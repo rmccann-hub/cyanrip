@@ -103,6 +103,7 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
     cyanrip_log(ctx, 0, "    Duration:    %s\n", length);
     cyanrip_log(ctx, 0, "    Samples:     %u\n", t->nb_samples);
     cyanrip_log(ctx, 0, "    Frames:      %u\n", t->end_lsn_sig - t->start_lsn_sig + 1);
+    cyanrip_log(ctx, 0, "    Peak level:  %.1f%%\n", 100.0 * pow(10.0, t->ebu_sample_peak / 20.0));
 
     print_offsets(ctx, t);
 
