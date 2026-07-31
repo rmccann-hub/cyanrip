@@ -104,6 +104,12 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
     cyanrip_log(ctx, 0, "    Samples:     %u\n", t->nb_samples);
     cyanrip_log(ctx, 0, "    Frames:      %u\n", t->end_lsn_sig - t->start_lsn_sig + 1);
     cyanrip_log(ctx, 0, "    Peak level:  %.1f%%\n", 100.0 * pow(10.0, t->ebu_sample_peak / 20.0));
+    if (t->rip_time_us > 0) {
+        char elapsed[13];
+        cyanrip_frames_to_duration((uint32_t)(t->rip_time_us * 75 / 1000000), elapsed);
+        cyanrip_log(ctx, 0, "    Elapsed:     %s (%.1fx)\n", elapsed,
+                    (t->frames / 75.0) / (t->rip_time_us / 1000000.0));
+    }
 
     print_offsets(ctx, t);
 

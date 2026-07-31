@@ -638,6 +638,7 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
     int calc_global_peak_set = 0;
     int calc_global_peak = !ctx->settings.ripping_retries;
     t->secure_rip_state = CYANRIP_SECURE_RIP_NA;
+    int64_t track_start_time = av_gettime_relative();
 repeat_ripping:;
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;
@@ -899,6 +900,7 @@ end:
     av_free(last_checksums);
 
     t->total_repeats = total_repeats;
+    t->rip_time_us = av_gettime_relative() - track_start_time;
     if (!quit_now && !ret) {
         cyanrip_finalize_encoding(ctx, t);
         if (ctx->settings.enable_replaygain)

@@ -157,6 +157,7 @@ typedef struct cyanrip_track {
     AVDictionary *meta; /* Disc's AVDictionary gets copied here */
     int total_repeats; /* How many times the track was re-ripped */
     enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
+    int64_t rip_time_us; /* Wall clock time spent ripping and encoding */
     int index; /* Array position + 1 */
 
     int track_is_data;
