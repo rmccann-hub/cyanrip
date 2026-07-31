@@ -637,6 +637,7 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
     uint32_t total_repeats = 0;
     int calc_global_peak_set = 0;
     int calc_global_peak = !ctx->settings.ripping_retries;
+    t->secure_rip_state = CYANRIP_SECURE_RIP_NA;
 repeat_ripping:;
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;
@@ -831,11 +832,13 @@ repeat_ripping:;
         if (matches >= ctx->settings.ripping_retries) {
             cyanrip_log(ctx, 0, "\nDone; (%i out of %i matches for current checksum %08X)\n",
                         matches, ctx->settings.ripping_retries, checksum_ctx.eac_crc);
+            t->secure_rip_state = CYANRIP_SECURE_RIP_CONVERGED;
             goto finalize_ripping;
         }
         if (total_repeats >= ctx->settings.max_retries) {
             cyanrip_log(ctx, 0, "\nDone; (no matches found, but hit repeat limit of %i)\n",
                         ctx->settings.max_retries);
+            t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
             goto finalize_ripping;
         }
 

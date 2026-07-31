@@ -69,6 +69,12 @@ enum CRIPAccuDBStatus {
     CYANRIP_ACCUDB_FOUND,
 };
 
+enum cyanrip_secure_rip_state {
+    CYANRIP_SECURE_RIP_NA = 0, /* -Z was not requested for this track */
+    CYANRIP_SECURE_RIP_CONVERGED, /* Matching checksums were found */
+    CYANRIP_SECURE_RIP_LIMIT_HIT, /* Repeat limit hit before checksums matched */
+};
+
 enum CRIPPathType {
     CRIP_PATH_COVERART, /* arg must be a CRIPArt * */
     CRIP_PATH_TRACK, /* arg must be a cyanrip_track * */
@@ -150,6 +156,7 @@ typedef struct cyanrip_track {
     int cd_track_number; /* Actual track on the CD, may be 0 */
     AVDictionary *meta; /* Disc's AVDictionary gets copied here */
     int total_repeats; /* How many times the track was re-ripped */
+    enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
     int index; /* Array position + 1 */
 
     int track_is_data;

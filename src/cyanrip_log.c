@@ -117,6 +117,20 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
             cyanrip_log(ctx, 0, "\n");
     }
 
+    switch (t->secure_rip_state) {
+    case CYANRIP_SECURE_RIP_CONVERGED:
+        cyanrip_log(ctx, 0, "  Secure re-read:  converged after %i reads\n", t->total_repeats);
+        break;
+    case CYANRIP_SECURE_RIP_LIMIT_HIT:
+        cyanrip_log(ctx, 0, "  Secure re-read:  did NOT converge after %i reads (repeat limit hit)\n",
+                    t->total_repeats);
+        break;
+    case CYANRIP_SECURE_RIP_NA:
+    default:
+        cyanrip_log(ctx, 0, "  Secure re-read:  not attempted\n");
+        break;
+    }
+
     cyanrip_log(ctx, 0, "  Accurip:       %s",
                 ctx->settings.disable_accurip ? "disabled" :
                 has_ar ? "disc found in database" : "not found");
