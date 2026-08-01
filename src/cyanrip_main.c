@@ -1000,6 +1000,13 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
         if (ct->pregap_lsn == CDIO_INVALID_LSN)
             continue;
 
+        /* A zero length pregap is not a gap: there is nothing to drop, merge
+         * or split off, so every action below would be a no-op. Track 1 hits
+         * this whenever its pregap LSN is the disc start, in which case the
+         * only real pregap is the lead-in, which the per-track block reports. */
+        if (ct->start_lsn == ct->pregap_lsn)
+            continue;
+
         cyanrip_log(ctx, 0, "    %i frame pregap in track %i, ",
                     ct->start_lsn - ct->pregap_lsn, ct->number);
         gaps++;
