@@ -300,5 +300,8 @@ int crip_is_integer(const char *src);
 
 extern int quit_now;
 
+/* The command line as received, or NULL before it is recorded */
+extern char *crip_invocation;
+
 extern uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
 extern const int crip_max_paranoia_level;

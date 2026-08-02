@@ -54,6 +54,48 @@ subchannel quirks, paranoia error-correction on damaged media). Flag any
 change touching drive I/O as "needs verification on real hardware" and defer
 that check to the user's own machine.
 
+## The Platterpus seam — binding protocol, not a preference
+
+This fork exists to feed **Platterpus** (`rmccann-hub/Platterpus`), which parses this
+program's log as an archival record. That makes the log an **API**, and the two
+projects each other's dependency. These terms are agreed by both sides and hold
+regardless of who is at the keyboard.
+
+- **The log is a contract.** Changing the text, indentation, field order, or units
+  of any line Platterpus parses is a breaking change. It requires a handshake round
+  before it ships — never a drive-by reword.
+- **Each round is two files and two verifications.** We send a handshake file
+  (sections A–J, spec below); they verify it against their real parser; they send a
+  verification file back. A round stays **OPEN** until that arrives. **No release and
+  no pin switch while a round is open.** Send a file every round even when nothing
+  changed — "no changes" written out is a complete round; silence is not.
+- **Answer from the artifact, not from memory of the artifact.** Name the artifact in
+  the claim. "EAC reports N" is unfalsifiable; "EAC's *log* reports N, its *cue*
+  reports M" is checkable. Both projects have shipped a wrong claim by reasoning about
+  a file instead of opening it.
+- **A correction from the other side gets the same scrutiny as a claim.** Corrections
+  arrive with social pressure to accept them. Both sides have now applied one that was
+  wrong.
+- **Revert-prove every behavioural fix.** Actually revert it and watch the test fail.
+  A test that passes with the fix removed is decoration — this has caught vacuous
+  tests on both sides, including one here.
+- **Distinguish "did not happen" from "happened and found nothing."** `none` and
+  `unknown (reason)` are different claims. Never collapse an absence of evidence into
+  evidence of absence.
+- **Every fatal path prints a diagnosable line before exiting**, at column 0, to a
+  stream the caller captures. A non-zero exit with no output is the one failure they
+  cannot explain to a user.
+- **Never prompt or block on stdin.** There is no controlling terminal.
+- **This build must identify itself** as `platterpus-fork` in the version banner and
+  in every logfile's first line. The version *number* stays upstream's.
+
+Handshake return-file sections: **A** pin · **B** answers to their questions, each
+tagged measured / read-from-source / unverified · **C** commits, flagging log-text
+changes · **D** log-format delta, stating "no changes" out loud · **E** regenerated
+golden log if D changed · **F** proven vs not-proven, with *how* · **G** revert-proof
+per fix · **H** anything found wrong in *their* output, stating "nothing found" out
+loud · **I** provider contract · **J** questions back.
+
 ## Code style
 
 - Matches existing code: K&R-ish C, 4-space indentation, no tabs, `c99`

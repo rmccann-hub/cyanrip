@@ -1123,6 +1123,28 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "%s\n", gaps ? "" : "    None signalled\n");
 }
 
+/* The command line as this process actually received it, recorded so a log
+ * states what was run rather than what a caller believes it ran. */
+char *crip_invocation = NULL;
+
+static void record_invocation(int argc, char **argv)
+{
+    AVBPrint buf;
+    av_bprint_init(&buf, 0, AV_BPRINT_SIZE_UNLIMITED);
+
+    for (int i = 0; i < argc; i++) {
+        if (i)
+            av_bprintf(&buf, " ");
+        /* Quote anything a reader could not paste back verbatim */
+        if (strpbrk(argv[i], " \t\"'\\"))
+            av_bprintf(&buf, "\"%s\"", argv[i]);
+        else
+            av_bprintf(&buf, "%s", argv[i]);
+    }
+
+    av_bprint_finalize(&buf, &crip_invocation);
+}
+
 int main(int argc, char **argv)
 {
     cyanrip_ctx *ctx = NULL;
@@ -1131,6 +1153,8 @@ int main(int argc, char **argv)
 #ifdef _WIN32
     setlocale(LC_ALL, ".UTF8");
 #endif
+
+    record_invocation(argc, argv);
 
     av_log_set_level(AV_LOG_QUIET);
 
@@ -1188,8 +1212,8 @@ int main(int argc, char **argv)
     int nb_track_cover_arts = 0;
 
     snprintf(cyanrip_helpstr, sizeof(cyanrip_helpstr),
-             "cyanrip %s (%s, %s)", PROJECT_VERSION_STRING, vcstag,
-             PROJECT_FORK_ID);
+             "cyanrip %s (%s-g%s)", PROJECT_VERSION_STRING, PROJECT_FORK_ID,
+             vcstag);
 
     GEN_OPT_INIT(opts_list, 64);
 

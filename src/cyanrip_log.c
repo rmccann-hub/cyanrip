@@ -262,8 +262,10 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
 
 void cyanrip_log_start_report(cyanrip_ctx *ctx)
 {
-    cyanrip_log(ctx, 0, "cyanrip %s (%s, %s)\n", PROJECT_VERSION_STRING,
-                vcstag, PROJECT_FORK_ID);
+    cyanrip_log(ctx, 0, "cyanrip %s (%s-g%s)\n", PROJECT_VERSION_STRING,
+                PROJECT_FORK_ID, vcstag);
+    if (crip_invocation)
+        cyanrip_log(ctx, 0, "Invoked as:     %s\n", crip_invocation);
     cdio_hwinfo_t hwinfo;
     const int hwinfo_success = cdio_get_hwinfo(ctx->cdio, &hwinfo);
     if (!hwinfo_success)
