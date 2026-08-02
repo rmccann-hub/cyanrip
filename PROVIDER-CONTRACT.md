@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc1 (platterpus-fork-ga835052)`
+Build: `cyanrip 0.9.4-rc1 (platterpus-fork-gf59a385)`
 
 This is the provider half of the seam. Platterpus generates the consumer half
 (`docs/cyanrip-consumer-contract.md`) from its parser tables. Neither side
