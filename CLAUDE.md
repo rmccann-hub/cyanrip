@@ -96,6 +96,52 @@ golden log if D changed · **F** proven vs not-proven, with *how* · **G** rever
 per fix · **H** anything found wrong in *their* output, stating "nothing found" out
 loud · **I** provider contract · **J** questions back.
 
+**Section I is generated, never hand-written.** Run
+`tools/gen-provider-contract.py > PROVIDER-CONTRACT.md` and ship the result. It
+derives, from the source tree and the built binary:
+
+- **P1** every command line flag (from the binary's own `--help`, so it cannot drift)
+- **P2** every stable log line — the API we undertake not to reword without a round
+- **P3** every unstable line, and whether it reaches the logfile at all
+- **P4** exit codes, and whether any non-zero exit can be silent
+- **P5** the full fatal/error message inventory with `file:line`
+
+`tools/gen-provider-contract.py --check PROVIDER-CONTRACT.md` exits non-zero when the
+committed copy has gone stale; run it after any change to a `cyanrip_log()` call site
+or the option table. A hand-written contract goes stale silently, which is the whole
+failure it exists to prevent — and a description derived from behaviour cannot
+describe behaviour we do not have.
+
+The handshake file must also carry what still needs **real-hardware** testing. Disc
+images cannot exercise the MMC sub-channel path (they always fail into `unknown`), so
+no fixture retires that risk and the file must say so rather than let a green suite
+imply coverage.
+
+### When this list is not enough
+
+The sections above are the shape as of the rounds that produced them, not a ceiling.
+The seam will grow — new flags, new consumers, a `--json` mode, a second downstream
+project, a capability probe. Two rules make the protocol survive that:
+
+- **The contract covers every surface the other side can observe, not just the ones
+  named here.** Today that is: the log text, the cue, the CLI, exit codes, stdout vs
+  logfile routing, and the files left on disk. If a change gives a consumer something
+  new to observe — a new output file, an environment variable, a schema, a network
+  call, a timing guarantee — it belongs in the contract *and* in a handshake round,
+  even though no section above lists it. When in doubt whether something is
+  observable, assume it is.
+- **Generate it if it can be generated.** Extend `tools/gen-provider-contract.py`
+  rather than appending prose to the generated file. A hand-maintained section inside
+  a generated document is the worst of both: it looks authoritative and it rots. If a
+  new surface genuinely cannot be derived, say so in the section itself and give it a
+  check that fails when the underlying thing changes.
+
+The same breadth applies to what the handshake reports. Anything that would change
+what a downstream build produces, how it fails, or what it claims about a rip is
+handshake material — including changes that are *not* to the log: build flags,
+dependency minimums, default behaviour, timing, resource use. The test is not "did I
+edit a `cyanrip_log()` line", it is **"could the other side notice?"**
+
 ## Code style
 
 - Matches existing code: K&R-ish C, 4-space indentation, no tabs, `c99`
