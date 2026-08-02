@@ -125,8 +125,16 @@ def exit_codes():
 
 
 def version(binary):
-    return subprocess.run([binary, "--version"], capture_output=True,
-                          text=True).stdout.strip()
+    """The banner, with the commit suffix normalised.
+
+    The real suffix is this build's short SHA. Embedding it verbatim would mean
+    committing this file changes the SHA, which makes the file it just produced
+    stale -- a generated artifact cannot contain a value that generating it
+    alters. The shape is the contract; the digits are not.
+    """
+    raw = subprocess.run([binary, "--version"], capture_output=True,
+                         text=True).stdout.strip()
+    return re.sub(r"-g[0-9a-f]{7,40}\)", "-g<commit>)", raw)
 
 
 def emit(binary):
@@ -271,9 +279,7 @@ def main():
 
     if args.check:
         have = open(args.check, encoding="utf-8").read()
-        # The build line carries the commit hash, which moves every commit.
-        strip = lambda s: re.sub(r"^Build: .*$", "Build: <pin>", s, flags=re.M)
-        if strip(have) != strip(text):
+        if have != text:
             sys.stderr.write(
                 f"{args.check} is stale -- regenerate with "
                 f"tools/gen-provider-contract.py\n")
