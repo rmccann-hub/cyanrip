@@ -407,6 +407,13 @@ int cyanrip_log_init(cyanrip_ctx *ctx)
 
         ctx->logfile[i] = fopen(logfile, "wb+");
 
+        /* Line buffer the log so a rip that is killed rather than ended
+         * cleanly still leaves every completed track on disk. Ripping is
+         * bound by the drive, so the extra write syscalls cost nothing
+         * next to a 1x read. */
+        if (ctx->logfile[i])
+            setvbuf(ctx->logfile[i], NULL, _IOLBF, 0);
+
         if (!ctx->logfile[i]) {
             cyanrip_log(ctx, 0, "Couldn't open path \"%s\" for writing: %s!\n"
                         "Invalid folder name? Try -D <folder>.\n",

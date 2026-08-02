@@ -29,6 +29,12 @@ int cyanrip_cue_init(cyanrip_ctx *ctx)
 
         ctx->cuefile[i] = fopen(cuefile, "wb+");
 
+        /* Line buffered for the same reason as the log: a killed rip should
+         * not leave a zero byte CUE sheet behind, which reads as a valid but
+         * empty sheet rather than as a missing one. */
+        if (ctx->cuefile[i])
+            setvbuf(ctx->cuefile[i], NULL, _IOLBF, 0);
+
         if (!ctx->cuefile[i]) {
             cyanrip_log(ctx, 0, "Couldn't open path \"%s\" for writing: %s!\n"
                         "Invalid folder name? Try -D <folder>.\n",
