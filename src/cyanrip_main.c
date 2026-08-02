@@ -279,7 +279,8 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         t->index = i + 1;
         t->number = t->cd_track_number = i + first_track_nb;
         t->track_is_data = !cdio_cddap_track_audiop(ctx->drive, t->number);
-        t->pregap_lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number);
+        t->pregap_lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number,
+                                                     &t->pregap_source);
         t->dropped_pregap_start = CDIO_INVALID_LSN;
         t->merged_pregap_end = CDIO_INVALID_LSN;
         t->start_lsn = cdio_get_track_lsn(ctx->cdio, t->number);
@@ -908,6 +909,7 @@ end:
             crip_replaygain_meta_track(ctx, t);
         cyanrip_log_track_end(ctx, t);
         cyanrip_cue_track(ctx, t);
+        ctx->tracks_completed++;
     } else {
         ctx->total_error_count++;
     }
@@ -1186,7 +1188,8 @@ int main(int argc, char **argv)
     int nb_track_cover_arts = 0;
 
     snprintf(cyanrip_helpstr, sizeof(cyanrip_helpstr),
-             "cyanrip %s (%s)", PROJECT_VERSION_STRING, vcstag);
+             "cyanrip %s (%s, %s)", PROJECT_VERSION_STRING, vcstag,
+             PROJECT_FORK_ID);
 
     GEN_OPT_INIT(opts_list, 64);
 

@@ -10,6 +10,11 @@ conf = configuration_data()
 conf.set_quoted('PROJECT_NAME', meson.project_name())
 conf.set_quoted('PROJECT_VERSION_STRING', meson.project_version())
 
+# Identifies this fork in every banner it prints. Deliberately separate from
+# the version number, which stays byte for byte upstream's so that anything
+# parsing a version out of the banner keeps working unchanged.
+conf.set_quoted('PROJECT_FORK_ID', 'platterpus-fork')
+
 version_split = meson.project_version().split('.')
 ver_major = version_split[0]
 ver_minor = version_split[1]

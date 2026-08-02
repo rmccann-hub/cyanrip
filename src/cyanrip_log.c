@@ -50,9 +50,22 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "    Pregap LSN:  %i (duration: %s)\n",
                     t->pregap_lsn, pregap_duration);
         cyanrip_log(ctx, 0, "    Pregap length: %i frames\n", pregap_frames);
+    } else if (t->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ) {
+        cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel unreadable)\n");
+    } else if (t->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC) {
+        cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel CRC mismatches)\n");
     } else {
         cyanrip_log(ctx, 0, "    Pregap LSN:  none\n");
     }
+
+    /* Say where a pregap came from when it wasn't the TOC, so a reader can
+     * tell a value this drive worked out from one the disc declared. */
+    if (t->pregap_source == CYANRIP_PREGAP_SRC_SUBCHANNEL)
+        cyanrip_log(ctx, 0, "    Pregap source: sub-channel (not signalled by TOC)\n");
+    else if (t->pregap_source == CYANRIP_PREGAP_SRC_LEADIN)
+        cyanrip_log(ctx, 0, "    Pregap source: lead-in\n");
+    else if (t->pregap_source == CYANRIP_PREGAP_SRC_TOC)
+        cyanrip_log(ctx, 0, "    Pregap source: TOC\n");
 
     if (t->frames_before_disc_start)
         cyanrip_log(ctx, 0, "    Prepended:   %i frames of silence\n", t->frames_before_disc_start);
@@ -249,7 +262,8 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
 
 void cyanrip_log_start_report(cyanrip_ctx *ctx)
 {
-    cyanrip_log(ctx, 0, "cyanrip %s (%s)\n", PROJECT_VERSION_STRING, vcstag);
+    cyanrip_log(ctx, 0, "cyanrip %s (%s, %s)\n", PROJECT_VERSION_STRING,
+                vcstag, PROJECT_FORK_ID);
     cdio_hwinfo_t hwinfo;
     const int hwinfo_success = cdio_get_hwinfo(ctx->cdio, &hwinfo);
     if (!hwinfo_success)
@@ -395,6 +409,18 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
 #undef PCHECK
 
     cyanrip_log(ctx, 0, "Ripping errors: %i\n", ctx->total_error_count);
+
+    /* State plainly whether the rip ran to completion. Without this a rip
+     * stopped part way through is only distinguishable from a whole one by
+     * counting track blocks against the disc's track count, which a reader
+     * can only do if it knows both. */
+    if (quit_now)
+        cyanrip_log(ctx, 0, "Rip completed:  no (interrupted by user, %i of %i tracks)\n",
+                    ctx->tracks_completed, ctx->nb_tracks);
+    else
+        cyanrip_log(ctx, 0, "Rip completed:  yes (%i of %i tracks)\n",
+                    ctx->tracks_completed, ctx->nb_tracks);
+
     cyanrip_log(ctx, 0, "Ripping finished at %s\n", t_s);
 }
 

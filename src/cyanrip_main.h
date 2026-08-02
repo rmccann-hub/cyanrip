@@ -69,6 +69,18 @@ enum CRIPAccuDBStatus {
     CYANRIP_ACCUDB_FOUND,
 };
 
+/* Where a track's pregap LSN came from, or why it isn't known. Recorded
+ * during disc enumeration, which runs before the log file is open, and
+ * reported later by the log writer. */
+enum cyanrip_pregap_source {
+    CYANRIP_PREGAP_SRC_NONE = 0, /* No pregap, and none looked for */
+    CYANRIP_PREGAP_SRC_TOC, /* The disc's TOC signalled it */
+    CYANRIP_PREGAP_SRC_LEADIN, /* First track, the standard lead-in */
+    CYANRIP_PREGAP_SRC_SUBCHANNEL, /* Found by reading Q sub-channel data */
+    CYANRIP_PREGAP_SRC_ERR_READ, /* Sub-channel unreadable, pregap unknown */
+    CYANRIP_PREGAP_SRC_ERR_CRC, /* Sub-channel CRCs never agreed, unknown */
+};
+
 enum cyanrip_secure_rip_state {
     CYANRIP_SECURE_RIP_NA = 0, /* -Z was not requested for this track */
     CYANRIP_SECURE_RIP_CONVERGED, /* Matching checksums were found */
@@ -171,6 +183,7 @@ typedef struct cyanrip_track {
     int frames_after_disc_end;
 
     lsn_t pregap_lsn;
+    enum cyanrip_pregap_source pregap_source; /* Provenance of pregap_lsn */
     lsn_t start_lsn;
     lsn_t start_lsn_sig;
     lsn_t end_lsn;
@@ -243,6 +256,7 @@ typedef struct cyanrip_ctx {
     /* State */
     int success;
     int total_error_count;
+    int tracks_completed; /* Tracks fully ripped, for the completion line */
     lsn_t start_lsn;
     lsn_t end_lsn;
     lsn_t duration_frames;
@@ -283,6 +297,8 @@ char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
 char *append_missing_keys(const char *src, const char *key1, const char *key2);
 
 int crip_is_integer(const char *src);
+
+extern int quit_now;
 
 extern uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
 extern const int crip_max_paranoia_level;

@@ -312,19 +312,28 @@ static driver_return_code_t read_audio_subq_sector_with_retries(
 
 
 // TODO: Check that drive is actually returning Q subchannel data and not just zeroes.
-lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number) {
+lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
+                                   enum cyanrip_pregap_source *source) {
+#define SET_SOURCE(v) do { if (source) *source = (v); } while (0)
+
+    SET_SOURCE(CYANRIP_PREGAP_SRC_NONE);
+
     // Try to use libcdio. If libcdio doesn't implement pregap finding
     // for a driver, it will return CDIO_INVALID_LSN.
     const lsn_t cdio_track_pregap_lsn = cdio_get_track_pregap_lsn(p_cdio, track_number);
-    if (cdio_track_pregap_lsn != CDIO_INVALID_LSN)
+    if (cdio_track_pregap_lsn != CDIO_INVALID_LSN) {
+        SET_SOURCE(CYANRIP_PREGAP_SRC_TOC);
         return cdio_track_pregap_lsn;
+    }
 
     // First track pregap is lsn = 0, lba = CDIO_PREGAP_SECTORS.
     // TODO Under what circumstances does libcdio give a first track not equal
     // to 1? Does this ever happen for a rippable CD?
     const track_t first_track_number = cdio_get_first_track_num(p_cdio);
-    if (track_number == first_track_number)
+    if (track_number == first_track_number) {
+        SET_SOURCE(CYANRIP_PREGAP_SRC_LEADIN);
         return 0;
+    }
 
     const lsn_t track_start_lsn = cdio_get_track_lsn(p_cdio, track_number);
     // TODO Is (track_number - 1) always safe? e.g. non-continuous track numbers?
@@ -332,8 +341,10 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number) {
     const lsn_t prev_track_start_lsn = cdio_get_track_lsn(p_cdio, prev_track_number);
 
     // Handle single sector previous track.
-    if (prev_track_start_lsn + 1 == track_start_lsn)
+    if (prev_track_start_lsn + 1 == track_start_lsn) {
+        SET_SOURCE(CYANRIP_PREGAP_SRC_SUBCHANNEL);
         return track_start_lsn;
+    }
 
     uint8_t *audio_subq_buf = av_malloc(CYANRIP_CD_FRAMESIZE_RAW_AND_SUBQ);
     const uint8_t *subq_buf = audio_subq_buf + CDIO_CD_FRAMESIZE_RAW;
@@ -369,12 +380,14 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number) {
     if (ret) {
         /* Persistent read failure: give up on detection rather than crash the
          * rip over what optical drives treat as a routine condition. */
+        SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
         av_free(audio_subq_buf);
         return CDIO_INVALID_LSN;
     }
     decode_subq(&subq, subq_buf);
     crc_comp = crc_subq(subq_buf);
     if (subq.crc == crc_comp && subq.adr == 1 && subq.track_number == prev_track_number) {
+        SET_SOURCE(CYANRIP_PREGAP_SRC_SUBCHANNEL);
         av_free(audio_subq_buf);
         return track_start_lsn;
     }
@@ -394,6 +407,7 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number) {
         }
         ret = read_audio_subq_sector_with_retries(p_cdio, audio_subq_buf, lsn, retry_max);
         if (ret) {
+            SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
             av_free(audio_subq_buf);
             return CDIO_INVALID_LSN;
         }
@@ -434,6 +448,7 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number) {
         }
         ret = read_audio_subq_sector_with_retries(p_cdio, audio_subq_buf, lsn, retry_max);
         if (ret) {
+            SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
             av_free(audio_subq_buf);
             return CDIO_INVALID_LSN;
         }
@@ -467,8 +482,15 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number) {
     // every caller in this codebase already checks for, unlike DRIVER_OP_ERROR
     // (a small negative driver-error code, easily mistaken for a real LSN by a
     // caller that only ever compares against CDIO_INVALID_LSN).
-    lsn = (left_bound + 1 == right_bound) ? right_bound : CDIO_INVALID_LSN;
+    if (left_bound + 1 == right_bound) {
+        lsn = right_bound;
+        SET_SOURCE(CYANRIP_PREGAP_SRC_SUBCHANNEL);
+    } else {
+        lsn = CDIO_INVALID_LSN;
+        SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_CRC);
+    }
 
     av_free(audio_subq_buf);
     return lsn;
+#undef SET_SOURCE
 }
