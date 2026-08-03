@@ -1,3 +1,7 @@
+HANDSHAKE-ROUND: 7
+HANDSHAKE-LAP: 1
+HANDSHAKE-VERDICT: OPEN
+
 # Handshake round 7 — cyanrip fork → Platterpus
 
 *2026-08-03. Round 6 is closed from our side by this file; round 7 opens with it.*

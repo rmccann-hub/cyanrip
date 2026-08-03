@@ -44,6 +44,12 @@ that failure, or one this repo has already made, would otherwise be reachable:
   * OPEN and HOLD are both "not closed". A deliberate mid-round lap is the
     normal case, not an edge case.
 
+  * A round can take several laps, and its state is the *latest* lap's verdict.
+    The alternative -- every lap must say GO -- would force us to go back and
+    edit a file we had already sent, which is the one thing a record of an
+    exchange must never do. A later lap may therefore also *reopen* a round, and
+    a test asserts it can.
+
 Run with no arguments for a human summary; --release-gate exits non-zero when a
 release is not permitted, which is the form a script should use.
 """
@@ -64,6 +70,7 @@ GRANDFATHERED = {5, 6}
 # Column 0 only. A quoted or indented copy inside prose is not a declaration.
 VERDICT_RE = re.compile(r"^HANDSHAKE-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]*$", re.M)
 ROUND_RE = re.compile(r"^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", re.M)
+LAP_RE = re.compile(r"^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", re.M)
 
 # Only GO closes a round. Anything else -- including a verdict this script has
 # never heard of -- leaves it open, because an unrecognised verdict is not
@@ -71,9 +78,10 @@ ROUND_RE = re.compile(r"^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", re.M)
 CLOSING = {"GO"}
 
 
-class Round:
-    def __init__(self, number, path, verdict, declared_number):
+class Lap:
+    def __init__(self, number, lap, path, verdict, declared_number):
         self.number = number
+        self.lap = lap
         self.path = path
         self.verdict = verdict
         self.declared_number = declared_number
@@ -100,7 +108,7 @@ class Round:
 
 
 def load_rounds(directory=HANDSHAKE_DIR):
-    rounds = []
+    all_laps = []
     for path in sorted(directory.glob("round-*.md")):
         m = re.match(r"round-(\d+)", path.name)
         if not m:
@@ -116,14 +124,33 @@ def load_rounds(directory=HANDSHAKE_DIR):
             verdict = "AMBIGUOUS"
 
         declared_number = int(declared[0]) if len(declared) == 1 else None
-        rounds.append(Round(int(m.group(1)), path, verdict, declared_number))
-    return rounds
+
+        # A file with no lap field is lap 1. Two lap declarations are ambiguous
+        # and sort last, so ambiguity cannot be hidden behind a later lap.
+        laps = LAP_RE.findall(text)
+        lap = int(laps[0]) if len(laps) == 1 else (1 if not laps else None)
+
+        all_laps.append(Lap(int(m.group(1)), lap, path, verdict, declared_number))
+
+    # A round's state is its latest lap. An unparseable lap number sorts to the
+    # end so it cannot be shadowed by a well-formed earlier one.
+    latest = {}
+    for lp in all_laps:
+        cur = latest.get(lp.number)
+        if cur is None or lp.lap is None or (cur.lap is not None and lp.lap > cur.lap):
+            latest[lp.number] = lp
+    return [latest[k] for k in sorted(latest)]
 
 
 def check(rounds):
     """Returns (ok, problems). Problems are reasons a release is not allowed."""
     problems = []
     for r in rounds:
+        if r.lap is None:
+            problems.append(
+                f"round {r.number} has an ambiguous HANDSHAKE-LAP declaration: "
+                f"{r.path.name}"
+            )
         if not r.closed:
             problems.append(f"round {r.number} is not closed ({r.why}): {r.path.name}")
         # A file that declares a different round number than its name is a
@@ -158,7 +185,8 @@ def main():
     print("Handshake rounds:")
     for r in rounds:
         state = "closed" if r.closed else "OPEN"
-        print(f"  round {r.number}: {state:6}  ({r.why})")
+        lap = f"lap {r.lap}" if r.lap is not None else "lap ?"
+        print(f"  round {r.number} ({lap}, {r.path.name}): {state:6}  ({r.why})")
     print()
 
     if ok:

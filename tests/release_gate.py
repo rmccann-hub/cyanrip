@@ -57,7 +57,48 @@ def gate(files):
     return rg.check(rg.load_rounds(d))
 
 
-GO = "HANDSHAKE-ROUND: 9\nHANDSHAKE-VERDICT: GO\n\n# round 9\n"
+GO = "HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\nHANDSHAKE-VERDICT: GO\n\n# round 9\n"
+
+
+def lap(n, round_no, verdict):
+    return (f"HANDSHAKE-ROUND: {round_no}\nHANDSHAKE-LAP: {n}\n"
+            f"HANDSHAKE-VERDICT: {verdict}\n\n# round {round_no} lap {n}\n")
+
+
+def test_latest_lap_decides_and_can_close():
+    # Lap 1 opened; lap 2 closes. The round must close WITHOUT going back and
+    # editing lap 1 -- a file already sent must never be retroactively rewritten.
+    ok, _ = gate({"round-9.md": lap(1, 9, "OPEN"),
+                  "round-9-lap2.md": lap(2, 9, "GO")})
+    check(ok, "a later lap declaring GO must close the round")
+
+
+def test_latest_lap_can_reopen():
+    # The converse, and it must work or a round could never be reopened by new
+    # evidence: lap 1 said GO, lap 2 found something.
+    ok, _ = gate({"round-9.md": lap(1, 9, "GO"),
+                  "round-9-lap2.md": lap(2, 9, "HOLD")})
+    check(not ok, "a later lap declaring HOLD must reopen the round")
+
+
+def test_lap_order_is_by_declaration_not_filename():
+    # Constructed so filename order and declared order DISAGREE, or the test
+    # cannot discriminate between the two implementations.
+    #   by name:        round-9-lap2.md < round-9.md  ('-' sorts before '.')
+    #                   -> last-by-name is round-9.md, verdict GO   -> allowed
+    #   by declaration: lap 3 > lap 2
+    #                   -> latest is round-9-lap2.md, verdict HOLD  -> blocked
+    ok, _ = gate({"round-9.md": lap(2, 9, "GO"),
+                  "round-9-lap2.md": lap(3, 9, "HOLD")})
+    check(not ok, "latest lap must come from the declared number, not the name")
+
+
+def test_ambiguous_lap_is_not_shadowed_by_a_good_one():
+    body = ("HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\nHANDSHAKE-LAP: 2\n"
+            "HANDSHAKE-VERDICT: GO\n\n# round 9\n")
+    ok, probs = gate({"round-9.md": body, "round-9-lap2.md": lap(2, 9, "GO")})
+    check(not ok, "an ambiguous lap declaration must not be hidden behind a good one")
+    check(any("ambiguous" in p for p in probs), "should name the ambiguity")
 
 
 def test_go_closes():

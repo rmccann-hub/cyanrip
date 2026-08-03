@@ -538,8 +538,14 @@ declaring at column 0:
 
 ```
 HANDSHAKE-ROUND: N
+HANDSHAKE-LAP: 1
 HANDSHAKE-VERDICT: OPEN
 ```
+
+A round may take several laps. **Each lap is a new file** — never edit one
+already sent — and **a round's state is its latest lap's verdict**, so a later
+lap can close a round *or* reopen one on new evidence. Lap order comes from the
+declared number, not the filename: `round-7-lap2.md` sorts before `round-7.md`.
 
 Send it. The round stays open until their verification file arrives *and* we
 agree — at which point the verdict becomes `GO`. A round may take several laps;
@@ -576,6 +582,9 @@ properties follow from that, and each is a separate way to get it wrong again:
   number**, in a set a test pins, so widening it is a visible act.
 - **Only `GO` closes.** `OPEN`, `HOLD`, and any verdict the script has not heard
   of all leave the round open, because an unrecognised verdict is not agreement.
+- **Two declarations of the same field are ambiguous, not "the first one".**
+  Picking either would be a guess wearing a derivation's clothes.
+- **An empty record is not agreement.** No round files found is a refusal.
 
 `tests/release_gate.py` is the list of ways it could wrongly say yes. Reverting
 the gate to presence-keying makes it print *"Release allowed"* against a record
