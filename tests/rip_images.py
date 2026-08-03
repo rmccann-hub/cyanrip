@@ -117,6 +117,18 @@ def sc_cli():
         if crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0", "-k", k)[0] != 0:
             fail(f"cli: -k {k} was rejected")
 
+    # -x (drive cache probe) must be accepted, must refuse to guess on an
+    # image rather than print a meaningless number, and must not appear at all
+    # unless asked for. The measurement itself needs a real drive.
+    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0", "-x")
+    if ec != 0:
+        fail(f"cli: -x was rejected (exit {ec})")
+    if "Cache probe:    not run (disc image has no drive cache)" not in out:
+        fail("cli: -x on an image did not refuse to measure")
+    if "Cache probe:" in crip("-d", WORK / "basic.cue", "-I", "-N", "-A",
+                             "-U", "-P", "0")[1]:
+        fail("cli: Cache probe line appeared without -x")
+
     # A genuinely unknown flag must still fail, diagnosably, on stdout
     ec, out = crip("--no-such-flag")
     if ec != 1:

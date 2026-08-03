@@ -32,6 +32,7 @@
 #include "fun512.h"
 #include "cue_writer.h"
 #include "cdtext.h"
+#include "cache_probe.h"
 #include "checksums.h"
 #include "discid.h"
 #include "musicbrainz.h"
@@ -1317,6 +1318,8 @@ int main(int argc, char **argv)
                 "Set drive speed");
     GEN_OPT_ONE(opts_list, int32_t, stall_secs, "k", 1, 1, 10, 0, INT32_MAX,
                 "Seconds a frame read must stall before reporting liveness (0 disables)");
+    GEN_OPT_ONE(opts_list, bool,    cache_probe, "x", 0, 0, 0, 0, 0,
+                "Measure the drive's readback cache before ripping (costs seconds)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
                 "Track pregap handling: N=default|drop|merge|track (repeatable)");
     GEN_OPT_ONE(opts_list, char *,  paranoia, "P", 1, 1, NULL, 0, 0,
@@ -1436,6 +1439,7 @@ int main(int argc, char **argv)
         (int)ceilf(abs(offset) / (float)(CDIO_CD_FRAMESIZE_RAW >> 2));
 
     settings.max_retries                = retries;
+    settings.cache_probe                = cache_probe;
     crip_stall_threshold_us             = stall_secs * 1000000LL;
     crip_heartbeat_us                   = crip_stall_threshold_us;
     settings.ripping_retries            = repeat_rips;
@@ -1872,6 +1876,13 @@ int main(int argc, char **argv)
     }
 
     cyanrip_log_start_report(ctx);
+
+    /* Read-only, before any track is ripped, so it cannot touch the audio.
+     * Off unless asked for: it costs seconds of drive time. */
+    if (ctx->settings.cache_probe) {
+        int measured = 0;
+        crip_probe_drive_cache(ctx, &measured);
+    }
     if (!ctx->settings.print_info_only)
         cyanrip_cue_start(ctx);
     setup_track_offsets_and_report(ctx);

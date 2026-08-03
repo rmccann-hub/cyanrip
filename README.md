@@ -114,6 +114,7 @@ Arguments are optional, except `-s`. By default cyanrip will rip all tracks from
 | -P `int`             | Sets the [paranoia level](#paranoia-level), default is max, 0 disables checking completely  |
 | -O                   | Overread into lead-in/lead-out areas, if unsupported by drive may freeze ripping            |
 | -k `int`             | Seconds a frame read must stall before liveness is reported (default 10, 0 disables)        |
+| -x                   | Measure the drive's readback cache before ripping (off by default, costs seconds)           |
 | -H                   | Enable HDCD decoding, read below for details                                                |
 | -E                   | Force CD deemphasis, for CDs mastered with preemphasis without actually signalling it       |
 | -W                   | Disable automatic CD deemphasis. Read [below](#deemphasis) for details.                     |
@@ -305,6 +306,10 @@ Behaviour differences from upstream:
  * **Log and cue files are line-buffered**, so a cancelled rip leaves a partial
    record rather than an empty file.
  * **`-k`** sets how long a frame read must stall before liveness is reported.
+ * **`-x`** measures the drive's readback cache at rip time, on the disc in the
+   drive, rather than leaving the figure an assumption. Off by default because
+   it costs seconds of drive time, and it refuses to report a number for a disc
+   image, which has no cache to measure. **Not yet verified on hardware.**
 
 Reporting additions, all in the rip log:
 
