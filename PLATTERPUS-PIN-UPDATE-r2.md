@@ -17,6 +17,11 @@ source anchor   sha256/16 = 90de0c7150e845c7     (over src/*.c and src/*.h)
 git tag         platterpus-fork-r2               (LOCAL ONLY -- see below)
 ```
 
+`2f950c8` is the last commit that changes the binary; anything above it on the
+branch is documentation only, so building the branch tip gives you the same
+binary. (A file cannot contain the hash of the commit that adds it, which is why
+this names the code commit rather than the tip.)
+
 **Pin the commit SHA, not the tag.** The git proxy in the cyanrip environment
 refuses tag pushes (`HTTP 403`); `git ls-remote --tags origin` returns nothing.
 No tag from this fork has ever reached the remote.
