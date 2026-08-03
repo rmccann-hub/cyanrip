@@ -325,6 +325,24 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   fatal-message classifier that looked forward without stopping at the next
   branch filed `Opening drive...` as fatal, because the *next* statement's
   if-block returned `AVERROR`.
+- **Assert every edit landed, individually.** A multi-part patch script whose
+  single `assert` covers only one replacement will pass while the others
+  silently no-op — and the ones that *did* land then reference things the failed
+  one was supposed to create. This happened three times in one session: a
+  `static` prefix that broke a multi-line match, a `sed` that left `|| ||`, and a
+  revert that reverted one of two labels. Count the matches, assert the count,
+  per edit.
+- **A fixture whose numbers agree by construction cannot discriminate.** The
+  per-track paranoia counters sum to the disc totals in the golden log, so a
+  consumer that summed the per-track blocks and one that read the disc block
+  produce identical output on it. Any test built on that fixture alone is
+  vacuous. When a reference is meant to catch a confusion, check that the
+  reference can actually *distinguish* the two readings — Platterpus caught this
+  one and had to construct variants to settle it.
+- **A reference log guards only the paths it exercises.** Regenerating it from a
+  simpler invocation silently drops coverage: dropping `-Z` removed the whole
+  secure-re-read surface from the artifact both sides check against. Generate
+  references with the awkward options on, not the convenient ones.
 - **Stage explicitly. Never `git add -A`.** It swept three unrelated changes and
   a `.pyc` into one commit here. One logical change per commit means staging the
   files for that change by name.
@@ -390,6 +408,23 @@ behaviour we do not have. Two ways it has still managed to lie:
   `cyanrip_main.c`. Calling it fatal files success lines as failures; calling it
   non-fatal drops real aborts. It gets its own labelled class and an explicit
   "this needs a run to settle" instead of a coin flip.
+- **Replacing a list of words with a list of idioms is the same defect one level
+  up.** The fatal classifier stopped guessing at *wording* and started guessing
+  at *control-flow idioms* — a hardcoded set of `return 1` / `goto fail` /
+  `total_error_count++`. It silently missed `goto end_meta`, `err = 1` feeding a
+  later `+= err`, and bare `return -1`, and still presented itself as derived.
+  Enumerate the thing from the source (every `goto` label found, reported under
+  its own name) rather than listing the ones you thought of.
+- **State the anchor a citation resolves against.** Every `file:line` in the
+  contract was unverifiable, because the build banner's SHA is normalised away
+  and nothing else identified the tree. Both sides then quoted line numbers at
+  each other from different commits and each was right about a different one.
+  The contract now carries a content hash of `src/`.
+- **A derived claim about the wrong scope is still a wrong claim.** The composed
+  progress line is rebuilt from the `snprintf` calls that fill its buffer — and
+  the first version attributed those formats to a *different* buffer of the same
+  name in another function, which would have shipped an invented shape for the
+  cue sheet echo. Bound the derivation to the scope it actually reasons about.
 - **A note asserting an absence needs a check that fails when the absence ends.**
   "there is no `-V`" was true when written and one upstream commit from being
   the misleading kind of true — the same shape as a dependency dialog reporting
