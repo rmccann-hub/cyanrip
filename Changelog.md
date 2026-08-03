@@ -20,6 +20,24 @@ answer to "is this the fork?" -- match on `platterpus-fork` or on the
 to.
 
 Fixed
+ - **`Duration:` was one frame (13.3 ms) too long for interior tracks whenever
+   `-s` was nonzero**, which is every real rip, since a drive read offset is
+   almost never zero. It was sourced from `t->frames`, which `setup_track_lsn()`
+   widens by a frame at whichever end the offset shifts into; the sample count
+   is taken before that adjustment, so the same block printed
+   `Samples: 176400` (exactly 00:04.00) directly above `Duration: 00:04.01`.
+   The log contradicted itself, and the shorter of the two fields was the wrong
+   one. Now derived from `nb_samples`.
+
+   **`-s 0` never showed it**, which is why no fixture caught it and why the
+   golden reference is unchanged: it is generated at `-s 0`. Found in
+   `bovinemagnet/cyanrip` commit `3eb6e22` during a survey of other forks, and
+   reproduced here before being taken.
+
+   Deliberately *not* sourced from `end_lsn_sig - start_lsn_sig`, which is what
+   the `Frames:` line prints: those are captured from the raw TOC before pregap
+   merging and lead-out padding move the LSNs, so for a merged pregap they
+   describe a different span than was ripped.
  - **The read-liveness heartbeat added in r2 never fired on a real stall.** It
    was emitted from libcdio-paranoia's status callback, so it could only report
    a read that was still making progress -- while a drive grinding on a bad
@@ -57,13 +75,20 @@ Added
    number for a disc image, which has no cache to measure.
    **Not verified on hardware** -- no drive exists in the environment it was
    written in, and no image can produce the timing signal the method needs.
+ - `tests/rip_images.py` scenario **duration**, which rips two fixtures at five
+   read offsets and asserts each track's `Duration:` against the `Samples:`
+   field beside it -- an independently sourced number, not the one it was
+   computed from. It also asserts the offset reached the rip, so the four
+   nonzero cases cannot silently degenerate into four copies of `-s 0`.
  - `tests/stall.c` (`meson test` name **Stall watchdog**), which asserts the
    heartbeat fires while a read is outstanding *and nothing is calling back* --
    the property r2 lacked. Reverting to a caller-driven poll fails four of its
    checks.
 
 Unchanged
- - **No logfile line changed in this release.** The golden reference differs
+ - **No logfile line changed in this release**, and no line changed at all at
+   `-s 0`. `Duration:` now reports a different *value* for interior tracks at a
+   nonzero offset -- a corrected measurement, not a format change. The golden reference differs
    from r2's only in the version string, the timestamps, the wall-clock timing
    fields, and the checksum over all of them.
 

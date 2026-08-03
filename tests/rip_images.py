@@ -316,6 +316,57 @@ def sc_cdtext():
         fail("cdtext_none: absent CD-TEXT not reported")
 
 
+def sc_duration():
+    # Duration: must agree with Samples:, which is an independently sourced
+    # field in the same block -- not with the value it was computed from.
+    #
+    # setup_track_lsn() widens t->frames by one frame at whichever end the read
+    # offset shifts into, so with a nonzero -s an interior track's t->frames is
+    # one greater than the track is. Sourcing Duration: from it printed a frame
+    # (13.3 ms) long, and the same block simultaneously reported
+    # "Samples: 176400" (exactly 00:04.00) next to "Duration: 00:04.01".
+    # Found on bovinemagnet/cyanrip 3eb6e22 and reproduced before fixing.
+    #
+    # -s 0 cannot catch it. Every offset below is exercised, and the run asserts
+    # the offset actually reached the rip rather than trusting that it did.
+    def dur(frames):
+        return "%02i:%02i.%02i" % (frames // (75 * 60), (frames // 75) % 60,
+                                   frames % 75)
+
+    checked = 0
+    for img in ("basic.cue", "pregap.cue"):
+        for off in ("0", "6", "588", "-6", "-588"):
+            name = f"dur_{img.split('.')[0]}_{off}"
+            ec, log = crip("-d", WORK / img, "-N", "-A", "-U", "-s", off,
+                           "-P", "0", "-o", "flac", "-D", WORK / f"out_{name}",
+                           "-F", "{track}", "-L", "log")
+            if ec != 0:
+                fail(f"duration: {img} at -s {off} exited {ec}")
+                continue
+
+            text = (WORK / f"out_{name}" / "log.log").read_text()
+
+            # The offset must have reached the rip, or every case below is the
+            # -s 0 case wearing a different name and the check is vacuous.
+            if f"Offset:         {'+' if not off.startswith('-') else ''}{off} samples" not in text:
+                fail(f"duration: -s {off} not reflected in the log's Offset: line")
+
+            pairs = re.findall(r"^    Duration:\s+(\S+)\n    Samples:\s+(\d+)$",
+                               text, re.M)
+            if len(pairs) < 2:
+                fail(f"duration: {img} at -s {off} gave {len(pairs)} audio "
+                     "tracks, need >= 2 for an interior boundary to exist")
+            for got, samples in pairs:
+                want = dur(int(samples) // 588)
+                if got != want:
+                    fail(f"duration: {img} at -s {off}: Duration {got} but "
+                         f"Samples {samples} is {want}")
+                checked += 1
+
+    if checked < 20:
+        fail(f"duration: only {checked} track blocks checked, expected >= 20")
+
+
 def sc_reporting():
     # Per-track paranoia counters must account for the disc total exactly.
     # They are a delta of a process-global array, so an off-by-one in the

@@ -206,7 +206,24 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
 void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     char length[16];
-    cyanrip_frames_to_duration(t->frames, length);
+
+    /* From nb_samples, not t->frames. setup_track_lsn() widens t->frames by a
+     * frame at whichever end the read offset shifts into, so with a nonzero -s
+     * an interior track's t->frames is one greater than the track really is and
+     * the duration printed a frame (13.3 ms) long. The sample count is
+     * deliberately taken before that adjustment, which is why the same log
+     * simultaneously reported "Samples: 176400" (exactly 00:04.00) and
+     * "Duration: 00:04.01". Found on bovinemagnet/cyanrip 3eb6e22 and
+     * reproduced here.
+     *
+     * Not from end_lsn_sig - start_lsn_sig either, which is what the Frames:
+     * line below prints: those are captured from the raw TOC before pregap
+     * merging and lead-out padding move start_lsn/end_lsn, so for a merged
+     * pregap they describe a different span than was ripped. nb_samples is
+     * computed after the merge and before the offset, which is exactly the
+     * span whose duration this is. */
+    cyanrip_frames_to_duration(t->nb_samples / (CDIO_CD_FRAMESIZE_RAW >> 2),
+                               length);
 
     cyanrip_log(ctx, 0, "  Preemphasis:   ");
     if (!t->preemphasis) {
