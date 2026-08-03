@@ -216,6 +216,74 @@ handshake material — including changes that are *not* to the log: build flags,
 dependency minimums, default behaviour, timing, resource use. The test is not "did I
 edit a `cyanrip_log()` line", it is **"could the other side notice?"**
 
+## Say exactly what is true, and no more
+
+This is the first rule, not one of the rules. Everything else in this file is
+machinery for keeping it.
+
+The output of this program becomes an **archival record**. A rip is a
+measurement of a physical object that may never be measured again, and every
+line of the log is a claim about that object which someone will later rely on
+without being able to re-check it. **A claim that is nearly true is a wrong
+claim**, and it is worse than no claim, because a missing field prompts a
+question and a confident wrong field does not.
+
+"100% correct" is achievable, but only under the right definition, and the
+definition is the point:
+
+> Correctness here is **never asserting more than was established**. It is not a
+> promise that the code has no bugs — nobody can promise that — it is a promise
+> that **every statement the program and its documentation make is exactly
+> supported by evidence that was actually obtained.**
+
+That version is reachable on every single run. Hold it absolutely.
+
+### The failure is almost always a word, not a number
+
+Numbers get checked. Words get assumed. Every precision defect found in this
+repo has been a word doing more work than the evidence behind it:
+
+- **A label asserts, even when its value disclaims.** `Cache defeat:` was
+  renamed to `Cache model:` because we report the size paranoia *models* and
+  explicitly say the drive was never probed. A qualifier in the value cannot
+  undo a claim the field name already made — a reader who greps the field name
+  is entitled to believe it.
+- **A name that does not discriminate is ambiguous the moment a sibling
+  appears.** `Peak level:` was fine alone and became ambiguous the instant
+  `True peak level:` was printed below it. It is now `Sample peak level:`.
+  Whenever a second thing of the same kind is added, re-read the first one's
+  name.
+- **Say what was observed, not what you infer from it.** "none reported by
+  libcdio" not "the disc has no CD-TEXT"; `unknown (sub-channel CRC
+  mismatches)` not `none`. The observation is checkable and the inference is
+  not.
+- **Nearly-right shorthand becomes a false claim when repeated.** "the audio is
+  bit-identical to upstream" was said many times in one session. The *files*
+  are not identical — they differ in `creation_time`, which differs between any
+  two rips by the same binary. The true statement is longer, stronger and more
+  useful: *the decoded PCM samples and every checksum over them are identical;
+  the container bytes differ only in a wall-clock timestamp, and the same binary
+  run twice differs the same way.* Prefer the long true sentence to the short
+  nearly-true one, every time.
+
+### Before any claim ships, in the log or in prose
+
+1. **Name the artifact.** "EAC's log reports N" is checkable; "EAC reports N" is
+   not. Same for "the decoded samples are identical" versus "the audio matches".
+2. **Check the verb.** Did we *defeat*, or *model*? *Detect*, or *fail to find*?
+   *Verify*, or *not contradict*? The strongest verb the evidence supports, and
+   not one notch stronger.
+3. **Check the scope.** "I verified the list you sent" is not "I verified your
+   inventory". "16/16 tests pass" is not "the feature works on hardware".
+4. **Check what the absence means.** If a field can be missing for two different
+   reasons, it must say which — or say that it cannot tell.
+5. **Ask what a reader would be entitled to conclude**, then confirm the
+   evidence entitles them to conclude exactly that, no more.
+
+When a word is imprecise but frozen by the contract — `Ripping errors:` counts
+operational failures and not read quality — **do not reword it silently.**
+Document the precise meaning, and propose the rename in a handshake round.
+
 ## Verifying your own work
 
 Every rule here exists because the obvious method produced a confident wrong
