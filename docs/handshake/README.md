@@ -17,34 +17,56 @@ record of the rounds themselves.
 
 ```
 repo            rmccann-hub/cyanrip
-branch          platterpus-fork
-commit          2f950c8                        <- build this
---version       cyanrip 0.9.4-rc1 (platterpus-fork-g2f950c8)
-fork release    r2
-source anchor   sha256/16 = 94dd6b3aa0454f8e   (over src/*.c and src/*.h)
-git tag         platterpus-fork-r2             (local only)
+branch          platterpus-fork                  <- the only branch to build from
+commit          d5d12ec                          <- build this
+--version       cyanrip 0.9.4-rc1+platterpus.3 (platterpus-fork-gd5d12ec)
+fork release    r3
+source anchor   sha256/16 = 8058479eb6459ba7     (over src/*.c and src/*.h)
+git tag         none published
 ```
 
-**Pin the commit, not the tag.** The git proxy in this environment refuses tag
-pushes (`HTTP 403`); `git ls-remote --tags origin` returns nothing, and no tag
-from this fork has ever reached the remote.
+**Pin the commit, not the tag, and not the branch tip.** The git proxy in this
+environment refuses tag pushes (`HTTP 403` — re-probed each round rather than
+assumed); `git ls-remote --tags origin` returns nothing, and no tag from this
+fork has ever reached the remote. The commit SHA is the only release identifier a
+consumer can resolve.
 
-`2f950c8` is the last commit that changes the binary — later commits are
+`d5d12ec` is the last commit that changes the binary — later commits are
 documentation, so the branch tip builds identically. A file cannot contain the
 hash of the commit that adds it, which is why this names the code commit.
 
-**Superseded, do not build:** `ad65a244` and `e1d800e`. Both carry the
-disc-image silence defect fixed in r2.
+**Do not use `0.9.4-rc3`.** That string was committed locally, never released,
+and withdrawn: it mints an identifier in upstream's namespace, which upstream can
+also mint. See `round-7.md` §2.
+
+**Superseded, do not build:** `2f950c8` (r2 — carries the read-liveness heartbeat
+that never fired, `round-7.md` §0), `ad65a244` and `e1d800e` (both carry the
+disc-image silence defect fixed in r2).
+
+### Branches on the remote
+
+As reported by `git ls-remote --heads origin`, which asks the remote — not by
+`git branch -r`, which prints a cache and once made this file list two branches
+that did not exist.
+
+| ref | what it is |
+|---|---|
+| `platterpus-fork` | integration branch, fast-forward only — **build from this** |
+| `master` | clean mirror of upstream `cyanreg/cyanrip`, never committed to |
+| `claude/pending-task-vg2afd` | session branch at the same commit |
 
 ## Round status
 
 | Round | State | Pin it settled on | Record |
 |---|---|---|---|
 | 5 | closed, GO | `e1d800e` *(superseded)* | `round-5.md` |
-| 6 | **open** | `2f950c8` (fork r2) | `round-6.md` |
+| 6 | closed from our side by round 7; verification file never received | `2f950c8` *(superseded)* | `round-6.md` |
+| 7 | **open** | `d5d12ec` (fork r3) | `round-7.md` |
 
-Round 6 is open pending Platterpus's verification file. When it arrives, the
-next round starts — and per the protocol a "no changes" round is still a round.
+Round 7 is open pending Platterpus's file. **Neither project releases while it is
+open**, and round 7 asks for more than a verification: a reciprocal handshake
+file, with Platterpus's own requirements and alerts to us. Per the protocol a "no
+changes" round is still a round; silence is not.
 
 ## What a consumer needs, and where it lives
 
