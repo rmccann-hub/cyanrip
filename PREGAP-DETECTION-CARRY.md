@@ -174,3 +174,77 @@ reported `Pregap LSN:`/cue `INDEX 00` output against what this same drive's TOC 
 reports (temporarily reverting the `cyanrip_main.c` call-site change back to
 `cdio_get_track_pregap_lsn()` gives that baseline). **Confirm the per-track CRC is unchanged
 either way** -- the same invariant this whole engagement has held to throughout.
+
+---
+
+# Addendum: round 5 changes to `pregap.c`
+
+Everything above describes the original PR #115 carry and remains accurate as a
+record of that audit. This section records what changed afterwards, so the
+document does not quietly describe a file that has moved on.
+
+## Carried from upstream PR #153: the raw-binary drive quirk
+
+Upstream PR #153 ("Harden pregap Q sub-channel search and make it unit-testable")
+is a later evolution of #115 by the same author. **The algorithm change was
+carried; the restructure was not.**
+
+Some drives' firmware returns the Q sub-channel track, index and MSF fields as
+**raw binary instead of the BCD the spec requires**. The CRC is written on the
+disc and computed over the BCD encoding, so on such a drive *every* sector fails
+validation and the search could only ever end in `unknown (sub-channel CRC
+mismatches)` — it never got off the ground. `verify_subq_crc()` now re-encodes to
+BCD and re-checks before giving up. XLD carries a workaround for the same
+firmware behaviour.
+
+Details worth keeping:
+
+- Detection is **sticky for the rest of one track's search**, so the cost is one
+  extra CRC on the first sector rather than on every sector. It is kept **local
+  to the search** rather than on the context — deliberately different from #153,
+  which stores it per-context — so one odd disc cannot poison the next.
+- `verify_subq_crc()` **mutates the buffer in place** when the fixup applies.
+  Callers must therefore use the validity flag the read helper returns and must
+  not re-check the CRC themselves; a second check would re-encode already-encoded
+  fields. The three call sites were rewritten for this.
+- An **all-zero CRC is now treated as invalid**. This resolves one of the six
+  inherited `TODO`s listed above — "whether a drive returning all-zero
+  sub-channel data should be detected rather than just failing the CRC check". It
+  is what a drive that returns no sub-channel data at all leaves in the buffer,
+  which is an absence of data, not a sector that happens to check out.
+
+## What was still NOT carried from #153, and why
+
+Its restructure moves the platform-specific read into `subq_read_mmc.c` /
+`subq_read_macos.c` behind a common header, with an ops-table seam for testing.
+The macOS file calls **`cdio_get_device_fd()`, which is not in libcdio 2.1.0** —
+verified against both the installed headers and the `.so` export table, not
+assumed. Carrying it would break the macOS build against current distributions,
+so `pregap.c` keeps the copy-pasted-struct workaround described above.
+
+The *testability* goal of #153 was met a different way: see below.
+
+## The path is now unit-tested without hardware
+
+`tests/subq.c` exercises the decoder on synthetic sectors — CRC, BCD conversion
+including the MMC-3 illegal-BCD passthrough (`>= 0xA0`), the compliant-drive path,
+the raw-binary recovery path and its stickiness, and the rejection cases
+(all-zero, corrupted payload, corrupted CRC).
+
+The CRC-16/GSM test vector was **computed independently of this code**, so the
+test pins the polynomial rather than agreeing with itself. Removing the fixup
+fails 9 of its checks.
+
+It `#include`s `pregap.c` rather than linking it, because the functions under
+test are static.
+
+## What this does and does not retire
+
+**Retired:** the risk that the sub-channel *decoder* is wrong. That is now
+testable, tested, and revert-proofed in this environment.
+
+**Not retired, unchanged from the section above:** the MMC read itself. No disc
+image reaches it — images resolve pregaps from the TOC — so a real
+`Pregap source: sub-channel` success has still **never executed anywhere**, and a
+drive exhibiting the binary-encoding quirk remains untested end to end. The
+hardware-validation procedure above is still the one to follow.
