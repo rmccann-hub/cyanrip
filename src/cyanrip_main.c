@@ -17,6 +17,8 @@
  */
 
 #include <time.h>
+#include <inttypes.h>
+#include <pthread.h>
 #include <sys/stat.h>
 
 #ifdef _WIN32
@@ -33,6 +35,7 @@
 #include "cue_writer.h"
 #include "cdtext.h"
 #include "cache_probe.h"
+#include "stall_watchdog.h"
 #include "checksums.h"
 #include "discid.h"
 #include "musicbrainz.h"
@@ -434,78 +437,31 @@ static const uint8_t silent_frame[CDIO_CD_FRAMESIZE_RAW] = { 0 };
 
 uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1] = { 0 };
 
-/* Liveness. A single frame read can sit inside cdio_paranoia_read_limited()
- * for minutes on a damaged sector, and until it returns the rip prints nothing
- * at all -- which is indistinguishable, from outside, from a process wedged in
- * an ioctl that will never come back. Those two need different words to a user
- * and different escalation on cancel.
- *
- * paranoia calls this callback throughout its internal retries, so emitting
- * from here is proof the read is still working rather than a guess that it
- * might be. Rate-limited, and only while a frame has been outstanding longer
- * than the threshold, so an ordinary rip stays silent: frames normally
- * complete in milliseconds and this never fires.
- *
- * stdout only. It is progress output, not part of the log contract. */
-/* Both configurable via -k. A consumer whose own stall detector fires at three
- * minutes does not want eighteen heartbeats before it would even call it a
- * stall (Platterpus, round 5 A6). -k 0 disables the reporting entirely. */
-static int64_t crip_stall_threshold_us = 10LL * 1000000LL;
-static int64_t crip_heartbeat_us       = 10LL * 1000000LL;
-
-static int64_t crip_frame_started;
+/* The stall heartbeat lives in stall_watchdog.c: it needs its own thread, and
+ * splitting it out is what lets tests/stall.c prove the heartbeat fires while
+ * a read is blocked and nothing is calling back. See that file's header for
+ * why the earlier callback-driven version could not. */
 static int crip_reading_track;
-static int64_t crip_last_heartbeat;
-static uint64_t crip_stall_callbacks;
 
 static void status_cb(long int n, paranoia_cb_mode_t status)
 {
     if (status >= PARANOIA_CB_READ && status <= PARANOIA_CB_FINISHED)
         paranoia_status[status]++;
-
-    if (!crip_frame_started)
-        return;
-
-    const int64_t now = av_gettime_relative();
-    if (!crip_stall_threshold_us ||
-        now - crip_frame_started < crip_stall_threshold_us)
-        return;
-
-    crip_stall_callbacks++;
-
-    if (crip_last_heartbeat && now - crip_last_heartbeat < crip_heartbeat_us)
-        return;
-
-    crip_last_heartbeat = now;
-    cyanrip_log(NULL, 0,
-                "\nStill reading track %i at LSN %li - %" PRId64 "s so far, "
-                "%" PRIu64 " paranoia callbacks since the frame began\n",
-                crip_reading_track, n,
-                (now - crip_frame_started) / 1000000LL, crip_stall_callbacks);
 }
 
-static const uint8_t *cyanrip_read_frame(cyanrip_ctx *ctx)
+static const uint8_t *cyanrip_read_frame(cyanrip_ctx *ctx, lsn_t lsn)
 {
     int err = 0;
     char *msg = NULL;
 
     const uint8_t *data;
 
-    crip_frame_started = av_gettime_relative();
-    crip_last_heartbeat = 0;
-    crip_stall_callbacks = 0;
+    crip_stall_read_begin(crip_reading_track, lsn);
 
     data = (void *)cdio_paranoia_read_limited(ctx->paranoia, &status_cb,
                                               ctx->settings.max_retries);
 
-    /* Say the stall ended, so a reader who saw a heartbeat is not left
-     * wondering whether the read ever came back. */
-    if (crip_last_heartbeat)
-        cyanrip_log(NULL, 0, "\nTrack %i resumed after %" PRId64 "s\n",
-                    crip_reading_track,
-                    (av_gettime_relative() - crip_frame_started) / 1000000LL);
-
-    crip_frame_started = 0;
+    crip_stall_read_end();
 
     msg = cdio_cddap_errors(ctx->drive);
     if (msg) {
@@ -595,8 +551,11 @@ static void search_for_drive_offset(cyanrip_ctx *ctx, int range)
 
         cyanrip_log(ctx, 0, "Loading data for track %i...\n", t_idx + 1);
         cdio_paranoia_seek(ctx->paranoia, start, SEEK_SET);
+
+        crip_reading_track = t_idx + 1;
+
         for (int i = 0; i < 2*range; i++) {
-            const uint8_t *data = cyanrip_read_frame(ctx);
+            const uint8_t *data = cyanrip_read_frame(ctx, start + i);
             memcpy(mem + bytes, data, CDIO_CD_FRAMESIZE_RAW);
             bytes += CDIO_CD_FRAMESIZE_RAW;
             if (quit_now) {
@@ -780,7 +739,7 @@ repeat_ripping:;
             cdio_paranoia_seek(ctx->paranoia, t->start_lsn + i, SEEK_SET);
 
         int bytes = CDIO_CD_FRAMESIZE_RAW;
-        const uint8_t *data = cyanrip_read_frame(ctx);
+        const uint8_t *data = cyanrip_read_frame(ctx, t->start_lsn + i);
 
         /* Account for partial frames caused by the offset */
         if (offs > 0) {
@@ -1440,8 +1399,7 @@ int main(int argc, char **argv)
 
     settings.max_retries                = retries;
     settings.cache_probe                = cache_probe;
-    crip_stall_threshold_us             = stall_secs * 1000000LL;
-    crip_heartbeat_us                   = crip_stall_threshold_us;
+    crip_stall_watchdog_config(stall_secs * 1000000LL, stall_secs * 1000000LL);
     settings.ripping_retries            = repeat_rips;
     settings.speed                      = speed;
     settings.bitrate                    = bitrate;
@@ -1883,6 +1841,13 @@ int main(int argc, char **argv)
         int measured = 0;
         crip_probe_drive_cache(ctx, &measured);
     }
+
+    /* From here until the "end:" cleanup, every drive read goes through
+     * cyanrip_read_frame(), so this is the whole window the stall watchdog
+     * needs to cover -- including the -f offset search, which reads the disc
+     * the same way and can stall the same way. */
+    crip_stall_watchdog_start();
+
     if (!ctx->settings.print_info_only)
         cyanrip_cue_start(ctx);
     setup_track_offsets_and_report(ctx);
@@ -2240,6 +2205,10 @@ int main(int argc, char **argv)
     if (!ctx->settings.print_info_only)
         cyanrip_log_finish_report(ctx);
 end:
+    /* No more disc reads past this point; join before anything else so the
+     * watchdog cannot print into the middle of the final report. */
+    crip_stall_watchdog_end();
+
     /* Wait for the encoders to finish and collect their status */
     for (int i = 0; i < ctx->nb_tracks; i++) {
         cyanrip_track *t = &ctx->tracks[i];

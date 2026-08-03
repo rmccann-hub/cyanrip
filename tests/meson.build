@@ -32,6 +32,18 @@ subq_test = executable('subq_test',
 )
 test('Q sub-channel decoding', subq_test)
 
+## Links the watchdog object and supplies its own cyanrip_log(), so the
+## assertions are against the formatted message rather than scraped stdout.
+## Deliberately calls nothing while a read is outstanding: that is the property
+## the callback-driven version lacked.
+stall_test = executable('stall_test',
+    sources: [ 'stall.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'stall_watchdog.c' ]),
+    dependencies: unit_test_deps + [ dependency('threads') ],
+)
+test('Stall watchdog', stall_test, timeout: 60)
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the

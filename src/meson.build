@@ -57,6 +57,7 @@ sources = [
 
     'cdtext.c',
     'cache_probe.c',
+    'stall_watchdog.c',
 
     'pregap.c',
 
