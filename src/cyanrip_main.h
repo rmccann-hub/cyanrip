@@ -87,6 +87,15 @@ enum cyanrip_secure_rip_state {
     CYANRIP_SECURE_RIP_LIMIT_HIT, /* Repeat limit hit before checksums matched */
 };
 
+/* Whether the disc carries CD-TEXT. libcdio hands back one NULL for both "the
+ * disc has no CD-TEXT block" and "this driver cannot read one", and gives us no
+ * way to tell them apart, so ABSENT means exactly "libcdio reported none" and
+ * the log says so rather than claiming the disc is bare. */
+enum cyanrip_cdtext_status {
+    CYANRIP_CDTEXT_ABSENT = 0, /* libcdio reported no CD-TEXT */
+    CYANRIP_CDTEXT_PRESENT, /* At least one field was read */
+};
+
 enum CRIPPathType {
     CRIP_PATH_COVERART, /* arg must be a CRIPArt * */
     CRIP_PATH_TRACK, /* arg must be a cyanrip_track * */
@@ -167,6 +176,7 @@ typedef struct cyanrip_track {
     int number; /* Human readable track number, may be 0 */
     int cd_track_number; /* Actual track on the CD, may be 0 */
     AVDictionary *meta; /* Disc's AVDictionary gets copied here */
+    AVDictionary *cdtext; /* This track's CD-TEXT, verbatim, never overwritten */
     int total_repeats; /* How many times the track was re-ripped */
     enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
     int64_t rip_time_us; /* Wall clock time spent ripping and encoding */
@@ -252,6 +262,14 @@ typedef struct cyanrip_ctx {
     /* Metadata */
     AVDictionary *meta;
     enum CRIPAccuDBStatus ar_db_status;
+
+    /* Disc-level CD-TEXT, verbatim. Kept apart from meta so it stays
+     * reportable no matter what later overwrites the tags. */
+    AVDictionary *cdtext;
+    enum cyanrip_cdtext_status cdtext_status;
+    int cdtext_nb_disc_fields;
+    int cdtext_nb_tagged_tracks;
+    const char *cdtext_language; /* Owned by libcdio, do not free */
 
     /* State */
     int success;

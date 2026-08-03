@@ -55,6 +55,8 @@ sources = [
 
     'cue_writer.c',
 
+    'cdtext.c',
+
     'pregap.c',
 
     # Version

@@ -31,6 +31,7 @@
 #include "cyanrip_log.h"
 #include "fun512.h"
 #include "cue_writer.h"
+#include "cdtext.h"
 #include "checksums.h"
 #include "discid.h"
 #include "musicbrainz.h"
@@ -89,6 +90,7 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
     crip_free_art(&t->art);
     av_dict_free(&t->meta);
+    av_dict_free(&t->cdtext);
     av_free(t->ar_db_entries);
 }
 
@@ -120,6 +122,7 @@ static void cyanrip_ctx_end(cyanrip_ctx **s)
 
     free(ctx->settings.dev_path);
     av_dict_free(&ctx->meta);
+    av_dict_free(&ctx->cdtext);
     av_freep(&ctx);
 
     *s = NULL;
@@ -1621,8 +1624,20 @@ int main(int argc, char **argv)
         goto end;
     }
 
+    /* Read the disc's own CD-TEXT before anything that could mask it. The
+     * fields are kept verbatim for the log either way; crip_cdtext_to_meta()
+     * only fills tags nothing else has claimed, so MusicBrainz below and the
+     * user's -a/-t further down still win. */
+    crip_fill_cdtext(ctx);
+    crip_cdtext_to_meta(ctx);
+
+    /* A disc that named itself in CD-TEXT does not get the "Unknown disc"
+     * placeholder, nor the fourcc suffix that disambiguates placeholders --
+     * same as when MusicBrainz supplies the title further down. */
+    const int album_from_cdtext = !!dict_get(ctx->meta, "album");
+
     /* Default album title */
-    av_dict_set(&ctx->meta, "album", "Unknown disc", 0);
+    av_dict_set(&ctx->meta, "album", "Unknown disc", AV_DICT_DONT_OVERWRITE);
     av_dict_set(&ctx->meta, "comment", "cyanrip "PROJECT_VERSION_STRING, 0);
     av_dict_set(&ctx->meta, "media",
                 ctx->settings.decode_hdcd ? "HDCD" : "CD", 0);
@@ -1630,7 +1645,7 @@ int main(int argc, char **argv)
     const char *mcn_id = dict_get(ctx->meta, "disc_mcn");
     const char *did_id = dict_get(ctx->meta, "musicbrainz_discid");
 
-    if (barcode_id || mcn_id || did_id) {
+    if (!album_from_cdtext && (barcode_id || mcn_id || did_id)) {
         char fourcc_id[5] = { '0', '0', '0', '0', '\0' };
         const char *id = NULL;
 

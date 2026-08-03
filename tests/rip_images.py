@@ -9,7 +9,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-CRIP = sys.argv[1]
+CRIP = str(Path(sys.argv[1]).resolve())
 FIX = Path(sys.argv[2])
 SCENARIO = sys.argv[3]
 
@@ -24,16 +24,22 @@ def fail(msg):
     fails += 1
 
 
-def crip(*args):
+def crip(*args, cwd=None):
     r = subprocess.run([CRIP, *map(str, args)], stdout=subprocess.PIPE,
-                       stderr=subprocess.STDOUT, timeout=60)
+                       stderr=subprocess.STDOUT, timeout=60, cwd=cwd)
     return r.returncode, r.stdout.decode(errors="replace")
 
 
-def rip(name, img, *extra):
-    ec, log = crip("-d", WORK / img, "-N", "-A", "-U", "-s", "0", "-P", "0",
+def rip(name, img, *extra, cwd=None):
+    # libcdio's cdrdao driver opens a .toc's FILE with the raw relative path
+    # instead of the absolute one it just computed (lib/driver/image/cdrdao.c,
+    # cdio_stdio_new(psz_field) rather than psz_filename -- bincue.c gets this
+    # right), so a .toc only loads when the process runs in its directory.
+    # cwd= lets a scenario satisfy that; everything else keeps absolute paths.
+    ec, log = crip("-d", img if cwd else WORK / img,
+                   "-N", "-A", "-U", "-s", "0", "-P", "0",
                    "-o", "flac", "-D", WORK / f"out_{name}", "-F", "{track}",
-                   "-L", "log", "-M", "sheet", *extra)
+                   "-L", "log", "-M", "sheet", *extra, cwd=cwd)
     (WORK / f"{name}.log").write_text(log)
     if ec != 0:
         fail(f"{name}: cyanrip exited with {ec} (log follows)")
@@ -200,6 +206,53 @@ def sc_errors():
         fail(f"longname: expected clean failure (1), got exit {ec}")
 
 
+def sc_cdtext():
+    # A cdrdao .toc image is the only disc image format libcdio parses CD-TEXT
+    # from, so it stands in for a CD-TEXT disc that no drive is needed to read.
+    rip("cdtext", "cdtext.toc", cwd=WORK)
+    log = (WORK / "out_cdtext" / "log.log").read_text()
+
+    if "CD-TEXT:        present (English, 5 disc fields, 2 of 2 tracks tagged)" not in log:
+        fail("cdtext: disc-level CD-TEXT summary line missing or wrong")
+
+    # Disc-level fields, verbatim
+    for field, value in (("title", "Probe Disc Title"),
+                         ("performer", "Probe Disc Performer"),
+                         ("message", "Probe disc message"),
+                         ("upc_ean", "0123456789012"),
+                         ("discid", "PROBE-DISCID")):
+        if f"{field}:" not in log or value not in log:
+            fail(f"cdtext: disc field {field}={value!r} missing")
+
+    # Per-track fields, including the two that deliberately reach no tag
+    for value in ("Probe Track One", "Probe Artist One", "Probe Writer One",
+                  "Probe Composer One", "Probe Arranger One",
+                  "Probe Track Two", "Probe Artist Two"):
+        if value not in log:
+            fail(f"cdtext: track field {value!r} missing")
+
+    # CD-TEXT fills empty tags, so the disc is named rather than "Unknown disc"
+    if "Album:          Probe Disc Title" not in log:
+        fail("cdtext: album not filled from CD-TEXT")
+    if "Unknown disc" in log:
+        fail("cdtext: placeholder album survived a named CD-TEXT disc")
+
+    # ...but never overrides what the user asked for
+    rip("cdtext_user", "cdtext.toc", "-a", "album=User Album", cwd=WORK)
+    ulog = (WORK / "out_cdtext_user" / "log.log").read_text()
+    if "Album:          User Album" not in ulog:
+        fail("cdtext_user: -a did not win over CD-TEXT")
+    if "title:     Probe Disc Title" not in ulog:
+        fail("cdtext_user: CD-TEXT block lost when a tag overrode it")
+
+    # A disc with no CD-TEXT must say so, and say it was libcdio that reported
+    # nothing -- not that the disc is definitely bare
+    rip("cdtext_none", "basic.cue")
+    nlog = (WORK / "out_cdtext_none" / "log.log").read_text()
+    if "CD-TEXT:        none reported by libcdio" not in nlog:
+        fail("cdtext_none: absent CD-TEXT not reported")
+
+
 def sc_verify_log():
     # CLI wiring only, the checksum logic itself is unit-tested
     rip("basic", "basic.cue")
@@ -221,6 +274,8 @@ with tempfile.TemporaryDirectory() as tmpdir:
     for f in FIX.glob("*.cue"):
         shutil.copy(f, WORK)
     shutil.copy(FIX / "cdda.nrg", WORK)
+    shutil.copy(FIX / "cdtext.toc", WORK)
+    shutil.copy(FIX / "cdda.bin", WORK / "cdtext.bin")
     for name in ("basic", "pregap", "preemph"):
         shutil.copy(FIX / "cdda.bin", WORK / f"{name}.bin")
     shutil.copy(FIX / "mixed.bin", WORK / "mixed.bin")

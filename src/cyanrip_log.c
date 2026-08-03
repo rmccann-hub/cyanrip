@@ -33,6 +33,46 @@
     if (dict_get(DICT, TAG))                                                   \
         cyanrip_log(ctx, 0, FORMAT, dict_get(DICT, TAG));                      \
 
+/* Prints one CD-TEXT dictionary as an aligned key: value block, matching the
+ * Metadata block's layout. Returns nothing; an empty dictionary prints
+ * nothing, so callers decide whether a heading is warranted. */
+static void print_cdtext_fields(cyanrip_ctx *ctx, AVDictionary *cdtext,
+                                const char *indent)
+{
+    int max_key_len = 0;
+    const AVDictionaryEntry *d = NULL;
+    while ((d = av_dict_get(cdtext, "", d, AV_DICT_IGNORE_SUFFIX)))
+        max_key_len = FFMAX(strlen(d->key), max_key_len);
+
+    d = NULL;
+    while ((d = av_dict_get(cdtext, "", d, AV_DICT_IGNORE_SUFFIX))) {
+        cyanrip_log(ctx, 0, "%s%s: ", indent, d->key);
+        for (int i = 0; i < (max_key_len - (int)strlen(d->key)); i++)
+            cyanrip_log(ctx, 0, " ");
+        cyanrip_log(ctx, 0, "%s\n", d->value);
+    }
+}
+
+static void print_cdtext(cyanrip_ctx *ctx)
+{
+    if (ctx->cdtext_status != CYANRIP_CDTEXT_PRESENT) {
+        /* Not "the disc has none": libcdio returns the same nothing for a disc
+         * without a CD-TEXT block and for a driver that cannot read one, and
+         * exposes no way to tell the two apart. Say what was observed. */
+        cyanrip_log(ctx, 0, "CD-TEXT:        none reported by libcdio "
+                            "(absent, or unreadable by this driver)\n");
+        return;
+    }
+
+    cyanrip_log(ctx, 0, "CD-TEXT:        present (%s, %i disc %s, %i of %i tracks tagged)\n",
+                ctx->cdtext_language ? ctx->cdtext_language : "unknown language",
+                ctx->cdtext_nb_disc_fields,
+                ctx->cdtext_nb_disc_fields == 1 ? "field" : "fields",
+                ctx->cdtext_nb_tagged_tracks, ctx->nb_tracks);
+
+    print_cdtext_fields(ctx, ctx->cdtext, "    ");
+}
+
 static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     if (t->pregap_lsn != CDIO_INVALID_LSN) {
@@ -221,6 +261,16 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "%s\n", d->value);
     }
 
+    /* The disc's own words for this track, verbatim and separate from the
+     * Metadata block above, which by now may have been overwritten by
+     * MusicBrainz or by a -t value. Absent when the disc tagged no fields for
+     * this track -- the disc-level CD-TEXT line says how many tracks were
+     * tagged, so a missing block here is not ambiguous. */
+    if (av_dict_count(t->cdtext)) {
+        cyanrip_log(ctx, 0, "\n  CD-TEXT:\n");
+        print_cdtext_fields(ctx, t->cdtext, "    ");
+    }
+
     if (!ctx->settings.disable_coverart_embedding && (t->art.source_url || ctx->nb_cover_arts)) {
         const char *codec_name = NULL;
         CRIPArt *art = &t->art;
@@ -292,6 +342,7 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
                     (ctx->mcap & CDIO_DRIVE_CAP_MISC_SELECT_SPEED) ? "changeable" : "unchangeable");
     cyanrip_log(ctx, 0, "C2 errors:      %s\n", (ctx->rcap & CDIO_DRIVE_CAP_READ_C2_ERRS) ?
                 "supported by drive, not used" : "unsupported by drive");
+    print_cdtext(ctx);
     if (ctx->settings.paranoia_level == crip_max_paranoia_level)
         cyanrip_log(ctx, 0, "Paranoia level: %s\n", "max");
     else if (ctx->settings.paranoia_level == 0)

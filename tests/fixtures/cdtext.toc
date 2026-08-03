@@ -1,0 +1,33 @@
+CD_DA
+
+CD_TEXT {
+  LANGUAGE_MAP { 0 : EN }
+  LANGUAGE 0 {
+    TITLE "Probe Disc Title"
+    PERFORMER "Probe Disc Performer"
+    DISC_ID "PROBE-DISCID"
+    UPC_EAN "0123456789012"
+    MESSAGE "Probe disc message"
+  }
+}
+
+TRACK AUDIO
+CD_TEXT {
+  LANGUAGE 0 {
+    TITLE "Probe Track One"
+    PERFORMER "Probe Artist One"
+    SONGWRITER "Probe Writer One"
+    COMPOSER "Probe Composer One"
+    ARRANGER "Probe Arranger One"
+  }
+}
+FILE "cdtext.bin" 0 00:04:00
+
+TRACK AUDIO
+CD_TEXT {
+  LANGUAGE 0 {
+    TITLE "Probe Track Two"
+    PERFORMER "Probe Artist Two"
+  }
+}
+FILE "cdtext.bin" 00:04:00 00:04:00
