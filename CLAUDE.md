@@ -332,6 +332,23 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   `static` prefix that broke a multi-line match, a `sed` that left `|| ||`, and a
   revert that reverted one of two labels. Count the matches, assert the count,
   per edit.
+- **"Identical to the other implementation" is not "correct".** The audio-safety
+  check compared this fork against upstream and found them identical for a whole
+  session — while both were emitting 99.7% silence on every disc image, because
+  they shared an inherited defect. Two builds with the same bug agree perfectly.
+  **Assert against the source artifact**, not against a sibling: the fixture
+  `.bin` is the ground truth for an image rip, and comparing to it found in one
+  command what a session of cross-build diffing could not.
+- **A comparison harness must pin the settings the thing under test varies.**
+  That same script omitted `-P 0` while every test scenario passed it, so the
+  suite and the harness silently exercised different code paths, and the one
+  nobody ran was the broken one. If a flag changes behaviour, the harness states
+  it rather than inheriting a default.
+- **Check that the data you are comparing is non-trivial.** Silence compares
+  equal to silence, an empty file compares equal to an empty file, and an empty
+  `astats` output parses as no peaks at all. Every one of those read as success
+  here. Before believing a match, assert the content is what you think — a
+  percentage of non-zero samples, a line count, a magnitude.
 - **A fixture whose numbers agree by construction cannot discriminate.** The
   per-track paranoia counters sum to the disc totals in the golden log, so a
   consumer that summed the per-track blocks and one that read the disc block
@@ -459,6 +476,16 @@ Record these rather than rediscovering them:
   `psz_filename`; `bincue.c` gets this right). A `.toc` therefore only loads
   when the process's working directory is the image's directory —
   `tests/rip_images.py` sets `cwd=` for exactly this.
+- **libcdio-paranoia sniffs sample data to guess byte order.** `data_bigendianp()`
+  votes on which interpretation looks more like audio. Real music votes
+  correctly; a synthetic full-scale square wave is *smoother* byte-swapped, so
+  it silently rips byte-reversed. Any synthetic test signal must be checked
+  against its source bytes before conclusions are drawn from it.
+- **Paranoia's cache model doubles as its read chunk size.** Setting it small
+  enough to stop the backseek probe over-reading the leadout leaves the
+  verification logic no overlap and it emits zeroes. On disc images the safe
+  window measured 5-256 sectors; upstream ships 1. See the table in
+  `cyanrip_main.c`.
 - **`cdio_get_device_fd()` is not in libcdio 2.1.0.** Verified against the
   installed headers *and* the `.so` export table. Upstream PR #153's macOS
   sub-channel path calls it, which is why that PR's restructure is not carried
