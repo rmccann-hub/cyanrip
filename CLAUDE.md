@@ -493,13 +493,20 @@ a housekeeping one. The rules, in force from r3:
 
 Two things that follow, and have already caused confusion:
 
-- **A stale branch pointing at old work is a wrong answer waiting to be given.**
-  As of r3 this repo carried `fork-main`, `platterpus-integration` and a session
-  branch all sitting at one old commit, none holding anything unique. Nobody was
-  misled *yet*, but "which branch do I build?" had four plausible answers and one
-  correct one. Check for these before a release: `git rev-list --count
-  origin/<b> ^origin/platterpus-fork` is `0` for every branch that is safe to
-  delete, and non-zero means it holds work nobody merged.
+- **`git branch -r` is a cache, not the remote.** Before r3 this repo's local
+  refs listed `fork-main` and `platterpus-integration` sitting at an old commit,
+  and they were reported as remote branches making "which branch do I build?"
+  ambiguous. They were stale remote-tracking refs; `git fetch --prune` deleted
+  both, because neither existed on the remote. **`git ls-remote --heads origin`
+  queries the remote; `git branch -r` prints whatever was true last time
+  something fetched.** The same holds for tags: `platterpus-fork-r2` exists
+  locally and `git ls-remote --tags origin` returns nothing, so no release of
+  this fork has ever been published as a tag. Ask the remote before describing
+  it — this is the version-control instance of answering from the artifact.
+- **A branch that really does hold unmerged work is a different problem.**
+  `git rev-list --count origin/<b> ^origin/platterpus-fork` is `0` for a branch
+  safe to delete and non-zero for one holding work nobody merged. Run it against
+  the *pruned* ref list, or it reports on branches that no longer exist.
 - **Rewriting unpushed history is cheap and correct; rewriting pushed history is
   neither.** The r3 work was committed locally as "Release 0.9.4-rc3", a release
   that never happened. Because it had not been pushed, the fix was to rewrite it
