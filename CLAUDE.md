@@ -483,10 +483,16 @@ a housekeeping one. The rules, in force from r3:
   developed. They merge into `platterpus-fork` **fast-forward only** — no merge
   commits, so `platterpus-fork`'s history stays a straight line a consumer can
   bisect. Delete the topic branch after it lands.
-- **Tags** `platterpus-fork-rN` mark releases, and a tag is the only thing that
-  is ever *permanent*. **A release is tagged only when the handshake round that
-  reviewed it has closed** — CLAUDE.md's seam rule already says no release while
-  a round is open, and the tag is where that rule bites.
+- **Tags** `platterpus-fork-rN` mark releases, and **a release is tagged only
+  once the handshake round that reviewed it has closed** — the seam rule already
+  says no release while a round is open, and the tag is where that rule bites.
+  **But a tag cannot currently be published from this environment.** The git
+  proxy refuses tag pushes with `HTTP 403`, and `git ls-remote --tags origin`
+  returns nothing, so no release of this fork has ever been reachable by tag from
+  the remote. This is recorded in `docs/handshake/README.md` and was re-probed
+  with a throwaway tag rather than assumed. Until it changes, **the commit SHA is
+  the only durable release identifier a consumer can resolve** — which is why the
+  handshake pins a SHA and says plainly that the tag is local-only.
 - **Platterpus pins a commit SHA, never a branch tip.** A branch tip is a moving
   target and cannot be quoted in a verification. Every handshake file states the
   pin as a SHA and names the branch only as context.
@@ -499,10 +505,8 @@ Two things that follow, and have already caused confusion:
   ambiguous. They were stale remote-tracking refs; `git fetch --prune` deleted
   both, because neither existed on the remote. **`git ls-remote --heads origin`
   queries the remote; `git branch -r` prints whatever was true last time
-  something fetched.** The same holds for tags: `platterpus-fork-r2` exists
-  locally and `git ls-remote --tags origin` returns nothing, so no release of
-  this fork has ever been published as a tag. Ask the remote before describing
-  it — this is the version-control instance of answering from the artifact.
+  something fetched.** Ask the remote before describing it — this is the
+  version-control instance of answering from the artifact.
 - **A branch that really does hold unmerged work is a different problem.**
   `git rev-list --count origin/<b> ^origin/platterpus-fork` is `0` for a branch
   safe to delete and non-zero for one holding work nobody merged. Run it against
