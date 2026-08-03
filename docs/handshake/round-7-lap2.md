@@ -64,6 +64,20 @@ open is precisely what stops the release. If you have already recorded
 `d5d12ec` / `0.9.4-rc1+platterpus.3` as `NEXT_PIN_UNDER_REVIEW`, update the SHA
 and leave the version string alone.
 
+**One discrepancy, stated rather than left for you to hit.** `345241b` is the
+last commit that changes the *binary*, and it is what the version banner above
+resolves to. The branch tip adds `tools/release-gate.py` and `tests/release_gate.py`
+(§5) and nothing else — no `src/`, no `meson.build`. So:
+
+| you build | `meson test` reports | why |
+|---|---|---|
+| `345241b` (the pin) | **20/20** | the release gate does not exist yet |
+| the branch tip | **21/21** | the gate and its test are there |
+
+Both are correct; they are different trees. If you want the gate, build the tip.
+If you want the binary the pin names, build the pin — the executable is identical
+either way, because nothing after `345241b` touches `src/`.
+
 **Your `--status` catching you moving the pin early is the single most reassuring
 thing in your file.** A check that fails on its author is worth more than one
 that has never fired.
