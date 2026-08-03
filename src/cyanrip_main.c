@@ -430,8 +430,11 @@ uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1] = { 0 };
  * complete in milliseconds and this never fires.
  *
  * stdout only. It is progress output, not part of the log contract. */
-#define CRIP_STALL_THRESHOLD_US (10LL * 1000000LL)
-#define CRIP_HEARTBEAT_US       (10LL * 1000000LL)
+/* Both configurable via -k. A consumer whose own stall detector fires at three
+ * minutes does not want eighteen heartbeats before it would even call it a
+ * stall (Platterpus, round 5 A6). -k 0 disables the reporting entirely. */
+static int64_t crip_stall_threshold_us = 10LL * 1000000LL;
+static int64_t crip_heartbeat_us       = 10LL * 1000000LL;
 
 static int64_t crip_frame_started;
 static int crip_reading_track;
@@ -447,12 +450,13 @@ static void status_cb(long int n, paranoia_cb_mode_t status)
         return;
 
     const int64_t now = av_gettime_relative();
-    if (now - crip_frame_started < CRIP_STALL_THRESHOLD_US)
+    if (!crip_stall_threshold_us ||
+        now - crip_frame_started < crip_stall_threshold_us)
         return;
 
     crip_stall_callbacks++;
 
-    if (crip_last_heartbeat && now - crip_last_heartbeat < CRIP_HEARTBEAT_US)
+    if (crip_last_heartbeat && now - crip_last_heartbeat < crip_heartbeat_us)
         return;
 
     crip_last_heartbeat = now;
@@ -1295,6 +1299,8 @@ int main(int argc, char **argv)
                 "Rip tracks until checksums match N times (for damaged CDs)");
     GEN_OPT_ONE(opts_list, int32_t, speed, "S", 1, 1, 0, 0, INT32_MAX,
                 "Set drive speed");
+    GEN_OPT_ONE(opts_list, int32_t, stall_secs, "k", 1, 1, 10, 0, INT32_MAX,
+                "Seconds a frame read must stall before reporting liveness (0 disables)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
                 "Track pregap handling: N=default|drop|merge|track (repeatable)");
     GEN_OPT_ONE(opts_list, char *,  paranoia, "P", 1, 1, NULL, 0, 0,
@@ -1414,6 +1420,8 @@ int main(int argc, char **argv)
         (int)ceilf(abs(offset) / (float)(CDIO_CD_FRAMESIZE_RAW >> 2));
 
     settings.max_retries                = retries;
+    crip_stall_threshold_us             = stall_secs * 1000000LL;
+    crip_heartbeat_us                   = crip_stall_threshold_us;
     settings.ripping_retries            = repeat_rips;
     settings.speed                      = speed;
     settings.bitrate                    = bitrate;

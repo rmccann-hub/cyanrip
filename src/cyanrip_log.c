@@ -253,6 +253,26 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                     100.0 * pow(10.0, t->ebu_sample_peak / 20.0),
                     t->ebu_sample_peak);
         cyanrip_log(ctx, 0, "    True peak level:   %.1f dBFS\n", t->ebu_true_peak);
+        /* EBU R128 loudness, ours rather than libavfilter's. The values were
+         * already computed and held per track and then discarded -- the same
+         * dead-field shape as the sample and true peaks above. Until now the
+         * only place a consumer could read integrated loudness or loudness
+         * range was FFmpeg's own summary block, whose wording is not ours and
+         * moves when FFmpeg does (Platterpus, round 5 A5).
+         *
+         * "(R128)" is not decoration. libavfilter's own summary block already
+         * prints headings spelled exactly "Integrated loudness:" and "Loudness
+         * range:", so an unqualified label here would collide with it and a
+         * consumer grepping the field name would match two different lines --
+         * the same defect that made a bare "Peak level" ambiguous once a true
+         * peak was printed beneath it.
+         *
+         * Units are not interchangeable: loudness is LUFS (absolute), range is
+         * LU (a difference), and the LRA bounds are LUFS again. */
+        cyanrip_log(ctx, 0, "    Integrated loudness (R128): %.1f LUFS\n",
+                    t->ebu_integrated);
+        cyanrip_log(ctx, 0, "    Loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)\n",
+                    t->ebu_range, t->ebu_lra_low, t->ebu_lra_high);
     }
     if (t->rip_time_us > 0) {
         cyanrip_log(ctx, 0, "    Extraction speed:  %.1fx\n",

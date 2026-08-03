@@ -111,6 +111,12 @@ def sc_cli():
     if crip("-h")[0] != 0:
         fail("cli: -h exited non-zero")
 
+    # -k (read-liveness threshold) must be accepted across its range, including
+    # 0, which disables the reporting entirely.
+    for k in ("0", "1", "45"):
+        if crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0", "-k", k)[0] != 0:
+            fail(f"cli: -k {k} was rejected")
+
     # A genuinely unknown flag must still fail, diagnosably, on stdout
     ec, out = crip("--no-such-flag")
     if ec != 1:
@@ -334,6 +340,15 @@ def sc_reporting():
         fail("reporting: no Sample peak level: line")
     if not re.search(r"^\s+True peak level:\s+-?[\d.]+ dBFS", log, re.M):
         fail("reporting: no True peak level: line")
+
+    # R128 loudness must be ours and must not collide with libavfilter's own
+    # "Integrated loudness:" / "Loudness range:" headings.
+    for pat, what in ((r"^\s+Integrated loudness \(R128\):\s+-?[\d.]+ LUFS", "integrated"),
+                      (r"^\s+Loudness range \(R128\):\s+[\d.]+ LU \(-?[\d.]+ to -?[\d.]+ LUFS\)", "range")):
+        if not re.search(pat, log, re.M):
+            fail(f"reporting: no fork-owned R128 {what} line")
+    if re.search(r"^\s{4}Integrated loudness:", log, re.M):
+        fail("reporting: unqualified 'Integrated loudness:' collides with libavfilter's")
 
     m = re.search(r"^Encoder:\s+libavformat (\d+)\.(\d+)\.(\d+)", log, re.M)
     if not m:
