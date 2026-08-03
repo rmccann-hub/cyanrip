@@ -417,10 +417,50 @@ static const uint8_t silent_frame[CDIO_CD_FRAMESIZE_RAW] = { 0 };
 
 uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1] = { 0 };
 
+/* Liveness. A single frame read can sit inside cdio_paranoia_read_limited()
+ * for minutes on a damaged sector, and until it returns the rip prints nothing
+ * at all -- which is indistinguishable, from outside, from a process wedged in
+ * an ioctl that will never come back. Those two need different words to a user
+ * and different escalation on cancel.
+ *
+ * paranoia calls this callback throughout its internal retries, so emitting
+ * from here is proof the read is still working rather than a guess that it
+ * might be. Rate-limited, and only while a frame has been outstanding longer
+ * than the threshold, so an ordinary rip stays silent: frames normally
+ * complete in milliseconds and this never fires.
+ *
+ * stdout only. It is progress output, not part of the log contract. */
+#define CRIP_STALL_THRESHOLD_US (10LL * 1000000LL)
+#define CRIP_HEARTBEAT_US       (10LL * 1000000LL)
+
+static int64_t crip_frame_started;
+static int crip_reading_track;
+static int64_t crip_last_heartbeat;
+static uint64_t crip_stall_callbacks;
+
 static void status_cb(long int n, paranoia_cb_mode_t status)
 {
     if (status >= PARANOIA_CB_READ && status <= PARANOIA_CB_FINISHED)
         paranoia_status[status]++;
+
+    if (!crip_frame_started)
+        return;
+
+    const int64_t now = av_gettime_relative();
+    if (now - crip_frame_started < CRIP_STALL_THRESHOLD_US)
+        return;
+
+    crip_stall_callbacks++;
+
+    if (crip_last_heartbeat && now - crip_last_heartbeat < CRIP_HEARTBEAT_US)
+        return;
+
+    crip_last_heartbeat = now;
+    cyanrip_log(NULL, 0,
+                "\nStill reading track %i at LSN %li - %" PRId64 "s so far, "
+                "%" PRIu64 " paranoia callbacks since the frame began\n",
+                crip_reading_track, n,
+                (now - crip_frame_started) / 1000000LL, crip_stall_callbacks);
 }
 
 static const uint8_t *cyanrip_read_frame(cyanrip_ctx *ctx)
@@ -429,8 +469,22 @@ static const uint8_t *cyanrip_read_frame(cyanrip_ctx *ctx)
     char *msg = NULL;
 
     const uint8_t *data;
+
+    crip_frame_started = av_gettime_relative();
+    crip_last_heartbeat = 0;
+    crip_stall_callbacks = 0;
+
     data = (void *)cdio_paranoia_read_limited(ctx->paranoia, &status_cb,
                                               ctx->settings.max_retries);
+
+    /* Say the stall ended, so a reader who saw a heartbeat is not left
+     * wondering whether the read ever came back. */
+    if (crip_last_heartbeat)
+        cyanrip_log(NULL, 0, "\nTrack %i resumed after %" PRId64 "s\n",
+                    crip_reading_track,
+                    (av_gettime_relative() - crip_frame_started) / 1000000LL);
+
+    crip_frame_started = 0;
 
     msg = cdio_cddap_errors(ctx->drive);
     if (msg) {
@@ -654,6 +708,14 @@ repeat_ripping:;
     cdio_paranoia_seek(ctx->paranoia, t->start_lsn, SEEK_SET);
 
     int start_err = ctx->total_error_count;
+
+    /* Snapshot the paranoia counters so this track's share can be recovered as
+     * a delta. They are process-global because libcdio-paranoia's callback
+     * carries no context pointer to hang them off. */
+    uint64_t start_paranoia[PARANOIA_CB_FINISHED + 1];
+    memcpy(start_paranoia, paranoia_status, sizeof(start_paranoia));
+
+    crip_reading_track = t->number;
 
     /* Checksum */
     cyanrip_checksum_ctx checksum_ctx;
@@ -906,6 +968,8 @@ end:
 
     t->total_repeats = total_repeats;
     t->rip_time_us = av_gettime_relative() - track_start_time;
+    for (int i = 0; i <= PARANOIA_CB_FINISHED; i++)
+        t->paranoia_status[i] = paranoia_status[i] - start_paranoia[i];
     if (!quit_now && !ret) {
         cyanrip_finalize_encoding(ctx, t);
         if (ctx->settings.enable_replaygain)

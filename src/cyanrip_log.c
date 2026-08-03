@@ -21,6 +21,7 @@
 #include <pthread.h>
 
 #include <libavutil/avutil.h>
+#include <libavformat/avformat.h>
 #include <libavutil/sha512.h>
 #include <libavutil/base64.h>
 
@@ -104,6 +105,48 @@ static void print_cache_defeat(cyanrip_ctx *ctx)
                     sectors, sectors == 1 ? "" : "s");
         break;
     }
+}
+
+/* Prints the paranoia callback counters that are non-zero, aligned on the
+ * longest name. Shared by the disc summary and the per-track block so the two
+ * cannot drift apart in wording or padding. Returns how many were printed, so
+ * a caller can tell "all zero" from "printed nothing". */
+static int print_paranoia_counts(cyanrip_ctx *ctx, const uint64_t *counts,
+                                 const char *indent)
+{
+    int printed = 0;
+
+#define PCHECK(PROP)                                                           \
+    if (counts[PARANOIA_CB_ ## PROP]) {                                        \
+        const char *pstr = #PROP ": ";                                         \
+        cyanrip_log(ctx, 0, "%s%s", indent, pstr);                             \
+        int padding = strlen("FIXUP_DROPPED: ") - strlen(pstr);                \
+        for (int i = 0; i < padding; i++)                                      \
+            cyanrip_log(ctx, 0, " ");                                          \
+        cyanrip_log(ctx, 0, "%lu\n", counts[PARANOIA_CB_ ## PROP]);            \
+        printed++;                                                             \
+    }
+
+    PCHECK(READ)
+    PCHECK(VERIFY)
+    PCHECK(FIXUP_EDGE)
+    PCHECK(FIXUP_ATOM)
+    PCHECK(SCRATCH)
+    PCHECK(REPAIR)
+    PCHECK(SKIP)
+    PCHECK(DRIFT)
+    PCHECK(BACKOFF)
+    PCHECK(OVERLAP)
+    PCHECK(FIXUP_DROPPED)
+    PCHECK(FIXUP_DUPED)
+    PCHECK(READERR)
+    PCHECK(CACHEERR)
+    PCHECK(WROTE)
+    PCHECK(FINISHED)
+
+#undef PCHECK
+
+    return printed;
 }
 
 static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
@@ -309,6 +352,17 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         print_cdtext_fields(ctx, t->cdtext, "    ");
     }
 
+    /* This track's share of the disc's paranoia work. The disc-level totals at
+     * the end say how much effort the rip cost; these say which track cost it,
+     * which is the difference between "this disc needed 1749 verifies" and
+     * "track 3 needed 1400 of them". Counts include every -Z re-read of this
+     * track. Data tracks are read outside paranoia, so they have none. */
+    if (!t->track_is_data) {
+        cyanrip_log(ctx, 0, "\n  Paranoia status counts:\n");
+        if (!print_paranoia_counts(ctx, t->paranoia_status, "    "))
+            cyanrip_log(ctx, 0, "    none\n");
+    }
+
     if (!ctx->settings.disable_coverart_embedding && (t->art.source_url || ctx->nb_cover_arts)) {
         const char *codec_name = NULL;
         CRIPArt *art = &t->art;
@@ -381,6 +435,16 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "C2 errors:      %s\n", (ctx->rcap & CDIO_DRIVE_CAP_READ_C2_ERRS) ?
                 "supported by drive, not used" : "unsupported by drive");
     print_cdtext(ctx);
+    /* Name the library that actually encodes the audio, not just the ripper.
+     * cyanrip encodes in-process through libavformat/libavcodec, so the FLAC
+     * vendor string in the output files reads "LavfNN.nn.nn" and the log --
+     * the archival record -- named the ripper and not the encoder. Two rips
+     * made against different FFmpeg majors were indistinguishable from the log
+     * alone. */
+    cyanrip_log(ctx, 0, "Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)\n",
+                LIBAVFORMAT_VERSION_MAJOR, LIBAVFORMAT_VERSION_MINOR, LIBAVFORMAT_VERSION_MICRO,
+                LIBAVCODEC_VERSION_MAJOR, LIBAVCODEC_VERSION_MINOR, LIBAVCODEC_VERSION_MICRO,
+                av_version_info());
     if (ctx->settings.paranoia_level == crip_max_paranoia_level)
         cyanrip_log(ctx, 0, "Paranoia level: %s\n", "max");
     else if (ctx->settings.paranoia_level == 0)
@@ -466,39 +530,10 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
         cyanrip_log(ctx, 0, "\n");
     }
 
-    int has_status = 0;
     cyanrip_log(ctx, 0, "Paranoia status counts:\n");
-
-#define PCHECK(PROP)                                                           \
-    if (paranoia_status[PARANOIA_CB_ ## PROP]) {                               \
-        const char *pstr = "  " #PROP ": ";                                  \
-        cyanrip_log(ctx, 0, "%s", pstr);                                       \
-        int padding = strlen("  FIXUP_DROPPED: ") - strlen(pstr);            \
-        for (int i = 0; i < padding; i++)                                      \
-            cyanrip_log(ctx, 0, " ");                                          \
-        cyanrip_log(ctx, 0, "%lu\n", paranoia_status[PARANOIA_CB_ ## PROP]);   \
-        has_status |= !!paranoia_status[PARANOIA_CB_ ## PROP];                 \
-    }
-
-    PCHECK(READ)
-    PCHECK(VERIFY)
-    PCHECK(FIXUP_EDGE)
-    PCHECK(FIXUP_ATOM)
-    PCHECK(SCRATCH)
-    PCHECK(REPAIR)
-    PCHECK(SKIP)
-    PCHECK(DRIFT)
-    PCHECK(BACKOFF)
-    PCHECK(OVERLAP)
-    PCHECK(FIXUP_DROPPED)
-    PCHECK(FIXUP_DUPED)
-    PCHECK(READERR)
-    PCHECK(CACHEERR)
-    PCHECK(WROTE)
-    PCHECK(FINISHED)
-    cyanrip_log(ctx, 0, "%s\n", has_status ? "" : "  none\n");
-
-#undef PCHECK
+    if (!print_paranoia_counts(ctx, paranoia_status, "  "))
+        cyanrip_log(ctx, 0, "  none\n");
+    cyanrip_log(ctx, 0, "\n");
 
     cyanrip_log(ctx, 0, "Ripping errors: %i\n", ctx->total_error_count);
 

@@ -3,6 +3,7 @@
 # Usage: rip_images.py <cyanrip-binary> <fixtures-dir> <scenario>
 
 import hashlib
+import re
 import shutil
 import subprocess
 import sys
@@ -253,6 +254,52 @@ def sc_cdtext():
         fail("cdtext_none: absent CD-TEXT not reported")
 
 
+def sc_reporting():
+    # Per-track paranoia counters must account for the disc total exactly.
+    # They are a delta of a process-global array, so an off-by-one in the
+    # snapshot would show up here and nowhere else.
+    rip("rep", "basic.cue")
+    log = (WORK / "out_rep" / "log.log").read_text()
+
+    disc, per_track, cur = {}, [], None
+    for ln in log.splitlines():
+        if ln == "Paranoia status counts:":
+            cur = disc
+            continue
+        if ln == "  Paranoia status counts:":
+            cur = {}
+            per_track.append(cur)
+            continue
+        m = re.match(r"\s+([A-Z_]+):\s+(\d+)$", ln)
+        if m and cur is not None:
+            cur[m.group(1)] = int(m.group(2))
+        elif not ln.strip():
+            cur = None
+
+    if not per_track:
+        fail("reporting: no per-track paranoia block found")
+    if not disc:
+        fail("reporting: no disc-level paranoia block found")
+
+    for key, total in disc.items():
+        summed = sum(t.get(key, 0) for t in per_track)
+        if summed != total:
+            fail(f"reporting: {key} per-track sum {summed} != disc total {total}")
+
+    # The Encoder: line must name the library that actually wrote the audio.
+    # Assert against the FLAC vendor string rather than against itself, or the
+    # check proves only that we can print a constant.
+    m = re.search(r"^Encoder:\s+libavformat (\d+)\.(\d+)\.(\d+)", log, re.M)
+    if not m:
+        fail("reporting: no Encoder: line")
+    elif FFPROBE:
+        vendor = probe(WORK / "out_rep" / "1.flac", "-show_entries",
+                       "format_tags=encoder")
+        want = "Lavf" + ".".join(m.groups())
+        if vendor != want:
+            fail(f"reporting: Encoder: says {want!r}, FLAC vendor string says {vendor!r}")
+
+
 def sc_verify_log():
     # CLI wiring only, the checksum logic itself is unit-tested
     rip("basic", "basic.cue")
@@ -265,6 +312,14 @@ def sc_verify_log():
                                                 "Ripping errors: 1"))
     if crip("--verify-log", tampered)[0] == 0:
         fail("tampered log verified")
+
+    # Trailing content must not verify either. Platterpus asked whether it
+    # could append an addendum after the checksum line; it cannot, and this
+    # locks that answer so it cannot silently become "yes".
+    appended = WORK / "appended.log"
+    appended.write_text(log.read_text() + "\n[addendum]\ntrailing content\n")
+    if crip("--verify-log", appended)[0] == 0:
+        fail("log with trailing content verified")
 
 
 with tempfile.TemporaryDirectory() as tmpdir:

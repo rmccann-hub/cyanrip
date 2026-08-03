@@ -49,6 +49,7 @@ rip_scenarios = [
     'cue_only',
     'errors',
     'cdtext',
+    'reporting',
     'verify_log',
 ]
 

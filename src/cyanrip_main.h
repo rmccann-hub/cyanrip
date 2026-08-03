@@ -178,6 +178,10 @@ typedef struct cyanrip_track {
     AVDictionary *meta; /* Disc's AVDictionary gets copied here */
     AVDictionary *cdtext; /* This track's CD-TEXT, verbatim, never overwritten */
     int total_repeats; /* How many times the track was re-ripped */
+    /* This track's share of the paranoia callback counters, taken as a
+     * before/after delta around the read so a disc total can be attributed to
+     * the track that earned it. Includes every -Z re-read of this track. */
+    uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
     enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
     int64_t rip_time_us; /* Wall clock time spent ripping and encoding */
     int index; /* Array position + 1 */

@@ -2,3 +2,5 @@ build
 *.log
 .github/_build
 .github/_install
+__pycache__/
+*.pyc
