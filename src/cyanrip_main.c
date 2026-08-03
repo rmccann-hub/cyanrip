@@ -249,14 +249,30 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
     /* Disc images have no hardware cache to defeat; paranoia's cache probe
      * reads cachemodel sectors past the seek target on backseeks, which
-     * beyond the leadout gets counted as a read error. 1, not 0, as the
-     * cachemodel size is also the c_block read chunk size, and 0 never
-     * makes progress */
+     * beyond the leadout gets counted as a read error.
+     *
+     * The value cannot simply be minimised, because the cachemodel size is
+     * also paranoia's c_block read chunk size, and a chunk too small leaves
+     * the verification logic no overlap to work with. Upstream used 1, which
+     * is in that range: at the default paranoia level a BIN/CUE image then
+     * returned one correct sector followed by silence -- 99.7% of samples
+     * zeroed, with "Ripping errors: 0". Measured on tests/fixtures/basic.cue:
+     *
+     *      cachemodel   audio        ripping errors
+     *      1 - 4        CORRUPTED    0
+     *      5 - 256      correct      0
+     *      512          correct      1
+     *      1200 (deflt) correct      2
+     *
+     * 16 sits an order of magnitude clear of the corruption boundary and an
+     * order of magnitude below where over-reading the leadout starts costing
+     * errors. The upper bound scales with the image's size, so the margin
+     * below it matters more than the exact figure. */
     switch (cdio_get_driver_id(ctx->cdio)) {
     case DRIVER_BINCUE:
     case DRIVER_NRG:
     case DRIVER_CDRDAO:
-        cdio_paranoia_cachemodel_size(ctx->paranoia, 1);
+        cdio_paranoia_cachemodel_size(ctx->paranoia, 16);
         break;
     default:
         break;

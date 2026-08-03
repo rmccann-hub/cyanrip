@@ -361,6 +361,71 @@ def sc_reporting():
             fail(f"reporting: Encoder: says {want!r}, FLAC vendor string says {vendor!r}")
 
 
+def sc_paranoia():
+    # Every other scenario passes -P 0 through rip(), so until this existed the
+    # suite had never once run an image at the DEFAULT paranoia level -- and at
+    # that level upstream's cachemodel override returned one correct sector
+    # followed by silence, with "Ripping errors: 0". 99.7% of samples zeroed,
+    # and nothing in the suite, the logs or the checksums said so.
+    #
+    # Asserts against the source image rather than against another rip: two
+    # builds with the same defect agree with each other perfectly.
+    for img, name in (("basic.cue", "basic"), ("cdda.nrg", "nrg")):
+        ec, _ = crip("-d", WORK / img, "-N", "-A", "-U", "-s", "0", "-P", "0",
+                     "-o", "pcm", "-D", WORK / f"par_{name}_off", "-F", "{track}")
+        if ec != 0:
+            fail(f"paranoia: {img} -P 0 exited {ec}")
+            continue
+        ec, _ = crip("-d", WORK / img, "-N", "-A", "-U", "-s", "0",
+                     "-o", "pcm", "-D", WORK / f"par_{name}_on", "-F", "{track}")
+        if ec != 0:
+            fail(f"paranoia: {img} default exited {ec}")
+            continue
+
+        off = (WORK / f"par_{name}_off" / "1.pcm").read_bytes()
+        on = (WORK / f"par_{name}_on" / "1.pcm").read_bytes()
+
+        # Paranoia must not alter a deterministic image at all.
+        if on != off:
+            nz_on = sum(1 for b in on if b)
+            fail(f"paranoia: {img} default-level audio differs from -P 0 "
+                 f"({100.0 * nz_on / max(len(on), 1):.1f}% of bytes non-zero) -- "
+                 "cachemodel too small for paranoia's overlap logic")
+
+        # And the result must not be mostly silence, which is how the defect
+        # presented. A check that only compared two rips would pass on two
+        # equally-silent ones.
+        if len(on) and (sum(1 for b in on if b) / len(on)) < 0.5:
+            fail(f"paranoia: {img} default-level output is mostly silence")
+
+
+def sc_reference():
+    # The golden reference sent to a consumer guards only the paths it
+    # exercises, and coverage is lost by dropping a *flag*, not by changing a
+    # fixture. Round 5's reference silently lost the secure-re-read surface and
+    # every over-full-scale peak because -Z and -G were omitted -- the fixture
+    # audio had a true peak above 0 dBFS the whole time.
+    rip("ref", "pregap.cue", "-Z", "2", "-G")
+    log = (WORK / "out_ref" / "log.log").read_text()
+
+    for pat, what in ((r"^Repeating ripping \(\d+ out of \d+", "-Z repeat line"),
+                      (r"^Done; \(\d+ out of \d+", "-Z convergence line"),
+                      (r"EAC CRC32:\s+[0-9A-F]{8} \(after \d+ rips\)", "rip-count suffix"),
+                      (r"^\s+Secure re-read:\s+converged after \d+ reads", "secure verdict")):
+        if not re.search(pat, log, re.M):
+            fail(f"reference: {what} missing -- -Z coverage lost")
+
+    # An intersample peak above full scale must survive into the tags, or the
+    # consumer's >1.0 reconciliation path is never exercised.
+    peaks = [float(m) for m in
+             re.findall(r"REPLAYGAIN_TRACK_PEAK:\s+([\d.]+)", log)]
+    if not peaks:
+        fail("reference: no REPLAYGAIN_TRACK_PEAK -- -G coverage lost")
+    elif max(peaks) <= 1.0:
+        fail(f"reference: no over-full-scale peak (max {max(peaks)}) -- "
+             "true peak above 0 dBFS is not exercised")
+
+
 def sc_verify_log():
     # CLI wiring only, the checksum logic itself is unit-tested
     rip("basic", "basic.cue")
