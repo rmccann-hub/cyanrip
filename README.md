@@ -307,7 +307,15 @@ Behaviour differences from upstream:
    reads as "not installed" rather than "flag renamed". Prefer `--version`.
  * **Log and cue files are line-buffered**, so a cancelled rip leaves a partial
    record rather than an empty file.
- * **`-k`** sets how long a frame read must stall before liveness is reported.
+ * **Read liveness while a frame read is blocked.** A single frame read can sit
+   inside libcdio-paranoia for minutes on a damaged sector, and until it returns
+   the rip prints nothing -- indistinguishable, from outside, from a wedged
+   process. A watchdog thread reports the outstanding read to stdout while it is
+   blocked. It is a thread and not a paranoia callback because a drive grinding
+   on a bad sector blocks inside one SCSI command, where paranoia never calls
+   back; the callback version shipped in r2 and was silent through two real
+   three-minute stalls. **`-k`** sets the threshold in seconds (default 10, 0
+   disables). These lines go to stdout only and never to the logfile.
  * **`-x`** measures the drive's readback cache at rip time, on the disc in the
    drive, rather than leaving the figure an assumption. Off by default because
    it costs seconds of drive time, and it refuses to report a number for a disc
