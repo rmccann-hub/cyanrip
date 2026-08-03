@@ -287,26 +287,90 @@ static void decode_subq(subq_t *subq, const uint8_t *src) {
 }
 
 
+/* Re-encodes the BCD-carrying Q sub-channel fields back to BCD, in place. */
+static void fixup_subq_to_bcd(uint8_t *subq_buf)
+{
+    static const int fields[] = { 1, 2, 3, 4, 5, 7, 8, 9 };
+    for (size_t i = 0; i < sizeof(fields) / sizeof(fields[0]); i++) {
+        const uint8_t x = subq_buf[fields[i]];
+        subq_buf[fields[i]] = (uint8_t)(((x / 10) << 4) | (x % 10));
+    }
+}
+
+/* Validates a Q sub-channel sector's CRC, transparently applying the BCD
+ * fixup above when this drive needs it.
+ *
+ * Some drives' firmware hands back the track/index/MSF fields as raw binary
+ * instead of the BCD the spec calls for. The CRC on the disc is always
+ * computed over the BCD encoding, so on such a drive every sector fails
+ * validation and pregap detection can only ever report "unknown (sub-channel
+ * CRC mismatches)" -- the detection never gets off the ground. Re-encoding to
+ * BCD before checking recovers those drives. XLD carries a workaround for the
+ * same firmware behaviour.
+ *
+ * Detected once per search and remembered in *needs_fixup, so the cost is one
+ * extra CRC on the first sector rather than on every sector.
+ *
+ * Mutates subq_buf in place when a fixup is applied, so callers must
+ * decode_subq() only after this returns, and must not call it twice on the
+ * same buffer -- a second call would re-encode already-encoded fields.
+ * Returns 1 if the sector is valid, 0 otherwise. */
+static int verify_subq_crc(uint8_t *subq_buf, int *needs_fixup)
+{
+    const unsigned crc_read = (subq_buf[10] << 8) | subq_buf[11];
+
+    /* An all-zero CRC is what a drive that does not return Q sub-channel data
+     * at all leaves in the buffer; treat it as invalid rather than as a
+     * sector that happens to check out. */
+    if (!crc_read)
+        return 0;
+
+    if (*needs_fixup)
+        fixup_subq_to_bcd(subq_buf);
+
+    if (crc_read == crc_subq(subq_buf))
+        return 1;
+
+    if (!*needs_fixup) {
+        fixup_subq_to_bcd(subq_buf);
+        if (crc_read == crc_subq(subq_buf)) {
+            *needs_fixup = 1;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/* Returns the driver error code (if any) via the return value, and whether the
+ * sector ended up CRC-valid via *out_valid. Callers must use *out_valid rather
+ * than re-checking the CRC themselves: verify_subq_crc() may have rewritten
+ * the buffer, so a second check would operate on already-fixed-up fields. */
 static driver_return_code_t read_audio_subq_sector_with_retries(
     const CdIo_t *p_cdio,
     uint8_t *audio_subq_buf,
     const lsn_t lsn,
-    const int retry_max)
+    const int retry_max,
+    int *needs_fixup,
+    int *out_valid)
 {
     driver_return_code_t ret = read_audio_subq_sector(p_cdio, audio_subq_buf, lsn);
-    const uint8_t *subq_buf = audio_subq_buf + CDIO_CD_FRAMESIZE_RAW;
-    unsigned crc_read = (subq_buf[10] << 8) | subq_buf[11];
-    unsigned crc_comp = crc_subq(subq_buf);
+    uint8_t *subq_buf = audio_subq_buf + CDIO_CD_FRAMESIZE_RAW;
+    int valid = !ret && verify_subq_crc(subq_buf, needs_fixup);
     int retry = 0;
-    while (retry++ < retry_max && crc_read != crc_comp) {
+
+    while (retry++ < retry_max && !valid) {
         // TODO Is a cache defeat here ever necessary? Testing on macOS with an
         // ASUS SDRW-08U7M-U, it didn't have an effect.
         // overflow_device_read_cache(p_cdio, lsn);
-        if ((ret = read_audio_subq_sector(p_cdio, audio_subq_buf, lsn)))
+        if ((ret = read_audio_subq_sector(p_cdio, audio_subq_buf, lsn))) {
+            *out_valid = 0;
             return ret;
-        crc_read = (subq_buf[10] << 8) | subq_buf[11];
-        crc_comp = crc_subq(subq_buf);
+        }
+        valid = verify_subq_crc(subq_buf, needs_fixup);
     }
+
+    *out_valid = valid;
     return ret;
 }
 
@@ -351,7 +415,12 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
 
     lsn_t lsn;
     subq_t subq;
-    unsigned crc_comp;
+    /* Whether this drive returns the Q sub-channel MSF/track fields as raw
+     * binary instead of BCD. Detected on the first sector that validates only
+     * after re-encoding, then reused for the rest of this search. Kept local
+     * rather than on the context so one odd disc cannot poison the next. */
+    int needs_bcd_fixup = 0;
+    int subq_valid = 0;
     // UltraFuzzy: Based on brief informal testing, successful subchannel Q read
     // retries become rare after ~5-10 attempts but I've seen a correct read
     // first occur as late as 180 attempts. The large harder_retry_max value
@@ -376,7 +445,8 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
 
     // Check one sector before track start to see if there is any pregap.
     lsn = track_start_lsn - 1;
-    ret = read_audio_subq_sector_with_retries(p_cdio, audio_subq_buf, lsn, retry_max);
+    ret = read_audio_subq_sector_with_retries(p_cdio, audio_subq_buf, lsn, retry_max,
+                                              &needs_bcd_fixup, &subq_valid);
     if (ret) {
         /* Persistent read failure: give up on detection rather than crash the
          * rip over what optical drives treat as a routine condition. */
@@ -385,14 +455,13 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
         return CDIO_INVALID_LSN;
     }
     decode_subq(&subq, subq_buf);
-    crc_comp = crc_subq(subq_buf);
-    if (subq.crc == crc_comp && subq.adr == 1 && subq.track_number == prev_track_number) {
+    if (subq_valid && subq.adr == 1 && subq.track_number == prev_track_number) {
         SET_SOURCE(CYANRIP_PREGAP_SRC_SUBCHANNEL);
         av_free(audio_subq_buf);
         return track_start_lsn;
     }
 
-    if (subq.crc == crc_comp && subq.adr == 1 && subq.track_number == track_number)
+    if (subq_valid && subq.adr == 1 && subq.track_number == track_number)
         right_bound = lsn;
 
     // There is a pregap or the result was ambiguous. Backtrack in 2
@@ -405,15 +474,15 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
         if (lsn == prev_track_start_lsn) {
             break;
         }
-        ret = read_audio_subq_sector_with_retries(p_cdio, audio_subq_buf, lsn, retry_max);
+        ret = read_audio_subq_sector_with_retries(p_cdio, audio_subq_buf, lsn, retry_max,
+                                              &needs_bcd_fixup, &subq_valid);
         if (ret) {
             SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
             av_free(audio_subq_buf);
             return CDIO_INVALID_LSN;
         }
         decode_subq(&subq, subq_buf);
-        crc_comp = crc_subq(subq_buf);
-        if (subq.crc != crc_comp || subq.adr != 1) {
+        if (!subq_valid || subq.adr != 1) {
             continue;
         }
         else if (subq.track_number == track_number) {
@@ -446,15 +515,15 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
             lsn = left_bound;
             continue;
         }
-        ret = read_audio_subq_sector_with_retries(p_cdio, audio_subq_buf, lsn, retry_max);
+        ret = read_audio_subq_sector_with_retries(p_cdio, audio_subq_buf, lsn, retry_max,
+                                              &needs_bcd_fixup, &subq_valid);
         if (ret) {
             SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
             av_free(audio_subq_buf);
             return CDIO_INVALID_LSN;
         }
         decode_subq(&subq, subq_buf);
-        crc_comp = crc_subq(subq_buf);
-        if (subq.crc != crc_comp) {
+        if (!subq_valid) {
             // Attempt to skip over sectors with bad CRCs.
             continue;
         }

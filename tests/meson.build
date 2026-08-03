@@ -23,6 +23,15 @@ naming_test = executable('naming_test',
 )
 test('Naming schemes', naming_test)
 
+## Includes pregap.c rather than linking it: the Q sub-channel helpers are
+## static, and this is the one pregap path no disc image can reach.
+subq_test = executable('subq_test',
+    sources: [ 'subq.c' ],
+    include_directories: [ '../src' ],
+    dependencies: unit_test_deps + [ dependency('libcdio_paranoia') ],
+)
+test('Q sub-channel decoding', subq_test)
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the
