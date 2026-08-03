@@ -1,5 +1,9 @@
 build
 *.log
+# ...but the golden reference IS the artifact, not a build by-product. Without
+# this negation "*.log" silently swallows it and docs/handshake/README.md points
+# at a file that is not in the repository.
+!docs/golden-reference.log
 .github/_build
 .github/_install
 __pycache__/
