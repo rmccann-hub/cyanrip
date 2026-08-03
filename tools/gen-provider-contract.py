@@ -43,12 +43,48 @@ FFMPEG_OWNED = (
     "LRA", "Threshold", "Summary:",
 )
 
-FATAL_PREFIXES = (
+# Wordings that read as a diagnostic. This list used to be the *only* test for
+# whether a message was fatal, which was a guess dressed as a derivation: a
+# hand-maintained allowlist cannot know about a message somebody words
+# differently. Platterpus caught exactly that in round 5 -- two argument-
+# validation fatals ("discnumber ... is larger than totaldiscs ...", "Cover art
+# already specified ...") that begin with no listed prefix and so never reached
+# the inventory, even though the parser saw them and printed them in P2.
+#
+# It is now one of two independent kinds of evidence, not the test. See
+# FAIL_PATH below and P5's evidence column.
+DIAGNOSTIC_PREFIXES = (
     "Invalid", "Unable", "Missing", "No device", "No cover art", "Error",
     "Errors", "Failed", "Couldn't", "Could not", "Cannot", "Unsupported",
     "Unknown", "Unrecognized", "Stopping", "Aborting", "Drive media",
     "Insufficient", "Out of memory", "Fatal", "-J ",
 )
+
+# The second kind of evidence, and the one that does not depend on wording: the
+# call is followed by something that leaves on a failure path.
+FAIL_PATH = re.compile(
+    r"\breturn\s+1\s*;"
+    r"|\bexit\s*\(\s*[1-9]"
+    r"|\breturn\s+AVERROR"
+    r"|total_error_count\s*\+\+"
+    r"|\bgoto\s+fail\b")
+
+# "goto end" gets its own class rather than being folded into either bucket.
+# cyanrip_main.c uses it for the ordinary success cleanup *and* for several
+# genuine aborts ("Offset is unset!" leaves that way), so calling it fatal would
+# file success lines as failures and calling it non-fatal would drop real
+# aborts. Neither is honest; naming it is.
+GOTO_END = re.compile(r"\bgoto\s+end\b")
+
+# Where to stop looking. A failure exit only counts as belonging to this call if
+# nothing has opened a new branch in between -- otherwise an informational line
+# inherits the error handling of whatever happens to follow it. Without this cut
+# "Opening drive..." reads as fatal because the *next* statement's if-block
+# returns AVERROR.
+NEXT_BRANCH = re.compile(r"\b(if|for|while|switch)\s*\(|cyanrip_log\s*\(|fprintf\s*\(")
+
+# Hard cap, in case no branch follows at all.
+FAIL_PATH_WINDOW = 320
 
 LOGCALL = re.compile(
     r'(?P<fn>cyanrip_log)\s*\(\s*(?P<target>[A-Za-z_][A-Za-z0-9_>\-\.]*)\s*,\s*\d+\s*,\s*'
@@ -59,6 +95,38 @@ STDERRCALL = re.compile(
 
 def joined(lit):
     return "".join(re.findall(r'"((?:[^"\\]|\\.)*)"', lit))
+
+
+def evidence(text, end, msg):
+    """Why this message is believed to be reachable on a failure path.
+
+    Returns "both", "control flow", "wording", or None. Two independent tests,
+    reported separately rather than OR-ed into a bare verdict, so a consumer can
+    see which ones rest on the weaker of the two.
+    """
+    window = text[end:end + FAIL_PATH_WINDOW]
+
+    # Trim at the next branch or log call, so this call is only credited with an
+    # exit that is actually its own.
+    cut = NEXT_BRANCH.search(window)
+    if cut:
+        window = window[:cut.start()]
+
+    by_flow = bool(FAIL_PATH.search(window))
+    by_word = any(msg.startswith(p) for p in DIAGNOSTIC_PREFIXES)
+    by_end = bool(GOTO_END.search(window))
+
+    if by_flow and by_word:
+        return "both"
+    if by_flow:
+        return "control flow"
+    if by_end and by_word:
+        return "wording + goto end"
+    if by_end:
+        return "goto end"
+    if by_word:
+        return "wording"
+    return None
 
 
 def collect():
@@ -82,15 +150,19 @@ def collect():
                 unstable.append(rec)
             else:
                 stable.append(rec)
-            if any(s.startswith(p) for p in FATAL_PREFIXES):
-                fatal.append(rec)
+            ev = evidence(text, m.end(), s)
+            if ev:
+                fatal.append((name, line, s, to_log, ev))
 
         for m in STDERRCALL.finditer(text):
             raw = joined(m.group("lit"))
             line = text[:m.start()].count("\n") + 1
             s = raw.replace("\\n", "").strip()
-            if s and any(s.startswith(p) for p in FATAL_PREFIXES):
-                fatal.append((name, line, s, False))
+            if not s:
+                continue
+            ev = evidence(text, m.end(), s)
+            if ev:
+                fatal.append((name, line, s, False, ev))
 
     return stable, unstable, fatal
 
@@ -245,20 +317,55 @@ def emit(binary):
 
     w("## P5 - Fatal and error message inventory")
     w("")
-    w("Every string a failure can print. Use this to derive error matching rather than")
-    w("guessing prefixes.")
+    w("Every string reachable on a failure path. Use this to derive error matching")
+    w("rather than guessing prefixes.")
     w("")
-    w("| File:line | Message |")
-    w("|---|---|")
-    seen = set()
-    for name, line, s, _ in fatal:
+    w("**Evidence** says why each string is here, and is reported rather than folded")
+    w("into a bare verdict so you can see which entries rest on the weaker test:")
+    w("")
+    w("- `control flow` - the call is followed by `return 1`, a non-zero `exit()`,")
+    w("  `return AVERROR(...)`, `total_error_count++`, or `goto fail`. Does not")
+    w("  depend on how the message is worded.")
+    w("- `wording` - the message begins like a diagnostic, but no failure exit was")
+    w("  found near it. Either the exit is further away than the search window, or")
+    w("  the message is a warning that does not end the run. **Treat these as")
+    w("  possibly non-fatal.**")
+    w("- `both` - the two agree.")
+    w("- `goto end` / `wording + goto end` - the call is followed by `goto end`,")
+    w("  which in `cyanrip_main.c` is *both* the ordinary success cleanup and the")
+    w("  route several genuine aborts take (`Offset is unset!` leaves that way).")
+    w("  It is reported as its own class because calling it fatal would file")
+    w("  success lines as failures, and calling it non-fatal would drop real")
+    w("  aborts. **Neither of us can settle these from the source alone; they need")
+    w("  a run to classify.**")
+    w("")
+    w("The search stops at the next `if`/`for`/`while`/`switch` or the next log")
+    w("call, so a message is only credited with an exit that is its own. Without")
+    w("that cut, `Opening drive...` reads as fatal because the *next* statement's")
+    w("if-block returns `AVERROR`.")
+    w("")
+    w("| File:line | Message | Evidence | Reaches logfile? |")
+    w("|---|---|---|---|")
+    seen = {}
+    for name, line, s, to_log, ev in fatal:
         if s in seen:
             continue
-        seen.add(s)
+        seen[s] = ev
         disp = s.replace("|", "\\|")
-        w(f"| `{name}:{line}` | `{disp}` |")
+        w(f"| `{name}:{line}` | `{disp}` | {ev} | {'yes' if to_log else '**no, stdout only**'} |")
     w("")
-    w(f"**{len(seen)} distinct strings.**")
+    tally = {}
+    for ev in seen.values():
+        tally[ev] = tally.get(ev, 0) + 1
+    w(f"**{len(seen)} distinct strings.** By evidence: " +
+      ", ".join(f"{tally.get(k, 0)} {k}"
+                for k in ("both", "control flow", "wording",
+                          "goto end", "wording + goto end")) + ".")
+    w("")
+    w("The `control flow` and `both` rows total "
+      f"{tally.get('both', 0) + tally.get('control flow', 0)} strings proven reachable on a")
+    w("failure path without reference to their wording. That subset is the one to")
+    w("build a hard failure classifier on.")
     w("")
     return "\n".join(o) + "\n"
 
