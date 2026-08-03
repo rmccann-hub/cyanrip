@@ -73,6 +73,39 @@ static void print_cdtext(cyanrip_ctx *ctx)
     print_cdtext_fields(ctx, ctx->cdtext, "    ");
 }
 
+/* Paranoia defeats a drive's read cache by modelling its size and seeking
+ * back further than that before a re-read. Report the model that is in force.
+ *
+ * This is deliberately not phrased as EAC's "Defeat audio cache : Yes": the
+ * number below is a *model*, not a measurement. cyanrip never probes the
+ * drive for its real cache size the way cd-paranoia -A does, so claiming the
+ * cache was defeated would assert something no part of this run established. */
+static void print_cache_defeat(cyanrip_ctx *ctx)
+{
+    if (!ctx->paranoia || !ctx->settings.paranoia_level) {
+        cyanrip_log(ctx, 0, "Cache defeat:   not in use (paranoia disabled)\n");
+        return;
+    }
+
+    /* -1 queries without setting, so this does not disturb the rip. */
+    const int sectors = cdio_paranoia_cachemodel_size(ctx->paranoia, -1);
+
+    switch (cdio_get_driver_id(ctx->cdio)) {
+    case DRIVER_BINCUE:
+    case DRIVER_NRG:
+    case DRIVER_CDRDAO:
+        cyanrip_log(ctx, 0, "Cache defeat:   %i sector%s modelled "
+                            "(disc image, no drive cache)\n",
+                    sectors, sectors == 1 ? "" : "s");
+        break;
+    default:
+        cyanrip_log(ctx, 0, "Cache defeat:   %i sector%s modelled "
+                            "(drive cache size not probed)\n",
+                    sectors, sectors == 1 ? "" : "s");
+        break;
+    }
+}
+
 static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     if (t->pregap_lsn != CDIO_INVALID_LSN) {
@@ -165,8 +198,13 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
     cyanrip_log(ctx, 0, "    Duration:    %s\n", length);
     cyanrip_log(ctx, 0, "    Samples:     %u\n", t->nb_samples);
     cyanrip_log(ctx, 0, "    Frames:      %u\n", t->end_lsn_sig - t->start_lsn_sig + 1);
-    if (t->computed_crcs)
+    if (t->computed_crcs) {
         cyanrip_log(ctx, 0, "    Peak level:  %.1f%%\n", 100.0 * pow(10.0, t->ebu_sample_peak / 20.0));
+        /* Named "True peak level" rather than "True peak" so it cannot be
+         * confused with libavfilter's own "  True peak:" heading, which is
+         * FFmpeg's wording and moves when FFmpeg does. */
+        cyanrip_log(ctx, 0, "    True peak level: %.1f dBFS\n", t->ebu_true_peak);
+    }
     if (t->rip_time_us > 0) {
         cyanrip_log(ctx, 0, "    Extraction speed:  %.1fx\n",
                     (t->frames / 75.0) / (t->rip_time_us / 1000000.0));
@@ -350,6 +388,7 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     else
         cyanrip_log(ctx, 0, "Paranoia level: %i\n", ctx->settings.paranoia_level);
     cyanrip_log(ctx, 0, "Frame retries:  %i\n", ctx->settings.max_retries);
+    print_cache_defeat(ctx);
     cyanrip_log(ctx, 0, "HDCD decoding:  %s\n", ctx->settings.decode_hdcd ? "enabled" : "disabled");
 
     cyanrip_log(ctx, 0, "Album Art:      %s", ctx->nb_cover_arts == 0 ? "none" : "");
