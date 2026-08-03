@@ -6,8 +6,9 @@ Fully featured CD ripping program able to take out most of the tedium. Fully acc
 > It keeps upstream's version number and identifies itself by its build tag:
 > `cyanrip 0.9.4-rc1 (platterpus-fork-g<commit>)`. Fork releases are numbered
 > separately -- current is **r2**. See [Fork differences](#fork-differences),
-> `Changelog.md` for what each fork release changed, and `PROVIDER-CONTRACT.md`
-> for the generated interface contract.
+> `Changelog.md` for what each fork release changed, `PROVIDER-CONTRACT.md` for
+> the generated interface contract, and `docs/handshake/` for the record of the
+> rounds that agreed it.
 
 Features
 --------

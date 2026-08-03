@@ -22,7 +22,7 @@
  * sentinel that could make a failed detection look like a real pregap at a
  * bogus LSN, a buffer leak on one return path, and I/O-retry exhaustion
  * aborting the whole process instead of falling back cleanly. See
- * PREGAP-DETECTION-CARRY.md for the full audit and what still needs
+ * docs/pregap-carry.md for the full audit and what still needs
  * real-hardware verification. */
 
 #include "pregap.h"
