@@ -1,8 +1,76 @@
+0.9.4-rc1+platterpus.3 (2026-08-03)
+===================================
+**One version string, and only one number to track.** Releases r1 and r2 both
+shipped carrying upstream's bare `0.9.4-rc1`, which made two fork builds
+indistinguishable by version and left two counters to reconcile -- "fork release
+r2" against a string that said `rc1`. From here the fork release is *in* the
+version: `0.9.4-rc1+platterpus.3` is upstream's 0.9.4-rc1, fork release 3.
+
+Advancing our own rc number instead (`0.9.4-rc3`) was tried and reverted before
+release. It mints identifiers in upstream's namespace: nothing stops upstream
+tagging its own `0.9.4-rc3`, at which point two different trees answer to one
+string. `+platterpus.N` cannot collide, because upstream will never mint one.
+
+There is no r1 or r2 equivalent of this string; those builds carry bare
+`0.9.4-rc1` and are told apart only by their git tag and commit.
+
+For a consumer parsing only the leading number, `PROJECT_FORK_ID` remains the
+answer to "is this the fork?" -- match on `platterpus-fork` or on the
+`+platterpus.` suffix, never on `0.9.4-rc1` alone, which upstream also answers
+to.
+
+Fixed
+ - **The read-liveness heartbeat added in r2 never fired on a real stall.** It
+   was emitted from libcdio-paranoia's status callback, so it could only report
+   a read that was still making progress -- while a drive grinding on a bad
+   sector blocks inside a single SCSI command, where paranoia is not running and
+   never calls back. Confirmed against a real rip on 2026-08-03: two
+   three-minute stalls, a build provably containing the r2 heartbeat, 41180
+   lines of captured stdout, and not one heartbeat line among them. The
+   heartbeat now runs on its own thread, which keeps ticking while the rip
+   thread is blocked in the kernel.
+
+   Anyone who took r2's silence as "no stalls occurred" was reading an absence
+   of evidence as evidence of absence. r2's heartbeat could not distinguish
+   them; r3's can.
+
+Changed
+ - The two liveness lines are reworded. Both are **stdout-only** progress output
+   and neither reaches the logfile, but a consumer capturing stdout will see it:
+
+       old  Still reading track N at LSN L - Ts so far, C paranoia callbacks
+            since the frame began
+       new  Still reading track N - the read for LSN L has not returned after Ts
+
+       old  Track N resumed after Ts
+       new  Track N - the read for LSN L returned after Ts
+
+   The callback count is gone: nothing counts callbacks for this purpose now.
+   The LSN names the frame the read was *asked* to return, which is all that is
+   known -- paranoia over-reads and re-reads around it, so the old wording
+   implied a drive position that was never measured.
+
+Added
+ - `-x` / `--cache-probe` measures the drive's readback cache at rip time, on
+   the disc actually in the drive, by timing re-reads against a known uncached
+   cost. Off by default; costs seconds of drive time. Refuses to report a
+   number for a disc image, which has no cache to measure.
+   **Not verified on hardware** -- no drive exists in the environment it was
+   written in, and no image can produce the timing signal the method needs.
+ - `tests/stall.c` (`meson test` name **Stall watchdog**), which asserts the
+   heartbeat fires while a read is outstanding *and nothing is calling back* --
+   the property r2 lacked. Reverting to a caller-driven poll fails four of its
+   checks.
+
+Unchanged
+ - **No logfile line changed in this release.** The golden reference differs
+   from r2's only in the version string, the timestamps, the wall-clock timing
+   fields, and the checksum over all of them.
+
 platterpus-fork r2 (2026-08-03)
 ===============================
-Fork release 2. Version number stays upstream's `0.9.4-rc1` deliberately -- this
-fork never renumbers upstream's releases, so the fork release counter and the
-`platterpus-fork` build tag are what identify it. See `CLAUDE.md`.
+Fork release 2. Shipped carrying upstream's version string `0.9.4-rc1`; see
+the r3 entry above for why that changed.
 
 Fixed
  - **Disc-image rips returned silence at any paranoia level above 0.** One
@@ -26,7 +94,9 @@ Added
  - `Integrated loudness (R128):` and `Loudness range (R128):`, fork-owned so a
    consumer need not scrape libavfilter's wording
  - Read-liveness reporting from inside paranoia's callback while a frame read
-   stalls, so a slow read is distinguishable from a wedged one
+   stalls, so a slow read is distinguishable from a wedged one.
+   **Superseded in r3: this did not work.** It could only report reads that were
+   still progressing, which are not the ones that matter. See the r3 entry.
  - `-k` / `--stall-secs` sets that threshold (default 10, 0 disables)
  - `-V` accepted again as an alias for `--version`, after upstream's move from
    getopt to genopt dropped it and broke callers probing with it
@@ -42,7 +112,8 @@ Changed
 
 platterpus-fork r1 (2026-08-02)
 ===============================
-First tagged fork release, on upstream `0.9.4-rc1` (`958e1ad`).
+First tagged fork release, on upstream `0.9.4-rc1` (`958e1ad`), and shipped
+carrying that version string.
 
  - Fork identifies itself as `platterpus-fork` in the version banner and on
    line 1 of every logfile; the version number stays upstream's
