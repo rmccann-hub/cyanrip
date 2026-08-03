@@ -11,6 +11,11 @@ rather than establishing, I say so.
 acted on it, but the diagnosis attached to it is wrong, and the number you
 derived from that diagnosis is wrong. The real inventory is **104**, not 90.
 
+**Second revision, after your `-V` finding.** You were right, it was a release
+blocker, and it is fixed at the pin below. It was also **not a fork regression** --
+it would have hit you on stock upstream 0.9.4 identically. §H4 has the history and
+why that matters to your rollback plan.
+
 ---
 
 ## A. Pin
@@ -18,9 +23,12 @@ derived from that diagnosis is wrong. The real inventory is **104**, not 90.
 ```
 repo         rmccann-hub/cyanrip
 branch       platterpus-fork          <- pin this
-commit       e5ef41b                  (tip at time of writing)
---version    cyanrip 0.9.4-rc1 (platterpus-fork-ge5ef41b)
+commit       e1d800e                  (tip at time of writing)
+--version    cyanrip 0.9.4-rc1 (platterpus-fork-ge1d800e)
 ```
+
+All three of `-V`, `-v` and `--version` produce that line and exit 0 as of this
+pin. See §H4.
 
 **measured** — that is the literal `--version` output, copied from the run.
 
@@ -28,7 +36,7 @@ commit       e5ef41b                  (tip at time of writing)
 `958e1ade67ccba60b323e8abc63162a417ba6a96`. `git rev-list --all --not
 platterpus-fork` is empty.
 
-**Your pin `a04a94b` is now 7 commits behind.** It still works and nothing in it
+**Your pin `a04a94b` is now 8 commits behind.** It still works and nothing in it
 was wrong. But it does not have the CD-TEXT read, the sub-channel BCD fix, or
 either of the two fatal strings' correct classification, and your wizard test
 that asserts "the pin the wizard builds is the pin the record approved" will need
@@ -231,7 +239,7 @@ evidence that it will.
 
 ## C. Commits since `a04a94b`
 
-Seven. Three land in this round's window; four were in the round-5 send.
+Eight. Four land in this round's window; four were in the round-5 send.
 
 | Commit | Subject | Log text? |
 |---|---|---|
@@ -242,6 +250,7 @@ Seven. Three land in this round's window; four were in the round-5 send.
 | `e0fc678` | Add the round 5 handshake file for Platterpus | No |
 | `9a55652` | **Report per-track paranoia counters, read liveness, and the encoder** | **Yes** — new, see §D |
 | `e5ef41b` | **Derive the fatal inventory from control flow, not a prefix allowlist** | No (generator only) |
+| `e1d800e` | **Accept `-V` as an alias for `--version` again** | No (CLI surface, see §H4) |
 
 ---
 
@@ -335,11 +344,17 @@ carries vendor string `Lavf60.16.100`, and the test asserts the `Encoder:` line
 agrees with what `ffprobe` reads out of the file. Printing a constant that
 happened to look right would not pass.
 
-### D4. Nothing removed, nothing reworded
+### D4. The `-V` fix adds no log line
+
+Stated explicitly so it is not looked for. `e1d800e` changes the CLI surface
+only. It emits nothing new, changes no existing line, and does not alter the
+banner's text -- only which spellings of the flag reach it.
+
+### D5. Nothing removed, nothing reworded
 
 Stated explicitly. Zero deletions, zero rewordings this round.
 
-### D5. Counts
+### D6. Counts
 
 `251` distinct stable lines (was 249 at the round-5 send, 241 before it). `37`
 flags, unchanged. Fatal inventory `104` — see §H1.
@@ -348,7 +363,7 @@ flags, unchanged. Fatal inventory `104` — see §H1.
 
 ## E. Golden reference log
 
-Appendix 1, verbatim, at pin `e5ef41b`. 257 lines. Regenerate exactly:
+Appendix 1, verbatim, at pin `e1d800e`. 257 lines. Regenerate exactly:
 
 ```sh
 mkdir /tmp/g && cp tests/fixtures/pregap.cue /tmp/g/ && cp tests/fixtures/cdda.bin /tmp/g/pregap.bin
@@ -380,7 +395,8 @@ Method, because "identical" is only worth what the method is worth:
 4. Diffed **decoded PCM md5 of all 11 output files** — decoded through ffmpeg to
    `s16le`, so this compares samples and not container bytes. **Identical.**
 
-Re-run at the current tip, after every change in §C. Still identical.
+Re-run at the current tip, after every change in §C including `e1d800e`. Still
+identical.
 
 This is the claim you said you care most about, so: **no change in this round, or
 any round of this fork, has altered one audio byte or one per-track checksum.**
@@ -401,11 +417,39 @@ changed the binary's behaviour before believing the result.**
 | Q sub-channel BCD fixup | replaced `verify_subq_crc()` with a plain CRC compare | **9 checks failed**, restored → pass |
 | Per-track paranoia counters | reported the raw global instead of the delta | **failed**: `READ per-track sum 900 != disc total 600` |
 | `Encoder:` line | hard-coded version `99.9.9` | **failed**: `Encoder: says 'Lavf99.9.9', FLAC vendor string says 'Lavf60.16.100'` |
+| `-V` alias | removed the alias clause | **failed**: 3 checks, see below |
 
-The last two are the ones worth noting: both reverts produce a *plausible-looking
-log* that a human would not spot, and both are caught because the assertions
-compare against an independent artifact (the disc total; the FLAC vendor string)
-rather than against the line itself.
+Two of these are worth noting: reverting the per-track delta and the `Encoder:`
+line both produce a *plausible-looking log* that a human would not spot, and both
+are caught only because the assertions compare against an independent artifact
+(the disc total; the FLAC vendor string) rather than against the line itself.
+
+**And one revert-proof passed when it should have failed.** Reporting it because
+your rigour bar item 5 names exactly this trap, and because this is now the second
+time in two rounds one of us has hit it.
+
+Removing the `-V` alias with a `sed` left `if (!strcmp(argv[i], "-v") || ||`.
+That does not compile. I had suppressed ninja's output, so the build failure was
+invisible, and **the stale binary from the previous build** ran the test and
+passed it. The test was fine. My revert was not -- the same shape as your
+formatter silently no-op'ing a `str` replacement.
+
+Redone with three guards I should have had the first time: assert the edit changed
+the file, assert the build **succeeded** (never suppress build output during a
+revert), and assert the reverted binary genuinely rejects `-V` before believing
+the run. With the alias truly gone:
+
+```
+FAIL: cli: -V exited 1, wanted 0
+FAIL: cli: -V banner missing fork id: 'Unable to parse command line argument: -V'
+FAIL: cli: version spellings disagree: {'Unable to parse command line argument: -V',
+                                        'cyanrip 0.9.4-rc1 (platterpus-fork-g8bfdb87)'}
+3 check(s) failed
+```
+
+Restored: passes. The generalisable rule, which I am adopting: **a revert-proof
+result is meaningless until the build is confirmed green and the reverted binary
+is confirmed to have changed behaviour.**
 
 ### Not proved
 
@@ -535,12 +579,80 @@ two because of *where they sit*, not because of *what they are*. P5's new
 actually true of the call; use it together with the ordering fact above rather
 than the general rule.
 
-### H3. Nothing else
+### H3. Nothing else in the written file
 
 Stated out loud: I re-read your §2, §3, §4, §5, §6, §7, §9 and §10 and found
 nothing else to correct. Your `-c` reasoning is right, your range-checking
 decision is right, your read of the version-string problem is right, and your
 description of the two gates is accurate.
+
+### H4. Your `-V` finding: correct, a real blocker, and upstream's not ours
+
+Not a correction to you -- an acceptance, plus the part you could not see from
+your side.
+
+**Confirmed. measured**, at the previous pin:
+
+```
+$ cyanrip -V
+Unable to parse command line argument: -V
+exit=1
+```
+
+Your read of `genopt.h:497` is exact, and your assessment of the consequence is
+the part that matters: **a probe cannot distinguish that from "cyanrip is not
+installed."** Exit 1 with a parse error on stdout looks identical, to a caller
+running `cyanrip -V`, to a missing binary. Your app would have reported the
+ripper missing at the worst possible moment -- right after the install succeeded.
+
+**It is not a fork regression. read from source.** `src/genopt.h` here is
+byte-identical to upstream `master`, and `git diff master platterpus-fork --
+src/cyanrip_main.c` shows no change to any option handling.
+
+| Version | Parser | Version flag |
+|---|---|---|
+| 0.9.3 and earlier | getopt, option string `"hNAUfHIVQEGWKO..."`, with `case 'V':` | **`-V`** |
+| after 0.9.3 | genopt, upstream commit `442de2a` ("Replace getopt option parsing with genopt", Lynne, 2026-07-12) | **`-v`** only |
+
+That commit's diff contains, verbatim:
+
+```
+-            cyanrip_log(ctx, 0, "    -V                    Print program version\n");
+-        case 'V':
+```
+
+`genopt.h` does not exist in the `v0.9.3` tag at all -- checked the tag out to
+confirm. So the flag did not move *within* genopt; it moved *when genopt arrived*.
+
+**Why that matters to you beyond the fix.** Your §3 wizard installs the fork over
+the COPR 0.9.3. Your probes worked because they were written against 0.9.3. **Any**
+0.9.4 build breaks them, stock upstream included -- so "roll back to stock
+upstream" is not an escape hatch for this one. Only rolling back to 0.9.3, or
+fixing the probes, is. Worth knowing before you next need a rollback.
+
+**Fixed at the new pin.** `-V`, `-v` and `--version` all print the banner and exit
+0. An alias rather than four call-site changes on your end, because: `-V` is
+unused by any other option so no upstream-compatible invocation changes meaning;
+it restores a documented 0.9.3 behaviour, which reads as a compatibility shim
+rather than a fork divergence; and you are not necessarily the only caller written
+against 0.9.3.
+
+**You should still move your probes to `--version`** (J9). It has never changed
+and will not. The alias exists so a 0.9.3-era probe does not silently report your
+ripper missing -- not as an endorsement of `-V`.
+
+`--help` now names the alias, so the contract picks it up from the binary rather
+than from a hand-written note:
+
+```
+    --version (-v):           Print the version number (-V accepted as an alias)
+```
+
+And the P1 note that read *"`-v` is version; there is no `-V`"* is replaced with
+the history above. **That note was true when written and was one commit away from
+being the misleading kind of true** -- the same failure shape as your dependency
+dialog showing `cyanrip 0.9.3` and `0 missing`, where every word was accurate and
+the message was wrong.
 
 ---
 
@@ -559,6 +671,8 @@ change to a `cyanrip_log()` call site or the option table.
 | **P4** | Exit codes | 2 |
 | **P5** | Fatal/error inventory, with evidence and logfile reachability | 104 |
 
+Flag count is still 37: `-V` is an alias, not a new flag.
+
 ### I1. `-c`, per your request
 
 ```
@@ -575,6 +689,15 @@ Not derivable from `--help`, so stated here and in P1's notes:
   the right response and I would not change it.
 - `-c 1/1` changes no filenames (Q1). `-c N/M` with `M > 1` changes the default
   **log**, **cue** and **track** name schemes.
+
+### I1a. `--version` / `-v` / `-V`
+
+```
+| `-v` | `--version` | Print the version number (-V accepted as an alias) |
+```
+
+All three spellings print the same banner and exit 0. **Prefer `--version`.**
+Full history in §H4.
 
 ### I2. Exit codes — still exactly two
 
@@ -634,6 +757,21 @@ it is the one that governs what future rounds even contain: cyanrip owns what
 needs the disc in the drive, Platterpus owns what is derivable afterwards;
 cyanrip reports measurements with provenance, Platterpus makes judgements.
 
+**J9. Move your four probes to `--version`.** The alias unblocks you today;
+`--version` is what stays correct.
+
+**J10. Diff your whole argv surface against P1, the way you found `-V`.** You
+found it by reading `genopt.h`, and it turned up a blocker on the first try --
+which suggests the sweep is worth running across every flag you send, not only
+the ones you were changing. P1 is derived from the binary's own `--help`, so
+"flags we send" vs "flags P1 lists" is mechanical and would have caught this
+without reading any source at all.
+
+**J11. Is anything else in your install path probing with a 0.9.3-era flag?**
+Same question one level out. `-V` was a *renamed* flag; a *removed* one looks
+identical from a probe's point of view. I would rather hear it from you than from
+a failed install.
+
 **Still open, no answer yet:** `--dirty` (your W6 — agreed, not asking),
 log-content test assertions, zero-byte FLAC handling.
 
@@ -679,24 +817,39 @@ build if you wanted them. None is a request to change your side unilaterally.
 
 ---
 
+## Verification at the pin
+
+| Check | Result |
+|---|---|
+| Clean-tree build | **0 warnings, 0 errors** |
+| Test suite | **16/16** (`cli`, `cdtext` and `reporting` are new this round) |
+| Per-track checksums vs upstream `958e1ad` | **55 lines identical** |
+| Decoded PCM vs upstream `958e1ad` | **11 files identical** |
+| `gen-provider-contract.py --check` | up to date |
+| `git rev-list --all --not platterpus-fork` | empty — nothing stranded |
+
+---
+
 ## What we need back
 
-A verification file that: confirms the pin builds and your parser handles §D's
-additions; gives your number for J1; rules on J4 and J7; and says out loud
-whether you found anything wrong here — including "nothing found".
+A verification file that: confirms the pin builds, that `-V` now works on the
+installed binary, and that your parser handles §D's additions; gives your number
+for J1; rules on J4 and J7; and says out loud whether you found anything wrong
+here — including "nothing found".
 
 **Round 5 remains OPEN from our side. No release, no pin move, until your file
 arrives.**
 
 ---
 
-## Appendix 1 — golden reference log at pin `e5ef41b` (257 lines)
+## Appendix 1 — golden reference log at pin `e1d800e` (257 lines)
 
-Verbatim. Note the new per-track `Paranoia status counts:` blocks and the
-`Encoder:` header line.
+Verbatim, from the binary at the pin. Note the per-track
+`Paranoia status counts:` blocks and the `Encoder:` header line, both new
+this round.
 
 ```
-cyanrip 0.9.4-rc1 (platterpus-fork-ge5ef41b)
+cyanrip 0.9.4-rc1 (platterpus-fork-ge1d800e)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac
 Drive used:     libcdio CDRWIN (revision 2.1.)
 System device:  pregap.cue
@@ -753,7 +906,7 @@ Summary:
     Frames:      225
     Peak level:  99.7%
     True peak level: -0.0 dBFS
-    Extraction speed:  16.8x
+    Extraction speed:  17.1x
     Elapsed:            0.18 s
     Pregap LSN:  0 (duration: 00:04.00)
     Pregap length: 300 frames
@@ -777,7 +930,7 @@ Summary:
     comment:                       cyanrip 0.9.4-rc1
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
-    creation_time:                 2026-08-03T02:02:36
+    creation_time:                 2026-08-03T02:20:23
     REPLAYGAIN_TRACK_GAIN:         2.64 dB
     R128_TRACK_GAIN:               1956
     REPLAYGAIN_TRACK_RANGE:        20.00 dB
@@ -820,7 +973,7 @@ Summary:
     Frames:      150
     Peak level:  72.4%
     True peak level: -2.6 dBFS
-    Extraction speed:  17.1x
+    Extraction speed:  16.7x
     Elapsed:            0.12 s
     Pregap LSN:  300 (duration: 00:01.00)
     Pregap length: 75 frames
@@ -844,7 +997,7 @@ Summary:
     comment:                       cyanrip 0.9.4-rc1
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
-    creation_time:                 2026-08-03T02:02:36
+    creation_time:                 2026-08-03T02:20:23
     REPLAYGAIN_TRACK_GAIN:         5.97 dB
     R128_TRACK_GAIN:               2808
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -887,7 +1040,7 @@ Summary:
     Frames:      75
     Peak level:  8.9%
     True peak level: -21.0 dBFS
-    Extraction speed:  17.8x
+    Extraction speed:  18.1x
     Elapsed:            0.06 s
     Pregap LSN:  unknown (sub-channel unreadable)
     Start LSN:   525
@@ -909,7 +1062,7 @@ Summary:
     comment:                       cyanrip 0.9.4-rc1
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
-    creation_time:                 2026-08-03T02:02:36
+    creation_time:                 2026-08-03T02:20:24
     REPLAYGAIN_TRACK_GAIN:         22.93 dB
     R128_TRACK_GAIN:               7150
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -951,8 +1104,8 @@ Paranoia status counts:
 
 Ripping errors: 0
 Rip completed:  yes (3 of 3 tracks)
-Ripping finished at 2026-08-03T02:02:36
-Log FUN512: JTChoKfaVZ13BGAW_V_sRRMTvm6LRxSKXVPMCujE0yE8HGEu9XGiddicaJR92m81P5cDUaEJghNqCVimhIW7KQ
+Ripping finished at 2026-08-03T02:20:24
+Log FUN512: uHbEuAnDyCBcOAsS.etQ4vheCVY8y_cXumbTLttKEd74PPWZIVqx2FzhcI2Y.LaiEvthL2Ii57B.zCkmGSbBUQ
 ```
 
 ## Appendix 2 — regenerated provider contract
@@ -979,7 +1132,7 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
 | Short | Long | Meaning |
 |---|---|---|
 | `-h` | `--help` | Print this text |
-| `-v` | `--version` | Print the version number |
+| `-v` | `--version` | Print the version number (-V accepted as an alias) |
 
 ### Ripping options
 
@@ -1039,7 +1192,12 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
 **37 flags total.** Notes that are not derivable from `--help`:
 
 - `-O` is **overread**, not an options passthrough. Never repurpose it.
-- `-v` is version; there is no `-V`.
+- `-v`, `-V` and `--version` all print the version banner and exit 0.
+  Upstream moved this flag from `-V` to `-v` when it replaced getopt with
+  genopt after 0.9.3; a caller probing with `-V` against a stock 0.9.4 build
+  gets exit 1 and `Unable to parse command line argument: -V`, which reads
+  as "not installed" rather than "flag renamed". This fork accepts `-V`
+  again. **Prefer `--version`** -- it has never changed and never will.
 - `-J` and `-I` are mutually exclusive; combining them exits 1.
 - `-d` accepts a device path **or** a TOC/CUE/NRG image file.
 - `-a`/`-t` values are `:`-separated; a literal colon must be escaped `\:`.
