@@ -265,6 +265,48 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   report stranded commits that are not ours. Delete the refs and the tags, then
   re-check, before claiming nothing is stranded.
 
+## Doing the work: inline beats fan-out here
+
+This repo's investigations are **narrow and verification-heavy**, not broad and
+survey-heavy. That shape makes parallel subagents a bad default, and the one
+time it was tried the result was worse on every axis.
+
+A seven-lane audit of upstream branches, PRs, forks and EAC parity was
+dispatched as a workflow. **16 of its 17 agents died on account usage limits.**
+The single lane that returned was worth something — it surfaced one real gap (an
+`ebu_true_peak` computed and then discarded) among thirteen restatements of
+things already established inline — so the honest verdict is *low yield for the
+cost*, not *no yield*.
+
+Redoing the whole audit directly then took less wall-clock time than the failed
+fan-out, and produced strictly better evidence, because the decisive step turned
+out to be *fetching the upstream refs and reading the files*: one `git fetch` of
+all 39 PR heads, then greps against the tree. That is not work seven parallel
+researchers do better than one shell.
+
+Rules of thumb earned from that:
+
+- **Default to inline.** Fetch, grep, read, compile, run. Nearly every question
+  here ("is this PR already merged?", "does this API exist?", "did the revert
+  land?") is answered by a command whose output is the evidence, and handing it
+  to a subagent adds a summarisation step that can only lose fidelity.
+- **A subagent's report is not an artifact.** It is a claim *about* artifacts,
+  and this repo's whole discipline is answering from the artifact. If a
+  delegated finding matters, re-derive it before acting — at which point the
+  delegation saved nothing.
+- **Fan-out is for genuinely independent breadth** with a cheap merge step:
+  sweeping many unrelated files for one pattern, or reading several long
+  documents that do not interact. Not for anything where the lanes must agree,
+  and not for anything whose conclusion needs a build to confirm.
+- **Assume the budget can run out mid-task**, and prefer the method that
+  degrades gracefully. An inline sequence that is interrupted leaves partial,
+  usable results and a shell you can resume from; a fan-out that is interrupted
+  leaves a summary saying most lanes failed.
+- **A failed lane is not a clean lane.** The workflow reported one lane's
+  findings and sixteen errors. Read the failure list before reading the results,
+  or an empty result set reads as "nothing found" — the same trap as a check
+  that can be satisfied by finding nothing.
+
 ## Deriving, not guessing
 
 `tools/gen-provider-contract.py` exists so the contract cannot describe
