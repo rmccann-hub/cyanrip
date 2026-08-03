@@ -1,3 +1,62 @@
+platterpus-fork r2 (2026-08-03)
+===============================
+Fork release 2. Version number stays upstream's `0.9.4-rc1` deliberately -- this
+fork never renumbers upstream's releases, so the fork release counter and the
+`platterpus-fork` build tag are what identify it. See `CLAUDE.md`.
+
+Fixed
+ - **Disc-image rips returned silence at any paranoia level above 0.** One
+   correct sector followed by 99.7% zeroed samples, reported as
+   `Ripping errors: 0`. Upstream sets paranoia's cache model to 1 sector for
+   image drivers, and that size doubles as the read chunk size, leaving the
+   verification logic no overlap. Raised to 16, clear of both the corruption
+   boundary (<=4) and the leadout over-read that costs errors (>=512).
+   Affects upstream 0.9.4-rc1 and every earlier build of this fork. Real
+   drives were never affected; `-P 0` was always byte-perfect.
+
+Added
+ - CD-TEXT is read from the disc, disc level and per track, kept verbatim in
+   the log and used to fill metadata only where nothing else claimed it
+   (user `-a`/`-t` > MusicBrainz > CD-TEXT > defaults)
+ - Per-track paranoia status counters, summing exactly to the disc totals
+ - `Encoder:` names the libavformat/libavcodec that wrote the audio
+ - `Cache model:` reports the size paranoia models, and says the drive was not
+   probed -- deliberately not phrased as a cache defeat, which is not measured
+ - `Sample peak level:` and `True peak level:`, each saying which peak
+ - `Integrated loudness (R128):` and `Loudness range (R128):`, fork-owned so a
+   consumer need not scrape libavfilter's wording
+ - Read-liveness reporting from inside paranoia's callback while a frame read
+   stalls, so a slow read is distinguishable from a wedged one
+ - `-k` / `--stall-secs` sets that threshold (default 10, 0 disables)
+ - `-V` accepted again as an alias for `--version`, after upstream's move from
+   getopt to genopt dropped it and broke callers probing with it
+ - Q sub-channel recovery for drives that return raw binary instead of BCD
+
+Changed
+ - `Cache defeat:` renamed to `Cache model:`, and `Peak level:` to
+   `Sample peak level:`. Both labels claimed more than their values
+   established. Consumers keying on the old names must update.
+ - Log and cue files are line-buffered, so a cancelled rip leaves a partial
+   record instead of an empty file
+ - The log's first line and `Invoked as:` identify the fork and its arguments
+
+platterpus-fork r1 (2026-08-02)
+===============================
+First tagged fork release, on upstream `0.9.4-rc1` (`958e1ad`).
+
+ - Fork identifies itself as `platterpus-fork` in the version banner and on
+   line 1 of every logfile; the version number stays upstream's
+ - Pregap provenance reported per track, distinguishing `none` from
+   `unknown (reason)`
+ - `-Z` convergence verdict reported per track
+ - Per-track extraction speed and elapsed time
+ - Q sub-channel pregap detection for physical discs, carried from upstream
+   PR #115 with three fixes
+ - `tools/gen-provider-contract.py` generates the machine-readable interface
+   contract consumed by Platterpus
+
+Everything below this line is upstream cyanreg/cyanrip's changelog, unmodified.
+
 0.9.4-rc1
 =========
  - New option parser: long options, typed values, saner errors

@@ -2,6 +2,13 @@
 ===================
 Fully featured CD ripping program able to take out most of the tedium. Fully accurate, has advanced features most rippers don't, yet has no bloat and is cross-platform.
 
+> **This is `platterpus-fork`, a fork of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip).**
+> It keeps upstream's version number and identifies itself by its build tag:
+> `cyanrip 0.9.4-rc1 (platterpus-fork-g<commit>)`. Fork releases are numbered
+> separately -- current is **r2**. See [Fork differences](#fork-differences),
+> `Changelog.md` for what each fork release changed, and `PROVIDER-CONTRACT.md`
+> for the generated interface contract.
+
 Features
 --------
  * Automatic tag lookup from the MusicBrainz database
@@ -15,6 +22,7 @@ Features
  * Able to encode to multiple formats in parallel
  * [Cover image embedding](#cover-art-embedding) in mp3, flac, aac and opus
  * Automatic [cover art image downloading](#cover-art-downloading)
+ * Reads and reports CD-TEXT, disc level and per track (fork addition)
  * Provides and automatically verifies EAC CRC32, AccurateRip V1 and V2 checksums
  * Accurate ripping verification of partially damaged tracks
  * Automatic drive offset finding
@@ -104,6 +112,7 @@ Arguments are optional, except `-s`. By default cyanrip will rip all tracks from
 | -p `number=string`   | Specifies what to do with the pregap, syntax is described below                             |
 | -P `int`             | Sets the [paranoia level](#paranoia-level), default is max, 0 disables checking completely  |
 | -O                   | Overread into lead-in/lead-out areas, if unsupported by drive may freeze ripping            |
+| -k `int`             | Seconds a frame read must stall before liveness is reported (default 10, 0 disables)        |
 | -H                   | Enable HDCD decoding, read below for details                                                |
 | -E                   | Force CD deemphasis, for CDs mastered with preemphasis without actually signalling it       |
 | -W                   | Disable automatic CD deemphasis. Read [below](#deemphasis) for details.                     |
@@ -133,7 +142,7 @@ Arguments are optional, except `-s`. By default cyanrip will rip all tracks from
 |                      | **Misc. options**                                                                           |
 | -Q                   | Eject CD tray if ripping has been successfully completed                                    |
 | -Y `file`            | Verify that a rip log's checksum matches its contents                                       |
-| -v                   | Print version                                                                               |
+| -v, -V               | Print version (`--version` also works; `-V` is a fork-only alias, see below)                 |
 | -h                   | Print usage (this)                                                                          |
 | -f                   | Find drive offset (requires a disc with an AccuRip DB entry)                                |
 
@@ -273,6 +282,47 @@ cyanrip will automatically compute ReplayGain tags and add them to all files whi
 
 The tags generated are ReplayGain 2.0 compliant, which is backwards-compatible with ReplayGain 1.0. The **true peak** value is calculated and used.
 
+
+Fork differences
+----------------
+`platterpus-fork` exists to feed [Platterpus](https://github.com/rmccann-hub/Platterpus),
+which parses this program's log as an archival record. That makes the log an
+interface, so the fork's additions are mostly *reporting* rather than behaviour,
+and it never renumbers upstream's version.
+
+Behaviour differences from upstream:
+
+ * **Disc images rip correctly at the default paranoia level.** Upstream sets
+   paranoia's cache model to 1 sector for image drivers; because that size is
+   also the read chunk size, the verification logic is left no overlap and
+   returns one correct sector followed by silence. This fork uses 16. Real
+   drives are unaffected either way, and `-P 0` is byte-perfect on both.
+ * **`-V` is accepted as an alias for `--version`.** Upstream moved this flag
+   from `-V` to `-v` when it replaced getopt with genopt after 0.9.3, which
+   makes any caller probing with `-V` see exit 1 and a parse error -- which
+   reads as "not installed" rather than "flag renamed". Prefer `--version`.
+ * **Log and cue files are line-buffered**, so a cancelled rip leaves a partial
+   record rather than an empty file.
+ * **`-k`** sets how long a frame read must stall before liveness is reported.
+
+Reporting additions, all in the rip log:
+
+ * CD-TEXT, disc level and per track, kept verbatim and separate from the
+   metadata dictionaries. It fills metadata only where nothing else claimed it:
+   user `-a`/`-t` > MusicBrainz > CD-TEXT > defaults.
+ * Per-track paranoia status counters, which sum exactly to the disc totals
+ * Pregap provenance per track, distinguishing `none` from `unknown (reason)`
+ * `-Z` convergence verdict per track, and per-track extraction speed/elapsed
+ * `Encoder:`, naming the libavformat/libavcodec that wrote the audio
+ * `Cache model:`, reporting the size paranoia models and stating that the
+   drive was not probed -- deliberately not phrased as a cache defeat
+ * `Sample peak level:`, `True peak level:`, `Integrated loudness (R128):` and
+   `Loudness range (R128):`
+
+`PROVIDER-CONTRACT.md` is generated from the source and the built binary by
+`tools/gen-provider-contract.py`, and documents every flag, every stable log
+line, the exit codes and the full error-message inventory. Regenerate it rather
+than editing it.
 
 Paranoia level
 --------------
