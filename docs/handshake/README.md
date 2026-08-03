@@ -31,9 +31,14 @@ assumed); `git ls-remote --tags origin` returns nothing, and no tag from this
 fork has ever reached the remote. The commit SHA is the only release identifier a
 consumer can resolve.
 
-`d5d12ec` is the last commit that changes the binary — later commits are
-documentation, so the branch tip builds identically. A file cannot contain the
-hash of the commit that adds it, which is why this names the code commit.
+`d5d12ec` is the last commit that changes the binary; everything after it on the
+branch is documentation. A file cannot contain the hash of the commit that adds
+it, which is why this names the code commit rather than the tip.
+
+Building the tip gives the same program, measured rather than assumed: the two
+commits were built in separate worktrees and the ELF binaries compared byte for
+byte. `.text` and `.data` are identical; the 22 differing bytes are the commit
+string, the build-id hash derived from it, and the build path in debug info.
 
 **Do not use `0.9.4-rc3`.** That string was committed locally, never released,
 and withdrawn: it mints an identifier in upstream's namespace, which upstream can

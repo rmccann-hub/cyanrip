@@ -27,8 +27,9 @@ Five things are new since anything you have seen:
    **unverified on hardware** — read that section before you enable it.
 
 Plus two findings in *your* output (§6), the rip-speed question answered from the
-logs (§7), a survey of other cyanrip forks with something in it for you (§8), and
-**a request that you send a handshake file of your own** (§12).
+logs (§7), a survey of other cyanrip forks with something in it for you (§8),
+**a joint test plan for running both updated applications against each other**
+(§14), and **a request that you send a handshake file of your own** (§12).
 
 ---
 
@@ -44,9 +45,43 @@ source anchor   sha256/16 = 8058479eb6459ba7        (over src/*.c and src/*.h)
 git tag         none published — see below
 ```
 
-`d5d12ec` is the last commit that changes the binary; `9eb2eb5` is the branch tip
-and is documentation only. A file cannot contain the hash of the commit that adds
-it, which is why this names the code commit.
+`d5d12ec` is the last commit that changes the binary. Everything after it on
+`platterpus-fork` is documentation — including this file. **A file cannot contain
+the hash of the commit that adds it**, which is why this pins the code commit and
+does not name the tip's SHA at all.
+
+**You may build the tip instead, and get the same program.** Measured, not
+assumed: both commits were checked out into separate worktrees, configured and
+built, and the resulting ELF binaries compared byte for byte. `.text` and `.data`
+are **identical**. They differ in 22 bytes total — the 7-character commit string
+in `.rodata`, the 20-byte `.note.gnu.build-id` that is a content hash of it, and
+2 bytes of build-directory path in `.debug_line_str`. No executable code differs.
+
+### Build and test it
+
+```sh
+git clone <repo> && cd cyanrip
+git checkout d5d12ec              # or: git checkout platterpus-fork
+meson setup build
+ninja -C build
+meson test -C build --print-errorlogs      # expect 20/20
+./build/src/cyanrip --version
+# -> cyanrip 0.9.4-rc1+platterpus.3 (platterpus-fork-gd5d12ec)
+```
+
+The 20 tests need no CD drive: 4 are unit tests and 16 rip synthetic disc images
+through the full pipeline. Debian/Ubuntu build dependencies are listed in
+`CLAUDE.md` under *Build*; a `meson setup` failure there is almost always a
+missing `-dev` package rather than a code problem.
+
+To exercise this round's two behaviour changes directly:
+
+```sh
+# The Duration: fix (§5) -- -s 0 cannot show it, a nonzero offset can.
+meson test -C build duration
+# The heartbeat that r2 did not have (§0).
+meson test -C build 'Stall watchdog'
+```
 
 **Pin the commit — not the tag, not the branch tip.** No tag from this fork has
 ever reached the remote: the git proxy here refuses tag pushes with `HTTP 403`.
@@ -643,7 +678,71 @@ Your file should carry, at minimum:
 
 ---
 
-## 14. Releases
+## 14. Joint test plan — both applications updated, tested together
+
+**The thing to avoid: testing cyanrip r3 against an old Platterpus, or a new
+Platterpus against r2's logs, and recording either as verification.** Round 7
+contains a retraction, a corrected measurement and a changed version string;
+every one of those is invisible if only one side is updated.
+
+### Step 0 — both sides state their build, before any test runs
+
+Neither of us records a result until both are pinned. Put these in your file:
+
+```
+cyanrip      commit d5d12ec   version 0.9.4-rc1+platterpus.3
+Platterpus   commit <yours>   version <yours>
+```
+
+If a test was run against anything else, say which — a result from a mismatched
+pair is still useful, but it is a different claim and must not be filed as
+"verified against r3".
+
+### Step 1 — no drive needed. Do this first; it catches most breakage.
+
+| # | test | what it proves | fails if |
+|---|---|---|---|
+| T1 | Build r3, `meson test -C build` | the tree you pinned is the tree that passes | not 20/20 |
+| T2 | `./build/src/cyanrip --version` through your version detection | §2's `+platterpus.3` parses on your side | your parser chokes on `+`, or a test still asserts `== 0.9.4-rc1` |
+| T3 | Feed `docs/golden-reference.log` (regenerated at this pin) to your parser | no logfile line changed — your parser should need **zero** changes | any field moves |
+| T4 | Rip a fixture and parse the result end to end: `cyanrip -d tests/fixtures/pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -D out -F '{track}' -L ref -M sheet -P 0` | the full pipeline, both apps, no hardware | anything |
+| T5 | **Repeat T4 with `-s 6`** and parse it | **the §5 `Duration:` fix.** `-s 0` cannot show this — T4 alone will pass on a build that still has the bug | `Duration:` disagrees with `Samples:`/44100 |
+| T6 | Point your parser at an *old* r1/r2 log from a nonzero-offset rip | your §5 repair path | you render the stored `Duration:` rather than recomputing from `Samples:` |
+| T7 | `cyanrip -d <image> -I -N -A -U -P 0 -x` | `-x` refuses on an image and says so; your renderer handles `Cache probe: not run (…)` | you render it as a measurement, or as a defeated cache |
+| T8 | Your EAC-format renderer over T4's log | §6a and §6b | `Defeat audio cache : Yes` still appears from an unprobed `Cache model:` |
+
+T5 and T6 are the two that a "looks fine" pass will miss. Please run them
+explicitly rather than assuming T4 covered them.
+
+### Step 2 — on the rig, one disc, both applications updated
+
+| # | test | what it proves |
+|---|---|---|
+| T9 | Full rip with `-k 30`, capturing stdout | **gate 3.** If a stall occurs, `Still reading track N - the read for LSN L has not returned after Ts` must appear. r2 produced nothing here through two three-minute stalls. |
+| T10 | Same rip, second disc with a known pregap layout | **gate 1** (§1, H9). One disc is one observation. |
+| T11 | Same rip with `-x` added | **gate 4** (§3, H10). Send us the line *and* its `uncached read` figure. An implausible number is our bug, not your drive's. |
+| T12 | Compare T9's `Duration:` against `Samples:`/44100 on a real disc | §5 on real media at the drive's real offset, rather than at a synthetic one |
+| T13 | Cancel a rip mid-track | **gate 2** — `setvbuf` under podman, a partial log rather than an empty one |
+
+T9, T11 and T13 can all be the *same rip* if you want one pass. T10 needs a
+second disc by definition.
+
+### Step 3 — what a green run does and does not entitle either of us to say
+
+- 20/20 plus T1–T8 green means **the software agrees with itself on synthetic
+  media**. It says nothing about `-x`'s numbers, the MMC sub-channel read, C2, `-f`,
+  or damaged media. §10's "NOT proven" table is the list, and it does not shrink
+  because a suite went green.
+- T9 passing proves the heartbeat *reports* a stalled read. It does not prove a
+  grinding drive is what leaves one outstanding — that inference is §0's
+  diagnosis, which is still inference.
+- **T9 not firing is only meaningful if a stall actually occurred.** If the rip
+  runs clean, gate 3 stays open; that is "did not happen", not "happened and found
+  nothing". Please report it that way.
+
+---
+
+## 15. Releases
 
 **We are not releasing r3 while this round is open, and we ask you to hold too.**
 
@@ -654,7 +753,9 @@ set you have never reviewed (§A). Any one of those is worth a round on its own.
 
 When you are satisfied, roll your own version and release — and say in your file
 which cyanrip pin that release is verified against, so the two are quotable
-together.
+together. **Release the pair, not the halves:** a Platterpus release verified
+only against r2 would ship with the §5 repair untested and the §2 version string
+unhandled.
 
 **A "no changes" file is a complete round. Silence is not.**
 
