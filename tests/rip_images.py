@@ -89,6 +89,36 @@ def sc_info():
             fail(f"info {img}: cyanrip exited with {ec}")
 
 
+def sc_cli():
+    # Version probing. cyanrip 0.9.3 and earlier spelled this -V; genopt moved
+    # it to -v, which broke callers probing with -V -- they get exit 1 and a
+    # parse error, which reads as "not installed" rather than "flag renamed".
+    # All three spellings must work, and the banner must carry the fork id so a
+    # consumer can tell a fork build from stock upstream.
+    for flag in ("-V", "-v", "--version"):
+        ec, out = crip(flag)
+        if ec != 0:
+            fail(f"cli: {flag} exited {ec}, wanted 0")
+        if "platterpus-fork" not in out:
+            fail(f"cli: {flag} banner missing fork id: {out.strip()!r}")
+
+    # All three must agree, or a consumer's answer depends on which it asked.
+    banners = {crip(f)[1].strip() for f in ("-V", "-v", "--version")}
+    if len(banners) != 1:
+        fail(f"cli: version spellings disagree: {banners}")
+
+    # -h must still work and must not be confused with the above
+    if crip("-h")[0] != 0:
+        fail("cli: -h exited non-zero")
+
+    # A genuinely unknown flag must still fail, diagnosably, on stdout
+    ec, out = crip("--no-such-flag")
+    if ec != 1:
+        fail(f"cli: unknown flag exited {ec}, wanted 1")
+    if "Unable to parse" not in out:
+        fail(f"cli: unknown flag gave no diagnosable message: {out.strip()!r}")
+
+
 def sc_basic():
     rip("basic", "basic.cue")
     expect("basic", "1.flac:4", "2.flac:4", "log.log", "sheet.cue")

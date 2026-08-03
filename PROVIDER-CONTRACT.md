@@ -20,7 +20,7 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
 | Short | Long | Meaning |
 |---|---|---|
 | `-h` | `--help` | Print this text |
-| `-v` | `--version` | Print the version number |
+| `-v` | `--version` | Print the version number (-V accepted as an alias) |
 
 ### Ripping options
 
@@ -80,7 +80,12 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
 **37 flags total.** Notes that are not derivable from `--help`:
 
 - `-O` is **overread**, not an options passthrough. Never repurpose it.
-- `-v` is version; there is no `-V`.
+- `-v`, `-V` and `--version` all print the version banner and exit 0.
+  Upstream moved this flag from `-V` to `-v` when it replaced getopt with
+  genopt after 0.9.3; a caller probing with `-V` against a stock 0.9.4 build
+  gets exit 1 and `Unable to parse command line argument: -V`, which reads
+  as "not installed" rather than "flag renamed". This fork accepts `-V`
+  again. **Prefer `--version`** -- it has never changed and never will.
 - `-J` and `-I` are mutually exclusive; combining them exits 1.
 - `-d` accepts a device path **or** a TOC/CUE/NRG image file.
 - `-a`/`-t` values are `:`-separated; a literal colon must be escaped `\:`.

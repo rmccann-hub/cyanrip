@@ -21,7 +21,11 @@ package, not a real bug. On Debian/Ubuntu the full set:
 
 Minimum versions are pinned in `src/meson.build` (e.g. libavcodec >= 59.24.100).
 Check `meson setup build`'s dependency-resolution errors first before assuming
-code is broken. Version banner is `cyanrip --version` / `-v`, not `-V`.
+code is broken. Version banner is `cyanrip --version`, `-v`, or `-V`. Upstream moved this flag
+from `-V` to `-v` when it replaced getopt with genopt after 0.9.3, which broke
+every caller probing with `-V` (exit 1, "Unable to parse command line argument",
+which reads as "not installed"). This fork accepts `-V` as an alias again; prefer
+`--version`, which has never changed.
 
 ## Where things live
 

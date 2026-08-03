@@ -40,6 +40,7 @@ python = import('python').find_installation()
 
 rip_scenarios = [
     'info',
+    'cli',
     'basic',
     'pregap',
     'mixed',

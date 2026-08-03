@@ -494,7 +494,17 @@ static inline int gen_opt_parse_fn(void *log_ctx, GenOpt *opts_list,
     for (int i = 1; i < argc; i++) {
         GenOpt *l = NULL;
 
-        if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--version")) {
+        /* -V is accepted as an alias for -v. cyanrip 0.9.3 and earlier parsed
+         * options with getopt and spelled this flag -V; replacing getopt with
+         * genopt moved it to -v, which silently broke every caller that probed
+         * for the version with -V -- they get "Unable to parse command line
+         * argument: -V" and exit 1, which reads as "cyanrip is not installed"
+         * rather than as "that flag was renamed". Platterpus hit exactly that.
+         * -V is otherwise unused, so accepting both costs nothing and no
+         * upstream-compatible invocation changes meaning. Prefer --version:
+         * it has never changed and never will. */
+        if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "-V") ||
+            !strcmp(argv[i], "--version")) {
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_INFO, "%s\n", GEN_OPT_HELPSTRING);
             return -EAGAIN;
         } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
@@ -514,7 +524,7 @@ static inline int gen_opt_parse_fn(void *log_ctx, GenOpt *opts_list,
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_INFO, "\n");
             GEN_OPT_LOG(GEN_OPT_PHDR,
                         "--version", "-v", pad_to - (int)strlen("--version"), " ",
-                        "Print the version number");
+                        "Print the version number (-V accepted as an alias)");
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_INFO, "\n");
             for (int j = 0; j < opts_list_nb; j++) {
                 if (opts_list[j].type == GEN_OPT_TYPE_SECTION) {
