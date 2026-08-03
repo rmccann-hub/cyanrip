@@ -216,6 +216,12 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
      * "Duration: 00:04.01". Found on bovinemagnet/cyanrip 3eb6e22 and
      * reproduced here.
      *
+     * The error is not always +1. The offset shifts both ends of the range; a
+     * track clamped at a disc boundary has the shift removed at one end only,
+     * so its error inverts -- measured -1 on the last track at -s +667 and on
+     * the first track at -s -667. Anything that "adds a frame back" is
+     * therefore wrong on the boundary track of every disc.
+     *
      * Not from end_lsn_sig - start_lsn_sig either, which is what the Frames:
      * line below prints: those are captured from the raw TOC before pregap
      * merging and lead-out padding move start_lsn/end_lsn, so for a merged

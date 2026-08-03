@@ -335,7 +335,11 @@ def sc_duration():
 
     checked = 0
     for img in ("basic.cue", "pregap.cue"):
-        for off in ("0", "6", "588", "-6", "-588"):
+        # 667 is the rig drive's real offset and is large enough that the
+        # shifted range reaches the disc boundary, which is where the error
+        # inverts: the last track at +667 and the first at -667 are -1, not +1.
+        # A repair that "adds a frame back" would pass every other case here.
+        for off in ("0", "6", "588", "667", "-6", "-588", "-667"):
             name = f"dur_{img.split('.')[0]}_{off}"
             ec, log = crip("-d", WORK / img, "-N", "-A", "-U", "-s", off,
                            "-P", "0", "-o", "flac", "-D", WORK / f"out_{name}",
@@ -363,8 +367,8 @@ def sc_duration():
                          f"Samples {samples} is {want}")
                 checked += 1
 
-    if checked < 20:
-        fail(f"duration: only {checked} track blocks checked, expected >= 20")
+    if checked < 28:
+        fail(f"duration: only {checked} track blocks checked, expected >= 28")
 
 
 def sc_reporting():

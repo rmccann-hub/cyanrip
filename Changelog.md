@@ -29,6 +29,23 @@ Fixed
    The log contradicted itself, and the shorter of the two fields was the wrong
    one. Now derived from `nb_samples`.
 
+   **The sign is not uniform, and this matters more than the size of the
+   error.** The offset shifts *both* ends of a track's range; on a track clamped
+   at the disc boundary the shift is removed at one end only, leaving the other
+   end's shift uncompensated in the opposite direction. Measured on the fixtures:
+
+   | | track 1 | last track |
+   |---|---|---|
+   | `-s +667` | **+1** | **−1** |
+   | `-s -667` | **−1** | **+1** |
+
+   So a downstream repair written as *"add one frame back"* is wrong on the
+   boundary track, in the opposite direction, on every disc. **The repair is
+   "recompute from `Samples:`", never "adjust by a frame."** Platterpus found the
+   inverted sign on their own rig log (track 14 of 14, `-s 667`); it was
+   reproduced here on `basic.cue` and `pregap.cue` before being accepted, which
+   is also where the symmetric start-boundary case came from.
+
    **`-s 0` never showed it**, which is why no fixture caught it and why the
    golden reference is unchanged: it is generated at `-s 0`. Found in
    `bovinemagnet/cyanrip` commit `3eb6e22` during a survey of other forks, and
