@@ -1,7 +1,7 @@
 project('cyanrip', 'c',
     license: 'LGPL2.1+',
     default_options: [ 'buildtype=debugoptimized', 'c_std=c99', 'warning_level=1' ],
-    version: '0.9.4-rc1',
+    version: '0.9.4-rc1+platterpus.3',
     meson_version: '>=0.53.0',
 )
 
@@ -10,9 +10,29 @@ conf = configuration_data()
 conf.set_quoted('PROJECT_NAME', meson.project_name())
 conf.set_quoted('PROJECT_VERSION_STRING', meson.project_version())
 
-# Identifies this fork in every banner it prints. Deliberately separate from
-# the version number, which stays byte for byte upstream's so that anything
-# parsing a version out of the banner keeps working unchanged.
+# Identifies this fork in every banner it prints, and remains the reliable
+# answer to "is this the fork?".
+#
+# Version scheme: upstream's number, verbatim, plus our release as SemVer build
+# metadata. Upstream is at 0.9.4-rc1 and has cut no 0.9.4 tag, so this build is
+# "upstream's 0.9.4-rc1, fork release 3".
+#
+# Releases r1 and r2 carried upstream's number with nothing appended, which made
+# two fork builds indistinguishable by version. The obvious fix -- advance the
+# rc number ourselves, 0.9.4-rc2, -rc3 -- was tried and reverted before it
+# shipped, because it mints identifiers in upstream's namespace: nothing stops
+# upstream tagging its own 0.9.4-rc3, and then two different trees answer to one
+# string. "rc3 is unambiguously ours" was true the day it was written and one
+# upstream tag away from being false. A `+platterpus.N` suffix cannot collide,
+# because upstream will never mint one.
+#
+# It also leaves exactly one number to track: fork release N appears once, here.
+# There is no separate "r2 vs rc1" to reconcile.
+#
+# Still true, and worth stating: PROJECT_FORK_ID is the only thing that answers
+# "fork or upstream?" for a consumer that parses only the leading version
+# number. Match on PROJECT_FORK_ID, or on the `+platterpus.` suffix -- never on
+# `0.9.4-rc1` alone, which upstream also answers to.
 conf.set_quoted('PROJECT_FORK_ID', 'platterpus-fork')
 
 version_split = meson.project_version().split('.')

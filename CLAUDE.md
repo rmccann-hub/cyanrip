@@ -129,7 +129,18 @@ regardless of who is at the keyboard.
   cannot explain to a user.
 - **Never prompt or block on stdin.** There is no controlling terminal.
 - **This build must identify itself** as `platterpus-fork` in the version banner and
-  in every logfile's first line. The version *number* stays upstream's.
+  in every logfile's first line. **`PROJECT_FORK_ID` is the only reliable answer to
+  "is this the fork?"** — match on it, never on the leading version number.
+  **Never mint a version identifier in upstream's namespace.** The version number
+  is upstream's, verbatim, with the fork release appended as SemVer build metadata:
+  `0.9.4-rc1+platterpus.3`. Releases r1 and r2 carried bare `0.9.4-rc1`, which made
+  two fork builds indistinguishable; the fix attempted first — advance our own rc
+  number to `0.9.4-rc3` — was reverted before it shipped, because upstream can mint
+  that same string and then two trees answer to one name. "rc3 is unambiguously
+  ours" was true when written and one upstream tag from being false, which is the
+  precise failure mode this file's first rule exists to catch. `+platterpus.N`
+  cannot collide. It also leaves one number rather than two: there is no "r2 vs
+  rc1" to reconcile.
 
 ### Which project owns what
 

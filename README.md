@@ -3,9 +3,11 @@
 Fully featured CD ripping program able to take out most of the tedium. Fully accurate, has advanced features most rippers don't, yet has no bloat and is cross-platform.
 
 > **This is `platterpus-fork`, a fork of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip).**
-> It keeps upstream's version number and identifies itself by its build tag:
-> `cyanrip 0.9.4-rc1 (platterpus-fork-g<commit>)`. Fork releases are numbered
-> separately -- current is **r2**. See [Fork differences](#fork-differences),
+> It keeps upstream's version number and appends its own release as build
+> metadata: `cyanrip 0.9.4-rc1+platterpus.3 (platterpus-fork-g<commit>)` is
+> upstream's 0.9.4-rc1, fork release 3. Match on `platterpus-fork` or on the
+> `+platterpus.` suffix, never on `0.9.4-rc1` alone -- upstream answers to that
+> too. See [Fork differences](#fork-differences),
 > `Changelog.md` for what each fork release changed, `PROVIDER-CONTRACT.md` for
 > the generated interface contract, and `docs/handshake/` for the record of the
 > rounds that agreed it.

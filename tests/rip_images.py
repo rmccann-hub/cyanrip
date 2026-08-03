@@ -107,6 +107,20 @@ def sc_cli():
     if len(banners) != 1:
         fail(f"cli: version spellings disagree: {banners}")
 
+    # The version number must stay inside a namespace upstream cannot mint.
+    # Releases r1/r2 shipped bare "0.9.4-rc1", indistinguishable from each other
+    # and from upstream; the first fix attempt advanced our own rc number to
+    # "0.9.4-rc3", which upstream can also tag. Both were reverted in favour of
+    # SemVer build metadata. This is the check that fails if it ever drifts back:
+    # a bare upstream-shaped number with nothing after it.
+    banner = banners.pop()
+    ver = re.search(r"^cyanrip (\S+)", banner)
+    if not ver:
+        fail(f"cli: banner has no version field: {banner!r}")
+    elif "+platterpus." not in ver.group(1):
+        fail(f"cli: version {ver.group(1)!r} is in upstream's namespace -- a "
+             "fork build must carry a +platterpus.N suffix upstream cannot mint")
+
     # -h must still work and must not be confused with the above
     if crip("-h")[0] != 0:
         fail("cli: -h exited non-zero")
