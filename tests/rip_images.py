@@ -319,6 +319,22 @@ def sc_reporting():
     # The Encoder: line must name the library that actually wrote the audio.
     # Assert against the FLAC vendor string rather than against itself, or the
     # check proves only that we can print a constant.
+    # A label must not assert more than its value establishes. "Cache defeat"
+    # named an action we explicitly do not perform -- we report a model and say
+    # the drive was never probed -- so the field is "Cache model".
+    if "Cache defeat" in log:
+        fail("reporting: 'Cache defeat' label claims an outcome never established")
+    if not re.search(r"^Cache model:\s+\S", log, re.M):
+        fail("reporting: no Cache model: line")
+
+    # "Peak level" did not say which peak, with a true peak reported below it.
+    if re.search(r"^\s+Peak level:", log, re.M):
+        fail("reporting: ambiguous 'Peak level' label (which peak?)")
+    if not re.search(r"^\s+Sample peak level:\s+[\d.]+% \(-?[\d.]+ dBFS\)", log, re.M):
+        fail("reporting: no Sample peak level: line")
+    if not re.search(r"^\s+True peak level:\s+-?[\d.]+ dBFS", log, re.M):
+        fail("reporting: no True peak level: line")
+
     m = re.search(r"^Encoder:\s+libavformat (\d+)\.(\d+)\.(\d+)", log, re.M)
     if not m:
         fail("reporting: no Encoder: line")

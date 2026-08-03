@@ -74,17 +74,19 @@ static void print_cdtext(cyanrip_ctx *ctx)
     print_cdtext_fields(ctx, ctx->cdtext, "    ");
 }
 
-/* Paranoia defeats a drive's read cache by modelling its size and seeking
- * back further than that before a re-read. Report the model that is in force.
+/* Paranoia defeats a drive's read cache by modelling its size and seeking back
+ * further than that before a re-read. Report the model that is in force.
  *
- * This is deliberately not phrased as EAC's "Defeat audio cache : Yes": the
- * number below is a *model*, not a measurement. cyanrip never probes the
- * drive for its real cache size the way cd-paranoia -A does, so claiming the
- * cache was defeated would assert something no part of this run established. */
-static void print_cache_defeat(cyanrip_ctx *ctx)
+ * The label is "Cache model", not "Cache defeat", and deliberately not EAC's
+ * "Defeat audio cache : Yes". We report the size paranoia *models*; we never
+ * probe the drive for its real cache the way cd-paranoia -A does. A field named
+ * for the defeating would assert an outcome no part of this run established,
+ * and a reader who greps the field name would be entitled to believe it -- the
+ * qualifier in the value cannot undo a claim the label already made. */
+static void print_cache_model(cyanrip_ctx *ctx)
 {
     if (!ctx->paranoia || !ctx->settings.paranoia_level) {
-        cyanrip_log(ctx, 0, "Cache defeat:   not in use (paranoia disabled)\n");
+        cyanrip_log(ctx, 0, "Cache model:    not in use (paranoia disabled)\n");
         return;
     }
 
@@ -95,12 +97,12 @@ static void print_cache_defeat(cyanrip_ctx *ctx)
     case DRIVER_BINCUE:
     case DRIVER_NRG:
     case DRIVER_CDRDAO:
-        cyanrip_log(ctx, 0, "Cache defeat:   %i sector%s modelled "
+        cyanrip_log(ctx, 0, "Cache model:    %i sector%s "
                             "(disc image, no drive cache)\n",
                     sectors, sectors == 1 ? "" : "s");
         break;
     default:
-        cyanrip_log(ctx, 0, "Cache defeat:   %i sector%s modelled "
+        cyanrip_log(ctx, 0, "Cache model:    %i sector%s "
                             "(drive cache size not probed)\n",
                     sectors, sectors == 1 ? "" : "s");
         break;
@@ -242,11 +244,15 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
     cyanrip_log(ctx, 0, "    Samples:     %u\n", t->nb_samples);
     cyanrip_log(ctx, 0, "    Frames:      %u\n", t->end_lsn_sig - t->start_lsn_sig + 1);
     if (t->computed_crcs) {
-        cyanrip_log(ctx, 0, "    Peak level:  %.1f%%\n", 100.0 * pow(10.0, t->ebu_sample_peak / 20.0));
-        /* Named "True peak level" rather than "True peak" so it cannot be
-         * confused with libavfilter's own "  True peak:" heading, which is
-         * FFmpeg's wording and moves when FFmpeg does. */
-        cyanrip_log(ctx, 0, "    True peak level: %.1f dBFS\n", t->ebu_true_peak);
+        /* "Sample peak level", not "Peak level": a bare "Peak level" does not
+         * say *which* peak, and a true peak is reported directly below it.
+         * Both are named "... peak level" rather than "... peak" so neither can
+         * be confused with libavfilter's own "  Sample peak:" / "  True peak:"
+         * headings, which are FFmpeg's wording and move when FFmpeg does. */
+        cyanrip_log(ctx, 0, "    Sample peak level: %.1f%% (%.1f dBFS)\n",
+                    100.0 * pow(10.0, t->ebu_sample_peak / 20.0),
+                    t->ebu_sample_peak);
+        cyanrip_log(ctx, 0, "    True peak level:   %.1f dBFS\n", t->ebu_true_peak);
     }
     if (t->rip_time_us > 0) {
         cyanrip_log(ctx, 0, "    Extraction speed:  %.1fx\n",
@@ -452,7 +458,7 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     else
         cyanrip_log(ctx, 0, "Paranoia level: %i\n", ctx->settings.paranoia_level);
     cyanrip_log(ctx, 0, "Frame retries:  %i\n", ctx->settings.max_retries);
-    print_cache_defeat(ctx);
+    print_cache_model(ctx);
     cyanrip_log(ctx, 0, "HDCD decoding:  %s\n", ctx->settings.decode_hdcd ? "enabled" : "disabled");
 
     cyanrip_log(ctx, 0, "Album Art:      %s", ctx->nb_cover_arts == 0 ? "none" : "");

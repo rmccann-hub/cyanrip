@@ -298,8 +298,9 @@ def emit(binary):
     w("")
     w("Also unstable, and **not ours**: the loudness block FFmpeg's `ebur128` filter")
     w("prints (" + ", ".join(f"`{x}`" for x in FFMPEG_OWNED[:4]) + ", ...). That wording")
-    w("belongs to libavfilter and moves when FFmpeg does. Prefer the `Peak level:`")
-    w("line in P2, which is ours and is gated on a completed rip.")
+    w("belongs to libavfilter and moves when FFmpeg does. Prefer the")
+    w("`Sample peak level:` and `True peak level:` lines in P2, which are ours,")
+    w("are gated on a completed rip, and each say which peak they report.")
     w("")
 
     w("## P4 - Exit codes")
