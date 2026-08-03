@@ -50,6 +50,13 @@ test('Stall watchdog', stall_test, timeout: 60)
 ## finished files.
 python = import('python').find_installation()
 
+## Release gate
+## ============
+## The "no release while a round is open" rule used to be prose only. This is
+## the check that executes it, and these are the ways it could wrongly say yes.
+test('Release gate', python, args: [ files('release_gate.py') ])
+
+
 rip_scenarios = [
     'info',
     'cli',

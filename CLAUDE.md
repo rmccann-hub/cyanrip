@@ -518,6 +518,76 @@ Two things that follow, and have already caused confusion:
   subject line would have been permanent and false, and the only honest remedy
   would be a follow-up commit saying so.
 
+## The release plan, and what enforces it
+
+Rolling a fork release is four things in a fixed order. The order is the point:
+every step depends on the one before, and skipping one is how a release ships a
+claim nobody checked.
+
+**1. Land the work.** Topic branch → `platterpus-fork`, fast-forward only, one
+logical change per commit, every commit building and testing green on its own.
+Behavioural fixes revert-proved *and* the build confirmed green during the
+revert.
+
+**2. Regenerate what is derived.** `tools/gen-provider-contract.py >
+PROVIDER-CONTRACT.md`, and the golden reference if any log line moved. Never
+hand-edit either. `--check` must exit 0.
+
+**3. Open a handshake round.** A round file in `docs/handshake/`, sections A–J,
+declaring at column 0:
+
+```
+HANDSHAKE-ROUND: N
+HANDSHAKE-VERDICT: OPEN
+```
+
+Send it. The round stays open until their verification file arrives *and* we
+agree — at which point the verdict becomes `GO`. A round may take several laps;
+a mid-round lap is `HOLD`, not `GO`, and a lap that changes nothing is still a
+complete lap.
+
+**4. Only then, release.** Bump `+platterpus.N`, write the `Changelog.md` entry,
+regenerate the contract and golden reference at the new version, and announce
+the pin as a **commit SHA** — tags cannot be published from here.
+
+### What enforces it
+
+`tools/release-gate.py` executes step 3, because until r3 it was prose and prose
+enforces nothing. It exits non-zero while any round is not closed:
+
+    python3 tools/release-gate.py                 # human summary
+    python3 tools/release-gate.py --release-gate  # non-zero blocks a release
+
+**Run it before bumping the version. If it says no, the answer is no.**
+
+It reads a *declared verdict*, never a file's existence. Platterpus's own gate
+keyed on three files being present, so a file whose first paragraph said
+"HOLD, do not release" closed a round exactly as a `GO` would have. Four
+properties follow from that, and each is a separate way to get it wrong again:
+
+- **The verdict is a field, not the file.** A round file exists from the moment
+  it is started.
+- **Matched line-anchored at column 0.** Prose *about* a verdict is not a
+  verdict — a file saying "this is not a closing GO" must not close a round
+  because the word appears in it.
+- **No verdict fails closed.** The tempting shortcut, treating a missing field as
+  `GO` so historical rounds still pass, reintroduces the entire defect through
+  the fallback. Rounds 5 and 6 predate the field and are grandfathered **by
+  number**, in a set a test pins, so widening it is a visible act.
+- **Only `GO` closes.** `OPEN`, `HOLD`, and any verdict the script has not heard
+  of all leave the round open, because an unrecognised verdict is not agreement.
+
+`tests/release_gate.py` is the list of ways it could wrongly say yes. Reverting
+the gate to presence-keying makes it print *"Release allowed"* against a record
+with an open round and fails eleven of them.
+
+### Version numbering, restated as a rule
+
+`+platterpus.N` increments by one per release, and **N is the only number that
+moves**. Upstream's `0.9.4-rc1` is copied verbatim and changes only when we sync
+a new upstream version. Never mint an identifier in upstream's namespace — see
+the seam section for why `0.9.4-rc3` was written and withdrawn.
+
 ## Watching upstream
 
 Upstream changes can break our consumer without touching our code, because we
