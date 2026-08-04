@@ -787,6 +787,14 @@ Record these rather than rediscovering them:
 - **libcdio does not distinguish "no CD-TEXT on disc" from "driver cannot read
   CD-TEXT".** `cdio_get_cdtext()` returns the same `NULL` for both. Report what
   was observed ("none reported by libcdio"), never the stronger claim.
+- **EAC's `Pre-gap length` field is hundredths of a second, not CD frames.**
+  Settled from a genuine EAC 1.8 log of the rig disc, which Platterpus opened
+  and we cannot (round 7 lap 11 §B). Our `Pregap length: N frames` states its
+  unit and is unaffected, but the two logs differ by design on every non-zero
+  pregap and **that is not a defect in either**. The reasoning that made it look
+  like one was sound and wrong: `0:00:01.96` cannot be a frame count, so we
+  correctly inferred the field was not frames — and then had no artifact to say
+  which of us matched EAC. Do not re-litigate this without opening an EAC log.
 - **libcdio terminates the process from inside a library call.** Its default
   log handler `exit(EXIT_FAILURE)`s on `CDIO_LOG_ERROR` and `abort()`s on
   `CDIO_LOG_ASSERT`, printing straight to stderr. So `-d` on an unparseable CUE
