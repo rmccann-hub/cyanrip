@@ -335,7 +335,7 @@ def test_fenced_examples_are_not_declarations():
 def test_protocol_version_is_pinned():
     # Bumping this is a protocol change and must be a deliberate, visible edit
     # shipped to both projects before the next close.
-    check(rg.PROTOCOL_VERSION == 1,
+    check(rg.PROTOCOL_VERSION == 2,
           f"protocol version changed to {rg.PROTOCOL_VERSION} -- "
           "both repos must ship the new spec before the next close")
 

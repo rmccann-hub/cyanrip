@@ -1,4 +1,4 @@
-# Handshake protocol v1
+# Handshake protocol v2
 
 **This file is the shared language. Both projects implement it; neither owns
 it.** cyanrip and Platterpus each have a gate that reads round files and decides
@@ -62,10 +62,14 @@ files the other gate rejects:
 ## 3. Required fields
 
 ```
-HANDSHAKE-PROTOCOL: 1
+HANDSHAKE-PROTOCOL: 2
 HANDSHAKE-ROUND: 7
-HANDSHAKE-LAP: 2
+HANDSHAKE-LAP: 4
+HANDSHAKE-FROM: cyanrip-fork
 HANDSHAKE-VERDICT: HOLD
+HANDSHAKE-APP-VERSION: platterpus 0.6.3
+HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.4 (platterpus-fork-g<sha>)
+HANDSHAKE-PIN: <sha>
 ```
 
 | field | value | notes |
@@ -73,7 +77,21 @@ HANDSHAKE-VERDICT: HOLD
 | `HANDSHAKE-PROTOCOL` | integer | this spec's version. A gate that reads a **higher** number than it implements must refuse the round rather than guess. |
 | `HANDSHAKE-ROUND` | integer | must match the round the file belongs to. A file declaring a different round than it is filed under is a bookkeeping error and refused. |
 | `HANDSHAKE-LAP` | integer ≥ 1 | absent means lap 1. **A round's state is its latest lap's verdict** — by declared number, never by filename or mtime. |
+| `HANDSHAKE-FROM` | `cyanrip-fork` \| `platterpus` | who wrote it. Makes a crossed pair unambiguous without relying on filename conventions. |
 | `HANDSHAKE-VERDICT` | see §4 | this side's position. |
+| `HANDSHAKE-APP-VERSION` | `platterpus <semver>` | the consumer build this file's results were produced with. |
+| `HANDSHAKE-RIPPER-VERSION` | `cyanrip <version> (<build tag>)` | the ripper banner, **verbatim**, that produced them. |
+| `HANDSHAKE-PIN` | short SHA | the commit this file concerns. |
+
+**The two version fields are load-bearing, not bookkeeping.** A round that
+approves a pin approves it *for a named consumer version*. Two artifacts from the
+same ripper under different app versions are not interchangeable evidence, and a
+file reporting a result without saying which **pair** produced it is a
+measurement with no provenance.
+
+**Unknown fields are ignored by both parsers**, so either side may add one
+without breaking the other. A format that breaks on an extra line is a format
+people stop emitting.
 
 **Each lap is a new file. Never edit a file already sent.** A later lap may close
 a round *or reopen one* on new evidence; that is why state is the latest lap and
@@ -200,7 +218,26 @@ rule like "a missing verdict is fine for old rounds", which is the fallback that
 lets any new round close by omission.
 
 - cyanrip grandfathers rounds `{5, 6}`.
-- Platterpus grandfathers rounds `{1, 2, 3}`.
+- Platterpus grandfathers rounds `{1, 2, 3}` for the prose form and `{1..7}` for
+  the header form.
+
+**Both sets may shrink, never grow.** Round 7 is grandfathered on both sides for
+the wire header, because neither side could comply with a spec being written
+during it.
+
+## 10. Changes in v2
+
+Adopted from Platterpus's round-7 lap-3 proposal, which arrived independently and
+is better than what v1 had:
+
+- `HANDSHAKE-FROM`, `HANDSHAKE-APP-VERSION`, `HANDSHAKE-RIPPER-VERSION` and
+  `HANDSHAKE-PIN` become required. v1 named the *agreeing* versions only in the
+  closing fields; v2 names the *producing* pair on every file, so a mid-round lap
+  reporting a measurement says which two builds produced it.
+- Unknown fields are explicitly ignored rather than merely tolerated.
+
+A v1 gate reading a v2 file refuses, which is correct and is why the number
+moved. **Both sides ship v2 before the next close.**
 
 Widening either set is a visible edit to a pinned constant, and it should be
 argued for in a round rather than done quietly.

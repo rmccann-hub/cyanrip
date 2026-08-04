@@ -88,8 +88,17 @@ LAP_RE = re.compile(r"^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", re.M)
 # The shared spec both projects implement. A file declaring a version this gate
 # does not implement is refused rather than guessed at -- see docs/handshake/
 # PROTOCOL.md, which is copied into both repositories.
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 PROTOCOL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(\d+)[ \t]*$", re.M)
+
+# Adopted from Platterpus round 7 lap 3 §1: the wire header both sides emit.
+# FROM makes a crossed pair unambiguous without filename conventions;
+# APP-VERSION and RIPPER-VERSION say which *pair* produced a file's results, so
+# a result carries its provenance rather than needing it reconstructed.
+FROM_RE = re.compile(r"^HANDSHAKE-FROM:[ \t]*(\S+)[ \t]*$", re.M)
+APP_VERSION_RE = re.compile(r"^HANDSHAKE-APP-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
+RIPPER_VERSION_RE = re.compile(r"^HANDSHAKE-RIPPER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
+PIN_RE = re.compile(r"^HANDSHAKE-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 
 PEER_VERDICT_RE = re.compile(r"^HANDSHAKE-PEER-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]*$", re.M)
 PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
@@ -107,7 +116,8 @@ CLOSING = {"GO"}
 class Lap:
     def __init__(self, number, lap, path, verdict, declared_number,
                  peer_verdict=None, peer_version=None, peer_pin=None,
-                 our_version=None, our_pin=None, tested=None, protocol=None):
+                 our_version=None, our_pin=None, tested=None, protocol=None,
+                 sender=None, app_version=None, ripper_version=None, pin=None):
         self.number = number
         self.lap = lap
         self.path = path
@@ -120,6 +130,10 @@ class Lap:
         self.our_pin = our_pin
         self.tested = tested
         self.protocol = protocol
+        self.sender = sender
+        self.app_version = app_version
+        self.ripper_version = ripper_version
+        self.pin = pin
 
     def missing_for_close(self):
         """Fields a close requires. Named individually so the gate can say
@@ -228,6 +242,10 @@ def load_rounds(directory=HANDSHAKE_DIR):
             our_pin=one(OUR_PIN_RE),
             tested=one(TESTED_RE),
             protocol=one(PROTOCOL_RE),
+            sender=one(FROM_RE),
+            app_version=one(APP_VERSION_RE),
+            ripper_version=one(RIPPER_VERSION_RE),
+            pin=one(PIN_RE),
         ))
 
     # A round's state is its latest lap. An unparseable lap number sorts to the

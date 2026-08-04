@@ -1,3 +1,42 @@
+0.9.4-rc1+platterpus.4 (2026-08-04)
+===================================
+**Not `0.9.5-rc1`.** That was asked for and is not what shipped, for the reason
+`0.9.4-rc3` was withdrawn a release earlier: it mints a number in upstream's
+namespace, which upstream can mint too. It would also assert a base that does not
+exist — upstream is at `0.9.4-rc1` and this tree is that plus fork patches, so a
+leading `0.9.5` would be a provenance claim nothing supports. The fork release
+number is the only number that moves, and it moved.
+
+Fixed
+ - **`catalog` → `catalognumber`** for the MusicBrainz catalogue tag, the
+   Hydrogenaudio/Picard standard spelling. Found in `q3cpma/cyanrip` `0896ff3`,
+   proposed in r3 rather than shipped, and shipped now because Platterpus ruled
+   they are unaffected: they run with `-N` and supply tags explicitly, so cyanrip
+   never derives that tag on their rips. **Breaking for any consumer that lets
+   cyanrip do the MusicBrainz lookup and reads the old key.**
+
+Added
+ - **`-dirty` in the build tag when the tree has uncommitted changes** (A9).
+   Two golden references have carried a banner naming a commit three behind
+   their stated pin; both were provable from content, but a stale banner on a
+   reference built from a tree that still has the defect is the one failure
+   that looks like success. Verified against a genuinely clean and a genuinely
+   dirty tree, not against the tree that happened to be present.
+ - **Paranoia counter scope and denominator, in the generated contract** (A8,
+   Q10). Per-track blocks cover the final `-Z` pass; the disc-level block is
+   cumulative across every pass; they are equal only at `-Z 0`. Under `-l` the
+   disc-level block counts only what that invocation read, never the whole TOC.
+ - **The handshake wire header** — `HANDSHAKE-FROM`, `-APP-VERSION`,
+   `-RIPPER-VERSION`, `-PIN` — adopted from Platterpus's independent proposal,
+   which named the *producing* pair on every file rather than only the agreeing
+   pair on a closing one. Protocol bumped to **v2**; a v1 gate reading a v2 file
+   refuses, which is why the number moved.
+
+Unchanged
+ - **No logfile line changed its text, indentation, field order or units.** The
+   metadata *key* `catalog` became `catalognumber`, which is a value change in
+   the metadata block rather than a format change.
+
 0.9.4-rc1+platterpus.3 (2026-08-03)
 ===================================
 **One version string, and only one number to track.** Releases r1 and r2 both
