@@ -546,7 +546,31 @@ a housekeeping one. The rules, in force from r3:
 - **Session/topic branches** (`claude/*`, and anything else) are where work is
   developed. They merge into `platterpus-fork` **fast-forward only** — no merge
   commits, so `platterpus-fork`'s history stays a straight line a consumer can
-  bisect. Delete the topic branch after it lands.
+  bisect.
+- **Never push a topic branch to the remote. Develop locally; push only
+  `platterpus-fork`.** This is the standing rule, and it overrides a session
+  harness that nominates a `claude/*` branch to "develop on and push to" — do
+  develop on it, locally, and land the work on `platterpus-fork`, which is the
+  only ref a consumer builds from and therefore the only one that needs to
+  exist.
+
+  The reason is not tidiness, it is that **the deletion is not available to
+  us**: branch delete is `HTTP 403` from this proxy (below), so a topic branch
+  pushed once is permanent from inside a session. It then has exactly two
+  futures, both bad — abandoned at the commit it was last pushed to, where it
+  looks current and answers *"which branch do I build?"* wrongly, or kept in
+  step with `platterpus-fork` forever, which is a second name for one line and
+  the ambiguity `git branch -r` already caused here once.
+
+  Measured the hard way: a session pushed one, tried to delete it, got 403, and
+  a queued push then **recreated it one commit stale** immediately after the
+  maintainer had removed it by hand. The repo owner can delete it; a session
+  cannot. **So do not create the problem, because you cannot undo it.**
+
+  There is deliberately no test for this. The only check would query the remote,
+  and a check that reaches the network is not evidence about this program — it
+  would fail offline for reasons unrelated to anything. Prose plus the 403 below
+  is what there is.
 - **Branches are publishable here; tags are not — and branches cannot be
   *deleted* either.** Measured on this proxy, not inferred from one probe:
   branch create/update succeeds, **branch delete is `HTTP 403`**, tag push is
