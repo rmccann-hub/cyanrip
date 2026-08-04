@@ -147,7 +147,8 @@ typedef struct cyanrip_settings {
     int disable_coverart_embedding;
     enum coverart_lookup_sizes coverart_lookup_size;
     int enable_replaygain;
-    int cache_probe; /* -x: measure the drive's readback cache before ripping */
+    int cache_probe;
+    char *consumer_id; /* -x: measure the drive's readback cache before ripping */
     int generate_cue_only;
 
     enum cyanrip_output_formats outputs[CYANRIP_FORMATS_NB];

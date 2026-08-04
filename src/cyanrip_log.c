@@ -27,6 +27,7 @@
 
 #include "cyanrip_encode.h"
 #include "cyanrip_log.h"
+#include "handshake_state.h"
 #include "fun512.h"
 #include "accurip.h"
 
@@ -457,6 +458,24 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
                 PROJECT_FORK_ID, vcstag);
     if (crip_invocation)
         cyanrip_log(ctx, 0, "Invoked as:     %s\n", crip_invocation);
+
+    /* Whether this build came from a tree whose handshake round had closed --
+     * i.e. whether both projects had affirmatively agreed on this pair. A rip
+     * from a mid-round working tree is a different provenance from a rip by a
+     * mutually-verified release, and a record read months later cannot tell
+     * them apart unless the log says. Compiled in from docs/handshake/ by
+     * tools/gen-handshake-state.py, so it is derived rather than asserted. */
+    cyanrip_log(ctx, 0, "Handshake:      %s%s\n", HANDSHAKE_STATE,
+                HANDSHAKE_RELEASED ? "" : " -- NOT a released build");
+
+    /* Who asked for this rip, verbatim as they identified themselves. We
+     * cannot check it: this is what the caller said, not what we verified, and
+     * the line says so rather than implying we confirmed a peer version. */
+    cyanrip_log(ctx, 0, "Consumer:       %s\n",
+                ctx->settings.consumer_id ? ctx->settings.consumer_id
+                                          : "not identified (no --consumer given)");
+    if (ctx->settings.consumer_id)
+        cyanrip_log(ctx, 0, "                (reported by the caller, not verified by cyanrip)\n");
     cdio_hwinfo_t hwinfo;
     const int hwinfo_success = cdio_get_hwinfo(ctx->cdio, &hwinfo);
     if (!hwinfo_success)

@@ -37,6 +37,20 @@ dependencies = [
 ]
 
 # Base files
+handshake_state_h = custom_target('handshake_state.h',
+    output: 'handshake_state.h',
+    input: files(
+        '../tools/gen-handshake-state.py',
+        '../tools/release-gate.py',
+    ) + run_command('sh', '-c',
+        'ls ' + meson.project_source_root() / 'docs/handshake/round-*.md',
+        check: false).stdout().strip().split('\n'),
+    command: [ find_program('python3'),
+               meson.project_source_root() / 'tools/gen-handshake-state.py',
+               '@OUTPUT@' ],
+    build_by_default: true,
+)
+
 sources = [
     'cyanrip_encode.c',
     'cyanrip_log.c',
@@ -60,6 +74,11 @@ sources = [
     'stall_watchdog.c',
 
     'pregap.c',
+
+    # Handshake state, compiled in so a rip can report whether it came from a
+    # mutually-verified build or a mid-round working tree. Regenerated whenever
+    # a round file changes, so it cannot go stale against the record.
+    handshake_state_h,
 
     # Version
     vcs_tag(command: ['git', 'rev-parse', '--short', 'HEAD'],

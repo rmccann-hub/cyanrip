@@ -13,6 +13,9 @@ from pathlib import Path
 CRIP = str(Path(sys.argv[1]).resolve())
 FIX = Path(sys.argv[2])
 SCENARIO = sys.argv[3]
+# The repo root, for tools/ -- the handshake scenario asks the release gate
+# what it says rather than hardcoding an expectation that would go stale.
+ROOT = Path(__file__).resolve().parent.parent
 
 FFPROBE = shutil.which("ffprobe")
 
@@ -314,6 +317,52 @@ def sc_cdtext():
     nlog = (WORK / "out_cdtext_none" / "log.log").read_text()
     if "CD-TEXT:        none reported by libcdio" not in nlog:
         fail("cdtext_none: absent CD-TEXT not reported")
+
+
+def sc_handshake():
+    # Every rip must record which pair of builds produced it. A log read months
+    # later cannot otherwise tell a mutually-verified release from a mid-round
+    # working tree, and those are different provenance.
+    rip("hs", "basic.cue")
+    log = (WORK / "out_hs" / "log.log").read_text()
+
+    m = re.search(r"^Handshake:      (.+)$", log, re.M)
+    if not m:
+        fail("handshake: no Handshake: line in the log")
+    else:
+        state = m.group(1)
+        # It must say round and verdict, not merely "ok".
+        if not re.match(r"round \d+( lap \d+)? (OPEN|closed), verdict \S+", state) \
+           and "unknown" not in state:
+            fail(f"handshake: state not in the derived form: {state!r}")
+        # An unreleased build must say so where a reader will see it, not
+        # leave "closed" to be inferred from the absence of a warning.
+        gate = subprocess.run([sys.executable, str(ROOT / "tools" / "release-gate.py"),
+                               "--release-gate"], capture_output=True)
+        open_round = gate.returncode != 0
+        if open_round and "NOT a released build" not in state:
+            fail(f"handshake: round is open but the log does not say so: {state!r}")
+        if not open_round and "NOT a released build" in state:
+            fail(f"handshake: round is closed but the log claims otherwise: {state!r}")
+
+    # Without --consumer the log must say the caller did not identify itself,
+    # rather than leaving the field absent -- a missing field prompts a
+    # question, a field saying "not identified" answers it.
+    if "Consumer:       not identified" not in log:
+        fail("handshake: no Consumer: line when --consumer was not given")
+
+    # With it, the value is recorded verbatim AND disclaimed. cyanrip cannot
+    # check what the caller calls itself, and must not imply that it did.
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-o", "flac", "-D", WORK / "out_hs2", "-F", "{track}",
+                 "-L", "log", "-u", "platterpus/9.9.9-test")
+    if ec != 0:
+        fail(f"handshake: --consumer was rejected (exit {ec})")
+    log2 = (WORK / "out_hs2" / "log.log").read_text()
+    if "Consumer:       platterpus/9.9.9-test" not in log2:
+        fail("handshake: --consumer value not recorded verbatim")
+    if "not verified by cyanrip" not in log2:
+        fail("handshake: --consumer value recorded without its disclaimer")
 
 
 def sc_duration():

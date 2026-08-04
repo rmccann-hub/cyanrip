@@ -1279,6 +1279,8 @@ int main(int argc, char **argv)
                 "Seconds a frame read must stall before reporting liveness (0 disables)");
     GEN_OPT_ONE(opts_list, bool,    cache_probe, "x", 0, 0, 0, 0, 0,
                 "Measure the drive's readback cache before ripping (costs seconds)");
+    GEN_OPT_ONE(opts_list, char *,  consumer, "u", 1, 1, NULL, 0, 0,
+                "Identify the calling program in the log (recorded verbatim, not verified)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
                 "Track pregap handling: N=default|drop|merge|track (repeatable)");
     GEN_OPT_ONE(opts_list, char *,  paranoia, "P", 1, 1, NULL, 0, 0,
@@ -1399,6 +1401,7 @@ int main(int argc, char **argv)
 
     settings.max_retries                = retries;
     settings.cache_probe                = cache_probe;
+    settings.consumer_id                = consumer;
     crip_stall_watchdog_config(stall_secs * 1000000LL, stall_secs * 1000000LL);
     settings.ripping_retries            = repeat_rips;
     settings.speed                      = speed;

@@ -71,6 +71,7 @@ rip_scenarios = [
     'cdtext',
     'reporting',
     'duration',
+    'handshake',
     'reference',
     'paranoia',
     'verify_log',
