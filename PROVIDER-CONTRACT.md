@@ -89,12 +89,9 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
 **41 flags total.** Notes that are not derivable from `--help`:
 
 - `-O` is **overread**, not an options passthrough. Never repurpose it.
-- `-v`, `-V` and `--version` all print the version banner and exit 0.
-  Upstream moved this flag from `-V` to `-v` when it replaced getopt with
-  genopt after 0.9.3; a caller probing with `-V` against a stock 0.9.4 build
-  gets exit 1 and `Unable to parse command line argument: -V`, which reads
-  as "not installed" rather than "flag renamed". This fork accepts `-V`
-  again. **Prefer `--version`** -- it has never changed and never will.
+- `-v`, `-V` and `--version` all print the version banner and exit 0 **on
+  this fork**. Across the stock line they are not interchangeable and there
+  is no single spelling that works everywhere -- see P6.
 - `-J` and `-I` are mutually exclusive; combining them exits 1.
 - `-d` accepts a device path **or** a TOC/CUE/NRG image file.
 - `-a`/`-t` values are `:`-separated; a literal colon must be escaped `\:`.
@@ -663,4 +660,47 @@ must carry the same class.
 The `control flow` and `both` rows total 84 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
 build a hard failure classifier on.
+
+## P6 - Version flags across the stock line
+
+**STATED, NOT DERIVED.** Every other section here comes from this build or
+this source tree. This one is about *upstream* builds, which this generator
+cannot introspect, so it is measured by hand and cited to commits. It is
+here because a consumer probing for cyanrip's version needs it and nowhere
+else carries it -- and because the sentence it replaces was wrong.
+
+P1 used to say **"prefer `--version`, it has never changed and never
+will"**. That is false: `--version` did not exist before genopt. The claim
+was prose, it was cited in a handshake lap as a recommendation, and a
+five-minute build disproved it. The `cli` scenario pins all three spellings
+**for this fork**, which is a real test whose scope is narrower than the
+claim it was cited for.
+
+Measured 2026-08-04 by building each tree and running the binary:
+
+| build | `--version` | `-V` | `-v` |
+|---|---|---|---|
+| stock, pre-genopt (`442de2a^`, `meson.build` says `0.9.3`) | **exit 1** | exit 0 | **exit 1** |
+| stock, genopt onward (`master` = `958e1ad`, 0.9.4-rc1) | exit 0 | **exit 1** | exit 0 |
+| **this fork** (`e1d800e` onward) | exit 0 | exit 0 | exit 0 |
+
+- Pre-genopt uses plain `getopt()` -- `#include <getopt.h>`, a short-only
+  optstring containing `V`, **no long options at all** -- so `--version` is
+  rejected by getopt before cyanrip sees it, on stderr, prefixed with the
+  binary's own path.
+- `442de2a` *"Replace getopt option parsing with genopt"* moved the flag to
+  `-v`/`--version` and dropped `-V`.
+- `e1d800e` restores `-V` as an alias **on this fork only**; it is not
+  upstream.
+
+**`-V` and `--version` are exactly complementary across the stock line.**
+No single spelling answers every stock build, so a probe over stock needs at
+least two attempts by construction -- no ordering reduces it to one. Only
+this fork accepts all three, and that is a property of ours, not something
+to rely on for stock.
+
+The `version_matrix` test scenario re-checks the two upstream claims from
+git -- that `442de2a^` parses with `getopt` and no long options, and that
+`442de2a` onward has no `-V` in its option table -- so this section fails
+when the commits it cites stop saying what it says they say.
 

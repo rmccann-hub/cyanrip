@@ -80,7 +80,7 @@ GRANDFATHERED = {5, 6}
 # The v2 wire header (FROM / APP-VERSION / RIPPER-VERSION / PIN) is required
 # from this round on. Rounds up to and including 7 are exempt because neither
 # project could comply with a spec that was written during round 7 -- stated in
-# round-7-lap4.md and agreed with Platterpus. Pinned, and asserted by a test, so
+# round-07-lap-04.md and agreed with Platterpus. Pinned, and asserted by a test, so
 # widening the exemption is a visible edit rather than a side effect.
 WIRE_HEADER_REQUIRED_FROM = 8
 

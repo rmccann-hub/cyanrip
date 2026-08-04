@@ -1,6 +1,6 @@
 # Rig session, 2026-08-04
 
-The artifacts every claim in `docs/handshake/round-7-lap10.md` is checked
+The artifacts every claim in `docs/handshake/round-07-lap-10.md` is checked
 against. Archived here because a handshake file that cites evidence nobody else
 can open is an assertion, not a verification — and because a rip is a
 measurement of a physical object that will not be measured the same way twice.

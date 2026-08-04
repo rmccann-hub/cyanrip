@@ -689,6 +689,67 @@ def sc_early_log():
         fail("early_log: a log containing the replay block fails --verify-log")
 
 
+def sc_version_matrix():
+    # P6 of the provider contract is the one section that is STATED, not
+    # derived: it describes upstream builds, which the generator cannot
+    # introspect. The sentence it replaced -- "prefer --version, it has never
+    # changed and never will" -- was false, lived in a generated document, and
+    # was quoted into a handshake lap as a recommendation before a build
+    # disproved it.
+    #
+    # So the two upstream claims are re-checked here from git. This cannot
+    # rebuild 0.9.3 on every run, but it can fail when the commits P6 cites
+    # stop saying what P6 says they say, which is the drift that would make the
+    # section quietly wrong again.
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    if "## P6 - Version flags across the stock line" not in contract:
+        fail("version_matrix: P6 is missing from the contract")
+        return
+
+    def git(*args):
+        r = subprocess.run(["git", "-C", str(ROOT), *args],
+                           stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                           timeout=60)
+        return r.returncode, r.stdout.decode(errors="replace")
+
+    if git("rev-parse", "--git-dir")[0] != 0:
+        fail("version_matrix: not a git checkout, so P6's citations cannot "
+             "be verified -- P6 claims a check that did not run")
+        return
+
+    # Claim 1: pre-genopt parses with getopt and has no long options at all.
+    ec, pre = git("show", "442de2a^:src/cyanrip_main.c")
+    if ec != 0:
+        fail("version_matrix: 442de2a^ is unreachable; P6 cites it")
+    else:
+        if "getopt_long" in pre:
+            fail("version_matrix: 442de2a^ uses getopt_long -- P6 says it has "
+                 "no long options, so --version might be accepted after all")
+        m = re.search(r'getopt\(argc, argv, "([^"]+)"', pre)
+        if not m:
+            fail("version_matrix: no getopt() optstring at 442de2a^ -- "
+                 "P6's account of how it parses is stale")
+        elif "V" not in m.group(1):
+            fail(f"version_matrix: 442de2a^ optstring {m.group(1)!r} has no "
+                 "'V' -- P6 says -V is its version flag")
+
+    # Claim 2: genopt onward has no -V in the option table. Checked against
+    # upstream master rather than our tree, because ours restores it.
+    ec, post = git("show", "master:src/cyanrip_main.c")
+    if ec != 0:
+        fail("version_matrix: master is unreachable; P6 cites it")
+    elif re.search(r'GEN_OPT_\w+\([^)]*"V"', post):
+        fail("version_matrix: upstream master has a -V option now -- P6 says "
+             "genopt dropped it, and our -V alias is described as fork-only")
+
+    # Claim 3, the fork's own row, which IS derivable: all three spellings work
+    # here. sc_cli already asserts they agree; this asserts P6's row matches.
+    for flag in ("--version", "-V", "-v"):
+        if crip(flag)[0] != 0:
+            fail(f"version_matrix: P6 says this fork accepts {flag}, and it "
+                 "exits non-zero")
+
+
 def sc_diagnostics():
     # The machine-readable record. What it is *for* is the runs that produce no
     # logfile at all -- a refusal writes nothing to disk, so a consumer that

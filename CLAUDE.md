@@ -21,11 +21,17 @@ package, not a real bug. On Debian/Ubuntu the full set:
 
 Minimum versions are pinned in `src/meson.build` (e.g. libavcodec >= 59.24.100).
 Check `meson setup build`'s dependency-resolution errors first before assuming
-code is broken. Version banner is `cyanrip --version`, `-v`, or `-V`. Upstream moved this flag
-from `-V` to `-v` when it replaced getopt with genopt after 0.9.3, which broke
-every caller probing with `-V` (exit 1, "Unable to parse command line argument",
-which reads as "not installed"). This fork accepts `-V` as an alias again; prefer
-`--version`, which has never changed.
+code is broken. Version banner is `cyanrip --version`, `-v`, or `-V` — **all three on this fork,
+and no single one across the stock line.** Upstream moved the flag from `-V` to
+`-v` when it replaced getopt with genopt after 0.9.3, which broke every caller
+probing with `-V` (exit 1, "Unable to parse command line argument", reading as
+"not installed"); this fork restores `-V` as an alias. **But pre-genopt builds
+reject `--version` outright** — plain `getopt()`, no long options at all — so
+`-V` and `--version` are exactly complementary across stock and a probe needs
+both. This paragraph said "prefer `--version`, which has never changed"; that was
+false, was repeated into the provider contract and a handshake lap, and was
+settled by building 0.9.3 and running it. The measured matrix is
+`PROVIDER-CONTRACT.md` P6, re-checked by the `version_matrix` test.
 
 ## Where things live
 
@@ -113,7 +119,7 @@ the LSN arithmetic consistent on every one, `-Z` converging after 5 reads, and
 per-track paranoia counters summing exactly to the disc totals on media that
 made paranoia work — an invariant that until then had only ever been checked
 against a fixture whose numbers agree by construction. Artifacts and the
-per-claim evidence are in `docs/handshake/round-7-lap10.md` §B and §F.
+per-claim evidence are in `docs/handshake/round-07-lap-10.md` §B and §F.
 
 Still untouched by any run, and the list is shorter but not empty: **`-x`, which
 has never executed on a real drive anywhere**, C2 (the rig's drive reports it
@@ -633,7 +639,27 @@ guesses.
 A round may take several laps. **Each lap is a new file** — never edit one
 already sent — and **a round's state is its latest lap's verdict**, so a later
 lap can close a round *or* reopen one on new evidence. Lap order comes from the
-declared number, not the filename: `round-7-lap2.md` sorts before `round-7.md`.
+declared number, not the filename.
+
+**Files are named `round-NN-lap-LL.md`, both fields zero-padded to two digits**,
+agreed with Platterpus in round 7 lap 17 and used by both projects. The name
+states the round and lap the file's own header declares, so it is a *second*
+description of a fact — which is only safe with a check, and
+`tests/release_gate.py` has one. Padding is what makes a lexical sort
+chronological; `lap-9` sorts after `lap-10` without it. An amendment is a new
+lap, never a letter: a lap number is a fact both sides can verify, "the next
+free letter" is a fact only the sender knows. Files predating the lap header
+(`round-5.md`, `round-6.md`) keep their names, and the exemption is derived, not
+listed — a file declaring no lap has nothing to name itself with.
+
+**Renaming these files can change what a gate reads**, which is why it needed a
+test rather than just a `git mv`. Platterpus's gate picked a round's newest file
+by sorting stems; adopting these names put the canonical files *before* the
+legacy `round-N.md` lexically (`'0' < '7'`), so the round's oldest file sorted
+last, was read as newest, and its `GO` closed a round whose latest lap said
+`HOLD`. Ours survives because a file with no `HANDSHAKE-LAP` is treated as
+**lap 1**, not as unknown — `None` is reserved for an *ambiguous* multi-
+declaration, which must win so ambiguity cannot hide.
 
 Send it. The round stays open until their verification file arrives *and* we
 agree — at which point the verdict becomes `GO`. A round may take several laps;

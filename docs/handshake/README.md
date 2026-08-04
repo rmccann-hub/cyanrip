@@ -42,10 +42,10 @@ string, the build-id hash derived from it, and the build path in debug info.
 
 **Do not use `0.9.4-rc3`.** That string was committed locally, never released,
 and withdrawn: it mints an identifier in upstream's namespace, which upstream can
-also mint. See `round-7.md` §2.
+also mint. See `round-07-lap-01.md` §2.
 
 **Superseded, do not build:** `2f950c8` (r2 — carries the read-liveness heartbeat
-that never fired, `round-7.md` §0), `ad65a244` and `e1d800e` (both carry the
+that never fired, `round-07-lap-01.md` §0), `ad65a244` and `e1d800e` (both carry the
 disc-image silence defect fixed in r2).
 
 ### Branches on the remote
@@ -66,7 +66,7 @@ that did not exist.
 |---|---|---|---|
 | 5 | closed, GO | `e1d800e` *(superseded)* | `round-5.md` |
 | 6 | closed from our side by round 7; verification file never received | `2f950c8` *(superseded)* | `round-6.md` |
-| 7 | **open** | `d5d12ec` (fork r3) | `round-7.md` |
+| 7 | **open** | `d5d12ec` (fork r3) | `round-07-lap-01.md` |
 
 Round 7 is open pending Platterpus's file. **Neither project releases while it is
 open**, and round 7 asks for more than a verification: a reciprocal handshake

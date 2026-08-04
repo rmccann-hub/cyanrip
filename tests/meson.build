@@ -96,6 +96,7 @@ rip_scenarios = [
     'handshake',
     'early_log',
     'diagnostics',
+    'version_matrix',
     'exit_codes',
     'reference',
     'paranoia',
