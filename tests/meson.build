@@ -83,6 +83,7 @@ rip_scenarios = [
     'duration',
     'handshake',
     'early_log',
+    'diagnostics',
     'exit_codes',
     'reference',
     'paranoia',

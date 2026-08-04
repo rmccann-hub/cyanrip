@@ -36,6 +36,7 @@
 #include "cdtext.h"
 #include "cache_probe.h"
 #include "stall_watchdog.h"
+#include "diagnostics.h"
 #include "checksums.h"
 #include "discid.h"
 #include "musicbrainz.h"
@@ -47,6 +48,26 @@
 
 static char cyanrip_helpstr[128];
 
+/* Route genopt's own output through ours. Left undefined, genopt vprintf()s
+ * directly, so every argument-parsing error and the whole of --help reached
+ * the terminal and nothing else -- not the logfile, not the diagnostics
+ * record. That is the class of failure a consumer cannot explain: the message
+ * that once read to Platterpus as "cyanrip is not installed" was one of them.
+ *
+ * genopt's level is discarded rather than translated. cyanrip_log() has no
+ * severity to translate it into, and inventing one here would be a severity
+ * this program does not actually carry. */
+static inline void crip_genopt_log(void *log_ctx, int level, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    cyanrip_vlog(NULL, 0, fmt, args);
+    va_end(args);
+}
+
+#define GEN_OPT_LOG crip_genopt_log
+#define GEN_OPT_LOG_INFO 0
+#define GEN_OPT_LOG_ERROR 1
 #define GEN_OPT_MAX_ARR 198
 #define GEN_OPT_HELPSTRING cyanrip_helpstr
 #include "genopt.h"
@@ -1192,7 +1213,56 @@ static void record_invocation(int argc, char **argv)
     av_bprint_finalize(&buf, &crip_invocation);
 }
 
-int main(int argc, char **argv)
+/* libcdio's own messages, routed through ours.
+ *
+ * Without this they go straight to stderr from inside the library and cyanrip
+ * never sees them, so nothing libcdio says about why a disc would not open
+ * reaches the logfile or the diagnostics record. That is the whole of the
+ * explanation for most open failures: "++ WARN: init failed" is libcdio's, not
+ * ours.
+ *
+ * The terminating behaviour is libcdio's and is preserved exactly. Its default
+ * handler exits on CDIO_LOG_ERROR and aborts on CDIO_LOG_ASSERT, and its
+ * internal callers are written on that assumption -- code after a cdio_error()
+ * call runs in a state its author never intended it to reach. Measured, not
+ * assumed: `-d` on an unparseable CUE printed libcdio's "**ERROR:" and the
+ * process was gone before main() could return, which is why that run's
+ * diagnostics record reported a null exit code. The only thing that changes
+ * here is that the reason is written down first.
+ *
+ * The level is named rather than folded into a severity of our own, because
+ * libcdio's idea of an error is libcdio's and we do not re-judge it. */
+static void crip_cdio_log_handler(cdio_log_level_t level, const char message[])
+{
+    const char *name;
+    switch (level) {
+    case CDIO_LOG_DEBUG:  name = "debug";  break;
+    case CDIO_LOG_INFO:   name = "info";   break;
+    case CDIO_LOG_WARN:   name = "warning"; break;
+    case CDIO_LOG_ERROR:  name = "error";  break;
+    case CDIO_LOG_ASSERT: name = "assert"; break;
+    default:              name = "message"; break;
+    }
+
+    cyanrip_log(NULL, 0, "libcdio %s: %s\n", name, message);
+
+    /* crip_diag_write() is idempotent, and abort() does not run atexit
+     * handlers -- so the record has to be written here or not at all. */
+    if (level == CDIO_LOG_ERROR) {
+        crip_diag_set_exit(1);
+        crip_diag_write();
+        exit(1);
+    }
+    if (level == CDIO_LOG_ASSERT) {
+        /* No exit code is set: abort() does not produce one, and claiming a
+         * number here would invent it. Null says we do not know, which is the
+         * true statement and a distinguishable one. */
+        crip_diag_write();
+        abort();
+    }
+}
+
+static int cyanrip_run(int argc, char **argv)
 {
     cyanrip_ctx *ctx = NULL;
     cyanrip_settings settings = { 0 };
@@ -1202,6 +1272,8 @@ int main(int argc, char **argv)
 #endif
 
     record_invocation(argc, argv);
+
+    cdio_log_set_handler(crip_cdio_log_handler);
 
     av_log_set_level(AV_LOG_QUIET);
 
@@ -1286,6 +1358,8 @@ int main(int argc, char **argv)
                 "Measure the drive's readback cache before ripping (costs seconds)");
     GEN_OPT_ONE(opts_list, char *,  consumer, "u", 1, 1, NULL, 0, 0,
                 "Identify the calling program in the log (recorded verbatim, not verified)");
+    GEN_OPT_ONE(opts_list, char *,  diagnostics, "j", 1, 1, NULL, 0, 0,
+                "Write a machine-readable diagnostics record to this path (JSON)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
                 "Track pregap handling: N=default|drop|merge|track (repeatable)");
     GEN_OPT_ONE(opts_list, char *,  paranoia, "P", 1, 1, NULL, 0, 0,
@@ -1407,6 +1481,11 @@ int main(int argc, char **argv)
     settings.max_retries                = retries;
     settings.cache_probe                = cache_probe;
     settings.consumer_id                = consumer;
+    /* Registers the atexit writer, so every route out of main() is covered
+     * rather than the ones someone remembered to instrument. Messages are
+     * recorded from process start regardless; this only decides whether they
+     * are written anywhere. */
+    crip_diag_enable(diagnostics);
     crip_stall_watchdog_config(stall_secs * 1000000LL, stall_secs * 1000000LL);
     settings.ripping_retries            = repeat_rips;
     settings.speed                      = speed;
@@ -2242,6 +2321,10 @@ end:
 
     int err_cnt = ctx->total_error_count;
 
+    /* Before the context is freed: the diagnostics file is written from
+     * atexit, long after this pointer is invalid, so it must own its copy. */
+    crip_diag_snapshot(ctx);
+
     cyanrip_ctx_end(&ctx);
 
     /* total_error_count counts *read* errors. An operational abort -- a refusal
@@ -2254,6 +2337,32 @@ end:
      *
      * Still within {0, 1} -- Platterpus's standing requirement 3. */
     return (err_cnt || fatal_abort) ? 1 : 0;
+}
+
+/* main() is a wrapper so that the exit code reaches the diagnostics record
+ * from *every* route out, not the ones someone remembered to instrument.
+ * cyanrip_run() refuses in a dozen places before a logfile exists, and those
+ * are precisely the runs whose only record is this file. */
+int main(int argc, char **argv)
+{
+    /* Find -j before genopt runs, so a run that refuses *during* argument
+     * parsing still leaves a record -- that refusal writes no logfile either,
+     * so without this it is a non-zero exit with nothing on disk explaining
+     * it. Deliberately a scan and not a parse: it must not change which
+     * arguments are accepted, only when the sink becomes known. genopt takes
+     * values space-separated with no '=' form, so exact matches are the whole
+     * grammar. cyanrip_run() calls crip_diag_enable() again with genopt's
+     * value, which is authoritative if the two ever disagree. */
+    for (int i = 1; i + 1 < argc; i++) {
+        if (!strcmp(argv[i], "-j") || !strcmp(argv[i], "--diagnostics")) {
+            crip_diag_enable(argv[i + 1]);
+            break;
+        }
+    }
+
+    const int rc = cyanrip_run(argc, argv);
+    crip_diag_set_exit(rc);
+    return rc;
 }
 
 #ifdef HAVE_WMAIN

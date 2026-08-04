@@ -3,6 +3,7 @@
 # Usage: rip_images.py <cyanrip-binary> <fixtures-dir> <scenario>
 
 import hashlib
+import json
 import re
 import shutil
 import subprocess
@@ -634,6 +635,127 @@ def sc_early_log():
     # would make every log from this build fail its own verification.
     if crip("--verify-log", WORK / "out_early" / "log.log")[0] != 0:
         fail("early_log: a log containing the replay block fails --verify-log")
+
+
+def sc_diagnostics():
+    # The machine-readable record. What it is *for* is the runs that produce no
+    # logfile at all -- a refusal writes nothing to disk, so a consumer that
+    # archives artifacts rather than terminals cannot say why a rip did not
+    # happen. Every check below is about that, not about the happy path.
+    diag = WORK / "diag.json"
+
+    # 1. Off by default. An unconditional extra file would break a consumer
+    #    asserting the exact set of files a rip produces -- sc_cue_only is one.
+    rip("nodiag", "basic.cue")
+    stray = [p.name for p in (WORK / "out_nodiag").iterdir()
+             if p.suffix == ".json"]
+    if stray:
+        fail(f"diagnostics: wrote {stray} without being asked")
+
+    # 2. A normal rip: valid JSON, and the structured facts are the *measured*
+    #    ones. Parsed with json.load, so a malformed file fails here rather
+    #    than in the consumer.
+    rip("diag", "basic.cue", "-j", diag)
+    try:
+        d = json.loads(diag.read_text())
+    except Exception as e:
+        fail(f"diagnostics: file is not valid JSON: {e}")
+        return
+
+    if d.get("schema") != "cyanrip-diagnostics/1":
+        fail(f"diagnostics: schema is {d.get('schema')!r}")
+    if d.get("exit_code") != 0:
+        fail(f"diagnostics: exit_code {d.get('exit_code')!r} for a clean rip")
+    if d.get("rip", {}).get("tracks_completed") != 2:
+        fail(f"diagnostics: tracks_completed {d.get('rip', {}).get('tracks_completed')!r}")
+
+    # No severity is claimed anywhere, and the file says so rather than leaving
+    # a consumer to read the absence of the field as "nothing here was
+    # serious". Classifying by wording is the defect the provider contract's
+    # fatal inventory already shipped once.
+    if d.get("messages_are_classified") is not False:
+        fail("diagnostics: messages_are_classified must be present and false")
+
+    # Progress is collapsed by modelling the terminal, not by matching text.
+    # Without that, one rip is thousands of near-identical lines; the check is
+    # that a bounded rip stays bounded and the *last* state of the line lives.
+    msgs = d.get("messages", [])
+    if len(msgs) > 400:
+        fail(f"diagnostics: {len(msgs)} messages for a 2-track rip -- "
+             "progress rewrites are not being collapsed")
+    if not any("Rip completed:  yes" in m for m in msgs):
+        fail("diagnostics: the rip's own completion line is missing")
+    if any(m.startswith("\r") or "\r" in m for m in msgs):
+        fail("diagnostics: a message still contains a carriage return")
+
+    # 3. The point of the feature. A refusal that opens no logfile must still
+    #    leave a record, with the reason in it.
+    #
+    #    -J with -I is used because it is decided from the argument table
+    #    alone: no disc, no network. The first version of this check used the
+    #    no-metadata refusal, which reaches that state via a MusicBrainz
+    #    lookup -- so what it asserted depended on whether the lookup failed by
+    #    not-found or by timeout, and it failed once in a way that did not
+    #    reproduce. A check whose result depends on the network is not
+    #    evidence about this program.
+    refusal = WORK / "refusal.json"
+    ec, out = crip("-J", "-I", "-D", WORK / "out_refusal", "-j", refusal)
+    if ec == 0:
+        fail("diagnostics: -J with -I stopped refusing -- probe is stale")
+    if (WORK / "out_refusal").exists():
+        logs = list((WORK / "out_refusal").glob("*.log"))
+        if logs:
+            fail(f"diagnostics: refusal wrote a logfile {logs} -- probe is stale, "
+                 "this case is meant to have no log at all")
+    if not refusal.exists():
+        fail("diagnostics: no record written for a run that wrote no log")
+    else:
+        r = json.loads(refusal.read_text())
+        if r.get("exit_code") != 1:
+            fail(f"diagnostics: refusal recorded exit_code {r.get('exit_code')!r}")
+        if not any("cannot be used with -I" in m for m in r.get("messages", [])):
+            fail(f"diagnostics: the refusal's reason is not in the record: "
+                 f"{r.get('messages')}")
+
+    # 4. An error raised *inside libcdio* must reach the record. Left alone,
+    #    libcdio prints to stderr and exits the process itself, so cyanrip
+    #    never sees the only message explaining the failure.
+    cdio = WORK / "cdio.json"
+    ec, out = crip("-d", WORK / "no-such-image.cue", "-N", "-o", "flac",
+                   "-j", cdio)
+    if ec == 0:
+        fail("diagnostics: opening a nonexistent CUE succeeded -- probe is stale")
+    if not cdio.exists():
+        fail("diagnostics: no record written for a libcdio-terminated run")
+    else:
+        c = json.loads(cdio.read_text())
+        if not any("libcdio" in m for m in c.get("messages", [])):
+            fail(f"diagnostics: libcdio's own message is not in the record: "
+                 f"{c.get('messages')}")
+        # rip is null, not absent: "no disc was ever opened" and "a disc with
+        # no tracks" are different claims.
+        if "rip" not in c or c["rip"] is not None:
+            fail(f"diagnostics: rip should be null when no disc was opened, "
+                 f"got {c.get('rip')!r}")
+
+    # 5. An argument-parsing failure happens before the option table is read,
+    #    so -j has to be found by a pre-pass or these runs stay unrecorded.
+    #    This is the exact shape of the -V incident: a parse error that read to
+    #    a consumer as "cyanrip is not installed".
+    argf = WORK / "argfail.json"
+    ec, out = crip("--not-a-real-flag", "-j", argf)
+    if ec == 0:
+        fail("diagnostics: an unknown flag was accepted -- probe is stale")
+    if not argf.exists():
+        fail("diagnostics: no record written for an argument-parsing failure")
+    else:
+        a = json.loads(argf.read_text())
+        if a.get("exit_code") != 1:
+            fail(f"diagnostics: argfail recorded exit_code {a.get('exit_code')!r}")
+        if not any("Unable to parse command line argument" in m
+                   for m in a.get("messages", [])):
+            fail(f"diagnostics: genopt's own error is not in the record: "
+                 f"{a.get('messages')}")
 
 
 def sc_golden_reference_is_from_a_clean_build():

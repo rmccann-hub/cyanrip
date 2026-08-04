@@ -76,6 +76,7 @@ sources = [
     'cdtext.c',
     'cache_probe.c',
     'stall_watchdog.c',
+    'diagnostics.c',
 
     'pregap.c',
 

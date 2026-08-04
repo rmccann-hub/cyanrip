@@ -32,6 +32,7 @@
 #include "fun512.h"
 #include "accurip.h"
 #include "stall_watchdog.h"
+#include "diagnostics.h"
 
 #define CLOG(FORMAT, DICT, TAG)                                                \
     if (dict_get(DICT, TAG))                                                   \
@@ -908,10 +909,20 @@ void cyanrip_set_av_log_capture(cyanrip_ctx *ctx, int enable,
 
 void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...)
 {
-    pthread_mutex_lock(&log_lock);
-
     va_list args;
     va_start(args, format);
+    cyanrip_vlog(ctx, verbose, format, args);
+    va_end(args);
+}
+
+void cyanrip_vlog(cyanrip_ctx *ctx, int verbose, const char *format,
+                  va_list args)
+{
+    pthread_mutex_lock(&log_lock);
+
+    /* Before any routing decision, so the diagnostics record is a record of
+     * what the program said and not of what happened to reach a file. */
+    crip_diag_record(format, args);
 
     int reached_a_logfile = 0;
 
@@ -935,8 +946,6 @@ void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...)
 
     vprintf(format, args);
     fflush(stdout);
-
-    va_end(args);
 
     pthread_mutex_unlock(&log_lock);
 }

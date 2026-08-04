@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <stdarg.h>
+
 #include "cyanrip_main.h"
 
 int cyanrip_log_init(cyanrip_ctx *ctx);
@@ -31,3 +33,12 @@ void cyanrip_set_av_log_capture(cyanrip_ctx *ctx, int enable,
                                 int max_av_lvl);
 
 void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...);
+
+/* Same, taking an assembled va_list, so another logging front end can forward
+ * into this one instead of printing on its own. genopt's does exactly that:
+ * left to itself it vprintf()s, which is how every argument-parsing error --
+ * including the "Unable to parse command line argument: -V" that once read to
+ * a consumer as "cyanrip is not installed" -- reached the terminal and nothing
+ * else. */
+void cyanrip_vlog(cyanrip_ctx *ctx, int verbose, const char *format,
+                  va_list args);
