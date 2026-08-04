@@ -57,26 +57,100 @@ def gate(files):
     return rg.check(rg.load_rounds(d))
 
 
-GO = "HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\nHANDSHAKE-VERDICT: GO\n\n# round 9\n"
+# A complete, closing round: both verdicts GO, both identities, and testing
+# declared. Anything less must not close -- see the tests below, one per field.
+GO = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\nHANDSHAKE-VERDICT: GO\n"
+      "HANDSHAKE-PEER-VERDICT: GO\n"
+      "HANDSHAKE-PEER-VERSION: platterpus/0.6.4\n"
+      "HANDSHAKE-PEER-PIN: abc1234\n"
+      "HANDSHAKE-OUR-VERSION: 0.9.4-rc1+platterpus.4\n"
+      "HANDSHAKE-OUR-PIN: def5678\n"
+      "HANDSHAKE-TESTED: T1-T14 on both builds, rig session 2026-08-04\n"
+      "\n# round 9\n")
 
 
-def lap(n, round_no, verdict):
-    return (f"HANDSHAKE-ROUND: {round_no}\nHANDSHAKE-LAP: {n}\n"
-            f"HANDSHAKE-VERDICT: {verdict}\n\n# round {round_no} lap {n}\n")
+def test_our_go_alone_does_not_close():
+    # The core of an affirmative handshake: our GO is a statement about our
+    # tree, not agreement. Silence from the other side is not consent.
+    body = "\n".join(l for l in GO.splitlines()
+                     if not l.startswith("HANDSHAKE-PEER-VERDICT"))
+    ok, probs = gate({"round-9.md": body})
+    check(not ok, "our GO alone must not close a round")
+    check(any("no peer verdict" in p for p in probs),
+          f"should say the peer verdict is missing: {probs}")
+
+
+def test_peer_hold_blocks_our_go():
+    ok, probs = gate({"round-9.md": GO.replace("HANDSHAKE-PEER-VERDICT: GO",
+                                               "HANDSHAKE-PEER-VERDICT: HOLD")})
+    check(not ok, "a peer HOLD must block even when we say GO")
+    check(any("peer verdict HOLD" in p for p in probs), f"should name it: {probs}")
+
+
+def test_close_requires_every_identity_and_testing_field():
+    # One test per field, generated, so adding a required field cannot be
+    # forgotten here -- and so the gate must name which one is absent.
+    for field in ("HANDSHAKE-PEER-VERSION", "HANDSHAKE-PEER-PIN",
+                  "HANDSHAKE-OUR-VERSION", "HANDSHAKE-OUR-PIN",
+                  "HANDSHAKE-TESTED"):
+        body = "\n".join(l for l in GO.splitlines()
+                         if not l.startswith(field + ":"))
+        ok, probs = gate({"round-9.md": body})
+        check(not ok, f"a close without {field} must be refused")
+        check(any(field in p for p in probs),
+              f"the refusal should name {field}: {probs}")
+
+
+def test_untested_round_cannot_close():
+    # Stated separately from the loop because it is the rule the maintainer
+    # asked for by name: no release without proper testing, ever.
+    body = "\n".join(l for l in GO.splitlines()
+                     if not l.startswith("HANDSHAKE-TESTED:"))
+    ok, _ = gate({"round-9.md": body})
+    check(not ok, "a round with no declared testing must never close")
+
+
+def test_complete_two_sided_round_does_close():
+    # The gate must still be satisfiable, or it is not a gate, it is a wall.
+    ok, probs = gate({"round-9.md": GO})
+    check(ok, f"a complete two-sided tested round should close: {probs}")
+
+
+def lap(n, round_no, verdict, complete=False):
+    """A lap file. complete=True adds the peer/identity/testing fields a close
+    requires, so a test can distinguish "this lap says GO" from "this lap is a
+    valid close" -- they are different things now."""
+    head = (f"HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: {round_no}\nHANDSHAKE-LAP: {n}\n"
+            f"HANDSHAKE-VERDICT: {verdict}\n")
+    if complete:
+        head += ("HANDSHAKE-PEER-VERDICT: GO\n"
+                 "HANDSHAKE-PEER-VERSION: platterpus/0.6.4\n"
+                 "HANDSHAKE-PEER-PIN: abc1234\n"
+                 "HANDSHAKE-OUR-VERSION: 0.9.4-rc1+platterpus.4\n"
+                 "HANDSHAKE-OUR-PIN: def5678\n"
+                 "HANDSHAKE-TESTED: T1-T14 both builds\n")
+    return head + f"\n# round {round_no} lap {n}\n"
 
 
 def test_latest_lap_decides_and_can_close():
     # Lap 1 opened; lap 2 closes. The round must close WITHOUT going back and
     # editing lap 1 -- a file already sent must never be retroactively rewritten.
+    ok, probs = gate({"round-9.md": lap(1, 9, "OPEN"),
+                      "round-9-lap2.md": lap(2, 9, "GO", complete=True)})
+    check(ok, f"a later complete GO lap must close the round: {probs}")
+
+
+def test_a_later_go_lap_that_is_incomplete_does_not_close():
+    # Guards against the fix above being read as "a later GO always wins".
     ok, _ = gate({"round-9.md": lap(1, 9, "OPEN"),
                   "round-9-lap2.md": lap(2, 9, "GO")})
-    check(ok, "a later lap declaring GO must close the round")
+    check(not ok, "a later GO lap missing the peer fields must not close")
 
 
 def test_latest_lap_can_reopen():
     # The converse, and it must work or a round could never be reopened by new
     # evidence: lap 1 said GO, lap 2 found something.
-    ok, _ = gate({"round-9.md": lap(1, 9, "GO"),
+    ok, _ = gate({"round-9.md": lap(1, 9, "GO", complete=True),
                   "round-9-lap2.md": lap(2, 9, "HOLD")})
     check(not ok, "a later lap declaring HOLD must reopen the round")
 
@@ -88,15 +162,16 @@ def test_lap_order_is_by_declaration_not_filename():
     #                   -> last-by-name is round-9.md, verdict GO   -> allowed
     #   by declaration: lap 3 > lap 2
     #                   -> latest is round-9-lap2.md, verdict HOLD  -> blocked
-    ok, _ = gate({"round-9.md": lap(2, 9, "GO"),
+    ok, _ = gate({"round-9.md": lap(2, 9, "GO", complete=True),
                   "round-9-lap2.md": lap(3, 9, "HOLD")})
     check(not ok, "latest lap must come from the declared number, not the name")
 
 
 def test_ambiguous_lap_is_not_shadowed_by_a_good_one():
-    body = ("HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\nHANDSHAKE-LAP: 2\n"
+    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\nHANDSHAKE-LAP: 2\n"
             "HANDSHAKE-VERDICT: GO\n\n# round 9\n")
-    ok, probs = gate({"round-9.md": body, "round-9-lap2.md": lap(2, 9, "GO")})
+    ok, probs = gate({"round-9.md": body,
+                      "round-9-lap2.md": lap(2, 9, "GO", complete=True)})
     check(not ok, "an ambiguous lap declaration must not be hidden behind a good one")
     check(any("ambiguous" in p for p in probs), "should name the ambiguity")
 
@@ -127,16 +202,17 @@ def test_unknown_verdict_does_not_close():
 def test_missing_verdict_fails_closed():
     # The tempting shortcut is to treat a missing field as GO so old rounds
     # still pass. That puts the whole defect back through the fallback.
-    ok, probs = gate({"round-9.md": "# round 9\n\nno field here at all\n"})
+    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n\n# round 9\n"
+    ok, probs = gate({"round-9.md": body})
     check(not ok, "a round with no verdict field must fail closed")
     check(any("NO VERDICT" in p for p in probs),
-          "a missing verdict should say so explicitly")
+          f"a missing verdict should say so explicitly: {probs}")
 
 
 def test_prose_about_a_verdict_is_not_a_verdict():
     # The exact failure Platterpus reported: a file that says it is NOT a GO,
     # closing the round because a matcher found the word GO in the prose.
-    body = ("HANDSHAKE-ROUND: 9\nHANDSHAKE-VERDICT: HOLD\n\n"
+    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-VERDICT: HOLD\n\n"
             "# round 9\n\n"
             "This is deliberately **not a closing GO**. The verdict is HOLD.\n"
             "Do not read `HANDSHAKE-VERDICT: GO` from this sentence.\n"
@@ -147,13 +223,13 @@ def test_prose_about_a_verdict_is_not_a_verdict():
 
 
 def test_indented_declaration_is_not_a_declaration():
-    body = "HANDSHAKE-ROUND: 9\n  HANDSHAKE-VERDICT: GO\n\n# round 9\n"
+    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n  HANDSHAKE-VERDICT: GO\n\n# round 9\n"
     ok, _ = gate({"round-9.md": body})
     check(not ok, "an indented verdict is quoted prose, not a declaration")
 
 
 def test_two_verdicts_are_ambiguous_not_closed():
-    body = ("HANDSHAKE-ROUND: 9\nHANDSHAKE-VERDICT: GO\n"
+    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-VERDICT: GO\n"
             "HANDSHAKE-VERDICT: HOLD\n\n# round 9\n")
     ok, _ = gate({"round-9.md": body})
     check(not ok, "two verdicts must be ambiguous, not closed on the first")
@@ -172,7 +248,7 @@ def test_grandfathering_does_not_leak_to_new_rounds():
 
 
 def test_mismatched_round_number_is_a_problem():
-    body = "HANDSHAKE-ROUND: 8\nHANDSHAKE-VERDICT: GO\n\n# round 9\n"
+    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 8\nHANDSHAKE-VERDICT: GO\n\n# round 9\n"
     ok, probs = gate({"round-9.md": body})
     check(not ok, "a file declaring a different round number must not pass")
     check(any("declares" in p for p in probs), "should name the mismatch")
@@ -201,6 +277,33 @@ def test_the_real_tree_is_consistent():
     if seven:
         check(seven[0].verdict is not None,
               "round 7 must declare a verdict now that the field exists")
+
+
+
+
+def test_future_protocol_version_is_refused_not_guessed():
+    # A gate reading a spec it does not implement must refuse. Guessing is how
+    # the two sides drift into disagreeing about what a close means.
+    ok, probs = gate({"round-9.md": GO.replace("HANDSHAKE-PROTOCOL: 1",
+                                               "HANDSHAKE-PROTOCOL: 99")})
+    check(not ok, "a future protocol version must be refused")
+    check(any("refusing rather than guessing" in p for p in probs),
+          f"should say why it refused: {probs}")
+
+
+def test_missing_protocol_field_fails_closed():
+    body = "\n".join(l for l in GO.splitlines()
+                     if not l.startswith("HANDSHAKE-PROTOCOL:"))
+    ok, _ = gate({"round-9.md": body})
+    check(not ok, "a round with no protocol declaration must fail closed")
+
+
+def test_protocol_version_is_pinned():
+    # Bumping this is a protocol change and must be a deliberate, visible edit
+    # shipped to both projects before the next close.
+    check(rg.PROTOCOL_VERSION == 1,
+          f"protocol version changed to {rg.PROTOCOL_VERSION} -- "
+          "both repos must ship the new spec before the next close")
 
 
 for name, fn in sorted(globals().items()):

@@ -44,6 +44,12 @@ that failure, or one this repo has already made, would otherwise be reachable:
   * OPEN and HOLD are both "not closed". A deliberate mid-round lap is the
     normal case, not an edge case.
 
+  * A close is *affirmative and two-sided*. Our own GO is a statement about our
+    tree, not agreement: it also needs the peer's declared GO, both sides'
+    versions and pins, and a declaration of what was tested. Any one missing and
+    the round stays open. "They did not object" is not "they agreed", and a
+    round that closed without testing would be a release nobody checked.
+
   * A round can take several laps, and its state is the *latest* lap's verdict.
     The alternative -- every lap must say GO -- would force us to go back and
     edit a file we had already sent, which is the one thing a record of an
@@ -72,6 +78,22 @@ VERDICT_RE = re.compile(r"^HANDSHAKE-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]*$", re.M)
 ROUND_RE = re.compile(r"^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", re.M)
 LAP_RE = re.compile(r"^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", re.M)
 
+# A close needs BOTH sides to have said yes and testing to have happened. Our
+# own GO is a statement about our tree; it is not agreement. These carry the
+# other half, recorded from the file they actually sent.
+# The shared spec both projects implement. A file declaring a version this gate
+# does not implement is refused rather than guessed at -- see docs/handshake/
+# PROTOCOL.md, which is copied into both repositories.
+PROTOCOL_VERSION = 1
+PROTOCOL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(\d+)[ \t]*$", re.M)
+
+PEER_VERDICT_RE = re.compile(r"^HANDSHAKE-PEER-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]*$", re.M)
+PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
+PEER_PIN_RE = re.compile(r"^HANDSHAKE-PEER-PIN:[ \t]*(\S+)[ \t]*$", re.M)
+OUR_VERSION_RE = re.compile(r"^HANDSHAKE-OUR-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
+OUR_PIN_RE = re.compile(r"^HANDSHAKE-OUR-PIN:[ \t]*(\S+)[ \t]*$", re.M)
+TESTED_RE = re.compile(r"^HANDSHAKE-TESTED:[ \t]*(\S.*?)[ \t]*$", re.M)
+
 # Only GO closes a round. Anything else -- including a verdict this script has
 # never heard of -- leaves it open, because an unrecognised verdict is not
 # evidence of agreement.
@@ -79,32 +101,79 @@ CLOSING = {"GO"}
 
 
 class Lap:
-    def __init__(self, number, lap, path, verdict, declared_number):
+    def __init__(self, number, lap, path, verdict, declared_number,
+                 peer_verdict=None, peer_version=None, peer_pin=None,
+                 our_version=None, our_pin=None, tested=None, protocol=None):
         self.number = number
         self.lap = lap
         self.path = path
         self.verdict = verdict
         self.declared_number = declared_number
+        self.peer_verdict = peer_verdict
+        self.peer_version = peer_version
+        self.peer_pin = peer_pin
+        self.our_version = our_version
+        self.our_pin = our_pin
+        self.tested = tested
+        self.protocol = protocol
+
+    def missing_for_close(self):
+        """Fields a close requires. Named individually so the gate can say
+        which one is absent rather than refusing without a reason."""
+        need = {
+            "HANDSHAKE-PEER-VERDICT": self.peer_verdict,
+            "HANDSHAKE-PEER-VERSION": self.peer_version,
+            "HANDSHAKE-PEER-PIN": self.peer_pin,
+            "HANDSHAKE-OUR-VERSION": self.our_version,
+            "HANDSHAKE-OUR-PIN": self.our_pin,
+            "HANDSHAKE-TESTED": self.tested,
+        }
+        return [k for k, v in need.items() if not v]
 
     @property
     def grandfathered(self):
         return self.verdict is None and self.number in GRANDFATHERED
 
     @property
+    def protocol_ok(self):
+        if self.protocol is None:
+            return self.grandfathered
+        return int(self.protocol) <= PROTOCOL_VERSION
+
+    @property
     def closed(self):
         if self.grandfathered:
             return True
-        return self.verdict in CLOSING
+        if not self.protocol_ok:
+            return False
+        if self.verdict not in CLOSING:
+            return False
+        # Our GO alone is not agreement.
+        if self.peer_verdict not in CLOSING:
+            return False
+        return not self.missing_for_close()
 
     @property
     def why(self):
         if self.grandfathered:
             return "no verdict field, grandfathered by number"
+        if self.protocol is not None and int(self.protocol) > PROTOCOL_VERSION:
+            return (f"declares HANDSHAKE-PROTOCOL: {self.protocol}, this gate "
+                    f"implements {PROTOCOL_VERSION} -- refusing rather than guessing")
+        if self.protocol is None:
+            return "NO HANDSHAKE-PROTOCOL FIELD -- fails closed"
         if self.verdict is None:
             return "NO VERDICT FIELD -- fails closed"
-        if self.verdict in CLOSING:
+        if self.verdict not in CLOSING:
             return f"verdict {self.verdict}"
-        return f"verdict {self.verdict}"
+        if self.peer_verdict is None:
+            return "our verdict GO, but no peer verdict declared"
+        if self.peer_verdict not in CLOSING:
+            return f"our verdict GO, peer verdict {self.peer_verdict}"
+        missing = self.missing_for_close()
+        if missing:
+            return "both verdicts GO, but missing " + ", ".join(missing)
+        return "verdict GO, peer GO, versions/pins/testing declared"
 
 
 def load_rounds(directory=HANDSHAKE_DIR):
@@ -130,7 +199,20 @@ def load_rounds(directory=HANDSHAKE_DIR):
         laps = LAP_RE.findall(text)
         lap = int(laps[0]) if len(laps) == 1 else (1 if not laps else None)
 
-        all_laps.append(Lap(int(m.group(1)), lap, path, verdict, declared_number))
+        def one(rx):
+            hits = rx.findall(text)
+            return hits[0] if len(hits) == 1 else None
+
+        all_laps.append(Lap(
+            int(m.group(1)), lap, path, verdict, declared_number,
+            peer_verdict=one(PEER_VERDICT_RE),
+            peer_version=one(PEER_VERSION_RE),
+            peer_pin=one(PEER_PIN_RE),
+            our_version=one(OUR_VERSION_RE),
+            our_pin=one(OUR_PIN_RE),
+            tested=one(TESTED_RE),
+            protocol=one(PROTOCOL_RE),
+        ))
 
     # A round's state is its latest lap. An unparseable lap number sorts to the
     # end so it cannot be shadowed by a well-formed earlier one.
