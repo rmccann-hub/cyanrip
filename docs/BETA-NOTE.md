@@ -1,4 +1,4 @@
-# cyanrip beta — `0.9.4-rc1+platterpus.5-beta.1`
+# cyanrip beta — `0.9.4-rc1+platterpus.5-beta.2`
 
 *Information only. This file describes the beta and nothing else.*
 
@@ -7,28 +7,31 @@
 ## Identifiers
 
 ```
-version   0.9.4-rc1+platterpus.5-beta.1
+version   0.9.4-rc1+platterpus.5-beta.2
 repo      rmccann-hub/cyanrip
 branch    platterpus-fork
-commit    9003e6f
-banner    cyanrip 0.9.4-rc1+platterpus.5-beta.1 (platterpus-fork-g9003e6f)
-tests     24/24
-anchor    sha256/16 = c109971e81cbba95   (over src/*.c and src/*.h)
-contract  PROVIDER-CONTRACT.md @ 9003e6f
+commit    c5fb909
+banner    cyanrip 0.9.4-rc1+platterpus.5-beta.2 (platterpus-fork-gc5fb909)
+tests     28/28
+anchor    sha256/16 = 1f09494a9899867b   (over src/*.c and src/*.h)
+contract  PROVIDER-CONTRACT.md @ c5fb909
 ```
 
 **The commit is the identifier.** There is no git tag and no GitHub release: the
 git proxy in the build environment refuses tag pushes (`HTTP 403`, re-probed for
-this build) and no release-creation API is reachable from it.
+this build — `git ls-remote --tags origin` returns nothing) and no
+release-creation API is reachable from it.
 
 **This is a pre-release.** It claims no joint verification, and says so in every
-logfile it writes.
+logfile it writes. Round 7 is open and both projects declare HOLD.
+
+**It supersedes `…+platterpus.5-beta.1` (`9003e6f`)** as the build to install.
 
 ## Build and verify
 
 ```sh
 git clone <repo> && cd cyanrip
-git checkout 9003e6f
+git checkout c5fb909
 meson setup build && ninja -C build
 meson test -C build --print-errorlogs
 ./build/src/cyanrip --version
@@ -37,8 +40,8 @@ meson test -C build --print-errorlogs
 Expected:
 
 ```
-24/24 tests passing
-cyanrip 0.9.4-rc1+platterpus.5-beta.1 (platterpus-fork-g9003e6f)
+28/28 tests passing
+cyanrip 0.9.4-rc1+platterpus.5-beta.2 (platterpus-fork-gc5fb909)
 ```
 
 A banner ending `-dirty` means the tree had uncommitted changes and the commit
@@ -47,63 +50,66 @@ does not describe the binary.
 ## What every logfile from this build contains
 
 ```
-cyanrip 0.9.4-rc1+platterpus.5-beta.1 (platterpus-fork-g9003e6f)
+cyanrip 0.9.4-rc1+platterpus.5-beta.2 (platterpus-fork-gc5fb909)
 Invoked as:     …
-Handshake:      round 7 lap 7 OPEN, verdict HOLD -- NOT a released build
+Handshake:      round 7 lap 20 OPEN, verdict HOLD -- NOT a released build
 Consumer:       <whatever --consumer was given>
                 (reported by the caller, not verified by cyanrip)
 ```
 
-`Handshake:` is derived at build time from this tree's handshake record. It reads
-`lap 7` rather than `lap 8` because a commit cannot contain the hash of a file
-added after it.
+`Handshake:` reads `lap 20` rather than lap 21 because a commit cannot contain
+the hash of a file added after it.
 
-## What is in this beta and was not in `0.9.4-rc1+platterpus.4`
+## What is in this beta and was not in `…-beta.1`
 
 **Fixed**
 
-- **A diagnosed abort no longer exits 0.** The exit code tracked read errors, so
-  a refusal to start or a rip that failed outright printed its reason and
-  returned success. Still within `{0, 1}`. *Not covered by any automated test —
-  the affected paths need real hardware.*
-- **`-x` can no longer hang without reporting it.** The cache probe ran before
-  the stall watchdog started, so the one read most likely to wedge on a real
-  drive had no liveness reporting. The watchdog now starts first and the probe
-  brackets its own reads, printing
-  `Still reading track 0 - the read for LSN N has not returned after Ts`.
-  Track `0` means "not ripping a track".
-- **The golden reference was regenerated from a clean tree.** The previous one
-  carried a `-dirty` banner.
+- **Track 1's pre-gap length counted the 2-second lead-in twice** on any disc
+  whose TOC signals an HTOA. `Pregap length: 300 frames` and `00:04.00` against
+  a `Gaps:` block, an LSN subtraction and a cue sheet that all said 150. Now
+  150 everywhere. *Only affects discs with a track 1 pre-gap; the 2026-08-04 rig
+  disc has none and reported 150 correctly.*
+- **Everything said before the logfile existed reached stdout and nowhere
+  else** — the drive open, the metadata lookups, and seven refusal paths. It is
+  now replayed into the logfile as a delimited block after the header.
+- **libcdio's own messages never reached cyanrip.** Its default handler prints
+  to stderr and exits the process itself, so a bad `-d` produced a run whose
+  exit code could not be reported.
+- **genopt's own messages did not either** — every argument-parsing error went
+  to the terminal only.
+- **The diagnostics record kept only the first 10000 messages**, discarding the
+  last — which is the one that explains a failure.
 
 **Added**
 
-- **Sample-peak cross-check.** The peak is measured a second way — max |sample|
-  over the same frames the ebur128 filter sees — and a line appears **only when
-  the two disagree**:
-  `Sample peak disagreement: ebur128 X dBFS, direct scan Y dBFS (Z dB apart)`.
-  Silent on agreement.
-- **`--prerelease`** on `tools/release-gate.py`: a stable release stays refused
-  while a handshake round is open; a pre-release is permitted after printing
-  every open round.
+- **`Read stalls:`** in the disc summary, in three forms:
+  `none (no read exceeded 10s)`, `N reads exceeded 10s; longest Ns (track T,
+  LSN L)`, or `unknown (stall reporting disabled with -k 0)`.
+- **`-j` / `--diagnostics <path>`** — a JSON record written for every run,
+  including runs that open no logfile at all. Off unless asked for.
 
 ## Flags relevant to this build
 
 | flag | |
 |---|---|
 | `-u` / `--consumer <string>` | recorded verbatim in the log, explicitly not verified |
+| `-j` / `--diagnostics <path>` | machine-readable JSON record; off unless given |
 | `-k <seconds>` | stall threshold before liveness is reported (default 10, `0` disables) |
 | `-x` / `--cache-probe` | measure the drive's readback cache before ripping; refuses on a disc image. **Never executed on real hardware** |
 
-Flag count: 40. Full generated interface in `PROVIDER-CONTRACT.md @ 9003e6f`.
+Flag count: 41 (was 40 — `-j` is new). Full generated interface in
+`PROVIDER-CONTRACT.md @ c5fb909`.
 
 ## Known limits of this build
 
 - **`-x` has never produced a measurement on a real drive.** Any number it
   prints is unverified.
-- **The exit-code fix is untested.** Its paths are not reachable from a disc
-  image.
-- **Seven refusal paths print to stdout only.** They fire before the logfile is
-  opened, so their diagnostics do not appear in any log.
+- **The exit-code fix is still untested.** Its paths are not reachable from a
+  disc image, and the 2026-08-04 rig rip had `Ripping errors: 0`.
+- **A non-zero `Read stalls:` count has never been produced anywhere.** The
+  accounting is unit-tested on synthetic stalls; no drive has stalled under it.
 - **No hardware path is verified by the test suite**: the MMC sub-channel read,
   C2 reporting, `-f` offset autodetection, damaged media, and CD-TEXT from a
-  physical disc are all outside what disc images can exercise.
+  physical disc are outside what disc images can exercise. The 2026-08-04 rig
+  session retired the sub-channel pre-gap read and `-Z` convergence **for
+  `9003e6f`**; nothing in this beta has been near a disc.
