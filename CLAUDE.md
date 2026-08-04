@@ -500,6 +500,15 @@ a housekeeping one. The rules, in force from r3:
   with a throwaway tag rather than assumed. Until it changes, **the commit SHA is
   the only durable release identifier a consumer can resolve** — which is why the
   handshake pins a SHA and says plainly that the tag is local-only.
+- **"Which commit changes the binary" includes `docs/handshake/round-*.md`.**
+  Since r3 the handshake state is *compiled in* by `tools/gen-handshake-state.py`,
+  so adding a lap file changes the binary — the `Handshake:` line moves. A pin
+  chosen with `git log -- src/ meson.build` is therefore wrong, and one was:
+  lap 6 named a test pin whose log says `lap 4`. Use
+  `git log -- src/ meson.build docs/handshake/round-*.md`, and note the
+  consequence — **a file can never name a build that contains itself**, so the
+  pin a round file announces is always the commit before it. Say that rather
+  than claiming the tip builds identically, which stopped being true at r3.
 - **Platterpus pins a commit SHA, never a branch tip.** A branch tip is a moving
   target and cannot be quoted in a verification. Every handshake file states the
   pin as a SHA and names the branch only as context.
