@@ -547,8 +547,22 @@ a housekeeping one. The rules, in force from r3:
   developed. They merge into `platterpus-fork` **fast-forward only** — no merge
   commits, so `platterpus-fork`'s history stays a straight line a consumer can
   bisect. Delete the topic branch after it lands.
-- **Branches are publishable here; tags are not.** Tag pushes are refused with
-  `HTTP 403`, branch pushes work. So a `release/*` **marker** — a branch pointing
+- **Branches are publishable here; tags are not — and branches cannot be
+  *deleted* either.** Measured on this proxy, not inferred from one probe:
+  branch create/update succeeds, **branch delete is `HTTP 403`**, tag push is
+  `HTTP 403`. The middle one was found by trying to remove a landed topic branch
+  and is the correction to what this bullet used to say ("branch pushes work",
+  which is true only of updates).
+
+  **Consequence, and it changes the convention above**: "delete the topic branch
+  after it lands" **cannot be carried out from here.** A topic branch pushed to
+  the remote is permanent. So either do not push one at all, or keep it in step
+  with `platterpus-fork` forever — a ref left behind at an old commit is worse
+  than both, because it looks current and answers "which branch do I build?"
+  wrongly. That is the stale-ref hazard this file already warns about, created
+  by our own tidying.
+
+  So a `release/*` **marker** — a branch pointing
   at a released commit already on the fast-forward line, never committed to and
   never moved — is the only named ref this environment can publish. It keeps the
   ancestor property a marker-into-the-line preserves and a separate development
