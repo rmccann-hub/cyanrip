@@ -583,6 +583,59 @@ def sc_paranoia():
             fail(f"paranoia: {img} default-level output is mostly silence")
 
 
+def sc_early_log():
+    # Everything cyanrip says before the logfile exists is replayed into it.
+    # Without that, a diagnostic's fate depended on *when* it fired: the drive
+    # open, the MusicBrainz lookup and the AccurateRip lookup all report before
+    # cyanrip_log_init(), so a consumer that archives the log and not the
+    # terminal lost them, and an aborted rip could read as a quiet success.
+    rip("early", "basic.cue")
+    log = (WORK / "out_early" / "log.log").read_text()
+    lines = log.splitlines()
+
+    # The banner is contractually the first line -- the only reliable answer to
+    # "is this the fork?". The first version of the replay flushed at log-open
+    # and pushed the banner to line 8. This is that regression, pinned.
+    if not re.match(r"^cyanrip \S+ \(platterpus-fork-g", lines[0]):
+        fail(f"early_log: first log line is not the version banner: {lines[0]!r}")
+
+    for marker in ("--- output before this log was opened ---",
+                   "--- end of pre-log output ---"):
+        if marker not in log:
+            fail(f"early_log: {marker!r} missing from the log")
+
+    # Assert against an independent artifact: lines the binary prints before
+    # the log opens, which are therefore in the log only via the replay. Each
+    # is checked to have been printed at all first, so a probe that stops
+    # firing fails loudly instead of passing by absence.
+    stdout = (WORK / "early.log").read_text()
+    for probe_line in ("Checking", "Opening drive..."):
+        if probe_line not in stdout:
+            fail(f"early_log: {probe_line!r} not printed at all -- probe is stale")
+        elif probe_line not in log:
+            fail(f"early_log: {probe_line!r} reached stdout but not the log")
+
+    # A real diagnostic, not just progress chatter. Cover-art lookup reports
+    # its own refusal before the log opens; -N makes it deterministic and
+    # offline (no release ID to search with), so this exercises the case the
+    # buffer exists for without depending on a network round trip.
+    # (rip() always passes -U, so this one is spelled out without it.)
+    _, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-s", "0", "-P", "0",
+                  "-o", "flac", "-D", WORK / "out_earlydiag", "-F", "{track}",
+                  "-L", "log")
+    diag = "Release ID unavailable, cannot search Cover Art DB!"
+    if diag not in out:
+        fail(f"early_log: {diag!r} not printed at all -- probe is stale")
+    elif diag not in (WORK / "out_earlydiag" / "log.log").read_text():
+        fail(f"early_log: {diag!r} reached stdout but not the log")
+
+    # The block must sit inside the log, not be appended after the checksum --
+    # --verify-log rejects trailing content, so a replay written at the end
+    # would make every log from this build fail its own verification.
+    if crip("--verify-log", WORK / "out_early" / "log.log")[0] != 0:
+        fail("early_log: a log containing the replay block fails --verify-log")
+
+
 def sc_golden_reference_is_from_a_clean_build():
     # The shipped reference must name a build someone else can reproduce. A
     # -dirty banner means it was generated from a tree with uncommitted

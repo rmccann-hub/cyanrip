@@ -35,6 +35,10 @@
     if (dict_get(DICT, TAG))                                                   \
         cyanrip_log(ctx, 0, FORMAT, dict_get(DICT, TAG));                      \
 
+/* Defined with the early-diagnostic buffer further down, next to the state it
+ * owns; declared here because cyanrip_log_init() drains it. */
+static void crip_early_flush(cyanrip_ctx *ctx);
+
 /* Prints one CD-TEXT dictionary as an aligned key: value block, matching the
  * Metadata block's layout. Returns nothing; an empty dictionary prints
  * nothing, so callers decide whether a heading is warranted. */
@@ -599,6 +603,18 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "Total time:     %s\n", duration);
 
     cyanrip_log(ctx, 0, "\n");
+
+    /* Replay anything said before the logfile existed, so a diagnostic's fate
+     * does not depend on *when* it fired.
+     *
+     * Deliberately here and not in cyanrip_log_init(): flushing at open time
+     * put the replay ahead of the version banner, and the banner is
+     * contractually the logfile's first line -- the only reliable answer to
+     * "is this the fork?". Measured, not assumed: the first version of this
+     * produced a log whose first line was the block marker. Emitting it after
+     * the header's trailing blank line leaves every header byte where it was
+     * and makes the replay its own section. */
+    crip_early_flush(ctx);
 }
 
 void cyanrip_log_finish_report(cyanrip_ctx *ctx)
@@ -726,6 +742,84 @@ static cyanrip_ctx *av_global_ctx = NULL;
 static int av_max_log_level = AV_LOG_QUIET;
 static pthread_mutex_t log_lock = PTHREAD_MUTEX_INITIALIZER;
 
+/* Everything printed before the logfile exists, kept so it can be replayed into
+ * it the moment it opens.
+ *
+ * Without this, a diagnostic's fate depends on *when* it fired. Seven refusal
+ * paths in cyanrip_main.c run between argument parsing and cyanrip_log_init(),
+ * so their messages existed on stdout and nowhere else -- and a consumer that
+ * archives the logfile and not the terminal lost them entirely. An aborted rip
+ * could look like a quiet success from the archive.
+ *
+ * Buffering rather than opening the log earlier, deliberately: some of those
+ * paths abort before the log's own path can be resolved, and creating a file for
+ * a run that then refuses is a worse shape than replaying into one that opens.
+ *
+ * Correct by construction rather than by enumeration -- there is no list of
+ * "early call sites" to keep up to date, which is the kind of list that rots. */
+#define CRIP_EARLY_MAX (256 * 1024)
+static char *crip_early;
+static size_t crip_early_len;
+static size_t crip_early_dropped;
+static int crip_early_sealed;
+
+/* Caller must hold log_lock. */
+static void crip_early_append(const char *format, va_list args)
+{
+    if (crip_early_sealed)
+        return;
+
+    if (!crip_early) {
+        crip_early = av_mallocz(CRIP_EARLY_MAX);
+        if (!crip_early) {
+            crip_early_dropped++;
+            return;
+        }
+    }
+
+    va_list copy;
+    va_copy(copy, args);
+    const int space = (int)(CRIP_EARLY_MAX - crip_early_len);
+    const int n = vsnprintf(crip_early + crip_early_len, space, format, copy);
+    va_end(copy);
+
+    /* Truncation is recorded rather than hidden: a buffer that silently drops
+     * the message explaining a failure is worse than no buffer. */
+    if (n < 0 || n >= space) {
+        crip_early_dropped++;
+        crip_early_len = CRIP_EARLY_MAX - 1;
+        return;
+    }
+    crip_early_len += n;
+}
+
+/* Replay everything said before the log existed into it, then stop buffering.
+ * Caller must NOT hold log_lock. */
+static void crip_early_flush(cyanrip_ctx *ctx)
+{
+    pthread_mutex_lock(&log_lock);
+
+    if (crip_early && crip_early_len) {
+        for (int i = 0; i < ctx->settings.outputs_num; i++) {
+            if (!ctx->logfile[i])
+                continue;
+            fputs("--- output before this log was opened ---\n", ctx->logfile[i]);
+            fwrite(crip_early, 1, crip_early_len, ctx->logfile[i]);
+            if (crip_early_dropped)
+                fprintf(ctx->logfile[i],
+                        "--- %zu earlier message(s) dropped: buffer full ---\n",
+                        crip_early_dropped);
+            fputs("--- end of pre-log output ---\n", ctx->logfile[i]);
+        }
+    }
+
+    crip_early_sealed = 1;
+    av_freep(&crip_early);
+    crip_early_len = 0;
+
+    pthread_mutex_unlock(&log_lock);
+}
+
 static void av_log_capture(void *ptr, int lvl, const char *format,
                            va_list args)
 {
@@ -777,6 +871,8 @@ void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...)
     va_list args;
     va_start(args, format);
 
+    int reached_a_logfile = 0;
+
     if (ctx) {
         for (int i = 0; i < ctx->settings.outputs_num; i++) {
             if (!ctx->logfile[i])
@@ -786,8 +882,14 @@ void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...)
             va_copy(args2, args);
             vfprintf(ctx->logfile[i], format, args2);
             va_end(args2);
+            reached_a_logfile = 1;
         }
     }
+
+    /* No logfile took it -- either none is open yet, or the caller passed no
+     * ctx. Keep it so it can be replayed once one exists. */
+    if (!reached_a_logfile)
+        crip_early_append(format, args);
 
     vprintf(format, args);
     fflush(stdout);
