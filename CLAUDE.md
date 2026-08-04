@@ -669,6 +669,24 @@ moves**. Upstream's `0.9.4-rc1` is copied verbatim and changes only when we sync
 a new upstream version. Never mint an identifier in upstream's namespace — see
 the seam section for why `0.9.4-rc3` was written and withdrawn.
 
+## Planned, not built
+
+Designs agreed in principle but deliberately unimplemented. Each states what it
+would cost and why it is not built yet, so "we decided against it" and "nobody
+got to it" stay distinguishable.
+
+- **Release channels and beta opt-in** — `docs/UPGRADE-CHANNELS-PLAN.md`.
+  A user must be able to take a beta of Platterpus or a dependency, with a
+  warning and an explicit choice, and there must be a way to check what exists.
+  Two findings already fix the shape of it: the projects spell a beta
+  differently (`…-beta.1` versus `b1`, so a naive substring check reports a beta
+  user as stable), and **our version cannot be ordered at all** because the part
+  that advances is SemVer build metadata, which the spec ignores for precedence.
+  So the design declares a channel and a monotonic sequence rather than parsing
+  the human-facing string. **Not to be built before the round-7 rig session** —
+  a design settled while the evidence that might change it is uncollected gets
+  rewritten.
+
 ## Watching upstream
 
 Upstream changes can break our consumer without touching our code, because we
