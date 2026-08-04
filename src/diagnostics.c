@@ -58,9 +58,23 @@
 
 /* Bounded so a long rip cannot grow this without limit. Overflow is counted
  * and reported rather than silently discarded: a diagnostics file that quietly
- * drops the message explaining a failure is worse than no file. */
-#define DIAG_MAX_LINES 20000
-#define DIAG_MAX_LINE  8192
+ * drops the message explaining a failure is worse than no file.
+ *
+ * HEAD *AND* TAIL, not head alone. The first version kept the first 20000 lines
+ * and dropped everything after, which is the same sentence above inverted: **a
+ * tool's fatal message is the last thing it prints**, so a head-only cap
+ * discards precisely the line that explains the failure while
+ * `messages_dropped` still makes the record look accounted for. Platterpus
+ * found this by reading the design rather than the file (round 7 lap 11 §D),
+ * and it is their mitigation for our stdout that they were describing.
+ *
+ * The two halves are separate fields rather than one array with an elision
+ * marker in it. A synthetic "--- N elided ---" string sitting among real
+ * messages would be a line the program never printed, in the record of what the
+ * program printed. */
+#define DIAG_MAX_HEAD 10000
+#define DIAG_MAX_TAIL 10000
+#define DIAG_MAX_LINE 8192
 
 static const char *diag_path;
 static int diag_written;
@@ -69,6 +83,12 @@ static int diag_registered;
 static char **diag_lines;
 static int diag_nb_lines;
 static int diag_dropped_lines;
+
+/* Ring of the most recent lines, once the head is full. diag_tail_next is where
+ * the next one goes; diag_tail_count saturates at DIAG_MAX_TAIL. */
+static char *diag_tail[DIAG_MAX_TAIL];
+static int diag_tail_next;
+static int diag_tail_count;
 
 static char diag_cur[DIAG_MAX_LINE];
 static size_t diag_cur_len;
@@ -98,9 +118,7 @@ static void diag_commit_line(void)
     if (!diag_cur_len && !diag_cur_truncated)
         return;
 
-    if (diag_nb_lines >= DIAG_MAX_LINES) {
-        diag_dropped_lines++;
-    } else {
+    if (diag_nb_lines < DIAG_MAX_HEAD) {
         char **grown = av_realloc_array(diag_lines, diag_nb_lines + 1,
                                         sizeof(*diag_lines));
         if (!grown) {
@@ -112,6 +130,22 @@ static void diag_commit_line(void)
                 diag_nb_lines++;
             else
                 diag_dropped_lines++;
+        }
+    } else {
+        /* Past the head: keep the newest, so the last thing said survives.
+         * Whatever this evicts is what "dropped" counts. */
+        char *copy = av_strdup(diag_cur);
+        if (!copy) {
+            diag_dropped_lines++;
+        } else {
+            if (diag_tail[diag_tail_next]) {
+                av_freep(&diag_tail[diag_tail_next]);
+                diag_dropped_lines++;
+            }
+            diag_tail[diag_tail_next] = copy;
+            diag_tail_next = (diag_tail_next + 1) % DIAG_MAX_TAIL;
+            if (diag_tail_count < DIAG_MAX_TAIL)
+                diag_tail_count++;
         }
     }
 
@@ -372,12 +406,26 @@ void crip_diag_write(void)
                    "overwritten on the terminal are collapsed to the final "
                    "state of each line.\",\n");
     av_bprintf(&b, "  \"messages_dropped\": %i,\n", diag_dropped_lines);
+    av_bprintf(&b, "  \"messages_are_complete\": %s,\n",
+               diag_dropped_lines ? "false" : "true");
     av_bprintf(&b, "  \"messages\": [");
     for (int i = 0; i < diag_nb_lines; i++) {
         av_bprintf(&b, "%s\n    ", i ? "," : "");
         diag_json_str(&b, diag_lines[i]);
     }
-    av_bprintf(&b, "%s]\n", diag_nb_lines ? "\n  " : "");
+    av_bprintf(&b, "%s],\n", diag_nb_lines ? "\n  " : "");
+
+    /* The last lines said, in order. Empty whenever nothing overflowed the
+     * head, so the ordinary case is one array and the field is still present
+     * rather than appearing only on failure. */
+    av_bprintf(&b, "  \"messages_tail\": [");
+    for (int i = 0; i < diag_tail_count; i++) {
+        const int idx = diag_tail_count < DIAG_MAX_TAIL
+                      ? i : (diag_tail_next + i) % DIAG_MAX_TAIL;
+        av_bprintf(&b, "%s\n    ", i ? "," : "");
+        diag_json_str(&b, diag_tail[idx] ? diag_tail[idx] : "");
+    }
+    av_bprintf(&b, "%s]\n", diag_tail_count ? "\n  " : "");
     av_bprintf(&b, "}\n");
 
     FILE *f = fopen(diag_path, "wb");

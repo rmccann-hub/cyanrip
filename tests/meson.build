@@ -54,6 +54,18 @@ stall_test = executable('stall_test',
 )
 test('Stall watchdog', stall_test, timeout: 60)
 
+## Links the diagnostics object to drive it past its own retention cap, which
+## no rip can reach: an image rip prints ~124 messages against a 20000 cap, so
+## the truncation path shipped head-only -- keeping the first lines and
+## dropping the last, which is the one that explains a failure.
+diag_test = executable('diag_test',
+    sources: [ 'diag.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c' ]),
+    dependencies: unit_test_deps + [ dependency('threads') ],
+)
+test('Diagnostics retention', diag_test)
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the
