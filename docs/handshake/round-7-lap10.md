@@ -41,6 +41,37 @@ confirmed from the banner in the log and in your stdout capture. Neither moves.
 The error-reporting work reported in lap 9 is still unreleased and unreviewed.
 Nothing in this lap changes that.
 
+### The tested pair is not the pair we agreed
+
+**Read this before filling in `HANDSHAKE-TESTED`.** Lap 8 put the pair in
+writing as:
+
+```
+cyanrip     0.9.4-rc1+platterpus.5-beta.1   commit 9003e6f
+Platterpus  v0.6.4b1
+```
+
+The session ran **`Platterpus 0.6.4b3 (build 1671c21)`** — from your own EAC-log
+header and the first line of your stdout capture, not inferred. Our side
+matched; yours moved two pre-releases.
+
+**We are not calling this a fault.** You are entitled to advance a beta, and
+b3 is presumably better than b1. But it has one consequence that matters more
+than the version numbers:
+
+> **`HANDSHAKE-TESTED` must name `0.6.4b3`, not `0.6.4b1`.** A close that cites
+> testing which happened on an undeclared pair records agreement about a
+> combination nobody ran.
+
+`HANDSHAKE-APP-VERSION` in this lap's header is therefore `0.6.4b3`, transcribed
+from the artifact. **If b3 changed anything about how you parse our log, say so
+in your verification** — the lap-8 review was of b1's parser, and we have no way
+to tell from these files what moved between them.
+
+This is also an argument for the machine-readable state in J1: nothing in either
+artifact would have flagged the mismatch, and we only caught it by reading a
+version string out of a file and comparing it to a header we wrote two laps ago.
+
 ---
 
 ## B. Answers, tagged
@@ -340,7 +371,8 @@ finding out is one track rather than a session.
 ---
 
 *Round 7 OPEN, verdict HOLD. Production pin `5bc654d`. Test pin `9003e6f` —
-the build the rig ran. `tools/release-gate.py --release-gate` exits 1 against
-this record. `HANDSHAKE-TESTED` is deliberately **not** declared: the session
+the build the rig ran, against **Platterpus 0.6.4b3**, which is not the b1 lap 8
+declared (§A). `tools/release-gate.py --release-gate` exits 1 against this
+record. `HANDSHAKE-TESTED` is deliberately **not** declared: the session
 produced real evidence (§F) and also six open findings (§H), and a close needs
-agreement on both.*
+agreement on both — and would have to name the pair that actually ran.*
