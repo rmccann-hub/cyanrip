@@ -97,6 +97,68 @@ static int cap_count(const char *needle)
     return n;
 }
 
+/* The stall must survive into the log, not only onto the terminal.
+ *
+ * The heartbeat is progress output and stays on stdout; what the *log* carries
+ * is this summary. Without it the 2026-08-03 rig capture's two three-minute
+ * stalls existed only because the consumer happened to be recording 41180
+ * lines of stdout -- from the log alone that rip looked untroubled, and a
+ * stall is not a thing you can go back and re-measure.
+ *
+ * Runs first, and stalls longer than anything else in this file, so
+ * test_stats_keep_the_longest() below can assert against a known winner.
+ */
+static void test_stats_count_and_longest(void)
+{
+    crip_stall_stats_t s;
+
+    crip_stall_stats(&s);
+    CHECK(s.count == 0, "stall count started at %i, not 0", s.count);
+
+    cap_reset();
+    crip_stall_watchdog_config(200000, 200000);
+    crip_stall_watchdog_start();
+
+    crip_stall_read_begin(9, 999);
+    av_usleep(900000);
+    crip_stall_read_end();
+
+    crip_stall_watchdog_end();
+
+    crip_stall_stats(&s);
+
+    /* The threshold comes back with the count because a count alone cannot be
+     * compared against another run's -- "3 stalls" means nothing until you
+     * know what counted as one. */
+    CHECK(s.threshold_us == 200000,
+          "threshold reported as %lldus, not the 200000 configured",
+          (long long)s.threshold_us);
+    CHECK(s.count == 1, "one 900ms stall counted as %i", s.count);
+    CHECK(s.longest_us >= 900000,
+          "longest stall reported as %lldus for a 900ms read",
+          (long long)s.longest_us);
+    CHECK(s.longest_track == 9 && s.longest_lsn == 999,
+          "longest stall attributed to track %i LSN %i, not track 9 LSN 999",
+          s.longest_track, (int)s.longest_lsn);
+}
+
+/* Runs last. Every stall after the first was shorter, so "longest" must still
+ * name the first -- a implementation that simply records the most recent stall
+ * passes every other check in this file and fails this one. */
+static void test_stats_keep_the_longest(void)
+{
+    crip_stall_stats_t s;
+    crip_stall_stats(&s);
+
+    CHECK(s.count >= 2, "stalls stopped accumulating: count is %i after "
+                        "several stalled reads", s.count);
+    CHECK(s.longest_track == 9 && s.longest_lsn == 999,
+          "longest stall is now track %i LSN %i -- the last stall overwrote "
+          "the longest one", s.longest_track, (int)s.longest_lsn);
+    CHECK(s.longest_us >= 900000,
+          "longest stall shrank to %lldus", (long long)s.longest_us);
+}
+
 /* The whole point. A read is outstanding for 700 ms with a 200 ms threshold,
  * and in that time this thread calls nothing at all -- exactly the shape of a
  * drive blocked inside a single SCSI command. */
@@ -217,11 +279,13 @@ static void test_nothing_printed_after_end(void)
 
 int main(void)
 {
+    test_stats_count_and_longest();
     test_fires_with_no_callbacks();
     test_silent_when_reads_are_fast();
     test_threshold_zero_disables();
     test_state_resets_between_reads();
     test_nothing_printed_after_end();
+    test_stats_keep_the_longest();
 
     if (failures)
         fprintf(stderr, "%d check(s) failed\n", failures);

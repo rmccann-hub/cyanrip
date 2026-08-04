@@ -36,3 +36,20 @@ void crip_stall_watchdog_end(void);
  * read, prints the line saying it came back. */
 void crip_stall_read_begin(int track, lsn_t lsn);
 void crip_stall_read_end(void);
+
+/* What the heartbeats added up to, for the log's disc summary.
+ *
+ * threshold_us is reported back rather than assumed by the caller, so the
+ * summary can say what "a stall" meant for this run -- a count with no
+ * threshold beside it is not a measurement anyone can compare. A threshold of
+ * 0 means the watchdog was disabled, which is "we did not look", not "there
+ * were none"; the two are different claims and the log must not merge them. */
+typedef struct {
+    int64_t threshold_us;
+    int     count;
+    int64_t longest_us;
+    int     longest_track;
+    lsn_t   longest_lsn;
+} crip_stall_stats_t;
+
+void crip_stall_stats(crip_stall_stats_t *s);

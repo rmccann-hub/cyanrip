@@ -71,6 +71,23 @@ static int64_t last_heartbeat;
 static int reading_track;
 static lsn_t reading_lsn;
 
+/* What the heartbeats add up to, kept so the log can carry the finding rather
+ * than only the terminal.
+ *
+ * The heartbeat itself is progress output and stays on stdout: a three-minute
+ * stall at the default threshold is eighteen lines, and eighteen identical
+ * lines are not eighteen findings. But the *fact* of the stall is a
+ * measurement of the disc that cannot be recovered afterwards -- put the disc
+ * back in the drive and it may read clean -- so by the ownership rule it must
+ * be reported at rip time. It was not: the 2026-08-03 rig capture's two
+ * three-minute stalls exist only because the consumer happened to be
+ * capturing 41180 lines of our stdout. From a log alone that run is
+ * indistinguishable from one that never hesitated. */
+static int stalls_seen;
+static int64_t longest_stall_us;
+static int longest_stall_track;
+static lsn_t longest_stall_lsn;
+
 static pthread_t watchdog;
 static int watchdog_running;
 static int watchdog_stop;
@@ -110,6 +127,17 @@ static void *watchdog_fn(void *unused)
         if (started && stall_threshold_us &&
             now - started >= stall_threshold_us &&
             (!last_heartbeat || now - last_heartbeat >= heartbeat_us)) {
+            /* Counted on the first heartbeat and extended on every one after,
+             * not at read_end: a read that never returns is the worst case
+             * and must not be the one that goes unrecorded. */
+            if (!last_heartbeat)
+                stalls_seen++;
+            if (now - started > longest_stall_us) {
+                longest_stall_us = now - started;
+                longest_stall_track = reading_track;
+                longest_stall_lsn = reading_lsn;
+            }
+
             last_heartbeat = now;
             const int track = reading_track;
             const lsn_t lsn = reading_lsn;
@@ -172,6 +200,16 @@ void crip_stall_read_end(void)
     const int reported = !!last_heartbeat;
     const int track = reading_track;
     const lsn_t lsn = reading_lsn;
+    const int64_t took = av_gettime_relative() - began;
+
+    /* The exact figure, which the last heartbeat could only round down to its
+     * own tick. */
+    if (reported && took > longest_stall_us) {
+        longest_stall_us = took;
+        longest_stall_track = track;
+        longest_stall_lsn = lsn;
+    }
+
     read_started = 0;
     last_heartbeat = 0;
     pthread_mutex_unlock(&live_lock);
@@ -181,5 +219,16 @@ void crip_stall_read_end(void)
     if (reported)
         cyanrip_log(NULL, 0,
                     "\nTrack %i - the read for LSN %i returned after %" PRId64 "s\n",
-                    track, (int)lsn, (av_gettime_relative() - began) / 1000000LL);
+                    track, (int)lsn, took / 1000000LL);
+}
+
+void crip_stall_stats(crip_stall_stats_t *s)
+{
+    pthread_mutex_lock(&live_lock);
+    s->threshold_us   = stall_threshold_us;
+    s->count          = stalls_seen;
+    s->longest_us     = longest_stall_us;
+    s->longest_track  = longest_stall_track;
+    s->longest_lsn    = longest_stall_lsn;
+    pthread_mutex_unlock(&live_lock);
 }

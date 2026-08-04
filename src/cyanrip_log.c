@@ -19,6 +19,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <pthread.h>
+#include <inttypes.h>
 
 #include <libavutil/avutil.h>
 #include <libavformat/avformat.h>
@@ -30,6 +31,7 @@
 #include "handshake_state.h"
 #include "fun512.h"
 #include "accurip.h"
+#include "stall_watchdog.h"
 
 #define CLOG(FORMAT, DICT, TAG)                                                \
     if (dict_get(DICT, TAG))                                                   \
@@ -145,6 +147,44 @@ static void print_peak_disagreement(cyanrip_ctx *ctx, const char *indent,
                 "%sSample peak disagreement: ebur128 %.2f dBFS, "
                 "direct scan %.2f dBFS (%.2f dB apart)\n",
                 indent, ebu_db, direct_db, delta);
+}
+
+/* How long the drive made us wait, as a measurement rather than a verdict.
+ *
+ * A stall is not recoverable after the fact: put the disc back in and it may
+ * read clean, so if it is not recorded at rip time it is gone. Before this the
+ * only record was the heartbeat on stdout, and a consumer that archives the
+ * log and not the terminal kept nothing.
+ *
+ * Three states, not two. Zero stalls is "we watched and saw none"; a disabled
+ * watchdog is "we did not watch". Collapsing the second into the first would
+ * turn an absence of evidence into evidence of absence, on exactly the field a
+ * reader would use to call a disc healthy. The threshold is printed with the
+ * count because a count alone cannot be compared against another run's. */
+static void print_stall_summary(cyanrip_ctx *ctx)
+{
+    crip_stall_stats_t s;
+    crip_stall_stats(&s);
+
+    if (!s.threshold_us) {
+        cyanrip_log(ctx, 0, "Read stalls:    unknown (stall reporting disabled "
+                            "with -k 0)\n");
+        return;
+    }
+
+    const int64_t thresh_s = s.threshold_us / 1000000LL;
+
+    if (!s.count) {
+        cyanrip_log(ctx, 0, "Read stalls:    none (no read exceeded %" PRId64 "s)\n",
+                    thresh_s);
+        return;
+    }
+
+    cyanrip_log(ctx, 0, "Read stalls:    %i read%s exceeded %" PRId64 "s; "
+                        "longest %" PRId64 "s (track %i, LSN %i)\n",
+                s.count, s.count == 1 ? "" : "s", thresh_s,
+                s.longest_us / 1000000LL, s.longest_track,
+                (int)s.longest_lsn);
 }
 
 static int print_paranoia_counts(cyanrip_ctx *ctx, const uint64_t *counts,
@@ -651,6 +691,8 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "\n");
 
     cyanrip_log(ctx, 0, "Ripping errors: %i\n", ctx->total_error_count);
+
+    print_stall_summary(ctx);
 
     /* State plainly whether the rip ran to completion. Without this a rip
      * stopped part way through is only distinguishable from a whole one by
