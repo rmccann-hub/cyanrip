@@ -617,6 +617,12 @@ complete lap.
 regenerate the contract and golden reference at the new version, and announce
 the pin as a **commit SHA** — tags cannot be published from here.
 
+The plan for the next one, worked through against the actual tree rather than
+in the abstract, is `docs/RELEASE-PLAN-platterpus.5.md`. It is a plan and not a
+release: it names the four observable surfaces Platterpus has to check, and the
+list of things the release still would not verify, so a green suite cannot be
+mistaken for hardware coverage.
+
 ### A close is affirmative, two-sided, and tested — never assumed
 
 **Neither project releases until both have said yes in writing and testing has
