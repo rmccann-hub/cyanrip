@@ -4,6 +4,11 @@ build
 # this negation "*.log" silently swallows it and docs/handshake/README.md points
 # at a file that is not in the repository.
 !docs/golden-reference.log
+# Same trap, second time: rig-session logs are evidence a handshake lap cites,
+# not build output. Caught because the commit that added them staged the .cue
+# and the .json and silently dropped both .log files -- while the test that
+# reads one kept passing, because the file was there untracked.
+!docs/rig-*/*.log
 .github/_build
 .github/_install
 __pycache__/

@@ -855,6 +855,37 @@ def sc_verify_log():
     if crip("--verify-log", appended)[0] == 0:
         fail("log with trailing content verified")
 
+    # The same rule, against a real artifact rather than one we constructed.
+    #
+    # The 2026-08-04 rig log came back with a consumer's auto-fix addendum
+    # appended after the checksum line, so it no longer verifies -- and the
+    # consumer's own integrity check reported the rip fine, because it verified
+    # a different file's checksum. Both halves are pinned here: that the shipped
+    # file is rejected, and that removing exactly the appended block makes the
+    # same bytes verify. The second half is what makes this a finding about the
+    # addendum rather than about the log.
+    rig = ROOT / "docs" / "rig-2026-08-04" / "cyanrip.log"
+    if not rig.exists():
+        fail("rig log evidence is missing")
+    else:
+        text = rig.read_text()
+        if crip("--verify-log", rig)[0] == 0:
+            fail("rig log verified -- it carries an addendum after the "
+                 "checksum and must not, or finding H1 has silently reverted")
+
+        head, sep, _ = text.partition("\n=====")
+        if not sep:
+            fail("rig log no longer contains the appended block -- the "
+                 "archived evidence was modified")
+        else:
+            clean = WORK / "rig_stripped.log"
+            clean.write_text(head + "\n")
+            ec, out = crip("--verify-log", clean)
+            if ec != 0:
+                fail(f"rig log does not verify even with the addendum removed: "
+                     f"{out.strip()!r} -- the addendum is then not the cause, "
+                     "and this test's premise is wrong")
+
 
 with tempfile.TemporaryDirectory() as tmpdir:
     WORK = Path(tmpdir)

@@ -106,6 +106,23 @@ end, C2 reporting, `-f`, damaged media, and CD-TEXT from a physical disc (which
 goes through `mmc_read_cdtext`, a different code path from the image parser).
 Say which of these a change touches; never let a green suite imply coverage.
 
+**Some of that list is now retired, and the retirement is dated.** The
+2026-08-04 rig session (`9003e6f`, PIONEER BD-RW BDR-209D, a 14-track disc)
+produced `Pregap source: sub-channel (not signalled by TOC)` on 13 tracks with
+the LSN arithmetic consistent on every one, `-Z` converging after 5 reads, and
+per-track paranoia counters summing exactly to the disc totals on media that
+made paranoia work — an invariant that until then had only ever been checked
+against a fixture whose numbers agree by construction. Artifacts and the
+per-claim evidence are in `docs/handshake/round-7-lap10.md` §B and §F.
+
+Still untouched by any run, and the list is shorter but not empty: **`-x`, which
+has never executed on a real drive anywhere**, C2 (the rig's drive reports it
+unsupported), `-f`, damaged media, CD-TEXT from a disc that has some, the
+diagnosed-abort exit code (the rig rip had `Ripping errors: 0`), and a non-zero
+`Read stalls:` count. **A silent watchdog is not a working watchdog** — that
+session had zero heartbeats because nothing stalled, which is the expected
+result on healthy media and is not evidence either way.
+
 ## The Platterpus seam — binding protocol, not a preference
 
 This fork exists to feed **Platterpus** (`rmccann-hub/Platterpus`), which parses this
