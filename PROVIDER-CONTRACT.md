@@ -6,7 +6,7 @@ stale silently, which is the failure this file exists to prevent.
 
 Build: `cyanrip 0.9.4-rc1+platterpus.4 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = 65c4333258871f68` over `src/*.c` and
+**Source anchor:** `sha256/16 = 873bdb49d1da09c0` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -166,31 +166,31 @@ requires a handshake round.
 | `coverart.c:299` | `Error demuxing cover image: %s!` |
 | `coverart.c:360` | `Release ID unavailable, cannot search Cover Art DB!` |
 | `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!Invalid folder name? Try -D <folder>.` |
-| `cyanrip_encode.c:361` | `Error creating filter source: %s!` |
-| `cyanrip_encode.c:372` | `Error creating filter sink: %s!` |
-| `cyanrip_encode.c:386` | `Error setting filter sample format: %s!` |
-| `cyanrip_encode.c:394` | `Error setting filter channel layout: %s!` |
-| `cyanrip_encode.c:403` | `Error setting filter sample rate: %s!` |
-| `cyanrip_encode.c:437` | `Error initializing filter sink: %s!` |
-| `cyanrip_encode.c:471` | `Error parsing filter graph: %s!` |
-| `cyanrip_encode.c:477` | `Error configuring filter graph: %s!` |
-| `cyanrip_encode.c:536` | `Error pushing frame to FIFO: %s!` |
-| `cyanrip_encode.c:555` | `Error filtering frame: %s!` |
-| `cyanrip_encode.c:633` | `Error allocating frame!` |
-| `cyanrip_encode.c:645` | `Error allocating frame: %s!` |
-| `cyanrip_encode.c:757` | `Album Loudness` |
-| `cyanrip_encode.c:776` | `Could not alloc swr context!` |
-| `cyanrip_encode.c:794` | `Could not init swr context!` |
-| `cyanrip_encode.c:969` | `Error while encoding: %s!` |
-| `cyanrip_encode.c:991` | `Error encoding: %s!` |
-| `cyanrip_encode.c:1022` | `Error pushing packet to FIFO: %s!` |
-| `cyanrip_encode.c:1029` | `Error writing packet: %s!` |
-| `cyanrip_encode.c:1059` | `Error writing to file: %s!` |
-| `cyanrip_encode.c:1182` | `Codec not found (not compiled in lavc?)!` |
-| `cyanrip_encode.c:1191` | `Unable to init output avctx!` |
-| `cyanrip_encode.c:1202` | `Could not open output codec context!` |
-| `cyanrip_encode.c:1209` | `Couldn't copy codec params!` |
-| `cyanrip_encode.c:1216` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
+| `cyanrip_encode.c:364` | `Error creating filter source: %s!` |
+| `cyanrip_encode.c:375` | `Error creating filter sink: %s!` |
+| `cyanrip_encode.c:389` | `Error setting filter sample format: %s!` |
+| `cyanrip_encode.c:397` | `Error setting filter channel layout: %s!` |
+| `cyanrip_encode.c:406` | `Error setting filter sample rate: %s!` |
+| `cyanrip_encode.c:440` | `Error initializing filter sink: %s!` |
+| `cyanrip_encode.c:474` | `Error parsing filter graph: %s!` |
+| `cyanrip_encode.c:480` | `Error configuring filter graph: %s!` |
+| `cyanrip_encode.c:541` | `Error pushing frame to FIFO: %s!` |
+| `cyanrip_encode.c:614` | `Error filtering frame: %s!` |
+| `cyanrip_encode.c:692` | `Error allocating frame!` |
+| `cyanrip_encode.c:704` | `Error allocating frame: %s!` |
+| `cyanrip_encode.c:820` | `Album Loudness` |
+| `cyanrip_encode.c:839` | `Could not alloc swr context!` |
+| `cyanrip_encode.c:857` | `Could not init swr context!` |
+| `cyanrip_encode.c:1032` | `Error while encoding: %s!` |
+| `cyanrip_encode.c:1054` | `Error encoding: %s!` |
+| `cyanrip_encode.c:1085` | `Error pushing packet to FIFO: %s!` |
+| `cyanrip_encode.c:1092` | `Error writing packet: %s!` |
+| `cyanrip_encode.c:1122` | `Error writing to file: %s!` |
+| `cyanrip_encode.c:1245` | `Codec not found (not compiled in lavc?)!` |
+| `cyanrip_encode.c:1254` | `Unable to init output avctx!` |
+| `cyanrip_encode.c:1265` | `Could not open output codec context!` |
+| `cyanrip_encode.c:1272` | `Couldn't copy codec params!` |
+| `cyanrip_encode.c:1279` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
 | `cyanrip_log.c:51` | `%s%s:` |
 | `cyanrip_log.c:54` | `%s` |
 | `cyanrip_log.c:64` | `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)` |
@@ -198,94 +198,95 @@ requires a handshake round.
 | `cyanrip_log.c:90` | `Cache model:    not in use (paranoia disabled)` |
 | `cyanrip_log.c:101` | `Cache model:    %i sector%s (disc image, no drive cache)` |
 | `cyanrip_log.c:106` | `Cache model:    %i sector%s (drive cache size not probed)` |
-| `cyanrip_log.c:125` | `%s%s` |
-| `cyanrip_log.c:129` | `%lu` |
-| `cyanrip_log.c:169` | `Pregap LSN:  %i (duration: %s)` |
-| `cyanrip_log.c:171` | `Pregap length: %i frames` |
-| `cyanrip_log.c:173` | `Pregap LSN:  unknown (sub-channel unreadable)` |
-| `cyanrip_log.c:175` | `Pregap LSN:  unknown (sub-channel CRC mismatches)` |
-| `cyanrip_log.c:177` | `Pregap LSN:  none` |
-| `cyanrip_log.c:183` | `Pregap source: sub-channel (not signalled by TOC)` |
-| `cyanrip_log.c:185` | `Pregap source: lead-in` |
-| `cyanrip_log.c:187` | `Pregap source: TOC` |
-| `cyanrip_log.c:190` | `Prepended:   %i frames of silence` |
-| `cyanrip_log.c:191` | `Start LSN:   %i` |
-| `cyanrip_log.c:193` | `(with offset: %i)` |
-| `cyanrip_log.c:197` | `End LSN:     %i` |
-| `cyanrip_log.c:204` | `Appended:    %i frames of silence` |
-| `cyanrip_log.c:235` | `Preemphasis:` |
-| `cyanrip_log.c:237` | `none detected` |
-| `cyanrip_log.c:240` | `(deemphasis forced)` |
-| `cyanrip_log.c:245` | `present (subcode)` |
-| `cyanrip_log.c:247` | `present (TOC)` |
-| `cyanrip_log.c:250` | `(deemphasis applied)` |
-| `cyanrip_log.c:255` | `Properties:` |
-| `cyanrip_log.c:258` | `Data bytes:  %i (%.2f Mib)` |
-| `cyanrip_log.c:261` | `Frames:      %u` |
-| `cyanrip_log.c:267` | `Duration:    %s` |
-| `cyanrip_log.c:268` | `Samples:     %u` |
-| `cyanrip_log.c:276` | `Sample peak level: %.1f%% (%.1f dBFS)` |
-| `cyanrip_log.c:279` | `True peak level:   %.1f dBFS` |
-| `cyanrip_log.c:296` | `Integrated loudness (R128): %.1f LUFS` |
-| `cyanrip_log.c:298` | `Loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)` |
-| `cyanrip_log.c:302` | `Extraction speed:  %.1fx` |
-| `cyanrip_log.c:304` | `Elapsed:            %.2f s` |
-| `cyanrip_log.c:312` | `EAC CRC32:     %08X` |
-| `cyanrip_log.c:314` | `(after %i rips)` |
-| `cyanrip_log.c:321` | `Secure re-read:  converged after %i reads` |
-| `cyanrip_log.c:324` | `Secure re-read:  did NOT converge after %i reads (repeat limit hit)` |
-| `cyanrip_log.c:329` | `Secure re-read:  not attempted` |
-| `cyanrip_log.c:333` | `Accurip:       %s` |
-| `cyanrip_log.c:337` | `(max confidence: %i)` |
-| `cyanrip_log.c:345` | `Accurip v1:  %08X` |
-| `cyanrip_log.c:347` | `(accurately ripped, confidence %i)` |
-| `cyanrip_log.c:349` | `(not found, either a new pressing, or bad rip)` |
-| `cyanrip_log.c:353` | `Accurip v2:  %08X` |
-| `cyanrip_log.c:364` | `Accurip 450: %08X` |
-| `cyanrip_log.c:366` | `(match found, confidence %i, but a checksum of 0 is meaningless)` |
-| `cyanrip_log.c:369` | `(matches Accurip DB, confidence %i, track is partially accurately ripped)` |
-| `cyanrip_log.c:372` | `(not found)` |
-| `cyanrip_log.c:379` | `Metadata:` |
-| `cyanrip_log.c:389` | `%s:` |
-| `cyanrip_log.c:401` | `CD-TEXT:` |
-| `cyanrip_log.c:411` | `Paranoia status counts:` |
-| `cyanrip_log.c:413` | `none` |
-| `cyanrip_log.c:436` | `Embedded cover art:    %s: %s` |
-| `cyanrip_log.c:439` | `Embedded cover art:    %s: %ix%i %s` |
-| `cyanrip_log.c:443` | `File(s):` |
-| `cyanrip_log.c:457` | `cyanrip %s (%s-g%s)` |
-| `cyanrip_log.c:460` | `Invoked as:     %s` |
-| `cyanrip_log.c:468` | `Handshake:      %s%s` |
-| `cyanrip_log.c:474` | `Consumer:       %s` |
-| `cyanrip_log.c:478` | `(reported by the caller, not verified by cyanrip)` |
-| `cyanrip_log.c:482` | `Drive used:     error retrieving drive info` |
-| `cyanrip_log.c:484` | `Drive used:     %s %s (revision %s)` |
-| `cyanrip_log.c:485` | `System device:  %s` |
-| `cyanrip_log.c:487` | `Device model:   %s` |
-| `cyanrip_log.c:488` | `Offset:         %c%i %s` |
-| `cyanrip_log.c:490` | `%s%c%i %s` |
-| `cyanrip_log.c:499` | `Speed:          %ix` |
-| `cyanrip_log.c:501` | `Speed:          default (%s)` |
-| `cyanrip_log.c:503` | `C2 errors:      %s` |
-| `cyanrip_log.c:512` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
-| `cyanrip_log.c:517` | `Paranoia level: %s` |
-| `cyanrip_log.c:521` | `Paranoia level: %i` |
-| `cyanrip_log.c:522` | `Frame retries:  %i` |
-| `cyanrip_log.c:524` | `HDCD decoding:  %s` |
-| `cyanrip_log.c:526` | `Album Art:      %s` |
-| `cyanrip_log.c:530` | `%s%s%s%s%s` |
-| `cyanrip_log.c:538` | `Outputs:` |
-| `cyanrip_log.c:544` | `Disc tracks:    %i` |
-| `cyanrip_log.c:545` | `Tracks to rip:  %s` |
-| `cyanrip_log.c:548` | `%i%s` |
-| `cyanrip_log.c:562` | `AccurateRip:    %s` |
-| `cyanrip_log.c:568` | `Total time:     %s` |
-| `cyanrip_log.c:594` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:596` | `Tracks ripped partially accurately: %i/%i` |
-| `cyanrip_log.c:606` | `Ripping errors: %i` |
-| `cyanrip_log.c:613` | `Rip completed:  no (interrupted by user, %i of %i tracks)` |
-| `cyanrip_log.c:616` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:619` | `Ripping finished at %s` |
+| `cyanrip_log.c:140` | `%sSample peak disagreement: ebur128 %.2f dBFS, direct scan %.2f dBFS (%.2f dB apart)` |
+| `cyanrip_log.c:154` | `%s%s` |
+| `cyanrip_log.c:158` | `%lu` |
+| `cyanrip_log.c:198` | `Pregap LSN:  %i (duration: %s)` |
+| `cyanrip_log.c:200` | `Pregap length: %i frames` |
+| `cyanrip_log.c:202` | `Pregap LSN:  unknown (sub-channel unreadable)` |
+| `cyanrip_log.c:204` | `Pregap LSN:  unknown (sub-channel CRC mismatches)` |
+| `cyanrip_log.c:206` | `Pregap LSN:  none` |
+| `cyanrip_log.c:212` | `Pregap source: sub-channel (not signalled by TOC)` |
+| `cyanrip_log.c:214` | `Pregap source: lead-in` |
+| `cyanrip_log.c:216` | `Pregap source: TOC` |
+| `cyanrip_log.c:219` | `Prepended:   %i frames of silence` |
+| `cyanrip_log.c:220` | `Start LSN:   %i` |
+| `cyanrip_log.c:222` | `(with offset: %i)` |
+| `cyanrip_log.c:226` | `End LSN:     %i` |
+| `cyanrip_log.c:233` | `Appended:    %i frames of silence` |
+| `cyanrip_log.c:264` | `Preemphasis:` |
+| `cyanrip_log.c:266` | `none detected` |
+| `cyanrip_log.c:269` | `(deemphasis forced)` |
+| `cyanrip_log.c:274` | `present (subcode)` |
+| `cyanrip_log.c:276` | `present (TOC)` |
+| `cyanrip_log.c:279` | `(deemphasis applied)` |
+| `cyanrip_log.c:284` | `Properties:` |
+| `cyanrip_log.c:287` | `Data bytes:  %i (%.2f Mib)` |
+| `cyanrip_log.c:290` | `Frames:      %u` |
+| `cyanrip_log.c:296` | `Duration:    %s` |
+| `cyanrip_log.c:297` | `Samples:     %u` |
+| `cyanrip_log.c:305` | `Sample peak level: %.1f%% (%.1f dBFS)` |
+| `cyanrip_log.c:308` | `True peak level:   %.1f dBFS` |
+| `cyanrip_log.c:327` | `Integrated loudness (R128): %.1f LUFS` |
+| `cyanrip_log.c:329` | `Loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)` |
+| `cyanrip_log.c:333` | `Extraction speed:  %.1fx` |
+| `cyanrip_log.c:335` | `Elapsed:            %.2f s` |
+| `cyanrip_log.c:343` | `EAC CRC32:     %08X` |
+| `cyanrip_log.c:345` | `(after %i rips)` |
+| `cyanrip_log.c:352` | `Secure re-read:  converged after %i reads` |
+| `cyanrip_log.c:355` | `Secure re-read:  did NOT converge after %i reads (repeat limit hit)` |
+| `cyanrip_log.c:360` | `Secure re-read:  not attempted` |
+| `cyanrip_log.c:364` | `Accurip:       %s` |
+| `cyanrip_log.c:368` | `(max confidence: %i)` |
+| `cyanrip_log.c:376` | `Accurip v1:  %08X` |
+| `cyanrip_log.c:378` | `(accurately ripped, confidence %i)` |
+| `cyanrip_log.c:380` | `(not found, either a new pressing, or bad rip)` |
+| `cyanrip_log.c:384` | `Accurip v2:  %08X` |
+| `cyanrip_log.c:395` | `Accurip 450: %08X` |
+| `cyanrip_log.c:397` | `(match found, confidence %i, but a checksum of 0 is meaningless)` |
+| `cyanrip_log.c:400` | `(matches Accurip DB, confidence %i, track is partially accurately ripped)` |
+| `cyanrip_log.c:403` | `(not found)` |
+| `cyanrip_log.c:410` | `Metadata:` |
+| `cyanrip_log.c:420` | `%s:` |
+| `cyanrip_log.c:432` | `CD-TEXT:` |
+| `cyanrip_log.c:442` | `Paranoia status counts:` |
+| `cyanrip_log.c:444` | `none` |
+| `cyanrip_log.c:467` | `Embedded cover art:    %s: %s` |
+| `cyanrip_log.c:470` | `Embedded cover art:    %s: %ix%i %s` |
+| `cyanrip_log.c:474` | `File(s):` |
+| `cyanrip_log.c:488` | `cyanrip %s (%s-g%s)` |
+| `cyanrip_log.c:491` | `Invoked as:     %s` |
+| `cyanrip_log.c:499` | `Handshake:      %s%s` |
+| `cyanrip_log.c:505` | `Consumer:       %s` |
+| `cyanrip_log.c:509` | `(reported by the caller, not verified by cyanrip)` |
+| `cyanrip_log.c:513` | `Drive used:     error retrieving drive info` |
+| `cyanrip_log.c:515` | `Drive used:     %s %s (revision %s)` |
+| `cyanrip_log.c:516` | `System device:  %s` |
+| `cyanrip_log.c:518` | `Device model:   %s` |
+| `cyanrip_log.c:519` | `Offset:         %c%i %s` |
+| `cyanrip_log.c:521` | `%s%c%i %s` |
+| `cyanrip_log.c:530` | `Speed:          %ix` |
+| `cyanrip_log.c:532` | `Speed:          default (%s)` |
+| `cyanrip_log.c:534` | `C2 errors:      %s` |
+| `cyanrip_log.c:543` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
+| `cyanrip_log.c:548` | `Paranoia level: %s` |
+| `cyanrip_log.c:552` | `Paranoia level: %i` |
+| `cyanrip_log.c:553` | `Frame retries:  %i` |
+| `cyanrip_log.c:555` | `HDCD decoding:  %s` |
+| `cyanrip_log.c:557` | `Album Art:      %s` |
+| `cyanrip_log.c:561` | `%s%s%s%s%s` |
+| `cyanrip_log.c:569` | `Outputs:` |
+| `cyanrip_log.c:575` | `Disc tracks:    %i` |
+| `cyanrip_log.c:576` | `Tracks to rip:  %s` |
+| `cyanrip_log.c:579` | `%i%s` |
+| `cyanrip_log.c:593` | `AccurateRip:    %s` |
+| `cyanrip_log.c:599` | `Total time:     %s` |
+| `cyanrip_log.c:625` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:627` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:637` | `Ripping errors: %i` |
+| `cyanrip_log.c:644` | `Rip completed:  no (interrupted by user, %i of %i tracks)` |
+| `cyanrip_log.c:647` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:650` | `Ripping finished at %s` |
 | `cyanrip_main.c:188` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:196` | `Unable to open device: %s` |
 | `cyanrip_main.c:205` | `Unable to init cddap context!` |
@@ -402,7 +403,7 @@ requires a handshake round.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:259` | `Invalid condition syntax!` |
 
-**263 distinct stable lines.**
+**264 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
@@ -454,8 +455,8 @@ P5 rows for error detection even when they appear here.
 
 | File:line | Line | Reaches logfile? |
 |---|---|---|
-| `cyanrip_encode.c:105` | `%s folder: [%s] extension: %s%s` | **no, stdout only** |
-| `cyanrip_encode.c:125` | `Encoder for %s not compiled in ffmpeg!` | **no, stdout only** |
+| `cyanrip_encode.c:108` | `%s folder: [%s] extension: %s%s` | **no, stdout only** |
+| `cyanrip_encode.c:128` | `Encoder for %s not compiled in ffmpeg!` | **no, stdout only** |
 | `cyanrip_main.c:781` | `\r` | **no, stdout only** |
 | `cyanrip_main.c:847` | `%s` | **no, stdout only** |
 | `cyanrip_main.c:928` | `Flushing encoders...` | **no, stdout only** |
@@ -544,31 +545,31 @@ must carry the same class.
 | `coverart.c:269` | `Unable to get cover image info: %s!` | wording + goto end | yes |
 | `coverart.c:299` | `Error demuxing cover image: %s!` | wording + goto end | yes |
 | `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!Invalid folder name? Try -D <folder>.` | both | yes |
-| `cyanrip_encode.c:125` | `Encoder for %s not compiled in ffmpeg!` | control flow | **no, stdout only** |
-| `cyanrip_encode.c:361` | `Error creating filter source: %s!` | both | yes |
-| `cyanrip_encode.c:372` | `Error creating filter sink: %s!` | both | yes |
-| `cyanrip_encode.c:386` | `Error setting filter sample format: %s!` | both | yes |
-| `cyanrip_encode.c:394` | `Error setting filter channel layout: %s!` | both | yes |
-| `cyanrip_encode.c:403` | `Error setting filter sample rate: %s!` | both | yes |
-| `cyanrip_encode.c:437` | `Error initializing filter sink: %s!` | both | yes |
-| `cyanrip_encode.c:471` | `Error parsing filter graph: %s!` | both | yes |
-| `cyanrip_encode.c:477` | `Error configuring filter graph: %s!` | both | yes |
-| `cyanrip_encode.c:536` | `Error pushing frame to FIFO: %s!` | wording | yes |
-| `cyanrip_encode.c:555` | `Error filtering frame: %s!` | both | yes |
-| `cyanrip_encode.c:633` | `Error allocating frame!` | both | yes |
-| `cyanrip_encode.c:645` | `Error allocating frame: %s!` | both | yes |
-| `cyanrip_encode.c:776` | `Could not alloc swr context!` | wording | yes |
-| `cyanrip_encode.c:794` | `Could not init swr context!` | wording | yes |
-| `cyanrip_encode.c:969` | `Error while encoding: %s!` | both | yes |
-| `cyanrip_encode.c:991` | `Error encoding: %s!` | both | yes |
-| `cyanrip_encode.c:1022` | `Error pushing packet to FIFO: %s!` | both | yes |
-| `cyanrip_encode.c:1029` | `Error writing packet: %s!` | both | yes |
-| `cyanrip_encode.c:1059` | `Error writing to file: %s!` | both | yes |
-| `cyanrip_encode.c:1182` | `Codec not found (not compiled in lavc?)!` | control flow | yes |
-| `cyanrip_encode.c:1191` | `Unable to init output avctx!` | both | yes |
-| `cyanrip_encode.c:1202` | `Could not open output codec context!` | both | yes |
-| `cyanrip_encode.c:1209` | `Couldn't copy codec params!` | both | yes |
-| `cyanrip_encode.c:1216` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
+| `cyanrip_encode.c:128` | `Encoder for %s not compiled in ffmpeg!` | control flow | **no, stdout only** |
+| `cyanrip_encode.c:364` | `Error creating filter source: %s!` | both | yes |
+| `cyanrip_encode.c:375` | `Error creating filter sink: %s!` | both | yes |
+| `cyanrip_encode.c:389` | `Error setting filter sample format: %s!` | both | yes |
+| `cyanrip_encode.c:397` | `Error setting filter channel layout: %s!` | both | yes |
+| `cyanrip_encode.c:406` | `Error setting filter sample rate: %s!` | both | yes |
+| `cyanrip_encode.c:440` | `Error initializing filter sink: %s!` | both | yes |
+| `cyanrip_encode.c:474` | `Error parsing filter graph: %s!` | both | yes |
+| `cyanrip_encode.c:480` | `Error configuring filter graph: %s!` | both | yes |
+| `cyanrip_encode.c:541` | `Error pushing frame to FIFO: %s!` | wording | yes |
+| `cyanrip_encode.c:614` | `Error filtering frame: %s!` | both | yes |
+| `cyanrip_encode.c:692` | `Error allocating frame!` | both | yes |
+| `cyanrip_encode.c:704` | `Error allocating frame: %s!` | both | yes |
+| `cyanrip_encode.c:839` | `Could not alloc swr context!` | wording | yes |
+| `cyanrip_encode.c:857` | `Could not init swr context!` | wording | yes |
+| `cyanrip_encode.c:1032` | `Error while encoding: %s!` | both | yes |
+| `cyanrip_encode.c:1054` | `Error encoding: %s!` | both | yes |
+| `cyanrip_encode.c:1085` | `Error pushing packet to FIFO: %s!` | both | yes |
+| `cyanrip_encode.c:1092` | `Error writing packet: %s!` | both | yes |
+| `cyanrip_encode.c:1122` | `Error writing to file: %s!` | both | yes |
+| `cyanrip_encode.c:1245` | `Codec not found (not compiled in lavc?)!` | control flow | yes |
+| `cyanrip_encode.c:1254` | `Unable to init output avctx!` | both | yes |
+| `cyanrip_encode.c:1265` | `Could not open output codec context!` | both | yes |
+| `cyanrip_encode.c:1272` | `Couldn't copy codec params!` | both | yes |
+| `cyanrip_encode.c:1279` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
 | `cyanrip_main.c:188` | `No device specified and unable to get default device!` | both | yes |
 | `cyanrip_main.c:196` | `Unable to open device: %s` | both | yes |
 | `cyanrip_main.c:205` | `Unable to init cddap context!` | wording | yes |

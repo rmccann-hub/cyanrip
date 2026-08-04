@@ -16,6 +16,19 @@ Fixed
    cyanrip do the MusicBrainz lookup and reads the old key.**
 
 Added
+ - **Sample-peak cross-check** (H6). The peak is measured a second way — max
+   |sample| over the same frames the ebur128 filter sees — and a line is printed
+   **only when the two disagree**, naming which value came from which method:
+
+       Sample peak disagreement: ebur128 X dBFS, direct scan Y dBFS (Z dB apart)
+
+   Silent on agreement, at Platterpus's request and for their reason: two
+   always-present numbers for one fact invite a consumer to pick one, and
+   whichever it picks will occasionally be the wrong one silently.
+   **The firing path is unreachable from any disc image** — two correct
+   measurements of identical input agree — so the decision is a pure function
+   with its own unit test, and the wiring was proved by perturbation rather than
+   assumed.
  - **`-dirty` in the build tag when the tree has uncommitted changes** (A9).
    Two golden references have carried a banner naming a commit three behind
    their stated pin; both were provable from content, but a stale banner on a
