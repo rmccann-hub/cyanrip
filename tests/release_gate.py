@@ -29,6 +29,7 @@ a file that said HOLD in its first paragraph.
 """
 
 import importlib.util
+import re
 import pathlib
 import sys
 import tempfile
@@ -78,6 +79,7 @@ GO = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n" + WIRE +
 
 
 def test_our_go_alone_does_not_close():
+    """Covers: C1"""
     # The core of an affirmative handshake: our GO is a statement about our
     # tree, not agreement. Silence from the other side is not consent.
     body = "\n".join(l for l in GO.splitlines()
@@ -89,6 +91,7 @@ def test_our_go_alone_does_not_close():
 
 
 def test_peer_hold_blocks_our_go():
+    """Covers: C2"""
     ok, probs = gate({"round-9.md": GO.replace("HANDSHAKE-PEER-VERDICT: GO",
                                                "HANDSHAKE-PEER-VERDICT: HOLD")})
     check(not ok, "a peer HOLD must block even when we say GO")
@@ -96,6 +99,7 @@ def test_peer_hold_blocks_our_go():
 
 
 def test_close_requires_every_identity_and_testing_field():
+    """Covers: C3, C4"""
     # One test per field, generated, so adding a required field cannot be
     # forgotten here -- and so the gate must name which one is absent.
     for field in ("HANDSHAKE-PEER-VERSION", "HANDSHAKE-PEER-PIN",
@@ -110,6 +114,7 @@ def test_close_requires_every_identity_and_testing_field():
 
 
 def test_untested_round_cannot_close():
+    """Covers: C4"""
     # Stated separately from the loop because it is the rule the maintainer
     # asked for by name: no release without proper testing, ever.
     body = "\n".join(l for l in GO.splitlines()
@@ -119,6 +124,7 @@ def test_untested_round_cannot_close():
 
 
 def test_complete_two_sided_round_does_close():
+    """Covers: C16"""
     # The gate must still be satisfiable, or it is not a gate, it is a wall.
     ok, probs = gate({"round-9.md": GO})
     check(ok, f"a complete two-sided tested round should close: {probs}")
@@ -141,6 +147,7 @@ def lap(n, round_no, verdict, complete=False):
 
 
 def test_latest_lap_decides_and_can_close():
+    """Covers: C16"""
     # Lap 1 opened; lap 2 closes. The round must close WITHOUT going back and
     # editing lap 1 -- a file already sent must never be retroactively rewritten.
     ok, probs = gate({"round-9.md": lap(1, 9, "OPEN"),
@@ -156,6 +163,7 @@ def test_a_later_go_lap_that_is_incomplete_does_not_close():
 
 
 def test_latest_lap_can_reopen():
+    """Covers: C13"""
     # The converse, and it must work or a round could never be reopened by new
     # evidence: lap 1 said GO, lap 2 found something.
     ok, _ = gate({"round-9.md": lap(1, 9, "GO", complete=True),
@@ -185,6 +193,7 @@ def test_ambiguous_lap_is_not_shadowed_by_a_good_one():
 
 
 def test_go_closes():
+    """Covers: C16"""
     ok, _ = gate({"round-9.md": GO})
     check(ok, "a declared GO should close a round")
 
@@ -202,12 +211,14 @@ def test_hold_does_not_close():
 
 
 def test_unknown_verdict_does_not_close():
+    """Covers: C11"""
     # An unrecognised verdict is not evidence of agreement.
     ok, _ = gate({"round-9.md": GO.replace("GO", "PROBABLY-FINE")})
     check(not ok, "an unrecognised verdict must not close a round")
 
 
 def test_missing_verdict_fails_closed():
+    """Covers: C5"""
     # The tempting shortcut is to treat a missing field as GO so old rounds
     # still pass. That puts the whole defect back through the fallback.
     body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE + "\n# round 9\n"
@@ -218,6 +229,7 @@ def test_missing_verdict_fails_closed():
 
 
 def test_prose_about_a_verdict_is_not_a_verdict():
+    """Covers: C7"""
     # The exact failure Platterpus reported: a file that says it is NOT a GO,
     # closing the round because a matcher found the word GO in the prose.
     body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE + "HANDSHAKE-VERDICT: HOLD\n\n"
@@ -231,12 +243,14 @@ def test_prose_about_a_verdict_is_not_a_verdict():
 
 
 def test_indented_declaration_is_not_a_declaration():
+    """Covers: C7"""
     body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE + "  HANDSHAKE-VERDICT: GO\n\n# round 9\n"
     ok, _ = gate({"round-9.md": body})
     check(not ok, "an indented verdict is quoted prose, not a declaration")
 
 
 def test_two_verdicts_are_ambiguous_not_closed():
+    """Covers: C6"""
     body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE + "HANDSHAKE-VERDICT: GO\n"
             "HANDSHAKE-VERDICT: HOLD\n\n# round 9\n")
     ok, _ = gate({"round-9.md": body})
@@ -257,6 +271,7 @@ def test_grandfathering_does_not_leak_to_new_rounds():
 
 
 def test_mismatched_round_number_is_a_problem():
+    """Covers: C12"""
     body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 8\n" + WIRE + "HANDSHAKE-VERDICT: GO\n\n# round 9\n"
     ok, probs = gate({"round-9.md": body})
     check(not ok, "a file declaring a different round number must not pass")
@@ -270,6 +285,7 @@ def test_one_open_round_blocks_even_when_others_closed():
 
 
 def test_empty_record_is_not_agreement():
+    """Covers: C14"""
     # Guarded in main() rather than check(); assert the loader reports nothing
     # so an empty directory can never look like "every round closed".
     d = pathlib.Path(tempfile.mkdtemp())
@@ -291,6 +307,7 @@ def test_the_real_tree_is_consistent():
 
 
 def test_future_protocol_version_is_refused_not_guessed():
+    """Covers: C15"""
     # A gate reading a spec it does not implement must refuse. Guessing is how
     # the two sides drift into disagreeing about what a close means.
     ok, probs = gate({"round-9.md": GO.replace("HANDSHAKE-PROTOCOL: 1",
@@ -308,6 +325,7 @@ def test_missing_protocol_field_fails_closed():
 
 
 def test_fenced_examples_are_not_declarations():
+    """Covers: C8"""
     # Found by running it: the lap that introduced the shared spec documented
     # the format with field lines inside ``` blocks, at column 0, and the gate
     # read them as declarations -- so a peer version the file was merely
@@ -352,6 +370,7 @@ def test_protocol_version_is_pinned():
 
 
 def test_v2_wire_header_required_from_round_8():
+    """Covers: C9, C16"""
     # The spec called four fields "required" while the gate enforced none of
     # them -- shipped in the very lap that introduced the spec. If Platterpus
     # implements the spec faithfully and we do not, the two gates disagree,
@@ -379,6 +398,7 @@ def test_v2_wire_header_required_from_round_8():
 
 
 def test_wire_header_required_on_a_mid_round_lap_too():
+    """Covers: C9"""
     # Required on EVERY file, not only a closing one: a lap reporting a
     # measurement must say which pair produced it.
     body = ("HANDSHAKE-PROTOCOL: 2\nHANDSHAKE-ROUND: 8\nHANDSHAKE-LAP: 2\n"
@@ -390,6 +410,7 @@ def test_wire_header_required_on_a_mid_round_lap_too():
 
 
 def test_round_7_is_exempt_from_the_wire_header():
+    """Covers: C10"""
     # Neither project could comply with a spec written during round 7.
     body = ("HANDSHAKE-PROTOCOL: 2\nHANDSHAKE-ROUND: 7\nHANDSHAKE-LAP: 1\n"
             "HANDSHAKE-VERDICT: HOLD\n\n# round 7\n")
@@ -402,6 +423,42 @@ def test_wire_header_exemption_boundary_is_pinned():
     check(rg.WIRE_HEADER_REQUIRED_FROM == 8,
           f"exemption boundary moved to {rg.WIRE_HEADER_REQUIRED_FROM} -- "
           "widening it is a protocol change, not a fix")
+
+
+
+
+def test_every_conformance_row_has_a_test():
+    """Covers: none -- this is the meta-check.
+
+    The mapping between PROTOCOL.md's conformance table and this file must be
+    derived from the table, not maintained beside it. A hand-kept list of "rows
+    we cover" is the same defect as a hand-written contract: it looks
+    authoritative and it rots the moment a row is added.
+
+    Reading the table for IDs and the test docstrings for claims makes both
+    directions checkable -- an uncovered row fails, and so does a test claiming
+    a row that does not exist.
+    """
+    proto = (HERE.parent / "docs" / "handshake" / "PROTOCOL.md").read_text(encoding="utf-8")
+    rows = set(re.findall(r"^\| (C\d+) \|", proto, re.M))
+    check(len(rows) >= 16, f"expected the conformance table, found {len(rows)} rows")
+
+    claimed = set()
+    for name, fn in globals().items():
+        if not (name.startswith("test_") and callable(fn) and fn.__doc__):
+            continue
+        m = re.search(r"Covers:\s*([^\n]+)", fn.__doc__)
+        if not m:
+            continue
+        claimed.update(re.findall(r"C\d+", m.group(1)))
+
+    uncovered = sorted(rows - claimed, key=lambda c: int(c[1:]))
+    check(not uncovered,
+          f"conformance rows with no test: {uncovered}")
+
+    invented = sorted(claimed - rows, key=lambda c: int(c[1:]))
+    check(not invented,
+          f"tests claim conformance rows that do not exist: {invented}")
 
 
 for name, fn in sorted(globals().items()):

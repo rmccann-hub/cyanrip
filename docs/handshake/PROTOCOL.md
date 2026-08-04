@@ -197,24 +197,30 @@ A gate implementing this spec must refuse a release in every one of these cases.
 Both projects should have a test per row; cyanrip's are in
 `tests/release_gate.py`.
 
-| case | expected |
-|---|---|
-| our `GO`, no peer verdict | refuse, naming the missing peer verdict |
-| our `GO`, peer `HOLD` | refuse, naming the peer verdict |
-| both `GO`, any identity field missing | refuse, naming the field |
-| both `GO`, no `HANDSHAKE-TESTED` | refuse |
-| verdict field absent entirely | refuse |
-| verdict declared twice | refuse as ambiguous |
-| verdict indented / inside prose | refuse; the declaration did not match |
-| a complete close **illustrated inside a ``` block** | refuse, and do not adopt any of the illustrated values |
-| a round ≥ 8 file missing any of `FROM` / `APP-VERSION` / `RIPPER-VERSION` / `PIN` | refuse, naming the field — including on a mid-round `HOLD` |
-| a round ≤ 7 file missing them | **allow**; the exemption is by pinned number |
-| unrecognised verdict | refuse |
-| declared round ≠ the round it is filed under | refuse |
-| a later lap declaring `HOLD` after an earlier `GO` | refuse — a round can reopen |
-| no round files at all | refuse; an empty record is not agreement |
-| `HANDSHAKE-PROTOCOL` higher than implemented | refuse rather than guess |
-| complete two-sided tested round | **allow** — a gate that can never say yes is a wall, not a gate |
+**Each row has a stable ID.** Cite them when reporting a disagreement, so the two
+projects are provably talking about the same row rather than the same paraphrase.
+cyanrip's `tests/release_gate.py` declares which rows each test covers and asserts
+every ID here is covered by at least one — a coverage claim that is derived from
+this table rather than asserted alongside it.
+
+| ID | case | expected |
+|---|---|---|
+| C1 | our `GO`, no peer verdict | refuse, naming the missing peer verdict |
+| C2 | our `GO`, peer `HOLD` | refuse, naming the peer verdict |
+| C3 | both `GO`, any identity field missing | refuse, naming the field |
+| C4 | both `GO`, no `HANDSHAKE-TESTED` | refuse |
+| C5 | verdict field absent entirely | refuse |
+| C6 | verdict declared twice | refuse as ambiguous |
+| C7 | verdict indented / inside prose | refuse; the declaration did not match |
+| C8 | a complete close **illustrated inside a ``` block** | refuse, and do not adopt any of the illustrated values |
+| C9 | a round ≥ 8 file missing any of `FROM` / `APP-VERSION` / `RIPPER-VERSION` / `PIN` | refuse, naming the field — including on a mid-round `HOLD` |
+| C10 | a round ≤ 7 file missing them | **allow**; the exemption is by pinned number |
+| C11 | unrecognised verdict | refuse |
+| C12 | declared round ≠ the round it is filed under | refuse |
+| C13 | a later lap declaring `HOLD` after an earlier `GO` | refuse — a round can reopen |
+| C14 | no round files at all | refuse; an empty record is not agreement |
+| C15 | `HANDSHAKE-PROTOCOL` higher than implemented | refuse rather than guess |
+| C16 | complete two-sided tested round | **allow** — a gate that can never say yes is a wall, not a gate |
 
 That last row matters as much as the others. Assert it, or a gate that refuses
 everything passes every other test in the table.
