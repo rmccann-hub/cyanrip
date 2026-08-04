@@ -158,6 +158,17 @@ regardless of who is at the keyboard.
 - **A correction from the other side gets the same scrutiny as a claim.** Corrections
   arrive with social pressure to accept them. Both sides have now applied one that was
   wrong.
+- **When the other side describes *how* something works, compare — do not
+  acknowledge.** Three findings in round 7 came from this and none from reviewing
+  each other's code, which neither project can do. A described *behaviour* is
+  checkable against your own behaviour; a described *intention* is not. Their
+  gate's filename-sort bug sent us to look at ours; describing ours back sent
+  them to compare loaders, and they found a hole where an ambiguous lap fell back
+  to the filename so the ambiguity was never examined at all. **Two
+  implementations of one agreed convention can differ silently while every test
+  on both sides passes** — a difference that changes no observable behaviour
+  today is invisible to every test either side can write, and stays invisible
+  until the input that separates them arrives.
 - **Separate the finding from the diagnosis; they fail independently.** A report can
   be right that something is broken and wrong about why, and the *why* is what you
   would act on. Two missing fatal strings were correctly found and attributed to a

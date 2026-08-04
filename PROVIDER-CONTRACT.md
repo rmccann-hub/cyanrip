@@ -704,3 +704,35 @@ git -- that `442de2a^` parses with `getopt` and no long options, and that
 `442de2a` onward has no `-V` in its option table -- so this section fails
 when the commits it cites stop saying what it says they say.
 
+### P6a - What a rejection actually prints
+
+**Appendix, deliberately not table cells.** Platterpus asked for the exact
+text so nobody has to guess it, and asked for it kept out of the table so
+it does not read like something to match on (round 7 lap 19 §C). Both
+halves of that are right: **key on the exit code, not on these strings.**
+They are upstream's wording, not ours, and one of them is not even
+constant.
+
+Measured 2026-08-04 by running each build:
+
+| build, flag | stream | text |
+|---|---|---|
+| stock pre-genopt, `--version` | **stderr** | `<argv[0]>: invalid option -- '-'` |
+| stock pre-genopt, `-v` | **stderr** | `<argv[0]>: invalid option -- 'v'` |
+| stock genopt onward, `-V` | **stdout** | `Unable to parse command line argument: -V` |
+
+Three things a consumer would otherwise have to discover the hard way:
+
+- **The two stock builds disagree about which stream carries the**
+  **diagnosis.** Pre-genopt writes to stderr, because the message is
+  getopt's own; genopt writes to stdout. A probe capturing only one stream
+  sees nothing at all from one of the two.
+- **The pre-genopt text is not constant.** getopt prefixes `argv[0]`
+  verbatim, so the line contains the path the binary was invoked by. Only
+  the `: invalid option -- 'X'` suffix is stable.
+- **One line each**, no usage block follows.
+
+On **this fork** the genopt message is routed through `cyanrip_log()`, so
+it reaches stdout, the logfile if one is open, and the `-j` record. That
+is a fork property; stock does neither.
+
