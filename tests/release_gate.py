@@ -52,10 +52,22 @@ def check(cond, msg):
 
 def gate(files):
     """Build a throwaway handshake dir and return (ok, problems)."""
+    return rg.check(resolve(files))
+
+
+def resolve(files):
+    """The rounds as the gate resolves them, before check() judges them.
+
+    Separate from gate() because "the gate refused" and "the gate picked the
+    right lap" are different claims, and a test that only asserts refusal can
+    be satisfied by an unrelated guard. One was: the ordering test below
+    passed with the ordering rule reverted, because a second guard caught the
+    same fixture for a different reason.
+    """
     d = pathlib.Path(tempfile.mkdtemp())
     for name, body in files.items():
         (d / name).write_text(body, encoding="utf-8")
-    return rg.check(rg.load_rounds(d))
+    return rg.load_rounds(d)
 
 
 # A complete, closing round: both verdicts GO, both identities, and testing
@@ -181,6 +193,61 @@ def test_lap_order_is_by_declaration_not_filename():
     ok, _ = gate({"round-9.md": lap(2, 9, "GO", complete=True),
                   "round-9-lap2.md": lap(3, 9, "HOLD")})
     check(not ok, "latest lap must come from the declared number, not the name")
+
+
+def test_legacy_named_no_lap_file_cannot_shadow_a_canonical_lap():
+    """The bug Platterpus's gate had, run against ours (round 7 lap 17 D).
+
+    Their `_round_files` picked the newest file in a round by sorting stems.
+    Adopting `round-NN-lap-LL.md` put canonically-named files BEFORE the
+    legacy `round-N.md` lexically -- '0' < '7' at the seventh character -- so
+    the oldest file in the round sorted last, was read as the newest, and its
+    GO closed a round whose latest lap says HOLD. Their release gate reported
+    `they-verified=yes (GO)` against our HOLD.
+
+    We adopt the same filenames this lap, so the same collision exists here.
+    It does not bite, for a reason worth pinning rather than assuming: a file
+    with no HANDSHAKE-LAP is treated as lap 1, not as unknown, so it loses to
+    every later lap on the declared number.
+    """
+    files = {
+        # Legacy name, no lap field, and a GO complete enough to close.
+        "round-9.md": ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE
+                       + "HANDSHAKE-VERDICT: GO\n"
+                       "HANDSHAKE-PEER-VERDICT: GO\n"
+                       "HANDSHAKE-PEER-VERSION: platterpus/0.6.4\n"
+                       "HANDSHAKE-PEER-PIN: abc1234\n"
+                       "HANDSHAKE-OUR-VERSION: 0.9.4-rc1+platterpus.4\n"
+                       "HANDSHAKE-OUR-PIN: def5678\n"
+                       "HANDSHAKE-TESTED: T1-T14 both builds\n\n# round 9\n"),
+        # Canonical name, later lap, HOLD.
+        "round-09-lap-16.md": lap(16, 9, "HOLD"),
+    }
+
+    # Floor: the test is only meaningful if the naive sort really does misorder
+    # these two. If a future rename made them agree, this would pass by the bug
+    # being unreachable rather than by the gate being right.
+    names = sorted(files)
+    check(names[-1] == "round-9.md",
+          "floor: the legacy name must sort LAST for this to reproduce the bug; "
+          f"got {names}")
+
+    # Assert WHICH lap won, not merely that the gate refused. Refusal alone is
+    # satisfied by an unrelated guard -- and was: with the no-lap-is-lap-1 rule
+    # reverted, this fixture still failed to close, because an unknown lap is
+    # separately treated as ambiguous. That is a second safety net, not this
+    # rule, and a test that cannot tell them apart pins neither.
+    rounds = resolve(files)
+    check(len(rounds) == 1, f"expected one round, got {len(rounds)}")
+    won = rounds[0]
+    check(won.lap == 16 and won.path.name == "round-09-lap-16.md",
+          "the later canonical lap must win the round; got "
+          f"lap={won.lap} from {won.path.name}")
+
+    ok, probs = gate(files)
+    check(not ok,
+          "a legacy-named no-lap GO must not shadow a later canonical HOLD -- "
+          f"this is the filename-ordering bug: {probs}")
 
 
 def test_ambiguous_lap_is_not_shadowed_by_a_good_one():
@@ -555,6 +622,72 @@ def test_prerelease_does_not_close_the_round():
     body = lap(1, 9, "HOLD")
     ok, _ = gate({"round-9.md": body})
     check(not ok, "the round must still be open after a pre-release is allowed")
+
+
+def test_real_handshake_files_follow_the_naming_convention():
+    """The convention agreed with Platterpus in round 7 lap 17 §C.
+
+        round-NN-lap-LL.md   both zero-padded to two digits
+
+    Checked against the real record rather than a fixture, because the point is
+    that OUR files obey it -- a fixture would prove the checker works on files
+    nobody sends.
+
+    Their §C2 reasoning is why each clause is here: the filename becomes a
+    second description of a fact the header already carries, and two
+    descriptions drift unless something compares them. Zero-padding is so a
+    lexical sort is chronological -- `lap-9` sorts after `lap-10` otherwise,
+    and at seventeen laps that is not hypothetical.
+
+    Files predating the lap header keep their old names, and the exemption is
+    derived rather than listed: a file with no declared lap has nothing to name
+    itself with. The converse is enforced too -- a canonical name on a file
+    declaring no lap is a false label, which is worse than a legacy name
+    because it looks checkable and is not.
+    """
+    canonical = re.compile(r"^round-(\d{2})-lap-(\d{2})\.md$")
+    seen = {}
+    for path in sorted(rg.HANDSHAKE_DIR.glob("round-*.md")):
+        text = path.read_text(encoding="utf-8")
+        rounds = rg.ROUND_RE.findall(text)
+        laps = rg.LAP_RE.findall(text)
+        m = canonical.match(path.name)
+
+        if len(laps) == 1 and len(rounds) == 1:
+            want = f"round-{int(rounds[0]):02d}-lap-{int(laps[0]):02d}.md"
+            check(path.name == want,
+                  f"{path.name} declares round {rounds[0]} lap {laps[0]}; "
+                  f"the convention names it {want}")
+            key = (int(rounds[0]), int(laps[0]))
+            check(key not in seen,
+                  f"{path.name} and {seen.get(key)} both claim round "
+                  f"{key[0]} lap {key[1]}")
+            seen[key] = path.name
+        elif m:
+            check(False, f"{path.name} wears a canonical name but declares "
+                         "no single round/lap -- a false label is worse than "
+                         "a legacy name, because it looks checkable")
+
+        # Direction comes from the directory, never the name (their §C2).
+        froms = re.findall(r"^HANDSHAKE-FROM:[ \t]*(\S+)", text, re.M)
+        if froms:
+            check(all(f == "cyanrip-fork" for f in froms),
+                  f"{path.name} declares HANDSHAKE-FROM {froms}; this "
+                  "directory holds our outbound files")
+
+    # Floor: a checker that found no canonically-named files would pass every
+    # assertion above by having nothing to check.
+    check(len(seen) >= 2,
+          f"floor: expected several lap-declaring files, found {len(seen)}")
+
+    # And the padding must actually deliver a chronological lexical sort, which
+    # is the property the padding is FOR. Asserting the rule without asserting
+    # its purpose is how a convention survives while its reason quietly stops
+    # holding.
+    names = sorted(n for n in seen.values())
+    by_lap = [n for _, n in sorted(seen.items())]
+    check(names == by_lap,
+          f"lexical order is not chronological: {names} vs {by_lap}")
 
 
 for name, fn in sorted(globals().items()):
