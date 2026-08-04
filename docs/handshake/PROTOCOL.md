@@ -40,16 +40,23 @@ FIELD-NAME: value
 implementation detail, because a gate that relaxes any of them silently accepts
 files the other gate rejects:
 
-1. **Column 0 only.** An indented or quoted copy is prose, not a declaration.
-   `  HANDSHAKE-VERDICT: GO` inside an example block **must not** match.
-2. **A field appearing twice is ambiguous, and ambiguity is not a close.** Do not
+1. **Column 0 only.** An indented copy is prose, not a declaration.
+   `  HANDSHAKE-VERDICT: GO` **must not** match.
+2. **Strip fenced code blocks before matching.** A declaration is a statement the
+   file *makes*, not one it *quotes*. Examples, templates and conformance tables
+   legitimately contain field lines at column 0 and none of them is a
+   declaration. **This was found the hard way**: the lap that introduced this
+   very spec documented the close requirements in a ``` block, and the gate read
+   the illustrated `HANDSHAKE-PEER-VERSION` as a fact and compiled it into the
+   binary. If your gate does not strip fences, it will do the same to this file.
+3. **A field appearing twice is ambiguous, and ambiguity is not a close.** Do not
    take the first, do not take the last — refuse.
-3. **An absent required field fails closed.** Never treat "missing" as a
+4. **An absent required field fails closed.** Never treat "missing" as a
    permissive default. That fallback reintroduces the entire defect: under it, a
    round closes by omitting a field.
-4. **Prose containing a value is not a declaration of it.** A file whose text
+5. **Prose containing a value is not a declaration of it.** A file whose text
    reads *"this is not a closing GO"* must not close a round.
-5. **An unrecognised value is not agreement.** Treat any verdict outside the
+6. **An unrecognised value is not agreement.** Treat any verdict outside the
    vocabulary below as "not closed", not as an error to skip past.
 
 ## 3. Required fields
@@ -137,7 +144,7 @@ cyanrip therefore compiles its round state into the binary and prints two lines
 into every logfile:
 
 ```
-Handshake:      round 7 lap 2 OPEN, verdict HOLD -- NOT a released build
+Handshake:      round 7 lap 3 OPEN, verdict HOLD -- NOT a released build
 Consumer:       platterpus/0.6.3
                 (reported by the caller, not verified by cyanrip)
 ```
@@ -174,6 +181,7 @@ Both projects should have a test per row; cyanrip's are in
 | verdict field absent entirely | refuse |
 | verdict declared twice | refuse as ambiguous |
 | verdict indented / inside prose | refuse; the declaration did not match |
+| a complete close **illustrated inside a ``` block** | refuse, and do not adopt any of the illustrated values |
 | unrecognised verdict | refuse |
 | declared round ≠ the round it is filed under | refuse |
 | a later lap declaring `HOLD` after an earlier `GO` | refuse — a round can reopen |

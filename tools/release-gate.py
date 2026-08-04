@@ -31,9 +31,13 @@ that failure, or one this repo has already made, would otherwise be reachable:
   * The verdict is read from a declared field, never inferred from a file being
     present. A round file exists from the moment it is started.
 
-  * The field is matched line-anchored at column 0. Prose *about* a verdict is
-    not a verdict: a round file that says "this is not a closing GO" must not
-    close a round because the word GO appears in it.
+  * The field is matched line-anchored at column 0, and **fenced code blocks are
+    stripped before matching**. Prose *about* a verdict is not a verdict, and
+    neither is an example of one: a round file that says "this is not a closing
+    GO" must not close a round, and a file that documents the format by showing
+    `HANDSHAKE-PEER-VERSION: platterpus/0.6.4` inside a ``` block must not be
+    read as declaring it. Found the hard way -- the lap that introduced the
+    shared spec had its own examples parsed as declarations.
 
   * A round with no verdict field fails closed. The tempting shortcut -- treat a
     missing verdict as GO so historical rounds still pass -- puts the entire
@@ -176,13 +180,25 @@ class Lap:
         return "verdict GO, peer GO, versions/pins/testing declared"
 
 
+FENCE_RE = re.compile(r"^```.*?^```", re.M | re.S)
+
+
+def strip_fences(text):
+    """Remove fenced code blocks, preserving line structure elsewhere.
+
+    A declaration is a statement the file makes, not one it quotes. Examples,
+    templates and conformance tables all legitimately contain field lines at
+    column 0, and none of them is a declaration."""
+    return FENCE_RE.sub(lambda m: "\n" * m.group(0).count("\n"), text)
+
+
 def load_rounds(directory=HANDSHAKE_DIR):
     all_laps = []
     for path in sorted(directory.glob("round-*.md")):
         m = re.match(r"round-(\d+)", path.name)
         if not m:
             continue
-        text = path.read_text(encoding="utf-8")
+        text = strip_fences(path.read_text(encoding="utf-8"))
         verdicts = VERDICT_RE.findall(text)
         declared = ROUND_RE.findall(text)
 

@@ -298,6 +298,40 @@ def test_missing_protocol_field_fails_closed():
     check(not ok, "a round with no protocol declaration must fail closed")
 
 
+def test_fenced_examples_are_not_declarations():
+    # Found by running it: the lap that introduced the shared spec documented
+    # the format with field lines inside ``` blocks, at column 0, and the gate
+    # read them as declarations -- so a peer version the file was merely
+    # *illustrating* was compiled into the binary as a fact. A declaration is a
+    # statement the file makes, not one it quotes.
+    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n"
+            "HANDSHAKE-VERDICT: HOLD\n\n"
+            "# round 9\n\n"
+            "A close needs all of these:\n\n"
+            "```\n"
+            "HANDSHAKE-VERDICT: GO\n"
+            "HANDSHAKE-PEER-VERDICT: GO\n"
+            "HANDSHAKE-PEER-VERSION: platterpus/9.9.9\n"
+            "HANDSHAKE-PEER-PIN: deadbee\n"
+            "HANDSHAKE-OUR-VERSION: 1.2.3\n"
+            "HANDSHAKE-OUR-PIN: cafe123\n"
+            "HANDSHAKE-TESTED: everything\n"
+            "```\n")
+    ok, _ = gate({"round-9.md": body})
+    check(not ok, "a file illustrating a close in a code block must not close")
+
+    # And the illustrated values must not be picked up as this file's own.
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "round-9.md").write_text(body, encoding="utf-8")
+    lap_obj = rg.load_rounds(d)[0]
+    check(lap_obj.verdict == "HOLD",
+          f"verdict should be the declared HOLD, got {lap_obj.verdict!r}")
+    check(lap_obj.peer_version is None,
+          f"peer version was quoted, not declared: {lap_obj.peer_version!r}")
+    check(lap_obj.tested is None,
+          f"tested was quoted, not declared: {lap_obj.tested!r}")
+
+
 def test_protocol_version_is_pinned():
     # Bumping this is a protocol change and must be a deliberate, visible edit
     # shipped to both projects before the next close.

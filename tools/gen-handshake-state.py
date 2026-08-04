@@ -90,10 +90,26 @@ def main():
 #define HANDSHAKE_PEER      {c_string(peer)}
 """
 
-    if args.output:
-        pathlib.Path(args.output).write_text(body, encoding="utf-8")
-    else:
+    if not args.output:
         sys.stdout.write(body)
+        return 0
+
+    # Written only when the content actually changes.
+    #
+    # This runs on every build (build_always_stale), because the header has to
+    # notice a round file being *added*, not merely one it already knew about
+    # changing. Neither a configure-time glob nor a depfile can do that: both
+    # enumerate what existed last time, so a new lap file appears and the header
+    # goes on describing the previous one. That happened here -- a binary
+    # reported "lap 2" from a tree whose latest lap was 3, which is precisely the
+    # staleness a generated header exists to prevent.
+    #
+    # Running every build is cheap; rewriting every build would not be, because
+    # the timestamp alone would recompile everything that includes this. Hence
+    # the comparison.
+    out = pathlib.Path(args.output)
+    if not out.exists() or out.read_text(encoding="utf-8") != body:
+        out.write_text(body, encoding="utf-8")
     return 0
 
 

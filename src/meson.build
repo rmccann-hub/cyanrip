@@ -37,14 +37,18 @@ dependencies = [
 ]
 
 # Base files
+# Regenerated on every build, because the header must notice a round file being
+# *added* and not only one it already knew about changing. A configure-time glob
+# and a depfile both enumerate what existed last time, so a new lap file appears
+# and the header goes on describing the previous one -- this shipped a binary
+# reporting "lap 2" from a tree whose latest lap was 3.
+#
+# The generator rewrites the file only when its content changes, so running
+# always costs a python invocation rather than a rebuild of everything that
+# includes it.
 handshake_state_h = custom_target('handshake_state.h',
     output: 'handshake_state.h',
-    input: files(
-        '../tools/gen-handshake-state.py',
-        '../tools/release-gate.py',
-    ) + run_command('sh', '-c',
-        'ls ' + meson.project_source_root() / 'docs/handshake/round-*.md',
-        check: false).stdout().strip().split('\n'),
+    build_always_stale: true,
     command: [ find_program('python3'),
                meson.project_source_root() / 'tools/gen-handshake-state.py',
                '@OUTPUT@' ],
