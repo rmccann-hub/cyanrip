@@ -490,6 +490,12 @@ a housekeeping one. The rules, in force from r3:
   developed. They merge into `platterpus-fork` **fast-forward only** — no merge
   commits, so `platterpus-fork`'s history stays a straight line a consumer can
   bisect. Delete the topic branch after it lands.
+- **Never prune a ref that a released or beta artifact can reference.** A commit
+  reachable only from a deleted branch is *destroyed* by routine `git gc`, not
+  hidden — measured, not assumed. Every rip writes its build SHA into the
+  logfile permanently, so pruning turns that line into a dangling reference: the
+  log still claims a build and the build no longer exists, which looks checkable
+  and is not. Session and topic branches stay prunable; nothing points at them.
 - **Tags** `platterpus-fork-rN` mark releases, and **a release is tagged only
   once the handshake round that reviewed it has closed** — the seam rule already
   says no release while a round is open, and the tag is where that rule bites.

@@ -172,6 +172,77 @@ Proposed position: **cyanrip reports the dependency versions it was built and ra
 against. Whether a newer one exists, and whether to install it, is entirely
 Platterpus's.** That is the ownership split applied unchanged.
 
+## 6a. Considered: a branch per release, pruning old alphas and betas
+
+**Proposed by the maintainer. Half of it is right and half of it would break the
+provenance guarantee shipped in this same round, so it is written up rather than
+adopted or dismissed.**
+
+### The pruning half: no, and this is measured
+
+A commit reachable only from a deleted branch is **destroyed by routine `git
+gc`**, not merely hidden. Tested rather than assumed:
+
+```
+beta commit on a branch not merged into the main line   -> resolvable
+git branch -D  +  git reflog expire  +  git gc --prune  -> GONE
+```
+
+Every rip made by a beta writes `cyanrip <version> (platterpus-fork-g<sha>)`
+into its logfile, permanently, and the whole point of that line is that someone
+years later can resolve it and know exactly what produced the audio. **Pruning
+the branch a beta lived on turns that line into a dangling reference** — the log
+still claims a build, and the build no longer exists. That is worse than not
+having recorded it, because it looks checkable and is not.
+
+The rule this violates is the one at the top of `CLAUDE.md`: a claim that is
+nearly true is a wrong claim. A SHA that used to resolve is exactly that.
+
+**So: never prune anything a released or beta artifact can reference.** Session
+and topic branches stay prunable — nothing points at them — which is already the
+rule.
+
+### The branch-per-release half: not yet, and for a reason that could change
+
+Today every release is a commit on one fast-forward line, so:
+
+```
+a50bd1a (r2)   ancestor of tip: yes
+5bc654d (r4)   ancestor of tip: yes
+f750890        ancestor of tip: yes
+9003e6f (beta) ancestor of tip: yes
+```
+
+**That property is load-bearing for Platterpus**, who said so directly:
+*"fast-forward-only into `platterpus-fork` with no rewinds is exactly what a
+downstream pinner wants — I can `git merge-base --is-ancestor` any old pin and
+know where I stand."* They have already used it in anger, to prove a rig build
+contained a specific fix. Release branches break it: a pin on `release/r4` need
+not be an ancestor of `release/r5`, and *"is this fix in that build?"* stops
+being one command.
+
+A release branch also does not solve the problem it looks like it solves. The
+gap is that **we cannot push tags** — and a branch is a *moving* ref, which is
+precisely what both projects agreed not to pin. Swapping an immutable identifier
+for a mutable one is the wrong direction.
+
+**The real use case for release branches is backporting**: r4 in production, r5
+in development, and a fix needed on r4 without shipping r5. We do not have that
+— one consumer, one rig, and nobody running an older fork release deliberately.
+**If that changes, this becomes right rather than premature**, and the trigger is
+worth naming: the first time someone needs a fix on a release that is not the
+newest.
+
+### What gets the benefit without the cost
+
+The manifest in §4 already is the tag substitute: release → version → **immutable
+commit**, generated, checkable offline. It gives the naming and the "which commit
+is r5" answer without a moving ref and without anything to prune.
+
+If human-readable pointers are still wanted, they can be **read-only refs created
+after the fact** — never developed on, never deleted — but that is convenience on
+top of the manifest, not a replacement for it.
+
 ## 7. What this plan deliberately does not decide
 
 Listed so they read as open questions rather than omissions:
@@ -187,6 +258,9 @@ Listed so they read as open questions rather than omissions:
 - **Who publishes first.** If Platterpus adopts `RELEASE-CHANNEL` before cyanrip
   emits a manifest, nothing breaks — unknown fields are ignored — but the order
   should be deliberate rather than accidental.
+- **When branch-per-release stops being premature** (§6a). The trigger is a fix
+  needed on a release that is not the newest; until then it costs the
+  ancestor-check property and buys nothing the manifest does not.
 
 ## 8. Cost, honestly
 
