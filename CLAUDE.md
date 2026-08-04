@@ -53,7 +53,15 @@ which reads as "not installed"). This fork accepts `-V` as an alias again; prefe
   own, and being linkable is what lets `tests/stall.c` prove the heartbeat fires
   while a read is blocked *and nothing is calling back*. The first version was
   driven from paranoia's status callback and was silent through two real
-  three-minute stalls; read that file's header before touching it.
+  three-minute stalls; read that file's header before touching it. It also
+  accumulates the stall count and the longest wait, because the heartbeat is
+  progress output and the *fact* of a stall is a measurement that cannot be
+  re-taken; `Read stalls:` in the disc summary is where it lands.
+- `src/diagnostics.c`/`.h` -- `-j`, the machine-readable record. Its reason to
+  exist is the runs that open **no logfile at all**, so it is written from
+  `atexit` and `-j` is found by a pre-pass before genopt. Read its header
+  before adding a field: it deliberately claims no severity and has no
+  `success` flag, and both absences are load-bearing.
 - `tests/` -- meson-driven unit tests (`fun512.c`, `naming.c`, `subq.c`,
   `stall.c`) plus
   disc-image integration tests (`rip_images.py` against BIN/CUE, NRG and
@@ -379,6 +387,21 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   `astats` output parses as no peaks at all. Every one of those read as success
   here. Before believing a match, assert the content is what you think — a
   percentage of non-zero samples, a line count, a magnitude.
+- **A revert-proof must be run one fix at a time, and the edit confirmed
+  landed.** Reverting three fixes together and seeing four failures proves
+  nothing about which fix pins which check — and the fourth here did not
+  reproduce. Reverted individually, each pinned exactly one. Confirm the edit
+  first: a batch loop whose `python3 … <<EOF` failed its own `assert` left the
+  file untouched, the build green, and every test passing, which reads exactly
+  like "the test does not discriminate" and is not. **Check the edit's exit
+  status, or grep the file, before believing the test result.**
+- **A check that reaches the network is not evidence about this program.** The
+  first version of the diagnostics refusal test drove cyanrip into its
+  no-metadata refusal, which is reached *via a MusicBrainz lookup* — so what it
+  asserted depended on whether the lookup failed by not-found or by timeout. It
+  failed once and then would not reproduce. Reach the same state from the
+  argument table instead (`-J` with `-I`), where no disc and no network are
+  involved.
 - **A fixture whose numbers agree by construction cannot discriminate.** The
   per-track paranoia counters sum to the disc totals in the golden log, so a
   consumer that summed the per-track blocks and one that read the disc block
@@ -741,6 +764,20 @@ Record these rather than rediscovering them:
 - **libcdio does not distinguish "no CD-TEXT on disc" from "driver cannot read
   CD-TEXT".** `cdio_get_cdtext()` returns the same `NULL` for both. Report what
   was observed ("none reported by libcdio"), never the stronger claim.
+- **libcdio terminates the process from inside a library call.** Its default
+  log handler `exit(EXIT_FAILURE)`s on `CDIO_LOG_ERROR` and `abort()`s on
+  `CDIO_LOG_ASSERT`, printing straight to stderr. So `-d` on an unparseable CUE
+  was a non-zero exit that cyanrip never saw and could not report the code of
+  -- measured, not assumed: that run's diagnostics record read `exit_code:
+  null`. `crip_cdio_log_handler()` now routes the message through ours first.
+  **It must keep terminating**: libcdio's internal callers are written assuming
+  `cdio_error()` does not return, so code after such a call runs in a state its
+  author never intended it to reach.
+- **genopt prints its own errors unless you take them.** `GEN_OPT_LOG` is
+  documented in `genopt.h` and cyanrip did not define it, so every
+  argument-parsing failure went to stdout via `vprintf` and reached no logfile
+  and no record. That includes the exact message that once read to a consumer
+  as "cyanrip is not installed".
 
 ## Code style
 

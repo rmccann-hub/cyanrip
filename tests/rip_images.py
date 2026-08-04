@@ -774,6 +774,37 @@ def sc_golden_reference_is_from_a_clean_build():
     if not re.match(r"^cyanrip \S+ \(platterpus-fork-g[0-9a-f]{7,}\)$", first):
         fail(f"golden reference banner is not the expected shape: {first!r}")
 
+    # The companion diagnostics record ships beside it and must describe the
+    # SAME run. Two reference artifacts that drifted apart would be worse than
+    # one: a consumer would reconcile them and one of the two would be wrong,
+    # with nothing saying which.
+    dj = ROOT / "docs" / "golden-reference.diagnostics.json"
+    if not dj.exists():
+        fail("golden diagnostics record is missing")
+        return
+    try:
+        d = json.loads(dj.read_text())
+    except Exception as e:
+        fail(f"golden diagnostics record is not valid JSON: {e}")
+        return
+
+    want_vcs = re.search(r"platterpus-fork-g(\S+)\)$", first)
+    if want_vcs and d.get("cyanrip", {}).get("vcs") != want_vcs.group(1):
+        fail(f"golden pair disagree on the build: log says "
+             f"{want_vcs.group(1)!r}, diagnostics says "
+             f"{d.get('cyanrip', {}).get('vcs')!r}")
+
+    # The fields a consumer will key on. Listed by name so that removing one
+    # fails here rather than in Platterpus.
+    for key in ("schema", "cyanrip", "invocation", "exit_code", "read_stalls",
+                "rip", "messages", "messages_are_classified",
+                "messages_dropped"):
+        if key not in d:
+            fail(f"golden diagnostics record has no {key!r} field")
+    if d.get("messages_dropped"):
+        fail(f"golden diagnostics record dropped {d['messages_dropped']} "
+             "message(s) -- it is not a complete reference")
+
 
 def sc_reference():
     sc_golden_reference_is_from_a_clean_build()

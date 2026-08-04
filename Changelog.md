@@ -1,3 +1,69 @@
+Unreleased
+==========
+**Not in any release, and not in the `…+platterpus.5-beta.1` beta the rig
+session is testing** -- that beta is commit `9003e6f`, and everything below
+landed after it. No version number has been bumped and none should be until
+round 7 closes.
+
+An error-reporting audit: the question asked throughout was not "is this
+message worded well" but **"can this run leave no explanation on disk?"**
+
+Fixed
+ - **Everything said before the logfile existed reached stdout and nowhere
+   else.** The drive open, the MusicBrainz lookup, the cover-art and
+   AccurateRip lookups and seven refusal paths all report before
+   `cyanrip_log_init()`, so a consumer archiving the log and not the terminal
+   lost every one of them, and an aborted rip could read from the archive as a
+   quiet success. Output is now buffered and replayed into the logfile as its
+   own delimited section, after the header. Correct by construction: there is
+   no list of early call sites to keep current.
+ - **libcdio's own messages never reached us at all.** Its default handler
+   prints to stderr and then *exits the process itself* on `CDIO_LOG_ERROR`,
+   which is why `-d` on an unparseable CUE produced a run whose exit code
+   cyanrip could not even report. A handler now records the message first; the
+   terminating behaviour is preserved exactly, because libcdio's internal
+   callers are written assuming `cdio_error()` does not return.
+ - **genopt's messages did not either.** It `vprintf()`s unless `GEN_OPT_LOG`
+   is defined, so every argument-parsing error went to the terminal only --
+   including the one that once read to Platterpus as "cyanrip is not
+   installed".
+ - **The provider contract published two P2 lines truncated mid-conversion**,
+   ending in a bare `%`, because a format written as `"… %" PRId64 "s"` is
+   three tokens and only the string literals were joined. P2 is the set of
+   lines we undertake not to reword, so a truncated one cannot be checked
+   against anything.
+ - **The contract's "reaches logfile" column was a straight yes/no on
+   `ctx != NULL`**, which stopped being true the moment pre-log output began
+   being replayed. It now reports that the answer depends on when the call
+   runs and says so, rather than picking one and being wrong for half the rows.
+
+Added
+ - **`Read stalls:`** in the disc summary. A stall is a measurement of the disc
+   that cannot be recovered afterwards -- put it back in the drive and it may
+   read clean -- and until now the only record was the heartbeat on stdout. The
+   2026-08-03 rig capture's two three-minute stalls survive only because the
+   consumer happened to be recording 41180 lines of it. Three states, not two:
+   `none (no read exceeded Ns)` is "we watched and saw none", and
+   `unknown (stall reporting disabled with -k 0)` is "we did not watch".
+ - **`-j` / `--diagnostics <path>`**, a JSON record written for every run,
+   *including the ones that open no logfile*. Off unless asked for: an
+   unconditional extra file would break a consumer asserting the exact set of
+   files a rip produces. `main()` is now a wrapper so the exit code reaches the
+   record from every route out, and `-j` is found by a pre-pass before genopt
+   runs, because an argument-parsing failure writes no log either. No severity
+   is claimed anywhere in it -- `cyanrip_log()` carries none, and classifying
+   by wording is the defect the contract's fatal inventory already shipped
+   once. Progress lines are collapsed by modelling the terminal (`\r` discards,
+   `\n` commits) rather than by recognising their text.
+ - **`docs/golden-reference.diagnostics.json`**, the companion reference for
+   that surface, checked to describe the same build as the golden log.
+
+Noted, not changed
+ - **`cyanrip_ctx.success` is never assigned anywhere in the program.** The
+   diagnostics record deliberately has no `success` field: emitting it would
+   have put a permanent `"success": false` into the record of every rip that
+   succeeded. A success verdict belongs downstream regardless.
+
 0.9.4-rc1+platterpus.5-beta.1 (2026-08-04) -- PRE-RELEASE
 =========================================================
 **A beta, not a release, and the distinction is the point.** Round 7 is open, so
