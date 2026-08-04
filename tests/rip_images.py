@@ -840,6 +840,33 @@ def sc_golden_reference_is_from_a_clean_build():
         fail(f"golden diagnostics record is not valid JSON: {e}")
         return
 
+    # The build that PRODUCED the reference must be named somewhere a reader
+    # can find it, not only the commit it was committed at.
+    #
+    # Those are always different commits and always will be: the fix builds the
+    # binary, a later commit checks in the regenerated artifact, and a file can
+    # never name a build that contains itself. Laps 12 and 14 each named the
+    # reference by its commit-at -- 70dcf19, f00cb2b -- while the banners said
+    # ceca8bc and 486dce3, and lap 14 stated outright that the number it gave
+    # was "the build of the artifact this lap is about". It was not. Platterpus
+    # caught it as the third instance of one shape: a build tag names a commit,
+    # it does not name what was built.
+    #
+    # No git here: asserting the pairing is recorded is what makes it
+    # checkable in a tarball too, and it is the practice, not the ancestry,
+    # that went wrong.
+    banner_sha = re.search(r"platterpus-fork-g([0-9a-f]{7,})", first)
+    if not banner_sha:
+        fail(f"golden reference banner has no build tag: {first!r}")
+    else:
+        sha = banner_sha.group(1)
+        laps = ROOT / "docs" / "handshake"
+        named = any(sha in p.read_text() for p in laps.glob("round-*.md"))
+        if not named:
+            fail(f"no handshake lap names {sha}, the build that produced the "
+                 "golden reference -- name both it and the commit the "
+                 "reference is committed at")
+
     want_vcs = re.search(r"platterpus-fork-g(\S+)\)$", first)
     if want_vcs and d.get("cyanrip", {}).get("vcs") != want_vcs.group(1):
         fail(f"golden pair disagree on the build: log says "
