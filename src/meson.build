@@ -85,7 +85,14 @@ sources = [
     handshake_state_h,
 
     # Version
-    vcs_tag(command: ['git', 'rev-parse', '--short', 'HEAD'],
+    # A9 (Platterpus, round 7): mark a dirty tree in the build tag. Two golden
+    # references have carried a banner naming a commit three behind their stated
+    # pin. Both were provable from content so nothing was lost -- but a stale
+    # banner on a reference generated from a build that still has the defect is
+    # the one failure mode that looks like success.
+    vcs_tag(command: ['sh', '-c',
+                      'cd ' + meson.project_source_root() +
+                      ' && printf %s "$(git rev-parse --short HEAD)$(git diff --quiet HEAD || printf -- -dirty)"'],
                       input: 'version.c.in', output: 'version.c',
                       fallback: 'release')
 ]

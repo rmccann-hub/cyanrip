@@ -4,9 +4,9 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc1+platterpus.3 (platterpus-fork-g<commit>)`
+Build: `cyanrip 0.9.4-rc1+platterpus.4 (platterpus-fork-g31c1476-dirty)`
 
-**Source anchor:** `sha256/16 = 98cb5d68405be33b` over `src/*.c` and
+**Source anchor:** `sha256/16 = 65c4333258871f68` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -116,6 +116,19 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
   `True peak level:` is dBFS only.
 - Paranoia counters are **raw callback counts**, not rates or scores, and are
   only comparable between tracks of the same disc on the same drive.
+- **Paranoia counter scope (A8).** A per-track `Paranoia status counts:`
+  block covers **the final `-Z` pass for that track only**; the disc-level
+  block is **cumulative across every pass the invocation performed**. They
+  are therefore equal only at `-Z 0`, where there is exactly one pass -
+  confirmed on real hardware by Platterpus (round 7: 22055/1600/54/468,
+  summing exactly across 14 tracks). Under `-Z N` the per-track figures sum
+  to **less** than the disc block by the reads the earlier passes did. A
+  consumer cross-checking the two blocks must condition on `-Z`.
+- **Paranoia counter denominator under `-l` (Q10).** The disc-level block
+  counts only what **this invocation** read, not the whole disc. Under
+  `-l 3,5` it covers tracks 3 and 5 and nothing else, and `Rip completed:`
+  says `yes (2 of 14 tracks)`. The denominator is the invocation, never the
+  TOC.
 
 ## P2 - Outputs: stable log lines (the API)
 
