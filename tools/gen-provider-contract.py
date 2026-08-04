@@ -302,6 +302,20 @@ def version(binary):
     """
     raw = subprocess.run([binary, "--version"], capture_output=True,
                          text=True).stdout.strip()
+
+    # A -dirty banner means the binary was built from a tree with uncommitted
+    # changes, so its SHA does not describe it. Refuse rather than normalise:
+    # a contract generated from such a build documents something that is not in
+    # any commit, and normalising the marker away would hide exactly what A9
+    # added it to expose. This surfaced immediately -- --check reported "stale,
+    # regenerate" for a build/ that was merely out of date, which blames the
+    # committed file for the state of the build directory.
+    if "-dirty" in raw:
+        sys.exit(f"refusing to derive the contract from a dirty build: {raw}\n"
+                 "The binary was built from a tree with uncommitted changes, so "
+                 "its commit does not describe it.\n"
+                 "Commit or stash, rebuild, and re-run.")
+
     return re.sub(r"-g[0-9a-f]{7,40}\)", "-g<commit>)", raw)
 
 
