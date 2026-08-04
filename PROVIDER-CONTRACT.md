@@ -6,7 +6,7 @@ stale silently, which is the failure this file exists to prevent.
 
 Build: `cyanrip 0.9.4-rc1+platterpus.5-beta.1 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = 317a564652c832b1` over `src/*.c` and
+**Source anchor:** `sha256/16 = 947b07ed25aee5f2` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -639,7 +639,7 @@ must carry the same class.
 | `cyanrip_main.c:2157` | `Error encoding: %s` | wording + goto end | yes |
 | `cyanrip_main.c:2177` | `Invalid rip index %i, list has %i tracks!` | both | yes |
 | `cyanrip_main.c:2259` | `Error ripping: %s` | wording + goto end | yes |
-| `diagnostics.c:389` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
+| `diagnostics.c:437` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` | wording | yes |
 | `musicbrainz.c:116` | `Invalid disc number %i, release only has %i CDs` | both | yes |
 | `musicbrainz.c:121` | `Got empty medium list.` | control flow | yes |

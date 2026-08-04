@@ -3,11 +3,11 @@
   "cyanrip": {
     "version": "0.9.4-rc1+platterpus.5-beta.1",
     "fork_id": "platterpus-fork",
-    "vcs": "372dccf",
-    "handshake": "round 7 lap 9 OPEN, verdict HOLD",
+    "vcs": "ceca8bc",
+    "handshake": "round 7 lap 10 OPEN, verdict HOLD",
     "released_build": false
   },
-  "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -D o -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b1 -j o/reference.diagnostics.json",
+  "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -D o -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b3 -j o/reference.diagnostics.json",
   "exit_code": 0,
   "read_stalls": {
     "watched": true,
@@ -18,7 +18,7 @@
   },
   "rip": {
     "device": "pregap.cue",
-    "consumer": "platterpus/0.6.4b1",
+    "consumer": "platterpus/0.6.4b3",
     "consumer_verified": false,
     "paranoia_level": 0,
     "frame_retries": 10,
@@ -30,22 +30,23 @@
     "ripping_errors": 0,
     "interrupted": false,
     "track_state": [
-      {"number":1,"cd_track":1,"repeats":3,"crcs_computed":true,"eac_crc":"D36D9296","rip_time_us":54874},
-      {"number":2,"cd_track":2,"repeats":3,"crcs_computed":true,"eac_crc":"07B89F6F","rip_time_us":47769},
-      {"number":3,"cd_track":3,"repeats":3,"crcs_computed":true,"eac_crc":"CC206A3D","rip_time_us":28534}
+      {"number":1,"cd_track":1,"repeats":3,"crcs_computed":true,"eac_crc":"D36D9296","rip_time_us":51824},
+      {"number":2,"cd_track":2,"repeats":3,"crcs_computed":true,"eac_crc":"07B89F6F","rip_time_us":38771},
+      {"number":3,"cd_track":3,"repeats":3,"crcs_computed":true,"eac_crc":"CC206A3D","rip_time_us":22667}
     ]
   },
   "messages_are_classified": false,
   "messages_note": "cyanrip_log() carries no severity, so no severity is asserted here. Progress lines that were overwritten on the terminal are collapsed to the final state of each line.",
   "messages_dropped": 0,
+  "messages_are_complete": true,
   "messages": [
     "Checking pregap.bin for cdrom...",
     "Opening drive...",
     "Release ID unavailable, cannot search Cover Art DB!",
-    "cyanrip 0.9.4-rc1+platterpus.5-beta.1 (platterpus-fork-g372dccf)",
-    "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -D o -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b1 -j o/reference.diagnostics.json",
-    "Handshake:      round 7 lap 9 OPEN, verdict HOLD -- NOT a released build",
-    "Consumer:       platterpus/0.6.4b1",
+    "cyanrip 0.9.4-rc1+platterpus.5-beta.1 (platterpus-fork-gceca8bc)",
+    "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -D o -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b3 -j o/reference.diagnostics.json",
+    "Handshake:      round 7 lap 10 OPEN, verdict HOLD -- NOT a released build",
+    "Consumer:       platterpus/0.6.4b3",
     "                (reported by the caller, not verified by cyanrip)",
     "Drive used:     libcdio CDRWIN (revision 2.1.)",
     "System device:  pregap.cue",
@@ -90,7 +91,7 @@
     "    True peak level:   0.0 dBFS",
     "    Integrated loudness (R128): -7.7 LUFS",
     "    Loudness range (R128):      20.0 LU (-27.7 to -7.7 LUFS)",
-    "    Extraction speed:  54.7x",
+    "    Extraction speed:  57.9x",
     "    Elapsed:            0.05 s",
     "    Pregap LSN:  0 (duration: 00:04.00)",
     "    Pregap length: 300 frames",
@@ -112,7 +113,7 @@
     "    comment:                       cyanrip 0.9.4-rc1+platterpus.5-beta.1",
     "    album:                         Unknown disc (OMP2)",
     "    title:                         Unknown track",
-    "    creation_time:                 2026-08-04T04:45:02",
+    "    creation_time:                 2026-08-04T13:50:13",
     "    REPLAYGAIN_TRACK_GAIN:         -10.29 dB",
     "    R128_TRACK_GAIN:               -1355",
     "    REPLAYGAIN_TRACK_RANGE:        20.00 dB",
@@ -139,8 +140,8 @@
     "    True peak level:   0.3 dBFS",
     "    Integrated loudness (R128): -6.8 LUFS",
     "    Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)",
-    "    Extraction speed:  41.9x",
-    "    Elapsed:            0.05 s",
+    "    Extraction speed:  51.6x",
+    "    Elapsed:            0.04 s",
     "    Pregap LSN:  300 (duration: 00:01.00)",
     "    Pregap length: 75 frames",
     "    Pregap source: TOC",
@@ -161,7 +162,7 @@
     "    comment:                       cyanrip 0.9.4-rc1+platterpus.5-beta.1",
     "    album:                         Unknown disc (OMP2)",
     "    title:                         Unknown track",
-    "    creation_time:                 2026-08-04T04:45:02",
+    "    creation_time:                 2026-08-04T13:50:13",
     "    REPLAYGAIN_TRACK_GAIN:         -11.19 dB",
     "    R128_TRACK_GAIN:               -1584",
     "    REPLAYGAIN_TRACK_RANGE:        0.00 dB",
@@ -188,8 +189,8 @@
     "    True peak level:   -11.3 dBFS",
     "    Integrated loudness (R128): -22.6 LUFS",
     "    Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)",
-    "    Extraction speed:  35.0x",
-    "    Elapsed:            0.03 s",
+    "    Extraction speed:  44.1x",
+    "    Elapsed:            0.02 s",
     "    Pregap LSN:  unknown (sub-channel unreadable)",
     "    Start LSN:   525",
     "    End LSN:     599",
@@ -208,7 +209,7 @@
     "    comment:                       cyanrip 0.9.4-rc1+platterpus.5-beta.1",
     "    album:                         Unknown disc (OMP2)",
     "    title:                         Unknown track",
-    "    creation_time:                 2026-08-04T04:45:02",
+    "    creation_time:                 2026-08-04T13:50:13",
     "    REPLAYGAIN_TRACK_GAIN:         4.63 dB",
     "    R128_TRACK_GAIN:               2465",
     "    REPLAYGAIN_TRACK_RANGE:        0.00 dB",
@@ -224,6 +225,7 @@
     "Ripping errors: 0",
     "Read stalls:    none (no read exceeded 10s)",
     "Rip completed:  yes (3 of 3 tracks)",
-    "Ripping finished at 2026-08-04T04:45:02"
-  ]
+    "Ripping finished at 2026-08-04T13:50:13"
+  ],
+  "messages_tail": []
 }
