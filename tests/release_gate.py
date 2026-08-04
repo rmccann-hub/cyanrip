@@ -501,6 +501,62 @@ def test_a_test_pin_is_not_the_production_pin():
     check(lap_obj.test_pin == "ccc3333", f"test pin misread: {lap_obj.test_pin!r}")
 
 
+
+
+def _gate_main(files, argv):
+    """Run the gate's main() against a throwaway record, capturing exit + out."""
+    import contextlib, io, sys as _sys
+    d = pathlib.Path(tempfile.mkdtemp())
+    for name, body in files.items():
+        (d / name).write_text(body, encoding="utf-8")
+    saved_dir, saved_argv = rg.HANDSHAKE_DIR, _sys.argv
+    rg.HANDSHAKE_DIR, _sys.argv = d, ["release-gate.py"] + argv
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            code = rg.main()
+    finally:
+        rg.HANDSHAKE_DIR, _sys.argv = saved_dir, saved_argv
+    return code, buf.getvalue()
+
+
+def test_stable_release_refused_with_a_round_open():
+    """Covers: C19"""
+    body = lap(1, 9, "HOLD")
+    code, _ = _gate_main({"round-9.md": body}, ["--release-gate"])
+    check(code != 0, "a stable release must be refused with a round open")
+
+
+def test_prerelease_permitted_but_never_quietly():
+    """Covers: C20
+
+    A beta claims no joint verification, so refusing it would only guarantee
+    the round can never close -- the evidence a close needs comes from running
+    the thing. But it must never be quiet: the open rounds are printed first.
+    """
+    body = lap(1, 9, "HOLD")
+    code, out = _gate_main({"round-9.md": body},
+                           ["--release-gate", "--prerelease"])
+    check(code == 0, "a pre-release must be permitted with a round open")
+    check("round 9" in out,
+          f"the open round must be printed before permitting: {out!r}")
+    check("PRE-RELEASE permitted" in out,
+          "permitting a pre-release must say so explicitly")
+    check("STABLE release is still refused" in out,
+          "must state that a stable release is still refused")
+
+
+def test_prerelease_does_not_close_the_round():
+    """Covers: C20
+
+    Permitting a beta must not make the record read as closed -- otherwise the
+    flag would be a release by another name, which is what it exists to avoid.
+    """
+    body = lap(1, 9, "HOLD")
+    ok, _ = gate({"round-9.md": body})
+    check(not ok, "the round must still be open after a pre-release is allowed")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()

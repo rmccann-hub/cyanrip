@@ -199,6 +199,30 @@ one. Those logs are what `HANDSHAKE-TESTED` then cites.
 the results → *then* the round can close on that evidence, moving
 `HANDSHAKE-PIN` to what was tested.
 
+### 6b. Pre-releases, for projects whose artifact is a release
+
+A test pin works when the other side builds from a tree. When a project's
+artifact is something a user *installs* — an AppImage, a package — the test pin
+has to be a published pre-release, and a gate that refuses all releases refuses
+that too.
+
+So the gate distinguishes what a release *claims* rather than whether one
+happens:
+
+| | permitted with a round open? |
+|---|---|
+| **stable release** | **no** — it claims the pair was jointly verified |
+| **pre-release / beta** | **yes**, after printing every open round |
+
+A beta claims no joint verification: it ships saying so, and every rip it makes
+records that in its own artifact. **Refusing it would not protect a user; it
+would guarantee the round can never close**, because the evidence a close
+requires can only come from running the thing.
+
+Proposed by Platterpus in round 7 lap 7, adopted by cyanrip in lap 8. Both gates
+take a `--prerelease` flag which prints the open rounds first, so permitting a
+beta is never quiet.
+
 Proposed by cyanrip in round 7 lap 6. Carried as an **optional** field on
 purpose: v2 gates ignore unknown fields, so it costs the other side nothing
 before they implement it. **`HANDSHAKE-PROTOCOL` is deliberately not bumped for
@@ -270,6 +294,8 @@ this table rather than asserted alongside it.
 | C16 | complete two-sided tested round | **allow** — a gate that can never say yes is a wall, not a gate |
 | C17 | a file declaring `HANDSHAKE-TEST-PIN` and otherwise complete, but verdict `HOLD` | refuse; a test pin is not a release |
 | C18 | `HANDSHAKE-TEST-PIN` present alongside a valid close | **allow**, and the test pin must not be mistaken for `HANDSHAKE-PIN` |
+| C19 | a **stable** release requested with any round open | refuse |
+| C20 | a **pre-release** requested with a round open | **allow**, and print every open round first — a beta claims no joint verification, and refusing it guarantees the round can never close |
 
 That last row matters as much as the others. Assert it, or a gate that refuses
 everything passes every other test in the table.

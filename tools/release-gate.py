@@ -242,7 +242,14 @@ def strip_fences(text):
     return FENCE_RE.sub(lambda m: "\n" * m.group(0).count("\n"), text)
 
 
-def load_rounds(directory=HANDSHAKE_DIR):
+def load_rounds(directory=None):
+    # Resolved at call time, not bound at definition time. A default of
+    # `directory=HANDSHAKE_DIR` captures the module-level value when the
+    # function is defined, so any caller that points the gate at a different
+    # record -- a test, a check of another checkout -- silently gets the real
+    # one instead and its result is about the wrong files.
+    if directory is None:
+        directory = HANDSHAKE_DIR
     all_laps = []
     for path in sorted(directory.glob("round-*.md")):
         m = re.match(r"round-(\d+)", path.name)
@@ -331,6 +338,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--release-gate", action="store_true",
                     help="exit non-zero if a release is not permitted")
+    ap.add_argument("--prerelease", action="store_true",
+                    help="permit a BETA/pre-release while a round is open, "
+                         "after printing every open round")
     args = ap.parse_args()
 
     rounds = load_rounds()
@@ -361,6 +371,26 @@ def main():
     print()
     print("A round closes when the other side's verification file agrees and "
           "this tree's round file declares HANDSHAKE-VERDICT: GO.")
+
+    # A pre-release is permitted with a round open; a stable one is not.
+    #
+    # Adopted from Platterpus round 7 lap 7, and it is the same argument as
+    # HANDSHAKE-TEST-PIN one level up: what the gate protects is the claim a
+    # STABLE release makes -- that the pair was jointly verified. A beta makes
+    # no such claim. It ships saying so, and every rip it produces carries
+    # "NOT a released build" in its own log. Refusing it would not protect
+    # anyone; it would guarantee the round can never close, because the
+    # evidence a close requires can only come from running the thing.
+    #
+    # The open rounds are printed FIRST and unconditionally, so permitting a
+    # beta is never quiet.
+    if args.prerelease:
+        print()
+        print("PRE-RELEASE permitted: the rounds above are open, and a beta "
+              "claims no joint verification. A STABLE release is still "
+              "refused.")
+        return 0
+
     return 1 if args.release_gate else 0
 
 

@@ -1,3 +1,42 @@
+0.9.4-rc1+platterpus.5-beta.1 (2026-08-04) -- PRE-RELEASE
+=========================================================
+**A beta, not a release, and the distinction is the point.** Round 7 is open, so
+this build claims no joint verification: every logfile it writes says
+`NOT a released build`, and `tools/release-gate.py --release-gate` still refuses
+a stable release against this record. It exists so the rig session can run the
+hardware evidence a round close requires -- which cannot be gathered without
+installing the build under review.
+
+**No git tag.** The git proxy in this environment refuses tag pushes with
+`HTTP 403`, re-probed for this release, and no release-creation API is reachable
+either. **The commit SHA is the identifier.**
+
+Fixed
+ - **A diagnosed abort exited 0.** The exit code tracked `total_error_count`,
+   which counts *read* errors, so a refusal to start or a rip that failed
+   outright printed its reason and returned success. Still within `{0,1}`.
+   **Unverified by any test**: the affected paths are hardware-gated, so this is
+   an item for the rig session rather than something a fixture retires.
+ - **`-x` could hang with no heartbeat.** The cache probe ran before the stall
+   watchdog started, so the one read most likely to wedge on real hardware --
+   raw MMC reads on a path that has never executed anywhere -- was the one read
+   with no liveness reporting. The watchdog now starts first and the probe
+   brackets its own reads.
+ - **The golden reference was regenerated from a dirty tree** and committed with
+   a `-dirty` banner, naming a build nobody can reproduce. Caught by A9's own
+   marker. Regenerated clean, and the reference scenario now refuses one.
+
+Added
+ - **Sample-peak cross-check** (H6), printed only when ebur128's figure and a
+   direct scan of the same frames disagree.
+ - **`--prerelease`** on the release gate: a stable release stays refused while
+   a round is open; a beta is permitted after printing every open round.
+   Adopted from Platterpus, whose artifact is an installable release rather than
+   a tree.
+ - **`HANDSHAKE-TEST-PIN`**, breaking the deadlock where a round could not close
+   without evidence that could not be gathered without installing the build the
+   round was reviewing.
+
 0.9.4-rc1+platterpus.4 (2026-08-04)
 ===================================
 **Not `0.9.5-rc1`.** That was asked for and is not what shipped, for the reason
