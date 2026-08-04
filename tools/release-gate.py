@@ -77,6 +77,13 @@ HANDSHAKE_DIR = pathlib.Path(__file__).resolve().parent.parent / "docs" / "hands
 # would close simply by omitting the field. Pinned, and asserted by a test.
 GRANDFATHERED = {5, 6}
 
+# The v2 wire header (FROM / APP-VERSION / RIPPER-VERSION / PIN) is required
+# from this round on. Rounds up to and including 7 are exempt because neither
+# project could comply with a spec that was written during round 7 -- stated in
+# round-7-lap4.md and agreed with Platterpus. Pinned, and asserted by a test, so
+# widening the exemption is a visible edit rather than a side effect.
+WIRE_HEADER_REQUIRED_FROM = 8
+
 # Column 0 only. A quoted or indented copy inside prose is not a declaration.
 VERDICT_RE = re.compile(r"^HANDSHAKE-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]*$", re.M)
 ROUND_RE = re.compile(r"^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", re.M)
@@ -135,6 +142,22 @@ class Lap:
         self.ripper_version = ripper_version
         self.pin = pin
 
+    def missing_wire_header(self):
+        """v2 fields every file must declare, from WIRE_HEADER_REQUIRED_FROM on.
+
+        Separate from missing_for_close(): these are required on *every* file,
+        including a mid-round HOLD, because a lap reporting a measurement must
+        say which pair produced it. The close-only fields say who agreed."""
+        if self.number < WIRE_HEADER_REQUIRED_FROM:
+            return []
+        need = {
+            "HANDSHAKE-FROM": self.sender,
+            "HANDSHAKE-APP-VERSION": self.app_version,
+            "HANDSHAKE-RIPPER-VERSION": self.ripper_version,
+            "HANDSHAKE-PIN": self.pin,
+        }
+        return [k for k, v in need.items() if not v]
+
     def missing_for_close(self):
         """Fields a close requires. Named individually so the gate can say
         which one is absent rather than refusing without a reason."""
@@ -164,6 +187,8 @@ class Lap:
             return True
         if not self.protocol_ok:
             return False
+        if self.missing_wire_header():
+            return False
         if self.verdict not in CLOSING:
             return False
         # Our GO alone is not agreement.
@@ -180,6 +205,9 @@ class Lap:
                     f"implements {PROTOCOL_VERSION} -- refusing rather than guessing")
         if self.protocol is None:
             return "NO HANDSHAKE-PROTOCOL FIELD -- fails closed"
+        wire = self.missing_wire_header()
+        if wire:
+            return "missing required v2 wire header: " + ", ".join(wire)
         if self.verdict is None:
             return "NO VERDICT FIELD -- fails closed"
         if self.verdict not in CLOSING:
@@ -266,6 +294,12 @@ def check(rounds):
             problems.append(
                 f"round {r.number} has an ambiguous HANDSHAKE-LAP declaration: "
                 f"{r.path.name}"
+            )
+        wire = r.missing_wire_header()
+        if wire:
+            problems.append(
+                f"round {r.number} ({r.path.name}) is missing required v2 wire "
+                f"header fields: {', '.join(wire)}"
             )
         if not r.closed:
             problems.append(f"round {r.number} is not closed ({r.why}): {r.path.name}")

@@ -59,7 +59,15 @@ def gate(files):
 
 # A complete, closing round: both verdicts GO, both identities, and testing
 # declared. Anything less must not close -- see the tests below, one per field.
-GO = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\nHANDSHAKE-VERDICT: GO\n"
+# The v2 wire header, required from round 8 on. Every fixture below uses round
+# 9, so it carries these; the round-7 exemption is tested separately.
+WIRE = ("HANDSHAKE-FROM: cyanrip-fork\n"
+        "HANDSHAKE-APP-VERSION: platterpus 0.6.4\n"
+        "HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5 (platterpus-fork-gbbb2222)\n"
+        "HANDSHAKE-PIN: bbb2222\n")
+
+GO = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n" + WIRE +
+      "HANDSHAKE-VERDICT: GO\n"
       "HANDSHAKE-PEER-VERDICT: GO\n"
       "HANDSHAKE-PEER-VERSION: platterpus/0.6.4\n"
       "HANDSHAKE-PEER-PIN: abc1234\n"
@@ -121,7 +129,7 @@ def lap(n, round_no, verdict, complete=False):
     requires, so a test can distinguish "this lap says GO" from "this lap is a
     valid close" -- they are different things now."""
     head = (f"HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: {round_no}\nHANDSHAKE-LAP: {n}\n"
-            f"HANDSHAKE-VERDICT: {verdict}\n")
+            + WIRE + f"HANDSHAKE-VERDICT: {verdict}\n")
     if complete:
         head += ("HANDSHAKE-PEER-VERDICT: GO\n"
                  "HANDSHAKE-PEER-VERSION: platterpus/0.6.4\n"
@@ -169,7 +177,7 @@ def test_lap_order_is_by_declaration_not_filename():
 
 def test_ambiguous_lap_is_not_shadowed_by_a_good_one():
     body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\nHANDSHAKE-LAP: 2\n"
-            "HANDSHAKE-VERDICT: GO\n\n# round 9\n")
+            + WIRE + "HANDSHAKE-VERDICT: GO\n\n# round 9\n")
     ok, probs = gate({"round-9.md": body,
                       "round-9-lap2.md": lap(2, 9, "GO", complete=True)})
     check(not ok, "an ambiguous lap declaration must not be hidden behind a good one")
@@ -202,7 +210,7 @@ def test_unknown_verdict_does_not_close():
 def test_missing_verdict_fails_closed():
     # The tempting shortcut is to treat a missing field as GO so old rounds
     # still pass. That puts the whole defect back through the fallback.
-    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n\n# round 9\n"
+    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE + "\n# round 9\n"
     ok, probs = gate({"round-9.md": body})
     check(not ok, "a round with no verdict field must fail closed")
     check(any("NO VERDICT" in p for p in probs),
@@ -212,7 +220,7 @@ def test_missing_verdict_fails_closed():
 def test_prose_about_a_verdict_is_not_a_verdict():
     # The exact failure Platterpus reported: a file that says it is NOT a GO,
     # closing the round because a matcher found the word GO in the prose.
-    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-VERDICT: HOLD\n\n"
+    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE + "HANDSHAKE-VERDICT: HOLD\n\n"
             "# round 9\n\n"
             "This is deliberately **not a closing GO**. The verdict is HOLD.\n"
             "Do not read `HANDSHAKE-VERDICT: GO` from this sentence.\n"
@@ -223,13 +231,13 @@ def test_prose_about_a_verdict_is_not_a_verdict():
 
 
 def test_indented_declaration_is_not_a_declaration():
-    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n  HANDSHAKE-VERDICT: GO\n\n# round 9\n"
+    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE + "  HANDSHAKE-VERDICT: GO\n\n# round 9\n"
     ok, _ = gate({"round-9.md": body})
     check(not ok, "an indented verdict is quoted prose, not a declaration")
 
 
 def test_two_verdicts_are_ambiguous_not_closed():
-    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-VERDICT: GO\n"
+    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\n" + WIRE + "HANDSHAKE-VERDICT: GO\n"
             "HANDSHAKE-VERDICT: HOLD\n\n# round 9\n")
     ok, _ = gate({"round-9.md": body})
     check(not ok, "two verdicts must be ambiguous, not closed on the first")
@@ -243,12 +251,13 @@ def test_grandfathered_set_is_pinned():
 
 
 def test_grandfathering_does_not_leak_to_new_rounds():
-    ok, _ = gate({"round-99.md": "# round 99\n\nno verdict\n"})
+    ok, _ = gate({"round-99.md": "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 99\n"
+                                 + WIRE + "\n# round 99\n"})
     check(not ok, "a new round must not inherit the grandfathered exemption")
 
 
 def test_mismatched_round_number_is_a_problem():
-    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 8\nHANDSHAKE-VERDICT: GO\n\n# round 9\n"
+    body = "HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 8\n" + WIRE + "HANDSHAKE-VERDICT: GO\n\n# round 9\n"
     ok, probs = gate({"round-9.md": body})
     check(not ok, "a file declaring a different round number must not pass")
     check(any("declares" in p for p in probs), "should name the mismatch")
@@ -305,7 +314,7 @@ def test_fenced_examples_are_not_declarations():
     # *illustrating* was compiled into the binary as a fact. A declaration is a
     # statement the file makes, not one it quotes.
     body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n"
-            "HANDSHAKE-VERDICT: HOLD\n\n"
+            + WIRE + "HANDSHAKE-VERDICT: HOLD\n\n"
             "# round 9\n\n"
             "A close needs all of these:\n\n"
             "```\n"
@@ -338,6 +347,61 @@ def test_protocol_version_is_pinned():
     check(rg.PROTOCOL_VERSION == 2,
           f"protocol version changed to {rg.PROTOCOL_VERSION} -- "
           "both repos must ship the new spec before the next close")
+
+
+
+
+def test_v2_wire_header_required_from_round_8():
+    # The spec called four fields "required" while the gate enforced none of
+    # them -- shipped in the very lap that introduced the spec. If Platterpus
+    # implements the spec faithfully and we do not, the two gates disagree,
+    # which is the failure the protocol exists to prevent.
+    body = ("HANDSHAKE-PROTOCOL: 2\nHANDSHAKE-ROUND: 8\nHANDSHAKE-LAP: 1\n"
+            "HANDSHAKE-VERDICT: GO\nHANDSHAKE-PEER-VERDICT: GO\n"
+            "HANDSHAKE-PEER-VERSION: platterpus/0.6.4\nHANDSHAKE-PEER-PIN: aaa1111\n"
+            "HANDSHAKE-OUR-VERSION: 0.9.4-rc1+platterpus.5\nHANDSHAKE-OUR-PIN: bbb2222\n"
+            "HANDSHAKE-TESTED: T1-T18 on both builds\n\n# round 8\n")
+    ok, probs = gate({"round-8.md": body})
+    check(not ok, "a round-8 close without the v2 wire header must be refused")
+    for f in ("HANDSHAKE-FROM", "HANDSHAKE-APP-VERSION",
+              "HANDSHAKE-RIPPER-VERSION", "HANDSHAKE-PIN"):
+        check(any(f in p for p in probs), f"refusal should name {f}: {probs}")
+
+    # With them, the same round closes -- the gate must remain satisfiable.
+    full = body.replace("HANDSHAKE-VERDICT: GO",
+                        "HANDSHAKE-FROM: cyanrip-fork\n"
+                        "HANDSHAKE-APP-VERSION: platterpus 0.6.4\n"
+                        "HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5 (platterpus-fork-gbbb2222)\n"
+                        "HANDSHAKE-PIN: bbb2222\n"
+                        "HANDSHAKE-VERDICT: GO")
+    ok2, probs2 = gate({"round-8.md": full})
+    check(ok2, f"a complete round-8 file should close: {probs2}")
+
+
+def test_wire_header_required_on_a_mid_round_lap_too():
+    # Required on EVERY file, not only a closing one: a lap reporting a
+    # measurement must say which pair produced it.
+    body = ("HANDSHAKE-PROTOCOL: 2\nHANDSHAKE-ROUND: 8\nHANDSHAKE-LAP: 2\n"
+            "HANDSHAKE-VERDICT: HOLD\n\n# round 8 lap 2\n")
+    ok, probs = gate({"round-8-lap2.md": body})
+    check(not ok, "a HOLD lap without the wire header must be flagged")
+    check(any("wire header" in p for p in probs),
+          f"should name the wire header, not only the verdict: {probs}")
+
+
+def test_round_7_is_exempt_from_the_wire_header():
+    # Neither project could comply with a spec written during round 7.
+    body = ("HANDSHAKE-PROTOCOL: 2\nHANDSHAKE-ROUND: 7\nHANDSHAKE-LAP: 1\n"
+            "HANDSHAKE-VERDICT: HOLD\n\n# round 7\n")
+    _, probs = gate({"round-7.md": body})
+    check(not any("wire header" in p for p in probs),
+          f"round 7 must not be asked for the v2 header: {probs}")
+
+
+def test_wire_header_exemption_boundary_is_pinned():
+    check(rg.WIRE_HEADER_REQUIRED_FROM == 8,
+          f"exemption boundary moved to {rg.WIRE_HEADER_REQUIRED_FROM} -- "
+          "widening it is a protocol change, not a fix")
 
 
 for name, fn in sorted(globals().items()):

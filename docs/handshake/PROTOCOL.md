@@ -83,6 +83,13 @@ HANDSHAKE-PIN: <sha>
 | `HANDSHAKE-RIPPER-VERSION` | `cyanrip <version> (<build tag>)` | the ripper banner, **verbatim**, that produced them. |
 | `HANDSHAKE-PIN` | short SHA | the commit this file concerns. |
 
+**Required from round 8 on.** Rounds up to and including 7 are exempt, because
+neither project could comply with a spec written during round 7. A gate must pin
+that boundary as a constant and assert it in a test, so widening the exemption is
+a visible edit rather than a side effect. **These four are required on *every*
+file, including a mid-round `HOLD`** — a lap reporting a measurement must say
+which pair produced it; the §5 fields say only who agreed.
+
 **The two version fields are load-bearing, not bookkeeping.** A round that
 approves a pin approves it *for a named consumer version*. Two artifacts from the
 same ripper under different app versions are not interchangeable evidence, and a
@@ -200,6 +207,8 @@ Both projects should have a test per row; cyanrip's are in
 | verdict declared twice | refuse as ambiguous |
 | verdict indented / inside prose | refuse; the declaration did not match |
 | a complete close **illustrated inside a ``` block** | refuse, and do not adopt any of the illustrated values |
+| a round ≥ 8 file missing any of `FROM` / `APP-VERSION` / `RIPPER-VERSION` / `PIN` | refuse, naming the field — including on a mid-round `HOLD` |
+| a round ≤ 7 file missing them | **allow**; the exemption is by pinned number |
 | unrecognised verdict | refuse |
 | declared round ≠ the round it is filed under | refuse |
 | a later lap declaring `HOLD` after an earlier `GO` | refuse — a round can reopen |
