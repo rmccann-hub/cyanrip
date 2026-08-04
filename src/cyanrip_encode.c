@@ -85,6 +85,9 @@ typedef struct cyanrip_filt_ctx {
 struct cyanrip_dec_ctx {
     cyanrip_filt_ctx filt;
     cyanrip_filt_ctx peak;
+    /* Running max |sample| in dBFS, measured directly, for the H6 cross-check
+     * against ebur128's own figure. -INFINITY until a frame is seen. */
+    double direct_sample_peak;
 };
 
 void cyanrip_print_codecs(void)
@@ -493,6 +496,8 @@ int cyanrip_create_dec_ctx(cyanrip_ctx *ctx, cyanrip_dec_ctx **s,
     int ret = 0;
 
     cyanrip_dec_ctx *dec_ctx = av_mallocz(sizeof(*dec_ctx));
+    if (dec_ctx)
+        dec_ctx->direct_sample_peak = -INFINITY;
     if (!dec_ctx)
         return AVERROR(ENOMEM);
 
@@ -541,12 +546,66 @@ static int push_frame_to_encs(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
     return 0;
 }
 
+/* Max |sample| over a frame, as a linear ratio of full scale, or -1 if the
+ * frame's format is not one we can read directly.
+ *
+ * Deliberately measured on the *same frames* that go into the ebur128 filter
+ * rather than on the bytes off the disc: a raw-byte measurement would differ
+ * legitimately whenever deemphasis or HDCD decoding is active, and would report
+ * a disagreement that means nothing. Same data, two methods, is the comparison
+ * worth making -- comparing two different inputs is not. */
+static double frame_abs_peak(const AVFrame *frame)
+{
+    if (!frame || frame->nb_samples <= 0)
+        return -1.0;
+
+    const int ch = frame->ch_layout.nb_channels;
+    int64_t peak = 0;
+
+    if (frame->format == AV_SAMPLE_FMT_S16) {
+        const int16_t *p = (const int16_t *)frame->data[0];
+        const int64_t n = (int64_t)frame->nb_samples * ch;
+        for (int64_t i = 0; i < n; i++) {
+            int64_t v = p[i] < 0 ? -(int64_t)p[i] : p[i];
+            if (v > peak)
+                peak = v;
+        }
+        return (double)peak / 32768.0;
+    } else if (frame->format == AV_SAMPLE_FMT_S32) {
+        const int32_t *p = (const int32_t *)frame->data[0];
+        const int64_t n = (int64_t)frame->nb_samples * ch;
+        for (int64_t i = 0; i < n; i++) {
+            int64_t v = p[i] < 0 ? -(int64_t)p[i] : p[i];
+            if (v > peak)
+                peak = v;
+        }
+        return (double)peak / 2147483648.0;
+    }
+
+    /* Anything else: say we could not measure rather than guess a layout. */
+    return -1.0;
+}
+
+static void note_direct_peak(double *dst, const AVFrame *frame)
+{
+    const double lin = frame_abs_peak(frame);
+    if (lin <= 0.0)
+        return;
+    const double db = 20.0 * log10(lin);
+    if (db > *dst)
+        *dst = db;
+}
+
 static int filter_frame(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
                         int num_enc, cyanrip_dec_ctx *dec_ctx, AVFrame *frame,
                         int calc_global_peak)
 {
     int ret = 0;
     AVFrame *dec_frame = NULL;
+
+    note_direct_peak(&dec_ctx->direct_sample_peak, frame);
+    if (frame && calc_global_peak && ctx->peak_ctx)
+        note_direct_peak(&ctx->peak_ctx->direct_sample_peak, frame);
 
     ret = av_buffersrc_add_frame_flags(dec_ctx->peak.buffersrc_ctx, frame,
                                        AV_BUFFERSRC_FLAG_NO_CHECK_FORMAT |
@@ -697,6 +756,7 @@ int cyanrip_finalize_encoding(cyanrip_ctx *ctx, cyanrip_track *t)
     av_opt_get_double(filt_ctx, "lra_high", AV_OPT_SEARCH_CHILDREN, &t->ebu_lra_high);
     av_opt_get_double(filt_ctx, "sample_peak", AV_OPT_SEARCH_CHILDREN, &t->ebu_sample_peak);
     av_opt_get_double(filt_ctx, "true_peak", AV_OPT_SEARCH_CHILDREN, &t->ebu_true_peak);
+    t->direct_sample_peak = t->dec_ctx->direct_sample_peak;
 
     cyanrip_free_filt_ctx(ctx, &t->dec_ctx->peak, 1);
     if (ctx->settings.decode_hdcd)
@@ -713,6 +773,8 @@ int cyanrip_initialize_ebur128(cyanrip_ctx *ctx)
     int ret = 0;
 
     cyanrip_dec_ctx *dec_ctx = av_mallocz(sizeof(*dec_ctx));
+    if (dec_ctx)
+        dec_ctx->direct_sample_peak = -INFINITY;
     if (!dec_ctx)
         return AVERROR(ENOMEM);
     ctx->peak_ctx = dec_ctx;
@@ -753,6 +815,7 @@ int cyanrip_finalize_ebur128(cyanrip_ctx *ctx, int log)
     av_opt_get_double(filt_ctx, "lra_high", AV_OPT_SEARCH_CHILDREN, &ctx->ebu_lra_high);
     av_opt_get_double(filt_ctx, "sample_peak", AV_OPT_SEARCH_CHILDREN, &ctx->ebu_sample_peak);
     av_opt_get_double(filt_ctx, "true_peak", AV_OPT_SEARCH_CHILDREN, &ctx->ebu_true_peak);
+    ctx->direct_sample_peak = ctx->peak_ctx->direct_sample_peak;
 
     cyanrip_log(ctx, 0, "Album Loudness ");
 

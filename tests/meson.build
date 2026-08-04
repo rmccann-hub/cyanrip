@@ -32,6 +32,16 @@ subq_test = executable('subq_test',
 )
 test('Q sub-channel decoding', subq_test)
 
+## The sample-peak cross-check decision. Header-only, so no objects: the point
+## is that the firing path is unreachable from any disc image, and the logic
+## therefore has to be exercised on its own.
+peak_test = executable('peak_test',
+    sources: [ 'peak.c' ],
+    include_directories: [ '../src' ],
+    dependencies: unit_test_deps,
+)
+test('Peak cross-check', peak_test)
+
 ## Links the watchdog object and supplies its own cyanrip_log(), so the
 ## assertions are against the formatted message rather than scraped stdout.
 ## Deliberately calls nothing while a read is outstanding: that is the property

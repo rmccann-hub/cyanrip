@@ -233,6 +233,12 @@ typedef struct cyanrip_track {
     double ebu_lra_high;
     double ebu_sample_peak;
     double ebu_true_peak;
+    /* The same sample peak measured a second way -- max |sample| over the
+     * frames handed to the ebur128 filter, in dBFS. Reported only when the two
+     * disagree (H6, Platterpus round 7): agreement is the expected case and a
+     * second always-present number invites a consumer to pick one, which will
+     * occasionally be the wrong one silently. -INFINITY until measured. */
+    double direct_sample_peak;
 
     struct cyanrip_track *pt;
     struct cyanrip_track *nt;
@@ -298,6 +304,12 @@ typedef struct cyanrip_ctx {
     double ebu_lra_high;
     double ebu_sample_peak;
     double ebu_true_peak;
+    /* The same sample peak measured a second way -- max |sample| over the
+     * frames handed to the ebur128 filter, in dBFS. Reported only when the two
+     * disagree (H6, Platterpus round 7): agreement is the expected case and a
+     * second always-present number invites a consumer to pick one, which will
+     * occasionally be the wrong one silently. -INFINITY until measured. */
+    double direct_sample_peak;
 } cyanrip_ctx;
 
 typedef struct cyanrip_out_fmt {

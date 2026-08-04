@@ -114,6 +114,35 @@ static void print_cache_model(cyanrip_ctx *ctx)
  * longest name. Shared by the disc summary and the per-track block so the two
  * cannot drift apart in wording or padding. Returns how many were printed, so
  * a caller can tell "all zero" from "printed nothing". */
+/* The sample peak, cross-checked against a second measurement of the same
+ * frames -- ebur128's figure against a direct max |sample| scan (H6,
+ * Platterpus round 7).
+ *
+ * Printed ONLY when they disagree, at their request and for their reason: two
+ * always-present numbers for one fact invite a consumer to pick one, and
+ * whichever it picks will occasionally be the wrong one silently. Agreement is
+ * the expected case and is not information; a disagreement is a finding.
+ *
+ * The line names which value came from which method, because a bare "they
+ * disagree" is not actionable -- also their condition, and it is right.
+ *
+ * The decision itself is crip_peaks_disagree() in utils.h, kept pure so
+ * tests/peak.c can exercise it: the firing path is unreachable from a disc
+ * image, because two correct measurements of the same frames agree, so the
+ * logic has to be testable on its own or the feature has never run. */
+static void print_peak_disagreement(cyanrip_ctx *ctx, const char *indent,
+                                    double ebu_db, double direct_db)
+{
+    double delta;
+    if (!crip_peaks_disagree(ebu_db, direct_db, &delta))
+        return;
+
+    cyanrip_log(ctx, 0,
+                "%sSample peak disagreement: ebur128 %.2f dBFS, "
+                "direct scan %.2f dBFS (%.2f dB apart)\n",
+                indent, ebu_db, direct_db, delta);
+}
+
 static int print_paranoia_counts(cyanrip_ctx *ctx, const uint64_t *counts,
                                  const char *indent)
 {
@@ -277,6 +306,8 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                     100.0 * pow(10.0, t->ebu_sample_peak / 20.0),
                     t->ebu_sample_peak);
         cyanrip_log(ctx, 0, "    True peak level:   %.1f dBFS\n", t->ebu_true_peak);
+        print_peak_disagreement(ctx, "    ", t->ebu_sample_peak,
+                                t->direct_sample_peak);
         /* EBU R128 loudness, ours rather than libavfilter's. The values were
          * already computed and held per track and then discarded -- the same
          * dead-field shape as the sample and true peaks above. Until now the

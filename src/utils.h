@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <math.h>
+
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -72,6 +74,35 @@ static inline void cyanrip_frames_to_duration(uint32_t frames, char *str)
     const uint32_t sec    = (frames / 75) % 60;
     const uint32_t remain = frames % 75;
     snprintf(str, 13, "%02i:%02i.%02i", min, sec, remain);
+}
+
+/* Do two measurements of the same sample peak disagree enough to be worth
+ * reporting? (H6, Platterpus round 7.)
+ *
+ * Pure and in a header so tests/peak.c can exercise it without linking the log
+ * writer. The path that *fires* it cannot be reached from a disc image -- two
+ * correct measurements of the same frames agree -- so the decision has to be
+ * testable on its own or the feature is decoration that has never run.
+ *
+ * The threshold is not zero: both figures are doubles derived through a log and
+ * ebur128 accumulates in float, so exact equality is not expected even when
+ * nothing is wrong. 0.1 dB sits below the precision the peak lines are printed
+ * at, so anything this catches is already visible in them.
+ *
+ * A non-finite input means "not measured" and is never a disagreement --
+ * absence of a measurement is not evidence of one. */
+#define CRIP_PEAK_DISAGREE_DB 0.1
+
+static inline int crip_peaks_disagree(double a_db, double b_db, double *delta)
+{
+    if (delta)
+        *delta = 0.0;
+    if (!isfinite(a_db) || !isfinite(b_db))
+        return 0;
+    const double d = fabs(a_db - b_db);
+    if (delta)
+        *delta = d;
+    return d >= CRIP_PEAK_DISAGREE_DB;
 }
 
 static inline int cmp_numbers(const void *a, const void *b)
