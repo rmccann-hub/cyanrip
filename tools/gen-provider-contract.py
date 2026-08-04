@@ -136,7 +136,50 @@ SNPRINTF_INTO = (
 INTTYPES = {
     "PRId64": "lld", "PRIu64": "llu", "PRIx64": "llx",
     "PRId32": "d",   "PRIu32": "u",   "PRIx32": "x",
+    "PRId16": "hd",  "PRIu16": "hu",  "PRIx16": "hx",
+    "PRId8":  "hhd", "PRIu8":  "hhu", "PRIx8":  "hhx",
 }
+
+INTTYPE_RUN = re.compile(
+    r'\s*(PRI[diux](?:8|16|32|64))\s*'
+    r'((?:"(?:[^"\\]|\\.)*"\s*)+)')
+
+
+def splice_inttypes(text, end, base):
+    """Continue a joined literal through <inttypes.h> length macros.
+
+    "Read stalls: ... exceeded %" PRId64 "s\\n" is three tokens with the macro
+    between them, so joining only the string literals stops at the '%' and
+    publishes a format truncated mid-conversion. That is not hypothetical: two
+    stable contract lines shipped ending in a bare '%', and P2 is the set of
+    lines we undertake not to reword -- a truncated one cannot be checked
+    against anything. Loops, because a format may carry several."""
+    out = base
+    pos = end
+    while True:
+        m = INTTYPE_RUN.match(text, pos)
+        if not m:
+            break
+        conv = INTTYPES.get(m.group(1), "?")
+        # The '%' lives at the end of the preceding literal by convention;
+        # only supply one when it does not.
+        out += conv if out.endswith("%") else "%" + conv
+        out += joined(m.group(2))
+        pos = m.end()
+    return out
+
+
+def reaches_cell(to_log):
+    """How a call site's target maps to "does this reach the logfile?".
+
+    It used to be a straight yes/no on `ctx != NULL`, and that stopped being
+    true when pre-log output began being replayed: a cyanrip_log(NULL, ...)
+    made before cyanrip_log_init() is buffered and written into the logfile
+    when it opens, while the same call made after it is not. Which of those a
+    given site is depends on when it runs, which is not a property of the call
+    site -- so this reports the evidence and leaves the timing open rather than
+    picking one and being wrong for half the rows."""
+    return "yes" if to_log else "**not directly** - see legend"
 
 
 def func_start(text, pos):
@@ -169,15 +212,11 @@ def composed(text):
         for sm in pat.finditer(text):
             if sm.start() > m.start() or sm.start() < lo:
                 continue
-            lit = sm.group("lit")
-            # Splice in any inttypes macro sitting between adjacent literals.
-            tail = text[sm.end():sm.end() + 40]
-            piece = joined(lit)
-            mac = re.match(r"\s*(PRI[diux]\d+)\s*(\"(?:[^\"\\\\]|\\\\.)*\")", tail)
-            if mac:
-                piece += "%" + INTTYPES.get(mac.group(1), "?") + joined(mac.group(2))
-                piece = piece.replace("%%" + INTTYPES.get(mac.group(1), "?"),
-                                      "%" + INTTYPES.get(mac.group(1), "?"))
+            # Splice in any inttypes macros sitting between adjacent
+            # literals -- the same handling as the call-site scanners, so the
+            # two cannot drift apart in what they can read.
+            piece = splice_inttypes(text, sm.end("lit"),
+                                    joined(sm.group("lit")))
             piece = piece.replace("\\n", "").replace("\\t", " ")
             if piece:
                 parts.append(piece)
@@ -235,7 +274,7 @@ def collect():
         text = open(path, encoding="utf-8").read()
 
         for m in LOGCALL.finditer(text):
-            raw = joined(m.group("lit"))
+            raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
             line = text[:m.start()].count("\n") + 1
             to_log = m.group("target") != "NULL"
             s = raw.replace("\\n", "").replace("\\t", " ").strip()
@@ -251,7 +290,7 @@ def collect():
                 fatal.append((name, line, s, to_log, ev))
 
         for m in STDERRCALL.finditer(text):
-            raw = joined(m.group("lit"))
+            raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
             line = text[:m.start()].count("\n") + 1
             s = raw.replace("\\n", "").strip()
             if not s:
@@ -450,7 +489,7 @@ def emit(binary):
     main_c = open(os.path.join(SRC, "cyanrip_main.c"), encoding="utf-8").read()
     for emit_line, to_log, parts, ok in composed(main_c):
         w(f"**`cyanrip_main.c:{emit_line}`** - reaches logfile: "
-          f"{'yes' if to_log else '**no, stdout only**'}")
+          f"{reaches_cell(to_log)}")
         w("")
         if not ok:
             w("Not derivable: the buffer is not built by `snprintf` in this function.")
@@ -478,7 +517,13 @@ def emit(binary):
     w("")
     w("- **Unstable wording** - the text may be reworded without a handshake round.")
     w("  Do not depend on the exact string.")
-    w("- **stdout only** - the line never reaches a logfile, whatever its wording.")
+    w("- **not directly** - the call passes no context, so it never writes to a")
+    w("  logfile itself. It is still buffered: anything said *before* the logfile is")
+    w("  opened is replayed into it, delimited by")
+    w("  `--- output before this log was opened ---` and `--- end of pre-log output ---`,")
+    w("  after the header block. Anything said *after* it is opened reaches stdout")
+    w("  only. Which of the two a given row is depends on when it runs, and that is")
+    w("  not derivable from the call site - **it needs a run to settle**.")
     w("")
     w("**Appearing here does not mean a line is harmless.** A line can be")
     w("stdout-only *and* a failure diagnostic; those rows are also in P5, and P5 is")
@@ -493,7 +538,7 @@ def emit(binary):
             continue
         seen.add(s)
         disp = (s.replace("|", "\\|") or "(empty / formatting only)")
-        w(f"| `{name}:{line}` | `{disp}` | {'yes' if to_log else '**no, stdout only**'} |")
+        w(f"| `{name}:{line}` | `{disp}` | {reaches_cell(to_log)} |")
     w("")
     w("Also unstable, and **not ours**: the loudness block FFmpeg's `ebur128` filter")
     w("prints (" + ", ".join(f"`{x}`" for x in FFMPEG_OWNED[:4]) + ", ...). That wording")
@@ -516,8 +561,13 @@ def emit(binary):
     w("print before returning, and every other `return 1` in `main()` is preceded by a")
     w("`cyanrip_log()` call.")
     w("")
-    w("Argument validation runs **before the logfile is opened**, so that whole class of")
-    w("diagnosis is **stdout only**. A consumer that reads only the logfile cannot see it.")
+    w("Argument validation runs **before the logfile is opened**. Those diagnostics are")
+    w("buffered and replayed into the logfile if one is later opened, so a consumer")
+    w("reading the log does see them. **But a run that refuses during argument")
+    w("validation opens no logfile at all**, and for that class the only artifact is")
+    w("the `-j` diagnostics record, which is written for those runs and is off unless")
+    w("asked for. Without `-j`, a refused run leaves its reason on stdout and nowhere")
+    w("else.")
     w("")
 
     w("## P5 - Fatal and error message inventory")
@@ -559,7 +609,7 @@ def emit(binary):
             continue
         seen[s] = ev
         disp = s.replace("|", "\\|")
-        w(f"| `{name}:{line}` | `{disp}` | {ev} | {'yes' if to_log else '**no, stdout only**'} |")
+        w(f"| `{name}:{line}` | `{disp}` | {ev} | {reaches_cell(to_log)} |")
     w("")
     tally = {}
     for ev in seen.values():
