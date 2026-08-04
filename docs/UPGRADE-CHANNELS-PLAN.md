@@ -66,6 +66,7 @@ RELEASE-CHANNEL: stable | beta | dev
 |---|---|
 | `stable` | a released build from a **closed** handshake round. The only channel a user reaches without opting in. |
 | `beta` | published deliberately, claims **no** joint verification. Requires opt-in. |
+| `alpha` | published, earlier than a beta, expected to break. Opt-in with a stronger warning. |
 | `dev` | a branch tip or working build. Never offered by an updater at all. |
 
 **Closed set.** An unrecognised channel is treated as `dev` — the most
@@ -172,11 +173,12 @@ Proposed position: **cyanrip reports the dependency versions it was built and ra
 against. Whether a newer one exists, and whether to install it, is entirely
 Platterpus's.** That is the ownership split applied unchanged.
 
-## 6a. Considered: a branch per release, pruning old alphas and betas
+## 6a. Release markers: a branch per release, nothing pruned
 
-**Proposed by the maintainer. Half of it is right and half of it would break the
-provenance guarantee shipped in this same round, so it is written up rather than
-adopted or dismissed.**
+**Proposed by the maintainer, revised across two passes.** The first version
+pruned old alphas and betas, which would have broken the provenance guarantee
+shipped in this same round; the second kept them, which is what makes the rest
+of it work.
 
 ### The pruning half: no, and this is measured
 
@@ -202,46 +204,89 @@ nearly true is a wrong claim. A SHA that used to resolve is exactly that.
 and topic branches stay prunable — nothing points at them — which is already the
 rule.
 
-### The branch-per-release half: not yet, and for a reason that could change
+### The branch half: yes — as immutable *markers*, not development lines
 
-Today every release is a commit on one fast-forward line, so:
+**Revised after the maintainer kept the branches and dropped the pruning.**
+Pruning was the destructive part; the branches are not, and one fact makes them
+the right answer rather than a tolerable one:
 
 ```
-a50bd1a (r2)   ancestor of tip: yes
-5bc654d (r4)   ancestor of tip: yes
-f750890        ancestor of tip: yes
-9003e6f (beta) ancestor of tip: yes
+tag push     HTTP 403, re-probed every round
+branch push  works -- this repository has pushed one ~15 times today
 ```
 
-**That property is load-bearing for Platterpus**, who said so directly:
-*"fast-forward-only into `platterpus-fork` with no rewinds is exactly what a
-downstream pinner wants — I can `git merge-base --is-ancestor` any old pin and
-know where I stand."* They have already used it in anger, to prove a rig build
-contained a specific fix. Release branches break it: a pin on `release/r4` need
-not be an ancestor of `release/r5`, and *"is this fix in that build?"* stops
-being one command.
+**A branch is the only named ref this environment can publish.** Every previous
+lap has said "there is no tag, use the SHA" — correct, and incomplete. There is
+no tag *and* there is a mechanism that does work, which nobody had put to this
+use.
 
-A release branch also does not solve the problem it looks like it solves. The
-gap is that **we cannot push tags** — and a branch is a *moving* ref, which is
-precisely what both projects agreed not to pin. Swapping an immutable identifier
-for a mutable one is the wrong direction.
+The distinction that makes it safe is **marker, not line**:
 
-**The real use case for release branches is backporting**: r4 in production, r5
-in development, and a fix needed on r4 without shipping r5. We do not have that
-— one consumer, one rig, and nobody running an older fork release deliberately.
-**If that changes, this becomes right rather than premature**, and the trigger is
-worth naming: the first time someone needs a fix on a release that is not the
-newest.
+| | |
+|---|---|
+| `platterpus-fork` | the single integration branch. All development. Fast-forward only. |
+| `release/*` | a **pointer into that line** at a released commit. Never committed to, never moved, never deleted. |
 
-### What gets the benefit without the cost
+Because a marker points at a commit that is already on the fast-forward line,
+**every property we rely on survives**:
 
-The manifest in §4 already is the tag substitute: release → version → **immutable
-commit**, generated, checkable offline. It gives the naming and the "which commit
-is r5" answer without a moving ref and without anything to prune.
+```
+a50bd1a (r2)    ancestor of tip: yes
+5bc654d (r4)    ancestor of tip: yes
+9003e6f (beta)  ancestor of tip: yes
+```
 
-If human-readable pointers are still wanted, they can be **read-only refs created
-after the fact** — never developed on, never deleted — but that is convenience on
-top of the manifest, not a replacement for it.
+Platterpus's `git merge-base --is-ancestor <any old pin> <any build>` still
+answers *"is this fix in that build?"* in one command — the property they said
+they rely on and have already used to prove a rig build contained a specific
+fix. And there is nothing to prune, because nothing lives only on a marker.
+
+Proposed names, matching the channel vocabulary in §3:
+
+```
+release/stable/0.9.4-rc1+platterpus.4
+release/beta/0.9.4-rc1+platterpus.5-beta.1
+release/alpha/...            (if we ever cut one)
+```
+
+### The one thing markers need that tags give for free
+
+**A branch can move; a tag cannot.** Our immutability is by convention, and a
+convention with nothing enforcing it is what this project keeps writing rules
+against.
+
+So the manifest (§4) records release → **commit**, and a check asserts **every
+`release/*` ref still points where the manifest says**. A moved or recreated
+marker is then a detectable error rather than a silent one. That check is cheap,
+it is the same shape as `gen-provider-contract.py --check`, and it is what makes
+"immutable marker" a fact instead of an intention.
+
+### Ordering still does not come from the names
+
+**Platterpus should not order these by parsing the branch names.** That is the
+same defect as parsing the version string, one level over: `beta.1` sorts against
+`b1` no better as a ref than as a version, and an `alpha` of a *newer* release
+must not be offered as older than a `beta` of an older one.
+
+The markers are for humans and for `git checkout`. **`RELEASE-SEQ` in the
+manifest is what orders them**, and "newest stable / newest beta / newest alpha"
+is three lookups in the manifest, each returning a commit a marker also names.
+
+### What Platterpus offers
+
+Three choices, which is the maintainer's ask, and each resolvable offline once
+fetched:
+
+| offer | source | default? |
+|---|---|---|
+| newest **stable** | manifest `channels.stable` | **yes** |
+| newest **beta** | `channels.beta` | opt-in, warned |
+| newest **alpha** | `channels.alpha` | opt-in, warned harder |
+
+`alpha` is added to §3's closed set for this. We have never cut one and may
+never; **an empty channel must be absent from the manifest rather than present
+and empty**, so a UI offering "newest alpha" when none exists is a bug the data
+prevents rather than one the UI has to remember.
 
 ## 7. What this plan deliberately does not decide
 
@@ -258,16 +303,26 @@ Listed so they read as open questions rather than omissions:
 - **Who publishes first.** If Platterpus adopts `RELEASE-CHANNEL` before cyanrip
   emits a manifest, nothing breaks — unknown fields are ignored — but the order
   should be deliberate rather than accidental.
-- **When branch-per-release stops being premature** (§6a). The trigger is a fix
-  needed on a release that is not the newest; until then it costs the
-  ancestor-check property and buys nothing the manifest does not.
+- **Whether `release/*` markers should ever become real branches** (§6a). As
+  markers they cost nothing. They would become development lines only if a fix
+  were needed on a release that is not the newest — and at that point the
+  ancestor-check property Platterpus relies on breaks, so it is a decision to
+  take deliberately rather than to drift into.
 
 ## 8. Cost, honestly
 
 Small on our side and mostly generation: a manifest generator, an assertion that
-`stable` never points at a beta, a test, and two declared fields. Larger on
-Platterpus's, because the UI, the opt-in state and the downgrade path are all
-theirs.
+`stable` never points at a beta, a check that every `release/*` marker still
+points where the manifest says, a test, and two declared fields. Creating the
+markers themselves is one `git branch` and one push per release.
+
+Larger on Platterpus's, because the UI, the opt-in state, the three-way choice
+and the downgrade path are all theirs.
+
+**The markers are also the cheapest thing here and the most useful immediately** —
+they can be created for the releases that already exist (`a50bd1a`, `5bc654d`,
+`9003e6f`) before any of the rest is built, and they would give a human a way to
+find a release without reading a handshake file.
 
 **None of it is needed for the round-7 rig session**, and none of it should
 be built before that session runs — a design agreed while the evidence it might

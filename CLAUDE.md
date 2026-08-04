@@ -490,6 +490,12 @@ a housekeeping one. The rules, in force from r3:
   developed. They merge into `platterpus-fork` **fast-forward only** — no merge
   commits, so `platterpus-fork`'s history stays a straight line a consumer can
   bisect. Delete the topic branch after it lands.
+- **Branches are publishable here; tags are not.** Tag pushes are refused with
+  `HTTP 403`, branch pushes work. So a `release/*` **marker** — a branch pointing
+  at a released commit already on the fast-forward line, never committed to and
+  never moved — is the only named ref this environment can publish. It keeps the
+  ancestor property a marker-into-the-line preserves and a separate development
+  line would destroy. Planned, not built: `docs/UPGRADE-CHANNELS-PLAN.md` §6a.
 - **Never prune a ref that a released or beta artifact can reference.** A commit
   reachable only from a deleted branch is *destroyed* by routine `git gc`, not
   hidden — measured, not assumed. Every rip writes its build SHA into the
