@@ -1,6 +1,6 @@
-cyanrip 0.9.4-rc1+platterpus.4 (platterpus-fork-g5bc654d)
+cyanrip 0.9.4-rc1+platterpus.4 (platterpus-fork-gb51a4fd-dirty)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -D o -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.3
-Handshake:      round 7 lap 4 OPEN, verdict HOLD -- NOT a released build
+Handshake:      round 7 lap 6 OPEN, verdict HOLD -- NOT a released build
 Consumer:       platterpus/0.6.3
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -66,8 +66,8 @@ Summary:
     True peak level:   0.0 dBFS
     Integrated loudness (R128): -7.7 LUFS
     Loudness range (R128):      20.0 LU (-27.7 to -7.7 LUFS)
-    Extraction speed:  51.6x
-    Elapsed:            0.06 s
+    Extraction speed:  45.9x
+    Elapsed:            0.07 s
     Pregap LSN:  0 (duration: 00:04.00)
     Pregap length: 300 frames
     Pregap source: TOC
@@ -90,7 +90,7 @@ Summary:
     comment:                       cyanrip 0.9.4-rc1+platterpus.4
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
-    creation_time:                 2026-08-04T00:58:14
+    creation_time:                 2026-08-04T01:43:49
     REPLAYGAIN_TRACK_GAIN:         -10.29 dB
     R128_TRACK_GAIN:               -1355
     REPLAYGAIN_TRACK_RANGE:        20.00 dB
@@ -138,7 +138,7 @@ Summary:
     True peak level:   0.3 dBFS
     Integrated loudness (R128): -6.8 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  53.6x
+    Extraction speed:  50.6x
     Elapsed:            0.04 s
     Pregap LSN:  300 (duration: 00:01.00)
     Pregap length: 75 frames
@@ -162,7 +162,7 @@ Summary:
     comment:                       cyanrip 0.9.4-rc1+platterpus.4
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
-    creation_time:                 2026-08-04T00:58:14
+    creation_time:                 2026-08-04T01:43:49
     REPLAYGAIN_TRACK_GAIN:         -11.19 dB
     R128_TRACK_GAIN:               -1584
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -210,7 +210,7 @@ Summary:
     True peak level:   -11.3 dBFS
     Integrated loudness (R128): -22.6 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  44.7x
+    Extraction speed:  40.7x
     Elapsed:            0.02 s
     Pregap LSN:  unknown (sub-channel unreadable)
     Start LSN:   525
@@ -232,7 +232,7 @@ Summary:
     comment:                       cyanrip 0.9.4-rc1+platterpus.4
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
-    creation_time:                 2026-08-04T00:58:14
+    creation_time:                 2026-08-04T01:43:49
     REPLAYGAIN_TRACK_GAIN:         4.63 dB
     R128_TRACK_GAIN:               2465
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -268,5 +268,5 @@ Paranoia status counts:
 
 Ripping errors: 0
 Rip completed:  yes (3 of 3 tracks)
-Ripping finished at 2026-08-04T00:58:14
-Log FUN512: E.loNr_nws5MMdpN4hqKhLzId22BZXJ60CbcM7S3V9.IVa9R1PjZnp.fU1pm8wr5oNcaXTiuRY1J5d1myXUfHg
+Ripping finished at 2026-08-04T01:43:49
+Log FUN512: ujZEKiR3R6P5SkiDMGduSqKxwcCNKLfw3Ijo8rdcBmXccBQRrU58T7lpw.3W9wUsttWne15T58dT9dchoJNYng
