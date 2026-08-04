@@ -173,6 +173,58 @@ def sc_pregap():
     rip("drop", "pregap.cue", "-p", "2=drop")
     expect("drop", "1.flac:2", "2.flac:2", "3.flac:1", "log.log", "sheet.cue")
 
+    # One log must not disagree with itself about the same gap.
+    #
+    # Four places state track N's pregap length, and they were not all saying
+    # the same thing: the per-track block added the 2-second lead-in to track 1
+    # unconditionally, so on a disc whose TOC already signals an HTOA the same
+    # 150 sectors were counted twice -- `300 frames` and `00:04.00` against a
+    # `Gaps:` block, an LSN subtraction and a cue sheet that all said 150.
+    #
+    # Track 2 is the control: its four agreed all along, which is what made
+    # track 1 a finding rather than a doubt about the arithmetic. Both are
+    # checked, so a "fix" that made every source equally wrong would fail here.
+    log = (WORK / "out_def" / "log.log").read_text()
+    gaps = dict((int(n), int(f)) for f, n in
+                re.findall(r"^ +(\d+) frame pregap in track (\d+),", log, re.M))
+    # Track 1's Gaps: row is absent when its gap is the bare lead-in, so the
+    # expectation comes from the fixture's own INDEX 00/01 pair: 2 s and 1 s.
+    for num, want in ((1, 150), (2, 75)):
+        blk = re.search(rf"^Track {num} ripped.*?(?=^Track |\Z)", log,
+                        re.M | re.S)
+        if not blk:
+            fail(f"pregap: no track {num} block")
+            continue
+        b = blk.group(0)
+        m_len = re.search(r"^ +Pregap length: (\d+) frames", b, re.M)
+        m_lsn = re.search(r"^ +Pregap LSN:  (\d+) \(duration: (\S+)\)", b, re.M)
+        m_start = re.search(r"^ +Start LSN:   (\d+)", b, re.M)
+        if not (m_len and m_lsn and m_start):
+            fail(f"pregap: track {num} is missing a pregap/LSN row")
+            continue
+
+        if int(m_len.group(1)) != want:
+            fail(f"pregap: track {num} 'Pregap length' is "
+                 f"{m_len.group(1)}, not {want}")
+
+        # The duration must be the same quantity in MM:SS.FF, not a second
+        # opinion -- both are printed from one variable and must stay that way.
+        mm, ss_ff = m_lsn.group(2).split(":")
+        ss, ff = ss_ff.split(".")
+        as_frames = (int(mm) * 60 + int(ss)) * 75 + int(ff)
+        if as_frames != want:
+            fail(f"pregap: track {num} duration {m_lsn.group(2)} is "
+                 f"{as_frames} frames, not {want}")
+
+        # And the LSN arithmetic, which is the independent artifact: it comes
+        # from the TOC rather than from the line above it.
+        span = int(m_start.group(1)) - int(m_lsn.group(1))
+        if num in gaps and gaps[num] != want:
+            fail(f"pregap: track {num} Gaps: row says {gaps[num]}, not {want}")
+        if span and span != want:
+            fail(f"pregap: track {num} Start LSN - Pregap LSN = {span}, "
+                 f"but the block says {want}")
+
 
 def sc_mixed():
     # Data track must be skipped, and produce no stray file

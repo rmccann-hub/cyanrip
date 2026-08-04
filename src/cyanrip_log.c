@@ -165,27 +165,12 @@ static void print_peak_disagreement(cyanrip_ctx *ctx, const char *indent,
 static void print_stall_summary(cyanrip_ctx *ctx)
 {
     crip_stall_stats_t s;
+    char line[160];
+
     crip_stall_stats(&s);
+    crip_stall_summary_line(line, sizeof(line), &s);
 
-    if (!s.threshold_us) {
-        cyanrip_log(ctx, 0, "Read stalls:    unknown (stall reporting disabled "
-                            "with -k 0)\n");
-        return;
-    }
-
-    const int64_t thresh_s = s.threshold_us / 1000000LL;
-
-    if (!s.count) {
-        cyanrip_log(ctx, 0, "Read stalls:    none (no read exceeded %" PRId64 "s)\n",
-                    thresh_s);
-        return;
-    }
-
-    cyanrip_log(ctx, 0, "Read stalls:    %i read%s exceeded %" PRId64 "s; "
-                        "longest %" PRId64 "s (track %i, LSN %i)\n",
-                s.count, s.count == 1 ? "" : "s", thresh_s,
-                s.longest_us / 1000000LL, s.longest_track,
-                (int)s.longest_lsn);
+    cyanrip_log(ctx, 0, "Read stalls:    %s\n", line);
 }
 
 static int print_paranoia_counts(cyanrip_ctx *ctx, const uint64_t *counts,
@@ -230,12 +215,31 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     if (t->pregap_lsn != CDIO_INVALID_LSN) {
         char pregap_duration[16];
-        /* 2-second lead-in is conventionally counted as part of track 1 pre-gap duration.
-         * It physically occupies LSN -150..-1, so it cannot be expressed by the pregap
-         * LSN itself, which is 0 for track 1 -- only the length below carries it. */
+        /* 2-second lead-in is conventionally counted as part of track 1 pre-gap
+         * duration. It physically occupies LSN -150..-1, so it cannot be
+         * expressed by the pregap LSN itself, which is 0 for track 1 -- only the
+         * length below carries it.
+         *
+         * Added ONLY when the TOC has not already expressed the gap. On a disc
+         * with no HTOA the arithmetic yields 0 and the 150 is the whole story,
+         * which is the case this was written for and the case the rig ran. But
+         * when track 1 signals its own pregap -- INDEX 00 before INDEX 01, an
+         * HTOA -- the subtraction already *is* those 150 frames, and adding the
+         * lead-in counted the same sectors twice: the pregap.cue fixture
+         * reported `300 frames` and `00:04.00` for a gap its own Gaps: block,
+         * its LSN arithmetic and the cue sheet all put at 150.
+         *
+         * They are never additive. Track 1's pregap on a real disc *is* the
+         * lead-in, at most 150 sectors, and an HTOA is audio recorded inside it
+         * -- so the two readings describe the same sectors rather than two
+         * stretches to be summed. cyanrip_main.c's Gaps: block already drew this
+         * distinction (it skips track 1 when start_lsn == pregap_lsn, noting the
+         * only real pregap is then the lead-in); this block did not, which is
+         * how one log came to disagree with itself. Found by Platterpus reading
+         * the golden reference, round 7 lap 13 §C. */
         const int lead_in_sectors = 2*75;
         int pregap_frames = t->start_lsn_sig - t->pregap_lsn;
-        if (t->number == 1)
+        if (t->number == 1 && !pregap_frames)
             pregap_frames += lead_in_sectors;
 
         cyanrip_frames_to_duration(pregap_frames, pregap_duration);
