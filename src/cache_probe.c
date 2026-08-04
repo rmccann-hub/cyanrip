@@ -18,6 +18,7 @@
 
 #include "cache_probe.h"
 #include "cyanrip_log.h"
+#include "stall_watchdog.h"
 
 /* After cache_probe.h: <cdio/read.h> uses CdIo_t and driver_return_code_t
  * without declaring them, so cdio/cdio.h must be in scope first. */
@@ -67,10 +68,28 @@
 #define PROBE_MIN_SECTORS 1
 #define PROBE_MAX_SECTORS 2048
 
+/* Every read here brackets itself for the stall watchdog. These are raw MMC
+ * reads on a path that has never run on hardware, so a hang is a live
+ * possibility -- and a hang with no heartbeat is indistinguishable from a
+ * wedged process, which is the whole thing the watchdog exists to prevent.
+ * Track 0 is not a real track number and is deliberate: it says "not ripping a
+ * track" rather than blaming one. */
+#define PROBE_PSEUDO_TRACK 0
+
+static driver_return_code_t probe_read(const CdIo_t *cdio, uint8_t *buf,
+                                       lsn_t lsn, int sectors)
+{
+    crip_stall_read_begin(PROBE_PSEUDO_TRACK, lsn);
+    const driver_return_code_t r =
+        cdio_read_audio_sectors((CdIo_t *)cdio, buf, lsn, sectors);
+    crip_stall_read_end();
+    return r;
+}
+
 static int64_t time_one_read(const CdIo_t *cdio, uint8_t *buf, lsn_t lsn)
 {
     const int64_t t0 = av_gettime_relative();
-    if (cdio_read_audio_sectors((CdIo_t *)cdio, buf, lsn, 1) != DRIVER_OP_SUCCESS)
+    if (probe_read(cdio, buf, lsn, 1) != DRIVER_OP_SUCCESS)
         return -1;
     return av_gettime_relative() - t0;
 }
@@ -117,7 +136,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
      * atypical, and the median of three is enough to be going on with. */
     int64_t uncached[3];
     for (int i = 0; i < 3; i++) {
-        if (cdio_read_audio_sectors((CdIo_t *)ctx->cdio, buf, ctx->end_lsn - 10, 1)
+        if (probe_read(ctx->cdio, buf, ctx->end_lsn - 10, 1)
             != DRIVER_OP_SUCCESS) {
             cyanrip_log(ctx, 0, "Cache probe:    unknown (read failed while calibrating)\n");
             av_free(buf);
@@ -145,7 +164,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
      * last run that still hit is the cache size. */
     int last_hit = 0;
     for (int run = PROBE_MIN_SECTORS; run <= max_run; run *= 2) {
-        if (cdio_read_audio_sectors((CdIo_t *)ctx->cdio, buf, seed, run)
+        if (probe_read(ctx->cdio, buf, seed, run)
             != DRIVER_OP_SUCCESS)
             break;
 

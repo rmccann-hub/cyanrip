@@ -319,6 +319,60 @@ def sc_cdtext():
         fail("cdtext_none: absent CD-TEXT not reported")
 
 
+def sc_exit_codes():
+    # A diagnosed abort must exit non-zero. The exit code used to track
+    # total_error_count, which counts *read* errors -- so a refusal to start or
+    # a rip that failed outright printed its reason and then exited 0, and a
+    # consumer checking the exit code saw success on a run that produced no
+    # audio.
+    #
+    # Our own generated contract flagged `goto end` as the one class it could
+    # not classify from control flow and said it needed a run to settle.
+    #
+    # WHAT THIS DOES NOT COVER, stated so the scenario cannot imply otherwise:
+    # every case below already exited 1 before the fix. Reverting the fix leaves
+    # this scenario passing. The paths the fix actually changes are not
+    # reachable from a disc image --
+    #
+    #   * "Offset is unset!" is gated on the drive reporting
+    #     CDIO_DRIVE_CAP_READ_ISRC, which no image driver does, so it can only
+    #     fire on real hardware.
+    #   * the two cyanrip_rip_track failure paths need a rip that genuinely
+    #     fails, which a synthetic image does not do.
+    #
+    # So the fix is UNVERIFIED by any test here, and that is an H12 item for the
+    # rig session rather than something a fixture can retire. What this scenario
+    # does pin is that the already-correct cases stay correct, and that a
+    # non-zero exit is never silent.
+    cases = [
+        # (argv, expected exit, a string the output must contain)
+        (("-d", str(WORK / "nonexistent.cue"), "-I", "-N", "-A", "-U"), 1, None),
+        (("--no-such-flag",), 1, "Unable to parse command line argument"),
+        (("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+          "-o", "flac", "-D", WORK / "out_ec", "-F", "{track}", "-t", "99"),
+         1, "Invalid track number 99"),
+        (("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-S", "8"),
+         1, "Device does not support changing speeds"),
+    ]
+    for argv, want_ec, want_text in cases:
+        ec, out = crip(*argv)
+        if ec != want_ec:
+            fail(f"exit_codes: {argv[0]} {argv[1] if len(argv) > 1 else ''} "
+                 f"exited {ec}, wanted {want_ec}")
+        # Never a non-zero exit with nothing to explain it: that is the one
+        # failure a user cannot be told anything about.
+        if ec != 0 and not out.strip():
+            fail(f"exit_codes: exit {ec} with no output at all for {argv}")
+        if want_text and want_text not in out:
+            fail(f"exit_codes: expected {want_text!r} in the output for {argv}")
+
+    # And the converse, or the check above is satisfied by a binary that always
+    # fails: a good run exits 0.
+    ec, _ = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0")
+    if ec != 0:
+        fail(f"exit_codes: a valid -I run exited {ec}, wanted 0")
+
+
 def sc_handshake():
     # Every rip must record which pair of builds produced it. A log read months
     # later cannot otherwise tell a mutually-verified release from a mid-round

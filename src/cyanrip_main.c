@@ -1240,6 +1240,11 @@ int main(int argc, char **argv)
 
     memset(settings.pregap_action, CYANRIP_PREGAP_DEFAULT, 198*sizeof(*settings.pregap_action));
 
+    /* Set on any path that diagnoses a problem and stops. Separate from
+     * total_error_count, which counts read errors and says nothing about
+     * whether the program did what it was asked. */
+    int fatal_abort = 0;
+
     int idx;
     char *p_save, *p;
     int mb_release_idx = -1;
@@ -1665,6 +1670,7 @@ int main(int argc, char **argv)
     if (!settings.offset && !offset_set && !settings.print_info_only &&
         !find_drive_offset_range && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
         cyanrip_log(ctx, 0, "Offset is unset! To continue with an offset of 0, run with -s 0!\n");
+        fatal_abort = 1;
         goto end;
     }
 
@@ -1840,16 +1846,24 @@ int main(int argc, char **argv)
 
     /* Read-only, before any track is ripped, so it cannot touch the audio.
      * Off unless asked for: it costs seconds of drive time. */
+    /* Started BEFORE the cache probe, not after.
+     *
+     * The probe issues raw cdio_read_audio_sectors() calls, on hardware, on a
+     * path that has never executed anywhere -- which makes it the single most
+     * likely thing in this program to hang on a real drive. Starting the
+     * watchdog after it meant the one read most able to wedge was the one read
+     * with no liveness reporting at all. The probe brackets its own reads so
+     * the heartbeat has something to report on.
+     *
+     * From here until the "end:" cleanup every other drive read goes through
+     * cyanrip_read_frame(), including the -f offset search, which reads the
+     * disc the same way and can stall the same way. */
+    crip_stall_watchdog_start();
+
     if (ctx->settings.cache_probe) {
         int measured = 0;
         crip_probe_drive_cache(ctx, &measured);
     }
-
-    /* From here until the "end:" cleanup, every drive read goes through
-     * cyanrip_read_frame(), so this is the whole window the stall watchdog
-     * needs to cover -- including the -f offset search, which reads the disc
-     * the same way and can stall the same way. */
-    crip_stall_watchdog_start();
 
     if (!ctx->settings.print_info_only)
         cyanrip_cue_start(ctx);
@@ -2032,8 +2046,10 @@ int main(int argc, char **argv)
                     }
                 }
 
-                if (cyanrip_rip_track(ctx, t))
+                if (cyanrip_rip_track(ctx, t)) {
+                    fatal_abort = 1;
                     break;
+                }
             }
 
             if (quit_now)
@@ -2162,6 +2178,7 @@ int main(int argc, char **argv)
             ret = cyanrip_rip_track(ctx, t);
             if (ret < 0) {
                 cyanrip_log(ctx, 0, "Error ripping: %s\n", av_err2str(ret));
+                fatal_abort = 1;
                 goto end;
             }
 
@@ -2227,7 +2244,16 @@ end:
 
     cyanrip_ctx_end(&ctx);
 
-    return !!err_cnt;
+    /* total_error_count counts *read* errors. An operational abort -- a refusal
+     * to start, a rip that failed outright -- increments nothing, so before
+     * this every diagnosed abort printed its reason and then exited 0. A
+     * consumer checking the exit code saw success on a run that produced no
+     * audio. Our own contract flagged `goto end` as the class that could not be
+     * classified from control flow and needed a run to settle it; this is that
+     * run.
+     *
+     * Still within {0, 1} -- Platterpus's standing requirement 3. */
+    return (err_cnt || fatal_abort) ? 1 : 0;
 }
 
 #ifdef HAVE_WMAIN
