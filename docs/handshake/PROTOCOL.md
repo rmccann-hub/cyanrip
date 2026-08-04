@@ -147,17 +147,64 @@ Write down what they declared. If they said `HOLD`, record `HOLD` — do not
 translate an encouraging paragraph into a `GO`. If their file is ambiguous, that
 is a lap, not a close.
 
-## 6. Optional but recommended
+## 6. Optional fields
 
 ```
 PROVIDER-CONTRACT: PROVIDER-CONTRACT.md @ <sha>
 HANDSHAKE-SOURCE-ANCHOR: sha256/16 = <hex>
+HANDSHAKE-TEST-PIN: <sha>
 ```
 
-A resolvable pointer to the generated interface contract at a specific commit,
-so a consumer's machine-readable check has something to resolve rather than
-parsing prose. **Do not write "unchanged" unless you have compared** — that
-sentence has already been proposed once when the contract had in fact moved.
+`PROVIDER-CONTRACT` is a resolvable pointer to the generated interface contract
+at a specific commit, so a consumer's machine-readable check has something to
+resolve rather than parsing prose. **Do not write "unchanged" unless you have
+compared** — that sentence has already been proposed once when the contract had
+in fact moved.
+
+`HANDSHAKE-SOURCE-ANCHOR` pins that contract by **content** rather than by
+pointer, so it stays checkable if the file is ever moved or renamed.
+
+### 6a. `HANDSHAKE-TEST-PIN` — and the deadlock it exists to break
+
+**A round cannot close without evidence that can only be gathered by installing
+the build the round is reviewing.** Written out, our own rules deadlock:
+
+1. A close requires `HANDSHAKE-TESTED`, naming what ran on which pair.
+2. Hardware evidence can only be gathered on the rig.
+3. The rig installs the pinned build.
+4. Neither project may switch the pin while a round is open.
+5. So the rig runs the *previous* release — the one without any of the changes
+   under review.
+6. So `HANDSHAKE-TESTED` can never describe the build being reviewed.
+7. So the round never closes.
+
+Every step is a rule both projects hold, and together they are unsatisfiable.
+The fault is conflating two different pins:
+
+| | what it is | who installs it | closes a round? |
+|---|---|---|---|
+| **production pin** (`HANDSHAKE-PIN`) | the agreed build | everything | it *is* the agreement |
+| **test pin** (`HANDSHAKE-TEST-PIN`) | a build designated to gather the evidence a close needs | the rig, deliberately, for a session | **never** |
+
+**A test pin is not a release and must never be treated as one.** Declaring it
+does not close a round, does not move `HANDSHAKE-PIN`, and does not permit a
+release. A gate must assert that a file declaring only a test pin still refuses.
+
+Both sides declare the same test pin, in writing, before the session. Logs it
+produces say `NOT a released build`, which is correct and is the point — the
+artifact records that it came from a build under review rather than an agreed
+one. Those logs are what `HANDSHAKE-TESTED` then cites.
+
+**Sequence:** agree the test pin → both install it → run the session → both file
+the results → *then* the round can close on that evidence, moving
+`HANDSHAKE-PIN` to what was tested.
+
+Proposed by cyanrip in round 7 lap 6. Carried as an **optional** field on
+purpose: v2 gates ignore unknown fields, so it costs the other side nothing
+before they implement it. **`HANDSHAKE-PROTOCOL` is deliberately not bumped for
+this** — a bump would make every v2 gate refuse the file that proposes it, which
+is the opposite of what a proposal needs. It becomes v3 only once both sides
+implement it.
 
 ## 7. Rip-time verification
 
@@ -221,6 +268,8 @@ this table rather than asserted alongside it.
 | C14 | no round files at all | refuse; an empty record is not agreement |
 | C15 | `HANDSHAKE-PROTOCOL` higher than implemented | refuse rather than guess |
 | C16 | complete two-sided tested round | **allow** — a gate that can never say yes is a wall, not a gate |
+| C17 | a file declaring `HANDSHAKE-TEST-PIN` and otherwise complete, but verdict `HOLD` | refuse; a test pin is not a release |
+| C18 | `HANDSHAKE-TEST-PIN` present alongside a valid close | **allow**, and the test pin must not be mistaken for `HANDSHAKE-PIN` |
 
 That last row matters as much as the others. Assert it, or a gate that refuses
 everything passes every other test in the table.

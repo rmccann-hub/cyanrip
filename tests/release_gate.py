@@ -461,6 +461,46 @@ def test_every_conformance_row_has_a_test():
           f"tests claim conformance rows that do not exist: {invented}")
 
 
+
+
+def test_a_test_pin_does_not_close_a_round():
+    """Covers: C17
+
+    The whole reason the field exists is to let the rig run a build the round
+    has not agreed to. If declaring one closed the round, it would be a release
+    by another name -- which is the rule it was invented to work around, not to
+    defeat.
+    """
+    body = ("HANDSHAKE-PROTOCOL: 2\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n" + WIRE +
+            "HANDSHAKE-VERDICT: HOLD\n"
+            "HANDSHAKE-TEST-PIN: ccc3333\n"
+            "HANDSHAKE-PEER-VERDICT: GO\n"
+            "HANDSHAKE-PEER-VERSION: platterpus/0.6.4\nHANDSHAKE-PEER-PIN: aaa1111\n"
+            "HANDSHAKE-OUR-VERSION: 0.9.4-rc1+platterpus.5\nHANDSHAKE-OUR-PIN: bbb2222\n"
+            "HANDSHAKE-TESTED: rig session\n\n# round 9\n")
+    ok, _ = gate({"round-9.md": body})
+    check(not ok, "a test pin must not close a round on its own")
+
+
+def test_a_test_pin_is_not_the_production_pin():
+    """Covers: C18
+
+    They are different builds by definition -- the test pin is what the rig
+    runs to produce the evidence, the production pin is what the round agrees
+    to. Reading one as the other would install an unreviewed build everywhere.
+    """
+    body = GO.replace("HANDSHAKE-PIN: bbb2222",
+                      "HANDSHAKE-PIN: bbb2222\nHANDSHAKE-TEST-PIN: ccc3333")
+    ok, probs = gate({"round-9.md": body})
+    check(ok, f"a complete close alongside a test pin should still close: {probs}")
+
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "round-9.md").write_text(body, encoding="utf-8")
+    lap_obj = rg.load_rounds(d)[0]
+    check(lap_obj.pin == "bbb2222", f"production pin misread: {lap_obj.pin!r}")
+    check(lap_obj.test_pin == "ccc3333", f"test pin misread: {lap_obj.test_pin!r}")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()

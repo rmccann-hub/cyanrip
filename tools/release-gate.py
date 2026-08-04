@@ -107,6 +107,12 @@ APP_VERSION_RE = re.compile(r"^HANDSHAKE-APP-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M
 RIPPER_VERSION_RE = re.compile(r"^HANDSHAKE-RIPPER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
 PIN_RE = re.compile(r"^HANDSHAKE-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 
+# A build designated to gather the hardware evidence a close requires. It is
+# NOT a release and must never close a round -- see PROTOCOL.md 6a for the
+# deadlock it breaks. Parsed so the gate can report which build the rig should
+# be running, and asserted never to affect closure.
+TEST_PIN_RE = re.compile(r"^HANDSHAKE-TEST-PIN:[ \t]*(\S+)[ \t]*$", re.M)
+
 PEER_VERDICT_RE = re.compile(r"^HANDSHAKE-PEER-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]*$", re.M)
 PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
 PEER_PIN_RE = re.compile(r"^HANDSHAKE-PEER-PIN:[ \t]*(\S+)[ \t]*$", re.M)
@@ -124,7 +130,8 @@ class Lap:
     def __init__(self, number, lap, path, verdict, declared_number,
                  peer_verdict=None, peer_version=None, peer_pin=None,
                  our_version=None, our_pin=None, tested=None, protocol=None,
-                 sender=None, app_version=None, ripper_version=None, pin=None):
+                 sender=None, app_version=None, ripper_version=None, pin=None,
+                 test_pin=None):
         self.number = number
         self.lap = lap
         self.path = path
@@ -141,6 +148,7 @@ class Lap:
         self.app_version = app_version
         self.ripper_version = ripper_version
         self.pin = pin
+        self.test_pin = test_pin
 
     def missing_wire_header(self):
         """v2 fields every file must declare, from WIRE_HEADER_REQUIRED_FROM on.
@@ -274,6 +282,7 @@ def load_rounds(directory=HANDSHAKE_DIR):
             app_version=one(APP_VERSION_RE),
             ripper_version=one(RIPPER_VERSION_RE),
             pin=one(PIN_RE),
+            test_pin=one(TEST_PIN_RE),
         ))
 
     # A round's state is its latest lap. An unparseable lap number sorts to the
@@ -337,6 +346,9 @@ def main():
         state = "closed" if r.closed else "OPEN"
         lap = f"lap {r.lap}" if r.lap is not None else "lap ?"
         print(f"  round {r.number} ({lap}, {r.path.name}): {state:6}  ({r.why})")
+        if r.test_pin:
+            print(f"      test pin {r.test_pin} -- for the rig to gather "
+                  f"evidence; NOT a release and does not close this round")
     print()
 
     if ok:

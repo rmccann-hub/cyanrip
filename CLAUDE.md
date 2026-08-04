@@ -111,7 +111,14 @@ regardless of who is at the keyboard.
 - **Each round is two files and two verifications.** We send a handshake file
   (sections A–J, spec below); they verify it against their real parser; they send a
   verification file back. A round stays **OPEN** until that arrives. **No release and
-  no pin switch while a round is open.** Send a file every round even when nothing
+  no pin switch while a round is open**, with one carve-out that had to be
+  invented because the rule as written deadlocks: a **test pin**
+  (`HANDSHAKE-TEST-PIN`) may be installed on the rig to gather the hardware
+  evidence a close requires. A close needs `HANDSHAKE-TESTED`; that evidence
+  needs the reviewed build installed; installing it was forbidden; so the round
+  could never close. A test pin is explicitly **not** a release, never moves
+  `HANDSHAKE-PIN`, and a gate must assert it cannot close a round — see
+  `docs/handshake/PROTOCOL.md` §6a. Send a file every round even when nothing
   changed — "no changes" written out is a complete round; silence is not.
 - **Answer from the artifact, not from memory of the artifact.** Name the artifact in
   the claim. "EAC reports N" is unfalsifiable; "EAC's *log* reports N, its *cue*
