@@ -54,6 +54,7 @@
 #include "cyanrip_log.h"
 
 #include <inttypes.h>
+#include <stdio.h>
 #include <pthread.h>
 #include <libavutil/time.h>
 
@@ -220,6 +221,29 @@ void crip_stall_read_end(void)
         cyanrip_log(NULL, 0,
                     "\nTrack %i - the read for LSN %i returned after %" PRId64 "s\n",
                     track, (int)lsn, took / 1000000LL);
+}
+
+void crip_stall_summary_line(char *buf, size_t buf_size,
+                             const crip_stall_stats_t *s)
+{
+    if (!s->threshold_us) {
+        snprintf(buf, buf_size,
+                 "unknown (stall reporting disabled with -k 0)");
+        return;
+    }
+
+    const long long thresh_s = (long long)(s->threshold_us / 1000000LL);
+
+    if (!s->count) {
+        snprintf(buf, buf_size, "none (no read exceeded %llds)", thresh_s);
+        return;
+    }
+
+    snprintf(buf, buf_size,
+             "%i read%s exceeded %llds; longest %llds (track %i, LSN %i)",
+             s->count, s->count == 1 ? "" : "s", thresh_s,
+             (long long)(s->longest_us / 1000000LL), s->longest_track,
+             (int)s->longest_lsn);
 }
 
 void crip_stall_stats(crip_stall_stats_t *s)

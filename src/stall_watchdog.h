@@ -53,3 +53,15 @@ typedef struct {
 } crip_stall_stats_t;
 
 void crip_stall_stats(crip_stall_stats_t *s);
+
+/* Render the disc summary's `Read stalls:` value into buf. Pure: it reads the
+ * stats it is handed and touches nothing else.
+ *
+ * Split out from the log so the *populated* shape can be exercised at all. No
+ * rip on a disc image can produce one -- an image read completes in
+ * microseconds against a threshold measured in seconds -- so left inline, the
+ * only wording a consumer could ever see written down was the `none` case, and
+ * Platterpus had to ask us for the other two rather than read them (round 7
+ * lap 13 D1). tests/stall.c now pins all three. */
+void crip_stall_summary_line(char *buf, size_t buf_size,
+                             const crip_stall_stats_t *s);

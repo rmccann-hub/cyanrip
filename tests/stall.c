@@ -277,8 +277,55 @@ static void test_nothing_printed_after_end(void)
     crip_stall_read_end();
 }
 
+/* The three shapes of the disc summary's `Read stalls:` value, exactly.
+ *
+ * The populated one is unreachable from any rip here -- an image read completes
+ * in microseconds against a threshold in whole seconds -- so before this the
+ * only wording anyone outside could see written down was `none`, and Platterpus
+ * asked us for the other two rather than being able to read them (round 7 lap
+ * 13 D1). Pinning the strings makes them quotable, and makes a reword a test
+ * failure rather than a surprise in an archival log.
+ *
+ * Asserted with strcmp against whole expected strings rather than substrings:
+ * a prefix check would pass while the tail of the line changed. */
+static void test_summary_line_shapes(void)
+{
+    char buf[160];
+    crip_stall_stats_t s;
+
+    /* -k 0: we did not look. Not the same claim as "there were none". */
+    s = (crip_stall_stats_t){ .threshold_us = 0 };
+    crip_stall_summary_line(buf, sizeof(buf), &s);
+    CHECK(!strcmp(buf, "unknown (stall reporting disabled with -k 0)"),
+          "disabled shape is %s", buf);
+
+    /* Watched, saw none. */
+    s = (crip_stall_stats_t){ .threshold_us = 10000000LL, .count = 0 };
+    crip_stall_summary_line(buf, sizeof(buf), &s);
+    CHECK(!strcmp(buf, "none (no read exceeded 10s)"),
+          "clean shape is %s", buf);
+
+    /* Populated, plural. */
+    s = (crip_stall_stats_t){ .threshold_us = 10000000LL, .count = 2,
+                              .longest_us = 187000000LL, .longest_track = 4,
+                              .longest_lsn = 45231 };
+    crip_stall_summary_line(buf, sizeof(buf), &s);
+    CHECK(!strcmp(buf, "2 reads exceeded 10s; longest 187s (track 4, LSN 45231)"),
+          "populated shape is %s", buf);
+
+    /* Populated, singular -- "1 reads" would be the kind of wrong nobody
+     * notices until it is in an archive. */
+    s = (crip_stall_stats_t){ .threshold_us = 30000000LL, .count = 1,
+                              .longest_us = 42000000LL, .longest_track = 1,
+                              .longest_lsn = 0 };
+    crip_stall_summary_line(buf, sizeof(buf), &s);
+    CHECK(!strcmp(buf, "1 read exceeded 30s; longest 42s (track 1, LSN 0)"),
+          "singular shape is %s", buf);
+}
+
 int main(void)
 {
+    test_summary_line_shapes();
     test_stats_count_and_longest();
     test_fires_with_no_callbacks();
     test_silent_when_reads_are_fast();
