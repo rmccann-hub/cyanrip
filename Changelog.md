@@ -1,14 +1,37 @@
-Unreleased
-==========
-**Not in any release, and not in the `…+platterpus.5-beta.1` beta the rig
-session is testing** -- that beta is commit `9003e6f`, and everything below
-landed after it. No version number has been bumped and none should be until
-round 7 closes.
+0.9.4-rc1+platterpus.5-beta.2 (2026-08-04) -- PRE-RELEASE
+=========================================================
+**A beta, not a release, and round 7 is still open.** Both sides declare HOLD,
+`tools/release-gate.py --release-gate` refuses a stable release against this
+record, and every logfile this build writes says `NOT a released build`. It
+exists so the rig can test the work below, which the previous beta does not
+contain.
 
-An error-reporting audit: the question asked throughout was not "is this
-message worded well" but **"can this run leave no explanation on disk?"**
+**Supersedes `…+platterpus.5-beta.1` (`9003e6f`) as the build to install.** That
+beta is what the 2026-08-04 rig session ran; everything here landed after it.
+`N` is unchanged at 5 -- only the beta counter moves, and the stable release of
+this line will be `0.9.4-rc1+platterpus.5`.
+
+**No git tag.** The git proxy refuses tag pushes with `HTTP 403`. **The commit
+SHA is the identifier.**
+
+An error-reporting audit -- the question asked throughout was not "is this
+message worded well" but **"can this run leave no explanation on disk?"** --
+plus one real bug found by Platterpus reading our golden reference.
 
 Fixed
+ - **Track 1's pre-gap length counted the 2-second lead-in twice** on any disc
+   whose TOC signals an HTOA. The per-track block added it unconditionally, so
+   the same 150 sectors were counted twice and one log disagreed with itself:
+   `300 frames` against a `Gaps:` block, an LSN subtraction and a cue sheet that
+   all said 150. They are never additive -- track 1's pre-gap *is* the lead-in,
+   and an HTOA is audio recorded inside it. Found by Platterpus cross-checking
+   four sources in the golden reference; the rig's disc has no HTOA, so a
+   hardware session had already passed over it.
+ - **The diagnostics record kept only the first 10000 messages.** A tool's fatal
+   message is the last thing it prints, so a head-only cap discarded precisely
+   the line explaining a failure while `messages_dropped` still made the record
+   look accounted for. Head plus a ring-buffer tail now. Found by Platterpus
+   reading the design; no rip can reach the cap, so nothing here could have.
  - **Everything said before the logfile existed reached stdout and nowhere
    else.** The drive open, the MusicBrainz lookup, the cover-art and
    AccurateRip lookups and seven refusal paths all report before
