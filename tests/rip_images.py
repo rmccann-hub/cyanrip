@@ -583,7 +583,25 @@ def sc_paranoia():
             fail(f"paranoia: {img} default-level output is mostly silence")
 
 
+def sc_golden_reference_is_from_a_clean_build():
+    # The shipped reference must name a build someone else can reproduce. A
+    # -dirty banner means it was generated from a tree with uncommitted
+    # changes, so its SHA does not describe the binary that wrote it -- which
+    # is exactly what A9's marker was added to expose, and it caught a
+    # reference committed that way rather than a hypothetical one.
+    ref = ROOT / "docs" / "golden-reference.log"
+    if not ref.exists():
+        fail("golden reference is missing")
+        return
+    first = ref.read_text().splitlines()[0]
+    if "-dirty" in first:
+        fail(f"golden reference was generated from a dirty tree: {first!r}")
+    if not re.match(r"^cyanrip \S+ \(platterpus-fork-g[0-9a-f]{7,}\)$", first):
+        fail(f"golden reference banner is not the expected shape: {first!r}")
+
+
 def sc_reference():
+    sc_golden_reference_is_from_a_clean_build()
     # The golden reference sent to a consumer guards only the paths it
     # exercises, and coverage is lost by dropping a *flag*, not by changing a
     # fixture. Round 5's reference silently lost the secure-re-read surface and
