@@ -1470,9 +1470,6 @@ static int cyanrip_run(int argc, char **argv)
         return 1;
     }
 
-    if (device)
-        settings.dev_path = strdup(device);
-
     settings.offset = offset;
     settings.over_under_read_frames =
         (offset < 0 ? -1 : 1) *
@@ -1742,6 +1739,20 @@ static int cyanrip_run(int argc, char **argv)
         settings.eject_on_success_rip = 0;
         cyanrip_log(ctx, 0, "Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...\n");
     }
+
+    /* Allocated here rather than with the rest of the settings, and the
+     * position is the fix rather than an accident: twenty argument-validation
+     * refusals return between the option table and this line, and every one of
+     * them leaked it. Only cyanrip_ctx_end() frees dev_path, and none of those
+     * paths reach it.
+     *
+     * Freeing on each refusal would work until the twenty-first is added.
+     * Nothing between the option table and here reads dev_path, so allocating
+     * after the last refusal cannot leak by construction. Found by running the
+     * suite under ASAN, which aborts on the leak and so cannot be used at all
+     * until it is gone. */
+    if (device)
+        settings.dev_path = strdup(device);
 
     if (cyanrip_ctx_init(&ctx, &settings))
         return 1;
