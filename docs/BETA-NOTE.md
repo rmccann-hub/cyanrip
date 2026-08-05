@@ -11,12 +11,21 @@ nothing else.*
 version   0.9.4-rc1+platterpus.5-beta.4
 repo      rmccann-hub/cyanrip
 branch    platterpus-fork
-commit    f5e11ba
-banner    cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gf5e11ba)
-tests     28/28
+build     c36ad65      <- check this out
+tests     30/30
 anchor    sha256/16 = da96b1223b0e182b   (over src/*.c and src/*.h)
-contract  PROVIDER-CONTRACT.md @ f5e11ba
+contract  PROVIDER-CONTRACT.md in that tree, and it describes that tree
 ```
+
+**`f5e11ba` was named as the pin in an earlier draft of this file. Do not use
+it** — read the box below. The *binary* is the same either way; the
+`PROVIDER-CONTRACT.md` beside it is not.
+
+**Why the pin is not the commit that bumped the version, and why this file names
+a commit that is not its own.** A file cannot contain the hash of a commit
+containing it, so this note lands as `c36ad65`'s child. That child changes no
+source file and no handshake state, so the binary built from either is the same
+program — only the SHA in the banner differs, and this note's own contents.
 
 **The commit is the identifier.** There is no git tag and no GitHub release: the
 git proxy in the build environment refuses tag pushes (`HTTP 403`,
@@ -56,18 +65,23 @@ rig tested.**
 
 ```sh
 git clone <repo> && cd cyanrip
-git checkout f5e11ba
+git checkout c36ad65
 meson setup build && ninja -C build
 meson test -C build --print-errorlogs
 ./build/src/cyanrip --version
+python3 tools/gen-provider-contract.py --check PROVIDER-CONTRACT.md
 ```
 
 Expected:
 
 ```
-28/28 tests passing
-cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gf5e11ba)
+30/30 tests passing
+cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gc36ad65)
+PROVIDER-CONTRACT.md is up to date
 ```
+
+30, not 28: `contract_build` and the audio-checksum mirror's `self-test` are
+new.
 
 A banner ending `-dirty` means the tree had uncommitted changes and the commit
 does not describe the binary.
@@ -81,6 +95,30 @@ unreachable"*. It passed in our working tree, which happens to carry the
 branch, so `beta.3`'s note claimed 28/28 from a clean checkout and that was not
 true for anyone who cloned. Fixed here, and this beta's 28/28 was verified in a
 fresh clone rather than in the tree that built it.
+
+## Two artifacts in that tree describe an earlier commit, on purpose
+
+Both are labelled here so neither reads as drift:
+
+| artifact | describes | why it cannot describe the pin |
+|---|---|---|
+| `PROVIDER-CONTRACT.md` | **the pin** | nothing — it is correct, and that is the point of pinning `c36ad65` rather than `f5e11ba` |
+| `docs/golden-reference.log` and its `.diagnostics.json` | build `f5e11ba` (banner says so) | a log contains the build tag of the binary that wrote it, so it can never sit inside that build's own commit |
+| this note | build `c36ad65` | same reason: it names a commit, so it lands as that commit's child |
+
+**`f5e11ba` and `c36ad65` differ in two observable ways and no others.**
+`git diff f5e11ba..c36ad65 -- src/ meson.build` is empty, so the ripping code is
+identical — but the `Handshake:` line is compiled in from `docs/handshake/`, and
+lap 25 does not exist at `f5e11ba`. So:
+
+```
+f5e11ba   banner …-gf5e11ba    Handshake: round 7 lap 24 OPEN, verdict HOLD
+c36ad65   banner …-gc36ad65    Handshake: round 7 lap 25 OPEN, verdict HOLD
+```
+
+A draft of this paragraph said the handshake state was the same. It is not, and
+the check that caught it was running `git show f5e11ba:docs/handshake/round-07-lap-25.md`
+rather than reasoning about what a doc-only commit can change.
 
 ## What changed, and it is exactly two log lines
 
@@ -145,7 +183,7 @@ disc becomes `1/14`.
 
 **Re-rip the baseline disc (The Police, *Every Breath You Take: The Classics*,
 14 tracks, MusicBrainz DiscID `pNtImOkdBm9RMBIalzx0w9cfsYY-`, CDDB ID
-`E20DFE0E`) on `f5e11ba` and diff the log against the one you already have.**
+`E20DFE0E`) on `c36ad65` and diff the log against the one you already have.**
 
 > **Which log?** Two rig sessions ran on 2026-08-04 — `9003e6f` (beta.1) and
 > `c5fb909` (beta.2) — and our documents had been calling both "the 2026-08-04
@@ -273,16 +311,18 @@ the cost stated.
 ## What every logfile from this build contains
 
 ```
-cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gf5e11ba)
+cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gc36ad65)
 Invoked as:     …
-Handshake:      round 7 lap 24 OPEN, verdict HOLD -- NOT a released build
+Handshake:      round 7 lap 25 OPEN, verdict HOLD -- NOT a released build
 Consumer:       <whatever --consumer was given>
                 (reported by the caller, not verified by cyanrip)
 ```
 
-`Handshake:` reads `lap 24` rather than lap 25 because a commit cannot contain
-the hash of a file added after it, and lap 24 is the newest lap file this
-commit contains.
+`Handshake:` is derived from `docs/handshake/` at build time, so it reports the
+newest lap the *tree* contains — `lap 25` at `c36ad65`. Building `f5e11ba`
+instead reports `lap 24`, which is not a discrepancy: lap 25 did not exist yet.
+`Consumer:` is whatever you pass to `-u`, recorded verbatim and explicitly not
+verified.
 
 ## Flags relevant to this build
 
@@ -293,7 +333,8 @@ commit contains.
 | `-k` / `--stall-secs <seconds>` | seconds a frame read must stall before liveness is reported (default 10, `0` disables) |
 | `-x` / `--cache-probe` | measure the drive's readback cache before ripping; refuses on a disc image. **Never executed on real hardware** |
 
-Flag count: 41. Full generated interface in `PROVIDER-CONTRACT.md @ f5e11ba`.
+Flag count: 41. Full generated interface in `PROVIDER-CONTRACT.md` **in the
+`c36ad65` tree** — not in `f5e11ba`'s, which carries `beta.3`'s.
 
 ## What this build still cannot claim
 

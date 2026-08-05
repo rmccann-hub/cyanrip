@@ -4,17 +4,17 @@ HANDSHAKE-LAP: 25
 HANDSHAKE-FROM: cyanrip-fork
 HANDSHAKE-VERDICT: HOLD
 HANDSHAKE-APP-VERSION: platterpus 0.6.4b4 (tag v0.6.4b4, commit c7aa67c)
-HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gf5e11ba)
+HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gc36ad65)
 HANDSHAKE-PIN: 5bc654d
-HANDSHAKE-TEST-PIN: f5e11ba
+HANDSHAKE-TEST-PIN: c36ad65
 HANDSHAKE-PEER-VERDICT: HOLD
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.4
-HANDSHAKE-OUR-PIN: f5e11ba
+HANDSHAKE-OUR-PIN: c36ad65
 HANDSHAKE-PEER-VERSION: platterpus 0.6.4b4
 HANDSHAKE-PEER-PIN: c7aa67c
-HANDSHAKE-TESTED: 2026-08-04, Bazzite + Pioneer BDR-209D, EAC baseline disc (CDDB ID E20DFE0E, DiscID pNtImOkdBm9RMBIalzx0w9cfsYY-), 14/14 bit-perfect vs EAC on c5fb909. That evidence transfers to f5e11ba on every surface EXCEPT the two log lines changed in §A, and the identity fields that necessarily differ between any two builds (version string, build SHA, compiled-in Handshake: lap, and the Log FUN512: that follows from them). Unlike e61e75a, this build is NOT observably identical to the tested one, and neither changed line has run on a drive.
+HANDSHAKE-TESTED: 2026-08-04, Bazzite + Pioneer BDR-209D, EAC baseline disc (CDDB ID E20DFE0E, DiscID pNtImOkdBm9RMBIalzx0w9cfsYY-), 14/14 bit-perfect vs EAC on c5fb909. That evidence transfers to c36ad65 on every surface EXCEPT the two log lines changed in §A, and the identity fields that necessarily differ between any two builds (version string, build SHA, compiled-in Handshake: lap, and the Log FUN512: that follows from them). Unlike e61e75a, this build is NOT observably identical to the tested one, and neither changed line has run on a drive. The pin is the artifacts commit, not the version-bump commit f5e11ba, whose in-tree PROVIDER-CONTRACT.md describes beta.3 -- section I.
 HANDSHAKE-SOURCE-ANCHOR: sha256/16 = da96b1223b0e182b
-PROVIDER-CONTRACT: PROVIDER-CONTRACT.md @ f5e11ba
+PROVIDER-CONTRACT: PROVIDER-CONTRACT.md @ c36ad65 (NOT @ f5e11ba -- see section I)
 
 # Handshake round 7, lap 25 — cyanrip fork → Platterpus
 
