@@ -1,3 +1,34 @@
+0.9.4-rc1+platterpus.5-beta.3 (2026-08-05) -- PRE-RELEASE
+=========================================================
+**One code change over beta.2, and it alters no observable surface** -- measured
+rather than asserted (`docs/AUDIT-2026-08-05.md` §5): same fixture and flags,
+both binaries, log body identical across 275 lines, cue sheet identical, decoded
+PCM identical, `-j` record identical but for `rip_time_us`. **The 2026-08-04 rig
+evidence for `c5fb909` therefore transfers.**
+
+Round 7 is still open and both sides declare HOLD, so this remains a
+pre-release and every logfile says `NOT a released build`.
+
+Fixed
+ - **`dev_path` leaked on every argument-validation refusal.** Twenty refusals
+   return between the option table and `cyanrip_ctx_init()`, and only
+   `cyanrip_ctx_end()` frees it, so `-d <dev> -J -I` leaked 100 bytes. The
+   allocation moved to after the last refusal rather than being freed on each
+   one: nothing in that window reads it, so allocating late cannot leak by
+   construction, whereas twenty cleanup sites work until the twenty-first is
+   added.
+
+   **The size is not the point.** The leak aborted the suite under
+   AddressSanitizer, so the sanitizers could not be run at all. They can now --
+   **28/28 under `address,undefined`**, including a full `-Z 2 -G -j` rip, and
+   that is a class of check this project had never applied to itself.
+
+Audited, nothing found
+ - `warning_level=3`: 8 `-Wsign-compare`, all in pre-existing upstream code.
+ - Dead struct fields: `cyanrip_ctx.success` only, already excluded from `-j`.
+ - Provider contract staleness, release gate behaviour, `TODO` inventory.
+ - Full detail, including the gaps that remain: `docs/AUDIT-2026-08-05.md`.
+
 0.9.4-rc1+platterpus.5-beta.2 (2026-08-04) -- PRE-RELEASE
 =========================================================
 **A beta, not a release, and round 7 is still open.** Both sides declare HOLD,
