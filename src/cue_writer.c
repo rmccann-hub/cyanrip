@@ -88,10 +88,9 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
     char time_01[16];
 
     /* Finish over the pregap which has been appended to the last track */
-    const int write_appended_pregap = (
-        t->pregap_lsn != CDIO_INVALID_LSN && t->pregap_lsn != t->start_lsn && t->pt
-        && t->dropped_pregap_start == CDIO_INVALID_LSN
-        && t->merged_pregap_end == CDIO_INVALID_LSN);
+    const int write_appended_pregap = crip_track_has_appended_pregap(
+        t->pregap_lsn, t->start_lsn_sig, t->dropped_pregap_start,
+        t->merged_pregap_end, !!t->pt);
     if (write_appended_pregap) {
         for (int Z = 0; Z < ctx->settings.outputs_num; Z++)
             fprintf(ctx->cuefile[Z], "  TRACK %02d AUDIO\n", t->index);

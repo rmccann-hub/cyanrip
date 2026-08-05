@@ -32,6 +32,17 @@ subq_test = executable('subq_test',
 )
 test('Q sub-channel decoding', subq_test)
 
+## Whether a pre-gap earns an INDEX 00. Header-only, no objects: the case it
+## exists to get right needs a pre-gap that is signalled AND zero frames long,
+## and no image driver produces one -- measured on a purpose-built bincue
+## fixture, which came back "unknown (sub-channel unreadable)".
+cuegap_test = executable('cuegap_test',
+    sources: [ 'cuegap.c' ],
+    include_directories: [ '../src' ],
+    dependencies: unit_test_deps,
+)
+test('Cue pre-gap decision', cuegap_test)
+
 ## The sample-peak cross-check decision. Header-only, so no objects: the point
 ## is that the firing path is unreachable from any disc image, and the logic
 ## therefore has to be exercised on its own.
