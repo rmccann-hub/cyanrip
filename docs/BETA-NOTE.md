@@ -36,14 +36,27 @@ reachable from it.
 > `tools/gen-provider-contract.py` reads the *built binary* and refuses on a
 > dirty tree, so the contract can never be regenerated in the same commit as a
 > version bump — the bump must be committed before a clean build exists to
-> derive from. **Every release this fork has cut carried a contract describing
-> the previous version:**
+> derive from. **Five of the six version bumps that carry a contract shipped one
+> describing the previous version:**
 >
 > ```
-> c5fb909   meson.build beta.2   PROVIDER-CONTRACT.md says beta.1
-> e61e75a   meson.build beta.3   PROVIDER-CONTRACT.md says beta.2
-> f5e11ba   meson.build beta.4   PROVIDER-CONTRACT.md says beta.3
+> 6e62172   meson .3                 contract 0.9.4-rc1              DISAGREE
+> 5bc654d   meson .4                 contract .4                     agree
+> 937cacf   meson .5-beta.1          contract .4                     DISAGREE
+> c5fb909   meson .5-beta.2          contract .5-beta.1              DISAGREE
+> e61e75a   meson .5-beta.3          contract .5-beta.2              DISAGREE
+> f5e11ba   meson .5-beta.4          contract .5-beta.3              DISAGREE
 > ```
+>
+> **Five of the six, not all six.** `5bc654d` — the release of
+> `0.9.4-rc1+platterpus.4`, and the commit this lap declares as `HANDSHAKE-PIN` —
+> agrees, because the contract had already been regenerated one commit earlier
+> from a tree that carried the `.4` string, so the bump landed into an
+> already-correct file. Earlier drafts of this passage said *"every release this
+> fork has cut"*; that was a generalisation from three checked commits, and
+> `tests/rip_images.py contract_build` passes at `5bc654d`, so the check offered
+> as the claim's enforcement is also its disproof. The list above is enumerated
+> from `git log --format=%h -- meson.build`, not sampled.
 >
 > Earlier notes published `PROVIDER-CONTRACT.md @ <release commit>`, so a
 > consumer following them got the wrong anchor, the pre-change coverart string

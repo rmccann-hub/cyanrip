@@ -692,8 +692,11 @@ def sc_early_log():
 def sc_contract_build():
     # The contract must describe THIS tree's version, not the previous one.
     #
-    # This is the check for a defect that shipped in every release this fork
-    # has ever cut. `tools/gen-provider-contract.py` reads the *built binary*
+    # This is the check for a defect that shipped in five of this fork's six
+    # version bumps -- 5bc654d is the exception, because its contract had been
+    # regenerated one commit earlier from a tree already carrying the new
+    # string, so this check passes there.
+    # `tools/gen-provider-contract.py` reads the *built binary*
     # and refuses on a dirty tree, so the contract can never be regenerated in
     # the same commit as a version bump -- the bump has to be committed before
     # a clean build exists to derive from. The consequence went unnoticed:

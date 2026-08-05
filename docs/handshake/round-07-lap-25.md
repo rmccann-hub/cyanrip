@@ -360,7 +360,7 @@ warn about.
 | A1 appears in the shipped golden reference | **reproducible** | `docs/golden-reference.log:33` |
 | A2's denominator | **not proven, anywhere** | block unreachable offline — measured, `AccurateRip: not found` on the fixtures |
 | only two files under `src/` changed vs `e61e75a` | **reproducible** | `git diff e61e75a..f5e11ba -- src/` |
-| the contract at `f5e11ba` describes `beta.3`, and every prior release did the same | **reproducible** | `git show <sha>:PROVIDER-CONTRACT.md` vs `git show <sha>:meson.build`, for `c5fb909`, `e61e75a`, `f5e11ba`; and `tests/rip_images.py contract_build` |
+| the contract at `f5e11ba` describes `beta.3`, and five of six version bumps did the same | **reproducible** | every commit from `git log --format=%h -- meson.build`, `git show <sha>:PROVIDER-CONTRACT.md` vs `git show <sha>:meson.build`. Enumerated, not sampled: a draft checked three and asserted an inventory |
 | a comment moves six P2 rows, indistinguishably from a semantic change | **reproducible** | `git show 811349b -- PROVIDER-CONTRACT.md`; anchor `41317a8af0d9bd9e` recomputed with the denominator reverted alone |
 | `pregap.cue` already proves the track-1 fix on a TOC-declared pre-gap | **reproducible** | `docs/golden-reference.log:77-80` |
 | suite green, 28/28, in a **fresh clone** | **run, not archived** | the *mechanism* is reproducible (a clone of this repo has `origin/master` and no `master`); the three counts are not re-derivable from anything committed |
@@ -476,25 +476,49 @@ your results file into this repository
 
 ## I. Provider contract
 
-**Pin the artifacts commit, not the release commit — `f5e11ba` carries the wrong
-contract, and so did every release before it.**
+**Pin the artifacts commit, not the release commit — `f5e11ba` carries a
+contract describing `beta.3`, and five of our six version bumps did the same.**
 
 `tools/gen-provider-contract.py` reads the built binary and refuses on a dirty
 tree, so the contract cannot be regenerated in the same commit as a version
-bump. The result went unnoticed through three releases:
+bump:
 
 ```
-c5fb909   meson.build beta.2   PROVIDER-CONTRACT.md says beta.1
-e61e75a   meson.build beta.3   PROVIDER-CONTRACT.md says beta.2
-f5e11ba   meson.build beta.4   PROVIDER-CONTRACT.md says beta.3
+6e62172   meson .3                 contract 0.9.4-rc1              DISAGREE
+5bc654d   meson .4                 contract .4                     agree
+937cacf   meson .5-beta.1          contract .4                     DISAGREE
+c5fb909   meson .5-beta.2          contract .5-beta.1              DISAGREE
+e61e75a   meson .5-beta.3          contract .5-beta.2              DISAGREE
+f5e11ba   meson .5-beta.4          contract .5-beta.3              DISAGREE
 ```
+
+**Five of the six, not all six.** `5bc654d` — the release of
+`0.9.4-rc1+platterpus.4`, and the commit this lap declares as `HANDSHAKE-PIN` —
+agrees, because the contract had already been regenerated one commit earlier
+from a tree that carried the `.4` string, so the bump landed into an
+already-correct file. Earlier drafts of this passage said *"every release this
+fork has cut"*; that was a generalisation from three checked commits, and
+`tests/rip_images.py contract_build` passes at `5bc654d`, so the check offered
+as the claim's enforcement is also its disproof. The list above is enumerated
+from `git log --format=%h -- meson.build`, not sampled.
 
 Lap 24 and the first draft of this lap both published
-`PROVIDER-CONTRACT.md @ <release commit>`. **If you resolved that literally you
-read the previous build's contract** — old anchor `b9f93e4fdc1fa4f4`, the
-pre-change `coverart.c:360` string, and six pre-change `cyanrip_log.c` line
-numbers. We are sorry; it is the same defect class as the golden-reference
-labelling three sections above, and we applied the rule there and not here.
+`PROVIDER-CONTRACT.md @ <release commit>`. **If you resolved either literally
+you read a contract describing the build before the one named — and the two
+citations resolve to two different wrong files**, which a draft of this
+paragraph collapsed into one:
+
+| citation | anchor in that file | what else is stale |
+|---|---|---|
+| lap 24's `@ e61e75a` | `1f09494a9899867b` | the pre-change `coverart.c:360` string, six `cyanrip_log.c` rows, **and every `cyanrip_main.c` row**, because `src/cyanrip_main.c` changed inside `e61e75a` itself |
+| the lap-25 draft's `@ f5e11ba` | `b9f93e4fdc1fa4f4` | the same `coverart.c` and `cyanrip_log.c` rows; `cyanrip_main.c` is unaffected |
+
+The draft gave `b9f93e4fdc1fa4f4` for both. It is only what `@ f5e11ba`
+resolves to. **The anchor is the one field whose entire job is to let you
+confirm which file you read**, so getting it wrong in a correction about
+citations is the worst place to get it wrong. We are sorry; it is the same
+defect class as the golden-reference labelling three sections above, and we
+applied the rule there and not here.
 
 **`tests/rip_images.py contract_build` now fails when a tree's contract and its
 `meson.build` version disagree.** Run against `f5e11ba` it fails, quoting both
