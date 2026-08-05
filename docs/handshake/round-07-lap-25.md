@@ -145,8 +145,8 @@ tracks, same verdict.
 this is the one change in the beta with no proof behind it:
 
 - The block is guarded by `ar_db_status == CYANRIP_ACCUDB_FOUND`.
-- `crip_fill_accurip()` (`src/accurip.c:108`) composes a URL against
-  `ACCURIP_DB_BASE_URL` and fetches it with curl. **There is no local-file
+- `crip_fill_accurip()` (defined `src/accurip.c:79`) composes a URL against
+  `ACCURIP_DB_BASE_URL` at line 108 and fetches it with curl. **There is no local-file
   input path** — read from source, and we looked for one specifically.
 - **Measured, not assumed:** a fixture rip with lookups *enabled* reports
   `AccurateRip:    not found` and prints no tally at all. The synthetic discs
@@ -171,9 +171,12 @@ the second line must read `1/14`, the first must be unchanged.
 
 ## B. What is in `beta.4` and nothing else is
 
-**Two log lines. That is the entire delta from `beta.3` (`e61e75a`).** No other
-source file changed; `git diff e61e75a..f5e11ba -- src/` touches
-`src/coverart.c` and `src/cyanrip_log.c` only.
+**Two log lines, and one test-harness fix.** `git diff e61e75a..f5e11ba -- src/`
+touches `src/coverart.c` and `src/cyanrip_log.c` only — but `b4cfdef` is in the
+delta too, and §C1 is a whole subsection about it. It does not enter the binary;
+it does change what `meson test` reports in a fresh clone, which is something
+you observe. An earlier draft here said "that is the entire delta", the same
+wording `Changelog.md` had already been corrected for.
 
 `beta.3`'s own delta from the build your rig ran (`c5fb909`) was a memory leak
 fix that altered no observable surface — measured across log body, cue,
@@ -196,6 +199,7 @@ drive, and A2 has not executed anywhere.
 | `f5e11ba` | Release `0.9.4-rc1+platterpus.5-beta.4` |
 | `811349b` | Regenerated contract and golden reference, this lap, the beta note |
 | `30a2c92` and later | Corrections to this lap's own claims, listed where they occur |
+| — | **`tools/audio-checksums.py`** (new) mirrors `src/checksums.h` so a rip's files can be checked against a rip's log. Its `self-test` is registered in `tests/meson.build`, because two implementations of one algorithm drift silently. §G2 is what it found. |
 | — | **`docs/rig-2026-08-04-c5fb909/`** archives your `c5fb909` results file. `docs/AUDIT-2026-08-05.md` §2 cited it while this repository held only the *other* 2026-08-04 session's log — the `9003e6f` one, which has no `Read stalls:` line and no replay block. **Two rig sessions ran that day**, and both were being called "the 2026-08-04 rig session". |
 
 ### C1. The suite did not pass in a clean clone, and had not for at least two betas
@@ -252,13 +256,13 @@ newest lap file `f5e11ba` contains. Lap 25 is this file.
 
 ## D. A limitation of our own generated contract, found while shipping A2
 
-**Not one row of `PROVIDER-CONTRACT.md`'s body changes when the denominator
-does — only the source anchor.**
+**A change to a number's meaning is indistinguishable, in the contract, from a
+comment being added.** That is the finding. Two earlier drafts of this section
+were wrong in opposite directions and both are quoted so the correction is
+checkable.
 
-**Correcting our own first draft of this section, which said `--check` exits 0
-across the change. It does not, and we had not run it before writing that.**
-Measured since, by reverting the denominator alone on a clean build and
-regenerating:
+**Draft 1 said `--check` exits 0 across the change. It does not** — we had not
+run it. Reverting the denominator **alone** on a clean build and regenerating:
 
 ```
 $ python3 tools/gen-provider-contract.py --check PROVIDER-CONTRACT.md
@@ -272,25 +276,26 @@ $ diff PROVIDER-CONTRACT.md <(python3 tools/gen-provider-contract.py)
 > **Source anchor:** `sha256/16 = 41317a8af0d9bd9e` over `src/*.c` and
 ```
 
-**That is the entire diff.** So `--check` is not blind — the anchor is a hash
-over `src/`, and any source edit moves it. What is blind is **the contract's
-content**. P2 derives its entries from the *format strings* at each
-`cyanrip_log()` call site, and A2 changes an **argument**, so the row is
-byte-identical:
+**Draft 2 then said not one row of the body changes. Six do.** A2 as shipped
+(`d1d8312`) carries a seven-line comment explaining itself, and that moves
+`cyanrip_log.c` 686→693, 688→695, 698→705, 707→714, 710→717, 713→720. A1
+(`38e84cb`) moves a seventh row and is the only one whose *text* changes. Both
+are visible in `git show 811349b -- PROVIDER-CONTRACT.md`.
+
+**So the accurate statement is the sharper one.** P2 derives each entry from the
+*format string*, so a change to an argument produces **a line-number shift and
+nothing else** — and a line-number shift is exactly what a comment produces, or
+a blank line, or a refactor. The contract does not go silent; it says something
+indistinguishable from noise:
 
 ```
-| `cyanrip_log.c:695` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:688` | `Tracks ripped partially accurately: %i/%i` |     <- before
+| `cyanrip_log.c:695` | `Tracks ripped partially accurately: %i/%i` |     <- after
 ```
 
 **The contract derives the shape of a line, not the meaning of its numbers.**
-
-This matters to you because of what a diff of two contracts tells you.
-`--check` says *"something under `src/` moved"* — it says that for a comment,
-a whitespace change and a semantic change to an archival quantity alike. The
-body says **nothing at all** about which. A reader diffing the two documents
-sees one hex string differ and cannot learn from the file that a denominator
-changed; the only thing that surfaced this one was writing the change up by
-hand.
+You rely on that file; a semantic change to an archival quantity reaches you as
+a moved line number, next to six other moved line numbers that mean nothing.
 
 **Not fixed in this beta, deliberately.** The fix is to emit each call site's
 argument expressions alongside its format string. That is derivable — the
@@ -342,16 +347,26 @@ a finding and we want it.
 
 ## F. Proven vs not proven, and how
 
+**Two grades of "proven" here, and the table says which.** *Reproducible* means
+you can re-derive it from what is committed. *Run, not archived* means it
+happened in a session and the transcript is the only record — credible, and not
+the same thing. Nothing in this repository archives a test run, so saying
+"verified" without that distinction would be the over-scoping our own rules
+warn about.
+
 | claim | status | how |
 |---|---|---|
-| A1's new wording is printed and reaches the logfile | **proven** | `early_log` asserts both; revert-proved with the build green |
-| A1 appears in the shipped golden reference | **proven** | line 33 of `docs/golden-reference.log` |
+| A1's new wording is printed and reaches the logfile | **reproducible** | `tests/rip_images.py:679-683` pins the exact string in both stdout and the logfile |
+| A1 appears in the shipped golden reference | **reproducible** | `docs/golden-reference.log:33` |
 | A2's denominator | **not proven, anywhere** | block unreachable offline — measured, `AccurateRip: not found` on the fixtures |
-| nothing else in `src/` changed vs `e61e75a` | **proven** | `git diff e61e75a..f5e11ba -- src/` is two files |
-| suite green | **proven** | 28/28, **verified in a fresh clone**, not only in the tree that built it — §C1 |
-| the clean-clone failure predates this beta | **proven** | same clone, `e61e75a`, same failure |
-| suite green under ASAN+UBSAN | **proven, re-run for `beta.4`** | `-Db_sanitize=address,undefined`, 28/28, 0 sanitizer errors. Drafted as "read across from `beta.3`"; running it was cheaper than the sentence explaining why we had not |
-| the contract's **body** cannot express A2, though `--check` still fails on it | **proven** | denominator reverted alone on a clean build, regenerated: the whole diff is the source anchor, every P2 row byte-identical; §D |
+| only two files under `src/` changed vs `e61e75a` | **reproducible** | `git diff e61e75a..f5e11ba -- src/` |
+| the contract at `f5e11ba` describes `beta.3`, and every prior release did the same | **reproducible** | `git show <sha>:PROVIDER-CONTRACT.md` vs `git show <sha>:meson.build`, for `c5fb909`, `e61e75a`, `f5e11ba`; and `tests/rip_images.py contract_build` |
+| a comment moves six P2 rows, indistinguishably from a semantic change | **reproducible** | `git show 811349b -- PROVIDER-CONTRACT.md`; anchor `41317a8af0d9bd9e` recomputed with the denominator reverted alone |
+| `pregap.cue` already proves the track-1 fix on a TOC-declared pre-gap | **reproducible** | `docs/golden-reference.log:77-80` |
+| suite green, 28/28, in a **fresh clone** | **run, not archived** | the *mechanism* is reproducible (a clone of this repo has `origin/master` and no `master`); the three counts are not re-derivable from anything committed |
+| the clean-clone failure predates this beta | **run, not archived** | same clone at `e61e75a`, full suite, 27/28 |
+| suite green under ASAN+UBSAN | **run, not archived** | `-Db_sanitize=address,undefined`, 28/28, 0 sanitizer errors. Drafted as "read across from `beta.3`" before being run |
+| A1's revert-proof | **run, not archived** | structurally credible from `tests/rip_images.py:679`, which pins the exact new string |
 
 ---
 
@@ -362,6 +377,56 @@ a finding and we want it.
 | A1 | reverted the string alone; **build confirmed green during the revert** (`coverart.c.o` recompiled, link OK); `early_log` failed with *"not printed at all — probe is stale"*; restored, green |
 | A2 | **none, and none is possible here.** §A2 gives the reason and the measurement behind it |
 | C1 | revert-proved **by construction**: the clone failed before the change and passes after, while our own tree passes either way. The asymmetry is the finding |
+
+---
+
+## G2. Your `14/14` recomputed here, from EAC's audio
+
+**Three tracks of the EAC-ripped audio reached us, so your headline claim is no
+longer something we take on report.** `tools/audio-checksums.py` (new, this lap)
+mirrors `src/checksums.h` and recomputes the ripper's own checksums over a file.
+Run against `docs/rig-2026-08-04/cyanrip.log`:
+
+| track | EAC CRC32 | Accurip v1 | Accurip v2 | Accurip 450 |
+|---|---|---|---|---|
+| 1 | `B0D122E7` **match** | `5D3C90CB` **match** | `22B9924D` **match** | not logged |
+| 5 | `E0036697` vs log `6902BCF0` | differs | differs | `4CCBCF89` **match** |
+| 7 | `CCBFF669` **match** | `DE379389` **match** | `154797B6` **match** | not logged |
+
+Sample counts match on all three.
+
+**Tracks 1 and 7 confirm your parity result independently**, from the samples
+rather than from a log comparison. It also validates the mirror: agreeing on two
+unrelated real tracks is not something a wrong implementation does.
+
+**Track 5 confirms your §C, from the other side.** Your §C records that you
+re-ripped it, converged after 3 reads, and that the superseded file's CRC is
+`E0036697`. **That is exactly what EAC's audio computes to here.** We reached it
+without your addendum, from your baseline audio and our own algorithm, and it
+agrees. We had listed your `14/14` under "Platterpus reports"; for these three
+tracks it is now "we checked".
+
+**What we would not have found without it, and it is a seam fact rather than a
+bug.** The ripper's log necessarily describes **the read that was thrown away**.
+For track 5, `cyanrip.log` states `6902BCF0` and the file on disk is
+`E0036697` — both correct, describing different reads. **So a cyanrip log is not
+a description of the files beside it**, once you supersede one, and *nothing in
+the log says so*. Today that is invisible because your addendum carries the
+supersede; a third consumer reconciling log against files would find them
+disagreeing on exactly the tracks your auto-fix repaired, and would have no way
+to tell that from a corrupted archive.
+
+**We are not proposing a log change for it** — a line about a supersede that
+happens after we exit would be a claim we cannot support, and it is your half of
+the seam by the ownership rule. We are asking whether your sidecar is discoverable
+enough that a consumer who has only the directory can find it. §J5.
+
+**One thing the 450 column settles.** `Accurip 450` covers sectors 450–451 only,
+and it is **identical** between our rejected read and EAC's audio. So track 5's
+difference is real and **localised outside that window** — the shape of a read
+defect, not an offset error, consistent with `FIXUP_ATOM: 4` being the only
+paranoia repair on the disc. `tools/audio-checksums.py diff` localises it to the
+sector given both files; we have only EAC's.
 
 ---
 
@@ -411,11 +476,38 @@ your results file into this repository
 
 ## I. Provider contract
 
-`PROVIDER-CONTRACT.md` regenerated at `f5e11ba`, source anchor
-`sha256/16 = da96b1223b0e182b`. Two P2 rows moved (§A); every `file:line` in it
-resolves against that anchor and not against any earlier one.
+**Pin the artifacts commit, not the release commit — `f5e11ba` carries the wrong
+contract, and so did every release before it.**
 
-Read §D before treating `--check` as a complete change detector.
+`tools/gen-provider-contract.py` reads the built binary and refuses on a dirty
+tree, so the contract cannot be regenerated in the same commit as a version
+bump. The result went unnoticed through three releases:
+
+```
+c5fb909   meson.build beta.2   PROVIDER-CONTRACT.md says beta.1
+e61e75a   meson.build beta.3   PROVIDER-CONTRACT.md says beta.2
+f5e11ba   meson.build beta.4   PROVIDER-CONTRACT.md says beta.3
+```
+
+Lap 24 and the first draft of this lap both published
+`PROVIDER-CONTRACT.md @ <release commit>`. **If you resolved that literally you
+read the previous build's contract** — old anchor `b9f93e4fdc1fa4f4`, the
+pre-change `coverart.c:360` string, and six pre-change `cyanrip_log.c` line
+numbers. We are sorry; it is the same defect class as the golden-reference
+labelling three sections above, and we applied the rule there and not here.
+
+**`tests/rip_images.py contract_build` now fails when a tree's contract and its
+`meson.build` version disagree.** Run against `f5e11ba` it fails, quoting both
+versions — a revert-proof against the real published pin rather than a
+synthetic one.
+
+Regenerated contract: source anchor `sha256/16 = da96b1223b0e182b`. **Seven P2
+rows moved** relative to the `e61e75a` contract — `coverart.c:360→368` with new
+text, and six `cyanrip_log.c` rows by line number only. The first draft of this
+section said "two". Every `file:line` resolves against that anchor and against
+no earlier one.
+
+Read §D before treating a contract diff as a change *description*.
 
 ---
 
@@ -430,6 +522,15 @@ Read §D before treating `--check` as a complete change detector.
 3. **Which build do you want promoted** — `e61e75a` (conservative: audited, and
    observably identical to what the rig ran) or `f5e11ba` (this one, with two
    line changes you would then be approving untested)?
-4. **Is there anything else in the log where a number's meaning is not obvious
+4. **Is your supersede sidecar discoverable from the directory alone?** §G2:
+   for track 5 our log says `6902BCF0` and the file says `E0036697`, and both
+   are right. A consumer who has the folder and neither of us can tell that from
+   a corrupted archive. Does the addendum have a fixed name a third party could
+   be told to look for, and does it name the track and both CRCs?
+5. **Would you like `tools/audio-checksums.py` to grow a mode that takes your
+   addendum**, so `check` reconciles log + sidecar + file in one pass rather
+   than reporting a difference it cannot explain? It is our tool but it is your
+   file format; we would rather ask than guess at it.
+6. **Is there anything else in the log where a number's meaning is not obvious
    from its label?** §D says we cannot detect that class automatically. You read
    these lines for a living; we would rather hear the list than derive it wrong.
