@@ -195,6 +195,49 @@ def test_lap_order_is_by_declaration_not_filename():
     check(not ok, "latest lap must come from the declared number, not the name")
 
 
+def test_a_first_go_is_expressible():
+    """A GO whose peer has not GO'd yet must be *sayable*, not malformed.
+
+    Platterpus's round 7 lap 23 §H reports a deadlock: their conformance
+    checker refuses a file declaring GO while HANDSHAKE-PEER-VERDICT is HOLD,
+    on the reading that "a GO that cannot close is worth saying at check time".
+    Both sides need a closable GO; a GO is closable only once the peer has
+    GO'd; so neither can go first and a round that reaches agreement can never
+    record it.
+
+    Ours does not have that hole, and this pins the difference rather than
+    leaving it to be rediscovered. Two separate properties, and conflating them
+    is what produced the deadlock:
+
+      * the file is ACCEPTED -- it is a well-formed declaration;
+      * the round does NOT close -- a close still needs both verdicts.
+
+    Asserting only the second would pass against an implementation that
+    rejected the file outright, which is exactly their failure.
+    """
+    files = {"round-09-lap-01.md":
+             ("HANDSHAKE-PROTOCOL: 2\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n"
+              + WIRE
+              + "HANDSHAKE-VERDICT: GO\n"
+                "HANDSHAKE-PEER-VERDICT: HOLD\n"
+                "HANDSHAKE-PEER-VERSION: platterpus/0.6.4b4\n"
+                "HANDSHAKE-PEER-PIN: c7aa67c\n"
+                "HANDSHAKE-OUR-VERSION: 0.9.4-rc1+platterpus.5\n"
+                "HANDSHAKE-OUR-PIN: aaa1111\n"
+                "HANDSHAKE-TESTED: rig session, 14/14 vs EAC\n\n# first GO\n")}
+
+    rounds = resolve(files)
+    check(len(rounds) == 1 and rounds[0].verdict == "GO",
+          "a first GO must parse as a well-formed GO, not be refused")
+    check(rounds[0].peer_verdict == "HOLD",
+          "the peer's HOLD must be read verbatim, not normalised away")
+
+    ok, probs = gate(files)
+    check(not ok, "one GO must not close the round")
+    check(any("peer verdict HOLD" in p for p in probs),
+          f"the gate should name the peer's HOLD as the reason: {probs}")
+
+
 def test_legacy_named_no_lap_file_cannot_shadow_a_canonical_lap():
     """The bug Platterpus's gate had, run against ours (round 7 lap 17 D).
 
