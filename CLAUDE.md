@@ -112,8 +112,13 @@ end, C2 reporting, `-f`, damaged media, and CD-TEXT from a physical disc (which
 goes through `mmc_read_cdtext`, a different code path from the image parser).
 Say which of these a change touches; never let a green suite imply coverage.
 
-**Some of that list is now retired, and the retirement is dated.** The
-2026-08-04 rig session (`9003e6f`, PIONEER BD-RW BDR-209D, a 14-track disc)
+**Some of that list is now retired, and the retirement is dated.** **Date a rig
+session by its build, never by its date — two ran on 2026-08-04** (`9003e6f`
+with Platterpus 0.6.4b3, and `c5fb909` with 0.6.4b4), and calling both "the
+2026-08-04 rig session" is how a claim about one came to be checked against the
+other's log. Their artifacts are in `docs/rig-2026-08-04/` and
+`docs/rig-2026-08-04-c5fb909/`, and only the first holds cyanrip's own log. The
+first session (`9003e6f`, PIONEER BD-RW BDR-209D, a 14-track disc)
 produced `Pregap source: sub-channel (not signalled by TOC)` on 13 tracks with
 the LSN arithmetic consistent on every one, `-Z` converging after 5 reads, and
 per-track paranoia counters summing exactly to the disc totals on media that

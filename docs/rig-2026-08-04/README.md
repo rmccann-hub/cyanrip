@@ -48,3 +48,13 @@ per-track/disc paranoia invariant on media that made paranoia work. It did not
 touch `-x`, C2, `-f`, damaged media, CD-TEXT from a disc that has some, or the
 diagnosed-abort exit code. The stall watchdog was silent because nothing
 stalled, which is not evidence that it fires. Per-claim detail is lap 10 §F.
+
+## Not the only 2026-08-04 session
+
+This directory is the **`9003e6f` (beta.1)** session. A second one ran the same
+day on **`c5fb909` (beta.2)** — different build, different Platterpus build, and
+it is the one that closed `Read stalls:` and the pre-log replay block, neither of
+which exists in this directory's log. See `docs/rig-2026-08-04-c5fb909/`.
+
+Both were being called "the 2026-08-04 rig session" in our documents, which is
+how a claim about one came to be checked against the other's log.

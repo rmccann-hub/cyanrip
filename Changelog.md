@@ -5,8 +5,10 @@ identical to the one the rig tested.** Both were carried as known imprecision
 in `docs/AUDIT-2026-08-05.md` §4, both were raised by Platterpus as non-blocking
 notes, and both are contract-frozen P2 lines. They are **proposals**, shipped in
 a beta so they can be run rather than argued about, and they are withdrawable at
-Platterpus's word -- round 7 lap 25 carries the proposal. Nothing else about the
-build differs from beta.3.
+Platterpus's word -- round 7 lap 25 carries the proposal. No other source file
+changes: `git diff e61e75a..f5e11ba -- src/` touches `coverart.c` and
+`cyanrip_log.c` only. One further commit lands between the two betas and it is
+a test-harness fix that does not enter the binary -- see the second section.
 
 Round 7 is still open and both sides declare HOLD, so this remains a
 pre-release and every logfile says `NOT a released build`.
@@ -14,9 +16,8 @@ pre-release and every logfile says `NOT a released build`.
 Changed -- log text, breaking, proposed
  - **`Release ID unavailable, cannot search Cover Art DB!` is now
    `No MusicBrainz release ID at cover art lookup, cannot search Cover Art
-   DB!`.** The old wording sits in the replayed pre-log block two blocks above a
-   header that prints `Release ID: <uuid>`, and a reader reconciling the two
-   concluded one was wrong. Neither is: `-R` and a user
+   DB!`.** A reader who sees the old wording and the header's `Release ID:
+   <uuid>` in one log concludes one of them is wrong. Neither is: `-R` and a user
    `-a musicbrainz_albumid=` are merged into `ctx->meta` *after*
    `crip_fill_coverart()` runs, so cyanrip genuinely has no ID of its own at
    that point. The line now names which ID and when, and reports the
