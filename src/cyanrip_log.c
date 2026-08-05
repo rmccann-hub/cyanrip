@@ -683,10 +683,17 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
                     accurip_partial++;
             }
         }
+        /* Both denominators are the disc's track count, so the two lines are
+         * counts over one population and a consumer can add them. The partial
+         * line used to divide by (nb_tracks - accurip_verified), i.e. by the
+         * tracks that were *not* fully verified, so a disc with 13 of 14 exact
+         * and the 14th partial printed "13/14" above "1/1" -- self-referential,
+         * and read as a disc-level tally it over-reports. Proposed to
+         * Platterpus in round 7 lap 25; the numerators are unchanged. */
         cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, ctx->nb_tracks);
         if (accurip_partial)
             cyanrip_log(ctx, 0, "Tracks ripped partially accurately: %i/%i\n",
-                        accurip_partial, ctx->nb_tracks - accurip_verified);
+                        accurip_partial, ctx->nb_tracks);
         cyanrip_log(ctx, 0, "\n");
     }
 
