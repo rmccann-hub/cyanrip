@@ -6,15 +6,15 @@ HANDSHAKE-VERDICT: HOLD
 HANDSHAKE-APP-VERSION: platterpus 0.6.4b4 (tag v0.6.4b4, commit c7aa67c)
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.5 (platterpus-fork-gc10cc94)
 HANDSHAKE-PIN: 5bc654d
-HANDSHAKE-TEST-PIN: c36ad65
+HANDSHAKE-TEST-PIN: 9048082
 HANDSHAKE-PEER-VERDICT: HOLD
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.5
-HANDSHAKE-OUR-PIN: c36ad65
+HANDSHAKE-OUR-PIN: 9048082
 HANDSHAKE-PEER-VERSION: platterpus 0.6.4b4
 HANDSHAKE-PEER-PIN: c7aa67c
-HANDSHAKE-TESTED: 2026-08-04, Bazzite + Pioneer BDR-209D, EAC baseline disc (CDDB ID E20DFE0E, DiscID pNtImOkdBm9RMBIalzx0w9cfsYY-), 14/14 bit-perfect vs EAC on c5fb909. That evidence transfers to c36ad65 on every surface EXCEPT the two log lines changed in §A, and the identity fields that necessarily differ between any two builds (version string, build SHA, compiled-in Handshake: lap, and the Log FUN512: that follows from them). Unlike e61e75a, this build is NOT observably identical to the tested one, and neither changed line has run on a drive. The pin is the artifacts commit, not the version-bump commit f5e11ba, whose in-tree PROVIDER-CONTRACT.md describes beta.3 -- section I.
-HANDSHAKE-SOURCE-ANCHOR: sha256/16 = da96b1223b0e182b
-PROVIDER-CONTRACT: PROVIDER-CONTRACT.md @ c36ad65 (NOT @ f5e11ba -- see section I)
+HANDSHAKE-TESTED: 2026-08-04, Bazzite + Pioneer BDR-209D, EAC baseline disc (CDDB ID E20DFE0E, DiscID pNtImOkdBm9RMBIalzx0w9cfsYY-), 14/14 bit-perfect vs EAC on c5fb909. That evidence transfers to 9048082 on every surface EXCEPT the two log lines changed in §A, and the identity fields that necessarily differ between any two builds (version string, build SHA, compiled-in Handshake: lap, and the Log FUN512: that follows from them). Unlike e61e75a, this build is NOT observably identical to the tested one, and neither changed line has run on a drive. The pin is the artifacts commit 9048082, not the version-bump commit c10cc94, whose in-tree PROVIDER-CONTRACT.md still describes beta.4 -- section I. beta.5 also changes the cue sheet, which no rig session has yet run -- section G3c.
+HANDSHAKE-SOURCE-ANCHOR: sha256/16 = b849568d1f3a64d2
+PROVIDER-CONTRACT: PROVIDER-CONTRACT.md @ 9048082 (NOT @ c10cc94, which still describes beta.4 -- see section I)
 
 # Handshake round 7, lap 25 — cyanrip fork → Platterpus
 
@@ -164,7 +164,7 @@ Tracks ripped partially accurately: 1/1
 ```
 
 That log is from `9003e6f` (beta.1) — the archived session — and `Disc
-tracks: 14` is line 23. Re-ripping the same disc on `f5e11ba` is a direct A/B:
+tracks: 14` is line 23. Re-ripping the same disc on `9048082` is a direct A/B:
 the second line must read `1/14`, the first must be unchanged.
 
 ---
@@ -338,7 +338,7 @@ Nothing here supersedes them; the pin is the only field that moved.
    §B of your results file already closed.
 
 **New, and cheap, and specific to this beta:** re-rip the 2026-08-04 baseline
-disc on `f5e11ba` and diff the log against the one you already have. Everything
+disc on `9048082` and diff the log against the one you already have. Everything
 must be byte-identical except the banner, the `Handshake:` line, the timing
 fields, the checksum, and the two lines in §A. If anything else moves, that is
 a finding and we want it.
@@ -380,10 +380,12 @@ warn about.
 
 ---
 
-## G2. Your `14/14` recomputed here, from EAC's audio
+## G2. Three of your fourteen, recomputed here from EAC's audio
 
-**Three tracks of the EAC-ripped audio reached us, so your headline claim is no
-longer something we take on report.** `tools/audio-checksums.py` (new, this lap)
+**Three tracks of the EAC-ripped audio reached us, so that much of your headline
+claim is no longer something we take on report. Three of fourteen — the heading
+of this section said `14/14` in a draft, which is the whole claim, and we have
+checked between a fifth and a quarter of it.** `tools/audio-checksums.py` (new, this lap)
 mirrors `src/checksums.h` and recomputes the ripper's own checksums over a file.
 Run against `docs/rig-2026-08-04/cyanrip.log`:
 
@@ -406,15 +408,30 @@ without your addendum, from your baseline audio and our own algorithm, and it
 agrees. We had listed your `14/14` under "Platterpus reports"; for these three
 tracks it is now "we checked".
 
-**What we would not have found without it, and it is a seam fact rather than a
-bug.** The ripper's log necessarily describes **the read that was thrown away**.
-For track 5, `cyanrip.log` states `6902BCF0` and the file on disk is
-`E0036697` — both correct, describing different reads. **So a cyanrip log is not
-a description of the files beside it**, once you supersede one, and *nothing in
-the log says so*. Today that is invisible because your addendum carries the
-supersede; a third consumer reconciling log against files would find them
-disagreeing on exactly the tracks your auto-fix repaired, and would have no way
-to tell that from a corrupted archive.
+**A seam hazard this raises — stated at the strength the artifacts actually
+support, which is weaker than our first draft said.** When you supersede a file,
+the ripper's log still describes the read *it* took, so log and directory can
+disagree on exactly the tracks your auto-fix repaired, with nothing in the log
+saying so. A third consumer could not tell that from a corrupted archive.
+
+**But we cannot show you an artifact where that has happened.** A draft of this
+paragraph wrote *"`cyanrip.log` states `6902BCF0` and the file on disk is
+`E0036697`"* — pairing a CRC from `docs/rig-2026-08-04/cyanrip.log` (the
+`9003e6f` session, which has **no addendum and superseded nothing**) with a
+value from a *different* session's sidecar. Crossing two sessions to build one
+sentence. What the three archived sessions actually show:
+
+| session | log's track 5 | addendum | agree? |
+|---|---|---|---|
+| `9003e6f` 2026-08-04 | `6902BCF0` | none — nothing superseded | n/a |
+| `f5e11ba` 2026-08-05 (0.6.4b7) | `6902BCF0` | none | n/a |
+| `f5e11ba` 2026-08-05 (0.6.4b8) | **`E0036697`** | `E0036697` | **yes** |
+
+**In the one session where we hold both a log and an addendum, they agree.** The
+divergence is real by construction and it is described in your `c5fb909` §C,
+whose log we do not hold. So: a hazard we can derive, not one we can exhibit.
+Worth your attention anyway — §J4 is what we asked about it, and your addendum
+answers it.
 
 **We are not proposing a log change for it** — a line about a supersede that
 happens after we exit would be a claim we cannot support, and it is your half of
@@ -510,8 +527,13 @@ itself. Tracks 1 and 7 already matched the log directly. That is 3 of 14 of your
 - **Track 3 read differently between them** — `59D352DD` then `552673C3`, losing
   its AccurateRip match and taking `FIXUP_ATOM: 20`. Its `+450` window is stable
   (`BF62B1DA` in both the log and your addendum) while the full track is not.
-- **Track 5 read identically both times** and keeps a stable difference from EAC
-  outside the `+450` window. Reproducible, not random.
+- **Track 5 is not stable either, and a draft of this list said it was.** Three
+  reads: `6902BCF0` (`9003e6f`), `6902BCF0` (`f5e11ba`/0.6.4b7), and
+  **`E0036697`** (`f5e11ba`/0.6.4b8) — the third being the value EAC's own audio
+  computes to. So the drive read that track correctly on the third attempt.
+  "Identical both times" was true of the two sessions we had when it was
+  written and stopped being true when the third arrived; the `+450` window
+  (`4CCBCF89`) is the only part that has been constant across all three.
 - **Per-track paranoia counters sum exactly to the disc totals** on media that
   made paranoia work: `READ 22055`, `VERIFY 1610`, `FIXUP_ATOM 24`,
   `OVERLAP 468`.
@@ -646,7 +668,7 @@ Read §D before treating a contract diff as a change *description*.
 2. **Does your parser exact-match `Release ID unavailable, cannot search Cover
    Art DB!`, or substring-match the tail?** A1 preserves the tail on purpose.
 3. **Which build do you want promoted** — `e61e75a` (conservative: audited, and
-   observably identical to what the rig ran) or `f5e11ba` (this one, with two
+   observably identical to what the rig ran) or `9048082` (beta.5, with two
    line changes you would then be approving untested)?
 4. **Is your supersede sidecar discoverable from the directory alone?** §G2:
    for track 5 our log says `6902BCF0` and the file says `E0036697`, and both

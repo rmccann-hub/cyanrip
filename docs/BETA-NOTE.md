@@ -1,4 +1,4 @@
-# cyanrip beta — `0.9.4-rc1+platterpus.5-beta.4`
+# cyanrip beta — `0.9.4-rc1+platterpus.5-beta.5`
 
 *Information only. This file describes the beta and what to test in it, and
 nothing else.*
@@ -229,11 +229,20 @@ disc rip, and it is longer.
 | **follows from all of the above** | `Log FUN512:` |
 
 **What should be identical:** the TOC and disc identity (`DiscID`, `CDDB ID`,
-`Disc tracks:`, `Total time:`), every pre-gap line, every `Pregap source:`, the
-drive and offset block, and **every checksum over the audio** — `CRC32`,
-`EAC CRC32`, `Accurip v1`/`v2` (the checksums, not their confidences).
+`Disc tracks:`, `Total time:`), the drive and offset block, and **every checksum
+over the audio** — `CRC32`, `EAC CRC32`, `Accurip v1`/`v2` (the checksums, not
+their confidences).
 
-**A checksum that moves is a finding. Anything in the table above is not.**
+**`Pregap source:` is not in that list, and an earlier draft put it there.**
+13 of the 14 lines on this disc read `sub-channel (not signalled by TOC)`, which
+is the *outcome of an MMC read*, not a TOC field — the same read can come back
+`unknown (sub-channel unreadable)` or `unknown (sub-channel CRC mismatches)` on
+another attempt. Empirically it has been stable: identical across the two rips
+we hold, 13 `sub-channel` + 1 `lead-in` both times. Stable so far is not
+guaranteed, and this file should not have promised the stronger thing.
+
+**A checksum that moves is worth reporting. Anything in the table above is
+expected. A `Pregap source:` that moves is interesting but not a defect.**
 
 The second line is the one that matters most: **it has never executed
 anywhere.** The block needs an AccurateRip database hit, the lookup fetches over
@@ -376,8 +385,12 @@ Full list with the cost to close each: `docs/AUDIT-2026-08-05.md` §3.
   cheapest route left", presenting a closed route as the open one; the audit
   (§3.7) had it right and this file contradicted it.
 
-  What remains is a *physical* disc whose TOC declares the pre-gap, and there
-  may not be one to hand: *Platterpus measured* 40+ `Pregap source:` lines
-  across three days of rips and **zero** say `TOC` — their measurement, stated
-  as theirs. The one rig log archived here has 14 such lines, 13 `sub-channel`
-  and 1 `lead-in`. **This is a measured "no candidate exists", not "untested".**
+  What remains is a *physical* disc whose TOC declares the pre-gap, and there may
+  not be one to hand. Platterpus's results file scopes its measurement precisely:
+  *"across every `Pregap source:` line in the whole retained log history — 40+
+  occurrences spanning three days of rips"*, none of them `TOC`. **That is
+  "looked in one collection's retained logs and found none", not "no candidate
+  exists"** — an earlier draft of this file wrote the stronger form, which is the
+  `none` versus `unknown (reason)` distinction this project has a rule about,
+  applied to somebody else's evidence. The rig logs archived here agree as far as
+  they go: 13 `sub-channel` and 1 `lead-in` per disc, no `TOC`.
