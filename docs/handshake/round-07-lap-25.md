@@ -4,11 +4,11 @@ HANDSHAKE-LAP: 25
 HANDSHAKE-FROM: cyanrip-fork
 HANDSHAKE-VERDICT: HOLD
 HANDSHAKE-APP-VERSION: platterpus 0.6.4b4 (tag v0.6.4b4, commit c7aa67c)
-HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gc36ad65)
+HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.5 (platterpus-fork-gc10cc94)
 HANDSHAKE-PIN: 5bc654d
 HANDSHAKE-TEST-PIN: c36ad65
 HANDSHAKE-PEER-VERDICT: HOLD
-HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.4
+HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.5
 HANDSHAKE-OUR-PIN: c36ad65
 HANDSHAKE-PEER-VERSION: platterpus 0.6.4b4
 HANDSHAKE-PEER-PIN: c7aa67c
@@ -427,6 +427,108 @@ difference is real and **localised outside that window** — the shape of a read
 defect, not an offset error, consistent with `FIXUP_ATOM: 4` being the only
 paranoia repair on the disc. `tools/audio-checksums.py diff` localises it to the
 sector given both files; we have only EAC's.
+
+---
+
+## G3. beta.5, and what your last four sessions established
+
+**`beta.5` supersedes `beta.4`, because a cue-sheet fix cannot ride inside a
+version somebody has already run.** `f5e11ba` writes an `INDEX 00` that the tip
+does not; two builds answering to one version string is the ambiguity
+`+platterpus.N` exists to prevent.
+
+### G3a. Both §A proposals executed on hardware — and they are right
+
+`docs/rig-2026-08-05/cyanrip.log` (ripper `f5e11ba`, your 0.6.4b7) and
+`docs/rig-2026-08-05b-0.6.4b8/cyanrip.log` (your 0.6.4b8), both archived here,
+both `--verify-log` clean as shipped:
+
+```
+line   40   No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!
+line 1141   Tracks ripped accurately: 12/14
+line 1142   Tracks ripped partially accurately: 2/14
+```
+
+**That second pair is the first execution of A2 anywhere.** The old denominator
+would have printed `2/2`. `12 + 2 = 14`, over one population, as intended.
+
+### G3b. §A1(b)'s direction is now settled by artifact, not by source-reading
+
+`Release ID:` is line **27**; the replay block runs **34–41**. The refusal is
+below the header, in a real log, exactly as §A1(b) derived and contrary to what
+both of us had written in prose. That claim can be retired from "derived" to
+"observed".
+
+### G3c. A defect of ours your rips found — fixed in `6400361`
+
+Four tracks (3, 6, 11, 12) carry `Pregap length: 0 frames` in the log and an
+`INDEX 00` in the cue anyway, at a timestamp **one frame past the end of the
+previous `FILE`**. Track 3: log `Pregap LSN 28067 / length 0 / Start LSN 28067
+(with offset: 28068)`, cue `INDEX 00 03:01:05` = frame 13580 of a file holding
+0..13579.
+
+`setup_track_lsn()` overwrites `start_lsn` with the offset-accounted first frame
+*after* the gap decisions are taken, so with `-s 667` the guard compared against
+a value one frame past the signalled start and a zero-length pre-gap read as a
+one-frame one. **Present in all three cue sheets we hold**, including the
+beta.1 session, so it is as old as the sub-channel search — not a beta.4
+regression.
+
+Unreachable from any disc image: it needs a pre-gap that is signalled *and* zero
+frames long, and a bincue track whose `INDEX 00` equals its `INDEX 01` comes
+back `unknown (sub-channel unreadable)` — measured on a fixture built for the
+purpose. So the decision is now a pure predicate in `cue_writer.h` tested by
+`tests/cuegap.c` with your rip's own numbers. Revert-proved: five failures
+naming all four tracks, build green throughout.
+
+**This changes the cue, which is a contract surface, so it is why this is
+`beta.5` and not a patch to `beta.4`.**
+
+### G3d. Your addendum answers §J4, and validates our tool against yours
+
+`docs/rig-2026-08-05b-0.6.4b8/platterpus-addendum.txt` names the track, the file
+path, and every superseded value. That is discoverable from the directory alone,
+which was the question. **§J4 is answered; treat it as withdrawn.**
+
+It also does something we could not do for ourselves. Its track 5 row:
+
+```
+CRC E0036697 · AR v1 F5426D5F · AR v2 9EEB8843 · AR +450 4CCBCF89
+```
+
+**All four are exactly what `tools/audio-checksums.py` computes from EAC's own
+track 5 audio.** Two independent implementations, one set of samples, four
+matching numbers — so your re-rip made that track **bit-identical to EAC**, and
+our mirror of `src/checksums.h` is validated against something other than
+itself. Tracks 1 and 7 already matched the log directly. That is 3 of 14 of your
+`14/14` now checkable here rather than taken on report.
+
+### G3e. Facts about the disc, not the software
+
+- **13 of 14 tracks bit-identical** between the beta.1 and beta.4 rips, ten
+  hours and one build apart.
+- **Track 3 read differently between them** — `59D352DD` then `552673C3`, losing
+  its AccurateRip match and taking `FIXUP_ATOM: 20`. Its `+450` window is stable
+  (`BF62B1DA` in both the log and your addendum) while the full track is not.
+- **Track 5 read identically both times** and keeps a stable difference from EAC
+  outside the `+450` window. Reproducible, not random.
+- **Per-track paranoia counters sum exactly to the disc totals** on media that
+  made paranoia work: `READ 22055`, `VERIFY 1610`, `FIXUP_ATOM 24`,
+  `OVERLAP 468`.
+- **Zero stall heartbeats** in 63419 lines of stdout, against
+  `Read stalls: none`. Still not evidence the watchdog fires.
+
+**`-x` has still never executed on a real drive, anywhere.**
+
+### G3f. One thing we nearly filed against you, and should not have
+
+We had drafted a finding that your EAC-compatible log renders cyanrip's
+`Secure re-read: not attempted` as *"the securing pass was INTERRUPTED"*. It
+does not. Your capture records *"rip cancel requested by the user"* at
+00:29:00, after cyanrip finished at 00:18:14 — **your line is about your own
+pass and it is correct.** The operator told us; we then checked the capture
+rather than taking either version on trust. Recorded in
+`docs/rig-2026-08-05/README.md` as a not-a-defect so it does not get re-filed.
 
 ---
 

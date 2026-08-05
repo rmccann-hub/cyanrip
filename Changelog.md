@@ -1,3 +1,61 @@
+0.9.4-rc1+platterpus.5-beta.5 (2026-08-05) -- PRE-RELEASE
+=========================================================
+**One fix, and it is why this is a new beta rather than a patch to beta.4.** An
+`INDEX 00` that used to be written and now is not is a behavioural change on a
+contract surface, and two builds answering to one version string is the
+ambiguity `+platterpus.N` exists to prevent.
+
+Round 7 is still open and both sides declare HOLD, so this remains a
+pre-release and every logfile says `NOT a released build`.
+
+Fixed -- the cue sheet, breaking, and found by a rip rather than by a test
+ - **A zero-length pre-gap no longer gets an `INDEX 00`.** Found by cross-checking
+   our own two artifacts from the 2026-08-05 rig session: on four tracks the log
+   said `Pregap length: 0 frames` and the cue declared an `INDEX 00` anyway, at a
+   timestamp **one frame past the end of the previous `FILE`**. Track 3 is the
+   clearest -- log `Pregap LSN: 28067 / length 0 / Start LSN: 28067 (with offset:
+   28068)`, cue `INDEX 00 03:01:05`, which addresses frame 13580 of a file holding
+   frames 0..13579.
+
+   `setup_track_lsn()` overwrites `start_lsn` with the offset-accounted first
+   frame *after* the gap decisions are taken, so by the time the cue is written a
+   `-s 667` offset has moved it one frame past `start_lsn_sig`. The guard
+   compared against `start_lsn`; the length two lines below already used
+   `start_lsn_sig`. A pre-gap's length is defined against the signalled start --
+   the offset is a property of the read.
+
+   **Present in all three cue sheets on record**, including the 2026-08-04
+   beta.1 session, so it is as old as the sub-channel pre-gap search.
+
+   Unreachable from any disc image, so the decision is now a pure predicate in
+   `cue_writer.h` exercised by `tests/cuegap.c`: it needs a pre-gap that is
+   signalled *and* zero frames long, and a bincue track whose `INDEX 00` equals
+   its `INDEX 01` comes back as `unknown (sub-channel unreadable)` -- measured on
+   a fixture built for the purpose, not assumed.
+
+Added
+ - **`tools/audio-checksums.py`** -- recompute cyanrip's EAC CRC32, AccurateRip
+   v1/v2 and +450 over any audio file, compare a file against a log, or localise
+   where two files differ. It turns "the rip matches EAC" from a report into a
+   command. Validated twice: against EAC's own audio for three tracks of the rig
+   disc, and against Platterpus's independently-computed addendum values, which
+   agree on all four numbers for track 5.
+ - **`tests/rip_images.py contract_build`** -- fails when `PROVIDER-CONTRACT.md`
+   describes a different version than `meson.build`. Five of this fork's six
+   version bumps shipped a contract one build stale, and every beta note then
+   published `PROVIDER-CONTRACT.md @ <release commit>`, sending a consumer to the
+   wrong file. Run against `f5e11ba` the check fails, quoting both versions.
+
+Archived, not changed
+ - `docs/rig-2026-08-05/` and `docs/rig-2026-08-05b-0.6.4b8/` -- beta.4's first
+   two runs on hardware. Both `--verify-log` clean as shipped. Both carry the
+   first hardware execution of the two log changes proposed in round 7 lap 25:
+   `Tracks ripped accurately: 12/14` with `Tracks ripped partially accurately:
+   2/14`, where the old denominator would have printed `2/2`.
+ - They also settle by artifact something both projects had described backwards:
+   the replayed pre-log block sits **below** the header. `Release ID:` is line 27
+   and the replay runs 34-41.
+
 0.9.4-rc1+platterpus.5-beta.4 (2026-08-05) -- PRE-RELEASE
 =========================================================
 **Two log lines change, and unlike beta.3 this build is *not* observably
