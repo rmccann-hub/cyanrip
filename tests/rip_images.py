@@ -676,7 +676,7 @@ def sc_early_log():
     _, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-s", "0", "-P", "0",
                   "-o", "flac", "-D", WORK / "out_earlydiag", "-F", "{track}",
                   "-L", "log")
-    diag = "Release ID unavailable, cannot search Cover Art DB!"
+    diag = "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!"
     if diag not in out:
         fail(f"early_log: {diag!r} not printed at all -- probe is stale")
     elif diag not in (WORK / "out_earlydiag" / "log.log").read_text():

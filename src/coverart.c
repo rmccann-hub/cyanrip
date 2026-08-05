@@ -357,7 +357,15 @@ int crip_fill_coverart(cyanrip_ctx *ctx, int info_only)
     if (!have_front || !have_back) {
         const char *release_id = dict_get(ctx->meta, "musicbrainz_albumid");
         if (!release_id && !ctx->settings.disable_coverart_db) {
-            cyanrip_log(ctx, 0, "Release ID unavailable, cannot search Cover Art DB!\n");
+            /* Name which ID, and when. The old wording was "Release ID
+             * unavailable", which a reader reconciled against the header's
+             * "Release ID: <uuid>" two blocks below and concluded one of them
+             * was wrong. Neither is: -R and user "-a musicbrainz_albumid=" are
+             * merged into ctx->meta *after* crip_fill_coverart() runs, so the
+             * only source at this point is cyanrip's own MusicBrainz lookup.
+             * Says what was observed -- the field is unset here -- rather than
+             * the stronger "the release has no ID". */
+            cyanrip_log(ctx, 0, "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!\n");
         } else if (!ctx->settings.disable_coverart_db) {
             int has_err = 0;
             if (!have_front) {
