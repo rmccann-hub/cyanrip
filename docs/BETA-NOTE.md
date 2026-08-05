@@ -118,11 +118,18 @@ Everything must be byte-identical except:
 |---|---|
 | the version banner | `beta.4`, `gf5e11ba` |
 | `Handshake:` | reads `round 7 lap 24` |
-| timing fields | `Elapsed:`, `Extraction speed:`, `Ripping finished at` |
+| `Invoked as:` | if the binary path, output directory or flags differ at all |
+| `Consumer:` | if you pass a different `-u` |
+| per-track timing | `Extraction speed:`, `Elapsed:` — these vary run to run on the same binary |
+| `Ripping finished at` | wall clock |
 | `Log FUN512:` | follows from all of the above |
 | the two lines above | §1 and §2 |
 
 **If anything else moves, that is a finding.**
+
+The list is derived from the reference log rather than recalled: `Invoked as:`,
+`Consumer:`, `Extraction speed:`, `Elapsed:`, `Ripping finished at` and
+`Log FUN512:` are the only lines in it whose value is not fixed by the disc.
 
 The second line is the one that matters most: **it has never executed
 anywhere.** The block needs an AccurateRip database hit, the lookup fetches over
@@ -156,14 +163,20 @@ priority order:
 
 ### One thing to know before relying on `PROVIDER-CONTRACT.md`
 
-**The contract did not change when change §2 did.** P2 derives each entry from
-the *format string* at the call site, and §2 changed an argument, so the row is
-byte-identical before and after and `--check` exits 0 across it.
+**Not one row of the contract's body changes when change §2 does — only the
+source anchor.** Measured by reverting the denominator alone on a clean build
+and regenerating: `--check` fails (the anchor is a hash over `src/`, so any
+source edit moves it), and the **entire** diff is that one hex string. Every P2
+row is byte-identical, because P2 derives each entry from the *format string* at
+the call site and §2 changed an argument.
 
 **The contract derives the shape of a line, not the meaning of its numbers.**
-Deliberately not patched on the way out — a half-working argument extractor
-would put wrong text into a document that presents itself as derived. It is
-proposed as round 8 work with the cost stated.
+So a diff of two contracts tells you *something under `src/` moved* — the same
+thing it says for a comment or a whitespace change — and nothing about what.
+
+Deliberately not patched on the way out: a half-working argument extractor
+would put wrong text into a document that presents itself as derived. Proposed
+as round 8 work with the cost stated.
 
 ## What every logfile from this build contains
 

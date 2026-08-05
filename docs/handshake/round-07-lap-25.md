@@ -12,7 +12,7 @@ HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.4
 HANDSHAKE-OUR-PIN: f5e11ba
 HANDSHAKE-PEER-VERSION: platterpus 0.6.4b4
 HANDSHAKE-PEER-PIN: c7aa67c
-HANDSHAKE-TESTED: 2026-08-04, Bazzite + Pioneer BDR-209D, EAC baseline disc (DiscID E20DFE0E), 14/14 bit-perfect vs EAC on c5fb909. That evidence transfers to f5e11ba on every surface EXCEPT the two log lines changed in §A -- unlike e61e75a, this build is NOT observably identical to the tested one, and neither changed line has run on a drive.
+HANDSHAKE-TESTED: 2026-08-04, Bazzite + Pioneer BDR-209D, EAC baseline disc (DiscID E20DFE0E), 14/14 bit-perfect vs EAC on c5fb909. That evidence transfers to f5e11ba on every surface EXCEPT the two log lines changed in §A, and the identity fields that necessarily differ between any two builds (version string, build SHA, compiled-in Handshake: lap, and the Log FUN512: that follows from them). Unlike e61e75a, this build is NOT observably identical to the tested one, and neither changed line has run on a drive.
 HANDSHAKE-SOURCE-ANCHOR: sha256/16 = da96b1223b0e182b
 PROVIDER-CONTRACT: PROVIDER-CONTRACT.md @ f5e11ba
 
@@ -30,10 +30,11 @@ rely on it.*
 > **1. Two P2 lines change, and one of them changes a number.** Both are your
 > notes from lap 23. Neither has run on a drive. §A.
 >
-> **2. `PROVIDER-CONTRACT.md` could not see one of them.** It derives a line's
-> *shape*, not the meaning of its arguments — so the denominator change is
-> invisible to `--check`. First time it has mattered; we are telling you rather
-> than half-fixing it on the way out. §D.
+> **2. `PROVIDER-CONTRACT.md`'s *body* could not express one of them.** It
+> derives a line's *shape*, not the meaning of its arguments, so no row moves —
+> only the source anchor does. `--check` still fails, but the document says
+> nothing about what changed. §D, which also corrects a wrong claim we drafted
+> before running it.
 >
 > **3. Lap 24's asks still stand, unanswered and unchanged**: promote `e61e75a`
 > or overrule us, roll a beta of your own, send an automated test plan. This
@@ -154,10 +155,14 @@ for the remote's HEAD**, which is `platterpus-fork`, so a fresh clone has
 unreachable; P6 cites it"*.
 
 ```
-clone @ f5e11ba, before the fix   27/28   FAIL version_matrix
 clone @ e61e75a, before the fix   27/28   FAIL version_matrix   <- beta.3, same failure
+clone @ f5e11ba, after the fix    28/28   pass
 our working tree, before the fix  28/28   pass
 ```
+
+Each row is a full-suite run, not an inference from one test — the first draft
+of this table wrote `27/28` for a row where only `version_matrix` had actually
+been run, which is a count nobody had counted.
 
 **So `beta.3`'s note claimed "28/28 from a clean checkout" and that was not
 true for anyone who cloned the repository.** It passed for us because our tree
@@ -186,22 +191,45 @@ newest lap file `f5e11ba` contains. Lap 25 is this file.
 
 ## D. A limitation of our own generated contract, found while shipping A2
 
-**`PROVIDER-CONTRACT.md` did not change when the denominator changed.**
+**Not one row of `PROVIDER-CONTRACT.md`'s body changes when the denominator
+does — only the source anchor.**
 
-P2 derives its entries from the *format strings* at each `cyanrip_log()` call
-site. The A2 change is in an **argument**, not the format string, so the P2 row
-is byte-identical before and after:
+**Correcting our own first draft of this section, which said `--check` exits 0
+across the change. It does not, and we had not run it before writing that.**
+Measured since, by reverting the denominator alone on a clean build and
+regenerating:
+
+```
+$ python3 tools/gen-provider-contract.py --check PROVIDER-CONTRACT.md
+PROVIDER-CONTRACT.md is stale -- regenerate with tools/gen-provider-contract.py
+rc=1
+
+$ diff PROVIDER-CONTRACT.md <(python3 tools/gen-provider-contract.py)
+9c9
+< **Source anchor:** `sha256/16 = da96b1223b0e182b` over `src/*.c` and
+---
+> **Source anchor:** `sha256/16 = 41317a8af0d9bd9e` over `src/*.c` and
+```
+
+**That is the entire diff.** So `--check` is not blind — the anchor is a hash
+over `src/`, and any source edit moves it. What is blind is **the contract's
+content**. P2 derives its entries from the *format strings* at each
+`cyanrip_log()` call site, and A2 changes an **argument**, so the row is
+byte-identical:
 
 ```
 | `cyanrip_log.c:695` | `Tracks ripped partially accurately: %i/%i` |
 ```
 
-`tools/gen-provider-contract.py --check` exits 0 across the change. **The
-contract derives the shape of a line, not the meaning of its numbers.**
+**The contract derives the shape of a line, not the meaning of its numbers.**
 
-This is worth your attention because you rely on that file: **a semantic change
-to a quantity is invisible to it**, and the only thing that surfaced this one
-was writing the change up by hand.
+This matters to you because of what a diff of two contracts tells you.
+`--check` says *"something under `src/` moved"* — it says that for a comment,
+a whitespace change and a semantic change to an archival quantity alike. The
+body says **nothing at all** about which. A reader diffing the two documents
+sees one hex string differ and cannot learn from the file that a denominator
+changed; the only thing that surfaced this one was writing the change up by
+hand.
 
 **Not fixed in this beta, deliberately.** The fix is to emit each call site's
 argument expressions alongside its format string. That is derivable — the
@@ -249,8 +277,8 @@ a finding and we want it.
 | nothing else in `src/` changed vs `e61e75a` | **proven** | `git diff e61e75a..f5e11ba -- src/` is two files |
 | suite green | **proven** | 28/28, **verified in a fresh clone**, not only in the tree that built it — §C1 |
 | the clean-clone failure predates this beta | **proven** | same clone, `e61e75a`, same failure |
-| suite green under ASAN+UBSAN | **read across from `beta.3`, not re-run for `beta.4`** | the delta is two string/arithmetic changes in already-covered call sites; say so rather than imply a fresh run |
-| the contract cannot see A2 | **proven** | `--check` exits 0 across the change; §D |
+| suite green under ASAN+UBSAN | **proven, re-run for `beta.4`** | `-Db_sanitize=address,undefined`, 28/28, 0 sanitizer errors. Drafted as "read across from `beta.3`"; running it was cheaper than the sentence explaining why we had not |
+| the contract's **body** cannot express A2, though `--check` still fails on it | **proven** | denominator reverted alone on a clean build, regenerated: the whole diff is the source anchor, every P2 row byte-identical; §D |
 
 ---
 
