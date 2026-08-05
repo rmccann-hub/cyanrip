@@ -8,63 +8,49 @@ nothing else.*
 ## Identifiers
 
 ```
-version   0.9.4-rc1+platterpus.5-beta.4
+version   0.9.4-rc1+platterpus.5-beta.5
 repo      rmccann-hub/cyanrip
 branch    platterpus-fork
-build     c36ad65      <- check this out
-tests     30/30
-anchor    sha256/16 = da96b1223b0e182b   (over src/*.c and src/*.h)
+build     9048082      <- check this out
+tests     31/31
+anchor    sha256/16 = b849568d1f3a64d2   (over src/*.c and src/*.h)
 contract  PROVIDER-CONTRACT.md in that tree, and it describes that tree
 ```
 
-**`f5e11ba` was named as the pin in an earlier draft of this file. Do not use
-it** — read the box below. The *binary* is the same either way; the
-`PROVIDER-CONTRACT.md` beside it is not.
-
-**Why the pin is not the commit that bumped the version, and why this file names
-a commit that is not its own.** A file cannot contain the hash of a commit
-containing it, so this note lands as `c36ad65`'s child. That child changes no
-source file and no handshake state, so the binary built from either is the same
-program — only the SHA in the banner differs, and this note's own contents.
+**`beta.4` (`f5e11ba`) is superseded and should not be installed.** It writes an
+`INDEX 00` for zero-length pre-gaps that this build does not — a cue-sheet
+change, so it earns a version rather than riding inside `beta.4`.
 
 **The commit is the identifier.** There is no git tag and no GitHub release: the
-git proxy in the build environment refuses tag pushes (`HTTP 403`,
-`git ls-remote --tags origin` returns nothing) and no release-creation API is
-reachable from it.
+git proxy refuses tag pushes (`HTTP 403`, `git ls-remote --tags origin` returns
+nothing) and no release-creation API is reachable from it.
 
-> **The pin is not the commit that bumped the version, and that is deliberate.**
+> **Pin the artifacts commit, not the commit that bumped the version.**
 > `tools/gen-provider-contract.py` reads the *built binary* and refuses on a
-> dirty tree, so the contract can never be regenerated in the same commit as a
-> version bump — the bump must be committed before a clean build exists to
+> dirty tree, so the contract cannot be regenerated in the same commit as a
+> version bump — the bump has to be committed before a clean build exists to
 > derive from. **Five of the six version bumps that carry a contract shipped one
 > describing the previous version:**
 >
 > ```
-> 6e62172   meson .3                 contract 0.9.4-rc1              DISAGREE
-> 5bc654d   meson .4                 contract .4                     agree
-> 937cacf   meson .5-beta.1          contract .4                     DISAGREE
-> c5fb909   meson .5-beta.2          contract .5-beta.1              DISAGREE
-> e61e75a   meson .5-beta.3          contract .5-beta.2              DISAGREE
-> f5e11ba   meson .5-beta.4          contract .5-beta.3              DISAGREE
+> 6e62172   meson .3          contract 0.9.4-rc1     DISAGREE
+> 5bc654d   meson .4          contract .4            agree
+> 937cacf   meson .5-beta.1   contract .4            DISAGREE
+> c5fb909   meson .5-beta.2   contract .5-beta.1     DISAGREE
+> e61e75a   meson .5-beta.3   contract .5-beta.2     DISAGREE
+> f5e11ba   meson .5-beta.4   contract .5-beta.3     DISAGREE
 > ```
 >
-> **Five of the six, not all six.** `5bc654d` — the release of
-> `0.9.4-rc1+platterpus.4`, and the commit this lap declares as `HANDSHAKE-PIN` —
-> agrees, because the contract had already been regenerated one commit earlier
-> from a tree that carried the `.4` string, so the bump landed into an
-> already-correct file. Earlier drafts of this passage said *"every release this
-> fork has cut"*; that was a generalisation from three checked commits, and
+> Five, not six: `5bc654d`'s contract had been regenerated one commit earlier
+> from a tree already carrying the new string. An earlier draft of this file said
+> *"every release"*, generalising from three checked commits;
 > `tests/rip_images.py contract_build` passes at `5bc654d`, so the check offered
-> as the claim's enforcement is also its disproof. The list above is enumerated
-> from `git log --format=%h -- meson.build`, not sampled.
+> as that claim's enforcement was also its disproof. Enumerated from
+> `git log --format=%h -- meson.build`, not sampled.
 >
-> Earlier notes published `PROVIDER-CONTRACT.md @ <release commit>`, so a
-> consumer following them got the wrong anchor, the pre-change coverart string
-> and six wrong `cyanrip_log.c` line numbers. **The pin above is the artifacts
-> commit**, where `gen-provider-contract.py --check` exits 0 and the contract
-> describes the binary you just built. `tests/rip_images.py contract_build`
-> now fails on any tree where the two disagree — run against `f5e11ba` it fails
-> with the message above.
+> **`c10cc94` is the version bump for this beta and its contract still says
+> `beta.4`.** `9048082`, above, is where the regenerated contract lands.
+> `contract_build` now fails on any tree where the two disagree.
 
 **This is a pre-release.** It claims no joint verification, and says so in every
 logfile it writes. Round 7 is open and both projects declare HOLD.
@@ -78,7 +64,7 @@ rig tested.**
 
 ```sh
 git clone <repo> && cd cyanrip
-git checkout c36ad65
+git checkout 9048082
 meson setup build && ninja -C build
 meson test -C build --print-errorlogs
 ./build/src/cyanrip --version
@@ -88,13 +74,13 @@ python3 tools/gen-provider-contract.py --check PROVIDER-CONTRACT.md
 Expected:
 
 ```
-30/30 tests passing
-cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gc36ad65)
+31/31 tests passing
+cyanrip 0.9.4-rc1+platterpus.5-beta.5 (platterpus-fork-g9048082)
 PROVIDER-CONTRACT.md is up to date
 ```
 
-30, not 28: `contract_build` and the audio-checksum mirror's `self-test` are
-new.
+31, not 28. Three checks are new since `beta.3`: `contract_build`, the audio
+checksum mirror's `self-test`, and the cue pre-gap decision.
 
 A banner ending `-dirty` means the tree had uncommitted changes and the commit
 does not describe the binary.
@@ -106,40 +92,29 @@ remote's HEAD — which is `platterpus-fork` — so a fresh clone had
 `origin/master` and no `master`, and the check failed with *"master is
 unreachable"*. It passed in our working tree, which happens to carry the
 branch, so `beta.3`'s note claimed 28/28 from a clean checkout and that was not
-true for anyone who cloned. Fixed here, and this beta's 28/28 was verified in a
-fresh clone rather than in the tree that built it.
+true for anyone who cloned. Fixed in `beta.4`; this beta's 31/31 was verified in
+a fresh clone rather than in the tree that built it.
 
-## Two artifacts in that tree describe an earlier commit, on purpose
+## Which artifact in that tree describes which commit
 
-Both are labelled here so neither reads as drift:
-
-| artifact | describes | why it cannot describe the pin |
+| artifact | describes | why |
 |---|---|---|
-| `PROVIDER-CONTRACT.md` | **the pin** | nothing — it is correct, and that is the point of pinning `c36ad65` rather than `f5e11ba` |
-| `docs/golden-reference.log` and its `.diagnostics.json` | build `f5e11ba` (banner says so) | a log contains the build tag of the binary that wrote it, so it can never sit inside that build's own commit |
-| this note | build `c36ad65` | same reason: it names a commit, so it lands as that commit's child |
+| `PROVIDER-CONTRACT.md` | **the pin, `9048082`** | correct, and the reason the pin is this commit and not `c10cc94` |
+| `docs/golden-reference.log` + `.diagnostics.json` | build **`c10cc94`** (banner says so) | a log carries the build tag of the binary that wrote it, so it can never sit inside that build's own commit |
+| this note | build **`9048082`** | same reason: it names a commit, so it lands as that commit's child |
 
-**`f5e11ba` and `c36ad65` differ in two observable ways and no others.**
-`git diff f5e11ba..c36ad65 -- src/ meson.build` is empty, so the ripping code is
-identical — but the `Handshake:` line is compiled in from `docs/handshake/`, and
-lap 25 does not exist at `f5e11ba`. So:
+`c10cc94` and `9048082` are the same ripping code — `git diff c10cc94..9048082
+-- src/ meson.build` is empty. They differ in the build SHA in the banner and in
+the documents above. **`f5e11ba` is a different program**: it lacks the cue fix.
 
-```
-f5e11ba   banner …-gf5e11ba    Handshake: round 7 lap 24 OPEN, verdict HOLD
-c36ad65   banner …-gc36ad65    Handshake: round 7 lap 25 OPEN, verdict HOLD
-```
-
-A draft of this paragraph said the handshake state was the same. It is not, and
-the check that caught it was running `git show f5e11ba:docs/handshake/round-07-lap-25.md`
-rather than reasoning about what a doc-only commit can change.
-
-## What changed, and it is exactly two log lines
+## What changed in `beta.4`, and still applies here — two log lines
 
 Both were raised as non-blocking notes and both were carried as known
 imprecision. They are **proposals shipped in a beta so they can be run**, and
 either can be withdrawn.
 
 `git diff e61e75a..f5e11ba -- src/` touches two files and nothing else.
+**`beta.5` adds one more change on top of these: the cue fix below.**
 
 ### 1. Cover art — the line now names which release ID, and when
 
@@ -190,13 +165,41 @@ Same disc, same verdict, different denominator.
 lines 1130-1131 against `Disc tracks: 14` on line 23. A stored `1/1` from that
 disc becomes `1/14`.
 
+## The cue-sheet fix, which is new in `beta.5`
+
+**A zero-length pre-gap no longer gets an `INDEX 00`.** Your own rips found it:
+on tracks 3, 6, 11 and 12 the log said `Pregap length: 0 frames` and the cue
+declared an `INDEX 00` anyway, at a timestamp **one frame past the end of the
+previous `FILE`**.
+
+```
+track 3   log:  Pregap LSN 28067,  length 0,  Start LSN 28067 (with offset: 28068)
+          cue:  INDEX 00 03:01:05   = frame 13580 of a file holding frames 0..13579
+```
+
+The guard compared against `start_lsn`, which `setup_track_lsn()` overwrites
+with the offset-accounted first frame *after* the gap decisions are taken — so
+with `-s 667` it sat one frame past the signalled start and a zero-length
+pre-gap read as a one-frame one. The length two lines below already used
+`start_lsn_sig`. **Present in all three cue sheets on record**, including the
+2026-08-04 beta.1 session, so this is not a `beta.4` regression.
+
+**What to check:** re-rip and confirm your cue has **no** `INDEX 00` for tracks
+3, 6, 11 and 12, and still has one for 2, 4, 5, 7, 8, 9, 10, 13 and 14. If a
+pre-gap you expect has gone missing, that is a finding and the fix goes back.
+
+No test here can reach the trigger — it needs a pre-gap that is signalled *and*
+zero frames long, and a bincue track whose `INDEX 00` equals its `INDEX 01`
+comes back `unknown (sub-channel unreadable)`, measured on a fixture built for
+it. `tests/cuegap.c` exercises the decision directly, with your rip's numbers.
+
 ## What to test
 
 ### Highest value, cheapest, and specific to this beta
 
 **Re-rip the baseline disc (The Police, *Every Breath You Take: The Classics*,
 14 tracks, MusicBrainz DiscID `pNtImOkdBm9RMBIalzx0w9cfsYY-`, CDDB ID
-`E20DFE0E`) on `c36ad65` and diff the log against the one you already have.**
+`E20DFE0E`) on `9048082` and diff the log against the one you already have.**
 
 > **Which log?** Two rig sessions ran on 2026-08-04 — `9003e6f` (beta.1) and
 > `c5fb909` (beta.2) — and our documents had been calling both "the 2026-08-04
@@ -324,7 +327,7 @@ the cost stated.
 ## What every logfile from this build contains
 
 ```
-cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-gc36ad65)
+cyanrip 0.9.4-rc1+platterpus.5-beta.5 (platterpus-fork-g9048082)
 Invoked as:     …
 Handshake:      round 7 lap 25 OPEN, verdict HOLD -- NOT a released build
 Consumer:       <whatever --consumer was given>
@@ -332,7 +335,7 @@ Consumer:       <whatever --consumer was given>
 ```
 
 `Handshake:` is derived from `docs/handshake/` at build time, so it reports the
-newest lap the *tree* contains — `lap 25` at `c36ad65`. Building `f5e11ba`
+newest lap the *tree* contains — `lap 25` at `9048082`. Building `f5e11ba`
 instead reports `lap 24`, which is not a discrepancy: lap 25 did not exist yet.
 `Consumer:` is whatever you pass to `-u`, recorded verbatim and explicitly not
 verified.
@@ -347,7 +350,7 @@ verified.
 | `-x` / `--cache-probe` | measure the drive's readback cache before ripping; refuses on a disc image. **Never executed on real hardware** |
 
 Flag count: 41. Full generated interface in `PROVIDER-CONTRACT.md` **in the
-`c36ad65` tree** — not in `f5e11ba`'s, which carries `beta.3`'s.
+`9048082` tree** — not in `c10cc94`'s, which still carries `beta.4`'s.
 
 ## What this build still cannot claim
 
