@@ -735,9 +735,21 @@ def sc_version_matrix():
 
     # Claim 2: genopt onward has no -V in the option table. Checked against
     # upstream master rather than our tree, because ours restores it.
-    ec, post = git("show", "master:src/cyanrip_main.c")
+    #
+    # `master` is a local branch here and a remote-tracking ref in a fresh
+    # clone: `git clone` creates a local branch only for the remote's HEAD,
+    # which is platterpus-fork. So this failed for every consumer who cloned
+    # the repository and passed for us, and both betas shipped a note claiming
+    # 28/28 from a clean checkout on the strength of a tree that happened to
+    # have the branch. Try each spelling and fail only when none resolves --
+    # an absent ref is still a refusal, never a silent skip.
+    for ref in ("master", "origin/master", "refs/remotes/origin/master"):
+        ec, post = git("show", f"{ref}:src/cyanrip_main.c")
+        if ec == 0:
+            break
     if ec != 0:
-        fail("version_matrix: master is unreachable; P6 cites it")
+        fail("version_matrix: upstream master is unreachable under any of "
+             "master, origin/master, refs/remotes/origin/master; P6 cites it")
     elif re.search(r'GEN_OPT_\w+\([^)]*"V"', post):
         fail("version_matrix: upstream master has a -V option now -- P6 says "
              "genopt dropped it, and our -V alias is described as fork-only")
