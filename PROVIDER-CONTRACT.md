@@ -4,9 +4,9 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc1+platterpus.5-beta.3 (platterpus-fork-g<commit>)`
+Build: `cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = b9f93e4fdc1fa4f4` over `src/*.c` and
+**Source anchor:** `sha256/16 = da96b1223b0e182b` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -162,7 +162,7 @@ requires a handshake round.
 | `coverart.c:262` | `Unable to open \"%s\": %s!` |
 | `coverart.c:269` | `Unable to get cover image info: %s!` |
 | `coverart.c:299` | `Error demuxing cover image: %s!` |
-| `coverart.c:360` | `Release ID unavailable, cannot search Cover Art DB!` |
+| `coverart.c:368` | `No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!` |
 | `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!Invalid folder name? Try -D <folder>.` |
 | `cyanrip_encode.c:364` | `Error creating filter source: %s!` |
 | `cyanrip_encode.c:375` | `Error creating filter sink: %s!` |
@@ -280,12 +280,12 @@ requires a handshake round.
 | `cyanrip_log.c:628` | `%i%s` |
 | `cyanrip_log.c:642` | `AccurateRip:    %s` |
 | `cyanrip_log.c:648` | `Total time:     %s` |
-| `cyanrip_log.c:686` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:688` | `Tracks ripped partially accurately: %i/%i` |
-| `cyanrip_log.c:698` | `Ripping errors: %i` |
-| `cyanrip_log.c:707` | `Rip completed:  no (interrupted by user, %i of %i tracks)` |
-| `cyanrip_log.c:710` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:713` | `Ripping finished at %s` |
+| `cyanrip_log.c:693` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:695` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:705` | `Ripping errors: %i` |
+| `cyanrip_log.c:714` | `Rip completed:  no (interrupted by user, %i of %i tracks)` |
+| `cyanrip_log.c:717` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:720` | `Ripping finished at %s` |
 | `cyanrip_main.c:209` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:217` | `Unable to open device: %s` |
 | `cyanrip_main.c:226` | `Unable to init cddap context!` |

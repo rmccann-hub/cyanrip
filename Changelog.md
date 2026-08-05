@@ -37,6 +37,24 @@ Changed -- log text, breaking, proposed
    with lookups enabled reports `AccurateRip: not found` and prints no tally.
    It needs the rig disc to verify.
 
+Fixed -- test harness, and it means the previous betas' notes were wrong
+ - **The suite did not pass in a clean clone, and had not for at least two
+   betas.** `version_matrix` verified P6's upstream claim with
+   `git show master:src/cyanrip_main.c`, and `git clone` creates a local branch
+   only for the remote's HEAD -- `platterpus-fork` -- so a fresh clone has
+   `origin/master` and no `master`. It failed there with *"master is
+   unreachable; P6 cites it"* while passing in a working tree that happens to
+   carry the branch.
+
+   Measured on both: a clone fails at `e61e75a` the same way. **So `beta.3`'s
+   note claimed 28/28 from a clean checkout and that was not true for anyone
+   who cloned the repository.** Each spelling is now tried, and the check still
+   fails when none resolves -- an absent ref stays a refusal rather than a
+   silent skip, which is the only reason this was visible at all.
+
+   Found by running the clean-checkout verification in a clone instead of in
+   the tree that produced the artifact. That difference is the whole finding.
+
 0.9.4-rc1+platterpus.5-beta.3 (2026-08-05) -- PRE-RELEASE
 =========================================================
 **One code change over beta.2, and it alters no observable surface** -- measured
