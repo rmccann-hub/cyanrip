@@ -6,7 +6,7 @@ stale silently, which is the failure this file exists to prevent.
 
 Build: `cyanrip 0.9.4-rc1+platterpus.5-beta.4 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = da96b1223b0e182b` over `src/*.c` and
+**Source anchor:** `sha256/16 = b849568d1f3a64d2` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
