@@ -692,8 +692,8 @@ def sc_early_log():
 def sc_contract_build():
     # The contract must describe THIS tree's version, not the previous one.
     #
-    # This is the check for a defect that shipped in five of this fork's six
-    # version bumps -- 5bc654d is the exception, because its contract had been
+    # This is the check for a defect that shipped in six of this fork's seven
+    # version bumps -- 5bc654d is the only exception, because its contract had been
     # regenerated one commit earlier from a tree already carrying the new
     # string, so this check passes there.
     # `tools/gen-provider-contract.py` reads the *built binary*

@@ -41,10 +41,10 @@ Added
    disc, and against Platterpus's independently-computed addendum values, which
    agree on all four numbers for track 5.
  - **`tests/rip_images.py contract_build`** -- fails when `PROVIDER-CONTRACT.md`
-   describes a different version than `meson.build`. Five of this fork's six
-   version bumps shipped a contract one build stale, and every beta note then
-   published `PROVIDER-CONTRACT.md @ <release commit>`, sending a consumer to the
-   wrong file. Run against `f5e11ba` the check fails, quoting both versions.
+   describes a different version than `meson.build`. Six of this fork's seven
+   version bumps shipped a contract one build stale, including this one's. Every
+   beta note then published `PROVIDER-CONTRACT.md @ <release commit>`, sending a
+   consumer to the wrong file. Run against `f5e11ba` the check fails, quoting both versions.
 
 Archived, not changed
  - `docs/rig-2026-08-05/` and `docs/rig-2026-08-05b-0.6.4b8/` -- beta.4's first

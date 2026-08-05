@@ -29,8 +29,8 @@ nothing) and no release-creation API is reachable from it.
 > `tools/gen-provider-contract.py` reads the *built binary* and refuses on a
 > dirty tree, so the contract cannot be regenerated in the same commit as a
 > version bump — the bump has to be committed before a clean build exists to
-> derive from. **Five of the six version bumps that carry a contract shipped one
-> describing the previous version:**
+> derive from. **Six of the seven version bumps that carry a contract shipped one
+> describing the previous version — including this beta's own:**
 >
 > ```
 > 6e62172   meson .3          contract 0.9.4-rc1     DISAGREE
@@ -39,9 +39,10 @@ nothing) and no release-creation API is reachable from it.
 > c5fb909   meson .5-beta.2   contract .5-beta.1     DISAGREE
 > e61e75a   meson .5-beta.3   contract .5-beta.2     DISAGREE
 > f5e11ba   meson .5-beta.4   contract .5-beta.3     DISAGREE
+> c10cc94   meson .5-beta.5   contract .5-beta.4     DISAGREE  <- this beta
 > ```
 >
-> Five, not six: `5bc654d`'s contract had been regenerated one commit earlier
+> Six, not seven: `5bc654d`'s contract had been regenerated one commit earlier
 > from a tree already carrying the new string. An earlier draft of this file said
 > *"every release"*, generalising from three checked commits;
 > `tests/rip_images.py contract_build` passes at `5bc654d`, so the check offered
