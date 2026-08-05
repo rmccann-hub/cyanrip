@@ -72,6 +72,15 @@ test('Diagnostics retention', diag_test)
 ## finished files.
 python = import('python').find_installation()
 
+## Audio checksum mirror
+## =====================
+## tools/audio-checksums.py reimplements src/checksums.h in Python so a rip's
+## files can be checked against a rip's log -- which is how "14/14 bit-perfect
+## vs EAC" stopped being somebody's report and became a command. Two
+## implementations of one algorithm drift silently; this is what notices.
+test('Audio checksum mirror', python,
+     args: [ files('../tools/audio-checksums.py'), 'self-test' ])
+
 ## Release gate
 ## ============
 ## The "no release while a round is open" rule used to be prose only. This is
