@@ -689,6 +689,47 @@ def sc_early_log():
         fail("early_log: a log containing the replay block fails --verify-log")
 
 
+def sc_contract_build():
+    # The contract must describe THIS tree's version, not the previous one.
+    #
+    # This is the check for a defect that shipped in every release this fork
+    # has ever cut. `tools/gen-provider-contract.py` reads the *built binary*
+    # and refuses on a dirty tree, so the contract can never be regenerated in
+    # the same commit as a version bump -- the bump has to be committed before
+    # a clean build exists to derive from. The consequence went unnoticed:
+    #
+    #     c5fb909  meson.build beta.2   contract says beta.1
+    #     e61e75a  meson.build beta.3   contract says beta.2
+    #     f5e11ba  meson.build beta.4   contract says beta.3
+    #
+    # Every beta note then published "PROVIDER-CONTRACT.md @ <release commit>",
+    # so a consumer following those instructions checked out a tree whose
+    # contract described the build before the one they had just compiled --
+    # wrong anchor, wrong coverart string, six wrong `cyanrip_log.c` line
+    # numbers. Found by an adversarial re-read, not by any check.
+    #
+    # The fix is procedural (pin the artifacts commit, not the release commit)
+    # and procedure rots, so this is the thing that fails when it does. It is
+    # pure text on purpose: no build, no network, no git, so it runs in a
+    # tarball and on a dirty tree, which is exactly where --check cannot.
+    version = re.search(r"^\s*version:\s*'([^']+)'", (ROOT / "meson.build").read_text(),
+                        re.M)
+    if not version:
+        fail("contract_build: no version in meson.build")
+        return
+
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    build = re.search(r"^Build: `cyanrip (\S+)", contract, re.M)
+    if not build:
+        fail("contract_build: PROVIDER-CONTRACT.md has no `Build:` line -- "
+             "the generator's output shape changed and this check is stale")
+    elif build.group(1) != version.group(1):
+        fail(f"contract_build: PROVIDER-CONTRACT.md describes "
+             f"{build.group(1)!r} but this tree is {version.group(1)!r}. "
+             "Rebuild from a clean tree and regenerate; do not publish this "
+             "commit as a pin.")
+
+
 def sc_version_matrix():
     # P6 of the provider contract is the one section that is STATED, not
     # derived: it describes upstream builds, which the generator cannot
