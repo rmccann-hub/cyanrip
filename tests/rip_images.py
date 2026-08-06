@@ -689,6 +689,52 @@ def sc_early_log():
         fail("early_log: a log containing the replay block fails --verify-log")
 
 
+def sc_cue_isrc():
+    # Every ISRC handed in must come back out in the cue, on a disc WITH
+    # pre-gaps. Both halves of that sentence are the test.
+    #
+    # Platterpus, round 7 lap 29: a rip on pin 9048082 carried 5 of its 14
+    # ISRCs, and the missing nine were exactly the nine tracks that got an
+    # INDEX 00. cyanrip_cue_track() has two shapes -- with an appended pre-gap
+    # and without -- and only the second emitted ISRC. The first forked from
+    # the second and did not inherit it.
+    #
+    # **The branch is upstream's**, verbatim in master since a0de6a0
+    # ("Prevent writing duplicate cue file commands when pregap exists"). What
+    # the fork changed is reachability: our sub-channel search finds pre-gaps
+    # stock leaves as CDIO_INVALID_LSN, so stock never takes the branch on a
+    # disc like this one and never loses an ISRC.
+    #
+    # WHY THIS FIXTURE: pregap.cue's track 2 takes the appended-pre-gap branch.
+    # The same assertion on basic.cue passes with the defect present, which is
+    # how it survived -- so this scenario is worthless on a gapless disc and
+    # the fixture choice is the substance, not an implementation detail.
+    codes = {1: "AAAAA0000001", 2: "BBBBB0000002", 3: "CCCCC0000003"}
+    rip("isrc", "pregap.cue",
+        *[a for n, c in codes.items() for a in ("-t", f"{n}=isrc={c}")])
+    cue = (WORK / "out_isrc" / "sheet.cue").read_text()
+
+    # The branch must actually be taken, or this proves nothing. A fixture that
+    # stopped producing an appended pre-gap would make every check below pass
+    # by never entering the code they are about.
+    if "INDEX 00" not in cue:
+        fail("cue_isrc: no INDEX 00 in the sheet -- the appended-pregap branch "
+             "was not taken, so this scenario cannot discriminate")
+
+    for n, code in codes.items():
+        if f"ISRC {code}" not in cue:
+            fail(f"cue_isrc: track {n}'s ISRC {code} is missing from the cue")
+
+    # Position, not just presence: the CUE grammar puts ISRC in the TRACK block
+    # before any INDEX line. An ISRC emitted after INDEX 00 would satisfy the
+    # count above and still be malformed.
+    for block in re.split(r"^  TRACK ", cue, flags=re.M)[1:]:
+        i_isrc = block.find("ISRC ")
+        i_index = block.find("INDEX ")
+        if i_isrc >= 0 and i_index >= 0 and i_isrc > i_index:
+            fail("cue_isrc: ISRC appears after an INDEX line in a TRACK block")
+
+
 def sc_contract_build():
     # The contract must describe THIS tree's version, not the previous one.
     #

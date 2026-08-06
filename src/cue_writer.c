@@ -97,6 +97,15 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
         CLOG("    TITLE \"%s\"\n", t->meta, "title");
         CLOG("    PERFORMER \"%s\"\n", t->meta, "artist");
+        /* ISRC belongs here too, and for a long time it did not: the branch
+         * below emits it and this one forked from that branch without it, so a
+         * track with an appended pre-gap silently lost its ISRC. Found by
+         * Platterpus in round 7 lap 29 by reading our cue back -- 9 of 14 gone
+         * on a real disc, exactly the tracks that got an INDEX 00.
+         *
+         * Position matters: the CUE grammar puts ISRC in the TRACK block before
+         * any INDEX line, so it goes above the INDEX 00 written just below. */
+        CLOG("    ISRC %s\n", t->meta, "isrc");
 
         cyanrip_frames_to_cue(t->pregap_lsn - t->pt->start_lsn_sig, time_00);
         for (int Z = 0; Z < ctx->settings.outputs_num; Z++)
