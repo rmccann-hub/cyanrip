@@ -96,7 +96,7 @@ its own, which is a different call path and is tabled separately in §2.
 | `-o` | format | `str` enum | **always `flac`** | archival master; every other format is transcoded host-side, so the ripper is never asked for a lossy encode | HAVE |  HAVE |
 | `-D` | directory | `str`, path | writable | output directory | HAVE |  HAVE |
 | `-a` | tag blob | `str`, colon-delimited, **backslash-escaped** | no newline, no NUL, bounded. Every `:` `=` `\` `'` in a *value* is escaped; the blob's structure (one `key=value` per unescaped `:`, exactly one unescaped `=` per field, no dangling escape) is refused at our argv chokepoint. Measured: an **unescaped** `:` does not fail, it silently truncates the value | the whole tag set as one argument | HAVE — escape shipped lap 31 |  HAVE — **and there IS an escape: `\\:`. See §7.** |
-| `-t` | track list | `str`, `n=<escaped blob>` | **range-checked against the disc's real track count**, and the leading `<number>=` is required — cyanrip does `strtol` then `end += 1` without checking a `=` is there, so a bare `-t 12` reads past the string | which tracks to rip. A `-t 17=` on a 16-track disc killed a rip in two seconds | HAVE — same escape, same chokepoint |  HAVE — same escape |
+| `-t` | track list | `str`, `n=<escaped blob>` | **range-checked against the disc's real track count**, and the leading `<number>=` is required. Your reading was right and understated: it did not only read past the string, it **published** what it read as track metadata. **Refused since `3923dee`** — `Missing "=" in track metadata "%s"`, exit 1 | which tracks to rip. A `-t 17=` on a 16-track disc killed a rip in two seconds | HAVE — same escape, same chokepoint |  HAVE — fixed `3923dee`, measured in §7, regression test in `sc_cli` |
 | `-c` | disc position | `int/int` | both ints, `number <= total`, else the flag is dropped | `DISCNUMBER` / `TOTALDISCS` | HAVE |  HAVE |
 | `-s` | offset | `int`, samples | drive-plausible range | read offset correction | HAVE |  HAVE — **now bounded ±1048576**, §7 |
 | `-S` | speed | `int` multiplier | bounded; `0` = drive max | read speed, fixed mode only | HAVE |  HAVE |
@@ -296,6 +296,38 @@ S-9 most wants recorded, and there are none.
   interaction probes inherited `-I` from the base invocation. Same shape as the
   false alarm you hit resolving `INDEX 00` against absolute LSNs.
 
+### What it did NOT find, and why that is the more useful half
+
+**`-t` without its `=` published adjacent process memory, and this probe walked
+straight past it for a whole round.** You found it by reading the source (lap 31
+J3), not us by running the binary — so S-9's "limits are established by running
+the binary" bought nothing here, and it is worth being precise about why rather
+than filing it as a win for source review.
+
+Every `-t` value in the grid above was **well-formed**: `1=title=x`,
+`1=title=a:b`, `0=title=x`, `99=title=x`. The grid varied the *track number* and
+the *value*, and never once varied the **shape**. The defect lived in the shape.
+A probe that only feeds well-formed arguments measures how the happy path
+handles bad data, which is not the same thing and reads identically in a summary
+— "82 probes, 0 silently ignored" was true, and the interesting input was not
+among the 82.
+
+Two consequences, and neither is "add the row" (that is done — `'1'`, `'99'`
+and `'1='` are in the table now):
+
+- **A grid needs a malformed-shape axis per argument, not just a value axis.**
+  For every argument with internal structure (`-t`, `-a`, `-p`, `-c`, `-C`), the
+  shapes are: separator missing, separator doubled, empty either side, trailing
+  separator. We have added them for `-t` only so far; the rest is round-8 work
+  and is listed as `not-probed` rather than left blank.
+- **Neither sanitizer covers this class**, so a green ASAN/UBSAN run is not
+  evidence here. argv and environ strings share the initial stack block, so an
+  overread out of one and into the next crosses no redzone either tool
+  maintains. Confirmed by running the pre-fix binary under both: it leaked the
+  environment variable into the FLAC tags and exited 0, silently, with no
+  sanitizer diagnostic. Anything that catches a regression of this class has to
+  assert on output.
+
 ### Answers to §4.4 and your Q3/Q4 — **an escape exists and always has**
 
 `-a` and `-t` are split by `av_dict_parse_string(dict, str, "=", ":", 0)`,
@@ -394,6 +426,9 @@ rather than an error — also an `absent` row.
 | `-t` | track metadata | `'1=title=a:b'` | **accepted** | 0 | (no header field exposes this) |
 | `-t` | track metadata | `'0=title=x'` | **refused** | 1 | Invalid track number 0, list has 2 tracks! |
 | `-t` | track metadata | `'99=title=x'` | **refused** | 1 | Invalid track number 99, list has 2 tracks! |
+| `-t` | track metadata | `'1'` | **refused** | 1 | Missing "=" in track metadata "1" |
+| `-t` | track metadata | `'99'` | **refused** | 1 | Invalid track number 99, list has 2 tracks! |
+| `-t` | track metadata | `'1='` | **accepted** | 0 | (no header field exposes this) |
 | `-o` | output formats | `'flac'` | **accepted** | 0 | (no header field exposes this) |
 | `-o` | output formats | `''` | **refused** | 1 | Invalid format "" |
 | `-o` | output formats | `'nosuchformat'` | **refused** | 1 | Invalid format "nosuchformat" |
@@ -420,7 +455,7 @@ rather than an error — also an `absent` row.
 | `-x` | cache probe on an image | **accepted** | 0 |  |
 | `-f` | find-offset on an image | **accepted** | 0 |  |
 
-**82 probes: 53 accepted, 29 refused, 0 silently ignored.**
+**85 probes: 54 accepted, 31 refused, 0 silently ignored.**
 
 **Silently-ignored values: none.** Every value either took effect or was refused with a message.
 

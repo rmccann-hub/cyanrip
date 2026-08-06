@@ -120,7 +120,11 @@ GRID = [
 STRING_GRID = [
     ("-u", "consumer tag", ["", "x", "platterpus/0.6.4b12", "a" * 4096]),
     ("-a", "album metadata blob", ["", "album=x", "album=a:b", "album=" + "z" * 8192]),
-    ("-t", "track metadata", ["1=title=x", "1=title=a:b", "0=title=x", "99=title=x"]),
+    # "1" and "99" carry no "=" on purpose. That shape used to step past the
+    # terminator and publish adjacent process memory as track metadata; it is
+    # refused since 3923dee. Reported by Platterpus in round 7 lap 31.
+    ("-t", "track metadata", ["1=title=x", "1=title=a:b", "0=title=x",
+                              "99=title=x", "1", "99", "1="]),
     ("-o", "output formats", ["flac", "", "nosuchformat", "flac,flac"]),
     ("-T", "filename sanitation", ["simple", "os_simple", "unicode", "os_unicode", "bogus"]),
     ("-p", "pregap action", ["1=default", "1=drop", "1=merge", "1=track", "1=bogus", "99=drop"]),
