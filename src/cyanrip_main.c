@@ -1344,7 +1344,19 @@ static int cyanrip_run(int argc, char **argv)
     GEN_OPT_SEC(opts_list, "Ripping options");
     GEN_OPT_ONE(opts_list, char *,  device, "d", 1, 1, NULL, 0, 0,
                 "Set device path (can be a TOC file)");
-    GEN_OPT_ONE(opts_list, int32_t, offset, "s", 1, 1, 0, INT32_MIN, INT32_MAX,
+    /* Bounded, and the bound is not cosmetic. -s took the full int32 range, and
+     * UBSAN reaches three distinct undefined behaviours on INT32_MIN alone:
+     * the negation at line ~1476 here, the abs() in cyanrip_log.c's Offset:
+     * line, and `offset*4` in setup_track_lsn(). The last is signed overflow in
+     * arithmetic a rip actually performs.
+     *
+     * CRIP_MAX_OFFSET_SAMPLES is ~23.8 seconds of audio, three orders of
+     * magnitude past any real drive (the largest in the AccurateRip database is
+     * around +/-1500 samples), so nothing legitimate is refused -- and *4 stays
+     * far inside int32. Found by tools/probe-argv-surface.py; reported to
+     * Platterpus in round 7 lap 30. */
+    GEN_OPT_ONE(opts_list, int32_t, offset, "s", 1, 1, 0,
+                -CRIP_MAX_OFFSET_SAMPLES, CRIP_MAX_OFFSET_SAMPLES,
                 "CD drive offset in samples");
     GEN_OPT_ONE(opts_list, int32_t, retries, "r", 1, 1, 10, 0, INT32_MAX,
                 "Maximum number of retries for frames and repeated rips");

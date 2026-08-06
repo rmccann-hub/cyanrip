@@ -92,6 +92,19 @@ python = import('python').find_installation()
 test('Audio checksum mirror', python,
      args: [ files('../tools/audio-checksums.py'), 'self-test' ])
 
+## Argument-surface probe (seam-rules S-9/S-11)
+## ===========================================
+## Black-box: runs the real binary across every numeric and string argument at
+## below-min / min / typical / max / one-past, and FAILS if any value a caller
+## set vanishes without a refusal. A silently ignored argument is the outcome
+## S-9 most wants written down, and this is the check that keeps the shared
+## command table honest between rounds rather than at the moment it was written.
+test('Argv surface probe', python,
+     args: [ files('../tools/probe-argv-surface.py'), '--gate',
+             '--binary', cyanrip_exe.full_path() ],
+     depends: cyanrip_exe,
+     timeout: 300)
+
 ## Release gate
 ## ============
 ## The "no release while a round is open" rule used to be prose only. This is

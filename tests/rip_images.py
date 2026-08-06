@@ -147,6 +147,33 @@ def sc_cli():
                              "-U", "-P", "0")[1]:
         fail("cli: Cache probe line appeared without -x")
 
+    # -s is bounded, and the bound is a fix rather than tidiness. It took the
+    # full int32 range, and UBSAN reaches three separate undefined behaviours on
+    # INT32_MIN: the negation in cyanrip_run(), the abs() in the Offset: log
+    # line -- which printed "--2147483648", a doubled sign in a contract line --
+    # and `offset*4` in setup_track_lsn(), which is signed overflow in
+    # arithmetic a real rip performs. Found by tools/probe-argv-surface.py and
+    # reported to Platterpus in round 7 lap 30 (seam-rules S-11: a defect found
+    # at the seam gets its regression test in the same change, naming the
+    # round).
+    #
+    # Boundary and one past each, which is what S-9 asks for.
+    for v, want in ((-1048576, 0), (1048576, 0), (-1048577, 1), (1048577, 1),
+                    (-2147483648, 1)):
+        ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
+                       "-P", "0", "-s", str(v))
+        if ec != want:
+            fail(f"cli: -s {v} exited {ec}, wanted {want}")
+        if want and "range" not in out:
+            fail(f"cli: -s {v} was refused without naming the range: {out.strip()[:90]!r}")
+
+    # The magnitude is printed unsigned, so no accepted value can double the
+    # sign. Asserted on the widest accepted value, which is where it broke.
+    _, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0",
+                  "-s", "-1048576")
+    if "--" in out.split("Offset:")[1].split("\n")[0]:
+        fail("cli: the Offset: line doubled its sign")
+
     # A genuinely unknown flag must still fail, diagnosably, on stdout
     ec, out = crip("--no-such-flag")
     if ec != 1:

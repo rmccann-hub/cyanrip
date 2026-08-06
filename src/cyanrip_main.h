@@ -175,6 +175,11 @@ typedef struct CRIPArt {
     char *extension;
 } CRIPArt;
 
+/* The widest read offset -s will accept, in samples: ~23.8 seconds, three
+ * orders of magnitude past any real drive. The bound exists so offset*4 and
+ * -offset stay defined; see the note at the option table. */
+#define CRIP_MAX_OFFSET_SAMPLES 1048576
+
 typedef struct cyanrip_track {
     int number; /* Human readable track number, may be 0 */
     int cd_track_number; /* Actual track on the CD, may be 0 */

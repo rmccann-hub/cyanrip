@@ -565,8 +565,17 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "System device:  %s\n", ctx->settings.dev_path);
     if (ctx->drive->drive_model)
         cyanrip_log(ctx, 0, "Device model:   %s\n", ctx->drive->drive_model);
-    cyanrip_log(ctx, 0, "Offset:         %c%i %s\n", ctx->settings.offset >= 0 ? '+' : '-', abs(ctx->settings.offset),
-                abs(ctx->settings.offset) == 1 ? "sample" : "samples");
+    /* Sign printed separately, so the magnitude is taken as unsigned: abs() on
+     * INT32_MIN is undefined and printed "--2147483648" here before -s was
+     * bounded. The bound makes that unreachable; this makes it undefined-free
+     * regardless, because a log line is an archival claim and must not depend
+     * on a caller staying in range. */
+    const uint32_t offs_mag = ctx->settings.offset < 0
+                              ? -(uint32_t)ctx->settings.offset
+                              : (uint32_t)ctx->settings.offset;
+    cyanrip_log(ctx, 0, "Offset:         %c%u %s\n",
+                ctx->settings.offset >= 0 ? '+' : '-', offs_mag,
+                offs_mag == 1 ? "sample" : "samples");
     cyanrip_log(ctx, 0, "%s%c%i %s\n",
                 ctx->settings.over_under_read_frames < 0 ? "Underread:      " : "Overread:       ",
                 ctx->settings.over_under_read_frames >= 0 ? '+' : '-',
