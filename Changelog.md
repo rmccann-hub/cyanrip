@@ -1,3 +1,87 @@
+0.9.4-rc1+platterpus.5-beta.7 (2026-08-06) -- PRE-RELEASE
+=========================================================
+**Three memory-safety defects on the argument surface, one of which reached the
+archival record.** None is near a drive; all three are reachable from a command
+line a consumer builds. Round 7 is still open and both sides declare HOLD, so
+this remains a pre-release and every logfile says `NOT a released build`.
+
+Fixed -- `-t` without its `=` published adjacent process memory
+ - `-t 12` (no `=`) made cyanrip `strtol()` the number and then step one past
+   the terminator without checking a separator was ever there.
+   `append_missing_keys()` then `strlen()`/`memcpy()`d whatever followed the
+   argv string in memory and parsed it as a metadata dictionary.
+
+   Measured on `tests/fixtures/basic.cue` with a marker in the environment:
+
+       $ env -i ZZMARKER=QQQQLEAKEDQQQQ PATH=... cyanrip -d basic.cue -t 1 ...
+       TAG:ZZMARKER=QQQQLEAKEDQQQQ          <- in the FLAC
+       ZZMARKER:      QQQQLEAKEDQQQQ        <- log line 90
+
+   Exit 0, nothing printed. Adjacent process memory reached the tags, the log
+   and the cue, and no re-read of the disc can tell a later reader that a field
+   was invented. Now `Missing "=" in track metadata "%s"`, exit 1.
+
+   **ASAN and UBSAN are both silent on this.** argv and environ strings share
+   the initial stack block, so the overread crosses no redzone either maintains
+   -- confirmed by running the pre-fix binary under both. The regression test
+   therefore asserts on output, not on a clean sanitizer run.
+
+   Reported by Platterpus in round 7 lap 31 J3, from reading the source. Their
+   report said it reads one past the NUL; it also publishes what it reads.
+
+Fixed -- two NULL dereferences on an argument that is only a separator
+ - `-c /`, `-c //`, `-p =` and `-p ==` segfaulted: exit 139 with **not one line
+   of output**, the undiagnosable non-zero exit the seam rules single out as the
+   one failure a consumer cannot explain to a user. An argument consisting only
+   of its delimiter tokenises to no token at all, so `av_strtok()` returns NULL
+   and `strtol()` dereferences it (`cyanrip_main.c:1575`, confirmed by ASAN).
+
+   In both functions the *second* `av_strtok()` was always NULL-checked and the
+   first never was. Now `Missing discnumber` and `Missing track idx for pregap`.
+
+Changed -- the argv probe can now find this class of defect at all
+ - `tools/probe-argv-surface.py` gains a malformed-shape axis (separator absent,
+   doubled, empty either side, trailing) for every structured argument, not just
+   the one that was reported: 82 probes -> 111. It found the four segfaults on
+   its first run.
+ - **It also stopped grading a segfault as a clean refusal.** Every non-zero exit
+   mapped to `refused`, and Python reports signal death as a *negative* return
+   code, so `-11` was filed as a successful refusal -- the gate printed
+   `0 silently ignored` and exited 0 while the binary was crashing. `crashed` is
+   now its own class, checked first, and a non-zero exit with no message is a
+   gate failure in its own right.
+
+   The generalisable part: a summary that counts only the failure mode you
+   thought of reads as all-clear. *"82 probes, 0 silently ignored"* was true,
+   complete about silent-ignores, and silent about crashes because nothing
+   looked.
+
+0.9.4-rc1+platterpus.5-beta.6 (2026-08-06) -- PRE-RELEASE
+=========================================================
+**Entry written retroactively in beta.7.** The version was bumped in `862d3e3`
+and no `Changelog.md` entry was ever written, so this string named a build the
+changelog could not resolve. The contents below are taken from that commit and
+the lap 30 round file, not reconstructed from memory. beta.6 was declared to
+Platterpus as a `HANDSHAKE-TEST-PIN` (`dc21958`) rather than a release, which is
+why the omission went unnoticed -- but a version string that exists owes the
+record an entry whether or not it was released.
+
+Fixed -- the cue sheet, and the argument surface
+ - **`ISRC` is written in the cue's appended-pregap branch.** A track with an
+   appended pregap took a different branch that emitted `TITLE` and `PERFORMER`
+   and not `ISRC`, so every ISRC we were handed went missing on exactly those
+   tracks. Found by Platterpus in round 7 lap 29. The branch is upstream's,
+   verbatim on `master` since `a0de6a0`; the fork changed its reachability, not
+   the branch.
+ - **`-s` is bounded to ±1048576 samples.** It took the full int32 range and
+   UBSAN reaches three distinct undefined behaviours on `INT32_MIN`.
+ - **The `Offset:` line takes its magnitude unsigned**, which is what printed
+   `Offset:  --2147483648 samples` -- a doubled sign in a contract line.
+
+Changed
+ - `docs/seam-rules.md` (SEAM-RULES-VERSION: 4) and `docs/seam-commands.md`
+   adopted byte-identical from Platterpus.
+
 0.9.4-rc1+platterpus.5-beta.5 (2026-08-05) -- PRE-RELEASE
 =========================================================
 **One fix, and it is why this is a new beta rather than a patch to beta.4.** An
