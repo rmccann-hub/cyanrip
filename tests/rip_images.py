@@ -221,6 +221,33 @@ def sc_cli():
     if "A: B" not in out:
         fail("cli: -t lost the escaped colon in a track title")
 
+    # An argument that is nothing but its own separator tokenises to no token
+    # at all, and both -c and -p then handed NULL to strtol(). Four segfaults:
+    # -c / -c // -p = -p ==, each exiting 139 with not one line of output --
+    # the undiagnosable non-zero exit the seam rules single out as the one
+    # failure a consumer cannot explain. Found by adding a malformed-shape axis
+    # to tools/probe-argv-surface.py after Platterpus's lap 31 J3 report showed
+    # the grid had never varied argument shape.
+    #
+    # The second av_strtok() in both functions was always NULL-checked; the
+    # first never was, because a non-empty string was assumed to yield a token.
+    for flag, val in (("-c", "/"), ("-c", "//"), ("-p", "="), ("-p", "==")):
+        ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
+                       "-P", "0", flag, val)
+        if ec < 0 or ec == 139:
+            fail(f"cli: {flag} {val!r} died by signal (exit {ec})")
+        if ec != 1:
+            fail(f"cli: {flag} {val!r} exited {ec}, wanted 1")
+        if "Missing" not in out:
+            fail(f"cli: {flag} {val!r} exited non-zero with no diagnosis: "
+                 f"{out.strip()[:90]!r}")
+
+    # ...and the well-formed spellings still work, or the guards are too wide.
+    for flag, val in (("-c", "1/2"), ("-p", "1=drop")):
+        if crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0",
+                flag, val)[0] != 0:
+            fail(f"cli: {flag} {val!r} was rejected")
+
     # A genuinely unknown flag must still fail, diagnosably, on stdout
     ec, out = crip("--no-such-flag")
     if ec != 1:

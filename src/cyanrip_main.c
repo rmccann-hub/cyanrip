@@ -1572,6 +1572,13 @@ static int cyanrip_run(int argc, char **argv)
 
     if (disc) {
         p = av_strtok(disc, "/", &p_save);
+        /* A string of nothing but delimiters yields no token at all, so this
+         * is NULL for "-c /" and strtol() then dereferences it. The second
+         * av_strtok below has always been checked; the first never was. */
+        if (!p) {
+            cyanrip_log(ctx, 0, "Missing discnumber\n");
+            return 1;
+        }
         discnumber = strtol(p, NULL, 10);
         if (discnumber <= 0) {
             cyanrip_log(ctx, 0, "Invalid discnumber %i\n", discnumber);
@@ -1638,6 +1645,11 @@ static int cyanrip_run(int argc, char **argv)
 
     for (int i = 0; i < 198 && pregap[i]; i++) {
         p = av_strtok(pregap[i], "=", &p_save);
+        /* Same shape as -c above: "-p =" tokenises to nothing. */
+        if (!p) {
+            cyanrip_log(ctx, 0, "Missing track idx for pregap\n");
+            return 1;
+        }
         idx = strtol(p, NULL, 10);
         if (idx < 1 || idx > 197) {
             cyanrip_log(ctx, 0, "Invalid track idx for pregap: %i\n", idx);
