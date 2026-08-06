@@ -1,3 +1,38 @@
+0.9.4-rc1+platterpus.5-beta.8 (2026-08-06) -- PRE-RELEASE
+=========================================================
+**A build from a source tarball could not name itself.** Found while packaging
+beta.7 for the rig — the first time this fork has been distributed as anything
+other than a clone. Round 7 is still open and both sides declare HOLD, so this
+remains a pre-release and every logfile says `NOT a released build`.
+
+Fixed -- the build tag from a source archive
+ - A build with no `.git` produced the banner:
+
+       cyanrip 0.9.4-rc1+platterpus.5-beta.7 (platterpus-fork-g-dirty)
+
+   Two wrong claims in one string. It names **no build** — the sha is empty —
+   and it asserts the tree was **modified**, on a tree freshly extracted from
+   `git archive` that provably was not. Every logfile records the build tag
+   permanently, so a rip from such a build is unusable as evidence: it claims a
+   provenance that resolves to nothing.
+
+   The cause is that the failure looked like a success. `git rev-parse` printed
+   nothing to stdout, `git diff --quiet` exited non-zero so `printf -- -dirty`
+   ran, and the enclosing `sh -c` then exited **0** — so meson's `fallback:`
+   never fired. A command that half-worked was indistinguishable from one that
+   worked.
+
+   `git archive` now substitutes the commit into `src/archive-version.txt` via
+   `.gitattributes` `export-subst`, and the version command falls back to it
+   when there is no repository. A tarball build reports its real commit and no
+   `-dirty`; a git build is byte-for-byte unchanged, including its `-dirty`
+   marking. If neither source is available the tag is the explicit string
+   `unknown`, which is a claim a reader can act on rather than a malformed one.
+
+   Regression test in `sc_cli`: the build tag must be a commit, optionally
+   `-dirty`, or exactly `unknown`. Revert-proved by rebuilding from a tarball
+   with the old command restored, where it fails.
+
 0.9.4-rc1+platterpus.5-beta.7 (2026-08-06) -- PRE-RELEASE
 =========================================================
 **Three memory-safety defects on the argument surface, one of which reached the

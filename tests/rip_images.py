@@ -126,6 +126,20 @@ def sc_cli():
         fail(f"cli: version {ver.group(1)!r} is in upstream's namespace -- a "
              "fork build must carry a +platterpus.N suffix upstream cannot mint")
 
+    # The build tag must identify a build. Packaging beta.7 as a source tarball
+    # produced "platterpus-fork-g-dirty": with no .git, `git rev-parse` printed
+    # nothing and `git diff --quiet` failed, so the sh -c still exited 0 and
+    # meson's fallback never fired. That string names no build AND asserts a
+    # modification that did not happen -- permanently, in every logfile, which
+    # for this program is an archival record. Fixed with git-archive
+    # export-subst; this pins the shape from either source.
+    tag = re.search(r"\(platterpus-fork-g([^)]*)\)", banner)
+    if not tag:
+        fail(f"cli: banner has no build tag: {banner!r}")
+    elif not re.fullmatch(r"[0-9a-f]{7,}(-dirty)?|unknown", tag.group(1)):
+        fail(f"cli: build tag {tag.group(1)!r} names no build -- wanted a "
+             "commit, optionally -dirty, or the explicit string 'unknown'")
+
     # -h must still work and must not be confused with the above
     if crip("-h")[0] != 0:
         fail("cli: -h exited non-zero")

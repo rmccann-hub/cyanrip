@@ -91,9 +91,27 @@ sources = [
     # pin. Both were provable from content so nothing was lost -- but a stale
     # banner on a reference generated from a build that still has the defect is
     # the one failure mode that looks like success.
+    # No .git (a source tarball) used to land here as "-dirty" with an EMPTY
+    # sha: git rev-parse printed nothing, git diff failed, and the sh -c still
+    # exited 0 -- so meson's fallback never fired and the banner read
+    # "platterpus-fork-g-dirty". That names no build and asserts a modification
+    # that did not happen, permanently, in every logfile it writes.
+    #
+    # git archive substitutes the commit into src/archive-version.txt via
+    # .gitattributes export-subst, so an archive can still name itself. In a
+    # working tree that file still holds the literal placeholder, which starts
+    # with '$' and so fails the hex test below.
     vcs_tag(command: ['sh', '-c',
                       'cd ' + meson.project_source_root() +
-                      ' && printf %s "$(git rev-parse --short HEAD)$(git diff --quiet HEAD || printf -- -dirty)"'],
+                      ''' && if git rev-parse --short HEAD >/dev/null 2>&1; then
+                             printf %s "$(git rev-parse --short HEAD)$(git diff --quiet HEAD || printf -- -dirty)"
+                           else
+                             a=$(cat src/archive-version.txt 2>/dev/null | tr -d " \n")
+                             case "$a" in
+                               [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) printf %s "$a" ;;
+                               *) printf %s "unknown" ;;
+                             esac
+                           fi'''],
                       input: 'version.c.in', output: 'version.c',
                       fallback: 'release')
 ]

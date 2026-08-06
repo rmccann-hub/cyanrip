@@ -1,0 +1,8 @@
+# `git archive` substitutes the commit into this file, so a build from a source
+# tarball can still name the commit it came from. Without it the version command
+# in src/meson.build finds no .git, `git rev-parse` prints nothing, and
+# `git diff --quiet` fails -- producing the banner "platterpus-fork-g-dirty",
+# which names no build at all AND falsely claims the tree was modified. Every
+# logfile records that string permanently, so a rip from such a build is
+# unusable as evidence. Found while packaging beta.7 for the rig.
+/src/archive-version.txt export-subst
