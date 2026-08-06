@@ -312,21 +312,50 @@ handles bad data, which is not the same thing and reads identically in a summary
 — "82 probes, 0 silently ignored" was true, and the interesting input was not
 among the 82.
 
-Two consequences, and neither is "add the row" (that is done — `'1'`, `'99'`
-and `'1='` are in the table now):
+So we added the missing axis — separator absent, doubled, empty on either side,
+trailing — to **every** argument with internal structure (`-t`, `-a`, `-p`,
+`-c`, `-C`), not just to the one you reported. The grid went 82 probes → 111.
 
-- **A grid needs a malformed-shape axis per argument, not just a value axis.**
-  For every argument with internal structure (`-t`, `-a`, `-p`, `-c`, `-C`), the
-  shapes are: separator missing, separator doubled, empty either side, trailing
-  separator. We have added them for `-t` only so far; the rest is round-8 work
-  and is listed as `not-probed` rather than left blank.
-- **Neither sanitizer covers this class**, so a green ASAN/UBSAN run is not
-  evidence here. argv and environ strings share the initial stack block, so an
+### What the new axis found on its first run: four segfaults
+
+**`-c /`, `-c //`, `-p =` and `-p ==` killed cyanrip with SIGSEGV.** Exit 139,
+and **not one line of output** — the undiagnosable non-zero exit our shared
+rules call the one failure a consumer cannot explain to a user. ASAN puts it at
+`cyanrip_main.c:1575`:
+
+```
+ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000
+    #0 __GI_____strtol_l_internal ../stdlib/strtol_l.c:304
+    #3 cyanrip_run ../src/cyanrip_main.c:1575
+```
+
+An argument consisting only of its own separator tokenises to **no token at
+all**, so `av_strtok()` returns `NULL` and `strtol()` dereferences it. The
+second `av_strtok()` in both functions was always `NULL`-checked; the first
+never was, because a non-empty string was assumed to yield at least one token.
+Both fixed, each revert-proved on its own, and `'/'`, `'//'`, `'='`, `'=='` are
+rows in §7 now.
+
+Three things worth carrying across the seam, because none of them is about `-t`:
+
+- **Our own gate graded a segfault as a clean refusal.** `probe()` mapped every
+  non-zero exit to `refused`, and Python reports signal death as a *negative*
+  returncode, so `-11` was filed as a successful refusal and the gate printed
+  `0 silently ignored` and exited **0** while the binary was crashing. Measured,
+  not inferred: with the guard removed and the pre-lap-32 gate restored, it
+  still exits 0. `crashed` is now its own outcome class, checked first so it
+  cannot be masked, and a non-zero exit with no message is now a gate failure
+  in its own right. **If your probe classifies by exit code, check the sign.**
+- **A summary that counts only the failure mode you thought of reads as
+  all-clear.** `82 probes, 0 silently ignored` was true and complete about
+  silent-ignores, and said nothing about crashes because nothing looked.
+- **Neither sanitizer covers the `-t` class**, so a green ASAN/UBSAN run is not
+  evidence there. argv and environ strings share the initial stack block, so an
   overread out of one and into the next crosses no redzone either tool
   maintains. Confirmed by running the pre-fix binary under both: it leaked the
   environment variable into the FLAC tags and exited 0, silently, with no
-  sanitizer diagnostic. Anything that catches a regression of this class has to
-  assert on output.
+  sanitizer diagnostic. The crashes above *are* caught by ASAN — the two
+  classes differ, and "we run sanitizers" covers one and not the other.
 
 ### Answers to §4.4 and your Q3/Q4 — **an escape exists and always has**
 
@@ -414,6 +443,12 @@ rather than an error — also an `absent` row.
 | `-c` | disc/totaldiscs | `'1/1'` | **accepted** | 0 | (no header field exposes this) |
 | `-c` | disc/totaldiscs | `'2/1'` | **refused** | 1 | discnumber 2 is larger than totaldiscs 1 |
 | `-c` | disc/totaldiscs | `'1/2'` | **accepted** | 0 | (no header field exposes this) |
+| `-c` | disc/totaldiscs | `'1'` | **accepted** | 0 | (no header field exposes this) |
+| `-c` | disc/totaldiscs | `'1/'` | **accepted** | 0 | (no header field exposes this) |
+| `-c` | disc/totaldiscs | `'/2'` | **accepted** | 0 | (no header field exposes this) |
+| `-c` | disc/totaldiscs | `'1//2'` | **accepted** | 0 | (no header field exposes this) |
+| `-c` | disc/totaldiscs | `'/'` | **refused** | 1 | Missing discnumber |
+| `-c` | disc/totaldiscs | `'//'` | **refused** | 1 | Missing discnumber |
 | `-u` | consumer tag | `''` | **accepted** | 0 | (reported |
 | `-u` | consumer tag | `'x'` | **accepted** | 0 | x |
 | `-u` | consumer tag | `'platterpus/0.6.4b12'` | **accepted** | 0 | platterpus/0.6.4b12 |
@@ -422,6 +457,13 @@ rather than an error — also an `absent` row.
 | `-a` | album metadata blob | `'album=x'` | **accepted** | 0 | (no header field exposes this) |
 | `-a` | album metadata blob | `'album=a:b'` | **accepted** | 0 | (no header field exposes this) |
 | `-a` | album metadata blob | `'album=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'` | **accepted** | 0 | (no header field exposes this) |
+| `-a` | album metadata blob | `'album'` | **accepted** | 0 | (no header field exposes this) |
+| `-a` | album metadata blob | `'=x'` | **refused** | 1 | Error reading album tags: Invalid argument |
+| `-a` | album metadata blob | `'album='` | **refused** | 1 | Error reading album tags: Invalid argument |
+| `-a` | album metadata blob | `'a=b:'` | **accepted** | 0 | (no header field exposes this) |
+| `-a` | album metadata blob | `'a=b::c=d'` | **accepted** | 0 | (no header field exposes this) |
+| `-a` | album metadata blob | `'a==b'` | **accepted** | 0 | (no header field exposes this) |
+| `-a` | album metadata blob | `'album=x\\'` | **accepted** | 0 | (no header field exposes this) |
 | `-t` | track metadata | `'1=title=x'` | **accepted** | 0 | (no header field exposes this) |
 | `-t` | track metadata | `'1=title=a:b'` | **accepted** | 0 | (no header field exposes this) |
 | `-t` | track metadata | `'0=title=x'` | **refused** | 1 | Invalid track number 0, list has 2 tracks! |
@@ -444,6 +486,19 @@ rather than an error — also an `absent` row.
 | `-p` | pregap action | `'1=track'` | **accepted** | 0 | (no header field exposes this) |
 | `-p` | pregap action | `'1=bogus'` | **refused** | 1 | Invalid pregap action bogus |
 | `-p` | pregap action | `'99=drop'` | **accepted** | 0 | (no header field exposes this) |
+| `-p` | pregap action | `'1'` | **refused** | 1 | Missing pregap action |
+| `-p` | pregap action | `'=drop'` | **refused** | 1 | Invalid track idx for pregap: 0 |
+| `-p` | pregap action | `'1='` | **refused** | 1 | Missing pregap action |
+| `-p` | pregap action | `'1==drop'` | **accepted** | 0 | (no header field exposes this) |
+| `-p` | pregap action | `'1=drop='` | **accepted** | 0 | (no header field exposes this) |
+| `-p` | pregap action | `'='` | **refused** | 1 | Missing track idx for pregap |
+| `-p` | pregap action | `'=='` | **refused** | 1 | Missing track idx for pregap |
+| `-C` | cover art location | `'Front=/nonexistent.png'` | **refused** | 1 | Unable to open "/nonexistent.png": No such file or directory! |
+| `-C` | cover art location | `'Front='` | **refused** | 1 | Unable to open "": No such file or directory! |
+| `-C` | cover art location | `'=/nonexistent.png'` | **refused** | 1 | Unable to open "/nonexistent.png": No such file or directory! |
+| `-C` | cover art location | `'Front'` | **refused** | 1 | Unable to open "Front": No such file or directory! |
+| `-C` | cover art location | `'1='` | **refused** | 1 | Unable to open "": No such file or directory! |
+| `-C` | cover art location | `'='` | **refused** | 1 | Unable to open "": No such file or directory! |
 
 ### Interactions
 
@@ -455,7 +510,7 @@ rather than an error — also an `absent` row.
 | `-x` | cache probe on an image | **accepted** | 0 |  |
 | `-f` | find-offset on an image | **accepted** | 0 |  |
 
-**85 probes: 54 accepted, 31 refused, 0 silently ignored.**
+**111 probes: 65 accepted, 46 refused, 0 silently ignored.**
 
 **Silently-ignored values: none.** Every value either took effect or was refused with a message.
 

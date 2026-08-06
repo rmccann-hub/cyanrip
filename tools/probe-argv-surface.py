@@ -20,6 +20,10 @@ Outcomes are classified from what the binary did, never from what it should
 have done:
 
     refused     non-zero exit; the run died. The message is recorded verbatim
+    crashed     killed by a signal -- NOT a refusal, however much the exit code
+                looks like one. This class was added in round 7 lap 32 after
+                the script graded four segfaults (-c /, -c //, -p =, -p ==) as
+                clean refusals and printed "0 silently ignored" in the same run
     accepted    exit 0 AND the value is visible in the header, so it took effect
     ignored     exit 0 and the value is NOT visible -- a silently dropped
                 argument, which is the outcome S-9 most wants written down
@@ -81,6 +85,12 @@ def probe(binary, image, flag, value, extra=None):
         # line: cyanrip prints its diagnosis immediately before exiting.
         noise = re.compile(r"^(Checking|Opening|MusicBrainz|https|Log\(s\)|CUE files|\s|$)")
         msg = [l for l in out.splitlines() if l.strip() and not noise.match(l)]
+        # A death by signal is NOT a refusal, and grading it as one is how this
+        # probe reported "0 silently ignored" while -c / segfaulted in the same
+        # run. subprocess reports signal death as a negative returncode.
+        if r.returncode < 0:
+            return ("crashed", r.returncode,
+                    f"**killed by signal {-r.returncode}**", None)
         return "refused", r.returncode, (msg[-1] if msg else "(no message)"), None
 
     pat = EFFECT.get(flag)
@@ -114,12 +124,24 @@ GRID = [
     ("-m", "cover art max size", [-2, -1, 250, 500, 1200, 999]),
     ("-b", "lossy bitrate, kbps", [-1, 0, 1, 256, 100000]),
     ("-l", "track list", [0, 1, 2, 3, 99]),
-    ("-c", "disc/totaldiscs", ["0/0", "1/1", "2/1", "1/2"]),
+    ("-c", "disc/totaldiscs", ["0/0", "1/1", "2/1", "1/2",
+                               # malformed shapes: separator missing, doubled,
+                               # empty either side. See MALFORMED_SHAPES below.
+                               "1", "1/", "/2", "1//2", "/", "//"]),
 ]
+
+# Every argument above with internal structure gets its separator abused the
+# same four ways: missing, doubled, empty-left, empty-right, trailing. The -t
+# defect Platterpus found in round 7 lap 31 lived in exactly this axis and the
+# grid had no such axis -- every -t value was well-formed, so the probe varied
+# the track number and the value and never the shape. Adding the axis once,
+# for every structured argument, is the generalisation of that one fix.
 
 STRING_GRID = [
     ("-u", "consumer tag", ["", "x", "platterpus/0.6.4b12", "a" * 4096]),
-    ("-a", "album metadata blob", ["", "album=x", "album=a:b", "album=" + "z" * 8192]),
+    ("-a", "album metadata blob", ["", "album=x", "album=a:b", "album=" + "z" * 8192,
+                                   "album", "=x", "album=", "a=b:", "a=b::c=d",
+                                   "a==b", "album=x\\"]),
     # "1" and "99" carry no "=" on purpose. That shape used to step past the
     # terminator and publish adjacent process memory as track metadata; it is
     # refused since 3923dee. Reported by Platterpus in round 7 lap 31.
@@ -127,7 +149,10 @@ STRING_GRID = [
                               "99=title=x", "1", "99", "1="]),
     ("-o", "output formats", ["flac", "", "nosuchformat", "flac,flac"]),
     ("-T", "filename sanitation", ["simple", "os_simple", "unicode", "os_unicode", "bogus"]),
-    ("-p", "pregap action", ["1=default", "1=drop", "1=merge", "1=track", "1=bogus", "99=drop"]),
+    ("-p", "pregap action", ["1=default", "1=drop", "1=merge", "1=track", "1=bogus", "99=drop",
+                             "1", "=drop", "1=", "1==drop", "1=drop=", "=", "=="]),
+    ("-C", "cover art location", ["Front=/nonexistent.png", "Front=", "=/nonexistent.png",
+                                  "Front", "1=", "="]),
 ]
 
 INTERACTIONS = [
@@ -171,6 +196,26 @@ def main():
             inter.append((" ".join(flags), label, outcome, rc, msg))
 
     if a.gate:
+        # A crash outranks every other finding: it is an undiagnosable failure
+        # and, for -c / and -p =, it was graded "refused" by this very script
+        # until round 7 lap 32. Checked first so it can never be masked.
+        crashed = [(r[0], r[2]) for r in rows if r[3] == "crashed"]
+        crashed += [(f, "(interaction)") for f, _, o, _, _ in inter
+                    if o == "crashed"]
+        if crashed:
+            print("CRASHED -- killed by a signal, no diagnosable exit:")
+            for f, v in crashed:
+                print(f"  {f} {v}")
+            return 1
+        # Every fatal path owes the caller a line. A non-zero exit with nothing
+        # printed is the one failure a consumer cannot explain to a user.
+        silent = [(r[0], r[2]) for r in rows
+                  if r[3] == "refused" and r[5] == "(no message)"]
+        if silent:
+            print("REFUSED WITH NO MESSAGE (undiagnosable to a consumer):")
+            for f, v in silent:
+                print(f"  {f} {v}")
+            return 1
         if ignored:
             print("SILENTLY IGNORED VALUES (S-9 findings):")
             for f, v in ignored:
@@ -179,7 +224,8 @@ def main():
         if not any(r[3] == "refused" for r in rows):
             print("nothing was refused by any probe -- the range guards are gone")
             return 1
-        print(f"{len(rows)} probes, 0 silently ignored, "
+        print(f"{len(rows)} probes, 0 crashed, 0 refused-without-a-message, "
+              f"0 silently ignored, "
               f"{sum(1 for r in rows if r[3] == 'refused')} refused")
         return 0
 
