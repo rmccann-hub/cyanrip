@@ -30,6 +30,19 @@ def fail(msg):
     fails += 1
 
 
+def skip(msg):
+    """Exit 77, which meson reports as skipped and counts separately.
+
+    For a check that CANNOT RUN here, never for one that ran and found
+    nothing -- those are different claims and collapsing them is the thing
+    this suite exists to stop. A skip stays visible in meson's summary, so
+    coverage cannot vanish quietly; it just does not read as a defect in the
+    thing under test when the limitation is the environment.
+    """
+    print("SKIP:", msg)
+    sys.exit(77)
+
+
 def crip(*args, cwd=None, env=None):
     r = subprocess.run([CRIP, *map(str, args)], stdout=subprocess.PIPE,
                        stderr=subprocess.STDOUT, timeout=60, cwd=cwd, env=env)
@@ -918,9 +931,15 @@ def sc_version_matrix():
         return r.returncode, r.stdout.decode(errors="replace")
 
     if git("rev-parse", "--git-dir")[0] != 0:
-        fail("version_matrix: not a git checkout, so P6's citations cannot "
-             "be verified -- P6 claims a check that did not run")
-        return
+        # A source tarball has no history, so P6's upstream citations cannot be
+        # resolved here at all. That is "the check could not run", not "the
+        # check failed", and reporting it as a failure made a correct beta.8
+        # tarball show a red suite on extraction -- a false alarm in exactly
+        # the delivery path git-archive support was added to enable.
+        # Still not silent: meson counts it under Skipped.
+        skip("version_matrix: not a git checkout (source tarball?), so P6's "
+             "upstream citations cannot be resolved. P6 is UNVERIFIED here -- "
+             "run this from a clone to check it")
 
     # Claim 1: pre-genopt parses with getopt and has no long options at all.
     ec, pre = git("show", "442de2a^:src/cyanrip_main.c")
