@@ -1,0 +1,180 @@
+# Rig session — build `104f6d4`, 2026-08-06
+
+**The J1 rip.** The disc the whole of round 7 has been blocked on.
+
+Dated by its build, not its date, per the lesson two sessions on 2026-08-04
+taught: `9003e6f` and `c5fb909` ran on the same day and a claim about one was
+checked against the other's log.
+
+| | |
+|---|---|
+| Build | `cyanrip 0.9.4-rc1+platterpus.5-beta.8 (platterpus-fork-g104f6d4)` |
+| Consumer | `platterpus/0.6.4b14` (recorded verbatim, not verified by us) |
+| Drive | PIONEER BD-RW BDR-209D, firmware 1.51, `/dev/sr0` |
+| Disc | The Police — *Every Breath You Take: The Classics*, 14 tracks |
+| Offset | `+667` |
+| Finished | 2026-08-06T19:13:12 |
+
+**These files are byte-exact and must stay that way.** `cyanrip.log` carries its
+own `FUN512`; altering a byte destroys the only self-check it has. `CHECKSUMS.txt`
+records them as received.
+
+---
+
+## Recorded BEFORE reading Platterpus's lap
+
+This file was written and committed **before** their reading of the same
+artifacts was received, deliberately, so "our analysis was independent" is
+checkable against a commit rather than asserted. The user is relaying between
+two sessions; only the commit order proves which came first.
+
+## The four J1 acceptance criteria — all four PASS
+
+Platterpus's, from lap 29 plus the fourth added in lap 31.
+
+| # | criterion | result |
+|---|---|---|
+| 1 | 14 ISRCs in the cue | **PASS** — `grep -c '^    ISRC '` = 14 |
+| 2 | `INDEX 00` on exactly 2/4/5/7/8/9/10/13/14 and nowhere else | **PASS** — measured set is exactly `2 4 5 7 8 9 10 13 14` |
+| 3 | `Offset:` unchanged | **PASS** — `Offset:         +667 samples` |
+| 4 | a **real colon** in the cue's `TITLE` and the log's `album:` | **PASS** — both read `Every Breath You Take: The Classics`; **zero** U+2236 in either file |
+
+Criterion 4 is the one neither side could prove alone. The escape survives the
+whole chain: Platterpus emits `album=…You Take\: The Classics`, our
+`append_missing_keys()` leaves the escape intact, `av_dict_parse_string()`
+consumes it, and a real `U+003A` lands in both artifacts. **The `\:` escape is
+now proven end-to-end**, which retires the hedge both laps carried.
+
+Note the U+2236 substitution still appears in *directory names*
+(`Every Breath You Take∶ The Classics/`) — that is a filesystem-safety
+substitution in the path, not the metadata, and it is correct there. The
+metadata fields carry the real colon.
+
+## The paranoia invariant, on media that made paranoia work
+
+Per-track counters must sum to the disc totals. Until this session that had only
+ever been checked against a fixture whose numbers agree by construction, so it
+could not discriminate.
+
+| counter | Σ tracks | disc total | |
+|---|---|---|---|
+| READ | 21972 | 21972 | OK |
+| VERIFY | 1591 | 1591 | OK |
+| FIXUP_ATOM | 8 | 8 | OK |
+| OVERLAP | 458 | 458 | OK |
+
+`FIXUP_ATOM: 8` is the part that matters — paranoia performed real repair work,
+so the totals are not trivially equal.
+
+## Other measurements
+
+- **Sub-channel pregap search: 13 of 14 tracks** reported
+  `Pregap source: sub-channel (not signalled by TOC)`; track 1 reported
+  `lead-in`. Nine of those have non-zero length and are the nine `INDEX 00`s.
+- **`Read stalls: none (no read exceeded 10s)`** — the expected result on healthy
+  media. A silent watchdog is not a working watchdog; this is still not evidence
+  either way.
+- **`Ripping errors: 0`**, `Rip completed: yes (14 of 14 tracks)`.
+- **`Tracks ripped accurately: 13/14` / `partially accurately: 1/14`** — both
+  denominators are 14, which is the denominator fix behaving on real data.
+- **`C2 errors: unsupported by drive`** — C2 remains unexercised anywhere.
+- **`Cache model: 1200 sectors (drive cache size not probed)`** — correct, and
+  `-x` was **not** passed on either pass. **`-x` has still never executed on a
+  real drive, in any session, on any build.**
+- **`--verify-log` on this log returns valid**, run by us against the archived
+  copy.
+
+## Track 5, and a wording question for Platterpus
+
+Track 5 is the one that failed AccurateRip v1/v2 (`+450` matched at confidence
+200, "partially accurately ripped"). Platterpus re-ripped it in a **second
+cyanrip invocation** with `-Z 2 -l 5`, and the addendum records
+`Secure re-read: converged after 5 reads`.
+
+**But the re-read produced a byte-identical result.** The addendum's CRC for
+track 5 is `6902BCF0`; the first pass's `EAC CRC32` for track 5 is `6902BCF0`.
+The three AccurateRip values are identical too.
+
+So the addendum's sentence — *"were re-ripped to secure them; the **improved**
+read was swapped in"* — is not supported for this track. Nothing improved. The
+read was **confirmed** by convergence, which is a different and still useful
+claim. Raise in §H: check the verb. This is the same shape as `defeat` versus
+`model` on our own side.
+
+## Provenance: the rip is one commit past the declared test pin
+
+`104f6d4`, not the `92ceeed` lap 33 declared. Benign, and stated rather than
+smoothed over:
+
+```
+$ git diff --stat 92ceeed 104f6d4 -- src/
+(empty)
+```
+
+The range touches **no `src/` at all** — only `tests/`, the golden reference and
+lap 33 itself. The rip code is identical; the sole compiled difference is the
+handshake state, which is why the log reads `round 7 lap 33` rather than
+`lap 32`. Lap 35 must name `104f6d4` as the build that ripped, not `92ceeed`.
+
+## Checked and NOT filed as findings
+
+Both nearly went in. Recording them because a rejected finding is evidence too.
+
+- **The GUI's "Cache defeat: Yes — cache defeated on re-read (measured,
+  cd-paranoia)"** looked like it re-introduced downstream the exact over-claim
+  we removed from our own log when `Cache defeat:` became `Cache model:`. It
+  does not. Their EAC-compatible log spells it out: *"measured for this drive
+  with cd-paranoia -A, **not asserted from the ripper's log**"*. They measured
+  it themselves, with a different tool, and disclaimed our log as the source.
+  Correctly scoped, and `-x` never having run is irrelevant to it.
+- **"Re-ripping track 5" on screen while the live log said "track 12".** Not a
+  defect in either program — see below.
+
+## The track 5 / track 12 display question
+
+Reported by the user from the GUI: the status line read *"Re-ripping track 5 to
+secure it… about 10s left in re-read 2"* while the Live log pane streamed
+*"ripping and encoding track 12, progress - 7.22%"*.
+
+Our progress line, `src/cyanrip_main.c:807`:
+
+```c
+"Ripping%strack %i, progress - %0.2f%%",
+(!ctx->settings.ripping_retries || repeat_mode_encode) ? " and encoding " : " ",
+t->number, ...
+```
+
+Two facts settle it, both from source rather than inference:
+
+1. **`%i` is `t->number`** — the real CD track number. It is never an index and
+   never an offset, so a printed "track 12" means track 12.
+2. **`ripping_retries` is `-Z`**, not `-r` (`cyanrip_main.c:1499`,
+   `settings.ripping_retries = repeat_rips`, declared at line 1363 as `"Z"`).
+
+So the wording is itself diagnostic:
+
+| pass | `-Z` | prints |
+|---|---|---|
+| whole-disc first pass | absent → `ripping_retries == 0` | `Ripping **and encoding** track N` |
+| the track-5 re-rip | `-Z 2` | `Ripping track 5` (no "and encoding") except on the final encode pass |
+
+The observed line has **both** "and encoding" *and* "track 12". The re-rip argv
+recorded in `platterpus.json` is `-Z 2 -l 5`, which rips track 5 only. So that
+line cannot have come from the re-rip pass by either the number or the wording —
+it is whole-disc-first-pass output.
+
+**Conclusion: not a cyanrip defect.** Two panes were showing different passes at
+one moment. Which pane is stale, and why, is Platterpus's to answer — it is
+their presentation layer, and by the ownership rule that is theirs. We can only
+say what our line means and which pass emits which spelling.
+
+## What this session still does NOT establish
+
+- **`-x`** — never run on a real drive, here or anywhere.
+- **C2** — this drive reports it unsupported.
+- **`-f`** offset autodetection.
+- **Damaged media**, and therefore a non-zero `Read stalls:` count.
+- **CD-TEXT from a physical disc** — this disc reported none.
+- **The diagnosed-abort exit code** — `Ripping errors: 0`.
+- **`-j`** was not passed, so there is no diagnostics record from this rip. The
+  JSON here is Platterpus's own, not ours.
