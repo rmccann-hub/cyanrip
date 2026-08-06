@@ -1123,6 +1123,23 @@ def sc_golden_reference_is_from_a_clean_build():
     if not re.match(r"^cyanrip \S+ \(platterpus-fork-g[0-9a-f]{7,}\)$", first):
         fail(f"golden reference banner is not the expected shape: {first!r}")
 
+    # ...and it must describe THIS tree's version, exactly as contract_build
+    # requires of PROVIDER-CONTRACT.md. That check existed for the contract and
+    # not for the reference, so beta.8 shipped a reference generated at beta.7
+    # and nothing complained -- the same "generated artifact lags its
+    # generator" shape Platterpus filed against us in round 7 lap 31 §H, which
+    # we fixed for the contract and left open here. A consumer diffing against
+    # this file cannot see our test output; the banner is all they have.
+    ref_ver = re.match(r"^cyanrip (\S+) ", first)
+    tree_ver = re.search(r"^\s*version:\s*'([^']+)'",
+                         (ROOT / "meson.build").read_text(), re.M)
+    if not tree_ver:
+        fail("golden reference: no version in meson.build")
+    elif ref_ver and ref_ver.group(1) != tree_ver.group(1):
+        fail(f"golden reference describes {ref_ver.group(1)!r} but this tree "
+             f"is {tree_ver.group(1)!r}. Regenerate it from a clean build and "
+             "name that build in a lap; do not publish this commit as a pin.")
+
     # The companion diagnostics record ships beside it and must describe the
     # SAME run. Two reference artifacts that drifted apart would be worse than
     # one: a consumer would reconcile them and one of the two would be wrong,
