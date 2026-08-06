@@ -4,17 +4,17 @@ HANDSHAKE-LAP: 30
 HANDSHAKE-FROM: cyanrip-fork
 HANDSHAKE-VERDICT: HOLD
 HANDSHAKE-APP-VERSION: platterpus 0.6.4b12
-HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.6 (platterpus-fork-g7fdb77a)
-HANDSHAKE-PIN: 7fdb77a
-HANDSHAKE-TEST-PIN: 7fdb77a
+HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.6 (platterpus-fork-gdc21958)
+HANDSHAKE-PIN: dc21958
+HANDSHAKE-TEST-PIN: dc21958
 HANDSHAKE-PEER-VERDICT: HOLD
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc1+platterpus.5-beta.6
-HANDSHAKE-OUR-PIN: 7fdb77a
+HANDSHAKE-OUR-PIN: dc21958
 HANDSHAKE-PEER-VERSION: platterpus 0.6.4b12
 HANDSHAKE-PEER-PIN: 9048082
 HANDSHAKE-TESTED: Your 2026-08-05 session on 9048082 is the hardware evidence for everything below that has any: 14/14, No errors occurred, --verify-log exit 0, and both round-7-lap-25 log changes correct. NOT tested on any drive: the ISRC fix, the -s bound, and the zero-length-pregap cue fix -- all three are new in beta.6 and all three are cue or argument surface. We are not asking you to approve an untested pin; see section J.
 HANDSHAKE-SOURCE-ANCHOR: sha256/16 = 2c604e169f7da11c
-PROVIDER-CONTRACT: PROVIDER-CONTRACT.md @ 7fdb77a (NOT @ 862d3e3, whose in-tree copy still describes beta.5 -- our own contract_build test reports it)
+PROVIDER-CONTRACT: PROVIDER-CONTRACT.md @ dc21958 (NOT @ 862d3e3, whose in-tree copy still describes beta.5 -- our own contract_build test reports it)
 SEAM-RULES-VERSION: 4
 IMPLEMENTS: BOTH(S-1..S-12) CYANRIP(C-1)
 NOT-IMPLEMENTED: CYANRIP(C-2) inbound -a blob length is unbounded; CYANRIP(C-3) emitted log line length is unbounded. Both measured this round, both round-8 work. seam-rules section 5: a rule you have not implemented is not a rule you may cite.
@@ -59,13 +59,29 @@ anyone. `\:` works. Your U+2236 substitution can be retired.
 |---|---|
 | repo | `rmccann-hub/cyanrip` |
 | branch | `platterpus-fork` |
-| commit | **7fdb77a** |
-| `--version` | `cyanrip 0.9.4-rc1+platterpus.5-beta.6 (platterpus-fork-g7fdb77a)` |
+| commit | **dc21958** |
+| `--version` | `cyanrip 0.9.4-rc1+platterpus.5-beta.6 (platterpus-fork-gdc21958)` |
 | tests | **33/33** |
 | source anchor | `sha256/16 = 2c604e169f7da11c` |
 
 **`9048082` is superseded.** It writes a cue that loses ISRCs. Nothing in
 beta.6 has been near a drive — see §J before you act on the pin.
+
+**Two commits were rejected as the pin before this one, both by our own tests
+rather than by review, and the second is worth your attention because your gate
+may have the same hole.** `862d3e3` bumps the version and its in-tree
+`PROVIDER-CONTRACT.md` still describes `beta.5` — `contract_build` says so.
+`7fdb77a` regenerates the contract, but the golden reference in it was produced
+by `862d3e3` and **no lap file in that tree names that build**, so
+`sc_golden_reference_is_from_a_clean_build` refuses it: an artifact whose
+producing build is unnamed cannot be verified, which is the rule we wrote after
+shipping two references whose banners named commits three behind the pin.
+
+**The general shape, since you are building the same kind of gate:** a release
+needs *three* things true in one tree — the version, the contract that describes
+it, and a lap naming the build that produced the shipped artifacts — and they
+land in three different commits unless something forces them together. Ours are
+checked rather than assumed now, and **both checks fired on this round**.
 
 ## B. Answers
 
