@@ -195,6 +195,53 @@ def test_lap_order_is_by_declaration_not_filename():
     check(not ok, "latest lap must come from the declared number, not the name")
 
 
+def test_two_files_declaring_one_lap_are_ambiguous_not_a_close():
+    """Round 7 lap 34, from the blind-exchange design.
+
+    Two files declaring the SAME lap have no order between them. The resolver
+    kept whichever `sorted()` yielded first -- i.e. by FILENAME -- which is the
+    defect Platterpus found in their own gate in lap 17. We believed we did not
+    share it because we compare declared numbers rather than stems. True, and
+    useless when the declared numbers are equal.
+
+    Measured before it was fixed: a lap 34 HOLD and a lap 34 GO in one
+    directory reported the GO and ALLOWED a release, decided purely by name.
+    """
+    ok, probs = gate({"round-9.md": lap(1, 9, "OPEN"),
+                      "round-9-lapA.md": lap(2, 9, "GO", complete=True),
+                      "round-9-lapB.md": lap(2, 9, "HOLD")})
+    check(not ok, f"two files declaring one lap must not close: {probs}")
+    check(any("no order between them" in p for p in probs),
+          f"the refusal must name the collision, not just say 'not closed': {probs}")
+
+
+def test_a_lap_collision_blocks_even_when_both_halves_agree():
+    """Guards the fix above against being narrowed to 'only when they differ'.
+
+    Two concurrent GOs are still two documents with no order between them, and
+    neither has seen the other. Ambiguity is not a close even when the two
+    happen to agree -- otherwise the check passes exactly when it is not needed.
+    """
+    ok, _ = gate({"round-9.md": lap(1, 9, "OPEN"),
+                  "round-9-lapA.md": lap(2, 9, "GO", complete=True),
+                  "round-9-lapB.md": lap(2, 9, "GO", complete=True)})
+    check(not ok, "two concurrent GO laps must still not close the round")
+
+
+def test_a_collision_below_the_latest_lap_is_harmless():
+    """The converse, or the fix would freeze the record permanently.
+
+    Once a genuinely later lap exists -- the rejoin, written by someone who has
+    seen both halves -- it supersedes the concurrent pair legitimately and the
+    round can close again. Without this, one blind exchange would make a round
+    unclosable forever.
+    """
+    ok, probs = gate({"round-9-lapA.md": lap(2, 9, "HOLD"),
+                      "round-9-lapB.md": lap(2, 9, "HOLD"),
+                      "round-9-lapC.md": lap(3, 9, "GO", complete=True)})
+    check(ok, f"a later rejoin lap must supersede a concurrent pair: {probs}")
+
+
 def test_a_first_go_is_expressible():
     """A GO whose peer has not GO'd yet must be *sayable*, not malformed.
 

@@ -137,6 +137,7 @@ class Lap:
         self.path = path
         self.verdict = verdict
         self.declared_number = declared_number
+        self.tied_with = None
         self.peer_verdict = peer_verdict
         self.peer_version = peer_version
         self.peer_pin = peer_pin
@@ -216,6 +217,11 @@ class Lap:
         wire = self.missing_wire_header()
         if wire:
             return "missing required v2 wire header: " + ", ".join(wire)
+        if self.tied_with:
+            return ("two files declare lap "
+                    f"{self.lap}, so there is no order between them: "
+                    + ", ".join(self.tied_with)
+                    + " -- ambiguity is not a close")
         if self.verdict is None:
             return "NO VERDICT FIELD -- fails closed"
         if self.verdict not in CLOSING:
@@ -299,6 +305,27 @@ def load_rounds(directory=None):
         cur = latest.get(lp.number)
         if cur is None or lp.lap is None or (cur.lap is not None and lp.lap > cur.lap):
             latest[lp.number] = lp
+
+    # Two files declaring the SAME lap have no order between them, and the loop
+    # above resolved that by keeping whichever `sorted()` yielded first -- i.e.
+    # by FILENAME. Measured, not feared: with a lap 34 declaring HOLD and
+    # another lap 34 declaring GO, the gate reported the GO and allowed a
+    # release, purely because that file's name sorted earlier. It is the exact
+    # defect Platterpus found in their own gate in round 7 lap 17, which we
+    # believed we did not share because our comparison is on the declared
+    # number rather than the stem -- true, and it does not help when the
+    # declared numbers are equal.
+    #
+    # Equal lap numbers are ambiguous, and ambiguity is not a close. This
+    # matters now because blind concurrent laps -- both sides reading one rig
+    # artifact without seeing each other -- produce exactly this shape.
+    for number, win in latest.items():
+        if win.lap is None:
+            continue
+        tied = [lp for lp in all_laps if lp.number == number and lp.lap == win.lap]
+        if len(tied) > 1:
+            win.verdict = "AMBIGUOUS-LAP"
+            win.tied_with = sorted(lp.path.name for lp in tied)
     return [latest[k] for k in sorted(latest)]
 
 
