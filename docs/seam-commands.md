@@ -95,8 +95,8 @@ its own, which is a different call path and is tabled separately in §2.
 | `-d` | device | `str`, absolute path | must exist, must be a block device | the drive | HAVE |  HAVE |
 | `-o` | format | `str` enum | **always `flac`** | archival master; every other format is transcoded host-side, so the ripper is never asked for a lossy encode | HAVE |  HAVE |
 | `-D` | directory | `str`, path | writable | output directory | HAVE |  HAVE |
-| `-a` | tag blob | `str`, colon-delimited | no newline, no NUL, bounded. **No escape syntax exists**, so a value containing `:` is unrepresentable — see §4.4 | the whole tag set as one argument — **this is the value we are least comfortable with** | HAVE |  HAVE — **and there IS an escape: `\\:`. See §7.** |
-| `-t` | track list | `str`, `n=` / ranges | **range-checked against the disc's real track count** | which tracks to rip. A `-t 17=` on a 16-track disc killed a rip in two seconds | HAVE |  HAVE — same escape |
+| `-a` | tag blob | `str`, colon-delimited, **backslash-escaped** | no newline, no NUL, bounded. Every `:` `=` `\` `'` in a *value* is escaped; the blob's structure (one `key=value` per unescaped `:`, exactly one unescaped `=` per field, no dangling escape) is refused at our argv chokepoint. Measured: an **unescaped** `:` does not fail, it silently truncates the value | the whole tag set as one argument | HAVE — escape shipped lap 31 |  HAVE — **and there IS an escape: `\\:`. See §7.** |
+| `-t` | track list | `str`, `n=<escaped blob>` | **range-checked against the disc's real track count**, and the leading `<number>=` is required — cyanrip does `strtol` then `end += 1` without checking a `=` is there, so a bare `-t 12` reads past the string | which tracks to rip. A `-t 17=` on a 16-track disc killed a rip in two seconds | HAVE — same escape, same chokepoint |  HAVE — same escape |
 | `-c` | disc position | `int/int` | both ints, `number <= total`, else the flag is dropped | `DISCNUMBER` / `TOTALDISCS` | HAVE |  HAVE |
 | `-s` | offset | `int`, samples | drive-plausible range | read offset correction | HAVE |  HAVE — **now bounded ±1048576**, §7 |
 | `-S` | speed | `int` multiplier | bounded; `0` = drive max | read speed, fixed mode only | HAVE |  HAVE |
@@ -192,7 +192,7 @@ Every row is `verified` (a test asserts it) or `documented-untested`, per S-11.
 | `.cue` → `ISRC` per track | `str`, 12 chars `[A-Z0-9]` | **every ISRC we sent must come back** on its track. We send N, the log records N, the cue must carry N | `cue_validate.validate_cue` ISRC round-trip; `tests/test_cue_validate.py` | verified | HAVE | **? — broken on `9048082`** |
 | `.cue` → `INDEX 00` presence | marker | present iff the log's per-track `Pregap length` is non-zero; **track 1 exempt** (its lead-in gap cannot append to a previous track) | same validator, pregap agreement | verified | HAVE | HAVE |
 | `.cue` → `INDEX 00` value | `MM:SS:FF` | an offset **within its own `FILE`**, not an absolute disc position. Resolve against that file's start LSN before comparing — a naive absolute comparison reports 8 false mismatches of 9 | lap-29 §A, checked on all 9 markers | verified | HAVE | HAVE |
-| `.cue` → `TITLE` / `PERFORMER` | `str`, arbitrary Unicode | must be the **real** metadata. Currently carries our U+2236 colon substitute, because `-a` has no escape (§4.4) | colon-fidelity check; `FILE` lines deliberately exempt | verified | HAVE | ? |
+| `.cue` → `TITLE` / `PERFORMER` | `str`, arbitrary Unicode | must be the **real** metadata, compared **character for character** against the text we sent — which catches substitution, truncation and any other mangling with one assertion. Should carry a real colon from beta.6 + app 0.6.4b13 on; **unconfirmed until a rig rip** | title-fidelity check, tri-state; `FILE` lines deliberately exempt | verified | HAVE | HAVE |
 | `.cue` → track numbering | `int` | contiguous from 1, every track has `INDEX 01`, count matches the disc | structural sanity check | verified | HAVE | ? |
 | `.log` → `album:` field | `str` | same U+2236 issue as the cue's `TITLE` | — | documented-untested | ? | ? |
 | `.log` → its own FUN512 checksum | `str` | `--verify-log` exits 0 with *"checksum valid"* on an unmodified log | `rip_audit`, every rip | verified | HAVE | HAVE |
@@ -439,4 +439,4 @@ Proposed for round 8 with the `generic` row left standing until then, per S-12.
 
 ---
 
-*Last updated for Platterpus v0.6.4b12.*
+*Last updated for Platterpus v0.6.4b13.*
