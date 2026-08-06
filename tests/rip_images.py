@@ -4,6 +4,7 @@
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -29,9 +30,9 @@ def fail(msg):
     fails += 1
 
 
-def crip(*args, cwd=None):
+def crip(*args, cwd=None, env=None):
     r = subprocess.run([CRIP, *map(str, args)], stdout=subprocess.PIPE,
-                       stderr=subprocess.STDOUT, timeout=60, cwd=cwd)
+                       stderr=subprocess.STDOUT, timeout=60, cwd=cwd, env=env)
     return r.returncode, r.stdout.decode(errors="replace")
 
 
@@ -173,6 +174,52 @@ def sc_cli():
                   "-s", "-1048576")
     if "--" in out.split("Offset:")[1].split("\n")[0]:
         fail("cli: the Offset: line doubled its sign")
+
+    # -t requires its "<track>=" prefix, and the check is a memory-safety fix
+    # rather than input tidiness. cyanrip did strtol() and then stepped one past
+    # the terminator without checking a "=" was ever there, so "-t 1" walked off
+    # the end of the argv string and append_missing_keys() copied whatever
+    # followed it in memory into that track's metadata dictionary -- reaching
+    # the FLAC tags, the log and the cue at exit 0, with nothing printed. An
+    # environment variable landed in a rip's archival record that way.
+    # Reported by Platterpus in round 7 lap 31 (seam-rules S-11: a defect found
+    # at the seam gets its regression test in the same change, naming the
+    # round).
+    #
+    # Note ASAN and UBSAN are both silent on this: argv and environ strings
+    # share the initial stack block, so the overread crosses no boundary either
+    # sanitizer redzones. A behavioural assertion is the only thing that catches
+    # it, which is why this asserts on output rather than on a clean run.
+    #
+    # This pair is the discriminator -- reverting the fix makes "-t 1" exit 0.
+    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0",
+                   "-t", "1")
+    if ec != 1:
+        fail(f"cli: bare -t 1 exited {ec}, wanted 1")
+    if "Missing \"=\" in track metadata" not in out:
+        fail(f"cli: bare -t 1 gave no diagnosable message: {out.strip()[:90]!r}")
+
+    # And the leak itself, named. This cannot fire unless adjacent memory is
+    # genuinely being published, but which bytes follow the argv string is a
+    # layout detail, so it is a safety net rather than the discriminator above.
+    # The canary is placed first in a minimal environment because envp[0]
+    # directly follows the last argv string, which is where it was observed.
+    canary = "MUST-NOT-REACH-METADATA"
+    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0",
+                   "-t", "1",
+                   env={"CYANRIP_LEAK_CANARY": canary,
+                        "PATH": os.environ.get("PATH", "")})
+    if canary in out:
+        fail("cli: bare -t 1 published adjacent process memory into metadata")
+
+    # The well-formed spelling is untouched, including the backslash escape
+    # Platterpus relies on for a colon inside a value.
+    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0",
+                   "-t", r"1=title=A\: B")
+    if ec != 0:
+        fail(f"cli: well-formed -t exited {ec}, wanted 0")
+    if "A: B" not in out:
+        fail("cli: -t lost the escaped colon in a track title")
 
     # A genuinely unknown flag must still fail, diagnosably, on stdout
     ec, out = crip("--no-such-flag")

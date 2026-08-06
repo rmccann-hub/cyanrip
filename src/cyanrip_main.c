@@ -1994,6 +1994,19 @@ static int cyanrip_run(int argc, char **argv)
             goto end;
         }
 
+        /* Check the equal sign is actually there before stepping past it.
+         * "-t 12" leaves end on the terminator, so the step below walked off
+         * the end of the argv string and append_missing_keys() then copied
+         * whatever followed it in memory into this track's metadata -- which
+         * reaches the tags, the log and the cue. Found by Platterpus in
+         * round 7 lap 31. */
+        if (*end != '=') {
+            cyanrip_log(ctx, 0, "Missing \"=\" in track metadata \"%s\"\n",
+                        track_metadata_ptr[i]);
+            ctx->total_error_count++;
+            goto end;
+        }
+
         end += 1; /* Move past equal sign */
 
         /* Fixup */
