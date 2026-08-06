@@ -4,9 +4,9 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc1+platterpus.5-beta.5 (platterpus-fork-g<commit>)`
+Build: `cyanrip 0.9.4-rc1+platterpus.5-beta.6 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = b849568d1f3a64d2` over `src/*.c` and
+**Source anchor:** `sha256/16 = 2c604e169f7da11c` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -262,30 +262,30 @@ requires a handshake round.
 | `cyanrip_log.c:564` | `Drive used:     %s %s (revision %s)` |
 | `cyanrip_log.c:565` | `System device:  %s` |
 | `cyanrip_log.c:567` | `Device model:   %s` |
-| `cyanrip_log.c:568` | `Offset:         %c%i %s` |
-| `cyanrip_log.c:570` | `%s%c%i %s` |
-| `cyanrip_log.c:579` | `Speed:          %ix` |
-| `cyanrip_log.c:581` | `Speed:          default (%s)` |
-| `cyanrip_log.c:583` | `C2 errors:      %s` |
-| `cyanrip_log.c:592` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
-| `cyanrip_log.c:597` | `Paranoia level: %s` |
-| `cyanrip_log.c:601` | `Paranoia level: %i` |
-| `cyanrip_log.c:602` | `Frame retries:  %i` |
-| `cyanrip_log.c:604` | `HDCD decoding:  %s` |
-| `cyanrip_log.c:606` | `Album Art:      %s` |
-| `cyanrip_log.c:610` | `%s%s%s%s%s` |
-| `cyanrip_log.c:618` | `Outputs:` |
-| `cyanrip_log.c:624` | `Disc tracks:    %i` |
-| `cyanrip_log.c:625` | `Tracks to rip:  %s` |
-| `cyanrip_log.c:628` | `%i%s` |
-| `cyanrip_log.c:642` | `AccurateRip:    %s` |
-| `cyanrip_log.c:648` | `Total time:     %s` |
-| `cyanrip_log.c:693` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:695` | `Tracks ripped partially accurately: %i/%i` |
-| `cyanrip_log.c:705` | `Ripping errors: %i` |
-| `cyanrip_log.c:714` | `Rip completed:  no (interrupted by user, %i of %i tracks)` |
-| `cyanrip_log.c:717` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:720` | `Ripping finished at %s` |
+| `cyanrip_log.c:576` | `Offset:         %c%u %s` |
+| `cyanrip_log.c:579` | `%s%c%i %s` |
+| `cyanrip_log.c:588` | `Speed:          %ix` |
+| `cyanrip_log.c:590` | `Speed:          default (%s)` |
+| `cyanrip_log.c:592` | `C2 errors:      %s` |
+| `cyanrip_log.c:601` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
+| `cyanrip_log.c:606` | `Paranoia level: %s` |
+| `cyanrip_log.c:610` | `Paranoia level: %i` |
+| `cyanrip_log.c:611` | `Frame retries:  %i` |
+| `cyanrip_log.c:613` | `HDCD decoding:  %s` |
+| `cyanrip_log.c:615` | `Album Art:      %s` |
+| `cyanrip_log.c:619` | `%s%s%s%s%s` |
+| `cyanrip_log.c:627` | `Outputs:` |
+| `cyanrip_log.c:633` | `Disc tracks:    %i` |
+| `cyanrip_log.c:634` | `Tracks to rip:  %s` |
+| `cyanrip_log.c:637` | `%i%s` |
+| `cyanrip_log.c:651` | `AccurateRip:    %s` |
+| `cyanrip_log.c:657` | `Total time:     %s` |
+| `cyanrip_log.c:702` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:704` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:714` | `Ripping errors: %i` |
+| `cyanrip_log.c:723` | `Rip completed:  no (interrupted by user, %i of %i tracks)` |
+| `cyanrip_log.c:726` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:729` | `Ripping finished at %s` |
 | `cyanrip_main.c:209` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:217` | `Unable to open device: %s` |
 | `cyanrip_main.c:226` | `Unable to init cddap context!` |
@@ -335,44 +335,44 @@ requires a handshake round.
 | `cyanrip_main.c:1157` | `ignoring` |
 | `cyanrip_main.c:1165` | `%i frame gap between last track and lead-out, padding track` |
 | `cyanrip_main.c:1281` | `Can't init signal handler!` |
-| `cyanrip_main.c:1519` | `Invalid paranoia level %i must be between 0 and %i!` |
-| `cyanrip_main.c:1532` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` |
-| `cyanrip_main.c:1544` | `Invalid sanitation method %s` |
-| `cyanrip_main.c:1556` | `Invalid release index %i!` |
-| `cyanrip_main.c:1565` | `Invalid discnumber %i` |
-| `cyanrip_main.c:1572` | `Invalid totaldiscs %i` |
-| `cyanrip_main.c:1576` | `discnumber %i is larger than totaldiscs %i` |
-| `cyanrip_main.c:1589` | `Supported output codecs:` |
-| `cyanrip_main.c:1597` | `Invalid format \"%s\"` |
-| `cyanrip_main.c:1602` | `Duplicated format \"%s\"` |
-| `cyanrip_main.c:1617` | `Duplicated rip idx %i` |
-| `cyanrip_main.c:1631` | `Invalid track idx for pregap: %i` |
-| `cyanrip_main.c:1637` | `Missing pregap action` |
-| `cyanrip_main.c:1645` | `Invalid pregap action %s` |
-| `cyanrip_main.c:1676` | `No cover art location specified for \"%s\"` |
-| `cyanrip_main.c:1685` | `Invalid track idx for cover art: %i` |
-| `cyanrip_main.c:1691` | `Cover art already specified for track idx %i!` |
-| `cyanrip_main.c:1703` | `Cover art \"%s\" already specified!` |
-| `cyanrip_main.c:1709` | `Too many cover arts specified!` |
-| `cyanrip_main.c:1719` | `Directory name scheme must contain {format} with multiple output formats!` |
-| `cyanrip_main.c:1724` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` |
-| `cyanrip_main.c:1740` | `Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...` |
-| `cyanrip_main.c:1762` | `Offset is unset! To continue with an offset of 0, run with -s 0!` |
-| `cyanrip_main.c:1843` | `MusicBrainz URL:%s` |
-| `cyanrip_main.c:1887` | `Error reading album tags: %s` |
-| `cyanrip_main.c:1917` | `Log(s) will be written to:` |
-| `cyanrip_main.c:1925` | `CUE files will be written to:` |
-| `cyanrip_main.c:1979` | `Invalid track number %i, list has %i tracks!` |
-| `cyanrip_main.c:1995` | `Error reading track tags: %s` |
-| `cyanrip_main.c:2049` | `Cover art destination(s):` |
-| `cyanrip_main.c:2084` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
-| `cyanrip_main.c:2095` | `Tracks:` |
-| `cyanrip_main.c:2105` | `Track %i info:` |
-| `cyanrip_main.c:2123` | `Error initializing decoder: %s` |
-| `cyanrip_main.c:2132` | `Error initializing encoder: %s` |
-| `cyanrip_main.c:2168` | `Error encoding: %s` |
-| `cyanrip_main.c:2188` | `Invalid rip index %i, list has %i tracks!` |
-| `cyanrip_main.c:2270` | `Error ripping: %s` |
+| `cyanrip_main.c:1531` | `Invalid paranoia level %i must be between 0 and %i!` |
+| `cyanrip_main.c:1544` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` |
+| `cyanrip_main.c:1556` | `Invalid sanitation method %s` |
+| `cyanrip_main.c:1568` | `Invalid release index %i!` |
+| `cyanrip_main.c:1577` | `Invalid discnumber %i` |
+| `cyanrip_main.c:1584` | `Invalid totaldiscs %i` |
+| `cyanrip_main.c:1588` | `discnumber %i is larger than totaldiscs %i` |
+| `cyanrip_main.c:1601` | `Supported output codecs:` |
+| `cyanrip_main.c:1609` | `Invalid format \"%s\"` |
+| `cyanrip_main.c:1614` | `Duplicated format \"%s\"` |
+| `cyanrip_main.c:1629` | `Duplicated rip idx %i` |
+| `cyanrip_main.c:1643` | `Invalid track idx for pregap: %i` |
+| `cyanrip_main.c:1649` | `Missing pregap action` |
+| `cyanrip_main.c:1657` | `Invalid pregap action %s` |
+| `cyanrip_main.c:1688` | `No cover art location specified for \"%s\"` |
+| `cyanrip_main.c:1697` | `Invalid track idx for cover art: %i` |
+| `cyanrip_main.c:1703` | `Cover art already specified for track idx %i!` |
+| `cyanrip_main.c:1715` | `Cover art \"%s\" already specified!` |
+| `cyanrip_main.c:1721` | `Too many cover arts specified!` |
+| `cyanrip_main.c:1731` | `Directory name scheme must contain {format} with multiple output formats!` |
+| `cyanrip_main.c:1736` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` |
+| `cyanrip_main.c:1752` | `Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...` |
+| `cyanrip_main.c:1774` | `Offset is unset! To continue with an offset of 0, run with -s 0!` |
+| `cyanrip_main.c:1855` | `MusicBrainz URL:%s` |
+| `cyanrip_main.c:1899` | `Error reading album tags: %s` |
+| `cyanrip_main.c:1929` | `Log(s) will be written to:` |
+| `cyanrip_main.c:1937` | `CUE files will be written to:` |
+| `cyanrip_main.c:1991` | `Invalid track number %i, list has %i tracks!` |
+| `cyanrip_main.c:2007` | `Error reading track tags: %s` |
+| `cyanrip_main.c:2061` | `Cover art destination(s):` |
+| `cyanrip_main.c:2096` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
+| `cyanrip_main.c:2107` | `Tracks:` |
+| `cyanrip_main.c:2117` | `Track %i info:` |
+| `cyanrip_main.c:2135` | `Error initializing decoder: %s` |
+| `cyanrip_main.c:2144` | `Error initializing encoder: %s` |
+| `cyanrip_main.c:2180` | `Error encoding: %s` |
+| `cyanrip_main.c:2200` | `Invalid rip index %i, list has %i tracks!` |
+| `cyanrip_main.c:2282` | `Error ripping: %s` |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` |
 | `musicbrainz.c:116` | `Invalid disc number %i, release only has %i CDs` |
 | `musicbrainz.c:121` | `Got empty medium list.` |
@@ -429,7 +429,7 @@ Segment 0 is always present; the rest are appended conditionally. This is
 **stable API**: the progress bar and ETA of at least one consumer are
 driven by it.
 
-**`cyanrip_main.c:2017`** - reaches logfile: yes
+**`cyanrip_main.c:2029`** - reaches logfile: yes
 
 Not derivable: the buffer is not built by `snprintf` in this function.
 It emits arbitrary text - here, the generated CUE sheet echoed back to
@@ -468,11 +468,11 @@ P5 rows for error detection even when they appear here.
 | `cyanrip_main.c:991` | `Force quitting` | **not directly** - see legend |
 | `cyanrip_main.c:994` | `\rTrying to quit` | **not directly** - see legend |
 | `cyanrip_main.c:1247` | `libcdio %s: %s` | **not directly** - see legend |
-| `cyanrip_main.c:1452` | `Log \"%s\" checksum valid.` | **not directly** - see legend |
-| `cyanrip_main.c:1455` | `Log \"%s\" checksum mismatch, the file has been modified!` | **not directly** - see legend |
-| `cyanrip_main.c:1459` | `Log \"%s\" has data after the checksum, the file has been modified!` | **not directly** - see legend |
-| `cyanrip_main.c:1463` | `No FUN512 checksum found in \"%s\"!` | **not directly** - see legend |
-| `cyanrip_main.c:1467` | `Couldn't read \"%s\"!` | **not directly** - see legend |
+| `cyanrip_main.c:1464` | `Log \"%s\" checksum valid.` | **not directly** - see legend |
+| `cyanrip_main.c:1467` | `Log \"%s\" checksum mismatch, the file has been modified!` | **not directly** - see legend |
+| `cyanrip_main.c:1471` | `Log \"%s\" has data after the checksum, the file has been modified!` | **not directly** - see legend |
+| `cyanrip_main.c:1475` | `No FUN512 checksum found in \"%s\"!` | **not directly** - see legend |
+| `cyanrip_main.c:1479` | `Couldn't read \"%s\"!` | **not directly** - see legend |
 | `stall_watchdog.c:147` | `Still reading track %i - the read for LSN %i has not returned after %llds` | **not directly** - see legend |
 | `stall_watchdog.c:221` | `Track %i - the read for LSN %i returned after %llds` | **not directly** - see legend |
 
@@ -602,38 +602,38 @@ must carry the same class.
 | `cyanrip_main.c:939` | `Error in encoding: %s` | wording + goto end | yes |
 | `cyanrip_main.c:955` | `Error sending flush signal to encoders: %s` | wording | yes |
 | `cyanrip_main.c:991` | `Force quitting` | control flow | **not directly** - see legend |
-| `cyanrip_main.c:1463` | `No FUN512 checksum found in \"%s\"!` | control flow | **not directly** - see legend |
-| `cyanrip_main.c:1467` | `Couldn't read \"%s\"!` | both | **not directly** - see legend |
-| `cyanrip_main.c:1519` | `Invalid paranoia level %i must be between 0 and %i!` | both | yes |
-| `cyanrip_main.c:1532` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` | both | yes |
-| `cyanrip_main.c:1544` | `Invalid sanitation method %s` | both | yes |
-| `cyanrip_main.c:1556` | `Invalid release index %i!` | both | yes |
-| `cyanrip_main.c:1565` | `Invalid discnumber %i` | both | yes |
-| `cyanrip_main.c:1572` | `Invalid totaldiscs %i` | both | yes |
-| `cyanrip_main.c:1576` | `discnumber %i is larger than totaldiscs %i` | control flow | yes |
-| `cyanrip_main.c:1597` | `Invalid format \"%s\"` | both | yes |
-| `cyanrip_main.c:1602` | `Duplicated format \"%s\"` | control flow | yes |
-| `cyanrip_main.c:1617` | `Duplicated rip idx %i` | control flow | yes |
-| `cyanrip_main.c:1631` | `Invalid track idx for pregap: %i` | both | yes |
-| `cyanrip_main.c:1637` | `Missing pregap action` | both | yes |
-| `cyanrip_main.c:1645` | `Invalid pregap action %s` | both | yes |
-| `cyanrip_main.c:1676` | `No cover art location specified for \"%s\"` | both | yes |
-| `cyanrip_main.c:1685` | `Invalid track idx for cover art: %i` | both | yes |
-| `cyanrip_main.c:1691` | `Cover art already specified for track idx %i!` | control flow | yes |
-| `cyanrip_main.c:1703` | `Cover art \"%s\" already specified!` | control flow | yes |
-| `cyanrip_main.c:1709` | `Too many cover arts specified!` | control flow | yes |
-| `cyanrip_main.c:1719` | `Directory name scheme must contain {format} with multiple output formats!` | control flow | yes |
-| `cyanrip_main.c:1724` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | both | yes |
-| `cyanrip_main.c:1762` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
-| `cyanrip_main.c:1887` | `Error reading album tags: %s` | both | yes |
-| `cyanrip_main.c:1979` | `Invalid track number %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:1995` | `Error reading track tags: %s` | both | yes |
-| `cyanrip_main.c:2017` | `%s` | goto end | yes |
-| `cyanrip_main.c:2123` | `Error initializing decoder: %s` | both | yes |
-| `cyanrip_main.c:2132` | `Error initializing encoder: %s` | both | yes |
-| `cyanrip_main.c:2168` | `Error encoding: %s` | wording + goto end | yes |
-| `cyanrip_main.c:2188` | `Invalid rip index %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2270` | `Error ripping: %s` | wording + goto end | yes |
+| `cyanrip_main.c:1475` | `No FUN512 checksum found in \"%s\"!` | control flow | **not directly** - see legend |
+| `cyanrip_main.c:1479` | `Couldn't read \"%s\"!` | both | **not directly** - see legend |
+| `cyanrip_main.c:1531` | `Invalid paranoia level %i must be between 0 and %i!` | both | yes |
+| `cyanrip_main.c:1544` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` | both | yes |
+| `cyanrip_main.c:1556` | `Invalid sanitation method %s` | both | yes |
+| `cyanrip_main.c:1568` | `Invalid release index %i!` | both | yes |
+| `cyanrip_main.c:1577` | `Invalid discnumber %i` | both | yes |
+| `cyanrip_main.c:1584` | `Invalid totaldiscs %i` | both | yes |
+| `cyanrip_main.c:1588` | `discnumber %i is larger than totaldiscs %i` | control flow | yes |
+| `cyanrip_main.c:1609` | `Invalid format \"%s\"` | both | yes |
+| `cyanrip_main.c:1614` | `Duplicated format \"%s\"` | control flow | yes |
+| `cyanrip_main.c:1629` | `Duplicated rip idx %i` | control flow | yes |
+| `cyanrip_main.c:1643` | `Invalid track idx for pregap: %i` | both | yes |
+| `cyanrip_main.c:1649` | `Missing pregap action` | both | yes |
+| `cyanrip_main.c:1657` | `Invalid pregap action %s` | both | yes |
+| `cyanrip_main.c:1688` | `No cover art location specified for \"%s\"` | both | yes |
+| `cyanrip_main.c:1697` | `Invalid track idx for cover art: %i` | both | yes |
+| `cyanrip_main.c:1703` | `Cover art already specified for track idx %i!` | control flow | yes |
+| `cyanrip_main.c:1715` | `Cover art \"%s\" already specified!` | control flow | yes |
+| `cyanrip_main.c:1721` | `Too many cover arts specified!` | control flow | yes |
+| `cyanrip_main.c:1731` | `Directory name scheme must contain {format} with multiple output formats!` | control flow | yes |
+| `cyanrip_main.c:1736` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | both | yes |
+| `cyanrip_main.c:1774` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
+| `cyanrip_main.c:1899` | `Error reading album tags: %s` | both | yes |
+| `cyanrip_main.c:1991` | `Invalid track number %i, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2007` | `Error reading track tags: %s` | both | yes |
+| `cyanrip_main.c:2029` | `%s` | goto end | yes |
+| `cyanrip_main.c:2135` | `Error initializing decoder: %s` | both | yes |
+| `cyanrip_main.c:2144` | `Error initializing encoder: %s` | both | yes |
+| `cyanrip_main.c:2180` | `Error encoding: %s` | wording + goto end | yes |
+| `cyanrip_main.c:2200` | `Invalid rip index %i, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2282` | `Error ripping: %s` | wording + goto end | yes |
 | `diagnostics.c:437` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` | wording | yes |
 | `musicbrainz.c:116` | `Invalid disc number %i, release only has %i CDs` | both | yes |
