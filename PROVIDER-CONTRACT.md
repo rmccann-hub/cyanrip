@@ -6,7 +6,7 @@ stale silently, which is the failure this file exists to prevent.
 
 Build: `cyanrip 0.9.4-rc1+platterpus.5-beta.6 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = 2c604e169f7da11c` over `src/*.c` and
+**Source anchor:** `sha256/16 = 62fbccd1f851e025` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -363,16 +363,17 @@ requires a handshake round.
 | `cyanrip_main.c:1929` | `Log(s) will be written to:` |
 | `cyanrip_main.c:1937` | `CUE files will be written to:` |
 | `cyanrip_main.c:1991` | `Invalid track number %i, list has %i tracks!` |
-| `cyanrip_main.c:2007` | `Error reading track tags: %s` |
-| `cyanrip_main.c:2061` | `Cover art destination(s):` |
-| `cyanrip_main.c:2096` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
-| `cyanrip_main.c:2107` | `Tracks:` |
-| `cyanrip_main.c:2117` | `Track %i info:` |
-| `cyanrip_main.c:2135` | `Error initializing decoder: %s` |
-| `cyanrip_main.c:2144` | `Error initializing encoder: %s` |
-| `cyanrip_main.c:2180` | `Error encoding: %s` |
-| `cyanrip_main.c:2200` | `Invalid rip index %i, list has %i tracks!` |
-| `cyanrip_main.c:2282` | `Error ripping: %s` |
+| `cyanrip_main.c:2004` | `Missing \"=\" in track metadata \"%s\"` |
+| `cyanrip_main.c:2020` | `Error reading track tags: %s` |
+| `cyanrip_main.c:2074` | `Cover art destination(s):` |
+| `cyanrip_main.c:2109` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
+| `cyanrip_main.c:2120` | `Tracks:` |
+| `cyanrip_main.c:2130` | `Track %i info:` |
+| `cyanrip_main.c:2148` | `Error initializing decoder: %s` |
+| `cyanrip_main.c:2157` | `Error initializing encoder: %s` |
+| `cyanrip_main.c:2193` | `Error encoding: %s` |
+| `cyanrip_main.c:2213` | `Invalid rip index %i, list has %i tracks!` |
+| `cyanrip_main.c:2295` | `Error ripping: %s` |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` |
 | `musicbrainz.c:116` | `Invalid disc number %i, release only has %i CDs` |
 | `musicbrainz.c:121` | `Got empty medium list.` |
@@ -402,7 +403,7 @@ requires a handshake round.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:259` | `Invalid condition syntax!` |
 
-**265 distinct stable lines.**
+**266 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
@@ -429,7 +430,7 @@ Segment 0 is always present; the rest are appended conditionally. This is
 **stable API**: the progress bar and ETA of at least one consumer are
 driven by it.
 
-**`cyanrip_main.c:2029`** - reaches logfile: yes
+**`cyanrip_main.c:2042`** - reaches logfile: yes
 
 Not derivable: the buffer is not built by `snprintf` in this function.
 It emits arbitrary text - here, the generated CUE sheet echoed back to
@@ -627,13 +628,14 @@ must carry the same class.
 | `cyanrip_main.c:1774` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
 | `cyanrip_main.c:1899` | `Error reading album tags: %s` | both | yes |
 | `cyanrip_main.c:1991` | `Invalid track number %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2007` | `Error reading track tags: %s` | both | yes |
-| `cyanrip_main.c:2029` | `%s` | goto end | yes |
-| `cyanrip_main.c:2135` | `Error initializing decoder: %s` | both | yes |
-| `cyanrip_main.c:2144` | `Error initializing encoder: %s` | both | yes |
-| `cyanrip_main.c:2180` | `Error encoding: %s` | wording + goto end | yes |
-| `cyanrip_main.c:2200` | `Invalid rip index %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2282` | `Error ripping: %s` | wording + goto end | yes |
+| `cyanrip_main.c:2004` | `Missing \"=\" in track metadata \"%s\"` | both | yes |
+| `cyanrip_main.c:2020` | `Error reading track tags: %s` | both | yes |
+| `cyanrip_main.c:2042` | `%s` | goto end | yes |
+| `cyanrip_main.c:2148` | `Error initializing decoder: %s` | both | yes |
+| `cyanrip_main.c:2157` | `Error initializing encoder: %s` | both | yes |
+| `cyanrip_main.c:2193` | `Error encoding: %s` | wording + goto end | yes |
+| `cyanrip_main.c:2213` | `Invalid rip index %i, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2295` | `Error ripping: %s` | wording + goto end | yes |
 | `diagnostics.c:437` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` | wording | yes |
 | `musicbrainz.c:116` | `Invalid disc number %i, release only has %i CDs` | both | yes |
@@ -655,9 +657,9 @@ must carry the same class.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
 | `naming.c:259` | `Invalid condition syntax!` | both | yes |
 
-**117 distinct strings.** By evidence: 63 both, 21 control flow, 12 wording, 3 goto end, 14 wording + goto end.
+**118 distinct strings.** By evidence: 64 both, 21 control flow, 12 wording, 3 goto end, 14 wording + goto end.
 
-The `control flow` and `both` rows total 84 strings proven reachable on a
+The `control flow` and `both` rows total 85 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
 build a hard failure classifier on.
 
