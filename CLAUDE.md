@@ -268,6 +268,46 @@ images cannot exercise the MMC sub-channel path (they always fail into `unknown`
 no fixture retires that risk and the file must say so rather than let a green suite
 imply coverage.
 
+### The shared seam files — three documents, none of them ours alone
+
+`docs/handshake/PROTOCOL.md`, `docs/seam-rules.md` and `docs/seam-commands.md`
+live at the same path in both repositories and **neither project owns any of
+them**. A change is a version bump both sides ship, not a local edit. A faithful
+restatement is still a second spec that can drift — which has already happened:
+their copy of the protocol is missing a paragraph ours carries, found in round 7
+lap 30 by diffing rather than assuming.
+
+Three `[BOTH]` rules from `seam-rules.md` v4 bind work here and are restated
+because they change what a commit must contain:
+
+- **S-9 — limits are established by running the binary, not by reading it.**
+  Each side probes its own; neither probes the other's. A range transcribed from
+  a `GEN_OPT_*` line is a claim about behaviour nobody ran.
+  `tools/probe-argv-surface.py` is ours, and it is a CI gate in `--gate` mode,
+  not a report. It found `-s` unbounded and reaching three undefined behaviours.
+- **S-11 — every row is a test, and every seam defect gets its regression test
+  in the same change as the fix, naming the round that found it.** A future
+  reader tracing an assertion lands on the correspondence, not a commit message.
+  Report three numbers every round: `verified`, `documented-untested`,
+  `not-probed`, plus the tests added.
+- **S-12 — an error code that distinguishes nothing is a defect row, not a
+  datum.** Ours is `1` for every failure; the *messages* distinguish, so they
+  are contract surface and S-11 asserts on them. The `generic` grade stays
+  visible until fixed or accepted with a reason.
+
+**And a rule about documents, adopted in round 7 lap 29:**
+
+> A durable lesson graduates into an **existing** canonical home. Creating a
+> **new** document requires that no existing home fits, and the commit message
+> must say which homes were considered and why each failed. When a recurring
+> activity's sheet goes stale it is **rewritten**, not joined by a sibling.
+
+**Carve-out, and it cuts the other way:** the handshake correspondence is
+**append-only and must never be amalgamated** — a merged round file is a
+falsified record. Same for artifacts: a rig log stays byte-exact because it
+carries its own checksum. **Consolidation applies to documentation, never to
+evidence.**
+
 ### When this list is not enough
 
 The sections above are the shape as of the rounds that produced them, not a ceiling.
