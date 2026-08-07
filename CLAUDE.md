@@ -419,6 +419,18 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   per-track paranoia counters are checked against the disc-level totals they
   must sum to. Both of those reverts produce a *plausible-looking log* no human
   would catch by reading it.
+- **A grep pattern that nearly matches is worse than one that does not.** The
+  golden reference's checksum lines were compared with `grep -E "EAC
+  CRC32|AccurateRip"`, which matched **four** lines, and the result shipped to
+  Platterpus as *"all four EAC CRC32 and AccurateRip lines byte-identical"*. The
+  real inventory is **twelve**: three `EAC CRC32:` and nine
+  `Accurip v1:/v2:/450:`. The per-track lines are spelled `Accurip`, without the
+  "ate", so the pattern matched three checksums plus the disc-level
+  `AccurateRip:` *status* line -- which is not a checksum at all. The conclusion
+  survived (all twelve are identical, checked afterwards) but the claim was
+  stated at a scope the command never covered, and the other side found it by
+  running the comparison properly. **Count what the pattern returned and ask
+  whether that is the number you expected**; four was wrong and looked plausible.
 - **A grep hit is not a fact.** Confirm the match is in code, and not in a
   comment or in prose written earlier in the same session. Two false positives
   in one day: a function name matched inside a `TODO` comment, and a search for
