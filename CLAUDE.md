@@ -696,6 +696,61 @@ Two things that follow, and have already caused confusion:
   subject line would have been permanent and false, and the only honest remedy
   would be a follow-up commit saying so.
 
+## Rounds must converge, and round 7 did not
+
+Measured from our own record, not felt:
+
+| | round 5 | round 6 | round 7 |
+|---|---|---|---|
+| laps to close | 1 | 1 | **36 and open** |
+| test pins declared | 1 | 1 | **10** |
+| pre-releases shipped inside it | 0 | 0 | **8** |
+
+**Nothing in round 7 was bad work.** It found a memory disclosure into an
+archival record, four segfaults, a gate that graded a crash as a clean refusal,
+a tarball build that could not name itself, and a shared-file drift. Every one
+was worth finding. The round still failed, because **it had no closing condition
+that could not be extended**, and the same properties that make the work good
+are the ones that keep it open.
+
+Four mechanisms, each measurable, each with a rule:
+
+- **The acceptance criteria grew.** Round 7 opened with three; a fourth arrived
+  at lap 31 and was correct. **Rule: a round's close conditions are fixed in its
+  lap 1 and cannot grow.** A criterion discovered later is the *next* round's,
+  unless it is a regression in the pin under review. Otherwise the finish line
+  moves every time either side is thorough, and thoroughness is the one thing
+  neither side will give up.
+- **Every finding was promoted to a blocker by default.** None of round 7's
+  findings made the reviewed pin unsafe -- they made the *next* build better.
+  **Rule: a finding defaults to the next round.** Promoting one to blocking
+  requires naming what it breaks in the artifact under review. "It is a real
+  defect" is an argument for fixing it, never on its own for holding a release.
+- **The pin chased the work.** Ten test pins in one round, each invalidating the
+  evidence gathered against the last. **Rule: once a test pin is agreed it does
+  not move for the rest of the round**, unless it is found unsafe. Fixes queue.
+  A pin that moves whenever something is fixed guarantees the hardware evidence
+  is always about a build nobody is reviewing any more.
+- **The return-file spec *requires* a questions section.** So every lap
+  manufactures roughly five new open items by construction, and a round cannot
+  converge faster than it invents work. **Rule: questions carry a target --
+  `BLOCKING` or `NEXT-ROUND` -- and `BLOCKING` must satisfy the rule above.**
+  §J may be empty; "no questions" is a complete section.
+
+And the move that actually ends a round, which costs nothing and neither side
+had used before lap 38:
+
+> **Pre-commit to the close.** A lap may declare *"our next lap is `GO` unless X"*,
+> naming X. It binds. It is the only thing that stops the reflex to find one more
+> thing, and the reflex is otherwise unbounded -- there is always one more thing,
+> and this repo is built to find it.
+
+**The failure mode is specific and worth naming: applying release-grade rigour
+to the *round* rather than to the *release*.** The rigour is right. Attaching it
+to a process that must terminate is what produced 36 laps, 8 pre-releases and no
+release. A round is a decision about one pin, not a standing invitation to audit
+the seam.
+
 ## The release plan, and what enforces it
 
 Rolling a fork release is four things in a fixed order. The order is the point:
