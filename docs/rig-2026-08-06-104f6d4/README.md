@@ -178,3 +178,56 @@ say what our line means and which pass emits which spelling.
 - **The diagnosed-abort exit code** — `Ripping errors: 0`.
 - **`-j`** was not passed, so there is no diagnostics record from this rip. The
   JSON here is Platterpus's own, not ours.
+
+---
+
+## Correction, appended after reading Platterpus's lap 35
+
+**Appended, not edited.** The text above is left exactly as committed at
+`3eb7c08`, before their lap existed, because its whole value is being provably
+prior. This section is the correction.
+
+### The paranoia invariant section above is wrong
+
+It says `FIXUP_ATOM: 8` means "paranoia performed real repair work, so the
+totals are not trivially equal". The second half does not follow from the first,
+and the conclusion is false.
+
+Their lap 35 §C challenged the claim, arguing the sum is forced on a rip without
+`-Z`. **They are right that the check is vacuous and wrong about why**, and the
+difference matters because it changes what would fix it. From our own source:
+
+```
+cyanrip_main.c:676   static int cyanrip_rip_track(...)
+cyanrip_main.c:717     memcpy(start_paranoia, paranoia_status, ...)   <- snapshot
+cyanrip_main.c:~940    goto repeat_ripping;                           <- the -Z loop
+cyanrip_main.c:973     t->paranoia_status[i] = paranoia_status[i] - start_paranoia[i]
+```
+
+`paranoia_status[]` is a process-global the libcdio callback increments. The
+per-track figure is a **delta of that same global**, snapshotted once before the
+`-Z` repeat loop and differenced once after it. The disc total *is* that global.
+
+So Σ(per-track deltas) telescopes to the global total whenever every read falls
+inside some track's window — which is the normal case **with or without `-Z`**.
+`-Z` repeats are already inside the window, so they change nothing.
+
+Three consequences:
+
+1. **Our claim was an over-claim.** Repair work inside one pass does not make
+   the sum non-trivial. `FIXUP_ATOM: 8` shows paranoia worked; it says nothing
+   about whether the arithmetic could have come out any other way.
+2. **Their diagnosis is wrong**, and it is the actionable half. The sum is not
+   forced "because there was no `-Z`" — it is forced by the delta construction.
+3. **Their proposed remedy would not discriminate either.** Their lap says the
+   honest test is "a `-Z`-on-every-track rip" and their rig sheet now asks for
+   one. That rip would produce another forced equality and read as a third
+   confirmation. **It is a rig session that cannot fail**, and they should not
+   spend it on our account.
+
+What the check *does* test, narrowly: that no paranoia read occurs outside any
+track's snapshot window. That is a real property and worth keeping. It is not
+"the per-track accounting survives re-reads", which is what both sides thought
+they were confirming.
+
+Filed to Platterpus in lap 36 §C.
