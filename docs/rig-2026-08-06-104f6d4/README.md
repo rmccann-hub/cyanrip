@@ -231,3 +231,64 @@ track's snapshot window. That is a real property and worth keeping. It is not
 they were confirming.
 
 Filed to Platterpus in lap 36 §C.
+
+---
+
+## Second correction — the first correction was also wrong
+
+Appended again, for the same reason: the record of what we believed, and when,
+is worth more than a tidy file.
+
+**The correction above is wrong, and Platterpus refuted it with measurement in
+lap 37.** The claim was that Σ(per-track) equals the disc total "by construction,
+with or without `-Z`", so the check could never discriminate and a
+`-Z`-on-every-track rig session could not fail.
+
+It discriminates. It has already failed, in this very session's artifacts:
+
+| pass | argv | tracks | per-track READ | disc READ | |
+|---|---|---|---|---|---|
+| album | no `-Z` | 14 | 21972 | 21972 | equal |
+| refix | `-Z 2 -l 5` | **1** | **1538** | **7738** | **not equal** |
+
+One track in the refix pass, so there is no summation to argue about. Track 5
+converged after 5 reads and 7738 / 1538 = 5.03.
+
+**Why we got it wrong, exactly.** The delta construction was read correctly; the
+loop boundary was not:
+
+```
+cyanrip_main.c:702   repeat_ripping:;                                <- the label
+cyanrip_main.c:717     memcpy(start_paranoia, paranoia_status, ...)  <- INSIDE the loop
+cyanrip_main.c:~940    goto repeat_ripping;
+cyanrip_main.c:973     t->paranoia_status[i] = paranoia_status[i] - start_paranoia[i]
+```
+
+The snapshot is **re-taken on every repeat**, so the per-track figure describes
+the **final read only**, while the process-global accumulates every read. They
+diverge by the repeat count exactly as measured.
+
+We searched the range 717..973, found `goto repeat_ripping` inside it, and
+concluded the loop sat between snapshot and delta. **We located the goto and
+inferred the label.** The label is at 702, fifteen lines above the snapshot.
+
+That is this repo's own rule, failed on our own source: *bound every scan, or a
+line inherits its neighbour's meaning*. A `goto` proves nothing about where its
+label is, and "the loop sits between the two" was asserted, never checked — in a
+paragraph that was itself correcting an over-claim.
+
+**What is actually true:**
+
+- Without `-Z`, each track is read once, so the delta covers the whole track and
+  the sum matches. That is why the album pass agrees.
+- With `-Z`, the per-track counters under-report by the repeat count, and the
+  disc total cannot be reconstructed from them.
+- So the invariant is real, checkable, and **false under `-Z`** — which makes
+  every previous "confirmation" of it a measurement taken only in the case where
+  it holds.
+
+Not a regression in `104f6d4`: the behaviour predates it and breaks nothing in
+the artifact under review. Round 8 by S-14, and the pin does not move for it by
+S-15 — the first outing of both rules, and they hold.
+
+Filed to Platterpus in lap 38 §B, with the retraction stated plainly.
