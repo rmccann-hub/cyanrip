@@ -1,0 +1,41 @@
+# cyanrip-fork release ledger — APPEND ONLY.
+#
+# Publication is an ACT, not a derivable fact: no amount of reading this tree
+# tells you that a build was handed to somebody. So this file is the one input
+# to the release manifest that a human writes, and everything else in
+# release-manifest.json is derived from it plus the record plus git.
+#
+# RULES, enforced by tools/gen-release-manifest.py and pinned by tests:
+#
+#   * seq increments by one per published artifact, stable or beta alike.
+#   * seq is NEVER reused and NEVER reset, including across a version-scheme
+#     change or an upstream sync. It is the only orderable thing we publish --
+#     our version string is not orderable at all, because the part that
+#     advances is SemVer build metadata, which the spec ignores for precedence.
+#   * A row is never edited or deleted once written. A mistake is corrected by
+#     appending a new row, exactly like a handshake lap.
+#   * `commit` is the commit that was PUBLISHED, which is not the commit that
+#     set the version. Those differ whenever the derived artifacts are
+#     regenerated after the bump -- see CLAUDE.md, "choose the released commit
+#     after the artifacts agree".
+#
+# On the historical rows: seq 1-11 record the commit that SET each version,
+# because that is what is recoverable from this tree today (git log -S over
+# meson.build). Only seq 12 records a commit verified to pass its own suite at
+# that commit. Said plainly rather than implied, because a column that means
+# two different things in different rows is the defect this project keeps
+# finding. Historical betas are superseded and are not installable targets;
+# they are here so the sequence is complete and monotonic.
+#
+# seq	channel	version	commit	round
+1	stable	0.9.4-rc1+platterpus.3	6e62172	5
+2	stable	0.9.4-rc1+platterpus.4	5bc654d	6
+3	beta	0.9.4-rc1+platterpus.5-beta.1	937cacf	7
+4	beta	0.9.4-rc1+platterpus.5-beta.2	c5fb909	7
+5	beta	0.9.4-rc1+platterpus.5-beta.3	e61e75a	7
+6	beta	0.9.4-rc1+platterpus.5-beta.4	f5e11ba	7
+7	beta	0.9.4-rc1+platterpus.5-beta.5	c10cc94	7
+8	beta	0.9.4-rc1+platterpus.5-beta.6	862d3e3	7
+9	beta	0.9.4-rc1+platterpus.5-beta.7	d7e8574	7
+10	beta	0.9.4-rc1+platterpus.5-beta.8	490aa36	7
+11	stable	0.9.4-rc1+platterpus.5	ddf7ac3	7

@@ -1,0 +1,27 @@
+{
+  "channels": {
+    "beta": {
+      "commit": "ddf7ac3",
+      "handshake_round": 7,
+      "install": "https://github.com/rmccann-hub/cyanrip/archive/ddf7ac3.tar.gz",
+      "release_seq": 11,
+      "round_closed": true,
+      "version": "0.9.4-rc1+platterpus.5"
+    },
+    "stable": {
+      "commit": "ddf7ac3",
+      "handshake_round": 7,
+      "install": "https://github.com/rmccann-hub/cyanrip/archive/ddf7ac3.tar.gz",
+      "release_seq": 11,
+      "round_closed": true,
+      "version": "0.9.4-rc1+platterpus.5"
+    }
+  },
+  "default_channel": "stable",
+  "latest_seq": 11,
+  "manifest_url": "https://raw.githubusercontent.com/rmccann-hub/cyanrip/platterpus-fork/release-manifest.json",
+  "note": "Machine-readable. Order by release_seq -- the version string cannot be ordered, because the part that advances is SemVer build metadata, which is ignored for precedence.",
+  "project": "cyanrip-fork",
+  "repo": "https://github.com/rmccann-hub/cyanrip",
+  "schema": 1
+}

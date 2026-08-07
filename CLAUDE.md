@@ -831,6 +831,44 @@ complete lap.
 regenerate the contract and golden reference at the new version, and announce the
 pin as a **commit SHA** -- tags cannot be published from here.
 
+**A release is not published until `release-manifest.json` names it.** This is
+how the consumer installs and upgrades -- there is no other mechanism, and there
+cannot be: tag pushes are `HTTP 403` from here and no release API is reachable,
+so a design resting on tags cannot ship. The sequence is:
+
+1. Append one row to `docs/release-ledger.tsv`. **Append only** -- never edit or
+   delete a row; a mistake is corrected by appending, exactly like a lap. It is
+   the one hand-written input, because *publication is an act* and no amount of
+   reading this tree reveals that a build was handed to somebody.
+2. `tools/gen-release-manifest.py > release-manifest.json`, then `--check` must
+   exit 0. Never hand-edit it.
+3. Commit both. A release whose manifest still names the previous build has not
+   been published, whatever the changelog says.
+
+**Machine decisions never come from the human-facing version string**, and both
+reasons are measured rather than feared. Ours cannot be ordered: `0.9.4-rc1` is
+upstream's and the part that advances is `+platterpus.N`, SemVer *build
+metadata*, which the spec says MUST be ignored for precedence -- so a version
+comparison compares `0.9.4-rc1` against `0.9.4-rc1` forever. And the two projects
+spell a beta differently (`-beta.1` versus `b1`), so a substring check finds ours
+and misses theirs, reporting a Platterpus beta user as stable. Order by
+`release_seq`. Read the channel from the `channel` column. Never parse the
+version.
+
+**Four properties the generator asserts, each blocking a way a user gets hurt:**
+
+- **`stable` never points at an unclosed round.** A stable release claims joint
+  verification; an open round means it does not have it.
+- **`stable` is retained when a beta exists**, so downgrade is always possible.
+- **A channel is a risk tolerance, not a lineage.** `beta` resolves to the newest
+  row of *any* channel, so opting into pre-releases can never move a user
+  backwards. The first generated manifest had `beta` on seq 10 while `stable`
+  was seq 11 -- opting in would have been a downgrade.
+- **`round_closed` is derived** by importing `release-gate.py`'s own loader, not
+  reimplemented. Two readers of one record that can disagree is the failure both
+  gates exist to prevent, and a second copy of the parsing rules is how they come
+  to disagree.
+
 **Choose the released commit AFTER the artifacts agree, never at the bump.** That
 ordering guarantees one commit exists whose own suite fails: the bump changes the
 version, the derived artifacts still describe the previous one, and

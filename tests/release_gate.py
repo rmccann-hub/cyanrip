@@ -780,6 +780,124 @@ def test_real_handshake_files_follow_the_naming_convention():
           f"lexical order is not chronological: {names} vs {by_lap}")
 
 
+# ---------------------------------------------------------------------------
+# release-manifest.json -- the file a consumer polls to decide whether to
+# offer an upgrade. Every check below blocks a way a USER gets hurt, not a way
+# the format looks wrong.
+# ---------------------------------------------------------------------------
+
+def _manifest_mod():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "genman", HERE.parent / "tools" / "gen-release-manifest.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def _ledger(rows):
+    """A ledger file from (seq, channel, version, commit, round) tuples."""
+    body = "# seq\tchannel\tversion\tcommit\tround\n"
+    return body + "".join("\t".join(str(c) for c in r) + "\n" for r in rows)
+
+
+def test_manifest_committed_copy_is_current():
+    """A stale manifest is worse than none: a consumer polls it and is told the
+    newest build is one that has been superseded."""
+    m = _manifest_mod()
+    want = m.render(m.build())
+    have = (HERE.parent / "release-manifest.json").read_text(encoding="utf-8")
+    check(want == have,
+          "release-manifest.json is stale -- regenerate with "
+          "tools/gen-release-manifest.py")
+
+
+def test_manifest_stable_never_points_at_an_open_round():
+    """A stable release claims joint verification. An open round means it does
+    not have it, so the generator must refuse rather than publish."""
+    m = _manifest_mod()
+    import tempfile, pathlib as _p
+    with tempfile.TemporaryDirectory() as d:
+        f = _p.Path(d) / "l.tsv"
+        f.write_text(_ledger([(1, "stable", "v1", "aaaaaaa", 999)]))
+        orig = m.LEDGER
+        try:
+            m.LEDGER = f
+            try:
+                m.build()
+                check(False, "stable on an unclosed round 999 was published")
+            except m.LedgerError as e:
+                check("NOT closed" in str(e),
+                      f"refused, but not for the round reason: {e}")
+        finally:
+            m.LEDGER = orig
+
+
+def test_manifest_beta_channel_never_offers_a_downgrade():
+    """Opting into pre-releases must never move a user backwards. The first
+    generated manifest had exactly this bug: beta resolved to beta.8 (seq 10)
+    while stable was seq 11."""
+    m = _manifest_mod()
+    man = m.build()
+    ch = man["channels"]
+    if "beta" in ch and "stable" in ch:
+        check(ch["beta"]["release_seq"] >= ch["stable"]["release_seq"],
+              f"beta seq {ch['beta']['release_seq']} is behind stable "
+              f"{ch['stable']['release_seq']} -- that is a downgrade")
+
+
+def test_manifest_default_channel_is_stable():
+    """A user who never opts in must be unable to reach a beta, even
+    transiently, even if this file is generated wrong."""
+    m = _manifest_mod()
+    check(m.build()["default_channel"] == "stable",
+          "default_channel must be stable")
+
+
+def test_ledger_sequence_is_monotonic_and_unique():
+    """The sequence is the ONLY orderable thing we publish -- our version
+    string is not orderable at all. Reuse or a gap destroys it."""
+    m = _manifest_mod()
+    import tempfile, pathlib as _p
+    cases = [
+        ([(1, "stable", "v1", "aaaaaaa", 5), (1, "beta", "v2", "bbbbbbb", 5)],
+         "reused", "reused"),
+        ([(1, "stable", "v1", "aaaaaaa", 5), (3, "beta", "v2", "bbbbbbb", 5)],
+         "gap", "does not follow"),
+        ([(1, "stable", "v1", "aaaaaaa", 5), (2, "nightly", "v2", "bbbbbbb", 5)],
+         "unknown channel", "not one of"),
+    ]
+    with tempfile.TemporaryDirectory() as d:
+        f = _p.Path(d) / "l.tsv"
+        orig = m.LEDGER
+        try:
+            m.LEDGER = f
+            for rows, label, want in cases:
+                f.write_text(_ledger(rows))
+                try:
+                    m.load_ledger(f)
+                    check(False, f"ledger with a {label} seq was accepted")
+                except m.LedgerError as e:
+                    check(want in str(e),
+                          f"{label}: refused for the wrong reason: {e}")
+        finally:
+            m.LEDGER = orig
+
+
+def test_manifest_round_closed_agrees_with_the_gate():
+    """Derived, never stated. A manifest claiming a round closed while the gate
+    says otherwise is the two-gates-disagree failure in a new place -- so the
+    manifest imports the gate's loader rather than reimplementing it."""
+    m = _manifest_mod()
+    man = m.build()
+    truth = {r.number: bool(r.closed) for r in rg.load_rounds()}
+    for name, ch in man["channels"].items():
+        rnd = ch["handshake_round"]
+        check(ch["round_closed"] == truth.get(rnd, False),
+              f"{name}: round_closed={ch['round_closed']} but the gate says "
+              f"{truth.get(rnd)} for round {rnd}")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()
