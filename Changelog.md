@@ -1,3 +1,46 @@
+0.9.4-rc1+platterpus.5 (2026-08-07) -- RELEASE
+==============================================
+**The first release of this fork since `+platterpus.4`, and the first one whose
+logs do not say `NOT a released build`.**
+
+Round 7 closed at lap 38 with `GO` on both sides against
+`cyanrip 0.9.4-rc1+platterpus.5-beta.8 (platterpus-fork-g104f6d4)` and
+`platterpus 0.6.4b15`. This release is that code with the version string
+finalised: **no source file differs between `104f6d4` and this commit.** The
+approved pin and the released artifact are therefore the same program under two
+version strings, which is stated here rather than left to be discovered.
+
+**What the close means, exactly.** One pin, one app version, one disc, on the
+evidence named in the round's `HANDSHAKE-TESTED`. It is not a claim that either
+program is defect-free or that the seam is fully explored.
+
+Everything in this release shipped through betas 1-8; see their entries for the
+detail. The headline items:
+
+ - **`INDEX 00` is no longer written for a zero-length pre-gap**, and `ISRC` is
+   written in the cue's appended-pregap branch. Both verified on hardware:
+   `INDEX 00` on exactly tracks 2/4/5/7/8/9/10/13/14 and nowhere else, and 14
+   ISRCs of 14.
+ - **`-t N` with no `=` no longer publishes adjacent process memory** into the
+   tags, the log and the cue at exit 0.
+ - **`-c /`, `-c //`, `-p =`, `-p ==` no longer segfault** with no output.
+ - **`-s` is bounded**, out of three undefined behaviours at `INT32_MIN`.
+ - **A source-tarball build names the commit it came from**, instead of
+   `platterpus-fork-g-dirty`.
+ - **The `\:` escape is proven end-to-end on hardware** — a real colon reaches
+   the cue's `TITLE` and the log's `Album:`.
+
+Known and deliberately not fixed here, carried to round 8:
+
+ - **Per-track paranoia counters describe the final read only under `-Z`**, while
+   the disc-level total accumulates every read, so the two diverge by roughly the
+   repeat count. Measured in the J1 rip's refix pass: per-track `READ` 1538
+   against a disc total of 7738 over 5 reads. Pre-dates this release and breaks
+   nothing in it; a caveat for anyone rendering disc-level tallies.
+ - **`-x` has never executed on a real drive**, in any session, on any build.
+   Nor have C2, `-f`, damaged media, CD-TEXT from a physical disc, a diagnosed
+   abort, or a non-zero `Read stalls:` count.
+
 0.9.4-rc1+platterpus.5-beta.8 (2026-08-06) -- PRE-RELEASE
 =========================================================
 **A build from a source tarball could not name itself.** Found while packaging
