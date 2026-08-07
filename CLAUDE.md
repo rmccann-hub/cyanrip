@@ -828,8 +828,23 @@ a mid-round lap is `HOLD`, not `GO`, and a lap that changes nothing is still a
 complete lap.
 
 **4. Only then, release.** Bump `+platterpus.N`, write the `Changelog.md` entry,
-regenerate the contract and golden reference at the new version, and announce
-the pin as a **commit SHA** — tags cannot be published from here.
+regenerate the contract and golden reference at the new version, and announce the
+pin as a **commit SHA** -- tags cannot be published from here.
+
+**Choose the released commit AFTER the artifacts agree, never at the bump.** That
+ordering guarantees one commit exists whose own suite fails: the bump changes the
+version, the derived artifacts still describe the previous one, and
+`contract_build` and the golden-reference version check both fire on it -- which
+is exactly what they are for. Measured, not hypothetical: `+platterpus.5` was
+announced at `422d12a`, which fails 2 of 33 from a fresh clone, and the consumer
+installed it on our say-so. The binary was correct; the commit was not, so anyone
+building it from source and running the tests sees a broken release.
+
+Regenerating in the same commit does **not** fix it -- a generated artifact
+cannot contain the hash of the build that produced it, which is the same fixpoint
+as a round file that cannot name its own commit. The remedy is the announcement:
+the release is the first commit where the version and every derived artifact
+agree, and it is named once that is true rather than when the version moves.
 
 The plan for the next one, worked through against the actual tree rather than
 in the abstract, is `docs/RELEASE-PLAN-platterpus.5.md`. It is a plan and not a
