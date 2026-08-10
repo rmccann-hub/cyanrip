@@ -116,6 +116,31 @@ LOGCALL = re.compile(
 STDERRCALL = re.compile(
     r'fprintf\s*\(\s*stderr\s*,\s*(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)', re.S)
 
+# genopt's own diagnostics, which reach the terminal and the logfile through
+# GEN_OPT_LOG -> crip_genopt_log -> cyanrip_vlog, and which were invisible to
+# this generator until 2026-08-10. The contract's anchor has always claimed to
+# cover `src/*.h`, and genopt.h has always been in `src/`; the scan simply had
+# no pattern for the macro. So an entire family of fatal messages was missing
+# from a document that presents itself as the complete inventory -- including
+#
+#     Unable to parse command line argument: %s
+#
+# the message that once read to a consumer as "cyanrip is not installed", and
+# the reason this fork restored -V. Found by running the binary with a bad
+# argument and looking for its message in the contract.
+GENOPTCALL = re.compile(
+    r'GEN_OPT_LOG\s*\(\s*[A-Za-z_][A-Za-z0-9_]*\s*,\s*GEN_OPT_LOG_[A-Z]+\s*,\s*'
+    r'(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)', re.S)
+
+# A macro body stringifies its parameter into the message: `"as a " #type " for"`.
+# The rendered text depends on the instantiation -- int32_t, double, and so on --
+# so there is no single literal to publish. Report the placeholder rather than
+# either guessing one instantiation or truncating the format at the break, which
+# is what joining only the string tokens would do.
+STRINGIFY_RUN = re.compile(
+    r'\s*#([A-Za-z_][A-Za-z0-9_]*)\s*'
+    r'((?:"(?:[^"\\]|\\.)*"\s*)+)')
+
 
 # Some lines are composed into a char buffer by a run of snprintf() calls and
 # then emitted with cyanrip_log(..., "%s", buf). The emitter's literal is a bare
@@ -158,6 +183,11 @@ def splice_inttypes(text, end, base):
     out = base
     pos = end
     while True:
+        m = STRINGIFY_RUN.match(text, pos)
+        if m:
+            out += "<" + m.group(1) + ">" + joined(m.group(2))
+            pos = m.end()
+            continue
         m = INTTYPE_RUN.match(text, pos)
         if not m:
             break
@@ -289,6 +319,22 @@ def collect():
             ev = evidence(text, m.end(), s)
             if ev:
                 fatal.append((name, line, s, to_log, ev))
+
+        for m in GENOPTCALL.finditer(text):
+            raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
+            line = text[:m.start()].count("\n") + 1
+            s = raw.replace("\\n", "").replace("\\t", " ").strip()
+            if not s:
+                continue
+            # Routed through cyanrip_vlog() by crip_genopt_log(), so it reaches
+            # the logfile exactly as any other message does. Every one of them
+            # is an argument-parsing failure and genopt returns non-zero, so
+            # they are fatal by construction rather than by classification --
+            # which is why they carry their own evidence value rather than
+            # going through evidence(), whose heuristics are written for
+            # cyanrip's own control flow and do not describe a macro body.
+            stable.append((name, line, s, True))
+            fatal.append((name, line, s, True, "genopt"))
 
         for m in STDERRCALL.finditer(text):
             raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
