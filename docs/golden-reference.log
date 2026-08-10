@@ -1,6 +1,6 @@
-cyanrip 0.9.4-rc1+platterpus.5 (platterpus-fork-g422d12a)
+cyanrip 0.9.4-rc1+platterpus.6-beta.1 (platterpus-fork-gea2793a)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -D o -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b12 -j o/reference.diagnostics.json -t 1=isrc=AAAAA0000001 -t 2=isrc=BBBBB0000002 -t 3=isrc=CCCCC0000003
-Handshake:      round 7 lap 38 closed, verdict GO
+Handshake:      round 7 lap 39 closed, verdict GO
 Consumer:       platterpus/0.6.4b12
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -72,7 +72,7 @@ Summary:
     True peak level:   0.0 dBFS
     Integrated loudness (R128): -7.7 LUFS
     Loudness range (R128):      20.0 LU (-27.7 to -7.7 LUFS)
-    Extraction speed:  56.4x
+    Extraction speed:  56.3x
     Elapsed:            0.05 s
     Pregap LSN:  0 (duration: 00:02.00)
     Pregap length: 150 frames
@@ -93,11 +93,11 @@ Summary:
     musicbrainz_discid:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     cddb:                          14000603
     media:                         CD
-    comment:                       cyanrip 0.9.4-rc1+platterpus.5
+    comment:                       cyanrip 0.9.4-rc1+platterpus.6-beta.1
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
     isrc:                          AAAAA0000001
-    creation_time:                 2026-08-07T02:03:39
+    creation_time:                 2026-08-10T23:12:54
     REPLAYGAIN_TRACK_GAIN:         -10.29 dB
     R128_TRACK_GAIN:               -1355
     REPLAYGAIN_TRACK_RANGE:        20.00 dB
@@ -145,7 +145,7 @@ Summary:
     True peak level:   0.3 dBFS
     Integrated loudness (R128): -6.8 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  48.3x
+    Extraction speed:  45.5x
     Elapsed:            0.04 s
     Pregap LSN:  300 (duration: 00:01.00)
     Pregap length: 75 frames
@@ -166,11 +166,11 @@ Summary:
     musicbrainz_discid:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     cddb:                          14000603
     media:                         CD
-    comment:                       cyanrip 0.9.4-rc1+platterpus.5
+    comment:                       cyanrip 0.9.4-rc1+platterpus.6-beta.1
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
     isrc:                          BBBBB0000002
-    creation_time:                 2026-08-07T02:03:39
+    creation_time:                 2026-08-10T23:12:55
     REPLAYGAIN_TRACK_GAIN:         -11.19 dB
     R128_TRACK_GAIN:               -1584
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -218,8 +218,8 @@ Summary:
     True peak level:   -11.3 dBFS
     Integrated loudness (R128): -22.6 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  43.0x
-    Elapsed:            0.02 s
+    Extraction speed:  38.3x
+    Elapsed:            0.03 s
     Pregap LSN:  unknown (sub-channel unreadable)
     Start LSN:   525
     End LSN:     599
@@ -237,11 +237,11 @@ Summary:
     musicbrainz_discid:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     cddb:                          14000603
     media:                         CD
-    comment:                       cyanrip 0.9.4-rc1+platterpus.5
+    comment:                       cyanrip 0.9.4-rc1+platterpus.6-beta.1
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
     isrc:                          CCCCC0000003
-    creation_time:                 2026-08-07T02:03:39
+    creation_time:                 2026-08-10T23:12:55
     REPLAYGAIN_TRACK_GAIN:         4.63 dB
     R128_TRACK_GAIN:               2465
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -278,5 +278,5 @@ Paranoia status counts:
 Ripping errors: 0
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  yes (3 of 3 tracks)
-Ripping finished at 2026-08-07T02:03:39
-Log FUN512: iBgEjGMTlZw3WdIcLCnIcidJPTs1t8ycJyKLSZx1OVMraJ1C91WbWK3pyJV12IjO9Hb_bLQsk8Ti2tu8O5f.yg
+Ripping finished at 2026-08-10T23:12:55
+Log FUN512: NmPBWpsGVbvBzyRfmwoH_IEpWIFFRhDwI6HLJHLceO9rRl9ogHOX.nwyXePKYvBBnEt1wWP930gKJ0zN1_0M5g

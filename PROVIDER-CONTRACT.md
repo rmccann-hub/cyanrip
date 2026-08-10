@@ -4,9 +4,9 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc1+platterpus.5 (platterpus-fork-g<commit>)`
+Build: `cyanrip 0.9.4-rc1+platterpus.6-beta.1 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = 99769a09466b0b57` over `src/*.c` and
+**Source anchor:** `sha256/16 = 302bd98a0e69c6bb` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -141,13 +141,7 @@ requires a handshake round.
 | `accurip.c:137` | `Unable to get AccuRIP DB data: %s%s` |
 | `accurip.c:140` | `Unable to get AccuRIP DB data: %s!` |
 | `accurip.c:176` | `AccuRIP DB data error, got unexpected number of bytes!` |
-| `cache_probe.c:108` | `Cache probe:    not run (disc image has no drive cache)` |
-| `cache_probe.c:116` | `Cache probe:    unknown (out of memory)` |
-| `cache_probe.c:129` | `Cache probe:    unknown (disc too short to probe)` |
-| `cache_probe.c:141` | `Cache probe:    unknown (read failed while calibrating)` |
-| `cache_probe.c:158` | `Cache probe:    unknown (drive returned reads too fast to time)` |
-| `cache_probe.c:187` | `Cache probe:    no readback cache measured (uncached read %.1f ms)` |
-| `cache_probe.c:193` | `Cache probe:    %i sectors measured (%.1f KiB, uncached read %.1f ms)` |
+| `cache_probe.c:179` | `Cache probe:    %s` |
 | `coverart.c:34` | `Cover art has no packet!` |
 | `coverart.c:51` | `Unable to init lavf context: %s!` |
 | `coverart.c:57` | `Unable to alloc stream!` |
@@ -377,6 +371,16 @@ requires a handshake round.
 | `cyanrip_main.c:2227` | `Invalid rip index %i, list has %i tracks!` |
 | `cyanrip_main.c:2309` | `Error ripping: %s` |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` |
+| `genopt.h:265` | `Error parsing \"%s\" as a <type> for argument \"%s\"` |
+| `genopt.h:272` | `Error parsing %f for argument \"%s\": not in [%f:%f] range!` |
+| `genopt.h:292` | `Error parsing %lli for argument \"%s\": not in [%lli:%lli] range!` |
+| `genopt.h:312` | `Error parsing %llu for argument \"%s\": not in [%llu:%llu] range!` |
+| `genopt.h:356` | `Error parsing value for argument \"%s\"` |
+| `genopt.h:376` | `Error parsing %f for argument \"%s\": range [%f:%f]!` |
+| `genopt.h:558` | `Unable to parse command line argument: %s` |
+| `genopt.h:564` | `Programming error, incorrect type for: %s` |
+| `genopt.h:575` | `Missing value for argument \"%s\"` |
+| `genopt.h:598` | `Too many values for argument \"%s\" (at most %i)` |
 | `musicbrainz.c:116` | `Invalid disc number %i, release only has %i CDs` |
 | `musicbrainz.c:121` | `Got empty medium list.` |
 | `musicbrainz.c:127` | `No mediums match DiscID!` |
@@ -405,7 +409,7 @@ requires a handshake round.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:259` | `Invalid condition syntax!` |
 
-**268 distinct stable lines.**
+**272 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
@@ -476,6 +480,16 @@ P5 rows for error detection even when they appear here.
 | `cyanrip_main.c:1473` | `Log \"%s\" has data after the checksum, the file has been modified!` | **not directly** - see legend |
 | `cyanrip_main.c:1477` | `No FUN512 checksum found in \"%s\"!` | **not directly** - see legend |
 | `cyanrip_main.c:1481` | `Couldn't read \"%s\"!` | **not directly** - see legend |
+| `genopt.h:399` | `(default: %f)` | yes |
+| `genopt.h:409` | `(default: %hi)` | yes |
+| `genopt.h:414` | `(default: %i)` | yes |
+| `genopt.h:419` | `(default: %lli)` | yes |
+| `genopt.h:424` | `(default: %hu)` | yes |
+| `genopt.h:429` | `(default: %u)` | yes |
+| `genopt.h:434` | `(default: %llu)` | yes |
+| `genopt.h:439` | `(default: %s)` | yes |
+| `genopt.h:445` | `(default: %i/%i)` | yes |
+| `genopt.h:531` | `%s:` | yes |
 | `stall_watchdog.c:147` | `Still reading track %i - the read for LSN %i has not returned after %llds` | **not directly** - see legend |
 | `stall_watchdog.c:221` | `Track %i - the read for LSN %i returned after %llds` | **not directly** - see legend |
 
@@ -545,7 +559,6 @@ must carry the same class.
 | `accurip.c:137` | `Unable to get AccuRIP DB data: %s%s` | wording + goto end | yes |
 | `accurip.c:140` | `Unable to get AccuRIP DB data: %s!` | wording + goto end | yes |
 | `accurip.c:176` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
-| `cache_probe.c:116` | `Cache probe:    unknown (out of memory)` | control flow | yes |
 | `coverart.c:51` | `Unable to init lavf context: %s!` | both | yes |
 | `coverart.c:57` | `Unable to alloc stream!` | both | yes |
 | `coverart.c:70` | `Couldn't open %s for writing: %s!` | both | yes |
@@ -642,6 +655,16 @@ must carry the same class.
 | `cyanrip_main.c:2309` | `Error ripping: %s` | wording + goto end | yes |
 | `diagnostics.c:437` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` | wording | yes |
+| `genopt.h:265` | `Error parsing \"%s\" as a <type> for argument \"%s\"` | genopt | yes |
+| `genopt.h:272` | `Error parsing %f for argument \"%s\": not in [%f:%f] range!` | genopt | yes |
+| `genopt.h:292` | `Error parsing %lli for argument \"%s\": not in [%lli:%lli] range!` | genopt | yes |
+| `genopt.h:312` | `Error parsing %llu for argument \"%s\": not in [%llu:%llu] range!` | genopt | yes |
+| `genopt.h:356` | `Error parsing value for argument \"%s\"` | genopt | yes |
+| `genopt.h:376` | `Error parsing %f for argument \"%s\": range [%f:%f]!` | genopt | yes |
+| `genopt.h:558` | `Unable to parse command line argument: %s` | genopt | yes |
+| `genopt.h:564` | `Programming error, incorrect type for: %s` | genopt | yes |
+| `genopt.h:575` | `Missing value for argument \"%s\"` | genopt | yes |
+| `genopt.h:598` | `Too many values for argument \"%s\" (at most %i)` | genopt | yes |
 | `musicbrainz.c:116` | `Invalid disc number %i, release only has %i CDs` | both | yes |
 | `musicbrainz.c:121` | `Got empty medium list.` | control flow | yes |
 | `musicbrainz.c:193` | `Could not connect to MusicBrainz.` | both | yes |
@@ -661,9 +684,9 @@ must carry the same class.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
 | `naming.c:259` | `Invalid condition syntax!` | both | yes |
 
-**120 distinct strings.** By evidence: 66 both, 21 control flow, 12 wording, 3 goto end, 14 wording + goto end.
+**129 distinct strings.** By evidence: 66 both, 20 control flow, 12 wording, 3 goto end, 14 wording + goto end.
 
-The `control flow` and `both` rows total 87 strings proven reachable on a
+The `control flow` and `both` rows total 86 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
 build a hard failure classifier on.
 
