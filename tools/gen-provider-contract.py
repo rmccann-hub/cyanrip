@@ -169,10 +169,10 @@ SNPRINTF_INTO = (
 # <inttypes.h> length macros, which sit *outside* the string literals and so
 # would otherwise truncate a format mid-conversion (", ETA - %" PRId64 "s").
 INTTYPES = {
-    "PRId64": "lld", "PRIu64": "llu", "PRIx64": "llx",
-    "PRId32": "d",   "PRIu32": "u",   "PRIx32": "x",
-    "PRId16": "hd",  "PRIu16": "hu",  "PRIx16": "hx",
-    "PRId8":  "hhd", "PRIu8":  "hhu", "PRIx8":  "hhx",
+    "PRId64": "lld", "PRIu64": "llu", "PRIx64": "llx", "PRIi64": "lli",
+    "PRId32": "d",   "PRIu32": "u",   "PRIx32": "x",   "PRIi32": "i",
+    "PRId16": "hd",  "PRIu16": "hu",  "PRIx16": "hx",  "PRIi16": "hi",
+    "PRId8":  "hhd", "PRIu8":  "hhu", "PRIx8":  "hhx", "PRIi8":  "hhi",
 }
 
 INTTYPE_RUN = re.compile(
@@ -200,7 +200,15 @@ def splice_inttypes(text, end, base):
         m = INTTYPE_RUN.match(text, pos)
         if not m:
             break
-        conv = INTTYPES.get(m.group(1), "?")
+        # Never "?": a generated document that quietly prints %? for a macro
+        # it does not know has published a format string that is wrong, while
+        # looking derived. PRIi64 was missing and shipped four rows reading
+        # `(default: %?)` and `not in [%?:%?] range!` before this refused.
+        if m.group(1) not in INTTYPES:
+            sys.exit("gen-provider-contract: unknown length macro %s at "
+                     "offset %i -- add it to INTTYPES rather than publishing "
+                     "a guessed conversion" % (m.group(1), m.start()))
+        conv = INTTYPES[m.group(1)]
         # The '%' lives at the end of the preceding literal by convention;
         # only supply one when it does not.
         out += conv if out.endswith("%") else "%" + conv
@@ -342,7 +350,14 @@ def collect():
             # which is why they carry their own evidence value rather than
             # going through evidence(), whose heuristics are written for
             # cyanrip's own control flow and do not describe a macro body.
-            stable.append((name, line, s, True))
+            # INFO-level genopt output is --help, which P1 already derives by
+            # running the binary. Publishing its fragments in P2 as well would
+            # commit us to not rewording text we do not own and did not write,
+            # and P2 is exactly the set of lines we undertake not to reword.
+            if m.group("level") == "GEN_OPT_LOG_ERROR":
+                stable.append((name, line, s, True))
+            else:
+                unstable.append((name, line, s, True))
             # Only the ERROR level is a failure. GEN_OPT_LOG also prints --help,
             # and filing help text as a fatal message is the same defect as the
             # classifier that once filed "Opening drive..." as one: a line
