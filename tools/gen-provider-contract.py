@@ -128,9 +128,18 @@ STDERRCALL = re.compile(
 # the message that once read to a consumer as "cyanrip is not installed", and
 # the reason this fork restored -V. Found by running the binary with a bad
 # argument and looking for its message in the contract.
+# Whitespace INCLUDING line continuations. Every one of these call sites that
+# matters lives inside a #define, so the tokens are separated by "\\\n" rather
+# than by whitespace alone. A \s*-only pattern silently matched the four sites
+# outside macro bodies and missed the four inside them -- among them the exact
+# message a malformed -l produced during seam testing, which is what sent us
+# looking here. A pattern that returns a plausible number is worse than one
+# that returns nothing.
+_WS = r'[\s\\]*'
 GENOPTCALL = re.compile(
-    r'GEN_OPT_LOG\s*\(\s*[A-Za-z_][A-Za-z0-9_]*\s*,\s*GEN_OPT_LOG_[A-Z]+\s*,\s*'
-    r'(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)', re.S)
+    r'GEN_OPT_LOG' + _WS + r'\(' + _WS + r'[A-Za-z_][A-Za-z0-9_]*' + _WS + r',' + _WS +
+    r'(?P<level>GEN_OPT_LOG_[A-Z]+)' + _WS + r',' + _WS +
+    r'(?P<lit>"(?:[^"\\]|\\.)*"(?:' + _WS + r'"(?:[^"\\]|\\.)*")*)', re.S)
 
 # A macro body stringifies its parameter into the message: `"as a " #type " for"`.
 # The rendered text depends on the instantiation -- int32_t, double, and so on --
@@ -138,8 +147,8 @@ GENOPTCALL = re.compile(
 # either guessing one instantiation or truncating the format at the break, which
 # is what joining only the string tokens would do.
 STRINGIFY_RUN = re.compile(
-    r'\s*#([A-Za-z_][A-Za-z0-9_]*)\s*'
-    r'((?:"(?:[^"\\]|\\.)*"\s*)+)')
+    r'[\s\\]*#([A-Za-z_][A-Za-z0-9_]*)[\s\\]*'
+    r'((?:"(?:[^"\\]|\\.)*"[\s\\]*)+)')
 
 
 # Some lines are composed into a char buffer by a run of snprintf() calls and
@@ -167,8 +176,8 @@ INTTYPES = {
 }
 
 INTTYPE_RUN = re.compile(
-    r'\s*(PRI[diux](?:8|16|32|64))\s*'
-    r'((?:"(?:[^"\\]|\\.)*"\s*)+)')
+    r'[\s\\]*(PRI[diux](?:8|16|32|64))[\s\\]*'
+    r'((?:"(?:[^"\\]|\\.)*"[\s\\]*)+)')
 
 
 def splice_inttypes(text, end, base):
@@ -334,7 +343,12 @@ def collect():
             # going through evidence(), whose heuristics are written for
             # cyanrip's own control flow and do not describe a macro body.
             stable.append((name, line, s, True))
-            fatal.append((name, line, s, True, "genopt"))
+            # Only the ERROR level is a failure. GEN_OPT_LOG also prints --help,
+            # and filing help text as a fatal message is the same defect as the
+            # classifier that once filed "Opening drive..." as one: a line
+            # inheriting a neighbour's meaning because the test was too coarse.
+            if m.group("level") == "GEN_OPT_LOG_ERROR":
+                fatal.append((name, line, s, True, "genopt"))
 
         for m in STDERRCALL.finditer(text):
             raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
