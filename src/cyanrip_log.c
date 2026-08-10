@@ -905,6 +905,22 @@ static void av_log_capture(void *ptr, int lvl, const char *format,
 
     vprintf(format, args);
 
+    /* The flush cyanrip_vlog() does and this function did not. Capture is
+     * switched on around avfilter_graph_free(), so this is the path the
+     * ebur128/astats summary blocks arrive on -- not incidental output.
+     *
+     * Stated at the strength it was actually established: this is a
+     * consistency fix, not a measured improvement. A probe that piped a whole
+     * image rip and counted read() chunks could not tell the two builds apart
+     * (955 chunks without, 981 with, and the summary block landed in its own
+     * chunk either way), because cyanrip_vlog() flushes after every message
+     * and messages alternate constantly, so stdout never accumulates. The one
+     * window where it can matter is a process killed between an av_log message
+     * and the next cyanrip_log() -- the 2026-08-10 hang was killed at 120s and
+     * its caller recorded no output at all. That window is a race and a flaky
+     * test is worse than none, so there is no test for it. */
+    fflush(stdout);
+
 end:
     pthread_mutex_unlock(&log_lock);
 }
