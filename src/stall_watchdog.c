@@ -220,7 +220,7 @@ void crip_stall_read_end(void)
     if (reported)
         cyanrip_log(NULL, 0,
                     "\nTrack %i - the read for LSN %i returned after %" PRId64 "s\n",
-                    track, (int)lsn, took / 1000000LL);
+                    track, (int)lsn, took / 1000000);
 }
 
 void crip_stall_summary_line(char *buf, size_t buf_size,

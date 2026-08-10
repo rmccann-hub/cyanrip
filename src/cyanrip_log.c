@@ -343,7 +343,7 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
     }
 
     cyanrip_log(ctx, 0, "    Duration:    %s\n", length);
-    cyanrip_log(ctx, 0, "    Samples:     %u\n", t->nb_samples);
+    cyanrip_log(ctx, 0, "    Samples:     %zu\n", t->nb_samples);
     cyanrip_log(ctx, 0, "    Frames:      %u\n", t->end_lsn_sig - t->start_lsn_sig + 1);
     if (t->computed_crcs) {
         /* "Sample peak level", not "Peak level": a bare "Peak level" does not
@@ -444,10 +444,10 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
             cyanrip_log(ctx, 0, "    Accurip 450: %08X", t->acurip_checksum_v1_450);
             if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4)) && (t->acurip_checksum_v1_450 == 0x0)) {
                 cyanrip_log(ctx, 0, " (match found, confidence %i, but a checksum of 0 is meaningless)\n",
-                            match_450, t->ar_db_max_confidence);
+                            match_450);
             } else if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4))) {
                 cyanrip_log(ctx, 0, " (matches Accurip DB, confidence %i, track is partially accurately ripped)\n",
-                            match_450, t->ar_db_max_confidence);
+                            match_450);
             } else if (has_ar) {
                 cyanrip_log(ctx, 0, " (not found)\n");
             } else {
@@ -456,7 +456,7 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         }
     }
 
-    cyanrip_log(ctx, 0, "\n  Metadata:\n", length);
+    cyanrip_log(ctx, 0, "\n  Metadata:\n");
 
     int max_key_len = 0;
     const AVDictionaryEntry *d = NULL;

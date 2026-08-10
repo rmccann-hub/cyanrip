@@ -32,7 +32,15 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t);
 void cyanrip_set_av_log_capture(cyanrip_ctx *ctx, int enable,
                                 int max_av_lvl);
 
-void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...);
+/* Annotated so the compiler checks these format strings. Nothing did until
+ * now: -Wformat only fires on functions it knows are printf-like, so not one
+ * format string in this program had ever been checked -- in a program whose
+ * output is an archival record. Six real mismatches were sitting in the tree
+ * when the annotation was added, and a -t argument that read adjacent process
+ * memory into a logfile had already shipped once. src/meson.build makes the
+ * diagnostic an error rather than a warning, so the check cannot lapse. */
+void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...)
+    av_printf_format(3, 4);
 
 /* Same, taking an assembled va_list, so another logging front end can forward
  * into this one instead of printing on its own. genopt's does exactly that:
@@ -41,4 +49,4 @@ void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...);
  * a consumer as "cyanrip is not installed" -- reached the terminal and nothing
  * else. */
 void cyanrip_vlog(cyanrip_ctx *ctx, int verbose, const char *format,
-                  va_list args);
+                  va_list args) av_printf_format(3, 0);

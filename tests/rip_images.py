@@ -907,6 +907,94 @@ def sc_contract_build():
              "commit as a pin.")
 
 
+def sc_format_guard():
+    # Every cyanrip_log() format string is compiler-checked, and stays that way.
+    #
+    # It was not until now. -Wformat only inspects functions the compiler knows
+    # are printf-like, and cyanrip_log() carried no such annotation, so not one
+    # of this program's format strings had ever been checked -- in a program
+    # whose output is an archival record. Adding av_printf_format() to the
+    # declaration surfaced six live mismatches in the tree, none of which
+    # changed a byte of output on x86-64 (measured: the golden reference is
+    # unchanged), and all of which were the same shape as defects that had
+    # already reached a logfile: a -t argument that printed adjacent process
+    # memory into FLAC tags, the log and the cue, at exit 0.
+    #
+    # Two things have to hold, and they fail independently, so both are checked
+    # here:
+    #
+    #   1. the annotation is present, so the compiler looks at all, and
+    #   2. -Werror=format is set, so what it sees stops a build rather than
+    #      scrolling past in a wall of ninja output.
+    #
+    # Removing either one puts the program back to unchecked while every test
+    # in this suite still passes -- which is precisely why this is a test and
+    # not a comment. The control compile is not decoration: without it, a probe
+    # that fails because the include paths are wrong reads exactly like a probe
+    # that fails because the guard worked.
+    import shlex
+
+    build_dir = Path(CRIP).resolve().parent.parent
+    compdb = build_dir / "compile_commands.json"
+    if not compdb.exists():
+        skip(f"no {compdb} -- the guard is a property of the compile, and "
+             "there is nothing here to reproduce the compile from")
+
+    entry = next((e for e in json.loads(compdb.read_text())
+                  if e.get("file", "").endswith("src/cyanrip_log.c")), None)
+    if entry is None:
+        skip("compile_commands.json has no entry for src/cyanrip_log.c")
+
+    argv, drop_next = [], False
+    for a in shlex.split(entry["command"])[1:]:
+        if drop_next:
+            drop_next = False
+            continue
+        if a in ("-o", "-MQ", "-MF"):
+            drop_next = True
+            continue
+        if a in ("-MD", "-MMD") or a == entry["file"] or a.endswith(".c"):
+            continue
+        argv.append(a)
+    cc = shlex.split(entry["command"])[0]
+
+    def compiles(body, name):
+        src = WORK / f"fmtprobe_{name}.c"
+        src.write_text('#include "cyanrip_log.h"\n'
+                       "void crip_format_probe(void);\n"
+                       "void crip_format_probe(void)\n{\n"
+                       f"    {body}\n}}\n")
+        r = subprocess.run([cc, *argv, "-fsyntax-only", str(src)],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                           cwd=entry["directory"], timeout=60)
+        return r.returncode, r.stdout.decode(errors="replace")
+
+    ec, out = compiles('cyanrip_log(NULL, 0, "%s\\n", "ok");', "control")
+    if ec != 0:
+        fail("format_guard: a CORRECT cyanrip_log() call does not compile with "
+             f"the project's own flags, so this scenario cannot discriminate: {out.strip()!r}")
+        return
+
+    # Too few arguments: the class that reads whatever is next on the stack and
+    # prints it into a file nobody can re-measure.
+    ec, out = compiles('cyanrip_log(NULL, 0, "%s\\n");', "missing_arg")
+    if ec == 0:
+        fail("format_guard: a cyanrip_log() format string with more conversions "
+             "than arguments compiled cleanly. Either av_printf_format() is "
+             "missing from the declaration in src/cyanrip_log.h or "
+             "-Werror=format is missing from src/meson.build; the program's "
+             "format strings are unchecked again.")
+    elif "format" not in out:
+        fail(f"format_guard: the bad call failed to compile, but not for a "
+             f"format reason -- the proof is not clean: {out.strip()!r}")
+
+    # Wrong type: the class that prints a wrong number into the record.
+    ec, out = compiles('cyanrip_log(NULL, 0, "%d\\n", "not an int");', "wrong_type")
+    if ec == 0:
+        fail("format_guard: a cyanrip_log() call passing char* to %d compiled "
+             "cleanly -- type mismatches are unchecked.")
+
+
 def sc_version_matrix():
     # P6 of the provider contract is the one section that is STATED, not
     # derived: it describes upstream builds, which the generator cannot

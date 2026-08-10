@@ -130,6 +130,7 @@ rip_scenarios = [
     'early_log',
     'diagnostics',
     'contract_build',
+    'format_guard',
     'cue_isrc',
     'version_matrix',
     'exit_codes',

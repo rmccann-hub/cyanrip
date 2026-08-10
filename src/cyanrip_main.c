@@ -58,6 +58,8 @@ static char cyanrip_helpstr[128];
  * severity to translate it into, and inventing one here would be a severity
  * this program does not actually carry. */
 static inline void crip_genopt_log(void *log_ctx, int level, const char *fmt, ...)
+    av_printf_format(3, 4);
+static inline void crip_genopt_log(void *log_ctx, int level, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -799,7 +801,7 @@ repeat_ripping:;
         }
 
         if (line_len > 0) {
-            cyanrip_log(NULL, 0, "\r", line);
+            cyanrip_log(NULL, 0, "\r");
             line_len = 0;
         }
 

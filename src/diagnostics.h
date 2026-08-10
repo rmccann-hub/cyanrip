@@ -20,6 +20,8 @@
 
 #include <stdarg.h>
 
+#include <libavutil/attributes.h>
+
 struct cyanrip_ctx;
 
 /* A machine-readable record of what a run said and how it ended.
@@ -45,7 +47,7 @@ struct cyanrip_ctx;
 void crip_diag_enable(const char *path);
 
 /* Every cyanrip_log() message, before it is routed anywhere. */
-void crip_diag_record(const char *format, va_list args);
+void crip_diag_record(const char *format, va_list args) av_printf_format(1, 0);
 
 /* Copy the structured facts out of ctx while it is still alive. Safe to call
  * more than once; the last call wins. Nothing else in this module dereferences

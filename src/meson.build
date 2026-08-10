@@ -7,6 +7,14 @@ build_opts = [
 
     # Warnings to treat as errors
     '-Werror=implicit-function-declaration',
+
+    # cyanrip_log() and friends carry av_printf_format() so that -Wformat
+    # applies to them at all -- until it was added, not one format string in
+    # the program had ever been checked. An error rather than a warning
+    # because the output is an archival record: a mismatch here is a wrong
+    # number, or adjacent process memory, printed into a file nobody can
+    # re-take a measurement for.
+    '-Werror=format', '-Werror=format-extra-args',
 ]
 
 #fix for MinGW32
