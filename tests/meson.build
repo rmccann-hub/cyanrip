@@ -65,6 +65,19 @@ stall_test = executable('stall_test',
 )
 test('Stall watchdog', stall_test, timeout: 60)
 
+## Pins every wording of the `Cache probe:` line. Eight of the nine are
+## reachable only from a real drive, and no real drive ran this code until
+## 2026-08-10 -- so until now the only wording anyone could read was whichever
+## one their disc happened to produce. That first run exposed two defects; this
+## is what stops them coming back.
+cacheprobe_test = executable('cacheprobe_test',
+    sources: [ 'cacheprobe.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'cache_probe.c', 'stall_watchdog.c' ]),
+    dependencies: unit_test_deps + [ dependency('threads') ],
+)
+test('Cache probe wording', cacheprobe_test)
+
 ## Links the diagnostics object to drive it past its own retention cap, which
 ## no rip can reach: an image rip prints ~124 messages against a 20000 cap, so
 ## the truncation path shipped head-only -- keeping the first lines and

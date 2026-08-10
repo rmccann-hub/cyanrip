@@ -49,11 +49,22 @@
  * cannot affect the audio. It costs seconds of drive time, which is why it is
  * behind a flag and off by default.
  *
- * NOT VERIFIED ON HARDWARE. This environment has no drive, and no disc image
- * has a cache to measure -- an image driver returns every read at memory speed,
- * so the timing signal the method depends on does not exist. The code is
- * exercised only to the extent that it compiles and refuses to run on an image.
- * Treat a number it prints as unverified until a real drive has produced one.
+ * RUN ONCE ON HARDWARE, 2026-08-10, and the date matters more than the fact.
+ * A PIONEER BD-RW BDR-209D 1.51 with a pressed audio CD returned a hit at 32
+ * sectors and a miss at 64, with an uncached single-sector read costing
+ * 364.3 ms. That is one drive, one disc, one run: enough to say the method
+ * produces a signal on real hardware, not enough to say it is right. Nothing
+ * cross-checks it -- cd-paranoia -A on the same drive would, and has not been
+ * run.
+ *
+ * That single run found two defects no fixture could have. It reported the
+ * lower bound as though it were the size, and it printed the same line whether
+ * the search ended in a cache miss, a failed read, or a read it could not
+ * time. Both are fixed below. This environment still has no drive, and no disc
+ * image has a cache to measure -- an image driver returns every read at memory
+ * speed, so the timing signal the method depends on does not exist there, and
+ * the code is still exercised in-tree only to the extent that it compiles and
+ * refuses to run on an image.
  */
 
 /* A re-read this much faster than the measured uncached cost is taken as a
@@ -94,6 +105,80 @@ static int64_t time_one_read(const CdIo_t *cdio, uint8_t *buf, lsn_t lsn)
     return av_gettime_relative() - t0;
 }
 
+void crip_cache_probe_line(char *buf, size_t buf_size, crip_cache_stop_t stop,
+                           int last_hit, int stop_run, int64_t miss_cost_us)
+{
+    const double miss_ms = miss_cost_us / 1000.0;
+    const double lo_kib  = last_hit * CDIO_CD_FRAMESIZE_RAW / 1024.0;
+
+    switch (stop) {
+    case CRIP_CACHE_IMAGE:
+        snprintf(buf, buf_size, "not run (disc image has no drive cache)");
+        return;
+    case CRIP_CACHE_OOM:
+        snprintf(buf, buf_size, "unknown (out of memory)");
+        return;
+    case CRIP_CACHE_SHORT_DISC:
+        snprintf(buf, buf_size, "unknown (disc too short to probe)");
+        return;
+    case CRIP_CACHE_CALIB_READ_FAIL:
+        snprintf(buf, buf_size, "unknown (read failed while calibrating)");
+        return;
+    case CRIP_CACHE_CALIB_TOO_FAST:
+        snprintf(buf, buf_size, "unknown (drive returned reads too fast to time)");
+        return;
+    default:
+        break;
+    }
+
+    if (!last_hit) {
+        /* Nothing hit, even at one sector -- but that is not one fact. A read
+         * that failed says nothing whatever about the cache, and must not be
+         * reported as an absence of one. */
+        if (stop == CRIP_CACHE_READ_FAIL || stop == CRIP_CACHE_TIME_FAIL)
+            snprintf(buf, buf_size,
+                     "unknown (%s at %i sector%s, before any cache hit)",
+                     stop == CRIP_CACHE_READ_FAIL ? "read failed"
+                                                  : "read could not be timed",
+                     stop_run, stop_run == 1 ? "" : "s");
+        else
+            /* The seed was already gone after the shortest possible run, so
+             * either the drive caches nothing or it caches less than one
+             * sector. Both are "no measurable cache", and neither is "the
+             * cache was defeated". */
+            snprintf(buf, buf_size,
+                     "no readback cache measured (uncached read %.1f ms)",
+                     miss_ms);
+        return;
+    }
+
+    if (stop == CRIP_CACHE_MISS)
+        snprintf(buf, buf_size,
+                 "%i to %i sectors (%.1f to %.1f KiB, uncached read %.1f ms)",
+                 last_hit, stop_run - 1, lo_kib,
+                 (stop_run - 1) * CDIO_CD_FRAMESIZE_RAW / 1024.0, miss_ms);
+    else
+        snprintf(buf, buf_size,
+                 "at least %i sectors, upper bound unknown "
+                 "(%.1f KiB or more, %s, uncached read %.1f ms)",
+                 last_hit, lo_kib,
+                 stop == CRIP_CACHE_CEILING   ? "search ceiling reached" :
+                 stop == CRIP_CACHE_READ_FAIL ? "read failed while growing the run"
+                                              : "read could not be timed while growing the run",
+                 miss_ms);
+}
+
+/* Emits it. Every exit from the probe goes through here, so no wording can
+ * exist that the composer -- and therefore the test -- does not know about. */
+static void log_cache_probe(cyanrip_ctx *ctx, crip_cache_stop_t stop,
+                            int last_hit, int stop_run, int64_t miss_cost_us)
+{
+    char line[160];
+    crip_cache_probe_line(line, sizeof(line), stop, last_hit, stop_run,
+                          miss_cost_us);
+    cyanrip_log(ctx, 0, "Cache probe:    %s\n", line);
+}
+
 int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
 {
     *sectors_out = 0;
@@ -105,7 +190,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
     case DRIVER_BINCUE:
     case DRIVER_NRG:
     case DRIVER_CDRDAO:
-        cyanrip_log(ctx, 0, "Cache probe:    not run (disc image has no drive cache)\n");
+        log_cache_probe(ctx, CRIP_CACHE_IMAGE, 0, 0, 0);
         return 0;
     default:
         break;
@@ -113,7 +198,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
 
     uint8_t *buf = av_malloc(CDIO_CD_FRAMESIZE_RAW * (size_t)PROBE_MAX_SECTORS);
     if (!buf) {
-        cyanrip_log(ctx, 0, "Cache probe:    unknown (out of memory)\n");
+        log_cache_probe(ctx, CRIP_CACHE_OOM, 0, 0, 0);
         return AVERROR(ENOMEM);
     }
 
@@ -126,7 +211,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
         max_run = room > 0 ? (int)room : 0;
 
     if (max_run < 8) {
-        cyanrip_log(ctx, 0, "Cache probe:    unknown (disc too short to probe)\n");
+        log_cache_probe(ctx, CRIP_CACHE_SHORT_DISC, 0, 0, 0);
         av_free(buf);
         return 0;
     }
@@ -138,13 +223,13 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
     for (int i = 0; i < 3; i++) {
         if (probe_read(ctx->cdio, buf, ctx->end_lsn - 10, 1)
             != DRIVER_OP_SUCCESS) {
-            cyanrip_log(ctx, 0, "Cache probe:    unknown (read failed while calibrating)\n");
+            log_cache_probe(ctx, CRIP_CACHE_CALIB_READ_FAIL, 0, 0, 0);
             av_free(buf);
             return 0;
         }
         uncached[i] = time_one_read(ctx->cdio, buf, seed);
         if (uncached[i] < 0) {
-            cyanrip_log(ctx, 0, "Cache probe:    unknown (read failed while calibrating)\n");
+            log_cache_probe(ctx, CRIP_CACHE_CALIB_READ_FAIL, 0, 0, 0);
             av_free(buf);
             return 0;
         }
@@ -155,44 +240,62 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
     const int64_t miss_cost = FFMAX(FFMIN(a, b), FFMIN(FFMAX(a, b), c));
 
     if (miss_cost <= 0) {
-        cyanrip_log(ctx, 0, "Cache probe:    unknown (drive returned reads too fast to time)\n");
+        log_cache_probe(ctx, CRIP_CACHE_CALIB_TOO_FAST, 0, 0, 0);
         av_free(buf);
         return 0;
     }
 
-    /* Grow the forward run until re-reading the seed is no longer fast. The
-     * last run that still hit is the cache size. */
-    int last_hit = 0;
+    /* Grow the forward run until re-reading the seed is no longer fast.
+     *
+     * The last run that still hit is a LOWER BOUND on the cache, not its size.
+     * The search doubles, so a hit at 32 and a miss at 64 establishes only
+     * that the cache holds at least 32 sectors and fewer than 64 -- and the
+     * answer can never be anything but a power of two. The first version
+     * printed "32 sectors measured", which claimed a precision the method
+     * cannot deliver. Found by the first run this code ever had on real
+     * hardware, 2026-08-10; every disc image refuses the probe, so no fixture
+     * could have caught it.
+     *
+     * Why the search stopped is recorded too, because three different endings
+     * used to print the same line: a genuine cache miss, a failed read, and a
+     * read that could not be timed. "The cache ran out at 64 sectors" and
+     * "the read at 64 sectors failed" are different claims about the drive,
+     * and a consumer cannot act on the second if it arrives dressed as the
+     * first. */
+    crip_cache_stop_t stop = CRIP_CACHE_CEILING;
+    int last_hit = 0, stop_run = 0;
+
     for (int run = PROBE_MIN_SECTORS; run <= max_run; run *= 2) {
-        if (probe_read(ctx->cdio, buf, seed, run)
-            != DRIVER_OP_SUCCESS)
+        stop_run = run;
+
+        if (probe_read(ctx->cdio, buf, seed, run) != DRIVER_OP_SUCCESS) {
+            stop = CRIP_CACHE_READ_FAIL;
             break;
+        }
 
         const int64_t t = time_one_read(ctx->cdio, buf, seed);
-        if (t < 0)
+        if (t < 0) {
+            stop = CRIP_CACHE_TIME_FAIL;
             break;
+        }
 
-        if (t * CACHE_HIT_RATIO < miss_cost)
+        if (t * CACHE_HIT_RATIO < miss_cost) {
             last_hit = run;
-        else
+            stop = CRIP_CACHE_CEILING;   /* until a later iteration says otherwise */
+        } else {
+            stop = CRIP_CACHE_MISS;
             break;
+        }
     }
 
     av_free(buf);
 
-    if (!last_hit) {
-        /* The seed was already gone after the shortest possible run, so either
-         * the drive caches nothing or it caches less than one sector. Both are
-         * "no measurable cache", and neither is "the cache was defeated". */
-        cyanrip_log(ctx, 0, "Cache probe:    no readback cache measured "
-                            "(uncached read %.1f ms)\n", miss_cost / 1000.0);
-        return 0;
-    }
+    /* The lower bound is what the caller gets: it is the figure the evidence
+     * supports, and erring low is the safe direction for anything downstream
+     * that seeks back past a cache. */
+    if (stop == CRIP_CACHE_MISS || stop == CRIP_CACHE_CEILING)
+        *sectors_out = last_hit;
 
-    *sectors_out = last_hit;
-    cyanrip_log(ctx, 0, "Cache probe:    %i sectors measured "
-                        "(%.1f KiB, uncached read %.1f ms)\n",
-                last_hit, last_hit * CDIO_CD_FRAMESIZE_RAW / 1024.0,
-                miss_cost / 1000.0);
+    log_cache_probe(ctx, stop, last_hit, stop_run, miss_cost);
     return 0;
 }
