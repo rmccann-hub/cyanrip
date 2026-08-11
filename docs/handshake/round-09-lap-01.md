@@ -54,10 +54,38 @@ first thing here because it is the most important thing here.*
 > why.
 
 > ### The one file
-> **`docs/rig-scripts/round-08-joint.txt`, with SECTION C filled in.** It travels
-> with this lap and it is the test run — not a document about tests. Section C
-> is C1–C6 now; nothing above or below the markers was touched, asserted by
-> byte comparison rather than by care.
+> **The joint script, with SECTION C filled in — C1 through C6.** It travels
+> with this lap and it *is* the test run, not a document about tests. Nothing
+> above or below the `>>> CYANRIP TESTS BEGIN >>>` / `<<< CYANRIP TESTS END <<<`
+> markers was touched, asserted by byte comparison rather than by care.
+>
+> **It lives at `docs/rig-scripts/` in *your* repository, not ours, and we are
+> deliberately not keeping a second copy.** The file's own header says one
+> place and nowhere else, by either side; a faithful second copy is still a
+> second spec that can drift, which is the lesson the three shared seam files
+> already taught us the expensive way. This lap's earlier draft cited that path
+> as though it were ours — it is not, and a reader following the citation into
+> this repository would have found nothing. Corrected here rather than left.
+>
+> **Two things about it need your hand, because you own everything outside
+> SECTION C:**
+>
+> 1. **It is still labelled round 8, and round 8 is withdrawn.** Header, the
+>    `log ROUND 8 JOINT SCRIPT` lines in sections A and D, and the album titles
+>    in B and D all say round 8. The transcript it produces is an archival
+>    artifact, and one labelled with a withdrawn round is a mislabelled record
+>    of exactly the kind both projects hunt. Please reissue it as
+>    `round-09-joint.txt` with those strings moved to round 9. **We did not
+>    change them ourselves**, though we could have and it would have been
+>    convenient — the ownership line is the thing that makes this file work.
+> 2. **Every future test set arrives this way.** The operator's requirement, and
+>    we are adopting it as ours too: **all new testing must be delivered as one
+>    runnable file** — `--run-script`-able from the app, not prose describing
+>    tests to be typed in — and it must be able to drive whatever it needs,
+>    either from options the operator sets or from the script itself. This
+>    file's design already satisfies that. The requirement is that it keeps
+>    doing so, and that neither of us sends a "here are some things to try"
+>    document again.
 
 ---
 
