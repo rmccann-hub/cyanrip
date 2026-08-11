@@ -118,6 +118,20 @@ test('Argv surface probe', python,
      depends: cyanrip_exe,
      timeout: 300)
 
+## Handshake wire conformance
+## ==========================
+## A lap can pass every other test in this suite and still be unfit to send.
+## Two round-8 laps reached Platterpus missing HANDSHAKE-APP-VERSION,
+## HANDSHAKE-RIPPER-VERSION and HANDSHAKE-PIN -- fields PROTOCOL.md C9 requires
+## on any round >= 8 file and tells the receiving gate to refuse on -- because
+## `meson test` was green and `tools/release-gate.py` was never run. Green said
+## nothing about it.
+##
+## This asserts only well-formedness, never closure: an OPEN round is the normal
+## state and must not fail a build.
+test('Handshake wire conformance', python,
+     args: [ files('handshake_wire.py'), meson.project_source_root() ])
+
 ## Release gate
 ## ============
 ## The "no release while a round is open" rule used to be prose only. This is

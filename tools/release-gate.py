@@ -248,7 +248,17 @@ def strip_fences(text):
     return FENCE_RE.sub(lambda m: "\n" * m.group(0).count("\n"), text)
 
 
-def load_rounds(directory=None):
+def load_rounds(directory=None, every_lap=False):
+    """Latest lap per round, or every lap when every_lap is set.
+
+    Closure is a property of a round, so the default collapses each round to
+    its latest lap. Well-formedness is a property of a FILE -- PROTOCOL.md C9
+    refuses an individual file missing a required header -- and applying a
+    per-file rule per-round-latest lets a malformed earlier lap through. That
+    is not hypothetical: round-8 laps 1 and 3 went out missing three required
+    fields and would still not have been caught by a check built on the
+    default, because lap 5 superseded them.
+    """
     # Resolved at call time, not bound at definition time. A default of
     # `directory=HANDSHAKE_DIR` captures the module-level value when the
     # function is defined, so any caller that points the gate at a different
@@ -326,6 +336,9 @@ def load_rounds(directory=None):
         if len(tied) > 1:
             win.verdict = "AMBIGUOUS-LAP"
             win.tied_with = sorted(lp.path.name for lp in tied)
+    if every_lap:
+        return sorted(all_laps, key=lambda lp: (lp.number or 0, lp.lap or 0,
+                                                lp.path.name))
     return [latest[k] for k in sorted(latest)]
 
 
