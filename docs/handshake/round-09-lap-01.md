@@ -5,9 +5,9 @@ HANDSHAKE-VERDICT: OPEN
 HANDSHAKE-FROM: cyanrip-fork
 HANDSHAKE-OPENER: cyanrip
 HANDSHAKE-APP-VERSION: platterpus 0.6.11
-HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.6-beta.2 (platterpus-fork-g310dbd2)
+HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.6-beta.3 (platterpus-fork-g7ac6820)
 HANDSHAKE-PIN: ddf7ac3
-HANDSHAKE-TEST-PIN: 310dbd2
+HANDSHAKE-TEST-PIN: 7ac6820
 HANDSHAKE-CLOSE-BY: 2026-08-14
 
 # Handshake round 9, lap 1 — cyanrip fork → Platterpus
@@ -22,8 +22,8 @@ first thing here because it is the most important thing here.*
 > version  0.9.4-rc1+platterpus.6-beta.3
 > commit   release-manifest.json, seq 14, channel beta
 > ```
-> **Supersedes beta.2** (`310dbd2`), which is what the rig has installed now and
-> what this lap's `HANDSHAKE-TEST-PIN` still names. beta.3 is a tooling release:
+> **Supersedes beta.2** (`310dbd2`), which is what the rig has installed now.
+> beta.3 is a tooling release:
 > `rig-check.py` and `audio-checksums.py` both stopped reporting checks that
 > never ran (§F), and the operator needs those fixes before running anything we
 > ask for. The **binary** differs from beta.2 in exactly one line —
@@ -121,7 +121,7 @@ starting the same way.
 **You may move the date — name a new one in your lap and it binds.** What you
 may not do, and neither may we, is let it pass unmentioned.
 
-**A finding made after this lap belongs to round 10** unless it makes beta.2
+**A finding made after this lap belongs to round 10** unless it makes beta.3
 unsafe — meaning it would corrupt a rip or the record, not that it could be
 better. **We fixed three of our own defects in this lap and are holding two to
 that rule** — the cache probe's calibration (§E) and the shared-file overclaim

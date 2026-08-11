@@ -1,3 +1,95 @@
+0.9.4-rc1+platterpus.6-beta.3 (2026-08-11) -- PRE-RELEASE
+=========================================================
+Released at `7ac6820`, published as `release-manifest.json` seq 14, channel
+`beta`. `0.9.4-rc1+platterpus.5` (`ddf7ac3`) remains stable and is retained, so
+downgrade stays possible.
+
+**Entries for beta.1 and beta.2 are written retroactively here**, reconstructed
+from `git log` and their round files rather than from memory. Both shipped with
+no changelog entry at all, which is a gap this entry closes rather than hides;
+the reconstruction is labelled as such, following the beta.6 precedent.
+
+**The binary differs from beta.2 in exactly one line.** `Handshake:` moves from
+`round 8 lap 3` to `round 9 lap 1`, compiled in by
+`tools/gen-handshake-state.py`. `PROVIDER-CONTRACT.md` regenerates with no
+content delta beyond the version, which is the evidence for that claim rather
+than the claim itself. **This is a tooling release**: what changed is the two
+scripts the operator runs on hardware nobody here can reach.
+
+ - **`tools/rig-check.py` and `tools/audio-checksums.py` stopped reporting
+   checks that never ran.** `cdparanoia-cache` said cd-paranoia *"did not fail,
+   it declined to answer"* on a run where it had printed `Approximate random
+   access cache size: 137 sector(s)` -- `re.M` anchors `^` after a newline and
+   not after the `\r` cd-paranoia separates progress with. `audio-vs-log` graded
+   a file it could not decode as *"differ -- expected for any track a re-rip
+   superseded"*, and could return OK saying *"0 track(s) checked; every one
+   matches its log"*.
+ - **`audio-checksums.py check` now distinguishes its exit codes**: `0` match,
+   `1` different audio, `2` no comparison was possible. Both were `1`, so a
+   caller could not tell a superseded track from a broken file. **Callers must
+   stop treating non-zero as one thing.**
+ - **New: `audio-checksums.py digest DIR`.** The audio cannot travel -- one
+   track of the reference disc is 32.8 MB and no channel between the two
+   projects would carry it -- so this runs where the files are and prints about
+   60 bytes per track. A parity question is settled by pasting a block instead
+   of moving a rip. Hardened against eight ways it produced a block that looked
+   complete, every one found by probing it rather than reading it.
+ - **The AccurateRip lead/tail skip is now covered.** `--first`/`--last` looked
+   broken on two EAC tracks and were not: those skip regions are digital
+   silence, so the skip is a no-op on that audio. The consequence is the finding
+   -- **the reference disc cannot discriminate a correct skip from an
+   unimplemented one**, and neither can any golden log derived from it. The
+   self-test carries three synthetic vectors that can.
+ - **New: `tools/gen-golden-reference.py`.** The reference was rebuilt by hand
+   from the previous reference's own `Invoked as:` line, and that went wrong
+   twice invisibly -- beta.8 shipped a reference generated at beta.7, and round
+   5's lost the whole secure-re-read surface when `-Z` and `-G` were dropped
+   from the retyped command. The recipe now lives in one place and `--check` is
+   a `meson test`. It immediately found that **the shipped reference was stale**:
+   it said `Handshake: round 8 lap 1` while the tree was at round 9 lap 1, and
+   the only existing guard read the banner's version and its dirty marker, both
+   of which were correct.
+ - Round 8 withdrawn (`round-08-lap-05.md`); round 9 opened. **Withdrawing it
+   deadlocked our own release gate**, permanently: `CLOSING = {"GO"}` and round
+   8 can never reach `GO`, so `--release-gate` exits non-zero forever. Not fixed
+   unilaterally -- `PROTOCOL.md` is a shared file and relaxing a close rule on
+   one side is how two gates come to disagree. It is round 9's `J7`.
+ - **Handshake wire conformance** is now a `meson test`. Two round-8 laps were
+   sent missing three fields `PROTOCOL.md` C9 requires, because `meson test` was
+   green and `tools/release-gate.py` was never run.
+
+Suite: **38 of 38 green from a fresh clone at `7ac6820`**, verified by cloning
+and building rather than asserted.
+
+0.9.4-rc1+platterpus.6-beta.2 (2026-08-10) -- PRE-RELEASE
+=========================================================
+`310dbd2`, seq 13. **Entry written retroactively in beta.3.**
+
+ - **The cache probe reads its warm-up run in chunks** (`8a045de`). Its first
+   hardware run reported a bound of 32 sectors; the read had *failed*, because
+   64 sectors is 150,528 bytes against an `sr` device's typical 128 KiB
+   `max_sectors_kb`. cd-paranoia reports the same drive's cache as 137 sectors.
+ - `tools/rig-check.py` added (`387033e`): every rig check that is not a full
+   rip, writing nothing into the music library. Two of its own defects fixed
+   the same day (`8a9b25c`, `6bd6f75`) -- an absence that meant two things, and
+   an empty album directory binding silently to the parent's log.
+
+0.9.4-rc1+platterpus.6-beta.1 (2026-08-10) -- PRE-RELEASE
+=========================================================
+`cb440bd`, seq 12. **Entry written retroactively in beta.3.**
+
+ - **Every `cyanrip_log()` format string is now checked** (`d1c9e57`), via
+   `av_printf_format` plus `-Werror=format`. Nothing had ever verified them.
+ - **The cache probe reports the bound it is, and why the search stopped**
+   (`1f00653`). `N sectors measured` asserted a measurement it had not made;
+   there are now nine distinct wordings, pinned by `tests/cacheprobe.c`.
+ - **genopt's messages entered the provider contract** (`fadddc6`, `add8054`,
+   `b247172`). Ten fatal messages were always emitted and never scanned, so the
+   document was incomplete while presenting itself as derived.
+ - **`release-manifest.json` published** (`3492a65`), with the released commit
+   chosen after the artifacts agree rather than at the bump (`22719b7`).
+ - stdout is flushed after a captured libav message (`1fe78f4`).
+
 0.9.4-rc1+platterpus.5 (2026-08-07) -- RELEASE
 ==============================================
 **The first release of this fork since `+platterpus.4`, and the first one whose
