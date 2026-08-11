@@ -174,6 +174,56 @@ else:
         check("exits 2 on a zero-byte file", run_check(empty, lg, 1) == 2)
 
     # ----------------------------------------------------------------------
+    # `digest`: the whole-directory block, for when the audio cannot travel
+    # ----------------------------------------------------------------------
+    print("audio-checksums.py digest")
+
+    def digest(args):
+        p = subprocess.run([sys.executable, TOOL, "digest"] + args,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return p.returncode, p.stdout.decode()
+
+    with tempfile.TemporaryDirectory() as td:
+        pcm = bytes(((i * 2654435761) >> 8) & 0xFF for i in range(4 * 588 * 460))
+        for name in ("01 - a.wav", "05 - b.wav", "10 - c.wav"):
+            wav(os.path.join(td, name), pcm)
+        # A file with no leading number must be skipped silently, not counted.
+        wav(os.path.join(td, "cover-note.wav"), pcm)
+
+        ec, out = digest([td, "--tracktotal", "14"])
+        rows = [l for l in out.splitlines() if l and not l.startswith("#")]
+        check("digest exits 0 and emits one row per numbered file",
+              ec == 0 and len(rows) == 3, f"exit={ec} rows={len(rows)}")
+        check("digest ignores files with no leading track number",
+              "cover-note" not in out)
+        check("digest names the assumed last track",
+              "track 14 treated as the last on the disc" in out)
+
+        # The trap the flag exists for: with no --tracktotal the highest number
+        # present is assumed last, which applies AccurateRip's tail skip to a
+        # track that is not the last one. The values MUST differ, and the
+        # header must say which assumption produced them.
+        _, out10 = digest([td])
+        row10_a = [l for l in out.splitlines() if l.strip().startswith("10")][0]
+        row10_b = [l for l in out10.splitlines() if l.strip().startswith("10")][0]
+        check("assuming the wrong last track changes track 10's v1/v2",
+              row10_a != row10_b)
+        check("and the header discloses the assumption",
+              "highest number present" in out10 and
+              "highest number present" not in out)
+
+        # Track 1 always gets the lead skip, so it must NOT depend on the
+        # tracktotal assumption at all.
+        r1a = [l for l in out.splitlines() if l.strip().startswith("1 ")][0]
+        r1b = [l for l in out10.splitlines() if l.strip().startswith("1 ")][0]
+        check("track 1 is unaffected by the tracktotal assumption", r1a == r1b)
+
+    with tempfile.TemporaryDirectory() as td:
+        wav(os.path.join(td, "no-number.wav"), pcm)
+        ec, _ = digest([td])
+        check("digest exits 2 when nothing in the directory is numbered", ec == 2)
+
+    # ----------------------------------------------------------------------
     # rig-check's own grading of those exit codes
     # ----------------------------------------------------------------------
     print("rig-check.py check_audio grading")

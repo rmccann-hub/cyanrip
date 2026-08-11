@@ -29,8 +29,13 @@ one is a judgement, and judgements belong downstream.
 Usage
 -----
     tools/audio-checksums.py sum FILE [--first] [--last]
+    tools/audio-checksums.py digest DIR [--tracktotal N]
     tools/audio-checksums.py check FILE --log cyanrip.log --track N
     tools/audio-checksums.py diff FILE_A FILE_B
+
+`digest` is the one to reach for when the audio cannot travel: it runs where
+the files are and prints about 60 bytes per track, so a parity claim can be
+settled by pasting a block instead of moving a rip.
 
 `--first`/`--last` mirror `acurip_track_is_first`/`_is_last`: AccurateRip skips
 the leading 5 sectors of track 1 and the trailing 5 of the last track, so the
@@ -171,6 +176,56 @@ def cmd_sum(args):
     return 0
 
 
+def cmd_digest(args):
+    """Every track in a directory, as a block small enough to paste.
+
+    Why this exists, and it is not convenience. Establishing that two rippers
+    read a disc identically requires the audio, and the audio is the one thing
+    that must not travel: it is somebody's music, it is large, and every
+    transfer channel between the people doing this work has refused it. Track 3
+    of the reference disc is 32.8 MB and could not be sent at all, so the claim
+    about it rested on log text alone while the file sat unread on a disk
+    twenty feet from the question.
+
+    The fix is to move the code to the audio instead. This runs where the files
+    are and emits about 60 bytes per track. Nothing about the audio leaves
+    beyond the checksums a log would already have published.
+
+    `--first`/`--last` are derived from the track numbers found, not from
+    argument order, because AccurateRip skips 5 sectors at each end of the disc
+    and getting that wrong silently changes v1 and v2 on exactly two tracks --
+    the two nobody re-checks.
+    """
+    import glob as _glob
+    import os as _os
+
+    found = {}
+    for path in sorted(_glob.glob(_os.path.join(args.directory, "*"))):
+        m = re.match(r"^\s*(\d+)", _os.path.basename(path))
+        if m and _os.path.isfile(path):
+            found.setdefault(int(m.group(1)), path)
+    if not found:
+        unusable(f"{args.directory}: no file whose name starts with a track "
+                 "number -- nothing to digest")
+
+    # The last track is the highest number PRESENT, which is not necessarily
+    # the disc's last track. Say which was assumed rather than let the reader
+    # infer it from a table: a wrong --last is a wrong v1/v2 that looks fine.
+    last = args.tracktotal if args.tracktotal else max(found)
+    print(f"# audio-checksums.py digest -- {len(found)} track(s) from "
+          f"{args.directory}")
+    print(f"# track {last} treated as the last on the disc"
+          + ("" if args.tracktotal else " (highest number present; pass "
+             "--tracktotal if that is not the disc's last track)"))
+    print("# trk    samples   EAC CRC32  Accurip v1  Accurip v2  Accurip 450")
+    for n in sorted(found):
+        c = checksums(decode(found[n]), is_first=(n == 1), is_last=(n == last))
+        print(f"{n:>5} {c['samples']:>10}    {c['eac_crc']:08X}    "
+              f"{c['v1']:08X}    {c['v2']:08X}     {c['v1_450']:08X}")
+    print("# end digest")
+    return 0
+
+
 def cmd_check(args):
     tracks, total = parse_log(args.log)
     if args.track not in tracks:
@@ -273,6 +328,37 @@ def cmd_self_test(_args):
         wanted = v if k == "samples" else f"{v:08X}"
         print(f"  {k:<10} {shown:<12} expected {wanted:<12} "
               f"{'ok' if ok else 'DRIFTED'}")
+
+    # The AccurateRip lead/tail skip, which nothing else here exercises and no
+    # real disc we hold can.
+    #
+    # `--first`/`--last` looked broken on 2026-08-11: `sum` printed identical
+    # v1/v2 with and without them on two EAC tracks. They are not broken. The
+    # skip covers the first and last 2940 stereo frames, those regions are
+    # DIGITAL SILENCE on both tracks, and mult * 0 is 0 -- so the skip is a
+    # no-op on that audio. Measured: 0 non-zero frames in either region, with
+    # 98.4% and 99.1% of each whole file non-zero, so this is real music with
+    # silent edges and not a file that compares equal to anything.
+    #
+    # Which means the reference disc CANNOT discriminate a correct skip from an
+    # unimplemented one, and neither can the golden log derived from it. This
+    # synthetic vector is the only thing that can, because it is non-zero
+    # everywhere including the edges.
+    skip = {(True, False): (0x13E54640, 0x55EF2C3F),
+            (False, True): (0x27EF914D, 0x5285ABB4),
+            (True, True):  (0x553F7A55, 0x7FB4A51C)}
+    for (first, last), (wv1, wv2) in sorted(skip.items()):
+        s = checksums(pcm, is_first=first, is_last=last)
+        for key, want in (("v1", wv1), ("v2", wv2)):
+            ok = s[key] == want
+            bad += not ok
+            print(f"  {key}/first={int(first)},last={int(last)}  "
+                  f"{s[key]:08X}     expected {want:08X}     "
+                  f"{'ok' if ok else 'DRIFTED'}")
+        if s["v1"] == c["v1"] and s["v2"] == c["v2"]:
+            bad += 1
+            print(f"  skip first={int(first)} last={int(last)} changed NOTHING "
+                  "-- the flag is being ignored")
     if bad:
         print("\nThis file no longer computes what it did when it was verified "
               "against real\nEAC audio. Either it changed, or it was changed to "
@@ -299,6 +385,12 @@ def main():
     p.add_argument("--log", required=True)
     p.add_argument("--track", type=int, required=True)
     p.set_defaults(func=cmd_check)
+
+    p = sub.add_parser("digest", help="every track in a directory, paste-sized")
+    p.add_argument("directory")
+    p.add_argument("--tracktotal", type=int,
+                   help="the disc's track count, if the directory is partial")
+    p.set_defaults(func=cmd_digest)
 
     p = sub.add_parser("diff", help="localise where two files' samples differ")
     p.add_argument("file_a")
