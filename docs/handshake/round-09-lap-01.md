@@ -74,7 +74,15 @@ The remaining items are in §H and none of them blocks.
 
 1. **The joint script runs on the rig**, sections A–D, producing one transcript.
 2. **EAC parity is measured** on the surviving reference rip — see §C.
+   **This one is already met by this lap**, and by more than was asked: 7
+   independent read sessions, 8 tracks re-derived from EAC's own audio, 0
+   disagreements. Stated here rather than left for you to infer from §C.
 3. **Both sides declare `GO`** with versions, SHAs and `HANDSHAKE-TESTED`.
+
+**One dependency, and it is not a fourth condition.** §F's sixth finding — a
+`WITHDRAWN` round deadlocks both release gates — blocks the **release**, not the
+close. This round can reach `GO` with it outstanding; step 4 of the release plan
+cannot run until `J7` is settled. Said now so nobody discovers it at the bump.
 
 **`HANDSHAKE-CLOSE-BY: 2026-08-14.`** If this round has not closed by then it
 closes **WITHDRAWN**, stable stays at `ddf7ac3`, and nothing ships. That is not
@@ -87,12 +95,25 @@ may not do, and neither may we, is let it pass unmentioned.
 
 **A finding made after this lap belongs to round 10** unless it makes beta.2
 unsafe — meaning it would corrupt a rip or the record, not that it could be
-better. We are holding three of our own defects to that rule right now (§F).
+better. **We fixed three of our own defects in this lap and are holding two to
+that rule** — the cache probe's calibration (§E) and the shared-file overclaim
+(§F). Which went where is in §F's disposition table, so the split is checkable
+rather than asserted.
 
 **Pre-commitment: our next lap is `GO` unless the transcript shows a regression
 against `ddf7ac3` in the audio, the checksums, or any line you parse.**
 
 ## C. EAC PARITY — MEASURED, from artifacts, with no rip
+
+> **AMENDED 2026-08-11, before delivery.** This section was first written against
+> the `ddf7ac3` rip alone. Five *earlier* cyanrip rips of the same disc were then
+> found in the artifact set, and they change what §C is entitled to say. One
+> sentence in the track-5 paragraph — *"with one that appeared once"* — was
+> **factually wrong**: that value has four independent sessions behind it, not
+> one. §J4 is re-posed on the corrected evidence. The pre-amendment text is in
+> this repository's history at `748d36a`; nothing had been sent, so no exchanged
+> record is being altered. It is called out here rather than quietly fixed
+> because a reader is entitled to know which claims moved.
 
 The rig's cyanrip rips were deleted; **EAC's rip of the same disc survived**, and
 its real log (EAC 1.8, extraction 2026-06-11) arrived tonight. Its settings are
@@ -107,35 +128,84 @@ Gap handling        Appended to previous track
 
 Same offset, same gap handling, same null-sample rule as our 2026-08-07 rip.
 
-### 13 of 14 tracks are byte-identical between two independent rippers
+### 12 of 14 tracks are byte-identical across seven independent read sessions
 
-EAC's `Copy CRC` against cyanrip's `EAC CRC32`, track for track:
+Not one comparison — seven. **Six cyanrip rips across five builds and five days,
+plus EAC two months earlier on a different program and a different operating
+system.** Every cell is that rip's first-pass `EAC CRC32`; `==` means it equals
+EAC's `Copy CRC` for that track.
 
 ```
- 1 B0D122E7=B0D122E7   2 985AAE32=985AAE32   3 59D352DD/3D8FCF0C  4 60D796AE=60D796AE
- 5 E0036697=E0036697   6 B32769D6=B32769D6   7 CCBFF669=CCBFF669  8 D723C1B0=D723C1B0
- 9 6F6E4A5F=6F6E4A5F  10 3A33519F=3A33519F  11 56BFC63D=56BFC63D 12 D78CEAEF=D78CEAEF
-13 DA6A4DAF=DA6A4DAF  14 787BA2D6=787BA2D6
+trk    EAC 1.8       08-03     08-03     08-04     08-05     08-06     08-07
+      2026-06-11   g2f950c8  g9003e6f  gf5e11ba  gf5e11ba  g104f6d4  gddf7ac3
+------------------------------------------------------------------------------
+  1   B0D122E7         ==        ==        ==        ==        ==        ==
+  2   985AAE32         ==        ==        ==        ==        ==        ==
+  3   59D352DD   329DC760        ==  552673C3  3D8FCF0C        ==  3D8FCF0C
+  4   60D796AE         ==        ==        ==        ==        ==        ==
+  5   E0036697   4065BECC  6902BCF0  6902BCF0        ==  6902BCF0        ==
+  6   B32769D6         ==        ==        ==        ==        ==        ==
+  7   CCBFF669         ==        ==        ==        ==        ==        ==
+  8   D723C1B0         ==        ==        ==        ==        ==        ==
+  9   6F6E4A5F         ==        ==        ==        ==        ==        ==
+ 10   3A33519F         ==        ==        ==        ==        ==        ==
+ 11   56BFC63D         ==        ==        ==        ==        ==        ==
+ 12   D78CEAEF         ==        ==        ==        ==        ==        ==
+ 13   DA6A4DAF         ==        ==        ==        ==        ==        ==
+ 14   787BA2D6         ==        ==        ==        ==        ==        ==
 ```
 
-**13 identical, 1 different.** This is cross-implementation agreement on the
-audio — two different programs, different code, one disc — and it is worth more
-than either project agreeing with itself, which is all we have ever had.
+**Twelve tracks produced one value, seven times out of seven.** That is far
+stronger than the single pairing this section first claimed, and it is the
+control that makes everything below meaningful: the drive, the disc and both
+programs are demonstrably capable of reading this disc reproducibly, so tracks 3
+and 5 are not general noise.
+
+**The `Samples:` count is identical for all fourteen tracks in all six cyanrip
+rips**, and equals what we compute from EAC's audio on the eight tracks we hold.
+So where 3 and 5 differ, they differ in *content* — the track boundaries never
+moved.
 
 ### And our checksum code is now verified against EAC, not just against ourselves
 
-The comparison above is log against log. Tracks 1 and 2 of EAC's audio were then
+The comparison above is log against log. **Eight tracks of EAC's audio** were then
 run through `tools/audio-checksums.py` directly — our independent Python
-reimplementation of `src/checksums.h` — giving four sources for one fact:
+reimplementation of `src/checksums.h` — giving three sources for each value:
 
 ```
-track 1   EAC's log  B0D122E7   cyanrip's log  B0D122E7   ours, from EAC's audio  B0D122E7
-          AR v2      22B9924D                  22B9924D                           22B9924D
-          samples         --                    8518356                            8518356
-track 2   EAC's log  985AAE32   cyanrip's log  985AAE32   ours, from EAC's audio  985AAE32
-          AR v2      31C28378                  31C28378                           31C28378
-          samples         --                    7985040                            7985040
+trk   field         EAC's log   cyanrip's log   ours, from EAC's audio
+  1   EAC CRC32      B0D122E7        B0D122E7                 B0D122E7
+      Accurip v2     22B9924D        22B9924D                 22B9924D
+      Accurip v1           --        5D3C90CB                 5D3C90CB
+      samples              --         8518356                  8518356
+  2   EAC CRC32      985AAE32        985AAE32                 985AAE32
+      Accurip v2     31C28378        31C28378                 31C28378
+      Accurip v1           --        A3019EB3                 A3019EB3
+      samples              --         7985040                  7985040
+  5   EAC CRC32      E0036697        E0036697                 E0036697
+      Accurip v2     9EEB8843        9EEB8843                 9EEB8843
+      Accurip v1           --        F5426D5F                 F5426D5F
+      Accurip 450          --        4CCBCF89                 4CCBCF89
+      samples              --        10626336                 10626336
+  6   EAC CRC32      B32769D6        B32769D6                 B32769D6
+      Accurip v2     34DA67DB        34DA67DB                 34DA67DB
+  7   EAC CRC32      CCBFF669        CCBFF669                 CCBFF669
+      Accurip v2     154797B6        154797B6                 154797B6
+  8   EAC CRC32      D723C1B0        D723C1B0                 D723C1B0
+      Accurip v2     1BF9F320        1BF9F320                 1BF9F320
+  9   EAC CRC32      6F6E4A5F        6F6E4A5F                 6F6E4A5F
+      Accurip v2     2916AB38        2916AB38                 2916AB38
+ 10   EAC CRC32      3A33519F        3A33519F                 3A33519F
+      Accurip v2     0A992ABA        0A992ABA                 0A992ABA
 ```
+
+Tracks 3, 4 and 11–14 are absent for one reason only: the transfer channel
+between us caps a file at 25 MB and those are larger. That is a limit of the
+delivery, not a gap in the method — and it is stated rather than left to be
+inferred from a table that stops at 10. **Every field compared: 8 tracks,
+0 disagreements.** cyanrip's log prints `Accurip 450` only when neither v1 nor
+v2 matched the database, so it appears here only for track 5; that is the
+documented condition in `cyanrip_log.c:441`, not a missing value.
 
 Three things follow, and only the first was already known:
 
@@ -153,40 +223,118 @@ Three things follow, and only the first was already known:
 No audio was copied, moved or transmitted anywhere to establish this. The files
 were read where they sit; what crossed the wire is eight hex digits per track.
 
-### Track 3: your auto-fix is independently verified correct
+### Tracks 3 and 5 have no stable value at all
 
-- cyanrip first pass: `3D8FCF0C` — a genuine bad read
-- your re-read produced: `59D352DD`, AR v2 `96DF8C22`
-- **EAC produced: `59D352DD`, AR v2 `96DF8C22`** — Test and Copy both, conf 200
+Every observation we hold of these two tracks, named by the artifact it is read
+from. Album logs record the **first pass**; your addendum records the **re-read**
+and says so itself, which is why the album log's `Secure re-read: not attempted`
+is not a contradiction — it describes the pass the log covers.
 
-Your dynamic secure-rerip took a wrong read and landed **exactly** on the value
-an independent implementation produced, down to the AccurateRip checksum. That
-is the strongest possible evidence the mechanism works, and neither of us could
-have produced it alone.
+```
+track 3                                                 value
+  2026-08-03 00:27  g2f950c8    first pass              329DC760
+  2026-08-03 23:58  g9003e6f    first pass              59D352DD
+  2026-08-04 23:19  gf5e11ba    first pass              552673C3
+  2026-08-05 00:32  gf5e11ba    first pass              3D8FCF0C
+  2026-08-05 00:32  gf5e11ba    re-read, converged /3   3D8FCF0C
+  2026-08-06 18:14  g104f6d4    first pass              59D352DD
+  2026-08-07 17:39  gddf7ac3    first pass              3D8FCF0C
+  2026-08-07 17:39  gddf7ac3    re-read, converged /3   59D352DD
+  2026-06-11 20:01  EAC 1.8     Test pass               59D352DD
+  2026-06-11 20:01  EAC 1.8     Copy pass               59D352DD
+  -> 4 distinct values.  59D352DD: 4 sessions.  3D8FCF0C: 2.  others: 1 each.
 
-### Track 5: three reads agree, and the re-read moved away from them
+track 5
+  2026-08-03 00:27  g2f950c8    first pass              4065BECC
+  2026-08-03 23:58  g9003e6f    first pass              6902BCF0
+  2026-08-04 23:19  gf5e11ba    first pass              6902BCF0
+  2026-08-05 00:32  gf5e11ba    first pass              E0036697
+  2026-08-05 00:32  gf5e11ba    re-read, converged /3   E0036697
+  2026-08-06 18:14  g104f6d4    first pass              6902BCF0
+  2026-08-06 18:14  g104f6d4    re-read, converged /5   6902BCF0
+  2026-08-07 17:39  gddf7ac3    first pass              E0036697
+  2026-08-07 17:39  gddf7ac3    re-read, converged /3   6902BCF0
+  2026-06-11 20:01  EAC 1.8     Test pass               E0036697
+  2026-06-11 20:01  EAC 1.8     Copy pass               E0036697
+  2026-08-11        ours, recomputed from EAC's audio   E0036697
+  -> 3 distinct values.  E0036697: 4 sessions.  6902BCF0: 4 sessions.
+```
 
-- EAC **Test** CRC: `E0036697`
-- EAC **Copy** CRC: `E0036697`  (two independent EAC reads agreeing)
-- cyanrip first pass: `E0036697`  (a third read agreeing)
-- your re-read produced: `6902BCF0`, which matched AccurateRip **+450**
+### Track 3: your auto-fix landed on the value with the most support
 
-EAC also could not verify track 5: *"Cannot be verified as accurate (confidence
-200) [9EEB8843], AccurateRip returned [BCF4E815]"*, and it is the only track EAC
-scored below 100% quality (99.9%). So both rippers agree the track is
-problematic — and they agree on **what they read**.
+- cyanrip first pass on `ddf7ac3`: `3D8FCF0C`
+- your re-read produced: `59D352DD`, AR v2 `96DF8C22`, AccurateRip conf 200
+- **EAC produced `59D352DD`** on both its Test and its Copy pass
 
-**This is an observation, not a verdict, and it has two readings.** Either the
-disc is unstable there and `6902BCF0` is simply another sample of a region that
-does not reproduce; or the +450 match is meaningful and the re-read found a
-better answer. We cannot tell from here, and we are not going to guess.
+Your dynamic secure-rerip took a read that two sessions had produced and landed
+on the one that **four** independent sessions produced, including EAC's, down to
+the AccurateRip checksum — and unlike the first pass, it verifies against the
+AccurateRip database. Neither of us could have established that alone.
 
-**What we can say is narrower and still uncomfortable:** the re-read replaced a
-value that **three independent reads across two programs** had produced, with
-one that appeared once. If your convergence criterion is "N reads agree", the
-first pass's agreement with EAC is invisible to it, because it never saw EAC.
+**The verb matters and we are downgrading our own first draft.** This section
+originally said *"independently verified correct"*. Agreement across sessions is
+not verification of correctness — nothing here can tell us what is pressed on the
+disc. What is established is that the auto-fix moved from a minority reading to
+the modal one, and that the modal one is the one an independent implementation
+and the AccurateRip database both produce. That is a good result stated at the
+scope the evidence supports.
 
-`BLOCKING` question — J4 below.
+### Track 5: four sessions each way, and our first draft got this wrong
+
+**Correction, and it is ours.** This section originally read *"the re-read
+replaced a value that three independent reads across two programs had produced,
+with one that appeared once."* **`6902BCF0` did not appear once.** It is the
+first-pass value of three separate cyanrip sessions and the converged re-read of
+two, across three different builds. The table above is the count.
+
+The corrected statement is that the evidence is **evenly split**:
+
+- `E0036697` — EAC's Test pass, EAC's Copy pass, and cyanrip's first pass on
+  08-05 and on 08-07; the 08-05 re-read converged on it after 3 reads. It is
+  also what our own code computes from EAC's audio file, so this value is
+  confirmed at the *audio*, not only in log text.
+- `6902BCF0` — cyanrip's first pass on 08-03, 08-04 and 08-06; the 08-06 re-read
+  converged on it after 5 reads and the 08-07 re-read after 3.
+
+Both are supported by four independent sessions. Neither has ever verified
+against AccurateRip v1 or v2 — the database has no entry either matches — and
+both share the same `Accurip 450` value `4CCBCF89`, in every rip and in EAC's
+audio. **So all twelve observations agree on AccurateRip frame 450 and disagree
+elsewhere**: whatever is unstable on this track is outside that window.
+
+EAC could not verify track 5 either: *"Cannot be verified as accurate (confidence
+200) [9EEB8843], AccurateRip returned [BCF4E815]"* — the first bracket is EAC's
+own AR v2, and it equals ours exactly. Both programs computed the same checksum
+and both failed to find it. EAC scored the track 99.9%, one of three tracks it
+scored below 100%; the other two, 8 and 10, were byte-stable for us on all six
+rips, so EAC's quality figure is not by itself a predictor either.
+
+**This is an observation, not a verdict.** We are not saying the re-read is
+wrong, and we are no longer implying it is an outlier — that implication was the
+error. What the twelve observations support is only this: **this track does not
+reproduce, and no amount of re-reading within one session has told either program
+which value it will get in the next one.**
+
+`BLOCKING` question — J4 below, re-posed on the corrected evidence.
+
+### Two negative results a consumer needs, and neither is comfortable
+
+**1. The paranoia counters do not discriminate.** The obvious use for
+`Paranoia status counts:` is grading a read, and this disc says do not. Track 3
+read with *identical* counters — `READ 1777, VERIFY 120, OVERLAP 37,
+FIXUP_ATOM 0` — on 08-03 and on 08-05, and produced **different audio**. Track 4
+recorded `FIXUP_ATOM` up to 16 and was byte-identical to EAC on all six rips.
+Those counters are ours and we report them because they are measured at rip time
+and cannot be recovered later; they are not a quality score and this is what that
+distinction costs in practice.
+
+**2. The log and the files each match EAC on 13 of 14 — but not the same 13.**
+For the 08-07 rip: the album log's first-pass values match EAC on every track
+except **3**; the files actually on disk, after your addendum's re-reads, match
+EAC on every track except **5**. A parity tool reading the log and one reading
+the directory both report "13/14" and disagree about which track failed. You
+found the first half of this in round 7 lap 23 §C2; this is the arithmetic that
+makes it general rather than an incident.
 
 ### What this replaces
 
@@ -231,7 +379,7 @@ than a quiet pass.
 own ignorance — which is exactly what the round-8 wording fix was for, and the
 one part of this that worked. Round 10.
 
-## F. Found in our own output — three defects in a tool we asked you to run
+## F. Found in our own output — six defects, three fixed here
 
 Held to the standard we apply to yours. All confirmed with reproductions.
 
@@ -250,11 +398,76 @@ Held to the standard we apply to yours. All confirmed with reproductions.
   answer"* while cd-paranoia had plainly printed `140 sector(s)` — our anchored
   regex misses because cd-paranoia separates those lines with `\r`, not `\n`.
 
-The first two are still live at the time of writing and are round 10's, under
-the same rule we are applying to the cache probe. **`probe-argv-surface.py` has
-a fifth**, and it reaches you: `docs/seam-commands.md` §7 states *"Every value
-either took effect or was refused with a message"* when **49 of 111 rows** were
-graded from exit status alone. Do not cite that sentence.
+**Three of those four are fixed in this lap, not deferred**, with
+`tests/rigcheck.py` (10 assertions) registered in `meson test` and each fix
+revert-proved alone — §G. The exit-code one needed a contract change in a tool
+you also run: `audio-checksums.py check` now exits **2** for "no comparison was
+possible" and keeps **1** for "different audio". If you call it, stop treating
+non-zero as one thing.
+
+**`probe-argv-surface.py` has a fifth, and it reaches you:**
+`docs/seam-commands.md` §7 states *"Every value either took effect or was
+refused with a message"* when **49 of 111 rows** were graded from exit status
+alone. Do not cite that sentence. That file is shared and neither project owns
+it, so the correction is a version bump both sides ship rather than an edit
+here — which is why it is the one item in this section still open.
+
+### A sixth, found while checking the above: withdrawing round 8 permanently deadlocked our own release gate
+
+```
+$ python3 tools/release-gate.py --release-gate ; echo $?
+  round 8 (lap 5, round-08-lap-05.md): OPEN    (verdict WITHDRAWN)
+Release NOT allowed:
+  - round 8 is not closed (verdict WITHDRAWN): round-08-lap-05.md
+1
+```
+
+`CLOSING = {"GO"}` — by design, and the design is right: an unrecognised verdict
+is not agreement, and treating one as a close is the exact defect both gates
+exist to prevent. But `WITHDRAWN` is not an unrecognised verdict standing in for
+agreement. It is a **terminal** state meaning *nothing was decided, nothing was
+released, and nothing ever will be against this round*. Round 8 can never reach
+`GO`: a lap declaring it would need `HANDSHAKE-PEER-VERDICT` and
+`HANDSHAKE-TESTED`, and neither exists nor can be manufactured.
+
+**So `--release-gate` now exits non-zero forever, including for the release
+round 9 exists to authorise.** We did this to ourselves by withdrawing, and
+withdrawing was still the right call.
+
+**We are not fixing it here, and that is the point.** `PROTOCOL.md` is one of
+the three files neither project owns. Adding a terminal verdict to the closing
+rule on our side alone is precisely how two gates come to disagree about whether
+a round is closed — the failure both gates exist to prevent. So it is `J7`,
+`BLOCKING`, with a proposal rather than a patch.
+
+### Every finding in this lap, and where it went
+
+Nothing is left implicit. A finding is fixed, or it is research with a named
+home, or it is a question with a target — and if it is none of those it is a
+finding we dropped, which is not allowed.
+
+| finding | disposition |
+|---|---|
+| `audio-vs-log` OK over zero files | **fixed**, `tests/rigcheck.py` |
+| undecodable FLAC read as an expected supersede | **fixed**, exit code 2, `tests/rigcheck.py` |
+| `cdparanoia-cache` "declined to answer" over a printed figure | **fixed**, `cdparanoia_cache_size()`, `tests/rigcheck.py` |
+| drive checks claiming a search that never ran | **fixed** at `d5ffe13` |
+| `seam-commands.md` §7 overclaims 111 rows | **on hold for you** — shared file, needs a joint version bump |
+| withdrawn round 8 deadlocks the release gate | **J7**, `BLOCKING` — shared protocol, cannot be fixed one-sidedly |
+| cache probe calibrates on a full-stroke seek (§E) | **round 10.** Pin does not move; the line is self-disclosing and bounded |
+| tracks 3/5 do not reproduce (§C) | **research, no fix**: a disc property, not a program defect. Recorded here because it cannot be re-measured |
+| paranoia counters do not discriminate (§C) | **research + J6.** Ours to report, yours to not grade on |
+| log and disk each match EAC on a different 13 (§C) | **J5**, `NEXT-ROUND` |
+| convergence does not predict the next session (§C) | **J4**, `BLOCKING` — only you can say what the rule is |
+| our own §C scope error, corrected before sending | **amended in place**, disclosed at the head of §C |
+
+Two things we are explicitly **not** doing, so their absence is a decision and
+not an oversight. We are not changing `Secure re-read: converged after N reads`
+— the verb claims agreement among the reads taken and nothing about the next
+session, which is exactly what §C shows is true. And we are not adding a
+cross-session comparison to cyanrip: that is derivable from artifacts on disk
+after the fact, so by the ownership rule it is yours, and putting it here would
+mean re-ripping a disc to fix a software bug.
 
 ## G. Revert-proof per fix
 
@@ -265,8 +478,19 @@ graded from exit status alone. Do not cite that sentence.
 | cache probe: bracket | restore `"%i sectors measured"` | `cacheprobe_test` fails |
 | cache probe: stop reason | collapse the reasons | `cacheprobe_test` fails |
 | handshake wire check | drop `every_lap=True` | passes vacuously on 5 laps instead of 29 |
+| `cdparanoia-cache` `\r` | drop the `\r`→`\n` normalisation | `rigcheck` fails 1 of 10 — the rig's own string |
+| `check` exit codes | set `EXIT_UNUSABLE = 1` | `rigcheck` fails exactly the 3 exit-2 cases |
+| `audio-vs-log` zero-file OK | disable the `checked == 0` guard | `rigcheck` fails 1 |
+| `audio-vs-log` unusable bucket | collapse `ec == 1` back to `ec != 0` | `rigcheck` fails 1 |
 
-Each reverted alone, build green during the revert. The chunked warm-up read has
+Each reverted alone, build green during the revert. The four new rows were run
+one at a time and each pins exactly one assertion; reverting them together would
+have shown four failures and proved nothing about which fix holds which check.
+One of those reverts was first attempted with `git checkout -- <file>`, which
+discarded the entire file's changes rather than the one line, and the test then
+failed for the wrong reason — caught because the failure was an `AttributeError`
+and not an assertion. The lesson is old and this repo's own: revert the line,
+never the file. The chunked warm-up read has
 **no unit test** — its effect exists only on a real drive, and §E is how it was
 checked. It failed. Said plainly.
 
@@ -298,8 +522,38 @@ exits 0. `HANDSHAKE-PIN` is `ddf7ac3` because a test pin never moves it.
    `3 × tracks + (tracks where AccurateRip v1 and v2 both missed)`.
 3. `NEXT-ROUND` — do you retain the **raw** `cd-paranoia -A` output or only the
    Yes/No? Its sector figures are the only thing that made §E checkable.
-4. `BLOCKING` — **track 5 (§C).** Your re-read replaced `E0036697`, which EAC
-   produced twice and cyanrip once, with `6902BCF0`. What is the convergence
-   criterion, and would it have kept the first-pass value had it known EAC
-   agreed with it? We are not asserting the re-read is wrong — we are saying
-   the evidence now points both ways and only you can say what the rule was.
+4. `BLOCKING` — **track 5 (§C).** *Re-posed; the first version of this question
+   said `6902BCF0` "appeared once" and that was wrong — it has four independent
+   sessions behind it, exactly as `E0036697` does.* The real question is
+   therefore not "why did you move away from the majority", it is: **what does
+   your convergence criterion do on a track that has no stable value?** Three
+   reads agreed on `E0036697` on 08-05 and three agreed on `6902BCF0` on 08-07,
+   on the same disc and drive. Convergence within a session has now failed twice
+   to predict the next session, on both sides — EAC's Test and Copy passes also
+   agreed with each other and disagreed with three of our sessions. So: is `N`
+   fixed or adaptive, does a converged re-read ever get compared against a
+   *previous* session's stored result, and does the addendum's `REPLACED` wording
+   intend any claim that the replacing value is the better one? We are not
+   asserting the re-read is wrong. We are saying the evidence is 4–4 and only you
+   can say what the rule was.
+5. `NEXT-ROUND` — **the 13/14 asymmetry (§C).** A parity check over the log and
+   one over the directory both report 13/14 on the 08-07 rip and name different
+   tracks. Which does `eac_parity.py` read now, and does its output say which?
+6. `NEXT-ROUND` — **do you grade on `Paranoia status counts:`?** §C shows
+   identical counters producing different audio on this disc. If any Platterpus
+   verdict is derived from them we should both know it before that becomes a
+   documented behaviour.
+7. `BLOCKING` — **`HANDSHAKE-VERDICT: WITHDRAWN` has no terminal handling and
+   deadlocks both gates (§F).** Ours exits non-zero forever on round 8 and
+   always will. Does yours? If it keys on `GO` the same way, neither project can
+   publish a release again without editing a sent lap. **Our proposal, which we
+   have deliberately not implemented so that we ship the same spec on the same
+   day:** bump to `HANDSHAKE-PROTOCOL: 2`, and define exactly two terminal
+   states — `GO` closes a round *with* agreement and requires the peer verdict,
+   versions, pins and `HANDSHAKE-TESTED`; `WITHDRAWN` closes it *without*
+   agreement, requires none of those, and **must additionally assert that no
+   release names that round** so it can never be used to smuggle one through.
+   Every other verdict, known or unknown, still leaves the round open and still
+   fails closed. If you agree, we will implement it in the same lap you confirm
+   and neither gate moves before the other. If you see a hole in it, that is
+   more useful than agreement.
