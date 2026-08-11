@@ -281,7 +281,7 @@ def check_audio(out, log, album):
     if not flacs:
         return record("audio-vs-log", SKIP, f"no .flac files in {album}")
 
-    lines, differ, checked = [], [], 0
+    lines, differ, unusable, checked = [], [], [], 0
     for f in flacs:
         m = re.match(r"^(\d+)", f.name)
         if not m:
@@ -291,9 +291,35 @@ def check_audio(out, log, album):
                        "--track", str(n), str(f)], timeout=300)
         lines.append(f"=== track {n}: {f.name} ===\n{txt}")
         checked += 1
-        if ec != 0:
+        # 1 is "different audio", 2 is "could not compare at all". Collapsing
+        # them reported a truncated FLAC as an expected supersede -- see
+        # audio-checksums.py's header. Anything else is the tool itself failing.
+        if ec == 1:
             differ.append(n)
+        elif ec != 0:
+            unusable.append(n)
     save(out, "audio-vs-log.txt", "\n".join(lines))
+
+    # Zero files checked is not "every one matches". `flacs` is non-empty here
+    # -- it was returned above if it were not -- so reaching this with checked
+    # == 0 means every filename failed the leading-number match, and the check
+    # examined nothing while wearing the word OK. A check that can be satisfied
+    # by finding nothing is the defect this script exists to catch elsewhere.
+    if checked == 0:
+        return record("audio-vs-log", SKIP,
+                      f"{len(flacs)} .flac file(s) in {album}, none with a "
+                      "leading track number in the filename, so none could be "
+                      "matched to a log track -- nothing was compared",
+                      "audio-vs-log.txt")
+
+    if unusable:
+        return record("audio-vs-log", FAIL,
+                      f"{checked} track(s) checked; could not be read at all: "
+                      f"{', '.join(map(str, unusable))} -- an undecodable or "
+                      "truncated file, which no re-rip explains"
+                      + (f"; also differ: {', '.join(map(str, differ))}"
+                         if differ else ""),
+                      "audio-vs-log.txt")
 
     # A track whose file was replaced after the log was written MUST differ --
     # the log describes the read that was thrown away. So a mismatch is not by
@@ -391,6 +417,32 @@ def check_offset(out, crip, device):
                   "offset-autodetect.txt")
 
 
+def cdparanoia_cache_size(txt):
+    """cd-paranoia -A's cache figure, or None if it did not report one.
+
+    Anchored on cd-paranoia's own heading, not on the word "cache" anywhere in
+    the output. The loose pattern `cache.*?(\\d+)\\s*sector` with DOTALL spans
+    lines and will happily return a number from somewhere else entirely -- it
+    reported "0 sectors" once, from a run that had already failed.
+
+    **`\\r` is normalised to `\\n` first, and that is the whole bug this
+    function exists to hold fixed.** `re.M` makes `^` match after a newline and
+    *not* after a carriage return, and cd-paranoia separates its progress output
+    with `\\r`. So on the rig -- 2026-08-10, PIONEER BD-RW BDR-209D -- the tool
+    printed `Approximate random access cache size: 137 sector(s)` and this check
+    reported that it "did not fail, it declined to answer". The pattern was
+    right; the line it was anchored to was not preceded by a `\\n`.
+
+    That is the exact shape this project keeps re-finding: a check that can be
+    satisfied by finding nothing, reporting an absence it never actually looked
+    for. Found in round 9 while re-reading the rig transcript against the source.
+    """
+    return next((m.group(1) for m in
+                 re.finditer(r"^\s*Approximate random access cache size:"
+                             r"\s*(\d+)\s*sector", (txt or "").replace("\r", "\n"),
+                             re.M)), None)
+
+
 def check_cdparanoia_cache(out, device):
     """The only independent cross-check our -x number has ever had.
 
@@ -404,15 +456,10 @@ def check_cdparanoia_cache(out, device):
     ec, txt = run([exe, "-A", "-d", device], timeout=900)
     save(out, "cdparanoia-A.txt", txt if isinstance(txt, str) else "")
 
-    # Anchored on cd-paranoia's own heading, not on the word "cache" anywhere in
-    # the file. The loose pattern `cache.*?(\d+)\s*sector` with DOTALL spans
-    # lines and will happily return a number from somewhere else entirely -- it
-    # reported "0 sectors" once, from a run that had already failed.
-    m = re.search(r"^\s*Approximate random access cache size:\s*(\d+)\s*sector",
-                  txt or "", re.M)
-    if m:
+    size = cdparanoia_cache_size(txt)
+    if size is not None:
         return record("cdparanoia-cache", INFO,
-                      f"approximate random access cache size: {m.group(1)} sectors",
+                      f"approximate random access cache size: {size} sectors",
                       "cdparanoia-A.txt")
 
     blocked = re.search(r"^.*(Could not stat|No such file or directory|"

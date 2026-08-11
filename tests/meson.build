@@ -105,6 +105,17 @@ python = import('python').find_installation()
 test('Audio checksum mirror', python,
      args: [ files('../tools/audio-checksums.py'), 'self-test' ])
 
+## Rig tools
+## =========
+## The two scripts we hand the operator and ask them to run on hardware nobody
+## here can reach. Both have reported a reassuring status over a check that had
+## not happened: `cdparanoia-cache` said cd-paranoia "declined to answer" on a
+## run where it had printed the figure (`^` under re.M does not match after the
+## `\r` cd-paranoia separates progress with), and `audio-vs-log` graded an
+## undecodable file as an expected re-rip supersede. Neither is visible on a
+## green suite, because passing is what those checks do when they find nothing.
+test('Rig tools', python, args: [ files('rigcheck.py') ])
+
 ## Argument-surface probe (seam-rules S-9/S-11)
 ## ===========================================
 ## Black-box: runs the real binary across every numeric and string argument at

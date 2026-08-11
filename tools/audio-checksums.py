@@ -38,6 +38,19 @@ v1/v2 sums are wrong for those tracks without the flag. `check` reads them from
 the log's track count so you cannot forget.
 
 Requires `ffmpeg` on PATH to decode; any format it can read works.
+
+`check` exit codes, which callers are expected to distinguish:
+
+    0   every field the log states matches the file
+    1   they describe DIFFERENT audio -- normal when a consumer superseded the
+        file after the log was written
+    2   no comparison was possible at all: undecodable or truncated file, or a
+        log with no such track
+
+1 and 2 were both 1 until 2026-08-11, which let `rig-check.py` report a broken
+file as an expected supersede. A caller that treats non-zero as one thing is
+making the same mistake this project keeps finding in absence values: two
+different facts collapsed into one symbol.
 """
 
 import argparse
@@ -51,6 +64,21 @@ M32 = 0xFFFFFFFF
 SECTOR_SAMPLES = 2352 >> 2          # 588 stereo frames per CD sector
 AR_SKIP_SAMPLES = (2352 * 5) >> 2   # AccurateRip's 5-sector lead/tail skip
 
+# `check` exits 1 when the audio and the log describe DIFFERENT audio, and 2
+# when it could not compare them at all -- an undecodable file, a truncated
+# file, a log with no such track. Those were both exit 1 until 2026-08-11,
+# so a caller could not tell "this track was superseded by a re-rip", which is
+# expected and fine, from "this file is broken", which is not. `rig-check.py`
+# graded a truncated FLAC as the former and said so reassuringly in its report.
+EXIT_DIFFER = 1
+EXIT_UNUSABLE = 2
+
+
+def unusable(msg):
+    """Exit for 'no comparison was possible', distinct from 'they differ'."""
+    print(msg, file=sys.stderr)
+    sys.exit(EXIT_UNUSABLE)
+
 
 def decode(path):
     """Decode to interleaved signed 16-bit little-endian stereo, as ripped."""
@@ -59,11 +87,11 @@ def decode(path):
          "-f", "s16le", "-acodec", "pcm_s16le", "-ac", "2", "-ar", "44100", "-"],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if p.returncode != 0:
-        sys.exit(f"{path}: ffmpeg failed: {p.stderr.decode(errors='replace').strip()}")
+        unusable(f"{path}: ffmpeg failed: {p.stderr.decode(errors='replace').strip()}")
     if not p.stdout:
-        sys.exit(f"{path}: decoded to zero bytes -- nothing to checksum")
+        unusable(f"{path}: decoded to zero bytes -- nothing to checksum")
     if len(p.stdout) % 4:
-        sys.exit(f"{path}: decoded length {len(p.stdout)} is not a whole number "
+        unusable(f"{path}: decoded length {len(p.stdout)} is not a whole number "
                  "of stereo frames")
     return p.stdout
 
@@ -146,7 +174,7 @@ def cmd_sum(args):
 def cmd_check(args):
     tracks, total = parse_log(args.log)
     if args.track not in tracks:
-        sys.exit(f"{args.log}: no track {args.track} (found: "
+        unusable(f"{args.log}: no track {args.track} (found: "
                  f"{sorted(tracks) or 'none'})")
     want = tracks[args.track]
     got = checksums(decode(args.file),
@@ -182,7 +210,7 @@ def cmd_check(args):
               "itself a defect:\na consumer that re-rips a track and supersedes "
               "the file leaves the ripper's log\ndescribing the read that was "
               "thrown away -- by design, so the log stays verifiable.")
-    return 1 if bad else 0
+    return EXIT_DIFFER if bad else 0
 
 
 def cmd_diff(args):
