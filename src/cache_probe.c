@@ -79,6 +79,27 @@
 #define PROBE_MIN_SECTORS 1
 #define PROBE_MAX_SECTORS 2048
 
+/* Sectors per read COMMAND, which is not the same thing as sectors per run.
+ *
+ * The forward run is a warm-up whose only job is to put data in the drive's
+ * cache; whether it arrives as one transfer or several does not change what
+ * ends up cached. Issuing it as one transfer does, however, put a hard ceiling
+ * on the search: a single command of 64 sectors is 150,528 bytes, and an sr
+ * device's max_sectors_kb is commonly 128 KiB, so the read simply fails.
+ *
+ * Measured, 2026-08-10, PIONEER BD-RW BDR-209D: the search hit at 32 and the
+ * 64-sector read FAILED, so the probe stopped and reported "at least 32
+ * sectors". cd-paranoia -A on the same drive and disc reports an approximate
+ * random-access cache of 137 sectors. The ceiling was ours, not the drive's,
+ * and before the wording fix one commit earlier this same event printed
+ * "32 sectors measured" -- a number wrong by a factor of four, in a line that
+ * goes into an archival record.
+ *
+ * 25 sectors is 58,800 bytes, comfortably under even a 64 KiB limit. A read
+ * that fails at this size is a real read failure and still ends the search,
+ * which is what the STOP_READ_FAIL wording is for. */
+#define PROBE_CHUNK_SECTORS 25
+
 /* Every read here brackets itself for the stall watchdog. These are raw MMC
  * reads on a path that has never run on hardware, so a hang is a live
  * possibility -- and a hang with no heartbeat is indistinguishable from a
@@ -87,6 +108,7 @@
  * track" rather than blaming one. */
 #define PROBE_PSEUDO_TRACK 0
 
+/* One command. Callers wanting a run of arbitrary length use probe_read_run(). */
 static driver_return_code_t probe_read(const CdIo_t *cdio, uint8_t *buf,
                                        lsn_t lsn, int sectors)
 {
@@ -95,6 +117,23 @@ static driver_return_code_t probe_read(const CdIo_t *cdio, uint8_t *buf,
         cdio_read_audio_sectors((CdIo_t *)cdio, buf, lsn, sectors);
     crip_stall_read_end();
     return r;
+}
+
+/* A run of `sectors`, issued as however many commands it takes. See
+ * PROBE_CHUNK_SECTORS for why this is not one call. */
+static driver_return_code_t probe_read_run(const CdIo_t *cdio, uint8_t *buf,
+                                           lsn_t lsn, int sectors)
+{
+    for (int done = 0; done < sectors; ) {
+        const int n = FFMIN(PROBE_CHUNK_SECTORS, sectors - done);
+        const driver_return_code_t r =
+            probe_read(cdio, buf + (size_t)done * CDIO_CD_FRAMESIZE_RAW,
+                       lsn + done, n);
+        if (r != DRIVER_OP_SUCCESS)
+            return r;
+        done += n;
+    }
+    return DRIVER_OP_SUCCESS;
 }
 
 static int64_t time_one_read(const CdIo_t *cdio, uint8_t *buf, lsn_t lsn)
@@ -268,7 +307,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
     for (int run = PROBE_MIN_SECTORS; run <= max_run; run *= 2) {
         stop_run = run;
 
-        if (probe_read(ctx->cdio, buf, seed, run) != DRIVER_OP_SUCCESS) {
+        if (probe_read_run(ctx->cdio, buf, seed, run) != DRIVER_OP_SUCCESS) {
             stop = CRIP_CACHE_READ_FAIL;
             break;
         }
