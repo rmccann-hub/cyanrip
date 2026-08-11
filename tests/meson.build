@@ -121,6 +121,21 @@ test('Audio checksum mirror', python,
 ## describe no disc. New code is not safer than old code.
 test('Rig tools', python, args: [ files('rigcheck.py') ])
 
+## Golden reference freshness
+## ==========================
+## The reference Platterpus checks its parser against carries the version and
+## the compiled-in handshake state, so it goes stale on a bump AND on a new lap
+## file. The only existing guard read the banner's version and its dirty
+## marker, so the shipped copy claimed `Handshake: round 8 lap 1` while the tree
+## was at round 9 lap 1 and nothing could see it. This re-runs the canonical rip
+## and diffs, normalising only wall-clock fields, the invocation line, the build
+## tag and the log's own checksum.
+test('Golden reference freshness', python,
+     args: [ files('../tools/gen-golden-reference.py'), '--check',
+             '--binary', cyanrip_exe.full_path() ],
+     depends: cyanrip_exe,
+     timeout: 300)
+
 ## Argument-surface probe (seam-rules S-9/S-11)
 ## ===========================================
 ## Black-box: runs the real binary across every numeric and string argument at

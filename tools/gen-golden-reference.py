@@ -133,18 +133,16 @@ def main():
                          "ignoring only wall-clock and invocation-path fields")
     args = ap.parse_args()
 
-    if not Path(args.binary).exists():
+    # Resolved before use: generate() runs the rip with cwd set to a staged
+    # fixture directory, so a relative --binary would be looked up there and
+    # fail with a bare FileNotFoundError that names the wrong problem.
+    binary = Path(args.binary).resolve()
+    if not binary.exists():
         sys.exit(f"{args.binary}: not built. Run ninja -C build first.")
 
-    log, js = generate(args.binary)
+    log, js = generate(binary)
 
-    # A reference from a dirty tree names a commit that does not describe it,
-    # which is the whole defect sc_golden_reference_is_from_a_clean_build()
-    # exists to catch. Refuse here too, where it is cheap.
     banner = log.splitlines()[0]
-    if "-dirty" in banner:
-        sys.exit(f"refusing to write a reference from a dirty build: {banner}\n"
-                 "Commit, rebuild, and re-run.")
 
     if args.check:
         if not OUT_LOG.exists():
@@ -158,6 +156,16 @@ def main():
             sys.exit("the golden reference is stale:\n" + "\n".join(d[:60]))
         print("golden reference is up to date")
         return 0
+
+    # WRITE path only. A reference from a dirty tree names a commit that does
+    # not describe it, which is the defect
+    # sc_golden_reference_is_from_a_clean_build() exists to catch -- so refuse
+    # here too, where it is cheap. NOT in --check: that mode normalises the
+    # build tag by design, so it must stay runnable on a dirty working tree or
+    # it could never be a `meson test`.
+    if "-dirty" in banner:
+        sys.exit(f"refusing to write a reference from a dirty build: {banner}\n"
+                 "Commit, rebuild, and re-run.")
 
     OUT_LOG.write_text(log)
     OUT_JSON.write_text(js)
