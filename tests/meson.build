@@ -114,6 +114,11 @@ test('Audio checksum mirror', python,
 ## `\r` cd-paranoia separates progress with), and `audio-vs-log` graded an
 ## undecodable file as an expected re-rip supersede. Neither is visible on a
 ## green suite, because passing is what those checks do when they find nothing.
+##
+## `digest` added eight more within an hour of being written -- a silently
+## dropped duplicate track number, an abort that put the reason on stderr where
+## a pasted block could not carry it, and four argument values accepted that
+## describe no disc. New code is not safer than old code.
 test('Rig tools', python, args: [ files('rigcheck.py') ])
 
 ## Argument-surface probe (seam-rules S-9/S-11)

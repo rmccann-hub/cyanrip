@@ -195,35 +195,106 @@ def cmd_digest(args):
     argument order, because AccurateRip skips 5 sectors at each end of the disc
     and getting that wrong silently changes v1 and v2 on exactly two tracks --
     the two nobody re-checks.
+
+    Every refusal below is a case the first version of this function got wrong,
+    found by probing it rather than by reading it, and each one produced a block
+    that looked complete:
+
+      * two files claiming the same track number -- one was silently dropped;
+      * a numbered file that is not audio -- the run aborted mid-table, with
+        the reason on stderr where a pasted block would not carry it;
+      * `--tracktotal` below the highest number present -- no track was treated
+        as last and the header cheerfully named one that was not there;
+      * `--tracktotal -3` -- accepted, and printed as the last track;
+      * a directory that does not exist -- reported as "no numbered files",
+        which is the absence-means-two-things defect inside the function whose
+        whole subject is that defect.
+
+    The block is the artifact, so everything a reader needs is IN it: failures
+    are rows, not stderr, and `# end digest` is always the final line. A block
+    without that line is truncated and must not be trusted.
     """
     import glob as _glob
     import os as _os
 
-    found = {}
+    if not _os.path.exists(args.directory):
+        unusable(f"{args.directory}: no such directory -- nothing was searched")
+    if not _os.path.isdir(args.directory):
+        unusable(f"{args.directory}: not a directory -- nothing was searched")
+
+    # Group rather than setdefault: two files claiming one track number is an
+    # ambiguity, and resolving it by sort order is a guess presented as a fact.
+    found, ignored = {}, 0
     for path in sorted(_glob.glob(_os.path.join(args.directory, "*"))):
+        if not _os.path.isfile(path):
+            continue
         m = re.match(r"^\s*(\d+)", _os.path.basename(path))
-        if m and _os.path.isfile(path):
-            found.setdefault(int(m.group(1)), path)
+        if not m:
+            ignored += 1
+            continue
+        found.setdefault(int(m.group(1)), []).append(path)
     if not found:
-        unusable(f"{args.directory}: no file whose name starts with a track "
-                 "number -- nothing to digest")
+        unusable(f"{args.directory}: searched, {ignored} file(s) present, none "
+                 "whose name starts with a track number -- nothing to digest")
+
+    dupes = {n: p for n, p in found.items() if len(p) > 1}
+    if dupes:
+        unusable(f"{args.directory}: more than one file claims the same track "
+                 "number, and picking one would be a guess:\n  "
+                 + "\n  ".join(f"track {n}: "
+                               + ", ".join(_os.path.basename(x) for x in p)
+                               for n, p in sorted(dupes.items())))
+
+    odd = [n for n in found if not 1 <= n <= 99]
+    if odd:
+        unusable(f"{args.directory}: track number(s) {sorted(odd)} are outside "
+                 "the 1-99 a CD can carry -- refusing rather than digesting a "
+                 "file that is probably not a track")
 
     # The last track is the highest number PRESENT, which is not necessarily
     # the disc's last track. Say which was assumed rather than let the reader
-    # infer it from a table: a wrong --last is a wrong v1/v2 that looks fine.
-    last = args.tracktotal if args.tracktotal else max(found)
+    # infer it: a wrong --last is a wrong v1/v2 that looks fine.
+    if args.tracktotal is not None:
+        if args.tracktotal < max(found):
+            unusable(f"--tracktotal {args.tracktotal} is below track "
+                     f"{max(found)}, which is present. No track would be "
+                     "treated as the disc's last and v1/v2 would be wrong for "
+                     "the one that is.")
+        last, assumed = args.tracktotal, ""
+    else:
+        last = max(found)
+        assumed = (" (highest number present; pass --tracktotal if that is not "
+                   "the disc's last track)")
+
     print(f"# audio-checksums.py digest -- {len(found)} track(s) from "
           f"{args.directory}")
-    print(f"# track {last} treated as the last on the disc"
-          + ("" if args.tracktotal else " (highest number present; pass "
-             "--tracktotal if that is not the disc's last track)"))
+    print(f"# track {last} treated as the last on the disc{assumed}")
+    if ignored:
+        print(f"# {ignored} file(s) ignored: no leading track number")
     print("# trk    samples   EAC CRC32  Accurip v1  Accurip v2  Accurip 450")
+
+    failed = []
     for n in sorted(found):
-        c = checksums(decode(found[n]), is_first=(n == 1), is_last=(n == last))
+        path = found[n][0]
+        try:
+            c = checksums(decode(path), is_first=(n == 1), is_last=(n == last))
+        except SystemExit as e:
+            # decode() refuses by exiting. In a digest that would truncate the
+            # block and put the reason on stderr, so take it back and make the
+            # failure a row: the block travels, stderr does not.
+            failed.append(n)
+            print(f"{n:>5}  COULD NOT DECODE -- {_os.path.basename(path)}"
+                  f" (exit {e.code})")
+            continue
+        note = "   <- zero, and a checksum of 0 is meaningless" if not c["v1_450"] else ""
         print(f"{n:>5} {c['samples']:>10}    {c['eac_crc']:08X}    "
-              f"{c['v1']:08X}    {c['v2']:08X}     {c['v1_450']:08X}")
+              f"{c['v1']:08X}    {c['v2']:08X}     {c['v1_450']:08X}{note}")
+
+    if failed:
+        print(f"# {len(failed)} track(s) could not be decoded: "
+              f"{', '.join(map(str, failed))}")
     print("# end digest")
-    return 0
+    return EXIT_UNUSABLE if failed else 0
 
 
 def cmd_check(args):

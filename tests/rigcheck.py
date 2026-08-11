@@ -22,6 +22,20 @@ Round 9, 2026-08-11, from re-reading the rig transcript against the source:
   * `audio-vs-log` could return OK saying *"0 track(s) checked; every one
     matches its log"* when no filename carried a leading track number.
 
+And eight more in `digest` within an hour of it being written, every one found
+by probing the command rather than re-reading it, and every one producing a
+block that looked complete: two files claiming one track number (one silently
+dropped); a numbered non-audio file (aborted mid-table with the reason on
+stderr, where a pasted block would not carry it); `--tracktotal` below the
+highest track present (nothing treated as last, header naming a track that was
+not there); `--tracktotal 0` and `-3` (accepted); a missing directory and a
+path that is a file (both reported as "no numbered files"); and track 0.
+
+The lesson is the one this repo keeps paying for: **new code is not safer than
+old code, and a function whose docstring is about a defect class is not immune
+to that class.** `digest` refuses a directory it cannot describe, and the
+refusals are the assertions below.
+
 Run standalone or under meson; it needs ffmpeg only for the exit-code cases and
 skips them, loudly, if it is absent.
 """
@@ -138,6 +152,15 @@ if not shutil.which("ffmpeg"):
     print("  SKIP  ffmpeg is not installed, so the exit-code cases cannot run.")
     print("        That is a gap in this run, not a pass -- say so if it matters.")
 else:
+    import atexit
+    import shutil as _shutil
+
+    # mkdtemp() does not clean up after itself, and a test that leaves
+    # directories behind on every run is a test nobody wants in CI.
+    _leaked = []
+    atexit.register(lambda: [_shutil.rmtree(d, ignore_errors=True)
+                             for d in _leaked])
+
     acs = load(TOOL, "audio_checksums")
     with tempfile.TemporaryDirectory() as td:
         # Two seconds of a deterministic non-silent signal. Silence would
@@ -223,6 +246,69 @@ else:
         ec, _ = digest([td])
         check("digest exits 2 when nothing in the directory is numbered", ec == 2)
 
+    # Eight refusals, every one of them a way the first version of `digest`
+    # produced a block that looked complete. Found by probing it, not reading
+    # it, which is the only reason they were found at all.
+    def refuses(label, files, argv, want_in_stderr):
+        td = tempfile.mkdtemp()
+        _leaked.append(td)
+        for name, body in files.items():
+            if body is None:
+                wav(os.path.join(td, name), pcm)
+            else:
+                open(os.path.join(td, name), "wb").write(body)
+        p = subprocess.run([sys.executable, TOOL, "digest", td] + argv,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        err = p.stderr.decode()
+        check(label, p.returncode == 2 and want_in_stderr in err,
+              f"exit={p.returncode} stderr={err.strip().splitlines()[:1]}")
+
+    refuses("two files claiming one track number are refused, not silently one",
+            {"01 - a.wav": None, "01 - a.flac.wav": None}, [],
+            "more than one file claims the same track number")
+    refuses("--tracktotal below the highest track present is refused",
+            {"01 - a.wav": None, "09 - i.wav": None}, ["--tracktotal", "5"],
+            "is below track 9")
+    refuses("--tracktotal 0 is refused, not silently ignored",
+            {"01 - a.wav": None, "09 - i.wav": None}, ["--tracktotal", "0"],
+            "is below track 9")
+    refuses("--tracktotal -3 is refused",
+            {"01 - a.wav": None, "09 - i.wav": None}, ["--tracktotal", "-3"],
+            "is below track 9")
+    refuses("track 0 is refused -- a CD carries 1..99",
+            {"0 - zero.wav": None}, [], "outside the 1-99")
+    refuses("a directory with files but none numbered says how many it saw",
+            {"readme.txt": b"x"}, [], "searched, 1 file(s) present")
+
+    p = subprocess.run([sys.executable, TOOL, "digest", "/nonexistent-dir-xyz"],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    check("a missing directory says so, not 'no numbered files'",
+          p.returncode == 2 and "no such directory" in p.stderr.decode(),
+          p.stderr.decode().strip()[:60])
+
+    with tempfile.NamedTemporaryFile(suffix=".txt") as tf:
+        p = subprocess.run([sys.executable, TOOL, "digest", tf.name],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        check("a path that is a file, not a directory, says so",
+              p.returncode == 2 and "not a directory" in p.stderr.decode())
+
+    # An undecodable file must not truncate the block. The failure has to be a
+    # ROW and `# end digest` has to be the last line, because a pasted block is
+    # the artifact and stderr does not travel with it.
+    with tempfile.TemporaryDirectory() as td:
+        wav(os.path.join(td, "01 - a.wav"), pcm)
+        open(os.path.join(td, "02 - cover.jpg"), "wb").write(b"\xff\xd8no")
+        wav(os.path.join(td, "03 - c.wav"), pcm)
+        ec, out = digest([td, "--tracktotal", "3"])
+        check("an undecodable track becomes a row, not an abort",
+              ec == 2 and "COULD NOT DECODE" in out
+              and out.rstrip().endswith("# end digest")
+              and "# 1 track(s) could not be decoded: 2" in out,
+              f"exit={ec}")
+        check("and the tracks around it still get their rows",
+              len([l for l in out.splitlines()
+                   if l and l[0] != "#" and "COULD NOT" not in l]) == 2)
+
     # ----------------------------------------------------------------------
     # rig-check's own grading of those exit codes
     # ----------------------------------------------------------------------
@@ -233,6 +319,7 @@ else:
     def grade(files, logvals=None, track=1):
         """Run check_audio over a synthetic album and return its status."""
         td = tempfile.mkdtemp()
+        _leaked.append(td)
         album, out = Path(td) / "album", Path(td) / "out"
         album.mkdir(); out.mkdir()
         for name, body in files.items():

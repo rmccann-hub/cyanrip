@@ -260,9 +260,17 @@ cyanrip log without the disc:
 
 ```sh
 tools/audio-checksums.py check track05.flac --log cyanrip.log --track 5
+tools/audio-checksums.py digest "Artist/Album" --tracktotal 14   # whole album
 tools/audio-checksums.py diff  ours.flac theirs.flac      # localise to the sector
 tools/audio-checksums.py self-test                        # it has not drifted
 ```
+
+`digest` exists because the audio cannot travel. It runs where the files are
+and prints about 60 bytes per track, so a parity question is settled by pasting
+a block rather than moving a rip. `check` distinguishes its exit codes: **0**
+match, **1** different audio (normal when a re-rip superseded the file), **2**
+no comparison was possible at all. Callers that treat non-zero as one thing
+report a broken file as an expected supersede -- ours did.
 
 Run over three tracks of the EAC baseline it reproduced the rig log exactly for
 tracks 1 and 7, and for track 5 produced `E0036697` — the value the auto-fix
