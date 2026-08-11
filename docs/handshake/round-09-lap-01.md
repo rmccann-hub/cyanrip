@@ -122,6 +122,37 @@ EAC's `Copy CRC` against cyanrip's `EAC CRC32`, track for track:
 audio — two different programs, different code, one disc — and it is worth more
 than either project agreeing with itself, which is all we have ever had.
 
+### And our checksum code is now verified against EAC, not just against ourselves
+
+The comparison above is log against log. Tracks 1 and 2 of EAC's audio were then
+run through `tools/audio-checksums.py` directly — our independent Python
+reimplementation of `src/checksums.h` — giving four sources for one fact:
+
+```
+track 1   EAC's log  B0D122E7   cyanrip's log  B0D122E7   ours, from EAC's audio  B0D122E7
+          AR v2      22B9924D                  22B9924D                           22B9924D
+          samples         --                    8518356                            8518356
+track 2   EAC's log  985AAE32   cyanrip's log  985AAE32   ours, from EAC's audio  985AAE32
+          AR v2      31C28378                  31C28378                           31C28378
+          samples         --                    7985040                            7985040
+```
+
+Three things follow, and only the first was already known:
+
+1. EAC's files agree with EAC's log — the reference is internally consistent.
+2. **Our Python checksum mirror reproduces EAC's CRC32 and AccurateRip v2
+   exactly, computed from EAC's own audio.** Until tonight both implementations
+   of that algorithm were ours, and two implementations of one spec by one
+   author drift together. It is now checked against a third, written by someone
+   else, for a different program.
+3. **The sample counts are identical.** That is not a statement about content —
+   it says the *track boundaries* agree: offset application and gap handling put
+   the cut in the same place, to the sample. Two rippers reading the same disc
+   the same way, not merely producing similar bytes.
+
+No audio was copied, moved or transmitted anywhere to establish this. The files
+were read where they sit; what crossed the wire is eight hex digits per track.
+
 ### Track 3: your auto-fix is independently verified correct
 
 - cyanrip first pass: `3D8FCF0C` — a genuine bad read
