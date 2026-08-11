@@ -172,10 +172,40 @@ def check_argv(out, crip, container):
 
 
 def find_log(album):
-    cands = [p for p in album.glob("*.log") if "EACcompatible" not in p.name]
-    if not cands:
-        cands = [p for p in album.parent.glob("*.log") if "EACcompatible" not in p.name]
-    return max(cands, key=lambda p: p.stat().st_mtime) if cands else None
+    """The newest rip log at or beside `album`, or a REASON it found none.
+
+    Returns (path, None) or (None, reason). One message for "that directory is
+    not there" and "that directory has no log in it" was the same defect this
+    script exists to report in other people's output: an absence that can mean
+    two things and does not say which. It cost a live rig run, where the
+    directory was known to hold a log and the script said only "no rip log
+    found under <path>".
+
+    Every path is printed in quotes, because the difference between a real
+    failure and a shell that fed us a trailing space is invisible without
+    them -- and that is a real possibility, not a hypothetical: a line
+    continuation followed by spaces stops continuing the line."""
+    if not album.exists():
+        return None, f"{str(album)!r} does not exist"
+    if not album.is_dir():
+        return None, f"{str(album)!r} is not a directory"
+
+    for where, d in (("in", album), ("beside", album.parent)):
+        logs = sorted(d.glob("*.log"))
+        cands = [p for p in logs if "EACcompatible" not in p.name]
+        if cands:
+            # The parent fallback exists because -D {album_artist}/{album} can
+            # put the log one level up. It is also how an EMPTY album directory
+            # silently bound to an unrelated log during this script's own
+            # testing, and reported it as the album's. Which directory the log
+            # came from is therefore part of the answer, not a detail.
+            return (max(cands, key=lambda p: p.stat().st_mtime), where), None
+        if logs:
+            return None, (f"{len(logs)} .log file(s) {where} {str(d)!r}, but "
+                          "every one is an EAC-compatible export, not a rip log")
+    n = len(list(album.iterdir()))
+    return None, (f"{str(album)!r} exists and holds {n} entr{'y' if n == 1 else 'ies'}, "
+                  "but no .log in it or beside it")
 
 
 def check_verify_log(out, crip, log):
@@ -341,11 +371,15 @@ def main():
 
     if args.album_dir:
         album = args.album_dir.expanduser()
-        log = find_log(album) if album.is_dir() else None
-        if not log:
-            record("album", SKIP, f"no rip log found under {album}")
+        found, why = find_log(album)
+        if not found:
+            record("album", SKIP, why)
         else:
-            record("album", INFO, f"log: {log}")
+            log, where = found
+            record("album", INFO, f"log: {str(log)!r}" + (
+                "" if where == "in" else
+                "  <- NOT in the album directory, found BESIDE it; check this "
+                "is the right album's log"))
             check_verify_log(out, crip, log)
             check_checksum_inventory(out, log)
             check_audio(out, log, album)
