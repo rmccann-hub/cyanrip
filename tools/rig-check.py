@@ -318,6 +318,42 @@ def check_audio(out, log, album):
 
 # -------------------------------------------------------------- with disc ---
 
+def optical_nodes():
+    """Whatever optical device nodes this machine actually has."""
+    import glob
+    seen = []
+    for pat in ("/dev/sr*", "/dev/scd*", "/dev/cdrom*", "/dev/dvd*"):
+        seen += glob.glob(pat)
+    return sorted(set(seen))
+
+
+def device_usable(device):
+    """(True, None) or (False, reason) -- checked ONCE, before any drive check.
+
+    Every drive tool here fails differently on a device node that is not there,
+    and each of those failures used to be interpreted as a result about the
+    disc. On 2026-08-11 /dev/sr0 did not exist and this script reported
+    `offset: no offset reported -- 'searched and did not find' is a result, not
+    a failure`. Nothing was searched. That sentence turned a missing drive into
+    a claim about the disc, which is the defect this whole script exists to
+    report in other people's output, committed three times in its own.
+
+    A precondition is the right shape for it: ask once, in language the reader
+    can act on, rather than teaching three separate output parsers to recognise
+    three separate spellings of "there is no drive".
+    """
+    if os.path.exists(device):
+        return True, None
+    others = [d for d in optical_nodes() if d != device]
+    if others:
+        return False, (f"{device!r} does not exist. This machine has: "
+                       + ", ".join(repr(d) for d in others)
+                       + " -- pass one of those to --device")
+    return False, (f"{device!r} does not exist, and this machine has no optical "
+                   "device node at all (no /dev/sr*, /dev/scd*, /dev/cdrom, "
+                   "/dev/dvd). Nothing about a disc can be concluded from this run")
+
+
 def check_cache_probe(out, crip, device):
     """-x, and -j for a complete record. Read-only: rips nothing, writes no
     audio. -D keeps the logfile -I announces inside --out instead of cwd."""
@@ -337,9 +373,20 @@ def check_offset(out, crip, device):
     save(out, "offset-autodetect.txt", txt if isinstance(txt, str) else "")
     m = re.search(r"^Drive offset of ([+-]\d+) found \(confidence: (\d+)\)", txt or "", re.M)
     if not m:
+        # "searched and did not find" is a claim about the DISC and must not be
+        # made when the search never started. cyanrip says so itself; believe it
+        # rather than falling through to the reassuring branch.
+        blocked = re.search(r"^(Unable to open device.*|.*No such file or directory.*)$",
+                            txt or "", re.M)
+        if ec != 0 or blocked:
+            return record("offset", FAIL,
+                          f"-f could not search (exit {ec})"
+                          + (f": {blocked.group(1).strip()}" if blocked else "")
+                          + " -- this says nothing about the disc",
+                          "offset-autodetect.txt")
         return record("offset", INFO,
-                      "no offset reported -- 'searched and did not find' is a "
-                      "result, not a failure", "offset-autodetect.txt")
+                      "-f ran to completion and reported no offset -- searched "
+                      "and did not find, which is a result", "offset-autodetect.txt")
     return record("offset", INFO, f"{m.group(1)} at confidence {m.group(2)}",
                   "offset-autodetect.txt")
 
@@ -356,10 +403,28 @@ def check_cdparanoia_cache(out, device):
         return record("cdparanoia-cache", SKIP, "cd-paranoia not installed")
     ec, txt = run([exe, "-A", "-d", device], timeout=900)
     save(out, "cdparanoia-A.txt", txt if isinstance(txt, str) else "")
-    m = re.search(r"cache.*?(\d+)\s*sector", txt or "", re.I | re.S)
+
+    # Anchored on cd-paranoia's own heading, not on the word "cache" anywhere in
+    # the file. The loose pattern `cache.*?(\d+)\s*sector` with DOTALL spans
+    # lines and will happily return a number from somewhere else entirely -- it
+    # reported "0 sectors" once, from a run that had already failed.
+    m = re.search(r"^\s*Approximate random access cache size:\s*(\d+)\s*sector",
+                  txt or "", re.M)
+    if m:
+        return record("cdparanoia-cache", INFO,
+                      f"approximate random access cache size: {m.group(1)} sectors",
+                      "cdparanoia-A.txt")
+
+    blocked = re.search(r"^.*(Could not stat|No such file or directory|"
+                        r"Unable to open).*$", txt or "", re.M)
+    if ec != 0 or blocked:
+        return record("cdparanoia-cache", FAIL,
+                      f"cd-paranoia could not reach the drive (exit {ec})"
+                      + (f": {blocked.group(0).strip()[:80]}" if blocked else ""),
+                      "cdparanoia-A.txt")
     return record("cdparanoia-cache", INFO,
-                  f"{m.group(1)} sectors reported" if m else
-                  "ran; no sector figure matched -- read the file",
+                  "cd-paranoia completed but reported no cache size -- read the "
+                  "file; it did not fail, it declined to answer",
                   "cdparanoia-A.txt")
 
 
@@ -407,9 +472,14 @@ def main():
         record("album", SKIP, "no --album-dir given")
 
     if args.device:
-        check_cache_probe(out, crip, args.device)
-        check_offset(out, crip, args.device)
-        check_cdparanoia_cache(out, args.device)
+        ok, why = device_usable(args.device)
+        if not ok:
+            for n in ("cache-probe", "offset", "cdparanoia-cache"):
+                record(n, SKIP, why)
+        else:
+            check_cache_probe(out, crip, args.device)
+            check_offset(out, crip, args.device)
+            check_cdparanoia_cache(out, args.device)
     else:
         for n in ("cache-probe", "offset", "cdparanoia-cache"):
             record(n, SKIP, "no --device given, so no drive check ran")
