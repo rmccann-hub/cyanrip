@@ -186,7 +186,27 @@ def find_log(album):
     them -- and that is a real possibility, not a hypothetical: a line
     continuation followed by spaces stops continuing the line."""
     if not album.exists():
-        return None, f"{str(album)!r} does not exist"
+        # A dead end is not an answer. Album directories here carry characters
+        # a path cannot survive being retyped through -- this album's title
+        # holds U+2236 RATIO standing in for a colon -- so "does not exist" is
+        # far more often a transcription failure than a missing rip, and the
+        # operator has no way to tell which from that sentence alone. Name what
+        # IS beside it and the next command writes itself.
+        near = album.parent
+        if near.is_dir():
+            sibs = sorted(d.name for d in near.iterdir() if d.is_dir())
+            if sibs:
+                shown = ", ".join(repr(x) for x in sibs[:6])
+                more = f" (+{len(sibs) - 6} more)" if len(sibs) > 6 else ""
+                return None, (f"{str(album)!r} does not exist. {str(near)!r} "
+                              f"holds: {shown}{more} -- if one of those is the "
+                              "album, the name differs by characters a copy-paste "
+                              "cannot carry; select it with find rather than "
+                              "retyping it")
+            return None, (f"{str(album)!r} does not exist, and {str(near)!r} "
+                          "holds no directories at all")
+        return None, (f"{str(album)!r} does not exist, and neither does its "
+                      f"parent {str(near)!r}")
     if not album.is_dir():
         return None, f"{str(album)!r} is not a directory"
 
