@@ -82,7 +82,16 @@ the default would have reported 5 laps, passed, and seen neither.
 > state is compiled in, so this file changes the binary and the binary that
 > ships with it is always the commit after — but two commits have landed since,
 > so it can now, and a pin a verification must quote is worth naming twice.
-> Verified from a fresh clone: **38 of 38**, built and run rather than asserted. `ddf7ac3` stays stable and retained, so downgrade is possible.
+> Verified from a fresh clone: **38 of 38**, built and run rather than asserted.
+> `ddf7ac3` stays stable and retained, so downgrade is possible.
+>
+> **Installed on the rig 2026-08-12 17:40 and verified by your own installer** —
+> *"Platterpus fork of cyanrip (build + export) — commit 2ce8993 — installed —
+> built from commit 2ce8993"*, with `verify-cyanrip-fork` matching the built
+> banner against `platterpus-fork-g2ce8993`, and the operator confirming
+> afterwards: `~/.local/bin/cyanrip -V` → `cyanrip 0.9.4-rc1+platterpus.6-beta.4
+> (platterpus-fork-g2ce8993)`. So the pin is not a proposal any more; it is what
+> the rig is running.
 >
 > **What changed since beta.3, and it is only two things.** The binary differs
 > in exactly one line — `Handshake:` now reads `round 8 lap 7`, because this
@@ -646,12 +655,46 @@ drive, and §E is how it was checked. It failed. Said plainly.
   printed at the exact moment someone is trying to comply with it. The path form
   works; a symlink into `~/.local/bin` fixes one machine and nobody else's.
 
-  **The rest of that dialog is correct and worth saying so**, because this is
-  the first end-to-end evidence that the manifest mechanism works: it read seq
-  15 and `2ce8993` from `release-manifest.json`, named the installed release,
-  reported round 8 as **OPEN** from our compiled handshake state, and warned
-  that rips would report the ripper as unapproved until a round verifies it.
-  Every one of those is derived rather than hardcoded, and every one is right.
+  **Most of that dialog is right, and that is worth saying too**, because it is
+  the first end-to-end evidence the manifest mechanism works: it read seq 15 and
+  `2ce8993` out of `release-manifest.json`, reported round 8 as **OPEN** from
+  our compiled handshake state, and warned that rips would report the ripper
+  unapproved until a round verifies it — adding, correctly, that the audio is
+  unaffected. All derived rather than hardcoded. The installer then behaved
+  exactly as it should: it announced the commit was *"supplied on the command
+  line — NOT a pinned build"*, declined to predict a version string for a commit
+  it does not pin, and verified the built banner before declaring success.
+
+- **One field of that dialog disagrees with an artifact, and we cannot say which
+  is right.** Two quotes, one day apart, about the same machine:
+
+  ```
+  2026-08-11 17:29:12   0.6.11 session log, after
+                        `host-setup: /home/rmccann/.local/bin/cyanrip -V`
+      cyanrip 0.9.4-rc1+platterpus.6-beta.2 (platterpus-fork-g310dbd2)
+  ```
+  ```
+  2026-08-12            update dialog
+      … release 15 — you have release 11 (ddf7ac3).
+  ```
+
+  Release 11 is `ddf7ac3`; the session log says the installed binary was
+  `310dbd2`, which is release 13. **We are reporting the disagreement and not a
+  cause.** Those are separate claims and this project has already shipped a
+  correct finding attached to a wrong diagnosis.
+
+  A hypothesis, labelled as one and **not** established: the dialog may compare
+  against a *recorded pin* rather than the *installed binary*, and `310dbd2` was
+  installed with `--install-ripper` from the command line — which your own
+  installer calls *"NOT a pinned build"*. If that is it, the dialog can tell a
+  user they are running X while they are running Y, and that matters more than
+  the wrong number, because telling someone what they are running is the whole
+  job of that dialog.
+
+  **The live evidence is gone**, overwritten by the 2026-08-12 install, and that
+  is our fault for not asking a day earlier. `git -C
+  ~/.cache/platterpus/cyanrip-fork reflog` may still hold the checkout history.
+  If you can settle it from your side, that beats our reconstruction.
 - **Post-rip FLAC verification is single-threaded and need not be.** Measured
   here: 59× realtime per core, so a 60-minute album costs ~61 s serially and
   ~8 s across 8 cores. Ours is already one thread per output format, because
