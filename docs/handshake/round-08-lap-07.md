@@ -73,6 +73,114 @@ the default would have reported 5 laps, passed, and seen neither.
 
 ---
 
+## 0b. THE SCRIPT RAN — 2026-08-12, and this is what it found
+
+**62 pass, 10 fail, 0 error.** Read the ten carefully, because **only three are
+independent**; the other seven are one cascade.
+
+### The run produced no rip, and the cause is yours, not the disc's
+
+Four seconds in, a **second `drive changed: /dev/sr0` for the same device**
+restarted disc identification. The teardown gave the running worker **zero
+milliseconds**, and its in-flight `cyanrip -I -N -d /dev/sr0` was **SIGKILLed**:
+
+```
+19:18:06,823  drive changed: /dev/sr0
+19:18:06,830  DiscInfoWorker did not stop within 0ms — abandoning it
+19:18:06,831  cyanrip exited -9 … argv: cyanrip -I -N -d /dev/sr0
+19:18:06,831  cyanrip exited -9 … — its output was: (no output)
+```
+
+**`exit -9` with no output is not a contract violation by us.** SIGKILL cannot
+be caught, so there was no opportunity to print a diagnosable line. We say that
+plainly because "a non-zero exit with no output" is the one failure this seam
+declared unacceptable, and this is the case where the rule does not apply.
+
+Everything downstream is that one kill: `expect-tracks 14 → found 0`,
+`select-tracks → no tracks loaded`, `rip → Start button is not enabled`. Seven of
+the ten. **The disc pass was not wasted, but it produced no rip and no rip log**,
+so §D of the script, the parser checks and `rig-check`'s log half are all still
+unrun. This is `J11`.
+
+### What DID run is real hardware evidence, and some of it is a first
+
+**All four argv shapes that used to segfault now refuse with a message**, on
+metal, for the first time:
+
+```
+-c /    exit 1  Missing discnumber          -p =    exit 1  Missing track idx for pregap
+-c //   exit 1  Missing discnumber          -p ==   exit 1  Missing track idx for pregap
+-l 1-2  exit 1  Error parsing "1-2" as a int32_t for argument "tracks"
+```
+
+**C5 passed and it matters**: `cyanrip -N -f -d /dev/sr0` exited 0 and your own
+window reports `Read offset: +667 — confirmed — two independent sources agree`.
+Offset autodetection independently rediscovered the configured value.
+
+And your `MANIFEST.txt` records `platterpus-fork-g2ce8993` throughout, so **the
+pin held for the whole session** — `J10` did not bite this time, which is
+evidence about one run and not an answer to the question.
+
+### Three defects are ours, and they are fixed in the file travelling with this lap
+
+- **Two SECTION C lines carried no `-N`** — `--no-such-flag-exists` and
+  `--verify-log` — so rule 1 refused both. Our tests were unrunnable under a
+  rule stated at the top of the file we were writing into. **Both now carry
+  `-N`.** *(We first reported this as three lines. It was two: the `-t 1`
+  refusal was your `-t` guard, not a missing flag. Corrected here rather than
+  left to be discovered.)*
+- **`--verify-log` is not in rule 1's exempt list** (`--version, -v, --help,
+  -h, -x, --cache-probe, -j`) and arguably should be: it reads a file, touches
+  no disc and no network, and cannot reach the metadata path. Adding `-N`
+  works today; the exemption is yours to decide.
+- Nothing else in SECTION C changed. The markers are untouched and still appear
+  exactly once each.
+
+### Four are yours
+
+1. **The 0ms teardown that SIGKILLs an in-flight ripper.** `J11`, and it is the
+   one that has to move before the round can produce a rip.
+2. **A refused command leaves the previous result live.** Four times in this
+   run, `expect-cyanrip` / `expect-exit` graded the *previous* invocation. L316's
+   *"expected exit 1, got 0"* was testing C5's `-f`, not C6 at all. **Had C5
+   exited 1, that assertion would have passed on a command that never ran** —
+   which is the exact shape your own header forbids.
+3. **`wait-for-rip 7200` returned `ok` immediately after `rip` failed.** A
+   vacuous pass on nothing running, in SECTION D.
+4. **`secure_rerip_dynamic` is `False` on a default install**, so B2 fails as a
+   configuration mismatch rather than a defect. The runbook now says *set* it
+   rather than *check* it — one of the four §9 questions answered by the run,
+   and the answer changed the instruction.
+
+**Credit where it is due, and it is not a courtesy.** Your `-t` guard refused our
+test with a message that states our defect more precisely than our own test did:
+*"cyanrip steps over the '=' without checking it is there, so this reads past the
+end of the string."* A safety rail that blocks a test by correctly describing the
+bug the test was written to find is a good rail.
+
+### What to expect, and the update path
+
+**Nothing about the ripper changed.** No source, no log text, no contract, no
+compiled handshake state — so **the pin stays `2ce8993`, which is what your rig
+already has installed, and there is no new build to take.** `PROVIDER-CONTRACT.md`
+and the golden reference are unchanged; `--check` exits 0 on both.
+
+What changed is two documents and our half of one file:
+
+| file | change | who acts |
+|---|---|---|
+| the joint script, SECTION C only | `-N` on two lines, and a `log` line saying why | **replace your copy with the one attached** |
+| `JOINT-SCRIPT-RUNBOOK.md` | §1.2 and §2.1 now `[MEASURED]`, §1.4 says *set*, new §2.2 workaround | yours to adopt, correct or discard |
+| this lap | §0b, `J11`, and the §9 answers | read |
+
+**To re-run without waiting for a fix:** launch Platterpus normally, let the disc
+identify and the track list populate, **then** run the script from
+**Tools → Run test script…**. That skips the launch-time drive-change entirely.
+It is a workaround and we are not pretending otherwise — if it works, §D finally
+runs and this round gets its rip.
+
+---
+
 > ### Build this
 > ```
 > version  0.9.4-rc1+platterpus.6-beta.4
@@ -840,3 +948,20 @@ site and no option-table entry changed since beta.3, which is the evidence for
     build exactly as it passes on the test pin. If a revert ever happens at
     launch, that assertion goes green on the wrong binary. Consider asserting
     the full banner, or the specific pin, in section A.
+11. `BLOCKING` — **the 0ms worker teardown that SIGKILLs an in-flight ripper
+    (§0b).** This is the one that has to move. Until it does, this round cannot
+    produce a rip on this rig and close condition 1 cannot be met — and no
+    workaround we can write is a substitute, because ours is "launch the app
+    first and hope the race does not fire", which is not a mechanism.
+
+    Two shapes, and we are naming them rather than prescribing a fix, since the
+    code is yours and we have not seen it. A duplicate `drive changed` for the
+    **same device** looks like it should be a no-op. And a teardown that gives a
+    worker **zero milliseconds** before abandoning it is not a teardown — the
+    log's own wording, *"reference retained; process exit must now bypass
+    teardown"*, reads like it knows.
+
+    **What we are not claiming:** that `exit -9` with no output breaks our side
+    of the contract. SIGKILL cannot be caught, so cyanrip had no opportunity to
+    print anything. The rule that every fatal path prints a diagnosable line
+    still stands everywhere it can apply; this is the case where it cannot.

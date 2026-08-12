@@ -86,11 +86,12 @@ void."*
 ~/Applications/platterpus-x86_64.AppImage --help
 ```
 
-`[UNVERIFIED]` **We have never run `--run-script` and cannot.** The flag,
-its spelling, and whether 0.6.11 implements it at all come from the joint
-script's header line, which Platterpus wrote. If `--help` does not list it,
-**stop** — the file is unrunnable and that is a lap 8 answer, not an operator
-problem to work around.
+`[MEASURED]` **Answered by the 2026-08-12 run: `--run-script` exists and
+works.** The app log records *"unattended test script starting (--run-script)"*
+and *"ui script run starting: 72 step(s), unsafe verbs refused"*. There is also
+a GUI path — **Tools → Run test script…** — which opens a paste-and-Run console.
+Both reach the same runner. This was `[UNVERIFIED]` until the run; it is not any
+more.
 
 ### 1.3 Put the disc in the drive, first
 
@@ -113,10 +114,14 @@ expect secure_rerip_dynamic True
 expect secure_rerip_matches 2
 ```
 
-`[INFERRED]` If your configuration differs, B2 reports a failure that is a
-configuration mismatch and nothing else. Worth knowing before you read the
-transcript, because a red line there means something different from every other
-red line in the run.
+`[MEASURED]` **On this rig `secure_rerip_dynamic` is `False`, and B2 fails
+because of it** — *"expected secure_rerip_dynamic == True, got False"*. So this
+section was wrong to say "check": **set it before running**, in Settings, or the
+run reports a configuration mismatch as though it were a defect. `matches` was
+not reported failing, so 2 appears to be correct already.
+
+That is one of the four handoff questions in §9 answered by the run, and the
+answer changes the instruction rather than confirming it.
 
 ---
 
@@ -166,9 +171,30 @@ Platterpus's, so tightening it to the specific pin is theirs to decide.
 ~/Applications/platterpus-x86_64.AppImage --run-script /path/to/round-08-joint.txt
 ```
 
-`[UNVERIFIED]` No other options. Everything the session needs is inside the
-file — that is the design, and the reason it is one file rather than a
-procedure. Whether the runner takes any further flags is Platterpus's to say.
+`[MEASURED]` This is the exact form that ran on 2026-08-12. No other options
+were needed. Whether the runner takes further flags is still Platterpus's to say.
+
+### 2.2 IMPORTANT — launch first, identify the disc, THEN run the script
+
+`[MEASURED]` **The 2026-08-12 run produced no rip at all**, and the cause was not
+the disc, the drive or the ripper. Four seconds in, a second `drive changed:
+/dev/sr0` event for the *same device* restarted disc identification, the teardown
+gave the running worker **zero milliseconds**, and its in-flight `cyanrip -I -N
+-d /dev/sr0` was **SIGKILLed** — `exit -9`, no output, because SIGKILL cannot be
+caught. No disc identified, so no tracks, so the Start button stayed disabled,
+so `rip` failed and everything after it was void:
+
+```
+19:18:06,823  drive changed: /dev/sr0
+19:18:06,830  DiscInfoWorker did not stop within 0ms — abandoning it
+19:18:06,831  cyanrip exited -9 … argv: cyanrip -I -N -d /dev/sr0
+```
+
+`[INFERRED]` **So do not launch straight into the script.** Start Platterpus
+normally, wait until the track list is populated and the disc is identified, and
+only then run the script from **Tools → Run test script…**. That skips the
+launch-time drive-change entirely. It is a workaround, not a fix — the fix is
+Platterpus's, and it is `J11`.
 
 ---
 
