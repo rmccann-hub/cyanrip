@@ -627,11 +627,31 @@ drive, and §E is how it was checked. It failed. Said plainly.
   refuse — see §0. Ours would not have caught it either; that is why this is a
   finding about the seam and not about you.
 - **The update dialog prints `platterpus --install-ripper <sha>`**, which cannot
-  run on an AppImage install — `bash: platterpus: command not found`. **Three
-  times now**, the most recent while following this very lap's install line. It
-  is the only thing that has actually blocked the operator, and it is printed at
-  the exact moment someone is trying to comply with it. The path form works, and
-  a symlink into `~/.local/bin` fixes it for one machine and nobody else's.
+  run on an AppImage install — `bash: platterpus: command not found`. **Four
+  times now.** Verbatim, from the dialog that offered this very release:
+
+  ```
+  To install it:
+      platterpus --install-ripper 2ce8993
+  ```
+
+  and verbatim, from the shell immediately after:
+
+  ```
+  rmccann@bazzite:/var/home/rmccann$ platterpus --install-ripper 2ce8993
+  bash: platterpus: command not found
+  ```
+
+  It is the only thing that has ever actually blocked the operator, and it is
+  printed at the exact moment someone is trying to comply with it. The path form
+  works; a symlink into `~/.local/bin` fixes one machine and nobody else's.
+
+  **The rest of that dialog is correct and worth saying so**, because this is
+  the first end-to-end evidence that the manifest mechanism works: it read seq
+  15 and `2ce8993` from `release-manifest.json`, named the installed release,
+  reported round 8 as **OPEN** from our compiled handshake state, and warned
+  that rips would report the ripper as unapproved until a round verifies it.
+  Every one of those is derived rather than hardcoded, and every one is right.
 - **Post-rip FLAC verification is single-threaded and need not be.** Measured
   here: 59× realtime per core, so a 60-minute album costs ~61 s serially and
   ~8 s across 8 cores. Ours is already one thread per output format, because
