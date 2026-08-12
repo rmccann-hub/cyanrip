@@ -693,21 +693,37 @@ drive, and §E is how it was checked. It failed. Said plainly.
   finding was tempting — it was tidy and it fit — and it would have shipped a
   false accusation against a dialog that was telling the truth.
 
-- **What the reflog does show, and we are not diagnosing this one either.** Both
-  `+platterpus.6` betas were installed and then returned to `ddf7ac3`:
-  `cb440bd → ddf7ac3` at `HEAD@{3}`, and `310dbd2 → ddf7ac3` at `HEAD@{1}`.
-  Twice is a pattern rather than an accident, and a reflog cannot say whether
-  the operator did it or Platterpus did.
+- **What the reflog does show, with timestamps, and we are still not diagnosing
+  it.** Every checkout of that build tree, `--date=iso`:
 
-  **It bears on this round directly.** If something returns the ripper to the
-  handshake-approved build, `2ce8993` may not survive until the joint script
-  runs — and section D would then rip against `ddf7ac3` while section A's banner
-  claimed otherwise. That is hardware evidence about a build nobody is
-  reviewing, which is the failure round 7 spent ten test pins learning. `J10`,
-  and the runbook now carries a pin-survival check immediately before the run so
-  it cannot happen silently. `git reflog --date=iso` would timestamp those two
-  reverts and settle whether they were automatic; we are asking rather than
-  reconstructing.
+  ```
+  2026-08-12 17:40:43   ddf7ac3 -> 2ce8993     today's install
+  2026-08-12 17:37:28   310dbd2 -> ddf7ac3     <- reverted, 3m15s earlier
+  2026-08-11 17:22:20   ddf7ac3 -> 310dbd2     beta.2 installed
+  2026-08-10 21:55:59   cb440bd -> ddf7ac3     <- reverted, 80 min later
+  2026-08-10 20:35:05   ddf7ac3 -> cb440bd     beta.1 installed
+  ```
+
+  **Three properties, all measured.** Every revert lands on `ddf7ac3` and never
+  on anything else — and `ddf7ac3` is the handshake-approved build. No revert
+  follows its install closely; the gaps are 80 minutes and about 24 hours. And
+  the 2026-08-12 revert happened **three minutes and fifteen seconds before** the
+  operator's install command, inside the window where they were interacting with
+  the application — and immediately before the update dialog reported *"you have
+  release 11 (ddf7ac3)"*, which was true when it said it.
+
+  **Two explanations fit and we cannot choose between them from here.** Either
+  the operator returned to stable each time, or something in Platterpus restores
+  the approved build — at launch, during host-setup, or on some other trigger.
+  The first is unremarkable. The second would mean **a test pin cannot survive an
+  app launch**, which makes gathering hardware evidence against any beta
+  impossible by construction, and would explain in one stroke why round 7 needed
+  ten test pins.
+
+  We are not choosing. **The artifact that settles it is the Platterpus log
+  covering 2026-08-12 17:37**, under `~/.local/share/platterpus/`. That is
+  `J10`, it is blocking, and the runbook now carries a pin check immediately
+  before the run — which catches a substitution but does not explain one.
 - **Post-rip FLAC verification is single-threaded and need not be.** Measured
   here: 59× realtime per core, so a 60-minute album costs ~61 s serially and
   ~8 s across 8 cores. Ours is already one thread per output format, because
@@ -788,15 +804,22 @@ site and no option-table entry changed since beta.3, which is the evidence for
    with the values a default install has. **If a default install fails B2, the
    runbook should say to set them rather than to check them** — and only you can
    tell us which.
-10. `BLOCKING` — **does anything return the installed ripper to the
-    handshake-approved build?** The rig's build-tree reflog shows both
-    `+platterpus.6` betas installed and then moved back to `ddf7ac3` (§H).
-    Twice. We cannot tell from a reflog whether that was the operator or you.
+10. `BLOCKING` — **does anything in Platterpus return the installed ripper to
+    the handshake-approved build?** §H has the timestamped reflog. Three
+    reverts, every one landing on `ddf7ac3` and never on anything else, none
+    close to its own install, and the most recent **3m15s before** the operator's
+    install command and immediately before the dialog reported `ddf7ac3` — which
+    was true when it said it.
 
-    Blocking, with a named consequence rather than by default: if `2ce8993` does
-    not survive until the joint script runs, section D rips against `ddf7ac3`
-    while section A's banner says otherwise, and the round's only hardware
-    evidence describes a build nobody is reviewing. `git reflog --date=iso` on
-    that tree would timestamp the two reverts and answer it. Until it is
-    answered the runbook checks the pin immediately before the run, which
-    catches it but does not explain it.
+    Blocking, with a named consequence rather than by default. If a test pin
+    cannot survive an app launch, then **gathering hardware evidence against any
+    beta is impossible by construction**: section D would rip on `ddf7ac3` while
+    section A's banner claimed `2ce8993`, and the round's only hardware evidence
+    would describe a build nobody is reviewing. It would also explain, in one
+    stroke, why round 7 needed ten test pins.
+
+    **We are asking, not asserting** — the same discipline that just saved us
+    from shipping a false finding against your update dialog one message earlier.
+    The artifact that settles it is your log covering **2026-08-12 17:37**, under
+    `~/.local/share/platterpus/`. If it was the operator, say so and this closes
+    with nothing to fix.
