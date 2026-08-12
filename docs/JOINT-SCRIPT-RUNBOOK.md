@@ -47,8 +47,25 @@ a document about tests. The tests."*
 
 `[MEASURED]` The **path form is required**. `platterpus --install-ripper …` as
 printed by the update dialog gives `bash: platterpus: command not found` on an
-AppImage install — this has blocked the operator twice and is a finding against
-the dialog, in the lap's §H.
+AppImage install. **This has now blocked the operator three times**, which is
+what moves it from an annoyance to the single most expensive line in the
+product: it is printed at the exact moment someone is trying to follow an
+instruction, and it does not work. It is a finding against the dialog, in the
+lap's §H.
+
+If the AppImage is not where this runbook assumes, find it rather than guess:
+```
+ls ~/Applications/*.AppImage; command -v platterpus || echo 'not on PATH'
+```
+
+**Operator-side fix, so it stops recurring** — `~/.local/bin` is already on this
+rig's PATH, since `~/.local/bin/cyanrip` resolves there:
+```
+ln -sf ~/Applications/platterpus-x86_64.AppImage ~/.local/bin/platterpus
+```
+After that the dialog's own command works verbatim. This is a workaround on the
+operator's machine and **not a substitute for fixing the dialog** — anyone
+installing fresh hits it again, and they have no symlink.
 
 `[MEASURED]` `2ce8993` is `0.9.4-rc1+platterpus.6-beta.4`, ledger seq 15,
 channel `beta`. 38 of 38 green from a fresh clone of that exact commit, built

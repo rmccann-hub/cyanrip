@@ -627,8 +627,11 @@ drive, and §E is how it was checked. It failed. Said plainly.
   refuse — see §0. Ours would not have caught it either; that is why this is a
   finding about the seam and not about you.
 - **The update dialog prints `platterpus --install-ripper <sha>`**, which cannot
-  run on an AppImage install — `bash: platterpus: command not found`. It is the
-  only thing that has actually blocked the operator, twice. The path form works.
+  run on an AppImage install — `bash: platterpus: command not found`. **Three
+  times now**, the most recent while following this very lap's install line. It
+  is the only thing that has actually blocked the operator, and it is printed at
+  the exact moment someone is trying to comply with it. The path form works, and
+  a symlink into `~/.local/bin` fixes it for one machine and nobody else's.
 - **Post-rip FLAC verification is single-threaded and need not be.** Measured
   here: 59× realtime per core, so a 60-minute album costs ~61 s serially and
   ~8 s across 8 cores. Ours is already one thread per output format, because
