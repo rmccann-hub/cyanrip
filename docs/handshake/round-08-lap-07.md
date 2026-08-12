@@ -821,5 +821,22 @@ site and no option-table entry changed since beta.3, which is the evidence for
     **We are asking, not asserting** — the same discipline that just saved us
     from shipping a false finding against your update dialog one message earlier.
     The artifact that settles it is your log covering **2026-08-12 17:37**, under
-    `~/.local/share/platterpus/`. If it was the operator, say so and this closes
-    with nothing to fix.
+    `~/.local/share/platterpus/`.
+
+    **The operator has now said they did not revert intentionally.** That is one
+    of the two explanations gone, and it leaves the other standing without
+    confirming it — an operator can revert something without meaning to, and a
+    reflog cannot tell the difference. So it stays a question rather than
+    becoming a finding.
+
+    **It does not block the run**, and we said so rather than holding the round
+    for it: the pin is verified in place, the runbook checks it immediately
+    before and immediately after the session, and the full banner is recorded in
+    the transcript by section A regardless. A substitution would be *visible*.
+
+    **But it is not asserted, and that part is yours.** Section A's
+    `expect-cyanrip platterpus-fork` is an identity check, not a pin check —
+    `ddf7ac3` is also a `platterpus-fork` build, so it passes on the approved
+    build exactly as it passes on the test pin. If a revert ever happens at
+    launch, that assertion goes green on the wrong binary. Consider asserting
+    the full banner, or the specific pin, in section A.

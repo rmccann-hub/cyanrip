@@ -147,6 +147,19 @@ If it has reverted, reinstall before running:
 ~/Applications/platterpus-x86_64.AppImage --install-ripper 2ce8993
 ```
 
+**And run the same command again the moment the script finishes.** Before and
+after is a complete guard where before alone is not: if both say `2ce8993`, no
+substitution happened at any point during the session and the transcript
+describes the build it claims to. One second, twice.
+
+`[SCRIPT]` **The script cannot catch this itself, and that is worth knowing.**
+Section A asserts `expect-cyanrip platterpus-fork`, which is an identity check,
+not a pin check — `ddf7ac3` is also a `platterpus-fork` build, so that
+assertion passes on the approved build just as happily as on the test pin. The
+full banner *is* recorded in the transcript either way, so a substitution is
+visible to anyone reading it; it is simply not asserted. Section A is
+Platterpus's, so tightening it to the specific pin is theirs to decide.
+
 ### 2.1 Then run it
 
 ```
