@@ -111,11 +111,35 @@ the default would have reported 5 laps, passed, and seen neither.
 > marker, both of which were correct. `tools/gen-golden-reference.py --check` is
 > new, is now a `meson test`, and re-runs the canonical rip and diffs it.
 
-> ### The one file that travels with this lap
-> **The joint script, with SECTION C filled in — C1 through C6.** It *is* the
+> ### Two files travel with this lap
+> **1. The joint script, with SECTION C filled in — C1 through C6.** It *is* the
 > test run, not a document about tests. Nothing above or below the
 > `>>> CYANRIP TESTS BEGIN >>>` / `<<< CYANRIP TESTS END <<<` markers was
 > touched, asserted by byte comparison rather than by care.
+>
+> **2. `docs/JOINT-SCRIPT-RUNBOOK.md` — new, a draft, and yours.** The operator
+> asked how to run the script and what options it needs, and there was no
+> written answer anywhere. So there is one now. **It is entirely about your
+> application** — your runner, your sections A, B and D, your settings names,
+> your transcript directory — which is why it is a draft handed over rather than
+> a document we maintain. §9 of it is the handoff: four `[UNVERIFIED]` claims,
+> each a yes/no, listed separately so your verification pass is mechanical.
+>
+> **Every line in it is tagged with where the claim came from** — `[SCRIPT]`
+> quoted from your file, `[MEASURED]` run by us, `[INFERRED]` derived from
+> something above, `[UNVERIFIED]` asserted and uncheckable from here. You only
+> need to read the last kind. That tagging is the whole reason to send a draft
+> instead of a list of questions: a question makes you write the answer, a
+> tagged draft makes you correct four lines.
+>
+> **On adoption it moves to `docs/rig-scripts/` beside the script and our copy
+> is deleted.** One place, nowhere else, the same rule the script imposes on
+> itself. Until you adopt it, ours is the only copy and it is marked DRAFT at
+> the top so nobody mistakes it for settled.
+>
+> **Send it back changed rather than commented on.** A correction we apply
+> ourselves is a second implementation of your intent, and this seam exists
+> because those drift silently.
 >
 > **It lives at `docs/rig-scripts/` in *your* repository, not ours, and we are
 > deliberately not keeping a second copy.** The file's own header says one place
@@ -671,3 +695,17 @@ site and no option-table entry changed since beta.3, which is the evidence for
 8. `NEXT-ROUND` — **do you apply the AccurateRip lead/tail skip, and against
    what did you test it?** §F's last item shows this disc cannot tell a correct
    implementation from a missing one.
+9. `BLOCKING` — **verify and take ownership of `JOINT-SCRIPT-RUNBOOK.md`.**
+   Blocking, and the justification is concrete rather than "it would be good to
+   have": close condition 1 is *the joint script runs on the rig*, and until §1.2
+   is answered **nobody knows whether it can be run at all.** We have never
+   invoked `--run-script`, so the command at the centre of this round's only
+   hardware evidence is an unverified claim quoted from your header.
+
+   The four questions are in §9 of the runbook and each is a yes/no: does
+   `--run-script` exist in 0.6.11 spelled that way; is the transcript path
+   right; does the runner take other options the operator should know; and are
+   `secure_rerip_dynamic` / `secure_rerip_matches` the right `config.toml` names
+   with the values a default install has. **If a default install fails B2, the
+   runbook should say to set them rather than to check them** — and only you can
+   tell us which.
