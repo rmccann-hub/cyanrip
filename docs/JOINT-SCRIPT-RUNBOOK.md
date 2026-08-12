@@ -122,6 +122,33 @@ red line in the run.
 
 ## 2. Run it
 
+### 2.0 First: confirm the pin survived
+
+```
+~/.local/bin/cyanrip -V
+```
+
+`[MEASURED]` Must still say `platterpus-fork-g2ce8993`. **Check this immediately
+before the run, not once at the start of the day.**
+
+`[MEASURED]` The reason is in the rig's own build-tree reflog: both earlier
+`+platterpus.6` betas were installed and then moved back to `ddf7ac3` —
+`cb440bd → ddf7ac3`, and `310dbd2 → ddf7ac3`. Twice.
+
+`[UNVERIFIED]` **Whether that was the operator or Platterpus, we do not know.**
+It is `J10` of the lap. What matters here is the consequence: if the pin has
+reverted by the time section D rips, the transcript's section A banner says one
+build and the rip happened on another, and the round's hardware evidence
+describes a build nobody is reviewing. This check costs one second and is the
+only thing standing between that and a silent invalidation.
+
+If it has reverted, reinstall before running:
+```
+~/Applications/platterpus-x86_64.AppImage --install-ripper 2ce8993
+```
+
+### 2.1 Then run it
+
 ```
 ~/Applications/platterpus-x86_64.AppImage --run-script /path/to/round-08-joint.txt
 ```

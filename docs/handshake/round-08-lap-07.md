@@ -665,36 +665,49 @@ drive, and §E is how it was checked. It failed. Said plainly.
   line — NOT a pinned build"*, declined to predict a version string for a commit
   it does not pin, and verified the built banner before declaring success.
 
-- **One field of that dialog disagrees with an artifact, and we cannot say which
-  is right.** Two quotes, one day apart, about the same machine:
+- **A finding we filed and then refuted within the hour, using evidence you
+  produced. The dialog was right and we were wrong.** We reported that its
+  *"you have release 11 (ddf7ac3)"* disagreed with a session log showing
+  `310dbd2` installed the evening before, and offered a hypothesis — labelled a
+  hypothesis — that it might compare a *recorded pin* rather than the
+  *installed binary*.
+
+  `git -C ~/.cache/platterpus/cyanrip-fork reflog` settles it, newest first as
+  git prints it:
 
   ```
-  2026-08-11 17:29:12   0.6.11 session log, after
-                        `host-setup: /home/rmccann/.local/bin/cyanrip -V`
-      cyanrip 0.9.4-rc1+platterpus.6-beta.2 (platterpus-fork-g310dbd2)
-  ```
-  ```
-  2026-08-12            update dialog
-      … release 15 — you have release 11 (ddf7ac3).
+  2ce8993 HEAD@{0}: checkout: moving from ddf7ac3… to 2ce8993
+  ddf7ac3 HEAD@{1}: checkout: moving from 310dbd2… to ddf7ac3
+  310dbd2 HEAD@{2}: checkout: moving from ddf7ac3… to 310dbd2
+  ddf7ac3 HEAD@{3}: checkout: moving from cb440bd… to ddf7ac3
+  cb440bd HEAD@{4}: checkout: moving from ddf7ac3… to cb440bd
   ```
 
-  Release 11 is `ddf7ac3`; the session log says the installed binary was
-  `310dbd2`, which is release 13. **We are reporting the disagreement and not a
-  cause.** Those are separate claims and this project has already shipped a
-  correct finding attached to a wrong diagnosis.
+  **The tree really was at `ddf7ac3` when the dialog spoke.** `310dbd2` had been
+  checked out and then moved back to `ddf7ac3` at `HEAD@{1}`, before the dialog
+  ran. There is no defect. **The hypothesis is withdrawn and so is the finding.**
 
-  A hypothesis, labelled as one and **not** established: the dialog may compare
-  against a *recorded pin* rather than the *installed binary*, and `310dbd2` was
-  installed with `--install-ripper` from the command line — which your own
-  installer calls *"NOT a pinned build"*. If that is it, the dialog can tell a
-  user they are running X while they are running Y, and that matters more than
-  the wrong number, because telling someone what they are running is the whole
-  job of that dialog.
+  The episode stays in rather than being deleted, because the process is the
+  point: the disagreement was filed as a *disagreement*, the cause as a
+  *hypothesis*, and only the hypothesis died. Filing the diagnosis as the
+  finding was tempting — it was tidy and it fit — and it would have shipped a
+  false accusation against a dialog that was telling the truth.
 
-  **The live evidence is gone**, overwritten by the 2026-08-12 install, and that
-  is our fault for not asking a day earlier. `git -C
-  ~/.cache/platterpus/cyanrip-fork reflog` may still hold the checkout history.
-  If you can settle it from your side, that beats our reconstruction.
+- **What the reflog does show, and we are not diagnosing this one either.** Both
+  `+platterpus.6` betas were installed and then returned to `ddf7ac3`:
+  `cb440bd → ddf7ac3` at `HEAD@{3}`, and `310dbd2 → ddf7ac3` at `HEAD@{1}`.
+  Twice is a pattern rather than an accident, and a reflog cannot say whether
+  the operator did it or Platterpus did.
+
+  **It bears on this round directly.** If something returns the ripper to the
+  handshake-approved build, `2ce8993` may not survive until the joint script
+  runs — and section D would then rip against `ddf7ac3` while section A's banner
+  claimed otherwise. That is hardware evidence about a build nobody is
+  reviewing, which is the failure round 7 spent ten test pins learning. `J10`,
+  and the runbook now carries a pin-survival check immediately before the run so
+  it cannot happen silently. `git reflog --date=iso` would timestamp those two
+  reverts and settle whether they were automatic; we are asking rather than
+  reconstructing.
 - **Post-rip FLAC verification is single-threaded and need not be.** Measured
   here: 59× realtime per core, so a 60-minute album costs ~61 s serially and
   ~8 s across 8 cores. Ours is already one thread per output format, because
@@ -775,3 +788,15 @@ site and no option-table entry changed since beta.3, which is the evidence for
    with the values a default install has. **If a default install fails B2, the
    runbook should say to set them rather than to check them** — and only you can
    tell us which.
+10. `BLOCKING` — **does anything return the installed ripper to the
+    handshake-approved build?** The rig's build-tree reflog shows both
+    `+platterpus.6` betas installed and then moved back to `ddf7ac3` (§H).
+    Twice. We cannot tell from a reflog whether that was the operator or you.
+
+    Blocking, with a named consequence rather than by default: if `2ce8993` does
+    not survive until the joint script runs, section D rips against `ddf7ac3`
+    while section A's banner says otherwise, and the round's only hardware
+    evidence describes a build nobody is reviewing. `git reflog --date=iso` on
+    that tree would timestamp the two reverts and answer it. Until it is
+    answered the runbook checks the pin immediately before the run, which
+    catches it but does not explain it.
