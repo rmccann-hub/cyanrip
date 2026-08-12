@@ -1,3 +1,34 @@
+0.9.4-rc1+platterpus.6-beta.4 (2026-08-11) -- PRE-RELEASE
+=========================================================
+Released at `2ce8993`, published as `release-manifest.json` seq 15, channel
+`beta`. `0.9.4-rc1+platterpus.5` (`ddf7ac3`) remains stable and retained.
+
+**The binary differs from beta.3 in exactly one line.** `Handshake:` now reads
+`round 8 lap 7`, because the handshake state is compiled in and the round was
+renumbered. `PROVIDER-CONTRACT.md` regenerates with no content delta beyond the
+version, which is the evidence for that rather than the claim itself.
+
+ - **Round 9 is folded back into round 8, and round 9 is deleted.** It was
+   opened in this tree and never sent; neither was the lap 5 that withdrew round
+   8. From the consumer's side the record has always been round 8, laps 1 and 3,
+   so two unclosed rounds was our bookkeeping and not a fact about the seam.
+   `round-08-lap-05.md` is **not** edited, merged or deleted -- its `WITHDRAWN`
+   verdict is superseded by lap 7's `OPEN`, which is the mechanism `PROTOCOL.md`
+   already provides. Laps 1 and 3 are untouched because they were sent.
+ - **The release-gate deadlock reported in beta.3 is gone as a consequence, not
+   as a fix.** With no round in a `WITHDRAWN` state the gate sees one open
+   round, which is normal. The protocol hole is unchanged and real -- the next
+   use of `WITHDRAWN` hits it -- so it survives as a next-round question with a
+   protocol-2 proposal rather than a one-sided patch.
+ - **Everything the seam needs is now one file**, `docs/handshake/round-08-lap-07.md`:
+   the retraction, the close conditions and deadline, the EAC parity measurement
+   across seven independent read sessions, the log-format delta, the cache
+   probe, seven of our own defects with a disposition each, the revert-proof
+   table, findings in the consumer's output, the contract, and eight questions.
+
+Suite: **38 of 38 green from a fresh clone at `2ce8993`**, verified by cloning
+and building rather than asserted.
+
 0.9.4-rc1+platterpus.6-beta.3 (2026-08-11) -- PRE-RELEASE
 =========================================================
 Released at `7ac6820`, published as `release-manifest.json` seq 14, channel
