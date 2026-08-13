@@ -133,6 +133,35 @@ evidence about one run and not an answer to the question.
   -h, -x, --cache-probe, -j`) and arguably should be: it reads a file, touches
   no disc and no network, and cannot reach the metadata path. Adding `-N`
   works today; the exemption is yours to decide.
+- **C3's assertion could never have matched, and the reason is your runner.**
+  cyanrip prints `Missing "=" in track metadata "1"` — we asserted that string
+  verbatim, quotes and all. Your own error reported it back as
+  *'Missing = in track metadata'*: **the double quotes were stripped before
+  comparing.** The script language appears to have no way to express a literal
+  `"`, so that assertion was unmatchable however the guard behaved. Ours is now
+  quote-free (`in track metadata`), which is weaker than we would like and is
+  the best the language allows. Worth a look — an assertion that cannot express
+  the string it needs is a gap in the language, not in the test.
+
+- **And your `-t` guard now blocks a defect that no longer exists.** It refuses
+  with *"cyanrip steps over the '=' without checking it is there, so this reads
+  past the end of the string"*. **Measured on the pinned build, just now, on
+  four shapes:**
+
+  ```
+  -t 1              exit 1   Missing "=" in track metadata "1"
+  -t ''             exit 1   Invalid track number 0, list has 2 tracks!
+  -t =x             exit 1   Invalid track number 0, list has 2 tracks!
+  -t 999=title=X    exit 1   Invalid track number 999, list has 2 tracks!
+  ```
+
+  Every one refuses with a diagnosable line and a non-zero exit. The overread
+  was fixed in round 7 lap 32 and shipped; your guard predates that and is now
+  preventing the regression test for a fix you did not know had landed. **We are
+  not asking you to remove it** — a guard that refuses a shape it believes
+  dangerous is behaving correctly on the information it has. We are supplying
+  the information.
+
 - Nothing else in SECTION C changed. The markers are untouched and still appear
   exactly once each.
 
@@ -965,3 +994,22 @@ site and no option-table entry changed since beta.3, which is the evidence for
     of the contract. SIGKILL cannot be caught, so cyanrip had no opportunity to
     print anything. The rule that every fatal path prints a diagnosable line
     still stands everywhere it can apply; this is the case where it cannot.
+12. `BLOCKING` — **how does the operator clear the previous run's artifacts
+    before we try again?** There is now one transcript directory, an app log, a
+    diagnostics record and a partial rig-check output from a run that produced
+    no rip, and the next run must not be read against them. We do not know
+    which of those are safe to delete, which the app expects to find on the
+    next launch, or whether any of it is load-bearing — so we are not
+    guessing and we are not writing an `rm` for somebody else's application.
+
+    **Give the operator a command, or a menu path, or a plain statement that
+    nothing needs clearing.** Any of the three closes this. What cannot stand
+    is the current state, where a second run's transcript sits beside a first
+    run's in a directory named by timestamp and the only thing distinguishing
+    them is that somebody remembers which is which.
+
+13. `NEXT-ROUND` — **is there a way to run one section?** §D is the only part
+    that has never executed. Re-running A through C to reach it costs the disc
+    time twice and re-runs tests that already passed. Not blocking — we will
+    run the whole file if that is the only way — but if a range or a resume
+    exists it changes what a retry costs.
