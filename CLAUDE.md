@@ -208,6 +208,60 @@ regardless of who is at the keyboard.
   cannot collide. It also leaves one number rather than two: there is no "r2 vs
   rc1" to reconcile.
 
+### Who goes first — settled 2026-08-13, both sides asked simultaneously
+
+The operator put "who starts?" to both projects at once, without either seeing
+the other's answer. That is the best available test of a shared convention, and
+it produced one real disagreement worth keeping.
+
+> **cyanrip opens. By default, every time.**
+
+**Platterpus's argument is stronger than the one we gave and we are adopting
+theirs.** We reasoned from ownership — the side that can *measure* a surface
+should speak before the side that can only infer it — and ranked dependency
+direction third. They reasoned that **only the provider can mint the unit of
+work**: a round is a decision about a pin, S-15 freezes the pin once the round
+starts, and you cannot open a round against a commit that does not exist. That
+is not a tiebreak, it is constitutive. Ours was a good rule about *who is
+credible*; theirs is a fact about *what a round is*.
+
+Two supporting facts, both checkable rather than argued: their setup wizard
+installs our pinned commit, so a Platterpus release cut first would ship an
+installer for a build nobody agreed on; and when upstream moved `-V` to `-v`
+they shipped four call sites against the old flag while our table already
+recorded the change — a consumer that moves first is guessing at what it will
+receive.
+
+**The general form, which both sides stated independently and in nearly the same
+words:** whoever is *asking* for a change goes first; whoever is *being asked to
+trust it* goes last. The one making the claim writes it down, the other
+verifies, never the reverse. A claim checked by its own author is the
+two-related-witnesses failure that cost a whole session of cross-build diffing.
+
+**And the gap their rule leaves, which is ours to remember because it bit us the
+day it was written.** Their one exception — a new requirement starts with
+Platterpus, because a provider cannot implement an unstated need — is filed as
+*"an ask, and it belongs to the next round, not the one in flight."* That is
+right for a *requirement* and wrong for a *blocker*. Round 8's `J11` is a
+Platterpus defect that prevents this round from producing the rip its own close
+condition 1 requires. Deferring it to the next round means the round cannot
+close, cannot be extended into one that can, and expires. So:
+
+> **Round opening is always cyanrip. Within a round, if one side's defect
+> prevents the other from producing the evidence the round needs, the blocker
+> goes first regardless of who opened.**
+
+Their own caveat contains this without naming it: for a rig run *they* drive the
+script and hold the evidence, so within a lap the reporting direction is already
+theirs. Ordering a round and ordering the work inside one are two questions, and
+conflating them is what made our two answers look opposed when only one of them
+was actually about round initiation.
+
+**Not yet in `seam-rules.md`.** It belongs there, it is a shared file neither
+project owns, and it goes in at the next version bump shipped by both sides on
+the same day. Restated here meanwhile because it changes what we do tomorrow —
+same reason the `[BOTH]` rules below are restated.
+
 ### Which project owns what
 
 Proposed to Platterpus in round 5 §0 and built to since. It decides what belongs
