@@ -58,8 +58,12 @@ void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...)
 static void expect(crip_cache_stop_t stop, int last_hit, int stop_run,
                    int64_t miss_us, const char *want)
 {
-    char got[160];
-    crip_cache_probe_line(got, sizeof(got), stop, last_hit, stop_run, miss_us);
+    char got[224];
+    /* -1/-1: no read was classified, which is the shape every pre-2026-08-13
+     * caller had. Kept as the default so the existing nine wordings are
+     * asserted unchanged, and the evidence clause is exercised separately. */
+    crip_cache_probe_line(got, sizeof(got), stop, last_hit, stop_run, miss_us,
+                          -1, -1);
     if (strcmp(got, want)) {
         printf("FAIL: stop=%i last_hit=%i stop_run=%i\n  want: %s\n  got:  %s\n",
                (int)stop, last_hit, stop_run, want, got);
@@ -114,10 +118,44 @@ int main(void)
     expect(CRIP_CACHE_TIME_FAIL, 0, 2, MS364,
            "unknown (read could not be timed at 2 sectors, before any cache hit)");
 
+    /* The evidence clause. The line used to report the calibration read and
+     * nothing about the reads it CLASSIFIED, so a reader saw a verdict with
+     * half its comparison missing -- and on 2026-08-11 that hid a 342.9 ms
+     * threshold that every ~2 ms test read beat, making every run a "hit" to
+     * the search ceiling. These assert the ratio now reaches the artifact. */
+    {
+        char ev[224];
+        crip_cache_probe_line(ev, sizeof(ev), CRIP_CACHE_CEILING, 2048, 2048,
+                              342900, 2200, -1);
+        if (!strstr(ev, "uncached read 342.9 ms") ||
+            !strstr(ev, "cached read 2.2 ms")) {
+            printf("FAIL: both sides of the comparison must be in the line: %s\n", ev);
+            fails++;
+        }
+
+        /* A miss ends the search, so there is a stop timing and it is the one
+         * that matters -- naming it "cached" would be exactly backwards. */
+        crip_cache_probe_line(ev, sizeof(ev), CRIP_CACHE_MISS, 32, 64,
+                              342900, -1, 120000);
+        if (!strstr(ev, "first uncached re-read 120.0 ms")) {
+            printf("FAIL: the stop timing must be reported and not called cached: %s\n", ev);
+            fails++;
+        }
+
+        /* Nothing classified: no clause at all, rather than a fabricated 0.0. */
+        crip_cache_probe_line(ev, sizeof(ev), CRIP_CACHE_SHORT_DISC, 0, 0,
+                              0, -1, -1);
+        if (strstr(ev, "ms")) {
+            printf("FAIL: a timing was reported for a probe that timed nothing: %s\n", ev);
+            fails++;
+        }
+    }
+
     /* The retired wording, asserted absent rather than merely not asserted:
      * "N sectors measured" is the claim the method cannot support. */
-    char line[160];
-    crip_cache_probe_line(line, sizeof(line), CRIP_CACHE_MISS, 32, 64, MS364);
+    char line[224];
+    crip_cache_probe_line(line, sizeof(line), CRIP_CACHE_MISS, 32, 64, MS364,
+                          -1, -1);
     if (strstr(line, "sectors measured")) {
         printf("FAIL: the bracket line still claims to have measured a size: %s\n",
                line);

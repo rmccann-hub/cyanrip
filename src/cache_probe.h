@@ -54,6 +54,14 @@ typedef enum {
  *
  * last_hit is the largest run that still hit, stop_run the run the search
  * stopped at, and miss_cost_us the calibrated uncached read. Fields a given
- * outcome does not use are ignored. */
+ * outcome does not use are ignored.
+ *
+ * last_hit_us and stop_us are the timings of the reads the probe CLASSIFIED --
+ * the last one it called cached, and the one that ended the search. Pass -1
+ * for either that does not apply. They exist because the line used to report
+ * miss_cost_us alone, which is one side of a two-sided comparison: a reader
+ * could see the verdict and not the evidence, and could not tell a real cache
+ * from a threshold every read beats. */
 void crip_cache_probe_line(char *buf, size_t buf_size, crip_cache_stop_t stop,
-                           int last_hit, int stop_run, int64_t miss_cost_us);
+                           int last_hit, int stop_run, int64_t miss_cost_us,
+                           int64_t last_hit_us, int64_t stop_us);
