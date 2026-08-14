@@ -394,7 +394,20 @@ repo has been a word doing more work than the evidence behind it:
    inventory". "16/16 tests pass" is not "the feature works on hardware".
 4. **Check what the absence means.** If a field can be missing for two different
    reasons, it must say which — or say that it cannot tell.
-5. **Ask what a reader would be entitled to conclude**, then confirm the
+5. **Check what the field's *age* means.** A record must never present one
+   timestamp for data of two different ages. This is the same defect as (4) one
+   axis over, and it is the one this project shipped without noticing: a
+   superseded track's `creation_time` in our log describes **the read that was
+   thrown away**, and the addendum that supersedes it carries no timestamp at
+   all — so for tracks 3 and 5 of the reference disc, the only time recorded
+   anywhere is the time of audio that is no longer on disk. Found 2026-08-13 by
+   checking our artifacts against an external reference on freshness signalling
+   (*"UI/UX & Accessibility Standards for Line-of-Business Web Applications
+   2024–2026"*, §6, held by the operator), which states the general form:
+   **event time and processing time are two independent ages and collapsing
+   them is the exact failure mode that misleads an operator.** Ours is a record
+   rather than a dashboard; the rule survives the change of medium intact.
+6. **Ask what a reader would be entitled to conclude**, then confirm the
    evidence entitles them to conclude exactly that, no more.
 
 When a word is imprecise but frozen by the contract — `Ripping errors:` counts

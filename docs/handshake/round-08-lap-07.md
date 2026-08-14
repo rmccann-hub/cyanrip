@@ -867,6 +867,34 @@ drive, and §E is how it was checked. It failed. Said plainly.
   FFmpeg's FLAC and MP3 encoders report `Threading capabilities: none`.
 - Minor: `Appended silence … because the drive could not read that far` — the
   fact is ours and supported; the cause is your inference.
+- **A superseded track has no recorded read time anywhere, and neither of us
+  noticed.** Found 2026-08-13 by checking our own artifacts against an external
+  reference on freshness signalling, and it is a defect in the *joint* record
+  rather than in either program:
+
+  - our album log gives each track a `creation_time` — for track 5 of the
+    2026-08-07 rip, `2026-08-07T17:56:15`. That describes the **first pass**,
+    the `E0036697` read.
+  - your addendum supersedes that track with `6902BCF0` and **carries no
+    timestamp at all** — we checked; there is not one anywhere in the file.
+
+  So the only time recorded for track 5 is the time of **audio that is no longer
+  on disk.** A reader combining the two artifacts gets one timestamp for data of
+  two different ages, which is the precise failure mode the freshness literature
+  names: *"a fresh refresh of stale source data is the exact failure mode that
+  misleads operators."*
+
+  **The datum exists — you already have it.** Your re-read is a cyanrip
+  invocation and it writes its own `creation_time`. Nothing new has to be
+  measured; the addendum simply has to carry forward the read time of the audio
+  it is describing. That makes it yours, and we are naming it rather than
+  proposing a format.
+
+  We have written the general rule into our own `CLAUDE.md` as a sibling of the
+  `none` / `unknown (reason)` rule, because it is the same defect one axis over:
+  **if a field can be missing for two reasons it must say which, and if a record
+  can describe data of two ages it must say which.**
+
 - **Nothing else.** Said out loud.
 
 ## I. Provider contract
@@ -1013,3 +1041,10 @@ site and no option-table entry changed since beta.3, which is the evidence for
     time twice and re-runs tests that already passed. Not blocking — we will
     run the whole file if that is the only way — but if a range or a resume
     exists it changes what a retry costs.
+14. `NEXT-ROUND` — **can the addendum carry the read time of the audio it
+    describes?** §H. Not blocking: nothing about the current round's evidence
+    depends on it, and no rip is invalidated by it. But every superseded track
+    ever written by this pair currently has one timestamp on record and it
+    belongs to the discarded read — and unlike most of what we trade, this one
+    cannot be recovered later. The read time of a rip that happened in August is
+    not derivable in September from anything on disk.
