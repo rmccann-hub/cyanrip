@@ -6,7 +6,7 @@ stale silently, which is the failure this file exists to prevent.
 
 Build: `cyanrip 0.9.4-rc1+platterpus.6-beta.4 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = 7852f4b6b0cc6ef6` over `src/*.c` and
+**Source anchor:** `sha256/16 = fc7d68f4b6b1ffba` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -141,7 +141,7 @@ requires a handshake round.
 | `accurip.c:137` | `Unable to get AccuRIP DB data: %s%s` |
 | `accurip.c:140` | `Unable to get AccuRIP DB data: %s!` |
 | `accurip.c:176` | `AccuRIP DB data error, got unexpected number of bytes!` |
-| `cache_probe.c:218` | `Cache probe:    %s` |
+| `cache_probe.c:232` | `Cache probe:    %s` |
 | `coverart.c:34` | `Cover art has no packet!` |
 | `coverart.c:51` | `Unable to init lavf context: %s!` |
 | `coverart.c:57` | `Unable to alloc stream!` |

@@ -48,14 +48,44 @@ a *short backseek* (2.22 ms/sector on the same drive). The threshold is
 `miss_cost / 4` = 86 ms, so every short backseek scores as a hit and the search
 runs to its ceiling.
 
-**Not fixed because round 8 lap 7 committed that the pin would not move again
-this round.** Honouring that costs nothing — the line is bounded and
-self-disclosing, `upper bound unknown, search ceiling reached` claims nothing
-false. Next round.
+**Diagnosis re-derived from the source 2026-08-13** rather than trusted from the
+earlier claim, because both this file and lap 7 assert it: calibration is
+`probe_read(end_lsn - 10)` then `time_one_read(start_lsn + 1000)` — a full
+stroke — while the loop's test read is a short backseek, and the hit test is
+`t * CACHE_HIT_RATIO < miss_cost` with the ratio at 4. It holds.
 
-**What would settle it:** calibrate `miss_cost` from a backseek of the same
-distance as the test read, then re-run on the rig and compare against
-`cd-paranoia -A` on the same drive and disc.
+**Half-fixed 2026-08-13.** The line reported the calibration read and nothing
+about the reads it *classified* — one side of a two-sided comparison, so a
+reader saw a verdict with half its evidence missing. It now carries both, so
+`uncached read 342.9 ms, cached read 2.2 ms` states its own implausibility in
+the artifact instead of requiring someone to reason about the source.
+
+**The calibration itself is still wrong and is deliberately not fixed.** It
+needs a backseek-based `miss_cost`, there is no drive here to verify one
+against, and the last prediction made about this exact code was falsified on
+hardware. Shipping a second unverifiable probe would repeat the mistake.
+
+**What would settle it:** one rig run on the new line. If it prints an uncached
+read in the hundreds of milliseconds beside a cached read of a few, the
+diagnosis is confirmed from the artifact and the fix is arithmetic. That is the
+whole reason the evidence clause was added first.
+
+### The provider contract cannot see composed log lines
+
+`PROVIDER-CONTRACT.md` records `Cache probe:    %s` and **none of the nine
+wordings that actually reach the log.** The document exists so the contract
+"cannot describe behaviour we do not have", and on this line it describes
+nothing at all — a consumer reading it learns a `%s`.
+
+The machinery exists: `gen-provider-contract.py` already rebuilds one composed
+line from the `snprintf` calls that fill its buffer. It is not applied here.
+
+**Not urgent** — the nine wordings are pinned by `tests/cacheprobe.c`, so they
+cannot drift silently; they are simply absent from the document Platterpus
+reads. **What would settle it:** extend the composer to `cache_probe.c`, bounded
+to that function's own buffer — the existing one was first written against a
+different buffer of the same name in another function and would have published
+an invented shape.
 
 ### `docs/seam-commands.md` §7 overclaims
 
