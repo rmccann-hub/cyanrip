@@ -315,6 +315,15 @@ static void fixup_subq_to_bcd(uint8_t *subq_buf)
  * decode_subq() only after this returns, and must not call it twice on the
  * same buffer -- a second call would re-encode already-encoded fields.
  * Returns 1 if the sector is valid, 0 otherwise. */
+/* Both track LSNs must be real before either is used in arithmetic. Separated
+ * out so tests/subq.c can assert it without a CdIo_t: the caller needs a live
+ * libcdio handle whose track lookup fails, which no fixture can produce. */
+static int track_lsns_usable(lsn_t track_start_lsn, lsn_t prev_track_start_lsn)
+{
+    return track_start_lsn != CDIO_INVALID_LSN &&
+           prev_track_start_lsn != CDIO_INVALID_LSN;
+}
+
 static int verify_subq_crc(uint8_t *subq_buf, int *needs_fixup)
 {
     const unsigned crc_read = (subq_buf[10] << 8) | subq_buf[11];
@@ -375,7 +384,12 @@ static driver_return_code_t read_audio_subq_sector_with_retries(
 }
 
 
-// TODO: Check that drive is actually returning Q subchannel data and not just zeroes.
+/* An earlier TODO here asked whether the drive is actually returning Q
+ * sub-channel data rather than zeroes. It is: verify_subq_crc() rejects a
+ * zero CRC outright, because a drive that returns nothing leaves the buffer
+ * zeroed and an all-zero block checksums as valid. tests/subq.c pins it
+ * (`all-zero sector accepted`). The comment outlived the fix and was asserting
+ * an unaddressed problem that is addressed -- removed 2026-08-13. */
 lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
                                    enum cyanrip_pregap_source *source) {
 #define SET_SOURCE(v) do { if (source) *source = (v); } while (0)
@@ -403,6 +417,18 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
     // TODO Is (track_number - 1) always safe? e.g. non-continuous track numbers?
     const uint8_t prev_track_number = track_number - 1;
     const lsn_t prev_track_start_lsn = cdio_get_track_lsn(p_cdio, prev_track_number);
+
+    /* Neither return value was checked before 2026-08-13. cdio_get_track_lsn()
+     * answers CDIO_INVALID_LSN when it cannot say, and the comparison below
+     * would then do arithmetic on a sentinel and report the result as a pregap
+     * LSN -- a number that was never measured, in a record whose whole purpose
+     * is that its numbers were. No disc has been seen to reach this, which is
+     * exactly why it is a guard and not a fix: the cost is three lines and the
+     * failure it prevents is unfalsifiable after the fact. */
+    if (!track_lsns_usable(track_start_lsn, prev_track_start_lsn)) {
+        SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
+        return CDIO_INVALID_LSN;
+    }
 
     // Handle single sector previous track.
     if (prev_track_start_lsn + 1 == track_start_lsn) {

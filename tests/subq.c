@@ -155,6 +155,23 @@ static void test_verify_rejects(void)
     CHECK(verify_subq_crc(buf, &fixup) == 0, "sector with bad CRC accepted");
 }
 
+/* Round 8, 2026-08-13. Neither cdio_get_track_lsn() return value was checked
+ * before the pregap search used them in arithmetic. CDIO_INVALID_LSN is a
+ * sentinel, not a sector, and a pregap LSN computed from one is a number that
+ * was never measured. Unreachable from any fixture -- it needs a live libcdio
+ * handle whose track lookup fails -- so the decision is tested here instead. */
+static void test_track_lsns_usable(void)
+{
+    CHECK(track_lsns_usable(0, 0) == 1, "two valid LSNs rejected");
+    CHECK(track_lsns_usable(150, 32000) == 1, "two valid LSNs rejected");
+    CHECK(track_lsns_usable(CDIO_INVALID_LSN, 32000) == 0,
+          "invalid current-track LSN accepted");
+    CHECK(track_lsns_usable(150, CDIO_INVALID_LSN) == 0,
+          "invalid previous-track LSN accepted");
+    CHECK(track_lsns_usable(CDIO_INVALID_LSN, CDIO_INVALID_LSN) == 0,
+          "two invalid LSNs accepted");
+}
+
 int main(void)
 {
     test_crc();
@@ -162,6 +179,7 @@ int main(void)
     test_verify_compliant_drive();
     test_verify_binary_drive();
     test_verify_rejects();
+    test_track_lsns_usable();
 
     if (failures) {
         fprintf(stderr, "%d check(s) failed\n", failures);
