@@ -23,6 +23,27 @@ say "probably" without saying what would settle it.
 
 ---
 
+## Fixed 2026-08-15, from Platterpus's known-issues hand-off and one rig hang
+
+| what | how it is pinned |
+|---|---|
+| **`cdio_cddap_open()` can block forever with no output.** The stall watchdog started ~1700 lines later, so the one window where cyanrip can block before saying anything about the disc had no liveness signal. A rig session sat 300s on `Opening drive...` and left a 111-byte artifact | `crip_stall_wait_begin/end()`, 5 assertions in `tests/stall.c`; revert-proved. **The hang itself is hardware-only** — an image opens instantly |
+| `-j` asserted `messages_are_complete: true` while 55 log lines were absent | `messages_scope` + `messages_complete_within_scope`, 4 assertions in `tests/diag.c` |
+| `-p 99=drop` accepted, exit 0, never applied | bounded against the disc after the TOC read; `errors` scenario asserts both ends |
+| `-l` wrote an `INDEX 00` into a FILE the rip never produced | rip-set input to the predicate + an EOF invariant; `cuegap.c` and the `pregap` scenario |
+| the contract could not see composed lines, wrapper macros or ternary labels | generator follows one helper hop, finds wrappers structurally, enumerates ternary arms; 343 stable rows |
+| nothing tied a lap's claim about the generating build to the contract | `contract_build` recomputes the source anchor |
+| album loudness had no cyanrip-owned row at all | four owned rows, `album_loudness` scenario asserts them against libavfilter's own block |
+| a zero AccurateRip checksum printed as `match found, confidence N` | distinct state, no confidence figure |
+| `Elapsed:`/`Extraction speed:` interval undefined | defined in the contract's units block, derived from source |
+
+**One of these was already fixed and we did not know it.** `C2 errors:` has said
+`supported by drive, not used` since `8499890`; the contract published the row
+as `%s`, so a delivered fix stayed invisible for a round. That is the same
+defect as the composed-line gap, measured from the consumer's side.
+
+---
+
 ## Fixed 2026-08-13, listed because they were open this morning
 
 | what | how it is pinned |
@@ -69,23 +90,6 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 read in the hundreds of milliseconds beside a cached read of a few, the
 diagnosis is confirmed from the artifact and the fix is arithmetic. That is the
 whole reason the evidence clause was added first.
-
-### The provider contract cannot see composed log lines
-
-`PROVIDER-CONTRACT.md` records `Cache probe:    %s` and **none of the nine
-wordings that actually reach the log.** The document exists so the contract
-"cannot describe behaviour we do not have", and on this line it describes
-nothing at all — a consumer reading it learns a `%s`.
-
-The machinery exists: `gen-provider-contract.py` already rebuilds one composed
-line from the `snprintf` calls that fill its buffer. It is not applied here.
-
-**Not urgent** — the nine wordings are pinned by `tests/cacheprobe.c`, so they
-cannot drift silently; they are simply absent from the document Platterpus
-reads. **What would settle it:** extend the composer to `cache_probe.c`, bounded
-to that function's own buffer — the existing one was first written against a
-different buffer of the same name in another function and would have published
-an invented shape.
 
 ### `docs/seam-commands.md` §7 overclaims
 
