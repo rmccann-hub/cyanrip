@@ -973,6 +973,12 @@ def sc_contract_build():
         "gpc", ROOT / "tools" / "gen-provider-contract.py")
     gpc = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(gpc)
+    # Its SRC is relative and it documents "run from the repository root".
+    # meson runs this from build/, where `src/` is the GENERATED header
+    # directory -- a real directory with real files, so the hash came out
+    # different rather than erroring, and the check failed for a reason that
+    # had nothing to do with the contract. Point it at the tree explicitly.
+    gpc.SRC = str(ROOT / "src")
 
     anchor = re.search(r"^\*\*Source anchor:\*\* `sha256/16 = ([0-9a-f]+)`",
                        contract, re.M)
