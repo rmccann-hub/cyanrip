@@ -42,6 +42,46 @@ SENT_MALFORMED = {
 
 fails = 0
 laps = relgate.load_rounds(root / "docs" / "handshake", every_lap=True)
+
+# The declared protocol version must never go BACKWARDS.
+#
+# Round 8 lap 1 declared `HANDSHAKE-PROTOCOL: 1` when every round-7 lap had
+# declared 2, and it propagated through eight laps before anyone noticed --
+# found 2026-08-15 while reading Platterpus's own laps, all of which declare 2.
+# Nothing caught it: the gate accepts anything <= the version it implements, so
+# under-declaring is silently valid, and PROTOCOL.md's own example says 2.
+#
+# It matters because the version selects which rules the RECEIVING gate
+# applies. Declaring an older protocol than the spec both sides implement asks
+# the peer to grade our file by rules we are not following, and the failure is
+# invisible from the sending side by construction -- exactly what the
+# HANDSHAKE-INBOUND-HELD: proposal exists to surface.
+# All eight round-8 laps carry the regression and all eight were SENT, so they
+# cannot be corrected -- editing a sent lap falsifies the record. Named
+# individually rather than waved through by round number, so adding to this set
+# stays a visible act and each entry is an admission that another under-declared
+# file reached the other side. Lap 17 declares 2 and is deliberately absent.
+SENT_UNDER_DECLARED = {
+    "round-08-lap-01.md", "round-08-lap-03.md", "round-08-lap-05.md",
+    "round-08-lap-07.md", "round-08-lap-09.md", "round-08-lap-11.md",
+    "round-08-lap-13.md", "round-08-lap-15.md",
+}
+
+prev_max = 0
+for lap in sorted(laps, key=lambda l: (l.number or 0, l.lap or 0)):
+    if lap.protocol is None:
+        continue
+    if int(lap.protocol) < prev_max:
+        if lap.path.name in SENT_UNDER_DECLARED:
+            print(f"known-bad (sent, cannot be edited): {lap.path.name} -- "
+                  f"declares HANDSHAKE-PROTOCOL: {lap.protocol}, "
+                  f"{prev_max} was already declared")
+        else:
+            print(f"FAIL: {lap.path.name} declares HANDSHAKE-PROTOCOL: "
+                  f"{lap.protocol} after an earlier lap declared {prev_max} -- "
+                  "the declared protocol must never go backwards")
+            fails += 1
+    prev_max = max(prev_max, int(lap.protocol))
 if not laps:
     print("FAIL: no handshake laps found at all -- an empty record is not a pass")
     sys.exit(1)
