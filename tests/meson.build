@@ -178,6 +178,7 @@ rip_scenarios = [
     'mixed',
     'nrg',
     'filters',
+    'album_loudness',
     'art',
     'cue_only',
     'errors',

@@ -822,8 +822,37 @@ int cyanrip_finalize_ebur128(cyanrip_ctx *ctx, int log)
 end:
     if (ctx->peak_ctx) {
         cyanrip_free_filt_ctx(ctx, &ctx->peak_ctx->peak, log);
-        if (log)
+        if (log) {
             cyanrip_log(ctx, 0, "\n");
+
+            /* Owned album rows, in our own wording, beside the block above.
+             *
+             * Only the two words `Album Loudness` are ours -- the ` Summary:`
+             * tail and every value under it are libavfilter's ebur128 output,
+             * which the contract already marks as wording that moves when
+             * FFmpeg does. So at album level a consumer had nothing stable to
+             * key on and no version signal to branch on: one FFmpeg release
+             * could empty the whole block silently. The per-track rows got
+             * this treatment in round 6 §C4 and the album ones never did.
+             * Platterpus asked for it (2026-08-14 hand-off §1), having tried
+             * three ways to derive it downstream -- integrated loudness and
+             * LRA are gated whole-programme measures and are not any function
+             * of the per-track values, so they are genuinely irrecoverable
+             * anywhere but here.
+             *
+             * The `(R128)` qualifier is load-bearing for the reason it was
+             * per-track: unqualified, `Album integrated loudness:` would
+             * collide with libavfilter's own unqualified heading in the same
+             * log. */
+            cyanrip_log(ctx, 0, "Album integrated loudness (R128): %.1f LUFS\n",
+                        ctx->ebu_integrated);
+            cyanrip_log(ctx, 0, "Album loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)\n",
+                        ctx->ebu_range, ctx->ebu_lra_low, ctx->ebu_lra_high);
+            cyanrip_log(ctx, 0, "Album sample peak level:          %.1f dBFS\n",
+                        ctx->ebu_sample_peak);
+            cyanrip_log(ctx, 0, "Album true peak level:            %.1f dBFS\n",
+                        ctx->ebu_true_peak);
+        }
     }
 
     av_freep(&ctx->peak_ctx);

@@ -392,6 +392,77 @@ def sc_nrg():
     expect("nrg", "1.flac:3", "2.flac:3", "log.log", "sheet.cue")
 
 
+def sc_album_loudness():
+    # Album-level loudness must be readable from lines we own.
+    #
+    # Only the two words `Album Loudness` were ours -- the ` Summary:` tail and
+    # every value under it are libavfilter's ebur128 output, wording our own
+    # contract marks as moving when FFmpeg does. So one FFmpeg release could
+    # empty a consumer's whole album_loudness field silently, with no version
+    # signal to branch on and nothing else in the log to fall back to. Round 8,
+    # Platterpus's 2026-08-14 hand-off §1.
+    #
+    # Asserted against libavfilter's OWN block in the same log, not against
+    # constants: a test comparing our line to a string we wrote proves only
+    # that a constant can be printed, and both halves come from the same filter
+    # so they must agree exactly.
+    rip("albloud", "pregap.cue", "-G")
+    whole = (WORK / "out_albloud" / "log.log").read_text()
+
+    # Bounded to the album block. Every ripped track prints an ebur128
+    # `Summary:` of its own, so an unbounded search finds track 1's numbers and
+    # compares them against the album's -- which is what the first version of
+    # this test did, reporting a mismatch that was entirely its own.
+    start = whole.find("Album Loudness Summary:")
+    if start < 0:
+        fail("album_loudness: no album block at all")
+        return
+    log = whole[start:]
+
+    def one(pat, what):
+        m = re.search(pat, log, re.M)
+        if not m:
+            fail(f"album_loudness: no {what} line")
+        return m.group(1) if m else None
+
+    theirs = {
+        "I": one(r"^\s+I:\s+(-?\d+\.\d)\s+LUFS", "libav integrated"),
+        "LRA": one(r"^\s+LRA:\s+(-?\d+\.\d)\s+LU", "libav LRA"),
+        "low": one(r"^\s+LRA low:\s+(-?\d+\.\d)\s+LUFS", "libav LRA low"),
+        "high": one(r"^\s+LRA high:\s+(-?\d+\.\d)\s+LUFS", "libav LRA high"),
+    }
+    ours = {
+        "I": one(r"^Album integrated loudness \(R128\): (-?\d+\.\d) LUFS", "owned integrated"),
+        "LRA": one(r"^Album loudness range \(R128\):\s+(-?\d+\.\d) LU", "owned LRA"),
+        "low": one(r"^Album loudness range \(R128\):.*\((-?\d+\.\d) to", "owned LRA low"),
+        "high": one(r"^Album loudness range \(R128\):.*to (-?\d+\.\d) LUFS", "owned LRA high"),
+    }
+    for k in theirs:
+        if theirs[k] is not None and ours[k] != theirs[k]:
+            fail(f"album_loudness: our {k} is {ours[k]} but libavfilter's own "
+                 f"block says {theirs[k]} in the same log")
+
+    # Peaks likewise, and both `Peak:` rows are ambiguous alone -- the sample
+    # one comes first under `Sample peak:`, the true one under `True peak:`.
+    peaks = re.findall(r"^\s+(?:Sample|True) peak:\n\s+Peak:\s+(-?\d+\.\d) dBFS",
+                       log, re.M)
+    if len(peaks) != 2:
+        fail(f"album_loudness: expected 2 libav peak rows, found {len(peaks)}")
+    else:
+        for label, want in (("sample", peaks[0]), ("true", peaks[1])):
+            got = one(rf"^Album {label} peak level:\s+(-?\d+\.\d) dBFS",
+                      f"owned {label} peak")
+            if got != want:
+                fail(f"album_loudness: our {label} peak is {got} but "
+                     f"libavfilter's own block says {want}")
+
+    # The qualifier is load-bearing: unqualified, it collides with
+    # libavfilter's own heading in the same log.
+    if re.search(r"^Album integrated loudness:", log, re.M):
+        fail("album_loudness: the (R128) qualifier is gone, so the label "
+             "collides with libavfilter's own unqualified heading")
+
+
 def sc_filters():
     # The HDCD and deemphasis filter graphs, verified on raw PCM output
     rip("plain", "basic.cue", "-o", "pcm")

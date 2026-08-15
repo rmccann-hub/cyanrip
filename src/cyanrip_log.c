@@ -443,8 +443,23 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
 
             cyanrip_log(ctx, 0, "    Accurip 450: %08X", t->acurip_checksum_v1_450);
             if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4)) && (t->acurip_checksum_v1_450 == 0x0)) {
-                cyanrip_log(ctx, 0, " (match found, confidence %i, but a checksum of 0 is meaningless)\n",
-                            match_450);
+                /* A zero checksum compares equal to every other zero in the
+                 * database, so the "match" is an artifact of the value and not
+                 * evidence about this audio. The old wording said so -- in a
+                 * sentence, INSIDE the same parenthetical that carried
+                 * "match found, confidence 200". A consumer keying on the
+                 * structured parts (a result plus a confidence integer, the
+                 * only format-agnostic way to read the line) therefore saw a
+                 * confidence-200 verification for audio nothing was compared
+                 * against, and a human skimming the log saw one too.
+                 *
+                 * Now the machine-readable shape agrees with the prose: no
+                 * match, no confidence figure. Platterpus, 2026-08-14 hand-off
+                 * §3 -- who note they key on the zero CRC rather than on our
+                 * wording precisely so their guard survives a backend that
+                 * omits the caveat, which is the stronger invariant and is why
+                 * this is a log-shape fix rather than a correctness one. */
+                cyanrip_log(ctx, 0, " (no comparison possible, a checksum of 0 is meaningless)\n");
             } else if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4))) {
                 cyanrip_log(ctx, 0, " (matches Accurip DB, confidence %i, track is partially accurately ripped)\n",
                             match_450);
