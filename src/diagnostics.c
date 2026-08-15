@@ -406,7 +406,35 @@ void crip_diag_write(void)
                    "overwritten on the terminal are collapsed to the final "
                    "state of each line.\",\n");
     av_bprintf(&b, "  \"messages_dropped\": %i,\n", diag_dropped_lines);
-    av_bprintf(&b, "  \"messages_are_complete\": %s,\n",
+    /* What the array is complete *with respect to*, stated before the boolean
+     * that answers it.
+     *
+     * `messages_are_complete` used to sit here and it was a wrong claim.
+     * The computation is `!diag_dropped_lines` -- did the retention cap fire
+     * -- but the name asserts the array holds everything cyanrip printed, and
+     * it does not: the capture hook wraps cyanrip_log(), while libavfilter's
+     * ebur128 blocks reach the logfile through av_log and never pass through
+     * it. Measured on our own golden reference: 55 non-blank log lines absent
+     * from messages[], 52 of them ebur128 content, beside `dropped: 0` and
+     * `complete: true`. Platterpus found it (2026-08-14 hand-off §7) and
+     * reproduced it across two builds; we reproduced it at the current one.
+     *
+     * The remedy is the rename, not a qualifier. This project has already
+     * settled that a label asserts even when its value disclaims -- `Cache
+     * defeat:` became `Cache model:` for exactly this reason -- so a scope
+     * field beside a boolean called `..._are_complete` would not have undone
+     * the claim the name already made.
+     *
+     * `messages_dropped` deliberately keeps its meaning: lines this record saw
+     * and discarded. The ebur128 lines were never seen, so they cannot be
+     * counted here, and counting an unknown quantity into a field that means
+     * something else would be the same defect one field over. */
+    av_bprintf(&b, "  \"messages_scope\": \"cyanrip_log() only. Output "
+                   "libavfilter writes directly -- the ebur128 loudness "
+                   "blocks -- reaches the logfile and not this array, and is "
+                   "not counted in messages_dropped because it was never "
+                   "seen here.\",\n");
+    av_bprintf(&b, "  \"messages_complete_within_scope\": %s,\n",
                diag_dropped_lines ? "false" : "true");
     av_bprintf(&b, "  \"messages\": [");
     for (int i = 0; i < diag_nb_lines; i++) {

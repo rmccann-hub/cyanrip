@@ -127,8 +127,19 @@ static void test_keeps_the_last_line_said(void)
           "the message that explains a failure");
 
     /* Truncation must be declared, not inferred from a short array. */
-    CHECK(strstr(out, "\"messages_are_complete\": false") != NULL,
+    CHECK(strstr(out, "\"messages_complete_within_scope\": false") != NULL,
           "record does not declare itself incomplete after dropping lines");
+
+    /* And the scope the boolean is relative to must be stated beside it. The
+     * field this replaced was named `messages_are_complete`, which asserted
+     * completeness over the logfile while computing something narrower -- 55
+     * lines of it were missing on our own reference. A boolean about coverage
+     * with no stated scope is the claim, not the qualifier. */
+    CHECK(strstr(out, "\"messages_scope\":") != NULL,
+          "no messages_scope field -- the completeness boolean has nothing to "
+          "be relative to");
+    CHECK(strstr(out, "\"messages_are_complete\"") == NULL,
+          "the unscoped completeness field is back");
     CHECK(strstr(out, "\"messages_dropped\": 0,") == NULL,
           "messages_dropped is 0 after overflowing the record");
 
