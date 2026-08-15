@@ -220,6 +220,30 @@ rather than dropping it because the round closed.
 
 Read in full: laps 2, 8 and 10.
 
+## 9b. Closing the round exposed a defect of ours, immediately
+
+`[MEASURED]` **The moment this lap declared `GO`, every log this tree writes
+became a false claim.** `HANDSHAKE_RELEASED` is compiled in and renders
+`-- NOT a released build`; it was derived from *"is the record closed?"*, a
+question about `HANDSHAKE-OUR-PIN`, while what it renders is a claim about **the
+binary in front of the reader**. Round 8 closes on `ddf7ac3`; the tree is 33
+commits past it. Without a fix, a rip from the tip would print
+`Handshake: round 8 lap 17 closed, verdict GO` with the disclaimer gone.
+
+Fixed at `a083279`: `HANDSHAKE_RELEASED` now additionally requires the built
+tree to **be** the closing lap's pin, on a clean checkout. It fails closed — no
+pin, no git, or a dirty tree all mean not released. **No wording changed**; the
+tip keeps saying exactly what it said before, which is the true thing.
+
+**The test was asserting the defect.** `sc_handshake()` required the disclaimer
+to be *absent* whenever the round was closed, so it failed the instant this lap
+landed and would have gone green again only once the claim became false. It now
+checks both directions against the pin.
+
+Reported here rather than held for round 9 because **it is a consequence of this
+lap** — the round's own close is what triggered it — and a defect a close
+creates belongs in the lap that closes.
+
 ## 10. What closing does and does not authorise
 
 **Does:** `ddf7ac3` is jointly verified. Our release gate stops refusing.
