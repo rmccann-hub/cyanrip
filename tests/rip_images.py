@@ -452,6 +452,26 @@ def sc_errors():
     if ec != 1:
         fail(f"longname: expected clean failure (1), got exit {ec}")
 
+    # -p with a track the disc does not have. Round 8, from Platterpus's
+    # 2026-08-14 hand-off §9: -p was bounded at a fixed 197 because it parses
+    # before the TOC is read, so `-p 99=drop` on a short disc was accepted,
+    # exited 0, and went into a slot no track reads -- while -t rejected the
+    # same mistake outright. Accepted-and-ignored is the outcome the seam rules
+    # call worse than a refusal, because a refusal gets investigated.
+    #
+    # Both ends are asserted. Checking only the refusal would pass just as well
+    # if the bound rejected everything.
+    for bad in ("99=drop", "4=drop"):
+        ec, out = crip("-I", "-N", "-d", WORK / "pregap.cue", "-p", bad)
+        if ec == 0:
+            fail(f"-p {bad}: accepted a track the 3-track disc does not have")
+        if "Invalid track number" not in out:
+            fail(f"-p {bad}: refused with no diagnosable line: {out[-200:]!r}")
+
+    ec, out = crip("-I", "-N", "-d", WORK / "pregap.cue", "-p", "3=drop")
+    if ec != 0:
+        fail(f"-p 3=drop: refused a track the disc has (exit {ec}): {out[-200:]!r}")
+
 
 def sc_cdtext():
     # A cdrdao .toc image is the only disc image format libcdio parses CD-TEXT

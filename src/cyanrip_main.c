@@ -1654,6 +1654,26 @@ static int cyanrip_run(int argc, char **argv)
               sizeof(int), cmp_numbers);
     }
 
+    /* The indices the CALLER gave -p, kept so they can be checked against the
+     * disc once there is one.
+     *
+     * Not derivable from settings.pregap_action[] afterwards: cyanrip writes
+     * into that array itself while setting tracks up -- including into slot
+     * `number`, one past the track's own -- so a non-default slot does not
+     * imply a user asked for it. Checking the array would have graded our own
+     * writes as bad input.
+     *
+     * Why it needs checking at all: the bound below is `idx > 197`, a fixed
+     * cap and not a disc-relative one, because -p is parsed before the TOC is
+     * read. So `-p 99=drop` on a 2-track disc was accepted, exited 0, and the
+     * directive went into a slot no track would ever read -- no message, no
+     * exit code, no effect. Measured 2026-08-15 on a 3-track image: exit 0,
+     * zero diagnostics. Reported by Platterpus (2026-08-14 hand-off §9), who
+     * also noted -t rejects the same shape outright, so the two flags
+     * disagreed about the same mistake. */
+    int pregap_idx_seen[198];
+    int nb_pregap_idx = 0;
+
     for (int i = 0; i < 198 && pregap[i]; i++) {
         p = av_strtok(pregap[i], "=", &p_save);
         /* Same shape as -c above: "-p =" tokenises to nothing. */
@@ -1681,6 +1701,7 @@ static int cyanrip_run(int argc, char **argv)
             return 1;
         }
         settings.pregap_action[idx - 1] = act;
+        pregap_idx_seen[nb_pregap_idx++] = idx;
     }
 
     for (int i = 0; i < 198 && track_meta[i]; i++)
@@ -1997,6 +2018,32 @@ static int cyanrip_run(int argc, char **argv)
     copy_album_to_track_meta(ctx);
 
     /* Read user track metadata */
+    /* Now the disc is known, re-check the -p indices against it. Same policy
+     * and the same message shape as the -t check immediately below, so one
+     * consumer matcher covers both and the two flags stop disagreeing about
+     * an out-of-range track.
+     *
+     * Whether that policy should be fatal at all is a real question and is
+     * deliberately NOT decided here: -t aborting a rip over a surplus tag has
+     * measured cost (a 16-track disc, an 18-track MusicBrainz medium, two
+     * seconds, nothing written). Changing it is a behavioural change to a
+     * documented fatal path and belongs in a round, not in the commit that
+     * closes the silent hole. Refusing is what -t already does; matching it is
+     * the smaller claim. */
+    for (int i = 0; i < nb_pregap_idx; i++) {
+        int track_idx = 0;
+        for (; track_idx < ctx->nb_tracks; track_idx++) {
+            if (ctx->tracks[track_idx].number == pregap_idx_seen[i])
+                break;
+        }
+        if (track_idx >= ctx->nb_tracks) {
+            cyanrip_log(ctx, 0, "Invalid track number %i for pregap, list has "
+                        "%i tracks!\n", pregap_idx_seen[i], ctx->nb_tracks);
+            ctx->total_error_count++;
+            goto end;
+        }
+    }
+
     for (int i = 0; i < track_metadata_ptr_cnt; i++) {
         if (!track_metadata_ptr[i])
             continue;
