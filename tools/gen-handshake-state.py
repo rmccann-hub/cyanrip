@@ -41,9 +41,11 @@ claim about the record rather than a derivation from it.
 import argparse
 import importlib.util
 import pathlib
+import subprocess
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
+ROOT = HERE.parent
 SPEC = importlib.util.spec_from_file_location(
     "release_gate", HERE / "release-gate.py")
 rg = importlib.util.module_from_spec(SPEC)
@@ -52,6 +54,31 @@ SPEC.loader.exec_module(rg)
 
 def c_string(s):
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _head_is(pin):
+    """True when the tree being built is exactly `pin`.
+
+    Compared as prefixes in whichever direction is shorter, because a lap names
+    an abbreviated SHA and git answers with a full one. Any failure -- no pin
+    declared, no git, a dirty tree -- returns False: a build whose provenance
+    cannot be established is not a released build, and that is the direction
+    that fails safe.
+    """
+    if not pin:
+        return False
+    try:
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
+                              capture_output=True, text=True,
+                              check=True).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT,
+                               capture_output=True, text=True,
+                               check=True).stdout.strip()
+    except Exception:
+        return False
+    if dirty:
+        return False
+    return head.startswith(pin) or pin.startswith(head)
 
 
 def main():
@@ -73,7 +100,23 @@ def main():
         verdict = latest.verdict or "no verdict declared"
         if ok:
             state = f"round {latest.number}{lap} closed, verdict {verdict}"
-            released = 1
+            # A CLOSED ROUND IS NOT A RELEASED BUILD, and conflating them made
+            # every log this tree writes into a false claim the moment round 8
+            # closed.
+            #
+            # `ok` answers "is the record closed?" -- a question about
+            # `HANDSHAKE-OUR-PIN`. HANDSHAKE_RELEASED renders a claim about THIS
+            # BINARY. Those are different questions, and this collapsed them: at
+            # the moment round 8 closed on ddf7ac3, the tree was 33 commits past
+            # it carrying ten unreviewed defect fixes and one breaking schema
+            # change, and every log it wrote would have dropped the
+            # "-- NOT a released build" suffix and read as jointly verified.
+            #
+            # So the build must BE the approved pin. Fails closed on a tarball
+            # or any tree where git cannot answer: unknown provenance is not a
+            # release. No wording changes -- the tip keeps saying exactly what
+            # it said before, which is the true thing.
+            released = 1 if _head_is(latest.our_pin or latest.pin) else 0
         else:
             state = f"round {latest.number}{lap} OPEN, verdict {verdict}"
             released = 0

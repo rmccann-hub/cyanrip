@@ -737,8 +737,32 @@ def sc_handshake():
         open_round = gate.returncode != 0
         if open_round and "NOT a released build" not in state:
             fail(f"handshake: round is open but the log does not say so: {state!r}")
-        if not open_round and "NOT a released build" in state:
-            fail(f"handshake: round is closed but the log claims otherwise: {state!r}")
+
+        # A CLOSED ROUND IS NOT A RELEASED BUILD, and this check used to assert
+        # that it was -- it failed the moment round 8 closed while the tree was
+        # 33 commits past the approved pin. "Is the record closed?" is a
+        # question about HANDSHAKE-OUR-PIN; the disclaimer is a claim about THIS
+        # BINARY. The build must BE the pin, and a dirty tree never is.
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
+                              capture_output=True, text=True).stdout.strip()
+        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT,
+                               capture_output=True, text=True).stdout.strip()
+        pin = None
+        import glob as _glob
+        laps = sorted(_glob.glob(str(ROOT / "docs" / "handshake" / "round-*.md")))
+        for path in reversed(laps):
+            mm = re.search(r"^HANDSHAKE-OUR-PIN:[ \t]*(\S+)", open(path).read(), re.M)
+            if mm:
+                pin = mm.group(1)
+                break
+        is_the_pin = bool(pin and head and not dirty
+                          and (head.startswith(pin) or pin.startswith(head)))
+        if not open_round and is_the_pin and "NOT a released build" in state:
+            fail(f"handshake: this IS the approved pin on a clean tree, so the "
+                 f"disclaimer is wrong: {state!r}")
+        if not open_round and not is_the_pin and "NOT a released build" not in state:
+            fail(f"handshake: the round is closed but this build is not the "
+                 f"approved pin, and the log does not say so: {state!r}")
 
     # Without --consumer the log must say the caller did not identify itself,
     # rather than leaving the field absent -- a missing field prompts a

@@ -902,7 +902,44 @@ for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()
 
+# A CLOSED ROUND IS NOT A RELEASED BUILD.
+#
+# HANDSHAKE_RELEASED renders "-- NOT a released build" in every logfile. It was
+# derived from "is the record closed?" alone, which is a question about
+# HANDSHAKE-OUR-PIN, while the claim it renders is about THIS BINARY. The moment
+# round 8 closed on ddf7ac3 the tree was 33 commits past it, carrying ten
+# unreviewed fixes and one breaking schema change -- and every log it wrote would
+# have dropped the disclaimer and read as jointly verified.
+def test_released_requires_the_build_to_be_the_pin():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "ghs", HERE.parent / "tools" / "gen-handshake-state.py")
+    ghs = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ghs)
+
+    check(not ghs._head_is(None), "a missing pin counted as released")
+    check(not ghs._head_is(""), "an empty pin counted as released")
+    check(not ghs._head_is("0000000"), "a pin that is not HEAD counted as released")
+
+    # And the positive direction, so the guard cannot pass by always saying no.
+    import subprocess
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=HERE.parent,
+                          capture_output=True, text=True).stdout.strip()
+    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=HERE.parent,
+                           capture_output=True, text=True).stdout.strip()
+    if head and not dirty:
+        check(ghs._head_is(head[:7]),
+              "HEAD's own abbreviated SHA was not recognised as the build")
+    # A dirty tree is never a released build, whatever it is checked out at.
+    if dirty:
+        check(not ghs._head_is(head[:7]),
+              "a dirty tree counted as a released build")
+
+
+test_released_requires_the_build_to_be_the_pin()
+
 if failures:
     print(f"{failures} check(s) failed", file=sys.stderr)
     sys.exit(1)
 print("all release gate checks passed")
+

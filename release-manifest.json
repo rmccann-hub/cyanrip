@@ -5,7 +5,7 @@
       "handshake_round": 8,
       "install": "https://github.com/rmccann-hub/cyanrip/archive/2ce8993.tar.gz",
       "release_seq": 15,
-      "round_closed": false,
+      "round_closed": true,
       "version": "0.9.4-rc1+platterpus.6-beta.4"
     },
     "stable": {
