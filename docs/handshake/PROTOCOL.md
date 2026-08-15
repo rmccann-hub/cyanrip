@@ -151,7 +151,7 @@ files the other gate rejects:
 ## 3. Required fields
 
 ```
-HANDSHAKE-PROTOCOL: 2
+HANDSHAKE-PROTOCOL: 3
 HANDSHAKE-ROUND: 7
 HANDSHAKE-LAP: 4
 HANDSHAKE-FROM: cyanrip-fork
@@ -189,9 +189,14 @@ measurement with no provenance.
 without breaking the other. A format that breaks on an extra line is a format
 people stop emitting.
 
-**Each lap is a new file. Never edit a file already sent.** A later lap may close
-a round *or reopen one* on new evidence; that is why state is the latest lap and
-not a conjunction over all of them.
+**Each lap is a new file. Never edit a file already sent.** A round's state is
+its **latest lap**, not a conjunction over all of them -- which is why a later
+lap can move a round from `OPEN` to a terminal state.
+
+**It cannot move it back.** v2 said a later lap could *reopen* a round; **v3
+removes that** (§4a). A closed round is finished, and new evidence opens a new
+round -- otherwise "closed" means "closed for now" and a consumer cannot pin
+against it.
 
 ## 3a. Addressing — where it came from, and what it wants changed (v3)
 
@@ -650,7 +655,8 @@ this table rather than asserted alongside it.
 | C10 | a round ≤ 7 file missing them | **allow**; the exemption is by pinned number |
 | C11 | unrecognised verdict | refuse |
 | C12 | declared round ≠ the round it is filed under | refuse |
-| C13 | a later lap declaring `HOLD` after an earlier `GO` | refuse — a round can reopen |
+| C13 | a later lap declaring `HOLD` after an earlier lap's `GO`, where that `GO` did **not** close the round (no peer verdict, missing fields) | refuse — the round was never closed, and the latest lap governs |
+| C13a | a later lap of any verdict after the round reached a **terminal** state (§4a) | refuse the *file* as an illegal transition; the round stays closed. **v3 changed this**: under v2 it reopened the round |
 | C14 | no round files at all | refuse; an empty record is not agreement |
 | C15 | `HANDSHAKE-PROTOCOL` higher than implemented | refuse rather than guess |
 | C16 | complete two-sided tested round | **allow** — a gate that can never say yes is a wall, not a gate |
@@ -658,6 +664,30 @@ this table rather than asserted alongside it.
 | C18 | `HANDSHAKE-TEST-PIN` present alongside a valid close | **allow**, and the test pin must not be mistaken for `HANDSHAKE-PIN` |
 | C19 | a **stable** release requested with any round open | refuse |
 | C20 | a **pre-release** requested with a round open | **allow**, and print every open round first — a beta claims no joint verification, and refusing it guarantees the round can never close |
+
+### Rows added in v3 — required once both gates implement 3
+
+**These are not yet in force.** A gate implementing protocol 2 must not be
+failed for missing them, and a gate implementing 3 must have every one. The
+split is by heading rather than by a list a test hardcodes, so bumping
+`PROTOCOL_VERSION` turns them on with no second edit — a deferral that needs a
+human to remember it is a deferral that rots.
+
+| ID | case | expected |
+|---|---|---|
+| C21 | `HANDSHAKE-ROUND-DIGEST` present on both sides and **unequal** | refuse; the round is `RECONCILE` and **may not close**. Not overridable (§6a-ter) |
+| C22 | a close attempted while the round is `RECONCILE` | refuse, naming both digests |
+| C23 | `HANDSHAKE-INBOUND-HELD` absent on a round ≥ 9 file | refuse; silence about what you hold is the failure this field exists for |
+| C24 | `HANDSHAKE-INBOUND-HELD: none` | **allow** — `none` is a claim, and a legal one |
+| C25 | a round ≥ 9 file missing any of `FROM-REPO` / `FROM-COMMIT` / `TO-REPO` / `TO-VERSION` | refuse, naming the field |
+| C26 | a file whose `TO-REPO` does not name this repository | **do not act on it**; it may be read and stored, but this repository is not a party |
+| C27 | a release naming a round whose latest verdict is `WITHDRAWN` | refuse — otherwise `WITHDRAWN` smuggles a release past C19 |
+| C28 | `HANDSHAKE-VERDICT: WITHDRAWN` with no `HANDSHAKE-WITHDRAWN-REASON` | refuse |
+| C29 | a lap declaring a **lower** `HANDSHAKE-PROTOCOL` than an earlier lap of the same record | refuse; under-declaring is silently valid to a version check and asks the peer to grade the file by rules the sender is not following |
+| C30 | lap number > 21 with no recorded override | refuse (§6a-bis R7) |
+| C31 | `HANDSHAKE-OVERRIDE` present with `-BY` or `-WHY` missing | refuse; an override without a weighable reason is not recorded, and an unrecorded override did not happen |
+| C32 | a valid, complete `HANDSHAKE-OVERRIDE` | **honour it, and print it every time the round's state is printed** — an override that becomes invisible is indistinguishable from the rule never existing |
+| C33 | an override naming §5a's digest rule | refuse; that rule alone is not overridable |
 
 That last row matters as much as the others. Assert it, or a gate that refuses
 everything passes every other test in the table.
@@ -734,6 +764,11 @@ caught, and one of them ran for thirteen laps.**
   to trust it goes last*), three bounded exceptions, and the multi-repo
   generalisation. Settled 2026-08-13 by asking both projects simultaneously; it
   had lived only in one project's private notes until now.
+- **§8 Conformance rows C21-C33**, one per new rule, so "we implement v3" is a
+  claim either side can check row by row rather than a paraphrase. **C13 was
+  also corrected**: its old rationale said *"a round can reopen"*, which v3
+  removes -- a conformance table contradicting the spec it belongs to is how two
+  gates come to disagree while both believe they conform.
 - **§6a-ter Overrides.** Any rule may be overridden by the operator, in writing,
   with rule id, who and why — honoured, printed loudly and permanently, and
   **an unrecorded override did not happen.**

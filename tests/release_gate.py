@@ -597,8 +597,26 @@ def test_every_conformance_row_has_a_test():
     a row that does not exist.
     """
     proto = (HERE.parent / "docs" / "handshake" / "PROTOCOL.md").read_text(encoding="utf-8")
-    rows = set(re.findall(r"^\| (C\d+) \|", proto, re.M))
+    # Rows below the "added in v3" heading are not in force until this gate
+    # implements 3. Scoped by HEADING, not by a hardcoded list: bumping
+    # PROTOCOL_VERSION turns them on with no second edit, and a deferral that
+    # needs a human to remember it is a deferral that rots.
+    split = proto.find("### Rows added in v3")
+    in_force = proto if split < 0 else proto[:split]
+    deferred_text = "" if split < 0 else proto[split:]
+    rows = set(re.findall(r"^\| (C\d+) \|", in_force, re.M))
+    deferred = set(re.findall(r"^\| (C\d+) \|", deferred_text, re.M))
     check(len(rows) >= 16, f"expected the conformance table, found {len(rows)} rows")
+
+    import importlib.util as _ilu
+    _s = _ilu.spec_from_file_location("rg2", HERE.parent / "tools" / "release-gate.py")
+    _rg = _ilu.module_from_spec(_s); _s.loader.exec_module(_rg)
+    if _rg.PROTOCOL_VERSION >= 3:
+        rows |= deferred
+        deferred = set()
+    if deferred:
+        print(f"  (deferred to protocol 3, not yet in force: "
+              f"{len(deferred)} row(s))")
 
     claimed = set()
     for name, fn in globals().items():
