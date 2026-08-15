@@ -392,6 +392,53 @@ def sc_nrg():
     expect("nrg", "1.flac:3", "2.flac:3", "log.log", "sheet.cue")
 
 
+def sc_contract_covers_log():
+    # Every label a real rip prints must be known to the contract.
+    #
+    # This is the floor the contract could previously decay past, and
+    # Platterpus proposed it in their 2026-08-14 hand-off §6: "run a real rip,
+    # extract every label from the resulting log, and fail the generator if any
+    # is absent from P2". We built only the first half of that fix -- the
+    # generator changes -- and this is the second, which is what found the
+    # defect the first half did not:
+    #
+    #   `Log FUN512: ` is written with a bare fprintf() to the logfile, never
+    #   through cyanrip_log(), because it is the checksum OVER the log and must
+    #   be appended after the log is otherwise finished. The scanner knew
+    #   cyanrip_log(), genopt and fprintf(stderr) and had no pattern for it, so
+    #   a stable line present in EVERY logfile -- the one `-Y/--verify-log`
+    #   round-trips -- was absent from every provider contract ever published.
+    #
+    # A positive check ("the labels I expected are there") could never have
+    # found that, because nobody expected it. This asks the log what it says.
+    rip("cov", "pregap.cue", "-Z", "2", "-G", "-Q")
+    log = (WORK / "out_cov" / "log.log").read_text()
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+
+    # Column-0 labels only: an indented row is a per-track field, and the
+    # label must be followed by whitespace so `Ripping finished at 2026-08-15T20:`
+    # is not read as a label ending in the timestamp's own colon.
+    labels = sorted(set(re.findall(r"^([A-Z][A-Za-z0-9 /()-]*:)(?=\s)", log, re.M)))
+    if len(labels) < 15:
+        fail(f"contract_covers_log: only {len(labels)} labels found -- the "
+             "extraction is broken, not the contract")
+        return
+
+    # Two labels are libavfilter's, not ours, and the contract says so in P3
+    # rather than publishing them as API. `Album Loudness Summary:` is the
+    # split case: `Album Loudness` is ours, ` Summary:` is the filter's.
+    NOT_OURS = {"Summary:", "Album Loudness Summary:"}
+
+    missing = [l for l in labels
+               if l not in NOT_OURS and l.rstrip(":") not in
+               {n.rstrip(":") for n in NOT_OURS}
+               and l not in contract]
+    if missing:
+        fail("contract_covers_log: the log prints labels the contract has "
+             "never heard of, so they sit outside our own breaking-change "
+             f"rule: {missing}")
+
+
 def sc_album_loudness():
     # Album-level loudness must be readable from lines we own.
     #

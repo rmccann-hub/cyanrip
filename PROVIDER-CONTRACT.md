@@ -205,6 +205,8 @@ requires a handshake round.
 | `cyanrip_encode.c:1294` | `Could not open output codec context!` |
 | `cyanrip_encode.c:1301` | `Couldn't copy codec params!` |
 | `cyanrip_encode.c:1308` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
+| `cyanrip_log.c:809` | `Log FUN512: %s` |
+| `cyanrip_log.c:887` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:58` | `%s%s:` |
 | `cyanrip_log.c:61` | `%s` |
 | `cyanrip_log.c:71` | `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)` |
@@ -445,7 +447,7 @@ requires a handshake round.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:259` | `Invalid condition syntax!` |
 
-**291 distinct stable lines.**
+**293 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.

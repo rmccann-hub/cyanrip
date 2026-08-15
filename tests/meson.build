@@ -179,6 +179,7 @@ rip_scenarios = [
     'nrg',
     'filters',
     'album_loudness',
+    'contract_covers_log',
     'art',
     'cue_only',
     'errors',

@@ -135,6 +135,30 @@ WRAPPER_DEF = re.compile(
     r'^#define\s+(?P<name>[A-Z][A-Z0-9_]*)\s*\(\s*(?P<fmt>[A-Za-z_][A-Za-z0-9_]*)\s*,'
     r'(?P<rest>(?:.*\\\n)*.*)', re.M)
 
+# Lines written STRAIGHT to the logfile, never through cyanrip_log().
+#
+# `Log FUN512: ` is the one that exposed this: it is the checksum OVER the log,
+# so it has to be appended after the log is otherwise finished and cannot go
+# through the capture path. The scanner knew cyanrip_log(), genopt and
+# fprintf(stderr) and had no pattern for this -- so a stable line present in
+# every logfile, which `-Y/--verify-log` round-trips, has been absent from
+# every provider contract ever published. Found 2026-08-15 by building the
+# self-check Platterpus asked for in their §6 (extract every label from a real
+# rip log, fail if any is missing from the contract) rather than by reading the
+# generator again.
+#
+# Routing is the mirror of the `not directly` class: these reach the LOGFILE and
+# not stdout, where a cyanrip_log(NULL, ...) reaches stdout and not the logfile.
+LOGFILECALL = re.compile(
+    r'fprintf\s*\(\s*ctx->logfile\s*\[[^\]]*\]\s*,\s*'
+    r'(?P<macro>[A-Z][A-Z0-9_]*\s+)?'
+    r'(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)', re.S)
+
+# Object-like macros holding a bare string, so a format spliced together as
+# `MARKER "%s\n"` resolves instead of publishing half of itself.
+OBJ_MACRO = re.compile(
+    r'^#define\s+(?P<name>[A-Z][A-Z0-9_]*)\s+"(?P<val>(?:[^"\\]|\\.)*)"\s*$', re.M)
+
 STDERRCALL = re.compile(
     r'fprintf\s*\(\s*stderr\s*,\s*(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)', re.S)
 
@@ -454,14 +478,51 @@ def wrapper_macros(text):
     return out
 
 
+def object_macros():
+    """Every `#define NAME "literal"` in the tree, by name.
+
+    Tree-wide rather than per-file on purpose: CRIP_LOG_FUN512_MARKER is
+    defined in fun512.h and used in cyanrip_log.c, and a per-file table would
+    have resolved neither."""
+    out = {}
+    for name in sorted(os.listdir(SRC)):
+        if name.endswith((".c", ".h")):
+            text = open(os.path.join(SRC, name), encoding="utf-8").read()
+            for m in OBJ_MACRO.finditer(text):
+                out[m.group("name")] = m.group("val")
+    return out
+
+
 def collect():
     """Walk every log call site. Returns (stable, unstable, fatal)."""
     stable, unstable, fatal = [], [], []
+    macros = object_macros()
     for name in sorted(os.listdir(SRC)):
         if not name.endswith((".c", ".h")):
             continue
         path = os.path.join(SRC, name)
         text = open(path, encoding="utf-8").read()
+
+        # Written straight to the logfile: reaches the logfile and NOT stdout.
+        for m in LOGFILECALL.finditer(text):
+            raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
+            if m.group("macro"):
+                key = m.group("macro").strip()
+                if key not in macros:
+                    # Publishing the tail alone would be a format missing its
+                    # own label -- worse than omitting the row, because it
+                    # looks complete.
+                    continue
+                raw = macros[key] + raw
+            line = text[:m.start()].count("\n") + 1
+            s = raw.replace("\\n", "").replace("\\t", " ").strip()
+            if not s:
+                continue
+            rec = (name, line, s, True)
+            if any(u in s for u in UNSTABLE_SUBSTRINGS):
+                unstable.append(rec)
+            else:
+                stable.append(rec)
 
         for m in LOGCALL.finditer(text):
             raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
