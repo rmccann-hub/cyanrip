@@ -190,6 +190,54 @@ static void test_fires_with_no_callbacks(void)
           "expected exactly one returned line, got %i", cap_count(ret_line));
 }
 
+/* The drive-open window. Measured on the rig 2026-08-14: cdio_cddap_open()
+ * did not return for the whole of a 300s timeout and the only artifact was a
+ * 111-byte file ending in `Opening drive...`. The watchdog could not have
+ * helped -- it was not started until ~1700 lines later, past the TOC read.
+ *
+ * Two properties, and the second is the one that keeps the record honest: a
+ * blocked non-read call must produce heartbeats, and it must NOT be counted as
+ * a read stall. `Read stalls:` is a measurement of reads; a drive that would
+ * not open is a different thing and merging them would make the field mean
+ * whichever happened. */
+static void test_wait_fires_and_is_not_a_read_stall(void)
+{
+    cap_reset();
+    crip_stall_watchdog_config(200000, 200000);
+    crip_stall_watchdog_start();
+
+    /* Taken before, because the counters are process-global and earlier tests
+     * have already put real read stalls into them. Asserting `== 0` here would
+     * be asserting something about the tests that ran first. */
+    crip_stall_stats_t before;
+    crip_stall_stats(&before);
+
+    crip_stall_wait_begin("the drive open");
+    av_usleep(700000);
+    crip_stall_wait_end();
+
+    crip_stall_watchdog_end();
+
+    const int hb = cap_count("Still waiting: the drive open has not returned");
+    CHECK(hb >= 1, "no heartbeat for a 700ms drive open at a 200ms threshold");
+    CHECK(hb <= 5, "wait heartbeat not rate limited: %i lines", hb);
+    CHECK(cap_count("the drive open returned after") == 1,
+          "expected exactly one returned line, got %i",
+          cap_count("the drive open returned after"));
+
+    /* Never claims to be a read. */
+    CHECK(cap_count("Still reading track") == 0,
+          "a blocked drive open printed the read wording");
+
+    crip_stall_stats_t after;
+    crip_stall_stats(&after);
+    CHECK(after.count == before.count,
+          "a blocked drive open moved the read-stall count %i -> %i",
+          before.count, after.count);
+    CHECK(after.longest_us == before.longest_us,
+          "a blocked drive open moved the longest read stall");
+}
+
 /* An ordinary rip must stay silent: frames complete in milliseconds and a
  * heartbeat on every one of them would bury the progress output. */
 static void test_silent_when_reads_are_fast(void)
@@ -328,6 +376,7 @@ int main(void)
     test_summary_line_shapes();
     test_stats_count_and_longest();
     test_fires_with_no_callbacks();
+    test_wait_fires_and_is_not_a_read_stall();
     test_silent_when_reads_are_fast();
     test_threshold_zero_disables();
     test_state_resets_between_reads();

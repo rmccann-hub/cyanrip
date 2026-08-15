@@ -72,6 +72,28 @@ static int64_t last_heartbeat;
 static int reading_track;
 static lsn_t reading_lsn;
 
+/* A blocking call that is NOT a read, kept in its own slot rather than
+ * borrowed from the read one.
+ *
+ * Measured 2026-08-14, and this is why it exists: a rig session hung for the
+ * whole of its 300s timeout having printed exactly `Opening drive...` and
+ * nothing after it. cdio_cddap_open() had not returned. The watchdog was not
+ * merely quiet -- it had not been started yet, because the only start() call
+ * sat ~1700 lines further on, past the TOC read. So the one window where the
+ * program can block before it has said anything about the disc was the one
+ * window with no liveness signal at all, and the operator's only evidence
+ * after a night of waiting was a 111-byte file ending in `Opening drive...`.
+ *
+ * It does NOT feed stalls_seen or longest_stall_us. `Read stalls:` counts
+ * reads; a drive that would not open is a different measurement, and a field
+ * that silently absorbed both would be the "name that does not discriminate"
+ * defect this project keeps finding. The heartbeat is the whole record here,
+ * deliberately -- a run that never gets past the open never reaches a
+ * summary line to carry anything. */
+static int64_t wait_started;
+static int64_t wait_heartbeat;
+static const char *wait_what;
+
 /* What the heartbeats add up to, kept so the log can carry the finding rather
  * than only the terminal.
  *
@@ -150,6 +172,22 @@ static void *watchdog_fn(void *unused)
             continue;
         }
 
+        /* Same shape as the read heartbeat above, separate wording: this is
+         * not a read and must not claim to be one. No counters -- see the
+         * wait_started declaration. */
+        if (wait_started && stall_threshold_us &&
+            now - wait_started >= stall_threshold_us &&
+            (!wait_heartbeat || now - wait_heartbeat >= heartbeat_us)) {
+            wait_heartbeat = now;
+            const char *what = wait_what;
+            const int64_t secs = (now - wait_started) / 1000000LL;
+            pthread_mutex_unlock(&live_lock);
+            cyanrip_log(NULL, 0,
+                        "\nStill waiting: %s has not returned after %" PRId64
+                        "s\n", what, secs);
+            continue;
+        }
+
         pthread_mutex_unlock(&live_lock);
     }
 
@@ -182,6 +220,34 @@ void crip_stall_watchdog_end(void)
     pthread_mutex_unlock(&live_lock);
     pthread_join(watchdog, NULL);
     watchdog_running = 0;
+}
+
+void crip_stall_wait_begin(const char *what)
+{
+    pthread_mutex_lock(&live_lock);
+    wait_started = av_gettime_relative();
+    wait_heartbeat = 0;
+    wait_what = what;
+    pthread_mutex_unlock(&live_lock);
+}
+
+void crip_stall_wait_end(void)
+{
+    pthread_mutex_lock(&live_lock);
+    const int reported = !!wait_heartbeat;
+    const char *what = wait_what;
+    const int64_t took = wait_started ? av_gettime_relative() - wait_started : 0;
+    wait_started = 0;
+    wait_heartbeat = 0;
+    wait_what = NULL;
+    pthread_mutex_unlock(&live_lock);
+
+    /* Only if it was reported: a call that returned promptly is not news, and
+     * the whole point of the heartbeat is that silence means healthy. */
+    if (reported) {
+        const int64_t secs = took / 1000000LL;
+        cyanrip_log(NULL, 0, "%s returned after %" PRId64 "s\n", what, secs);
+    }
 }
 
 void crip_stall_read_begin(int track, lsn_t lsn)

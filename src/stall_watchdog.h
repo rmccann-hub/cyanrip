@@ -37,6 +37,14 @@ void crip_stall_watchdog_end(void);
 void crip_stall_read_begin(int track, lsn_t lsn);
 void crip_stall_read_end(void);
 
+/* Bracket one blocking call that is NOT a read -- `what` is a noun phrase the
+ * heartbeat prints verbatim ("the drive open"), so it must be a literal that
+ * outlives the call. Deliberately separate from the read bracket: it prints
+ * different words and feeds no counter, because `Read stalls:` is a
+ * measurement of reads and must not quietly absorb something else. */
+void crip_stall_wait_begin(const char *what);
+void crip_stall_wait_end(void);
+
 /* What the heartbeats added up to, for the log's disc summary.
  *
  * threshold_us is reported back rather than assumed by the caller, so the

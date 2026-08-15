@@ -239,7 +239,16 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     }
 
     cyanrip_log(ctx, 0, "Opening drive...\n");
+    /* Started here rather than only before the rip loop: this call can block
+     * indefinitely on a drive that will not spin up, and until 2026-08-14 it
+     * did so with no liveness output of any kind -- a rig session sat for its
+     * whole 300s timeout on `Opening drive...` and left an artifact that could
+     * not distinguish a wedged drive from a wedged program. start() is
+     * idempotent, so the later call is a no-op. */
+    crip_stall_watchdog_start();
+    crip_stall_wait_begin("the drive open");
     int ret = cdio_cddap_open(ctx->drive);
+    crip_stall_wait_end();
     if (ret < 0) {
         cyanrip_log(ctx, 0, "Unable to open device!\n");
         cyanrip_ctx_end(&ctx);
