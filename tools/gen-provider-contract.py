@@ -113,6 +113,28 @@ FAIL_PATH_WINDOW = 320
 LOGCALL = re.compile(
     r'(?P<fn>cyanrip_log)\s*\(\s*(?P<target>[A-Za-z_][A-Za-z0-9_>\-\.]*)\s*,\s*\d+\s*,\s*'
     r'(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)', re.S)
+# Function-like macros that wrap cyanrip_log() and take the format as their
+# first argument. Found by structure -- a #define whose body calls
+# cyanrip_log(...) with the macro's own first parameter as the format -- rather
+# than by a hardcoded list of names, because a hardcoded list is a guess wearing
+# a derivation's clothes and this generator has shipped that defect twice.
+#
+# cyanrip_log.c's CLOG is one, and it emits seven banner labels every rip
+# prints: Disc number:, Total discs:, DiscID:, Release ID:, CDDB ID:, Album:,
+# Album artist:. None of them was in ANY published contract -- five of them, so
+# all five published contracts -- because the scanner had no pattern for the
+# macro. Platterpus depends on six (2026-08-14 hand-off §6), so the two halves
+# of the seam disagreed about what was covered, and the side that would break
+# on a reword was the side with no say in it.
+# The body runs to the last backslash-continued line, so a multi-line macro is
+# read whole. Getting this wrong is silent: an alternation that stopped at the
+# first newline matched CLOG's signature, found no cyanrip_log in the one line
+# it had, and reported "not a wrapper" -- which looks exactly like "there are
+# no wrappers".
+WRAPPER_DEF = re.compile(
+    r'^#define\s+(?P<name>[A-Z][A-Z0-9_]*)\s*\(\s*(?P<fmt>[A-Za-z_][A-Za-z0-9_]*)\s*,'
+    r'(?P<rest>(?:.*\\\n)*.*)', re.M)
+
 STDERRCALL = re.compile(
     r'fprintf\s*\(\s*stderr\s*,\s*(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)', re.S)
 
@@ -160,7 +182,28 @@ STRINGIFY_RUN = re.compile(
 # buffer, in source order, so the shape stays generated rather than described.
 COMPOSED_EMIT = re.compile(
     r'cyanrip_log\s*\(\s*(?P<target>[A-Za-z_][A-Za-z0-9_>\-\.]*)\s*,\s*\d+\s*,\s*'
-    r'"%s"\s*,\s*(?P<buf>[a-z_][a-z0-9_]*)\s*\)')
+    r'(?P<lit>"(?:[^"\\]|\\.)*")\s*,\s*(?P<buf>[a-z_][a-z0-9_]*)\s*\)')
+
+# The literal must be a fixed prefix (possibly empty) followed by one %s and
+# nothing else -- `"%s"` or `"Cache probe:    %s\n"`. Anything with a second
+# conversion is not one buffer being echoed and must not be reconstructed as
+# though it were.
+COMPOSED_LIT = re.compile(r'^"((?:[^"\\%]|\\.)*)%s(?:\\n)?"$')
+
+# A buffer filled by a named helper rather than in the emitting function:
+#   char line[224];
+#   crip_cache_probe_line(line, sizeof(line), ...);
+#   cyanrip_log(ctx, 0, "Cache probe:    %s\n", line);
+# One hop, and only when the buffer is the helper's FIRST argument, so the
+# formats attributed to it are the ones writing into that buffer and not into
+# something else the helper also touches.
+FILLED_BY = r'\b(?P<fn>[a-z_][a-z0-9_]*)\s*\(\s*{buf}\s*,\s*sizeof\s*\(\s*{buf}\s*\)'
+
+# Its definition, so the scan can be bounded to that function's body and the
+# parameter name it writes through recovered. Nothing is assumed about the
+# parameter being called the same thing as the caller's buffer -- it is not.
+FN_DEF = (r'^[A-Za-z_][A-Za-z0-9_ \*]*\b{fn}\s*\(\s*char\s*\*\s*'
+          r'(?P<param>[a-z_][a-z0-9_]*)\b')
 SNPRINTF_INTO = (
     r'snprintf\s*\(\s*{buf}\b[^;]*?,\s*'
     r'(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)')
@@ -243,33 +286,96 @@ def func_start(text, pos):
     return m.end() if m else 0
 
 
+def snprintf_parts(text, buf, lo, hi):
+    """snprintf formats writing into `buf` within [lo, hi), in source order."""
+    pat = re.compile(SNPRINTF_INTO.format(buf=re.escape(buf)), re.S)
+    parts = []
+    for sm in pat.finditer(text):
+        if sm.start() >= hi or sm.start() < lo:
+            continue
+        # Splice in any inttypes macros sitting between adjacent literals --
+        # the same handling as the call-site scanners, so the two cannot drift
+        # apart in what they can read.
+        piece = splice_inttypes(text, sm.end("lit"), joined(sm.group("lit")))
+        piece = piece.replace("\\n", "").replace("\\t", " ")
+        if piece:
+            parts.append(piece)
+    return parts
+
+
 def composed(text):
     """Reconstruct buffer-composed log lines.
 
-    Returns [(emit_line, reaches_logfile, [parts], derived_ok)]. derived_ok is
-    False when the buffer is not built by snprintf in the same function -- the
-    line still emits arbitrary text, and saying so is better than inventing a
-    shape for it."""
+    Returns [(emit_line, reaches_logfile, prefix, [parts], derived_ok)].
+    derived_ok is False when the buffer's content cannot be derived -- the line
+    still emits arbitrary text, and saying so is better than inventing a shape
+    for it.
+
+    Two shapes are read. The buffer is filled by snprintf in the emitting
+    function; or it is filled by a named helper the emitting function calls as
+    `helper(buf, sizeof(buf), ...)`, in which case the formats come from that
+    helper's body, keyed on ITS parameter name.
+
+    The second hop exists because `Cache probe:` was published as
+    `Cache probe:    %s` and nothing else -- nine wordings a consumer could not
+    see, in the document whose purpose is that the contract cannot describe
+    behaviour we do not have. Platterpus found it from the other end (2026-08-14
+    hand-off §5) and asked for a regeneration; a regeneration alone would have
+    published the same `%s`, because the composer had never been able to reach
+    through a helper.
+
+    Bounded deliberately at ONE hop and at the first parameter. A composer that
+    chases arbitrary call graphs would eventually attribute some other
+    function's formats to this line, which is the defect this function already
+    carries a scar from -- a same-named buffer in another function."""
     out = []
     for m in COMPOSED_EMIT.finditer(text):
+        lit_m = COMPOSED_LIT.match(m.group("lit"))
+        if not lit_m:
+            continue
+        prefix = lit_m.group(1).replace("\\n", "").replace("\\t", " ")
         buf = m.group("buf")
         emit_line = text[:m.start()].count("\n") + 1
         lo = func_start(text, m.start())
-        pat = re.compile(SNPRINTF_INTO.format(buf=re.escape(buf)), re.S)
-        parts = []
-        for sm in pat.finditer(text):
-            if sm.start() > m.start() or sm.start() < lo:
-                continue
-            # Splice in any inttypes macros sitting between adjacent
-            # literals -- the same handling as the call-site scanners, so the
-            # two cannot drift apart in what they can read.
-            piece = splice_inttypes(text, sm.end("lit"),
-                                    joined(sm.group("lit")))
-            piece = piece.replace("\\n", "").replace("\\t", " ")
-            if piece:
-                parts.append(piece)
-        out.append((emit_line, m.group("target") != "NULL", parts, bool(parts)))
+
+        # It must actually BE a buffer. Widening the emit regex to allow a
+        # prefix also swept up every ordinary `"...%s\n", some_char_ptr` call
+        # -- `cdio error: %s` with libcdio's message, `Invalid pregap action
+        # %s` with the argv token. Those are complete literals already
+        # published in P2, and filing them here as "not derivable" would have
+        # added ten rows of noise saying nothing was hidden. A composed line's
+        # buffer is a char array declared in the emitting function; that is
+        # the discriminator, and it is read from the source rather than
+        # guessed from the name.
+        if not re.search(r'\bchar\s+' + re.escape(buf) + r'\s*\[',
+                         text[lo:m.start()]):
+            continue
+
+        parts = snprintf_parts(text, buf, lo, m.start())
+
+        if not parts:
+            fm = re.search(FILLED_BY.format(buf=re.escape(buf)),
+                           text[lo:m.start()])
+            if fm:
+                fn = fm.group("fn")
+                dm = re.search(FN_DEF.format(fn=re.escape(fn)), text, re.M)
+                if dm:
+                    body_lo = dm.end()
+                    body_hi = next_func_start(text, body_lo)
+                    parts = snprintf_parts(text, dm.group("param"),
+                                           body_lo, body_hi)
+
+        out.append((emit_line, m.group("target") != "NULL", prefix, parts,
+                    bool(parts)))
     return out
+
+
+def next_func_start(text, pos):
+    """Offset of the next column-0 '}' after pos -- the end of the function
+    whose body starts at pos. The mirror of func_start(), and the bound that
+    stops a helper's formats bleeding into whatever is defined below it."""
+    m = re.search(r"^\}", text[pos:], re.M)
+    return pos + m.end() if m else len(text)
 
 
 def joined(lit):
@@ -312,6 +418,42 @@ def evidence(text, end, msg):
     return None
 
 
+TERNARY_LABEL = re.compile(
+    r'\s*,\s*[^,()]*?\?\s*(?P<a>"(?:[^"\\]|\\.)*")\s*:\s*(?P<b>"(?:[^"\\]|\\.)*")')
+
+
+def label_variants(text, end, fmt):
+    """Expand a leading `%s` fed by a ternary of two string literals.
+
+    `cyanrip_log(ctx, 0, "%s%c%i %s\\n", cond ? "Underread:      " :
+    "Overread:       ", ...)` publishes as `%s%c%i %s`, which pins no text at
+    all -- and `Overread:` is a line Platterpus keys on. The label is a
+    compile-time literal in the source; enumerating both arms states what the
+    line can say instead of leaving a row whose label is a conversion.
+
+    Returns [] when the shape does not apply, so nothing is invented for a `%s`
+    fed by a variable."""
+    if not fmt.startswith("%s"):
+        return []
+    m = TERNARY_LABEL.match(text, end)
+    if not m:
+        return []
+    tail = fmt[2:]
+    return [joined(m.group("a")) + tail, joined(m.group("b")) + tail]
+
+
+def wrapper_macros(text):
+    """Names of function-like macros in `text` that wrap cyanrip_log() with
+    their own first parameter as the format."""
+    out = []
+    for m in WRAPPER_DEF.finditer(text):
+        body = m.group("rest")
+        if re.search(r'cyanrip_log\s*\([^;]*?\b' + re.escape(m.group("fmt")) +
+                     r'\b', body, re.S):
+            out.append(m.group("name"))
+    return out
+
+
 def collect():
     """Walk every log call site. Returns (stable, unstable, fatal)."""
     stable, unstable, fatal = [], [], []
@@ -328,14 +470,44 @@ def collect():
             s = raw.replace("\\n", "").replace("\\t", " ").strip()
             if not s:
                 continue
-            rec = (name, line, s, to_log)
-            if any(u in s for u in UNSTABLE_SUBSTRINGS) or not to_log:
-                unstable.append(rec)
-            else:
-                stable.append(rec)
+            # A leading `%s` fed by a ternary of two literals publishes as a
+            # conversion and pins nothing; enumerate the arms instead.
+            variants = label_variants(text, m.end("lit"), s) or [s]
+            for v in variants:
+                rec = (name, line, v, to_log)
+                if any(u in v for u in UNSTABLE_SUBSTRINGS) or not to_log:
+                    unstable.append(rec)
+                else:
+                    stable.append(rec)
             ev = evidence(text, m.end(), s)
             if ev:
                 fatal.append((name, line, s, to_log, ev))
+
+        # Sites that reach cyanrip_log() through a wrapper macro. The target is
+        # the macro's, not the call site's, so `to_log` is read from the macro
+        # body once rather than guessed per site.
+        for wname in wrapper_macros(text):
+            wdef = re.search(r'^#define\s+' + wname + r'\b((?:.*\\\n)*.*)',
+                             text, re.M)
+            wraps_ctx = bool(wdef and re.search(
+                r'cyanrip_log\s*\(\s*(?!NULL)[A-Za-z_]', wdef.group(1)))
+            wcall = re.compile(r'\b' + wname +
+                               r'\s*\(\s*(?P<lit>"(?:[^"\\]|\\.)*"'
+                               r'(?:\s*"(?:[^"\\]|\\.)*")*)', re.S)
+            for m in wcall.finditer(text):
+                if wdef and wdef.start() <= m.start() <= wdef.end():
+                    continue
+                raw = splice_inttypes(text, m.end("lit"),
+                                      joined(m.group("lit")))
+                line = text[:m.start()].count("\n") + 1
+                s = raw.replace("\\n", "").replace("\\t", " ").strip()
+                if not s:
+                    continue
+                rec = (name, line, s, wraps_ctx)
+                if any(u in s for u in UNSTABLE_SUBSTRINGS) or not wraps_ctx:
+                    unstable.append(rec)
+                else:
+                    stable.append(rec)
 
         for m in GENOPTCALL.finditer(text):
             raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
@@ -554,32 +726,42 @@ def emit(binary):
     w("")
     w("### P2a - Composed lines")
     w("")
-    w("Lines assembled into a buffer by a run of `snprintf()` and emitted through a")
-    w("bare `\"%s\"`. The emitting call site shows a consumer nothing, so the pieces")
-    w("are reconstructed here from the `snprintf` formats that build the buffer, in")
-    w("source order. Segments after the first are conditional.")
+    w("Lines assembled into a buffer and emitted through a trailing `%s`. The")
+    w("emitting call site shows a consumer nothing, so the pieces are reconstructed")
+    w("here from the `snprintf` formats that build the buffer, in source order.")
+    w("Segments after the first are conditional.")
     w("")
-    main_c = open(os.path.join(SRC, "cyanrip_main.c"), encoding="utf-8").read()
-    for emit_line, to_log, parts, ok in composed(main_c):
-        w(f"**`cyanrip_main.c:{emit_line}`** - reaches logfile: "
-          f"{reaches_cell(to_log)}")
-        w("")
-        if not ok:
-            w("Not derivable: the buffer is not built by `snprintf` in this function.")
-            w("It emits arbitrary text - here, the generated CUE sheet echoed back to")
-            w("the terminal a line at a time. **Do not pattern-match this row**; a")
-            w("pattern built from its `\"%s\"` would match every line in the log.")
+    w("The buffer is either filled in the emitting function, or filled by a helper")
+    w("the emitting function calls as `helper(buf, sizeof(buf), ...)` -- one hop, and")
+    w("only through the helper's first parameter. `Cache probe:` is the second shape,")
+    w("and until this generator could follow that hop the contract published it as a")
+    w("bare `%s` with none of its wordings, in the document whose whole purpose is")
+    w("that the contract cannot describe behaviour we do not have.")
+    w("")
+    for src_name in ("cyanrip_main.c", "cache_probe.c"):
+        src_text = open(os.path.join(SRC, src_name), encoding="utf-8").read()
+        for emit_line, to_log, prefix, parts, ok in composed(src_text):
+            w(f"**`{src_name}:{emit_line}`** - reaches logfile: "
+              f"{reaches_cell(to_log)}")
             w("")
-            continue
-        w("| # | Segment |")
-        w("|---|---|")
-        for i, part in enumerate(parts):
-            w(f"| {i} | `{part}` |")
-        w("")
-        w("Segment 0 is always present; the rest are appended conditionally. This is")
-        w("**stable API**: the progress bar and ETA of at least one consumer are")
-        w("driven by it.")
-        w("")
+            if prefix:
+                w(f"Fixed prefix: `{prefix}`")
+                w("")
+            if not ok:
+                w("Not derivable: the buffer is built neither by `snprintf` in this")
+                w("function nor by a `helper(buf, sizeof(buf), ...)` call in it. It")
+                w("emits arbitrary text - here, the generated CUE sheet echoed back to")
+                w("the terminal a line at a time. **Do not pattern-match this row**; a")
+                w("pattern built from its `\"%s\"` would match every line in the log.")
+                w("")
+                continue
+            w("| # | Segment |")
+            w("|---|---|")
+            for i, part in enumerate(parts):
+                w(f"| {i} | `{part}` |")
+            w("")
+            w("Segment 0 is always present; the rest are appended conditionally.")
+            w("")
 
     w("## P3 - Unstable wording, and stdout-only routing")
     w("")
