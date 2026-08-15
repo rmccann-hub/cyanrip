@@ -3,6 +3,7 @@
 # Usage: rip_images.py <cyanrip-binary> <fixtures-dir> <scenario>
 
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -946,6 +947,43 @@ def sc_contract_build():
              f"{build.group(1)!r} but this tree is {version.group(1)!r}. "
              "Rebuild from a clean tree and regenerate; do not publish this "
              "commit as a pin.")
+
+    # And the CONTENT half, which the version check cannot reach: a contract
+    # generated from a different tree describes different line numbers and can
+    # be missing whole log lines while its version string is right.
+    #
+    # Round 8, Platterpus's 2026-08-14 hand-off §4/§5: the contract shipped with
+    # round-8 lap 1 was the regeneration from one commit BEFORE the log change
+    # the same lap announced, so it published a retired wording and omitted the
+    # live one -- and its version string gave nothing away.
+    #
+    # Their diagnosis was that `--check` does not compare the Build banner.
+    # Measured here rather than accepted: `--check` regenerates and diffs the
+    # WHOLE file, banner included, and a doctored banner fails it. So the check
+    # was not blind; it simply was not run again after the later commits, and
+    # nothing tied the lap's claim about which build generated the file to the
+    # file. This is that tie, and it is deliberately the pure-text kind: no
+    # build, no network, so it runs in a tarball and on a dirty tree, which is
+    # exactly where `--check` refuses to.
+    #
+    # Imports the generator's own hash rather than reimplementing it. Two
+    # readers of one record that can disagree is the defect both gates exist to
+    # prevent.
+    spec = importlib.util.spec_from_file_location(
+        "gpc", ROOT / "tools" / "gen-provider-contract.py")
+    gpc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gpc)
+
+    anchor = re.search(r"^\*\*Source anchor:\*\* `sha256/16 = ([0-9a-f]+)`",
+                       contract, re.M)
+    if not anchor:
+        fail("contract_build: PROVIDER-CONTRACT.md has no source anchor -- "
+             "every file:line in it is unverifiable")
+    elif anchor.group(1) != gpc.source_hash():
+        fail(f"contract_build: PROVIDER-CONTRACT.md's source anchor is "
+             f"{anchor.group(1)} but src/ hashes to {gpc.source_hash()}. It "
+             "was generated from a different tree, so its line numbers cite "
+             "source that is not this source. Regenerate.")
 
 
 def sc_format_guard():
