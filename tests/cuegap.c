@@ -66,15 +66,15 @@ static int failures;
 static void test_zero_length_pregap_is_not_a_pregap(void)
 {
     /* Track 3, 2026-08-05 rig rip: signalled at the track's own start. */
-    CHECK(!crip_track_has_appended_pregap(28067, 28067, NONE, NONE, 1),
+    CHECK(!crip_track_has_appended_pregap(28067, 28067, NONE, NONE, 1, 1),
           "a zero-length pre-gap asked for an INDEX 00");
 
     /* The other three tracks of that disc with the same shape. */
-    CHECK(!crip_track_has_appended_pregap(90642, 90642, NONE, NONE, 1),
+    CHECK(!crip_track_has_appended_pregap(90642, 90642, NONE, NONE, 1, 1),
           "track 6 (zero-length) asked for an INDEX 00");
-    CHECK(!crip_track_has_appended_pregap(178332, 178332, NONE, NONE, 1),
+    CHECK(!crip_track_has_appended_pregap(178332, 178332, NONE, NONE, 1, 1),
           "track 11 (zero-length) asked for an INDEX 00");
-    CHECK(!crip_track_has_appended_pregap(200862, 200862, NONE, NONE, 1),
+    CHECK(!crip_track_has_appended_pregap(200862, 200862, NONE, NONE, 1, 1),
           "track 12 (zero-length) asked for an INDEX 00");
 }
 
@@ -83,13 +83,13 @@ static void test_zero_length_pregap_is_not_a_pregap(void)
 static void test_real_pregaps_still_get_an_index(void)
 {
     /* Track 5 of the same rip: 115 frames, 72455 -> 72570. */
-    CHECK(crip_track_has_appended_pregap(72455, 72570, NONE, NONE, 1),
+    CHECK(crip_track_has_appended_pregap(72455, 72570, NONE, NONE, 1, 1),
           "a 115 frame pre-gap did not ask for an INDEX 00");
     /* Track 2: 160 frames. */
-    CHECK(crip_track_has_appended_pregap(14327, 14487, NONE, NONE, 1),
+    CHECK(crip_track_has_appended_pregap(14327, 14487, NONE, NONE, 1, 1),
           "a 160 frame pre-gap did not ask for an INDEX 00");
     /* One frame is still a pre-gap. */
-    CHECK(crip_track_has_appended_pregap(999, 1000, NONE, NONE, 1),
+    CHECK(crip_track_has_appended_pregap(999, 1000, NONE, NONE, 1, 1),
           "a one frame pre-gap did not ask for an INDEX 00");
 }
 
@@ -103,7 +103,7 @@ static void test_the_read_offset_cannot_change_the_answer(void)
         /* The caller must pass start_lsn_sig; whatever the offset does to
          * start_lsn is irrelevant, and the only way to state that in a test
          * is that no offset value is an input here. */
-        CHECK(!crip_track_has_appended_pregap(sig, sig, NONE, NONE, 1),
+        CHECK(!crip_track_has_appended_pregap(sig, sig, NONE, NONE, 1, 1),
               "zero-length pre-gap became a pre-gap at offset %d", offset_frames);
     }
 }
@@ -111,18 +111,44 @@ static void test_the_read_offset_cannot_change_the_answer(void)
 /* The other three conditions, so a rewrite that drops one is caught. */
 static void test_the_remaining_guards(void)
 {
-    CHECK(!crip_track_has_appended_pregap(NONE, 14487, NONE, NONE, 1),
+    CHECK(!crip_track_has_appended_pregap(NONE, 14487, NONE, NONE, 1, 1),
           "an unknown pre-gap LSN asked for an INDEX 00");
-    CHECK(!crip_track_has_appended_pregap(14327, 14487, NONE, NONE, 0),
+    CHECK(!crip_track_has_appended_pregap(14327, 14487, NONE, NONE, 0, 1),
           "track 1 (no previous track) asked for an INDEX 00");
-    CHECK(!crip_track_has_appended_pregap(14327, 14487, 14327, NONE, 1),
+    CHECK(!crip_track_has_appended_pregap(14327, 14487, 14327, NONE, 1, 1),
           "a dropped pre-gap asked for an appended INDEX 00");
-    CHECK(!crip_track_has_appended_pregap(14327, 14487, NONE, 14487, 1),
+    CHECK(!crip_track_has_appended_pregap(14327, 14487, NONE, 14487, 1, 1),
           "a merged pre-gap asked for an appended INDEX 00");
+}
+
+/* The -l case. Round 8, from Platterpus's 2026-08-14 hand-off §8: the
+ * predicate's only structural input was `!!t->pt`, the previous track on the
+ * DISC, so on `-l 1,3,5,6,7` track 5's INDEX 00 was computed against excluded
+ * track 4 and printed inside track 3's FILE -- 22535 frames into a 21853 frame
+ * file, 682 past the end.
+ *
+ * Both directions, because a predicate that always says no would pass the
+ * first half alone -- and that is the exact vacuity the zero-length fix was
+ * already tested against. */
+static void test_a_pregap_needs_the_previous_file_to_exist(void)
+{
+    /* Track 5's real numbers, predecessor NOT written. */
+    CHECK(!crip_track_has_appended_pregap(72455, 72570, NONE, NONE, 1, 0),
+          "an INDEX 00 was written against a FILE that does not exist");
+
+    /* Same numbers, predecessor written: still a pre-gap. */
+    CHECK(crip_track_has_appended_pregap(72455, 72570, NONE, NONE, 1, 1),
+          "a real pre-gap stopped asking for an INDEX 00");
+
+    /* The two inputs are independent: a track with no predecessor at all is
+     * refused whatever the file flag says, so one cannot mask the other. */
+    CHECK(!crip_track_has_appended_pregap(72455, 72570, NONE, NONE, 0, 1),
+          "track 1 asked for an INDEX 00 because a file flag was set");
 }
 
 int main(void)
 {
+    test_a_pregap_needs_the_previous_file_to_exist();
     test_zero_length_pregap_is_not_a_pregap();
     test_real_pregaps_still_get_an_index();
     test_the_read_offset_cannot_change_the_answer();

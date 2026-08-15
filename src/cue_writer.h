@@ -39,15 +39,31 @@
  * four tracks of the 2026-08-04 and 2026-08-05 rig rips, at a timestamp one
  * frame past the end of the previous FILE. A pre-gap's length is defined
  * against the signalled start; the offset is a property of the read. */
+/* **prev_file_written, not just has_prev_track.** The marker is an offset into
+ * the previous track's FILE, and under -l that FILE may never have been
+ * written. has_prev_track is `!!t->pt` -- the previous track on the DISC, in
+ * the rip set or not -- so on `-l 1,3,5,6,7` track 5's INDEX 00 was computed
+ * against track 4 (excluded) and printed inside track 3's FILE block, landing
+ * 682 frames past its end: 22535 into a file of 21853. Found by Platterpus in
+ * their 2026-08-14 hand-off §8, proved with the full-rip control cue carrying
+ * the byte-identical `INDEX 00 05:00:35` under a different FILE, where it is
+ * correct. Upstream-origin: 90c02175 (2023) referenced the previous track on
+ * the disc three years before this fork existed.
+ *
+ * The pre-gap frames are in no file at all in that case -- the rig log shows
+ * track 5 at 18072 frames in both the full and the partial rip -- so there is
+ * nothing for a marker to point at and the honest cue omits it. */
 static inline int crip_track_has_appended_pregap(lsn_t pregap_lsn,
                                                  lsn_t start_lsn_sig,
                                                  lsn_t dropped_pregap_start,
                                                  lsn_t merged_pregap_end,
-                                                 int has_prev_track)
+                                                 int has_prev_track,
+                                                 int prev_file_written)
 {
     return pregap_lsn != CDIO_INVALID_LSN
         && pregap_lsn != start_lsn_sig
         && has_prev_track
+        && prev_file_written
         && dropped_pregap_start == CDIO_INVALID_LSN
         && merged_pregap_end == CDIO_INVALID_LSN;
 }

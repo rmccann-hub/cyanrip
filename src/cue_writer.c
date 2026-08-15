@@ -88,9 +88,28 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
     char time_01[16];
 
     /* Finish over the pregap which has been appended to the last track */
-    const int write_appended_pregap = crip_track_has_appended_pregap(
+    int write_appended_pregap = crip_track_has_appended_pregap(
         t->pregap_lsn, t->start_lsn_sig, t->dropped_pregap_start,
-        t->merged_pregap_end, !!t->pt);
+        t->merged_pregap_end, !!t->pt,
+        t->pt && t->pt->cue_file_written);
+
+    /* The invariant, independent of the predicate above: an INDEX 00 is an
+     * offset into the FILE it is nested under, so it cannot be negative and
+     * cannot reach that file's end. Kept as a separate belt because it catches
+     * the whole class rather than the one case just fixed -- the earlier
+     * one-frame-past-EOF variant (start_lsn vs start_lsn_sig) would have been
+     * caught here too, and a cue is an archival artifact that a burner or
+     * tracker will either error on or mis-seek. */
+    if (write_appended_pregap) {
+        const lsn_t off = t->pregap_lsn - t->pt->start_lsn_sig;
+        if (off < 0 || off >= t->pt->frames) {
+            cyanrip_log(ctx, 0, "Refusing an INDEX 00 of %i frames into a "
+                        "%i frame file for track %i, writing none\n",
+                        (int)off, (int)t->pt->frames, t->number);
+            write_appended_pregap = 0;
+        }
+    }
+
     if (write_appended_pregap) {
         for (int Z = 0; Z < ctx->settings.outputs_num; Z++)
             fprintf(ctx->cuefile[Z], "  TRACK %02d AUDIO\n", t->index);
@@ -140,6 +159,10 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
         av_free(path);
     }
+
+    /* This track's FILE now exists in the cue, so the NEXT track's appended
+     * pre-gap has something real to be an offset into. */
+    t->cue_file_written = 1;
 
     if (!t->track_is_data && !write_appended_pregap) {
         CLOG("    TITLE \"%s\"\n", t->meta, "title");

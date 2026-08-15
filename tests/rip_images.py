@@ -301,6 +301,27 @@ def sc_pregap():
     rip("drop", "pregap.cue", "-p", "2=drop")
     expect("drop", "1.flac:2", "2.flac:2", "3.flac:1", "log.log", "sheet.cue")
 
+    # An INDEX 00 is an offset into the FILE it is nested under, so a partial
+    # rip that excludes the track holding the gap must not emit one. Round 8,
+    # Platterpus's 2026-08-14 hand-off §8: on `-l 1,3,5,6,7` track 5's marker
+    # was computed against excluded track 4 and printed inside track 3's FILE,
+    # 682 frames past its end. Upstream-origin, so stock cyanrip has it too.
+    #
+    # Track 2 carries the signalled pre-gap here, so -l 2,3 is the shape: its
+    # predecessor is not in the rip set and its FILE is never written.
+    rip("lgap", "pregap.cue", "-l", "2,3")
+    cue = (WORK / "out_lgap" / "sheet.cue").read_text()
+    if "INDEX 00" in cue:
+        fail("lgap: INDEX 00 written against a FILE the rip never produced:\n"
+             + cue)
+
+    # Not vacuous: the same disc ripped whole DOES emit one, so the assertion
+    # above is about the selection and not about the fixture having no gaps.
+    full = (WORK / "out_def" / "sheet.cue").read_text()
+    if "INDEX 00" not in full:
+        fail("lgap: the full rip emits no INDEX 00, so the -l check proves "
+             "nothing about the fix")
+
     # One log must not disagree with itself about the same gap.
     #
     # Four places state track N's pregap length, and they were not all saying

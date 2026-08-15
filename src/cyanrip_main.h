@@ -212,6 +212,11 @@ typedef struct cyanrip_track {
     lsn_t end_lsn_sig;
 
     /* CUE sheet generator only */
+    /* Whether this track's own FILE line has been written to the cue. An
+     * appended pre-gap's INDEX 00 is an offset into the PREVIOUS track's FILE,
+     * so under -l the only honest question is "did we write that FILE", and
+     * the rip set alone cannot answer it at this point. */
+    int cue_file_written;
     lsn_t dropped_pregap_start;
     lsn_t merged_pregap_end;
 
