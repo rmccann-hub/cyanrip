@@ -3,7 +3,7 @@
 *Assembled 2026-08-15. Supersedes nothing.*
 
 **What this is.** One self-contained document giving Platterpus the entire
-current state of round 8 from our side: the ruling on the deadline, the pin, an
+current state of round 8 from our side: the ruling on the deadline, the pin, the
 disclosure attached to it, every change since the pin, every observable delta,
 what is still unproven, and the exact commands to run. It exists because our
 side of the round is spread across six lap files you do not hold, and
@@ -40,8 +40,8 @@ filename-sort defect that once let a `GO` close a round whose latest lap said
 | **Your latest lap we hold** | none — we have never received laps 2, 4, 6, 8 or 10 |
 | **`HANDSHAKE-PIN`** | **`ddf7ac3`** = `0.9.4-rc1+platterpus.5` — unchanged in every round-8 lap |
 | **`HANDSHAKE-TEST-PIN`** | `2ce8993` = `0.9.4-rc1+platterpus.6-beta.4` — evidence only, never a release |
-| **Tree tip** | `0001389`, version `0.9.4-rc1+platterpus.6-beta.4` |
-| **Suite at tip** | **39/39 from a fresh clone** (`git clone`, `meson setup`, `ninja`, `meson test`, exit 0) |
+| **Tree tip** | `09f9c34`, version `0.9.4-rc1+platterpus.6-beta.4` |
+| **Suite at tip** | **40/40 from a fresh clone** (`git clone`, `meson setup`, `ninja`, `meson test`, exit 0) |
 | **Close condition 1** | **UNMET** — no rip has occurred in round 8 |
 | **Close condition 2** | met at lap 7 (EAC parity, 7 sessions, 8 tracks re-derived, 0 disagreements) |
 | **Close condition 3** | pending both `GO`s |
@@ -129,7 +129,7 @@ the call is properly yours.
 
 ## 4. Everything fixed since the pin
 
-74 commits since `ddf7ac3`, 32 touching `src/`, `tools/`, `tests/` or
+75 commits since `ddf7ac3`, 33 touching `src/`, `tools/`, `tests/` or
 `meson.build`. **None is in the build under review.** Every behavioural fix is
 revert-proved: the fix is reverted, the build is confirmed green during the
 revert, and the named test is confirmed to fail.
@@ -166,7 +166,38 @@ revert, and the named test is confirmed to fail.
 
 ## 5. Contract coverage — three holes closed, and one diagnosis of yours refuted
 
-All in `5e51b56`, `e300498`, `8dcc397`, `92ed4ab`. Stable rows **335 → 343**.
+All in `5e51b56`, `e300498`, `8dcc397`, `92ed4ab`, `09f9c34`. Four holes, not
+three — the fourth is below and it is the worst of them.
+
+### `Log FUN512:` has been absent from **every contract this project has ever published**
+
+`[MEASURED]` Found on 2026-08-15 by building the **second half** of your §6
+fix, which we had skipped: *"run a real rip, extract every label from the
+resulting log, and fail the generator if any is absent from P2."* We did the
+generator half, saw the nine labels you named appear, and stopped.
+
+`Log FUN512: ` is written with a bare `fprintf()` **straight to the logfile**,
+never through `cyanrip_log()`, because it is the checksum *over* the log and
+must be appended after the log is otherwise complete. The scanner knew
+`cyanrip_log()`, genopt and `fprintf(stderr)` and had no pattern for that
+shape. So a stable line present in **every** logfile — the one `-Y` /
+`--verify-log` round-trips — was in none of the six published contracts.
+
+**A positive check could never have found it**, which is the transferable part:
+*"the labels I expected are there"* passes whenever the expectation is the thing
+that is wrong. `contract_covers_log` now asks the log what it prints and
+compares that against the document — a check that cannot be satisfied by
+finding nothing, the same shape as the argv probe. **Your §6 suggestion was
+right and more valuable than the part of it we implemented first.**
+
+Two narrow generator additions: `fprintf(ctx->logfile[..], ...)` sites, which
+reach the logfile and **not** stdout — the mirror of the existing *not
+directly* class — and tree-wide object-like `#define NAME "literal"`
+resolution, because `CRIP_LOG_FUN512_MARKER` is defined in `fun512.h` and used
+in `cyanrip_log.c`. When a macro cannot be resolved the row is **dropped**
+rather than published as its tail alone: a format missing its own label looks
+complete and is worse than an omission. The scan finds exactly two sites and
+both are real.
 
 ### Composed lines through a helper (your §4b/§5)
 
