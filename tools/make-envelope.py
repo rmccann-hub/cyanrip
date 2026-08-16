@@ -36,8 +36,14 @@ their defect produced, which is why the format is safe to use again.
 This tool asserts that property on its own output before writing it, so an
 envelope that would be mistaken for a lap is never produced in the first place.
 
+**One file per exchange.** The operator moves these by hand, so a handshake
+exchange is ONE attachment: the lap travels inside the envelope with everything
+it references. Pass the operative lap with --lap and it is placed first and
+named in the header, so a reader knows what the exchange is before splitting.
+The only thing that may ever travel separately is a script meant to be run.
+
 Usage:
-    tools/make-envelope.py out.md FILE [FILE ...]
+    tools/make-envelope.py out.md [--lap LAP.md] FILE [FILE ...]
 """
 
 import hashlib
@@ -71,10 +77,18 @@ def not_a_lap(text):
 
 
 def main():
-    if len(sys.argv) < 3:
-        sys.exit(__doc__.strip().splitlines()[-1].strip())
-    out = pathlib.Path(sys.argv[1])
-    paths = [pathlib.Path(p) for p in sys.argv[2:]]
+    argv = sys.argv[1:]
+    lap = None
+    if "--lap" in argv:
+        i = argv.index("--lap")
+        lap = pathlib.Path(argv[i + 1])
+        del argv[i:i + 2]
+    if len(argv) < 2:
+        sys.exit("usage: make-envelope.py out.md [--lap LAP.md] FILE [FILE ...]")
+    out = pathlib.Path(argv[0])
+    paths = [pathlib.Path(p) for p in argv[1:]]
+    if lap is not None:
+        paths = [lap] + [p for p in paths if p != lap]
 
     rows, body = [], []
     for p in paths:
@@ -88,9 +102,25 @@ def main():
                     f"{text}\n"
                     f"<<<<<<<<<< END {p.name} >>>>>>>>>>")
 
+    if lap is not None:
+        head = lap.read_text(encoding="utf-8")
+        verdict = re.search(r"^HANDSHAKE-VERDICT:[ \t]*(\S+)", head, re.M)
+        lapno = re.search(r"^HANDSHAKE-LAP:[ \t]*(\d+)", head, re.M)
+        rnd = re.search(r"^HANDSHAKE-ROUND:[ \t]*(\d+)", head, re.M)
+        # Prose, deliberately -- PROTOCOL.md 2 rule 5 says a value quoted in
+        # prose is not a declaration of it, so this tells a reader what the
+        # exchange is without the envelope ever parsing as a lap.
+        lead = (f"**The operative lap is `{lap.name}`, part 1 below** — round "
+                f"{rnd.group(1) if rnd else '?'}, lap "
+                f"{lapno.group(1) if lapno else '?'}, verdict stated in it as "
+                f"{verdict.group(1) if verdict else 'none'}. Split first, then "
+                f"read it; everything else here is what it references.\n\n")
+    else:
+        lead = ""
+
     doc = f"""# Transport envelope — {len(paths)} file(s)
 
-**Not a merged file and not a lap.** Each part below is byte-identical to its
+{lead}**Not a merged file and not a lap.** Each part below is byte-identical to its
 original, between column-0 delimiters, with its own SHA-256. Split it before
 reading; the reader is published here as code so you have an exact inverse
 rather than a description of one.

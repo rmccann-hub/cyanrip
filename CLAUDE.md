@@ -144,6 +144,16 @@ regardless of who is at the keyboard.
 - **The log is a contract.** Changing the text, indentation, field order, or units
   of any line Platterpus parses is a breaking change. It requires a handshake round
   before it ships — never a drive-by reword.
+- **One file per exchange. The lap travels inside the envelope.** The operator
+  moves these by hand between two repositories, and two attachments is one more
+  than the number that can be dropped, mis-ordered, or half-forwarded. Build it
+  with `tools/make-envelope.py out.md --lap <lap> <everything it references>`;
+  the lap becomes part 1 and the header names it in prose so a reader knows
+  what the exchange is before splitting. **The only thing that may travel
+  separately is a script meant to be run** — a file you execute should not have
+  to be extracted first. This is *transport*, not protocol: `PROTOCOL.md` §1
+  says the spec does not govern how files move, so this is the operator's
+  convention and belongs here rather than there.
 - **Each round is two files and two verifications.** We send a handshake file
   (sections A–J, spec below); they verify it against their real parser; they send a
   verification file back. A round stays **OPEN** until that arrives. **No release and

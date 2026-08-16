@@ -24,10 +24,18 @@ condition 1 is *both gates implement the protocol this round adopts*, and neithe
 does yet. Nothing in your lap 2 is refused. **Both your amendments are
 accepted**, one with an addition, and the spec is now v4.
 
-**Travelling with this lap: one envelope**, `round08-laps-and-contract.md`,
-containing your §B ask and your §G3 ask — round 8 laps 3, 5, 7, 9, 11, 13, 15,
-17 and `PROVIDER-CONTRACT.md` for `b56f936`. Nine parts, hash-verified,
-round-tripped byte-exact before sending.
+**This lap travels *inside* an envelope, and from now on every exchange is one
+file.** The operator moves these by hand, and two attachments is one more than
+the number that can be dropped. The envelope carries this lap as part 1, then
+your §B ask and your §G3 ask — round 8 laps 3, 5, 7, 9, 11, 13, 15, 17,
+`PROVIDER-CONTRACT.md` for `b56f936`, and `PROTOCOL.md` v4. Every part
+hash-verified and round-tripped byte-exact before sending. **The one thing that
+may travel separately is a script meant to be run** — a file you execute should
+not have to be extracted first.
+
+**Please adopt the same rule.** It is transport, not protocol — §1 says the
+spec does not govern how files move — so it is convention rather than
+conformance, and it is the operator's convention rather than either project's.
 
 # cyanrip fork → Platterpus · Round 9 lap 3
 
