@@ -95,7 +95,7 @@ LAP_RE = re.compile(r"^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", re.M)
 # The shared spec both projects implement. A file declaring a version this gate
 # does not implement is refused rather than guessed at -- see docs/handshake/
 # PROTOCOL.md, which is copied into both repositories.
-PROTOCOL_VERSION = 2
+PROTOCOL_VERSION = 4
 PROTOCOL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(\d+)[ \t]*$", re.M)
 
 # Adopted from Platterpus round 7 lap 3 §1: the wire header both sides emit.
@@ -118,6 +118,26 @@ PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S.*?)[ \t]*$", re
 PEER_PIN_RE = re.compile(r"^HANDSHAKE-PEER-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 OUR_VERSION_RE = re.compile(r"^HANDSHAKE-OUR-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
 OUR_PIN_RE = re.compile(r"^HANDSHAKE-OUR-PIN:[ \t]*(\S+)[ \t]*$", re.M)
+
+# v4 fields. Captured to end-of-line rather than \S+ because every one of them
+# carries prose: an INBOUND-HELD that says "none" and a digest that explains why
+# it could not be computed are both legal and both meaningful.
+INBOUND_RE = re.compile(r"^HANDSHAKE-INBOUND-HELD:[ \t]*(.+?)[ \t]*$", re.M)
+DIGEST_RE = re.compile(r"^HANDSHAKE-ROUND-DIGEST:[ \t]*(.+?)[ \t]*$", re.M)
+TO_REPO_RE = re.compile(r"^HANDSHAKE-TO-REPO:[ \t]*(.+?)[ \t]*$", re.M)
+FROM_REPO_RE = re.compile(r"^HANDSHAKE-FROM-REPO:[ \t]*(\S+)[ \t]*$", re.M)
+FROM_COMMIT_RE = re.compile(r"^HANDSHAKE-FROM-COMMIT:[ \t]*(.+?)[ \t]*$", re.M)
+TO_VERSION_RE = re.compile(r"^HANDSHAKE-TO-VERSION:[ \t]*(.+?)[ \t]*$", re.M)
+WITHDRAWN_REASON_RE = re.compile(r"^HANDSHAKE-WITHDRAWN-REASON:[ \t]*(.+?)[ \t]*$", re.M)
+OVERRIDE_RE = re.compile(r"^HANDSHAKE-OVERRIDE:[ \t]*(.+?)[ \t]*$", re.M)
+OVERRIDE_BY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-BY:[ \t]*(.+?)[ \t]*$", re.M)
+OVERRIDE_WHY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-WHY:[ \t]*(.+?)[ \t]*$", re.M)
+
+# v4 6a-bis R7. A lap past this needs a recorded override.
+LAP_CEILING = 21
+
+# v4 3a: required from round 9, the way v2's four are required from round 8.
+ADDRESSING_FROM_ROUND = 9
 TESTED_RE = re.compile(r"^HANDSHAKE-TESTED:[ \t]*(\S.*?)[ \t]*$", re.M)
 
 # Only GO closes a round. Anything else -- including a verdict this script has
@@ -143,6 +163,19 @@ class Lap:
         self.peer_pin = peer_pin
         self.our_version = our_version
         self.our_pin = our_pin
+        # v4. Defaulted to None so a v2/v3 file keeps working unchanged --
+        # unknown-fields-are-ignored cuts both ways, and a gate that broke on
+        # an older file would make the version bump a flag day.
+        self.inbound_held = None
+        self.digest = None
+        self.to_repo = None
+        self.from_repo = None
+        self.from_commit = None
+        self.to_version = None
+        self.withdrawn_reason = None
+        self.override = None
+        self.override_by = None
+        self.override_why = None
         self.tested = tested
         self.protocol = protocol
         self.sender = sender
@@ -190,6 +223,58 @@ class Lap:
             return self.grandfathered
         return int(self.protocol) <= PROTOCOL_VERSION
 
+    def missing_v4(self):
+        """v4 fields this lap should carry and does not. Empty for older rounds.
+
+        Scoped by ROUND rather than by declared protocol on purpose: a lap can
+        under-declare its protocol -- ours did, for eight laps -- so keying the
+        requirement on the declaration would let a file exempt itself from the
+        checks by claiming to be older than it is."""
+        if self.number is None or self.number < ADDRESSING_FROM_ROUND:
+            return []
+        want = {"HANDSHAKE-FROM-REPO": self.from_repo,
+                "HANDSHAKE-FROM-COMMIT": self.from_commit,
+                "HANDSHAKE-TO-REPO": self.to_repo,
+                "HANDSHAKE-TO-VERSION": self.to_version,
+                "HANDSHAKE-INBOUND-HELD": self.inbound_held}
+        return [k for k, v in want.items() if not v]
+
+    def bad_override(self):
+        """An override that is not fully recorded, or that names the one rule
+        no reason can waive."""
+        if not self.override:
+            return None
+        if not self.override_by or not self.override_why:
+            return ("HANDSHAKE-OVERRIDE without -BY and -WHY is not recorded, "
+                    "and an unrecorded override did not happen")
+        if re.search(r"\b5a\b|digest", self.override, re.I):
+            return ("§5a's digest rule is not overridable -- two parties "
+                    "exchanging GO over divergent records are agreeing about "
+                    "different things")
+        return None
+
+    @property
+    def over_ceiling(self):
+        """v4 §6a-bis R7, and NOT retroactive.
+
+        Round 7 ran to lap 39. Applying the ceiling backwards would reopen a
+        round both projects closed, on a rule that did not exist while it ran
+        -- and round 7 is the history that MOTIVATED the ceiling, so punishing
+        it is the one outcome that teaches nothing. Scoped from the round v4
+        was adopted in, exactly like the addressing fields, and for the same
+        reason: a rule arrives at a round boundary or it rewrites the past."""
+        if self.number is None or self.number < ADDRESSING_FROM_ROUND:
+            return False
+        return (self.lap is not None and self.lap > LAP_CEILING
+                and not self.override)
+
+    @property
+    def withdrawn(self):
+        """v4 §4b. Terminal, and requires only a reason -- there is no
+        agreement to record. A gate must additionally refuse any release that
+        names it, which check() does."""
+        return self.verdict == "WITHDRAWN"
+
     @property
     def closed(self):
         if self.grandfathered:
@@ -198,6 +283,15 @@ class Lap:
             return False
         if self.missing_wire_header():
             return False
+        if self.missing_v4():
+            return False
+        if self.bad_override() or self.over_ceiling:
+            return False
+        # WITHDRAWN is terminal but is NOT a close that permits a release --
+        # check() refuses one that names it. Reported separately so a withdrawn
+        # round does not sit forever in the "not closed" list.
+        if self.withdrawn:
+            return bool(self.withdrawn_reason)
         if self.verdict not in CLOSING:
             return False
         # Our GO alone is not agreement.
@@ -307,6 +401,21 @@ def load_rounds(directory=None, every_lap=False):
             pin=one(PIN_RE),
             test_pin=one(TEST_PIN_RE),
         ))
+        # v4 fields, set after construction so the constructor signature stays
+        # the v2 one -- Platterpus's gate is a separate implementation and a
+        # widened positional signature is the kind of change that only breaks
+        # for whoever tries to share code later.
+        lp = all_laps[-1]
+        lp.inbound_held = one(INBOUND_RE)
+        lp.digest = one(DIGEST_RE)
+        lp.to_repo = one(TO_REPO_RE)
+        lp.from_repo = one(FROM_REPO_RE)
+        lp.from_commit = one(FROM_COMMIT_RE)
+        lp.to_version = one(TO_VERSION_RE)
+        lp.withdrawn_reason = one(WITHDRAWN_REASON_RE)
+        lp.override = one(OVERRIDE_RE)
+        lp.override_by = one(OVERRIDE_BY_RE)
+        lp.override_why = one(OVERRIDE_WHY_RE)
 
     # A round's state is its latest lap. An unparseable lap number sorts to the
     # end so it cannot be shadowed by a well-formed earlier one.
@@ -359,6 +468,24 @@ def check(rounds):
             )
         if not r.closed:
             problems.append(f"round {r.number} is not closed ({r.why}): {r.path.name}")
+        elif r.withdrawn:
+            # v4 §4b, C27. WITHDRAWN is terminal -- the round is over and no
+            # further lap can reopen it -- but it records NO agreement, so a
+            # release must never name it. Without this, WITHDRAWN is a way to
+            # get past "no release while a round is open" by ending the round
+            # instead of closing it, which is worse than not having the state.
+            problems.append(
+                f"round {r.number} is WITHDRAWN, not closed by agreement, so no "
+                f"release may name it: {r.path.name}"
+                + (f" -- {r.withdrawn_reason}" if r.withdrawn_reason else ""))
+        bad = r.bad_override()
+        if bad:
+            problems.append(f"round {r.number} ({r.path.name}): {bad}")
+        miss4 = r.missing_v4()
+        if miss4:
+            problems.append(
+                f"round {r.number} ({r.path.name}) is missing required v4 "
+                f"fields: {', '.join(miss4)}")
         # A file that declares a different round number than its name is a
         # bookkeeping error that would make any per-round claim unresolvable.
         if r.declared_number is not None and r.declared_number != r.number:
@@ -396,6 +523,12 @@ def main():
         state = "closed" if r.closed else "OPEN"
         lap = f"lap {r.lap}" if r.lap is not None else "lap ?"
         print(f"  round {r.number} ({lap}, {r.path.name}): {state:6}  ({r.why})")
+        if r.override and not r.bad_override():
+            # C32: every time the state is printed, not once. An override
+            # that becomes invisible after the session that made it is
+            # indistinguishable from the rule never having existed.
+            print(f"      OVERRIDE {r.override} — by {r.override_by} "
+                  f"— {r.override_why}")
         if r.test_pin:
             print(f"      test pin {r.test_pin} -- for the rig to gather "
                   f"evidence; NOT a release and does not close this round")

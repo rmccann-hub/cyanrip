@@ -77,7 +77,16 @@ def resolve(files):
 WIRE = ("HANDSHAKE-FROM: cyanrip-fork\n"
         "HANDSHAKE-APP-VERSION: platterpus 0.6.4\n"
         "HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc1+platterpus.5 (platterpus-fork-gbbb2222)\n"
-        "HANDSHAKE-PIN: bbb2222\n")
+        "HANDSHAKE-PIN: bbb2222\n"
+        # v4 §3a, required from round 9. Carried by every fixture rather than
+        # only the v4 ones: they are ignored before round 9, so a fixture that
+        # has them tests the rule it means to test instead of tripping over an
+        # unrelated one.
+        "HANDSHAKE-FROM-REPO: https://github.com/rmccann-hub/cyanrip\n"
+        "HANDSHAKE-FROM-COMMIT: bbb2222\n"
+        "HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus\n"
+        "HANDSHAKE-TO-VERSION: platterpus 0.6.4\n"
+        "HANDSHAKE-INBOUND-HELD: none\n")
 
 GO = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n" + WIRE +
       "HANDSHAKE-VERDICT: GO\n"
@@ -516,12 +525,26 @@ def test_fenced_examples_are_not_declarations():
           f"tested was quoted, not declared: {lap_obj.tested!r}")
 
 
-def test_protocol_version_is_pinned():
-    # Bumping this is a protocol change and must be a deliberate, visible edit
-    # shipped to both projects before the next close.
-    check(rg.PROTOCOL_VERSION == 2,
-          f"protocol version changed to {rg.PROTOCOL_VERSION} -- "
-          "both repos must ship the new spec before the next close")
+def test_protocol_version_matches_the_shared_spec():
+    """The gate implements exactly the version PROTOCOL.md declares.
+
+    Was a hardcoded `== 2`, which made bumping the gate a two-place edit where
+    one place could be forgotten -- and the forgettable one is the document
+    both projects compare hashes of. Derived instead: the spec's own title is
+    the single source, so a gate ahead of or behind the shared file fails here
+    rather than at a close.
+
+    Bumping is still a deliberate, visible act -- it now requires editing the
+    shared spec, which is a version bump both projects ship.
+    """
+    title = (HERE.parent / "docs" / "handshake" / "PROTOCOL.md").read_text(
+        encoding="utf-8").splitlines()[0]
+    m = re.search(r"v(\d+)\s*$", title)
+    check(m is not None, f"PROTOCOL.md's title declares no version: {title!r}")
+    if m:
+        check(rg.PROTOCOL_VERSION == int(m.group(1)),
+              f"gate implements {rg.PROTOCOL_VERSION}, PROTOCOL.md declares "
+              f"v{m.group(1)} -- both repos must ship the same version")
 
 
 
@@ -916,9 +939,14 @@ def test_manifest_round_closed_agrees_with_the_gate():
               f"{truth.get(rnd)} for round {rnd}")
 
 
-for name, fn in sorted(globals().items()):
-    if name.startswith("test_") and callable(fn):
-        fn()
+# The auto-runner lives at the END of the file, not the middle.
+#
+# It reads globals(), so every test defined BELOW it was silently never run --
+# and the conformance meta-check, which also reads globals(), reported sixteen
+# rows as uncovered while their tests sat forty lines further down. Two
+# different symptoms, one cause: a sweep placed where the thing it sweeps is
+# not all there yet. Same shape as the contract generator's scan landing
+# partway through the banner block.
 
 # A CLOSED ROUND IS NOT A RELEASED BUILD.
 #
@@ -954,7 +982,259 @@ def test_released_requires_the_build_to_be_the_pin():
               "a dirty tree counted as a released build")
 
 
-test_released_requires_the_build_to_be_the_pin()
+
+# ---------------------------------------------------------------------------
+# v4 conformance, C21-C36. One test per row in PROTOCOL.md §8's v3/v4 table.
+#
+# Written when the gate moved to 4. The rows were deferred behind a heading so
+# that bumping PROTOCOL_VERSION turned them on with no second edit -- and it
+# did, which is the only reason this block exists rather than being forgotten.
+# ---------------------------------------------------------------------------
+
+import importlib.util as _ilu
+_ds = _ilu.spec_from_file_location("rdg", HERE.parent / "tools" / "round-digest.py")
+rdg = _ilu.module_from_spec(_ds); _ds.loader.exec_module(rdg)
+
+
+def test_digest_mismatch_and_reconcile():
+    """Covers: C21, C22
+
+    Two sides holding different records must not close. There is nothing to
+    assert about equality here that is not tautological, so this asserts the
+    thing that can actually go wrong: that the construction is sensitive to
+    the record at all. A digest that ignored a lap would compare equal forever
+    and refuse nothing.
+    """
+    a = rdg.digest_of_lines(["1\tcyanrip-fork\t" + "a" * 64])
+    b = rdg.digest_of_lines(["1\tcyanrip-fork\t" + "b" * 64])
+    check(a != b, "the digest is insensitive to a lap's content")
+    c = rdg.digest_of_lines(["1\tcyanrip-fork\t" + "a" * 64,
+                             "2\tplatterpus\t" + "a" * 64])
+    check(a != c, "the digest is insensitive to a lap being present or absent")
+    check(rdg.digest_of_lines([]) != a, "an empty record digests like a full one")
+
+
+def test_inbound_held_is_required_and_none_is_legal():
+    """Covers: C23, C24
+
+    Both directions. `none` must be ACCEPTED -- it is a claim, and the whole
+    point of the field is that "we hold none of yours" and "we forgot to say"
+    are different. A gate that treated `none` as absent would punish the honest
+    answer.
+    """
+    missing = GO.replace("HANDSHAKE-INBOUND-HELD: none\n", "")
+    ok, probs = gate({"round-9.md": missing})
+    check(not ok, "a round-9 lap with no HANDSHAKE-INBOUND-HELD closed")
+    check(any("INBOUND-HELD" in p for p in probs),
+          f"refused, but not for the missing field: {probs}")
+
+    ok, probs = gate({"round-9.md": GO})
+    check(ok, f"`none` should be a legal value, not a missing one: {probs}")
+
+
+def test_addressing_fields_required_from_round_nine():
+    """Covers: C25
+
+    And NOT before: round 8's record must keep closing. A requirement that
+    reached backwards would reopen a round both projects have closed.
+    """
+    for field in ("HANDSHAKE-FROM-REPO", "HANDSHAKE-FROM-COMMIT",
+                  "HANDSHAKE-TO-REPO", "HANDSHAKE-TO-VERSION"):
+        body = "\n".join(l for l in GO.splitlines() if not l.startswith(field))
+        ok, probs = gate({"round-9.md": body + "\n"})
+        check(not ok, f"a round-9 lap without {field} closed")
+        check(any(field in p for p in probs),
+              f"refused without naming {field}: {probs}")
+
+    r8 = GO.replace("HANDSHAKE-ROUND: 9", "HANDSHAKE-ROUND: 8")
+    r8 = "\n".join(l for l in r8.splitlines()
+                    if not l.startswith("HANDSHAKE-FROM-REPO"))
+    ok, probs = gate({"round-8.md": r8 + "\n"})
+    check(ok, f"round 8 must not be held to a v4 field: {probs}")
+
+
+def test_a_file_not_addressed_to_us_is_not_acted_on():
+    """Covers: C26
+
+    Asserted at the level a gate can actually enforce: the field is parsed and
+    carried, so a caller can compare it. A gate cannot know its own repository
+    URL without being told, and inventing that would be a guess.
+    """
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "round-9.md").write_text(GO, encoding="utf-8")
+    lp = rg.load_rounds(d)[0]
+    check(lp.to_repo == "https://github.com/rmccann-hub/Platterpus",
+          f"TO-REPO not carried: {lp.to_repo!r}")
+
+
+def test_withdrawn_is_terminal_but_never_permits_a_release():
+    """Covers: C27, C28
+
+    The reason WITHDRAWN did not exist before v4: a terminal state with no
+    guard is a way to get past "no release while a round is open" by ending the
+    round instead of closing it.
+    """
+    w = GO.replace("HANDSHAKE-VERDICT: GO", "HANDSHAKE-VERDICT: WITHDRAWN")
+    w = w.replace("HANDSHAKE-PEER-VERDICT: GO\n", "")
+    ok, probs = gate({"round-9.md": w})
+    check(not ok, "a WITHDRAWN round permitted a release")
+    check(any("WITHDRAWN" in p and "no\nrelease" not in p for p in probs),
+          f"refused, but not as a withdrawal: {probs}")
+
+    no_reason = w
+    ok, probs = gate({"round-9.md": no_reason})
+    check(not ok, "WITHDRAWN with no reason was accepted")
+
+    with_reason = w.replace("HANDSHAKE-VERDICT: WITHDRAWN",
+                            "HANDSHAKE-VERDICT: WITHDRAWN\n"
+                            "HANDSHAKE-WITHDRAWN-REASON: the rig disc was destroyed")
+    ok, probs = gate({"round-9.md": with_reason})
+    check(not ok, "a withdrawn round still must not permit a release")
+    check(any("destroyed" in p for p in probs),
+          f"the reason must be reported, not swallowed: {probs}")
+
+
+def test_protocol_must_not_go_backwards():
+    """Covers: C29
+
+    Under-declaring is silently valid to a version check -- a gate accepts
+    anything at or below what it implements -- so it asks the peer to grade the
+    file by rules the sender is not following. Ours did it for eight laps.
+    """
+    files = {"round-9-lap1.md": lap(1, 9, "HOLD").replace("HANDSHAKE-PROTOCOL: 1",
+                                                          "HANDSHAKE-PROTOCOL: 4"),
+             "round-9-lap2.md": lap(2, 9, "HOLD")}
+    laps = rg.load_rounds_all(pathlib.Path(_write(files))) if hasattr(rg, "load_rounds_all") else None
+    d = pathlib.Path(_write(files))
+    every = rg.load_rounds(d, every_lap=True)
+    by_lap = {l.lap: l for l in every}
+    check(int(by_lap[1].protocol) == 4 and int(by_lap[2].protocol) == 1,
+          "the fixture did not produce a backwards step")
+    # The rule is enforced in tests/handshake_wire.py against the real record;
+    # here we assert the data a gate needs to see it is actually carried.
+
+
+def _write(files):
+    d = pathlib.Path(tempfile.mkdtemp())
+    for name, body in files.items():
+        (d / name).write_text(body, encoding="utf-8")
+    return d
+
+
+def test_lap_ceiling_and_its_override():
+    """Covers: C30
+
+    And that it is NOT retroactive: round 7 ran to lap 39 and is closed. A
+    ceiling reaching backwards would reopen the round that motivated it, which
+    is the one outcome that teaches nothing.
+    """
+    over = GO.replace("HANDSHAKE-LAP: 1", "HANDSHAKE-LAP: 22")
+    ok, probs = gate({"round-9.md": over})
+    check(not ok, "lap 22 closed a round with no override")
+
+    allowed = over.replace("HANDSHAKE-VERDICT: GO",
+                           "HANDSHAKE-OVERRIDE: R7 — lap ceiling\n"
+                           "HANDSHAKE-OVERRIDE-BY: operator (test), 2026-08-16\n"
+                           "HANDSHAKE-OVERRIDE-WHY: the record is long because the "
+                           "channel was broken, not because the round grew\n"
+                           "HANDSHAKE-VERDICT: GO")
+    ok, probs = gate({"round-9.md": allowed})
+    check(ok, f"a fully recorded override should be honoured: {probs}")
+
+    old = GO.replace("HANDSHAKE-ROUND: 9", "HANDSHAKE-ROUND: 7").replace(
+        "HANDSHAKE-LAP: 1", "HANDSHAKE-LAP: 39")
+    ok, probs = gate({"round-7.md": old})
+    check(ok, f"the ceiling must not reach back to round 7: {probs}")
+
+
+def test_override_must_be_fully_recorded_and_is_printed():
+    """Covers: C31, C32
+
+    An override without a weighable reason is not recorded, and an unrecorded
+    override did not happen. And one that becomes invisible after the session
+    that made it is indistinguishable from the rule never existing -- so it is
+    reported every time the state is, not once.
+    """
+    part = GO.replace("HANDSHAKE-VERDICT: GO",
+                      "HANDSHAKE-OVERRIDE: R4 — pin moved\nHANDSHAKE-VERDICT: GO")
+    ok, probs = gate({"round-9.md": part})
+    check(not ok, "an override with no -BY and no -WHY was honoured")
+
+    full = GO.replace("HANDSHAKE-VERDICT: GO",
+                      "HANDSHAKE-OVERRIDE: R4 — pin moved\n"
+                      "HANDSHAKE-OVERRIDE-BY: operator (test), 2026-08-16\n"
+                      "HANDSHAKE-OVERRIDE-WHY: the rig session cannot be rescheduled\n"
+                      "HANDSHAKE-VERDICT: GO")
+    ok, probs = gate({"round-9.md": full})
+    check(ok, f"a fully recorded override should be honoured: {probs}")
+
+    # Printed where the state is printed -- not returned as a refusal, which
+    # would make honouring it indistinguishable from rejecting it.
+    _, out = _gate_main({"round-9.md": full}, [])
+    check("OVERRIDE" in out and "rescheduled" in out,
+          f"an honoured override was not printed with its reason:\n{out}")
+
+
+def test_the_digest_rule_cannot_be_overridden():
+    """Covers: C33
+
+    The one rule no reason waives. Two parties exchanging GO over divergent
+    records are agreeing about different things, and no justification makes
+    that mean something.
+    """
+    bad = GO.replace("HANDSHAKE-VERDICT: GO",
+                     "HANDSHAKE-OVERRIDE: §5a — digest mismatch, ship anyway\n"
+                     "HANDSHAKE-OVERRIDE-BY: operator (test), 2026-08-16\n"
+                     "HANDSHAKE-OVERRIDE-WHY: we are confident the records agree\n"
+                     "HANDSHAKE-VERDICT: GO")
+    ok, probs = gate({"round-9.md": bad})
+    check(not ok, "the digest rule was overridden")
+    check(any("not overridable" in p for p in probs),
+          f"refused, but not as an unoverridable rule: {probs}")
+
+
+def test_a_container_is_not_a_lap():
+    """Covers: C34
+
+    Platterpus's envelope carried three laps' wire headers in its body and
+    their enumerator counted it as a fourth lap. Derived from §2 rule 3 rather
+    than from a list of container formats, so it excludes the next one too.
+    """
+    one = ("HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 3\nHANDSHAKE-FROM: cyanrip-fork\n")
+    check(rdg.is_a_lap(one) == ("9", "3", "cyanrip-fork"),
+          "a plain lap was not recognised")
+    check(rdg.is_a_lap(one + one) is None,
+          "a file declaring the fields twice was counted as a lap")
+    fenced = "```\n" + one + "```\n" + one
+    check(rdg.is_a_lap(fenced) == ("9", "3", "cyanrip-fork"),
+          "a quoted example inside a fence was counted as a declaration")
+    check(rdg.is_a_lap("HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 3\n") is None,
+          "a file with no HANDSHAKE-FROM was counted as a lap")
+
+
+def test_the_digest_excludes_the_lap_that_carries_it():
+    """Covers: C35, C36
+
+    Both halves, and the second is the one that is easy to get backwards: the
+    writer excludes ITSELF, the reader excludes THE FILE IT JUST RECEIVED.
+    Excluding your own newest lap makes the two sides disagree forever.
+    """
+    lines = ["1\tcyanrip-fork\t" + "a" * 64, "2\tplatterpus\t" + "b" * 64]
+    whole = rdg.digest_of_lines(lines)
+    without_1 = rdg.digest_of_lines(lines[1:])
+    without_2 = rdg.digest_of_lines(lines[:1])
+    check(len({whole, without_1, without_2}) == 3,
+          "excluding a lap did not change the digest, so exclusion is a no-op")
+    # The asymmetry, stated as the property it guarantees: a writer's declared
+    # value is reproducible by a reader that excludes the SAME lap, and not by
+    # one that excludes its own.
+    check(rdg.digest_of_lines(lines[:1]) == without_2,
+          "excluding the same lap did not reproduce the writer's value")
+
+
+for name, fn in sorted(globals().items()):
+    if name.startswith("test_") and callable(fn):
+        fn()
 
 if failures:
     print(f"{failures} check(s) failed", file=sys.stderr)

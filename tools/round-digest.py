@@ -110,10 +110,18 @@ def lap_lines(round_no, exclude=None):
     return sorted(out)
 
 
+def digest_of_lines(lines):
+    """The construction itself, separated so it can be tested on synthetic
+    records rather than only on this repository's own history -- a digest that
+    can only be exercised against one real record cannot be shown to be
+    sensitive to anything."""
+    blob = ("\n".join(sorted(lines)) + "\n").encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()[:16]
+
+
 def digest(round_no, exclude=None):
     lines = lap_lines(round_no, exclude)
-    blob = ("\n".join(lines) + "\n").encode("utf-8")
-    return hashlib.sha256(blob).hexdigest()[:16], len(lines), lines
+    return digest_of_lines(lines), len(lines), lines
 
 
 def main():
