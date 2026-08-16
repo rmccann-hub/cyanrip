@@ -53,9 +53,40 @@ HS = ROOT / "docs" / "handshake"
 LAP_RE = re.compile(r"^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", re.M)
 ROUND_RE = re.compile(r"^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", re.M)
 FROM_RE = re.compile(r"^HANDSHAKE-FROM:[ \t]*(\S+)[ \t]*$", re.M)
+FENCE_RE = re.compile(r"^```.*?^```", re.M | re.S)
 
 
-def lap_lines(round_no):
+def is_a_lap(text):
+    """PROTOCOL.md v4 §5a: one lap iff ROUND, LAP and FROM each appear exactly
+    once after fenced blocks are stripped.
+
+    Returns (round, lap, from) or None.
+
+    Derived from §2 rule 3 -- a field declared twice is ambiguous and ambiguity
+    is never resolved by taking the first or the last -- so a file with two
+    HANDSHAKE-LAP lines is not a lap, it is a file CONTAINING laps.
+
+    Platterpus found this on their implementation's first run: a transport
+    envelope carrying three laps verbatim declared three wire headers in its
+    body, their enumerator took the first, and the envelope counted as a fourth
+    lap 2. The digest was stable, reproducible, and described a record neither
+    side held -- which under §4a puts the round into RECONCILE, a state
+    exchanging files cannot exit because nothing is missing.
+
+    Deliberately NOT a filename or container-format exclusion. A list only ever
+    excludes the container someone has already met; this excludes the next one.
+    """
+    stripped = FENCE_RE.sub("", text)
+    got = []
+    for rx in (ROUND_RE, LAP_RE, FROM_RE):
+        m = rx.findall(stripped)
+        if len(m) != 1:
+            return None
+        got.append(m[0])
+    return got[0], got[1], got[2]
+
+
+def lap_lines(round_no, exclude=None):
     """One "<lap>\\t<from>\\t<sha>" line per lap file of this round we hold.
 
     Both directories: ours and inbound/. The digest covers the record, and the
@@ -66,27 +97,21 @@ def lap_lines(round_no):
     out = []
     for path in sorted(list(HS.glob("round-*.md")) +
                        list((HS / "inbound").glob("round-*.md"))):
+        if exclude and path.name == exclude:
+            continue
         raw = path.read_bytes()
-        text = raw.decode("utf-8", errors="replace")
-        rm = ROUND_RE.search(text)
-        if not rm or int(rm.group(1)) != round_no:
+        parts = is_a_lap(raw.decode("utf-8", errors="replace"))
+        if parts is None:
             continue
-        lm = LAP_RE.search(text)
-        fm = FROM_RE.search(text)
-        if not lm or not fm:
-            # A file with no lap or no author cannot be placed in the record,
-            # and guessing at either is how a digest stops meaning anything.
-            print(f"warning: {path.name} declares no "
-                  f"{'HANDSHAKE-LAP' if not lm else 'HANDSHAKE-FROM'} "
-                  "-- excluded from the digest", file=sys.stderr)
+        rnd, lap, frm = parts
+        if int(rnd) != round_no:
             continue
-        out.append(f"{lm.group(1)}\t{fm.group(1)}\t"
-                   f"{hashlib.sha256(raw).hexdigest()}")
+        out.append(f"{lap}\t{frm}\t{hashlib.sha256(raw).hexdigest()}")
     return sorted(out)
 
 
-def digest(round_no):
-    lines = lap_lines(round_no)
+def digest(round_no, exclude=None):
+    lines = lap_lines(round_no, exclude)
     blob = ("\n".join(lines) + "\n").encode("utf-8")
     return hashlib.sha256(blob).hexdigest()[:16], len(lines), lines
 
@@ -95,9 +120,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("round", type=int)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--exclude", metavar="FILENAME",
+                    help="the lap being written, or -- when VERIFYING a peer's "
+                         "declared digest -- the lap THEY wrote. v4 §5a: the "
+                         "writer excludes itself and the reader excludes that "
+                         "same file, never its own newest lap. Getting this "
+                         "backwards makes the two sides disagree forever.")
     args = ap.parse_args()
 
-    d, n, lines = digest(args.round)
+    d, n, lines = digest(args.round, args.exclude)
     if args.verbose:
         for line in lines:
             print(line, file=sys.stderr)
