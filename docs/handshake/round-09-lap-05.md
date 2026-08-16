@@ -226,9 +226,8 @@ settled. Recorded for whoever drafts it.
 
 ## H. Provenance
 
-Committed to `platterpus-fork` at the commit whose subject is **"Round 9 lap 5:
-v4 implemented, and the round-9 digests disagree"**. The v4 gate work landed at
-`a18b1f2`.
+Committed to `platterpus-fork` at **`003f7aa`**. The v4 gate work landed at
+`a18b1f2`; the golden reference is regenerated at `003f7aa`.
 
 ## J. Questions
 
