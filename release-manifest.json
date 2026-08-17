@@ -1,24 +1,24 @@
 {
   "channels": {
     "beta": {
-      "commit": "2ce8993",
-      "handshake_round": 8,
-      "install": "https://github.com/rmccann-hub/cyanrip/archive/2ce8993.tar.gz",
-      "release_seq": 15,
+      "commit": "c4d1a00",
+      "handshake_round": 10,
+      "install": "https://github.com/rmccann-hub/cyanrip/archive/c4d1a00.tar.gz",
+      "release_seq": 16,
       "round_closed": true,
-      "version": "0.9.4-rc1+platterpus.6-beta.4"
+      "version": "0.9.4-rc1+platterpus.6"
     },
     "stable": {
-      "commit": "ddf7ac3",
-      "handshake_round": 7,
-      "install": "https://github.com/rmccann-hub/cyanrip/archive/ddf7ac3.tar.gz",
-      "release_seq": 11,
+      "commit": "c4d1a00",
+      "handshake_round": 10,
+      "install": "https://github.com/rmccann-hub/cyanrip/archive/c4d1a00.tar.gz",
+      "release_seq": 16,
       "round_closed": true,
-      "version": "0.9.4-rc1+platterpus.5"
+      "version": "0.9.4-rc1+platterpus.6"
     }
   },
   "default_channel": "stable",
-  "latest_seq": 15,
+  "latest_seq": 16,
   "manifest_url": "https://raw.githubusercontent.com/rmccann-hub/cyanrip/platterpus-fork/release-manifest.json",
   "note": "Machine-readable. Order by release_seq -- the version string cannot be ordered, because the part that advances is SemVer build metadata, which is ignored for precedence.",
   "project": "cyanrip-fork",
