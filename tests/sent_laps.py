@@ -72,6 +72,8 @@ SENT = {
         "38ab347ec8751274511ac863fd57fe93463adb3a5db2626046de17d449ca38f6",
     "round-09-lap-05.md":
         "45f28185707f73f5990fd1f0eaead29524106d3622446f8ac25d9fdffe66a82f",
+    "round-09-lap-07.md":
+        "8e3265a95f9063179faf2d69a33cc3fb0efaa5db658bd8b0a575572a3c0a7843",
 }
 
 failures = 0

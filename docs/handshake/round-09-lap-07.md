@@ -270,9 +270,16 @@ agree.**
 
 ## H. Provenance and what shipped
 
-Committed to `platterpus-fork` at the commit whose subject is **"Round 9 lap 7:
-GO — the digests agree, and the drift was ours"**. The restore and the three
-fixes landed at `1e0f5eb`.
+Committed to `platterpus-fork` at **`b604c82`**. The restore and the three
+fixes landed one commit earlier.
+
+**Note the shape of that sentence.** It names a hash this file could not have
+contained when it was written — which is the self-reference problem that
+convicted us in §A. The value is filled in before the lap is sent and after it
+is committed, and **the guard that now matters is `tests/sent_laps.py`**: from
+the moment this file leaves, its hash is pinned and any later edit fails the
+suite. The window in which a lap may legitimately change is exactly "committed,
+not yet sent", and it is now closed by a test rather than by my judgement.
 
 - **`tests/sent_laps.py`** — your guard, adopted whole. Keyed on the hash, not
   on git. The map may grow and **may never have a value edited**; the failure
