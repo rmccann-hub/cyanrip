@@ -173,6 +173,9 @@ class Lap:
         self.from_commit = None
         self.to_version = None
         self.withdrawn_reason = None
+        # (verdict, filename) of the newest peer lap of this round we hold, or
+        # None when we hold none of theirs. Filled in by load_rounds().
+        self.peer_latest = None
         self.override = None
         self.override_by = None
         self.override_why = None
@@ -297,7 +300,36 @@ class Lap:
         # Our GO alone is not agreement.
         if self.peer_verdict not in CLOSING:
             return False
+        if self.stale_peer_verdict:
+            return False
         return not self.missing_for_close()
+
+    @property
+    def stale_peer_verdict(self):
+        """True when HANDSHAKE-PEER-VERDICT transcribes a SUPERSEDED peer lap.
+
+        **Found while answering round 9 lap 8, in the gate, about round 9.** Our
+        lap 7 declared `PEER-VERDICT: GO`, transcribed from their lap 4, while
+        we held their lap 6 declaring `HOLD` -- and said so in its own header.
+        This gate reads only our outbox, so it saw GO + GO and printed *"Release
+        allowed: every round is closed"* for a round the other side was holding
+        open, and had been holding open for two laps.
+
+        That is the exact defect this gate exists to prevent, one axis over.
+        Platterpus's gate closed a round off a file whose text said HOLD; ours
+        closed one off a peer verdict that was real, correctly transcribed, and
+        no longer true. **Transcription was never the weak point -- recency
+        was**, and nothing checked it, because the newest peer lap lives in a
+        directory the gate did not read.
+
+        `none` is not a failure: rounds 5-7 predate `inbound/` and we hold no
+        peer file for them. An absence of evidence is not evidence of staleness,
+        so a round with no inbound lap is judged exactly as before.
+        """
+        if self.peer_latest is None:
+            return False
+        peer_verdict, _ = self.peer_latest
+        return peer_verdict not in CLOSING
 
     @property
     def why(self):
@@ -324,6 +356,10 @@ class Lap:
             return "our verdict GO, but no peer verdict declared"
         if self.peer_verdict not in CLOSING:
             return f"our verdict GO, peer verdict {self.peer_verdict}"
+        if self.stale_peer_verdict:
+            verdict, name = self.peer_latest
+            return (f"we transcribe peer {self.peer_verdict}, but the newest "
+                    f"peer lap we hold ({name}) declares {verdict}")
         missing = self.missing_for_close()
         if missing:
             return "both verdicts GO, but missing " + ", ".join(missing)
@@ -445,6 +481,28 @@ def load_rounds(directory=None, every_lap=False):
         if len(tied) > 1:
             win.verdict = "AMBIGUOUS-LAP"
             win.tied_with = sorted(lp.path.name for lp in tied)
+    # The newest PEER lap we hold per round, from inbound/. Read here rather
+    # than left to the caller because the alternative is what shipped: a gate
+    # that reads only our own outbox and cannot tell a current peer verdict
+    # from a superseded one. See Lap.stale_peer_verdict.
+    peer_latest = {}
+    for path in sorted((directory / "inbound").glob("round-*.md")):
+        text = strip_fences(path.read_text(encoding="utf-8"))
+        nums, laps, verdicts = (ROUND_RE.findall(text), LAP_RE.findall(text),
+                                VERDICT_RE.findall(text))
+        # Same ambiguity rule as our own laps: a field declared twice is not
+        # resolved by taking the first. A peer file we cannot read
+        # unambiguously is skipped, never guessed at.
+        if not (len(nums) == len(laps) == len(verdicts) == 1):
+            continue
+        n, lap, verdict = int(nums[0]), int(laps[0]), verdicts[0]
+        if n not in peer_latest or lap > peer_latest[n][0]:
+            peer_latest[n] = (lap, verdict, path.name)
+    for lp in all_laps:
+        got = peer_latest.get(lp.number)
+        if got:
+            lp.peer_latest = (got[1], got[2])
+
     if every_lap:
         return sorted(all_laps, key=lambda lp: (lp.number or 0, lp.lap or 0,
                                                 lp.path.name))

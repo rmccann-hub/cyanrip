@@ -1419,6 +1419,79 @@ def test_the_digest_checker_can_fail():
         rdg.HS = real
 
 
+def test_a_superseded_peer_verdict_does_not_close_a_round():
+    """Covers: C21 (round 9 lap 8)
+
+    **Measured on this repository, not imagined.** Round 9 lap 7 declared
+    `PEER-VERDICT: GO`, transcribed from their lap 4, while we held their lap 6
+    declaring `HOLD` -- and said so in its own header. The gate read only our
+    outbox, saw GO + GO, and printed *"Release allowed: every round is closed"*
+    for a round Platterpus had been holding open for two laps.
+
+    Their gate closed a round off a file whose text said HOLD. Ours closed one
+    off a peer verdict that was real, correctly transcribed, and superseded.
+    **Transcription was never the weak point. Recency was.**
+
+    The check is bounded by what we hold: a peer lap we never received cannot
+    make us stale. `HANDSHAKE-INBOUND-HELD` is what catches that, from their
+    side, and this does not replace it.
+    """
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "inbound").mkdir()
+    (d / "round-9.md").write_text(GO, encoding="utf-8")
+    peer = ("HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: {}\n"
+            "HANDSHAKE-FROM: platterpus\nHANDSHAKE-VERDICT: {}\n")
+
+    # No inbound lap at all: judged exactly as before. Rounds 5-7 are this.
+    check(rg.check(rg.load_rounds(d))[0],
+          "a round with no peer file held was refused")
+
+    (d / "inbound" / "round-09-lap-04.md").write_text(
+        peer.format(4, "GO"), encoding="utf-8")
+    check(rg.check(rg.load_rounds(d))[0],
+          "a peer GO we hold did not permit the close")
+
+    (d / "inbound" / "round-09-lap-06.md").write_text(
+        peer.format(6, "HOLD"), encoding="utf-8")
+    ok, probs = rg.check(rg.load_rounds(d))
+    check(not ok, "a superseded peer GO still closed the round")
+    check(any("round-09-lap-06.md" in p and "HOLD" in p for p in probs),
+          f"refused without naming the newer peer lap: {probs}")
+
+    # And it reopens correctly: a later peer GO closes it again. A check that
+    # only ever refuses is a check nobody can satisfy.
+    (d / "inbound" / "round-09-lap-10.md").write_text(
+        peer.format(10, "GO"), encoding="utf-8")
+    check(rg.check(rg.load_rounds(d))[0],
+          "a newer peer GO did not close the round again")
+
+    # Lap ORDER, not filename order. CLAUDE.md states the rule outright -- "lap
+    # order comes from the declared number, not the filename" -- and our padded
+    # convention hides every violation of it, because for laps 1-99 the two
+    # orders agree. The first version of this case used padded names and a
+    # revert to picking the LAST file in sorted order passed it.
+    #
+    # So the newest lap gets a name that sorts EARLY, which is not contrived:
+    # inbound files arrive under whatever name the operator saved them as, and
+    # this repo's own round-5.md and round-6.md are unpadded.
+    # The newest lap sorts FIRST and says GO; an older one sorts LAST and says
+    # HOLD. Reading by filename yields the HOLD and refuses; reading by lap
+    # number yields the GO and closes. Nothing between the two answers.
+    (d / "inbound" / "round-09-a-newest-lap.md").write_text(
+        peer.format(11, "GO"), encoding="utf-8")
+    (d / "inbound" / "round-09-zz-older-lap.md").write_text(
+        peer.format(5, "HOLD"), encoding="utf-8")
+    check(rg.check(rg.load_rounds(d))[0],
+          "an OLDER peer lap overrode a newer one, so the order is by filename")
+
+    # A peer file declaring a field twice is ambiguous, and ambiguity is never
+    # resolved by taking the first -- the rule already applied to our own laps.
+    (d / "inbound" / "round-09-lap-12.md").write_text(
+        peer.format(12, "HOLD") + "HANDSHAKE-VERDICT: GO\n", encoding="utf-8")
+    check(rg.check(rg.load_rounds(d))[0],
+          "an ambiguous peer file was read as a verdict rather than skipped")
+
+
 def test_exclude_refuses_when_it_matches_nothing():
     """Covers: C21 (round 9 lap 6 §F3)
 
