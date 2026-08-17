@@ -6,7 +6,7 @@ stale silently, which is the failure this file exists to prevent.
 
 Build: `cyanrip 0.9.4-rc1+platterpus.6-beta.4 (platterpus-fork-g<commit>)`
 
-**Source anchor:** `sha256/16 = e3723c3064504a7e` over `src/*.c` and
+**Source anchor:** `sha256/16 = 68765127787107cf` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -205,8 +205,8 @@ requires a handshake round.
 | `cyanrip_encode.c:1294` | `Could not open output codec context!` |
 | `cyanrip_encode.c:1301` | `Couldn't copy codec params!` |
 | `cyanrip_encode.c:1308` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
-| `cyanrip_log.c:809` | `Log FUN512: %s` |
-| `cyanrip_log.c:887` | `--- %zu earlier message(s) dropped: buffer full ---` |
+| `cyanrip_log.c:825` | `Log FUN512: %s` |
+| `cyanrip_log.c:903` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:58` | `%s%s:` |
 | `cyanrip_log.c:61` | `%s` |
 | `cyanrip_log.c:71` | `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)` |
@@ -273,48 +273,49 @@ requires a handshake round.
 | `cyanrip_log.c:538` | `File(s):` |
 | `cyanrip_log.c:552` | `cyanrip %s (%s-g%s)` |
 | `cyanrip_log.c:555` | `Invoked as:     %s` |
-| `cyanrip_log.c:563` | `Handshake:      %s%s` |
-| `cyanrip_log.c:569` | `Consumer:       %s` |
-| `cyanrip_log.c:573` | `(reported by the caller, not verified by cyanrip)` |
-| `cyanrip_log.c:577` | `Drive used:     error retrieving drive info` |
-| `cyanrip_log.c:579` | `Drive used:     %s %s (revision %s)` |
-| `cyanrip_log.c:580` | `System device:  %s` |
-| `cyanrip_log.c:582` | `Device model:   %s` |
-| `cyanrip_log.c:591` | `Offset:         %c%u %s` |
-| `cyanrip_log.c:594` | `Underread:      %c%i %s` |
-| `cyanrip_log.c:594` | `Overread:       %c%i %s` |
-| `cyanrip_log.c:599` | `Underread mode: %s` |
-| `cyanrip_log.c:599` | `Overread mode:  %s` |
-| `cyanrip_log.c:603` | `Speed:          %ix` |
-| `cyanrip_log.c:605` | `Speed:          default (%s)` |
-| `cyanrip_log.c:607` | `C2 errors:      %s` |
-| `cyanrip_log.c:616` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
-| `cyanrip_log.c:621` | `Paranoia level: %s` |
-| `cyanrip_log.c:625` | `Paranoia level: %i` |
-| `cyanrip_log.c:626` | `Frame retries:  %i` |
-| `cyanrip_log.c:628` | `HDCD decoding:  %s` |
-| `cyanrip_log.c:630` | `Album Art:      %s` |
-| `cyanrip_log.c:634` | `%s%s%s%s%s` |
-| `cyanrip_log.c:642` | `Outputs:` |
-| `cyanrip_log.c:648` | `Disc tracks:    %i` |
-| `cyanrip_log.c:649` | `Tracks to rip:  %s` |
-| `cyanrip_log.c:652` | `%i%s` |
-| `cyanrip_log.c:666` | `AccurateRip:    %s` |
-| `cyanrip_log.c:672` | `Total time:     %s` |
-| `cyanrip_log.c:717` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:719` | `Tracks ripped partially accurately: %i/%i` |
-| `cyanrip_log.c:729` | `Ripping errors: %i` |
-| `cyanrip_log.c:738` | `Rip completed:  no (interrupted by user, %i of %i tracks)` |
-| `cyanrip_log.c:741` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:744` | `Ripping finished at %s` |
-| `cyanrip_log.c:646` | `Disc number:    %s` |
-| `cyanrip_log.c:647` | `Total discs:    %s` |
-| `cyanrip_log.c:659` | `DiscID:         %s` |
-| `cyanrip_log.c:660` | `Release ID:     %s` |
-| `cyanrip_log.c:661` | `CDDB ID:        %s` |
-| `cyanrip_log.c:662` | `Disc MCN:       %s` |
-| `cyanrip_log.c:663` | `Album:          %s` |
-| `cyanrip_log.c:664` | `Album artist:   %s` |
+| `cyanrip_log.c:576` | `Handshake:      %s%s` |
+| `cyanrip_log.c:580` | `(declared at build time, not verified by cyanrip)` |
+| `cyanrip_log.c:585` | `Consumer:       %s` |
+| `cyanrip_log.c:589` | `(reported by the caller, not verified by cyanrip)` |
+| `cyanrip_log.c:593` | `Drive used:     error retrieving drive info` |
+| `cyanrip_log.c:595` | `Drive used:     %s %s (revision %s)` |
+| `cyanrip_log.c:596` | `System device:  %s` |
+| `cyanrip_log.c:598` | `Device model:   %s` |
+| `cyanrip_log.c:607` | `Offset:         %c%u %s` |
+| `cyanrip_log.c:610` | `Underread:      %c%i %s` |
+| `cyanrip_log.c:610` | `Overread:       %c%i %s` |
+| `cyanrip_log.c:615` | `Underread mode: %s` |
+| `cyanrip_log.c:615` | `Overread mode:  %s` |
+| `cyanrip_log.c:619` | `Speed:          %ix` |
+| `cyanrip_log.c:621` | `Speed:          default (%s)` |
+| `cyanrip_log.c:623` | `C2 errors:      %s` |
+| `cyanrip_log.c:632` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
+| `cyanrip_log.c:637` | `Paranoia level: %s` |
+| `cyanrip_log.c:641` | `Paranoia level: %i` |
+| `cyanrip_log.c:642` | `Frame retries:  %i` |
+| `cyanrip_log.c:644` | `HDCD decoding:  %s` |
+| `cyanrip_log.c:646` | `Album Art:      %s` |
+| `cyanrip_log.c:650` | `%s%s%s%s%s` |
+| `cyanrip_log.c:658` | `Outputs:` |
+| `cyanrip_log.c:664` | `Disc tracks:    %i` |
+| `cyanrip_log.c:665` | `Tracks to rip:  %s` |
+| `cyanrip_log.c:668` | `%i%s` |
+| `cyanrip_log.c:682` | `AccurateRip:    %s` |
+| `cyanrip_log.c:688` | `Total time:     %s` |
+| `cyanrip_log.c:733` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:735` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:745` | `Ripping errors: %i` |
+| `cyanrip_log.c:754` | `Rip completed:  no (interrupted by user, %i of %i tracks)` |
+| `cyanrip_log.c:757` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:760` | `Ripping finished at %s` |
+| `cyanrip_log.c:662` | `Disc number:    %s` |
+| `cyanrip_log.c:663` | `Total discs:    %s` |
+| `cyanrip_log.c:675` | `DiscID:         %s` |
+| `cyanrip_log.c:676` | `Release ID:     %s` |
+| `cyanrip_log.c:677` | `CDDB ID:        %s` |
+| `cyanrip_log.c:678` | `Disc MCN:       %s` |
+| `cyanrip_log.c:679` | `Album:          %s` |
+| `cyanrip_log.c:680` | `Album artist:   %s` |
 | `cyanrip_main.c:211` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:219` | `Unable to open device: %s` |
 | `cyanrip_main.c:228` | `Unable to init cddap context!` |
@@ -447,7 +448,7 @@ requires a handshake round.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:259` | `Invalid condition syntax!` |
 
-**293 distinct stable lines.**
+**294 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
@@ -718,7 +719,7 @@ must carry the same class.
 | `cyanrip_main.c:2263` | `Error encoding: %s` | wording + goto end | yes |
 | `cyanrip_main.c:2283` | `Invalid rip index %i, list has %i tracks!` | both | yes |
 | `cyanrip_main.c:2365` | `Error ripping: %s` | wording + goto end | yes |
-| `diagnostics.c:465` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
+| `diagnostics.c:476` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` | wording | yes |
 | `genopt.h:265` | `Error parsing \"%s\" as a <type> for argument \"%s\"` | genopt | yes |
 | `genopt.h:272` | `Error parsing %f for argument \"%s\": not in [%f:%f] range!` | genopt | yes |
