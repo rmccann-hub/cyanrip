@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc1+platterpus.6-beta.4 (platterpus-fork-g<commit>)`
+Build: `cyanrip 0.9.4-rc1+platterpus.6 (platterpus-fork-g<commit>)`
 
 **Source anchor:** `sha256/16 = 68765127787107cf` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
