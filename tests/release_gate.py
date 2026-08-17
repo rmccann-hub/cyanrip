@@ -29,6 +29,7 @@ a file that said HOLD in its first paragraph.
 """
 
 import importlib.util
+import json
 import re
 import pathlib
 import sys
@@ -937,6 +938,61 @@ def test_manifest_round_closed_agrees_with_the_gate():
         check(ch["round_closed"] == truth.get(rnd, False),
               f"{name}: round_closed={ch['round_closed']} but the gate says "
               f"{truth.get(rnd)} for round {rnd}")
+
+
+def test_manifest_build_command_is_derived_per_commit():
+    """schema 2. `install` hands over a source tarball and said nothing about
+    how to build it, so the consumer built the default and `+platterpus.6`
+    shipped with round 10's whole deliverable switched off.
+
+    The trap is the fix, not the defect. `-Ddeclare_released=true` does not
+    exist before +platterpus.6, and meson fails the entire configure on an
+    unknown -D:
+
+        meson.build:1:0: ERROR: Unknown options: "declare_released"
+
+    So one global build string breaks the DOWNGRADE path -- the single thing
+    retaining a previous stable exists to guarantee, and ddf7ac3 is the pin the
+    consumer is running right now. The command has to be derived from each
+    released commit's own tree.
+    """
+    m = _manifest_mod()
+
+    # A commit that predates the option must NOT be told to pass it.
+    old = m.build_command("ddf7ac3")
+    check("declare_released" not in old,
+          f"ddf7ac3 predates the option but its build command passes it: "
+          f"{old!r} -- meson would fail the configure and the downgrade path "
+          f"would be dead")
+    check("meson setup" in old and "ninja" in old,
+          f"the fallback build command is not a build command: {old!r}")
+
+    # ...and a commit that has it must be. Without this the test passes on a
+    # derivation that always returns the fallback.
+    new = m.build_command("c4d1a00")
+    check("-Ddeclare_released=true" in new,
+          f"c4d1a00 declares the option but its build command omits it: {new!r}")
+
+    # And the shipped manifest carries one per channel.
+    man = m.build()
+    for name, ch in man["channels"].items():
+        check("build" in ch, f"{name}: manifest has no build command")
+        check("meson setup" in ch["build"],
+              f"{name}: build command is not a build: {ch['build']!r}")
+
+
+def test_manifest_schema_is_declared_and_current():
+    """A consumer pins a schema. Adding `build` without moving the number
+    leaves them unable to tell a manifest that has it from one that does not,
+    which is the whole reason the field exists."""
+    m = _manifest_mod()
+    man = m.build()
+    check(man["schema"] == 2,
+          f"manifest schema is {man['schema']!r}; `build` arrived at 2")
+    committed = json.loads((HERE.parent / "release-manifest.json").read_text())
+    check(committed["schema"] == man["schema"],
+          f"committed manifest declares schema {committed['schema']!r} but the "
+          f"generator emits {man['schema']!r}")
 
 
 # The auto-runner lives at the END of the file, not the middle.

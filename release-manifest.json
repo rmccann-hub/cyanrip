@@ -1,6 +1,7 @@
 {
   "channels": {
     "beta": {
+      "build": "meson setup build -Ddeclare_released=true && ninja -C build",
       "commit": "c4d1a00",
       "handshake_round": 10,
       "install": "https://github.com/rmccann-hub/cyanrip/archive/c4d1a00.tar.gz",
@@ -9,6 +10,7 @@
       "version": "0.9.4-rc1+platterpus.6"
     },
     "stable": {
+      "build": "meson setup build -Ddeclare_released=true && ninja -C build",
       "commit": "c4d1a00",
       "handshake_round": 10,
       "install": "https://github.com/rmccann-hub/cyanrip/archive/c4d1a00.tar.gz",
@@ -23,5 +25,5 @@
   "note": "Machine-readable. Order by release_seq -- the version string cannot be ordered, because the part that advances is SemVer build metadata, which is ignored for precedence.",
   "project": "cyanrip-fork",
   "repo": "https://github.com/rmccann-hub/cyanrip",
-  "schema": 1
+  "schema": 2
 }

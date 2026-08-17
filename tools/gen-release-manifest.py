@@ -64,6 +64,7 @@ import importlib.util
 import json
 import pathlib
 import re
+import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -134,6 +135,50 @@ def load_ledger(path=None):
     return rows
 
 
+def build_command(commit):
+    """The exact build a consumer must run for THIS commit, derived from it.
+
+    Why this field exists at all: `install` is a source tarball, so the
+    consumer is the build path. `-Ddeclare_released=true` is what makes a
+    release admit to being one, it defaults off by design, and NOTHING in this
+    tree passes it. So `+platterpus.6` shipped with round 10's entire
+    deliverable switched off in the artifact round 10 authorised -- measured by
+    unpacking the release tarball and building it twice.
+
+    Why it is DERIVED PER COMMIT rather than written once: the option does not
+    exist before `+platterpus.6`. `meson_options.txt` is absent at ddf7ac3 --
+    the previous stable, and the pin the consumer is running today -- and meson
+    fails the whole configure step on an unknown -D:
+
+        meson.build:1:0: ERROR: Unknown options: "declare_released"
+
+    A single global build string would therefore have broken the DOWNGRADE
+    path, which is the one thing retaining a previous stable exists to
+    guarantee. Measured on ddf7ac3 rather than assumed.
+
+    So: ask each released commit whether it declares the option, and emit the
+    command that works for it. Asking git rather than comparing release_seq
+    against a threshold -- a threshold is a second description of a fact the
+    tree already holds, and it goes stale the moment the option is renamed or
+    removed.
+    """
+    base = "meson setup build && ninja -C build"
+    try:
+        opts = subprocess.run(["git", "show", f"{commit}:meson_options.txt"],
+                              cwd=ROOT, capture_output=True, text=True)
+    except Exception:
+        return base
+    if opts.returncode != 0:
+        # No meson_options.txt at that commit: the option cannot exist, and
+        # passing it would fail the configure. Older releases take the plain
+        # build and simply render as unreleased, which is the honest outcome --
+        # they predate the flag and never could declare anything.
+        return base
+    if not re.search(r"^option\('declare_released'", opts.stdout, re.M):
+        return base
+    return "meson setup build -Ddeclare_released=true && ninja -C build"
+
+
 def round_state():
     """Round -> closed?, derived from the SAME loader the release gate uses.
 
@@ -152,7 +197,7 @@ def build():
     closed = round_state()
 
     manifest = {
-        "schema": 1,
+        "schema": 2,
         "project": "cyanrip-fork",
         "manifest_url": MANIFEST_URL,
         "repo": REPO_URL,
@@ -189,6 +234,10 @@ def build():
             # Derived, never stated. See round_state().
             "round_closed": closed.get(latest["round"], False),
             "install": f"{REPO_URL}/archive/{latest['commit']}.tar.gz",
+            # schema 2. `install` alone was not enough: it hands over a source
+            # tarball and says nothing about how to build it, so the consumer
+            # guessed the default and the release rendered as unreleased.
+            "build": build_command(latest["commit"]),
         }
 
     stable = manifest["channels"].get("stable")
