@@ -176,6 +176,10 @@ class Lap:
         # (verdict, filename) of the newest peer lap of this round we hold, or
         # None when we hold none of theirs. Filled in by load_rounds().
         self.peer_latest = None
+        # True for a round that exists ONLY in inbound/ -- they opened it and we
+        # have not answered. Such a round has no file of ours to parse, so every
+        # per-file check below is meaningless on it; it is open by definition.
+        self.peer_only = False
         self.override = None
         self.override_by = None
         self.override_why = None
@@ -280,6 +284,22 @@ class Lap:
 
     @property
     def closed(self):
+        # FIRST, above grandfathering. A round they opened and we have not
+        # answered is open by definition -- there is no verdict of ours, and
+        # silence is never agreement.
+        #
+        # The position is the whole check. Below `grandfathered` this line is
+        # dead: a synthetic peer-only lap carries verdict=None, which every
+        # later test already refuses. Above it, it is the only thing standing
+        # between a peer-opened round numbered 5 or 6 and `grandfathered`'s
+        # unconditional True -- because grandfathering keys on exactly
+        # "verdict is None and the number is old", and a peer-only round
+        # satisfies the first half for a completely different reason.
+        #
+        # Found by revert-proving it where it first went, watching the suite
+        # stay green, and asking why rather than deleting the line.
+        if self.peer_only:
+            return False
         if self.grandfathered:
             return True
         if not self.protocol_ok:
@@ -333,6 +353,9 @@ class Lap:
 
     @property
     def why(self):
+        if self.peer_only:
+            return (f"they opened it and we have not answered -- we hold "
+                    f"{self.path.name} and no lap of our own")
         if self.grandfathered:
             return "no verdict field, grandfathered by number"
         if self.protocol is not None and int(self.protocol) > PROTOCOL_VERSION:
@@ -503,6 +526,29 @@ def load_rounds(directory=None, every_lap=False):
         if got:
             lp.peer_latest = (got[1], got[2])
 
+    # A round that exists ONLY in inbound/ is a round they opened and we have
+    # not answered -- and it was INVISIBLE here, because this loader only ever
+    # enumerated our own files. Measured on a record holding a closed round of
+    # ours plus an unanswered peer-opened round: the gate listed one round and
+    # said "Release allowed".
+    #
+    # It is the mirror of the defect Platterpus reported in round 9 lap 10 §C2
+    # -- their gate could never CLOSE a round we opened, ours could not SEE one
+    # they opened -- and ours fails in the worse direction. Theirs refused a
+    # release that should have been allowed; ours allows one during a round
+    # that is unambiguously open, since we have not even replied to it.
+    #
+    # Found by writing the test for THEIR hazard against our gate. The hazard
+    # itself did not reproduce; the neighbouring one did.
+    for number, (lap, verdict, name) in sorted(peer_latest.items()):
+        if number in latest:
+            continue
+        synthetic = Lap(number, lap, (directory / "inbound" / name), None, None)
+        synthetic.peer_only = True
+        synthetic.peer_latest = (verdict, name)
+        latest[number] = synthetic
+        all_laps.append(synthetic)
+
     if every_lap:
         return sorted(all_laps, key=lambda lp: (lp.number or 0, lp.lap or 0,
                                                 lp.path.name))
@@ -513,6 +559,13 @@ def check(rounds):
     """Returns (ok, problems). Problems are reasons a release is not allowed."""
     problems = []
     for r in rounds:
+        # A peer-opened round we have not answered has no file of ours, so
+        # every per-file check below would report on THEIR file against OUR
+        # requirements. One problem, naming the real one.
+        if r.peer_only:
+            problems.append(
+                f"round {r.number} is not closed ({r.why}): {r.path.name}")
+            continue
         if r.lap is None:
             problems.append(
                 f"round {r.number} has an ambiguous HANDSHAKE-LAP declaration: "

@@ -1492,6 +1492,96 @@ def test_a_superseded_peer_verdict_does_not_close_a_round():
           "an ambiguous peer file was read as a verdict rather than skipped")
 
 
+def test_a_round_we_did_not_open_can_still_close():
+    """Covers: C21 (round 9 lap 10 §C2)
+
+    Platterpus's gate required a file in the directory only a round's OPENER
+    writes, so a round we opened could never close on their side -- it would
+    have refused every release forever, on a round both sides had agreed. They
+    found it by aiming our lap 9 §C at themselves instead of pointing at a test
+    that already passed.
+
+    We have no outbound/verified split to couple to: our laps live in one
+    directory whoever opened. That is a reason to believe we do not have it, not
+    evidence -- so this constructs the round and runs the gate, which is the
+    standard their lap set for us. **A passing test named after a hazard is not
+    the same as the hazard failing to reproduce.**
+
+    The floor is asserted too: holding only THEIR file, with no lap of ours in
+    the round, must stay open. A fix for "refuses everything" that arrives at
+    "refuses nothing" is the trade their §C2 explicitly did not make.
+    """
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "inbound").mkdir()
+    peer = ("HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n"
+            "HANDSHAKE-FROM: platterpus\nHANDSHAKE-VERDICT: GO\n")
+    (d / "inbound" / "round-09-lap-01.md").write_text(peer, encoding="utf-8")
+
+    # Their lap alone: we have contributed nothing, so there is no agreement.
+    #
+    # **This is the mirror defect, and it was ours.** load_rounds() enumerated
+    # only our own files, so a round they opened and we had not answered was
+    # not merely open -- it was INVISIBLE. Measured on a record holding a closed
+    # round of ours plus an unanswered peer-opened round: one round listed,
+    # "Release allowed". Theirs refused a release that should have been allowed;
+    # ours allowed one during a round we had not even replied to. Fail-open is
+    # the worse direction and we had it.
+    #
+    # A closed round of ours is present so the record is NOT empty -- main()
+    # refuses an empty record for an unrelated reason, and without this the case
+    # would pass through that guard and prove nothing.
+    (d / "round-08-lap-17.md").write_text(
+        (HERE.parent / "docs" / "handshake" / "round-08-lap-17.md")
+        .read_text(encoding="utf-8"), encoding="utf-8")
+    rounds = rg.load_rounds(d)
+    check(9 in [r.number for r in rounds],
+          "a peer-opened round we have not answered is invisible to the gate")
+    ok, probs = rg.check(rounds)
+    check(not ok, f"a round with no lap of ours permitted a release: {probs}")
+    check(any("have not answered" in p for p in probs),
+          f"refused, but not for the right reason: {probs}")
+
+    # And `closed` itself, not only check()'s verdict. check() short-circuits on
+    # peer_only and never consults it, so reverting the guard in `closed` left
+    # this whole test green -- while main() prints its per-round state from
+    # r.closed and gen-release-manifest.py derives round_closed from this same
+    # loader. Both would have read "closed" for a round the gate was refusing.
+    peer_round = [r for r in rounds if r.number == 9][0]
+    check(not peer_round.closed,
+          "Lap.closed reported a peer-opened unanswered round as closed; "
+          "main()'s summary and the release manifest both read this directly")
+    check("have not answered" in peer_round.why,
+          f"the printed reason does not name the cause: {peer_round.why!r}")
+
+    # Our verification, lap 2 -- we did not open this round and never will have
+    # a lap 1 in it. It must still close. A fix for "cannot see it" that lands
+    # on "can never close it" is their §C2 defect imported.
+    ours = GO.replace("HANDSHAKE-LAP: 1", "HANDSHAKE-LAP: 2")
+    check("HANDSHAKE-LAP: 2" in ours, "the lap number substitution did not land")
+    (d / "round-09-lap-02.md").write_text(ours, encoding="utf-8")
+    ok, probs = rg.check(rg.load_rounds(d))
+    check(ok, f"a round we did not open could not close: {probs}")
+
+    # LAST, because it leaves the record open and every assertion after it would
+    # inherit that. A GRANDFATHERED number is where `closed`'s peer_only guard is
+    # the only thing that works: rounds 5 and 6 close on "verdict is None and the
+    # number is old", and a peer-only round has verdict None for an entirely
+    # different reason, so it satisfies that test by coincidence. Below
+    # `grandfathered` the guard is dead code every later check already covers;
+    # above it, this is the case it catches.
+    (d / "inbound" / "round-05-lap-01.md").write_text(
+        peer.replace("HANDSHAKE-ROUND: 9", "HANDSHAKE-ROUND: 5"),
+        encoding="utf-8")
+    five = [r for r in rg.load_rounds(d) if r.number == 5]
+    check(len(five) == 1, "the peer-only round 5 was not enumerated")
+    if five:
+        check(not five[0].closed,
+              "a peer-opened round we never answered was GRANDFATHERED closed "
+              "because its verdict is None and its number is 5")
+    ok, probs = rg.check(rg.load_rounds(d))
+    check(not ok, f"a grandfathered peer-only round permitted a release: {probs}")
+
+
 def test_exclude_refuses_when_it_matches_nothing():
     """Covers: C21 (round 9 lap 6 §F3)
 
