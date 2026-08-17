@@ -34,6 +34,20 @@ Adopted from Platterpus's `tests/test_sent_laps_are_immutable.py` (round 9 lap 4
     you corrected. Do NOT update the constant to match the drifted file. A guard
     whose remedy is "adjust the guard" is not one.
 
+  * A PREMATURE PIN IS REMOVED, NOT EDITED, AND IT IS NOT THE SAME FAILURE.
+    The map means "the bytes that LEFT". An entry added before the lap was handed
+    over records a send that never happened, so the remedy is to DELETE the entry
+    and re-add it when it actually goes -- not to edit the value, and not to
+    freeze a draft. Round 10 lap 5 was pinned at write time, and then genuinely
+    needed to change, because the operator had not sent it and the release landed
+    in it. Editing the value would have been the forbidden move below; keeping the
+    stale value would have frozen a lap that was still ours to write.
+
+    A SENT lap that drifted is evidence tampering. An UNSENT lap that changed is
+    just editing. What tells them apart is not in the tree -- it is whether an
+    operator handed the file over -- so it is their answer, and the safe default
+    when nobody says is to treat it as sent.
+
   * RESTORE FROM THE SEND COMMIT, NOT WITH `git checkout --`. Platterpus's first
     attempt used the latter and stayed red, because the repository's own history
     had the drifted copy as HEAD. That is what drift means.
@@ -41,6 +55,7 @@ Adopted from Platterpus's `tests/test_sent_laps_are_immutable.py` (round 9 lap 4
 
 import hashlib
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -82,8 +97,6 @@ SENT = {
         "0c33dea35fc3dda0c2cf67166d33116799aa62b3b3ad76cf1f757811d7703ef5",
     "round-10-lap-03.md":
         "3475b9b8ce69550fee5998c3c8040d87c25043269f5db72de4a689ada1be23cc",
-    "round-10-lap-05.md":
-        "f4473e607e1bf8295ed95df538e81b498eb33f55de52a08e2d7dd2151e9e22e6",
 }
 
 failures = 0
@@ -106,8 +119,20 @@ for name, want in sorted(SENT.items()):
 # Every lap file must be pinned once sent. A lap that exists and is not in the
 # map is either unsent (fine, and it will be added when it goes) or forgotten --
 # and the two are indistinguishable without saying which, so say which.
-unpinned = sorted(p.name for p in HS.glob("round-0[89]-lap-*.md")
-                  if p.name not in SENT)
+# From round 8 onward, which is where this map begins. Round 7's laps were sent
+# before it existed, and pinning them now would assert a hash nobody checked at
+# send time -- a fabricated record, not a recovered one.
+#
+# The glob was `round-0[89]-lap-*.md`, which silently stopped covering anything
+# the moment round 10 opened. That is how round 10 lap 5 came to be pinned before
+# it was sent with nothing to notice: the one check that reports a lap's pin
+# state had gone blind to the whole round.
+def _round_of(name):
+    m = re.match(r"round-(\d+)-lap-", name)
+    return int(m.group(1)) if m else None
+
+unpinned = sorted(p.name for p in HS.glob("round-*-lap-*.md")
+                  if p.name not in SENT and (_round_of(p.name) or 0) >= 8)
 if unpinned:
     print(f"not yet pinned (add on send): {', '.join(unpinned)}")
 

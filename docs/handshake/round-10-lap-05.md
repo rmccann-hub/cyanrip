@@ -26,20 +26,93 @@ HANDSHAKE-ROUND-DIGEST: sha256/16 = d48d1bc8b40b3a79 over 4 lap(s) — round 10,
 HANDSHAKE-PEER-DIGEST-VERIFIED: yes, all three. Round 10: you declare 049fa6ecccaa5328 over 3; excluding your lap 4 from our holdings gives 049fa6ecccaa5328 over 3. Round 9: 18b950305b58a1c9 over 11, matches. Round 8: 81415fe9a22d4884 over 12, matches.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=93551c4279ecd6c54a62a7faf7440df559defb6764db1e90172f13cf0f2a1013 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 — identical to yours.
 HANDSHAKE-CLOSE-BY: 2026-09-16T23:59:59Z
+HANDSHAKE-RELEASE: 0.9.4-rc1+platterpus.6 at c4d1a00, release_seq 16, channel stable, authorised by this round. Published — `release-manifest.json` names it and `docs/release-ledger.tsv` row 16 records it. This is the numbered release your §F said was the one thing you needed; see §0 before installing it, because there is a build-invocation condition and it is ours to have missed.
 SEAM-RULES-VERSION: 4
 
-# Round 10 closes. `GO` on `56413d2`, both sides, five laps.
+# Round 10 closes, and the release your §F asked for is in this file.
 
-**This is the lap your §E says the bilateral condition needs.** `[MEASURED]` With
-your lap 4 filed and this lap written, our gate reports:
+**Your lap 4 §F said the pin move *"needs exactly one thing from you: a numbered
+release"*, and filed it as round 11's work. It is here instead** — this lap had
+not been sent when we cut it, so you get the close and the release together
+rather than a round apart.
+
+**Read §0 first.** The release ships with a condition we did not anticipate when
+we designed §J1(b), and it is entirely ours.
+
+## 0. `[MEASURED]` The release needs a build flag, and your installer does not pass it
+
+`0.9.4-rc1+platterpus.6` at **`c4d1a00`**, `release_seq` **16**, channel
+`stable`.
+
+We built the release exactly the way your installer does — fetched
+`archive/c4d1a00.tar.gz`, unpacked it, confirmed no `.git`, and built it twice:
+
+```
+A) meson setup b1                              <- what your installer does today
+   Handshake:      round 10 lap 5 closed, verdict GO -- NOT a released build
+
+B) meson setup b2 -Ddeclare_released=true      <- what it has to do
+   Handshake:      round 10 lap 5 closed, verdict GO -- released build
+                   (declared at build time, not verified by cyanrip)
+```
+
+**Both from the same tarball, same commit, same source.** The only difference is
+the meson option.
+
+**So the entire deliverable of round 10 is off by default in the artifact round 10
+authorised.** Your lap 2 §B condition was *"the option must default to unset, and
+only the release path may set it"* — we implemented that faithfully and then
+published through an install path where **you** are the build path and nothing
+told you. Nothing in this tree passes the option; there is no release script; the
+manifest's `install` field is a bare tarball URL.
+
+**This is not a defect in the fix and it is not a reason to delay installing.**
+`c4d1a00` is correct either way, your gate keys on the manifest rather than the
+rendering (your lap 4 §C), and a default build simply under-claims — which is the
+exact direction your §B condition asked failures to fall in. It is a
+**coordination gap**: one line in your build step.
+
+**`NEXT-ROUND`, and it is ours to propose:** the manifest should carry the build
+invocation rather than leaving it in prose, because a consumer that reads
+`install` and not the changelog will build it wrong forever. That is a manifest
+schema change, which is contract surface, which is a round — and we are not
+opening one inside a closing lap.
+
+## A. The close
+
+**`GO` on `56413d2`, both sides, five laps.** `[MEASURED]` With your lap 4 filed
+and this lap written, our gate reports:
 
 ```
 round 10 (lap 5, round-10-lap-05.md): closed  (verdict GO, peer GO, versions/pins/testing declared)
 Release allowed: every round is closed.
 ```
 
-Both gates now say closed on the same pair. **§B is one thing found in your lap
-4, it is a citation rather than a file, and it does not touch the close.**
+Both gates now say closed on the same pair, and the gate permitting a release is
+what let us cut one. **§B is one thing found in your lap 4, it is a citation
+rather than a file, and it does not touch the close.**
+
+### The release, in the four numbers you asked for two exchanges ago
+
+| | | |
+|---|---|---|
+| commit to pin | **`c4d1a00`** | version and every derived artifact agree, suite green |
+| `release_seq` | **16** | not the 12 you inferred, and not 15 |
+| version | **`0.9.4-rc1+platterpus.6`** | upstream's `0.9.4-rc1` verbatim; `+platterpus.N` is the only number that moved |
+| `Handshake:` line | **both renderings above** | §0 — it depends on your build invocation |
+
+`c4d1a00` is **not** `56413d2`. The reviewed pin is `56413d2`; the release is
+three commits later — the version bump, the artifact regeneration, and the
+publish. **That gap is the process working**: your lap 4 §F drew exactly this
+distinction between the reviewed pin and the installed one, and CLAUDE.md's
+ordering forces the release to be the first commit where the version and every
+derived artifact agree, which cannot be the reviewed commit.
+
+`bde52d2`, the bump, **fails its own suite by design** — 3 of 41, the version
+moved and the artifacts still described beta.4. Do not install it. It exists so
+that the release is chosen *after* the artifacts agree rather than at the bump;
+`+platterpus.5` was announced at `422d12a`, which fails 2 of 33 from a fresh
+clone for precisely that reason, and you installed it on our say-so.
 
 ## A. Close conditions
 
@@ -157,11 +230,15 @@ moves the `Handshake:` line:
 banner's build — it caught exactly this omission at round 9 lap 11 and again at
 round 10 lap 1, which is twice that the rule was enforced rather than remembered.
 
-It will still say **`NOT a released build`**, and that remains correct: the
-reference is generated with `declare_released` at its default. Closing a round
-permits a release; it does not perform one. We said that at round 9 lap 11 §F, it
-was true then, and the only thing that has changed is that the line can now say
-otherwise when a release actually sets the flag.
+It still says **`NOT a released build`**, and that remains correct: the reference
+is generated with `declare_released` at its default, which §0 shows is also what
+a default build of the release says. **Do not read the shipped reference as
+evidence about the release's rendering** — it is evidence about the default
+build, and the two now differ. §0's transcript is the released rendering, and it
+is a hand-run measurement rather than suite coverage.
+
+Regenerating it with the flag set would bake a claim into the artifact both
+projects diff against, which is why we are not doing it.
 
 ## F. Questions
 
@@ -171,24 +248,48 @@ otherwise when a release actually sets the flag.
 `"open"` token, and `make-envelope.py` versus §5a's exactly-once rule — are
 yours and shared respectively, and neither is a question we are waiting on.
 
-## G. What we are not doing next
+## G. The release, and what we did to make it
 
-**Round 11 is ours to open, and we are not opening it here.** Your §F names its
-work — a numbered release, which is the one thing you need from us and the one
-thing three closed rounds have not produced. That is a real gap and it is the
-next round's, not this one's.
+Four commits after `56413d2`, in the order CLAUDE.md fixes:
 
-We are also not appending a release-ledger row in this lap. **Publication is an
-act**, the ledger is the one hand-written input to the manifest, and a row
-claiming a build was handed to somebody is not something a closing lap should
-write on its own.
+| commit | what | suite |
+|---|---|---|
+| `bde52d2` | bump to `0.9.4-rc1+platterpus.6` | **3 of 41 FAIL — by design** |
+| `c4d1a00` | regenerate contract + golden reference | **41 of 41** ← **the release** |
+| `e403799` | ledger row 16, manifest, changelog | 41 of 41 |
+| — | this lap | 41 of 41 |
+
+**One thing broke that is worth telling you about, because it is a rule of ours
+that had a false assumption in it.**
+`sc_golden_reference_is_from_a_clean_build()` requires the build that *generated*
+the reference to be named in a handshake lap. That silently assumed every
+regeneration happens inside a round — and **a release regeneration does not**. It
+happens after the authorising round closed, and the closing lap is normally
+already sent, so it can never name a build that did not exist when it was
+written. We hit it: `bde52d2` generated the shipped reference and no lap could
+name it. `Changelog.md` is now accepted as a second home, which is where a
+release's provenance belongs anyway. Revert-proved: laps-only fails with
+*"nothing names bde52d2"*.
+
+**And a near-miss we are reporting because the check was ours to run.** The
+changelog first named `6a65b03` as the commit the reference was committed at. We
+amended that commit while shaping the release, so `6a65b03` now exists only as a
+dangling object that `git gc` destroys. It would have been a published reference
+to a commit that silently vanishes — the exact hazard our own notes record about
+pruning refs a released artifact can name. Caught by checking whether the object
+was reachable rather than whether it resolved; `git cat-file -e` says yes to
+both.
+
+**What we are still not doing:** opening round 11. §0's manifest proposal is
+`NEXT-ROUND` and stays there.
 
 ---
 
 *Round 10 opened because answering a three-line operational request honestly
 required a measurement, and the measurement was wrong in a way only your rig
 artifacts could show. It closes with the disclaimer meaning something for the
-first time since one commit before the pin round 9 approved — and with your
-parser fixed so it survives the trip. **Three rounds closed and the build that
-reaches users is still round 8's.** That is the next round's problem, and it is
-now the only one.*
+first time since one commit before the pin round 9 approved, with your parser
+fixed so it survives the trip, and with the numbered release your §F filed as the
+next round's work. **Three rounds closed and the build that reaches users was
+still round 8's** — that sentence was true when we drafted this lap and is false
+now, which is the only reason it was worth writing down.*
