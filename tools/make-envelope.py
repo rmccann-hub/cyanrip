@@ -132,6 +132,27 @@ def main():
                 f"{lapno.group(1) if lapno else '?'}, verdict stated in it as "
                 f"{verdict.group(1) if verdict else 'none'}. Split first, then "
                 f"read it; everything else here is what it references.\n\n")
+        # The envelope RE-DECLARES the triple its operative lap declares, so
+        # each field appears at least twice and §5a's exactly-once test excludes
+        # this file by construction.
+        #
+        # Without it, an envelope carrying ONE lap and its artifacts is
+        # indistinguishable from a lap -- one round, one lap, one from -- and
+        # this tool refused to emit one at all. That is the single commonest
+        # exchange there is, so "one file per exchange" and "attach what the lap
+        # references" were in direct conflict, and round 10 lap 5 travelled bare
+        # because of it. The prose below already claimed the envelope "declares
+        # the wire headers of every lap it carries"; with one lap that was false,
+        # and this makes it true rather than rewording it.
+        #
+        # Only when a lap is present: with no lap the parts declare nothing, the
+        # counts are zero, and adding these would make them exactly one -- which
+        # would refuse the artifacts-only envelope for the reason this fixes.
+        fro = re.search(r"^HANDSHAKE-FROM:[ \t]*(\S+)", head, re.M)
+        lead = (f"HANDSHAKE-ENVELOPE: 1\n"
+                f"HANDSHAKE-ROUND: {rnd.group(1) if rnd else '?'}\n"
+                f"HANDSHAKE-LAP: {lapno.group(1) if lapno else '?'}\n"
+                f"HANDSHAKE-FROM: {fro.group(1) if fro else '?'}\n\n") + lead
     else:
         lead = ""
 

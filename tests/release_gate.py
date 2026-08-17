@@ -1415,6 +1415,84 @@ def test_a_container_is_not_a_lap():
           "a file with no HANDSHAKE-FROM was counted as a lap")
 
 
+def test_an_envelope_carrying_one_lap_can_be_built():
+    """Covers: round 11 lap 2 §J3 -- the exchange the transport rule requires
+    and the tool refused to produce.
+
+    Two rules were in direct conflict. "One file per exchange, the lap travels
+    inside the envelope with everything it references" is the transport
+    convention. §5a says a file is a lap when ROUND, LAP and FROM each appear
+    exactly once. An envelope carrying ONE lap declares each exactly once, so
+    make-envelope.py refused to emit it -- and one lap plus its artifacts is by
+    far the commonest exchange there is. Round 10 lap 5 travelled bare because
+    of this, and round 11 lap 3 has to carry PROVIDER-CONTRACT.md.
+
+    Fixed inside the spec rather than by relaxing it: the envelope re-declares
+    the triple its operative lap declares, so the count is two and §5a excludes
+    it by construction. No protocol change, no version bump, and the envelope's
+    own prose -- which already claimed it "declares the wire headers of every
+    lap it carries" -- becomes true for the single-lap case instead of being
+    quietly false.
+    """
+    import subprocess
+
+    root = HERE.parent
+    d = pathlib.Path(tempfile.mkdtemp())
+    lap = d / "round-42-lap-07.md"
+    lap.write_text(
+        "HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 42\nHANDSHAKE-LAP: 7\n"
+        "HANDSHAKE-FROM: cyanrip-fork\nHANDSHAKE-VERDICT: GO\n\nbody\n",
+        encoding="utf-8")
+    art = d / "artifact.md"
+    art.write_text("some artifact the lap references\n", encoding="utf-8")
+
+    def run(*args):
+        return subprocess.run(
+            [sys.executable, str(root / "tools" / "make-envelope.py"), *args],
+            capture_output=True, text=True)
+
+    # 1. One lap plus one artifact. This is the case that used to be refused.
+    r = run(str(d / "out.md"), "--lap", str(lap), str(art))
+    check(r.returncode == 0,
+          f"an envelope carrying one lap was refused: {r.stderr.strip()!r}")
+    env = d / "round-42-lap-07-envelope.md"
+    check(env.exists(), f"envelope not written where expected: {list(d.iterdir())}")
+
+    # 2. It must still not READ as a lap, which is the property the refusal was
+    #    protecting. Asserted with the real enumerator, not by eye.
+    if env.exists():
+        check(rdg.is_a_lap(env.read_text(encoding="utf-8")) is None,
+              "the envelope parses as a lap -- §5a's exactly-once test now "
+              "counts it, which is the defect the guard existed to prevent")
+
+        # 3. And the parts must come back byte-identical, or the fix traded one
+        #    failure for a worse one.
+        import hashlib, re as _re
+        PART = _re.compile(
+            r"^<{10} BEGIN (?P<name>\S+) sha256=(?P<sha>[0-9a-f]{64}) >{10}$\n"
+            r"(?P<body>.*?)\n^<{10} END (?P=name) >{10}$",
+            _re.MULTILINE | _re.DOTALL)
+        got = {}
+        for m in PART.finditer(env.read_text(encoding="utf-8")):
+            data = (m["body"] + "\n").encode("utf-8")
+            check(hashlib.sha256(data).hexdigest() == m["sha"],
+                  f"{m['name']}: declared sha256 does not match its own body")
+            got[m["name"]] = data
+        check(got.get(lap.name) == lap.read_bytes(),
+              "the lap did not survive the envelope byte-identically")
+        check(got.get(art.name) == art.read_bytes(),
+              "the artifact did not survive the envelope byte-identically")
+
+    # 4. The artifacts-only envelope must NOT regress. With no lap the parts
+    #    declare nothing, so adding envelope-level declarations would make each
+    #    field appear exactly once -- refusing the very case that worked before.
+    art2 = d / "artifact2.md"
+    art2.write_text("second artifact\n", encoding="utf-8")
+    r2 = run(str(d / "plain.md"), str(art), str(art2))
+    check(r2.returncode == 0,
+          f"an envelope with no lap was refused: {r2.stderr.strip()!r}")
+
+
 def test_the_digest_excludes_the_lap_that_carries_it():
     """Covers: C35, C36
 
