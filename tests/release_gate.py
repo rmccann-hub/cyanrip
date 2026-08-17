@@ -1232,6 +1232,236 @@ def test_the_digest_excludes_the_lap_that_carries_it():
           "excluding the same lap did not reproduce the writer's value")
 
 
+# The lap from which a declared HANDSHAKE-ROUND-DIGEST must re-derive.
+#
+# Round 9 laps 5 and 7 do not, and cannot be made to: they are SENT, and a sent
+# lap is immutable -- the one rule this session already broke once and rebuilt
+# tests/sent_laps.py to stop. Both carry the same defect, conceded in lap 7 §D
+# and re-declared in lap 9: a VERIFIER's computation under the WRITER's field.
+# Round 8 and earlier predate the field entirely.
+#
+# Scoped forward rather than retroactively, for the reason the v4 lap ceiling
+# had to be: a requirement that reaches backwards reopens a round both projects
+# have closed. Widening this constant is a visible act.
+WRITER_DIGEST_CHECKED_FROM = (9, 9)
+
+# The two known-failing laps, pinned by the value each declares. Naming them by
+# their WRONG value rather than by filename is deliberate: if either file is
+# ever edited, the declaration moves, this stops matching, and the test fails
+# rather than silently excusing a file that has changed under it.
+KNOWN_UNREPRODUCIBLE = {
+    "round-09-lap-05.md": "ed2cf5c3c4443733",
+    "round-09-lap-07.md": "53f0b465833ac845",
+}
+
+
+def test_a_declared_digest_re_derives():
+    """Covers: C21 (round 9 lap 8)
+
+    **The defect: round 9 lap 7 declared `53f0b465833ac845 over 4`.** A real
+    digest of a real set -- our holdings at an earlier moment excluding the
+    peer's lap 4 -- produced by a command run to VERIFY THEIR declaration, then
+    transcribed into the writer's field and never re-derived after the file it
+    belonged to was written. Platterpus could not reproduce it and recovered the
+    subset by exhaustive search over every subset of the eight laps they hold.
+
+    Their diagnosis was that our enumerator was dropping their laps 4 and 6.
+    `[REFUTED]` -- the enumerator produces their expected value at the very
+    commit that carries the wrong declaration, and did before this change. The
+    finding was right, the cause was not, and the cause is what you act on.
+
+    A digest is the one field a human cannot proofread: every wrong value looks
+    exactly like every right one. So it must not be typed, and until this test
+    nothing stopped it being.
+    """
+    for problem in scan_declarations(WRITER_DIGEST_CHECKED_FROM,
+                                     KNOWN_UNREPRODUCIBLE):
+        check(False, problem)
+
+
+def scan_declarations(scope, pins):
+    """Every declared digest in the record, judged. Returns a list of problems.
+
+    A function rather than a loop inside the test so it can be driven against a
+    SYNTHETIC record too. As a loop it could only ever run against this
+    repository's real history, where the pinned laps are immutable -- so the
+    by-value pinning below was unfalsifiable, and a revert to pinning by
+    filename passed. Found by running that revert and watching it not fail.
+    """
+    from_round, from_lap = scope
+    problems, seen = [], set()
+    for path in rdg.candidates():
+        parts = rdg.is_a_lap(path.read_bytes().decode("utf-8", errors="replace"))
+        if not parts:
+            continue
+        rnd, lap = int(parts[0]), int(parts[1])
+        status, decl, comp, _ = rdg.check_lap(path)
+        if status == "undeclared":
+            continue
+        known = pins.get(path.name)
+        if known and decl[0] == known:
+            seen.add(path.name)
+            if status != "mismatch":
+                problems.append(
+                    f"{path.name} is pinned as not re-deriving but now does; "
+                    "remove it from KNOWN_UNREPRODUCIBLE")
+            continue
+        if (rnd, lap) < (from_round, from_lap):
+            continue
+        if status != "match":
+            problems.append(f"{path.name} declares {decl[0]} over {decl[1]}, "
+                            f"re-derives {comp[0]} over {comp[1]}")
+    if seen != set(pins):
+        problems.append(f"a pinned lap changed or vanished: {set(pins) - seen}")
+    return problems
+
+
+def test_the_digest_checker_can_fail():
+    """Covers: C21 (round 9 lap 8)
+
+    The check above can only fail on a real defect, so on a healthy record it
+    passes by finding nothing -- the shape this project's own rules say to
+    distrust. This drives it against a record built to be wrong.
+    """
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "inbound").mkdir()
+    lap = ("HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: {}\n"
+           "HANDSHAKE-FROM: {}\n{}\nbody {}\n")
+    real = rdg.HS
+    try:
+        rdg.HS = d
+        (d / "round-09-lap-01.md").write_text(
+            lap.format(1, "cyanrip-fork", "", "one"), encoding="utf-8")
+        (d / "inbound" / "round-09-lap-02.md").write_text(
+            lap.format(2, "platterpus", "", "two"), encoding="utf-8")
+
+        # Lap 3 must exist before its own digest can be computed excluding it:
+        # --exclude refuses a name that matches nothing, which is the fix from
+        # round 9 lap 6 §F3 doing its job inside its own test.
+        good = d / "round-09-lap-03.md"
+        good.write_text(lap.format(3, "cyanrip-fork", "", "three"),
+                        encoding="utf-8")
+        truth, n, _ = rdg.digest(9, ["round-09-lap-03.md"])
+        check(n == 2, f"the synthetic record did not enumerate 2 laps: {n}")
+
+        good.write_text(lap.format(
+            3, "cyanrip-fork",
+            f"HANDSHAKE-ROUND-DIGEST: sha256/16 = {truth} over 2 lap(s)",
+            "three"), encoding="utf-8")
+        check(rdg.check_lap(good)[0] == "match",
+              "a correct declaration was not recognised")
+
+        # Every way it can be wrong, one at a time.
+        for label, field in (
+            ("a wrong hash",
+             f"HANDSHAKE-ROUND-DIGEST: sha256/16 = {'0' * 16} over 2 lap(s)"),
+            ("a wrong count",
+             f"HANDSHAKE-ROUND-DIGEST: sha256/16 = {truth} over 9 lap(s)"),
+        ):
+            good.write_text(lap.format(3, "cyanrip-fork", field, "three"),
+                            encoding="utf-8")
+            check(rdg.check_lap(good)[0] == "mismatch",
+                  f"{label} was accepted as a match")
+
+        # Prose before the clause is not a declaration -- round 9 lap 1 says
+        # "not computable" and then quotes ROUND 8's digest. Reading that as
+        # round 9's is what the first version of the checker did.
+        good.write_text(lap.format(
+            3, "cyanrip-fork",
+            "HANDSHAKE-ROUND-DIGEST: not computable. For round 8: "
+            f"sha256/16 = {'f' * 16} over 12 lap(s).", "three"),
+            encoding="utf-8")
+        check(rdg.check_lap(good)[0] == "undeclared",
+              "a digest quoted for another round was read as this round's")
+
+        # THE PROPERTY THAT MAKES OLD DECLARATIONS STILL CHECKABLE, and the one
+        # the first version of this test could not see: a lap's declaration
+        # covers the holdings that existed WHEN IT WAS WRITTEN, so re-deriving
+        # it must drop every lap filed since -- not just the lap itself.
+        #
+        # Invisible until a later lap exists. With lap 3 the newest, "drop laps
+        # >= 3" and "drop lap 3" are the same set, so reverting the rule to the
+        # wrong one changed nothing and the test still passed. Found by running
+        # the revert-proof and watching it NOT fail, which is the only reason
+        # this block is here.
+        good.write_text(lap.format(
+            3, "cyanrip-fork",
+            f"HANDSHAKE-ROUND-DIGEST: sha256/16 = {truth} over 2 lap(s)",
+            "three"), encoding="utf-8")
+        (d / "inbound" / "round-09-lap-04.md").write_text(
+            lap.format(4, "platterpus", "", "four"), encoding="utf-8")
+        check(rdg.check_lap(good)[0] == "match",
+              "lap 3's declaration stopped re-deriving once lap 4 was filed; "
+              "the reconstruction is dropping only the lap itself")
+
+        # And the pin is by VALUE, so editing a lap that is excused for a known
+        # wrong declaration stops excusing it. Proved here rather than on the
+        # real record because a sent lap is immutable -- the rule this session
+        # already broke once.
+        edited = good.read_text().replace(truth, "d" * 16)
+        good.write_text(edited, encoding="utf-8")
+        st, decl, _, _ = rdg.check_lap(good)
+        check(st == "mismatch" and decl[0] == "d" * 16,
+              f"an edited declaration was not seen as changed: {st} {decl}")
+
+        # And the scan's PIN, driven the only way it can be: a pinned lap whose
+        # declaration has moved must stop being excused. On the real record the
+        # pinned laps are sent and immutable, so this is unreachable there --
+        # which is why a revert to pinning by filename passed the first version.
+        pins = {"round-09-lap-03.md": "d" * 16}
+        check(not scan_declarations((9, 9), pins),
+              "a lap pinned by its current wrong value was not excused")
+        pins = {"round-09-lap-03.md": "e" * 16}
+        problems = scan_declarations((9, 9), pins)
+        check(any("changed or vanished" in p for p in problems),
+              f"an edited pinned lap was still excused: {problems}")
+    finally:
+        rdg.HS = real
+
+
+def test_exclude_refuses_when_it_matches_nothing():
+    """Covers: C21 (round 9 lap 6 §F3)
+
+    Platterpus found this in their implementation and we had it identically:
+    `--exclude` matched on basename and silently dropped nothing otherwise, so
+    a wrong name printed a confident digest over the full set. **A manufactured
+    mismatch, indistinguishable from a real one, inside the tool implementing
+    the one rule neither side may override.**
+
+    The fix shipped in round 9 lap 7 with no test. Reverting it to a no-op left
+    the whole suite green -- found here by trying it, three laps later.
+    """
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "inbound").mkdir()
+    real = rdg.HS
+    try:
+        rdg.HS = d
+        (d / "round-09-lap-01.md").write_text(
+            "HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: 1\n"
+            "HANDSHAKE-FROM: cyanrip-fork\nbody\n", encoding="utf-8")
+        full, n, _ = rdg.digest(9)
+        check(n == 1, f"synthetic record did not enumerate 1 lap: {n}")
+
+        for bad in ("docs/handshake/round-09-lap-01.md",  # a path, not a name
+                    "round-09-lap-99.md",                 # no such lap
+                    "round-9-lap-1.md"):                  # unpadded
+            try:
+                rdg.digest(9, [bad])
+                check(False, f"--exclude {bad} printed a digest instead of "
+                             "refusing; it silently dropped nothing")
+            except SystemExit as e:
+                check(bad in str(e),
+                      f"refused without naming the unmatched value: {e}")
+
+        # And it still works when the name IS right, so the refusal is not
+        # simply "always refuse".
+        got, n, _ = rdg.digest(9, ["round-09-lap-01.md"])
+        check(n == 0 and got != full,
+              f"a matching --exclude did not drop the lap: {n}")
+    finally:
+        rdg.HS = real
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()

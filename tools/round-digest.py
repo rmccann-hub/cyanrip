@@ -39,6 +39,8 @@ bytes: a lap reflowed or re-encoded in transit must not pass as the original.
 Usage:
     tools/round-digest.py 8            # our laps plus docs/handshake/inbound/
     tools/round-digest.py 8 --verbose  # show every line that went in
+    tools/round-digest.py 8 --list     # every candidate FILE, in or out, and why
+    tools/round-digest.py 8 --check    # re-derive every declaration in the round
 """
 
 import argparse
@@ -86,6 +88,61 @@ def is_a_lap(text):
     return got[0], got[1], got[2]
 
 
+def candidates():
+    """Every file the enumerator looks at, ours and inbound/, in one order.
+
+    Separated from the filtering so `--list` reports on the same set the digest
+    walks rather than on a second, hand-kept idea of what the record contains.
+    """
+    return sorted(list(HS.glob("round-*.md")) +
+                  list((HS / "inbound").glob("round-*.md")))
+
+
+def survey(round_no, exclude=()):
+    """Per-FILE verdicts: (path, line-or-None, reason).
+
+    `line` is the "<lap>\\t<from>\\t<sha>" string when the file is enumerated,
+    None otherwise, and `reason` says which it was and why. This exists because
+    a digest is a single opaque number: when two sides disagree, the count is
+    the only clue, and "over 4" against "over 6" does not say WHICH two. Round 9
+    lap 8 asked for exactly this output and had to reconstruct our record by
+    exhaustive search over subsets to ask the question at all.
+    """
+    out = []
+    for path in candidates():
+        if path.name in exclude:
+            out.append((path, None, "excluded by --exclude"))
+            continue
+        raw = path.read_bytes()
+        parts = is_a_lap(raw.decode("utf-8", errors="replace"))
+        if parts is None:
+            out.append((path, None, "not a lap: " + why_not_a_lap(raw)))
+            continue
+        rnd, lap, frm = parts
+        if int(rnd) != round_no:
+            out.append((path, None, f"round {rnd}, not {round_no}"))
+            continue
+        out.append((path, f"{lap}\t{frm}\t{hashlib.sha256(raw).hexdigest()}",
+                    "enumerated"))
+    return out
+
+
+def why_not_a_lap(raw):
+    """The counts that made is_a_lap() refuse, so `--list` names the field.
+
+    Reports what was counted rather than a category, because "malformed" is the
+    answer that sends someone to read the whole file. A transport envelope and a
+    truncated lap are both "not a lap" and the remedies are opposite.
+    """
+    stripped = FENCE_RE.sub("", raw.decode("utf-8", errors="replace"))
+    bits = []
+    for name, rx in (("ROUND", ROUND_RE), ("LAP", LAP_RE), ("FROM", FROM_RE)):
+        n = len(rx.findall(stripped))
+        if n != 1:
+            bits.append(f"{name}x{n}")
+    return ", ".join(bits) if bits else "unknown"
+
+
 def lap_lines(round_no, exclude=()):
     """One "<lap>\\t<from>\\t<sha>" line per lap file of this round we hold.
 
@@ -94,21 +151,9 @@ def lap_lines(round_no, exclude=()):
     alike. A digest over only our own outbox would agree with itself forever,
     which is the defect this replaces.
     """
-    out = []
-    excluded = set()
-    for path in sorted(list(HS.glob("round-*.md")) +
-                       list((HS / "inbound").glob("round-*.md"))):
-        if path.name in exclude:
-            excluded.add(path.name)
-            continue
-        raw = path.read_bytes()
-        parts = is_a_lap(raw.decode("utf-8", errors="replace"))
-        if parts is None:
-            continue
-        rnd, lap, frm = parts
-        if int(rnd) != round_no:
-            continue
-        out.append(f"{lap}\t{frm}\t{hashlib.sha256(raw).hexdigest()}")
+    rows = survey(round_no, exclude)
+    out = [line for _, line, _ in rows if line is not None]
+    excluded = {p.name for p, line, r in rows if r == "excluded by --exclude"}
 
     # An exclusion that matched nothing is a MANUFACTURED MISMATCH, and it is
     # indistinguishable from a real one -- inside the tool implementing the one
@@ -147,10 +192,95 @@ def digest(round_no, exclude=()):
     return digest_of_lines(lines), len(lines), lines
 
 
+# Anchored to the START of the field, not searched within it. Every lap of
+# round 9 carries prose in this field, and three of them quote a SECOND digest
+# in it -- round 8's, or the peer's declaration being verified. A search finds
+# whichever comes first in the sentence and reports it as the declaration:
+# round 9 lap 1 says "not computable ... For round 8: sha256/16 = 81415fe9..."
+# and the first version of this checker read round 8's number as round 9's,
+# then reported the lap as a mismatch. It was the checker that was wrong.
+#
+# The rule is derived rather than chosen: the field's machine-readable part is
+# exactly what round-digest.py PRINTS, and it prints the clause immediately
+# after the colon. Anything further along is commentary. A field not beginning
+# with the clause declares nothing machine-readable, which is the honest
+# reading of lap 1 -- it says "not computable" and means it.
+#
+# This is the verdict-field prose question of round 9 §I arriving in a second
+# field, and it wants the same v5 answer: the value is the leading token
+# sequence, prose follows and is ignored.
+DECL_RE = re.compile(
+    r"^HANDSHAKE-ROUND-DIGEST:[ \t]*sha256/16 = ([0-9a-f]{16}) over (\d+) lap",
+    re.M)
+
+
+def check_lap(path):
+    """Re-derive the HANDSHAKE-ROUND-DIGEST a lap file declares.
+
+    Returns (status, declared, computed, excluded) where status is one of
+    "match", "mismatch", "undeclared", "not-a-lap".
+
+    **The one defect this exists for, named because S-11 requires it: round 9
+    lap 7.** It declared `53f0b465833ac845 over 4`, which is a real digest of a
+    real set -- our holdings at an earlier moment, excluding the peer's lap 4,
+    computed by a command run to VERIFY THEIR declaration and then transcribed
+    into the writer's field. Platterpus could not reproduce it and recovered the
+    subset by exhaustive search over every subset of the eight laps they hold.
+    The same lap's section D is the section conceding that the previous lap had
+    put the verifier's computation under the writer's field. It announced the
+    correction and committed it again, in its own header, two screens apart.
+
+    A digest is the one field a human cannot proofread: every wrong value looks
+    exactly like every right one. So it must not be typed, and until now nothing
+    stopped it being.
+
+    The reconstruction: a lap's declaration covers the holdings that existed
+    when it was written, which is every lap of the round numbered BELOW it --
+    so excluding every lap numbered at or above L reproduces it. That is the
+    writer's rule (exclude yourself, hold 1..L-1) and the reader's retroactive
+    rule (exclude that lap and everything filed since) arriving at one set,
+    which is why this works on the peer's laps as well as ours.
+
+    It is a reconstruction and not a recording, and it can be wrong in exactly
+    one way: a lap written while a lower-numbered lap was not yet held. That is
+    not a false positive to be tolerated -- under §5a such a lap CANNOT declare
+    a digest its reader reproduces, because the reader holds the lap the writer
+    was missing. The check failing is the correct outcome, and lap 7 is the case
+    in point: it was written holding lap 6 and declared a value computed before
+    lap 6 arrived.
+    """
+    raw = path.read_bytes()
+    text = raw.decode("utf-8", errors="replace")
+    parts = is_a_lap(text)
+    if parts is None:
+        return "not-a-lap", None, None, []
+    rnd, lap, _frm = parts
+    m = DECL_RE.search(FENCE_RE.sub("", text))
+    if not m:
+        return "undeclared", None, None, []
+    declared = (m.group(1), int(m.group(2)))
+
+    drop = []
+    for p in candidates():
+        got = is_a_lap(p.read_bytes().decode("utf-8", errors="replace"))
+        if got and int(got[0]) == int(rnd) and int(got[1]) >= int(lap):
+            drop.append(p.name)
+    d, n, _ = digest(int(rnd), drop)
+    return ("match" if (d, n) == declared else "mismatch",
+            declared, (d, n), sorted(drop))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("round", type=int)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--list", action="store_true", dest="list_",
+                    help="every candidate file and whether it was enumerated, "
+                         "with the reason when it was not. A count alone cannot "
+                         "say WHICH laps two sides differ over.")
+    ap.add_argument("--check", action="store_true",
+                    help="re-derive the digest every lap of this round "
+                         "declares. Non-zero on any mismatch.")
     ap.add_argument("--exclude", metavar="FILENAME", action="append", default=[],
                     help="the lap being written, or -- when VERIFYING a peer's "
                          "declared digest -- the lap THEY wrote. v4 §5a: the "
@@ -162,8 +292,40 @@ def main():
                          "cannot express. Refuses if a name matches nothing.")
     args = ap.parse_args()
 
+    if args.list_:
+        for path, line, reason in survey(args.round, args.exclude):
+            mark = "IN " if line else "out"
+            rel = path.relative_to(HS)
+            print(f"{mark} {rel}  ({reason})")
+            if line and args.verbose:
+                print(f"      {line}")
+
+    if args.check:
+        bad = 0
+        for path in candidates():
+            got = is_a_lap(path.read_bytes().decode("utf-8", errors="replace"))
+            if not got or int(got[0]) != args.round:
+                continue
+            status, decl, comp, drop = check_lap(path)
+            rel = path.relative_to(HS)
+            if status == "undeclared":
+                print(f"  -- {rel}: declares no digest")
+                continue
+            ds = f"{decl[0]} over {decl[1]}"
+            if status == "match":
+                print(f"  ok {rel}: {ds}")
+            else:
+                bad += 1
+                print(f"FAIL {rel}: declares {ds}, "
+                      f"re-derives {comp[0]} over {comp[1]}")
+                print(f"       (excluding {', '.join(drop)})")
+        if bad:
+            print(f"\n{bad} declaration(s) do not re-derive.", file=sys.stderr)
+            return 1
+        return 0
+
     d, n, lines = digest(args.round, args.exclude)
-    if args.verbose:
+    if args.verbose and not args.list_:
         for line in lines:
             print(line, file=sys.stderr)
     print(f"HANDSHAKE-ROUND-DIGEST: sha256/16 = {d} over {n} lap(s)")
