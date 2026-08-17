@@ -97,6 +97,12 @@ SENT = {
         "0c33dea35fc3dda0c2cf67166d33116799aa62b3b3ad76cf1f757811d7703ef5",
     "round-10-lap-03.md":
         "3475b9b8ce69550fee5998c3c8040d87c25043269f5db72de4a689ada1be23cc",
+    # Confirmed delivered by Platterpus quoting its §0 back to us in their own
+    # changelog -- "their lap 5 §0 measured that a default build of that tarball
+    # still renders NOT a released build". That citation is the send receipt this
+    # map otherwise has no way to observe.
+    "round-10-lap-05.md":
+        "e9be4ae1496728a9f53886a3942e3714ba855e523d695218c8c5aae926232064",
 }
 
 failures = 0
