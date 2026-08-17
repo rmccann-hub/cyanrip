@@ -299,7 +299,7 @@ void crip_diag_write(void)
     av_bprint_init(&b, 0, AV_BPRINT_SIZE_UNLIMITED);
 
     av_bprintf(&b, "{\n");
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/1\",\n");
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/2\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
@@ -310,7 +310,18 @@ void crip_diag_write(void)
     diag_json_str(&b, vcstag);
     av_bprintf(&b, ",\n    \"handshake\": ");
     diag_json_str(&b, HANDSHAKE_STATE);
-    av_bprintf(&b, ",\n    \"released_build\": %s\n",
+    /* `released_build_declared`, not `released_build`. Round 10 made this a
+     * build-time assertion rather than a derivation, and the logfile says so
+     * in words -- "declared at build time, not verified by cyanrip". The JSON
+     * key said `released_build`, which asserts a verified fact, so the two
+     * surfaces disagreed about the same bit: the human one disclaimed and the
+     * machine one did not.
+     *
+     * A label asserts even when its value disclaims, and here the value could
+     * not disclaim at all -- a bare `true` has nowhere to put a qualifier. The
+     * provenance has to be in the name. Same defect and same remedy as
+     * `Cache defeat:` -> `Cache model:`. */
+    av_bprintf(&b, ",\n    \"released_build_declared\": %s\n",
                HANDSHAKE_RELEASED ? "true" : "false");
     av_bprintf(&b, "  },\n");
 

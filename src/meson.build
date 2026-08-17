@@ -54,11 +54,21 @@ dependencies = [
 # The generator rewrites the file only when its content changes, so running
 # always costs a python invocation rather than a rebuild of everything that
 # includes it.
+# Round 10 §J1(b). Built as a list rather than a ternary so the flag is either
+# present or absent: passing a placeholder like '--no-op' to make both branches
+# the same shape would be an argument the tool must then accept, and a tool that
+# accepts a meaningless flag will one day accept a misspelt meaningful one.
+handshake_declare_args = []
+if get_option('declare_released')
+    handshake_declare_args += '--declare-released'
+endif
+
 handshake_state_h = custom_target('handshake_state.h',
     output: 'handshake_state.h',
     build_always_stale: true,
     command: [ find_program('python3'),
                meson.project_source_root() / 'tools/gen-handshake-state.py',
+               handshake_declare_args,
                '@OUTPUT@' ],
     build_by_default: true,
 )

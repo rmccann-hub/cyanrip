@@ -56,34 +56,46 @@ def c_string(s):
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def _head_is(pin):
-    """True when the tree being built is exactly `pin`.
+def _known_dirty():
+    """True only when git is available AND reports uncommitted changes.
 
-    Compared as prefixes in whichever direction is shorter, because a lap names
-    an abbreviated SHA and git answers with a full one. Any failure -- no pin
-    declared, no git, a dirty tree -- returns False: a build whose provenance
-    cannot be established is not a released build, and that is the direction
-    that fails safe.
+    Three states, deliberately not two. A tree git says is dirty is not a
+    release. A tree git says is clean may be. A tree we cannot ask -- an
+    unpacked tarball, no .git -- is UNKNOWN, and unknown must not refuse here.
+
+    That last clause is the whole reason this function replaced a stricter one.
+    Platterpus installs from `https://github.com/.../archive/<sha>.tar.gz`; it
+    is the only install path the manifest offers. A check that demands a clean
+    git tree therefore refuses the exact artifact a user installs, which would
+    have reintroduced unreachability through the distribution channel after
+    round 10 removed it from the condition. Measured against the manifest's own
+    `install` field, not assumed.
+
+    The build-time declaration is what carries the claim (see main()); this only
+    withdraws it where the tree is visibly modified.
     """
-    if not pin:
-        return False
     try:
-        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
-                              capture_output=True, text=True,
-                              check=True).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT,
-                               capture_output=True, text=True,
-                               check=True).stdout.strip()
+        return bool(subprocess.run(["git", "status", "--porcelain"], cwd=ROOT,
+                                   capture_output=True, text=True,
+                                   check=True).stdout.strip())
     except Exception:
         return False
-    if dirty:
-        return False
-    return head.startswith(pin) or pin.startswith(head)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("output", nargs="?", help="header to write (default stdout)")
+    # Round 10 §J1(b), agreed with Platterpus in lap 2. DEFAULT FALSE, and only
+    # the release path passes it -- their one condition on accepting (b), and
+    # the right one: the failure mode of a mis-set flag is a release that
+    # UNDER-claims, never a working tree that OVER-claims. An assertion that
+    # lies permissively lands in somebody's archival record forever; one that
+    # lies in the refusing direction costs a line of prose.
+    ap.add_argument("--declare-released", action="store_true",
+                    help="assert at build time that this build is a published "
+                         "release. Recorded as declared and explicitly not "
+                         "verified -- the `Consumer:` idiom. Never set by "
+                         "default; see docs/RELEASING.md.")
     args = ap.parse_args()
 
     rounds = rg.load_rounds()
@@ -100,23 +112,31 @@ def main():
         verdict = latest.verdict or "no verdict declared"
         if ok:
             state = f"round {latest.number}{lap} closed, verdict {verdict}"
-            # A CLOSED ROUND IS NOT A RELEASED BUILD, and conflating them made
-            # every log this tree writes into a false claim the moment round 8
-            # closed.
+            # A CLOSED ROUND IS NOT A RELEASED BUILD -- still true, still the
+            # reason this is not just `ok`. At the moment round 8 closed on
+            # ddf7ac3 the tree was 33 commits past it, carrying ten unreviewed
+            # fixes, and `released = ok` alone had every log it wrote read as
+            # jointly verified.
             #
-            # `ok` answers "is the record closed?" -- a question about
-            # `HANDSHAKE-OUR-PIN`. HANDSHAKE_RELEASED renders a claim about THIS
-            # BINARY. Those are different questions, and this collapsed them: at
-            # the moment round 8 closed on ddf7ac3, the tree was 33 commits past
-            # it carrying ten unreviewed defect fixes and one breaking schema
-            # change, and every log it wrote would have dropped the
-            # "-- NOT a released build" suffix and read as jointly verified.
+            # The fix for that was `_head_is(latest.our_pin)` -- require the
+            # build to BE the approved pin -- and it was correct about the
+            # defect and unsatisfiable as a remedy. `our_pin` is read from a lap
+            # file INSIDE the tree being built, so setting the flag needed that
+            # file to contain the abbreviated SHA of the commit containing it.
+            # A lap can only ever name an ancestor. Round 10 lap 1 measured it
+            # across all 15 ledger commits and the tip: 16 for 16, always 0.
             #
-            # So the build must BE the approved pin. Fails closed on a tarball
-            # or any tree where git cannot answer: unknown provenance is not a
-            # release. No wording changes -- the tip keeps saying exactly what
-            # it said before, which is the true thing.
-            released = 1 if _head_is(latest.our_pin or latest.pin) else 0
+            # Round 10 §J1(b): the build DECLARES it, in the `Consumer:` idiom
+            # -- recorded as declared, explicitly not verified. It is the one
+            # thing a build genuinely knows that its own tree cannot, because
+            # no artifact inside a commit can name that commit.
+            #
+            # Two derived preconditions still gate the declaration, so a
+            # mis-set flag cannot claim just anything:
+            #   * the record must be closed -- an open round is never a release,
+            #     and this is the half that has always worked;
+            #   * the tree must not be VISIBLY dirty (see _known_dirty).
+            released = 1 if (args.declare_released and not _known_dirty()) else 0
         else:
             state = f"round {latest.number}{lap} OPEN, verdict {verdict}"
             released = 0

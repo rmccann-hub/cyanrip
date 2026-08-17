@@ -559,9 +559,25 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
      * from a mid-round working tree is a different provenance from a rip by a
      * mutually-verified release, and a record read months later cannot tell
      * them apart unless the log says. Compiled in from docs/handshake/ by
-     * tools/gen-handshake-state.py, so it is derived rather than asserted. */
+     * tools/gen-handshake-state.py, so the round state is derived rather than
+     * asserted.
+     *
+     * The RELEASE half cannot be derived and now says so. No artifact inside a
+     * commit can name that commit, so a build cannot establish from its own
+     * tree that it is the published one -- round 10 measured the previous
+     * attempt at 0 for 16. It is declared at build time instead, and carries
+     * the same disclaimer `Consumer:` does, for the same reason: an assertion
+     * we did not check must never render as one we did.
+     *
+     * Silence would have been the trap. Before round 10 a released build
+     * printed no suffix at all, so the strongest claim in the line was made by
+     * omission -- the `Cache defeat:` defect exactly inverted, where a reader
+     * who greps the field is entitled to believe more than we established. */
     cyanrip_log(ctx, 0, "Handshake:      %s%s\n", HANDSHAKE_STATE,
-                HANDSHAKE_RELEASED ? "" : " -- NOT a released build");
+                HANDSHAKE_RELEASED ? " -- released build"
+                                   : " -- NOT a released build");
+    if (HANDSHAKE_RELEASED)
+        cyanrip_log(ctx, 0, "                (declared at build time, not verified by cyanrip)\n");
 
     /* Who asked for this rip, verbatim as they identified themselves. We
      * cannot check it: this is what the caller said, not what we verified, and

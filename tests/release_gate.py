@@ -956,30 +956,177 @@ def test_manifest_round_closed_agrees_with_the_gate():
 # round 8 closed on ddf7ac3 the tree was 33 commits past it, carrying ten
 # unreviewed fixes and one breaking schema change -- and every log it wrote would
 # have dropped the disclaimer and read as jointly verified.
-def test_released_requires_the_build_to_be_the_pin():
-    import importlib.util
+# The comment above is kept because the defect it describes is real and the
+# disclaimer still exists to prevent it. What is gone is the REMEDY it used to
+# test: `_head_is(latest_lap.our_pin)`, requiring the build to be the approved
+# pin.
+#
+# That remedy was correct about the defect and unsatisfiable as a fix. `our_pin`
+# is read from a lap file inside the tree being built, so setting the flag
+# needed that file to contain the abbreviated SHA of the commit containing it --
+# the same fixpoint that stops a generated artifact naming the build that
+# produced it. Round 10 lap 1 measured it across all 15 commits in the release
+# ledger and the tip: 16 for 16, always 0. Platterpus then produced the other
+# half from their rig artifacts: ddf7ac3, seq 11, DID render clean, because
+# `_head_is` post-dates it -- so the disclaimer was invariant only from a083279
+# onward, not from the beginning.
+#
+# `_head_is` is deleted rather than repaired. It also compared prefixes in
+# whichever direction was shorter with no minimum length, so `_head_is('b')` was
+# True for roughly one commit in sixteen (round 10 lap 1 §J3). Platterpus's lap
+# 2 §F asked for that fixed BEFORE the flag became reachable, on the grounds
+# that a latent permissive comparison behind a constant False goes live the
+# moment the constant is fixed. They were right, and removing the function is
+# the stronger answer than bounding it.
+#
+# The replacement is test_released_is_declared_and_defaults_to_off below, which
+# pins every direction the claim can be withdrawn in.
+
+
+# ---------------------------------------------------------------------------
+# Round 10: the released claim is DECLARED, and every way it can be withdrawn.
+#
+# _head_is was correct about the defect and unsatisfiable as a remedy -- it
+# required a lap file inside the tree to name the commit containing it, which
+# lap 1 measured at 0 for 16 across the whole release ledger. §J1(b) replaced
+# the derivation with a build-time declaration in the `Consumer:` idiom.
+#
+# A declaration is only as good as its fail-closed directions, so those are
+# what this pins. Platterpus's one condition on accepting (b) was that a
+# mis-set flag must produce a release that UNDER-claims, never a working tree
+# that OVER-claims.
+# ---------------------------------------------------------------------------
+def _ghs():
     spec = importlib.util.spec_from_file_location(
-        "ghs", HERE.parent / "tools" / "gen-handshake-state.py")
-    ghs = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(ghs)
+        "ghs2", HERE.parent / "tools" / "gen-handshake-state.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
 
-    check(not ghs._head_is(None), "a missing pin counted as released")
-    check(not ghs._head_is(""), "an empty pin counted as released")
-    check(not ghs._head_is("0000000"), "a pin that is not HEAD counted as released")
 
-    # And the positive direction, so the guard cannot pass by always saying no.
-    import subprocess
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=HERE.parent,
-                          capture_output=True, text=True).stdout.strip()
-    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=HERE.parent,
-                           capture_output=True, text=True).stdout.strip()
-    if head and not dirty:
-        check(ghs._head_is(head[:7]),
-              "HEAD's own abbreviated SHA was not recognised as the build")
-    # A dirty tree is never a released build, whatever it is checked out at.
-    if dirty:
-        check(not ghs._head_is(head[:7]),
-              "a dirty tree counted as a released build")
+def test_released_is_declared_and_defaults_to_off():
+    """Covers: round 10 §J1(b), §B's fail-closed condition.
+
+    Runs the generator as a subprocess against a REAL tree rather than poking
+    module state, because the thing under test is the composition -- flag AND
+    closed record AND not-visibly-dirty -- and a monkeypatched precondition
+    proves nothing about how the three combine.
+    """
+    import subprocess, shutil
+
+    root = HERE.parent
+
+    def build_tree(with_git):
+        """A copy of the WORKING tree's tools plus a fixed, closed record.
+
+        Two things this deliberately does not do, each learned by doing it:
+
+        `git archive HEAD` / `git clone` -- the first version used both, and
+        both test the last commit rather than the code under test. They failed
+        against this very fix while it was uncommitted, which is exactly
+        backwards: a test that passes only after you commit cannot tell you
+        whether to commit.
+
+        Inheriting the repo's live docs/handshake -- the second version did,
+        and round 10 being open made "declared release claims released"
+        unprovable, because `ok` was False for reasons that had nothing to do
+        with the flag. The record here is ONE closed round, fixed, so every
+        answer below is attributable to the term the step moves.
+        """
+        work = pathlib.Path(tempfile.mkdtemp()) / "tree"
+        (work / "docs" / "handshake").mkdir(parents=True)
+        shutil.copytree(root / "tools", work / "tools")
+        shutil.copy(root / "docs" / "handshake" / "round-08-lap-17.md",
+                    work / "docs" / "handshake")
+        if with_git:
+            for cmd in (["git", "init", "-q"], ["git", "add", "-A"],
+                        ["git", "-c", "user.email=t@t", "-c", "user.name=t",
+                         "commit", "-qm", "fixture"]):
+                subprocess.run(cmd, cwd=work, capture_output=True, check=True)
+        return work
+
+    def released_in(tree, *args):
+        out = subprocess.run(
+            [sys.executable, str(tree / "tools" / "gen-handshake-state.py"), *args],
+            capture_output=True, text=True, check=True).stdout
+        m = re.search(r"^#define HANDSHAKE_RELEASED\s+(\d)$", out, re.M)
+        check(m is not None, "the generator emitted no HANDSHAKE_RELEASED")
+        return m.group(1) if m else None
+
+    # --- no git at all: the unpacked-tarball install path -------------------
+    work = build_tree(with_git=False)
+    hs = work / "docs" / "handshake"
+
+    # 1. The default. Only the flag differs between this and step 2.
+    check(released_in(work) == "0",
+          "a build with no declaration claimed to be a released build")
+
+    # 2. Declared, record closed, dirt unaskable -> the claim stands. Without
+    #    this the rest is satisfiable by a generator that always says 0, which
+    #    is precisely the shape _head_is failed in for sixteen builds while
+    #    every test on it passed.
+    check(released_in(work, "--declare-released") == "1",
+          "a declared release could not claim to be one -- the flag is "
+          "unreachable again, which is the defect round 10 exists to fix")
+
+    # 3. An open round withdraws it. Same tree, same flag, no git: `ok` is the
+    #    only term that moved.
+    open_lap = hs / "round-99-lap-01.md"
+    open_lap.write_text(
+        "HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 99\nHANDSHAKE-LAP: 1\n"
+        "HANDSHAKE-FROM: cyanrip-fork\nHANDSHAKE-VERDICT: OPEN\n",
+        encoding="utf-8")
+    check(released_in(work, "--declare-released") == "0",
+          "a build from a tree with an OPEN round declared itself released")
+    open_lap.unlink()
+    check(released_in(work, "--declare-released") == "1",
+          "removing the open lap did not restore the claim -- then step 3 "
+          "proved nothing about the round state")
+
+    # --- a real repo: the visibly-dirty withdrawal --------------------------
+    repo = build_tree(with_git=True)
+    check(released_in(repo, "--declare-released") == "1",
+          "a clean declared tree did not claim release -- the dirty step "
+          "below would then prove nothing")
+    (repo / "tools" / "scratch.txt").write_text("dirty\n", encoding="utf-8")
+    check(released_in(repo, "--declare-released") == "0",
+          "a visibly dirty tree declared itself a released build")
+    (repo / "tools" / "scratch.txt").unlink()
+    check(released_in(repo, "--declare-released") == "1",
+          "removing the dirt did not restore the claim -- then the dirty "
+          "check was not what moved it")
+
+    shutil.rmtree(work.parent, ignore_errors=True)
+    shutil.rmtree(repo.parent, ignore_errors=True)
+
+
+def test_the_tarball_install_path_can_still_declare():
+    """Covers: round 10 §J1(b), the trap inside the fix.
+
+    Platterpus installs from `.../archive/<sha>.tar.gz` -- the only path the
+    manifest offers. An unpacked tarball has no .git, so a released check that
+    DEMANDS a clean git tree refuses the exact artifact users install, and the
+    flag is unreachable again through the distribution channel rather than
+    through the condition.
+
+    That is not hypothetical: the check this replaced returned False on any
+    tree where git could not answer, and called it failing safe. It was failing
+    safe into unreachable.
+    """
+    import json
+    manifest = json.loads((HERE.parent / "release-manifest.json").read_text())
+    installs = [c["install"] for c in manifest["channels"].values()]
+    check(all(".tar.gz" in u for u in installs),
+          f"the manifest no longer installs from tarballs: {installs} -- "
+          f"if the install path changed, this test's premise needs rechecking")
+
+    ghs = _ghs()
+    # The behaviour that makes it work, asserted directly: unknown dirt is not
+    # dirt. `_known_dirty` answers about ROOT, which is a git tree here, so the
+    # tarball case is asserted by the subprocess test above; this pins the
+    # three-state intent against a future two-state rewrite.
+    check(ghs._known_dirty() in (True, False),
+          "_known_dirty must answer a bool, never raise, on any tree")
 
 
 

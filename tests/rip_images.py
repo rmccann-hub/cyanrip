@@ -1326,7 +1326,7 @@ def sc_diagnostics():
         fail(f"diagnostics: file is not valid JSON: {e}")
         return
 
-    if d.get("schema") != "cyanrip-diagnostics/1":
+    if d.get("schema") != "cyanrip-diagnostics/2":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
     if d.get("exit_code") != 0:
         fail(f"diagnostics: exit_code {d.get('exit_code')!r} for a clean rip")

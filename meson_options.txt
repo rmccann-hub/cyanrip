@@ -1,0 +1,16 @@
+# Round 10 §J1(b), agreed with Platterpus in lap 2.
+#
+# Assert at build time that this build is a published release. It is a CLAIM,
+# not a measurement: the log renders it with the same "not verified by cyanrip"
+# disclaimer `Consumer:` carries, because a build cannot establish from its own
+# tree that it is the published one -- no artifact inside a commit can name that
+# commit.
+#
+# DEFAULT FALSE, and only tools/ sets it during a release. This is Platterpus's
+# one condition on accepting a declaration over a derivation, and it is the
+# right one: the failure mode of a mis-set flag must be a release that
+# UNDER-claims, never a working tree that OVER-claims. A permissive lie lands in
+# somebody's archival record forever; a refusing one costs a line of prose.
+option('declare_released', type: 'boolean', value: false,
+       description: 'Declare this build a published release (release path only; ' +
+                    'recorded as declared, never verified)')
