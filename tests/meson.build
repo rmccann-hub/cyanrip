@@ -209,10 +209,19 @@ rip_scenarios = [
     'verify_log',
 ]
 
+# The scenarios are told which build configuration they are testing, because
+# one of them -- `handshake` -- asserts a rendering that DEPENDS on it. The
+# released suffix is chosen by -Ddeclare_released at build time, so a test that
+# guesses can only be right for one of the two builds, and the one it was wrong
+# for is the one we ship: the shipping configuration failed 2 of 41 until this
+# existed. Derived from the option rather than sniffed from the binary.
+declared_env = 'CYANRIP_DECLARED_RELEASED=' + (get_option('declare_released') ? '1' : '0')
+
 foreach s : rip_scenarios
     test(s, python,
          args: [ files('rip_images.py'), cyanrip_exe,
                  meson.current_source_dir() / 'fixtures', s ],
+         env: [ declared_env ],
          suite: 'images',
          timeout: 120)
 endforeach

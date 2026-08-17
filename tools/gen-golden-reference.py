@@ -86,6 +86,25 @@ VOLATILE = (
     (re.compile(r"^(Total time taken:\s+).*$", re.M), r"\1<normalised>"),
     (re.compile(r"^(\s*Elapsed:\s+).*$", re.M), r"\1<normalised>"),
     (re.compile(r"^(\s*Extraction speed:\s+).*$", re.M), r"\1<normalised>"),
+    # The released/unreleased suffix and its qualifier line, ONLY in --check.
+    #
+    # These are a BUILD CONFIGURATION, not log content: the same commit built
+    # with and without -Ddeclare_released=true produces both renderings, and the
+    # reference is generated with the option at its default. Leaving them strict
+    # made the shipping configuration fail its own suite -- measured, 2 of 41,
+    # on the exact build our release manifest instructs the consumer to make.
+    #
+    # Same argument as the build tag above, and the same limit: this drops the
+    # suffix from the BODY comparison only. It is not unguarded -- the
+    # `handshake` scenario asserts the rendering directly against the
+    # configuration the binary was actually built with, which is a stronger
+    # check than diffing it here could be, because it knows which one to expect.
+    #
+    # The round/lap/verdict half of the line stays strict. That half is content.
+    (re.compile(r"^(Handshake:\s+.*?) -- (?:NOT a )?released build$", re.M),
+     r"\1 -- <build-declaration normalised>"),
+    (re.compile(r"^\s*\(declared at build time, not verified by cyanrip\)\n",
+                re.M), ""),
     (re.compile(r'("(?:started_at|finished_at|elapsed_s)":\s*)[^,\n}]+'),
      r"\1<normalised>"),
 )

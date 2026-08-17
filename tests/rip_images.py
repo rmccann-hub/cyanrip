@@ -738,31 +738,71 @@ def sc_handshake():
         if open_round and "NOT a released build" not in state:
             fail(f"handshake: round is open but the log does not say so: {state!r}")
 
-        # A CLOSED ROUND IS NOT A RELEASED BUILD, and this check used to assert
-        # that it was -- it failed the moment round 8 closed while the tree was
-        # 33 commits past the approved pin. "Is the record closed?" is a
-        # question about HANDSHAKE-OUR-PIN; the disclaimer is a claim about THIS
-        # BINARY. The build must BE the pin, and a dirty tree never is.
-        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
-                              capture_output=True, text=True).stdout.strip()
-        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT,
-                               capture_output=True, text=True).stdout.strip()
-        pin = None
-        import glob as _glob
-        laps = sorted(_glob.glob(str(ROOT / "docs" / "handshake" / "round-*.md")))
-        for path in reversed(laps):
-            mm = re.search(r"^HANDSHAKE-OUR-PIN:[ \t]*(\S+)", open(path).read(), re.M)
-            if mm:
-                pin = mm.group(1)
-                break
-        is_the_pin = bool(pin and head and not dirty
-                          and (head.startswith(pin) or pin.startswith(head)))
-        if not open_round and is_the_pin and "NOT a released build" in state:
-            fail(f"handshake: this IS the approved pin on a clean tree, so the "
-                 f"disclaimer is wrong: {state!r}")
-        if not open_round and not is_the_pin and "NOT a released build" not in state:
-            fail(f"handshake: the round is closed but this build is not the "
-                 f"approved pin, and the log does not say so: {state!r}")
+        # A CLOSED ROUND IS NOT A RELEASED BUILD. That is still the rule; what
+        # changed in round 10 is how the second half is established.
+        #
+        # This block used to compute `is_the_pin` -- HEAD equals the newest
+        # lap's HANDSHAKE-OUR-PIN on a clean tree -- and assert the disclaimer
+        # against it. That was the `_head_is` design, and it is deleted: a lap
+        # is read from a file inside the tree it names, so the pin can only ever
+        # be an ancestor and `is_the_pin` was unreachable. It survived here as
+        # dead code whose SECOND branch then did the work for the wrong reason:
+        # with is_the_pin always false, it demanded the disclaimer on every closed
+        # round -- including on a legitimately declared release, which correctly
+        # omits it. Measured: the shipping configuration failed 2 of 41.
+        #
+        # The rule now is the declaration, so the test needs to know what the
+        # binary was built with. meson passes it; without the variable we assume
+        # the default, which is what a bare `python3 tests/rip_images.py` gets.
+        declared = os.environ.get("CYANRIP_DECLARED_RELEASED") == "1"
+        qualifier = "(declared at build time, not verified by cyanrip)"
+
+        # The declaration is not the whole condition: a VISIBLY dirty tree
+        # withdraws it. So a test that expects the released rendering from the
+        # option alone fails for every developer with uncommitted work -- which
+        # is how this test first failed, on the very change that added it.
+        #
+        # Asked of the generator rather than reimplemented with a second
+        # `git status`. Two readers of one tree that can disagree is the failure
+        # the release manifest already imports the gate's loader to avoid, and
+        # a test disagreeing with the binary about the same tree would be
+        # indistinguishable from the rendering being broken.
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location(
+            "ghs_probe", ROOT / "tools" / "gen-handshake-state.py")
+        _ghs = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_ghs)
+        expect_released = declared and not _ghs._known_dirty()
+
+        if not open_round and not expect_released and "NOT a released build" not in state:
+            fail(f"handshake: the round is closed and this build makes no "
+                 f"effective release declaration, so the log must still "
+                 f"disclaim: {state!r}")
+
+        # The declared rendering, which nothing tested until now -- it was
+        # verified only by hand-run transcripts pasted into handshake laps.
+        if not open_round and expect_released:
+            if "-- released build" not in state or "NOT a released build" in state:
+                fail(f"handshake: built with -Ddeclare_released=true on a closed "
+                     f"round, but the log does not say so: {state!r}")
+            # ...and it must NOT go silent. Before round 10 a released build
+            # printed no suffix at all, which made the strongest claim in the
+            # line by omission. The qualifier is the whole fix: it says who
+            # declared it and that cyanrip did not check.
+            if qualifier not in log:
+                fail("handshake: the released rendering dropped its qualifier "
+                     f"{qualifier!r} -- a declaration rendering as a bare claim "
+                     "is the defect round 10 existed to remove")
+            # Adjacency, not mere presence. The qualifier belongs to the
+            # Handshake: line; Consumer: has its own, two lines later, and a
+            # reader folding by proximity must not graft one onto the other.
+            for i, ln in enumerate(log.splitlines()):
+                if ln.startswith("Handshake:"):
+                    nxt = log.splitlines()[i + 1] if i + 1 < len(log.splitlines()) else ""
+                    if qualifier not in nxt:
+                        fail("handshake: the qualifier is not on the line "
+                             f"immediately after Handshake:, it is {nxt!r}")
+                    break
 
     # Without --consumer the log must say the caller did not identify itself,
     # rather than leaving the field absent -- a missing field prompts a
