@@ -160,6 +160,16 @@ test('Argv surface probe', python,
 ##
 ## This asserts only well-formedness, never closure: an OPEN round is the normal
 ## state and must not fail a build.
+## Sent laps are immutable
+## =======================
+## Round 9 lap 3 was sent and then edited twice -- by us, one lap after we
+## criticised Platterpus for the same thing, and while telling ourselves the
+## lap was "still DRAFT". It was not; it had been handed over. Nothing caught
+## it because every check we had was about a file's CONTENT and none about its
+## IDENTITY OVER TIME. Adopted from Platterpus's guard, which is better than
+## anything we had.
+test('Sent laps are immutable', python, args: [ files('sent_laps.py') ])
+
 test('Handshake wire conformance', python,
      args: [ files('handshake_wire.py'), meson.project_source_root() ])
 

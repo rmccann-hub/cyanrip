@@ -86,7 +86,7 @@ def is_a_lap(text):
     return got[0], got[1], got[2]
 
 
-def lap_lines(round_no, exclude=None):
+def lap_lines(round_no, exclude=()):
     """One "<lap>\\t<from>\\t<sha>" line per lap file of this round we hold.
 
     Both directories: ours and inbound/. The digest covers the record, and the
@@ -95,9 +95,11 @@ def lap_lines(round_no, exclude=None):
     which is the defect this replaces.
     """
     out = []
+    excluded = set()
     for path in sorted(list(HS.glob("round-*.md")) +
                        list((HS / "inbound").glob("round-*.md"))):
-        if exclude and path.name == exclude:
+        if path.name in exclude:
+            excluded.add(path.name)
             continue
         raw = path.read_bytes()
         parts = is_a_lap(raw.decode("utf-8", errors="replace"))
@@ -107,6 +109,27 @@ def lap_lines(round_no, exclude=None):
         if int(rnd) != round_no:
             continue
         out.append(f"{lap}\t{frm}\t{hashlib.sha256(raw).hexdigest()}")
+
+    # An exclusion that matched nothing is a MANUFACTURED MISMATCH, and it is
+    # indistinguishable from a real one -- inside the tool implementing the one
+    # §5a rule neither side may override.
+    #
+    # Ours matched on basename and silently dropped nothing when the name did
+    # not match, so `--exclude docs/handshake/inbound/round-09-lap-04.md`
+    # printed a confident digest over the full set including the lap it had been
+    # told to remove. Platterpus found it in their implementation (round 9 lap 6
+    # §F3) by attacking their own diagnosis before publishing it; we had the
+    # identical defect and had not asked the question. It is this project's own
+    # "can this check be satisfied by finding nothing?" -- unasked, in the check
+    # that matters most.
+    missed = set(exclude) - excluded
+    if missed:
+        raise SystemExit(
+            "refusing to print a digest: --exclude matched nothing for "
+            + ", ".join(sorted(missed))
+            + "\nPass the FILENAME as it appears in the record, not a path. A "
+              "silently ignored exclusion produces a digest over the wrong set "
+              "and is indistinguishable from a genuine mismatch.")
     return sorted(out)
 
 
@@ -119,7 +142,7 @@ def digest_of_lines(lines):
     return hashlib.sha256(blob).hexdigest()[:16]
 
 
-def digest(round_no, exclude=None):
+def digest(round_no, exclude=()):
     lines = lap_lines(round_no, exclude)
     return digest_of_lines(lines), len(lines), lines
 
@@ -128,12 +151,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("round", type=int)
     ap.add_argument("--verbose", action="store_true")
-    ap.add_argument("--exclude", metavar="FILENAME",
+    ap.add_argument("--exclude", metavar="FILENAME", action="append", default=[],
                     help="the lap being written, or -- when VERIFYING a peer's "
                          "declared digest -- the lap THEY wrote. v4 §5a: the "
                          "writer excludes itself and the reader excludes that "
                          "same file, never its own newest lap. Getting this "
-                         "backwards makes the two sides disagree forever.")
+                         "backwards makes the two sides disagree forever. "
+                         "Repeatable: reproducing an older declaration means "
+                         "dropping every lap filed since, which one value "
+                         "cannot express. Refuses if a name matches nothing.")
     args = ap.parse_args()
 
     d, n, lines = digest(args.round, args.exclude)

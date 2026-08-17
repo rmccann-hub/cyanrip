@@ -87,6 +87,23 @@ def main():
         sys.exit("usage: make-envelope.py out.md [--lap LAP.md] FILE [FILE ...]")
     out = pathlib.Path(argv[0])
     paths = [pathlib.Path(p) for p in argv[1:]]
+    # The name is DERIVED from the lap it carries, never typed. Platterpus's
+    # drifted three times in one session because the property lived in a source
+    # comment instead of a check, and an envelope named for a round but not a
+    # lap silently overwrites the previous one on the operator's disk -- our own
+    # two round-9 envelopes were `round09-exchange.md` and `round09-lap05.md`,
+    # which is exactly the inconsistency they warned about (lap 6 §H). If a lap
+    # is named, the filename comes from it.
+    if lap is not None:
+        head = lap.read_text(encoding="utf-8")
+        r = re.search(r"^HANDSHAKE-ROUND:[ \t]*(\d+)", head, re.M)
+        l = re.search(r"^HANDSHAKE-LAP:[ \t]*(\d+)", head, re.M)
+        if r and l:
+            derived = out.parent / f"round-{int(r.group(1)):02d}-lap-{int(l.group(1)):02d}-envelope.md"
+            if derived != out:
+                print(f"note: naming the envelope for the lap it carries: "
+                      f"{derived.name} (not {out.name})")
+            out = derived
     if lap is not None:
         paths = [lap] + [p for p in paths if p != lap]
 
