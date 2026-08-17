@@ -103,6 +103,8 @@ SENT = {
     # map otherwise has no way to observe.
     "round-10-lap-05.md":
         "e9be4ae1496728a9f53886a3942e3714ba855e523d695218c8c5aae926232064",
+    "round-11-lap-01.md":
+        "cc74b3cf8d43d5f4acd4c555e44cbd447f53cbbf718e2fd0c80b78c1c46d19b8",
 }
 
 failures = 0
