@@ -2,13 +2,40 @@ name: CI
 
 on:
   push:
-    branches: [ master, workflow ]
+    # platterpus-fork is where this fork's work actually lands, and it was NOT
+    # here: the inherited trigger fired only on master (our clean upstream
+    # mirror, never committed to) and on a `workflow` branch that does not
+    # exist. So this fork had CI configured and no CI running -- every green
+    # suite was a human running it by hand, which is the same class of gap as
+    # a build configuration nobody compiles.
+    branches: [ master, workflow, platterpus-fork ]
+  pull_request:
+    branches: [ platterpus-fork ]
   release:
     types: [ released ]
 
 jobs:
   linux:
     runs-on: ubuntu-latest
+    # Four configurations, because a configuration nobody builds is a
+    # configuration nobody knows the state of -- and that is not theoretical
+    # here. `-Ddeclare_released=true` is the build our release manifest tells
+    # the consumer to make, nothing had ever compiled it, and when it finally
+    # was it failed 2 of 41. The sanitizer rows are the same argument one level
+    # down: they pass today, and nothing was running them.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default
+            opts: ""
+          - name: released
+            opts: "-Ddeclare_released=true"
+          - name: sanitizers
+            opts: "-Db_sanitize=address,undefined -Db_lundef=false"
+          - name: released+sanitizers
+            opts: "-Ddeclare_released=true -Db_sanitize=address,undefined -Db_lundef=false"
+    name: linux (${{ matrix.name }})
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +49,7 @@ jobs:
 
       - name: Build
         run: |
-          meson setup build
+          meson setup build ${{ matrix.opts }}
           ninja -C build
 
       - name: Test
