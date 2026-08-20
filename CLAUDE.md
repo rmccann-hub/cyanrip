@@ -1087,6 +1087,29 @@ code.** Anything that changes either is handshake material even though we did
 not write it — and say plainly that it came from upstream, because it changes
 whether "roll back to stock" is an escape hatch for the other side.
 
+**That diff is a tool and a record, not a habit.** `tools/upstream-delta.py`
+generates it — versions, inbound commits, CLI flags *measured from both
+binaries' `--help`* rather than read from the option table, log-line inventories
+from both trees, and dependency deltas. It judges nothing; the verdicts live in
+`docs/upstream/sync-*.md`, one per sync, **written before anything merges into
+`platterpus-fork`**. `docs/upstream/README.md` is the index and explains the
+fork to whoever maintains `cyanreg/cyanrip`; `Changelog.md` stays our releases
+by version and links there rather than growing a second voice.
+
+Two traps that record exists to keep, both paid for:
+
+- **Compare merged trees, never individual commits in a series.** Upstream's
+  `b227408` added a log line spelled `Peak: %.6f`; two later "Address PR
+  comments" commits in the same series renamed it to `Sample peak: %.6f`. The
+  introducing commit named a label that never shipped in any upstream build, and
+  it was reported here as a finding before anyone opened the merged file. Use
+  `git show <ref>:<path>`.
+- **Syncing `master` is free and never touches the fork.** They diverged at
+  `958e1ad`, and every consumer-facing reference — `release-manifest.json`'s
+  `commit` and `install`, and the URL the consumer polls — resolves to a SHA or
+  to `platterpus-fork`. The string `master` appears nowhere in the manifest.
+  Keeping the mirror current is what makes the delta visible at all.
+
 ## Known external bugs worked around here
 
 Record these rather than rediscovering them:

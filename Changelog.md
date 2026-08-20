@@ -1,3 +1,37 @@
+Unreleased
+==========
+No release. Two additions, both about seeing upstream clearly rather than
+changing what this fork does.
+
+ - **`docs/upstream/` — the fork explained to upstream.** This file stays what
+   it is: our releases, by version, for people installing the fork. The new
+   directory is the other half, and the split is deliberate:
+
+   > "The normal changelog by version lives as it does. One for the original
+   > cyanrip repo maintainer that is in more detail and gives the full shape and
+   > reasoning — that can be in a different location, maybe linked to in the
+   > other files so they can easily find it."
+
+   So `docs/upstream/README.md` explains the fork to whoever maintains
+   `cyanreg/cyanrip`, and each `sync-*.md` is one upstream sync analysed
+   **before** anything is merged. A file saying "we did not take this, here is
+   why" is a complete entry.
+ - **`tools/upstream-delta.py`** generates the facts for those files: versions,
+   inbound commits, CLI flags *measured from both binaries' `--help`*, log-line
+   inventories from both trees, and dependency deltas. It judges nothing.
+
+**First analysis: `docs/upstream/sync-2026-08-18-rc2.md`.** Upstream reached
+`0.9.4-rc2`; we are 15 commits behind it and 299 ahead. Nothing is merged.
+Headline: no CLI change inbound, one new track-level log line that collides by
+prefix with ours (`Sample peak:` against our `Sample peak level:`), MusicBrainz
+title and artist selection changed, and one new optional dependency.
+
+It also carries a correction. An earlier reading of this sync reported that
+upstream had reintroduced a bare `Peak:` label — that was read from the commit
+that *introduced* the line, and two later commits in the same series renamed it.
+The label never shipped. **Compare merged trees, never individual commits in a
+series**, and the tool uses `git show <ref>:<path>` because of it.
+
 0.9.4-rc1+platterpus.6 (2026-08-17)
 ===================================
 **Leaves beta.** Released at `c4d1a00`, published as `release-manifest.json`
