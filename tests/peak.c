@@ -110,6 +110,59 @@ static void test_null_delta_is_allowed(void)
     CHECK(crip_peaks_disagree(-1.0, -9.0, NULL), "NULL delta broke the verdict");
 }
 
+/* The THIRD witness, which arrived with the upstream 0.9.4-rc2 merge.
+ *
+ * Upstream computes its own max|int16| over the raw bytes read from the disc,
+ * as a relative amplitude in 0.0-1.0. It measures the same samples our direct
+ * scan does -- the AVFrames the ebur128 filter sees are built verbatim from
+ * those bytes -- by an independent route, so comparing the two brackets the
+ * read-buffer-to-AVFrame handoff. It reaches the same crip_peaks_disagree()
+ * through crip_rel_amp_to_dbfs(), and that conversion is the new logic.
+ *
+ * Same unreachability as everything else in this file, one step worse: making
+ * this fire needs the two scans to differ, which needs a defect between them.
+ * No fixture can produce it. */
+static void test_rel_amp_conversion(void)
+{
+    CHECK(crip_rel_amp_to_dbfs(1.0) == 0.0,
+          "full scale must be 0 dBFS, got %f", crip_rel_amp_to_dbfs(1.0));
+
+    const double half = crip_rel_amp_to_dbfs(0.5);
+    CHECK(half < -6.01 && half > -6.03,
+          "half amplitude should be ~-6.02 dBFS, got %f", half);
+
+    /* 0.0 means "never measured" -- a data track, or one that did not rip --
+     * so it must land on -INFINITY and be read as an ABSENCE rather than as a
+     * disagreement of that size.
+     *
+     * THIS PAIR DOES NOT DISCRIMINATE AGAINST THE GUARD IN THE FUNCTION, and
+     * saying so is the point of writing it down: log10(0.0) is already
+     * -INFINITY, so deleting the `rel_amp > 0.0` branch leaves both of these
+     * passing. That was checked by deleting it, and it is the reason no
+     * revert-proof is claimed for that branch anywhere. What these DO pin is
+     * the behaviour the log depends on, whichever way the function is written
+     * -- a future rewrite that returned a finite floor instead would fail
+     * here. */
+    CHECK(crip_rel_amp_to_dbfs(0.0) == -INFINITY,
+          "an unmeasured peak must convert to -INFINITY, got %f",
+          crip_rel_amp_to_dbfs(0.0));
+    CHECK(!crip_peaks_disagree(-3.0, crip_rel_amp_to_dbfs(0.0), NULL),
+          "an unmeasured raw peak must not read as a disagreement");
+
+    /* Two measurements of the same samples: our scan reports dBFS directly,
+     * upstream's reports the linear amplitude, and after conversion they must
+     * agree well inside the threshold rather than merely "look close". */
+    CHECK(!crip_peaks_disagree(crip_rel_amp_to_dbfs(0.891251),
+                               crip_rel_amp_to_dbfs(0.891251), NULL),
+          "identical amplitudes disagreed after conversion");
+
+    /* And it still fires when they genuinely differ -- one full-scale sample
+     * against a peak 3 dB down is the shape a broken handoff would produce. */
+    CHECK(crip_peaks_disagree(crip_rel_amp_to_dbfs(1.0),
+                              crip_rel_amp_to_dbfs(0.707946), NULL),
+          "a 3 dB difference between the two scans did not fire");
+}
+
 int main(void)
 {
     test_agreement_is_silent();
@@ -117,6 +170,7 @@ int main(void)
     test_threshold_boundary();
     test_unmeasured_is_never_a_disagreement();
     test_null_delta_is_allowed();
+    test_rel_amp_conversion();
 
     if (failures)
         fprintf(stderr, "%d check(s) failed\n", failures);

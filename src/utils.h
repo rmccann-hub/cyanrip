@@ -94,6 +94,33 @@ static inline void cyanrip_frames_to_duration(uint32_t frames, char *str)
  * absence of a measurement is not evidence of one. */
 #define CRIP_PEAK_DISAGREE_DB 0.1
 
+/* A relative amplitude in 0.0-1.0 as dBFS, for comparison against a figure
+ * already in dBFS.
+ *
+ * Zero means "not measured", not "silence", and that reading is what makes the
+ * cross-check usable: upstream's sample_peak_rel_amp starts at 0.0 and stays
+ * there for a data track or a track that never ripped. -INFINITY is what
+ * crip_peaks_disagree() treats as an absence rather than as a disagreement, so
+ * such a track stays silent instead of reporting a cross-check failure of
+ * infinite size.
+ *
+ * THE EXPLICIT ZERO TEST IS DEFENSIVE AND CHANGES NOTHING, said here because
+ * the first draft of this comment claimed otherwise. log10(0.0) is already
+ * -INFINITY under IEEE-754, so removing the branch gives identical results for
+ * every value this can be called with -- which is why the revert-proof for it
+ * failed to fail, correctly. It is kept because it states the intent at the
+ * point of the decision, and because a negative input would otherwise be NaN;
+ * both are non-finite and reach the same verdict, so even that is not
+ * observable, and no caller can produce one.
+ *
+ * Pure and inline for the same reason as the function below: the caller is a
+ * static in cyanrip_log.c on a path no disc image can reach, so this is the
+ * only place the conversion can be exercised at all. */
+static inline double crip_rel_amp_to_dbfs(double rel_amp)
+{
+    return rel_amp > 0.0 ? 20.0 * log10(rel_amp) : -INFINITY;
+}
+
 static inline int crip_peaks_disagree(double a_db, double b_db, double *delta)
 {
     if (delta)

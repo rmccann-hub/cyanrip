@@ -177,8 +177,7 @@ static void print_peak_disagreement(cyanrip_ctx *ctx, const char *indent,
 static void print_read_path_disagreement(cyanrip_ctx *ctx, const char *indent,
                                          double direct_db, double raw_rel_amp)
 {
-    const double raw_db = raw_rel_amp > 0.0 ? 20.0 * log10(raw_rel_amp)
-                                            : -INFINITY;
+    const double raw_db = crip_rel_amp_to_dbfs(raw_rel_amp);
     double delta;
     if (!crip_peaks_disagree(direct_db, raw_db, &delta))
         return;
