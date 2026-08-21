@@ -205,6 +205,19 @@ typedef struct cyanrip_track {
      * the track that earned it. Includes every -Z re-read of this track. */
     uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
     enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
+    /* Whether this track's audio was ripped AND finalised. Set in the one
+     * place ctx->tracks_completed is incremented, so the per-track flag and
+     * the disc counter agree by construction rather than by two readings of
+     * the same condition.
+     *
+     * Named for what it is, not "completed": a DATA track is false here and
+     * nothing went wrong -- it is never ripped. An interrupted audio track is
+     * also false, and the diagnostics record uses this to decide that its
+     * checksum fields carry nothing. Before that, a rip stopped mid-track
+     * published `crcs_computed: true` and an eac_crc computed over a partial
+     * read, for audio that is not on disk: a confident wrong field in an
+     * archival record, which is worse than a missing one. */
+    int audio_ripped;
     int64_t rip_time_us; /* Wall clock time spent ripping and encoding */
     int index; /* Array position + 1 */
 

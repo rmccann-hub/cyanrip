@@ -234,7 +234,18 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
         snap_consumer = av_strdup(ctx->settings.consumer_id);
 
     /* Per-track completion, so a partial rip says which tracks are missing
-     * rather than only how many. */
+     * rather than only how many -- and, since /3, so that the ones that are
+     * missing carry no measurement of the audio nobody has.
+     *
+     * `audio_ripped` is the discriminator and the checksum fields are
+     * meaningful only when it is true. A rip stopped mid-track used to
+     * publish `crcs_computed: true` with an eac_crc taken over a partial
+     * read: the checksums really were computed, so the field was true about
+     * the program and false about the track, and a consumer reading it got a
+     * checksum for audio that was never written. null, not 00000000 -- a
+     * zero checksum is a value somebody will compare against, and this
+     * project has already had an all-zero CRC read downstream as a
+     * confidence-200 match. */
     for (int i = 0; i < snap_nb_track_state; i++)
         av_freep(&snap_track_state[i]);
     av_freep(&snap_track_state);
@@ -247,13 +258,19 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
             for (int i = 0; i < ctx->nb_tracks; i++) {
                 const cyanrip_track *t = &ctx->tracks[i];
                 char line[256];
+                char crc[16];
+                if (t->audio_ripped && t->computed_crcs)
+                    snprintf(crc, sizeof(crc), "\"%08X\"", t->eac_crc);
+                else
+                    snprintf(crc, sizeof(crc), "null");
                 snprintf(line, sizeof(line),
                          "{\"number\":%i,\"cd_track\":%i,\"repeats\":%i,"
-                         "\"crcs_computed\":%s,\"eac_crc\":\"%08X\","
-                         "\"rip_time_us\":%lli}",
+                         "\"audio_ripped\":%s,\"crcs_computed\":%s,"
+                         "\"eac_crc\":%s,\"rip_time_us\":%lli}",
                          t->number, t->cd_track_number, t->total_repeats,
-                         t->computed_crcs ? "true" : "false",
-                         t->eac_crc, (long long)t->rip_time_us);
+                         t->audio_ripped ? "true" : "false",
+                         (t->audio_ripped && t->computed_crcs) ? "true" : "false",
+                         crc, (long long)t->rip_time_us);
                 snap_track_state[i] = av_strdup(line);
             }
         }

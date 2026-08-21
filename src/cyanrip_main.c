@@ -1029,6 +1029,7 @@ end:
             crip_replaygain_meta_track(ctx, t);
         cyanrip_log_track_end(ctx, t);
         cyanrip_cue_track(ctx, t);
+        t->audio_ripped = 1;
         ctx->tracks_completed++;
     } else {
         ctx->total_error_count++;

@@ -1388,6 +1388,20 @@ def sc_diagnostics():
         fail(f"diagnostics: interrupted_by is "
              f"{d['rip']['interrupted_by']!r} for a completed rip")
 
+    # The other side of the audio_ripped discriminator, checked here so it
+    # cannot be satisfied by a build that reports false for everything. A rip
+    # that finished must report every track ripped, WITH its checksum.
+    states = d.get("rip", {}).get("track_state") or []
+    if len(states) != 2:
+        fail(f"diagnostics: {len(states)} track_state entries for a 2-track disc")
+    for st in states:
+        if not st or st.get("audio_ripped") is not True:
+            fail(f"diagnostics: {st!r} did not report audio_ripped on a rip "
+                 f"that completed")
+        elif st.get("eac_crc") is None:
+            fail(f"diagnostics: track {st.get('number')!r} finished but "
+                 f"publishes no checksum")
+
     # No severity is claimed anywhere, and the file says so rather than leaving
     # a consumer to read the absence of the field as "nothing here was
     # serious". Classifying by wording is the defect the provider contract's
@@ -1812,6 +1826,41 @@ def sc_interrupt():
         if rip_d.get("interrupted_by") != name:
             fail(f"interrupt/{name}: diagnostics interrupted_by is "
                  f"{rip_d.get('interrupted_by')!r}")
+
+        # NO CHECKSUM MAY BE PUBLISHED FOR A TRACK THAT DID NOT FINISH.
+        #
+        # The track that was in progress has had crip_finalize_checksums() run
+        # over its partial read, so eac_crc holds a real number describing
+        # audio that is not on disk. Emitting it is a confident wrong field in
+        # an archival record, which is worse than a missing one -- and null,
+        # not 00000000, because a zero checksum is a value somebody compares
+        # against.
+        states = rip_d.get("track_state") or []
+        if not states:
+            fail(f"interrupt/{name}: no per-track state in the record")
+        for st in states:
+            if st is None:
+                continue
+            if st.get("audio_ripped") is not False:
+                continue_ = st.get("audio_ripped")
+                fail(f"interrupt/{name}: track {st.get('number')!r} reports "
+                     f"audio_ripped={continue_!r}, but no track can have "
+                     f"finished -- the rip was stopped during the first one")
+            if st.get("eac_crc") is not None:
+                fail(f"interrupt/{name}: track {st.get('number')!r} publishes "
+                     f"eac_crc {st['eac_crc']!r} for audio that was never "
+                     f"written")
+            if st.get("crcs_computed") is not False:
+                fail(f"interrupt/{name}: track {st.get('number')!r} claims "
+                     f"crcs_computed for an unfinished track")
+
+        # The per-track flags and the disc counter must agree. They are set
+        # together today; this is what notices if they ever stop being.
+        ripped = sum(1 for st in states if st and st.get("audio_ripped"))
+        if ripped != rip_d.get("tracks_completed"):
+            fail(f"interrupt/{name}: {ripped} tracks report audio_ripped but "
+                 f"the disc says tracks_completed="
+                 f"{rip_d.get('tracks_completed')!r}")
 
 
 def sc_interrupt_deadlock():
