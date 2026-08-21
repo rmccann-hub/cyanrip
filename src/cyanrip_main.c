@@ -1511,8 +1511,17 @@ static int cyanrip_run(int argc, char **argv)
                 "Set drive speed");
     GEN_OPT_ONE(opts_list, int32_t, stall_secs, "k", 1, 1, 10, 0, INT32_MAX,
                 "Seconds a frame read must stall before reporting liveness (0 disables)");
+    /* "with -I to measure without ripping" is not padding. -x is a MODIFIER,
+     * not a command: it measures and then rips, which is what its old help
+     * said and what the code does. Platterpus read the name as a command,
+     * ran `-x -N -s 0` on the rig expecting a measurement, and got a rip with
+     * a 1h03m ETA (standing status 2026-08-21, ask 1). The defect was
+     * discoverability, and -x -I already measures and exits -- the same
+     * "only do this" idiom -I and -J already use -- so the fix is to say so
+     * where a caller reads it, rather than to change what a documented flag
+     * does. sc_cache_probe_only() runs both halves so this stays true. */
     GEN_OPT_ONE(opts_list, bool,    cache_probe, "x", 0, 0, 0, 0, 0,
-                "Measure the drive's readback cache before ripping (costs seconds)");
+                "Measure the drive's readback cache before ripping (costs seconds; with -I to measure without ripping)");
     GEN_OPT_ONE(opts_list, char *,  consumer, "u", 1, 1, NULL, 0, 0,
                 "Identify the calling program in the log (recorded verbatim, not verified)");
     GEN_OPT_ONE(opts_list, char *,  diagnostics, "j", 1, 1, NULL, 0, 0,

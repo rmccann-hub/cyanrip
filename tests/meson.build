@@ -210,6 +210,7 @@ rip_scenarios = [
     'verify_log',
     'interrupt',
     'interrupt_deadlock',
+    'cache_probe_only',
 ]
 
 # The scenarios are told which build configuration they are testing, because

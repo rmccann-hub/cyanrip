@@ -1945,6 +1945,68 @@ def sc_interrupt_deadlock():
         os.close(rfd)
 
 
+def sc_cache_probe_only():
+    """-x is a modifier; -x -I is the probe-only invocation, and both are pinned.
+
+    Platterpus standing status 2026-08-21, ask 1: they read `--cache-probe` as
+    a command, ran it on the rig, and got a full rip with a 1h03m ETA. The flag
+    was behaving as documented -- "measure the drive's readback cache BEFORE
+    ripping" -- so the defect was that nothing told a caller how to measure
+    WITHOUT ripping, which -I already does and which is the same idiom -I and
+    -J use elsewhere.
+
+    Three assertions, and the first two are the ones that would catch a future
+    change to -x's meaning before a consumer does:
+
+      * -x -I writes no audio. This is the probe-only guarantee.
+      * -x alone DOES rip. If someone later makes -x exit after measuring --
+        which is what was asked for, and which we declined with reasons -- this
+        fails and forces the question back through a round instead of letting a
+        documented flag change meaning quietly.
+      * --help says how. A remedy that is only in a commit message is not a
+        remedy; this makes the sentence a thing that runs.
+
+    WHAT THIS DOES NOT COVER, said plainly: the probe itself never executes
+    here. cache_probe.c refuses on image drivers, which have no cache to
+    measure, so what is exercised is the DISPATCH around it -- whether -x
+    proceeds into a rip -- and not a single cdio_read_audio_sectors() call.
+    -x has still never run to completion on real hardware anywhere.
+    """
+    out = WORK / "out_xprobe"
+    ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                   "-L", "log", "-M", "sheet", "-x", "-I")
+    if ec != 0:
+        fail(f"cache_probe_only: -x -I exited {ec}")
+    if out.exists() and any(p.suffix == ".flac" for p in out.iterdir()):
+        fail("cache_probe_only: -x -I ripped audio -- the probe-only "
+             "invocation is gone, and a caller measuring a drive now waits "
+             "for a whole disc")
+    if "Cache probe:" not in log:
+        fail("cache_probe_only: -x -I reported no cache probe result at all")
+
+    # The modifier half. Separate output directory so a leftover from the
+    # check above cannot satisfy this one.
+    out2 = WORK / "out_xrip"
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                 "-P", "0", "-o", "flac", "-D", out2, "-F", "{track}",
+                 "-L", "log", "-M", "sheet", "-x")
+    if ec != 0:
+        fail(f"cache_probe_only: -x exited {ec}")
+    if not (out2.exists() and any(p.suffix == ".flac" for p in out2.iterdir())):
+        fail("cache_probe_only: -x alone did not rip. That may be an "
+             "improvement, but it is a change to a documented flag and it "
+             "belongs in a handshake round, not in a passing test")
+
+    # Measured from the binary, not read from the option table (seam-rules
+    # S-9). The substring is deliberately just the actionable half: pinning
+    # the whole sentence would make every rewording a test failure.
+    helptext = crip("--help")[1]
+    if "measure without ripping" not in helptext:
+        fail("cache_probe_only: --help no longer says how to measure without "
+             "ripping, so the only fix for ask 1 has been undone")
+
+
 with tempfile.TemporaryDirectory() as tmpdir:
     WORK = Path(tmpdir)
 
