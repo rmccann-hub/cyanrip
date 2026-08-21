@@ -1,7 +1,67 @@
 Unreleased
 ==========
-No release. Two additions, both about seeing upstream clearly rather than
-changing what this fork does.
+No release. **Upstream `0.9.4-rc2` is merged, and three cancellation defects
+were fixed on top of it.** Handshake round 12 is OPEN on `64ae7bc`; nothing
+here is released until it closes, and `release-manifest.json` still resolves
+both channels to `c4d1a00`.
+
+ - **Merged upstream `0.9.4-rc2` (`4f28cf0`) at `1ee56fc`.** A merge, never a
+   rebase: rebasing would orphan 22 published SHAs including the one Platterpus
+   runs, and every rip ever made writes its build SHA into its logfile
+   permanently. The merge-base is now `4f28cf0`, so the next delta measures only
+   what is genuinely new. Inbound: QR codes for MusicBrainz submission URLs
+   (optional `libqrencode`, stdout only and TTY-gated), flatpak packaging,
+   MusicBrainz track-title and artist-credit preference, a macOS CI job. No CLI
+   flag came in and no audio changed — all twelve checksum lines in the golden
+   reference are byte-identical across the merge.
+
+   The full outcome, including the three conflicts and why upstream's
+   `Sample peak:` line was not taken, is `docs/upstream/sync-2026-08-18-rc2.md`
+   §10.
+
+ - **A signal could deadlock cyanrip with the drive held.** `on_quit_signal()`
+   called `cyanrip_log()`, which takes a mutex and uses stdio — neither
+   permitted in a signal handler. When the signal arrived while the main thread
+   held that mutex, the handler blocked on it forever, on the thread that would
+   have released it. A progress line is printed per frame, so the window is one
+   frame wide. **Upstream has this verbatim.** Found by looping the new
+   interrupt test until it hung and reading the backtrace.
+
+ - **SIGTERM was not handled at all**, so a supervisor's kill left a truncated
+   logfile with no `Log FUN512:` footer and — because the record is written from
+   `atexit` — no `-j` diagnostics record at all. Both signals now shut down
+   gracefully, and the log names which one arrived rather than saying
+   "interrupted by user".
+
+ - **`-Z` kept repeating after being told to stop**, doing one encoder teardown
+   and rebuild per remaining `-r` attempt. A cancelled `-Z 200 -r 200` printed
+   `Stopping, ripping incomplete!` 182 times before it would exit; it now prints
+   it once.
+
+ - **`--verify-log` gives every verdict its own exit code** (0 valid, 2
+   mismatch, 3 no checksum, 4 trailing data, 5 unreadable). 1 stays reserved for
+   "cyanrip failed before reaching a verdict". A log with no footer is an
+   incomplete record, not a tamper claim, and until now both exited 1.
+
+ - **The diagnostics record no longer publishes a checksum for a track that
+   never finished.** Checksums are finalised per pass, so an interrupted track
+   carried a real `eac_crc` computed over a partial read — two runs interrupted
+   at the same point produced `3697A1BF` and `03EEE452`. Schema moves to
+   `cyanrip-diagnostics/3`, adding `rip.interrupted_by` and per-track
+   `audio_ripped`; when that is false the checksum fields are `false` and
+   `null`.
+
+ - **`docs/sample-interrupted.log`** ships one real rip stopped by SIGTERM, so a
+   consumer parsing a cancelled rip has an artifact rather than a description.
+   It is a sample, not a golden reference — where the signal lands is not
+   reproducible — and its own header says so at the top of the file.
+
+ - **`-x`'s help now says how to measure without ripping.** `-x -I` already did;
+   nothing said so. The flag's meaning is unchanged and a test pins that too, so
+   changing it later goes through a round.
+
+And two additions from before the merge, both about seeing upstream clearly
+rather than changing what this fork does.
 
  - **`docs/upstream/` — the fork explained to upstream.** This file stays what
    it is: our releases, by version, for people installing the fork. The new
@@ -32,7 +92,9 @@ SHAs, including the one Platterpus runs today, would be orphaned.
 unattached repositories) and the audit says so rather than reporting "none".
 
 **First analysis: `docs/upstream/sync-2026-08-18-rc2.md`.** Upstream reached
-`0.9.4-rc2`; we are 15 commits behind it and 299 ahead. Nothing is merged.
+`0.9.4-rc2`; at the time of writing we were 15 commits behind it and 299 ahead,
+and nothing was merged. **It has since been merged** — see the top of this
+section and §10 of that file, which was appended rather than superseded.
 Headline: no CLI change inbound, one new track-level log line that collides by
 prefix with ours (`Sample peak:` against our `Sample peak level:`), MusicBrainz
 title and artist selection changed, and one new optional dependency.
