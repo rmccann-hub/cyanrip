@@ -21,6 +21,25 @@
 
 #pragma once
 
+/* A raw descriptor write and an immediate exit, for the one caller that may
+ * not use stdio: the quit signal handler. printf() and friends take locks, and
+ * taking a lock the interrupted frame already holds is a self-deadlock -- see
+ * on_quit_signal() in cyanrip_main.c, where it was one.
+ *
+ * write()/_exit() are async-signal-safe by POSIX; _write()/_exit() are the
+ * MSVCRT spellings and Windows never delivers these signals asynchronously
+ * anyway, so what matters there is only that it compiles and behaves. */
+#ifdef _WIN32
+#include <io.h>
+#include <process.h>
+#define CRIP_STDOUT_FD 1
+#define crip_write_fd(fd, buf, n) _write((fd), (buf), (unsigned int)(n))
+#else
+#include <unistd.h>
+#define CRIP_STDOUT_FD STDOUT_FILENO
+#define crip_write_fd(fd, buf, n) write((fd), (buf), (n))
+#endif
+
 #ifdef _WIN32
 #include <direct.h>
 #include <sys/stat.h>

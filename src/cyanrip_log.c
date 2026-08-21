@@ -445,6 +445,13 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "  Secure re-read:  did NOT converge after %i reads (repeat limit hit)\n",
                     t->total_repeats);
         break;
+    case CYANRIP_SECURE_RIP_INTERRUPTED:
+        /* "stopped by" and not "did NOT converge": we do not know whether it
+         * would have. The reads that completed are reported because they were
+         * really taken; the verdict is withheld because it was not reached. */
+        cyanrip_log(ctx, 0, "  Secure re-read:  stopped by signal after %i complete reads (no verdict)\n",
+                    t->total_repeats);
+        break;
     case CYANRIP_SECURE_RIP_NA:
     default:
         cyanrip_log(ctx, 0, "  Secure re-read:  not attempted\n");
@@ -791,10 +798,27 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
      * stopped part way through is only distinguishable from a whole one by
      * counting track blocks against the disc's track count, which a reader
      * can only do if it knows both. */
-    if (quit_now)
-        cyanrip_log(ctx, 0, "Rip completed:  no (interrupted by user, %i of %i tracks)\n",
-                    ctx->tracks_completed, ctx->nb_tracks);
-    else
+    if (quit_now) {
+        /* Name the signal, not the presumed sender. "interrupted by user" was
+         * accurate while SIGINT was the only signal handled; the moment
+         * SIGTERM was handled too it became a wrong claim on every rip a
+         * supervising process stopped -- and a supervisor's timeout is exactly
+         * the case Platterpus hits. The observation is which signal arrived;
+         * who sent it is an inference we cannot make.
+         *
+         * crip_signal_name() returns NULL for a signal we did not install, so
+         * the number is printed rather than a plausible-looking name. That
+         * cannot happen today and is not written as if it cannot: the handler
+         * is generic and the next signal added would otherwise be reported as
+         * whichever name the switch fell through to. */
+        const char *signame = crip_signal_name(quit_signal);
+        if (signame)
+            cyanrip_log(ctx, 0, "Rip completed:  no (interrupted by %s, %i of %i tracks)\n",
+                        signame, ctx->tracks_completed, ctx->nb_tracks);
+        else
+            cyanrip_log(ctx, 0, "Rip completed:  no (interrupted by signal %i, %i of %i tracks)\n",
+                        (int)quit_signal, ctx->tracks_completed, ctx->nb_tracks);
+    } else
         cyanrip_log(ctx, 0, "Rip completed:  yes (%i of %i tracks)\n",
                     ctx->tracks_completed, ctx->nb_tracks);
 

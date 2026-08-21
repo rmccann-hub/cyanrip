@@ -208,6 +208,8 @@ rip_scenarios = [
     'reference',
     'paranoia',
     'verify_log',
+    'interrupt',
+    'interrupt_deadlock',
 ]
 
 # The scenarios are told which build configuration they are testing, because

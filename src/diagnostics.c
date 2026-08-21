@@ -299,7 +299,15 @@ void crip_diag_write(void)
     av_bprint_init(&b, 0, AV_BPRINT_SIZE_UNLIMITED);
 
     av_bprintf(&b, "{\n");
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/2\",\n");
+    /* /3 adds rip.interrupted_by. A field ADDED to a record is harmless to a
+     * consumer that ignores unknown keys and fatal to one that allowlists
+     * schema strings, and Platterpus does the latter -- so the version moves
+     * and round 12 carries the ask to widen SUPPORTED_SCHEMAS. Adding the
+     * field without the bump was the tempting alternative and is the worse
+     * one: two different records both calling themselves /2 is the same defect
+     * as two builds answering to one version string, which this fork already
+     * fixed once with +platterpus.N. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/3\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
@@ -399,6 +407,31 @@ void crip_diag_write(void)
          * ripping_errors, interrupted and exit_code are the measurements
          * a consumer needs to reach one. */
         av_bprintf(&b, "    \"interrupted\": %s,\n", quit_now ? "true" : "false");
+        /* Which signal, beside the bool, for the reason the logfile names it
+         * too: SIGINT is a person at a terminal and SIGTERM is a supervising
+         * process, and a record that says only "interrupted" invites the
+         * consumer to assume the first. It is null when the rip was not
+         * interrupted -- absence of an interruption, not an unknown signal --
+         * and the two are distinguishable because `interrupted` is beside it.
+         *
+         * A name and not a number: a signal number is not portable and the
+         * record is archival. crip_signal_name() answers NULL for a signal we
+         * do not install, which becomes the number, so an unrecognised value
+         * is reported rather than mis-named. */
+        av_bprintf(&b, "    \"interrupted_by\": ");
+        if (!quit_now) {
+            av_bprintf(&b, "null");
+        } else {
+            const char *signame = crip_signal_name(quit_signal);
+            if (signame) {
+                diag_json_str(&b, signame);
+            } else {
+                char num[32];
+                snprintf(num, sizeof(num), "signal %i", (int)quit_signal);
+                diag_json_str(&b, num);
+            }
+        }
+        av_bprintf(&b, ",\n");
         av_bprintf(&b, "    \"track_state\": [");
         for (int i = 0; i < snap_nb_track_state; i++) {
             av_bprintf(&b, "%s\n      %s", i ? "," : "",

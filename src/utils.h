@@ -20,6 +20,7 @@
 
 #include <math.h>
 
+#include <signal.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -103,6 +104,30 @@ static inline int crip_peaks_disagree(double a_db, double b_db, double *delta)
     if (delta)
         *delta = d;
     return d >= CRIP_PEAK_DISAGREE_DB;
+}
+
+/* The name of a signal cyanrip installs a quit handler for.
+ *
+ * NULL for anything else, deliberately: a caller has to decide what to print
+ * rather than being handed a plausible-looking guess. Both the logfile's
+ * `Rip completed: no (interrupted by ...)` and the diagnostics record's
+ * `interrupted_by` fall back to the number, so a signal added to the handler
+ * and forgotten here is reported as a number and not as whichever name a
+ * switch fell through to.
+ *
+ * Inline in a header rather than in cyanrip_main.c, and that placement is the
+ * point: tests/diag.c links diagnostics.c without the disc context, so a
+ * definition in cyanrip_main.c would have forced the test to carry its own
+ * copy -- two implementations of one convention, able to differ silently while
+ * every test on both sides passes. There is one definition and everything uses
+ * it. */
+static inline const char *crip_signal_name(int signo)
+{
+    switch (signo) {
+    case SIGINT:  return "SIGINT";
+    case SIGTERM: return "SIGTERM";
+    default:      return NULL;
+    }
 }
 
 static inline int cmp_numbers(const void *a, const void *b)

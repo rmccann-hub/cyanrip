@@ -8,9 +8,11 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 CRIP = str(Path(sys.argv[1]).resolve())
@@ -1366,12 +1368,25 @@ def sc_diagnostics():
         fail(f"diagnostics: file is not valid JSON: {e}")
         return
 
-    if d.get("schema") != "cyanrip-diagnostics/2":
+    if d.get("schema") != "cyanrip-diagnostics/3":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
     if d.get("exit_code") != 0:
         fail(f"diagnostics: exit_code {d.get('exit_code')!r} for a clean rip")
     if d.get("rip", {}).get("tracks_completed") != 2:
         fail(f"diagnostics: tracks_completed {d.get('rip', {}).get('tracks_completed')!r}")
+
+    # A rip that finished says so twice, and the two are separate facts: the
+    # bool says no signal arrived, and interrupted_by is null rather than
+    # absent. `is not None` and `not in d` would read the same for a consumer
+    # using .get(), which is how an absence of an interruption becomes
+    # indistinguishable from a field nobody wrote.
+    if d.get("rip", {}).get("interrupted") is not False:
+        fail("diagnostics: interrupted must be false for a completed rip")
+    if "interrupted_by" not in d.get("rip", {}):
+        fail("diagnostics: interrupted_by must be present, null, not absent")
+    elif d["rip"]["interrupted_by"] is not None:
+        fail(f"diagnostics: interrupted_by is "
+             f"{d['rip']['interrupted_by']!r} for a completed rip")
 
     # No severity is claimed anywhere, and the file says so rather than leaving
     # a consumer to read the absence of the field as "nothing here was
@@ -1651,6 +1666,239 @@ def sc_verify_log():
                 fail(f"rig log does not verify even with the addendum removed: "
                      f"{out.strip()!r} -- the addendum is then not the cause, "
                      "and this test's premise is wrong")
+
+
+def sc_interrupt():
+    """A rip stopped by a signal still leaves a complete, checksummed record.
+
+    Platterpus standing status 2026-08-21, ask 1, and it was a real defect
+    found by them running a flag for the first time. Before this only SIGINT
+    was handled, so a supervising process's kill took the default disposition
+    and cyanrip died where it stood: the logfile was cut off mid-sentence with
+    no `Log FUN512:` footer, and the -j record -- which is written from atexit
+    and therefore never ran -- was not written at all. -j exists for runs that
+    open no logfile, so that lost it exactly where it was most needed, and the
+    footerless log is the case Platterpus then has to tell apart from a
+    tampered one.
+
+    THREE things are asserted per signal and they fail independently:
+
+      * the exit is graceful and the log carries a VALID checksum footer,
+        checked by running --verify-log over it rather than by grepping for
+        the marker. A footer that is present and wrong would pass a grep.
+      * the log NAMES THE SIGNAL. This is what makes the test discriminate:
+        handling only SIGINT (the state before the fix) leaves the SIGTERM
+        case failing, and printing a fixed string for both -- the old
+        "interrupted by user" -- fails on whichever signal is not that one.
+      * the diagnostics record agrees with the log, independently. Two
+        surfaces reporting one fact must not be able to drift.
+
+    The rip is made long with -Z rather than with a big fixture, so the
+    scenario costs nothing when the signal lands and cannot silently become a
+    full rip if the signal is lost: it is killed and reported instead.
+    """
+    for signo, name in ((signal.SIGINT, "SIGINT"),
+                        (signal.SIGTERM, "SIGTERM")):
+        out = WORK / f"out_int_{name}"
+        diag = WORK / f"int_{name}.json"
+        stdout = WORK / f"int_{name}.out"
+
+        with stdout.open("wb") as fh:
+            p = subprocess.Popen(
+                [CRIP, "-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                 "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                 "-L", "log", "-M", "sheet", "-Z", "200", "-r", "200",
+                 "-j", diag],
+                stdout=fh, stderr=subprocess.STDOUT)
+
+        # Signal only once the rip is demonstrably under way. Signalling on a
+        # fixed sleep races the handler's installation, and a signal that
+        # arrives before the handler is a DEFAULT-DISPOSITION kill that would
+        # then be reported as this fix failing.
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            if b"Ripping track" in stdout.read_bytes():
+                break
+            if p.poll() is not None:
+                break
+            time.sleep(0.05)
+        else:
+            p.kill(), p.wait()
+            fail(f"interrupt/{name}: rip never started")
+            continue
+
+        p.send_signal(signo)
+        try:
+            ec = p.wait(timeout=60)
+        except subprocess.TimeoutExpired:
+            p.kill(), p.wait()
+            fail(f"interrupt/{name}: still running 60s after the signal")
+            continue
+
+        if ec != 1:
+            fail(f"interrupt/{name}: exited {ec}, expected 1")
+
+        log = out / "log.log"
+        if not log.exists():
+            fail(f"interrupt/{name}: no logfile was written")
+            continue
+
+        vec, vout = crip("--verify-log", log)
+        if vec != 0:
+            fail(f"interrupt/{name}: the log it left does not verify "
+                 f"({vout.strip()!r}) -- an interrupted rip must still close "
+                 f"its record")
+
+        want = f"Rip completed:  no (interrupted by {name},"
+        if want not in log.read_text():
+            got = [ln for ln in log.read_text().splitlines()
+                   if ln.startswith("Rip completed:")]
+            fail(f"interrupt/{name}: log says {got!r}, expected {want!r}")
+
+        if not diag.exists():
+            fail(f"interrupt/{name}: no diagnostics record -- it is written "
+                 f"from atexit, so this means the process did not unwind")
+            continue
+
+        d = json.loads(diag.read_text())
+        rip_d = d.get("rip") or {}
+        if rip_d.get("interrupted") is not True:
+            fail(f"interrupt/{name}: diagnostics interrupted is "
+                 f"{rip_d.get('interrupted')!r}")
+        if rip_d.get("interrupted_by") != name:
+            fail(f"interrupt/{name}: diagnostics interrupted_by is "
+                 f"{rip_d.get('interrupted_by')!r}")
+
+
+def sc_interrupt_deadlock():
+    """A signal arriving while the log lock is held must not wedge the process.
+
+    THE DEFECT THIS PINS. on_quit_signal() called cyanrip_log(), which takes
+    log_lock and uses stdio -- neither of which a signal handler may do. When
+    the signal landed while the main thread was inside cyanrip_vlog() holding
+    that same non-recursive mutex, the handler blocked on it forever, on the
+    thread that would have released it. The process then sat there with the
+    drive held and only SIGKILL left, which produces exactly the truncated
+    footerless log the rest of this round exists to stop producing. Found by
+    running sc_interrupt() in a loop until it hung and reading the backtrace;
+    it is almost certainly what Platterpus saw on 2026-08-19 as "the child
+    could not be reaped (exit: null), so the drive stayed held".
+
+    WHY THIS IS A SEPARATE SCENARIO FROM sc_interrupt(). sc_interrupt() hits
+    the window by luck -- the race is one frame wide, and it reproduced roughly
+    once in forty runs on an idle machine. A test that catches a defect one
+    time in forty is not a regression test. This one CONSTRUCTS the state:
+    cyanrip's stdout is a pipe nobody drains, so the main thread parks inside
+    write(2) with log_lock held and stays there. The signal then always lands
+    in the window.
+
+    AND WHY THE PIPE IS DRAINED AFTERWARDS. Blocking in write(2) is not the
+    defect -- the reader can always release it -- so the drain separates the
+    two: with the fix the process wakes and shuts down, and with the defect it
+    is still stuck on the mutex, which draining cannot touch. Without the drain
+    both versions would hang and the test would prove nothing.
+
+    Linux-only, and skipped rather than silently weakened elsewhere: the
+    premise assertion needs F_GETPIPE_SZ and FIONREAD to establish that the
+    pipe really is full before the signal is sent. A version of this that just
+    slept would pass on a build where the writer was never blocked at all.
+    """
+    if not sys.platform.startswith("linux"):
+        skip("interrupt_deadlock: needs Linux pipe introspection to assert "
+             "the writer is actually blocked before signalling")
+
+    import fcntl
+    import struct
+    import termios
+    import threading
+
+    F_GETPIPE_SZ = 1032
+
+    rfd, wfd = os.pipe()
+    out = WORK / "out_deadlock"
+    p = subprocess.Popen(
+        [CRIP, "-d", str(WORK / "basic.cue"), "-N", "-A", "-U", "-s", "0",
+         "-P", "0", "-o", "flac", "-D", str(out), "-F", "{track}",
+         "-L", "log", "-M", "sheet", "-Z", "200", "-r", "200"],
+        stdout=wfd, stderr=subprocess.STDOUT)
+    os.close(wfd)
+
+    try:
+        capacity = fcntl.fcntl(rfd, F_GETPIPE_SZ)
+
+        def buffered():
+            return struct.unpack(
+                "i", fcntl.ioctl(rfd, termios.FIONREAD, b"\0\0\0\0"))[0]
+
+        # The premise is "the writer is parked in write(2)", and the signal it
+        # gives is that the buffered count STOPS GROWING while the process is
+        # still alive. Waiting for buffered == capacity does not work and the
+        # difference is the point: a blocked writer is one whose next chunk did
+        # not fit, so the pipe stops a chunk short of full and stays there.
+        # Measured at 65386 of 65536 the first time this was written.
+        #
+        # Both halves are required. Near-full alone could be a writer that is
+        # merely slow; steady alone could be a writer that has not started.
+        deadline = time.monotonic() + 30
+        last, steady_since, level = -1, None, 0
+        while time.monotonic() < deadline:
+            level = buffered()
+            if level != last:
+                last, steady_since = level, time.monotonic()
+            elif (level > capacity - 8192 and
+                  time.monotonic() - steady_since > 1.0):
+                break
+            if p.poll() is not None:
+                break
+            time.sleep(0.02)
+
+        if p.poll() is not None or level <= capacity - 8192:
+            p.kill(), p.wait()
+            fail(f"interrupt_deadlock: the writer never blocked on the pipe "
+                 f"({level} of {capacity} bytes buffered, exit {p.poll()}) -- "
+                 f"this check cannot discriminate and its result means nothing "
+                 f"either way")
+            return
+
+        p.send_signal(signal.SIGINT)
+
+        # Only now let it write again. A fixed binary unblocks and shuts down;
+        # one deadlocked on the mutex does not, because nothing is holding the
+        # pipe against it any more.
+        drained = bytearray()
+
+        def drain():
+            while True:
+                chunk = os.read(rfd, 65536)
+                if not chunk:
+                    break
+                drained.extend(chunk)
+
+        t = threading.Thread(target=drain, daemon=True)
+        t.start()
+
+        try:
+            ec = p.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            p.kill(), p.wait()
+            fail("interrupt_deadlock: still running 30s after the signal with "
+                 "its output being drained -- the quit handler is blocked on "
+                 "something the reader cannot release, which is the log-lock "
+                 "self-deadlock")
+            return
+        finally:
+            t.join(timeout=5)
+
+        if ec != 1:
+            fail(f"interrupt_deadlock: exited {ec}, expected 1")
+
+        log = out / "log.log"
+        if not log.exists():
+            fail("interrupt_deadlock: no logfile -- it did not unwind")
+        elif crip("--verify-log", log)[0] != 0:
+            fail("interrupt_deadlock: the log it left does not verify")
+    finally:
+        os.close(rfd)
 
 
 with tempfile.TemporaryDirectory() as tmpdir:

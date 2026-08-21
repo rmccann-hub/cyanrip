@@ -37,6 +37,7 @@
 
 #include "diagnostics.h"
 
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,7 +58,11 @@ static int failures;
 /* What diagnostics.c expects from the rest of the program. Supplied here so the
  * module links without dragging in the disc context. */
 char *crip_invocation = (char *)"cyanrip (diag unit test)";
-int quit_now = 0;
+volatile sig_atomic_t quit_now = 0;
+volatile sig_atomic_t quit_signal = 0;
+/* crip_signal_name() is NOT stubbed here. It is a static inline in utils.h, so
+ * this test exercises the same function the program does -- a stub would let
+ * an assertion here pass against a name cyanrip never prints. */
 /* Normally generated into version.c at build time from git describe. Its value
  * is irrelevant here and pinning it keeps this test independent of the tree's
  * commit. */

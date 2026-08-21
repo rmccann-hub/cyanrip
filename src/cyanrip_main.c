@@ -83,7 +83,8 @@ static int genopt_nb_vals(GenOpt *opts_list, int n, const char *name)
     return 0;
 }
 
-int quit_now = 0;
+volatile sig_atomic_t quit_now = 0;
+volatile sig_atomic_t quit_signal = 0;
 
 const cyanrip_out_fmt crip_fmt_info[] = {
     [CYANRIP_FORMAT_FLAC]     = { "flac",     "FLAC", "flac",  "flac",  1, 11, 1, AV_CODEC_ID_FLAC,      },
@@ -926,6 +927,26 @@ repeat_ripping:;
     crip_finalize_checksums(&checksum_ctx, t);
 
     if (ctx->settings.ripping_retries) {
+        /* Stop repeating when we have been told to stop. Without this the
+         * quit_now break above ends the READ, the partial pass then fails to
+         * match, and the loop goes round again -- for as many passes as -r
+         * allows, each one tearing down and rebuilding the encoders in
+         * cyanrip_reset_encoding(), each one breaking out of the read
+         * immediately. A cancelled `-Z 200 -r 200` therefore did 200 encoder
+         * resets before it would exit, which is felt as "the ripper ignored
+         * the kill" and is what a supervisor's timeout gives up waiting for
+         * (Platterpus 2026-08-21, and the same shape as their -x report: a
+         * flag that keeps working after the operator has stopped asking).
+         *
+         * It also stops the log making a false claim. Reaching the repeat
+         * limit this way reported `did NOT converge after N reads (repeat
+         * limit hit)`, which blames the disc for a decision the operator
+         * made. */
+        if (quit_now) {
+            t->secure_rip_state = CYANRIP_SECURE_RIP_INTERRUPTED;
+            goto finalize_ripping;
+        }
+
         int matches = 0;
         for (int i = 0; i < nb_last_checksums; i++)
             matches += last_checksums[i] == checksum_ctx.eac_crc;
@@ -1018,13 +1039,73 @@ end:
     return ret;
 }
 
+/* Write straight to a descriptor, because a signal handler may not use stdio.
+ * The return value is deliberately ignored and said to be: there is nothing a
+ * handler can do about a short write, and the alternative -- retrying -- can
+ * block forever in the one place that must not. */
+static void sig_write(const char *s, size_t n)
+{
+    ssize_t r = crip_write_fd(CRIP_STDOUT_FD, s, n);
+    (void)r;
+}
+
+#define SIG_WRITE_LIT(s) sig_write("" s, sizeof(s) - 1)
+
+/* ASYNC-SIGNAL-SAFE ONLY. Nothing here may take a lock or touch stdio.
+ *
+ * This used to call cyanrip_log(), and that was a real deadlock, found by
+ * running the interrupt regression test in a loop until it hung and reading
+ * the backtrace rather than by reasoning about it:
+ *
+ *   Thread 1  cyanrip_rip_track -> cyanrip_log("\r") -> cyanrip_vlog
+ *                                  holds log_lock, inside fflush(stdout)
+ *             <signal delivered>
+ *             on_quit_signal -> cyanrip_log("Trying to quit") -> cyanrip_vlog
+ *                                  pthread_mutex_lock(&log_lock)   <-- itself
+ *
+ * log_lock is not recursive, so the process wedges forever with the drive
+ * held, and the operator's only remaining move is SIGKILL -- which leaves the
+ * truncated, footerless log this same round is trying to stop producing. The
+ * window is every frame, because a progress line is printed per frame, which
+ * is why it reproduces under load and why a fixed-delay test misses it.
+ *
+ * This is almost certainly the real cause of Platterpus's "the child could not
+ * be reaped (exit: null), so the drive stayed held" on 2026-08-19. They
+ * reported it against -x and diagnosed it as -x not exiting after measuring;
+ * -x was behaving as documented and the ripper was deadlocking in its own
+ * handler. The finding was right, the diagnosis was not, and the diagnosis is
+ * the half you would have acted on.
+ *
+ * WHAT IS LOST, rather than left to be discovered: the two notices no longer
+ * enter the diagnostics message ring or the early-replay buffer, because
+ * reaching those means taking log_lock. Both were stdout-only in practice, and
+ * the fact they carried is now in the record as structured fields --
+ * rip.interrupted and rip.interrupted_by -- which is a better place for it.
+ * On a SECOND signal we _exit() rather than exit(): exit() runs the atexit
+ * diagnostics writer, which uses stdio, so it can wedge in exactly the way
+ * above. Today's behaviour there is "sometimes writes the record, sometimes
+ * hangs forever"; this is "never writes the record on a double signal, always
+ * terminates". The single-signal path still writes it, and that is the path
+ * that matters -- a second signal means the operator has already decided the
+ * first one did not work.
+ *
+ * ONE CAVEAT, and it is a caveat rather than a defect: crip_write_fd() blocks
+ * if stdout is a pipe nobody is draining. That is not a new failure mode --
+ * the interrupted frame was already blocked in the same write on the same
+ * descriptor, so a consumer that has stopped reading had already stopped the
+ * program. It is only reachable by a consumer that spawns cyanrip and then
+ * ignores its output, which is a thing to fix in the consumer. It is NOT the
+ * deadlock above: draining the pipe releases it, whereas nothing released the
+ * mutex. sc_interrupt_deadlock() constructs exactly that state to tell the
+ * two apart. */
 static void on_quit_signal(int signo)
 {
     if (quit_now) {
-        cyanrip_log(NULL, 0, "Force quitting\n");
-        exit(1);
+        SIG_WRITE_LIT("Force quitting\n");
+        _exit(1);
     }
-    cyanrip_log(NULL, 0, "\r\nTrying to quit\n");
+    SIG_WRITE_LIT("\r\nTrying to quit\n");
+    quit_signal = signo;
     quit_now = 1;
 }
 
@@ -1310,8 +1391,39 @@ static int cyanrip_run(int argc, char **argv)
 
     av_log_set_level(AV_LOG_QUIET);
 
-    if (signal(SIGINT, on_quit_signal) == SIG_ERR)
-        cyanrip_log(ctx, 0, "Can't init signal handler!\n");
+    /* SIGTERM as well as SIGINT, and the difference was measured rather than
+     * argued (Platterpus standing status 2026-08-21, ask 1). Before this only
+     * SIGINT was handled, so a supervising process's kill took the default
+     * disposition and the program died where it stood. Ripping a fixture and
+     * signalling it mid-track:
+     *
+     *   SIGINT   146-line log ending `Rip completed: no (...)` and a valid
+     *            `Log FUN512:` footer; the -j diagnostics record written.
+     *   SIGTERM   76-line log cut off mid-sentence; NO footer; NO diagnostics
+     *            record at all, because it is written from atexit and the
+     *            default disposition does not run atexit handlers.
+     *
+     * -j exists for runs that open no logfile, and a killed run is exactly
+     * such a run, so losing the record there loses it where it was most
+     * needed. The footer's absence is also what Platterpus has to tell apart
+     * from a tampered log, and we were manufacturing the ambiguous case.
+     *
+     * A failure to install is reported per signal. Reporting "can't init
+     * signal handler" once for two installs cannot say which, and a program
+     * that will not stop on the signal a supervisor sends is worth naming
+     * precisely.
+     *
+     * Not handled, and said out loud rather than left to inference: SIGHUP,
+     * SIGQUIT, and SIGKILL. The first two keep their default dispositions; the
+     * third cannot be caught by anyone. A rip killed by any of them still
+     * leaves a footerless log, which is a real state Platterpus must handle --
+     * see -Y's exit code 3. */
+    static const int quit_signals[] = { SIGINT, SIGTERM };
+    for (size_t i = 0; i < FF_ARRAY_ELEMS(quit_signals); i++) {
+        if (signal(quit_signals[i], on_quit_signal) == SIG_ERR)
+            cyanrip_log(ctx, 0, "Can't init %s handler!\n",
+                        crip_signal_name(quit_signals[i]));
+    }
 
     /* Default settings */
     settings.dev_path = NULL;

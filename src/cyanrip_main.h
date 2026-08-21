@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <signal.h>
 #include "../config.h"
 #include "version.h"
 
@@ -86,6 +87,13 @@ enum cyanrip_secure_rip_state {
     CYANRIP_SECURE_RIP_NA = 0, /* -Z was not requested for this track */
     CYANRIP_SECURE_RIP_CONVERGED, /* Matching checksums were found */
     CYANRIP_SECURE_RIP_LIMIT_HIT, /* Repeat limit hit before checksums matched */
+    /* A signal stopped us before either. A fourth state because the other
+     * three are all wrong claims about it: NA says -Z was never asked for,
+     * CONVERGED says the reads agreed, and LIMIT_HIT says the disc could not
+     * be read consistently within -r. None of those happened -- we were told
+     * to stop -- and LIMIT_HIT is the one it used to report, which blames the
+     * media for an operator's decision. */
+    CYANRIP_SECURE_RIP_INTERRUPTED,
 };
 
 /* Whether the disc carries CD-TEXT. libcdio hands back one NULL for both "the
@@ -368,7 +376,20 @@ char *append_missing_keys(const char *src, const char *key1, const char *key2);
 
 int crip_is_integer(const char *src);
 
-extern int quit_now;
+/* Set from a signal handler, so volatile sig_atomic_t rather than int: an int
+ * written in a handler and read from the rip loop may be cached in a register
+ * and never re-read, which is the compiler being allowed to ignore the only
+ * thing telling it to stop. It has always behaved here; that is not the same
+ * as being correct, and the fix costs a type. */
+extern volatile sig_atomic_t quit_now;
+
+/* Which signal set quit_now, or 0 if none has. Recorded rather than inferred
+ * because the log has to say *what* stopped the rip: SIGINT is a person at a
+ * terminal, SIGTERM is a supervising process, and calling a supervisor's
+ * timeout "interrupted by user" is a wrong claim in an archival record. */
+extern volatile sig_atomic_t quit_signal;
+/* crip_signal_name() turns it into text, and lives in utils.h so tests/diag.c
+ * can use the same one rather than carrying a second copy. */
 
 /* The command line as received, or NULL before it is recorded */
 extern char *crip_invocation;
