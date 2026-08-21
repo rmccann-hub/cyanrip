@@ -4,7 +4,15 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g<commit>)`
+Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g8a1a3ee)`
+
+That is the build that GENERATED this file, which is always the commit
+*before* the one containing it -- a generated artifact cannot carry the hash
+of a commit that adds it. `--check` normalises this field for exactly that
+reason; everything else in the file is compared byte for byte. **It is the
+weaker provenance handle**: a build tag names a commit, not what was built.
+The source anchor below is content-derived, survives committing this file,
+and is the one to recompute.
 
 **Source anchor:** `sha256/16 = f606f536c72da8cc` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
@@ -566,16 +574,38 @@ are gated on a completed rip, and each say which peak they report.
 
 ## P4 - Exit codes
 
-| Code | Meaning |
-|---|---|
-| `0` | Success: completed rip, `-I`, `-J`, `-h`, `-v`, or a `-Y` that validated |
-| `1` | Every failure, without exception |
+**Derived, including the table.** Until round 12 the rows here were literal
+strings in the generator -- one of them read *"1, Every failure, without
+exception"* -- while the line beneath them counted the tree and found
+something else. A hand-written claim inside a generated document is the exact
+defect this file exists to prevent, and it shipped a contract saying the
+opposite of the binary's `--verify-log` codes. Platterpus found it.
 
-Distinct exit values found in the tree: `1`.
+| Code | Return/exit sites | Meaning, where the source states one |
+|---|---|---|
+| `0` | 4 | `CRIP_LOG_EXIT_VALID` -- footer present and matching |
+| `1` | 30 | *(the source annotates none)* |
+| `2` | 1 | `CRIP_LOG_EXIT_MISMATCH` -- footer present, does not match: modified |
+| `3` | 1 | `CRIP_LOG_EXIT_NO_CHECKSUM` -- no footer: incomplete, NOT a tamper claim |
+| `4` | 1 | `CRIP_LOG_EXIT_TRAILING_DATA` -- footer present, content after it: modified |
+| `5` | 1 | `CRIP_LOG_EXIT_IO_ERROR` -- unreadable: no verdict was reached |
 
-**There is no per-failure-class code.** Classification must come from the text,
-which is why P5 exists. No non-zero exit is silent: argument parse failures
-print before returning, and every other `return 1` in `main()` is preceded by a
+**Values resolved: `0`, `1`, `2`, `3`, `4`, `5`.** Exit paths that could not be resolved: **none**.
+
+Followed from the entry point, one hop at a time, so the scope is checkable
+rather than asserted: `main()` -> `cyanrip_run()`.
+Comments and string literals are blanked before scanning, because this file's
+own comments discuss returns and exits and the first version of this
+derivation reported three of them as real paths.
+
+**`1` is the generic failure and carries no class.** For everything except
+`--verify-log`, classification must come from the text, which is why P5
+exists. `--verify-log` is the one surface that discriminates, and its five
+values are wire format: the enum's ORDER is an implementation detail, the
+numbers are not, and they are mapped explicitly for that reason.
+
+No non-zero exit is silent: argument parse failures print before returning,
+and every other `return 1` reachable from the entry point is preceded by a
 `cyanrip_log()` call.
 
 Argument validation runs **before the logfile is opened**. Those diagnostics are
