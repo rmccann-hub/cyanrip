@@ -17,6 +17,7 @@ here rather than growing a second voice inside itself.
 | file | what it is |
 |---|---|
 | `sync-YYYY-MM-DD-<upstream version>.md` | one per upstream sync analysis: what an inbound merge would bring, what it collides with, and the verdict |
+| `audit-YYYY-MM-DD-*.md` | a wider sweep — upstream PRs, branches, third-party forks — answering "have we missed anything, and should we still be on our own line?" |
 
 Each sync file is written when `master` moves and **before** anything is merged
 into `platterpus-fork`. It is a decision record, not a report of work done, so

@@ -20,6 +20,17 @@ changing what this fork does.
    inbound commits, CLI flags *measured from both binaries' `--help`*, log-line
    inventories from both trees, and dependency deltas. It judges nothing.
 
+**Full audit: `docs/upstream/audit-2026-08-21-prs-and-forks.md`.** All 42
+upstream PR heads and both topic branches, content-checked against our tree.
+Result: 17 of the 21 with a shared history are fully covered, 21 more are
+ancient and long merged, and **four are outstanding — two of which we already
+implement independently**, including the ebur128 `peak=true+sample` fix that
+upstream still has open as PR #116. Verdict: stay on our own line, merge
+upstream forward rather than rebasing onto it, and never rebase — 22 published
+SHAs, including the one Platterpus runs today, would be orphaned.
+**Third-party forks could not be enumerated** (GitHub API is not available for
+unattached repositories) and the audit says so rather than reporting "none".
+
 **First analysis: `docs/upstream/sync-2026-08-18-rc2.md`.** Upstream reached
 `0.9.4-rc2`; we are 15 commits behind it and 299 ahead. Nothing is merged.
 Headline: no CLI change inbound, one new track-level log line that collides by
