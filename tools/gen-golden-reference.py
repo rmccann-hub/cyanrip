@@ -156,6 +156,30 @@ def generate(binary):
         return log.read_text(), js.read_text()
 
 
+SAMPLE_HEADER = """\
+=== THIS IS A SAMPLE, NOT A GOLDEN REFERENCE. DO NOT DIFF IT. ===
+
+One real rip of tests/fixtures/pregap.cue, stopped with SIGTERM part way
+through track 1, kept so a consumer writing a parser for an interrupted rip has
+an artifact to open instead of a paragraph describing one. The canonical rip in
+docs/golden-reference.log completes and therefore can never show this shape.
+
+Where the signal lands is not reproducible, so how many frames were read, how
+many track blocks exist and every timing differ between runs. Regenerating it
+produces a DIFFERENT and equally correct file. What is checked, by
+`tools/gen-golden-reference.py --interrupted --check`, is that this file still
+carries the line shapes a rip interrupted right now produces -- which catches a
+reworded line and claims nothing about the body.
+
+Everything below this marker is the log byte for byte. It does not verify with
+--verify-log while this header is attached, because the header is not part of
+what the checksum covers; strip everything up to and including the next marker
+line and it does.
+
+Companion record: docs/sample-interrupted.diagnostics.json
+=== END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
+"""
+
 SAMPLE_LOG = ROOT / "docs" / "sample-interrupted.log"
 SAMPLE_JSON = ROOT / "docs" / "sample-interrupted.diagnostics.json"
 
@@ -290,7 +314,17 @@ def main():
             sys.exit(f"refusing to write a sample from a dirty build: {banner}\n"
                      "Commit, rebuild, and re-run.")
 
-        SAMPLE_LOG.write_text(log)
+        # The header goes in the FILE, not only in a README, because the file
+        # is what gets opened. Without it the obvious thing to do with an
+        # artifact that sits beside a golden reference is to diff it, and that
+        # would fail every time for a reason that says nothing.
+        #
+        # Prefixed with the log's own comment-free plain text: it is not a
+        # cyanrip log any more once this is on it, and that is deliberate --
+        # nothing should feed this to --verify-log and conclude the format is
+        # broken. The unmodified log is reachable by removing the block, and
+        # the block says so.
+        SAMPLE_LOG.write_text(SAMPLE_HEADER + log)
         SAMPLE_JSON.write_text(js)
         print(f"wrote {SAMPLE_LOG.relative_to(ROOT)} and "
               f"{SAMPLE_JSON.relative_to(ROOT)}\n  {banner}")

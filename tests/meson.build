@@ -137,6 +137,25 @@ test('Golden reference freshness', python,
      depends: cyanrip_exe,
      timeout: 300)
 
+## Interrupted sample freshness
+## ===========================
+## The golden reference is a rip that COMPLETES, so it carries none of the
+## lines a consumer sees when a rip is stopped -- and after round 12 that is a
+## shape Platterpus has to parse. docs/sample-interrupted.log is one real
+## artifact of it.
+##
+## Checked by line shape, never byte for byte, and the difference is the point:
+## where the signal lands decides how many frames were read and how many track
+## blocks exist, so a body diff would fail on every run for a reason that says
+## nothing about the format. This asserts the committed file still carries the
+## shapes a rip interrupted right now produces, which is what catches a
+## reworded line.
+test('Interrupted sample freshness', python,
+     args: [ files('../tools/gen-golden-reference.py'), '--interrupted',
+             '--check', '--binary', cyanrip_exe.full_path() ],
+     depends: cyanrip_exe,
+     timeout: 300)
+
 ## Argument-surface probe (seam-rules S-9/S-11)
 ## ===========================================
 ## Black-box: runs the real binary across every numeric and string argument at
@@ -211,6 +230,7 @@ rip_scenarios = [
     'interrupt',
     'interrupt_deadlock',
     'cache_probe_only',
+    'artifacts_are_tracked',
 ]
 
 # The scenarios are told which build configuration they are testing, because

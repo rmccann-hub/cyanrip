@@ -1694,6 +1694,34 @@ def sc_verify_log():
     if 1 in observed.values():
         fail(f"verify_log: a verdict took exit code 1: {observed}")
 
+    # docs/sample-interrupted.log carries a header explaining what it is, and
+    # that header makes two checkable claims about --verify-log: that the file
+    # as shipped does NOT verify, and that stripping the header makes the same
+    # bytes verify. Both are asserted here, because a claim written into an
+    # archival artifact and checked by nobody is the shape this project keeps
+    # finding wrong. Same pattern as the rig-log addendum check below: reject
+    # the shipped file, and prove the header is the reason.
+    sample = ROOT / "docs" / "sample-interrupted.log"
+    end = "=== END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===\n"
+    if not sample.exists():
+        fail("verify_log: the interrupted sample is missing")
+    else:
+        text = sample.read_text()
+        if crip("--verify-log", sample)[0] == 0:
+            fail("verify_log: the interrupted sample verified WITH its header "
+                 "attached, which its own header says it does not")
+        if end not in text:
+            fail("verify_log: the interrupted sample has no header marker, so "
+                 "the instruction it ships for recovering the log is wrong")
+        else:
+            stripped = WORK / "sample_stripped.log"
+            stripped.write_text(text.split(end, 1)[1])
+            ec, out = crip("--verify-log", stripped)
+            if ec != 0:
+                fail(f"verify_log: the interrupted sample does not verify even "
+                     f"with its header removed ({out.strip()!r}) -- the header "
+                     f"is then not the reason, and its instructions are wrong")
+
     # The same rule, against a real artifact rather than one we constructed.
     #
     # The 2026-08-04 rig log came back with a consumer's auto-fix addendum
@@ -1861,6 +1889,63 @@ def sc_interrupt():
             fail(f"interrupt/{name}: {ripped} tracks report audio_ripped but "
                  f"the disc says tracks_completed="
                  f"{rip_d.get('tracks_completed')!r}")
+
+
+def sc_artifacts_are_tracked():
+    """Every artifact this suite reads must be IN the repository.
+
+    Third time is a rule. `.gitignore` starts with `*.log`, and docs/ is full of
+    files that are artifacts rather than build output, so three of them have now
+    been silently excluded: the golden reference, the rig-session logs, and the
+    interrupted sample. Each was fixed by adding a negation, which only ever
+    helps the file somebody remembered.
+
+    The failure mode is what makes this worth a test rather than a comment. An
+    ignored file is still THERE in the working tree, so every check that reads
+    it passes locally and forever -- the rig-log case shipped exactly that way,
+    with a green suite over a file no clone contained. Nothing fails until
+    somebody clones, at which point the tests that read it fail for a reason
+    that looks nothing like "the file was never committed".
+
+    So the assertion is against git's index, not the filesystem: presence on
+    disk is precisely the evidence that misleads. Untracked and ignored are
+    both failures and are reported separately, because "we forgot to add it"
+    and ".gitignore ate it" need different fixes.
+    """
+    if not (ROOT / ".git").exists():
+        skip("artifacts_are_tracked: not a git checkout (source tarball)")
+
+    # Named, not globbed. A glob over docs/ would pass by finding nothing if the
+    # directory moved, and this is a check that must not be satisfiable by
+    # finding nothing.
+    artifacts = [
+        "docs/golden-reference.log",
+        "docs/golden-reference.diagnostics.json",
+        "docs/sample-interrupted.log",
+        "docs/sample-interrupted.diagnostics.json",
+        "PROVIDER-CONTRACT.md",
+        "release-manifest.json",
+        "docs/release-ledger.tsv",
+    ]
+
+    tracked = subprocess.run(["git", "ls-files", "-z", "--", *artifacts],
+                             cwd=ROOT, stdout=subprocess.PIPE, timeout=60)
+    have = set(tracked.stdout.decode().split("\0")) - {""}
+
+    for a in artifacts:
+        if a in have:
+            continue
+        if not (ROOT / a).exists():
+            fail(f"artifacts_are_tracked: {a} is neither tracked nor present")
+            continue
+        ign = subprocess.run(["git", "check-ignore", "-q", "--", a],
+                             cwd=ROOT, timeout=60)
+        if ign.returncode == 0:
+            fail(f"artifacts_are_tracked: {a} exists but .gitignore excludes "
+                 f"it, so a clone will not have it and every check that reads "
+                 f"it passes here for a reason no clone shares")
+        else:
+            fail(f"artifacts_are_tracked: {a} exists but was never git-added")
 
 
 def sc_interrupt_deadlock():
