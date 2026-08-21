@@ -1863,6 +1863,96 @@ def test_a_round_we_did_not_open_can_still_close():
     check(not ok, f"a grandfathered peer-only round permitted a release: {probs}")
 
 
+def test_a_standing_status_is_never_counted_as_a_lap():
+    """Covers: PROTOCOL v4 §5a, and a file we now really hold.
+
+    Both projects send a STANDING STATUS between rounds -- Platterpus invented
+    the convention, we adopted it. It is deliberately not a lap: it declares no
+    HANDSHAKE-ROUND or HANDSHAKE-LAP, so no conforming enumerator can count it.
+    Both of theirs are filed under docs/handshake/inbound/ as evidence, because
+    a document we quote has to be one we hold.
+
+    That filing is what makes this worth executing rather than asserting. Their
+    statuses now sit in the same directory as their laps, and the ONLY thing
+    keeping them out of the round record is the glob. Two ways that could go
+    wrong, and both are checked:
+
+      * a status filed beside the laps must not be enumerated -- if the glob
+        ever widened to `*.md`, every status would become a lap of some round;
+      * a status that happened to CONTAIN the header text must still not be
+        enumerated, because the filename is what the glob reads. This is the
+        stronger case and the one a future rename would hit.
+
+    The floor matters as much as the property: the real laps in the same
+    directory must still be found, or a check that refuses everything would
+    pass this while breaking the gate.
+
+    AND THE REAL RECORD CANNOT STAND IN FOR THIS. Widening the glob to `*.md`
+    and running the gate over docs/handshake/ still prints "Release allowed",
+    because the two statuses we actually hold declare no wire headers -- so the
+    live record is insensitive to the defect. The second fixture below is the
+    one that discriminates, and it exists because "it does not break today" is
+    not the same claim as "it cannot break".
+    """
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "inbound").mkdir()
+
+    # A COMPLETE lap, not a minimal one. The first draft carried only the
+    # closure fields and the round would not close -- for an unrelated reason,
+    # the v2 and v4 required-header sets -- which would have made the floor
+    # below assert something this test is not about. A fixture that fails for
+    # the wrong reason teaches nothing.
+    ours = ("HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 12\nHANDSHAKE-LAP: 3\n"
+            "HANDSHAKE-FROM: cyanrip-fork\nHANDSHAKE-VERDICT: GO\n"
+            "HANDSHAKE-PEER-VERDICT: GO\nHANDSHAKE-OUR-VERSION: x\n"
+            "HANDSHAKE-OUR-PIN: aaaaaaa\nHANDSHAKE-PEER-VERSION: y\n"
+            "HANDSHAKE-PEER-PIN: bbbbbbb\nHANDSHAKE-TESTED: suite\n"
+            "HANDSHAKE-APP-VERSION: platterpus 0.6.23\n"
+            "HANDSHAKE-RIPPER-VERSION: cyanrip x (platterpus-fork-gaaaaaaa)\n"
+            "HANDSHAKE-PIN: aaaaaaa\n"
+            "HANDSHAKE-FROM-REPO: https://example.invalid/a\n"
+            "HANDSHAKE-FROM-COMMIT: aaaaaaa\n"
+            "HANDSHAKE-TO-REPO: https://example.invalid/b\n"
+            "HANDSHAKE-TO-VERSION: platterpus 0.6.23\n"
+            "HANDSHAKE-INBOUND-HELD: none\n")
+    (d / "round-12-lap-03.md").write_text(ours, encoding="utf-8")
+    (d / "inbound" / "round-12-lap-02.md").write_text(
+        "HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 12\nHANDSHAKE-LAP: 2\n"
+        "HANDSHAKE-FROM: platterpus\nHANDSHAKE-VERDICT: GO\n", encoding="utf-8")
+
+    baseline = [r.number for r in rg.load_rounds(d)]
+    check(baseline == [12], f"fixture is not one round: {baseline}")
+
+    # A real standing status: no wire headers at all.
+    (d / "inbound" / "status-2026-08-21-v0.6.23.md").write_text(
+        "# Platterpus -> cyanrip fork · standing status\n\n"
+        "NOT A LAP AND NOT A ROUND.\n", encoding="utf-8")
+
+    # And the hostile one: header TEXT present, filename still not a lap.
+    (d / "inbound" / "status-2026-09-01-v0.7.0.md").write_text(
+        "HANDSHAKE-ROUND: 99\nHANDSHAKE-LAP: 1\nHANDSHAKE-FROM: platterpus\n"
+        "HANDSHAKE-VERDICT: GO\n", encoding="utf-8")
+
+    after = [r.number for r in rg.load_rounds(d)]
+    check(after == baseline,
+          f"a standing status filed beside the laps was counted as one: "
+          f"{baseline} became {after}")
+    check(99 not in after,
+          "a non-lap filename carrying wire headers was enumerated as round 99")
+
+    # The floor, and it is not optional: a glob that matched NOTHING would
+    # satisfy every assertion above. So the round the real laps describe must
+    # still be found, still be at lap 3, and still close -- the status files
+    # must be invisible, not the directory.
+    r12 = [r for r in rg.load_rounds(d) if r.number == 12]
+    check(len(r12) == 1, f"round 12 went missing: {r12}")
+    check(r12[0].lap == 3,
+          f"round 12 is at lap {r12[0].lap!r}, not 3 -- a status file was read "
+          f"as the newest lap")
+    check(r12[0].closed,
+          "round 12 stopped closing once status files were filed beside it")
+
+
 def test_exclude_refuses_when_it_matches_nothing():
     """Covers: C21 (round 9 lap 6 §F3)
 

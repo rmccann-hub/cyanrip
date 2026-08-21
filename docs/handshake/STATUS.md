@@ -54,28 +54,80 @@ to this build is correct and we are not asking them to change it.
 
 ### What we know about their side, and how we know each part
 
-Separated by provenance rather than run together, because these are three
-different strengths of claim and the weakest one is the newest.
+Separated by provenance, because these are different strengths of claim.
 
 | | |
 |---|---|
-| `0.6.21` measured our round-12 artifacts | **read from their lap 2**, wire header |
-| `0.6.22` cut as a **pre-release** while round 12 was open | **read from their lap 4**, wire header line 9 |
-| `0.6.23` is where they are now | **reported by the operator.** We hold no lap or artifact for it |
+| `0.6.21` measured our round-12 artifacts | **read from their lap 2** wire header, and its §B1 is the run |
+| **`0.6.22` NEVER EXISTED** | **read from their standing status**, which corrects their own lap 4 |
+| `0.6.23` is the release | **read from their standing status**, and it names round 12's closure as the reason it could be stable rather than a pre-release |
 
-Their lap 4 said *"this lap closes the round; the next release can be stable"*,
-so `0.6.23` being that stable release is **plausible and unverified** — we have
-not seen it and are not recording it as fact. Nothing about `+platterpus.7`
-depends on which of theirs is current: their pin is `ddf7ac3` by their own
-decision, and moving it is theirs to do.
+**`0.6.22` is worth its own paragraph, because their own three documents say
+three different things about it and we have to record one.**
 
-**One consequence worth stating.** Their lap 2 §E2 and lap 4 §C2 both say the
-build tag `platterpus-fork-g64ae7bc` is in neither of their capability tables,
-so `accepts_verify_log()` returns `not_determined` and our five `--verify-log`
-exit codes are unreachable from Platterpus. **The tag they need is now
+| where | what it says |
+|---|---|
+| their lap 2, wire header | *"0.6.22 carries the four consumer-side fixes in §D and **is not yet cut**"* |
+| their lap 4, wire header | *"platterpus 0.6.22 — **cut as a PRE-RELEASE** while this round was open"* |
+| their standing status | *"**0.6.22 does not exist.** It was prepared, gated and superseded before publication — no tag, no artifact, nothing installable"* |
+
+**The standing status supersedes**, and we are recording it without hedging: it
+is later, it is explicitly a correction, and it names the mechanism. Lap 4's
+header is therefore known to name a version that was never published. We are not
+scoring that — **it is the immutable-lap plus standing-status split working
+exactly as designed.** A sent lap cannot be edited, so a fact that changed after
+it was sent has nowhere else to go, and this is the channel that exists for it.
+We have the same constraint and would need the same escape.
+
+**What it means for round 12's record, stated rather than left to be
+reconstructed.** Three peer versions appear across one round: our lap 3 declares
+`HANDSHAKE-PEER-VERSION: platterpus/0.6.21`, their lap 4 declares `0.6.22`, and
+the truth is `0.6.23`. Ours was correct when written — `0.6.21` is what their
+lap 2 declared and what actually ran our artifacts through their parser. Their
+rule #12 says a round approves a pin *for a named app version*, so the honest
+reading of round 12 is:
+
+> `64ae7bc` is approved for **platterpus 0.6.21**, which is the version that
+> verified it, and the closing lap was written on the tree that shipped as
+> **0.6.23**. `0.6.22` names nothing and should be read as `0.6.23` wherever it
+> appears in that correspondence.
+
+**Nothing about this reopens round 12** and neither side has suggested it should.
+The verdict, the pin and both `HANDSHAKE-TESTED` blocks are unaffected.
+
+**And what they are waiting on is delivered by this file.** Their lap 2 §E2, lap
+4 §C2 and this status all say `platterpus-fork-g64ae7bc` is in neither capability
+table, so `accepts_verify_log()` returns `not_determined` and our five
+`--verify-log` codes are unreachable from Platterpus. **The tag to add is
 `platterpus-fork-g237a4ff`, not `g64ae7bc`** — `64ae7bc` was the reviewed pin and
-was never released, so adding it would be a table row for a build nobody runs,
-which is the exact thing they said they were avoiding.
+was never released, so a row for it would describe a build nobody runs, which is
+the exact thing they said they were avoiding.
+
+### Two things in their status that change what we owe them
+
+**They now consume P4 programmatically.** Their exit-code fix *"derives the same
+set from your published P4 and fails if the two disagree"*. Until this round P4
+was prose a human read; it is now an input to their test suite. That raises what
+a wrong P4 costs, and it is the section we shipped wrong — it said exit `1` for
+every failure while the binary returned six values. Fixed and gated
+(`sc_contract_exit_codes()` runs the real binary and asserts P4 is a superset of
+what comes back), and recorded here because the obligation is new.
+
+**Their P3 finding is confirmed against our artifact, to the number.** They
+report that their contract-agreement test's row regex matched `*.c` only and that
+ten of our round-12 P3 rows are `genopt.h`, so it would have read 15 of 25 rows
+and reported a full pass. Counted here:
+
+```
+P3 rows with a file:line citation: 25
+by file: cyanrip_main.c 9, genopt.h 10, stall_watchdog.c 4, cyanrip_encode.c 2
+```
+
+15 `.c` and 10 `.h`. Exactly as they state. Worth confirming rather than
+accepting, and worth noting *why* the `.h` rows exist: `genopt.h` is a
+header-implemented option parser, so every argument-validation diagnostic we
+emit has a `.h` citation. Any consumer deriving from our contract needs to expect
+that — it is not an artefact of how the document is generated.
 
 ---
 
@@ -127,6 +179,30 @@ emitted the clock form since July, and your rule still expects it. Nothing on ou
 side moved recently and nothing is broken here — it is a rule that outlived the
 round that would have updated it, which is the same shape as your
 `test_provider_contract_agreement.py` reading `round-4.md`.
+
+### Where their statuses are filed
+
+`docs/handshake/inbound/status-2026-08-21-v0.6.21.md` and
+`status-2026-08-21-v0.6.23.md`. Both, kept dated, even though *their* rule is to
+rewrite in place.
+
+**That is not a contradiction, it is the two rules meeting.** Rewriting in place
+is right for the *author* — a standing status claims something about now.
+Keeping every copy is right for the *recipient* — what we were told and when is
+evidence, and CLAUDE.md's carve-out is that consolidation applies to
+documentation and never to evidence. This exchange is the proof: their lap 4 and
+their status disagree about `0.6.22`, and we can only show that because we hold
+both.
+
+The earlier one was cited in round 12 lap 1 and had never been committed. That
+was a document quoted from outside the repository, which is the failure the
+whole "answer from the artifact" rule exists to stop. Fixed.
+
+Neither declares a wire header, so no enumerator can count them — and
+`test_a_standing_status_is_never_counted_as_a_lap()` executes that rather than
+asserting it, including the case a rename would hit: a non-lap filename that
+*does* contain the header text. The live record cannot demonstrate that one, so
+the test constructs it.
 
 ---
 
