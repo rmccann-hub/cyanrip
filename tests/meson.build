@@ -221,6 +221,7 @@ rip_scenarios = [
     'diagnostics',
     'contract_build',
     'contract_exit_codes',
+    'status_is_current',
     'format_guard',
     'cue_isrc',
     'version_matrix',

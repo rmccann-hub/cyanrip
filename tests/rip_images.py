@@ -1089,6 +1089,66 @@ def sc_cue_isrc():
             fail("cue_isrc: ISRC appears after an INDEX line in a TRACK block")
 
 
+def sc_status_is_current():
+    """docs/handshake/STATUS.md must describe the release the manifest names.
+
+    It is the one document here that claims things about *now* rather than about
+    a moment, and it says so itself: rewritten in place, never appended to,
+    because a stale standing status is worse than none. That property is a rule
+    and a rule nothing executes is not a rule -- the whole reason it exists is
+    that Platterpus reads it between rounds, when no lap is coming to correct it.
+
+    Checked against `release-manifest.json` rather than against the ledger,
+    because the manifest is what the consumer actually resolves. Three fields,
+    all of which a reader would act on: the commit they clone, the version they
+    expect the binary to print, and the build tag their capability table keys on.
+
+    Deliberately NOT a check that the prose is up to date -- nothing can check
+    that. It catches the one way this file rots that is mechanical, which is a
+    release being cut and this file still naming the previous one.
+    """
+    status = ROOT / "docs" / "handshake" / "STATUS.md"
+    manifest = ROOT / "release-manifest.json"
+    if not status.exists():
+        fail("status_is_current: docs/handshake/STATUS.md is missing")
+        return
+    if not manifest.exists():
+        fail("status_is_current: release-manifest.json is missing")
+        return
+
+    text = status.read_text()
+    stable = json.loads(manifest.read_text())["channels"]["stable"]
+
+    # POSITIONAL, not a substring sweep of the file. The first version of this
+    # check asked whether the SHA appeared ANYWHERE in the document, and its
+    # revert-proof did not fail: the release commit is also in the install URL,
+    # the build tag and a paragraph of prose, so corrupting the table cell left
+    # the string present three times over. A check satisfied by the string
+    # being somewhere is satisfied by the document being wrong.
+    rows = {}
+    for line in text.splitlines():
+        cells = [c.strip() for c in line.split("|")]
+        if len(cells) >= 4:
+            key = cells[1].strip("* `")
+            rows.setdefault(key, cells[2])
+
+    for key, want in (
+        ("commit", stable["commit"]),
+        ("version", stable["version"]),
+        ("build tag", f"platterpus-fork-g{stable['commit']}"),
+        ("install", f"archive/{stable['commit']}.tar.gz"),
+    ):
+        cell = rows.get(key)
+        if cell is None:
+            fail(f"status_is_current: the release table has no {key!r} row. It "
+                 f"is the table a consumer reads to find what to clone.")
+        elif want not in cell:
+            fail(f"status_is_current: the release table's {key!r} row says "
+                 f"{cell!r}, but the manifest's stable channel says {want!r}. A "
+                 f"release was cut and the standing status still describes "
+                 f"another one.")
+
+
 def sc_contract_exit_codes():
     """Every exit code the binary actually produces must be in P4.
 
