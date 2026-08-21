@@ -1604,27 +1604,43 @@ static int cyanrip_run(int argc, char **argv)
     }
 
     if (verify_log) {
+        /* One exit code per verdict, never a shared 1 (Platterpus ask 2). The
+         * messages are unchanged and stay the human-facing answer; the code is
+         * the machine-readable one, so a consumer no longer has to match our
+         * wording to tell an incomplete record from a modified one.
+         *
+         * Every enumerator is listed with no `default:`, so adding a verdict
+         * to CRIPLogVerify is a compile error here rather than a silent fall
+         * through to some other verdict's code. The switch is exhaustive and
+         * the `return 1` after it is unreachable in practice -- it is what a
+         * value from outside the enum would get, which is the "we did not
+         * reach a verdict" reading 1 already carries everywhere else. */
+        int ec = 1;
         switch (cyanrip_verify_log(verify_log)) {
         case CRIP_LOG_VALID:
             cyanrip_log(NULL, 0, "Log \"%s\" checksum valid.\n", verify_log);
-            return 0;
+            return CRIP_LOG_EXIT_VALID;
         case CRIP_LOG_MISMATCH:
             cyanrip_log(NULL, 0, "Log \"%s\" checksum mismatch, "
                         "the file has been modified!\n", verify_log);
+            ec = CRIP_LOG_EXIT_MISMATCH;
             break;
         case CRIP_LOG_TRAILING_DATA:
             cyanrip_log(NULL, 0, "Log \"%s\" has data after the checksum, "
                         "the file has been modified!\n", verify_log);
+            ec = CRIP_LOG_EXIT_TRAILING_DATA;
             break;
         case CRIP_LOG_NO_CHECKSUM:
             cyanrip_log(NULL, 0, "No FUN512 checksum found in \"%s\"!\n",
                         verify_log);
+            ec = CRIP_LOG_EXIT_NO_CHECKSUM;
             break;
         case CRIP_LOG_IO_ERROR:
             cyanrip_log(NULL, 0, "Couldn't read \"%s\"!\n", verify_log);
+            ec = CRIP_LOG_EXIT_IO_ERROR;
             break;
         }
-        return 1;
+        return ec;
     }
 
     settings.offset = offset;

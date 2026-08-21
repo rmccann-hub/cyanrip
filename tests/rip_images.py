@@ -1616,25 +1616,69 @@ def sc_reference():
 
 
 def sc_verify_log():
-    # CLI wiring only, the checksum logic itself is unit-tested
+    # CLI wiring only, the checksum logic itself is unit-tested.
+    #
+    # Every case below asserts the EXACT exit code, not `!= 0`. Platterpus
+    # ask 2 (standing status 2026-08-21): "the ripper was killed mid-write" and
+    # "this file was modified" are different findings and only the second is a
+    # tamper claim, and until this change both exited 1. A test written as
+    # `!= 0` passes just as well with all five collapsed back onto one code,
+    # which is exactly the state being fixed -- so the numbers are named here
+    # and this is where they become contract.
     rip("basic", "basic.cue")
     log = WORK / "out_basic" / "log.log"
-    if crip("--verify-log", log)[0] != 0:
-        fail("valid log did not verify")
+    body = log.read_text()
 
     tampered = WORK / "tampered.log"
-    tampered.write_text(log.read_text().replace("Ripping errors: 0",
-                                                "Ripping errors: 1"))
-    if crip("--verify-log", tampered)[0] == 0:
-        fail("tampered log verified")
+    tampered.write_text(body.replace("Ripping errors: 0", "Ripping errors: 1"))
 
     # Trailing content must not verify either. Platterpus asked whether it
     # could append an addendum after the checksum line; it cannot, and this
     # locks that answer so it cannot silently become "yes".
     appended = WORK / "appended.log"
-    appended.write_text(log.read_text() + "\n[addendum]\ntrailing content\n")
-    if crip("--verify-log", appended)[0] == 0:
-        fail("log with trailing content verified")
+    appended.write_text(body + "\n[addendum]\ntrailing content\n")
+
+    # The case ask 2 is actually about, and the one this program manufactures:
+    # a log with NO footer, which is what a rip killed mid-write leaves. Built
+    # by truncating a real log at its checksum line rather than by writing a
+    # fake one, so what is checked is a genuine cyanrip log missing exactly the
+    # footer -- a hand-written file could differ in some other way and pass for
+    # the wrong reason.
+    truncated = WORK / "truncated.log"
+    truncated.write_text(body[:body.index("Log FUN512:")])
+
+    cases = [
+        ("valid",         log,                        0),
+        ("mismatch",      tampered,                   2),
+        ("no checksum",   truncated,                  3),
+        ("trailing data", appended,                   4),
+        ("I/O error",     WORK / "no_such_file.log",  5),
+    ]
+
+    observed = {}
+    for what, path, want in cases:
+        ec, out = crip("--verify-log", path)
+        observed[what] = ec
+        if ec != want:
+            fail(f"verify_log: {what} exited {ec}, expected {want} "
+                 f"({out.strip()!r})")
+
+    # The point of the change is that the verdicts DIFFER, and this is asserted
+    # over what the binary actually returned rather than over the list of
+    # numbers written above -- a set built from the expectations can only ever
+    # agree with itself, which is a check satisfied by the thing it is checking.
+    if len(set(observed.values())) != len(observed):
+        fail(f"verify_log: verdicts share an exit code: {observed}")
+
+    # And 1 stays reserved for "no verdict was reached": it is what cyanrip
+    # exits with for a rejected command line, so a verdict taking it would make
+    # a modified log indistinguishable from an argv cyanrip refused. Checked
+    # against a real refusal, so it is a statement about this binary.
+    if crip("--verify-log")[0] != 1:
+        fail("verify_log: a --verify-log with no argument no longer exits 1, "
+             "so the reserved 'no verdict' code has moved")
+    if 1 in observed.values():
+        fail(f"verify_log: a verdict took exit code 1: {observed}")
 
     # The same rule, against a real artifact rather than one we constructed.
     #
