@@ -444,13 +444,6 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "  Secure re-read:  did NOT converge after %i reads (repeat limit hit)\n",
                     t->total_repeats);
         break;
-    case CYANRIP_SECURE_RIP_INTERRUPTED:
-        /* "stopped by" and not "did NOT converge": we do not know whether it
-         * would have. The reads that completed are reported because they were
-         * really taken; the verdict is withheld because it was not reached. */
-        cyanrip_log(ctx, 0, "  Secure re-read:  stopped by signal after %i complete reads (no verdict)\n",
-                    t->total_repeats);
-        break;
     case CYANRIP_SECURE_RIP_NA:
     default:
         cyanrip_log(ctx, 0, "  Secure re-read:  not attempted\n");

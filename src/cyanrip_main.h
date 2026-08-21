@@ -87,13 +87,19 @@ enum cyanrip_secure_rip_state {
     CYANRIP_SECURE_RIP_NA = 0, /* -Z was not requested for this track */
     CYANRIP_SECURE_RIP_CONVERGED, /* Matching checksums were found */
     CYANRIP_SECURE_RIP_LIMIT_HIT, /* Repeat limit hit before checksums matched */
-    /* A signal stopped us before either. A fourth state because the other
-     * three are all wrong claims about it: NA says -Z was never asked for,
-     * CONVERGED says the reads agreed, and LIMIT_HIT says the disc could not
-     * be read consistently within -r. None of those happened -- we were told
-     * to stop -- and LIMIT_HIT is the one it used to report, which blames the
-     * media for an operator's decision. */
-    CYANRIP_SECURE_RIP_INTERRUPTED,
+    /* There is deliberately NO "interrupted" state, and the absence is load
+     * bearing rather than an omission. An interrupted track emits no track
+     * block at all -- cyanrip_rip_track()'s `if (!quit_now && !ret)` guard --
+     * because its checksums would be over a partial read and its files are
+     * unfinalised, so every measurement in that block would be a wrong claim.
+     * A state added here therefore has nowhere to be printed.
+     *
+     * One WAS added, in this round, before generating a sample artifact showed
+     * the line never appears. That the rest of the suite stayed green is the
+     * point: no test asserted a line nobody emits. What a consumer loses by
+     * this -- there is no record of WHICH track was in progress when the rip
+     * stopped -- is real, and is round 12 §J rather than something to invent
+     * here. */
 };
 
 /* Whether the disc carries CD-TEXT. libcdio hands back one NULL for both "the

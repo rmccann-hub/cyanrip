@@ -942,10 +942,8 @@ repeat_ripping:;
          * limit this way reported `did NOT converge after N reads (repeat
          * limit hit)`, which blames the disc for a decision the operator
          * made. */
-        if (quit_now) {
-            t->secure_rip_state = CYANRIP_SECURE_RIP_INTERRUPTED;
+        if (quit_now)
             goto finalize_ripping;
-        }
 
         int matches = 0;
         for (int i = 0; i < nb_last_checksums; i++)
