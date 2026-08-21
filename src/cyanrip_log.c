@@ -150,6 +150,45 @@ static void print_peak_disagreement(cyanrip_ctx *ctx, const char *indent,
                 indent, ebu_db, direct_db, delta);
 }
 
+/* The second cross-check, and it answers a DIFFERENT question from the one
+ * above. That one asks "is ebur128 measuring what we think it is?"; this one
+ * asks "did the bytes survive the trip from the read buffer into an AVFrame?"
+ *
+ * Two lines rather than one three-way line, for that reason. A single
+ * "three figures, one disagrees" line names a discrepancy without localising
+ * it, and localising it is the whole value of having a third witness: the two
+ * scans here bracket the frame construction, so a disagreement puts the defect
+ * between the read and the filter rather than inside the filter.
+ *
+ * sample_peak_rel_amp arrives with the upstream rc2 merge and is upstream's own
+ * hand-rolled scan over the bytes read from the disc, in linear 0.0-1.0. It is
+ * consumed here rather than printed as upstream prints it because an
+ * unconditional `Sample peak:` would (a) collide by prefix with our
+ * `Sample peak level:` so a consumer grepping the field name matches two
+ * different lines, and (b) be a third always-present number for one fact -- the
+ * exact shape H6 asked us not to emit. Leaving the field unused was the other
+ * option and is worse: a computed-then-discarded peak is the dead-field defect
+ * this project already had once, in ebu_sample_peak.
+ *
+ * 0.0 means "not measured" (a data track, or a track that never ripped) and
+ * becomes -INFINITY, which crip_peaks_disagree() treats as absence rather than
+ * as a disagreement. Digital silence lands in the same place and is likewise
+ * not a finding: the other scan reports -INFINITY for it too. */
+static void print_read_path_disagreement(cyanrip_ctx *ctx, const char *indent,
+                                         double direct_db, double raw_rel_amp)
+{
+    const double raw_db = raw_rel_amp > 0.0 ? 20.0 * log10(raw_rel_amp)
+                                            : -INFINITY;
+    double delta;
+    if (!crip_peaks_disagree(direct_db, raw_db, &delta))
+        return;
+
+    cyanrip_log(ctx, 0,
+                "%sRead-path peak disagreement: direct scan %.2f dBFS, "
+                "read-buffer scan %.2f dBFS (%.2f dB apart)\n",
+                indent, direct_db, raw_db, delta);
+}
+
 /* How long the drive made us wait, as a measurement rather than a verdict.
  *
  * A stall is not recoverable after the fact: put the disc back in and it may
@@ -357,6 +396,8 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "    True peak level:   %.1f dBFS\n", t->ebu_true_peak);
         print_peak_disagreement(ctx, "    ", t->ebu_sample_peak,
                                 t->direct_sample_peak);
+        print_read_path_disagreement(ctx, "    ", t->direct_sample_peak,
+                                     t->sample_peak_rel_amp);
         /* EBU R128 loudness, ours rather than libavfilter's. The values were
          * already computed and held per track and then discarded -- the same
          * dead-field shape as the sample and true peaks above. Until now the

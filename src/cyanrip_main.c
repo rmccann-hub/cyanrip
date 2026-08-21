@@ -40,6 +40,7 @@
 #include "checksums.h"
 #include "discid.h"
 #include "musicbrainz.h"
+#include "qrcode.h"
 #include "coverart.h"
 #include "accurip.h"
 #include "os_compat.h"
@@ -684,6 +685,20 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
     }
 }
 
+static double sample_peak_rel_amp(const uint8_t *data, const int bytes)
+{
+    const int16_t* samples = (int16_t*)data;
+    const int sample_num = bytes / 2;
+
+    int sample_peak = 0;
+    for (int i = 0; i < sample_num; ++i) {
+        sample_peak = FFMAX(sample_peak, abs(samples[i]));
+    }
+
+    /* The greatest sample absolute value is abs(INT16_MIN) = 32768 */
+    return (double)sample_peak/32768.0;
+}
+
 static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     int ret = 0;
@@ -732,6 +747,10 @@ repeat_ripping:;
     /* Checksum */
     cyanrip_checksum_ctx checksum_ctx;
     crip_init_checksum_ctx(ctx, &checksum_ctx, t);
+
+    /* Reset sample peak for this attempt - a bad sample from a discarded
+     * (non-matching) repeat ripping pass must not stick around forever. */
+    t->sample_peak_rel_amp = 0.0;
 
     /* Fill with silence to maintain track length */
     for (int i = 0; i < frames_before_disc_start; i++) {
@@ -798,6 +817,9 @@ repeat_ripping:;
 
         /* Update checksums */
         crip_process_checksums(&checksum_ctx, data, bytes);
+
+         /* Update sample peak */
+        t->sample_peak_rel_amp = FFMAX(sample_peak_rel_amp(data, bytes), t->sample_peak_rel_amp);
 
         /* Decode and encode */
         if (!ctx->settings.ripping_retries || repeat_mode_encode) {
@@ -1895,8 +1917,10 @@ static int cyanrip_run(int argc, char **argv)
     }
 
     /* Print this for easy access */
-    if (ctx->settings.print_info_only)
+    if (ctx->settings.print_info_only) {
         cyanrip_log(ctx, 0, "MusicBrainz URL:\n%s\n", ctx->mb_submission_url);
+        crip_print_qrcode(ctx->mb_submission_url);
+    }
 
     /* Copy album cover arts */
     ctx->nb_cover_arts = nb_cover_arts;

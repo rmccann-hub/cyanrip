@@ -889,6 +889,7 @@ Everything below this line is upstream cyanreg/cyanrip's changelog, unmodified.
  - CUE sheet-only mode, without ripping anything (-J)
  - Rip log checksum verification (-Y)
  - Label and catalog number tagging from MusicBrainz
+ - MusicBrainz submission URLs are printed as a QR code (needs libqrencode)
  - Embedded cover art is now typed as a front cover, so file managers thumbnail it
  - Automatic deemphasis of preemphasized discs now actually happens
  - CUE sheets reference their files relative to the sheet

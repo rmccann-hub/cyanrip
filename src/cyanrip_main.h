@@ -244,12 +244,35 @@ typedef struct cyanrip_track {
     double ebu_lra_high;
     double ebu_sample_peak;
     double ebu_true_peak;
-    /* The same sample peak measured a second way -- max |sample| over the
-     * frames handed to the ebur128 filter, in dBFS. Reported only when the two
-     * disagree (H6, Platterpus round 7): agreement is the expected case and a
-     * second always-present number invites a consumer to pick one, which will
-     * occasionally be the wrong one silently. -INFINITY until measured. */
+    /* THREE measurements of one fact, and the reason there are three is that
+     * each is computed by a different route, so a disagreement localises a
+     * defect instead of merely announcing one.
+     *
+     *   ebu_sample_peak      libavfilter's ebur128, dBFS
+     *   direct_sample_peak   our own max |sample| over the AVFrames handed to
+     *                        that filter, dBFS
+     *   sample_peak_rel_amp  upstream's max |int16| over the raw bytes read
+     *                        from the disc, linear 0.0-1.0
+     *
+     * They measure the SAME SAMPLES. The frames the first two see are built
+     * verbatim from the bytes the third sees (S16, nb_samples = bytes >> 2) and
+     * the deemphasis/HDCD filter is applied downstream of them, on the way to
+     * the encoders only -- so agreement is the expected case on every disc, not
+     * just an unfiltered one. Said plainly because the tempting reading is that
+     * upstream's measures the pre-emphasised audio and ours the de-emphasised
+     * one; it was checked in cyanrip_encode.c:filter_frame() and it does not.
+     *
+     * NONE of the three is printed unconditionally beside another. Two
+     * always-present numbers for one fact invite a consumer to pick one, and
+     * whichever it picks will occasionally be the wrong one silently (H6,
+     * Platterpus round 7). Agreement is not information; a disagreement is a
+     * finding, and only the finding is logged.
+     *
+     * direct_sample_peak is -INFINITY until measured; sample_peak_rel_amp is
+     * 0.0 until measured and is reset per -Z attempt so a discarded pass cannot
+     * leave a peak behind. */
     double direct_sample_peak;
+    double sample_peak_rel_amp;
 
     struct cyanrip_track *pt;
     struct cyanrip_track *nt;
