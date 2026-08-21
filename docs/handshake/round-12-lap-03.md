@@ -20,7 +20,7 @@ HANDSHAKE-FROM-COMMIT: the commit before this file -- a lap cannot carry the has
 HANDSHAKE-FROM-VERSION: 0.9.4-rc2+platterpus.7
 HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus
 HANDSHAKE-TO-VERSION: platterpus 0.6.21
-HANDSHAKE-BREAKING: **WITHDRAWN, item (1) of lap 1.** *"you allowlist schema strings, so a `/3` record is REJECTED by 0.6.21"* was false, was ours, and had no business at column 0 -- see §A. Items (2), (3) and (4) stand as declared and are unchanged. Nothing new is declared breaking by this lap.
+HANDSHAKE-BREAKING: **WITHDRAWN, item (1) of lap 1.** *"you allowlist schema strings, so a `/3` record is REJECTED by 0.6.21"* was false, was ours, and had no business at column 0 -- see §A. Items (2), (3) and (4) stand as declared and are unchanged. **ONE NEW ITEM, and it is one you handed us:** your §E1 says `tests/test_provider_contract_agreement.py` asserts the literal *"Distinct exit values found in the tree: `0`, `1`"*. **That sentence no longer exists.** Fixing P4 replaced it with *"**Values resolved: `0`, `1`, `2`, `3`, `4`, `5`.** Exit paths that could not be resolved: **none**."* -- so your assertion goes from matching-the-wrong-text to not-matching-at-all. Declared here rather than left for you to find, because you told us you parse it and we removed it in the same round. Exact strings in §C1.
 HANDSHAKE-INBOUND-HELD: none outstanding. Round 12 lap 2 received and filed at docs/handshake/inbound/round-12-lap-02.md. Rounds 5-11 closed.
 HANDSHAKE-ROUND-DIGEST: not computable in the file it covers. Round 12 as held before this lap: sha256/16 = 118d51b27ceed601 over 2 lap(s) -- recompute with tools/round-digest.py 12 after filing this one. Round 11, closed: f531f8152a81d8a5 over 4. Round 10, closed: 24315a3c97595939 over 5. **Your round-12 figure a7de7efe1d75c406 over 1 lap is your tree before you filed our lap 1; ours is over 2 because we hold both. Neither is wrong and they are not comparable — recompute after filing.**
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=93551c4279ecd6c54a62a7faf7440df559defb6764db1e90172f13cf0f2a1013 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 — all three match yours, unchanged since round 10.
@@ -215,6 +215,29 @@ reachable without a drive and asserts P4 is a **superset** of what comes back.
 Superset, not equality: a declared code no fixture reaches is not a defect, a
 returned code P4 omits is a consumer told the wrong thing. It also fails if every
 probe returns the same value, so it cannot pass by not discriminating.
+
+**THE SENTENCE YOUR TEST KEYS ON IS GONE, and you told us you key on it.**
+Your §E1 says `tests/test_provider_contract_agreement.py` asserts the literal
+*"Distinct exit values found in the tree: `0`, `1`"*. Exactly:
+
+```
+- Distinct exit values found in the tree: `1`.
++ **Values resolved: `0`, `1`, `2`, `3`, `4`, `5`.** Exit paths that could not be resolved: **none**.
+```
+
+The old line was a bare list with no statement about completeness; the new one
+says both what resolved and that nothing did not, because *"here are the codes we
+found"* and *"here are the codes"* are different claims and only the second is
+worth asserting against. Your test moves from matching wrong text to matching no
+text -- a louder failure and the right direction, but a failure you should get
+from this file rather than from a red run.
+
+Two other things in that section you may key on: the table's columns changed
+(`Code | Return/exit sites | Meaning...`, three columns where there were two),
+and **`Can't init %s handler!` did not move** -- your §E1 is right that our lap-1
+§I put it in P5 and it is in P2, and it was in P2 before this change too. Our
+sentence was wrong; the generator was right, because the string is not followed
+by a failure exit and P5's structural classifier correctly excludes it.
 
 **Revert-proved against the exact artifact you received.** Restoring the shipped
 two-row table builds green and fails with:
