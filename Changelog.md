@@ -1,9 +1,92 @@
 Unreleased
 ==========
-No release. **Upstream `0.9.4-rc2` is merged, and three cancellation defects
-were fixed on top of it.** Handshake round 12 is OPEN on `64ae7bc`; nothing
-here is released until it closes, and `release-manifest.json` still resolves
-both channels to `c4d1a00`.
+Nothing yet.
+
+0.9.4-rc2+platterpus.7 (2026-08-21)
+===================================
+**First release on upstream's `0.9.4-rc2` base**, and the first whose version's
+left half moved because upstream released rather than because we did.
+Authorised by handshake round 12, closed `GO`/`GO` on `64ae7bc` in four laps
+against round 7's thirty-seven.
+
+Published as `release-manifest.json` `release_seq` 17, channel `stable`.
+`0.9.4-rc1+platterpus.6` (`c4d1a00`) stays in `docs/release-ledger.tsv` as seq
+16, which is where a downgrade target comes from.
+
+**Three cancellation defects, and the first one is why the other two were
+found.** Platterpus reported that a rip they killed at 300 s held the drive and
+could not be reaped, and filed it against `-x`. `-x` was behaving as documented.
+
+ - **A signal could deadlock cyanrip with the drive held.**
+   `on_quit_signal()` called `cyanrip_log()`, which takes a mutex and uses
+   stdio -- neither permitted in a signal handler. When the signal landed while
+   the main thread held that mutex, the handler blocked on it forever, on the
+   thread that would have released it. A progress line is printed per frame, so
+   the window is one frame wide: roughly one run in forty idle, reliably under
+   load. **Upstream has this verbatim.**
+ - **SIGTERM was not handled at all.** A supervisor's kill took the default
+   disposition, so the logfile was cut off mid-sentence with no `Log FUN512:`
+   footer and -- because the record is written from `atexit` -- no `-j`
+   diagnostics record at all. `-j` exists for runs that open no logfile, so it
+   was lost exactly where it was most needed.
+ - **`-Z` kept repeating after being told to stop**, rebuilding the encoders
+   once per remaining `-r` attempt. A cancelled `-Z 200 -r 200` printed
+   `Stopping, ripping incomplete!` 182 times before it would exit; it now
+   prints it once.
+
+**Log and record changes, all declared in round 12 and verified by Platterpus
+against their real parser:**
+
+ - `Rip completed:  no (interrupted by user, ...)` now names the signal --
+   `SIGINT` or `SIGTERM`. "by user" was accurate while SIGINT was the only
+   signal handled and became a wrong claim the moment SIGTERM was, since a
+   supervisor's timeout is not a user.
+ - **`--verify-log` gives every verdict its own exit code**: 0 valid, 2
+   mismatch, 3 no checksum, 4 trailing data, 5 unreadable. `1` stays reserved
+   for "cyanrip failed before reaching a verdict". A log with no footer is an
+   incomplete record, not a tamper claim, and until now both exited 1.
+ - **The diagnostics record no longer publishes a checksum for a track that
+   never finished.** Checksums are finalised per pass, so an interrupted track
+   carried a real `eac_crc` over a partial read -- two runs interrupted at the
+   same point produced `3697A1BF` and `03EEE452`. Schema `cyanrip-diagnostics/3`
+   adds `rip.interrupted_by` and per-track `audio_ripped`; when that is false
+   the checksum fields are `false` and `null`.
+
+**Upstream `0.9.4-rc2` merged** (`1ee56fc`), never rebased: rebasing would
+orphan 22 published SHAs including the one Platterpus runs. Inbound: QR codes
+for MusicBrainz submission URLs (optional `libqrencode`, stdout only and
+TTY-gated), flatpak packaging, MusicBrainz track-title and artist-credit
+preference, a macOS CI job. No CLI flag came in, and **no audio changed** --
+all twelve checksum lines in the golden reference are byte-identical across the
+merge.
+
+**Two generated documents were describing programs we do not have.**
+
+ - **`PROVIDER-CONTRACT.md` P4 said exit `1` for every failure** in the same
+   release whose breaking notice declared five distinct codes. The rows were
+   literal strings inside the generator, and the derivation beneath them
+   scanned integer literals inside `main()` -- which returns `rc` from
+   `cyanrip_run()`, so every real exit was out of scope. It found `1` and
+   missed even `0`. Now derived by following the program one hop from the entry
+   point, resolving enum constants and assigned variables, and reporting
+   anything unresolved with `file:line`. `sc_contract_exit_codes()` runs the
+   real binary and asserts P4 is a superset of what comes back.
+ - **The contract's build line was a literal `<commit>` placeholder.** It now
+   names the build that generated it, normalised in `--check` only -- the
+   mechanism `gen-golden-reference.py` already used.
+
+**New: `docs/sample-interrupted.log`**, one real rip stopped by SIGTERM, so a
+consumer parsing a cancelled rip has an artifact rather than a description of
+one. Not a golden reference, and its own header says so.
+
+**What this release does not have:** any hardware evidence. 47 of 47 from a
+clean clone in four build configurations including ASAN and UBSAN, and not one
+disc. `-x` has still never run to completion on a real drive anywhere except
+Platterpus's rig. Platterpus is deliberately **not** moving its pin to this
+build for that reason, and we think they are right to.
+
+Full round-12 correspondence: `docs/handshake/round-12-lap-01.md`, `-03`, and
+their `-02`, `-04` under `docs/handshake/inbound/`.
 
  - **Merged upstream `0.9.4-rc2` (`4f28cf0`) at `1ee56fc`.** A merge, never a
    rebase: rebasing would orphan 22 published SHAs including the one Platterpus
