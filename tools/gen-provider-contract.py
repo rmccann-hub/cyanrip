@@ -805,20 +805,19 @@ def exit_surface():
 
     # The entry points, and one hop from each. wmain() is the Windows entry
     # point and is compiled instead of main() there, so both are followed.
-    frontier = [re.compile(r"^int\s+(?:w)?main\s*\(", re.M)]
+    frontier = [(re.compile(r"^int\s+(?:w)?main\s*\(", re.M), "main()")]
     seen = set()
     for _ in range(4):                       # depth cap, stated rather than felt
         if not frontier:
             break
-        sig = frontier.pop(0)
+        sig, fname = frontier.pop(0)
         body, first_line = _fn_body(main_src, sig)
         if body is None:
             continue
-        label = sig.pattern
-        if label in seen:
+        if fname in seen:
             continue
-        seen.add(label)
-        chain.append(label)
+        seen.add(fname)
+        chain.append(fname)
 
         for m in re.finditer(r"\breturn\s+([^;]+);", body):
             expr = m.group(1).strip()
@@ -830,7 +829,8 @@ def exit_surface():
                              body) if re.fullmatch(r"[a-z_][a-z0-9_]*", expr) else None
             if call:
                 frontier.append(
-                    re.compile(rf"^(?:static\s+)?int\s+{call.group(1)}\s*\(", re.M))
+                    (re.compile(rf"^(?:static\s+)?int\s+{call.group(1)}\s*\(",
+                                re.M), f"{call.group(1)}()"))
                 continue
             resolve(expr, where, body)
 
