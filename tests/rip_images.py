@@ -1089,6 +1089,92 @@ def sc_cue_isrc():
             fail("cue_isrc: ISRC appears after an INDEX line in a TRACK block")
 
 
+def sc_contract_exit_codes():
+    """Every exit code the binary actually produces must be in P4.
+
+    THE DEFECT THIS EXISTS FOR. P4's table was literal strings inside the
+    generator -- one row read *"1, Every failure, without exception"* -- while
+    the binary had just gained five distinct `--verify-log` codes, declared at
+    column 0 as HANDSHAKE-BREAKING in the same round. The `Distinct exit values`
+    line below the table WAS derived and found only `1`, so a generated document
+    contradicted itself in one section and neither half matched the program.
+    Platterpus found it by reading the delivered contract against our own lap
+    (round 12 lap 2 §E1); nothing here noticed, because nothing here had ever
+    compared the contract to a running binary.
+
+    So this does the comparison the generator cannot: seam-rules S-9, limits are
+    established by RUNNING the binary. The generator reads source and can only
+    be as right as its parsing; this runs the real thing and asserts P4 is a
+    superset of what came back.
+
+    Superset, not equality, and the asymmetry is deliberate. A code P4 declares
+    but no scenario here reaches is not a defect -- most failure paths need a
+    drive. A code the binary returns and P4 omits is a consumer told the wrong
+    thing, which is the only direction that hurts.
+    """
+    contract = ROOT / "PROVIDER-CONTRACT.md"
+    if not contract.exists():
+        fail("contract_exit_codes: PROVIDER-CONTRACT.md is missing")
+        return
+
+    text = contract.read_text()
+    section = re.search(r"^## P4 .*?(?=^## P5 )", text, re.M | re.S)
+    if not section:
+        fail("contract_exit_codes: no P4 section")
+        return
+    declared = {int(m) for m in re.findall(r"^\| `(\d+)` \|", section.group(0),
+                                           re.M)}
+    if not declared:
+        fail("contract_exit_codes: P4 declares no codes at all -- a check that "
+             "can be satisfied by finding nothing is the failure it guards")
+        return
+
+    rip("basic", "basic.cue")
+    log = WORK / "out_basic" / "log.log"
+    body = log.read_text()
+
+    tampered = WORK / "ec_tampered.log"
+    tampered.write_text(body.replace("Ripping errors: 0", "Ripping errors: 1"))
+    truncated = WORK / "ec_truncated.log"
+    truncated.write_text(body[:body.index("Log FUN512:")])
+    appended = WORK / "ec_appended.log"
+    appended.write_text(body + "\n[addendum]\n")
+
+    # One invocation per class we can reach without a drive. Named rather than
+    # globbed, so adding a class is a visible act.
+    probes = [
+        ("valid log",       ["--verify-log", log]),
+        ("mismatched log",  ["--verify-log", tampered]),
+        ("footerless log",  ["--verify-log", truncated]),
+        ("appended log",    ["--verify-log", appended]),
+        ("unreadable log",  ["--verify-log", WORK / "ec_absent.log"]),
+        ("refused argv",    ["--verify-log"]),
+        ("version",         ["--version"]),
+        ("help",            ["--help"]),
+        ("-I and -J",       ["-d", WORK / "basic.cue", "-I", "-J", "-N", "-A",
+                             "-U", "-s", "0"]),
+    ]
+
+    observed = {}
+    for what, argv in probes:
+        observed.setdefault(crip(*argv)[0], []).append(what)
+
+    missing = sorted(set(observed) - declared)
+    if missing:
+        fail(f"contract_exit_codes: the binary returns "
+             f"{ {c: observed[c] for c in missing} } and P4 does not declare "
+             f"{missing}. P4 declares {sorted(declared)}. A generated contract "
+             f"that omits a code the program returns tells a consumer the wrong "
+             f"thing about a failure it will actually see.")
+
+    # And the check must not be passable by a P4 that declares nothing useful:
+    # if the probes above only ever produced one code, this scenario proves
+    # nothing about discrimination and should say so rather than pass quietly.
+    if len(observed) < 2:
+        fail(f"contract_exit_codes: every probe returned {sorted(observed)} -- "
+             f"this cannot discriminate, so its result means nothing")
+
+
 def sc_contract_build():
     # The contract must describe THIS tree's version, not the previous one.
     #

@@ -626,27 +626,259 @@ def flags(binary):
     return rows
 
 
-def exit_codes():
-    """Every distinct process exit value reachable from main()."""
-    codes = set()
-    for name in os.listdir(SRC):
-        if not name.endswith(".c"):
+def blank_noncode(text):
+    """Comments and string literals replaced by spaces, newlines preserved.
+
+    A grep hit is not a fact, and this file has already shipped two findings
+    that were prose: a function name matched inside a TODO, and a search for
+    cache handling matched a comment written an hour earlier. Scanning for
+    `return` or `exit(` in a file whose comments DISCUSS returns and exits will
+    find them there -- the first run of exit_surface() reported three phantom
+    paths, every one of them a sentence explaining the real code beside it.
+
+    Line numbers must survive, because every citation in this document is a
+    file:line. So content is replaced rather than removed.
+    """
+    out, i, n = [], 0, len(text)
+    while i < n:
+        c = text[i]
+        if c == "/" and i + 1 < n and text[i + 1] == "*":
+            j = text.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            out.append("".join(ch if ch == "\n" else " " for ch in text[i:j]))
+            i = j
+        elif c == "/" and i + 1 < n and text[i + 1] == "/":
+            j = text.find("\n", i)
+            j = n if j < 0 else j
+            out.append(" " * (j - i))
+            i = j
+        elif c in "\"'":
+            j = i + 1
+            while j < n and text[j] != c:
+                j += 2 if text[j] == "\\" else 1
+            j = min(j + 1, n)
+            out.append("".join(ch if ch == "\n" else " " for ch in text[i:j]))
+            i = j
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def enum_values():
+    """Every enumerator in src/*.h that has an explicit integer initialiser,
+    with the trailing comment on its line.
+
+    Only explicit initialisers, on purpose. Implicit successors would have to be
+    counted through the enum, and a miscount there produces a *plausible* wrong
+    number in a document whose whole job is not doing that. Every exit code this
+    program returns is explicitly valued (see CRIPLogVerifyExit in fun512.h), so
+    the restriction costs nothing and an enumerator that stops being explicit
+    shows up as unresolved rather than as a guess.
+
+    The comment is captured because for the exit codes it IS the meaning, in the
+    source, next to the value -- which is the only place a meaning can be
+    derived from rather than editorialised into this file.
+    """
+    out = {}
+    for name in sorted(os.listdir(SRC)):
+        if not name.endswith(".h"):
             continue
-        t = open(os.path.join(SRC, name), encoding="utf-8").read()
-        codes.update(re.findall(r"exit\((\d+)\)", t))
-    main = open(os.path.join(SRC, "cyanrip_main.c"), encoding="utf-8").read()
-    start = main.index("int main(")
-    codes.update(re.findall(r"^\s*return (\d+);", main[start:], re.M))
-    return sorted(codes, key=int)
+        path = os.path.join(SRC, name)
+        for i, line in enumerate(open(path, encoding="utf-8"), 1):
+            m = re.match(r"\s*([A-Z][A-Z0-9_]*)\s*=\s*(-?\d+)\s*,?"
+                         r"\s*(?:/\*\s*(.*?)\s*\*/)?\s*$", line)
+            if m:
+                out[m.group(1)] = (int(m.group(2)), m.group(3) or "",
+                                   f"{name}:{i}")
+    return out
+
+
+def _fn_body(text, signature_re):
+    """The text of the first function whose signature matches, brace-balanced.
+
+    Brace counting rather than a regex to the next "^}": cyanrip_run() contains
+    nested blocks at column 0 in no case today, but a function that gained one
+    would silently truncate the body and drop every return past it -- which is
+    the failure mode that makes a derivation quietly incomplete.
+    """
+    m = signature_re.search(text)
+    if not m:
+        return None, 0
+    start = text.index("{", m.start())
+    depth, i = 0, start
+    while i < len(text):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start:i + 1], text[:start].count("\n") + 1
+        i += 1
+    return text[start:], text[:start].count("\n") + 1
+
+
+def exit_surface():
+    """Every distinct process exit value, and every path we could NOT resolve.
+
+    WHY THIS IS NOT A LIST OF DIGITS ANY MORE. The previous version scanned for
+    `exit\((\d+)\)` across src/*.c and for `^\s*return (\d+);` inside main().
+    Both halves were wrong in the same direction:
+
+      * main() does not return a literal. It returns `rc`, which is
+        cyanrip_run()'s value, so every real exit code was out of scope.
+      * the codes are not literals. --verify-log returns CRIP_LOG_EXIT_VALID and
+        a variable `ec` assigned from four more enumerators.
+
+    So it reported `1` while the binary returned 0, 1, 2, 3, 4 and 5 -- and the
+    P4 table above it was hardcoded prose saying "1, Every failure, without
+    exception", which is a hand-written claim inside a generated document, the
+    exact defect this file exists to prevent. Platterpus found it in round 12
+    lap 2 §E1 by reading the delivered contract against our own lap.
+
+    HOW IT DERIVES NOW. Start at main()/wmain(); follow `return <var>;` one hop
+    to the function that assigned it; enumerate every `return <expr>;` in the
+    functions so reached, plus every exit()/_exit() call anywhere in src/. An
+    expression that is a literal or a known enumerator resolves to a value; an
+    expression that is a variable resolves to every value assigned to that
+    variable inside the same function. Anything left over is REPORTED, with
+    file:line, rather than dropped -- an exit path we cannot read is a fact a
+    consumer needs, and silently omitting it is how a contract comes to describe
+    a program that does not exist.
+
+    Returns (resolved, unresolved, chain):
+      resolved   {int: [evidence strings]}
+      unresolved [(where, expression)]
+      chain      the functions followed, in order, so a reader can check the
+                 hop rather than trust it.
+    """
+    enums = enum_values()
+    resolved, unresolved, chain = {}, [], []
+
+    def note(value, where):
+        resolved.setdefault(value, []).append(where)
+
+    def resolve(expr, where, body):
+        """expr -> value(s), or record it as unresolved."""
+        expr = " ".join(expr.split())
+        if re.fullmatch(r"-?\d+", expr):
+            note(int(expr), where)
+            return
+        # `cond ? A : B` where both arms are constants. Resolved rather than
+        # reported, because this IS the normal rip's exit -- `(err_cnt ||
+        # fatal_abort) ? 1 : 0` -- and a contract that files the program's main
+        # exit path under "could not resolve" is describing a different program.
+        # Only when BOTH arms resolve: one unreadable arm makes the whole
+        # expression unreadable, and half an answer here is worse than none.
+        tern = re.fullmatch(r".+\?\s*([^:?]+?)\s*:\s*([^:?]+?)\s*", expr)
+        if tern:
+            arms = [a.strip() for a in tern.groups()]
+            vals = [int(a) if re.fullmatch(r"-?\d+", a)
+                    else (enums[a][0] if a in enums else None) for a in arms]
+            if all(v is not None for v in vals):
+                for v in vals:
+                    note(v, f"{where} (ternary)")
+                return
+        if expr in enums:
+            note(enums[expr][0], f"{where} (`{expr}`)")
+            return
+        # A bare identifier: every value assigned to it in this function. Bounded
+        # to the function on purpose -- following it further would be a dataflow
+        # analysis, and a wrong one would be indistinguishable from a right one
+        # in the output.
+        if re.fullmatch(r"[a-z_][a-z0-9_]*", expr) and body is not None:
+            hits = re.findall(rf"\b{re.escape(expr)}\s*=\s*([^;]+);", body)
+            if hits:
+                for h in hits:
+                    h = h.strip()
+                    if re.fullmatch(r"-?\d+", h):
+                        note(int(h), f"{where} (via `{expr}`)")
+                    elif h in enums:
+                        note(enums[h][0], f"{where} (via `{expr}` = `{h}`)")
+                    else:
+                        unresolved.append((where, f"{expr} = {h}"))
+                return
+        unresolved.append((where, expr))
+
+    main_src = blank_noncode(
+        open(os.path.join(SRC, "cyanrip_main.c"), encoding="utf-8").read())
+
+    # The entry points, and one hop from each. wmain() is the Windows entry
+    # point and is compiled instead of main() there, so both are followed.
+    frontier = [re.compile(r"^int\s+(?:w)?main\s*\(", re.M)]
+    seen = set()
+    for _ in range(4):                       # depth cap, stated rather than felt
+        if not frontier:
+            break
+        sig = frontier.pop(0)
+        body, first_line = _fn_body(main_src, sig)
+        if body is None:
+            continue
+        label = sig.pattern
+        if label in seen:
+            continue
+        seen.add(label)
+        chain.append(label)
+
+        for m in re.finditer(r"\breturn\s+([^;]+);", body):
+            expr = m.group(1).strip()
+            line = first_line + body[:m.start()].count("\n")
+            where = f"cyanrip_main.c:{line}"
+            # `return <var>;` where <var> was assigned from a call: follow the
+            # call rather than the variable, one hop.
+            call = re.search(rf"\b{re.escape(expr)}\s*=\s*([a-z_][a-z0-9_]*)\s*\(",
+                             body) if re.fullmatch(r"[a-z_][a-z0-9_]*", expr) else None
+            if call:
+                frontier.append(
+                    re.compile(rf"^(?:static\s+)?int\s+{call.group(1)}\s*\(", re.M))
+                continue
+            resolve(expr, where, body)
+
+    # exit()/_exit() anywhere. Headers included: genopt.h is a header and carries
+    # argument-parsing failures, and scanning only .c is how the old version
+    # would have missed them had they been there.
+    for name in sorted(os.listdir(SRC)):
+        if not name.endswith((".c", ".h")):
+            continue
+        path = os.path.join(SRC, name)
+        text = blank_noncode(open(path, encoding="utf-8").read())
+        for i, line in enumerate(text.splitlines(), 1):
+            for m in re.finditer(r"\b_?exit\s*\(\s*([^)]+?)\s*\)", line):
+                resolve(m.group(1), f"{name}:{i}", None)
+
+    return resolved, unresolved, chain
+
+
+# The build tag inside the banner. Normalised in --check ONLY, never in the
+# written file, and the split is the whole point of E3's fix.
+BUILD_TAG = re.compile(r"-g[0-9a-f]{7,40}\)")
 
 
 def version(binary):
-    """The banner, with the commit suffix normalised.
+    """The banner, verbatim, INCLUDING the build's short SHA.
 
-    The real suffix is this build's short SHA. Embedding it verbatim would mean
-    committing this file changes the SHA, which makes the file it just produced
-    stale -- a generated artifact cannot contain a value that generating it
-    alters. The shape is the contract; the digits are not.
+    It used to be written as `-g<commit>)`, a literal placeholder, and the
+    reasoning was sound as far as it went: committing this file changes HEAD, so
+    a file containing HEAD's SHA is stale the instant it lands. Same fixpoint as
+    every other generated artifact here.
+
+    But the conclusion was wrong, and Platterpus was right to flag it (round 12
+    lap 2 §E3): a generated contract with an unfilled placeholder cannot be
+    checked against a binary at all. Their proposed one-line fix -- just fill it
+    in -- recreates the fixpoint. The actual fix is the one gen-golden-reference.py
+    has used all along: WRITE the real value and NORMALISE IT IN --check. The
+    reference's banner carries `platterpus-fork-gdef36a6` and its --check ignores
+    that field, so the artifact names its build and the gate still passes.
+
+    So this file now says which build produced it, and that build is always the
+    commit BEFORE the one containing this file -- "generated by X, committed at
+    Y", the same labelling every other artifact here uses.
+
+    The SHA is the weaker of the two provenance handles and is not the one to
+    check against. A build tag names a COMMIT, not what was built -- round 6 cost
+    both projects two golden references to that. The source anchor below it is
+    content-derived, survives committing this file, and is what a consumer should
+    recompute.
     """
     raw = subprocess.run([binary, "--version"], capture_output=True,
                          text=True).stdout.strip()
@@ -664,7 +896,7 @@ def version(binary):
                  "its commit does not describe it.\n"
                  "Commit or stash, rebuild, and re-run.")
 
-    return re.sub(r"-g[0-9a-f]{7,40}\)", "-g<commit>)", raw)
+    return raw
 
 
 def source_hash():
@@ -694,6 +926,14 @@ def emit(binary):
     w("stale silently, which is the failure this file exists to prevent.")
     w("")
     w(f"Build: `{version(binary)}`")
+    w("")
+    w("That is the build that GENERATED this file, which is always the commit")
+    w("*before* the one containing it -- a generated artifact cannot carry the hash")
+    w("of a commit that adds it. `--check` normalises this field for exactly that")
+    w("reason; everything else in the file is compared byte for byte. **It is the")
+    w("weaker provenance handle**: a build tag names a commit, not what was built.")
+    w("The source anchor below is content-derived, survives committing this file,")
+    w("and is the one to recompute.")
     w("")
     w(f"**Source anchor:** `sha256/16 = {source_hash()}` over `src/*.c` and")
     w("`src/*.h`. **Every `file:line` below refers to exactly that source.** Line")
@@ -882,16 +1122,47 @@ def emit(binary):
 
     w("## P4 - Exit codes")
     w("")
-    w("| Code | Meaning |")
-    w("|---|---|")
-    w("| `0` | Success: completed rip, `-I`, `-J`, `-h`, `-v`, or a `-Y` that validated |")
-    w("| `1` | Every failure, without exception |")
+    w("**Derived, including the table.** Until round 12 the rows here were literal")
+    w("strings in the generator -- one of them read *\"1, Every failure, without")
+    w("exception\"* -- while the line beneath them counted the tree and found")
+    w("something else. A hand-written claim inside a generated document is the exact")
+    w("defect this file exists to prevent, and it shipped a contract saying the")
+    w("opposite of the binary's `--verify-log` codes. Platterpus found it.")
     w("")
-    w(f"Distinct exit values found in the tree: {', '.join('`'+c+'`' for c in exit_codes())}.")
+    resolved, unresolved, chain = exit_surface()
+    enums = enum_values()
+    w("| Code | Return/exit sites | Meaning, where the source states one |")
+    w("|---|---|---|")
+    for code in sorted(resolved):
+        named = []
+        for ev in resolved[code]:
+            for m in re.finditer(r"`([A-Z][A-Z0-9_]*)`", ev):
+                if m.group(1) in enums and enums[m.group(1)][1]:
+                    named.append(f"`{m.group(1)}` -- {enums[m.group(1)][1]}")
+        meaning = "; ".join(dict.fromkeys(named)) or "*(the source annotates none)*"
+        w(f"| `{code}` | {len(resolved[code])} | {meaning} |")
     w("")
-    w("**There is no per-failure-class code.** Classification must come from the text,")
-    w("which is why P5 exists. No non-zero exit is silent: argument parse failures")
-    w("print before returning, and every other `return 1` in `main()` is preceded by a")
+    w(f"**Values resolved: "
+      f"{', '.join('`'+str(c)+'`' for c in sorted(resolved))}.** "
+      f"Exit paths that could not be resolved: "
+      + (f"**{len(unresolved)}** -- "
+         + "; ".join(f"`{w_}` (`{e}`)" for w_, e in unresolved)
+         if unresolved else "**none**.") )
+    w("")
+    w("Followed from the entry point, one hop at a time, so the scope is checkable")
+    w("rather than asserted: " + " -> ".join("`" + c + "`" for c in chain) + ".")
+    w("Comments and string literals are blanked before scanning, because this file's")
+    w("own comments discuss returns and exits and the first version of this")
+    w("derivation reported three of them as real paths.")
+    w("")
+    w("**`1` is the generic failure and carries no class.** For everything except")
+    w("`--verify-log`, classification must come from the text, which is why P5")
+    w("exists. `--verify-log` is the one surface that discriminates, and its five")
+    w("values are wire format: the enum's ORDER is an implementation detail, the")
+    w("numbers are not, and they are mapped explicitly for that reason.")
+    w("")
+    w("No non-zero exit is silent: argument parse failures print before returning,")
+    w("and every other `return 1` reachable from the entry point is preceded by a")
     w("`cyanrip_log()` call.")
     w("")
     w("Argument validation runs **before the logfile is opened**. Those diagnostics are")
@@ -1052,7 +1323,11 @@ def main():
 
     if args.check:
         have = open(args.check, encoding="utf-8").read()
-        if have != text:
+        # The build tag is normalised on BOTH sides and nothing else is. Written
+        # verbatim so the artifact names its build (E3); ignored here so
+        # committing the file does not make it stale. Same split, and for the
+        # same reason, as gen-golden-reference.py's VOLATILE table.
+        if BUILD_TAG.sub("-g<tag>)", have) != BUILD_TAG.sub("-g<tag>)", text):
             sys.stderr.write(
                 f"{args.check} is stale -- regenerate with "
                 f"tools/gen-provider-contract.py\n")
