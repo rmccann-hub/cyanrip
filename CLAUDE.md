@@ -170,6 +170,32 @@ regardless of who is at the keyboard.
   the claim. "EAC reports N" is unfalsifiable; "EAC's *log* reports N, its *cue*
   reports M" is checkable. Both projects have shipped a wrong claim by reasoning about
   a file instead of opening it.
+
+  **This binds hardest on a `HANDSHAKE-BREAKING` line, and round 12 is the proof.**
+  Ours declared *"you allowlist schema strings, so a `/3` record is REJECTED by
+  0.6.21"* — a claim about **their** code, in **their** repository, which we cannot
+  read. Two artifacts we hold said otherwise: their round-10 lap 4 (*"we have never
+  consumed that JSON"*) and their round-11 lap 2, which prints the constant as
+  `SUPPORTED_SCHEMAS = {1, 2}`, integers, under a heading that reads `[MEASURED]`.
+  We had the evidence and asserted past it — then promoted a question to `BLOCKING`
+  on it, which is the one tag that can hold a release. **A whole round existed for
+  it.**
+
+  Their diagnosis was that a name collision plus one unqualified sentence explains
+  it, and they offered to share the blame. **Checked, and declined:** all three
+  sentences either side wrote about `SUPPORTED_SCHEMAS` are in unambiguous
+  release-manifest context — theirs under a `[MEASURED]` list of manifest changes,
+  ours four lines below `release-manifest.json`'s own schema number. Nothing was
+  ambiguous. Accepting the generous cause would have imported the wrong remedy
+  ("name the document in prose") for the real one:
+
+  > **Never state a mechanism in the other side's code without citing the artifact
+  > it came from, or marking it unverified. We can measure our behaviour and read
+  > their laps; we cannot read their source. A `HANDSHAKE-BREAKING` line describing
+  > what *their* build does is a guess unless it names where it was read.**
+
+  Same root as the P4 defect found in the same lap — a contract section describing
+  our own binary from memory rather than from the binary. One cause, two surfaces.
 - **A correction from the other side gets the same scrutiny as a claim.** Corrections
   arrive with social pressure to accept them. Both sides have now applied one that was
   wrong.
