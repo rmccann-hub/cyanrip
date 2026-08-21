@@ -118,7 +118,14 @@ def log_lines(ref):
         for m in re.finditer(r'cyanrip_log\s*\([^,]*,[^,]*,\s*("(?:[^"\\]|\\.)*")',
                              src):
             lit = m.group(1)[1:-1]
-            lit = re.sub(r"%[-+ #0-9.*]*[a-zA-Z]", "%_", lit)
+            # Length modifiers are part of the conversion, not the text. The
+            # first version stopped at the first letter, so `%zu` collapsed to
+            # `%_u` while upstream's `%u` collapsed to `%_` -- and
+            # `Samples:     %zu` was then reported as a line upstream has and
+            # we lack, when the two differ only in a size_t. Exactly the shape
+            # this collapsing exists to prevent, one level down.
+            lit = re.sub(r"%[-+ #0-9.*]*(?:hh|h|ll|l|j|z|t|L)?[a-zA-Z%]",
+                         "%_", lit)
             lit = lit.replace("\\n", "").strip()
             if lit:
                 out.add(lit)
