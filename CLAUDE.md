@@ -166,6 +166,32 @@ regardless of who is at the keyboard.
   `HANDSHAKE-PIN`, and a gate must assert it cannot close a round — see
   `docs/handshake/PROTOCOL.md` §6a. Send a file every round even when nothing
   changed — "no changes" written out is a complete round; silence is not.
+- **Between rounds there is a STANDING STATUS, and it is not a lap.**
+  `docs/handshake/STATUS.md` is ours; Platterpus invented the convention and
+  sent the first one. It declares **no `HANDSHAKE-*` wire headers**, so under
+  `PROTOCOL.md` v4 §5a no conforming enumerator can count it — and
+  `tests/release_gate.py` executes that rather than trusting it, including the
+  case a rename would hit.
+
+  **The two directions obey opposite rules and both are right.** *Ours* is
+  rewritten in place and never appended to: it claims something about **now**,
+  and a stale standing status is worse than none. *Theirs*, once received, is
+  filed dated under `docs/handshake/inbound/status-YYYY-MM-DD-vN.md` and never
+  consolidated: what we were told and when is **evidence**, and consolidation
+  applies to documentation and never to evidence.
+
+  That is not a contradiction, and round 12 proved why both halves are needed.
+  Their lap 2 said `0.6.22` *"is not yet cut"*, their lap 4's wire header said
+  it was *"cut as a PRE-RELEASE"*, and their standing status said it **never
+  existed**. We can only show that because we hold all three. And the status is
+  the *only* channel that correction could use: a sent lap is immutable on both
+  sides, so a fact that changes after a lap goes has nowhere else to live.
+  Expect to need the same escape, and do not read a status correcting a lap as
+  sloppiness — it is the mechanism working.
+
+  A cited document must be one we hold. The first status they sent was quoted
+  in round 12 lap 1 and had never been committed — a claim sourced from outside
+  the repository, which is the failure the next rule exists to stop.
 - **Answer from the artifact, not from memory of the artifact.** Name the artifact in
   the claim. "EAC reports N" is unfalsifiable; "EAC's *log* reports N, its *cue*
   reports M" is checkable. Both projects have shipped a wrong claim by reasoning about
@@ -534,6 +560,15 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   stated at a scope the command never covered, and the other side found it by
   running the comparison properly. **Count what the pattern returned and ask
   whether that is the number you expected**; four was wrong and looked plausible.
+
+  **The same shape in a test: a substring check over a whole document is
+  satisfied by the document being wrong.** `sc_status_is_current()` first asked
+  whether the released SHA appeared *anywhere* in `STATUS.md`. It appears in the
+  install URL, in the build tag and in a paragraph of prose, so corrupting the
+  one cell a reader acts on left the string present three times and the test
+  passed — the revert-proof said so, which is the only reason it was caught.
+  **Assert against the position, not the file.** It now reads the table row and
+  compares that cell, and each row revert-proves separately.
 - **A grep hit is not a fact.** Confirm the match is in code, and not in a
   comment or in prose written earlier in the same session. Two false positives
   in one day: a function name matched inside a `TODO` comment, and a search for
