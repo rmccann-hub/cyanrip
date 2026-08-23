@@ -1090,7 +1090,12 @@ def sc_cue_isrc():
 
 
 def sc_status_is_current():
-    """docs/handshake/STATUS.md must describe the release the manifest names.
+    """Every doc in docs/handshake/ that names the current pin must name it.
+
+    Two files claim it: STATUS.md's release table and README.md's pin block.
+    They are checked together because it is ONE property -- a document that says
+    what to build has to say what to build -- and splitting it would let one
+    drift while the other passed.
 
     It is the one document here that claims things about *now* rather than about
     a moment, and it says so itself: rewritten in place, never appended to,
@@ -1147,6 +1152,54 @@ def sc_status_is_current():
                  f"{cell!r}, but the manifest's stable channel says {want!r}. A "
                  f"release was cut and the standing status still describes "
                  f"another one.")
+
+    # README.md's pin block. Found five releases stale -- it named d5d12ec and
+    # +platterpus.3 while the manifest resolved to +platterpus.7, and its round
+    # table still said "round 7 is open" through five closed rounds. A consumer
+    # landing on the directory's index would have built a binary from July.
+    #
+    # A fenced block rather than a table, so this reads the lines inside the
+    # fence positionally: `commit  <sha>`. Same rule as above -- the whole file
+    # contains the right SHA in several places, and asking whether it is
+    # "somewhere" is a check the wrong document passes.
+    readme = ROOT / "docs" / "handshake" / "README.md"
+    if not readme.exists():
+        fail("status_is_current: docs/handshake/README.md is missing")
+        return
+
+    rtext = readme.read_text()
+    block = re.search(r"^```\n(repo\s+.*?)^```", rtext, re.M | re.S)
+    if not block:
+        fail("status_is_current: README.md has no `repo ...` pin block. It is "
+             "the first thing a consumer reads to find what to build.")
+    else:
+        fields = {}
+        for line in block.group(1).splitlines():
+            parts = line.split(None, 1)
+            if len(parts) == 2:
+                fields[parts[0]] = parts[1].split("<-")[0].strip()
+        for key, want in (("commit", stable["commit"]),
+                          ("--version", stable["version"]),
+                          ("release_seq", str(stable["release_seq"]))):
+            got = fields.get(key)
+            if got is None:
+                fail(f"status_is_current: README.md's pin block has no {key!r}")
+            elif want not in got:
+                fail(f"status_is_current: README.md's pin block says "
+                     f"{key} = {got!r}, but the manifest's stable channel says "
+                     f"{want!r}. The index a consumer lands on names a build "
+                     f"that is not the release.")
+
+    # And the round table must not advertise an open round while the gate says
+    # every round is closed. That exact disagreement is what let "round 7 is
+    # open" survive five closures.
+    gate = subprocess.run([sys.executable, str(ROOT / "tools" / "release-gate.py")],
+                          cwd=ROOT, stdout=subprocess.PIPE, timeout=60)
+    gate_out = gate.stdout.decode(errors="replace")
+    if "Release allowed" in gate_out and re.search(r"^\|.*\*\*open\*\*", rtext, re.M):
+        fail("status_is_current: README.md's round table marks a round **open** "
+             "while tools/release-gate.py reports every round closed. The gate "
+             "is authoritative; the table is a copy that rotted.")
 
 
 def sc_contract_exit_codes():

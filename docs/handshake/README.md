@@ -15,15 +15,26 @@ record of the rounds themselves.
 
 ## Current pin
 
+**This block had gone five releases stale** — it named `d5d12ec` /
+`+platterpus.3` while the manifest resolved to `+platterpus.7`, and a consumer
+following it would have built a binary from July. `sc_status_is_current()` now
+compares it against `release-manifest.json` on every run, because a document
+that claims something about *now* and is checked by nobody is the shape this
+directory keeps finding wrong.
+
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
-commit          d5d12ec                          <- build this
---version       cyanrip 0.9.4-rc1+platterpus.3 (platterpus-fork-gd5d12ec)
-fork release    r3
-source anchor   sha256/16 = 8058479eb6459ba7     (over src/*.c and src/*.h)
+commit          237a4ff                          <- build this
+--version       cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g237a4ff)
+release_seq     17                               <- the ONLY orderable identifier
+channel         stable
+build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
+
+`release-manifest.json` is the machine-readable form and is authoritative;
+this block is a convenience copy and is checked against it.
 
 **Pin the commit, not the tag, and not the branch tip.** The git proxy in this
 environment refuses tag pushes (`HTTP 403` — re-probed each round rather than
@@ -31,14 +42,13 @@ assumed); `git ls-remote --tags origin` returns nothing, and no tag from this
 fork has ever reached the remote. The commit SHA is the only release identifier a
 consumer can resolve.
 
-`d5d12ec` is the last commit that changes the binary; everything after it on the
-branch is documentation. A file cannot contain the hash of the commit that adds
-it, which is why this names the code commit rather than the tip.
-
-Building the tip gives the same program, measured rather than assumed: the two
-commits were built in separate worktrees and the ELF binaries compared byte for
-byte. `.text` and `.data` are identical; the 22 differing bytes are the commit
-string, the build-id hash derived from it, and the build path in debug info.
+`237a4ff` is **the released commit, not the last commit that changes the
+binary** — the two are different questions and this file used to answer the
+second. A release is the first commit at which the version and every derived
+artifact agree AND the round that reviewed it has closed; commits after the
+version bump that only regenerate artifacts are part of the release, not noise
+before it. Verified at `237a4ff` itself from a fresh clone: 47 of 47 in four
+build configurations including ASAN and UBSAN.
 
 **Do not use `0.9.4-rc3`.** That string was committed locally, never released,
 and withdrawn: it mints an identifier in upstream's namespace, which upstream can
@@ -56,22 +66,56 @@ that did not exist.
 
 | ref | what it is |
 |---|---|
-| `platterpus-fork` | integration branch, fast-forward only — **build from this** |
+| `platterpus-fork` | integration branch — **build from this** |
 | `master` | clean mirror of upstream `cyanreg/cyanrip`, never committed to |
-| `claude/pending-task-vg2afd` | session branch at the same commit |
+
+**Two, and only two.** This table used to list a third,
+`claude/pending-task-vg2afd`, and it is gone from the remote. It is worth saying
+why rather than quietly dropping the row: a session branch pushed once is
+**permanent from inside a session** — branch delete is `HTTP 403` from this git
+proxy, measured by trying it — so it can only be removed by the repository
+owner, and one was. The standing rule is therefore not to create the problem:
+develop on a session branch locally, land on `platterpus-fork`, push only that.
+
+`platterpus-fork` is no longer strictly fast-forward: `1ee56fc` is a merge
+commit, the upstream `0.9.4-rc2` sync. That carve-out is deliberate and is
+recorded in `CLAUDE.md` — the straight-line rule exists so a consumer can
+bisect our own topic work, and an upstream sync is not that.
 
 ## Round status
+
+**Do not read this table as authoritative — run the gate.**
+`python3 tools/release-gate.py` prints the live state from the declared verdicts
+in `docs/handshake/`, and it is what blocks a release. This table went stale
+once already, stopping at *"round 7 is open"* through five closed rounds.
 
 | Round | State | Pin it settled on | Record |
 |---|---|---|---|
 | 5 | closed, GO | `e1d800e` *(superseded)* | `round-5.md` |
 | 6 | closed from our side by round 7; verification file never received | `2f950c8` *(superseded)* | `round-6.md` |
-| 7 | **open** | `d5d12ec` (fork r3) | `round-07-lap-01.md` |
+| 7 | closed, GO/GO — 39 laps | `5bc654d` *(superseded)* | `round-07-lap-39.md` |
+| 8 | closed, GO/GO | `ddf7ac3` — **the build Platterpus installs** | `round-08-lap-17.md` |
+| 9 | closed, GO/GO | *(no pin move)* | `round-09-lap-11.md` |
+| 10 | closed, GO/GO | `56413d2` *(superseded)* | `round-10-lap-05.md` |
+| 11 | closed, GO/GO | `beb9fba` *(superseded)* | `round-11-lap-03.md` |
+| 12 | closed, GO/GO — 4 laps | `64ae7bc`, released as `237a4ff` | `round-12-lap-03.md` |
 
-Round 7 is open pending Platterpus's file. **Neither project releases while it is
-open**, and round 7 asks for more than a verification: a reciprocal handshake
-file, with Platterpus's own requirements and alerts to us. Per the protocol a "no
-changes" round is still a round; silence is not.
+**Every round is closed and a release is permitted.** Round 12 approved
+`64ae7bc`; `+platterpus.7` was cut at `237a4ff`, nine commits later, which is the
+first commit where the version and every derived artifact agree.
+
+Per the protocol a "no changes" round is still a round; silence is not.
+
+## Between rounds
+
+`STATUS.md` here is the standing status — **not a lap**, declares no
+`HANDSHAKE-*` wire headers, and no conforming enumerator can count it.
+Platterpus's received statuses are filed dated under
+`inbound/status-YYYY-MM-DD-vN.md`.
+
+Ours is rewritten in place; theirs are kept as they arrive. Both rules are right
+and they are opposite: ours claims something about now, theirs are evidence of
+what we were told and when. See `CLAUDE.md`.
 
 ## What a consumer needs, and where it lives
 
