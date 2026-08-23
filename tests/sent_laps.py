@@ -107,6 +107,25 @@ SENT = {
         "cc74b3cf8d43d5f4acd4c555e44cbd447f53cbbf718e2fd0c80b78c1c46d19b8",
     "round-11-lap-03.md":
         "915ab34d89a0997e2721244786fe3abd31c6fa19203ee0f16011025ec80f985f",
+    # ROUND 12: both pinned against THEIR OWN QUOTED HASHES, which is the
+    # strongest receipt this map has ever had. Everything before it rests on a
+    # citation in prose or on our own record of sending; these rest on
+    # Platterpus hashing the bytes and printing the digest back.
+    #
+    #   their lap 2 HANDSHAKE-PEER-VERDICT-SOURCE quotes lap 1 as
+    #     b20f133642f5061d7315dc56b790a098178c80ffa8585de3bc33891e0a5999b4
+    #   their lap 4 HANDSHAKE-PEER-VERDICT-SOURCE quotes lap 3 as
+    #     1cd1da38bf632dc56491e5308f0450175826792a7a332f5e8d5f1c1064efab59
+    #
+    # Both verified against the files in this tree before pinning, not assumed:
+    # lap 3 was edited TWICE after its first envelope was built and before it
+    # was sent, so "the version they hold" and "the version we drafted" are
+    # genuinely different objects here and only the hash settles which one is
+    # on disk. It is the sent one.
+    "round-12-lap-01.md":
+        "b20f133642f5061d7315dc56b790a098178c80ffa8585de3bc33891e0a5999b4",
+    "round-12-lap-03.md":
+        "1cd1da38bf632dc56491e5308f0450175826792a7a332f5e8d5f1c1064efab59",
 }
 
 failures = 0
