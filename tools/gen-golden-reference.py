@@ -128,6 +128,34 @@ def normalise(text):
     return text
 
 
+def refuse_if_released_build(log, what):
+    """The reference is DEFINED as generated at `declare_released`'s default.
+
+    A build with -Ddeclare_released=true stamps `-- released build` instead of
+    `-- NOT a released build` into every logfile, so the artifact silently
+    describes a different build configuration than the one it is supposed to
+    pin. VOLATILE normalises that suffix for --check, which is right for
+    comparing bodies and means --check CANNOT catch this: a reference generated
+    from the wrong configuration passes its own freshness test.
+
+    Measured, not hypothesised. The four-configuration matrix leaves build/ in
+    whichever configuration ran last, which is released+sanitizers, and a
+    regeneration that inherited it committed a golden reference reading
+    `round 13 lap 8 closed, verdict GO -- released build`. Caught by reading the
+    line, which is not a check.
+
+    Its own function so both writers share it rather than one growing the guard
+    and the other not -- the one-branch-of-two shape both projects keep finding.
+    """
+    if re.search(r"^Handshake:.*-- released build$", log, re.M):
+        sys.exit(
+            f"refusing to write {what} from a build that declares itself "
+            f"released.\n"
+            f"The reference is generated at declare_released's DEFAULT, and "
+            f"--check normalises that suffix so it cannot catch this.\n"
+            f"  meson setup build --wipe && ninja -C build")
+
+
 def generate(binary):
     """Run the canonical rip in a staged fixture dir; return (log, json)."""
     with tempfile.TemporaryDirectory() as td:
@@ -340,6 +368,7 @@ def main():
         # nothing should feed this to --verify-log and conclude the format is
         # broken. The unmodified log is reachable by removing the block, and
         # the block says so.
+        refuse_if_released_build(log, "the interrupted sample")
         SAMPLE_LOG.write_text(SAMPLE_HEADER + log)
         SAMPLE_JSON.write_text(js)
         print(f"wrote {SAMPLE_LOG.relative_to(ROOT)} and "
@@ -373,6 +402,7 @@ def main():
         sys.exit(f"refusing to write a reference from a dirty build: {banner}\n"
                  "Commit, rebuild, and re-run.")
 
+    refuse_if_released_build(log, "the golden reference")
     OUT_LOG.write_text(log)
     OUT_JSON.write_text(js)
     print(f"wrote {OUT_LOG.relative_to(ROOT)} and "
