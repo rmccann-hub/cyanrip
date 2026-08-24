@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g673a57b)`
+Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g24de9b4)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 1d60fb91b66c0bec` over `src/*.c` and
+**Source anchor:** `sha256/16 = 94f2b1f625e2f63d` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -213,8 +213,8 @@ requires a handshake round.
 | `cyanrip_encode.c:1294` | `Could not open output codec context!` |
 | `cyanrip_encode.c:1301` | `Couldn't copy codec params!` |
 | `cyanrip_encode.c:1308` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
-| `cyanrip_log.c:922` | `Log FUN512: %s` |
-| `cyanrip_log.c:1000` | `--- %zu earlier message(s) dropped: buffer full ---` |
+| `cyanrip_log.c:941` | `Log FUN512: %s` |
+| `cyanrip_log.c:1019` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:58` | `%s%s:` |
 | `cyanrip_log.c:61` | `%s` |
 | `cyanrip_log.c:71` | `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)` |
@@ -276,59 +276,60 @@ requires a handshake round.
 | `cyanrip_log.c:534` | `Metadata:` |
 | `cyanrip_log.c:544` | `%s:` |
 | `cyanrip_log.c:556` | `CD-TEXT:` |
-| `cyanrip_log.c:566` | `Paranoia status counts:` |
-| `cyanrip_log.c:568` | `none` |
-| `cyanrip_log.c:591` | `Embedded cover art:    %s: %s` |
-| `cyanrip_log.c:594` | `Embedded cover art:    %s: %ix%i %s` |
-| `cyanrip_log.c:598` | `File(s):` |
-| `cyanrip_log.c:612` | `cyanrip %s (%s-g%s)` |
-| `cyanrip_log.c:615` | `Invoked as:     %s` |
-| `cyanrip_log.c:636` | `Handshake:      %s%s` |
-| `cyanrip_log.c:640` | `(declared at build time, not verified by cyanrip)` |
-| `cyanrip_log.c:645` | `Consumer:       %s` |
-| `cyanrip_log.c:649` | `(reported by the caller, not verified by cyanrip)` |
-| `cyanrip_log.c:653` | `Drive used:     error retrieving drive info` |
-| `cyanrip_log.c:655` | `Drive used:     %s %s (revision %s)` |
-| `cyanrip_log.c:656` | `System device:  %s` |
-| `cyanrip_log.c:658` | `Device model:   %s` |
-| `cyanrip_log.c:667` | `Offset:         %c%u %s` |
-| `cyanrip_log.c:670` | `Underread:      %c%i %s` |
-| `cyanrip_log.c:670` | `Overread:       %c%i %s` |
-| `cyanrip_log.c:675` | `Underread mode: %s` |
-| `cyanrip_log.c:675` | `Overread mode:  %s` |
-| `cyanrip_log.c:679` | `Speed:          %ix` |
-| `cyanrip_log.c:681` | `Speed:          default (%s)` |
-| `cyanrip_log.c:683` | `C2 errors:      %s` |
-| `cyanrip_log.c:692` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
-| `cyanrip_log.c:697` | `Paranoia level: %s` |
-| `cyanrip_log.c:701` | `Paranoia level: %i` |
-| `cyanrip_log.c:702` | `Frame retries:  %i` |
-| `cyanrip_log.c:704` | `HDCD decoding:  %s` |
-| `cyanrip_log.c:706` | `Album Art:      %s` |
-| `cyanrip_log.c:710` | `%s%s%s%s%s` |
-| `cyanrip_log.c:718` | `Outputs:` |
-| `cyanrip_log.c:724` | `Disc tracks:    %i` |
-| `cyanrip_log.c:725` | `Tracks to rip:  %s` |
-| `cyanrip_log.c:728` | `%i%s` |
-| `cyanrip_log.c:742` | `AccurateRip:    %s` |
-| `cyanrip_log.c:748` | `Total time:     %s` |
-| `cyanrip_log.c:793` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:795` | `Tracks ripped partially accurately: %i/%i` |
-| `cyanrip_log.c:805` | `Ripping errors: %i` |
-| `cyanrip_log.c:828` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
-| `cyanrip_log.c:831` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
-| `cyanrip_log.c:849` | `Interrupted at: track %i, mid-read` |
-| `cyanrip_log.c:852` | `Interrupted at: between tracks, no read in progress` |
-| `cyanrip_log.c:854` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:857` | `Ripping finished at %s` |
-| `cyanrip_log.c:722` | `Disc number:    %s` |
-| `cyanrip_log.c:723` | `Total discs:    %s` |
-| `cyanrip_log.c:735` | `DiscID:         %s` |
-| `cyanrip_log.c:736` | `Release ID:     %s` |
-| `cyanrip_log.c:737` | `CDDB ID:        %s` |
-| `cyanrip_log.c:738` | `Disc MCN:       %s` |
-| `cyanrip_log.c:739` | `Album:          %s` |
-| `cyanrip_log.c:740` | `Album artist:   %s` |
+| `cyanrip_log.c:581` | `Paranoia status counts:` |
+| `cyanrip_log.c:583` | `Scope:         the last of %i reads; the disc totals below sum all of them` |
+| `cyanrip_log.c:587` | `none` |
+| `cyanrip_log.c:610` | `Embedded cover art:    %s: %s` |
+| `cyanrip_log.c:613` | `Embedded cover art:    %s: %ix%i %s` |
+| `cyanrip_log.c:617` | `File(s):` |
+| `cyanrip_log.c:631` | `cyanrip %s (%s-g%s)` |
+| `cyanrip_log.c:634` | `Invoked as:     %s` |
+| `cyanrip_log.c:655` | `Handshake:      %s%s` |
+| `cyanrip_log.c:659` | `(declared at build time, not verified by cyanrip)` |
+| `cyanrip_log.c:664` | `Consumer:       %s` |
+| `cyanrip_log.c:668` | `(reported by the caller, not verified by cyanrip)` |
+| `cyanrip_log.c:672` | `Drive used:     error retrieving drive info` |
+| `cyanrip_log.c:674` | `Drive used:     %s %s (revision %s)` |
+| `cyanrip_log.c:675` | `System device:  %s` |
+| `cyanrip_log.c:677` | `Device model:   %s` |
+| `cyanrip_log.c:686` | `Offset:         %c%u %s` |
+| `cyanrip_log.c:689` | `Underread:      %c%i %s` |
+| `cyanrip_log.c:689` | `Overread:       %c%i %s` |
+| `cyanrip_log.c:694` | `Underread mode: %s` |
+| `cyanrip_log.c:694` | `Overread mode:  %s` |
+| `cyanrip_log.c:698` | `Speed:          %ix` |
+| `cyanrip_log.c:700` | `Speed:          default (%s)` |
+| `cyanrip_log.c:702` | `C2 errors:      %s` |
+| `cyanrip_log.c:711` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
+| `cyanrip_log.c:716` | `Paranoia level: %s` |
+| `cyanrip_log.c:720` | `Paranoia level: %i` |
+| `cyanrip_log.c:721` | `Frame retries:  %i` |
+| `cyanrip_log.c:723` | `HDCD decoding:  %s` |
+| `cyanrip_log.c:725` | `Album Art:      %s` |
+| `cyanrip_log.c:729` | `%s%s%s%s%s` |
+| `cyanrip_log.c:737` | `Outputs:` |
+| `cyanrip_log.c:743` | `Disc tracks:    %i` |
+| `cyanrip_log.c:744` | `Tracks to rip:  %s` |
+| `cyanrip_log.c:747` | `%i%s` |
+| `cyanrip_log.c:761` | `AccurateRip:    %s` |
+| `cyanrip_log.c:767` | `Total time:     %s` |
+| `cyanrip_log.c:812` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:814` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:824` | `Ripping errors: %i` |
+| `cyanrip_log.c:847` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
+| `cyanrip_log.c:850` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
+| `cyanrip_log.c:868` | `Interrupted at: track %i, mid-read` |
+| `cyanrip_log.c:871` | `Interrupted at: between tracks, no read in progress` |
+| `cyanrip_log.c:873` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:876` | `Ripping finished at %s` |
+| `cyanrip_log.c:741` | `Disc number:    %s` |
+| `cyanrip_log.c:742` | `Total discs:    %s` |
+| `cyanrip_log.c:754` | `DiscID:         %s` |
+| `cyanrip_log.c:755` | `Release ID:     %s` |
+| `cyanrip_log.c:756` | `CDDB ID:        %s` |
+| `cyanrip_log.c:757` | `Disc MCN:       %s` |
+| `cyanrip_log.c:758` | `Album:          %s` |
+| `cyanrip_log.c:759` | `Album artist:   %s` |
 | `cyanrip_main.c:224` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:232` | `Unable to open device: %s` |
 | `cyanrip_main.c:241` | `Unable to init cddap context!` |
@@ -462,7 +463,7 @@ requires a handshake round.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:259` | `Invalid condition syntax!` |
 
-**300 distinct stable lines.**
+**301 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
