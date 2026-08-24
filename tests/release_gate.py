@@ -1533,6 +1533,29 @@ WRITER_DIGEST_CHECKED_FROM = (9, 9)
 KNOWN_UNREPRODUCIBLE = {
     "round-09-lap-05.md": "ed2cf5c3c4443733",
     "round-09-lap-07.md": "53f0b465833ac845",
+    # Round 13 lap 7, theirs. Declares `039cfa03a335266e over 6`; we re-derive
+    # `051bfc6d98ed1eb9` over the SAME COUNT. Same six laps, different bytes for
+    # at least one of them -- which is exactly what this field exists to detect,
+    # and the first time it has detected it rather than catching a typed value.
+    #
+    # CAUSE UNDETERMINED FROM THIS SIDE, and three hypotheses were tested and
+    # REJECTED rather than assumed:
+    #
+    #   * their verification renumbered from LAP 1 to LAP 3 on their disk while
+    #     ours holds it as sent -> re-derives 468ad5d6fd563dcf, not theirs;
+    #   * they hold the pre-edit lap 6 (ARTIFACT-BUILD g2865436) while we hold
+    #     the corrected one (ge9b9d4c) -> re-derives c311b5e06ff3c975;
+    #   * a different population -> ruled out by the count, which agrees at 6.
+    #
+    # Resolving it needs their per-lap hashes, which only they can produce.
+    # Round 14 lap 1 asks for them.
+    #
+    # Allowlisted rather than left red because the disagreement is about the
+    # RECORD and not about the verdicts: both sides' GO is declared in a file
+    # the other holds and quotes by line. Named individually and pinned by the
+    # wrong value, like the two above, so that if their file is ever edited this
+    # stops matching and the test fails rather than excusing a moved target.
+    "round-13-lap-07.md": "039cfa03a335266e",
 }
 
 
