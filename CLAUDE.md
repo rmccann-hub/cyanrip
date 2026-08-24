@@ -824,6 +824,20 @@ a housekeeping one. The rules, in force from r3:
   Y"*; `sc_golden_reference_is_from_a_clean_build()` fails when no lap names the
   banner's build. Regenerating in the same commit does **not** fix this — it just
   moves the mismatch — which is why the remedy is labelling rather than process.
+- **X has to stay reachable, so never fold a derived artifact in with
+  `git commit --amend`.** It looks like the tidy way to keep every commit green:
+  commit the code, rebuild from the now-clean tree, regenerate, amend. But the
+  artifact's banner names the *pre-amend* commit, and amending leaves that commit
+  reachable only from the reflog — so a fresh clone cannot resolve it and routine
+  `git gc` destroys it. Done three times in one session here before
+  `git merge-base --is-ancestor` was run against the SHAs the artifacts actually
+  name; all three came back **NOT reachable from HEAD**. That is the dangling
+  reference this file already warns about, manufactured by the tidying rather
+  than by a deleted branch. **Commit the code, then commit the regenerated
+  artifacts as their own commit**, whose parent is the build they name. The
+  intermediate commit is briefly red on the freshness checks, and a red commit
+  that can be bisected past beats a green one that cites a build nobody can
+  fetch.
 
 Two things that follow, and have already caused confusion:
 
