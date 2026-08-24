@@ -84,7 +84,13 @@ int crip_fill_discid(cyanrip_ctx *ctx)
     }
 
     cddb  = (cddb % 0xff) << 24;
-    cddb |= (last/75 - (ctx->tracks[0].start_lsn + 150)/75) << 8;
+    /* Shifted as unsigned. `last` cannot be negative once the CD-Extra gap is
+     * guarded in cyanrip_main.c, so this changes no observable behaviour and
+     * carries no revert-proof -- it is here because a left shift of a negative
+     * int is undefined behaviour rather than a wrong number, and this line is
+     * two hops from a value derived from the TOC. Reverting the guard alone
+     * reproduces UBSan's diagnostic at exactly this line. */
+    cddb |= ((uint32_t)(last/75 - (ctx->tracks[0].start_lsn + 150)/75)) << 8;
     cddb |= ctx->tracks[last_audio_track_idx].number;
 
     snprintf(temp, sizeof(temp), "%08X", cddb);

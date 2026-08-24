@@ -234,6 +234,7 @@ rip_scenarios = [
     'cache_probe_only',
     'artifacts_are_tracked',
     'sanitize',
+    'enhanced_cd',
 ]
 
 # The scenarios are told which build configuration they are testing, because

@@ -2575,6 +2575,113 @@ def sc_sanitize():
                  f"in all four modes. Found "
                  f"{sorted(str(p.relative_to(out)) for p in out.rglob('*'))}")
 
+def sc_enhanced_cd():
+    """A trailing data track must not be able to publish a garbage disc ID.
+
+    THE DEFECT. cyanrip treats a data track in LAST position as a CD-Extra
+    second session and takes CDEXTRA_SESSION_GAP frames off the preceding audio
+    track, because libcdio reports the inter-session link area as part of it.
+    The subtraction was unguarded. On a TOC where the gap does not fit, the LSN
+    went negative, discid.c left-shifted a negative int -- undefined behaviour,
+    and UBSan says so at discid.c:87 -- and the run published
+
+        toc=1+2+4294956496+150+375        CDDB ID: FFFF6E02
+
+    at exit 0, with no diagnostic whatsoever in a default build. Nothing else
+    in the output looked wrong: 3 tracks, the right total time. That is a
+    confident wrong field in an archival record, which is the single outcome
+    this program exists not to produce.
+
+    Found while answering a NEXT-ROUND question from Platterpus about
+    two-session (Enhanced CD) TOCs -- they asked because a mishandled session
+    gap shifts every sector number and silently breaks the disc ID, and
+    therefore AccurateRip and CTDB, across a whole class of discs. They were
+    right that it was worth asking; the answer turned out to be worse than
+    "we handle it".
+
+    WHAT THIS FIXTURE PROVES AND WHAT IT DOES NOT. ecd.cue is the shape whose
+    gap does NOT fit, so it pins the refusal. A WELL-FORMED Enhanced CD needs
+    11400 sectors of audio before the data track -- 26.8 MB of BIN -- so the
+    path where the subtraction actually applies is exercised by nothing here
+    and by no rig run so far. Do not read a green suite as coverage of it.
+
+    The strongest assertion below is not "the numbers look sane", which garbage
+    can satisfy. It is that the leadout in the MusicBrainz TOC equals the last
+    audio track's own End LSN plus 151, both read out of the same run -- an
+    invariant between two fields of one artifact, which is what a negative LSN
+    breaks and what a plausible-looking wrong number cannot satisfy.
+    """
+    rip("ecd", "ecd.cue")
+    out = (WORK / "ecd.log").read_text()
+    log = (WORK / "out_ecd" / "log.log").read_text()
+
+    if "runtime error" in out:
+        fail(f"enhanced_cd: the sanitizer fired: "
+             f"{[l for l in out.splitlines() if 'runtime error' in l]}")
+
+    if "CD-Extra session gap does not fit" not in out:
+        fail("enhanced_cd: no diagnostic about the session gap. Either the "
+             "guard is gone -- in which case the numbers below are garbage -- "
+             "or it was reworded, which is contract surface and belongs in a "
+             "round")
+
+    # Every End LSN in the log, in track order.
+    ends = [int(m) for m in re.findall(r"^    End LSN:     (-?\d+)", log, re.M)]
+    if len(ends) != 3:
+        fail(f"enhanced_cd: found {len(ends)} End LSN lines, expected 3")
+        return
+    if any(e < 0 for e in ends):
+        fail(f"enhanced_cd: a negative End LSN reached the log: {ends}. "
+             f"The session-gap guard is not holding")
+
+    starts = [int(m) for m in re.findall(r"^    Start LSN:   (-?\d+)", log, re.M)]
+    if len(starts) != 3:
+        fail(f"enhanced_cd: found {len(starts)} Start LSN lines, expected 3")
+        return
+
+    # The last AUDIO track is track 2 here; track 3 is the data track and is
+    # excluded from the disc ID by design. Read that from the log rather than
+    # assuming it, so the assertion still means something if the fixture grows.
+    if "Track 3 is data:" not in log:
+        fail("enhanced_cd: track 3 was not identified as data")
+    last_audio_end = ends[1]
+
+    # The TOC string is printed by the lookup path, not by a rip, so it takes
+    # its own -I run. Same fixture, same numbers; asserting it separately is
+    # what pins the leadout itself rather than only the length field derived
+    # from it.
+    _, info = crip("-d", WORK / "ecd.cue", "-I", "-N", "-A", "-U", "-P", "0")
+    if "runtime error" in info:
+        fail(f"enhanced_cd: the sanitizer fired during -I: "
+             f"{[l for l in info.splitlines() if 'runtime error' in l]}")
+    m = re.search(r"toc=(\d+)\+(\d+)\+(\d+)((?:\+\d+)*)", info)
+    if not m:
+        fail("enhanced_cd: no MusicBrainz TOC string in the -I output")
+        return
+    leadout = int(m.group(3))
+    if leadout != last_audio_end + 151:
+        fail(f"enhanced_cd: the TOC leadout is {leadout} but the last audio "
+             f"track's End LSN is {last_audio_end}, so it should be "
+             f"{last_audio_end + 151}. These are two fields of one artifact "
+             f"and they disagree")
+    if int(m.group(2)) != 2:
+        fail(f"enhanced_cd: the TOC's last track is {m.group(2)}, expected 2 "
+             f"-- the data track must not appear in the disc ID")
+
+    # And the CDDB ID's middle 16 bits are the disc length in seconds, which is
+    # the field that read 0xFF6E when the LSN went negative.
+    c = re.search(r"^CDDB ID:\s+([0-9A-F]{8})$", log, re.M)
+    if not c:
+        fail("enhanced_cd: no CDDB ID line in the log")
+        return
+    want = leadout // 75 - (starts[0] + 150) // 75
+    have = (int(c.group(1), 16) >> 8) & 0xFFFF
+    if have != want:
+        fail(f"enhanced_cd: CDDB ID {c.group(1)} carries a length field of "
+             f"{have}, and the TOC says {want}")
+
+    expect("ecd", "1.flac", "2.flac", "log.log", "sheet.cue")
+
 with tempfile.TemporaryDirectory() as tmpdir:
     WORK = Path(tmpdir)
 
@@ -2584,7 +2691,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     shutil.copy(FIX / "cdda.nrg", WORK)
     shutil.copy(FIX / "cdtext.toc", WORK)
     shutil.copy(FIX / "cdda.bin", WORK / "cdtext.bin")
-    for name in ("basic", "pregap", "preemph"):
+    for name in ("basic", "pregap", "preemph", "ecd"):
         shutil.copy(FIX / "cdda.bin", WORK / f"{name}.bin")
     shutil.copy(FIX / "mixed.bin", WORK / "mixed.bin")
 

@@ -16,11 +16,19 @@
 #   450-600 (2 s)  audio C
 #
 # mixed.bin, mixed-mode CD for mixed.cue, 450 sectors (6 s). The data track
-# must come first: cyanrip treats a *trailing* data track as a CD-Extra
-# session and assumes the standard 11400-sector session gap, which cannot fit
-# in a bundled-size fixture:
+# comes first, which is what makes it mixed-mode rather than Enhanced CD:
 #   0-150   (2 s)  MODE1/2352 data sectors
 #   150-450 (4 s)  audio A + first second of audio B
+#
+# ecd.cue is the other arrangement -- audio tracks with a TRAILING data track,
+# which cyanrip reads as a CD-Extra second session -- and it reuses cdda.bin.
+# This comment used to say that shape "cannot fit in a bundled-size fixture",
+# and that was true of the WELL-FORMED case and wrong as a reason not to have
+# the fixture at all: an Enhanced CD whose gap actually fits needs 11400
+# sectors of audio ahead of the data track, 26.8 MB of BIN, but the case where
+# it does NOT fit is small, is the one that used to publish a garbage disc ID
+# at exit 0, and is now pinned by the enhanced_cd scenario. The well-formed
+# path is still exercised by nothing here.
 #
 # The NRG reuses the first 6 s of cdda.bin audio as a 2-track DAO image with
 # a 1 s pregap on track 2.

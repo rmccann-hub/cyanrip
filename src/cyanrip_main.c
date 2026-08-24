@@ -73,6 +73,17 @@ static inline void crip_genopt_log(void *log_ctx, int level, const char *fmt, ..
 #define GEN_OPT_LOG_ERROR 1
 #define GEN_OPT_MAX_ARR 198
 #define GEN_OPT_HELPSTRING cyanrip_helpstr
+
+/* The CD-Extra inter-session gap, in CD frames: 11400 frames is 152 s at 75
+ * fps. Upstream spells it as a bare 11400 at the one place it is used; it is
+ * named here so the diagnostic that reports it cannot drift from the
+ * arithmetic that applies it.
+ *
+ * Deliberately NOT decomposed into run-out/lead-in/run-in components here. The
+ * value is inherited from upstream and this fork has never checked it against
+ * the Orange Book, so a breakdown would be a claim nobody in this tree has
+ * evidence for -- and a plausible wrong one is worse than none. */
+#define CDEXTRA_SESSION_GAP 11400
 #include "genopt.h"
 
 static int genopt_nb_vals(GenOpt *opts_list, int n, const char *name)
@@ -358,9 +369,37 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
                 ctx->settings.pregap_action[t->number - 1] = CYANRIP_PREGAP_DROP;
             if (ctx->settings.pregap_action[t->number - 0] == CYANRIP_PREGAP_DEFAULT)
                 ctx->settings.pregap_action[t->number - 0] = CYANRIP_PREGAP_DROP;
-            if (i == (ctx->nb_cd_tracks - 1)) {
-                ctx->tracks[i - 1].end_lsn -= 11400;
-                t->pregap_lsn = ctx->tracks[i - 1].end_lsn + 1;
+            /* A trailing data track is a CD-Extra second session, and libcdio
+             * reports the inter-session link area as part of the last audio
+             * track -- so the standard gap comes off that track's end.
+             *
+             * The subtraction used to be unguarded, and on a TOC where the gap
+             * does not FIT it ran the LSN negative: discid.c then left-shifted
+             * a negative int (undefined behaviour, and UBSan says so) and the
+             * run published `toc=1+2+4294956496+150+375` and
+             * `CDDB ID: FFFF6E02` at exit 0 with no diagnostic at all in a
+             * default build. A confident wrong field in an archival record is
+             * the one outcome this program must not produce, so when the
+             * assumption cannot hold we say so and leave the TOC alone.
+             * Measured on tests/fixtures/ecd.cue, not reasoned about.
+             *
+             * i > 0 is defence, not a fix: a data-only disc never reaches here
+             * because cdio_cddap_open() refuses it first ("Unable to open
+             * device!", exit 1). Written down because nothing else asserts
+             * that ordering. */
+            if ((i == (ctx->nb_cd_tracks - 1)) && (i > 0)) {
+                cyanrip_track *pt = &ctx->tracks[i - 1];
+                if ((pt->end_lsn - CDEXTRA_SESSION_GAP) >= pt->start_lsn) {
+                    pt->end_lsn -= CDEXTRA_SESSION_GAP;
+                    t->pregap_lsn = pt->end_lsn + 1;
+                } else {
+                    cyanrip_log(ctx, 0, "Track %i is data and last, but track "
+                                "%i is %i frames and the %i frame CD-Extra "
+                                "session gap does not fit; TOC left unadjusted\n",
+                                t->number, pt->number,
+                                pt->end_lsn - pt->start_lsn + 1,
+                                CDEXTRA_SESSION_GAP);
+                }
             }
         }
     }
