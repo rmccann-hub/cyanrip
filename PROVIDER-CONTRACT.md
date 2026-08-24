@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g2865436)`
+Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g3af8a0a)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -809,7 +809,7 @@ Measured 2026-08-04 by building each tree and running the binary:
 | build | `--version` | `-V` | `-v` |
 |---|---|---|---|
 | stock, pre-genopt (`442de2a^`, `meson.build` says `0.9.3`) | **exit 1** | exit 0 | **exit 1** |
-| stock, genopt onward (`master` = `958e1ad`, 0.9.4-rc1) | exit 0 | **exit 1** | exit 0 |
+| stock, genopt onward (`958e1ad`, 0.9.4-rc1) | exit 0 | **exit 1** | exit 0 |
 | **this fork** (`e1d800e` onward) | exit 0 | exit 0 | exit 0 |
 
 - Pre-genopt uses plain `getopt()` -- `#include <getopt.h>`, a short-only
@@ -820,6 +820,17 @@ Measured 2026-08-04 by building each tree and running the binary:
   `-v`/`--version` and dropped `-V`.
 - `e1d800e` restores `-V` as an alias **on this fork only**; it is not
   upstream.
+
+**The middle row names a COMMIT, not a branch, and that is a repair.** It
+used to read `master` = `958e1ad`, which was an equality rather than an
+identification -- true on 2026-08-04 and false the moment our mirror of
+upstream moved on. Found by asking what would break if `master` were
+synced: nothing else does, and this row already had. A measurement is
+about the build it ran on, and a branch tip is not a build.
+
+The `version_matrix` scenario checks its claim against whatever `master`
+points at **now**, not against `958e1ad`, so it stays meaningful across a
+sync and will fail if upstream ever restores `-V`.
 
 **`-V` and `--version` are exactly complementary across the stock line.**
 No single spelling answers every stock build, so a probe over stock needs at
