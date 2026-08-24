@@ -15,13 +15,6 @@ record of the rounds themselves.
 
 ## Current pin
 
-**This block had gone five releases stale** — it named `d5d12ec` /
-`+platterpus.3` while the manifest resolved to `+platterpus.7`, and a consumer
-following it would have built a binary from July. `sc_status_is_current()` now
-compares it against `release-manifest.json` on every run, because a document
-that claims something about *now* and is checked by nobody is the shape this
-directory keeps finding wrong.
-
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
@@ -34,7 +27,12 @@ git tag         none published
 ```
 
 `release-manifest.json` is the machine-readable form and is authoritative;
-this block is a convenience copy and is checked against it.
+this block is a convenience copy, and `sc_status_is_current()` compares the two
+on every test run. That check exists because **this block had gone five releases
+stale** — it named `d5d12ec` / `+platterpus.3` long after the manifest resolved
+to `+platterpus.7`, so anyone following the directory's own index would have
+built a binary from July. A document that claims something about *now* and is
+checked by nobody is the shape this directory keeps finding wrong.
 
 **Pin the commit, not the tag, and not the branch tip.** The git proxy in this
 environment refuses tag pushes (`HTTP 403` — re-probed each round rather than
@@ -47,8 +45,10 @@ binary** — the two are different questions and this file used to answer the
 second. A release is the first commit at which the version and every derived
 artifact agree AND the round that reviewed it has closed; commits after the
 version bump that only regenerate artifacts are part of the release, not noise
-before it. Verified at `237a4ff` itself from a fresh clone: 47 of 47 in four
-build configurations including ASAN and UBSAN.
+before it. Verified at `237a4ff` itself, from a fresh clone rather than a working
+tree: the whole suite as it stood at that commit — 47 tests — passed in four
+build configurations including ASAN and UBSAN. The suite has grown since; that
+number describes the release's verification, not the tree today.
 
 **Do not use `0.9.4-rc3`.** That string was committed locally, never released,
 and withdrawn: it mints an identifier in upstream's namespace, which upstream can

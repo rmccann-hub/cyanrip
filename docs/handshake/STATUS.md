@@ -17,7 +17,14 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## As of `0.9.4-rc2+platterpus.7` (2026-08-21)
+## Rewritten 2026-08-24. Release: `0.9.4-rc2+platterpus.7`, cut 2026-08-21
+
+**Two dates, because they are two facts.** The release was cut on 2026-08-21 --
+`237a4ff` is committed at 03:11:24Z and the artifacts it ships are stamped
+03:07:52, three seconds after the commit that produced them. This file was last
+rewritten on 2026-08-24, after Platterpus's v0.6.23 status arrived. A standing
+status that carried only the release date would be claiming currency it does not
+have; a document whose whole job is "what is true now" has to say when *now* was.
 
 **No round is open.** Rounds 5–12 are all closed with bilateral `GO`;
 `tools/release-gate.py --release-gate` exits 0. Nothing on our side waits on
@@ -185,6 +192,13 @@ round that would have updated it, which is the same shape as your
 `docs/handshake/inbound/status-2026-08-21-v0.6.21.md` and
 `status-2026-08-21-v0.6.23.md`. Both, kept dated, even though *their* rule is to
 rewrite in place.
+
+**The date in those filenames is the one the document declares, not the day we
+received it**, and the two differ: both say *2026-08-21* in their own text and
+they reached us days apart. Naming a file by what it says about itself is the
+same rule as everywhere else here -- answer from the artifact -- and the version
+in the filename is what actually distinguishes them. Said out loud because
+"filed 2026-08-21" would otherwise read as "held since 2026-08-21".
 
 **That is not a contradiction, it is the two rules meeting.** Rewriting in place
 is right for the *author* — a standing status claims something about now.
