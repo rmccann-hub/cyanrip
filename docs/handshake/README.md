@@ -15,6 +15,13 @@ record of the rounds themselves.
 
 ## Current pin
 
+**Two channels resolve to two different builds.** `stable` is what you get
+without opting in; `beta` is newer and has never been run on a drive. Pick by
+risk tolerance, not by recency — and never by comparing the version strings,
+which cannot be ordered at all.
+
+### `stable` — the default
+
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
@@ -25,6 +32,26 @@ channel         stable
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
+
+### `beta` — opt-in, jointly verified, **no hardware evidence**
+
+```
+repo            rmccann-hub/cyanrip
+branch          platterpus-fork
+commit          796df32
+--version       cyanrip 0.9.4-rc2+platterpus.8 (platterpus-fork-g796df32)
+release_seq     18                               <- newest of any channel
+channel         beta
+build           meson setup build -Ddeclare_released=true && ninja -C build
+git tag         none published
+```
+
+**What "beta" claims here is narrower than usual and worth reading.** It is not
+"less tested" in the ordinary sense — round 13 closed `GO`/`GO` on it and it is
+51/51 in four build configurations. It is that **no disc was read for it.**
+Round 13's hardware condition was mis-specified, was moved to round 14 by
+bilateral agreement, and until that pass runs this build has never touched a
+drive. `stable` is retained precisely so that opting in is reversible.
 
 `release-manifest.json` is the machine-readable form and is authoritative;
 this block is a convenience copy, and `sc_status_is_current()` compares the two
@@ -99,10 +126,21 @@ once already, stopping at *"round 7 is open"* through five closed rounds.
 | 10 | closed, GO/GO | `56413d2` *(superseded)* | `round-10-lap-05.md` |
 | 11 | closed, GO/GO | `beb9fba` *(superseded)* | `round-11-lap-03.md` |
 | 12 | closed, GO/GO — 4 laps | `64ae7bc`, released as `237a4ff` | `round-12-lap-03.md` |
+| 13 | closed, GO/GO — 8 laps | `9f8592e`, released as `796df32` (`beta`) | `round-13-lap-08.md` |
 
-**Every round is closed and a release is permitted.** Round 12 approved
-`64ae7bc`; `+platterpus.7` was cut at `237a4ff`, nine commits later, which is the
-first commit where the version and every derived artifact agree.
+**Every round is closed and a release is permitted.** Round 13 approved
+`9f8592e`; `+platterpus.8` was cut at `796df32`, which is the first commit where
+the version and every derived artifact agree.
+
+**Round 13 carried one close condition out with it, and that is a first.** CC-2
+required a hardware acceptance pass, and it was mis-specified: it named a *test
+pin* that could not be the released commit, so satisfying it would still have
+left the released pair with no hardware evidence. It was **moved** to round 14 by
+explicit bilateral agreement — never deleted, and never by one side alone. Those
+three properties are what stop the mechanism emptying every future round, and
+they are `seam-rules.md` v5's newest row rather than an improvisation.
+
+Round 14 opens from our side with CC-2 as its only close condition.
 
 Per the protocol a "no changes" round is still a round; silence is not.
 
