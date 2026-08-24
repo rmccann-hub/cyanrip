@@ -989,6 +989,87 @@ def sc_paranoia():
         if len(on) and (sum(1 for b in on if b) / len(on)) < 0.5:
             fail(f"paranoia: {img} default-level output is mostly silence")
 
+    # --- what the two `Paranoia status counts:` blocks each cover ----------
+    #
+    # Two blocks in one log carry the same heading and mean different things,
+    # and until Platterpus measured it neither project knew which. Round 5
+    # recorded "per-track sums to the disc total" as a verified invariant. It
+    # is true only when nothing re-read: the per-track baseline is snapshotted
+    # AFTER `repeat_ripping:`, so a -Z re-read resets it and the per-track
+    # figure describes the LAST pass, while the disc counters are global and
+    # sum every pass.
+    #
+    # THE FIXTURE CANNOT PROVE THIS ON ITS OWN, which is the point. Both prior
+    # verifications ran on artifacts where every track reported `not attempted`
+    # -- the one condition that forces the sum arithmetically -- so they could
+    # not have failed. This rips the SAME image twice, once single-pass and
+    # once with -Z, and asserts the two rips disagree in exactly the way the
+    # re-read count predicts. A check that only ever saw one of them would be
+    # satisfied by either reading.
+    def counts(path):
+        text = Path(path).read_text()
+        per = [int(m) for m in
+               re.findall(r"^    READ:          (\d+)$", text, re.M)]
+        disc = re.search(r"^  READ:          (\d+)$", text, re.M)
+        return per, (int(disc.group(1)) if disc else None)
+
+    single = WORK / "par_scope_single"
+    ec, _ = crip("-d", WORK / "pregap.cue", "-N", "-A", "-Q", "-s", "0",
+                 "-P", "0", "-o", "flac", "-D", single, "-F", "{track}",
+                 "-L", "log", "-M", "sheet")
+    if ec != 0:
+        fail(f"paranoia/scope: the single-pass rip exited {ec}")
+        return
+    per1, disc1 = counts(single / "log.log")
+
+    multi = WORK / "par_scope_multi"
+    ec, _ = crip("-d", WORK / "pregap.cue", "-N", "-A", "-Q", "-s", "0",
+                 "-P", "0", "-o", "flac", "-D", multi, "-F", "{track}",
+                 "-L", "log", "-M", "sheet", "-Z", "2")
+    if ec != 0:
+        fail(f"paranoia/scope: the -Z rip exited {ec}")
+        return
+    per2, disc2 = counts(multi / "log.log")
+    mtext = (multi / "log.log").read_text()
+
+    if not per1 or disc1 is None or not per2 or disc2 is None:
+        fail(f"paranoia/scope: could not read the counters "
+             f"(single {per1}/{disc1}, -Z {per2}/{disc2})")
+        return
+    if disc1 == 0 or disc2 == 0:
+        fail("paranoia/scope: a READ count of zero cannot discriminate")
+        return
+
+    # Single pass: the round-5 invariant, and it must still hold.
+    if sum(per1) != disc1:
+        fail(f"paranoia/scope: on a single-pass rip the per-track counts "
+             f"{per1} sum to {sum(per1)} and the disc total is {disc1}. With "
+             f"no re-reads these must agree")
+
+    # -Z: they must NOT agree, and the ratio must be the read count. This is
+    # the half that was never exercised.
+    reads = re.findall(r"^  Secure re-read:  converged after (\d+) reads$",
+                       mtext, re.M)
+    if len(set(reads)) != 1:
+        fail(f"paranoia/scope: the -Z rip reports read counts {reads}; this "
+             f"assertion needs them uniform")
+    elif sum(per2) * int(reads[0]) != disc2:
+        fail(f"paranoia/scope: per-track {per2} sums to {sum(per2)} over "
+             f"{reads[0]} reads, which predicts a disc total of "
+             f"{sum(per2) * int(reads[0])}, and the log says {disc2}")
+
+    # And the log must SAY so, on the rip where it is true and not on the one
+    # where it is not.
+    want = f"    Scope:         the last of {reads[0] if reads else '?'} reads"
+    if want not in mtext:
+        fail(f"paranoia/scope: the -Z log does not carry {want!r} -- two "
+             f"blocks share a heading and mean different things, and nothing "
+             f"in the artifact says which")
+    if "Scope:" in (single / "log.log").read_text():
+        fail("paranoia/scope: a single-pass rip printed a Scope: line. It is "
+             "additive on purpose -- a rip with no re-reads must be "
+             "byte-identical to before this existed")
+
 
 def sc_early_log():
     # Everything cyanrip says before the logfile exists is replayed into it.

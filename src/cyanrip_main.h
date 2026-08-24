@@ -202,7 +202,21 @@ typedef struct cyanrip_track {
     int total_repeats; /* How many times the track was re-ripped */
     /* This track's share of the paranoia callback counters, taken as a
      * before/after delta around the read so a disc total can be attributed to
-     * the track that earned it. Includes every -Z re-read of this track. */
+     * the track that earned it.
+     *
+     * THE LAST PASS ONLY, and this comment used to claim the opposite. The
+     * baseline is snapshotted AFTER the `repeat_ripping:` label, so every -Z
+     * re-read resets it and what survives describes the read whose audio was
+     * kept -- not the work the track cost. The disc-level counters are the
+     * process-global ones and DO sum every pass.
+     *
+     * So per-track figures do NOT sum to the disc totals whenever anything
+     * re-read, which is round 5's invariant and it is false in general.
+     * Platterpus measured it on our own golden reference (15+10+5 against 90,
+     * three reads a track, ratio exactly 3) and it is confirmed here from the
+     * source. Both prior verifications of that invariant ran on artifacts
+     * where every track reported `not attempted`, which is the one condition
+     * that forces the sum arithmetically. */
     uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
     enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
     /* Whether this track's audio was ripped AND finalised. Set in the one

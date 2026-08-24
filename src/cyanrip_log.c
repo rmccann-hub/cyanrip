@@ -560,10 +560,29 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
     /* This track's share of the disc's paranoia work. The disc-level totals at
      * the end say how much effort the rip cost; these say which track cost it,
      * which is the difference between "this disc needed 1749 verifies" and
-     * "track 3 needed 1400 of them". Counts include every -Z re-read of this
-     * track. Data tracks are read outside paranoia, so they have none. */
+     * "track 3 needed 1400 of them".
+     *
+     * THE LAST PASS ONLY when -Z re-read the track, and this comment used to
+     * say the opposite -- see the field's declaration in cyanrip_main.h for
+     * why. Two blocks in this log carry the heading `Paranoia status counts:`
+     * and they mean different things: this one describes the read whose audio
+     * was kept, the disc-level one sums every pass of every track. A reader
+     * who adds these up expecting the disc total is short by the re-read
+     * factor, and nothing said so.
+     *
+     * The `Scope:` line is printed ONLY when the track was actually re-read,
+     * so a single-pass rip -- which is every rip without -Z, and every disc
+     * where -Z converged first time -- is byte-identical to before. It is
+     * additive for the same reason the End LSN session-gap suffix is: this
+     * removes an ambiguity without moving a line anybody parses.
+     *
+     * Data tracks are read outside paranoia, so they have none. */
     if (!t->track_is_data) {
         cyanrip_log(ctx, 0, "\n  Paranoia status counts:\n");
+        if (t->total_repeats > 1)
+            cyanrip_log(ctx, 0, "    Scope:         the last of %i reads; "
+                                "the disc totals below sum all of them\n",
+                        t->total_repeats);
         if (!print_paranoia_counts(ctx, t->paranoia_status, "    "))
             cyanrip_log(ctx, 0, "    none\n");
     }

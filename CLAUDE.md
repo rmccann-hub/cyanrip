@@ -122,9 +122,29 @@ first session (`9003e6f`, PIONEER BD-RW BDR-209D, a 14-track disc)
 produced `Pregap source: sub-channel (not signalled by TOC)` on 13 tracks with
 the LSN arithmetic consistent on every one, `-Z` converging after 5 reads, and
 per-track paranoia counters summing exactly to the disc totals on media that
-made paranoia work — an invariant that until then had only ever been checked
-against a fixture whose numbers agree by construction. Artifacts and the
-per-claim evidence are in `docs/handshake/round-07-lap-10.md` §B and §F.
+made paranoia work. Artifacts and the per-claim evidence are in
+`docs/handshake/round-07-lap-10.md` §B and §F.
+
+**That last one is FALSE as a general invariant, and the way it survived four
+verifications is the lesson.** The per-track baseline is snapshotted *after*
+`repeat_ripping:`, so a `-Z` re-read resets it: the per-track figure describes
+the **last pass**, and the disc counters are process-global and sum **every**
+pass. Measured on our own golden reference — three reads a track, per-track
+`15+10+5 = 30` against a disc total of `90`, ratio exactly 3 — and confirmed
+from the source. Two source comments claimed the opposite in as many words.
+
+It held every time it was checked because **every artifact it was checked
+against had each track read exactly once**, which is the one condition that
+forces the sum arithmetically. Round 5 asserted it; round 7's rig session
+re-checked it on hardware and it held there too, because that disc converged
+without re-reading a track whose counters anyone summed. A claim that is true
+in every case you can construct is not thereby true — ask what condition your
+cases share before calling it an invariant.
+
+Platterpus found it, in round 13, by running our `-Z` reference through their
+parser rather than reading it. They had told us in their standing status
+exactly what artifact would settle it, and we shipped that artifact for an
+unrelated reason.
 
 Still untouched by any run, and the list is shorter but not empty: **`-x`, which
 has never executed on a real drive anywhere**, C2 (the rig's drive reports it
