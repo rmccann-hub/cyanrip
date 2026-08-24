@@ -21,10 +21,12 @@ Sections emitted:
 
 import argparse
 import hashlib
+import json
 import os
 import re
 import subprocess
 import sys
+import tempfile
 
 SRC = "src"
 
@@ -1102,6 +1104,133 @@ def sanitize_callsites():
         out.append((line, args[-1] if args else "?"))
     return out
 
+def diag_schema_literal():
+    """The `schema` string diagnostics.c emits, and its file:line.
+
+    Read from the source rather than from a record, because it is the one field
+    a consumer is expected to gate on and the contract must say what THIS tree
+    emits even if no record were available to read.
+    """
+    path = os.path.join(SRC, "diagnostics.c")
+    for i, line in enumerate(open(path, encoding="utf-8"), 1):
+        m = re.search(r'\\"schema\\":\s*\\"([^\\]+)\\"', line)
+        if m:
+            return m.group(1), f"diagnostics.c:{i}"
+    return None, None
+
+
+def diag_source_keys():
+    """Every JSON key literal in diagnostics.c's emitter, in emission order.
+
+    The record is built by a run of av_bprintf() calls with the key names
+    spelled into the format strings, so the keys ARE derivable from source.
+    This half exists to catch the opposite error from reading records: a key
+    the code can emit under a condition no sample reaches would be invisible to
+    a record-only derivation, and a contract that lists only what happened to
+    be exercised is a coverage report wearing a schema's clothes.
+    """
+    path = os.path.join(SRC, "diagnostics.c")
+    text = open(path, encoding="utf-8").read()
+    out = []
+    for i, line in enumerate(text.splitlines(), 1):
+        for m in re.finditer(r'\\"([A-Za-z_][A-Za-z0-9_]*)\\":', line):
+            out.append((m.group(1), i))
+    return out
+
+
+def diag_walk(node, path, acc):
+    """Collect {json path: (types seen, nullable)} from one record."""
+    if isinstance(node, dict):
+        # The object itself is a TYPE, not just a parent. Without this a field
+        # that is an object in one record and null in another accumulated no
+        # type at all and rendered as "null in every record here" -- which is
+        # exactly what `rip` did, and it is false: `rip` is the record's
+        # largest object on any run that opened a disc.
+        if path:
+            ts, _nul = acc.setdefault(path, (set(), False))
+            ts.add("object")
+        for k, v in node.items():
+            p = f"{path}.{k}" if path else k
+            diag_walk(v, p, acc)
+            t, nullable = acc.setdefault(p, (set(), False))
+            if v is None:
+                acc[p] = (t, True)
+    elif isinstance(node, list):
+        t, nullable = acc.setdefault(path, (set(), False))
+        t.add("array")
+        for v in node:
+            diag_walk(v, path + "[]", acc)
+    else:
+        t, nullable = acc.setdefault(path, (set(), False))
+        if node is None:
+            acc[path] = (t, True)
+        elif isinstance(node, bool):
+            t.add("bool")
+        elif isinstance(node, int):
+            t.add("int")
+        elif isinstance(node, float):
+            t.add("float")
+        else:
+            t.add("string")
+
+
+def diag_records(binary):
+    """Three real records, covering the three shapes the emitter has.
+
+    Named rather than globbed, so a shape that stops being covered is a visible
+    act. The third is PRODUCED here rather than committed, because the refusal
+    path leaves no logfile and therefore has no golden artifact -- and it is
+    reached from the argument table (`-J` with `-I`), which involves no disc and
+    no network. A check that reaches the network is not evidence about this
+    program; an earlier version of a related test drove the refusal through a
+    MusicBrainz lookup and its result depended on whether that lookup failed by
+    not-found or by timeout.
+
+    Returns (records, missing) -- a record that cannot be read is REPORTED, not
+    skipped, or this section silently narrows to whatever happens to be on disk.
+    """
+    want = [
+        ("a completed rip", os.path.join("docs", "golden-reference.diagnostics.json")),
+        ("a rip stopped by a signal", os.path.join("docs", "sample-interrupted.diagnostics.json")),
+    ]
+    records, missing = [], []
+    for what, rel in want:
+        if os.path.exists(rel):
+            try:
+                records.append((what, rel, json.load(open(rel, encoding="utf-8"))))
+            except ValueError as e:
+                missing.append(f"{rel}: not valid JSON ({e})")
+        else:
+            missing.append(f"{rel}: not found")
+
+    # Two more, produced here. The refusal path leaves no logfile and so has
+    # no golden artifact; `-k 0` reaches a read_stalls shape the other three
+    # cannot, which the source/record reconciliation below found by flagging
+    # `reason` as emitted-but-never-observed. Adding the run that observes it
+    # is the fix; leaving the row in the disagreement list would have been a
+    # documented hole where a covered field was one flag away.
+    produced = [
+        ("a run refused during argument validation", ["-J", "-I"]),
+        ("a run with stall reporting off (-k 0)", ["-J", "-I", "-k", "0"]),
+    ]
+    with tempfile.TemporaryDirectory() as td:
+        for what, extra in produced:
+            out = os.path.join(td, re.sub(r"\W+", "_", what) + ".json")
+            argv = [binary] + extra + ["-j", out]
+            subprocess.run(argv, stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL, timeout=60)
+            shown = "produced by " + " ".join(extra + ["-j"])
+            if os.path.exists(out):
+                try:
+                    records.append((what, shown,
+                                    json.load(open(out, encoding="utf-8"))))
+                except ValueError as e:
+                    missing.append(f"{shown}: not valid JSON ({e})")
+            else:
+                missing.append(f"{shown}: wrote no record")
+
+    return records, missing
+
 def version(binary):
     """The banner, verbatim, INCLUDING the build's short SHA.
 
@@ -1548,6 +1677,145 @@ def emit(binary):
     w("  the `: invalid option -- 'X'` suffix is stable.")
     w("- **One line each**, no usage block follows.")
     w("")
+    w("## P8 - The `-j` diagnostics record")
+    w("")
+    w("**DERIVED, from two sources that must agree.** The key names come from")
+    w("`diagnostics.c`'s emitter, where they are spelled into the format")
+    w("strings; the types and nullability come from real records. Neither half")
+    w("is sufficient alone, and the failure mode each one covers is the other's")
+    w("blind spot: a record-only derivation lists whatever the samples happened")
+    w("to exercise and calls it a schema, and a source-only derivation cannot")
+    w("say which fields are ever null. Anything the two disagree about is")
+    w("reported below rather than reconciled.")
+    w("")
+    w("Platterpus asked for this in round 12 §F1 and carried it into round 13.")
+    w("")
+
+    schema, schema_at = diag_schema_literal()
+    records, missing = diag_records(binary)
+    source_keys = diag_source_keys()
+
+    w("### P8a - The schema string, and what a consumer should do with it")
+    w("")
+    if schema:
+        w(f"This build emits `\"schema\": \"{schema}\"` (`{schema_at}`).")
+    else:
+        w("**The schema literal could not be found in `diagnostics.c`.** Treat")
+        w("every claim in this section as unverified until that is fixed.")
+    w("")
+    w("The number after the slash is not a version to compare, it is an")
+    w("identity to recognise. A field ADDED to this record is harmless to a")
+    w("reader that ignores unknown keys, and every change so far has been an")
+    w("addition -- so a consumer that rejects an unrecognised schema string")
+    w("rejects records it could have read. Gate on the prefix, and widen the")
+    w("accepted set rather than pinning one value.")
+    w("")
+
+    w("### P8b - Every field")
+    w("")
+    if missing:
+        w("**Records this section could not read, reported rather than dropped:**")
+        w("")
+        for m in missing:
+            w(f"- `{m}`")
+        w("")
+        w("Every column below is narrower than it should be by whatever those")
+        w("would have contributed.")
+        w("")
+    w(f"Derived from {len(records)} records, named rather than globbed so that")
+    w("a shape which stops being covered is a visible act:")
+    w("")
+    for what, where, _ in records:
+        shown = where if where.startswith("produced by") else f"`{where}`"
+        w(f"- **{what}** -- {shown}")
+    w("")
+
+    acc = {}
+    per_record = []
+    for what, _where, rec in records:
+        one = {}
+        diag_walk(rec, "", one)
+        per_record.append((what, set(one)))
+        for k, (types, nullable) in one.items():
+            t, n = acc.setdefault(k, (set(), False))
+            t |= types
+            acc[k] = (t, n or nullable)
+
+    w("`null` in the table means **observed null in at least one record**, which")
+    w("is a stronger claim than \"the type allows it\" and a weaker one than")
+    w("\"it is the only way it can be null\". A field marked `--` was never")
+    w("observed null by any record here; that is not a guarantee it cannot be.")
+    w("")
+    w("| field | type | observed null | in every record |")
+    w("|---|---|---|---|")
+    for key in sorted(acc):
+        types, nullable = acc[key]
+        everywhere = all(key in ks for _w, ks in per_record)
+        if types:
+            tdesc = "/".join(sorted(types))
+        elif nullable:
+            # Never observed carrying a value. NOT the same as "container",
+            # which is what this said first and which would have described
+            # read_stalls.longest_lsn -- a plain integer -- as a nested object.
+            tdesc = "*(null in every record here)*"
+        else:
+            tdesc = "*(container)*"
+        w(f"| `{key}` | {tdesc} | {'**yes**' if nullable else '--'} | "
+          f"{'yes' if everywhere else '**no**'} |")
+    w("")
+
+    # Source-vs-record reconciliation. Reported, never silently merged.
+    src_names = {k for k, _ln in source_keys}
+    rec_leaves = {k.split(".")[-1].replace("[]", "") for k in acc}
+    only_src = sorted(src_names - rec_leaves)
+    only_rec = sorted(rec_leaves - src_names)
+    if only_src or only_rec:
+        w("**Where the two derivations disagree.** Reported rather than")
+        w("reconciled: a difference here is either a field no record reaches or")
+        w("a field this generator cannot read out of the source, and those need")
+        w("different fixes.")
+        w("")
+        if only_src:
+            w("Emitted by `diagnostics.c` and absent from every record read here"
+              " -- so reachable only under conditions none of them met:")
+            w("")
+            for k in only_src:
+                lines = sorted(ln for name, ln in source_keys if name == k)
+                w(f"- `{k}` (`diagnostics.c:{lines[0]}`)")
+            w("")
+        if only_rec:
+            w("Present in a record and not found in the source scan -- this")
+            w("generator's key extraction is incomplete for these:")
+            w("")
+            for k in only_rec:
+                w(f"- `{k}`")
+            w("")
+    else:
+        w("The two derivations agree: every key in the source scan appears in a")
+        w("record, and every key in a record appears in the source scan.")
+        w("")
+
+    w("### P8c - Two absences that are deliberate")
+    w("")
+    w("Both would be easy to add and both would be wrong, so they are stated")
+    w("here rather than left to look like oversights.")
+    w("")
+    w("- **No severity on any message.** `cyanrip_log()` carries none, so")
+    w("  attaching one here would be this program guessing at its own output.")
+    w("  The record says so in its own `messages_note` field rather than only")
+    w("  in this document.")
+    w("- **No `success` flag.** A record is written for runs that produce no")
+    w("  logfile at all, which is the reason `-j` exists; a boolean verdict")
+    w("  would be cyanrip making a judgement, and judgements are the")
+    w("  consumer's. `exit_code`, `ripping_errors`, `interrupted` and the")
+    w("  per-track `audio_ripped` are the measurements a verdict would be")
+    w("  built from, and they are all present.")
+    w("")
+    w("`exit_code` is **tri-state and `null` is not `0`.** A record written from")
+    w("`atexit` before the exit status is known reports `null`, and a consumer")
+    w("that coerces that to zero reports a crashed run as a clean one.")
+    w("")
+
     w("On **this fork** the genopt message is routed through `cyanrip_log()`, so")
     w("it reaches stdout, the logfile if one is open, and the `-j` record. That")
     w("is a fork property; stock does neither.")

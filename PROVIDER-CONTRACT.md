@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-gbbc2880)`
+Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g771a958)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -858,6 +858,119 @@ Three things a consumer would otherwise have to discover the hard way:
   verbatim, so the line contains the path the binary was invoked by. Only
   the `: invalid option -- 'X'` suffix is stable.
 - **One line each**, no usage block follows.
+
+## P8 - The `-j` diagnostics record
+
+**DERIVED, from two sources that must agree.** The key names come from
+`diagnostics.c`'s emitter, where they are spelled into the format
+strings; the types and nullability come from real records. Neither half
+is sufficient alone, and the failure mode each one covers is the other's
+blind spot: a record-only derivation lists whatever the samples happened
+to exercise and calls it a schema, and a source-only derivation cannot
+say which fields are ever null. Anything the two disagree about is
+reported below rather than reconciled.
+
+Platterpus asked for this in round 12 §F1 and carried it into round 13.
+
+### P8a - The schema string, and what a consumer should do with it
+
+This build emits `"schema": "cyanrip-diagnostics/3"` (`diagnostics.c:327`).
+
+The number after the slash is not a version to compare, it is an
+identity to recognise. A field ADDED to this record is harmless to a
+reader that ignores unknown keys, and every change so far has been an
+addition -- so a consumer that rejects an unrecognised schema string
+rejects records it could have read. Gate on the prefix, and widen the
+accepted set rather than pinning one value.
+
+### P8b - Every field
+
+Derived from 4 records, named rather than globbed so that
+a shape which stops being covered is a visible act:
+
+- **a completed rip** -- `docs/golden-reference.diagnostics.json`
+- **a rip stopped by a signal** -- `docs/sample-interrupted.diagnostics.json`
+- **a run refused during argument validation** -- produced by -J -I -j
+- **a run with stall reporting off (-k 0)** -- produced by -J -I -k 0 -j
+
+`null` in the table means **observed null in at least one record**, which
+is a stronger claim than "the type allows it" and a weaker one than
+"it is the only way it can be null". A field marked `--` was never
+observed null by any record here; that is not a guarantee it cannot be.
+
+| field | type | observed null | in every record |
+|---|---|---|---|
+| `cyanrip` | object | -- | yes |
+| `cyanrip.fork_id` | string | -- | yes |
+| `cyanrip.handshake` | string | -- | yes |
+| `cyanrip.released_build_declared` | bool | -- | yes |
+| `cyanrip.vcs` | string | -- | yes |
+| `cyanrip.version` | string | -- | yes |
+| `exit_code` | int | -- | yes |
+| `invocation` | string | -- | yes |
+| `messages` | array | -- | yes |
+| `messages[]` | string | -- | yes |
+| `messages_are_classified` | bool | -- | yes |
+| `messages_complete_within_scope` | bool | -- | yes |
+| `messages_dropped` | int | -- | yes |
+| `messages_note` | string | -- | yes |
+| `messages_scope` | string | -- | yes |
+| `messages_tail` | array | -- | yes |
+| `read_stalls` | object | -- | yes |
+| `read_stalls.count` | int | **yes** | yes |
+| `read_stalls.longest_lsn` | *(null in every record here)* | **yes** | yes |
+| `read_stalls.longest_seconds` | int | **yes** | yes |
+| `read_stalls.longest_track` | *(null in every record here)* | **yes** | yes |
+| `read_stalls.reason` | string | -- | **no** |
+| `read_stalls.threshold_seconds` | int | -- | **no** |
+| `read_stalls.watched` | bool | -- | yes |
+| `rip` | object | **yes** | yes |
+| `rip.cd_tracks` | int | -- | **no** |
+| `rip.consumer` | string | -- | **no** |
+| `rip.consumer_verified` | bool | -- | **no** |
+| `rip.device` | string | -- | **no** |
+| `rip.frame_retries` | int | -- | **no** |
+| `rip.interrupted` | bool | -- | **no** |
+| `rip.interrupted_by` | string | **yes** | **no** |
+| `rip.offset_samples` | int | -- | **no** |
+| `rip.paranoia_level` | int | -- | **no** |
+| `rip.rip_repeats` | int | -- | **no** |
+| `rip.ripping_errors` | int | -- | **no** |
+| `rip.track_state` | array | -- | **no** |
+| `rip.track_state[]` | object | -- | **no** |
+| `rip.track_state[].audio_ripped` | bool | -- | **no** |
+| `rip.track_state[].cd_track` | int | -- | **no** |
+| `rip.track_state[].crcs_computed` | bool | -- | **no** |
+| `rip.track_state[].eac_crc` | string | **yes** | **no** |
+| `rip.track_state[].number` | int | -- | **no** |
+| `rip.track_state[].repeats` | int | -- | **no** |
+| `rip.track_state[].rip_time_us` | int | -- | **no** |
+| `rip.tracks` | int | -- | **no** |
+| `rip.tracks_completed` | int | -- | **no** |
+| `schema` | string | -- | yes |
+
+The two derivations agree: every key in the source scan appears in a
+record, and every key in a record appears in the source scan.
+
+### P8c - Two absences that are deliberate
+
+Both would be easy to add and both would be wrong, so they are stated
+here rather than left to look like oversights.
+
+- **No severity on any message.** `cyanrip_log()` carries none, so
+  attaching one here would be this program guessing at its own output.
+  The record says so in its own `messages_note` field rather than only
+  in this document.
+- **No `success` flag.** A record is written for runs that produce no
+  logfile at all, which is the reason `-j` exists; a boolean verdict
+  would be cyanrip making a judgement, and judgements are the
+  consumer's. `exit_code`, `ripping_errors`, `interrupted` and the
+  per-track `audio_ripped` are the measurements a verdict would be
+  built from, and they are all present.
+
+`exit_code` is **tri-state and `null` is not `0`.** A record written from
+`atexit` before the exit status is known reports `null`, and a consumer
+that coerces that to zero reports a crashed run as a clean one.
 
 On **this fork** the genopt message is routed through `cyanrip_log()`, so
 it reaches stdout, the logfile if one is open, and the `-j` record. That

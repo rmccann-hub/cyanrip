@@ -235,6 +235,7 @@ rip_scenarios = [
     'artifacts_are_tracked',
     'sanitize',
     'enhanced_cd',
+    'contract_diagnostics',
 ]
 
 # The scenarios are told which build configuration they are testing, because

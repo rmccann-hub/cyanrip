@@ -2808,6 +2808,91 @@ def sc_enhanced_cd():
         fail("enhanced_cd/wellformed: a disc with no data track reported a "
              "CD-Extra session gap")
 
+def sc_contract_diagnostics():
+    """Every field a real `-j` record contains must be in P8b.
+
+    Same shape and same reason as sc_contract_exit_codes(): the generator reads
+    source and reads committed sample records, and can only be as right as its
+    parsing of both. This runs the binary and asserts the document is a superset
+    of what actually came back. Seam rule S-9.
+
+    SUPERSET, NOT EQUALITY, and the asymmetry is deliberate. A field P8b
+    declares that no invocation here reaches is not a defect -- most of the
+    record needs a disc. A field the binary emits and P8b omits is a consumer
+    told the wrong thing, and that is the only direction that hurts.
+
+    THE RIP IS THE POINT. The generator's own four records include two that it
+    produces from the argument table and two that are committed artifacts, so a
+    field added to the rip path would go into P8b and into the samples together
+    and agree with itself. This rips a real image, which is a fifth record
+    nothing in the generator has seen.
+    """
+    contract = ROOT / "PROVIDER-CONTRACT.md"
+    if not contract.exists():
+        fail("contract_diagnostics: PROVIDER-CONTRACT.md is missing")
+        return
+
+    text = contract.read_text()
+    section = re.search(r"^### P8b .*?(?=^### P8c )", text, re.M | re.S)
+    if not section:
+        fail("contract_diagnostics: no P8b section -- the diagnostics record "
+             "is a surface a consumer parses and the contract must describe it")
+        return
+
+    declared = set(re.findall(r"^\| `([A-Za-z_][^`]*)` \|", section.group(0),
+                              re.M))
+    if not declared:
+        fail("contract_diagnostics: P8b lists no fields at all -- a check that "
+             "can be satisfied by finding nothing is the failure it guards")
+        return
+
+    diag = WORK / "cd.json"
+    out = WORK / "out_cd"
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                 "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                 "-L", "log", "-M", "sheet", "-j", diag)
+    if ec != 0:
+        fail(f"contract_diagnostics: the rip exited {ec}")
+        return
+    if not diag.exists():
+        fail("contract_diagnostics: no record was written")
+        return
+
+    record = json.loads(diag.read_text())
+
+    def walk(node, path, acc):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                p = f"{path}.{k}" if path else k
+                acc.add(p)
+                walk(v, p, acc)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v, path + "[]", acc)
+
+    observed = set()
+    walk(record, "", observed)
+    if len(observed) < 10:
+        fail(f"contract_diagnostics: the record has only {len(observed)} "
+             f"fields ({sorted(observed)}) -- too few to discriminate")
+        return
+
+    missing = sorted(observed - declared)
+    if missing:
+        fail(f"contract_diagnostics: the binary emitted {missing} and P8b does "
+             f"not declare them. P8b declares {len(declared)} fields. A "
+             f"generated contract that omits a field the record carries tells "
+             f"a consumer the wrong thing about a surface it parses")
+
+    # And the schema string P8a names must be the one the record carries: two
+    # places stating one fact, so they are compared rather than each asserted.
+    m = re.search(r'emits `"schema": "([^"]+)"`', text)
+    if not m:
+        fail("contract_diagnostics: P8a names no schema string")
+    elif record.get("schema") != m.group(1):
+        fail(f"contract_diagnostics: the record says schema "
+             f"{record.get('schema')!r} and P8a says {m.group(1)!r}")
+
 with tempfile.TemporaryDirectory() as tmpdir:
     WORK = Path(tmpdir)
 
