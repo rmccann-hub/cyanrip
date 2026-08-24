@@ -2040,6 +2040,31 @@ def sc_interrupt():
                    if ln.startswith("Rip completed:")]
             fail(f"interrupt/{name}: log says {got!r}, expected {want!r}")
 
+        # WHICH track, from the log alone. Platterpus carried this across two
+        # rounds: the -j record has always answered it and the log has not, so
+        # a consumer holding only the log knew a rip stopped after N tracks and
+        # not which track the drive was on.
+        #
+        # This signals once `Ripping track` has appeared, so the read is always
+        # in flight and the mid-read arm is the one produced. The other arm --
+        # `between tracks, no read in progress` -- needs the signal to land in
+        # the writeout window, which nothing here can schedule. It is in the
+        # contract, it is UNEXERCISED, and that is said out loud rather than
+        # left for a green suite to imply.
+        #
+        # The track number is cross-checked against the -j record below rather
+        # than hardcoded: two surfaces reporting one fact must not be able to
+        # drift, and pinning "track 1" here would pass even if the two
+        # disagreed.
+        at = re.search(r"^Interrupted at: track (\d+), mid-read$",
+                       log.read_text(), re.M)
+        if not at:
+            got = [ln for ln in log.read_text().splitlines()
+                   if ln.startswith("Interrupted at:")]
+            fail(f"interrupt/{name}: no mid-read `Interrupted at:` line "
+                 f"(found {got!r}). The log names how many tracks finished "
+                 f"and must also name the one that did not")
+
         if not diag.exists():
             fail(f"interrupt/{name}: no diagnostics record -- it is written "
                  f"from atexit, so this means the process did not unwind")
@@ -2065,6 +2090,18 @@ def sc_interrupt():
         states = rip_d.get("track_state") or []
         if not states:
             fail(f"interrupt/{name}: no per-track state in the record")
+
+        # The log's `Interrupted at:` and the record's per-track state are two
+        # surfaces describing one fact. The track the log names must be the
+        # first one the record says did not finish.
+        if at and states:
+            unfinished = [st.get("number") for st in states
+                          if st and st.get("audio_ripped") is False]
+            if unfinished and int(at.group(1)) != unfinished[0]:
+                fail(f"interrupt/{name}: the log says the rip stopped in "
+                     f"track {at.group(1)} and the -j record's first "
+                     f"unfinished track is {unfinished[0]}. Two surfaces, one "
+                     f"fact, and they disagree")
         for st in states:
             if st is None:
                 continue

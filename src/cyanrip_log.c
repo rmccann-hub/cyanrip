@@ -831,6 +831,25 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
             cyanrip_log(ctx, 0, "Rip completed:  no (interrupted by signal %i, %i of %i tracks)\n",
                         (int)quit_signal, ctx->tracks_completed, ctx->nb_tracks);
 
+        /* WHICH track, not just how many. Platterpus asked for this across two
+         * rounds: the `-j` record has always answered it and the log has not,
+         * so a consumer holding only the log could tell that a rip stopped
+         * after N tracks but not which track the drive was on. Inferring it by
+         * counting track blocks needs the disc's track count AND the
+         * assumption that blocks are contiguous from track 1, which `-l` makes
+         * false.
+         *
+         * Both arms print. `none` and `unknown` are different claims and so
+         * are "mid-read" and "between tracks" -- an interrupt that lands
+         * between tracks means no audio was in flight, which is a materially
+         * better position for the operator than one that lands mid-read, and
+         * omitting the line in that case would leave them unable to tell which
+         * happened. */
+        if (ctx->track_read_incomplete)
+            cyanrip_log(ctx, 0, "Interrupted at: track %i, mid-read\n",
+                        ctx->track_read_incomplete);
+        else
+            cyanrip_log(ctx, 0, "Interrupted at: between tracks, no read in progress\n");
     } else
         cyanrip_log(ctx, 0, "Rip completed:  yes (%i of %i tracks)\n",
                     ctx->tracks_completed, ctx->nb_tracks);

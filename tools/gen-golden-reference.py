@@ -183,11 +183,27 @@ Companion record: docs/sample-interrupted.diagnostics.json
 SAMPLE_LOG = ROOT / "docs" / "sample-interrupted.log"
 SAMPLE_JSON = ROOT / "docs" / "sample-interrupted.diagnostics.json"
 
-# The three line shapes a consumer can ONLY see on an interrupted rip, and
-# therefore the three the golden reference can never carry. Digits are
-# wildcards; everything else is the text we undertake not to reword.
+# The line shapes a consumer can ONLY see on an interrupted rip, and therefore
+# the ones the golden reference can never carry. Digits are wildcards;
+# everything else is the text we undertake not to reword.
+#
+# This list is hand-maintained, which is a weakness worth naming: a new
+# interrupted-only line is not caught until somebody adds it here, and
+# `Interrupted at:` proved that -- it was added to the binary, the sample was
+# regenerated, and --check went on passing until this entry existed. It cannot
+# be derived from the source the way P5 is, because "interrupted-only" is a
+# property of the control flow reaching the line, not of the call itself.
 INTERRUPTED_SHAPES = (
     re.compile(r"^Rip completed:  no \(interrupted by SIGTERM, \d+ of \d+ tracks\)$",
+               re.M),
+    # Both arms, so a reword of either fails. Only the first is produced by any
+    # test here: sc_interrupt() signals once `Ripping track` has appeared, so
+    # the read is always in flight. The `between tracks` arm needs the signal
+    # to land in the writeout window, which nothing here can schedule -- it is
+    # in the contract and it is UNEXERCISED, and that is stated rather than
+    # left for a green suite to imply.
+    re.compile(r"^Interrupted at: "
+               r"(track \d+, mid-read|between tracks, no read in progress)$",
                re.M),
     re.compile(r"^Stopping, ripping incomplete!$", re.M),
     re.compile(r"^Log FUN512: \S+$", re.M),

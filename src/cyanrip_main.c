@@ -767,6 +767,19 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
     t->secure_rip_state = CYANRIP_SECURE_RIP_NA;
     int64_t track_start_time = av_gettime_relative();
 
+    /* Named from here until this track FINISHES, and cleared beside
+     * audio_ripped and tracks_completed because those three say one thing.
+     *
+     * It was first cleared at `finalize_ripping:`, on the reasoning that the
+     * read loop had ended there. That is wrong and the test said so
+     * immediately: three `goto finalize_ripping` sites reach it, and the first
+     * of them is `if (quit_now)`. So an interrupted rip cleared the field on
+     * its way out and the summary then reported `between tracks` for a signal
+     * that landed mid-read -- the exact wrong claim the line exists to
+     * prevent. Every other path out of the read loop leaves it set, which is
+     * correct: the read did not finish. */
+    ctx->track_read_incomplete = t->number;
+
 repeat_ripping:;
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;
@@ -1072,6 +1085,7 @@ end:
         cyanrip_cue_track(ctx, t);
         t->audio_ripped = 1;
         ctx->tracks_completed++;
+        ctx->track_read_incomplete = 0;
     } else {
         ctx->total_error_count++;
     }

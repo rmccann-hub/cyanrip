@@ -354,6 +354,13 @@ typedef struct cyanrip_ctx {
     int success;
     int total_error_count;
     int tracks_completed; /* Tracks fully ripped, for the completion line */
+    /* CD track number of a read that STARTED and has not completed, else 0.
+     * Set as the read loop is entered and cleared only when that loop exits
+     * normally, so every abort out of it -- a signal, an error, a goto --
+     * leaves the track named rather than needing its own clear. Reported by
+     * `Interrupted at:`; a consumer could otherwise only infer it by counting
+     * track blocks against the disc's track count. */
+    int track_read_incomplete;
     lsn_t start_lsn;
     lsn_t end_lsn;
     lsn_t duration_frames;
