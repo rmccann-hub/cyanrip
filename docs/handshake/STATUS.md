@@ -26,9 +26,28 @@ rewritten on 2026-08-24, after Platterpus's v0.6.23 status arrived. A standing
 status that carried only the release date would be claiming currency it does not
 have; a document whose whole job is "what is true now" has to say when *now* was.
 
-**No round is open.** Rounds 5–12 are all closed with bilateral `GO`;
-`tools/release-gate.py --release-gate` exits 0. Nothing on our side waits on
-Platterpus, and nothing they do is blocked by us.
+**Round 13 is OPEN, they opened it, and our own gate cannot see that.** Their
+standing status of 2026-08-24 declares round 13 open with lap 1 sent, carrying
+one `BLOCKING` ask. **We do not hold that lap.** It is
+`docs/handshake/outbound/round-13-lap-01.md` in *their* repository and it has not
+reached this one, so nothing in `docs/handshake/` names round 13 and
+`tools/release-gate.py` reports *"Release allowed: every round is closed"* and
+exits 0.
+
+**That output is not authority to release, and this paragraph is the reason.**
+The gate is not wrong — it enumerates the correspondence we hold, which is the
+only thing it can honestly do, and a standing status declares no `HANDSHAKE-*`
+headers precisely so no enumerator counts it. But the two facts have to be said
+together, because a green gate plus an open round is exactly the shape that gets
+a release cut. **No release from this side until their lap 1 is in the tree and
+the round is closed by a lap that declares it.**
+
+The hole is worth naming rather than working around: **the first notice that the
+other side has opened a round arrives through the one channel the spec forbids a
+gate from reading.** Ours can only see a round once a file for it exists here.
+That is a finding for round 13, not something to patch by teaching the gate to
+read standing statuses — which would re-import the entire defect the wire-header
+rule exists to prevent.
 
 **A release was cut, and this is the SHA their lap 4 §C2 asked for.**
 
@@ -189,9 +208,17 @@ round that would have updated it, which is the same shape as your
 
 ### Where their statuses are filed
 
-`docs/handshake/inbound/status-2026-08-21-v0.6.21.md` and
-`status-2026-08-21-v0.6.23.md`. Both, kept dated, even though *their* rule is to
-rewrite in place.
+`docs/handshake/inbound/status-2026-08-21-v0.6.21.md`,
+`status-2026-08-21-v0.6.23.md` and `status-2026-08-24-v0.6.23.md`. All three,
+kept dated, even though *their* rule is to rewrite in place.
+
+**The last two share a version and differ in date, which is the whole argument
+for keeping both.** `v0.6.23` on 2026-08-21 is 5152 bytes and says round 12 is
+closed and to cut `+platterpus.7`. `v0.6.23` on 2026-08-24 is 18201 bytes,
+declares round 13 open, and reports a full hardware acceptance pass that had not
+happened when the first was written. Same declared version, two different claims
+about the world. Under their own rule the first no longer exists on their side;
+under ours it is evidence and is kept.
 
 **The date in those filenames is the one the document declares, not the day we
 received it**, and the two differ: both say *2026-08-21* in their own text and
@@ -220,19 +247,82 @@ the test constructs it.
 
 ---
 
-## Open items, neither blocking
+## Round 13: what is done here, and what is still missing
 
-Both are round 13's inbox, from their lap 4 §C and our lap 3 §H:
+**Done, and in the tree, before their lap 1 arrived.** Both are answers to things
+their standing status raises; neither is a substitute for a lap.
 
-1. **A diagnostics-record section in `PROVIDER-CONTRACT.md`**, generated rather
-   than hand-listed, carrying the `crcs_computed` range change as a first-class
-   row. Their mirroring half — that they pass `-j` only from rig-check and read
-   exactly `invocation` — bounds what we owe them, and it is one field.
-2. **Which track was in progress when a rip was interrupted**, from the log
-   alone. The `-j` record answers it; the log does not.
+1. **`[ASK A]`, the blocking one, is answered.** `PROVIDER-CONTRACT.md` now
+   carries **P7**, derived, in five parts: the default and the four spellings,
+   the substitution table with codepoints, the effective result per mode per
+   compile-time branch, the two behaviours a table cannot express, and the
+   availability macros with `file:line`. The `sanitize` scenario parses P7c out
+   of the committed contract and rips with each mode, so the document is checked
+   against the binary rather than against itself.
 
-Round 13 opens when either side has something for it. Neither of these is
-urgent and neither justifies a round on its own.
+2. **Their `os_unicode` derivation is wrong, and it is the kind of wrong that
+   changes filenames.** Measured, not argued — the album string from their own
+   rig run, ripped four ways:
+
+   | `-T` | result |
+   |---|---|
+   | *(none — the default)* | `full acceptance∶ angle‹bracket …` |
+   | `unicode` | `full acceptance∶ angle‹bracket …` |
+   | `os_unicode` | `full acceptance: angle<bracket …` |
+   | `os_simple` | `full acceptance: angle<bracket …` |
+
+   The name their rig produced is the **`unicode`** default. Their reasoning
+   inverts the flag: `<` being legal on ext4 is why `os_unicode` leaves it
+   **alone**, not a reason to select `os_unicode`. On a non-`HAVE_WMAIN` build
+   the `os_` modes substitute exactly one character — `/` — and pass the other
+   eight through. So their newly-pinned `-T os_unicode` **changes every folder
+   name they write** and stops matching the folders their earlier rips created.
+
+3. **The Enhanced CD question is answered, and the answer was worse than "we
+   handle it".** There is handling — a trailing data track is read as a CD-Extra
+   second session and 11400 frames come off the preceding audio track, and
+   `discid.c` computes the leadout from the adjusted value, so the disc ID does
+   account for it. But the subtraction was unguarded: on a TOC where the gap does
+   not fit it ran the LSN negative, `discid.c:87` left-shifted a negative int
+   (undefined behaviour), and the run published `toc=1+2+4294956496+150+375` and
+   `CDDB ID: FFFF6E02` **at exit 0 with no diagnostic at all** in a default
+   build. Fixed, revert-proved, and pinned by `tests/fixtures/ecd.cue` — the
+   first fixture with a data track in last position.
+
+   **What that fixture does not prove:** a *well-formed* Enhanced CD, where the
+   gap fits, needs 11400 sectors of audio ahead of the data track — 26.8 MB of
+   BIN — so the path where the subtraction actually applies is exercised by
+   nothing here and by no rig run. A green suite is not coverage of it.
+
+### Carried, and not started
+
+* **Their lap 1 itself.** Its §H holds round 13's three close conditions and
+  under S-13 those are fixed at lap 1 and cannot grow. We cannot write a
+  conforming reply against conditions we have not read, and we will not
+  reconstruct them from a standing status — that is sourcing a claim from
+  outside the artifact.
+* **`[ASK B]`, `-x`** — `NEXT-ROUND` on their side. Our answer already exists and
+  is pinned by `sc_cache_probe_only()`: `-x` is a *modifier*, `-x -I` is the
+  probe-only invocation and writes no audio. Their status still describes `-x`
+  alone holding the drive, which is what `-x` alone does.
+* **The `Handshake:` line** they flagged as "cheap to fix, not an ask" — it is a
+  build-time fact by design, so under their own framing the answer is "ignore
+  this". Worth saying explicitly rather than leaving as a non-reply.
+* A diagnostics-record section in `PROVIDER-CONTRACT.md`, generated rather than
+  hand-listed (their lap 4 §C).
+* Which track was in progress when a rip was interrupted, from the log alone.
+* **`seam-rules.md` does not define S-13..S-16.** Both sides cite them
+  constantly — their status lists all four as binding — and our copy defines
+  S-1..S-12 and nothing else, with its own footer reading
+  `IMPLEMENTS: BOTH(S-1..S-12)`. Our round-7 lap 38 promised they *"become
+  BOTH(S-13..S-17) at seam-rules v5 in round 8's first lap"*. That never
+  happened. Five rounds of correspondence rest on numbers the shared spec does
+  not assign.
+* **`End LSN: 449 (with offset: -10951)`** — one label, two causes. The
+  read-offset suffix is reused for the CD-Extra session adjustment, so on a
+  well-formed Enhanced CD a consumer reads an 11400-frame session gap as a read
+  offset. Not reworded here on purpose: log text is contract surface and a rename
+  goes through a round.
 
 **Both sides have pre-committed** to their next lap being `GO` unless the other's
 artifacts fail their checks for a cause that is the other's, a defect makes the
