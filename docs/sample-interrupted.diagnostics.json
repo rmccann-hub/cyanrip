@@ -3,8 +3,8 @@
   "cyanrip": {
     "version": "0.9.4-rc2+platterpus.7",
     "fork_id": "platterpus-fork",
-    "vcs": "6fbc41d",
-    "handshake": "round 12 lap 3 closed, verdict GO",
+    "vcs": "673a57b",
+    "handshake": "round 13 lap 1 OPEN, verdict OPEN",
     "released_build_declared": false
   },
   "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
@@ -31,7 +31,7 @@
     "interrupted": true,
     "interrupted_by": "SIGTERM",
     "track_state": [
-      {"number":1,"cd_track":1,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":592},
+      {"number":1,"cd_track":1,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":1742},
       {"number":2,"cd_track":2,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
       {"number":3,"cd_track":3,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0}
     ]
@@ -45,9 +45,9 @@
     "Checking pregap.bin for cdrom...",
     "Opening drive...",
     "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!",
-    "cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g6fbc41d)",
+    "cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g673a57b)",
     "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
-    "Handshake:      round 12 lap 3 closed, verdict GO -- NOT a released build",
+    "Handshake:      round 13 lap 1 OPEN, verdict OPEN -- NOT a released build",
     "Consumer:       platterpus/0.6.21",
     "                (reported by the caller, not verified by cyanrip)",
     "Drive used:     libcdio CDRWIN (revision 2.1.)",
@@ -76,7 +76,7 @@
     "    150 frame pregap in track 1, unmerged",
     "    75 frame pregap in track 2, merging into track 1",
     "Tracks:",
-    "Ripping track 1, progress - 20.00%, ETA - 0s",
+    "Ripping track 1, progress - 61.78%, ETA - 0s",
     "Stopping, ripping incomplete!",
     "Flushing encoders...",
     "Album Loudness ",
@@ -85,12 +85,12 @@
     "Album sample peak level:          0.0 dBFS",
     "Album true peak level:            0.0 dBFS",
     "Paranoia status counts:",
-    "  READ:          3",
+    "  READ:          9",
     "Ripping errors: 1",
     "Read stalls:    none (no read exceeded 10s)",
     "Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)",
     "Interrupted at: track 1, mid-read",
-    "Ripping finished at 2026-08-24T18:53:01"
+    "Ripping finished at 2026-08-24T18:57:32"
   ],
   "messages_tail": []
 }

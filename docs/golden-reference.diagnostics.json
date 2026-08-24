@@ -3,8 +3,8 @@
   "cyanrip": {
     "version": "0.9.4-rc2+platterpus.7",
     "fork_id": "platterpus-fork",
-    "vcs": "6fbc41d",
-    "handshake": "round 12 lap 3 closed, verdict GO",
+    "vcs": "673a57b",
+    "handshake": "round 13 lap 1 OPEN, verdict OPEN",
     "released_build_declared": false
   },
   "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b12 -t 1=isrc=AAAAA0000001 -t 2=isrc=BBBBB0000002 -t 3=isrc=CCCCC0000003 -D o -j o/reference.diagnostics.json",
@@ -31,9 +31,9 @@
     "interrupted": false,
     "interrupted_by": null,
     "track_state": [
-      {"number":1,"cd_track":1,"repeats":3,"audio_ripped":true,"crcs_computed":true,"eac_crc":"D36D9296","rip_time_us":63964},
-      {"number":2,"cd_track":2,"repeats":3,"audio_ripped":true,"crcs_computed":true,"eac_crc":"07B89F6F","rip_time_us":51725},
-      {"number":3,"cd_track":3,"repeats":3,"audio_ripped":true,"crcs_computed":true,"eac_crc":"CC206A3D","rip_time_us":29933}
+      {"number":1,"cd_track":1,"repeats":3,"audio_ripped":true,"crcs_computed":true,"eac_crc":"D36D9296","rip_time_us":65604},
+      {"number":2,"cd_track":2,"repeats":3,"audio_ripped":true,"crcs_computed":true,"eac_crc":"07B89F6F","rip_time_us":54605},
+      {"number":3,"cd_track":3,"repeats":3,"audio_ripped":true,"crcs_computed":true,"eac_crc":"CC206A3D","rip_time_us":32607}
     ]
   },
   "messages_are_classified": false,
@@ -45,9 +45,9 @@
     "Checking pregap.bin for cdrom...",
     "Opening drive...",
     "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!",
-    "cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g6fbc41d)",
+    "cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g673a57b)",
     "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b12 -t 1=isrc=AAAAA0000001 -t 2=isrc=BBBBB0000002 -t 3=isrc=CCCCC0000003 -D o -j o/reference.diagnostics.json",
-    "Handshake:      round 12 lap 3 closed, verdict GO -- NOT a released build",
+    "Handshake:      round 13 lap 1 OPEN, verdict OPEN -- NOT a released build",
     "Consumer:       platterpus/0.6.4b12",
     "                (reported by the caller, not verified by cyanrip)",
     "Drive used:     libcdio CDRWIN (revision 2.1.)",
@@ -93,8 +93,8 @@
     "    True peak level:   0.0 dBFS",
     "    Integrated loudness (R128): -7.7 LUFS",
     "    Loudness range (R128):      20.0 LU (-27.7 to -7.7 LUFS)",
-    "    Extraction speed:  46.9x",
-    "    Elapsed:            0.06 s",
+    "    Extraction speed:  45.7x",
+    "    Elapsed:            0.07 s",
     "    Pregap LSN:  0 (duration: 00:02.00)",
     "    Pregap length: 150 frames",
     "    Pregap source: TOC",
@@ -116,7 +116,7 @@
     "    album:                         Unknown disc (OMP2)",
     "    title:                         Unknown track",
     "    isrc:                          AAAAA0000001",
-    "    creation_time:                 2026-08-24T18:53:00",
+    "    creation_time:                 2026-08-24T18:57:31",
     "    REPLAYGAIN_TRACK_GAIN:         -10.29 dB",
     "    R128_TRACK_GAIN:               -1355",
     "    REPLAYGAIN_TRACK_RANGE:        20.00 dB",
@@ -143,7 +143,7 @@
     "    True peak level:   0.3 dBFS",
     "    Integrated loudness (R128): -6.8 LUFS",
     "    Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)",
-    "    Extraction speed:  38.7x",
+    "    Extraction speed:  36.6x",
     "    Elapsed:            0.05 s",
     "    Pregap LSN:  300 (duration: 00:01.00)",
     "    Pregap length: 75 frames",
@@ -166,7 +166,7 @@
     "    album:                         Unknown disc (OMP2)",
     "    title:                         Unknown track",
     "    isrc:                          BBBBB0000002",
-    "    creation_time:                 2026-08-24T18:53:00",
+    "    creation_time:                 2026-08-24T18:57:31",
     "    REPLAYGAIN_TRACK_GAIN:         -11.19 dB",
     "    R128_TRACK_GAIN:               -1584",
     "    REPLAYGAIN_TRACK_RANGE:        0.00 dB",
@@ -193,7 +193,7 @@
     "    True peak level:   -11.3 dBFS",
     "    Integrated loudness (R128): -22.6 LUFS",
     "    Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)",
-    "    Extraction speed:  33.4x",
+    "    Extraction speed:  30.7x",
     "    Elapsed:            0.03 s",
     "    Pregap LSN:  unknown (sub-channel unreadable)",
     "    Start LSN:   525",
@@ -214,7 +214,7 @@
     "    album:                         Unknown disc (OMP2)",
     "    title:                         Unknown track",
     "    isrc:                          CCCCC0000003",
-    "    creation_time:                 2026-08-24T18:53:00",
+    "    creation_time:                 2026-08-24T18:57:31",
     "    REPLAYGAIN_TRACK_GAIN:         4.63 dB",
     "    R128_TRACK_GAIN:               2465",
     "    REPLAYGAIN_TRACK_RANGE:        0.00 dB",
@@ -234,7 +234,7 @@
     "Ripping errors: 0",
     "Read stalls:    none (no read exceeded 10s)",
     "Rip completed:  yes (3 of 3 tracks)",
-    "Ripping finished at 2026-08-24T18:53:00"
+    "Ripping finished at 2026-08-24T18:57:31"
   ],
   "messages_tail": []
 }
