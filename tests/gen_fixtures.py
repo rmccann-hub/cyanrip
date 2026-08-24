@@ -22,13 +22,12 @@
 #
 # ecd.cue is the other arrangement -- audio tracks with a TRAILING data track,
 # which cyanrip reads as a CD-Extra second session -- and it reuses cdda.bin.
-# This comment used to say that shape "cannot fit in a bundled-size fixture",
-# and that was true of the WELL-FORMED case and wrong as a reason not to have
-# the fixture at all: an Enhanced CD whose gap actually fits needs 11400
-# sectors of audio ahead of the data track, 26.8 MB of BIN, but the case where
-# it does NOT fit is small, is the one that used to publish a garbage disc ID
-# at exit 0, and is now pinned by the enhanced_cd scenario. The well-formed
-# path is still exercised by nothing here.
+# This comment used to say that shape "cannot fit in a bundled-size fixture".
+# That was a claim about what can be COMMITTED, used as a reason to have no
+# fixture at all. Both halves now exist: the small one, where the 11400-frame
+# gap does not fit, is committed as ecd.cue; the well-formed one, which needs
+# 29.6 MB, is built by the enhanced_cd scenario in its own temp workdir and
+# costs this directory nothing.
 #
 # The NRG reuses the first 6 s of cdda.bin audio as a 2-track DAO image with
 # a 1 s pregap on track 2.

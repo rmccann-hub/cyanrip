@@ -218,6 +218,12 @@ typedef struct cyanrip_track {
      * read, for audio that is not on disk: a confident wrong field in an
      * archival record, which is worse than a missing one. */
     int audio_ripped;
+    /* Frames removed from end_lsn as a CD-Extra inter-session gap, else 0.
+     * end_lsn differs from end_lsn_sig for TWO independent reasons -- the read
+     * offset and this -- and the log said "with offset" for both, so an
+     * 11400-frame session adjustment read as a read offset that is normally
+     * one frame. This is what lets the two be told apart. */
+    int end_lsn_session_gap;
     int64_t rip_time_us; /* Wall clock time spent ripping and encoding */
     int index; /* Array position + 1 */
 

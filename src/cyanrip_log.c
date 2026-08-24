@@ -310,11 +310,31 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
     else
         cyanrip_log(ctx, 0, "\n");
 
+    /* `end_lsn` differs from `end_lsn_sig` for two independent reasons: the
+     * read offset, and the CD-Extra inter-session gap removed from the last
+     * audio track when the disc's last track is data. Both used to print
+     * ` (with offset: %i)`, so on an Enhanced CD an 11400-frame session
+     * adjustment was reported as a read offset -- a field normally worth one
+     * frame. One label, two causes, and the reader cannot tell which.
+     *
+     * The offset-only wording is UNCHANGED, byte for byte, because that is the
+     * case on every disc without a trailing data track and Platterpus parses
+     * it. The session-gap case gets its own suffix rather than a reword, so
+     * this adds a shape instead of breaking one.
+     *
+     * "read to" rather than attributing the whole delta to the gap: when a
+     * read offset is also in play the number carries both, and naming the gap
+     * as the sole cause would be the same defect one step over. The two
+     * clauses are each separately true -- that subtraction happened, and the
+     * read ended there. */
     cyanrip_log(ctx, 0,     "    End LSN:     %i", t->end_lsn_sig);
-    if (t->end_lsn != t->end_lsn_sig)
-        cyanrip_log(ctx, 0, " (with offset: %i)\n", t->end_lsn);
-    else
+    if (t->end_lsn == t->end_lsn_sig)
         cyanrip_log(ctx, 0, "\n");
+    else if (t->end_lsn_session_gap)
+        cyanrip_log(ctx, 0, " (less %i frame CD-Extra session gap, read to: %i)\n",
+                    t->end_lsn_session_gap, t->end_lsn);
+    else
+        cyanrip_log(ctx, 0, " (with offset: %i)\n", t->end_lsn);
 
     if (t->frames_after_disc_end)
         cyanrip_log(ctx, 0, "    Appended:    %i frames of silence\n", t->frames_after_disc_end);
@@ -810,6 +830,7 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
         else
             cyanrip_log(ctx, 0, "Rip completed:  no (interrupted by signal %i, %i of %i tracks)\n",
                         (int)quit_signal, ctx->tracks_completed, ctx->nb_tracks);
+
     } else
         cyanrip_log(ctx, 0, "Rip completed:  yes (%i of %i tracks)\n",
                     ctx->tracks_completed, ctx->nb_tracks);

@@ -391,6 +391,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
                 cyanrip_track *pt = &ctx->tracks[i - 1];
                 if ((pt->end_lsn - CDEXTRA_SESSION_GAP) >= pt->start_lsn) {
                     pt->end_lsn -= CDEXTRA_SESSION_GAP;
+                    pt->end_lsn_session_gap = CDEXTRA_SESSION_GAP;
                     t->pregap_lsn = pt->end_lsn + 1;
                 } else {
                     cyanrip_log(ctx, 0, "Track %i is data and last, but track "
@@ -765,6 +766,7 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
     int calc_global_peak = !ctx->settings.ripping_retries;
     t->secure_rip_state = CYANRIP_SECURE_RIP_NA;
     int64_t track_start_time = av_gettime_relative();
+
 repeat_ripping:;
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;

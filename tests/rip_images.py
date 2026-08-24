@@ -2599,11 +2599,21 @@ def sc_enhanced_cd():
     right that it was worth asking; the answer turned out to be worse than
     "we handle it".
 
-    WHAT THIS FIXTURE PROVES AND WHAT IT DOES NOT. ecd.cue is the shape whose
-    gap does NOT fit, so it pins the refusal. A WELL-FORMED Enhanced CD needs
-    11400 sectors of audio before the data track -- 26.8 MB of BIN -- so the
-    path where the subtraction actually applies is exercised by nothing here
-    and by no rig run so far. Do not read a green suite as coverage of it.
+    BOTH SHAPES ARE COVERED, and the second one only because the first write-up
+    of this was wrong. ecd.cue is the disc whose gap does NOT fit, committed,
+    and it pins the refusal. The well-formed disc needs 11400 sectors of audio
+    ahead of the data track -- 29.6 MB -- which this file twice called
+    impossible, and gen_fixtures.py called impossible before that. Both were
+    reasoning about what can be COMMITTED. A fixture does not have to be: the
+    big one is built in the temp workdir at test time and costs the repository
+    nothing, which is a `for` loop rather than a hardware session.
+
+    WHAT NEITHER SHAPE SETTLES: whether 11400 is the RIGHT number to remove
+    from a physical Enhanced CD. These are images, and on an image the data
+    track starts immediately after the audio, so the gap is carved out of real
+    audio bytes. What libcdio reports for track 2's last LSN on a pressed
+    CD-Extra disc is not knowable from here, and the constant is inherited from
+    upstream unverified. That question needs a disc and is round 13 §J.
 
     The strongest assertion below is not "the numbers look sane", which garbage
     can satisfy. It is that the leadout in the MusicBrainz TOC equals the last
@@ -2681,6 +2691,85 @@ def sc_enhanced_cd():
              f"{have}, and the TOC says {want}")
 
     expect("ecd", "1.flac", "2.flac", "log.log", "sheet.cue")
+
+    # --- and the case where the gap DOES fit -------------------------------
+    #
+    # This was written off twice as needing hardware: gen_fixtures.py's header
+    # said a trailing data track "cannot fit in a bundled-size fixture", and
+    # ecd.cue's own header said the well-formed path "needs a real disc". Both
+    # were reasoning about what can be COMMITTED, and the fixture does not have
+    # to be committed -- 29.6 MB of BIN is unreasonable in a repository and
+    # entirely reasonable in a temp directory that exists for the length of one
+    # test. CLAUDE.md's rule is to check whether a different image can reach it
+    # before accepting that nothing can; the answer here was a `for` loop.
+    #
+    # Track 2 spans 150..11999, which is 11850 frames, so CDEXTRA_SESSION_GAP
+    # fits with room: 11999 - 11400 = 599, still past the track's own start.
+    # The read is therefore 150..599 -- 450 frames -- so the fixture is large
+    # and the rip is not.
+    big = WORK / "ecdbig.bin"
+    with big.open("wb") as fh:
+        chunk = (FIX / "cdda.bin").read_bytes()
+        for _ in range(21):                 # 21 * 600 = 12600 sectors
+            fh.write(chunk)
+    (WORK / "ecdbig.cue").write_text(
+        'FILE "ecdbig.bin" BINARY\n'
+        "  TRACK 01 AUDIO\n"
+        "    INDEX 01 00:00:00\n"
+        "  TRACK 02 AUDIO\n"
+        "    INDEX 01 00:02:00\n"
+        "  TRACK 03 MODE1/2352\n"
+        "    INDEX 01 02:40:00\n")
+
+    rip("ecdbig", "ecdbig.cue")
+    bigout = (WORK / "ecdbig.log").read_text()
+    biglog = (WORK / "out_ecdbig" / "log.log").read_text()
+
+    if "runtime error" in bigout:
+        fail(f"enhanced_cd/wellformed: the sanitizer fired: "
+             f"{[l for l in bigout.splitlines() if 'runtime error' in l]}")
+    if "CD-Extra session gap does not fit" in bigout:
+        fail("enhanced_cd/wellformed: the guard refused a gap that fits. "
+             "Track 2 is 11850 frames against an 11400 frame gap, so this is "
+             "the guard being wrong, not the disc")
+
+    # THE POINT OF THIS HALF. The old wording called an 11400-frame session
+    # adjustment a read offset -- a field that is normally worth one frame --
+    # so a consumer reading `End LSN: 11999 (with offset: 599)` would attribute
+    # 11400 frames to `-s`. Both clauses of the replacement are asserted.
+    m = re.search(r"^    End LSN:     (\d+) "
+                  r"\(less (\d+) frame CD-Extra session gap, read to: (-?\d+)\)$",
+                  biglog, re.M)
+    if not m:
+        ends = re.findall(r"^    End LSN:.*$", biglog, re.M)
+        fail(f"enhanced_cd/wellformed: no session-gap End LSN line. Found "
+             f"{ends}. If one of those says `(with offset:` then the two "
+             f"causes have been collapsed back into one label")
+    else:
+        sig, gap, read_to = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        if sig - gap != read_to:
+            fail(f"enhanced_cd/wellformed: the line says {sig} less {gap} "
+                 f"frames reads to {read_to}, and {sig} - {gap} is "
+                 f"{sig - gap}. The three numbers on one line disagree")
+        # No -s is passed by rip(), so the gap is the whole delta here. Stated
+        # as an assertion rather than assumed: if rip() ever grows an offset,
+        # this fires instead of silently checking something weaker.
+        if gap != 11400:
+            fail(f"enhanced_cd/wellformed: the gap is reported as {gap} frames "
+                 f"and CDEXTRA_SESSION_GAP is 11400")
+
+    # An offset-only line must still read exactly as it always has, on a disc
+    # with no trailing data track. This is the half that must NOT have moved.
+    rip("ecdoff", "basic.cue", "-s", "10")
+    offlog = (WORK / "out_ecdoff" / "log.log").read_text()
+    if not re.search(r"^    End LSN:     \d+ \(with offset: -?\d+\)$", offlog,
+                     re.M):
+        fail("enhanced_cd/wellformed: the offset-only End LSN wording changed. "
+             "It was left byte-identical on purpose -- Platterpus parses it, "
+             "and this change was supposed to ADD a shape, not reword one")
+    if "CD-Extra session gap" in offlog:
+        fail("enhanced_cd/wellformed: a disc with no data track reported a "
+             "CD-Extra session gap")
 
 with tempfile.TemporaryDirectory() as tmpdir:
     WORK = Path(tmpdir)
