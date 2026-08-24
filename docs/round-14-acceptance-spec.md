@@ -261,8 +261,44 @@ Cache probe:    unknown (read could not be timed at %i sectors, before any cache
 > and says so, including a "needs a run to settle" case when a row is mixed.
 >
 > **The pin does not move** — S-15 — so `796df32` still ships the wrong sentence
-> and the corrected contract lands in the next release. **Use this box as the
-> correct reading for T3 until then.**
+> and the corrected contract lands in the next release.
+>
+> **A corrected `PROVIDER-CONTRACT.md` travels with this document.** Two contracts
+> in circulation is exactly the ambiguity this seam exists to prevent, so here is
+> the whole difference, `[MEASURED]` by `diff` rather than described:
+>
+> | hunk | what |
+> |---|---|
+> | 1 | the build banner — `g76a1017` → `g2f7758b` |
+> | 2 | `cyanrip_main.c:956`'s structural sentence |
+> | 3 | `cache_probe.c:232`'s structural sentence |
+>
+> **Nothing else. Three hunks, and the source anchor `sha256/16 =
+> 94f2b1f625e2f63d` is unchanged in both** — `src/` did not move, so the binary
+> at the pin behaves identically and every flag, segment, exit code and message
+> is byte-identical. Only the document's account of how two composed lines
+> combine improved. **Where the two disagree, this one is right.**
+
+### The same correction, one row over — and it cuts the other way
+
+The sentence was right for `cyanrip_main.c:956`, the progress line, whose
+segments **are** `snprintf(line + line_len, …)` appends. That is why it survived:
+it was written from one example and printed under every composed row. The
+corrected contract now says of that row that segment 0 replaces the buffer and
+1–5 extend it, **and still refuses to claim any of them is unconditional**,
+because that is control flow and needs a run.
+
+Two rows, opposite structures, one sentence asserting both. Worth naming because
+the failure is not "we got a fact wrong" — it is a **hardcoded claim inside a
+generated document**, which is the same shape as the fatal-message wording
+allowlist and P4's `1, Every failure, without exception` row, both of which
+Platterpus found from the other end.
+
+**Guarded now, and asserted against the binary rather than the document**: a new
+`contract_composed` scenario runs `-x -I`, takes the `Cache probe:` line the
+binary actually wrote, and checks it contains exactly **one** segment head from
+P2's table. Concatenated segments would show two; a stale table would show none.
+Revert-proved on both assertions separately.
 
 **Read the vocabulary before writing an assertion on it**, because the
 distinctions are load-bearing and were argued over:
