@@ -231,7 +231,7 @@ FILLED_BY = r'\b(?P<fn>[a-z_][a-z0-9_]*)\s*\(\s*{buf}\s*,\s*sizeof\s*\(\s*{buf}\
 FN_DEF = (r'^[A-Za-z_][A-Za-z0-9_ \*]*\b{fn}\s*\(\s*char\s*\*\s*'
           r'(?P<param>[a-z_][a-z0-9_]*)\b')
 SNPRINTF_INTO = (
-    r'snprintf\s*\(\s*{buf}\b[^;]*?,\s*'
+    r'snprintf\s*\(\s*{buf}\b(?P<off>[^;,]*),[^;]*?,\s*'
     r'(?P<lit>"(?:[^"\\]|\\.)*"(?:\s*"(?:[^"\\]|\\.)*")*)')
 
 
@@ -313,7 +313,26 @@ def func_start(text, pos):
 
 
 def snprintf_parts(text, buf, lo, hi):
-    """snprintf formats writing into `buf` within [lo, hi), in source order."""
+    """snprintf formats writing into `buf` within [lo, hi), in source order.
+
+    Returns [(piece, writes_whole_buffer)].
+
+    The second field is what says whether the segments COMBINE or ALTERNATE,
+    and it is derived rather than assumed. `snprintf(buf, ...)` writes from the
+    start and NUL-terminates, so it replaces whatever was there; only a write
+    at an offset -- `snprintf(buf + n, ...)` -- can append. That is a fact
+    about the call, readable from the call.
+
+    It exists because this file used to print, under every composed row and
+    without deriving anything, *"Segment 0 is always present; the rest are
+    appended conditionally."* For `cache_probe.c` that is flatly false: the
+    nine segments are arms of a `switch`, each ending in `return`, so exactly
+    one is ever emitted. A consumer building a matcher from that sentence would
+    have written a concatenation pattern for a line that alternates -- and it
+    is `Cache probe:`, the one line in round 14 whose real shape has never been
+    seen on hardware. A hardcoded prose claim inside a generated document is a
+    guess wearing a derivation's clothes, which is the exact failure this
+    generator exists to prevent."""
     pat = re.compile(SNPRINTF_INTO.format(buf=re.escape(buf)), re.S)
     parts = []
     for sm in pat.finditer(text):
@@ -325,7 +344,7 @@ def snprintf_parts(text, buf, lo, hi):
         piece = splice_inttypes(text, sm.end("lit"), joined(sm.group("lit")))
         piece = piece.replace("\\n", "").replace("\\t", " ")
         if piece:
-            parts.append(piece)
+            parts.append((piece, not sm.group("off").strip()))
     return parts
 
 
@@ -1452,10 +1471,30 @@ def emit(binary):
                 continue
             w("| # | Segment |")
             w("|---|---|")
-            for i, part in enumerate(parts):
+            for i, (part, _whole) in enumerate(parts):
                 w(f"| {i} | `{part}` |")
             w("")
-            w("Segment 0 is always present; the rest are appended conditionally.")
+            # DERIVED, not asserted. See snprintf_parts' docstring for the
+            # sentence this replaced and what it got wrong.
+            whole = [p for p, is_whole in parts if is_whole]
+            appended = [p for p, is_whole in parts if not is_whole]
+            if not appended:
+                w("**These segments ALTERNATE - exactly one is emitted.** Every")
+                w("write above targets the whole buffer (`snprintf(buf, ...)`),")
+                w("which writes from the start and NUL-terminates, so each")
+                w("replaces the last rather than extending it. **Match them as")
+                w("alternatives, never as a concatenation.**")
+            elif not whole:
+                w(f"**These {len(appended)} segments are written at an offset**")
+                w("(`snprintf(buf + n, ...)`), so they extend the buffer rather")
+                w("than replacing it, and more than one can appear in a single")
+                w("line.")
+            else:
+                w(f"**Mixed, and this row needs a run to settle.** {len(whole)}")
+                w("segment(s) write the whole buffer and so replace it;")
+                w(f"{len(appended)} write at an offset and so extend it. Which")
+                w("combinations actually occur is a control-flow question this")
+                w("generator does not answer - it reports the writes it can see.")
             w("")
 
     w("## P3 - Unstable wording, and stdout-only routing")
