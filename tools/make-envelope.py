@@ -76,6 +76,64 @@ def not_a_lap(text):
     return True
 
 
+def _check_artifact_provenance(lap, artifacts):
+    """Refuse an envelope whose artifacts assert a build its lap never names.
+
+    THE DEFECT THIS EXISTS FOR, and it is ours. Round 13 lap 1 shipped five
+    artifacts whose banners all said `platterpus-fork-g673a57b` inside a lap
+    that named `g9f8592e` in its header and `g6fbc41d` in its prose. Neither of
+    those strings appears in any artifact. The sequence that produced it is
+    ordinary and will happen again: write the lap, commit it, notice the lap
+    changed the compiled-in handshake state, regenerate the artifacts against
+    the new build, then build the envelope from the working tree -- without
+    re-reading what the lap had already said about them. The lap went stale
+    against its own attachments between being written and being sent.
+
+    Platterpus caught it (round 13 lap 2 §K3) and named the rule it breaks:
+    a claim about an artifact's provenance must be derivable from the
+    artifact's content, not from the banner of a covering message. They file
+    artifacts under the build the artifact itself asserts, which is why the
+    mismatch was visible to them at all.
+
+    Two assertions, and the second is the one that would have caught it:
+
+      * every artifact that carries a build tag carries the SAME one -- a
+        mixed bundle means at least one was regenerated and one was not;
+      * that tag appears somewhere in the lap. Not "the lap's SHAs are right",
+        which this cannot know: a lap legitimately names the pin, the peer's
+        build and prior releases. Only that the build the reader will find
+        stamped on every attachment is a build the lap mentions at all.
+    """
+    tag = re.compile(r"platterpus-fork-g([0-9a-f]{7,40})")
+    seen = {}
+    for path in artifacts:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for sha in set(tag.findall(text)):
+            seen.setdefault(sha, []).append(path.name)
+    if not seen:
+        return
+
+    if len(seen) > 1:
+        detail = "; ".join(f"{s}: {', '.join(sorted(f))}"
+                           for s, f in sorted(seen.items()))
+        sys.exit(f"refusing: the artifacts assert {len(seen)} different builds "
+                 f"({detail}). A mixed bundle means at least one was "
+                 f"regenerated and one was not.")
+
+    sha = next(iter(seen))
+    lap_text = lap.read_text(encoding="utf-8")
+    if sha not in lap_text and sha[:7] not in lap_text:
+        named = sorted(set(tag.findall(lap_text))) or ["none"]
+        sys.exit(f"refusing: every artifact asserts build {sha}, and the lap "
+                 f"never names it (it names: {', '.join(named)}). A reader "
+                 f"who checks provenance against the artifacts -- which is the "
+                 f"only place it is derivable -- finds a build the covering "
+                 f"lap does not mention. Regenerate, or correct the lap.")
+
+
 def main():
     argv = sys.argv[1:]
     lap = None
@@ -106,6 +164,7 @@ def main():
             out = derived
     if lap is not None:
         paths = [lap] + [p for p in paths if p != lap]
+        _check_artifact_provenance(lap, paths[1:])
 
     rows, body = [], []
     for p in paths:

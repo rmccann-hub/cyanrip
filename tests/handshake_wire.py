@@ -98,5 +98,80 @@ for lap in sorted(laps, key=lambda l: (l.number or 0, l.lap or 0)):
           "PROTOCOL.md C9 tells the receiving gate to refuse this file")
     fails += 1
 
+# --- the envelope's artifact-provenance refusal ---------------------------
+#
+# make-envelope.py had no test at all until round 13, and it shipped the defect
+# that proves it needed one: lap 1 went out with five artifacts whose banners
+# said `platterpus-fork-g673a57b` inside a lap that named `g9f8592e` and
+# `g6fbc41d` and never mentioned 673a57b. Platterpus found it by checking
+# provenance where it is derivable -- the artifact's own content -- rather than
+# from the covering message.
+#
+# Driven as a subprocess against files built here, so it exercises the real
+# tool and not a reimplementation of its rule. Both refusals must fire and the
+# clean case must still be accepted; a check that only proves the refusals
+# would pass with the tool refusing everything.
+import subprocess
+import tempfile
+
+ROOT = Path(__file__).resolve().parent.parent
+TOOL = ROOT / "tools" / "make-envelope.py"
+
+LAP_STUB = """HANDSHAKE-PROTOCOL: 4
+HANDSHAKE-ROUND: 99
+HANDSHAKE-LAP: 1
+HANDSHAKE-FROM: cyanrip-fork
+
+Body naming build platterpus-fork-g%s and nothing else.
+"""
+
+
+def _envelope(tmp, lap_sha, artifact_shas):
+    lap = tmp / "round-99-lap-01.md"
+    lap.write_text(LAP_STUB % lap_sha, encoding="utf-8")
+    parts = []
+    for i, sha in enumerate(artifact_shas):
+        a = tmp / f"artifact{i}.log"
+        a.write_text(f"cyanrip 0.0.0 (platterpus-fork-g{sha})\nbody\n",
+                     encoding="utf-8")
+        parts.append(str(a))
+    r = subprocess.run(
+        [sys.executable, str(TOOL), str(tmp / "out.md"), "--lap", str(lap)]
+        + parts, capture_output=True, text=True)
+    return r.returncode, (r.stdout + r.stderr)
+
+
+with tempfile.TemporaryDirectory() as td:
+    tmp = Path(td)
+
+    # 1. The exact round-13 mistake: artifacts agree with each other and the
+    #    lap names a different build.
+    rc, out = _envelope(tmp, "9f8592e", ["673a57b", "673a57b"])
+    if rc == 0:
+        print("FAIL: make-envelope.py accepted a bundle whose artifacts all "
+              "assert a build the lap never names -- this is round 13 lap 1's "
+              "own defect and it must not be emittable")
+        fails += 1
+    elif "never names it" not in out:
+        print(f"FAIL: make-envelope.py refused for the wrong reason: {out!r}")
+        fails += 1
+
+    # 2. A mixed bundle -- one artifact regenerated, one not.
+    rc, out = _envelope(tmp, "673a57b", ["673a57b", "24de9b4"])
+    if rc == 0:
+        print("FAIL: make-envelope.py accepted a bundle whose artifacts "
+              "assert two different builds")
+        fails += 1
+    elif "different builds" not in out:
+        print(f"FAIL: mixed bundle refused for the wrong reason: {out!r}")
+        fails += 1
+
+    # 3. And it must still emit the correct case, or the two above prove only
+    #    that the tool refuses everything.
+    rc, out = _envelope(tmp, "673a57b", ["673a57b", "673a57b"])
+    if rc != 0:
+        print(f"FAIL: make-envelope.py refused a correct bundle: {out!r}")
+        fails += 1
+
 print(f"{len(laps)} lap(s) checked, {fails} malformed")
 sys.exit(1 if fails else 0)
