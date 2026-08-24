@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.8 (platterpus-fork-g76a1017)`
+Build: `cyanrip 0.9.4-rc2+platterpus.8 (platterpus-fork-g2f7758b)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -493,7 +493,17 @@ that the contract cannot describe behaviour we do not have.
 | 4 | `, errors - %i` |
 | 5 | ` ` |
 
-Segment 0 is always present; the rest are appended conditionally.
+**Mixed: segment(s) 0 replace the buffer, 1, 2, 3, 4, 5 extend it.**
+A whole-buffer `snprintf(buf, ...)` writes from the start, so
+it resets the line; a `snprintf(buf + n, ...)` appends to
+whatever is already there. So a rendered line is one of the
+replacing segments followed by zero or more of the extending
+ones, in source order.
+
+**Which of them actually appear needs a run to settle** - that
+is control flow, and this generator reports the writes it can
+see rather than guessing at the branches around them. In
+particular it does NOT claim any segment is unconditional.
 
 **`cyanrip_main.c:2327`** - reaches logfile: yes
 
@@ -519,7 +529,11 @@ Fixed prefix: `Cache probe:    `
 | 7 | `%i to %i sectors (%.1f to %.1f KiB, uncached read %.1f ms%s)` |
 | 8 | `at least %i sectors, upper bound unknown (%.1f KiB or more, %s, uncached read %.1f ms%s)` |
 
-Segment 0 is always present; the rest are appended conditionally.
+**These segments ALTERNATE - exactly one is emitted.** Every
+write above targets the whole buffer (`snprintf(buf, ...)`),
+which writes from the start and NUL-terminates, so each
+replaces the last rather than extending it. **Match them as
+alternatives, never as a concatenation.**
 
 ## P3 - Unstable wording, and stdout-only routing
 
