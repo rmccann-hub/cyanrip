@@ -1490,11 +1490,22 @@ def emit(binary):
                 w("than replacing it, and more than one can appear in a single")
                 w("line.")
             else:
-                w(f"**Mixed, and this row needs a run to settle.** {len(whole)}")
-                w("segment(s) write the whole buffer and so replace it;")
-                w(f"{len(appended)} write at an offset and so extend it. Which")
-                w("combinations actually occur is a control-flow question this")
-                w("generator does not answer - it reports the writes it can see.")
+                repl = [str(i) for i, (_p, is_whole) in enumerate(parts)
+                        if is_whole]
+                ext = [str(i) for i, (_p, is_whole) in enumerate(parts)
+                       if not is_whole]
+                w(f"**Mixed: segment(s) {', '.join(repl)} replace the buffer, "
+                  f"{', '.join(ext)} extend it.**")
+                w("A whole-buffer `snprintf(buf, ...)` writes from the start, so")
+                w("it resets the line; a `snprintf(buf + n, ...)` appends to")
+                w("whatever is already there. So a rendered line is one of the")
+                w("replacing segments followed by zero or more of the extending")
+                w("ones, in source order.")
+                w("")
+                w("**Which of them actually appear needs a run to settle** - that")
+                w("is control flow, and this generator reports the writes it can")
+                w("see rather than guessing at the branches around them. In")
+                w("particular it does NOT claim any segment is unconditional.")
             w("")
 
     w("## P3 - Unstable wording, and stdout-only routing")
