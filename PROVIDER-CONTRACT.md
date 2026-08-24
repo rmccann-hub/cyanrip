@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g8a1a3ee)`
+Build: `cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g5f25b71)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -858,4 +858,187 @@ Three things a consumer would otherwise have to discover the hard way:
 On **this fork** the genopt message is routed through `cyanrip_log()`, so
 it reaches stdout, the logfile if one is open, and the `-j` record. That
 is a fork property; stock does neither.
+
+## P7 - Filename sanitisation (`-T`)
+
+**DERIVED.** From `src/naming.c`'s substitution table and the branch that
+writes each glyph, `src/cyanrip_main.c`'s option handling, and
+`src/os_compat.h`'s per-OS availability macros. Nothing here is
+transcribed; a hand-copied second copy of the table inside a generated
+document is the failure this generator exists to prevent.
+
+**Why it is here.** Platterpus asked for it in round 13 (`[ASK A]`,
+BLOCKING). P1 documented the flag and its four spellings and documented
+**none of their substitutions**, so the path a rip lands on -- a value
+that crosses the seam -- was described by neither contract. The concrete
+cost was a completed 14-track rip silently overwritten by a 2-track one,
+because a downstream guard predicted the directory name from a two-entry
+copy of this table and probed a directory that did not exist.
+
+This section is not advice about which mode to use. It is what the
+program does.
+
+### P7a - The default, and the four spellings
+
+**The default is `unicode`.** `cyanrip_main.c:1433` assigns `CRIP_SANITIZE_UNICODE`, and it
+is the only assignment to `settings.sanitize_method` that is not
+guarded by a `-T` value -- which is how this generator identifies it,
+and why a second unguarded one would be reported here as ambiguous
+rather than resolved to the first.
+
+| `-T` value | enum constant | glyph field | limited to characters unavailable on the build's OS |
+|---|---|---|---|
+| `simple` | `CRIP_SANITIZE_SIMPLE` | `to` | no |
+| `os_simple` | `CRIP_SANITIZE_OS_SIMPLE` | `to` | **yes** |
+| `unicode` *(default)* | `CRIP_SANITIZE_UNICODE` | `to_u` | no |
+| `os_unicode` | `CRIP_SANITIZE_OS_UNICODE` | `to_u` | **yes** |
+
+`-T` takes a value; there is no bare form. An unrecognised value is
+refused before any disc is touched -- P5 carries the string and the
+`return 1` that follows it.
+
+### P7b - The substitution table
+
+`crip_char_replacement[]`, in source order. The order matters for one
+thing only, and P7d is about that thing.
+
+| # | character | codepoint | `simple` writes | `unicode` writes | codepoint | availability macro |
+|---|---|---|---|---|---|---|
+| 0 | `<` | `U+003C` | `_` | `‹` | `U+2039` | `HAS_CH_LESS` |
+| 1 | `>` | `U+003E` | `_` | `›` | `U+203A` | `HAS_CH_MORE` |
+| 2 | `:` | `U+003A` | `_` | `∶` | `U+2236` | `HAS_CH_COLUMN` |
+| 3 | `\|` | `U+007C` | `_` | `│` | `U+2502` | `HAS_CH_OR` |
+| 4 | `?` | `U+003F` | `_` | `？` | `U+FF1F` | `HAS_CH_Q` |
+| 5 | `*` | `U+002A` | `_` | `∗` | `U+2217` | `HAS_CH_ANY` |
+| 6 | `/` | `U+002F` | `_` | `∕` | `U+2215` | `HAS_CH_FWDSLASH` |
+| 7 | `\` | `U+005C` | `_` | `⧹` | `U+29F9` | `HAS_CH_BWDSLASH` |
+| 8 | `"` | `U+0022` | `'` | `“` | `U+201C` | `HAS_CH_QUOTES` |
+| 9 | `"` | `U+0022` | `'` | `”` | `U+201D` | `HAS_CH_QUOTES` |
+
+**Anything not in the `character` column is passed through unchanged**
+-- no length limit, no case folding, no whitespace collapsing, no
+trailing-dot handling. That is an absence, so here is what it rests on
+rather than an assurance: these are every call in
+`crip_bprint_sanitize()` that writes to the output buffer, enumerated
+from the function body. A transformation this table does not describe
+would have to appear as a call here.
+
+| line | call | writes |
+|---|---|---|
+| `naming.c:142` | `av_bprint_append_data` | the input, verbatim |
+| `naming.c:147` | `av_bprint_chars` | the `simple` glyph, from the table |
+| `naming.c:150` | `av_bprint_append_data` | the `unicode` glyph, from the table |
+
+### P7c - What each mode does to each character
+
+The two `os_` modes substitute a character **only when it is unavailable
+on the build's OS**. Note which way that runs: a character being *legal*
+on the target filesystem is why an `os_` mode leaves it **alone**. On any
+given build an `os_` mode is therefore the **least** substituting of the
+four, never the most, and `-T os_unicode` is not a way to ask for the
+unicode glyphs -- it is a way to ask for fewer of them.
+
+Availability is a **compile-time** property (P7e). Two columns cover it,
+because `os_compat.h` has exactly two states for these macros: the
+`HAVE_WMAIN` build and everything else. `HAVE_WMAIN` is set by
+`src/meson.build:150` when the compiler links `wmain` with `-municode`,
+so in practice it means a Windows/MinGW build. The build that generated
+this document is named in the banner at the top; which branch **your**
+build took is a property of your build, not of this file.
+
+| character | `simple` | `unicode` | `os_simple` non-`HAVE_WMAIN` | `os_unicode` non-`HAVE_WMAIN` | `os_simple` `HAVE_WMAIN` | `os_unicode` `HAVE_WMAIN` |
+|---|---|---|---|---|---|---|
+| `<` | `_` | `‹` | unchanged | unchanged | `_` | `‹` |
+| `>` | `_` | `›` | unchanged | unchanged | `_` | `›` |
+| `:` | `_` | `∶` | unchanged | unchanged | `_` | `∶` |
+| `\|` | `_` | `│` | unchanged | unchanged | `_` | `│` |
+| `?` | `_` | `？` | unchanged | unchanged | `_` | `？` |
+| `*` | `_` | `∗` | unchanged | unchanged | `_` | `∗` |
+| `/` † | `_` | `∕` | `_` | `∕` | `_` | `∕` |
+| `\` | `_` | `⧹` | unchanged | unchanged | `_` | `⧹` |
+| `"` | `'` | `“` | unchanged | unchanged | `'` | `“` |
+| `"` | `'` | `”` | unchanged | unchanged | `'` | `”` |
+
+Read the two `non-HAVE_WMAIN` columns before treating an `os_` mode as
+a safe substitute for a plain one. On such a build **8 of the 9 distinct
+characters** are left unchanged by both `os_` modes: `<`, `>`, `:`, `\|`, `?`, `*`, `\`, `"`.
+
+Which leaves `os_simple` and `os_unicode` differing, on such a
+build, on `/` and nothing else.
+
+**† `/` is the exception, and it is not a property of the mode.** See
+P7d.
+
+### P7d - Two behaviours the table cannot express
+
+Both are read from the control flow of `crip_bprint_sanitize()`, not from
+the table, and both change the resulting filename. A consumer predicting
+a path from metadata gets the wrong answer without them.
+
+**1. `/` depends on where the text came from, not on the mode.**
+`crip_bprint_sanitize()` takes a `sanitize_fwdslash` argument; when it is
+0, a `/` is emitted verbatim -- which is how a naming scheme spells a
+subdirectory. Every call site, and what each one passes:
+
+| call site | `sanitize_fwdslash` | meaning |
+|---|---|---|
+| `naming.c:205` | `0` | literal text, never a tag value -- `/` is a directory separator here |
+| `naming.c:315` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
+| `naming.c:335` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
+| `naming.c:401` | `0` | literal text, never a tag value -- `/` is a directory separator here |
+
+So a `/` **inside a metadata value** is substituted, and a `/` **in the
+scheme itself** creates a directory. The pass-through is checked after
+the OS-availability test, so it applies in all four modes.
+
+**2. The two quote glyphs alternate on a counter that every substituted
+character advances -- not only quotes.** The table holds two rows for
+`"`; which one is used is chosen by a parity flag, and that flag is
+toggled by **every** character the table matches, including characters
+that are then left unchanged by an `os_` mode or by the `/` pass-through.
+The flag is a local, so it resets at every call -- and `process_cond()`
+calls once per literal run and once per `{tag}`, which means a `{tag}`
+boundary between two quotes resets the parity.
+
+Two consequences, both observable in a filename:
+
+- an odd number of other substitutable characters between two quotes
+  flips which glyph the closing quote gets;
+- the same rendered text produces different filenames depending on where
+  the scheme's `{}` boundaries fall.
+
+The `sanitize_quotes` scenario in `tests/rip_images.py` rips with each
+mode and asserts the resulting names, so this section fails when the
+behaviour moves.
+
+### P7e - Availability macros, and where they come from
+
+| macro | default | set under | value there |
+|---|---|---|---|
+| `HAS_CH_LESS` | `1` (`os_compat.h:109`) | `HAVE_WMAIN` | `0` (`os_compat.h:97`) |
+| `HAS_CH_MORE` | `1` (`os_compat.h:112`) | `HAVE_WMAIN` | `0` (`os_compat.h:98`) |
+| `HAS_CH_COLUMN` | `1` (`os_compat.h:115`) | `HAVE_WMAIN` | `0` (`os_compat.h:99`) |
+| `HAS_CH_OR` | `1` (`os_compat.h:118`) | `HAVE_WMAIN` | `0` (`os_compat.h:100`) |
+| `HAS_CH_Q` | `1` (`os_compat.h:121`) | `HAVE_WMAIN` | `0` (`os_compat.h:101`) |
+| `HAS_CH_ANY` | `1` (`os_compat.h:124`) | `HAVE_WMAIN` | `0` (`os_compat.h:102`) |
+| `HAS_CH_FWDSLASH` | `0` (`os_compat.h:127`, *default should be 0 here*) | `HAVE_WMAIN` | `0` (`os_compat.h:103`) |
+| `HAS_CH_BWDSLASH` | `1` (`os_compat.h:130`) | `HAVE_WMAIN` | `0` (`os_compat.h:104`) |
+| `HAS_CH_QUOTES` | `1` (`os_compat.h:133`) | `HAVE_WMAIN` | `0` (`os_compat.h:105`) |
+
+A macro appears once per row of P7b, so `HAS_CH_QUOTES` governs both
+quote rows together.
+
+**Defined here and read by nothing.** Derived, not noted: this
+paragraph disappears by itself when the macro is wired up, which a
+prose remark could not do.
+
+- **`HAS_COLUMN`** -- `os_compat.h:93` defines it as
+  `0` under `__MACH__`. No file in `src/` reads
+  that name.
+
+Stated as an observation and not as an intent: this generator can see
+that the name is never read, and cannot see what was meant. The
+consequence a consumer can act on is in the table above -- the macro
+the substitution table actually reads has no override under that
+condition, so those builds follow the default column.
 

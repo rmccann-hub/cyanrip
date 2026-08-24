@@ -2340,6 +2340,241 @@ def sc_cache_probe_only():
              "ripping, so the only fix for ask 1 has been undone")
 
 
+def sc_sanitize():
+    """P7's substitution tables, asserted against the running binary.
+
+    WHY THIS SHAPE. The generator reads source and can only be as right as its
+    parsing; nothing in it runs cyanrip. So this does the comparison the
+    generator cannot -- it parses the committed contract's P7c table and rips
+    with each -T mode, asserting the document predicts the filename that
+    actually appears on disk. Seam rule S-9: limits are established by running
+    the binary. It is also the only kind of check that can catch the generator
+    misreading the table, because a wrong derivation and a wrong hand-written
+    claim look identical in the document.
+
+    WHAT IT COST TO NOT HAVE THIS. Platterpus's overwrite guard predicted a rip
+    directory by rendering our naming template through their own two-entry copy
+    of our substitution table. It got one character wrong, probed a directory
+    that did not exist, found no audio, asked nothing, and a completed 14-track
+    archival rip was overwritten by a 2-track one (round 13 [ASK A]). Neither
+    contract described the substitutions; P1 documented only that the flag
+    existed.
+
+    WHICH COLUMN. P7c reports both compile-time branches, because availability
+    is a property of the build and this suite runs on one platform. The column
+    is chosen from os.name and stated out loud rather than inferred from the
+    behaviour under test -- picking the column by measuring the thing the column
+    is supposed to predict would make the assertion circular.
+
+    QUOTES ARE HELD BACK from the per-character pass on purpose. They have two
+    table rows and a parity rule, so folding them in would test the parity and
+    the table at once and tell you nothing about which failed. They get their
+    own block below.
+    """
+    contract = ROOT / "PROVIDER-CONTRACT.md"
+    if not contract.exists():
+        fail("sanitize: PROVIDER-CONTRACT.md is missing")
+        return
+    text = contract.read_text()
+
+    section = re.search(r"^### P7c .*?(?=^### P7d )", text, re.M | re.S)
+    if not section:
+        fail("sanitize: no P7c section in the contract -- round 13's blocking "
+             "ask was to publish this table, and it is not there")
+        return
+
+    def unwrap(cell):
+        cell = cell.strip().rstrip("†").strip()
+        if cell == "unchanged":
+            return None
+        m = re.fullmatch(r"`(.*)`", cell)
+        if not m:
+            return "UNPARSED:" + cell
+        # GFM tables escape a literal pipe as \| even inside a code span; it is
+        # the one escape the table parser honours, so it is the one to undo.
+        return m.group(1).replace("\\|", "|")
+
+    rows = {}
+    for line in section.group(0).splitlines():
+        if not line.startswith("| `"):
+            continue
+        # Split on unescaped pipes only. `\|` is a cell's content, not a
+        # boundary -- splitting on it drops the `|` row entirely, and a row
+        # missing from a completeness check is the failure this test is for.
+        cells = re.split(r"(?<!\\)\|", line.strip().strip("|"))
+        if len(cells) != 7:
+            fail(f"sanitize: P7c row has {len(cells)} cells, expected 7: "
+                 f"{line}")
+            continue
+        ch = unwrap(cells[0])
+        rows.setdefault(ch, []).append([unwrap(c) for c in cells[1:]])
+    if not rows:
+        fail("sanitize: P7c declares no rows at all -- a check satisfiable by "
+             "finding nothing is the failure it guards")
+        return
+
+    win = os.name == "nt"
+    col = {"simple": 0, "unicode": 1,
+           "os_simple": 4 if win else 2, "os_unicode": 5 if win else 3}
+    print(f"sanitize: asserting the "
+          f"{'HAVE_WMAIN' if win else 'non-HAVE_WMAIN'} columns of P7c "
+          f"(os.name={os.name!r})")
+
+    # `/` is excluded: P7c footnotes it because its result depends on the call
+    # site rather than the mode, and it is asserted separately below.
+    # `"` is excluded: two rows, parity rule, own block below.
+    chars = [c for c in rows if c not in ('/', '"') and len(rows[c]) == 1]
+    if len(chars) < 4:
+        fail(f"sanitize: only {len(chars)} single-row characters to test "
+             f"({chars}) -- too few to discriminate")
+        return
+
+    subject = "A".join([""] + chars + [""])          # A<A>A:A|A?A*A\A
+    # -a parses key=value:key=value and treats \ as an escape, so a literal
+    # colon and a literal backslash have to be escaped to reach the tag at all.
+    encoded = subject.replace("\\", "\\\\").replace(":", "\\:")
+
+    for mode in ("simple", "unicode", "os_simple", "os_unicode"):
+        want = "".join((rows[c][0][col[mode]] or c) if c in rows else c
+                       for c in subject)
+        if "UNPARSED:" in want:
+            fail(f"sanitize: P7c has a cell this test cannot read for {mode}: "
+                 f"{want}")
+            continue
+        out = WORK / f"out_san_{mode}"
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-l", "1", "-o", "flac", "-D", out,
+                     "-F", "{album}", "-L", "log", "-M", "sheet",
+                     "-T", mode, "-a", f"album={encoded}")
+        if ec != 0:
+            fail(f"sanitize: -T {mode} exited {ec}")
+            continue
+        have = [p.name for p in out.iterdir() if p.suffix == ".flac"]
+        if have != [want + ".flac"]:
+            fail(f"sanitize: -T {mode} on {subject!r} produced {have}, and "
+                 f"P7c predicts {[want + '.flac']}. The contract and the "
+                 f"binary disagree about a filename, which is the exact "
+                 f"failure round 13 [ASK A] was raised for")
+
+    # The default. Parsed from P7a's own marker rather than hardcoded here:
+    # two places naming the default is two places that can disagree.
+    m = re.search(r"^\| `(\w+)` \*\(default\)\*", text, re.M)
+    if not m:
+        fail("sanitize: P7a marks no mode as the default")
+    else:
+        declared = m.group(1)
+        out = WORK / "out_san_default"
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-l", "1", "-o", "flac", "-D", out,
+                     "-F", "{album}", "-L", "log", "-M", "sheet",
+                     "-a", f"album={encoded}")
+        if ec != 0:
+            fail(f"sanitize: the default-mode rip exited {ec}")
+        else:
+            have = [p.name for p in out.iterdir() if p.suffix == ".flac"]
+            same = [p.name for p in (WORK / f"out_san_{declared}").iterdir()
+                    if p.suffix == ".flac"]
+            if have != same:
+                fail(f"sanitize: with no -T the binary produced {have}, but "
+                     f"P7a declares the default is `{declared}`, which "
+                     f"produced {same}")
+
+    # --- quotes: two rows, and a parity that other characters advance -------
+    #
+    # Measured, then written down -- not the reverse. Each case pins one thing:
+    #   1. plain alternation, nothing in between
+    #   2. ONE other substituted character in between flips the closing glyph,
+    #      because the parity advances on every table match and not on quotes
+    #   3. TWO put it back
+    #   4. a {tag} boundary resets it, so identical rendered text gives two
+    #      different filenames depending on where the scheme's braces fall
+    #
+    # 4 is the one a consumer cannot possibly guess, and the one that makes
+    # "reconstruct the path from the metadata" wrong rather than merely fragile.
+    qrows = rows.get('"')
+    if not qrows or len(qrows) != 2:
+        fail(f"sanitize: P7c has {len(qrows or [])} rows for `\"`, expected 2 "
+             f"-- the parity below is meaningless without both glyphs")
+        return
+    open_q = qrows[0][col["unicode"]]
+    close_q = qrows[1][col["unicode"]]
+    lt = rows['<'][0][col["unicode"]] if '<' in rows else None
+    star = rows['*'][0][col["unicode"]] if '*' in rows else None
+    if not (open_q and close_q and lt and star):
+        fail("sanitize: P7c's unicode column is missing a glyph the parity "
+             "cases need")
+        return
+
+    for what, scheme, meta, want in (
+            ("plain alternation", 'q"a"z', None,
+             f"q{open_q}a{close_q}z"),
+            ("one intervening substitution", 'q"a<b"z', None,
+             f"q{open_q}a{lt}b{open_q}z"),
+            ("two intervening substitutions", 'q"a<b*c"z', None,
+             f"q{open_q}a{lt}b{star}c{close_q}z"),
+            ("a {tag} boundary resets the parity", 'x"a{album}"z', "MID",
+             f"x{open_q}aMID{open_q}z"),
+            ("the same text with no boundary", 'x"aMID"z', None,
+             f"x{open_q}aMID{close_q}z")):
+        out = WORK / ("out_q" + str(abs(hash(what)) % 10**8))
+        extra = ["-a", f"album={meta}"] if meta else []
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-l", "1", "-o", "flac", "-D", out,
+                     "-F", scheme, "-L", "log", "-M", "sheet",
+                     "-T", "unicode", *extra)
+        if ec != 0:
+            fail(f"sanitize/quotes ({what}): exited {ec}")
+            continue
+        have = [p.name for p in out.iterdir() if p.suffix == ".flac"]
+        if have != [want + ".flac"]:
+            fail(f"sanitize/quotes ({what}): scheme {scheme!r} produced "
+                 f"{have}, expected {[want + '.flac']}")
+
+    # And the two cases must actually differ, or the pair proves nothing.
+    if f"x{open_q}aMID{open_q}z" == f"x{open_q}aMID{close_q}z":
+        fail("sanitize/quotes: the two boundary cases predict the same name, "
+             "so they cannot discriminate")
+
+    # --- `/`: a separator or a character, decided by the call site ----------
+    slash = rows.get('/')
+    if not slash:
+        fail("sanitize: P7c has no `/` row")
+        return
+    # In a tag value it is substituted, in all four modes.
+    for mode in ("simple", "unicode", "os_simple", "os_unicode"):
+        want = slash[0][col[mode]]
+        if want is None:
+            fail(f"sanitize: P7c says `/` is unchanged under {mode}; the "
+                 f"footnote says it is the one row that is never unchanged")
+            continue
+        out = WORK / f"out_slash_{mode}"
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-l", "1", "-o", "flac", "-D", out,
+                     "-F", "{album}", "-L", "log", "-M", "sheet",
+                     "-T", mode, "-a", "album=a/b")
+        if ec != 0:
+            fail(f"sanitize/slash: -T {mode} exited {ec}")
+            continue
+        have = [p.name for p in out.iterdir() if p.suffix == ".flac"]
+        if have != [f"a{want}b.flac"]:
+            fail(f"sanitize/slash: -T {mode} on a tag value 'a/b' produced "
+                 f"{have}, and P7c predicts {[f'a{want}b.flac']}")
+
+    # In the scheme itself it is a directory separator, in every mode.
+    for mode in ("simple", "unicode", "os_simple", "os_unicode"):
+        out = WORK / f"out_sep_{mode}"
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-l", "1", "-o", "flac", "-D", out,
+                     "-F", "sub/trk", "-L", "log", "-M", "sheet", "-T", mode)
+        if ec != 0:
+            fail(f"sanitize/separator: -T {mode} exited {ec}")
+            continue
+        if not (out / "sub" / "trk.flac").exists():
+            fail(f"sanitize/separator: -T {mode} did not treat `/` in the "
+                 f"naming scheme as a directory separator; P7d says it is one "
+                 f"in all four modes. Found "
+                 f"{sorted(str(p.relative_to(out)) for p in out.rglob('*'))}")
+
 with tempfile.TemporaryDirectory() as tmpdir:
     WORK = Path(tmpdir)
 

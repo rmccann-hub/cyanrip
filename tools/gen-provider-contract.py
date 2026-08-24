@@ -854,6 +854,254 @@ def exit_surface():
 BUILD_TAG = re.compile(r"-g[0-9a-f]{7,40}\)")
 
 
+def md_cell(s):
+    """A string safe to drop into a GFM table cell.
+
+    `|` is one of the ten characters the substitution table names, and an
+    unescaped one splits the row -- P7b rendered its `|` row with two extra
+    columns, silently, because a pipe inside a code span is still a pipe to
+    the table parser. Backslash-escaping is the only thing GFM honours here.
+    """
+    return s.replace("|", "\\|")
+
+
+def c_char(lit):
+    """The character a C single-quoted literal denotes.
+
+    The table's `from` column contains `'\\\\'` and its `to` column `'\\''`, and
+    printing those verbatim into the contract would publish the C escape rather
+    than the character -- a consumer matching on it would look for a backslash
+    followed by a quote. Unknown escapes are returned unchanged rather than
+    guessed at, so a new one shows up as itself instead of as a wrong glyph.
+    """
+    return {"\\\\": "\\", "\\'": "'", "\\\"": "\"",
+            "\\n": "\n", "\\t": "\t", "\\r": "\r",
+            "\\0": "\0"}.get(lit, lit)
+
+
+def sanitize_table():
+    """Rows of `crip_char_replacement[]` in src/naming.c, in table order.
+
+    Derived from the initialiser rather than transcribed. This table IS the
+    answer to "what does -T do to a filename", and a hand-copied second copy of
+    it inside a generated document is the exact defect this generator exists to
+    prevent -- it would look authoritative and rot the first time a row moved.
+
+    Returns (rows, unresolved). A row is (index, from_char, to_char, to_utf8,
+    availability_macro). Anything in the initialiser that does not parse is
+    REPORTED rather than dropped: a substitution we cannot read is a fact the
+    consumer needs.
+    """
+    text = open(os.path.join(SRC, "naming.c"), encoding="utf-8").read()
+    m = re.search(r"crip_char_replacement\[\]\s*=\s*\{(.*?)\n\};", text, re.S)
+    if not m:
+        return [], ["crip_char_replacement[] initialiser not found in naming.c"]
+    base = text[:m.start(1)].count("\n") + 1
+    rows, unresolved = [], []
+    idx = 0
+    for off, raw in enumerate(m.group(1).splitlines()):
+        s = raw.strip()
+        if not s or s.startswith("/*") or s.startswith("*"):
+            continue
+        if re.match(r"\{\s*0\s*\}\s*,?$", s):          # the terminator
+            continue
+        r = re.match(r"\{\s*'(\\?.)'\s*,\s*'(\\?.)'\s*,\s*\"(.*?)\"\s*,"
+                     r"\s*(\w+)\s*\}\s*,?$", s)
+        if r:
+            rows.append((idx, r.group(1), r.group(2), r.group(3), r.group(4)))
+            idx += 1
+        else:
+            unresolved.append(f"naming.c:{base + off}: {s}")
+    return rows, unresolved
+
+
+def sanitize_modes():
+    """The four -T spellings, the enum constant each selects, the default, and
+    which constants take the OS-availability path and which glyph field.
+
+    Every part of this is read from control flow rather than from the help
+    text: the help string lists the spellings but says nothing about what any
+    of them does, and it is the *behaviour* Platterpus has to reproduce.
+    """
+    naming = blank_noncode(
+        open(os.path.join(SRC, "naming.c"), encoding="utf-8").read())
+    # The spellings ARE string literals, so this one derivation has to read the
+    # raw text -- blank_noncode() would erase the very thing being extracted.
+    # It is anchored on `strcmp(sanitize, ...)` followed by the assignment, so
+    # a mention of "unicode" in a comment cannot contribute a spelling: a
+    # comment does not contain that call shape.
+    raw_main = open(os.path.join(SRC, "cyanrip_main.c"), encoding="utf-8").read()
+
+    unresolved = []
+
+    # -T "<spelling>" -> enum constant, from the strcmp chain.
+    spellings = re.findall(
+        r'strcmp\(\s*sanitize\s*,\s*"([^"]+)"\s*\)\s*\)\s*'
+        r'settings\.sanitize_method\s*=\s*(\w+)\s*;', raw_main)
+    if not spellings:
+        unresolved.append("cyanrip_main.c: -T strcmp chain not found")
+
+    # The default: the one assignment that is not part of the strcmp chain.
+    default, default_at = None, None
+    for i, line in enumerate(raw_main.splitlines(), 1):
+        m = re.match(r"\s*settings\.sanitize_method\s*=\s*(\w+)\s*;\s*$", line)
+        if m:
+            if default is not None:
+                unresolved.append(
+                    f"cyanrip_main.c:{i}: a second unconditional default "
+                    f"({m.group(1)}) -- two declarations are ambiguous, not "
+                    f"'the first one'")
+            default, default_at = m.group(1), i
+
+    # Which constants take the availability path.
+    m = re.search(r"int\s+os_sanitize\s*=\s*(.*?);", naming, re.S)
+    os_modes = set(re.findall(r"==\s*(\w+)", m.group(1))) if m else set()
+    if not m:
+        unresolved.append("naming.c: os_sanitize expression not found")
+
+    # Which constants emit rep->to, and which emit rep->to_u. Derived from the
+    # branch that actually writes, not from the constant's name -- CRIP_
+    # SANITIZE_OS_SIMPLE reads like "simple" but nothing guarantees the source
+    # agrees, and a contract that assumes it is guessing.
+    glyph = {}
+    for cond, body in re.findall(
+            r"if\s*\((ctx->settings\.sanitize_method[^{]*?)\)\s*\{(.*?)\n\s*\}",
+            naming, re.S):
+        field = None
+        if re.search(r"rep->to_u", body):
+            field = "to_u"
+        elif re.search(r"rep->to\b", body):
+            field = "to"
+        if field:
+            for c in re.findall(r"==\s*(\w+)", cond):
+                glyph[c] = field
+
+    modes = []
+    for spelling, const in spellings:
+        if const not in glyph:
+            unresolved.append(
+                f"naming.c: no branch in crip_bprint_sanitize() writes a glyph "
+                f"for {const}")
+        modes.append((spelling, const, const in os_modes, glyph.get(const)))
+    return modes, default, default_at, unresolved
+
+
+def sanitize_availability():
+    """HAS_* macro values by platform, from src/os_compat.h's own #if structure.
+
+    Reported as a structure rather than as "this build's values" on purpose:
+    this generator runs on one platform and the contract describes the program,
+    so collapsing the conditional into whatever the build machine happens to be
+    would state a per-OS fact at the scope of a single OS. Both branches are
+    emitted and the reader picks their own.
+
+    Returns (overrides, defaults, unread):
+      overrides  {condition: {macro: (value, line)}}
+      defaults   {macro: (value, comment, line)}
+      unread     macros defined here that no file reads
+    """
+    path = os.path.join(SRC, "os_compat.h")
+    lines = open(path, encoding="utf-8").read().splitlines()
+    overrides, defaults = {}, {}
+    guard, pend = [], None
+    for i, raw in enumerate(lines, 1):
+        s = raw.strip()
+        m = re.match(r"#\s*if\s+defined\s*\(\s*(\w+)\s*\)\s*$", s)
+        if m:
+            guard.append(m.group(1)); pend = None; continue
+        m = re.match(r"#\s*ifndef\s+(\w+)\s*$", s)
+        if m:
+            guard.append("!" + m.group(1)); pend = m.group(1); continue
+        if re.match(r"#\s*if(def)?\b", s):
+            guard.append(None); pend = None; continue
+        if re.match(r"#\s*endif\b", s):
+            if guard:
+                guard.pop()
+            pend = None; continue
+        if re.match(r"#\s*el(se|if)\b", s):
+            pend = None; continue
+        m = re.match(r"#\s*define\s+(HAS_[A-Z0-9_]*)\s+(-?\d+)\s*"
+                     r"(?://\s*(.*?)\s*)?$", s)
+        if m:
+            name, val, cmt = m.group(1), int(m.group(2)), m.group(3) or ""
+            if pend == name:
+                defaults[name] = (val, cmt, i)
+            else:
+                cond = guard[-1] if guard and guard[-1] else "?"
+                overrides.setdefault(cond, {})[name] = (val, i)
+
+    named = set(defaults)
+    for d in overrides.values():
+        named |= set(d)
+
+    # "Defined and never read" is derivable, so it is derived. A prose note
+    # saying so would go stale the moment somebody wired the macro up; this
+    # line disappears by itself when they do.
+    unread = []
+    for macro in sorted(named):
+        read = False
+        for name in sorted(os.listdir(SRC)):
+            if not name.endswith((".c", ".h")):
+                continue
+            text = blank_noncode(
+                open(os.path.join(SRC, name), encoding="utf-8").read())
+            for line in text.splitlines():
+                if re.match(r"\s*#\s*(define|ifndef|undef)\s+" + macro + r"\b",
+                            line):
+                    continue
+                if re.search(r"\b" + macro + r"\b", line):
+                    read = True
+                    break
+            if read:
+                break
+        if not read:
+            where = defaults.get(macro)
+            if where is None:
+                for cond, d in overrides.items():
+                    if macro in d:
+                        where = (d[macro][0], cond, d[macro][1])
+            unread.append((macro, where))
+    return overrides, defaults, unread
+
+
+def sanitize_writes():
+    """Every output-buffer write inside crip_bprint_sanitize(), in order.
+
+    This is what backs P7b's passthrough claim. "The table is the only
+    transformation" is an absence, and an absence asserted in prose goes
+    quietly wrong the first time somebody adds a fifth branch -- the same shape
+    as "there is no -V", which was true when written and one upstream commit
+    from being the misleading kind of true. Enumerating the writes means a new
+    one appears in the document as an unclassified row instead of not appearing
+    at all.
+    """
+    text = open(os.path.join(SRC, "naming.c"), encoding="utf-8").read()
+    body, start = _fn_body(blank_noncode(text),
+                           re.compile(r"crip_bprint_sanitize\s*\([^;{}]*?\)\s*\n?\s*\{"))
+    if body is None:
+        return []
+    out = []
+    for m in re.finditer(r"(av_bprint_\w+)\s*\(([^;{}]*?)\)\s*;", body, re.S):
+        args = [a.strip() for a in m.group(2).split(",")]
+        line = start + body[:m.start()].count("\n")
+        out.append((line, m.group(1), args[1] if len(args) > 1 else "?"))
+    return out
+
+
+def sanitize_callsites():
+    """Every crip_bprint_sanitize() call and the sanitize_fwdslash argument it
+    passes, because that argument decides whether '/' is a separator or a
+    character -- and it is the one part of the substitution table that is not a
+    property of the mode at all."""
+    text = open(os.path.join(SRC, "naming.c"), encoding="utf-8").read()
+    blanked = blank_noncode(text)
+    out = []
+    for m in re.finditer(r"crip_bprint_sanitize\s*\(([^;{}]*?)\)\s*;", blanked, re.S):
+        args = [a.strip() for a in m.group(1).split(",")]
+        line = blanked[:m.start()].count("\n") + 1
+        out.append((line, args[-1] if args else "?"))
+    return out
+
 def version(binary):
     """The banner, verbatim, INCLUDING the build's short SHA.
 
@@ -1304,6 +1552,249 @@ def emit(binary):
     w("it reaches stdout, the logfile if one is open, and the `-j` record. That")
     w("is a fork property; stock does neither.")
     w("")
+    w("## P7 - Filename sanitisation (`-T`)")
+    w("")
+    w("**DERIVED.** From `src/naming.c`'s substitution table and the branch that")
+    w("writes each glyph, `src/cyanrip_main.c`'s option handling, and")
+    w("`src/os_compat.h`'s per-OS availability macros. Nothing here is")
+    w("transcribed; a hand-copied second copy of the table inside a generated")
+    w("document is the failure this generator exists to prevent.")
+    w("")
+    w("**Why it is here.** Platterpus asked for it in round 13 (`[ASK A]`,")
+    w("BLOCKING). P1 documented the flag and its four spellings and documented")
+    w("**none of their substitutions**, so the path a rip lands on -- a value")
+    w("that crosses the seam -- was described by neither contract. The concrete")
+    w("cost was a completed 14-track rip silently overwritten by a 2-track one,")
+    w("because a downstream guard predicted the directory name from a two-entry")
+    w("copy of this table and probed a directory that did not exist.")
+    w("")
+    w("This section is not advice about which mode to use. It is what the")
+    w("program does.")
+    w("")
+
+    rows, row_unresolved = sanitize_table()
+    modes, default_const, default_line, mode_unresolved = sanitize_modes()
+    overrides, defaults, unread = sanitize_availability()
+    callsites = sanitize_callsites()
+
+    w("### P7a - The default, and the four spellings")
+    w("")
+    if default_const:
+        dname = next((s for s, c, _o, _g in modes if c == default_const), None)
+        w(f"**The default is `{dname or default_const}`.** "
+          f"`cyanrip_main.c:{default_line}` assigns `{default_const}`, and it")
+        w("is the only assignment to `settings.sanitize_method` that is not")
+        w("guarded by a `-T` value -- which is how this generator identifies it,")
+        w("and why a second unguarded one would be reported here as ambiguous")
+        w("rather than resolved to the first.")
+    else:
+        w("**The default could not be resolved from the source.** Treat every")
+        w("mode below as possible until this is fixed.")
+    w("")
+    w("| `-T` value | enum constant | glyph field | limited to characters unavailable on the build's OS |")
+    w("|---|---|---|---|")
+    for spelling, const, is_os, field in modes:
+        dflt = " *(default)*" if const == default_const else ""
+        w(f"| `{spelling}`{dflt} | `{const}` | `{field or '**unresolved**'}` | "
+          f"{'**yes**' if is_os else 'no' } |")
+    w("")
+    w("`-T` takes a value; there is no bare form. An unrecognised value is")
+    w("refused before any disc is touched -- P5 carries the string and the")
+    w("`return 1` that follows it.")
+    w("")
+
+    w("### P7b - The substitution table")
+    w("")
+    w("`crip_char_replacement[]`, in source order. The order matters for one")
+    w("thing only, and P7d is about that thing.")
+    w("")
+    w("| # | character | codepoint | `simple` writes | `unicode` writes | codepoint | availability macro |")
+    w("|---|---|---|---|---|---|---|")
+    for idx, frm, to, to_u, macro in rows:
+        f_ch, t_ch = c_char(frm), c_char(to)
+        w(f"| {idx} | `{md_cell(f_ch)}` | `U+{ord(f_ch):04X}` | "
+          f"`{md_cell(t_ch)}` | `{md_cell(to_u)}` | "
+          f"`{' '.join('U+%04X' % ord(ch) for ch in to_u)}` | `{macro}` |")
+    w("")
+    if row_unresolved:
+        w("**Rows this generator could not parse, reported rather than dropped:**")
+        w("")
+        for u in row_unresolved:
+            w(f"- `{u}`")
+        w("")
+    w("**Anything not in the `character` column is passed through unchanged**")
+    w("-- no length limit, no case folding, no whitespace collapsing, no")
+    w("trailing-dot handling. That is an absence, so here is what it rests on")
+    w("rather than an assurance: these are every call in")
+    w("`crip_bprint_sanitize()` that writes to the output buffer, enumerated")
+    w("from the function body. A transformation this table does not describe")
+    w("would have to appear as a call here.")
+    w("")
+    w("| line | call | writes |")
+    w("|---|---|---|")
+    for line, call, arg in sanitize_writes():
+        if "pos" in arg:
+            what = "the input, verbatim"
+        elif "to_u" in arg:
+            what = "the `unicode` glyph, from the table"
+        elif "rep->to" in arg:
+            what = "the `simple` glyph, from the table"
+        else:
+            what = f"**unclassified** -- `{md_cell(arg)}`"
+        w(f"| `naming.c:{line}` | `{call}` | {what} |")
+    w("")
+
+    w("### P7c - What each mode does to each character")
+    w("")
+    w("The two `os_` modes substitute a character **only when it is unavailable")
+    w("on the build's OS**. Note which way that runs: a character being *legal*")
+    w("on the target filesystem is why an `os_` mode leaves it **alone**. On any")
+    w("given build an `os_` mode is therefore the **least** substituting of the")
+    w("four, never the most, and `-T os_unicode` is not a way to ask for the")
+    w("unicode glyphs -- it is a way to ask for fewer of them.")
+    w("")
+    w("Availability is a **compile-time** property (P7e). Two columns cover it,")
+    w("because `os_compat.h` has exactly two states for these macros: the")
+    w("`HAVE_WMAIN` build and everything else. `HAVE_WMAIN` is set by")
+    w("`src/meson.build:150` when the compiler links `wmain` with `-municode`,")
+    w("so in practice it means a Windows/MinGW build. The build that generated")
+    w("this document is named in the banner at the top; which branch **your**")
+    w("build took is a property of your build, not of this file.")
+    w("")
+
+    def avail(macro, win):
+        if win and macro in overrides.get("HAVE_WMAIN", {}):
+            return overrides["HAVE_WMAIN"][macro][0]
+        if macro in defaults:
+            return defaults[macro][0]
+        return None
+
+    def cell(macro, glyph, win):
+        a = avail(macro, win)
+        if a is None:
+            return "**unresolved**"
+        return "unchanged" if a else f"`{md_cell(glyph)}`"
+
+    w("| character | `simple` | `unicode` | `os_simple` non-`HAVE_WMAIN` | `os_unicode` non-`HAVE_WMAIN` | `os_simple` `HAVE_WMAIN` | `os_unicode` `HAVE_WMAIN` |")
+    w("|---|---|---|---|---|---|---|")
+    for idx, frm, to, to_u, macro in rows:
+        f_ch, t_ch = c_char(frm), c_char(to)
+        note = " †" if f_ch == "/" else ""
+        w(f"| `{md_cell(f_ch)}`{note} | `{md_cell(t_ch)}` | `{md_cell(to_u)}` | "
+          f"{cell(macro, t_ch, False)} | {cell(macro, to_u, False)} | "
+          f"{cell(macro, t_ch, True)} | {cell(macro, to_u, True)} |")
+    w("")
+    same = list(dict.fromkeys(c_char(f) for _i, f, _t, _u, m in rows
+                              if avail(m, False)))
+    diff = list(dict.fromkeys(c_char(f) for _i, f, _t, _u, m in rows
+                              if not avail(m, False)))
+    if same:
+        w("Read the two `non-HAVE_WMAIN` columns before treating an `os_` mode as")
+        w("a safe substitute for a plain one. On such a build "
+          f"**{len(same)} of the {len(set(c_char(r[1]) for r in rows))} distinct")
+        w("characters** are left unchanged by both `os_` modes: "
+          + ", ".join(f"`{md_cell(c)}`" for c in same) + ".")
+        w("")
+        if diff:
+            w("Which leaves `os_simple` and `os_unicode` differing, on such a")
+            w("build, on " + ", ".join(f"`{md_cell(c)}`" for c in diff) +
+              " and nothing else.")
+            w("")
+    w("**† `/` is the exception, and it is not a property of the mode.** See")
+    w("P7d.")
+    w("")
+
+    w("### P7d - Two behaviours the table cannot express")
+    w("")
+    w("Both are read from the control flow of `crip_bprint_sanitize()`, not from")
+    w("the table, and both change the resulting filename. A consumer predicting")
+    w("a path from metadata gets the wrong answer without them.")
+    w("")
+    w("**1. `/` depends on where the text came from, not on the mode.**")
+    w("`crip_bprint_sanitize()` takes a `sanitize_fwdslash` argument; when it is")
+    w("0, a `/` is emitted verbatim -- which is how a naming scheme spells a")
+    w("subdirectory. Every call site, and what each one passes:")
+    w("")
+    w("| call site | `sanitize_fwdslash` | meaning |")
+    w("|---|---|---|")
+    for line, arg in callsites:
+        if arg == "0":
+            meaning = ("literal text, never a tag value -- `/` is a directory "
+                       "separator here")
+        else:
+            meaning = (f"`{arg}`: 1 when the token resolved to a metadata tag, "
+                       f"0 when it fell back to literal scheme text")
+        w(f"| `naming.c:{line}` | `{arg}` | {meaning} |")
+    w("")
+    w("So a `/` **inside a metadata value** is substituted, and a `/` **in the")
+    w("scheme itself** creates a directory. The pass-through is checked after")
+    w("the OS-availability test, so it applies in all four modes.")
+    w("")
+    w("**2. The two quote glyphs alternate on a counter that every substituted")
+    w("character advances -- not only quotes.** The table holds two rows for")
+    w("`\"`; which one is used is chosen by a parity flag, and that flag is")
+    w("toggled by **every** character the table matches, including characters")
+    w("that are then left unchanged by an `os_` mode or by the `/` pass-through.")
+    w("The flag is a local, so it resets at every call -- and `process_cond()`")
+    w("calls once per literal run and once per `{tag}`, which means a `{tag}`")
+    w("boundary between two quotes resets the parity.")
+    w("")
+    w("Two consequences, both observable in a filename:")
+    w("")
+    w("- an odd number of other substitutable characters between two quotes")
+    w("  flips which glyph the closing quote gets;")
+    w("- the same rendered text produces different filenames depending on where")
+    w("  the scheme's `{}` boundaries fall.")
+    w("")
+    w("The `sanitize_quotes` scenario in `tests/rip_images.py` rips with each")
+    w("mode and asserts the resulting names, so this section fails when the")
+    w("behaviour moves.")
+    w("")
+
+    w("### P7e - Availability macros, and where they come from")
+    w("")
+    w("| macro | default | set under | value there |")
+    w("|---|---|---|---|")
+    for macro in dict.fromkeys(r[4] for r in rows):
+        d = defaults.get(macro)
+        dtxt = (f"`{d[0]}` (`os_compat.h:{d[2]}`"
+                + (f", *{d[1]}*" if d[1] else "") + ")") if d else "**none**"
+        ovs = [f"`{cond}` -> `{v[0]}` (`os_compat.h:{v[1]}`)"
+               for cond, m in sorted(overrides.items()) if macro in m
+               for v in [m[macro]]]
+        w(f"| `{macro}` | {dtxt} | "
+          f"{'; '.join(c.split(' -> ')[0] for c in ovs) if ovs else '--'} | "
+          f"{'; '.join(c.split(' -> ')[1] for c in ovs) if ovs else '--'} |")
+    w("")
+    w("A macro appears once per row of P7b, so `HAS_CH_QUOTES` governs both")
+    w("quote rows together.")
+    w("")
+    if unread:
+        w("**Defined here and read by nothing.** Derived, not noted: this")
+        w("paragraph disappears by itself when the macro is wired up, which a")
+        w("prose remark could not do.")
+        w("")
+        for macro, where in unread:
+            if where and len(where) == 3 and isinstance(where[1], str) and where[1]:
+                w(f"- **`{macro}`** -- `os_compat.h:{where[2]}` defines it as")
+                w(f"  `{where[0]}` under `{where[1]}`. No file in `src/` reads")
+                w(f"  that name.")
+            else:
+                w(f"- **`{macro}`** -- defined in `os_compat.h`, read nowhere.")
+        w("")
+        w("Stated as an observation and not as an intent: this generator can see")
+        w("that the name is never read, and cannot see what was meant. The")
+        w("consequence a consumer can act on is in the table above -- the macro")
+        w("the substitution table actually reads has no override under that")
+        w("condition, so those builds follow the default column.")
+        w("")
+    if mode_unresolved:
+        w("**Unresolved while deriving this section:**")
+        w("")
+        for u in mode_unresolved:
+            w(f"- `{u}`")
+        w("")
+
     return "\n".join(o) + "\n"
 
 

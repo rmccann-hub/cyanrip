@@ -233,6 +233,7 @@ rip_scenarios = [
     'interrupt_deadlock',
     'cache_probe_only',
     'artifacts_are_tracked',
+    'sanitize',
 ]
 
 # The scenarios are told which build configuration they are testing, because
