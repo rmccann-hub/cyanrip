@@ -2942,6 +2942,90 @@ def sc_enhanced_cd():
         fail("enhanced_cd/wellformed: a disc with no data track reported a "
              "CD-Extra session gap")
 
+def sc_contract_composed():
+    """A composed line's segments must combine the way P2 says they do.
+
+    ROUND 14, found by writing docs/round-14-acceptance-spec.md against our own
+    contract and noticing the document disagreed with the source.
+
+    P2 printed one sentence under EVERY composed row -- *"Segment 0 is always
+    present; the rest are appended conditionally"* -- and it was a hardcoded
+    string in the generator, deriving nothing. It happens to be right for the
+    progress line, whose segments really are `snprintf(buf + n, ...)` appends.
+    It is flatly wrong for `Cache probe:`, whose nine segments are arms of a
+    `switch` in cache_probe.c, each ending in `return` and each writing the
+    WHOLE buffer -- so exactly one is ever emitted.
+
+    That is not a cosmetic error. A consumer building a matcher from that
+    sentence writes `segment0 + optional extras` and never matches a real probe
+    result, and `Cache probe:` is the line round 14's T3 exists to exercise on a
+    drive for the first time.
+
+    ASSERTED AGAINST THE BINARY, not against the document, because comparing a
+    generated claim to a second derivation of the same rule proves only that two
+    of our own regexes agree. So: run the probe, take the line the binary
+    actually wrote, and check it is ONE segment and not several concatenated.
+    The image driver can only reach segment 0, which is a real limit and is
+    stated rather than papered over -- but "the emitted line contains no other
+    segment's text" is exactly the property the false sentence would break, and
+    it is checkable on the one branch we can reach.
+    """
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+
+    # The cache_probe row, POSITIONALLY: from its own heading to the next
+    # composed row's heading or the next section, whichever comes first. Not a
+    # sweep of the whole document -- P2 has three composed rows and a check
+    # satisfied by finding the right words *somewhere* is satisfied by the
+    # document attributing them to the wrong row, which is a defect this
+    # generator has already shipped once (a same-named buffer in another
+    # function).
+    start = re.search(r"^\*\*`cache_probe\.c:\d+`\*\*", contract, re.M)
+    if not start:
+        fail("contract_composed: P2 has no `cache_probe.c` composed row")
+        return
+    rest = contract[start.end():]
+    end = re.search(r"^(\*\*`\S+\.c:\d+`\*\*|## )", rest, re.M)
+    row = rest[:end.start()] if end else rest
+
+    segs = re.findall(r"^\| \d+ \| `(.+?)` \|$", row, re.M)
+    if len(segs) < 2:
+        fail(f"contract_composed: P2 lists {len(segs)} cache-probe segment(s); "
+             "a row with fewer than two cannot express how they combine")
+        return
+
+    if "ALTERNATE" not in row:
+        fail("contract_composed: P2 does not say the cache-probe segments "
+             "ALTERNATE. They are arms of "
+             "a switch that each write the whole buffer, so exactly one is "
+             "emitted -- a consumer told otherwise builds a concatenation "
+             "matcher that never matches.")
+
+    ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-x", "-I")
+    if ec != 0:
+        fail(f"contract_composed: -x -I exited {ec}")
+        return
+    line = next((l for l in log.splitlines() if l.startswith("Cache probe:")),
+                None)
+    if line is None:
+        fail("contract_composed: -x -I emitted no `Cache probe:` line")
+        return
+    value = line.split(":", 1)[1].strip()
+
+    # The literal head of each segment -- everything before its first
+    # conversion -- is what a concatenation would leave visible. Compare on
+    # those rather than on whole formats, which carry %-specifiers the run
+    # has already substituted.
+    heads = [s.split("%")[0].strip() for s in segs]
+    present = [h for h in heads if h and h in value]
+    if len(present) != 1:
+        fail(f"contract_composed: the emitted line {value!r} contains "
+             f"{len(present)} segment head(s) {present!r}. Exactly one segment "
+             "is emitted per call, so more than one means they concatenated "
+             "and P2's structural claim is wrong; none means the segment table "
+             "no longer describes what the binary writes.")
+
+
 def sc_contract_diagnostics():
     """Every field a real `-j` record contains must be in P8b.
 
