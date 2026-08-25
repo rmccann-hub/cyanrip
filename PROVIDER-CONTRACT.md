@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-gfc0e703)`
+Build: `cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-g12d77c1)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 8ce937678f3cee40` over `src/*.c` and
+**Source anchor:** `sha256/16 = 96262d1ea8f282c3` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -213,124 +213,125 @@ requires a handshake round.
 | `cyanrip_encode.c:1294` | `Could not open output codec context!` |
 | `cyanrip_encode.c:1301` | `Couldn't copy codec params!` |
 | `cyanrip_encode.c:1308` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
-| `cyanrip_log.c:955` | `Log FUN512: %s` |
-| `cyanrip_log.c:1033` | `--- %zu earlier message(s) dropped: buffer full ---` |
+| `cyanrip_log.c:980` | `Log FUN512: %s` |
+| `cyanrip_log.c:1058` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:58` | `%s%s:` |
 | `cyanrip_log.c:61` | `%s` |
 | `cyanrip_log.c:71` | `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)` |
 | `cyanrip_log.c:76` | `CD-TEXT:        present (%s, %i disc %s, %i of %i tracks tagged)` |
 | `cyanrip_log.c:97` | `Cache model:    not in use (paranoia disabled)` |
-| `cyanrip_log.c:108` | `Cache model:    %i sector%s (disc image, no drive cache)` |
-| `cyanrip_log.c:113` | `Cache model:    %i sector%s (drive cache size not probed)` |
-| `cyanrip_log.c:147` | `%sSample peak disagreement: ebur128 %.2f dBFS, direct scan %.2f dBFS (%.2f dB apart)` |
-| `cyanrip_log.c:185` | `%sRead-path peak disagreement: direct scan %.2f dBFS, read-buffer scan %.2f dBFS (%.2f dB apart)` |
-| `cyanrip_log.c:211` | `Read stalls:    %s` |
-| `cyanrip_log.c:222` | `%s%s` |
-| `cyanrip_log.c:226` | `%lu` |
-| `cyanrip_log.c:285` | `Pregap LSN:  %i (duration: %s)` |
-| `cyanrip_log.c:287` | `Pregap length: %i frames` |
-| `cyanrip_log.c:289` | `Pregap LSN:  unknown (sub-channel unreadable)` |
-| `cyanrip_log.c:291` | `Pregap LSN:  unknown (sub-channel CRC mismatches)` |
-| `cyanrip_log.c:293` | `Pregap LSN:  none` |
-| `cyanrip_log.c:299` | `Pregap source: sub-channel (not signalled by TOC)` |
-| `cyanrip_log.c:301` | `Pregap source: lead-in` |
-| `cyanrip_log.c:303` | `Pregap source: TOC` |
-| `cyanrip_log.c:306` | `Prepended:   %i frames of silence` |
-| `cyanrip_log.c:307` | `Start LSN:   %i` |
-| `cyanrip_log.c:309` | `(with offset: %i)` |
-| `cyanrip_log.c:330` | `End LSN:     %i` |
-| `cyanrip_log.c:334` | `(less %i frame CD-Extra session gap, read to: %i)` |
-| `cyanrip_log.c:340` | `Appended:    %i frames of silence` |
-| `cyanrip_log.c:371` | `Preemphasis:` |
-| `cyanrip_log.c:373` | `none detected` |
-| `cyanrip_log.c:376` | `(deemphasis forced)` |
-| `cyanrip_log.c:381` | `present (subcode)` |
-| `cyanrip_log.c:383` | `present (TOC)` |
-| `cyanrip_log.c:386` | `(deemphasis applied)` |
-| `cyanrip_log.c:391` | `Properties:` |
-| `cyanrip_log.c:394` | `Data bytes:  %i (%.2f Mib)` |
-| `cyanrip_log.c:397` | `Frames:      %u` |
-| `cyanrip_log.c:403` | `Duration:    %s` |
-| `cyanrip_log.c:404` | `Samples:     %zu` |
-| `cyanrip_log.c:412` | `Sample peak level: %.1f%% (%.1f dBFS)` |
-| `cyanrip_log.c:415` | `True peak level:   %.1f dBFS` |
-| `cyanrip_log.c:436` | `Integrated loudness (R128): %.1f LUFS` |
-| `cyanrip_log.c:438` | `Loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)` |
-| `cyanrip_log.c:442` | `Extraction speed:  %.1fx` |
-| `cyanrip_log.c:444` | `Elapsed:            %.2f s` |
-| `cyanrip_log.c:452` | `EAC CRC32:     %08X` |
-| `cyanrip_log.c:454` | `(after %i rips)` |
-| `cyanrip_log.c:461` | `Secure re-read:  converged after %i reads` |
-| `cyanrip_log.c:464` | `Secure re-read:  did NOT converge after %i reads (repeat limit hit)` |
-| `cyanrip_log.c:469` | `Secure re-read:  not attempted` |
-| `cyanrip_log.c:473` | `Accurip:       %s` |
-| `cyanrip_log.c:477` | `(max confidence: %i)` |
-| `cyanrip_log.c:485` | `Accurip v1:  %08X` |
-| `cyanrip_log.c:487` | `(accurately ripped, confidence %i)` |
-| `cyanrip_log.c:489` | `(not found, either a new pressing, or bad rip)` |
-| `cyanrip_log.c:493` | `Accurip v2:  %08X` |
-| `cyanrip_log.c:504` | `Accurip 450: %08X` |
-| `cyanrip_log.c:522` | `(no comparison possible, a checksum of 0 is meaningless)` |
-| `cyanrip_log.c:524` | `(matches Accurip DB, confidence %i, track is partially accurately ripped)` |
-| `cyanrip_log.c:527` | `(not found)` |
-| `cyanrip_log.c:534` | `Metadata:` |
-| `cyanrip_log.c:544` | `%s:` |
-| `cyanrip_log.c:556` | `CD-TEXT:` |
-| `cyanrip_log.c:581` | `Paranoia status counts:` |
-| `cyanrip_log.c:583` | `Scope:         the last of %i reads; the disc totals below sum all of them` |
-| `cyanrip_log.c:587` | `none` |
-| `cyanrip_log.c:610` | `Embedded cover art:    %s: %s` |
-| `cyanrip_log.c:613` | `Embedded cover art:    %s: %ix%i %s` |
-| `cyanrip_log.c:617` | `File(s):` |
-| `cyanrip_log.c:631` | `cyanrip %s (%s-g%s)` |
-| `cyanrip_log.c:634` | `Invoked as:     %s` |
-| `cyanrip_log.c:655` | `Handshake:      %s%s` |
-| `cyanrip_log.c:659` | `(declared at build time, not verified by cyanrip)` |
-| `cyanrip_log.c:664` | `Consumer:       %s` |
-| `cyanrip_log.c:668` | `(reported by the caller, not verified by cyanrip)` |
-| `cyanrip_log.c:672` | `Drive used:     error retrieving drive info` |
-| `cyanrip_log.c:674` | `Drive used:     %s %s (revision %s)` |
-| `cyanrip_log.c:675` | `System device:  %s` |
-| `cyanrip_log.c:677` | `Device model:   %s` |
-| `cyanrip_log.c:686` | `Offset:         %c%u %s` |
-| `cyanrip_log.c:689` | `Underread:      %c%i %s` |
-| `cyanrip_log.c:689` | `Overread:       %c%i %s` |
-| `cyanrip_log.c:694` | `Underread mode: %s` |
-| `cyanrip_log.c:694` | `Overread mode:  %s` |
-| `cyanrip_log.c:698` | `Speed:          %ix` |
-| `cyanrip_log.c:700` | `Speed:          default (%s)` |
-| `cyanrip_log.c:702` | `C2 errors:      %s` |
-| `cyanrip_log.c:711` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
-| `cyanrip_log.c:716` | `Paranoia level: %s` |
-| `cyanrip_log.c:720` | `Paranoia level: %i` |
-| `cyanrip_log.c:721` | `Frame retries:  %i` |
-| `cyanrip_log.c:723` | `HDCD decoding:  %s` |
-| `cyanrip_log.c:725` | `Album Art:      %s` |
-| `cyanrip_log.c:729` | `%s%s%s%s%s` |
-| `cyanrip_log.c:737` | `Outputs:` |
-| `cyanrip_log.c:743` | `Disc tracks:    %i` |
-| `cyanrip_log.c:744` | `Tracks to rip:  %s` |
-| `cyanrip_log.c:747` | `%i%s` |
-| `cyanrip_log.c:761` | `AccurateRip:    %s` |
-| `cyanrip_log.c:767` | `Total time:     %s` |
-| `cyanrip_log.c:812` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:814` | `Tracks ripped partially accurately: %i/%i` |
-| `cyanrip_log.c:824` | `Ripping errors: %i` |
-| `cyanrip_log.c:847` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
-| `cyanrip_log.c:850` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
-| `cyanrip_log.c:868` | `Interrupted at: track %i, mid-read` |
-| `cyanrip_log.c:871` | `Interrupted at: between tracks, no read in progress` |
-| `cyanrip_log.c:884` | `Rip completed:  no (aborted, %i of %i tracks)` |
-| `cyanrip_log.c:887` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:890` | `Ripping finished at %s` |
-| `cyanrip_log.c:741` | `Disc number:    %s` |
-| `cyanrip_log.c:742` | `Total discs:    %s` |
-| `cyanrip_log.c:754` | `DiscID:         %s` |
-| `cyanrip_log.c:755` | `Release ID:     %s` |
-| `cyanrip_log.c:756` | `CDDB ID:        %s` |
-| `cyanrip_log.c:757` | `Disc MCN:       %s` |
-| `cyanrip_log.c:758` | `Album:          %s` |
-| `cyanrip_log.c:759` | `Album artist:   %s` |
+| `cyanrip_log.c:127` | `Cache model:    %i sector%s (disc image, no drive cache)` |
+| `cyanrip_log.c:132` | `Cache model:    %i sector%s (drive cache probed separately, see \"Cache probe:\")` |
+| `cyanrip_log.c:138` | `Cache model:    %i sector%s (drive cache size not probed)` |
+| `cyanrip_log.c:172` | `%sSample peak disagreement: ebur128 %.2f dBFS, direct scan %.2f dBFS (%.2f dB apart)` |
+| `cyanrip_log.c:210` | `%sRead-path peak disagreement: direct scan %.2f dBFS, read-buffer scan %.2f dBFS (%.2f dB apart)` |
+| `cyanrip_log.c:236` | `Read stalls:    %s` |
+| `cyanrip_log.c:247` | `%s%s` |
+| `cyanrip_log.c:251` | `%lu` |
+| `cyanrip_log.c:310` | `Pregap LSN:  %i (duration: %s)` |
+| `cyanrip_log.c:312` | `Pregap length: %i frames` |
+| `cyanrip_log.c:314` | `Pregap LSN:  unknown (sub-channel unreadable)` |
+| `cyanrip_log.c:316` | `Pregap LSN:  unknown (sub-channel CRC mismatches)` |
+| `cyanrip_log.c:318` | `Pregap LSN:  none` |
+| `cyanrip_log.c:324` | `Pregap source: sub-channel (not signalled by TOC)` |
+| `cyanrip_log.c:326` | `Pregap source: lead-in` |
+| `cyanrip_log.c:328` | `Pregap source: TOC` |
+| `cyanrip_log.c:331` | `Prepended:   %i frames of silence` |
+| `cyanrip_log.c:332` | `Start LSN:   %i` |
+| `cyanrip_log.c:334` | `(with offset: %i)` |
+| `cyanrip_log.c:355` | `End LSN:     %i` |
+| `cyanrip_log.c:359` | `(less %i frame CD-Extra session gap, read to: %i)` |
+| `cyanrip_log.c:365` | `Appended:    %i frames of silence` |
+| `cyanrip_log.c:396` | `Preemphasis:` |
+| `cyanrip_log.c:398` | `none detected` |
+| `cyanrip_log.c:401` | `(deemphasis forced)` |
+| `cyanrip_log.c:406` | `present (subcode)` |
+| `cyanrip_log.c:408` | `present (TOC)` |
+| `cyanrip_log.c:411` | `(deemphasis applied)` |
+| `cyanrip_log.c:416` | `Properties:` |
+| `cyanrip_log.c:419` | `Data bytes:  %i (%.2f Mib)` |
+| `cyanrip_log.c:422` | `Frames:      %u` |
+| `cyanrip_log.c:428` | `Duration:    %s` |
+| `cyanrip_log.c:429` | `Samples:     %zu` |
+| `cyanrip_log.c:437` | `Sample peak level: %.1f%% (%.1f dBFS)` |
+| `cyanrip_log.c:440` | `True peak level:   %.1f dBFS` |
+| `cyanrip_log.c:461` | `Integrated loudness (R128): %.1f LUFS` |
+| `cyanrip_log.c:463` | `Loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)` |
+| `cyanrip_log.c:467` | `Extraction speed:  %.1fx` |
+| `cyanrip_log.c:469` | `Elapsed:            %.2f s` |
+| `cyanrip_log.c:477` | `EAC CRC32:     %08X` |
+| `cyanrip_log.c:479` | `(after %i rips)` |
+| `cyanrip_log.c:486` | `Secure re-read:  converged after %i reads` |
+| `cyanrip_log.c:489` | `Secure re-read:  did NOT converge after %i reads (repeat limit hit)` |
+| `cyanrip_log.c:494` | `Secure re-read:  not attempted` |
+| `cyanrip_log.c:498` | `Accurip:       %s` |
+| `cyanrip_log.c:502` | `(max confidence: %i)` |
+| `cyanrip_log.c:510` | `Accurip v1:  %08X` |
+| `cyanrip_log.c:512` | `(accurately ripped, confidence %i)` |
+| `cyanrip_log.c:514` | `(not found, either a new pressing, or bad rip)` |
+| `cyanrip_log.c:518` | `Accurip v2:  %08X` |
+| `cyanrip_log.c:529` | `Accurip 450: %08X` |
+| `cyanrip_log.c:547` | `(no comparison possible, a checksum of 0 is meaningless)` |
+| `cyanrip_log.c:549` | `(matches Accurip DB, confidence %i, track is partially accurately ripped)` |
+| `cyanrip_log.c:552` | `(not found)` |
+| `cyanrip_log.c:559` | `Metadata:` |
+| `cyanrip_log.c:569` | `%s:` |
+| `cyanrip_log.c:581` | `CD-TEXT:` |
+| `cyanrip_log.c:606` | `Paranoia status counts:` |
+| `cyanrip_log.c:608` | `Scope:         the last of %i reads; the disc totals below sum all of them` |
+| `cyanrip_log.c:612` | `none` |
+| `cyanrip_log.c:635` | `Embedded cover art:    %s: %s` |
+| `cyanrip_log.c:638` | `Embedded cover art:    %s: %ix%i %s` |
+| `cyanrip_log.c:642` | `File(s):` |
+| `cyanrip_log.c:656` | `cyanrip %s (%s-g%s)` |
+| `cyanrip_log.c:659` | `Invoked as:     %s` |
+| `cyanrip_log.c:680` | `Handshake:      %s%s` |
+| `cyanrip_log.c:684` | `(declared at build time, not verified by cyanrip)` |
+| `cyanrip_log.c:689` | `Consumer:       %s` |
+| `cyanrip_log.c:693` | `(reported by the caller, not verified by cyanrip)` |
+| `cyanrip_log.c:697` | `Drive used:     error retrieving drive info` |
+| `cyanrip_log.c:699` | `Drive used:     %s %s (revision %s)` |
+| `cyanrip_log.c:700` | `System device:  %s` |
+| `cyanrip_log.c:702` | `Device model:   %s` |
+| `cyanrip_log.c:711` | `Offset:         %c%u %s` |
+| `cyanrip_log.c:714` | `Underread:      %c%i %s` |
+| `cyanrip_log.c:714` | `Overread:       %c%i %s` |
+| `cyanrip_log.c:719` | `Underread mode: %s` |
+| `cyanrip_log.c:719` | `Overread mode:  %s` |
+| `cyanrip_log.c:723` | `Speed:          %ix` |
+| `cyanrip_log.c:725` | `Speed:          default (%s)` |
+| `cyanrip_log.c:727` | `C2 errors:      %s` |
+| `cyanrip_log.c:736` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
+| `cyanrip_log.c:741` | `Paranoia level: %s` |
+| `cyanrip_log.c:745` | `Paranoia level: %i` |
+| `cyanrip_log.c:746` | `Frame retries:  %i` |
+| `cyanrip_log.c:748` | `HDCD decoding:  %s` |
+| `cyanrip_log.c:750` | `Album Art:      %s` |
+| `cyanrip_log.c:754` | `%s%s%s%s%s` |
+| `cyanrip_log.c:762` | `Outputs:` |
+| `cyanrip_log.c:768` | `Disc tracks:    %i` |
+| `cyanrip_log.c:769` | `Tracks to rip:  %s` |
+| `cyanrip_log.c:772` | `%i%s` |
+| `cyanrip_log.c:786` | `AccurateRip:    %s` |
+| `cyanrip_log.c:792` | `Total time:     %s` |
+| `cyanrip_log.c:837` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:839` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:849` | `Ripping errors: %i` |
+| `cyanrip_log.c:872` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
+| `cyanrip_log.c:875` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
+| `cyanrip_log.c:893` | `Interrupted at: track %i, mid-read` |
+| `cyanrip_log.c:896` | `Interrupted at: between tracks, no read in progress` |
+| `cyanrip_log.c:909` | `Rip completed:  no (aborted, %i of %i tracks)` |
+| `cyanrip_log.c:912` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:915` | `Ripping finished at %s` |
+| `cyanrip_log.c:766` | `Disc number:    %s` |
+| `cyanrip_log.c:767` | `Total discs:    %s` |
+| `cyanrip_log.c:779` | `DiscID:         %s` |
+| `cyanrip_log.c:780` | `Release ID:     %s` |
+| `cyanrip_log.c:781` | `CDDB ID:        %s` |
+| `cyanrip_log.c:782` | `Disc MCN:       %s` |
+| `cyanrip_log.c:783` | `Album:          %s` |
+| `cyanrip_log.c:784` | `Album artist:   %s` |
 | `cyanrip_main.c:224` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:232` | `Unable to open device: %s` |
 | `cyanrip_main.c:241` | `Unable to init cddap context!` |
@@ -464,7 +465,7 @@ requires a handshake round.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:259` | `Invalid condition syntax!` |
 
-**302 distinct stable lines.**
+**303 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
