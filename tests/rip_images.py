@@ -2942,6 +2942,80 @@ def sc_enhanced_cd():
         fail("enhanced_cd/wellformed: a disc with no data track reported a "
              "CD-Extra session gap")
 
+def sc_abort_footer():
+    """A run that ABORTS must still write a completion footer, and say so.
+
+    ROUND 14, found on hardware. Platterpus cancelled a rip mid-track and their
+    library audit reported *"the ripper's completion footer is absent -- the log
+    was cut off"* on BOTH cancelled rips in their library. Every image test
+    passed throughout.
+
+    THE DEFECT. `cyanrip_log_finish_report()` sat immediately ABOVE the `end:`
+    label in cyanrip_run(), and there are TWENTY-FOUR `goto end` sites in that
+    function. Every one jumped past it, so any aborting run wrote a log with no
+    `Ripping errors:`, no `Read stalls:`, no `Rip completed:` and no
+    `Interrupted at:` -- and then `cyanrip_log_end()` signed that truncated body
+    with a FUN512 as though it were a whole record.
+
+    `sc_interrupt()` never caught it because a signal sets `quit_now` and the
+    loop *breaks* and falls through to the footer; it does not `goto`. Two
+    different routes out, and only the one nothing tested was broken.
+
+    THE SECOND HALF, and it is why this test asserts the wording. Moving the
+    footer where aborts reach it made `Rip completed:` print `yes (0 of N
+    tracks)` on a run that ripped nothing -- because the only `no` was the
+    signal case, so every abort fell to the `else`. A silent omission became a
+    confident false claim, which is worse. The line now has three states and
+    this pins the third.
+    """
+    out = WORK / "out_abort"
+    # A refusal that lands AFTER the context is built, so a logfile exists and
+    # the run reaches `end:` by a goto. `-t 99=...` names a track the disc does
+    # not have. Chosen over the offset refusal deliberately: that one is gated
+    # on a DRIVE capability an image driver never reports, so no fixture can
+    # reach it -- which is exactly how this whole class stayed invisible.
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                 "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                 "-L", "log", "-M", "sheet", "-t", "99=title=Nope")
+    if ec == 0:
+        fail("abort_footer: the bad -t was accepted; this scenario no longer "
+             "exercises an abort path and proves nothing")
+        return
+    log = out / "log.log"
+    if not log.exists():
+        fail("abort_footer: the aborting run wrote no logfile at all")
+        return
+    text = log.read_text(errors="replace")
+
+    # The footer, line by line. Named individually rather than swept, because
+    # "some of the footer is present" is the state that shipped.
+    for want in ("Ripping errors:", "Read stalls:", "Rip completed:",
+                 "Log FUN512:"):
+        if not re.search(rf"^{re.escape(want)}", text, re.M):
+            fail(f"abort_footer: the aborting run's log has no {want!r} line. "
+                 f"A log signed with a FUN512 but missing its completion "
+                 f"footer is a truncated record that presents as a whole one.")
+
+    m = re.search(r"^Rip completed:\s+(.*)$", text, re.M)
+    if not m:
+        return
+    got = m.group(1).strip()
+    if got.startswith("yes"):
+        fail(f"abort_footer: an aborted run that ripped nothing reports "
+             f"{got!r}. That is a false claim in an archival record -- the "
+             f"third state exists so it does not have to be inferred.")
+    elif "aborted" not in got:
+        fail(f"abort_footer: expected the aborted state, got {got!r}")
+
+    # And the FUN512 must still verify: the point is a COMPLETE short record,
+    # not a log the ripper then disowns.
+    vc, _ = crip("--verify-log", log)
+    if vc != 0:
+        fail(f"abort_footer: --verify-log exited {vc} on the aborted run's own "
+             f"log; the record it wrote does not verify against the checksum "
+             f"it wrote for it")
+
+
 def sc_contract_composed():
     """A composed line's segments must combine the way P2 says they do.
 

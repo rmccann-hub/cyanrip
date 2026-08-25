@@ -2622,12 +2622,36 @@ static int cyanrip_run(int argc, char **argv)
         }
     }
 
-    if (!ctx->settings.print_info_only)
-        cyanrip_log_finish_report(ctx);
+    /* The ONE place the rip loop falls out normally. Every other route to
+     * `end:` is a `goto`, so this single assignment tells the footer below
+     * whether the run finished or aborted -- see the field's declaration. */
+    ctx->rip_ran_to_completion = 1;
 end:
     /* No more disc reads past this point; join before anything else so the
      * watchdog cannot print into the middle of the final report. */
     crip_stall_watchdog_end();
+
+    /* THE COMPLETION FOOTER, AND IT IS INSIDE `end:` ON PURPOSE.
+     *
+     * It used to sit immediately ABOVE this label, so only the fall-through
+     * path reached it -- and there are TWENTY-FOUR `goto end` sites in this
+     * function, every one of which jumped straight past it. A run that took any
+     * of them wrote a log with no `Ripping errors:`, no `Read stalls:`, no
+     * `Rip completed:` and no `Interrupted at:` -- and then `cyanrip_log_end()`
+     * below signed that truncated body with a FUN512 as though it were whole.
+     *
+     * Found on hardware, round 14: Platterpus cancelled a rip mid-track and
+     * their library audit reported *"the ripper's completion footer is absent
+     * -- the log was cut off"* on BOTH cancelled rips in their library. Every
+     * image test passed throughout, because `sc_interrupt()`'s signal arrives
+     * where the loop breaks and falls through rather than where anything jumps.
+     *
+     * Placed AFTER the watchdog join for the reason the comment above gives,
+     * and BEFORE the encoder-status loop so that `Ripping errors:` counts
+     * exactly what it counted before -- moving it below would silently fold
+     * encoder failures into a contract line. */
+    if (!ctx->settings.print_info_only)
+        cyanrip_log_finish_report(ctx);
 
     /* Wait for the encoders to finish and collect their status */
     for (int i = 0; i < ctx->nb_tracks; i++) {

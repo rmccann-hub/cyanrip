@@ -375,6 +375,20 @@ typedef struct cyanrip_ctx {
      * `Interrupted at:`; a consumer could otherwise only infer it by counting
      * track blocks against the disc's track count. */
     int track_read_incomplete;
+    /* Set at the ONE point where the rip loop falls out normally, immediately
+     * before `end:`. Everything else in cyanrip_run() leaves it 0 -- and there
+     * are twenty-four `goto end` sites, so a per-site flag would be twenty-four
+     * chances to forget one. The single assignment is the discriminator, in the
+     * same shape and for the same reason as track_read_incomplete above.
+     *
+     * `Rip completed:` needs THREE states and had two. `no (interrupted by
+     * SIGTERM…)` was the only "no", so every abort that was not a signal --
+     * every one of those twenty-four -- fell to the `else` and printed
+     * `yes`. That never showed, because the footer sat above `end:` and no
+     * abort reached it at all; moving the footer where aborts can reach it
+     * turned a silent omission into a confident false claim, which is worse.
+     * Both halves are fixed together for that reason. */
+    int rip_ran_to_completion;
     lsn_t start_lsn;
     lsn_t end_lsn;
     lsn_t duration_frames;

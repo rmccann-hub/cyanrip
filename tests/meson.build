@@ -237,6 +237,7 @@ rip_scenarios = [
     'enhanced_cd',
     'contract_diagnostics',
     'contract_composed',
+    'abort_footer',
 ]
 
 # The scenarios are told which build configuration they are testing, because

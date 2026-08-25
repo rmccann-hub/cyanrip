@@ -869,6 +869,20 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
                         ctx->track_read_incomplete);
         else
             cyanrip_log(ctx, 0, "Interrupted at: between tracks, no read in progress\n");
+    } else if (!ctx->rip_ran_to_completion) {
+        /* THE THIRD STATE. A run that aborted without a signal is neither
+         * "yes" nor "interrupted by" anything -- it stopped because cyanrip
+         * itself refused or failed, and the reason is already at column 0
+         * further up this log. Before this it printed `yes`, which on a run
+         * that ripped nothing is a false claim in an archival record.
+         *
+         * The wording says `aborted` and not `failed`: some of the paths that
+         * reach it are deliberate refusals -- an unset offset, an unusable
+         * argument -- and calling those a failure would assert more than the
+         * control flow supports. What is known is that the rip did not run to
+         * the end, and that is what it says. */
+        cyanrip_log(ctx, 0, "Rip completed:  no (aborted, %i of %i tracks)\n",
+                    ctx->tracks_completed, ctx->nb_tracks);
     } else
         cyanrip_log(ctx, 0, "Rip completed:  yes (%i of %i tracks)\n",
                     ctx->tracks_completed, ctx->nb_tracks);
