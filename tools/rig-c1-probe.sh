@@ -71,6 +71,16 @@
 # to know WHEN bytes arrived, the watcher below samples the file's SIZE from
 # outside rather than inserting itself into the path.
 #
+# ONE THING THAT IS NOT UNDER OUR CONTROL, and it is why this script now names
+# what it watched. Platterpus's round-14 lap 12 §E2 records that on their rig
+# `~/.local/bin/cyanrip` is a host-exported Distrobox wrapper and the real
+# ripper runs in a container, so there is a container runtime forwarding stdio
+# between cyanrip's fd 1 and any redirect on the host. "A plain shell redirect"
+# is still the simplest capture available; it is not the same as "nothing in
+# the path". If this probe comes back with an empty capture on that rig, that
+# is a fact about the forwarding, not about cyanrip -- and the process-tree
+# block below is what lets a reader tell.
+#
 # -----------------------------------------------------------------------------
 # WHAT A RESULT LOOKS LIKE -- all four are results, none is a failure
 # -----------------------------------------------------------------------------
@@ -159,29 +169,101 @@ SHELL_PID=$!
 # The pid we want is cyanrip's, not `timeout`'s. Resolve it from timeout's
 # children rather than assuming, because /proc/<timeout>/wchan would report on
 # the wrong process and would look like a perfectly good answer.
+# Every descendant of $1, depth first. Recursive on purpose: on the rig the
+# binary at $CRIP is NOT cyanrip.
+#
+# THE DEFECT THIS REPLACES, and it was in the first version of this script.
+# It took the LAST DIRECT CHILD of `timeout` and called it "cyanrip pid". That
+# is right only when the thing you exec IS the thing you want to watch.
+# Platterpus's round-14 lap 12 §E2 told us it is not: their `$RIPPER`,
+# `~/.local/bin/cyanrip`, is a host-exported Distrobox wrapper and the real
+# ripper runs inside a container. So the pid we would have sampled is a
+# launcher, `wchan` would have named whatever a launcher waits on, and it would
+# have looked like a perfectly good answer.
+#
+# That is the exact trap this script's own header claimed to have avoided --
+# "resolves the pid from timeout's children rather than assuming, because wchan
+# on the wrong process would look like a perfectly good answer". We wrote the
+# warning and then shipped the bug, because we tested against a bare binary. It
+# needed a fact about somebody else's rig that we could not have derived.
+descendants() {
+    for c in $(cat "/proc/$1/task/$1/children" 2>/dev/null); do
+        echo "$c"
+        descendants "$c"
+    done
+}
+comm_of() { cat "/proc/$1/comm" 2>/dev/null; }
+
 CRIP_PID=""
+PID_SOURCE=""
 i=0
-while [ "$i" -lt 40 ]; do
-    for c in $(cat "/proc/$SHELL_PID/task/$SHELL_PID/children" 2>/dev/null); do
-        CRIP_PID=$c
+while [ "$i" -lt 60 ]; do
+    TREE=$(descendants "$SHELL_PID")
+    for c in $TREE; do
+        if [ "$(comm_of "$c")" = "cyanrip" ]; then
+            CRIP_PID=$c
+            PID_SOURCE="a descendant of timeout, comm=cyanrip"
+        fi
     done
     [ -n "$CRIP_PID" ] && break
     kill -0 "$SHELL_PID" 2>/dev/null || break   # already over; nothing to sample
     i=$((i + 1))
     sleep 0.25
 done
+
+# Not a descendant we can see? It may still be visible in the host's /proc --
+# a container sharing the host PID namespace puts it there without making it a
+# child of anything we launched. We do NOT assume either way: that is a fact
+# about a runtime we have not read.
+#
+# A unique match is used and LABELLED as coming from outside the tree. Two or
+# more is refused rather than picked from, because guessing which cyanrip is
+# ours would produce a wchan line indistinguishable from a correct one.
+if [ -z "$CRIP_PID" ] && kill -0 "$SHELL_PID" 2>/dev/null; then
+    HITS=$(pgrep -x cyanrip 2>/dev/null | tr '\n' ' ')
+    NHITS=$(printf '%s' "$HITS" | wc -w | tr -d ' ')
+    if [ "$NHITS" = "1" ]; then
+        CRIP_PID=$(printf '%s' "$HITS" | tr -d ' ')
+        PID_SOURCE="pgrep -x cyanrip -- NOT a descendant of timeout, so this \
+process was found in the host's /proc without being a child of anything we \
+launched"
+    elif [ "$NHITS" != "0" ]; then
+        say "--- pgrep found $NHITS processes named cyanrip. REFUSING to pick"
+        say "    one: the wrong one produces a wchan line that looks correct."
+    fi
+fi
+
+# The tree goes in the record either way. It costs nothing and it is the thing
+# that explains an empty sample block to whoever reads the bundle.
+say "--- process tree under timeout $SHELL_PID"
+TREE=$(descendants "$SHELL_PID")
+if [ -z "$TREE" ]; then
+    say "    (none -- already exited, or children are not visible here)"
+else
+    for c in $TREE; do
+        say "    pid $c  comm=$(comm_of "$c")  exe=$(readlink "/proc/$c/exe" 2>/dev/null)"
+    done
+fi
+say ""
+
 if [ -n "$CRIP_PID" ]; then
-    say "--- cyanrip pid $CRIP_PID (timeout pid $SHELL_PID)"
+    say "--- watching pid $CRIP_PID ($PID_SOURCE)"
 elif ! kill -0 "$SHELL_PID" 2>/dev/null; then
     # Not a gap. The run was over before there was anything to sample, which
     # only happens when it refused long before the 14 seconds we expect.
     say "--- the run finished before a pid could be sampled, so it lasted well"
     say "    under a second. /proc samples are empty BECAUSE nothing hung."
 else
-    say "--- could not resolve cyanrip's pid under timeout $SHELL_PID."
-    say "    THIS ONE IS A GAP, not a result: the run is still going and we"
-    say "    cannot see into it. /proc/<pid>/task/<pid>/children may be"
-    say "    unavailable on this kernel."
+    say "--- NO PROCESS NAMED cyanrip FOUND, and /proc samples are SKIPPED."
+    say ""
+    say "    This is a GAP, not a result, and it is deliberately not filled by"
+    say "    sampling whatever we did find. If \$CRIP is a wrapper -- a"
+    say "    container launcher, a shim -- then the tree above names it, and"
+    say "    its wchan would describe the launcher rather than the ripper."
+    say ""
+    say "    If the ripper runs in a container, run this probe INSIDE it, or"
+    say "    point \$CRIP at the real binary:"
+    say "        distrobox enter <container> -- sh rig-c1-probe.sh /usr/local/bin/cyanrip"
 fi
 say ""
 
@@ -202,6 +284,9 @@ sample() {
                 echo "    thread $(basename "$t") : $(cat "$t/wchan" 2>/dev/null; echo) \
 [$(awk '/^State:/{print $2}' "$t/status" 2>/dev/null)]"
             done
+        elif [ -z "$CRIP_PID" ]; then
+            echo "    process       : NOT IDENTIFIED -- samples skipped rather"
+            echo "                    than taken from the wrong process"
         else
             echo "    process       : gone"
         fi
