@@ -3,8 +3,8 @@
   "cyanrip": {
     "version": "0.9.4-rc2+platterpus.10",
     "fork_id": "platterpus-fork",
-    "vcs": "0d26ebf",
-    "handshake": "round 14 lap 7 OPEN, verdict HOLD",
+    "vcs": "fc0e703",
+    "handshake": "round 14 lap 9 OPEN, verdict HOLD",
     "released_build_declared": false
   },
   "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
@@ -31,7 +31,7 @@
     "interrupted": true,
     "interrupted_by": "SIGTERM",
     "track_state": [
-      {"number":1,"cd_track":1,"repeats":3,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":34435},
+      {"number":1,"cd_track":1,"repeats":2,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":19553},
       {"number":2,"cd_track":2,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
       {"number":3,"cd_track":3,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0}
     ]
@@ -45,9 +45,9 @@
     "Checking pregap.bin for cdrom...",
     "Opening drive...",
     "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!",
-    "cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-g0d26ebf)",
+    "cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-gfc0e703)",
     "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
-    "Handshake:      round 14 lap 7 OPEN, verdict HOLD -- NOT a released build",
+    "Handshake:      round 14 lap 9 OPEN, verdict HOLD -- NOT a released build",
     "Consumer:       platterpus/0.6.21",
     "                (reported by the caller, not verified by cyanrip)",
     "Drive used:     libcdio CDRWIN (revision 2.1.)",
@@ -80,9 +80,7 @@
     "Repeating ripping (0 out of 200 matches for current checksum 2C926D69)",
     "Ripping track 1, progress - 100.00%, ETA - 0s",
     "Repeating ripping (1 out of 200 matches for current checksum 2C926D69)",
-    "Ripping track 1, progress - 100.00%, ETA - 0s",
-    "Repeating ripping (2 out of 200 matches for current checksum 2C926D69)",
-    "Ripping track 1, progress - 46.22%, ETA - 0s ",
+    "Ripping track 1, progress - 4.89%, ETA - 0s  ",
     "Stopping, ripping incomplete!",
     "Flushing encoders...",
     "Album Loudness ",
@@ -91,12 +89,12 @@
     "Album sample peak level:          0.0 dBFS",
     "Album true peak level:            0.0 dBFS",
     "Paranoia status counts:",
-    "  READ:          52",
+    "  READ:          31",
     "Ripping errors: 1",
     "Read stalls:    none (no read exceeded 10s)",
     "Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)",
     "Interrupted at: track 1, mid-read",
-    "Ripping finished at 2026-08-25T13:10:56"
+    "Ripping finished at 2026-08-25T13:48:28"
   ],
   "messages_tail": []
 }

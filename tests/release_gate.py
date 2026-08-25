@@ -1607,6 +1607,23 @@ KNOWN_UNREPRODUCIBLE = {
     # not about any verdict; our lap 7 reports it and ships lap 2 with it.
     # Pinned by their declared value so an edit to their file fails here.
     "round-14-lap-06.md": "801c634a4ff9113e",
+    # Round 14 lap 8, theirs. Declares `adf7122c1c236276 over 7`; we re-derive
+    # eight. SAME CAUSE as the entry above and they PRE-DECLARED IT: their own
+    # field reads "every round-14 lap either side holds *that we hold*,
+    # excluding this one. Your §F is right that the true population is 8; the
+    # eighth is your lap 2".
+    #
+    # So this is not a divergence either side has to discover -- it is an
+    # agreed, named difference in holdings, declared in the same field that
+    # carries the number. That is the field working as well as it can: the
+    # value disagrees, the prose says exactly why, and neither side had to
+    # spend a round finding out. Our lap 9 ships lap 2 as its own file, which
+    # is what closes it.
+    #
+    # Kept rather than suppressed until they confirm receipt: an allowlist
+    # entry that outlives its cause is how a gate stops gating, so this comes
+    # out when a later lap of theirs enumerates eight.
+    "round-14-lap-08.md": "adf7122c1c236276",
 }
 
 
