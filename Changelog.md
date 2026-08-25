@@ -2,6 +2,101 @@ Unreleased
 ==========
 Nothing yet.
 
+0.9.4-rc2+platterpus.9 (2026-08-25)
+===================================
+**A BETA, and it supersedes `+platterpus.8` as the build round 14 tests.**
+Published as `release-manifest.json` `release_seq` 19, channel **`beta`**;
+`0.9.4-rc2+platterpus.7` (`237a4ff`) remains `stable` and is untouched.
+
+**Cut while handshake round 14 was OPEN, deliberately and on the maintainer's
+explicit instruction.** `tools/release-gate.py --release-gate` exits 1 on this
+tree and names round 14; that is recorded here rather than worked around,
+because a release the gate refused is a fact a reader is entitled to know. What
+the gate protects is `stable`, and `stable` did not move — `gen-release-manifest.py`
+enforces separately that a stable release can never point at an unclosed round,
+and that assertion is untouched and still passing. A `beta` pointing at an open
+round is what the beta channel *is*: the manifest reports `round_closed: false`
+for this row, truthfully.
+
+**Why it exists at all: `+platterpus.8` was already stale as a test subject.**
+Round 14's one close condition is a hardware acceptance pass on *the build that
+ships*. Four fixes landed after `796df32` was cut, so testing `796df32` would
+have meant testing something nobody would install — which is the precise defect
+that made round 13's CC-2 unsound and got it moved. The coherent repair is the
+same one as last time: **release what is current, then test that.** Round 14's
+pin moves to this build, which is a departure from S-15 and is declared as one
+rather than smuggled.
+
+**What is in it that `+platterpus.8` is not:**
+
+ - **A false structural claim removed from `PROVIDER-CONTRACT.md`, and the
+   generator taught to derive what it used to assert.** P2 printed one sentence
+   under *every* buffer-composed row — *"Segment 0 is always present; the rest
+   are appended conditionally"* — as a hardcoded string that derived nothing. It
+   is correct for the progress line, whose segments genuinely are
+   `snprintf(line + line_len, …)` appends, and **flatly wrong for `Cache
+   probe:`**, whose nine segments are arms of a `switch` that each write the
+   whole buffer and `return`, so exactly one is ever emitted. A consumer building
+   a matcher from that sentence writes a concatenation pattern that can never
+   match a real probe result — and `Cache probe:` is the one line round 14's T3
+   exists to put on a drive for the first time.
+
+   The fix derives it from the call rather than restating it: a whole-buffer
+   `snprintf(buf, …)` writes from the start and NUL-terminates, so it *replaces*;
+   only `snprintf(buf + n, …)` can *append*. The contract now says which of the
+   two each write is, and reports three outcomes — all-replace (*"these
+   ALTERNATE, match them as alternatives, never as a concatenation"*), all-append,
+   or mixed, naming which segments do which. **It still refuses to claim any
+   segment is unconditional**, because that is control flow and needs a run.
+
+   The defect's shape is the point and is worth keeping: not a mistaken fact, but
+   a **hardcoded prose claim inside a generated document** — the same shape as the
+   fatal-message wording allowlist and P4's `1, Every failure, without exception`
+   row, both of which Platterpus found from the other end. Found here by writing
+   an acceptance spec against our own contract and noticing the document
+   disagreed with the source.
+
+ - **`contract_composed`, a regression test that asserts against the binary.**
+   Re-deriving the structure in the test and comparing it to the generator's
+   derivation would prove only that two of our own regexes agree. So it runs
+   `-x -I`, takes the `Cache probe:` line cyanrip actually wrote, and checks the
+   value contains exactly **one** segment head from P2's table: concatenated
+   segments would show two, a stale table none. It reads the contract
+   positionally — from the cache-probe row's own heading to the next composed
+   row's — because P2 has three composed rows and a check satisfied by finding
+   the right words *somewhere* is satisfied by the document attributing them to
+   the wrong row. Revert-proved on both assertions separately. 52 tests now, up
+   from 51.
+
+ - **`docs/round-14-acceptance-spec.md`** — what cyanrip expects round 14's
+   acceptance pass to *observe*, per test, produced by running the binary rather
+   than described from memory. It states **no acceptance criteria on purpose**:
+   we report measurements with provenance and Platterpus makes judgements. It
+   carries the measured `-T` table across all five modes, both directions of the
+   paranoia relationship, the `Cache probe:` vocabulary, and the seven questions
+   we will ask of their plan — published in advance so our review is a diff and
+   so we cannot invent new criteria later.
+
+ - **The paranoia relationship, measured in both directions rather than reasoned.**
+   A single-pass rip gives per-track `15+10+5 = 30` against a disc total of **30**
+   and emits **no** `Scope:` line at all; three passes give the same 30 against
+   **90**. So the general rule is `sum(per-track) ≤ disc total`, with equality
+   exactly when every track was read once. **The ratio does not generalise** — on
+   this fixture every pass does identical work, which is not true of real media,
+   and a consumer asserting `disc == repeats × sum` would fail on a correct rip.
+
+**Nothing in `src/` changed.** The source anchor is unchanged from
+`+platterpus.8`, so the binary behaves identically; what improved is the
+contract's account of it, the test that holds it there, and the specification
+built on it. Said explicitly because "a new release" normally implies changed
+behaviour and here it does not.
+
+**Still no disc.** 52 of 52 in four build configurations — default,
+`-Ddeclare_released=true`, ASAN+UBSAN, and both — and not one sector read from a
+drive. `-x` has still never executed on real hardware anywhere outside
+Platterpus's rig, and this release does not change that. It is what round 14 is
+for.
+
 0.9.4-rc2+platterpus.8 (2026-08-24)
 ===================================
 **A BETA, deliberately, and the channel is the point.** Authorised by handshake

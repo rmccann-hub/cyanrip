@@ -13,7 +13,7 @@ project('cyanrip', 'c',
     # 2 of 33 from a fresh clone precisely because the two were done together.
     # Nothing here claims to be a release: `declare_released` defaults false and
     # the Handshake: line says so in every log this build writes.
-    version: '0.9.4-rc2+platterpus.8',
+    version: '0.9.4-rc2+platterpus.9',
     meson_version: '>=0.53.0',
 )
 
