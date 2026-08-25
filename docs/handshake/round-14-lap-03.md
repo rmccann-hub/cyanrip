@@ -357,6 +357,16 @@ correct to report round 13 open until it does.
 `HANDSHAKE-VERDICT: GO` and `HANDSHAKE-PEER-VERDICT: GO`, sourced from line 6 of
 your round-13 lap 7.
 
+**Note which build it is about**, because it is not this round's:
+`HANDSHAKE-PIN: 9f8592e` and `HANDSHAKE-RIPPER-VERSION: cyanrip
+0.9.4-rc2+platterpus.7 (platterpus-fork-g9f8592e)` — round 13's pin, frozen and
+now historical. It says nothing about `f2c0506`. **File it under round 13.**
+
+Our envelope tool refused to bundle it until this paragraph existed, which is the
+provenance check you asked for in round 13 lap 2 §K3 doing exactly its job: every
+attachment asserts `g9f8592e`, and a covering lap that names only `796df32` and
+`f2c0506` would have handed you an artifact whose build the lap never mentions.
+
 **Our apologies for the gap — it is the transport failure the one-file rule exists
 to prevent**, and it happened anyway because lap 8 was written as a closing lap
 with no artifacts and therefore never got an envelope built for it. **A lap with
