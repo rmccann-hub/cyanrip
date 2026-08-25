@@ -173,5 +173,92 @@ with tempfile.TemporaryDirectory() as td:
         print(f"FAIL: make-envelope.py refused a correct bundle: {out!r}")
         fails += 1
 
+# ---------------------------------------------------------------------------
+# A pin field must name the repository it claims to.
+#
+# THE DEFECT, and we shipped it first. `HANDSHAKE-OUR-PIN` and
+# `HANDSHAKE-PEER-PIN` exist so a closed round records WHICH TWO PROGRAMS
+# agreed (PROTOCOL.md line 361). Ours declared `HANDSHAKE-PEER-PIN: ddf7ac3` --
+# a CYANRIP commit, our own `0.9.4-rc1+platterpus.5` -- as Platterpus's pin, in
+# round-11 lap 3, round-12 lap 3 and round-13 laps 3, 6 and 8. Two of those are
+# the laps that CLOSED rounds 11 and 13. The same shape appears in round 7 with
+# `9048082` and `104f6d4`.
+#
+# It then propagated: Platterpus transcribed it back as their own
+# `HANDSHAKE-OUR-PIN`, correctly following the protocol's instruction to
+# transcribe what the peer declared, and it has stood in nine of their laps
+# from round-13 lap 2 to round-14 lap 13 while their APP-VERSION prose named a
+# real Platterpus SHA (`0.6.23 (722e24f)`) a few lines above it.
+#
+# NEITHER GATE COULD CATCH IT, because neither side can resolve the other's
+# SHAs -- which is exactly why the check has to be local and about our own
+# half: each side can verify that its OWN pin resolves here and that the PEER's
+# does not. Cheap, offline, and it would have fired on the first occurrence.
+#
+# WHAT THIS CANNOT DO, said rather than implied: a 7-hex prefix could collide
+# across two repositories, so a "resolves here" is evidence and not proof. The
+# subject line is printed so a human can tell a collision from a mistake. And
+# an absent object is not proof either -- it only means this clone does not
+# have it.
+
+
+def _resolves_here(sha):
+    """The commit subject if this repository has it, else None."""
+    r = subprocess.run(["git", "-C", str(root), "log", "--format=%s", "-1",
+                        sha + "^{commit}"], capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+# Sent and therefore uncorrectable, exactly like SENT_MALFORMED above. Named
+# individually so that adding one is a visible act, and each is an admission
+# that a lap went out naming the wrong repository's commit.
+SENT_WRONG_PEER_PIN = {
+    "round-07-lap-30.md", "round-07-lap-32.md", "round-07-lap-33.md",
+    "round-07-lap-36.md", "round-07-lap-38.md", "round-07-lap-39.md",
+    "round-11-lap-03.md", "round-12-lap-03.md", "round-13-lap-03.md",
+    "round-13-lap-06.md", "round-13-lap-08.md",
+}
+
+_git_ok = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-dir"],
+                         capture_output=True, text=True).returncode == 0
+if not _git_ok:
+    print("pin-repository check SKIPPED: not a git checkout "
+          "(this is a gap, not a pass)")
+else:
+    # The checker must be able to tell the two cases apart, or every assertion
+    # below passes for the wrong reason. `ddf7ac3` is ours; `722e24f` is the
+    # Platterpus SHA their own round-13 laps print in APP-VERSION.
+    if _resolves_here("ddf7ac3") is None:
+        print("FAIL: the pin resolver cannot find a commit known to be ours "
+              "-- every check below would pass vacuously")
+        fails += 1
+    if _resolves_here("722e24f") is not None:
+        print("FAIL: the pin resolver claims a Platterpus SHA is ours")
+        fails += 1
+
+    for lap in laps:
+        text = lap.path.read_text(encoding="utf-8")
+        ours = relgate.OUR_PIN_RE.search(text)
+        theirs = relgate.PEER_PIN_RE.search(text)
+
+        if ours and not ours.group(1).startswith("<"):
+            if _resolves_here(ours.group(1)) is None:
+                print(f"FAIL: {lap.path.name} declares HANDSHAKE-OUR-PIN "
+                      f"{ours.group(1)}, which is not a commit in this "
+                      f"repository")
+                fails += 1
+
+        if theirs and not theirs.group(1).startswith("<"):
+            subject = _resolves_here(theirs.group(1))
+            if subject is not None:
+                msg = (f"{lap.path.name} declares HANDSHAKE-PEER-PIN "
+                       f"{theirs.group(1)}, which is a commit in THIS "
+                       f"repository: {subject!r}")
+                if lap.path.name in SENT_WRONG_PEER_PIN:
+                    print(f"known-bad (sent, cannot be edited): {msg}")
+                else:
+                    print(f"FAIL: {msg}")
+                    fails += 1
+
 print(f"{len(laps)} lap(s) checked, {fails} malformed")
 sys.exit(1 if fails else 0)
