@@ -1584,6 +1584,29 @@ KNOWN_UNREPRODUCIBLE = {
     # wrong value, like the two above, so that if their file is ever edited this
     # stops matching and the test fails rather than excusing a moved target.
     "round-13-lap-07.md": "039cfa03a335266e",
+    # Round 14 lap 6, theirs. Declares `801c634a4ff9113e over 5`; we re-derive
+    # six over the same retroactive population.
+    #
+    # CAUSE KNOWN AT THE MOMENT OF FILING, which is the difference from the
+    # entry above: **they do not hold our round-14 lap 2.** Their lap 6's
+    # HANDSHAKE-INBOUND-HELD lists "your laps 3 and 4"; lap 2 is absent. It is
+    # the lap that moved the pin to f2c0506, superseded by our lap 4, and it
+    # evidently never reached them.
+    #
+    # So the extra lap in our count is `round-14-lap-02.md` (ours, outbound),
+    # which sits beside `inbound/round-14-lap-02.md` (theirs) -- round 14
+    # carries TWO lap 2s and TWO lap 5s, both sides having numbered from their
+    # own directory listing. That is the collision `HANDSHAKE-NEXT-LAP` is
+    # being added to the protocol to remove, and their lap 6 §Z9 names the
+    # shape: the number is chosen when a lap is WRITTEN and the divergence
+    # appears when it is not immediately sent.
+    #
+    # Both declarations are therefore correct about their own record and the
+    # records genuinely differ, exactly as in round 13. Allowlisted rather than
+    # left red because the disagreement is about which files each side holds,
+    # not about any verdict; our lap 7 reports it and ships lap 2 with it.
+    # Pinned by their declared value so an edit to their file fails here.
+    "round-14-lap-06.md": "801c634a4ff9113e",
 }
 
 
