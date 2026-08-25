@@ -1,4 +1,4 @@
-cyanrip 0.9.4-rc2+platterpus.9 (platterpus-fork-g829f188)
+cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-g7b53688)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b12 -t 1=isrc=AAAAA0000001 -t 2=isrc=BBBBB0000002 -t 3=isrc=CCCCC0000003 -D o -j o/reference.diagnostics.json
 Handshake:      round 14 lap 3 OPEN, verdict HOLD -- NOT a released build
 Consumer:       platterpus/0.6.4b12
@@ -72,8 +72,8 @@ Summary:
     True peak level:   0.0 dBFS
     Integrated loudness (R128): -7.7 LUFS
     Loudness range (R128):      20.0 LU (-27.7 to -7.7 LUFS)
-    Extraction speed:  30.0x
-    Elapsed:            0.10 s
+    Extraction speed:  27.8x
+    Elapsed:            0.11 s
     Pregap LSN:  0 (duration: 00:02.00)
     Pregap length: 150 frames
     Pregap source: TOC
@@ -93,11 +93,11 @@ Summary:
     musicbrainz_discid:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     cddb:                          14000603
     media:                         CD
-    comment:                       cyanrip 0.9.4-rc2+platterpus.9
+    comment:                       cyanrip 0.9.4-rc2+platterpus.10
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
     isrc:                          AAAAA0000001
-    creation_time:                 2026-08-25T01:06:31
+    creation_time:                 2026-08-25T01:16:11
     REPLAYGAIN_TRACK_GAIN:         -10.29 dB
     R128_TRACK_GAIN:               -1355
     REPLAYGAIN_TRACK_RANGE:        20.00 dB
@@ -146,7 +146,7 @@ Summary:
     True peak level:   0.3 dBFS
     Integrated loudness (R128): -6.8 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  23.4x
+    Extraction speed:  21.8x
     Elapsed:            0.09 s
     Pregap LSN:  300 (duration: 00:01.00)
     Pregap length: 75 frames
@@ -167,11 +167,11 @@ Summary:
     musicbrainz_discid:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     cddb:                          14000603
     media:                         CD
-    comment:                       cyanrip 0.9.4-rc2+platterpus.9
+    comment:                       cyanrip 0.9.4-rc2+platterpus.10
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
     isrc:                          BBBBB0000002
-    creation_time:                 2026-08-25T01:06:31
+    creation_time:                 2026-08-25T01:16:11
     REPLAYGAIN_TRACK_GAIN:         -11.19 dB
     R128_TRACK_GAIN:               -1584
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -220,7 +220,7 @@ Summary:
     True peak level:   -11.3 dBFS
     Integrated loudness (R128): -22.6 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  18.6x
+    Extraction speed:  18.4x
     Elapsed:            0.05 s
     Pregap LSN:  unknown (sub-channel unreadable)
     Start LSN:   525
@@ -239,11 +239,11 @@ Summary:
     musicbrainz_discid:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     cddb:                          14000603
     media:                         CD
-    comment:                       cyanrip 0.9.4-rc2+platterpus.9
+    comment:                       cyanrip 0.9.4-rc2+platterpus.10
     album:                         Unknown disc (OMP2)
     title:                         Unknown track
     isrc:                          CCCCC0000003
-    creation_time:                 2026-08-25T01:06:31
+    creation_time:                 2026-08-25T01:16:11
     REPLAYGAIN_TRACK_GAIN:         4.63 dB
     R128_TRACK_GAIN:               2465
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -285,5 +285,5 @@ Paranoia status counts:
 Ripping errors: 0
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  yes (3 of 3 tracks)
-Ripping finished at 2026-08-25T01:06:31
-Log FUN512: wGmAMA5w0zgQodyMYXOsIY3.ktvndH9SGlB4x349iqLXd0yCb8xKKK2qME_AZj3V9ETI0DAky8jHk8NSbZ050Q
+Ripping finished at 2026-08-25T01:16:11
+Log FUN512: _Cts0nQ8yH6Pz.ILhyK5kTuUWKg1VWES_mmLdQkC4B6sYrDBz47LX_PFcYx1niWcs4uqSPByTCfvjurVpTL.wg
