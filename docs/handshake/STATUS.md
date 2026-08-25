@@ -17,12 +17,19 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-08-24. **Round 13 is CLOSED. Two releases exist.**
+## Rewritten 2026-08-25. **Round 13 CLOSED. Round 14 OPEN. `+platterpus.10` is the build to test.**
 
-The previous rewrite of this file, earlier the same day, said round 13 was open,
-that we did not hold their lap 1, and that **no release was to be cut from this
-side.** All three have changed. Round 13 closed `GO`/`GO` on `9f8592e` in eight
-laps, and `0.9.4-rc2+platterpus.8` is published on the **`beta`** channel.
+Round 13 closed `GO`/`GO` on `9f8592e` in eight laps. Round 14 is open with one
+close condition — a hardware acceptance pass — and
+**`0.9.4-rc2+platterpus.10` at `d9c058c` is the build it is about.**
+
+**Three betas in two days, and the last of them.** `+platterpus.8`, `.9` and
+`.10` were cut in quick succession as the acceptance plan came together, and each
+one invalidated a build-tag assertion in the script Platterpus had already
+written. **That churn is ours and it stops here:**
+
+> **Pre-commit, and it binds: no further release until round 14 closes or the
+> acceptance pass reports.** `d9c058c` is what the pass runs against.
 
 ### The release table — now two channels, and the rows are named for it
 
@@ -44,11 +51,11 @@ nothing verified the beta channel of this table until there was a beta in it.
 
 | | |
 |---|---|
-| **beta version** | `0.9.4-rc2+platterpus.9` |
-| **beta commit** | **`f2c0506`** |
-| beta build tag | `platterpus-fork-gf2c0506` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/f2c0506.tar.gz` |
-| beta `release_seq` | 19 |
+| **beta version** | `0.9.4-rc2+platterpus.10` |
+| **beta commit** | **`d9c058c`** |
+| beta build tag | `platterpus-fork-gd9c058c` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/d9c058c.tar.gz` |
+| beta `release_seq` | 20 |
 | beta authorised by | **nothing yet — handshake round 14 is OPEN** |
 
 **`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**
@@ -61,13 +68,14 @@ Build command for either: `meson setup build -Ddeclare_released=true && ninja -C
 resolves these; this table is a human-readable copy of it and the test exists
 because a copy rots.
 
-### Why beta, and why a SECOND beta — read this before pinning anything
+### Why beta — read this before pinning anything
 
-**`+platterpus.9` has not been verified by anyone but us, and it was cut while
+**`+platterpus.10` has not been verified by anyone but us, and it was cut while
 round 14 was open.** Both facts are stated here because neither is visible from
 the version number.
 
-**Two betas in two days is not churn, it is the CC-2 repair applied again.**
+**The first two of the three were the CC-2 repair applied again; the third was
+not, and the difference is worth keeping.**
 Round 13's original close condition measured a *test pin* while the release would
 necessarily be a later commit — so satisfying it would still have left the
 released pair with no hardware evidence. It was moved to round 14 by bilateral
@@ -77,11 +85,19 @@ build that ships**. Then four fixes landed after `796df32` was cut, and testing
 one release later. So the release moved to match the fixes, rather than the test
 being pointed at a stale build.
 
-**Round 14's pin therefore moves to `f2c0506`.** That is a departure from S-15,
-which freezes a pin for the duration of a round, and it is declared as one rather
-than smuggled. The maintainer instructed it, both projects are cutting fresh
+**`+platterpus.10` had a different reason**, and a weaker one: no fix landed
+after `f2c0506` — only correspondence. What moved was the compiled-in handshake
+state, which is a real part of an archival record but is not a defect being
+fixed. Distinguishing the two is why the pre-commit above exists: the first two
+releases had to happen, the third was a judgement call, and a fourth would be
+churn.
+
+**Round 14's pin therefore moved, twice, and now rests at `d9c058c`.** That is a
+departure from S-15, which freezes a pin for the duration of a round, and it is
+declared as one rather than smuggled — our round-14 lap 2 and lap 3 both say so
+at column 0. The maintainer instructed it, both projects are cutting fresh
 releases, and the alternative was a hardware pass on a build no consumer would
-ever install.
+ever install. **It does not move again.**
 
 **What the gate says, recorded rather than worked around:**
 `tools/release-gate.py --release-gate` **exits 1** on this tree and names round
@@ -96,7 +112,7 @@ The manifest reports `"round_closed": false` for the beta row, truthfully. A
 `beta` pointing at an open round is exactly what the beta channel is for.
 
 `beta` resolves to the newest row of **any** channel, so opting in reaches
-`+platterpus.9` and can never move a user backwards.
+`+platterpus.10` and can never move a user backwards.
 
 **Their `FORK_PIN` stays at `ddf7ac3` and we are not asking them to move it.**
 Their lap 7 §W2 is right that a pin they have not run on hardware is a pin they
@@ -109,7 +125,23 @@ yet"*, which is the same missing state their §J1 hit in the verdict vocabulary 
 week earlier. Two vocabularies, one absent value, discovered independently. That
 is theirs to fix and they have not asked us for anything.
 
-### What `+platterpus.9` adds on top of `+platterpus.8`
+### What `+platterpus.10` adds on top of `+platterpus.9`
+
+**Nothing in `src/`, and nothing a rip can observe.** The one substantive change
+is the **compiled-in handshake state**: `+platterpus.9` stamps `round 14 lap 1
+OPEN, verdict OPEN` into every logfile, which was two laps stale by the time the
+acceptance plan was reviewed. This build stamps `round 14 lap 3 OPEN, verdict
+HOLD`.
+
+That is worth a release because the pass's logs are **archival records of a
+measurement nobody repeats**, and the round they name is part of the record.
+
+It also carries round 14 laps 2 and 3 — the pin reconciliation, the review of
+Platterpus's acceptance plan against the seven questions we published in advance,
+and the identification that **round 13's lap 8 had never been delivered**, which
+is why their gate was correctly holding round 13 open.
+
+### What `+platterpus.9` added on top of `+platterpus.8`
 
 **Nothing in `src/`.** The source anchor is unchanged, so the binary behaves
 identically. Said explicitly because "a new release" normally implies changed

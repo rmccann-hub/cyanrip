@@ -38,9 +38,9 @@ git tag         none published
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          f2c0506
---version       cyanrip 0.9.4-rc2+platterpus.9 (platterpus-fork-gf2c0506)
-release_seq     19                               <- newest of any channel
+commit          d9c058c
+--version       cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-gd9c058c)
+release_seq     20                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
