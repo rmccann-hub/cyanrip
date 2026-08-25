@@ -44,12 +44,16 @@ nothing verified the beta channel of this table until there was a beta in it.
 
 | | |
 |---|---|
-| **beta version** | `0.9.4-rc2+platterpus.8` |
-| **beta commit** | **`796df32`** |
-| beta build tag | `platterpus-fork-g796df32` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/796df32.tar.gz` |
-| beta `release_seq` | 18 |
-| beta authorised by | handshake round 13, closed `GO`/`GO` on `9f8592e` |
+| **beta version** | `0.9.4-rc2+platterpus.9` |
+| **beta commit** | **`f2c0506`** |
+| beta build tag | `platterpus-fork-gf2c0506` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/f2c0506.tar.gz` |
+| beta `release_seq` | 19 |
+| beta authorised by | **nothing yet — handshake round 14 is OPEN** |
+
+**`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**
+It is still in the ledger, because the ledger is append-only and a published
+build is a fact, but no channel resolves to it any more.
 
 Build command for either: `meson setup build -Ddeclare_released=true && ninja -C build`.
 
@@ -57,25 +61,42 @@ Build command for either: `meson setup build -Ddeclare_released=true && ninja -C
 resolves these; this table is a human-readable copy of it and the test exists
 because a copy rots.
 
-### Why beta and not stable — the channel carries a real distinction
+### Why beta, and why a SECOND beta — read this before pinning anything
 
-**`+platterpus.8` is jointly verified and has never been run on a drive.** Those
-are both true, and no single channel name says both, so the channel says the
-weaker one.
+**`+platterpus.9` has not been verified by anyone but us, and it was cut while
+round 14 was open.** Both facts are stated here because neither is visible from
+the version number.
 
-Round 13's original CC-2 required a hardware acceptance pass. It was
-mis-specified, we found it ourselves at lap 6, and Platterpus checked the argument
-before accepting it rather than deferring to it: CC-2 measured a **test pin**,
-`e78cd66`, while the release would necessarily be a different commit — so closing
-on it would have shipped a pair carrying no hardware evidence at all, which is
-precisely the gap they have refused to accept on their own side. The condition was
-**moved** to round 14 by explicit bilateral agreement (our lap 6 §N1, their lap 7
-§W1), where it tests the build that actually ships and therefore terminates.
+**Two betas in two days is not churn, it is the CC-2 repair applied again.**
+Round 13's original close condition measured a *test pin* while the release would
+necessarily be a later commit — so satisfying it would still have left the
+released pair with no hardware evidence. It was moved to round 14 by bilateral
+agreement (our lap 6 §N1, their lap 7 §W1) precisely so the pass would test **the
+build that ships**. Then four fixes landed after `796df32` was cut, and testing
+`796df32` would have meant testing something nobody would install — the same gap,
+one release later. So the release moved to match the fixes, rather than the test
+being pointed at a stale build.
 
-`stable` stays at `237a4ff` so nobody reaches the untested build by accident.
+**Round 14's pin therefore moves to `f2c0506`.** That is a departure from S-15,
+which freezes a pin for the duration of a round, and it is declared as one rather
+than smuggled. The maintainer instructed it, both projects are cutting fresh
+releases, and the alternative was a hardware pass on a build no consumer would
+ever install.
+
+**What the gate says, recorded rather than worked around:**
+`tools/release-gate.py --release-gate` **exits 1** on this tree and names round
+14 as open. The rule it enforces — no release while a round is open — was
+overridden deliberately.
+
+**What was NOT overridden, and this is the part that matters to a user.** The
+gate protects `stable`, and `stable` did not move: it is still `237a4ff`, seq 17,
+round 12, closed. `gen-release-manifest.py` independently refuses a `stable` row
+pointing at an unclosed round, and that assertion is untouched and still passing.
+The manifest reports `"round_closed": false` for the beta row, truthfully. A
+`beta` pointing at an open round is exactly what the beta channel is for.
+
 `beta` resolves to the newest row of **any** channel, so opting in reaches
-`+platterpus.8` and can never move a user backwards. The generator asserts both
-properties rather than leaving them to review.
+`+platterpus.9` and can never move a user backwards.
 
 **Their `FORK_PIN` stays at `ddf7ac3` and we are not asking them to move it.**
 Their lap 7 §W2 is right that a pin they have not run on hardware is a pin they
@@ -88,7 +109,31 @@ yet"*, which is the same missing state their §J1 hit in the verdict vocabulary 
 week earlier. Two vocabularies, one absent value, discovered independently. That
 is theirs to fix and they have not asked us for anything.
 
-### What `+platterpus.8` contains
+### What `+platterpus.9` adds on top of `+platterpus.8`
+
+**Nothing in `src/`.** The source anchor is unchanged, so the binary behaves
+identically. Said explicitly because "a new release" normally implies changed
+behaviour and here it does not.
+
+1. **A false structural claim removed from `PROVIDER-CONTRACT.md`, and the
+   generator taught to derive what it used to assert.** P2 printed one hardcoded
+   sentence under *every* buffer-composed row — *"Segment 0 is always present;
+   the rest are appended conditionally"*. It is right for the progress line and
+   **flatly wrong for `Cache probe:`**, whose nine segments are `switch` arms
+   that each write the whole buffer and `return`, so exactly one is emitted. A
+   matcher built from it is a concatenation pattern that can never match a real
+   probe result — and that is the line round 14's T3 exists to put on a drive.
+   Now derived: a whole-buffer `snprintf` replaces, only an offset write appends.
+
+2. **`contract_composed`**, which asserts against the **binary** rather than the
+   document — it runs `-x -I` and checks the emitted line carries exactly one
+   segment head. 52 tests, up from 51. Revert-proved on both assertions.
+
+3. **`docs/round-14-acceptance-spec.md`** — what we expect the acceptance pass to
+   *observe*, per test, measured by running the binary. It states no acceptance
+   criteria: we report measurements, Platterpus judges.
+
+### What `+platterpus.8` contained, and `.9` inherits
 
 Round 13's work, all of it already reviewed by them:
 

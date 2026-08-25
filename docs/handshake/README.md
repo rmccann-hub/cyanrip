@@ -33,25 +33,34 @@ build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
-### `beta` — opt-in, jointly verified, **no hardware evidence**
+### `beta` — opt-in, **not yet verified by anyone but us**
 
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          796df32
---version       cyanrip 0.9.4-rc2+platterpus.8 (platterpus-fork-g796df32)
-release_seq     18                               <- newest of any channel
+commit          f2c0506
+--version       cyanrip 0.9.4-rc2+platterpus.9 (platterpus-fork-gf2c0506)
+release_seq     19                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
-**What "beta" claims here is narrower than usual and worth reading.** It is not
-"less tested" in the ordinary sense — round 13 closed `GO`/`GO` on it and it is
-51/51 in four build configurations. It is that **no disc was read for it.**
-Round 13's hardware condition was mis-specified, was moved to round 14 by
-bilateral agreement, and until that pass runs this build has never touched a
-drive. `stable` is retained precisely so that opting in is reversible.
+**Two things this beta claims that the previous one did not, both weaker.** It
+has **no disc behind it** — 52/52 in four build configurations, and not one
+sector read from a drive — *and* it carries **no joint verification**: it was cut
+while handshake round 14 was open, on the maintainer's explicit instruction, and
+`tools/release-gate.py --release-gate` exits 1 on this tree naming that round.
+
+**`stable` did not move and the assertion protecting it is untouched.**
+`gen-release-manifest.py` independently refuses a `stable` row pointing at an
+unclosed round; `stable` is `237a4ff`, round 12, closed. The manifest reports
+`"round_closed": false` for this beta row, truthfully. Opting in is reversible by
+design, and that is the whole reason `stable` is retained.
+
+**`+platterpus.8` (`796df32`, seq 18) is superseded** — still in the ledger,
+because a published build is a fact and the ledger is append-only, but no channel
+resolves to it.
 
 `release-manifest.json` is the machine-readable form and is authoritative;
 this block is a convenience copy, and `sc_status_is_current()` compares the two
