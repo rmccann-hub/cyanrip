@@ -1670,6 +1670,36 @@ KNOWN_UNREPRODUCIBLE = {
     # entry that outlives its cause is how a gate stops gating, so this comes
     # out when a later lap of theirs enumerates eight.
     "round-14-lap-08.md": "adf7122c1c236276",
+    # Round 14 lap 13, theirs. Declares `84744e825d0b3d42 over 12`; we re-derive
+    # `fceaf38eff740b03 over 13`.
+    #
+    # CAUSE DETERMINED HERE, and it is a DIFFERENT one from the three above:
+    # not a difference in holdings. Their own field says so -- "unchanged from
+    # our lap 12, which this file does not count and which named the same
+    # population". They deliberately RE-DECLARED lap 12's value because nothing
+    # new had arrived.
+    #
+    # But something had: their own lap 12. A lap's digest covers the round's
+    # laps excluding the lap in flight, and by lap 13 their lap 12 is a held lap
+    # of the round. Re-declaring lap 12's number omits it.
+    #
+    # DERIVED, not argued. Over the 13 laps they held when writing it --
+    # everything in round 14 numbered below 13 -- the digest is
+    # `fceaf38eff740b03`, which is exactly what OUR lap 13 declares, written
+    # independently and covering the same population. So the two loaders agree
+    # and the declaration is the slip: this is a third consecutive agreement
+    # once the value is corrected, not a fourth divergence.
+    #
+    # WHY THE NAME COLLISION HERE DOES NOT SUPPRESS OUR OWN LAP 13. Round 14
+    # has two files called `round-14-lap-13.md` -- ours and theirs -- and the
+    # pin is keyed on the basename, so it matches both. It does not excuse ours
+    # because an entry only applies when the DECLARED VALUE also matches, and
+    # ours declares `fceaf38eff740b03`. Value-pinning was added so an edit to
+    # their file would fail here; it now carries a second load it was not
+    # designed for, so there is a test asserting our lap 13 is still judged.
+    #
+    # Comes out when a later lap of theirs declares over its full holdings.
+    "round-14-lap-13.md": "84744e825d0b3d42",
 }
 
 
@@ -1833,6 +1863,52 @@ def test_the_digest_checker_can_fail():
         problems = scan_declarations((9, 9), pins)
         check(any("changed or vanished" in p for p in problems),
               f"an edited pinned lap was still excused: {problems}")
+
+        # TWO FILES, ONE BASENAME -- and the pin must excuse only one of them.
+        #
+        # Round 14 has two files called `round-14-lap-13.md`: ours in
+        # docs/handshake/ and theirs in inbound/. Both sides numbered from
+        # their own directory listing, which is the same collision round 14
+        # already hit twice at lap 2. Pins are keyed on the BASENAME, so an
+        # entry added for their file matches ours as well -- and if the key were
+        # the whole story, allowlisting theirs would silently allowlist a wrong
+        # declaration of ours.
+        #
+        # It does not, because an entry applies only when the DECLARED VALUE
+        # also matches. That guard was added so an edit to a pinned lap would
+        # stop excusing it; it now carries a second load nobody designed it for,
+        # so it gets its own assertion rather than being left to be rediscovered
+        # the next time two laps share a number.
+        good.write_text(lap.format(
+            3, "cyanrip-fork",
+            f"HANDSHAKE-ROUND-DIGEST: sha256/16 = {truth} over 2 lap(s)",
+            "three"), encoding="utf-8")
+        theirs = d / "inbound" / "round-09-lap-03.md"
+        theirs.write_text(lap.format(
+            3, "platterpus",
+            f"HANDSHAKE-ROUND-DIGEST: sha256/16 = {'a' * 16} over 2 lap(s)",
+            "three-theirs"), encoding="utf-8")
+        # Scope (9, 1), NOT (9, 9): scan_declarations skips laps below its
+        # scope, so at (9, 9) nothing here is judged at all and every
+        # assertion below would pass on an empty list. The first draft of this
+        # block used (9, 9) and failed for exactly that reason -- which is the
+        # good outcome, since the alternative was a test that passed vacuously.
+        pins = {"round-09-lap-03.md": "a" * 16}
+        check(not scan_declarations((9, 1), pins),
+              "the same-basename pair was not both judged and excused "
+              "correctly with a matching pin")
+
+        # Now break OURS. The pin still names the basename and still holds
+        # THEIR value, so if the basename alone excused a file, this would pass.
+        good.write_text(lap.format(
+            3, "cyanrip-fork",
+            f"HANDSHAKE-ROUND-DIGEST: sha256/16 = {'b' * 16} over 2 lap(s)",
+            "three"), encoding="utf-8")
+        problems = scan_declarations((9, 1), pins)
+        check(any("b" * 16 in p for p in problems),
+              "a pin for the PEER's file of the same basename excused OUR "
+              f"wrong declaration: {problems}")
+        theirs.unlink()
     finally:
         rdg.HS = real
 
