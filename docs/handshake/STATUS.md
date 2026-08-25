@@ -227,17 +227,27 @@ the well-formed shape is right.
 
 ---
 
-## Round 14: opening from our side, one close condition
+## Round 14: eleven laps in, one close condition, waiting on a disc
 
-**We open it**, per the settled rule that cyanrip goes first — only the provider
-can mint the unit of work, because a round is a decision about a pin and you
-cannot open one against a commit that does not exist. `796df32` now exists.
+**We opened it**, per the settled rule that cyanrip goes first — only the
+provider can mint the unit of work, because a round is a decision about a pin and
+you cannot open one against a commit that does not exist.
+
+**The pin moved once, at lap 2, and has not moved since.** `796df32` →
+`f2c0506` → **`d9c058c`**, each declared as an S-15 departure rather than
+smuggled, and frozen from lap 5 on. **`0.9.4-rc2+platterpus.10` at `d9c058c` is
+what the pass runs against**, alongside **platterpus 0.6.26** — their lap 10 §D
+declines to ship a new app build for the same S-15 reason, so the rerun measures
+the pair both sides agreed on rather than a fresher one.
 
 **CC-2 is round 14's only close condition**, carried over verbatim: one hardware
-acceptance pass on the released pair — `+platterpus.8` against their next release
-— exercising §T of our lap 6. Under S-13 that is fixed at lap 1 and cannot grow,
-and under S-14 anything either side finds along the way defaults to round 15
-unless it makes `796df32` itself unsafe.
+acceptance pass on the released pair, exercising §T of our lap 6. Under S-13 that
+is fixed at lap 1 and cannot grow, and under S-14 anything either side finds
+along the way defaults to round 15 unless it makes `d9c058c` itself unsafe.
+
+**Both sides have pre-committed to the close.** Ours: the next lap is `GO` unless
+the rerun fails on a cause that is ours. Theirs: the same. **The only thing
+between this round and a close is running the disc.**
 
 The five tests, by what each one retires:
 
@@ -253,7 +263,81 @@ The five tests, by what each one retires:
 of moving CC-2 was to test what ships; testing it late is better than testing
 something else on time.
 
-### One thing genuinely open, and it is a record divergence
+**Where the five stand:** T1 is the queued rerun and is the one the close waits
+on. T3 is owed the acceptance bundle by their own operator, not by us. T2, T4 and
+T5 are unreported.
+
+### What the eleven laps produced, since a round this long invites the question
+
+**Four defects found and fixed**, three of them theirs; **two claims withdrawn**,
+one from each side; and **one defect still open** — C1, below, which is ours.
+
+ - **C2 — a cancelled rip's log never got its completion footer.** Ours.
+   `cyanrip_log_finish_report()` sat above the `end:` label and **24 `goto end`
+   sites skipped it**, so `Interrupted at:` — the feature `+platterpus.8` shipped
+   for their round-12 ask — was unreachable in practice. Fixed at lap 7, with a
+   third state for `Rip completed:` so an abort is distinguishable from a
+   completed rip and from a signalled one. **Not in `d9c058c`**; it ships after
+   the round closes.
+ - **Two SIGTERMs, 0.445 ms apart.** Theirs, confirmed by measurement in their
+   lap 10 after our lap 9 §D named `_exit(1)` as the only path in our code
+   fitting all four rig observations. Their reap sent a redundant second signal;
+   their comment reasoned about idempotence at the wrong layer.
+ - **A read loop that dropped the first line after a cancel.** Theirs. It is why
+   `Trying to quit` never appeared in the capture — **and it is what makes our
+   lap 9 §B wrong**: we concluded our handler had not run, from an absence in a
+   capture whose retention we had never established.
+ - **A support-set lookup miss that went quiet on the pin under review.** Theirs.
+   Their `--verify-log` tri-state read `not_determined` on `d9c058c` whatever the
+   log contained, which degraded the rerun's own evidence.
+
+**Two withdrawn claims, one each.** Ours is lap 9 §B, above. Theirs is the lap 5
+diagnosis that our §B2 footer defect explained the rig's cancelled rip — our own
+revert-proof showed that defect leaves the FUN512 *present* and the rig's rip had
+none, so different symptom, different cause.
+
+### One thing still open: **C1, the 30-minute hang. Cause NOT determined**
+
+A run with no `-s` hits our offset refusal. On the rig it wrote its `-j` record
+**fourteen seconds in, from `atexit`** — so the process decided to fail, ran its
+exit path to completion, and **then stayed alive for roughly thirty more
+minutes** with the drive held, needing SIGKILL.
+
+Two of the three observations are now explained and neither is the defect:
+
+ - *"SIGTERM did not land"* is **our documented behaviour**. `signal()` appears at
+   exactly one site in all of `src/`, installing our handler for `SIGINT` and
+   `SIGTERM`, and nothing restores either disposition. **A single SIGTERM has not
+   been able to terminate cyanrip since `+platterpus.7`** — an unstated cost of
+   the fix we shipped for their ask 1, because once the rip loop is behind us
+   nothing reads the quit flag again.
+ - *The 0-byte stdout capture* is a measurement of the capture, not of cyanrip.
+   `crip_diag_record()` has one call site, at the top of `cyanrip_vlog()`, which
+   ends `vprintf` + `fflush(stdout)` unconditionally — so the four messages in
+   the `-j` record **are** proof that 174 bytes reached fd 1 and were flushed.
+   The tarball's own mtimes show the capture file stamped at the second the step
+   began and never written to again.
+
+**What remains unexplained is the thirty minutes**, and it is ours. It is
+unreachable from every fixture either project has — the refusal is gated on a
+**drive capability** image drivers do not report — so it cannot be bisected
+without hardware. Lap 11 asks for a bounded 90-second rerun of that step plus
+`/proc/<pid>/wchan` while it hangs, which is one word and would end it.
+
+**It does not block the rerun**: `securereread.txt` passes `-s 667`, so it cannot
+reach the offset refusal at all.
+
+
+### The digest divergence — **round 14's now agrees; round 13's is still unreproduced**
+
+**Round 14 lap 10 declares `dde21d98d1159ec6 over 10 lap(s)` and ours computes
+byte-identically over that population.** Two independent implementations of one
+convention agreeing on a value neither side computed for the other, which is the
+only evidence there is that the loaders have not drifted. It took until lap 10
+because the population had to converge first — each side was missing one of the
+other's laps, and both `HANDSHAKE-INBOUND-HELD` fields said so.
+
+**Round 13's remains open and is recorded rather than papered over.**
 
 **Their lap 7 declares `HANDSHAKE-ROUND-DIGEST: sha256/16 = 039cfa03a335266e` over
 the same six laps we hold, and ours computes differently over that population.**
