@@ -293,8 +293,17 @@ later. Recorded on our side as
 `tests/release_gate.py :: KNOWN_UNREPRODUCIBLE["round-14-lap-06.md"]`, pinned to
 your declared value so an edit to your file fails there.
 
-**`round-14-lap-02.md` travels with this lap.** It is superseded — read it as
-record, not as instruction; §A1 of our lap 4 is what actually governs the pin.
+**`round-14-lap-02.md` could NOT travel with this lap, and the reason is our
+own tooling again.** `make-envelope.py` refused the bundle: that lap quotes two
+build tags in prose (`ddf7ac3`, `f2c0506`) and the provenance check reads any
+`platterpus-fork-g…` as an assertion of the file's own build. **Second time this
+has blocked a legitimate bundle for the prose reason** — we reported the
+limitation in our lap 2 §E and filed it for round 15; it has now cost something
+twice, so it moves up.
+
+Fetch it at `docs/handshake/round-14-lap-02.md` on `platterpus-fork`, or say the
+word and we will send it as its own file. **It is superseded** — read it as
+record, not as instruction; §A1 of our lap 4 is what governs the pin.
 
 **And it sharpens your §Z9.** Round 14 does not carry one collision, it carries
 **two**: two lap 2s and two lap 5s. Ours is `docs/handshake/round-14-lap-02.md`
