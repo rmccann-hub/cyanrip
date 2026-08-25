@@ -2,6 +2,64 @@ Unreleased
 ==========
 Nothing yet.
 
+0.9.4-rc2+platterpus.10 (2026-08-25)
+====================================
+**The build to run the round-14 acceptance pass on, and the LAST release before
+round 14 closes.** `release_seq` 20, channel **`beta`**;
+`0.9.4-rc2+platterpus.7` (`237a4ff`) remains `stable` and is untouched.
+
+> **Pre-commit, and it binds:** no further release will be cut until round 14
+> closes or the acceptance pass reports. Platterpus's acceptance script asserts
+> an exact build tag, so every release we publish mid-round invalidates a script
+> they have already written — twice now. **The churn is ours and it stops here.**
+
+**Nothing in `src/` changed since `+platterpus.9`.** The provider contract's
+source anchor is identical, so the binary reads discs exactly as `+platterpus.9`
+and `+platterpus.8` do. Said first because "a new release" normally implies
+changed behaviour and three releases running it has not.
+
+**What did change, and it is the reason to cut this at all:** the **compiled-in
+handshake state**. Every logfile records the round it was produced under, and
+`+platterpus.9` stamps `round 14 lap 1 OPEN, verdict OPEN` — the state before the
+pin was reconciled and before the acceptance plan was reviewed. This build stamps
+`round 14 lap 3 OPEN, verdict HOLD`.
+
+That matters because the acceptance run's logs are **archival records of a
+measurement that will not be repeated**, and the round they name is part of the
+record. A log from the pass saying `lap 1` would describe a state two laps stale
+at the moment it was written — the same defect as a superseded track's
+`creation_time` describing a read that was thrown away.
+
+**Contents, all of it correspondence and none of it behaviour:**
+
+ - **Round 14 lap 2** — the pin moved from `796df32` to `f2c0506`, declared as an
+   S-15 departure rather than smuggled, because four fixes had landed after
+   `796df32` was cut and testing it would have meant spending a disc on a build
+   no consumer would install.
+ - **Round 14 lap 3** — Platterpus's acceptance plan reviewed against the seven
+   questions published in advance (seven for seven), plus one blocking amendment:
+   their script asserts an exact build tag and their own install route now
+   delivers a different one.
+ - **Round 13 lap 8 identified as never delivered.** Their gate was correctly
+   holding round 13 open; the lap existed here and no envelope was ever built for
+   it, because it was a closing lap with no artifacts. **A lap with nothing
+   attached is exactly the one that gets forgotten.**
+ - **A correction to our own record.** The round-13 digest divergence is resolved:
+   transcribing Platterpus's six rows and re-hashing them here reproduces *both*
+   declarations exactly, with one row differing — the same file before and after
+   they renumbered it. Neither implementation was wrong. Our earlier note filed
+   the renumbering hypothesis as **rejected**; it was not refuted, because we
+   varied the lap number with the file's hash held fixed and could not do
+   otherwise without holding their copy. **A hypothesis that cannot be fully
+   tested from one side is not a refuted one**, and the note said it was.
+ - **A stale comment in `meson.build`** that named the version it was written for
+   (".7") and had been wrong for two releases. A comment beside a value must not
+   restate the value.
+
+**Still no disc.** 52 of 52 in four build configurations — default,
+`-Ddeclare_released=true`, ASAN+UBSAN, and both — and not one sector read from a
+drive. That is what round 14 exists to change.
+
 0.9.4-rc2+platterpus.9 (2026-08-25)
 ===================================
 **A BETA, and it supersedes `+platterpus.8` as the build round 14 tests.**

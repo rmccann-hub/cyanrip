@@ -6,14 +6,19 @@ project('cyanrip', 'c',
     # 4f28cf0; only upstream may change that half, and it changes exactly when
     # we sync. `+platterpus.N` is ours and is the only number we advance.
     #
-    # Bumped to .7 here rather than at release time on purpose: CLAUDE.md's
+    # The bump happens HERE, before release time, on purpose: CLAUDE.md's
     # release plan says to choose the RELEASED COMMIT after every derived
     # artifact agrees with the version, never at the bump. Bumping first is what
     # makes that possible -- +platterpus.5 was announced at a commit that failed
     # 2 of 33 from a fresh clone precisely because the two were done together.
+    #
+    # This comment used to name the version it was written for (".7"), which
+    # made it wrong at .8 and stayed wrong through .9. A comment beside a value
+    # must not restate the value -- that is two places to change and only one
+    # that fails a test when it drifts.
     # Nothing here claims to be a release: `declare_released` defaults false and
     # the Handshake: line says so in every log this build writes.
-    version: '0.9.4-rc2+platterpus.9',
+    version: '0.9.4-rc2+platterpus.10',
     meson_version: '>=0.53.0',
 )
 
