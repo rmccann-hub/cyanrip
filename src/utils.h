@@ -157,6 +157,34 @@ static inline const char *crip_signal_name(int signo)
     }
 }
 
+/* The parenthetical on the `Cache model:` line, chosen from two facts and
+ * nothing else.
+ *
+ * A FUNCTION RATHER THAN AN `if` AT THE CALL SITE, for the same reason
+ * crip_signal_name() is here: the call site is print_cache_model(), which needs
+ * a live cdio handle and a paranoia context, so the physical-drive branch is
+ * unreachable from every disc-image fixture -- all three image drivers take the
+ * image arm before ever reaching it. The choice is pure, so it is separated out
+ * and asserted directly rather than shipped on the strength of a code reading.
+ *
+ * THE DEFECT IT EXISTS FOR. The drive arm said "(drive cache size not probed)"
+ * unconditionally, and `-x` can probe it. Measured 2026-08-25 on the first
+ * `-x -I` ever to finish on real hardware: one log carried
+ * `Cache model: 1200 sectors (drive cache size not probed)` in its header and
+ * `Cache probe: at least 2048 sectors` forty lines below, in that order, so the
+ * denial reads first.
+ *
+ * The two numbers stay separate and neither is derived from the other -- the
+ * model is what paranoia was configured with, the probe is what the drive did.
+ * All that changes is that the line stops denying the other one exists. */
+static inline const char *crip_cache_model_note(int is_image, int probe_requested)
+{
+    if (is_image)
+        return "disc image, no drive cache";
+    return probe_requested ? "drive cache probed separately, see \"Cache probe:\""
+                           : "drive cache size not probed";
+}
+
 static inline int cmp_numbers(const void *a, const void *b)
 {
     return *((int *)a) > *((int *)b);

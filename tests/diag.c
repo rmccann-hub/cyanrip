@@ -36,6 +36,7 @@
  */
 
 #include "diagnostics.h"
+#include "utils.h"
 
 #include <signal.h>
 #include <stdarg.h>
@@ -160,9 +161,61 @@ static void test_keeps_the_last_line_said(void)
     remove(path);
 }
 
+/* THE `Cache model:` PARENTHETICAL, asserted directly because its call site
+ * cannot be reached from a fixture.
+ *
+ * print_cache_model() needs a live cdio handle and a paranoia context, and all
+ * three image drivers take the image arm before the drive arm is reached, so
+ * no BIN/CUE, NRG or .toc rip in this suite can exercise the branch that was
+ * wrong. Splitting the pure choice out is what makes it checkable at all.
+ *
+ * IT LIVES HERE because this test already builds against the module set that
+ * carries utils.h and needs no disc context, which is exactly the property the
+ * helper needs -- the same reason crip_signal_name() is in that header rather
+ * than in cyanrip_main.c. utils.h is included directly above: it reached this
+ * binary through diagnostics.c before, which links the symbol but does not
+ * declare it in THIS translation unit, and an implicit declaration is how a
+ * test comes to assert against a function nobody checked the signature of.
+ *
+ * The defect: the drive arm said "not probed" whatever -x did. Measured on the
+ * 2026-08-25 acceptance run, whose §P log carried
+ * `Cache model: 1200 sectors (drive cache size not probed)` in the header and
+ * `Cache probe: at least 2048 sectors` below it. */
+static void test_cache_model_note(void)
+{
+    const char *img_off = crip_cache_model_note(1, 0);
+    const char *img_on  = crip_cache_model_note(1, 1);
+    const char *drv_off = crip_cache_model_note(0, 0);
+    const char *drv_on  = crip_cache_model_note(0, 1);
+
+    /* An image has no drive cache whatever -x was asked for, so -x must not
+     * change this arm -- on an image the probe refuses before doing anything
+     * and a note claiming otherwise would be the same defect mirrored. */
+    CHECK(strcmp(img_off, img_on) == 0,
+          "-x changed the disc-image note, which has no drive cache to probe");
+    CHECK(strstr(img_off, "disc image") != NULL,
+          "the disc-image note stopped saying it is an image");
+
+    /* The defect itself, both directions. */
+    CHECK(strstr(drv_off, "not probed") != NULL,
+          "a drive with no -x stopped saying the cache was not probed");
+    CHECK(strstr(drv_on, "not probed") == NULL,
+          "a drive WITH -x still claims the cache was not probed -- this is "
+          "the false parenthetical this function exists to stop");
+    CHECK(strstr(drv_on, "Cache probe:") != NULL,
+          "the -x note does not point at the line carrying the measurement, "
+          "so a reader has nothing to go to");
+
+    /* And the four are not all one string: a note that never varied would
+     * satisfy half the checks above by saying nothing. */
+    CHECK(strcmp(drv_off, drv_on) != 0 && strcmp(drv_off, img_off) != 0,
+          "the note does not discriminate its inputs");
+}
+
 int main(void)
 {
     test_keeps_the_last_line_said();
+    test_cache_model_note();
 
     if (failures)
         fprintf(stderr, "%d check(s) failed\n", failures);

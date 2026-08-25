@@ -101,20 +101,22 @@ static void print_cache_model(cyanrip_ctx *ctx)
     /* -1 queries without setting, so this does not disturb the rip. */
     const int sectors = cdio_paranoia_cachemodel_size(ctx->paranoia, -1);
 
+    /* The parenthetical is crip_cache_model_note()'s, and it is a separate
+     * function because this branch is unreachable from every fixture: all
+     * three image drivers take the image arm. Its header carries the defect
+     * that put "(drive cache size not probed)" in a log that also carried a
+     * probe result. */
+    int is_image;
     switch (cdio_get_driver_id(ctx->cdio)) {
     case DRIVER_BINCUE:
     case DRIVER_NRG:
-    case DRIVER_CDRDAO:
-        cyanrip_log(ctx, 0, "Cache model:    %i sector%s "
-                            "(disc image, no drive cache)\n",
-                    sectors, sectors == 1 ? "" : "s");
-        break;
-    default:
-        cyanrip_log(ctx, 0, "Cache model:    %i sector%s "
-                            "(drive cache size not probed)\n",
-                    sectors, sectors == 1 ? "" : "s");
-        break;
+    case DRIVER_CDRDAO: is_image = 1; break;
+    default:            is_image = 0; break;
     }
+
+    cyanrip_log(ctx, 0, "Cache model:    %i sector%s (%s)\n",
+                sectors, sectors == 1 ? "" : "s",
+                crip_cache_model_note(is_image, ctx->settings.cache_probe));
 }
 
 /* Prints the paranoia callback counters that are non-zero, aligned on the
