@@ -191,6 +191,28 @@ class Lap:
         self.pin = pin
         self.test_pin = test_pin
 
+    def test_pin_is_declared_none(self):
+        """`HANDSHAKE-TEST-PIN: none` is an ANSWER, not a pin.
+
+        Found in round 14 lap 11, in this gate's own output, against a lap of
+        ours that declared the field rather than omitting it:
+
+            test pin none. -- for the rig to gather evidence; NOT a release
+
+        which reads as a test pin whose name is "none." -- a label asserting
+        something its value disclaims, the same defect as `Cache defeat:`. The
+        declaration itself is right and both sides make it: "we considered a
+        test pin and there is not one" is a different claim from a missing
+        field, and this project separates those everywhere else.
+
+        Punctuation is tolerated because prose is legal in these fields and a
+        sender writing "none." is answering, not naming a build. Nothing else
+        is: an unrecognised value stays a pin, because a gate that guesses at
+        absence is the failure this whole file exists to prevent."""
+        if self.test_pin is None:
+            return False
+        return self.test_pin.strip().rstrip(".").casefold() == "none"
+
     def missing_wire_header(self):
         """v2 fields every file must declare, from WIRE_HEADER_REQUIRED_FROM on.
 
@@ -640,7 +662,13 @@ def main():
             # indistinguishable from the rule never having existed.
             print(f"      OVERRIDE {r.override} — by {r.override_by} "
                   f"— {r.override_why}")
-        if r.test_pin:
+        if r.test_pin_is_declared_none():
+            # Printed rather than passed over: "declared none" and "field
+            # absent" are different claims, and the round's record should show
+            # which one it made.
+            print("      no test pin -- declared `none`, which is an answer "
+                  "and not a build")
+        elif r.test_pin:
             print(f"      test pin {r.test_pin} -- for the rig to gather "
                   f"evidence; NOT a release and does not close this round")
     print()

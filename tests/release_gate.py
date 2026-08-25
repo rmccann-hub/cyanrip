@@ -700,6 +700,52 @@ def test_a_test_pin_is_not_the_production_pin():
     check(lap_obj.test_pin == "ccc3333", f"test pin misread: {lap_obj.test_pin!r}")
 
 
+def test_a_declared_none_test_pin_is_not_rendered_as_a_build():
+    """Found in round 14 lap 11, in this gate's own output.
+
+    `HANDSHAKE-TEST-PIN: none.` printed as `test pin none. -- for the rig to
+    gather evidence`, which names a build called "none." -- a label asserting
+    what its value disclaims. Both sides declare the field this way and both
+    are right to: "we considered a test pin and there is not one" is a
+    different claim from a missing field.
+
+    No conformance row: PROTOCOL.md §8 says nothing about what a gate prints,
+    and adding a row is a shared-spec bump neither project may make alone.
+
+    Three cases, because the whole point is that they are three: a real pin
+    still renders as a pin, a declared absence renders as an absence, and a
+    missing field renders as nothing at all."""
+    def render(extra):
+        d = pathlib.Path(tempfile.mkdtemp())
+        (d / "round-9.md").write_text(
+            GO.replace("HANDSHAKE-PIN: bbb2222",
+                       "HANDSHAKE-PIN: bbb2222" + extra), encoding="utf-8")
+        lap_obj = rg.load_rounds(d)[0]
+        return lap_obj
+
+    real = render("\nHANDSHAKE-TEST-PIN: ccc3333")
+    check(not real.test_pin_is_declared_none(),
+          "a real test pin must not be read as a declared absence")
+
+    for spelling in ("none", "none.", "None", "NONE", "none..."):
+        declared = render(f"\nHANDSHAKE-TEST-PIN: {spelling}")
+        check(declared.test_pin == spelling,
+              f"the raw declaration must survive parsing: {declared.test_pin!r}")
+        check(declared.test_pin_is_declared_none(),
+              f"{spelling!r} is an answer, not a build")
+
+    absent = render("")
+    check(absent.test_pin is None, "no field means no declaration")
+    check(not absent.test_pin_is_declared_none(),
+          "a missing field is not a declared absence -- that is the whole "
+          "distinction this test exists for")
+
+    # And the value nobody should guess at: an unrecognised string stays a pin.
+    weird = render("\nHANDSHAKE-TEST-PIN: nonesuch1")
+    check(not weird.test_pin_is_declared_none(),
+          "only an exact `none` is an absence; anything else is a build")
+
+
 
 
 def _gate_main(files, argv):
