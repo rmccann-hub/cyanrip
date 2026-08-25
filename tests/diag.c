@@ -180,36 +180,36 @@ static void test_keeps_the_last_line_said(void)
  * The defect: the drive arm said "not probed" whatever -x did. Measured on the
  * 2026-08-25 acceptance run, whose §P log carried
  * `Cache model: 1200 sectors (drive cache size not probed)` in the header and
- * `Cache probe: at least 2048 sectors` below it. */
+ * `Cache probe: at least 2048 sectors` below it.
+ *
+ * IT ASSERTS THE CHOICE AND NOT THE WORDING, deliberately. The helper returns
+ * an arm rather than a string so the three literal formats stay at the call
+ * site where gen-provider-contract.py can see them; a `%s` passed in from here
+ * turned two enumerated P2 rows into `Cache model: %i sector%s (%s)` and took
+ * the wording out of the document a consumer parses. So P2 covers the words,
+ * this covers the decision, and neither is a second copy of the other. */
 static void test_cache_model_note(void)
 {
-    const char *img_off = crip_cache_model_note(1, 0);
-    const char *img_on  = crip_cache_model_note(1, 1);
-    const char *drv_off = crip_cache_model_note(0, 0);
-    const char *drv_on  = crip_cache_model_note(0, 1);
-
     /* An image has no drive cache whatever -x was asked for, so -x must not
      * change this arm -- on an image the probe refuses before doing anything
-     * and a note claiming otherwise would be the same defect mirrored. */
-    CHECK(strcmp(img_off, img_on) == 0,
-          "-x changed the disc-image note, which has no drive cache to probe");
-    CHECK(strstr(img_off, "disc image") != NULL,
-          "the disc-image note stopped saying it is an image");
+     * and an arm claiming otherwise would be the same defect mirrored. */
+    CHECK(crip_cache_model_note(1, 0) == CRIP_CACHE_NOTE_IMAGE &&
+          crip_cache_model_note(1, 1) == CRIP_CACHE_NOTE_IMAGE,
+          "-x changed the disc-image arm, which has no drive cache to probe");
 
     /* The defect itself, both directions. */
-    CHECK(strstr(drv_off, "not probed") != NULL,
-          "a drive with no -x stopped saying the cache was not probed");
-    CHECK(strstr(drv_on, "not probed") == NULL,
-          "a drive WITH -x still claims the cache was not probed -- this is "
-          "the false parenthetical this function exists to stop");
-    CHECK(strstr(drv_on, "Cache probe:") != NULL,
-          "the -x note does not point at the line carrying the measurement, "
-          "so a reader has nothing to go to");
+    CHECK(crip_cache_model_note(0, 0) == CRIP_CACHE_NOTE_UNPROBED,
+          "a drive with no -x stopped selecting the not-probed arm");
+    CHECK(crip_cache_model_note(0, 1) == CRIP_CACHE_NOTE_PROBED,
+          "a drive WITH -x still selects the not-probed arm -- this is the "
+          "false parenthetical this function exists to stop");
 
-    /* And the four are not all one string: a note that never varied would
-     * satisfy half the checks above by saying nothing. */
-    CHECK(strcmp(drv_off, drv_on) != 0 && strcmp(drv_off, img_off) != 0,
-          "the note does not discriminate its inputs");
+    /* And the three are distinct: a chooser that returned one value would
+     * satisfy a subset of the checks above by saying nothing. */
+    CHECK(CRIP_CACHE_NOTE_IMAGE != CRIP_CACHE_NOTE_UNPROBED &&
+          CRIP_CACHE_NOTE_UNPROBED != CRIP_CACHE_NOTE_PROBED &&
+          CRIP_CACHE_NOTE_IMAGE != CRIP_CACHE_NOTE_PROBED,
+          "the three arms are not distinct values");
 }
 
 int main(void)

@@ -177,12 +177,17 @@ static inline const char *crip_signal_name(int signo)
  * The two numbers stay separate and neither is derived from the other -- the
  * model is what paranoia was configured with, the probe is what the drive did.
  * All that changes is that the line stops denying the other one exists. */
-static inline const char *crip_cache_model_note(int is_image, int probe_requested)
+enum {
+    CRIP_CACHE_NOTE_IMAGE = 0,      /* no drive, so nothing to probe */
+    CRIP_CACHE_NOTE_UNPROBED,       /* a drive, and -x was not asked for */
+    CRIP_CACHE_NOTE_PROBED,         /* a drive, and -x measured it this run */
+};
+
+static inline int crip_cache_model_note(int is_image, int probe_requested)
 {
     if (is_image)
-        return "disc image, no drive cache";
-    return probe_requested ? "drive cache probed separately, see \"Cache probe:\""
-                           : "drive cache size not probed";
+        return CRIP_CACHE_NOTE_IMAGE;
+    return probe_requested ? CRIP_CACHE_NOTE_PROBED : CRIP_CACHE_NOTE_UNPROBED;
 }
 
 static inline int cmp_numbers(const void *a, const void *b)

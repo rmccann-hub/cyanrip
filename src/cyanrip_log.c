@@ -114,9 +114,32 @@ static void print_cache_model(cyanrip_ctx *ctx)
     default:            is_image = 0; break;
     }
 
-    cyanrip_log(ctx, 0, "Cache model:    %i sector%s (%s)\n",
-                sectors, sectors == 1 ? "" : "s",
-                crip_cache_model_note(is_image, ctx->settings.cache_probe));
+    /* Three literal formats rather than one with a %s, and that is a decision
+     * the contract forces. P2 is generated from these call sites, so a
+     * parenthetical passed in as %s vanishes from the document a consumer
+     * parses -- the first version of this fix did exactly that and turned two
+     * enumerated wordings into `Cache model: %i sector%s (%s)`.
+     *
+     * So the helper chooses and the arms carry the words: the test covers the
+     * CHOICE, P2 covers the WORDING, and neither duplicates the other. */
+    switch (crip_cache_model_note(is_image, ctx->settings.cache_probe)) {
+    case CRIP_CACHE_NOTE_IMAGE:
+        cyanrip_log(ctx, 0, "Cache model:    %i sector%s "
+                            "(disc image, no drive cache)\n",
+                    sectors, sectors == 1 ? "" : "s");
+        break;
+    case CRIP_CACHE_NOTE_PROBED:
+        cyanrip_log(ctx, 0, "Cache model:    %i sector%s "
+                            "(drive cache probed separately, "
+                            "see \"Cache probe:\")\n",
+                    sectors, sectors == 1 ? "" : "s");
+        break;
+    default:
+        cyanrip_log(ctx, 0, "Cache model:    %i sector%s "
+                            "(drive cache size not probed)\n",
+                    sectors, sectors == 1 ? "" : "s");
+        break;
+    }
 }
 
 /* Prints the paranoia callback counters that are non-zero, aligned on the
