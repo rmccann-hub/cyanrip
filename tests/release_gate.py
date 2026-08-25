@@ -1538,17 +1538,45 @@ KNOWN_UNREPRODUCIBLE = {
     # at least one of them -- which is exactly what this field exists to detect,
     # and the first time it has detected it rather than catching a typed value.
     #
-    # CAUSE UNDETERMINED FROM THIS SIDE, and three hypotheses were tested and
-    # REJECTED rather than assumed:
+    # CAUSE NOW DETERMINED, round 14 lap 2 §E2, and VERIFIED HERE rather than
+    # accepted: their six rows, transcribed from their lap and re-hashed by
+    # this side, reproduce 039cfa03a335266e exactly, while ours reproduce
+    # 051bfc6d98ed1eb9. Exactly ONE row of six differs:
     #
-    #   * their verification renumbered from LAP 1 to LAP 3 on their disk while
-    #     ours holds it as sent -> re-derives 468ad5d6fd563dcf, not theirs;
+    #     ours   1  platterpus  f4bece7f...   <- as they sent it
+    #     theirs 3  platterpus  4c5dd696...   <- after renumbering it
+    #
+    # Same file at two moments. It is their verification of our lap 1, sent
+    # declaring LAP 1, then renamed and its header renumbered to lap 3 on their
+    # disk. Renumbering edits the header, so the file's sha moves with the lap
+    # field. `docs/handshake/inbound/round-13-lap-01-verification.md` in this
+    # tree hashes to f4bece7f..., which is the row they say they held before the
+    # rename -- so the half of their account that touches OUR artifact is
+    # confirmed against it. The half in their git history is read from their lap
+    # and is not independently checkable here.
+    #
+    # SO NEITHER IMPLEMENTATION IS WRONG. The digest is over the RECORD, the two
+    # records genuinely differ by one file's bytes, and the field reported that
+    # on its first real use. That is the mechanism working, not failing.
+    #
+    # Our first hypothesis below was right about the MECHANISM and its test was
+    # necessarily incomplete: we varied the lap number with the sha held fixed,
+    # because we do not hold their renumbered file and cannot know its hash. A
+    # hypothesis that cannot be fully tested from one side is not a refuted one,
+    # and recording it as "REJECTED" flattened that. Kept, corrected, because
+    # the three rejections are still the useful part of this entry:
+    #
+    #   * renumbered LAP 1 -> LAP 3, sha held fixed -> 468ad5d6fd563dcf. Right
+    #     mechanism, wrong because the sha moves too. NOT refuted; untestable.
     #   * they hold the pre-edit lap 6 (ARTIFACT-BUILD g2865436) while we hold
-    #     the corrected one (ge9b9d4c) -> re-derives c311b5e06ff3c975;
+    #     the corrected one (ge9b9d4c) -> re-derives c311b5e06ff3c975. Refuted.
     #   * a different population -> ruled out by the count, which agrees at 6.
     #
-    # Resolving it needs their per-lap hashes, which only they can produce.
-    # Round 14 lap 1 asks for them.
+    # RETAINED, not retired, and they invited us to retire it. The entry's job
+    # is to stop a declared digest we cannot re-derive from silently passing;
+    # that is still true of this file, because we still cannot re-derive it from
+    # laps we hold -- only from rows they typed. Deleting it would make the gate
+    # green for a reason no reader could reconstruct.
     #
     # Allowlisted rather than left red because the disagreement is about the
     # RECORD and not about the verdicts: both sides' GO is declared in a file
