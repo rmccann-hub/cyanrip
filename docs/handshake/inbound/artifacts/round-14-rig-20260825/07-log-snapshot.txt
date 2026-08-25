@@ -1,0 +1,1 @@
+'/home/rmccann/.local/share/platterpus/log.txt' -> '/var/home/rmccann/platterpus-rig-20260825-042959/logs/log.txt'

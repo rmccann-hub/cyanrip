@@ -1,0 +1,16 @@
+== per-album report sizes (81% of the b6 one was the embedded debug log) ==
+   4487581  /home/rmccann/Music/rips/Platterpus Acceptance/full acceptance∶ angle‹bracket platterpus-fork-gd9c058c/full acceptance∶ angle‹bracket platterpus-fork-gd9c058c.platterpus.json
+    846033  /home/rmccann/Music/rips/The Police/after cancel platterpus-fork-gd9c058c/after cancel platterpus-fork-gd9c058c.platterpus.json
+    636705  /home/rmccann/Music/rips/The Police/derived mp3 platterpus-fork-gd9c058c/derived mp3 platterpus-fork-gd9c058c.platterpus.json
+    472234  /home/rmccann/Music/rips/Platterpus Acceptance/full acceptance∶ angle‹bracket platterpus-fork-gddf7ac3/full acceptance∶ angle‹bracket platterpus-fork-gddf7ac3.platterpus.json
+    471450  /home/rmccann/Music/rips/The Police/derived wavpack platterpus-fork-gd9c058c/derived wavpack platterpus-fork-gd9c058c.platterpus.json
+    468181  /home/rmccann/Music/rips/The Police/derived wav platterpus-fork-gd9c058c/derived wav platterpus-fork-gd9c058c.platterpus.json
+    465128  /home/rmccann/Music/rips/Platterpus Acceptance/full acceptance∶ angle‹bracket platterpus-fork-gd9c058c (2)/full acceptance∶ angle‹bracket platterpus-fork-gd9c058c.platterpus.json
+    149367  /home/rmccann/Music/rips/Platterpus Acceptance/cancel me platterpus-fork-gddf7ac3/cancel me platterpus-fork-gddf7ac3.platterpus.json
+    141402  /home/rmccann/Music/rips/Platterpus Acceptance/cancel me platterpus-fork-gd9c058c/cancel me platterpus-fork-gd9c058c.platterpus.json
+
+== app log retention (8 MiB x 10 from v0.6.4b7; was 1 MiB x 5) ==
+-rw-r--r--. 1 rmccann rmccann 6246017 Aug 25 05:01 /home/rmccann/.local/share/platterpus/log.txt
+
+A file at EXACTLY the max size is FULL, which is how the old 1 MiB window
+silently evicted the rip you were trying to diagnose.

@@ -1,0 +1,16 @@
+2026-08-25 05:01:11,390 INFO platterpus.app: platterpus 0.6.25 (build 5f374aa) starting; args: --compare
+2026-08-25 05:01:11,403 WARNING platterpus.config: unknown config keys ignored: ['working_dir']
+2026-08-25 05:01:11,448 INFO platterpus.logging_setup: debug logging disabled
+2026-08-25 05:01:11,454 WARNING platterpus.config: unknown config keys ignored: ['working_dir']
+comparing (found automatically): derived wavpack platterpus-fork-gd9c058c/derived wavpack platterpus-fork-gd9c058c.platterpus.json -> derived wav platterpus-fork-gd9c058c/derived wav platterpus-fork-gd9c058c.platterpus.json
+
+Comparing:  A = v0.6.25 · 2026-08-25T00:09:01  [/var/home/rmccann/Music/rips/The Police/derived wavpack platterpus-fork-gd9c058c/derived wavpack platterpus-fork-gd9c058c.platterpus.json]
+            B = v0.6.25 · 2026-08-25T00:15:57  [/var/home/rmccann/Music/rips/The Police/derived wav platterpus-fork-gd9c058c/derived wav platterpus-fork-gd9c058c.platterpus.json]
+Same disc:  yes (pNtImOkdBm9RMBIalzx0w9cfsYY-)
+
+  #  Track                             A                     B                     Better
+-----------------------------------------------------------------------------------------
+  1  01 - Roxanne                      B0D122E7 ✓200         B0D122E7 ✓200         = identical
+  2  02 - Can’t Stand Losing You       985AAE32 ✓200         985AAE32 ✓200         = identical
+
+All 2 track(s) are byte-for-byte identical to the previous rip.

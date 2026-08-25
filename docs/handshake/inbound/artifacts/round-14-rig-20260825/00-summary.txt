@@ -1,0 +1,119 @@
+
+=== rig session 2026-08-25T08:29:59Z
+    app:    /var/home/rmccann/Applications/platterpus-x86_64.AppImage
+    ripper: /home/rmccann/.local/bin/cyanrip
+    out:    /var/home/rmccann/platterpus-rig-20260825-042959
+
+=== P1  app version
+    argv: /var/home/rmccann/Applications/platterpus-x86_64.AppImage --version
+    exit: 0   artifact: 01-app-version.txt (28 bytes)
+
+=== P3  ripper banner
+    argv: /home/rmccann/.local/bin/cyanrip --version
+    exit: 0   artifact: 02-ripper-version.txt (59 bytes)
+
+=== P4  doctor
+    argv: /var/home/rmccann/Applications/platterpus-x86_64.AppImage --doctor
+    exit: 0   artifact: 03-doctor.txt (1659 bytes)
+
+=== 5a  their cache probe (-x) — NOT RUN, deliberately
+    measured once on 2026-08-19: Cache probe: 32 sectors, 73.5 KiB, uncached read 362.6 ms
+    it then rips the whole disc (ETA 1h 3m) and leaves the drive held, so this
+    harness no longer runs it. Returns when the fork's -x exits after measuring.
+    This is a recorded omission, not a skipped check: see docs/dependency-contracts.md.
+
+=== 5b  their diagnostics record (-j)
+    argv: timeout -k 60 1800 /home/rmccann/.local/bin/cyanrip -j /var/home/rmccann/platterpus-rig-20260825-042959/scratch/diag.json -D /var/home/rmccann/platterpus-rig-20260825-042959/scratch -o flac -N -l 1 -u platterpus/rig-session
+    exit: 137   artifact: 05-minus-j.txt (0 bytes)
+    !! timed out at 1800s and needed SIGKILL — SIGTERM did not
+       land, which means the reader was wedged, not merely slow
+    diag.json written: 3469 bytes
+
+=== 1   A25 pre-gap screening (reads the app log; no rip)
+    no Pregap source: lines in the retained log — recorded, not skipped
+    artifact: 06-pregap-sources.txt
+    no TOC-sourced pre-gap in the retained log — a REAL RESULT, not a gap
+
+=== 0   snapshot the app logs (do this early — rotation is silent)
+    artifact: 07-log-snapshot.txt  (1 files)
+
+=== 3   audit every rip found (no disc needed)
+
+===     --audit-rips
+    argv: /var/home/rmccann/Applications/platterpus-x86_64.AppImage --audit-rips /home/rmccann/Music
+    exit: 1   artifact: 08-audit-rips.txt (22431 bytes)
+
+=== 3   EAC parity — the anchor. Needs a checkout; skipped if absent.
+    not in a checkout (output_reference/EAC_flac/eac_baseline_police_classics.log absent) — run this step from the repo later
+
+=== 10  ETA sanity — the 62-hour bug, checked against THIS rip's own trace
+    artifact: 10-eta-sweep.txt
+
+=== 11  report sizes — the 1.5 MB JSON, and whether retention is holding
+    artifact: 11-sizes.txt
+
+=== 12  the fork's own test suite, IN A CLEAN CLONE (their lap 25 §C1 lesson)
+
+===     clone the fork
+    argv: 
+    exit: 0   artifact: 12-fork-clone.txt (0 bytes)
+    clone present — run their suite there per their beta note
+
+=== 13  our own gates, so a rig session also proves the app's build is sane
+    not in a checkout — skipping the repo-side gates
+
+=== 15  the most recent rip, found rather than named
+    searching: /home/rmccann/Music/rips /home/rmccann/Music
+    newest rip: /home/rmccann/Music/rips/The Police/derived wav platterpus-fork-gd9c058c
+
+===     audit the rip
+    argv: /var/home/rmccann/Applications/platterpus-x86_64.AppImage --audit-rips /home/rmccann/Music/rips/The Police/derived wav platterpus-fork-gd9c058c
+    exit: 1   artifact: 16-audit.txt (2951 bytes)
+
+=== 17b the double-rip diff, if a second pass exists
+
+===     compare passes
+    argv: /var/home/rmccann/Applications/platterpus-x86_64.AppImage --compare
+    exit: 0   artifact: 17b-compare.txt (1461 bytes)
+
+=== 17  the cyanrip seam check (our half; theirs appends to the same manifest)
+
+===     rig check
+    argv: /var/home/rmccann/Applications/platterpus-x86_64.AppImage --rig-check /var/home/rmccann/platterpus-rig-20260825-042959/seam --rig-check-album /home/rmccann/Music/rips/The Police/derived wav platterpus-fork-gd9c058c
+    exit: 0   artifact: 17-rig-check.txt (2455 bytes)
+
+=== 18  collect the rip's text artifacts (never the audio)
+    copied 4 text artifact(s) — audio deliberately excluded
+      derived wav platterpus-fork-gd9c058c.cue
+      derived wav platterpus-fork-gd9c058c (EAC-compatible).log
+      derived wav platterpus-fork-gd9c058c.log
+      derived wav platterpus-fork-gd9c058c.platterpus.json
+
+=== COMPLETE
+    artifacts:
+      00-summary.txt
+      01-app-version.txt
+      02-ripper-version.txt
+      03-doctor.txt
+      05-minus-j.txt
+      06-pregap-sources.txt
+      07-log-snapshot.txt
+      08-audit-rips.txt
+      09-eac-parity.txt
+      10-eta-sweep.txt
+      11-sizes.txt
+      12-fork-clone.txt
+      13-handshake-status.txt
+      14-preflight.txt
+      15-newest-rip.txt
+      16-audit.txt
+      17b-compare.txt
+      17-rig-check.txt
+      logs
+      rip-artifacts
+      scratch
+      seam
+    
+    Every file matters, including the empty ones — an artifact that exists and
+    is empty is a measurement; a missing artifact is a step that did not run,
+    and only one of those is a result.
