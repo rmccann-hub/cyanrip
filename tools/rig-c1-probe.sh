@@ -98,6 +98,16 @@
 # Send back the whole output directory. It is a few kilobytes.
 # =============================================================================
 
+# `set -u` but deliberately NOT `set -e`, written down because Platterpus's
+# round-14 lap 12 G3 noticed the omission and could not tell it from an
+# oversight. It is a decision: this probe's subject is a program we EXPECT to
+# exit non-zero, so `set -e` would abort it on its own evidence.
+#
+# Two places break outright. `"$CRIP" --version` -- a build where that exits
+# non-zero is not hypothetical, it is our own history: pre-genopt cyanrip
+# rejects `--version` entirely, and under `set -e` the probe would die at the
+# banner on exactly the build most worth probing. And the `grep -q`
+# classifiers, whose whole job is to return 1.
 set -u
 
 BUDGET=120          # seconds before SIGTERM
