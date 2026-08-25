@@ -2474,7 +2474,12 @@ def sc_cache_probe_only():
     here. cache_probe.c refuses on image drivers, which have no cache to
     measure, so what is exercised is the DISPATCH around it -- whether -x
     proceeds into a rip -- and not a single cdio_read_audio_sectors() call.
-    -x has still never run to completion on real hardware anywhere.
+    -x -I HAS now run to completion on real hardware -- 2026-08-25, PIONEER
+    BD-RW BDR-209D, exit 0 in 15.9 s, drive returned, `Cache probe: at least
+    2048 sectors ... search ceiling reached`. What this scenario exercises is
+    still only the dispatch; the sentence is corrected rather than deleted
+    because "no fixture reaches the measurement" and "nothing anywhere has"
+    were one claim here and are now two.
     """
     out = WORK / "out_xprobe"
     ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",

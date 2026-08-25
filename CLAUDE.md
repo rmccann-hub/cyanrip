@@ -53,7 +53,11 @@ settled by building 0.9.3 and running it. The measured matrix is
 - `src/pregap.c`/`.h` -- Q sub-channel pregap search for physical discs, carried
   from upstream PR #115 with fixes; see `docs/pregap-carry.md`.
 - `src/cache_probe.c`/`.h` -- `-x` drive readback cache measurement. Refuses on
-  image drivers, which have no cache to measure. **Unverified on hardware.**
+  image drivers, which have no cache to measure. **Verified on hardware
+  2026-08-25** -- `-x -I` completed in 15.9 s on a PIONEER BD-RW BDR-209D, exit
+  0, drive returned, reporting `at least 2048 sectors ... search ceiling
+  reached`. The probe-only invocation is the verified one; **`-x` alone, the
+  modifier that goes on to rip, still is not**.
 - `src/stall_watchdog.c`/`.h` -- the read-liveness heartbeat, on its own thread.
   It is a separate translation unit for two reasons: it needs a thread of its
   own, and being linkable is what lets `tests/stall.c` prove the heartbeat fires
@@ -146,11 +150,20 @@ parser rather than reading it. They had told us in their standing status
 exactly what artifact would settle it, and we shipped that artifact for an
 unrelated reason.
 
-Still untouched by any run, and the list is shorter but not empty: **`-x`, which
-has never executed on a real drive anywhere**, C2 (the rig's drive reports it
-unsupported), `-f`, damaged media, CD-TEXT from a disc that has some, the
-diagnosed-abort exit code (the rig rip had `Ripping errors: 0`), and a non-zero
-`Read stalls:` count. **A silent watchdog is not a working watchdog** — that
+Still untouched by any run, and the list is shorter again: C2 (the rig's drive
+reports it unsupported), `-f`, damaged media, CD-TEXT from a disc that has some,
+the diagnosed-abort exit code (the rig rip had `Ripping errors: 0`), and a
+non-zero `Read stalls:` count.
+
+**`-x` came off this list on 2026-08-25 and only half of it did.** `-x -I`
+completed on a drive; **`-x` alone has still never been shown to return one**,
+and the two are different claims about the same flag. The first successful probe
+also immediately hit **our own** `PROBE_MAX_SECTORS` ceiling, so the number it
+reported is a floor we set -- and the same drive reported `at least 32 sectors`
+two weeks earlier because a 64-sector read *failed*. Two stops, two reasons, both
+correctly labelled, neither bounding the drive. **A retired risk is not a
+measured quantity**, and this one retired the first without producing the
+second. **A silent watchdog is not a working watchdog** — that
 session had zero heartbeats because nothing stalled, which is the expected
 result on healthy media and is not evidence either way.
 
