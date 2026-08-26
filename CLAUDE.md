@@ -177,16 +177,22 @@ regardless of who is at the keyboard.
 - **The log is a contract.** Changing the text, indentation, field order, or units
   of any line Platterpus parses is a breaking change. It requires a handshake round
   before it ships — never a drive-by reword.
-- **One file per exchange. The lap travels inside the envelope.** The operator
-  moves these by hand between two repositories, and two attachments is one more
-  than the number that can be dropped, mis-ordered, or half-forwarded. Build it
-  with `tools/make-envelope.py out.md --lap <lap> <everything it references>`;
-  the lap becomes part 1 and the header names it in prose so a reader knows
-  what the exchange is before splitting. **The only thing that may travel
-  separately is a script meant to be run** — a file you execute should not have
-  to be extracted first. This is *transport*, not protocol: `PROTOCOL.md` §1
-  says the spec does not govern how files move, so this is the operator's
-  convention and belongs here rather than there.
+- **ONE FILE PER EXCHANGE, AND IT IS THE LAP. Nothing is attached** — operator's
+  rule, 2026-08-26, superseding the envelope convention. **The repository is the
+  transport**: anything the lap references is fetched from the branch by URL,
+  with its SHA-256 quoted in the lap so the fetch is verifiable. A hash mismatch
+  means the branch moved under the reader, which is worth a line.
+
+  **A test does not travel; its specification does.** Put what the test checks
+  and what a pass looks like in the lap, and let the other repository build it.
+  An independently built checker is a second implementation, and two
+  implementations of one convention catching each other is worth more than one
+  copied twice — round 7 lap 30 is the precedent, and round 14 lap 17 §6 is what
+  two independent readings of §5a just found.
+
+  `tools/make-envelope.py` stays for **reading** envelopes still arriving from
+  the other side; we no longer emit them. This is *transport*, not protocol:
+  `PROTOCOL.md` §1 says the spec does not govern how files move.
 - **Each round is two files and two verifications.** We send a handshake file
   (sections A–J, spec below); they verify it against their real parser; they send a
   verification file back. A round stays **OPEN** until that arrives. **No release and

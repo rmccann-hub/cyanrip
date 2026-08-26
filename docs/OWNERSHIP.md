@@ -94,8 +94,26 @@ had never seen is the measured proof.
 
 ## 6. When the two disagree
 
-**The lap does not pass and the round does not close.** In that order, and
-without exception:
+**First, separate the two kinds of disagreement, because they need opposite
+responses and treating them alike is how a seam stalls.**
+
+| kind | what it means | what to do |
+|---|---|---|
+| **A RECORDS DIFFERENCE** | both sides computed correctly from what each holds, and the holdings differ | **RECONCILE.** Exchange the enumerated population, compute the set difference, and each side sends what the other lacks. **Nobody is wrong and nobody re-does work.** |
+| **A RULES DIFFERENCE** | the two sides are grading against different specs | **STOP.** Reconcile the shared file first; nothing else in the lap has been graded. |
+| **A CLAIM DIFFERENCE** | both hold the same inputs and disagree about what they show | **§1's test decides**, and if it cannot, §6.3. |
+
+**A gate that reports a records difference as a bare failure is a defective
+gate.** It must print what each side holds, the exact set difference, and who
+sends what — otherwise it turns "we have not exchanged everything yet" into an
+argument. **Every side's checker owes a recommendation, not a rejection.**
+
+> **BASELINE: every lap enumerates the record it computed its digest over.**
+> A hash says *that* two records differ; the enumeration says *how*. Without it,
+> a digest mismatch costs a lap to diagnose — which it did, twice, in round 14.
+
+**Then, for the kinds that really are failures**, in this order and without
+exception:
 
 1. **A shared-file hash mismatch is settled before anything else.** The two
    copies are reconciled, both sides ship the reconciled version, and the lap is

@@ -152,16 +152,40 @@ def check_lap(path):
         note("INFO", "wire/digest", f"{name} declares no round digest")
     elif status == "match":
         note("OK", "wire/digest", f"{decl[0]} over {decl[1]} re-derives here")
+    elif decl[1] != comp[1]:
+        # A RECORDS DIFFERENCE, not a failure of either side. OWNERSHIP.md §6:
+        # a gate that reports this as a bare rejection is a defective gate --
+        # both sides computed correctly from what each holds. So say WHAT WE
+        # HOLD, so the other side can compute the difference and send what is
+        # missing. A hash says *that* two records differ; only the enumeration
+        # says *how*, and without it a mismatch costs a lap to diagnose.
+        mine = []
+        for other in rdg.candidates():
+            q = rdg.is_a_lap(other.read_bytes().decode("utf-8", errors="replace"))
+            if q and int(q[0]) == rnd and int(q[1]) < lap:
+                mine.append(f"{q[1]}:{q[2]}")
+        mine.sort(key=lambda r: (int(r.split(":")[0]), r))
+        note("WARN", "wire/digest",
+             f"RECORDS DIFFER, not a fault: {name} declares {decl[0]} over "
+             f"{decl[1]}; we re-derive {comp[0]} over {comp[1]}",
+             fix="RECONCILE, do not re-do work -- neither side is wrong. We hold "
+                 f"these {len(mine)} lap(s) below {lap}, as lap:sender pairs: "
+                 + ", ".join(mine) +
+                 ". Enumerate yours the same way; the set difference names "
+                 "exactly what each side must send, and nothing else needs "
+                 "deciding. Then declare the enumeration in every lap, per "
+                 "OWNERSHIP.md §6's baseline, so the next mismatch costs a diff "
+                 "and not a lap.")
     else:
         note("FAIL", "wire/digest",
-             f"{name} declares {decl[0]} over {decl[1]}; this record re-derives "
-             f"{comp[0]} over {comp[1]}",
-             fix="if the counts differ, one side is missing a lap the other "
-                 "holds -- name it in HANDSHAKE-INBOUND-HELD and send it. If "
-                 "the counts agree and the hashes do not, one file's bytes "
-                 "differ between the two records. Either way: never re-declare "
-                 "an earlier lap's value when nothing new arrived, because your "
-                 "own previous lap has since become part of the population.")
+             f"SAME COUNT, DIFFERENT HASH: {name} declares {decl[0]} over "
+             f"{decl[1]}; we re-derive {comp[0]} over the same count",
+             fix="this one is NOT a holdings difference -- both sides hold the "
+                 "same number of laps and at least one file's bytes differ "
+                 "between the records. Compare per-lap hashes to find which. "
+                 "The usual cause is a file edited or renumbered after it was "
+                 "sent, which moves its hash; a sent lap is immutable on both "
+                 "sides precisely so this cannot happen quietly.")
 
     # --- pins name the right repository, round 14 lap 14 §C ---------------
     for field, regex, should_resolve in (

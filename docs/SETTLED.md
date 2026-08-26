@@ -51,7 +51,7 @@ that no command here can re-run. Those are the rows to distrust first.
 |---|---|
 | **`-x -I` completed on a drive**, 2026-08-25, PIONEER BD-RW BDR-209D: exit 0, 15.9 s, drive returned, `at least 2048 sectors … search ceiling reached` | — `docs/handshake/inbound/artifacts/round-14-acceptance-20260825/transcript.txt` |
 | **`-x` alone has never been shown to return a drive.** Different claim, same flag | — |
-| **C1 did not reproduce**: `cyanrip -N -l 1` took 4.9 s and exited 1 on the drive that once hung 30 min. The invocations differ by `-j`; cause NOT determined | — same transcript, §P2 |
+| **C1 is `-j`-associated, cause NOT determined.** The controlled pair, same drive/disc/day: `-N -l 1` = 4.9 s exit 1; `-j -D -o -u …` = 1800 s and SIGKILL. Narrowed to which flag, not to where | — their lap 16 §D; our transcript §P2 |
 | `Pregap source: sub-channel (not signalled by TOC)` on 13 of 14 tracks, track 1 `lead-in`, LSN arithmetic consistent, on `d9c058c` | — same transcript, §P |
 | **Never run anywhere:** C2 reporting (drive says unsupported), `-f`, damaged media, CD-TEXT from a physical disc, the diagnosed-abort exit code, a non-zero `Read stalls:` count, T1's uniform secure re-read on hardware | — |
 
@@ -81,7 +81,7 @@ checked rather than written.
 
 | fact | check |
 |---|---|
-| `~/.local/bin/cyanrip` on the rig is a **host-exported Distrobox wrapper**; the real ripper runs in a container, so a command whose argv names `cyanrip` can hang without cyanrip starting | — their lap 12 §E2 |
+| `~/.local/bin/cyanrip` on the rig is a **host-exported Distrobox wrapper**; the real ripper runs in a container. **ARCHITECTURE YES, CAUSE NO** — their lap 16 §D1(a) withdraws it as the explanation for the empty capture, because a later run's capture was 111 bytes and a theory predicting *always empty* does not predict *sometimes empty* | — their lap 12 §E2, corrected by their lap 16 §D1(a) |
 | Their `cyanrip` script verb is bounded: 300 s, then a kill, then 20 s, then an unreapable-child record with a **null** exit code | — their lap 12 §A |
 | `0.6.26` was **not published** until 2026-08-25; the operator was on `0.6.25 (5f374aa)` before that | — their lap 13 §A2 |
 | Their gate had the same `HANDSHAKE-TEST-PIN: none.` misreading as ours, fixed the same way | — their lap 12 §D |

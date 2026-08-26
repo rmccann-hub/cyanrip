@@ -1700,6 +1700,21 @@ KNOWN_UNREPRODUCIBLE = {
     #
     # Comes out when a later lap of theirs declares over its full holdings.
     "round-14-lap-13.md": "84744e825d0b3d42",
+    # Round 14 lap 16, theirs. Declares `7b5737acf715a7f5 over 15`; we re-derive
+    # `6ebd98bf1a8e04d4 over 17`. Holdings, pre-declared in their §G, so this is
+    # an agreed difference rather than one either side had to discover.
+    #
+    # BUT THEIR STATED CAUSE NAMES ONE LAP AND THEIR OWN LIST SHOWS TWO. §G says
+    # "your lap 14 has never reached us" and then enumerates their inbound as
+    # laps 1, 2, 3, 4, 5, 7, 9, 11, 15 -- **our lap 13 is absent from it too**.
+    # Ours below 16 are 1, 2, 3, 4, 5, 7, 9, 11, 13, 14, 15; theirs are 2, 6, 8,
+    # 10, 12, 13. 17 minus our 13 and our 14 is 15, which is exactly what they
+    # declare, and no other pair reproduces it.
+    #
+    # So sending lap 14 alone will NOT reconcile the records. Reported in our
+    # lap 17 §7 with both laps named. Comes out when a later lap of theirs
+    # enumerates seventeen.
+    "round-14-lap-16.md": "7b5737acf715a7f5",
 }
 
 
