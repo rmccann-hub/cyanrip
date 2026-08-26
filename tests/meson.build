@@ -199,6 +199,26 @@ test('Handshake wire conformance', python,
 ## the check that executes it, and these are the ways it could wrongly say yes.
 test('Release gate', python, args: [ files('release_gate.py') ])
 
+## Settled facts, and the seam checker
+## ==================================
+## BOTH OF THESE WERE BUILT TO CATCH MISTAKES AND THEN RUN BY NOTHING.
+##
+## `check-settled.py` re-runs every command in docs/SETTLED.md, so a fact
+## nobody re-derives cannot go quietly stale. `seam-check.py` grades every lap
+## in the record against the shared protocol. Both were written on 2026-08-26
+## and neither was wired to anything, so each only ran when somebody remembered
+## -- which is the failure mode they exist to remove, reproduced in the act of
+## building them. Same shape as HANDSHAKE-SHARED-HASHES: declared for eight
+## rounds and read by nothing.
+##
+## seam-check runs in --gaps mode here rather than over every lap: grading
+## inbound laps is triage a human reads, and a peer's legitimately-different
+## holdings would fail the suite for something that is not our defect. --gaps
+## audits OUR record for absent lap numbers and cannot fail for anything the
+## other side did.
+test('Settled facts', python, args: [ files('../tools/check-settled.py') ])
+test('Seam record audit', python, args: [ files('../tools/seam-check.py'), '--gaps' ])
+
 
 rip_scenarios = [
     'info',
