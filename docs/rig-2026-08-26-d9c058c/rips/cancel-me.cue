@@ -1,0 +1,32 @@
+REM MUSICBRAINZ_ID "pNtImOkdBm9RMBIalzx0w9cfsYY-"
+REM DISCID "E20DFE0E"
+REM MEDIA "CD"
+REM COMMENT "cyanrip 0.9.4-rc2+platterpus.10"
+REM TOTALDISCS "1"
+REM DISC "1"
+REM DATE "1995-09-12"
+REM CATALOGNUMBER "31454 0380 2"
+REM LABEL "A&M Records"
+REM MUSICBRAINZ_ALBUMID "d14a7546-815b-43c6-8af6-35cff6cee1d0"
+REM ARTIST "The Police"
+PERFORMER "The Police"
+TITLE "cancel me 20260826t091428 platterpus-fork-gd9c058c"
+FILE "01 - Roxanne.flac" WAVE
+  TRACK 01 AUDIO
+    TITLE "Roxanne"
+    PERFORMER "The Police"
+    ISRC GBAAM0201086
+    INDEX 01 00:00:00
+  TRACK 02 AUDIO
+    TITLE "Can’t Stand Losing You"
+    PERFORMER "The Police"
+    ISRC GBAAM0201089
+    INDEX 00 03:11:02
+FILE "02 - Can’t Stand Losing You.flac" WAVE
+    INDEX 01 00:00:00
+FILE "03 - Message in a Bottle.flac" WAVE
+  TRACK 03 AUDIO
+    TITLE "Message in a Bottle"
+    PERFORMER "The Police"
+    ISRC GBAAM0201170
+    INDEX 01 00:00:00

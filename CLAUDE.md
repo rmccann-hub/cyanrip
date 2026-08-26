@@ -152,8 +152,32 @@ unrelated reason.
 
 Still untouched by any run, and the list is shorter again: C2 (the rig's drive
 reports it unsupported), `-f`, damaged media, CD-TEXT from a disc that has some,
-the diagnosed-abort exit code (the rig rip had `Ripping errors: 0`), and a
-non-zero `Read stalls:` count.
+the diagnosed-abort exit code (every rig rip has had `Ripping errors: 0`), and
+the interrupt/abort footers.
+
+**Two more came off on 2026-08-26** — `docs/rig-2026-08-26-d9c058c/`, a
+14-track disc on the BDR-209D at build `d9c058c`:
+
+- **Secure re-read on hardware**, which was T1 and which no run had produced:
+  `-Z 2 -r 3` gave `Secure re-read:  converged after 3 reads` on all 14 tracks.
+- **A non-zero `Read stalls:` count**, populated and singular —
+  `1 read exceeded 10s; longest 11s (track 3, LSN 37086)` — matching
+  `crip_stall_summary_line()`'s format byte for byte and the shape
+  `tests/stall.c:370` pins from a synthetic stall. **A silent watchdog is not a
+  working watchdog; this one is no longer silent.**
+
+That session also re-checked the corrected paranoia claim on evidence nobody
+constructed for it, and produced the sharpest case there has been: with three
+reads a track, `READ` came out at a ratio of **3.02**, and **`FIXUP_EDGE`
+summed to 0 per-track against a disc total of 2** — the last pass needed no
+edge fixups, so a consumer trusting round 5's invariant would report none for a
+disc that recorded two. The `Scope:` line exists for exactly that.
+
+**And the cancel rips do not show a cancel.** Two are named `cancel me` and
+`after cancel`; both were invoked with a narrowed `Tracks to rip:`, both
+finished normally, and both footers read `Rip completed:  yes`. A folder name is
+not evidence — read the `Invoked as:` line before crediting a scenario with
+what its name claims.
 
 **`-x` came off this list on 2026-08-25 and only half of it did.** `-x -I`
 completed on a drive; **`-x` alone has still never been shown to return one**,
