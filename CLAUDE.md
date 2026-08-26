@@ -463,6 +463,51 @@ falsified record. Same for artifacts: a rig log stays byte-exact because it
 carries its own checksum. **Consolidation applies to documentation, never to
 evidence.**
 
+### What this repository is, and the standard that follows from it
+
+**cyanrip is the provider. It is forked from upstream, it is forkable in turn,
+and a whole application is built on top of it.** That is not a boast; it is a
+set of obligations, and they are stricter than the ones a leaf project carries
+because **a mistake here propagates and a mistake downstream does not.**
+
+**The obligations are to ANY consumer, not to Platterpus.** Platterpus is the
+consumer we have; the rules are written for the class. Wherever a rule in this
+file names them, read "the consumer" — and when a second one appears, nothing
+should need rewriting. If it does, that is the defect.
+
+1. **Every observable surface is documented by derivation, never by
+   description.** A hand-written claim about our own behaviour rots the moment
+   the behaviour moves, and a consumer cannot tell a stale document from a
+   current one. `tools/gen-provider-contract.py` exists so the contract cannot
+   describe a binary we do not have.
+2. **No claim ships that the evidence does not support.** That is this file's
+   first rule and it is a provider obligation before it is a craft one: a
+   consumer inherits our claims and cannot re-derive them.
+3. **A breaking change is announced before it ships, to every consumer.** A
+   handshake round is how we do that with the one we have. With two, it is two
+   rounds or one shared announcement — but never a change that lands first and
+   is explained after.
+4. **A release is identified by SHA and ordered by `release_seq`.** Never by
+   parsing a version string. Ours *cannot* be ordered — the part that advances
+   is SemVer build metadata, which the spec says MUST be ignored for
+   precedence.
+5. **We identify ourselves and never mint an identifier in upstream's
+   namespace.** `PROJECT_FORK_ID` is the only reliable answer to "is this the
+   fork?"
+6. **A defect we find that exists upstream goes upstream.** We are a fork of a
+   working project, not a private garden. Three are outstanding and verified
+   against `master` — the signal-handler deadlock, SIGTERM unhandled, and the
+   completion-footer skip — each with its re-check in `docs/SETTLED.md`.
+
+**And custody, which is the part that makes "source of truth" mean something
+without meaning "we decide".** The shared seam documents live here as the
+canonical copy: one address a fork can fetch, one hash it can check against.
+**Custody is ours; authorship is joint.** A change still requires the consumer's
+assent, because a rule imposed on a consumer is a decree and not a protocol —
+and the whole handshake exists so the consumer can say no. **What custody buys
+is that there is exactly one place to be wrong**, rather than two copies drifting
+in the dark, which is the failure `PROTOCOL.md` already suffered once.
+
 ### When this list is not enough
 
 The sections above are the shape as of the rounds that produced them, not a ceiling.

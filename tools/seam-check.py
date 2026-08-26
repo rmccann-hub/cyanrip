@@ -80,6 +80,26 @@ def note(level, cat, msg, fix=None, artifact=None):
     FINDINGS.append((level, cat, msg, fix, artifact))
 
 
+# A shared file carries its version in the lap header. If the lap's declared
+# version differs from ours, a hash mismatch is expected and is not drift.
+VERSION_FIELD = {"ownership": "OWNERSHIP-VERSION", "seam-rules": "SEAM-RULES-VERSION"}
+
+
+def _version_differs(text, label):
+    field = VERSION_FIELD.get(label)
+    if not field:
+        return False
+    theirs = re.search(rf"^{field}:[ \t]*(\d+)[ \t]*$", text, re.M)
+    local = None
+    for rel in ("docs/OWNERSHIP.md", "docs/seam-rules.md"):
+        f = ROOT / rel
+        if f.exists() and label.split("-")[0] in rel.lower():
+            m = re.search(rf"{field}:\**[ \t]*(\d+)", f.read_text(encoding="utf-8"))
+            if m:
+                local = m.group(1)
+    return bool(theirs and local and theirs.group(1) != local)
+
+
 def check_lap(path):
     """Every mechanical thing round 14 spent a lap saying in prose."""
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -276,6 +296,20 @@ def check_lap(path):
                  fix=f"add `{label}={ours}` to HANDSHAKE-SHARED-HASHES. An "
                      f"undeclared shared file is one nobody can prove you hold "
                      f"the same copy of.")
+        elif declared.group(1) != ours and _version_differs(text, label):
+            # A VERSION DIFFERENCE, not drift. OWNERSHIP.md §6a: a lap sent under
+            # v1 is correct under v1, and a receiver who has moved to v2 must not
+            # read it as a rules difference. Without this the very act of
+            # agreeing a new version false-fails every lap already in flight --
+            # which is what bumping the charter to v2 did to our own lap 17.
+            note("WARN", "shared/" + label,
+                 f"{name} declares {rel} at a DIFFERENT VERSION, not a "
+                 f"different copy of the same one",
+                 fix="the sender is behind or ahead, which is normal while a "
+                     "bump is being agreed. Nothing is drifting. Compare the "
+                     "declared *-VERSION fields, agree the newer one, and ship "
+                     "it from cyanrip's canonical copy -- custody is there so "
+                     "there is one address to fetch and one hash to check.")
         elif declared.group(1) != ours:
             note("FAIL", "shared/" + label,
                  f"{name} declares {rel} as {declared.group(1)[:16]}…; this tree "
