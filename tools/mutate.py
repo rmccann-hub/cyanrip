@@ -88,7 +88,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 FAST_TESTS = [
     "FUN512 checksum", "Naming schemes", "Q sub-channel decoding",
     "Cue pre-gap decision", "Peak cross-check", "Diagnostics retention",
-    "Cache probe wording", "Audio checksum mirror",
+    "Cache probe wording", "Audio checksum mirror", "Log rendering",
 ]
 
 # See the header. Each entry needs a reason, and the reason must be that the

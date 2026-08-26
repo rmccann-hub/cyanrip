@@ -91,6 +91,28 @@ diag_test = executable('diag_test',
 )
 test('Diagnostics retention', diag_test)
 
+## Drives the record writer itself and reads back what it wrote.
+##
+## A mutation sweep of src/cyanrip_log.c scored 44.3%: of 88 single-operator
+## changes, 49 were changes the WHOLE suite agreed were fine. Twenty were in the
+## AccurateRip verdict -- the strongest claim the log makes -- because every
+## scenario passes -A and the verdict needs a network the suite does not have,
+## so the surface was unreachable and therefore unasserted. Same for four of the
+## six pregap provenances, which need a drive's Q sub-channel.
+##
+## cyanrip_log_track_end() reads settings and a track struct and calls neither,
+## so the states are simply BUILT: point ctx->logfile[0] at a tmpfile, fill the
+## track in, call the shipped object, compare the bytes it wrote against the
+## contract wording. Not a mock -- cyanrip_log.c and accurip.c are linked
+## unmodified, and libcurl comes with accurip.c rather than being used.
+logrender_test = executable('logrender_test',
+    sources: [ 'logrender.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'cyanrip_log.c', 'accurip.c' ]),
+    dependencies: unit_test_deps + [ dependency('threads'), dependency('libcurl') ],
+)
+test('Log rendering', logrender_test)
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the
