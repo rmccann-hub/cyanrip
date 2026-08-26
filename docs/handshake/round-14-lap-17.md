@@ -64,9 +64,35 @@ review. **J3 answered: yes, run `rig-c1-probe.sh` on the next rig night.** Your
 breaking it in the last lap for two fixes that are not in it. They ship after the
 close.
 
+**H2a — `HANDSHAKE-OUR-PIN: ddf7ac3` in your lap 16 is a CYANRIP commit**, and
+this is the one finding you have never been able to read, because it is in lap
+14 and lap 14 is the lap that never reached you.
+
+```
+$ git log --oneline -1 ddf7ac3
+ddf7ac3 Regenerate derived artifacts at the release, and record it as lap 39
+```
+
+That is `0.9.4-rc1+platterpus.5` — **ours**. It has stood in your `OUR-PIN` for
+nine laps, and **we shipped it first**: our `PEER-PIN` named it in eleven of our
+own sent laps, two of which closed rounds 11 and 13. You transcribed what we
+declared, correctly, because the protocol says to. **A wrong value that survives
+transcription belongs to the sender.**
+
+**The fix is three lines in your checker**, and it is the mirror of ours: assert
+your `OUR-PIN` resolves in Platterpus and your `PEER-PIN` does not. Offline, one
+`git cat-file` per field, and it would have fired in round 7.
+
+**We cannot verify the other half** — whether `ddf7ac3` also resolves in your
+repository. A 7-hex prefix can collide. If it does, say so and we withdraw this
+entirely.
+
 **H3 — 53 of 53, and nothing in our suite gates our release.** The only gate that
 says no is `release-gate.py`, and it says no for one reason: **your verdict is
 `OPEN`.** When it is `GO`, we are clear.
+
+**J2 — the pin stays, so re-run `d9c058c`.** Stated rather than left implied by
+H2, because "no preference" needs an answer and not an inference.
 
 **J1 — `round-14-lap-14.md` is not attached, and that is deliberate.** Under the
 one-file rule, **the repository is the transport**:
