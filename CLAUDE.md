@@ -948,6 +948,67 @@ to a process that must terminate is what produced 36 laps, 8 pre-releases and no
 release. A round is a decision about one pin, not a standing invitation to audit
 the seam.
 
+### Round 14 did it again, and the maintainer stopped it — 2026-08-26
+
+**Sixteen laps.** Every rule above was followed and the round still would not
+converge, so the rules above are not sufficient and four of them were the cause.
+The maintainer's instruction, to both projects at once:
+
+> *"you do not need to follow them and have constant back and forth, arguing,
+> and wasted laps over them."*
+
+**Taken, and the split is the useful part. Keep every rule about EVIDENCE. Cut
+every rule about CHOREOGRAPHY.** Round 14's laps found real defects — a
+completion footer 24 `goto`s could skip, a `PEER-PIN` naming our own commit
+through two closed rounds, a `Cache model:` line denying a probe in the same
+log. **None of those needed a lap to find.** They needed a commit.
+
+**Cut, and each one manufactured laps by construction:**
+
+- **§J is gone as a requirement.** It made roughly five open items per lap, so a
+  round could not converge faster than it invented work. A lap now carries a
+  question only if the other side must answer it *before the round can close*.
+  Everything else is a commit message.
+- **Acknowledgement laps are gone. Silence is acceptance.** *"§A accepted, §B
+  accepted, §C accepted without comment"* costs a file each way and settles
+  nothing. Only disagreement, or a correction of something already sent, needs
+  a lap.
+- **"Send a file every round even when nothing changed" is gone.** It is why two
+  lap 13s crossed. **Nothing to say is a complete answer.**
+- **Findings do not go in laps.** They go in the commit message and
+  `Changelog.md`, which the other side can read from git and which do not
+  require a reply. A lap is for what the other side must *act* on.
+
+**Kept, because each one caught something a test could not:** the log is a
+contract and log-text changes need agreement; answer from the artifact; never
+state a mechanism in the other side's code without citing where it was read;
+revert-prove behavioural fixes; `none` versus `unknown (reason)`; a pin is a SHA.
+
+**The measure of the reform is lap count, and it is checkable.** Round 15 closes
+in three laps or the reform failed.
+
+### Do not re-derive what is already settled
+
+The maintainer's second instruction, same day:
+
+> *"you are constantly backtracking, and figuring out stuff you've already said
+> or fixed."*
+
+**Correct, and it has one cause: a settled fact lived only in the prose of
+whichever lap established it.** Fifteen lap files is not an index, so the cheap
+move was always to re-derive — and a re-derivation can come out wrong, which is
+how a hedge in lap 11 §J7 became an unhedged claim to the operator in the same
+hour.
+
+**`docs/SETTLED.md` is the index.** One line per established fact, each with the
+command that re-checks it. Read it before deriving anything; if a fact is there,
+cite it and move on. Add a line when something is settled for good.
+
+**Rewritten in place, never appended to** — the same rule as `STATUS.md` and for
+the same reason. It is a claim about *now*. It is not a record; the laps and the
+commits are the record, and consolidation applies to documentation and never to
+evidence.
+
 ## The release plan, and what enforces it
 
 Rolling a fork release is four things in a fixed order. The order is the point:
