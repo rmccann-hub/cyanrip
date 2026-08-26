@@ -98,6 +98,24 @@ def candidates():
                   list((HS / "inbound").glob("round-*.md")))
 
 
+def matches_exclude(path, exclude):
+    """Whether one --exclude token names this file.
+
+    A bare basename matches, and so does any repo-relative path whose tail this
+    file's path ends with -- which is what makes an AMBIGUOUS basename
+    disambiguable at all. See lap_lines(): a token matching two files is a
+    refusal, not a double exclusion.
+    """
+    rel = str(path)
+    for tok in exclude:
+        tok = tok.strip()
+        if not tok:
+            continue
+        if path.name == tok or rel.endswith("/" + tok.lstrip("./")) or rel == tok:
+            return True
+    return False
+
+
 def survey(round_no, exclude=()):
     """Per-FILE verdicts: (path, line-or-None, reason).
 
@@ -110,7 +128,7 @@ def survey(round_no, exclude=()):
     """
     out = []
     for path in candidates():
-        if path.name in exclude:
+        if matches_exclude(path, exclude):
             out.append((path, None, "excluded by --exclude"))
             continue
         raw = path.read_bytes()
@@ -167,14 +185,41 @@ def lap_lines(round_no, exclude=()):
     # identical defect and had not asked the question. It is this project's own
     # "can this check be satisfied by finding nothing?" -- unasked, in the check
     # that matters most.
-    missed = set(exclude) - excluded
+    missed = [t for t in exclude
+              if not any(matches_exclude(p, [t]) for p, _, _ in rows)]
     if missed:
         raise SystemExit(
             "refusing to print a digest: --exclude matched nothing for "
             + ", ".join(sorted(missed))
-            + "\nPass the FILENAME as it appears in the record, not a path. A "
-              "silently ignored exclusion produces a digest over the wrong set "
-              "and is indistinguishable from a genuine mismatch.")
+            + "\nPass the FILENAME as it appears in the record, or a "
+              "repo-relative path. A silently ignored exclusion produces a "
+              "digest over the wrong set and is indistinguishable from a "
+              "genuine mismatch.")
+
+    # AND THE MIRROR, which is the same defect pointing the other way and which
+    # both projects missed. The refusal above catches a token matching NOTHING.
+    # A token matching MORE THAN ONE file was excluding all of them, silently,
+    # and that becomes reachable the moment two laps cross at one number --
+    # which round 14 did at lap 18, ours and theirs. `--exclude
+    # round-14-lap-18.md` then dropped THEIRS as well as ours, and the digest
+    # came out over 20 rows either way: same count, different set, different
+    # hash. Our own seam-check read that as "a sent lap's bytes changed", which
+    # is the wrong diagnosis for a right finding.
+    #
+    # Refusing rather than guessing: the writer's rule is "exclude yourself",
+    # and only the caller knows which of two same-numbered files is theirs.
+    for tok in exclude:
+        hits = [p for p, _, _ in rows if matches_exclude(p, [tok])]
+        if len(hits) > 1:
+            raise SystemExit(
+                f"refusing to print a digest: --exclude {tok} matches "
+                f"{len(hits)} files:\n  "
+                + "\n  ".join(sorted(str(h) for h in hits))
+                + "\nTwo laps crossed at one number, so the basename no longer "
+                  "identifies one file. Pass the repo-relative path of the lap "
+                  "carrying this digest -- excluding both silently produces a "
+                  "digest over the wrong set, which is what this refusal is "
+                  "for.")
     return sorted(out)
 
 
@@ -260,11 +305,19 @@ def check_lap(path):
         return "undeclared", None, None, []
     declared = (m.group(1), int(m.group(2)))
 
+    # By PATH, not by basename. The set this drops is "this lap and everything
+    # filed since", by lap NUMBER and across both directories -- so when two
+    # laps cross at one number it genuinely wants both, and naming them by
+    # basename asked for one token to match two files. That reads as the
+    # ambiguity --exclude now refuses, in the one caller where dropping both is
+    # the correct answer. A path names exactly one file, so the same set is
+    # dropped and nothing is ambiguous. Round 14 crossed at laps 2, 13, 16
+    # and 18.
     drop = []
     for p in candidates():
         got = is_a_lap(p.read_bytes().decode("utf-8", errors="replace"))
         if got and int(got[0]) == int(rnd) and int(got[1]) >= int(lap):
-            drop.append(p.name)
+            drop.append(str(p))
     d, n, _ = digest(int(rnd), drop)
     return ("match" if (d, n) == declared else "mismatch",
             declared, (d, n), sorted(drop))

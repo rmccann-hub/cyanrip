@@ -1715,6 +1715,33 @@ KNOWN_UNREPRODUCIBLE = {
     # lap 17 §7 with both laps named. Comes out when a later lap of theirs
     # enumerates seventeen.
     "round-14-lap-16.md": "7b5737acf715a7f5",
+    # Round 14 lap 18, theirs. Declares `999fe4e8a9d13d86 over 20`; we re-derive
+    # `5469816e2d1591e3` over the SAME COUNT of 20.
+    #
+    # SAME COUNT, DIFFERENT SET, and that combination is new. Every entry above
+    # disagreed on the number, which at least announces itself; here the two
+    # populations are both 20 and are not the same 20, so the count carries no
+    # signal at all. Two causes, both already on the record:
+    #
+    #   - **The lap 18s crossed.** Both sides wrote one, neither had the
+    #     other's, so their record cannot contain ours and ours contains theirs.
+    #     This is the fourth crossing of round 14 -- laps 2, 13, 16 and 18 --
+    #     and it is what HANDSHAKE-NEXT-LAP is being added to remove.
+    #   - **They have never held our lap 2**, declared by their own laps 6 and
+    #     8 and unresolved since.
+    #
+    # It is also what found the over-match defect in our own round-digest.py:
+    # `--exclude round-14-lap-18.md` matched BOTH files and dropped both, so the
+    # tool answered confidently over a population nobody asked for. The
+    # under-match mirror -- a token matching nothing -- was fixed in round 9
+    # after Platterpus found it in theirs; neither side had asked the question
+    # the other way round. `--exclude` now refuses an ambiguous basename and
+    # takes a path, and check_lap() names files by path.
+    #
+    # Pinned by their declared value so an edit to their file fails here rather
+    # than being excused. Comes out when a later lap of theirs enumerates a
+    # population that includes our lap 2 and our lap 18.
+    "round-14-lap-18.md": "999fe4e8a9d13d86",
 }
 
 
