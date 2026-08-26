@@ -292,12 +292,52 @@ def check_lap(path):
              f"test pin {this.test_pin} -- not a release and cannot close a round")
 
 
+def audit_gaps():
+    """Per round, which lap numbers are absent from what THIS side holds.
+
+    WHAT IT CANNOT TELL YOU, and the distinction is the whole point: a gap is
+    either a lap that exists and never reached us, or a number nobody ever
+    used. **Nothing on one side can tell those apart** -- it needs the other
+    side's enumeration, which is exactly why OWNERSHIP.md §6 makes every lap
+    declare the record it hashed.
+
+    So this prints gaps and refuses to call them losses."""
+    import collections
+    have = collections.defaultdict(dict)
+    for p in rdg.candidates():
+        q = rdg.is_a_lap(p.read_bytes().decode("utf-8", errors="replace"))
+        if q:
+            have[int(q[0])].setdefault(int(q[1]), []).append(q[2])
+
+    total = 0
+    print(f"{'round':>5}  {'laps held':<44}  absent from our holdings")
+    for r in sorted(have):
+        laps = sorted(have[r])
+        missing = [n for n in range(1, max(laps) + 1) if n not in have[r]]
+        total += len(missing)
+        shown = " ".join(f"{n}{'*' if len(have[r][n]) > 1 else ''}" for n in laps)
+        print(f"{r:>5}  {shown:<44}  "
+              f"{'none' if not missing else ', '.join(map(str, missing))}")
+    print("\n* two files claim that lap number, one from each side -- legal "
+          "under \u00a75a's (lap, FROM) key, unresolvable under \u00a72's state rule")
+    print(f"{total} absent number(s) across all rounds. AN ABSENCE IS NOT A LOSS: "
+          "it is a lap that never reached us OR a number nobody used, and no "
+          "check on one side can tell those apart. Ask for the other side's "
+          "enumeration -- that is what it is for.")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("lap", nargs="*", help="lap file(s) to check")
     ap.add_argument("--all", action="store_true",
                     help="every lap in the record, ours and theirs")
+    ap.add_argument("--gaps", action="store_true",
+                    help="per round, which lap numbers are absent from what we hold")
     args = ap.parse_args()
+
+    if args.gaps:
+        return audit_gaps()
 
     paths = [pathlib.Path(p) for p in args.lap]
     if args.all:
