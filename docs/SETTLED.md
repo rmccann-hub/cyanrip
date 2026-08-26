@@ -19,8 +19,18 @@ evidence.
 
     python3 tools/check-settled.py
 
-A row with `check: —` is a fact about somebody else's machine or a past event
-that no command here can re-run. Those are the rows to distrust first.
+**A row with no command must say WHY it has none**, because three very
+different confidences were looking identical:
+
+| tag | means | how much to trust it |
+|---|---|---|
+| `— past:` | a measurement taken once, on hardware or in a session that is gone | the artifact is cited; it cannot be re-run, only re-read |
+| `— theirs:` | a fact about a machine or repository we cannot reach | **only as good as the lap that told us**, and laps get corrected |
+| `— structural:` | true of our own code but **not observable from any fixture here** | read from source; a reader could check it, no command can |
+
+**This distinction is the same `none` versus `unknown (reason)` rule this project
+applies to every log line, turned on its own index.** A bare em dash said "not
+checked" and hid whether that was *cannot*, *has not*, or *nobody can*.
 
 ---
 
@@ -31,7 +41,7 @@ that no command here can re-run. Those are the rows to distrust first.
 | Round 14's pin is `d9c058c` = `0.9.4-rc2+platterpus.10`, seq 20, channel `beta` | `grep -m1 HANDSHAKE-PIN: docs/handshake/round-14-lap-15.md` |
 | `stable` is `237a4ff` = `+platterpus.7`, seq 17, authorised by round 12 | `python3 tools/gen-release-manifest.py --check release-manifest.json` |
 | Nothing in `src/` changed between `+platterpus.8` and `+platterpus.10` | `git diff --stat 796df32 d9c058c -- src/` |
-| Tag pushes and branch **deletes** are `HTTP 403` from this proxy; branch create/update works | — measured, `docs/handshake/README.md` |
+| Tag pushes and branch **deletes** are `HTTP 403` from this proxy; branch create/update works | — past: probed with a throwaway tag, `docs/handshake/README.md`. **Deliberately no test** — a check that reaches the network is not evidence about this program |
 
 ## Our own binary
 
@@ -39,7 +49,7 @@ that no command here can re-run. Those are the rows to distrust first.
 |---|---|
 | `-Y` / `--verify-log` is in P1, generated from the binary's `--help`, so it cannot lapse for a new pin | `grep -n 'verify-log' PROVIDER-CONTRACT.md` |
 | `signal()` appears at exactly **one** site in all of `src/`, installing `on_quit_signal` for `SIGINT` and `SIGTERM`; nothing restores either disposition | `grep -c '[^_a-z]signal(' src/cyanrip_main.c` |
-| **A single SIGTERM cannot terminate cyanrip** since `+platterpus.7`: the handler sets a flag and returns, and nothing reads it once the rip loop is past | — read from `src/cyanrip_main.c:1155` |
+| **A single SIGTERM cannot terminate cyanrip** since `+platterpus.7`: the handler sets a flag and returns, and nothing reads it once the rip loop is past | — structural: `src/cyanrip_main.c:1155`. The mid-rip half IS covered by `sc_interrupt`, which signals a live rip and asserts a graceful exit; **the half after the rip loop is a millisecond-wide window on an image**, so a timing test would be flaky and a flaky test is worse than none |
 | `crip_diag_record()` has **one** call site, at the top of `cyanrip_vlog()`, which ends `vprintf` + `fflush(stdout)` unconditionally — so a message in the `-j` array **is** proof it reached fd 1 and was flushed | `grep -rc 'crip_diag_record(' src/cyanrip_log.c` |
 | The `-j` record is written from `atexit`, so a run that produced one reached `exit()` | `grep -n 'atexit(crip_diag_write)' src/diagnostics.c` |
 | `PROBE_MAX_SECTORS` is **2048** — a ceiling of ours, not a drive limit | `grep -n 'PROBE_MAX_SECTORS' src/cache_probe.c` |
@@ -49,19 +59,19 @@ that no command here can re-run. Those are the rows to distrust first.
 
 | fact | check |
 |---|---|
-| **`-x -I` completed on a drive**, 2026-08-25, PIONEER BD-RW BDR-209D: exit 0, 15.9 s, drive returned, `at least 2048 sectors … search ceiling reached` | — `docs/handshake/inbound/artifacts/round-14-acceptance-20260825/transcript.txt` |
-| **`-x` alone has never been shown to return a drive.** Different claim, same flag | — |
-| **C1 is `-j`-associated, cause NOT determined.** The controlled pair, same drive/disc/day: `-N -l 1` = 4.9 s exit 1; `-j -D -o -u …` = 1800 s and SIGKILL. Narrowed to which flag, not to where | — their lap 16 §D; our transcript §P2 |
-| `Pregap source: sub-channel (not signalled by TOC)` on 13 of 14 tracks, track 1 `lead-in`, LSN arithmetic consistent, on `d9c058c` | — same transcript, §P |
-| **Never run anywhere:** C2 reporting (drive says unsupported), `-f`, damaged media, CD-TEXT from a physical disc, the diagnosed-abort exit code, a non-zero `Read stalls:` count, T1's uniform secure re-read on hardware | — |
+| **`-x -I` completed on a drive**, 2026-08-25, PIONEER BD-RW BDR-209D: exit 0, 15.9 s, drive returned, `at least 2048 sectors … search ceiling reached` | — past: `docs/handshake/inbound/artifacts/round-14-acceptance-20260825/transcript.txt` |
+| **`-x` alone has never been shown to return a drive.** Different claim, same flag | — structural: an absence, and a different claim from the row above |
+| **C1 is `-j`-associated, cause NOT determined.** The controlled pair, same drive/disc/day: `-N -l 1` = 4.9 s exit 1; `-j -D -o -u …` = 1800 s and SIGKILL. Narrowed to which flag, not to where | — theirs: their lap 16 §D, with our transcript §P2 as the other half of the pair |
+| `Pregap source: sub-channel (not signalled by TOC)` on 13 of 14 tracks, track 1 `lead-in`, LSN arithmetic consistent, on `d9c058c` | — past: same transcript, §P |
+| **Never run anywhere:** C2 reporting (drive says unsupported), `-f`, damaged media, CD-TEXT from a physical disc, the diagnosed-abort exit code, a non-zero `Read stalls:` count, T1's uniform secure re-read on hardware | — structural: an absence. No fixture can produce any of these, which is the claim |
 
 ## Things that are true and read as false
 
 | fact | check |
 |---|---|
-| **Per-track paranoia counters do NOT sum to the disc totals under `-Z`.** The per-track baseline is snapshotted after `repeat_ripping:`, so it describes the **last pass**; the disc counters sum **every** pass. Equality holds only when each track was read once | — round 13; measured 15+10+5=30 against 90 |
+| **Per-track paranoia counters do NOT sum to the disc totals under `-Z`.** The per-track baseline is snapshotted after `repeat_ripping:`, so it describes the **last pass**; the disc counters sum **every** pass. Equality holds only when each track was read once | — past: round 13, measured 15+10+5=30 against a disc total of 90 |
 | `Cache model:` reports what paranoia **models**, never what the drive has. Since 2026-08-26 it says `(drive cache probed separately…)` when `-x` ran | `./build/tests/diag_test` |
-| `none` and `unknown (reason)` are different claims everywhere in the log, on purpose | — |
+| `none` and `unknown (reason)` are different claims everywhere in the log, on purpose | — structural: a policy over every log line, not a single assertion |
 | **`ddf7ac3` is a cyanrip commit** (`0.9.4-rc1+platterpus.5`), not a Platterpus one, despite standing in `HANDSHAKE-PEER-PIN` through two closed rounds | `git log --oneline -1 ddf7ac3` |
 
 ## Upstream `cyanreg/cyanrip` — what it still lacks, for merge-back
@@ -81,7 +91,7 @@ checked rather than written.
 
 | fact | check |
 |---|---|
-| `~/.local/bin/cyanrip` on the rig is a **host-exported Distrobox wrapper**; the real ripper runs in a container. **ARCHITECTURE YES, CAUSE NO** — their lap 16 §D1(a) withdraws it as the explanation for the empty capture, because a later run's capture was 111 bytes and a theory predicting *always empty* does not predict *sometimes empty* | — their lap 12 §E2, corrected by their lap 16 §D1(a) |
-| Their `cyanrip` script verb is bounded: 300 s, then a kill, then 20 s, then an unreapable-child record with a **null** exit code | — their lap 12 §A |
-| `0.6.26` was **not published** until 2026-08-25; the operator was on `0.6.25 (5f374aa)` before that | — their lap 13 §A2 |
-| Their gate had the same `HANDSHAKE-TEST-PIN: none.` misreading as ours, fixed the same way | — their lap 12 §D |
+| `~/.local/bin/cyanrip` on the rig is a **host-exported Distrobox wrapper**; the real ripper runs in a container. **ARCHITECTURE YES, CAUSE NO** — their lap 16 §D1(a) withdraws it as the explanation for the empty capture, because a later run's capture was 111 bytes and a theory predicting *always empty* does not predict *sometimes empty* | — theirs: their lap 12 §E2, corrected by their lap 16 §D1(a) |
+| Their `cyanrip` script verb is bounded: 300 s, then a kill, then 20 s, then an unreapable-child record with a **null** exit code | — theirs: their lap 12 §A |
+| `0.6.26` was **not published** until 2026-08-25; the operator was on `0.6.25 (5f374aa)` before that | — theirs: their lap 13 §A2 |
+| Their gate had the same `HANDSHAKE-TEST-PIN: none.` misreading as ours, fixed the same way | — theirs: their lap 12 §D |
