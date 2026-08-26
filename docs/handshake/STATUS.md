@@ -17,52 +17,55 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-08-26. **Round 14: our verdict `GO`, waiting on theirs. `+platterpus.10` at `d9c058c` is the build.**
+## Rewritten 2026-08-26. **Round 14 CLOSED `GO`/`GO`. `+platterpus.11` at `978f9b0` is STABLE.**
 
-Round 13 closed `GO`/`GO` on `9f8592e` in eight laps. **Round 14's acceptance
-pass has now run** — 2026-08-25, on hardware — and **CC-2 as written was not
-met**: T1's secure re-read never started. **Our verdict is `GO` with that
-shortfall named**; the round closes when Platterpus's lap says `GO` too.
-`0.9.4-rc2+platterpus.10` at `d9c058c` is the build, and **it does not move**.
+**Round 14 closed on `d9c058c` / Platterpus `b524936`, and the stable release
+followed immediately** — the first since `+platterpus.7`, and the first ever cut
+on a round whose subject was a *release* rather than a test pin.
 
-**Three betas in two days, and the last of them.** `+platterpus.8`, `.9` and
-`.10` were cut in quick succession as the acceptance plan came together, and each
-one invalidated a build-tag assertion in the script Platterpus had already
-written. **That churn is ours and it stopped there:**
+**Its single close condition was met by two independent hardware runs on the
+same build.** Platterpus's 2026-08-26 pass: 218 steps, 211 pass, every failure
+descending from one defect in their app and none in the pin, with T1 running and
+converging 14/14. Ours, the same day: `Secure re-read: converged after 3 reads`
+on 14/14 tracks, six logs all verifying `-Y` exit 0. **T1 had never run
+anywhere** before that day; it was the half of CC-2 the 2026-08-25 pass could
+not produce.
 
-> **Pre-commit, and it held: no further release until round 14 closes.** Two
-> fixes have landed since — the `Cache model:` probe wording and the pin-field
-> check — and **neither is in `d9c058c`**. They ship after the close.
+### Read the channel, never the version string
 
-**Full detail of the run, the reform and the ownership charter is further down**;
-this section is the release table and stays about builds.
+**`0.9.4-rc2+platterpus.11` is a STABLE release.** The `-rc2` is upstream's own
+string, copied verbatim because we may not mint in `cyanreg/cyanrip`'s
+namespace; the part that advances is `+platterpus.N`, which SemVer says MUST be
+ignored for precedence. **A check that reads the shape of the version will call
+this a pre-release, and it will be wrong.** Order by `release_seq`, read the
+`channel` column of `release-manifest.json`.
 
-### The release table — now two channels, and the rows are named for it
+**There is no tag.** Tag pushes are `HTTP 403` from the environment this is
+built in, and `git ls-remote --tags origin` returns nothing. No release of this
+fork has ever been reachable by tag. The commit SHA and the manifest row are the
+whole identifier.
 
-**`commit` was an unambiguous row label until this morning.** It stopped being one
-the instant a second channel was published, which is the same defect as
-`Peak level:` becoming ambiguous when `True peak level:` was printed below it. The
-rows are channel-qualified now, and `sc_status_is_current()` was changed to key on
-the qualified names *and* to check the beta row, which it never did before —
-nothing verified the beta channel of this table until there was a beta in it.
+### Both channels point at the same build, deliberately
 
-| | |
+`beta` resolves to the newest row of *any* channel, so opting into pre-releases
+can never move a user backwards. With `+platterpus.11` the newest row overall,
+both channels resolve to it. There is no separate beta to take.
+
+| field | value |
 |---|---|
-| **stable version** | `0.9.4-rc2+platterpus.7` |
-| **stable commit** | **`237a4ff`** |
-| stable build tag | `platterpus-fork-g237a4ff` |
-| stable install | `https://github.com/rmccann-hub/cyanrip/archive/237a4ff.tar.gz` |
-| stable `release_seq` | 17 |
-| stable authorised by | handshake round 12, closed `GO`/`GO` on `64ae7bc` |
-
+| **stable version** | `0.9.4-rc2+platterpus.11` |
+| **stable commit** | **`978f9b0`** |
+| stable build tag | `platterpus-fork-g978f9b0` |
+| stable install | `https://github.com/rmccann-hub/cyanrip/archive/978f9b0.tar.gz` |
+| stable `release_seq` | 21 |
+| stable authorised by | handshake round 14, closed `GO`/`GO` on `d9c058c` / `b524936` |
 | | |
-|---|---|
-| **beta version** | `0.9.4-rc2+platterpus.10` |
-| **beta commit** | **`d9c058c`** |
-| beta build tag | `platterpus-fork-gd9c058c` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/d9c058c.tar.gz` |
-| beta `release_seq` | 20 |
-| beta authorised by | **nothing yet — handshake round 14 is OPEN** |
+| **beta version** | `0.9.4-rc2+platterpus.11` |
+| **beta commit** | **`978f9b0`** |
+| beta build tag | `platterpus-fork-g978f9b0` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/978f9b0.tar.gz` |
+| beta `release_seq` | 21 |
+| beta authorised by | handshake round 14, closed `GO`/`GO` — same build as stable |
 
 **`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**
 It is still in the ledger, because the ledger is append-only and a published

@@ -25,38 +25,44 @@ which cannot be ordered at all.
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
-commit          237a4ff                          <- build this
---version       cyanrip 0.9.4-rc2+platterpus.7 (platterpus-fork-g237a4ff)
-release_seq     17                               <- the ONLY orderable identifier
+commit          978f9b0                          <- build this
+--version       cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
+release_seq     21                               <- the ONLY orderable identifier
 channel         stable
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
-### `beta` — opt-in, **not yet verified by anyone but us**
+### `beta` — currently the SAME BUILD as stable
 
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          d9c058c
---version       cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-gd9c058c)
-release_seq     20                               <- newest of any channel
+commit          978f9b0
+--version       cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
+release_seq     21                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
-**Two things this beta claims that the previous one did not, both weaker.** It
-has **no disc behind it** — 52/52 in four build configurations, and not one
-sector read from a drive — *and* it carries **no joint verification**: it was cut
-while handshake round 14 was open, on the maintainer's explicit instruction, and
-`tools/release-gate.py --release-gate` exits 1 on this tree naming that round.
+**`beta` resolves to the newest row of ANY channel**, so opting into
+pre-releases can never move a user backwards. `+platterpus.11` is the newest row
+overall, so both channels resolve to it and there is no separate beta to take.
+That property was not decorative: the first generated manifest had `beta` on seq
+10 while `stable` was seq 11, so opting in would have been a downgrade.
 
-**`stable` did not move and the assertion protecting it is untouched.**
-`gen-release-manifest.py` independently refuses a `stable` row pointing at an
-unclosed round; `stable` is `237a4ff`, round 12, closed. The manifest reports
-`"round_closed": false` for this beta row, truthfully. Opting in is reversible by
-design, and that is the whole reason `stable` is retained.
+**`0.9.4-rc2+platterpus.11` IS A STABLE RELEASE despite the `-rc2`.** That
+string is upstream's, copied verbatim because we may not mint in
+`cyanreg/cyanrip`'s namespace; the part that advances is SemVer build metadata,
+which the spec says MUST be ignored for precedence. **A check that reads the
+shape of the version will call this a pre-release and will be wrong.** Order by
+`release_seq`; read the `channel` column.
+
+**Authorised by handshake round 14, closed `GO`/`GO`** on `d9c058c` /
+Platterpus `b524936`, with its single close condition met by two independent
+hardware runs on that build — including T1, the whole-disc secure re-read, which
+had never run anywhere before 2026-08-26.
 
 **`+platterpus.8` (`796df32`, seq 18) is superseded** — still in the ledger,
 because a published build is a fact and the ledger is append-only, but no channel

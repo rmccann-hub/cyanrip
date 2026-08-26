@@ -39,7 +39,7 @@ checked" and hid whether that was *cannot*, *has not*, or *nobody can*.
 | fact | check |
 |---|---|
 | Round 14's pin is `d9c058c` = `0.9.4-rc2+platterpus.10`, seq 20, channel `beta` | `grep -m1 HANDSHAKE-PIN: docs/handshake/round-14-lap-15.md` |
-| `stable` is `237a4ff` = `+platterpus.7`, seq 17, authorised by round 12 | `python3 tools/gen-release-manifest.py --check release-manifest.json` |
+| **`stable` is `978f9b0` = `0.9.4-rc2+platterpus.11`, seq 21**, authorised by round 14 closing `GO`/`GO`. The version string carries upstream's `-rc2` and is stable anyway — order by `release_seq`, read `channel`, never parse the version | `python3 tools/gen-release-manifest.py --check release-manifest.json` |
 | Nothing in `src/` changed between `+platterpus.8` and `+platterpus.10` | `git diff --stat 796df32 d9c058c -- src/` |
 | Tag pushes and branch **deletes** are `HTTP 403` from this proxy; branch create/update works | — past: probed with a throwaway tag, `docs/handshake/README.md`. **Deliberately no test** — a check that reaches the network is not evidence about this program |
 
