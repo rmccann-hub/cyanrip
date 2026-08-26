@@ -62,6 +62,10 @@
 
 #include <unistd.h>
 
+#include <libavcodec/avcodec.h>
+#include <libavcodec/packet.h>
+#include <libavutil/dict.h>
+
 /* The real headers, so a stub whose signature drifts from the declaration it
  * stands in for is a compile error rather than a silent mismatch at link
  * time. */
@@ -949,6 +953,344 @@ static void test_data_track_reports_bytes_and_stops(void)
     free_ctx(ctx);
 }
 
+/* =====================================================================
+ * The disc-level AccurateRip tally: `Tracks ripped accurately: i/N`.
+ *
+ * cyanrip_log_finish_report() touches no drive either, so the same technique
+ * reaches it. Seven mutants lived here -- :819, :821, :822 twice, :823 and
+ * :825 twice -- and this is the disc's headline verdict, the one a consumer
+ * shows a user.
+ * ===================================================================== */
+
+static void setup_disc(cyanrip_ctx *ctx, int nb)
+{
+    ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
+    ctx->nb_tracks = nb;
+    for (int i = 0; i < nb; i++) {
+        base_track(&ctx->tracks[i]);
+        ctx->tracks[i].number = i + 1;
+    }
+}
+
+static void test_disc_tally_counts_over_one_population(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 3);
+
+    /* Track 1 verified exactly through v1, track 2 through v2, track 3 only
+     * partially -- so 2 exact and 1 partial out of 3. */
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 8, .checksum = 0x11111111,
+                                       .checksum_450 = 0x44444444 };
+    ar_entries[1] = (CRIPAccuDBEntry){ .confidence = 8, .checksum = 0x22222222,
+                                       .checksum_450 = 0x44444444 };
+    for (int i = 0; i < 3; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+        t->ar_db_entries = ar_entries;
+        t->ar_db_nb_entries = 2;
+        t->ar_db_max_confidence = 8;      /* threshold 3*(8+1)/4 = 6 */
+    }
+    ctx->tracks[0].acurip_checksum_v1 = 0x11111111;
+    ctx->tracks[1].acurip_checksum_v2 = 0x22222222;
+    ctx->tracks[2].acurip_checksum_v1_450 = 0x44444444;   /* conf 8 > 6 */
+
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+
+    /* BOTH denominators are the disc's track count, so the two lines are
+     * counts over one population and a consumer can add them. The partial line
+     * once divided by (nb_tracks - verified), so a disc with 13 exact and one
+     * partial printed "13/14" above "1/1" -- self-referential, and read as a
+     * disc-level tally it over-reports. */
+    expect_line(out, "Tracks ripped accurately: 2/3", "disc-tally/exact");
+    expect_line(out, "Tracks ripped partially accurately: 1/3", "disc-tally/partial");
+    free_ctx(ctx);
+}
+
+/* cyanrip_log.c:825 [&& to ||] -- a zero 450 checksum must not be counted as a
+ * partial match, for the same reason it carries no confidence figure on the
+ * per-track line: zero compares equal to every other zero in the database. */
+static void test_disc_tally_ignores_a_zero_450_checksum(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 2);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 90, .checksum = 0x11111111,
+                                       .checksum_450 = 0x0 };
+    for (int i = 0; i < 2; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+        t->ar_db_entries = ar_entries;
+        t->ar_db_nb_entries = 1;
+        t->ar_db_max_confidence = 90;
+        t->acurip_checksum_v1 = 0xDEADBEEF;
+        t->acurip_checksum_v2 = 0xFEEDFACE;
+        t->acurip_checksum_v1_450 = 0x0;     /* matches at 90, meaninglessly */
+    }
+
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+
+    expect_line(out, "Tracks ripped accurately: 0/2", "disc-tally/zero-450");
+    if (strstr(out, "Tracks ripped partially accurately"))
+        FAIL("disc-tally/zero-450: a zero 450 checksum was counted as a "
+             "partial match -- it compares equal to every other zero");
+    free_ctx(ctx);
+}
+
+/* cyanrip_log.c:821 [== to !=] -- a track that is not itself in the database
+ * is not counted, even on a disc that is. */
+static void test_disc_tally_skips_tracks_not_in_the_database(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 2);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 4, .checksum = 0x11111111,
+                                       .checksum_450 = 0x44444444 };
+    ctx->tracks[0].ar_db_status = CYANRIP_ACCUDB_FOUND;
+    ctx->tracks[0].ar_db_entries = ar_entries;
+    ctx->tracks[0].ar_db_nb_entries = 1;
+    ctx->tracks[0].ar_db_max_confidence = 4;
+    ctx->tracks[0].acurip_checksum_v1 = 0x11111111;
+    /* Track 2 stays CYANRIP_ACCUDB_DISABLED with the same checksum, which
+     * would count if the status were not checked. */
+    ctx->tracks[1].acurip_checksum_v1 = 0x11111111;
+
+    cyanrip_log_finish_report(ctx);
+    expect_line(drain(ctx), "Tracks ripped accurately: 1/2", "disc-tally/skip");
+    free_ctx(ctx);
+}
+
+/* A disc that is not in the database gets no tally at all -- not a tally of
+ * zero, which would read as "checked, and nothing matched". */
+static void test_disc_absent_reports_no_tally(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 2);
+    ctx->ar_db_status = CYANRIP_ACCUDB_NOT_FOUND;
+
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    if (strstr(out, "Tracks ripped"))
+        FAIL("disc-tally/absent: a tally was printed for a disc that is not in "
+             "the database, which reads as 0 of N verified rather than as no "
+             "comparison having been possible");
+    free_ctx(ctx);
+}
+
+/* cyanrip_log.c:819 [< to <=] -- the tally counts exactly the disc's tracks.
+ *
+ * ctx->tracks is a fixed 198-entry array, so one past nb_tracks is a live slot
+ * rather than a fault, and on a real rip it holds whatever the previous disc
+ * or the zero-fill left. Planting a would-count track there is the only way to
+ * tell a correct bound from an off-by-one: with a zeroed slot the two agree. */
+static void test_disc_tally_stops_at_the_track_count(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 2);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 5, .checksum = 0x11111111,
+                                       .checksum_450 = 0x44444444 };
+    /* Three tracks are prepared and only two are declared. */
+    base_track(&ctx->tracks[2]);
+    for (int i = 0; i < 3; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+        t->ar_db_entries = ar_entries;
+        t->ar_db_nb_entries = 1;
+        t->ar_db_max_confidence = 5;
+        t->acurip_checksum_v1 = 0x11111111;    /* all three would count */
+    }
+
+    cyanrip_log_finish_report(ctx);
+    expect_line(drain(ctx), "Tracks ripped accurately: 2/2",
+                "disc-tally/track-count");
+    free_ctx(ctx);
+}
+
+/* cyanrip_log.c:822 and :823 [> to >=] -- a confidence of ZERO is not a
+ * verification.
+ *
+ * crip_find_ar() returns the database's confidence, and zero means the disc is
+ * listed but nobody's rip agreed. `> 0` is what separates that from a real
+ * match; `>= 0` would also swallow it, and would additionally count every
+ * track on a disc that is not in the database at all. Both comparisons are in
+ * one expression and a single-operator mutation flips one, so both versions
+ * are given the zero-confidence entry. */
+static void test_disc_tally_zero_confidence_is_not_a_verification(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 2);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 0, .checksum = 0x11111111,
+                                       .checksum_450 = 0x44444444 };
+    for (int i = 0; i < 2; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+        t->ar_db_entries = ar_entries;
+        t->ar_db_nb_entries = 1;
+        t->ar_db_max_confidence = 0;
+        t->acurip_checksum_v1 = 0x11111111;   /* both match, at confidence 0 */
+        t->acurip_checksum_v2 = 0x11111111;
+    }
+
+    cyanrip_log_finish_report(ctx);
+    expect_line(drain(ctx), "Tracks ripped accurately: 0/2",
+                "disc-tally/zero-confidence");
+    free_ctx(ctx);
+}
+
+/* cyanrip_log.c:825 [> to >=] -- the disc tally's copy of the 3/4 threshold,
+ * which is a third writing of the same rule and needs its own boundary. */
+static void test_disc_tally_450_threshold_boundary(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 1);
+    /* max confidence 7 -> threshold 6, and the entry sits exactly on it. */
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 6, .checksum = 0x11111111,
+                                       .checksum_450 = 0x44444444 };
+    cyanrip_track *t = &ctx->tracks[0];
+    t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+    t->ar_db_entries = ar_entries;
+    t->ar_db_nb_entries = 1;
+    t->ar_db_max_confidence = 7;
+    t->acurip_checksum_v1 = 0xDEADBEEF;
+    t->acurip_checksum_v2 = 0xFEEDFACE;
+    t->acurip_checksum_v1_450 = 0x44444444;
+
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    expect_line(out, "Tracks ripped accurately: 0/1", "disc-tally/450-boundary");
+    if (strstr(out, "Tracks ripped partially accurately"))
+        FAIL("disc-tally/450-boundary: a 450 match sitting exactly ON the 3/4 "
+             "threshold was counted as partially accurate; the rule is above "
+             "it, and it is written out three separate times");
+    free_ctx(ctx);
+}
+
+/* =====================================================================
+ * Embedded cover art: which art is described, and whether any is.
+ *
+ * NOT covered, and deliberately: cyanrip_log.c:626 `art->pkt && art->params`
+ * is an EQUIVALENT mutant, not a gap. demux_image() sets params and then
+ * `if (info_only) goto end;` before allocating pkt, and both callers in
+ * cyanrip_main.c pass ctx->settings.print_info_only -- so a NULL pkt happens
+ * only in -I, which takes the branch that uses neither pkt nor the codec name,
+ * and params is never NULL while pkt is set. Mutating && to || therefore
+ * changes no output in any reachable state. Established by reading the call
+ * sites, because a mutant that cannot be killed and a mutant that is equivalent
+ * look identical from the sweep.
+ * ===================================================================== */
+
+static AVCodecParameters *art_params(int w, int h)
+{
+    AVCodecParameters *p = avcodec_parameters_alloc();
+    p->codec_id = AV_CODEC_ID_MJPEG;
+    p->width = w;
+    p->height = h;
+    return p;
+}
+
+/* cyanrip_log.c:620 and :623 -- the disc-wide art a track inherits is the one
+ * titled "Front", and the index expression falls back to entry 0 only when no
+ * Front exists. `i == nb_cover_arts` is the not-found sentinel, so mutating it
+ * inverts the fallback: every disc with a Front would get the wrong picture
+ * described, and every disc without one would read past the array. */
+static void test_embedded_cover_art_picks_front(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    cyanrip_track t;
+    base_track(&t);
+
+    ctx->nb_cover_arts = 2;
+    av_dict_set(&ctx->cover_arts[0].meta, "title", "Back", 0);
+    ctx->cover_arts[0].params = art_params(100, 100);
+    ctx->cover_arts[0].pkt = av_packet_alloc();
+    av_dict_set(&ctx->cover_arts[1].meta, "title", "Front", 0);
+    ctx->cover_arts[1].params = art_params(600, 600);
+    ctx->cover_arts[1].pkt = av_packet_alloc();
+
+    cyanrip_log_track_end(ctx, &t);
+    const char *out = drain(ctx);
+
+    expect_line(out, "  Embedded cover art:", "cover-art/heading");
+    expect_line(out, "    Front: 600x600 Motion JPEG", "cover-art/front");
+    expect_no_line(out, "    Back: 100x100 Motion JPEG", "cover-art/front");
+
+    /* With no Front at all, entry 0 is the documented fallback. */
+    av_dict_set(&ctx->cover_arts[1].meta, "title", "Media", 0);
+    cyanrip_log_track_end(ctx, &t);
+    out = drain(ctx);
+    expect_line(out, "    Back: 100x100 Motion JPEG", "cover-art/fallback");
+
+    for (int i = 0; i < 2; i++) {
+        av_dict_free(&ctx->cover_arts[i].meta);
+        avcodec_parameters_free(&ctx->cover_arts[i].params);
+        av_packet_free(&ctx->cover_arts[i].pkt);
+    }
+    free_ctx(ctx);
+}
+
+/* cyanrip_log.c:615 [|| to &&] -- the block is written when the track has its
+ * own art OR the disc has some, and not at all when embedding is off. */
+static void test_embedded_cover_art_gating(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    cyanrip_track t;
+    base_track(&t);
+    t.art.source_url = (char *)"file:///cover.jpg";
+    av_dict_set(&t.art.meta, "title", "Front", 0);
+    t.art.params = art_params(300, 300);
+    t.art.pkt = av_packet_alloc();
+
+    /* A track's own art, with no disc-wide art at all. */
+    cyanrip_log_track_end(ctx, &t);
+    expect_line(drain(ctx), "    Front: 300x300 Motion JPEG", "cover-art/track-own");
+
+    /* -I names the source instead of the decoded dimensions. */
+    ctx->settings.print_info_only = 1;
+    cyanrip_log_track_end(ctx, &t);
+    expect_line(drain(ctx), "    Front: file:///cover.jpg", "cover-art/info-only");
+    ctx->settings.print_info_only = 0;
+
+    /* Embedding off: no block, whatever art exists. */
+    ctx->settings.disable_coverart_embedding = 1;
+    cyanrip_log_track_end(ctx, &t);
+    if (strstr(drain(ctx), "Embedded cover art"))
+        FAIL("cover-art/disabled: art was reported as embedded with embedding "
+             "switched off");
+
+    av_dict_free(&t.art.meta);
+    avcodec_parameters_free(&t.art.params);
+    av_packet_free(&t.art.pkt);
+    free_ctx(ctx);
+}
+
+/* cyanrip_log.c:1152 [< to <=] -- the routing loop in cyanrip_vlog().
+ *
+ * A log line goes to the logfile of every REQUESTED output format and to no
+ * other. One past the end is a read of a slot the run never asked for, and
+ * with several -o formats that slot belongs to a different rip's file. The
+ * assertion is on the second file staying EMPTY, which no existing test could
+ * make: every scenario opens exactly the logs it asked for and never looks at
+ * the ones it did not. */
+static void test_log_reaches_only_requested_outputs(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    FILE *unrequested = tmpfile();
+    ctx->logfile[1] = unrequested;        /* open, but outputs_num is 1 */
+
+    cyanrip_log(ctx, 0, "a line\n");
+
+    fflush(unrequested);
+    fseek(unrequested, 0, SEEK_END);
+    long n = ftell(unrequested);
+    if (n != 0)
+        FAIL("routing: %ld byte(s) reached the logfile of a format this run "
+             "never requested", n);
+    expect_line(drain(ctx), "a line", "routing/requested");
+
+    fclose(unrequested);
+    ctx->logfile[1] = NULL;
+    free_ctx(ctx);
+}
+
 int main(void)
 {
     test_accurip_disabled_says_disabled();
@@ -975,6 +1317,18 @@ int main(void)
     test_end_lsn_suffixes_name_their_cause();
     test_padding_lines();
     test_data_track_reports_bytes_and_stops();
+
+    test_disc_tally_counts_over_one_population();
+    test_disc_tally_ignores_a_zero_450_checksum();
+    test_disc_tally_skips_tracks_not_in_the_database();
+    test_disc_absent_reports_no_tally();
+    test_disc_tally_stops_at_the_track_count();
+    test_disc_tally_zero_confidence_is_not_a_verification();
+    test_disc_tally_450_threshold_boundary();
+
+    test_embedded_cover_art_picks_front();
+    test_embedded_cover_art_gating();
+    test_log_reaches_only_requested_outputs();
 
     if (failures) {
         printf("%i check(s) failed\n", failures);
