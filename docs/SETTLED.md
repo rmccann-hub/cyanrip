@@ -64,6 +64,19 @@ that no command here can re-run. Those are the rows to distrust first.
 | `none` and `unknown (reason)` are different claims everywhere in the log, on purpose | — |
 | **`ddf7ac3` is a cyanrip commit** (`0.9.4-rc1+platterpus.5`), not a Platterpus one, despite standing in `HANDSHAKE-PEER-PIN` through two closed rounds | `git log --oneline -1 ddf7ac3` |
 
+## Upstream `cyanreg/cyanrip` — what it still lacks, for merge-back
+
+Checked against `master` at `f8ebf48`, not recalled. **`-Y` was on this list from
+memory and is wrong: upstream has it.** That is the whole reason the list is
+checked rather than written.
+
+| fact | check |
+|---|---|
+| Upstream still calls `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a handler, the deadlock that hangs the process with the drive held | `git show master:src/cyanrip_main.c \| grep -A3 'on_quit_signal(int'` |
+| Upstream handles **no SIGTERM at all** — 0 occurrences | `test $(git show master:src/cyanrip_main.c \| grep -c SIGTERM) -eq 0` |
+| Upstream has `cyanrip_log_finish_report()` immediately **above** `end:`, so every `goto end` skips the completion footer | `git show master:src/cyanrip_main.c \| grep -n -B1 '^end:' \| tail -3` |
+| **`-Y` / `--verify-log` is already upstream** — not ours to contribute | `test $(git show master:src/cyanrip_main.c \| grep -c verify_log) -gt 0` |
+
 ## Platterpus's side — held because they told us, not because we checked
 
 | fact | check |

@@ -77,10 +77,15 @@ def main():
             continue
 
         runnable += 1
-        r = subprocess.run(cmd.group(1), shell=True, cwd=ROOT,
+        # A markdown table cell must escape a pipe as `\|`, so a command
+        # containing one arrives here escaped and the shell sees a literal
+        # backslash. Unescape before running -- otherwise every piped check is
+        # reported STALE for a reason that has nothing to do with the fact.
+        command = cmd.group(1).replace("\\|", "|")
+        r = subprocess.run(command, shell=True, cwd=ROOT,
                            capture_output=True, text=True)
         if r.returncode != 0:
-            failures.append((fact[:70], cmd.group(1), r.returncode,
+            failures.append((fact[:70], command, r.returncode,
                              (r.stderr or r.stdout).strip()[:200]))
 
     for fact, cmd, rc, err in failures:
