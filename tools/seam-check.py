@@ -49,6 +49,7 @@ exists to remove.
 """
 
 import argparse
+import hashlib
 import importlib.util
 import pathlib
 import re
@@ -215,6 +216,49 @@ def check_lap(path):
                  "the next lap past the collision and say so.")
     else:
         note("OK", "wire/lap-number", f"lap {lap} is claimed once")
+
+    # --- THE SHARED FILES BOTH SIDES MUST HOLD IDENTICALLY -----------------
+    #
+    # `HANDSHAKE-SHARED-HASHES` has been declared in every lap since round 7 and
+    # **verified by nothing on either side** until 2026-08-26. Both projects
+    # published hashes of the shared spec at each other for eight rounds and
+    # neither gate ever compared them with its own copies.
+    #
+    # It is the enforcement slot for OWNERSHIP.md's §6: if a lap's declared hash
+    # differs from the file in this tree, the two sides are working from
+    # different rules and NOTHING ELSE IN THE LAP HAS BEEN GRADED -- it was
+    # graded against a spec the sender is not following. So this FAILs, and a
+    # round cannot close over a failing lap.
+    for label, rel in (("protocol(v4)", "docs/handshake/PROTOCOL.md"),
+                       ("seam-rules", "docs/seam-rules.md"),
+                       ("seam-commands", "docs/seam-commands.md"),
+                       ("ownership", "docs/OWNERSHIP.md")):
+        declared = re.search(rf"{re.escape(label)}=([0-9a-f]{{64}})", text)
+        local = ROOT / rel
+        if not local.exists():
+            note("WARN", "shared/" + label,
+                 f"{rel} is not in this tree, so nothing can be compared",
+                 fix=f"add {rel}. A shared file only one side holds is not "
+                     f"shared, and its hash cannot be checked by anybody.")
+            continue
+        ours = hashlib.sha256(local.read_bytes()).hexdigest()
+        if not declared:
+            note("WARN", "shared/" + label,
+                 f"{name} declares no hash for {rel}",
+                 fix=f"add `{label}={ours}` to HANDSHAKE-SHARED-HASHES. An "
+                     f"undeclared shared file is one nobody can prove you hold "
+                     f"the same copy of.")
+        elif declared.group(1) != ours:
+            note("FAIL", "shared/" + label,
+                 f"{name} declares {rel} as {declared.group(1)[:16]}…; this tree "
+                 f"holds {ours[:16]}…",
+                 fix="RECONCILE THE FILE BEFORE ANYTHING ELSE IN THIS LAP IS "
+                     "JUDGED. The two sides are working from different rules, so "
+                     "every other finding here was graded against a spec you are "
+                     "not following. Diff the two copies, agree one, bump its "
+                     "version, ship it both sides, re-send the lap.")
+        else:
+            note("OK", "shared/" + label, f"{ours[:16]}… matches this tree")
 
     # --- a declared-none test pin is an answer, not a build ---------------
     if this and this.test_pin_is_declared_none():
