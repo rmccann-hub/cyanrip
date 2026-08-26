@@ -776,6 +776,7 @@ Measured 2026-08-26, and both numbers matter:
 | target | mutants | killed | score |
 |---|---|---|---|
 | `src/cyanrip_log.c`, before `tests/logrender.c` | 88 | 39 | **44.3%** |
+| `src/cyanrip_log.c`, after it | 88 | 59 | **67.0%** |
 | `src/cyanrip_main.c`, 15 sampled | 15 | 6 | **40.0%** |
 
 Four rules, each paid for on the first run:
@@ -805,6 +806,26 @@ Four rules, each paid for on the first run:
   thirteen reported `STILLBORN` because the proof script mangled
   `t->rip_time_us` into `t-->=rip_time_us`, which reads exactly like "that
   mutation is invalid" and was not.
+- **A PATTERN THAT MATCHES BOTH BRANCHES ASSERTS NOTHING ABOUT EITHER**, and it
+  is the easiest way to write a test that looks like it closed a gap. The first
+  assertion for the `Cache model:` line spelled the plural `sectors?` -- which
+  matches `sector` and `sectors` alike, so it killed **none** of the three
+  `sectors == 1 ? "" : "s"` mutants it was written for. Derived from the count
+  instead (`"sector" if n == 1 else "sectors"`), it kills the one arm a fixture
+  can reach. **When a test is written to kill a specific mutant, re-run that
+  mutant.** The test passing is not the evidence; the mutant dying is.
+- **A check that CANNOT FIRE is worse than a missing one, and the environment
+  can disarm it silently.** Three `if "runtime error" in out` assertions sat in
+  `sc_enhanced_cd()` unable to fail, because the committed build is
+  `b_sanitize=none` and the binary carries zero UBSan symbols. Meson exports
+  `ASAN_OPTIONS` and `UBSAN_OPTIONS` for every test whatever the build options
+  are, so the *test log* looked instrumented while the *binary* was not. The
+  remedy is both halves: the in-suite checks now say `UNPROBED` out loud when
+  they cannot run, and `tools/sanitize-run.py` runs the whole image suite
+  against a build where they can. **Ask the artifact, not the environment** --
+  that tool asks `nm` whether sanitizer symbols are present before believing a
+  clean sweep, for the same reason `mutate.py` excludes the test that hashes
+  `src/`.
 - **A survivor is one of three things and they need different answers**: a real
   gap, a line whose two behaviours are genuinely equivalent, or code no fixture
   can reach. `offset < 0 ? -(uint32_t)offset : (uint32_t)offset` mutated to
@@ -820,6 +841,16 @@ assertions needed a case the first draft did not have, and the sweep named each
 one checksum version matching at confidence 0 while the other is absent, a
 single-pass rip that must not carry the `Scope:` caveat. Re-reading the code
 does not produce that list.
+
+**The sharpest example so far is not in the log at all.** `album_artist &&
+!artist` in `cyanrip_main.c` is the one place this program writes one metadata
+field from another, and mutating it to `||` survived everything. The cases the
+suite already had — one field set, or neither — **cannot distinguish `&&` from
+`||` there**; the input that separates them is *both set and different*, which
+is every compilation. With the mutation in, a caller's `artist` is silently
+replaced by the album artist on every track, in the files and in the log. No
+amount of reading that line suggests "try a compilation"; the sweep says it in
+one word.
 
 ## Doing the work: inline beats fan-out here
 
