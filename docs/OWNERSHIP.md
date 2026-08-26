@@ -91,6 +91,18 @@ had never seen is the measured proof.
 - **Neither reads an absence as evidence** unless the channel is known to retain
   presence — and the side producing a capture is responsible for saying what its
   capture drops.
+- **NEITHER REPORTS A LAP AS MISSING. FETCH IT.** Every lap declares
+  `HANDSHAKE-FROM-REPO` and `HANDSHAKE-FROM-COMMIT`; together they locate every
+  lap its sender has written. **A lap absent from your inbound is a lap you have
+  not fetched** — it is not missing until a fetch fails, and only a failed fetch
+  is worth a word.
+
+  **And it is never the operator's problem.** They copied the file; a hand-carry
+  that did not land is the channel's fault and neither project's, so **nobody
+  asks the operator to re-send anything.** Fetch it, or say the fetch failed and
+  what it returned. *"We never received your lap N"* is not a finding — it is a
+  step that was skipped, and it has cost this seam two rounds of argument over
+  laps that were on the branch the whole time.
 
 ## 6. When the two disagree
 

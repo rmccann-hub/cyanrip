@@ -168,7 +168,11 @@ def check_lap(path):
         note("WARN", "wire/digest",
              f"RECORDS DIFFER, not a fault: {name} declares {decl[0]} over "
              f"{decl[1]}; we re-derive {comp[0]} over {comp[1]}",
-             fix="RECONCILE, do not re-do work -- neither side is wrong. We hold "
+             fix="FETCH, do not ask anyone to re-send -- neither side is wrong "
+                 "and the operator is not a delivery service. Every lap declares "
+                 "FROM-REPO and FROM-COMMIT, which together locate every lap its "
+                 "sender wrote; a lap absent from your inbound is one you have "
+                 "not fetched, and it is not missing until a fetch FAILS. We hold "
                  f"these {len(mine)} lap(s) below {lap}, as lap:sender pairs: "
                  + ", ".join(mine) +
                  ". Enumerate yours the same way; the set difference names "

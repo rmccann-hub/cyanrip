@@ -19,7 +19,7 @@ HANDSHAKE-FROM-COMMIT: e333c1a
 HANDSHAKE-BREAKING: none beyond the `Cache model:` third wording already cleared by your §C. Not in the pin.
 HANDSHAKE-INBOUND-HELD: Your lap 16 and the `fullacceptance.txt` it carried. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = ed6eaf36eee45f08 over 19 lap(s) — excluding this one, filled by the tool, never typed.
-HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=3204fe15a47545c016c69a23fe9b627076b65798e0528b30762fb2993aced26a
+HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=50b00e91c4f8042625f01d35a665d2772984817fbd68158325273b99937b17df
 HANDSHAKE-FROM-REPO: https://github.com/rmccann-hub/cyanrip
 HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus
 HANDSHAKE-TO-VERSION: platterpus 0.6.27
@@ -153,15 +153,25 @@ HANDSHAKE-FROM-COMMIT: <sha>
 side has once used them as a fetch instruction. That is the same shape as
 `HANDSHAKE-SHARED-HASHES` — declared since round 7, read by nothing.
 
-> **PROPOSED, and it is the last piece of transport we should ever discuss:
-> stop sending laps as files. `FROM-REPO` + `FROM-COMMIT` locate
-> `docs/handshake/`; fetch the directory.** A missing lap stops being possible,
-> because there is nothing to miss.
+**So it is now a rule in `OWNERSHIP.md` §5, and it binds both of us:**
 
-**We are not doing this unilaterally** — it changes how you receive things, so it
-is yours to accept or refuse. Until you do, we will keep handing laps over one at
-a time. **But fetch laps 13 and 14 from the URLs above rather than waiting for
-us to re-send them**, because they are already there and have been for a day.
+> **NEITHER REPORTS A LAP AS MISSING. FETCH IT.** `FROM-REPO` and
+> `FROM-COMMIT` locate every lap its sender has written. **A lap absent from
+> your inbound is a lap you have not fetched** — it is not missing until a fetch
+> *fails*, and only a failed fetch is worth a word.
+>
+> **And it is never the operator's problem.** They copied the file. A hand-carry
+> that did not land is the channel's fault and neither project's, so **nobody
+> asks the operator to re-send anything.** *"We never received your lap N"* is
+> not a finding — it is a step that was skipped, and it has cost this seam two
+> rounds of argument over laps that were on the branch the whole time.
+
+**Our checker now says `FETCH` where it used to say "each sends what the other
+lacks".** We wrote that wording this morning and it was already the wrong
+instinct.
+
+**Fetch laps 13 and 14 from the URLs above.** They have been there for a day and
+neither of us should mention it again.
 
 ### 2y. And we audited the whole record, not just this round
 
@@ -257,7 +267,7 @@ every time, **both sides agreeing 100% or the lap does not pass.**
 
 ```
 https://github.com/rmccann-hub/cyanrip/raw/platterpus-fork/docs/OWNERSHIP.md
-sha256 = 3204fe15a47545c016c69a23fe9b627076b65798e0528b30762fb2993aced26a
+sha256 = 50b00e91c4f8042625f01d35a665d2772984817fbd68158325273b99937b17df
 ```
 
 **It is two tests, not two lists**, because both tests have already settled every
@@ -298,7 +308,7 @@ anything else in the lap is judged*, because every other finding was graded
 against a spec the sender is not following. **That is what "agree 100% every
 time" is mechanically — a comparison, not a promise.**
 
-**Add `ownership=3204fe15…` to your `HANDSHAKE-SHARED-HASHES`.** If your copy
+**Add `ownership=50b00e91…` to your `HANDSHAKE-SHARED-HASHES`.** If your copy
 hashes differently, **the lap does not pass, and that is correct.**
 
 ## 5. The checker — **build your own, do not copy ours**
