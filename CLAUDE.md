@@ -734,6 +734,69 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   report stranded commits that are not ours. Delete the refs and the tags, then
   re-check, before claiming nothing is stranded.
 
+## Finding the gap before the defect walks through it
+
+Every test in this repository is an **example**: run this input, assert that
+output. Examples find the bugs somebody thought of. Nothing in the suite could
+say which bugs nobody thought of, and "we test a lot" is not the same claim as
+"we would have caught it."
+
+`tools/mutate.py` answers it by measurement. It changes one operator in the
+program, rebuilds, and runs the suite: **a surviving mutant is a change to the
+program that every test agrees is fine.** It settles the other half at the same
+time -- a test that never kills any mutant is doing nothing, and that is found
+out by running it rather than by arguing about it.
+
+Measured 2026-08-26, and both numbers matter:
+
+| target | mutants | killed | score |
+|---|---|---|---|
+| `src/cyanrip_log.c`, before `tests/logrender.c` | 88 | 39 | **44.3%** |
+| `src/cyanrip_main.c`, 15 sampled | 15 | 6 | **40.0%** |
+
+Four rules, each paid for on the first run:
+
+- **A test that hashes the source cannot participate, and one such test makes
+  the whole measurement vacuous.** `contract_build` compares
+  `PROVIDER-CONTRACT.md`'s source anchor against the live tree, so it fails on
+  any byte changed in `src/`. The first sweep scored **100% over 100 mutants**
+  and meant nothing, because that one check killed every mutant that got past
+  the unit tests. **A test that hashes the source detects the EDIT, not the
+  DEFECT.** Find them by making a behaviourally inert edit -- a comment appended
+  at EOF, moving no line number -- and asking which tests fail. Exactly one did.
+  `EXCLUDED_TESTS` names it with its reason and prints the exclusion on every
+  run; a second one added later would silently restore the 100%.
+- **"No fixture can reach this" is a claim about the harness, not about the
+  code.** Twenty of the 49 survivors were the AccurateRip verdict, unreachable
+  because every scenario passes `-A` and the suite has no network. But
+  `cyanrip_log_track_end()` reads settings and a track struct and calls neither
+  a drive nor a network, so the states can be **built**: point `ctx->logfile[0]`
+  at a `tmpfile()`, fill the track in, call the shipped object, compare the
+  bytes it wrote. Same move as splitting the Q sub-channel decode out for
+  `tests/subq.c`, one level up -- and it applies to any state the program can be
+  *in* that the harness cannot *drive it into*.
+- **A mutation-derived test carries its own revert-proof**, because the mutant
+  IS the revert. Assert all three things anyway: the edit landed, **the build
+  was green**, and the binary then behaved differently. Two of the first
+  thirteen reported `STILLBORN` because the proof script mangled
+  `t->rip_time_us` into `t-->=rip_time_us`, which reads exactly like "that
+  mutation is invalid" and was not.
+- **A survivor is one of three things and they need different answers**: a real
+  gap, a line whose two behaviours are genuinely equivalent, or code no fixture
+  can reach. `offset < 0 ? -(uint32_t)offset : (uint32_t)offset` mutated to
+  `<= 0` is equivalent, because negating zero gives zero. Chasing the cover-art
+  bound looked like an off-by-one overflow and was not: the outer loop caps at
+  32 iterations, which reading only the inner guard would have missed. **Read
+  each one; do not assume the first.**
+
+And the sharpest thing a sweep produces is not a bug at all: **a survivor names
+the INPUT the tests never used.** Four of `tests/logrender.c`'s thirteen
+assertions needed a case the first draft did not have, and the sweep named each
+-- a confidence of exactly 1, a zero checksum sitting exactly on the threshold,
+one checksum version matching at confidence 0 while the other is absent, a
+single-pass rip that must not carry the `Scope:` caveat. Re-reading the code
+does not produce that list.
+
 ## Doing the work: inline beats fan-out here
 
 This repo's investigations are **narrow and verification-heavy**, not broad and
