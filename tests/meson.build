@@ -282,6 +282,7 @@ rip_scenarios = [
     'errors',
     'cdtext',
     'reporting',
+    'metadata',
     'duration',
     'handshake',
     'early_log',

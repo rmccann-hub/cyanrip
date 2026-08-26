@@ -976,6 +976,49 @@ def sc_reporting():
             fail(f"reporting: Encoder: says {want!r}, FLAC vendor string says {vendor!r}")
 
 
+def sc_metadata():
+    """The artist / album_artist gap-fill, and the case where it must NOT fire.
+
+    cyanrip fills whichever of the two is missing from the other, so a caller
+    naming only one gets both. That is convenient and it is also the only place
+    in the program where **one metadata field is written from another**, which
+    makes the guard on it worth pinning: get it wrong and a tag is silently
+    replaced by a different tag, in the files and in the log, for every track.
+
+    Found by a mutation sweep of src/cyanrip_main.c: `album_artist && !artist`
+    at :2175 mutated to `||` and survived the whole suite. The three cases the
+    suite already exercised cannot tell the two apart -- with exactly one of
+    them set, and with neither, both spellings do the same thing. **The input
+    that separates them is both set and DIFFERENT**, which is every
+    compilation, and no scenario had ever passed it.
+    """
+    # One set, the other filled in from it. Both directions.
+    for given, other in (("artist", "album_artist"),
+                         ("album_artist", "artist")):
+        rip(f"meta_{given}", "basic.cue", "-a", f"{given}=Only This")
+        log = (WORK / f"out_meta_{given}" / "log.log").read_text()
+        for field in (given, other):
+            if not re.search(rf"^    {field}:\s+Only This$", log, re.M):
+                fail(f"metadata: -a {given}=Only This did not leave {field} as "
+                     f"'Only This'; the gap-fill is the documented behaviour")
+
+    # BOTH SET AND DIFFERENT: neither may be overwritten by the other. This is
+    # the compilation case -- an album by "Various Artists" whose disc-level
+    # artist is somebody specific -- and it is the one the mutant breaks.
+    rip("meta_both", "basic.cue",
+        "-a", "artist=Disc Artist:album_artist=Various Artists")
+    log = (WORK / "out_meta_both" / "log.log").read_text()
+    for field, want in (("artist", "Disc Artist"),
+                        ("album_artist", "Various Artists")):
+        got = re.findall(rf"^    {field}:\s+(.*)$", log, re.M)
+        if not got:
+            fail(f"metadata: no {field}: line at all with both set")
+        elif any(g.strip() != want for g in got):
+            fail(f"metadata: {field} came out {got!r} with both set, wanted "
+                 f"every one to be {want!r}. One tag has been overwritten by "
+                 f"the other, which is silent and affects every track")
+
+
 def sc_paranoia():
     # Every other scenario passes -P 0 through rip(), so until this existed the
     # suite had never once run an image at the DEFAULT paranoia level -- and at
