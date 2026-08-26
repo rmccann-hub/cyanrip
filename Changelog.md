@@ -1,3 +1,21 @@
+0.9.4-rc2+platterpus.11 — 2026-08-26 — **stable**
+=================================================
+**The first stable release since `+platterpus.7`, and the first ever cut on a
+round that reviewed a RELEASE rather than a test pin.** Round 14 closed
+`GO`/`GO` on `d9c058c` / Platterpus `b524936`, with its single close condition
+met by two independent hardware runs on the same build.
+
+**The version string carries upstream's `-rc2` and this release is stable
+anyway.** `0.9.4-rc2` is `cyanreg/cyanrip`'s string, copied verbatim because we
+may not mint in their namespace; the part that advances is `+platterpus.N`,
+which SemVer says MUST be ignored for precedence. **Order by `release_seq` and
+read the `channel` column. Never parse the version.** A shape-based check will
+read this stable release as a pre-release, forever.
+
+There is no tag. Tag pushes are `HTTP 403` from the environment this is built
+in, so the commit SHA and the `release-manifest.json` row are the whole
+identifier.
+
 Unreleased
 ==========
 **No release, and none is coming until round 14 closes** — the pre-commit below

@@ -18,7 +18,7 @@ project('cyanrip', 'c',
     # that fails a test when it drifts.
     # Nothing here claims to be a release: `declare_released` defaults false and
     # the Handshake: line says so in every log this build writes.
-    version: '0.9.4-rc2+platterpus.10',
+    version: '0.9.4-rc2+platterpus.11',
     meson_version: '>=0.53.0',
 )
 
