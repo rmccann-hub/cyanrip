@@ -103,6 +103,20 @@ responses and treating them alike is how a seam stalls.**
 | **A RULES DIFFERENCE** | the two sides are grading against different specs | **STOP.** Reconcile the shared file first; nothing else in the lap has been graded. |
 | **A CLAIM DIFFERENCE** | both hold the same inputs and disagree about what they show | **§1's test decides**, and if it cannot, §6.3. |
 
+| **A NEARLY-RIGHT PROPOSAL** | one side's answer would work with a tweak | **COUNTER-PROPOSE.** Name the smallest change that makes it work. **Refusing something you can name a working variant of is orthodoxy, not rigour.** |
+
+**RULES, FAILURE AND TESTING ARE NOT NEGOTIABLE — RIGIDITY IS.** A gate must
+fail what is *wrong*. It must not fail what is merely *different from how we
+would have done it*, and the two are distinguishable by one question:
+
+> **Can I name a small change that would make this work?**
+> If yes, the response is that change, at `WARN`. If no, it is `FAIL`.
+
+Applied to a checker: **`FAIL` is reserved for a claim that is false, a field
+that is absent, or a record that cannot be reconciled.** Everything a
+counter-proposal could fix is `WARN` with the counter-proposal attached. A `FAIL`
+neither side can act on is a stalled round wearing a verdict's clothes.
+
 **A gate that reports a records difference as a bare failure is a defective
 gate.** It must print what each side holds, the exact set difference, and who
 sends what — otherwise it turns "we have not exchanged everything yet" into an

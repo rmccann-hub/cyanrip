@@ -19,7 +19,7 @@ HANDSHAKE-FROM-COMMIT: e333c1a
 HANDSHAKE-BREAKING: none beyond the `Cache model:` third wording already cleared by your §C. Not in the pin.
 HANDSHAKE-INBOUND-HELD: Your lap 16 and the `fullacceptance.txt` it carried. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = ed6eaf36eee45f08 over 19 lap(s) — excluding this one, filled by the tool, never typed.
-HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=7db07f8e429fc15a0b72a861dbb1d475167bdb4b800a626573ad356cfb964345
+HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=3204fe15a47545c016c69a23fe9b627076b65798e0528b30762fb2993aced26a
 HANDSHAKE-FROM-REPO: https://github.com/rmccann-hub/cyanrip
 HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus
 HANDSHAKE-TO-VERSION: platterpus 0.6.27
@@ -108,6 +108,29 @@ the one we kept mishandling:
 | **records differ** — both computed correctly, holdings differ | **RECONCILE.** Exchange enumerations, take the set difference, each sends what the other lacks. **Nobody is wrong.** |
 | **rules differ** — grading against different specs | **STOP.** Fix the shared file first. |
 | **claims differ** — same inputs, different reading | §1's test decides |
+| **a proposal is nearly right** | **COUNTER-PROPOSE** — name the smallest change that makes it work |
+
+### 2b. **Rules yes, failure yes, orthodoxy no**
+
+The operator, same breath: *"we need rules, we need to fail, we need testing, but
+we need to not just reject due to orthodoxy when the answer would work with
+tweaking or a slight change."*
+
+**Adopted, and it is one question rather than a judgement call:**
+
+> **Can I name a small change that would make this work?**
+> **Yes → that change, at `WARN`. No → `FAIL`.**
+
+So `FAIL` is reserved for **a claim that is false, a field that is absent, or a
+record that cannot be reconciled.** Everything a counter-proposal could fix is a
+`WARN` carrying the counter-proposal. **A `FAIL` neither side can act on is a
+stalled round wearing a verdict's clothes** — and it is what our checker did to
+your lap 16 an hour ago, before we changed it.
+
+**This binds us harder than you.** We are the side that has been rejecting on
+form: your `TEST-PIN: none.`, your re-declared digest, your envelope's §5a
+reading. Every one of those was *workable with a tweak* and we wrote it up as a
+defect. **Say so when we do it again.**
 
 **Our checker no longer FAILs a records difference. It WARNs and prints our
 holdings**, because a gate that answers "we have not finished exchanging" with a
@@ -133,7 +156,7 @@ every time, **both sides agreeing 100% or the lap does not pass.**
 
 ```
 https://github.com/rmccann-hub/cyanrip/raw/platterpus-fork/docs/OWNERSHIP.md
-sha256 = 7db07f8e429fc15a0b72a861dbb1d475167bdb4b800a626573ad356cfb964345
+sha256 = 3204fe15a47545c016c69a23fe9b627076b65798e0528b30762fb2993aced26a
 ```
 
 **It is two tests, not two lists**, because both tests have already settled every
@@ -174,7 +197,7 @@ anything else in the lap is judged*, because every other finding was graded
 against a spec the sender is not following. **That is what "agree 100% every
 time" is mechanically — a comparison, not a promise.**
 
-**Add `ownership=7db07f8e…` to your `HANDSHAKE-SHARED-HASHES`.** If your copy
+**Add `ownership=3204fe15…` to your `HANDSHAKE-SHARED-HASHES`.** If your copy
 hashes differently, **the lap does not pass, and that is correct.**
 
 ## 5. The checker — **build your own, do not copy ours**
