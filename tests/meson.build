@@ -238,6 +238,31 @@ test('Release gate', python, args: [ files('release_gate.py') ])
 ## holdings would fail the suite for something that is not our defect. --gaps
 ## audits OUR record for absent lap numbers and cannot fail for anything the
 ## other side did.
+## The instrumented sweep
+## ======================
+## tests/rip_images.py carries three `runtime error` assertions, written while
+## chasing the CD-Extra session-gap underflow. The committed build is
+## b_sanitize=none -- the binary carries ZERO UBSan symbols -- so UBSan can
+## never print that string and those three checks CANNOT FAIL. They have been
+## decoration since that investigation ended, and meson setting ASAN_OPTIONS
+## for every test regardless of build options is what made it invisible.
+##
+## Deleting them would be the wrong fix: signed overflow, a shift out of range,
+## a bad index and a NULL deref are exactly what turns an archival record into a
+## confident wrong number, and this program does lsn arithmetic on every track.
+## So the suite runs them against a build where they can fire.
+##
+## MEASURED before wiring it in: ~7 s to configure and build the instrumented
+## tree from nothing, ~16 s for all 37 image scenarios under it. It roughly
+## doubles the suite, and it makes a whole class of defect un-omittable.
+##
+## The tool verifies the binary really is instrumented before believing a clean
+## run -- a sanitizer sweep over an uninstrumented build reports zero findings
+## and means nothing, the same shape as a mutation sweep whose mutants are all
+## killed by a check that hashes the source.
+test('Sanitizer sweep', python, args: [ files('../tools/sanitize-run.py') ],
+     timeout: 900)
+
 test('Settled facts', python, args: [ files('../tools/check-settled.py') ])
 test('Seam record audit', python, args: [ files('../tools/seam-check.py'), '--gaps' ])
 

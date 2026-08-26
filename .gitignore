@@ -1,4 +1,7 @@
 build
+# The instrumented tree tools/sanitize-run.py configures. Same reason as
+# `build`: a by-product, rebuilt in about seven seconds from nothing.
+build-asan
 *.log
 # ...but docs/ holds ARTIFACTS, not build by-products, and three of them have
 # now been swallowed by that one line.

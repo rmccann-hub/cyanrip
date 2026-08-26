@@ -24,13 +24,37 @@ ROOT = Path(__file__).resolve().parent.parent
 
 FFPROBE = shutil.which("ffprobe")
 
+# WHETHER UBSan/ASan IS ACTUALLY COMPILED IN, measured from the binary rather
+# than from the environment. Meson sets ASAN_OPTIONS and UBSAN_OPTIONS for
+# every test it runs whatever the build options are, so the test log looks
+# instrumented while the binary is not -- which is how three `runtime error`
+# assertions in sc_enhanced_cd() came to be unable to fail.
+SANITIZED = b"__ubsan_handle" in Path(CRIP).read_bytes() \
+    or b"__asan_report" in Path(CRIP).read_bytes()
+
 fails = 0
+unprobed_notes = []
 
 
 def fail(msg):
     global fails
     print("FAIL:", msg)
     fails += 1
+
+
+def unprobed(msg):
+    """A check inside a scenario that COULD NOT RUN here.
+
+    Not a failure and not a silent pass. `skip()` exits the whole scenario,
+    which is right when the environment cannot support any of it; this is for
+    one check among many, where the rest still mean something.
+
+    Printed and counted, because a green run that quietly proved less than it
+    appears to is the exact defect this suite is built to avoid. The footer
+    reports the count, so coverage cannot vanish without a line saying so.
+    """
+    unprobed_notes.append(msg)
+    print("UNPROBED:", msg)
 
 
 def skip(msg):
@@ -967,11 +991,51 @@ def sc_paranoia():
         if ec != 0:
             fail(f"paranoia: {img} -P 0 exited {ec}")
             continue
-        ec, _ = crip("-d", WORK / img, "-N", "-A", "-U", "-s", "0",
-                     "-o", "pcm", "-D", WORK / f"par_{name}_on", "-F", "{track}")
+        ec, dlog = crip("-d", WORK / img, "-N", "-A", "-U", "-s", "0",
+                        "-o", "pcm", "-D", WORK / f"par_{name}_on", "-F", "{track}")
         if ec != 0:
             fail(f"paranoia: {img} default exited {ec}")
             continue
+
+        # THE PARENTHETICAL IS THE CLAIM, and nothing asserted it until now.
+        # sc_reporting only asks for `^Cache model:\s+\S`, which all four
+        # wordings satisfy -- and every scenario that reaches it goes through
+        # rip(), which passes -P 0, so the only arm any artifact has ever shown
+        # is "not in use (paranoia disabled)". The three sector-count arms,
+        # including the two added to stop a log reading "(drive cache size not
+        # probed)" beside a completed probe, were guarded by nothing at all.
+        # This is the one place in the suite that runs an image at the DEFAULT
+        # paranoia level, so it is the only place the image arm can be reached.
+        m = re.search(r"^Cache model:    (\d+) (sectors?) "
+                      r"\(disc image, no drive cache\)$", dlog, re.M)
+        if not m:
+            got = [l for l in dlog.splitlines() if l.startswith("Cache model:")]
+            fail(f"paranoia: {img} at default paranoia reported {got!r}. An "
+                 "image driver has no drive cache and the line must say which "
+                 "of the four things it is")
+        else:
+            # THE PLURAL IS TIED TO THE NUMBER, not written as `sectors?`. The
+            # permissive spelling was the first version of this check and it
+            # killed none of the three `sectors == 1 ? "" : "s"` mutants -- a
+            # pattern matching both branches asserts nothing about either.
+            #
+            # ONLY THE IMAGE ARM IS REACHABLE HERE, which is a property of the
+            # environment and not a gap: print_cache_model() is static and its
+            # other two arms need cdio_get_driver_id() to name a real drive. A
+            # 2026-08-26 rig log carries the third correctly -- `1200 sectors
+            # (drive cache size not probed)` -- but a frozen artifact is not a
+            # test; it can only ever pass. Recorded so a later sweep reads this
+            # rather than re-chasing them.
+            n, word = int(m.group(1)), m.group(2)
+            want = "sector" if n == 1 else "sectors"
+            if word != want:
+                fail(f"paranoia: {img} reported {n} {word!r}, wanted {want!r}")
+        for wrong in ("(drive cache size not probed)",
+                      "(drive cache probed separately, see \"Cache probe:\")",
+                      "not in use (paranoia disabled)"):
+            if wrong in dlog:
+                fail(f"paranoia: {img} at default paranoia claimed {wrong!r}, "
+                     "which is a claim about a drive this run never had")
 
         off = (WORK / f"par_{name}_off" / "1.pcm").read_bytes()
         on = (WORK / f"par_{name}_on" / "1.pcm").read_bytes()
@@ -2801,7 +2865,11 @@ def sc_enhanced_cd():
     out = (WORK / "ecd.log").read_text()
     log = (WORK / "out_ecd" / "log.log").read_text()
 
-    if "runtime error" in out:
+    if not SANITIZED:
+        unprobed("enhanced_cd: UBSan/ASan is not compiled into this build, so "
+                 "the 'runtime error' check below proved nothing. Run "
+                 "tools/sanitize-run.py for the instrumented sweep.")
+    elif "runtime error" in out:
         fail(f"enhanced_cd: the sanitizer fired: "
              f"{[l for l in out.splitlines() if 'runtime error' in l]}")
 
@@ -2837,7 +2905,11 @@ def sc_enhanced_cd():
     # what pins the leadout itself rather than only the length field derived
     # from it.
     _, info = crip("-d", WORK / "ecd.cue", "-I", "-N", "-A", "-U", "-P", "0")
-    if "runtime error" in info:
+    if not SANITIZED:
+        unprobed("enhanced_cd/-I: UBSan/ASan is not compiled into this build, so "
+                 "the 'runtime error' check below proved nothing. Run "
+                 "tools/sanitize-run.py for the instrumented sweep.")
+    elif "runtime error" in info:
         fail(f"enhanced_cd: the sanitizer fired during -I: "
              f"{[l for l in info.splitlines() if 'runtime error' in l]}")
     m = re.search(r"toc=(\d+)\+(\d+)\+(\d+)((?:\+\d+)*)", info)
@@ -2901,7 +2973,11 @@ def sc_enhanced_cd():
     bigout = (WORK / "ecdbig.log").read_text()
     biglog = (WORK / "out_ecdbig" / "log.log").read_text()
 
-    if "runtime error" in bigout:
+    if not SANITIZED:
+        unprobed("enhanced_cd/wellformed: UBSan/ASan is not compiled into this build, so "
+                 "the 'runtime error' check below proved nothing. Run "
+                 "tools/sanitize-run.py for the instrumented sweep.")
+    elif "runtime error" in bigout:
         fail(f"enhanced_cd/wellformed: the sanitizer fired: "
              f"{[l for l in bigout.splitlines() if 'runtime error' in l]}")
     if "CD-Extra session gap does not fit" in bigout:
@@ -3190,6 +3266,46 @@ def sc_contract_diagnostics():
         fail(f"contract_diagnostics: the record says schema "
              f"{record.get('schema')!r} and P8a says {m.group(1)!r}")
 
+# EVERY SCENARIO MUST BE REACHABLE, checked on every scenario run.
+#
+# A `sc_<name>()` added here does nothing until it is listed in
+# tests/meson.build's rip_scenarios, and a scenario that never runs looks
+# exactly like a scenario that passes. CLAUDE.md has warned about this in prose
+# since the suite existed; prose enforces nothing, which is the lesson
+# tools/release-gate.py was built for.
+#
+# Deliberately here rather than as a scenario of its own: a scenario could
+# itself go unregistered, and then the check that catches unregistered
+# scenarios is the thing nobody notices. Here it runs 37 times per suite and
+# cannot be omitted.
+#
+# Reachable-not-registered is the failure. A helper CALLED BY another scenario
+# is fine -- sc_reference() calls sc_golden_reference_is_from_a_clean_build() --
+# so the rule is "listed in meson.build OR called from somewhere in this file",
+# which makes it a reachability check and not a naming convention.
+def _check_every_scenario_is_reachable():
+    src = Path(__file__).read_text(encoding="utf-8")
+    mb = (ROOT / "tests" / "meson.build").read_text(encoding="utf-8")
+    block = re.search(r"rip_scenarios = \[(.*?)\]", mb, re.S)
+    if not block:
+        fail("registration: tests/meson.build has no rip_scenarios list, so "
+             "nothing can say which scenarios run")
+        return
+    registered = set(re.findall(r"'([a-z0-9_]+)'", block.group(1)))
+    defined = set(re.findall(r"^def sc_(\w+)", src, re.M))
+    for name in sorted(defined - registered):
+        if not re.search(r"(?<!def )\bsc_%s\s*\(" % re.escape(name), src):
+            fail(f"registration: sc_{name}() is defined, is not in "
+                 f"rip_scenarios, and nothing in this file calls it -- so it "
+                 f"has never run and never will. A scenario that does not run "
+                 f"looks exactly like one that passes")
+    for name in sorted(registered - defined):
+        fail(f"registration: rip_scenarios lists {name!r} and there is no "
+             f"sc_{name}() to run")
+
+
+_check_every_scenario_is_reachable()
+
 with tempfile.TemporaryDirectory() as tmpdir:
     WORK = Path(tmpdir)
 
@@ -3208,4 +3324,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
 if fails:
     print(f"{fails} check(s) failed")
     sys.exit(1)
-print(SCENARIO, "passed")
+if unprobed_notes:
+    print(f"{SCENARIO} passed ({len(unprobed_notes)} check(s) UNPROBED)")
+else:
+    print(SCENARIO, "passed")
