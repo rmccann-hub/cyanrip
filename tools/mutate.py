@@ -62,13 +62,22 @@ pattern, and the exclusion is printed on every run. If another source-hashing
 check is ever added, this sweep silently returns to reporting 100% -- so the
 probe above is worth repeating rather than trusting this comment.
 
-SAFETY. `src/` is restored from git after every mutant and verified clean at the
-end. If this is interrupted, run `git status` before trusting the tree -- and
-the final line says whether it verified.
+SAFETY, AND IT RUNS IN A WORKTREE. Mutating `src/` in the working tree left it
+dirty for the whole sweep -- forty minutes during which `git status` showed a
+deliberately broken file, no other work could touch `src/` or run the suite, and
+any commit risked landing a defect on purpose. The sweep now does its work in a
+detached `git worktree`, so the tree you are sitting in is never touched and the
+two are independent.
+
+The worktree is created under the system temp directory, built once, and
+removed at the end. `src/` inside it is still restored from git after every
+mutant and verified clean, because the harness must not lie about its own state
+even when nothing outside can see it.
 
     tools/mutate.py                     # every target file
     tools/mutate.py src/fun512.c        # one
     tools/mutate.py --limit 20          # bounded
+    tools/mutate.py --in-place          # the old behaviour, mutating this tree
 """
 
 import argparse
@@ -80,6 +89,11 @@ import sys
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+
+# Where the sweep actually mutates and builds. Repointed at a detached git
+# worktree unless --in-place, so this checkout is never dirtied. Everything
+# below reads WORK, never ROOT, for exactly that reason.
+WORK = ROOT
 
 # Stage 1, named individually. `--no-suite images` would be shorter and would
 # also pull in `Argv surface probe`, which is 25 of the 26 seconds the whole
@@ -103,7 +117,7 @@ EXCLUDED_TESTS = {
 
 def image_scenarios():
     """The images suite, read from tests/meson.build so it cannot go stale."""
-    text = (ROOT / "tests" / "meson.build").read_text(encoding="utf-8")
+    text = (WORK / "tests" / "meson.build").read_text(encoding="utf-8")
     block = re.search(r"rip_scenarios = \[(.*?)\]", text, re.S)
     if not block:
         raise SystemExit("mutate: no rip_scenarios list in tests/meson.build")
@@ -147,7 +161,7 @@ SKIP_LINE = re.compile(r"^\s*#|^\s*\*|^\s*/\*|^\s*//")
 
 def run(cmd, timeout=300):
     try:
-        return subprocess.run(cmd, cwd=ROOT, capture_output=True,
+        return subprocess.run(cmd, cwd=WORK, capture_output=True,
                               text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         return None
@@ -155,7 +169,7 @@ def run(cmd, timeout=300):
 
 def candidates(relpath):
     """Every (line index, column, replacement, label) this file admits."""
-    text = (ROOT / relpath).read_text(encoding="utf-8", errors="replace")
+    text = (WORK / relpath).read_text(encoding="utf-8", errors="replace")
     out = []
     in_block_comment = False
     for i, line in enumerate(text.splitlines()):
@@ -182,7 +196,7 @@ def candidates(relpath):
 
 def apply_mutation(relpath, mut):
     i, a, b, repl, _ = mut
-    p = ROOT / relpath
+    p = WORK / relpath
     lines = p.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
     line = lines[i]
     lines[i] = line[:a] + repl + line[b:]
@@ -199,6 +213,9 @@ def main():
     ap.add_argument("--limit", type=int, default=0,
                     help="stop after this many valid mutants")
     ap.add_argument("--seed", type=int, default=20260826)
+    ap.add_argument("--in-place", action="store_true",
+                    help="mutate this checkout instead of a worktree; leaves "
+                         "src/ dirty for the whole sweep")
     ap.add_argument("--count", action="store_true",
                     help="report the pool size per file and exit, so a sweep "
                          "is costed before it is started")
@@ -220,6 +237,44 @@ def main():
               "git after every mutant and would destroy them.")
         return 2
 
+    global WORK
+    tree = None
+    if not args.in_place:
+        # A DETACHED WORKTREE, so this checkout is never dirty. Sweeping in
+        # place left `git status` showing a deliberately broken file for forty
+        # minutes at a stretch, blocked every other edit to src/, and made any
+        # `git add` a chance to commit a defect on purpose.
+        #
+        # It sweeps HEAD, which is the right thing to measure and worth saying
+        # out loud: uncommitted test changes are NOT in the worktree, so commit
+        # a new test before asking whether it kills anything.
+        import tempfile
+        tree = pathlib.Path(tempfile.mkdtemp(prefix="cyanrip-mutate-"))
+        r = run(["git", "worktree", "add", "--detach", str(tree), "HEAD"])
+        if r is None or r.returncode != 0:
+            print("REFUSING: could not create a worktree; pass --in-place to "
+                  "sweep this checkout instead.")
+            print((r.stdout + r.stderr)[-800:] if r else "timed out")
+            return 2
+        WORK = tree
+        b = run(["meson", "setup", "build"], timeout=600)
+        if b is None or b.returncode != 0:
+            print("REFUSING: the worktree would not configure.")
+            print((b.stdout + b.stderr)[-800:] if b else "timed out")
+            run(["git", "worktree", "remove", "--force", str(tree)])
+            return 2
+        print(f"sweeping a worktree at {tree} -- this checkout is untouched")
+
+    try:
+        return sweep(args, tree)
+    finally:
+        if tree is not None:
+            WORK = ROOT
+            run(["git", "worktree", "remove", "--force", str(tree)])
+            run(["git", "worktree", "prune"])
+
+
+def sweep(args, tree):
     targets = args.files or TARGETS
     pool = []
     for t in targets:
@@ -242,7 +297,7 @@ def main():
     try:
         for n, (relpath, mut) in enumerate(pool, 1):
             i, a, _, repl, label = mut
-            src_line = (ROOT / relpath).read_text().splitlines()[i].strip()[:72]
+            src_line = (WORK / relpath).read_text().splitlines()[i].strip()[:72]
             apply_mutation(relpath, mut)
 
             b = run(["ninja", "-C", "build"], timeout=180)
