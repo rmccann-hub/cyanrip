@@ -1,0 +1,9 @@
+# collected 20260827T013150Z
+
+$ platterpus --version
+platterpus 0.6.29 (43a33b4)
+
+$ cyanrip --version
+cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
+/home/rmccann/rig/platterpusmorning.sh: line 143: 221525 Killed                     timeout -k 10 60 "$HOME/.local/bin/cyanrip" --version 2>&1
+(probe failed: exit 137)

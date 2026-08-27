@@ -1,0 +1,12 @@
+
+=== rig session 2026-08-27T01:33:03Z
+    app:    /var/home/rmccann/Applications/platterpus-x86_64.AppImage
+    ripper: /home/rmccann/.local/bin/cyanrip
+    out:    /var/home/rmccann/platterpusmorning20260827T013150Z/session
+
+=== P1  app version
+    argv: /var/home/rmccann/Applications/platterpus-x86_64.AppImage --version
+    exit: 0   elapsed: 1s   artifact: 01-app-version.txt (28 bytes)
+
+=== P3  ripper banner
+    argv: /home/rmccann/.local/bin/cyanrip --version
