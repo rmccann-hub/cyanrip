@@ -50,6 +50,7 @@ by a check that hashes the source. `nm` is asked, not the build options.
 import argparse
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -61,6 +62,43 @@ BUILD = ROOT / "build-asan"
 # disc supplies: LSNs, session gaps, offsets, track counts, and the argument
 # parser's own bounds. --quick runs these; the default runs everything.
 QUICK = ["enhanced_cd", "pregap", "duration", "cli", "sanitize", "basic"]
+
+# `contract_build` is excluded, for a reason that is not about sanitizers at
+# all and that this tool got wrong on its first day.
+#
+# It compares PROVIDER-CONTRACT.md's source anchor -- a sha256 over src/ --
+# against the live tree, so it fails on ANY byte changed in src/, behaviour or
+# not. tools/mutate.py already excludes it for that reason. This tool did not,
+# and because it runs the whole images suite in the instrumented tree, it
+# INHERITED the check transitively: a mutation sweep whose third stage runs
+# `--no-suite images` picks up "Sanitizer sweep", which runs contract_build,
+# which kills every mutant on the edit.
+#
+# That is exactly how the FIRST sweep in this repository came to report 100%
+# over 100 mutants and mean nothing, reintroduced by the commit that added this
+# file -- and CLAUDE.md had predicted it in those words: "a second one added
+# later would silently restore the 100%." The first cyanrip_encode.c sweep
+# scored 100.0% because of it.
+#
+# Found the way that rule says to: append a comment to a source file, moving no
+# line number and changing no behaviour, and ask which tests fail. Two did.
+EXCLUDED = {"contract_build"}
+
+
+def scenarios():
+    """Every image scenario except the ones that detect an edit, from
+    tests/meson.build so the list cannot go stale as scenarios are added."""
+    text = (ROOT / "tests" / "meson.build").read_text(encoding="utf-8")
+    block = re.search(r"rip_scenarios = \[(.*?)\]", text, re.S)
+    if not block:
+        print("FAIL: no rip_scenarios list in tests/meson.build")
+        sys.exit(1)
+    names = [n for n in re.findall(r"'([a-z0-9_]+)'", block.group(1))
+             if n not in EXCLUDED]
+    if not names:
+        print("FAIL: every scenario was excluded")
+        sys.exit(1)
+    return names
 
 
 def run(cmd, **kw):
@@ -120,6 +158,8 @@ def main():
     cmd = ["meson", "test", "-C", str(BUILD), "--suite", "images"]
     if args.quick:
         cmd += QUICK
+    else:
+        cmd += scenarios()
     r = run(cmd, timeout=1800)
     out = r.stdout + r.stderr
 
@@ -149,7 +189,9 @@ def main():
               "behaviour:")
         print(out[-2000:])
 
-    scope = f"{len(QUICK)} scenario(s), --quick" if args.quick else "37 scenarios"
+    n_ran = len(QUICK) if args.quick else len(scenarios())
+    scope = (f"{n_ran} scenario(s), --quick" if args.quick
+             else f"{n_ran} scenario(s), excluding {sorted(EXCLUDED)}")
     if r.returncode == 0 and not findings:
         print(f"clean under address,undefined over {scope} "
               f"({symbols} sanitizer symbols in the binary)")

@@ -791,6 +791,15 @@ Four rules, each paid for on the first run:
   at EOF, moving no line number -- and asking which tests fail. Exactly one did.
   `EXCLUDED_TESTS` names it with its reason and prints the exclusion on every
   run; a second one added later would silently restore the 100%.
+
+  **It did, within hours, and by the commit that added `tools/sanitize-run.py`.**
+  That tool ran the whole images suite in the instrumented tree — including
+  `contract_build` — so `mutate.py`'s third stage picked it up through
+  `Sanitizer sweep` and every mutant reaching that stage died on the edit again.
+  `src/cyanrip_encode.c` scored **100.0% over 125 mutants** and meant nothing.
+  Caught by running the inert-edit probe *before* reporting the number, which is
+  now the rule: **a sweep that reports 100% is not a result until the probe says
+  which tests detect an edit.** Two did; after the fix, one does.
 - **"No fixture can reach this" is a claim about the harness, not about the
   code.** Twenty of the 49 survivors were the AccurateRip verdict, unreachable
   because every scenario passes `-A` and the suite has no network. But
