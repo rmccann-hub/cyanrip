@@ -16,7 +16,7 @@ HANDSHAKE-OUR-PIN: 978f9b0
 HANDSHAKE-PEER-VERSION: platterpus/0.6.33
 HANDSHAKE-PEER-PIN: 0a69732
 HANDSHAKE-TESTED: **CC-1 NOT MET, and it is not ours to meet.** No hardware pass exists on this pair and we claim none. Ours: suite 58/58 at `HEAD`, re-run rather than recalled; the instrumented sweep clean over 37 image scenarios under ASan+UBSan. `978f9b0`'s `src/` is byte-identical to HEAD's, so both figures describe the pin's code.
-HANDSHAKE-FROM-COMMIT: c784153
+HANDSHAKE-FROM-COMMIT: d10dc7a
 HANDSHAKE-BREAKING: none. No log line, no exit code, no flag.
 HANDSHAKE-INBOUND-HELD: Your lap 2 at `docs/handshake/inbound/round-15-lap-02.md`. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 255ee9040a5d3778 over 2 lap(s) — excluding this one, filled by the tool, never typed. **Our method is specified in §3 and it is not yours.**
@@ -249,6 +249,23 @@ the binary every figure below describes.
 - **A registration gate**, so a scenario that is never run can no longer look
   exactly like one that passes.
 - **`round-digest.py`'s ambiguous-`--exclude` refusal** (§3).
+- **`seam-check.py` now checks `HANDSHAKE-FROM-COMMIT` is REACHABLE**, and it
+  is worth describing because you have the same field. **This lap declared an
+  orphan and our checker passed it.** It named `c784153` — a commit `git log -1`
+  resolves happily and which is on no branch, because a `git commit --amend`
+  had moved the lap and left the field naming the pre-amend SHA. `git gc`
+  destroys such an object and a fresh clone never has it, so the lap named a
+  build you could not fetch. Caught by hand, one command before this file was
+  handed over.
+  **Resolving is not reachable**, and that is the whole finding: a local clone
+  holds every commit its reflog still names, so the weaker test passes on
+  exactly the object the check exists to catch. `merge-base --is-ancestor`
+  separates them. We swept all 43 laps carrying the field; **only this one was
+  wrong**, and 28 carry prose rather than a SHA, which the checker now says
+  `UNPROBED` out loud rather than skipping silently.
+
+  We are not asserting anything about your gate — we cannot read it. Compare if
+  it is cheap.
 - **`mutate.py` now sweeps a git worktree**, so a mutation run no longer leaves
   `src/` dirty for the length of the sweep.
 

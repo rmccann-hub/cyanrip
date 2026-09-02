@@ -242,6 +242,80 @@ def check_lap(path):
         else:
             note("OK", "wire/pin", f"{field} {sha} resolves as expected")
 
+    # --- HANDSHAKE-FROM-COMMIT must be FETCHABLE, round 15 lap 3 -----------
+    #
+    # Found by hand, one command before this lap was handed over: it declared
+    # `c784153`, which `git log -1` resolves happily and which is reachable from
+    # NO BRANCH. It was the pre-amend version of the commit that adds the lap --
+    # `git commit --amend` had moved the lap to `796e2b1` and orphaned the SHA
+    # the file names. Routine `git gc` destroys such a commit and a fresh clone
+    # never has it, so the field pointed at a build the reader cannot fetch.
+    #
+    # RESOLVING IS NOT REACHABLE, and that is the whole of the check. A local
+    # clone holds every commit its reflog still names, so the weaker test passes
+    # on exactly the object this exists to catch. `--is-ancestor` is the one that
+    # separates them.
+    #
+    # No network. Whether the commit is PUSHED is a question about the remote,
+    # and a check that reaches the network is not evidence about this tree; the
+    # ancestor test catches the amend, which is the defect that actually
+    # happened. Inbound laps name a commit in the OTHER repository, so there it
+    # must not resolve -- the same shape as the pin check above.
+    m = rg.FROM_COMMIT_RE.search(text)
+    fc = m.group(1).strip() if m else None
+    if fc and not re.fullmatch(r"[0-9a-f]{7,40}", fc):
+        # SAID OUT LOUD rather than skipped. 28 of the 43 laps carrying this
+        # field carry prose in it ("see §E -- a lap cannot carry the hash of a
+        # tree containing it"), and a check that quietly examines a third of its
+        # input reads exactly like one that examined all of it and found
+        # nothing. Same remedy as the sanitizer assertions that could not fail.
+        note("UNPROBED", "wire/from-commit",
+             f"HANDSHAKE-FROM-COMMIT is {fc!r}, which is not a SHA -- "
+             "nothing to resolve, so nothing was checked",
+             fix="a lap that points elsewhere for its from-commit gets no "
+                 "reachability check. Declare a bare SHA to get one.")
+    elif fc:
+        ours = frm == "cyanrip-fork"
+        r = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--verify",
+                            "--quiet", fc + "^{commit}"],
+                           capture_output=True, text=True)
+        resolves = r.returncode == 0
+        anc = resolves and subprocess.run(
+            ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", fc, "HEAD"],
+            capture_output=True).returncode == 0
+        if ours and resolves and not anc:
+            note("FAIL", "wire/from-commit",
+                 f"{name}'s HANDSHAKE-FROM-COMMIT is {fc}, which this clone "
+                 "resolves but which is NOT AN ANCESTOR OF HEAD",
+                 fix="an object that resolves locally and is on no branch is an "
+                     "orphan -- almost always a `git commit --amend` that moved "
+                     "the commit and left this field naming the old SHA. Routine "
+                     "`git gc` destroys it and a fresh clone never has it, so a "
+                     "reader cannot fetch what the lap names. Point the field at "
+                     "the tip the lap was written against (the PARENT of the "
+                     "commit that adds it -- a file cannot name a commit "
+                     "containing itself), and commit derived artifacts as their "
+                     "own commit rather than amending them in.")
+        elif ours and not resolves:
+            note("FAIL", "wire/from-commit",
+                 f"{name}'s HANDSHAKE-FROM-COMMIT is {fc}, which this clone "
+                 "does not have at all",
+                 fix="our own lap must name a commit in our own repository. "
+                     "Either the field names the wrong tree or the commit was "
+                     "never created.")
+        elif not ours and resolves:
+            note("FAIL", "wire/from-commit",
+                 f"{name}'s HANDSHAKE-FROM-COMMIT is {fc}, which is a commit in "
+                 "the CYANRIP repository",
+                 fix="an inbound lap's from-commit names the sender's tree, not "
+                     "ours. A SHA that resolves in both is a collision worth "
+                     "saying out loud.")
+        elif not ours:
+            note("OK", "wire/from-commit",
+                 f"{fc} names the sender's tree, not ours")
+        else:
+            note("OK", "wire/from-commit", f"{fc} is reachable from HEAD")
+
     # --- lap number collisions, which round 14 hit three times -------------
     # resolve() on both sides: candidates() yields paths built from its own
     # root, so a `==` against the path the caller typed matched nothing and
