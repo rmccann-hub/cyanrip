@@ -1742,6 +1742,31 @@ KNOWN_UNREPRODUCIBLE = {
     # than being excused. Comes out when a later lap of theirs enumerates a
     # population that includes our lap 2 and our lap 18.
     "round-14-lap-18.md": "999fe4e8a9d13d86",
+    # Round 15 lap 2, theirs. Declares `a1ff77af1fd6e3cb over 1`; we re-derive
+    # `c8fa5d93d9af5a20` over the SAME COUNT of 1.
+    #
+    # A DIFFERENT CAUSE FROM EVERY ENTRY ABOVE, and the cleanest one yet: the
+    # populations AGREE and the ALGORITHM differs. They state it in the field
+    # itself -- "sha256 of the concatenated bytes of
+    # docs/handshake/inbound/round-15-lap-*.md in sorted order, truncated to 16
+    # hex" -- because they hold no implementation and computed it by hand.
+    #
+    # Reproduced here rather than accepted: sha256 of our lap 1's bytes,
+    # truncated to 16, IS a1ff77af1fd6e3cb. Their method is understood and was
+    # executed correctly. Ours builds `<lap>\t<FROM>\t<sha256>` rows and hashes
+    # those, so with one lap the two cannot agree even though both are right.
+    #
+    # Our lap 3 §3 ships the full spec and asks them to adopt one method or tell
+    # us to adopt theirs -- two implementations of one convention that can differ
+    # silently is the round-7 finding neither project wants again. The lap also
+    # names the substantive divergence, which is NOT the construction: theirs
+    # covers their inbox only, and an inbox-only digest can never disagree about
+    # anything the other side sent, which is the mirror of the outbox-only defect
+    # our row format was built to replace.
+    #
+    # Pinned to their declared value so an edit to their file fails here. Comes
+    # out when one method is agreed and a later lap of theirs declares under it.
+    "round-15-lap-02.md": "a1ff77af1fd6e3cb",
 }
 
 
