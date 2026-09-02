@@ -80,6 +80,8 @@ checked" and hid whether that was *cannot*, *has not*, or *nobody can*.
 | `Cache model:` reports what paranoia **models**, never what the drive has. Since 2026-08-26 it says `(drive cache probed separately…)` when `-x` ran | `./build/tests/diag_test` |
 | `none` and `unknown (reason)` are different claims everywhere in the log, on purpose | — structural: a policy over every log line, not a single assertion |
 | **`ddf7ac3` is a cyanrip commit** (`0.9.4-rc1+platterpus.5`), not a Platterpus one, despite standing in `HANDSHAKE-PEER-PIN` through two closed rounds | `git log --oneline -1 ddf7ac3` |
+| **A commit that RESOLVES is not thereby REACHABLE.** A clone holds every object its reflog still names, so `git log -1 <sha>` succeeds on a commit that `git commit --amend` orphaned — one that `git gc` destroys and a fresh clone never has. `merge-base --is-ancestor` is the only test that separates them, and `seam-check.py` now runs it on `HANDSHAKE-FROM-COMMIT`. Round 15 lap 3 declared such an orphan and every check passed it | `python3 tests/release_gate.py` — the regression test builds an orphan; **grading a well-formed lap does not discriminate**, since a reachable commit resolves too |
+| **`HANDSHAKE-FROM-COMMIT` is the PARENT of the commit that adds the lap**, never the lap's own commit — the same fixpoint as a generated artifact naming its build. Every lap that declares a bare SHA obeys it | `test $(python3 tools/seam-check.py docs/handshake/round-*.md \| grep -c 'FAIL  wire/from-commit') -eq 0` |
 
 ## Upstream `cyanreg/cyanrip` — what it still lacks, for merge-back
 

@@ -2276,6 +2276,143 @@ def test_exclude_refuses_when_it_matches_nothing():
         rdg.HS = real
 
 
+def test_from_commit_must_be_reachable_not_merely_resolvable():
+    """Round 15 lap 3 named an orphan and every check we had passed it.
+
+    The lap declared `HANDSHAKE-FROM-COMMIT: c784153`, which `git log -1`
+    resolves happily and which is reachable from NO BRANCH: a `git commit
+    --amend` had moved the commit that adds the lap and left the field naming
+    the pre-amend SHA. `git gc` destroys such an object and a fresh clone never
+    has it, so the lap named a build its reader could not fetch.
+
+    RESOLVING IS NOT REACHABLE. A clone holds every object its reflog still
+    names, so the weaker test succeeds on exactly the commit this exists to
+    catch -- which is why the check must be `merge-base --is-ancestor` and why
+    THIS TEST HAS TO BUILD AN ORPHAN rather than assert on a well-formed lap.
+    A test that only checks a good lap still prints `OK` when the ancestor call
+    is deleted, because a reachable commit resolves too: the pattern matches
+    both branches and asserts nothing about either. Measured -- an earlier
+    behavioural check in docs/SETTLED.md was reverted and did not fire.
+
+    The topology is built in a throwaway repo, so it is deterministic and does
+    not depend on this repository's branch layout or on anything a fetch might
+    prune.
+    """
+    import shutil
+    import subprocess
+
+    sc_path = HERE.parent / "tools" / "seam-check.py"
+    spec = importlib.util.spec_from_file_location("seam_check_t", sc_path)
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+
+    def git(repo, *args):
+        return subprocess.run(["git", "-C", str(repo), *args],
+                              capture_output=True, text=True, check=True)
+
+    repo = pathlib.Path(tempfile.mkdtemp())
+    try:
+        git(repo, "init", "-q", "-b", "main")
+        git(repo, "config", "user.email", "t@example.invalid")
+        git(repo, "config", "user.name", "t")
+        (repo / "a").write_text("1\n")
+        git(repo, "add", "a")
+        git(repo, "commit", "-qm", "base")
+        base = git(repo, "rev-parse", "HEAD").stdout.strip()[:7]
+
+        # The orphan: commit, then amend. The pre-amend SHA still resolves out
+        # of the reflog and is on no branch -- exactly the lap-3 topology.
+        (repo / "b").write_text("2\n")
+        git(repo, "add", "b")
+        git(repo, "commit", "-qm", "will be amended")
+        orphan = git(repo, "rev-parse", "HEAD").stdout.strip()[:7]
+        git(repo, "commit", "-q", "--amend", "-m", "amended")
+        head = git(repo, "rev-parse", "HEAD").stdout.strip()[:7]
+
+        check(orphan != head, "the amend did not move the commit")
+        resolves = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "--verify", "--quiet",
+             orphan + "^{commit}"], capture_output=True)
+        check(resolves.returncode == 0,
+              "the orphan must still RESOLVE, or the fixture proves nothing "
+              "about the difference between resolving and being reachable")
+        anc = subprocess.run(
+            ["git", "-C", str(repo), "merge-base", "--is-ancestor",
+             orphan, "HEAD"], capture_output=True)
+        check(anc.returncode != 0, "the orphan must not be an ancestor")
+
+        # A lap carrying every required v4 field, so check_lap reaches the
+        # from-commit block instead of returning early on identity.
+        real = (HERE.parent / "docs" / "handshake"
+                / "round-15-lap-03.md").read_text(encoding="utf-8")
+        header = real.split("\n\n", 1)[0]
+
+        def graded(from_commit, frm="cyanrip-fork"):
+            body = re.sub(r"^HANDSHAKE-FROM-COMMIT:.*$",
+                          f"HANDSHAKE-FROM-COMMIT: {from_commit}",
+                          header, flags=re.M)
+            body = re.sub(r"^HANDSHAKE-FROM:.*$", f"HANDSHAKE-FROM: {frm}",
+                          body, flags=re.M)
+            check(f"HANDSHAKE-FROM-COMMIT: {from_commit}" in body,
+                  "the substitution did not land; the case below would grade "
+                  "the wrong SHA and pass for the wrong reason")
+            d = pathlib.Path(tempfile.mkdtemp())
+            p = d / "round-15-lap-03.md"
+            p.write_text(body + "\n\nbody\n", encoding="utf-8")
+            sc.FINDINGS.clear()
+            saved = sc.ROOT
+            sc.ROOT = repo
+            try:
+                sc.check_lap(p)
+            finally:
+                sc.ROOT = saved
+                shutil.rmtree(d, ignore_errors=True)
+            return [(lv, m) for lv, cat, m, _f, _a in sc.FINDINGS
+                    if cat == "wire/from-commit"]
+
+        # 1. THE DEFECT: ours, resolves, not an ancestor.
+        got = graded(orphan)
+        check(got and got[0][0] == "FAIL",
+              f"an orphaned from-commit must FAIL, got {got}")
+        check(got and "NOT AN ANCESTOR" in got[0][1],
+              f"the finding must name reachability, not resolution: {got}")
+
+        # 2. Ours, reachable. The check must not simply always refuse.
+        got = graded(head)
+        check(got and got[0][0] == "OK",
+              f"a reachable from-commit must pass, got {got}")
+        got = graded(base)
+        check(got and got[0][0] == "OK",
+              f"an older ancestor must pass, got {got}")
+
+        # 3. Ours, absent from this clone entirely.
+        got = graded("0123456789abcdef0123456789abcdef01234567")
+        check(got and got[0][0] == "FAIL",
+              f"a from-commit this clone lacks must FAIL, got {got}")
+
+        # 4. Inbound: the sender's tree, so it must NOT resolve here. Reachable
+        #    and orphaned alike are OUR commits and both are wrong on an
+        #    inbound lap -- a SHA that resolves in both repositories is a
+        #    collision worth saying out loud.
+        for sha in (head, orphan):
+            got = graded(sha, frm="platterpus")
+            check(got and got[0][0] == "FAIL",
+                  f"an inbound lap naming our commit {sha} must FAIL: {got}")
+        got = graded("0123456789abcdef0123456789abcdef01234567", frm="platterpus")
+        check(got and got[0][0] == "OK",
+              f"an inbound from-commit we cannot resolve is expected: {got}")
+
+        # 5. Prose rather than a SHA says UNPROBED OUT LOUD. 28 of the 43 laps
+        #    carrying this field carry prose, so a silent skip examined a third
+        #    of the record while reading exactly like a full pass.
+        got = graded("see §E -- a lap cannot carry the hash of a tree "
+                     "containing it")
+        check(got and got[0][0] == "UNPROBED",
+              f"a non-SHA from-commit must say UNPROBED out loud, got {got}")
+    finally:
+        shutil.rmtree(repo, ignore_errors=True)
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()
