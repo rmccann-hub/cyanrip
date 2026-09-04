@@ -13,9 +13,23 @@ flattened to match the earlier sessions, and nothing else was touched.
 **What is NOT here, and it is a choice rather than an omission.** The seven
 per-rip `*.platterpus.json` reports total 19 MB, almost all of it their
 embedded debug log and per-sample ETA trace. Their hashes are in `SHA256SUMS`
-so a copy can be identified. The 2026-08-26 session filed no JSON either, and
-`session/DIAGNOSTICS.txt` carries the diagnostic entries the findings below
-rest on. The 219-file screenshot directory is likewise not filed.
+so a copy can be identified. The 2026-08-26 session filed no JSON either. The
+219-file screenshot directory is likewise not filed.
+
+**This paragraph was wrong on its first writing, and the omission it hid cost a
+false claim.** It said "a choice rather than an omission" while
+`session/transcript.txt` and `session/report.json` had been dropped without
+being named — and those two carry the run's own verdict:
+
+    transcript.txt:293   [ FAIL ] L366  wait-for-rip 10800   (10800.1s)
+                                  still not finished after 10800s
+    report.json          "ok": false,  counts {pass: 217, fail: 5}
+
+**The bundle said the run failed and we published that it passed.** Not a gap
+in what we were sent; a failure to read what we were sent, and then a filing
+note that made the unread files invisible. Both are filed now, and the rule
+this cost is that a "what is not here" list must be **derived from what was
+dropped**, not written from memory of what was dropped.
 
 ## What this session is
 
@@ -166,14 +180,21 @@ it, so it is not offered as one. Verified here: all four CRCs appear in the
 and `Rip completed:  yes (3 of 14 tracks)`, and it carries a `Log FUN512:`
 line. Same as 2026-08-26: a folder name is not evidence.
 
-**But this session does hold evidence that a cancel happened** — which is a
-different claim, and the distinction is the point. `session/DIAGNOSTICS.txt`
-records, at 14:15:25, `cyanrip exit 3: No FUN512 checksum found in ".../cancel
-me ....log"`, which is what a rip killed before it writes its own signature
-looks like. That log was then re-run to completion and the completed one is
-what the bundle carries. So: **the interrupted artifact existed and is not
-here.** `none` and `unknown (reason)` are different claims, and this is the
-second.
+**But this session does hold evidence that a cancel happened**, and it is
+stronger than we first reported. `session/DIAGNOSTICS.txt` records, at
+14:15:25, `cyanrip exit 3: No FUN512 checksum found in ".../cancel me ....log"`
+— a rip killed before it writes its own signature. **And
+`session/transcript.txt:458` says so outright**, in Platterpus's own words:
+
+    SKIP  parser/log  cancel me ... parsed to zero tracks, and this rip's own
+    report says it was CANCELLED — the ripper was stopped before any track
+    record was written
+
+So a cancel **did** happen; the log that survives in `rips/` is a later
+completed re-run of the same scenario. The earlier claim that the interrupted
+artifact "existed and is not here" was right and understated — the transcript
+we had not read documents it. `none` and `unknown (reason)` are still different
+claims, and this one is now `observed`.
 
 ## Numbers worth keeping
 

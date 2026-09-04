@@ -17,7 +17,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-04. **Round 15 is OPEN at lap 7, theirs. CC-1 is NOT met — and we said it was.**
+## Rewritten 2026-09-04. **Round 15 is OPEN at lap 9, theirs. No lap is owed. The round closes on their run.**
 
 ### The correction, first — and it is ours, twice over
 
@@ -174,32 +174,38 @@ none of it in `src/`.
 | **opened** | our lap 1, on the released pair rather than a test pin |
 | **close condition** | **one, fixed at lap 1 under S-13: CC-1**, a hardware acceptance pass on the released pair |
 | **pin** | `978f9b0`, unmoved all round. No test pin; `none` is declared, which is an answer and not a build |
-| **their laps 4–7** | all `OPEN`, all transcribing our `GO`. Four laps in one envelope, three of them late. Their half moved `0.6.33` → `0.6.34` → `0.6.36` → `0.6.37`, each movement declared and lap 7 saying plainly that lap 6 promised it would not |
+| **their laps 4–9** | all `OPEN`, all transcribing our `GO`. Laps 4–7 arrived in one envelope, three of them late; their half moved `0.6.33` → `0.6.34` → `0.6.36` → `0.6.37`, each move declared, and has not moved since lap 7 |
 | **our lap 3** | `GO`, sent. Its `HANDSHAKE-TESTED` was right; our reading of the bundle was not |
-| **next** | **ours, lap 8.** Their lap 7 declares `HANDSHAKE-NEXT-LAP: 8 (yours)` |
+| **our lap 8** | `GO`, sent. Accepts `0.6.37` at `f3b60a0` as the app half and corrects our own CC-1 claim |
+| **next** | **nothing.** Their lap 9 declares `HANDSHAKE-NEXT-LAP: none owed` — the next thing across the seam is their run's result, not a lap. Both pre-commits are already conditional on it |
 
 **CC-1 is NOT met.** Their four laps say so in every `HANDSHAKE-TESTED`, and the reason is theirs and named: the acceptance script's section F was under-budgeted, and `0.6.36` could not have passed either for a second reason they found afterwards. Our §9 pre-commit stands — our next lap is `GO` unless their pass fails on a cause that is ours. The one cause that was ours, the P5 misclassification, is fixed and does not touch the pin.
 
-### The digest methods no longer differ — resolved, and reproduced four times
+### The digest methods no longer differ — six consecutive agreeing values
 
-Lap 2 declared `a1ff77af1fd6e3cb over 1` where we derived `c8fa5d93d9af5a20`
-over the same count: same population, different construction. Lap 3 §3 shipped
-our full spec and asked them to adopt one method or tell us to adopt theirs.
+Lap 2 declared `a1ff77af1fd6e3cb over 1` where we derived `c8fa5d93d9af5a20`:
+same population, different construction. Lap 3 §3 shipped our full spec and
+asked them to adopt one or tell us to adopt theirs.
 
 **They adopted ours and built it independently** (`scripts/round_digest.py`),
-having first reproduced both numbers. Every digest in their laps 4, 5, 6 and 7
-re-derives here exactly:
+having first reproduced both of lap 2's numbers. Every value since re-derives
+here exactly, in both directions:
 
-| their lap | declared | we derive |
+| lap | declared | |
 |---|---|---|
-| 4 | `1ad28e7744de3d6b over 3` | identical |
-| 5 | `ddc0d8a741f76b60 over 4` | identical |
-| 6 | `09268d7203773872 over 5` | identical |
-| 7 | `60a7c64dc252b1fa over 6` | identical |
+| theirs 4 | `1ad28e7744de3d6b over 3` | reproduces |
+| theirs 5 | `ddc0d8a741f76b60 over 4` | reproduces |
+| theirs 6 | `09268d7203773872 over 5` | reproduces |
+| theirs 7 | `60a7c64dc252b1fa over 6` | reproduces |
+| **ours 8** | `44e14b452950ebb0 over 7` | **they reproduce it** — their lap 9 §B2 |
+| theirs 9 | `35b861f25abfa69c over 8` | reproduces |
 
-**Two implementations of one written spec, agreeing on four consecutive values,
-neither having seen the other's code.** That is what the field was for. The
-allowlist entry in `tests/release_gate.py` stays pinned to lap 2's declared
+**Two implementations of one written spec, agreeing on six consecutive values,
+neither having read the other's code.** Their §B2 makes the point that matters:
+two implementations agreeing is weak evidence when they share an ancestor and
+strong evidence when they do not. These do not.
+
+The allowlist entry in `tests/release_gate.py` stays pinned to lap 2's declared
 value, because lap 2 is immutable and was computed by the old method.
 
 ### The process reform — 2026-08-26, on the maintainer's instruction

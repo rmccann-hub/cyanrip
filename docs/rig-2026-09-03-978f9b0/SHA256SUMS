@@ -24,6 +24,12 @@ c7d52746ada05c5843a81de04056b5de4dcb2d7dbdeb5e8c6d45aa5e7da61368  rips/full-acce
 5a3dd28bcd1bb99ea316e47ba4a5dc0b021b4d39d6013b66e28818bbb9451973  session/DIAGNOSTICS.txt
 9919ca4faf7a83b88e1f1ef969fedf4af288d544c0c86f40cb09110828371eef  session/MANIFEST.txt
 65d050165c5ec547c4d639129de87fe1963a278c9c56b92229d8a1e5168f6fa0  session/SOURCES.txt
+4be8fa1662315484623c07e8b3cd94448d62d02260b8aa862cabd101ec86cf15  session/report.json
+b3a1a877282c2338549bec4ef41417b29245bae7bbcc9965dfb5c73521aa14fb  session/rig-check/MANIFEST.txt
+5203e22e53d8b54ad2569db28d47ffee454377c54604dcc314cb64a9138226df  session/rig-check/argv-probe-output.txt
+8fd8a4bd133a4b6aa8dae253adc0759b7de2a9aab1c54d469eb18ef1fd92cfc5  session/rig-check/argv-probe.json
+e386e7ac571f38e252be8563771d9f6c56539b5909c779879fbf248f5e70e9b3  session/rig-check/ripper-version.txt
+63fab90d0c9353de72135695ba2dfcd3d8e937c509b6a6e7e75b4c28ec65e66b  session/transcript.txt
 
 # NOT filed: the per-rip Platterpus JSON reports. 19 MB across seven files,
 # almost all of it their embedded debug log and per-sample ETA trace. Their
