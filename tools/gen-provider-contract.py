@@ -92,9 +92,9 @@ FAIL_MECHANISMS = (
     (r"\breturn\s+-\d+\s*;",             "return -N;",            "**ends the function** non-zero"),
     (r"\bexit\s*\(\s*[1-9]",             "exit(non-zero)",        "**ends the process**"),
     (r"\breturn\s+AVERROR",               "return AVERROR(...)",   "**ends the function** with an FFmpeg error"),
-    (r"total_error_count\s*(\+\+|\+=)",   "total_error_count++",   "**records and CONTINUES** -- surfaces later as `Ripping errors: N`"),
-    (r"\berr\s*=\s*[1-9]",                "err = N",               "sets a local flag; **does not itself transfer control**"),
-    (r"\bret\s*=\s*[1-9]\s*;",           "ret = N;",              "sets a local flag; **does not itself transfer control**"),
+    (r"total_error_count\s*(\+\+|\+=)",   "total_error_count++",   "increments a counter; **transfers no control by itself**"),
+    (r"\berr\s*=\s*[1-9]",                "err = N",               "sets a local flag; **transfers no control by itself**"),
+    (r"\bret\s*=\s*[1-9]\s*;",           "ret = N;",              "sets a local flag; **transfers no control by itself**"),
 )
 
 # ONE SOURCE OF TRUTH. The predicate is BUILT from the table above rather than
@@ -132,6 +132,50 @@ GOTO_FATAL = ("fail",)
 # "not established", not "not a failure", so a consumer reads them rather than
 # trusting either verdict.
 GOTO_ONLY_RE = re.compile(r"goto [a-zA-Z_][a-zA-Z0-9_]*")
+
+
+def _suppressed_gotos(fatal):
+    """How many P5 rows carry a `goto` that the Evidence column hides.
+
+    evidence() sets `by_flow` from FAIL_PATH and then returns "control flow" or
+    "both" WITHOUT reporting the goto label it also found -- the label is only
+    surfaced when nothing else matched. So a row reading `control flow` on the
+    strength of `total_error_count++` may be followed by `goto end`, and the
+    column says nothing about it.
+
+    That is not academic. Every row whose sole mechanism is
+    `total_error_count++` is followed by `goto end`, and `end:` in cyanrip_run
+    sits one line past `ctx->rip_ran_to_completion = 1`. Those rips abort. An
+    earlier version of the table above said "records and CONTINUES" for exactly
+    those rows, which is the opposite of what happens -- shipped by us, found by
+    an adversarial audit of our own source, and this function is what stops the
+    document being able to say it again.
+
+    Counted, not asserted: re-runs evidence()'s own window rule and reports what
+    it discarded.
+    """
+    import collections
+    seen, out = set(), collections.Counter()
+    for name, line, msg, _to_log, ev in fatal:
+        if msg in seen or ev not in ("control flow", "both"):
+            continue
+        seen.add(msg)
+        text = open(os.path.join(SRC, name), encoding="utf-8").read()
+        # Re-locate this call's window the way evidence() does.
+        for m in LOGCALL.finditer(text):
+            if text.count("\n", 0, m.start()) + 1 != line:
+                continue
+            w = text[m.end():m.end() + FAIL_PATH_WINDOW]
+            cut = NEXT_BRANCH.search(w)
+            if cut:
+                w = w[:cut.start()]
+            if not FAIL_PATH.search(w):
+                break
+            g = GOTO_ANY.search(w)
+            if g and g.group(1) not in GOTO_FATAL:
+                out[g.group(1)] += 1
+            break
+    return sorted(out.items(), key=lambda kv: (-kv[1], kv[0]))
 
 
 def partition_fatal(rows):
@@ -1735,6 +1779,23 @@ def emit(binary):
     w("")
     w("  Derived from `FAIL_PATH` in the generator, so this list cannot describe a")
     w("  predicate the tool does not have.")
+    w("")
+    w("  **A CONSTRUCT IS NOT A SITE, AND THIS COLUMN DESCRIBES THE CONSTRUCT.**")
+    w("  \"Transfers no control by itself\" does NOT mean the run continued: at")
+    w("  most such sites something else in the same window does the transferring,")
+    w("  and **this class reports only the first mechanism it finds**. Measured on")
+    w("  this tree:")
+    w("")
+    for label, n in _suppressed_gotos(fatal):
+        w(f"  - **{n}** row(s) whose evidence is a bare mechanism ALSO carry a")
+        w(f"    `goto {label}` that this column does not report.")
+    w("")
+    w("  The sharpest case: **every** row whose sole evidence is")
+    w("  `total_error_count++` is followed immediately by `goto end`, and `end:`")
+    w("  in `cyanrip_run` is reached past the one assignment that records a")
+    w("  completed rip. Those rips ABORT. Reading the row as record-and-continue")
+    w("  is the opposite of what happens, and this paragraph exists because an")
+    w("  earlier version of this table said exactly that.")
     w("- `wording` - the message begins like a diagnostic, but no failure exit was")
     w("  found near it. Either the exit is further away than the search window, or")
     w("  the message is a warning that does not end the run. **Treat these as")
