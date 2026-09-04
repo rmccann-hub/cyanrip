@@ -77,14 +77,30 @@ DIAGNOSTIC_PREFIXES = (
 # So gotos are no longer enumerated here at all. Every "goto <label>" is
 # discovered from the source and reported under its own label name (see
 # GOTO_ANY), which cannot miss a label nobody thought of.
-FAIL_PATH = re.compile(
-    r"\breturn\s+1\s*;"
-    r"|\breturn\s+-\d+\s*;"
-    r"|\bexit\s*\(\s*[1-9]"
-    r"|\breturn\s+AVERROR"
-    r"|total_error_count\s*(\+\+|\+=)"
-    r"|\berr\s*=\s*[1-9]"
-    r"|\bret\s*=\s*[1-9]\s*;")
+# Each FAIL_PATH alternative, with what reaching it actually does. Kept BESIDE
+# the regex so the two cannot drift, and emitted into P5's preamble rather than
+# restated there in prose.
+#
+# The split matters and Platterpus named it in round 15 lap 9 §E1: four of these
+# end the run and three do not. `total_error_count++` records a read error and
+# execution continues -- it is how a rip prints a diagnostic and still finishes
+# with `Ripping errors: N`. `err = N` and `ret = N` set a variable that some
+# caller may or may not read; the generator cannot follow it that far, which is
+# why they are reported as evidence and not as a verdict.
+FAIL_MECHANISMS = (
+    (r"\breturn\s+1\s*;",                "return 1;",             "**ends the function** non-zero"),
+    (r"\breturn\s+-\d+\s*;",             "return -N;",            "**ends the function** non-zero"),
+    (r"\bexit\s*\(\s*[1-9]",             "exit(non-zero)",        "**ends the process**"),
+    (r"\breturn\s+AVERROR",               "return AVERROR(...)",   "**ends the function** with an FFmpeg error"),
+    (r"total_error_count\s*(\+\+|\+=)",   "total_error_count++",   "**records and CONTINUES** -- surfaces later as `Ripping errors: N`"),
+    (r"\berr\s*=\s*[1-9]",                "err = N",               "sets a local flag; **does not itself transfer control**"),
+    (r"\bret\s*=\s*[1-9]\s*;",           "ret = N;",              "sets a local flag; **does not itself transfer control**"),
+)
+
+# ONE SOURCE OF TRUTH. The predicate is BUILT from the table above rather than
+# written out a second time beside it -- two lists that must agree is how the
+# preamble came to name five mechanisms for a regex with seven.
+FAIL_PATH = re.compile("|".join(pat for pat, _, _ in FAIL_MECHANISMS))
 
 # Any goto, with its label captured. A label is *named* rather than judged:
 # "goto fail" is unambiguous, "goto end" is both the success cleanup and the
@@ -1690,9 +1706,35 @@ def emit(binary):
     w("**Evidence** says why each string is here, and is reported rather than folded")
     w("into a bare verdict so you can see which entries rest on the weaker test:")
     w("")
-    w("- `control flow` - the call is followed by `return 1`, a non-zero `exit()`,")
-    w("  `return AVERROR(...)`, `total_error_count++`, or `goto fail`. Does not")
-    w("  depend on how the message is worded.")
+    # DERIVED FROM THE PREDICATE, NOT DESCRIBED FROM MEMORY OF IT.
+    #
+    # This paragraph used to name five mechanisms in hand-written prose while
+    # FAIL_PATH matched seven, plus `goto fail` via GOTO_FATAL. `return -N`,
+    # `err = N` and `ret = N` were in the predicate and in no sentence a reader
+    # could see -- a hand-maintained description inside a generated artifact,
+    # which is the exact failure this file exists to prevent, one level up from
+    # the fatal classifier's old allowlist of opening words.
+    #
+    # Platterpus reasoned from the five-item list in round 15 lap 9 §E1. Their
+    # conclusion held anyway, but they priced the ask against a class three
+    # members smaller than it is.
+    #
+    # FAIL_MECHANISMS pairs each alternative with whether reaching it ENDS THE
+    # RUN or only records something and continues -- the distinction §E1 asked
+    # for, which the single class name cannot carry.
+    w("- `control flow` - the call is followed by one of the constructs below.")
+    w("  Does not depend on how the message is worded. **They are not equivalent:**")
+    w("  some end the run and some record an error and continue, and this class")
+    w("  name alone cannot tell you which fired.")
+    w("")
+    w("  | construct | reaching it |")
+    w("  |---|---|")
+    for pat, label, effect in FAIL_MECHANISMS:
+        w(f"  | `{label}` | {effect} |")
+    w(f"  | `goto fail` | see P5a's note -- `fail:` is a label name, not a verdict |")
+    w("")
+    w("  Derived from `FAIL_PATH` in the generator, so this list cannot describe a")
+    w("  predicate the tool does not have.")
     w("- `wording` - the message begins like a diagnostic, but no failure exit was")
     w("  found near it. Either the exit is further away than the search window, or")
     w("  the message is a warning that does not end the run. **Treat these as")
