@@ -40,8 +40,25 @@ Unreleased
    send that never happened.
 
  - **`PROVIDER-CONTRACT.md` P5 stopped asserting a failure path it had no
-   evidence for**, found by that pass and described in full above. Seven rows
-   moved to `P5a`; `src/` is untouched.
+   evidence for.** Platterpus's 2026-09-03 record carried five error-severity
+   entries quoting `Done; (no matches found, but hit repeat limit of 3)` against
+   a rip reading `status: success`, `exit code 0`, `14 of 14 tracks`. In our log
+   that string is immediately followed, three times, by `Track N ripped and
+   encoded successfully!` — and P5 listed it under *"Every string reachable on a
+   failure path"* on the strength of `goto finalize_ripping` alone.
+
+   A jump is not evidence of a failure path; it is the *absence* of evidence
+   plus a note about where control went. Seven rows moved to **`P5a`, "Strings
+   this document does NOT classify"** — among them the *convergence* line and
+   the loop that echoes the cue sheet. No label list: `end:`, `end_meta:` and
+   `finalize_ripping:` are all fall-through-reachable from success, so any rule
+   separating them is about the label's name.
+
+   Same section, same cause: the summary claimed `128 distinct strings` above a
+   breakdown totalling **114**, because it iterated a hardcoded tuple of class
+   names — three classes counted in the total and named in no line a reader
+   could see. 121 + 7 = 128, and the generator now asserts each tally sums.
+   `src/` is untouched, so no rip behaves differently.
 
  - **`docs/rig-2026-09-03-978f9b0/`** — the session filed byte-exact, with the
    four things it took off the never-run list and the two it did not.
