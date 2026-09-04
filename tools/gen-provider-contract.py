@@ -1376,6 +1376,31 @@ def emit(binary):
     w("numbers move between commits, so a citation without an anchor is not")
     w("checkable -- recompute this hash before quoting one back.")
     w("")
+    # THE FORK IDENTIFIER, DERIVED FROM THE BANNER RATHER THAN STATED.
+    #
+    # A consumer is told -- by meson.build's own comment and by every rule this
+    # project has written about identity -- that PROJECT_FORK_ID is the only
+    # reliable answer to "is this the fork?" and that matching on the leading
+    # version number is wrong. Platterpus's acceptance script does exactly that,
+    # `expect-cyanrip platterpus-fork`, and until now THIS DOCUMENT NEVER
+    # PUBLISHED THE VALUE. The instruction was in our prose and the datum was
+    # nowhere a generated artifact could be checked against.
+    #
+    # Parsed out of the banner the generator already runs, so it cannot drift
+    # from the build: the banner is "cyanrip <version> (<fork-id>-g<tag>)".
+    m = re.search(r"\(([A-Za-z0-9_.-]+?)-g[0-9a-f]+(?:-dirty)?\)\s*$", version(binary))
+    fork_id = m.group(1) if m else None
+    if fork_id:
+        w(f"**Fork identifier:** `{fork_id}`. This is `PROJECT_FORK_ID`, and it is")
+        w("**the only reliable answer to \"is this the fork?\"** -- it appears in the")
+        w("version banner, in the first line of every logfile, and as `cyanrip.fork_id`")
+        w("in the `-j` record. **Match on it. Never match on the leading version")
+        w("number**, which is upstream's string copied verbatim and which upstream can")
+        w("mint identically; and never on the `-g<tag>` suffix, which names a commit")
+        w("rather than a build. Derived here from the banner, so it cannot drift from")
+        w("the binary.")
+        w("")
+
     w("This is the provider half of the seam. Platterpus generates the consumer half")
     w("(`docs/cyanrip-consumer-contract.md`) from its parser tables. Neither side")
     w("describes behaviour it does not have.")
