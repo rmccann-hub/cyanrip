@@ -263,7 +263,12 @@ test('Release gate', python, args: [ files('release_gate.py') ])
 test('Sanitizer sweep', python, args: [ files('../tools/sanitize-run.py') ],
      timeout: 900)
 
-test('Settled facts', python, args: [ files('../tools/check-settled.py') ])
+## Timeout raised from meson's 30 s default: these rows run git and python over
+## every lap and the whole record, and it was measured at 27-30 s on a loaded
+## machine -- close enough to flake, and a flaky test is worse than none. The
+## expensive rows were made cheap in the same change; this is the headroom.
+test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
+     timeout: 120)
 test('Seam record audit', python, args: [ files('../tools/seam-check.py'), '--gaps' ])
 
 

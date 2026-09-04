@@ -261,8 +261,31 @@ def check_lap(path):
     # ancestor test catches the amend, which is the defect that actually
     # happened. Inbound laps name a commit in the OTHER repository, so there it
     # must not resolve -- the same shape as the pin check above.
-    m = rg.FROM_COMMIT_RE.search(text)
-    fc = m.group(1).strip() if m else None
+    decls = rg.FROM_COMMIT_RE.findall(text)
+    if len(decls) > 1:
+        # DECLARED TWICE IS AMBIGUOUS, NOT "THE FIRST ONE". This used
+        # `.search()`, which silently took the first and examined it as though
+        # it were the only one -- picking either would be a guess wearing a
+        # derivation's clothes, the same defect the release gate already
+        # refuses for a doubly-declared verdict.
+        #
+        # Both live cases are a field quoted inside a FENCED CODE BLOCK while
+        # proposing its format, so they are legitimate lap content that a
+        # line-anchored parser cannot distinguish from a declaration. Both laps
+        # are sent and immutable, so the fix is here and not in them. Reported
+        # rather than failed, because nothing is actually wrong with the laps --
+        # and reported rather than skipped, because a silent skip reads exactly
+        # like a check that ran.
+        note("UNPROBED", "wire/from-commit",
+             f"HANDSHAKE-FROM-COMMIT is declared {len(decls)} times at column 0 "
+             f"({', '.join(decls)}) -- ambiguous, so nothing was checked",
+             fix="under §5a a wire field declared more than once is ambiguous, "
+                 "and resolving it to the first is a guess. If the extra "
+                 "declarations are inside a fenced code block, that is a "
+                 "parser question for both sides rather than a defect in the "
+                 "lap -- neither spec says whether a fence suppresses a field.")
+        decls = []
+    fc = decls[0].strip() if decls else None
     if fc and not re.fullmatch(r"[0-9a-f]{7,40}", fc):
         # SAID OUT LOUD rather than skipped. 28 of the 43 laps carrying this
         # field carry prose in it ("see §E -- a lap cannot carry the hash of a
