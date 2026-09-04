@@ -99,10 +99,10 @@ checked rather than written.
 
 | fact | check |
 |---|---|
-| Upstream still calls `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a handler, the deadlock that hangs the process with the drive held | `git show master:src/cyanrip_main.c \| grep -A3 'on_quit_signal(int'` |
-| Upstream handles **no SIGTERM at all** — 0 occurrences | `test $(git show master:src/cyanrip_main.c \| grep -c SIGTERM) -eq 0` |
-| Upstream has `cyanrip_log_finish_report()` immediately **above** `end:`, so every `goto end` skips the completion footer | `git show master:src/cyanrip_main.c \| grep -n -B1 '^end:' \| tail -3` |
-| **`-Y` / `--verify-log` is already upstream** — not ours to contribute | `test $(git show master:src/cyanrip_main.c \| grep -c verify_log) -gt 0` |
+| Upstream still calls `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a handler, the deadlock that hangs the process with the drive held | `r=$(git rev-parse -q --verify master \|\| git rev-parse -q --verify origin/master) && u=$(git show $r:src/cyanrip_main.c) && printf '%s' "$u" \| awk '/on_quit_signal\(int/,/^}/' \| grep -q cyanrip_log` |
+| Upstream handles **no SIGTERM at all** — 0 occurrences | `r=$(git rev-parse -q --verify master \|\| git rev-parse -q --verify origin/master) && u=$(git show $r:src/cyanrip_main.c) && printf '%s' "$u" \| grep -q on_quit_signal && ! printf '%s' "$u" \| grep -q SIGTERM` |
+| Upstream has `cyanrip_log_finish_report()` immediately **above** `end:`, so every `goto end` skips the completion footer | `r=$(git rev-parse -q --verify master \|\| git rev-parse -q --verify origin/master) && u=$(git show $r:src/cyanrip_main.c) && printf '%s' "$u" \| grep -B1 '^end:' \| grep -q cyanrip_log_finish_report` |
+| **`-Y` / `--verify-log` is already upstream** — not ours to contribute | `r=$(git rev-parse -q --verify master \|\| git rev-parse -q --verify origin/master) && u=$(git show $r:src/cyanrip_main.c) && printf '%s' "$u" \| grep -q verify_log` |
 
 ## Platterpus's side — held because they told us, not because we checked
 
