@@ -19,6 +19,49 @@ record of what was said at a moment and this is a claim about *now*.
 
 ## Rewritten 2026-09-04. **Round 15 is OPEN at lap 9, theirs. No lap is owed. The round closes on their run.**
 
+### The correction that must reach them next — our lap 10 is wrong about eight rows
+
+**Our lap 10 §1 told Platterpus that 16 P5 rows "rest only on a construct that
+does not end the run".** The count is right. **The implication is wrong for
+eight of them**, and the contract we shipped the same day said so outright:
+`total_error_count++ | records and CONTINUES`.
+
+**Every one of those eight is followed immediately by `goto end`:**
+
+    cyanrip_main.c:2158  Error reading album tags: %s
+    cyanrip_main.c:2255  Invalid track number %i for pregap...
+    cyanrip_main.c:2276  Invalid track number %i...
+    cyanrip_main.c:2289  Missing "=" in track metadata "%s"
+    cyanrip_main.c:2305  Error reading track tags: %s
+    cyanrip_main.c:2433  Error initializing decoder: %s
+    cyanrip_main.c:2442  Error initializing encoder: %s
+    cyanrip_main.c:2498  Invalid rip index %i...
+
+`end:` in `cyanrip_run` sits one line past `ctx->rip_ran_to_completion = 1`, so
+those rips **abort and exit 1**. A consumer reading our table would file
+`Error initializing decoder:` as a run that carried on.
+
+**The cause is that `evidence()` discards the goto once `by_flow` is true.**
+Measured by re-running its own window rule: **12 of the 84** control-flow/`both`
+rows carry a suppressed `goto` — 9 `end`, 3 `end_meta`. Only **two** of the 84
+genuinely record and continue: `cyanrip_main.c:542` and `:549`, in
+`cyanrip_read_frame`, which substitutes silence and returns.
+
+**Fixed in the contract without moving a row** — the effect column now describes
+the construct, and a generated paragraph states the measured suppression and
+names this case. Reporting the label in the Evidence *value* is the real fix; it
+moves rows, so it is round-16 material and would stale the fixture their lap 9
+§C1 regenerated from our filed artifact.
+
+**A count in lap 10 is also short.** Rows resting only on `goto fail` are **33**,
+not 30 — `cyanrip_encode.c` 21 not 20, plus **two in `cyanrip_main.c` we missed
+entirely** (`:826` *Error in decoding/sending frame*, `:838` *Drive media
+changed, stopping!*), both in the rip loop.
+
+**Found by an adversarial audit of our own source**, 58 agents over every
+mechanism and every `fail:` label, two independent refuters each. It found a
+defect in a fix we had shipped that morning.
+
 ### The correction, first — and it is ours, twice over
 
 **Our round 15 lap 3 declared `HANDSHAKE-TESTED: CC-1 NOT MET`. Then we read
