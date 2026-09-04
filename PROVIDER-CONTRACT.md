@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g047f8a9)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g3561fd2)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -666,13 +666,31 @@ into a bare verdict so you can see which entries rest on the weaker test:
   | `return -N;` | **ends the function** non-zero |
   | `exit(non-zero)` | **ends the process** |
   | `return AVERROR(...)` | **ends the function** with an FFmpeg error |
-  | `total_error_count++` | **records and CONTINUES** -- surfaces later as `Ripping errors: N` |
-  | `err = N` | sets a local flag; **does not itself transfer control** |
-  | `ret = N;` | sets a local flag; **does not itself transfer control** |
+  | `total_error_count++` | increments a counter; **transfers no control by itself** |
+  | `err = N` | sets a local flag; **transfers no control by itself** |
+  | `ret = N;` | sets a local flag; **transfers no control by itself** |
   | `goto fail` | see P5a's note -- `fail:` is a label name, not a verdict |
 
   Derived from `FAIL_PATH` in the generator, so this list cannot describe a
   predicate the tool does not have.
+
+  **A CONSTRUCT IS NOT A SITE, AND THIS COLUMN DESCRIBES THE CONSTRUCT.**
+  "Transfers no control by itself" does NOT mean the run continued: at
+  most such sites something else in the same window does the transferring,
+  and **this class reports only the first mechanism it finds**. Measured on
+  this tree:
+
+  - **9** row(s) whose evidence is a bare mechanism ALSO carry a
+    `goto end` that this column does not report.
+  - **3** row(s) whose evidence is a bare mechanism ALSO carry a
+    `goto end_meta` that this column does not report.
+
+  The sharpest case: **every** row whose sole evidence is
+  `total_error_count++` is followed immediately by `goto end`, and `end:`
+  in `cyanrip_run` is reached past the one assignment that records a
+  completed rip. Those rips ABORT. Reading the row as record-and-continue
+  is the opposite of what happens, and this paragraph exists because an
+  earlier version of this table said exactly that.
 - `wording` - the message begins like a diagnostic, but no failure exit was
   found near it. Either the exit is further away than the search window, or
   the message is a warning that does not end the run. **Treat these as
