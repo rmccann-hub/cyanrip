@@ -17,39 +17,108 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-08-26. **Round 14 CLOSED `GO`/`GO`. `+platterpus.11` at `978f9b0` is STABLE.**
+## Rewritten 2026-09-04. **Round 15 is OPEN at lap 3. CC-1 IS MET. And lap 3 is wrong about that.**
 
-**Round 14 closed on `d9c058c` / Platterpus `b524936`, and the stable release
-followed immediately** — the first since `+platterpus.7`, and the first ever cut
-on a round whose subject was a *release* rather than a test pin.
+### The correction, first, because it is why this section exists
 
-**Its single close condition was met by two independent hardware runs on the
-same build.** Platterpus's 2026-08-26 pass: 218 steps, 211 pass, every failure
-descending from one defect in their app and none in the pin, with T1 running and
-converging 14/14. Ours, the same day: `Secure re-read: converged after 3 reads`
-on 14/14 tracks, six logs all verifying `-Y` exit 0. **T1 had never run
-anywhere** before that day; it was the half of CC-2 the 2026-08-25 pass could
-not produce.
+**Our round 15 lap 3 was sent declaring**
 
-### Read the channel, never the version string
+    HANDSHAKE-TESTED: **CC-1 NOT MET, and it is not ours to meet.** No hardware
+    pass exists on this pair and we claim none.
+
+**That is now false.** The 2026-09-03 bundle is a whole-disc pass on the released
+pin. Lap 3 also carries `HANDSHAKE-PEER-VERSION: platterpus/0.6.33` and
+`HANDSHAKE-PEER-PIN: 0a69732`; the rig ran **`0.6.34`**.
+
+Both were true when written. Neither is now, and **a sent lap is never edited** —
+`PROTOCOL.md` §4a, and `tests/sent_laps.py` pins lap 3 at
+`f0de87ff787d331c…` so it cannot drift. A fact that changes after a lap goes has
+nowhere else to live, which is exactly the mechanism round 12 established when
+their standing status corrected their own lap 4 about `0.6.22`. This is that
+mechanism, used on ourselves.
+
+**The formal correction is the next lap.** This is the interim record.
+
+### What the 2026-09-03 session established
+
+Platterpus `0.6.34` drove **`978f9b0`** — the round-15 pin, `0.9.4-rc2+platterpus.11` —
+on the PIONEER BDR-209D over the 14-track disc. Filed at
+`docs/rig-2026-09-03-978f9b0/`, byte-exact, with `SHA256SUMS`.
+
+| | |
+|---|---|
+| whole-disc rip | `Tracks to rip: all`, `Ripping errors: 0`, `Rip completed:  yes (14 of 14 tracks)` |
+| logs | seven, **all verifying `-Y` exit 0** against a *later* build |
+| AccurateRip | 12 of 14 exact, 2 matched an offset-variant pressing |
+| pregap | 13 × `sub-channel (not signalled by TOC)`, track 1 `lead-in` |
+
+**Four things came off the never-run list**, all from the artifacts:
+
+- **The abort footer and a diagnosed non-zero exit, together.** `-N -l 1` exited
+  **1** having printed `Offset is unset!…` at column 0, then
+  `Rip completed:  no (aborted, 0 of 14 tracks)`. It also **settles one `goto end`
+  row by running it**, which is what P5's legend said those rows needed.
+- **`Secure re-read:  did NOT converge after 3 reads (repeat limit hit)`** — the
+  non-converged arm, three tracks on each whole-disc rip.
+- **The plural `Read stalls:` rendering**, `5 reads exceeded 10s`.
+
+Still untouched by any run: C2 (the drive reports it unsupported), `-f`, damaged
+media, CD-TEXT from a physical disc, and `-x` alone on a drive that goes on to rip.
+
+### The defect the pass found, and it is ours
+
+`session/DIAGNOSTICS.txt` records thirteen `[error]` entries, recurring on
+
+    [error] ripper.fatal_message
+      Done; (no matches found, but hit repeat limit of 3)
+      tool: cyanrip
+
+against a rip whose own report reads `status: success`, `ripper_exit_code: 0`,
+`14 of 14 tracks` and `health_status: No errors occurred` — beside
+`error_count: 5`. In our log that string sits at lines 222, 305 and 387 and each
+is **immediately followed by `Track N ripped and encoded successfully!`**.
+
+**`PROVIDER-CONTRACT.md` P5 listed it, under a heading reading *"Every string
+reachable on a failure path"*.** It was there on the strength of `goto
+finalize_ripping` and nothing else — no failure exit in the search window, no
+diagnostic wording — and `finalize_ripping:` is the ordinary continuation, which
+flushes encoders and falls into that success line. **The contract is the API, so
+this is our defect** whatever else contributed to the consumer's reading; saying
+more would be a claim about code we cannot read.
+
+**Fixed at `896a80a`.** A bare `goto` is no longer treated as failure evidence.
+The seven rows in that state moved to **`P5a` — "Strings this document does NOT
+classify"**, not established in either direction, which is the only claim the
+generator can support. Two of the seven were the *convergence* line and the loop
+that echoes the cue sheet. A second defect in the same section, same cause: the
+summary said `128 distinct strings` above a breakdown totalling **114**, because
+it iterated a hardcoded tuple of class names — so three classes were counted in
+the total and named in no line a reader could see. Both pinned by
+`contract_fatal_inventory`, revert-proved three ways.
+
+**`src/` is unchanged.** The source anchor is unmoved and the binary reads discs
+exactly as `978f9b0` does; what moved is a document a consumer parses.
+
+### What a consumer should do about it
+
+If you classify our messages from P5, **re-read it**. `Done; (no matches found,
+but hit repeat limit of N)` and `Done; (N out of M matches for current checksum
+X)` are not errors — they are the two arms of the secure-re-read outcome, and the
+second is the *success* arm. Neither is in P5 any more.
+
+## Releases — read the channel, never the version string
 
 **`0.9.4-rc2+platterpus.11` is a STABLE release.** The `-rc2` is upstream's own
-string, copied verbatim because we may not mint in `cyanreg/cyanrip`'s
-namespace; the part that advances is `+platterpus.N`, which SemVer says MUST be
-ignored for precedence. **A check that reads the shape of the version will call
-this a pre-release, and it will be wrong.** Order by `release_seq`, read the
-`channel` column of `release-manifest.json`.
+string, copied verbatim because we may not mint in `cyanreg/cyanrip`'s namespace;
+the part that advances is `+platterpus.N`, which SemVer says MUST be ignored for
+precedence. **A check that reads the shape of the version will call this a
+pre-release, and it will be wrong.** Order by `release_seq`, read the `channel`
+column of `release-manifest.json`.
 
-**There is no tag.** Tag pushes are `HTTP 403` from the environment this is
-built in, and `git ls-remote --tags origin` returns nothing. No release of this
-fork has ever been reachable by tag. The commit SHA and the manifest row are the
-whole identifier.
-
-### Both channels point at the same build, deliberately
-
-`beta` resolves to the newest row of *any* channel, so opting into pre-releases
-can never move a user backwards. With `+platterpus.11` the newest row overall,
-both channels resolve to it. There is no separate beta to take.
+**There is no tag.** Tag pushes are `HTTP 403` from the environment this is built
+in, and `git ls-remote --tags origin` returns nothing. No release of this fork has
+ever been reachable by tag. The commit SHA and the manifest row are the whole
+identifier.
 
 | field | value |
 |---|---|
@@ -67,260 +136,68 @@ both channels resolve to it. There is no separate beta to take.
 | beta `release_seq` | 21 |
 | beta authorised by | handshake round 14, closed `GO`/`GO` — same build as stable |
 
-**`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**
-It is still in the ledger, because the ledger is append-only and a published
-build is a fact, but no channel resolves to it any more.
+`beta` resolves to the newest row of *any* channel, so opting into pre-releases
+can never move a user backwards. Both channels resolve to `978f9b0`; there is no
+separate beta to take.
 
-Build command for either: `meson setup build -Ddeclare_released=true && ninja -C build`.
+**`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**
+It is still in the ledger, because the ledger is append-only and a published build
+is a fact, but no channel resolves to it any more.
+
+Build command: `meson setup build -Ddeclare_released=true && ninja -C build`.
 
 `release-manifest.json` is the only mechanism to install from and it is what
 resolves these; this table is a human-readable copy of it and the test exists
 because a copy rots.
 
-### Why beta — read this before pinning anything
+**No release is coming while round 15 is open.**
+`tools/release-gate.py --release-gate` exits 1 on this tree and names round 15,
+which is correct and is not being overridden. Work has landed on
+`platterpus-fork` since the pin — all of it documentation, tests and tooling,
+none of it in `src/`.
 
-**`+platterpus.10` has not been verified by anyone but us, and it was cut while
-round 14 was open.** Both facts are stated here because neither is visible from
-the version number.
-
-**The first two of the three were the CC-2 repair applied again; the third was
-not, and the difference is worth keeping.**
-Round 13's original close condition measured a *test pin* while the release would
-necessarily be a later commit — so satisfying it would still have left the
-released pair with no hardware evidence. It was moved to round 14 by bilateral
-agreement (our lap 6 §N1, their lap 7 §W1) precisely so the pass would test **the
-build that ships**. Then four fixes landed after `796df32` was cut, and testing
-`796df32` would have meant testing something nobody would install — the same gap,
-one release later. So the release moved to match the fixes, rather than the test
-being pointed at a stale build.
-
-**`+platterpus.10` had a different reason**, and a weaker one: no fix landed
-after `f2c0506` — only correspondence. What moved was the compiled-in handshake
-state, which is a real part of an archival record but is not a defect being
-fixed. Distinguishing the two is why the pre-commit above exists: the first two
-releases had to happen, the third was a judgement call, and a fourth would be
-churn.
-
-**Round 14's pin therefore moved, twice, and now rests at `d9c058c`.** That is a
-departure from S-15, which freezes a pin for the duration of a round, and it is
-declared as one rather than smuggled — our round-14 lap 2 and lap 3 both say so
-at column 0. The maintainer instructed it, both projects are cutting fresh
-releases, and the alternative was a hardware pass on a build no consumer would
-ever install. **It does not move again.**
-
-**What the gate says, recorded rather than worked around:**
-`tools/release-gate.py --release-gate` **exits 1** on this tree and names round
-14 as open. The rule it enforces — no release while a round is open — was
-overridden deliberately.
-
-**What was NOT overridden, and this is the part that matters to a user.** The
-gate protects `stable`, and `stable` did not move: it is still `237a4ff`, seq 17,
-round 12, closed. `gen-release-manifest.py` independently refuses a `stable` row
-pointing at an unclosed round, and that assertion is untouched and still passing.
-The manifest reports `"round_closed": false` for the beta row, truthfully. A
-`beta` pointing at an open round is exactly what the beta channel is for.
-
-`beta` resolves to the newest row of **any** channel, so opting in reaches
-`+platterpus.10` and can never move a user backwards.
-
-**Their `FORK_PIN` stays at `ddf7ac3` and we are not asking them to move it.**
-Their lap 7 §W2 is right that a pin they have not run on hardware is a pin they
-do not claim, and their bar and ours agree here.
-
-**A consequence they found and own:** a user who opts into `beta` gets
-`unapproved` in their archival record, and their §W3 identifies that as
-overstating — the true statement is *"jointly verified, no hardware evidence
-yet"*, which is the same missing state their §J1 hit in the verdict vocabulary a
-week earlier. Two vocabularies, one absent value, discovered independently. That
-is theirs to fix and they have not asked us for anything.
-
-### What `+platterpus.10` adds on top of `+platterpus.9`
-
-**Nothing in `src/`, and nothing a rip can observe.** The one substantive change
-is the **compiled-in handshake state**: `+platterpus.9` stamps `round 14 lap 1
-OPEN, verdict OPEN` into every logfile, which was two laps stale by the time the
-acceptance plan was reviewed. This build stamps `round 14 lap 3 OPEN, verdict
-HOLD`.
-
-That is worth a release because the pass's logs are **archival records of a
-measurement nobody repeats**, and the round they name is part of the record.
-
-It also carries round 14 laps 2 and 3 — the pin reconciliation, the review of
-Platterpus's acceptance plan against the seven questions we published in advance,
-and the identification that **round 13's lap 8 had never been delivered**, which
-is why their gate was correctly holding round 13 open.
-
-### What `+platterpus.9` added on top of `+platterpus.8`
-
-**Nothing in `src/`.** The source anchor is unchanged, so the binary behaves
-identically. Said explicitly because "a new release" normally implies changed
-behaviour and here it does not.
-
-1. **A false structural claim removed from `PROVIDER-CONTRACT.md`, and the
-   generator taught to derive what it used to assert.** P2 printed one hardcoded
-   sentence under *every* buffer-composed row — *"Segment 0 is always present;
-   the rest are appended conditionally"*. It is right for the progress line and
-   **flatly wrong for `Cache probe:`**, whose nine segments are `switch` arms
-   that each write the whole buffer and `return`, so exactly one is emitted. A
-   matcher built from it is a concatenation pattern that can never match a real
-   probe result — and that is the line round 14's T3 exists to put on a drive.
-   Now derived: a whole-buffer `snprintf` replaces, only an offset write appends.
-
-2. **`contract_composed`**, which asserts against the **binary** rather than the
-   document — it runs `-x -I` and checks the emitted line carries exactly one
-   segment head. 52 tests, up from 51. Revert-proved on both assertions.
-
-3. **`docs/round-14-acceptance-spec.md`** — what we expect the acceptance pass to
-   *observe*, per test, measured by running the binary. It states no acceptance
-   criteria: we report measurements, Platterpus judges.
-
-### What `+platterpus.8` contained, and `.9` inherits
-
-Round 13's work, all of it already reviewed by them:
-
-1. **`[ASK A]` answered — the `-T` substitution table is published as `P7`**,
-   derived in five parts: the default and four spellings, the substitution table
-   with codepoints, the effective result per mode per compile-time branch, the two
-   behaviours a table cannot express (`/` is decided by the call site rather than
-   the mode, and the two quote glyphs alternate on a parity), and the availability
-   macros with `file:line`. The `sanitize` scenario parses P7c out of the committed
-   contract and rips with each mode, so the document is checked against the binary.
-
-2. **Their `os_unicode` derivation was inverted, and we measured it rather than
-   argued it.** The name their rig produced is the `unicode` **default**; `<` being
-   legal on ext4 is why `os_unicode` leaves it *alone*. Their newly-pinned
-   `-T os_unicode` would have changed every folder name they write.
-
-3. **A CD-Extra defect that published a garbage DiscID at exit 0.** An unguarded
-   session-gap subtraction ran the LSN negative, `discid.c` left-shifted a negative
-   int (undefined behaviour), and the run emitted `CDDB ID: FFFF6E02` with **no
-   diagnostic in a default build**. Fixed, revert-proved, pinned by
-   `tests/fixtures/ecd.cue` — the first fixture with a data track in last position.
-
-4. **`Interrupted at:`** — which track was in progress when a rip was interrupted,
-   readable from the log alone.
-
-5. **The `End LSN:` suffix is split**, so a CD-Extra session adjustment is no
-   longer reported in the same words as a read offset.
-
-6. **`P8`** — the `-j` diagnostics record, generated rather than hand-listed.
-
-7. **`seam-rules.md` v5**, defining S-13..S-18, which five rounds of correspondence
-   had been citing against a spec that assigned S-1..S-12 and nothing else. Both
-   sides now hold it byte-identical.
-
-8. **A false claim corrected in our own source and in `CLAUDE.md`.** Two comments
-   asserted that per-track paranoia counters sum to the disc totals. They do not:
-   the per-track baseline is snapshotted after `repeat_ripping:`, so a `-Z` re-read
-   resets it and the per-track figure describes the **last pass** while the disc
-   counters sum every pass. It held through four verifications because every
-   artifact it was checked against had each track read exactly once. Platterpus
-   found it by running our `-Z` reference through their parser.
-
-### What is NOT verified, stated because a green suite implies otherwise
-
-**No disc was read for this release, and round 13 closes saying so** rather than
-leaving it as a gap. 51 of 51 in four build configurations — default,
-`-Ddeclare_released=true`, ASAN+UBSAN, and both.
-
-Still untouched by any run anywhere: **`-x`, which has never executed on a real
-drive except on Platterpus's rig**, C2 reporting, `-f` offset autodetection,
-damaged media, CD-TEXT from a physical disc, the diagnosed-abort exit code, and a
-non-zero `Read stalls:` count. **A silent watchdog is not a working watchdog.**
-
-And one the fixture cannot reach: a **well-formed** Enhanced CD, where the session
-gap fits, needs 11400 sectors of audio ahead of the data track — 26.8 MB of BIN —
-so the branch where the subtraction actually applies is exercised by nothing here
-and by no rig run. `ecd.cue` proves the malformed shape refuses; it does not prove
-the well-formed shape is right.
-
----
-
-## Round 14: seventeen laps, our verdict is `GO`, waiting on theirs
-
-**The disc ran on 2026-08-25** — 218 steps, 201 pass, `0.6.27`'s predecessor
-`0.6.26 (37b0789)` against `d9c058c`. **CC-2 as written was not met**: one
-unanswered dialog in §F stopped every rip after §H, so **T1's secure re-read
-never started** and T4 had nothing to cancel. Platterpus fixed the cause and
-released `0.6.27`.
-
-**Our verdict is `GO` with the shortfall named rather than absorbed**, in
-`HANDSHAKE-TESTED` where a future reader will quote it. **The pin stays at
-`d9c058c`** — S-15 held all round and two fixes not in it are not worth breaking
-it in the last lap. **The round closes when their lap says `GO`.**
-
-**What the night retired anyway, and it is more than the failure cost:**
-
- - **T3.** `-x -I` completed on real hardware for the first time anywhere —
-   exit 0, 15.9 s, drive returned, `at least 2048 sectors … search ceiling
-   reached`. Three claims of ours saying it never had are corrected.
- - **C1 is narrowed to a flag.** The controlled pair, same drive and disc and
-   day: `-N -l 1` = 4.9 s exit 1; `-j -D -o -u …` = 1800 s and SIGKILL. **Cause
-   still NOT determined** — narrowed to *which flag*, not to *where*.
- - **Pregap sub-channel on 13 of 14 tracks**, re-confirmed on this pin.
-
-**Two defects of ours came out of that one `-x` log**, neither in the pin: the
-`Cache model:` line denied a probe printed forty lines below it, and the probe
-hit **our own** `PROBE_MAX_SECTORS` ceiling, so the number it reported is a
-floor we set.
-
-### The process reform — 2026-08-26, on the maintainer's instruction
-
-Round 14 ran to seventeen laps with every rule followed, which is round 7's
-failure repeated. **Cut: §J as a requirement, acknowledgement laps, "send a file
-even when nothing changed", and findings written up in laps.** Kept: every rule
-about evidence. **One file per exchange and it is the lap** — the repository is
-the transport, and a test does not travel, its specification does.
-
-`docs/SETTLED.md` is the index that stops facts being re-derived, and
-`tools/check-settled.py` runs every row's check.
-
-### `docs/OWNERSHIP.md` — who owns what, enforced
-
-A shared file, `OWNERSHIP-VERSION: 1`, **proposed to Platterpus in lap 17 and
-not yet adopted by them.** Two tests decide everything: **recoverability** (does
-fixing it need the disc back?) and **executability** (can you run what you
-gate?).
-
-**The systematic-gate duty is Platterpus's**, by executability — they can run
-both sides and we can run one. Ours: the binary, contract, golden reference,
-release gate, outgoing laps, and the rip pipeline.
-
-**Enforcement is `HANDSHAKE-SHARED-HASHES`, which has been declared since round 7
-and read by nothing.** Now wired: a mismatch fails, and the file is reconciled
-before anything else in the lap is judged.
-
-**And a gate must not reject what a tweak would fix.** `FAIL` is for a false
-claim, an absent field, or an unreconcilable record; everything a
-counter-proposal could fix is a `WARN` carrying the counter-proposal.
-
-### Still open, and it is short
+## Round 15
 
 | | |
 |---|---|
-| **T1** | never run on hardware. Carried to round 15. |
-| **C1** | narrowed to `-j`, cause not determined. `rig-c1-probe.sh` is on the rig, unused. |
-| **Their `GO`** | the only thing between round 14 and closed. |
-| **Records** | they lack our laps 13 and 14; enumerations exchanged in lap 17 so the difference is a diff. |
+| **opened** | our lap 1, on the released pair rather than a test pin |
+| **close condition** | **one, fixed at lap 1 under S-13: CC-1**, a hardware acceptance pass on the released pair |
+| **pin** | `978f9b0`, unmoved all round. No test pin; `none` is declared, which is an answer and not a build |
+| **their lap 2** | `OPEN`. Re-pinned their half to `0.6.33` at `0a69732` and declined to run CC-1 on `0.6.29`, for reasons better than the request was |
+| **our lap 3** | `GO`, sent. Carries the two statements corrected at the top of this file |
+| **next** | their lap 4. Ours declared `HANDSHAKE-NEXT-LAP: 4 (yours)` |
 
-## Upstream: one commit inbound, deliberately not merged
+**CC-1 is met by the 2026-09-03 session** and lap 3 could not say so. Our §9
+pre-commit was *"our next lap is `GO` unless your pass fails on a cause that is
+ours"* — the pass surfaced a cause that is ours, it is fixed, and it does not
+touch the pin.
 
-Upstream moved on 2026-08-24: `f8ebf48`, *"src/musicbrainz: retry queries when
-busy"*. **Our mirror is synced; `platterpus-fork` does not contain it** and will
-not until round 14's window.
+### The digest methods still differ, and only the population matters
 
-It adds two log lines — `Retrying in %_ seconds (attempt %_ out of %_)...` and
-`MusicBrainz lookup failed, try again later,` — **neither of which can appear in a
-Platterpus rip**, because they pass `-N` and `-N` disables the lookup entirely.
+Their lap 2 declares `a1ff77af1fd6e3cb over 1`; we re-derive `c8fa5d93d9af5a20`
+over the same count. **Reproduced rather than accepted**: `sha256` of our lap 1's
+bytes truncated to 16 *is* their number, so their stated method was executed
+correctly. Ours builds `<lap>\t<FROM>\t<sha256>` rows and hashes those.
 
-We are recording it anyway because a log line entering our contract is handshake
-material whether or not the one consumer we have can reach it. The analysis is
-`docs/upstream/sync-2026-08-24-mb-retry.md`, written before anything merged, and
-its §3 leaves the CLI-surface row **blank and says so** rather than deriving a
-flag list from the option table, which S-9 forbids.
+The construction is a coin-flip; **the population is not.** Ours covers the whole
+record, ours and theirs. Theirs covers their inbox only — which can never disagree
+about anything the other side sent, the mirror of the outbox-only defect our row
+format replaced. Lap 3 §3 ships the full spec and asks them to adopt one method or
+tell us to adopt theirs. `tests/release_gate.py` allowlists their value with the
+cause recorded, pinned to their declared number so an edit to their filed lap
+fails here.
 
-Merging it inside the release we were asking them to trust is the thing the
-handshake exists to prevent, so it waits.
+### The process reform — 2026-08-26, on the maintainer's instruction
+
+Round 14 ran to nineteen laps with every rule followed, which is round 7's failure
+repeated. **Cut: §J as a requirement, acknowledgement laps, "send a file even when
+nothing changed", and findings written up in laps.** Kept: every rule about
+evidence. **One file per exchange and it is the lap** — the repository is the
+transport, and a test does not travel, its specification does.
+
+**The measure is lap count and round 15 is at 3.** `docs/SETTLED.md` is the index
+that stops facts being re-derived, and `tools/check-settled.py` runs every row's
+check.
 
 ---
 
@@ -330,61 +207,47 @@ Separated by provenance, because these are different strengths of claim.
 
 | | |
 |---|---|
-| `0.6.23` is their release, at `ddf7ac3` | **read from their lap 7** wire header |
-| their `FORK_PIN` is `ddf7ac3`, unmoved | **read from their lap 7 §W2** |
-| `0.7.100` is gated on a full hardware pass by their own KDD-35 | **read from their lap 7 §W2**, independent of any handshake round |
+| `0.6.34` is what ran on 2026-09-03 | **measured**, from `Consumer:` in every log we hold |
+| `0.6.33` at `0a69732` is their round-15 release | **read from their lap 2 §B** |
+| `0.6.34`'s commit | **unknown.** Nothing we hold names it; the `Consumer:` string carries no SHA |
+| their `0.6.33` banner reads `platterpus 0.6.33 (0a69732)` | **UNVERIFIED.** Lap 3 said the next bundle would answer it. It does not — the bundle is `0.6.34` |
+| `0.6.34` treats `978f9b0` as `unapproved` | **measured**, from their JSON: *"NOT the build this Platterpus was verified against (platterpus-fork-gd9c058c)"* — which is round 14's pin, so the field is right and round 15 is what changes it |
+| their `FORK_PIN` is `ddf7ac3`, unmoved | **read from their round-14 lap 7 §W2** |
 | **`0.6.22` NEVER EXISTED** | **read from their standing status**, which corrects their own lap 4 |
-| their gate reports round 13 OPEN until they receive our lap 8 | **read from their lap 7 §W4a**, and it is right to |
 
-**The one-lap tail is structural and symmetric**, and both sides measured it on
-their own tree rather than taking the other's word. The side that completes a
-round can never have its `GO` acknowledged by a file the other has already sent —
-our gate blocked on **our own lap 6**, which declares `HANDSHAKE-PEER-VERDICT:
-HOLD`, true when written. **Neither side is touching its gate.** A gate that
-closed a round on one side's say-so is the half-of-a-two-half-contract failure
-this protocol has now recorded four times, and fail-closed is the right direction
-to be wrong in. It is a `NEXT-ROUND` question for the v6 draft, which they are
-writing and sending at round 14 lap 1.
-
-One observation offered as material for it: a verdict field carries **two** facts
-— my judgement and my reading of yours — and only the first can ever be current
-in the file that states it.
+**`session/DIAGNOSTICS.txt`'s banner names `+platterpus.10` / `d9c058c` while
+every rip in that bundle was made by `+platterpus.11` / `978f9b0`.** Not a defect:
+the banner names the **approved** pair, not the running one. Checked before it was
+written down, because the shorter reading was "their diagnostics are stale".
 
 ### Where their statuses are filed
 
 `docs/handshake/inbound/status-2026-08-21-v0.6.21.md`,
-`status-2026-08-21-v0.6.23.md` and `status-2026-08-24-v0.6.23.md`. All three,
-kept dated, even though *their* rule is to rewrite in place.
+`status-2026-08-21-v0.6.23.md` and `status-2026-08-24-v0.6.23.md`. All three, kept
+dated, even though *their* rule is to rewrite in place.
 
-**The last two share a version and differ in date, which is the whole argument
-for keeping both.** `v0.6.23` on 2026-08-21 is 5152 bytes and says round 12 is
-closed and to cut `+platterpus.7`. `v0.6.23` on 2026-08-24 is 18201 bytes,
-declares round 13 open, and reports a full hardware acceptance pass that had not
-happened when the first was written. Same declared version, two different claims
-about the world. Under their own rule the first no longer exists on their side;
-under ours it is evidence and is kept.
-
-**The date in those filenames is the one the document declares, not the day we
-received it**, and the two differ: both say *2026-08-21* in their own text and
-they reached us days apart. Naming a file by what it says about itself is the
-same rule as everywhere else here — answer from the artifact. Said out loud
-because "filed 2026-08-21" would otherwise read as "held since 2026-08-21".
-
-**That is not a contradiction, it is the two rules meeting.** Rewriting in place
-is right for the *author*; keeping every copy is right for the *recipient*, because
-what we were told and when is evidence, and consolidation applies to documentation
-and never to evidence. Their lap 4 and their status disagree about `0.6.22`, and we
-can only show that because we hold both.
+**The last two share a version and differ in date, which is the whole argument for
+keeping both.** Same declared version, two different claims about the world. Under
+their own rule the first no longer exists on their side; under ours it is evidence
+and is kept. **The date in those filenames is the one the document declares, not
+the day we received it**, and the two differ.
 
 Neither declares a wire header, so no enumerator can count them — and
 `test_a_standing_status_is_never_counted_as_a_lap()` executes that rather than
-asserting it, including the case a rename would hit: a non-lap filename that
-*does* contain the header text. The live record cannot demonstrate that one, so
-the test constructs it.
+asserting it, including the case a rename would hit.
 
----
+## Upstream: one commit inbound, deliberately not merged
 
-**Round 13: eight laps, one test pin declared and lapsed, one close condition
-moved by agreement, and a release.** Round 7 was thirty-nine laps and no release.
-We think the difference was the pre-commit in lap 1 and their refusal to let a
-`HOLD` be read as a hold.
+Upstream moved on 2026-08-24: `f8ebf48`, *"src/musicbrainz: retry queries when
+busy"*. **Our mirror is synced; `platterpus-fork` does not contain it.**
+
+It adds two log lines — `Retrying in %_ seconds (attempt %_ out of %_)...` and
+`MusicBrainz lookup failed, try again later,` — **neither of which can appear in a
+Platterpus rip**, because they pass `-N` and `-N` disables the lookup entirely.
+Recorded anyway, because a log line entering our contract is handshake material
+whether or not the one consumer we have can reach it. The analysis is
+`docs/upstream/sync-2026-08-24-mb-retry.md`.
+
+**Three defects of ours are verified as present upstream and not yet contributed
+back**: the signal-handler deadlock, SIGTERM unhandled, and the completion-footer
+skip. Each has its re-check in `docs/SETTLED.md`.

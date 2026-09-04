@@ -126,6 +126,33 @@ SENT = {
         "b20f133642f5061d7315dc56b790a098178c80ffa8585de3bc33891e0a5999b4",
     "round-12-lap-03.md":
         "1cd1da38bf632dc56491e5308f0450175826792a7a332f5e8d5f1c1064efab59",
+
+    # ROUND 15. Rounds 13 and 14 are deliberately NOT here: the map stopped
+    # being maintained after round 12, and pinning those now would assert a
+    # hash nobody checked at send time. That is the same reason round 7 is
+    # absent -- a fabricated record, not a recovered one -- and the unpinned
+    # list below says so out loud rather than letting the gap look like "no
+    # laps were sent".
+    #
+    # Lap 1 has the strongest receipt in this map, of the round-12 kind: THEIR
+    # lap 2 declares HANDSHAKE-ROUND-DIGEST a1ff77af1fd6e3cb, which is sha256
+    # of our lap 1's bytes truncated to 16 by their stated method. They hashed
+    # what they hold and printed it back, and it is these bytes.
+    "round-15-lap-01.md":
+        "a1ff77af1fd6e3cbb7a39608c6d72dc0f765f942a6084f26eba8e4bf4fea0f64",
+
+    # Lap 3's receipt is the operator confirming it went. It matters WHICH
+    # bytes: the file was corrected twice before delivery -- an orphaned
+    # HANDSHAKE-FROM-COMMIT at 9c053b7, and a §7 bullet -- so the draft
+    # committed at 796e2b1 hashes bb479ac0… and is NOT what left. Pinning the
+    # draft would freeze a send that never happened, which is the premature-pin
+    # failure this file separates from drift. The sent object is 9c053b7's.
+    #
+    # It is now known to carry a FALSE HANDSHAKE-TESTED -- it says no hardware
+    # pass exists on this pair, and the 2026-09-03 bundle is one. That is
+    # exactly why this entry exists: the remedy is a new lap, never an edit.
+    "round-15-lap-03.md":
+        "f0de87ff787d331cf1ca38b4744ac06c1ea0f971318280f42acf97045d4f8de6",
 }
 
 failures = 0
