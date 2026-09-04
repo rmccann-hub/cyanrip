@@ -38,6 +38,8 @@ checked" and hid whether that was *cannot*, *has not*, or *nobody can*.
 
 | fact | check |
 |---|---|
+| **The gate cross-checks our transcription against the peer's actual lap.** Declaring `HANDSHAKE-PEER-VERDICT: GO` in our own lap does NOT close a round: it refuses with *"the newest peer lap we hold declares OPEN"* until a filed inbound lap itself declares `GO`. "They did not object" cannot become "they agreed" | — past: dry run on a throwaway clone, 2026-09-04. **Not checkable from this tree**: the message only appears when our lap transcribes `GO` while the newest peer lap does not, and our lap 10 transcribes `OPEN`. Reaching it needs a state the record does not contain, so a check here would test nothing |
+| **The release path is dry-run and works end to end.** With a simulated inbound `GO` filed: gate closes round 15, `gen-release-manifest.py` emits seq 22 `0.9.4-rc2+platterpus.12`, both channels resolving, `round_closed=true`. It also refuses a ledger row whose commit is not a sha | — past: dry run on a throwaway clone, 2026-09-04; the real tree was untouched and verified clean afterwards |
 | Round 14's pin is `d9c058c` = `0.9.4-rc2+platterpus.10`, seq 20, channel `beta` | `grep -m1 HANDSHAKE-PIN: docs/handshake/round-14-lap-15.md` |
 | **`stable` is `978f9b0` = `0.9.4-rc2+platterpus.11`, seq 21**, authorised by round 14 closing `GO`/`GO`. The version string carries upstream's `-rc2` and is stable anyway — order by `release_seq`, read `channel`, never parse the version | `python3 tools/gen-release-manifest.py --check release-manifest.json` |
 | Nothing in `src/` changed between `+platterpus.8` and `+platterpus.10` | `git diff --stat 796df32 d9c058c -- src/` |
