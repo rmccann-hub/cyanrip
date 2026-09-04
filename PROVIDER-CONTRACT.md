@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g009a573)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g896a80a)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -639,8 +639,9 @@ else.
 
 ## P5 - Fatal and error message inventory
 
-Every string reachable on a failure path. Use this to derive error matching
-rather than guessing prefixes.
+Every string with evidence of being reachable on a failure path. Use this to
+derive error matching rather than guessing prefixes. **P5a below lists strings
+this document does NOT claim are failures**; it is not part of this inventory.
 
 **Evidence** says why each string is here, and is reported rather than folded
 into a bare verdict so you can see which entries rest on the weaker test:
@@ -674,7 +675,6 @@ must carry the same class.
 | `accurip.c:129` | `Unable to get AccuRIP DB data: missing entry!` | wording + goto end | yes |
 | `accurip.c:137` | `Unable to get AccuRIP DB data: %s%s` | wording + goto end | yes |
 | `accurip.c:140` | `Unable to get AccuRIP DB data: %s!` | wording + goto end | yes |
-| `accurip.c:176` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
 | `coverart.c:51` | `Unable to init lavf context: %s!` | both | yes |
 | `coverart.c:57` | `Unable to alloc stream!` | both | yes |
 | `coverart.c:70` | `Couldn't open %s for writing: %s!` | both | yes |
@@ -729,8 +729,6 @@ must carry the same class.
 | `cyanrip_main.c:826` | `Error in decoding/sending frame: %s` | both | yes |
 | `cyanrip_main.c:838` | `Drive media changed, stopping!` | both | yes |
 | `cyanrip_main.c:869` | `Stopping, ripping incomplete!` | wording | yes |
-| `cyanrip_main.c:1008` | `Done; (%i out of %i matches for current checksum %08X)` | goto finalize_ripping | yes |
-| `cyanrip_main.c:1014` | `Done; (no matches found, but hit repeat limit of %i)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:1045` | `Error in encoding: %s` | wording + goto end | yes |
 | `cyanrip_main.c:1061` | `Error sending flush signal to encoders: %s` | wording | yes |
 | `cyanrip_main.c:1702` | `Couldn't read \"%s\"!` | wording | **not directly** - see legend |
@@ -756,13 +754,11 @@ must carry the same class.
 | `cyanrip_main.c:1978` | `Too many cover arts specified!` | control flow | yes |
 | `cyanrip_main.c:1988` | `Directory name scheme must contain {format} with multiple output formats!` | control flow | yes |
 | `cyanrip_main.c:1993` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | both | yes |
-| `cyanrip_main.c:2031` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
 | `cyanrip_main.c:2158` | `Error reading album tags: %s` | both | yes |
 | `cyanrip_main.c:2255` | `Invalid track number %i for pregap, list has %i tracks!` | both | yes |
 | `cyanrip_main.c:2276` | `Invalid track number %i, list has %i tracks!` | both | yes |
 | `cyanrip_main.c:2289` | `Missing \"=\" in track metadata \"%s\"` | both | yes |
 | `cyanrip_main.c:2305` | `Error reading track tags: %s` | both | yes |
-| `cyanrip_main.c:2327` | `%s` | goto end | yes |
 | `cyanrip_main.c:2433` | `Error initializing decoder: %s` | both | yes |
 | `cyanrip_main.c:2442` | `Error initializing encoder: %s` | both | yes |
 | `cyanrip_main.c:2478` | `Error encoding: %s` | wording + goto end | yes |
@@ -785,8 +781,6 @@ must carry the same class.
 | `musicbrainz.c:197` | `Could not connect to MusicBrainz.` | both | yes |
 | `musicbrainz.c:205` | `Missing DiscID!` | wording | yes |
 | `musicbrainz.c:228` | `Error fetching/requesting/auth, this shouldn't happen.` | both | yes |
-| `musicbrainz.c:251` | `MusicBrainz lookup failed: DiscID has no associated releases.` | goto end_meta | yes |
-| `musicbrainz.c:259` | `MusicBrainz lookup failed: no releases found for DiscID.` | goto end_meta | yes |
 | `musicbrainz.c:298` | `Please specify which release to use by adding the -R argument with an index or ID.` | control flow | yes |
 | `musicbrainz.c:303` | `Invalid release index %i specified, only have %i releases!` | both | yes |
 | `musicbrainz.c:321` | `Release ID %s not found in release list for DiscID %s!` | control flow | yes |
@@ -799,11 +793,47 @@ must carry the same class.
 | `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
 | `naming.c:259` | `Invalid condition syntax!` | both | yes |
 
-**128 distinct strings.** By evidence: 66 both, 18 control flow, 13 wording, 3 goto end, 14 wording + goto end.
+**121 distinct strings.** By evidence: 66 both, 18 control flow, 14 wording + goto end, 13 wording, 10 genopt.
 
 The `control flow` and `both` rows total 84 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
 build a hard failure classifier on.
+
+## P5a - Strings this document does NOT classify
+
+**Not established in either direction. Do not match these as errors, and do
+not treat their absence from P5 as a claim that they are harmless** -- read
+them and decide. Neither of the two independent tests fired: no failure exit
+within the search window, and no diagnostic wording. All that was found was a
+`goto <label>`, which says where control went and nothing about why.
+
+**A jump is not an abort, and this section exists because asserting otherwise
+was acted on.** These rows sat in P5 under a heading reading *"Every string
+reachable on a failure path"* purely on the strength of a `goto`. One of them
+follows a converged/not-converged decision and jumps to `finalize_ripping:`,
+which flushes encoders and falls into `Track %i ripped and encoded
+successfully!` -- so a consumer classifying by this document recorded errors
+against a rip that completed every track with none.
+
+**The label is not the discriminator, which is why no label is exempted
+here.** `end:`, `end_meta:` and `finalize_ripping:` are all reachable by
+fall-through from their function's success path; a rule separating them would
+be about their names. Two of the rows below really are failures -- by a flag
+set here and read further down than the search window reaches -- and that is
+evidence this generator does not have, which is exactly what this section
+says.
+
+| File:line | Message | Evidence | Reaches logfile? |
+|---|---|---|---|
+| `accurip.c:176` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
+| `cyanrip_main.c:1008` | `Done; (%i out of %i matches for current checksum %08X)` | goto finalize_ripping | yes |
+| `cyanrip_main.c:1014` | `Done; (no matches found, but hit repeat limit of %i)` | goto finalize_ripping | yes |
+| `cyanrip_main.c:2031` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
+| `cyanrip_main.c:2327` | `%s` | goto end | yes |
+| `musicbrainz.c:251` | `MusicBrainz lookup failed: DiscID has no associated releases.` | goto end_meta | yes |
+| `musicbrainz.c:259` | `MusicBrainz lookup failed: no releases found for DiscID.` | goto end_meta | yes |
+
+**7 distinct strings.** By evidence: 3 goto end, 2 goto end_meta, 2 goto finalize_ripping.
 
 ## P6 - Version flags across the stock line
 
