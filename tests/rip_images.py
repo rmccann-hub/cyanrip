@@ -2425,6 +2425,119 @@ def sc_artifacts_are_tracked():
             fail(f"artifacts_are_tracked: {a} exists but was never git-added")
 
 
+def sc_contract_fatal_inventory():
+    """P5 must not assert a failure path it has no evidence for.
+
+    THE DEFECT THIS PINS, found on 2026-09-03 in a consumer's record of a rip
+    against our own released pin. Five error-severity diagnostics quoted
+
+        Done; (no matches found, but hit repeat limit of 3)
+
+    on a rip whose report read `status: success`, `ripper_exit_code: 0`,
+    `14 of 14 tracks`, and whose log says `Ripping errors: 0`. In that log the
+    string is immediately followed -- three times -- by `Track N ripped and
+    encoded successfully!`.
+
+    PROVIDER-CONTRACT.md listed it in P5, under a heading reading *"Every
+    string reachable on a failure path"*, on the strength of `goto
+    finalize_ripping` and nothing else: no failure exit in the search window,
+    no diagnostic wording. `finalize_ripping:` is the ordinary continuation. Two
+    of the seven rows in that state were the CONVERGENCE line and the loop that
+    echoes the cue sheet.
+
+    A jump is not evidence of a failure path -- it is the absence of evidence
+    plus a note about where control went -- so those rows now live in P5a,
+    which claims nothing in either direction.
+
+    WHY THIS ASSERTS AGAINST THE GENERATOR AND NOT THE COMMITTED DOCUMENT.
+    Reverting the partition changes `tools/`, not `PROVIDER-CONTRACT.md`, so a
+    test that only read the committed file would keep passing over a stale
+    artifact -- a check that cannot fire. `contract_build` covers the committed
+    copy going stale; this covers the rule that produced it. Both halves are
+    asserted below, and each fails on its own revert.
+    """
+    import importlib.util
+
+    gen = ROOT / "tools" / "gen-provider-contract.py"
+    spec = importlib.util.spec_from_file_location("gpc_t", gen)
+    g = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(g)
+
+    # The generator's SRC is the cwd-relative "src", because it is meant to be
+    # run from the repository root. The empty-partition guard below is what
+    # caught this: without it, a wrong cwd yields two empty tables and every
+    # assertion in this scenario passes by having nothing to check.
+    was = os.getcwd()
+    try:
+        os.chdir(ROOT)
+        _stable, _unstable, fatal = g.collect()
+    finally:
+        os.chdir(was)
+    # THE GENERATOR'S OWN SPLIT, not a second copy of the rule. The first draft
+    # applied GOTO_ONLY_RE here, so reverting the writer's partition changed
+    # nothing this looked at and the revert-proof PASSED -- a test that
+    # reimplements the thing under test asserts only that its own copy agrees
+    # with itself. partition_fatal() has exactly two callers and this is one.
+    est, only = g.partition_fatal(fatal)
+
+    def by_string(rows):
+        out = {}
+        for name, line, s, _to_log, ev in rows:
+            out.setdefault(s, (name, line, ev))
+        return out
+
+    p5, p5a = by_string(est), by_string(only)
+
+    if not p5 or not p5a:
+        fail("contract_fatal_inventory: one side of the partition is empty "
+             f"(P5={len(p5)}, P5a={len(p5a)}); a check that can be satisfied "
+             "by finding nothing is not a check")
+        return
+
+    # 1. THE REGRESSION. No row may sit in the failure inventory on the
+    #    strength of a bare `goto` alone.
+    for s, (name, line, ev) in sorted(p5.items()):
+        if g.GOTO_ONLY_RE.fullmatch(ev or ""):
+            fail(f"contract_fatal_inventory: P5 claims {name}:{line} is on a "
+                 f"failure path with `{ev}` as its only evidence: {s!r}")
+
+    # 2. Named, so the two that were acted on cannot drift back silently. A
+    #    structural rule can be satisfied by a renamed class; these cannot.
+    for probe in ("Done; (no matches found, but hit repeat limit of %i)",
+                  "Done; (%i out of %i matches for current checksum %08X)"):
+        if probe in p5:
+            fail(f"contract_fatal_inventory: {probe!r} is back in the fatal "
+                 "inventory. It is followed by `Track %i ripped and encoded "
+                 "successfully!` on hardware")
+        elif probe not in p5a:
+            fail(f"contract_fatal_inventory: {probe!r} is in neither table; "
+                 "the generator stopped seeing a string a real rip prints")
+
+    # 3. Both tallies must sum to their own table. The old summary said `128
+    #    distinct strings` above a breakdown totalling 114, because it iterated
+    #    a hardcoded tuple of class names -- so three classes were counted in
+    #    the total and shown in no line a reader could see, which is how an
+    #    unrecognised class stayed invisible in a derived document.
+    doc = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
+    tallies = re.findall(r"^\*\*(\d+) distinct strings\.\*\* By evidence: "
+                         r"(.+?)\.$", doc, re.M)
+    if len(tallies) != 2:
+        fail(f"contract_fatal_inventory: expected 2 inventory summaries in the "
+             f"committed contract, found {len(tallies)}")
+    for total, breakdown in tallies:
+        parts = [int(p.strip().split()[0]) for p in breakdown.split(",")]
+        if sum(parts) != int(total):
+            fail(f"contract_fatal_inventory: a summary claims {total} strings "
+                 f"over a breakdown summing to {sum(parts)}; a class is "
+                 "counted in the total and named in no line")
+
+    # 4. And the committed document must actually carry the section, so a
+    #    correct generator with a stale artifact is still a failure.
+    if "## P5a" not in doc:
+        fail("contract_fatal_inventory: the generator partitions but the "
+             "committed contract has no P5a; regenerate it")
+
+
 def sc_interrupt_deadlock():
     """A signal arriving while the log lock is held must not wedge the process.
 

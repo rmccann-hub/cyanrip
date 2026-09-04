@@ -117,6 +117,25 @@ GOTO_FATAL = ("fail",)
 # trusting either verdict.
 GOTO_ONLY_RE = re.compile(r"goto [a-zA-Z_][a-zA-Z0-9_]*")
 
+
+def partition_fatal(rows):
+    """Split collect()'s fatal list into (P5 established, P5a unclassified).
+
+    A module-level function with two callers -- emit() below and
+    tests/rip_images.py's contract_fatal_inventory -- rather than a couple of
+    lines inline in the writer. The test's FIRST draft applied GOTO_ONLY_RE
+    itself, which meant reverting the split changed nothing the test looked at
+    and the revert-proof passed: a test that reimplements the thing under test
+    asserts only that its own copy is self-consistent. Same remedy as
+    gen-release-manifest.py importing release-gate.py's loader instead of
+    reimplementing the parse.
+    """
+    established, goto_only = [], []
+    for row in rows:
+        ev = row[4]
+        (goto_only if GOTO_ONLY_RE.fullmatch(ev or "") else established).append(row)
+    return established, goto_only
+
 # Where to stop looking. A failure exit only counts as belonging to this call if
 # nothing has opened a new branch in between -- otherwise an informational line
 # inherits the error handling of whatever happens to follow it. Without this cut
@@ -1635,10 +1654,7 @@ def emit(binary):
     # `goto end` is a real ambiguity and keeps its established status, because
     # `end:` genuinely is the route several aborts take. Every other label is
     # named, unexamined, and now reported WITHOUT the failure claim.
-    established, goto_only = [], []
-    for row in fatal:
-        ev = row[4]
-        (goto_only if GOTO_ONLY_RE.fullmatch(ev or "") else established).append(row)
+    established, goto_only = partition_fatal(fatal)
 
     w("## P5 - Fatal and error message inventory")
     w("")
