@@ -19,8 +19,21 @@ rest on. The 219-file screenshot directory is likewise not filed.
 
 ## What this session is
 
-**It is the CC-1 hardware evidence: a pass on the released pin.** Seven rips, of
-which two are whole-disc. **All seven `rips/*.log` — the ones that are not
+**It is NOT a CC-1 pass, and this file said it was.** The acceptance run it comes
+from **did not complete**: Platterpus's own section F budgeted `10800`s for a
+whole-disc `-Z 2 -r 3` that needs about twice that, timed out at `10800.1`s, and
+the ARCHIVAL section downstream of it produced no evidence at all. Their rule is
+that a run whose archival section produces nothing is not a pass — it is a run
+that did not happen. Their lap 6 §C1.
+
+**What this session does establish is real and is about our binary.** Two
+whole-disc rips inside that run completed cleanly, and every claim below is
+measured from the files here. **We concluded the acceptance pass from the rips
+inside it**, which is the scope error this repository names in as many words:
+*"I verified the list you sent" is not "I verified your inventory"*. The rips
+were verified; the pass was not.
+
+Seven rips, of which two are whole-disc. **All seven `rips/*.log` — the ones that are not
 `*.eac.log` — carry `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)`
 as their first line and `Consumer: platterpus/0.6.34` in the header.**
 
@@ -102,6 +115,50 @@ above, not recalled.
 Still untouched by any run: C2 (the drive reports it unsupported), `-f`,
 damaged media, CD-TEXT from a disc that has some, and `-x` alone on a drive
 that goes on to rip.
+
+## What Platterpus found in these same files
+
+Filed here because a future reader has the artifacts and should not have to
+re-derive it, and because one of the findings is visible in a file in this
+directory.
+
+**Their EAC-compatible rendering stamps `Copy OK` over tracks it has just
+declared unreproducible.** Their defect, self-reported in their lap 6 §C2, and
+checkable here — `rips/full-acceptance-angle-bracket.eac.log` lines 96–98 and
+125–127:
+
+    Copy CRC 418F6CF8  (re-reads did NOT agree — this read is not confirmed reproducible)
+    Matched an offset-variant pressing — partially accurate (confidence 200)
+    Copy OK
+
+`Copy OK` is EAC's clean verdict and the string a logchecker greps for. **Our
+per-pass results are what they rendered it from and they say so**: the verdict
+line was written from our per-track status, which says nothing about
+convergence, while the convergence tri-state they compute and already print was
+never consulted. Fixed on their side; the artifacts here predate the fix and
+are left byte-exact, because a rig log is evidence.
+
+**Non-convergence lands on the tracks AccurateRip calls an offset variant**, and
+it reproduces across both whole-disc rips hours apart:
+
+| rip | non-convergent | AccurateRip on those tracks |
+|---|---|---|
+| `full-acceptance` | 3, 5 (track 4 re-read and superseded by the addendum) | offset-variant, AR +450, confidence 200 |
+| `secure-reread` | 3, 4, 5 | offset-variant, AR +450, confidence 200 |
+
+Every other track: *accurately ripped, confidence 200, AR v2*. Their reading —
+marked `[INFERRED]` by them and not asserted — is that this is a pressing
+property and our paranoia machinery declined to certify reads it could not
+reproduce, on precisely the tracks an independent database calls unusual. **We
+are not claiming that**, and neither are they; it is recorded as their inference
+with their own tag on it.
+
+**And one thing nobody can explain yet.** Track 3's copy CRC is identical across
+both rips (`418F6CF8`) while its own within-rip re-reads disagreed; track 5's
+copy CRC differs between rips (`E0036697` / `6902BCF0`) while its AccurateRip
+CRC is identical in both. They have a candidate explanation and have not tested
+it, so it is not offered as one. Verified here: all four CRCs appear in the
+`.eac.log` files in this directory.
 
 ## The cancel scenarios, again
 

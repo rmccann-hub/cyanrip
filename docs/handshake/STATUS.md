@@ -17,29 +17,40 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-04. **Round 15 is OPEN at lap 3. CC-1 IS MET. And lap 3 is wrong about that.**
+## Rewritten 2026-09-04. **Round 15 is OPEN at lap 7, theirs. CC-1 is NOT met — and we said it was.**
 
-### The correction, first, because it is why this section exists
+### The correction, first — and it is ours, twice over
 
-**Our round 15 lap 3 was sent declaring**
+**Our round 15 lap 3 declared `HANDSHAKE-TESTED: CC-1 NOT MET`. Then we read
+Platterpus's 2026-09-03 bundle, decided lap 3 was falsified, and wrote CC-1 IS
+MET into this file, into `docs/SETTLED.md` and into the rig README.**
 
-    HANDSHAKE-TESTED: **CC-1 NOT MET, and it is not ours to meet.** No hardware
-    pass exists on this pair and we claim none.
+**Lap 3 was right and the correction was wrong.** Their lap 6 §C1 says what
+happened to that run: their acceptance script budgeted `10800`s for a
+whole-disc `-Z 2 -r 3` that needs about twice that, section F timed out at
+`10800.1`s, and the ARCHIVAL section downstream produced no evidence at all. A
+run whose archival section produces nothing is not a pass; it is a run that did
+not happen.
 
-**That is now false.** The 2026-09-03 bundle is a whole-disc pass on the released
-pin. Lap 3 also carries `HANDSHAKE-PEER-VERSION: platterpus/0.6.33` and
-`HANDSHAKE-PEER-PIN: 0a69732`; the rig ran **`0.6.34`**.
+**What we did is the scope error this project names in as many words.** Two
+whole-disc rips inside that run completed cleanly, and we verified them
+properly — `Ripping errors: 0`, `14 of 14 tracks`, `Log FUN512` intact, `-Y`
+exit 0 on all seven logs. Then we called that the acceptance pass. *"I verified
+the list you sent" is not "I verified your inventory."* The rips were verified;
+the pass was not.
 
-Both were true when written. Neither is now, and **a sent lap is never edited** —
-`PROTOCOL.md` §4a, and `tests/sent_laps.py` pins lap 3 at
-`f0de87ff787d331c…` so it cannot drift. A fact that changes after a lap goes has
-nowhere else to live, which is exactly the mechanism round 12 established when
-their standing status corrected their own lap 4 about `0.6.22`. This is that
-mechanism, used on ourselves.
+**A second thing we held and did not use.** Lap 5 (withdrawn unsent) declared
+`HANDSHAKE-PEER-PIN: unknown` for `0.6.34` and asked them for it. The bundle's
+own per-rip JSON carries `generator.build_fingerprint: dba2ab2` — we printed
+that field while reading the bundle. Their lap 5 confirms `0.6.34 = dba2ab2`
+independently.
 
-**The formal correction is the next lap.** This is the interim record.
+**And lap 3 is still on the wire and still says `platterpus/0.6.33` at
+`0a69732`.** Their half has since moved to `0.6.37` at `f3b60a0`, declared by
+them out of turn and with the movement labelled as such. A sent lap is never
+edited; this is the interim record and the next lap is the formal one.
 
-### What the 2026-09-03 session established
+### What the 2026-09-03 session DOES establish
 
 Platterpus `0.6.34` drove **`978f9b0`** — the round-15 pin, `0.9.4-rc2+platterpus.11` —
 on the PIONEER BDR-209D over the 14-track disc. Filed at
@@ -65,7 +76,7 @@ on the PIONEER BDR-209D over the 14-track disc. Filed at
 Still untouched by any run: C2 (the drive reports it unsupported), `-f`, damaged
 media, CD-TEXT from a physical disc, and `-x` alone on a drive that goes on to rip.
 
-### The defect the pass found, and it is ours
+### The defect that run found, and it is ours
 
 `session/DIAGNOSTICS.txt` records thirteen `[error]` entries, recurring on
 
@@ -163,29 +174,33 @@ none of it in `src/`.
 | **opened** | our lap 1, on the released pair rather than a test pin |
 | **close condition** | **one, fixed at lap 1 under S-13: CC-1**, a hardware acceptance pass on the released pair |
 | **pin** | `978f9b0`, unmoved all round. No test pin; `none` is declared, which is an answer and not a build |
-| **their lap 2** | `OPEN`. Re-pinned their half to `0.6.33` at `0a69732` and declined to run CC-1 on `0.6.29`, for reasons better than the request was |
-| **our lap 3** | `GO`, sent. Carries the two statements corrected at the top of this file |
-| **next** | their lap 4. Ours declared `HANDSHAKE-NEXT-LAP: 4 (yours)` |
+| **their laps 4–7** | all `OPEN`, all transcribing our `GO`. Four laps in one envelope, three of them late. Their half moved `0.6.33` → `0.6.34` → `0.6.36` → `0.6.37`, each movement declared and lap 7 saying plainly that lap 6 promised it would not |
+| **our lap 3** | `GO`, sent. Its `HANDSHAKE-TESTED` was right; our reading of the bundle was not |
+| **next** | **ours, lap 8.** Their lap 7 declares `HANDSHAKE-NEXT-LAP: 8 (yours)` |
 
-**CC-1 is met by the 2026-09-03 session** and lap 3 could not say so. Our §9
-pre-commit was *"our next lap is `GO` unless your pass fails on a cause that is
-ours"* — the pass surfaced a cause that is ours, it is fixed, and it does not
-touch the pin.
+**CC-1 is NOT met.** Their four laps say so in every `HANDSHAKE-TESTED`, and the reason is theirs and named: the acceptance script's section F was under-budgeted, and `0.6.36` could not have passed either for a second reason they found afterwards. Our §9 pre-commit stands — our next lap is `GO` unless their pass fails on a cause that is ours. The one cause that was ours, the P5 misclassification, is fixed and does not touch the pin.
 
-### The digest methods still differ, and only the population matters
+### The digest methods no longer differ — resolved, and reproduced four times
 
-Their lap 2 declares `a1ff77af1fd6e3cb over 1`; we re-derive `c8fa5d93d9af5a20`
-over the same count. **Reproduced rather than accepted**: `sha256` of our lap 1's
-bytes truncated to 16 *is* their number, so their stated method was executed
-correctly. Ours builds `<lap>\t<FROM>\t<sha256>` rows and hashes those.
+Lap 2 declared `a1ff77af1fd6e3cb over 1` where we derived `c8fa5d93d9af5a20`
+over the same count: same population, different construction. Lap 3 §3 shipped
+our full spec and asked them to adopt one method or tell us to adopt theirs.
 
-The construction is a coin-flip; **the population is not.** Ours covers the whole
-record, ours and theirs. Theirs covers their inbox only — which can never disagree
-about anything the other side sent, the mirror of the outbox-only defect our row
-format replaced. Lap 3 §3 ships the full spec and asks them to adopt one method or
-tell us to adopt theirs. `tests/release_gate.py` allowlists their value with the
-cause recorded, pinned to their declared number so an edit to their filed lap
-fails here.
+**They adopted ours and built it independently** (`scripts/round_digest.py`),
+having first reproduced both numbers. Every digest in their laps 4, 5, 6 and 7
+re-derives here exactly:
+
+| their lap | declared | we derive |
+|---|---|---|
+| 4 | `1ad28e7744de3d6b over 3` | identical |
+| 5 | `ddc0d8a741f76b60 over 4` | identical |
+| 6 | `09268d7203773872 over 5` | identical |
+| 7 | `60a7c64dc252b1fa over 6` | identical |
+
+**Two implementations of one written spec, agreeing on four consecutive values,
+neither having seen the other's code.** That is what the field was for. The
+allowlist entry in `tests/release_gate.py` stays pinned to lap 2's declared
+value, because lap 2 is immutable and was computed by the old method.
 
 ### The process reform — 2026-08-26, on the maintainer's instruction
 
