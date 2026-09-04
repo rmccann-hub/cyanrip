@@ -269,6 +269,21 @@ test('Sanitizer sweep', python, args: [ files('../tools/sanitize-run.py') ],
 ## expensive rows were made cheap in the same change; this is the headroom.
 test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
      timeout: 120)
+
+## Reading a delivered bundle
+## =========================
+## The 2026-09-03 acceptance bundle said its own run FAILED -- report.json
+## "ok": false, and five [ FAIL ] lines in its transcript -- and we published
+## that it passed. Both files were in our hands and neither was read; the
+## filing note that should have exposed the omission was written from memory of
+## what was dropped rather than derived from it.
+##
+## tools/ingest-bundle.py reads the run's verdict BEFORE anything else and
+## derives the not-filed list as a set difference. This pins both properties,
+## on archives it builds itself -- a test that needs a delivered upload cannot
+## run in a clone, and the states that matter (no verdict file at all, a
+## passing one, a failing one) are states no single real bundle supplies.
+test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
 test('Seam record audit', python, args: [ files('../tools/seam-check.py'), '--gaps' ])
 
 
