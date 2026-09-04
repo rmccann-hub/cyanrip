@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gc4df1f0)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g047f8a9)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -655,9 +655,24 @@ this document does NOT claim are failures**; it is not part of this inventory.
 **Evidence** says why each string is here, and is reported rather than folded
 into a bare verdict so you can see which entries rest on the weaker test:
 
-- `control flow` - the call is followed by `return 1`, a non-zero `exit()`,
-  `return AVERROR(...)`, `total_error_count++`, or `goto fail`. Does not
-  depend on how the message is worded.
+- `control flow` - the call is followed by one of the constructs below.
+  Does not depend on how the message is worded. **They are not equivalent:**
+  some end the run and some record an error and continue, and this class
+  name alone cannot tell you which fired.
+
+  | construct | reaching it |
+  |---|---|
+  | `return 1;` | **ends the function** non-zero |
+  | `return -N;` | **ends the function** non-zero |
+  | `exit(non-zero)` | **ends the process** |
+  | `return AVERROR(...)` | **ends the function** with an FFmpeg error |
+  | `total_error_count++` | **records and CONTINUES** -- surfaces later as `Ripping errors: N` |
+  | `err = N` | sets a local flag; **does not itself transfer control** |
+  | `ret = N;` | sets a local flag; **does not itself transfer control** |
+  | `goto fail` | see P5a's note -- `fail:` is a label name, not a verdict |
+
+  Derived from `FAIL_PATH` in the generator, so this list cannot describe a
+  predicate the tool does not have.
 - `wording` - the message begins like a diagnostic, but no failure exit was
   found near it. Either the exit is further away than the search window, or
   the message is a warning that does not end the run. **Treat these as
