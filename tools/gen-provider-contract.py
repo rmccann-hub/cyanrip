@@ -96,6 +96,27 @@ GOTO_ANY = re.compile(r"\bgoto\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*;")
 # Kept deliberately small and stated, rather than inferred.
 GOTO_FATAL = ("fail",)
 
+# Evidence values that are a bare `goto <label>` and NOTHING ELSE: neither of
+# the two independent tests fired, and all that was found was a jump.
+#
+# A jump is not evidence of a failure path; it is the ABSENCE of evidence plus
+# a note about where control went. Treating it as a third kind of evidence is
+# what put `Done; (no matches found, but hit repeat limit of %i)` under a
+# heading reading "Every string reachable on a failure path" -- and
+# `finalize_ripping:` is the ordinary continuation, which flushes encoders and
+# falls into "Track %i ripped and encoded successfully!".
+#
+# NO LABEL LIST. An earlier draft of this kept `goto end` in P5 as a special
+# case and moved the rest, which would have been a hand-maintained allowlist
+# inside a generated artifact -- and reading `musicbrainz.c` showed why it
+# fails: `end_meta:` is fall-through-reachable from the SUCCESS path exactly
+# like `end:`, so any rule that separates them is about the label's name. The
+# two messages there really are failures, by `notfound = 1` reaching `ret = 1`
+# further down, which is evidence this generator does not have. P5a says
+# "not established", not "not a failure", so a consumer reads them rather than
+# trusting either verdict.
+GOTO_ONLY_RE = re.compile(r"goto [a-zA-Z_][a-zA-Z0-9_]*")
+
 # Where to stop looking. A failure exit only counts as belonging to this call if
 # nothing has opened a new branch in between -- otherwise an informational line
 # inherits the error handling of whatever happens to follow it. Without this cut
@@ -1601,10 +1622,29 @@ def emit(binary):
     w("else.")
     w("")
 
+    # A bare `goto <label>` is NOT evidence of a failure path, and P5 used to
+    # assert it was. Round 15's 2026-09-03 rig run is what showed the cost:
+    # `Done; (no matches found, but hit repeat limit of %i)` sat in a section
+    # headed "Every string reachable on a failure path" on the strength of
+    # `goto finalize_ripping` alone -- no wording evidence, no control-flow
+    # evidence -- and `finalize_ripping:` is the NORMAL continuation, which
+    # flushes encoders and falls into `Track %i ripped and encoded
+    # successfully!`. It appeared three times in a rip that ended
+    # `Ripping errors: 0` / `Rip completed: yes (14 of 14 tracks)`.
+    #
+    # `goto end` is a real ambiguity and keeps its established status, because
+    # `end:` genuinely is the route several aborts take. Every other label is
+    # named, unexamined, and now reported WITHOUT the failure claim.
+    established, goto_only = [], []
+    for row in fatal:
+        ev = row[4]
+        (goto_only if GOTO_ONLY_RE.fullmatch(ev or "") else established).append(row)
+
     w("## P5 - Fatal and error message inventory")
     w("")
-    w("Every string reachable on a failure path. Use this to derive error matching")
-    w("rather than guessing prefixes.")
+    w("Every string with evidence of being reachable on a failure path. Use this to")
+    w("derive error matching rather than guessing prefixes. **P5a below lists strings")
+    w("this document does NOT claim are failures**; it is not part of this inventory.")
     w("")
     w("**Evidence** says why each string is here, and is reported rather than folded")
     w("into a bare verdict so you can see which entries rest on the weaker test:")
@@ -1632,29 +1672,73 @@ def emit(binary):
     w("two arms of one if/else that both log and then converge on a single exit")
     w("must carry the same class.")
     w("")
-    w("| File:line | Message | Evidence | Reaches logfile? |")
-    w("|---|---|---|---|")
-    seen = {}
-    for name, line, s, to_log, ev in fatal:
-        if s in seen:
-            continue
-        seen[s] = ev
-        disp = s.replace("|", "\\|")
-        w(f"| `{name}:{line}` | `{disp}` | {ev} | {reaches_cell(to_log)} |")
-    w("")
-    tally = {}
-    for ev in seen.values():
-        tally[ev] = tally.get(ev, 0) + 1
-    w(f"**{len(seen)} distinct strings.** By evidence: " +
-      ", ".join(f"{tally.get(k, 0)} {k}"
-                for k in ("both", "control flow", "wording",
-                          "goto end", "wording + goto end")) + ".")
-    w("")
+    def message_table(rows):
+        """Emit one inventory table; return {evidence: count} over what it printed.
+
+        The tally is DERIVED from what was emitted rather than read off a list
+        of class names written by hand. The hand-written list is how this
+        section came to say `128 distinct strings` above a breakdown summing to
+        114: `genopt`, `goto finalize_ripping` and `goto end_meta` were in the
+        table and in the total, and in no line a reader could see. A class
+        nobody named stayed invisible in a document that presents itself as
+        derived -- the same defect as the fatal classifier's old allowlist of
+        opening words, one level up in the same section.
+        """
+        w("| File:line | Message | Evidence | Reaches logfile? |")
+        w("|---|---|---|---|")
+        seen, tally = set(), {}
+        for name, line, s, to_log, ev in rows:
+            if s in seen:
+                continue
+            seen.add(s)
+            tally[ev] = tally.get(ev, 0) + 1
+            disp = s.replace("|", "\\|")
+            w(f"| `{name}:{line}` | `{disp}` | {ev} | {reaches_cell(to_log)} |")
+        w("")
+        n = len(seen)
+        assert sum(tally.values()) == n, (
+            f"P5 tally {sum(tally.values())} does not sum to {n} distinct "
+            "strings; a class is being counted in the total and omitted from "
+            "the breakdown")
+        w(f"**{n} distinct strings.** By evidence: " +
+          ", ".join(f"{c} {k}" for k, c in sorted(tally.items(),
+                                                  key=lambda kv: (-kv[1], kv[0])))
+          + ".")
+        w("")
+        return tally
+
+    tally = message_table(established)
     w("The `control flow` and `both` rows total "
       f"{tally.get('both', 0) + tally.get('control flow', 0)} strings proven reachable on a")
     w("failure path without reference to their wording. That subset is the one to")
     w("build a hard failure classifier on.")
     w("")
+
+    w("## P5a - Strings this document does NOT classify")
+    w("")
+    w("**Not established in either direction. Do not match these as errors, and do")
+    w("not treat their absence from P5 as a claim that they are harmless** -- read")
+    w("them and decide. Neither of the two independent tests fired: no failure exit")
+    w("within the search window, and no diagnostic wording. All that was found was a")
+    w("`goto <label>`, which says where control went and nothing about why.")
+    w("")
+    w("**A jump is not an abort, and this section exists because asserting otherwise")
+    w("was acted on.** These rows sat in P5 under a heading reading *\"Every string")
+    w("reachable on a failure path\"* purely on the strength of a `goto`. One of them")
+    w("follows a converged/not-converged decision and jumps to `finalize_ripping:`,")
+    w("which flushes encoders and falls into `Track %i ripped and encoded")
+    w("successfully!` -- so a consumer classifying by this document recorded errors")
+    w("against a rip that completed every track with none.")
+    w("")
+    w("**The label is not the discriminator, which is why no label is exempted")
+    w("here.** `end:`, `end_meta:` and `finalize_ripping:` are all reachable by")
+    w("fall-through from their function's success path; a rule separating them would")
+    w("be about their names. Two of the rows below really are failures -- by a flag")
+    w("set here and read further down than the search window reaches -- and that is")
+    w("evidence this generator does not have, which is exactly what this section")
+    w("says.")
+    w("")
+    message_table(goto_only)
 
     w("## P6 - Version flags across the stock line")
     w("")
