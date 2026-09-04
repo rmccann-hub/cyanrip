@@ -1,0 +1,41 @@
+# Filed here, byte-exact from the bundle.
+441b9383300f564857ad9aafc60e2894a1ac4ff6d3e8f17f5b730918e239b181  rips/after-cancel.cue
+54ff56e544ba381e0d0bcd9a7c0f7854ddf693efe329ec5d9c0147e7237f2ec8  rips/after-cancel.eac.log
+4adaea2d71d471733a730b92d7be45f0952fed6a00fcbca1b52c02693bbc26d7  rips/after-cancel.log
+0fd7836a47d029aec7db558c7cbb947869125ac6e43b53854944387cbceda81c  rips/cancel-me.cue
+f1320766918297ec5373183b24d2d99876d960a2d0fb0aeeb84c50cb4a811d9a  rips/cancel-me.eac.log
+e7a2427b9b1978cfbfa4443da4239acdd13f3d2f29f3b0f3ce450b65f0b0eceb  rips/cancel-me.log
+90a3ce3a537aba0f4443fd24b4161ad897c807de2968a786a8c778c6e23890c4  rips/derived-mp3.cue
+ffc1b62334e0e04d64f36ba4e63ff5edf17a83c461c88d41c14c021cf0bb66e1  rips/derived-mp3.eac.log
+2772ed14833daab5dd72c7270e090393aa97bc66cd2072bdd5f80e8a340dd123  rips/derived-mp3.log
+fbdaba6753025d89e462b1d206b0c4043cab34bb604900e5d6112225528af606  rips/derived-wav.cue
+fd87cce5980ed5ceb84e0353948b035f70f84a36b5d4c067777f10c921765587  rips/derived-wav.eac.log
+a2e7afdb03dd041ebf46980cb7e8840cec837616649b7e4a5ec9c736f5d87b37  rips/derived-wav.log
+7a7a7ee793b5448c7d96f0b640e50ebe407e7956941520fdf21435cdc927b192  rips/derived-wavpack.cue
+ae0f9fa002bf7d57789bb0217f730e973b1cc43bd8aea144b2ee0344a6ce50fc  rips/derived-wavpack.eac.log
+e306274dec785b95c5b89bcbf5e73fe86a15138d8b191065ae74ff6773358d5f  rips/derived-wavpack.log
+94476a4028f325bda282e31ec3c907717a3784a74986eae920ac199d59cd0569  rips/full-acceptance-angle-bracket.cue
+c7d52746ada05c5843a81de04056b5de4dcb2d7dbdeb5e8c6d45aa5e7da61368  rips/full-acceptance-angle-bracket.eac.log
+45097210fc26ac8c3a2754263101ab9dfe34193b19e4df3ca6d22f328e957103  rips/full-acceptance-angle-bracket.log
+758652e2684e6c85663b8fdd8f551f0e9479afd8147e6d5901e9f40b13944135  rips/full-acceptance-angle-bracket.platterpus-addendum.txt
+973d6a4455da939e4c803d4af09c71ca2d7c6bd6d4f4da7ebbbfad964da23e5a  rips/secure-reread.cue
+806f50deadcacbe24daf90e3f39b592251fc098fd364eac584c0f8955c534b4e  rips/secure-reread.eac.log
+1757ce0791d4db20a82f27170d69c03b82ca4e2e6ea0780de0c6791a711b1a92  rips/secure-reread.log
+5a3dd28bcd1bb99ea316e47ba4a5dc0b021b4d39d6013b66e28818bbb9451973  session/DIAGNOSTICS.txt
+9919ca4faf7a83b88e1f1ef969fedf4af288d544c0c86f40cb09110828371eef  session/MANIFEST.txt
+65d050165c5ec547c4d639129de87fe1963a278c9c56b92229d8a1e5168f6fa0  session/SOURCES.txt
+
+# NOT filed: the per-rip Platterpus JSON reports. 19 MB across seven files,
+# almost all of it their embedded debug log and per-sample ETA trace. Their
+# hashes are here so a copy can be identified; the 2026-08-26 session filed
+# no JSON either. session/DIAGNOSTICS.txt carries the diagnostic entries.
+e49ab036bb13701223aa11a7d8e0c9a6bb7521f123494fc5cec935b05ed47720  (not filed) after cancel 20260903t110812 platterpus-fork-g978f9b0.platterpus.json
+a854e7101d07cfb3638611d442a0a4dc848e1e0244bbd19020d9c40669fab4c1  (not filed) cancel me 20260903t110812 platterpus-fork-g978f9b0.platterpus.json
+55f0bd1bf8d7d31ea8f703546c2883e8b65a2814903bb7cad8d758856e7ba490  (not filed) derived mp3 20260903t110812 platterpus-fork-g978f9b0.platterpus.json
+bde596473df84baf591c61d59e85f21dabf6ae52b2991c0045059a3704d5be56  (not filed) derived wav 20260903t110812 platterpus-fork-g978f9b0.platterpus.json
+b9390447cfe0600fbd333fc6e8ea30df630dfc362bc32a612db46f4fe396b6b4  (not filed) derived wavpack 20260903t110812 platterpus-fork-g978f9b0.platterpus.json
+8e19aa83c35f4b1c3034b05fa7627958bda99b1ff1152c68d7411a620dedc706  (not filed) full acceptance∶ angle‹bracket 20260903t110812 platterpus-fork-g978f9b0.platterpus.json
+6f25d299ea3c842e58140d9efc072e8a24ba29356ce7f85f71b18467bedf8b70  (not filed) secure reread 20260903t110812 platterpus-fork-g978f9b0.platterpus.json
+
+# The bundle as delivered.
+28618b5a6b5eb5b229869222d016bd0fff7a20e40e7dcc680603f35151bd443c  (not filed) platterpusbundle20260903t110812z.tar.gz
