@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g896a80a)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gc4df1f0)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -18,6 +18,15 @@ and is the one to recompute.
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
+
+**Fork identifier:** `platterpus-fork`. This is `PROJECT_FORK_ID`, and it is
+**the only reliable answer to "is this the fork?"** -- it appears in the
+version banner, in the first line of every logfile, and as `cyanrip.fork_id`
+in the `-j` record. **Match on it. Never match on the leading version
+number**, which is upstream's string copied verbatim and which upstream can
+mint identically; and never on the `-g<tag>` suffix, which names a commit
+rather than a build. Derived here from the banner, so it cannot drift from
+the binary.
 
 This is the provider half of the seam. Platterpus generates the consumer half
 (`docs/cyanrip-consumer-contract.md`) from its parser tables. Neither side
