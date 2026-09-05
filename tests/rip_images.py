@@ -2538,6 +2538,136 @@ def sc_contract_fatal_inventory():
              "committed contract has no P5a; regenerate it")
 
 
+def _meta_blocks(text):
+    """Every per-track rendered `Metadata:` block, as {track_no: {key: value}}.
+
+    ASSERT AGAINST THIS, NEVER AGAINST THE WHOLE LOG. The header echoes the
+    caller's argv verbatim on `Invoked as:`, so `"artist=" in log` is true on a
+    perfectly correct run. The first version of sc_consumer_argv() checked
+    exactly that, to prove no value had swallowed its neighbours, and failed a
+    clean binary on its own `-t` argument coming back in the echo. "Assert
+    against the position, not the file" -- CLAUDE.md already carried the rule
+    from sc_status_is_current(); this is the same defect in a new scenario.
+
+    A parsed field renders as `artist:` with padding. A SWALLOWED one never
+    renders at all -- its text sits inside the previous value -- so the two
+    readings differ in which KEYS EXIST, which is what this returns.
+    """
+    blocks = {}
+    for chunk in text.split("  Metadata:")[1:]:
+        fields = {}
+        for line in chunk.splitlines()[1:]:
+            m = re.match(r"^    (\S+):[ ]+(.*)$", line)
+            if not m:
+                break                      # blank line ends the block
+            fields[m.group(1)] = m.group(2).rstrip()
+        if "track" in fields:
+            blocks[int(fields["track"])] = fields
+    return blocks
+
+
+def sc_consumer_argv():
+    """Replay the consumer's ACTUAL argv shape and check every field lands.
+
+    WHY THIS EXISTS. Every flag Platterpus sends is exercised somewhere in this
+    suite -- individually. Their COMBINATION was not, and running it once found
+    a defect no scenario had: an ASCII apostrophe in a `-a` or `-t` value
+    silently destroys every later field in that argument.
+
+        -t "1=title=Can't Stand:artist=A:isrc=I"
+           -> title:  Cant Stand:artist=A:isrc=I
+              artist: never set
+              isrc:   never set
+
+    `-a`/`-t` go to av_dict_parse_string(..., "=", ":", 0), and FFmpeg's
+    tokeniser treats `'` as a QUOTE character: a bare apostrophe opens a run
+    that never closes. The apostrophe is dropped, the separators are ignored,
+    there is NO diagnostic, and the log records the corrupted value as though it
+    were what was asked for.
+
+    Their 2026-09-03 run escaped it by luck of the data -- every title in that
+    bundle uses U+2019, which is not a quote character.
+
+    The shape below is taken from that run's own `Invoked as:` line rather than
+    invented, so it goes stale the way their app does and not the way our
+    imagination does.
+    """
+    # Their argv, minus -d/-s (fixture) and plus -A (no network here).
+    common = ["-o", "flac", "-T", "unicode", "-r", "3", "-Z", "2", "-N", "-A",
+              "--consumer", "platterpus/0.6.37", "-c", "1/1", "-G"]
+
+    # 1. THE SHAPE THAT WORKS -- U+2019, as their MusicBrainz data supplied.
+    #
+    # TRACK 2's ARTIST IS DELIBERATELY NOT THEIRS. Their disc is single-artist,
+    # so `artist` and `album_artist` carry the same string -- and cyanrip_main.c
+    # backfills `artist` from `album_artist` when artist is unset, which means a
+    # faithful replay asserts `artist: The Police` that would hold EVEN IF the
+    # -t artist had been swallowed. The assertion would pass for the wrong
+    # reason. Found by revert-proving this scenario: introducing the apostrophe
+    # defect into track 1 failed on `title` and `isrc` and NOT on `artist`.
+    #
+    # A guest artist on track 2 makes the two sources distinguishable. It also
+    # supplies the input the `album_artist && !artist` mutant survives for want
+    # of -- CLAUDE.md names it as the sharpest survivor the sweep found, and
+    # says the case that separates `&&` from `||` there is a compilation.
+    rip("cargv", "basic.cue", *common,
+        "-a", "album=Greatest Hits:album_artist=The Police:date=2003",
+        "-t", "1=title=Can’t Stand Losing You:artist=The Police:isrc=GBAAM0201089",
+        "-t", "2=title=Roxanne:artist=Sting:isrc=GBAAM0201086")
+    meta = _meta_blocks((WORK / "cargv.log").read_text())
+
+    if set(meta) != {1, 2}:
+        fail(f"consumer_argv: expected a Metadata block for tracks 1 and 2, "
+             f"got {sorted(meta)}")
+        return
+
+    # EVERY field the caller passed must land, on the right track, with the
+    # exact value. Equality rather than substring: a swallowed field leaves its
+    # text inside the PREVIOUS value, so `"The Police" in blob` stays true
+    # while `artist` itself was never set -- which is how this went unnoticed.
+    want = {
+        1: {"album": "Greatest Hits", "album_artist": "The Police",
+            "date": "2003", "title": "Can’t Stand Losing You",
+            "artist": "The Police", "isrc": "GBAAM0201089"},
+        2: {"album": "Greatest Hits", "album_artist": "The Police",
+            "date": "2003", "title": "Roxanne",
+            "artist": "Sting", "isrc": "GBAAM0201086"},
+    }
+    for track, fields in want.items():
+        for key, value in fields.items():
+            got = meta[track].get(key)
+            if got is None:
+                fail(f"consumer_argv: track {track} was passed {key}={value!r} "
+                     f"and the field is absent from its Metadata block -- an "
+                     f"earlier value swallowed it")
+            elif got != value:
+                fail(f"consumer_argv: track {track} {key} is {got!r}, "
+                     f"expected {value!r}")
+
+    # 2. THE KNOWN DEFECT, PINNED SO IT CANNOT CHANGE SHAPE UNNOTICED.
+    #
+    # This asserts the program is CURRENTLY WRONG. That is deliberate and it is
+    # the only honest option while src/ is frozen: handshake round 15 is open,
+    # a consumer is running an acceptance test against the pin, and S-15
+    # forbids moving it.
+    #
+    # WHEN THE FIX LANDS THIS MUST FAIL, and the remedy is to fold the fields
+    # into part 1's table rather than to delete the case. docs/SETTLED.md
+    # carries the row.
+    rip("cargvq", "basic.cue", *common,
+        "-t", "1=title=Can't Stand:artist=SHOULD_LAND:isrc=SHOULD_ALSO_LAND")
+    qmeta = _meta_blocks((WORK / "cargvq.log").read_text()).get(1, {})
+
+    if qmeta.get("artist") == "SHOULD_LAND":
+        fail("consumer_argv: the ASCII-apostrophe defect appears to be FIXED -- "
+             "artist now lands as its own field. Good. Fold these fields into "
+             "part 1's table and drop the SETTLED row that records the defect.")
+    elif qmeta.get("title") != "Cant Stand:artist=SHOULD_LAND:isrc=SHOULD_ALSO_LAND":
+        fail("consumer_argv: the ASCII-apostrophe defect did not reproduce in "
+             f"the expected shape -- title is {qmeta.get('title')!r}. It may "
+             "have changed rather than been fixed; re-derive it before "
+             "trusting either reading.")
+
 def sc_interrupt_deadlock():
     """A signal arriving while the log lock is held must not wedge the process.
 

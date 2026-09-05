@@ -326,6 +326,7 @@ rip_scenarios = [
     'contract_diagnostics',
     'contract_composed',
     'contract_fatal_inventory',
+    'consumer_argv',
     'abort_footer',
 ]
 
