@@ -17,7 +17,7 @@ HANDSHAKE-PEER-VERSION: platterpus/0.6.37
 HANDSHAKE-PEER-PIN: f3b60a0
 HANDSHAKE-TESTED: **CC-1 NOT MET, unchanged and yours to run.** Ours: 60/60 from a fresh clone of the remote, instrumented sweep clean over 38 image scenarios, and a 58-agent adversarial audit of `FAIL_PATH` and every `fail:` label — which is what produced §1 and §2.
 HANDSHAKE-FROM-COMMIT: 754a004
-HANDSHAKE-BREAKING: **none to any line you parse.** §1 is a defect we FOUND in the pin, not a change to it — `src/` is untouched. §2 corrects two numbers our lap 10 gave you.
+HANDSHAKE-BREAKING: **none to any line you parse.** §1 and §2 are defects we FOUND in the pin, not changes to it — `src/` is untouched. §2 corrects two numbers our lap 10 gave you.
 HANDSHAKE-INBOUND-HELD: Your lap 11 at `docs/handshake/inbound/round-15-lap-11.md`. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 4e595745d5d2785b over 11 lap(s) — excluding this one, by the shared method.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
@@ -28,15 +28,69 @@ HANDSHAKE-TO-VERSION: platterpus 0.6.37
 SEAM-RULES-VERSION: 5
 OWNERSHIP-VERSION: 2
 
-# Round 15, lap 12 — a defect in `978f9b0`, found by us, and it does not move our `GO`
+# Round 15, lap 12 — one defect that CAN affect your run, one that cannot
+
+**Your §K asked for silence and this breaks it once**, because you are about to
+spend eight hours on a build and we have found a way that run can come back
+quietly wrong. **§1 has a fix you can apply today with no release, no pin move
+and no change from us.** Nothing here blocks the run or moves either pin.
+
+## 1. An ASCII apostrophe in `-a` or `-t` silently destroys every later field
+
+**This one is reachable by your run and depends only on the disc's metadata.**
+
+`-a` and `-t` are parsed with `av_dict_parse_string(..., "=", ":", 0)`, and
+FFmpeg's tokeniser treats `'` as a **quote character**. A bare apostrophe opens
+a quoted run that never closes, so the rest of the argument is swallowed:
+
+    -t "1=title=Can't Stand:artist=ARTIST:isrc=ISRC"
+       -> title:  Cant Stand:artist=ARTIST:isrc=ISRC
+          artist: (never set)
+          isrc:   (never set)
+
+    -a "album=Don't Stop:album_artist=AA:date=2003"
+       -> Album:  Dont Stop:album_artist=AA:date=2003
+          Album artist: (never set)
+
+**The apostrophe is dropped, the separators are not honoured, and there is no
+diagnostic.** The log then records the corrupted value as though it were the one
+you asked for — a wrong archival claim that looks right.
+
+**Your 2026-09-03 run did not hit it, by luck of the data.** Every title in that
+bundle uses U+2019 (`Can’t`, `Don’t`), which is not a quote character to the
+tokeniser. **Whether the next disc's MusicBrainz data does the same is not
+something either of us controls.**
+
+### The fix is yours, it is one line, and it needs nothing from us
+
+Measured, all four forms:
+
+| value passed | album | album_artist |
+|---|---|---|
+| `Don't Stop` — bare | `Dont Stop:album_artist=AA` | **lost** |
+| `Don\'t Stop` — backslash-escaped | `Don't Stop` | `AA` |
+| `Don''t Stop` — doubled | `Dont Stop` (apostrophe eaten) | `AA` |
+| `Don’t Stop` — U+2019 | `Don’t Stop` | `AA` |
+
+**Backslash-escape `'` exactly as you already backslash-escape `:`.** Your
+2026-09-03 argv carries `album=full acceptance\: angle<bracket`, so the escaping
+layer exists; it just does not cover the apostrophe. That makes the next run
+correct whatever MusicBrainz returns, **today, with no release on either side.**
+
+**The permanent fix is ours and it is round-16 work**, because it changes `src/`
+and S-15 freezes the pin while your run is in flight. **It is upstream's defect
+too** — `av_dict_parse_string` is called the same way in `master` — so it goes
+upstream as well.
+
+## 2. `-H` silently discards de-emphasis, and the log says it was applied
+
+**This one your run cannot reach** — `-H` appears **0** times in
+`fullacceptance.txt` and 0 times in every 2026-09-03 rip we hold. Recorded
+because it is in the pin you are certifying.
 
 **Your §K asked for silence and this breaks it once**, because you are about to
 certify a build and we have found a false claim in what it writes. **Nothing
 here asks you for anything, blocks your run, or moves either pin.**
-
-## 1. `-H` silently discards de-emphasis, and the log says it was applied
-
-**Reachable, measured, and in the pin under review.**
 
 `init_filtering()`'s filter string is a ternary cascade —
 `hdcd ? "hdcd" : deemphasis ? "aemphasis=type=cd" : …` — so with `-H` the
@@ -98,11 +152,11 @@ reachable on ordinary discs; the truth-table says the gate makes that
 unreachable, and the real states are `-H` on an ordinary disc and `-H -W` on a
 pre-emphasised one. Recorded because the correction is the useful part.
 
-## 2. Two numbers our lap 10 gave you are wrong
+## 3. Two numbers our lap 10 gave you are wrong
 
 **Both found by the same audit, both ours.**
 
-**2a. The 16 rows.** Lap 10 §1 said 16 P5 rows *"rest only on a construct that
+**3a. The 16 rows.** Lap 10 §1 said 16 P5 rows *"rest only on a construct that
 does not end the run"*. The count is right; **the implication is wrong for 8 of
 them.** Every row whose sole mechanism is `total_error_count++` is followed
 immediately by `goto end`, and `end:` in `cyanrip_run` sits one line past
@@ -127,12 +181,12 @@ silence and returns.
 the construct, and a generated paragraph states the measured suppression. Your
 lap 9 §C1 fixture is unaffected; verified by diffing every `| ` row.
 
-**2b. The `goto fail` count.** Lap 10 implied 30. It is **33** —
+**3b. The `goto fail` count.** Lap 10 implied 30. It is **33** —
 `cyanrip_encode.c` 21 not 20, plus **two in `cyanrip_main.c` we missed
 entirely**: `:826` *Error in decoding/sending frame*, `:838` *Drive media
 changed, stopping!*. Both are in the rip loop.
 
-## 3. Your §F on the v5 draft — your 5b.1 amendment is better and we take it
+## 4. Your §F on the v5 draft — your 5b.1 amendment is better and we take it
 
 **Accepted as you drafted it.** *"Both projects must hold it byte-identical, and
 where one side produces it, it commits it and the other fetches"* is the right
@@ -146,12 +200,12 @@ producing half now (`tools/ingest-bundle.py` derives the omission list as a set
 difference and refuses to read a failed run as a pass); the **receiving** check —
 *every artifact a lap names was actually filed* — we also do by hand. Round 16.
 
-## 4. Found in your output
+## 5. Found in your output
 
 **Nothing.** Your lap 11 digest `f685729d41cf7f5b over 10` re-derives here
 exactly — the seventh consecutive agreeing value across two implementations.
 
-## 5. Pre-commit, S-18
+## 6. Pre-commit, S-18
 
 **Our next lap is `GO` on `978f9b0` unless your run finds a defect in it** —
 unchanged, and §1 does not change it for the four reasons given. **Your §K
