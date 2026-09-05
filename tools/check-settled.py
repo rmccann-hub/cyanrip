@@ -53,6 +53,27 @@ SETTLED = ROOT / "docs" / "SETTLED.md"
 ROW = re.compile(r"^\|(?P<fact>.+?)\|(?P<check>.+?)\|\s*$")
 CMD = re.compile(r"`([^`]+)`")
 
+# A markdown cell escapes a pipe as `\|`, and ROW's lazy `.+?` pair cannot see
+# that escape -- so a row whose FACT cell contains one split in the wrong place
+# and this checker ran the wrong text as that row's command. Measured
+# 2026-09-05: a row reading "`&&` from `\|\|`" reported
+# `exit 2: Syntax error: end of file unexpected`, having executed a fragment of
+# its own prose.
+#
+# The pipe-COUNT check below already honoured the escape. Two readers of one
+# convention disagreed -- the seam failure this project names in as many words,
+# here inside a single file. Splitting on unescaped pipes makes them one reader.
+UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")
+
+
+def cells(line):
+    """The row's two cells, split on UNESCAPED pipes, or None if not a row."""
+    parts = UNESCAPED_PIPE.split(line.rstrip())
+    # `| fact | check |` -> ['', ' fact ', ' check ', '']
+    if len(parts) != 4 or parts[0].strip() or parts[3].strip():
+        return None
+    return parts[1].strip(), parts[2].strip()
+
 
 def main():
     text = SETTLED.read_text(encoding="utf-8")
@@ -60,8 +81,8 @@ def main():
     kinds, untagged = {}, []
 
     for line in text.splitlines():
-        m = ROW.match(line)
-        if not m:
+        split = cells(line)
+        if split is None:
             continue
         # Exactly two columns. The `— past: / theirs: / structural:` legend in
         # this file's own header is a THREE-column table, and the non-greedy
@@ -74,9 +95,7 @@ def main():
         # pipes into grep -- 15 runnable checks became 11, silently, and the
         # only reason it was caught is that the number was read after the edit
         # rather than assumed.
-        if len(re.sub(r"\\\|", "", line).split("|")) - 1 != 3:
-            continue
-        fact, check = m.group("fact").strip(), m.group("check").strip()
+        fact, check = split
         # The header row and its underline.
         if fact in ("fact",) or set(fact) <= set("-: "):
             continue
