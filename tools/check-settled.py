@@ -121,6 +121,26 @@ def main():
             malformed.append(fact[:70])
             continue
 
+        # THIS SCRIPT IS ITSELF A REGISTERED MESON TEST ('Settled facts'), so a
+        # cell that runs `meson test -C build ...` re-enters meson on the SAME
+        # build directory. Meson's log base is <builddir>/meson-logs/testlog
+        # with no uniquifier, so the inner run TRUNCATES the file the outer run
+        # is still appending to. Measured 2026-09-05 after two such cells were
+        # added: testlog.json came out 26.7% NUL bytes with 47 of 61 records
+        # surviving and the inner run's single result first, while the JUnit
+        # copy stayed intact because it is rewritten whole at finish().
+        #
+        # The suite really had passed. Its machine-readable record of having
+        # passed was corrupt -- which is the confident-wrong-artifact this
+        # project rates worse than a missing one, and it is exactly the file a
+        # CI job archives as proof the commit was green.
+        #
+        # Invoke the scenario directly instead; that is how meson runs it.
+        if re.search(r"\bmeson\s+test\b", cmd.group(1)) and "--logbase" not in cmd.group(1):
+            malformed.append(fact[:70] + "  [re-enters meson test without "
+                             "--logbase; run the scenario directly]")
+            continue
+
         runnable += 1
         # A markdown table cell must escape a pipe as `\|`, so a command
         # containing one arrives here escaped and the shell sees a literal
