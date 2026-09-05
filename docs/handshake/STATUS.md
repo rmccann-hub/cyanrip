@@ -17,50 +17,76 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-04. **Round 15 is OPEN at lap 9, theirs. No lap is owed. The round closes on their run.**
+## Rewritten 2026-09-05. **Round 15 is OPEN at lap 12, ours, sent. Their lap is owed. The round still closes on their run.**
 
-### The correction that must reach them next — our lap 10 is wrong about eight rows
+**Lap 12 delivered the correction this file used to say was owed** — our lap 10
+told them 16 P5 rows "rest only on a construct that does not end the run", and
+for eight of them that was wrong because each is followed immediately by
+`goto end`. Lap 12 §3 carries it. Nothing is outstanding from us.
 
-**Our lap 10 §1 told Platterpus that 16 P5 rows "rest only on a construct that
-does not end the run".** The count is right. **The implication is wrong for
-eight of them**, and the contract we shipped the same day said so outright:
-`total_error_count++ | records and CONTINUES`.
+**Our lap 12 pre-commits under S-18: our next lap is `GO` on `978f9b0` unless
+their run finds a defect in it.** That binds. It is conditioned on *their* run,
+so the findings below do not release us from it — and none of them makes the
+reviewed pin unsafe, which is the only thing that could promote one to blocking.
 
-**Every one of those eight is followed immediately by `goto end`:**
+### A test audit ran on 2026-09-05, and what it changes here
 
-    cyanrip_main.c:2158  Error reading album tags: %s
-    cyanrip_main.c:2255  Invalid track number %i for pregap...
-    cyanrip_main.c:2276  Invalid track number %i...
-    cyanrip_main.c:2289  Missing "=" in track metadata "%s"
-    cyanrip_main.c:2305  Error reading track tags: %s
-    cyanrip_main.c:2433  Error initializing decoder: %s
-    cyanrip_main.c:2442  Error initializing encoder: %s
-    cyanrip_main.c:2498  Invalid rip index %i...
+`docs/AUDIT-2026-09-05.md` is the record; `docs/SETTLED.md` carries the rows with
+their re-check commands. Seven defects were verified first-hand, two lane claims
+were refuted by measurement, and the merge-back list is now **six**.
 
-`end:` in `cyanrip_run` sits one line past `ctx->rip_ran_to_completion = 1`, so
-those rips **abort and exit 1**. A consumer reading our table would file
-`Error initializing decoder:` as a run that carried on.
+**Exactly one of them is theirs to agree to, and it is the one that matters most:**
 
-**The cause is that `evidence()` discards the goto once `by_flow` is true.**
-Measured by re-running its own window rule: **12 of the 84** control-flow/`both`
-rows carry a suppressed `goto` — 9 `end`, 3 `end_meta`. Only **two** of the 84
-genuinely record and continue: `cyanrip_main.c:542` and `:549`, in
-`cyanrip_read_frame`, which substitutes silence and returns.
+> **`docs/seam-commands.md` §7 is stale, and both projects have cryptographically
+> agreed on the stale bytes.** Line 504 publishes `-p '99=drop'` as accepted /
+> exit 0; the binary refuses it with exit 1 and a diagnostic, and the control
+> `-p '1=drop'` exits 0 so the probe discriminates. The file last moved
+> `b9a9c53` (2026-08-07); the bound moved `bf8ab3a` (2026-08-15).
+>
+> Its `sha256` is `7dc31381…5564196`, byte-identical to the `seam-commands=`
+> value in `round-15-lap-12.md:23`, and `tools/seam-check.py` reports **OK**.
+>
+> **A shared hash proves both sides hold the same bytes. It can never prove the
+> bytes describe the binary.** §7 has no `--check` and no gate — it is the one
+> shared artifact where those two facts can diverge in silence, and they have.
 
-**Fixed in the contract without moving a row** — the effect column now describes
-the construct, and a generated paragraph states the measured suppression and
-names this case. Reporting the label in the Evidence *value* is the real fix; it
-moves rows, so it is round-16 material and would stale the fixture their lap 9
-§C1 regenerated from our filed artifact.
+`seam-commands.md` is jointly owned, so a cell correction is a shared-file edit
+and needs a joint version bump. **It goes in a lap.** The remedy is ours to build
+and theirs to assent to: `--check` in `tools/probe-argv-surface.py`, regenerating
+§7 between explicit delimiters and diffing. The delimiters are not decoration —
+the check must not claim prose the other side wrote.
 
-**A count in lap 10 is also short.** Rows resting only on `goto fail` are **33**,
-not 30 — `cyanrip_encode.c` 21 not 20, plus **two in `cyanrip_main.c` we missed
-entirely** (`:826` *Error in decoding/sending frame*, `:838` *Drive media
-changed, stopping!*), both in the rip loop.
+**Everything else found is ours alone, and none of it is lap material.** Under the
+2026-08-26 reform, findings go in commit messages and `Changelog.md`, which they
+can read from git and which need no reply. Five of the six code defects are frozen
+by S-15 while the round is open; all are next-round work. In brief, all upstream's
+and all with commands in `docs/SETTLED.md`:
 
-**Found by an adversarial audit of our own source**, 58 agents over every
-mechanism and every `fail:` label, two independent refuters each. It found a
-defect in a fix we had shipped that morning.
+| finding | reach |
+|---|---|
+| Three live defects in the AccurateRip response parser — unchecked `av_realloc` feeding a `memcpy`, `strcmp` on a NULL `content_type`, `strstr` over a never-NUL-terminated buffer | the network path, which **no scenario here can reach**: all 40 hardcode `-N -A -U` |
+| `fun512.c:72` signed-overflow UB — `ftell` on a directory returns `LONG_MAX`, so `len + 1` overflows before any bound check | `cyanrip -Y <a directory>` |
+| `cyanrip_main.c:2184`/`:2186` bare `return 1;` skip `cyanrip_ctx_end()`, which also **closes the drive** | the log-init and cue-init failure paths |
+| Invalid UTF-8 truncates a name; a **leading** bad byte empties the component, and with a multi-component `-D` the path becomes **absolute** | measured with their own `-D {album_artist}/{album}`: a rip landed in `/Some Album`, exit 0 |
+| A logfile's first line is not always the fork banner when a naming-scheme argument holds invalid UTF-8 | `-Y` still returns 0 on such a log |
+
+**One was ours and was made that same session:** two `docs/SETTLED.md` cells ran
+`meson test` inside a registered meson test, so the suite re-entered meson on the
+same build directory and the inner run truncated `testlog.json` — 26.7% NUL, 47 of
+61 records, while JUnit stayed intact. Fixed at `8e1fd20` and guarded. The suite
+had really passed; its machine-readable record of passing had not.
+
+**And one positive result, recorded because an absence of a finding is a result:**
+metadata **cannot** escape the output directory. `/` becomes U+2215 before it
+reaches the filesystem; 16 of 16 traversal attempts across all four `-T` modes
+stayed contained.
+
+### What we expect from their next lap
+
+Their run's result, per both pre-commits. **If it carries testing language or asks
+of us, the audit above is the prepared answer** — `docs/AUDIT-2026-09-05.md` §3
+holds ~40 further leads that were reported by an agent and *not* re-derived here,
+and they are labelled at that weight on purpose. A lead is not a finding.
 
 ### The correction, first — and it is ours, twice over
 
@@ -220,11 +246,13 @@ none of it in `src/`.
 | **their laps 4–9** | all `OPEN`, all transcribing our `GO`. Laps 4–7 arrived in one envelope, three of them late; their half moved `0.6.33` → `0.6.34` → `0.6.36` → `0.6.37`, each move declared, and has not moved since lap 7 |
 | **our lap 3** | `GO`, sent. Its `HANDSHAKE-TESTED` was right; our reading of the bundle was not |
 | **our lap 8** | `GO`, sent. Accepts `0.6.37` at `f3b60a0` as the app half and corrects our own CC-1 claim |
-| **next** | **nothing.** Their lap 9 declares `HANDSHAKE-NEXT-LAP: none owed` — the next thing across the seam is their run's result, not a lap. Both pre-commits are already conditional on it |
+| **our laps 10 and 12** | both `GO`, sent. Lap 10 named 16 P5 rows; lap 12 §3 corrects eight of them — each is followed immediately by `goto end`, so the contract's own `records and CONTINUES` was right and our lap was not |
+| **our lap 12 pre-commit** | S-18: **`GO` on `978f9b0` unless their run finds a defect in it.** Binding, and conditioned on their run — the 2026-09-05 audit's findings do not release it |
+| **next** | **nothing from us.** Lap 12 declares `HANDSHAKE-NEXT-LAP: none owed`; the next thing across the seam is their run's result. Both pre-commits are conditional on it |
 
 **CC-1 is NOT met.** Their four laps say so in every `HANDSHAKE-TESTED`, and the reason is theirs and named: the acceptance script's section F was under-budgeted, and `0.6.36` could not have passed either for a second reason they found afterwards. Our §9 pre-commit stands — our next lap is `GO` unless their pass fails on a cause that is ours. The one cause that was ours, the P5 misclassification, is fixed and does not touch the pin.
 
-### The digest methods no longer differ — six consecutive agreeing values
+### The digest methods no longer differ — seven consecutive agreeing values
 
 Lap 2 declared `a1ff77af1fd6e3cb over 1` where we derived `c8fa5d93d9af5a20`:
 same population, different construction. Lap 3 §3 shipped our full spec and
