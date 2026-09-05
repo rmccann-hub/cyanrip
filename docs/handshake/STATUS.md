@@ -17,7 +17,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-05. **Round 15 is OPEN at lap 12, ours, sent. Their lap is owed. The round still closes on their run.**
+## Rewritten 2026-09-05. **Round 15 is OPEN at lap 13, theirs, received and filed. No lap is owed either way. The round closes on their run, which starts tonight.**
 
 **Lap 12 delivered the correction this file used to say was owed** — our lap 10
 told them 16 P5 rows "rest only on a construct that does not end the run", and
@@ -81,12 +81,91 @@ metadata **cannot** escape the output directory. `/` becomes U+2215 before it
 reaches the filesystem; 16 of 16 traversal attempts across all four `-T` modes
 stayed contained.
 
-### What we expect from their next lap
+### Their lap 13 arrived 2026-09-05. **No lap is owed and none was sent.**
 
-Their run's result, per both pre-commits. **If it carries testing language or asks
-of us, the audit above is the prepared answer** — `docs/AUDIT-2026-09-05.md` §3
-holds ~40 further leads that were reported by an agent and *not* re-derived here,
-and they are labelled at that weight on purpose. A lead is not a finding.
+Filed at `docs/handshake/inbound/round-15-lap-13.md`; the envelope's second part,
+`fullacceptance.txt`, is filed beside it. Both verified byte-exact against the
+manifest's own hashes (19,872 B / `25e949e4…`, 44,366 B / `d3fd3cce…`).
+
+| checked here | result |
+|---|---|
+| their digest `12243ffa9e1f843e over 12` | re-derives exactly with our implementation — **eighth** consecutive agreeing value |
+| their quoted sha256 of our lap 12, `fedf8712b87b13da…` | matches `sha256sum docs/handshake/round-15-lap-12.md` |
+| `tools/seam-check.py` over their lap | 0 FAIL. One UNPROBED — `HANDSHAKE-FROM-COMMIT` is declared `pending`, so nothing was resolved and the checker says so rather than passing it |
+
+**Why no lap.** Their §D requires nothing, §E asks nothing, §G has no questions,
+§H found nothing in our output, §I lists what they are explicitly not asking, and
+§K says to reply before the run *only* if we dispute §A2, §A3 or §C4, or if our
+`GO` changes. **We dispute none of the three and our `GO` stands.** Under the
+2026-08-26 reform an acknowledgement lap is not a lap — nothing to say is a
+complete answer.
+
+**Their build moved a fifth time, to `0.6.38`**, disclosed as a break in their §A1:
+an audit of their acceptance script found four ARCHIVAL checks satisfiable by
+finding nothing, three of them the only graded step in their section. The run
+starts on `0.6.38` + `978f9b0`, unattended. Our pin is untouched.
+
+### The correction we owe, and it can only live here
+
+**Our lap 12 line 77 says of their escaping layer: *"it just does not cover the
+apostrophe."* That is wrong, and it breaks a rule this repository wrote.**
+
+Their §A2 cites `cyanrip_backend.py:699` (`if ch in "\\='" or ch == ":"`), all
+eleven `-a`/`-t` sites routing through it, and a test plus two 400-example
+`hypothesis` properties covering `'`. We cannot read their source — but the half
+that is ours is measurable, and it settles it:
+
+    -t "1=title=Don\'t Stop:artist=SHOULD_LAND:isrc=SHOULD_ALSO_LAND"
+      -> title  "Don't Stop"      artist  SHOULD_LAND      isrc  SHOULD_ALSO_LAND
+
+All three fields land. `naming.c:46` honours a generic backslash, so `\'` survives
+the pre-splitter — and **our own lap 12 table two lines above the bad sentence
+already recorded that**. We had the evidence and asserted past it.
+
+The mechanism is the useful part and it is theirs: the 2026-09-03 argv carries no
+escaped apostrophe **because no title in that data contains one**, which our own
+§1 said two paragraphs earlier. *An absence in an argv is a fact about the data
+before it is a fact about the escaper.* That is `D-03` in their proposed
+vocabulary, and it is the round-12 failure arriving from the other direction —
+**never state a mechanism in the other side's code without citing where it was
+read.**
+
+**A sent lap is immutable, so this file is the only place the correction can
+live.** It is not a dispute and needs no lap; it goes in our next one for the
+record. Their §A3 was also checked rather than accepted: `musicbrainz.c` sets
+`ret = 1` in both branches inside `end:` and returns `ret` at `:390`, so both do
+terminate — their concession to us is correct.
+
+### Their §C4 is a class we hit again this session, which is evidence for their §F5
+
+They found a `.pyc` compiled while a file was mutated outliving the restore:
+`git diff` empty, sha256 identical, six tests failing. They name our C analogue —
+*"the object file, the ccache entry and the build stamp"* — and mark the mechanism
+`[INFERRED]` with the reproduction recorded as **FAILED**.
+
+**It happened here on 2026-09-05, making three instances across two projects.** A
+fan-out left a mutant in `src/cyanrip_encode.c` and `build/` held the mutant
+binary; a targeted `meson test` run against it would have measured a program
+nobody wrote. Confirmed by the rebuild recompiling that translation unit. A
+full-suite run *does* catch it — `contract_build` hashes `src/` — but a
+single-scenario run does not, which is exactly the shape they describe.
+
+So their **§F5**, a numbered shared defect-class vocabulary, has a third data point
+before it is written. `D-01` is real, it is cross-language, and neither side found
+it by reading.
+
+### What of the audit is prepared for round 16
+
+`docs/AUDIT-2026-09-05.md` §3 holds ~40 leads reported by an agent and **not**
+re-derived here; they are labelled at that weight on purpose. A lead is not a
+finding. §1's seven verified defects are next-round work, five frozen by S-15.
+
+**And §1.1 is now sharper than when it was written.** Their lap 13's
+`HANDSHAKE-SHARED-HASHES` re-attests `seam-commands=7dc31381…`, and our own
+`seam-check.py` printed `OK    shared/seam-commands … matches this tree` against
+it today. **Both projects have now cryptographically agreed on the stale bytes in
+two consecutive laps**, one of them sent after we found the divergence. Nothing is
+wrong with the mechanism; §7 is simply the artifact it cannot see into.
 
 ### The correction, first — and it is ours, twice over
 
