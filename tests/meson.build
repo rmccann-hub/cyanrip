@@ -33,6 +33,18 @@ subq_test = executable('subq_test',
 )
 test('Q sub-channel decoding', subq_test)
 
+## Includes accurip.c rather than linking it: the response helpers are static,
+## and this is the one path NO disc image can reach -- rip_images.py passes
+## -N -A -U on every scenario, so crip_fill_accurip() returns before any of it.
+## Three defects lived there. The over-read cases need the instrumented build
+## to detect the read itself: meson test -C build-asan 'AccurateRip response'.
+arresp_test = executable('arresp_test',
+    sources: [ 'arresp.c' ],
+    include_directories: [ '../src' ],
+    dependencies: unit_test_deps + [ dependency('libcurl') ],
+)
+test('AccurateRip response', arresp_test)
+
 ## Whether a pre-gap earns an INDEX 00. Header-only, no objects: the case it
 ## exists to get right needs a pre-gap that is signalled AND zero frames long,
 ## and no image driver produces one -- measured on a purpose-built bincue
