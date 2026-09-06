@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g72975de)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-ga79ac9e)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 17c824289720be44` over `src/*.c` and
+**Source anchor:** `sha256/16 = 9ecba7c3934fe976` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -420,21 +420,21 @@ requires a handshake round.
 | `cyanrip_main.c:2031` | `Offset is unset! To continue with an offset of 0, run with -s 0!` |
 | `cyanrip_main.c:2112` | `MusicBrainz URL:%s` |
 | `cyanrip_main.c:2158` | `Error reading album tags: %s` |
-| `cyanrip_main.c:2208` | `Log(s) will be written to:` |
-| `cyanrip_main.c:2216` | `CUE files will be written to:` |
-| `cyanrip_main.c:2275` | `Invalid track number %i for pregap, list has %i tracks!` |
-| `cyanrip_main.c:2296` | `Invalid track number %i, list has %i tracks!` |
-| `cyanrip_main.c:2309` | `Missing \"=\" in track metadata \"%s\"` |
-| `cyanrip_main.c:2325` | `Error reading track tags: %s` |
-| `cyanrip_main.c:2379` | `Cover art destination(s):` |
-| `cyanrip_main.c:2414` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
-| `cyanrip_main.c:2425` | `Tracks:` |
-| `cyanrip_main.c:2435` | `Track %i info:` |
-| `cyanrip_main.c:2453` | `Error initializing decoder: %s` |
-| `cyanrip_main.c:2462` | `Error initializing encoder: %s` |
-| `cyanrip_main.c:2498` | `Error encoding: %s` |
-| `cyanrip_main.c:2518` | `Invalid rip index %i, list has %i tracks!` |
-| `cyanrip_main.c:2600` | `Error ripping: %s` |
+| `cyanrip_main.c:2223` | `Log(s) will be written to:` |
+| `cyanrip_main.c:2231` | `CUE files will be written to:` |
+| `cyanrip_main.c:2290` | `Invalid track number %i for pregap, list has %i tracks!` |
+| `cyanrip_main.c:2311` | `Invalid track number %i, list has %i tracks!` |
+| `cyanrip_main.c:2324` | `Missing \"=\" in track metadata \"%s\"` |
+| `cyanrip_main.c:2340` | `Error reading track tags: %s` |
+| `cyanrip_main.c:2394` | `Cover art destination(s):` |
+| `cyanrip_main.c:2429` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
+| `cyanrip_main.c:2440` | `Tracks:` |
+| `cyanrip_main.c:2450` | `Track %i info:` |
+| `cyanrip_main.c:2468` | `Error initializing decoder: %s` |
+| `cyanrip_main.c:2477` | `Error initializing encoder: %s` |
+| `cyanrip_main.c:2513` | `Error encoding: %s` |
+| `cyanrip_main.c:2533` | `Invalid rip index %i, list has %i tracks!` |
+| `cyanrip_main.c:2615` | `Error ripping: %s` |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` |
 | `genopt.h:265` | `Error parsing \"%s\" as a <type> for argument \"%s\"` |
 | `genopt.h:272` | `Error parsing %f for argument \"%s\": not in [%f:%f] range!` |
@@ -516,7 +516,7 @@ is control flow, and this generator reports the writes it can
 see rather than guessing at the branches around them. In
 particular it does NOT claim any segment is unconditional.
 
-**`cyanrip_main.c:2347`** - reaches logfile: yes
+**`cyanrip_main.c:2362`** - reaches logfile: yes
 
 Not derivable: the buffer is built neither by `snprintf` in this
 function nor by a `helper(buf, sizeof(buf), ...)` call in it. It
@@ -614,7 +614,7 @@ opposite of the binary's `--verify-log` codes. Platterpus found it.
 | Code | Return/exit sites | Meaning, where the source states one |
 |---|---|---|
 | `0` | 4 | `CRIP_LOG_EXIT_VALID` -- footer present and matching |
-| `1` | 30 | *(the source annotates none)* |
+| `1` | 28 | *(the source annotates none)* |
 | `2` | 1 | `CRIP_LOG_EXIT_MISMATCH` -- footer present, does not match: modified |
 | `3` | 1 | `CRIP_LOG_EXIT_NO_CHECKSUM` -- no footer: incomplete, NOT a tamper claim |
 | `4` | 1 | `CRIP_LOG_EXIT_TRAILING_DATA` -- footer present, content after it: modified |
@@ -797,15 +797,15 @@ must carry the same class.
 | `cyanrip_main.c:1988` | `Directory name scheme must contain {format} with multiple output formats!` | control flow | yes |
 | `cyanrip_main.c:1993` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | both | yes |
 | `cyanrip_main.c:2158` | `Error reading album tags: %s` | both | yes |
-| `cyanrip_main.c:2275` | `Invalid track number %i for pregap, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2296` | `Invalid track number %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2309` | `Missing \"=\" in track metadata \"%s\"` | both | yes |
-| `cyanrip_main.c:2325` | `Error reading track tags: %s` | both | yes |
-| `cyanrip_main.c:2453` | `Error initializing decoder: %s` | both | yes |
-| `cyanrip_main.c:2462` | `Error initializing encoder: %s` | both | yes |
-| `cyanrip_main.c:2498` | `Error encoding: %s` | wording + goto end | yes |
-| `cyanrip_main.c:2518` | `Invalid rip index %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2600` | `Error ripping: %s` | wording + goto end | yes |
+| `cyanrip_main.c:2290` | `Invalid track number %i for pregap, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2311` | `Invalid track number %i, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2324` | `Missing \"=\" in track metadata \"%s\"` | both | yes |
+| `cyanrip_main.c:2340` | `Error reading track tags: %s` | both | yes |
+| `cyanrip_main.c:2468` | `Error initializing decoder: %s` | both | yes |
+| `cyanrip_main.c:2477` | `Error initializing encoder: %s` | both | yes |
+| `cyanrip_main.c:2513` | `Error encoding: %s` | wording + goto end | yes |
+| `cyanrip_main.c:2533` | `Invalid rip index %i, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2615` | `Error ripping: %s` | wording + goto end | yes |
 | `diagnostics.c:526` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` | wording | yes |
 | `genopt.h:265` | `Error parsing \"%s\" as a <type> for argument \"%s\"` | genopt | yes |
@@ -871,7 +871,7 @@ says.
 | `cyanrip_main.c:1008` | `Done; (%i out of %i matches for current checksum %08X)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:1014` | `Done; (no matches found, but hit repeat limit of %i)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:2031` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
-| `cyanrip_main.c:2347` | `%s` | goto end | yes |
+| `cyanrip_main.c:2362` | `%s` | goto end | yes |
 | `musicbrainz.c:251` | `MusicBrainz lookup failed: DiscID has no associated releases.` | goto end_meta | yes |
 | `musicbrainz.c:259` | `MusicBrainz lookup failed: no releases found for DiscID.` | goto end_meta | yes |
 
