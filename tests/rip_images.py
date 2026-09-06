@@ -2566,6 +2566,142 @@ def _meta_blocks(text):
     return blocks
 
 
+def _strip_c_comments(text):
+    """Remove /* */ and // comments, preserving line structure.
+
+    Written because the first version of sc_curl_timeouts() scanned raw source
+    and counted the string `curl_easy_perform` where it appears in a COMMENT in
+    receive_data() -- a function that performs no transfer at all. The scenario
+    then failed identically with the fix in place and with it reverted, which is
+    the signature of a check asserting about the wrong thing rather than of a
+    defect. A grep hit is not a fact; confirm the match is in code.
+    """
+    out = []
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        if c == '/' and i + 1 < n and text[i + 1] == '*':
+            j = text.find('*/', i + 2)
+            j = n if j < 0 else j + 2
+            out.append("\n" * text.count("\n", i, j))   # keep line numbering
+            i = j
+        elif c == '/' and i + 1 < n and text[i + 1] == '/':
+            j = text.find('\n', i)
+            i = n if j < 0 else j
+        elif c == '"' or c == "'":
+            j = i + 1
+            while j < n and text[j] != c:
+                j += 2 if text[j] == '\\' else 1
+            out.append(c + c)                            # empty literal
+            i = min(j + 1, n)
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def _c_functions(text):
+    """Yield (name, body) for each top-level function definition.
+
+    Bounds come from BRACE DEPTH, not from a header regex. The header-regex
+    version mis-attributed a call to the previous function whenever a signature
+    it did not match let one body run on into the next, and the fallback of
+    splitting on a column-0 `}` named every function `'{'` -- this codebase puts
+    the opening brace on its own line, so the last unindented line before a body
+    is the brace and not the name.
+    """
+    lines = text.splitlines()
+    depth, start, name = 0, None, None
+    for idx, line in enumerate(lines):
+        if depth == 0 and line.startswith('{'):
+            # Walk back over a signature that may span several lines, stopping
+            # when the accumulated text has balanced parentheses -- taking only
+            # the last line named coverart.c's helper 'const char *own_url)'.
+            parts = []
+            for back in range(idx - 1, -1, -1):
+                prev = lines[back].strip()
+                if not prev or prev.startswith('#'):
+                    break
+                parts.insert(0, prev)
+                joined = " ".join(parts)
+                if joined.count('(') and joined.count('(') == joined.count(')'):
+                    break
+            name = " ".join(parts)
+            start = idx
+        opened = line.count('{')
+        closed = line.count('}')
+        depth += opened - closed
+        if start is not None and depth <= 0:
+            yield (name or "<anonymous>", "\n".join(lines[start:idx + 1]))
+            depth, start, name = 0, None, None
+
+
+def sc_curl_timeouts():
+    """Every curl transfer must be bounded, checked structurally.
+
+    Round 15 lap 14 §5 item 6. There was no timeout of any kind on any handle,
+    so a server that accepted a connection and then said nothing hung the rip
+    indefinitely -- after the disc had been read, with the drive still open.
+    Platterpus's §J names "a hang attributable to the ripper" as a defect that
+    would break their pre-commit, and their acceptance run is unattended
+    overnight.
+
+    WHY THIS IS A SOURCE CHECK AND NOT A BEHAVIOURAL ONE, said plainly rather
+    than left as an implied claim. Triggering a real timeout needs a server that
+    accepts and then stalls, and there is NO WAY to point cyanrip at one: the
+    AccurateRip and Cover Art hosts are compile-time constants with no override.
+    Adding an override purely to test this would be new observable surface --
+    exactly what this seam makes us announce -- so the behavioural half is
+    UNPROBED and says so.
+
+    What it DOES catch is the regression that actually threatens: a new handle,
+    or a new perform on an existing one, added without a bound. It asserts the
+    relation rather than a count -- every `curl_easy_perform` must sit in a
+    function that has already set `CURLOPT_TIMEOUT` -- because counting inits
+    against timeouts gives the wrong answer here: coverart.c creates TWO handles
+    and both are performed inside one shared helper.
+    """
+    src = Path(__file__).resolve().parent.parent / "src"
+    performs = 0
+    for path in sorted(src.glob("*.c")):
+        code = _strip_c_comments(path.read_text(encoding="utf-8", errors="replace"))
+        if "curl_easy_perform" not in code:
+            continue
+        seen_here = 0
+        for name, body in _c_functions(code):
+            n = body.count("curl_easy_perform")
+            if not n:
+                continue
+            seen_here += n
+            performs += n
+            label = name[:70]
+            if "CURLOPT_TIMEOUT" not in body:
+                fail(f"curl_timeouts: {path.name} '{label}' performs a transfer "
+                     f"without setting CURLOPT_TIMEOUT -- an unbounded transfer "
+                     f"hangs the rip after the disc has been read")
+            if "CURLOPT_CONNECTTIMEOUT" not in body:
+                fail(f"curl_timeouts: {path.name} '{label}' sets no "
+                     f"CURLOPT_CONNECTTIMEOUT")
+        # A file whose stripped source still mentions the call, but where the
+        # function walker attributed it to nothing, is a broken walker -- and it
+        # would otherwise read exactly like "this file is clean".
+        if seen_here != code.count("curl_easy_perform"):
+            fail(f"curl_timeouts: {path.name} has "
+                 f"{code.count('curl_easy_perform')} curl_easy_perform in code "
+                 f"but the function walker placed {seen_here} -- the scan is "
+                 f"broken, not the code")
+
+    # The census must be non-trivial: a regex that matched nothing would pass
+    # this scenario while asserting about zero transfers.
+    if performs < 2:
+        fail(f"curl_timeouts: only {performs} curl_easy_perform call(s) found "
+             f"in src/ -- the scan is broken, not the code")
+
+    unprobed("curl_timeouts: the behavioural half is not run. The AccurateRip "
+             "and Cover Art hosts are compile-time constants with no override, "
+             "so no test here can point cyanrip at a server that stalls.")
+
+
 def sc_timestamp_offset():
     """Every timestamp in the record must name an INSTANT, not a wall clock.
 

@@ -165,6 +165,29 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
     curl_easy_setopt(curl_ctx, CURLOPT_ERRORBUFFER, errbuf);
     curl_easy_setopt(curl_ctx, CURLOPT_FAILONERROR, 1L); /* Explode on errors */
 
+    /* BOUND EVERY TRANSFER. There was no timeout of any kind on any handle,
+     * so a server that accepted a connection and then said nothing hung the
+     * rip indefinitely -- after the disc had been read, with the drive still
+     * open. Platterpus's own §J names "a hang attributable to the ripper" as a
+     * defect that would break their pre-commit, and their acceptance run is
+     * unattended overnight.
+     *
+     * Announced as round 15 lap 14 §5 item 6 rather than shipped quietly: a
+     * timeout is a TIMING GUARANTEE, which this project's own rules count as
+     * contract surface even though the failure reuses the existing
+     * curl_easy_strerror() message and adds no new string. Their lap 15 §C3:
+     * "sound, and we are not going to argue a peer into weakening their own
+     * rule."
+     *
+     * NOSIGNAL because libcurl's default timeout implementation uses SIGALRM
+     * and this program installs its own handlers and runs encoder threads.
+     * MAXREDIRS only matters where FOLLOWLOCATION is set, and is set here
+     * anyway so a future caller cannot enable one without the other. */
+    curl_easy_setopt(curl_ctx, CURLOPT_CONNECTTIMEOUT, 15L);
+    curl_easy_setopt(curl_ctx, CURLOPT_TIMEOUT, 60L);
+    curl_easy_setopt(curl_ctx, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(curl_ctx, CURLOPT_MAXREDIRS, 8L);
+
     if (!info_only) {
         cyanrip_log(ctx, 0, "Downloading %s cover art...\n", type);
         curl_easy_setopt(curl_ctx, CURLOPT_FOLLOWLOCATION, 1L);
