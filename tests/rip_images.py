@@ -1959,8 +1959,73 @@ def sc_diagnostics():
         fail(f"diagnostics: file is not valid JSON: {e}")
         return
 
-    if d.get("schema") != "cyanrip-diagnostics/3":
+    if d.get("schema") != "cyanrip-diagnostics/4":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
+
+    # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
+    # a single timestamp would name when the process ENDED while a reader took
+    # it for when the rip HAPPENED -- event time and processing time collapsed,
+    # which is the defect this project already found in its own log.
+    #
+    # Round 15 lap 14 §5 item 7 named this half ("the -j record carries no wall
+    # clock at all") and the fix that shipped addressed only the two log lines.
+    # A record whose reason to exist is the runs that open NO LOGFILE could say
+    # what happened and never when.
+    stamps = {}
+    for key in ("started_at", "finished_at"):
+        v = d.get(key)
+        if not isinstance(v, str):
+            fail(f"diagnostics: {key} is {v!r}, not a string")
+            continue
+        # An OFFSET, not a bare wall clock. `...T18:06:33` is ISO SHAPED and
+        # names no instant; two rips in different zones cannot be ordered.
+        m = re.match(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d([+-]\d\d:\d\d|Z)$", v)
+        if not m:
+            fail(f"diagnostics: {key} = {v!r} names no instant -- it must "
+                 "carry a UTC offset or Z")
+        else:
+            stamps[key] = v
+
+    # ...and they must ORDER. That is deterministic and is what a consumer acts
+    # on: a record whose finish precedes its start is unusable whatever else it
+    # says.
+    if len(stamps) == 2:
+        from datetime import datetime
+        a = datetime.fromisoformat(stamps["started_at"].replace("Z", "+00:00"))
+        b = datetime.fromisoformat(stamps["finished_at"].replace("Z", "+00:00"))
+        if b < a:
+            fail(f"diagnostics: finished_at {stamps['finished_at']} is before "
+                 f"started_at {stamps['started_at']}")
+
+        # WHETHER THEY ARE TWO INDEPENDENT CAPTURES CANNOT BE FORCED HERE, and
+        # saying so is the point. The values are second-resolution and no rip
+        # this suite can drive takes a second: measured, the slowest is `-Z 30`
+        # on pregap.cue at 0.81 s, and 0.81 s crosses a second boundary by luck
+        # rather than by guarantee. So an equal pair is exactly what a correct
+        # implementation produces here, and it is also what one value written
+        # twice under two names would produce. This assertion cannot separate
+        # them and does not pretend to.
+        if a == b:
+            unprobed("diagnostics: started_at and finished_at are equal, which "
+                     "a fast rip makes expected -- so this run does not "
+                     "establish that they are two independent captures. Only "
+                     "a rip exceeding one second can, and none here does.")
+
+    # So the independence is asserted STRUCTURALLY instead, which is a weaker
+    # claim honestly labelled rather than a stronger one nobody measured. Two
+    # distinct call sites, one of them in crip_diag_enable() -- if a later edit
+    # collapsed them to a single capture, the record would carry one instant
+    # under two names and every behavioural check above would still pass.
+    diag_src = (ROOT / "src" / "diagnostics.c").read_text()
+    if diag_src.count("crip_iso8601_now(") != 2:
+        fail(f"diagnostics: crip_iso8601_now() appears "
+             f"{diag_src.count('crip_iso8601_now(')} times in diagnostics.c; "
+             "started_at and finished_at must be two separate captures")
+    enable = diag_src[diag_src.find("void crip_diag_enable("):]
+    enable = enable[:enable.find("\n}\n")]
+    if "crip_iso8601_now(" not in enable:
+        fail("diagnostics: started_at is not captured in crip_diag_enable(), "
+             "so it does not name when the run began")
     if d.get("exit_code") != 0:
         fail(f"diagnostics: exit_code {d.get('exit_code')!r} for a clean rip")
     if d.get("rip", {}).get("tracks_completed") != 2:

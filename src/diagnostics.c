@@ -77,6 +77,8 @@
 #define DIAG_MAX_LINE 8192
 
 static const char *diag_path;
+/* Room for "YYYY-MM-DDTHH:MM:SS+HH:MM" and its NUL, with slack. */
+static char diag_started_at[40];
 static int diag_written;
 static int diag_registered;
 
@@ -200,6 +202,25 @@ void crip_diag_enable(const char *path)
 {
     diag_path = path;
     if (path && !diag_registered) {
+        /* TWO INSTANTS, CAPTURED AT TWO TIMES, BECAUSE THEY ARE TWO AGES.
+         * This record is written from atexit, so a single timestamp taken
+         * there would name when the process ENDED and a reader would take it
+         * for when the rip HAPPENED. Event time and processing time are
+         * independent, and collapsing them is the exact failure this project
+         * already found in its own log -- a superseded track's creation_time
+         * describing the read that was thrown away.
+         *
+         * The record's reason to exist is the runs that open NO LOGFILE AT
+         * ALL. Until now such a run carried no wall clock anywhere: the file
+         * could say what happened and never when. Round 15 lap 14 §5 item 7
+         * named this half and fixed only the other one -- the two log lines --
+         * which is why it is called out rather than folded in.
+         *
+         * Captured HERE rather than in main() because -j is what creates the
+         * record; a start time recorded for a run that writes no record is a
+         * measurement with nowhere to go. -j is found by a pre-pass before
+         * genopt, so this still runs before any ripping. */
+        crip_iso8601_now(diag_started_at, sizeof(diag_started_at));
         atexit(crip_diag_write);
         diag_registered = 1;
     }
@@ -316,15 +337,21 @@ void crip_diag_write(void)
     av_bprint_init(&b, 0, AV_BPRINT_SIZE_UNLIMITED);
 
     av_bprintf(&b, "{\n");
-    /* /3 adds rip.interrupted_by. A field ADDED to a record is harmless to a
-     * consumer that ignores unknown keys and fatal to one that allowlists
-     * schema strings, and Platterpus does the latter -- so the version moves
-     * and round 12 carries the ask to widen SUPPORTED_SCHEMAS. Adding the
-     * field without the bump was the tempting alternative and is the worse
-     * one: two different records both calling themselves /2 is the same defect
-     * as two builds answering to one version string, which this fork already
-     * fixed once with +platterpus.N. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/3\",\n");
+    /* /3 added rip.interrupted_by; /4 adds started_at and finished_at. A field
+     * ADDED to a record is harmless to a consumer that ignores unknown keys
+     * and fatal to one that allowlists schema strings, and Platterpus does the
+     * latter -- so the version moves and the round carries the ask to widen
+     * SUPPORTED_SCHEMAS. Adding the field without the bump was the tempting
+     * alternative and is the worse one: two different records both calling
+     * themselves /3 is the same defect as two builds answering to one version
+     * string, which this fork already fixed once with +platterpus.N.
+     *
+     * WHAT WE KNOW ABOUT THEIR ALLOWLIST, and where it was read, because a
+     * mechanism stated about the other side's code without a citation is a
+     * guess: their round-11 lap 2 prints it as `SUPPORTED_SCHEMAS = {1, 2}`,
+     * integers, under a heading marked [MEASURED]. That is the last value we
+     * hold. We cannot read their source and do not claim to. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/4\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
@@ -352,6 +379,25 @@ void crip_diag_write(void)
 
     av_bprintf(&b, "  \"invocation\": ");
     diag_json_str(&b, crip_invocation ? crip_invocation : "");
+    av_bprintf(&b, ",\n");
+
+    /* started_at is when -j was enabled, which is before any ripping;
+     * finished_at is when this file was written, from atexit. Both carry a UTC
+     * offset, so each names an INSTANT rather than a wall clock -- two rips on
+     * machines in different zones can be ordered, and a DST fall-back does not
+     * give two instants an hour apart the same text.
+     *
+     * Never one field. A reader given one timestamp on a record written at
+     * exit would read it as the time of the rip, and for a long rip or a hung
+     * one those differ by exactly the interval a consumer most wants. */
+    av_bprintf(&b, "  \"started_at\": ");
+    diag_json_str(&b, diag_started_at);
+    av_bprintf(&b, ",\n  \"finished_at\": ");
+    {
+        char now[40];
+        crip_iso8601_now(now, sizeof(now));
+        diag_json_str(&b, now);
+    }
     av_bprintf(&b, ",\n");
 
     if (diag_have_exit)
