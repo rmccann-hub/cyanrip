@@ -492,9 +492,7 @@ static void track_set_creation_time(cyanrip_ctx *ctx, cyanrip_track *t)
         return;
 
     char t_s[64];
-    time_t t_c = time(NULL);
-    struct tm *t_l = localtime(&t_c);
-    strftime(t_s, sizeof(t_s), "%Y-%m-%dT%H:%M:%S", t_l);
+    crip_iso8601_now(t_s, sizeof(t_s));
     av_dict_set(&t->meta, "creation_time", t_s, 0);
 }
 

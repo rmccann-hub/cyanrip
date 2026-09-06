@@ -2566,6 +2566,76 @@ def _meta_blocks(text):
     return blocks
 
 
+def sc_timestamp_offset():
+    """Every timestamp in the record must name an INSTANT, not a wall clock.
+
+    Round 15 lap 14 §5 item 7. Both sites emitted `%Y-%m-%dT%H:%M:%S` and
+    nothing else -- ISO SHAPED, naming no instant. Two rips on machines in
+    different zones could not be ordered, and a DST fall-back names two instants
+    an hour apart with identical text. The `-j` record carries no wall clock at
+    all, so it cannot recover the instant either.
+
+    PLATTERPUS ASKED FOR THIS rather than merely permitting it (lap 15 §C3):
+    their EAC renderer slices the first 19 characters, so an offset-bearing
+    timestamp parses fine and the OFFSET IS SILENTLY DROPPED -- two instants
+    seven hours apart rendering identical text in an archival log.
+
+    THE DISCRIMINATOR IS TWO ZONES, NOT ONE. A single-zone check passes on a
+    bare local timestamp too, because the text is well-formed either way. Only
+    running the same rip under two offsets shows whether the instant survives.
+    """
+    import datetime
+
+    stamps = {}
+    for zone in ("America/Los_Angeles", "Asia/Kolkata"):
+        env = dict(os.environ, TZ=zone)
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-o", "flac", "-D", WORK / f"tz_{zone[0]}",
+                     "-L", "log", "-M", "sheet", env=env)
+        if ec != 0:
+            fail(f"timestamp_offset: rip under TZ={zone} exited {ec}")
+            return
+        log = (WORK / f"tz_{zone[0]}" / "log.log").read_text(encoding="utf-8",
+                                                             errors="replace")
+        line = [l for l in log.splitlines() if l.startswith("Ripping finished at")]
+        if not line:
+            fail(f"timestamp_offset: no completion timestamp under TZ={zone}")
+            return
+        stamps[zone] = line[0].split("at ", 1)[1].strip()
+
+    for zone, ts in stamps.items():
+        # A bare local timestamp is exactly 19 characters. Anything naming an
+        # instant is longer, and must parse as one.
+        if len(ts) <= 19:
+            fail(f"timestamp_offset: under TZ={zone} the stamp is {ts!r}, which "
+                 f"names a wall clock and not an instant")
+            continue
+        try:
+            datetime.datetime.fromisoformat(ts)
+        except ValueError:
+            fail(f"timestamp_offset: under TZ={zone} the stamp {ts!r} does not "
+                 f"parse as ISO 8601")
+
+    # THE POINT: the two must denote the SAME instant. This is what a bare local
+    # timestamp cannot express and what makes two rips orderable.
+    try:
+        a, b = (datetime.datetime.fromisoformat(stamps[z])
+                for z in ("America/Los_Angeles", "Asia/Kolkata"))
+    except (ValueError, KeyError):
+        return                      # already reported above
+    if abs((a - b).total_seconds()) > 120:
+        fail(f"timestamp_offset: the two zones disagree about the instant by "
+             f"{(a - b).total_seconds():.0f}s -- {stamps!r}")
+
+    # And their renderer's 19-character slice must still parse as it always did.
+    for zone, ts in stamps.items():
+        try:
+            datetime.datetime.fromisoformat(ts[:19])
+        except ValueError:
+            fail(f"timestamp_offset: the first 19 characters of {ts!r} no "
+                 f"longer parse; the consumer slices exactly that many")
+
+
 def sc_utf8_naming():
     """Invalid UTF-8 in a name must be SUBSTITUTED, never truncated.
 

@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <time.h>
 #include <math.h>
 
 #include <signal.h>
@@ -188,6 +189,42 @@ static inline int crip_cache_model_note(int is_image, int probe_requested)
     if (is_image)
         return CRIP_CACHE_NOTE_IMAGE;
     return probe_requested ? CRIP_CACHE_NOTE_PROBED : CRIP_CACHE_NOTE_UNPROBED;
+}
+
+/* An ISO 8601 / RFC 3339 INSTANT for the record: local time WITH its offset.
+ *
+ * Both timestamp sites used to emit `%Y-%m-%dT%H:%M:%S` and nothing else -- ISO
+ * SHAPED, naming no instant. Two rips on machines in different zones could not
+ * be ordered, and a DST fall-back names two instants an hour apart with the
+ * same text. Announced as round 15 lap 14 §5 item 7.
+ *
+ * Platterpus asked for this rather than merely permitting it (their lap 15 §C3):
+ * their EAC renderer slices the first 19 characters and parses those, so an
+ * offset-bearing timestamp parses fine and the OFFSET IS SILENTLY DROPPED --
+ * two instants seven hours apart rendering identical text in an archival log.
+ * Slicing 19 also means the suffix costs them nothing today.
+ *
+ * LOCAL TIME, NOT UTC, deliberately. Converting to Z would shift the displayed
+ * hour, and that hour is what their renderer shows a human. Adding the offset
+ * makes the instant recoverable without moving anything anyone reads.
+ *
+ * strftime's %z is `+HHMM`; RFC 3339 wants `+HH:MM`, which is the form
+ * PROTOCOL.md §6b R2 already requires of the seam's own timestamps. */
+static inline void crip_iso8601_now(char *buf, size_t len)
+{
+    char raw[64];
+    time_t t_c = time(NULL);
+    struct tm *t_l = localtime(&t_c);
+
+    strftime(raw, sizeof(raw), "%Y-%m-%dT%H:%M:%S%z", t_l);
+
+    size_t n = strlen(raw);
+    if (n >= 5 && (raw[n - 5] == '+' || raw[n - 5] == '-')) {
+        memmove(raw + n - 1, raw + n - 2, 3);   /* minutes and the NUL */
+        raw[n - 2] = ':';
+    }
+
+    snprintf(buf, len, "%s", raw);
 }
 
 static inline int cmp_numbers(const void *a, const void *b)
