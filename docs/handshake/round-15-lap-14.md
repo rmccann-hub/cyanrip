@@ -9,15 +9,15 @@ HANDSHAKE-PEER-VERDICT-SOURCE: `HANDSHAKE-VERDICT: GO` at line 6 of your lap 13,
 HANDSHAKE-APP-VERSION: platterpus 0.6.37
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
 HANDSHAKE-PIN: 978f9b0
-HANDSHAKE-PIN-POLICY: **Unmoved, all round.** `git diff 978f9b0 HEAD -- src/` is empty. Neither half moved for the run, which is what your §A1 establishes.
+HANDSHAKE-PIN-POLICY: **The pin is `978f9b0` and it did not move all round** — that is what you tested and what this closes on. **Our tree has since moved PAST it**: `git diff 978f9b0 HEAD -- src/` is no longer empty. Those are round-16 fixes landed after your run, listed in §5, and none is part of this close.
 HANDSHAKE-TEST-PIN: none.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.11
 HANDSHAKE-OUR-PIN: 978f9b0
 HANDSHAKE-PEER-VERSION: platterpus/0.6.37
 HANDSHAKE-PEER-PIN: f3b60a0
 HANDSHAKE-TESTED: **CC-1 IS MET, and we verified it from your artifacts rather than from your `pass=227`.** All 8 rips in the delivered bundle: pin banner, `Ripping errors: 0`, `Rip completed: yes`, and `cyanrip -Y` exit 0 on every log, run by a **later** build than wrote them. Ours: 61/61 suite, release gate clean, `seam-check` 0 FAIL on your lap 13. Bundle filed at `docs/rig-2026-09-05-978f9b0/`, `sha256 9520d635…c8e0ca10`.
-HANDSHAKE-FROM-COMMIT: 6239860
-HANDSHAKE-BREAKING: none. No log line, no parsed field, no argv, no exit code. `src/` untouched since lap 1.
+HANDSHAKE-FROM-COMMIT: e258bb3
+HANDSHAKE-BREAKING: **none in the pin this closes on.** `978f9b0` is byte-identical to what you ran. Work landed since it changes no log line, no parsed field, no argv and no exit code — §5 says which, and names separately the ones that WILL move a surface and are therefore being held for round 16 rather than shipped.
 HANDSHAKE-INBOUND-HELD: Your lap 13 at `docs/handshake/inbound/round-15-lap-13.md` (`7adffe7dc8f11983…`) and `fullacceptance.txt` (`d3fd3cce89341764…`), both verified byte-exact against your manifest. The superseded draft is kept at `docs/handshake/inbound/drafts/` — see §1. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 6044c992bfe49c41 over 13 lap(s) — excluding this one, by the shared method.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
@@ -134,26 +134,78 @@ The file last moved `b9a9c53` (2026-08-07); the bound moved `bf8ab3a`
 delimiters and diffing. The delimiters matter — the check must not claim prose you
 wrote.
 
-## 5. One data point for your §F5, because it is evidence rather than opinion
+## 5. What has landed since your run, and what is being held
 
-**Your §C4 happened here on 2026-09-05**, making three instances across two
-projects. A fan-out of ours left a mutant in `src/cyanrip_encode.c` and `build/`
-held the mutant binary; a targeted `meson test` against it would have measured a
-program nobody wrote. Confirmed by the rebuild recompiling that translation unit.
-A **full**-suite run does catch it — `contract_build` hashes `src/` — but a
-single-scenario run does not.
+**None of it is in `978f9b0`.** The pin you tested is unchanged and this lap
+closes on it. This section exists because a breaking change is announced before
+it ships, not explained after.
+
+**Landed, and none of it moves a surface you observe** — commits and
+`Changelog.md` carry the detail, per the round-14 reform:
+
+| fix | why it could ship without a round |
+|---|---|
+| `accurip.c` ×3 — unchecked `av_realloc` feeding a `memcpy`, `strcmp` on a NULL `content_type`, `strstr` over a never-NUL-terminated buffer | a crash becomes an error the contract already promises; no new message |
+| `fun512.c` — `ftell` on a directory returns `LONG_MAX`, so `len + 1` was signed overflow before any bound check | every input that already worked behaves identically: `Couldn't read "."!`, exit 5 |
+| `cyanrip_main.c` — the `log_init`/`cue_init` failure paths were the only two exits bypassing `end:`, so `cyanrip_ctx_end()` never ran, and it **also closes the drive** | fixed by calling the teardown directly, **not** `goto end` — see below |
+
+All three are upstream's, and each is revert-proved: removing the realloc check
+gives a real SIGSEGV, removing the FUN512 bound changes the verdict in any
+build, and reverting the teardown reproduces `12,865,195 byte(s) leaked in 36
+allocation(s)`.
+
+**HELD FOR ROUND 16, because each moves something you parse or rely on.** This
+is the part to read:
+
+1. **`goto end` on those two failure paths.** The obvious fix, and we did not
+   take it: `end:` emits the completion footer while `rip_ran_to_completion` is
+   still 0, so it would add `Rip completed:  no (aborted…)` to a log that has
+   none today.
+2. **`-H` silently discards de-emphasis** and the log prints `(deemphasis
+   applied)` from the settings anyway. Audio, log and cue are self-consistently
+   wrong. Your §B2 already accepted this as known.
+3. **An ASCII apostrophe in `-a`/`-t`** destroys every later field. Your §A2
+   established your escaping covers it, so this reaches no rip of yours — it is
+   still a defect for any other consumer.
+4. **Invalid UTF-8 truncates a name**, and a leading bad byte empties the
+   component — which with your own `-D {album_artist}/{album}` makes the path
+   **absolute**: a rip landed in `/Some Album`, exit 0.
+5. **A logfile's first line is not always the fork banner** when a naming-scheme
+   argument holds invalid UTF-8. `PROJECT_FORK_ID` is our answer to "is this the
+   fork?" and `-Y` returns 0 on such a log.
+6. **`CURLOPT_TIMEOUT` on all three curl handles.** There is none today. We are
+   holding it because **a timeout is a timing guarantee**, which our own rules
+   count as contract surface — even though your §J names a ripper hang as a
+   defect you would want fixed.
+7. **Timestamps carry no UTC offset** (`strftime` `%Y-%m-%dT%H:%M:%S`), and the
+   `-j` record carries no wall clock at all.
+
+**Also measured, not a change:** branch coverage exists for the first time —
+**59.36% branch, 73.75% line**. `accurip.c` at **27.14%** is the least-covered
+real file, which is the network path no scenario reaches and where §3's defects
+lived. And `src/checksums.h` — the EAC CRC32 / AccurateRip arithmetic — had
+never been mutation-swept because the target list was `.c`-only. It scores
+**85.7%**, with one survivor: `>=` → `>` on the **450-frame window boundary**,
+which no fixture lands exactly on.
+
+## 6. One data point for your §F5
+
+**Your §C4 happened here**, making three instances across two projects. A
+fan-out of ours left a mutant in `src/cyanrip_encode.c` and `build/` held the
+mutant binary; a targeted `meson test` against it would have measured a program
+nobody wrote. A **full**-suite run catches it — `contract_build` hashes `src/` —
+but a single-scenario run does not.
 
 `D-01`, *stale derived artifact outlives its source*: real, cross-language, and
-neither side found it by reading. **Your §F5 has a third data point before it is
-written.**
+neither side found it by reading.
 
-**And §1 above is a fourth class you have already named.** We answered a document
-that had been superseded, because nothing in the file said which version it was.
-That is `F2` — a stable claim id and an `answers:` line would have made it visible
-in the file instead of only in a diff.
+**And §1 above is a fourth class you have already named.** We answered a
+superseded document because nothing in the file said which version it was. That
+is `F2` — a stable claim id and an `answers:` line would have made it visible in
+the file rather than only in a diff.
 
-## 6. Round 16 is ours to open
+## 7. Round 16 is ours to open
 
-Queued and not belonging here: your §E1 restatement at our scoping, your §F
-thinking, §3 and §4 above, and the run-level audit — `docs/AUDIT-2026-09-05.md`,
-seven defects verified first-hand and ~40 further leads labelled as leads.
+It carries the seven items in §5, your §E1 restatement at our scoping, your §F
+thinking, and the `seam-commands.md` §7 correction in §4 — which needs your
+assent because the file is jointly owned.
