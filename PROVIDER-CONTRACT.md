@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gb866900)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g1c96c8d)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -173,7 +173,7 @@ requires a handshake round.
 | `accurip.c:133` | `Unable to get AccuRIP DB data: missing CDDB ID!` |
 | `accurip.c:188` | `Unable to get AccuRIP DB data: missing entry!` |
 | `accurip.c:196` | `Unable to get AccuRIP DB data: %s%s` |
-| `accurip.c:199` | `Unable to get AccuRIP DB data: %s!` |
+| `accurip.c:199` | `Unable to get AccuRIP DB data: %s\n!` |
 | `accurip.c:248` | `AccuRIP DB data error, got unexpected number of bytes!` |
 | `cache_probe.c:232` | `Cache probe:    %s` |
 | `coverart.c:34` | `Cover art has no packet!` |
@@ -186,12 +186,12 @@ requires a handshake round.
 | `coverart.c:192` | `Downloading %s cover art...` |
 | `coverart.c:200` | `Unable to get cover art \"%s\": not found!` |
 | `coverart.c:209` | `Unable to get cover art \"%s\": %s%s!` |
-| `coverart.c:212` | `Unable to get cover art \"%s\": %s!` |
+| `coverart.c:212` | `Unable to get cover art \"%s\": %s\n!` |
 | `coverart.c:285` | `Unable to open \"%s\": %s!` |
 | `coverart.c:292` | `Unable to get cover image info: %s!` |
 | `coverart.c:322` | `Error demuxing cover image: %s!` |
 | `coverart.c:391` | `No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!` |
-| `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!Invalid folder name? Try -D <folder>.` |
+| `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!\nInvalid folder name? Try -D <folder>.` |
 | `cue_writer.c:106` | `Refusing an INDEX 00 of %i frames into a %i frame file for track %i, writing none` |
 | `cyanrip_encode.c:364` | `Error creating filter source: %s!` |
 | `cyanrip_encode.c:375` | `Error creating filter sink: %s!` |
@@ -289,8 +289,8 @@ requires a handshake round.
 | `cyanrip_log.c:606` | `Paranoia status counts:` |
 | `cyanrip_log.c:608` | `Scope:         the last of %i reads; the disc totals below sum all of them` |
 | `cyanrip_log.c:612` | `none` |
-| `cyanrip_log.c:635` | `Embedded cover art:    %s: %s` |
-| `cyanrip_log.c:638` | `Embedded cover art:    %s: %ix%i %s` |
+| `cyanrip_log.c:635` | `Embedded cover art:\n    %s: %s` |
+| `cyanrip_log.c:638` | `Embedded cover art:\n    %s: %ix%i %s` |
 | `cyanrip_log.c:642` | `File(s):` |
 | `cyanrip_log.c:656` | `cyanrip %s (%s-g%s)` |
 | `cyanrip_log.c:659` | `Invoked as:     %s` |
@@ -418,7 +418,7 @@ requires a handshake round.
 | `cyanrip_main.c:1991` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` |
 | `cyanrip_main.c:2007` | `Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...` |
 | `cyanrip_main.c:2029` | `Offset is unset! To continue with an offset of 0, run with -s 0!` |
-| `cyanrip_main.c:2110` | `MusicBrainz URL:%s` |
+| `cyanrip_main.c:2110` | `MusicBrainz URL:\n%s` |
 | `cyanrip_main.c:2158` | `Error reading album tags: %s` |
 | `cyanrip_main.c:2223` | `Log(s) will be written to:` |
 | `cyanrip_main.c:2231` | `CUE files will be written to:` |
@@ -715,7 +715,7 @@ must carry the same class.
 | `accurip.c:133` | `Unable to get AccuRIP DB data: missing CDDB ID!` | wording + goto end | yes |
 | `accurip.c:188` | `Unable to get AccuRIP DB data: missing entry!` | wording + goto end | yes |
 | `accurip.c:196` | `Unable to get AccuRIP DB data: %s%s` | wording + goto end | yes |
-| `accurip.c:199` | `Unable to get AccuRIP DB data: %s!` | wording + goto end | yes |
+| `accurip.c:199` | `Unable to get AccuRIP DB data: %s\n!` | wording + goto end | yes |
 | `coverart.c:51` | `Unable to init lavf context: %s!` | both | yes |
 | `coverart.c:57` | `Unable to alloc stream!` | both | yes |
 | `coverart.c:70` | `Couldn't open %s for writing: %s!` | both | yes |
@@ -724,11 +724,11 @@ must carry the same class.
 | `coverart.c:97` | `Error writing trailer: %s!` | both | yes |
 | `coverart.c:200` | `Unable to get cover art \"%s\": not found!` | wording + goto end | yes |
 | `coverart.c:209` | `Unable to get cover art \"%s\": %s%s!` | wording + goto end | yes |
-| `coverart.c:212` | `Unable to get cover art \"%s\": %s!` | wording + goto end | yes |
+| `coverart.c:212` | `Unable to get cover art \"%s\": %s\n!` | wording + goto end | yes |
 | `coverart.c:285` | `Unable to open \"%s\": %s!` | wording + goto end | yes |
 | `coverart.c:292` | `Unable to get cover image info: %s!` | wording + goto end | yes |
 | `coverart.c:322` | `Error demuxing cover image: %s!` | wording + goto end | yes |
-| `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!Invalid folder name? Try -D <folder>.` | both | yes |
+| `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!\nInvalid folder name? Try -D <folder>.` | both | yes |
 | `cyanrip_encode.c:128` | `Encoder for %s not compiled in ffmpeg!` | control flow | **not directly** - see legend |
 | `cyanrip_encode.c:364` | `Error creating filter source: %s!` | both | yes |
 | `cyanrip_encode.c:375` | `Error creating filter sink: %s!` | both | yes |
