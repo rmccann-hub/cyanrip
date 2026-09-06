@@ -2620,6 +2620,25 @@ def sc_outdir_is_a_file():
         fail("outdir_is_a_file: no column-0 diagnostic naming the cause; got "
              f"{out.strip().splitlines()[-1][:90]!r}")
 
+    # THE COMPLETION FOOTER, which round 14 found 24 `goto end` sites skipping
+    # and which these two paths skipped until round 15 lap 15 assented to the
+    # change. A log or a run that ends without it has been cut off, and
+    # cyanrip_log_end() would sign the truncated body with a FUN512 regardless.
+    for want in ("Ripping errors:", "Rip completed:"):
+        if want not in out:
+            fail(f"outdir_is_a_file: the completion footer is missing {want!r} "
+                 "-- this path skipped `end:` again")
+    if "Rip completed:  no" not in out:
+        fail("outdir_is_a_file: the footer must report the abort, got "
+             f"{[l for l in out.splitlines() if l.startswith('Rip completed:')]}")
+
+    # AND THE EXIT CODE MUST STAY 1. The first draft of the `goto end` change
+    # set neither fatal_abort nor total_error_count, so the footer appeared and
+    # the process exited 0 -- reporting success for a run that produced no
+    # audio, which is strictly worse than the missing footer it fixed. The
+    # `ec == 0` check above catches it; this comment says why that check is not
+    # redundant now that control reaches the normal end path.
+
     # THE HALF THAT PINS THE FIX. Reverting cyanrip_ctx_end() on this path
     # leaks 12,865,095 bytes in 36 allocations from one root -- and the leak
     # matters less than what it proves: the same teardown closes the drive.

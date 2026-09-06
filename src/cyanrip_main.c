@@ -2189,20 +2189,35 @@ static int cyanrip_run(int argc, char **argv)
          * The failure paths on which the archival record could not be OPENED
          * were the ones that never closed the drive.
          *
-         * NOT `goto end`, deliberately. `end:` emits the completion footer,
-         * and rip_ran_to_completion is still 0 here, so jumping there would
-         * add a `Rip completed:  no (aborted...)` line to a log that has none
-         * today. That is a contract-visible change to a line the consumer
-         * parses, and it belongs in a handshake round rather than in a leak
-         * fix. Calling the teardown directly closes the drive and frees the
-         * context while leaving every observable surface exactly as it was. */
+         * `end:` emits the completion footer while rip_ran_to_completion is
+         * still 0, so `goto end` ADDS a `Rip completed:  no (aborted...)` line
+         * to a log that had none. That is contract surface, so it was held and
+         * ANNOUNCED in round 15 lap 14 §5 item 1 rather than shipped -- and
+         * Platterpus assented in their lap 15 §C3: their pattern is
+         * `^Rip completed:\s+(?P<verdict>yes|no)`, which ignores the
+         * parenthetical, so the added line costs them nothing. Announced
+         * first, shipped second.
+         *
+         * The footer is the whole point. Round 14 found 24 `goto end` sites
+         * that skipped it, producing a log with no `Ripping errors:`, no
+         * `Read stalls:` and no `Rip completed:` -- which cyanrip_log_end()
+         * then signed with a FUN512 as though it were whole. These two were
+         * the last exits still doing that.
+         *
+         * fatal_abort, NOT total_error_count++. The exit code is
+         * `(err_cnt || fatal_abort) ? 1 : 0`, and the first draft of this
+         * change set neither -- so the footer appeared and the process exited
+         * **0**, reporting success for a run that produced no audio. That is
+         * strictly worse than the missing footer it was fixing. total_error_count
+         * counts READ errors and this is an operational refusal to start, which
+         * is the distinction `fatal_abort` exists to carry. */
         if (!ctx->settings.generate_cue_only && cyanrip_log_init(ctx)) {
-            cyanrip_ctx_end(&ctx);
-            return 1;
+            fatal_abort = 1;
+            goto end;
         }
         if (cyanrip_cue_init(ctx)) {
-            cyanrip_ctx_end(&ctx);
-            return 1;
+            fatal_abort = 1;
+            goto end;
         }
     } else {
         cyanrip_log(ctx, 0, "Log(s) will be written to:\n");
