@@ -118,7 +118,7 @@ class Run:
     """One invocation and everything observable about it."""
 
     def __init__(self, label, argv, exit_code, signal, out, timed_out,
-                 escaped, logs, unrunnable=None):
+                 escaped, logs, unrunnable=None, unattributed=None):
         self.label = label
         self.argv = argv
         self.exit_code = exit_code
@@ -128,6 +128,7 @@ class Run:
         self.escaped = escaped        # files created outside the output root
         self.logs = logs              # (path, first_line) for each *.log written
         self.unrunnable = unrunnable  # why the binary could not be executed
+        self.unattributed = unattributed or []  # root entries we cannot own
 
 
 def instrumented(binary):
@@ -294,6 +295,7 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
 
     escaped = sorted(str(p.relative_to(work)) for p in new
                      if not contained(p) and p.parent != work)
+    unattributed = []
 
     # Anything that appeared in a root this run had no business touching --
     # BUT ONLY IF NOTHING ELSE ON THIS MACHINE IS WRITING THERE. The window
@@ -302,11 +304,41 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
     # dropped and reported UNPROBED, because a manufactured containment breach
     # is the most alarming thing this tool can say and it would say it more
     # often the busier the machine got.
+    # ATTRIBUTED BY NAME, because a time window cannot attribute anything.
+    #
+    # Two samples -- one before the sweep, one after -- were not enough, and
+    # the failure is on record: a run of this tool reported 96 containment
+    # breaches, every one a /tmp/tmpXXXXXXXX belonging to another process, and
+    # one of them was /tmp/.git_signing_buffer_* left by a `git commit` in
+    # another terminal. Both control windows were quiet; the activity happened
+    # between them. A window belongs to the machine and always will.
+    #
+    # What CAN be attributed is a NAME. Every path this program writes is built
+    # from strings this harness handed it -- the -D/-L/-M/-F schemes and the
+    # metadata values behind them -- so an entry appearing in a scanned root
+    # counts as ours only if its name carries one of those strings. The defect
+    # this class exists to catch passes that test exactly: the rip that landed
+    # in `/Some Album` was named from an `-a album=Some Album` this harness
+    # supplied. A foreign mkstemp name carries none of them.
+    #
+    # Anything else is REPORTED AND NOT GATED, under its own heading, because
+    # "a file appeared and we cannot say whose" is a real observation and a
+    # different claim from "this binary escaped".
     if OUTSIDE_ATTRIBUTABLE:
+        tokens = set()
+        for a in argv:
+            for piece in re.split(r"[\s/=:,]+", str(a)):
+                piece = piece.strip()
+                if len(piece) >= 3 and not piece.startswith("-"):
+                    tokens.add(piece)
         outside_after = outside_snapshot()
         for r, names in outside_after.items():
             for n in sorted(names - outside_before.get(r, set())):
-                escaped.append(f"{r / n}   (OUTSIDE the sandbox entirely)")
+                if any(tok in n for tok in tokens):
+                    escaped.append(f"{r / n}   (OUTSIDE the sandbox entirely, "
+                                   f"and named from this run's own argv)")
+                else:
+                    unattributed.append(str(r / n))
     logs = []
     for p in sorted(new):
         if p.suffix == ".log":
@@ -316,7 +348,8 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
             except OSError:
                 first = []
             logs.append((str(p.relative_to(work)), first[0] if first else ""))
-    return Run(label, argv, code, sig, text, timed_out, escaped, logs)
+    return Run(label, argv, code, sig, text, timed_out, escaped, logs,
+               unattributed=unattributed)
 
 
 def check(run, banner_re, can_sanitize, findings, unprobed):
@@ -846,6 +879,24 @@ def main():
                 "withdrawn rather than reported. Re-run on a quiet machine")
 
     print(f"\n{len(runs)} invocation(s)\n")
+
+    # REPORTED, NEVER GATED. These are entries that appeared in a scanned root
+    # during some invocation's window and carry no string this harness handed
+    # the binary. On a busy machine they are somebody else's temp files, which
+    # is what they were every time this has been checked. They are printed so
+    # a human can look, and they do not fail the gate, because "a file
+    # appeared and we cannot say whose" is not "this binary escaped".
+    unattributed = sorted({u for r in runs for u in r.unattributed})
+    if unattributed:
+        print(f"unattributed appearances in {'/, /tmp, $HOME'} during the "
+              f"sweep -- NOT findings, and not gated: {len(unattributed)}")
+        for u in unattributed[:10]:
+            print(f"    {u}")
+        if len(unattributed) > 10:
+            print(f"    ... and {len(unattributed) - 10} more")
+        print("  None carries a string this harness passed the binary, so none "
+              "can be attributed to it. Other processes on this machine write "
+              "to these directories too.\n")
 
     by_inv = {}
     for inv, label, what, argv in findings:
