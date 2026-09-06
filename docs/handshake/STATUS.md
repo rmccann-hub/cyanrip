@@ -17,7 +17,30 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-05. **Round 15 is OPEN at lap 13, theirs, received and filed. No lap is owed either way. The round closes on their run, which starts tonight.**
+## Rewritten 2026-09-05. **Round 15 is OPEN at lap 14, ours, sent. Their run arrived, completed and passed; our half shows no defect. CC-1 is theirs to assess and §H is why.**
+
+**Their acceptance run is filed at `docs/rig-2026-09-05-978f9b0/`** (`sha256
+9520d635…`, 34 filed / 255 named-not-filed, all 289 checksummed). It completed:
+`ok = True`, 227 pass, 0 fail. **Our half is clean on every criterion their §J
+names** — 8 of 8 rips carry the pin's banner, `Ripping errors: 0`, `Rip
+completed: yes`, and `cyanrip -Y` returns 0 on every log under a later build.
+
+**But the run was produced by `0.6.37` at `f3b60a0`, not the `0.6.38` their lap 13
+declared** — `transcript.txt:360` says so of itself, `report.json` agrees, all 8
+`Consumer:` lines agree, and `0.6.38` appears 0 times in 289 entries. The script
+is the older one too: none of the three verbs their §C1 says `0.6.38` introduces
+appear, while `expect-tracks 2+` (×10) and `expect-status cancelled` (×3) — the
+checks their own §A1 calls satisfiable by finding nothing — do. The fixed script
+exists; they sent it to us in the same envelope.
+
+**We are not calling CC-1 unmet.** S-14: a failure in their half is not a `HOLD`
+on ours, and the close condition is theirs to weigh. Our lap 14 §H reports it and
+asks only that the assessment be made on a correct reading of which build produced
+the evidence. **Our `GO` stands** — and rests on the rip-level facts, which are
+ours and independent of their script's assertions.
+
+**Our lap 14 also carries** the §A2 concession (below), the `seam-commands` §7
+proposal for round 16, and one data point for their §F5.
 
 **Lap 12 delivered the correction this file used to say was owed** — our lap 10
 told them 16 P5 rows "rest only on a construct that does not end the run", and
