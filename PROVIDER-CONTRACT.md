@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-ga79ac9e)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gf6e330c)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 9ecba7c3934fe976` over `src/*.c` and
+**Source anchor:** `sha256/16 = b5844e12ba227fa8` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -468,13 +468,12 @@ requires a handshake round.
 | `musicbrainz.c:374` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` |
 | `musicbrainz.c:380` | `Please help improve the MusicBrainz DB by submitting the disc info via the following URL:` |
 | `musicbrainz.c:387` | `To continue add metadata via -a or -t, or ignore via -N!` |
-| `naming.c:123` | `Error parsing string: %s!` |
-| `naming.c:215` | `Invalid scheme syntax, unterminated \"{\"!` |
-| `naming.c:229` | `Invalid scheme syntax, no \"#\"!` |
-| `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` |
-| `naming.c:259` | `Invalid condition syntax!` |
+| `naming.c:242` | `Invalid scheme syntax, unterminated \"{\"!` |
+| `naming.c:256` | `Invalid scheme syntax, no \"#\"!` |
+| `naming.c:270` | `Invalid scheme syntax, no terminating \"#\"!` |
+| `naming.c:286` | `Invalid condition syntax!` |
 
-**303 distinct stable lines.**
+**302 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
@@ -829,13 +828,12 @@ must carry the same class.
 | `musicbrainz.c:366` | `MusicBrainz lookup failed, but DiscID has a matching stub, consider verifying the data and creating a release here:` | control flow | yes |
 | `musicbrainz.c:370` | `Unable to find release info for this CD, and metadata hasn't been manually added!` | both | yes |
 | `musicbrainz.c:374` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` | wording | yes |
-| `naming.c:123` | `Error parsing string: %s!` | wording | yes |
-| `naming.c:215` | `Invalid scheme syntax, unterminated \"{\"!` | both | yes |
-| `naming.c:229` | `Invalid scheme syntax, no \"#\"!` | both | yes |
-| `naming.c:243` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
-| `naming.c:259` | `Invalid condition syntax!` | both | yes |
+| `naming.c:242` | `Invalid scheme syntax, unterminated \"{\"!` | both | yes |
+| `naming.c:256` | `Invalid scheme syntax, no \"#\"!` | both | yes |
+| `naming.c:270` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
+| `naming.c:286` | `Invalid condition syntax!` | both | yes |
 
-**121 distinct strings.** By evidence: 66 both, 18 control flow, 14 wording + goto end, 13 wording, 10 genopt.
+**120 distinct strings.** By evidence: 66 both, 18 control flow, 14 wording + goto end, 12 wording, 10 genopt.
 
 The `control flow` and `both` rows total 84 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
@@ -1142,9 +1140,11 @@ would have to appear as a call here.
 
 | line | call | writes |
 |---|---|---|
-| `naming.c:142` | `av_bprint_append_data` | the input, verbatim |
-| `naming.c:147` | `av_bprint_chars` | the `simple` glyph, from the table |
-| `naming.c:150` | `av_bprint_append_data` | the `unicode` glyph, from the table |
+| `naming.c:147` | `av_bprint_append_data` | the input, verbatim |
+| `naming.c:148` | `av_bprint_append_data` | **unclassified** -- `` |
+| `naming.c:169` | `av_bprint_append_data` | the input, verbatim |
+| `naming.c:174` | `av_bprint_chars` | the `simple` glyph, from the table |
+| `naming.c:177` | `av_bprint_append_data` | the `unicode` glyph, from the table |
 
 ### P7c - What each mode does to each character
 
@@ -1199,10 +1199,10 @@ subdirectory. Every call site, and what each one passes:
 
 | call site | `sanitize_fwdslash` | meaning |
 |---|---|---|
-| `naming.c:205` | `0` | literal text, never a tag value -- `/` is a directory separator here |
-| `naming.c:315` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
-| `naming.c:335` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
-| `naming.c:401` | `0` | literal text, never a tag value -- `/` is a directory separator here |
+| `naming.c:232` | `0` | literal text, never a tag value -- `/` is a directory separator here |
+| `naming.c:342` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
+| `naming.c:362` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
+| `naming.c:428` | `0` | literal text, never a tag value -- `/` is a directory separator here |
 
 So a `/` **inside a metadata value** is substituted, and a `/` **in the
 scheme itself** creates a directory. The pass-through is checked after
