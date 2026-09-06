@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g3561fd2)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g36385d9)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 96262d1ea8f282c3` over `src/*.c` and
+**Source anchor:** `sha256/16 = 48763961b859ffd6` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -170,11 +170,11 @@ requires a handshake round.
 
 | File:line | Line |
 |---|---|
-| `accurip.c:97` | `Unable to get AccuRIP DB data: missing CDDB ID!` |
-| `accurip.c:129` | `Unable to get AccuRIP DB data: missing entry!` |
-| `accurip.c:137` | `Unable to get AccuRIP DB data: %s%s` |
-| `accurip.c:140` | `Unable to get AccuRIP DB data: %s!` |
-| `accurip.c:176` | `AccuRIP DB data error, got unexpected number of bytes!` |
+| `accurip.c:133` | `Unable to get AccuRIP DB data: missing CDDB ID!` |
+| `accurip.c:165` | `Unable to get AccuRIP DB data: missing entry!` |
+| `accurip.c:173` | `Unable to get AccuRIP DB data: %s%s` |
+| `accurip.c:176` | `Unable to get AccuRIP DB data: %s!` |
+| `accurip.c:225` | `AccuRIP DB data error, got unexpected number of bytes!` |
 | `cache_probe.c:232` | `Cache probe:    %s` |
 | `coverart.c:34` | `Cover art has no packet!` |
 | `coverart.c:51` | `Unable to init lavf context: %s!` |
@@ -713,10 +713,10 @@ must carry the same class.
 
 | File:line | Message | Evidence | Reaches logfile? |
 |---|---|---|---|
-| `accurip.c:97` | `Unable to get AccuRIP DB data: missing CDDB ID!` | wording + goto end | yes |
-| `accurip.c:129` | `Unable to get AccuRIP DB data: missing entry!` | wording + goto end | yes |
-| `accurip.c:137` | `Unable to get AccuRIP DB data: %s%s` | wording + goto end | yes |
-| `accurip.c:140` | `Unable to get AccuRIP DB data: %s!` | wording + goto end | yes |
+| `accurip.c:133` | `Unable to get AccuRIP DB data: missing CDDB ID!` | wording + goto end | yes |
+| `accurip.c:165` | `Unable to get AccuRIP DB data: missing entry!` | wording + goto end | yes |
+| `accurip.c:173` | `Unable to get AccuRIP DB data: %s%s` | wording + goto end | yes |
+| `accurip.c:176` | `Unable to get AccuRIP DB data: %s!` | wording + goto end | yes |
 | `coverart.c:51` | `Unable to init lavf context: %s!` | both | yes |
 | `coverart.c:57` | `Unable to alloc stream!` | both | yes |
 | `coverart.c:70` | `Couldn't open %s for writing: %s!` | both | yes |
@@ -867,7 +867,7 @@ says.
 
 | File:line | Message | Evidence | Reaches logfile? |
 |---|---|---|---|
-| `accurip.c:176` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
+| `accurip.c:225` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
 | `cyanrip_main.c:1008` | `Done; (%i out of %i matches for current checksum %08X)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:1014` | `Done; (no matches found, but hit repeat limit of %i)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:2031` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
