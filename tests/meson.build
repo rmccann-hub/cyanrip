@@ -78,6 +78,35 @@ stall_test = executable('stall_test',
 )
 test('Stall watchdog', stall_test, timeout: 60)
 
+## A SPURIOUS WAKEUP, CONSTRUCTED RATHER THAN WAITED FOR.
+##
+## pthread_cond_wait() may return without the predicate holding -- POSIX says
+## so -- and the FIFO's three waits were guarded by a single `if`. In
+## fifo_pop() that fell straight through to `out = ctx->queued[0]` with
+## num_queued still 0, reading a slot nothing had written and then decrementing
+## the count to -1.
+##
+## Waiting for a real spurious wakeup gives a test that fails once a year on
+## somebody else's machine. But to the WAITER a spurious wakeup is exactly "the
+## condition variable was signalled and the predicate did not change", and that
+## is producible on demand: signal cond_in with the queue empty. The waiter
+## must not be able to tell the difference, which is the property under test.
+##
+## REVERT-PROVED, and the result is not subtle: with the single `if` restored,
+## this test SEGFAULTS -- exit 139, not a failed assertion. That is what the
+## defect actually was.
+##
+## It includes fifo_frame.c rather than linking it, because CRFrameFIFO and its
+## condition variables are private to the translation unit that instantiates
+## the template. Same move as tests/subq.c with pregap.c, and for the same
+## reason: reaching them is what makes the scenario constructible.
+fifo_test = executable('fifo_test',
+    sources: [ 'fifo.c' ],
+    include_directories: [ '../src' ],
+    dependencies: unit_test_deps + [ dependency('threads') ],
+)
+test('FIFO spurious wakeup', fifo_test, timeout: 60)
+
 ## Pins every wording of the `Cache probe:` line. Eight of the nine are
 ## reachable only from a real drive, and no real drive ran this code until
 ## 2026-08-10 -- so until now the only wording anyone could read was whichever

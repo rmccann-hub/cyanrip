@@ -123,9 +123,24 @@ int RENAME(fifo_push)(AVBufferRef *dst, TYPE *in)
     if (ctx->max_queued == 0)
         goto unlock;
 
-    /* Block or error, but only for non-NULL pushes */
-    if (in && (ctx->max_queued != -1) &&
-        (ctx->num_queued > (ctx->max_queued + 1))) {
+    /* Block or error, but only for non-NULL pushes.
+     *
+     * WHILE, NOT IF, AND POSIX REQUIRES IT. pthread_cond_wait may return
+     * without the predicate holding -- a spurious wakeup -- and this program
+     * makes that concretely reachable rather than theoretical: it installs
+     * SIGINT and SIGTERM handlers and its encoder threads sit in these waits,
+     * and signal delivery is one of the ways a wait returns early.
+     *
+     * Here the cost of the single `if` was a bounded queue that was not
+     * bounded: one spurious wake and the push proceeded past its own limit.
+     * In fifo_pop() below the same shape is worse.
+     *
+     * The loop re-reads block_flags as well as the count, so a shutdown that
+     * clears the flag still lets a waiter leave. It cannot deadlock: the
+     * end-of-stream sentinel is a NULL PUSH, which really does increment
+     * num_queued, so the pop-side predicate genuinely becomes false. */
+    while (in && (ctx->max_queued != -1) &&
+           (ctx->num_queued > (ctx->max_queued + 1))) {
         if (!(ctx->block_flags & FRENAME(BLOCK_MAX_OUTPUT))) {
             err = AVERROR(ENOBUFS);
             FREE_FN(&in_clone);
@@ -165,7 +180,12 @@ TYPE *RENAME(fifo_pop)(AVBufferRef *src)
     SNAME *ctx = (SNAME *)src->data;
     pthread_mutex_lock(&ctx->lock);
 
-    if (!ctx->num_queued) {
+    /* WHILE, NOT IF -- and this is the site where it matters. With the single
+     * `if`, a spurious wakeup fell straight through to `out = ctx->queued[0]`
+     * with num_queued still 0: a read of a slot that was never written, and
+     * then num_queued decremented to -1. The assert below catches it only in a
+     * build that keeps asserts. See the note in fifo_push(). */
+    while (!ctx->num_queued) {
         if (!(ctx->block_flags & FRENAME(BLOCK_NO_INPUT)))
             goto unlock;
 
@@ -196,7 +216,9 @@ TYPE *RENAME(fifo_peek)(AVBufferRef *src)
     SNAME *ctx = (SNAME *)src->data;
     pthread_mutex_lock(&ctx->lock);
 
-    if (!ctx->num_queued) {
+    /* Same as fifo_pop(): a spurious wakeup here cloned ctx->queued[0] with
+     * nothing queued. */
+    while (!ctx->num_queued) {
         if (!(ctx->block_flags & FRENAME(BLOCK_NO_INPUT)))
             goto unlock;
 
