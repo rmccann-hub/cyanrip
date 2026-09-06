@@ -60,35 +60,79 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-FILE_RE = re.compile(r"^File '(?P<path>[^']+)'$")
-LINES_RE = re.compile(r"^Lines executed:(?P<pct>[\d.]+)% of (?P<n>\d+)$")
-TAKEN_RE = re.compile(r"^Taken at least once:(?P<pct>[\d.]+)% of (?P<n>\d+)$")
-
-Cov = collections.namedtuple("Cov", "lines_pct lines_n branch_pct branch_n")
+SOURCE_RE = re.compile(r"^\s*-:\s*0:Source:(?P<path>.+)$")
+LINE_RE = re.compile(r"^\s*(?P<count>[#=]{5}|-|\d+\*?):\s*(?P<no>\d+):")
+BRANCH_RE = re.compile(r"^branch\s+(?P<idx>\d+)\s+(?:taken\s+(?P<taken>\d+)|never executed)")
 
 
-def gcov_for(gcno):
-    """Run gcov -b -n on one .gcno and return {reported path: fields}."""
-    r = subprocess.run(["gcov", "-b", "-n", gcno.name],
-                       cwd=str(gcno.parent), stdout=subprocess.PIPE,
-                       stderr=subprocess.DEVNULL, text=True, timeout=180)
-    out, cur, found = {}, None, {}
-    for line in r.stdout.splitlines():
-        m = FILE_RE.match(line)
+class Merge:
+    """Union of per-line and per-branch execution across every object file.
+
+    WHY A UNION AND NOT A PERCENTAGE. gcov's text summary gives one percentage
+    per (source, object) pair, and a header compiled into several objects gets
+    several. src/utils.h is reported by TEN of them here. Percentages cannot be
+    merged -- a line executed by one object and not another is covered, and
+    picking one reading discards the rest. The first version of this tool kept
+    the reading with the most branches and understated every shared header.
+
+    So this keys on (file, line) and (file, line, branch index) and asks whether
+    ANY object executed it, which is what "covered" means.
+    """
+
+    def __init__(self):
+        self.executable = collections.defaultdict(set)   # file -> {line}
+        self.covered = collections.defaultdict(set)      # file -> {line}
+        self.branches = collections.defaultdict(set)     # file -> {(line, idx)}
+        self.taken = collections.defaultdict(set)        # file -> {(line, idx)}
+
+    def feed(self, path, text):
+        line_no = None
+        for raw in text.splitlines():
+            m = LINE_RE.match(raw)
+            if m:
+                line_no = int(m.group("no"))
+                c = m.group("count")
+                if c == "-":
+                    line_no = None      # not executable; branches cannot attach
+                    continue
+                self.executable[path].add(line_no)
+                if c[0] not in "#=":
+                    self.covered[path].add(line_no)
+                continue
+            m = BRANCH_RE.match(raw)
+            if m and line_no is not None:
+                key = (line_no, int(m.group("idx")))
+                self.branches[path].add(key)
+                # -c prints exact counts, so a branch taken once in ten thousand
+                # is 1 and not a rounded 0%. That distinction is the whole
+                # reason for -c.
+                if m.group("taken") and int(m.group("taken")) > 0:
+                    self.taken[path].add(key)
+
+    def files(self):
+        return sorted(self.executable)
+
+
+def run_gcov(build, gcno):
+    """Emit .gcov files for one object and return {source path: text}.
+
+    gcov resolves sources against the COMPILATION directory recorded in the
+    .gcno -- the build root, not the object directory. Running anywhere else
+    yields a .gcov containing only a four-line header, which parses to zero
+    coverage and reads exactly like an untested file.
+    """
+    for stale in build.glob("*.gcov"):
+        stale.unlink()
+    subprocess.run(["gcov", "-b", "-c", "-o", str(gcno.parent), str(gcno)],
+                   cwd=str(build), stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL, timeout=300)
+    out = {}
+    for f in build.glob("*.gcov"):
+        text = f.read_text(encoding="utf-8", errors="replace")
+        m = SOURCE_RE.match(text.splitlines()[0]) if text else None
         if m:
-            if cur and "lines" in found:
-                out[cur] = found
-            cur, found = m.group("path"), {}
-            continue
-        m = LINES_RE.match(line)
-        if m and cur:
-            found["lines"] = (float(m.group("pct")), int(m.group("n")))
-            continue
-        m = TAKEN_RE.match(line)
-        if m and cur:
-            found["taken"] = (float(m.group("pct")), int(m.group("n")))
-    if cur and "lines" in found:
-        out[cur] = found
+            out[m.group("path")] = text
+        f.unlink()
     return out
 
 
@@ -112,16 +156,11 @@ def main():
     # omitted unexecuted TU reads as full coverage of a smaller program.
     never_ran = [g for g in gcno if not g.with_suffix(".gcda").exists()]
 
-    per_file = {}
+    merge = Merge()
     for g in gcno:
         if not g.with_suffix(".gcda").exists():
             continue
-        for path, d in gcov_for(g).items():
-            # gcov reports source paths relative to the COMPILATION
-            # directory recorded in the .gcno -- which is the build root, not
-            # the .gcno's own directory. Resolving against g.parent yields
-            # build-cov/src/src/... and matches nothing, which this tool's
-            # own guard caught by refusing to report 0%.
+        for path, text in run_gcov(build, g).items():
             try:
                 rel = (build / pathlib.Path(path)).resolve().relative_to(ROOT)
             except (ValueError, OSError):
@@ -131,37 +170,38 @@ def main():
             # to do with this project's tests.
             if rel.parts[0] != "src":
                 continue
-            lp, ln = d.get("lines", (0.0, 0))
-            bp, bn = d.get("taken", (0.0, 0))
-            prev = per_file.get(rel)
-            # A header included by several TUs is reported more than once; keep
-            # the reading with the most branches, the fullest compilation.
-            if prev is None or bn > prev.branch_n:
-                per_file[rel] = Cov(lp, ln, bp, bn)
+            merge.feed(rel, text)
 
-    if not per_file:
+    if not merge.files():
         sys.exit("gcov produced no data for src/ -- refusing to print 0%, "
                  "which would be a claim about the tests when it is a fact "
                  "about this tool having failed")
 
-    print(f"branch coverage from {build.name}, via gcov "
-          f'("Taken at least once", not "Branches executed")\n')
+    print(f"branch coverage from {build.name}, via gcov -b -c, "
+          f"unioned across objects\n")
     print(f"  {'file':<34} {'lines':>8}  {'branch':>8}  {'branches':>9}")
     print(f"  {'-' * 34} {'-' * 8}  {'-' * 8}  {'-' * 9}")
-    tot_l = tot_ln = tot_b = tot_bn = 0
-    for rel in sorted(per_file, key=lambda r: per_file[r].branch_pct):
-        c = per_file[rel]
-        print(f"  {str(rel):<34} {c.lines_pct:7.2f}% {c.branch_pct:8.2f}% "
-              f"{c.branch_n:9d}")
-        tot_l += c.lines_pct * c.lines_n / 100.0
-        tot_ln += c.lines_n
-        tot_b += c.branch_pct * c.branch_n / 100.0
-        tot_bn += c.branch_n
 
-    line_pct = 100.0 * tot_l / tot_ln if tot_ln else 0.0
-    branch_pct = 100.0 * tot_b / tot_bn if tot_bn else 0.0
-    print(f"\n  TOTAL over {len(per_file)} file(s): {line_pct:.2f}% line, "
-          f"{branch_pct:.2f}% branch ({tot_bn} branches)")
+    rows, tot_cl = [], 0
+    tot_el = tot_tb = tot_ab = 0
+    for rel in merge.files():
+        el, cl = len(merge.executable[rel]), len(merge.covered[rel])
+        ab, tb = len(merge.branches[rel]), len(merge.taken[rel])
+        rows.append((rel, 100.0 * cl / el if el else 0.0,
+                     100.0 * tb / ab if ab else 0.0, ab))
+        tot_el += el
+        tot_cl += cl
+        tot_ab += ab
+        tot_tb += tb
+
+    for rel, lp, bp, ab in sorted(rows, key=lambda r: r[2]):
+        print(f"  {str(rel):<34} {lp:7.2f}% {bp:8.2f}% {ab:9d}")
+
+    line_pct = 100.0 * tot_cl / tot_el if tot_el else 0.0
+    branch_pct = 100.0 * tot_tb / tot_ab if tot_ab else 0.0
+    print(f"\n  TOTAL over {len(rows)} file(s): {line_pct:.2f}% line "
+          f"({tot_cl}/{tot_el}), {branch_pct:.2f}% branch "
+          f"({tot_tb}/{tot_ab})")
 
     if never_ran:
         print(f"\n  {len(never_ran)} translation unit(s) produced no .gcda -- "
