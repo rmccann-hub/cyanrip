@@ -7,6 +7,7 @@ import importlib.util
 import json
 import os
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -2079,6 +2080,121 @@ def sc_diagnostics():
                    for m in a.get("messages", [])):
             fail(f"diagnostics: genopt's own error is not in the record: "
                  f"{a.get('messages')}")
+
+
+def _line_shape(line):
+    """A line's SHAPE: every alphanumeric run collapsed, punctuation kept.
+
+    Values legitimately differ between two rips of the same fixture -- a
+    checksum, a duration, a wall clock -- so comparing them would make this
+    test fail for the wrong reason every time. Collapsing each alphanumeric run
+    to a single `w` keeps exactly what a consumer's parser depends on: the
+    labels, the punctuation, the field order and the SEPARATORS.
+
+    Collapsing the run rather than mapping digit-to-9 and letter-to-a is
+    deliberate. `EAC CRC32: 1A2B3C4D` and `EAC CRC32: 12345678` are the same
+    line and differ under a per-character map, so that map would report a
+    format change on every second run.
+
+    What it still catches is the thing that went wrong: `2026-09-06T02:49:54`
+    and `2026-09-06T02:49:54+00:00` have different shapes.
+    """
+    out, i = [], 0
+    while i < len(line):
+        c = line[i]
+        if c.isalnum():
+            while i < len(line) and line[i].isalnum():
+                i += 1
+            out.append("w")
+        elif c.isspace():
+            while i < len(line) and line[i].isspace():
+                i += 1
+            out.append(" ")
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def sc_golden_reference_matches_a_fresh_rip():
+    """The shipped reference must still describe what the binary emits.
+
+    THE GAP THIS CLOSES, and it was open for a real change.
+    sc_golden_reference_is_from_a_clean_build() checks the reference's banner
+    for a -dirty marker and for THIS TREE'S VERSION. Both are worth checking
+    and neither says anything about the reference's FORMAT. So when item 7
+    added a UTC offset to `Ripping finished at`, the reference went on carrying
+    a bare `2026-09-06T02:49:54`, described a binary that no longer existed,
+    and the whole suite stayed green -- while the reference is the artifact
+    Platterpus diffs against and the only one they can see.
+
+    "A reference log guards only the paths it exercises" is already in this
+    project's rules. This is that one level up: it guarded no format at all.
+
+    The rip is driven from the reference's OWN `Invoked as:` line, so the
+    comparison cannot silently drift onto different options -- which is how a
+    previous regeneration dropped `-Z` and removed the whole secure-re-read
+    surface from the artifact both sides check against.
+    """
+    ref_path = ROOT / "docs" / "golden-reference.log"
+    if not ref_path.exists():
+        fail("golden_shape: the reference is missing")
+        return
+    ref = ref_path.read_text()
+
+    m = re.search(r"^Invoked as:\s+(\S+)\s+(.*)$", ref, re.M)
+    if not m:
+        fail("golden_shape: the reference has no `Invoked as:` line, so the "
+             "rip it records cannot be reproduced")
+        return
+    args = shlex.split(m.group(2))
+    # The binary is this tree's; everything else in that line is relative to
+    # the directory the rip ran in, which is what `cwd=` reproduces.
+    for f in ("pregap.cue", "cdda.bin"):
+        src = FIX / f
+        if src.exists():
+            shutil.copy(src, WORK / f)
+    # pregap.cue's FILE names its own .bin; copy it under that name too.
+    if (FIX / "cdda.bin").exists():
+        shutil.copy(FIX / "cdda.bin", WORK / "pregap.bin")
+
+    ec, _ = crip(*args, cwd=WORK)
+    fresh_path = WORK / "o" / "reference.log"
+    if ec != 0 or not fresh_path.exists():
+        fail(f"golden_shape: re-running the reference's own argv exited {ec} "
+             f"and wrote no log -- the recorded invocation no longer works")
+        return
+    fresh = fresh_path.read_text()
+
+    # A `-dirty` marker is a property of the TREE, not of the log format, and
+    # it is already sc_golden_reference_is_from_a_clean_build()'s job. Left in,
+    # the banner's shape differs on any working tree with an uncommitted change
+    # and this check reports a format change that has not happened.
+    def shapes(text):
+        return [_line_shape(l.replace("-dirty", "")) for l in text.splitlines()]
+
+    a, b = shapes(ref), shapes(fresh)
+
+    # A floor, so a comparison of two nearly-empty documents cannot pass by
+    # agreeing about nothing.
+    if len(a) < 60 or len(b) < 60:
+        fail(f"golden_shape: {len(a)} reference lines against {len(b)} fresh "
+             "-- one of these is not a full rip log")
+        return
+
+    if len(a) != len(b):
+        fail(f"golden_shape: the reference has {len(a)} lines and a fresh rip "
+             f"of its own argv has {len(b)} -- a line was added or removed and "
+             "the reference was not regenerated")
+
+    ref_lines, fresh_lines = ref.splitlines(), fresh.splitlines()
+    for i, (x, y) in enumerate(zip(a, b)):
+        if x != y:
+            fail(f"golden_shape: line {i + 1} changed shape and the reference "
+                 f"was not regenerated.\n         reference: "
+                 f"{ref_lines[i][:80]!r}\n         fresh:     "
+                 f"{fresh_lines[i][:80]!r}")
+            return          # the first one is the finding; the rest are noise
 
 
 def sc_golden_reference_is_from_a_clean_build():
