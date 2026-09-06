@@ -17,314 +17,136 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-05. **ROUND 15 IS CLOSED — `GO`/`GO` on `978f9b0` + `platterpus 0.6.37`.** Round 16 is ours to open.
+## Rewritten 2026-09-06. **ROUND 15 IS CLOSED — `GO`/`GO` on `978f9b0` + `platterpus 0.6.37`, and their lap 16 has arrived.** Round 16 is ours to open and is NOT yet open.
 
-Closed by our lap 14, which is the single file their lap 13 §K asked for: a
-header recording `GO` on both sides. A close is read from the newest file on each
-side, and our lap 12 carried `HANDSHAKE-PEER-VERDICT: OPEN` — true when written,
-stale the moment their verdict moved. `tools/release-gate.py` now reports every
-round closed.
+Closed by our lap 14 and their lap 15, both declaring `GO`.
+`tools/release-gate.py` reports every round closed.
 
-**CC-1 is met.** Their acceptance run completed on `0.6.37` + `978f9b0`:
-`ok = True`, 227 pass, 0 fail, filed at `docs/rig-2026-09-05-978f9b0/`. **Our half
-is clean on every criterion their §J names** — 8 of 8 rips carry the pin's banner,
-`Ripping errors: 0`, `Rip completed: yes`, and `cyanrip -Y` returns 0 on every log
-under a later build.
+**Their lap 16 arrived 2026-09-06, out of order and out of turn, and owes no
+reply.** `HANDSHAKE-NEXT-LAP: none owed, and none requested`; §F says absorbing
+it by reference in our opener is a complete answer. `seam-check` passes 14 of 14
+on it: the digest `696b8ada8b203d21 over 15` re-derives here — the **tenth**
+consecutive agreement — and all four shared-artifact hashes match this tree.
 
-**A release is NOT cut.** The round closing and a release are different acts: no
-version bump, no `release-ledger.tsv` row, no manifest regeneration. The build
-still says `NOT a released build`, correctly.
+Its purpose is that their lap 15 had aged: it *promised* a fix for our §5 item 7
+and the fix now exists, along with three more. Sending an opener's worth of stale
+promises would have cost us a lap collecting corrections.
 
-### We answered a draft, and it moved a hash
+**A release is NOT cut, and one is now possible for the first time this round.**
+The round closing and a release are different acts: no version bump, no
+`release-ledger.tsv` row, no manifest regeneration. The build still says
+`NOT a released build`, correctly.
 
-**The first lap 13 we were handed was their unsent draft** (`25e949e4…`, declaring
-`OPEN` and `0.6.38`). Their sent lap (`7adffe7d…`) declares `GO` and `0.6.37`, and
-its §A1 names the first as a draft. Nothing was wrong on their side — §310 permits
-revising an unsent lap.
+### All seven held items have landed. That is what changed since the last rewrite.
 
-We had written a whole §H against the draft, establishing from the bundle that the
-run used `0.6.37` at `f3b60a0`. **Their §A1 discloses it unprompted, and their §B
-goes further than we did**: rather than banking `pass=227 fail=0` they call it
-overstated and verify §I, §N and §E directly from the artifacts. Theirs was first
-and better; ours is recorded as a confirmation, not sent as a finding.
+Our lap 14 §5 announced seven changes held for round 16 because each moves
+something the consumer parses or relies on. **Every one is now in the tree**, each
+revert-proved with the build confirmed green during the revert:
 
-The draft is kept at `docs/handshake/inbound/drafts/` — **not** beside the laps,
-because `release-gate.py` and `round-digest.py` both `glob("round-*.md")`
-non-recursively in `inbound/`, so a file named `round-15-lap-13-DRAFT.md` would
-have been counted as a lap. Checked before naming it.
+| item | what it was | landed |
+|---|---|---|
+| 1 | the `log_init`/`cue_init` failure paths emitted no completion footer | `a79ac9e` — `fatal_abort = 1`, so `end:` reports the abort rather than a success |
+| 2 | **`-H` silently discarded de-emphasis** while the log printed `(deemphasis applied)` and the cue dropped `FLAGS PRE` | `b866900` |
+| 3 | an ASCII apostrophe in `-a`/`-t` destroyed every later field | `c59dea3` |
+| 4 | invalid UTF-8 truncated a name; an empty leading component made `-D` resolve **absolute** | `c3482b0` |
+| 5 | a logfile's first line was not always the fork banner | `c3482b0`, same fix |
+| 6 | **no timeout of any kind on any curl handle** | `e7835c3` |
+| 7 | timestamps carried no UTC offset | `8d465f1` |
 
-**Swapping the draft for the real lap moved the thirteen-lap digest** from
-`25c903c294d88e82` to `6044c992bfe49c41`, and `seam-check` caught it as
-**`SAME COUNT, DIFFERENT HASH`** — a count-only check cannot see that.
+**Their lap 16 §D closes four of the seven on their side** — items 1, 4, 5 and 7
+reach them and all four are now handled there too. Item 2 does not reach them at
+all (*"we never pass `-H`. Measured across the codebase."*), item 3 is covered by
+their escaping, and item 6 they decline to argue us out of.
 
-**Their acceptance run is filed at `docs/rig-2026-09-05-978f9b0/`** (`sha256
-9520d635…`, 34 filed / 255 named-not-filed, all 289 checksummed). It completed:
-`ok = True`, 227 pass, 0 fail. **Our half is clean on every criterion their §J
-names** — 8 of 8 rips carry the pin's banner, `Ripping errors: 0`, `Rip
-completed: yes`, and `cyanrip -Y` returns 0 on every log under a later build.
+**Item 2 is the one worth reading.** The filter description was a ternary cascade,
+so `hdcd` matched first and `aemphasis` was never reached; audio, log and cue were
+**self-consistently wrong**, and a reader checking one against another found
+agreement. The composed chain needs two explicit `aresample` bridges, because
+libavfilter's `hdcd` filter calls `avfilter_graph_set_auto_convert(NONE)` in its
+own init and that setting is **graph-wide** — the plain chain does not mis-render,
+it fails to configure. `aformat` cannot substitute: it constrains a link and
+relies on the converter that is switched off. Both were tried against libavfilter
+directly before either was written.
 
-**But the run was produced by `0.6.37` at `f3b60a0`, not the `0.6.38` their lap 13
-declared** — `transcript.txt:360` says so of itself, `report.json` agrees, all 8
-`Consumer:` lines agree, and `0.6.38` appears 0 times in 289 entries. The script
-is the older one too: none of the three verbs their §C1 says `0.6.38` introduces
-appear, while `expect-tracks 2+` (×10) and `expect-status cancelled` (×3) — the
-checks their own §A1 calls satisfiable by finding nothing — do. The fixed script
-exists; they sent it to us in the same envelope.
+### Four things found here since the close, none of them lap material
 
-**We are not calling CC-1 unmet.** S-14: a failure in their half is not a `HOLD`
-on ours, and the close condition is theirs to weigh. Our lap 14 §H reports it and
-asks only that the assessment be made on a correct reading of which build produced
-the evidence. **Our `GO` stands** — and rests on the rip-level facts, which are
-ours and independent of their script's assertions.
+Under the 2026-08-26 reform findings go in commit messages and `Changelog.md`,
+which they can read from git and which need no reply.
 
-**Our lap 14 also carries** the §A2 concession (below), the `seam-commands` §7
-proposal for round 16, and one data point for their §F5.
+- **The provider contract published lines the binary never printed.** The
+  generator deleted every `\n` in a format string, including **interior** ones,
+  fusing two printed lines into one string. It reached **P2** — the surface we
+  undertake not to reword without a round — where `cyanrip_log.c:635` published
+  `Embedded cover art:    %s: %ix%i %s` while a real rip prints the label and the
+  value on separate lines. P5 was worse: `...for writing: %s!Invalid folder name?
+  Try -D <folder>.` ran two sentences together with no separator at all. **Nine
+  rows** across P2, P3 and P5. Fixed at `1c96c8d`; the corrected contract is the
+  commit after. **This is a change to what the contract publishes and is round-16
+  material**, even though the binary did not move.
+- **`tools/message-witness.py`** answers a question P5 could not: which of its
+  messages does anything here actually assert? The 2026-09-05 audit put it at
+  "~20 of ~128" as a lead. **Measured: 7 witnessed, 107 with no witness, 6
+  unprobable** — a literal prefix too short for a probe to discriminate, counted
+  in neither column. It found the fused-line defect on its first run. It gates
+  drift and a floor, never full coverage: most of P5 needs a drive, a network or
+  an allocation failure, and a permanently red gate is one nobody reads.
+- **`check-settled.py` truncated any check command containing a backtick** and
+  handed the fragment to the shell, which then failed on an unterminated quote —
+  reported as a **stale fact** rather than an unreadable row. Fixed at `c399f44`,
+  and the first diagnosis was wrong: the note blamed the `\|` escape, which
+  survives fine.
+- **`README.md` displayed upstream's green CI badge** at the head of a section in
+  this fork's README, for a repository whose own CI has never executed a run.
+  Now says whose it is (`6e74343`).
 
-**Lap 12 delivered the correction this file used to say was owed** — our lap 10
-told them 16 P5 rows "rest only on a construct that does not end the run", and
-for eight of them that was wrong because each is followed immediately by
-`goto end`. Lap 12 §3 carries it. Nothing is outstanding from us.
+### The shared file has a SECOND wrong row, and they found it
 
-**Our lap 12 pre-commits under S-18: our next lap is `GO` on `978f9b0` unless
-their run finds a defect in it.** That binds. It is conditioned on *their* run,
-so the findings below do not release us from it — and none of them makes the
-reviewed pin unsafe, which is the only thing that could promote one to blocking.
+`docs/seam-commands.md` line 504 publishes `-p '99=drop'` as accepted / exit 0;
+the binary refuses it. **Line 97 publishes `-D` as `directory` / `str, path` /
+`writable` / "output directory".** It is `folder_scheme`, *"Directory naming
+scheme"* (`cyanrip_main.c:1603` at the pin) — a **relative scheme**, with `-F` its
+per-track sibling. Their lap 16 §B3, read from our source at `978f9b0` and
+re-checked here.
 
-### A test audit ran on 2026-09-05, and what it changes here
+**Two is a pattern where one was a coincidence**, and the `-D` row is not
+incidental: its real semantics are exactly why held item 4 mattered, since an
+empty leading component made a multi-component scheme resolve **absolute**. A
+reader who believed line 97 would not have looked.
 
-`docs/AUDIT-2026-09-05.md` is the record; `docs/SETTLED.md` carries the rows with
-their re-check commands. Seven defects were verified first-hand, two lane claims
-were refuted by measurement, and the merge-back list is now **six**.
+**Neither cell is corrected.** The file is jointly owned; a correction is a
+version bump both sides ship. **They assent to the `--check` remedy** (lap 16 §D)
+with two riders we accept: the delimiters must not claim prose either side wrote,
+and **the regenerated table must name the build it was measured from** — a shared
+hash cannot prove the bytes describe the binary, and neither can its replacement
+unless it says which binary.
 
-**Exactly one of them is theirs to agree to, and it is the one that matters most:**
+### Their §G asks one question, and our answer is no
 
-> **`docs/seam-commands.md` §7 is stale, and both projects have cryptographically
-> agreed on the stale bytes.** Line 504 publishes `-p '99=drop'` as accepted /
-> exit 0; the binary refuses it with exit 1 and a diagnostic, and the control
-> `-p '1=drop'` exits 0 so the probe discriminates. The file last moved
-> `b9a9c53` (2026-08-07); the bound moved `bf8ab3a` (2026-08-15).
->
-> Its `sha256` is `7dc31381…5564196`, byte-identical to the `seam-commands=`
-> value in `round-15-lap-12.md:23`, and `tools/seam-check.py` reports **OK**.
->
-> **A shared hash proves both sides hold the same bytes. It can never prove the
-> bytes describe the binary.** §7 has no `--check` and no gate — it is the one
-> shared artifact where those two facts can diverge in silence, and they have.
+They ask whether our side has a mechanism making a lap's **sent/unsent** state
+visible in the tree. **We do not, and we have the same failure at least three
+times**: `56e7d71` withdrew a committed lap 5 that was never sent, `d360c38`
+edited lap 14 after committing it, `6239860` replaced a lap 13 we had already
+answered. Each was stopped by the operator, not by a check.
 
-`seam-commands.md` is jointly owned, so a cell correction is a shared-file edit
-and needs a joint version bump. **It goes in a lap.** The remedy is ours to build
-and theirs to assent to: `--check` in `tools/probe-argv-surface.py`, regenerating
-§7 between explicit delimiters and diffing. The delimiters are not decoration —
-the check must not claim prose the other side wrote.
+The reason is structural rather than an oversight: **"sent" is an event outside
+both repositories**, so neither tree can observe it. The only in-tree evidence is
+the peer quoting the hash back — the check they built, and which they correctly
+say is not sufficient. Whether *committed* can stand in for *sent* is a real
+trade with a real cost: it is strictly stronger and checkable, and it would have
+forbidden our own `56e7d71` withdrawal. That belongs in the round-16 opener.
 
-**Everything else found is ours alone, and none of it is lap material.** Under the
-2026-08-26 reform, findings go in commit messages and `Changelog.md`, which they
-can read from git and which need no reply. Five of the six code defects are frozen
-by S-15 while the round is open; all are next-round work. In brief, all upstream's
-and all with commands in `docs/SETTLED.md`:
+### What is still not verified, and no green suite implies it
 
-| finding | reach |
-|---|---|
-| Three live defects in the AccurateRip response parser — unchecked `av_realloc` feeding a `memcpy`, `strcmp` on a NULL `content_type`, `strstr` over a never-NUL-terminated buffer | the network path, which **no scenario here can reach**: all 40 hardcode `-N -A -U` |
-| `fun512.c:72` signed-overflow UB — `ftell` on a directory returns `LONG_MAX`, so `len + 1` overflows before any bound check | `cyanrip -Y <a directory>` |
-| `cyanrip_main.c:2184`/`:2186` bare `return 1;` skip `cyanrip_ctx_end()`, which also **closes the drive** | the log-init and cue-init failure paths |
-| Invalid UTF-8 truncates a name; a **leading** bad byte empties the component, and with a multi-component `-D` the path becomes **absolute** | measured with their own `-D {album_artist}/{album}`: a rip landed in `/Some Album`, exit 0 |
-| A logfile's first line is not always the fork banner when a naming-scheme argument holds invalid UTF-8 | `-Y` still returns 0 on such a log |
+Unchanged by any of the above. **No hardware has run since the run that closed
+this round.** Untouched by any run to date: C2 (the rig's drive reports it
+unsupported), `-f`, damaged media, CD-TEXT from a disc that has some, the
+diagnosed-abort exit code, and `-x` alone returning a drive (`-x -I` has; they are
+different claims about the same flag).
 
-**One was ours and was made that same session:** two `docs/SETTLED.md` cells ran
-`meson test` inside a registered meson test, so the suite re-entered meson on the
-same build directory and the inner run truncated `testlog.json` — 26.7% NUL, 47 of
-61 records, while JUnit stayed intact. Fixed at `8e1fd20` and guarded. The suite
-had really passed; its machine-readable record of passing had not.
-
-**And one positive result, recorded because an absence of a finding is a result:**
-metadata **cannot** escape the output directory. `/` becomes U+2215 before it
-reaches the filesystem; 16 of 16 traversal attempts across all four `-T` modes
-stayed contained.
-
-### Their lap 13 arrived 2026-09-05. **No lap is owed and none was sent.**
-
-Filed at `docs/handshake/inbound/round-15-lap-13.md`; the envelope's second part,
-`fullacceptance.txt`, is filed beside it. Both verified byte-exact against the
-manifest's own hashes (19,872 B / `25e949e4…`, 44,366 B / `d3fd3cce…`).
-
-| checked here | result |
-|---|---|
-| their digest `12243ffa9e1f843e over 12` | re-derives exactly with our implementation — **eighth** consecutive agreeing value |
-| their quoted sha256 of our lap 12, `fedf8712b87b13da…` | matches `sha256sum docs/handshake/round-15-lap-12.md` |
-| `tools/seam-check.py` over their lap | 0 FAIL. One UNPROBED — `HANDSHAKE-FROM-COMMIT` is declared `pending`, so nothing was resolved and the checker says so rather than passing it |
-
-**Why no lap.** Their §D requires nothing, §E asks nothing, §G has no questions,
-§H found nothing in our output, §I lists what they are explicitly not asking, and
-§K says to reply before the run *only* if we dispute §A2, §A3 or §C4, or if our
-`GO` changes. **We dispute none of the three and our `GO` stands.** Under the
-2026-08-26 reform an acknowledgement lap is not a lap — nothing to say is a
-complete answer.
-
-**Their build moved a fifth time, to `0.6.38`**, disclosed as a break in their §A1:
-an audit of their acceptance script found four ARCHIVAL checks satisfiable by
-finding nothing, three of them the only graded step in their section. The run
-starts on `0.6.38` + `978f9b0`, unattended. Our pin is untouched.
-
-### The correction we owe, and it can only live here
-
-**Our lap 12 line 77 says of their escaping layer: *"it just does not cover the
-apostrophe."* That is wrong, and it breaks a rule this repository wrote.**
-
-Their §A2 cites `cyanrip_backend.py:699` (`if ch in "\\='" or ch == ":"`), all
-eleven `-a`/`-t` sites routing through it, and a test plus two 400-example
-`hypothesis` properties covering `'`. We cannot read their source — but the half
-that is ours is measurable, and it settles it:
-
-    -t "1=title=Don\'t Stop:artist=SHOULD_LAND:isrc=SHOULD_ALSO_LAND"
-      -> title  "Don't Stop"      artist  SHOULD_LAND      isrc  SHOULD_ALSO_LAND
-
-All three fields land. `naming.c:46` honours a generic backslash, so `\'` survives
-the pre-splitter — and **our own lap 12 table two lines above the bad sentence
-already recorded that**. We had the evidence and asserted past it.
-
-The mechanism is the useful part and it is theirs: the 2026-09-03 argv carries no
-escaped apostrophe **because no title in that data contains one**, which our own
-§1 said two paragraphs earlier. *An absence in an argv is a fact about the data
-before it is a fact about the escaper.* That is `D-03` in their proposed
-vocabulary, and it is the round-12 failure arriving from the other direction —
-**never state a mechanism in the other side's code without citing where it was
-read.**
-
-**A sent lap is immutable, so this file is the only place the correction can
-live.** It is not a dispute and needs no lap; it goes in our next one for the
-record. Their §A3 was also checked rather than accepted: `musicbrainz.c` sets
-`ret = 1` in both branches inside `end:` and returns `ret` at `:390`, so both do
-terminate — their concession to us is correct.
-
-### Their §C4 is a class we hit again this session, which is evidence for their §F5
-
-They found a `.pyc` compiled while a file was mutated outliving the restore:
-`git diff` empty, sha256 identical, six tests failing. They name our C analogue —
-*"the object file, the ccache entry and the build stamp"* — and mark the mechanism
-`[INFERRED]` with the reproduction recorded as **FAILED**.
-
-**It happened here on 2026-09-05, making three instances across two projects.** A
-fan-out left a mutant in `src/cyanrip_encode.c` and `build/` held the mutant
-binary; a targeted `meson test` run against it would have measured a program
-nobody wrote. Confirmed by the rebuild recompiling that translation unit. A
-full-suite run *does* catch it — `contract_build` hashes `src/` — but a
-single-scenario run does not, which is exactly the shape they describe.
-
-So their **§F5**, a numbered shared defect-class vocabulary, has a third data point
-before it is written. `D-01` is real, it is cross-language, and neither side found
-it by reading.
-
-### What of the audit is prepared for round 16
-
-`docs/AUDIT-2026-09-05.md` §3 holds ~40 leads reported by an agent and **not**
-re-derived here; they are labelled at that weight on purpose. A lead is not a
-finding. §1's seven verified defects are next-round work, five frozen by S-15.
-
-**And §1.1 is now sharper than when it was written.** Their lap 13's
-`HANDSHAKE-SHARED-HASHES` re-attests `seam-commands=7dc31381…`, and our own
-`seam-check.py` printed `OK    shared/seam-commands … matches this tree` against
-it today. **Both projects have now cryptographically agreed on the stale bytes in
-two consecutive laps**, one of them sent after we found the divergence. Nothing is
-wrong with the mechanism; §7 is simply the artifact it cannot see into.
-
-### The correction, first — and it is ours, twice over
-
-**Our round 15 lap 3 declared `HANDSHAKE-TESTED: CC-1 NOT MET`. Then we read
-Platterpus's 2026-09-03 bundle, decided lap 3 was falsified, and wrote CC-1 IS
-MET into this file, into `docs/SETTLED.md` and into the rig README.**
-
-**Lap 3 was right and the correction was wrong.** Their lap 6 §C1 says what
-happened to that run: their acceptance script budgeted `10800`s for a
-whole-disc `-Z 2 -r 3` that needs about twice that, section F timed out at
-`10800.1`s, and the ARCHIVAL section downstream produced no evidence at all. A
-run whose archival section produces nothing is not a pass; it is a run that did
-not happen.
-
-**What we did is the scope error this project names in as many words.** Two
-whole-disc rips inside that run completed cleanly, and we verified them
-properly — `Ripping errors: 0`, `14 of 14 tracks`, `Log FUN512` intact, `-Y`
-exit 0 on all seven logs. Then we called that the acceptance pass. *"I verified
-the list you sent" is not "I verified your inventory."* The rips were verified;
-the pass was not.
-
-**A second thing we held and did not use.** Lap 5 (withdrawn unsent) declared
-`HANDSHAKE-PEER-PIN: unknown` for `0.6.34` and asked them for it. The bundle's
-own per-rip JSON carries `generator.build_fingerprint: dba2ab2` — we printed
-that field while reading the bundle. Their lap 5 confirms `0.6.34 = dba2ab2`
-independently.
-
-**And lap 3 is still on the wire and still says `platterpus/0.6.33` at
-`0a69732`.** Their half has since moved to `0.6.37` at `f3b60a0`, declared by
-them out of turn and with the movement labelled as such. A sent lap is never
-edited; this is the interim record and the next lap is the formal one.
-
-### What the 2026-09-03 session DOES establish
-
-Platterpus `0.6.34` drove **`978f9b0`** — the round-15 pin, `0.9.4-rc2+platterpus.11` —
-on the PIONEER BDR-209D over the 14-track disc. Filed at
-`docs/rig-2026-09-03-978f9b0/`, byte-exact, with `SHA256SUMS`.
-
-| | |
-|---|---|
-| whole-disc rip | `Tracks to rip: all`, `Ripping errors: 0`, `Rip completed:  yes (14 of 14 tracks)` |
-| logs | seven, **all verifying `-Y` exit 0** against a *later* build |
-| AccurateRip | 12 of 14 exact, 2 matched an offset-variant pressing |
-| pregap | 13 × `sub-channel (not signalled by TOC)`, track 1 `lead-in` |
-
-**Four things came off the never-run list**, all from the artifacts:
-
-- **The abort footer and a diagnosed non-zero exit, together.** `-N -l 1` exited
-  **1** having printed `Offset is unset!…` at column 0, then
-  `Rip completed:  no (aborted, 0 of 14 tracks)`. It also **settles one `goto end`
-  row by running it**, which is what P5's legend said those rows needed.
-- **`Secure re-read:  did NOT converge after 3 reads (repeat limit hit)`** — the
-  non-converged arm, three tracks on each whole-disc rip.
-- **The plural `Read stalls:` rendering**, `5 reads exceeded 10s`.
-
-Still untouched by any run: C2 (the drive reports it unsupported), `-f`, damaged
-media, CD-TEXT from a physical disc, and `-x` alone on a drive that goes on to rip.
-
-### The defect that run found, and it is ours
-
-`session/DIAGNOSTICS.txt` records thirteen `[error]` entries, recurring on
-
-    [error] ripper.fatal_message
-      Done; (no matches found, but hit repeat limit of 3)
-      tool: cyanrip
-
-against a rip whose own report reads `status: success`, `ripper_exit_code: 0`,
-`14 of 14 tracks` and `health_status: No errors occurred` — beside
-`error_count: 5`. In our log that string sits at lines 222, 305 and 387 and each
-is **immediately followed by `Track N ripped and encoded successfully!`**.
-
-**`PROVIDER-CONTRACT.md` P5 listed it, under a heading reading *"Every string
-reachable on a failure path"*.** It was there on the strength of `goto
-finalize_ripping` and nothing else — no failure exit in the search window, no
-diagnostic wording — and `finalize_ripping:` is the ordinary continuation, which
-flushes encoders and falls into that success line. **The contract is the API, so
-this is our defect** whatever else contributed to the consumer's reading; saying
-more would be a claim about code we cannot read.
-
-**Fixed at `896a80a`.** A bare `goto` is no longer treated as failure evidence.
-The seven rows in that state moved to **`P5a` — "Strings this document does NOT
-classify"**, not established in either direction, which is the only claim the
-generator can support. Two of the seven were the *convergence* line and the loop
-that echoes the cue sheet. A second defect in the same section, same cause: the
-summary said `128 distinct strings` above a breakdown totalling **114**, because
-it iterated a hardcoded tuple of class names — so three classes were counted in
-the total and named in no line a reader could see. Both pinned by
-`contract_fatal_inventory`, revert-proved three ways.
-
-**`src/` is unchanged.** The source anchor is unmoved and the binary reads discs
-exactly as `978f9b0` does; what moved is a document a consumer parses.
-
-### What a consumer should do about it
-
-If you classify our messages from P5, **re-read it**. `Done; (no matches found,
-but hit repeat limit of N)` and `Done; (N out of M matches for current checksum
-X)` are not errors — they are the two arms of the secure-re-read outcome, and the
-second is the *success* arm. Neither is in P5 any more.
+**Nothing in this section's landed work has been on a drive.** In particular
+item 2 changes **audio** for `-H` on a pre-emphasised disc, and item 6 changes
+what happens when a network endpoint stalls — neither of which any fixture here
+can exercise.
 
 ## Releases — read the channel, never the version string
 
@@ -376,21 +198,21 @@ which is correct and is not being overridden. Work has landed on
 `platterpus-fork` since the pin — all of it documentation, tests and tooling,
 none of it in `src/`.
 
-## Round 15
+## Round 15 — closed at 16 laps
 
 | | |
 |---|---|
 | **opened** | our lap 1, on the released pair rather than a test pin |
-| **close condition** | **one, fixed at lap 1 under S-13: CC-1**, a hardware acceptance pass on the released pair |
-| **pin** | `978f9b0`, unmoved all round. No test pin; `none` is declared, which is an answer and not a build |
-| **their laps 4–9** | all `OPEN`, all transcribing our `GO`. Laps 4–7 arrived in one envelope, three of them late; their half moved `0.6.33` → `0.6.34` → `0.6.36` → `0.6.37`, each move declared, and has not moved since lap 7 |
-| **our lap 3** | `GO`, sent. Its `HANDSHAKE-TESTED` was right; our reading of the bundle was not |
-| **our lap 8** | `GO`, sent. Accepts `0.6.37` at `f3b60a0` as the app half and corrects our own CC-1 claim |
-| **our laps 10 and 12** | both `GO`, sent. Lap 10 named 16 P5 rows; lap 12 §3 corrects eight of them — each is followed immediately by `goto end`, so the contract's own `records and CONTINUES` was right and our lap was not |
-| **our lap 12 pre-commit** | S-18: **`GO` on `978f9b0` unless their run finds a defect in it.** Binding, and conditioned on their run — the 2026-09-05 audit's findings do not release it |
-| **next** | **nothing from us.** Lap 12 declares `HANDSHAKE-NEXT-LAP: none owed`; the next thing across the seam is their run's result. Both pre-commits are conditional on it |
+| **close condition** | **one, fixed at lap 1 under S-13: CC-1**, a hardware acceptance pass on the released pair. **Met** |
+| **pin** | `978f9b0`, unmoved all round on both sides. No test pin was ever declared |
+| **closed by** | our lap 14 (`GO`) and their lap 15 (`GO`), each transcribing the other |
+| **their lap 16** | out of order, `GO`/`GO`, **no reply owed**. Four fixes on their side, an assent, and one question (§G, answered above) |
+| **next** | **round 16, ours to open.** Not yet open |
 
-**CC-1 is NOT met.** Their four laps say so in every `HANDSHAKE-TESTED`, and the reason is theirs and named: the acceptance script's section F was under-budgeted, and `0.6.36` could not have passed either for a second reason they found afterwards. Our §9 pre-commit stands — our next lap is `GO` unless their pass fails on a cause that is ours. The one cause that was ours, the P5 misclassification, is fixed and does not touch the pin.
+**The reform's measure is lap count, and round 15 ran to 16.** Round 14 ran to
+nineteen; the reform's own test was *"round 15 closes in three laps or the reform
+failed"*. It did not. Sixteen is better than nineteen and it is not three, and
+saying so is cheaper than explaining it away.
 
 ### The digest methods no longer differ — seven consecutive agreeing values
 
