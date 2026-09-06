@@ -318,6 +318,7 @@ rip_scenarios = [
     'mixed',
     'nrg',
     'filters',
+    'deemph_with_hdcd',
     'album_loudness',
     'contract_covers_log',
     'art',

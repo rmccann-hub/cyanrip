@@ -437,6 +437,25 @@ char *crip_escape_bare_quotes(const char *src);
 
 int crip_is_integer(const char *src);
 
+/* Is de-emphasis applied to this track? ONE PREDICATE, because the same
+ * condition was spelled out at five sites in three files -- the decode
+ * context, the encoder, the swr setup, the log's "(deemphasis applied)" and
+ * the cue's FLAGS PRE -- and nothing made them agree. They happened to, which
+ * is not the same thing: what disagreed was the FILTER GRAPH, whose ternary
+ * cascade dropped de-emphasis whenever -H was also given while all five sites
+ * went on reporting it. Round 15 lap 14 §5 item 2.
+ *
+ * It reads settings and one track field, so it answers identically before a
+ * rip and after one -- which matters because -J writes a cue sheet without
+ * ever building a decode context, and a predicate keyed on what the graph did
+ * would flip FLAGS PRE between a cue-only run and a real one. */
+static inline int crip_deemphasis_active(const cyanrip_ctx *ctx,
+                                         const cyanrip_track *t)
+{
+    return (ctx->settings.deemphasis && t->preemphasis) ||
+            ctx->settings.force_deemphasis;
+}
+
 /* Set from a signal handler, so volatile sig_atomic_t rather than int: an int
  * written in a handler and read from the rip loop may be cached in a register
  * and never re-read, which is the compiler being allowed to ignore the only

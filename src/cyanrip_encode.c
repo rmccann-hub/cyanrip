@@ -464,12 +464,61 @@ static int init_filtering(cyanrip_ctx *ctx, cyanrip_filt_ctx *s,
         inputs->next          = NULL;
     }
 
-    const char *filter_desc = hdcd ? "hdcd" :
-                              deemphasis ? "aemphasis=type=cd" :
-                              peak ? "ebur128=peak=true+sample,anullsink" :
-                              NULL;
+    /* COMPOSED, NOT SELECTED, and that is the whole fix. This was a ternary
+     * cascade, so `-H` on a pre-emphasised disc -- or `-H -E` on any disc --
+     * silently dropped de-emphasis: hdcd matched first and aemphasis was never
+     * reached. Nothing said so. The log went on printing "(deemphasis
+     * applied)" and the cue went on omitting FLAGS PRE, both reading the
+     * SETTING, so audio, log and cue were self-consistently wrong and no
+     * artifact carried a trace of it. Round 15 lap 14 §5 item 2.
+     *
+     * ORDER IS NOT ARBITRARY: hdcd runs first. Its control code is carried in
+     * the low bits of the 16-bit samples, so any filter placed ahead of it
+     * alters the very thing it decodes. De-emphasis is a correction to the
+     * reconstructed signal and belongs after.
+     *
+     * The peak graph is separate, and always alone on its own graph -- it is
+     * built by its own init_filtering() call with hdcd and deemphasis both 0,
+     * so it can never be composed with these and is kept in its own branch
+     * rather than appended. */
+    char filter_desc[128];
+    filter_desc[0] = '\0';
 
-    ret = avfilter_graph_parse_ptr(s->graph, filter_desc, &inputs, &outputs, NULL);
+    if (peak) {
+        av_strlcpy(filter_desc, "ebur128=peak=true+sample,anullsink",
+                   sizeof(filter_desc));
+    } else if (hdcd && deemphasis) {
+        /* THE TWO BRIDGES ARE NOT DECORATION, and the reason is measured
+         * rather than assumed. libavfilter's hdcd filter calls
+         * avfilter_graph_set_auto_convert(AVFILTER_AUTO_CONVERT_NONE) in its
+         * own init -- it must see the exact samples off the disc, because the
+         * control code it decodes lives in their low bits -- and that setting
+         * is GRAPH-WIDE. So the format conversion lavfi would normally insert
+         * for us is switched off everywhere, and the plain chain
+         * "hdcd,aemphasis=type=cd" fails to configure with:
+         *
+         *   The filters 'Parsed_aemphasis_1' and 'out' do not have a common
+         *   format and automatic conversion is disabled.
+         *
+         * aformat does not fix it: aformat only CONSTRAINS a link's format
+         * list and relies on the same auto-inserted converter. aresample
+         * converts, so it is what goes in. Both were tried against libavfilter
+         * directly before either was written here.
+         *
+         * hdcd emits s32, aemphasis works in dblp, and the sink asks for s32
+         * because the encoder is configured for HDCD's 20 bits. */
+        av_strlcpy(filter_desc,
+                   "hdcd,aresample=osf=dblp,aemphasis=type=cd,aresample=osf=s32",
+                   sizeof(filter_desc));
+    } else if (hdcd) {
+        av_strlcpy(filter_desc, "hdcd", sizeof(filter_desc));
+    } else if (deemphasis) {
+        av_strlcpy(filter_desc, "aemphasis=type=cd", sizeof(filter_desc));
+    }
+
+    ret = avfilter_graph_parse_ptr(s->graph,
+                                   filter_desc[0] ? filter_desc : NULL,
+                                   &inputs, &outputs, NULL);
     if (ret < 0) {
         cyanrip_log(ctx, 0, "Error parsing filter graph: %s!\n", av_err2str(ret));
         goto fail;
@@ -501,13 +550,10 @@ int cyanrip_create_dec_ctx(cyanrip_ctx *ctx, cyanrip_dec_ctx **s,
     if (!dec_ctx)
         return AVERROR(ENOMEM);
 
-    if ((ctx->settings.decode_hdcd) ||
-        (ctx->settings.deemphasis && t->preemphasis) ||
-        (ctx->settings.force_deemphasis)) {
-
+    if (ctx->settings.decode_hdcd || crip_deemphasis_active(ctx, t)) {
         ret = init_filtering(ctx, &dec_ctx->filt,
                              ctx->settings.decode_hdcd,
-                             (ctx->settings.deemphasis && t->preemphasis) || ctx->settings.force_deemphasis,
+                             crip_deemphasis_active(ctx, t),
                              0);
         if (ret < 0)
             goto fail;
@@ -1195,7 +1241,7 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
     int ret = 0;
     const cyanrip_out_fmt *cfmt = &crip_fmt_info[format];
     cyanrip_enc_ctx *s = av_mallocz(sizeof(*s));
-    int deemphasis = (ctx->settings.deemphasis && t->preemphasis) || ctx->settings.force_deemphasis;
+    int deemphasis = crip_deemphasis_active(ctx, t);
 
     const AVCodec *out_codec = NULL;
 

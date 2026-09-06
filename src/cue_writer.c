@@ -181,8 +181,10 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
     }
 
     for (int Z = 0; Z < ctx->settings.outputs_num; Z++) {
-        if (t->preemphasis && !ctx->settings.deemphasis &&
-            !ctx->settings.force_deemphasis)
+        /* FLAGS PRE says the AUDIO IN THE FILE is still pre-emphasised, so
+         * it is the exact negation of "de-emphasis was applied" -- one
+         * predicate, not a second hand-spelled copy of the same three terms. */
+        if (t->preemphasis && !crip_deemphasis_active(ctx, t))
             fprintf(ctx->cuefile[Z], "    FLAGS PRE\n");
 
         if (t->dropped_pregap_start != CDIO_INVALID_LSN &&

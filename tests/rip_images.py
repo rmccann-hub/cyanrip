@@ -566,6 +566,80 @@ def sc_filters():
         fail("-W did not disable deemphasis")
 
 
+def sc_deemph_with_hdcd():
+    """-H must not silently swallow de-emphasis. Round 15 lap 14 §5 item 2.
+
+    The filter description was a TERNARY CASCADE -- `hdcd ? "hdcd" :
+    deemphasis ? "aemphasis=type=cd" : ...` -- so whenever both were asked for,
+    hdcd matched and aemphasis was never reached. Nothing anywhere said so: the
+    log printed "(deemphasis applied)" and the cue omitted FLAGS PRE, both
+    reading the SETTING rather than the graph, so the audio, the log and the
+    cue were self-consistently wrong and no artifact carried a trace.
+
+    THE INPUT THE SUITE NEVER USED IS BOTH AT ONCE. sc_filters() covers -H
+    alone and -E alone, and neither can distinguish a cascade from a
+    composition -- with only one of the two set, selecting and composing give
+    byte-identical output. That is the same shape as the album_artist survivor:
+    a pair of cases that agree under both readings cannot separate them.
+
+    Every check here is a comparison between two rips of the SAME fixture, so
+    none of them can be satisfied by silence, by an empty file, or by a
+    constant this file also wrote.
+    """
+    # -H -E against -H alone. If de-emphasis reaches the graph the samples
+    # differ; if it is swallowed they are identical.
+    rip("hb_hdcd", "basic.cue", "-o", "pcm", "-H")
+    rip("hb_both", "basic.cue", "-o", "pcm", "-H", "-E")
+    if pcm_md5("hb_both", 1) == pcm_md5("hb_hdcd", 1):
+        fail("deemph_with_hdcd: -H -E gives byte-identical audio to -H alone, "
+             "so de-emphasis never reached the filter graph")
+
+    # ...and hdcd must still be there. HDCD decodes to 20 bits carried in s32,
+    # so its raw output is twice the size of a 16-bit rip. A composition that
+    # dropped hdcd instead of aemphasis would pass the check above.
+    plain = (WORK / "out_hb_hdcd" / "1.pcm").stat().st_size
+    both = (WORK / "out_hb_both" / "1.pcm").stat().st_size
+    if both != plain:
+        fail(f"deemph_with_hdcd: -H -E wrote {both} bytes against -H's "
+             f"{plain} -- hdcd is no longer in the graph")
+
+    # ...and it is not merely -E's output either, which would mean the
+    # composition ran aemphasis and dropped hdcd while keeping the format.
+    rip("hb_emph", "basic.cue", "-o", "pcm", "-E")
+    if pcm_md5("hb_both", 1) == pcm_md5("hb_emph", 1):
+        fail("deemph_with_hdcd: -H -E gives byte-identical audio to -E alone")
+
+    # The automatic path, which is the one a real pre-emphasised disc takes:
+    # -H on preemph.cue must de-emphasise, so it must differ from -H -W.
+    rip("hb_auto", "preemph.cue", "-o", "pcm", "-H")
+    rip("hb_off", "preemph.cue", "-o", "pcm", "-H", "-W")
+    if pcm_md5("hb_auto", 1) == pcm_md5("hb_off", 1):
+        fail("deemph_with_hdcd: -H on a pre-emphasised disc matches -H -W, "
+             "so the TOC flag reached the log but not the audio")
+
+    # The log's claim and the cue's flag must agree with what just happened.
+    # These read the same predicate the graph does, so they cannot drift from
+    # it again -- but a test that assumes that is a test asserting its own
+    # construction, so both are read from the artifacts.
+    auto_log = (WORK / "hb_auto.log").read_text()
+    if "(deemphasis applied)" not in auto_log:
+        fail("deemph_with_hdcd: -H on preemph.cue de-emphasised the audio but "
+             "the log does not say so")
+    off_log = (WORK / "hb_off.log").read_text()
+    if "(deemphasis applied)" in off_log:
+        fail("deemph_with_hdcd: -H -W left the audio pre-emphasised and the "
+             "log claims de-emphasis was applied")
+
+    auto_cue = (WORK / "out_hb_auto" / "sheet.cue").read_text()
+    if "FLAGS PRE" in auto_cue:
+        fail("deemph_with_hdcd: the audio was de-emphasised and the cue still "
+             "flags it PRE, which tells a player to de-emphasise it twice")
+    off_cue = (WORK / "out_hb_off" / "sheet.cue").read_text()
+    if "FLAGS PRE" not in off_cue:
+        fail("deemph_with_hdcd: -H -W left the audio pre-emphasised and the "
+             "cue does not flag it")
+
+
 def sc_art():
     # Album cover art: written out per format and embedded in every track
     rip("art", "basic.cue", "-C", f"Front={FIX / 'art.png'}")
