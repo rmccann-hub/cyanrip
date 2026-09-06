@@ -40,6 +40,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 /* The .c, not the .h: SNAME (CRFrameFIFO) and its condition
@@ -48,6 +49,17 @@
  * a spurious wakeup constructible, and this is the same move
  * tests/subq.c makes with pregap.c. */
 #include "../src/fifo_frame.c"
+
+/* nanosleep, not usleep: the build compiles with -D_XOPEN_SOURCE=700, and
+ * POSIX 2008 removed usleep -- so it is not declared and -Werror=implicit-
+ * function-declaration turns that into a build failure. Compiling this file
+ * with a bare `gcc` outside the project's flags did NOT catch it, which is
+ * the reason to build the way the build builds. */
+static void nap_ms(long ms)
+{
+    struct timespec ts = { ms / 1000, (ms % 1000) * 1000000L };
+    nanosleep(&ts, NULL);
+}
 
 static int failures;
 
@@ -106,14 +118,14 @@ int main(void)
     /* Let it reach the wait. There is no portable way to observe that it has,
      * so this sleeps generously and then checks it has NOT returned -- which
      * is itself the assertion that it really did block. */
-    usleep(200 * 1000);
+    nap_ms(200);
     check(p.returned == 0, "the popper is still blocked before any signal");
 
     /* THE SPURIOUS WAKEUP. Signal the condition variable the popper waits on,
      * without queueing anything. Indistinguishable, to the waiter, from the
      * spurious return POSIX allows. */
     signal_in_with_nothing_queued(fifo);
-    usleep(200 * 1000);
+    nap_ms(200);
 
     check(p.returned == 0,
           "a signal with nothing queued does NOT wake the popper through");
@@ -137,7 +149,7 @@ int main(void)
     check(cr_frame_fifo_push(fifo, f) == 0, "the real push succeeds");
 
     for (int i = 0; i < 200 && !p.returned; i++)
-        usleep(10 * 1000);
+        nap_ms(10);
     check(p.returned == 1, "the popper returns once something is queued");
     pthread_join(th, NULL);
     check(p.got != NULL, "the popper returns a frame, not NULL");
