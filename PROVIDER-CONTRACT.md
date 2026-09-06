@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g6ce94bb)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g0d0ae8e)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 649c154471aeeb07` over `src/*.c` and
+**Source anchor:** `sha256/16 = c0f550c75450f031` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -1005,7 +1005,7 @@ observed null by any record here; that is not a guarantee it cannot be.
 | `cyanrip.vcs` | string | -- | yes |
 | `cyanrip.version` | string | -- | yes |
 | `exit_code` | int | -- | yes |
-| `finished_at` | string | -- | **no** |
+| `finished_at` | string | -- | yes |
 | `invocation` | string | -- | yes |
 | `messages` | array | -- | yes |
 | `messages[]` | string | -- | yes |
@@ -1047,7 +1047,7 @@ observed null by any record here; that is not a guarantee it cannot be.
 | `rip.tracks` | int | -- | **no** |
 | `rip.tracks_completed` | int | -- | **no** |
 | `schema` | string | -- | yes |
-| `started_at` | string | -- | **no** |
+| `started_at` | string | -- | yes |
 
 The two derivations agree: every key in the source scan appears in a
 record, and every key in a record appears in the source scan.
