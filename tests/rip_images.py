@@ -2566,6 +2566,73 @@ def _meta_blocks(text):
     return blocks
 
 
+def sc_outdir_is_a_file():
+    """The output directory cannot be created -- the log was never opened.
+
+    WHY THIS EXISTS AND WHAT IT ACTUALLY PINS. `cyanrip_main.c` had exactly two
+    exits that bypassed `end:`: the `cyanrip_log_init()` and `cyanrip_cue_init()`
+    failure paths returned bare, so `cyanrip_ctx_end()` never ran. All
+    twenty-four `goto end` sites reach it; these two did not.
+
+    The leak was 12,865,095 bytes in 36 allocations from one root, but the leak
+    is not the point. `cyanrip_ctx_end()` also calls
+    `cdio_cddap_close_no_free_cdio()` and `cdio_destroy()` -- so the failure
+    paths on which the archival record could not be OPENED were precisely the
+    ones that never closed the drive.
+
+    WHAT THIS SCENARIO CAN AND CANNOT SEE, corrected after measuring it. The
+    first version of this docstring said the leak was "caught by
+    tools/sanitize-run.py, which re-runs every image scenario under ASan and
+    greps for LeakSanitizer". **That was false, and reverting the fix under the
+    sweep proved it: the sweep passed both ways.**
+
+    The reason is worth keeping. sanitize-run.py greps meson's test log, but the
+    sanitizer output is written to the *cyanrip subprocess's* stderr, which
+    crip() CAPTURES into a Python string. When this scenario's own checks pass,
+    that string is never printed, so nothing the sweep can see ever contains the
+    word LeakSanitizer. The scenario was swallowing the evidence it exists to
+    surface.
+
+    So the check has to happen HERE, on the captured output, which is what the
+    third block below does. Against an uninstrumented binary it says UNPROBED
+    rather than passing quietly -- SANITIZED asks the binary's bytes, not the
+    environment, because meson exports ASAN_OPTIONS whatever the build options
+    are.
+    """
+    afile = WORK / "notadir"
+    afile.write_text("this is a regular file, not a directory\n")
+
+    ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac", "-D", f"{afile}/out",
+                   "-L", "log", "-M", "sheet")
+
+    if ec == 0:
+        fail("outdir_is_a_file: creating the output directory under a regular "
+             f"file should have failed, exit was {ec}")
+
+    # CLAUDE.md: every fatal path prints a diagnosable line before exiting, at
+    # column 0. A non-zero exit with no output is the one failure a caller
+    # cannot explain to a user.
+    if not out.strip():
+        fail(f"outdir_is_a_file: exit {ec} with no output at all")
+    elif not any(l.startswith("Couldn't open path") or
+                 l.startswith("Invalid folder name") for l in out.splitlines()):
+        fail("outdir_is_a_file: no column-0 diagnostic naming the cause; got "
+             f"{out.strip().splitlines()[-1][:90]!r}")
+
+    # THE HALF THAT PINS THE FIX. Reverting cyanrip_ctx_end() on this path
+    # leaks 12,865,095 bytes in 36 allocations from one root -- and the leak
+    # matters less than what it proves: the same teardown closes the drive.
+    if not SANITIZED:
+        unprobed("outdir_is_a_file: the binary carries no sanitizer symbols, "
+                 "so the leak check below cannot fire. Run "
+                 "'meson test -C build-asan outdir_is_a_file'.")
+    elif any(w in out for w in ("LeakSanitizer", "AddressSanitizer")):
+        fail("outdir_is_a_file: a sanitizer finding on the log-init failure "
+             "path -- the teardown that also closes the drive was skipped: "
+             f"{[l.strip()[:120] for l in out.splitlines() if 'Sanitizer' in l][:3]}")
+
+
 def sc_consumer_argv():
     """Replay the consumer's ACTUAL argv shape and check every field lands.
 

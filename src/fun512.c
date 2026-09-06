@@ -69,7 +69,18 @@ enum CRIPLogVerify cyanrip_verify_log(const char *path)
     fseek(f, 0, SEEK_END);
     long int len = ftell(f);
     rewind(f);
-    if (len <= 0 || !(data = av_mallocz(len + 1))) {
+    /* `len + 1` was signed overflow, and the guard in front of it did not
+     * stop it: fopen() on a DIRECTORY succeeds and ftell() then returns
+     * exactly LONG_MAX on glibc, so `len <= 0` is false and the addition is
+     * undefined behaviour. Reached by `cyanrip -Y <a directory>`. The release
+     * build only survived it because the wrapped value made av_mallocz() fail,
+     * which is not the same as being correct.
+     *
+     * Bound the length BEFORE adding to it. The cap is far above any rip log
+     * -- the golden reference is about 10 kB and a 99-track disc is nowhere
+     * near this -- so no real log is refused and the observable behaviour on
+     * every input that already worked is unchanged. */
+    if (len <= 0 || len > CRIP_LOG_MAX_SIZE || !(data = av_mallocz(len + 1))) {
         fclose(f);
         return CRIP_LOG_IO_ERROR;
     }

@@ -111,6 +111,42 @@ int main(void)
         fails++;
     }
 
+    /* A DIRECTORY. fopen() on one SUCCEEDS and ftell() then returns exactly
+     * LONG_MAX on glibc, so the old `len <= 0` guard passed and `len + 1` was
+     * signed overflow -- undefined behaviour, reached by `cyanrip -Y .`, and
+     * survived only because the wrapped value made the allocation fail.
+     *
+     * THIS CHECK ALONE DOES NOT DISCRIMINATE in a normal build: the verdict is
+     * CRIP_LOG_IO_ERROR either way. It discriminates under UBSan, where the
+     * pre-fix code aborts. The oversize case below is the one that fails in
+     * every build. */
+    if (cyanrip_verify_log(".") != CRIP_LOG_IO_ERROR) {
+        printf("FAIL: a directory did not report an I/O error\n");
+        fails++;
+    }
+
+    /* OVER THE CAP, and this is the discriminating case. A sparse file costs
+     * no disk. Before the bound existed, 65 MiB allocated fine, was read, and
+     * parsed to CRIP_LOG_NO_CHECKSUM -- a different verdict from the one the
+     * bound now produces, so a revert changes the answer in ANY build. */
+    {
+        const char *big = "/tmp/cyanrip-fun512-oversize.log";
+        FILE *bf = fopen(big, "wb");
+        if (!bf) {
+            printf("UNPROBED: could not create %s, oversize case not run\n", big);
+        } else {
+            /* 1 byte past the cap, written sparsely. */
+            if (fseek(bf, CRIP_LOG_MAX_SIZE, SEEK_SET) || fputc('x', bf) == EOF)
+                printf("UNPROBED: could not extend %s\n", big);
+            fclose(bf);
+            if (cyanrip_verify_log(big) != CRIP_LOG_IO_ERROR) {
+                printf("FAIL: a file over CRIP_LOG_MAX_SIZE was read anyway\n");
+                fails++;
+            }
+            remove(big);
+        }
+    }
+
     if (fails) {
         printf("%i check(s) failed\n", fails);
         return 1;

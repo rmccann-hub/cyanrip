@@ -2180,10 +2180,30 @@ static int cyanrip_run(int argc, char **argv)
 
     /* Create log file */
     if (!ctx->settings.print_info_only) {
-        if (!ctx->settings.generate_cue_only && cyanrip_log_init(ctx))
+        /* These two returns used to be bare, bypassing `end:` entirely -- the
+         * only two exits from this function that did. All twenty-four `goto
+         * end` sites reach the teardown; these did not, so the context
+         * allocated above was never freed and, far more to the point,
+         * cyanrip_ctx_end() ALSO closes the drive
+         * (cdio_cddap_close_no_free_cdio) and destroys the libcdio handle.
+         * The failure paths on which the archival record could not be OPENED
+         * were the ones that never closed the drive.
+         *
+         * NOT `goto end`, deliberately. `end:` emits the completion footer,
+         * and rip_ran_to_completion is still 0 here, so jumping there would
+         * add a `Rip completed:  no (aborted...)` line to a log that has none
+         * today. That is a contract-visible change to a line the consumer
+         * parses, and it belongs in a handshake round rather than in a leak
+         * fix. Calling the teardown directly closes the drive and frees the
+         * context while leaving every observable surface exactly as it was. */
+        if (!ctx->settings.generate_cue_only && cyanrip_log_init(ctx)) {
+            cyanrip_ctx_end(&ctx);
             return 1;
-        if (cyanrip_cue_init(ctx))
+        }
+        if (cyanrip_cue_init(ctx)) {
+            cyanrip_ctx_end(&ctx);
             return 1;
+        }
     } else {
         cyanrip_log(ctx, 0, "Log(s) will be written to:\n");
         for (int f = 0; f < ctx->settings.outputs_num; f++) {

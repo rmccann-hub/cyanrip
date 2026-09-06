@@ -25,6 +25,11 @@
 /* base64 of 64 bytes, including padding and NUL */
 #define CRIP_FUN512_STR_SIZE 89
 
+/* Largest file cyanrip_verify_log() will read. Exists to bound `len + 1`
+ * before the addition, not to express a policy about log size: ftell() on a
+ * directory returns LONG_MAX and fopen() on one succeeds. */
+#define CRIP_LOG_MAX_SIZE (64L * 1024 * 1024)
+
 /* Compute the FUN512 string of a SHA-512 digest. idx is the index of the
  * output format the log belongs to, each simultaneous output is permuted
  * differently. */
