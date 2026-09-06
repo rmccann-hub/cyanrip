@@ -26,6 +26,46 @@
 #include "os_compat.h"
 
 /* Key 1 and 2 must be set */
+/* Escape apostrophes the caller left BARE, and only those.
+ *
+ * THE DEFECT. `-a`/`-t` values reach av_dict_parse_string(), whose tokeniser
+ * treats `'` as a QUOTE character: a bare apostrophe opens a run that never
+ * closes, so `-t "1=title=Don't Stop:artist=A:isrc=I"` yielded
+ * `title: Dont Stop:artist=A:isrc=I` with artist and isrc never set, no
+ * diagnostic, and the corrupted value written into the record as though it
+ * were what was asked for. Announced as round 15 lap 14 §5 item 3.
+ *
+ * WHY NOT SIMPLY ESCAPE EVERY APOSTROPHE. Platterpus already escapes: their
+ * cyanrip_backend.py:699 backslashes `\`, `=`, `'` and `:`, and every one of
+ * their eleven -a/-t sites routes through it (their lap 15 §A2, read from
+ * their source and confirmed by measuring `Don\'t Stop` through our own
+ * binary). Escaping unconditionally would turn their `\'` into `\\'` and
+ * put a literal backslash in the record -- fixing the defect for one consumer
+ * by breaking it for the one we have.
+ *
+ * So this escapes an apostrophe ONLY when it is not already escaped. A
+ * backslash consumes the character after it, exactly as the tokeniser will,
+ * which leaves every already-correct input byte-identical. */
+char *crip_escape_bare_quotes(const char *src)
+{
+    size_t n = strlen(src);
+    char *out = av_mallocz(2 * n + 1);   /* every byte could need a backslash */
+    size_t o = 0;
+
+    for (size_t i = 0; i < n; i++) {
+        if (src[i] == '\\' && (i + 1) < n) {
+            out[o++] = src[i++];
+            out[o++] = src[i];
+            continue;
+        }
+        if (src[i] == '\'')
+            out[o++] = '\\';
+        out[o++] = src[i];
+    }
+
+    return out;
+}
+
 char *append_missing_keys(const char *src, const char *key1, const char *key2)
 {
     /* Copy string with enough space to append extra */

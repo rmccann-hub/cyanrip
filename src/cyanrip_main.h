@@ -433,6 +433,7 @@ char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
 /* Prepend key1= and key2= to the first two keyless entries of a
  * key=value:key=value string, minding escapes. Key 1 and 2 must be set. */
 char *append_missing_keys(const char *src, const char *key1, const char *key2);
+char *crip_escape_bare_quotes(const char *src);
 
 int crip_is_integer(const char *src);
 

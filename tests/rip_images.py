@@ -2797,29 +2797,30 @@ def sc_consumer_argv():
                 fail(f"consumer_argv: track {track} {key} is {got!r}, "
                      f"expected {value!r}")
 
-    # 2. THE KNOWN DEFECT, PINNED SO IT CANNOT CHANGE SHAPE UNNOTICED.
+    # 2. THE APOSTROPHE, BOTH WAYS. This used to assert the program was WRONG,
+    #    because src/ was frozen while round 15 was open. The fix shipped once
+    #    the round closed, and this check told us so itself -- it failed with
+    #    "the defect appears to be FIXED ... fold these fields into part 1's
+    #    table", which is what happened here.
     #
-    # This asserts the program is CURRENTLY WRONG. That is deliberate and it is
-    # the only honest option while src/ is frozen: handshake round 15 is open,
-    # a consumer is running an acceptance test against the pin, and S-15
-    # forbids moving it.
-    #
-    # WHEN THE FIX LANDS THIS MUST FAIL, and the remedy is to fold the fields
-    # into part 1's table rather than to delete the case. docs/SETTLED.md
-    # carries the row.
-    rip("cargvq", "basic.cue", *common,
-        "-t", "1=title=Can't Stand:artist=SHOULD_LAND:isrc=SHOULD_ALSO_LAND")
-    qmeta = _meta_blocks((WORK / "cargvq.log").read_text()).get(1, {})
+    #    BOTH FORMS MUST WORK, and the second is the one that could regress.
+    #    Platterpus escapes `'` as `\'` at cyanrip_backend.py:699 and routes all
+    #    eleven -a/-t sites through it, so a fix that escaped unconditionally
+    #    would double it and put a literal backslash in the record -- fixing the
+    #    defect for a hypothetical consumer by breaking the real one.
+    for label, title_arg in (("bare", "Don't Stop"),
+                             ("already-escaped", "Don\\'t Stop")):
+        rip(f"cargvq_{label}", "basic.cue", *common,
+            "-t", f"1=title={title_arg}:artist=SHOULD_LAND:isrc=SHOULD_ALSO_LAND")
+        got = _meta_blocks((WORK / f"cargvq_{label}.log").read_text()).get(1, {})
+        for key, want in (("title", "Don't Stop"),
+                          ("artist", "SHOULD_LAND"),
+                          ("isrc", "SHOULD_ALSO_LAND")):
+            if got.get(key) != want:
+                fail(f"consumer_argv: with an {label} apostrophe, {key} is "
+                     f"{got.get(key)!r}, expected {want!r} -- a value swallowed "
+                     f"the fields after it")
 
-    if qmeta.get("artist") == "SHOULD_LAND":
-        fail("consumer_argv: the ASCII-apostrophe defect appears to be FIXED -- "
-             "artist now lands as its own field. Good. Fold these fields into "
-             "part 1's table and drop the SETTLED row that records the defect.")
-    elif qmeta.get("title") != "Cant Stand:artist=SHOULD_LAND:isrc=SHOULD_ALSO_LAND":
-        fail("consumer_argv: the ASCII-apostrophe defect did not reproduce in "
-             f"the expected shape -- title is {qmeta.get('title')!r}. It may "
-             "have changed rather than been fixed; re-derive it before "
-             "trusting either reading.")
 
 def sc_interrupt_deadlock():
     """A signal arriving while the log lock is held must not wedge the process.

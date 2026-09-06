@@ -2149,7 +2149,9 @@ static int cyanrip_run(int argc, char **argv)
     /* Read user album metadata */
     if (album_metadata_ptr) {
         /* Fixup */
-        char *copy = append_missing_keys(album_metadata_ptr, "album=", "album_artist=");
+        char *esc = crip_escape_bare_quotes(album_metadata_ptr);
+        char *copy = append_missing_keys(esc, "album=", "album_artist=");
+        av_free(esc);
 
         /* Parse */
         int err = av_dict_parse_string(&ctx->meta, copy, "=", ":", 0);
@@ -2330,7 +2332,9 @@ static int cyanrip_run(int argc, char **argv)
         end += 1; /* Move past equal sign */
 
         /* Fixup */
-        char *copy = append_missing_keys(end, "title=", "artist=");
+        char *esc = crip_escape_bare_quotes(end);
+        char *copy = append_missing_keys(esc, "title=", "artist=");
+        av_free(esc);
 
         /* Parse */
         int err = av_dict_parse_string(&ctx->tracks[track_idx].meta,
