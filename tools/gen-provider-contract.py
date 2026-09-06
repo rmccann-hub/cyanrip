@@ -349,6 +349,41 @@ INTTYPE_RUN = re.compile(
     r'((?:"(?:[^"\\]|\\.)*"[\s\\]*)+)')
 
 
+def render_literal(raw):
+    r"""A format string as a consumer would have to match it.
+
+    A LEADING OR TRAILING \n IS A LINE BOUNDARY; AN INTERIOR ONE IS CONTENT,
+    and this function exists because the generator used to delete all three.
+    Deleting the outer ones is right -- they position the line and are not part
+    of it. Deleting an interior one FUSES TWO PRINTED LINES INTO A STRING THE
+    BINARY NEVER PRINTS, and P2's whole purpose is that a consumer can derive
+    matching from it rather than guess.
+
+    Measured on this tree before the change, and it reached P2, not only P5:
+
+      cyanrip_log.c:635 published `Embedded cover art:    %s: %ix%i %s`
+      while an actual rip prints
+          Embedded cover art:
+            Front: 8x8 PNG (Portable Network Graphics) image
+
+    cue_writer.c:39 was worse -- `...for writing: %s!Invalid folder name?...`
+    ran two sentences together with no separator at all. A consumer matching
+    either row could never match, and both rows looked complete.
+
+    The interior newline is rendered as the two-character escape, consistent
+    with the \" this table already uses for an embedded quote, so one row still
+    means one CALL SITE. Splitting into a row per line would break the
+    file:line-to-row correspondence other checks rely on.
+    """
+    body = raw.replace("\\t", " ")
+    # Strip only the boundary runs, then keep whatever remains.
+    while body.startswith("\\n"):
+        body = body[2:]
+    while body.endswith("\\n"):
+        body = body[:-2]
+    return body.strip()
+
+
 def splice_inttypes(text, end, base):
     """Continue a joined literal through <inttypes.h> length macros.
 
@@ -636,7 +671,7 @@ def collect():
                     continue
                 raw = macros[key] + raw
             line = text[:m.start()].count("\n") + 1
-            s = raw.replace("\\n", "").replace("\\t", " ").strip()
+            s = render_literal(raw)
             if not s:
                 continue
             rec = (name, line, s, True)
@@ -649,7 +684,7 @@ def collect():
             raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
             line = text[:m.start()].count("\n") + 1
             to_log = m.group("target") != "NULL"
-            s = raw.replace("\\n", "").replace("\\t", " ").strip()
+            s = render_literal(raw)
             if not s:
                 continue
             # A leading `%s` fed by a ternary of two literals publishes as a
@@ -682,7 +717,7 @@ def collect():
                 raw = splice_inttypes(text, m.end("lit"),
                                       joined(m.group("lit")))
                 line = text[:m.start()].count("\n") + 1
-                s = raw.replace("\\n", "").replace("\\t", " ").strip()
+                s = render_literal(raw)
                 if not s:
                     continue
                 rec = (name, line, s, wraps_ctx)
@@ -694,7 +729,7 @@ def collect():
         for m in GENOPTCALL.finditer(text):
             raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
             line = text[:m.start()].count("\n") + 1
-            s = raw.replace("\\n", "").replace("\\t", " ").strip()
+            s = render_literal(raw)
             if not s:
                 continue
             # Routed through cyanrip_vlog() by crip_genopt_log(), so it reaches
@@ -722,7 +757,7 @@ def collect():
         for m in STDERRCALL.finditer(text):
             raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
             line = text[:m.start()].count("\n") + 1
-            s = raw.replace("\\n", "").strip()
+            s = render_literal(raw)
             if not s:
                 continue
             ev = evidence(text, m.end(), s)

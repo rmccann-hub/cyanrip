@@ -319,6 +319,7 @@ rip_scenarios = [
     'nrg',
     'filters',
     'deemph_with_hdcd',
+    'contract_line_shapes',
     'album_loudness',
     'contract_covers_log',
     'art',

@@ -465,6 +465,82 @@ def sc_contract_covers_log():
              f"rule: {missing}")
 
 
+def sc_contract_line_shapes():
+    """A contract row must be renderable as the LINE the binary prints.
+
+    sc_contract_covers_log() asks whether every column-0 label the log prints
+    is known to the contract. It cannot ask this, for two structural reasons:
+    it extracts column-0 labels only, so every indented per-track field is out
+    of scope, and it tests `label in contract` -- a substring check over the
+    whole document, which is satisfied by the document being wrong. Both
+    limits are real and neither is a defect in that scenario; this is the
+    other half.
+
+    WHAT IT CATCHES, and what it was written from. The generator deleted every
+    `\n` in a format string, including INTERIOR ones, so a two-line message was
+    published as one string the binary never prints. Measured on this tree:
+
+        P2 published  `Embedded cover art:    %s: %ix%i %s`
+        a real rip prints
+            Embedded cover art:
+              Front: 8x8 PNG (Portable Network Graphics) image
+
+    P5 had it worse -- `...for writing: %s!Invalid folder name? Try -D
+    <folder>.` runs two sentences together with no separator at all -- and P2
+    is the surface we undertake not to reword without a round. A consumer
+    deriving a matcher from either row could never match, and both rows looked
+    complete.
+
+    THE DISCRIMINATOR IS THE PADDING, not the label. A fused row still STARTS
+    with the right label, so any check that strips the row before comparing
+    passes on both readings -- which is how the first draft of this scenario
+    failed to fail. What separates them is what follows the label: the real
+    line ends there, and the fused row claims four more spaces and another
+    field. So the label is matched stripped, to find the line at all, and then
+    the row's own text is required to be a prefix of it verbatim.
+
+    Rows for lines this rip does not print are skipped rather than failed --
+    most of P2 needs a drive. That is a deliberate limit, and it is why the
+    scenario also asserts a floor on how many rows it actually checked: a
+    version that matched nothing would pass in silence.
+    """
+    # -C so the cover-art block, which is the two-line case, is in the log.
+    rip("shapes", "basic.cue", "-C", f"Front={FIX / 'art.png'}")
+    log = (WORK / "out_shapes" / "log.log").read_text()
+    lines = [l.rstrip("\n") for l in log.splitlines()]
+    stripped = [l.lstrip() for l in lines]
+
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    rows = re.findall(r"^\| `[^`]+:\d+` \| `(.+?)` \|", contract, re.M)
+    if len(rows) < 100:
+        fail(f"contract_line_shapes: {len(rows)} rows read from the contract "
+             "-- the table's shape moved and this is reading the wrong thing")
+        return
+
+    checked = 0
+    for row in rows:
+        # The contract escapes an embedded quote as markdown, not as C.
+        for seg in row.replace('\\"', '"').split("\\n"):
+            lit = seg.split("%")[0]
+            key = lit.strip()
+            if len(key) < 8:
+                continue          # too short to identify a line
+            hits = [s for s in stripped if s.startswith(key)]
+            if not hits:
+                continue          # this line is not in this rip's log
+            checked += 1
+            want = lit.lstrip()   # keep the TRAILING padding: it is the test
+            if not any(s.startswith(want) for s in hits):
+                fail(f"contract_line_shapes: the contract publishes "
+                     f"{lit!r} but the log's line is {hits[0][:60]!r} -- the "
+                     f"row is not the line, so a consumer matching it never "
+                     f"matches")
+
+    if checked < 10:
+        fail(f"contract_line_shapes: only {checked} row(s) were matched "
+             "against a log line -- the scan is broken, not the contract")
+
+
 def sc_album_loudness():
     # Album-level loudness must be readable from lines we own.
     #
