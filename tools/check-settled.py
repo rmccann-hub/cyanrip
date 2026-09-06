@@ -40,6 +40,7 @@ their number is visible rather than implied.
 
 import pathlib
 import re
+import shlex
 import subprocess
 import sys
 
@@ -51,6 +52,14 @@ SETTLED = ROOT / "docs" / "SETTLED.md"
 # than passed over -- a row nobody can run is indistinguishable from a row that
 # passes, which is the failure this whole file is about.
 ROW = re.compile(r"^\|(?P<fact>.+?)\|(?P<check>.+?)\|\s*$")
+# A DOUBLE-BACKTICK SPAN IS TRIED FIRST, so a check command may itself contain
+# a backtick. With only the single-backtick form, such a command was TRUNCATED
+# AT THE FIRST INNER BACKTICK and the fragment was handed to the shell -- which
+# then failed on an unterminated quote and was reported STALE, i.e. as a fact
+# that had stopped being true rather than as a row that could not be read.
+# Silent truncation into a shell command is the worse of the two failures: it
+# looks exactly like a finding.
+CMD_FENCED = re.compile(r"``(.+?)``")
 CMD = re.compile(r"`([^`]+)`")
 
 # A markdown cell escapes a pipe as `\|`, and ROW's lazy `.+?` pair cannot see
@@ -116,7 +125,7 @@ def main():
             unrunnable += 1
             continue
 
-        cmd = CMD.search(check)
+        cmd = CMD_FENCED.search(check) or CMD.search(check)
         if not cmd:
             malformed.append(fact[:70])
             continue
@@ -147,6 +156,20 @@ def main():
         # backslash. Unescape before running -- otherwise every piped check is
         # reported STALE for a reason that has nothing to do with the fact.
         command = cmd.group(1).replace("\\|", "|")
+
+        # LEXICALLY WELL-FORMED, checked before running. An unbalanced quote
+        # cannot occur in a command somebody wrote and can only arrive here by
+        # truncation, so this turns "reported STALE for a reason that has
+        # nothing to do with the fact" into a row that names its own defect.
+        try:
+            shlex.split(command)
+        except ValueError as e:
+            malformed.append(fact[:70] + f"  [command is not lexically valid "
+                             f"({e}); if it contains a backtick, wrap the whole "
+                             f"command in a ``double-backtick`` span]")
+            runnable -= 1
+            continue
+
         r = subprocess.run(command, shell=True, cwd=ROOT,
                            capture_output=True, text=True)
         if r.returncode != 0:
