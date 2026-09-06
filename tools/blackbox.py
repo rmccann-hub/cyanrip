@@ -817,6 +817,34 @@ def main():
                 except OSError:
                     pass
 
+    # THE CONTROL WINDOW IS A SAMPLE, NOT A GUARANTEE, and this second one is
+    # why that sentence is here rather than left implied. The opening check
+    # watches the roots for a second and a half; the sweep then runs for
+    # minutes, and a process that writes every so often passes the sample and
+    # pollutes everything after it. That is not hypothetical: an ORPHANED
+    # meson test -- parented to init, its build directory long deleted -- had
+    # been running for ten and a half hours on this machine, and the opening
+    # sample caught it between writes.
+    #
+    # So the machine is asked again at the end. If it became busy, every
+    # outside-root finding this run produced is unattributable in hindsight,
+    # and they are moved from findings to UNPROBED rather than reported as
+    # breaches or silently dropped. "We looked and it was fine" and "we looked
+    # and cannot say" are different claims.
+    if OUTSIDE_ATTRIBUTABLE:
+        still_quiet, late_noise = machine_is_quiet()
+        if not still_quiet:
+            moved = [f for f in findings
+                     if f[0] == "I6" and "OUTSIDE the sandbox" in f[2]]
+            findings[:] = [f for f in findings if f not in moved]
+            unprobed.add(
+                "I6/outside-roots: the machine was quiet when this sweep "
+                f"started and is not now ({', '.join(late_noise[:3])}"
+                f"{'…' if len(late_noise) > 3 else ''}). An appearance in the "
+                f"scanned roots cannot be attributed to the binary in "
+                f"hindsight, so {len(moved)} finding(s) of that class are "
+                "withdrawn rather than reported. Re-run on a quiet machine")
+
     print(f"\n{len(runs)} invocation(s)\n")
 
     by_inv = {}
