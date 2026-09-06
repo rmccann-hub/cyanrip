@@ -293,6 +293,61 @@ test('Sanitizer sweep', python, args: [ files('../tools/sanitize-run.py') ],
 test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
      timeout: 120)
 
+## The black-box sweep
+## ==================
+## 838 invocations of hostile, malformed and adversarial argv against seven
+## invariants -- no death by signal, terminates, a non-zero exit prints
+## something, no sanitizer diagnostic, stdin is never read, nothing is written
+## outside where the run was told, and a logfile's first line is the fork
+## banner. It is the only place the containment invariant is checked at all.
+##
+## IT MUST RUN ALONE, and that is measured rather than tidiness. Its
+## outside-root class compares listings of /, /tmp and $HOME across each
+## invocation's window, and that window belongs to the MACHINE: run beside a
+## concurrent build it reported 13 containment breaches across 8 invocations,
+## every one of them somebody else's file -- GCC assembler temps and another
+## process's Python tempfiles. The tool now measures whether attribution is
+## possible at all before believing that class, and degrades it to UNPROBED
+## when it is not, so a parallel run would not report a false breach; it would
+## silently stop checking the one thing only this tool checks.
+##
+## is_parallel: false is therefore load-bearing. `meson test` runs
+## non-parallel tests on their own, which is the condition the class needs.
+##
+## MEASURED before wiring it in: ~7 minutes for all 838 on this machine, and
+## a clean serial run reports no invariant violations. Two classes are
+## UNPROBED and say so: I4 needs a sanitizer build, and the three read-only
+## filesystem probes cannot bind as root.
+## Which of P5's failure messages does anything here actually assert?
+## ================================================================
+## PROVIDER-CONTRACT.md P5 is the inventory of every string this program can
+## print on a failure path -- the surface a consumer writes its error matching
+## against. It is derived from the source, so it cannot describe a binary we do
+## not have, and it says nothing at all about whether any of those messages has
+## ever been SEEN. The 2026-09-05 audit put it at "~20 of ~128" as a lead;
+## measured, it is 7 witnessed of 120, with 6 whose literal prefix is too short
+## for a probe to discriminate reported as UNPROBABLE and counted in neither
+## column.
+##
+## IT IS NOT A COVERAGE GATE AND MUST NOT BECOME ONE. Most of P5 needs a real
+## drive, a live network or an allocation failure; a check that failed until
+## every row had a witness would be red forever, and a permanently red gate is
+## one nobody reads. What --gate fails on is the two things that are defects: a
+## citation naming a message P5 does not publish, which means the text was
+## reworded and the assertion now names something the binary cannot print, and
+## the witnessed count falling below its recorded floor.
+##
+## Both directions are revert-proved. Adding a bogus "Unable to reticulate the
+## splines" to a test file exits 1 and names the file; removing it exits 0.
+test('P5 message witnesses', python,
+     args: [ files('../tools/message-witness.py'), '--gate' ],
+     timeout: 120)
+
+test('Black-box sweep', python,
+     args: [ files('../tools/blackbox.py'), '--binary', cyanrip_exe, '--gate' ],
+     is_parallel: false,
+     timeout: 1800)
+
 ## Reading a delivered bundle
 ## =========================
 ## The 2026-09-03 acceptance bundle said its own run FAILED -- report.json

@@ -64,7 +64,27 @@ MIN_PROBE = 12
 
 # The count of witnessed rows at the last deliberate measurement. Raising it is
 # a normal part of adding a test; LOWERING it is an act, and has to be one.
-WITNESS_FLOOR = 0
+WITNESS_FLOOR = 7
+
+
+def looks_like_a_regex(s):
+    r"""Is this string a regex fragment rather than a message?
+
+    The citation scan reads string literals out of the corpus, and a corpus of
+    TESTS is full of patterns. `rig-check.py` builds one across two source
+    lines -- `r"^.*(Could not stat|...|Unable to open).*$"` -- and the half on
+    the second line, `"Unable to open).*$"`, matched the scan's own prefix
+    filter and was reported as a message the binary cannot print. It is not a
+    message at all.
+
+    Two signals, both structural rather than a list of words: an unbalanced
+    bracket cannot occur in a message somebody wrote and can occur in half of a
+    pattern, and a regex quantifier or anchor is not diagnostic prose.
+    """
+    for opener, closer in (("(", ")"), ("[", "]"), ("{", "}")):
+        if s.count(opener) != s.count(closer):
+            return True
+    return any(tok in s for tok in (".*", ".+", "\\\\s", "\\\\d", "\\\\w", "$", "^", "|"))
 
 
 def p5_rows(contract):
@@ -162,13 +182,25 @@ def main():
     # Direction 2 of the traceability: a citation naming a message P5 does not
     # publish. Only strings that LOOK like one of ours are considered, or every
     # ordinary sentence in a test would be a candidate.
-    published = {probe_for(m) for _, m in rows}
+    # EVERY PRINTED LINE, not just the first. A message with an interior
+    # newline is two lines on screen and both are separately matchable, so a
+    # test asserting the SECOND one is citing real text. Before this split,
+    # `Invalid folder name? Try -D <folder>.` -- the second line of
+    # cue_writer.c:39 -- was reported as text the binary cannot print, which is
+    # the opposite of true. The contract only started rendering that newline in
+    # 1c96c8d; before it, the segment could not have been found at all.
+    published = set()
+    for _, message in rows:
+        for seg in message.split("\\n"):
+            published.add(probe_for(seg))
     published.discard(None)
     for path, text in corpus.items():
         for cited in re.findall(r'"((?:Unable to|Couldn\'t|Error |Invalid )'
                                 r'[^"\\\n]{8,})"', text):
             head = cited.split("%")[0].strip()
             if len(head) < MIN_PROBE:
+                continue
+            if looks_like_a_regex(head):
                 continue
             if not any(head.startswith(p) or p.startswith(head)
                        for p in published):
