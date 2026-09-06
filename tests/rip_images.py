@@ -2566,6 +2566,73 @@ def _meta_blocks(text):
     return blocks
 
 
+def sc_utf8_naming():
+    """Invalid UTF-8 in a name must be SUBSTITUTED, never truncated.
+
+    Round 15 lap 14 §5 items 4 and 5, announced before shipping; item 5 cleared
+    by their lap 15 §C1. Before this, `av_utf8_decode` failing made
+    crip_bprint_sanitize() log and RETURN, which did two things:
+
+      * the name was cut at the bad byte, so `<bad>TAIL` produced NOTHING --
+        and an empty LEADING component makes a multi-component `-D` resolve to
+        an ABSOLUTE path. Measured with the consumer's own
+        `-D {album_artist}/{album}`: a whole rip landed in `/Some Album`,
+        exit 0, nothing in the working directory;
+      * the log line went out BEFORE the header, so it became the logfile's
+        FIRST LINE, displacing the banner PROJECT_FORK_ID is read from -- while
+        `-Y` still returned 0. Their dispatcher reads the first non-blank line,
+        so such a log went to the wrong parser: fourteen tracks read as zero.
+
+    THE DISCRIMINATING CASE IS THE LEADING BYTE. A fix that only stopped the
+    truncation would still leave the component empty and the path absolute, and
+    a fix that only silenced the log would leave both. Each check below fails on
+    its own if the substitution is reverted.
+    """
+    bad = "\udcff"
+
+    # 1. A bad byte in the MIDDLE must not eat the tail.
+    rip("u8mid", "basic.cue", "-D", str(WORK / "u8mid_out") + "/{album}",
+        "-a", f"album=START{bad}TAIL")
+    made = [d.name for d in (WORK / "u8mid_out").iterdir()] if (WORK / "u8mid_out").is_dir() else []
+    if not any("TAIL" in d for d in made):
+        fail(f"utf8_naming: the tail after an invalid byte was truncated away; "
+             f"got {made!r}")
+
+    # 2. A LEADING bad byte must not empty the component. This is the one that
+    #    turns `{album_artist}/{album}` into an absolute path.
+    #    THE SCHEME MUST BE RELATIVE AND `{album_artist}` MUST BE FIRST. With an
+    #    absolute prefix an empty component only yields `//`, which is the same
+    #    directory -- so the first version of this check COULD NOT FIRE, and the
+    #    revert-proof is what showed it: truncation and the banner both failed,
+    #    containment stayed silent. `cwd=` puts us in WORK so a relative scheme
+    #    is safe to run.
+    before = {p.name for p in Path("/").iterdir()}
+    rip("u8lead", "basic.cue", "-T", "unicode",
+        "-D", "{album_artist}/{album}",
+        "-a", f"album_artist={bad}Artist:album=SomeAlbum", cwd=str(WORK))
+    escaped = {p.name for p in Path("/").iterdir()} - before
+    if escaped:
+        fail(f"utf8_naming: CONTAINMENT BREACH -- a leading invalid byte made "
+             f"the scheme absolute and wrote to the filesystem root: {escaped!r}")
+    lead = [d.name for d in WORK.iterdir() if d.is_dir() and "Artist" in d.name]
+    if not lead:
+        fail("utf8_naming: no artist directory under the work dir, so the "
+             "leading component collapsed to nothing")
+
+    # 3. The logfile's first line must still be the banner. PROJECT_FORK_ID is
+    #    the only reliable answer to "is this the fork?", and a consumer reading
+    #    line 1 is entitled to find it there.
+    rip("u8log", "basic.cue", "-D", str(WORK / "u8log_out") + "/x" + bad)
+    logs = list((WORK / "u8log_out").rglob("*.log"))
+    if not logs:
+        fail("utf8_naming: no logfile was written")
+    else:
+        first = logs[0].read_text(encoding="utf-8", errors="replace").splitlines()[0]
+        if not first.startswith("cyanrip "):
+            fail(f"utf8_naming: the logfile's first line is not the banner: "
+                 f"{first[:80]!r}")
+
+
 def sc_outdir_is_a_file():
     """The output directory cannot be created -- the log was never opened.
 

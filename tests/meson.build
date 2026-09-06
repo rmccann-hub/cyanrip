@@ -349,6 +349,7 @@ rip_scenarios = [
     'contract_diagnostics',
     'contract_composed',
     'contract_fatal_inventory',
+    'utf8_naming',
     'outdir_is_a_file',
     'consumer_argv',
     'abort_footer',

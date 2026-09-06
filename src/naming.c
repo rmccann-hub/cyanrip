@@ -118,10 +118,37 @@ static int crip_bprint_sanitize(cyanrip_ctx *ctx, AVBPrint *buf, const char *str
                       (ctx->settings.sanitize_method == CRIP_SANITIZE_OS_UNICODE);
 
     while (str < end) {
+        const char *cp_start = str;
         ret = av_utf8_decode(&cp, (const uint8_t **)&str, end, AV_UTF8_FLAG_ACCEPT_ALL);
         if (ret < 0) {
-            cyanrip_log(ctx, 0, "Error parsing string: %s!\n", av_err2str(ret));
-            return ret;
+            /* SUBSTITUTE, DO NOT TRUNCATE, AND DO NOT LOG. Announced as items
+             * 4 and 5 of round 15 lap 14 §5; item 5 cleared by their lap 15
+             * §C1 (*"land it whenever it suits you; we are ready"*).
+             *
+             * The old `return ret` truncated the name at the bad byte, so
+             * `START<bad>TAIL` produced a directory `START` and `<bad>TAIL`
+             * produced NOTHING. An empty leading component then made a
+             * multi-component scheme resolve to an ABSOLUTE path: measured
+             * with the consumer's own `-D {album_artist}/{album}`, a whole rip
+             * landed in `/Some Album` at exit 0. An explicitly empty value is
+             * refused with exit 1, so a guard against an empty component
+             * existed and this evaded it.
+             *
+             * And the log line was worse than it looked. It went through
+             * cyanrip_log() BEFORE the header was written, so it became the
+             * LOGFILE'S FIRST LINE -- displacing the banner that
+             * PROJECT_FORK_ID is read from, while `-Y` still returned 0.
+             * Their own dispatcher then read exactly the first non-blank line
+             * and sent such a log to the wrong parser: fourteen tracks parsed
+             * as zero, no error anywhere (their lap 15 §C1).
+             *
+             * U+FFFD is what the byte MEANT to a reader and costs neither the
+             * rest of the name nor a line of the record. */
+            av_bprint_append_data(buf, pos, cp_start - pos);
+            av_bprint_append_data(buf, "\xEF\xBF\xBD", 3);
+            str = cp_start + 1;
+            pos = str;
+            continue;
         }
 
         struct CRIPCharReplacement *rep = NULL;
