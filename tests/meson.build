@@ -131,6 +131,17 @@ test('Log rendering', logrender_test)
 ## finished files.
 python = import('python').find_installation()
 
+## Zero compiler diagnostics under the flags the build ships. Installed while
+## the count was 0, which is the only cheap moment. NOT -Wextra: that set is 22
+## and needs its own change. See the tool's docstring for what is excluded and
+## for the -fdiagnostics-color trap that made an earlier attempt report a false
+## zero.
+test('Compiler diagnostics', python,
+    args: [ files('../tools/warn-gate.py') ],
+    timeout: 300,
+)
+
+
 ## Audio checksum mirror
 ## =====================
 ## tools/audio-checksums.py reimplements src/checksums.h in Python so a rip's
