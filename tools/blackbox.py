@@ -82,6 +82,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 import sys
 import tempfile
 from pathlib import Path
@@ -94,24 +95,30 @@ FIX = ROOT / "tests" / "fixtures"
 # finding.
 TIMEOUT = 45
 
-# A known defect is still a finding; it is just one that already has a home.
-# Naming it here keeps the report honest in both directions -- it is not
-# silently dropped, and it does not read as new.
 # Reasons a probe declined to run, stated out loud. A blank reads as "tested
 # and fine", so there are none.
 UNPROBED_STATIC = set()
 
-KNOWN = {
-    "apostrophe-swallows-later-fields":
-        "docs/SETTLED.md, and pinned by tests/rip_images.py sc_consumer_argv",
-}
+# THERE IS NO `KNOWN` MAP, AND ITS ABSENCE IS DELIBERATE.
+#
+# There was one. It named a single defect and carried a comment saying it
+# "keeps the report honest in both directions -- it is not silently dropped,
+# and it does not read as new". It was referenced by nothing: no probe, no
+# report, no gate ever read it. So it did neither of the things it claimed,
+# and the claim is exactly the kind this sweep exists to catch -- a label
+# asserting what its value does not deliver.
+#
+# The one entry it held (`apostrophe-swallows-later-fields`) is now FIXED, so
+# reviving it would have meant maintaining a map of one stale row. A defect
+# that has a home belongs in docs/SETTLED.md with the command that re-checks
+# it; a defect that does not is a finding this sweep should report as new.
 
 
 class Run:
     """One invocation and everything observable about it."""
 
     def __init__(self, label, argv, exit_code, signal, out, timed_out,
-                 escaped, logs):
+                 escaped, logs, unrunnable=None):
         self.label = label
         self.argv = argv
         self.exit_code = exit_code
@@ -120,6 +127,7 @@ class Run:
         self.timed_out = timed_out
         self.escaped = escaped        # files created outside the output root
         self.logs = logs              # (path, first_line) for each *.log written
+        self.unrunnable = unrunnable  # why the binary could not be executed
 
 
 def instrumented(binary):
@@ -151,6 +159,10 @@ def snapshot(root):
 # One listdir per root per run is cheap and catches exactly that class.
 OUTSIDE_ROOTS = [Path("/"), Path("/tmp"), Path.home()]
 
+# Set once by main() from machine_is_quiet(). Default True so a caller that
+# imports invoke() directly keeps the check rather than silently losing it.
+OUTSIDE_ATTRIBUTABLE = True
+
 
 def outside_snapshot():
     seen = {}
@@ -160,6 +172,38 @@ def outside_snapshot():
         except OSError:
             seen[r] = set()
     return seen
+
+
+def machine_is_quiet(settle=1.5):
+    """Does anything ELSE on this machine write to the scanned roots?
+
+    THE SCAN CANNOT ATTRIBUTE, and until this existed it did not say so. A
+    file appearing in /, /tmp or $HOME during a run's window was reported as
+    that run escaping the sandbox -- but the window belongs to the machine,
+    not to the child. Measured while writing this: a containment sweep run
+    beside a concurrent build reported 13 violations across 8 invocations, and
+    every one of them was somebody else's file. Two were GCC assembler temps
+    (`/tmp/ccu3IXTb.s`) and three were Python `tempfile` names from the other
+    sweep. None was a cyanrip output, which would be a .flac, a .log, a .cue,
+    or a directory named from metadata.
+
+    That is worse than a missed finding: it manufactures a containment breach,
+    which is the most alarming thing this tool can report, and it does it more
+    often the busier the machine is.
+
+    There is no way to attribute a foreign write, so this does not try. It
+    measures whether attribution is possible AT ALL right now -- one control
+    window with no invocation in it -- and the caller degrades the outside-root
+    class to UNPROBED when it is not. `none` versus `unknown (reason)`, applied
+    to a check's own preconditions.
+    """
+    before = outside_snapshot()
+    time.sleep(settle)
+    after = outside_snapshot()
+    noise = set()
+    for r in OUTSIDE_ROOTS:
+        noise |= {str(r / n) for n in (after.get(r, set()) - before.get(r, set()))}
+    return (not noise), sorted(noise)
 
 
 def invoke(binary, label, argv, work, out_root, env_overlay=None):
@@ -185,6 +229,16 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                            cwd=str(work), timeout=TIMEOUT, env=env)
         code, out = r.returncode, r.stdout
+    except OSError as e:
+        # THE BINARY COULD NOT BE EXECUTED AT ALL, which is not a result about
+        # the program. A sweep of 838 probes died at 475 with a traceback
+        # because a concurrent `meson test` relinked the binary mid-run and one
+        # exec hit EACCES -- losing every probe that had already passed. An
+        # environment failure is UNPROBED, never a finding and never fatal:
+        # `did not happen` and `happened and found nothing` are different
+        # claims, and a crash reports neither.
+        return Run(label, argv, None, None, "", False,
+                   [], [], unrunnable=f"could not execute: {e}")
     except subprocess.TimeoutExpired as e:
         timed_out = True
         code, out = None, (e.output or b"")
@@ -201,14 +255,35 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
     # the sweep's first run. The invariant is "outside what it was TOLD", and
     # a check whose expectation is a constant is not testing that.
     allowed = set()
-    for flag in ("-D", "-j"):
-        if flag in argv:
-            v = str(argv[argv.index(flag) + 1])
-            try:
-                allowed.add((work / v).resolve())
-            except (OSError, RuntimeError):   # RuntimeError: symlink loop
-                pass
+    scheme_valued = False
+    for i, a in enumerate(argv[:-1]):
+        if a not in ("-D", "-j"):
+            continue
+        v = str(argv[i + 1])
+        # EVERY occurrence, not argv.index()'s first. genopt takes the LAST
+        # value for a repeated flag, so a probe passing `-D out ... -D rerun`
+        # writes to `rerun` while the first-occurrence lookup allowed only
+        # `out` -- four correct writes reported as containment breaches.
+        # Allowing both is right for an allowlist: the run was told about both.
+        if "{" in v:
+            # A NAMING SCHEME, NOT A PATH. `-D {album_artist}/{album}` expands
+            # at runtime from metadata this harness does not model, so no
+            # predicted directory can be right and the literal one never
+            # exists. The sandbox becomes the bound, and the check is weakened
+            # DELIBERATELY and visibly rather than reporting the expansion as
+            # an escape. What it still catches is the one that matters: an
+            # expansion that leaves the sandbox entirely -- the empty-leading-
+            # component defect that landed a rip in `/Some Album` -- because
+            # outside_snapshot() covers /, /tmp and $HOME independently.
+            scheme_valued = True
+            continue
+        try:
+            allowed.add((work / v).resolve())
+        except (OSError, RuntimeError):       # RuntimeError: symlink loop
+            pass
     allowed.add(out_root.resolve())
+    if scheme_valued:
+        allowed.add(work.resolve())
 
     def contained(f):
         try:
@@ -220,11 +295,18 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
     escaped = sorted(str(p.relative_to(work)) for p in new
                      if not contained(p) and p.parent != work)
 
-    # Anything that appeared in a root this run had no business touching.
-    outside_after = outside_snapshot()
-    for r, names in outside_after.items():
-        for n in sorted(names - outside_before.get(r, set())):
-            escaped.append(f"{r / n}   (OUTSIDE the sandbox entirely)")
+    # Anything that appeared in a root this run had no business touching --
+    # BUT ONLY IF NOTHING ELSE ON THIS MACHINE IS WRITING THERE. The window
+    # belongs to the machine, not to the child, and this scan cannot
+    # attribute. When the control window found the machine busy the class is
+    # dropped and reported UNPROBED, because a manufactured containment breach
+    # is the most alarming thing this tool can say and it would say it more
+    # often the busier the machine got.
+    if OUTSIDE_ATTRIBUTABLE:
+        outside_after = outside_snapshot()
+        for r, names in outside_after.items():
+            for n in sorted(names - outside_before.get(r, set())):
+                escaped.append(f"{r / n}   (OUTSIDE the sandbox entirely)")
     logs = []
     for p in sorted(new):
         if p.suffix == ".log":
@@ -241,6 +323,12 @@ def check(run, banner_re, can_sanitize, findings, unprobed):
     """Apply every invariant to one run. One run may break several."""
     def note(inv, what):
         findings.append((inv, run.label, what, run.argv))
+
+    if run.unrunnable:
+        # Reported, never counted as a pass. A probe that could not run is not
+        # a probe that found nothing.
+        unprobed.add(f"{run.label}: {run.unrunnable}")
+        return
 
     if run.timed_out:
         note("I2", f"did not terminate within {TIMEOUT}s")
@@ -665,9 +753,21 @@ def main():
     families = args.family or sorted(FAMILIES)
     findings, unprobed, runs = [], set(), []
 
+    # Measured, not assumed: can an outside-root appearance be attributed to
+    # the child at all on this machine right now?
+    global OUTSIDE_ATTRIBUTABLE
+    OUTSIDE_ATTRIBUTABLE, noise = machine_is_quiet()
+    if not OUTSIDE_ATTRIBUTABLE:
+        unprobed.add(
+            "I6/outside-roots: another process is writing to the scanned roots "
+            f"({', '.join(noise[:3])}{'…' if len(noise) > 3 else ''}), so an "
+            "appearance there cannot be attributed to the binary. That class is "
+            "NOT checked in this run. Re-run on a quiet machine")
+
     print(f"binary   {binary}")
     print(f"banner   {banner}")
     print(f"sanitize {'yes' if can_sanitize else ('unknown' if can_sanitize is None else 'NO -- I4 cannot fire')}")
+    print(f"outside  {'attributable' if OUTSIDE_ATTRIBUTABLE else 'NOT attributable -- machine is busy'}")
     print(f"families {', '.join(families)}\n")
 
     with tempfile.TemporaryDirectory() as tmp:
