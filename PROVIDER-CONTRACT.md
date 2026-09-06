@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g8d465f1)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-ge7835c3)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = a3c64b922de58feb` over `src/*.c` and
+**Source anchor:** `sha256/16 = 8c417b355ca6f0b7` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -171,10 +171,10 @@ requires a handshake round.
 | File:line | Line |
 |---|---|
 | `accurip.c:133` | `Unable to get AccuRIP DB data: missing CDDB ID!` |
-| `accurip.c:165` | `Unable to get AccuRIP DB data: missing entry!` |
-| `accurip.c:173` | `Unable to get AccuRIP DB data: %s%s` |
-| `accurip.c:176` | `Unable to get AccuRIP DB data: %s!` |
-| `accurip.c:225` | `AccuRIP DB data error, got unexpected number of bytes!` |
+| `accurip.c:188` | `Unable to get AccuRIP DB data: missing entry!` |
+| `accurip.c:196` | `Unable to get AccuRIP DB data: %s%s` |
+| `accurip.c:199` | `Unable to get AccuRIP DB data: %s!` |
+| `accurip.c:248` | `AccuRIP DB data error, got unexpected number of bytes!` |
 | `cache_probe.c:232` | `Cache probe:    %s` |
 | `coverart.c:34` | `Cover art has no packet!` |
 | `coverart.c:51` | `Unable to init lavf context: %s!` |
@@ -183,14 +183,14 @@ requires a handshake round.
 | `coverart.c:82` | `Couldn't write header: %s!` |
 | `coverart.c:92` | `Error writing picture packet: %s!` |
 | `coverart.c:97` | `Error writing trailer: %s!` |
-| `coverart.c:169` | `Downloading %s cover art...` |
-| `coverart.c:177` | `Unable to get cover art \"%s\": not found!` |
-| `coverart.c:186` | `Unable to get cover art \"%s\": %s%s!` |
-| `coverart.c:189` | `Unable to get cover art \"%s\": %s!` |
-| `coverart.c:262` | `Unable to open \"%s\": %s!` |
-| `coverart.c:269` | `Unable to get cover image info: %s!` |
-| `coverart.c:299` | `Error demuxing cover image: %s!` |
-| `coverart.c:368` | `No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!` |
+| `coverart.c:192` | `Downloading %s cover art...` |
+| `coverart.c:200` | `Unable to get cover art \"%s\": not found!` |
+| `coverart.c:209` | `Unable to get cover art \"%s\": %s%s!` |
+| `coverart.c:212` | `Unable to get cover art \"%s\": %s!` |
+| `coverart.c:285` | `Unable to open \"%s\": %s!` |
+| `coverart.c:292` | `Unable to get cover image info: %s!` |
+| `coverart.c:322` | `Error demuxing cover image: %s!` |
+| `coverart.c:391` | `No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!` |
 | `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!Invalid folder name? Try -D <folder>.` |
 | `cue_writer.c:106` | `Refusing an INDEX 00 of %i frames into a %i frame file for track %i, writing none` |
 | `cyanrip_encode.c:364` | `Error creating filter source: %s!` |
@@ -713,21 +713,21 @@ must carry the same class.
 | File:line | Message | Evidence | Reaches logfile? |
 |---|---|---|---|
 | `accurip.c:133` | `Unable to get AccuRIP DB data: missing CDDB ID!` | wording + goto end | yes |
-| `accurip.c:165` | `Unable to get AccuRIP DB data: missing entry!` | wording + goto end | yes |
-| `accurip.c:173` | `Unable to get AccuRIP DB data: %s%s` | wording + goto end | yes |
-| `accurip.c:176` | `Unable to get AccuRIP DB data: %s!` | wording + goto end | yes |
+| `accurip.c:188` | `Unable to get AccuRIP DB data: missing entry!` | wording + goto end | yes |
+| `accurip.c:196` | `Unable to get AccuRIP DB data: %s%s` | wording + goto end | yes |
+| `accurip.c:199` | `Unable to get AccuRIP DB data: %s!` | wording + goto end | yes |
 | `coverart.c:51` | `Unable to init lavf context: %s!` | both | yes |
 | `coverart.c:57` | `Unable to alloc stream!` | both | yes |
 | `coverart.c:70` | `Couldn't open %s for writing: %s!` | both | yes |
 | `coverart.c:82` | `Couldn't write header: %s!` | both | yes |
 | `coverart.c:92` | `Error writing picture packet: %s!` | both | yes |
 | `coverart.c:97` | `Error writing trailer: %s!` | both | yes |
-| `coverart.c:177` | `Unable to get cover art \"%s\": not found!` | wording + goto end | yes |
-| `coverart.c:186` | `Unable to get cover art \"%s\": %s%s!` | wording + goto end | yes |
-| `coverart.c:189` | `Unable to get cover art \"%s\": %s!` | wording + goto end | yes |
-| `coverart.c:262` | `Unable to open \"%s\": %s!` | wording + goto end | yes |
-| `coverart.c:269` | `Unable to get cover image info: %s!` | wording + goto end | yes |
-| `coverart.c:299` | `Error demuxing cover image: %s!` | wording + goto end | yes |
+| `coverart.c:200` | `Unable to get cover art \"%s\": not found!` | wording + goto end | yes |
+| `coverart.c:209` | `Unable to get cover art \"%s\": %s%s!` | wording + goto end | yes |
+| `coverart.c:212` | `Unable to get cover art \"%s\": %s!` | wording + goto end | yes |
+| `coverart.c:285` | `Unable to open \"%s\": %s!` | wording + goto end | yes |
+| `coverart.c:292` | `Unable to get cover image info: %s!` | wording + goto end | yes |
+| `coverart.c:322` | `Error demuxing cover image: %s!` | wording + goto end | yes |
 | `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!Invalid folder name? Try -D <folder>.` | both | yes |
 | `cyanrip_encode.c:128` | `Encoder for %s not compiled in ffmpeg!` | control flow | **not directly** - see legend |
 | `cyanrip_encode.c:364` | `Error creating filter source: %s!` | both | yes |
@@ -865,7 +865,7 @@ says.
 
 | File:line | Message | Evidence | Reaches logfile? |
 |---|---|---|---|
-| `accurip.c:225` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
+| `accurip.c:248` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
 | `cyanrip_main.c:1006` | `Done; (%i out of %i matches for current checksum %08X)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:1012` | `Done; (no matches found, but hit repeat limit of %i)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:2029` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
