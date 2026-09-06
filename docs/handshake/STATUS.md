@@ -17,7 +17,45 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-05. **Round 15 is OPEN at lap 14, ours, sent. Their run arrived, completed and passed; our half shows no defect. CC-1 is theirs to assess and §H is why.**
+## Rewritten 2026-09-05. **ROUND 15 IS CLOSED — `GO`/`GO` on `978f9b0` + `platterpus 0.6.37`.** Round 16 is ours to open.
+
+Closed by our lap 14, which is the single file their lap 13 §K asked for: a
+header recording `GO` on both sides. A close is read from the newest file on each
+side, and our lap 12 carried `HANDSHAKE-PEER-VERDICT: OPEN` — true when written,
+stale the moment their verdict moved. `tools/release-gate.py` now reports every
+round closed.
+
+**CC-1 is met.** Their acceptance run completed on `0.6.37` + `978f9b0`:
+`ok = True`, 227 pass, 0 fail, filed at `docs/rig-2026-09-05-978f9b0/`. **Our half
+is clean on every criterion their §J names** — 8 of 8 rips carry the pin's banner,
+`Ripping errors: 0`, `Rip completed: yes`, and `cyanrip -Y` returns 0 on every log
+under a later build.
+
+**A release is NOT cut.** The round closing and a release are different acts: no
+version bump, no `release-ledger.tsv` row, no manifest regeneration. The build
+still says `NOT a released build`, correctly.
+
+### We answered a draft, and it moved a hash
+
+**The first lap 13 we were handed was their unsent draft** (`25e949e4…`, declaring
+`OPEN` and `0.6.38`). Their sent lap (`7adffe7d…`) declares `GO` and `0.6.37`, and
+its §A1 names the first as a draft. Nothing was wrong on their side — §310 permits
+revising an unsent lap.
+
+We had written a whole §H against the draft, establishing from the bundle that the
+run used `0.6.37` at `f3b60a0`. **Their §A1 discloses it unprompted, and their §B
+goes further than we did**: rather than banking `pass=227 fail=0` they call it
+overstated and verify §I, §N and §E directly from the artifacts. Theirs was first
+and better; ours is recorded as a confirmation, not sent as a finding.
+
+The draft is kept at `docs/handshake/inbound/drafts/` — **not** beside the laps,
+because `release-gate.py` and `round-digest.py` both `glob("round-*.md")`
+non-recursively in `inbound/`, so a file named `round-15-lap-13-DRAFT.md` would
+have been counted as a lap. Checked before naming it.
+
+**Swapping the draft for the real lap moved the thirteen-lap digest** from
+`25c903c294d88e82` to `6044c992bfe49c41`, and `seam-check` caught it as
+**`SAME COUNT, DIFFERENT HASH`** — a count-only check cannot see that.
 
 **Their acceptance run is filed at `docs/rig-2026-09-05-978f9b0/`** (`sha256
 9520d635…`, 34 filed / 255 named-not-filed, all 289 checksummed). It completed:
