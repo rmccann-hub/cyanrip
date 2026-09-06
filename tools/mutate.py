@@ -137,6 +137,7 @@ TARGETS = [
     "src/cache_probe.c",    # the -x measurement
     "src/cyanrip_main.c",   # the rip loop and -Z convergence
     "src/cyanrip_encode.c", # decode -> filter -> encode
+    "src/checksums.h",      # EAC CRC32 / AccurateRip v1/v2/450 arithmetic
 ]
 
 # Operators chosen to COMPILE reliably. A stillborn mutant costs a build and
