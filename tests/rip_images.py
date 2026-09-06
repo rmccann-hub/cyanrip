@@ -2099,6 +2099,18 @@ def _line_shape(line):
     What it still catches is the thing that went wrong: `2026-09-06T02:49:54`
     and `2026-09-06T02:49:54+00:00` have different shapes.
     """
+    # AN OPAQUE BLOB CARRIES NO FORMAT INFORMATION, and treating it as
+    # structure made this check fail on every run. `Log FUN512:` is a base64
+    # digest over the log: two of them differ not only in their characters but
+    # in WHERE the punctuation falls, so the shapes differ every time even
+    # though the line's format is identical.
+    #
+    # A run of 16 or more base64url characters collapses to one token. The
+    # bound is what keeps the timestamp -- the thing this check exists to
+    # catch -- out of it: `2026-09-06T23:04:45+00:00` contains colons, which
+    # are not in the class, and its longest qualifying run is 13 characters.
+    line = re.sub(r"[A-Za-z0-9+/=._-]{16,}", "B", line)
+
     out, i = [], 0
     while i < len(line):
         c = line[i]
