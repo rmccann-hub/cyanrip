@@ -25,8 +25,11 @@ Closed by our lap 14 and their lap 15, both declaring `GO`.
 **Their lap 16 arrived 2026-09-06, out of order and out of turn, and owes no
 reply.** `HANDSHAKE-NEXT-LAP: none owed, and none requested`; §F says absorbing
 it by reference in our opener is a complete answer. `seam-check` passes 14 of 14
-on it: the digest `696b8ada8b203d21 over 15` re-derives here — the **tenth**
-consecutive agreement — and all four shared-artifact hashes match this tree.
+on it: the digest `696b8ada8b203d21 over 15` re-derives here, and so does every
+inbound digest since lap 2 — **nine consecutive**, counted by running
+`seam-check` over each inbound lap rather than recalled. Lap 2 is the one
+`FAIL`, allowlisted because its cause is the old construction and not the
+population. All four shared-artifact hashes match this tree.
 
 Its purpose is that their lap 15 had aged: it *promised* a fix for our §5 item 7
 and the fix now exists, along with three more. Sending an opener's worth of stale
