@@ -43,6 +43,19 @@ def fail(msg):
     fails += 1
 
 
+def note(msg):
+    """Something the scenario ESTABLISHED that is worth reading in the log.
+
+    Distinct from unprobed() on purpose. `unprobed` says a check could not
+    run; this says one ran and reached its conclusion by a route the reader
+    would not otherwise see -- typically a fact taken from a committed
+    artifact rather than from this run. Neither is a failure, and collapsing
+    them would make "we could not tell" and "we could tell, from over here"
+    read the same.
+    """
+    print("NOTE:", msg)
+
+
 def unprobed(msg):
     """A check inside a scenario that COULD NOT RUN here.
 
@@ -2006,10 +2019,35 @@ def sc_diagnostics():
         # twice under two names would produce. This assertion cannot separate
         # them and does not pretend to.
         if a == b:
-            unprobed("diagnostics: started_at and finished_at are equal, which "
-                     "a fast rip makes expected -- so this run does not "
-                     "establish that they are two independent captures. Only "
-                     "a rip exceeding one second can, and none here does.")
+            # ...but a COMMITTED artifact may already show them apart. The
+            # interrupted sample is one real rip stopped by SIGTERM part way
+            # through, which takes over a second, so its two stamps have been
+            # observed to differ. Reading it turns this from "cannot tell" into
+            # a measurement whenever the artifact supports one -- and when it
+            # does not, this still says so rather than passing quietly.
+            observed = None
+            sj = ROOT / "docs" / "sample-interrupted.diagnostics.json"
+            if sj.exists():
+                try:
+                    s = json.loads(sj.read_text())
+                    if (isinstance(s.get("started_at"), str)
+                            and isinstance(s.get("finished_at"), str)
+                            and s["started_at"] != s["finished_at"]):
+                        observed = (s["started_at"], s["finished_at"])
+                except ValueError:
+                    pass
+            if observed:
+                note(f"diagnostics: this rip is too fast to separate the two "
+                     f"instants, but docs/sample-interrupted.diagnostics.json "
+                     f"shows them apart ({observed[0]} -> {observed[1]}), so "
+                     f"they are two captures and not one value written twice")
+            else:
+                unprobed("diagnostics: started_at and finished_at are equal, "
+                         "which a fast rip makes expected -- so this run does "
+                         "not establish that they are two independent "
+                         "captures. No committed record shows them apart "
+                         "either. Only a rip exceeding one second can, and "
+                         "none this suite drives does.")
 
     # So the independence is asserted STRUCTURALLY instead, which is a weaker
     # claim honestly labelled rather than a stronger one nobody measured. Two

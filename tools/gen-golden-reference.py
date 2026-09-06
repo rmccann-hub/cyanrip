@@ -52,6 +52,7 @@ import os
 import re
 import shutil
 import subprocess
+import json
 import sys
 import tempfile
 import time
@@ -347,11 +348,52 @@ def main():
                          "what this binary writes -- these shapes are absent "
                          "from it:\n  " + "\n  ".join(stale)
                          + "\nRegenerate with --interrupted.")
+            # ...AND THE COMPANION RECORD, which this check did not look at
+            # and which went stale because of that. The sample's LOG was shape
+            # -checked on every run while its .diagnostics.json sat at schema
+            # /3 with two fields missing, produced by a build three releases
+            # back -- and the provider contract, which derives its field table
+            # from the committed records, then published `started_at` as NOT
+            # in every record. True of the samples, false of the binary.
+            #
+            # Compared by KEY SET, at the top level and one level down, not by
+            # value: an interrupted rip's counts and timings differ every run,
+            # exactly as the log's do. A key the binary emits and the sample
+            # lacks means the sample predates a field.
+            if not SAMPLE_JSON.exists():
+                sys.exit(f"{SAMPLE_JSON.relative_to(ROOT)} is missing")
+            try:
+                have = json.loads(SAMPLE_JSON.read_text(encoding="utf-8"))
+                fresh = json.loads(js)
+            except ValueError as e:
+                sys.exit(f"{SAMPLE_JSON.relative_to(ROOT)}: not valid JSON ({e})")
+
+            def keyset(d, prefix=""):
+                out = set()
+                for k, v in d.items():
+                    out.add(prefix + k)
+                    if isinstance(v, dict):
+                        out |= keyset(v, prefix + k + ".")
+                return out
+
+            absent = sorted(keyset(fresh) - keyset(have))
+            if absent:
+                sys.exit("the committed interrupted RECORD no longer matches "
+                         "what this binary writes -- these keys are absent "
+                         "from it:\n  " + "\n  ".join(absent)
+                         + "\nRegenerate with --interrupted.")
+            if have.get("schema") != fresh.get("schema"):
+                sys.exit(f"the committed interrupted record declares "
+                         f"{have.get('schema')!r} and this binary emits "
+                         f"{fresh.get('schema')!r}. Regenerate with "
+                         f"--interrupted.")
+
             # Deliberately NOT a body diff. Where the signal lands decides how
             # many frames were read and how many track blocks exist, so a
             # byte comparison would fail on every run for a reason that says
             # nothing about the format.
-            print("interrupted sample carries the current line shapes")
+            print("interrupted sample carries the current line shapes, and "
+                  "its record carries the current keys and schema")
             return 0
 
         if "-dirty" in banner:
