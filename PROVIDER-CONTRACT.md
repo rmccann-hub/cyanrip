@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gf6e330c)`
+Build: `cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gc59dea3)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = b5844e12ba227fa8` over `src/*.c` and
+**Source anchor:** `sha256/16 = 6b1f1c31863d8bd5` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -419,22 +419,22 @@ requires a handshake round.
 | `cyanrip_main.c:2009` | `Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...` |
 | `cyanrip_main.c:2031` | `Offset is unset! To continue with an offset of 0, run with -s 0!` |
 | `cyanrip_main.c:2112` | `MusicBrainz URL:%s` |
-| `cyanrip_main.c:2158` | `Error reading album tags: %s` |
-| `cyanrip_main.c:2223` | `Log(s) will be written to:` |
-| `cyanrip_main.c:2231` | `CUE files will be written to:` |
-| `cyanrip_main.c:2290` | `Invalid track number %i for pregap, list has %i tracks!` |
-| `cyanrip_main.c:2311` | `Invalid track number %i, list has %i tracks!` |
-| `cyanrip_main.c:2324` | `Missing \"=\" in track metadata \"%s\"` |
-| `cyanrip_main.c:2340` | `Error reading track tags: %s` |
-| `cyanrip_main.c:2394` | `Cover art destination(s):` |
-| `cyanrip_main.c:2429` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
-| `cyanrip_main.c:2440` | `Tracks:` |
-| `cyanrip_main.c:2450` | `Track %i info:` |
-| `cyanrip_main.c:2468` | `Error initializing decoder: %s` |
-| `cyanrip_main.c:2477` | `Error initializing encoder: %s` |
-| `cyanrip_main.c:2513` | `Error encoding: %s` |
-| `cyanrip_main.c:2533` | `Invalid rip index %i, list has %i tracks!` |
-| `cyanrip_main.c:2615` | `Error ripping: %s` |
+| `cyanrip_main.c:2160` | `Error reading album tags: %s` |
+| `cyanrip_main.c:2225` | `Log(s) will be written to:` |
+| `cyanrip_main.c:2233` | `CUE files will be written to:` |
+| `cyanrip_main.c:2292` | `Invalid track number %i for pregap, list has %i tracks!` |
+| `cyanrip_main.c:2313` | `Invalid track number %i, list has %i tracks!` |
+| `cyanrip_main.c:2326` | `Missing \"=\" in track metadata \"%s\"` |
+| `cyanrip_main.c:2344` | `Error reading track tags: %s` |
+| `cyanrip_main.c:2398` | `Cover art destination(s):` |
+| `cyanrip_main.c:2433` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
+| `cyanrip_main.c:2444` | `Tracks:` |
+| `cyanrip_main.c:2454` | `Track %i info:` |
+| `cyanrip_main.c:2472` | `Error initializing decoder: %s` |
+| `cyanrip_main.c:2481` | `Error initializing encoder: %s` |
+| `cyanrip_main.c:2517` | `Error encoding: %s` |
+| `cyanrip_main.c:2537` | `Invalid rip index %i, list has %i tracks!` |
+| `cyanrip_main.c:2619` | `Error ripping: %s` |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` |
 | `genopt.h:265` | `Error parsing \"%s\" as a <type> for argument \"%s\"` |
 | `genopt.h:272` | `Error parsing %f for argument \"%s\": not in [%f:%f] range!` |
@@ -468,10 +468,10 @@ requires a handshake round.
 | `musicbrainz.c:374` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` |
 | `musicbrainz.c:380` | `Please help improve the MusicBrainz DB by submitting the disc info via the following URL:` |
 | `musicbrainz.c:387` | `To continue add metadata via -a or -t, or ignore via -N!` |
-| `naming.c:242` | `Invalid scheme syntax, unterminated \"{\"!` |
-| `naming.c:256` | `Invalid scheme syntax, no \"#\"!` |
-| `naming.c:270` | `Invalid scheme syntax, no terminating \"#\"!` |
-| `naming.c:286` | `Invalid condition syntax!` |
+| `naming.c:282` | `Invalid scheme syntax, unterminated \"{\"!` |
+| `naming.c:296` | `Invalid scheme syntax, no \"#\"!` |
+| `naming.c:310` | `Invalid scheme syntax, no terminating \"#\"!` |
+| `naming.c:326` | `Invalid condition syntax!` |
 
 **302 distinct stable lines.**
 
@@ -515,7 +515,7 @@ is control flow, and this generator reports the writes it can
 see rather than guessing at the branches around them. In
 particular it does NOT claim any segment is unconditional.
 
-**`cyanrip_main.c:2362`** - reaches logfile: yes
+**`cyanrip_main.c:2366`** - reaches logfile: yes
 
 Not derivable: the buffer is built neither by `snprintf` in this
 function nor by a `helper(buf, sizeof(buf), ...)` call in it. It
@@ -795,16 +795,16 @@ must carry the same class.
 | `cyanrip_main.c:1978` | `Too many cover arts specified!` | control flow | yes |
 | `cyanrip_main.c:1988` | `Directory name scheme must contain {format} with multiple output formats!` | control flow | yes |
 | `cyanrip_main.c:1993` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | both | yes |
-| `cyanrip_main.c:2158` | `Error reading album tags: %s` | both | yes |
-| `cyanrip_main.c:2290` | `Invalid track number %i for pregap, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2311` | `Invalid track number %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2324` | `Missing \"=\" in track metadata \"%s\"` | both | yes |
-| `cyanrip_main.c:2340` | `Error reading track tags: %s` | both | yes |
-| `cyanrip_main.c:2468` | `Error initializing decoder: %s` | both | yes |
-| `cyanrip_main.c:2477` | `Error initializing encoder: %s` | both | yes |
-| `cyanrip_main.c:2513` | `Error encoding: %s` | wording + goto end | yes |
-| `cyanrip_main.c:2533` | `Invalid rip index %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:2615` | `Error ripping: %s` | wording + goto end | yes |
+| `cyanrip_main.c:2160` | `Error reading album tags: %s` | both | yes |
+| `cyanrip_main.c:2292` | `Invalid track number %i for pregap, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2313` | `Invalid track number %i, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2326` | `Missing \"=\" in track metadata \"%s\"` | both | yes |
+| `cyanrip_main.c:2344` | `Error reading track tags: %s` | both | yes |
+| `cyanrip_main.c:2472` | `Error initializing decoder: %s` | both | yes |
+| `cyanrip_main.c:2481` | `Error initializing encoder: %s` | both | yes |
+| `cyanrip_main.c:2517` | `Error encoding: %s` | wording + goto end | yes |
+| `cyanrip_main.c:2537` | `Invalid rip index %i, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:2619` | `Error ripping: %s` | wording + goto end | yes |
 | `diagnostics.c:526` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
 | `discid.c:31` | `Unable to init SHA for DiscID: %s!` | wording | yes |
 | `genopt.h:265` | `Error parsing \"%s\" as a <type> for argument \"%s\"` | genopt | yes |
@@ -828,10 +828,10 @@ must carry the same class.
 | `musicbrainz.c:366` | `MusicBrainz lookup failed, but DiscID has a matching stub, consider verifying the data and creating a release here:` | control flow | yes |
 | `musicbrainz.c:370` | `Unable to find release info for this CD, and metadata hasn't been manually added!` | both | yes |
 | `musicbrainz.c:374` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` | wording | yes |
-| `naming.c:242` | `Invalid scheme syntax, unterminated \"{\"!` | both | yes |
-| `naming.c:256` | `Invalid scheme syntax, no \"#\"!` | both | yes |
-| `naming.c:270` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
-| `naming.c:286` | `Invalid condition syntax!` | both | yes |
+| `naming.c:282` | `Invalid scheme syntax, unterminated \"{\"!` | both | yes |
+| `naming.c:296` | `Invalid scheme syntax, no \"#\"!` | both | yes |
+| `naming.c:310` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
+| `naming.c:326` | `Invalid condition syntax!` | both | yes |
 
 **120 distinct strings.** By evidence: 66 both, 18 control flow, 14 wording + goto end, 12 wording, 10 genopt.
 
@@ -869,7 +869,7 @@ says.
 | `cyanrip_main.c:1008` | `Done; (%i out of %i matches for current checksum %08X)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:1014` | `Done; (no matches found, but hit repeat limit of %i)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:2031` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
-| `cyanrip_main.c:2362` | `%s` | goto end | yes |
+| `cyanrip_main.c:2366` | `%s` | goto end | yes |
 | `musicbrainz.c:251` | `MusicBrainz lookup failed: DiscID has no associated releases.` | goto end_meta | yes |
 | `musicbrainz.c:259` | `MusicBrainz lookup failed: no releases found for DiscID.` | goto end_meta | yes |
 
@@ -1140,11 +1140,11 @@ would have to appear as a call here.
 
 | line | call | writes |
 |---|---|---|
-| `naming.c:147` | `av_bprint_append_data` | the input, verbatim |
-| `naming.c:148` | `av_bprint_append_data` | **unclassified** -- `` |
-| `naming.c:169` | `av_bprint_append_data` | the input, verbatim |
-| `naming.c:174` | `av_bprint_chars` | the `simple` glyph, from the table |
-| `naming.c:177` | `av_bprint_append_data` | the `unicode` glyph, from the table |
+| `naming.c:187` | `av_bprint_append_data` | the input, verbatim |
+| `naming.c:188` | `av_bprint_append_data` | **unclassified** -- `` |
+| `naming.c:209` | `av_bprint_append_data` | the input, verbatim |
+| `naming.c:214` | `av_bprint_chars` | the `simple` glyph, from the table |
+| `naming.c:217` | `av_bprint_append_data` | the `unicode` glyph, from the table |
 
 ### P7c - What each mode does to each character
 
@@ -1199,10 +1199,10 @@ subdirectory. Every call site, and what each one passes:
 
 | call site | `sanitize_fwdslash` | meaning |
 |---|---|---|
-| `naming.c:232` | `0` | literal text, never a tag value -- `/` is a directory separator here |
-| `naming.c:342` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
-| `naming.c:362` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
-| `naming.c:428` | `0` | literal text, never a tag value -- `/` is a directory separator here |
+| `naming.c:272` | `0` | literal text, never a tag value -- `/` is a directory separator here |
+| `naming.c:382` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
+| `naming.c:402` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
+| `naming.c:468` | `0` | literal text, never a tag value -- `/` is a directory separator here |
 
 So a `/` **inside a metadata value** is substituted, and a `/` **in the
 scheme itself** creates a directory. The pass-through is checked after
