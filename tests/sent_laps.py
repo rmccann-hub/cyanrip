@@ -206,6 +206,11 @@ SENT = {
     # reference this project already warns about, manufactured by us.
     "round-16-lap-06.md":
         "749ef81684a30a0ca7ce39f055518633bca1396ef56ad2d9a9c0cea738feac50",
+
+    # Lap 8, handed over 2026-09-07. Corrects the P5/P3 mislabel their lap 7
+    # §H1 found in lap 6 -- which stays exactly as sent.
+    "round-16-lap-08.md":
+        "565c624e6f3cb6449cc8fadb192967c86923e05f0f02b3618876491b6207784f",
 }
 
 failures = 0
