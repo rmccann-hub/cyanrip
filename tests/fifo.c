@@ -38,6 +38,7 @@
  */
 
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -74,14 +75,19 @@ static void check(int cond, const char *what)
 struct popper {
     AVBufferRef *fifo;
     AVFrame *got;
-    int returned;
+    /* ATOMIC, because the popper thread writes it and main reads it in a spin
+     * loop with no lock between them. That is a data race even though every
+     * run of it happens to work, and ThreadSanitizer says so: it was the ONLY
+     * warning this test produced, and it was in the harness rather than in the
+     * FIFO under test. A test that races is not a test of anything. */
+    atomic_int returned;
 };
 
 static void *pop_thread(void *arg)
 {
     struct popper *p = arg;
     p->got = cr_frame_fifo_pop(p->fifo);
-    p->returned = 1;
+    atomic_store(&p->returned, 1);
     return NULL;
 }
 
@@ -110,7 +116,8 @@ int main(void)
     if (!fifo)
         return 1;
 
-    struct popper p = { .fifo = fifo, .got = NULL, .returned = 0 };
+    struct popper p = { .fifo = fifo, .got = NULL };
+    atomic_init(&p.returned, 0);
     pthread_t th;
     check(pthread_create(&th, NULL, pop_thread, &p) == 0,
           "a popper thread starts and blocks on an empty queue");
@@ -119,7 +126,7 @@ int main(void)
      * so this sleeps generously and then checks it has NOT returned -- which
      * is itself the assertion that it really did block. */
     nap_ms(200);
-    check(p.returned == 0, "the popper is still blocked before any signal");
+    check(atomic_load(&p.returned) == 0, "the popper is still blocked before any signal");
 
     /* THE SPURIOUS WAKEUP. Signal the condition variable the popper waits on,
      * without queueing anything. Indistinguishable, to the waiter, from the
@@ -127,7 +134,7 @@ int main(void)
     signal_in_with_nothing_queued(fifo);
     nap_ms(200);
 
-    check(p.returned == 0,
+    check(atomic_load(&p.returned) == 0,
           "a signal with nothing queued does NOT wake the popper through");
 
     /* Now a real push. The popper must come back with the frame, and exactly
@@ -148,9 +155,9 @@ int main(void)
     }
     check(cr_frame_fifo_push(fifo, f) == 0, "the real push succeeds");
 
-    for (int i = 0; i < 200 && !p.returned; i++)
+    for (int i = 0; i < 200 && !atomic_load(&p.returned); i++)
         nap_ms(10);
-    check(p.returned == 1, "the popper returns once something is queued");
+    check(atomic_load(&p.returned) == 1, "the popper returns once something is queued");
     pthread_join(th, NULL);
     check(p.got != NULL, "the popper returns a frame, not NULL");
 
