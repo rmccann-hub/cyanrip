@@ -36,6 +36,19 @@ OFFSET=${OFFSET:-667}          # the BDR-209D's read offset, as used on 2026-08-
 OUT=${OUT:-./round16-$(date -u +%Y%m%dT%H%M%SZ)}
 CRIP=${CRIP:-cyanrip}
 LIMIT=${LIMIT:-600}            # per-invocation ceiling, seconds
+KILL=${KILL:-30}               # grace before SIGKILL. NOT optional -- see below.
+
+# BARE `timeout` CANNOT STOP THIS PROGRAM, and this script existed for an hour
+# in a form that used one. on_quit_signal() sets a flag and RETURNS
+# (src/cyanrip_main.c:1153); the last read of quit_now is inside the rip loop
+# (:2656). Past that point a single SIGTERM changes nothing, and GNU timeout
+# without -k sends exactly one and then waits -- so the bound meant to contain
+# C1's 1800 s hang would itself have hung. A check that cannot fire is worse
+# than a missing one.
+#
+# `timeout -k` sends SIGKILL after the grace period. A SECOND SIGTERM would
+# also do it -- the handler force-exits when quit_now is already set -- but
+# SIGKILL does not depend on the program cooperating at all.
 EXPECT_BUILD=platterpus-fork-ga9aedf0
 
 mkdir -p "$OUT" || exit 1
@@ -47,7 +60,7 @@ run() {                        # run <name> <clause> -- <argv...>
   printf '=== %-22s %s\n' "$name" "$clause"
   printf '    %s' "$CRIP"; for a in "$@"; do printf ' %s' "$a"; done; printf '\n'
   start=$(date +%s)
-  timeout "$LIMIT" "$CRIP" "$@" > "$OUT/$name.stdout" 2>&1
+  timeout -k "$KILL" "$LIMIT" "$CRIP" "$@" > "$OUT/$name.stdout" 2>&1
   rc=$?
   end=$(date +%s)
   echo "    exit $rc in $((end-start))s   -> $OUT/$name.stdout"
@@ -72,12 +85,34 @@ echo "$banner" > "$OUT/banner.txt"
 echo
 
 echo "=== the disc in the drive ==="
-timeout 120 "$CRIP" -d "$DEV" -N -A -U -I > "$OUT/disc-info.txt" 2>&1
+timeout -k 15 120 "$CRIP" -d "$DEV" -N -A -U -I > "$OUT/disc-info.txt" 2>&1
 grep -E "^(DiscID|CDDB ID|Disc tracks|Total time):" "$OUT/disc-info.txt" | sed 's/^/    /'
 echo "    (reference disc for clause 1 is DiscID pNtImOkdBm9RMBIalzx0w9cfsYY-,"
 echo "     CDDB E20DFE0E, 14 tracks, 59:42.57 -- The Police, 'Every Breath You"
 echo "     Take: The Classics'. A DIFFERENT disc still tests the parser, but"
 echo "     the line-by-line comparison below only means something on that one.)"
+echo
+
+# --------------------------------- clause 1, go/no-go BEFORE spending drive time
+# -I reaches crip_fill_accurip() -- the query runs at cyanrip_main.c:2128, and
+# the `if (!print_info_only)` guards that skip the ripping start at :2182. So
+# this exercises the WHOLE rewritten path (fetch, Content-Type, marker scan,
+# entry loop) in about ten seconds and prints the verdict line, without reading
+# a single sector of audio.
+#
+# What it does NOT print is the per-track `Accurip v1:/v2:/450:` lines: those
+# are guarded by `t->computed_crcs` (cyanrip_log.c:431), which needs a real
+# rip. So this cannot settle clause 1 -- it tells you whether the disc is worth
+# ripping for it.
+run accurip-probe "clause 1 GO/NO-GO -- the parser, no audio read" -- \
+    -d "$DEV" -N -U -I -D "$OUT/probe"
+echo "    verdict line:"
+grep -aE "^AccurateRip:" "$OUT/accurip-probe.stdout" | sed 's/^/      /'
+echo "      'found'      -> rip 1 below can establish clause 1."
+echo "      'not found'  -> the parser RAN and the disc is not in the database."
+echo "                      The rip below will not produce a comparison. Try"
+echo "                      another disc before spending the drive time."
+echo "      'error'      -> read the line; that is a finding either way."
 echo
 
 # ------------------------------------------------- clause 1: AccurateRip
@@ -104,8 +139,14 @@ run hdcd-nodeemph "clause 2 -- the control: same rip, de-emphasis OFF" -- \
 # --------------------------------- clause 3 + the -j record's new schema
 # Separated from the rips above precisely BECAUSE of C1: if -j is what hangs,
 # it hangs here and the other evidence is already on disk.
-run plain-j "clause 3 -- a plain rip, and the -j record at schema /4" -- \
-    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o flac \
+# -Z 2 AND -u ARE NOT OPTIONAL HERE, and leaving them out is how this rip
+# would have failed to test what it claims. Without -Z every log reads
+# `Secure re-read: not attempted` and the `converged after N reads` arm --
+# a line Platterpus has parsed on hardware -- is never emitted, so clause 3
+# could not show it had not moved. Without -u the log is one header line
+# shorter than the golden reference it is compared against.
+run plain-j "clause 3 -- parsed lines unmoved, -Z, -u, and the /4 record" -- \
+    -d "$DEV" -s "$OFFSET" -l 1,2 -N -A -U -o flac -Z 2 -u platterpus/0.6.40 \
     -D "$OUT/plain" -F "{track}" -L plain -M plain -j "$OUT/plain.json"
 
 # ================================================================ summary
@@ -200,7 +241,7 @@ echo
 echo "--- every log's first line must be the fork banner, and -Y must verify ---"
 for f in $(find "$OUT" -name '*.log' 2>/dev/null); do
   printf '    %-40s %s\n' "$(basename "$f")" "$(head -1 "$f")"
-  timeout 60 "$CRIP" -Y "$f" >/dev/null 2>&1
+  timeout -k 10 60 "$CRIP" -Y "$f" >/dev/null 2>&1
   echo "        -Y exit $?  (0 = the log verifies against its own FUN512)"
 done
 echo
@@ -215,5 +256,14 @@ echo "  * whether -H behaves correctly on a disc that genuinely carries"
 echo "    pre-emphasis. -E FORCES the same filter graph, which is why the lap"
 echo "    says -H -E is not a weaker substitute -- but a TOC-flagged disc would"
 echo "    additionally show the flag being read."
+echo
+echo "DO NOT, whatever else happens:"
+echo "  * pass -O. [MEASURED] in docs/JOINT-SCRIPT-RUNBOOK.md section 6: -O is"
+echo "    overread and hangs the PIONEER BD-RW BDR-209D for about 23 minutes."
+echo "    It is one keystroke from -x, which is the cache probe. This script"
+echo "    passes neither."
+echo "  * use bare timeout(1) on cyanrip. One SIGTERM sets a flag and returns;"
+echo "    past the rip loop's last quit_now read it changes nothing. Every"
+echo "    invocation here uses timeout -k."
 echo
 echo "Bring back the whole of $OUT."
