@@ -2734,13 +2734,40 @@ int main(int argc, char **argv)
      * arguments are accepted, only when the sink becomes known. genopt takes
      * values space-separated with no '=' form, so exact matches are the whole
      * grammar. cyanrip_run() calls crip_diag_enable() again with genopt's
-     * value, which is authoritative if the two ever disagree. */
+     * value.
+     *
+     * TAKE THE LAST -j, NOT THE FIRST, BECAUSE GENOPT TAKES THE LAST. This
+     * loop used to `break` on the first one while genopt kept the last, so a
+     * repeated -j armed two different sinks and WHICH FILE GOT THE RECORD
+     * DEPENDED ON WHEN THE PROCESS DIED: before genopt, the first path; after
+     * it, the second. The pre-pass exists precisely for deaths in that
+     * window, so the disagreement was worst exactly where it mattered.
+     *
+     * Measured in Platterpus's 2026-09-07 hardware run, whose rig-check
+     * passed `-j <probe>` while their argv builder appended its own
+     * `-j cyanrip-diagnostics.json`. The record was written -- to the second
+     * path -- and their check watched the first, reporting that cyanrip
+     * "wrote no -j diagnostics record". It had. Nothing on either side could
+     * see which file won, because nothing said. */
+    const char *diag_arg = NULL;
+    int diag_given = 0;
     for (int i = 1; i + 1 < argc; i++) {
         if (!strcmp(argv[i], "-j") || !strcmp(argv[i], "--diagnostics")) {
-            crip_diag_enable(argv[i + 1]);
-            break;
+            diag_arg = argv[i + 1];
+            diag_given++;
         }
     }
+    if (diag_arg)
+        crip_diag_enable(diag_arg);
+
+    /* Not an error: appending a default -j to a caller-supplied one is a
+     * reasonable thing for a front-end to do, and refusing would break a
+     * working consumer to punish a duplicate. But a silently discarded sink
+     * is a file somebody is watching that will never appear, so say which one
+     * won. Emitted after crip_diag_enable() so the record carries it too. */
+    if (diag_given > 1)
+        cyanrip_log(NULL, 0, "-j given %i times; the diagnostics record goes "
+                    "to the last one: \"%s\"\n", diag_given, diag_arg);
 
     const int rc = cyanrip_run(argc, argv);
     crip_diag_set_exit(rc);

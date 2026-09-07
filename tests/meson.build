@@ -463,6 +463,7 @@ rip_scenarios = [
     'sanitize',
     'enhanced_cd',
     'contract_diagnostics',
+    'diag_repeated_flag',
     'contract_composed',
     'contract_fatal_inventory',
     'curl_timeouts',

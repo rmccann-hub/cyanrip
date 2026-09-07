@@ -4269,6 +4269,80 @@ def sc_contract_composed():
              "no longer describes what the binary writes.")
 
 
+def sc_diag_repeated_flag():
+    """A repeated `-j` writes ONE record, to the last path, and says so.
+
+    ROUND 16 FOUND THIS ON HARDWARE, and it is the clearest case yet of a
+    finding and its diagnosis failing independently. Platterpus's 2026-09-07
+    acceptance run reported, seven times, that "cyanrip wrote no -j
+    diagnostics record". It had written one. Their rig-check passed
+    `-j <probe path>` and their argv builder appended its own
+    `-j cyanrip-diagnostics.json`; the record went to the second and their
+    check watched the first.
+
+    Underneath was a real defect of ours. The pre-pass in main() took the
+    FIRST -j and broke; genopt takes the LAST. So a repeated -j armed two
+    sinks and WHICH ONE RECEIVED THE RECORD DEPENDED ON WHEN THE PROCESS
+    DIED -- before genopt, the first; after, the second. The pre-pass exists
+    for deaths in exactly that window.
+
+    FOUR ASSERTIONS, AND THE THIRD IS WHY THIS IS NOT ONE. A test that only
+    checked "the announcement appears" would pass against a binary that
+    printed it unconditionally, which is the pattern-matches-both-branches
+    failure. So a single -j must NOT produce the line.
+    """
+    a = WORK / "diag_first.json"
+    b = WORK / "diag_last.json"
+    for f in (a, b):
+        if f.exists():
+            f.unlink()
+
+    # -I lists the disc and writes no audio; it needs no network and no drive.
+    ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-I", "-j", a, "-j", b)
+
+    # 1. The last path wins, and it is the ONLY file written.
+    if not b.exists():
+        fail(f"diag_repeated_flag: the last -j path was not written (exit {ec})")
+        return
+    if a.exists():
+        fail("diag_repeated_flag: BOTH -j paths were written. One flag, one "
+             "record: two sinks is how a consumer ends up watching the wrong "
+             "file, which is the round-16 finding this pins")
+        return
+
+    # 2. The announcement names the count and the winning path, at column 0.
+    want = f'-j given 2 times; the diagnostics record goes to the last one: "{b}"'
+    if want not in out:
+        fail("diag_repeated_flag: a repeated -j was accepted silently. A "
+             f"discarded sink a caller is watching must be said out loud.\n"
+             f"    wanted: {want}\n    output: {out[:400]}")
+        return
+
+    # 3. A single -j must NOT print it, or the check above proves nothing.
+    single = WORK / "diag_single.json"
+    if single.exists():
+        single.unlink()
+    _, out1 = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-I", "-j", single)
+    if "-j given" in out1:
+        fail("diag_repeated_flag: the announcement is printed for a SINGLE "
+             "-j too, so it distinguishes nothing")
+        return
+
+    # 4. It reaches the record as well as the terminal -- that is why it is
+    # emitted after crip_diag_enable() rather than before it.
+    try:
+        rec = json.loads(b.read_text())
+    except ValueError as e:
+        fail(f"diag_repeated_flag: the record is not JSON: {e}")
+        return
+    if not any("-j given 2 times" in m for m in rec.get("messages", [])):
+        fail("diag_repeated_flag: the announcement never reached the record. "
+             "A run whose only artifact is this file must carry it, or the "
+             "one reader who cannot see the terminal cannot see it at all")
+
+
 def sc_contract_diagnostics():
     """Every field a real `-j` record contains must be in P8b.
 
