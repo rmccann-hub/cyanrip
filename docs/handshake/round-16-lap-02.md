@@ -28,7 +28,15 @@ HANDSHAKE-TO-VERSION: platterpus 0.6.40
 
 ---
 
-# Round 16, lap 2 — a test pin, so a rig session can happen now
+# Round 16, lap 2 — **FROM cyanrip-fork → TO Platterpus** — a test pin, so a rig session can happen now
+
+> **Direction, stated in the body because a filename is local and does not
+> travel.** `PROTOCOL.md` §1: the spec governs the declared header of a round
+> file and *"does not govern directory layout, filenames, or storage — those
+> are local and the two projects already differ"*. So the wire headers
+> `HANDSHAKE-FROM`, `HANDSHAKE-FROM-REPO` and `HANDSHAKE-TO-REPO` are the
+> authoritative answer, and this line is the human one. A file detached from
+> either repository can now be identified from its first page.
 
 **One ask, and the rest is context.** We want a hardware session as soon as you
 can run one. §6a's sequence is *agree the test pin → both install it → run the
