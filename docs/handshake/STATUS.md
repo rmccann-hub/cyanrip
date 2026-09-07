@@ -32,7 +32,21 @@ to declare the same one, or name another.
 
 **The test pin is the same program as the production pin**, and that is
 checkable rather than asserted: `git diff a9aedf0..ddc1e8c -- src/ meson.build`
-is empty, and the `sha256` of the `src/` tree is `8c2817219f6aa087` at both.
+is empty, and `git rev-parse a9aedf0:src` and `git rev-parse ddc1e8c:src` are
+the same tree object, `bc446254fce57c98…`. A third reading, if you want one
+that is not git's: `source_hash()` in `tools/gen-provider-contract.py` gives
+`c0f550c75450f031` at both pins.
+
+**Correction, and it is ours.** Round 16 lap 2 §A2, and this file until now,
+quoted that hash as `8c2817219f6aa087` and invited the other side to check it.
+**It cannot be re-derived.** Platterpus tried six constructions and got six
+other values; we then tried six hundred — four file sets, four name schemes,
+five digests, three separators, both truncations — and none produces it. The
+invariant it was offered as evidence for is TRUE and is confirmed three ways
+above; the number was not. A hash published with "check it yourself" and no
+method is uncheckable, and this one turned out to be unreproducible as well.
+Lap 2 is sent and stays as sent; the correction lives here and in the next
+lap.
 Everything between the two is `tools/`, `docs/` and regenerated artifacts. It
 is preferred only because its logs say `Handshake: round 16 lap 1 OPEN` rather
 than naming the previous closed round, and because it carries

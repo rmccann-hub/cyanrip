@@ -74,8 +74,11 @@ Unreleased
 
    **The test pin is the same program as the production pin**, quoted so it can
    be checked rather than believed: `git diff a9aedf0..ddc1e8c -- src/
-   meson.build` is empty and the `src/` tree hashes to `8c2817219f6aa087` at
-   both. It is preferred only because `a9aedf0` writes `Handshake: round 15
+   meson.build` is empty and `git rev-parse <ref>:src` is the same tree
+   object `bc446254fce57c98…` at both. **The `8c2817219f6aa087` this entry
+   first quoted is withdrawn: it cannot be re-derived by any of 600
+   constructions, nor by the six Platterpus tried.** The invariant holds; the
+   number did not, and it was published with no method to check it against. It is preferred only because `a9aedf0` writes `Handshake: round 15
    lap 14 closed` — so a rip gathered for round 16 would label itself with the
    previous, closed round — and because `tools/rig-round16.sh` landed after it.
 

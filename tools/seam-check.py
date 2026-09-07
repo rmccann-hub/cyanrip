@@ -458,7 +458,17 @@ def check_lap(path):
 # `round-15-lap-10-protocol-v5-proposal.md` reading as lap 10 -- it is an
 # ARTIFACT of that lap carrying its own different hash, and pairing the two
 # manufactures a mismatch out of a correct record.
-LAP_TOKEN = re.compile(r"round-(\d+)-lap-(\d+)(?![-\d])(?:\.md)?")
+# Two spellings, because the peer uses both and the second was invisible.
+# `round-16-lap-01.md` is the filename form. `round-16 lap 1` is the prose
+# form their lap 3 used to confirm BOTH of our round-16 laps -- and this
+# audit read that line and found nothing, which is the one case it exists
+# for. Missing a claim is the safe direction and it is still a miss.
+#
+# What is NOT matched, deliberately: a bare `lap 1`. Their same line says
+# "lap 1's draft (`7a5157a5572513ae`)" about a rig SCRIPT, and pairing that
+# hash with lap 1 would invent a mismatch out of a correct record. The
+# round number is what makes a reference unambiguous, so it is required.
+LAP_TOKEN = re.compile(r"round-(\d+)[- ]lap[- ](\d+)(?![-\d])(?:\.md)?")
 # Any other filename. It need not be recognised, only noticed: an unrecognised
 # file between a lap and a hash means the hash is not that lap's.
 FILE_TOKEN = re.compile(r"\S+\.(?:md|sh|py|txt|json|log|tsv)\b")

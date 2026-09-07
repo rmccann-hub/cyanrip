@@ -49,7 +49,34 @@ KILL=${KILL:-30}               # grace before SIGKILL. NOT optional -- see below
 # `timeout -k` sends SIGKILL after the grace period. A SECOND SIGTERM would
 # also do it -- the handler force-exits when quit_now is already set -- but
 # SIGKILL does not depend on the program cooperating at all.
-EXPECT_BUILD=platterpus-fork-ga9aedf0
+# TWO BUILDS ARE LEGITIMATE EVIDENCE FOR THIS ROUND, and pinning one was a
+# defect Platterpus found by reading (round 16 lap 3 §H1.1). This said
+# `platterpus-fork-ga9aedf0` while both projects' instructions tell the operator
+# to install the TEST PIN ddc1e8c -- so following the instructions correctly
+# made the script's one loud warning fire on every run. A warning that fires
+# when everything is right is how an operator learns to scroll past the one
+# that matters.
+#
+# Both are accepted because `git diff a9aedf0..ddc1e8c -- src/ meson.build` is
+# EMPTY: one program, two commits. The test pin is preferred only because its
+# logs self-identify as round-16 evidence via the compiled-in Handshake: line.
+TEST_PIN_BUILD=platterpus-fork-gddc1e8c
+REVIEWED_PIN_BUILD=platterpus-fork-ga9aedf0
+
+# The consumer label this rig reports. NOT `platterpus/<version>`, and that is
+# a deliberate departure from lap 3 §H1.3's suggestion: Platterpus does not run
+# during Run A at all -- their own §0 says so -- and `Consumer:` is a caller's
+# claim about itself that cyanrip records verbatim and explicitly does not
+# verify. Writing `platterpus/0.6.41` into a log no Platterpus produced would
+# put a false claim in an archival record, and would make Run A's logs
+# indistinguishable from Run B's in the one field that says who called.
+# Override if you really are driving this from something else.
+CONSUMER=${CONSUMER:-cyanrip-rig/round-16}
+
+# Set to 1 to run against a build that is neither pin. The evidence cannot
+# close the round -- the script says so and continues -- but a baseline against
+# another build is a legitimate thing to want.
+ALLOW_ANY_BUILD=${ALLOW_ANY_BUILD:-0}
 
 mkdir -p "$OUT" || exit 1
 echo "output: $OUT"
@@ -77,9 +104,25 @@ echo "=== preflight: is the PIN installed? ==="
 banner=$("$CRIP" --version 2>&1 | head -1)
 echo "    $banner"
 case "$banner" in
-  *"$EXPECT_BUILD"*) echo "    OK: this is the round-16 pin." ;;
-  *) echo "    *** NOT THE PIN. Expected $EXPECT_BUILD."
-     echo "    *** Evidence from another build cannot close this round. Stop." ;;
+  *"$TEST_PIN_BUILD"*)
+     echo "    OK: the agreed TEST PIN ddc1e8c. Its logs self-identify as"
+     echo "        round-16 evidence." ;;
+  *"$REVIEWED_PIN_BUILD"*)
+     echo "    OK: the reviewed pin a9aedf0. Same src/ as the test pin, so the"
+     echo "        measurements are equally valid; only the Handshake: line"
+     echo "        differs." ;;
+  *)
+     echo "    *** NOT A ROUND-16 BUILD."
+     echo "    *** Expected $TEST_PIN_BUILD"
+     echo "    ***       or $REVIEWED_PIN_BUILD"
+     echo "    *** Evidence from another build cannot close this round."
+     if [ "$ALLOW_ANY_BUILD" = 1 ]; then
+       echo "    *** ALLOW_ANY_BUILD=1 -- continuing anyway. This run is a"
+       echo "    *** baseline, NOT round-16 evidence."
+     else
+       echo "    *** Stopping. Re-run with ALLOW_ANY_BUILD=1 for a baseline."
+       exit 1
+     fi ;;
 esac
 echo "$banner" > "$OUT/banner.txt"
 echo
@@ -155,7 +198,7 @@ echo
 # so the ONLY network call this run makes is the AccurateRip query -- which is
 # the thing under test, with the fewest other variables in play.
 run accurip "clause 1 -- AccurateRip path, rewritten parser" -- \
-    -d "$DEV" -s "$OFFSET" -l 1,2,3 -N -U -o flac \
+    -d "$DEV" -s "$OFFSET" -l 1,2,3 -N -U -o flac -u "$CONSUMER" \
     -D "$OUT/accurip" -F "{track}" -L accurip -M accurip
 
 # ------------------------------------------- clause 2: -H with de-emphasis
@@ -170,11 +213,11 @@ run accurip "clause 1 -- AccurateRip path, rewritten parser" -- \
 # difference is necessary and not sufficient, and settling it needed a decoder
 # that may not be installed. Now nothing is needed.
 run hdcd-deemph "clause 2 -- -H with de-emphasis forced" -- \
-    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -E \
+    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -E -u "$CONSUMER" \
     -D "$OUT/hdcd-deemph" -F "{track}" -L hdcd-deemph -M hdcd-deemph
 
 run hdcd-nodeemph "clause 2 -- the control: same rip, de-emphasis OFF" -- \
-    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -W \
+    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -W -u "$CONSUMER" \
     -D "$OUT/hdcd-nodeemph" -F "{track}" -L hdcd-nodeemph -M hdcd-nodeemph
 
 # --------------------------------- clause 3 + the -j record's new schema
@@ -191,7 +234,7 @@ run hdcd-nodeemph "clause 2 -- the control: same rip, de-emphasis OFF" -- \
 # on. {format} in -D is REQUIRED with more than one output -- cyanrip refuses
 # otherwise, with a clear message, which is how this was found.
 run plain-j "clause 3 -- parsed lines unmoved, -Z, -u, and the /4 record" -- \
-    -d "$DEV" -s "$OFFSET" -l 1,2 -N -A -U -o flac,pcm -Z 2 -u platterpus/0.6.40 \
+    -d "$DEV" -s "$OFFSET" -l 1,2 -N -A -U -o flac,pcm -Z 2 -u "$CONSUMER" \
     -D "$OUT/plain/{format}" -F "{track}" -L plain -M plain -j "$OUT/plain.json"
 
 # ================================================================ summary
