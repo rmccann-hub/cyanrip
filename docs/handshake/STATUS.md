@@ -17,7 +17,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-07. **ROUND 16 IS OPEN on `a9aedf0`. The TEST PIN `ddc1e8c` IS AGREED by both sides, and the rig can run.**
+## Rewritten 2026-09-07. **ROUND 16 IS OPEN on `a9aedf0`. Everything is agreed and pinned; the round is waiting on ONE THING, and it is the rig.**
 
 **A release is blocked and should be.** `tools/release-gate.py --release-gate`
 exits **1** on this tree and names round 16 as open. That is not being
@@ -27,24 +27,46 @@ still resolve to `978f9b0`.
 **What unblocks a hardware session instead is a TEST PIN**, which
 `PROTOCOL.md` §6a defines precisely so a round is not deadlocked between
 "a close needs hardware evidence" and "the pin may not move while the round is
-open". Our lap 2 declared **`HANDSHAKE-TEST-PIN: ddc1e8c`**; **their lap 3 agreed it
-verbatim** and carries an S-18 pre-commit — *their next lap is `GO` on
-`a9aedf0` + `platterpus 0.6.41` unless the hardware run finds the reviewed pin
-unsafe.* So the round now needs a RUN, not another lap, and both sides have
-said so.
+open". Our lap 2 declared **`HANDSHAKE-TEST-PIN: ddc1e8c`**; **their lap 3
+agreed it verbatim**, and both sides now carry the same S-18 pre-commit —
+*next lap is `GO` on `a9aedf0` + `platterpus 0.6.42` unless the run finds the
+reviewed pin unsafe.* **The round needs a RUN, not another lap, and both sides
+have said so in writing.**
+
+**Laps 4, 5 and 6 settled everything that had a deadline.** Nothing is
+outstanding in either direction:
+
+| | state |
+|---|---|
+| test pin | `ddc1e8c`, agreed both sides, unmoved |
+| reviewed pin | `a9aedf0`, unmoved (S-15) |
+| app | `platterpus 0.6.42`, released |
+| rig script | **pinned to commit `0cd611a`**, not to a branch tip |
+| provider contract | delivered by URL + sha256; **no flag changed** |
+| open questions | none blocking, either way |
 
 **Run A is ours and is the one that closes the round.** It drives
-`tools/rig-round16.sh` directly against the installed test pin and needs no
-Platterpus process at all. **The script at the branch tip is NOT the one they
-reviewed**: they hashed `ddc1e8c`'s copy at sha256/16 `615243361882b881`, and
-the tip is `178bd4df5dc28d53` — three defects they found in §H1 are fixed in
-it (a build check that fired on a correct install, a preflight that said
-"Stop." and did not, and `-u` reaching one rip of five). Run A fetches the tip
-by design; that is the split their §0 proposes, newest harness against the
-pinned binary.
+`tools/rig-round16.sh` against the installed test pin and needs no Platterpus
+process at all:
 
-Our lap 2 asks Platterpus
-to declare the same one, or name another.
+```sh
+git checkout 0cd611a -- tools/rig-round16.sh tools/audio-checksums.py
+DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" sh tools/rig-round16.sh
+python3 tools/round16-accept.py --out round16-<stamp>Z
+```
+
+**A commit, not a branch tip, and that was their ask in lap 5 §0.** Between our
+lap 2 and lap 4 the script moved `615243361882b881` → `178bd4df5dc28d53` for
+good reasons — three defects *they* found — but an artifact reviewed and an
+artifact run are the same thing only if it is named by commit. Those two files
+do not change again this round; if something forces it, they get the new commit
+before the night.
+
+**`tools/round16-accept.py` grades the result** against the close condition and
+was written **before** the run, which is the only reason it can be trusted: a
+checker written afterwards is how a close condition quietly moves. It refuses
+to grade a run whose `banner.txt` names neither pin, and its exit code
+distinguishes *a clause said no* (1) from *a clause could not be asked* (2).
 
 **The test pin is the same program as the production pin**, and that is
 checkable rather than asserted: `git diff a9aedf0..ddc1e8c -- src/ meson.build`
