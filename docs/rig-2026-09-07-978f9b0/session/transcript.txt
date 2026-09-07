@@ -1,0 +1,1263 @@
+================================================================
+Platterpus UI script run — 2026-09-07T03:07:12+00:00
+app: 0.6.40
+saved to: /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000
+  (transcript.txt, report.json, and any screenshots)
+================================================================
+[  ok  ] L148  log =============================================================
+           =============================================================
+[  ok  ] L149  log FULL ACCEPTANCE RUN - end to end, one pass
+           FULL ACCEPTANCE RUN - end to end, one pass
+[  ok  ] L150  log order: cheapest and least likely to fail first
+           order: cheapest and least likely to fail first
+[  ok  ] L151  log the first rip is section F; the long one is section N
+           the first rip is section F; the long one is section N
+[  ok  ] L152  log =============================================================
+           =============================================================
+[  ok  ] L157  set debug_logging on
+           debug_logging = True
+[  ok  ] L158  expect debug_logging on
+           debug_logging is True
+[  ok  ] L159  snapshot atstart
+           snapshot 'atstart':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L180  log --- A. identity: which ripper is installed ---
+           --- A. identity: which ripper is installed ---
+[  ok  ] L181  cyanrip --version   (0.4s)
+           argv: /home/rmccann/.local/bin/cyanrip --version
+           exit: 0
+           cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
+[  ok  ] L182  expect-exit 0
+           exit was 0
+[  ok  ] L183  expect-cyanrip platterpus-fork
+           found 'platterpus-fork'
+[  ok  ] L184  expect-ripper-under-review
+           installed build is platterpus-fork-g978f9b0 — 978f9b0 is the APPROVED production pin (no handshake round is open, so there is no build under review)
+[  ok  ] L185  snapshot identity
+           snapshot 'identity':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[ info ] L198  probe-ripper-wrapper
+           exits: The host export exited in 0.25s. The 2026-08-27 hang does not reproduce here.
+           Ripper wrapper exit probe
+             verdict: exits
+             decided by: host export, stdin open
+             summary: The host export exited in 0.25s. The 2026-08-27 hang does not reproduce here.
+             blames the wrapper: False
+           
+             [host export, stdin open] exits
+               argv: ['/home/rmccann/.local/bin/cyanrip', '--version']
+               exit: 0   elapsed: 0.251s
+               output: cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
+           
+             [host export, stdin closed] exits
+               argv: ['/home/rmccann/.local/bin/cyanrip', '--version']
+               exit: 0   elapsed: 0.250s
+               output: cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
+           
+             [wrapper alone] exits
+               argv: ['distrobox-enter', '-n', 'ripping', '--', 'true']
+               exit: 0   elapsed: 0.194s
+               output: (nothing)
+           
+             [in-container binary] exits
+               argv: ['distrobox-enter', '-n', 'ripping', '--', '/usr/local/bin/cyanrip', '--version']
+               exit: 0   elapsed: 0.247s
+               output: cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
+[  ok  ] L211  abort-if-failed the installed ripper is not the build the handshake record names — fix that first, the failing step above prints the one command
+           no failures in the 7 step(s) of 'A. identity: which ripper is installed' — continuing
+[  ok  ] L232  log --- B. settings: validated round-trips ---
+           --- B. settings: validated round-trips ---
+[  ok  ] L233  set read_offset 667
+           read_offset = 667
+[  ok  ] L234  expect read_offset 667
+           read_offset is 667
+[  ok  ] L235  set max_retries 3
+           max_retries = 3
+[  ok  ] L236  expect max_retries 3
+           max_retries is 3
+[  ok  ] L237  set output_format flac
+           output_format = 'flac'
+[  ok  ] L238  expect output_format flac
+           output_format is 'flac'
+[  ok  ] L239  set force_overread off
+           force_overread = False
+[  ok  ] L240  expect force_overread off
+           force_overread is False
+[  ok  ] L241  set auto_eject_after_rip off
+           auto_eject_after_rip = False
+[  ok  ] L242  expect auto_eject_after_rip off
+           auto_eject_after_rip is False
+[  ok  ] L243  set ripper_channel beta
+           ripper_channel = 'beta'
+[  ok  ] L244  expect ripper_channel beta
+           ripper_channel is 'beta'
+[  ok  ] L245  snapshot settingsafter
+           snapshot 'settingsafter':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L258  log --- C. validation: every guard must refuse and not write ---
+           --- C. validation: every guard must refuse and not write ---
+[  ok  ] L259  expect-refused read_offset 99999
+           refused, and read_offset is still 667 — Read offset must be between -5000 and 5000.
+[  ok  ] L260  expect-refused read_offset -99999
+           refused, and read_offset is still 667 — Read offset must be between -5000 and 5000.
+[  ok  ] L261  expect-refused max_retries 101
+           refused, and max_retries is still 3 — Max retries must be between 0 and 100.
+[  ok  ] L262  expect-refused secure_rerip_matches 11
+           refused, and secure_rerip_matches is still 2 — Max reads to confirm a shaky track must be between 0 and 10.
+[  ok  ] L263  expect-refused mp3_vbr_quality 10
+           refused, and mp3_vbr_quality is still 0 — MP3 VBR quality must be between 0 and 9.
+[  ok  ] L266  expect read_offset 667
+           read_offset is 667
+[  ok  ] L267  expect max_retries 3
+           max_retries is 3
+[  ok  ] L268  snapshot validationdone
+           snapshot 'validationdone':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L279  log --- D. dialogs: open, close, and prove none is left up ---
+           --- D. dialogs: open, close, and prove none is left up ---
+[  ok  ] L280  open drive
+           opening drive
+[  ok  ] L281  screenshot dialogdrive
+           examined 15 window(s); wrote 15 PNG(s)
+             DriveSetupDialog 'Set up drive' visible=True platform_window=yes exposed=True modal=True geom=2549,202 661x603 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/dialogdrive.png
+[  ok  ] L282  cancel
+           cancelled 'Set up drive'
+[  ok  ] L283  open settings
+           opening settings
+[  ok  ] L284  screenshot dialogsettings
+           examined 20 window(s); wrote 20 PNG(s)
+             SettingsDialog 'Settings' visible=True platform_window=yes exposed=True modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 100x30 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/dialogsettings.png
+[  ok  ] L285  cancel
+           cancelled 'Settings'
+[  ok  ] L286  open dependencies
+           opening dependencies
+[  ok  ] L287  screenshot dialogdependencies
+           examined 21 window(s); wrote 21 PNG(s)
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMessageBox 'Dependency check complete' visible=True platform_window=yes exposed=False modal=True geom=2240,467 500x168 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/dialogdependencies.png
+[  ok  ] L288  cancel
+           cancelled 'Dependency check complete'
+[  ok  ] L289  open about
+           opening about
+[  ok  ] L290  cancel
+           cancelled 'About Platterpus'
+[  ok  ] L291  open diagnostics
+           opening diagnostics
+[  ok  ] L292  screenshot dialogdiagnostics
+           examined 21 window(s); wrote 21 PNG(s)
+             DiagnosticsDialog 'Diagnostics' visible=True platform_window=yes exposed=True modal=True geom=2500,238 760x560 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/dialogdiagnostics.png
+[  ok  ] L293  cancel
+           cancelled 'Diagnostics'
+[  ok  ] L294  open guide
+           opening guide
+[  ok  ] L295  cancel
+           cancelled 'Platterpus — User Guide'
+[  ok  ] L296  open setup
+           opening setup
+[  ok  ] L297  cancel
+           cancelled 'Set up Platterpus'
+[  ok  ] L298  snapshot dialogsdone
+           snapshot 'dialogsdone':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L318  log --- E. disc: scan and identify ---
+           --- E. disc: scan and identify ---
+[  ok  ] L319  rescan
+           rescanning /dev/sr0
+[  ok  ] L320  pick-release 1 120   (9.9s)
+           chose 65282302-368b-4ba2-953a-483bcdef2410 (Every Breath You Take: The Classics) — row 1 of 4; 14 track(s) loaded
+[  ok  ] L321  expect-dialog none
+           no dialog, as expected
+[  ok  ] L322  expect-tracks 2+
+           14 track rows (at least 2)
+[  ok  ] L330  expect-identified
+           identified as release 65282302-368b-4ba2-953a-483bcdef2410; 14 track row(s)
+[  ok  ] L331  snapshot discidentified
+           snapshot 'discidentified':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L349  abort-if-failed the disc was never identified — the picker did not resolve or no tracks loaded, so every rip after this would be about an unknown release
+           no failures in the 7 step(s) of 'E. disc: scan and identify' — continuing
+[  ok  ] L395  log --- F. the main event: full-disc rip, all tracks, every post-rip check on ---
+           --- F. the main event: full-disc rip, all tracks, every post-rip check on ---
+[  ok  ] L396  set cover_art embed
+           cover_art = 'embed'
+[  ok  ] L397  expect cover_art embed
+           cover_art is 'embed'
+[  ok  ] L398  set save_additional_art on
+           save_additional_art = True
+[  ok  ] L399  set ctdb_verify_after_rip on
+           ctdb_verify_after_rip = True
+[  ok  ] L400  set verify_flac_after_rip on
+           verify_flac_after_rip = True
+[  ok  ] L401  set write_eac_log_after_rip on
+           write_eac_log_after_rip = True
+[  ok  ] L402  expect write_eac_log_after_rip on
+           write_eac_log_after_rip is True
+[  ok  ] L403  select-tracks all
+           all 14 tracks selected
+[  ok  ] L404  album full acceptance: angle<bracket (run) (ripper)
+           album title set to 'full acceptance: angle<bracket 20260907t030712 platterpus-fork-g978f9b0'
+[  ok  ] L405  album-artist Platterpus Acceptance
+           album artist set to 'Platterpus Acceptance'
+[  ok  ] L406  rip
+           start requested
+[  ok  ] L407  wait-for-rip 21600   (3010.5s)
+[  ok  ] L408  snapshot afterfullrip
+           snapshot 'afterfullrip':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: 12 of 14 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L409  screenshot afterfullrip
+           examined 21 window(s); wrote 21 PNG(s)
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/afterfullrip.png
+[  ok  ] L432  expect-rip-complete
+           the ripper's own log records the rip as complete — 14 track(s) in the log; convergence not measured (no secure re-read in this rip)
+[  ok  ] L450  log --- G. post-rip: the seam check, and the rip's own log ---
+           --- G. post-rip: the seam check, and the rip's own log ---
+[ FAIL ] L451  rig-check   (0.6s)
+           exit: 1
+           manifest under /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check
+           INFO  album/discovery  newest rip found: /var/home/rmccann/Music/rips/Platterpus Acceptance/full acceptance∶ angle‹bracket 20260907t030712 platterpus-fork-g978f9b0
+           INFO  platterpus/version  0.6.40 (build 1654bdd)
+           INFO  ripper/version  cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)  [ripper-version.txt]
+           OK    ripper/handshake  approved — ripper build platterpus-fork-g978f9b0 is the one handshake round 15 approved, verified by both projects, for Platterpus 0.6.37
+           INFO  ripper/pin  this Platterpus pins 978f9b0; the installed banner is above. A test pin is expected to differ during an open round.
+           FAIL  argv/record  cyanrip wrote no -j diagnostics record, so what it received cannot be read back — the check could not be performed  [argv-probe-output.txt]
+           INFO  handshake/note  closed: Handshake:      round 14 lap 19 closed, verdict GO -- released build
+           INFO  parser/paranoia  per-track counters sum to 24389; the disc block totals 24389. Scope: line present on 0 of 14 track(s) — secure re-read genuinely exercised: no
+           INFO  parser/interrupted  no 'Interrupted at:' line in this log (rip_completed=True) — expected for a rip that ran to the end; only a cancelled or killed rip produces one
+           OK    parser/log  parsed 14 track(s) from full acceptance∶ angle‹bracket 20260907t030712 platterpus-fork-g978f9b0.log
+           INFO  parser/cache-probe  no Cache probe: line in this log, and there never will be one — `-x` is not in the rip argv builder at all, so no Platterpus rip probes the cache. The probe is a separate `cyanrip -N -x -I` invocation (round 14 T3), whose exact argv, exit code and complete output are recorded in the SCRIPT REPORT and transcript, not here. Look there, not for an absence in this manifest.
+           SKIP  device  no --device given
+           manifest: /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check/MANIFEST.txt
+[  ok  ] L452  snapshot afterrigcheck
+           snapshot 'afterrigcheck':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: 12 of 14 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L481  log --- H. re-rip the same title: the overwrite prompt must fire ---
+           --- H. re-rip the same title: the overwrite prompt must fire ---
+[  ok  ] L482  select-tracks 1-2
+           selected 2 track(s): [1, 2]
+[  ok  ] L483  album full acceptance: angle<bracket (run) (ripper)
+           album title set to 'full acceptance: angle<bracket 20260907t030712 platterpus-fork-g978f9b0'
+[  ok  ] L484  rip
+           start requested
+[  ok  ] L485  answer-dialog click=new 120 Album already ripped   (0.1s)
+           clicked 'Rip to a new folder' on 'Album already ripped' (matched 'Album already ripped')
+[  ok  ] L486  wait-for-rip 3600   (333.6s)
+[  ok  ] L487  snapshot afteroverwrite
+           snapshot 'afteroverwrite':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: verified — all 2 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L488  screenshot afteroverwrite
+           examined 21 window(s); wrote 21 PNG(s)
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/afteroverwrite.png
+[  ok  ] L489  expect-rip-complete
+           the ripper's own log records the rip as complete — 2 track(s) in the log; convergence not measured (no secure re-read in this rip)
+[  ok  ] L507  log --- I. cancel a rip in flight ---
+           --- I. cancel a rip in flight ---
+[  ok  ] L508  select-tracks 1-3
+           selected 3 track(s): [1, 2, 3]
+[  ok  ] L509  album cancel me (run) (ripper)
+           album title set to 'cancel me 20260907t030712 platterpus-fork-g978f9b0'
+[  ok  ] L510  rip
+           start requested
+[  ok  ] L511  log reading for 90s so the cancel lands mid-track
+           reading for 90s so the cancel lands mid-track
+[  ok  ] L512  wait 90   (90.1s)
+[  ok  ] L513  snapshot beforecancel
+           snapshot 'beforecancel':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: verified — all 2 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L514  cancel-rip
+           cancel requested
+[  ok  ] L515  log cancel issued; giving the escalation its full window
+           cancel issued; giving the escalation its full window
+[  ok  ] L516  wait 30   (30.1s)
+[  ok  ] L518  expect-status cancelled
+           status line contains 'cancelled'
+[ FAIL ] L529  expect-log-well-formed
+           the log carries NO completion footer, so whether the ripper signed off is NOT DETERMINED — which is never a pass, and is the exact loss this section exists to detect; the log carries NO `Log FUN512:` signature — cyanrip writes it from `atexit`, so an unattested log means the process never ran its normal shutdown. The record cannot be verified; the log carries no track blocks at all [footer says not determined; 0 track block(s); signature ABSENT]
+[  ok  ] L530  snapshot aftercancel
+           snapshot 'aftercancel':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L531  screenshot aftercancel
+           examined 21 window(s); wrote 21 PNG(s)
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/aftercancel.png
+[ FAIL ] L532  rig-check   (0.6s)
+           exit: 1
+           manifest under /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check
+           INFO  album/discovery  newest rip found: /var/home/rmccann/Music/rips/Platterpus Acceptance/cancel me 20260907t030712 platterpus-fork-g978f9b0
+           INFO  platterpus/version  0.6.40 (build 1654bdd)
+           INFO  ripper/version  cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)  [ripper-version.txt]
+           OK    ripper/handshake  approved — ripper build platterpus-fork-g978f9b0 is the one handshake round 15 approved, verified by both projects, for Platterpus 0.6.37
+           INFO  ripper/pin  this Platterpus pins 978f9b0; the installed banner is above. A test pin is expected to differ during an open round.
+           FAIL  argv/record  cyanrip wrote no -j diagnostics record, so what it received cannot be read back — the check could not be performed  [argv-probe-output.txt]
+           INFO  handshake/note  closed: Handshake:      round 14 lap 19 closed, verdict GO -- released build
+           INFO  parser/paranoia  this log carries no paranoia counters at all — not a finding on its own (a clean read of a clean disc reports none), but it means the per-track/disc relationship is untested by this rip
+           INFO  parser/interrupted  no 'Interrupted at:' line in this log (rip_completed=None) — expected for a rip that ran to the end; only a cancelled or killed rip produces one
+           SKIP  parser/log  cancel me 20260907t030712 platterpus-fork-g978f9b0.log parsed to zero tracks, and this rip's own report says it was CANCELLED — the ripper was stopped before any track record was written, so there is nothing for the parser to find and this log is not a subject for the check. Rip a disc to completion to exercise it.
+           SKIP  device  no --device given
+           manifest: /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check/MANIFEST.txt
+[  ok  ] L533  snapshot aftercancelrigcheck
+           snapshot 'aftercancelrigcheck':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L546  log --- J. drive-open proof: identify and rip again after the cancel ---
+           --- J. drive-open proof: identify and rip again after the cancel ---
+[  ok  ] L547  rescan
+           rescanning /dev/sr0
+[  ok  ] L548  pick-release 1 120   (14.7s)
+           chose 65282302-368b-4ba2-953a-483bcdef2410 (Every Breath You Take: The Classics) — row 1 of 4; 14 track(s) loaded
+[  ok  ] L549  expect-tracks 2+
+           14 track rows (at least 2)
+[  ok  ] L550  select-tracks 1-2
+           selected 2 track(s): [1, 2]
+[  ok  ] L551  album after cancel (run) (ripper)
+           album title set to 'after cancel 20260907t030712 platterpus-fork-g978f9b0'
+[  ok  ] L552  rip
+           start requested
+[  ok  ] L553  wait-for-rip 3600   (636.7s)
+[  ok  ] L554  snapshot afterrecovery
+           snapshot 'afterrecovery':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: verified — all 2 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L555  screenshot afterrecovery
+           examined 22 window(s); wrote 22 PNG(s)
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/afterrecovery.png
+[  ok  ] L556  expect-rip-complete
+           the ripper's own log records the rip as complete — 2 track(s) in the log; convergence not measured (no secure re-read in this rip)
+[ FAIL ] L557  rig-check   (0.6s)
+           exit: 1
+           manifest under /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check
+           INFO  album/discovery  newest rip found: /var/home/rmccann/Music/rips/The Police/after cancel 20260907t030712 platterpus-fork-g978f9b0
+           INFO  platterpus/version  0.6.40 (build 1654bdd)
+           INFO  ripper/version  cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)  [ripper-version.txt]
+           OK    ripper/handshake  approved — ripper build platterpus-fork-g978f9b0 is the one handshake round 15 approved, verified by both projects, for Platterpus 0.6.37
+           INFO  ripper/pin  this Platterpus pins 978f9b0; the installed banner is above. A test pin is expected to differ during an open round.
+           FAIL  argv/record  cyanrip wrote no -j diagnostics record, so what it received cannot be read back — the check could not be performed  [argv-probe-output.txt]
+           INFO  handshake/note  closed: Handshake:      round 14 lap 19 closed, verdict GO -- released build
+           INFO  parser/paranoia  per-track counters sum to 2550; the disc block totals 2550. Scope: line present on 0 of 2 track(s) — secure re-read genuinely exercised: no
+           INFO  parser/interrupted  no 'Interrupted at:' line in this log (rip_completed=True) — expected for a rip that ran to the end; only a cancelled or killed rip produces one
+           OK    parser/log  parsed 2 track(s) from after cancel 20260907t030712 platterpus-fork-g978f9b0.log
+           INFO  parser/cache-probe  no Cache probe: line in this log, and there never will be one — `-x` is not in the rip argv builder at all, so no Platterpus rip probes the cache. The probe is a separate `cyanrip -N -x -I` invocation (round 14 T3), whose exact argv, exit code and complete output are recorded in the SCRIPT REPORT and transcript, not here. Look there, not for an absence in this manifest.
+           SKIP  device  no --device given
+           manifest: /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check/MANIFEST.txt
+[  ok  ] L581  log --- K1. MP3: the lossy derived output, with a real VBR quality ---
+           --- K1. MP3: the lossy derived output, with a real VBR quality ---
+[  ok  ] L582  set output_format mp3
+           output_format = 'mp3'
+[  ok  ] L583  expect output_format mp3
+           output_format is 'mp3'
+[  ok  ] L584  set mp3_vbr_quality 2
+           mp3_vbr_quality = 2
+[  ok  ] L585  expect mp3_vbr_quality 2
+           mp3_vbr_quality is 2
+[  ok  ] L586  select-tracks 1-2
+           selected 2 track(s): [1, 2]
+[  ok  ] L587  album derived mp3 (run) (ripper)
+           album title set to 'derived mp3 20260907t030712 platterpus-fork-g978f9b0'
+[  ok  ] L588  rip
+           start requested
+[  ok  ] L589  wait-for-rip 3600   (458.9s)
+[  ok  ] L590  snapshot aftermp3
+           snapshot 'aftermp3':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: verified — all 2 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L591  screenshot aftermp3
+           examined 22 window(s); wrote 22 PNG(s)
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/aftermp3.png
+[  ok  ] L592  expect-rip-complete
+           the ripper's own log records the rip as complete — 2 track(s) in the log; convergence not measured (no secure re-read in this rip)
+[ FAIL ] L593  rig-check   (0.6s)
+           exit: 1
+           manifest under /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check
+           INFO  album/discovery  newest rip found: /var/home/rmccann/Music/rips/The Police/derived mp3 20260907t030712 platterpus-fork-g978f9b0
+           INFO  platterpus/version  0.6.40 (build 1654bdd)
+           INFO  ripper/version  cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)  [ripper-version.txt]
+           OK    ripper/handshake  approved — ripper build platterpus-fork-g978f9b0 is the one handshake round 15 approved, verified by both projects, for Platterpus 0.6.37
+           INFO  ripper/pin  this Platterpus pins 978f9b0; the installed banner is above. A test pin is expected to differ during an open round.
+           FAIL  argv/record  cyanrip wrote no -j diagnostics record, so what it received cannot be read back — the check could not be performed  [argv-probe-output.txt]
+           INFO  handshake/note  closed: Handshake:      round 14 lap 19 closed, verdict GO -- released build
+           INFO  parser/paranoia  per-track counters sum to 2550; the disc block totals 2550. Scope: line present on 0 of 2 track(s) — secure re-read genuinely exercised: no
+           INFO  parser/interrupted  no 'Interrupted at:' line in this log (rip_completed=True) — expected for a rip that ran to the end; only a cancelled or killed rip produces one
+           OK    parser/log  parsed 2 track(s) from derived mp3 20260907t030712 platterpus-fork-g978f9b0.log
+           INFO  parser/cache-probe  no Cache probe: line in this log, and there never will be one — `-x` is not in the rip argv builder at all, so no Platterpus rip probes the cache. The probe is a separate `cyanrip -N -x -I` invocation (round 14 T3), whose exact argv, exit code and complete output are recorded in the SCRIPT REPORT and transcript, not here. Look there, not for an absence in this manifest.
+           SKIP  device  no --device given
+           manifest: /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check/MANIFEST.txt
+[  ok  ] L595  log --- K2. WavPack: the second lossless format ---
+           --- K2. WavPack: the second lossless format ---
+[  ok  ] L596  set output_format wavpack
+           output_format = 'wavpack'
+[  ok  ] L597  expect output_format wavpack
+           output_format is 'wavpack'
+[  ok  ] L598  select-tracks 1-2
+           selected 2 track(s): [1, 2]
+[  ok  ] L599  album derived wavpack (run) (ripper)
+           album title set to 'derived wavpack 20260907t030712 platterpus-fork-g978f9b0'
+[  ok  ] L600  rip
+           start requested
+[  ok  ] L601  wait-for-rip 3600   (333.2s)
+[  ok  ] L602  snapshot afterwavpack
+           snapshot 'afterwavpack':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: verified — all 2 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L603  expect-rip-complete
+           the ripper's own log records the rip as complete — 2 track(s) in the log; convergence not measured (no secure re-read in this rip)
+[ FAIL ] L604  rig-check   (0.6s)
+           exit: 1
+           manifest under /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check
+           INFO  album/discovery  newest rip found: /var/home/rmccann/Music/rips/The Police/derived wavpack 20260907t030712 platterpus-fork-g978f9b0
+           INFO  platterpus/version  0.6.40 (build 1654bdd)
+           INFO  ripper/version  cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)  [ripper-version.txt]
+           OK    ripper/handshake  approved — ripper build platterpus-fork-g978f9b0 is the one handshake round 15 approved, verified by both projects, for Platterpus 0.6.37
+           INFO  ripper/pin  this Platterpus pins 978f9b0; the installed banner is above. A test pin is expected to differ during an open round.
+           FAIL  argv/record  cyanrip wrote no -j diagnostics record, so what it received cannot be read back — the check could not be performed  [argv-probe-output.txt]
+           INFO  handshake/note  closed: Handshake:      round 14 lap 19 closed, verdict GO -- released build
+           INFO  parser/paranoia  per-track counters sum to 2550; the disc block totals 2550. Scope: line present on 0 of 2 track(s) — secure re-read genuinely exercised: no
+           INFO  parser/interrupted  no 'Interrupted at:' line in this log (rip_completed=True) — expected for a rip that ran to the end; only a cancelled or killed rip produces one
+           OK    parser/log  parsed 2 track(s) from derived wavpack 20260907t030712 platterpus-fork-g978f9b0.log
+           INFO  parser/cache-probe  no Cache probe: line in this log, and there never will be one — `-x` is not in the rip argv builder at all, so no Platterpus rip probes the cache. The probe is a separate `cyanrip -N -x -I` invocation (round 14 T3), whose exact argv, exit code and complete output are recorded in the SCRIPT REPORT and transcript, not here. Look there, not for an absence in this manifest.
+           SKIP  device  no --device given
+           manifest: /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check/MANIFEST.txt
+[  ok  ] L606  log --- K3. WAV: raw PCM, no tags, no art - the UI must say so ---
+           --- K3. WAV: raw PCM, no tags, no art - the UI must say so ---
+[  ok  ] L607  set output_format wav
+           output_format = 'wav'
+[  ok  ] L608  expect output_format wav
+           output_format is 'wav'
+[  ok  ] L609  select-tracks 1-2
+           selected 2 track(s): [1, 2]
+[  ok  ] L610  album derived wav (run) (ripper)
+           album title set to 'derived wav 20260907t030712 platterpus-fork-g978f9b0'
+[  ok  ] L611  rip
+           start requested
+[  ok  ] L612  wait-for-rip 3600   (332.9s)
+[  ok  ] L613  snapshot afterwav
+           snapshot 'afterwav':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: verified — all 2 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L614  screenshot afterwav
+           examined 22 window(s); wrote 22 PNG(s)
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/afterwav.png
+[  ok  ] L615  expect-rip-complete
+           the ripper's own log records the rip as complete — 2 track(s) in the log; convergence not measured (no secure re-read in this rip)
+[ FAIL ] L616  rig-check   (0.6s)
+           exit: 1
+           manifest under /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check
+           INFO  album/discovery  newest rip found: /var/home/rmccann/Music/rips/The Police/derived wav 20260907t030712 platterpus-fork-g978f9b0
+           INFO  platterpus/version  0.6.40 (build 1654bdd)
+           INFO  ripper/version  cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)  [ripper-version.txt]
+           OK    ripper/handshake  approved — ripper build platterpus-fork-g978f9b0 is the one handshake round 15 approved, verified by both projects, for Platterpus 0.6.37
+           INFO  ripper/pin  this Platterpus pins 978f9b0; the installed banner is above. A test pin is expected to differ during an open round.
+           FAIL  argv/record  cyanrip wrote no -j diagnostics record, so what it received cannot be read back — the check could not be performed  [argv-probe-output.txt]
+           INFO  handshake/note  closed: Handshake:      round 14 lap 19 closed, verdict GO -- released build
+           INFO  parser/paranoia  per-track counters sum to 2550; the disc block totals 2550. Scope: line present on 0 of 2 track(s) — secure re-read genuinely exercised: no
+           INFO  parser/interrupted  no 'Interrupted at:' line in this log (rip_completed=True) — expected for a rip that ran to the end; only a cancelled or killed rip produces one
+           OK    parser/log  parsed 2 track(s) from derived wav 20260907t030712 platterpus-fork-g978f9b0.log
+           INFO  parser/cache-probe  no Cache probe: line in this log, and there never will be one — `-x` is not in the rip argv builder at all, so no Platterpus rip probes the cache. The probe is a separate `cyanrip -N -x -I` invocation (round 14 T3), whose exact argv, exit code and complete output are recorded in the SCRIPT REPORT and transcript, not here. Look there, not for an absence in this manifest.
+           SKIP  device  no --device given
+           manifest: /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check/MANIFEST.txt
+[  ok  ] L618  log --- K4. back to FLAC, the archival master ---
+           --- K4. back to FLAC, the archival master ---
+[  ok  ] L619  set output_format flac
+           output_format = 'flac'
+[  ok  ] L620  expect output_format flac
+           output_format is 'flac'
+[  ok  ] L632  log --- L. goal presets: selecting a goal applies all of it ---
+           --- L. goal presets: selecting a goal applies all of it ---
+[  ok  ] L633  set rip_goal archival
+           rip_goal = 'archival'
+[  ok  ] L634  expect rip_goal archival
+           rip_goal is 'archival'
+[  ok  ] L635  expect secure_rerip_dynamic off
+           secure_rerip_dynamic is False
+[  ok  ] L636  expect rerip_offset_variant on
+           rerip_offset_variant is True
+[  ok  ] L637  set rip_goal portable
+           rip_goal = 'portable'
+[  ok  ] L638  expect rip_goal portable
+           rip_goal is 'portable'
+[  ok  ] L639  expect output_format mp3
+           output_format is 'mp3'
+[  ok  ] L640  set rip_goal fast_verified
+           rip_goal = 'fast_verified'
+[  ok  ] L641  expect rip_goal fast_verified
+           rip_goal is 'fast_verified'
+[  ok  ] L642  expect secure_rerip_dynamic on
+           secure_rerip_dynamic is True
+[  ok  ] L643  expect output_format flac
+           output_format is 'flac'
+[  ok  ] L644  snapshot goalsdone
+           snapshot 'goalsdone':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: verified — all 2 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L651  log --- M. naming templates round-trip through the validator ---
+           --- M. naming templates round-trip through the validator ---
+[  ok  ] L652  set track_template %A/%d/%t - %n
+           track_template = '%A/%d/%t - %n'
+[  ok  ] L653  expect track_template %A/%d/%t - %n
+           track_template is '%A/%d/%t - %n'
+[  ok  ] L654  set disc_template %A/%d/%d
+           disc_template = '%A/%d/%d'
+[  ok  ] L655  expect disc_template %A/%d/%d
+           disc_template is '%A/%d/%d'
+[  ok  ] L656  snapshot templatesdone
+           snapshot 'templatesdone':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: verified — all 2 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L694  log --- N. T1: uniform secure re-read, WHOLE DISC, so the counters actually move ---
+           --- N. T1: uniform secure re-read, WHOLE DISC, so the counters actually move ---
+[  ok  ] L695  set rip_goal archival
+           rip_goal = 'archival'
+[  ok  ] L696  expect secure_rerip_dynamic off
+           secure_rerip_dynamic is False
+[  ok  ] L697  expect rerip_offset_variant on
+           rerip_offset_variant is True
+[  ok  ] L698  set secure_rerip_matches 2
+           secure_rerip_matches = 2
+[  ok  ] L699  expect secure_rerip_matches 2
+           secure_rerip_matches is 2
+[  ok  ] L700  rescan
+           rescanning /dev/sr0
+[  ok  ] L701  pick-release 1 120   (18.1s)
+           chose 65282302-368b-4ba2-953a-483bcdef2410 (Every Breath You Take: The Classics) — row 1 of 4; 14 track(s) loaded
+[  ok  ] L702  expect-tracks 2+
+           14 track rows (at least 2)
+[  ok  ] L703  select-tracks all
+           all 14 tracks selected
+[  ok  ] L704  album secure reread (run) (ripper)
+           album title set to 'secure reread 20260907t030712 platterpus-fork-g978f9b0'
+[  ok  ] L705  rip
+           start requested
+[  ok  ] L706  wait-for-rip 21600   (10353.3s)
+[  ok  ] L707  snapshot aftersecurereread
+           snapshot 'aftersecurereread':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: 12 of 14 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L708  screenshot aftersecurereread
+           examined 23 window(s); wrote 23 PNG(s)
+             MainWindow 'Platterpus 0.6.40' visible=True platform_window=yes exposed=True modal=False geom=2380,74 1000x888 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,328 900x380 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 120x26 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             ScriptConsoleDialog 'Run test script' visible=True platform_window=yes exposed=True modal=False geom=2500,170 760x668 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2467,125 235x158 on_a_screen=True
+             QMenu '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 242x54 on_a_screen=False
+             ReleasePickerDialog 'Pick a MusicBrainz release' visible=False platform_window=yes exposed=False modal=True geom=2430,300 900x408 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             QMenu '' visible=False platform_window=yes exposed=False modal=False geom=2421,125 264x236 on_a_screen=True
+             QFrame '' visible=False platform_window=NO (never shown) exposed=n/a modal=False geom=0,0 2x2 on_a_screen=False
+             SettingsDialog 'Settings' visible=False platform_window=yes exposed=False modal=True geom=2494,0 772x1036 on_a_screen=True
+           -> /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/aftersecurereread.png
+[  ok  ] L717  expect-rip-complete
+           the ripper's own log records the rip as complete — 14 track(s) in the log; read stability: track(s) 3, 5 did NOT converge — a property of the disc, reported here and deliberately not graded by this step
+[  ok  ] L726  expect-secure-rerip
+           Scope: line present on 14 of 14 track(s); track(s) 3, 5 did not converge — a property of the DISC, reported and not graded here
+[ FAIL ] L727  rig-check   (0.6s)
+           exit: 1
+           manifest under /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check
+           INFO  album/discovery  newest rip found: /var/home/rmccann/Music/rips/The Police/secure reread 20260907t030712 platterpus-fork-g978f9b0
+           INFO  platterpus/version  0.6.40 (build 1654bdd)
+           INFO  ripper/version  cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)  [ripper-version.txt]
+           OK    ripper/handshake  approved — ripper build platterpus-fork-g978f9b0 is the one handshake round 15 approved, verified by both projects, for Platterpus 0.6.37
+           INFO  ripper/pin  this Platterpus pins 978f9b0; the installed banner is above. A test pin is expected to differ during an open round.
+           FAIL  argv/record  cyanrip wrote no -j diagnostics record, so what it received cannot be read back — the check could not be performed  [argv-probe-output.txt]
+           INFO  handshake/note  closed: Handshake:      round 14 lap 19 closed, verdict GO -- released build
+           INFO  parser/paranoia  per-track counters sum to 26596; the disc block totals 76217. Scope: line present on 14 of 14 track(s) — secure re-read genuinely exercised: YES
+           INFO  parser/interrupted  no 'Interrupted at:' line in this log (rip_completed=True) — expected for a rip that ran to the end; only a cancelled or killed rip produces one
+           OK    parser/log  parsed 14 track(s) from secure reread 20260907t030712 platterpus-fork-g978f9b0.log
+           INFO  parser/cache-probe  no Cache probe: line in this log, and there never will be one — `-x` is not in the rip argv builder at all, so no Platterpus rip probes the cache. The probe is a separate `cyanrip -N -x -I` invocation (round 14 T3), whose exact argv, exit code and complete output are recorded in the SCRIPT REPORT and transcript, not here. Look there, not for an absence in this manifest.
+           SKIP  device  no --device given
+           manifest: /home/rmccann/.local/share/platterpus/uiscript/20260907T030712+0000/rig-check/MANIFEST.txt
+[  ok  ] L772  log --- P. T3: the fork's cache probe, probe-only ---
+           --- P. T3: the fork's cache probe, probe-only ---
+[  ok  ] L773  cyanrip -N -x -I   (9.9s)
+           argv: /home/rmccann/.local/bin/cyanrip -N -x -I
+           exit: 0
+           Checking /dev/cdrom for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           MusicBrainz URL:
+           https://musicbrainz.org/cdtoc/attach?toc=1+14+268857+150+14637+28217+50070+72720+90792+109325+128907+145812+159387+178482+201012+224660+246677&tracks=14&id=pNtImOkdBm9RMBIalzx0w9cfsYY-
+           No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!
+           Log(s) will be written to:
+               Unknown disc (PNTI) [FLAC]/Unknown disc (PNTI).log
+           CUE files will be written to:
+               Unknown disc (PNTI) [FLAC]/Unknown disc (PNTI).cue
+           cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
+           Invoked as:     /usr/local/bin/cyanrip -N -x -I
+           Handshake:      round 14 lap 19 closed, verdict GO -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       not identified (no --consumer given)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/cdrom
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +0 samples
+           Overread:       +0 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (unchangeable)
+           C2 errors:      unsupported by drive
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Frame retries:  10
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  all
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip:    found
+           Total time:     59:42.57
+           
+           Cache probe:    at least 2048 sectors, upper bound unknown (4704.0 KiB or more, search ceiling reached, uncached read 245.3 ms, cached read 42.4 ms)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               94 frame pregap in track 9, merging into track 8
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Tracks:
+           Track 1 info:
+             Preemphasis:   none detected
+           
+             Properties:
+               Duration:    03:13.12
+               Samples:     8518356
+               Frames:      14487
+               Pregap LSN:  0 (duration: 00:02.00)
+               Pregap length: 150 frames
+               Pregap source: lead-in
+               Start LSN:   0
+               End LSN:     14486
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+           
+             Metadata:
+               track:              1
+               tracktotal:         14
+               musicbrainz_discid: pNtImOkdBm9RMBIalzx0w9cfsYY-
+               cddb:               E20DFE0E
+               media:              CD
+               comment:            cyanrip 0.9.4-rc2+platterpus.11
+               album:              Unknown disc (PNTI)
+               title:              Unknown track
+           
+             Paranoia status counts:
+               none
+           
+             File(s):
+               Unknown disc (PNTI) [FLAC]/01 - Unknown track.flac
+           
+           Track 2 info:
+             Preemphasis:   none detected
+           
+             Properties:
+               Duration:    03:01.05
+               Samples:     7985040
+               Frames:      13580
+               Pregap LSN:  14327 (duration: 00:02.10)
+               Pregap length: 160 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Start LSN:   14487
+               End LSN:     28066
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+           
+             Metadata:
+               track:              2
+               tracktotal:         14
+               musicbrainz_discid: pNtImOkdBm9RMBIalzx0w9cfsYY-
+               cddb:               E20DFE0E
+               media:              CD
+               comment:            cyanrip 0.9.4-rc2+platterpus.11
+               album:              Unknown disc (PNTI)
+               title:              Unknown track
+           
+             Paranoia status counts:
+               none
+           
+             File(s):
+               Unknown disc (PNTI) [FLAC]/02 - Unknown track.flac
+           
+           Track 3 info:
+             Preemphasis:  
+           … [5892 characters omitted] …
+           p LSN:  159090 (duration: 00:01.72)
+               Pregap length: 147 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Start LSN:   159237
+               End LSN:     178331
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+           
+             Metadata:
+               track:              10
+               tracktotal:         14
+               musicbrainz_discid: pNtImOkdBm9RMBIalzx0w9cfsYY-
+               cddb:               E20DFE0E
+               media:              CD
+               comment:            cyanrip 0.9.4-rc2+platterpus.11
+               album:              Unknown disc (PNTI)
+               title:              Unknown track
+           
+             Paranoia status counts:
+               none
+           
+             File(s):
+               Unknown disc (PNTI) [FLAC]/10 - Unknown track.flac
+           
+           Track 11 info:
+             Preemphasis:   none detected
+           
+             Properties:
+               Duration:    05:00.30
+               Samples:     13247640
+               Frames:      22530
+               Pregap LSN:  178332 (duration: 00:00.00)
+               Pregap length: 0 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Start LSN:   178332
+               End LSN:     200861
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+           
+             Metadata:
+               track:              11
+               tracktotal:         14
+               musicbrainz_discid: pNtImOkdBm9RMBIalzx0w9cfsYY-
+               cddb:               E20DFE0E
+               media:              CD
+               comment:            cyanrip 0.9.4-rc2+platterpus.11
+               album:              Unknown disc (PNTI)
+               title:              Unknown track
+           
+             Paranoia status counts:
+               none
+           
+             File(s):
+               Unknown disc (PNTI) [FLAC]/11 - Unknown track.flac
+           
+           Track 12 info:
+             Preemphasis:   none detected
+           
+             Properties:
+               Duration:    05:15.23
+               Samples:     13905024
+               Frames:      23648
+               Pregap LSN:  200862 (duration: 00:00.00)
+               Pregap length: 0 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Start LSN:   200862
+               End LSN:     224509
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+           
+             Metadata:
+               track:              12
+               tracktotal:         14
+               musicbrainz_discid: pNtImOkdBm9RMBIalzx0w9cfsYY-
+               cddb:               E20DFE0E
+               media:              CD
+               comment:            cyanrip 0.9.4-rc2+platterpus.11
+               album:              Unknown disc (PNTI)
+               title:              Unknown track
+           
+             Paranoia status counts:
+               none
+           
+             File(s):
+               Unknown disc (PNTI) [FLAC]/12 - Unknown track.flac
+           
+           Track 13 info:
+             Preemphasis:   none detected
+           
+             Properties:
+               Duration:    04:53.42
+               Samples:     12945996
+               Frames:      22017
+               Pregap LSN:  224420 (duration: 00:01.15)
+               Pregap length: 90 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Start LSN:   224510
+               End LSN:     246526
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+           
+             Metadata:
+               track:              13
+               tracktotal:         14
+               musicbrainz_discid: pNtImOkdBm9RMBIalzx0w9cfsYY-
+               cddb:               E20DFE0E
+               media:              CD
+               comment:            cyanrip 0.9.4-rc2+platterpus.11
+               album:              Unknown disc (PNTI)
+               title:              Unknown track
+           
+             Paranoia status counts:
+               none
+           
+             File(s):
+               Unknown disc (PNTI) [FLAC]/13 - Unknown track.flac
+           
+           Track 14 info:
+             Preemphasis:   none detected
+           
+             Properties:
+               Duration:    04:55.55
+               Samples:     13041840
+               Frames:      22180
+               Pregap LSN:  246410 (duration: 00:01.42)
+               Pregap length: 117 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Start LSN:   246527
+               End LSN:     268706
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+           
+             Metadata:
+               track:              14
+               tracktotal:         14
+               musicbrainz_discid: pNtImOkdBm9RMBIalzx0w9cfsYY-
+               cddb:               E20DFE0E
+               media:              CD
+               comment:            cyanrip 0.9.4-rc2+platterpus.11
+               album:              Unknown disc (PNTI)
+               title:              Unknown track
+           
+             Paranoia status counts:
+               none
+           
+             File(s):
+               Unknown disc (PNTI) [FLAC]/14 - Unknown track.flac
+           
+[  ok  ] L774  expect-exit 0
+           exit was 0
+[  ok  ] L775  expect-cyanrip Cache probe
+           found 'Cache probe'
+[  ok  ] L776  snapshot aftercacheprobe
+           snapshot 'aftercacheprobe':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: 12 of 14 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L820  log --- P2. C1: does a no-offset refusal hang the drive? ---
+           --- P2. C1: does a no-offset refusal hang the drive? ---
+[  ok  ] L821  cyanrip -N -l 1   (4.9s)
+           argv: /home/rmccann/.local/bin/cyanrip -N -l 1
+           exit: 1
+           Checking /dev/cdrom for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           Offset is unset! To continue with an offset of 0, run with -s 0!
+           Paranoia status counts:
+             none
+           
+           Ripping errors: 0
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  no (aborted, 0 of 14 tracks)
+           Ripping finished at 2026-09-07T03:28:21
+[  ok  ] L822  expect-exit 1
+           exit was 1
+[  ok  ] L823  expect-cyanrip Offset is unset
+           found 'Offset is unset'
+[  ok  ] L824  snapshot afterc1
+           snapshot 'afterc1':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: 12 of 14 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L839  log --- Q. restoring what this run changed ---
+           --- Q. restoring what this run changed ---
+[  ok  ] L840  set rip_goal fast_verified
+           rip_goal = 'fast_verified'
+[  ok  ] L841  expect rip_goal fast_verified
+           rip_goal is 'fast_verified'
+[  ok  ] L842  expect secure_rerip_dynamic on
+           secure_rerip_dynamic is True
+[  ok  ] L843  set output_format flac
+           output_format = 'flac'
+[  ok  ] L844  expect output_format flac
+           output_format is 'flac'
+[  ok  ] L845  set mp3_vbr_quality 0
+           mp3_vbr_quality = 0
+[  ok  ] L846  set write_eac_log_after_rip off
+           write_eac_log_after_rip = False
+[  ok  ] L847  set debug_logging off
+           debug_logging = False
+[  ok  ] L848  expect debug_logging off
+           debug_logging is False
+[  ok  ] L849  expect force_overread off
+           force_overread is False
+[  ok  ] L850  expect read_offset 667
+           read_offset is 667
+[  ok  ] L851  expect-dialog none
+           no dialog, as expected
+[  ok  ] L852  snapshot atend
+           snapshot 'atend':
+             dialog on top: (none)
+             window title : Platterpus 0.6.40
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: 12 of 14 tracks matched
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L854  log =============================================================
+           =============================================================
+[  ok  ] L855  log DONE. There is nothing left for you to run.
+           DONE. There is nothing left for you to run.
+[  ok  ] L856  log Platterpus packs this run into ONE .tar.gz and names it in a
+           Platterpus packs this run into ONE .tar.gz and names it in a
+[  ok  ] L857  log dialog when the window comes back - with a button that opens
+           dialog when the window comes back - with a button that opens
+[  ok  ] L858  log the folder. Send that file. It carries the transcript, the app
+           the folder. Send that file. It carries the transcript, the app
+[  ok  ] L859  log log, the settings, the screenshots and every rip folder's text
+           log, the settings, the screenshots and every rip folder's text
+[  ok  ] L860  log artifacts (logs, cue sheets, reports, checksums). No audio.
+           artifacts (logs, cue sheets, reports, checksums). No audio.
+[  ok  ] L861  log If the dialog is gone, the same path is on the SEND THIS ONE FILE
+           If the dialog is gone, the same path is on the SEND THIS ONE FILE
+[  ok  ] L862  log line in the app log.
+           line in the app log.
+[  ok  ] L863  log =============================================================
+           =============================================================
+================================================================
+pass=222  fail=8  error=0  skipped=0  blocked=0  info=1
+RESULT: see failures above
+================================================================
