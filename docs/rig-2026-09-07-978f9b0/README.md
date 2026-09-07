@@ -102,19 +102,35 @@ of ours: `main()`'s pre-pass took the **first** `-j` and `break`ed while genopt
 takes the **last**, so which file received the record depended on when the
 process died. Fixed at `12f2081` with `sc_diag_repeated_flag`.
 
-## Finding 3 -- `-Z` did NOT converge on two tracks
+## Finding 3 -- `-Z` non-convergence is NOT deterministic
 
-`rips/secure-reread.log`, `-Z 2 -r 3`: **12 of 14 tracks converged after 3
-reads; tracks 3 and 5 report `Secure re-read:  did NOT converge after 3 reads
-(repeat limit hit)`.**
+`rips/secure-reread.log`, `-Z 2 -r 3`: 12 of 14 tracks converged after 3 reads;
+**tracks 3 and 5** report `Secure re-read:  did NOT converge after 3 reads
+(repeat limit hit)`.
 
-The 2026-08-26 session had all 14 converge, so this is the first hardware
-evidence of the non-convergence arm, and it is the arm a consumer has to handle.
-`Ripping errors: 0` on all eight rips, and `AccurateRip: found` with
-`Tracks ripped accurately: 12/14` -- the same two tracks.
+**This is not the first hardware evidence of that arm and the first draft of
+this file said it was.** `docs/SETTLED.md` already carries it from
+`docs/rig-2026-09-03-978f9b0`, four days earlier. Re-deriving a settled fact and
+getting it wrong is exactly what that index exists to stop, and it was caught by
+reading the index rather than by anything in the artifacts.
 
-The `Scope:` caveat is present on all 14 track blocks, which is what a multi-pass
-rip must carry.
+What IS new is the comparison, and it is more useful than the claim it replaces.
+**Same disc, same build `978f9b0`, same `-Z 2 -r 3`, four days apart:**
+
+| session | tracks that hit the repeat limit |
+|---|---|
+| `rig-2026-09-03-978f9b0` | 3, **4**, 5 |
+| `rig-2026-09-07-978f9b0` | 3, 5 |
+
+Track 4 did not converge on one run and did on the other, with nothing changed.
+**Non-convergence is a property of the read, not of the track** -- so a consumer
+must not treat a track's convergence as a stable attribute of the disc, and two
+rips of one disc legitimately disagree about which tracks converged.
+
+`Ripping errors: 0` on all eight rips; `AccurateRip: found`,
+`Tracks ripped accurately: 12/14` -- the same two tracks as the non-converged
+ones this time. The `Scope:` caveat is present on all 14 track blocks, which is
+what a multi-pass rip must carry.
 
 ## What this session does NOT establish
 
