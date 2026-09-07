@@ -264,6 +264,17 @@ test('Argv surface probe', python,
 ## anything we had.
 test('Sent laps are immutable', python, args: [ files('sent_laps.py') ])
 
+## tools/round16-accept.py grades a rig run against round 16's close condition,
+## and it was written BEFORE the run so its git history proves the criteria were
+## not adjusted to fit the data. S-13 fixes close conditions at lap 1; a checker
+## written afterwards is how one quietly moves.
+##
+## This is the list of ways it could wrongly say a run passed. Every fixture is
+## built -- there is no drive here -- so each check is PROVED able to fire
+## rather than assumed to be. It also asserts the accepted build ids match
+## rig-round16.sh's preflight, because that is one fact described in two files.
+test('Round 16 acceptance checker', python, args: [ files('round16_accept.py') ])
+
 test('Handshake wire conformance', python,
      args: [ files('handshake_wire.py'), meson.project_source_root() ])
 
