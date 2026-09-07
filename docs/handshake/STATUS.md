@@ -17,7 +17,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-07. **ROUND 16 IS OPEN on `a9aedf0`, and lap 2 proposes a TEST PIN so a rig session can happen now.**
+## Rewritten 2026-09-07. **ROUND 16 IS OPEN on `a9aedf0`. The TEST PIN `ddc1e8c` IS AGREED by both sides, and the rig can run.**
 
 **A release is blocked and should be.** `tools/release-gate.py --release-gate`
 exits **1** on this tree and names round 16 as open. That is not being
@@ -27,7 +27,23 @@ still resolve to `978f9b0`.
 **What unblocks a hardware session instead is a TEST PIN**, which
 `PROTOCOL.md` §6a defines precisely so a round is not deadlocked between
 "a close needs hardware evidence" and "the pin may not move while the round is
-open". Our lap 2 declares **`HANDSHAKE-TEST-PIN: ddc1e8c`** and asks Platterpus
+open". Our lap 2 declared **`HANDSHAKE-TEST-PIN: ddc1e8c`**; **their lap 3 agreed it
+verbatim** and carries an S-18 pre-commit — *their next lap is `GO` on
+`a9aedf0` + `platterpus 0.6.41` unless the hardware run finds the reviewed pin
+unsafe.* So the round now needs a RUN, not another lap, and both sides have
+said so.
+
+**Run A is ours and is the one that closes the round.** It drives
+`tools/rig-round16.sh` directly against the installed test pin and needs no
+Platterpus process at all. **The script at the branch tip is NOT the one they
+reviewed**: they hashed `ddc1e8c`'s copy at sha256/16 `615243361882b881`, and
+the tip is `178bd4df5dc28d53` — three defects they found in §H1 are fixed in
+it (a build check that fired on a correct install, a preflight that said
+"Stop." and did not, and `-u` reaching one rip of five). Run A fetches the tip
+by design; that is the split their §0 proposes, newest harness against the
+pinned binary.
+
+Our lap 2 asks Platterpus
 to declare the same one, or name another.
 
 **The test pin is the same program as the production pin**, and that is
