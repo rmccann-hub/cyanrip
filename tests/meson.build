@@ -404,6 +404,17 @@ rip_scenarios = [
     'filters',
     'deemph_with_hdcd',
     'golden_reference_matches_a_fresh_rip',
+## THE SUITE NEVER CHECKED THE AUDIO AGAINST THE LOG THAT DESCRIBES IT.
+## tools/audio-checksums.py reimplements src/checksums.h in Python so a rip
+## can be verified by something that is not the C that produced it -- and only
+## its `self-test` was wired, which proves the reimplementation has not
+## drifted from ITSELF. The 2026-09-05 audit filed the gap as lead (b).
+##
+## The reason it stayed open was real: `check` decoded through ffmpeg, which
+## is absent here, and it died with a traceback rather than saying so. A .pcm
+## file IS interleaved s16le stereo, so it is now read rather than decoded,
+## and the check runs with no external decoder at all.
+    'audio_checksums',
     'contract_line_shapes',
     'album_loudness',
     'contract_covers_log',

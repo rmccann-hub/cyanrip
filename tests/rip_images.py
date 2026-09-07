@@ -730,6 +730,67 @@ def sc_deemph_with_hdcd():
              "cue does not flag it")
 
 
+def sc_audio_checksums():
+    """The audio on disk must match the checksums the log claims for it.
+
+    THE SUITE NEVER RAN THIS. `tools/audio-checksums.py` reimplements
+    `src/checksums.h` in Python precisely so a rip can be checked by something
+    that is not the C that produced it -- and only its `self-test` was wired,
+    which proves the reimplementation has not drifted from ITSELF. Nothing
+    compared it against a rip. The 2026-09-05 audit filed that as lead (b).
+
+    The reason it was never wired is real: `check` decoded through ffmpeg,
+    which is not installed here, and it died with a traceback rather than
+    saying so. Both are fixed -- a `.pcm` file IS interleaved s16le stereo, so
+    it is read rather than decoded, and an absent ffmpeg now takes the tool's
+    own diagnosable path.
+
+    This is the "assert against an independent artifact" rule at full strength:
+    two implementations of the same arithmetic, in different languages, over
+    the same bytes, neither able to agree with the other by construction.
+    """
+    rip("acsum", "pregap.cue", "-o", "pcm")
+    log = WORK / "out_acsum" / "log.log"
+    tool = ROOT / "tools" / "audio-checksums.py"
+
+    checked = 0
+    for tr in (1, 2, 3):
+        pcm = WORK / "out_acsum" / f"{tr}.pcm"
+        if not pcm.exists():
+            fail(f"audio_checksums: no {tr}.pcm -- the rip did not produce it")
+            continue
+        r = subprocess.run([sys.executable, str(tool), "check", "--log", str(log),
+                            "--track", str(tr), str(pcm)],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                           timeout=120)
+        out = r.stdout.decode("utf-8", "replace")
+        if r.returncode != 0:
+            fail(f"audio_checksums: track {tr} did not verify:\n{out.strip()}")
+        checked += out.count("match")
+
+    # A FLOOR, so a run that compared nothing cannot pass. Three tracks times
+    # four checksums -- EAC CRC32, Accurip v1, v2 and 450 -- is twelve.
+    if checked < 12:
+        fail(f"audio_checksums: only {checked} checksum comparisons were made "
+             "across three tracks; expected 12. The scan is broken, not the "
+             "audio")
+
+    # AND IT MUST BE ABLE TO FAIL. Flip one sample in a copy and the tool has
+    # to reject it; a checker that accepts altered audio is checking nothing.
+    import shutil as _sh
+    bad = WORK / "corrupt.pcm"
+    _sh.copy(WORK / "out_acsum" / "1.pcm", bad)
+    data = bytearray(bad.read_bytes())
+    data[100] ^= 0xFF
+    bad.write_bytes(bytes(data))
+    r = subprocess.run([sys.executable, str(tool), "check", "--log", str(log),
+                        "--track", "1", str(bad)],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=120)
+    if r.returncode == 0:
+        fail("audio_checksums: one flipped byte was accepted, so the check "
+             "does not discriminate")
+
+
 def sc_art():
     # Album cover art: written out per format and embedded in every track
     rip("art", "basic.cue", "-C", f"Front={FIX / 'art.png'}")

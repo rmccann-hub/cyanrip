@@ -61,6 +61,7 @@ different facts collapsed into one symbol.
 import argparse
 import re
 import struct
+import pathlib
 import subprocess
 import sys
 import zlib
@@ -86,11 +87,38 @@ def unusable(msg):
 
 
 def decode(path):
-    """Decode to interleaved signed 16-bit little-endian stereo, as ripped."""
-    p = subprocess.run(
-        ["ffmpeg", "-v", "error", "-i", path,
-         "-f", "s16le", "-acodec", "pcm_s16le", "-ac", "2", "-ar", "44100", "-"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    """Decode to interleaved signed 16-bit little-endian stereo, as ripped.
+
+    A `.pcm` FILE IS ALREADY THAT, so it is read rather than decoded. cyanrip's
+    `-o pcm` writes exactly this layout -- interleaved s16le stereo at 44100 --
+    which is why the format exists in the option table at all. Reading it
+    directly is not a shortcut: it removes ffmpeg from the one check that
+    answers "does the audio on disk match what the log claims", so that check
+    can run in an environment that has no ffmpeg. This one does not, which is
+    why nothing in the suite had ever run it against a rip.
+    """
+    if str(path).endswith(".pcm"):
+        data = pathlib.Path(path).read_bytes()
+        if not data:
+            unusable(f"{path}: zero bytes -- nothing to checksum")
+        if len(data) % 4:
+            unusable(f"{path}: length {len(data)} is not a whole number of "
+                     "stereo frames, so this is not raw s16le stereo")
+        return data
+
+    try:
+        p = subprocess.run(
+            ["ffmpeg", "-v", "error", "-i", path,
+             "-f", "s16le", "-acodec", "pcm_s16le", "-ac", "2", "-ar", "44100", "-"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        # Its own diagnosable line, not a traceback. A tool that dies with a
+        # stack trace when a dependency is absent has told the caller nothing
+        # they can act on, which is the rule this project applies to the
+        # program and has to apply to its own tooling too.
+        unusable("ffmpeg is not on PATH, so this file cannot be decoded. "
+                 "Rip with `-o pcm` and check the .pcm directly -- that path "
+                 "needs no decoder.")
     if p.returncode != 0:
         unusable(f"{path}: ffmpeg failed: {p.stderr.decode(errors='replace').strip()}")
     if not p.stdout:
