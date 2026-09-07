@@ -325,11 +325,25 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
     # "a file appeared and we cannot say whose" is a real observation and a
     # different claim from "this binary escaped".
     if OUTSIDE_ATTRIBUTABLE:
+        # A TOKEN THAT NAMES A SCANNED ROOT CANNOT ATTRIBUTE ANYTHING INSIDE IT.
+        # Found by the rule misfiring once in 166: the probe
+        # `contain/folder/unicode/absolute` passes `-a album=/tmp/escaped`,
+        # which splits to {album, tmp, escaped} -- and `tmp` is a substring of
+        # every name Python's tempfile produces, so a foreign /tmp/tmpf_wrg7bd
+        # was reported as this binary escaping. The other 165 appearances that
+        # sweep saw were correctly left unattributed.
+        #
+        # The roots' own names are exactly the strings most likely to recur in
+        # the naming conventions used inside them, so they are dropped. The
+        # genuine case survives: a rip landing in /tmp/escaped is attributed by
+        # `escaped`, and one in `/Some Album` by `Album`.
+        root_words = {c for r in OUTSIDE_ROOTS for c in r.parts if c != os.sep}
         tokens = set()
         for a in argv:
             for piece in re.split(r"[\s/=:,]+", str(a)):
                 piece = piece.strip()
-                if len(piece) >= 3 and not piece.startswith("-"):
+                if len(piece) >= 3 and not piece.startswith("-") \
+                        and piece not in root_words:
                     tokens.add(piece)
         outside_after = outside_snapshot()
         for r, names in outside_after.items():
