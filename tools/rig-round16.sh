@@ -84,9 +84,44 @@ esac
 echo "$banner" > "$OUT/banner.txt"
 echo
 
+# THE OFFSET IS ONLY RIGHT FOR ONE DRIVE, and getting it wrong makes every
+# AccurateRip comparison below fail for a reason that has nothing to do with the
+# parser under test. 667 is the PIONEER BD-RW BDR-209D's. A different drive
+# needs its own value from the AccurateRip drive database; there is no default
+# that is right for all of them, so this warns rather than guessing.
+echo "=== the drive, and whether the offset matches it ==="
+if [ ! -e "$DEV" ]; then
+    echo "    *** $DEV does not exist. Name the right device with DEV=..., and"
+    echo "    *** stop: everything below would fail for that reason alone."
+fi
+timeout -k 10 60 "$CRIP" -d "$DEV" -N -A -U -I > "$OUT/drive.txt" 2>&1
+drive=$(grep -aE "^Drive used:" "$OUT/drive.txt" | sed 's/^Drive used: *//')
+echo "    Drive used: ${drive:-<none reported>}"
+case "$drive" in
+  *BDR-209D*) echo "    OFFSET=$OFFSET matches the drive the reference block was made on." ;;
+  "")         echo "    *** No drive line. Is there a disc in it, and is $DEV right?" ;;
+  *)          echo "    *** THIS IS NOT THE BDR-209D. OFFSET is set to $OFFSET; the"
+              echo "    *** default of 667 belongs to the BDR-209D and is wrong here."
+              echo "    *** Look this drive up in the AccurateRip database and set"
+              echo "    *** OFFSET=<its value>. With the wrong offset every checksum"
+              echo "    *** below differs and NONE of it tests the parser." ;;
+esac
+echo
+
 echo "=== the disc in the drive ==="
 timeout -k 15 120 "$CRIP" -d "$DEV" -N -A -U -I > "$OUT/disc-info.txt" 2>&1
 grep -E "^(DiscID|CDDB ID|Disc tracks|Total time):" "$OUT/disc-info.txt" | sed 's/^/    /'
+got_id=$(grep -aE "^DiscID:" "$OUT/disc-info.txt" | sed 's/^DiscID: *//')
+if [ "$got_id" = "pNtImOkdBm9RMBIalzx0w9cfsYY-" ]; then
+    echo "    THIS IS THE REFERENCE DISC. The line-by-line comparison below is"
+    echo "    against an artifact made by an older build with the OLD parser,"
+    echo "    which is the strongest form clause 1 can take."
+else
+    echo "    NOT the reference disc (got '${got_id:-none}'). The parser is still"
+    echo "    exercised and a 'found' verdict still means it worked -- but the"
+    echo "    checksum block below cannot be compared line by line, because we"
+    echo "    hold no prior block for this disc. Say so in the write-up."
+fi
 echo "    (reference disc for clause 1 is DiscID pNtImOkdBm9RMBIalzx0w9cfsYY-,"
 echo "     CDDB E20DFE0E, 14 tracks, 59:42.57 -- The Police, 'Every Breath You"
 echo "     Take: The Classics'. A DIFFERENT disc still tests the parser, but"
@@ -128,12 +163,18 @@ run accurip "clause 1 -- AccurateRip path, rewritten parser" -- \
 # disables it with everything else identical. Before the fix these produced
 # BYTE-IDENTICAL audio, because the filter string was a ternary cascade and
 # aemphasis was never reached. They must now differ.
+# -o pcm, NOT flac, and that is the whole reason this pair can be settled on a
+# rig with no ffmpeg. A .pcm file IS interleaved s16le stereo -- the decoded
+# form -- so `md5sum` over it compares SAMPLES, not container bytes. With flac
+# the two files differ in creation_time whatever the audio does, so a container
+# difference is necessary and not sufficient, and settling it needed a decoder
+# that may not be installed. Now nothing is needed.
 run hdcd-deemph "clause 2 -- -H with de-emphasis forced" -- \
-    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o flac -H -E \
+    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -E \
     -D "$OUT/hdcd-deemph" -F "{track}" -L hdcd-deemph -M hdcd-deemph
 
 run hdcd-nodeemph "clause 2 -- the control: same rip, de-emphasis OFF" -- \
-    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o flac -H -W \
+    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -W \
     -D "$OUT/hdcd-nodeemph" -F "{track}" -L hdcd-nodeemph -M hdcd-nodeemph
 
 # --------------------------------- clause 3 + the -j record's new schema
@@ -145,9 +186,13 @@ run hdcd-nodeemph "clause 2 -- the control: same rip, de-emphasis OFF" -- \
 # a line Platterpus has parsed on hardware -- is never emitted, so clause 3
 # could not show it had not moved. Without -u the log is one header line
 # shorter than the golden reference it is compared against.
+# BOTH formats: flac exercises the normal encode path that clause 3 is about,
+# and pcm gives the independent checksum verification below an s16 file to work
+# on. {format} in -D is REQUIRED with more than one output -- cyanrip refuses
+# otherwise, with a clear message, which is how this was found.
 run plain-j "clause 3 -- parsed lines unmoved, -Z, -u, and the /4 record" -- \
-    -d "$DEV" -s "$OFFSET" -l 1,2 -N -A -U -o flac -Z 2 -u platterpus/0.6.40 \
-    -D "$OUT/plain" -F "{track}" -L plain -M plain -j "$OUT/plain.json"
+    -d "$DEV" -s "$OFFSET" -l 1,2 -N -A -U -o flac,pcm -Z 2 -u platterpus/0.6.40 \
+    -D "$OUT/plain/{format}" -F "{track}" -L plain -M plain -j "$OUT/plain.json"
 
 # ================================================================ summary
 echo "================================ measurements ================================"
@@ -179,38 +224,22 @@ cat <<'EXPECTED'
 EXPECTED
 echo
 echo "--- clause 2: the two rips must DIFFER ---"
-a=$(find "$OUT/hdcd-deemph" -name '*.flac' 2>/dev/null | head -1)
-b=$(find "$OUT/hdcd-nodeemph" -name '*.flac' 2>/dev/null | head -1)
+a=$(find "$OUT/hdcd-deemph" -name '*.pcm' 2>/dev/null | head -1)
+b=$(find "$OUT/hdcd-nodeemph" -name '*.pcm' 2>/dev/null | head -1)
 if [ -n "$a" ] && [ -n "$b" ]; then
   ha=$(md5sum "$a" | cut -d' ' -f1); hb=$(md5sum "$b" | cut -d' ' -f1)
-  echo "    -H -E : $ha"
-  echo "    -H -W : $hb"
+  echo "    -H -E decoded samples: $ha"
+  echo "    -H -W decoded samples: $hb"
   if [ "$ha" = "$hb" ]; then
     echo "    *** IDENTICAL -- de-emphasis did not reach the audio. Clause 2 FAILS."
+    echo "    *** This is exactly the defect the composition fix was for."
   else
-    echo "    differ, which is what the fix was for."
-    echo "    (container bytes include a creation_time that differs between ANY two"
-    echo "     rips, so a difference here is necessary and not sufficient. The"
-    echo "     decoded-sample comparison below is the one that means something.)"
-  fi
-  # THE DECODED SAMPLES ARE THE CLAIM, not the container. Two rips by the same
-  # binary differ in creation_time regardless, so a container difference is
-  # necessary and not sufficient -- this project has stated a wrong version of
-  # that claim before and the long true sentence is the one to keep.
-  if command -v ffmpeg >/dev/null 2>&1; then
-    for f in "$a" "$b"; do
-      printf '    decoded %-16s %s\n' "$(basename "$(dirname "$f")")" \
-        "$(ffmpeg -v error -i "$f" -f md5 - 2>/dev/null | sed 's/^MD5=//')"
-    done
-    echo "    THESE are the two that must differ. If the containers differ and the"
-    echo "    decoded samples do not, de-emphasis did not reach the audio."
-  else
-    echo "    ffmpeg absent -- decoded-sample comparison UNPROBED. The container"
-    echo "    comparison above cannot settle clause 2 on its own; install ffmpeg"
-    echo "    or bring the flacs back for the comparison to be done off the rig."
+    echo "    THEY DIFFER, which is what the fix was for. These are raw samples,"
+    echo "    not containers, so this settles it -- no creation_time to explain"
+    echo "    away and no decoder in the path."
   fi
 else
-  echo "    one or both rips produced no flac -- read the .stdout files"
+  echo "    one or both rips produced no .pcm -- read the .stdout files"
 fi
 echo
 echo "--- clause 2, the other half: what the LOG and CUE claim ---"
@@ -224,6 +253,45 @@ pre_w=$(cat "$OUT"/hdcd-nodeemph/*.cue 2>/dev/null | grep -ac 'FLAGS PRE'); pre_
 echo "    FLAGS PRE in the -H -E cue: $pre_e  (expect 0 -- the audio was de-emphasised)"
 echo "    FLAGS PRE in the -H -W cue: $pre_w  (expect >0 ONLY if the disc's TOC flags pre-emphasis;"
 echo "                                         on a disc that does not, 0 is correct in both)"
+echo
+echo "--- does the audio on disk match the log that describes it? ---"
+# AN INDEPENDENT IMPLEMENTATION, on hardware, which nothing has ever done.
+# tools/audio-checksums.py reimplements src/checksums.h in Python, so this is
+# two implementations of the same arithmetic in different languages over the
+# same bytes -- neither able to agree with the other by construction. It reads
+# .pcm directly, so no decoder is involved.
+AC="$(dirname "$0")/audio-checksums.py"
+if [ -f "$AC" ]; then
+  # THE NON-H RIP ONLY. -H decodes to 20 bits in s32, and this tool reads
+  # s16le, so checksumming an -H rip reports exactly double the samples and a
+  # bare DIFFER that reads like a rip defect and is not one. Found by wiring it
+  # the wrong way first; the tool now says so itself, and this points at the
+  # rip that is actually s16.
+  # EVERY track, each against ITS OWN log entry. `find | head -1` picked 2.pcm
+  # and checked it against track 1, which reported four DIFFERs that were
+  # entirely the harness -- the third wiring error this block produced, and the
+  # tool caught all three. -F "{track}" names the files by track number, so the
+  # basename IS the track.
+  lg=$(find "$OUT/plain/PCM" -name '*.log' 2>/dev/null | head -1)
+  if [ -n "$lg" ]; then
+    for pc in "$OUT"/plain/PCM/*.pcm; do
+      [ -e "$pc" ] || continue
+      tr=$(basename "$pc" .pcm)
+      case "$tr" in *[!0-9]*) continue ;; esac      # only {track}-named files
+      printf '    track %s: ' "$tr"
+      if timeout -k 10 120 python3 "$AC" check --log "$lg" --track "$tr" \
+             "$pc" > "$OUT/acsum-$tr.txt" 2>&1; then
+        echo "$(grep -ac match "$OUT/acsum-$tr.txt") checksum(s) match the log"
+      else
+        echo "MISMATCH -- see $OUT/acsum-$tr.txt"
+      fi
+    done
+  else
+    echo "    no s16 rip to check -- UNPROBED"
+  fi
+else
+  echo "    tools/audio-checksums.py not beside this script -- UNPROBED"
+fi
 echo
 echo "--- the -j record ---"
 if [ -f "$OUT/plain.json" ]; then

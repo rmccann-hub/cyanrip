@@ -86,6 +86,19 @@ def unusable(msg):
     sys.exit(EXIT_UNUSABLE)
 
 
+def looks_like_s32(computed_samples, log_samples):
+    """Is this file 32-bit where s16le was assumed?
+
+    cyanrip's `-H` decodes HDCD to 20 bits carried in s32, so its `-o pcm`
+    output is TWICE the bytes for the same music. Read as s16le it yields
+    exactly double the sample count, and the bare "samples DIFFER" that
+    produces sends the reader looking for a rip defect that is not there --
+    which is where an hour went when this check was first wired into the rig
+    script. Say it instead.
+    """
+    return log_samples and computed_samples == 2 * log_samples
+
+
 def decode(path):
     """Decode to interleaved signed 16-bit little-endian stereo, as ripped.
 
@@ -358,6 +371,14 @@ def cmd_check(args):
         bad += not same
         print(f"  {label}  computed {fmt(got[key]):<10} "
               f"log {fmt(want[key]):<10} {'match' if same else 'DIFFER'}")
+
+    if bad and looks_like_s32(got.get("samples"), want.get("samples")):
+        print("\n*** THE SAMPLE COUNT IS EXACTLY DOUBLE, which almost always "
+              "means this file is\n*** 32-bit and was read as s16le. cyanrip's "
+              "-H decodes HDCD to 20 bits carried\n*** in s32, so `-H -o pcm` "
+              "writes twice the bytes for the same music. Checksum\n*** this "
+              "against a rip WITHOUT -H, or decode the file first. Nothing here "
+              "is\n*** evidence of a rip defect.")
 
     if bad:
         print("\nThe file and the log describe different audio. That is not by "
