@@ -644,22 +644,54 @@ def audit_gaps():
     declare the record it hashed.
 
     So this prints gaps and refuses to call them losses."""
-    import collections
+    import collections, re as _re
     have = collections.defaultdict(dict)
+    # HELD BUT NOT A CONFORMING LAP. §5a's exactly-once test needs ROUND, LAP
+    # and FROM, and HANDSHAKE-FROM did not exist for the first laps of round 7.
+    # Those files are ON DISK. Counting them as "absent from our holdings" --
+    # which this report did until round 16 -- invites the one action that
+    # cannot help: asking the peer to re-send a file we already have. It is the
+    # "did not happen" versus "happened and found nothing" confusion, inside
+    # the report whose closing paragraph is about exactly that.
+    unconforming = collections.defaultdict(dict)
     for p in rdg.candidates():
-        q = rdg.is_a_lap(p.read_bytes().decode("utf-8", errors="replace"))
+        text = p.read_bytes().decode("utf-8", errors="replace")
+        q = rdg.is_a_lap(text)
         if q:
             have[int(q[0])].setdefault(int(q[1]), []).append(q[2])
+            continue
+        m = _re.match(r"round-(\d+)-lap-(\d+)\.md$", p.name)
+        if m:
+            missing = [f for f, rx in (("ROUND", rdg.ROUND_RE),
+                                       ("LAP", rdg.LAP_RE), ("FROM", rdg.FROM_RE))
+                       if len(rx.findall(rdg.FENCE_RE.sub("", text))) != 1]
+            unconforming[int(m.group(1))][int(m.group(2))] = ",".join(missing)
 
-    total = 0
-    print(f"{'round':>5}  {'laps held':<44}  absent from our holdings")
-    for r in sorted(have):
+    total = held_unconforming = 0
+    print(f"{'round':>5}  {'laps held':<44}  no file at all")
+    for r in sorted(set(have) | set(unconforming)):
         laps = sorted(have[r])
-        missing = [n for n in range(1, max(laps) + 1) if n not in have[r]]
+        top = max(laps + list(unconforming.get(r, {})) or [0])
+        # A number is only ABSENT if no file carries it. A file that is held
+        # but does not declare the three §5a fields is held.
+        missing = [n for n in range(1, top + 1)
+                   if n not in have[r] and n not in unconforming.get(r, {})]
         total += len(missing)
+        held_unconforming += len(unconforming.get(r, {}))
         shown = " ".join(f"{n}{'*' if len(have[r][n]) > 1 else ''}" for n in laps)
+        for n in sorted(unconforming.get(r, {})):
+            shown += f" {n}\u00b0"
         print(f"{r:>5}  {shown:<44}  "
               f"{'none' if not missing else ', '.join(map(str, missing))}")
+    if held_unconforming:
+        print(f"\n\u00b0 {held_unconforming} file(s) HELD but not conforming laps "
+              f"under \u00a75a's exactly-once test -- they predate a wire field "
+              f"and\n  cannot be counted for a digest. They are on disk; do NOT "
+              f"ask for them again:")
+        for r in sorted(unconforming):
+            for n in sorted(unconforming[r]):
+                print(f"      round-{r:02d}-lap-{n:02d}.md  missing: "
+                      f"{unconforming[r][n]}")
     print("\n* two files claim that lap number, one from each side -- legal "
           "under \u00a75a's (lap, FROM) key, unresolvable under \u00a72's state rule")
     print(f"{total} absent number(s) across all rounds. AN ABSENCE IS NOT A LOSS: "
