@@ -50,7 +50,8 @@ outstanding in either direction:
 process at all:
 
 ```sh
-git checkout 0cd611a -- tools/rig-round16.sh tools/audio-checksums.py
+git checkout 0cd611a -- tools/rig-round16.sh tools/audio-checksums.py \
+                       tools/round16-accept.py
 DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" sh tools/rig-round16.sh
 python3 tools/round16-accept.py --out round16-<stamp>Z
 ```
