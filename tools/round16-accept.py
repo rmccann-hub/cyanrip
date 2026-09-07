@@ -156,13 +156,41 @@ def clause1(out):
     verdict = status.group(1)
     got = accurip_lines(text)
     if verdict != "found":
-        # A real query that came back empty is a MEASUREMENT, not a failure of
-        # ours -- and it still cannot settle the clause. Those are two claims.
-        note("WARN", "clause1/status",
-             f"`AccurateRip: {verdict}`. The parser RAN -- that is what this "
-             f"line reports -- but with no match there is nothing to compare "
-             f"against the reference, so the clause is UNSETTLED rather than "
-             f"failed. Try a disc that is in the database", str(log))
+        # FIVE VALUES, NOT TWO, and the first version of this lumped four of
+        # them into one sentence that said "the parser RAN". It does not run at
+        # all for `disabled`, so that sentence was false for the value a
+        # misconfigured harness actually produces. Found by running this
+        # against a real rip rather than against the fixtures it was written
+        # with -- the fixtures only ever produced `found`.
+        #
+        # cyanrip_log.c:786 is the whole set: error, not found, found,
+        # mismatch, disabled.
+        if verdict == "disabled":
+            note("FAIL", "clause1/disabled",
+                 "`AccurateRip: disabled` -- the query never ran, because -A "
+                 "was passed to the ONE rip that must not have it. This is a "
+                 "harness error, not a result: nothing about the rewritten "
+                 "parser was exercised", str(log))
+        elif verdict == "not found":
+            note("WARN", "clause1/status",
+                 "`AccurateRip: not found`. The parser RAN and the disc is not "
+                 "in the database -- a real measurement, and not a failure of "
+                 "ours. With no match there is nothing to compare, so the "
+                 "clause is UNSETTLED rather than failed. Try a disc that is "
+                 "in the database", str(log))
+        elif verdict == "mismatch":
+            note("WARN", "clause1/status",
+                 "`AccurateRip: mismatch` -- the parser RAN and worked; the "
+                 "disc was found and our checksums disagree with the "
+                 "database. That is a claim about THIS RIP or this pressing, "
+                 "not about the parser, and the clause is unsettled either "
+                 "way. Read the per-track lines before concluding anything",
+                 str(log))
+        else:
+            note("WARN", "clause1/status",
+                 f"`AccurateRip: {verdict}` -- the query failed. Whether the "
+                 f"rewritten parser ran at all is NOT established by this: an "
+                 f"error can be raised before any response is parsed", str(log))
         note("UNPROBED", "clause1/checksums",
              f"{len(got)} per-track checksum line(s) produced, nothing to "
              f"compare them to")

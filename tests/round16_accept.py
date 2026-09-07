@@ -150,13 +150,36 @@ def main():
                (o / "accurip" / "accurip.log").read_text()
                .replace("confidence 129", "confidence 3")),
            1, r"confidence FELL")
-    # A real query that found nothing is a MEASUREMENT, not our failure -- and
-    # still cannot settle the clause. Both halves asserted.
-    expect("clause 1 not found is unsettled, not failed",
-           lambda o: (o / "accurip" / "accurip.log").write_text(
-               (o / "accurip" / "accurip.log").read_text()
-               .replace("AccurateRip:    found", "AccurateRip:    not found")),
-           2, r"UNSETTLED rather than failed")
+    # THE FIVE VALUES cyanrip_log.c:786 CAN PRINT, each asserted separately.
+    # The checker's first version collapsed four of them into one sentence
+    # claiming "the parser RAN", which is FALSE for `disabled` -- the value a
+    # misconfigured harness actually produces. It was found by running the
+    # checker against a real rip, because every fixture here produced `found`.
+    # An example suite only finds the cases someone thought of.
+    def verdict(v):
+        return lambda o: (o / "accurip" / "accurip.log").write_text(
+            (o / "accurip" / "accurip.log").read_text()
+            .replace("AccurateRip:    found", f"AccurateRip:    {v}"))
+
+    # `not found`: the parser RAN and the disc is not in the database. A real
+    # measurement, not our failure, and still cannot settle the clause.
+    expect("clause 1 not found is unsettled, not failed", verdict("not found"),
+           2, r"parser RAN and the disc is not in the database")
+    # `disabled`: the query never ran at all. -A reached the one rip that must
+    # not have it, which is a harness error and not a result.
+    expect("clause 1 disabled is a harness error", verdict("disabled"),
+           1, r"FAIL.*clause1/disabled")
+    # `mismatch`: the parser worked; the disc was found and the checksums
+    # disagree. A claim about the rip, not about the parser.
+    expect("clause 1 mismatch is about the rip, not the parser",
+           verdict("mismatch"), 2, r"parser RAN and worked")
+    # `error`: whether the parser ran at all is NOT established.
+    expect("clause 1 error establishes nothing about the parser",
+           verdict("error"), 2, r"NOT established")
+    # And none of the four may be mistaken for the passing case.
+    for v in ("not found", "disabled", "mismatch", "error"):
+        expect(f"clause 1 {v} is never a pass", verdict(v),
+               None, None, r"All three clauses settled")
 
     # 3. Clause 2, including the two ways a comparison lies.
     expect("clause 2 identical audio",
