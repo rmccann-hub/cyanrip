@@ -393,6 +393,24 @@ test('Black-box sweep', python,
 test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
 test('Seam record audit', python, args: [ files('../tools/seam-check.py'), '--gaps' ])
 
+## --gaps prints which lap numbers WE are missing and then says, correctly,
+## that no check on one side can tell a lost lap from a number nobody used:
+## "ask for the other side's enumeration -- that is what it is for."
+##
+## --held is that advice, taken. Their enumeration has been in every inbound
+## lap's HANDSHAKE-INBOUND-HELD since round 9 and no tool had ever read it.
+## It checks only the hashes they quote against our lap files -- the field is
+## prose by design, and round-14 lap 8 writes "NOT held: your round-14 lap 2"
+## in the same sentence shape as everything it does hold, so an extractor
+## reading lap numbers out of it would read that one exactly backwards.
+##
+## It FAILS when a hash they quote does not match our file, which is a §4a
+## violation by whichever side edited a sent lap -- and it covers laps sent
+## long before we kept any record of sending, because THEIR file is the
+## independent artifact.
+test('Seam inbound-held audit', python,
+     args: [ files('../tools/seam-check.py'), '--held' ])
+
 
 rip_scenarios = [
     'info',

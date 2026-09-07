@@ -427,6 +427,138 @@ def check_lap(path):
              f"test pin {this.test_pin} -- not a release and cannot close a round")
 
 
+# --------------------------------------------------------------------------
+# HANDSHAKE-INBOUND-HELD, read as a record instead of as prose.
+#
+# ROUND 16 FOUND THIS: --gaps below prints which lap numbers are absent from
+# our holdings and then says, correctly, that no check on one side can tell a
+# lost lap from a number nobody used -- "ask for the other side's enumeration,
+# that is what it is for." THEIR ENUMERATION HAS BEEN SITTING IN EVERY INBOUND
+# LAP SINCE ROUND 9 AND NOTHING HAS EVER READ IT. The advice was right and the
+# tool never took it.
+#
+# WHAT IS CHECKABLE HERE AND WHAT IS NOT. The field is prose by design, and
+# prose in it does real work: round-14 lap 8 says "**NOT held: your round-14
+# lap 2**" in the same sentence shape as everything it DOES hold. An extractor
+# that read lap numbers out of this field would read that one exactly
+# backwards -- a pattern matching both branches, asserting nothing about
+# either. So this refuses to derive WHICH laps they hold.
+#
+# It derives the one thing stated structurally: a HASH quoted against a lap of
+# ours. That pair is checkable with no reading of intent at all, and it catches
+# the §4a violation in the direction tools/sent-ledger.py cannot -- their file
+# is the independent artifact, so it covers laps sent before SENT.tsv existed
+# and would catch an edit WE made to a lap already delivered.
+#
+# Coverage is printed, never implied: most INBOUND-HELD lines quote no hash and
+# are checked by nobody but a reader.
+
+# A lap reference: round-NN-lap-LL, optionally .md, NOT followed by another
+# dash or digit. The trailing guard is what stops
+# `round-15-lap-10-protocol-v5-proposal.md` reading as lap 10 -- it is an
+# ARTIFACT of that lap carrying its own different hash, and pairing the two
+# manufactures a mismatch out of a correct record.
+LAP_TOKEN = re.compile(r"round-(\d+)-lap-(\d+)(?![-\d])(?:\.md)?")
+# Any other filename. It need not be recognised, only noticed: an unrecognised
+# file between a lap and a hash means the hash is not that lap's.
+FILE_TOKEN = re.compile(r"\S+\.(?:md|sh|py|txt|json|log|tsv)\b")
+HASH_TOKEN = re.compile(r"\b([0-9a-f]{16,64})\b")
+# Clause boundaries. Round-09 lap 6 puts a lap-1 hash three clauses after a
+# lap-5 reference; pairing by proximity alone gets that exactly wrong.
+BOUNDARY = re.compile(r"\.\s|;|\u2014|--|\bFor round\b|\bRound \d")
+
+
+def held_claims(line):
+    """(round, lap, hash) the line STATES -- never what it implies.
+
+    Walks left to right. A lap file sets the subject; any other file, or a
+    clause boundary, clears it; the first hash while a subject is set belongs
+    to that lap and clears the subject, so no hash is attributed twice.
+    """
+    events = []
+    for m in LAP_TOKEN.finditer(line):
+        events.append((m.start(), 0, "lap", (int(m.group(1)), int(m.group(2)))))
+    for m in FILE_TOKEN.finditer(line):
+        stem = m.group(0).split("/")[-1]
+        if not LAP_TOKEN.fullmatch(stem):
+            events.append((m.start(), 1, "file", None))
+    for m in HASH_TOKEN.finditer(line):
+        events.append((m.start(), 2, "hash", m.group(1)))
+    for m in BOUNDARY.finditer(line):
+        events.append((m.start(), 3, "bound", None))
+    events.sort()
+
+    out, subject = [], None
+    for _, _, kind, val in events:
+        if kind == "lap":
+            subject = val
+        elif kind in ("file", "bound"):
+            subject = None
+        elif kind == "hash" and subject:
+            out.append((subject[0], subject[1], val))
+            subject = None
+    return out
+
+
+def held_lines(text):
+    """Every INBOUND-HELD declaration, fenced quotations excluded.
+
+    Round-09 lap 8 quotes our header inside a fence at column 0, which the
+    protocol's column-0 rule cannot tell from a declaration. release-gate.py
+    already strips fences; this borrows its stripper rather than growing a
+    second one that could disagree with it.
+    """
+    return [ln for ln in rg.strip_fences(text).splitlines()
+            if ln.startswith("HANDSHAKE-INBOUND-HELD:")]
+
+
+def audit_held():
+    """Check every hash the peer has quoted back at us against our own files."""
+    inbound = sorted((HS / "inbound").glob("round-*.md"))
+    lines = checked = 0
+    fails = 0
+    for p in inbound:
+        for ln in held_lines(p.read_text(encoding="utf-8", errors="replace")):
+            lines += 1
+            for r, lap, h in held_claims(ln):
+                checked += 1
+                tgt = HS / f"round-{r:02d}-lap-{lap:02d}.md"
+                if not tgt.exists():
+                    fails += 1
+                    note("FAIL", "held/absent",
+                         f"{p.name} states it holds our round {r} lap {lap}, "
+                         f"and {tgt.relative_to(ROOT)} is not in this tree",
+                         fix="Either the lap was renamed or deleted here -- a "
+                             "sent lap may be neither -- or they transcribed "
+                             "the number wrongly. Their file is evidence; "
+                             "restore ours from git before answering.",
+                         artifact=str(p.relative_to(ROOT)))
+                    continue
+                real = hashlib.sha256(tgt.read_bytes()).hexdigest()
+                if not real.startswith(h):
+                    fails += 1
+                    note("FAIL", "held/mismatch",
+                         f"{p.name} quotes {h[:16]}\u2026 for our round {r} "
+                         f"lap {lap}; that file now hashes {real[:16]}\u2026",
+                         fix="One side has edited a sent lap (PROTOCOL \u00a74a). "
+                             "Ours is the copy to check first: git log the lap "
+                             "file. The remedy is a new lap saying so, never a "
+                             "revision.",
+                         artifact=str(tgt.relative_to(ROOT)))
+                else:
+                    note("OK", "held/verified",
+                         f"{p.name} holds our round {r} lap {lap} at "
+                         f"{h[:16]}\u2026 \u2014 byte-identical here")
+
+    note("INFO", "held/coverage",
+         f"{lines} INBOUND-HELD line(s) across {len(inbound)} inbound lap(s); "
+         f"{checked} carried a hash against a lap of ours and were checked. "
+         f"The rest name laps in prose only and NOTHING VERIFIES THEM \u2014 the "
+         f"field is deliberately prose, and 'NOT held: your lap 2' is a "
+         f"sentence no extractor should be trusted to read.")
+    return fails
+
+
 def audit_gaps():
     """Per round, which lap numbers are absent from what THIS side holds.
 
@@ -469,15 +601,22 @@ def main():
                     help="every lap in the record, ours and theirs")
     ap.add_argument("--gaps", action="store_true",
                     help="per round, which lap numbers are absent from what we hold")
+    ap.add_argument("--held", action="store_true",
+                    help="check every hash the peer has quoted back at us "
+                         "against our own lap files")
     args = ap.parse_args()
 
     if args.gaps:
         return audit_gaps()
 
+    if args.held:
+        audit_held()
+        paths = []
+
     paths = [pathlib.Path(p) for p in args.lap]
     if args.all:
         paths = sorted(rdg.candidates())
-    if not paths:
+    if not paths and not args.held:
         ap.error("give a lap file, or --all")
 
     for p in paths:

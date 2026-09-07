@@ -54,6 +54,7 @@ Adopted from Platterpus's `tests/test_sent_laps_are_immutable.py` (round 9 lap 4
 """
 
 import hashlib
+import importlib.util
 import pathlib
 import re
 import sys
@@ -153,6 +154,44 @@ SENT = {
     # exactly why this entry exists: the remedy is a new lap, never an edit.
     "round-15-lap-03.md":
         "f0de87ff787d331cf1ca38b4744ac06c1ea0f971318280f42acf97045d4f8de6",
+
+    # ROUND 15, THE REST OF IT -- and the reason it was missing is worth more
+    # than the entries. The map went unmaintained from lap 3 to the end of the
+    # round, so `not yet pinned` listed four laps that had all long since gone.
+    # A list nobody reads is a list that stops meaning anything, and this one
+    # was printed on every test run.
+    #
+    # Found in round 16 while answering their round-15 lap 16 §G, which asked
+    # whether we hold any mechanism making a lap's sent state visible. We do,
+    # it is this file, and it had drifted out of date while we answered "no".
+    #
+    # Three of the four carry the strongest receipt there is: THEIR OWN
+    # INBOUND-HELD quotes the hash, so these are not our record of sending but
+    # their record of receiving, and `--held` re-checks them on every run.
+    #
+    #   their lap  9 names lap  8 in prose, with no hash: a weaker receipt, and
+    #              it is pinned as such rather than promoted to look like the
+    #              others
+    #   their lap 11 quotes lap 10 in FULL: 97af8e1e…a979a2ad
+    #   their lap 13 quotes lap 12 as fedf8712b87b13da…
+    #   their laps 15 AND 16 both quote lap 14 as 567c12a8ec7d50e8…
+    "round-15-lap-08.md":
+        "028c552743f677878f09c0270192e44667d8f18002f5fabe4d9fb93f647b0944",
+    "round-15-lap-10.md":
+        "97af8e1e0aa5b2d8915035a26b8597cfd3a19b62f14020a2d2aba838a979a2ad",
+    "round-15-lap-12.md":
+        "fedf8712b87b13dab3b3310c326a7d8dd0ebd29690e20a72e483c837deb16b0e",
+    "round-15-lap-14.md":
+        "567c12a8ec7d50e8abdfe31ce34b57a893076b0132fc1c492dcc54e1e40ebe1c",
+
+    # ROUND 16, ours to open and opened. NO PEER RECEIPT YET, and that is the
+    # ordinary state of a round in flight rather than a doubt: their most
+    # recent lap predates both of these, so it COULD NOT have confirmed them.
+    # The receipt to expect is their lap 3's INBOUND-HELD.
+    "round-16-lap-01.md":
+        "e07a24345e37639e42d0f70c93e2b47b8e91ef2d00d0dcccb83c7df42baeb741",
+    "round-16-lap-02.md":
+        "522d8b160edad24cc684e54d46431779eeddf657686ca053d0a334cd3e57d2d4",
 }
 
 failures = 0
@@ -190,7 +229,82 @@ def _round_of(name):
 unpinned = sorted(p.name for p in HS.glob("round-*-lap-*.md")
                   if p.name not in SENT and (_round_of(p.name) or 0) >= 8)
 if unpinned:
-    print(f"not yet pinned (add on send): {', '.join(unpinned)}")
+    # NOT "unsent". Every round-13 and round-14 lap below was handed over
+    # months ago; the map simply went unmaintained from round 12 to round 15,
+    # and "add on send" read as though these were still ours to write. An
+    # unpinned lap means ONE thing -- no hash was recorded at send time -- and
+    # says nothing either way about whether it went. They are not pinned
+    # retroactively because a hash taken today is a hash nobody checked then:
+    # that is a fabricated record, not a recovered one, and the map is
+    # evidence before it is a checklist.
+    print(f"NOT PINNED -- no hash was recorded when these were written, which "
+          f"is not a claim\n  that they were never sent, and most of them "
+          f"certainly were ({len(unpinned)}):\n  {', '.join(unpinned)}")
+
+# ---------------------------------------------------------------------------
+# AND THE OTHER HALF, WHICH THIS FILE COULD NOT ANSWER UNTIL ROUND 16: has the
+# peer said it holds these bytes?
+#
+# Everything above is OUR record of sending. It cannot tell a lap that arrived
+# from one that did not, which is precisely what went wrong in round 14: their
+# lap 8 reported NOT holding our lap 2, eight laps after we sent it, and
+# nothing on either side had noticed. THEIR `HANDSHAKE-INBOUND-HELD` is the
+# answer and has been in every inbound lap since round 9 -- unread by any tool
+# until now.
+#
+# Parsed by seam-check.py, never re-implemented here. Two readers of one
+# convention that can disagree is the failure both gates exist to prevent.
+def _confirmations():
+    spec = importlib.util.spec_from_file_location(
+        "sc", ROOT / "tools" / "seam-check.py")
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+    out = set()
+    inb = HS / "inbound"
+    if not inb.is_dir():
+        return out
+    for f in sorted(inb.glob("round-*.md")):
+        for line in sc.held_lines(f.read_text(encoding="utf-8", errors="replace")):
+            out.update(sc.held_claims(line))
+    return out
+
+
+def _rl(name):
+    m = re.match(r"round-(\d+)-lap-(\d+)\.md$", name)
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+peer = _confirmations()
+# The newest lap they have sent us. A lap of ours sent after it cannot have
+# been confirmed by anyone, so its silence is chronology and not a loss --
+# `none` and `unknown (reason)` are different claims and this is the line that
+# keeps them apart.
+newest_peer = max((rl for rl in
+                   (_rl(f.name) for f in (HS / "inbound").glob("round-*.md"))
+                   if rl), default=(0, 0))
+
+confirmed, awaited, silent = 0, [], []
+for name in sorted(SENT):
+    rl = _rl(name)
+    if any(rl == (r, lap) and SENT[name].startswith(h) for r, lap, h in peer):
+        confirmed += 1
+    elif rl and rl > newest_peer:
+        awaited.append(name)
+    else:
+        silent.append(name)
+
+print(f"{confirmed} of {len(SENT)} sent lap(s) confirmed by a hash the peer "
+      f"quoted back")
+if awaited:
+    print(f"  awaiting a reply, cannot yet be confirmed by anyone "
+          f"(newest inbound is round {newest_peer[0]} lap {newest_peer[1]}): "
+          f"{', '.join(awaited)}")
+if silent:
+    print(f"  sent, and no INBOUND-HELD quotes a hash for them ({len(silent)}). "
+          f"NOT a loss:\n  most predate the field carrying hashes at all, and "
+          f"prose receipts are not parsed\n  here on purpose -- 'NOT held: your "
+          f"lap 2' is a sentence no extractor\n  should be trusted to read. "
+          f"Read them: {', '.join(silent)}")
 
 print(f"{len(SENT)} sent lap(s) checked, {failures} changed")
 sys.exit(1 if failures else 0)
