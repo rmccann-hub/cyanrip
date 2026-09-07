@@ -472,6 +472,9 @@ LAP_TOKEN = re.compile(r"round-(\d+)[- ]lap[- ](\d+)(?![-\d])(?:\.md)?")
 # Any other filename. It need not be recognised, only noticed: an unrecognised
 # file between a lap and a hash means the hash is not that lap's.
 FILE_TOKEN = re.compile(r"\S+\.(?:md|sh|py|txt|json|log|tsv)\b")
+# A bare `lap N`, which is only ever resolved against a round established
+# earlier in the same clause -- never on its own.
+BARE_LAP = re.compile(r"\blap[- ](\d+)(?![-\d])")
 HASH_TOKEN = re.compile(r"\b([0-9a-f]{16,64})\b")
 # Clause boundaries. Round-09 lap 6 puts a lap-1 hash three clauses after a
 # lap-5 reference; pairing by proximity alone gets that exactly wrong.
@@ -488,6 +491,8 @@ def held_claims(line):
     events = []
     for m in LAP_TOKEN.finditer(line):
         events.append((m.start(), 0, "lap", (int(m.group(1)), int(m.group(2)))))
+    for m in BARE_LAP.finditer(line):
+        events.append((m.start(), 0, "bare", int(m.group(1))))
     for m in FILE_TOKEN.finditer(line):
         stem = m.group(0).split("/")[-1]
         if not LAP_TOKEN.fullmatch(stem):
@@ -498,12 +503,25 @@ def held_claims(line):
         events.append((m.start(), 3, "bound", None))
     events.sort()
 
-    out, subject = [], None
-    for _, _, kind, val in events:
+    out, subject, round_ctx = [], None, None
+    for pos, _, kind, val in events:
         if kind == "lap":
-            subject = val
+            subject, round_ctx = val, val[0]
+        elif kind == "bare":
+            # A bare `lap N` inherits the round ONLY from a fully qualified
+            # reference earlier in the same clause. Their lap 5 writes "your
+            # round-16 lap 1 (...), lap 2 (...), lap 4 (...)" and without this
+            # two of the three confirmations are invisible.
+            subject = (round_ctx, val) if round_ctx is not None else None
         elif kind in ("file", "bound"):
             subject = None
+            # THE ROUND CONTEXT DIES AT THE BOUNDARY TOO, and that is the whole
+            # safety of this. The same INBOUND-HELD line continues "...and both
+            # rig scripts -- lap 1's draft (`7a5157a5572513ae`) and lap 2's
+            # (`615243361882b881`)", which are hashes of a SCRIPT. Carrying the
+            # round past the em dash would pair both with laps 1 and 2 and
+            # report two mismatches on a correct record.
+            round_ctx = None
         elif kind == "hash" and subject:
             out.append((subject[0], subject[1], val))
             subject = None
@@ -520,6 +538,53 @@ def held_lines(text):
     """
     return [ln for ln in rg.strip_fences(text).splitlines()
             if ln.startswith("HANDSHAKE-INBOUND-HELD:")]
+
+
+def audit_held_inbound():
+    """The mirror: every hash WE quoted for one of THEIR laps, re-checked.
+
+    ROUND 16 LAP 5 §A IS WHY. Platterpus edited a sent lap twice, and the thing
+    that caught it was OUR enumeration of what we hold -- their own record
+    could not see it, because a side that edits a file has no copy of what it
+    used to be. That is symmetric and we had only built the half that watches
+    them: nothing checked that OUR copies of THEIR laps still hash to what we
+    said they did.
+
+    Derived, not stored. Our own laps' HANDSHAKE-INBOUND-HELD already quote
+    those hashes -- a sent lap is immutable, so each is a fixed claim about an
+    inbound file made at a moment we cannot revise. A second hand-maintained
+    map would be a record that can drift from the one already in the laps.
+    """
+    ours = sorted(p for p in HS.glob("round-*-lap-*.md"))
+    checked = fails = 0
+    for p in ours:
+        for ln in held_lines(p.read_text(encoding="utf-8", errors="replace")):
+            for r, lap, h in held_claims(ln):
+                tgt = HS / "inbound" / f"round-{r:02d}-lap-{lap:02d}.md"
+                if not tgt.exists():
+                    continue          # we may cite a lap we never filed; §D's job
+                checked += 1
+                real = hashlib.sha256(tgt.read_bytes()).hexdigest()
+                if not real.startswith(h):
+                    fails += 1
+                    note("FAIL", "held-in/mismatch",
+                         f"our {p.name} says their round {r} lap {lap} hashes "
+                         f"{h[:16]}\u2026; our copy now hashes {real[:16]}\u2026",
+                         fix="OUR held copy has changed since we vouched for "
+                             "it. Restore it from the commit that filed it. An "
+                             "inbound lap is evidence and we may not edit it "
+                             "any more than they may edit a sent one.",
+                         artifact=str(tgt.relative_to(ROOT)))
+                else:
+                    note("OK", "held-in/verified",
+                         f"their round {r} lap {lap} still hashes {h[:16]}"
+                         f"\u2026 as our {p.name} vouched")
+    note("INFO", "held-in/coverage",
+         f"{checked} hash(es) we published about THEIR laps, re-checked "
+         f"against our filed copies. This is the direction their lap 5 §A "
+         f"proves is needed: a side that edits a file cannot detect it, and "
+         f"only the other side's record can.")
+    return fails
 
 
 def audit_held():
@@ -621,6 +686,7 @@ def main():
 
     if args.held:
         audit_held()
+        audit_held_inbound()
         paths = []
 
     paths = [pathlib.Path(p) for p in args.lap]
