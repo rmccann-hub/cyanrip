@@ -17,7 +17,29 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-06. **ROUND 15 IS CLOSED — `GO`/`GO` on `978f9b0` + `platterpus 0.6.37`, and their lap 16 has arrived.** Round 16 is ours to open and is NOT yet open.
+## Rewritten 2026-09-07. **ROUND 16 IS OPEN on `a9aedf0`, and lap 2 proposes a TEST PIN so a rig session can happen now.**
+
+**A release is blocked and should be.** `tools/release-gate.py --release-gate`
+exits **1** on this tree and names round 16 as open. That is not being
+overridden, and no ledger row or manifest change has been made: both channels
+still resolve to `978f9b0`.
+
+**What unblocks a hardware session instead is a TEST PIN**, which
+`PROTOCOL.md` §6a defines precisely so a round is not deadlocked between
+"a close needs hardware evidence" and "the pin may not move while the round is
+open". Our lap 2 declares **`HANDSHAKE-TEST-PIN: ddc1e8c`** and asks Platterpus
+to declare the same one, or name another.
+
+**The test pin is the same program as the production pin**, and that is
+checkable rather than asserted: `git diff a9aedf0..ddc1e8c -- src/ meson.build`
+is empty, and the `sha256` of the `src/` tree is `8c2817219f6aa087` at both.
+Everything between the two is `tools/`, `docs/` and regenerated artifacts. It
+is preferred only because its logs say `Handshake: round 16 lap 1 OPEN` rather
+than naming the previous closed round, and because it carries
+`tools/rig-round16.sh`.
+
+**Lap 2 pre-commits under S-18**: our next lap agrees whatever test pin their
+reply names. No answer costs another lap of negotiation.
 
 Closed by our lap 14 and their lap 15, both declaring `GO`.
 `tools/release-gate.py` reports every round closed.
