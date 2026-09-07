@@ -199,6 +199,13 @@ SENT = {
     # it is the check that would catch a last-minute edit.
     "round-16-lap-04.md":
         "ac62b0a8e0b8df447c23f7a01d20edc903fe73ac82db5a4400fd6396a2ed4b98",
+
+    # Lap 6, handed over 2026-09-07. It names commit 0cd611a and quotes three
+    # hashes from it; all four were resolved against the REMOTE before the file
+    # went, because a lap that names a commit nobody can fetch is the dangling
+    # reference this project already warns about, manufactured by us.
+    "round-16-lap-06.md":
+        "749ef81684a30a0ca7ce39f055518633bca1396ef56ad2d9a9c0cea738feac50",
 }
 
 failures = 0
