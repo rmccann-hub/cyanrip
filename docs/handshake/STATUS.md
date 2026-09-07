@@ -68,6 +68,52 @@ checker written afterwards is how a close condition quietly moves. It refuses
 to grade a run whose `banner.txt` names neither pin, and its exit code
 distinguishes *a clause said no* (1) from *a clause could not be asked* (2).
 
+## What is still OPEN — audited 2026-09-07, and it is a short list
+
+Swept mechanically rather than remembered: every `J`-item either side raised in
+rounds 15 and 16, every `BLOCKING` tag in the record, and `--gaps` over all ten
+rounds.
+
+**Nothing is blocking. Every question either side asked has been answered or
+explicitly deferred, and no live `BLOCKING` tag exists anywhere** — the ones the
+grep finds are round 14's, closed.
+
+**Two items carry to round 17, both `NEXT-ROUND`, both accepted in principle:**
+
+| item | raised | state |
+|---|---|---|
+| **J2** — write up *committed-is-sent*, with their three riders | their round-16 lap 3 | accepted, not started |
+| **J3** — make `HANDSHAKE-TO` and the repo pair normative in `PROTOCOL.md` v5 | their round-16 lap 3 | accepted; **needs a v5 bump neither side may make alone** |
+
+**Also filed for round 17, none of them questions:**
+
+- Their lap 5 §H1.4 — exclude the `.flac` files from what travels back **only
+  when the decoded comparison ran**. Conditional, because our own ffmpeg-absent
+  branch wanted them; that branch is gone since `b3fa6cd`, so the condition may
+  now be simpler than when they wrote it.
+- **The release-versus-tree gap, filed by both sides independently.** A lap
+  resolves its claims against `HANDSHAKE-FROM-COMMIT`; a *release* is a
+  different object, and nothing on either side relates "the fixes this lap
+  describes" to "the build the operator installs". It cost them a wrong
+  instruction in round 16 lap 5 and we have the same exposure in the other
+  direction. Neither side is proposing a mechanism inside this round — S-13.
+
+**Three holes in the RECORD, which are not questions and cannot be closed by
+asking:**
+
+- **Round 8: five laps of theirs we have never held** — 4, 6, 12, 14, 16. Our
+  own round-9 lap 9 §D recorded it at the time (*"we hold three of your nine"*);
+  we hold four now. Round 8 is closed and this does not reopen it.
+- **Round 13 lap 4: no file declares it**, on either side of our tree. It may be
+  their renumbering artifact — their round-13 verification file declares lap 1
+  and was later renumbered — or a number nobody used.
+- **Round 7: sixteen numbers with no file at all.** Round 7 ran to 39 laps and
+  its inbound side is absent from this tree entirely.
+
+For all three, `--gaps` says the only true thing available from one side: an
+absence is a lap that never arrived **or** a number nobody used, and no check
+here can tell those apart.
+
 **The test pin is the same program as the production pin**, and that is
 checkable rather than asserted: `git diff a9aedf0..ddc1e8c -- src/ meson.build`
 is empty, and `git rev-parse a9aedf0:src` and `git rev-parse ddc1e8c:src` are
