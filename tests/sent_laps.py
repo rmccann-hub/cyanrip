@@ -192,6 +192,13 @@ SENT = {
         "e07a24345e37639e42d0f70c93e2b47b8e91ef2d00d0dcccb83c7df42baeb741",
     "round-16-lap-02.md":
         "522d8b160edad24cc684e54d46431779eeddf657686ca053d0a334cd3e57d2d4",
+
+    # Lap 4, handed to the operator 2026-09-07. Pinned at the bytes that left,
+    # which are byte-identical to the committed copy -- checked before pinning,
+    # not assumed, because lap 3's §C3 checked exactly that about our lap 2 and
+    # it is the check that would catch a last-minute edit.
+    "round-16-lap-04.md":
+        "ac62b0a8e0b8df447c23f7a01d20edc903fe73ac82db5a4400fd6396a2ed4b98",
 }
 
 failures = 0
