@@ -275,6 +275,16 @@ test('Sent laps are immutable', python, args: [ files('sent_laps.py') ])
 ## rig-round16.sh's preflight, because that is one fact described in two files.
 test('Round 16 acceptance checker', python, args: [ files('round16_accept.py') ])
 
+## Round 16 lap 7 §H1: our lap 6 told the consumer the contract's one added row
+## was in P5. It is in P3. The generator was right; the LABEL was inferred from
+## a diff hunk -- "a message inventory row is a P5 row" -- and never checked
+## against the document. P3 and P5 are opposites to a consumer: P5 is a fatal
+## string they must surface, P3 is unstable wording whose absence from a log
+## proves nothing. tools/contract-delta.py derives the section so the inference
+## cannot be made again, and this asserts the specific sentence that was wrong.
+test('Contract delta names its section', python,
+     args: [ files('contract_delta.py') ])
+
 test('Handshake wire conformance', python,
      args: [ files('handshake_wire.py'), meson.project_source_root() ])
 
