@@ -677,6 +677,33 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   passed — the revert-proof said so, which is the only reason it was caught.
   **Assert against the position, not the file.** It now reads the table row and
   compares that cell, and each row revert-proves separately.
+- **`grep -c` OVER A GLOB PRINTS ONE COUNT PER FILE, not a total**, so it
+  substitutes into a shell test as `0:0` and the test fails with an operator
+  error rather than a wrong answer — which at least is loud. Hit **twice in one
+  session**, hours apart: once in `tools/rig-round16.sh`'s FLAGS PRE line, once
+  in a `docs/SETTLED.md` check command written *after* fixing the first. Pipe
+  it (`cat … | grep -c`) or use `grep -h … | wc -l`. Recorded because the
+  general rule — count what the pattern returned and ask whether that is the
+  number you expected — did not stop the second one.
+- **A PROCESS pattern that nearly matches is the same defect, and it matches
+  YOU.** `pkill -f blackbox.py` killed the monitoring shells that were waiting
+  on the sweep, because their command lines contained the string too; twice
+  more, `ps -p $(pgrep -f ...)` returned a wait-loop shell rather than the
+  process being asked about. Three times in one session. **Wait on a PID, not
+  on a pattern** — the pattern's namespace includes the tools you are using to
+  watch.
+- **A FILTERED VIEW OF AN ARTIFACT IS NOT THE ARTIFACT.** This is "answer from
+  the artifact" one turn deeper, and it produced the worst claim of the
+  session: a black-box sweep's meson block was read through `grep -v` and a
+  `tail`, showed only a header, and was reported — in a commit — as a process
+  that had been killed. It had completed all 838 invocations and exited on 96
+  findings. The progress lines were there and the filter had removed them.
+  **Before concluding anything from a log, look at the whole of it once.**
+- **Build the way the build builds.** `tests/fifo.c` compiled and passed under a
+  bare `gcc` and broke the tree, because the project sets `-D_XOPEN_SOURCE=700`
+  — under which POSIX 2008 has removed `usleep` — plus
+  `-Werror=implicit-function-declaration`. A convenience compile that omits the
+  project's flags is not a compile of the project.
 - **A grep hit is not a fact.** Confirm the match is in code, and not in a
   comment or in prose written earlier in the same session. Two false positives
   in one day: a function name matched inside a `TODO` comment, and a search for
@@ -925,6 +952,25 @@ behaviour we do not have. Two ways it has still managed to lie:
   later `+= err`, and bare `return -1`, and still presented itself as derived.
   Enumerate the thing from the source (every `goto` label found, reported under
   its own name) rather than listing the ones you thought of.
+- **A GENERATED DOCUMENT CAN BE WRONG BECAUSE AN INPUT ROTTED**, and that is
+  not a failure of derivation — it is one more input to keep fresh. The
+  contract's diagnostics field table is derived from the *committed* records,
+  so with `docs/sample-interrupted.diagnostics.json` three releases stale it
+  published `started_at` as **not in every record**: true of the samples, false
+  of the binary. Every guard passed. Ask what a generator READS, and put each
+  of those under a freshness check too.
+- **A CHECK WHOSE PRECONDITION HOLDS ONLY SOMETIMES REPORTS CONFIDENTLY EITHER
+  WAY.** `tools/blackbox.py` attributed any file appearing in `/tmp` during a
+  run's window to that run — but a window belongs to the MACHINE, so beside
+  other activity it reported 96 containment breaches, every one somebody
+  else's temp file. Sampling the machine for quiet at the start and end was not
+  enough either: an orphaned `meson test`, parented to init with its build
+  directory long deleted, had been running for ten and a half hours and both
+  samples fell between its writes. **A time window cannot attribute anything; a
+  NAME can** — every path this program writes is built from a string the
+  harness handed it. And the token must still discriminate: `tmp`, split out of
+  a probe's own `-a album=/tmp/escaped`, is a substring of every name Python's
+  `tempfile` produces.
 - **State the anchor a citation resolves against.** Every `file:line` in the
   contract was unverifiable, because the build banner's SHA is normalised away
   and nothing else identified the tree. Both sides then quoted line numbers at
