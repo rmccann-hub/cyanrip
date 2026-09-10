@@ -151,9 +151,24 @@ exactly what artifact would settle it, and we shipped that artifact for an
 unrelated reason.
 
 Still untouched by any run, and the list is shorter again: C2 (the rig's drive
-reports it unsupported), `-f`, damaged media, CD-TEXT from a disc that has some,
-the diagnosed-abort exit code (every rig rip has had `Ripping errors: 0`), and
-the interrupt/abort footers.
+reports it unsupported), `-f`, damaged media, and CD-TEXT from a disc that has
+some.
+
+**Two came off on 2026-09-10**, on test pin `ddc1e8c` —
+`docs/rig-2026-09-10-ddc1e8c/`, and the parenthetical this list used to carry
+("every rig rip has had `Ripping errors: 0`") is no longer true either:
+
+- **The interrupt footer**, which is NOT the abort footer and is a different
+  path: a SIGTERM arriving **mid-read** gave `Ripping errors: 1`,
+  `Rip completed:  no (interrupted by SIGTERM, 0 of 14 tracks)` and
+  `Interrupted at: track 1, mid-read` — with `Log FUN512:` present and `-Y`
+  exit 0, so the record of an incomplete rip is itself complete and attested.
+  The abort arm was settled on 2026-09-03; only that one was.
+- **A cancel that actually reached the process.** The three before it did not —
+  two finished normally, and 2026-09-07's ran 15m33s past the cancel because the
+  signal went to a distrobox wrapper. `SETTLED.md`'s *"a single SIGTERM cannot
+  terminate cyanrip"* still holds and is not contradicted: it is precise about
+  *once the rip loop is past*, and this one arrived inside it.
 
 **Two more came off on 2026-08-26** — `docs/rig-2026-08-26-d9c058c/`, a
 14-track disc on the BDR-209D at build `d9c058c`:
