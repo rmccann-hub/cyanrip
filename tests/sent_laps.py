@@ -211,6 +211,12 @@ SENT = {
     # §H1 found in lap 6 -- which stays exactly as sent.
     "round-16-lap-08.md":
         "565c624e6f3cb6449cc8fadb192967c86923e05f0f02b3618876491b6207784f",
+
+    # Lap 9, handed over 2026-09-10. Reports their first hardware run on this
+    # round's pair, the false negative in it, and gives the disk-full record
+    # the section our lap 4 gave six words.
+    "round-16-lap-09.md":
+        "0b05e8d4a5f37b63b8721805cf0d1840271d7db6d4388c801931e9a26263456b",
 }
 
 failures = 0
