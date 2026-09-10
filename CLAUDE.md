@@ -844,7 +844,13 @@ Four rules, each paid for on the first run:
   which tests detect an edit.** Two did; after the fix, one does.
 - **"No fixture can reach this" is a claim about the harness, not about the
   code.** Twenty of the 49 survivors were the AccurateRip verdict, unreachable
-  because every scenario passes `-A` and the suite has no network. But
+  because every scenario passes `-A`. **This used to say "and the suite has no
+  network", which stopped being true**: `accuraterip.com` answers from this
+  sandbox, and `tools/accurip-live-probe.py` drives the rewritten response
+  parser over a real 200 with no drive. The `-A` half was always the sufficient
+  reason and the network half was a second one that rotted -- a conclusion
+  resting on two reasons survives one of them going false, and nothing would
+  have noticed. But
   `cyanrip_log_track_end()` reads settings and a track struct and calls neither
   a drive nor a network, so the states can be **built**: point `ctx->logfile[0]`
   at a `tmpfile()`, fill the track in, call the shipped object, compare the
