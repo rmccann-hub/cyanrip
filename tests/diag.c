@@ -157,6 +157,38 @@ static void test_keeps_the_last_line_said(void)
     CHECK(strstr(out, "elided") == NULL && strstr(out, "truncated ---") == NULL,
           "a synthetic marker was written into the message record");
 
+    /* HOW MANY, not just which. Every assertion above is satisfied by a record
+     * holding one line too many at either bound, and a 2026-09-10 mutation
+     * sweep of src/diagnostics.c proved it: `diag_nb_lines < DIAG_MAX_HEAD`
+     * mutated to `<=` and `diag_tail_count < DIAG_MAX_TAIL` mutated to `<=`
+     * both SURVIVED this file, because the first and last markers still
+     * appear, the arrays are still present, and dropped is still non-zero.
+     *
+     * The bound is only observable in the arithmetic, so count it. 25002 lines
+     * were recorded against a 10000 head and a 10000 tail, so exactly 20000
+     * are kept and exactly 5002 are dropped -- and the three numbers must
+     * agree with each other, which is what makes this an independent check
+     * rather than a restatement of the constant.
+     *
+     * Counting `filler line ` and adding the two markers, rather than parsing
+     * JSON: every kept entry is one or the other, so the sum IS the array
+     * length and needs no parser to be exact. */
+    long kept = 2;                       /* FIRST-LINE and FATAL-LAST-LINE */
+    for (const char *s = out; (s = strstr(s, "filler line ")) != NULL; s++)
+        kept++;
+
+    CHECK(kept == 20000,
+          "the record kept a number of lines the two caps do not add up to -- "
+          "10000 head + 10000 tail is 20000, and an off-by-one at either bound "
+          "is invisible to every other check in this file");
+
+    char want_dropped[64];
+    snprintf(want_dropped, sizeof(want_dropped),
+             "\"messages_dropped\": %ld", 25002L - kept);
+    CHECK(strstr(out, want_dropped) != NULL,
+          "messages_dropped does not equal recorded minus kept -- the record's "
+          "own accounting disagrees with the lines it actually carries");
+
     free(out);
     remove(path);
 }
