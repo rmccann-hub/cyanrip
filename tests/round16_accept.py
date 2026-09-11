@@ -273,6 +273,14 @@ def main():
            2, r"WARN.*clause1/disabled.*no `Invoked as:` line",
            r"because -A was passed")
 
+    # The mirror of §C1 that their lap did not name: a hash differing for a
+    # reason that is not de-emphasis. A truncated arm is neither near-empty nor
+    # silent, so neither guard above sees it -- and the hashes differ.
+    expect("clause 2 one arm TRUNCATED",
+           lambda o: (o / "hdcd-nodeemph" / "1.pcm").write_bytes(audio(2)[:100000]),
+           1, r"FAIL.*clause2/trivial.*different LENGTHS",
+           r"OK.*clause2/differ")
+
     # 4. Clause 3.
     expect("clause 3 old schema",
            lambda o: (o / "plain.json").write_text(

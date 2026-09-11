@@ -329,6 +329,31 @@ def clause2(out):
              f"nothing about de-emphasis")
         return
 
+    # THE SAME CLASS AS §C1, AND THE INSTANCE THEY DID NOT NAME: a hash that
+    # differs for a reason that is not de-emphasis. Silence was one; unequal
+    # LENGTH is another, and it is not caught above -- a half-truncated arm is
+    # neither near-empty nor silent, and its hash differs from the other arm's
+    # for a reason this clause is not about.
+    #
+    # Equal length is a real invariant here, not a hope. Both arms pass `-H`,
+    # so both decode to the same width, and `aemphasis` is a biquad -- a
+    # filter, sample-count preserving. Two `-o pcm` rips of one track list off
+    # one disc differ in length only if something OTHER than the filter graph
+    # did it, which is exactly when the comparison stops measuring de-emphasis.
+    #
+    # What the passing fixtures shared was "same length and both audio". Asking
+    # what a set of passing cases has in common is the move that would have
+    # found §C1 here rather than in their lap.
+    if len(data["hdcd-deemph"]) != len(data["hdcd-nodeemph"]):
+        note("FAIL", "clause2/trivial",
+             f"the two arms are different LENGTHS: -H -E "
+             f"{len(data['hdcd-deemph'])} bytes, -H -W "
+             f"{len(data['hdcd-nodeemph'])}. De-emphasis is a filter and "
+             f"preserves sample count, so this difference was produced by "
+             f"something else and the hashes below cannot be about "
+             f"de-emphasis. Read both .stdout files", str(pcm["hdcd-deemph"]))
+        return
+
     h = {k: hashlib.md5(d).hexdigest() for k, d in data.items()}
     if h["hdcd-deemph"] == h["hdcd-nodeemph"]:
         note("FAIL", "clause2/differ",
