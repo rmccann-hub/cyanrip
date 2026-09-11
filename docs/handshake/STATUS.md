@@ -63,11 +63,20 @@ outstanding in either direction:
 process at all:
 
 ```sh
-git checkout 0cd611a -- tools/rig-round16.sh tools/audio-checksums.py \
+git checkout 5bbb5ae -- tools/rig-round16.sh tools/audio-checksums.py \
                        tools/round16-accept.py
 DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" sh tools/rig-round16.sh
 python3 tools/round16-accept.py --out round16-<stamp>Z
 ```
+
+**The pin moved from `0cd611a` to `5bbb5ae`, and only because it had to.**
+`rig-round16.sh` and `audio-checksums.py` are **byte-identical** between the two
+— checked, not assumed — so the only file that changes is the grader, and it
+changes for two defects their lap 12 found in it. §C1: the audio gate was `max`
+where it must be `min`, so one silent arm beside one real arm PASSED clause 2,
+*because* the hashes differ when one side is empty. §C2: `disabled` is the
+zero-value fallthrough of the ternary at `cyanrip_log.c:786`, so it does not
+require `-A` and the message must not claim it does.
 
 **A commit, not a branch tip, and that was their ask in lap 5 §0.** Between our
 lap 2 and lap 4 the script moved `615243361882b881` → `178bd4df5dc28d53` for
@@ -85,11 +94,16 @@ checker written afterwards is how a close condition quietly moves. It refuses
 to grade a run whose `banner.txt` names neither pin, and its exit code
 distinguishes *a clause said no* (1) from *a clause could not be asked* (2).
 
-**`tools/round16-accept.py` has moved since `0cd611a` and the block still does
-not.** `a0830e0` splits clause 1's four non-`found` verdicts; the only one it
-promotes to `FAIL` is `disabled`, which needs `-A` on the clause-1 rip, and the
-pinned script deliberately omits it there. Nothing reachable in Run A differs.
-A pin that chases the work is what round 7 died of.
+**The earlier reasoning for keeping `0cd611a` was wrong and is withdrawn.** It
+said `a0830e0` changed nothing reachable because *"`disabled` requires `-A`"*.
+It does not: `CYANRIP_ACCUDB_DISABLED` is `0`, `"disabled"` is the bare `else`
+of a ternary over that field, and `accurip.c:134` and `:211` both `goto end`
+without writing it — `:211` **after** `curl_easy_perform` returned `CURLE_OK`,
+so the query ran. Their lap 12 §C2 found it; verified here at the pin.
+
+**A pin that chases the work is still what round 7 died of, and this is the
+exception that rule allows**: a change that is reachable, in the file both
+pre-commits key on. It moves once, for this, and not again.
 
 ## What is still OPEN — audited 2026-09-11, and it is a short list
 
