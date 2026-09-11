@@ -165,10 +165,16 @@ def main():
     # measurement, not our failure, and still cannot settle the clause.
     expect("clause 1 not found is unsettled, not failed", verdict("not found"),
            2, r"parser RAN and the disc is not in the database")
-    # `disabled`: the query never ran at all. -A reached the one rip that must
-    # not have it, which is a harness error and not a result.
-    expect("clause 1 disabled is a harness error", verdict("disabled"),
-           1, r"FAIL.*clause1/disabled")
+    # `disabled`: THIS CASE USED TO ASSERT THE DEFECT. It read "the query never
+    # ran at all. -A reached the one rip that must not have it, which is a
+    # harness error" and demanded exit 1 -- pinning, as a requirement, the
+    # claim round 16 lap 12 §C2 disproved. A test written from the same wrong
+    # premise as the code cannot catch the code; it makes the defect harder to
+    # remove. The base fixture's argv carries no `-A`, so the honest grade is
+    # UNSETTLED, and the four cases below assert the distinction properly.
+    expect("clause 1 disabled on the base fixture is UNSETTLED, not a harness error",
+           verdict("disabled"), 2, r"WARN.*clause1/disabled",
+           r"because -A was passed")
     # `mismatch`: the parser worked; the disc was found and the checksums
     # disagree. A claim about the rip, not about the parser.
     expect("clause 1 mismatch is about the rip, not the parser",
@@ -189,13 +195,83 @@ def main():
     expect("clause 2 silence",
            lambda o: [(o / n / "1.pcm").write_bytes(b"\0" * 200000)
                       for n in ("hdcd-deemph", "hdcd-nodeemph")],
-           1, r"FAIL.*clause2/trivial")
+           1, r"FAIL.*clause2/trivial.*hdcd-deemph and hdcd-nodeemph are")
+
+    # ROUND 16 LAP 12 §C1, AND THE CASE THAT MADE THE DEFECT INVISIBLE. The
+    # gate was `max(fr.values()) < 0.01`, which fires only when NEITHER arm has
+    # audio -- and "neither" is the one case the fixture above builds. One
+    # silent arm beside one real arm sailed through, and then PASSED, because
+    # the two hashes differ PRECISELY BECAUSE one of them is silence. A broken
+    # `-H -E` decoding to nothing would have been graded as proof that
+    # de-emphasis reached the audio.
+    #
+    # Both arms get their own case. A gate written to look at one key passes
+    # whichever one the single fixture happens to use, and which arm goes
+    # silent is not something a rig run gets to choose.
+    for silent, other in (("hdcd-deemph", "hdcd-nodeemph"),
+                          ("hdcd-nodeemph", "hdcd-deemph")):
+        expect(f"clause 2 ONLY {silent} is silent",
+               lambda o, s=silent: (o / s / "1.pcm").write_bytes(b"\0" * 200000),
+               1, rf"FAIL.*clause2/trivial.*\b{silent} is\b",
+               # THE HARM, asserted directly: without this the checker reports
+               # the two arms differing as a clause-2 PASS.
+               r"OK.*clause2/differ")
+
+    # The message must say WHICH arm, and a message that fits both arities
+    # describes neither -- `sectors?` matching `sector` and `sectors` alike is
+    # the precedent, and it killed none of the three mutants it was for. So the
+    # single-arm case must NOT name the arm that still has audio.
+    expect("clause 2 one-arm message does not name the loud arm",
+           lambda o: (o / "hdcd-deemph" / "1.pcm").write_bytes(b"\0" * 200000),
+           1, r"clause2/trivial.*hdcd-deemph is\b",
+           r"clause2/trivial.*hdcd-deemph and hdcd-nodeemph")
     expect("clause 2 near-empty",
            lambda o: (o / "hdcd-deemph" / "1.pcm").write_bytes(b"\1\2" * 8),
            1, r"FAIL.*clause2/trivial")
     expect("clause 2 no pcm at all",
            lambda o: (o / "hdcd-deemph" / "1.pcm").unlink(),
            2, r"UNPROBED.*clause2/audio", r"All three clauses settled")
+
+    # ROUND 16 LAP 12 §C2. `disabled` is the ZERO-VALUE FALLTHROUGH of the
+    # ternary at cyanrip_log.c:786, over a field whose zero is
+    # CYANRIP_ACCUDB_DISABLED -- so every path leaving it unwritten prints it,
+    # including accurip.c:211, reached AFTER curl_easy_perform returned
+    # CURLE_OK. The message here used to assert `-A` as the cause, which the
+    # status line cannot establish. It IS readable, from the argv.
+    def disable(o, invoked=None):
+        log = o / "accurip" / "accurip.log"
+        txt = log.read_text().replace("AccurateRip:    found",
+                                      "AccurateRip:    disabled")
+        if invoked is None:
+            txt = "\n".join(l for l in txt.splitlines()
+                             if not l.startswith("Invoked as:")) + "\n"
+        else:
+            txt = re.sub(r"(?m)^Invoked as:.*$", f"Invoked as:     {invoked}", txt)
+        log.write_text(txt)
+
+    expect("clause 1 disabled WITH -A in the argv",
+           lambda o: disable(o, "/usr/local/bin/cyanrip -d /dev/sr0 -N -A -U"),
+           1, r"FAIL.*clause1/disabled.*`-A` IS in `Invoked as:`")
+
+    # The one that matters: -A absent. The old message would have reported a
+    # harness error that did not happen, and named a cause it cannot know.
+    expect("clause 1 disabled with NO -A",
+           lambda o: disable(o, "/usr/local/bin/cyanrip -d /dev/sr0 -N -U"),
+           2, r"WARN.*clause1/disabled.*NO -A in `Invoked as:`",
+           r"because -A was passed")
+
+    # -A must be matched as a TOKEN. It occurs inside ordinary paths, and a
+    # pattern that nearly matches is worse than one that does not.
+    expect("clause 1 disabled where -A is only a substring",
+           lambda o: disable(o, "/usr/local/bin/cyanrip -d /dev/sr0 -N -U "
+                                "-D /home/rig/OUT-Archive -a album=SIDE-Α"),
+           2, r"WARN.*clause1/disabled.*NO -A in `Invoked as:`",
+           r"`-A` IS in")
+
+    expect("clause 1 disabled with no Invoked as: line at all",
+           lambda o: disable(o, None),
+           2, r"WARN.*clause1/disabled.*no `Invoked as:` line",
+           r"because -A was passed")
 
     # 4. Clause 3.
     expect("clause 3 old schema",

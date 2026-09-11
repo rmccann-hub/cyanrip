@@ -166,11 +166,54 @@ def clause1(out):
         # cyanrip_log.c:786 is the whole set: error, not found, found,
         # mismatch, disabled.
         if verdict == "disabled":
-            note("FAIL", "clause1/disabled",
-                 "`AccurateRip: disabled` -- the query never ran, because -A "
-                 "was passed to the ONE rip that must not have it. This is a "
-                 "harness error, not a result: nothing about the rewritten "
-                 "parser was exercised", str(log))
+            # ROUND 16 LAP 12 §C2, AND THE HALF OF IT THEY DID NOT TAKE FAR
+            # ENOUGH. `disabled` is the bare `else` of a ternary cascade over
+            # `ar_db_status`, whose zero value IS `CYANRIP_ACCUDB_DISABLED`
+            # (cyanrip_main.h:67, cyanrip_log.c:786-790 at a9aedf0). So EVERY
+            # path that leaves the field unwritten prints it, and there are at
+            # least three:
+            #
+            #   -A                     crip_fill_accurip() returns at once
+            #   missing CDDB ID        accurip.c:134, `goto end`, no query made
+            #   CONTENT_TYPE getinfo   accurip.c:211, AFTER curl_easy_perform
+            #                          returned CURLE_OK -- the query DID run
+            #
+            # The message that used to be here asserted the FIRST of those as
+            # the cause. That is a mechanism the printed value cannot establish
+            # -- the same defect one level down from the one their §C2 found,
+            # and the first rule in this tree forbids it.
+            #
+            # It IS distinguishable, but from the argv rather than from the
+            # status line, so that is what we read. Absent that, say which two
+            # remain and that this cannot choose between them.
+            inv = re.search(r"^Invoked as:\s+(.*?)\s*$", text, re.M)
+            argv = inv.group(1).split() if inv else None
+            if argv is None:
+                note("WARN", "clause1/disabled",
+                     "`AccurateRip: disabled` and the logfile carries no "
+                     "`Invoked as:` line, so this cannot say whether -A was "
+                     "passed or whether the query ran and left the status "
+                     "unwritten. The clause is UNSETTLED either way", str(log))
+            elif "-A" in argv:
+                # An exact token after splitting, never a substring: `-A` occurs
+                # inside ordinary paths and metadata values, and a pattern that
+                # nearly matches is worse than one that does not.
+                note("FAIL", "clause1/disabled",
+                     "`AccurateRip: disabled` and `-A` IS in `Invoked as:` -- "
+                     "read from the logfile, not inferred from the status. The "
+                     "query never ran and nothing about the rewritten parser "
+                     "was exercised. A harness error, not a result: drop -A "
+                     "from the clause-1 rip and run it again", str(log))
+            else:
+                note("WARN", "clause1/disabled",
+                     "`AccurateRip: disabled` with NO -A in `Invoked as:`. The "
+                     "status field was left at its zero value by some path "
+                     "inside crip_fill_accurip() -- accurip.c:134 (missing "
+                     "CDDB ID, no query) and :211 (CONTENT_TYPE getinfo failed "
+                     "AFTER a successful transfer, so the query DID run) are "
+                     "two of them, and THIS LINE CANNOT TELL THEM APART. Read "
+                     "the stdout for the `Unable to get AccuRIP DB data:` "
+                     "message, which names the path", str(log))
         elif verdict == "not found":
             note("WARN", "clause1/status",
                  "`AccurateRip: not found`. The parser RAN and the disc is not "
@@ -265,11 +308,25 @@ def clause2(out):
                  str(pcm[k]))
             return
     fr = {k: nonzero_fraction(d[:400000]) for k, d in data.items()}
-    if max(fr.values()) < 0.01:
+    # `min`, NOT `max`. ROUND 16 LAP 12 §C1. With `max` this fires only when
+    # NEITHER arm carries audio, so one silent arm beside one real arm sails
+    # straight through -- and then PASSES the hash comparison below, because the
+    # two hashes differ PRECISELY BECAUSE one of them is silence. A broken
+    # `-H -E` that decoded to nothing would have been graded as proof that
+    # de-emphasis reached the audio: the exact mirror of `b866900`, which this
+    # clause exists to retire, and the one the fixtures could not see.
+    quiet = sorted(k for k, v in fr.items() if v < 0.01)
+    if quiet:
+        # Derived from the count, never a bare `file(s)`. A message that fits
+        # both arities describes neither, and this branch's whole job is to say
+        # WHICH arm is empty -- the old one could only ever say "both".
         note("FAIL", "clause2/trivial",
-             f"both files are >=99% silence in the first 200k samples "
-             f"({fr['hdcd-deemph']:.3%} / {fr['hdcd-nodeemph']:.3%}). Silence "
-             f"compares equal to silence; this settles nothing")
+             f"{' and '.join(quiet)} "
+             f"{'is' if len(quiet) == 1 else 'are'} >=99% silence in the first "
+             f"200k samples (-H -E {fr['hdcd-deemph']:.3%}, -H -W "
+             f"{fr['hdcd-nodeemph']:.3%}). Silence compares equal to silence, "
+             f"and a hash that differs because one side is EMPTY settles "
+             f"nothing about de-emphasis")
         return
 
     h = {k: hashlib.md5(d).hexdigest() for k, d in data.items()}
