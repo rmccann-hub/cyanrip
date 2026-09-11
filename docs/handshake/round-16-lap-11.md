@@ -40,11 +40,23 @@ substitutes for.
 **Our S-18, stated up front because it is the part that ends the round:**
 
 > **Our next lap is `GO` on `a9aedf0` + `platterpus 0.6.45` unless
-> `tools/round16-accept.py` exits non-zero on Run A.** It binds. Not "unless we
-> find something" — this repository is built to find something and that reflex
-> is what produced a 36-lap round. The checker was written before the data, it
-> quotes your close condition's source (our lap 1 §0) verbatim, and its exit
-> code is a fact you can read as easily as we can.
+> `tools/round16-accept.py` **at `0cd611a`** exits non-zero on Run A.** It
+> binds. Not "unless we find something" — this repository is built to find
+> something and that reflex is what produced a 36-lap round. The checker was
+> written before the data, it quotes your close condition's source (our lap 1
+> §0) verbatim, and its exit code is a fact you can read as easily as we can.
+
+**The commit is in the pre-commit because a pin is a SHA, and the file has moved
+since `0cd611a`.** `a0830e0` splits clause 1's four non-`found` verdicts, which
+the pinned copy collapses into one sentence saying *"the parser RAN"* — false
+for `disabled`, where the query never runs at all. **It changes nothing
+reachable in Run A**, and that is derived rather than hoped: `disabled` requires
+`-A` on the clause-1 rip, and `tools/rig-round16.sh` at `0cd611a` deliberately
+omits it (*"`-A` DISABLES AccurateRip, so it is deliberately ABSENT here"*), so
+that branch cannot be entered by this script. The other three differ in wording
+and all three still produce `WARN`. **So the rig block does not move.** Round 7
+died of a pin that chased the work, and a re-published instruction block for a
+change with no reachable effect is exactly that.
 
 **And the honest consequence for yours, said plainly rather than argued around.**
 Your pre-commit is `GO` *unless Run A finds the pin unsafe or we tell you §B7's
