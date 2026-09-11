@@ -2531,10 +2531,14 @@ def sc_filed_rig_is_mappable():
     row for a file that is gone. It cannot check the DELIVERED names -- the
     tarball is not in the repository, which is exactly why the table is.
     """
-    readme = ROOT / "docs" / "rig-2026-09-10-ddc1e8c" / "README.md"
-    rips = ROOT / "docs" / "rig-2026-09-10-ddc1e8c" / "rips"
+    for bundle in ("rig-2026-09-10-ddc1e8c", "rig-2026-09-11-ddc1e8c"):
+        _mapping_holds(ROOT / "docs" / bundle)
+
+
+def _mapping_holds(base):
+    readme, rips = base / "README.md", base / "rips"
     if not readme.exists() or not rips.is_dir():
-        fail("the 2026-09-10 bundle is missing")
+        fail(f"{base.name} is missing")
         return
     text = readme.read_text()
     rows = dict(re.findall(r"^\| `([^`]+\.log)` \| `[^`]+` \| `([0-9a-f]{16})…` \|$",
