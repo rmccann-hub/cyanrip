@@ -285,6 +285,17 @@ test('Round 16 acceptance checker', python, args: [ files('round16_accept.py') ]
 test('Contract delta names its section', python,
      args: [ files('contract_delta.py') ])
 
+## Round 16 lap 10 §D: our lap 9 §C said "three commits since lap 8" and named
+## them in prose. Platterpus derived FIVE from the send pin and NINE from lap
+## 8's HANDSHAKE-FROM-COMMIT; two were missing, and one of them corrected the
+## Run A block -- the procedure for the one artifact the round waits on. The
+## defect is the MISSING RANGE: a count naming no baseline is unfalsifiable, so
+## they had to guess two and report both. tools/lap-commits.py derives it, and
+## the sharpest check here is the cross-check -- it must reproduce BOTH numbers
+## a second, independent implementation got from our own history.
+test('Lap commit list names its range', python,
+     args: [ files('lap_commits.py') ])
+
 test('Handshake wire conformance', python,
      args: [ files('handshake_wire.py'), meson.project_source_root() ])
 
