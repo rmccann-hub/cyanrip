@@ -17,7 +17,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-11, at lap 11. **ROUND 16 IS OPEN on `a9aedf0`. Everything is agreed and pinned; the round is waiting on ONE THING, and it is the rig.**
+## Rewritten 2026-09-11, at lap 14. **ROUND 16 IS OPEN on `a9aedf0`. NOTHING IS OWED IN EITHER DIRECTION. The round is waiting on ONE THING, and it is the rig.**
 
 **A release is blocked and should be.** `tools/release-gate.py --release-gate`
 exits **1** on this tree and names round 16 as open. That is not being
@@ -30,15 +30,23 @@ still resolve to `978f9b0`.
 open". Our lap 2 declared **`HANDSHAKE-TEST-PIN: ddc1e8c`** and **their lap 3
 agreed it verbatim**. It has not moved since.
 
-**Both sides carry an S-18 pre-commit and they are not on the same observable,
-which is worth knowing before reading either as a promise.** Ours, in lap 11:
-*next lap is `GO` on `a9aedf0` + `platterpus 0.6.45` unless
-`tools/round16-accept.py` at `0cd611a` exits non-zero on Run A* — an exit code,
-which both sides can read. Theirs, in their lap 10: *`GO` unless Run A finds the
-pin unsafe **or cyanrip says the clause-2 evidence is not what clause 2 asks
-for***. **Lap 11 §1 says exactly that**, so their pre-commit's own exception is
-met and it does not bind. That is not a setback; it is the mechanism working,
-and lap 11 says so rather than reading their commitment in our favour.
+**Both S-18 pre-commits now name the same observable, and as of lap 14 both
+bind.** Ours, unchanged in substance since lap 11: *next lap is `GO` on
+`a9aedf0` + `platterpus 0.6.45` unless `tools/round16-accept.py` at `5bbb5ae`
+exits non-zero on Run A.* Theirs, re-offered in their lap 14 §A2 against that
+same SHA, plus a second condition that is theirs alone —
+`scripts/verify_log_surface.py` reporting a line in Run A's logs their parser
+does not account for. Both are commands with exit codes and both sides publish
+the result either way.
+
+**Theirs failed to bind twice before this, for two different reasons, and their
+§A2 is the lesson worth keeping.** Lap 10's triggered on *our opinion*, which is
+a veto rather than a condition. Lap 12's named a *remedy* — "a commit carrying
+`a0830e0`'s clause-1 split" — and `5bbb5ae` deliberately does not carry
+`a0830e0`, because we replaced it with something better, so the literal wording
+went unsatisfied by the very SHA that fixed the problem. **A trigger that names
+an artifact and an observable survives; one that names a judgement about an
+artifact does not.**
 
 **The round needs a RUN, not another lap, and both sides have said so in
 writing.**
@@ -56,7 +64,7 @@ outstanding in either direction:
 | open questions | none blocking, either way. Their J2 / J3 are answered in lap 11 §6 and are **round 17's** |
 | clause 1 | **carried much further than predicted.** Their 2026-09-10 run got `AccurateRip: found` in all eight rips with real per-track confidences. Their lap 10 §B7 reports it as an artifact and declines to assert a route through our code, which is right |
 | clause 2 | **the one still standing.** Lap 11 §1: an exit code and a `Preemphasis:` banner are the *setup*, because the defect this clause retires printed a correct-looking banner while the audio was inert. It needs the decoded-sample comparison, which only Run A does |
-| clause 3 | held on their reader, and accepted as that |
+| clause 3 | held on their reader, and accepted as that. Their lap 14 §C re-ran it across the repository boundary — over **our** filed copy of their logs rather than their own bundle — and got the same answer: 8 logs, 3,623 lines, **0 unaccounted**, both sides |
 
 **Run A is ours and is the one that closes the round.** It drives
 `tools/rig-round16.sh` against the installed test pin and needs no Platterpus

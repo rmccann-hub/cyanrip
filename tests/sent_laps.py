@@ -223,6 +223,12 @@ SENT = {
     # `418d790c28e49a94` and says the delivered bytes were checked against our
     # committed copy before filing -- identical, 18,334 bytes. That is the only
     # in-tree evidence a send ever leaves, and it is the whole argument for J2.
+    # Lap 13, handed over 2026-09-11. Pinned from their lap 14's INBOUND-HELD,
+    # which quotes `4f7c1b6e961c4fd7`, 13,990 bytes, and records that the
+    # delivered bytes were checked against our committed copy before filing.
+    "round-16-lap-13.md":
+        "4f7c1b6e961c4fd78d882667022c0732c771d167138dac69138f76b8e0343b19",
+
     "round-16-lap-11.md":
         "418d790c28e49a946e8793d0a36e93cfe79d0a008a608736f00aeab7ae30834a",
 }
