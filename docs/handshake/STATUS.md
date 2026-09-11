@@ -17,7 +17,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-07. **ROUND 16 IS OPEN on `a9aedf0`. Everything is agreed and pinned; the round is waiting on ONE THING, and it is the rig.**
+## Rewritten 2026-09-11, at lap 11. **ROUND 16 IS OPEN on `a9aedf0`. Everything is agreed and pinned; the round is waiting on ONE THING, and it is the rig.**
 
 **A release is blocked and should be.** `tools/release-gate.py --release-gate`
 exits **1** on this tree and names round 16 as open. That is not being
@@ -27,23 +27,36 @@ still resolve to `978f9b0`.
 **What unblocks a hardware session instead is a TEST PIN**, which
 `PROTOCOL.md` §6a defines precisely so a round is not deadlocked between
 "a close needs hardware evidence" and "the pin may not move while the round is
-open". Our lap 2 declared **`HANDSHAKE-TEST-PIN: ddc1e8c`**; **their lap 3
-agreed it verbatim**, and both sides now carry the same S-18 pre-commit —
-*next lap is `GO` on `a9aedf0` + `platterpus 0.6.42` unless the run finds the
-reviewed pin unsafe.* **The round needs a RUN, not another lap, and both sides
-have said so in writing.**
+open". Our lap 2 declared **`HANDSHAKE-TEST-PIN: ddc1e8c`** and **their lap 3
+agreed it verbatim**. It has not moved since.
 
-**Laps 4, 5 and 6 settled everything that had a deadline.** Nothing is
+**Both sides carry an S-18 pre-commit and they are not on the same observable,
+which is worth knowing before reading either as a promise.** Ours, in lap 11:
+*next lap is `GO` on `a9aedf0` + `platterpus 0.6.45` unless
+`tools/round16-accept.py` at `0cd611a` exits non-zero on Run A* — an exit code,
+which both sides can read. Theirs, in their lap 10: *`GO` unless Run A finds the
+pin unsafe **or cyanrip says the clause-2 evidence is not what clause 2 asks
+for***. **Lap 11 §1 says exactly that**, so their pre-commit's own exception is
+met and it does not bind. That is not a setback; it is the mechanism working,
+and lap 11 says so rather than reading their commitment in our favour.
+
+**The round needs a RUN, not another lap, and both sides have said so in
+writing.**
+
+**Laps 4 through 11 settled everything that had a deadline.** Nothing is
 outstanding in either direction:
 
 | | state |
 |---|---|
 | test pin | `ddc1e8c`, agreed both sides, unmoved |
 | reviewed pin | `a9aedf0`, unmoved (S-15) |
-| app | `platterpus 0.6.42`, released |
+| app | `platterpus 0.6.45`, released; their pin `62de7b6`, transcribed from their lap 10 and **not** resolvable here |
 | rig script | **pinned to commit `0cd611a`**, not to a branch tip |
 | provider contract | delivered by URL + sha256; **no flag changed** |
-| open questions | none blocking, either way |
+| open questions | none blocking, either way. Their J2 / J3 are answered in lap 11 §6 and are **round 17's** |
+| clause 1 | **carried much further than predicted.** Their 2026-09-10 run got `AccurateRip: found` in all eight rips with real per-track confidences. Their lap 10 §B7 reports it as an artifact and declines to assert a route through our code, which is right |
+| clause 2 | **the one still standing.** Lap 11 §1: an exit code and a `Preemphasis:` banner are the *setup*, because the defect this clause retires printed a correct-looking banner while the audio was inert. It needs the decoded-sample comparison, which only Run A does |
+| clause 3 | held on their reader, and accepted as that |
 
 **Run A is ours and is the one that closes the round.** It drives
 `tools/rig-round16.sh` against the installed test pin and needs no Platterpus
@@ -59,9 +72,12 @@ python3 tools/round16-accept.py --out round16-<stamp>Z
 **A commit, not a branch tip, and that was their ask in lap 5 §0.** Between our
 lap 2 and lap 4 the script moved `615243361882b881` → `178bd4df5dc28d53` for
 good reasons — three defects *they* found — but an artifact reviewed and an
-artifact run are the same thing only if it is named by commit. Those two files
-do not change again this round; if something forces it, they get the new commit
-before the night.
+artifact run are the same thing only if it is named by commit.
+
+**Three files, three commands, and their lap 3 published a two-file version.**
+`7ace6e5` corrected this block; their §D corrected their own copy from it and
+says a Run A from the stale block *"would have produced no verdict"*. All three
+files are present at `0cd611a` — checked, not assumed.
 
 **`tools/round16-accept.py` grades the result** against the close condition and
 was written **before** the run, which is the only reason it can be trusted: a
@@ -69,7 +85,13 @@ checker written afterwards is how a close condition quietly moves. It refuses
 to grade a run whose `banner.txt` names neither pin, and its exit code
 distinguishes *a clause said no* (1) from *a clause could not be asked* (2).
 
-## What is still OPEN — audited 2026-09-07, and it is a short list
+**`tools/round16-accept.py` has moved since `0cd611a` and the block still does
+not.** `a0830e0` splits clause 1's four non-`found` verdicts; the only one it
+promotes to `FAIL` is `disabled`, which needs `-A` on the clause-1 rip, and the
+pinned script deliberately omits it there. Nothing reachable in Run A differs.
+A pin that chases the work is what round 7 died of.
+
+## What is still OPEN — audited 2026-09-11, and it is a short list
 
 Swept mechanically rather than remembered: every `J`-item either side raised in
 rounds 15 and 16, every `BLOCKING` tag in the record, and `--gaps` over all ten
@@ -79,12 +101,20 @@ rounds.
 explicitly deferred, and no live `BLOCKING` tag exists anywhere** — the ones the
 grep finds are round 14's, closed.
 
-**Two items carry to round 17, both `NEXT-ROUND`, both accepted in principle:**
+**Two items carry to round 17, both `NEXT-ROUND`, both now settled as to who
+does what — their lap 10 §I2 asked, and lap 11 §6 answered:**
 
 | item | raised | state |
 |---|---|---|
-| **J2** — write up *committed-is-sent*, with their three riders | their round-16 lap 3 | accepted, not started |
-| **J3** — make `HANDSHAKE-TO` and the repo pair normative in `PROTOCOL.md` v5 | their round-16 lap 3 | accepted; **needs a v5 bump neither side may make alone** |
+| **J2** — write up *committed-is-sent*, with their three riders | their round-16 lap 3 | **accepted both sides.** Their §I3 made the strongest case for it either side has: a list that was seven long when they packed the envelope and longer by the time we read it is the argument, not a caveat |
+| **J3** — make `HANDSHAKE-TO` and the repo pair normative in `PROTOCOL.md` v5 | their round-16 lap 3 | **we draft, they review in one lap.** Custody of the shared seam files is ours — one address to fetch, one hash to check — while authorship is joint. J2, J3, `seam-commands.md`'s line-97 `-D` row and direction-in-envelope-filenames ride in ONE bump, not three |
+
+**Their lap 10 §I2 also closed three questions they were carrying that we had
+already answered in lap 4** — the `8c2817219f6aa087` method (withdrawn), the
+`-j` precedence, and the `0f8523b` contract, which they already hold: it and
+`0cd611a` hash identically, `1bf60e555fa37d0a…`, re-derived here rather than
+accepted. Carrying an answered question forward makes a lap look like it is
+waiting on the other side when it is not.
 
 **Also filed for round 17, none of them questions:**
 
@@ -316,8 +346,8 @@ Build command: `meson setup build -Ddeclare_released=true && ninja -C build`.
 resolves these; this table is a human-readable copy of it and the test exists
 because a copy rots.
 
-**No release is coming while round 15 is open.**
-`tools/release-gate.py --release-gate` exits 1 on this tree and names round 15,
+**No release is coming while round 16 is open.**
+`tools/release-gate.py --release-gate` exits 1 on this tree and names round 16,
 which is correct and is not being overridden. Work has landed on
 `platterpus-fork` since the pin — all of it documentation, tests and tooling,
 none of it in `src/`.
