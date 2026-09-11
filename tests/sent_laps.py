@@ -217,6 +217,14 @@ SENT = {
     # the section our lap 4 gave six words.
     "round-16-lap-09.md":
         "0b05e8d4a5f37b63b8721805cf0d1840271d7db6d4388c801931e9a26263456b",
+
+    # Lap 11, handed over 2026-09-11. Pinned from a PEER RECEIPT rather than
+    # from the act of sending: their lap 12's INBOUND-HELD quotes
+    # `418d790c28e49a94` and says the delivered bytes were checked against our
+    # committed copy before filing -- identical, 18,334 bytes. That is the only
+    # in-tree evidence a send ever leaves, and it is the whole argument for J2.
+    "round-16-lap-11.md":
+        "418d790c28e49a946e8793d0a36e93cfe79d0a008a608736f00aeab7ae30834a",
 }
 
 failures = 0
