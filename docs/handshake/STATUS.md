@@ -73,9 +73,19 @@ process at all:
 ```sh
 git checkout 5bbb5ae -- tools/rig-round16.sh tools/audio-checksums.py \
                        tools/round16-accept.py
-DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" sh tools/rig-round16.sh
-python3 tools/round16-accept.py --out round16-<stamp>Z
+OUT=./runA DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" \
+    sh tools/rig-round16.sh
+python3 tools/round16-accept.py --out ./runA
 ```
+
+**`OUT=./runA` is deliberate and it is the third command's whole point.** The
+script otherwise names its own directory `round16-<UTC stamp>`, which the
+operator then has to read off the screen and retype into the grader — a
+transcription step between the measurement and the verdict, at the end of a
+long session, on the one run this round is waiting for. Naming it up front
+removes it. `OUT` is honoured at `rig-round16.sh:36` and the directory is
+created at `:81`; nothing else about the pinned files changes, so `5bbb5ae`
+does not move and neither pre-commit is disturbed.
 
 **The pin moved from `0cd611a` to `5bbb5ae`, and only because it had to.**
 `rig-round16.sh` and `audio-checksums.py` are **byte-identical** between the two
