@@ -71,13 +71,19 @@ outstanding in either direction:
 process at all:
 
 ```sh
-cd ~ && rm -rf runA-work
-git clone -q https://github.com/rmccann-hub/cyanrip runA-work && cd runA-work
+# EVERYTHING this procedure creates lives under ONE directory, so cleanup is
+# `rm -rf ~/cyanrip-rig` and nothing else. Operator's instruction, 2026-09-11,
+# after a session left runA-work/, xtest/, ytest/, regrade/, keep/ and a tarball
+# loose in $HOME. A rig procedure that scatters is one the operator has to
+# garden; this one does not.
+RIG=~/cyanrip-rig
+rm -rf "$RIG/work" && mkdir -p "$RIG"
+git clone -q https://github.com/rmccann-hub/cyanrip "$RIG/work" && cd "$RIG/work"
 git checkout 5bbb5ae -- tools/rig-round16.sh tools/audio-checksums.py \
                        tools/round16-accept.py docs/rig-2026-08-05/cyanrip.log
-OUT=./runA DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" \
+OUT="$RIG/runA" DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" \
     sh tools/rig-round16.sh
-python3 tools/round16-accept.py --out ./runA
+python3 tools/round16-accept.py --out "$RIG/runA"
 ```
 
 **Three things in that block are there because a previous version of it was
