@@ -259,11 +259,27 @@ def clause1(out):
     # overlap and SAY how many -- a comparison whose scope is unstated is the
     # defect that shipped "all four lines identical" over an inventory of 12.
     n = min(len(got), len(want))
-    bad, rose, fell = [], 0, 0
+    bad, rose, fell, unusable = [], 0, 0, []
     for i in range(n):
         gk, gs, gc = got[i]
         wk, ws, wc = want[i]
-        if gk != wk or gs != ws:
+        # A REFERENCE LINE THE DATABASE DID NOT RECOGNISE IS NOT A REFERENCE.
+        # `conf is None` means the line carried no `confidence N`, i.e. it read
+        # "not found, either a new pressing, or bad rip". Run A 2026-09-11 hit
+        # exactly this: the 2026-08-05 reference's track 3 was NOT FOUND, and
+        # tonight's rip of the same track came back `accurately ripped,
+        # confidence 128`. Calling that a disagreement graded the BETTER rip as
+        # a regression against a known-bad line -- and would have held a round
+        # closed on it.
+        #
+        # Deliberately not silent, and deliberately not a pass: it is a third
+        # outcome and it gets its own row. Tracks 1 and 2 matched exactly in
+        # that run, which is what established the disc and offset were right.
+        if wc is None and gc is not None and gk == wk:
+            unusable.append(f"#{i+1} {gk}: reference {ws} was NOT FOUND by the "
+                            f"database; ours {gs} is accurately ripped at "
+                            f"confidence {gc}")
+        elif gk != wk or gs != ws:
             bad.append(f"#{i+1} {gk} {gs} != reference {wk} {ws}")
         elif gc is not None and wc is not None:
             if gc > wc:
@@ -271,13 +287,23 @@ def clause1(out):
             elif gc < wc:
                 fell += 1
                 bad.append(f"#{i+1} {gk} confidence FELL {wc} -> {gc}")
+    if unusable:
+        note("INFO", "clause1/reference",
+             f"{len(unusable)} of {n} reference line(s) cannot serve as a "
+             f"reference -- the database did not recognise them, so a "
+             f"disagreement there says nothing about this rip and IMPROVES on "
+             f"the record: " + "; ".join(unusable[:4]), str(REFERENCE))
     if bad:
         note("FAIL", "clause1/checksums",
              f"{len(bad)} of {n} compared line(s) disagree with the reference: "
              + "; ".join(bad[:4]), str(log))
+    elif not (n - len(unusable)):
+        note("UNPROBED", "clause1/checksums",
+             f"all {n} overlapping reference line(s) are unrecognised by the "
+             f"database, so nothing could be compared. NOT a pass", str(log))
     else:
         note("OK", "clause1/checksums",
-             f"all {n} compared checksum(s) identical to "
+             f"all {n - len(unusable)} comparable checksum(s) identical to "
              f"docs/rig-2026-08-05/cyanrip.log ({len(got)} produced, "
              f"{len(want)} on record, {n} overlap). {rose} confidence(s) rose, "
              f"0 fell -- a rise is the database moving and is expected")

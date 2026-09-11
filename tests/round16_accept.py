@@ -187,6 +187,51 @@ def main():
         expect(f"clause 1 {v} is never a pass", verdict(v),
                None, None, r"All three clauses settled")
 
+    # RUN A, 2026-09-11. The 2026-08-05 reference's track 3 reads "not found,
+    # either a new pressing, or bad rip" -- no confidence. That night's rip of
+    # the same track came back accurately ripped at confidence 128. The checker
+    # called that a disagreement and FAILED: it graded the BETTER rip as a
+    # regression against a line the database never recognised, and would have
+    # held the round closed on it.
+    #
+    # The fixture reproduces the shape exactly -- six of our lines against the
+    # reference's first six, where the reference's 5th and 6th are the NOT
+    # FOUND ones and ours carry confidences.
+    ref_lines = re.findall(r"^\s+Accurip (?:v1|v2|450):.*$",
+                           REFERENCE.read_text(errors="replace"), re.M)[:6]
+    unrecognised = [l for l in ref_lines if "confidence" not in l]
+    if len(unrecognised) != 2:
+        fail(f"the reference no longer has exactly 2 unrecognised lines in its "
+             f"first six ({len(unrecognised)}); this case needs rewriting "
+             f"against whatever it has now")
+    else:
+        ours = [re.sub(r"\(not found[^)]*\)",
+                       "(accurately ripped, confidence 128)", l).replace(
+                    "DCA378E8", "3C8BDDD2").replace("36F6EA91", "96DF8C22")
+                for l in ref_lines]
+
+        def six(o):
+            log = o / "accurip" / "accurip.log"
+            body = log.read_text()
+            head = body.split("AccurateRip:    found")[0]
+            log.write_text(head + "AccurateRip:    found\n"
+                           + "\n".join(ours) + "\n"
+                           + "Rip completed:  yes (3 of 14 tracks)\n"
+                           + "Log FUN512: x\n")
+
+        with tempfile.TemporaryDirectory() as td:
+            out = build(td)
+            six(out)
+            rc, txt = run(out)
+            if re.search(r"FAIL.*clause1/checksums", txt):
+                fail("our recognised checksum disagreeing with an UNRECOGNISED "
+                     f"reference line was graded a failure\n{txt}")
+            if not re.search(r"INFO.*clause1/reference", txt):
+                fail(f"the unusable reference lines were not reported at all -- "
+                     f"silence is not the fix either\n{txt}")
+            if "NOT FOUND by the database" not in txt:
+                fail(f"the row does not say WHY the reference is unusable\n{txt}")
+
     # 3. Clause 2, including the two ways a comparison lies.
     expect("clause 2 identical audio",
            lambda o: (o / "hdcd-nodeemph" / "1.pcm").write_bytes(
