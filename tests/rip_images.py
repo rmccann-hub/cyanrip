@@ -2572,6 +2572,64 @@ def _mapping_holds(base):
              "the -2 suffix is load-bearing and something has collapsed them")
 
 
+def sc_runa_block_is_complete():
+    """The Run A block must name every file the tools it pins actually need.
+
+    THREE VERSIONS OF THIS BLOCK HAVE BEEN WRONG, each found by running it:
+      1. it fetched two files and then ran a third (their round-16 lap 10 §D);
+      2. it began at `git checkout`, assuming a clone the operator was not
+         standing in -- run from a home directory it gave `fatal: not a git
+         repository` and never reached the drive;
+      3. it omitted `docs/rig-2026-08-05/cyanrip.log`, which a fresh clone does
+         NOT have because `master` is a clean mirror of upstream. The grader
+         then reports `UNPROBED clause1/compare` and exits 2 -- a wasted rig
+         session for a checkout error, found after the drive time.
+
+    Three failures of care is a missing check. The required list is DERIVED from
+    the tools' own source, so adding a new dependency to a tool fails this until
+    the block names it -- a hardcoded list would rot exactly when it mattered.
+    """
+    status = ROOT / "docs" / "handshake" / "STATUS.md"
+    if not status.exists():
+        fail("STATUS.md is missing")
+        return
+    text = status.read_text()
+    m = re.search(r"```sh\n(.*?)```", text, re.S)
+    if not m:
+        fail("STATUS.md carries no shell block for Run A")
+        return
+    block = m.group(1)
+
+    # A LINE-ANCHORED, UNCOMMENTED command. `"git clone" in block` matched a
+    # commented-out clone during this check's own revert-proof, which is the
+    # pattern-matches-both-branches defect one level up: the check was written
+    # to catch a missing clone and could not tell one from a disabled one.
+    if not re.search(r"(?m)^\s*(cd .*&&\s*)?git clone\b", block):
+        fail("the Run A block has no live `git clone` -- it assumes a checkout "
+             "the operator may not be standing in, which is how it failed on "
+             "2026-09-11")
+
+    # DERIVED, not listed: every repo-relative path the pinned grader resolves
+    # against ROOT. Today that is its clause-1 reference log.
+    grader = ROOT / "tools" / "round16-accept.py"
+    needed = {"tools/rig-round16.sh", "tools/audio-checksums.py",
+              "tools/round16-accept.py"}
+    for parts in re.findall(r'ROOT\s*/\s*((?:"[^"]+"\s*/\s*)*"[^"]+")',
+                            grader.read_text()):
+        needed.add("/".join(re.findall(r'"([^"]+)"', parts)))
+
+    for path in sorted(needed):
+        if path not in block:
+            fail(f"the Run A block never checks out {path}, which the tools it "
+                 f"pins need. A fresh clone lands on master and does not have it")
+
+    # And the file must actually be in the tree at the pinned commit, or the
+    # block names something the operator cannot fetch.
+    for path in sorted(needed):
+        if not (ROOT / path).exists():
+            fail(f"{path} is named in the Run A block but is not in this tree")
+
+
 def sc_verify_log():
     # CLI wiring only, the checksum logic itself is unit-tested.
     #

@@ -71,12 +71,34 @@ outstanding in either direction:
 process at all:
 
 ```sh
+cd ~ && rm -rf runA-work
+git clone -q https://github.com/rmccann-hub/cyanrip runA-work && cd runA-work
 git checkout 5bbb5ae -- tools/rig-round16.sh tools/audio-checksums.py \
-                       tools/round16-accept.py
+                       tools/round16-accept.py docs/rig-2026-08-05/cyanrip.log
 OUT=./runA DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" \
     sh tools/rig-round16.sh
 python3 tools/round16-accept.py --out ./runA
 ```
+
+**Three things in that block are there because a previous version of it was
+broken, and each was found by RUNNING it rather than reading it.**
+
+* **It clones.** The block used to start at `git checkout`, which assumes the
+  operator is already standing in a clone. On 2026-09-11 it was run from a home
+  directory and produced `fatal: not a git repository`, `sh: tools/rig-round16.sh:
+  No such file or directory`. Nothing reached the drive.
+* **It checks out `docs/rig-2026-08-05/cyanrip.log` too.** A fresh clone lands on
+  `master`, which is a clean mirror of upstream and carries **no `tools/` at all**
+  — and, less obviously, no reference log. `round16-accept.py:69` needs that file
+  for clause 1's line-by-line comparison. Without it the grader says `UNPROBED
+  clause1/compare — the run is fine; this checkout is not` and exits 2: a wasted
+  session for a checkout error, discovered after the drive time, not before.
+* **`OUT=./runA` is named up front**, so the verdict command needs no timestamp
+  transcribed off the screen at the end of a long night.
+
+`tests/rip_images.py` `sc_runa_block_is_complete` derives the required file list
+from the tools' own source and fails if the block omits one. **Three broken
+blocks is not a reason to be more careful; it is a reason to have a check.**
 
 **`OUT=./runA` is deliberate and it is the third command's whole point.** The
 script otherwise names its own directory `round16-<UTC stamp>`, which the

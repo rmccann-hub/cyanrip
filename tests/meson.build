@@ -498,6 +498,13 @@ rip_scenarios = [
     # directory. Renaming is a change to an artifact even when every byte
     # survives.
     'filed_rig_is_mappable',
+    # Three versions of STATUS.md's Run A block have been wrong, each found by
+    # RUNNING it: one fetched two files and ran a third; one assumed a clone the
+    # operator was not standing in; one omitted the grader's clause-1 reference
+    # log, which a fresh clone lacks because master is a clean upstream mirror.
+    # Three failures of care is a missing check. The required list is derived
+    # from the tools' own source.
+    'runa_block_is_complete',
     'interrupt',
     'interrupt_deadlock',
     'cache_probe_only',
