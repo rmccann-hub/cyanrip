@@ -77,6 +77,54 @@ clauses 1–3, and it is still outstanding.
 `session/` carries the transcript, the manifest, the sources list, and their
 application log.
 
+### The rips were RENAMED when filed, and here is the mapping
+
+**The bytes are untouched; the names are not, and until round 16 lap 14 this
+file did not say so.** Their bundle names each rip from the album title, with
+spaces, a timestamp, a build tag and a parenthesised `(EAC-compatible)` suffix.
+Those were shortened to fit a repository. **Renaming is a change to an artifact
+even when every byte survives**, and a filed copy that cannot be mapped back to
+what was delivered is not fully evidence.
+
+**It had a consequence, measured rather than imagined.** Their
+`scripts/verify_log_surface.py` excluded *their own* EAC exports by NAME. Over
+their bundle that worked; over this filed copy it did not, because `*.eac.log`
+is a third spelling of the same artifact — so 43 lines of their own export were
+reported as evidence that *our* log format had moved. Their lap 14 §C fixes
+their half by asking the document what it is instead of trusting its name. This
+table is our half: **the rename is now recorded, so the mapping is recoverable
+from the repository rather than from the tarball.**
+
+Each row was produced by hashing the filed file and looking that hash up among
+the bundle's originals — so the pairing is derived from the bytes, not from
+anyone's memory of which file was which.
+
+| filed here | as delivered in their bundle | sha256/16 |
+|---|---|---|
+| `after-cancel.eac.log` | `after cancel 20260910t005434 platterpus-fork-gddc1e8c (EAC-compatible).log` | `598866e874b870d0…` |
+| `after-cancel.log` | `after cancel 20260910t005434 platterpus-fork-gddc1e8c.log` | `9a902659fac06cb8…` |
+| `cancel-me.eac.log` | `cancel me 20260910t005434 platterpus-fork-gddc1e8c (EAC-compatible).log` | `4c89980eb76498a7…` |
+| `cancel-me.log` | `cancel me 20260910t005434 platterpus-fork-gddc1e8c.log` | `2935f0ef8f621876…` |
+| `derived-mp3.eac.log` | `derived mp3 20260910t005434 platterpus-fork-gddc1e8c (EAC-compatible).log` | `c8b40f1c711543e0…` |
+| `derived-mp3.log` | `derived mp3 20260910t005434 platterpus-fork-gddc1e8c.log` | `3bf251e1cb532634…` |
+| `derived-wav.eac.log` | `derived wav 20260910t005434 platterpus-fork-gddc1e8c (EAC-compatible).log` | `cfb0038efe7a295d…` |
+| `derived-wav.log` | `derived wav 20260910t005434 platterpus-fork-gddc1e8c.log` | `2db69e1cab3f6cb2…` |
+| `derived-wavpack.eac.log` | `derived wavpack 20260910t005434 platterpus-fork-gddc1e8c (EAC-compatible).log` | `29112b14f18104dd…` |
+| `derived-wavpack.log` | `derived wavpack 20260910t005434 platterpus-fork-gddc1e8c.log` | `79623576292602ca…` |
+| `full-acceptance-angle-bracket-2.eac.log` | `full acceptance∶ angle‹bracket 20260910t005434 platterpus-fork-gddc1e8c (EAC-compatible).log` | `b5d1052290b61c2a…` |
+| `full-acceptance-angle-bracket-2.log` | `full acceptance∶ angle‹bracket 20260910t005434 platterpus-fork-gddc1e8c.log` | `b67ddb2463980574…` |
+| `full-acceptance-angle-bracket.eac.log` | `full acceptance∶ angle‹bracket 20260910t005434 platterpus-fork-gddc1e8c (EAC-compatible).log` | `16df2c015557264e…` |
+| `full-acceptance-angle-bracket.log` | `full acceptance∶ angle‹bracket 20260910t005434 platterpus-fork-gddc1e8c.log` | `f4987f331f1bb3db…` |
+| `secure-reread.eac.log` | `secure reread 20260910t005434 platterpus-fork-gddc1e8c (EAC-compatible).log` | `642366537ae4dbc7…` |
+| `secure-reread.log` | `secure reread 20260910t005434 platterpus-fork-gddc1e8c.log` | `18d1dd0a602a36e6…` |
+
+**Two rows share a delivered name and that is not an error.** Their bundle
+carries two `full acceptance∶ angle‹bracket …` rips in two different
+directories, distinguished only by the directory. Flattening into one folder
+would have collided them, so the second took a `-2` suffix — the four files
+involved have four distinct hashes, checked. **Our suffix preserves a
+distinction their basename alone loses.**
+
 **That app log is 7.2 MB of 66,452 lines**, most of it DEBUG-level echo of
 cyanrip's own progress output. It is filed **whole and unedited**: it is
 evidence, and trimming evidence to save space is falsifying it. The 2026-09-07

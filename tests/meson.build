@@ -488,6 +488,16 @@ rip_scenarios = [
     'reference',
     'paranoia',
     'verify_log',
+    # Round 16 lap 14 §C: we renamed Platterpus's 2026-09-10 logs when filing
+    # them. The bytes survived; the mapping back to the delivered names did not
+    # get recorded. Their verify_log_surface.py excluded their OWN EAC exports
+    # by NAME -- which worked over their bundle and failed over our filed copy,
+    # because `*.eac.log` is a third spelling of one artifact, so 43 lines of
+    # their own export were reported as evidence that OUR format had moved.
+    # The README now carries the mapping; this asserts it still describes the
+    # directory. Renaming is a change to an artifact even when every byte
+    # survives.
+    'filed_rig_is_mappable',
     'interrupt',
     'interrupt_deadlock',
     'cache_probe_only',

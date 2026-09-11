@@ -2511,6 +2511,63 @@ def sc_reference():
              "true peak above 0 dBFS is not exercised")
 
 
+def sc_filed_rig_is_mappable():
+    """A filed rig bundle must map back to what was delivered.
+
+    ROUND 16 LAP 14 §C. We renamed Platterpus's 2026-09-10 logs when filing
+    them -- their names carry spaces, a timestamp, a build tag and a
+    parenthesised `(EAC-compatible)` suffix, and those were shortened. The
+    bytes were preserved; the mapping was not recorded anywhere.
+
+    IT HAD A MEASURED CONSEQUENCE. Their verify_log_surface.py excluded their
+    OWN EAC exports by NAME. Over their bundle that worked; over our filed copy
+    it did not, because `*.eac.log` is a THIRD spelling of one artifact -- so 43
+    lines of their own export were reported as evidence that our log format had
+    moved. Renaming is a change to an artifact even when every byte survives.
+
+    The README now carries the mapping, derived by hashing each filed file and
+    looking that hash up among the bundle's originals. This asserts the table
+    still describes the directory: every log present, every hash current, no
+    row for a file that is gone. It cannot check the DELIVERED names -- the
+    tarball is not in the repository, which is exactly why the table is.
+    """
+    readme = ROOT / "docs" / "rig-2026-09-10-ddc1e8c" / "README.md"
+    rips = ROOT / "docs" / "rig-2026-09-10-ddc1e8c" / "rips"
+    if not readme.exists() or not rips.is_dir():
+        fail("the 2026-09-10 bundle is missing")
+        return
+    text = readme.read_text()
+    rows = dict(re.findall(r"^\| `([^`]+\.log)` \| `[^`]+` \| `([0-9a-f]{16})…` \|$",
+                           text, re.M))
+    logs = sorted(p.name for p in rips.glob("*.log"))
+    if not rows:
+        fail("the README carries no rename mapping -- a filed bundle that "
+             "cannot be mapped back to the delivered names is not evidence")
+        return
+    for name in logs:
+        if name not in rows:
+            fail(f"{name} is filed but absent from the README's mapping")
+            continue
+        got = hashlib.sha256((rips / name).read_bytes()).hexdigest()[:16]
+        if got != rows[name]:
+            fail(f"{name} hashes {got}, the mapping says {rows[name]} -- "
+                 f"archived evidence was modified, or the table went stale")
+    for name in rows:
+        if name not in logs:
+            fail(f"the mapping has a row for {name}, which is not in rips/")
+
+    # The two `full acceptance` rips came from two bundle directories with
+    # IDENTICAL basenames. Our `-2` suffix is the only thing separating them
+    # here, so a mapping that collapsed them would lose a distinction their own
+    # names could not carry. Four files, four hashes.
+    ab = sorted(n for n in logs if "angle-bracket" in n)
+    if len(ab) != 4:
+        fail(f"expected 4 angle-bracket logs, found {len(ab)}")
+    elif len({rows[n] for n in ab}) != 4:
+        fail("the two angle-bracket rips do not have four distinct hashes -- "
+             "the -2 suffix is load-bearing and something has collapsed them")
+
+
 def sc_verify_log():
     # CLI wiring only, the checksum logic itself is unit-tested.
     #
