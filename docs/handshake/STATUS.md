@@ -17,65 +17,92 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-11, at lap 14. **ROUND 16 IS OPEN on `a9aedf0`. NOTHING IS OWED IN EITHER DIRECTION. The round is waiting on ONE THING, and it is the rig.**
+## Rewritten 2026-09-12. **ROUND 17 IS CLOSED AND BOTH HALVES ARE PUBLISHED. `0.9.4-rc2+platterpus.12` is what a consumer installs. The next artifact is a hardware run.**
 
-**A release is blocked and should be.** `tools/release-gate.py --release-gate`
-exits **1** on this tree and names round 16 as open. That is not being
-overridden, and no ledger row or manifest change has been made: both channels
-still resolve to `978f9b0`.
+**A release is no longer blocked and one has been cut.**
+`tools/release-gate.py --release-gate` exits **0**; `release-manifest.json`
+resolves **both** channels to `0.9.4-rc2+platterpus.12` at **`fe4d2c4`**,
+`release_seq` 22, authorised by round 17.
 
-**What unblocks a hardware session instead is a TEST PIN**, which
-`PROTOCOL.md` §6a defines precisely so a round is not deadlocked between
-"a close needs hardware evidence" and "the pin may not move while the round is
-open". Our lap 2 declared **`HANDSHAKE-TEST-PIN: ddc1e8c`** and **their lap 3
-agreed it verbatim**. It has not moved since.
+| | version | pin | published |
+|---|---|---|---|
+| cyanrip fork | `0.9.4-rc2+platterpus.12` | **`fe4d2c4`** | yes — ledger row 22, manifest regenerated |
+| Platterpus | **`0.6.47`** | `abd2eb8`, tagged `v0.6.47` | yes — AppImage, `.sha256`, `.zsync`, signed attestation |
 
-**Both S-18 pre-commits now name the same observable, and as of lap 14 both
-bind.** Ours, unchanged in substance since lap 11: *next lap is `GO` on
-`a9aedf0` + `platterpus 0.6.45` unless `tools/round16-accept.py` at `5bbb5ae`
-exits non-zero on Run A.* Theirs, re-offered in their lap 14 §A2 against that
-same SHA, plus a second condition that is theirs alone —
-`scripts/verify_log_surface.py` reporting a line in Run A's logs their parser
-does not account for. Both are commands with exit codes and both sides publish
-the result either way.
+**Round 17 closed in THREE laps.** Ours opened it, theirs answered both questions
+with citations, ours closed it `GO`/`GO`. No hardware was required to close it,
+deliberately: round 16's condition needed a drive and took sixteen laps and five
+rig sessions, so this one was about readiness and put the test *after* the close.
+That worked.
 
-**Theirs failed to bind twice before this, for two different reasons, and their
-§A2 is the lesson worth keeping.** Lap 10's triggered on *our opinion*, which is
-a veto rather than a condition. Lap 12's named a *remedy* — "a commit carrying
-`a0830e0`'s clause-1 split" — and `5bbb5ae` deliberately does not carry
-`a0830e0`, because we replaced it with something better, so the literal wording
-went unsatisfied by the very SHA that fixed the problem. **A trigger that names
-an artifact and an observable survives; one that names a judgement about an
-artifact does not.**
+**`fe4d2c4` was verified from a clean detached worktree before the verdict** —
+fresh `meson setup`, 81/81, 0 fail, binary self-identifying as
+`platterpus-fork-gfe4d2c4`. That is the check `+platterpus.5` failed, when a
+release was announced at a commit failing 2 of 33 from a fresh clone and the
+consumer installed it on our say-so.
 
-**The round needs a RUN, not another lap, and both sides have said so in
-writing.**
+### THE TEST PAIR IS NOT THE APPROVED PAIR, and that is on purpose
 
-**Laps 4 through 11 settled everything that had a deadline.** Nothing is
-outstanding in either direction:
+**Round 17 approved `(fe4d2c4, Platterpus 0.6.46)`. The run will be
+`(fe4d2c4, Platterpus 0.6.47)`.**
 
-| | state |
-|---|---|
-| test pin | `ddc1e8c`, agreed both sides, unmoved |
-| reviewed pin | `a9aedf0`, unmoved (S-15) |
-| app | `platterpus 0.6.45`, released; their pin `62de7b6`, transcribed from their lap 10 and **not** resolvable here |
-| rig script | **pinned to commit `0cd611a`**, not to a branch tip |
-| provider contract | delivered by URL + sha256; **no flag changed** |
-| open questions | none blocking, either way. Their J2 / J3 are answered in lap 11 §6 and are **round 17's** |
-| clause 1 | **carried much further than predicted.** Their 2026-09-10 run got `AccurateRip: found` in all eight rips with real per-track confidences. Their lap 10 §B7 reports it as an artifact and declines to assert a route through our code, which is right |
-| clause 2 | **the one still standing.** Lap 11 §1: an exit code and a `Preemphasis:` banner are the *setup*, because the defect this clause retires printed a correct-looking banner while the audio was inert. It needs the decoded-sample comparison, which only Run A does |
-| clause 3 | held on their reader, and accepted as that. Their lap 14 §C re-ran it across the repository boundary — over **our** filed copy of their logs rather than their own bundle — and got the same answer: 8 logs, 3,623 lines, **0 unaccounted**, both sides |
+`0.6.46` is real and is on their `main` at `45663c3`, exactly as their lap 2
+named it. But the moment we published, their approval constants still named
+round 15 and pin `978f9b0`, so `approve_ripper("…platterpus-fork-gfe4d2c4")`
+returned **unapproved** — their verdict keys on their own constants while their
+update offer keys on our manifest, so the offer would have installed our approved
+build and stamped every report, log and EAC export *unapproved*. `0.6.47` is the
+pin roll that closes it, and it is theirs entirely: our manifest was right and
+they were a release behind.
 
-**Run A is ours and is the one that closes the round.** It drives
-`tools/rig-round16.sh` against the installed test pin and needs no Platterpus
-process at all:
+**So every artifact from the run will carry:**
+
+```
+ripper build platterpus-fork-gfe4d2c4 is the one handshake round 17 approved,
+verified by both projects, for Platterpus 0.6.46
+```
+
+**That `0.6.46` is deliberate and not stale.** Their
+`APPROVED_FOR_PLATTERPUS_VERSION` names the pairing a round approved, not the app
+that happens to be running; writing `0.6.47` there would credit round 17 with
+approving a pairing it never saw. It is the same discipline this file's first
+rule states, applied to their constant.
+
+**The consequence is ours to hold onto: a result from that run is evidence about
+`fe4d2c4`, and NOT about the approved pair.** Read `Consumer:` for what actually
+ran. Do not let a green run be written up as "the round-17 pair verified on
+hardware", because it will not be.
+
+### Their gate disagreed with ours, which our lap 3 asked them to report
+
+**Their `--status` held round 17 OPEN with both sides declaring `GO`.** No
+blocker on our lap 3; one on their lap 2 — *peer verdict is 'OPEN', not GO* — the
+only honest value it could carry, since we had not declared when it was written.
+
+**Structural, and it is a property both implementations share:** a gate reads the
+newest file on its own side, so **a round can only close on the gate of whichever
+side sent the last lap.** Round 16 hid it by running to seventeen laps. They did
+not loosen theirs; they filed their acceptance as a `verified/` record.
+
+**Ours has one protection theirs did not need here, and only because ours once
+failed the other way.** `stale_peer_verdict` cross-checks our declared
+`HANDSHAKE-PEER-VERDICT` against the newest lap in `inbound/`, because in round 9
+our gate printed *"Release allowed"* for a round the other side had been holding
+open for two laps — the transcription was real and correctly copied and no longer
+true. **Transcription was never the weak point; recency was.**
+
+### The hardware procedure, pinned, and contained to one directory
+
+**Round 18 decides what the release test IS.** This is the procedure that exists
+today — round 16's Run A, which settled that round's three clauses — kept here
+because it is the only pinned rig block either project has and round 18 will
+start from it rather than from nothing.
+
+**Everything it creates lives under `~/cyanrip-rig`, so cleanup is one
+`rm -rf`.** Operator's instruction, 2026-09-11, after a session left five
+directories and a tarball loose in `$HOME`.
 
 ```sh
-# EVERYTHING this procedure creates lives under ONE directory, so cleanup is
-# `rm -rf ~/cyanrip-rig` and nothing else. Operator's instruction, 2026-09-11,
-# after a session left runA-work/, xtest/, ytest/, regrade/, keep/ and a tarball
-# loose in $HOME. A rig procedure that scatters is one the operator has to
-# garden; this one does not.
 RIG=~/cyanrip-rig
 rm -rf "$RIG/work" && mkdir -p "$RIG"
 git clone -q https://github.com/rmccann-hub/cyanrip "$RIG/work" && cd "$RIG/work"
@@ -86,70 +113,38 @@ OUT="$RIG/runA" DEV=/dev/sr0 OFFSET=667 CRIP="$HOME/.local/bin/cyanrip" \
 python3 tools/round16-accept.py --out "$RIG/runA"
 ```
 
-**Three things in that block are there because a previous version of it was
-broken, and each was found by RUNNING it rather than reading it.**
+**Three things in it are there because a previous version was broken**, each
+found by running it rather than reading it: it **clones** (the block once began
+at `git checkout` and produced `fatal: not a git repository` from a home
+directory); it checks out **`docs/rig-2026-08-05/cyanrip.log`** (a fresh clone
+lands on `master`, a clean upstream mirror with no `tools/` and no reference
+log, and without it the grader exits 2 after all the drive time); and `OUT` is
+named up front so no timestamp is transcribed off the screen at the end of a
+long night. `sc_runa_block_is_complete` derives the required file list from the
+tools' own source, so a new dependency fails the suite until the block names it.
 
-* **It clones.** The block used to start at `git checkout`, which assumes the
-  operator is already standing in a clone. On 2026-09-11 it was run from a home
-  directory and produced `fatal: not a git repository`, `sh: tools/rig-round16.sh:
-  No such file or directory`. Nothing reached the drive.
-* **It checks out `docs/rig-2026-08-05/cyanrip.log` too.** A fresh clone lands on
-  `master`, which is a clean mirror of upstream and carries **no `tools/` at all**
-  — and, less obviously, no reference log. `round16-accept.py:69` needs that file
-  for clause 1's line-by-line comparison. Without it the grader says `UNPROBED
-  clause1/compare — the run is fine; this checkout is not` and exits 2: a wasted
-  session for a checkout error, discovered after the drive time, not before.
-* **`OUT=./runA` is named up front**, so the verdict command needs no timestamp
-  transcribed off the screen at the end of a long night.
+**`CRIP` here is the host wrapper, and that is the one thing to change for a
+release test.** `timeout -k` around `~/.local/bin/cyanrip` kills the **distrobox
+wrapper** and leaves the containerized cyanrip running — measured on 2026-09-11
+from the run's own mtimes, 23m20s between the script giving up and the log being
+written, with `plain.json` recording `exit_code: 0`. Every rip completed; the
+script was wrong about all five. Drive the real binary directly
+(`distrobox enter ripping -- /usr/local/bin/cyanrip`) or accept that every step
+will hit its ceiling.
 
-`tests/rip_images.py` `sc_runa_block_is_complete` derives the required file list
-from the tools' own source and fails if the block omits one. **Three broken
-blocks is not a reason to be more careful; it is a reason to have a check.**
+### What is still not verified, and no green run will imply it
 
-**`OUT=./runA` is deliberate and it is the third command's whole point.** The
-script otherwise names its own directory `round16-<UTC stamp>`, which the
-operator then has to read off the screen and retype into the grader — a
-transcription step between the measurement and the verdict, at the end of a
-long session, on the one run this round is waiting for. Naming it up front
-removes it. `OUT` is honoured at `rig-round16.sh:36` and the directory is
-created at `:81`; nothing else about the pinned files changes, so `5bbb5ae`
-does not move and neither pre-commit is disturbed.
+Untouched by any run to date: **C2** (the rig's drive reports it unsupported),
+**`-f`**, **damaged media**, and **CD-TEXT from a disc that has some**. The `-x`
+cache figure is still **a floor we set** — `search ceiling reached` is our own
+`PROBE_MAX_SECTORS`, so two successful probes have not bounded the drive. And
+**`12f2081`** — the single `src/` commit between Run A's program and `fe4d2c4` —
+has never run on hardware; it cannot fire for a caller passing `-j` once, and
+theirs does (`cyanrip_backend.py:390`).
 
-**The pin moved from `0cd611a` to `5bbb5ae`, and only because it had to.**
-`rig-round16.sh` and `audio-checksums.py` are **byte-identical** between the two
-— checked, not assumed — so the only file that changes is the grader, and it
-changes for two defects their lap 12 found in it. §C1: the audio gate was `max`
-where it must be `min`, so one silent arm beside one real arm PASSED clause 2,
-*because* the hashes differ when one side is empty. §C2: `disabled` is the
-zero-value fallthrough of the ternary at `cyanrip_log.c:786`, so it does not
-require `-A` and the message must not claim it does.
-
-**A commit, not a branch tip, and that was their ask in lap 5 §0.** Between our
-lap 2 and lap 4 the script moved `615243361882b881` → `178bd4df5dc28d53` for
-good reasons — three defects *they* found — but an artifact reviewed and an
-artifact run are the same thing only if it is named by commit.
-
-**Three files, three commands, and their lap 3 published a two-file version.**
-`7ace6e5` corrected this block; their §D corrected their own copy from it and
-says a Run A from the stale block *"would have produced no verdict"*. All three
-files are present at `0cd611a` — checked, not assumed.
-
-**`tools/round16-accept.py` grades the result** against the close condition and
-was written **before** the run, which is the only reason it can be trusted: a
-checker written afterwards is how a close condition quietly moves. It refuses
-to grade a run whose `banner.txt` names neither pin, and its exit code
-distinguishes *a clause said no* (1) from *a clause could not be asked* (2).
-
-**The earlier reasoning for keeping `0cd611a` was wrong and is withdrawn.** It
-said `a0830e0` changed nothing reachable because *"`disabled` requires `-A`"*.
-It does not: `CYANRIP_ACCUDB_DISABLED` is `0`, `"disabled"` is the bare `else`
-of a ternary over that field, and `accurip.c:134` and `:211` both `goto end`
-without writing it — `:211` **after** `curl_easy_perform` returned `CURLE_OK`,
-so the query ran. Their lap 12 §C2 found it; verified here at the pin.
-
-**A pin that chases the work is still what round 7 died of, and this is the
-exception that rule allows**: a change that is reachable, in the file both
-pre-commits key on. It moves once, for this, and not again.
+**What the release test should be belongs to round 18**, not to a condition
+bolted onto a closed round. S-13 fixed round 17's conditions at its lap 1 and not
+one of them grew.
 
 ## What is still OPEN — audited 2026-09-11, and it is a short list
 
