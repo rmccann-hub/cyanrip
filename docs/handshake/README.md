@@ -25,9 +25,9 @@ which cannot be ordered at all.
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
-commit          978f9b0                          <- build this
---version       cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
-release_seq     21                               <- the ONLY orderable identifier
+commit          fe4d2c4                          <- build this
+--version       cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)
+release_seq     22                               <- the ONLY orderable identifier
 channel         stable
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
@@ -38,21 +38,21 @@ git tag         none published
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          978f9b0
---version       cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)
-release_seq     21                               <- newest of any channel
+commit          fe4d2c4
+--version       cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)
+release_seq     22                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
 **`beta` resolves to the newest row of ANY channel**, so opting into
-pre-releases can never move a user backwards. `+platterpus.11` is the newest row
+pre-releases can never move a user backwards. `+platterpus.12` is the newest row
 overall, so both channels resolve to it and there is no separate beta to take.
 That property was not decorative: the first generated manifest had `beta` on seq
 10 while `stable` was seq 11, so opting in would have been a downgrade.
 
-**`0.9.4-rc2+platterpus.11` IS A STABLE RELEASE despite the `-rc2`.** That
+**`0.9.4-rc2+platterpus.12` IS A STABLE RELEASE despite the `-rc2`.** That
 string is upstream's, copied verbatim because we may not mint in
 `cyanreg/cyanrip`'s namespace; the part that advances is SemVer build metadata,
 which the spec says MUST be ignored for precedence. **A check that reads the

@@ -378,19 +378,19 @@ identifier.
 
 | field | value |
 |---|---|
-| **stable version** | `0.9.4-rc2+platterpus.11` |
-| **stable commit** | **`978f9b0`** |
-| stable build tag | `platterpus-fork-g978f9b0` |
-| stable install | `https://github.com/rmccann-hub/cyanrip/archive/978f9b0.tar.gz` |
-| stable `release_seq` | 21 |
-| stable authorised by | handshake round 14, closed `GO`/`GO` on `d9c058c` / `b524936` |
+| **stable version** | `0.9.4-rc2+platterpus.12` |
+| **stable commit** | **`fe4d2c4`** |
+| stable build tag | `platterpus-fork-gfe4d2c4` |
+| stable install | `https://github.com/rmccann-hub/cyanrip/archive/fe4d2c4.tar.gz` |
+| stable `release_seq` | 22 |
+| stable authorised by | handshake round 17, closed `GO`/`GO` on `fe4d2c4` / `45663c3` |
 | | |
-| **beta version** | `0.9.4-rc2+platterpus.11` |
-| **beta commit** | **`978f9b0`** |
-| beta build tag | `platterpus-fork-g978f9b0` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/978f9b0.tar.gz` |
-| beta `release_seq` | 21 |
-| beta authorised by | handshake round 14, closed `GO`/`GO` — same build as stable |
+| **beta version** | `0.9.4-rc2+platterpus.12` |
+| **beta commit** | **`fe4d2c4`** |
+| beta build tag | `platterpus-fork-gfe4d2c4` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/fe4d2c4.tar.gz` |
+| beta `release_seq` | 22 |
+| beta authorised by | handshake round 17, closed `GO`/`GO` — same build as stable |
 
 `beta` resolves to the newest row of *any* channel, so opting into pre-releases
 can never move a user backwards. Both channels resolve to `978f9b0`; there is no
