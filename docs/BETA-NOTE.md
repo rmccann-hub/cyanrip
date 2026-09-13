@@ -1,5 +1,14 @@
 # cyanrip beta — `0.9.4-rc1+platterpus.5-beta.5`
 
+> **SUPERSEDED, AND BY SEVEN RELEASES. Marked 2026-09-13.** The beta this file
+> describes is long gone; the live release is **`0.9.4-rc2+platterpus.12` at
+> `fe4d2c4`**, `release_seq` 22. **Nothing here describes what a user installs
+> today** — read `release-manifest.json`, and order by `release_seq` rather than
+> by parsing either version string.
+>
+> Kept for the record of what that beta was for. Not updated in place, because
+> rewriting it would destroy the only account of a build that existed.
+
 *Information only. This file describes the beta and what to test in it, and
 nothing else.*
 

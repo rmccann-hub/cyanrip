@@ -1,5 +1,15 @@
 # Release plan — `+platterpus.12`, if round 15 closes `GO`
 
+> **THIS PLAN WAS EXECUTED. Marked 2026-09-13.** `0.9.4-rc2+platterpus.12`
+> shipped at **`fe4d2c4`**, ledger row **22**, authorised by **round 17**
+> (`GO`/`GO` at lap 3) — not round 15, which closed before this was actioned.
+> `tools/release-gate.py --release-gate` now exits **0**.
+>
+> **The paragraph below is kept verbatim as the record of what was true when the
+> plan was written, and every sentence in it is now false.** It is left rather
+> than corrected because a plan is evidence of what was intended; the outcome
+> belongs here at the top where a reader meets it first.
+
 *Written 2026-09-04. **A plan, not a release.** Nothing here is executed.
 `meson.build` still says `0.9.4-rc2+platterpus.11`, the ledger's last row is
 seq 21, and `tools/release-gate.py --release-gate` exits 1 naming round 15.*
