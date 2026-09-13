@@ -294,9 +294,23 @@ regardless of who is at the keyboard.
   ("name the document in prose") for the real one:
 
   > **Never state a mechanism in the other side's code without citing the artifact
-  > it came from, or marking it unverified. We can measure our behaviour and read
-  > their laps; we cannot read their source. A `HANDSHAKE-BREAKING` line describing
+  > it came from, or marking it unverified. A `HANDSHAKE-BREAKING` line describing
   > what *their* build does is a guess unless it names where it was read.**
+
+  **This rule used to carry the clause *"we cannot read their source"*, and that
+  clause was FALSE — corrected 2026-09-13 by running the check instead of
+  repeating the claim.** `rmccann-hub/Platterpus` is public and this
+  environment's git proxy serves anonymous reads of it, so the round-12 defect
+  was never actually unpreventable: the constant we guessed at could have been
+  read. **The rule is unchanged and is now cheap to satisfy** — cite
+  `platterpus@<sha>:<path>:<line>` exactly as we cite our own `file:line`
+  against a source anchor, and pin the SHA, because a shallow clone of a moving
+  branch is a claim about whenever it was fetched.
+
+  **It does NOT license fixing their tree, and reading is not a substitute for a
+  lap.** The seam's value is two independent implementations catching each other;
+  a convention re-derived from their code is one implementation copied twice.
+  Read to VERIFY a claim, never to author one on their behalf.
 
   Same root as the P4 defect found in the same lap — a contract section describing
   our own binary from memory rather than from the binary. One cause, two surfaces.
@@ -305,7 +319,9 @@ regardless of who is at the keyboard.
   wrong.
 - **When the other side describes *how* something works, compare — do not
   acknowledge.** Three findings in round 7 came from this and none from reviewing
-  each other's code, which neither project can do. A described *behaviour* is
+  each other's code — which at the time neither project **did**, though the
+  clause that used to stand here said neither project **could**, and that was
+  wrong (see above). A described *behaviour* is
   checkable against your own behaviour; a described *intention* is not. Their
   gate's filename-sort bug sent us to look at ours; describing ours back sent
   them to compare loaders, and they found a hole where an ambiguous lap fell back
