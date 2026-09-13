@@ -49,15 +49,37 @@
  * cannot affect the audio. It costs seconds of drive time, which is why it is
  * behind a flag and off by default.
  *
- * RUN ONCE ON HARDWARE, 2026-08-10, and the date matters more than the fact.
- * A PIONEER BD-RW BDR-209D 1.51 with a pressed audio CD returned a hit at 32
- * sectors and a miss at 64, with an uncached single-sector read costing
- * 364.3 ms. That is one drive, one disc, one run: enough to say the method
- * produces a signal on real hardware, not enough to say it is right. Nothing
- * cross-checks it -- cd-paranoia -A on the same drive would, and has not been
- * run.
+ * RUN ON HARDWARE FIVE TIMES NOW, and the dates matter more than the count.
  *
- * That single run found two defects no fixture could have. It reported the
+ * 2026-08-10, PIONEER BD-RW BDR-209D 1.51, pressed audio CD: a hit at 32
+ * sectors, then the 64-sector read FAILED. That is not a cache miss -- it is a
+ * different claim about the drive, and separating the two is what the commit
+ * carrying this comment was for. The cause was our own transfer size and not
+ * the drive; see PROBE_CHUNK_SECTORS. Uncached single-sector read 364.3 ms.
+ *
+ * 2026-09-07, 2026-09-10, 2026-09-12, same drive, after the chunking fix: all
+ * three report "at least 2048 sectors ... search ceiling reached". The search
+ * ran to OUR limit every time and never found the drive's.
+ *
+ * IT IS CROSS-CHECKED NOW, AND IT DISAGREES. cd-paranoia -A on this drive and
+ * disc reports 137 sectors, then 140 on a second run. So our figure is high by
+ * a factor of roughly fifteen, and the reference itself moves between runs --
+ * which caps how precisely any of this can ever be stated. This comment said
+ * cd-paranoia "has not been run" for a month after it had been; the sentence
+ * was written on 2026-08-10 and contradicted by the block below it on
+ * 2026-08-11, and neither this file nor any check noticed.
+ *
+ * The mechanism is understood and written up in docs/KNOWN-ISSUES.md:
+ * `miss_cost` is calibrated with a FULL-STROKE seek (end_lsn to start_lsn +
+ * 1000) while the loop's test read is a backseek of at most the current run
+ * length. The threshold is therefore set by the longest seek the drive can
+ * make and tested against one of the shortest, so every test read scores as a
+ * hit. RAISING PROBE_MAX_SECTORS DOES NOT FIX THIS -- it only moves the number
+ * the search runs to. Deliberately not fixed here: it needs a backseek-based
+ * calibration verified against a drive, and the last prediction made about
+ * this code was falsified by the first run it ever had.
+ *
+ * That first run found two defects no fixture could have. It reported the
  * lower bound as though it were the size, and it printed the same line whether
  * the search ended in a cache miss, a failed read, or a read it could not
  * time. Both are fixed below. This environment still has no drive, and no disc
@@ -75,7 +97,14 @@
 
 /* Bounds on the search. Drives in the wild model out between roughly 64 KiB
  * and 8 MiB of audio cache; 1 to 2048 sectors spans that with room either
- * side. Stopping rather than running away matters more than the exact top. */
+ * side. Stopping rather than running away matters more than the exact top.
+ *
+ * EVERY HARDWARE RUN SINCE THE CHUNKING FIX HAS REACHED THIS CEILING, and that
+ * is not evidence it is too low -- it is the calibration defect in the header
+ * comment. Do not raise it to chase a number; fix `miss_cost` first, and then
+ * reaching 2048 will mean a drive that genuinely caches 4.6 MiB. Until then
+ * the honest report is the one the composer already emits: a lower bound that
+ * says it is a lower bound. */
 #define PROBE_MIN_SECTORS 1
 #define PROBE_MAX_SECTORS 2048
 
