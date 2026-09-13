@@ -86,10 +86,55 @@ needs a backseek-based `miss_cost`, there is no drive here to verify one
 against, and the last prediction made about this exact code was falsified on
 hardware. Shipping a second unverifiable probe would repeat the mistake.
 
-**What would settle it:** one rig run on the new line. If it prints an uncached
-read in the hundreds of milliseconds beside a cached read of a few, the
-diagnosis is confirmed from the artifact and the fix is arithmetic. That is the
-whole reason the evidence clause was added first.
+**SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — three rig runs, read
+2026-09-13.** The prediction this section made was *"an uncached read in the
+hundreds of milliseconds beside a cached read of a few."* Both halves are now
+measured, from the transcripts rather than from memory of them:
+
+| session | uncached | cached | threshold (`miss_cost / 4`) | margin |
+|---|---|---|---|---|
+| 2026-09-07 `978f9b0` | 245.3 ms | 42.4 ms | 61.3 ms | 69% |
+| 2026-09-10 `ddc1e8c` | 363.2 ms | 82.0 ms | 90.8 ms | **90%** |
+| 2026-09-12 `fe4d2c4` | 250.6 ms | 42.3 ms | 62.7 ms | 67% |
+
+**Hundreds of ms uncached: confirmed, three times. "A cached read of a few ms":
+FALSIFIED** — 42 to 82, not 2.2.
+
+The gap is structural rather than noise, and it changes the fix. `last_hit_us`
+is overwritten on every hit, so the figure printed is the re-read after the
+**2048-sector** forward run — the longest backseek the search ever performs. The
+2.22 ms figure came from a 1-sector run. **They were never the same
+measurement**, and the earlier prediction compared them as though they were.
+
+**So the fix is not "arithmetic", as this section previously claimed.** One
+corrected `miss_cost` constant cannot be right at both ends: the test read's
+cost grows with the run length — a backseek of 1 sector at the start, 2048 at
+the ceiling — while the calibration is a single fixed full-stroke figure. The
+comparison needs a baseline that **tracks the run length**, or the search must
+seek away by a comparable distance before each timed re-read so that one
+baseline is valid throughout. Which of those is right is not settled.
+
+**The margin column is why retuning `CACHE_HIT_RATIO` is not the fix either.**
+The `ddc1e8c` row sits at **90%** of its threshold: a ratio of 3.5 instead of 4
+would have stopped that search, at a run length with no physical meaning. A
+constant that swings the answer by a factor of sixteen on its third significant
+figure is not calibrated, it is coincidental.
+
+**Still deliberately not fixed, and now for a better-evidenced reason:** the
+shape of the correct fix changed the moment the magnitude arrived, which is
+precisely what shipping the "arithmetic" version on 2026-08-13 would have got
+wrong. The evidence clause was added first so this could be seen rather than
+argued, and it worked.
+
+**Believe `cd-paranoia -A` — 137 sectors, then 140 — not our figure.** Note that
+the reference moves between its own runs, which caps how precisely any of this
+can ever be stated.
+
+**Raising `PROBE_MAX_SECTORS` is not the fix and never was.** The search is
+stopped by the comparison, not by the limit; raising the limit moves the number
+the probe reports and changes nothing about whether it is right. Recorded
+because the question keeps arising from the `search ceiling reached` wording,
+which is accurate and reads like a complaint about the ceiling.
 
 ### `docs/seam-commands.md` §7 overclaims
 
