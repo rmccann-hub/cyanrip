@@ -148,6 +148,7 @@ once already, stopping at *"round 7 is open"* through five closed rounds.
 | 16 | closed, GO/GO — 17 laps | `fe4d2c4` line; closed on Run A hardware | `round-16-lap-17.md` |
 | 17 | closed, GO/GO — 3 laps | **`fe4d2c4`, released as `+platterpus.12`** | `round-17-lap-03.md` |
 | 18 | closed, GO/GO — 3 laps | *(no pin move — a procedure round)* | `round-18-lap-03.md` |
+| 19 | **OPEN** | *(no pin move)* | `round-19-lap-01.md` |
 
 **THIS TABLE WENT STALE AGAIN, EXACTLY AS ITS OWN WARNING DESCRIBES.** It
 stopped at round 13 through **five** closed rounds (14–18) while claiming
