@@ -18,6 +18,7 @@ prevent, and a second copy of the parsing rules is how they come to disagree.
 """
 
 import importlib.util
+import re
 import sys
 from pathlib import Path
 
@@ -259,6 +260,46 @@ else:
                 else:
                     print(f"FAIL: {msg}")
                     fails += 1
+
+# --- HANDSHAKE-ANNOUNCED: published is not sent (operator, 2026-09-13) -------
+#
+# Committing and pushing a lap makes it PUBLISHED. It becomes SENT only when the
+# operator announces it, and §192 -- "never edit a file already sent" -- hinges
+# on that word. The first version of our pull-transport rule said sent-means-
+# pushed, which left no window at all: a defect found one second after `git
+# push` had nowhere to go but a whole new lap.
+#
+# So the lap declares its own state and a reader never infers it:
+#
+#     HANDSHAKE-ANNOUNCED: no  -- published, NOT yet released for reading
+#     HANDSHAKE-ANNOUNCED: yes -- operator (rmccann), 2026-09-13
+#
+# `no` is a legitimate transient state and this check does NOT require `yes`;
+# requiring it would make committing a lap impossible before announcing it,
+# which is the order the rule prescribes. What is checked is that the field is
+# present and says one of the two things.
+#
+# BOUNDARY, NOT AN ALLOWLIST. Every lap in the tree when the field was
+# introduced predates it, and a set naming them all would grow forever and rot.
+# The field is required on every lap after round 19 lap 1 -- the last one
+# written without it. Moving that tuple is a visible act, exactly as
+# grandfathering rounds 5 and 6 by number is.
+ANNOUNCED_FROM = (19, 2)
+ANNOUNCED_RE = re.compile(r"(?m)^HANDSHAKE-ANNOUNCED:[ \t]*(yes|no)\b")
+
+for lap in laps:
+    text = lap.path.read_text(encoding="utf-8", errors="replace")
+    rm = re.search(r"(?m)^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", text)
+    lm = re.search(r"(?m)^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", text)
+    if not (rm and lm):
+        continue                      # malformed identity is already reported above
+    if (int(rm.group(1)), int(lm.group(1))) < ANNOUNCED_FROM:
+        continue                      # predates the field
+    if not ANNOUNCED_RE.search(text):
+        print(f"FAIL: {lap.path.name} declares no HANDSHAKE-ANNOUNCED -- a "
+              f"reader cannot tell whether this lap is published or SENT, and "
+              f"§192's 'never edit a file already sent' hinges on exactly that")
+        fails += 1
 
 print(f"{len(laps)} lap(s) checked, {fails} malformed")
 sys.exit(1 if fails else 0)
