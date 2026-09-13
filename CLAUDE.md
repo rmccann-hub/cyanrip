@@ -253,10 +253,31 @@ regardless of who is at the keyboard.
   above started. Both repositories are public and this environment performs
   anonymous git reads of theirs, so:
 
-  1. **A lap is SENT when it is committed and pushed** to `platterpus-fork`.
-  2. **The operator is the signal, not the courier.** We say *"our lap N is
-     published at `<sha>`"*; they are told; they read it from git. Same in
+  1. **PUBLISHING IS NOT SENDING, and conflating them was a defect in the first
+     version of this rule.** Committing and pushing a lap makes it
+     **published** — present in the repository, countable, buildable. It does
+     **NOT** make it readable. Operator's rule, 2026-09-13.
+  2. **A lap becomes SENT when the OPERATOR announces it** to the other side.
+     We say *"our lap N is published at `<sha>`"*; the operator decides when to
+     pass that on; only then may the other side read or act on it. Same in
      reverse. No file changes hands.
+  3. **The lap declares its own state**, so a reader never has to infer it:
+
+     ```
+     HANDSHAKE-ANNOUNCED: no — published, NOT yet released for reading
+     HANDSHAKE-ANNOUNCED: yes — operator (rmccann), 2026-09-13
+     ```
+
+     **This is what makes §192 workable.** *"Never edit a file already sent"*
+     hinges on "sent", and with publish-equals-send there was no window in which
+     a pushed lap could still be corrected — so a mistake found one minute after
+     `git push` had nowhere to go. With the announcement as the hinge, a lap
+     marked `no` is **not yet sent and may still be revised**; the moment it
+     flips to `yes` it is immutable forever.
+
+     **Fail closed.** If you cannot establish that a lap is still `no`, treat it
+     as sent and do not touch it. An unrecorded announcement is indistinguishable
+     from an announcement, exactly as an unrecorded override did not happen.
   3. **Cite a lap by COMMIT SHA, never by a branch tip** — the rule that
      already governs a pin. A read of a branch is a claim about whenever it was
      fetched, and must say so.
@@ -267,10 +288,17 @@ regardless of who is at the keyboard.
   recorded in `tests/release_gate.py`: *"the number is chosen when a lap is
   WRITTEN and the divergence appears when it is not immediately sent."* Written,
   sent and visible are now one event. It also makes §4a and §310 hinge on
-  something both sides can check — **sent means committed** — instead of on an
-  unobservable, and it agrees with the fact that a lap file is counted by every
-  conforming enumerator the moment it exists on disk. **Do not commit a lap you
-  are not ready to have read.**
+  something both sides can check — **sent means announced, and the lap says so**
+  — instead of on an unobservable.
+
+  **The open question it raises, and round 19 §0.2 is where it gets settled:
+  does a NOT-YET-ANNOUNCED lap count for `HANDSHAKE-ROUND-DIGEST`?** A lap file
+  is counted by every conforming enumerator the moment it exists on disk, so a
+  published-but-unannounced lap enters OUR digest while the other side holds
+  nothing — which is the §5a divergence no override may excuse. It is the same
+  question as whether a transport envelope is a lap, one level over: **what
+  counts as a lap.** Until it is settled, do not leave a lap unannounced across
+  a lap boundary.
 
   Proposed to Platterpus as `PROTOCOL.md` §5b.7/§5b.8 in
   `docs/handshake/PROTOCOL-v5-PROPOSAL-evidence-transport.md`. Envelopes and

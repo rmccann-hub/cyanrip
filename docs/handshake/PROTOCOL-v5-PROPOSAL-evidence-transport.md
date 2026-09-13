@@ -124,12 +124,45 @@ carried (v5 — normative, proposed 2026-09-13).**
 Both repositories are public and each side's environment can perform anonymous
 git reads of the other. So:
 
-1. **A lap is *sent* when it is committed and pushed** to the sender's public
-   integration branch. No file is uploaded, attached or downloaded.
-2. **The operator is the signal, not the courier.** The sender tells the
-   operator *"our lap N is published at `<sha>`"*; the operator tells the other
-   side; the other side reads it from git. The human stays in the loop and
-   stops being a file transfer.
+1. **PUBLISHING IS NOT SENDING.** Committing and pushing a lap makes it
+   **published** — present, countable, buildable. It does **not** make it
+   readable, and **the other side must not read or act on it.** No file is
+   uploaded, attached or downloaded at any point.
+2. **A lap becomes *sent* when the OPERATOR announces it.** The sender tells the
+   operator *"our lap N is published at `<sha>`"*; the operator decides when to
+   pass that on; only then may the other side read it. The human stays in the
+   loop as the **signal**, and stops being a file transfer.
+
+   **The first draft of this section said "sent when committed and pushed", and
+   that was wrong.** It left no window in which a pushed lap could be corrected:
+   §192's *"never edit a file already sent"* would have bitten one second after
+   `git push`, so a defect found a minute later had nowhere to go but a new lap.
+   Operator's rule, 2026-09-13, and it is strictly better than what we proposed.
+
+2a. **THE LAP DECLARES ITS OWN STATE. A reader must never have to infer it:**
+
+   ```
+   HANDSHAKE-ANNOUNCED: no — published, NOT yet released for reading
+   HANDSHAKE-ANNOUNCED: yes — operator (rmccann), 2026-09-13
+   ```
+
+   A lap marked `no` is **not yet sent and may still be revised**. The moment it
+   reads `yes` it is immutable forever. **Both sides implement this or neither
+   does** — a field one side writes and the other ignores is worse than no
+   field, because it looks like a safeguard.
+
+2b. **Fail closed, on both sides.** If you cannot establish that a lap is still
+   `no`, treat it as **sent** and do not touch it. An unrecorded announcement is
+   indistinguishable from an announcement — the same reasoning §6a-ter applies to
+   overrides, which is why an unrecorded one did not happen.
+
+2c. **OPEN, and it is round 19 §0.2: does a NOT-YET-ANNOUNCED lap count for
+   `HANDSHAKE-ROUND-DIGEST`?** A lap file is counted by every conforming
+   enumerator the moment it exists on disk, so a published-but-unannounced lap
+   enters the publisher's digest while the other side holds nothing — the §5a
+   divergence no override may excuse. **This is the same question as whether a
+   transport envelope is a lap, one level over: what counts as a lap.** We do
+   not propose an answer here; we propose that one answer covers both.
 3. **A lap is cited by COMMIT SHA, never by branch tip.** A branch tip is a
    moving target — the rule that already applies to a pin applies to a lap. A
    read of a branch is a claim about whenever it was fetched, and says so.
