@@ -2531,7 +2531,8 @@ def sc_filed_rig_is_mappable():
     row for a file that is gone. It cannot check the DELIVERED names -- the
     tarball is not in the repository, which is exactly why the table is.
     """
-    for bundle in ("rig-2026-09-10-ddc1e8c", "rig-2026-09-11-ddc1e8c"):
+    for bundle in ("rig-2026-09-10-ddc1e8c", "rig-2026-09-11-ddc1e8c",
+                   "rig-2026-09-12-fe4d2c4"):
         _mapping_holds(ROOT / "docs" / bundle)
 
 
