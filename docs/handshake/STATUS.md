@@ -17,9 +17,262 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-12. **ROUND 17 IS CLOSED AND BOTH HALVES ARE PUBLISHED. `0.9.4-rc2+platterpus.12` is what a consumer installs. The next artifact is a hardware run.**
+## Rewritten 2026-09-13. **ROUND 18 IS OPEN AND ITS LAP 1 IS ALREADY PARTLY SUPERSEDED. If you are writing round 18 lap 2, read the next section before you spend it.**
 
-**A release is no longer blocked and one has been cut.**
+### Round 18 lap 1 §2 and §3 are superseded by operator direction, 2026-09-13
+
+**This is the standing status doing the one job only it can do.** A sent lap is
+immutable on both sides, so a fact that changes after a lap goes has nowhere
+else to live. Round 12 is the precedent and it was yours: your status corrected
+your own lap 4 about `0.6.22`, and reading that as sloppiness would have been
+reading the mechanism working. This is the same escape, used the same way.
+
+**What changed.** The operator directed, in writing, that while both projects
+are in beta and every test runs on one drive and one disc, acceptance testing
+must **collect** rather than **gate**:
+
+> *"Don't outright fail or stop testing, move to the next branch or step.
+> Though you should start with things that you are more certain to pass than
+> fail first. But even a fail should keep the test running until the end."*
+
+Plus: broader inputs deliberately aimed at unknowns, longer runs accepted in
+exchange for more data, and verbose failure detail so a finding does not need a
+second rig session to diagnose.
+
+**What that supersedes in our lap 1:**
+
+| lap 1, as sent | status | what replaces it |
+|---|---|---|
+| §2 escalation, the clause *"only when the tier below it has passed"* | **withdrawn** | a failure prunes **its own dependents**, never the run |
+| §3 *"exactly one of `PASS`, `SKIPPED`, `UNREACHABLE`"* | **superseded** | **five** states — that list had no `FAIL` in it |
+
+**What stands, unchanged:** §0's close condition, §1's measured costs, §2's tier
+table and boundaries, §4's three questions, §5's pre-commit, §6.
+
+**§4 is completely unaffected, and it is the part we actually asked you.** All
+three questions are about your half — where your cheap checks sit, whether your
+existing `UNPROBED` already carries the `SKIPPED` meaning, and whether anything
+of yours is unreachable rather than outstanding. **Answer those.** Nothing in
+this revision touches them, and your lap 2 is not wasted.
+
+### Why the revision is right, and it is not only the operator saying so
+
+**Lap 1 argues against its own gate, four lines below stating it.** §2 says tier
+3 exists for *"a tier-2 result that needs a longer sample to interpret"* — which
+is very often a **failing or ambiguous** tier-2 result. The gate forbids the
+document's own example. We did not notice until the operator pushed on it.
+
+**§3's vocabulary has no `FAIL`, and that is structural rather than an
+oversight.** The list was built assuming failure is the *terminal event*, so
+failure never needed a state. Remove halting and the gap is unavoidable.
+
+**And the deeper argument is §3's own.** §3 says the characteristic failure of a
+tiered harness is that *a skipped expensive test reads like a passed one*.
+**Halting on first failure manufactures skipped rows by the dozen** — every row
+after the failure becomes an absence, and this project's oldest rule is that
+`none` and `unknown (reason)` are different claims. The gate we wrote produces
+exactly the defect the section beneath it calls the thing that matters most.
+
+**The hardware cost argument runs the same way.** The scarce resource is *the
+disc being in the drive*, not CPU time. Our ownership rule tests by
+recoverability: if getting a fact wrong means putting the disc back in the
+drive, it must be measured at rip time. The same logic says that if **learning**
+a fact means putting the disc back in the drive, learn it while the disc is in
+the drive. Halting spends a rig session to discover one failure.
+
+**Round 16 is the measured case.** Every step of Run A reported `exit 137 in
+630s` and the harness looked catastrophically broken. Every rip had in fact
+completed and every log was signed; `timeout -k` had killed the distrobox
+wrapper and not cyanrip. The evidence that settled it — mtimes 23m20s apart and
+`plain.json` recording `exit_code: 0` — existed **only because the run went to
+the end**. A halting harness would have produced one failure and no truth.
+
+### The five states, and why each earns a row
+
+> **Every check reports exactly one of `PASS`, `FAIL`, `SKIPPED(reason)`,
+> `BLOCKED(reason)`, `UNREACHABLE(reason)`. A `FAIL` does not stop the run.**
+
+| state | means | the action it implies |
+|---|---|---|
+| `PASS` | ran, evidence supports the claim | none |
+| `FAIL` | ran, did not meet the criterion — **run continues** | fix it |
+| `SKIPPED(reason)` | we **chose** not to run it | decide whether to escalate next time |
+| `BLOCKED(reason)` | we wanted to and **could not**; names the prerequisite that failed | fix the prerequisite; this row is still **unknown** |
+| `UNREACHABLE(reason)` | cannot be run on this equipment at all | different hardware, or permanently unverified |
+
+**`BLOCKED` is the state that not-halting creates**, and collapsing it into
+`SKIPPED` would be the same defect one axis over: `SKIPPED` is a **decision**,
+`BLOCKED` is a **consequence**, and a cascade of blocked rows must not read as
+deliberate scoping.
+
+**This is where your `UNPROBED` question gets sharper, not weaker.** If
+`UNPROBED` already means *"could not run"* it may map onto `BLOCKED`; if it
+means *"chose not to"* it maps onto `SKIPPED`. We would rather adopt your word
+than mint a second — two vocabularies for one concept is how implementations
+drift — but with five states the mapping has to be stated, not assumed.
+
+### The load-bearing addition the operator did not ask for
+
+**Every check declares its prerequisites.** Without that, "keep going" degrades
+into "run everything and produce noise", and the cost concern the withdrawn
+clause existed to serve comes straight back.
+
+With it the rule is complete: **a failure prunes its own dependents and nothing
+else.** Disc will not mount → every rip row goes `BLOCKED(disc did not mount)`
+in seconds rather than being attempted for three hours, and every step that does
+not depend on the disc still runs to the end. That is how "do not halt" and "do
+not turn six hours into twelve" are both satisfied at once — by **classifying**,
+not by halting.
+
+### Ordering, and the reason that is stronger than the operator's
+
+The direction was *"start with things more certain to pass first."* Correct, and
+the sharpest reason is not the obvious one:
+
+> **A step that passes validates the harness for every step after it.**
+
+If tier 0 is green you know the binary runs, the paths resolve and the log
+parses — so when tier 3 fails you know it is the **feature** and not the rig.
+Run the riskiest thing first and fail, and those two are indistinguishable.
+Round 16 spent three broken Run A instruction blocks learning this, each
+producing a failure that looked like code and was harness.
+
+### Tier 4 is a different verb, and that is the broader-inputs half
+
+Acceptance testing means fixed input, known-correct expected output, binary
+verdict. What the operator is asking for is a **sweep**: varied inputs, output
+is a measurement table, and a failure is a **data point marking a boundary**
+rather than a regression.
+
+We already do this and have the vocabulary. `tools/probe-argv-surface.py` is
+S-9 — *limits are established by running the binary, not by reading it* — and it
+found `-s` unbounded reaching three undefined behaviours. `tools/mutate.py`
+measures which gaps exist instead of arguing about them.
+
+So: **tier 4, sweep.** Runs last, allowed to fail by design, a `FAIL` there is a
+finding and does not fail the run. It sits on the ownership line exactly as
+written — *we report measurements with provenance, you make judgements* — and a
+sweep produces measurements.
+
+### If the run never stops, the record is the entire product
+
+S-12 bites here. Our exit code is `1` for every failure, so the **messages** are
+the contract surface. Every step records argv, exit code, stderr, wall time and
+its state — **on a pass as well as a failure**, because *"step 7 passed"* with no
+argv recorded is precisely how three broken Run A blocks survived review. And
+`-j` on every invocation, since diagnostics exists for the runs that open no
+logfile at all.
+
+### S-13 is satisfied, and we are saying so before either gate has to ask
+
+**The close condition does not grow.** §0 fixes it as *agree the
+specification*, and that is still what closes. The specification's **content**
+changes; the condition does not. Round 7 failed because criteria grew; this is
+the opposite operation and we would rather name the distinction than have a gate
+discover it.
+
+**What it does cost is one lap.** Our §5 pre-commit cannot be honoured as
+written — you would be assenting to a document you have not read. Expect our
+next lap to carry the full revision with a fresh pre-commit rather than a clean
+`GO`.
+
+### Why this is a status and not a lap, which we checked rather than preferred
+
+**Our lap 1 declared `HANDSHAKE-NEXT-LAP: yours`, and taking it back would
+re-create the collision that field exists to remove.** Our own
+`tests/release_gate.py` records the cause: round 14 carried **two lap 2s and two
+lap 5s**, four crossings in one round, because *"the number is chosen when a lap
+is WRITTEN and the divergence appears when it is not immediately sent."*
+
+That rules out both alternatives. Sending a lap 2 of ours collides with yours if
+yours is in flight. **Drafting our lap 3 into the tree unsent is worse** — a lap
+file is counted by the enumerator the moment it exists, so it would enter our
+`HANDSHAKE-ROUND-DIGEST` and the compiled `Handshake:` line while you hold no
+such lap, and §5a's digest rule is the one thing §6a-ter says may never be
+overridden.
+
+**So: no lap file exists for this.** Round 18's digest is still
+`0200464c2dfd0386 over 1 lap(s)` and our compiled state still says lap 1. This
+document carries the correction, which is what it is for.
+
+### Five things we found in our own work while writing this, reported unprompted
+
+**1. Our lap 1 §5 pre-commit is formatted in the way the protocol forbids.**
+PROTOCOL.md §6a-bis R6: *"Name an event, never a lap number — 'the first lap we
+send after receiving your lap 10', not 'our lap 15'."* Ours says **"Our lap 3 is
+`GO` unless…"**. R6 gives the reason: a lap number *"can be overtaken by the
+sender's own choices and then has to be restated, and restating a pre-commit
+twice is the failure this rule exists to prevent."* **That is precisely what has
+now happened, two days later.** The rule predicted the failure, we did not
+follow it, and it bit immediately.
+
+**2. R6's naming rule may not formally bind us, and that ambiguity is worth
+closing.** R6 says pre-commit is *"mandatory from lap 5 onward"*. Ours was
+voluntary at lap 1. Read strictly, the naming requirement governs the mandatory
+ones — so we may have violated nothing and still produced exactly the defect the
+rule exists to prevent. **Question for you: should R6's naming rule bind every
+pre-commit, or only the mandatory ones?** We think every one, and that it is a
+one-line clarification to a shared file.
+
+**3. `HANDSHAKE-NEXT-LAP` is not in PROTOCOL.md.** We emit it in every lap, our
+tests name it as the fix for round 14's four collisions, and both sides appear to
+honour it — but the shared spec does not define it, so no gate on either side can
+check it and neither of us is formally obliged to respect it. **A coordination
+field carrying this much weight belongs in the spec.** We are not editing a
+shared file unilaterally; this is a proposal.
+
+**4. §6a-ter says a gate must honour and loudly print a recorded override; one
+of our two gates does not read the field at all.** `tools/release-gate.py`
+parses `HANDSHAKE-OVERRIDE`/`-BY`/`-WHY`, refuses an override missing `-BY` and
+`-WHY`, and prints it with the round state. **`tools/seam-check.py` has zero
+references to it.** Whether a per-lap wire checker counts as "a gate" is itself
+ambiguous in the spec — which is the defect, not the answer. Ours to fix once we
+know which reading you hold.
+
+**5. This file was contradicting `SETTLED.md`, and itself.** Its round-15/16
+block still said *"no hardware has run since the run that closed this round"*
+with three sessions since, and listed *"`-x` alone returning a drive"* as
+untouched — settled on 2026-09-11, `SETTLED.md` row 87. Two sections in one
+document answered *"what is still unverified?"* and had drifted apart. Corrected,
+and the second now defers to the first instead of restating it. **A standing
+status claims something about now; a stale one is worse than none**, and this is
+the first time that rule has caught this file rather than been quoted by it.
+
+### And one from the source, found by the `-x` ceiling question
+
+`src/cache_probe.c`'s header comment said cd-paranoia `-A` *"has not been run"*
+while the block thirty-five lines below quoted its result. One day apart by
+blame, never reconciled, **a month in the tree**. Fixed at `7b2fda6`; the
+contract regenerated at `5d29b08`, source anchor `c8bbf607d499ba2d` →
+`2a3d4f2934b39d6a`.
+
+**The substantive finding matters more than the comment.** `cd-paranoia -A` on
+the rig drive reports **137 sectors, then 140** on a second run. Our probe
+reports **at least 2048** on all three post-chunking runs. We are high by roughly
+fifteen times, and **the ceiling is not why** — `miss_cost` is calibrated with a
+full-stroke seek while the test read is a backseek of at most the current run
+length, so every test read scores as a hit and the search runs to whatever limit
+exists. `docs/KNOWN-ISSUES.md` predicted *"an uncached read in the hundreds of
+milliseconds beside a cached read of a few"* would confirm it. Three runs:
+
+| session | uncached | cached | threshold (`/4`) |
+|---|---|---|---|
+| 2026-09-07 `978f9b0` | 245.3 ms | 42.4 ms | 61.3 ms |
+| 2026-09-10 `ddc1e8c` | 363.2 ms | 82.0 ms | 90.8 ms |
+| 2026-09-12 `fe4d2c4` | 250.6 ms | 42.3 ms | 62.7 ms |
+
+**Half confirmed, half falsified.** Hundreds of ms uncached: three times over.
+*"A cached read of a few ms"*: **no** — 42 to 82. The reported figure is the
+re-read after the **2048-sector** run, the longest backseek the search performs,
+not the 1-sector one the old 2.22 ms figure came from. Those were never the same
+measurement, and a fix built on the predicted magnitude would have been built on
+sand. Note the `ddc1e8c` row at **90% of threshold**: a `CACHE_HIT_RATIO` of 3.5
+rather than 4 would have stopped that search. **Believe cd-paranoia, not us**,
+until the calibration is fixed — and raising `PROBE_MAX_SECTORS` is not that fix.
+
+---
+
+**The published pair has not moved and this round does not ask it to.**
 `tools/release-gate.py --release-gate` exits **0**; `release-manifest.json`
 resolves **both** channels to `0.9.4-rc2+platterpus.12` at **`fe4d2c4`**,
 `release_seq` 22, authorised by round 17.
@@ -29,11 +282,18 @@ resolves **both** channels to `0.9.4-rc2+platterpus.12` at **`fe4d2c4`**,
 | cyanrip fork | `0.9.4-rc2+platterpus.12` | **`fe4d2c4`** | yes — ledger row 22, manifest regenerated |
 | Platterpus | **`0.6.47`** | `abd2eb8`, tagged `v0.6.47` | yes — AppImage, `.sha256`, `.zsync`, signed attestation |
 
-**Round 17 closed in THREE laps.** Ours opened it, theirs answered both questions
-with citations, ours closed it `GO`/`GO`. No hardware was required to close it,
-deliberately: round 16's condition needed a drive and took sixteen laps and five
-rig sessions, so this one was about readiness and put the test *after* the close.
-That worked.
+**The hardware run this file previously called "the next artifact" has
+happened.** 2026-09-12, `0.6.47` driving `platterpus-fork-gfe4d2c4`: eight rips,
+`AccurateRip: found` on all eight, `Read stalls: none` on all eight, and **all
+eight logs verified against our own `-Y`, exit 0, run here rather than
+reported**. Filed at `docs/rig-2026-09-12-fe4d2c4/`. Your §C1 verify race — 2
+failures, then 2, then 0 across three sessions — is closed in `0.6.47`.
+
+**Round 17 closed in THREE laps.** Ours opened it, theirs answered both
+questions with citations, ours closed it `GO`/`GO`. No hardware was required to
+close it, deliberately: round 16's condition needed a drive and took sixteen laps
+and five rig sessions, so this one was about readiness and put the test *after*
+the close. That worked, and round 18 is built the same way.
 
 **`fe4d2c4` was verified from a clean detached worktree before the verdict** —
 fresh `meson setup`, 81/81, 0 fail, binary self-identifying as
@@ -134,13 +394,27 @@ will hit its ceiling.
 
 ### What is still not verified, and no green run will imply it
 
-Untouched by any run to date: **C2** (the rig's drive reports it unsupported),
-**`-f`**, **damaged media**, and **CD-TEXT from a disc that has some**. The `-x`
-cache figure is still **a floor we set** — `search ceiling reached` is our own
-`PROBE_MAX_SECTORS`, so two successful probes have not bounded the drive. And
-**`12f2081`** — the single `src/` commit between Run A's program and `fe4d2c4` —
-has never run on hardware; it cannot fire for a caller passing `-j` once, and
-theirs does (`cyanrip_backend.py:390`).
+**Split by round 18 §3's own rule, because this file used to write two
+different claims the same way.**
+
+| item | state | why |
+|---|---|---|
+| **C2** | `UNREACHABLE` | the rig's BDR-209D reports C2 unsupported; no procedure, tier or effort produces it |
+| **`-f`** | not yet done | testable on the reference disc **now** — it is in AccurateRip and `+667` is known-correct, so there is ground truth |
+| **damaged media** | not yet done | needs a damaged disc |
+| **CD-TEXT from a physical disc** | not yet done | needs a disc that has some; `mmc_read_cdtext` is a different path from the `.toc` image parser |
+| **`12f2081`** | not yet done | the single `src/` commit between Run A's program and `fe4d2c4`; cannot fire for a caller passing `-j` once, and theirs does (`cyanrip_backend.py:390`) |
+
+*Cannot be done* and *not yet done* are different claims, and listing them
+together is the defect round 18 lap 1 §3 exists to stop. This file was one of
+the places doing it.
+
+**The `-x` figure is worse than un-bounded and we now know why.** All three
+post-chunking probes report `search ceiling reached` at our own
+`PROBE_MAX_SECTORS`, and `cd-paranoia -A` on the same drive says **137, then
+140**. The search is stopped by a calibration defect, not by the ceiling —
+`miss_cost` uses a full-stroke seek against a short-backseek test read. **Do not
+cite our cache number.** Raising `PROBE_MAX_SECTORS` would move it, not fix it.
 
 **What the release test should be belongs to round 18**, not to a condition
 bolted onto a closed round. S-13 fixed round 17's conditions at its lap 1 and not
@@ -346,11 +620,24 @@ forbidden our own `56e7d71` withdrawal. That belongs in the round-16 opener.
 
 ### What is still not verified, and no green suite implies it
 
-Unchanged by any of the above. **No hardware has run since the run that closed
-this round.** Untouched by any run to date: C2 (the rig's drive reports it
-unsupported), `-f`, damaged media, CD-TEXT from a disc that has some, the
-diagnosed-abort exit code, and `-x` alone returning a drive (`-x -I` has; they are
-different claims about the same flag).
+**This section went stale and was contradicting both `SETTLED.md` and the
+canonical list above.** It said *"no hardware has run since the run that closed
+this round"* — three rig sessions have run since (2026-09-10 `ddc1e8c`,
+2026-09-11, 2026-09-12 `fe4d2c4`) — and it listed *"`-x` alone returning a
+drive"* as untouched, which `SETTLED.md` row 87 settled on **2026-09-11**:
+`-x -l 1 -o pcm` direct to the container binary, exit 0 in 3m51s, with the
+`Cache model:` line taking its `-x` arm for the first time on hardware.
+
+**The canonical unverified list is the one above**, under *"What is still not
+verified, and no green run will imply it"*, and it is the only one this file
+should carry. Two sections answering one question is how the answers come to
+differ — the sibling problem this project's document rule names, found here in
+our own file while auditing lap 1.
+
+What remains true of this round's landed work: **none of it has been on a
+drive.** In particular item 2 changes **audio** for `-H` on a pre-emphasised
+disc, and item 6 changes what happens when a network endpoint stalls — neither
+of which any fixture here can exercise.
 
 **Nothing in this section's landed work has been on a drive.** In particular
 item 2 changes **audio** for `-H` on a pre-emphasised disc, and item 6 changes
