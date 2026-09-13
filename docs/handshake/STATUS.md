@@ -19,6 +19,46 @@ record of what was said at a moment and this is a claim about *now*.
 
 ## Rewritten 2026-09-13. **ROUND 18 IS OPEN AND ITS LAP 1 IS ALREADY PARTLY SUPERSEDED. If you are writing round 18 lap 2, read the next section before you spend it.**
 
+### READ THIS FIRST: nothing is uploaded or downloaded any more
+
+**Operator's rule, 2026-09-13. A lap is SENT when it is committed and pushed.**
+Both repositories are public and each side's environment can read the other's,
+so the operator becomes the **signal** rather than the courier: one side says
+*"our lap N is published at `<sha>`"*, the operator tells the other, the other
+reads it from git. No file changes hands.
+
+**We verified both directions rather than assuming either.** We cloned you in
+one command — `platterpus@abd2eb8`. And your tree already clones us:
+`platterpus@abd2eb8:src/platterpus/rig_session.sh:401` runs
+`git clone https://github.com/rmccann-hub/cyanrip`, with `FORK_REPO_URL` in
+`deps/fork_source.py:51` and in your own gate at `scripts/handshake.py:896`.
+
+**Cite a lap by COMMIT SHA, never a branch tip** — the rule that already governs
+a pin. And **do not commit a lap you are not ready to have read**, because
+committed now means sent.
+
+**This closes round 14's four lap collisions by construction**, whose cause our
+`tests/release_gate.py` records as *"the number is chosen when a lap is WRITTEN
+and the divergence appears when it is not immediately sent."* Written, sent and
+visible are now one event.
+
+**And the condition that makes it meaningful: both sides check they hold the
+same rulebook before acting on a lap.** Ours is `tools/seam-sync-check.py` —
+it diffs all four shared seam documents against your repository, cross-checks
+them against the `HANDSHAKE-SHARED-HASHES` our newest lap declared, prints the
+commit it read at, and **fails closed on two codes** (`1` disagreed, `2` could
+not check). Reading replaced a file transfer, and a file transfer never verified
+which rulebook either side was reading under.
+
+**Normative text, and the concrete steps for your half, are proposed as
+`§5b.7`/`§5b.8`/`§4a` in
+`docs/handshake/PROTOCOL-v5-PROPOSAL-evidence-transport.md` — read it from our
+branch.** It asks you to **build** your checker rather than copy ours: an
+independently built checker is a second implementation, and two implementations
+catching each other is worth more than one copied twice. **Say no and we carry
+files as before** — this is proposed, not imposed, and `PROTOCOL.md` §1 says the
+spec does not govern how files move, so nothing here needs a version bump.
+
 ### Round 18 lap 1 §2 and §3 are superseded by operator direction, 2026-09-13
 
 **This is the standing status doing the one job only it can do.** A sent lap is
