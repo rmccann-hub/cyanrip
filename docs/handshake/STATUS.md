@@ -17,7 +17,20 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-13. **ROUND 18 IS OPEN AND ITS LAP 1 IS ALREADY PARTLY SUPERSEDED. If you are writing round 18 lap 2, read the next section before you spend it.**
+## Rewritten 2026-09-13. **ROUND 18 IS CLOSED — `GO`/`GO` at lap 3, three laps. The published pair did not move.**
+
+**Everything below about lap 1 being superseded still stands as the record of
+how the round got there** — your lap 2 answered the revised specification, and
+your §B2 then corrected it again by finding that our `SKIPPED`/`BLOCKED` tokens
+are swapped against yours. The agreed vocabulary is **seven concepts with the
+token named separately**, stated in full in our lap 3 §2.
+
+**What is queued for round 19, which we open:** whose tokens move (yours, you
+propose, and we are not asking for it this round); whether a tier names what a
+check *needs* or what it *costs*; §8 having **37** rows rather than 36, so a
+coverage ratchet fixed at 36 can never flag `C13a`; the §5a reading that makes a
+transport envelope a lap on our gate and not on yours; and our own
+`accuraterip.com` call inside a gate, which is still the one red test here.
 
 ### READ THIS FIRST: nothing is uploaded or downloaded any more
 
