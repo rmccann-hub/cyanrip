@@ -303,7 +303,21 @@ test('Handshake wire conformance', python,
 ## ============
 ## The "no release while a round is open" rule used to be prose only. This is
 ## the check that executes it, and these are the ways it could wrongly say yes.
-test('Release gate', python, args: [ files('release_gate.py') ])
+## MEASURED 17.5 s standalone, 2026-09-13, against meson's DEFAULT 30 s -- a
+## limit nobody chose. It TIMED OUT at 30.01 s in the full suite the day round 18
+## added two lap files, because the gate re-derives every round's digest over
+## every lap and that work grows with the record. 1.7x headroom on a parallel
+## run is close enough to flake, and a flaky test is worse than none.
+##
+## This is NOT the same case as `Settled facts` below, and the difference is why
+## one gets headroom and the other does not. That one exceeds its limit because
+## a SETTLED.md row re-checks a fact about our own parser by calling
+## accuraterip.com -- 80.2 s of its 136.8 s -- and raising a timeout over a
+## network call inside a gate would keep an unpredictable verdict and only move
+## where it misfires. This one is CPU-bound, deterministic, and growing with the
+## handshake record exactly as designed.
+test('Release gate', python, args: [ files('release_gate.py') ],
+     timeout: 120)
 
 ## Settled facts, and the seam checker
 ## ==================================
