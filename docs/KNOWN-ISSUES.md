@@ -136,6 +136,54 @@ the probe reports and changes nothing about whether it is right. Recorded
 because the question keeps arising from the `search ceiling reached` wording,
 which is accurate and reads like a complaint about the ceiling.
 
+### A settled fact is re-checked by calling the internet, and it times the suite out
+
+**Measured 2026-09-13**, by profiling `tools/check-settled.py` rather than
+guessing at it: 136.8 s over 67 commands, of which **`tools/accurip-live-probe.py`
+is 80.2 s — 59% of the whole check**. `probe-argv-surface.py --gate` is 26.7 s
+and `tests/release_gate.py` 17.3 s; the remaining **64 commands total ~13 s**.
+
+`tests/meson.build` gives `Settled facts` a 120 s timeout, chosen as roughly 4x
+headroom over a measured 27-30 s. It now **exceeds that and the meson test
+TIMEOUTs**, so the suite reports 80 OK and 1 timeout rather than 81 OK. The
+check itself still returns **0 stale**; it is the clock that fails, not the
+facts.
+
+**The cause is not size, and the first diagnosis of it here was wrong.** It was
+attributed to documentation growth — ~380 lines added to `STATUS.md`,
+`KNOWN-ISSUES.md` and `Changelog.md` in one session — on the reasoning that the
+check greps `docs/`. Profiling says those greps are in the ~13 s tail. **80 of
+the 137 seconds are one HTTP conversation with `accuraterip.com`**, and its
+duration is set by the network that day.
+
+**The defect is that the row exists in this form at all.** `SETTLED.md` row 84
+states a fact about **our parser** — that the AccurateRip response parser runs
+in this sandbox with no drive — and re-checks it by contacting a third-party
+service. This repository already has the rule, and paid for it:
+
+> *A check that reaches the network is not evidence about this program.* The
+> first diagnostics refusal test drove cyanrip into a refusal reached **via a
+> MusicBrainz lookup**, so what it asserted depended on whether the lookup
+> failed by not-found or by timeout. It failed once and would not reproduce.
+
+Two consequences, and the second is worse than the slowness:
+
+1. **The runtime is unpredictable**, so any timeout is either too tight (today)
+   or too loose to catch a real regression.
+2. **A settled fact can go red because someone else's server is down.**
+   `check-settled` cannot distinguish *"the parser broke"* from *"accuraterip.com
+   did not answer"* — which is this project's own `none` versus
+   `unknown (reason)` rule, failing in the tool that indexes the rule.
+
+**What the fix looks like, and why it is not made here.** The parser should be
+asserted against a **recorded response** committed as a fixture, so the settled
+fact is checkable offline and deterministically; the live probe stays as a
+separate tool that proves the *service* still answers in the shape we recorded,
+which is a different claim and does not belong in a gate. That is a new fixture,
+a new test, and a revert-proof — its own change, not a rider. **Raising the
+timeout is explicitly not the fix**: it would keep a network-dependent verdict
+inside a gate and only move the point at which it misfires.
+
 ### `docs/seam-commands.md` §7 overclaims
 
 It states *"Every value either took effect or was refused with a message"* when
