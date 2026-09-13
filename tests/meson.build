@@ -495,6 +495,7 @@ rip_scenarios = [
     'contract_build',
     'contract_exit_codes',
     'status_is_current',
+    'docs_do_not_contradict_themselves',
     'format_guard',
     'cue_isrc',
     'version_matrix',

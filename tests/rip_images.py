@@ -1502,6 +1502,84 @@ def sc_cue_isrc():
             fail("cue_isrc: ISRC appears after an INDEX line in a TRACK block")
 
 
+def sc_docs_do_not_contradict_themselves():
+    """Three ways this repository's OWN documentation rotted, each now executed.
+
+    All three were found by a full documentation audit on 2026-09-13 and all
+    three had been true for weeks. Prose caught none of them, because prose
+    enforces nothing -- which is the reason `release-gate.py` exists and the
+    reason these are here rather than in a paragraph asking a reader to be
+    careful.
+
+    Every check DERIVES what it expects from the tree. None carries a list of
+    things somebody thought of: a hand-maintained allowlist is a guess wearing a
+    derivation's clothes, and it goes stale exactly like the documents it is
+    supposed to guard.
+    """
+    claude = ROOT / "CLAUDE.md"
+    hs_readme = ROOT / "docs" / "handshake" / "README.md"
+    for f in (claude, hs_readme):
+        if not f.exists():
+            fail(f"docs_self_consistent: {f.relative_to(ROOT)} is missing")
+            return
+    ctext = claude.read_text(encoding="utf-8", errors="replace")
+    rtext = hs_readme.read_text(encoding="utf-8", errors="replace")
+
+    # 1. A RULE DECLARED RETIRED MUST NOT ALSO STAND AS A LIVE INSTRUCTION.
+    #
+    # CLAUDE.md stated "send a file every round even when nothing changed --
+    # silence is not [complete]" in the seam section and retired that exact rule
+    # a thousand lines below under the round-14 reform, which says it is why two
+    # lap 13s crossed. A reader going top-down got the dead rule. The retirement
+    # quotes the rule verbatim, so the expected set is derivable from the file.
+    retired = re.findall(r'\*\*"([^"]{10,})" is gone\.\*\*', ctext)
+    if not retired:
+        # The extraction itself can rot: if the reform section is reworded, this
+        # check silently guards nothing. A check that cannot fire is worse than
+        # a missing one, so say so rather than pass.
+        fail("docs_self_consistent: no retired rule matched '**\"...\" is gone.**' "
+             "in CLAUDE.md -- the reform section was reworded and this check is "
+             "now guarding nothing")
+    for rule in retired:
+        # Once in the retirement is correct; twice means it also stands somewhere
+        # as an instruction.
+        if ctext.count(rule) > 1:
+            fail(f"docs_self_consistent: CLAUDE.md declares \"{rule[:60]}...\" "
+                 f"RETIRED but the same text appears {ctext.count(rule)} times -- "
+                 f"a reader going top-down meets the dead rule as live")
+
+    # 2. THE ROUND TABLE MUST COVER EVERY ROUND THE RECORD HOLDS.
+    #
+    # It stopped at round 13 through FIVE closed rounds while claiming "every
+    # round is closed" and naming a release superseded twice. It carries a
+    # warning that it went stale once before, stopping at "round 7 is open"
+    # through five closed rounds -- so the warning demonstrably does not work
+    # and this does.
+    rounds = set()
+    for f in (ROOT / "docs" / "handshake").glob("round-*.md"):
+        m = re.match(r"round-(\d+)(?:-lap-\d+)?\.md$", f.name)
+        if m:
+            rounds.add(int(m.group(1)))
+    listed = {int(n) for n in re.findall(r"(?m)^\|\s*(\d+)\s*\|", rtext)}
+    missing = sorted(rounds - listed)
+    if missing:
+        fail(f"docs_self_consistent: docs/handshake/README.md's round table is "
+             f"missing round(s) {missing} -- the record holds them and the table "
+             f"does not, which is how it came to name a superseded release as "
+             f"current")
+
+    # 3. THE CONSUMER MAP MUST POINT AT THE LAPS.
+    #
+    # It did not, and under pull transport (§5b.7) the lap path IS the transport:
+    # a lap is delivered by being pushed, so a consumer that cannot find the
+    # directory cannot receive one. Harmless while laps were mailed, load-bearing
+    # the moment they were not.
+    if "round-NN-lap-LL.md" not in rtext:
+        fail("docs_self_consistent: docs/handshake/README.md never names "
+             "`round-NN-lap-LL.md` -- the map a consumer reads does not say "
+             "where the laps are, and under pull transport that is the transport")
+
+
 def sc_status_is_current():
     """Every doc in docs/handshake/ that names the current pin must name it.
 
