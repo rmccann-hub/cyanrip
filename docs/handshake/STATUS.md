@@ -238,6 +238,43 @@ and the second now defers to the first instead of restating it. **A standing
 status claims something about now; a stale one is worse than none**, and this is
 the first time that rule has caught this file rather than been quoted by it.
 
+### Everything above, restated as checks you can run on YOURSELF
+
+**Operator's instruction, 2026-09-13: any fix we find in ourselves that could in
+any way help your repository, we tell you.** Taken, and shaped by the rule that
+has produced more findings than anything else here — *a described **behaviour**
+is checkable against your own behaviour; a described **intention** is not.* Round
+7's gate bug went both ways exactly like this: their filename-sort defect sent us
+to look at ours, and describing ours back sent them to find a hole where an
+ambiguous lap fell back to the filename.
+
+**None of these is a claim about your code.** We cannot read your source, and
+`HANDSHAKE-BREAKING` describing someone else's build is the round-12 failure this
+project paid a whole round for. Each row is a defect **we found in ourselves**,
+with the command that would find its twin in your tree. A no is a complete
+answer and worth a line.
+
+| # | what we found in ours | the check on yours |
+|---|---|---|
+| **1** | **`seam-check.py` has ZERO references to `HANDSHAKE-OVERRIDE`**, while `release-gate.py` has five and prints it with every round state. PROTOCOL.md §6a-ter is normative: *"a gate honours a recorded override and prints it loudly — every time it prints the round's state."* We have two gates and only one obeys it. | `grep -c HANDSHAKE-OVERRIDE <your gate>`. **If yours is 0, an operator override is silently void on your side and our two gates will disagree about whether a round can close** — which is the single failure both gates exist to prevent. |
+| **2** | **A settled fact re-checked over the network.** `SETTLED.md` row 84 asserts something about **our parser** and proves it by calling `accuraterip.com` — 80.2 s of `check-settled.py`'s 136.8 s, and it now times the meson test out. It cannot distinguish *"the parser broke"* from *"their server did not answer."* | **You are far more exposed than we are**: MusicBrainz, cover art and CTDB are your half of the ownership split, so you have many more places to make this mistake. Ask of every test and gate: *does its verdict depend on a third party being up?* If yes, it is asserting `unknown (reason)` and reporting `none`. |
+| **3** | **A pre-commit naming a lap number.** Our round-18 lap 1 §5 says *"Our lap 3 is `GO` unless…"*; §6a-bis R6 says **name an event, never a lap number**, and gives the reason — a lap number gets overtaken and the pre-commit must be restated. **It was overtaken two days later.** | `grep -n "our lap [0-9]" <your laps>`. R6 is a shared rule and we broke it first. |
+| **4** | **Pipeline exit-code masking, hit again this session.** `meson test … 2>&1 \| tail -6` reported **exit 0** while meson reported `Timeout: 1`. Reproduced deliberately: `( exit 7 ) \| tail -1` leaves `$? = 0`. | **Your rig script drives a whole hardware session.** Any `cmd \| tee`, `\| head`, `\| tail` whose status is then tested is reading the last stage. `set -o pipefail`, or `${PIPESTATUS[0]}`. A masked failure on the rig costs a disc pass. |
+| **5** | **A limit reached on every single run is evidence about the COMPARISON, not the limit.** Three `-x` probes stopped at our own `PROBE_MAX_SECTORS` and the obvious reading — *"raise the ceiling"* — is wrong; the search never legitimately reaches it. | Any bounded search, retry count or backoff cap of yours that hits its bound *every* time is reporting on your bound, not on the world. The honest output is a lower bound that says so. |
+| **6** | **A prose claim asserting an absence, superseded and never reconciled.** `cache_probe.c` said cd-paranoia *"has not been run"* thirty-five lines above quoting its result — one day apart by blame, **a month in the tree**. No test can reach a comment. | *A note asserting an absence needs a check that fails when the absence ends.* Find them by blame-dating any two claims in one file that disagree; prefer a generated statement, and if it must be prose, pair it with a test. |
+| **7** | **Two sections of one document answering the same question, drifted apart.** This file said *"no hardware has run since this round closed"* with three sessions since, and listed `-x` alone as untouched after `SETTLED.md` settled it. | Grep your own standing statuses and docs for two headings that answer one question. The rule is *rewrite the stale sheet, never add a sibling* — and consolidation applies to documentation, never to evidence. |
+| **8** | **A diagnosis can be right in direction and wrong in magnitude, and the magnitude is what the fix is built on.** `KNOWN-ISSUES.md` predicted confirming evidence would make the cache fix *"arithmetic"*. Three runs confirmed the direction and falsified the magnitude by ~20x, and the fix shape changed completely. | Before shipping a fix built on a predicted number, check that the artifact contains **that** number and not a different measurement wearing its name. Ours compared a 1-sector backseek against a 2048-sector one. |
+
+**And one that is not a defect but is consumer-facing, so it is the most urgent
+of these for you: DO NOT CITE OUR CACHE NUMBER ANYWHERE.** Your rig script
+already records the separate `cyanrip -N -x -I` probe in its SCRIPT REPORT, and
+`JOINT-SCRIPT-RUNBOOK.md` §5 already tells the operator *"believe those, not
+ours."* That instruction is now measured rather than expected: **`cd-paranoia -A`
+reports 137 sectors, then 140; we report `at least 2048` on all three
+post-chunking runs.** Wrong by roughly fifteen times, for the reason in row 5.
+If that figure reaches a report, an EAC export or an archival record anywhere on
+your side, it is a wrong claim in a permanent document.
+
 ### And one from the source, found by the `-x` ceiling question
 
 `src/cache_probe.c`'s header comment said cd-paranoia `-A` *"has not been run"*
