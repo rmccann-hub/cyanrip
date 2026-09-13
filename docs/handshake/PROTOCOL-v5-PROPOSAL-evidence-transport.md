@@ -3,7 +3,16 @@
 **Status: a DRAFT PROPOSAL, not the spec.** `docs/handshake/PROTOCOL.md` is v4
 and is unchanged; its hash is declared in every lap and editing it mid-round
 would break `HANDSHAKE-SHARED-HASHES` on both sides and impose a rule on a
-consumer who has not agreed to it. This is put to Platterpus for **round 16**.
+consumer who has not agreed to it. This was put to Platterpus for **round 16**;
+**round 16 closed without adopting it** and the protocol is still v4, verified
+2026-09-13 by `tools/seam-sync-check.py` against `platterpus@abd2eb8`.
+
+**EXTENDED 2026-09-13 with §5b.7 and §5b.8, on operator direction, and they are
+the reason to look at this file again.** The operator asked whether each side
+could simply read the other's public repository instead of files being carried
+by hand. **It can** — and the clause in our `CLAUDE.md` saying otherwise was
+false. That changes the answer to the question this whole proposal was written
+to settle, so the answer is revised here rather than in a new document.
 
 **Neither project owns it.** A change is a version bump both sides ship.
 
@@ -109,6 +118,84 @@ must be constructed so no conforming enumerator can count it as a lap — v4 §5
 exactly-once test does this, and Platterpus's `emit_envelope.py` already asserts
 it. **Either side may send one; neither is obliged to.**
 
+**5b.7 — PULL TRANSPORT: a lap is delivered by being published, not by being
+carried (v5 — normative, proposed 2026-09-13).**
+
+Both repositories are public and each side's environment can perform anonymous
+git reads of the other. So:
+
+1. **A lap is *sent* when it is committed and pushed** to the sender's public
+   integration branch. No file is uploaded, attached or downloaded.
+2. **The operator is the signal, not the courier.** The sender tells the
+   operator *"our lap N is published at `<sha>`"*; the operator tells the other
+   side; the other side reads it from git. The human stays in the loop and
+   stops being a file transfer.
+3. **A lap is cited by COMMIT SHA, never by branch tip.** A branch tip is a
+   moving target — the rule that already applies to a pin applies to a lap. A
+   read of a branch is a claim about whenever it was fetched, and says so.
+4. **The recipient declares the SHA it read at** in its next lap's
+   `HANDSHAKE-INBOUND-HELD`, so *"we hold your lap 2"* names a resolvable
+   object rather than a file whose provenance is a memory of an upload.
+
+**This closes a defect neither side could close before.** Round 14 carried
+**two lap 2s and two lap 5s across four crossings**, and our own
+`tests/release_gate.py` records the cause: *"the number is chosen when a lap is
+WRITTEN and the divergence appears when it is not immediately sent."* Under
+5b.7 **written, sent and visible are one event**, so the gap the collisions grew
+in does not exist. It also makes `HANDSHAKE-NEXT-LAP` checkable rather than
+honour-based, since each side can see whether the other has published.
+
+**It also sharpens §4a and §310, which currently hinge on an unobservable.** *A
+sent lap is immutable; an unsent lap may be revised* — under 5b.7, **sent means
+committed**, which both sides can verify. A lap file that exists on disk is
+already counted by every conforming enumerator, so this makes the digest rule
+and the immutability rule agree about the same moment instead of two.
+
+**What it does not change:** §5b.6 stands — envelopes and bundles remain legal
+transport and either side may still send one. Pull is the default, not the only
+route. And a **rig artifact** still needs §5b.1: a bundle produced by a run must
+reach both projects byte-identical, whether by push or by upload.
+
+**5b.8 — BOTH SIDES VERIFY THEY HOLD THE SAME RULES BEFORE ACTING ON A LAP
+(v5 — normative, proposed 2026-09-13).**
+
+Reading replaces a file transfer, and a file transfer never verified anything
+about the *rulebook* either side was reading it under. So the check has to be
+added explicitly, and it is the condition under which everything else here is
+meaningful:
+
+> **Before acting on a lap from the other side, each project verifies that all
+> four shared seam documents are byte-identical across the two repositories,
+> and names the commit it read at.**
+
+Ours is `tools/seam-sync-check.py`. It diffs the real files — the protocol, both
+seam sheets and the ownership split — at whatever commit the peer checkout
+resolves to, cross-checks them against the `HANDSHAKE-SHARED-HASHES` our own
+newest lap declared, and prints the peer SHA so the result is quotable.
+
+**It fails closed, with two distinct exit codes.** `1` is *disagreed*; `2` is
+*could not check* — no peer checkout, wrong repository, unresolvable ref.
+Collapsing those would be the `none` versus `unknown (reason)` defect in the
+tool built to prevent disagreement.
+
+**Neither side should make it a suite gate, and the reason is measured.** It
+reaches the network, and a check that reaches the network is not evidence about
+the program under test. This repository has that defect exactly once —
+`SETTLED.md` row 84 re-checks a fact about **our own parser** by calling
+`accuraterip.com`, which profiling on 2026-09-13 showed to be **80.2 s of
+`check-settled.py`'s 136.8 s** and now times the meson test out. A second one
+would repeat a mistake found the same week.
+
+**Why it is needed at all:** round 7 lap 30 found their protocol copy missing a
+paragraph ours carried, by diffing rather than assuming. The remedy then was to
+exchange hashes in every lap, which only works if both sides compute them over
+the same thing and neither can check the other. **Two projects agreeing on a
+verdict while holding different rulebooks are not agreeing about anything, and
+that failure is silent by construction: every test on both sides passes.**
+
+Run 2026-09-13 against `platterpus@abd2eb8`: **all four byte-identical**, and
+all four match what our round-18 lap 1 declared.
+
 ## 4. What this does NOT propose
 
 - No change to the verdict vocabulary, the digest, or any required field.
@@ -116,6 +203,68 @@ it. **Either side may send one; neither is obliged to.**
 - No obligation on the operator about *where* they upload; §5b.1 says both
   parties end up holding it, not by what route.
 - Nothing that makes a bundle a close condition. S-13 still fixes those at lap 1.
+- **Nothing that licenses either side to author the other's half.** 5b.7 grants
+  a *read*, and the seam's value is two independent implementations catching
+  each other — a convention re-derived from the other's source is one
+  implementation copied twice. Read to VERIFY a claim, never to write their
+  code, their laps or their tests for them.
+- **No relaxation of the citation rule — it gets STRICTER, because it can.**
+  *Never state a mechanism in the other side's code without citing the artifact
+  it came from, or marking it unverified* stood when neither side could read the
+  other. Round 12's defect was us asserting a constant in their build we had
+  never opened, and it was never actually unpreventable. Now the citation is
+  cheap: `platterpus@<sha>:<path>:<line>`, SHA pinned. **"Unverified" stops
+  being an acceptable tag for anything that is in a public file.**
+
+## 4a. What Platterpus does to adopt §5b.7/§5b.8 — concrete
+
+**You do not need our permission and we are not imposing this.** It is proposed;
+say no and we carry files as before. But it is symmetric, so here is our half
+already done and the mirror image of it for yours.
+
+**1. Clone us. You already can — we just proved the reverse direction.**
+
+```sh
+GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 \
+    https://github.com/rmccann-hub/cyanrip <somewhere>
+```
+
+`platterpus-fork` is the only branch to build from or read laps from. `master`
+is a clean upstream mirror and carries none of this.
+
+**2. Build the mirror of `tools/seam-sync-check.py`.** Do NOT copy ours — *an
+independently built checker is a second implementation, and two implementations
+of one convention catching each other is worth more than one copied twice.* Ours
+is readable at `tools/seam-sync-check.py` if you want the shape. What it must do:
+
+| requirement | why |
+|---|---|
+| compare all **four** shared documents byte-for-byte | protocol, both seam sheets, ownership |
+| know that the **paths differ** — ours is `docs/handshake/PROTOCOL.md`, yours is `docs/handshake-protocol.md`; the other three share a path | layout is not drift, but a *moved* shared document should be loud, not silently searched around |
+| cross-check both trees against the `HANDSHAKE-SHARED-HASHES` your newest lap declared | two trees agreeing says nothing about what the lap we actually hold quoted |
+| **print the peer commit SHA** | a shallow clone of a moving branch is a claim about whenever it was fetched |
+| **fail closed, on two distinct codes** — disagreed vs could-not-check | `none` and `unknown (reason)` are different claims |
+| **not be a test in your suite** | it reaches the network; see §5b.8 for what that already cost us |
+
+**3. Adopt commit-is-send.** Publish a lap by pushing it. Tell the operator
+*"our lap N is published at `<sha>`"* — that sentence is the whole handshake now.
+Do not commit a lap you are not ready to have read.
+
+**4. Cite by SHA.** Laps, pins, and any line about our code:
+`cyanrip@<sha>:<path>:<line>`. Our source anchor is in `PROVIDER-CONTRACT.md` so
+a `file:line` resolves against a stated tree.
+
+**5. Nothing else changes.** Same verdict vocabulary, same digest, same close
+rule, same §1a (we open). Envelopes stay legal. S-13 still fixes close
+conditions at lap 1.
+
+**One thing we ask you NOT to do, and we are holding ourselves to it.** Reading
+your tree does not license us to author your half, and the reverse is true.
+**Read to verify a claim, never to write the other project's code, laps or
+tests.** The seam works because two independent implementations disagree
+out loud; a convention re-derived from the other's source is one implementation
+copied twice, and it would quietly delete the thing that has found nearly every
+defect either project has caught in the other.
 
 ## 5. Open question for Platterpus
 

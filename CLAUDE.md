@@ -222,6 +222,59 @@ regardless of who is at the keyboard.
   with its SHA-256 quoted in the lap so the fetch is verifiable. A hash mismatch
   means the branch moved under the reader, which is worth a line.
 
+  **AND SINCE 2026-09-13 THE LAP ITSELF TRAVELS THAT WAY — NOTHING IS UPLOADED
+  OR DOWNLOADED.** Operator's rule, and it finishes the sentence the bullet
+  above started. Both repositories are public and this environment performs
+  anonymous git reads of theirs, so:
+
+  1. **A lap is SENT when it is committed and pushed** to `platterpus-fork`.
+  2. **The operator is the signal, not the courier.** We say *"our lap N is
+     published at `<sha>`"*; they are told; they read it from git. Same in
+     reverse. No file changes hands.
+  3. **Cite a lap by COMMIT SHA, never by a branch tip** — the rule that
+     already governs a pin. A read of a branch is a claim about whenever it was
+     fetched, and must say so.
+  4. **`HANDSHAKE-INBOUND-HELD` names the SHA we read at**, so "we hold your
+     lap 2" resolves to an object rather than to a memory of an upload.
+
+  **This closes round 14's four lap collisions by construction.** Their cause is
+  recorded in `tests/release_gate.py`: *"the number is chosen when a lap is
+  WRITTEN and the divergence appears when it is not immediately sent."* Written,
+  sent and visible are now one event. It also makes §4a and §310 hinge on
+  something both sides can check — **sent means committed** — instead of on an
+  unobservable, and it agrees with the fact that a lap file is counted by every
+  conforming enumerator the moment it exists on disk. **Do not commit a lap you
+  are not ready to have read.**
+
+  Proposed to Platterpus as `PROTOCOL.md` §5b.7/§5b.8 in
+  `docs/handshake/PROTOCOL-v5-PROPOSAL-evidence-transport.md`. Envelopes and
+  bundles stay legal (§5b.6); pull is the default, not the only route, and a rig
+  bundle still has to reach both projects byte-identical.
+
+- **RUN `tools/seam-sync-check.py` BEFORE ACTING ON ANY LAP OF THEIRS. Every
+  time.** It diffs the four shared seam documents against their public
+  repository and prints the commit it read at.
+
+  **Reading replaced a file transfer, and a file transfer never verified which
+  RULEBOOK either side was reading under.** Round 7 lap 30 found their protocol
+  copy missing a paragraph ours carried, by diffing rather than assuming. The
+  remedy then — exchange hashes in every lap — only works if both sides compute
+  them over the same thing, and neither could check the other. **Two projects
+  agreeing on a verdict while holding different rulebooks are not agreeing about
+  anything, and that failure is silent by construction: every test on both sides
+  passes.**
+
+  It **fails closed on two distinct exit codes**: `1` disagreed, `2` could not
+  check. Collapsing those would be the `none` versus `unknown (reason)` defect
+  inside the tool built to prevent disagreement.
+
+  **It is deliberately NOT a meson test, and that is not laziness.** It reaches
+  the network, and a check that reaches the network is not evidence about this
+  program. We already carry that defect once — `SETTLED.md` row 84 re-checks a
+  fact about **our own parser** by calling `accuraterip.com`, measured at
+  **80.2 s of `check-settled.py`'s 136.8 s** and now timing the suite out.
+  Adding a second would repeat a mistake found in the same week.
+
   **A test does not travel; its specification does.** Put what the test checks
   and what a pass looks like in the lap, and let the other repository build it.
   An independently built checker is a second implementation, and two
