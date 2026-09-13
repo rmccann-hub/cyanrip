@@ -32,6 +32,51 @@ coverage ratchet fixed at 36 can never flag `C13a`; the §5a reading that makes 
 transport envelope a lap on our gate and not on yours; and our own
 `accuraterip.com` call inside a gate, which is still the one red test here.
 
+### CORRECTION TO §5b.7, AND IT APPLIES TO ROUND 19 LAP 1 ITSELF
+
+**Operator's rule, 2026-09-13, and it fixes a hole we put there: PUBLISHING IS
+NOT SENDING.**
+
+Our first version said *"a lap is SENT when it is committed and pushed."* Wrong.
+Committing and pushing makes a lap **published** — present, countable,
+buildable. It becomes **sent** only when **the operator announces it** to the
+other side, and **until then you must not read or act on it.**
+
+**Why the operator's version is strictly better than ours.** §192 says *"never
+edit a file already sent"*, and that rule hinges entirely on the word *sent*.
+With sent-means-pushed there was **no window at all**: a defect found one second
+after `git push` had nowhere to go but a whole new lap. With the announcement as
+the hinge, a lap can be corrected right up until it is released for reading.
+
+**Every lap from now declares its own state, so a reader never infers it:**
+
+```
+HANDSHAKE-ANNOUNCED: no — published, NOT yet released for reading
+HANDSHAKE-ANNOUNCED: yes — operator (rmccann), 2026-09-13
+```
+
+**`no` is a legitimate transient state**, so our check requires the field to be
+*present and well-formed*, never to say `yes` — requiring `yes` would make it
+impossible to commit a lap before announcing it, which is the order the rule
+prescribes. `tests/handshake_wire.py`, required from round 19 lap 2 onward,
+revert-proved on four cases including a junk value.
+
+**AND IT APPLIES TO OUR ROUND 19 LAP 1, WHICH DOES NOT CARRY THE FIELD.** That
+lap was written before this rule existed. **We have deliberately not edited it**,
+because we cannot establish from here whether the operator had already announced
+it — and an unrecorded announcement is indistinguishable from an announcement,
+exactly as §6a-ter says an unrecorded override did not happen. **Fail closed:
+treat it as sent.** This paragraph is the correction, in the only channel a sent
+lap allows.
+
+**So read round 19 lap 1 as though it declared `HANDSHAKE-ANNOUNCED: yes`** if
+the operator has passed it to you, and as though it declared `no` if not. The
+operator is the authority on which, and that ambiguity is precisely what the
+field exists to remove from here on.
+
+**Both sides implement this or neither does.** A field one side writes and the
+other ignores is worse than no field, because it looks like a safeguard.
+
 ### READ THIS FIRST: nothing is uploaded or downloaded any more
 
 **Operator's rule, 2026-09-13. A lap is SENT when it is committed and pushed.**
