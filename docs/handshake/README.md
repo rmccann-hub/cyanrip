@@ -143,9 +143,24 @@ once already, stopping at *"round 7 is open"* through five closed rounds.
 | 12 | closed, GO/GO — 4 laps | `64ae7bc`, released as `237a4ff` | `round-12-lap-03.md` |
 | 13 | closed, GO/GO — 8 laps | `9f8592e`, released as `796df32` (`beta`) | `round-13-lap-08.md` |
 
-**Every round is closed and a release is permitted.** Round 13 approved
-`9f8592e`; `+platterpus.8` was cut at `796df32`, which is the first commit where
-the version and every derived artifact agree.
+| 14 | closed, GO/GO — 16 laps | `d9c058c`, released as `+platterpus.11` | `round-14-lap-*.md` |
+| 15 | closed, GO/GO | *(see the gate)* | `round-15-lap-*.md` |
+| 16 | closed, GO/GO — 17 laps | `fe4d2c4` line; closed on Run A hardware | `round-16-lap-17.md` |
+| 17 | closed, GO/GO — 3 laps | **`fe4d2c4`, released as `+platterpus.12`** | `round-17-lap-03.md` |
+| 18 | closed, GO/GO — 3 laps | *(no pin move — a procedure round)* | `round-18-lap-03.md` |
+
+**THIS TABLE WENT STALE AGAIN, EXACTLY AS ITS OWN WARNING DESCRIBES.** It
+stopped at round 13 through **five** closed rounds (14–18) while claiming
+*"every round is closed"* and naming `+platterpus.8` at `796df32` as the
+release — which had been superseded twice. Found 2026-09-13 by auditing this
+directory against `tools/release-gate.py`. **The warning above the table did not
+stop it happening a second time, so read the gate and treat the table as a
+convenience.**
+
+**Every round is closed and a release is permitted.** The live release is
+**`0.9.4-rc2+platterpus.12` at `fe4d2c4`**, `release_seq` 22, authorised by
+round 17. Round 18 agreed a tiered acceptance *procedure* and deliberately moved
+no pin.
 
 **Round 13 carried one close condition out with it, and that is a first.** CC-2
 required a hardware acceptance pass, and it was mis-specified: it named a *test
@@ -172,13 +187,59 @@ what we were told and when. See `CLAUDE.md`.
 
 ## What a consumer needs, and where it lives
 
+**Under pull transport (2026-09-13) this table is how the consumer finds a lap,
+so it has to name the laps — it did not, because laps used to be mailed.**
+
 | | |
 |---|---|
+| **Our laps — the handshake itself** | **`docs/handshake/round-NN-lap-LL.md`**, both fields zero-padded |
+| **Our standing status, between rounds** | **`docs/handshake/STATUS.md`** — rewritten in place, claims about *now*, carries no `HANDSHAKE-*` wire headers so no enumerator counts it |
+| **Laps we have received** | `docs/handshake/inbound/` — filed byte-exact; a transport envelope is kept as `envelope-round-NN-lap-LL.md`, a name no `round-*-lap-*` glob can match |
+| **The live round state** | `python3 tools/release-gate.py` — the gate, not the table above |
+| The shared seam documents | `docs/handshake/PROTOCOL.md`, `docs/seam-rules.md`, `docs/seam-commands.md`, `docs/OWNERSHIP.md` — **neither project owns any of them** |
 | Every flag, log line, exit code and error string | `PROVIDER-CONTRACT.md` (generated) |
 | A worked example of the log | `docs/golden-reference.log` |
-| What changed per fork release | `Changelog.md` |
+| What changed per fork release, **and every finding** | `Changelog.md` — the no-reply channel; findings go here, not in laps |
+| Facts already settled, with the command that re-checks each | `docs/SETTLED.md` |
+| Known defects we have not fixed, and why | `docs/KNOWN-ISSUES.md` |
+| What a user installs, and from which commit | `release-manifest.json` |
 | Behaviour that differs from upstream | `README.md`, *Fork differences* |
 | Why the pregap carry looks the way it does | `docs/pregap-carry.md` |
+
+## Where WE read from, in THEIR repository
+
+**The other half of the same map, and it did not exist until 2026-09-13.** It
+lived only in one session's scrollback, which is the failure `SETTLED.md` was
+created to stop. Derived by reading `rmccann-hub/Platterpus` at `abd2eb8`, not
+from memory:
+
+| | |
+|---|---|
+| Their laps, as sent | `docs/handshake/outbound/` — **naming is theirs, not the agreed one**: `round17lap02FROMplatterpusTOcyanrip.md`, unpadded, no separators |
+| Their canonical/filed copies | `docs/handshake/verified/` |
+| Laps of ours they hold | `docs/handshake/inbound/` |
+| Their standing status | `docs/handshake/outbound/platterpusstatus.md` — **not** named `STATUS.md`; a `STATUS*.md` search finds nothing in their tree |
+| Their copy of the protocol | `docs/handshake-protocol.md` — **a different path from ours** (`docs/handshake/PROTOCOL.md`); the other three shared files share our path |
+| Their gate | `scripts/handshake.py` |
+| Their state vocabulary | `src/platterpus/uiscript/report.py` — six outcomes; **their `SKIPPED`/`BLOCKED` are swapped against ours** |
+| Their version | `src/platterpus/__init__.py`, `__version__` |
+| Their changelog | `CHANGELOG.md` (upper case; ours is `Changelog.md`) |
+
+**Clone it read-only; we cannot push to it:**
+
+```sh
+GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 \
+    https://github.com/rmccann-hub/platterpus /home/user/rmccann-hub/platterpus
+git -C /home/user/rmccann-hub/platterpus fetch --depth 1 origin HEAD   # to update
+```
+
+**AND THE LIMIT THAT MATTERS, measured 2026-09-13 with a fresh fetch: their
+round-18 lap 2 is NOT in their public repository.** Their HEAD is `abd2eb8` and
+their newest outbound file is round 17 lap 2. **Reading works in both
+directions; PUBLISHING does not yet on their side** — lap 2 reached us as a file
+through the operator. Until they push laps, pull transport (§5b.7) is live for
+our direction only, and that is a fact about their workflow rather than a
+defect in ours.
 
 `PROVIDER-CONTRACT.md` is generated by `tools/gen-provider-contract.py` from the
 source tree and the built binary. Regenerate it rather than editing it;
