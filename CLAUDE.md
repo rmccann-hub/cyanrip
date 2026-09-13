@@ -56,8 +56,20 @@ settled by building 0.9.3 and running it. The measured matrix is
   image drivers, which have no cache to measure. **Verified on hardware
   2026-08-25** -- `-x -I` completed in 15.9 s on a PIONEER BD-RW BDR-209D, exit
   0, drive returned, reporting `at least 2048 sectors ... search ceiling
-  reached`. The probe-only invocation is the verified one; **`-x` alone, the
-  modifier that goes on to rip, still is not**.
+  reached`. **`-x` ALONE — the modifier that goes on to rip — was settled
+  2026-09-11** on test pin `ddc1e8c`: `-x -l 1 -o pcm`, exit 0 in 3m51s. This
+  bullet said it *"still is not"* for two days after `SETTLED.md` row 87
+  recorded it, so the file you are told to read before deriving anything
+  disagreed with this one.
+
+  **AND THE NUMBER IT REPORTS IS WRONG BY ROUGHLY FIFTEEN TIMES.** `cd-paranoia
+  -A` on the same drive says **137 sectors, then 140**; we say *at least 2048*
+  on all three post-chunking runs. **The ceiling is not why** — `miss_cost` is
+  calibrated with a full-stroke seek while the test read is a backseek of at
+  most the current run length, so every test read scores as a hit and the search
+  runs to whatever limit exists. **Raising `PROBE_MAX_SECTORS` moves the number
+  and fixes nothing.** Mechanism and the three-run evidence are in
+  `docs/KNOWN-ISSUES.md`; **do not cite our cache figure.**
 - `src/stall_watchdog.c`/`.h` -- the read-liveness heartbeat, on its own thread.
   It is a separate translation unit for two reasons: it needs a thread of its
   own, and being linkable is what lets `tests/stall.c` prove the heartbeat fires
@@ -150,9 +162,19 @@ parser rather than reading it. They had told us in their standing status
 exactly what artifact would settle it, and we shipped that artifact for an
 unrelated reason.
 
-Still untouched by any run, and the list is shorter again: C2 (the rig's drive
-reports it unsupported), `-f`, damaged media, and CD-TEXT from a disc that has
-some.
+Still untouched by any run — **and split by round 18's own rule, because this
+list wrote two different claims the same way for months:**
+
+| item | state | why |
+|---|---|---|
+| **C2** | `UNREACHABLE` | the rig's BDR-209D **reports C2 unsupported**. No procedure, tier or effort produces it — it needs a different drive or it stays unverified permanently. |
+| **`-f`** | not yet done | testable on the reference disc **now**: it is in AccurateRip and `+667` is known-correct, so ground truth exists. |
+| **damaged media** | not yet done | needs a damaged disc. |
+| **CD-TEXT from a physical disc** | not yet done | needs a disc that has some; `mmc_read_cdtext` is a different path from the `.toc` image parser. |
+
+***Cannot be done* and *not yet done* are different claims**, and listing them
+in one sentence is the defect round 18 lap 1 §3 exists to stop. This file was
+one of the places doing it.
 
 **Two came off on 2026-09-10**, on test pin `ddc1e8c` —
 `docs/rig-2026-09-10-ddc1e8c/`, and the parenthetical this list used to carry
@@ -194,15 +216,19 @@ finished normally, and both footers read `Rip completed:  yes`. A folder name is
 not evidence — read the `Invoked as:` line before crediting a scenario with
 what its name claims.
 
-**`-x` came off this list on 2026-08-25 and only half of it did.** `-x -I`
-completed on a drive; **`-x` alone has still never been shown to return one**,
-and the two are different claims about the same flag. The first successful probe
+**`-x` came off this list on 2026-08-25 and only half of it did — and the other
+half came off on 2026-09-11.** `-x -I` completed on a drive; **`-x` alone, the
+modifier that goes on to rip, was settled on test pin `ddc1e8c`** (`-x -l 1 -o
+pcm`, exit 0 in 3m51s, `SETTLED.md` row 87). They were always different claims
+about the same flag, and both are now answered. The first successful probe
 also immediately hit **our own** `PROBE_MAX_SECTORS` ceiling, so the number it
 reported is a floor we set -- and the same drive reported `at least 32 sectors`
 two weeks earlier because a 64-sector read *failed*. Two stops, two reasons, both
 correctly labelled, neither bounding the drive. **A retired risk is not a
 measured quantity**, and this one retired the first without producing the
-second. **A silent watchdog is not a working watchdog** — that
+second. **And the quantity, when it finally arrived, was wrong**: `cd-paranoia
+-A` says 137 then 140 on the drive we report as *at least 2048*. The ceiling is
+not the cause — see the `cache_probe.c` bullet above and `docs/KNOWN-ISSUES.md`. **A silent watchdog is not a working watchdog** — that
 session had zero heartbeats because nothing stalled, which is the expected
 result on healthy media and is not evidence either way.
 
@@ -295,8 +321,14 @@ regardless of who is at the keyboard.
   needs the reviewed build installed; installing it was forbidden; so the round
   could never close. A test pin is explicitly **not** a release, never moves
   `HANDSHAKE-PIN`, and a gate must assert it cannot close a round — see
-  `docs/handshake/PROTOCOL.md` §6a. Send a file every round even when nothing
-  changed — "no changes" written out is a complete round; silence is not.
+  `docs/handshake/PROTOCOL.md` §6a.
+
+  **This bullet used to end *"send a file every round even when nothing changed
+  — silence is not [a complete round]"*. THAT IS RETIRED and the retirement is
+  a thousand lines below, under the round-14 reform: it is why two lap 13s
+  crossed, and **nothing to say is now a complete answer.** Removed here rather
+  than left for a reader to discover the contradiction — found 2026-09-13 by
+  auditing this file against itself.**
 - **Between rounds there is a STANDING STATUS, and it is not a lap.**
   `docs/handshake/STATUS.md` is ours; Platterpus invented the convention and
   sent the first one. It declares **no `HANDSHAKE-*` wire headers**, so under
@@ -537,8 +569,15 @@ imply coverage.
 live at the same path in both repositories and **neither project owns any of
 them**. A change is a version bump both sides ship, not a local edit. A faithful
 restatement is still a second spec that can drift — which has already happened:
-their copy of the protocol is missing a paragraph ours carries, found in round 7
-lap 30 by diffing rather than assuming.
+their copy of the protocol **was** missing a paragraph ours carried, found in
+round 7 lap 30 by diffing rather than assuming.
+
+**Present tense would now be false, and this is checkable rather than hoped.**
+Measured 2026-09-13 against `platterpus@abd2eb8`: **all four shared documents
+are byte-identical** and match the hashes our round-18 lap 1 declared. Run
+`tools/seam-sync-check.py` — it diffs the real files rather than comparing two
+hashes each side computed for itself, and it is the check that has to pass
+before acting on any lap of theirs.
 
 Three `[BOTH]` rules from `seam-rules.md` v4 bind work here and are restated
 because they change what a commit must contain:
