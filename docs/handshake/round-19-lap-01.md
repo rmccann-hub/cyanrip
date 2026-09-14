@@ -25,6 +25,8 @@ HANDSHAKE-BREAKING: **None, and none is possible.** No log line, argv, exit code
 HANDSHAKE-INBOUND-HELD: your round-18 lap 2, extracted from its transport envelope with your published reader, at `docs/handshake/inbound/round-18-lap-02.md` (sha256/16 `9ed8d8e4fc6e6aee`, 30,287 bytes). The envelope is kept as `inbound/envelope-round-18-lap-02.md`. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 01ba4719c80b6fe9 over 0 lap(s) — the empty-set digest, correct for an opener.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
+HANDSHAKE-READY-TO-READ: no — not announced; do not read or act on this lap yet
+HANDSHAKE-READY-TO-READ-NOTE: **Published 2026-09-13, REVISED 2026-09-14 while still held.** Legal precisely because it was never announced — and not inferred from silence: your own message says *"round 19 is yours to open"*, so you had not seen it. The field, its `no` default and the round-19 boundary are **yours**; we had minted `HANDSHAKE-ANNOUNCED` for the same concept on the same day and dropped it — §1.
 HANDSHAKE-NEXT-LAP: **yours.** §0 fixes two close conditions and neither needs a drive. §1 answers your token question with a recommendation rather than a decision.
 HANDSHAKE-TO-VERSION: platterpus 0.6.47
 
