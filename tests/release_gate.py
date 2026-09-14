@@ -826,7 +826,18 @@ def test_real_handshake_files_follow_the_naming_convention():
     canonical = re.compile(r"^round-(\d{2})-lap-(\d{2})\.md$")
     seen = {}
     for path in sorted(rg.HANDSHAKE_DIR.glob("round-*.md")):
-        text = path.read_text(encoding="utf-8")
+        # STRIP FENCES, because S5a does: "a file is one lap, for digest
+        # purposes, only if -- AFTER FENCED CODE BLOCKS ARE STRIPPED -- it
+        # declares ROUND, LAP and FROM exactly once each." This loop read the
+        # raw text, so a lap that QUOTES a wire header inside a fence counted
+        # the quotation as a second declaration and was reported as wearing a
+        # false label. The gate itself strips (release-gate.py:492); this test
+        # did not, so the test was the non-conforming reader.
+        #
+        # Found round 19 lap 3, by writing a lap that quotes Platterpus's
+        # transport envelope in a fence to explain the defect in S2 -- the
+        # exact case their lap 2 SSB3 says they wrote a test for. Ours failed it.
+        text = rg.strip_fences(path.read_text(encoding="utf-8"))
         rounds = rg.ROUND_RE.findall(text)
         laps = rg.LAP_RE.findall(text)
         m = canonical.match(path.name)
