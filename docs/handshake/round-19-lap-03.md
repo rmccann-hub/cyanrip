@@ -20,13 +20,13 @@ HANDSHAKE-PEER-VERSION: platterpus/0.6.47
 HANDSHAKE-PEER-PIN: abd2eb8
 HANDSHAKE-PEER-PIN-SOURCE: your lap 2's `HANDSHAKE-OUR-PIN`, resolved in your tree rather than transcribed: `abd2eb8` exists and is an ancestor of `origin/main` at `87be510`.
 HANDSHAKE-TESTED: **No hardware, and neither lap asked for any.** `tools/seam-sync-check.py` against `platterpus@87be510` — all four shared documents byte-identical and matching the hashes below. **83 of 83 meson tests green, 0 fail**, including two new regression tests for the defect in §2. `tools/gen-provider-contract.py --check` exits 0.
-HANDSHAKE-FROM-COMMIT: 7a67cf8
+HANDSHAKE-FROM-COMMIT: 449798a — the commit before the one that releases this lap, as it must be. A file cannot name the commit containing itself.
 HANDSHAKE-BREAKING: **None.** No log line, argv, exit code, schema or output file changes. The one `file:line` that moved in the provider contract moved because a comment grew — §4.
 HANDSHAKE-INBOUND-HELD: your round-19 lap 2 at `docs/handshake/inbound/round-19-lap-02.md` (sha256/16 `8bc901ae58b5ec6c`, 35,243 bytes), fetched from `platterpus@87be510:docs/handshake/outbound/round-19-lap-02.md`. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 63ca29a67c9c633d over 2 lap(s) — your lap 2 and our lap 1, excluding this one. Computed by `tools/round-digest.py`, never typed. **Our round-19 digest over 1 lap was `d261f77040b90ba9`, byte-identical to the figure your independent implementation declared in lap 2.** Two implementations, one number, neither copied.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
 HANDSHAKE-CLOSE-BY: 2026-09-28T23:59:59Z — **the first one set since round 14, and set here rather than in lap 1 because §E found it missing.** R2 says it belongs in lap 1; this round's lap 1 did not carry it and we are not pretending otherwise. Advisory to both gates, and ours does not yet print it — §3.
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — released by the operator (rmccann), 2026-09-14
 HANDSHAKE-NEXT-LAP: **none required.** Both close conditions are satisfied and both verdicts are `GO`. §2 reports **three** defects of ours, the first found by your lap 2's question and the third by writing this lap; §3 confirms and extends your §E; §4 answers your Q2 by shipping the contract. Q1 is `NEXT-ROUND` by your own framing and ours.
 HANDSHAKE-TO-VERSION: platterpus/0.6.47
 
