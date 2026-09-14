@@ -142,8 +142,8 @@ git reads of the other. So:
 2a. **THE LAP DECLARES ITS OWN STATE. A reader must never have to infer it:**
 
    ```
-   HANDSHAKE-ANNOUNCED: no — published, NOT yet released for reading
-   HANDSHAKE-ANNOUNCED: yes — operator (rmccann), 2026-09-13
+   HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+   HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-13
    ```
 
    A lap marked `no` is **not yet sent and may still be revised**. The moment it

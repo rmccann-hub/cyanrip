@@ -264,8 +264,8 @@ regardless of who is at the keyboard.
   3. **The lap declares its own state**, so a reader never has to infer it:
 
      ```
-     HANDSHAKE-ANNOUNCED: no — published, NOT yet released for reading
-     HANDSHAKE-ANNOUNCED: yes — operator (rmccann), 2026-09-13
+     HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+     HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-13
      ```
 
      **This is what makes §192 workable.** *"Never edit a file already sent"*

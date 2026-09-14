@@ -261,7 +261,7 @@ else:
                     print(f"FAIL: {msg}")
                     fails += 1
 
-# --- HANDSHAKE-ANNOUNCED: published is not sent (operator, 2026-09-13) -------
+# --- HANDSHAKE-READY-TO-READ: published is not sent (operator, 2026-09-13) -------
 #
 # Committing and pushing a lap makes it PUBLISHED. It becomes SENT only when the
 # operator announces it, and §192 -- "never edit a file already sent" -- hinges
@@ -271,8 +271,8 @@ else:
 #
 # So the lap declares its own state and a reader never infers it:
 #
-#     HANDSHAKE-ANNOUNCED: no  -- published, NOT yet released for reading
-#     HANDSHAKE-ANNOUNCED: yes -- operator (rmccann), 2026-09-13
+#     HANDSHAKE-READY-TO-READ: no  -- published, NOT yet released for reading
+#     HANDSHAKE-READY-TO-READ: yes -- operator (rmccann), 2026-09-13
 #
 # `no` is a legitimate transient state and this check does NOT require `yes`;
 # requiring it would make committing a lap impossible before announcing it,
@@ -281,11 +281,20 @@ else:
 #
 # BOUNDARY, NOT AN ALLOWLIST. Every lap in the tree when the field was
 # introduced predates it, and a set naming them all would grow forever and rot.
-# The field is required on every lap after round 19 lap 1 -- the last one
-# written without it. Moving that tuple is a visible act, exactly as
-# grandfathering rounds 5 and 6 by number is.
-ANNOUNCED_FROM = (19, 2)
-ANNOUNCED_RE = re.compile(r"(?m)^HANDSHAKE-ANNOUNCED:[ \t]*(yes|no)\b")
+#
+# THE BOUNDARY IS ROUND 19 ENTIRE, MATCHING PLATTERPUS. We first set it at
+# (19, 2) so our own already-published lap 1 fell in the gap. Theirs grandfathers
+# rounds 1-18 and binds from 19, and two boundaries one lap apart is exactly the
+# silent drift this field exists to stop -- our lap 1 would have read as
+# conforming here and as not-released there. Moving the tuple is a visible act.
+#
+# THE TOKEN IS THEIRS, AND SO IS THE CONCEPT. We minted HANDSHAKE-ANNOUNCED for
+# the same thing on the same day. Nothing of ours that had been SENT carried it,
+# so switching cost nothing -- and keeping it would have been the round-18 §B2
+# defect (their SKIPPED/BLOCKED swapped against ours) recurring inside the
+# mechanism built to prevent drift, one day later.
+READY_FROM = (19, 1)
+READY_RE = re.compile(r"(?m)^HANDSHAKE-READY-TO-READ:[ \t]*(yes|no)\b")
 
 for lap in laps:
     text = lap.path.read_text(encoding="utf-8", errors="replace")
@@ -293,10 +302,10 @@ for lap in laps:
     lm = re.search(r"(?m)^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", text)
     if not (rm and lm):
         continue                      # malformed identity is already reported above
-    if (int(rm.group(1)), int(lm.group(1))) < ANNOUNCED_FROM:
+    if (int(rm.group(1)), int(lm.group(1))) < READY_FROM:
         continue                      # predates the field
-    if not ANNOUNCED_RE.search(text):
-        print(f"FAIL: {lap.path.name} declares no HANDSHAKE-ANNOUNCED -- a "
+    if not READY_RE.search(text):
+        print(f"FAIL: {lap.path.name} declares no HANDSHAKE-READY-TO-READ -- a "
               f"reader cannot tell whether this lap is published or SENT, and "
               f"§192's 'never edit a file already sent' hinges on exactly that")
         fails += 1
