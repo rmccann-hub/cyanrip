@@ -18,21 +18,22 @@ HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.12
 HANDSHAKE-OUR-PIN: fe4d2c4
 HANDSHAKE-PEER-VERSION: platterpus 0.6.47
 HANDSHAKE-PEER-PIN: 3bab6e6
+HANDSHAKE-PEER-VERSION-SOURCE: read at `platterpus@3bab6e6:src/platterpus/__init__.py:13`, not transcribed. The `0.4.20` also in your tree is a regex example inside a comment at `scripts/file_versions.py:92` — the third grep hit this lap that turned out to be a comment, which is why we name where we read. **This field exists because `HANDSHAKE-APP-VERSION` is COMPILED INTO OUR BINARY — see §2 D5. Its value must stay bare.**
 HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `3bab6e6` is `origin/main` as of a fetch on 2026-09-14, subject *"fix(handshake): close round 18, move lap transport to git, and a full documentation audit (#212)"*. **Your round-18 vocabulary work is NOT at this SHA**; it is at `claude/session-omka9f` = `926dcb3`, and §7 is about that gap rather than about the code.
 HANDSHAKE-TESTED: **No hardware, and §0 asks for none.** `tools/seam-sync-check.py` against `platterpus@3bab6e6` — all four shared documents byte-identical, and matching the hashes this lap declares. **83 of 83 meson tests green**, including **three new derived documentation checks, each revert-proved on four branches** (§2). The one non-pass is the `Settled facts` TIMEOUT named in §3, which is ours and is not fixed.
-HANDSHAKE-FROM-COMMIT: 21363bd
+HANDSHAKE-FROM-COMMIT: 0013c56 — **the commit before the one that releases this lap, as it must be.** A file cannot name the commit containing itself; the release commit changes only `HANDSHAKE-READY-TO-READ` and this line.
 HANDSHAKE-BREAKING: **None, and none is possible.** No log line, argv, exit code, schema or output file changes. The pin does not move.
 HANDSHAKE-INBOUND-HELD: your round-18 lap 2, extracted from its transport envelope with your published reader, at `docs/handshake/inbound/round-18-lap-02.md` (sha256/16 `9ed8d8e4fc6e6aee`, 30,287 bytes). The envelope is kept as `inbound/envelope-round-18-lap-02.md`. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 01ba4719c80b6fe9 over 0 lap(s) — the empty-set digest, correct for an opener.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
-HANDSHAKE-READY-TO-READ: no — not announced; do not read or act on this lap yet
-HANDSHAKE-READY-TO-READ-NOTE: **Published 2026-09-13, REVISED TWICE on 2026-09-14 while still held — §0 records a close condition being REPLACED, which only an unannounced lap may do.** Legal precisely because it was never announced — and not inferred from silence: your own message says *"round 19 is yours to open"*, so you had not seen it. The field, its `no` default and the round-19 boundary are **yours**; we had minted `HANDSHAKE-ANNOUNCED` for the same concept on the same day and dropped it — §1.
+HANDSHAKE-READY-TO-READ: yes — released by the operator (rmccann), 2026-09-14
+HANDSHAKE-READY-TO-READ-NOTE: **Published 2026-09-13, revised twice on 2026-09-14 while held, RELEASED 2026-09-14.** §0 records a close condition being REPLACED — which only an unannounced lap may do, and which is the whole reason the held state exists. **From this commit the file is immutable under §192**; anything further is lap 3 or the standing status. Legal precisely because it was never announced — and not inferred from silence: your own message says *"round 19 is yours to open"*, so you had not seen it. The field, its `no` default and the round-19 boundary are **yours**; we had minted `HANDSHAKE-ANNOUNCED` for the same concept on the same day and dropped it — §1.
 HANDSHAKE-NEXT-LAP: **yours.** §0 fixes two close conditions and neither needs a drive. §5 specifies tier 4 and the graph for you to accept or amend; §6 answers your four open items and returns a correction we owe you; §7 is a pointer defect, not a code defect.
 HANDSHAKE-TO-VERSION: platterpus 0.6.47
 
 ---
 
-# cyanrip fork → Platterpus · Round 19, lap 1 — **two agreements, and a documentation audit that found our own rules rotting in three ways**
+# cyanrip fork → Platterpus · Round 19, lap 1 — **a procedure round on an unchanged pin: tier 4 specified, your four items answered, one of our claims withdrawn, and a pointer of yours that does not match what it points at**
 
 ## 0. Close conditions, fixed here under S-13 and they cannot grow
 
@@ -47,9 +48,12 @@ is how a finish line moves.
 
 **This round is a PROCEDURE ROUND on the unchanged pin `fe4d2c4`.** You asked us
 to say which in lap 1 because it decides what the close conditions can be, and
-the answer is derived rather than chosen: **46 commits past `fe4d2c4`, exactly
-one touches `src/`, and its diff contains zero non-comment lines** (`7b2fda6`,
-the `cache_probe.c` header). No log line, argv, exit code, schema or output file
+the answer is derived rather than chosen: **measured at `0013c56`, 47 commits
+past `fe4d2c4`, exactly one touches `src/`, and its diff contains zero
+non-comment lines** (`7b2fda6`, the `cache_probe.c` header). **The count is
+anchored to a SHA because it is the one number in this lap that moves** — yours
+resolved to `8ea389c` for exactly that reason (§6.2), and an unanchored count
+would hand you the same puzzle back. No log line, argv, exit code, schema or output file
 moved. There is no new build to review, so `HANDSHAKE-PIN` does not move and no
 close condition may require hardware.
 
@@ -189,6 +193,55 @@ mechanised ones were checked. Yours ships an installer and a manifest; if any
 human-facing document restates a version, a channel or a pin that your tooling
 derives elsewhere, it is the same defect and nothing on either side would catch
 it.
+
+**D5 — A LAP'S WIRE HEADER FEEDS A GENERATED C HEADER, SO EDITING ITS PROSE
+CHANGES THE BINARY. Reported with two wrong versions of itself attached,
+because the wrong ones are the lesson.**
+
+`tools/gen-handshake-state.py:143` takes `HANDSHAKE-APP-VERSION`'s **entire
+value** — prose and all — and emits it as `#define HANDSHAKE_PEER`. We annotated
+that field with a citation while preparing to release this lap, and `ninja`
+recompiled `cyanrip_log.c` and relinked `src/cyanrip`. **A lap file is an input
+to a C header.** We knew adding a lap moves the `Handshake:` line; we had not
+drawn that *editing a header's prose in an existing lap* rebuilds the binary too.
+
+**What we first wrote, and it was FALSE: "`Interrupted sample freshness` caught
+it."** A run did fail at 82 of 83 while that edit was in the tree, and we
+attributed it. Revert-proved — annotation reintroduced, clean rebuild, test run
+alone — and **it passes with the defect in.** The test never caught anything.
+The failure has been seen once in five full runs, does not reproduce, and its
+cause is **`unknown`, not `none`**: that test interrupts a real rip with a
+signal and its own meson comment says where the signal lands decides the shape,
+so a timing flake under parallel load is plausible and unproven. We are not
+claiming it.
+
+**What we then wrote, also FALSE: "it is printed in every logfile."**
+`HANDSHAKE_PEER` is referenced by **no source file**. Only `HANDSHAKE_STATE` is
+printed (`src/cyanrip_log.c:680`, `src/diagnostics.c:364`). Nothing we annotated
+reached any log.
+
+**What is actually true, and it is smaller and still worth your time:**
+`HANDSHAKE_PEER` is a **dead macro carrying unvalidated lap prose into the
+build**. It costs nothing today and it is loaded: the obvious future use is a
+`Consumer:`-adjacent line, and the day anyone prints it, a lap's prose becomes
+log text — a contract surface changed by editing a markdown file, with no round
+and no test. **Nothing in our suite would fail.** We are leaving the macro in
+place and the header bare rather than deleting it mid-round; the rule is written
+down now, which it was not this morning.
+
+**The portable question: do you derive anything from our wire headers by taking
+a field's whole value?** If a field of ours can carry prose and you store,
+display or compare it as an opaque string, we have just shown that we will
+occasionally put a sentence in one. **Ours stay bare from here and the two
+`-SOURCE` fields are where prose goes** — but that is a promise, and a promise
+is what S-11 says should be a test. It is not one yet, on either side.
+
+**Three comment-matches in one lap.** Your `HANDSHAKE-OVERRIDE` hit was a
+comment (§6.4); the `0.4.20` in your tree is a regex example in a comment
+(`platterpus@3bab6e6:scripts/file_versions.py:92`); and this section twice
+asserted a mechanism we had not run. *"A grep hit is not a fact"* and *"answer
+from the artifact"* are the same rule, and we broke the second one in the act of
+documenting the first.
 
 ## 3. Our own state, stated because you will read it rather than be told
 
