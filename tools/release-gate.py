@@ -88,6 +88,13 @@ WIRE_HEADER_REQUIRED_FROM = 8
 VERDICT_RE = re.compile(r"^HANDSHAKE-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]*$", re.M)
 ROUND_RE = re.compile(r"^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", re.M)
 LAP_RE = re.compile(r"^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", re.M)
+# The DECLARATION, whatever follows it. LAP_RE is strict about the value, so it
+# cannot see a second declaration whose value is prose -- and counting matches
+# of LAP_RE is therefore not counting declarations. Round 19 lap 2 (Platterpus)
+# found the same shape in their own `_row_for`; ours is here and in
+# tools/round-digest.py. A file declaring `HANDSHAKE-LAP: not-a-lap (transport
+# envelope)` and `HANDSHAKE-LAP: 2` read as an unambiguous lap 2.
+LAP_DECL_RE = re.compile(r"(?m)^HANDSHAKE-LAP:")
 
 # A close needs BOTH sides to have said yes and testing to have happened. Our
 # own GO is a statement about our tree; it is not agreement. These carry the
@@ -498,6 +505,18 @@ def load_rounds(directory=None, every_lap=False):
         # and sort last, so ambiguity cannot be hidden behind a later lap.
         laps = LAP_RE.findall(text)
         lap = int(laps[0]) if len(laps) == 1 else (1 if not laps else None)
+
+        # A DECLARATION is the field name at column 0, whatever follows. LAP_RE
+        # is strict about the value, so a second declaration reading
+        # `HANDSHAKE-LAP: not-a-lap (transport envelope)` matches nothing and
+        # the file read as an unambiguous lap. Setting `lap = None` was NOT
+        # enough -- that only sorts it last -- so this refuses the VERDICT, the
+        # way a doubly-declared verdict is already refused. A container
+        # committed under a lap's filename must fail closed loudly, not vanish:
+        # excluding it silently would let a round close on its other laps while
+        # the record holds a file neither side agrees is one.
+        if len(LAP_DECL_RE.findall(text)) > 1:
+            lap, verdict = None, "AMBIGUOUS"
 
         def one(rx):
             hits = rx.findall(text)

@@ -2413,6 +2413,110 @@ def test_from_commit_must_be_reachable_not_merely_resolvable():
         shutil.rmtree(repo, ignore_errors=True)
 
 
+def test_a_field_declared_twice_is_ambiguous_even_when_one_value_is_prose():
+    """Covers: C13 (S2 rule 3) -- found in round 19 by Platterpus's lap 2 SSB1.
+
+    They asked whether our enumerator selects laps by filename. It does not --
+    `is_a_lap()` applies S5a's content test. But the content test was being
+    defeated anyway, and only the `envelope-` filename was keeping their
+    transport envelope out of our digest, which is the exclusion S5a forbids.
+
+    THE COUNTER WAS COUNTING WELL-FORMED VALUES, NOT DECLARATIONS. ROUND_RE and
+    friends require `(\d+)$`, so a second declaration reading
+    `HANDSHAKE-ROUND: not-a-lap (transport envelope)` matched nothing and
+    `len(m) != 1` never fired. The envelope declares all three identity fields
+    TWICE and read as declaring them once.
+
+    The disclaimer Platterpus wrote to say "this is not a lap" was INVISIBLE to
+    the check it was written for -- strictness about the value made the second
+    declaration unseeable, which is the "a pattern that nearly matches" defect
+    pointed at a counter instead of a claim.
+    """
+    def wire(round_, lap, frm):
+        return (f"HANDSHAKE-ROUND: {round_}\n"
+                f"HANDSHAKE-LAP: {lap}\n"
+                f"HANDSHAKE-FROM: {frm}\n")
+
+    good = wire(18, 2, "platterpus")
+    if rdg.is_a_lap(good) != ("18", "2", "platterpus"):
+        fail("a well-formed lap must still be a lap")
+
+    # The real envelope shape: one prose declaration, one well-formed.
+    env = wire("not-a-lap (transport envelope)",
+               "not-a-lap (transport envelope)",
+               "not-a-lap (transport envelope)") + good
+    if rdg.is_a_lap(env) is not None:
+        fail("a file declaring each identity field twice is a file CONTAINING "
+             "laps, not a lap -- one prose value and one well-formed value is "
+             "still two declarations")
+
+    # Each field independently, so the test does not pass because of whichever
+    # one happens to be checked first.
+    for i, extra in enumerate(("HANDSHAKE-ROUND: not-a-lap\n",
+                               "HANDSHAKE-LAP: not-a-lap\n",
+                               "HANDSHAKE-FROM: not a lap\n")):
+        if rdg.is_a_lap(extra + good) is not None:
+            fail(f"field {i} declared twice (one value unparseable) still read "
+                 f"as a lap")
+
+    # And the exclusion must not depend on the name: the committed envelope is
+    # refused on CONTENT, whatever it is called.
+    envelope = (HERE.parent / "docs" / "handshake" / "inbound" /
+                "envelope-round-18-lap-02.md")
+    if envelope.exists():
+        if rdg.is_a_lap(envelope.read_text(encoding="utf-8")) is not None:
+            fail("the committed transport envelope is still read as a lap; "
+                 "renaming it is not what excludes it and must not be")
+
+
+def test_the_gate_reads_a_twice_declared_lap_as_ambiguous_not_as_the_parseable_one():
+    """Covers: C13 (S2 rule 3), the GATE half of round 19's envelope finding.
+
+    round-digest.py and release-gate.py had the same defect and the digest test
+    does not cover this one -- reverting this guard alone left the suite green,
+    which is the "a test that passes with the fix removed is decoration" rule
+    catching a fix of ours within the hour of writing it.
+
+    A container committed under a lap's filename declares HANDSHAKE-LAP twice.
+    LAP_RE requires `(\d+)$` and matches only the well-formed one, so the gate
+    read a doubly-declared file as an unambiguous lap. S2 rule 3 says ambiguity
+    is never resolved by taking the first or the last, and a value the pattern
+    cannot parse is still a declaration.
+
+    The floor is asserted too: the same record with ONE declaration must close,
+    or a gate that refuses everything would pass this while breaking releases.
+    """
+    base = ("HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 12\n"
+            "HANDSHAKE-FROM: cyanrip-fork\nHANDSHAKE-VERDICT: GO\n"
+            "HANDSHAKE-PEER-VERDICT: GO\nHANDSHAKE-OUR-VERSION: x\n"
+            "HANDSHAKE-OUR-PIN: aaaaaaa\nHANDSHAKE-PEER-VERSION: y\n"
+            "HANDSHAKE-PEER-PIN: bbbbbbb\nHANDSHAKE-TESTED: suite\n"
+            "HANDSHAKE-APP-VERSION: platterpus 0.6.23\n"
+            "HANDSHAKE-RIPPER-VERSION: cyanrip x (platterpus-fork-gaaaaaaa)\n"
+            "HANDSHAKE-PIN: aaaaaaa\n"
+            "HANDSHAKE-FROM-REPO: https://example.invalid/a\n"
+            "HANDSHAKE-FROM-COMMIT: aaaaaaa\n"
+            "HANDSHAKE-TO-REPO: https://example.invalid/b\n"
+            "HANDSHAKE-TO-VERSION: platterpus 0.6.23\n"
+            "HANDSHAKE-INBOUND-HELD: none\n")
+
+    def gate_says_closed(lap_block):
+        d = pathlib.Path(tempfile.mkdtemp())
+        (d / "inbound").mkdir()
+        (d / "round-12-lap-01.md").write_text(lap_block + base, encoding="utf-8")
+        rounds = rg.load_rounds(d)
+        return bool(rounds) and all(r.closed for r in rounds)
+
+    check(gate_says_closed("HANDSHAKE-LAP: 1\n"),
+          "floor: a single well-formed lap declaration must still close")
+
+    check(not gate_says_closed("HANDSHAKE-LAP: not-a-lap (transport envelope)\n"
+                               "HANDSHAKE-LAP: 1\n"),
+          "the gate closed a round on a file declaring HANDSHAKE-LAP twice -- "
+          "one prose value and one well-formed value is two declarations, and "
+          "S2 rule 3 forbids resolving that by taking the parseable one")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()

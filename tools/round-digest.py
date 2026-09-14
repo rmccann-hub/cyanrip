@@ -57,6 +57,15 @@ ROUND_RE = re.compile(r"^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", re.M)
 FROM_RE = re.compile(r"^HANDSHAKE-FROM:[ \t]*(\S+)[ \t]*$", re.M)
 FENCE_RE = re.compile(r"^```.*?^```", re.M | re.S)
 
+# A DECLARATION is the field name at column 0, whatever follows it. The value
+# patterns above are strict -- `(\d+)$` for a number -- so they cannot see a
+# declaration whose value is prose, and counting THEM is not counting
+# declarations. Round 19 lap 2 asked whether our enumerator selects by filename;
+# it does not, but this is how the content test was being defeated anyway.
+ROUND_DECL_RE = re.compile(r"(?m)^HANDSHAKE-ROUND:")
+LAP_DECL_RE = re.compile(r"(?m)^HANDSHAKE-LAP:")
+FROM_DECL_RE = re.compile(r"(?m)^HANDSHAKE-FROM:")
+
 
 def is_a_lap(text):
     """PROTOCOL.md v4 §5a: one lap iff ROUND, LAP and FROM each appear exactly
@@ -80,7 +89,19 @@ def is_a_lap(text):
     """
     stripped = FENCE_RE.sub("", text)
     got = []
-    for rx in (ROUND_RE, LAP_RE, FROM_RE):
+    for decl_rx, rx in ((ROUND_DECL_RE, ROUND_RE),
+                        (LAP_DECL_RE, LAP_RE),
+                        (FROM_DECL_RE, FROM_RE)):
+        # Count DECLARATIONS first. Found round 19 by running Platterpus's own
+        # B1 test against this function: their transport envelope declares each
+        # identity field TWICE -- once as `not-a-lap (transport envelope)` and
+        # once well-formed -- and the strict value pattern matches only the
+        # second, so `len(m) != 1` never fired and the envelope read as a lap.
+        # The disclaimer written to say "this is not a lap" was invisible to the
+        # check it was written for, and only the `envelope-` filename kept it
+        # out of the digest, which is the filename exclusion 5a forbids.
+        if len(decl_rx.findall(stripped)) != 1:
+            return None
         m = rx.findall(stripped)
         if len(m) != 1:
             return None
