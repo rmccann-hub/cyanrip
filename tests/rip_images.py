@@ -1580,6 +1580,91 @@ def sc_docs_do_not_contradict_themselves():
              "where the laps are, and under pull transport that is the transport")
 
 
+def sc_changelog_names_every_release():
+    """`Changelog.md` must name every published release, newest first.
+
+    Found 2026-09-14 by the operator, who read the changelog and asked why we
+    were still on `+platterpus.11` when the manifest, the ledger and
+    `meson.build` all said `.12`. They were right and the changelog was wrong:
+    `.12` shipped on 2026-09-12 with its notes left under `Unreleased` and no
+    heading ever added, so the file's newest heading said `.11` for two days.
+
+    THREE MACHINE-READ ARTIFACTS AGAINST ONE HUMAN-READ ONE, and the human-read
+    one was the wrong one. `release-ledger.tsv` is append-only and
+    `release-manifest.json` is generated and `--check`ed, so both moved with the
+    release; the changelog heading is prose and was checked by nothing. This is
+    the second-description-of-a-fact problem that `round-NN-lap-LL.md` naming
+    already needed a test for.
+
+    Derived from the ledger. Nothing here lists a version somebody thought of --
+    a hand-maintained list would go stale in exactly the way the changelog did.
+    """
+    ledger = ROOT / "docs" / "release-ledger.tsv"
+    changelog = ROOT / "Changelog.md"
+    if not ledger.exists() or not changelog.exists():
+        fail("changelog_releases: ledger or changelog missing")
+
+    rows = []
+    for line in ledger.read_text(encoding="utf-8").splitlines():
+        if not line.strip() or line.startswith("#"):
+            continue
+        parts = line.split("\t")
+        if len(parts) < 4 or not parts[0].strip().isdigit():
+            continue           # header row, or a shape this check does not read
+        rows.append((int(parts[0]), parts[1].strip(), parts[2].strip()))
+    if not rows:
+        fail("changelog_releases: no rows parsed from release-ledger.tsv -- "
+             "the format moved and this check is now guarding nothing")
+
+    ctext = changelog.read_text(encoding="utf-8")
+    clines = ctext.split("\n")
+
+    # A HEADING, not a mention. The version string appears throughout the prose
+    # of neighbouring entries -- `.12` is named 20 times in this file -- so a
+    # substring check over the document is satisfied by the document being
+    # wrong. That is the `sc_status_is_current()` defect verbatim: assert
+    # against the position, never against the file.
+    heads = {}
+    for i, line in enumerate(clines):
+        if not line.startswith("0.9."):
+            continue
+        if i + 1 >= len(clines) or not clines[i + 1].startswith("==="):
+            continue
+        for _, _, ver in rows:
+            if line.startswith(ver + " ") or line.startswith(ver + "\n"):
+                heads.setdefault(ver, i)
+
+    missing = [(s, v) for s, _, v in rows if v not in heads]
+    if missing:
+        fail("changelog_releases: Changelog.md has no heading for published "
+             + ", ".join(f"{v} (release_seq {s})" for s, v in missing)
+             + " -- release-ledger.tsv and release-manifest.json name it and "
+               "the changelog does not, so the one artifact a human reads "
+               "disagrees with the ones a machine reads")
+
+    # Newest ledger row must be the FIRST release heading in the file. The
+    # ordering is what a reader actually uses: `.11` sat above `Unreleased`
+    # while `.12` had no heading at all, so the file answered "what is the
+    # latest release?" with the wrong one even once `.12` was mentioned in it.
+    newest_seq, _, newest_ver = max(rows, key=lambda r: r[0])
+    first_ver = min(heads, key=lambda v: heads[v])
+    if first_ver != newest_ver:
+        fail(f"changelog_releases: the newest published release is "
+             f"{newest_ver} (release_seq {newest_seq}) but the first heading "
+             f"in Changelog.md is {first_ver} at line {heads[first_ver] + 1} "
+             f"-- a reader takes the top heading as current")
+
+    # And every heading below it descends by release_seq, so a reader can trust
+    # the order rather than checking each date.
+    seq_of = {v: s for s, _, v in rows}
+    ordered = sorted(heads, key=lambda v: heads[v])
+    for a, b in zip(ordered, ordered[1:]):
+        if seq_of[a] < seq_of[b]:
+            fail(f"changelog_releases: {a} (release_seq {seq_of[a]}) appears "
+                 f"above {b} (release_seq {seq_of[b]}) in Changelog.md -- the "
+                 f"file is newest-first and this pair is inverted")
+
+
 def sc_status_is_current():
     """Every doc in docs/handshake/ that names the current pin must name it.
 
