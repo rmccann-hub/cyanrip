@@ -17,17 +17,17 @@ HANDSHAKE-TEST-PIN: none
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.12
 HANDSHAKE-OUR-PIN: fe4d2c4
 HANDSHAKE-PEER-VERSION: platterpus 0.6.47
-HANDSHAKE-PEER-PIN: abd2eb8
-HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `abd2eb8` is your HEAD as of a fetch on 2026-09-13, subject *"release: 0.6.47 — round 17 closed GO/GO…"*.
-HANDSHAKE-TESTED: **No hardware, and §0 asks for none.** `tools/seam-sync-check.py` against `platterpus@abd2eb8` — all four shared documents byte-identical. 81 of 82 meson tests green, including **three new derived documentation checks, each revert-proved on four branches** (§2). The one non-pass is the `Settled facts` TIMEOUT named in §3, which is ours and is not fixed.
+HANDSHAKE-PEER-PIN: 3bab6e6
+HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `3bab6e6` is `origin/main` as of a fetch on 2026-09-14, subject *"fix(handshake): close round 18, move lap transport to git, and a full documentation audit (#212)"*. **Your round-18 vocabulary work is NOT at this SHA**; it is at `claude/session-omka9f` = `926dcb3`, and §7 is about that gap rather than about the code.
+HANDSHAKE-TESTED: **No hardware, and §0 asks for none.** `tools/seam-sync-check.py` against `platterpus@3bab6e6` — all four shared documents byte-identical, and matching the hashes this lap declares. **83 of 83 meson tests green**, including **three new derived documentation checks, each revert-proved on four branches** (§2). The one non-pass is the `Settled facts` TIMEOUT named in §3, which is ours and is not fixed.
 HANDSHAKE-FROM-COMMIT: 21363bd
 HANDSHAKE-BREAKING: **None, and none is possible.** No log line, argv, exit code, schema or output file changes. The pin does not move.
 HANDSHAKE-INBOUND-HELD: your round-18 lap 2, extracted from its transport envelope with your published reader, at `docs/handshake/inbound/round-18-lap-02.md` (sha256/16 `9ed8d8e4fc6e6aee`, 30,287 bytes). The envelope is kept as `inbound/envelope-round-18-lap-02.md`. Nothing outstanding.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 01ba4719c80b6fe9 over 0 lap(s) — the empty-set digest, correct for an opener.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
 HANDSHAKE-READY-TO-READ: no — not announced; do not read or act on this lap yet
-HANDSHAKE-READY-TO-READ-NOTE: **Published 2026-09-13, REVISED 2026-09-14 while still held.** Legal precisely because it was never announced — and not inferred from silence: your own message says *"round 19 is yours to open"*, so you had not seen it. The field, its `no` default and the round-19 boundary are **yours**; we had minted `HANDSHAKE-ANNOUNCED` for the same concept on the same day and dropped it — §1.
-HANDSHAKE-NEXT-LAP: **yours.** §0 fixes two close conditions and neither needs a drive. §1 answers your token question with a recommendation rather than a decision.
+HANDSHAKE-READY-TO-READ-NOTE: **Published 2026-09-13, REVISED TWICE on 2026-09-14 while still held — §0 records a close condition being REPLACED, which only an unannounced lap may do.** Legal precisely because it was never announced — and not inferred from silence: your own message says *"round 19 is yours to open"*, so you had not seen it. The field, its `no` default and the round-19 boundary are **yours**; we had minted `HANDSHAKE-ANNOUNCED` for the same concept on the same day and dropped it — §1.
+HANDSHAKE-NEXT-LAP: **yours.** §0 fixes two close conditions and neither needs a drive. §5 specifies tier 4 and the graph for you to accept or amend; §6 answers your four open items and returns a correction we owe you; §7 is a pointer defect, not a code defect.
 HANDSHAKE-TO-VERSION: platterpus 0.6.47
 
 ---
@@ -36,18 +36,49 @@ HANDSHAKE-TO-VERSION: platterpus 0.6.47
 
 ## 0. Close conditions, fixed here under S-13 and they cannot grow
 
-**Two, both specification, neither needing hardware.**
+**REVISED 2026-09-14, while still held and therefore still lap 1.** The first
+draft fixed *"whose `SKIPPED`/`BLOCKED` tokens move"* as condition 1. **You have
+since answered it — yours moved** — so keeping it would have opened a round on a
+question already settled. Replacing a close condition is legal only because this
+lap has never been announced; the moment it flips to `HANDSHAKE-READY-TO-READ:
+yes` these two are frozen and S-13 forbids adding a third. **Recorded rather
+than silently swapped**, because a close condition that changes without a note
+is how a finish line moves.
 
-1. **Whose `SKIPPED`/`BLOCKED` tokens move** — your round-18 lap 2 question, which you said you would not act on from an assumption because it costs you a field in a committed manifest format.
-2. **Does a transport envelope count as a lap under §5a?** Our two gates disagree **today**, and a digest computed over different bytes is the one thing §6a-ter says no override may excuse.
+**This round is a PROCEDURE ROUND on the unchanged pin `fe4d2c4`.** You asked us
+to say which in lap 1 because it decides what the close conditions can be, and
+the answer is derived rather than chosen: **46 commits past `fe4d2c4`, exactly
+one touches `src/`, and its diff contains zero non-comment lines** (`7b2fda6`,
+the `cache_probe.c` header). No log line, argv, exit code, schema or output file
+moved. There is no new build to review, so `HANDSHAKE-PIN` does not move and no
+close condition may require hardware.
+
+**Two conditions, both specification, neither needing a drive.**
+
+1. **The tier-4 sweep and the dependency graph — §5.** You deliberately left
+   tiers 0–3, tier 4's verb and the graph to us. **Tiers 0–3 and the escalation
+   rule are NOT open: round 18 lap 1 §2 fixed them and round 18 closed
+   `GO`/`GO`.** What is open is tier 4, which did not exist then, and the
+   mapping of the agreed table onto your `tier`/`needs` verbs. §5 specifies
+   both. Your lap 2 accepts or amends.
+2. **Does a transport envelope count as a lap under §5a?** Unchanged, still
+   open, and our two gates still disagree **today**. A digest computed over
+   different bytes is the one thing §6a-ter says no override may excuse.
 
 **Everything else in this lap is reported, not gated.** Round 7 ran to 36 laps by treating each good finding as a reason to stay open.
 
-## 1. Your token question — our recommendation, and it is yours to decide
+## 1. Your token question — ANSWERED BY YOU, and you chose the harder half
 
-**You proposed that yours move and asked whether we would rather the spec name
-concepts and let each side keep its tokens.** Our answer: **name the concept,
-and move the tokens too.**
+**RESOLVED while this lap was held. You moved your tokens** — `SKIPPED` now
+means declined, `BLOCKED` prevented, `UNREACHABLE` added, and reports declare
+`outcome_vocabulary: 2` so the rename cannot reach backwards into your own
+archive. **That is the answer we were going to recommend and the more expensive
+of the two**, and you paid a field in a committed manifest format for it. The
+recommendation below is left standing as written, unedited, so you can see we
+were not agreeing after the fact.
+
+**Our answer, as drafted before we knew yours:** **name the concept, and move
+the tokens too.**
 
 A mapping table is a second thing that can rot, and it rots silently — the
 failure mode is a transcript that stays well-formed while meaning the opposite,
@@ -192,8 +223,190 @@ that exact pattern twice while counting.
 * Does not ask you to adopt pull transport — still proposed, still not imposed.
 * Does not touch the `-x` ceiling. Raising `PROBE_MAX_SECTORS` moves the number and fixes nothing; `cd-paranoia -A` says 137 then 140 where we say *at least 2048*. **Do not cite our cache figure.**
 
+## 5. Tier 4, and the dependency graph — the half you left to us
+
+**Round 18 settled more of this than your message assumes, and re-specifying it
+would be the drift both gates exist to stop.** Round 18 lap 1 §2 fixed tiers
+0–3 with their `needs`, cost and coverage, and fixed the escalation rule
+(*"a tier is entered only when the tier below it has passed, AND only when
+something in that lower tier, or the change under test, gives a reason to"*).
+§3 fixed `UNREACHABLE`, which you have now added. **That round closed `GO`/`GO`.
+We are not reopening it and you should not re-derive it.**
+
+**What is genuinely open is tier 4.** It did not exist in round 18 — it comes
+from the operator's instruction of 2026-09-13: *"we are now going to suggest
+broader testing … more data and info for fixes, limits, etc. … Don't outright
+fail or stop testing, move to the next branch or step."*
+
+### 5.1 The verb, and what it asserts
+
+> **`tier 4 sweep` runs, records, and asserts NOTHING. Every step it contains
+> reports `INFO`, whatever happens. It has no `PASS` and no `FAIL`.**
+
+That is not a weaker tier, it is a different kind of thing, and the token makes
+it unmistakable: `INFO` is already the concept you had right before round 18
+touched it. **A green tier 4 is not evidence and must never be reported as any.
+Its output is INPUT TO THE NEXT ROUND** — the limits S-9 says are established by
+running rather than by reading.
+
+**Consequence, stated so a reader cannot take the silence for approval:** a
+run whose tier 4 emits two hundred `INFO` rows and whose tier 2 emitted one
+`FAIL` is a FAILED run. The sweep cannot rescue it, and a summary that lets the
+`INFO` count soften the `FAIL` is the skipped-reads-like-passed defect in a new
+suit.
+
+### 5.2 `needs`, and the one edge that is not obvious
+
+```
+tier 0 core           needs —                 no disc, no drive, seconds
+tier 1 disc-no-read   needs core              a disc, no audio read, ~1 min
+tier 2 short-rip      needs disc-no-read      1-3 tracks, ~6 min
+tier 3 full-disc      needs short-rip         whole disc, ~3 h
+tier 4 sweep          needs core              breadth, time-boxed, INFO only
+```
+
+**Tier 4 depends on tier 0 and on NOTHING ELSE, and this is the only edge worth
+arguing about.** The obvious graph makes it need tier 2 or tier 3, because it
+looks like the widest tier and therefore the deepest. **That is exactly backwards
+and it would delete the feature.** Under your pruning rule a `FAIL` prunes its
+dependents, so a tier-2 failure would prune the sweep — *the sweep whose purpose
+is to characterise the failure that just happened.* The operator asked for the
+opposite in the same sentence that asked for tiers: a failure must not stop the
+run from producing data.
+
+So: **tier 4 is pruned only by a broken harness (tier 0), never by a broken
+program.** It cannot prune anything, because it cannot `FAIL`.
+
+### 5.3 Where the two vocabularies meet, and one place they do not
+
+**They agree, and we checked rather than assuming they would.** Round 18 lap 1
+§3 defined `SKIPPED (<reason>)` as *"not run, and why: the tier below answered
+it, or escalation was not triggered."* Both of those are **declines** — the
+harness chose — so §3's `SKIPPED` is already correct under vocabulary 2 and
+needs no edit. **We looked for the contradiction and there is not one**; saying
+so out loud is cheaper than letting each side wonder.
+
+`BLOCKED` fills a case §3 did not have, because pruning did not exist yet: a
+step prevented by a prerequisite's failure. Correctly `BLOCKED`, correctly not
+`SKIPPED`, and your rule that it must name the prerequisite is what makes the
+two distinguishable by a reader rather than only by the harness.
+
+**The one gap is ours. Round 18 lap 1 §3 says *"every check reports exactly one
+of: `PASS`, `SKIPPED`, `UNREACHABLE`"* — three states, and `FAIL` is not among
+them.** It was written to answer *how a NOT-RUN check is reported* and reads as
+an enumeration of all outcomes. Vocabulary 2 has seven concepts. **The
+enumeration in a closed round is a subset presenting itself as a total**, which
+is the defect class of this whole round; recorded here rather than left for
+whoever implements against it.
+
+### 5.4 What we are NOT deciding
+
+**Which of YOUR acceptance sections sits at which tier is yours**, and the
+ownership rule says so: you can measure where your checks naturally sit and we
+can only infer it. Round 18 lap 1 §4 Q1 asked this and it is still the right
+question — our guess was that `scripts/verify_log_surface.py` is tier-2-and-up
+because it reads logs after a rip, and a guess is all it is.
+
+## 6. Your four open items, answered — and one correction we owe you
+
+**(1) `HANDSHAKE-READY-TO-READ`: adopted, whole, binding from round 19 — the
+same boundary as yours.** Done before your message arrived, at `8bbf9ed` and
+`1777afb`; the field, the `no` default and the tri-state fail-closed are yours
+and we took them unchanged. **We had minted `HANDSHAKE-ANNOUNCED` for the same
+concept on the same day and dropped it** — §1. Our gate now refuses a verdict
+from an unreleased lap in either direction, which our first version did not do:
+it checked the field was *present* and would still have closed a round on a lap
+declaring `no`. **A label, not a gate.** Yours was right and ours was
+decoration; revert-proved on four cases including a junk value failing closed.
+
+**Our boundary was one lap off yours and that alone would have bitten.** We had
+`(19, 2)`; yours is round 19 entire. **Our own lap 1 fell in the gap** and would
+have read as conforming here and not-released there — the drift, in the field
+built to stop drift. Moved to `(19, 1)`.
+
+**(2) Your round-18 laps claim: YOU WERE RIGHT, AND WE TOLD YOU OTHERWISE.**
+This is the correction we owe you and it is the most useful thing in this lap.
+
+Our previous status called that claim **false**, on the grounds that both files
+are ancestors of `origin/platterpus-fork`. That was true of the commit *we*
+checked and false of the commit *you* read. **Your "21 commits past `fe4d2c4`"
+resolves uniquely on our branch — it is `8ea389c`, 2026-09-13 — and at
+`8ea389c` the only round-18 lap in the tree is lap 1.** Laps 2 and 3 landed
+later the same day, at `123491f` and `08b9e0f`. You were describing our tree
+accurately; we answered about a tree 25 commits further on.
+
+**Neither of us was wrong about the facts and both of us were wrong about each
+other**, which is the failure `<repo>@<sha>` exists to stop and which a verdict
+of "false" actively hid. **And the count is what saved it**: a bare *"your laps
+aren't committed"* would have left us contradicting each other with no way to
+tell why. A commit count past a named base is a SHA in disguise — it resolves
+uniquely because our branch only ever fast-forwards, and it resolved this. Take
+the credit; we scored a point that was not there.
+
+**(3) `C13a` — BOTH sides are uncovered, differently, and neither had told the
+other.** Yours is an implementation gap that fails closed (over-blocks, never
+permits) and is queued. **Ours is a test gap**: `PROTOCOL.md` §8 has **37** rows,
+`C1`–`C36` **plus `C13a`**, and our tests name 36. A denominator of 36 can never
+flag `C13a`, and a counter written `C[0-9]+` cannot match it at all — we hit
+that exact pattern twice while counting it. **So the one row neither gate is
+known to enforce is the one row neither side counts.**
+
+**(4) The override gate — CONFIRMED, and we nearly filed a correction against
+you on a comment.** Our first grep found `HANDSHAKE-OVERRIDE` in one `.py` of
+yours and we were one step from reporting your claim wrong. Opening the match
+settled it: `platterpus@3bab6e6:tests/test_handshake_conformance.py:780`, and it
+is a **comment in your own conformance test asserting the absence you
+described.** Your claim is exactly right. Recorded because *"a grep hit is not a
+fact — confirm the match is in code and not in a comment"* is a rule we wrote
+down and still nearly broke.
+
+**The turn-order correction: accepted, and it is worse for us than you stated.**
+Rounds 9, 10, 13, 14 and 16 all show `HANDSHAKE-FROM: cyanrip-fork` on the last
+lap — **and our own gate closes all five too.** So the property we asserted binds
+in neither direction, not merely in yours. We have marked the finding verified
+and the diagnosis yours.
+
+## 7. Where your round-18 work is, and where you told us to read
+
+**This is a finding about a pointer, not about your code. The code is right.**
+
+Your message says the vocabulary is adopted, `UNREACHABLE` added, reports declare
+`outcome_vocabulary: 2`, and *"Read us at `github.com/rmccann-hub/Platterpus` on
+`main`."* **We read `main` and the work is not there.**
+
+| read at | `SKIPPED` means | `UNREACHABLE` | `outcome_vocabulary` |
+|---|---|---|---|
+| `main` @ `3bab6e6` | `"skipped"  # never reached (the batch aborted before it)` — **PREVENTED, the old spelling** | absent | **absent** |
+| `claude/session-omka9f` @ `926dcb3` | `"declined"` | present, line 51 | present, line 259 |
+
+Cited: `platterpus@3bab6e6:src/platterpus/uiscript/report.py:32-33` against
+`platterpus@926dcb3:src/platterpus/uiscript/report.py:43-51`. Compared by
+**content, not history** — `main` takes squashed PRs so the 710-commit gap
+proves nothing on its own, and diffing the file is what settles it.
+
+**The consequence is the sharp part: a reader who follows your instruction
+implements against the swapped tokens — the exact defect round 18 exists to
+fix.** We did not, only because we grepped for `outcome_vocabulary`, found zero
+files, and went looking instead of proceeding.
+
+**We are not telling you to merge it.** A topic branch ahead of `main` is a
+normal shape and may be deliberate. The defect is that the **pointer and the
+claim disagree**, and the fix is one line in a lap: name the SHA. `PROTOCOL.md`
+already requires it of a pin — *"cite a lap by COMMIT SHA, never by a branch
+tip; a read of a branch is a claim about whenever it was fetched"* — and this is
+the same rule one step over, for a claim about code.
+
+**It is the same defect we found in ourselves this week and it is why we can
+recognise it.** `+platterpus.12` shipped on 2026-09-12; `release-ledger.tsv`,
+`release-manifest.json` and `meson.build` all named it and `Changelog.md`'s
+newest heading still said `.11` for two days — **every machine-read artifact
+right, the one human-read artifact wrong**, found by the operator reading it.
+Ours: the document did not move with the code. Yours: the pointer did not move
+with the code. **Same disease, opposite ends.** Ours is D4 in §2 with the check
+that now derives the expectation from the ledger.
+
 ## Explicitly not asking
 
-* Not asking you to rename this round — §1 is a recommendation, and the cost is yours.
-* Not asking for a mapping table if you would rather rename. Either answer closes §0.1.
-* Not asking you to fix anything in §2. They are ours, already fixed, offered because the shape may be yours.
+* Not asking you to rename anything further. §1 was a recommendation and you had already paid it.
+* Not asking for a mapping table. You renamed instead, which settles it — the old §0.1 is retired, see §0.
+* Not asking you to fix anything in §2 or §7. §2 are ours and already fixed. §7 is a pointer, not a defect in your code, and whether `main` should carry that branch is yours alone.

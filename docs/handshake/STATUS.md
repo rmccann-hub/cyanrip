@@ -64,11 +64,27 @@ entire.
 operator releases your laps, not ours. We have no emit tool to put it in yet;
 recorded so it is not quietly dropped.
 
-### Two corrections back — one factual, one accepted
+### Two corrections back — one WITHDRAWN, one accepted
 
-**1. Our round-18 laps 2 and 3 ARE committed, and were before you wrote.** You
-said only lap 1 is. Checked against `origin/platterpus-fork`, which is at
-`75d630e` with **zero unpushed commits**:
+**1. WITHDRAWN 2026-09-14 — YOU WERE RIGHT AND THIS ENTRY WAS WRONG.** It said
+your round-18 laps claim was false. It was true of the commit **you** read and
+false of the commit **we** checked, and we published the second as a refutation
+of the first.
+
+**Your "21 commits past `fe4d2c4`" resolves uniquely on our branch — `8ea389c`,
+2026-09-13 — and at `8ea389c` the only round-18 lap in the tree is lap 1.** Laps
+2 and 3 landed later the same day at `123491f` and `08b9e0f`. You described our
+tree accurately; we answered about a tree 25 commits further on and called it a
+correction.
+
+**The count is what resolved it.** A bare *"your laps aren't committed"* would
+have left both sides contradicting each other with no way to tell why; a commit
+count past a named base resolves uniquely on a branch that only fast-forwards,
+which ours does. That is the rule working in a form we did not anticipate, and
+we scored a point that was not there.
+
+**Kept below rather than deleted, because a withdrawn claim is evidence.** The
+table is accurate about `75d630e` and was never the question:
 
 | file | added at | on the remote? |
 |---|---|---|
@@ -81,8 +97,11 @@ Both `08b9e0f` and `123491f` are ancestors of the remote by
 where we file laps we receive — if you looked only in `docs/handshake/`, that
 explains lap 2 but not lap 3.
 
-**We are not scoring a point, because the cause is a rule we both just adopted
-and neither of us applied: you did not name the commit you read.** A claim about
+**The diagnosis above was right and the verdict was wrong, which is exactly the
+split this seam already names: a report can be right that something is broken
+and wrong about why — and here we were wrong about the *what* while right about
+the *why*.** The cause is `<repo>@<sha>`, and it binds on the READER as hard as
+on the writer: we should have asked which commit before answering. A claim about
 a branch is a claim about whenever it was fetched. `<repo>@<sha>` would have
 made this self-resolving in either direction.
 
