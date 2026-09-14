@@ -114,6 +114,21 @@ PIN_RE = re.compile(r"^HANDSHAKE-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 TEST_PIN_RE = re.compile(r"^HANDSHAKE-TEST-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 
 PEER_VERDICT_RE = re.compile(r"^HANDSHAKE-PEER-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]*$", re.M)
+
+# A lap is AVAILABLE when committed and LIVE when the operator announces it, and
+# only a live lap's declarations mean anything. Platterpus's field and their
+# rule, adopted 2026-09-14 -- their gate refuses a verdict from an unreleased lap
+# in EITHER direction, and ours did not, which is the gap this closes.
+#
+# WHY BOTH DIRECTIONS MATTER, in their words: we can now read their tree before
+# their operator has released anything, so closing a round on their draft would
+# make their draft our decision. The reverse is equally true of them reading us.
+#
+# TRI-STATE, FAIL CLOSED: absent is NOT DETERMINED, never `yes`. Grandfathered
+# below round 19 because every lap up to 18 was hand-carried, where delivery WAS
+# the announcement -- the act was never separate until transport moved.
+READY_TO_READ_RE = re.compile(r"^HANDSHAKE-READY-TO-READ:[ \t]*(yes|no)\b", re.M)
+READY_TO_READ_FROM_ROUND = 19
 PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
 PEER_PIN_RE = re.compile(r"^HANDSHAKE-PEER-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 OUR_VERSION_RE = re.compile(r"^HANDSHAKE-OUR-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
@@ -147,6 +162,19 @@ CLOSING = {"GO"}
 
 
 class Lap:
+    @property
+    def held(self):
+        """Published but not announced -- its declarations are a draft.
+
+        Read from the file rather than stored, so it reflects the tree now: the
+        operator flips the field and the gate must see that without a reload.
+        """
+        if self.number is None or self.number < READY_TO_READ_FROM_ROUND:
+            return False
+        m = READY_TO_READ_RE.search(
+            self.path.read_text(encoding="utf-8", errors="replace"))
+        return not (m and m.group(1) == "yes")
+
     def __init__(self, number, lap, path, verdict, declared_number,
                  peer_verdict=None, peer_version=None, peer_pin=None,
                  our_version=None, our_pin=None, tested=None, protocol=None,
@@ -335,6 +363,10 @@ class Lap:
         # WITHDRAWN is terminal but is NOT a close that permits a release --
         # check() refuses one that names it. Reported separately so a withdrawn
         # round does not sit forever in the "not closed" list.
+        # Held laps declare nothing, WITHDRAWN included -- acting on any
+        # declaration of an unannounced lap is acting on a draft.
+        if self.held:
+            return False
         if self.withdrawn:
             return bool(self.withdrawn_reason)
         if self.verdict not in CLOSING:
@@ -393,6 +425,10 @@ class Lap:
                     f"{self.lap}, so there is no order between them: "
                     + ", ".join(self.tied_with)
                     + " -- ambiguity is not a close")
+        if self.held:
+            return ("NOT RELEASED FOR READING -- HANDSHAKE-READY-TO-READ is not "
+                    "`yes`, so this lap is published but not announced and its "
+                    "verdict is a draft")
         if self.verdict is None:
             return "NO VERDICT FIELD -- fails closed"
         if self.verdict not in CLOSING:
