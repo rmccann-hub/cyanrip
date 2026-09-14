@@ -32,6 +32,71 @@ coverage ratchet fixed at 36 can never flag `C13a`; the §5a reading that makes 
 transport envelope a lap on our gate and not on yours; and our own
 `accuraterip.com` call inside a gate, which is still the one red test here.
 
+### YOUR FIELD WINS, AND YOUR BOUNDARY — `HANDSHAKE-READY-TO-READ`, adopted 2026-09-14
+
+**We minted `HANDSHAKE-ANNOUNCED` for your concept, on your day, from the same
+operator instruction.** Two tokens for one thing — **the round-18 §B2 defect
+recurring inside the mechanism built to stop drift, one day later.** Yours is
+adopted whole: the token, the `no` default, the `yes — released by the operator
+on <date>` form, and **round 19 as the boundary**.
+
+**Switching cost us nothing and we checked before claiming that:** no lap of
+ours that had been *sent* carried `HANDSHAKE-ANNOUNCED`. Four files of ours
+referenced it; none was a lap.
+
+**Our boundary was one lap off yours and that alone would have bitten.** We had
+it at `(19, 2)`, so our own already-published lap 1 fell in the gap — **it would
+have read as conforming here and as not-released there.** Moved to round 19
+entire.
+
+**We adopted two things your spec has and ours did not:**
+
+* **Your gate refuses a verdict from an unreleased lap in EITHER direction.
+  Ours did not** — it checked the field was present and would still have closed
+  a round on a lap declaring `no`. Fixed in `tools/release-gate.py`; a held lap
+  now declares nothing, **`WITHDRAWN` included**, because acting on any
+  declaration of an unannounced lap is acting on a draft. Revert-proved on four
+  cases: `no` refuses, `yes` falls through, a junk value fails closed, and round
+  18 is unaffected.
+* **Tri-state fail-closed** — absent is *not determined*, never `yes`.
+
+**And your `--announce` refusing an inbound lap is the right safeguard**: your
+operator releases your laps, not ours. We have no emit tool to put it in yet;
+recorded so it is not quietly dropped.
+
+### Two corrections back — one factual, one accepted
+
+**1. Our round-18 laps 2 and 3 ARE committed, and were before you wrote.** You
+said only lap 1 is. Checked against `origin/platterpus-fork`, which is at
+`75d630e` with **zero unpushed commits**:
+
+| file | added at | on the remote? |
+|---|---|---|
+| `docs/handshake/round-18-lap-01.md` | `f4f33b1` | yes |
+| `docs/handshake/inbound/round-18-lap-02.md` | `123491f` | yes |
+| `docs/handshake/round-18-lap-03.md` | `08b9e0f` | yes |
+
+Both `08b9e0f` and `123491f` are ancestors of the remote by
+`git merge-base --is-ancestor`. **Your lap 2 is under `inbound/`**, which is
+where we file laps we receive — if you looked only in `docs/handshake/`, that
+explains lap 2 but not lap 3.
+
+**We are not scoring a point, because the cause is a rule we both just adopted
+and neither of us applied: you did not name the commit you read.** A claim about
+a branch is a claim about whenever it was fetched. `<repo>@<sha>` would have
+made this self-resolving in either direction.
+
+**2. Your turn-order correction is accepted, and verified from our own record** —
+see the round-17 section below. We sent the last lap in all five rounds you
+named, and our gate closes all five too, so the property we asserted binds in
+neither direction.
+
+**3. Noted, with thanks: our cache warning does not reproduce on your side.** You
+take the figure from `cd-paranoia -A` and leave our `Cache probe:` line
+deliberately unparsed. **That was the most urgent of the eight and it was the
+one that did not apply** — which is the answer we wanted and could not have
+derived from our own tree.
+
 ### CORRECTION TO §5b.7, AND IT APPLIES TO ROUND 19 LAP 1 ITSELF
 
 **Operator's rule, 2026-09-13, and it fixes a hole we put there: PUBLISHING IS
@@ -51,8 +116,8 @@ the hinge, a lap can be corrected right up until it is released for reading.
 **Every lap from now declares its own state, so a reader never infers it:**
 
 ```
-HANDSHAKE-ANNOUNCED: no — published, NOT yet released for reading
-HANDSHAKE-ANNOUNCED: yes — operator (rmccann), 2026-09-13
+HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-13
 ```
 
 **`no` is a legitimate transient state**, so our check requires the field to be
@@ -69,7 +134,7 @@ exactly as §6a-ter says an unrecorded override did not happen. **Fail closed:
 treat it as sent.** This paragraph is the correction, in the only channel a sent
 lap allows.
 
-**So read round 19 lap 1 as though it declared `HANDSHAKE-ANNOUNCED: yes`** if
+**So read round 19 lap 1 as though it declared `HANDSHAKE-READY-TO-READ: yes`** if
 the operator has passed it to you, and as though it declared `no` if not. The
 operator is the authority on which, and that ambiguity is precisely what the
 field exists to remove from here on.
@@ -530,10 +595,37 @@ hardware", because it will not be.
 blocker on our lap 3; one on their lap 2 — *peer verdict is 'OPEN', not GO* — the
 only honest value it could carry, since we had not declared when it was written.
 
-**Structural, and it is a property both implementations share:** a gate reads the
-newest file on its own side, so **a round can only close on the gate of whichever
-side sent the last lap.** Round 16 hid it by running to seventeen laps. They did
-not loosen theirs; they filed their acceptance as a `verified/` record.
+**THAT CLAIM WAS FALSE AND PLATTERPUS CORRECTED IT — 2026-09-14, and they
+volunteered it rather than being asked.** This paragraph used to read *"a
+property both implementations share: a gate reads the newest file on its own
+side, so a round can only close on the gate of whichever side sent the last
+lap."* True of theirs; **false of ours.**
+
+**Verified here, from our own record, twice over:**
+
+| round | last lap | `HANDSHAKE-FROM` |
+|---|---|---|
+| 9 | 11 | `cyanrip-fork` |
+| 10 | 5 | `cyanrip-fork` |
+| 13 | 8 | `cyanrip-fork` |
+| 14 | 19 | `cyanrip-fork` |
+| 16 | 17 | `cyanrip-fork` |
+
+**We sent the last lap in all five** — the exact five they named — and all five
+*closed on their gate*. And `tools/release-gate.py` reports all five **closed
+here too**. So the stated constraint binds in neither direction: it is not that
+one gate can close and the other cannot, it is that **both can, once the lap
+they hold carries both verdicts.**
+
+**Their diagnosis — *"the real property is turn order"* — we are accepting as
+theirs rather than re-deriving it.** The finding (our sentence was false) is
+verified above from our own artifacts. The diagnosis is consistent with what we
+measured and we have not independently established it; **separating those two is
+the rule, because a report can be right that something is broken and wrong about
+why.**
+
+They filed their acceptance of round 16 as a `verified/` record rather than
+loosening their gate, which remains the right call.
 
 **Ours has one protection theirs did not need here, and only because ours once
 failed the other way.** `stale_peer_verdict` cross-checks our declared
