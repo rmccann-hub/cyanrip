@@ -65,6 +65,7 @@ release is not permitted, which is the form a script should use.
 """
 
 import argparse
+import datetime
 import pathlib
 import re
 import sys
@@ -161,6 +162,126 @@ LAP_CEILING = 21
 # v4 3a: required from round 9, the way v2's four are required from round 8.
 ADDRESSING_FROM_ROUND = 9
 TESTED_RE = re.compile(r"^HANDSHAKE-TESTED:[ \t]*(\S.*?)[ \t]*$", re.M)
+
+# v4 §6a-bis R2. ADVISORY, AND THE GATE MUST NEVER ENFORCE IT: "a gate *prints*
+# whether it has passed and never enforces it, because enforcement lets a clock
+# skew block a release." So this is deliberately kept out of check() -- the
+# function that decides -- rather than added there and guarded. A rule that must
+# not affect a verdict is safest when it cannot reach the code that forms one.
+#
+# Unimplemented from round 14, when CLOSE-BY was written into the spec, to round
+# 20. Their round-19 §E measured the consequence: the field has been dead on BOTH
+# sides for five rounds, so `EXPIRED` was unreachable -- a state in the
+# transition table that nothing could ever produce. It exists because round 7
+# ran to 36 laps.
+# Rounds 5-7 predate the field entirely: the first declaration in the record is
+# round 8 lap 7. Named in a constant rather than left implicit, the way
+# ADDRESSING_FROM_ROUND and READY_TO_READ_FROM_ROUND are, so that widening the
+# exemption is a visible act rather than a quiet one.
+CLOSE_BY_FROM_ROUND = 8
+CLOSE_BY_RE = re.compile(r"^HANDSHAKE-CLOSE-BY:[ \t]*(\S+)", re.M)
+# A DECLARATION is the field name at column 0, whatever follows -- the same
+# distinction LAP_DECL_RE draws, and for the same reason: CLOSE_BY_RE is strict
+# about the value, so a second declaration carrying prose would match nothing
+# and the file would read as unambiguous.
+CLOSE_BY_DECL_RE = re.compile(r"(?m)^HANDSHAKE-CLOSE-BY:")
+
+
+def parse_close_by(raw):
+    """(instant, None) or (None, reason). R2 requires an ISO 8601 INSTANT.
+
+    A bare date is refused rather than assumed to mean midnight: R2 says so in
+    as many words -- it "names no timezone and gave two defensible answers to
+    *has it passed?* on the same afternoon." Refusing names which of the two
+    failures happened, which is the `none` versus `unknown (reason)` rule
+    applied to a date.
+    """
+    if not raw:
+        return None, "declared with no value"
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
+        return None, "a bare date names no timezone; R2 requires an instant"
+    try:
+        dt = datetime.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None, "not an ISO 8601 instant"
+    if dt.tzinfo is None:
+        return None, "no timezone offset; R2 requires an instant"
+    return dt, None
+
+
+def close_by_lines(laps, is_terminal, now):
+    """The CLOSE-BY lines for one round. Returns a list of strings, possibly [].
+
+    `laps` is every lap of the round in declaration order. R2 puts the field in
+    lap 1, so a later lap declaring it is reported AS a later lap rather than
+    silently accepted -- round 19 set it in lap 3, and a gate that hid that
+    would be the second reader of one convention disagreeing with the first.
+    """
+    if laps and laps[0].number is not None \
+            and laps[0].number < CLOSE_BY_FROM_ROUND:
+        return []
+    declared, ambiguous = [], []
+    for lap in laps:
+        text = strip_fences(lap.path.read_text(encoding="utf-8",
+                                               errors="replace"))
+        n = len(CLOSE_BY_DECL_RE.findall(text))
+        if not n:
+            continue
+        if n > 1:
+            ambiguous.append(lap)
+            continue
+        m = CLOSE_BY_RE.search(text)
+        declared.append((lap, m.group(1) if m else None))
+
+    out = []
+    for lap in ambiguous:
+        out.append(f"      close-by: AMBIGUOUS -- {lap.path.name} declares "
+                   f"HANDSHAKE-CLOSE-BY more than once")
+    if not declared:
+        if not ambiguous:
+            out.append("      close-by: none declared -- R2 requires one in "
+                       "lap 1 (advisory; this gate never enforces it)")
+        return out
+
+    # The EARLIEST declaration governs: R2 says it "is not extended", so a later
+    # lap naming a later instant is a rule being broken, not a new deadline.
+    lap, raw = declared[0]
+    when, why = parse_close_by(raw)
+    where = f"lap {lap.lap}" if lap.lap is not None else lap.path.name
+    if when is None:
+        out.append(f"      close-by: unknown ({why}) -- {where} declares "
+                   f"`{raw}`")
+        return out
+
+    stamp = raw
+    if when <= now:
+        if is_terminal:
+            out.append(f"      close-by: {stamp} ({where}) has PASSED, and the "
+                       f"round reached a terminal state first -- §4a does not "
+                       f"make it EXPIRED")
+        else:
+            out.append(f"      close-by: {stamp} ({where}) has PASSED with the "
+                       f"round still open -- EXPIRED per §4a. Advisory only: "
+                       f"this gate never enforces it (R2)")
+    else:
+        days = (when - now).days
+        out.append(f"      close-by: {stamp} ({where}), {days} day(s) remaining")
+
+    # ONLY a DIFFERENT value in a later lap is an extension. Every lap carries
+    # the whole wire header, so re-declaring the SAME instant is the header
+    # being carried forward -- which is what R2 wants. The first version of this
+    # reported five "extensions" in round 9, all of them the identical instant,
+    # and the number looked plausible enough to ship.
+    changed = [l for l, v in declared[1:] if v != raw]
+    if changed:
+        out.append("      close-by: EXTENDED -- "
+                   + ", ".join(f"lap {l.lap} declares a different value"
+                               for l in changed)
+                   + "; R2 says it is set in lap 1 and is not extended")
+    elif lap.lap not in (None, 1):
+        out.append(f"      close-by: set in {where}, not lap 1 -- R2 says lap 1")
+    return out
+
 
 # Only GO closes a round. Anything else -- including a verdict this script has
 # never heard of -- leaves it open, because an unrecognised verdict is not
@@ -699,6 +820,15 @@ def main():
     args = ap.parse_args()
 
     rounds = load_rounds()
+    # R2 needs every lap of each round, not just the latest: CLOSE-BY is set in
+    # lap 1 and the latest lap is rarely lap 1. Loaded separately so the
+    # closure logic above is untouched by a field that must not affect it.
+    laps_by_round = {}
+    for lap in load_rounds(every_lap=True):
+        laps_by_round.setdefault(lap.number, []).append(lap)
+    for group in laps_by_round.values():
+        group.sort(key=lambda l: (l.lap is None, l.lap))
+    now = datetime.datetime.now(datetime.timezone.utc)
     if not rounds:
         print("release-gate: no round files found -- refusing rather than "
               "reporting an empty record as agreement", file=sys.stderr)
@@ -726,6 +856,9 @@ def main():
         elif r.test_pin:
             print(f"      test pin {r.test_pin} -- for the rig to gather "
                   f"evidence; NOT a release and does not close this round")
+        for line in close_by_lines(laps_by_round.get(r.number, [r]),
+                                   r.closed or r.withdrawn, now):
+            print(line)
     print()
 
     if ok:

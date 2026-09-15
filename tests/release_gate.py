@@ -2528,6 +2528,168 @@ def test_the_gate_reads_a_twice_declared_lap_as_ambiguous_not_as_the_parseable_o
           "S2 rule 3 forbids resolving that by taking the parseable one")
 
 
+
+# ---------------------------------------------------------------------------
+# v4 §6a-bis R2 -- HANDSHAKE-CLOSE-BY. Unimplemented from round 14 to round 20,
+# which their round-19 §E measured: dead on both sides for five rounds, so the
+# `EXPIRED` state in §4a's transition table was unreachable.
+#
+# R2's hard constraint is that the gate PRINTS and NEVER ENFORCES, "because
+# enforcement lets a clock skew block a release". test_close_by_never_enforces
+# is the one that matters: every other test here could pass while the feature
+# had quietly become a blocker.
+
+
+def _close_by_lines(files, number, is_terminal=True, now=None):
+    """close_by_lines() over a throwaway record, laps in declaration order."""
+    d = pathlib.Path(tempfile.mkdtemp())
+    for name, body in files.items():
+        (d / name).write_text(body, encoding="utf-8")
+    laps = [l for l in rg.load_rounds(d, every_lap=True) if l.number == number]
+    laps.sort(key=lambda l: (l.lap is None, l.lap))
+    if now is None:
+        now = rg.datetime.datetime(2026, 9, 15, tzinfo=rg.datetime.timezone.utc)
+    return rg.close_by_lines(laps, is_terminal, now)
+
+
+def _round20(lap, close_by=None, verdict="GO"):
+    body = ("HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 20\n"
+            f"HANDSHAKE-LAP: {lap}\n" + WIRE.replace("0.6.4", "0.6.48")
+            + f"HANDSHAKE-VERDICT: {verdict}\n"
+              "HANDSHAKE-PEER-VERDICT: GO\n"
+              "HANDSHAKE-PEER-VERSION: platterpus/0.6.48\n"
+              "HANDSHAKE-PEER-PIN: abc1234\n"
+              "HANDSHAKE-OUR-VERSION: 0.9.4-rc2+platterpus.12\n"
+              "HANDSHAKE-OUR-PIN: fe4d2c4\n"
+              "HANDSHAKE-TESTED: suite\n"
+              # Required from round 19: a lap that is not released for reading
+              # is a draft and cannot close. Carried by the fixture so these
+              # tests exercise CLOSE-BY rather than tripping over that rule.
+              "HANDSHAKE-READY-TO-READ: yes -- fixture\n")
+    if close_by is not None:
+        body += f"HANDSHAKE-CLOSE-BY: {close_by}\n"
+    return body + "\n# round 20\n"
+
+
+def test_close_by_refuses_a_bare_date_rather_than_assuming_midnight():
+    when, why = rg.parse_close_by("2026-08-14")
+    # ASSERTED ON THE WORDING, and that is the whole test. Both guards refuse a
+    # bare date -- fromisoformat accepts it and returns a NAIVE datetime, which
+    # the tzinfo check then rejects -- so `"timezone" in why` matched both
+    # messages and passed with the bare-date guard reverted. A pattern that
+    # matches both branches asserts nothing about either; the revert-proof said
+    # so, which is the only reason this is worded this way.
+    check(when is None and why is not None and "bare date" in why,
+          "a bare date was refused by the wrong guard, so the gate would tell "
+          "a reader 'no timezone offset' about round 8 lap 7's `2026-08-14`. "
+          "R2 forbids the form by name because it 'gave two defensible answers "
+          "to has it passed? on the same afternoon'")
+    when, why = rg.parse_close_by("2026-08-14T23:59:59")
+    check(when is None and why is not None and "bare date" not in why,
+          "a naive TIMESTAMP was reported as a bare DATE, or accepted")
+    when, why = rg.parse_close_by("2026-09-28T23:59:59Z")
+    check(when is not None and why is None,
+          "the form R2 gives as its own example failed to parse")
+    when, why = rg.parse_close_by("expired")
+    check(when is None and why is not None,
+          "prose in the value parsed as an instant; round 8 laps 13 and 15 "
+          "declare `expired 2026-08-14 -- see S1, not extended`")
+
+
+def test_close_by_absent_is_reported_not_passed_over():
+    lines = _close_by_lines({"round-20-lap-01.md": _round20(1)}, 20)
+    check(any("none declared" in l for l in lines),
+          "a round with no HANDSHAKE-CLOSE-BY printed nothing -- an absence "
+          "nobody can read is exactly the five silent rounds their S-E found")
+
+
+def test_close_by_is_silent_for_rounds_that_predate_the_field():
+    body = ("HANDSHAKE-PROTOCOL: 1\nHANDSHAKE-ROUND: 7\nHANDSHAKE-LAP: 1\n"
+            + WIRE + "HANDSHAKE-VERDICT: GO\nHANDSHAKE-PEER-VERDICT: GO\n"
+            "HANDSHAKE-PEER-VERSION: p\nHANDSHAKE-PEER-PIN: abc1234\n"
+            "HANDSHAKE-OUR-VERSION: c\nHANDSHAKE-OUR-PIN: def5678\n"
+            "HANDSHAKE-TESTED: suite\n\n# round 7\n")
+    check(_close_by_lines({"round-07-lap-01.md": body}, 7) == [],
+          "a pre-round-8 round was asked for a field that did not exist yet; "
+          "the exemption is CLOSE_BY_FROM_ROUND and must stay visible")
+
+
+def test_the_same_instant_repeated_in_every_lap_is_not_an_extension():
+    files = {"round-20-lap-01.md": _round20(1, "2026-10-01T23:59:59Z"),
+             "round-20-lap-02.md": _round20(2, "2026-10-01T23:59:59Z"),
+             "round-20-lap-03.md": _round20(3, "2026-10-01T23:59:59Z")}
+    lines = _close_by_lines(files, 20)
+    check(not any("EXTENDED" in l for l in lines),
+          "carrying the SAME instant forward in every lap was reported as an "
+          "extension. Every lap carries the whole wire header, so that is the "
+          "header working. The first version of this reported five such "
+          "'extensions' in round 9, all the identical instant")
+    check(any("2026-10-01T23:59:59Z" in l and "remaining" in l for l in lines),
+          "the governing instant was not printed")
+
+
+def test_a_later_lap_moving_the_instant_is_reported_as_an_extension():
+    files = {"round-20-lap-01.md": _round20(1, "2026-10-01T23:59:59Z"),
+             "round-20-lap-02.md": _round20(2, "2026-11-01T23:59:59Z")}
+    lines = _close_by_lines(files, 20)
+    check(any("EXTENDED" in l for l in lines),
+          "lap 2 moved the deadline a month and the gate said nothing -- R2: "
+          "'set in lap 1 and is not extended'")
+    check(any("2026-10-01T23:59:59Z" in l for l in lines),
+          "the EARLIEST instant must govern; taking the latest would let a "
+          "round extend itself, which is the round-7 failure R2 exists to stop")
+
+
+def test_close_by_passed_on_an_open_round_reads_as_expired():
+    files = {"round-20-lap-01.md": _round20(1, "2026-09-01T23:59:59Z",
+                                            verdict="HOLD")}
+    lines = _close_by_lines(files, 20, is_terminal=False)
+    check(any("EXPIRED per" in l for l in lines),
+          "CLOSE-BY passed with the round still open and the gate did not say "
+          "EXPIRED -- S4a's OPEN -> EXPIRED transition")
+    check(any("never enforces" in l for l in lines),
+          "the EXPIRED line must say on its face that it is advisory")
+    done = _close_by_lines(files, 20, is_terminal=True)
+    # Substring-matched on the PHRASE, not on the word: the terminal message
+    # contains "does not make it EXPIRED", so `not any("EXPIRED" in l)` would
+    # have failed against correct output -- a check over a whole string
+    # satisfied by the string being right, one turn from the defect that
+    # `sc_status_is_current()` shipped.
+    check(any("reached a terminal state first" in l for l in done),
+          "a round that CLOSED before its deadline passed was not told so")
+    check(not any("EXPIRED per" in l for l in done),
+          "a round that CLOSED before its deadline passed was declared "
+          "EXPIRED -- S4a reaches EXPIRED only from a non-terminal state, and "
+          "a terminal state is final")
+
+
+def test_close_by_declared_twice_in_one_lap_is_ambiguous():
+    body = _round20(1, "2026-10-01T23:59:59Z")
+    body = body.replace("HANDSHAKE-CLOSE-BY: 2026-10-01T23:59:59Z\n",
+                        "HANDSHAKE-CLOSE-BY: 2026-10-01T23:59:59Z\n"
+                        "HANDSHAKE-CLOSE-BY: whenever we feel like it\n")
+    lines = _close_by_lines({"round-20-lap-01.md": body}, 20)
+    check(any("AMBIGUOUS" in l for l in lines),
+          "two declarations in one file resolved to the parseable one -- the "
+          "same guess the twice-declared HANDSHAKE-LAP defect made")
+
+
+def test_close_by_never_enforces():
+    """R2's whole point, and the one property the others cannot cover."""
+    without = {"round-20-lap-01.md": _round20(1)}
+    passed = {"round-20-lap-01.md": _round20(1, "2026-01-01T00:00:00Z")}
+    check(gate(without)[0] is True,
+          "fixture floor: the round must close with no CLOSE-BY at all")
+    ok, problems = gate(passed)
+    check(ok is True and not problems,
+          "a CLOSE-BY that passed months ago blocked the release. R2: a gate "
+          "'prints whether it has passed and never enforces it, because "
+          "enforcement lets a clock skew block a release'")
+    check(gate(without)[1] == problems,
+          "adding CLOSE-BY changed which problems check() reports; the field "
+          "must not reach the function that forms a verdict at all")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()
