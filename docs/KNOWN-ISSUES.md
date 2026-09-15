@@ -264,15 +264,33 @@ it. R4 says fixes queue; this one queues. **Raising the timeout was never the
 fix** — it keeps a network-dependent verdict in a gate and moves where it
 misfires.
 
-### `docs/seam-commands.md` §7 overclaims
+### `docs/seam-commands.md` carries THREE known-wrong statements
 
-It states *"Every value either took effect or was refused with a message"* when
-**49 of 111 rows** were graded from exit status alone. **Do not cite that
-sentence.**
+**Consolidated here 2026-09-15.** They were recorded in two different files, one
+of them a 1,100-line standing status, which is how a set of three reads as three
+unrelated one-offs instead of a document to fix. Consolidation applies to
+documentation and never to evidence; this is documentation.
 
-**Not fixed because the file is shared** and neither project owns it. A
-one-sided edit is how two copies of one spec come to disagree, which has already
-happened once to `PROTOCOL.md`. It goes in at the next joint version bump.
+| # | what it publishes | what is true | found |
+|---|---|---|---|
+| 1 | §7: *"Every value either took effect or was refused with a message"* | **49 of 111 rows** were graded from exit status alone | ours |
+| 2 | line 504: `-p '99=drop'` accepted, exit 0 | the binary **refuses** it | theirs, lap 16 §B3 |
+| 3 | line 97: `-D` is `directory` / `str, path` / `writable` / *"output directory"* | it is `folder_scheme`, *"Directory naming scheme"* (`cyanrip_main.c:1603` at the pin) — a **relative** scheme, with `-F` its per-track sibling | theirs, lap 16 §B3 |
+
+**Do not cite any of the three.** Row 3 is the one that has already cost
+something: the real semantics are exactly why an empty leading component made a
+multi-component scheme resolve **absolute**, and a reader who believed line 97
+would not have looked.
+
+**NONE of them is fixed, and not for want of knowing the answer.** The file is
+shared and neither project owns it — a one-sided edit is how two copies of one
+spec come to disagree, which has already happened once to `PROTOCOL.md`. They go
+in together at the next joint version bump.
+
+**Deliberately NOT added to round 20.** R1 fixes a round's close conditions at
+lap 1 and round 20 has two; a third arriving mid-round is the exact failure R1
+exists to stop, and these break nothing in `fe4d2c4`. They are a round-21
+bundle — one version bump, three rows, shipped by both sides on one day.
 
 ---
 

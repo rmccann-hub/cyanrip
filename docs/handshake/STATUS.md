@@ -1039,6 +1039,14 @@ incidental: its real semantics are exactly why held item 4 mattered, since an
 empty leading component made a multi-component scheme resolve **absolute**. A
 reader who believed line 97 would not have looked.
 
+**THREE, counting §7's overclaim, and all three now live in one place** —
+`docs/KNOWN-ISSUES.md`, *"`docs/seam-commands.md` carries THREE known-wrong
+statements"*. They were split across this file and that one, which is how a set
+of three reads as three unrelated one-offs instead of a document to fix. They
+are a **round-21 bundle**: one joint version bump, three rows, shipped by both
+sides on one day. Not added to round 20 — R1 fixes the conditions at lap 1 and
+none of these breaks anything in `fe4d2c4`.
+
 **Neither cell is corrected.** The file is jointly owned; a correction is a
 version bump both sides ship. **They assent to the `--check` remedy** (lap 16 §D)
 with two riders we accept: the delimiters must not claim prose either side wrote,

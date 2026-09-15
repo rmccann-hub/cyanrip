@@ -31,6 +31,19 @@ rips, and the three that still show `"ran"` beside a null block are each flagged
 by their own backstop as `verification_result_missing`. We nearly filed "still
 broken".
 
+**THE SHARED COMMAND SHEET'S THREE WRONG ROWS NOW LIVE IN ONE PLACE.**
+`docs/seam-commands.md` publishes §7's *"Every value either took effect or was
+refused with a message"* (49 of 111 rows were graded from exit status alone),
+`-p '99=drop'` as accepted at line 504 (the binary refuses it), and `-D` as an
+output directory at line 97 (it is `folder_scheme`, a **relative** scheme).
+They were recorded in two different files, one of them an 1,100-line standing
+status — which is how a set of three reads as three unrelated one-offs instead
+of a document to fix. **None is fixed and not for want of knowing the answer**:
+the file is shared, a one-sided edit is how two copies of one spec come to
+disagree, and they go in together at the next joint version bump. **Deliberately
+not added to round 20** — R1 fixes the conditions at lap 1, and none of the
+three breaks anything in `fe4d2c4`.
+
 **AND THE TABLE THAT WAS WRONG TWICE IS NOW DERIVED-CHECKED.**
 `sc_cache_table_matches_the_transcripts()` resolves every row of the
 cache-probe table to `docs/rig-<row>-<build>/session/transcript.txt` and

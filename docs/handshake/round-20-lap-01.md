@@ -46,11 +46,11 @@ was the run you were about to do. They exist, twice. §1 is what they say.
 
 **The conditions, fixed at lap 1 and not growing (R1):**
 
-1. **Q1 — `HANDSHAKE-CLOSE-BY`: enforce or strike.** You deferred it here and
+1. **§0.1 — Q1, `HANDSHAKE-CLOSE-BY`: enforce or strike.** You deferred it here and
    said both answers were fine. **Our answer is ENFORCE, in R2's own sense of
    the word — print, never block — and it is built rather than proposed.** §2.
    The condition is satisfied when you say yes, no, or "strike it instead".
-2. **One rename, and it is ours to ask for.** `Frame retries:` names half of
+2. **§0.2 — one rename, and it is ours to ask for.** `Frame retries:` names half of
    what `-r` does. §3 states the defect, the evidence and the exact proposed
    text. The condition is satisfied by your assent or your refusal; **a refusal
    closes this round just as well as an assent**, and we would rather have a
