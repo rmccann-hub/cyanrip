@@ -31,6 +31,33 @@ rips, and the three that still show `"ran"` beside a null block are each flagged
 by their own backstop as `verification_result_missing`. We nearly filed "still
 broken".
 
+**TWO LIVE CLAIMS WERE INCOMPLETE IN THE SAME WAY, AND THE AUDIT FOUND BOTH.**
+The cache-probe table said *"three rig runs"* and then four; **eight** filed
+sessions carry a `Cache probe:` line, and the missing rows were hiding the
+strongest datum — 2026-09-05 sits at **95%** of its threshold, so
+`CACHE_HIT_RATIO` comes within five percent of swinging the answer on noise
+rather than merely by a factor of sixteen on its third significant figure. Four
+runs calibrate `miss_cost` to within **0.7 ms** of each other and their verdict
+margins still split into 68% and 90%, which turns an argument from the source
+into a measurement. `CLAUDE.md` carried the same *"all three post-chunking
+runs"* and is corrected.
+
+The `-Z` convergence rows named four sessions; **eight** have a
+`secure-reread.log`. Derived whole: track 3 has produced **four** distinct
+values and track 5 **two**, and `3D8FCF0C` is reported **converged twice and
+not-converged three times**. That settles *convergence status and the reported
+checksum are independent* over sixteen track-observations instead of two, and
+it is sound across builds because `src/checksums.h` is byte-identical across
+all four and no commit between them touches `last_checksums`, `total_repeats`
+or `max_retries` — checked, not assumed.
+
+**Both were right in direction and short on evidence, and both were found by
+scanning `docs/rig-*/` rather than by adding the sessions anyone remembered.**
+The first derivation of the cache table also read `uncached read` into the
+`cached` column — **`uncached` contains `cached`** — and produced a margin of
+exactly 400% on every row, which is what a nearly-matching pattern looks like
+when it is wrong plausibly.
+
 **AND IT FALSIFIED A CLAIM WE HAD ALREADY WRITTEN DOWN TWICE.** Two sessions
 supported *"the single differing track is exactly the track whose convergence
 status differed"*; in `0.6.49` track 3 did **not** converge and reported the

@@ -218,24 +218,38 @@ twice, `heavy_reread` seven times, `verification_result_missing` eight times and
 `verification_superseded` six. Both true, about different things. We are stating
 it once in general rather than re-learning it per session.
 
-**Now the part that is ours. §1.2's conclusion is FALSIFIED.** It said *"the
-single differing track is exactly the track whose convergence status differed."*
-Your `0.6.49` session has track 3 **not** converging and reporting `3D8FCF0C` —
-the value it produced under `0.6.48` when it **did**:
+**Now the part that is ours. §1.2's conclusion is FALSIFIED**, and your session
+is what prompted us to derive the whole record instead of the newest slice of
+it. §1.2 said *"the single differing track is exactly the track whose
+convergence status differed."*
 
-| | 09-12 `0.6.47` | 09-15a `0.6.48` | 09-15b `0.6.49` |
-|---|---|---|---|
-| `did NOT converge` | tracks 3, 5 | track 5 | track **3** |
-| track 3 `EAC CRC32` | `62680376` | `3D8FCF0C` | `3D8FCF0C` |
+**Every `secure-reread.log` we hold — eight sessions, four builds:**
 
-> **Convergence status and the reported checksum are independent.** A track can
-> converge on a value it also produces without converging, and can fail to
-> converge twice on two different values.
+| session | build | track 3 | | track 5 | |
+|---|---|---|---|---|---|
+| 2026-08-26 | `d9c058c` | `3D8FCF0C` | converged | `E0036697` | converged |
+| 2026-09-03 | `978f9b0` | `418F6CF8` | **not** | `6902BCF0` | **not** |
+| 2026-09-07 | `978f9b0` | `89165F71` | **not** | `6902BCF0` | **not** |
+| 2026-09-10 | `ddc1e8c` | `3D8FCF0C` | **not** | `E0036697` | converged |
+| 2026-09-11 | `ddc1e8c` | `3D8FCF0C` | **not** | `6902BCF0` | **not** |
+| 2026-09-12 | `fe4d2c4` | `62680376` | **not** | `E0036697` | **not** |
+| 2026-09-15a | `fe4d2c4` | `3D8FCF0C` | converged | `E0036697` | **not** |
+| 2026-09-15b | `fe4d2c4` | `3D8FCF0C` | **not** | `E0036697` | converged |
+
+> **Convergence status and the reported checksum are independent.** `3D8FCF0C`
+> is reported **converged twice and not-converged three times**; `E0036697`
+> likewise both ways. A track can converge on a value it also produces without
+> converging, and can fail to converge twice on two different values.
+
+**The comparison is sound across builds, checked rather than assumed:**
+`src/checksums.h` is byte-identical across all four, and no commit between
+`d9c058c` and `fe4d2c4` touches `last_checksums`, `total_repeats` or
+`max_retries`. A value difference is a difference in the read.
 
 Two samples produced a tidy story and it was wrong — the same shape as the
-paranoia-sum "invariant" that held on every artifact anyone had constructed.
-**13 of 14 tracks are identical across all three sessions** and that part
-stands.
+paranoia-sum "invariant". **13 of 14 tracks identical across the three
+`fe4d2c4` sessions** stands; it is the same-build subset and the clean
+comparison.
 
 ### 1.7 Your addendum, and one of ours it re-confirms
 

@@ -86,42 +86,54 @@ needs a backseek-based `miss_cost`, there is no drive here to verify one
 against, and the last prediction made about this exact code was falsified on
 hardware. Shipping a second unverifiable probe would repeat the mistake.
 
-**SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — four rig runs; the first
-three read 2026-09-13, the fourth 2026-09-15.** The prediction this section
-made was *"an uncached read in the hundreds of milliseconds beside a cached
-read of a few."* Both halves are now
-measured, from the transcripts rather than from memory of them:
+**SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
+INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
+session that produced a `Cache probe:` line is here now: eight of them**,
+derived 2026-09-15 by scanning `docs/rig-*/session/transcript.txt` rather than
+by adding the ones anyone remembered. The prediction this section made was *"an
+uncached read in the hundreds of milliseconds beside a cached read of a few."*
 
-| session | uncached | cached | threshold (`miss_cost / 4`) | margin |
+| session | uncached (`miss_cost`) | cached | threshold (`miss_cost / 4`) | margin |
 |---|---|---|---|---|
+| 2026-09-03 `978f9b0` | 244.7 ms | 43.1 ms | 61.2 ms | 70% |
+| 2026-09-05 `978f9b0` | 237.6 ms | 56.4 ms | 59.4 ms | **95%** |
 | 2026-09-07 `978f9b0` | 245.3 ms | 42.4 ms | 61.3 ms | 69% |
 | 2026-09-10 `ddc1e8c` | 363.2 ms | 82.0 ms | 90.8 ms | **90%** |
-| 2026-09-12 `fe4d2c4` | 250.6 ms | 42.3 ms | 62.7 ms | 67% |
-| 2026-09-15 `fe4d2c4` | 362.6 ms | 61.7 ms | 90.7 ms | 68% |
+| 2026-09-11 `ddc1e8c` | 362.5 ms | 61.9 ms | 90.6 ms | 68% |
+| 2026-09-12 `fe4d2c4` | 250.6 ms | 42.3 ms | 62.6 ms | 68% |
+| 2026-09-15a `fe4d2c4` | 362.6 ms | 61.7 ms | 90.7 ms | 68% |
+| 2026-09-15b `fe4d2c4` | 362.7 ms | 81.6 ms | 90.7 ms | **90%** |
 
-**Hundreds of ms uncached: confirmed, four times. "A cached read of a few ms":
-FALSIFIED** — 42 to 82, not 2.2.
+**Hundreds of ms uncached: confirmed, eight times. "A cached read of a few ms":
+FALSIFIED** — 42 to 82, not 2.2. All eight end identically, at
+`at least 2048 sectors … search ceiling reached`.
 
-**The fourth run is not a fourth data point, it is a CONTROLLED one, and it
-moves the argument from inference to measurement.** 2026-09-10 and 2026-09-15
-calibrated `miss_cost` at **363.2 ms** and **362.6 ms** — 0.17% apart, which is
-as close to the same calibration as two runs of a mechanical drive get. Their
-*classified* reads were **82.0 ms** and **61.7 ms**, 25% apart, moving the
-margin from **90%** of threshold to **68%**.
+**THE FOUR-RUN CONTROL, which is what the missing rows were hiding.** Sessions
+09-10, 09-11, 09-15a and 09-15b calibrated `miss_cost` at **363.2, 362.5, 362.6
+and 362.7 ms** — a spread of **0.7 ms**, as close to one calibration as a
+mechanical drive gets. Their *classified* reads split into two tight clusters,
+**61.7–61.9 ms** and **81.6–82.0 ms**, giving margins of **68%** and **90%**.
 
-So the margin's variance does not come from the calibration. It comes from the
-read being classified, and the section below argued that from the source
-(`last_hit_us` is overwritten on every hit, so the figure printed is the
-re-read after the longest forward run the search performed). **That argument is
-now measured rather than reasoned**: hold `miss_cost` fixed and the verdict
-still swings by a third. A retuned `CACHE_HIT_RATIO` would therefore stop the
-search at a different run length on two runs of the same drive with the same
-calibration -- which is the whole claim, demonstrated instead of asserted.
+**So the margin's variance does not come from the calibration.** Hold
+`miss_cost` fixed to within a fifth of a percent and the verdict still lands in
+one of two places 22 points apart. This was previously argued from the source —
+`last_hit_us` is overwritten on every hit, so the figure printed is the re-read
+after the longest forward run the search performed — and it is now measured over
+four runs rather than inferred from two.
 
-Same disc, same drive, same build `fe4d2c4`; only Platterpus differed
-(`0.6.47` / `0.6.48`), and it does not touch this probe -- `-x` is not in
-their rip argv builder at all, and this is a standalone `cyanrip -N -x -I`
-invocation. Evidence: `docs/rig-2026-09-15-fe4d2c4/session/transcript.txt`.
+**And the closest call was in a row that had been left out.** 2026-09-05 sits at
+**95% of its threshold**. A `CACHE_HIT_RATIO` of 3.8 instead of 4 would have
+stopped that search, at a run length with no physical meaning — so the constant
+does not merely swing the answer by a factor of sixteen on its third significant
+figure, it comes within five percent of swinging it on noise. **The table was
+understating its own case.**
+
+Evidence: `docs/rig-*/session/transcript.txt`, all eight. Re-derive with
+`grep -h "Cache probe:" docs/rig-*/session/transcript.txt` — and note that
+`cached read` must be matched with a guard, because **`uncached` contains
+`cached`**: the first derivation of this table read the same number into both
+columns and produced a margin of exactly 400% on every row, which is what a
+pattern that nearly matches looks like when it is wrong in a plausible way.
 
 The gap is structural rather than noise, and it changes the fix. `last_hit_us`
 is overwritten on every hit, so the figure printed is the re-read after the

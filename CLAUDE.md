@@ -64,12 +64,16 @@ settled by building 0.9.3 and running it. The measured matrix is
 
   **AND THE NUMBER IT REPORTS IS WRONG BY ROUGHLY FIFTEEN TIMES.** `cd-paranoia
   -A` on the same drive says **137 sectors, then 140**; we say *at least 2048*
-  on all three post-chunking runs. **The ceiling is not why** — `miss_cost` is
+  on **every** run that has produced the line — eight filed sessions as of
+  2026-09-15, derived by scanning the transcripts rather than counted from
+  memory; this said "all three" for a month while five more existed. **The ceiling is not why** — `miss_cost` is
   calibrated with a full-stroke seek while the test read is a backseek of at
   most the current run length, so every test read scores as a hit and the search
   runs to whatever limit exists. **Raising `PROBE_MAX_SECTORS` moves the number
-  and fixes nothing.** Mechanism and the three-run evidence are in
-  `docs/KNOWN-ISSUES.md`; **do not cite our cache figure.**
+  and fixes nothing.** Mechanism and the eight-run evidence are in
+  `docs/KNOWN-ISSUES.md` — including four runs whose `miss_cost` agrees to
+  within 0.7 ms and whose verdict margin still lands 22 points apart, and one
+  run at **95%** of its threshold. **Do not cite our cache figure.**
 - `src/stall_watchdog.c`/`.h` -- the read-liveness heartbeat, on its own thread.
   It is a separate translation unit for two reasons: it needs a thread of its
   own, and being linkable is what lets `tests/stall.c` prove the heartbeat fires

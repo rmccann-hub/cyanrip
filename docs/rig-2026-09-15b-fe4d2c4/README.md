@@ -95,6 +95,17 @@ That is the same lesson as the paranoia-sum "invariant": a correlation that held
 on every case anyone had constructed is not a rule, and the third sample is what
 says so. **Two samples produced a tidy story and it was wrong.**
 
+**And deriving the WHOLE record rather than the newest slice settles it.** All
+eight filed `secure-reread.log`s, four builds: track 3 has produced **four**
+distinct values and track 5 **two**. `3D8FCF0C` is reported **converged twice
+and not-converged three times**; `E0036697` likewise both ways; `6902BCF0` only
+ever non-converged. Non-convergence hits track 3 in seven of eight sessions,
+track 5 in five, track 4 in one, and 2026-08-26 converged on all fourteen.
+`src/checksums.h` is byte-identical across all four builds and no commit between
+them touches `last_checksums`, `total_repeats` or `max_retries`, so a value
+difference is a difference in the read. `docs/SETTLED.md` carries all three
+statements with runnable checks.
+
 ## The addendum — a new artifact, and it respects the contract exactly
 
 Two rips carry a `.platterpus-addendum.txt` beside the log:
