@@ -86,9 +86,10 @@ needs a backseek-based `miss_cost`, there is no drive here to verify one
 against, and the last prediction made about this exact code was falsified on
 hardware. Shipping a second unverifiable probe would repeat the mistake.
 
-**SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — three rig runs, read
-2026-09-13.** The prediction this section made was *"an uncached read in the
-hundreds of milliseconds beside a cached read of a few."* Both halves are now
+**SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — four rig runs; the first
+three read 2026-09-13, the fourth 2026-09-15.** The prediction this section
+made was *"an uncached read in the hundreds of milliseconds beside a cached
+read of a few."* Both halves are now
 measured, from the transcripts rather than from memory of them:
 
 | session | uncached | cached | threshold (`miss_cost / 4`) | margin |
@@ -96,9 +97,31 @@ measured, from the transcripts rather than from memory of them:
 | 2026-09-07 `978f9b0` | 245.3 ms | 42.4 ms | 61.3 ms | 69% |
 | 2026-09-10 `ddc1e8c` | 363.2 ms | 82.0 ms | 90.8 ms | **90%** |
 | 2026-09-12 `fe4d2c4` | 250.6 ms | 42.3 ms | 62.7 ms | 67% |
+| 2026-09-15 `fe4d2c4` | 362.6 ms | 61.7 ms | 90.7 ms | 68% |
 
-**Hundreds of ms uncached: confirmed, three times. "A cached read of a few ms":
+**Hundreds of ms uncached: confirmed, four times. "A cached read of a few ms":
 FALSIFIED** — 42 to 82, not 2.2.
+
+**The fourth run is not a fourth data point, it is a CONTROLLED one, and it
+moves the argument from inference to measurement.** 2026-09-10 and 2026-09-15
+calibrated `miss_cost` at **363.2 ms** and **362.6 ms** — 0.17% apart, which is
+as close to the same calibration as two runs of a mechanical drive get. Their
+*classified* reads were **82.0 ms** and **61.7 ms**, 25% apart, moving the
+margin from **90%** of threshold to **68%**.
+
+So the margin's variance does not come from the calibration. It comes from the
+read being classified, and the section below argued that from the source
+(`last_hit_us` is overwritten on every hit, so the figure printed is the
+re-read after the longest forward run the search performed). **That argument is
+now measured rather than reasoned**: hold `miss_cost` fixed and the verdict
+still swings by a third. A retuned `CACHE_HIT_RATIO` would therefore stop the
+search at a different run length on two runs of the same drive with the same
+calibration -- which is the whole claim, demonstrated instead of asserted.
+
+Same disc, same drive, same build `fe4d2c4`; only Platterpus differed
+(`0.6.47` / `0.6.48`), and it does not touch this probe -- `-x` is not in
+their rip argv builder at all, and this is a standalone `cyanrip -N -x -I`
+invocation. Evidence: `docs/rig-2026-09-15-fe4d2c4/session/transcript.txt`.
 
 The gap is structural rather than noise, and it changes the fix. `last_hit_us`
 is overwritten on every hit, so the figure printed is the re-read after the
@@ -232,6 +255,36 @@ The datum is not missing, only uncarried — their re-read is a cyanrip invocati
 and writes its own `creation_time`. Asked as round 8 `J14`. **Unrecoverable
 after the fact**, which is why it is asked at all: a read time is not derivable
 a month later from anything on disk.
+
+### `Frame retries:` names half of what `-r` does
+
+Found 2026-09-15 by reading `docs/rig-2026-09-15-fe4d2c4/rips/secure-reread.log`
+whole: line 18 says `Frame retries:  3`, line 425 says
+`Secure re-read:  did NOT converge after 3 reads (repeat limit hit)`, and
+**both threes are the same knob**, which nothing in the log says.
+
+`-r` is *"Maximum number of retries for frames and repeated rips"*. It is passed
+to `cdio_paranoia_read_limited()` (`src/cyanrip_main.c:534`) **and** used as the
+repeat-loop ceiling (`src/cyanrip_main.c:1011`). So on that rip it governed
+paranoia's per-frame retries *and* decided that track 5 stopped after three
+whole-track reads.
+
+**The generated contract is right and the log line is what under-states.**
+`PROVIDER-CONTRACT.md` P1 carries genopt's own text — *"for frames and repeated
+rips"* — because P1 is derived from `--help`. P2's `Frame retries:` label is
+hand-shaped and names one of the two. `-j`'s `"frame_retries"` field
+(`src/diagnostics.c:458`) has the same name and the same gap.
+
+This is `Cache defeat:` → `Cache model:` again, and `Peak level:` →
+`Sample peak level:` again: **a label asserts, and a name that does not
+discriminate becomes ambiguous the moment a sibling appears.** The sibling here
+is `Secure re-read:`, which did not exist when the label was written.
+
+**Deliberately not reworded.** `Frame retries:` is a stable log line, so a
+silent rename is exactly the drive-by reword the seam forbids; and the JSON
+field is a schema key a consumer may already read. It is a rename to propose,
+not to ship — carried into round 20. Until then the line is not wrong, only
+narrower than the number it prints.
 
 ### The reference disc cannot discriminate a correct AccurateRip skip
 
