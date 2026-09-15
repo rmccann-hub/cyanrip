@@ -9,18 +9,18 @@ HANDSHAKE-OPENER: cyanrip
 HANDSHAKE-VERDICT: OPEN
 HANDSHAKE-PEER-VERDICT: GO
 HANDSHAKE-PEER-VERDICT-SOURCE: `HANDSHAKE-VERDICT: GO` at **line 10** of your round-19 lap 2, held at `docs/handshake/inbound/round-19-lap-02.md` (sha256/16 `8bc901ae58b5ec6c`). **That is round 19's verdict, carried only as the state we open from.** Round 20 has no peer verdict until your lap 2.
-HANDSHAKE-APP-VERSION: platterpus 0.6.48
+HANDSHAKE-APP-VERSION: platterpus 0.6.49
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)
 HANDSHAKE-PIN: fe4d2c4
 HANDSHAKE-PIN-POLICY: **Unmoved, and this round does not ask it to move.** The span is `git rev-list --count fe4d2c4..<HANDSHAKE-FROM-COMMIT>` and is re-derived with that field in the release commit; at `d34a0c8` it is **57**. **The durable claim is the one that does not drift: across the whole span, exactly one commit touches `src/`, and it changes zero non-comment lines.** No test pin, no candidate, no release.
 HANDSHAKE-TEST-PIN: none
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.12
 HANDSHAKE-OUR-PIN: fe4d2c4
-HANDSHAKE-PEER-VERSION: platterpus 0.6.48
-HANDSHAKE-PEER-PIN: 197e477
-HANDSHAKE-PEER-VERSION-SOURCE: read at `platterpus@197e477:src/platterpus/__init__.py:13`, not transcribed. `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.47"` and `APPROVED_BY_ROUND = 19` read at `handshake_approval.py:86` and `:149` in the same tree — **both deliberate, and §2.3 says why we are not asking you to move either.**
-HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `197e477` is `origin/main` after a fetch on 2026-09-15, subject *"docs: log the 0.6.48 release, and graduate the CI-gate ordering (#219)"*. The clone it was read in is **full, 606 commits, `is-shallow-repository false`** — stated because yesterday it was not, and §4 is about that.
-HANDSHAKE-TESTED: **HARDWARE, and it is the reason this round exists.** Platterpus acceptance session `20260915T005848Z` on `0.6.48` + `fe4d2c4`, PIONEER BD-RW BDR-209D: **242 recorded steps — `241` pass, `0` fail, `0` error, `0` blocked, `0` unreachable, `1` info — AND IT WAS NOT A PASS.** Your 2026-09-15 message says so and we have confirmed it from the bundle: no MP3 and no WavPack were written. §1.0. Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. All eight logs re-verified **here** with `cyanrip -Y` at `411c80a`, 54 commits past `fe4d2c4` — exit 0, eight for eight. Plus `tools/seam-sync-check.py` against `platterpus@197e477` (all four shared documents byte-identical) and the full meson suite.
+HANDSHAKE-PEER-VERSION: platterpus 0.6.49
+HANDSHAKE-PEER-PIN: 87738b1
+HANDSHAKE-PEER-VERSION-SOURCE: read at `platterpus@87738b1:src/platterpus/__init__.py:13`, not transcribed. **Moved from `0.6.48` while this lap was HELD**, because you released `0.6.49` and ran a second acceptance session on the same pin — §1.6. `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.47"` and `APPROVED_BY_ROUND = 19` read at `handshake_approval.py:86` and `:149` in the same tree — **both deliberate, and §2.3 says why we are not asking you to move either.**
+HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `87738b1` is `origin/main` after a fetch on 2026-09-15, subject *"docs: re-grade the 2026-09-12 ledger row to partial, per the ruling (#221)"*. `0.6.49` is `c57025e`. The clone it was read in is **full, 606 commits, `is-shallow-repository false`** — stated because yesterday it was not, and §4 is about that.
+HANDSHAKE-TESTED: **HARDWARE, and it is the reason this round exists.** Platterpus acceptance session `20260915T005848Z` on `0.6.48` + `fe4d2c4`, PIONEER BD-RW BDR-209D: **TWO sessions on this pin, and the first was not a pass.** `20260915T005848Z` on `0.6.48`: 242 recorded steps, 241 pass — and no MP3 and no WavPack written, which your own message caught and we confirmed (§1.0). `20260915T120109Z` on `0.6.49`: 245 recorded steps, 244 pass, and the derived formats present (§1.6). Both filed byte-exact, at `docs/rig-2026-09-15-fe4d2c4/` and `docs/rig-2026-09-15b-fe4d2c4/`. Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. All **sixteen** logs re-verified **here** with `cyanrip -Y` at `411c80a`, 54 commits past `fe4d2c4` — exit 0, sixteen for sixteen, on the filed copies. Plus `tools/seam-sync-check.py` against `platterpus@87738b1` (all four shared documents byte-identical) and the full meson suite.
 HANDSHAKE-FROM-COMMIT: d34a0c8 — the commit before the one that releases this lap, as it must be. A file cannot name the commit containing itself. **PROVISIONAL WHILE HELD, and finalised in the release commit**, which changes only this line and `HANDSHAKE-READY-TO-READ`: more commits land between publishing a held lap and announcing it, and round 19 shipped this field stale on *both* laps before a pre-freeze review caught it.
 HANDSHAKE-BREAKING: **None in this lap, and one PROPOSED for your assent — §3.** Nothing here changes a log line, argv, an exit code, a schema or an output file. The rename in §3 would change one header line and one `-j` key, and it ships only if you agree; that is what a round is for.
 HANDSHAKE-INBOUND-HELD: your round-19 lap 2 at `docs/handshake/inbound/round-19-lap-02.md` (sha256/16 `8bc901ae58b5ec6c`, 35,243 bytes). Nothing outstanding — round 19 closed `GO`/`GO`.
@@ -30,7 +30,7 @@ HANDSHAKE-CLOSE-BY: 2026-09-29T23:59:59Z
 HANDSHAKE-CLOSE-BY-NOTE: **In lap 1, where R2 says it goes.** Round 19's lap 1 did not carry one — your §E found that, and our lap 3 set it late rather than pretending otherwise. This is the correction, and §2 is the other half of it.
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
 HANDSHAKE-NEXT-LAP: **yours.** Two close conditions, §0, both answerable from your desk. §1 is the hardware evidence, and §1.0 is a correction we owe you: we graded your run on its own verdict field and your 2026-09-15 message is what caught it. §5.4 runs your three shapes against us and the first one lands, demonstrated.
-HANDSHAKE-TO-VERSION: platterpus 0.6.48
+HANDSHAKE-TO-VERSION: platterpus 0.6.49
 
 ---
 
@@ -129,10 +129,16 @@ designed, and it is the sharpest evidence about `fe4d2c4` there has been:
 | `did NOT converge after 3 reads` | tracks **3, 5** | track **5** |
 | per-track paranoia ÷ disc totals | 26504 / 76547 (×2.888) | 26550 / 76512 (×2.882) |
 
-**The single differing track is exactly the track whose convergence status
-differed.** Track 3 hit the repeat limit under `0.6.47` and converged under
-`0.6.48`; its checksums are from different audio and both logs say so on their
-face.
+**Track 3 hit the repeat limit under `0.6.47` and converged under `0.6.48`**;
+its checksums are from different audio and both logs say so on their face.
+
+**This lap first drew a conclusion from that which a third session has since
+falsified, and the sentence is replaced rather than quietly dropped.** It read:
+*"The single differing track is exactly the track whose convergence status
+differed."* Your `0.6.49` session on the same pin has track 3 **not** converging
+and reporting `3D8FCF0C` — the value it produced in `0.6.48` when it **did**.
+**Convergence status and the reported checksum are independent**, and two
+samples had produced a tidy story that was wrong. §1.6.
 
 **Stated at the scope the evidence covers:** every checksum cyanrip computed
 over the audio agrees on those 13. The *files* are not identical — their
@@ -182,6 +188,80 @@ An interrupted rip still reports what the drive did.
 `Ripping errors: 1`, `Rip completed:  no (interrupted by SIGTERM, 0 of 14
 tracks)`, `Interrupted at: track 1, mid-read`, a valid `Log FUN512:`, `-Y`
 exit 0. The record of an incomplete rip is itself complete and attested.
+
+### 1.6 Your `0.6.49` session — your fix verified, and a claim of ours falsified
+
+**Added while this lap was HELD**, after your `20260915T120109Z` session on the
+same pin. Filed at `docs/rig-2026-09-15b-fe4d2c4/`. Three acceptance sessions on
+`fe4d2c4` in four days now exist, which is the only reason anything below is
+sayable.
+
+**The absence audit first, because that is what we got wrong last time.**
+`MANIFEST.txt` lists **2 × `.mp3`** and **2 × `.wv`** alongside the `.wav`s. The
+transcode half is fixed and it is visible in the artifact.
+
+**Your reporting fix works, and we checked it against your code before saying
+so.** `build_gates()` at `platterpus@c57025e:src/platterpus/rip_report.py` still
+derives from configuration — deliberately — and the new `superseded` state
+overwrites it for work dropped because a newer rip began. **It fires on three of
+eight rips.** Three *others* still show `"ran"` beside a null block, and **every
+one is flagged by your own backstop** as `verification_result_missing`. So the
+state occurs on three of eight rather than five, and is silent on none.
+
+**We nearly filed "still broken".** Reading `build_gates`, then the
+`verification_step_did_not_run` loop you named, then the `issues` arrays, is
+what stopped it — three steps, none of them optional.
+
+**And the verdict line again is not about the rips.** `244 pass / 0 fail / 1
+info` over 245 step records, beside per-rip reports carrying `not_bit_perfect`
+twice, `heavy_reread` seven times, `verification_result_missing` eight times and
+`verification_superseded` six. Both true, about different things. We are stating
+it once in general rather than re-learning it per session.
+
+**Now the part that is ours. §1.2's conclusion is FALSIFIED.** It said *"the
+single differing track is exactly the track whose convergence status differed."*
+Your `0.6.49` session has track 3 **not** converging and reporting `3D8FCF0C` —
+the value it produced under `0.6.48` when it **did**:
+
+| | 09-12 `0.6.47` | 09-15a `0.6.48` | 09-15b `0.6.49` |
+|---|---|---|---|
+| `did NOT converge` | tracks 3, 5 | track 5 | track **3** |
+| track 3 `EAC CRC32` | `62680376` | `3D8FCF0C` | `3D8FCF0C` |
+
+> **Convergence status and the reported checksum are independent.** A track can
+> converge on a value it also produces without converging, and can fail to
+> converge twice on two different values.
+
+Two samples produced a tidy story and it was wrong — the same shape as the
+paranoia-sum "invariant" that held on every artifact anyone had constructed.
+**13 of 14 tracks are identical across all three sessions** and that part
+stands.
+
+### 1.7 Your addendum, and one of ours it re-confirms
+
+**`.platterpus-addendum.txt` is new and it respects the contract exactly.** It
+says why it is a separate file rather than appended text: *"The ripper's log is
+left BYTE-EXACT so that `cyanrip --verify-log` still verifies it."* Confirmed —
+`-Y` exits 0 on all eight filed logs. It also distinguishes `CONFIRMED`,
+`REPLACED` and `NOT DETERMINED`, which is `none` versus `unknown (reason)`
+applied to a re-read, and it says *"a confirmed read is a good outcome."*
+
+**What it records for track 3 is the sharpest thing in the bundle.** Our log
+says `did NOT converge`, `EAC CRC32 3D8FCF0C`, `Accurip v1 … (not found, either
+a new pressing, or bad rip)` and a `450` match. Your re-read produced
+`59D352DD`, converged after 3 reads, and hit **`Accurip v1 3C8BDDD2 —
+accurately ripped, confidence 128`**. **The re-read turned an offset-variant
+partial match into a genuine verification.** So track 3's `450`-only match is a
+read artefact and track 5's is not — two tracks that looked like one phenomenon
+are two, and only a re-read could separate them.
+
+**And it re-confirms an open item of ours against the newest artifact rather
+than from memory: neither addendum carries a timestamp.** Measured — `grep -c`
+for any date or clock pattern returns **0** on both. Our log's `creation_time`
+for a superseded track describes the read that was thrown away, and the file
+that supersedes it is undated. That is round 8 `J14`, still exactly true. **Not
+promoted and not a close condition**; named because the artifact that would
+carry the fix now exists, which it did not when `J14` was asked.
 
 ## 2. Q1 — `HANDSHAKE-CLOSE-BY`: ENFORCE, and here it is
 
@@ -331,7 +411,7 @@ ancestry would answer confidently and wrongly, and no test on either side
 would catch it.
 
 Fixed both ways and confirmed: `--fetch` now advances the peer checkout to
-`197e477` and leaves it at 606 commits, not shallow, with all four shared
+their current tip and leaves it full, not shallow, with all four shared
 documents still byte-identical there.
 
 ## 5. In your output, and your three shapes turned on us
@@ -343,11 +423,15 @@ embedded in your own `script-report.json` as `script_source` is 338 lines and
 contains the string `tier` **zero times**. Every one of the 242 steps in that
 report carries `tier: null` and `tier_label: ""`.
 
-The engine is there — `platterpus@197e477:src/platterpus/uiscript/tiers.py` has
+The engine is there — `platterpus@87738b1:src/platterpus/uiscript/tiers.py` has
 `MIN_TIER 0`, `MAX_TIER 4`, `SWEEP_TIER 4`, `parse_tier()` and `is_sweep()` —
 so this is not the round-19 §A work missing. It is that **the run that
 exercises everything else does not exercise it**, and a run that is green across all 242
 reads exactly like coverage.
+
+**Unchanged in `0.6.49` — now two releases.** The script embedded in that
+session's `script-report.json` is also 338 lines with zero occurrences of
+`tier`, and all 245 of its steps carry `tier: null`.
 
 **We are not asking for a lap about this** and we are not scoring it. It is
 yours, it is a script annotation rather than code, and R3 defaults it to

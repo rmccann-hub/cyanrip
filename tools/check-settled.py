@@ -74,14 +74,36 @@ CMD = re.compile(r"`([^`]+)`")
 # here inside a single file. Splitting on unescaped pipes makes them one reader.
 UNESCAPED_PIPE = re.compile(r"(?<!\\)\|")
 
+#: `cells()` saw a table row it could not split into exactly two cells.
+MALFORMED = object()
+
+
+# A line that OPENS and CLOSES with a pipe is a table row, whatever it splits
+# into. Anything else is prose.
+LOOKS_LIKE_A_ROW = re.compile(r"^\s*\|.*\|\s*$")
+
 
 def cells(line):
-    """The row's two cells, split on UNESCAPED pipes, or None if not a row."""
+    """The row's two cells, or None for prose, or MALFORMED for a broken row.
+
+    THE THREE-WAY RETURN IS THE POINT. This used to return None both for prose
+    and for a row that split into the wrong number of cells, and the caller
+    `continue`d on None -- so a row with an UNESCAPED pipe in its command
+    vanished from the run entirely. Not reported, not counted, not run.
+
+    Found 2026-09-15 by tripping it: a new row whose check contained
+    `grep -E 'A|B'` split into five cells and was silently skipped, while the
+    summary line went on reporting "0 stale". **A row nobody can run is
+    indistinguishable from a row that passes** -- this file's own docstring
+    says so, and this function was the place it was true.
+    """
     parts = UNESCAPED_PIPE.split(line.rstrip())
     # `| fact | check |` -> ['', ' fact ', ' check ', '']
-    if len(parts) != 4 or parts[0].strip() or parts[3].strip():
+    if len(parts) == 4 and not parts[0].strip() and not parts[3].strip():
+        return parts[1].strip(), parts[2].strip()
+    if not LOOKS_LIKE_A_ROW.match(line):
         return None
-    return parts[1].strip(), parts[2].strip()
+    return MALFORMED
 
 
 def main():
@@ -89,9 +111,25 @@ def main():
     runnable, unrunnable, failures, malformed = 0, 0, [], []
     kinds, untagged = {}, []
 
+    # THE LEGEND ABOVE THE MAIN TABLE IS A THREE-COLUMN TABLE, so a wrong cell
+    # count is only a defect once the main table has started. Keyed to the main
+    # table's own `| fact | check |` header rather than to a line number or a
+    # list of exempt lines -- the document's structure, read from the document.
+    in_main_table = False
     for line in text.splitlines():
         split = cells(line)
         if split is None:
+            continue
+        if split is not MALFORMED and split[0] == "fact":
+            in_main_table = True
+        if split is MALFORMED and not in_main_table:
+            continue
+        if split is MALFORMED:
+            # Named and counted, never skipped. The commonest cause is an
+            # unescaped `|` inside the check command -- a markdown cell needs
+            # `\\|`, and a regex alternation or a shell pipe written raw
+            # splits the row into five cells.
+            malformed.append(("cells", line.strip()[:70]))
             continue
         # Exactly two columns. The `— past: / theirs: / structural:` legend in
         # this file's own header is a THREE-column table, and the non-greedy
@@ -127,7 +165,7 @@ def main():
 
         cmd = CMD_FENCED.search(check) or CMD.search(check)
         if not cmd:
-            malformed.append(fact[:70])
+            malformed.append(("nocmd", fact[:70]))
             continue
 
         # THIS SCRIPT IS ITSELF A REGISTERED MESON TEST ('Settled facts'), so a
@@ -180,8 +218,17 @@ def main():
         print(f"STALE: {fact}")
         print(f"       {cmd}")
         print(f"       exit {rc}: {err}")
-    for fact in malformed:
-        print(f"MALFORMED (no command and no em dash): {fact}")
+    # TWO DIFFERENT DEFECTS, NAMED SEPARATELY. "the row has no command" and
+    # "the row could not be split into cells" need different fixes, and the
+    # second one used to be invisible -- so collapsing them into one message
+    # would be the `none` versus `unknown (reason)` rule failing in the tool
+    # that indexes the rule.
+    for kind, fact in malformed:
+        if kind == "cells":
+            print(f"MALFORMED (not two cells -- an unescaped `|` in the check "
+                  f"splits the row; markdown needs `\\|`): {fact}")
+        else:
+            print(f"MALFORMED (no command and no em dash): {fact}")
 
     for fact in untagged:
         print(f"UNTAGGED (no command and no reason for having none): {fact}")

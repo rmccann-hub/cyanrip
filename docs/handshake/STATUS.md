@@ -17,7 +17,35 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-15, later the same day. **ROUND 20 IS OPEN AND HELD. Your hardware run landed, and it is the first time two sessions have shared a pin.**
+## Rewritten 2026-09-15, third time that day. **ROUND 20 IS OPEN AND HELD. THREE sessions now share one pin, and the third falsified something the first two said.**
+
+**`0.6.49` (`c57025e`) ran a second acceptance session on `fe4d2c4`** — filed at
+`docs/rig-2026-09-15b-fe4d2c4/`. **Their reporting fix works and we checked it
+against their code before saying so**: the new `superseded` gate state fires on
+three of eight rips, and the three that still show `"ran"` beside a null block
+are every one flagged by their own backstop as `verification_result_missing`.
+Five of eight became three of eight, silent on none. **We nearly filed "still
+broken"** — reading `build_gates`, then the loop they named, then the `issues`
+arrays is what stopped it. The MP3s and WavPacks are present this time; the
+absence audit is clean.
+
+**AND A CLAIM OF OURS IS FALSIFIED.** Two sessions said *"the single differing
+track is exactly the track whose convergence status differed"*. In `0.6.49`
+track 3 did **not** converge and reported `3D8FCF0C` — the value it produced
+under `0.6.48` when it **did**. **Convergence status and the reported checksum
+are independent.** 13 of 14 tracks identical across all three sessions stands.
+
+**Their new `.platterpus-addendum.txt` respects the contract exactly** — a
+separate file *"so that `cyanrip --verify-log` still verifies"* our log
+byte-exact, distinguishing `CONFIRMED` / `REPLACED` / `NOT DETERMINED`. Its
+re-read of track 3 turned a `450`-only partial match into
+`Accurip v1 — accurately ripped, confidence 128`, so **track 3's offset-variant
+reading was a read artefact and track 5's is not.** Neither addendum carries a
+timestamp: round 8 `J14`, re-confirmed against the newest artifact.
+
+---
+
+## Earlier the same day. **Your hardware run landed, and it is the first time two sessions have shared a pin.**
 
 **Round 19 closed `GO`/`GO` on 2026-09-14** on the unchanged pin `fe4d2c4`.
 **Round 20 is now open**, at `docs/handshake/round-20-lap-01.md`, and it is

@@ -62,9 +62,16 @@ both `-Z 2 -r 3`:
 | `did NOT converge after 3 reads` | tracks **3, 5** | track **5** |
 | per-track paranoia / disc totals | 26504 / 76547 (×2.888) | 26550 / 76512 (×2.882) |
 
-**The single differing track is exactly the track whose convergence status
-differed**, which is the result the corrected `-Z` semantics predict and the
-only one that would be reassuring. Track 3 hit the repeat limit on 09-12 and
+**FALSIFIED BY THE 2026-09-15b SESSION — left standing and corrected here
+rather than rewritten, because it is what two samples said.** This read: *"The
+single differing track is exactly the track whose convergence status differed,
+which is the result the corrected `-Z` semantics predict and the only one that
+would be reassuring."* A third session on the same pin breaks it: in 09-15b
+track 3 did **not** converge and reported `3D8FCF0C`, the value it produced in
+09-15a when it **did**. **Convergence status and the reported checksum are
+independent.** Same lesson as the paranoia-sum "invariant" — a correlation that
+held on every case anyone had constructed is not a rule. See
+`docs/rig-2026-09-15b-fe4d2c4/README.md`. Track 3 hit the repeat limit on 09-12 and
 converged on 09-15; its checksums are from different audio, and the log says so
 on both.
 

@@ -1,5 +1,53 @@
 Unreleased
 ==========
+**A SETTLED ROW THAT HAD NEVER RUN, FOUND BY TRIPPING OVER A NEW ONE.** Adding
+a row whose check contained a regex `|` split it into five cells, and
+`check-settled.py` **silently skipped it** — `cells()` returned `None` both for
+prose and for a broken row, and the caller `continue`d. Not reported, not
+counted, while the summary went on saying *"0 stale"*. **That is the failure
+this file's own docstring names**: *"a row nobody can run is indistinguishable
+from a row that passes."*
+
+Fixing it surfaced a **second** row that had never run since it was written —
+the published-pair row, whose `||` was unescaped. It claims eight logs verify
+and nothing had been checking it; it passes now that it does. **77 runnable,
+0 stale**, up from 74.
+
+`cells()` now returns three things — prose, two cells, or `MALFORMED` — and a
+wrong cell count is reported with its own message rather than collapsed into
+*"no command"*, because the two need different fixes. The legend above the main
+table is a genuine three-column table and is exempted by keying the check to
+the main table's own `| fact | check |` header, which is the document's
+structure read from the document rather than a list of exempt lines.
+Revert-proved both ways: with the fix, a re-broken row is NAMED and the count
+drops 77 → 76; with the fix reverted, the same row goes silent at 76. Files
+restored byte-exact.
+
+**THE 2026-09-15b SESSION IS FILED — `0.6.49` (`c57025e`) on the same pin**,
+`docs/rig-2026-09-15b-fe4d2c4/`. The MP3s and WavPacks are present, so the
+absence audit is clean. **Their reporting fix works, checked against their code
+before saying so**: the new `superseded` gate state fires on three of eight
+rips, and the three that still show `"ran"` beside a null block are each flagged
+by their own backstop as `verification_result_missing`. We nearly filed "still
+broken".
+
+**AND IT FALSIFIED A CLAIM WE HAD ALREADY WRITTEN DOWN TWICE.** Two sessions
+supported *"the single differing track is exactly the track whose convergence
+status differed"*; in `0.6.49` track 3 did **not** converge and reported the
+value it produced under `0.6.48` when it **did**. **Convergence status and the
+reported checksum are independent.** Same shape as the paranoia-sum
+"invariant" — a correlation that held on every case anyone had constructed is
+not a rule. 13 of 14 tracks identical across all three sessions stands, and the
+`SETTLED.md` row is rewritten rather than deleted.
+
+**Their `.platterpus-addendum.txt` is new and respects the contract exactly** —
+a separate file *"so that `cyanrip --verify-log` still verifies"* our log
+byte-exact. Its re-read of track 3 turned a `450`-only partial match into
+`Accurip v1 — accurately ripped, confidence 128`: **track 3's offset-variant
+reading was a read artefact and track 5's is not**, two tracks that looked like
+one phenomenon. Neither addendum carries a timestamp — round 8 `J14`,
+re-confirmed against the newest artifact rather than remembered.
+
 **ROUND 20 OPENED, HELD, on 2026-09-15** — `docs/handshake/round-20-lap-01.md`,
 `HANDSHAKE-READY-TO-READ: no` until the operator announces it. It carries a
 `HANDSHAKE-CLOSE-BY` **in lap 1**, which is the correction Platterpus's
