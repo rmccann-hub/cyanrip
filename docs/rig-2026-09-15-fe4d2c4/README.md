@@ -12,8 +12,10 @@ the one thing a single session can never be.
 
 ## What it establishes
 
-**Round 19's pin survives a second hardware session.** `241` steps, `0` fail,
-`0` error, `0` blocked, `0` unreachable, `1` info. Eight rips: two whole-disc
+**Round 19's pin survives a second hardware session.** **242 recorded steps:
+`241` pass, `0` fail, `0` error, `0` blocked, `0` unreachable, `1` info.**
+Platterpus's own summary line reads *"all 241 step(s) passed"*, which is true
+of the 241 that had a pass/fail outcome; the 242nd is the `info`. Eight rips: two whole-disc
 (`14 of 14`), five partial (`2 of 14`), one deliberately interrupted. Seven
 `Ripping errors: 0`, `Read stalls: none` on all eight, `AccurateRip: found` on
 all eight.
