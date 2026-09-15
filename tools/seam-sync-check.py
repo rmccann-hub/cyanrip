@@ -113,7 +113,17 @@ def main():
         return 2
 
     if args.fetch:
-        rc, _, err = git(peer, "fetch", "--depth", "1", "origin", "HEAD")
+        # NO `--depth`. It used to read `fetch --depth 1 origin HEAD`, and that
+        # MAKES A FULL CLONE SHALLOW -- measured 2026-09-15 on a throwaway repo
+        # rather than reasoned about: a 5-commit full clone became
+        # `is-shallow-repository true` with 1 commit after one such fetch.
+        #
+        # So this tool's own --fetch manufactured the exact condition the
+        # warning fourteen lines below exists to catch, and would have undone
+        # the `fetch --unshallow` that repaired this peer clone the day before.
+        # A tool that creates the hazard it warns about is worse than one that
+        # does neither.
+        rc, _, err = git(peer, "fetch", "origin", "HEAD")
         if rc != 0:
             print(f"CANNOT CHECK: fetch failed: {err}", file=sys.stderr)
             return 2
