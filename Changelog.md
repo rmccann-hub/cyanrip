@@ -4,8 +4,10 @@ Unreleased
 `HANDSHAKE-READY-TO-READ: no` until the operator announces it. It carries a
 `HANDSHAKE-CLOSE-BY` **in lap 1**, which is the correction Platterpus's
 round-19 §E asked for. Two close conditions, fixed at lap 1 and not growing.
-The pin is still `fe4d2c4`: **54** commits past it, exactly one touching `src/`,
-zero non-comment lines.
+The pin is still `fe4d2c4`. The span drifts with every commit, so it is quoted
+against one: **57** commits at `d34a0c8`. **The claim that does not drift is the
+one that matters — exactly one commit in the whole span touches `src/`, and it
+changes zero non-comment lines.**
 
 **The golden reference was regenerated because opening the round moved the
 compiled-in `Handshake:` line** to *"round 20 lap 1 OPEN, verdict OPEN -- NOT a
@@ -64,7 +66,8 @@ does neither.**
 HAVE SHARED A PIN.** `docs/rig-2026-09-15-fe4d2c4/`: Platterpus `0.6.48`
 (`a7fdf98`) driving `fe4d2c4`, 242 recorded steps, 241 pass, 0 fail, 0 error,
 0 unreachable, 1 info. All eight logs verify with our own `-Y`, run here, at a
-build 54 commits later — which also proves the filing altered no byte.
+build 54 commits later (`411c80a`) — which also proves the filing altered no
+byte.
 
 Because the pin did not move between their 09-12 and 09-15 sessions, the pair is
 a reproducibility experiment nobody designed: **13 of 14 tracks carry the

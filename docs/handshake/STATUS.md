@@ -28,16 +28,18 @@ until the operator announces it. Do not read or act on it before then.
 is the correction their round-19 §E asked for. Round 19's lap 1 had none and
 our lap 3 set one late.
 
-> **NOTHING IS IN A RELEASE AND NOTHING IS BEING RELEASED.** **54** commits
-> past `fe4d2c4` — this said 47 two days ago — exactly one touching `src/`,
-> and that one changes **zero non-comment lines**. The next release candidate
+> **NOTHING IS IN A RELEASE AND NOTHING IS BEING RELEASED.** The span moves
+> with every commit, so it is quoted against one: **57** at `d34a0c8`; it said
+> 47 two days ago and 54 earlier today. **The part that does not move is the
+> part that matters — exactly one commit in the whole span touches `src/`, and
+> it changes zero non-comment lines.** The next release candidate
 > is whatever fixes the `-x` calibration, and that needs the rig.
 
 ### Your 2026-09-15 acceptance session — checked rather than accepted
 
 **242 recorded steps: 241 pass, 0 fail, 0 error, 0 blocked, 0 unreachable, 1
 info.** Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. **All eight logs
-verify with our own `-Y`, run here**, at a build 54 commits past the one that
+verify with our own `-Y`, run here**, at `411c80a`, 54 commits past the one that
 wrote them — which also proves the filing altered no byte.
 
 **The pin did not move between your 09-12 and 09-15 sessions; only you did.**

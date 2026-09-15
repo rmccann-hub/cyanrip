@@ -70,10 +70,18 @@ diffing these two sessions will meet it and could reasonably read it as a bug.
 ### The paranoia `Scope:` caveat earns itself again
 
 `secure-reread.log`: per-track counters sum to **26550**, the disc block totals
-**76512** — a ratio of **2.88**, not 3, because one track stopped at the repeat
-limit while thirteen converged. Independently re-derived here from the filed
+**76512** — a ratio of **2.88**. Independently re-derived here from the filed
 copies rather than taken from Platterpus's `rig-check` summary, which reports
 the same pair.
+
+**Not because one track hit the repeat limit**, which is the first explanation
+written here and is wrong: all 14 tracks read three times — thirteen
+`converged after 3 reads`, one `did NOT converge after 3 reads`. The ratio is
+under 3 because the per-track figure is the **last pass** while the disc total
+sums **all three**, and the passes do not cost the same: `READ` is 21630 for
+the last pass against 65412 across three, a mean of 21804, so the final pass
+ran about 4% cheaper. Separate the finding from the diagnosis — the arithmetic
+was right and the cause was not.
 
 `FIXUP_ATOM` is the sharp one again: **8 per-track against 32 at the disc
 level**, a ratio of 4 inside a log whose overall ratio is 2.88. A consumer

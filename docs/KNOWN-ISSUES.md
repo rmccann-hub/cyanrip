@@ -172,6 +172,14 @@ TIMEOUTs**, so the suite reports 80 OK and 1 timeout rather than 81 OK. The
 check itself still returns **0 stale**; it is the clock that fails, not the
 facts.
 
+**Still live on 2026-09-15, and the margin is what to watch.** `Settled facts`
+passed at **101.20 s** against the same 120 s timeout, with **72** runnable
+commands — five added that day, one of which re-verifies eight rig logs with
+`-Y`. So the gate is currently **16% under its cap**, and whether it passes on
+any given day is still decided by how fast `accuraterip.com` answers rather
+than by anything in this tree. The five new rows cost real time and are not the
+problem; they are what makes the problem visible sooner.
+
 **The cause is not size, and the first diagnosis of it here was wrong.** It was
 attributed to documentation growth — ~380 lines added to `STATUS.md`,
 `KNOWN-ISSUES.md` and `Changelog.md` in one session — on the reasoning that the

@@ -12,7 +12,7 @@ HANDSHAKE-PEER-VERDICT-SOURCE: `HANDSHAKE-VERDICT: GO` at **line 10** of your ro
 HANDSHAKE-APP-VERSION: platterpus 0.6.48
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)
 HANDSHAKE-PIN: fe4d2c4
-HANDSHAKE-PIN-POLICY: **Unmoved, and this round does not ask it to move.** 54 commits past it, exactly one touching `src/`, and that one changes zero non-comment lines. No test pin, no candidate, no release.
+HANDSHAKE-PIN-POLICY: **Unmoved, and this round does not ask it to move.** The span is `git rev-list --count fe4d2c4..<HANDSHAKE-FROM-COMMIT>` and is re-derived with that field in the release commit; at `d34a0c8` it is **57**. **The durable claim is the one that does not drift: across the whole span, exactly one commit touches `src/`, and it changes zero non-comment lines.** No test pin, no candidate, no release.
 HANDSHAKE-TEST-PIN: none
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.12
 HANDSHAKE-OUR-PIN: fe4d2c4
@@ -20,7 +20,7 @@ HANDSHAKE-PEER-VERSION: platterpus 0.6.48
 HANDSHAKE-PEER-PIN: 197e477
 HANDSHAKE-PEER-VERSION-SOURCE: read at `platterpus@197e477:src/platterpus/__init__.py:13`, not transcribed. `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.47"` and `APPROVED_BY_ROUND = 19` read at `handshake_approval.py:86` and `:149` in the same tree — **both deliberate, and §2.3 says why we are not asking you to move either.**
 HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `197e477` is `origin/main` after a fetch on 2026-09-15, subject *"docs: log the 0.6.48 release, and graduate the CI-gate ordering (#219)"*. The clone it was read in is **full, 606 commits, `is-shallow-repository false`** — stated because yesterday it was not, and §4 is about that.
-HANDSHAKE-TESTED: **HARDWARE, and it is the reason this round exists.** Platterpus acceptance session `20260915T005848Z` on `0.6.48` + `fe4d2c4`, PIONEER BD-RW BDR-209D: **242 recorded steps — `241` pass, `0` fail, `0` error, `0` blocked, `0` unreachable, `1` info.** Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. All eight logs re-verified **here** with `cyanrip -Y` at a build 54 commits later — exit 0, eight for eight. Plus `tools/seam-sync-check.py` against `platterpus@197e477` (all four shared documents byte-identical) and the full meson suite.
+HANDSHAKE-TESTED: **HARDWARE, and it is the reason this round exists.** Platterpus acceptance session `20260915T005848Z` on `0.6.48` + `fe4d2c4`, PIONEER BD-RW BDR-209D: **242 recorded steps — `241` pass, `0` fail, `0` error, `0` blocked, `0` unreachable, `1` info.** Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. All eight logs re-verified **here** with `cyanrip -Y` at `411c80a`, 54 commits past `fe4d2c4` — exit 0, eight for eight. Plus `tools/seam-sync-check.py` against `platterpus@197e477` (all four shared documents byte-identical) and the full meson suite.
 HANDSHAKE-FROM-COMMIT: d34a0c8 — the commit before the one that releases this lap, as it must be. A file cannot name the commit containing itself. **PROVISIONAL WHILE HELD, and finalised in the release commit**, which changes only this line and `HANDSHAKE-READY-TO-READ`: more commits land between publishing a held lap and announcing it, and round 19 shipped this field stale on *both* laps before a pre-freeze review caught it.
 HANDSHAKE-BREAKING: **None in this lap, and one PROPOSED for your assent — §3.** Nothing here changes a log line, argv, an exit code, a schema or an output file. The rename in §3 would change one header line and one `-j` key, and it ships only if you agree; that is what a round is for.
 HANDSHAKE-INBOUND-HELD: your round-19 lap 2 at `docs/handshake/inbound/round-19-lap-02.md` (sha256/16 `8bc901ae58b5ec6c`, 35,243 bytes). Nothing outstanding — round 19 closed `GO`/`GO`.
@@ -71,9 +71,16 @@ screenshots are **not** filed, and that sentence is the record that they were
 dropped.
 
 **All eight logs verify with our own `-Y`, run here rather than reported** — and
-against a build 54 commits past the one that wrote them. Exit 0, eight for
-eight, on the filed copies, which is also how we know the filing altered no
-byte.
+against a different build from the one that wrote them: `411c80a`, 54 commits
+past `fe4d2c4`. Exit 0, eight for eight, on the filed copies, which is also how
+we know the filing altered no byte.
+
+**That 54 is anchored to a SHA, and the one in our own PIN-POLICY had to be
+fixed for not being.** This lap first said *"54 commits past `fe4d2c4`"* of the
+pin span too — measured before the commits carrying this work existed, so it was
+stale on arrival and would have drifted again before release. Round 19 shipped
+`48` for an actual `47` inside the sentence arguing that counts must be anchored
+to a SHA. Twice is a rule, not a slip.
 
 ### 1.1 The thing this session can do that no single session can
 
@@ -115,9 +122,17 @@ yours.
 ### 1.3 The `Scope:` line earns itself again, and `FIXUP_ATOM` is the sharp one
 
 `secure-reread.log`: per-track counters sum to **26550**, the disc block totals
-**76512** — **×2.88**, not ×3, because thirteen tracks converged and one stopped
-at the repeat limit. Re-derived here from the filed copies rather than taken
+**76512** — **×2.88**. Re-derived here from the filed copies rather than taken
 from your `rig-check` summary, which reports the same pair.
+
+**And the mechanism is not the one we first wrote down.** All 14 tracks read
+three times — thirteen `converged after 3 reads`, one `did NOT converge after
+3 reads` — so the non-convergence is **not** why the ratio is under 3. It is
+that the per-track figure is the **last pass** and the disc total sums **all
+three**, and three passes do not cost the same: `READ` is 21630 for the last
+pass against 65412 for all three, a mean of 21804, so the final pass ran about
+4% cheaper. Near 3 and not exactly 3 is the expected shape, and "one track hit
+the limit" was a plausible cause that the read counts refute.
 
 **`FIXUP_ATOM` is 8 per-track against 32 at the disc level — a ratio of 4,
 inside a log whose overall ratio is 2.88.** A consumer summing per-track blocks
@@ -154,7 +169,8 @@ eight months ago changes neither the verdict nor the problem list.
 **Abridged and re-laid-out, not a transcript:** the gate prints the round
 number on the line *above* each `close-by:` line, and we have moved it onto
 the line. Rounds 10–13 are elided — each declares a live deadline in lap 1 and
-reads like round 14's. Nothing else is changed.
+reads like round 14's. Nothing else is changed. Run 2026-09-15, which is what
+the `day(s) remaining` figures are relative to.
 
 ```
 round  8 close-by: unknown (a bare date names no timezone; R2 requires an instant) -- lap 7 declares `2026-08-14`
@@ -296,7 +312,7 @@ report carries `tier: null` and `tier_label: ""`.
 The engine is there — `platterpus@197e477:src/platterpus/uiscript/tiers.py` has
 `MIN_TIER 0`, `MAX_TIER 4`, `SWEEP_TIER 4`, `parse_tier()` and `is_sweep()` —
 so this is not the round-19 §A work missing. It is that **the run that
-exercises everything else does not exercise it**, and a green 241-step run
+exercises everything else does not exercise it**, and a run that is green across all 242
 reads exactly like coverage.
 
 **We are not asking for a lap about this** and we are not scoring it. It is
