@@ -264,6 +264,70 @@ and writes its own `creation_time`. Asked as round 8 `J14`. **Unrecoverable
 after the fact**, which is why it is asked at all: a read time is not derivable
 a month later from anything on disk.
 
+### `Ripping errors:` is written before the encoders are asked how they did
+
+**Found 2026-09-15, provoked by Platterpus reporting the same shape in their
+own code, and demonstrated rather than argued** —
+`tests/rip_images.py sc_encode_failure_is_absent_from_the_log()`.
+
+Cap every write at 32 KiB and rip `mixed.cue`. The muxer's trailer write fails.
+**The failure is caught**: `cyanrip_end_track_encoding()` returns the encoder
+thread's status, the collection loop in `cyanrip_main.c` counts it,
+`ripping_errors` in `-j` reads **2**, and the process exits **1**. But the log
+says:
+
+```
+Track 2 ripped and encoded successfully!
+  File(s):
+    …/2.flac                    <- 32768 bytes; the intact file is 253742
+Ripping errors: 0
+Rip completed:  yes (2 of 3 tracks)
+Log FUN512: …                   <- and `-Y` exits 0 on it
+```
+
+**The diagnosable lines ARE in the logfile, six lines above that zero** —
+`Error writing trailer: File too large!` and `Error writing packet: File too
+large!` at lines 204 and 205, `Ripping errors: 0` at line 211, both at column 0
+— so the rule that every failure prints a diagnosable line held. What failed is that **no field reflects them**, and a
+parser grades fields, which is the whole reason the log is a contract.
+
+**Two records of one run, disagreeing, and the human-readable one is wrong.**
+That is the changelog-versus-ledger shape the operator caught on 2026-09-13,
+one document over: three machine-read artifacts said `.12` and the human-read
+one said `.11`.
+
+**The mechanism is a deliberate choice whose consequence was not written
+down.** `cyanrip_log_finish_report()` is called *before* the encoder-status
+loop, and the comment at `cyanrip_main.c:2686` says why in as many words:
+*"so that `Ripping errors:` counts exactly what it counted before — moving it
+below would silently fold encoder failures into a contract line."* That
+reasoning is right. What it did not say is that the log then makes a claim the
+same program contradicts in the next file it writes.
+
+**`File(s):` is the other half.** It is built from `ctx->settings.outputs` and
+the naming scheme (`cyanrip_log.c:642`) and consults nothing about what was
+written, so it names a path whatever happened to it. **A completeness field
+computed from the REQUEST, read as the OUTCOME** — Platterpus's phrase for
+their own defect, and ours fits it exactly.
+
+**The fix is one line and is deliberately not made here.** Moving the footer
+below the loop makes the two agree — measured: the scenario then reports
+*"the log and -j now AGREE (2)"*. It also changes what a P2 contract line
+counts, which is precisely the drive-by reword the seam forbids. It is a
+handshake proposal; round 20 §5.4 carries it.
+
+**Not promoted to blocking, and the reasoning is R3's.** It does not make
+`fe4d2c4` unsafe for the consumer we have: Platterpus captures the exit code
+(their own `DIAGNOSTICS.txt` shows `cyanrip exited 1` recorded from a different
+failure), and `-j` is correct. It is unsafe for a **log-only** consumer — and
+the log is the archival record, which is the one that outlives the exit code.
+That is an argument for fixing it, not on its own for holding a release.
+
+**RLIMIT_FSIZE stands in for ENOSPC**, which is the realistic case: both reach
+the muxer as a write error rather than as a signal. With SIGXFSZ *not* ignored
+the kernel kills the process outright — exit 153, no footer at all — which is a
+different and safer failure.
+
 ### `Frame retries:` names half of what `-r` does
 
 Found 2026-09-15 by reading `docs/rig-2026-09-15-fe4d2c4/rips/secure-reread.log`

@@ -65,7 +65,14 @@ does neither.**
 **THE 2026-09-15 RIG SESSION IS FILED, AND IT IS THE FIRST TIME TWO SESSIONS
 HAVE SHARED A PIN.** `docs/rig-2026-09-15-fe4d2c4/`: Platterpus `0.6.48`
 (`a7fdf98`) driving `fe4d2c4`, 242 recorded steps, 241 pass, 0 fail, 0 error,
-0 unreachable, 1 info. All eight logs verify with our own `-Y`, run here, at a
+0 unreachable, 1 info — **and it was NOT a pass.** Platterpus reported later
+that day that no MP3 and no WavPack were written; confirmed from the bundle,
+where `gates.derived` reads `"ran"` beside a null `verification.derived` on
+both, and `MANIFEST.txt` lists no `.mp3` and no `.wv` for them. **That file
+exists so an absence is readable and we had quoted it without asking it what
+was missing** — a completeness verdict taken from the runner under test. Our
+own half of the session stands; it is derived from our logs and checksums, not
+from their verdict. All eight logs verify with our own `-Y`, run here, at a
 build 54 commits later (`411c80a`) — which also proves the filing altered no
 byte.
 
@@ -76,6 +83,44 @@ one that differs is exactly the track whose convergence status differed.** Track
 5 hit the repeat limit in *both* and reported the same checksum in both — so
 `did NOT converge` says *no two reads within the limit agreed* and entitles a
 reader to nothing further. Both arms now exist on one disc in one week.
+
+**`Ripping errors:` IS WRITTEN BEFORE THE ENCODERS ARE ASKED HOW THEY DID —
+found because Platterpus sent us three portable shapes from their own code and
+we ran them against ourselves.** Their first, *a completeness field computed
+from the REQUEST read as the OUTCOME*, is in our log. Demonstrated rather than
+argued, in `sc_encode_failure_is_absent_from_the_log()`: cap every write at
+32 KiB, rip `mixed.cue`, and the muxer's trailer write fails. The failure **is**
+caught — `-j` reads `ripping_errors: 2` and we exit `1` — but the log, written
+moments earlier, says `Track 2 ripped and encoded successfully!`,
+`Ripping errors: 0`, `Rip completed:  yes`, names a file truncated to 32768
+bytes from 253742, and signs it with a `Log FUN512:` that `-Y` accepts. **The
+diagnosable lines are in the logfile SIX LINES ABOVE that zero** — `Error
+writing trailer: File too large!` at line 204, `Ripping errors: 0` at line 211
+— so that rule held; what failed is that no FIELD reflects them, and a parser
+grades fields.
+
+**Two records of one run disagreeing, with the human-readable one wrong** — the
+changelog-versus-ledger shape from two days ago, one document over. The
+placement is deliberate (`cyanrip_main.c:2686`: *"moving it below would
+silently fold encoder failures into a contract line"*) and that reasoning is
+right; what went unrecorded is that the log then contradicts the next file the
+same program writes. **The fix is one line and is not made here**: it changes
+what a P2 contract line counts, so it is a handshake proposal. The scenario
+pins the defect and is proved to SEE the fix — moving the footer makes it fail
+with *"the log and -j now AGREE (2)"*, build green throughout, source restored
+byte-exact.
+
+**AND THEIR SECOND SHAPE SWEPT RATHER THAN ASSUMED.** Their sharpest sentence
+was *"It was itself a fix from an earlier incident, which is why nobody
+re-asked can this be satisfied by finding nothing? of it."* So an AST pass over
+every `sc_*` scenario found the ones where **every** `fail()` sits inside a
+loop — the shape that passes on an empty population. **Five flagged, all five
+safe on inspection**: two iterate literal tuples, `sc_interrupt` already
+refuses with *"no per-track state in the record"*, `sc_artifacts_are_tracked`
+is a hardcoded list carrying *"A glob over docs/ would pass by finding nothing
+if the directory moved"*, and `sc_info` also asserts outside its loops.
+**`unknown (swept, found none)`, not `none`** — the scan is a heuristic over
+one file.
 
 **`Frame retries:` NAMES HALF OF WHAT `-r` DOES — found, recorded, and
 deliberately not fixed.** Line 18 of that session's `secure-reread.log` says

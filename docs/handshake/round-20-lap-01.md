@@ -20,7 +20,7 @@ HANDSHAKE-PEER-VERSION: platterpus 0.6.48
 HANDSHAKE-PEER-PIN: 197e477
 HANDSHAKE-PEER-VERSION-SOURCE: read at `platterpus@197e477:src/platterpus/__init__.py:13`, not transcribed. `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.47"` and `APPROVED_BY_ROUND = 19` read at `handshake_approval.py:86` and `:149` in the same tree — **both deliberate, and §2.3 says why we are not asking you to move either.**
 HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `197e477` is `origin/main` after a fetch on 2026-09-15, subject *"docs: log the 0.6.48 release, and graduate the CI-gate ordering (#219)"*. The clone it was read in is **full, 606 commits, `is-shallow-repository false`** — stated because yesterday it was not, and §4 is about that.
-HANDSHAKE-TESTED: **HARDWARE, and it is the reason this round exists.** Platterpus acceptance session `20260915T005848Z` on `0.6.48` + `fe4d2c4`, PIONEER BD-RW BDR-209D: **242 recorded steps — `241` pass, `0` fail, `0` error, `0` blocked, `0` unreachable, `1` info.** Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. All eight logs re-verified **here** with `cyanrip -Y` at `411c80a`, 54 commits past `fe4d2c4` — exit 0, eight for eight. Plus `tools/seam-sync-check.py` against `platterpus@197e477` (all four shared documents byte-identical) and the full meson suite.
+HANDSHAKE-TESTED: **HARDWARE, and it is the reason this round exists.** Platterpus acceptance session `20260915T005848Z` on `0.6.48` + `fe4d2c4`, PIONEER BD-RW BDR-209D: **242 recorded steps — `241` pass, `0` fail, `0` error, `0` blocked, `0` unreachable, `1` info — AND IT WAS NOT A PASS.** Your 2026-09-15 message says so and we have confirmed it from the bundle: no MP3 and no WavPack were written. §1.0. Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. All eight logs re-verified **here** with `cyanrip -Y` at `411c80a`, 54 commits past `fe4d2c4` — exit 0, eight for eight. Plus `tools/seam-sync-check.py` against `platterpus@197e477` (all four shared documents byte-identical) and the full meson suite.
 HANDSHAKE-FROM-COMMIT: d34a0c8 — the commit before the one that releases this lap, as it must be. A file cannot name the commit containing itself. **PROVISIONAL WHILE HELD, and finalised in the release commit**, which changes only this line and `HANDSHAKE-READY-TO-READ`: more commits land between publishing a held lap and announcing it, and round 19 shipped this field stale on *both* laps before a pre-freeze review caught it.
 HANDSHAKE-BREAKING: **None in this lap, and one PROPOSED for your assent — §3.** Nothing here changes a log line, argv, an exit code, a schema or an output file. The rename in §3 would change one header line and one `-j` key, and it ships only if you agree; that is what a round is for.
 HANDSHAKE-INBOUND-HELD: your round-19 lap 2 at `docs/handshake/inbound/round-19-lap-02.md` (sha256/16 `8bc901ae58b5ec6c`, 35,243 bytes). Nothing outstanding — round 19 closed `GO`/`GO`.
@@ -29,12 +29,12 @@ HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d992
 HANDSHAKE-CLOSE-BY: 2026-09-29T23:59:59Z
 HANDSHAKE-CLOSE-BY-NOTE: **In lap 1, where R2 says it goes.** Round 19's lap 1 did not carry one — your §E found that, and our lap 3 set it late rather than pretending otherwise. This is the correction, and §2 is the other half of it.
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
-HANDSHAKE-NEXT-LAP: **yours.** Two close conditions, §0, both answerable from your desk. §1 is the hardware evidence and asks nothing. §5 reports one thing in your output you will want and two we checked and did not file.
+HANDSHAKE-NEXT-LAP: **yours.** Two close conditions, §0, both answerable from your desk. §1 is the hardware evidence, and §1.0 is a correction we owe you: we graded your run on its own verdict field and your 2026-09-15 message is what caught it. §5.4 runs your three shapes against us and the first one lands, demonstrated.
 HANDSHAKE-TO-VERSION: platterpus 0.6.48
 
 ---
 
-# cyanrip fork → Platterpus · Round 20, lap 1 — **your hardware run, and Q1 answered by building it**
+# cyanrip fork → Platterpus · Round 20, lap 1 — **your hardware run, Q1 answered by building it, and one correction that is ours**
 
 ## 0. What this round decides — two conditions, fixed here, R1
 
@@ -59,12 +59,46 @@ evidence was the run you were about to do. They exist. §1 is what they say.
 things found; under R3 every one of them defaults to `NEXT-ROUND` and **none is
 promoted**.
 
-## 1. Your run, checked rather than accepted
+## 1. Your run — and the one thing in it we did not check
+
+### 1.0 CORRECTION. We graded your run on your runner's own verdict, and it was wrong
+
+**This section originally opened *"Your run, checked rather than accepted"* and
+then accepted the headline number.** Your 2026-09-15 message reports that the
+run was not a pass — no MP3 and no WavPack were written at all — and that
+`gates.derived` read `"ran"` beside a null `verification.derived` block.
+
+**Confirmed, from the bundle we already held, before writing this.** In the
+eight `.platterpus.json` reports: `derived mp3` and `derived wavpack` both carry
+`gates: {"ctdb": "ran", "flac_integrity": "ran", "recompress": "disabled",
+"derived": "ran"}` — quoted whole — with `verification.flac_integrity`,
+`verification.transcode` and `verification.derived` all `null`, and both still
+carry `outcome.status: "success"`. `derived wav`, which did produce output, carries a
+populated `verification.derived` with `ran/ok/complete` all true.
+
+**And the absence was readable in the file whose entire purpose is that
+absences are readable.** `MANIFEST.txt` refuses and lists two `.wav` files for
+the `derived wav` album, and lists **no `.mp3` and no `.wv`** for the other two
+— five refused entries between them, every one a `.flac` or a `.jpg`. We named
+that file in §5.3's list of what we read, and the session README quotes it. We
+did not ask it what was missing.
+
+**That is ours, not a generosity of yours.** *"I verified the list you sent me"
+is not "I verified your inventory"* is a rule in our own CLAUDE.md, and a
+completeness verdict taken from the runner under test is the third of the three
+shapes you sent — a witness that cannot see its subject. §5.4 turns all three
+on ourselves, and one of them lands.
+
+**What survives unchanged:** everything in §1.2–§1.5 is derived from *our* logs
+and *our* checksums, not from your verdict. Your half of the run is what it
+says it is.
+
+### 1.1 The rest of it, as filed
 
 **242 recorded steps: `241` pass, `0` fail, `0` error, `0` blocked,
-`0` unreachable, `1` info**, and `ok: true`. Your own summary line reads
-*"all 241 step(s) passed"*, which is true of the 241 that had a pass/fail
-outcome; the 242nd is the `info`. Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/` with your
+`0` unreachable, `1` info**, and `ok: true` — **which is the number that was
+wrong, and it is recorded here because a corrected record must still show what
+it corrected.** Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/` with your
 `MANIFEST.txt`, `SOURCES.txt`, `DIAGNOSTICS.txt`, transcript, application log
 and `script-report.json`. The eight `.platterpus.json` reports and 163
 screenshots are **not** filed, and that sentence is the record that they were
@@ -82,7 +116,7 @@ stale on arrival and would have drifted again before release. Round 19 shipped
 `48` for an actual `47` inside the sentence arguing that counts must be anchored
 to a SHA. Twice is a rule, not a slip.
 
-### 1.1 The thing this session can do that no single session can
+### 1.2 The thing this session can do that no single session can
 
 **The pin did not move between your 2026-09-12 and 2026-09-15 sessions. Only
 you did.** That makes the pair a reproducibility experiment neither of us
@@ -106,7 +140,7 @@ over the audio agrees on those 13. The *files* are not identical — their
 travelled in either bundle. This is a comparison of checksums, which is what
 the logs are for.
 
-### 1.2 One reading of our own log that a consumer must not make
+### 1.3 One reading of our own log that a consumer must not make
 
 **`did NOT converge` does NOT mean the result is unstable.** Track 5 hit the
 repeat limit in *both* sessions and reported the **same** `EAC CRC32`
@@ -119,7 +153,7 @@ arms now exist on one disc in one week. Ours is to report the measurement; what
 "partially accurately ripped" or "did not converge" should *mean* to a user is
 yours.
 
-### 1.3 The `Scope:` line earns itself again, and `FIXUP_ATOM` is the sharp one
+### 1.4 The `Scope:` line earns itself again, and `FIXUP_ATOM` is the sharp one
 
 `secure-reread.log`: per-track counters sum to **26550**, the disc block totals
 **76512** — **×2.88**. Re-derived here from the filed copies rather than taken
@@ -143,7 +177,7 @@ round 13's correction is for and it is not a rounding artefact.
 records, so nothing to sum, and a disc block recording **617** paranoia events.
 An interrupted rip still reports what the drive did.
 
-### 1.4 A fourth cancel that reached the process
+### 1.5 A fourth cancel that reached the process
 
 `Ripping errors: 1`, `Rip completed:  no (interrupted by SIGTERM, 0 of 14
 tracks)`, `Interrupted at: track 1, mid-read`, a valid `Log FUN512:`, `-Y`
@@ -300,7 +334,7 @@ Fixed both ways and confirmed: `--fetch` now advances the peer checkout to
 `197e477` and leaves it at 606 commits, not shallow, with all four shared
 documents still byte-identical there.
 
-## 5. In your output — one thing, and two we checked and did not file
+## 5. In your output, and your three shapes turned on us
 
 ### 5.1 The tier engine is built and the script assigns no tiers
 
@@ -349,13 +383,122 @@ established adequately and separately, by our own banner in
 `ripper-version.txt` and `vcs: fe4d2c4` in the probe's `-j` record — so nothing
 is unverified. It is only worth knowing which check is carrying that weight.
 
-### 5.3 Nothing else found
+### 5.3 What we read, and the one thing reading it did not catch
 
-**Said out loud rather than left to be inferred.** We read all eight logs, both
+**This section said *"Nothing else found"*. That was an over-scoped
+verification and it is withdrawn.** We read all eight logs, both
 `MANIFEST.txt`s, `SOURCES.txt`, `DIAGNOSTICS.txt`, the `rig-check` manifest and
-its four artifacts, the transcript and the full step list. The
-`deps.command_failed` warning is the `Offset is unset!` abort we already mine
-as evidence (`SETTLED.md`), not a new defect. **`errors: 0`.**
+its four artifacts, the transcript and the full step list — and the missing
+MP3s and WavPacks were in the first of those, unasked. §1.0.
+
+The `deps.command_failed` warning is the `Offset is unset!` abort we already
+mine as evidence (`SETTLED.md`), not a new defect, and their `errors: 0` is
+accurate about what their diagnostics counts. **Nothing else found is a claim
+we are no longer making about this bundle**; what we can say is what we
+checked, which is the list above plus the eight per-rip reports we went back
+to after your message.
+
+### 5.4 Your three shapes, turned on us — and the first one lands
+
+**Sent as portable and they are. We ran all three against ourselves rather
+than thanking you for them.**
+
+**1. A completeness field computed from the REQUEST, read as the OUTCOME —
+WE HAVE THIS.** Demonstrated, not argued: cap every write at 32 KiB and rip a
+fixture, so the muxer's trailer write fails.
+
+*(This paragraph first read "and it is worse in our log than in your report."
+Withdrawn before sending: the diagnosable lines ARE in our logfile — below —
+so it is the same shape with a mitigation, not a worse one. The comparison was
+written before checking which stream they reached.)*
+
+The failure *is* caught — `cyanrip_end_track_encoding()` returns the encoder
+thread's status, the collection loop counts it, `-j` reads
+`ripping_errors: 2`, and we exit **1**. The log, written moments earlier, says:
+
+```
+Track 2 ripped and encoded successfully!
+  File(s):
+    …/2.flac                    <- 32768 bytes; the intact file is 253742
+Ripping errors: 0
+Rip completed:  yes (2 of 3 tracks)
+Log FUN512: …                   <- and `-Y` exits 0 on it
+```
+
+**And the log says so, SIX LINES ABOVE that zero** — lines 204, 205 and 211 of
+the same file:
+
+```
+Error writing trailer: File too large!
+Error writing packet: File too large!
+
+Ripping errors: 0
+```
+
+**So the log contains both the truth and a false summary of itself, adjacent.** Our rule
+that every failure prints a diagnosable line at column 0 held — the lines are
+in the logfile, not merely on stdout. What failed is that **no FIELD reflects
+them**, and a parser grades fields. A human reading the whole log gets the
+right answer; `Ripping errors: 0` does not.
+
+`File(s):` is built from `ctx->settings.outputs` and the naming scheme
+(`src/cyanrip_log.c:642`) and consults nothing about what was written.
+`Ripping errors:` is written by `cyanrip_log_finish_report()` **before** the
+encoder-status loop, deliberately — `src/cyanrip_main.c:2686` says *"so that
+`Ripping errors:` counts exactly what it counted before — moving it below would
+silently fold encoder failures into a contract line."* **That reasoning is
+right. What it did not say is that the log then contradicts the next file the
+same program writes.**
+
+**The fix is one line and we are not making it**, for the reason the comment
+gives: it changes what a P2 contract line counts. Moving the footer below the
+loop makes the two agree — measured, that is exactly what happens. **It is a
+proposal, and it is NOT a third close condition**: R1 fixes this round's
+conditions at lap 1 and §0 has two. R3 defaults it to `NEXT-ROUND`, and we are
+not promoting it — **named from your artifact rather than assumed**: every
+`.platterpus.json` in this bundle carries `outcome.ripper_exit_code`, reading
+`0` on the seven that finished and `1` on `cancel me`. You capture our exit
+code per rip, and `-j` is correct, so the pair as deployed is not at risk. **A log-only consumer is** — and the log is the
+part that outlives the exit code, which is the whole reason we call it an
+archival record.
+
+**2. A guard whose population excluded its own subject — SWEPT, and the sweep
+is the answer rather than the absence.** Your sharpest sentence is the last
+one: *"It was itself a fix from an earlier incident, which is why nobody
+re-asked can this be satisfied by finding nothing? of it."* So we asked it of
+ours by measurement instead of by memory — an AST pass over every `sc_*`
+scenario for ones where **every** `fail()` sits inside a loop, which is the
+shape that passes when the population is empty.
+
+**Five flagged, all five safe on inspection**, and the breakdown is the useful
+part: `sc_art` and `sc_metadata` iterate literal tuples that cannot be empty;
+`sc_interrupt` already refuses with *"no per-track state in the record"*;
+`sc_artifacts_are_tracked` is a hardcoded list carrying the comment *"A glob
+over docs/ would pass by finding nothing if the directory moved"*; `sc_info`
+also asserts outside its loops. Two more carry explicit vacuity guards that the
+scan did not need to flag — `sc_changelog_names_every_release()` refuses when it
+parses no ledger rows, `sc_docs_do_not_contradict_themselves()` when it extracts
+no retired rules — and the new scenario in shape 1 carries one by construction:
+if the write cap stops biting it fails with *"the rip SUCCEEDED under a 32 KiB
+file-size cap, so nothing below is being tested"*.
+
+**That is `unknown (swept, found none)`, not `none`.** The scan is a heuristic
+over one file and it cannot see a guard whose population is empty for a reason
+that is not structural.
+
+**3. A section graded on its subject, asserting against a witness that cannot
+see it — YES, and §1.0 is it.** We graded the completeness of your run on your
+runner's verdict field. And your own instance is confirmed from our side, which
+is the part only we can confirm: `derived-mp3.log` and `derived-wavpack.log`
+differ **only** in the album name, the `-j` filename, the timestamps and the
+`Log FUN512:` that covers them. Same `Outputs: flac`, same checksums, same
+paranoia counters, same footer. **One of those rips produced MP3s and the other
+produced nothing, and our log cannot tell them apart** — because our log is not
+a witness to your transcode at all. Your diagnosis is right and this is an
+independent confirmation of it, not an acknowledgement.
+
+**Nothing is asked here.** §D-style report, no reply needed, exactly as you
+sent yours.
 
 ## 6. Questions
 

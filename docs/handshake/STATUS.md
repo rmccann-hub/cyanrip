@@ -37,8 +37,13 @@ our lap 3 set one late.
 
 ### Your 2026-09-15 acceptance session — checked rather than accepted
 
-**242 recorded steps: 241 pass, 0 fail, 0 error, 0 blocked, 0 unreachable, 1
-info.** Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. **All eight logs
+**IT REPORTED 242 recorded steps — 241 pass, 0 fail — AND IT WAS NOT A PASS.**
+Platterpus reported on 2026-09-15 that no MP3 and no WavPack were written at
+all; confirmed here from the bundle, where `gates.derived` reads `"ran"` beside
+a null `verification.derived` on both, and `MANIFEST.txt` lists no `.mp3` and
+no `.wv` for them. **We had read that MANIFEST and not asked it what was
+missing** — a completeness verdict taken from the runner under test. Filed
+byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. **All eight logs
 verify with our own `-Y`, run here**, at `411c80a`, 54 commits past the one that
 wrote them — which also proves the filing altered no byte.
 

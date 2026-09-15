@@ -1617,6 +1617,150 @@ def sc_docs_do_not_contradict_themselves():
              "where the laps are, and under pull transport that is the transport")
 
 
+def sc_encode_failure_is_absent_from_the_log():
+    """THIS PINS A DEFECT, NOT A GUARANTEE. Do not "fix" it; see KNOWN-ISSUES.
+
+    Provoked by Platterpus, 2026-09-15, reporting three portable shapes found
+    in their own reporting code. The first -- *a completeness field computed
+    from the REQUEST, read as the OUTCOME* -- is in our log too, and this is
+    the demonstration rather than the argument.
+
+    Make every write past 32 KiB fail and rip a fixture. The muxer's trailer
+    write fails, the encoder thread records it, and the collection loop in
+    cyanrip_main.c DOES count it -- `ripping_errors` in `-j` reads 2 and the
+    exit code is 1. But `cyanrip_log_finish_report()` runs BEFORE that loop, on
+    purpose (`cyanrip_main.c:2686`: "so that `Ripping errors:` counts exactly
+    what it counted before -- moving it below would silently fold encoder
+    failures into a contract line"), so the LOG says:
+
+        Track 2 ripped and encoded successfully!
+          File(s):
+            .../2.flac                 <- truncated to 32768 bytes
+        Error writing trailer: File too large!    <- line 204
+        Error writing packet: File too large!    <- line 205
+        Ripping errors: 0                        <- line 211
+        Rip completed:  yes (2 of 3 tracks)
+        Log FUN512: ...                <- and `-Y` exits 0 on it
+
+    The diagnosable lines ARE in the logfile, six lines above that zero, so the
+    rule that every failure prints one at column 0 held. What fails is that no
+    FIELD reflects them -- and a parser grades fields, which is the whole
+    reason the log is a contract. Two records of one run, disagreeing, and the
+    human-readable one is the one that is wrong. `File(s):` is built from `ctx->settings.outputs` and the
+    naming scheme (cyanrip_log.c:642) and consults nothing about what was
+    written, so it names a path whatever happened to it.
+
+    THE DECISION NOT TO CHANGE IT HERE IS DELIBERATE. `Ripping errors:` is a
+    P2 contract line; folding encoder failures into it is exactly the drive-by
+    reword the seam forbids, and the comment above says the placement was
+    chosen for that reason. It is a handshake proposal, not a commit.
+
+    RLIMIT_FSIZE stands in for ENOSPC, which is the realistic case: both reach
+    the muxer as a write error rather than as a signal. Without SIGXFSZ ignored
+    the kernel kills the process outright (exit 153, no footer at all), which
+    is a different -- and safer -- failure.
+    """
+    import resource
+
+    out = WORK / "out_encfail"
+    diag = WORK / "encfail.json"
+
+    def cap():
+        resource.setrlimit(resource.RLIMIT_FSIZE, (32768, 32768))
+        signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
+
+    r = subprocess.run(
+        [CRIP, "-d", str(WORK / "mixed.cue"), "-N", "-A", "-U", "-s", "0",
+         "-P", "0", "-o", "flac", "-D", str(out), "-F", "{track}",
+         "-L", "log", "-M", "sheet", "-j", str(diag)],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60,
+        preexec_fn=cap)
+
+    # VACUITY GUARD, and it is the point of the whole exercise. Platterpus's
+    # second shape is "a guard whose population excluded its own subject" -- a
+    # check that had been green for the life of the feature because the state
+    # it looked for was never in the set it looked at. If the cap stops biting
+    # -- a bigger fixture, a smaller output, a libav change -- every assertion
+    # below is satisfied by nothing having gone wrong, and this scenario would
+    # report a defect fixed that is still there.
+    if r.returncode == 0:
+        fail("encfail: the rip SUCCEEDED under a 32 KiB file-size cap, so "
+             "nothing below is being tested. The cap no longer provokes the "
+             "encoder failure this scenario exists to observe -- fix the "
+             "provocation, do not delete the checks")
+        return
+
+    logs = list(out.rglob("*.log"))
+    if len(logs) != 1:
+        fail(f"encfail: expected exactly one log, found {len(logs)}")
+        return
+    text = logs[0].read_text(encoding="utf-8", errors="replace")
+
+    m = re.search(r"(?m)^Ripping errors: (\d+)$", text)
+    if not m:
+        fail("encfail: no `Ripping errors:` line -- the footer did not run, "
+             "which is a different defect and not the one under test")
+        return
+    in_log = int(m.group(1))
+
+    try:
+        in_json = json.loads(diag.read_text())["rip"]["ripping_errors"]
+    except Exception as exc:
+        fail(f"encfail: could not read ripping_errors from -j: {exc}")
+        return
+
+    # The defect, stated as the disagreement rather than as either number.
+    if in_log == in_json:
+        fail(f"encfail: the log and -j now AGREE ({in_log}) about "
+             f"ripping_errors. That is the fix; it changes a P2 contract line, "
+             f"so it needs the handshake round KNOWN-ISSUES points at -- and "
+             f"then this scenario is rewritten to assert agreement rather than "
+             f"deleted")
+    if in_log != 0 or in_json != 2:
+        fail(f"encfail: expected log 0 and -j 2, got log {in_log}, -j "
+             f"{in_json} -- the measured shape moved")
+
+    if "Rip completed:  yes" not in text:
+        fail("encfail: `Rip completed:  yes` is absent -- the measured shape "
+             "moved; the point is that it is PRESENT beside truncated output")
+
+    # And the files it names are really truncated, so this is not a quibble
+    # about a counter. Assert against the artifact, not against the log.
+    named = re.findall(r"(?m)^    (.*\.flac)$", text)
+    if not named:
+        fail("encfail: the log named no output files, so `File(s):` did not "
+             "render and this check is guarding nothing")
+    for path in named:
+        f = Path(path)
+        if not f.exists():
+            fail(f"encfail: log names {path}, which does not exist")
+        elif f.stat().st_size != 32768:
+            fail(f"encfail: {path} is {f.stat().st_size} bytes, not the "
+                 f"32768 the cap forces -- the cap did not truncate it")
+
+    # THE DIAGNOSABLE LINES MUST BE IN THE LOGFILE, not merely on stdout.
+    # Asserted because the first write-up of this said our log was WORSE than
+    # the report Platterpus sent us, which was wrong: the lines are here, and
+    # the rule that every failure prints a diagnosable line at column 0 held.
+    # What fails is that no FIELD reflects them. Pinning their presence keeps
+    # the finding at the scope the evidence supports.
+    for want in ("Error writing trailer:", "Error writing packet:"):
+        if not re.search(r"(?m)^" + re.escape(want), text):
+            fail(f"encfail: {want!r} is not at column 0 in the logfile -- the "
+                 f"mitigation this finding is scoped against has gone, which "
+                 f"makes the defect strictly worse, not fixed")
+
+    # The record of a destroyed rip is itself complete and attested. That
+    # sentence was written approvingly about the interrupt footer; here it
+    # cuts the other way, and that is worth executing rather than asserting.
+    if "Log FUN512:" not in text:
+        fail("encfail: no `Log FUN512:` -- expected present")
+    ec, _ = crip("-Y", str(logs[0]))
+    if ec != 0:
+        fail(f"encfail: -Y exited {ec} on the log; expected 0, because the "
+             f"log IS internally consistent -- that is the problem")
+
+
 def sc_changelog_names_every_release():
     """`Changelog.md` must name every published release, newest first.
 

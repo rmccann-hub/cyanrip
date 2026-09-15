@@ -10,6 +10,29 @@ green run: two acceptance sessions, same build, same disc, same offset, three
 days apart, is a **reproducibility experiment nobody constructed** — and it is
 the one thing a single session can never be.
 
+## The headline correction: THE RUN WAS NOT A PASS
+
+**Platterpus reported on 2026-09-15 that their half of this session failed: no
+MP3 and no WavPack were written at all**, while their report's
+`gates.derived` read `"ran"` beside a null `verification.derived` block on both
+rips. Confirmed here from the bundle rather than accepted:
+
+| album | `gates.derived` | `verification.derived` | derived output in `MANIFEST.txt` |
+|---|---|---|---|
+| `derived wav` | `flac-only` | populated, `ran/ok/complete` | **2 × `.wav`** |
+| `derived mp3` | `"ran"` | `null` | **none** |
+| `derived wavpack` | `"ran"` | `null` | **none** |
+
+**The absence was readable in the file whose whole purpose is that absences are
+readable.** `MANIFEST.txt` names every file it refused and why; for those two
+albums it names five, and every one is a `.flac` or a `.jpg`. This README
+quoted that file and did not ask it what was missing. **`241 pass / 0 fail` is
+their runner's verdict on itself, and grading their run on it is a witness that
+cannot see its subject.**
+
+Everything below is derived from **our** logs and **our** checksums, not from
+their verdict, and stands.
+
 ## What it establishes
 
 **Round 19's pin survives a second hardware session.** **242 recorded steps:
