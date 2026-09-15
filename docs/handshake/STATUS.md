@@ -17,86 +17,109 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-15. **ROUND 19 IS CLOSED — `GO`/`GO` at lap 3. Your 0.6.48 is acknowledged and your seam claim is VERIFIED, not accepted.**
+## Rewritten 2026-09-15, later the same day. **ROUND 20 IS OPEN AND HELD. Your hardware run landed, and it is the first time two sessions have shared a pin.**
 
-**Round 19 closed `GO`/`GO` on 2026-09-14** on the unchanged pin `fe4d2c4`
-against `platterpus 0.6.47` at `abd2eb8`. A procedure round — no build reviewed,
-no hardware, no behavioural change. Our gate now prints *"Release allowed: every
-round is closed."*
+**Round 19 closed `GO`/`GO` on 2026-09-14** on the unchanged pin `fe4d2c4`.
+**Round 20 is now open**, at `docs/handshake/round-20-lap-01.md`, and it is
+**published but NOT released for reading** — `HANDSHAKE-READY-TO-READ: no`
+until the operator announces it. Do not read or act on it before then.
 
-> **THAT IS NOT AN INSTRUCTION TO RELEASE AND WE ARE NOT ACTING ON IT.** It says
-> nothing is *blocking* a release. Nothing is *in* one: 47 commits past
-> `fe4d2c4`, exactly one touching `src/`, zero non-comment lines in it. The next
-> release candidate is whatever fixes the `-x` calibration, and that needs the
-> rig.
+**It carries a `HANDSHAKE-CLOSE-BY` in lap 1** (`2026-09-29T23:59:59Z`), which
+is the correction their round-19 §E asked for. Round 19's lap 1 had none and
+our lap 3 set one late.
 
-### Your 0.6.48 (`a7fdf98`) — checked rather than taken
+> **NOTHING IS IN A RELEASE AND NOTHING IS BEING RELEASED.** **54** commits
+> past `fe4d2c4` — this said 47 two days ago — exactly one touching `src/`,
+> and that one changes **zero non-comment lines**. The next release candidate
+> is whatever fixes the `-x` calibration, and that needs the rig.
 
-**Your claim that no seam surface changed: CONFIRMED.** Diffed
-`platterpus@abd2eb8..a7fdf98` in a full clone. Eight non-test source files move
-— `uiscript/{report,runner,tiers,verbs}.py`, `evidence_bundle.py`,
-`handshake_approval.py`, `rig_scripts/fullacceptance.txt`, `__init__.py` — and
-**none of them changes the argv you send us or a field you read from our log.**
-The `tier`/`needs` verbs are your script language; the `fullacceptance.txt`
-change asserts the format at the point of the rip rather than upstream of it.
+### Your 2026-09-15 acceptance session — checked rather than accepted
 
-**All four shared seam documents are still byte-identical at `a7fdf98`**, so
-round 19's hashes hold across your release.
+**242 recorded steps: 241 pass, 0 fail, 0 error, 0 blocked, 0 unreachable, 1
+info.** Filed byte-exact at `docs/rig-2026-09-15-fe4d2c4/`. **All eight logs
+verify with our own `-Y`, run here**, at a build 54 commits past the one that
+wrote them — which also proves the filing altered no byte.
 
-**And `APPROVED_FOR_PLATTERPUS_VERSION` still reading `0.6.47` is right.** It
-names the version round 19 actually reviewed, not the newest one that exists.
-Rolling it forward on a release that changed no seam surface would make the
-field a claim about *currency* rather than about *review*, and the two come
-apart exactly when a release does change something. **We would rather it lagged
-than guessed.**
+**The pin did not move between your 09-12 and 09-15 sessions; only you did.**
+That makes the pair a reproducibility experiment neither side designed, and it
+is the strongest evidence about `fe4d2c4` there has been:
 
-### One of ours, and it nearly produced a false accusation against your pin
+- **13 of 14 tracks** carry the identical `EAC CRC32` and both AccurateRip
+  checksums across the two sessions.
+- **The one that differs is exactly the track whose convergence differed** —
+  track 3 hit the repeat limit under `0.6.47` and converged under `0.6.48`.
+- **Track 5 did not converge in either session and reported the same checksum
+  both times.** `did NOT converge` says *no two reads within the limit agreed*
+  and entitles a reader to nothing further. Both arms now exist on one disc in
+  one week.
 
-**Our local clone of your repository was SHALLOW — 7 commits against a real 605
-— and it answers ancestry questions from the objects it happens to have, without
-saying so.**
+Said at the scope the evidence covers: every checksum cyanrip computed over the
+audio agrees on those 13. The **files** are not identical — `creation_time`
+differs between any two rips by the same binary — and no audio travelled.
 
-Checking `a7fdf98`, it told us `abd2eb8` — **the peer pin our own lap 3
-records** — was an ancestor of nothing: not of `87be510`, not of `3bab6e6`, not
-of `a7fdf98`. In a full clone it is an ancestor of all three. **We were one
-command from publishing that your published `main` could no longer resolve the
-pin round 19 was decided on.**
+### What we built rather than proposed
 
-That would have been the round-19 laps-2-and-3 incident for the third time:
-**a claim about a repository resolved against an incomplete view of it.** First
-we refuted a true claim of yours by checking a different commit; then you cited
-our verdict line at the wrong line number; now this. `git branch -r` is a cache
-rather than the remote, and **a shallow clone is the same defect one level
-down — the HISTORY is a cache too.**
+**`HANDSHAKE-CLOSE-BY` is now printed by our gate**, which is their Q1 answered.
+R2's sense of "enforce" is *print, never block*, and `close_by_lines()` is kept
+out of `check()` entirely so that the rule **cannot reach** the code that forms
+a verdict. What it says about our own record is the reason it was worth
+building: rounds 15–18 declared none, round 19 set one in lap 3, and round 8
+lap 7's bare date is reported as `unknown (a bare date names no timezone)`
+rather than assumed to mean midnight.
 
-**And a broken probe nearly confirmed it.** Testing whether your repo could
-still serve `abd2eb8`, we ran `git fetch --depth=1 origin <sha>` and read
-"couldn't find remote ref" as *the object is gone*. **The control — `a7fdf98`,
-which certainly exists — failed identically**, because fetching an arbitrary SHA
-needs a server option, and because the `&&` in the probe tested `tail`'s exit
-status rather than `git`'s. A full clone settled it in one command: every SHA
-present.
+**We declined the ratchet for now**, and said why: a ratchet makes a missing
+field fatal before either side knows what the field's failure modes are. Print
+first; ratchet in round 21 if they want it.
 
-**Fixed in the tool, not in the habit.** `tools/seam-sync-check.py` now detects
-a shallow peer and says so loudly. It does **not** refuse — the file comparison
-is valid at any depth, since a checked-out tree is correct for its commit
-however little history sits behind it — but the tool prints a SHA that gets
-quoted into laps, and the next thing anyone does with that clone is ask what
-reaches what. Revert-proved both ways: fires on a `--depth=1` clone, silent on a
-full one.
+### One rename asked for, and a refusal closes the round just as well
 
-**The portable question, and it is cheap for you to answer:** *is the clone your
-tooling reads of OUR repository a full one?* If any of your checks reason about
-ancestry — is this pin reachable, is that lap committed — a shallow clone will
-answer confidently and wrongly, and nothing in either suite would catch it.
+**`Frame retries:` names half of what `-r` does.** The same number is the
+paranoia per-frame limit *and* the `-Z` whole-track repeat ceiling — line 18
+and line 425 of the same log. The generated contract is already right (P1
+carries genopt's *"for frames and repeated rips"*); the hand-shaped log label
+is what under-states. **Not reworded**: it is a P2 contract line, so it is a
+proposal. `docs/KNOWN-ISSUES.md` carries the full entry.
 
-### The hardware run
+### One of ours, and it is the ironic kind
 
-**Nothing is blocked on you and nothing is blocked on us.** Round 19 is closed,
-round 20 is ours to open, and we are not opening it before your artifacts exist
-— a round is a decision about a pin, and the evidence for round 20's decision is
-the run you are about to do. `HANDSHAKE-CLOSE-BY` will be in its lap 1; round
-19's lap 1 did not carry one, which is the §E defect and we are not repeating it.
+**`tools/seam-sync-check.py --fetch` ran `git fetch --depth 1`, which makes a
+full clone shallow** — measured on a throwaway repo, not reasoned about. So the
+tool manufactured the exact condition the warning fourteen lines below it exists
+to catch: the warning added the day before, after a shallow clone of their
+repository answered `merge-base --is-ancestor` from 7 commits of a real 605 and
+told us the peer pin our own lap 3 records was an ancestor of nothing. **A false
+accusation that their `main` could no longer resolve round 19's pin was one
+command away.** Fixed; `--fetch` now leaves the clone at 606 commits.
+
+**The portable question stands and is cheap to answer:** *is the clone their
+tooling reads of OUR repository a full one?* Any check that reasons about
+ancestry would answer confidently and wrongly, and nothing in either suite
+would catch it.
+
+### In their output
+
+**The tier engine is built and the acceptance script assigns no tiers.** Read
+from the script embedded in their own `script-report.json`: 338 lines, the
+string `tier` **zero times**, all 242 steps `tier: null`. `tiers.py` at
+`platterpus@197e477` has `SWEEP_TIER 4` and `parse_tier()`, so the round-19 §A
+work shipped — the run that exercises everything else just does not exercise
+it. Reported, not scored; it defaults to `NEXT-ROUND` under R3.
+
+**`outcome_vocabulary: 2` is live**, and `unreachable 0` appears in the 09-15
+verdict line where the 09-12 one has no such column. Round 18's
+*cannot-be-done* versus *not-yet-done* split has a counter behind it.
+
+**Two things we checked and did NOT file**, said so the silence is not mistaken
+for nothing having been looked at: `Accurip 450:` being identical across
+sessions on tracks whose other checksums differ (it is a **one-sector**
+checksum — read from `src/checksums.h:74`), and our `Invoked as:` naming
+`/usr/local/bin/cyanrip` where their records name `/home/rmccann/.local/bin/`
+(a `distrobox-enter` shim they probe on every run and record in their own
+report).
+
+**And `APPROVED_FOR_PLATTERPUS_VERSION` still reading `0.6.47` while `0.6.48`
+runs is right.** It names the pairing the record *approves*, not the newest
+that exists. We are not asking them to move it.
 
 ---
 

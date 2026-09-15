@@ -1568,6 +1568,43 @@ def sc_docs_do_not_contradict_themselves():
              f"does not, which is how it came to name a superseded release as "
              f"current")
 
+    # 2b. AND EACH ROW MUST NAME THAT ROUND'S NEWEST LAP.
+    #
+    # Check 2 catches a MISSING round and nothing else, so the table stayed
+    # "| 19 | **OPEN** | ... | `round-19-lap-01.md` |" after round 19 closed
+    # GO/GO at lap 3 -- present, listed, and wrong about both the state and the
+    # file. A reader following that cell reads the opener and never sees the
+    # close. Found 2026-09-15 when adding round 20 made check 2 fire and the
+    # row above it turned out to be stale too.
+    #
+    # Derived, never listed: the newest lap comes from the filenames on disk.
+    # A row may name the file exactly or use the `round-NN-lap-*.md` wildcard
+    # some rows already carry, which still resolves to it.
+    newest = {}
+    for f in (ROOT / "docs" / "handshake").glob("round-*.md"):
+        m = re.match(r"round-(\d+)-lap-(\d+)\.md$", f.name)
+        if m:
+            n, lap = int(m.group(1)), int(m.group(2))
+            if lap >= newest.get(n, (0, ""))[0]:
+                newest[n] = (lap, f.name)
+    if not newest:
+        fail("docs_self_consistent: no round-NN-lap-LL.md files found, so the "
+             "newest-lap check is guarding nothing -- the naming convention "
+             "moved")
+    for row in re.findall(r"(?m)^\|\s*(\d+)\s*\|([^\n]*)$", rtext):
+        n, rest = int(row[0]), row[1]
+        if n not in newest:
+            continue
+        lap, fname = newest[n]
+        stem = fname[:-3]
+        wildcard = re.sub(r"lap-\d+$", "lap-*", stem)
+        if fname not in rest and wildcard + ".md" not in rest:
+            fail(f"docs_self_consistent: docs/handshake/README.md's row for "
+                 f"round {n} does not name {fname}, that round's newest lap. "
+                 f"The row is listed, so check 2 passes and the row is still "
+                 f"wrong -- which is how round 19 read OPEN at lap 1 after it "
+                 f"had closed GO/GO at lap 3")
+
     # 3. THE CONSUMER MAP MUST POINT AT THE LAPS.
     #
     # It did not, and under pull transport (§5b.7) the lap path IS the transport:
