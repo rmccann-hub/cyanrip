@@ -1617,6 +1617,92 @@ def sc_docs_do_not_contradict_themselves():
              "where the laps are, and under pull transport that is the transport")
 
 
+def sc_cache_table_matches_the_transcripts():
+    """`docs/KNOWN-ISSUES.md`'s cache-probe table, checked against the rig logs.
+
+    THIS EXISTS BECAUSE THE TABLE WAS WRONG TWICE IN TWO DAYS, both times by
+    being INCOMPLETE rather than by holding a wrong number. It said "three rig
+    runs", then four; eight filed sessions carry a `Cache probe:` line. The
+    omitted rows held the strongest datum in the set -- a run at 95% of its
+    threshold -- so the table was understating its own case while presenting
+    itself as the evidence.
+
+    Prose cannot notice that. This does, in both directions: every row must
+    match the session it names, and every session that produced the line must
+    have a row. The second direction is the one that catches an omission, and
+    an omission is what actually happened.
+
+    ON THE LOOKBEHIND, WHICH IS BELT-AND-BRACES AND SAYS SO. `uncached`
+    CONTAINS `cached`, and the first derivation of this table used two
+    INDEPENDENT searches -- so `cached read ([\d.]+) ms` matched the uncached
+    figure, the same number went into both columns, and every row came out at a
+    margin of exactly 400%. The pattern below reads both figures in ONE
+    anchored match, and the literal `uncached read … ms, ` in front already
+    disambiguates the second group: revert-proved by removing `(?<!un)`, and
+    this test still passes.
+
+    It stays anyway, because the next person to re-derive this table will reach
+    for the standalone pattern, and because a docstring that names the trap is
+    worth more than one that claims a guard it does not need. Said plainly
+    rather than left as an implied guarantee -- the claim that removing it
+    breaks this test was written first and the revert-proof refuted it.
+    """
+    doc = ROOT / "docs" / "KNOWN-ISSUES.md"
+    if not doc.exists():
+        fail("cache_table: docs/KNOWN-ISSUES.md is missing")
+        return
+
+    # `| 2026-09-15a `fe4d2c4` | 362.6 ms | 61.7 ms | 90.7 ms | 68% |`
+    row_re = re.compile(
+        r"^\|\s*(\d{4}-\d{2}-\d{2}[a-z]?)\s+`([0-9a-f]+)`\s*\|"
+        r"\s*([\d.]+) ms\s*\|\s*([\d.]+) ms\s*\|", re.M)
+    rows = {}
+    for m in row_re.finditer(doc.read_text(encoding="utf-8")):
+        rows[f"rig-{m.group(1)}-{m.group(2)}"] = (float(m.group(3)),
+                                                  float(m.group(4)))
+    if not rows:
+        fail("cache_table: no rows parsed from KNOWN-ISSUES.md -- the table "
+             "was reshaped and this check is now guarding nothing")
+        return
+
+    # `uncached` contains `cached`; the lookbehind is the whole point.
+    probe_re = re.compile(r"Cache probe:.*?uncached read ([\d.]+) ms, "
+                          r"(?<!un)cached read ([\d.]+) ms")
+    found = {}
+    for d in sorted((ROOT / "docs").glob("rig-*/")):
+        t = d / "session" / "transcript.txt"
+        if not t.exists():
+            continue
+        m = probe_re.search(t.read_text(encoding="utf-8", errors="replace"))
+        if m:
+            found[d.name] = (float(m.group(1)), float(m.group(2)))
+    if not found:
+        fail("cache_table: no `Cache probe:` line found in any filed "
+             "transcript -- the sessions moved and this check is guarding "
+             "nothing")
+        return
+
+    for name, (u, c) in sorted(found.items()):
+        if name not in rows:
+            fail(f"cache_table: {name} produced a `Cache probe:` line "
+                 f"({u} ms / {c} ms) and KNOWN-ISSUES.md has no row for it. "
+                 f"An incomplete table that presents itself as the evidence "
+                 f"is how that section understated its own case twice")
+            continue
+        want_u, want_c = rows[name]
+        if (want_u, want_c) != (u, c):
+            fail(f"cache_table: {name} row says {want_u} ms / {want_c} ms, "
+                 f"the transcript says {u} ms / {c} ms")
+    for name in sorted(rows):
+        if name not in found:
+            fail(f"cache_table: KNOWN-ISSUES.md has a row for {name}, which "
+                 f"has no `Cache probe:` line in a filed transcript")
+
+    if len(found) != len(rows):
+        fail(f"cache_table: {len(found)} session(s) with a probe line against "
+             f"{len(rows)} table row(s)")
+
+
 def sc_encode_failure_is_absent_from_the_log():
     """THIS PINS A DEFECT, NOT A GUARANTEE. Do not "fix" it; see KNOWN-ISSUES.
 

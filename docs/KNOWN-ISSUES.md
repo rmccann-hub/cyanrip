@@ -101,15 +101,21 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-10 `ddc1e8c` | 363.2 ms | 82.0 ms | 90.8 ms | **90%** |
 | 2026-09-11 `ddc1e8c` | 362.5 ms | 61.9 ms | 90.6 ms | 68% |
 | 2026-09-12 `fe4d2c4` | 250.6 ms | 42.3 ms | 62.6 ms | 68% |
-| 2026-09-15a `fe4d2c4` | 362.6 ms | 61.7 ms | 90.7 ms | 68% |
+| 2026-09-15 `fe4d2c4` | 362.6 ms | 61.7 ms | 90.7 ms | 68% |
 | 2026-09-15b `fe4d2c4` | 362.7 ms | 81.6 ms | 90.7 ms | **90%** |
+
+**Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
+the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
+filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
+and fails on a row that names no session **and** on a session with no row; the
+label read `2026-09-15a` until that test was written and pointed at nothing.
 
 **Hundreds of ms uncached: confirmed, eight times. "A cached read of a few ms":
 FALSIFIED** — 42 to 82, not 2.2. All eight end identically, at
 `at least 2048 sectors … search ceiling reached`.
 
 **THE FOUR-RUN CONTROL, which is what the missing rows were hiding.** Sessions
-09-10, 09-11, 09-15a and 09-15b calibrated `miss_cost` at **363.2, 362.5, 362.6
+09-10, 09-11, 09-15 and 09-15b calibrated `miss_cost` at **363.2, 362.5, 362.6
 and 362.7 ms** — a spread of **0.7 ms**, as close to one calibration as a
 mechanical drive gets. Their *classified* reads split into two tight clusters,
 **61.7–61.9 ms** and **81.6–82.0 ms**, giving margins of **68%** and **90%**.
@@ -184,13 +190,19 @@ TIMEOUTs**, so the suite reports 80 OK and 1 timeout rather than 81 OK. The
 check itself still returns **0 stale**; it is the clock that fails, not the
 facts.
 
-**Still live on 2026-09-15, and the margin is what to watch.** `Settled facts`
-passed at **101.20 s** against the same 120 s timeout, with **72** runnable
-commands — five added that day, one of which re-verifies eight rig logs with
-`-Y`. So the gate is currently **16% under its cap**, and whether it passes on
-any given day is still decided by how fast `accuraterip.com` answers rather
-than by anything in this tree. The five new rows cost real time and are not the
-problem; they are what makes the problem visible sooner.
+**Measured again on 2026-09-15 morning, at 101.20 s against the same 120 s
+timeout over 72 runnable commands — and FIXED that afternoon**, so this
+paragraph is the record of the last measurement taken while the network was
+still in the gate, not a current state. It said *"whether it passes on any given
+day is still decided by how fast `accuraterip.com` answers rather than by
+anything in this tree."* That stopped being true a few hours later; see the
+half-fix below, which took it to **54.6 s** over **77** commands.
+
+**Left standing rather than deleted, because it is also an example.** A document
+edited twice in one session contradicted itself in the same file — the exact
+thing `sc_docs_do_not_contradict_themselves()` exists to catch, and it was
+caught by grepping this file for its own numbers rather than by the test, which
+checks CLAUDE.md and the handshake README and not this one.
 
 **The cause is not size, and the first diagnosis of it here was wrong.** It was
 attributed to documentation growth — ~380 lines added to `STATUS.md`,

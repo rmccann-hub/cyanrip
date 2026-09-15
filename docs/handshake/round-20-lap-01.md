@@ -38,10 +38,11 @@ HANDSHAKE-TO-VERSION: platterpus 0.6.49
 
 ## 0. What this round decides — two conditions, fixed here, R1
 
-**Round 20 is a decision about `fe4d2c4` under `0.6.48`, and the evidence for it
-is the run you did on 2026-09-15.** We said we would not open this round before
-your artifacts existed, because a round is a decision about a pin and the
-evidence was the run you were about to do. They exist. §1 is what they say.
+**Round 20 is a decision about `fe4d2c4`, and the evidence for it is the two
+acceptance sessions you ran on 2026-09-15** — `0.6.48` at `00:58` and `0.6.49`
+at `12:01`, both on that pin. We said we would not open this round before your
+artifacts existed, because a round is a decision about a pin and the evidence
+was the run you were about to do. They exist, twice. §1 is what they say.
 
 **The conditions, fixed at lap 1 and not growing (R1):**
 
@@ -55,9 +56,11 @@ evidence was the run you were about to do. They exist. §1 is what they say.
    closes this round just as well as an assent**, and we would rather have a
    no than a rename you did not want.
 
-**Neither condition needs a drive, a release, or a pin move.** §5 reports
-things found; under R3 every one of them defaults to `NEXT-ROUND` and **none is
-promoted**.
+**Neither condition needs a drive, a release, or a pin move.** §1.6, §1.7 and
+§5 report things found — including two corrections that are ours and one claim
+of ours your `0.6.49` session falsified. Under R3 every one of them defaults to
+`NEXT-ROUND` and **none is promoted, and none is a third condition.** R1 fixes
+the list above and it has not grown.
 
 ## 1. Your run — and the one thing in it we did not check
 
@@ -607,12 +610,13 @@ section may be empty, and this one is.
 ## 7. Pre-commit (S-18)
 
 **Our next lap is `GO` unless your lap 2 raises something that makes `fe4d2c4`
-unsafe under `0.6.48`.** Naming an event rather than a lap number, per R6: the
+unsafe under `0.6.48` or `0.6.49`.** Naming an event rather than a lap number, per R6: the
 first lap we send after receiving yours.
 
 Answering §0.1 either way satisfies condition 1. Answering §0.2 either way —
 including *"leave the label alone"* — satisfies condition 2. Nothing in §1
-needs an answer, and §5 is reported rather than asked.
+needs an answer, and §5 is reported rather than asked. §4's closing question —
+whether your clone of our repository is a full one — you may answer or ignore.
 
 ## 8. Where to read this
 

@@ -31,6 +31,21 @@ rips, and the three that still show `"ran"` beside a null block are each flagged
 by their own backstop as `verification_result_missing`. We nearly filed "still
 broken".
 
+**AND THE TABLE THAT WAS WRONG TWICE IS NOW DERIVED-CHECKED.**
+`sc_cache_table_matches_the_transcripts()` resolves every row of the
+cache-probe table to `docs/rig-<row>-<build>/session/transcript.txt` and
+compares both figures, **in both directions** — a row naming no session fails,
+and a session with no row fails. The second direction is the one that catches an
+omission, and an omission is what actually happened, twice. It found a real
+defect on its first run: the table labelled a session `2026-09-15a`, which
+resolves to nothing; the rows now name their directories.
+
+Revert-proved by deleting a row and watching it name the missing session. **And
+one claim in its docstring was refuted by its own revert-proof** — it said the
+`(?<!un)` lookbehind was load-bearing, but the pattern reads both figures in one
+anchored match and passes without it. The lookbehind stays, and the docstring
+now says it is belt-and-braces rather than claiming a guard it does not need.
+
 **THE NETWORK IS OUT OF THE GATE.** `SETTLED.md`'s AccurateRip row re-checked a
 fact about **our own parser** by calling `accuraterip.com` — 80.2 s on
 2026-09-13, **38.1 s** on 2026-09-15, a factor of two decided by somebody else's
