@@ -218,14 +218,39 @@ Two consequences, and the second is worse than the slowness:
    did not answer"* — which is this project's own `none` versus
    `unknown (reason)` rule, failing in the tool that indexes the rule.
 
-**What the fix looks like, and why it is not made here.** The parser should be
-asserted against a **recorded response** committed as a fixture, so the settled
-fact is checkable offline and deterministically; the live probe stays as a
-separate tool that proves the *service* still answers in the shape we recorded,
-which is a different claim and does not belong in a gate. That is a new fixture,
-a new test, and a revert-proof — its own change, not a rider. **Raising the
-timeout is explicitly not the fix**: it would keep a network-dependent verdict
-inside a gate and only move the point at which it misfires.
+**HALF-FIXED 2026-09-15, and the half that is left is DEFERRED FOR A NAMED
+REASON.**
+
+**Done: the network is out of the gate.** `SETTLED.md`'s AccurateRip row no
+longer re-runs the probe. The run is filed verbatim at `docs/accurip-probe.log`
+(2026-09-15, `found`, confidence 200) and the row's check asserts the **claim
+against the artifact** — edit the row's numbers without re-running the probe and
+it fails. Measured: `check-settled.py` went from ~100 s to **54.6 s**, so
+`Settled facts` now sits at 45% of its 120 s timeout instead of 84%, and no
+verdict in the suite depends on somebody else's server.
+
+**A first attempt at that check was near-vacuous and the revert-proof said so.**
+`--toc-only` re-derived the reference TOC, on the theory that the query's one
+local input could rot. Pointed at a *different* session's log it returned the
+same `14 268707` — every session is the same disc. A check satisfied by the
+wrong file is not a check; the flag stays as a tool affordance and the row's
+check moved to the claim-versus-artifact comparison, which fails when the
+artifact is edited.
+
+**Still to do: assert the parser against a recorded response.** That is the real
+fix — offline, deterministic, and it would cover the parse rather than a
+recorded verdict about it. It needs the response parse split out of
+`crip_fill_accurip()`, which does the curl fetch inline, exactly as
+`tests/subq.c` needed the Q sub-channel decode split out.
+
+**And it is NOT being done while round 20 is open.** Splitting it touches
+`src/`, and round 20's own `HANDSHAKE-PIN-POLICY` — and Platterpus's round-19
+§F1, which calls it *"a stronger statement than the pin has not moved"* — rest
+on the span from `fe4d2c4` containing **exactly one `src/` commit changing zero
+non-comment lines**. A refactor would end that, during the round that relies on
+it. R4 says fixes queue; this one queues. **Raising the timeout was never the
+fix** — it keeps a network-dependent verdict in a gate and moves where it
+misfires.
 
 ### `docs/seam-commands.md` §7 overclaims
 

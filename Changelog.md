@@ -31,6 +31,28 @@ rips, and the three that still show `"ran"` beside a null block are each flagged
 by their own backstop as `verification_result_missing`. We nearly filed "still
 broken".
 
+**THE NETWORK IS OUT OF THE GATE.** `SETTLED.md`'s AccurateRip row re-checked a
+fact about **our own parser** by calling `accuraterip.com` — 80.2 s on
+2026-09-13, **38.1 s** on 2026-09-15, a factor of two decided by somebody else's
+server, and it has timed `Settled facts` out. The run is now filed verbatim at
+`docs/accurip-probe.log` and the row's check asserts the **claim against the
+artifact**: edit the row's numbers without re-running the probe and it fails.
+`check-settled.py` drops from ~100 s to **54.6 s** — 45% of the timeout instead
+of 84% — and no verdict in the suite depends on a third party being up.
+
+**The first check written for it was near-vacuous and the revert-proof caught
+it.** `--toc-only` re-derived the reference TOC; pointed at a *different*
+session's log it returned the same `14 268707`, because every session is the
+same disc. The flag stays as a tool affordance; the check moved to the
+comparison that can actually fail.
+
+**The real fix is deferred for a named reason.** Asserting the parser against a
+recorded response needs the parse split out of `crip_fill_accurip()`, which
+touches `src/` — and round 20's `HANDSHAKE-PIN-POLICY`, plus Platterpus's
+round-19 §F1, rest on the span from `fe4d2c4` containing exactly one `src/`
+commit changing zero non-comment lines. R4 says fixes queue; this one queues
+until the round closes.
+
 **TWO LIVE CLAIMS WERE INCOMPLETE IN THE SAME WAY, AND THE AUDIT FOUND BOTH.**
 The cache-probe table said *"three rig runs"* and then four; **eight** filed
 sessions carry a `Cache probe:` line, and the missing rows were hiding the

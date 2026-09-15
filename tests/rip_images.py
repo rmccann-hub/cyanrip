@@ -3309,6 +3309,9 @@ def sc_artifacts_are_tracked():
         "PROVIDER-CONTRACT.md",
         "release-manifest.json",
         "docs/release-ledger.tsv",
+        # Filed evidence for the AccurateRip row, which no longer re-runs the
+        # probe. If this is not in the repository the row cites nothing.
+        "docs/accurip-probe.log",
     ]
 
     tracked = subprocess.run(["git", "ls-files", "-z", "--", *artifacts],

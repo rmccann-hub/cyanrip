@@ -1,0 +1,30 @@
+AccurateRip live-probe result — FILED EVIDENCE, not a re-runnable gate.
+===============================================================
+
+Run 2026-09-15 by `tools/accurip-live-probe.py --crip build/src/cyanrip`,
+against cyanrip 0.9.4-rc2+platterpus.12 at 041e484.
+
+WHY THIS FILE EXISTS. docs/SETTLED.md's AccurateRip row used to re-check
+itself by running the probe, which put an HTTP conversation with
+accuraterip.com inside a gate: 80.2 s on 2026-09-13 and 38.1 s here, a
+factor of two decided by somebody else's server, and `Settled facts` has
+TIMEOUT'd on the slow end. The row is now a past measurement citing this
+artifact, and its check is `--toc-only`, which re-derives the query's one
+local input and touches no network.
+
+RE-RUN IT DELIBERATELY, not on a schedule:
+    python3 tools/accurip-live-probe.py --crip build/src/cyanrip
+
+--- output, verbatim ---
+TOC from docs/rig-2026-09-10-ddc1e8c/rips/secure-reread.log: 14 tracks, leadout 268707
+  exit 0
+  AccurateRip: found
+  max confidence parsed: 200
+
+The rewritten response parser ran over a real 200 and read a confidence
+out of it, with no drive.
+NOT SETTLED BY THIS: the per-track MATCH path. The audio is silence, so every
+checksum is 00000000 and correctly matches nothing. Clause 1 is de-risked,
+--- end ---
+
+Elapsed: 38.1 s real (the 2026-09-13 run of the same probe: 80.2 s).

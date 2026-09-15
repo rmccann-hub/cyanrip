@@ -82,9 +82,29 @@ def main():
     ap.add_argument("--tracks", default="1,2,3",
                     help="which tracks to rip; the query covers the whole TOC "
                          "either way, so three is enough and is faster")
+    # OFFLINE, AND IT EXISTS SO A GATE NEED NOT REACH THE NETWORK.
+    #
+    # `docs/SETTLED.md`'s AccurateRip row records a measurement taken against a
+    # real 200. Re-running that on every suite invocation put an HTTP
+    # conversation inside a gate: 80.2 s on 2026-09-13 and 38.1 s on
+    # 2026-09-15, measured, which is a factor of two decided by somebody else's
+    # server -- and `Settled facts` has TIMEOUT'd on the slow end. Raising the
+    # timeout is explicitly not the fix; it keeps a network-dependent verdict
+    # in a gate and moves where it misfires.
+    #
+    # So the row is a past measurement with its output filed, and its check is
+    # this: the ONE input that can rot locally is the reference TOC the query
+    # is derived from. If that log moves, the filed result stops describing
+    # what this tool would do today, and the check says so offline.
+    ap.add_argument("--toc-only", action="store_true",
+                    help="print `<tracks> <leadout>` from the reference log "
+                         "and exit; touches no network and rips nothing")
     args = ap.parse_args()
 
     lsns, leadout = toc_from(REF_LOG)
+    if args.toc_only:
+        print(f"{len(lsns)} {leadout}")
+        return 0
     print(f"TOC from {REF_LOG.relative_to(ROOT)}: {len(lsns)} tracks, "
           f"leadout {leadout}")
 
