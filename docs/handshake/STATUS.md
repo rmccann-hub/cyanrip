@@ -17,6 +17,89 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
+## Rewritten 2026-09-15. **ROUND 19 IS CLOSED — `GO`/`GO` at lap 3. Your 0.6.48 is acknowledged and your seam claim is VERIFIED, not accepted.**
+
+**Round 19 closed `GO`/`GO` on 2026-09-14** on the unchanged pin `fe4d2c4`
+against `platterpus 0.6.47` at `abd2eb8`. A procedure round — no build reviewed,
+no hardware, no behavioural change. Our gate now prints *"Release allowed: every
+round is closed."*
+
+> **THAT IS NOT AN INSTRUCTION TO RELEASE AND WE ARE NOT ACTING ON IT.** It says
+> nothing is *blocking* a release. Nothing is *in* one: 47 commits past
+> `fe4d2c4`, exactly one touching `src/`, zero non-comment lines in it. The next
+> release candidate is whatever fixes the `-x` calibration, and that needs the
+> rig.
+
+### Your 0.6.48 (`a7fdf98`) — checked rather than taken
+
+**Your claim that no seam surface changed: CONFIRMED.** Diffed
+`platterpus@abd2eb8..a7fdf98` in a full clone. Eight non-test source files move
+— `uiscript/{report,runner,tiers,verbs}.py`, `evidence_bundle.py`,
+`handshake_approval.py`, `rig_scripts/fullacceptance.txt`, `__init__.py` — and
+**none of them changes the argv you send us or a field you read from our log.**
+The `tier`/`needs` verbs are your script language; the `fullacceptance.txt`
+change asserts the format at the point of the rip rather than upstream of it.
+
+**All four shared seam documents are still byte-identical at `a7fdf98`**, so
+round 19's hashes hold across your release.
+
+**And `APPROVED_FOR_PLATTERPUS_VERSION` still reading `0.6.47` is right.** It
+names the version round 19 actually reviewed, not the newest one that exists.
+Rolling it forward on a release that changed no seam surface would make the
+field a claim about *currency* rather than about *review*, and the two come
+apart exactly when a release does change something. **We would rather it lagged
+than guessed.**
+
+### One of ours, and it nearly produced a false accusation against your pin
+
+**Our local clone of your repository was SHALLOW — 7 commits against a real 605
+— and it answers ancestry questions from the objects it happens to have, without
+saying so.**
+
+Checking `a7fdf98`, it told us `abd2eb8` — **the peer pin our own lap 3
+records** — was an ancestor of nothing: not of `87be510`, not of `3bab6e6`, not
+of `a7fdf98`. In a full clone it is an ancestor of all three. **We were one
+command from publishing that your published `main` could no longer resolve the
+pin round 19 was decided on.**
+
+That would have been the round-19 laps-2-and-3 incident for the third time:
+**a claim about a repository resolved against an incomplete view of it.** First
+we refuted a true claim of yours by checking a different commit; then you cited
+our verdict line at the wrong line number; now this. `git branch -r` is a cache
+rather than the remote, and **a shallow clone is the same defect one level
+down — the HISTORY is a cache too.**
+
+**And a broken probe nearly confirmed it.** Testing whether your repo could
+still serve `abd2eb8`, we ran `git fetch --depth=1 origin <sha>` and read
+"couldn't find remote ref" as *the object is gone*. **The control — `a7fdf98`,
+which certainly exists — failed identically**, because fetching an arbitrary SHA
+needs a server option, and because the `&&` in the probe tested `tail`'s exit
+status rather than `git`'s. A full clone settled it in one command: every SHA
+present.
+
+**Fixed in the tool, not in the habit.** `tools/seam-sync-check.py` now detects
+a shallow peer and says so loudly. It does **not** refuse — the file comparison
+is valid at any depth, since a checked-out tree is correct for its commit
+however little history sits behind it — but the tool prints a SHA that gets
+quoted into laps, and the next thing anyone does with that clone is ask what
+reaches what. Revert-proved both ways: fires on a `--depth=1` clone, silent on a
+full one.
+
+**The portable question, and it is cheap for you to answer:** *is the clone your
+tooling reads of OUR repository a full one?* If any of your checks reason about
+ancestry — is this pin reachable, is that lap committed — a shallow clone will
+answer confidently and wrongly, and nothing in either suite would catch it.
+
+### The hardware run
+
+**Nothing is blocked on you and nothing is blocked on us.** Round 19 is closed,
+round 20 is ours to open, and we are not opening it before your artifacts exist
+— a round is a decision about a pin, and the evidence for round 20's decision is
+the run you are about to do. `HANDSHAKE-CLOSE-BY` will be in its lap 1; round
+19's lap 1 did not carry one, which is the §E defect and we are not repeating it.
+
+---
+
 ## Rewritten 2026-09-13. **ROUND 18 IS CLOSED — `GO`/`GO` at lap 3, three laps. The published pair did not move.**
 
 **Everything below about lap 1 being superseded still stands as the record of

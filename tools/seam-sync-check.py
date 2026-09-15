@@ -126,6 +126,33 @@ def main():
     rc, dirty, _ = git(peer, "status", "--porcelain")
     rc, ours_sha, _ = git(ROOT, "rev-parse", "HEAD")
 
+    # A SHALLOW PEER CLONE ANSWERS ANCESTRY QUESTIONS FROM THE OBJECTS IT
+    # HAPPENS TO HAVE, AND IT ANSWERS THEM WITHOUT SAYING SO.
+    #
+    # The file comparison below is unaffected -- a checked-out tree is correct
+    # for its commit however little history sits behind it -- so this does not
+    # refuse. But this tool prints a SHA that gets quoted into laps, and the
+    # next thing anyone does with that clone is ask whether some pin is an
+    # ancestor of it.
+    #
+    # Found 2026-09-15. This peer clone was shallow at 7 commits against a real
+    # 605, and `git merge-base --is-ancestor abd2eb8 87be510` answered NO --
+    # abd2eb8 being the peer pin our round-19 lap 3 records. In a full clone the
+    # answer is YES. A false refutation of their pin was one command away, and
+    # it would have been the round-19 laps-2-and-3 incident a third time: a
+    # claim about a repository resolved against an incomplete view of it.
+    #
+    # `git branch -r` is a cache, not the remote. A shallow clone is the same
+    # defect one level down: the HISTORY is a cache too.
+    rc_s, shallow_out, _ = git(peer, "rev-parse", "--is-shallow-repository")
+    if shallow_out.strip() == "true":
+        print(f"WARNING: {peer} is a SHALLOW clone. File comparison below is "
+              f"still valid, but ANY ancestry question asked of this clone "
+              f"(is-ancestor, merge-base, rev-list --count) will be answered "
+              f"from partial history and can be silently WRONG. "
+              f"Run `git -C {peer} fetch --unshallow origin` before reasoning "
+              f"about what reaches what.", file=sys.stderr)
+
     lap_name, declared = newest_lap_hashes()
 
     print(f"ours   {ours_sha[:7]}  {ROOT}")
