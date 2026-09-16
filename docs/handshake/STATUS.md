@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-21-lap-01.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -27,6 +27,58 @@ rounds each side still needs somewhere to say where it is.
 none. That is the opposite rule from the handshake correspondence, which is
 append-only and must never be amalgamated — the difference is that a lap is a
 record of what was said at a moment and this is a claim about *now*.
+
+---
+
+## Rewritten 2026-09-16, sixth time that day. **ROUND 21 LAP 1 IS RELEASED. IT IS SENT, AND IT IS IMMUTABLE.**
+
+**Released on the operator's instruction, not on our own judgement.** This
+rewrite is *inside* the release commit, so it cannot name that commit's SHA —
+the same fixpoint as a lap that cannot name the build containing it. The lap's
+`HANDSHAKE-FROM-COMMIT` names `8d8f041`, the commit before it. The release
+commit changes exactly three cells: the lap's `HANDSHAKE-READY-TO-READ` and
+`HANDSHAKE-FROM-COMMIT`, and `STATUS-NEWEST-LAP-STATE` above. From it the lap is
+immutable under §192.
+
+**The pre-freeze read of the whole lap found one defect, and it was contract
+surface.** §1.1 said the `-j` record moves to `cyanrip-diagnostics/5`. The
+shipped record is **`/6`** — the rename took it to `/5` and §4b's `cache_probe`
+block moved it again inside the same round, so the lap stated one fact in three
+places and one of the three was stale. `src/diagnostics.c:371` is the artifact.
+Fixed at `8d8f041`, before the flip; after it the only remedy would have been a
+correction lap.
+
+**The test pin is `3952c03`. The section below this one says `2c3deff`** and is
+left standing, dated: it was correct when written, and the pin moved once while
+the lap was held, before anything was agreed, which is the only window R4 allows.
+That section's `cyanrip-diagnostics/5` is stale for the same reason.
+
+**Measured at the declared pin rather than at the tip:** `meson test` in a
+detached worktree at `3952c03a397790b7c6bd4ae07a5a01c0a5d65e77` — **86 of 86, 0
+failures, exit 0**, with all 86 `result:` lines in that run's own `testlog.txt`
+reading `exit status 0`. 86 rather than round 20's 85 because `Cache probe
+evidence` was added; nothing was dropped.
+
+**What the consumer can assume between rounds, which is what this file is for:**
+
+- **The release pin has not moved.** `fe4d2c4`, `0.9.4-rc2+platterpus.12`,
+  `release_seq` 22, `stable`. A test pin is not a release and cannot close a
+  round — `PROTOCOL.md` §6a.
+- **But `3952c03` is not `fe4d2c4`, and it carries two breaking log changes.**
+  `Retry limit:    N (per frame, and per whole-track re-read)` replaces
+  `Frame retries:  N`, and `Ripping errors:` now counts encoder failures.
+  Anything built from the test pin produces logs that differ from the release
+  pin's on both fields, and every logfile it writes says `NOT a released build`.
+- **`-j` from the test pin is `cyanrip-diagnostics/6`**, with `retry_limit` in
+  place of `frame_retries` and a new `cache_probe` block. A consumer keyed on the
+  old key gets nothing rather than an unknown key it could ignore, which is why
+  the schema moves.
+
+**Waiting on their lap 2.** §0 fixes two close conditions and R1 says they cannot
+grow: one hardware acceptance session on `3952c03` with `0.6.50`, and their
+ruling on `Rip completed:` beside a non-zero error count — where a refusal closes
+the condition exactly as an assent does. §7 asks one question: where the session
+runs, and whether `3952c03` is the pin they want on the rig.
 
 ---
 
