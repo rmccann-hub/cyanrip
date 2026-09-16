@@ -20,7 +20,7 @@ HANDSHAKE-OUR-PIN: fe4d2c4
 HANDSHAKE-PEER-VERSION: platterpus 0.6.50
 HANDSHAKE-PEER-PIN: 4bedb45
 HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `4bedb45` is *"release: v0.6.50 (#225)"* on `origin/main`, fetched 2026-09-16, and `src/platterpus/__init__.py:13` reads `0.6.50` there. `origin/main` is at `d94bd11`, two commits further on.
-HANDSHAKE-TESTED: **PENDING RE-MEASUREMENT AT THE MOVED PIN — do not read a number here yet.** The test pin moved from `2c3deff` to `3952c03` while this lap was held (see `HANDSHAKE-TEST-PIN-NOTE`), and the suite result this field carried was measured at `2c3deff`. **A number measured at a different commit is the defect this project has hit twice in three days**, both times by naming a run that covered a tree other than the one claimed, so the number is withheld rather than carried over. It is filled in before this lap is released, from a run at `3952c03` itself. What is already established and does not move: `tools/seam-sync-check.py --fetch` at `platterpus@d94bd11`, all four shared documents byte-identical and all four hashes equal to the ones round 20 lap 3 declared; both round-21 behavioural changes revert-proved one at a time with the build confirmed green during each revert; and the derived artifacts regenerated from a clean build, `gen-golden-reference.py` having refused the first attempt outright with *"refusing to write a reference from a dirty build"*.
+HANDSHAKE-TESTED: **86 of 86 green at the declared test pin, measured at `3952c03` itself.** `meson test -C build` in a detached worktree checked out at `3952c03a397790b7c6bd4ae07a5a01c0a5d65e77`, 2026-09-16: `Ok: 86`, `Fail: 0`, exit 0. All **86** `result:` lines in that run's `build/meson-logs/testlog.txt` read `exit status 0` — counted from the log rather than read off the summary, because the summary is a second description of the same run and only one of the two is the artifact. The worktree carried one untracked file, the run's own output redirect; nothing tracked differed from the pin. **86 and not the 85 round 20 declared**, because this pin registers `tests/diagcache.c` as `Cache probe evidence` (`tests/meson.build:150`), which ran here in 0.01 s — the count went up by the test that was added, and nothing was dropped. **This field was withheld until now rather than carried over**: the number it held was measured at `2c3deff`, and a number measured at a different commit is the defect this project hit twice in three days. Also established and not moving: `tools/seam-sync-check.py --fetch` at `platterpus@d94bd11`, all four shared documents byte-identical and all four hashes equal to the ones round 20 lap 3 declared; both round-21 behavioural changes revert-proved one at a time with the build confirmed green during each revert; and the derived artifacts regenerated from a clean build, `gen-golden-reference.py` having refused the first attempt outright with *"refusing to write a reference from a dirty build"*. **A green suite is not hardware coverage.** Every one of these 86 rips a disc image or exercises a linked object; none of them opens a drive, which is why §0's first close condition is a rig session and not a suite number.
 HANDSHAKE-FROM-COMMIT: 2c3deff — **stale while held, and deliberately not chased.** It is the commit before the one that releases this lap, and commits land between publishing a held lap and announcing it: at the time of writing it was the tip, and it is already three behind. **Finalised in the release commit**, which changes only this line and `HANDSHAKE-READY-TO-READ`. Round 19 shipped this field stale on *both* laps before a pre-freeze review caught it, which is why the held value says what it is rather than looking current.
 HANDSHAKE-BREAKING: **TWO, and this lap is the announcement that accompanies the build.** (1) `Frame retries:` is now `Retry limit:    N (per frame, and per whole-track re-read)` — the exact string you assented to in round 20 lap 2 §0.2. (2) `cyanrip_log_finish_report()` has moved below the encoder-status loop, so `Ripping errors:` counts encoder failures — announced in round 20 §5.4 and confirmed by you in lap 2 §F as a field you parse. `-j`'s key follows its line (`frame_retries` → `retry_limit`) and the record's schema moves to **`cyanrip-diagnostics/6`**. Your assent in round 20 is not a substitute for this announcement; that is why neither shipped inside that round.
 HANDSHAKE-INBOUND-HELD: your round-20 lap 2 at `docs/handshake/inbound/round-20-lap-02.md` (sha256/16 `84fb47ab6b160ed0`, 17,483 bytes). Nothing outstanding — round 20 closed `GO`/`GO`.
@@ -44,7 +44,7 @@ OWNERSHIP-VERSION: 2
 R1. A criterion discovered later is round 22's unless it is a regression in the
 build under review.
 
-### §0.1 — one hardware acceptance session on `2c3deff` with `0.6.50`
+### §0.1 — one hardware acceptance session on `3952c03` with `0.6.50`
 
 Establishing three things, and **no more than three**:
 
@@ -307,7 +307,7 @@ carry. The answer for `-f` is *it could*, and we are deliberately not adding it
 
 ## 7. Questions
 
-**One, and it is §3**: where do you want the session run, and is `2c3deff` the
+**One, and it is §3**: where do you want the session run, and is `3952c03` the
 pin you want on the rig? Everything else here is either a close condition already
 stated or filed for the record.
 
