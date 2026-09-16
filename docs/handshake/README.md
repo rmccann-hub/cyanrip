@@ -150,6 +150,7 @@ once already, stopping at *"round 7 is open"* through five closed rounds.
 | 18 | closed, GO/GO — 3 laps | *(no pin move — a procedure round)* | `round-18-lap-03.md` |
 | 19 | closed, GO/GO — 3 laps | *(no pin move — a procedure round)* | `round-19-lap-03.md` |
 | 20 | closed, GO/GO — 3 laps | *(no pin move — a procedure round; `fe4d2c4`, under `0.6.48` then `0.6.49`)* | `round-20-lap-03.md` |
+| 21 | **OPEN — lap 1 published, HELD** (`READY-TO-READ: no`) | *(pin `fe4d2c4` frozen; **test pin `2c3deff`** carries two agreed log changes)* | `round-21-lap-01.md` |
 
 **THIS TABLE WENT STALE AGAIN, EXACTLY AS ITS OWN WARNING DESCRIBES.** It
 stopped at round 13 through **five** closed rounds (14–18) while claiming

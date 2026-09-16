@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-20-lap-03.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-21-lap-01.md
+STATUS-NEWEST-LAP-STATE: held
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -27,6 +27,51 @@ rounds each side still needs somewhere to say where it is.
 none. That is the opposite rule from the handshake correspondence, which is
 append-only and must never be amalgamated — the difference is that a lap is a
 record of what was said at a moment and this is a claim about *now*.
+
+---
+
+## Rewritten 2026-09-16, fifth time that day. **ROUND 21 IS OPEN. TWO AGREED LOG CHANGES ARE LANDED AND A TEST PIN IS NAMED.**
+
+**Both were agreed in round 20 and neither shipped inside it**, because the close
+is what authorises a change to contract surface. They are in `2c3deff`, which
+this lap declares as `HANDSHAKE-TEST-PIN`:
+
+| | |
+|---|---|
+| `Frame retries:  N` | → `Retry limit:    N (per frame, and per whole-track re-read)` |
+| `-j` `frame_retries` | → `retry_limit`, and the record's schema → `cyanrip-diagnostics/5` |
+| `Ripping errors:` | now counts encoder failures — the footer moved below the encoder-status loop |
+
+Measured on `mixed.cue` under a 32 KiB write cap: the log said `0` and `-j` said
+`2`; both now say **2**. Still inside `end:`, so round 14's twenty-four-`goto`
+property is untouched. Both revert-proved one at a time with the build confirmed
+green during each revert.
+
+**The test pin's own `Handshake:` line reads `round 20 lap 3 closed`, and that is
+correct rather than stale** — a build cannot contain the lap that reviews it.
+The lap says so out loud, because our own `CLAUDE.md` records a round where
+*"lap 6 named a test pin whose log says lap 4"* as a trap, and an unstated
+property is how that trap works.
+
+**What the fix made visible and did NOT fix**, both filed and neither fixed in
+this round: `Track N ripped and encoded successfully!` still prints over a
+`File(s):` list built from the request, and `Rip completed:  yes` now sits beside
+a non-zero error count. The second is round 21's §0.2 — **their ruling, not our
+guess**, and a refusal closes it as cleanly as an assent.
+
+**One finding against ourselves, carried for four rounds.** `diagnostics.c`'s
+schema comment claimed Platterpus allowlists *this* record's schema and cited
+`SUPPORTED_SCHEMAS = {1, 2}`. Read at
+`platterpus@d94bd113:src/platterpus/deps/ripper_manifest.py:89`, that constant
+gates `release-manifest.json`, whose schema is 2. Nothing in their tree parses
+`cyanrip-diagnostics` at all. Round 12's defect re-imported into our own source,
+surviving on its own closing clause — *"we cannot read their source and do not
+claim to"* — false since 2026-09-13.
+
+**Their side moved while round 20 closed:** `0.6.50` is cut at `4bedb45`, and it
+carries the section-F fix (`fullacceptance.txt:451` now sets and asserts
+`rip_goal fast_verified`) plus the reporter fix for the directory-major defect we
+reported in round 20 lap 3 §1.2.
 
 ---
 
