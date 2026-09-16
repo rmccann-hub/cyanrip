@@ -1,5 +1,25 @@
 # Release plan — the first stable `+platterpus.5`
 
+> ## THIS PLAN WAS EXECUTED. IT IS HISTORY, NOT INSTRUCTIONS.
+>
+> **Marked 2026-09-16. It went stale on 2026-08-07 and stayed that way for
+> forty days.** `+platterpus.5` shipped at **`ddf7ac3`**, committed that day,
+> under round 7 — `docs/release-ledger.tsv` row 11 —
+> and the ledger is now at row **22**, `+platterpus.12` at `fe4d2c4`. So the
+> paragraph below saying *"nothing here has been executed and nothing should
+> be"* describes a state that ended seven releases ago, and its
+> *"`HANDSHAKE-PIN` still points at `5bc654d`"* names a pin three moves back.
+>
+> **`CLAUDE.md` pointed at this file as "the plan for the next one"** while the
+> next one is `+platterpus.13`. That pointer is corrected; this banner exists
+> because a document that looks authoritative and has rotted is the failure
+> this repository keeps finding, and the fix is to say so at the top rather
+> than to delete the record of what was decided and when.
+>
+> **What survives and is still worth reading:** §1's conditions and the four
+> observable surfaces a consumer has to check. What does not: every present-tense
+> claim about the pin, the version, and what has happened.
+
 *Written 2026-08-04. **A plan, not a release.** Nothing here has been executed
 and nothing should be until the conditions in §1 are met. `HANDSHAKE-PIN` still
 points at `5bc654d`; the version number has not been bumped and must not be.*

@@ -1530,11 +1530,20 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
-The plan for the next one, worked through against the actual tree rather than
-in the abstract, is `docs/RELEASE-PLAN-platterpus.5.md`. It is a plan and not a
-release: it names the four observable surfaces Platterpus has to check, and the
-list of things the release still would not verify, so a green suite cannot be
-mistaken for hardware coverage.
+**There is no written plan for the next release, and this paragraph claimed
+there was for forty days.** It pointed at `docs/RELEASE-PLAN-platterpus.5.md` as
+*"the plan for the next one"* — but `+platterpus.5` **shipped**, at `ddf7ac3`
+committed 2026-08-07 under round 7, `release-ledger.tsv` row 11, and the ledger
+is now at row 22.
+That file is history and carries a banner saying so; its §1 conditions and its
+four observable surfaces are still worth reading, and every present-tense claim
+in it about the pin and the version is wrong. **The next release is
+`+platterpus.13` and nothing is written for it.**
+
+What that file got right and any successor must keep: it named the four
+observable surfaces a consumer has to check, and the list of things the release
+would still not verify, so that a green suite could not be mistaken for hardware
+coverage.
 
 ### A close is affirmative, two-sided, and tested — never assumed
 
