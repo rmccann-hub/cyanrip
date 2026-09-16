@@ -5,8 +5,11 @@
 `src/pregap.c`/`src/pregap.h` and the two call-site changes in `src/cyanrip_main.c` and
 `src/cyanrip_log.c` are carried from upstream pull request
 [cyanreg/cyanrip#115](https://github.com/cyanreg/cyanrip/pull/115), "Add pregap detection
-for physical CDs", by **UltraFuzzy**. That PR is still open/unmerged upstream as of
-2026-07-31. This is a fork-local carry, not an independent reimplementation -- the
+for physical CDs", by **UltraFuzzy**. That PR is still open/unmerged upstream — checked
+2026-09-16 against `master` at `f8ebf48`, where `src/pregap.c` does not exist, and
+carried as a row in `docs/SETTLED.md` so the absence is re-checked rather than
+re-read. It first said *"as of 2026-07-31"* and nothing would have noticed it
+merging. This is a fork-local carry, not an independent reimplementation -- the
 detection algorithm, its comments, and its design are UltraFuzzy's. Three bugs found during
 review were fixed before integrating (below); everything else is unchanged from the PR.
 
