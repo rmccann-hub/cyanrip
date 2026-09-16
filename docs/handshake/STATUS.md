@@ -54,10 +54,19 @@ what round 20 decides; the argument for waiting is that the rig run is the
 expensive thing and it should follow their reading of the last two, not precede
 it.
 
-**Note for anyone resolving `d43b8cd`: it is on `claude/session-omka9f`, not
-`main`.** `main` is at `87738b1`. They said "on our branch" and they cited a SHA
-rather than a tip, which is the rule — recorded because a reader who goes to
-`main` finds nothing.
+**Two facts about `d43b8cd`, recorded so they cannot become a round-12 later.**
+
+1. **It is on `claude/session-omka9f`, not `main`.** `main` is at `87738b1`,
+   which is an ancestor of it. They said "on our branch" and cited a SHA rather
+   than a tip, which is the rule — noted only because a reader who goes to
+   `main` finds nothing.
+2. **`__version__` there still reads `0.6.49`.** So **0.6.50 is not cut**; the
+   work intended for it is on the branch and the version has not moved. *Held*
+   and *not yet cut* are compatible and we are not calling this a discrepancy —
+   we are naming which one it is. Round 12 is why: their lap 2 said `0.6.22`
+   *"is not yet cut"*, their lap 4's wire header said it was *"cut as a
+   PRE-RELEASE"*, and their standing status said it never existed. We could only
+   show that because we held all three.
 
 ---
 
