@@ -46,6 +46,7 @@
 #include "diagnostics.h"
 #include "cyanrip_main.h"
 #include "stall_watchdog.h"
+#include "cache_probe.h"
 #include "version.h"
 #include "handshake_state.h"
 
@@ -367,7 +368,7 @@ void crip_diag_write(void)
      * records both calling themselves /4 is the same defect as two builds
      * answering to one version string, which this fork already fixed once with
      * +platterpus.N. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/5\",\n");
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/6\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
@@ -428,6 +429,35 @@ void crip_diag_write(void)
     /* Stall statistics, in the same three states the log reports: a threshold
      * of 0 means the watchdog was off, which is "we did not look" and not
      * "there were none". */
+    /* THE CACHE PROBE'S EVIDENCE, not its verdict. The verdict is in the log;
+     * what was never anywhere is the series it was formed from -- eight rig
+     * sessions reported `at least 2048 sectors` and none recorded the dozen
+     * timings behind it, so none of them can be used to fix the calibration
+     * they demonstrate. A read time is a measurement of a drive at a moment
+     * and cannot be re-taken.
+     *
+     * `ran: false` is "the probe did not get that far", which is a different
+     * claim from an empty series, and both are different from `-x` not being
+     * passed at all -- the reader can tell those apart from `settings`. */
+    const crip_cache_evidence_t *ev = crip_cache_evidence();
+    av_bprintf(&b, "  \"cache_probe\": {\n");
+    av_bprintf(&b, "    \"ran\": %s", ev->ran ? "true" : "false");
+    if (ev->ran) {
+        av_bprintf(&b, ",\n    \"calibration_us\": [%" PRId64 ", %" PRId64
+                       ", %" PRId64 "],\n", ev->calib_us[0], ev->calib_us[1],
+                       ev->calib_us[2]);
+        av_bprintf(&b, "    \"miss_cost_us\": %" PRId64 ",\n", ev->miss_cost_us);
+        av_bprintf(&b, "    \"hit_ratio\": %i,\n", ev->hit_ratio);
+        av_bprintf(&b, "    \"steps\": [");
+        for (int i = 0; i < ev->nb_steps; i++)
+            av_bprintf(&b, "%s\n      {\"run_sectors\": %i, \"reread_us\": %"
+                           PRId64 ", \"scored_hit\": %s}",
+                       i ? "," : "", ev->step_run[i], ev->step_us[i],
+                       ev->step_hit[i] ? "true" : "false");
+        av_bprintf(&b, "%s]", ev->nb_steps ? "\n    " : "");
+    }
+    av_bprintf(&b, "\n  },\n");
+
     crip_stall_stats_t st;
     crip_stall_stats(&st);
     av_bprintf(&b, "  \"read_stalls\": {\n");

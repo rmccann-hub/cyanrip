@@ -36,6 +36,7 @@
  */
 
 #include "diagnostics.h"
+#include "cache_probe.h"
 #include "utils.h"
 
 #include <signal.h>
@@ -74,6 +75,16 @@ void cyanrip_log(struct cyanrip_ctx *ctx, int verbose, const char *format, ...);
 void cyanrip_log(struct cyanrip_ctx *ctx, int verbose, const char *format, ...)
 {
     (void)ctx; (void)verbose; (void)format;
+}
+
+/* diagnostics.c calls this; the block it feeds is exercised in
+ * tests/diagcache.c, which drives the struct. Here it only has to link, and a
+ * zeroed struct is the honest value: this binary never runs a probe. */
+static const crip_cache_evidence_t no_probe;
+
+const crip_cache_evidence_t *crip_cache_evidence(void)
+{
+    return &no_probe;
 }
 
 static void record(const char *format, ...)

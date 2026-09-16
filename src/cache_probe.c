@@ -137,6 +137,18 @@
  * track" rather than blaming one. */
 #define PROBE_PSEUDO_TRACK 0
 
+/* See cache_probe.h: the series the verdict was formed from. Static because it
+ * outlives ctx -- the diagnostics record is written from atexit, by which time
+ * the context is freed, and the same rule that makes diagnostics.c snapshot its
+ * fields applies here. Zeroed at start of day and only ever written by the one
+ * probe this process can run. */
+static crip_cache_evidence_t evidence;
+
+const crip_cache_evidence_t *crip_cache_evidence(void)
+{
+    return &evidence;
+}
+
 /* One command. Callers wanting a run of arbitrary length use probe_read_run(). */
 static driver_return_code_t probe_read(const CdIo_t *cdio, uint8_t *buf,
                                        lsn_t lsn, int sectors)
@@ -310,6 +322,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
             return 0;
         }
         uncached[i] = time_one_read(ctx->cdio, buf, seed);
+        evidence.calib_us[i] = uncached[i];
         if (uncached[i] < 0) {
             log_cache_probe(ctx, CRIP_CACHE_CALIB_READ_FAIL, 0, 0, 0, -1, -1);
             av_free(buf);
@@ -320,6 +333,12 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
     /* Median of three, by hand -- three elements does not warrant a sort. */
     int64_t a = uncached[0], b = uncached[1], c = uncached[2];
     const int64_t miss_cost = FFMAX(FFMIN(a, b), FFMIN(FFMAX(a, b), c));
+
+    /* Recorded before the early return below, so a run that calibrated and
+     * then refused still carries the three reads that made it refuse. */
+    evidence.ran          = 1;
+    evidence.miss_cost_us = miss_cost;
+    evidence.hit_ratio    = CACHE_HIT_RATIO;
 
     if (miss_cost <= 0) {
         log_cache_probe(ctx, CRIP_CACHE_CALIB_TOO_FAST, 0, 0, 0, -1, -1);
@@ -367,6 +386,16 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
             break;
         }
 
+        /* RECORDED, NOT ACTED ON. The predicate below is unchanged in round
+         * 21; this only writes down what it was given and what it said, which
+         * is the pair a redesigned rule has to be checked against. */
+        if (evidence.nb_steps < CRIP_CACHE_MAX_STEPS) {
+            const int k = evidence.nb_steps++;
+            evidence.step_run[k] = run;
+            evidence.step_us[k]  = t;
+            evidence.step_hit[k] = (t * CACHE_HIT_RATIO < miss_cost);
+        }
+
         if (t * CACHE_HIT_RATIO < miss_cost) {
             last_hit = run;
             last_hit_us = t;
@@ -385,6 +414,8 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
      * that seeks back past a cache. */
     if (stop == CRIP_CACHE_MISS || stop == CRIP_CACHE_CEILING)
         *sectors_out = last_hit;
+
+    evidence.stop = stop;
 
     log_cache_probe(ctx, stop, last_hit, stop_run, miss_cost,
                     last_hit_us, stop_us);

@@ -132,6 +132,23 @@ diag_test = executable('diag_test',
 )
 test('Diagnostics retention', diag_test)
 
+## The cache probe's evidence block, in its OWN binary because crip_diag_write()
+## writes one record per process -- a second writer in diag_test got an empty
+## file and failed for a reason that looked nothing like the latch.
+##
+## It stubs crip_cache_evidence() rather than linking cache_probe.c, and that is
+## what makes it possible at all: the real probe REFUSES on an image driver, so
+## no fixture in this repository can ever make it emit a series. Driving the
+## struct reaches a state the harness cannot drive the program into -- the same
+## move as splitting the Q sub-channel decode out for tests/subq.c.
+diagcache_test = executable('diagcache_test',
+    sources: [ 'diagcache.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c' ]),
+    dependencies: unit_test_deps + [ dependency('threads') ],
+)
+test('Cache probe evidence', diagcache_test)
+
 ## Drives the record writer itself and reads back what it wrote.
 ##
 ## A mutation sweep of src/cyanrip_log.c scored 44.3%: of 88 single-operator

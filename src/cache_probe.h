@@ -45,6 +45,45 @@ typedef enum {
     CRIP_CACHE_OOM,
 } crip_cache_stop_t;
 
+/* THE EVIDENCE THE VERDICT WAS FORMED FROM, recorded so a calibration fix can
+ * be designed against data instead of against reasoning about data.
+ *
+ * `Cache probe:` publishes three numbers -- the calibration cost, the last
+ * cached read, the first uncached one. That is enough to see THAT the
+ * threshold is wrong and not enough to work out what it should be: the series
+ * of per-run times is what carries the step, and the line has never carried
+ * it. Eight filed rig sessions report `at least 2048 sectors ... search
+ * ceiling reached` and not one of them recorded the twelve timings behind it,
+ * so every one of those sessions is unusable for fixing the defect it
+ * demonstrates.
+ *
+ * A read time is a measurement of a physical drive at a moment and cannot be
+ * re-taken; not recording it is the same class of loss as a superseded track's
+ * read time. So this is captured in round 21 and the DECISION RULE IS NOT
+ * TOUCHED -- a rule redesigned before its evidence exists is the thing this
+ * repository has a rule against.
+ *
+ * Bounded at 16: the search doubles from 1 to PROBE_MAX_SECTORS, which is 12
+ * steps, and a bound that cannot be exceeded beats a growable buffer in a
+ * process that must not fail here. */
+#define CRIP_CACHE_MAX_STEPS 16
+
+typedef struct {
+    int     ran;                /* the probe got as far as recording anything */
+    int64_t calib_us[3];        /* the three calibration reads, in order */
+    int64_t miss_cost_us;       /* the median of them, which is the threshold */
+    int     hit_ratio;          /* CACHE_HIT_RATIO as it was at the time */
+    int     nb_steps;
+    int     step_run[CRIP_CACHE_MAX_STEPS];   /* run length in sectors */
+    int64_t step_us[CRIP_CACHE_MAX_STEPS];    /* the re-read that classified it */
+    int     step_hit[CRIP_CACHE_MAX_STEPS];   /* what the CURRENT rule decided */
+    crip_cache_stop_t stop;
+} crip_cache_evidence_t;
+
+/* Process-lifetime, owned here, read by the diagnostics record at exit. Never
+ * NULL; `ran` is 0 when the probe did not run or refused. */
+const crip_cache_evidence_t *crip_cache_evidence(void);
+
 /* Composes the value half of the `Cache probe:` line into buf.
  *
  * Split out for the same reason crip_stall_summary_line() is: the branches are
