@@ -1350,9 +1350,15 @@ Measured from our own record, not felt:
 
 | | round 5 | round 6 | round 7 |
 |---|---|---|---|
-| laps to close | 1 | 1 | **36 and open** |
+| laps to close | 1 | 1 | **39** |
 | test pins declared | 1 | 1 | **10** |
 | pre-releases shipped inside it | 0 | 0 | **8** |
+
+**That cell read `36 and open` for seven weeks.** It was true when written and
+round 7 went on to lap 39. Recounted 2026-09-16 from the declared
+`HANDSHAKE-LAP` of every lap either side holds — the same recount that found
+this file's *"Sixteen laps"* below is 19, and that the reform's own test was
+never scored.
 
 **Nothing in round 7 was bad work.** It found a memory disclosure into an
 archival record, four segfaults, a gate that graded a crash as a clean refusal,
@@ -1401,7 +1407,8 @@ the seam.
 
 ### Round 14 did it again, and the maintainer stopped it — 2026-08-26
 
-**Sixteen laps.** Every rule above was followed and the round still would not
+**Nineteen laps** — this said *"sixteen"*, which is where it stood when the
+maintainer stopped it. Every rule above was followed and the round still would not
 converge, so the rules above are not sufficient and four of them were the cause.
 The maintainer's instruction, to both projects at once:
 
@@ -1437,6 +1444,25 @@ revert-prove behavioural fixes; `none` versus `unknown (reason)`; a pin is a SHA
 
 **The measure of the reform is lap count, and it is checkable.** Round 15 closes
 in three laps or the reform failed.
+
+**IT FAILED, TWICE, AND NOBODY WENT BACK TO READ THE ANSWER.** Counted
+2026-09-16, and this paragraph carried the prediction with no result beside it
+for a month:
+
+| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 |
+|---|---|---|---|---|---|---|---|---|
+| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 |
+
+Round 15 took **sixteen** and round 16 took **seventeen**. Convergence to three
+laps began at **round 17** and has held for four rounds since. So the reform was
+right and its own one-round test was wrong — which is worth more than either half
+alone, because **a falsifiable prediction that nobody scores is indistinguishable
+from one that was never made.** Set the test, and then go back and read it.
+
+Re-check: `for r in 15 16 17 18 19 20; do ... grep -m1 '^HANDSHAKE-LAP:' ...;
+done` over `docs/handshake/round-$r-lap-*.md` and
+`docs/handshake/inbound/round-$r-lap-*.md`. Never from the filename — the
+declared field is the fact, and the name is a second description of it.
 
 ### Do not re-derive what is already settled
 
