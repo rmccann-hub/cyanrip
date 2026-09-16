@@ -595,14 +595,32 @@ images cannot exercise the MMC sub-channel path (they always fail into `unknown`
 no fixture retires that risk and the file must say so rather than let a green suite
 imply coverage.
 
-### The shared seam files — three documents, none of them ours alone
+### The shared seam files — four documents, none of them ours alone
 
-`docs/handshake/PROTOCOL.md`, `docs/seam-rules.md` and `docs/seam-commands.md`
-live at the same path in both repositories and **neither project owns any of
-them**. A change is a version bump both sides ship, not a local edit. A faithful
-restatement is still a second spec that can drift — which has already happened:
-their copy of the protocol **was** missing a paragraph ours carried, found in
-round 7 lap 30 by diffing rather than assuming.
+**This heading said "three" while the paragraph below it said "all four", and
+one of the four does NOT live at the same path.** Corrected 2026-09-16 by
+reading `tools/seam-sync-check.py`'s own `SHARED` table, which is the list both
+claims should always have been derived from:
+
+| key | ours | theirs |
+|---|---|---|
+| `protocol` | `docs/handshake/PROTOCOL.md` | **`docs/handshake-protocol.md`** |
+| `seam-rules` | `docs/seam-rules.md` | `docs/seam-rules.md` |
+| `seam-commands` | `docs/seam-commands.md` | `docs/seam-commands.md` |
+| `ownership` | `docs/OWNERSHIP.md` | `docs/OWNERSHIP.md` |
+
+`OWNERSHIP.md` was the one the prose kept dropping, and it is the document that
+states custody — so the list of shared files was omitting the file that says
+what "shared" means. **Neither project owns any of them.** A change is a version
+bump both sides ship, not a local edit. A faithful restatement is still a second
+spec that can drift — which has already happened: their copy of the protocol
+**was** missing a paragraph ours carried, found in round 7 lap 30 by diffing
+rather than assuming.
+
+**Same content, different path, is still the same shared document** — the tool
+pairs them by key, so never assume a path when checking one. That mismatch is
+also why a hash must be computed over the *file the table names*, not over the
+path you expected to find it at.
 
 **Present tense would now be false, and this is checkable rather than hoped.**
 Measured 2026-09-13 against `platterpus@abd2eb8`: **all four shared documents
