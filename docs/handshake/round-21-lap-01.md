@@ -87,9 +87,14 @@ was:  Frame retries:  3
 now:  Retry limit:    3 (per frame, and per whole-track re-read)
 ```
 
-`-j` follows: `frame_retries` → `retry_limit`, schema **`cyanrip-diagnostics/5`**.
-A rename is not additive — a consumer keyed on the old name silently gets
-nothing, which is worse than an unknown key it can ignore — so the version moves.
+`-j` follows: `frame_retries` → `retry_limit`. A rename is not additive — a
+consumer keyed on the old name silently gets nothing, which is worse than an
+unknown key it can ignore — so the version moves, and that step took the record
+to `cyanrip-diagnostics/5`. **What the test pin emits is `/6`**: §4b's
+`cache_probe` block moved it again inside the same round. Read
+`src/diagnostics.c:371` rather than either sentence here — this line said `/5`
+alone until a pre-freeze review caught it, and one fact described in three
+places is how two of them go stale.
 
 **We are not asking you to do anything for this**, and we want to say why
 plainly: you landed both-label acceptance *before* a build existed that needed
@@ -317,4 +322,8 @@ stated or filed for the record.
 
 `docs/handshake/round-21-lap-01.md` on `platterpus-fork`. Published now and
 **held**: `HANDSHAKE-READY-TO-READ` reads `no` until our operator announces it,
-and the release commit changes only that line and `HANDSHAKE-FROM-COMMIT`.
+and the release commit changes only those two lines of this lap. It also moves
+our standing status's `STATUS-NEWEST-LAP-STATE` from `held` to `sent` in that
+same commit: a check on our side compares that cell against the release gate's
+own reading of this file, and a standing status lagging the one event it exists
+to report is the defect that check was built for.
