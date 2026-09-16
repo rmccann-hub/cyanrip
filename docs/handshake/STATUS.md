@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-20-lap-01.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-20-lap-03.md
+STATUS-NEWEST-LAP-STATE: held
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -27,6 +27,55 @@ rounds each side still needs somewhere to say where it is.
 none. That is the opposite rule from the handshake correspondence, which is
 append-only and must never be amalgamated — the difference is that a lap is a
 record of what was said at a moment and this is a claim about *now*.
+
+---
+
+## Rewritten 2026-09-16, third time that day. **ROUND 20 IS ANSWERED GO/GO. OUR LAP 3 CLOSES IT AND IS HELD.**
+
+**Their lap 2 arrived, was released by the operator, and declares
+`HANDSHAKE-VERDICT: GO` on `fe4d2c4`.** Filed byte-exact at
+`docs/handshake/inbound/round-20-lap-02.md` — git blob
+`7ff5ce4af53faf3336a85aef883783d722cfb1ea`, 17,483 bytes, **identical to the blob
+we recorded yesterday while it was published and not yet sent**, so the lap did
+not change between publication and release and that is checked rather than
+assumed. Verified before reading, in order: `seam-sync-check.py --fetch` in sync
+at `platterpus@b0731ef`; `refs/heads/main` resolved from the remote with
+`ls-remote` rather than from a cached ref; then the blob.
+
+**Both close conditions answered.** §0.1 `CLOSE-BY`: **ENFORCE** in R2's sense —
+print, never block — built on both sides rather than proposed, and by the same
+structural placement (the reporter is not reachable from the code that forms a
+verdict). §0.2 the `Retry limit:` rename: **ASSENT**, with their parser already
+accepting both labels permanently, landed in advance of a build that does not
+exist yet so our first shipped rip log does not fail their completeness sweep.
+
+**Our lap 3 is written, published, and HELD** at
+`docs/handshake/round-20-lap-03.md`. The release gate refuses to close the round
+while it reads `HANDSHAKE-READY-TO-READ: no` — *"published but not announced and
+its verdict is a draft"* — which is the field doing exactly its job. Releasing it
+is the operator's act and the release commit changes only that line and
+`HANDSHAKE-FROM-COMMIT`.
+
+**What lap 3 carries that needed work rather than transcription:**
+
+- **Their §G answered, and the answer is a disagreement.** Our close-by reporter
+  says rounds 13 and 14 were set in **lap 1**; theirs says lap 2 — on files that
+  are byte-identical in both trees. The record says lap 1. Diagnosis read from
+  `platterpus@b0731ef:scripts/handshake.py:2445-2451`: their lap list is built
+  directory-major, so `declared[0]` is the earliest lap *in the first directory
+  that has one*, not the earliest lap. Reported as a finding with the diagnosis
+  marked read-from-source; nothing of theirs touched.
+- **A defect of ours they found by printing their output.** Round 8's provenance
+  row was suppressed by an early return, and fixing it exposed an `elif` hiding
+  the same thing one level over. Round 8 now prints all three rows, two
+  regression tests added, each fix revert-proved on its own.
+- **A lap-count claim we nearly shipped from memory.** Rounds 15 and 16 took
+  **16** and **17** laps, not 3 — so round 14's reform failed its own stated
+  test twice before convergence began at round 17.
+
+**The rename does not land until after the close**, by R4 and because the close
+is what authorises a change to contract surface. Round 21 announces it as
+`HANDSHAKE-BREAKING` alongside the `Ripping errors:` footer placement.
 
 ---
 

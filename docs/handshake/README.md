@@ -149,7 +149,7 @@ once already, stopping at *"round 7 is open"* through five closed rounds.
 | 17 | closed, GO/GO — 3 laps | **`fe4d2c4`, released as `+platterpus.12`** | `round-17-lap-03.md` |
 | 18 | closed, GO/GO — 3 laps | *(no pin move — a procedure round)* | `round-18-lap-03.md` |
 | 19 | closed, GO/GO — 3 laps | *(no pin move — a procedure round)* | `round-19-lap-03.md` |
-| 20 | **OPEN — lap 1 published, HELD** (`READY-TO-READ: no`) | *(no pin move; `fe4d2c4` under `0.6.48`)* | `round-20-lap-01.md` |
+| 20 | **GO/GO, closing — lap 3 published, HELD** (`READY-TO-READ: no`, so the gate still reports it open) | *(no pin move; `fe4d2c4`, under `0.6.48` then `0.6.49`)* | `round-20-lap-03.md` |
 
 **THIS TABLE WENT STALE AGAIN, EXACTLY AS ITS OWN WARNING DESCRIBES.** It
 stopped at round 13 through **five** closed rounds (14–18) while claiming
