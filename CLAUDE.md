@@ -623,11 +623,16 @@ also why a hash must be computed over the *file the table names*, not over the
 path you expected to find it at.
 
 **Present tense would now be false, and this is checkable rather than hoped.**
-Measured 2026-09-13 against `platterpus@abd2eb8`: **all four shared documents
-are byte-identical** and match the hashes our round-18 lap 1 declared. Run
-`tools/seam-sync-check.py` — it diffs the real files rather than comparing two
-hashes each side computed for itself, and it is the check that has to pass
-before acting on any lap of theirs.
+Measured **2026-09-16 against `platterpus@b0731ef`**, with `--fetch`: **all four
+shared documents are byte-identical** and all four hashes match the ones round
+20 lap 1 declared in `HANDSHAKE-SHARED-HASHES`. Their tip has moved twice since
+the previous reading here (`abd2eb8`, 2026-09-13) and the documents have not.
+**Re-run it rather than quoting this line** — `tools/seam-sync-check.py
+--fetch` diffs the real files rather than comparing two hashes each side
+computed for itself, it prints the peer SHA it read at, and it is the check that
+has to pass before acting on any lap of theirs. **A dated reading is a claim
+about that date**, which is why the command is here and the number is not the
+point.
 
 Three `[BOTH]` rules from `seam-rules.md` v4 bind work here and are restated
 because they change what a commit must contain:

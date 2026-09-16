@@ -50,6 +50,34 @@ this section — the three revisions, their 0.6.50 reasoning, the two facts abou
 enforce-or-strike `CLOSE-BY`, and §0.2 the `Frame retries:` → `Retry limit:`
 rename, where a refusal closes the round just as an assent does.
 
+**THEIR LAP 2 IS PUBLISHED AND WE HAVE NOT READ IT.** Observed 2026-09-16:
+`platterpus@b0731ef`, subject *"docs(handshake): release round 20 lap 2
+(#223)"*, the file present at `docs/handshake/outbound/round-20-lap-02.md`,
+blob `7ff5ce4a`, 17,483 bytes. **Published is not sent.** Under the 2026-09-13
+rule a lap becomes readable when the *operator* announces it, so this is recorded
+as an observation of the repository and nothing in it has been opened — not the
+body, not the wire headers. The blob hash is written down here so that whatever
+we are eventually told to read can be checked against what existed today.
+
+**AND OUR LAP 1 CROSSED THE SEAM BYTE-EXACT — the first check of that kind.**
+Their tree at `b0731ef` carries `docs/handshake/inbound/round-20-lap-01.md` as
+git blob `784973f3750a5e9cd3eac0918441e85e4c029135`, 42,039 bytes. `git
+hash-object` on our own released copy gives **the same blob**. The
+repository-as-transport rule replaced a file transfer with a fetch, and the
+thing a file transfer could never demonstrate — that both sides hold the same
+bytes — is now a one-command check rather than an assumption.
+
+**Their `__version__` at `b0731ef` still reads `0.6.49`**, at
+`src/platterpus/__init__.py:13`, so 0.6.50 is still *held and not cut*, exactly
+as the section below records. `87738b1` is an ancestor of `b0731ef`; nothing was
+rewritten.
+
+**The seam is in sync at `platterpus@b0731ef`.** `tools/seam-sync-check.py
+--fetch` on 2026-09-16: all four shared documents byte-identical, and all four
+hashes match the ones round 20 lap 1 declared in `HANDSHAKE-SHARED-HASHES`. The
+previous reading in `CLAUDE.md` was against `abd2eb8`; their tip has moved twice
+since and the documents have not.
+
 **Revised three times while held, which is what held is for.** Once for the
 missing MP3s they caught; once for the eight-session derivations; and now for
 two things that landed on 2026-09-16:
