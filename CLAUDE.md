@@ -674,9 +674,37 @@ should need rewriting. If it does, that is the defect.
    namespace.** `PROJECT_FORK_ID` is the only reliable answer to "is this the
    fork?"
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
-   working project, not a private garden. Three are outstanding and verified
-   against `master` — the signal-handler deadlock, SIGTERM unhandled, and the
-   completion-footer skip — each with its re-check in `docs/SETTLED.md`.
+   working project, not a private garden. **This said "three" from 2026-08-26
+   (`3181add`) and was never re-counted** — the same failure as the cache-run
+   tally that said "all three" while five more existed. **It is eight**, counted
+   off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather than
+   remembered, each with a re-check `tools/check-settled.py` runs against
+   `master`:
+
+   1. `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a
+      handler, the deadlock that hangs the process with the drive held.
+   2. **No SIGTERM handling at all**, 0 occurrences.
+   3. `cyanrip_log_finish_report()` immediately above `end:`, so every
+      `goto end` **skips the completion footer**.
+   4. The filter string is a **ternary cascade**, so `-H` discards de-emphasis
+      and `-W`/`-E` are both inert under it.
+   5. `(deemphasis applied)` is printed **from the settings**, not from what
+      happened, so the log claims it under `-H` when it did not occur.
+   6. `-a`/`-t` go through `av_dict_parse_string`, whose tokeniser treats `'`
+      as a quote, so **a bare apostrophe swallows every later field** — the one
+      most likely to corrupt a real rip.
+   7. An invalid UTF-8 byte **truncates a name**, and an empty leading
+      component makes a multi-component `-D` resolve **absolute**.
+   8. `cdio_paranoia_cachemodel_size(…, 1)` on image drivers returns
+      **corrupted audio with `Ripping errors: 0`** — still present at `f8ebf48`,
+      and the only one with a report already written:
+      `docs/upstream-cachemodel-report.md`, **drafted and not filed.**
+
+   **Not filed is not fixed, and eight unfiled reports is the private garden
+   this rule forbids.** Filing is on upstream's tracker and outside this
+   repository, so it is the maintainer's act, not ours — but the count belongs
+   here where it can be checked, and it is checked by the same command as every
+   other fact: `python3 tools/check-settled.py`.
 
 **And custody, which is the part that makes "source of truth" mean something
 without meaning "we decide".** The shared seam documents live here as the
