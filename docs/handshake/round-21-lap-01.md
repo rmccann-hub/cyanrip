@@ -13,16 +13,16 @@ HANDSHAKE-APP-VERSION: platterpus 0.6.50
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)
 HANDSHAKE-PIN: fe4d2c4
 HANDSHAKE-PIN-POLICY: **Unmoved, and S-15 freezes it for the round.** `fe4d2c4` is what `release-manifest.json` resolves for both channels and it does not move until a close authorises a release. What this lap adds is a **TEST PIN**, which §6a says is a different thing and explicitly cannot close a round.
-HANDSHAKE-TEST-PIN: 2c3deff
-HANDSHAKE-TEST-PIN-NOTE: **Its own `Handshake:` line reads `round 20 lap 3 closed, verdict GO`, and that is correct rather than stale.** A build cannot contain the lap that reviews it — the same fixpoint as `HANDSHAKE-FROM-COMMIT` — so the candidate for round 21 was compiled before round 21 existed. Saying it here is deliberate: our own `CLAUDE.md` records a round where *"lap 6 named a test pin whose log says lap 4"* as a trap, and an unstated property is how that trap works. Every rip log from this pin will carry that line; read it as *"built under round 20's closed state"*, not as *"round 21 never happened"*.
+HANDSHAKE-TEST-PIN: 3952c03
+HANDSHAKE-TEST-PIN-NOTE: **Moved once, while this lap was still held, and this is the last time it moves.** It was `2c3deff`; it is now `3952c03`, which additionally carries the cache-probe evidence block (§4a) and its regenerated artifacts. R4 freezes a test pin **once agreed**, and nothing has been agreed yet — from your lap 2 it does not move again. The earlier pin had a confusing property worth recording even though it is now gone: compiled before round 21 existed, its own `Handshake:` line read `round 20 lap 3 closed`. `3952c03` sits after this lap's commit and reads `round 21 lap 1 OPEN, verdict OPEN -- NOT a released build`, which is what every rip log from the session will carry.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.12
 HANDSHAKE-OUR-PIN: fe4d2c4
 HANDSHAKE-PEER-VERSION: platterpus 0.6.50
 HANDSHAKE-PEER-PIN: 4bedb45
 HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `4bedb45` is *"release: v0.6.50 (#225)"* on `origin/main`, fetched 2026-09-16, and `src/platterpus/__init__.py:13` reads `0.6.50` there. `origin/main` is at `d94bd11`, two commits further on.
-HANDSHAKE-TESTED: **No hardware yet, and that is the whole point of this round — §0.1.** What ran **at the test pin itself**, `2c3deff`, rather than at a tree that resembles it: the full meson suite, **85 of 85 green, 0 fail**; and `tools/seam-sync-check.py --fetch` at `platterpus@d94bd11`, all four shared documents byte-identical and all four hashes equal to the ones round 20 lap 3 declared. Both behavioural changes revert-proved one at a time with the build confirmed green during each revert, and the derived artifacts regenerated from a clean build — `gen-golden-reference.py` refused the first attempt outright (*"refusing to write a reference from a dirty build"*), which is the guard working.
+HANDSHAKE-TESTED: **PENDING RE-MEASUREMENT AT THE MOVED PIN — do not read a number here yet.** The test pin moved from `2c3deff` to `3952c03` while this lap was held (see `HANDSHAKE-TEST-PIN-NOTE`), and the suite result this field carried was measured at `2c3deff`. **A number measured at a different commit is the defect this project has hit twice in three days**, both times by naming a run that covered a tree other than the one claimed, so the number is withheld rather than carried over. It is filled in before this lap is released, from a run at `3952c03` itself. What is already established and does not move: `tools/seam-sync-check.py --fetch` at `platterpus@d94bd11`, all four shared documents byte-identical and all four hashes equal to the ones round 20 lap 3 declared; both round-21 behavioural changes revert-proved one at a time with the build confirmed green during each revert; and the derived artifacts regenerated from a clean build, `gen-golden-reference.py` having refused the first attempt outright with *"refusing to write a reference from a dirty build"*.
 HANDSHAKE-FROM-COMMIT: 2c3deff — **stale while held, and deliberately not chased.** It is the commit before the one that releases this lap, and commits land between publishing a held lap and announcing it: at the time of writing it was the tip, and it is already three behind. **Finalised in the release commit**, which changes only this line and `HANDSHAKE-READY-TO-READ`. Round 19 shipped this field stale on *both* laps before a pre-freeze review caught it, which is why the held value says what it is rather than looking current.
-HANDSHAKE-BREAKING: **TWO, and this lap is the announcement that accompanies the build.** (1) `Frame retries:` is now `Retry limit:    N (per frame, and per whole-track re-read)` — the exact string you assented to in round 20 lap 2 §0.2. (2) `cyanrip_log_finish_report()` has moved below the encoder-status loop, so `Ripping errors:` counts encoder failures — announced in round 20 §5.4 and confirmed by you in lap 2 §F as a field you parse. `-j`'s key follows its line (`frame_retries` → `retry_limit`) and the record's schema moves to **`cyanrip-diagnostics/5`**. Your assent in round 20 is not a substitute for this announcement; that is why neither shipped inside that round.
+HANDSHAKE-BREAKING: **TWO, and this lap is the announcement that accompanies the build.** (1) `Frame retries:` is now `Retry limit:    N (per frame, and per whole-track re-read)` — the exact string you assented to in round 20 lap 2 §0.2. (2) `cyanrip_log_finish_report()` has moved below the encoder-status loop, so `Ripping errors:` counts encoder failures — announced in round 20 §5.4 and confirmed by you in lap 2 §F as a field you parse. `-j`'s key follows its line (`frame_retries` → `retry_limit`) and the record's schema moves to **`cyanrip-diagnostics/6`**. Your assent in round 20 is not a substitute for this announcement; that is why neither shipped inside that round.
 HANDSHAKE-INBOUND-HELD: your round-20 lap 2 at `docs/handshake/inbound/round-20-lap-02.md` (sha256/16 `84fb47ab6b160ed0`, 17,483 bytes). Nothing outstanding — round 20 closed `GO`/`GO`.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 01ba4719c80b6fe9 over 0 lap(s) — the empty-set digest, correct for an opener, and checkable as `printf '' | sha256sum`.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
@@ -63,6 +63,15 @@ Establishing three things, and **no more than three**:
 
 See §2.2. **A refusal closes this condition exactly as an assent does** — *leave
 it alone* is an answer and we will take it.
+
+**We are not treating this as a cheap ruling, and your own note corrected us
+before this lap was sent.** You called `Rip completed:` *"the strongest
+completeness signal in the log"*, and `rig_check.py` reads it to decide whether a
+rip was interrupted — so the pairing we have created is exactly the case the
+field exists to separate, and what `rig_check` does with `completed=True` beside
+a non-zero error count is a thing to check before answering rather than after.
+Take the time. **The close-by is 2026-10-20 for this reason as much as for the
+session.**
 
 ---
 
@@ -179,7 +188,7 @@ does not move for the rest of the round, so lap 2 is the moment.
 
 ---
 
-## 4. §H — something wrong in OUR output, about YOUR code, carried for four rounds
+## 4a. §H — something wrong in OUR output, about YOUR code, carried for four rounds
 
 `src/diagnostics.c`'s schema-bump comment asserted that *"Platterpus ...
 allowlists schema strings"* and cited `SUPPORTED_SCHEMAS = {1, 2}` as why a
@@ -210,27 +219,74 @@ mechanism at you before.
 
 ---
 
-## 5. `docs/seam-commands.md` — three known-wrong rows, and it is a shared file
+## 4b. While you are there — **evidence, and explicitly NOT a close condition**
 
-None of this is new; it is collected because a shared document cannot be fixed
-by one side.
+R1 fixes §0's two conditions and they have not grown. This is a thing the
+session can now *record* at no extra cost, and the round closes whether or not
+it does.
 
-| # | what it publishes | what is true |
+**`-x` now writes down what its verdict was formed from.** `Cache probe:`
+publishes three numbers — the calibration cost, the last cached read, the first
+uncached one. That is enough to see **that** our threshold is wrong and not
+enough to work out what it should be: the step lives in the series of per-run
+times, and the line has never carried it.
+
+**Eight filed sessions report `at least 2048 sectors … search ceiling reached`
+and not one recorded the dozen timings behind it.** So all eight are unusable
+for fixing the defect they demonstrate. A read time is a measurement of a drive
+at a moment; it cannot be re-taken.
+
+`-j` now carries a `cache_probe` block — the three calibration reads, the median
+that became the threshold, the ratio in force, and one entry per run with its
+re-read time and what the current rule scored it. Schema `cyanrip-diagnostics/6`.
+
+**The decision rule is untouched, deliberately.** The predicate is still
+`t * CACHE_HIT_RATIO < miss_cost` and the probe will still report *at least
+2048*. We are not fixing the calibration on this pin: a rule redesigned before
+its evidence exists is what this repository has a rule against, and the last
+prediction anyone made about this code was falsified by the first run it ever
+had. Round 22 designs the rule **against the series this session records**.
+
+**So the ask is only: run `-x` with `-j` at some point in the session.** If it
+does not happen, nothing here blocks the close.
+
+## 5. `docs/seam-commands.md` — **corrected: two of the three are ours to regenerate**
+
+**Our first draft of this section was wrong and you caught it before it was
+sent.** It said a fix is *"a version bump both sides ship"*, as though all three
+rows were joint prose. Checked against the file: **§7 is generated by
+`tools/probe-argv-surface.py --markdown`** — our tool — and carries its own
+*"Never hand-edit it"*. So:
+
+| # | where | whose fix |
 |---|---|---|
-| 1 | §7: *"Every value either took effect or was refused with a message"* | **49 of 111 rows** were graded from exit status alone |
-| 2 | line 504: `-p '99=drop'` accepted, exit 0 | the binary **refuses** it |
-| 3 | line 97: `-D` is `directory` / `str, path` / *"output directory"* | it is `folder_scheme`, *"Directory naming scheme"* — a **relative** scheme, with `-F` its per-track sibling |
+| 1 | §7, line 531 | **ours** — the generator's wording |
+| 2 | §7, line 504 (`-p '99=drop'`) | **ours** — regeneration alone fixes it |
+| 3 | §1, line 97 (`-D`) | hand-written prose in a shared section — **joint** |
 
-Row 3 has already cost something: the relative-scheme semantics are exactly why
-an empty leading component made a multi-component `-D` resolve **absolute**, and
-a reader who believed line 97 would not have looked.
+**Row 2 is already fixed by regenerating.** The live binary refuses it:
+`Invalid track number 99 for pregap, list has 2 tracks!`, exit 1. The committed
+copy says *accepted, exit 0*.
 
-**A fix is a version bump both sides ship on the same day.** We are not editing
-it unilaterally — custody is ours and authorship is joint. Tell us in lap 2
-whether you want it in this round or the next; **either answer is fine and
-neither is a close condition.**
+**Row 1 is NOT fixed by regenerating, and it is worse than the entry says.** The
+sentence *"Every value either took effect or was refused with a message"* is
+emitted by the tool itself. Measured on the current binary: **116 rows, 48
+refused, 68 accepted — and 48 of those 68 say `(no header field exposes this)`.**
+The classifier returns `accepted` on exit status alone when no header field
+exists to check (`probe-argv-surface.py:99`). So **three quarters of the accepted
+rows were never observed to take effect**, and the summary claims they were.
+That is our `none` versus `unknown (reason)` rule failing inside our own
+generator, and the fix is a third outcome rather than a reword.
 
----
+**And the reason all three drifted is a check that could not fire.**
+`probe-argv-surface.py --check docs/seam-commands.md` refuses outright: *"carries
+no generated-block delimiters"*. §7 has declared itself generated since it was
+written and **nothing has ever verified that it is**.
+
+**None of this is a close condition and none of it is proposed for this round.**
+It needs the delimiters inserted, the generator's wording fixed, and then one
+regeneration — which changes the shared hash, so it ships as a joint bump. Round
+22, unless you want it sooner.
 
 ## 6. What still needs real hardware, stated so a green suite cannot imply coverage
 
