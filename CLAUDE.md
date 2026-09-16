@@ -1647,17 +1647,29 @@ Designs agreed in principle but deliberately unimplemented. Each states what it
 would cost and why it is not built yet, so "we decided against it" and "nobody
 got to it" stay distinguishable.
 
-- **Release channels and beta opt-in** — `docs/UPGRADE-CHANNELS-PLAN.md`.
-  A user must be able to take a beta of Platterpus or a dependency, with a
-  warning and an explicit choice, and there must be a way to check what exists.
-  Two findings already fix the shape of it: the projects spell a beta
-  differently (`…-beta.1` versus `b1`, so a naive substring check reports a beta
-  user as stable), and **our version cannot be ordered at all** because the part
-  that advances is SemVer build metadata, which the spec ignores for precedence.
-  So the design declares a channel and a monotonic sequence rather than parsing
-  the human-facing string. **Not to be built before the round-7 rig session** —
-  a design settled while the evidence that might change it is uncollected gets
-  rewritten.
+- **Release markers — `release/*` branches** — `docs/UPGRADE-CHANNELS-PLAN.md`
+  §6a, and it is now the **only** undone part of that plan. A marker is a branch
+  pointing at a released commit already on the fast-forward line, never committed
+  to and never moved: the one named ref this environment can publish, since tag
+  push is `HTTP 403`. Checked against the remote 2026-09-16 rather than against
+  `git branch -r`: `git ls-remote --heads origin` returns exactly `master` and
+  `platterpus-fork`.
+
+  **The rest of that plan shipped at `3492a65` on 2026-08-07** — the ledger's
+  `channel` and `seq` columns, `release-manifest.json` and its generator, and
+  §5's four guarantees, which the `Handshake:` line and `default_channel: stable`
+  already satisfy. This entry used to claim the whole design was unimplemented
+  and gated on *"the round-7 rig session"*; that session ran on 2026-08-04
+  (`docs/rig-2026-08-04/`), so the gate was spent before the sentence was stale,
+  and the file now carries a section-by-section banner saying which half is
+  which. **A "planned, not built" list that contains a built thing is the exact
+  confusion it exists to prevent** — "we decided against it" and "nobody got to
+  it" were supposed to stay distinguishable, and "it is already done" was a third
+  state the list had no way to say.
+
+  **Still genuinely open, and it is a question rather than work:** should a beta
+  *expire*? Put to Platterpus in §5; our inclination is no expiry and a louder
+  notice, on the same reasoning that rejected a refuse-to-run flag.
 
 ## Watching upstream
 

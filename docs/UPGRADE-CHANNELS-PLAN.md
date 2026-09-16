@@ -1,5 +1,30 @@
 # Plan: release channels, beta opt-in, and version checking
 
+> ## MOSTLY BUILT. THE HEADER BELOW SAYS OTHERWISE AND IS WRONG.
+>
+> **Marked 2026-09-16.** *"Design only. Nothing here is implemented"* was true on
+> 2026-08-04 and stopped being true three days later, at `3492a65` on 2026-08-07
+> — the same day `+platterpus.5` shipped. Section by section, read off the tree
+> rather than remembered:
+>
+> | § | state |
+> |---|---|
+> | **3** — declare the channel, do not parse it | **BUILT.** `docs/release-ledger.tsv`'s columns are `seq channel version commit round`; 22 rows. |
+> | **3, ordering** — a sequence number, not a version comparison | **BUILT.** `release-manifest.json` carries `release_seq` and `latest_seq: 22`; nothing parses the version string. |
+> | **4** — a generated manifest, because tags do not work | **BUILT.** `tools/gen-release-manifest.py`, schema 2, `--check` is a gate. The four properties it asserts are in `CLAUDE.md`. |
+> | **5** — warning and option | **BUILT, and it was already half true when written.** (1) every logfile carries `Handshake:` and the fork banner, so a beta is identifiable offline; (2) `default_channel` is `stable`; (3) the fact is in *every* log, so a UI re-derives rather than remembers; (4) declining changes nothing. |
+> | **5, the open question** — should a beta expire? | **STILL OPEN.** Put to Platterpus; our inclination remains no expiry, louder notice. |
+> | **6a** — `release/*` marker branches | **NOT BUILT.** Checked against the remote on 2026-09-16, not against `git branch -r`: `git ls-remote --heads origin` returns exactly `master` and `platterpus-fork`. |
+>
+> **So this is the one place a reader should still look for undone work, and it
+> is §6a alone.** `CLAUDE.md`'s *"Planned, not built"* entry said the whole thing
+> was unimplemented and gated on the round-7 rig session — a session that ran on
+> 2026-08-04 and is filed in `docs/rig-2026-08-04/`. That gate is spent and the
+> entry is corrected.
+>
+> Everything below is left as written. A plan is evidence of what was intended.
+
+
 *Design only. Nothing here is implemented. To be carried in the next handshake
 lap for Platterpus to agree, amend or reject before either side builds it.*
 
