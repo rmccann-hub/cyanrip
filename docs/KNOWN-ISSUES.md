@@ -23,6 +23,29 @@ say "probably" without saying what would settle it.
 
 ---
 
+## Fixed 2026-09-16, round 21 — both agreed in round 20 and neither shipped inside it
+
+| what | how it is pinned |
+|---|---|
+| **`Ripping errors:` was written before the encoders were asked how they did.** Under a 32 KiB write cap the muxer's trailer write fails, `-j` recorded 2 and the process exited 1, and the log said `Ripping errors: 0` and `Rip completed:  yes` over a 32768-byte file whose intact form is 253742 — two records of one run, and the human-readable one, the archival one, was the wrong one | `cyanrip_log_finish_report()` moved below the encoder-status loop, still inside `end:` so round 14's twenty-four-`goto` property is untouched. `sc_encode_failure_reaches_the_log()` asserts the two records are **equal** and separately that they are **non-zero**, so the property cannot be met by both being 0. Revert-proved with the build confirmed green |
+| **`Frame retries:` named half of what `-r` does** — it caps paranoia's per-frame retries *and* the whole-track repeat ceiling, and the log printed a bare number with nothing saying they were one knob | now `Retry limit:    N (per frame, and per whole-track re-read)`, the exact string Platterpus assented to in round 20 lap 2 §0.2. `-j`'s key follows it (`frame_retries` → `retry_limit`) and the record's schema moves to `cyanrip-diagnostics/5`. `contract_covers_log` and `contract_diagnostics` both fired on the change and pass on the regenerated contract |
+
+**The fix made two things visible that it did not fix**, and they are in the open
+list below rather than closed quietly: the per-track block still says
+`Track N ripped and encoded successfully!` over a `File(s):` list computed from
+the request, and `Rip completed:  yes` now sits beside a non-zero error count.
+
+**And one comment was wrong about Platterpus's code for four rounds.** The
+schema-bump rationale in `diagnostics.c` cited `SUPPORTED_SCHEMAS = {1, 2}` as
+an allowlist over *this* record. Read at
+`platterpus@d94bd113:src/platterpus/deps/ripper_manifest.py:89`, it gates
+`release-manifest.json`, whose schema is 2; nothing in their tree parses
+`cyanrip-diagnostics` at all. Round 12's defect, re-imported into our own
+source, surviving on its own closing clause — *"we cannot read their source and
+do not claim to"* — which has been false since 2026-09-13.
+
+---
+
 ## Fixed 2026-08-15, from Platterpus's known-issues hand-off and one rig hang
 
 | what | how it is pinned |
@@ -378,99 +401,54 @@ and writes its own `creation_time`. Asked as round 8 `J14`. **Unrecoverable
 after the fact**, which is why it is asked at all: a read time is not derivable
 a month later from anything on disk.
 
-### `Ripping errors:` is written before the encoders are asked how they did
+### A track's per-track lines are computed from the REQUEST, not the outcome
 
-**Found 2026-09-15, provoked by Platterpus reporting the same shape in their
-own code, and demonstrated rather than argued** —
-`tests/rip_images.py sc_encode_failure_is_absent_from_the_log()`.
-
-Cap every write at 32 KiB and rip `mixed.cue`. The muxer's trailer write fails.
-**The failure is caught**: `cyanrip_end_track_encoding()` returns the encoder
-thread's status, the collection loop in `cyanrip_main.c` counts it,
-`ripping_errors` in `-j` reads **2**, and the process exits **1**. But the log
-says:
+**What round 21 fixed was the COUNT, and this is what it made visible.** With
+the completion footer moved below the encoder-status loop, `Ripping errors:`
+now reports the encoder failures — but the per-track block above it still does
+not:
 
 ```
-Track 2 ripped and encoded successfully!
+Track 2 ripped and encoded successfully!      <- the encode failed
   File(s):
-    …/2.flac                    <- 32768 bytes; the intact file is 253742
-Ripping errors: 0
+    .../2.flac                                <- 32768 bytes; intact is 253742
+Error writing packet: File too large!
+Error writing trailer: File too large!
+Ripping errors: 2                             <- fixed in round 21
 Rip completed:  yes (2 of 3 tracks)
-Log FUN512: …                   <- and `-Y` exits 0 on it
 ```
 
-**The diagnosable lines ARE in the logfile, six lines above that zero** —
-`Error writing trailer: File too large!` and `Error writing packet: File too
-large!` at lines 204 and 205, `Ripping errors: 0` at line 211, both at column 0
-— so the rule that every failure prints a diagnosable line held. What failed is that **no field reflects them**, and a
-parser grades fields, which is the whole reason the log is a contract.
+Two separate causes, and they need different answers:
 
-**Two records of one run, disagreeing, and the human-readable one is wrong.**
-That is the changelog-versus-ledger shape the operator caught on 2026-09-13,
-one document over: three machine-read artifacts said `.12` and the human-read
-one said `.11`.
+- **`File(s):`** is built from `ctx->settings.outputs` and the naming scheme
+  (`cyanrip_log.c:642`) and consults nothing about what was written, so it names
+  a path whatever happened to it. Platterpus's phrase for their own version of
+  this — *a completeness field computed from the REQUEST, read as the OUTCOME* —
+  fits it exactly.
+- **`Track N ripped and encoded successfully!`** is printed when the READ
+  finished. The encoders run asynchronously and their status does not exist yet,
+  so the line is not merely mis-worded: at the moment it prints, the fact it
+  asserts is genuinely unknown. Fixing it means deferring the line or amending
+  it later, which is a bigger change than a reword.
 
-**The mechanism is a deliberate choice whose consequence was not written
-down.** `cyanrip_log_finish_report()` is called *before* the encoder-status
-loop, and the comment at `cyanrip_main.c:2686` says why in as many words:
-*"so that `Ripping errors:` counts exactly what it counted before — moving it
-below would silently fold encoder failures into a contract line."* That
-reasoning is right. What it did not say is that the log then makes a claim the
-same program contradicts in the next file it writes.
+**Not fixed in round 21 deliberately.** Round 21 ships two agreed changes; a
+third, unannounced, would be the finish line moving inside the round — R1. Both
+are pinned as *known and unfixed* by
+`sc_encode_failure_reaches_the_log()`'s docstring rather than by an assertion,
+because an assertion here would pin the defect and this file already records
+what happens next time somebody reads it.
 
-**`File(s):` is the other half.** It is built from `ctx->settings.outputs` and
-the naming scheme (`cyanrip_log.c:642`) and consults nothing about what was
-written, so it names a path whatever happened to it. **A completeness field
-computed from the REQUEST, read as the OUTCOME** — Platterpus's phrase for
-their own defect, and ours fits it exactly.
+### `Rip completed:` and `Ripping errors:` can now disagree on their face
 
-**The fix is one line and is deliberately not made here.** Moving the footer
-below the loop makes the two agree — measured: the scenario then reports
-*"the log and -j now AGREE (2)"*. It also changes what a P2 contract line
-counts, which is precisely the drive-by reword the seam forbids. It is a
-handshake proposal; round 20 §5.4 carries it.
+`Rip completed:  yes (2 of 3 tracks)` beside `Ripping errors: 2`. Both are
+true — the rip loop ran to completion and the encoders failed, which are two
+facts — and before round 21 they agreed by both being wrong.
 
-**Not promoted to blocking, and the reasoning is R3's.** It does not make
-`fe4d2c4` unsafe for the consumer we have: Platterpus captures the exit code
-(their own `DIAGNOSTICS.txt` shows `cyanrip exited 1` recorded from a different
-failure), and `-j` is correct. It is unsafe for a **log-only** consumer — and
-the log is the archival record, which is the one that outlives the exit code.
-That is an argument for fixing it, not on its own for holding a release.
-
-**RLIMIT_FSIZE stands in for ENOSPC**, which is the realistic case: both reach
-the muxer as a write error rather than as a signal. With SIGXFSZ *not* ignored
-the kernel kills the process outright — exit 153, no footer at all — which is a
-different and safer failure.
-
-### `Frame retries:` names half of what `-r` does
-
-Found 2026-09-15 by reading `docs/rig-2026-09-15-fe4d2c4/rips/secure-reread.log`
-whole: line 18 says `Frame retries:  3`, line 425 says
-`Secure re-read:  did NOT converge after 3 reads (repeat limit hit)`, and
-**both threes are the same knob**, which nothing in the log says.
-
-`-r` is *"Maximum number of retries for frames and repeated rips"*. It is passed
-to `cdio_paranoia_read_limited()` (`src/cyanrip_main.c:534`) **and** used as the
-repeat-loop ceiling (`src/cyanrip_main.c:1011`). So on that rip it governed
-paranoia's per-frame retries *and* decided that track 5 stopped after three
-whole-track reads.
-
-**The generated contract is right and the log line is what under-states.**
-`PROVIDER-CONTRACT.md` P1 carries genopt's own text — *"for frames and repeated
-rips"* — because P1 is derived from `--help`. P2's `Frame retries:` label is
-hand-shaped and names one of the two. `-j`'s `"frame_retries"` field
-(`src/diagnostics.c:458`) has the same name and the same gap.
-
-This is `Cache defeat:` → `Cache model:` again, and `Peak level:` →
-`Sample peak level:` again: **a label asserts, and a name that does not
-discriminate becomes ambiguous the moment a sibling appears.** The sibling here
-is `Secure re-read:`, which did not exist when the label was written.
-
-**Deliberately not reworded.** `Frame retries:` is a stable log line, so a
-silent rename is exactly the drive-by reword the seam forbids; and the JSON
-field is a schema key a consumer may already read. It is a rename to propose,
-not to ship — carried into round 20. Until then the line is not wrong, only
-narrower than the number it prints.
+**This is a question for the seam, not a defect to fix unilaterally.**
+`Rip completed:` is the single most-parsed field in the footer. Round 21 lap 1
+puts it to Platterpus: whether the footer should distinguish *the loop finished*
+from *the run produced what it claimed*, and if so, how. Recorded here so that
+"nobody asked" and "asked and they said leave it" stay distinguishable.
 
 ### The reference disc cannot discriminate a correct AccurateRip skip
 
