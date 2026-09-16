@@ -847,6 +847,21 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   process being asked about. Three times in one session. **Wait on a PID, not
   on a pattern** — the pattern's namespace includes the tools you are using to
   watch.
+
+  **AND THE WORST ARM OF IT IS A LOOP THAT CAN NEVER EXIT, not a wrong
+  answer.** `until ! pgrep -f "meson test"; do sleep 20; done` **never
+  terminates**: the waiting shell's own command line contains `meson test`, so
+  the `pgrep` matches itself and the negated condition is false forever.
+  Measured 2026-09-16 — one such loop span for **1h18m**, and three further
+  loops waiting on the file it was supposed to write were deadlocked behind it,
+  four stale shells from one line. It also killed a real suite run earlier the
+  same day, via `pkill -f "meson test -C build"` issued from a shell whose own
+  command line matched.
+
+  The other two arms give you a wrong answer and stop. This one gives you no
+  answer and does not stop, so it is invisible until somebody counts the
+  processes. **Match on something the watcher cannot contain** — a PID, a
+  marker file, a program path like `bin/meson` — or exclude `$$`.
 - **A FILTERED VIEW OF AN ARTIFACT IS NOT THE ARTIFACT.** This is "answer from
   the artifact" one turn deeper, and it produced the worst claim of the
   session: a black-box sweep's meson block was read through `grep -v` and a
