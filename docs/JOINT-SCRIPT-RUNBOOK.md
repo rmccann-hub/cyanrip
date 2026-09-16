@@ -1,5 +1,60 @@
 # Running the joint script — operator runbook
 
+> ## SUPERSEDED, AND DECLINED BEFORE IT WAS SUPERSEDED. DO NOT FOLLOW IT.
+>
+> **Marked 2026-09-16. Untouched since `9971573` (2026-08-12), while the
+> application it describes went from v0.6.11 to v0.6.49.** Two separate things
+> are wrong with it and they need separate sentences, because *"they never took
+> it"* and *"the procedure moved"* are different claims:
+>
+> **1. Platterpus declined to adopt it, in round 8.** The header below says
+> *"on adoption this file moves to `docs/rig-scripts/` … and our copy is
+> deleted"*. That adoption was refused, not delayed.
+> `docs/handshake/inbound/round-08-lap-08.md` §J9 is headed *"Verified, owned,
+> and now unnecessary"* and says in as many words: **"And the runbook itself
+> should not exist"** — on their maintainer directive of 2026-08-11 that a
+> document of manual steps is work handed back, a symptom rather than a
+> deliverable. Their artifact is the script, `docs/rig-scripts/round-08-joint.txt`.
+> We demoted the ask from `BLOCKING` to `NEXT-ROUND` in our lap 9 and then let
+> the file sit as though adoption were still pending. It is not pending. It was
+> answered.
+>
+> **2. The procedure it documents is the legacy route.** Read from the artifact
+> at `platterpus@d43b8cd:docs/rig-scripts/README.md`, whose own first block is
+> headed *"Read this first (v0.6.32)"*: the full acceptance run is now
+> **Tools → Run acceptance test…** inside the app, the `.txt` scripts moved into
+> the package (`src/platterpus/rig_scripts/`) so the AppImage ships them, and the
+> `.sh` wrappers this runbook's §2 drives are kept only as *"the **legacy
+> route**"*. They are at **0.6.49** — read off `--consumer platterpus/0.6.49` in
+> `docs/rig-2026-09-15b-fe4d2c4/rips/secure-reread.log`, not remembered — so
+> that note has been in force for seventeen version numbers.
+>
+> ### The four `[UNVERIFIED]` claims in §9 were all answered — and one answer corrects the body
+>
+> Answered against 0.6.12 in that same §J9, which this file never had applied to
+> it:
+>
+> | §9 | their answer |
+> |---|---|
+> | 1. `--run-script`, spelled that way? | **Yes**, exactly `--run-script FILE`. §1.2 stands. |
+> | 2. transcript path? | **§7 BELOW IS WRONG.** It is `<log dir>/uiscript/<timestamp>` — XDG-aware, derived from `paths.LOG_PATH.parent`, so it follows a relocated log dir. §7's `~/.local/share/platterpus/uiscript/<timestamp>/` assumes the default location. |
+> | 3. other runner options? | **No.** `--run-script` takes the file and nothing else. §2 stands. |
+> | 4. `secure_rerip_dynamic` / `secure_rerip_matches`, defaults `True` / `2`? | **Both names correct, both defaults as asserted**, so B2 passes on a default install. §1.4 stands. |
+>
+> ### What survives, because it is a measurement and not a procedure
+>
+> **Every `[MEASURED]` row is still a measurement**, and supersession of the
+> workflow does not touch one. In particular §6 — `-O` is overread, it is one
+> keystroke from `-x`, and it hung the PIONEER BD-RW BDR-209D for about 23
+> minutes — is cited live by `tools/rig-round16.sh:372` and that citation still
+> resolves. The `[INFERRED]` and `[UNVERIFIED]` rows are the ones to distrust,
+> and row 2 of the table above is the one already known wrong.
+>
+> **Kept rather than deleted.** It is the draft round 8 lap 7 offered and their
+> lap 8 answered; the body is left as it was written so that what was handed
+> across stays legible. Everything corrective is in this banner.
+
+
 **DRAFT, and Platterpus owns it.** Every instruction here is about *their*
 application: their `--run-script` runner, their sections A, B and D of the joint
 script, their settings names, their transcript directory. We wrote it because
