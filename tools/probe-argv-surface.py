@@ -59,7 +59,7 @@ BASE = ["-I", "-N", "-A", "-U", "-P", "0"]
 # exactly the thing this file exists to stop.
 EFFECT = {
     "-s": (r"^Offset:\s+([+-]?\d+) samples", lambda v: int(v)),
-    "-r": (r"^Frame retries:\s+(\d+)", lambda v: int(v)),
+    "-r": (r"^Retry limit:\s+(\d+)", lambda v: int(v)),
     "-P": (r"^Paranoia level:\s+(\S+)", None),
     "-O": (r"^Overread:\s+([+-]?\d+) frames", None),
     "-u": (r"^Consumer:\s+(\S+)", None),

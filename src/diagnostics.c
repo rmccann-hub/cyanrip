@@ -337,21 +337,37 @@ void crip_diag_write(void)
     av_bprint_init(&b, 0, AV_BPRINT_SIZE_UNLIMITED);
 
     av_bprintf(&b, "{\n");
-    /* /3 added rip.interrupted_by; /4 adds started_at and finished_at. A field
-     * ADDED to a record is harmless to a consumer that ignores unknown keys
-     * and fatal to one that allowlists schema strings, and Platterpus does the
-     * latter -- so the version moves and the round carries the ask to widen
-     * SUPPORTED_SCHEMAS. Adding the field without the bump was the tempting
-     * alternative and is the worse one: two different records both calling
-     * themselves /3 is the same defect as two builds answering to one version
-     * string, which this fork already fixed once with +platterpus.N.
+    /* /3 added rip.interrupted_by; /4 added started_at and finished_at; /5
+     * RENAMES frame_retries to retry_limit, with the log line it mirrors
+     * (round 20 lap 2 §0.2). A rename is not additive: a consumer keyed on the
+     * old name silently gets nothing, which is strictly worse than an unknown
+     * key it can ignore. So the version moves.
      *
-     * WHAT WE KNOW ABOUT THEIR ALLOWLIST, and where it was read, because a
-     * mechanism stated about the other side's code without a citation is a
-     * guess: their round-11 lap 2 prints it as `SUPPORTED_SCHEMAS = {1, 2}`,
-     * integers, under a heading marked [MEASURED]. That is the last value we
-     * hold. We cannot read their source and do not claim to. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/4\",\n");
+     * THE REASON IS OUR OWN HONESTY, NOT A CLAIM ABOUT THEIR PARSER, and this
+     * comment used to say otherwise. It asserted that "Platterpus ... allowlists
+     * schema strings" and cited SUPPORTED_SCHEMAS = {1, 2} as the reason a
+     * change here would be fatal to them. READ AT platterpus@d94bd113:
+     * src/platterpus/deps/ripper_manifest.py:89, that constant gates
+     * "platterpus-fork/release-manifest.json" -- its own docstring says so, and
+     * that document's schema is 2, which is in the set. It has nothing to do
+     * with this record. Nothing in their tree parses cyanrip-diagnostics at
+     * all: the only files naming it are their changelog, task list, handshake
+     * docs and filed artifacts.
+     *
+     * THAT IS ROUND 12'S DEFECT, RE-IMPORTED INTO OUR OWN SOURCE. Round 12 was
+     * a whole round spent establishing that every sentence either side wrote
+     * about SUPPORTED_SCHEMAS was in release-manifest context; this comment
+     * then carried the same confusion forward for four rounds. It survived
+     * because of its own last clause -- "we cannot read their source and do not
+     * claim to" -- which was false from 2026-09-13, when the git proxy was
+     * measured to serve anonymous reads of their public repository. An
+     * unfalsifiable excuse is what kept a checkable claim unchecked.
+     *
+     * So the bump stands on the reason that never needed them: two different
+     * records both calling themselves /4 is the same defect as two builds
+     * answering to one version string, which this fork already fixed once with
+     * +platterpus.N. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/5\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
@@ -455,7 +471,7 @@ void crip_diag_write(void)
         av_bprintf(&b, ",\n");
         av_bprintf(&b, "    \"consumer_verified\": false,\n");
         av_bprintf(&b, "    \"paranoia_level\": %i,\n", snap_paranoia_level);
-        av_bprintf(&b, "    \"frame_retries\": %i,\n", snap_max_retries);
+        av_bprintf(&b, "    \"retry_limit\": %i,\n", snap_max_retries);
         av_bprintf(&b, "    \"offset_samples\": %i,\n", snap_offset);
         av_bprintf(&b, "    \"rip_repeats\": %i,\n", snap_ripping_retries);
         av_bprintf(&b, "    \"cd_tracks\": %i,\n", snap_nb_cd_tracks);

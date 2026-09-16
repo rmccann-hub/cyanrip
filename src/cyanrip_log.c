@@ -743,7 +743,14 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
         cyanrip_log(ctx, 0, "Paranoia level: %s\n", "none");
     else
         cyanrip_log(ctx, 0, "Paranoia level: %i\n", ctx->settings.paranoia_level);
-    cyanrip_log(ctx, 0, "Frame retries:  %i\n", ctx->settings.max_retries);
+    /* `Frame retries:` named half of what -r does: it caps paranoia's
+     * per-frame retries at cyanrip_main.c:534 AND the whole-track repeat
+     * ceiling at :1011, and the log printed a bare number with nothing
+     * saying they were one knob. Renamed with Platterpus's assent, round
+     * 20 lap 2 §0.2; their parser accepts both labels permanently so the
+     * eight acceptance logs already filed under docs/ still read. */
+    cyanrip_log(ctx, 0, "Retry limit:    %i (per frame, and per whole-track re-read)\n",
+                ctx->settings.max_retries);
     print_cache_model(ctx);
     cyanrip_log(ctx, 0, "HDCD decoding:  %s\n", ctx->settings.decode_hdcd ? "enabled" : "disabled");
 
