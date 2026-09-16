@@ -60,6 +60,53 @@ which is the only method that finds this class.
 
 ## Open, ours, and solvable — but deliberately not now
 
+### `Lap commit list names its range` timed out once, and the cause is NOT established
+
+**Measured 2026-09-16, one occurrence, immediately after round 20 closed.** The
+suite reported `Ok: 84  Fail: 0  Timeout: 1`, exit 1 — and **84 + 0 is not 85**,
+which is the only thing that made it visible. Read as the two lines the previous
+runs trained the eye to look at, *"84 Ok, 0 Fail"* reads as a pass.
+
+```
+22/85 cyanrip:Lap commit list names its range   TIMEOUT   30.01s  killed by signal 15 SIGTERM
+```
+
+**What is measured:**
+
+| | |
+|---|---|
+| standalone, three runs | **0.89 s, 0.89 s, 0.94 s** |
+| in every earlier full suite that day | 0.98 s, 1.04 s, 1.12 s, 1.95 s |
+| the one timeout | **30.01 s**, meson's default limit |
+| the immediate re-run of the whole suite | **OK in 1.07 s**, and 85/85 green |
+
+**What is ruled out**, checked rather than assumed: no `gc.pid`, no stale
+`.git/*.lock`, and 1,926 loose objects — below git's auto-gc threshold. The
+tempting hypothesis, a background `git gc` holding a lock, is **not supported**.
+
+**What is narrowed but NOT established.** `tests/lap_commits.py` spawns a fresh
+Python interpreter per peer entry in a loop and shells out to git, and it has
+**no explicit `timeout:` in `tests/meson.build`**, so it gets meson's default 30
+seconds. Meson runs tests in parallel, and its neighbours include `Sanitizer
+sweep` — a full `meson setup` plus `ninja` build of a second tree — the
+838-invocation black-box sweep, and the argv probe. Contention is a plausible
+mechanism for a slowdown. **It is not a plausible mechanism for 30×, and saying
+so is the point of this entry.**
+
+**Deliberately NOT fixed by widening the timeout.** A number chosen without the
+mechanism is a guess, and changing a test so it stops reporting is the move this
+repository has a rule against. The flake is recorded instead, with what would
+settle it: **run the suite with `--num-processes 1` and time this test, and run
+it under a deliberate parallel load.** If it recurs, that is evidence to act on
+and an explicit `timeout:` becomes a *declaration* rather than a suppression —
+the same standing `Black-box sweep` already has.
+
+**Why it matters beyond one flake.** A gate that can fail for a reason unrelated
+to the code is the exact disease `PROTOCOL.md` R2 names when it forbids
+enforcing `HANDSHAKE-CLOSE-BY`: *enforcement lets a clock skew block a release*.
+A 30-second default doing the same thing to a release is the same shape, one
+layer down.
+
 ### The cache probe's calibration is wrong
 
 `-x` reports `at least 2048 sectors, upper bound unknown` on a drive
