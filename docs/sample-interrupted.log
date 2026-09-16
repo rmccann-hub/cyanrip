@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gf4f33b1)
+cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-g293c1c2)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 18 lap 1 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 20 lap 3 closed, verdict GO -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -34,7 +34,7 @@ C2 errors:      unsupported by drive
 CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
 Encoder:        libavformat 60.16.100, libavcodec 60.31.102 (6.1.1-3ubuntu5)
 Paranoia level: none
-Frame retries:  200
+Retry limit:    200 (per frame, and per whole-track re-read)
 Cache model:    not in use (paranoia disabled)
 HDCD decoding:  disabled
 Album Art:      none
@@ -61,6 +61,14 @@ Tracks:
 
 Repeating ripping (0 out of 200 matches for current checksum 2C926D69)
 
+Repeating ripping (1 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (2 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (3 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (4 out of 200 matches for current checksum 2C926D69)
+
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -85,11 +93,11 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          16
+  READ:          77
 
 Ripping errors: 1
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-09-13T13:55:57+00:00
-Log FUN512: E3uQ2sXt.xW9thLozXn8QG8aRFPhuJSMDaVrhDVDntzKiRroIp1AxqVJKHcJLzEsRUvhbLYevKXJqSr9_vfeQQ
+Ripping finished at 2026-09-16T22:15:14+00:00
+Log FUN512: tsgD2axsiv0nSHuNZo3EBw7_sXRmulTzsr82LkO37iOQ.3YlZoqgcYBDfnXkVhLCJj227bCLOmMO27MYf.14_A
