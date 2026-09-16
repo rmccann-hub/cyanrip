@@ -1540,10 +1540,19 @@ four observable surfaces are still worth reading, and every present-tense claim
 in it about the pin and the version is wrong. **The next release is
 `+platterpus.13` and nothing is written for it.**
 
-What that file got right and any successor must keep: it named the four
-observable surfaces a consumer has to check, and the list of things the release
-would still not verify, so that a green suite could not be mistaken for hardware
-coverage.
+**The worked example to copy is `docs/RELEASE-PLAN-platterpus.12.md`**, which is
+also executed and also bannered — and which records the thing a plan cannot know
+in advance: it was authorised by **round 17**, not by round 15, whose close it
+was written to wait for. A plan names a condition, not a round number.
+
+What both got right and any successor must keep: they named the observable
+surfaces a consumer has to check, and the list of things the release would still
+not verify, so that a green suite could not be mistaken for hardware coverage.
+
+**And a plan is bannered on the day it is executed, not when somebody notices.**
+The `.12` banner is dated 2026-09-13 against a release commit of 2026-09-12 —
+one day. The `.5` one is dated forty days late, and in between `CLAUDE.md`
+pointed a reader at it.
 
 ### A close is affirmative, two-sided, and tested — never assumed
 
