@@ -248,24 +248,40 @@ def close_by_lines(laps, is_terminal, now):
     lap, raw = declared[0]
     when, why = parse_close_by(raw)
     where = f"lap {lap.lap}" if lap.lap is not None else lap.path.name
+    # TWO INDEPENDENT DEFECTS, AND THIS USED TO REPORT ONLY THE FIRST.
+    #
+    # `when is None` returned early, so a round whose CLOSE-BY is both
+    # unparseable AND declared after lap 1 lost the second row entirely. Round 8
+    # is exactly that: lap 7 declares a bare `2026-08-14`, and this printed the
+    # `unknown` line and stopped. Found in round 20 lap 2 by Platterpus
+    # PUBLISHING THEIR REPORTER'S OUTPUT UNABRIDGED next to ours -- theirs
+    # carries both rows for round 8 and ours carried one. Neither side was
+    # auditing the other's code; the two outputs sat side by side and the
+    # missing row was visible.
+    #
+    # It is the `none` versus `unknown (reason)` rule inside the tool: "we
+    # cannot read the value" and "it was set in the wrong lap" are different
+    # claims about one round, and collapsing them hides the one a reader can
+    # act on. Whether the instant parses has nothing to do with which lap
+    # declared it, so the provenance rows below now run either way.
     if when is None:
         out.append(f"      close-by: unknown ({why}) -- {where} declares "
                    f"`{raw}`")
-        return out
-
-    stamp = raw
-    if when <= now:
-        if is_terminal:
-            out.append(f"      close-by: {stamp} ({where}) has PASSED, and the "
-                       f"round reached a terminal state first -- §4a does not "
-                       f"make it EXPIRED")
-        else:
-            out.append(f"      close-by: {stamp} ({where}) has PASSED with the "
-                       f"round still open -- EXPIRED per §4a. Advisory only: "
-                       f"this gate never enforces it (R2)")
     else:
-        days = (when - now).days
-        out.append(f"      close-by: {stamp} ({where}), {days} day(s) remaining")
+        stamp = raw
+        if when <= now:
+            if is_terminal:
+                out.append(f"      close-by: {stamp} ({where}) has PASSED, and "
+                           f"the round reached a terminal state first -- §4a "
+                           f"does not make it EXPIRED")
+            else:
+                out.append(f"      close-by: {stamp} ({where}) has PASSED with "
+                           f"the round still open -- EXPIRED per §4a. Advisory "
+                           f"only: this gate never enforces it (R2)")
+        else:
+            days = (when - now).days
+            out.append(f"      close-by: {stamp} ({where}), "
+                       f"{days} day(s) remaining")
 
     # ONLY a DIFFERENT value in a later lap is an extension. Every lap carries
     # the whole wire header, so re-declaring the SAME instant is the header
@@ -278,7 +294,13 @@ def close_by_lines(laps, is_terminal, now):
                    + ", ".join(f"lap {l.lap} declares a different value"
                                for l in changed)
                    + "; R2 says it is set in lap 1 and is not extended")
-    elif lap.lap not in (None, 1):
+    # `elif` HERE WAS THE SAME SUPPRESSION ONE LEVEL OVER, found by fixing the
+    # one above and re-reading the output rather than by a second report.
+    # "it was extended" and "it was not set in lap 1" are two independent facts
+    # about one round, and round 8 is both: first declared in lap 7, then
+    # changed in four later laps. Under `elif` the extension hid the late
+    # declaration, so the round that broke R2 hardest reported it least.
+    if lap.lap not in (None, 1):
         out.append(f"      close-by: set in {where}, not lap 1 -- R2 says lap 1")
     return out
 

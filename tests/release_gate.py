@@ -2674,6 +2674,59 @@ def test_close_by_declared_twice_in_one_lap_is_ambiguous():
           "same guess the twice-declared HANDSHAKE-LAP defect made")
 
 
+def test_an_unreadable_close_by_still_reports_which_lap_set_it():
+    """Round 20 lap 2, and PLATTERPUS FOUND IT BY PUBLISHING THEIR OUTPUT.
+
+    Their reporter printed two rows for round 8 -- the bare date refused as
+    unknown, AND `set in lap 7, not lap 1`. Ours printed one. Nobody audited
+    anybody's code: the two outputs sat side by side in a lap and the missing
+    row was visible. `close_by_lines()` returned early on an unparseable value,
+    so a round that broke R2 twice reported it once.
+
+    The two facts are independent -- whether the instant parses says nothing
+    about which lap declared it -- and collapsing them is this project's own
+    `none` versus `unknown (reason)` rule failing inside the tool built to
+    apply it.
+    """
+    lines = _close_by_lines({"round-20-lap-01.md": _round20(1),
+                             "round-20-lap-02.md": _round20(2, "2026-08-14")},
+                            20)
+    unreadable = [l for l in lines if "unknown (" in l]
+    provenance = [l for l in lines if "not lap 1" in l]
+    check(len(unreadable) == 1,
+          f"expected exactly one 'unknown (...)' row, got {unreadable!r}")
+    check(len(provenance) == 1,
+          "an unparseable CLOSE-BY suppressed the row saying which lap set it. "
+          f"Rows were {lines!r}")
+    check(any("lap 2" in l for l in provenance),
+          f"the provenance row must name lap 2, got {provenance!r}")
+
+
+def test_an_extension_does_not_hide_a_late_declaration():
+    """Round 20, found by fixing the test above and re-reading the output.
+
+    The same suppression one level over: `if changed: ... elif late: ...` made
+    the two mutually exclusive. Round 8 is BOTH -- first declared in lap 7,
+    then changed in four later laps -- so under `elif` the round that broke R2
+    hardest reported it least.
+
+    Not a fixture built to fit: the real record is the case, and the real
+    record is what produced the missing row.
+    """
+    lines = _close_by_lines(
+        {"round-20-lap-01.md": _round20(1),
+         "round-20-lap-02.md": _round20(2, "2026-09-20T00:00:00Z"),
+         "round-20-lap-03.md": _round20(3, "2026-09-30T00:00:00Z")},
+        20)
+    extended = [l for l in lines if "EXTENDED" in l]
+    provenance = [l for l in lines if "not lap 1" in l]
+    check(len(extended) == 1,
+          f"expected exactly one EXTENDED row, got {extended!r}")
+    check(len(provenance) == 1,
+          "an EXTENDED row suppressed the row saying which lap set it; both "
+          f"are true of this round. Rows were {lines!r}")
+
+
 def test_close_by_never_enforces():
     """R2's whole point, and the one property the others cannot cover."""
     without = {"round-20-lap-01.md": _round20(1)}
