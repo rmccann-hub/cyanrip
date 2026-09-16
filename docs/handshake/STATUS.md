@@ -1,5 +1,18 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
+STATUS-NEWEST-LAP: round-20-lap-01.md
+STATUS-NEWEST-LAP-STATE: sent
+
+**Those two lines are declarations, not wire headers.** They carry a `STATUS-`
+prefix precisely so that no conforming enumerator counts this file as a lap —
+the rule in the paragraph below is unchanged. They exist because on 2026-09-16
+this document said round 20 lap 1 was *"published, NOT yet released"* and
+*"waiting on the operator's word"* for part of a day **after** the operator had
+released it at `6c86689`, and every check over this file passed, because none of
+them looked at a lap. `sc_status_is_current()` now resolves the newest lap with
+the release gate's own loader and its own `held` property, and compares these
+two cells against it.
+
 **Not a round, not a lap, and it must not be counted as one.** It carries no
 `HANDSHAKE-*` wire headers for that reason, and `tests/handshake_wire.py` never
 sees it because it is not named `round-NN-lap-LL.md`.
@@ -17,14 +30,25 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-16. **ROUND 20 LAP 1 IS WRITTEN, REVISED THREE TIMES WHILE HELD, AND WAITING ON THE OPERATOR'S WORD.**
+## Rewritten 2026-09-16, second time that day. **ROUND 20 LAP 1 IS RELEASED. IT IS SENT, AND IT IS IMMUTABLE.**
 
-**It is published at `docs/handshake/round-20-lap-01.md` and still declares
-`HANDSHAKE-READY-TO-READ: no`.** Platterpus has read it enough to confirm it
-exists and has deliberately not acted on it — their rule refuses a verdict from
-an unreleased lap in either direction, which is the field working. **Releasing
-it is the operator's act**, and the release commit changes only that line and
-`HANDSHAKE-FROM-COMMIT`.
+**Released at `6c86689`**, which is the commit that flipped
+`HANDSHAKE-READY-TO-READ` to *"yes — released by the operator (rmccann),
+2026-09-16"* and finalised `HANDSHAKE-FROM-COMMIT: 6f87881`. Those two lines are
+all it changed, as the held note said it would. **From that commit the lap is
+immutable under §192** and the three revisions it took while held are the last
+it will ever take.
+
+**This section said it was still held for part of the day, after the release
+commit.** Left visible rather than smoothed over: a standing status is *"a claim
+about now"*, it is the document whose own header says a stale one is worse than
+none, and it went stale about the one event it exists to report. What follows in
+this section — the three revisions, their 0.6.50 reasoning, the two facts about
+`d43b8cd` — was true when written and still is.
+
+**Waiting on their lap 2**, which §0 says answers two close conditions: §0.1
+enforce-or-strike `CLOSE-BY`, and §0.2 the `Frame retries:` → `Retry limit:`
+rename, where a refusal closes the round just as an assent does.
 
 **Revised three times while held, which is what held is for.** Once for the
 missing MP3s they caught; once for the eight-session derivations; and now for

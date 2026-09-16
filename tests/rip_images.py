@@ -2097,6 +2097,76 @@ def sc_status_is_current():
              "while tools/release-gate.py reports every round closed. The gate "
              "is authoritative; the table is a copy that rotted.")
 
+    # SECOND MECHANICAL ROT, and this docstring used to say there was only one.
+    #
+    # Measured 2026-09-16, not imagined: round 20 lap 1 was RELEASED at 6c86689
+    # and STATUS.md went on saying it was "published, NOT yet released" and
+    # "waiting on the operator's word" -- the one event a standing status exists
+    # to report, wrong in the document whose own header says a stale one is
+    # worse than none. Every check above passed, because none of them looks at
+    # a lap.
+    #
+    # It is mechanical because both sides are DECLARED fields: the lap declares
+    # HANDSHAKE-READY-TO-READ and the status now declares which lap is newest
+    # and what state it is in. Prose is still unchecked and still uncheckable;
+    # this is the fact underneath the prose.
+    #
+    # The newest lap is resolved by the GATE's own loader and the gate's own
+    # `Lap.held` property, imported rather than reimplemented. A second reader
+    # of one record that can disagree with the first is the failure both gates
+    # exist to prevent, and "which lap is newest" is exactly the question
+    # Platterpus's gate once answered by sorting filenames.
+    spec = importlib.util.spec_from_file_location(
+        "rg_status", ROOT / "tools" / "release-gate.py")
+    rg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rg)
+
+    laps = [lp for lp in rg.load_rounds(every_lap=True) if lp.lap is not None]
+    if not laps:
+        fail("status_is_current: the gate's loader found no well-formed lap. "
+             "An empty record is not agreement, and it is not a current "
+             "status either.")
+        return
+    newest = max(laps, key=lambda lp: (lp.number, lp.lap))
+    want_name = newest.path.name
+    want_state = "held" if newest.held else "sent"
+
+    # Positional: the declared field, not a sweep of the file. The filename and
+    # both state words appear in STATUS.md's prose several times over, so
+    # asking whether the right word is "somewhere" is a question the wrong
+    # document answers yes to -- the same trap the release table above already
+    # paid for once.
+    decl = {}
+    for line in text.splitlines():
+        m = re.match(r"^(STATUS-NEWEST-LAP(?:-STATE)?):[ \t]*(\S+)[ \t]*$", line)
+        if m:
+            decl.setdefault(m.group(1), []).append(m.group(2))
+
+    for field, want in (("STATUS-NEWEST-LAP", want_name),
+                        ("STATUS-NEWEST-LAP-STATE", want_state)):
+        got = decl.get(field)
+        if got is None:
+            fail(f"status_is_current: STATUS.md declares no {field}. It is how "
+                 f"this file says which lap it is describing; without it the "
+                 f"prose can go stale about a release and nothing notices.")
+        elif len(got) > 1:
+            fail(f"status_is_current: STATUS.md declares {field} {len(got)} "
+                 f"times ({got!r}). Two declarations are ambiguous, and picking "
+                 f"either would be a guess.")
+        elif got[0] != want:
+            fail(f"status_is_current: STATUS.md declares {field} = {got[0]!r}, "
+                 f"but the record's newest lap is {want_name} and the gate "
+                 f"reads it as {want_state!r}. The standing status is stale "
+                 f"about the one thing it exists to report.")
+
+    # And the state must be one the gate can produce, so a typo cannot pass by
+    # matching neither branch.
+    state = decl.get("STATUS-NEWEST-LAP-STATE", [None])[0]
+    if state is not None and state not in ("held", "sent"):
+        fail(f"status_is_current: STATUS.md declares an unknown lap state "
+             f"{state!r}. The only two the gate distinguishes are 'held' and "
+             f"'sent'.")
+
 
 def sc_contract_exit_codes():
     """Every exit code the binary actually produces must be in P4.
