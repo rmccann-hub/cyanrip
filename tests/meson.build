@@ -497,7 +497,7 @@ rip_scenarios = [
     'status_is_current',
     'docs_do_not_contradict_themselves',
     'changelog_names_every_release',
-    'encode_failure_is_absent_from_the_log',
+    'encode_failure_reaches_the_log',
     'cache_table_matches_the_transcripts',
     'format_guard',
     'cue_isrc',

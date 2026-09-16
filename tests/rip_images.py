@@ -1703,43 +1703,54 @@ def sc_cache_table_matches_the_transcripts():
              f"{len(rows)} table row(s)")
 
 
-def sc_encode_failure_is_absent_from_the_log():
-    """THIS PINS A DEFECT, NOT A GUARANTEE. Do not "fix" it; see KNOWN-ISSUES.
+def sc_encode_failure_reaches_the_log():
+    """The log and `-j` must not disagree about how many errors a run had.
 
-    Provoked by Platterpus, 2026-09-15, reporting three portable shapes found
-    in their own reporting code. The first -- *a completeness field computed
-    from the REQUEST, read as the OUTCOME* -- is in our log too, and this is
-    the demonstration rather than the argument.
+    RENAMED IN ROUND 21. It was `sc_encode_failure_is_absent_from_the_log()`
+    while the failure WAS absent, and it pinned the defect; the footer has
+    moved and it now pins the fix. The old name is written here so a reader
+    tracing round 20 lands on it, and because a test named for a defect it no
+    longer pins is the label rule this repository applies to log lines, turned
+    on its own suite.
 
-    Make every write past 32 KiB fail and rip a fixture. The muxer's trailer
-    write fails, the encoder thread records it, and the collection loop in
-    cyanrip_main.c DOES count it -- `ripping_errors` in `-j` reads 2 and the
-    exit code is 1. But `cyanrip_log_finish_report()` runs BEFORE that loop, on
-    purpose (`cyanrip_main.c:2686`: "so that `Ripping errors:` counts exactly
-    what it counted before -- moving it below would silently fold encoder
-    failures into a contract line"), so the LOG says:
+    THE DEFECT IT USED TO PIN. Provoked by Platterpus, 2026-09-15, reporting
+    three portable shapes found in their own reporting code. The first -- *a
+    completeness field computed from the REQUEST, read as the OUTCOME* -- was
+    in our log too, and this was the demonstration rather than the argument.
+    Make every write past 32 KiB fail and rip a fixture: the muxer's trailer
+    write fails, the encoder thread records it, the collection loop DOES count
+    it, `-j` read 2 and the exit code was 1 -- and the log said:
 
         Track 2 ripped and encoded successfully!
           File(s):
             .../2.flac                 <- truncated to 32768 bytes
-        Error writing trailer: File too large!    <- line 204
-        Error writing packet: File too large!    <- line 205
-        Ripping errors: 0                        <- line 211
+        Error writing trailer: File too large!
+        Error writing packet: File too large!
+        Ripping errors: 0                        <- the defect
         Rip completed:  yes (2 of 3 tracks)
         Log FUN512: ...                <- and `-Y` exits 0 on it
 
-    The diagnosable lines ARE in the logfile, six lines above that zero, so the
-    rule that every failure prints one at column 0 held. What fails is that no
-    FIELD reflects them -- and a parser grades fields, which is the whole
-    reason the log is a contract. Two records of one run, disagreeing, and the
-    human-readable one is the one that is wrong. `File(s):` is built from `ctx->settings.outputs` and the
-    naming scheme (cyanrip_log.c:642) and consults nothing about what was
-    written, so it names a path whatever happened to it.
+    WHAT CHANGED. `cyanrip_log_finish_report()` now runs AFTER the
+    encoder-status loop rather than before it, so `Ripping errors:` counts the
+    encoder failures and the two records agree. That is a P2 contract line:
+    announced in round 20 §5.4, confirmed by Platterpus in round 20 lap 2 §F as
+    a field they parse -- `_take_rip_errors` turns 0 into
+    `health_status = "No errors occurred"`, the string their EAC-compatible
+    export writes -- and shipped in round 21. It was NOT a drive-by reword,
+    which is why it waited two rounds.
 
-    THE DECISION NOT TO CHANGE IT HERE IS DELIBERATE. `Ripping errors:` is a
-    P2 contract line; folding encoder failures into it is exactly the drive-by
-    reword the seam forbids, and the comment above says the placement was
-    chosen for that reason. It is a handshake proposal, not a commit.
+    WHAT DID NOT CHANGE, and is now visible because the count is right:
+    `Rip completed:  yes` still sits beside a non-zero error count. The loop
+    did run to completion and the encoders did fail; those are two facts. Round
+    21 lap 1 asks Platterpus whether the footer should say so differently
+    rather than answering it here.
+
+    STILL NOT FIXED, and still worth a reader knowing: `File(s):` is built from
+    `ctx->settings.outputs` and the naming scheme (`cyanrip_log.c:642`) and
+    consults nothing about what was written, so it names a path whatever
+    happened to it -- and `Track N ripped and encoded successfully!` is printed
+    when the READ finished, before any encoder status exists. Both are in
+    KNOWN-ISSUES.
 
     RLIMIT_FSIZE stands in for ENOSPC, which is the realistic case: both reach
     the muxer as a write error rather than as a signal. Without SIGXFSZ ignored
@@ -1795,20 +1806,45 @@ def sc_encode_failure_is_absent_from_the_log():
         fail(f"encfail: could not read ripping_errors from -j: {exc}")
         return
 
-    # The defect, stated as the disagreement rather than as either number.
-    if in_log == in_json:
-        fail(f"encfail: the log and -j now AGREE ({in_log}) about "
-             f"ripping_errors. That is the fix; it changes a P2 contract line, "
-             f"so it needs the handshake round KNOWN-ISSUES points at -- and "
-             f"then this scenario is rewritten to assert agreement rather than "
-             f"deleted")
-    if in_log != 0 or in_json != 2:
-        fail(f"encfail: expected log 0 and -j 2, got log {in_log}, -j "
-             f"{in_json} -- the measured shape moved")
+    # FIXED IN ROUND 21, AND THIS NOW ASSERTS AGREEMENT RATHER THAN THE
+    # DISAGREEMENT. The previous version failed the moment the fix landed and
+    # its own message said what to do about it -- rewrite, do not delete --
+    # which is the only reason this rewrite is a rewrite and not a guess at
+    # what the scenario had been for.
+    #
+    # The property is the one that matters to a consumer: TWO RECORDS OF ONE
+    # RUN MUST NOT DISAGREE. Asserted as equality between them, not as a
+    # literal, so a fixture whose track count changes does not silently turn
+    # this into a check on the number 2.
+    if in_log != in_json:
+        fail(f"encfail: the log says `Ripping errors: {in_log}` and -j says "
+             f"ripping_errors {in_json}. Two records of one run, disagreeing, "
+             f"and the human-readable one is the archival record -- this is "
+             f"the defect round 21 moved the completion footer to fix")
+    elif in_log == 0:
+        # Equality alone is satisfied by both being 0, which is what the
+        # pre-fix log claimed on its own. This is the vacuity guard for the
+        # property above -- and it is `elif` because "both say 0" is only a
+        # truthful thing to print once they have been shown equal. Written as
+        # a bare `if` first, it fired during this fix's own revert-proof with
+        # log 0 and -j 2 and told the reader both said 0.
+        fail("encfail: both records say 0 errors under a 32 KiB cap that "
+             "truncated the output. They agree by both being wrong, which is "
+             "the pre-fix log behaviour with the -j side broken to match")
 
+    # `Rip completed:` is UNCHANGED and that is deliberate, not an oversight.
+    # It reports whether the rip loop ran to completion, which it did; the
+    # errors are the encoders'. Before the fix the two lines read `0` and
+    # `yes` and agreed by being wrong. They now read `2` and `yes`, which a
+    # careful reader reconciles and a grepper may not -- so round 21 lap 1 puts
+    # the question of rewording it to Platterpus rather than this repository
+    # answering it alone. Pinned here so that if the answer ever arrives, the
+    # change is visible as a change.
     if "Rip completed:  yes" not in text:
-        fail("encfail: `Rip completed:  yes` is absent -- the measured shape "
-             "moved; the point is that it is PRESENT beside truncated output")
+        fail("encfail: `Rip completed:  yes` is absent. It is expected to be "
+             "PRESENT beside a non-zero error count until a round says "
+             "otherwise -- the loop completed and the encoders failed, which "
+             "are two facts")
 
     # And the files it names are really truncated, so this is not a quibble
     # about a counter. Assert against the artifact, not against the log.

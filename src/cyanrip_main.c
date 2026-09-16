@@ -2683,12 +2683,7 @@ end:
      * image test passed throughout, because `sc_interrupt()`'s signal arrives
      * where the loop breaks and falls through rather than where anything jumps.
      *
-     * Placed AFTER the watchdog join for the reason the comment above gives,
-     * and BEFORE the encoder-status loop so that `Ripping errors:` counts
-     * exactly what it counted before -- moving it below would silently fold
-     * encoder failures into a contract line. */
-    if (!ctx->settings.print_info_only)
-        cyanrip_log_finish_report(ctx);
+     * Placed AFTER the watchdog join for the reason the comment above gives. */
 
     /* Wait for the encoders to finish and collect their status */
     for (int i = 0; i < ctx->nb_tracks; i++) {
@@ -2697,6 +2692,39 @@ end:
             if (cyanrip_end_track_encoding(&t->enc_ctx[j]) < 0)
                 ctx->total_error_count++;
     }
+
+    /* THE FOOTER IS NOW BELOW THE ENCODER LOOP, AND THAT IS THE CHANGE.
+     *
+     * It sat above the loop deliberately, and the comment said why: so that
+     * `Ripping errors:` counted "exactly what it counted before -- moving it
+     * below would silently fold encoder failures into a contract line". The
+     * reasoning was right about the risk and wrong about which way it pointed.
+     * What the old placement actually produced, demonstrated rather than
+     * argued in `sc_encode_failure_is_absent_from_the_log()`: cap every write
+     * at 32 KiB, and the muxer's trailer write fails, the failure IS caught,
+     * `-j` records ripping_errors 2, the process exits 1 -- and the log says
+     * `Ripping errors: 0` and `Rip completed:  yes`, over a 32768-byte file
+     * whose intact form is 253742.
+     *
+     * TWO RECORDS OF ONE RUN, DISAGREEING, AND THE HUMAN-READABLE ONE WRONG.
+     * The log is the archival record: it is the one that outlives the exit
+     * code, and a consumer that reads only the log was being told a truncated
+     * rip was clean. `Error writing trailer: File too large!` was in the same
+     * file six lines above the zero, so the rule that every failure prints a
+     * diagnosable line held -- what failed is that no FIELD reflected it, and a
+     * parser grades fields.
+     *
+     * The move is not a drive-by reword: `Ripping errors:` is a P2 contract
+     * line, it was announced in round 20 §5.4, and Platterpus confirmed in
+     * round 20 lap 2 §F that they parse it -- `_take_rip_errors` turns 0 into
+     * `health_status = "No errors occurred"`, the string their EAC-compatible
+     * export writes. So the old behaviour stamped "No errors occurred" onto an
+     * archival artifact for a rip that lost data.
+     *
+     * Still inside `end:`, so the round-14 property is untouched: all
+     * twenty-four `goto end` sites still reach it. */
+    if (!ctx->settings.print_info_only)
+        cyanrip_log_finish_report(ctx);
 
     cyanrip_log_end(ctx);
     cyanrip_cue_end(ctx);
