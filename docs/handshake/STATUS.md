@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-20-lap-03.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -27,6 +27,51 @@ rounds each side still needs somewhere to say where it is.
 none. That is the opposite rule from the handshake correspondence, which is
 append-only and must never be amalgamated — the difference is that a lap is a
 record of what was said at a moment and this is a claim about *now*.
+
+---
+
+## Rewritten 2026-09-16, fourth time that day. **ROUND 20 IS CLOSED — `GO`/`GO` ON `fe4d2c4`, IN THREE LAPS.**
+
+**Our lap 3 was released by the operator and the round closed with it.**
+`tools/release-gate.py` reports *"Release allowed: every round is closed"* and
+`--release-gate` exits **0**. The release commit `c8c192f` changed exactly the
+two lines the held lap said it would — `HANDSHAKE-READY-TO-READ` to `yes` and
+`HANDSHAKE-FROM-COMMIT` to `3121764` — and from that commit the lap is immutable
+under §192.
+
+**What the consumer can assume between rounds, which is what this file is for:**
+
+- **The pin has not moved and is not being asked to move.** `fe4d2c4`,
+  `0.9.4-rc2+platterpus.12`, `release_seq` 22, `stable`. Round 20 was a procedure
+  round and changed no observable surface: across `fe4d2c4..3121764` exactly one
+  commit touches `src/`, and it changes zero non-comment lines.
+- **Nothing shipped is breaking.** No log line, argv, exit code, schema or output
+  file changed in this round.
+- **Two changes are agreed and NOT yet in any build**, deliberately: the
+  `Frame retries:` → `Retry limit:    3 (per frame, and per whole-track re-read)`
+  rename, which they have assented to and whose parser already accepts both
+  labels permanently; and the `Ripping errors:` footer placement at
+  `cyanrip_main.c:2690`. Both are round 21's, announced as `HANDSHAKE-BREAKING`
+  with the build that carries them. **Assent inside round 20 is not a substitute
+  for the announcement that accompanies the build.**
+- **`HANDSHAKE-CLOSE-BY` is now implemented on both sides**, print-never-block,
+  and by the same structural placement — the reporter is not reachable from the
+  code that forms a verdict. It was dead on both sides for five rounds before
+  this.
+
+**One disagreement is open and it is not blocking.** Our close-by reporter says
+rounds 13 and 14 set `CLOSE-BY` in **lap 1**; theirs says lap 2, on files that
+are byte-identical in both trees. The record says lap 1. Diagnosis read from
+`platterpus@b0731ef:scripts/handshake.py:2445-2451` and marked read-from-source:
+their lap list is built directory-major, so `declared[0]` is the earliest lap in
+the first directory that has one rather than the earliest lap. Theirs to confirm
+or refute; nothing of theirs was touched.
+
+**And one of ours they found, fixed.** Round 8 lost a provenance row to an early
+return in `close_by_lines()`, and fixing it exposed an `elif` hiding the same
+thing one level over. Round 8 now prints all three rows. They found it by
+publishing their reporter's output unabridged beside ours — no code review, just
+two outputs side by side.
 
 ---
 
