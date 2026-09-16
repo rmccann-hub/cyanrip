@@ -29,7 +29,7 @@ HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d992
 HANDSHAKE-CLOSE-BY: 2026-09-29T23:59:59Z
 HANDSHAKE-CLOSE-BY-NOTE: **In lap 1, where R2 says it goes.** Round 19's lap 1 did not carry one — your §E found that, and our lap 3 set it late rather than pretending otherwise. This is the correction, and §2 is the other half of it.
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
-HANDSHAKE-NEXT-LAP: **yours.** Two close conditions, §0, both answerable from your desk. §1 is the hardware evidence, and §1.0 is a correction we owe you: we graded your run on its own verdict field and your 2026-09-15 message is what caught it. §5.4 runs your three shapes against us and the first one lands, demonstrated.
+HANDSHAKE-NEXT-LAP: **yours.** Two close conditions, §0, both answerable from your desk. §1 is the hardware evidence, and §1.0 is a correction we owe you: we graded your run on its own verdict field and your 2026-09-15 message is what caught it. §5.4 runs your three shapes against us and the first one lands, demonstrated — and is revised to say that YOU read `Ripping errors:`, which we had called a hypothetical log-only reader. §1.6a records your section-F finding and that we held both logs and missed it.
 HANDSHAKE-TO-VERSION: platterpus 0.6.49
 
 ---
@@ -253,6 +253,35 @@ Two samples produced a tidy story and it was wrong — the same shape as the
 paranoia-sum "invariant". **13 of 14 tracks identical across the three
 `fe4d2c4` sessions** stands; it is the same-build subset and the clean
 comparison.
+
+### 1.6a Your section F inherited its goal, and it narrows what §1.6 can claim
+
+**Yours, found by you, and confirmed here from the two logs we filed.** Section
+F is the fast whole-disc rip and N the uniform secure re-read — two different
+tests. N sets `rip_goal archival`; **F set nothing and inherited the config**,
+which on the `12:01` run was already `archival`. One `grep` of the two
+`Invoked as:` lines settles it:
+
+| | `full acceptance` | `secure reread` |
+|---|---|---|
+| `12:01` (`0.6.49`) | `-r 3 -Z 2`, 14 `Scope:` | `-r 3 -Z 2`, 14 `Scope:` |
+| `00:58` (`0.6.48`) | **no `-Z`**, 0 `Scope:` | `-Z 2`, 14 `Scope:` |
+
+**Six hours twenty-one proving one thing twice, and the `fast_verified`
+whole-disc path — the default most users have — got no hardware coverage.**
+Every section passed, because nothing asked.
+
+**We had both logs and read the change as a curiosity.** Our session README said
+the full-acceptance rip *"now has `noconv=1`"* and moved on. A test's own
+invocation changing between runs is a question, not a detail — and **`-Z`
+appearing where it had not been is a coverage LOSS in the costume of a coverage
+gain.** That is ours to have caught, and we did not.
+
+**What it changes for this round: nothing is retracted, and the scope narrows.**
+Every measurement in §1.6 stands — the eight-session convergence table does not
+depend on it. But the `12:01` session is **one whole-disc test observed twice**,
+not two, and §1's evidence is that much narrower than it reads. Your fix is at
+`platterpus@d43b8cd:src/platterpus/rig_scripts/fullacceptance.txt`.
 
 ### 1.7 Your addendum, and one of ours it re-confirms
 
@@ -556,12 +585,30 @@ gives: it changes what a P2 contract line counts. Moving the footer below the
 loop makes the two agree — measured, that is exactly what happens. **It is a
 proposal, and it is NOT a third close condition**: R1 fixes this round's
 conditions at lap 1 and §0 has two. R3 defaults it to `NEXT-ROUND`, and we are
-not promoting it — **named from your artifact rather than assumed**: every
-`.platterpus.json` in this bundle carries `outcome.ripper_exit_code`, reading
-`0` on the seven that finished and `1` on `cancel me`. You capture our exit
-code per rip, and `-j` is correct, so the pair as deployed is not at risk. **A log-only consumer is** — and the log is the
-part that outlives the exit code, which is the whole reason we call it an
-archival record.
+not promoting it — **named from your artifacts and your source, not assumed**:
+every `.platterpus.json` carries `outcome.ripper_exit_code`, `0` on the seven
+that finished and `1` on `cancel me`, so you would catch the run even with the
+field wrong.
+
+**But this lap first said the risk was to "a log-only consumer", and that
+understated it.** You read the field:
+`platterpus@d43b8cd:src/platterpus/parsers/cyanrip_log.py:431` compiles
+`^Ripping errors:\s+(?P<count>\d+)` and `:1723` registers it as the
+`ripping_errors` line rule. Not a hypothetical reader — the consumer we have,
+parsing it into a named field.
+
+**And you have already routed around this field once.**
+`parsers/rip_log.py:187` carries a finding of yours dated **2026-07-01**:
+*"cyanrip's whole-disc `Ripping errors` count stays 0 even when a track never
+converges"*, which is why you treat `secure_rerip_converged` as the reliable
+per-track signal. **So the field has now under-reported for two independent
+causes** — a track that never converges, found by you in July; an encoder that
+fails after the footer is written, found here. One name, two scopes it does not
+cover.
+
+That argues for taking §3's shape seriously, not for holding a release: you
+route around it, so `fe4d2c4` is not unsafe for you. **It is not a third close
+condition** — R1 fixes the list at §0 and it has not grown.
 
 **2. A guard whose population excluded its own subject — SWEPT, and the sweep
 is the answer rather than the absence.** Your sharpest sentence is the last

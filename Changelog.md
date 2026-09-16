@@ -31,6 +31,39 @@ rips, and the three that still show `"ran"` beside a null block are each flagged
 by their own backstop as `verification_result_missing`. We nearly filed "still
 broken".
 
+**THEIR SECTION F INHERITED ITS GOAL, AND WE HAD THE EVIDENCE AND MISSED IT.**
+Platterpus found it in their own acceptance script: section F is the FAST
+whole-disc rip, N the uniform secure re-read, and F set no `rip_goal` — so on
+the 2026-09-15 `12:01` run, which began with the config already on `archival`,
+**F and N ran the identical test.** Six hours twenty-one proving one thing
+twice, and the `fast_verified` whole-disc path — the default most users have —
+got **no hardware coverage at all**. Every section passed, because nothing
+asked.
+
+**Confirmed here with one grep of the two `Invoked as:` lines we filed
+yesterday**: in `12:01` both carry `-r 3 -Z 2` and 14 `Scope:` lines; in `00:58`
+the full-acceptance rip carries **no `-Z`** and zero. Our session README noted
+the change — *"now has `noconv=1`"* — and moved on. **A test's own invocation
+changing between runs is a question, not a detail, and `-Z` appearing where it
+had not been is a coverage LOSS in the costume of a coverage gain.** Third time
+this week a difference was read without asking what it meant.
+
+Nothing is retracted: every measurement stands, and the eight-session
+convergence table does not depend on it. But the `12:01` session is **one
+whole-disc test observed twice, not two**, and the session README and round 20
+§1.6a now say so.
+
+**AND `Ripping errors:` IS READ BY THE CONSUMER WE HAVE, not by a hypothetical
+one.** §5.4 called the risk *"a log-only consumer"*; verified from their source
+instead — `platterpus@d43b8cd:src/platterpus/parsers/cyanrip_log.py:431`
+compiles `^Ripping errors:\s+(?P<count>\d+)` and `:1723` registers it as a line
+rule. **And they have already routed around that field once**:
+`parsers/rip_log.py:187` carries their 2026-07-01 finding that the count *"stays
+0 even when a track never converges"*, which is why they trust
+`secure_rerip_converged` instead. **So the field has under-reported for two
+independent causes** — non-convergence, theirs in July; an encoder failing after
+the footer is written, ours this week. One name, two scopes it does not cover.
+
 **THE SHARED COMMAND SHEET'S THREE WRONG ROWS NOW LIVE IN ONE PLACE.**
 `docs/seam-commands.md` publishes §7's *"Every value either took effect or was
 refused with a message"* (49 of 111 rows were graded from exit status alone),

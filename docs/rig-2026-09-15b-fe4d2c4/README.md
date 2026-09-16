@@ -48,6 +48,43 @@ So the state they reported still occurs, on **three of eight** rather than five,
 and it is no longer silent on any of them. **We nearly filed "still broken";
 reading their code and then their `issues` arrays is what stopped it.**
 
+## CORRECTION: this session covers LESS than it appears to, and we had the evidence
+
+**Platterpus found it in their own script and we confirmed it from the two logs
+filed here.** Their acceptance script's section F is meant to be the **fast**
+whole-disc rip and section N the **uniform secure re-read** of the same disc —
+two different tests, and the run's value is that they are different. N sets
+`rip_goal archival` explicitly. **F set nothing and inherited whatever the
+config held**, and this run began with the config already on `archival`.
+
+Confirmed from `rips/`, one `grep` of the two `Invoked as:` lines:
+
+| | `full-acceptance-angle-bracket.log` | `secure-reread.log` |
+|---|---|---|
+| **09-15b (this session)** | `-r 3 -Z 2`, 14 tracks, 14 `Scope:` | `-r 3 -Z 2`, 14 tracks, 14 `Scope:` |
+| 09-15a (the session before) | **no `-Z`**, 0 `Scope:` | `-Z 2`, 14 `Scope:` |
+
+**F and N ran the identical test.** Six hours and twenty-one minutes proving one
+thing twice, and **the `fast_verified` whole-disc path — the default most users
+have — got no hardware coverage at all.** Every section still passed, because
+nothing asked.
+
+**We had every byte of this yesterday and read it as a curiosity.** This README
+noted that the 14-track full-acceptance rip "now has `noconv=1`" and moved on. A
+test's own invocation changing between runs is a question, not a detail —
+and **`-Z` appearing where it had not been is a coverage LOSS wearing the
+costume of a coverage gain.** More secure re-reading looks like more rigour;
+what it meant was that the fast path was no longer being tested.
+
+Third time this week that a difference was read without asking what it meant:
+the missing MP3s in 09-15a's `MANIFEST.txt`, two evidence tables built from the
+sessions somebody remembered, and this.
+
+**Their fix is in `platterpus@d43b8cd:src/platterpus/rig_scripts/fullacceptance.txt`**,
+which pins F's goal and carries the finding as a comment. Nothing here is
+retracted — every measurement below stands — but **this session is one
+whole-disc test observed twice, not two.**
+
 ## The 244/0 verdict is again not a statement about the rips
 
 `script-report.json`: 245 step records, **244 pass, 0 fail, 0 error,

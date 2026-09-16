@@ -17,6 +17,50 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
+## Rewritten 2026-09-16. **ROUND 20 LAP 1 IS WRITTEN, REVISED THREE TIMES WHILE HELD, AND WAITING ON THE OPERATOR'S WORD.**
+
+**It is published at `docs/handshake/round-20-lap-01.md` and still declares
+`HANDSHAKE-READY-TO-READ: no`.** Platterpus has read it enough to confirm it
+exists and has deliberately not acted on it — their rule refuses a verdict from
+an unreleased lap in either direction, which is the field working. **Releasing
+it is the operator's act**, and the release commit changes only that line and
+`HANDSHAKE-FROM-COMMIT`.
+
+**Revised three times while held, which is what held is for.** Once for the
+missing MP3s they caught; once for the eight-session derivations; and now for
+two things that landed on 2026-09-16:
+
+**Their section F inherited its `rip_goal`, and we had the evidence and missed
+it.** On the `12:01` run F and N ran the identical test — both `-r 3 -Z 2`, both
+14 `Scope:` lines — so the `fast_verified` whole-disc path got no hardware
+coverage and six hours twenty-one went on proving one thing twice. One grep of
+the two `Invoked as:` lines we filed shows it. Our README noted the change and
+moved on. **`-Z` appearing where it had not been is a coverage LOSS in the
+costume of a coverage gain.**
+
+**`Ripping errors:` is read by the consumer we have.** §5.4 had called the risk
+*"a log-only consumer"*. Verified from their source:
+`parsers/cyanrip_log.py:431` compiles the field and `:1723` registers it. **And
+they routed around it once already** — `parsers/rip_log.py:187`, their
+2026-07-01 finding that the count stays 0 when a track never converges. Two
+independent causes, one field name.
+
+**Their 0.6.50 is held pending this round and their reasoning is better than the
+rule's.** They checked rather than invoked §6a: `c57025e..d43b8cd` touches five
+files under `src/` — the acceptance script and four UI modules — with **no
+parser, argv builder, adapter or ripper module**, and `REPORT_SCHEMA_VERSION`
+still **24**. Verified here in a full clone, 608 commits. So 0.6.50 cannot change
+what round 20 decides; the argument for waiting is that the rig run is the
+expensive thing and it should follow their reading of the last two, not precede
+it.
+
+**Note for anyone resolving `d43b8cd`: it is on `claude/session-omka9f`, not
+`main`.** `main` is at `87738b1`. They said "on our branch" and they cited a SHA
+rather than a tip, which is the rule — recorded because a reader who goes to
+`main` finds nothing.
+
+---
+
 ## Rewritten 2026-09-15, third time that day. **ROUND 20 IS OPEN AND HELD. THREE sessions now share one pin, and the third falsified something the first two said.**
 
 **`0.6.49` (`c57025e`) ran a second acceptance session on `fe4d2c4`** — filed at
