@@ -3398,6 +3398,9 @@ def sc_artifacts_are_tracked():
         # Filed evidence for the AccurateRip row, which no longer re-runs the
         # probe. If this is not in the repository the row cites nothing.
         "docs/accurip-probe.log",
+        # Filed evidence for the inert-edit row, which no longer re-runs the
+        # probe. Same reason: without it the row cites nothing.
+        "docs/inert-edit-probe.log",
     ]
 
     tracked = subprocess.run(["git", "ls-files", "-z", "--", *artifacts],

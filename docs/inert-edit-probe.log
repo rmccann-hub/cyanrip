@@ -1,0 +1,146 @@
+Inert-edit probe — FILED EVIDENCE, not a re-runnable gate.
+==========================================================
+
+Run 2026-09-16 on `platterpus-fork` at d92c4e1, in a detached git worktree so
+this tree was never dirty.
+
+WHAT IT ANSWERS. `tools/mutate.py` reports a mutation score, and that score is
+vacuous if any test in the suite detects the EDIT rather than the DEFECT --
+such a test kills every mutant and the sweep reports 100%. `EXCLUDED_TESTS`
+names the ones that do. The list is derived-and-named rather than pattern
+filtered, so it cannot grow by itself, and mutate.py's own docstring says the
+probe "is worth repeating rather than trusting this comment". This is that
+repeat.
+
+It had not been repeated since three tests were added to the images suite:
+`cache_table_matches_the_transcripts`, `encode_failure_is_absent_from_the_log`,
+and check 2b inside `docs_do_not_contradict_themselves`. All three appear below
+as OK, so none of them detects an edit.
+
+THE EDIT. Three lines appended at EOF of `src/utils.c`, moving no line number:
+
+    /* Behaviourally inert probe edit: a comment at EOF, moving no line number.
+     * Appended to ask which tests detect an EDIT rather than a DEFECT. */
+
+Confirmed landed before the run: `git diff --stat` reported `src/utils.c | 3
++++`, and the build was green (ninja regenerated version.c and
+handshake_state.h and linked without error) -- a probe whose edit did not
+compile would run the stale binary and report a clean sweep for the wrong
+reason.
+
+THE RESULT. 84 OK, 1 FAIL. The one failure is `images - cyanrip:contract_build`,
+which is exactly what `EXCLUDED_TESTS` names and the only entry it has.
+**The exclusion list is still complete.**
+
+SECOND FINDING, not what the probe was for. `cyanrip:Sanitizer sweep` PASSED.
+That is the other edit-detector CLAUDE.md records: `tools/sanitize-run.py` used
+to run the whole images suite including `contract_build`, so mutants died on the
+edit through the sweep and `src/cyanrip_encode.c` scored 100.0% over 125
+mutants and meant nothing. Under an inert edit that sweep would fail if it still
+carried `contract_build`. It does not.
+
+RE-RUN IT DELIBERATELY, not on a schedule -- it is a full build plus the whole
+85-test suite, about seven minutes:
+
+    git worktree add --detach <tmp> HEAD
+    printf '\n/* inert */\n' >> <tmp>/src/utils.c
+    cd <tmp> && meson setup build && ninja -C build && meson test -C build
+    # expect: exactly the tests EXCLUDED_TESTS names, and no others, FAIL
+
+--- meson test output, verbatim ---
+ninja: Entering directory `/tmp/claude-0/-home-user-cyanrip/c0ae9fac-eea3-5c9a-93c0-1dc9de0149d3/scratchpad/probe-wt/build'
+[1/8] Generating src/version.c with a custom command (wrapped by meson because command contains newlines)
+[2/7] Generating src/handshake_state.h with a custom command
+ 1/85 cyanrip:FUN512 checksum                                OK                0.01s
+ 2/85 cyanrip:Naming schemes                                 OK                0.01s
+ 3/85 cyanrip:Q sub-channel decoding                         OK                0.01s
+ 4/85 cyanrip:AccurateRip response                           OK                0.01s
+ 5/85 cyanrip:Cue pre-gap decision                           OK                0.01s
+ 6/85 cyanrip:Peak cross-check                               OK                0.01s
+ 7/85 cyanrip:Cache probe wording                            OK                0.01s
+ 8/85 cyanrip:Diagnostics retention                          OK                0.01s
+ 9/85 cyanrip:Log rendering                                  OK                0.12s
+10/85 cyanrip:FIFO spurious wakeup                           OK                0.42s
+11/85 cyanrip:Rig tools                                      OK                0.04s
+12/85 cyanrip:Audio checksum mirror                          OK                0.43s
+13/85 cyanrip:Golden reference freshness                     OK                0.42s
+14/85 cyanrip:Interrupted sample freshness                   OK                0.37s
+15/85 cyanrip:Sent laps are immutable                        OK                0.06s
+16/85 cyanrip:Round 16 acceptance checker                    OK                2.00s
+17/85 cyanrip:Contract delta names its section               OK                0.10s
+18/85 cyanrip:Compiler diagnostics                           OK                3.65s
+19/85 cyanrip:Stall watchdog                                 OK                4.15s
+20/85 cyanrip:Lap commit list names its range                OK                1.12s
+21/85 cyanrip:Handshake wire conformance                     OK                0.61s
+22/85 cyanrip:Release gate                                   OK               20.93s
+23/85 cyanrip:P5 message witnesses                           OK                0.11s
+24/85 cyanrip:Argv surface probe                             OK               26.71s
+25/85 cyanrip:Sanitizer sweep                                OK               27.50s
+26/85 cyanrip:Settled facts                                  OK               56.08s
+27/85 cyanrip:Black-box sweep                                OK              286.32s
+28/85 cyanrip:Seam inbound-held audit                        OK                0.08s
+29/85 cyanrip:Seam record audit                              OK                0.13s
+30/85 cyanrip:Bundle ingest                                  OK                0.23s
+31/85 images - cyanrip:basic                                 OK                0.36s
+32/85 images - cyanrip:mixed                                 OK                0.66s
+33/85 images - cyanrip:pregap                                OK                1.23s
+34/85 images - cyanrip:info                                  OK                1.52s
+35/85 images - cyanrip:nrg                                   OK                0.37s
+36/85 images - cyanrip:golden_reference_matches_a_fresh_rip  OK                0.38s
+37/85 images - cyanrip:audio_checksums                       OK                0.63s
+38/85 images - cyanrip:contract_line_shapes                  OK                0.37s
+39/85 images - cyanrip:filters                               OK                1.53s
+40/85 images - cyanrip:deemph_with_hdcd                      OK                1.54s
+41/85 images - cyanrip:album_loudness                        OK                0.37s
+42/85 images - cyanrip:contract_covers_log                   OK                0.37s
+43/85 images - cyanrip:art                                   OK                0.37s
+44/85 images - cyanrip:cue_only                              OK                0.41s
+45/85 images - cyanrip:cli                                   OK                3.96s
+46/85 images - cyanrip:reporting                             OK                0.37s
+47/85 images - cyanrip:cdtext                                OK                0.94s
+48/85 images - cyanrip:metadata                              OK                0.95s
+49/85 images - cyanrip:handshake                             OK                1.16s
+50/85 images - cyanrip:errors                                OK                2.30s
+51/85 images - cyanrip:early_log                             OK                0.69s
+52/85 images - cyanrip:contract_build                        FAIL              0.12s   exit status 1
+>>> ASAN_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1 MALLOC_PERTURB_=29 UBSAN_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1:print_stacktrace=1 MSAN_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1:print_stacktrace=1 MESON_TEST_ITERATION=1 CYANRIP_DECLARED_RELEASED=0 /usr/bin/python3 /tmp/claude-0/-home-user-cyanrip/c0ae9fac-eea3-5c9a-93c0-1dc9de0149d3/scratchpad/probe-wt/build/../tests/rip_images.py src/cyanrip /tmp/claude-0/-home-user-cyanrip/c0ae9fac-eea3-5c9a-93c0-1dc9de0149d3/scratchpad/probe-wt/tests/fixtures contract_build
+
+53/85 images - cyanrip:diagnostics                           OK                0.78s
+54/85 images - cyanrip:status_is_current                     OK                0.58s
+55/85 images - cyanrip:contract_exit_codes                   OK                0.68s
+56/85 images - cyanrip:docs_do_not_contradict_themselves     OK                0.08s
+57/85 images - cyanrip:changelog_names_every_release         OK                0.07s
+58/85 images - cyanrip:cache_table_matches_the_transcripts   OK                0.07s
+59/85 images - cyanrip:format_guard                          OK                0.19s
+60/85 images - cyanrip:encode_failure_is_absent_from_the_log OK                0.40s
+61/85 images - cyanrip:version_matrix                        OK                0.20s
+62/85 images - cyanrip:cue_isrc                              OK                0.36s
+63/85 images - cyanrip:reference                             OK                0.37s
+64/85 images - cyanrip:exit_codes                            OK                0.75s
+65/85 images - cyanrip:filed_rig_is_mappable                 OK                0.08s
+66/85 images - cyanrip:runa_block_is_complete                OK                0.07s
+67/85 images - cyanrip:verify_log                            OK                0.68s
+68/85 images - cyanrip:duration                              OK                4.13s
+69/85 images - cyanrip:interrupt                             OK                0.77s
+70/85 images - cyanrip:artifacts_are_tracked                 OK                0.08s
+71/85 images - cyanrip:paranoia                              OK                1.82s
+72/85 images - cyanrip:cache_probe_only                      OK                0.68s
+73/85 images - cyanrip:contract_diagnostics                  OK                0.37s
+74/85 images - cyanrip:interrupt_deadlock                    OK                1.44s
+75/85 images - cyanrip:contract_composed                     OK                0.36s
+76/85 images - cyanrip:contract_fatal_inventory              OK                0.11s
+77/85 images - cyanrip:diag_repeated_flag                    OK                0.65s
+78/85 images - cyanrip:enhanced_cd                           OK                1.24s
+79/85 images - cyanrip:curl_timeouts                         OK                0.11s
+80/85 images - cyanrip:outdir_is_a_file                      OK                0.36s
+81/85 images - cyanrip:timestamp_offset                      OK                0.66s
+82/85 images - cyanrip:utf8_naming                           OK                0.94s
+83/85 images - cyanrip:abort_footer                          OK                0.40s
+84/85 images - cyanrip:consumer_argv                         OK                1.20s
+85/85 images - cyanrip:sanitize                              OK                5.26s
+
+Ok:                84  
+Fail:              1   
+
+Full log written to /tmp/claude-0/-home-user-cyanrip/c0ae9fac-eea3-5c9a-93c0-1dc9de0149d3/scratchpad/probe-wt/build/meson-logs/testlog.txt
+EXIT=1
