@@ -83,6 +83,62 @@ which is the only method that finds this class.
 
 ## Open, ours, and solvable — but deliberately not now
 
+### `Interrupted sample freshness` failed once, and the mechanism is narrowed but NOT established
+
+**Measured 2026-09-17, one occurrence, in a full suite run.** `Ok: 85 Fail: 1`,
+and the message was precise:
+
+```
+a rip interrupted right now does not produce:
+  ^Stopping, ripping incomplete!$
+```
+
+**Not reproducible standalone:** three consecutive runs immediately afterwards
+passed. So the check is non-deterministic under load, and a green re-run is not
+evidence that anything was fixed.
+
+**What is narrowed.** `cyanrip_main.c:867` prints that line from **inside the
+per-frame loop** of a track read:
+
+```c
+/* Stop now if requested */
+if (quit_now) {
+    cyanrip_log(ctx, 0, "\nStopping, ripping incomplete!\n");
+    break;
+}
+```
+
+So the line is produced only when `quit_now` is observed *while a read is in
+flight*. `tools/gen-golden-reference.py` polls the child's stdout every 0.05 s
+for `Ripping track` and signals the moment it appears — and the fixture is three
+short tracks, 600 sectors, so a pass can finish inside that window. A signal
+arriving after the frame loop has ended reaches a different check and this line
+is never written.
+
+**And the generator asserts the opposite as a guarantee.** `INTERRUPTED_SHAPES`
+says of the two `Interrupted at:` arms: *"Only the first is produced by any test
+here: sc_interrupt() signals once `Ripping track` has appeared, so the read is
+always in flight."* **"Always" is the word that failed.** It was true in every
+run anyone had constructed, which is not the same as true — the same shape as
+the per-track paranoia invariant that survived four verifications because every
+artifact it met had each track read once.
+
+**What is NOT established**, and saying so is the point: which arm the failing
+run actually took. `generate_interrupted()` runs inside a
+`tempfile.TemporaryDirectory()`, so the log and the diagnostics record from that
+run were deleted when it exited. **The check discards the evidence needed to
+diagnose its own failure**, and that is a second, cheaper defect than the race
+— a failing artifact that cannot be re-created by definition, because where the
+signal lands is not reproducible.
+
+**Deliberately not fixed in this round.** Round 21 is open and this is not a
+regression in the pin under review; R3 defaults it to round 22. The two candidate
+fixes are not equivalent and should not be chosen under a round's clock: keeping
+the failing run's artifacts costs nothing and settles the next occurrence, while
+making the signal reliably land mid-read changes what the check exercises. **The
+comment is corrected now regardless**, because a docstring claiming a guarantee
+the code does not have is the defect that let this go unnoticed.
+
 ### `Lap commit list names its range` timed out once, and the cause is NOT established
 
 **Measured 2026-09-16, one occurrence, immediately after round 20 closed.** The

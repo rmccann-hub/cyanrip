@@ -225,12 +225,21 @@ SAMPLE_JSON = ROOT / "docs" / "sample-interrupted.diagnostics.json"
 INTERRUPTED_SHAPES = (
     re.compile(r"^Rip completed:  no \(interrupted by SIGTERM, \d+ of \d+ tracks\)$",
                re.M),
-    # Both arms, so a reword of either fails. Only the first is produced by any
-    # test here: sc_interrupt() signals once `Ripping track` has appeared, so
-    # the read is always in flight. The `between tracks` arm needs the signal
-    # to land in the writeout window, which nothing here can schedule -- it is
-    # in the contract and it is UNEXERCISED, and that is stated rather than
-    # left for a green suite to imply.
+    # Both arms, so a reword of either fails. This comment used to say the
+    # first arm is the only one produced here, "so the read is always in
+    # flight". THAT WORD WAS WRONG, and it failed on 2026-09-17: a full-suite
+    # run reported that a rip interrupted right now did not produce
+    # `Stopping, ripping incomplete!`, which cyanrip_main.c:867 writes only
+    # from INSIDE the per-frame loop. Three standalone re-runs passed.
+    #
+    # The gate below waits for `Ripping track` in stdout and signals when it
+    # appears; the fixture is three short tracks and 600 sectors, so under load
+    # a pass can finish inside that window and the signal lands somewhere else.
+    # So the first arm is what this USUALLY produces, the `between tracks` arm
+    # is reachable here by accident rather than by design, and neither is
+    # scheduled. See docs/KNOWN-ISSUES.md -- including the second defect, that
+    # this function's TemporaryDirectory deletes the artifacts a failing run
+    # would need to settle which arm it took.
     re.compile(r"^Interrupted at: "
                r"(track \d+, mid-read|between tracks, no read in progress)$",
                re.M),
