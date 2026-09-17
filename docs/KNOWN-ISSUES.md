@@ -173,6 +173,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-12 `fe4d2c4` | 250.6 ms | 42.3 ms | 62.6 ms | 68% |
 | 2026-09-15 `fe4d2c4` | 362.6 ms | 61.7 ms | 90.7 ms | 68% |
 | 2026-09-15b `fe4d2c4` | 362.7 ms | 81.6 ms | 90.7 ms | **90%** |
+| 2026-09-17 `fe4d2c4` | 362.8 ms | 62.2 ms | 90.7 ms | 69% |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are

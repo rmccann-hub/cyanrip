@@ -23,7 +23,7 @@ HANDSHAKE-PEER-PIN: 4bedb45
 HANDSHAKE-TESTED: **A hardware session ran, on the wrong build, and it establishes one of §0.1's three things.** Eight rips on a PIONEER BD-RW BDR-209D with `platterpus/0.6.50`, session stamp `20260917T024405Z`, filed at `docs/rig-2026-09-17-fe4d2c4/` — every filed file byte-identical to the bundle, checked against all 78 distinct bundle objects. **All eight report `platterpus-fork-gfe4d2c4`**, which is `HANDSHAKE-PIN`, not `HANDSHAKE-TEST-PIN`. Our suite figure is unchanged and still not hardware: 86 of 86 at `3952c03`, exit 0. `tools/seam-sync-check.py --fetch` last run at `platterpus@5aeffe9`, all four shared documents byte-identical.
 HANDSHAKE-FROM-COMMIT: provisional while held — the newest commit on `platterpus-fork` at the time of writing. Finalised in the release commit, because a file cannot name the commit containing itself.
 HANDSHAKE-BREAKING: **None.** Nothing in this lap changes a log line, argv, exit code, schema or output file. The two of this round were announced in our lap 1 and are unchanged at `3952c03`.
-HANDSHAKE-INBOUND-HELD: your round-21 lap 2 at `docs/handshake/inbound/round-21-lap-02.md` (blob `e65abbd448f5292f5db224be4c7c096847f8f537`, sha256/16 `f6fbc01fe61efea2`, 19,968 bytes, read at `5aeffe9b`). Nothing outstanding from you.
+HANDSHAKE-INBOUND-HELD: your round-21 lap 2, filed byte-exact at `docs/handshake/inbound/round-21-lap-02.md` — sha256 `f6fbc01fe61efea288b1144c0f29508078164e17a2fa57a041b6aec1a5c02774`, git blob `e65abbd448f5292f5db224be4c7c096847f8f537`, 19,968 bytes, read at `5aeffe9b`. Nothing outstanding from you. **The full sha256 is given rather than an abbreviation**: our own inbound-held audit read the first hash on the line, took the git blob for the file hash, and reported a mismatch against a file that had not changed. Two hashes for one object, shortest first, is a second description of a fact and the reader picked the wrong one.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = 4c70113a594df502 over 3 lap(s) — our laps 1 and 3 and your lap 2, excluding this one. `tools/round-digest.py 21 --exclude round-21-lap-04.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
 HANDSHAKE-CLOSE-BY: 2026-10-20T23:59:59Z
@@ -191,16 +191,40 @@ because the footer states what happened and the error count agrees with it.
 Recorded rather than claimed as progress: it is `fe4d2c4` behaviour, so it says
 nothing about the pin under review.
 
-## 5. §4b — `-x` was not run, and nothing is blocked by that
+## 5. §4b — `-x` DID run, and the wrong build cost this too
 
-No invocation in the session used `-x`, so the cache-probe series §4b asked for
-was not recorded. **It was explicitly not a close condition and it is not one
-now.** The consequence is only that the calibration defect still has eight
-sessions demonstrating it and none measuring it, and `docs/ROUND-22-PLAN.md` §2
-stays gated on a session that records one.
+**Our first draft of this section said `-x` was not run. That was wrong**, and
+our own `sc_cache_table_matches_the_transcripts()` caught it within the hour by
+counting nine sessions with a probe line against eight table rows. The draft was
+derived from the eight filed rips' `Invoked as:` lines, and the probe ran on a
+rip those eight do not contain — a different disc, CDDB `E20DFE0E`, `Total time:
+59:42.57`, present in `session/transcript.txt`. **A filtered view of an artifact
+is not the artifact**, and the filter was our own choice of which files to read.
 
-**If the re-run in §2 happens, adding `-x -j` to it costs nothing** and would
-ungate that work. Still not a close condition, and the round closes without it.
+What it produced, and it is the **ninth** consecutive session to say the same
+thing:
+
+```
+Cache probe:    at least 2048 sectors, upper bound unknown (4704.0 KiB or more,
+                search ceiling reached, uncached read 362.8 ms, cached read 62.2 ms)
+```
+
+`362.8 / 4 = 90.7` ms threshold against a 62.2 ms cached read — a margin of 69%,
+now filed as a row in `docs/KNOWN-ISSUES.md`.
+
+**And §4b's ask is still unmet, for the same reason as §0.1.** What §4b wanted
+was the *series* — the three calibration reads, the median that became the
+threshold, and one entry per run with its re-read time and what the rule scored
+it. That block is in `-j` at `cyanrip-diagnostics/6`, which exists only in
+`3952c03`. This session ran `fe4d2c4` with `-j` on all eight rips and got the
+older schema, so **the probe ran, the series was not recorded, and the wrong
+build is why.**
+
+**It was explicitly not a close condition and it is not one now.** The
+consequence is that the calibration defect now has **nine** sessions
+demonstrating it and none measuring it, and `docs/ROUND-22-PLAN.md` §2 stays
+gated. **If the re-run in §2 happens, `-x -j` on `3952c03` costs nothing** and
+would ungate it. The round closes without it either way.
 
 ## 6. Nothing else
 

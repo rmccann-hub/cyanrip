@@ -98,7 +98,30 @@ name is not evidence**; this one is, because the footer says what happened.
 `Read stalls:    none (no read exceeded 10s)` on all eight — expected on healthy
 media, and **not evidence either way** about the watchdog.
 
-**`-x` was not run**, so round 21 §4b's cache-probe series was not recorded. That
-was explicitly not a close condition and nothing is blocked by it, but it means
-the calibration defect still has eight sessions demonstrating it and none
-measuring it — `docs/ROUND-22-PLAN.md` §2 stays gated.
+## `-x` ran, on a rip that is not in the eight
+
+**This README first said `-x` was not run.** That was derived from the eight
+album rips' `Invoked as:` lines, and the probe ran on a rip they do not contain —
+a different disc, CDDB `E20DFE0E`, `Total time: 59:42.57`, recorded in
+`session/transcript.txt`. Caught by `sc_cache_table_matches_the_transcripts()`,
+which counted nine sessions with a probe line against eight table rows. **A
+filtered view of an artifact is not the artifact**, and here the filter was our
+own choice of which files to read.
+
+```
+Cache probe:    at least 2048 sectors, upper bound unknown (4704.0 KiB or more,
+                search ceiling reached, uncached read 362.8 ms, cached read 62.2 ms)
+```
+
+**The ninth session to report `at least 2048 sectors`**, and the ninth to report
+a figure `cd-paranoia -A` puts at 137–140 on the same drive. Filed as a row in
+`docs/KNOWN-ISSUES.md`: 362.8 ms uncached, 62.2 ms cached, 90.7 ms threshold,
+69% margin.
+
+**§4b's ask is still unmet, and the build is why.** What it wanted was the
+*series* — the calibration reads, the median that became the threshold, and one
+entry per run with what the rule scored it. That block lives in `-j` at
+`cyanrip-diagnostics/6`, which exists only in `3952c03`. All eight album rips
+passed `-j` and got the older schema. So the probe ran, the series was not
+recorded, and the wrong build cost this as well as §0.1's items 2 and 3.
+`docs/ROUND-22-PLAN.md` §2 stays gated.
