@@ -195,7 +195,41 @@ making the signal reliably land mid-read changes what the check exercises. **The
 comment is corrected now regardless**, because a docstring claiming a guarantee
 the code does not have is the defect that let this go unnoticed.
 
-### `Lap commit list names its range` timed out once, and the cause is NOT established
+### `Lap commit list names its range` has timed out TWICE, and the cause is still NOT established
+
+**Second occurrence 2026-09-17**, at the tip `dcd6f95`, in a full suite:
+`Ok: 85  Fail: 0  Timeout: 1`, exit 1.
+
+```
+23/86 cyanrip:Lap commit list names its range   TIMEOUT   30.01s  killed by signal 15 SIGTERM
+```
+
+**Identical to the first in every measured respect**: same test, same 30.01 s,
+same `SIGTERM` at meson's default limit, same full-suite-only context.
+
+**What the second occurrence rules OUT, measured rather than assumed.**
+Standalone immediately afterwards: **0.88 s, 0.89 s, 0.88 s** — against 0.89,
+0.89, 0.94 on 2026-09-16. **The test has not got slower**, although the tree has
+gained laps, a 34-file rig session and three weeks of commits since. **Growth in
+what it walks is not the cause.**
+
+**And the distribution is bimodal, which is the sharpest thing we have.** Every
+observation is either ~0.9 s or ≥30 s; nothing in between, across two timeouts
+and a dozen normal runs. Ordinary CPU contention in an 86-test parallel suite
+produces a spread, not a 34× cliff. **A bimodal time is the shape of waiting on
+something, not of competing for something** — which is the direction to look next,
+and is not yet evidence for any particular lock.
+
+**Deliberately NOT given a wider `timeout:`.** It has no explicit one and takes
+meson's default 30 s, so widening it is the available move and it is the wrong
+one: it would convert the only signal we have into silence, and this file already
+records that treatment as the defect. **The useful change is instrumentation, not
+tolerance** — the test should record its own elapsed time per peer entry, so the
+third occurrence says *where* the 30 seconds went instead of only that they went.
+Round 22.
+
+**First occurrence, kept verbatim below, because two data points are the finding
+and consolidating them would destroy it.**
 
 **Measured 2026-09-16, one occurrence, immediately after round 20 closed.** The
 suite reported `Ok: 84  Fail: 0  Timeout: 1`, exit 1 — and **84 + 0 is not 85**,
