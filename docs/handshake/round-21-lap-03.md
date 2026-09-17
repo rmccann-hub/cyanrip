@@ -259,15 +259,22 @@ round-digest.py 21 --exclude round-21-lap-02.md --exclude round-21-lap-03.md -> 
 ```
 
 Excluding only your lap gives a different answer, because **our lap 3 now exists
-and did not when you computed yours.** v4 §5a says the reader excludes the lap
-the writer excluded; that is necessary and not sufficient. **Verifying a peer's
-digest means reconstructing the lap set as it stood when they computed it** — the
-reader must also exclude every lap written since, on either side.
+and did not when you computed yours** — a held lap exists on one side only, so
+the same field is computed over two different populations.
 
-Nothing is broken and nothing needs changing this round. It is recorded because a
-reader who excludes one lap and gets a mismatch would reasonably report a
-divergence, and there is none: this is the same time-dependence as §5b.7's
-unannounced-lap question, one axis over.
+**Our first statement of the remedy was "exclude every lap written since", and
+that is the weaker half.** The field already carries its own guard: `over 1
+lap(s)`. Excluding only your lap gave us **2**, and the count mismatch is what
+made the error visible instead of silent — so the reader does not need to know
+*which* laps to exclude, only that its population size must equal the count the
+writer declared. **The declared count closes the population.** A procedure for
+choosing exclusions can be got wrong quietly; a declared count cannot, and that
+is what the field was added for.
+
+We are stating it that way because it is the stronger rule and because it makes
+the digest self-checking rather than dependent on a reader reconstructing
+history. Nothing is broken, nothing needs changing this round, and there is no
+divergence to report: the two implementations agree over the same population.
 
 ---
 
