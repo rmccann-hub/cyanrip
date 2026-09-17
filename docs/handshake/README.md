@@ -150,7 +150,7 @@ once already, stopping at *"round 7 is open"* through five closed rounds.
 | 18 | closed, GO/GO — 3 laps | *(no pin move — a procedure round)* | `round-18-lap-03.md` |
 | 19 | closed, GO/GO — 3 laps | *(no pin move — a procedure round)* | `round-19-lap-03.md` |
 | 20 | closed, GO/GO — 3 laps | *(no pin move — a procedure round; `fe4d2c4`, under `0.6.48` then `0.6.49`)* | `round-20-lap-03.md` |
-| 21 | **OPEN** — our lap 1 sent 2026-09-16; our lap 3 published, HELD; their lap 2 published and **not released**, so unread | *(pin `fe4d2c4` frozen; **test pin `3952c03`** carries two agreed log changes)* | `round-21-lap-03.md` |
+| 21 | **OPEN** — laps 1–3 all sent; §0.2 closed by their refusal; §0.1 **not met**: the 2026-09-17 rig session ran `fe4d2c4`, not the test pin, so 1 of its 3 items is established | *(pin `fe4d2c4` frozen; **test pin `3952c03`** carries two agreed log changes and is what the session should have run)* | `round-21-lap-04.md` |
 
 **THIS TABLE WENT STALE AGAIN, EXACTLY AS ITS OWN WARNING DESCRIBES.** It
 stopped at round 13 through **five** closed rounds (14–18) while claiming

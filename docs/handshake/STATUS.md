@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-21-lap-03.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-21-lap-04.md
+STATUS-NEWEST-LAP-STATE: held
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -30,7 +30,76 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-17, third time that day. **OUR LAP 3 IS RELEASED. ROUND 21 IS DONE EXCEPT FOR A DRIVE.**
+## Rewritten 2026-09-17, fourth time that day. **THE SESSION RAN, ON THE WRONG BUILD. §0.1 IS ONE OF THREE. LAP 4 IS WRITTEN AND HELD.**
+
+**The section below says round 21 is "done except for a drive". A drive ran, and
+it was the wrong build, so that sentence was true for about two hours.**
+
+**Eight rips, session stamp `20260917T024405Z`, all on `fe4d2c4`** — the release
+pin, not the test pin `3952c03` that §0.1 names. Filed at
+`docs/rig-2026-09-17-fe4d2c4/`, every file byte-identical to the bundle, bundle
+sha256 `d8037c57291f93f3…`. Zero logs contain `Retry limit:`; all eight carry the
+old `Frame retries:`.
+
+**The `Handshake:` line is what answered it**, and this is the first time that
+line has settled a question rather than sat in a log unread. Every rip says
+`round 16 lap 17 closed, verdict GO -- released build`; a build from a tree with
+an open round writes `NOT a released build` instead. Nobody had to remember what
+the rig held.
+
+**§0.1 is one of three.**
+
+| | | |
+|---|---|---|
+| 1. `fast_verified` whole-disc on hardware | **established** | `full-acceptance-angle-bracket-2.log`, 14 of 14 — it is their section-F fix and does not depend on our build |
+| 2. their parser reads `Retry limit:` | **not** | the label does not exist in `fe4d2c4` |
+| 3. `Ripping errors:` is the moved field | **not** | `fe4d2c4` has the footer in the old position |
+
+**What is left is short, and that is the useful half.** Items 2 and 3 need *a rip
+that produces a log* on `3952c03`, not another acceptance sweep. The six-hour
+item is banked.
+
+**Their derivation was right and was not consulted.** Read at
+`platterpus@5aeffe9:src/platterpus/deps/fork_source.py`: `PIN_UNDER_REVIEW` is
+`fe4d2c4` (line 508), `FORK_TEST_PIN` is `3952c03` (697), and
+`pin_the_rig_should_install()` (1178) returns the test pin whenever a round is
+open and the two differ (1224). It returns `3952c03`. The rig ran `fe4d2c4`, and
+`session/rig-check-ripper-version.txt` recorded that — **both values present in
+one session, nothing joining them.** That is the §C shape they sent us, one level
+up. Their own docstring names the failure class and says what round 16's version
+of it would have cost: *"the artifact's provenance … the mis-pairing class this
+module exists to prevent rather than a wasted night."* **This time it was both**,
+because unlike round 16's pair these two builds are not behaviourally identical —
+they differ by exactly the two changes under review.
+
+**We could have caught it and did not.** Our lap 3 said §0.1 was the only thing
+left and never asked what the rig would install. Their lap 2 said the pin was
+landed *so the installer offers the right build* — and **offering is not
+installing**, a distinction neither side drew. `docs/rig-2026-09-12-fe4d2c4/`,
+`-09-15-` and `-09-15b-` show the rig had been on `fe4d2c4` for days, readable
+from our own tree before the session ran.
+
+**One thing the session produced that nothing asked for:** a SIGTERM that reached
+the process mid-rip — `cancel-me.log`, `Ripping errors: 1`,
+`Rip completed:  no (interrupted by SIGTERM, 0 of 14 tracks)`. The interrupt
+footer, not the abort footer. Three earlier folders named for a cancel never
+exercised it. It is `fe4d2c4` behaviour, so it says nothing about the pin under
+review.
+
+**`-x` was not run**, so §4b's cache-probe series was not recorded. Not a close
+condition; the consequence is that `docs/ROUND-22-PLAN.md` §2 stays gated and the
+calibration defect still has eight sessions demonstrating it and none measuring
+it. If the re-run happens, `-x -j` on it costs nothing.
+
+**Lap 4 is written and HELD.** It is ours although both sides said lap 4 would be
+theirs: we hold the finding that decides what their next lap should contain, and
+the blocker goes first regardless of who opened. **Our lap 3's pre-commitment is
+unspent and this is its named clause firing** — `GO` unless the session fails to
+establish one of §0.1's three things. It failed two.
+
+---
+
+## Rewritten 2026-09-17, third time that day. **OUR LAP 3 IS RELEASED. ROUND 21 IS DONE EXCEPT FOR A DRIVE.** *(true for about two hours — see above)*
 
 **Released on the operator's instruction, not on our own judgement.** This
 rewrite is inside the release commit, so it cannot name that commit's SHA — the
