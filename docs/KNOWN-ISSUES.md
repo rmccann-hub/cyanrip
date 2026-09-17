@@ -83,6 +83,62 @@ which is the only method that finds this class.
 
 ## Open, ours, and solvable — but deliberately not now
 
+### `EXCLUDED_TESTS` rests on a premise we recorded as lapsed, and nothing reads that premise
+
+**Found 2026-09-17 by checking Platterpus's round-21 lap 4 §H shape against our
+own tree rather than assuming it was not here.** Their shape: *a guard widened
+under an assumption, with the note recording that the assumption had lapsed
+written one screen away by the same hand, and nothing connecting them.* They
+asked for silence if it did not appear here. **It appears here.**
+
+`tools/mutate.py:111` excludes one test from the mutation sweep:
+
+```python
+EXCLUDED_TESTS = {
+    "contract_build": "hashes src/ into the contract's source anchor, so it "
+                      "fails on any byte changed in src/ …",
+}
+```
+
+**The premise is that exactly one test detects an EDIT rather than a DEFECT**,
+and a sweep is vacuous if a second one exists — every mutant dies on the edit and
+the score reads 100%.
+
+**That premise has already lapsed once, within hours**, and `CLAUDE.md` records
+it in prose: `tools/sanitize-run.py` ran the whole images suite in the
+instrumented tree, `mutate.py`'s third stage picked `contract_build` up again
+through `Sanitizer sweep`, and `src/cyanrip_encode.c` scored **100.0% over 125
+mutants and meant nothing**.
+
+**The remedy adopted was a procedure, not a check** — run the inert-edit probe
+before reporting a sweep — **and the probe no longer runs.**
+`tests/rip_images.py:3507` says so in as many words: *"Filed evidence for the
+inert-edit row, which no longer re-runs the probe."* `docs/inert-edit-probe.log`
+opens with *"FILED EVIDENCE, not a re-runnable gate."* It is asserted to be
+**tracked**, not to be **true**.
+
+So a third test that hashes `src/` would silently restore the vacuous 100%, and
+the only thing standing between us and that is a person remembering a rule
+written three hundred lines away in a different file.
+
+**The counter-example is in our own tree and makes the point sharper rather than
+softer.** `GRANDFATHERED = {5, 6}` in `tools/release-gate.py:79` is the same kind
+of set resting on the same kind of premise, and `tests/release_gate.py:430`
+pins it: *"grandfathered set changed"*. **We wrote the check once and not the
+other time**, so the shape is not that the check is hard — it is that nothing
+prompts you to write it when the premise is retired in prose instead of in code.
+
+**Platterpus's general form, which we are adopting as stated:** *when a premise
+is retired in prose, what reads that premise?* Nothing does, by construction — a
+comment explaining why an assumption no longer holds is not a thing any checker
+reads.
+
+**Not fixed in this round.** R3 defaults a finding to the next round, round 21 is
+open, and this makes nothing about the pin under review unsafe. The fix is cheap
+and obvious — assert the exclusion set, and make the inert-edit probe a gate
+again or say out loud that it is not one — but "cheap" is not a reason to widen a
+round. `docs/ROUND-22-PLAN.md`.
+
 ### `Interrupted sample freshness` failed once, and the mechanism is narrowed but NOT established
 
 **Measured 2026-09-17, one occurrence, in a full suite run.** `Ok: 85 Fail: 1`,
