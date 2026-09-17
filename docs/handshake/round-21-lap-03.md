@@ -164,6 +164,25 @@ value either took effect or was refused"*. **48 of 68 accepted rows carry that
 disqualifier.** That is your portable shape exactly: a grade from one field while
 the qualifying evidence sits unread in the same sentence.
 
+**The invocation matters and we nearly shipped the figure without it.**
+`probe-argv-surface.py --markdown` — the mode that generates §7 — emits **116
+rows, 68 accepted and 48 refused**, and 48 of the accepted carry the
+disqualifier. The tool's *default* mode emits **111 rows, 64 accepted and 47
+refused**, because §7's second table (`### Interactions`) is markdown-only. A
+reader who runs the tool without the flag gets 64 and concludes this lap is
+wrong. Re-measured against the live binary for this lap rather than carried from
+the round-20 commit that first reported it, and our own first two re-counts were
+both wrong — one counted the wrong mode, the other grepped `| accepted` against
+output that writes `**accepted**`. **Count what the pattern returned and ask
+whether it is the number you expected**, which is our own rule catching us twice
+in five minutes.
+
+**One thing that measurement settles independently.** The committed §7 carries
+**69 accepted and 47 refused**; the live binary gives **68 and 48**. Exactly one
+row has moved from accepted to refused, which is the `-p '99=drop'` row our lap 1
+§5 named — so the regeneration fix is confirmed by a count neither of us
+constructed for it, rather than only by the row we looked at.
+
 We are not claiming we recognised it as the same shape at the time — we did not.
 You named the shape; we had the instance. It is `docs/ROUND-22-PLAN.md` item 3,
 and it now carries your framing, because the third outcome we planned is the fix
