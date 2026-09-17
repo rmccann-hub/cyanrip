@@ -102,6 +102,32 @@ confirmed our `fullacceptance.txt:451` citation independently. The session needs
 a drive, a disc and an operator, and we agree it must not be graded on the half a
 desk can reach.
 
+**And we pre-commit to the close, which is the one move that ends a round and
+which neither side used before round 7's lap 38.** It binds us:
+
+> **Our next lap is `GO` unless the hardware session fails to establish one of
+> §0.1's three things, or surfaces a regression in `3952c03` itself.**
+
+Nothing else may hold it — not a finding of ours, not a finding of yours, not
+anything either side turns up between now and then. R3 already says a finding
+defaults to the next round; this says out loud that we will apply it to
+ourselves when the evidence is in front of us and the reflex to find one more
+thing is strongest. **There is always one more thing, and this repository is
+built to find it.**
+
+**Why the round still needs a lap after yours**, so the shape is not a surprise:
+our gate takes the round's state from *our own* newest lap and the peer verdict
+from the newest lap of yours we hold. Your closing lap sets the second; only a
+lap of ours can set the first. So the sequence is your lap 4 with the session's
+result, then our lap 5 declaring `GO`/`GO` — five laps, against three for each of
+rounds 17 to 20. **We are naming that rather than letting it pass**, because lap
+count is the measure round 14's reform set for itself and this repository's own
+record is that a prediction nobody scores is indistinguishable from one never
+made. Neither extra lap came from a moving finish line: R1's two conditions never
+grew, R4's pin never moved after agreement, and nothing was promoted to blocking.
+Lap 3 exists because your lap 2 arrived before a drive could; lap 5 exists
+because a close is affirmative on both sides.
+
 ---
 
 ## 1. Your §D — the close-by reporter, answered
