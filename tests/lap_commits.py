@@ -17,10 +17,14 @@ BOTH numbers a SECOND, INDEPENDENT implementation derived from our own history
 and published in their lap 10 §D. Not a comparison with ourselves.
 """
 
+import atexit
+import os
 import pathlib
 import re
+import signal
 import subprocess
 import sys
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TOOL = ROOT / "tools" / "lap-commits.py"
@@ -43,11 +47,53 @@ def have(ref):
                           cwd=ROOT, capture_output=True).returncode == 0
 
 
+# Every `run()` call, with how long it took. THIS EXISTS BECAUSE THIS TEST HAS
+# TIMED OUT TWICE -- 2026-09-16 and 2026-09-17, both at meson's default 30 s,
+# both killed by SIGTERM, both only ever inside a full parallel suite. Standalone
+# it takes 0.88-0.94 s and has not got slower across three weeks of tree growth,
+# so the cause is not what it walks.
+#
+# The distribution is bimodal: every observation is ~0.9 s or >=30 s, nothing
+# between. That is the shape of WAITING on something rather than competing for
+# it, and a third timeout currently tells us nothing a second one did not,
+# because the process dies before printing anything. These timings are dumped on
+# the way out so the next occurrence says WHERE the thirty seconds went.
+_TIMINGS = []
+
+
 def run(*args):
+    t0 = time.monotonic()
     r = subprocess.run([sys.executable, str(TOOL), *args], cwd=ROOT,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                        timeout=180)
+    _TIMINGS.append((time.monotonic() - t0, " ".join(args)))
     return r.returncode, r.stdout.decode(errors="replace")
+
+
+def _dump_timings():
+    """Print the per-call timings, slowest first.
+
+    Registered with atexit so it runs whether main() returns, raises, or the
+    interpreter is torn down -- but NOT when meson's SIGTERM kills us, because
+    the default disposition does not run atexit handlers. So the handler below
+    installs itself for SIGTERM too: a timeout is precisely the case these
+    numbers exist for, and a diagnostic that only prints when nothing went wrong
+    is the check-that-cannot-fire defect one level over.
+    """
+    if not _TIMINGS:
+        return
+    total = sum(d for d, _ in _TIMINGS)
+    print(f"timings: {len(_TIMINGS)} call(s), {total:.2f} s total", flush=True)
+    for d, what in sorted(_TIMINGS, reverse=True):
+        print(f"  {d:7.2f} s  {what}", flush=True)
+
+
+def _on_sigterm(signo, frame):
+    print(f"\nkilled by signal {signo} after "
+          f"{len(_TIMINGS)} completed call(s) -- the call in flight is the one "
+          f"that hung, and is NOT in the list below", flush=True)
+    _dump_timings()
+    os._exit(143)
 
 
 def count(out):
@@ -56,6 +102,9 @@ def count(out):
 
 
 def main():
+    atexit.register(_dump_timings)
+    signal.signal(signal.SIGTERM, _on_sigterm)
+
     # A CHECK THAT CANNOT RUN SAYS SO, rather than passing on an absence.
     if not all(have(r) for r, _ in PEER) or not have("59cb5a9"):
         print("UNPROBED: this history is not present (shallow clone). The "
