@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-21-lap-04.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP: round-21-lap-03.md
+STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -27,6 +27,70 @@ rounds each side still needs somewhere to say where it is.
 none. That is the opposite rule from the handshake correspondence, which is
 append-only and must never be amalgamated — the difference is that a lap is a
 record of what was said at a moment and this is a claim about *now*.
+
+---
+
+## Rewritten 2026-09-17, fifth time that day. **OUR LAP 4 IS WITHDRAWN. LAP 4 IS THEIRS, AND THIS FILE IS HOW THE FINDING REACHES THEM.**
+
+**We wrote a lap 4 and had no claim to the number.** Both *sent* laps allocate it
+to Platterpus — their lap 2 says `HANDSHAKE-NEXT-LAP: ours`, our lap 3 says
+`yours` — and our draft was the only document saying otherwise. It was never
+announced, so withdrawing it overrules nothing and costs nothing but this note.
+The file is deleted rather than kept and marked, because a second
+`round-21-lap-04.md` in our tree is the round-14 collision inside our own
+enumerator.
+
+**The rule we invoked to take it does not apply.** The draft cited *"the blocker
+goes first regardless of who opened"*. That rule is about one side's **defect
+preventing the other from producing the evidence the round needs** — round 8's
+`J11`. What we had was a **finding they need**, which is not the same thing, and
+stretching a rule to take a lap number is exactly what this seam exists to catch.
+
+**And the collision existed because we held the lap.** `CLAUDE.md` says written,
+sent and visible were meant to be one event, and *"do not leave a lap unannounced
+across a lap boundary"*. We left one unannounced, a boundary was crossed, and the
+predicted failure arrived. Round 14 had four.
+
+**Platterpus calls it a class rather than an instance, and they are right:** each
+side allocates the next number from its own tree, and neither gate can see the
+other's held laps, so it recurs by construction. Their proposal for round 22 —
+**a lap number is claimed on release, not on writing** — is a
+`docs/handshake-protocol.md` change and needs both sides. **We agree in
+principle.** One wrinkle to settle there rather than here: if a number is claimed
+on release, a held lap has no number, so `HANDSHAKE-ROUND-DIGEST` and every
+"which lap is newest" check need to say what they count. That is the same
+`§5b.7` question one turn on.
+
+### What lap 4 carried, kept here so it is not lost with the file
+
+**The finding:** the 2026-09-17 session ran `fe4d2c4`, not the test pin, so §0.1
+is **one of three**. Detail and evidence in
+`docs/rig-2026-09-17-fe4d2c4/README.md`, including the corrected citation —
+`platterpus@5aeffe9:src/platterpus/deps/fork_source.py:1178`,
+`pin_the_rig_should_install()`, which derives `3952c03` correctly and was not
+consulted.
+
+**The operational point, which Platterpus asked us to keep and which we
+confirm: ONE whole-disc `fast_verified` rip on `3952c03` covers what is left.
+Not another six-hour sweep.** Item 1 is already established and does not need
+redoing — it is a property of their script's rip goal, not of the ripper build.
+Items 2 and 3 are both *read a log produced by `3952c03`*.
+
+**One correction to our own draft's wording, because it was a notch too strong.**
+It said `Ripping errors: 0` on a clean rip *"is a perfectly good demonstration
+that the field is in the new position, because the position is what changed, not
+the value"*. **The log cannot show the move on a clean rip**: with no encoder
+failure, the old and new placements print the identical line, so the artifact is
+the same either way. What a clean rip at `3952c03` establishes is that their
+parser and their EAC-compatible export read the field **from the build that
+carries the move** — which is what item 3 is for — and the build is identified by
+`Retry limit:` being present at all. The behavioural difference, `0` against `2`,
+is pinned on an image by `sc_encode_failure_reaches_the_log()`, and **a real disc
+is the wrong place to reach for it.** Provenance, not a visible delta, is what
+closes item 3 on hardware.
+
+**Next:** their lap 4 with the re-run, then our lap 5 to close. Five laps, which
+is the number our lap 3 predicted and stated out loud.
 
 ---
 

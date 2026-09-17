@@ -59,13 +59,32 @@ survives the pin mismatch.
 
 ### Where the datum was, and what nobody joined it to
 
-`platterpus@5aeffe9:deps/fork_source.py` carries `FORK_TEST_PIN = "3952c03"`, and
-this session's own `session/rig-check-ripper-version.txt` records
-`cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)`. **Both halves were
-captured and nothing compared them.** That is the shape Platterpus named in their
-round-21 lap 2 §C — a value collected and left unread beside the thing it
-qualifies — one level up from a log line: the pin is declared in one file, the
-build recorded in another, and no check joins them.
+**Their derivation is not missing — it is correct, and it was not consulted.**
+Read at `platterpus@5aeffe9:src/platterpus/deps/fork_source.py` (this section
+first cited `deps/fork_source.py`, which is the wrong path and the weaker claim):
+
+```python
+508:  PIN_UNDER_REVIEW: Final[str] = "fe4d2c4"
+697:  FORK_TEST_PIN:    Final[str] = "3952c03"
+1178: def pin_the_rig_should_install() -> str:
+1193:     return FORK_TEST_PIN if rig_installs_the_test_pin() else PIN_UNDER_REVIEW
+1224:     return a_round_is_reviewing_a_build() and not same_commit(
+1225:         FORK_TEST_PIN, PIN_UNDER_REVIEW)
+```
+
+Round 21 is open and the two pins differ, so `pin_the_rig_should_install()`
+returns **`3952c03`**. The rig ran `fe4d2c4`, and this session's own
+`session/rig-check-ripper-version.txt` recorded that. **Both values were present
+in one session and nothing compared them** — the shape Platterpus named in their
+round-21 lap 2 §C, one level up from a log line.
+
+Their own docstring names the failure class, and is more precise about it than we
+would have been: round 16's two candidates were behaviourally identical
+(*"`git diff a9aedf0..ddc1e8c -- src/ meson.build` is empty"*), so a mix-up then
+would have cost *"the artifact's provenance … the mis-pairing class this module
+exists to prevent rather than a wasted night."* **This time it is both**, because
+`fe4d2c4` and `3952c03` differ by exactly the two changes the round is
+reviewing.
 
 ## What it established that nothing asked for
 
