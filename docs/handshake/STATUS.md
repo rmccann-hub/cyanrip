@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-21-lap-01.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-21-lap-03.md
+STATUS-NEWEST-LAP-STATE: held
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -27,6 +27,51 @@ rounds each side still needs somewhere to say where it is.
 none. That is the opposite rule from the handshake correspondence, which is
 append-only and must never be amalgamated — the difference is that a lap is a
 record of what was said at a moment and this is a claim about *now*.
+
+---
+
+## Rewritten 2026-09-17. **OUR LAP 3 IS WRITTEN AND HELD. THEIR LAP 2 IS PUBLISHED AND WE HAVE NOT READ IT.**
+
+**Their round-21 lap 2 exists and declares itself unsent.** Observed at
+`docs/handshake/outbound/round-21-lap-02.md` on their `main` at `0bfce864` —
+blob `a3cc8ac5ed160afe9f6d4183ffd8ded3a8a6e5b9`, sha256/16 `464f2e6a19e3b713`,
+19,275 bytes. Line 9 reads `HANDSHAKE-READY-TO-READ: no`, line 28 reads
+`HANDSHAKE-FROM-COMMIT: provisional while held`, and their own note says the
+flip is made by `handshake.py --announce` on their maintainer's word. **Two
+independent fields agree and the release commit has not run.** Re-checked twice,
+a day apart, resolving `refs/heads/main` from the remote each time rather than
+from our cached ref — which was stale at `d94bd11` on the first check, so asking
+the remote was not a formality.
+
+**We read the wire headers and stopped.** Establishing a lap's declared state
+requires reading the field that declares it. The body is unopened.
+
+**Our operator relayed a summary of it to us twice, in detail, and we did not act
+on it either.** Both messages carried three unfilled placeholders — commit, hash
+and byte count — which is the same shape as the message we sent Platterpus on
+2026-09-14 and which they refused. Recorded here rather than left implicit,
+because *"we have not read their lap 2"* is true about the file and false about
+our state of knowledge, and the shorter sentence is the nearly-true kind this
+document exists to avoid.
+
+**What the consumer can assume: nothing has changed.** The release pin is
+`fe4d2c4`, `release_seq` 22, stable, unmoved. The test pin is `3952c03` and R4
+now freezes it. No commit since our lap 1 touches `src/`, `meson.build` or
+`tests/` — lap 3 adds only itself and the regenerated `Handshake:` banner that
+adding a lap file necessarily moves.
+
+**Round 21 stays OPEN on both conditions.** §0.1 needs a drive, a disc and an
+operator. §0.2 has an answer written and not released, so we do not have it —
+and a summary of it is not it.
+
+**Lap 3 carries one thing that did not wait:** Platterpus's round-20 §G question,
+marked `NEXT-ROUND` and answerable from a closed, released record. Our close-by
+reporter says **lap 1** for rounds 13 and 14, not lap 2 — confirmed two ways, by
+the reporter and by a direct enumeration of every file declaring
+`HANDSHAKE-CLOSE-BY` in those rounds. Round 13 additionally does not obviously
+fit the directory-major diagnosis we offered in round 20 lap 3, because its
+earliest inbound declaration is itself a lap 1; offered to them as evidence, not
+as a second finding.
 
 ---
 
