@@ -469,11 +469,66 @@ what happens next time somebody reads it.
 true — the rip loop ran to completion and the encoders failed, which are two
 facts — and before round 21 they agreed by both being wrong.
 
-**This is a question for the seam, not a defect to fix unilaterally.**
-`Rip completed:` is the single most-parsed field in the footer. Round 21 lap 1
-puts it to Platterpus: whether the footer should distinguish *the loop finished*
-from *the run produced what it claimed*, and if so, how. Recorded here so that
-"nobody asked" and "asked and they said leave it" stay distinguishable.
+**ASKED, AND THEY RULED: LEAVE IT ALONE.** Round 21 lap 1 put it to Platterpus —
+whether the footer should distinguish *the loop finished* from *the run produced
+what it claimed*. Their round-21 lap 2 §0.2, released 2026-09-16 and filed at
+`docs/handshake/inbound/round-21-lap-02.md`, is a **refusal to change the field**,
+and our lap 1 had already said a refusal closes that condition as cleanly as an
+assent. `Ripping errors: 2` beside `Rip completed:  yes (2 of 3 tracks)` is
+**correct output and stays**. Three reasons, each checked here rather than only
+read:
+
+1. **Their parser's tri-state depends on `yes` meaning the loop reached its own
+   end.** `None` is an absent footer — what a killed rip looks like — and must
+   never read as `False`. A stricter `yes` would collapse *ran to the end and
+   failed* into *stopped early*, and that distinction is the **attested
+   truncation** finding we root-caused in round 14 lap 7 §B2: the completion
+   footer twenty-four `goto end` sites can skip, signed anyway by
+   `cyanrip_log_end()`. Tightening the field would spend a diagnosis that cost a
+   round to find.
+2. **The `(N of M)` denominator is the disc, not the selection** — confirmed in
+   our own source at `cyanrip_log.c:917`, which prints `tracks_ripped` against
+   the disc's track count, so a narrowed `Tracks to rip:` produces the same
+   shape. `done < total` is therefore the ordinary form of a partial rip and can
+   never be a failure signal. They measured it on seven rips in their 2026-09-03
+   bundle, and an earlier version of their own handler asserted `done == total`
+   and would have failed all five partial-rip sites it was added to.
+3. **The floor that works is `done == len(tracks)`** — the record agreeing with
+   itself, disc- and selection-independent, already in their tree, and needing
+   nothing from us.
+
+They also read `rig_check.py` before answering, which we asked for: it consumes
+`rip_completed` only as context for `Interrupted at:`, tri-state, `INFO`-only,
+and the change does not perturb it.
+
+**So this entry stays open as a description and is closed as a question.** It is
+not a defect and there is nothing to fix; it is recorded because the two states
+*"nobody asked"* and *"asked, and they said leave it"* are different claims, and
+this is now firmly the second.
+
+### A derived contract covers a surface's SHAPE and says nothing about its MEANING
+
+Round 21's second breaking change — `Ripping errors:` now counting encoder
+failures — **is invisible to a provider-contract diff by nature.** It changes no
+format string, no message text, no exit code and no option; it changes what a
+counted thing counts.
+
+Platterpus measured it across the two contracts in their round-21 lap 2 §E:
+**1 of 303** two-column format-string rows changed (the `Retry limit:` rename
+only), **0 of 120** P5 message texts, **0 of 7** P5a, and one citation moved
+(`diagnostics.c:572` → `:618`). A green argv-surface suite and a byte-clean
+inventory regeneration say **nothing** about the semantic change.
+
+`tools/gen-provider-contract.py` derives from format strings, the option table
+and control flow, so there is no wording for it to notice. **The hazard is a
+future round reading *"the contract diff was one line"* as *"nothing
+happened"*** — which here would be exactly backwards. `CLAUDE.md` already states
+the test as *"could the other side notice?"* rather than *"did I edit a
+`cyanrip_log()` line"*; this is that rule with a measured example attached.
+
+No mechanism is proposed yet, deliberately. R1 fixed round 21's conditions at
+lap 1, and a semantic-change marker designed in a hurry would be a field nobody
+can derive. Round 22.
 
 ### The reference disc cannot discriminate a correct AccurateRip skip
 

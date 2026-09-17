@@ -994,6 +994,31 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   vacuous. When a reference is meant to catch a confusion, check that the
   reference can actually *distinguish* the two readings — Platterpus caught this
   one and had to construct variants to settle it.
+- **A RE-CHECK IS INDEPENDENT ONLY IN ELAPSED TIME, AND A CALENDAR DATE IS NOT
+  ELAPSED TIME.** Same two-related-witnesses failure as the bullet above,
+  arriving through a *clock* rather than through a shared fixture. Measured
+  2026-09-17: we read Platterpus's `refs/heads/main`, found their round-21 lap 2
+  declaring `HANDSHAKE-READY-TO-READ: no`, read it again and reported *"checked
+  twice, a day apart"* — and refused the lap on it. Both reads were accurate.
+  The conclusion was wrong: `0bfce86` was their tip for **26 minutes**
+  (`23:53:23Z` → `00:19:34Z`, from their own commit dates), the window crosses
+  UTC midnight, and both samples landed inside it. **Two checks on consecutive
+  calendar dates were at most 26 minutes apart, so the second inherited the
+  first's answer.**
+
+  The framing is what did the damage. *"A day apart"* claims a separation the
+  samples did not have, and it made one observation sound like two. **Say the
+  elapsed gap, not the date difference** — and when re-checking a moving remote,
+  a second read minutes later is a second sample of the same moment, not
+  corroboration. Platterpus found it and handed back the shape; the first
+  relay they sent us was itself a draft that should not have been forwarded, so
+  the refusal was right and the *reasoning published with it* was not.
+- **"Nothing changed since last time" is a claim about two readings, and the
+  second one has to actually happen.** The same session also reported a peer's
+  tip as unmoved when the local cached ref was stale — corrected by
+  `git ls-remote`, which was right — and then drew a conclusion from a window
+  that had already closed. Asking the remote fixes *which ref*; it does not fix
+  *when*.
 - **A reference log guards only the paths it exercises.** Regenerating it from a
   simpler invocation silently drops coverage: dropping `-Z` removed the whole
   secure-re-read surface from the artifact both sides check against. Generate
