@@ -3529,6 +3529,68 @@ def sc_artifacts_are_tracked():
             fail(f"artifacts_are_tracked: {a} exists but was never git-added")
 
 
+def sc_mutation_exclusions_are_pinned():
+    """`tools/mutate.py`'s `EXCLUDED_TESTS` may not change silently.
+
+    WHAT THIS PINS AND WHAT IT DOES NOT, stated first because the difference is
+    the whole reason the check exists.
+
+    It pins the SET. Adding a second exclusion becomes a visible act that fails
+    here until somebody changes this line deliberately -- the same treatment
+    `GRANDFATHERED` gets in `tests/release_gate.py`, and for the same reason.
+
+    It does NOT verify the premise the set rests on, which is that exactly one
+    test detects an EDIT rather than a DEFECT. A sweep is vacuous if a second
+    such test exists: every mutant dies on the edit and the score reads 100%.
+    Only the inert-edit probe establishes that, by making a behaviourally inert
+    change and asking which tests fail -- AND THE PROBE NO LONGER RUNS.
+    `docs/inert-edit-probe.log` opens with "FILED EVIDENCE, not a re-runnable
+    gate", and `sc_artifacts_are_tracked()` asserts it is TRACKED, not that it is
+    TRUE.
+
+    WHY THAT GAP IS WORTH A CHECK ANYWAY. The premise lapsed once already, within
+    hours: `tools/sanitize-run.py` ran the images suite in the instrumented tree,
+    `mutate.py` picked `contract_build` back up through `Sanitizer sweep`, and
+    `src/cyanrip_encode.c` scored 100.0% over 125 mutants and meant nothing. The
+    remedy adopted then was a PROCEDURE -- run the probe before reporting -- and a
+    procedure is exactly what nobody reads.
+
+    Found 2026-09-17 by checking Platterpus's round-21 lap 4 §H shape against our
+    own tree instead of assuming it was not here. Their general form: WHEN A
+    PREMISE IS RETIRED IN PROSE, WHAT READS THAT PREMISE? Nothing did. This reads
+    half of it, and says out loud which half.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "crip_mutate", ROOT / "tools" / "mutate.py")
+    mod = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(mod)
+    except Exception as exc:                       # noqa: BLE001
+        fail(f"mutation_exclusions: tools/mutate.py did not import ({exc}), so "
+             f"this check is guarding nothing")
+        return
+
+    want = {"contract_build"}
+    got = set(getattr(mod, "EXCLUDED_TESTS", {}))
+    if got != want:
+        fail(f"mutation_exclusions: EXCLUDED_TESTS is {sorted(got)}, expected "
+             f"{sorted(want)}. A sweep excludes these from its score, so an "
+             f"addition here silently narrows what the score measures -- and a "
+             f"REMOVAL silently restores the vacuous 100% this set exists to "
+             f"prevent. Change this test in the same commit, deliberately, and "
+             f"re-run the inert-edit probe: the set is only correct if it names "
+             f"exactly the tests that detect an EDIT rather than a DEFECT.")
+
+    # The exclusion is useless if the name does not match a real test, which is
+    # how a rename turns a guard into a no-op that still looks present.
+    reg = (ROOT / "tests" / "meson.build").read_text(encoding="utf-8")
+    for name in sorted(want):
+        if f"'{name}'" not in reg:
+            fail(f"mutation_exclusions: EXCLUDED_TESTS names {name!r}, which no "
+                 f"longer appears in tests/meson.build -- the exclusion matches "
+                 f"nothing and the sweep silently counts a test it means to skip")
+
+
 def sc_contract_fatal_inventory():
     """P5 must not assert a failure path it has no evidence for.
 

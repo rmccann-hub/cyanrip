@@ -544,6 +544,7 @@ rip_scenarios = [
     'interrupt_deadlock',
     'cache_probe_only',
     'artifacts_are_tracked',
+    'mutation_exclusions_are_pinned',
     'sanitize',
     'enhanced_cd',
     'contract_diagnostics',
