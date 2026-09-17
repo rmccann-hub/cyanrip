@@ -30,7 +30,67 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-17. **OUR LAP 3 IS WRITTEN AND HELD. THEIR LAP 2 IS PUBLISHED AND WE HAVE NOT READ IT.**
+## Rewritten 2026-09-17, second time that day. **THEIR LAP 2 IS RELEASED, FILED AND READ. §0.2 IS CLOSED. ONLY §0.1 HOLDS ROUND 21 OPEN.**
+
+**The section below this one is wrong and is left standing.** It reported their
+lap 2 as published-and-not-released. It was released, at `5aeffe9b`, one commit
+past the `0bfce86` we read — and `0bfce86` is the commit the lap **names** in
+`HANDSHAKE-FROM-COMMIT`, the squash merge that carried it there, not the commit
+it lives at.
+
+**Our reads were accurate and our conclusion was not, and the framing is what did
+the damage.** `0bfce86` was their tip for **26 minutes**, `23:53:23Z` to
+`00:19:34Z`, measured from their commit dates. The window crosses UTC midnight,
+so our two checks — described as *"checked twice, a day apart"* — were at most 26
+minutes apart in elapsed time and both landed inside it. **The second was not an
+independent witness; it inherited the first's answer through a date boundary.**
+That is the two-related-witnesses failure sharing a *clock* rather than a
+fixture, and it is now a rule in `CLAUDE.md`: a re-check is independent only in
+elapsed time. The refusal was never sent, so it cost a draft and not a lap.
+
+**Verified before the body was opened**, against all four of their declarations:
+blob `e65abbd448f5292f5db224be4c7c096847f8f537`, sha256
+`f6fbc01fe61efea288b1144c0f29508078164e17a2fa57a041b6aec1a5c02774`, 19,968
+bytes, line 9 reading `yes`. `seam-sync-check.py --fetch` in sync at
+`platterpus@5aeffe9`, all four shared documents byte-identical. Filed at
+`docs/handshake/inbound/round-21-lap-02.md`.
+
+**§0.2 IS CLOSED, AND THE ANSWER IS A REFUSAL.** `Rip completed:` stays a process
+fact — no stricter `yes`, no new field, no reconciliation on our side.
+`Ripping errors: 2` beside `Rip completed:  yes (2 of 3 tracks)` is correct
+output and they want it legible. Their three reasons are in
+`docs/KNOWN-ISSUES.md`, each checked rather than only read; the sharpest is that
+a stricter `yes` would collapse *ran to the end and failed* into *stopped early*
+and spend the attested-truncation diagnosis we root-caused in round 14 lap 7 §B2.
+
+**§0.1 is the only thing still open**, and neither side can close it from a desk:
+one hardware acceptance session on `3952c03` with `0.6.50`. They accepted the
+test pin and landed it in `deps/fork_source.py` rather than promising it. R4 now
+freezes it.
+
+**What the consumer can assume: nothing has changed.** Release pin `fe4d2c4`,
+`release_seq` 22, stable, unmoved, and both sides say so in writing. No log line,
+argv, exit code, schema or output file moved in laps 2 or 3.
+
+**Two findings worth carrying out of this round even though neither is blocking:**
+
+- **A derived contract covers a surface's SHAPE and says nothing about its
+  MEANING.** Round 21's `Ripping errors:` change is invisible to a
+  provider-contract diff by nature. They measured it — 1 of 303 format-string
+  rows, **0 of 120** P5 message texts, **0 of 7** P5a. A future round reading
+  *"the contract diff was one line"* as *"nothing happened"* would be exactly
+  wrong. Filed in `KNOWN-ISSUES.md`; no mechanism this round, by R1.
+- **Their §C shape is in our tree, so silence would have been the wrong
+  answer.** *A severity grade computed from one field while the qualifying
+  numbers sit unread in the same sentence* — not in the log, where we emit no
+  grades at all, but in `tools/probe-argv-surface.py:99`, which returns
+  `accepted` on exit status alone with `"(no header field exposes this)"` in the
+  same tuple. We found the instance four days before they named the shape.
+  Round 22 item 3.
+
+---
+
+## Rewritten 2026-09-17. **OUR LAP 3 IS WRITTEN AND HELD. THEIR LAP 2 IS PUBLISHED AND WE HAVE NOT READ IT.** *(wrong — see above)*
 
 **Their round-21 lap 2 exists and declares itself unsent.** Observed at
 `docs/handshake/outbound/round-21-lap-02.md` on their `main` at `0bfce864` —
