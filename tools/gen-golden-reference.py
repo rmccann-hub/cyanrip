@@ -343,8 +343,30 @@ def main():
 
         missing = [p.pattern for p in INTERRUPTED_SHAPES if not p.search(log)]
         if missing:
+            # KEEP THE EVIDENCE. Where a SIGTERM lands is not reproducible, so a
+            # failing run's artifacts cannot be re-made -- and until 2026-09-17
+            # they were deleted with generate_interrupted()'s TemporaryDirectory
+            # the moment it returned. That happened: one full-suite run reported
+            # `Stopping, ripping incomplete!` absent, three standalone re-runs
+            # passed, and WHICH `Interrupted at:` arm it took is unknowable
+            # because the log is gone. A check that discards what is needed to
+            # diagnose its own failure is worse than the race it was reporting.
+            keep = ROOT / "build" / "interrupted-probe-failure"
+            where = "(not saved)"
+            try:
+                keep.mkdir(parents=True, exist_ok=True)
+                (keep / "sample.log").write_text(log, encoding="utf-8")
+                (keep / "sample.diagnostics.json").write_text(js,
+                                                              encoding="utf-8")
+                where = str(keep)
+            except OSError as exc:                       # never mask the real
+                where = f"(could not be saved: {exc})"   # failure with this one
             sys.exit("a rip interrupted right now does not produce:\n  "
-                     + "\n  ".join(missing))
+                     + "\n  ".join(missing)
+                     + f"\n\nthe failing run's log and -j record are kept at:"
+                       f"\n  {where}\n"
+                       "they are NOT reproducible -- where the signal lands is "
+                       "not schedulable -- so read them before re-running.")
 
         if args.check:
             if not SAMPLE_LOG.exists():
