@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-21-lap-03.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -27,6 +27,48 @@ rounds each side still needs somewhere to say where it is.
 none. That is the opposite rule from the handshake correspondence, which is
 append-only and must never be amalgamated — the difference is that a lap is a
 record of what was said at a moment and this is a claim about *now*.
+
+---
+
+## Rewritten 2026-09-17, third time that day. **OUR LAP 3 IS RELEASED. ROUND 21 IS DONE EXCEPT FOR A DRIVE.**
+
+**Released on the operator's instruction, not on our own judgement.** This
+rewrite is inside the release commit, so it cannot name that commit's SHA — the
+same fixpoint as a lap that cannot name the build containing it. The lap's
+`HANDSHAKE-FROM-COMMIT` names `fefd760`, the commit before it. From that commit
+lap 3 is immutable under §192.
+
+**The whole round's ledger, which is short:** our lap 1 sent at `f67d783`, their
+lap 2 received and filed at `5aeffe9b`, our lap 3 sent now. One sent, one
+received, one sent.
+
+**§0.2 is closed by their refusal and §0.1 is the only thing left.** Their lap 2
+ruled that `Rip completed:` stays a process fact — no stricter `yes`, no new
+field, no reconciliation on our side — and our lap 1 had already said a refusal
+closes that condition as cleanly as an assent. The three reasons are in
+`docs/KNOWN-ISSUES.md`, each checked rather than only read.
+
+**Lap 3 pre-commits us to the close**, which `CLAUDE.md` records as the move that
+actually ends a round and which neither side used before round 7's lap 38:
+*our next lap is `GO` unless the hardware session fails to establish one of
+§0.1's three things, or surfaces a regression in `3952c03` itself.* Nothing else
+may hold it, including a finding of our own.
+
+**Round 21 will be five laps, against three for each of rounds 17–20**, and lap 3
+says so out loud rather than leaving it to be noticed. Neither extra lap came
+from a moving finish line — R1's two conditions never grew, R4's pin never moved
+after agreement, nothing was promoted to blocking. Lap 3 exists because their lap
+2 arrived before a drive could, and lap 5 because a close is affirmative on both
+sides: each gate takes a round's state from its own newest lap and the peer
+verdict from the newest lap of the other's it holds, so their lap 4 can set only
+the peer half.
+
+**What the consumer can assume: nothing has changed and nothing is pending.**
+Release pin `fe4d2c4`, `release_seq` 22, stable, unmoved. Test pin `3952c03`,
+frozen under R4. No log line, argv, exit code, schema or output file moved in
+laps 2 or 3. Neither side is waiting on the other for anything writable at a
+desk. The close-by is 2026-10-20, so there is no clock pressure on scheduling the
+session.
 
 ---
 
