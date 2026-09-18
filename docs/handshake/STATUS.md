@@ -41,18 +41,36 @@ record of what was said at a moment and this is a claim about *now*.
 | round-21 pin | `fe4d2c4` — **never moved during the round**, and neither side asked |
 | test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
 | approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` — **and the release carries round 21's two P2 changes, which `fe4d2c4` does not** |
-| `--release-gate` | exits **0** — first time since the round opened |
-| released | **nothing new.** `meson.build` is `+platterpus.12`, ledger row 22 |
+| `--release-gate` | exits **1**, naming round 22 — and correctly: opening a round re-blocks it |
+| round 22 | **lap 1 published and HELD** — not sent, so nothing in it binds either side yet |
+| `platterpus-fork` tip | **ahead of the release, with a P2 log change in it.** Build from `2cce60d`, not from the tip |
 
-**A RELEASE IS AUTHORISED AND HAS NOT BEEN CUT, and those are different
-sentences.** `docs/RELEASE-PLAN-platterpus.13.md` §1's condition is met and §4 is
-the sequence. Platterpus separately report that a release is *not due on their
+**THIS TABLE CARRIED TWO `released` ROWS DISAGREEING**, one naming `.13` and one
+saying *"nothing new, `meson.build` is `+platterpus.12`, ledger row 22"*. The
+second was left behind when the release was cut, and nothing checked it —
+`sc_status_is_current()` reads the channel-qualified rows of the *release* table
+below, which were right the whole time. **Two descriptions of one fact, and the
+unchecked one was the wrong one**, in the document whose entire job is to be a
+claim about now. Removed 2026-09-18.
+
+**The release was authorised by round 21 and HAS been cut**, at `2cce60d`,
+`release_seq` 23 — `docs/RELEASE-PLAN-platterpus.13.md` is executed and
+bannered. Platterpus separately report that a release is *not due on their
 side* — their version bar is `0.7.100` gated on a full hardware pass and their
 evidence ledger holds no full-green row. **That is their gate on their release
 and it is not an argument about ours**, which is recorded here so the two do not
-quietly merge into "neither side ships". Ours has its own reason to go, in the
-plan's §3: `+platterpus.12` stamps `No errors occurred` onto an archival artifact
-for a rip that lost data.
+quietly merge into "neither side ships". Ours had its own reason to go:
+`+platterpus.12` stamps `No errors occurred` onto an archival artifact for a rip
+that lost data, and `.13` is the build that does not.
+
+**ROUND 22 IS BEING WORKED AND THE TIP IS NOT A RELEASE.** `89a57d6` splits the
+per-track claim — `Track N ripped and encoded successfully!` printed before any
+encoder was joined, so it asserted a fact that did not yet exist; it now reads
+`Track N read successfully!` and a new `Encoder errors:` line carries the encode
+outcome in the footer. **That is P2 contract surface, it is announced in round
+22 lap 1, and lap 1 is held** — so it is visible in the repository and binds
+nothing. A consumer builds `2cce60d` until a release says otherwise, and every
+log a tip build writes says `NOT a released build` in its own first lines.
 
 **Their `verified/round-21-lap-06.md` is a verification record and NOT a lap.**
 It is not sent, does not enter our `inbound/`, is in no digest, and we have not
@@ -662,10 +680,13 @@ The lap says so out loud, because our own `CLAUDE.md` records a round where
 property is how that trap works.
 
 **What the fix made visible and did NOT fix**, both filed and neither fixed in
-this round: `Track N ripped and encoded successfully!` still prints over a
-`File(s):` list built from the request, and `Rip completed:  yes` now sits beside
-a non-zero error count. The second is round 21's §0.2 — **their ruling, not our
-guess**, and a refusal closes it as cleanly as an assent.
+round 21: `Track N ripped and encoded successfully!` printed over a `File(s):`
+list built from the request, and `Rip completed:  yes` now sits beside a
+non-zero error count. The second is round 21's §0.2 — **their ruling, not our
+guess**, and a refusal closes it as cleanly as an assent. **The first is half
+answered in round 22**: the per-track line now reads `Track N read
+successfully!` and the encode outcome lands in a new `Encoder errors:` line in
+the footer; `File(s):` is unchanged and still open.
 
 **One finding against ourselves, carried for four rounds.** `diagnostics.c`'s
 schema comment claimed Platterpus allowlists *this* record's schema and cited

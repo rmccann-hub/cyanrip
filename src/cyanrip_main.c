@@ -2737,9 +2737,12 @@ end:
      * below would silently fold encoder failures into a contract line". The
      * reasoning was right about the risk and wrong about which way it pointed.
      * What the old placement actually produced, demonstrated rather than
-     * argued in `sc_encode_failure_is_absent_from_the_log()`: cap every write
-     * at 32 KiB, and the muxer's trailer write fails, the failure IS caught,
-     * `-j` records ripping_errors 2, the process exits 1 -- and the log says
+     * argued in `sc_encode_failure_reaches_the_log()` -- named
+     * `sc_encode_failure_is_absent_from_the_log()` when this comment was
+     * written, and renamed in the same round the failure stopped being absent.
+     * Cap every write at 32 KiB, and the muxer's trailer write fails, the
+     * failure IS caught, `-j` records ripping_errors 2, the process exits 1
+     * -- and the log says
      * `Ripping errors: 0` and `Rip completed:  yes`, over a 32768-byte file
      * whose intact form is 253742.
      *

@@ -1,8 +1,16 @@
 # Round 22 — a plan, not a round
 
-*Written 2026-09-16, while round 21 lap 1 was still held. **Nothing here is
-started.** Round 21's close conditions are fixed and cannot grow (R1), so every
-item below is deliberately outside it.*
+*Written 2026-09-16, while round 21 lap 1 was still held. Round 21's close
+conditions were fixed and could not grow (R1), so every item below was
+deliberately outside it.*
+
+> **STATUS, 2026-09-18 — round 22 is open and this file is being worked.** It
+> said *"nothing here is started"*, which was true for two days and is the kind
+> of sentence that goes quietly false. **Item 1 is executed** (`89a57d6`, option
+> 2 only; see its banner). **Items 1b, 2 and 3 are not started.** Each section
+> carries its own banner; this line is the index and nothing more, so a reader
+> who trusts it and reads no further is wrong about at most which section to
+> open.
 
 **Why this file exists.** Three defects are understood well enough to fix and
 were each deliberately left alone, for three different reasons. *"We decided
@@ -18,6 +26,17 @@ re-planning it.
 ---
 
 ## 1. The per-track block is computed from the request, not the outcome
+
+> **EXECUTED 2026-09-18, and only the option below that was chosen.** Shipped at
+> `89a57d6` with the artifacts regenerated at `ae29818`. Option 2 was taken as
+> written: the per-track line now reads `Track N read successfully!` and a new
+> `Encoder errors:` line lands below `Ripping errors:` in the footer. **Option 3
+> — marking failed entries in `File(s):` — is still not done**, and the plan's
+> reason for deferring it holds exactly: it prints from the same pre-join
+> moment, so it is possible only as a second pass now that the footer names the
+> tracks. `docs/KNOWN-ISSUES.md` keeps it open. Announced to Platterpus in round
+> 22 lap 1; everything below is the plan as written, kept because the rejections
+> are the part worth reading.
 
 ### What is wrong
 

@@ -25,16 +25,26 @@ say "probably" without saying what would settle it.
 
 ## Fixed 2026-09-16, round 21 — both agreed in round 20 and neither shipped inside it
 
+*The middle row is the exception and says so in its own cell: it was FOUND
+while doing round 21's work, deferred for a reason that was about round 21's
+pin, and fixed in round 22 once that reason was spent. It stays here because
+this is where a reader tracing the footer move lands, and a table grouped by
+when something was found is not the same as one grouped by when it shipped —
+the cell carries the second date so the two cannot be confused.*
+
 | what | how it is pinned |
 |---|---|
 | **`Ripping errors:` was written before the encoders were asked how they did.** Under a 32 KiB write cap the muxer's trailer write fails, `-j` recorded 2 and the process exited 1, and the log said `Ripping errors: 0` and `Rip completed:  yes` over a 32768-byte file whose intact form is 253742 — two records of one run, and the human-readable one, the archival one, was the wrong one | `cyanrip_log_finish_report()` moved below the encoder-status loop, still inside `end:` so round 14's twenty-four-`goto` property is untouched. `sc_encode_failure_reaches_the_log()` asserts the two records are **equal** and separately that they are **non-zero**, so the property cannot be met by both being 0. Revert-proved with the build confirmed green |
-| **A SOURCE COMMENT CITES A TEST THAT WAS RENAMED IN THE SAME ROUND.** `src/cyanrip_main.c:2703` — the long comment justifying the footer move — says the defect was *"demonstrated rather than argued in `sc_encode_failure_is_absent_from_the_log()`"*. That scenario is now `sc_encode_failure_reaches_the_log()` (`tests/rip_images.py:1706`, `tests/meson.build:517`), and the rename is recorded in the test's own docstring. **A `file:line`-style citation that resolves to nothing is the defect this project fixes everywhere else**, and a reader following it gets no hits. Found 2026-09-18 while writing the rig README that quotes the same comment | **DEFERRED TO ROUND 22 ON PURPOSE, and the reason is the pin.** `git diff --stat 3952c03 HEAD -- src/` is empty: our tree's `src/` is byte-identical to the test pin the round is reviewing, so every claim about the pin's source holds of `HEAD` too. Editing a comment changes that hash and `PROVIDER-CONTRACT.md`'s source anchor with it, which a closing lap would then have to explain — for a comment. The docs that cite the old name are corrected where they are not immutable; round 21 lap 1 §1.2 keeps it, because a sent lap is never edited |
+| **A SOURCE COMMENT CITES A TEST THAT WAS RENAMED IN THE SAME ROUND.** `src/cyanrip_main.c:2703` — the long comment justifying the footer move — says the defect was *"demonstrated rather than argued in `sc_encode_failure_is_absent_from_the_log()`"*. That scenario is now `sc_encode_failure_reaches_the_log()` (`tests/rip_images.py:1706`, `tests/meson.build:517`), and the rename is recorded in the test's own docstring. **A `file:line`-style citation that resolves to nothing is the defect this project fixes everywhere else**, and a reader following it gets no hits. Found 2026-09-18 while writing the rig README that quotes the same comment | **FIXED IN ROUND 22**, at the commit carrying round 22's first log change. It was deferred *because of the pin*: `git diff --stat 3952c03 HEAD -- src/` was empty, so every claim about the reviewed pin's source held of `HEAD` too, and editing a comment would have moved that hash and `PROVIDER-CONTRACT.md`'s source anchor for a comment. **Round 22's first fix moves `src/` anyway**, so the reason is spent and the citation is corrected in the same change rather than carried another round. The comment now names both spellings and says which round renamed it. Round 21 lap 1 §1.2 keeps the old name, because a sent lap is never edited |
 | **`Frame retries:` named half of what `-r` does** — it caps paranoia's per-frame retries *and* the whole-track repeat ceiling, and the log printed a bare number with nothing saying they were one knob | now `Retry limit:    N (per frame, and per whole-track re-read)`, the exact string Platterpus assented to in round 20 lap 2 §0.2. `-j`'s key follows it (`frame_retries` → `retry_limit`) and the record's schema moved twice inside round 21 — the rename took it to `cyanrip-diagnostics/5` and §4b's `cache_probe` block took it to **`/6`**, which is what the test pin emits. `src/diagnostics.c:371` is the artifact; this cell said `/5` for two days after `/6` shipped. `contract_covers_log` and `contract_diagnostics` both fired on the change and pass on the regenerated contract |
 
-**The fix made two things visible that it did not fix**, and they are in the open
-list below rather than closed quietly: the per-track block still says
+**The fix made two things visible that it did not fix**, and they went into the
+open list below rather than being closed quietly: the per-track block said
 `Track N ripped and encoded successfully!` over a `File(s):` list computed from
 the request, and `Rip completed:  yes` now sits beside a non-zero error count.
+**Both have since been answered and neither by this fix** — the first half of
+the first was split in round 22 (`89a57d6`; `File(s):` is still open), and the
+second was put to Platterpus, who ruled *leave it alone*.
 
 **And one comment was wrong about Platterpus's code for four rounds.** The
 schema-bump rationale in `diagnostics.c` cited `SUPPORTED_SCHEMAS = {1, 2}` as
@@ -698,10 +708,14 @@ a month later from anything on disk.
 
 ### A track's per-track lines are computed from the REQUEST, not the outcome
 
+**HALF FIXED IN ROUND 22, at `89a57d6`, and the half that remains is the harder
+one.** Kept here rather than moved to the fixed section, because a heading that
+said *fixed* over an entry describing a live defect is the label rule this
+repository applies to log lines, turned on its own notes.
+
 **What round 21 fixed was the COUNT, and this is what it made visible.** With
 the completion footer moved below the encoder-status loop, `Ripping errors:`
-now reports the encoder failures — but the per-track block above it still does
-not:
+reported the encoder failures — but the per-track block above it did not:
 
 ```
 Track 2 ripped and encoded successfully!      <- the encode failed
@@ -715,23 +729,44 @@ Rip completed:  yes (2 of 3 tracks)
 
 Two separate causes, and they need different answers:
 
-- **`File(s):`** is built from `ctx->settings.outputs` and the naming scheme
-  (`cyanrip_log.c:642`) and consults nothing about what was written, so it names
-  a path whatever happened to it. Platterpus's phrase for their own version of
-  this — *a completeness field computed from the REQUEST, read as the OUTCOME* —
-  fits it exactly.
-- **`Track N ripped and encoded successfully!`** is printed when the READ
-  finished. The encoders run asynchronously and their status does not exist yet,
-  so the line is not merely mis-worded: at the moment it prints, the fact it
-  asserts is genuinely unknown. Fixing it means deferring the line or amending
-  it later, which is a bigger change than a reword.
+- **`Track N ripped and encoded successfully!`** — **FIXED, round 22.** It was
+  printed when the READ finished; the encoders run asynchronously and their
+  status did not exist yet, so the line was not merely mis-worded — at the
+  moment it printed, the fact it asserted was genuinely unknown. **No rewording
+  of a line printed at time T can report a fact that comes into being at T+1**,
+  so the claim is split rather than softened: the per-track line now reads
+  `Track N read successfully!` and the encode outcome lands in a new
+  `Encoder errors:` line in the footer, below `Ripping errors:`, where the
+  collection loop has joined every encoder thread. Three arms — `none; N tracks
+  encoded`, `M tracks failed (…); N tracks encoded`, `not applicable; no track
+  was encoded` — because `none` over an unstated population is the absence-of-
+  evidence defect wearing a number.
+- **`File(s):`** — **STILL OPEN.** It is built from `ctx->settings.outputs` and
+  the naming scheme (`cyanrip_log.c:642`) and consults nothing about what was
+  written, so it names a path whatever happened to it. Platterpus's phrase for
+  their own version of this — *a completeness field computed from the REQUEST,
+  read as the OUTCOME* — fits it exactly. **It prints from
+  `cyanrip_log_track_end()`, which runs at the same pre-join moment**, so
+  marking a failed entry there is the identical fixpoint one level down. It
+  became *possible* only once the footer named the tracks, which is why
+  `ROUND-22-PLAN.md` §1 rejected it as a standalone option and listed it as a
+  second pass. **Nobody has got to it**; that is not the same as declining it.
 
-**Not fixed in round 21 deliberately.** Round 21 ships two agreed changes; a
-third, unannounced, would be the finish line moving inside the round — R1. Both
-are pinned as *known and unfixed* by
-`sc_encode_failure_reaches_the_log()`'s docstring rather than by an assertion,
-because an assertion here would pin the defect and this file already records
-what happens next time somebody reads it.
+**Why it waited for round 22, and what changed.** Round 21 shipped two agreed
+changes; a third, unannounced, would have been the finish line moving inside the
+round — R1. Platterpus's round-21 lap 2 then listed it under *"explicitly not
+asking"*, with the reason *"a real design question, not a reword, and it should
+not be decided under a round's clock"*. **That is an argument for deciding it in
+a round that OPENS on it, which is what round 22 lap 1 does** — the design was
+written out in full in `ROUND-22-PLAN.md` §1 before the round opened, options
+and rejections included, so nothing about it is being settled under time
+pressure.
+
+Pinned by assertion now rather than by a docstring:
+`sc_encode_failure_reaches_the_log()` requires the old string to be **absent**,
+not merely joined by a new one, and compares the tracks `Encoder errors:` names
+against the truncated files on disk rather than against the log's other half.
+Revert-proved four times, one fix at a time.
 
 ### `Rip completed:` and `Ripping errors:` can now disagree on their face
 

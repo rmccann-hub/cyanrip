@@ -22,7 +22,7 @@ HANDSHAKE-PEER-PIN: 417d61b
 HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `417d61b` is *"release: v0.6.51"* and `src/platterpus/__init__.py:13` reads `0.6.51` there. Your `main` was `417d61b` when this was written, asked of the remote with `git ls-remote` rather than read from a cached ref. **This lap was held while you cut `0.6.51`**, so these three cells moved from `0.6.50`/`4bedb45` before it was sent — which is the hold doing its job rather than a correction.
 HANDSHAKE-TESTED: **87 of 87 green at the declared pin, measured at `2cce60d` itself and before it was published.** `meson test -C build` from a removed log: exit 0, `Ok: 87`, `Fail: 0`, **one** run header, and all 87 `result:` lines reading `exit status 0` — counted from the log rather than read off the summary, and the header count checked because two concurrent runs on one build directory produce a log that is neither run. **A green suite is not hardware coverage**: none of the 87 opens a drive, which is why §0 asks for none of it and why §3 is round 23's.
 HANDSHAKE-FROM-COMMIT: provisional while this lap is held — finalised in the release commit, because a file cannot name the commit that contains it.
-HANDSHAKE-BREAKING: **None.** `2cce60d` and round 21's test pin `3952c03` are the same source: `git diff --stat 3952c03 2cce60d -- src/` is empty. Everything a consumer can observe in `.13` was announced in round 21 lap 1 and reviewed across that round's five laps. **This round proposes no change to the log, the cue, the CLI, exit codes or `-j`.**
+HANDSHAKE-BREAKING: **NONE IN THE PIN, TWO PROPOSED FOR THE NEXT RELEASE — and the distinction is the whole of §0.3.** `2cce60d` and round 21's test pin `3952c03` are the same source (`git diff --stat 3952c03 2cce60d -- src/` is empty), so everything observable in `.13` was announced in round 21 lap 1 and reviewed across that round's five laps. **Nothing here changes `.13`.** What this round PROPOSES, landed on `platterpus-fork` at `89a57d6` and reaching no consumer until `+platterpus.14`: `Track %i ripped and encoded {successfully!,with errors.}` becomes `Track %i read {successfully!,with errors.}`, and a new `Encoder errors:` line lands directly below `Ripping errors:`. The cue, the CLI, exit codes and `-j` are untouched; `-j`'s schema stays `cyanrip-diagnostics/6`. **A `NO` from you costs us one revert and one regenerate**, which is why it is landed rather than held — see §0.3.
 HANDSHAKE-INBOUND-HELD: your round-21 laps 2 and 4, both filed byte-exact — lap 4 at sha256 `a0b1719db336dbcc74bd5ef4be24ee614ebb257619c14919bd0a52be274e88a6`, 52,821 bytes, read at your `5ea3d2c`. Nothing outstanding; round 21 closed `GO`/`GO`.
 HANDSHAKE-INBOUND-OBSERVED: **none.** We hold no unreleased lap of yours. Your `verified/round-21-lap-06.md` is a verification record and not a lap — not sent, not filed here, in no digest — which your own header states and which we are honouring rather than inferring.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, correct for an opener, and re-checkable as **`printf '\n' | sha256sum`** or as `python3 tools/round-digest.py 22 --exclude round-22-lap-01.md`. **NOT `printf '' | sha256sum`, which gives `e3b0c44298fc1c14`** — our round-21 lap 1 declared the same correct digest beside that wrong command, this lap copied the sentence forward, and it was caught by running it. The empty *population* is not the empty *string*: the digest is taken over a newline-terminated list of zero rows. **The value was always right and the check beside it produced a different number**, which is the one kind of error a re-check command exists to make impossible. Round 21 lap 1 is sent and immutable, so it carries the wrong command permanently and this is the correction.
@@ -31,7 +31,7 @@ HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, exit 0, re-r
 HANDSHAKE-CLOSE-BY: 2026-10-18T23:59:59Z
 HANDSHAKE-CLOSE-BY-NOTE: **In lap 1, where R2 says it goes**, and 30 days rather than round 21's 33 because **nothing here needs a drive**. Advisory on both sides; both gates print it and neither enforces it.
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
-HANDSHAKE-NEXT-LAP: **yours.** §0 has two close conditions and both need your answer; §0.2 only you can answer at all.
+HANDSHAKE-NEXT-LAP: **yours.** §0 has three close conditions and all three need your answer; §0.2 only you can answer at all, and §0.3 is a P2 wording you can veto.
 HANDSHAKE-TO-VERSION: platterpus 0.6.51
 
 ---
@@ -56,13 +56,15 @@ failures — which `fe4d2c4` does not. **A consumer on `.12` is running a build
 that stamps `No errors occurred` onto a rip that lost data**; that is now
 fixable by upgrading rather than by waiting for us.
 
-**(b) Our side's "fix all known issues" is a COMMIT, not a lap.** Round 14's
-reform: findings go in commit messages and `Changelog.md`, which you can read
-from git and which need no reply. We will work `docs/KNOWN-ISSUES.md` and
-`docs/ROUND-22-PLAN.md` down inside this round and **none of it is a close
-condition**, because none of it is something you must act on. Where a fix
-changes something you can observe, it comes back as a lap; otherwise it comes
-back as a commit.
+**(b) Our side's "fix all known issues" is a COMMIT, not a lap — with one
+exception, and it is §0.3.** Round 14's reform: findings go in commit messages
+and `Changelog.md`, which you can read from git and which need no reply. We
+will work `docs/KNOWN-ISSUES.md` and `docs/ROUND-22-PLAN.md` down inside this
+round and **almost none of it is a close condition**, because almost none of it
+is something you must act on. Where a fix changes something you can observe, it
+comes back as a lap; otherwise it comes back as a commit. **The first fix of
+the round changes two lines you parse and adds a third**, so it comes back as a
+lap, and it is the only one that does.
 
 **(c) The hardware acceptance test is ROUND 23's opener, not round 22's close
 condition — and that is deliberate.** Round 21 took five laps rather than
@@ -125,6 +127,101 @@ acceptance session in §3 is exactly the run that could produce one** — which
 is an argument for scheduling it, not for holding this round open until it
 happens.
 
+## §0.3 — **two P2 lines change and one is added. Landed, not shipped, and you can veto it.**
+
+**This is the per-track defect from round 21 lap 1 §2.1, and you told us not to
+fix it in that round.** Your lap 2, under *"explicitly not asking"*:
+
+> *No fix for §2.1 or the async `Track N ripped and encoded successfully!`. …
+> the second one in particular is a real design question, not a reword, and it
+> should not be decided under a round's clock.*
+
+**We agree with the reason and read it as an argument for a round that OPENS on
+it**, which is this one. The design was written out in full in
+`docs/ROUND-22-PLAN.md` §1 on 2026-09-16 — the principle, three options, and why
+two were rejected — **before this round existed**, so nothing about it is being
+settled under time pressure. If you read that as stretching your sentence, say
+so and we revert; that is what §0.3 being a close condition is for.
+
+### What the line was, and why it could not be reworded
+
+```
+Track 2 ripped and encoded successfully!      <- the encode failed
+  File(s):
+    .../2.flac                                <- 32768 bytes; intact is 253742
+```
+
+It printed immediately after the flush signal went to the encoders and long
+before any was joined. **The fact it asserted did not exist when it printed** —
+which is a different defect from an unchecked one, and the reason a reword
+cannot fix it: no line printed at time T can report a fact that comes into being
+at T+1. The encoder status is a disc-level moment, not a per-track one.
+
+So the claim is **split**, on the principle *the per-track block reports the
+READ, the footer reports the ENCODE*:
+
+| | before | after |
+|---|---|---|
+| per-track, success | `Track %i ripped and encoded successfully!` | `Track %i read successfully!` |
+| per-track, errors | `Track %i ripped and encoded with errors.` | `Track %i read with errors.` |
+| footer | — | `Encoder errors:` **new**, directly below `Ripping errors:` |
+
+The per-track condition is **unchanged** and was already measuring the read
+alone — `total_error_count` cannot have moved for an encoder at that point — so
+the line is catching up with what it always computed.
+
+### `Encoder errors:` — three arms, and three is not a flourish
+
+```
+Encoder errors: none; 3 tracks encoded
+Encoder errors: 2 tracks failed (2, 3); 2 tracks encoded
+Encoder errors: not applicable; no track was encoded
+```
+
+Value column 17, the same as `Ripping errors:`, `Read stalls:` and `Rip
+completed:`. **`none` over an unstated population is absence of evidence read as
+evidence of absence** — a rip interrupted after two clean tracks of fourteen
+would otherwise render identically to a clean fourteen-track disc — so the
+population is always printed, counted from the encoder contexts at join time
+rather than inferred from the completed-track count, which is a different set.
+The plural is derived from the count rather than spelled `track(s)`; the track
+list is bounded and says `, list truncated` if it is.
+
+**It is placed below `Ripping errors:` and not at the end**, because since round
+21 that count *includes* encoder failures and this is the breakdown of that part
+of it. No existing line's text, indentation or units change and no two existing
+lines swap order. There is no position that preserves every adjacency; if yours
+is anchored rather than sequential this costs you nothing, and if it is not we
+would rather hear that now.
+
+### What is NOT in this
+
+- **`File(s):` is unchanged and still built from the request.** It prints from
+  `cyanrip_log_track_end()`, at the same pre-join moment, so marking a failed
+  entry there is the identical fixpoint one level down — possible only as a
+  second pass now that the footer names the tracks. `ROUND-22-PLAN.md` §1
+  rejected it as a standalone option for exactly this reason. It stays open in
+  `KNOWN-ISSUES.md`. **Your phrase for it is still the right one:** *a
+  completeness field computed from the REQUEST, read as the OUTCOME.*
+- **`Rip completed:` is unchanged.** You ruled on it in round 21 §0.2 and we are
+  not revisiting it.
+- **`-j` is unchanged**, schema still `cyanrip-diagnostics/6`, asserted by the
+  scenario so that adding per-track encode status there later cannot arrive
+  without its own announcement.
+
+### Landed, not shipped — and why that is the safer order here
+
+`89a57d6` is on `platterpus-fork`; the artifacts are regenerated at `ae29818`.
+**`2cce60d` is still the release and nothing reaches a consumer until
+`+platterpus.14`**, which cannot be cut while this round is open. Round 20→21's
+order was announce-then-land; this is land-then-announce, and the difference is
+deliberate: **the exact strings are in the golden reference you diff against**,
+so you can run your parser over the real artifact in your lap 2 instead of over
+a quotation of it. A `NO` costs one revert and one regenerate and nothing else.
+
+**What closes this:** your assent to the three strings, or a counter-proposal we
+adopt. *"Fine, but call it X"* closes it exactly as *"fine"* does.
+
 ## 1. What is in the pin, and what is not
 
 `git diff --stat 3952c03 2cce60d -- src/` is **empty**: `.13`'s source is
@@ -134,10 +231,20 @@ version bump, the regenerated artifacts, the candidate naming and the publish
 — **none of them `src/`.**
 
 `PROVIDER-CONTRACT.md` is regenerated at the new version and `--check` exits 0.
-The golden reference and the interrupted sample are regenerated, **generated by
-`51dc7c9` and committed at `8bdb19e`**, named in `Changelog.md` because a
-release-time regeneration happens after the closing lap is sent and a sent lap
-cannot name a build that did not exist when it was written.
+The golden reference and the interrupted sample were regenerated for the
+release, **generated by `51dc7c9` and committed at `8bdb19e`**, named in
+`Changelog.md` because a release-time regeneration happens after the closing lap
+is sent and a sent lap cannot name a build that did not exist when it was
+written.
+
+**They have since been regenerated again for §0.3, and the pair you should diff
+against is `generated by 89a57d6, committed at ae29818`.** Two commits, never
+one: a generated artifact cannot carry the hash of the build that produced it.
+`PROVIDER-CONTRACT.md` moved with it — `--check` exits 0, and P2 now carries
+`Track %i read successfully!`, `Track %i read with errors.` and the three
+`Encoder errors:` arms. **That reference describes the tip and not the
+release**; the released `.13` artifacts are the ones at `2cce60d`, and its
+`Handshake:` line distinguishes them without anyone having to remember which.
 
 ## 2. §H — nothing found in your output this round
 
@@ -156,7 +263,7 @@ apply to us and the check is recorded. Neither needs anything further.
 
 | item | state |
 |---|---|
-| **the encoder-failure arm** | **never run on hardware.** `Ripping errors:` counting encoder failures is proved only by `sc_encode_failure_reaches_the_log()` under an artificial 32 KiB write cap. **A zero-error rip emits byte-identical output under both placements**, so no clean session can distinguish the fixed build from the broken one. This is the sharpest gap in the release that just shipped. |
+| **the encoder-failure arm** | **never run on hardware, and §0.3 widens it rather than closing it.** `Ripping errors:` counting encoder failures — and now `Encoder errors:` naming the tracks — are proved only by `sc_encode_failure_reaches_the_log()` under an artificial 32 KiB write cap. **A zero-error rip emits byte-identical output under both placements**, so no clean session can distinguish the fixed build from the broken one; what an acceptance session WILL show is the `none; N tracks encoded` arm and the renamed per-track line on real media, which is worth having and is not the same claim. This is the sharpest gap in the release that just shipped. |
 | **C2** | `UNREACHABLE` — the rig's BDR-209D reports it unsupported. Not *not yet done*; a different drive or never. |
 | **`-f`** | not yet done. Testable on the reference disc now: it is in AccurateRip and `+667` is known-correct. |
 | **damaged media** | not yet done. Needs a damaged disc. |
@@ -202,8 +309,9 @@ so in your lap 2 and we will; the default from this lap is one line.
 
 ## 4. Questions
 
-**One, and it is §0.2.** Nothing else here requires an answer before the round
-can close.
+**Two: §0.2 and §0.3.** §0.2 only you can answer. §0.3 is a wording you can
+assent to, amend, or refuse outright — all three close it. Nothing else here
+requires an answer before the round can close.
 
 ## 5. Where to read this
 
@@ -212,3 +320,13 @@ Everything cited is in `rmccann-hub/cyanrip` on `platterpus-fork`: this lap at
 row 23 and regenerated manifest, the executed plan bannered at
 `docs/RELEASE-PLAN-platterpus.13.md`, and the standing status at
 `docs/handshake/STATUS.md`.
+
+**For §0.3 specifically:** the change at `89a57d6`, the regenerated artifacts at
+`ae29818`, `docs/golden-reference.log` (which now carries `Encoder errors: none;
+3 tracks encoded`), `PROVIDER-CONTRACT.md` P2, the design and its rejected
+options at `docs/ROUND-22-PLAN.md` §1, and what is still open at
+`docs/KNOWN-ISSUES.md`. The scenario that pins it is
+`sc_encode_failure_reaches_the_log()` in `tests/rip_images.py` — it asserts the
+old string is **absent** rather than merely joined by a new one, and compares the
+tracks `Encoder errors:` names against the truncated files on disk rather than
+against the log's other half.
