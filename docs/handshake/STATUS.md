@@ -30,6 +30,158 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
+## Rewritten 2026-09-18. **THE RE-RUN HAPPENED, ON THE TEST PIN. §0.1 ITEM 1 IS ESTABLISHED, ITEM 3 IS ESTABLISHED, AND ITEM 2 CANNOT BE SATISFIED AS WE WORDED IT.**
+
+**This is the second rig session of 2026-09-17 and it is the one §0.1 asked
+for.** Bundle `platterpusbundle20260917t233651z.tar.gz`, sha256
+`901d6f7e8896ebdf1ed76b0bc091cba059b1b216c8d9830bf0cb7e52f2ae8dac`, handed over
+by the operator. Filed at **`docs/rig-2026-09-17-3952c03/`** — five files, each
+byte-identical to a bundle file, checked by hashing all 14 bundle objects and
+requiring each filed file to match one. The session before it ran `fe4d2c4` and
+is at `docs/rig-2026-09-17-fe4d2c4/`; **two sessions, one date, different
+builds**, which is why these directories are named by build.
+
+    cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-g3952c03)
+    Handshake:      round 21 lap 1 OPEN, verdict OPEN -- NOT a released build
+    Retry limit:    3 (per frame, and per whole-track re-read)
+
+**One whole-disc `fast_verified` rip, GUI-driven, 58m38s, `Rip completed:  yes
+(14 of 14 tracks)`, `Ripping errors: 0`.** One rip and not an acceptance sweep
+is the shape their lap 4 kept from our withdrawn draft, so it is the deliverable
+rather than a shortfall. There is no `script-report.json` and no `rig-check-*`
+file in this bundle because the acceptance script did not drive it — said out
+loud so a reader does not take a different method for a missing file.
+
+### §0.1, scored one by one
+
+| | asked for | verdict |
+|---|---|---|
+| 1 | the `fast_verified` whole-disc path runs on hardware | **established** — `settings.rip_goal: "fast_verified"`, 14 of 14, and their `self_check` adds *"the ripper received the 13 flags we sent on the whole-disc pass"* |
+| 2 | *"your parser reads `Retry limit:` on real logs"* | **the risk is retired; the wording is not satisfiable** |
+| 3 | `Ripping errors:` is the moved field and their export's `health_status` reflects it | **established** — `No errors occurred` at line 252 of their EAC-compatible export |
+
+**Item 2 is the one worth reading, because it is a finding about our own lap.**
+Read at `platterpus@4bedb45:src/platterpus/parsers/cyanrip_log.py:1876-1879`,
+`Retry limit:` is an entry in `_IGNORED_DISC_LINES` — the allowlist of disc rows
+their parser matches so its completeness sweep does not trip, and from which no
+field is derived. Their comment says it plainly: *"We extract nothing from it
+either way, so the rename is invisible to the PARSE."* Both labels are in one
+pattern, so nothing regressed at the rename.
+
+So **"your parser reads it" was never a property their code had**, for the new
+label or the old one. What the condition was actually guarding is the clause
+after that dash — an unrecognised disc line trips their sweep on every rip — and
+**that is retired on hardware**: their report carries `log_parse: {"ok": true,
+"note": null}` and is fully populated from a log carrying the new label.
+
+**This is the round-12 defect in a new place: a close condition asserting a
+mechanism in their code, written without reading it.** The comment was in their
+tree at that path when lap 1 was written. It binds harder in a close condition
+than anywhere else, because R1 freezes the conditions at lap 1 — a condition
+found unsatisfiable mid-round cannot be edited, only explained. Recorded in
+`CLAUDE.md` and in `docs/SETTLED.md` under the new `— peer-source:` tag.
+
+**Item 3 holds as worded and this artifact cannot discriminate the move.**
+`_take_rip_errors`
+(`platterpus@4bedb45:src/platterpus/parsers/cyanrip_log.py:1617-1624`) turns 0
+into `"No errors occurred"` and a non-zero count into `f"{count} ripping
+errors"`, so the field does discriminate — but with **zero encoder failures the
+pre-move and post-move builds emit byte-identical output**, so this rip does not
+demonstrate the fix. The discriminating evidence stays
+`sc_encode_failure_reaches_the_log()` in our own suite, and it is not hardware
+evidence. Said out loud so a green close condition is not read as a hardware
+demonstration.
+
+**And `src/` is byte-identical between `3952c03` and our tip** —
+`git diff --stat 3952c03 HEAD -- src/` is empty. The three fixes that landed
+after the test pin touched `tests/` and `tools/` only, so every claim this
+round makes about the pin's source holds of `HEAD` as well, and the contract's
+source anchor has not moved. **That is worth keeping for the rest of the
+round**, which is why the one stale citation found today —
+`src/cyanrip_main.c:2703` names `sc_encode_failure_is_absent_from_the_log()`,
+renamed in this same round — is recorded in `docs/KNOWN-ISSUES.md` for round 22
+rather than fixed now. A comment fix would change the source hash of the tree
+under review, for a comment.
+
+### What did NOT happen: `-x`
+
+§4b's cache-probe **calibration series** is still unmet, and for a different
+reason than last time — which is the whole point of writing it down. The
+`fe4d2c4` session ran the probe and got the old `-j` schema because the build
+was wrong; **this session did not run the probe at all.** `-x` is absent from
+`Invoked as:`, the log reads `Cache model:    1200 sectors (drive cache size not
+probed)`, and `Cache probe` appears 0 times in the session's app log. *Did not
+happen* and *happened and produced the wrong thing* are different claims.
+`docs/ROUND-22-PLAN.md` §2 stays gated on the first one now.
+
+There is also **no `-j` record in the bundle**, though `-j` was on the command
+line, so `3952c03` wrote one at `cyanrip-diagnostics/6`. Absent, not empty.
+
+### What the consumer can assume: nothing has changed
+
+Release pin `fe4d2c4` under `HANDSHAKE-PIN`, unmoved and frozen by S-15 for the
+round. `3952c03` is the **test pin** and §6a says a test pin is not a release and
+cannot close a round. Every rip from it says `NOT a released build` in its log,
+permanently — and this session is the first filed rip that says `round 21 lap 1
+OPEN`, which **Platterpus's own `self_check` raised as a warn**, from our
+`Handshake:` line, unprompted.
+
+### Where the round stands, and whose lap is next
+
+**OUR LAP 5 IS WRITTEN AND HELD, and lap 6 does not exist.** Checked against
+the remote rather than a cached ref: their `refs/heads/main` is `5aeffe9b` and
+`claude/session-omka9f` has moved `0020541` → `27a174dc`. **Their lap 4 is now
+filled from the session and declares `HANDSHAKE-VERDICT: GO`** — and
+`HANDSHAKE-READY-TO-READ: no — filled and complete, awaiting the operator's
+release`. Its own note says *"until it reads `yes`, your gate should still
+refuse a verdict from this file"*. So it is **observed, not held**: we read its
+wire headers, which is the step that establishes a lap's state, and neither
+filed it nor derived anything in lap 5 from its contents.
+
+**There is no lap 5 in their tree and no lap 6 anywhere.** Their outbound
+round-21 files are laps 2 and 4; their inbound are our laps 1 and 3. Their
+`HANDSHAKE-NEXT-LAP` reads *"yours, and your pre-commit says it is the last"*.
+Round 21 closes at lap 5.
+
+**Lap 5 declares `HANDSHAKE-VERDICT: GO` and `HANDSHAKE-PEER-VERDICT: OPEN`,
+and the second cell is why it does not close the round yet.** `OPEN` is
+transcribed from their lap **2**, the newest *released* inbound lap we hold.
+Their lap 4's `GO` is unreleased, and transcribing a verdict from an unreleased
+lap is the one thing the announcement rule exists to stop — our own gate's
+`stale_peer_verdict` would refuse it anyway. The gate's current verdict says
+this out loud: *"NOT RELEASED FOR READING — HANDSHAKE-READY-TO-READ is not
+`yes`, so this lap is published but not announced and its verdict is a draft"*.
+
+**One operator act closes round 21: releasing their lap 4.** Then two
+mechanical edits here — file their lap 4 under `inbound/` byte-exact against
+`989427bd4ddacc0d…`, flip our peer cell to `GO` — and lap 5 is released.
+Neither is a judgement. **This file is the channel for the re-run**, and it is
+not a lap.
+
+**The digests already agree.** `python3 tools/round-digest.py 21` gives
+`4c70113a594df502 over 3 lap(s)`, and their lap 4's header declares the
+identical value over the identical population from `scripts/round_digest.py`.
+Two independent implementations, one number — and both exclude the sender's own
+in-flight lap, which is what keeps them equal while each side holds one.
+
+**Lap 3's pre-commitment still points at `GO`.** It binds us to `GO` *"unless
+the hardware session fails to establish one of §0.1's three things, or surfaces
+a regression in `3952c03` itself."* No regression surfaced. Items 1 and 3 are
+established. Item 2's wording is unsatisfiable and its risk is retired, which is
+a defect in our condition and not a failure of the build under review — so lap 5
+is `GO`, and it has to say all three of those things in those words rather than
+report three ticks.
+
+**Also settled here, and it was already settled before this session:** the two
+`cyanrip` paths in the records are the host-exported Distrobox wrapper
+(`~/.local/bin/cyanrip`, which Platterpus spawns) and the container binary
+(`/usr/local/bin/cyanrip`, which our `Invoked as:` records because
+`record_invocation()` prints `argv[0]` verbatim). This file's first draft of that
+paragraph said the mechanism was *"not determinable from this bundle"*; it is in
+`docs/SETTLED.md`, which the rule says to read before deriving anything.
+
+---
+
 ## Rewritten 2026-09-17, fifth time that day. **OUR LAP 4 IS WITHDRAWN. LAP 4 IS THEIRS, AND THIS FILE IS HOW THE FINDING REACHES THEM.**
 
 **We wrote a lap 4 and had no claim to the number.** Both *sent* laps allocate it
