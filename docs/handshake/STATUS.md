@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-22-lap-01.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -30,9 +30,9 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-18, on the close. **ROUND 21 IS CLOSED `GO`/`GO`. WE ARE BETWEEN ROUNDS, AND ROUND 22 IS OURS TO OPEN.**
+## Rewritten 2026-09-18, twice. **ROUND 21 IS CLOSED `GO`/`GO`. ROUND 22 IS OPEN AND ITS LAP 1 IS SENT.**
 
-**This is the state a consumer can assume until round 22 lap 1.**
+**This is the state a consumer can assume until Platterpus's round-22 lap 2.**
 
 | | |
 |---|---|
@@ -42,7 +42,7 @@ record of what was said at a moment and this is a claim about *now*.
 | test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
 | approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` — **and the release carries round 21's two P2 changes, which `fe4d2c4` does not** |
 | `--release-gate` | exits **1**, naming round 22 — and correctly: opening a round re-blocks it |
-| round 22 | **lap 1 published and HELD** — not sent, so nothing in it binds either side yet |
+| round 22 | **OPEN. Lap 1 RELEASED for reading 2026-09-18**, from `ef88ad2`, at the commit that flipped it. Three close conditions: §0.1 the two shared-protocol changes, §0.2 whether a Platterpus release fits inside this round, §0.3 two P2 per-track lines and one new footer line. Lap 1 is immutable from here; the next lap is theirs |
 | `platterpus-fork` tip | **ahead of the release, with a P2 log change in it.** Build from `2cce60d`, not from the tip |
 
 **THIS TABLE CARRIED TWO `released` ROWS DISAGREEING**, one naming `.13` and one
@@ -67,10 +67,13 @@ that lost data, and `.13` is the build that does not.
 per-track claim — `Track N ripped and encoded successfully!` printed before any
 encoder was joined, so it asserted a fact that did not yet exist; it now reads
 `Track N read successfully!` and a new `Encoder errors:` line carries the encode
-outcome in the footer. **That is P2 contract surface, it is announced in round
-22 lap 1, and lap 1 is held** — so it is visible in the repository and binds
-nothing. A consumer builds `2cce60d` until a release says otherwise, and every
-log a tip build writes says `NOT a released build` in its own first lines.
+outcome in the footer. **That is P2 contract surface and it is §0.3 of round 22
+lap 1, now sent** — so it is announced and not yet agreed. A consumer builds
+`2cce60d` until a release says otherwise, and every log a tip build writes says
+`NOT a released build` in its own first lines. **If Platterpus refuse or amend
+the wording, it changes before `+platterpus.14` and no released build ever
+carried it** — which is the whole reason it is announced while the round is open
+rather than explained after.
 
 **Their `verified/round-21-lap-06.md` is a verification record and NOT a lap.**
 It is not sent, does not enter our `inbound/`, is in no digest, and we have not
