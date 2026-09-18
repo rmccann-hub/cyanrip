@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-21-lap-03.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-21-lap-05.md
+STATUS-NEWEST-LAP-STATE: held
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
