@@ -735,6 +735,18 @@ repository applies to log lines, turned on its own notes.
 > before. `+platterpus.14` must not be cut until that release exists; round 22
 > cannot close without `HANDSHAKE-PEER-VERSION`, so naming it there is what
 > enforces the order with machinery that already exists.
+>
+> **AND THE ZERO-TRACKS OUTCOME IS SILENT AT RUNTIME — do not write "wrong but
+> loud" in lap 3.** Read at `417d61b`, their completeness enumeration is two
+> mechanisms and neither reaches a user: their *test* walks their **committed**
+> logs and fails on a top-level line matching neither the tables nor
+> `_IGNORED_DISC_LINES` (`cyanrip_log.py:1082-1085`), and the parser itself logs
+> an unclaimed top-level line **at debug** (`:1086-1087`). So the sweep that
+> caught `Encoder errors:` fires on fixtures they hold, and a user running a tip
+> build gets zero tracks with a debug line and nothing else. That makes their
+> ordering ask stronger rather than weaker. **Lap 3 §H material at most, flagged
+> read-from-source, and explicitly not a condition** — they said no new
+> conditions and we are not adding one.
 
 **What round 21 fixed was the COUNT, and this is what it made visible.** With
 the completion footer moved below the encoder-status loop, `Ripping errors:`
