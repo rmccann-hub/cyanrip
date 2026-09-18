@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gb2c9527)
+cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-g19621d3)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 21 lap 1 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 21 lap 5 closed, verdict GO -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -61,6 +61,18 @@ Tracks:
 
 Repeating ripping (0 out of 200 matches for current checksum 2C926D69)
 
+Repeating ripping (1 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (2 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (3 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (4 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (5 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (6 out of 200 matches for current checksum 2C926D69)
+
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -85,11 +97,11 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          17
+  READ:          106
 
 Ripping errors: 1
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-09-16T22:46:08+00:00
-Log FUN512: .5THEMRlwZapi1N0RqVG8MK7JbBLO_4I1tV8w1lhze0htZI15R98gn6Kqmmg1J5JPP1ha7cSwLpTZf1p3tW2cQ
+Ripping finished at 2026-09-18T14:28:57+00:00
+Log FUN512: jEm2VcWZW4fTPu7kazJpu4NuGItJp_inf1fXqSLUHSbCChHWl7hZAMnM7eOBA4cFi1uCPnoLwra8PSPFFPTfvw
