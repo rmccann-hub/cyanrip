@@ -131,7 +131,8 @@ def main():
             # splits the row into five cells.
             malformed.append(("cells", line.strip()[:70]))
             continue
-        # Exactly two columns. The `— past: / theirs: / structural:` legend in
+        # Exactly two columns. The `— past: / theirs: / peer-source: /
+        # structural:` legend in
         # this file's own header is a THREE-column table, and the non-greedy
         # middle group happily swallowed its middle column and reported the
         # legend as four malformed facts. A parser that reads a document's
@@ -148,13 +149,18 @@ def main():
             continue
 
         if check.startswith("—") or check.startswith("--"):
-            # A row with no command must say WHY it has none. Three very
+            # A row with no command must say WHY it has none. FOUR very
             # different confidences were looking identical behind a bare em
             # dash: a past measurement, a fact about someone else's machine,
-            # and a truth about our own code that no fixture can observe.
+            # a fact READ FROM THEIR SOURCE at a pinned commit, and a truth
+            # about our own code that no fixture can observe. `peer-source:`
+            # was added 2026-09-18: it is stronger than `theirs:`, which means
+            # "only as good as the lap that told us", and it earns no command
+            # because a check that reaches the network is not evidence about
+            # this program -- one such row already times this suite out.
             # Untagged is a defect, not a default -- the same `none` versus
             # `unknown (reason)` rule this project applies to every log line.
-            for t in ("past:", "theirs:", "structural:"):
+            for t in ("past:", "theirs:", "peer-source:", "structural:"):
                 if t in check[:24]:
                     kinds[t] = kinds.get(t, 0) + 1
                     break
@@ -247,6 +253,12 @@ def main():
     # how a checker comes to pass by checking nothing. The runnable floor
     # already caught one: an edit that counted escaped pipes as columns dropped
     # 15 runnable checks to 11 in silence.
+    # `past:` and `peer-source:` are deliberately NOT floored, and the
+    # omission was previously unexplained: both are finite sets that can
+    # legitimately empty as a measurement is superseded or a peer fact is
+    # promoted to something runnable, so a floor there would refuse on a
+    # correct edit. `structural:` and `theirs:` cannot empty while this
+    # project has a consumer and a source tree.
     if not kinds.get("structural:") or not kinds.get("theirs:"):
         print("REFUSING: a whole class of unrunnable row has vanished -- "
               "SETTLED.md has probably been reformatted out from under this")
