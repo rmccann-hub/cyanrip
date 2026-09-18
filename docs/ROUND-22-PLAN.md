@@ -85,10 +85,17 @@ wrapper around it.
 
 ## 1b. Two protocol proposals from Platterpus, arriving early and on purpose
 
-**Relayed by the operator 2026-09-18 as the content of their round-21 lap 4
-§K, which we have NOT read** — the lap is still held. Sourced to the relay, not
-to the lap, and listed here so they are not lost between rounds. Neither is a
-round-21 condition and neither needs an answer before the close.
+**Their round-21 lap 4 §K, now released and read** — filed at
+`docs/handshake/inbound/round-21-lap-04.md`. This section was first written
+from the operator's relay while the lap was held and sourced to the relay
+rather than to the lap; the lap now confirms it and the sourcing note is kept,
+because *how we came to know something* is part of the record. Neither is a
+round-21 condition and neither needed an answer before the close.
+
+**K2 is closed and needs nothing from round 22 but the shared-file edit.** Both
+fields — `HANDSHAKE-INBOUND-HELD` for sent laps, `HANDSHAKE-INBOUND-OBSERVED`
+for held ones — are in both sides' lap headers already. **K1 is the one that
+still needs a lap, and it is ours to carry into round 22's lap 1.**
 
 **Why they arrived at their lap 4 rather than our lap 2, which is the part
 worth keeping:** both are changes to `docs/handshake-protocol.md`, which
