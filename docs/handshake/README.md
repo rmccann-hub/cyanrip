@@ -25,9 +25,9 @@ which cannot be ordered at all.
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
-commit          fe4d2c4                          <- build this
---version       cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)
-release_seq     22                               <- the ONLY orderable identifier
+commit          2cce60d                          <- build this
+--version       cyanrip 0.9.4-rc2+platterpus.13 (platterpus-fork-g2cce60d)
+release_seq     23                               <- the ONLY orderable identifier
 channel         stable
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
@@ -38,9 +38,9 @@ git tag         none published
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          fe4d2c4
---version       cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)
-release_seq     22                               <- newest of any channel
+commit          2cce60d
+--version       cyanrip 0.9.4-rc2+platterpus.13 (platterpus-fork-g2cce60d)
+release_seq     23                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
@@ -161,8 +161,9 @@ stop it happening a second time, so read the gate and treat the table as a
 convenience.**
 
 **Every round is closed and a release is permitted.** The live release is
-**`0.9.4-rc2+platterpus.12` at `fe4d2c4`**, `release_seq` 22, authorised by
-round 17. Round 18 agreed a tiered acceptance *procedure* and deliberately moved
+**`0.9.4-rc2+platterpus.13` at `2cce60d`**, `release_seq` 23, authorised by
+round 21 — and it is the first release since `.12` in which **a rip changes**:
+`Retry limit:` and `Ripping errors:` counting encoder failures are both P2. Round 18 agreed a tiered acceptance *procedure* and deliberately moved
 no pin.
 
 **Round 13 carried one close condition out with it, and that is a first.** CC-2

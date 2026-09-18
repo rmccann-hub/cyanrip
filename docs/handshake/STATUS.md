@@ -37,9 +37,10 @@ record of what was said at a moment and this is a claim about *now*.
 | | |
 |---|---|
 | round 21 | **CLOSED `GO`/`GO`**, five laps, 32 days before the close-by |
-| release pin | `fe4d2c4` — **never moved**, and neither side asked |
+| **released** | **`0.9.4-rc2+platterpus.13` at `2cce60d`**, `release_seq` 23, stable — cut 2026-09-18 on round 21's authority |
+| round-21 pin | `fe4d2c4` — **never moved during the round**, and neither side asked |
 | test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
-| approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` |
+| approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` — **and the release carries round 21's two P2 changes, which `fe4d2c4` does not** |
 | `--release-gate` | exits **0** — first time since the round opened |
 | released | **nothing new.** `meson.build` is `+platterpus.12`, ledger row 22 |
 
@@ -1962,19 +1963,19 @@ identifier.
 
 | field | value |
 |---|---|
-| **stable version** | `0.9.4-rc2+platterpus.12` |
-| **stable commit** | **`fe4d2c4`** |
-| stable build tag | `platterpus-fork-gfe4d2c4` |
-| stable install | `https://github.com/rmccann-hub/cyanrip/archive/fe4d2c4.tar.gz` |
-| stable `release_seq` | 22 |
-| stable authorised by | handshake round 17, closed `GO`/`GO` on `fe4d2c4` / `45663c3` |
+| **stable version** | `0.9.4-rc2+platterpus.13` |
+| **stable commit** | **`2cce60d`** |
+| stable build tag | `platterpus-fork-g2cce60d` |
+| stable install | `https://github.com/rmccann-hub/cyanrip/archive/2cce60d.tar.gz` |
+| stable `release_seq` | 23 |
+| stable authorised by | handshake round 21, closed `GO`/`GO` on `fe4d2c4` / `4bedb45`, five laps |
 | | |
-| **beta version** | `0.9.4-rc2+platterpus.12` |
-| **beta commit** | **`fe4d2c4`** |
-| beta build tag | `platterpus-fork-gfe4d2c4` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/fe4d2c4.tar.gz` |
-| beta `release_seq` | 22 |
-| beta authorised by | handshake round 17, closed `GO`/`GO` — same build as stable |
+| **beta version** | `0.9.4-rc2+platterpus.13` |
+| **beta commit** | **`2cce60d`** |
+| beta build tag | `platterpus-fork-g2cce60d` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/2cce60d.tar.gz` |
+| beta `release_seq` | 23 |
+| beta authorised by | handshake round 21, closed `GO`/`GO` — same build as stable |
 
 `beta` resolves to the newest row of *any* channel, so opting into pre-releases
 can never move a user backwards. Both channels resolve to `978f9b0`; there is no
