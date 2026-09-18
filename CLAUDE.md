@@ -252,6 +252,29 @@ regardless of who is at the keyboard.
   with its SHA-256 quoted in the lap so the fetch is verifiable. A hash mismatch
   means the branch moved under the reader, which is worth a line.
 
+  **AND THE ANNOUNCEMENT IS ONE LINE, NOT A SECOND DOCUMENT. WE DRIFTED AND
+  THE OPERATOR CAUGHT IT.** The rule above says the announcement is *"our lap N
+  is published at `<sha>`"*. Through round 21 and into round 22 what actually
+  went to the operator was that line wrapped in **eight hundred words** of
+  prose restating the lap's own sections — checked rather than estimated, every
+  substantive claim in the last one was already in the lap.
+
+  **The hazard is not length, it is that a relay is in neither repository.**
+  The round-12 rule is *a cited document must be one we hold*, and the failure
+  there was quoting a standing status that had never been committed. **A relay
+  is worse: it is not merely uncommitted, it exists nowhere** — not in our
+  tree, not in theirs, in no digest, unciteable by either side forever.
+  Platterpus's round-21 lap 4 §I and §J answer points we made *in relays*, so
+  **their sent, immutable laps now cite text nobody can produce.** That is our
+  doing.
+
+  It is the envelope convention the operator abolished on 2026-08-26 growing
+  back in a different shape — and the tell is the same one: **if it is worth
+  the other side reading, it is worth being in the file that is the exchange.**
+  The one exception is a warning about a *held* lap, which by construction
+  cannot travel inside it; that is narrow, and it is exactly why it is being
+  proposed as a written rule rather than left as a habit.
+
   **AND SINCE 2026-09-13 THE LAP ITSELF TRAVELS THAT WAY — NOTHING IS UPLOADED
   OR DOWNLOADED.** Operator's rule, and it finishes the sentence the bullet
   above started. Both repositories are public and this environment performs

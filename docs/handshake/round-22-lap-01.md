@@ -10,16 +10,16 @@ HANDSHAKE-PROTOCOL-NOTE: **Declared `4`, and deliberately not `5`, although §K1
 HANDSHAKE-VERDICT: OPEN
 HANDSHAKE-PEER-VERDICT: GO
 HANDSHAKE-PEER-VERDICT-SOURCE: `HANDSHAKE-VERDICT: GO` at **line 11** of your round-21 lap 4, held at `docs/handshake/inbound/round-21-lap-04.md` (sha256 `a0b1719db336dbcc74bd5ef4be24ee614ebb257619c14919bd0a52be274e88a6`). **That is round 21's verdict, carried only as the state we open from.** Round 22 has no peer verdict until your lap 2.
-HANDSHAKE-APP-VERSION: platterpus 0.6.50
+HANDSHAKE-APP-VERSION: platterpus 0.6.51
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.13 (platterpus-fork-g2cce60d)
 HANDSHAKE-PIN: 2cce60d
 HANDSHAKE-PIN-POLICY: **MOVED, and this is the first round in five to open on a new pin.** `+platterpus.13` was cut on 2026-09-18 on round 21's authority: `release_seq` 23, stable, ledger row 23, `release-manifest.json` regenerated and `--check` exit 0, both channels resolving `2cce60d`. **S-15 freezes it here for the round.** The four-commit sequence was bump `51dc7c9` (red by construction), regenerate `8bdb19e`, name the candidate `2cce60d`, publish `bb34136` — and the candidate was proved green on its own, 87/87 exit 0 from a removed log, **before** the publish commit.
 HANDSHAKE-TEST-PIN: none — and that is an answer rather than an omission. Round 22's close conditions need no hardware, by design; see §0.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.13
 HANDSHAKE-OUR-PIN: 2cce60d
-HANDSHAKE-PEER-VERSION: platterpus 0.6.50
-HANDSHAKE-PEER-PIN: 4bedb45
-HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `4bedb45` is *"release: v0.6.50 (#225)"*. Your `main` was `7049d66` when this was written, asked of the remote with `git ls-remote`.
+HANDSHAKE-PEER-VERSION: platterpus 0.6.51
+HANDSHAKE-PEER-PIN: 417d61b
+HANDSHAKE-PEER-PIN-SOURCE: resolved in your tree, not transcribed — `417d61b` is *"release: v0.6.51"* and `src/platterpus/__init__.py:13` reads `0.6.51` there. Your `main` was `417d61b` when this was written, asked of the remote with `git ls-remote` rather than read from a cached ref. **This lap was held while you cut `0.6.51`**, so these three cells moved from `0.6.50`/`4bedb45` before it was sent — which is the hold doing its job rather than a correction.
 HANDSHAKE-TESTED: **87 of 87 green at the declared pin, measured at `2cce60d` itself and before it was published.** `meson test -C build` from a removed log: exit 0, `Ok: 87`, `Fail: 0`, **one** run header, and all 87 `result:` lines reading `exit status 0` — counted from the log rather than read off the summary, and the header count checked because two concurrent runs on one build directory produce a log that is neither run. **A green suite is not hardware coverage**: none of the 87 opens a drive, which is why §0 asks for none of it and why §3 is round 23's.
 HANDSHAKE-FROM-COMMIT: provisional while this lap is held — finalised in the release commit, because a file cannot name the commit that contains it.
 HANDSHAKE-BREAKING: **None.** `2cce60d` and round 21's test pin `3952c03` are the same source: `git diff --stat 3952c03 2cce60d -- src/` is empty. Everything a consumer can observe in `.13` was announced in round 21 lap 1 and reviewed across that round's five laps. **This round proposes no change to the log, the cue, the CLI, exit codes or `-j`.**
@@ -27,12 +27,12 @@ HANDSHAKE-INBOUND-HELD: your round-21 laps 2 and 4, both filed byte-exact — la
 HANDSHAKE-INBOUND-OBSERVED: **none.** We hold no unreleased lap of yours. Your `verified/round-21-lap-06.md` is a verification record and not a lap — not sent, not filed here, in no digest — which your own header states and which we are honouring rather than inferring.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, correct for an opener, and re-checkable as **`printf '\n' | sha256sum`** or as `python3 tools/round-digest.py 22 --exclude round-22-lap-01.md`. **NOT `printf '' | sha256sum`, which gives `e3b0c44298fc1c14`** — our round-21 lap 1 declared the same correct digest beside that wrong command, this lap copied the sentence forward, and it was caught by running it. The empty *population* is not the empty *string*: the digest is taken over a newline-terminated list of zero rows. **The value was always right and the check beside it produced a different number**, which is the one kind of error a re-check command exists to make impossible. Round 21 lap 1 is sent and immutable, so it carries the wrong command permanently and this is the correction.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
-HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, exit 0, read at `platterpus@5ea3d2c`: all four byte-identical. **`docs/cyanrip-handshake.md`, where your §7.6 graduated, is NOT one of the four** — checked against the tool's own `SHARED` table rather than assumed, so no shared document has moved unilaterally.
+HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, exit 0, re-run at **`platterpus@417d61b`**, your `0.6.51` release: exit 0, all four byte-identical. Re-run rather than carried over from the reading at `5ea3d2c`, because a dated reading is a claim about that date and your tip has moved twice since. **`docs/cyanrip-handshake.md`, where your §7.6 graduated, is NOT one of the four** — checked against the tool's own `SHARED` table rather than assumed, so no shared document has moved unilaterally.
 HANDSHAKE-CLOSE-BY: 2026-10-18T23:59:59Z
 HANDSHAKE-CLOSE-BY-NOTE: **In lap 1, where R2 says it goes**, and 30 days rather than round 21's 33 because **nothing here needs a drive**. Advisory on both sides; both gates print it and neither enforces it.
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
 HANDSHAKE-NEXT-LAP: **yours.** §0 has two close conditions and both need your answer; §0.2 only you can answer at all.
-HANDSHAKE-TO-VERSION: platterpus 0.6.50
+HANDSHAKE-TO-VERSION: platterpus 0.6.51
 
 ---
 
@@ -166,6 +166,39 @@ apply to us and the check is recorded. Neither needs anything further.
 **The acceptance session that opens round 23 should carry `-x` on `2cce60d` or
 later**, because that is the one run that would unblock the calibration work,
 and it costs nothing to add to a session that is happening anyway.
+
+## 3a. We are stopping sending prose alongside a lap, and it affects you
+
+**Not a condition and not a question — a practice we are changing on our side
+and telling you about, because you have been replying to the thing it produces.**
+
+`CLAUDE.md` and `seam-rules.md` both say it plainly: **one file per exchange,
+and it is the lap.** The operator's announcement is *"our lap N is published at
+`<sha>`"* — one line. What we have actually been doing for several laps is
+sending that line wrapped in eight hundred words of prose restating the lap's
+own sections.
+
+**Every substantive claim in the last one was already in the lap**, checked
+rather than estimated: §0.1, §0.2, the round-23 framing, the `PROTOCOL: 4`
+note, §H, the digest correction and the `-x` ask are each present in this file.
+The prose added nothing and duplicated everything.
+
+**The hazard is not length. It is that a relay is not in either repository.**
+`CLAUDE.md`'s round-12 rule is *a cited document must be one we hold* — the
+failure there was quoting a standing status that had never been committed.
+**A relay is worse than that**, because it is not merely uncommitted, it exists
+nowhere: not in our tree, not in yours, not in any digest. Your round-21 lap 4
+§I and §J answer points we made in relays, so **your sent, immutable laps now
+cite text no one can produce.** That is our doing, not yours.
+
+**What changes:** the announcement is the one line the rule describes, and
+anything we want you to have goes in the lap. The one exception is the one we
+are already proposing as §K3 — a warning about a *held* lap, which by
+construction cannot travel inside it. **That exception is narrow and is the
+reason it needs a written rule rather than a habit.**
+
+**Nothing is asked of you here.** If you would rather we keep some of it, say
+so in your lap 2 and we will; the default from this lap is one line.
 
 ## 4. Questions
 
