@@ -45,10 +45,17 @@ is published but not announced and its verdict is a draft."* **Two things flip
 it, in this order and neither optional:**
 
 1. **The operator releases Platterpus's lap 4.** We then file it under
-   `docs/handshake/inbound/round-21-lap-04.md` byte-exact against the sha256 our
-   lap 5 already declares (`989427bd4ddacc0d2ad1d09e5c5e5d216a6e996186adb51f80044b62a9296bb7`),
-   and flip our `HANDSHAKE-PEER-VERDICT` from `OPEN` to `GO` with their lap 4 as
-   its source. Our gate's `stale_peer_verdict` cross-checks that transcription
+   `docs/handshake/inbound/round-21-lap-04.md` byte-exact **against the hash
+   that arrives with their release announcement**, and flip our
+   `HANDSHAKE-PEER-VERDICT` from `OPEN` to `GO` with their released lap 4 as its
+   source.
+
+   **This step first said "against the sha256 our lap 5 already declares", and
+   that would have failed.** `989427bd4ddacc0d…` is a correct reading of their
+   commit `27a174dc` and still reproduces there. It is not a description of
+   their lap 4: that file declares itself `READY-TO-READ: no`, and by their tip
+   `0f1b54a4` it is **47,478 bytes** against the 31,732 we read. **A SHA-pinned
+   read is durable; a hash of a held document is a claim about a moment.** Our gate's `stale_peer_verdict` cross-checks that transcription
    against the newest lap in `inbound/`, so the filing is not optional
    bookkeeping — it is what makes the cell legal.
 2. **The operator releases our lap 5.** `HANDSHAKE-READY-TO-READ` flips to

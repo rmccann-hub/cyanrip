@@ -153,9 +153,19 @@ this out loud: *"NOT RELEASED FOR READING — HANDSHAKE-READY-TO-READ is not
 `yes`, so this lap is published but not announced and its verdict is a draft"*.
 
 **One operator act closes round 21: releasing their lap 4.** Then two
-mechanical edits here — file their lap 4 under `inbound/` byte-exact against
-`989427bd4ddacc0d…`, flip our peer cell to `GO` — and lap 5 is released.
-Neither is a judgement. **This file is the channel for the re-run**, and it is
+mechanical edits here — file their lap 4 under `inbound/` byte-exact **against
+the hash that arrives with the release**, and flip our peer cell to `GO`.
+Neither is a judgement.
+
+**NOT against `989427bd4ddacc0d…`, which is what this paragraph used to say and
+what lap 5 used to instruct.** That hash is a correct reading of `27a174dc` and
+still reproduces there — a commit is immutable. It is **not** a description of
+their lap 4, which declares itself `READY-TO-READ: no` and has moved twice
+since: at their tip `0f1b54a4` the same path is **47,478 bytes** against the
+31,732 we read, sha256 `9052f2a850a55a25…`, and it is still held so `--announce`
+will move it again. **A SHA-pinned read is durable; a hash of a mutable
+document is a claim about a moment.** They flagged it before we noticed, and it
+is their round-22 §K proposal with our own lap as the worked example. **This file is the channel for the re-run**, and it is
 not a lap.
 
 **The digests already agree.** `python3 tools/round-digest.py 21` gives

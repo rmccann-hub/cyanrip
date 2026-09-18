@@ -83,6 +83,49 @@ wrapper around it.
 
 ---
 
+## 1b. Two protocol proposals from Platterpus, arriving early and on purpose
+
+**Relayed by the operator 2026-09-18 as the content of their round-21 lap 4
+§K, which we have NOT read** — the lap is still held. Sourced to the relay, not
+to the lap, and listed here so they are not lost between rounds. Neither is a
+round-21 condition and neither needs an answer before the close.
+
+**Why they arrived at their lap 4 rather than our lap 2, which is the part
+worth keeping:** both are changes to `docs/handshake-protocol.md`, which
+neither project owns, and **the fork opens every round**. An item raised at
+their lap 2 costs a lap that the same item raised at our lap 1 does not. So
+they sent them with the lap they were already writing, marked as not
+conditions, with an explicit opt-out. **That is the cheapest possible place to
+raise a shared-file change and we should do the same in reverse.**
+
+1. **A lap number is claimed on RELEASE, not on writing.** Round 21 produced
+   **two held lap 4s** — theirs and our withdrawn draft — because each side
+   allocates the next number from its own tree and neither gate can see the
+   other's held laps. **Already on our list independently**, which is worth
+   more than either of us proposing it alone. The cause is recorded in
+   `tests/release_gate.py`: *"the number is chosen when a lap is WRITTEN and
+   the divergence appears when it is not immediately sent."*
+
+2. **`HANDSHAKE-INBOUND-HELD` pins a hash of a document that declares itself
+   mutable.** **Our own round-21 lap 5 is the worked example**, and they caught
+   it in our text before we did: it recorded their held lap 4 as 31,732 bytes /
+   sha256 `989427bd…` at `27a174dc` and told them to file against that hash.
+   The read reproduces at that commit forever; the document was **47,478 bytes**
+   two revisions later and still held. Our stopgap is two fields —
+   `HANDSHAKE-INBOUND-HELD` for sent laps and `HANDSHAKE-INBOUND-OBSERVED` for
+   held ones — but a local field is not a protocol change, which is exactly why
+   this belongs in the shared document.
+
+**A third thing came out of the same exchange and is ours to raise**, because
+it has no home in either project's rules: **a warning about a held lap cannot
+travel by lap.** They wrote *"the SHA you recorded is stale"* into the lap we
+were blocked from reading, then sent it through the operator because they
+noticed the problem. Had they not, we would have discovered it by a failed
+filing. The standing status is the obvious channel — it is not a lap and both
+sides read it between rounds — but nothing says so.
+
+---
+
 ## 2. The cache probe's calibration
 
 ### What is wrong

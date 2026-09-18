@@ -287,6 +287,31 @@ regardless of who is at the keyboard.
      fetched, and must say so.
   4. **`HANDSHAKE-INBOUND-HELD` names the SHA we read at**, so "we hold your
      lap 2" resolves to an object rather than to a memory of an upload.
+  5. **BUT A HASH OF A HELD LAP IS NOT A FACT ABOUT THAT LAP, AND WE SHIPPED
+     THE CONFUSION.** Round 21 lap 5 recorded Platterpus's held lap 4 as blob
+     `4c672bcf…`, 31,732 bytes, sha256 `989427bd…` at their `27a174dc`, and
+     then instructed *"file it byte-exact against that sha256"*. **The read is
+     durable and the hash is not.** `27a174dc` still reproduces all three
+     exactly — a commit is immutable, so a SHA-pinned read stays verifiable
+     forever. The *document* had moved twice by the time they relayed the
+     warning: **47,478 bytes at their next tip, half again as large**, and
+     still `READY-TO-READ: no`, so the announce would move it again.
+
+     **A held lap declares itself mutable in its own wire header.** Quoting its
+     size and digest as though they identified it is the same category error as
+     citing a branch tip instead of a commit — one level in, and harder to see,
+     because the numbers are real and reproduce. **Two fields, never one**:
+     name the commit you read at, and say plainly that the file's hash comes
+     with the release announcement. Ours is now split into
+     `HANDSHAKE-INBOUND-HELD` (sent laps, where a hash means something) and
+     `HANDSHAKE-INBOUND-OBSERVED` (held laps, where it does not).
+
+     **And the warning could not travel by lap.** They wrote it into the very
+     document we were blocked from reading, then sent it through the operator
+     because they noticed. **A warning that lives only inside the artifact its
+     reader cannot open is not a warning**, and neither project has a rule for
+     that yet. It is Platterpus's round-22 §K proposal, and our lap is the
+     worked example.
 
   **This closes round 14's four lap collisions by construction.** Their cause is
   recorded in `tests/release_gate.py`: *"the number is chosen when a lap is
@@ -339,6 +364,20 @@ regardless of who is at the keyboard.
   implementations of one convention catching each other is worth more than one
   copied twice — round 7 lap 30 is the precedent, and round 14 lap 17 §6 is what
   two independent readings of §5a just found.
+
+  **AND IT IS WHAT MAKES AN AGREEMENT MEAN ANYTHING, which is the inverse of
+  the two-related-witnesses rule and worth stating in those words.** Two
+  implementations agreeing is normally *weak* evidence, because the commonest
+  cause is a shared ancestor — this project has been caught by that through a
+  shared fixture and through a shared clock, and both times every test passed.
+  The round-digest agreement is the case where it is *strong*: their
+  `scripts/round_digest.py` was built from our written specification and **has
+  never read our code**, so the shared ancestor is absent **by construction**
+  rather than by hope. Seven consecutive rounds of identical digests is then a
+  real measurement of the convention. Platterpus made this point back to us in
+  round 21 and it is sharper than the fact it is about. **Before crediting an
+  agreement, ask what the two parties share** — and prefer the arrangement where
+  the answer is provably "only the spec".
 
   `tools/make-envelope.py` stays for **reading** envelopes still arriving from
   the other side; we no longer emit them. This is *transport*, not protocol:
