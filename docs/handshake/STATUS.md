@@ -59,7 +59,15 @@ bannered. Platterpus separately report that a release is *not due on their
 side* — their version bar is `0.7.100` gated on a full hardware pass and their
 evidence ledger holds no full-green row. **That is their gate on their release
 and it is not an argument about ours**, which is recorded here so the two do not
-quietly merge into "neither side ships". Ours had its own reason to go:
+quietly merge into "neither side ships".
+
+**They have since corrected the sentence we quoted.** *"A release is now
+authorised, it is not due"* named **the gate** and not what it gates, and they
+noticed because our lap 1 §0.2 quoted it. Our lap quoted it accurately and the
+question it asked — *given that bar, can a release be cut inside this round?* —
+is unaffected; noted here so a reader does not cite their sentence as their
+current position. **A quotation is a faithful record of what was said and not a
+claim that it still holds**, and the sent lap cannot say so itself. Ours had its own reason to go:
 `+platterpus.12` stamps `No errors occurred` onto an archival artifact for a rip
 that lost data, and `.13` is the build that does not.
 
@@ -70,10 +78,36 @@ encoder was joined, so it asserted a fact that did not yet exist; it now reads
 outcome in the footer. **That is P2 contract surface and it is §0.3 of round 22
 lap 1, now sent** — so it is announced and not yet agreed. A consumer builds
 `2cce60d` until a release says otherwise, and every log a tip build writes says
-`NOT a released build` in its own first lines. **If Platterpus refuse or amend
-the wording, it changes before `+platterpus.14` and no released build ever
-carried it** — which is the whole reason it is announced while the round is open
-rather than explained after.
+`NOT a released build` in its own first lines.
+
+**AND §0.3 UNDERSTATED IT. THIS IS THE CORRECTION, AND THE STANDING STATUS IS
+THE ONLY CHANNEL IT HAS** — the lap is sent and immutable, and this is exactly
+the escape `CLAUDE.md` says to expect. Platterpus replied that
+`Track %i ripped and encoded successfully!` is their **block delimiter**, not a
+field they read:
+`platterpus@417d61b:src/platterpus/parsers/cyanrip_log.py:212-215`,
+`_TRACK_START`, commented *"A track block opens with its outcome line"*, and it
+matches **both** arms we renamed. Verified by reading their source at the SHA
+they cited: line 2452 is the only `_TrackAcc(` construction site and it sits
+inside that match, so no match means **no track is parsed at all**, while
+`rip_completed_tracks` is set separately at line 1458 from the disc-level
+footer. **The same parse reports 14 of 14 tracks and `No errors occurred` over a
+record carrying zero tracks.**
+
+§0.3's heading — *"two P2 lines change and one is added"* — is accurate,
+complete as a description, and silent on that. **Describing a change is not
+describing its consequence**, and the one `git show` that separates a field
+rename from a delimiter rename was available and not run.
+
+**THE ORDERING IS NOW A HARD PREREQUISITE ON `+platterpus.14`, and it is the
+first release of this fork to have one.** Platterpus are **not** vetoing and not
+asking for a redesign; the ask is their round-20 ordering — their parser accepts
+both wordings additively, **ships in a release**, and only then does ours ship.
+Taken. `Encoder errors:` they accept as a clean P2: all three arms trip their
+completeness sweep, which is the sweep working, and tracks still parse.
+
+**What a consumer should do meanwhile: build `2cce60d`.** Nothing about this
+reaches a released build, and if the wording changes it changes before `.14`.
 
 **Their `verified/round-21-lap-06.md` is a verification record and NOT a lap.**
 It is not sent, does not enter our `inbound/`, is in no digest, and we have not

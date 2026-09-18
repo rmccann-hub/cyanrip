@@ -513,6 +513,47 @@ regardless of who is at the keyboard.
   the thing to verify was checkable and the mechanism we attached to it was
   not.
 
+  **AND IT BINDS ON A CHANGE YOU ASK THEM TO ABSORB, NOT ONLY ON A CLAIM ABOUT
+  THEIR CODE — which is the same rule one round later and we walked into it.**
+  Round 22 lap 1 §0.3 announced renaming `Track %i ripped and encoded
+  successfully!` to `Track %i read successfully!`. The lap described the change
+  in full — both arms, the placement of the new footer line, three rejected
+  options, the revert-proofs — and said **nothing about what it does to a
+  consumer**, because nobody opened their parser. It is
+  `platterpus@417d61b:src/platterpus/parsers/cyanrip_log.py:212-215`,
+  `_TRACK_START`, commented *"A track block opens with its outcome line"*, and
+  it matches **both** renamed arms. Line 2452 is the **only** `_TrackAcc(`
+  construction site and it is inside that match, so no match means **no track
+  is parsed at all**; `rip_completed_tracks` is set separately at line 1458 from
+  the disc-level footer. **So the same parse reports 14 of 14 tracks and
+  `No errors occurred` over a record carrying zero tracks.** Verified by reading
+  their source at the SHA they cited, not taken on their word.
+
+  **Describing a change is not describing its consequence**, and a lap that does
+  the first reads as though it did the second. The heading *"two P2 lines change
+  and one is added"* is accurate, complete as a description, and silent on the
+  only thing that mattered. **A renamed line is not a field until you have
+  checked it is not a DELIMITER** — a field rename loses one value, a delimiter
+  rename loses every value hanging off it, and the two are indistinguishable
+  from our side of the seam. One `git show` separates them.
+
+  **The ordering rule that follows, and it is theirs from round 20.** For a
+  change that **removes** a string a consumer matches on: *the consumer accepts
+  both wordings additively, ships that in a release, and only then does the
+  provider ship.* "Announced before it ships" is satisfied by a lap; it is not
+  satisfied by a lap, because a consumer cannot adapt to an announcement, only
+  to a release. Landing first and announcing in the same round inverts it, and
+  **that is what we did** — the lap even argued for the inversion on the grounds
+  that the strings would be in the golden reference for them to test against.
+  That argument was right about the artifact and wrong about the order, and both
+  can be true: keep the artifact, fix the order.
+
+  **They did not veto it.** *"We are not vetoing it and not asking you to
+  redesign it"* — the ask was the ordering alone, made at the cost of one
+  release on their side. **A consumer who answers a breaking change by fixing
+  the sequence rather than by refusing it is doing the seam's work**, and the
+  correct response is to take the sequence, not to thank them for the latitude.
+
   **It does NOT license fixing their tree, and reading is not a substitute for a
   lap.** The seam's value is two independent implementations catching each other;
   a convention re-derived from their code is one implementation copied twice.
@@ -1786,16 +1827,25 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
-**The next release is `+platterpus.13` and the plan is
-`docs/RELEASE-PLAN-platterpus.13.md`**, written 2026-09-18 and **not executed**
-— `meson.build` still says `+platterpus.12`, the ledger's last row is seq 22,
-and the gate exits 1 naming round 21. Its condition is *"`release-gate.py
---release-gate` exits 0"*, deliberately not *"round 21 closes"*, and it names
-the two operator acts that flip it. Unlike `.12`'s, **a rip does change**: the
-`Retry limit:` rename and `Ripping errors:` counting encoder failures are both
-P2 surface, and the second is why the release matters rather than tidies —
-`+platterpus.12` stamps `No errors occurred` onto an archival artifact for a
-rip that lost data.
+**`+platterpus.13` SHIPPED on 2026-09-18** at `2cce60d`, `release_seq` 23,
+authorised by round 21 — `docs/RELEASE-PLAN-platterpus.13.md` is executed and
+bannered. Every clause this paragraph used to carry is now false and each was
+checkable: `meson.build` says `.13`, the ledger's last row is seq 23, and the
+gate names round **22**. It carried the `Retry limit:` rename and
+`Ripping errors:` counting encoder failures, and the second is why it mattered
+rather than tidied — `+platterpus.12` stamps `No errors occurred` onto an
+archival artifact for a rip that lost data.
+
+**The next release is `+platterpus.14` and IT HAS A CONSUMER-SIDE PREREQUISITE,
+which no release of this fork has had before.** It carries round 22's per-track
+split, and the renamed line is Platterpus's `_TRACK_START` block delimiter — so
+a `.14` shipped before their both-wordings release exists would make their
+current parser report a disc with zero tracks in it. **Their round-20 ordering
+governs: their release first, ours second.** Write the plan with that as a §1
+condition beside the gate, and note that the gate alone does not encode it —
+what does is the close itself, since round 22 cannot close without
+`HANDSHAKE-PEER-VERSION`, and naming the both-wordings release there satisfies
+the ordering with machinery that already exists.
 
 **This paragraph said no plan existed, and before that it claimed one did for
 forty days** by pointing at `docs/RELEASE-PLAN-platterpus.5.md` as *"the plan

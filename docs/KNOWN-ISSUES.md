@@ -713,6 +713,29 @@ one.** Kept here rather than moved to the fixed section, because a heading that
 said *fixed* over an entry describing a live defect is the label rule this
 repository applies to log lines, turned on its own notes.
 
+> **THE FIX IS NOT RELEASABLE ON ITS OWN, and the reason came back from
+> Platterpus in round 22 after our lap 1 had already gone.** The renamed line is
+> their **block delimiter**, not a field they read:
+> `platterpus@417d61b:src/platterpus/parsers/cyanrip_log.py:212-215`,
+> `_TRACK_START`, commented *"A track block opens with its outcome line"*,
+> matching **both** arms we renamed. Line 2452 is the only `_TrackAcc(`
+> construction site and sits inside that match, so no match means **no track is
+> parsed**; `rip_completed_tracks` is set separately at 1458 from the disc-level
+> footer. **The same parse therefore reports 14 of 14 tracks and
+> `No errors occurred` over a record carrying zero tracks.** Read at the SHA
+> they cited rather than taken on their word.
+>
+> **They did not veto it.** The ask is their round-20 ordering: their parser
+> accepts both wordings additively, ships in a release, **then** `+platterpus.14`
+> ships. `Encoder errors:` they accepted as a clean P2 — all three arms trip
+> their completeness sweep, which is the sweep working, and tracks still parse.
+>
+> **So this entry is now two facts, not one.** The log is right and the release
+> is blocked on a consumer-side prerequisite no release of this fork has had
+> before. `+platterpus.14` must not be cut until that release exists; round 22
+> cannot close without `HANDSHAKE-PEER-VERSION`, so naming it there is what
+> enforces the order with machinery that already exists.
+
 **What round 21 fixed was the COUNT, and this is what it made visible.** With
 the completion footer moved below the encoder-status loop, `Ripping errors:`
 reported the encoder failures — but the per-track block above it did not:
