@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.13 (platterpus-fork-g89a57d6)`
+Build: `cyanrip 0.9.4-rc2+platterpus.13 (platterpus-fork-g2f7d9c9)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 783dd367f116e9c4` over `src/*.c` and
+**Source anchor:** `sha256/16 = dab754382dce156d` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -583,7 +583,7 @@ P5 rows for error detection even when they appear here.
 | `cyanrip_main.c:1711` | `Log \"%s\" has data after the checksum, the file has been modified!` | **not directly** - see legend |
 | `cyanrip_main.c:1716` | `No FUN512 checksum found in \"%s\"!` | **not directly** - see legend |
 | `cyanrip_main.c:1721` | `Couldn't read \"%s\"!` | **not directly** - see legend |
-| `cyanrip_main.c:2834` | `-j given %i times; the diagnostics record goes to the last one: \"%s\"` | **not directly** - see legend |
+| `cyanrip_main.c:2837` | `-j given %i times; the diagnostics record goes to the last one: \"%s\"` | **not directly** - see legend |
 | `genopt.h:399` | `(default: %f)` | yes |
 | `genopt.h:409` | `(default: %hi)` | yes |
 | `genopt.h:414` | `(default: %i)` | yes |
