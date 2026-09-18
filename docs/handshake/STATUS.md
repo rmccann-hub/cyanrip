@@ -30,6 +30,64 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
+## Rewritten 2026-09-18, on the close. **ROUND 21 IS CLOSED `GO`/`GO`. WE ARE BETWEEN ROUNDS, AND ROUND 22 IS OURS TO OPEN.**
+
+**This is the state a consumer can assume until round 22 lap 1.**
+
+| | |
+|---|---|
+| round 21 | **CLOSED `GO`/`GO`**, five laps, 32 days before the close-by |
+| release pin | `fe4d2c4` — **never moved**, and neither side asked |
+| test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
+| approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` |
+| `--release-gate` | exits **0** — first time since the round opened |
+| released | **nothing new.** `meson.build` is `+platterpus.12`, ledger row 22 |
+
+**A RELEASE IS AUTHORISED AND HAS NOT BEEN CUT, and those are different
+sentences.** `docs/RELEASE-PLAN-platterpus.13.md` §1's condition is met and §4 is
+the sequence. Platterpus separately report that a release is *not due on their
+side* — their version bar is `0.7.100` gated on a full hardware pass and their
+evidence ledger holds no full-green row. **That is their gate on their release
+and it is not an argument about ours**, which is recorded here so the two do not
+quietly merge into "neither side ships". Ours has its own reason to go, in the
+plan's §3: `+platterpus.12` stamps `No errors occurred` onto an archival artifact
+for a rip that lost data.
+
+**Their `verified/round-21-lap-06.md` is a verification record and NOT a lap.**
+It is not sent, does not enter our `inbound/`, is in no digest, and we have not
+filed it — filing it would change our digest and would be wrong. Their own
+header says so and gives the precedent (`verified/round-20-lap-04.md`) and the
+sharpest line in it: *"If this had been a sendable lap the number would have
+collided with yours, which is exactly K1."* **Worth one caveat we are keeping
+for round 22:** the file declares `HANDSHAKE-LAP: 6` at column 0, and under
+`PROTOCOL.md` §5a that is what a conforming enumerator counts, whatever the
+prose beside it says. Theirs excludes it deliberately and ours never sees it, so
+nothing diverges today — but the general shape is the mirror of why this file
+carries `STATUS-` prefixes rather than `HANDSHAKE-` ones.
+
+**Three digests now agree across two implementations that share only a written
+spec.** `4c70113a594df502 over 3`, `34ee5bd1e7a3bf8e over 4`, and — checked here
+after their close — **`9e1bd1da1c5bb5c6 over 5`, reproduced exactly by
+`python3 tools/round-digest.py 21` over the final immutable set.** Each is
+correct of the population it names, and the declared `over N` is what makes
+three different numbers read as arithmetic.
+
+**What a closed round does NOT change, and this list is the point of saying it
+here:** C2 is `UNREACHABLE` on the rig's drive; `-f`, damaged media and CD-TEXT
+from a physical disc are *not yet done*; **the encoder-failure arm the round's
+own fix addresses has never run on hardware** — a zero-error rip cannot
+discriminate it; and §4b's cache-probe calibration series is still unrecorded,
+so **do not cite our cache figure.** Platterpus have carried all of these into
+their record unprompted.
+
+**Round 22 is ours to open** and carries three things: **K1** (a lap number
+claimed on release, not on writing), the **held-lap warning channel** (a warning
+about a held lap cannot travel inside it — ours to raise, no rule exists either
+side), and `docs/ROUND-22-PLAN.md`'s own items, of which §2's cache calibration
+stays gated on a session that records the series.
+
+---
+
 ## Rewritten 2026-09-18, later. **THEIR LAP 4 IS RELEASED, READ AND FILED. OUR LAP 5 IS HELD AND IS THE LAST ACT.**
 
 **One thing stands between round 21 and a close, and it is the operator's:

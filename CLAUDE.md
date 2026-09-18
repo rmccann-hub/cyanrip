@@ -1597,12 +1597,20 @@ in three laps or the reform failed.
 2026-09-16, and this paragraph carried the prediction with no result beside it
 for a month:
 
-| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 |
-|---|---|---|---|---|---|---|---|---|
-| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 |
+| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 |
+|---|---|---|---|---|---|---|---|---|---|
+| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** |
 
 Round 15 took **sixteen** and round 16 took **seventeen**. Convergence to three
-laps began at **round 17** and has held for four rounds since. So the reform was
+laps began at **round 17** and held for four rounds; **round 21 took five, and
+the two extra were bought rather than wasted.** Its lap 1 declared a close
+condition needing a *hardware session*, which no desk lap can supply — the first
+round since 17 to do so. The session then ran on the wrong pin and was void
+(`docs/rig-2026-09-17-fe4d2c4/`), so the evidence lap had to wait for a second
+one. **Lap 3 pre-committed to `GO`** and lap 5 delivered it, closing 32 days
+before the declared close-by. Five laps for two rig sessions and two contract
+changes is not the round-7 failure mode; it is the cost of a condition that
+needs a drive, and the pre-commitment is what kept it from becoming six. So the reform was
 right and its own one-round test was wrong — which is worth more than either half
 alone, because **a falsifiable prediction that nobody scores is indistinguishable
 from one that was never made.** Set the test, and then go back and read it.
