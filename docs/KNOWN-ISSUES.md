@@ -231,7 +231,7 @@ making the signal reliably land mid-read changes what the check exercises. **The
 comment is corrected now regardless**, because a docstring claiming a guarantee
 the code does not have is the defect that let this go unnoticed.
 
-### `Lap commit list names its range` has timed out TWICE, and the cause is still NOT established
+### `Lap commit list names its range` has timed out THREE times, and the third one said where the time went
 
 **Second occurrence 2026-09-17**, at the tip `dcd6f95`, in a full suite:
 `Ok: 85  Fail: 0  Timeout: 1`, exit 1.
@@ -262,6 +262,49 @@ one: it would convert the only signal we have into silence, and this file alread
 records that treatment as the defect. **The useful change is instrumentation, not
 tolerance** — the test should record its own elapsed time per peer entry, so the
 third occurrence says *where* the 30 seconds went instead of only that they went.
+
+**THAT PREDICTION WAS MADE, THE INSTRUMENT SHIPPED AT `122af59`, AND THE THIRD
+OCCURRENCE SCORED IT — 2026-09-18, in a full suite, same 30.01 s, same SIGTERM.**
+For the first time the test said something on its way out:
+
+```
+killed by signal 15 after 3 completed call(s) -- the call in flight is the one
+that hung, and is NOT in the list below
+timings: 3 call(s), 1.40 s total
+     1.18 s  --since 343ebd1 --head 59cb5a9
+     0.12 s  --since 8880d8f --head 59cb5a9
+     0.10 s  --since 8880d8f --head 59cb5a9
+```
+
+**What that establishes, against a complete passing run measured immediately
+afterwards — 8 calls, 0.78 s total, three standalone runs at ~1 s each, all
+exit 0:**
+
+- **The test does 8 subprocess calls and they cost under a second together.**
+  So roughly **28.6 s went into ONE call** whose siblings each take ~0.1 s.
+- **It is not the test that waits, it is one subprocess.** The bimodal
+  distribution recorded above now has a mechanism-shaped explanation rather than
+  only a shape: a single `git` invocation that does not return.
+- **A new datum nobody had:** the failing run's *first* call took **1.18 s
+  against 0.16 s** in a normal run — **7× slower before anything hung at all**.
+  Whatever the run was contending with was already visible in call one.
+
+**What is still NOT established, and the instrument's own limit is why.** Which
+call hung. The dump is **sorted by duration, not by order**, so the three
+survivors cannot be placed in sequence and the fourth cannot be named from a
+passing run's list either. The instrument answered *how many completed* and not
+*which one is next* — **a cheap fix, and the next one to make**: record the call
+index alongside the duration. Recorded here rather than done now because round
+21 is closing and this is not a regression in the pin under review; R3 defaults
+it to round 22.
+
+**The pattern is worth naming because it has now happened twice in one day.**
+Both this and the interrupted-probe race were entries that said *"the cause is
+not established, and here is the cheap instrument that would settle the next
+occurrence"*. Both instruments shipped. **Both fired on their first real
+occurrence and both moved the entry forward** — one named the arm, this one named
+the shape. *The cheap instrument first* is not a compromise; it is the thing that
+turns an unreproducible failure into evidence.
 Round 22.
 
 **First occurrence, kept verbatim below, because two data points are the finding
