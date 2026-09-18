@@ -231,7 +231,7 @@ making the signal reliably land mid-read changes what the check exercises. **The
 comment is corrected now regardless**, because a docstring claiming a guarantee
 the code does not have is the defect that let this go unnoticed.
 
-### `Lap commit list names its range` has timed out THREE times, and the third one said where the time went
+### `Lap commit list names its range` has timed out FOUR times, and the call that hangs is now named
 
 **Second occurrence 2026-09-17**, at the tip `dcd6f95`, in a full suite:
 `Ok: 85  Fail: 0  Timeout: 1`, exit 1.
@@ -289,7 +289,52 @@ exit 0:**
   against 0.16 s** in a normal run — **7× slower before anything hung at all**.
   Whatever the run was contending with was already visible in call one.
 
-**What is still NOT established, and the instrument's own limit is why.** Which
+**FOURTH OCCURRENCE, 2026-09-18, AND IT REPEATED THE THIRD EXACTLY** — same
+suite, `Ok: 86  Fail: 0  Timeout: 1`, three standalone re-runs at ~1 s
+immediately afterwards. The dump:
+
+```
+killed by signal 15 after 3 completed call(s)
+timings: 3 call(s), 2.75 s total
+     2.53 s  --since 343ebd1 --head 59cb5a9
+     0.11 s  --since 8880d8f --head 59cb5a9
+     0.10 s  --since 8880d8f --head 59cb5a9
+```
+
+**Two occurrences, one shape, and it is sharper than "bimodal":** exactly **3**
+completed calls both times; the **first** call abnormally slow both times
+(1.18 s then 2.53 s, against 0.13 s normal — 9× and 19×); calls 2 and 3
+ordinary at ~0.1 s; and the 4th never returning. **Whatever this contends with
+is already visible in call one**, and it is not general slowness, because the
+two calls after the slow one are normal.
+
+**THE HANGING CALL IS #4, `16 9 --head 59cb5a9`** — derived, and say so: the
+instrument now prints in call order, a clean run is
+`#1 --since 343ebd1`, `#2 --since 8880d8f`, `#3 --since 8880d8f`,
+`#4 16 9 --head 59cb5a9`, and **both timeout dumps match #1–#3 of that sequence
+exactly.** So #4 is the next one. This is inference from two artifacts rather
+than a direct observation; **the next occurrence will simply say it**, because
+the handler now prints `THE CALL THAT HUNG IS #N: <args>`.
+
+**And #4 is the first call of a different kind.** Calls 1–3 pass `--since
+<sha>`; #4 is the first to use the **positional round/lap form**, which has to
+resolve a lap's commit range out of the record rather than being handed one.
+That is a direction to look and **not yet a cause** — no run has demonstrated
+it, and the distinction between narrowing and establishing is the whole point
+of this entry.
+
+**The instrument's limit is fixed, and it was the identified next step.** It
+sorted by duration, which reads well and destroys the one fact a hang needs:
+what came next. It now prints in call order with an index, and holds the call
+in flight. **Revert-proved**: SIGTERM at 0.30 s into a run printed
+`killed by signal 15 after 2 completed call(s)` / `THE CALL THAT HUNG IS #3:
+--since 8880d8f --head 59cb5a9`, which is exactly what occurrences 3 and 4
+could not produce.
+
+**What is still NOT established**, and it is now one question rather than two:
+**why** #4 does not return.
+
+**Superseded — what this entry said before the fourth occurrence.** Which
 call hung. The dump is **sorted by duration, not by order**, so the three
 survivors cannot be placed in sequence and the fourth cannot be named from a
 passing run's list either. The instrument answered *how many completed* and not
@@ -305,7 +350,6 @@ occurrence"*. Both instruments shipped. **Both fired on their first real
 occurrence and both moved the entry forward** — one named the arm, this one named
 the shape. *The cheap instrument first* is not a compromise; it is the thing that
 turns an unreproducible failure into evidence.
-Round 22.
 
 **First occurrence, kept verbatim below, because two data points are the finding
 and consolidating them would destroy it.**

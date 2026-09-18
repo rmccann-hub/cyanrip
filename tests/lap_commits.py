@@ -61,12 +61,23 @@ def have(ref):
 _TIMINGS = []
 
 
+# THE CALL IN FLIGHT, BY INDEX AND ARGUMENTS. The first instrument answered
+# "how many completed" and not "WHICH ONE IS NEXT", because the dump is sorted
+# by duration and a sorted list cannot be read back as a sequence. Two timeouts
+# (2026-09-18, occurrences 3 and 4) both stopped after exactly 3 completed
+# calls, and neither could name the 4th. This holds it.
+_IN_FLIGHT = [None]
+
+
 def run(*args):
+    what = " ".join(args)
+    _IN_FLIGHT[0] = (len(_TIMINGS) + 1, what)
     t0 = time.monotonic()
     r = subprocess.run([sys.executable, str(TOOL), *args], cwd=ROOT,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                        timeout=180)
     _TIMINGS.append((time.monotonic() - t0, " ".join(args)))
+    _IN_FLIGHT[0] = None
     return r.returncode, r.stdout.decode(errors="replace")
 
 
@@ -84,14 +95,21 @@ def _dump_timings():
         return
     total = sum(d for d, _ in _TIMINGS)
     print(f"timings: {len(_TIMINGS)} call(s), {total:.2f} s total", flush=True)
-    for d, what in sorted(_TIMINGS, reverse=True):
-        print(f"  {d:7.2f} s  {what}", flush=True)
+    # IN CALL ORDER, with the index, and no longer sorted by duration. Slowest
+    # first reads well and destroys the one fact a hang needs: which call came
+    # next. The duration is still there to be scanned.
+    for i, (d, what) in enumerate(_TIMINGS, 1):
+        print(f"  #{i}  {d:7.2f} s  {what}", flush=True)
 
 
 def _on_sigterm(signo, frame):
+    stuck = _IN_FLIGHT[0]
     print(f"\nkilled by signal {signo} after "
-          f"{len(_TIMINGS)} completed call(s) -- the call in flight is the one "
-          f"that hung, and is NOT in the list below", flush=True)
+          f"{len(_TIMINGS)} completed call(s)", flush=True)
+    if stuck:
+        print(f"THE CALL THAT HUNG IS #{stuck[0]}:  {stuck[1]}", flush=True)
+    else:
+        print("no call was in flight -- the hang is NOT in run()", flush=True)
     _dump_timings()
     os._exit(143)
 
