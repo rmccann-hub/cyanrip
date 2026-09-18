@@ -140,7 +140,7 @@ and obvious — assert the exclusion set, and make the inert-edit probe a gate
 again or say out loud that it is not one — but "cheap" is not a reason to widen a
 round. `docs/ROUND-22-PLAN.md`.
 
-### `Interrupted sample freshness` failed once, and the mechanism is narrowed but NOT established
+### `Interrupted sample freshness` has failed TWICE, and the second failure named the arm
 
 **Measured 2026-09-17, one occurrence, in a full suite run.** `Ok: 85 Fail: 1`,
 and the message was precise:
@@ -180,13 +180,48 @@ run anyone had constructed, which is not the same as true — the same shape as
 the per-track paranoia invariant that survived four verifications because every
 artifact it met had each track read once.
 
-**What is NOT established**, and saying so is the point: which arm the failing
-run actually took. `generate_interrupted()` runs inside a
-`tempfile.TemporaryDirectory()`, so the log and the diagnostics record from that
-run were deleted when it exited. **The check discards the evidence needed to
-diagnose its own failure**, and that is a second, cheaper defect than the race
-— a failing artifact that cannot be re-created by definition, because where the
-signal lands is not reproducible.
+**WHICH ARM IT TOOK IS NOW ESTABLISHED, on the second occurrence — 2026-09-18,
+one failure in a full suite run, five standalone re-runs immediately afterwards
+all exit 0.** The paragraph this replaces said it could not be established,
+because `generate_interrupted()` ran inside a `tempfile.TemporaryDirectory()`
+and deleted the evidence. `6c507e3` fixed that, and this is the first failure
+since. `build/interrupted-probe-failure/` holds both artifacts and they say:
+
+```
+Ripping errors: 1
+Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
+Interrupted at: track 1, mid-read
+Log FUN512: SKQUXzRlvWeF6AasZe_SaqvCaenUQeoHvEn0Y161iIsQ…
+```
+
+with `-j` at `cyanrip-diagnostics/6` and `exit_code: 1`. **So the interrupt was
+real, complete and attested** — every footer field present, the log signed and
+verifiable — and the ONLY thing missing was the one line the check pins.
+
+**AND `mid-read` IS NOT EVIDENCE THAT THE LINE-866 BRANCH RAN, which is the
+subtlety and the reason to read the source before concluding.** The two are
+written from **different conditions**:
+
+- `Stopping, ripping incomplete!` (`cyanrip_main.c:866`) prints only when
+  `quit_now` is observed **inside the per-frame loop**.
+- `Interrupted at: track N, mid-read` (`cyanrip_log.c:897`) prints when
+  `ctx->track_read_incomplete` is still set — and that is assigned **before**
+  the loop and cleared only when the read *finishes*, so it means "the read did
+  not complete **by any exit path**".
+
+A first reading of these artifacts said they refuted the narrowing above. They
+do not. **The read did not finish AND the line-866 check was not reached**, so
+the loop left by some other route while the field was still set — which is a
+narrower open question than the one this entry started with, not an answer.
+
+**What is still NOT established:** which route. The candidates are a paranoia
+read returning an error under the signal, or an earlier `break`/`goto` out of
+the frame loop. Both are readable from the source and neither is confirmed by a
+run, so neither is written here as the cause.
+
+**The fix that made this paragraph possible cost nothing and settled the next
+occurrence exactly as predicted** — which is the argument for the cheaper of
+two candidate fixes being done first.
 
 **Deliberately not fixed in this round.** Round 21 is open and this is not a
 regression in the pin under review; R3 defaults it to round 22. The two candidate
