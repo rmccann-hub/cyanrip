@@ -101,10 +101,14 @@ the number and fixes nothing.**
 
 ### Why this could not have been planned before now
 
-**Eight filed rig sessions demonstrate the defect and not one can be used to fix
+**NINE filed rig sessions demonstrate the defect and not one can be used to fix
 it.** `Cache probe:` publishes three numbers; the step lives in the *series* of
 per-run times, which was never recorded anywhere. A read time is a measurement of
-a drive at a moment and cannot be re-taken.
+a drive at a moment and cannot be re-taken. (This said *"eight"*, which was true
+when written; counted 2026-09-18 by asking which rig directories hold the line
+rather than from memory — the same undercount as `CLAUDE.md`'s *"all three"*,
+which is the reason `sc_cache_table_matches_the_transcripts()` exists and checks
+the count in both directions.)
 
 **Round 21 fixes that and nothing else about this.** `-j` now carries a
 `cache_probe` block with the calibration reads, the threshold, the ratio and one
@@ -114,6 +118,22 @@ entry per run. The decision rule is untouched on purpose.
 
 1. **The session records a series.** Round 21 §4b, explicitly not a close
    condition. **If this does not happen, stop here.**
+
+   **IT HAS NOT HAPPENED, TWICE, FOR TWO DIFFERENT REASONS — so this step is
+   still the gate and the plan is still parked.** Both attempts are 2026-09-17:
+
+   - `docs/rig-2026-09-17-fe4d2c4/` **ran the probe and got the old `-j`
+     schema**, because the session was installed on the release pin rather than
+     the test pin. The series block exists only in `3952c03`.
+   - `docs/rig-2026-09-17-3952c03/` **has the right build and did not run the
+     probe at all.** `-x` is absent from `Invoked as:`, the log reads `Cache
+     model:    1200 sectors (drive cache size not probed)`, and `Cache probe`
+     appears 0 times in that session's app log.
+
+   *Did not happen* and *happened and produced the wrong thing* are different
+   claims, and collapsing them here would lose the only actionable part: the
+   next session needs `-x` **on `3952c03` or later**, and either half alone is
+   not enough.
 2. **Split the classification out of the I/O loop into a pure function.** Today
    the predicate `t * CACHE_HIT_RATIO < miss_cost` is inline in a loop that also
    issues reads, so it cannot be tested without a drive. Given the series it
