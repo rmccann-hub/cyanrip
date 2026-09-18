@@ -1,5 +1,25 @@
 # Release plan — `+platterpus.13`, once round 21 closes `GO`/`GO`
 
+> **THIS PLAN WAS EXECUTED. Marked 2026-09-18, the same day.**
+> `0.9.4-rc2+platterpus.13` shipped at **`2cce60d`**, ledger row **23**,
+> `release_seq` 23, stable, authorised by **round 21** (`GO`/`GO` at lap 5) —
+> the round its §1 named, which is not something a plan can rely on: `.12`'s
+> was written for round 15 and authorised by round 17.
+> `tools/release-gate.py --release-gate` exited 0 before the bump, and the
+> candidate was proved green on its own — 87/87, exit 0, from a removed log —
+> **before** the publish commit, which is the check `.5` failed.
+>
+> **The four-commit sequence §4 prescribes was followed exactly:** bump
+> (`51dc7c9`, red by construction), regenerate (`8bdb19e`), name the candidate
+> (`2cce60d` — the release), publish (`bb34136`).
+>
+> **The paragraph below is kept verbatim as the record of what was true when
+> the plan was written, and its present-tense claims are now false.** A plan is
+> evidence of what was intended; the outcome belongs at the top where a reader
+> meets it first — and it is dated the day of execution rather than forty days
+> late, which is what happened to `.5` while `CLAUDE.md` pointed readers at it.
+
+
 *Written 2026-09-18. **A plan, not a release.** Nothing here is executed.
 `meson.build` says `0.9.4-rc2+platterpus.12`, the ledger's last row is seq 22,
 and `tools/release-gate.py --release-gate` exits 1 naming round 21.*
