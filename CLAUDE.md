@@ -940,6 +940,32 @@ answer in this repo. They are cheap; skipping them is what is expensive.
   answer and does not stop, so it is invisible until somebody counts the
   processes. **Match on something the watcher cannot contain** — a PID, a
   marker file, a program path like `bin/meson` — or exclude `$$`.
+- **TWO CONCURRENT `meson test` RUNS ON ONE BUILD DIRECTORY PRODUCE A LOG THAT
+  IS NEITHER RUN**, and it reads like a result. `build/meson-logs/testlog.txt`
+  has no uniquifier, so the second run truncates what the first is still
+  appending to and the survivor is an interleaving. Measured 2026-09-18: the
+  file held **88** `result:` lines against a suite of **87**, the duplicate
+  being the last test of both runs — and its tail carried the OLDER run's
+  `Summary of Failures` with `Ok: 86  Fail: 1`. **So the same file supports
+  "green" and "one failure" depending on where you grep**, and the stale half
+  is at the end, which is where `tail` looks.
+
+  This is already recorded inside `tools/check-settled.py` for the case where a
+  SETTLED cell re-enters meson. The case that actually happened is dumber and
+  more likely: **launching a second background run because the first was taking
+  too long.** The first one had not finished.
+
+  Two rules. **Count the run headers** — `grep -c '^Log of Meson test suite
+  run' build/meson-logs/testlog.txt` must be `1`; more than one means the log is
+  a composite and nothing in it is evidence. And **before starting a suite run,
+  check nothing is already running** — by program path or PID, never by a
+  pattern the checking shell's own command line can contain. `rm` the log first
+  if in doubt: a missing log is loud and a merged one is not.
+
+  The surviving summary in the run's own captured stdout is per-run and stays
+  trustworthy, which is why the real result was recoverable at all. **Quote the
+  run, then check the log agrees with it** — and if they disagree, re-run.
+
 - **A FILTERED VIEW OF AN ARTIFACT IS NOT THE ARTIFACT.** This is "answer from
   the artifact" one turn deeper, and it produced the worst claim of the
   session: a black-box sweep's meson block was read through `grep -v` and a
