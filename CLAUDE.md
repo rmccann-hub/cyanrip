@@ -1659,15 +1659,24 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
-**There is no written plan for the next release, and this paragraph claimed
-there was for forty days.** It pointed at `docs/RELEASE-PLAN-platterpus.5.md` as
-*"the plan for the next one"* — but `+platterpus.5` **shipped**, at `ddf7ac3`
-committed 2026-08-07 under round 7, `release-ledger.tsv` row 11, and the ledger
-is now at row 22.
-That file is history and carries a banner saying so; its §1 conditions and its
-four observable surfaces are still worth reading, and every present-tense claim
-in it about the pin and the version is wrong. **The next release is
-`+platterpus.13` and nothing is written for it.**
+**The next release is `+platterpus.13` and the plan is
+`docs/RELEASE-PLAN-platterpus.13.md`**, written 2026-09-18 and **not executed**
+— `meson.build` still says `+platterpus.12`, the ledger's last row is seq 22,
+and the gate exits 1 naming round 21. Its condition is *"`release-gate.py
+--release-gate` exits 0"*, deliberately not *"round 21 closes"*, and it names
+the two operator acts that flip it. Unlike `.12`'s, **a rip does change**: the
+`Retry limit:` rename and `Ripping errors:` counting encoder failures are both
+P2 surface, and the second is why the release matters rather than tidies —
+`+platterpus.12` stamps `No errors occurred` onto an archival artifact for a
+rip that lost data.
+
+**This paragraph said no plan existed, and before that it claimed one did for
+forty days** by pointing at `docs/RELEASE-PLAN-platterpus.5.md` as *"the plan
+for the next one"* — but `+platterpus.5` **shipped**, at `ddf7ac3` committed
+2026-08-07 under round 7, `release-ledger.tsv` row 11. That file is history and
+carries a banner saying so; its §1 conditions and its four observable surfaces
+are still worth reading, and every present-tense claim in it about the pin and
+the version is wrong.
 
 **The worked example to copy is `docs/RELEASE-PLAN-platterpus.12.md`**, which is
 also executed and also bannered — and which records the thing a plan cannot know

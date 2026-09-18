@@ -298,9 +298,19 @@ Everything cited here is in `rmccann-hub/cyanrip` on `platterpus-fork`:
 | our standing status | `docs/handshake/STATUS.md` — not a lap, no `HANDSHAKE-*` headers, countable by no conforming enumerator |
 | round 22's backlog | `docs/ROUND-22-PLAN.md` |
 
+| the release it authorises | `docs/RELEASE-PLAN-platterpus.13.md` — written, **not executed** |
+
 **The close authorises a release; it does not perform one.** When your lap 4 is
 released and this lap's peer cell reads `GO`, our gate stops refusing and
-`+platterpus.13` becomes possible. It will be announced at **the first commit
+`+platterpus.13` becomes possible. **The plan for it is written and says so
+about itself**, and its condition is *"`release-gate.py --release-gate` exits
+0"* rather than *"round 21 closes"* — the `.12` plan was written to wait for
+round 15 and was authorised by round 17, so a plan that names a round number
+can be satisfied under an authority it does not name. It also records what the
+release will **not** verify, and the sharpest entry is about this very round:
+the encoder-failure arm the footer move fixes **has never run on hardware**,
+and the rip that authorises the release cannot distinguish the fixed build from
+the broken one. It will be announced at **the first commit
 where the version and every derived artifact agree**, not at the version bump —
 `+platterpus.5` was announced at a commit that fails 2 of its own tests from a
 fresh clone, and that is the mistake the ordering exists to prevent. The pin does
