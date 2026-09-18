@@ -1062,10 +1062,31 @@ finalize_ripping:
 
 fail:
     if (!ret && !quit_now) {
+        /* IT SAYS `read`, NOT `ripped and encoded`, AND THAT IS A P2 CHANGE.
+         *
+         * This line prints immediately after the flush signal goes to the
+         * encoders and long before they are joined -- the collection loop that
+         * learns whether they succeeded is at the bottom of cyanrip_rip(), by
+         * which point every track has been read. So the old wording asserted a
+         * fact that did not yet exist, and a 32 KiB write cap demonstrates it:
+         * `Track 2 ripped and encoded successfully!` over a 32768-byte file
+         * whose intact form is 253742.
+         *
+         * No rewording of a line printed at time T can report a fact that comes
+         * into being at T+1, so the claim is split rather than softened: the
+         * per-track block reports the READ, and `Encoder errors:` in the footer
+         * reports the ENCODE, where the outcome is known.
+         *
+         * The condition is unchanged and already measured the read alone --
+         * ctx->total_error_count cannot have moved for an encoder yet -- so
+         * this is the line catching up with what it was always computing.
+         *
+         * Announced to Platterpus in round 22; `docs/ROUND-22-PLAN.md` §1 has
+         * the two options that were rejected and why. */
         if (ctx->total_error_count - start_err)
-            cyanrip_log(ctx, 0, "Track %i ripped and encoded with errors.\n", t->number);
+            cyanrip_log(ctx, 0, "Track %i read with errors.\n", t->number);
         else
-            cyanrip_log(ctx, 0, "Track %i ripped and encoded successfully!\n", t->number);
+            cyanrip_log(ctx, 0, "Track %i read successfully!\n", t->number);
     }
 
 end:
@@ -2688,9 +2709,25 @@ end:
     /* Wait for the encoders to finish and collect their status */
     for (int i = 0; i < ctx->nb_tracks; i++) {
         cyanrip_track *t = &ctx->tracks[i];
-        for (int j = 0; j < ctx->settings.outputs_num; j++)
-            if (cyanrip_end_track_encoding(&t->enc_ctx[j]) < 0)
+        int had_encoder = 0;
+        for (int j = 0; j < ctx->settings.outputs_num; j++) {
+            /* Read BEFORE the join: cyanrip_end_track_encoding() frees the
+             * context and NULLs the pointer, so asking afterwards would report
+             * every track as never encoded. */
+            if (t->enc_ctx[j])
+                had_encoder = 1;
+            if (cyanrip_end_track_encoding(&t->enc_ctx[j]) < 0) {
                 ctx->total_error_count++;
+                /* WHICH track, not just how many -- the same ask that put
+                 * `Interrupted at:` in the footer. Without this the count is a
+                 * disc-level total and a reader holding the log cannot tell
+                 * which files are untrustworthy, which is the only question
+                 * they have. */
+                t->encode_failures++;
+            }
+        }
+        if (had_encoder)
+            ctx->tracks_encoded++;
     }
 
     /* THE FOOTER IS NOW BELOW THE ENCODER LOOP, AND THAT IS THE CHANGE.

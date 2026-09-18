@@ -324,6 +324,19 @@ typedef struct cyanrip_track {
     struct cyanrip_track *pt;
     struct cyanrip_track *nt;
 
+    /* How many of this track's encoders returned a failure, filled in by the
+     * collection loop in cyanrip_main.c that joins them -- so it is zero until
+     * every track has been read and cannot be consulted from the per-track
+     * block, which prints long before.
+     *
+     * THAT IS THE WHOLE POINT. The per-track block used to say `Track N ripped
+     * and encoded successfully!` at a moment when the encoders had been handed
+     * a flush signal and not yet joined, so the fact it asserted was not merely
+     * unchecked, it did not exist. No rewording of a line printed at time T can
+     * report a fact that comes into being at T+1; the only honest fix is to
+     * split the claim, and this field is the half that lands in the footer. */
+    int encode_failures;
+
     struct cyanrip_dec_ctx *dec_ctx;
     struct cyanrip_enc_ctx *enc_ctx[CYANRIP_FORMATS_NB];
 } cyanrip_track;
@@ -368,6 +381,17 @@ typedef struct cyanrip_ctx {
     int success;
     int total_error_count;
     int tracks_completed; /* Tracks fully ripped, for the completion line */
+    /* Tracks that had at least one encoder to join, counted by the collection
+     * loop from the encoder contexts themselves rather than inferred from
+     * tracks_completed -- which is a different population, because a track
+     * whose read failed has encoders started and is never counted completed.
+     *
+     * It exists so `Encoder errors: none` can name the set it is none OF. An
+     * absence over an unstated population is the `none` versus
+     * `unknown (reason)` defect wearing a number: on an interrupted rip, two
+     * encoded tracks with no failures and twelve tracks never attempted would
+     * otherwise render identically to a clean fourteen-track disc. */
+    int tracks_encoded;
     /* CD track number of a read that STARTED and has not completed, else 0.
      * Set as the read loop is entered and cleared only when that loop exits
      * normally, so every abort out of it -- a signal, an error, a goto --

@@ -380,7 +380,7 @@ def sc_pregap():
     # Track 1's Gaps: row is absent when its gap is the bare lead-in, so the
     # expectation comes from the fixture's own INDEX 00/01 pair: 2 s and 1 s.
     for num, want in ((1, 150), (2, 75)):
-        blk = re.search(rf"^Track {num} ripped.*?(?=^Track |\Z)", log,
+        blk = re.search(rf"^Track {num} read.*?(?=^Track |\Z)", log,
                         re.M | re.S)
         if not blk:
             fail(f"pregap: no track {num} block")
@@ -1745,12 +1745,22 @@ def sc_encode_failure_reaches_the_log():
     21 lap 1 asks Platterpus whether the footer should say so differently
     rather than answering it here.
 
+    FIXED IN ROUND 22, AND HALF OF IT ONLY. `Track N ripped and encoded
+    successfully!` was printed when the READ finished, before any encoder
+    status existed -- so it asserted a fact that did not yet exist rather than
+    one that was merely unchecked. It now reads `Track N read successfully!`
+    and the encode outcome lands in `Encoder errors:` in the footer, where the
+    collection loop has joined every encoder thread. Two P2 lines and one new
+    one, announced in round 22 lap 1; `docs/ROUND-22-PLAN.md` §1 has the
+    options that were rejected.
+
     STILL NOT FIXED, and still worth a reader knowing: `File(s):` is built from
     `ctx->settings.outputs` and the naming scheme (`cyanrip_log.c:642`) and
     consults nothing about what was written, so it names a path whatever
-    happened to it -- and `Track N ripped and encoded successfully!` is printed
-    when the READ finished, before any encoder status exists. Both are in
-    KNOWN-ISSUES.
+    happened to it. It prints from `cyanrip_log_track_end()`, which also runs
+    before the encoders are joined, so marking a failed entry there is the same
+    fixpoint one level down -- possible only as a second pass now that the
+    footer names the tracks. It is in KNOWN-ISSUES.
 
     RLIMIT_FSIZE stands in for ENOSPC, which is the realistic case: both reach
     the muxer as a write error rather than as a signal. Without SIGXFSZ ignored
@@ -1881,6 +1891,75 @@ def sc_encode_failure_reaches_the_log():
     if ec != 0:
         fail(f"encfail: -Y exited {ec} on the log; expected 0, because the "
              f"log IS internally consistent -- that is the problem")
+
+    # ---- ROUND 22: THE PER-TRACK BLOCK NO LONGER CLAIMS THE ENCODE ----------
+    #
+    # `Track N ripped and encoded successfully!` printed after the flush signal
+    # went to the encoders and before any of them was joined, so the fact it
+    # asserted did not exist yet. It is now two claims in two places: the
+    # per-track line reports the READ, and `Encoder errors:` in the footer
+    # reports the ENCODE, at the disc-level moment where the outcome is known.
+    #
+    # The old string must be ABSENT, not merely joined by a new one. A log that
+    # carries both is a log that still makes the false claim.
+    if "ripped and encoded" in text:
+        fail("encfail: `ripped and encoded` is still in the log. The per-track "
+             "line asserts an encode outcome that does not exist when it "
+             "prints -- round 22's whole point")
+    if not re.search(r"(?m)^Track \d+ read successfully!$", text):
+        fail("encfail: no `Track N read successfully!` line -- the per-track "
+             "block reports nothing about the read at all, which is worse "
+             "than over-claiming")
+
+    m = re.search(r"(?m)^Encoder errors: (.*)$", text)
+    if not m:
+        fail("encfail: no `Encoder errors:` line. The encode outcome has "
+             "nowhere to land, so removing it from the per-track line lost "
+             "the fact rather than relocating it")
+        return
+    value = m.group(1)
+
+    # VACUITY GUARD for the new line, matching the one above it. Under a cap
+    # that truncated every output, `none` is the pre-fix claim wearing a new
+    # label.
+    if value.startswith("none") or value.startswith("not applicable"):
+        fail(f"encfail: `Encoder errors: {value}` under a 32 KiB cap that "
+             f"truncated the output. An absence here is the old defect moved "
+             f"to a new field, not fixed")
+        return
+
+    # ASSERT AGAINST THE ARTIFACT, NOT AGAINST THE LOG'S OTHER HALF. The set of
+    # tracks the footer names must equal the set derived from the files on
+    # disk, which `named` above has already proved are truncated. Comparing the
+    # footer with the per-track blocks would compare the log with itself.
+    listed = set(re.findall(r"\d+", re.search(r"\((.*?)\)", value).group(1)))
+    on_disk = {Path(pth).stem for pth in named}
+    if listed != on_disk:
+        fail(f"encfail: `Encoder errors:` names tracks {sorted(listed)} and "
+             f"the truncated files on disk are {sorted(on_disk)}")
+
+    # And the population, because `N failed` without the set it failed out of
+    # is the `none` versus `unknown (reason)` defect wearing a number.
+    m2 = re.search(r"(\d+) tracks? encoded$", value)
+    if not m2:
+        fail(f"encfail: `Encoder errors: {value}` does not state how many "
+             f"tracks were encoded -- a count over an unstated population")
+    elif int(m2.group(1)) != len(on_disk):
+        fail(f"encfail: the line says {m2.group(1)} track(s) encoded and "
+             f"{len(on_disk)} track(s) have files")
+
+    # `-j` is deliberately UNCHANGED and the schema did not move. Pinned so
+    # that if per-track encode status is ever added there, it is visible as a
+    # change and gets its own schema bump rather than arriving silently.
+    try:
+        schema = json.loads(diag.read_text())["schema"]
+    except Exception as exc:
+        fail(f"encfail: could not read the -j schema: {exc}")
+    else:
+        if schema != "cyanrip-diagnostics/6":
+            fail(f"encfail: -j schema is {schema!r}, not "
+                 f"'cyanrip-diagnostics/6'. Round 22 changed the log and not "
+                 f"the record; a schema move here needs its own announcement")
 
 
 def sc_changelog_names_every_release():
@@ -3738,8 +3817,10 @@ def sc_contract_fatal_inventory():
                   "Done; (%i out of %i matches for current checksum %08X)"):
         if probe in p5:
             fail(f"contract_fatal_inventory: {probe!r} is back in the fatal "
-                 "inventory. It is followed by `Track %i ripped and encoded "
-                 "successfully!` on hardware")
+                 "inventory. It is followed by `Track %i read successfully!` "
+                 "on hardware -- spelled `ripped and encoded successfully!` in "
+                 "the rig logs that settled it, before round 22 split the "
+                 "claim")
         elif probe not in p5a:
             fail(f"contract_fatal_inventory: {probe!r} is in neither table; "
                  "the generator stopped seeing a string a real rip prints")

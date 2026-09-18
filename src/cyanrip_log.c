@@ -236,6 +236,74 @@ static void print_stall_summary(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "Read stalls:    %s\n", line);
 }
 
+/* `Encoder errors:` -- THE HALF OF THE PER-TRACK CLAIM THAT CANNOT BE PRINTED
+ * PER TRACK.
+ *
+ * The per-track block runs while the encoders are still in flight, so it now
+ * reports the READ alone (`Track N read successfully!`). The encode outcome
+ * exists only after the collection loop at the bottom of cyanrip_run() joins
+ * every encoder thread, which is a disc-level moment -- so this is where it
+ * lands, and it names the tracks rather than only counting them, for the same
+ * reason `Interrupted at:` names the track.
+ *
+ * THREE STATES, NOT TWO, exactly as `Read stalls:` has three. `none` over an
+ * unstated population is an absence of evidence read as evidence of absence:
+ * a rip interrupted after two clean tracks of fourteen would otherwise render
+ * identically to a clean fourteen-track disc. So the population is always
+ * printed, and a run in which nothing was encoded at all says so instead of
+ * saying `none`.
+ *
+ * The plural is derived from the count rather than spelled `track(s)`. A
+ * pattern that matches both arms asserts nothing about either, and this
+ * repository has already shipped a test that killed none of three `sectors`
+ * mutants for exactly that reason.
+ *
+ * It is NOT a verdict. It reports which tracks had an encoder return a
+ * failure; whether the rip is usable is the consumer's judgement. */
+static void print_encode_failure_summary(cyanrip_ctx *ctx)
+{
+    char tracks[512];
+    int nb_failed = 0, len = 0, truncated = 0;
+
+    tracks[0] = '\0';
+
+    for (int i = 0; i < ctx->nb_tracks; i++) {
+        const cyanrip_track *t = &ctx->tracks[i];
+        if (!t->encode_failures)
+            continue;
+        nb_failed++;
+        if (truncated)
+            continue;
+        /* Bounded, and the bound is reported rather than silently applied.
+         * A list that stops without saying so is a count a reader would
+         * believe. */
+        int n = snprintf(tracks + len, sizeof(tracks) - len, "%s%i",
+                         len ? ", " : "", t->number);
+        if (n < 0 || (size_t)n >= sizeof(tracks) - len)
+            truncated = 1;
+        else
+            len += n;
+    }
+
+    if (!ctx->tracks_encoded) {
+        cyanrip_log(ctx, 0, "Encoder errors: not applicable; no track was "
+                            "encoded\n");
+        return;
+    }
+
+    if (!nb_failed) {
+        cyanrip_log(ctx, 0, "Encoder errors: none; %i track%s encoded\n",
+                    ctx->tracks_encoded, ctx->tracks_encoded == 1 ? "" : "s");
+        return;
+    }
+
+    cyanrip_log(ctx, 0, "Encoder errors: %i track%s failed (%s%s); "
+                        "%i track%s encoded\n",
+                nb_failed, nb_failed == 1 ? "" : "s",
+                tracks, truncated ? ", list truncated" : "",
+                ctx->tracks_encoded, ctx->tracks_encoded == 1 ? "" : "s");
+}
+
 static int print_paranoia_counts(cyanrip_ctx *ctx, const uint64_t *counts,
                                  const char *indent)
 {
@@ -852,6 +920,13 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "\n");
 
     cyanrip_log(ctx, 0, "Ripping errors: %i\n", ctx->total_error_count);
+
+    /* Directly below `Ripping errors:`, because since round 21 that count
+     * INCLUDES encoder failures and this is the breakdown of that part of it.
+     * No existing line's text, indentation or units change and no two existing
+     * lines swap order; a new line between two of them is the smallest delta
+     * available, and there is no position that preserves every adjacency. */
+    print_encode_failure_summary(ctx);
 
     print_stall_summary(ctx);
 

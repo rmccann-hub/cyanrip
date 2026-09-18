@@ -120,7 +120,8 @@ GOTO_FATAL = ("fail",)
 # what put `Done; (no matches found, but hit repeat limit of %i)` under a
 # heading reading "Every string reachable on a failure path" -- and
 # `finalize_ripping:` is the ordinary continuation, which flushes encoders and
-# falls into "Track %i ripped and encoded successfully!".
+# falls into "Track %i read successfully!" -- spelled "ripped and encoded
+# successfully!" until round 22 split the read claim from the encode claim.
 #
 # NO LABEL LIST. An earlier draft of this kept `goto end` in P5 as a special
 # case and moved the rest, which would have been a hand-maintained allowlist
@@ -1767,8 +1768,9 @@ def emit(binary):
     # headed "Every string reachable on a failure path" on the strength of
     # `goto finalize_ripping` alone -- no wording evidence, no control-flow
     # evidence -- and `finalize_ripping:` is the NORMAL continuation, which
-    # flushes encoders and falls into `Track %i ripped and encoded
-    # successfully!`. It appeared three times in a rip that ended
+    # flushes encoders and falls into `Track %i read successfully!` -- the line
+    # round 22 renamed from `Track %i ripped and encoded successfully!`, which
+    # is what the rig log quoted here says. It appeared three times in a rip that ended
     # `Ripping errors: 0` / `Rip completed: yes (14 of 14 tracks)`.
     #
     # `goto end` is a real ambiguity and keeps its established status, because
@@ -1905,9 +1907,11 @@ def emit(binary):
     w("was acted on.** These rows sat in P5 under a heading reading *\"Every string")
     w("reachable on a failure path\"* purely on the strength of a `goto`. One of them")
     w("follows a converged/not-converged decision and jumps to `finalize_ripping:`,")
-    w("which flushes encoders and falls into `Track %i ripped and encoded")
-    w("successfully!` -- so a consumer classifying by this document recorded errors")
-    w("against a rip that completed every track with none.")
+    w("which flushes encoders and falls into `Track %i read successfully!` -- so a")
+    w("consumer classifying by this document recorded errors against a rip that")
+    w("completed every track with none. (That line read `Track %i ripped and encoded")
+    w("successfully!` until round 22 split the claim; logs filed before it carry the")
+    w("old wording, and the point it makes is unchanged.)")
     w("")
     w("**The label is not the discriminator, which is why no label is exempted")
     w("here.** `end:`, `end_meta:` and `finalize_ripping:` are all reachable by")

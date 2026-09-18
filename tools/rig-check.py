@@ -247,9 +247,19 @@ def check_checksum_inventory(out, log):
     text = log.read_text(encoding="utf-8", errors="replace")
     counts = {k: len(re.findall(rf"^\s+{k}:", text, re.M))
               for k in ("EAC CRC32", "Accurip v1", "Accurip v2", "Accurip 450")}
-    tracks = len(re.findall(r"^Track \d+ ripped", text, re.M))
+    # BOTH SPELLINGS, DELIBERATELY. Round 22 renamed the per-track line from
+    # `Track N ripped and encoded successfully!` to `Track N read
+    # successfully!`, because the old one asserted an encode outcome that did
+    # not exist when it printed. This tool reads FILED rig logs as well as new
+    # ones, and every log filed before that round carries the old wording --
+    # rewriting the pattern to the new spelling alone would silently count zero
+    # tracks in each of them. A tolerant pattern here is not the
+    # matches-both-branches defect: it is a block DELIMITER over an artifact
+    # whose format has a history, not an assertion about which one it found.
+    TRACK_BLOCK = r"^Track \d+ (?:ripped|read)\b"
+    tracks = len(re.findall(TRACK_BLOCK, text, re.M))
     both_missed = 0
-    for blk in re.split(r"^Track \d+ ripped", text, flags=re.M)[1:]:
+    for blk in re.split(TRACK_BLOCK, text, flags=re.M)[1:]:
         v1 = re.search(r"^\s+Accurip v1:.*$", blk, re.M)
         v2 = re.search(r"^\s+Accurip v2:.*$", blk, re.M)
         if v1 and v2 and "accurately ripped" not in v1.group(0) \

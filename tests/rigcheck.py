@@ -129,7 +129,7 @@ def wav(path, pcm):
 def log_for(path, track, vals, tracktotal=1):
     """The fragment of a cyanrip log that parse_log() reads."""
     with open(path, "w") as fh:
-        fh.write(f"Track {track} ripped and encoded successfully!\n"
+        fh.write(f"Track {track} read successfully!\n"
                  f"  Properties:\n"
                  f"    Samples:     {vals['samples']}\n"
                  f"\n  EAC CRC32:     {vals['eac_crc']:08X}\n"
