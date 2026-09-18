@@ -424,6 +424,33 @@ regardless of who is at the keyboard.
   against a source anchor, and pin the SHA, because a shallow clone of a moving
   branch is a claim about whenever it was fetched.
 
+  **AND IT BINDS HARDEST ON A CLOSE CONDITION, WHICH IS THE ONE PLACE THE
+  MISTAKE CANNOT BE EDITED OUT.** Round 21 §0.1 asked, as one of three
+  conditions fixed for the round, that *"your parser reads `Retry limit:` on
+  real logs"*. Read afterwards at
+  `platterpus@4bedb45:src/platterpus/parsers/cyanrip_log.py:1876-1879`, that
+  label is an entry in `_IGNORED_DISC_LINES` — the allowlist of rows their
+  parser matches precisely so its completeness sweep does not trip, and from
+  which **no field is derived**. Their own comment: *"We extract nothing from
+  it either way, so the rename is invisible to the PARSE."* The condition named
+  a behaviour their code documents as deliberately absent, for the new label
+  and the old one alike, **and the comment was in their tree at that path when
+  the lap was written.**
+
+  A `HANDSHAKE-BREAKING` line can be corrected by a later lap. **R1 freezes a
+  round's close conditions at lap 1**, so an unsatisfiable one cannot be edited
+  — only explained, in the lap that was supposed to close on it. The whole cost
+  of avoiding this is one `git show` before the condition is written. **Read
+  their code before asking them to have a behaviour**, not after they fail to
+  demonstrate it.
+
+  The *risk* the condition was guarding was real and is retired — an
+  unrecognised disc line trips their sweep on every rip, and their report
+  carried `log_parse: {"ok": true, "note": null}` on a real log with the new
+  label. **Separate the finding from the diagnosis** applies to our own asks:
+  the thing to verify was checkable and the mechanism we attached to it was
+  not.
+
   **It does NOT license fixing their tree, and reading is not a substitute for a
   lap.** The seam's value is two independent implementations catching each other;
   a convention re-derived from their code is one implementation copied twice.
