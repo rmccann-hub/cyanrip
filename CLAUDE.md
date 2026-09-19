@@ -275,6 +275,42 @@ regardless of who is at the keyboard.
   cannot travel inside it; that is narrow, and it is exactly why it is being
   proposed as a written rule rather than left as a habit.
 
+  **AND A RELAY IS NOT EVIDENCE OF A LAP'S STATE. WE READ ONE AND CONCLUDED
+  THEIR LAP WAS NOT SENT WHILE IT WAS SITTING RELEASED ON THEIR `main`.**
+  2026-09-18: their round-22 lap 2 relay ended *"say the word and I'll merge the
+  moment those two legs land, then send you this with the commit filled in"*,
+  which reads as *not yet out*. It was out. `HANDSHAKE-READY-TO-READ: yes —
+  released by the operator (rmccann), 2026-09-18` was line 9 of
+  `platterpus@67aa0511:docs/handshake/outbound/round-22-lap-02.md`, and the whole
+  cost of knowing that was one `git fetch` and one `grep -n '^HANDSHAKE-READY-TO-
+  READ:'`. **The field exists so a reader never has to infer the state, and we
+  inferred it from prose that is in neither repository.**
+
+  Three separate rules already covered it and none fired. *A cited document must
+  be one we hold* — we acted on a relay. *`git branch -r` is a cache, not the
+  remote* — our cached `origin/main` said `5aeffe9b` while the remote said
+  `67aa0511`, three tips behind, and we did not ask. *A reading is a claim about
+  when it was taken* — we carried a `seam-sync-check` result from earlier in the
+  same turn forward as though it were current, which is the elapsed-time defect
+  arriving from the other direction: not two samples too close together, but one
+  sample reused after the thing moved.
+
+  **So: never answer "has their lap been sent?" from anything but the file.**
+  Fetch, read the field, cite the SHA. And the operator saying *"it is released"*
+  is a reason to go and look, not a fact to transcribe — it happened to be right,
+  and checking took one command either way.
+
+  **Their body disagrees with their own header, which is the same defect one
+  level over and is ours to report, not to copy.** That lap's §F reads *"This lap
+  is HELD: `HANDSHAKE-READY-TO-READ` reads `no` until our operator announces
+  it"*, in the section a reader opens to learn whether they may read it, while
+  line 9 says released. Their release is flipped by `handshake.py --announce`,
+  which updates the declaration and not the prose — so **an automated flip leaves
+  the document asserting both states**, and the half a human reads is the stale
+  one. Same shape as our own `STATUS.md` carrying two `released` rows that
+  disagreed, found the same day: two descriptions of one fact, and nothing
+  checking the second.
+
   **AND SINCE 2026-09-13 THE LAP ITSELF TRAVELS THAT WAY — NOTHING IS UPLOADED
   OR DOWNLOADED.** Operator's rule, and it finishes the sentence the bullet
   above started. Both repositories are public and this environment performs
@@ -1841,11 +1877,23 @@ which no release of this fork has had before.** It carries round 22's per-track
 split, and the renamed line is Platterpus's `_TRACK_START` block delimiter — so
 a `.14` shipped before their both-wordings release exists would make their
 current parser report a disc with zero tracks in it. **Their round-20 ordering
-governs: their release first, ours second.** Write the plan with that as a §1
-condition beside the gate, and note that the gate alone does not encode it —
-what does is the close itself, since round 22 cannot close without
-`HANDSHAKE-PEER-VERSION`, and naming the both-wordings release there satisfies
-the ordering with machinery that already exists.
+governs: their release first, ours second.**
+
+**AND NOTHING MACHINE-CHECKABLE ENFORCES THAT — say so rather than inventing a
+mechanism.** This paragraph first claimed the close enforced it, since round 22
+cannot close without `HANDSHAKE-PEER-VERSION`, so naming the both-wordings
+release there would do the work. **Their lap 2 §0.2 makes that impossible:**
+their own gate exits 1 while our round is open, so the release that accepts both
+wordings cannot be cut until round 22 has closed — at which point
+`HANDSHAKE-PEER-VERSION` necessarily names the release *before* it. The sequence
+is close, then their release, then ours, and **the close cannot name a release
+that does not exist when it happens.**
+
+So it is a `§1` condition in the `.14` plan and an operator act, exactly like
+appending a ledger row, and it is written down here where it can be checked
+rather than claimed to be automatic. **A guess wearing a derivation's clothes is
+worse than an admitted gap** — and this one was written an hour before the
+artifact that refuted it arrived.
 
 **This paragraph said no plan existed, and before that it claimed one did for
 forty days** by pointing at `docs/RELEASE-PLAN-platterpus.5.md` as *"the plan
