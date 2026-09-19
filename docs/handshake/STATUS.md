@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-22-lap-01.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-22-lap-03.md
+STATUS-NEWEST-LAP-STATE: held
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -42,7 +42,7 @@ record of what was said at a moment and this is a claim about *now*.
 | test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
 | approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` — **and the release carries round 21's two P2 changes, which `fe4d2c4` does not** |
 | `--release-gate` | exits **1**, naming round 22 — and correctly: opening a round re-blocks it |
-| round 22 | **OPEN. Lap 1 RELEASED for reading 2026-09-18**, from `ef88ad2`, at the commit that flipped it. Three close conditions: §0.1 the two shared-protocol changes, §0.2 whether a Platterpus release fits inside this round, §0.3 two P2 per-track lines and one new footer line. Lap 1 is immutable from here; the next lap is theirs |
+| round 22 | **OPEN, three laps in, and `GO` from our side.** Lap 1 released 2026-09-18 at `f071b35`; **their lap 2 released and filed** (`206be6e1…`, 19,775 B, read at their `67aa0511`); **our lap 3 published and HELD**. §0.1 and §0.2 are closed. §0.3's ordering is agreed and its grade corrected to **P1** on their measurement. What remains is one thing and it is theirs: their own `GO` condition, read with their §0.2, is **circular** — see lap 3 §0.3. Lap 3 pre-commits to `GO` unchanged, so the round can close at four |
 | `platterpus-fork` tip | **ahead of the release, with a P2 log change in it.** Build from `2cce60d`, not from the tip |
 
 **THIS TABLE CARRIED TWO `released` ROWS DISAGREEING**, one naming `.13` and one
