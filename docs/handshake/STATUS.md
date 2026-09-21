@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-22-lap-03.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-22-lap-05.md
+STATUS-NEWEST-LAP-STATE: held
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -30,9 +30,14 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-18, twice. **ROUND 21 IS CLOSED `GO`/`GO`. ROUND 22 IS OPEN AND ITS LAP 1 IS SENT.**
+## Rewritten 2026-09-21. **ROUND 22 IS AGREED `GO`/`GO` AND NOT YET CLOSED: ITS CLOSING LAP IS HELD.**
 
-**This is the state a consumer can assume until Platterpus's round-22 lap 2.**
+**This is the state a consumer can assume until the operator releases lap 5.**
+
+**Nothing a consumer builds changes when it is released.** The pin stays `2cce60d`,
+the released build stays `+platterpus.13`, and `+platterpus.14` still waits on
+Platterpus's both-wordings release, which is their act and comes after the close.
+What the close changes is that `--release-gate` stops naming round 22.
 
 | | |
 |---|---|
@@ -41,8 +46,8 @@ record of what was said at a moment and this is a claim about *now*.
 | round-21 pin | `fe4d2c4` — **never moved during the round**, and neither side asked |
 | test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
 | approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` — **and the release carries round 21's two P2 changes, which `fe4d2c4` does not** |
-| `--release-gate` | exits **1**, naming round 22 — and correctly: opening a round re-blocks it |
-| round 22 | **OPEN, three laps in, and `GO` from our side.** Lap 1 released 2026-09-18 at `f071b35`; **their lap 2 released and filed** (`206be6e1…`, 19,775 B, read at their `67aa0511`); **our lap 3 RELEASED 2026-09-19** at the commit that flipped it. §0.1 and §0.2 are closed. §0.3's ordering is agreed and its grade corrected to **P1** on their measurement. What remains is one thing and it is theirs: their own `GO` condition, read with their §0.2, is **circular** — see lap 3 §0.3. Lap 3 pre-commits to `GO` unchanged, so the round can close at four |
+| `--release-gate` | exits **1**, naming round 22 — and correctly, for a reason that has changed: the blocker is no longer disagreement but that **our closing lap 5 is HELD**, so the gate reads its verdict as a draft. Both sides have declared `GO` |
+| round 22 | **AGREED `GO`/`GO`, five laps, and the close is one operator act away.** Lap 1 released 2026-09-18 at `f071b35`; their lap 2 released and filed (`206be6e1…`, 19,775 bytes); lap 3 released at `0110219`, `GO` from our side; **their lap 4 released and filed** — `614c6115…`, 15,283 bytes, read at `platterpus@267a696` — declaring `GO` on `2cce60d` with no question and nothing that could reopen it, and resolving the circularity lap 3 named by conceding that the second clause of their own `GO` condition conflated a decision with an act. **Lap 5 is ours, is the close, and is HELD.** It is a fifth lap because `PROTOCOL.md` §5 needs `HANDSHAKE-PEER-VERDICT: GO` in a file of *ours* and lap 3 said `OPEN` — the only honest value when it was written — so their lap 4 closed the round on their gate and could not on ours. `SETTLED.md` row 102, from round 17 with the roles reversed; lap 5 §H1 proposes the v5 fix and does not make it |
 | `platterpus-fork` tip | **ahead of the release, with a P2 log change in it.** Build from `2cce60d`, not from the tip |
 
 **THIS TABLE CARRIED TWO `released` ROWS DISAGREEING**, one naming `.13` and one
