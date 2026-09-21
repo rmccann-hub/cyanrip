@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-22-lap-05.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -30,14 +30,19 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-21. **ROUND 22 IS AGREED `GO`/`GO` AND NOT YET CLOSED: ITS CLOSING LAP IS HELD.**
+## Rewritten 2026-09-21, twice. **ROUND 22 IS CLOSED `GO`/`GO`** — five laps, 27 days before the close-by.
 
-**This is the state a consumer can assume until the operator releases lap 5.**
+**This is the state a consumer can assume until round 23 opens.**
 
-**Nothing a consumer builds changes when it is released.** The pin stays `2cce60d`,
-the released build stays `+platterpus.13`, and `+platterpus.14` still waits on
-Platterpus's both-wordings release, which is their act and comes after the close.
-What the close changes is that `--release-gate` stops naming round 22.
+**NOTHING A CONSUMER BUILDS CHANGED WHEN IT CLOSED.** The pin is still `2cce60d`,
+the released build is still `+platterpus.13`, and **`+platterpus.14` has NOT been
+cut and must not be** until Platterpus's both-wordings release exists — their
+round-20 ordering, their act, and it comes after this close by their own §0.2.
+What the close changed is that `--release-gate` now prints *"Release allowed:
+every round is closed"*. **That is the gate's answer, not authorisation to ship**:
+nothing machine-checkable enforces the `.14` prerequisite, it is a `§1` condition
+in the `.14` plan and an operator act, and saying so here is the point of this
+file.
 
 | | |
 |---|---|
@@ -46,8 +51,8 @@ What the close changes is that `--release-gate` stops naming round 22.
 | round-21 pin | `fe4d2c4` — **never moved during the round**, and neither side asked |
 | test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
 | approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` — **and the release carries round 21's two P2 changes, which `fe4d2c4` does not** |
-| `--release-gate` | exits **1**, naming round 22 — and correctly, for a reason that has changed: the blocker is no longer disagreement but that **our closing lap 5 is HELD**, so the gate reads its verdict as a draft. Both sides have declared `GO` |
-| round 22 | **AGREED `GO`/`GO`, five laps, and the close is one operator act away.** Lap 1 released 2026-09-18 at `f071b35`; their lap 2 released and filed (`206be6e1…`, 19,775 bytes); lap 3 released at `0110219`, `GO` from our side; **their lap 4 released and filed** — `614c6115…`, 15,283 bytes, read at `platterpus@267a696` — declaring `GO` on `2cce60d` with no question and nothing that could reopen it, and resolving the circularity lap 3 named by conceding that the second clause of their own `GO` condition conflated a decision with an act. **Lap 5 is ours, is the close, and is HELD.** It is a fifth lap because `PROTOCOL.md` §5 needs `HANDSHAKE-PEER-VERDICT: GO` in a file of *ours* and lap 3 said `OPEN` — the only honest value when it was written — so their lap 4 closed the round on their gate and could not on ours. `SETTLED.md` row 102, from round 17 with the roles reversed; lap 5 §H1 proposes the v5 fix and does not make it |
+| `--release-gate` | exits **0** — *"Release allowed: every round is closed"*. **Not a green light for `+platterpus.14`**, which waits on Platterpus's both-wordings release; the gate cannot see that prerequisite and does not claim to |
+| round 22 | **CLOSED `GO`/`GO`**, 2026-09-21, **five laps**, 27 days before the close-by. Lap 1 released at `f071b35`; their lap 2 filed; lap 3 released at `0110219`; **their lap 4 released and filed** — `614c6115…`, 15,283 bytes, read at `platterpus@267a696` — `GO` on `2cce60d`, resolving the circularity lap 3 named by conceding that the second clause of their own `GO` condition conflated a decision with an act; **our lap 5 released at `23c18d2`** and is the close. Five laps because `PROTOCOL.md` §5 needs `HANDSHAKE-PEER-VERDICT: GO` in a file of *ours* and lap 3 said `OPEN` — the only honest value when it was written — so their lap 4 closed the round on their gate and could not on ours (`SETTLED.md` row 102, round 17, roles reversed). Lap 5 §H1 proposes the v5 fix and does not make it |
 | `platterpus-fork` tip | **ahead of the release, with a P2 log change in it.** Build from `2cce60d`, not from the tip |
 
 **THIS TABLE CARRIED TWO `released` ROWS DISAGREEING**, one naming `.13` and one
