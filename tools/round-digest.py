@@ -275,16 +275,73 @@ def digest(round_no, exclude=()):
 # This is the verdict-field prose question of round 9 §I arriving in a second
 # field, and it wants the same v5 answer: the value is the leading token
 # sequence, prose follows and is ignored.
-DECL_RE = re.compile(
-    r"^HANDSHAKE-ROUND-DIGEST:[ \t]*sha256/16 = ([0-9a-f]{16}) over (\d+) lap",
-    re.M)
+# THE ANCHORING WAS RIGHT AND THE LITERAL WAS TOO STRICT. The pattern above
+# required `sha256/16 = <hex> over N lap` with the hex BARE, and both sides
+# write that cell with markdown in it. Measured over the whole record on
+# 2026-09-21: of 121 `HANDSHAKE-ROUND-DIGEST:` lines, 98 parsed and **6 carried
+# a real digest this reader could not see** -- three of them ours:
+#
+#   sha256/16 = `<hex>` over 2 lap(s)        round-22-lap-01, round-22-lap-03
+#   sha256/16 `<hex>` **over N lap(s)**      round-21-lap-05, and their
+#                                            round-21-lap-04, round-22-lap-02,
+#                                            round-22-lap-04
+#
+# So `--check` skipped every declaration in round 22 and returned 0. The check
+# whose own docstring says a digest is the one field a human cannot proofread
+# reported nothing to proofread. The format drifted at round 21 lap 4/5 when
+# both sides started emphasising the cell, and nothing noticed for two rounds
+# because "no declaration" and "a declaration I could not read" printed the
+# same sentence.
+#
+# The fix keeps the anchor and implements the v5 rule the comment above already
+# states: the value is the LEADING token sequence, prose follows and is
+# ignored. So the head of the line is taken first -- up to the em dash, the
+# double hyphen or a sentence break -- and inline markup is stripped from that
+# head alone. Prose cannot contribute a value, which is the round-9 defect the
+# anchor exists for, and `not computable in the file it covers -- a digest over
+# ... 81415fe9` still declares nothing however many hex tokens follow.
+HEAD_RE = re.compile(r"^HANDSHAKE-ROUND-DIGEST:[ \t]*(.*)$", re.M)
+# Where the machine-readable clause ends and commentary begins.
+PROSE_RE = re.compile(r"\s+(?:—|--|;)\s|\.\s")
+# Inline markup carries no meaning in a declared value.
+MARKUP_RE = re.compile(r"[`*_]+")
+VALUE_RE = re.compile(r"^sha256/16\s*=?\s*([0-9a-f]{16})\s+over\s+(\d+)\s+lap")
+# A head that MEANT to carry a value: says sha256/16 and shows a digest. Used
+# only to tell "declares no value" from "declares one I failed to read", which
+# `none` versus `unknown (reason)` says must never be one state.
+LOOKS_VALUED_RE = re.compile(r"^sha256/16\b.*\b[0-9a-f]{16}\b")
+
+
+def declared_digest(text):
+    """(hex, n) a lap declares, or None, or the string "unparsed".
+
+    "unparsed" is the third state: the head names sha256/16 AND shows a
+    digest, and this reader still could not take it. It is a defect in the
+    reader or a real format change, and either way it must be loud.
+    """
+    m = HEAD_RE.search(text)
+    if not m:
+        return None
+    head = MARKUP_RE.sub("", PROSE_RE.split(m.group(1).strip(), 1)[0].strip())
+    hit = VALUE_RE.match(head)
+    if hit:
+        return hit.group(1), hit.group(2)
+    return "unparsed" if LOOKS_VALUED_RE.match(head) else None
 
 
 def check_lap(path):
     """Re-derive the HANDSHAKE-ROUND-DIGEST a lap file declares.
 
     Returns (status, declared, computed, excluded) where status is one of
-    "match", "mismatch", "undeclared", "not-a-lap".
+    "match", "mismatch", "undeclared", "unparsed", "not-a-lap".
+
+    "undeclared" and "unparsed" are two states on purpose. The first is a lap
+    that declares no machine-readable digest, which several legitimately do --
+    `not computable in the file it covers` says so and means it. The second is
+    a cell that names sha256/16 and shows a digest that this reader could not
+    take, which is either a format change or a defect here. Printing one
+    sentence for both is what let six real declarations go unverified for two
+    rounds.
 
     **The one defect this exists for, named because S-11 requires it: round 9
     lap 7.** It declared `53f0b465833ac845 over 4`, which is a real digest of a
@@ -321,10 +378,12 @@ def check_lap(path):
     if parts is None:
         return "not-a-lap", None, None, []
     rnd, lap, _frm = parts
-    m = DECL_RE.search(FENCE_RE.sub("", text))
-    if not m:
+    got = declared_digest(FENCE_RE.sub("", text))
+    if got is None:
         return "undeclared", None, None, []
-    declared = (m.group(1), int(m.group(2)))
+    if got == "unparsed":
+        return "unparsed", None, None, []
+    declared = (got[0], int(got[1]))
 
     # By PATH, not by basename. The set this drops is "this lap and everything
     # filed since", by lap NUMBER and across both directories -- so when two
@@ -383,7 +442,13 @@ def main():
             status, decl, comp, drop = check_lap(path)
             rel = path.relative_to(HS)
             if status == "undeclared":
-                print(f"  -- {rel}: declares no digest")
+                print(f"  -- {rel}: declares no machine-readable digest")
+                continue
+            if status == "unparsed":
+                bad += 1
+                print(f"FAIL {rel}: the cell names sha256/16 and shows a "
+                      "digest, and this checker could not read it -- fix the "
+                      "reader or the cell, but do not let it pass silently")
                 continue
             ds = f"{decl[0]} over {decl[1]}"
             if status == "match":

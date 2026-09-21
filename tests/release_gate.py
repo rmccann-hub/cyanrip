@@ -1900,6 +1900,51 @@ def test_the_digest_checker_can_fail():
         check(rdg.check_lap(good)[0] == "undeclared",
               "a digest quoted for another round was read as this round's")
 
+        # MARKUP IN THE CELL, WHICH BOTH SIDES WRITE AND THE READER USED TO
+        # REFUSE. Round 22, 2026-09-21: measured over the whole record, 6 of
+        # 121 declarations carried a real digest the checker could not see --
+        # three of them ours. `--check` skipped every declaration in round 22
+        # and returned 0, in the tool whose own docstring says a digest is the
+        # one field a human cannot proofread. The drift started at round 21
+        # lap 4/5, when both sides began emphasising the value.
+        for label, field in (
+            ("backticked hex with the equals sign",      # ours, round 22
+             f"HANDSHAKE-ROUND-DIGEST: sha256/16 = `{truth}` over 2 lap(s)"),
+            ("backticked hex, no equals, bold count",    # theirs, and our r21
+             f"HANDSHAKE-ROUND-DIGEST: sha256/16 `{truth}` **over 2 lap(s)**"),
+            ("markup plus trailing prose after an em dash",
+             f"HANDSHAKE-ROUND-DIGEST: sha256/16 `{truth}` **over 2 lap(s)** "
+             "— our lap 1 and your lap 2, excluding this file"),
+        ):
+            good.write_text(lap.format(3, "cyanrip-fork", field, "three"),
+                            encoding="utf-8")
+            check(rdg.check_lap(good)[0] == "match",
+                  f"{label} was not read as a declaration")
+
+        # AND THE THIRD STATE. "declares no digest" and "declares one I could
+        # not read" printed the same sentence, which is why six real values
+        # went unverified for two rounds -- `none` versus `unknown (reason)`
+        # inside the checker built to stop exactly that. A cell that names
+        # sha256/16 AND shows a digest must fail loudly, never pass as absent.
+        good.write_text(lap.format(
+            3, "cyanrip-fork",
+            f"HANDSHAKE-ROUND-DIGEST: sha256/16 {truth} across 2 laps",
+            "three"), encoding="utf-8")
+        check(rdg.check_lap(good)[0] == "unparsed",
+              "a cell naming sha256/16 with a digest in it was reported as "
+              "declaring nothing, which is the silent-skip defect")
+
+        # The narrow case that must NOT become `unparsed`: a legitimate
+        # "no value" declaration, whose prose mentions digests further along.
+        good.write_text(lap.format(
+            3, "cyanrip-fork",
+            "HANDSHAKE-ROUND-DIGEST: not computable in the file it covers "
+            f"-- a digest over every lap would include {'a' * 16}", "three"),
+            encoding="utf-8")
+        check(rdg.check_lap(good)[0] == "undeclared",
+              "a deliberate no-value declaration was graded unparsed; prose "
+              "after the clause must not contribute a value")
+
         # THE PROPERTY THAT MAKES OLD DECLARATIONS STILL CHECKABLE, and the one
         # the first version of this test could not see: a lap's declaration
         # covers the holdings that existed WHEN IT WAS WRITTEN, so re-deriving
