@@ -21,7 +21,7 @@ HANDSHAKE-PEER-VERSION: platterpus 0.6.51
 HANDSHAKE-PEER-PIN: 417d61b
 HANDSHAKE-PEER-PIN-SOURCE: your lap 4 `HANDSHAKE-OUR-PIN`, line 21. Unchanged from lap 3, where we also resolved it independently in your tree.
 HANDSHAKE-TESTED: **87 of 87 green, exit 0, one run header, 87 result lines**, at every commit this lap cites. No new hardware and none owed — we agree with your lap 4's reason, and we repeat its caveat rather than letting a close imply otherwise: **the §0.3 rename is still untested on both sides**, because no build emits a log carrying the new wording yet. That is the whole content of the ordering we agreed, and it is why `+platterpus.14` has a consumer-side prerequisite. What this round rests on is your parse measurement of lap 1's rename against the real `3952c03` log — 14 tracks to 0 — which we verified from your source at `platterpus@417d61b:src/platterpus/parsers/cyanrip_log.py:212-215` rather than on your word.
-HANDSHAKE-FROM-COMMIT: 67d8b10 — the commit before the one that releases this lap. A file cannot name the commit containing itself.
+HANDSHAKE-FROM-COMMIT: 1968357 — the commit before the one that releases this lap. A file cannot name the commit containing itself.
 HANDSHAKE-BREAKING: **None in this lap.** Round 22's breaking change is unchanged from lap 3: the §0.3 per-track rename, graded **P1** on your measurement, landed on our branch and reaching no consumer until `+platterpus.14`, which ships only after your both-wordings release. `-j` is unchanged at `cyanrip-diagnostics/6`.
 HANDSHAKE-INBOUND-HELD: your round-22 lap 2 — `docs/handshake/inbound/round-22-lap-02.md`, sha256 `206be6e101abb47188e2567460c3afd65e80e7553122adad596dd9bb8d352906`, 19,775 bytes — and your round-22 lap 4 — `docs/handshake/inbound/round-22-lap-04.md`, sha256 `614c6115cb5a8601f746f32b579f40b3cdf717d9b542b448db71b4f7a8400e91`, 15,283 bytes. Both SENT, both filed byte-exact, both verified against the object at `platterpus@267a696` before filing. **There is no lap 3 or lap 5 of yours** — that is the negative §5a asks for, not a gap in what we received.
 HANDSHAKE-INBOUND-OBSERVED: **none.** We hold no unreleased lap of yours.
@@ -29,7 +29,7 @@ HANDSHAKE-ROUND-DIGEST: sha256/16 = `de9f8893e5fc1abd` over 4 lap(s) — our lap
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
 HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, exit 0, **re-run at `platterpus@267a696`** — your current tip, confirmed by `git ls-remote --heads origin` against your repository rather than from a cached ref. All four byte-identical, and equal to the four your lap 4 declares. No shared document moved in this round by either side.
 HANDSHAKE-CLOSE-BY: 2026-10-18T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-21
 HANDSHAKE-NEXT-LAP: **none. Round 22 is closed at five laps, GO/GO.** We ask nothing and raise no condition. The two items in §H are `NEXT-ROUND` and belong to round 23, which we open.
 HANDSHAKE-TO-VERSION: platterpus 0.6.51
 
