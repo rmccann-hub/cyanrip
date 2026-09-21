@@ -35,6 +35,117 @@ round moved the compiled `Handshake:` banner. **The released build `2cce60d` is
 unaffected** — it is a named commit with its own correct artifacts, not the tip,
 and none of this reaches a consumer until `+platterpus.14`.
 
+**THE RIG TOOLS WERE READING THE WRONG FILE, AND THE CHECK THAT NOTICED SAID
+`ok`** — `40b2aff`, found by running `tools/rig-check.py` against a Platterpus
+bundle instead of re-reading it. **No source change; the ripper is untouched.**
+
+| defect | what it did |
+|---|---|
+| `find_log()` filtered the EAC export with `"EACcompatible" not in p.name` | the file is `<album> (EAC-compatible).log`, **with a hyphen**, so the filter never matched anything from `387033e` onward. An album folder holds both logs, so every run has been picking between them by mtime |
+| `check_checksum_inventory()` | `3 * tracks + both_missed` over a file with no track block is `3*0 + 0 == 0 == got`, so it printed `ok  0 lines (0/0/0/0), rule says 3x0 + 0 = 0` |
+| `check_argv()` | reported `-j wrote no record at all, which is the one job it has on a run that fails early` on a run where cyanrip was never executed — `run()` returns exit `None` for a program it cannot start, and that fell through to the `j.exists()` arm |
+
+**The first hid the second**, which is why both are fixed and both are tested.
+Selection is now by **content**: a cyanrip log names cyanrip on its first line
+(`cyanrip_log.c:724`, whose own comment calls that line contractual) and a
+closed log carries the FUN512 marker. Either is enough — they fail in opposite
+directions, an elided head keeps the marker and a killed run keeps the banner —
+and an EAC export has neither, whatever it is called. Its **second** line names
+cyanrip and a version, so anything looser than first-line anchoring matches it.
+
+The bundle's tar flattens mtimes to the epoch. That made the tie
+non-deterministic and the wrong pick visible; on a rig the two mtimes differ and
+it would have gone on choosing by luck.
+
+**The round-22 tolerant `TRACK_BLOCK` delimiter got its first real exercise and
+holds.** Over the bundle's log — which carries the OLD `Track N ripped and
+encoded successfully!` wording fourteen times and the new wording zero times —
+the inventory now reads `44 lines (14/14/14/2)` against `3x14 + 2 = 44`, the two
+being the `Accurip 450:` lines on the tracks whose whole-track checksums both
+missed. A pattern pinned to the new spelling alone would have counted zero
+tracks in every log filed before the rename.
+
+`1b2d13f` also moves the default output from `~/seam-check-<stamp>` to
+`~/cyanrip-rig-checks/seam-check-<stamp>`. The runbook's documented invocation
+passes no `--out`, so each pre-flight was leaving another directory loose in the
+operator's home.
+
+**WHAT THE BUNDLE ITSELF SAYS, AND IT COUNTS FOR NO RUN** — the operator's
+words; it is not a filed rig session, discharges no close condition and appears
+in no `HANDSHAKE-TESTED`. Nothing below is cited in a lap or in `SETTLED.md`,
+and recording any of it would mean filing the session, which is the operator's
+call. Read at
+`platterpusbundle20260919T051245Z`, sha256
+`eaa6ea96df182e33f09b2a833b441d910df166565b622183aae4fd3b5a1ceb18`:
+
+- **The rig is running `fe4d2c4` = `+platterpus.12`**, a build of 2026-09-12 and
+  **two releases behind** — `.13` shipped at `2cce60d` on 2026-09-18 and this rip
+  ran on 2026-09-19. `git rev-list --count fe4d2c4..1b2d13f` is 178; say it
+  against a named commit, because "behind the tip" is a number that moves. Its compiled banner still reads `round 16 lap 17
+  closed`. The bundle's own `MANIFEST.txt` flags a pin mismatch, but against
+  **round 21's** test pin `3952c03`, which is stale now that round 21 is closed.
+  Round 23's acceptance session needs `2cce60d` or later.
+- **`flac` and `metaflac` are absent from the rig's container.** 42 errors in
+  `applog/log.txt`, every one `exit 127: executable file not found` — 14
+  `flac.verify_failed` and 28 `metaflac.failed`. Counted distinct: `flac --test`
+  was attempted on all **14** files and `metaflac` on all **14**, twice each —
+  `--export-tags-to=-` and `--remove --block-type=PICTURE`. So **no local decode
+  check, no tag read-back and no PICTURE-block removal happened** on any of the
+  14 files. AccurateRip v2 at
+  confidence 200 on 12 of them is still a checksum match against a database, but
+  the local verification leg is missing, and it is missing for an environment
+  reason rather than a rip reason. Fix before the acceptance session or round 23
+  produces the same gap.
+- **A fifth rip of the reference disc on `fe4d2c4` agrees with the other four.**
+  13 of 14 tracks carry the identical `EAC CRC32` across 09-12 (Platterpus
+  0.6.47), 09-15a (0.6.48), 09-15b (0.6.49), 09-17 (the void session) and this
+  one (0.6.51). The outlier is **track 3, and only in the earliest session**
+  (`62680376`); the last four all give `3D8FCF0C`. Scope: this compares what
+  cyanrip's LOG recorded, not the files, and 09-15b's track 3 is superseded on
+  disk by a Platterpus re-read. Extends `SETTLED.md` row 112 from three sessions
+  to five, but see the no-run note above.
+- **The checksum reproduces while the convergence verdict does not.** Track 5
+  gives the same `EAC CRC32` in all five sessions and track 3 in the last four,
+  while the `Secure re-read:` line flips under them: track 3 reads `did NOT
+  converge` in four of the five, track 5 in four of the five, **and not the same
+  four** — track 3 converged in 09-15a, track 5 in 09-15b. `did NOT converge after 3 reads (repeat limit
+  hit)` is a statement about whether three reads agreed inside the limit, **not
+  about whether the audio is right** — a consumer treating it as "bad rip" would
+  quarantine a track whose bytes have now reproduced five times.
+- **The sharpest `Scope:` case on record, and it is not the one `SETTLED.md`
+  names.** Under `-Z 2 -r 3` the per-track paranoia blocks sum to `READ` 21439
+  against a disc total of 64994 (ratio 3.032), `OVERLAP` 477 against 1417
+  (2.971), `VERIFY` 3991 against 8742 (2.190) — and **`FIXUP_ATOM` sums to 0
+  per-track against a disc total of 45.** Row 84 records `FIXUP_EDGE` 0-against-2
+  as the sharpest there has been; this is the same shape at 45, on a counter that
+  marks actual audio repair. The `Scope:` line is present and correct on all 14
+  tracks, which is the whole reason a consumer is protected here. Row 84's
+  superlative is left alone, because the artifact that refutes it counts for no
+  run.
+
+**AND TWO THINGS FOUND WRONG IN THEIR OUTPUT, DERIVED FROM THE BUNDLE ALONE —
+no code of theirs was read.**
+
+- **`MANIFEST.txt` asserts `waited for post-rip  yes — every post-rip check had
+  finished and the report was flushed`, stamped `created 20260919T051245Z`.** The
+  `applog/log.txt` in the same archive runs to `01:12:57` local (`05:12:57Z`) and
+  its **first** error is at `01:12:45,978` — after the stamp. `diagnostics.txt`
+  says `errors: 0  warnings: 0  info: 16  worst: info` over `scope: process
+  session`, and its last entry is `05:12:44+00:00`, **one second before that
+  first error**. Each file was accurate when written; the archive's contents span
+  `05:12:44Z` to `05:12:57Z` under one apparent "as of", and the field whose
+  entire job is to say the snapshot waited is the one that is wrong. This is `CLAUDE.md`'s rule 5 — event
+  time and processing time are two independent ages — arriving in a bundler, and
+  the same shape as our own `STATUS.md` carrying two disagreeing `released` rows.
+- **`⚠ FLAC verify FAILED for 14 file(s)` where every one is `exit 127:
+  executable file /usr/bin/flac not found`.** A verifier that could not run
+  reported as a verification that failed. Their `detail:` preserves the exit code
+  and the message, so no evidence is lost and this is the label over-asserting,
+  not a data defect — *a label asserts even when its value disclaims*. **We have
+  the same defect in our own tree this week**, in `check_argv()` above, found in
+  the same session by running our tool against their bundle. Reporting theirs
+  without ours would be the over-scoped verification this repo has a rule about.
+
 0.9.4-rc2+platterpus.13 — 2026-09-18 — **stable**
 =================================================
 **Released at `2cce60d`, `release_seq` 23, authorised by round 21** (`GO`/`GO`,
