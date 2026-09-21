@@ -694,6 +694,68 @@ verified against the installed headers *and* the `.so` export table).
 
 ## Open, joint — belongs to the seam, not to one side
 
+### The close condition cannot be satisfied by the side that speaks first — round-23 item
+
+`PROTOCOL.md` §5 requires `HANDSHAKE-PEER-VERDICT: GO`, *"transcribed from the
+file they actually sent"*, in each side's own newest lap. **The side that speaks
+last can do that; the side that speaks first cannot**, because its file was
+written before the other side's answer existed. So a round is mutually closeable
+only if the first speaker writes one more lap — which makes the other side the
+first speaker.
+
+Not hypothetical and not new. `SETTLED.md` row 102 records it from **round 17**,
+where we spoke last and Platterpus's `--status` held the round `OPEN`; they filed
+their acceptance as a `verified/` record. **Round 22 is the first time they spoke
+last**, and we cannot use that escape: `tools/release-gate.py --release-gate`
+refuses while any round is open, so an unclosed round 22 blocks
+`+platterpus.14` permanently. Our lap 5 is that extra lap, and it closes the
+round rather than reopening anything.
+
+Measured on our side rather than assumed: with their lap 4 filed,
+`stale_peer_verdict` **is** satisfied and `closed()` still returns False one line
+earlier, on `self.peer_verdict not in CLOSING` — our own lap 3's cell, correctly
+declaring `OPEN`.
+
+**This is a condition gated on a consequence of itself**, the family Platterpus's
+round-22 lap 4 C1 named, and the third instance in that round alone: §6a's
+test-pin deadlock, their verdict-note circularity, and this. Their formulation is
+the one to keep — *state what must be TRUE, never what must have HAPPENED* — and
+`HANDSHAKE-PEER-VERDICT` is a has-happened condition in a must-be-true field.
+
+**Proposed for v5 in lap 5 §H1 and deliberately not implemented.** The close rule
+is shared, and relaxing a match rule on one side is how two gates come to
+disagree about whether a round is closed. The proposal: read the peer verdict
+from the newest peer lap the writer holds and has enumerated in
+`HANDSHAKE-INBOUND-HELD`, keeping `HANDSHAKE-PEER-VERDICT` as the declaration and
+cross-checking it against that — which is what `stale_peer_verdict` already does
+in one direction. Needs a `HANDSHAKE-PROTOCOL` bump shipped to both sides before
+either gate implements it. **Their assent is required and a no is a complete
+answer.**
+
+### A HELD lap's draft verdict reaches the compiled `Handshake:` line — round-23 item
+
+`tools/gen-handshake-state.py` takes `latest.verdict` verbatim, so with lap 5
+published and `HANDSHAKE-READY-TO-READ: no` the banner reads `round 22 lap 5
+OPEN, verdict GO` — a verdict the release gate itself declines to act on,
+reporting *"its verdict is a draft"*. A held lap may still be revised; the banner
+publishes its verdict as though it were settled.
+
+**Pre-existing, not introduced by lap 5.** Checked by generating the state in a
+throwaway worktree at `623251c`, where lap 3 was held: it produced `round 22 lap
+3 OPEN, verdict GO` the same way. Every held lap since the field existed has done
+this.
+
+**Bounded, and that is why it is not urgent.** `HANDSHAKE_RELEASED` is separately
+`0` for any open round, so every log such a build writes also says **`NOT a
+released build`**, and a *released* build cannot carry a draft verdict at all —
+a release needs a closed round, and the gate refuses to close on a held lap. So
+the exposure is unreleased builds, which already disclaim themselves on the line
+below.
+
+**The fix is contract surface, which is why it waits.** `Handshake:` is a line a
+consumer parses, so adding a qualifier to its value vocabulary is a handshake
+matter and not a drive-by reword. Round 23, with the v5 item above.
+
 ### A superseded track has no recorded read time anywhere
 
 Our album log gives each track a `creation_time` describing the **first pass**.
