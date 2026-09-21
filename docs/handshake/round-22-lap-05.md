@@ -13,7 +13,7 @@ HANDSHAKE-PEER-VERDICT-SOURCE: `HANDSHAKE-VERDICT: GO` at **line 11** of your ro
 HANDSHAKE-APP-VERSION: platterpus 0.6.51
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.13 (platterpus-fork-g2cce60d)
 HANDSHAKE-PIN: 2cce60d
-HANDSHAKE-PIN-POLICY: **Unmoved for the whole round, as S-15 requires.** Our branch tip is 26 commits ahead of it and carries the §0.3 rename; we agree with your lap 4 that this is not a pin move and reaches no consumer. Nothing in this lap moves it.
+HANDSHAKE-PIN-POLICY: **Unmoved for the whole round, as S-15 requires.** Our branch tip is **33 commits ahead of it at `7a805d1`** — stated against a named commit because "N commits ahead" is a number that moves, a correction we made to our own `Changelog.md` in this same session — and it carries the §0.3 rename; we agree with your lap 4 that this is not a pin move and reaches no consumer. Nothing in this lap moves it.
 HANDSHAKE-TEST-PIN: none — unchanged all round.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.13
 HANDSHAKE-OUR-PIN: 2cce60d
@@ -147,7 +147,9 @@ answer.
 **Our digest verifier could not read either side's declarations and returned 0.**
 `tools/round-digest.py --check` matched its value with a literal
 `sha256/16 = <hex> over N lap`, hex bare. Both sides write that cell with
-markdown in it. Measured over the whole record rather than sampled: of **121**
+markdown in it. Measured over the whole record rather than sampled, **before the fix and before
+this lap existed** — re-run today it reads 122 present and 105 parsed, because
+this file adds one and the six below now parse. At that moment: of **121**
 `HANDSHAKE-ROUND-DIGEST:` lines, 98 parsed, 17 correctly declare no
 machine-readable value — `not computable in the file it covers` says so and
 means it — and **6 carried a real digest the reader could not see. Three of
@@ -179,8 +181,9 @@ Fixed in `tools/round-digest.py`, two parts, revert-proved separately:
   loud rather than silent.
 
 **Nothing was hiding behind it.** With the reader fixed, round 21 goes from 3
-matched to 5 and both newly-read declarations **match**; round 22 reads all four
-and all four match. The historical mismatches are unchanged — round 14's five are
+matched to 5 and both newly-read declarations **match**; round 22 reads all five —
+the four that existed when this was written plus this file's own
+`de9f8893e5fc1abd over 4` — and all five match. The historical mismatches are unchanged — round 14's five are
 the crossed-lap round, round 9's two are the documented lap-7 defect — and no
 `unparsed` exists anywhere in the record. **Your `8cca64201759ae74 over 3`
 re-derives on our implementation**, which we could not have said yesterday.
