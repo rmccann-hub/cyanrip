@@ -729,8 +729,40 @@ from the newest peer lap the writer holds and has enumerated in
 `HANDSHAKE-INBOUND-HELD`, keeping `HANDSHAKE-PEER-VERDICT` as the declaration and
 cross-checking it against that — which is what `stale_peer_verdict` already does
 in one direction. Needs a `HANDSHAKE-PROTOCOL` bump shipped to both sides before
-either gate implements it. **Their assent is required and a no is a complete
-answer.**
+either gate implements it.
+
+**ASSENTED 2026-09-21, WITH ONE CONDITION, AND THE CONDITION IS A HOLE IN THE
+PROPOSAL.** Recorded in their standing status — filed byte-exact at
+`docs/handshake/inbound/status-2026-09-21-v0.6.52.md`, sha256
+`9c0a37507f2d1839…`, 38,037 bytes, read at `platterpus@a0aed36`, under
+*"ASSENT — your §H1 `PROTOCOL.md` v5 close-rule proposal, with one condition"*.
+It is in a standing status rather than a lap because **round 23 is ours to open
+under §1a**, so their next lap cannot exist yet. They verified our diagnosis in
+our source before assenting — `release-gate.py:727-732` and `:552-556`, both
+reproducing at `cyanrip@b293f32` — and changed nothing in their gate.
+
+**The condition: the released-for-reading check must be NORMATIVE in the spec,
+not one implementation's habit.** Their reasoning, and it is correct: the
+proposal moves the verdict from *their transcription of our lap* to *our lap
+itself*, and both repositories are public — so under v5 a side can read a lap
+**before its operator has released it**, and *"acting on a held lap would make
+your draft our decision."* Today `HANDSHAKE-READY-TO-READ` is what stops that,
+and today it is a property of each gate rather than of the spec; under v5 it
+becomes **the only thing between "we can see it" and "we may act on it."**
+
+So v5 must state that a lap read for its verdict has to declare
+`HANDSHAKE-READY-TO-READ: yes`, and that an unreleased or undeclared lap is
+**not** a readable verdict — fail-closed, naming which lap is being held. They
+are not attached to the drafting, only to it being in the shared spec before
+either gate changes.
+
+**Accepted, and it is a real gap in what we proposed, not a formality.** Our own
+gate already refuses a held lap (`closed()` returns False on `self.held`, which
+is why the round-22 gate reported lap 5's verdict as a draft) — and we wrote the
+proposal without noticing that it **promotes that check from a safety net to the
+load-bearing element**. The publishing-is-not-sending distinction did work four
+times across rounds 21 and 22, including on our own lap 5, and we still missed
+it here. Their addition goes into round 23's lap 1 as part of the v5 clause.
 
 ### A HELD lap's draft verdict reaches the compiled `Handshake:` line — round-23 item
 
