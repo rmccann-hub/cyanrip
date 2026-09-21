@@ -371,6 +371,13 @@ never ran — four separate ways, all fixed in this release and listed in the
 lap's §F. Exit status is 0 when nothing FAILED; a SKIP is not a failure, and the
 summary keeps "did not run" and "ran and found nothing" apart on purpose.
 
+`[MEASURED]` With no `--out`, output lands in
+`~/cyanrip-rig-checks/seam-check-<stamp>/` and the last two lines print the path
+and the `tar` command for it. It used to be `~/seam-check-<stamp>` — one new
+directory in `$HOME` per pre-flight — and this invocation passes no `--out`, so
+the runs accumulated there. **A folder to delete is fine; fourteen of them in
+`$HOME` is not.** Pass `--out` to put it anywhere else.
+
 `[MEASURED]` And if you want a parity block for an album without moving any
 audio anywhere:
 
