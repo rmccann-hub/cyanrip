@@ -134,10 +134,28 @@ def check_argv(out, crip, container):
         ec, txt = run(prefix + ["-j", str(j), "-Z", "3", "-l", "1,2", "-N",
                                 "-d", "/nonexistent.cue"], timeout=240)
         save(out, f"argv-{label}.txt", txt if isinstance(txt, str) else "")
+        # A RUN THAT NEVER HAPPENED IS NOT A -j DEFECT. `run()` returns an exit
+        # code of None for a program it could not execute at all and for one
+        # that had to be killed, and this fell straight through to the
+        # `j.exists()` arm below -- which reports "-j wrote no record at all,
+        # which is the one job it has on a run that fails early". That is a
+        # claim about cyanrip's behaviour, and it was asserted on a run where
+        # cyanrip never ran: measured 2026-09-21 in a container with no cyanrip
+        # installed, where check_build had already said so on the line above.
+        # `none` and `unknown (reason)` are different claims -- this file's own
+        # docstring says the summary keeps them apart -- so pass the reason
+        # through and claim nothing about the record. The grade stays FAIL: on
+        # the rig, a cyanrip that cannot be executed or that hangs is a
+        # failure, and it is the SENTENCE that was wrong, not the severity.
+        if ec is None:
+            record(f"argv/{label}", FAIL,
+                   f"the probe never completed ({txt.strip()}), so nothing is "
+                   "known about whether -Z and -l arrive intact")
+            continue
         if not j.exists():
             record(f"argv/{label}", FAIL,
-                   "-j wrote no record at all, which is the one job it has "
-                   "on a run that fails early")
+                   f"cyanrip exited {ec} and -j wrote no record at all, which "
+                   "is the one job it has on a run that fails early")
             continue
         try:
             inv = json.loads(j.read_text()).get("invocation", "")
@@ -169,6 +187,48 @@ def check_argv(out, crip, container):
         record("argv/shim-vs-direct", SKIP,
                "no container given (--container) or distrobox absent, so the "
                "shim could not be compared against the binary")
+
+
+CRIP_LOG_FUN512_MARKER = "Log FUN512: "   # src/fun512.h
+
+
+def is_cyanrip_log(p):
+    """Is this file a cyanrip rip log? Judged by its CONTENT, not its name.
+
+    THE NAME FILTER THIS REPLACES NEVER MATCHED ANYTHING. It read
+    `"EACcompatible" not in p.name`, and the file it exists to exclude is
+    spelled `<album> (EAC-compatible).log` -- with a hyphen. Wrong by one
+    character since the commit that introduced this tool, so every run has
+    treated Platterpus's EAC-format export as a candidate rip log, and an album
+    folder holds both. `tests/rip_images.py` had the spelling right in a comment
+    the whole time.
+
+    Found 2026-09-21 by running this tool against a real bundle rather than
+    re-reading it: it bound to the export, and `checksum-inventory` then
+    reported `ok  0 lines (0/0/0/0), rule says 3x0 + 0 = 0` -- a check satisfied
+    by finding nothing, over an artifact nobody had asked about. Two defects,
+    one of which hid the other, which is why both are fixed and both are tested.
+
+    So this no longer guesses at a name. A cyanrip log names cyanrip on its
+    first line -- `cyanrip_log.c:724` prints it, and its own comment calls that
+    line contractual -- which makes it the one discriminator a rename cannot
+    rot. A closed log also carries the FUN512 marker. EITHER is enough, because
+    they fail in opposite directions: a log whose head a bundler elided keeps
+    the marker, and a run killed before close keeps the banner. An EAC-format
+    export has neither, whatever it is called.
+    """
+    try:
+        with p.open("rb") as fh:
+            head = fh.read(4096).decode("utf-8", errors="replace")
+    except OSError:
+        return False
+    if re.match(r"cyanrip \S+ \(", head):
+        return True
+    try:
+        return CRIP_LOG_FUN512_MARKER in p.read_text(encoding="utf-8",
+                                                     errors="replace")
+    except OSError:
+        return False
 
 
 def find_log(album):
@@ -212,7 +272,7 @@ def find_log(album):
 
     for where, d in (("in", album), ("beside", album.parent)):
         logs = sorted(d.glob("*.log"))
-        cands = [p for p in logs if "EACcompatible" not in p.name]
+        cands = [p for p in logs if is_cyanrip_log(p)]
         if cands:
             # The parent fallback exists because -D {album_artist}/{album} can
             # put the log one level up. It is also how an EMPTY album directory
@@ -221,8 +281,12 @@ def find_log(album):
             # came from is therefore part of the answer, not a detail.
             return (max(cands, key=lambda p: p.stat().st_mtime), where), None
         if logs:
-            return None, (f"{len(logs)} .log file(s) {where} {str(d)!r}, but "
-                          "every one is an EAC-compatible export, not a rip log")
+            names = ", ".join(repr(q.name) for q in logs[:4])
+            more = f" (+{len(logs) - 4} more)" if len(logs) > 4 else ""
+            return None, (f"{len(logs)} .log file(s) {where} {str(d)!r} and not "
+                          "one is a cyanrip rip log -- none names cyanrip on its "
+                          f"first line or carries a {CRIP_LOG_FUN512_MARKER!r} "
+                          f"line: {names}{more}")
     n = len(list(album.iterdir()))
     return None, (f"{str(album)!r} exists and holds {n} entr{'y' if n == 1 else 'ies'}, "
                   "but no .log in it or beside it")
@@ -270,6 +334,19 @@ def check_checksum_inventory(out, log):
     detail = (f"{got} lines ({counts['EAC CRC32']}/{counts['Accurip v1']}/"
               f"{counts['Accurip v2']}/{counts['Accurip 450']}), "
               f"rule says 3x{tracks} + {both_missed} = {want}")
+    # AN EMPTY LOG SATISFIES THIS RULE. `3x0 + 0 == 0` is true, and it reported
+    # OK over a file with no track block in it at all -- measured 2026-09-21
+    # against a real bundle, where a name filter that never matched had bound
+    # this check to an EAC-format export. The selector is fixed above; this
+    # floor is a SEPARATE fix, because a check that passes on nothing is a
+    # defect whatever fed it. "Check that the data you are comparing is
+    # non-trivial" is a rule this repo already carries, and the check written
+    # to police the near-miss-grep defect was itself satisfiable by zero.
+    if not tracks:
+        return record("checksum-inventory", FAIL,
+                      f"no `Track N ...` block in {log.name!r}, so nothing was "
+                      f"counted -- {detail} is what an empty file scores, and "
+                      "it says nothing about any rip")
     return record("checksum-inventory", OK if got == want else FAIL, detail)
 
 
