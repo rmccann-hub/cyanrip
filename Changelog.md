@@ -123,13 +123,32 @@ call. Read at
   superlative is left alone, because the artifact that refutes it counts for no
   run.
 
+**AND THE TWO ALBUM ARTIFACTS DESCRIBE TWO DIFFERENT INVOCATIONS** — read after
+the entry above was written, by opening the 6.8 MB `.platterpus.json` instead of
+stopping at the log. `outcome.ripper_argv` ends `-r 3 -Z 2 -l 3,5 -N`; the
+`Invoked as:` line of the `.log` beside it carries **no `-l`** and the header
+says `Tracks to rip:  all`. So the log is the finished 14-track rip
+(`Ripping finished at 2026-09-19T00:45:17-04:00`) and the report is a **targeted
+re-rip of tracks 3 and 5** — the two that did not converge — merged into an
+album record: `tracks` carries all 14 numbers with full per-track data, and
+`completeness` reads `tracks_expected 14 / tracks_in_report 14 / complete
+true`, which is coherent for a merged record and is **not** a defect. The
+diagnostics' 15th and 16th entries (`05:00:40Z`, `05:12:44Z`) are that re-rip's
+two tracks, and that is what "mid run" means here. *Read the `Invoked as:` line
+before crediting a scenario with what its folder claims* — this repo's own rule,
+and one album folder can now hold two rips' worth of artifacts.
+
 **AND TWO THINGS FOUND WRONG IN THEIR OUTPUT, DERIVED FROM THE BUNDLE ALONE —
 no code of theirs was read.**
 
 - **`MANIFEST.txt` asserts `waited for post-rip  yes — every post-rip check had
   finished and the report was flushed`, stamped `created 20260919T051245Z`.** The
-  `applog/log.txt` in the same archive runs to `01:12:57` local (`05:12:57Z`) and
-  its **first** error is at `01:12:45,978` — after the stamp. `diagnostics.txt`
+  report in that same archive declares `generated_at
+  2026-09-19T01:12:57-04:00` — **`05:12:57Z`, twelve seconds later.** One
+  declared field against another, both inside the bundle: the archive carries a
+  report that did not exist at the moment its manifest said the report was
+  flushed. The `applog/log.txt` agrees and dates it — it runs to the same
+  `01:12:57` and its **first** error is at `01:12:45,978`, after the stamp. `diagnostics.txt`
   says `errors: 0  warnings: 0  info: 16  worst: info` over `scope: process
   session`, and its last entry is `05:12:44+00:00`, **one second before that
   first error**. Each file was accurate when written; the archive's contents span
@@ -137,11 +156,19 @@ no code of theirs was read.**
   entire job is to say the snapshot waited is the one that is wrong. This is `CLAUDE.md`'s rule 5 — event
   time and processing time are two independent ages — arriving in a bundler, and
   the same shape as our own `STATUS.md` carrying two disagreeing `released` rows.
-- **`⚠ FLAC verify FAILED for 14 file(s)` where every one is `exit 127:
-  executable file /usr/bin/flac not found`.** A verifier that could not run
-  reported as a verification that failed. Their `detail:` preserves the exit code
-  and the message, so no evidence is lost and this is the label over-asserting,
-  not a data defect — *a label asserts even when its value disclaims*. **We have
+- **A verifier that could not run, reported as a verification that failed —
+  and it is in the machine-readable field, not only in a UI label.** The warning
+  reads `⚠ FLAC verify FAILED for 14 file(s)` where every one is `exit 127:
+  executable file /usr/bin/flac not found`, and the report declares
+  `verification.gates.flac_integrity: "ran"` with
+  `flac_integrity: {ran: true, ok: false, checked: 14, failures: [all 14]}`.
+  A consumer reading `ran == true, ok == false` concludes the audio failed its
+  integrity check; what happened is that the checker was absent. `gates.ctdb`
+  says `"ran"` the same way, with `ctdb.verdict: "lookup_error"` caused by the
+  same missing `metaflac`. Their `detail:` and `message:` preserve the exit code
+  and the reason throughout, so no evidence is lost — this is the **grade**
+  over-asserting, not a data defect, and *a label asserts even when its value
+  disclaims*. **We have
   the same defect in our own tree this week**, in `check_argv()` above, found in
   the same session by running our tool against their bundle. Reporting theirs
   without ours would be the over-scoped verification this repo has a rule about.
