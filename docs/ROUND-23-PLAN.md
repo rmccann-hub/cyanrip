@@ -46,8 +46,14 @@ ran on the wrong pin and was void. With the evidence already in hand, lap 1
 **reports** hardware instead of demanding it, and round 23 can close in three
 laps like rounds 17–20.
 
-**`<<PENDING-ACCEPTANCE>>` marks every cell the bundle must fill.** They are
-loud on purpose: a released lap must not carry one.
+**~~`<<PENDING-ACCEPTANCE>>` marks every cell the bundle must fill.~~ THE BUNDLE
+ARRIVED 2026-09-22 AND EVERY ONE OF THEM IS FILLED.** Five cells took values from
+the session; two were never acceptance cells at all and are now marked
+`<<AT-RELEASE>>` — `HANDSHAKE-FROM-COMMIT` cannot be known until the release
+commit exists, because a file can never name a build that contains itself, and
+`HANDSHAKE-CLOSE-BY` runs 30 days from the operator's announcement, which
+publishing is not. **Both markers stay loud on purpose: a released lap must not
+carry either.**
 
 ---
 
@@ -131,16 +137,16 @@ HANDSHAKE-TEST-PIN: none — the reviewed pin is a released build and the rig in
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.13
 HANDSHAKE-OUR-PIN: 2cce60d
 HANDSHAKE-PEER-VERSION: platterpus 0.6.52
-HANDSHAKE-PEER-PIN: <<PENDING-ACCEPTANCE>> — the commit the acceptance run reports, resolved in your tree, not taken from this draft's a0aed36
-HANDSHAKE-TESTED: <<PENDING-ACCEPTANCE>> — the full acceptance session: 8 album steps, whole disc twice plus six partials, on `2cce60d` + Platterpus 0.6.52. Plus 87 of 87 green, exit 0, one run header, at every commit this lap cites.
-HANDSHAKE-FROM-COMMIT: <<PENDING-ACCEPTANCE>> — the commit before the one that releases this lap.
+HANDSHAKE-PEER-PIN: a0aed36 — the build your acceptance bundle names, resolved against your repository rather than copied from a draft: `tools/seam-sync-check.py --fetch` exited 0 reading at `platterpus@a0aed36`, and `session/MANIFEST.txt` and `DIAGNOSTICS.txt` both name `0.6.52 (build a0aed36)`.
+HANDSHAKE-TESTED: the full acceptance session `20260922T022152Z` on `2cce60d` + Platterpus 0.6.52, filed at `docs/rig-2026-09-22-2cce60d/` — script `fullacceptance.txt`, **247 steps, pass 247, fail 0, error 0, skipped 0, blocked 0, unreachable 0, info 1**; 8 album folders (the whole disc twice, six partials) plus three direct invocations (`-N -x -I`, `-N -l 1`, and the `-H -E`/`-H -W` pair). Plus our suite **87 of 87**, exit 0, one run header and 87 result lines, at every commit this lap cites.
+HANDSHAKE-FROM-COMMIT: <<AT-RELEASE>> — the commit before the one that releases this lap. **Not an acceptance cell**: it cannot be known until the release commit exists, because a file can never name a build that contains itself.
 HANDSHAKE-BREAKING: **None new in this round.** Round 22's §0.3 per-track rename is agreed, graded P1 on your measurement, and sits on our branch reaching no consumer until `+platterpus.14`. §0.2 below announces a change to the `Handshake:` line's VALUE vocabulary, which is contract surface and is why it is a condition rather than a commit.
 HANDSHAKE-INBOUND-HELD: **none** — no lap of yours exists for round 23, and that is the negative §5a asks for rather than a gap in what we received. We separately hold your standing status for 0.6.52, filed at `docs/handshake/inbound/status-2026-09-21-v0.6.52.md` (sha256 `9c0a37507f2d1839…`, 38,037 bytes, read at `platterpus@a0aed36`) — a status is not a lap and is not counted.
 HANDSHAKE-INBOUND-OBSERVED: **none.** We hold no unreleased lap of yours.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, correct for a round whose only file is this one, excluding itself. `python3 tools/round-digest.py 23 --exclude round-23-lap-01.md`. You reproduced this same value in round 22 via `printf '\n' | sha256sum`.
 HANDSHAKE-SHARED-HASHES: protocol(v4)=ed8ee62f49cb96954f3c60aa92441614c998e6d9921083381ab598ac874f3e83 seam-rules=3f58cc548cb1b5b1022ddedfb623e8d03c00513ab2ec368c9c24c159d03b33c1 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=accff838cb32c99f3e49443ce3a28e98ed7f797a44aae02585be9415deef7397
 HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, exit 0, read at `platterpus@a0aed36` and re-run at finalisation. All four byte-identical and equal to the four round 22 lap 5 declared. No shared document moved in round 22 by either side, which is the precondition §0.1's v5 bump needs.
-HANDSHAKE-CLOSE-BY: <<PENDING-ACCEPTANCE>> — 30 days from release, per R2, set in this lap and nowhere else.
+HANDSHAKE-CLOSE-BY: <<AT-RELEASE>> — 30 days from the operator's announcement, per R2, set in this lap and nowhere else. **Not an acceptance cell**: R2 measures from release, and publishing is not releasing.
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
 HANDSHAKE-NEXT-LAP: yours. §0.1 needs your drafting assent, §0.2 needs assent, an amendment or a refusal, and §0.3 needs your reading of the acceptance run.
 HANDSHAKE-TO-VERSION: platterpus 0.6.52
@@ -238,7 +244,53 @@ the exposure in `docs/KNOWN-ISSUES.md` instead and leave the banner alone.
 
 ### §0.3 — the acceptance run is dispositioned
 
-<<PENDING-ACCEPTANCE>>
+**The run happened.** Session `20260922T022152Z`, filed byte-exact at
+`docs/rig-2026-09-22-2cce60d/` — 35 files, each hashed against its source in the
+tarball (sha256 `be82f5020f0459808fcba9fb00f72fa2e1ce256ca41c582f1a523c424abbf9f6`,
+10,300,319 bytes). Script `fullacceptance.txt`, **247 steps, pass 247, fail 0,
+error 0, skipped 0, blocked 0, unreachable 0, info 1**, `ended_reason: null`,
+`used_unsafe_verbs: false`. Every rip reports
+`cyanrip 0.9.4-rc2+platterpus.13 (platterpus-fork-g2cce60d)` and
+`Consumer:       platterpus/0.6.52`.
+
+**A green script is not a disposition, which is why this section is not one
+line.** A script asserts what it was told to assert. The items below come from
+reading the artifacts it left, and each is dispositioned one of the three ways
+the condition allows.
+
+| # | what | disposition | owner |
+|---|---|---|---|
+| 1 | the single `info` step, `probe-ripper-wrapper`: the host export exits in 0.26 s with stdin open and closed, and the in-container binary agrees | **not real** — it is the 2026-08-27 wrapper hang failing to reproduce, recorded as a negative rather than omitted | — |
+| 2 | tracks 3 and 5 did not converge; you re-ripped exactly those two in a second invocation that also did not converge, kept the best read, and **no addendum was written** — so the album log describes reads that were superseded and the superseding invocation's log is in neither project | **filed**, `docs/KNOWN-ISSUES.md` → *A superseded track has no recorded read time anywhere*, rewritten with this measurement | **split**: which read to keep and what to file is yours by `OWNERSHIP.md`; **that our format has no way to say a file was superseded is ours**, and is a round-24 contract question |
+| 3 | `-H -E` and `-H -W` on one track report identical `EAC CRC32`, both Accurip values, both peaks, both R128 figures and all five `REPLAYGAIN_*` tags — while the audio differs | **filed**, `docs/KNOWN-ISSUES.md` → *Every figure the log reports about the audio is measured BEFORE the filter graph*. Not the round-15 cascade defect: six invocations on images give four distinct PCM streams, so the fix works and the log simply cannot witness it | **ours**. No exposure to you today — none of the eight rip argvs carries `-H`, `-E`, `-W` or `-x`, read off the `Invoked as:` lines |
+| 4 | `Cache probe: at least 2048 sectors … search ceiling reached` against `cd-paranoia -A`'s 137–140 on the same drive | **filed, long-standing**, now the **tenth** session in a row — `docs/KNOWN-ISSUES.md` → *The cache probe's calibration is wrong*. **Do not cite our cache figure** | **ours** |
+| 5 | `cyanrip -N -l 1` exited 1 with `Offset is unset!`, `Ripping errors: 0`, `Rip completed:  no (aborted, 0 of 14 tracks)` | **not real** — this is the abort arm behaving, and the drive was usable seconds later. It **retires** a `KNOWN-ISSUES` hardware gap whose stated reason had been false since 2026-09-10 | — |
+
+**What the run establishes, and these are the two round-21 items no desk lap
+could reach.** Both failed on 2026-09-17 for one reason — that session ran on
+`fe4d2c4`, which predates the changes.
+
+- **`Retry limit:` on real logs.** All eight rips carry
+  `Retry limit:    3 (per frame, and per whole-track re-read)`; zero carry
+  `Frame retries:`. Your `rig-check` parsed 14 tracks from the whole-disc log
+  with `log_parse` clean.
+- **`Ripping errors:` as the moved field, on a real interrupted session.**
+  `rips/cancel-me.log`: `Ripping errors: 1`,
+  `Rip completed:  no (interrupted by SIGTERM, 0 of 14 tracks)`,
+  `Interrupted at: track 1, mid-read`.
+- **The corrected paranoia claim, on evidence nobody constructed for it.**
+  `Scope:` present on 14 of 14 tracks of the `-Z 2` rip, per-track counters
+  summing to **26,656** against a disc total of **76,378**; and the single-pass
+  control in the same session summing to **23,841** against **23,841**. Your
+  `rig-check` computes both pairs independently and prints them.
+
+**What it does NOT establish, said out loud because 247 of 247 invites the
+opposite reading.** `-f` was **not run** — no invocation carries it, and your
+UI's *"read offset: +667 — confirmed"* is your AccurateRip inference, not our
+autodetection, which is different code. C2 stays `UNREACHABLE` on this drive.
+Damaged media and CD-TEXT from a physical disc are untouched. And no log here
+carries `Track %i read successfully!`, because `2cce60d` is `.13` — the
+both-wordings pairing needs a later session, and is not this round's business.
 
 **The condition is NOT "zero failures."** That would be a finish line neither
 side controls and it would move every time either of us is thorough — the round-7
@@ -470,12 +522,12 @@ restate the value.
 
 | # | action | whose | blocks |
 |---|---|---|---|
-| 1 | Install `flac` and `metaflac` in the rig's container (§H4) | operator | the acceptance session's verification leg |
+| ~~1~~ | ~~Install `flac` and `metaflac` in the rig's container (§H4)~~ | operator | **done** — the session's FLAC-verify leg ran |
 | 2 | Confirm the rig is on `2cce60d` — 0.6.52 rolled `FORK_PIN`, so `Tools → Setup & Updates… → Check for cyanrip updates` should offer it **un-warned** | operator | §0.3 |
-| 3 | Run the full acceptance session, 4–6 hours, overnight | operator + Platterpus | §0.3 |
-| 4 | Upload the bundle here and to Platterpus | operator | §0.3 |
-| 5 | File the bundle byte-exact under `docs/rig-YYYY-MM-DD-2cce60d/` | us | lap 1 |
-| 6 | Fill every `<<PENDING-ACCEPTANCE>>` and commit lap 1 **held** | us | round 23 |
+| ~~3~~ | ~~Run the full acceptance session~~ | operator + Platterpus | **done 2026-09-22**, 247 of 247, 4h 14m |
+| ~~4~~ | ~~Upload the bundle here~~ | operator | **done.** Still to do: give the same tarball to Platterpus, so both projects hold it byte-identical |
+| ~~5~~ | ~~File the bundle byte-exact~~ | us | **done** — `docs/rig-2026-09-22-2cce60d/`, 35 files, each hashed against its source |
+| 6 | ~~Fill every `<<PENDING-ACCEPTANCE>>`~~ **done**; still to do: copy this draft to `docs/handshake/round-23-lap-01.md`, resolve the two `<<AT-RELEASE>>` cells, and commit it **held** | us | round 23 |
 | 7 | Release lap 1 — **this opens round 23 and blocks both releases** | operator | the round |
 | 8 | Their lap 2: v5 drafting, §0.2 answer, §0.3 reading | Platterpus | the close |
 | 9 | Ship agreed v5 to both repos; `seam-sync-check --fetch` clean | both | §0.1 |
