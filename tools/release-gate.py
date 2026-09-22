@@ -280,8 +280,34 @@ def close_by_lines(laps, is_terminal, now):
                            f"only: this gate never enforces it (R2)")
         else:
             days = (when - now).days
-            out.append(f"      close-by: {stamp} ({where}), "
-                       f"{days} day(s) remaining")
+            # A COUNTDOWN ON A FINISHED ROUND READS AS PENDING WORK, and this
+            # branch had `is_terminal` in scope and did not use it. The branch
+            # above uses it in both directions -- PASSED-and-terminal versus
+            # PASSED-and-open -- so the function was terminality-aware in one
+            # half and forgetful in the other, which is worse than uniformly
+            # uncoupled: the parameter is right there.
+            #
+            # Reported as a shape by Platterpus on 2026-09-22 from their own
+            # `--status`, which prints the same thing. Their fix belongs at
+            # their print site because THEIR equivalent is deliberately
+            # uncoupled from round state -- the spec forbids CLOSE-BY reaching
+            # a verdict, and they keep that guarantee structurally. Ours
+            # already takes `is_terminal` as a parameter, so using it here adds
+            # no new direction of information flow: close-by still never
+            # reaches `closed()`, which is the property that matters.
+            #
+            # The margin is KEPT rather than suppressed, because it is the
+            # interesting part -- round 21 closed 32 days early and round 22
+            # 27 days early, and that is a measure of convergence. What changes
+            # is the claim: "to spare" is a fact about a finished round,
+            # "remaining" is a claim about work outstanding.
+            if is_terminal:
+                out.append(f"      close-by: {stamp} ({where}) -- the round "
+                           f"reached a terminal state first, with {days} "
+                           f"day(s) to spare")
+            else:
+                out.append(f"      close-by: {stamp} ({where}), "
+                           f"{days} day(s) remaining")
 
     # ONLY a DIFFERENT value in a later lap is an extension. Every lap carries
     # the whole wire header, so re-declaring the SAME instant is the header

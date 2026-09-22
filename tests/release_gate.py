@@ -2669,8 +2669,15 @@ def test_the_same_instant_repeated_in_every_lap_is_not_an_extension():
           "extension. Every lap carries the whole wire header, so that is the "
           "header working. The first version of this reported five such "
           "'extensions' in round 9, all the identical instant")
-    check(any("2026-10-01T23:59:59Z" in l and "remaining" in l for l in lines),
-          "the governing instant was not printed")
+    # Asserts the INSTANT and the line's uniqueness, not the countdown
+    # wording. It used to read `instant in l and "remaining" in l`, which
+    # coupled this test to a phrase it does not care about -- and `_close_by_lines`
+    # defaults to is_terminal=True, so it was pinning countdown wording onto a
+    # CLOSED round, which is the defect fixed on 2026-09-22. The failure message
+    # always said what it wanted: the governing instant.
+    governing = [l for l in lines if "2026-10-01T23:59:59Z" in l]
+    check(len(governing) == 1,
+          f"the governing instant was not printed exactly once: {lines}")
 
 
 def test_a_later_lap_moving_the_instant_is_reported_as_an_extension():
@@ -2683,6 +2690,50 @@ def test_a_later_lap_moving_the_instant_is_reported_as_an_extension():
     check(any("2026-10-01T23:59:59Z" in l for l in lines),
           "the EARLIEST instant must govern; taking the latest would let a "
           "round extend itself, which is the round-7 failure R2 exists to stop")
+
+
+def test_close_by_not_yet_reached_on_a_closed_round_is_not_a_countdown():
+    """A finished round must not print "N day(s) remaining".
+
+    Round 22, 2026-09-22. Platterpus reported the shape from their own
+    `--status` and we ran it here rather than acknowledging it -- the round-21
+    precedent, where one grep on a reported shape found a live defect. Ours had
+    it: `close_by_lines` takes `is_terminal`, uses it in BOTH directions of the
+    PASSED branch, and ignored it entirely when the instant was still in the
+    future. So every closed round whose deadline had not yet arrived printed a
+    countdown, which reads as outstanding work -- round 13, closed for weeks,
+    said "2 day(s) remaining" on the day this was found.
+
+    Terminality-aware in one branch and forgetful in the other is worse than
+    uniformly uncoupled, because the parameter is already in scope. The margin
+    is kept because it measures convergence -- rounds 21 and 22 closed 32 and
+    27 days early -- but "to spare" is a fact about a finished round and
+    "remaining" is a claim about work outstanding.
+
+    Their fix belongs at their print site, because their equivalent is
+    deliberately uncoupled from round state to guarantee CLOSE-BY can never
+    reach a verdict. Ours keeps that guarantee anyway: `is_terminal` flows IN,
+    nothing flows out, and `closed()` still never reads close-by.
+    """
+    files = {"round-20-lap-01.md": _round20(1, "2099-01-01T23:59:59Z")}
+
+    open_lines = _close_by_lines(files, 20, is_terminal=False)
+    check(any("day(s) remaining" in l for l in open_lines),
+          "an OPEN round whose close-by is ahead must still count down")
+
+    done = _close_by_lines(files, 20, is_terminal=True)
+    check(not any("remaining" in l for l in done),
+          f"a closed round still counts down: {done}")
+    check(any("to spare" in l for l in done),
+          f"the margin must be kept, not suppressed: {done}")
+    check(any("terminal state" in l for l in done),
+          f"the line must say why it is not a countdown: {done}")
+
+    # The instant itself is still reported either way -- this is a change to
+    # the CLAIM about the deadline, never to whether the deadline is shown.
+    for lines in (open_lines, done):
+        check(any("2099-01-01T23:59:59Z" in l for l in lines),
+              f"the declared instant stopped being printed: {lines}")
 
 
 def test_close_by_passed_on_an_open_round_reads_as_expired():
