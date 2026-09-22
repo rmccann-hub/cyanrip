@@ -1745,20 +1745,36 @@ and this time the extra lap is one mechanism, not two stories.** In both, their
 newest lap is 4 and ours is 5, and **our lap 5 existed only to carry a
 transcription**: §5 requires `HANDSHAKE-PEER-VERDICT: GO` in a file of ours, and
 the side that speaks first writes its lap before the answer exists. Round 22's
-lap 3 had to say `OPEN`; round 23's lap 3 had to say `OPEN`. That is what
-`PROTOCOL.md` v5 §5b removes, adopted in round 23 by both sides. **Round 24 is its
-first possible test, and the prediction is set in advance: a round like 22 or
-23, run with every lap declaring `HANDSHAKE-PROTOCOL: 5`, closes in four laps by
-the measure above. If round 24 runs under 5 and takes five with nothing new to
-explain it, v5 did not work.**
+lap 3 and round 23's lap 3 both declared `GO` and had to transcribe the peer
+verdict as `OPEN`, because that is what the peer had declared when they were
+written. That is what `PROTOCOL.md` v5 §5b was adopted to remove. **The
+prediction was set in advance: a round like 22 or 23, run with every lap
+declaring `HANDSHAKE-PROTOCOL: 5`, closes in four laps by the measure above.**
 
-**The condition is not a formality.** At `platterpus@52b44282` their gate still
-implements 4 (`scripts/handshake.py:1093`). Their round-23 lap 4 §C calls that
-v5's own instruction, because implementation follows adoption. **A v4 gate
-refuses a file declaring 5**, so a round run before their gate reaches 5 has to
-declare 4. §5b then cannot apply, and the extra lap comes back for a reason v5
-never addressed. Such a round is not a test of v5, and it should say so rather
-than score it.
+**IT CANNOT BE SCORED YET, AND NOT FOR THE REASON THIS PARAGRAPH FIRST GAVE.**
+The first version said a round could test v5 only once Platterpus's gate
+implemented 5, since at `platterpus@52b44282` it implemented 4. That condition
+was met at `platterpus@c2f43d28`, 21:30Z on 2026-09-22 by commit date. The
+audit commit saying it was not met was 21:18Z. **A dated reading is a claim
+about that date**, and this one held for twelve minutes.
+
+**The real obstacle is in the spec, and we drafted it.** Their post-round-23
+status asked how we read §5b's *"enumerated"*. Step 1 and row C37 require the
+candidate peer lap to be one the closing file declares in its own
+`HANDSHAKE-INBOUND-HELD`. But the lap that would save the transcription lap is
+always written *after* that file, so step 3 — *"the whole of v5's saving"* —
+cannot fire on a real record. Measured on our gate: a record where lap 3 holds
+only lap 2 and lap 4 arrives later does not close. The one test that shows
+§5b closing, `test_v5_close_rule_and_the_v4_control`, passes only because its
+fixture has lap 3 declare it holds lap 4 (`tests/release_gate.py:2864`), a
+file that cannot have existed when lap 3 was written. **A test whose input
+cannot occur proves the code, not the rule.** Their reading — enumerated by
+the gate when it decides — is the one under which §5b does what it says. It
+needs v6 wording, and until then the two gates implement two readings.
+
+**So round 24 is not a test of §5b either.** It declares 5, but its lap 1
+declares `GO`, so the structure that made rounds 22 and 23 take five does not
+arise. If it closes in three laps, that measures the lap-1 `GO`, not v5.
 
 Re-check: `for r in 15 16 17 18 19 20 21 22 23; do ... grep '^HANDSHAKE-LAP:'
 ...; done`, taking the maximum over `docs/handshake/round-$r-lap-*.md` and

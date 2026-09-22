@@ -62,7 +62,7 @@ judgement that round 24 will be short. **Round 24's opening lap says so.**
 | round 23 | **CLOSED `GO`/`GO`** 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
 | round 22 | CLOSED `GO`/`GO` 2026-09-21, five laps. Authorised `.14` |
 | round 24 | **not open**, and ours to open — the provider opens (§1a). Its lap 1 must say `.14` went stable by the operator's instruction |
-| lap counts | rounds 21, 22 and 23 all took five. In 22 and 23 the fifth lap existed only to carry a transcription, which is what v5 §5b removes. **Round 24 is v5's first possible test**, and only if their gate implements 5 by then; `CLAUDE.md` sets the prediction, the measure and that condition |
+| lap counts | rounds 21, 22 and 23 all took five. In 22 and 23 the fifth lap existed only to carry a transcription, which v5 §5b was adopted to remove — and as written cannot, because step 3 needs a peer lap the closing file could not have declared. `CLAUDE.md` has the prediction, the measure, and why it cannot be scored yet |
 
 ### The protocol
 
@@ -70,7 +70,7 @@ judgement that round 24 will be short. **Round 24's opening lap says so.**
 |---|---|
 | `PROTOCOL.md` | **v5**, byte-identical in both trees, `d698d58a8130ab52`; `seam-sync-check --fetch` exits 0 at `platterpus@52b4428` |
 | what v5 added | §5b, the close rule; §5c, Platterpus's readability condition; `HANDSHAKE-PEER-VERDICT-SOURCE`, their field; rows C37–C42 |
-| v5's reach | **none yet.** Our gate implements it, keyed on the FILE's declared version, and no lap has declared 5. Theirs implements 4 (`platterpus@52b44282:scripts/handshake.py:1093`); their round-23 lap 4 §C says *"implementation follows"*, and a bootstrap reason their suite requires keeps the lag visible (`tests/test_handshake_tooling.py:1415`). **A v4 gate refuses a file declaring 5**, so round 24 can test v5 only once their gate reaches 5, and its lap 1 declares whatever both gates accept |
+| v5's reach | **Both gates implement 5**: ours since round 23, theirs from `platterpus@c2f43d28` (21:30Z 2026-09-22 by commit date; at `52b44282` it was 4). **The two gates read §5b's *"enumerated"* differently**, and under ours step 3 cannot fire on a real record. Measured, and in `docs/KNOWN-ISSUES.md`. v6 wording is proposed for round 25 |
 | **what v5 is missing** | **K1, K2 and K3**, agreed in round 22 and never written into the spec — found by the pre-round-24 audit. `docs/KNOWN-ISSUES.md` → *Three agreed protocol changes never reached the spec* |
 
 ### Platterpus's side, and how we know each part
@@ -79,10 +79,11 @@ judgement that round 24 will be short. **Round 24's opening lap says so.**
 |---|---|
 | released **0.6.53**, 2026-09-22, at `52b44282`, tag `v0.6.53`, pre-release as every `v0.*` tag is | `git ls-remote --tags` and `--symref` on their repository |
 | 0.6.53 is **the both-wordings release** — `_TRACK_START` matches both pairs, and no earlier tag does | read at `52b44282:src/platterpus/parsers/cyanrip_log.py:237-244`; counted across four tags |
-| `FORK_PIN = "2cce60d"`, `PIN_UNDER_REVIEW = "2cce60d"` | read at `52b44282:src/platterpus/deps/fork_source.py:183` and `:538` |
-| `APPROVED_BY_ROUND = 23`, `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.52"` | read at `52b44282:src/platterpus/handshake_approval.py:216` and `:132` |
+| `FORK_PIN = "2cce60d"`, `PIN_UNDER_REVIEW = "2cce60d"` | read at `52b44282:src/platterpus/deps/fork_source.py:183` and `:538`, and unchanged at `c2f43d28` |
+| `APPROVED_BY_ROUND = 23`, `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.52"` | read at `52b44282:src/platterpus/handshake_approval.py:216` and `:132`, and unchanged at `c2f43d28` |
+| their `main` moved past the release to **`c2f43d28`**, 2026-09-22 21:30Z by commit date, untagged: their gate now implements protocol 5, and their standing status was rewritten | `git ls-remote --symref` and a fetch; `scripts/handshake.py:1109` reads `PROTOCOL_VERSION: int = 5` at that commit |
 | their app **offers, never installs**, a newer build from our manifest on the user's channel | read at `52b44282:src/platterpus/deps/ripper_manifest.py:1-16`, `:66-68` |
-| their standing status, as of 0.6.53 | filed byte-exact at `docs/handshake/inbound/status-2026-09-22-v0.6.53.md`, sha256 `2ac99eb5…09ab9`, 39,016 bytes |
+| their standing status, as of 0.6.53 | filed byte-exact twice, because it was rewritten the same day under the same as-of: `docs/handshake/inbound/status-2026-09-22-v0.6.53.md` (read at `52b44282`, sha256 `2ac99eb5…09ab9`, 39,016 bytes) and `…-2026-09-22-v0.6.53-c2f43d28.md` (read at `c2f43d28`, sha256 `ddfcbbe6…62ac0`, 43,166 bytes) |
 | their branch-delete cause was a repository setting, now off | **relayed**, and corroborated rather than proven: the cited commits are reachable again as ancestors of `claude/session-omka9f` at `9cc23eab` |
 
 ### What is still open
@@ -92,16 +93,18 @@ items: **K1–K3 missing from the spec**; round 23's `Handshake:` qualifier
 **agreed and not built**; `File(s):` still built from the request; the loudness
 block measured upstream of the filter graph; the cache figure wrong on all ten
 filed sessions; and no way in our format to mark a superseded or abandoned read.
-**The four shared documents carry twelve known defects**, tabled in one place
+**The four shared documents carry thirteen known defects**, tabled in one place
 under *"The four shared documents: every known defect"*. None can be fixed
 from one side, so round 24 proposes them as one bump.
 
 ### Where their statuses are filed
 
-Five, each dated by the date **it declares**, not the day we received it:
+Six, each dated by the date **it declares**, not the day we received it:
 `docs/handshake/inbound/status-2026-08-21-v0.6.21.md`, `…-2026-08-21-v0.6.23.md`,
-`…-2026-08-24-v0.6.23.md`, `…-2026-09-21-v0.6.52.md` and
-`…-2026-09-22-v0.6.53.md`. **Theirs are evidence and are never consolidated;
+`…-2026-08-24-v0.6.23.md`, `…-2026-09-21-v0.6.52.md`, `…-2026-09-22-v0.6.53.md`
+and `…-2026-09-22-v0.6.53-c2f43d28.md`. The last two declare the same as-of, so
+the second carries the commit it was read at — the one identifier that tells
+them apart. **Theirs are evidence and are never consolidated;
 ours is a claim about now and is rewritten** — the two rules are opposite and
 both are right. None declares a live wire header; the `HANDSHAKE-*` lines in the
 newest are inside a fenced example, and `test_a_standing_status_is_never_counted_as_a_lap()`

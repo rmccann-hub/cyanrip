@@ -726,6 +726,40 @@ it. R4 says fixes queue; this one queues. **Raising the timeout was never the
 fix** — it keeps a network-dependent verdict in a gate and moves where it
 misfires.
 
+### Our gate has two defects Platterpus's questions found, and neither was fixed on finding
+
+**Found 2026-09-22, answering their post-round-23 standing status**
+(`docs/handshake/inbound/status-2026-09-22-v0.6.53-c2f43d28.md`, the
+**protocol** row). They described two defects in their own gate as *"portable
+shapes, so we are telling you rather than checking your tree"*. **Both are in
+ours.** That is the compare-do-not-acknowledge rule paying out twice.
+
+1. **A peer lap declaring a protocol we do not implement still decides a
+   close.** `tools/release-gate.py` refuses a higher `HANDSHAKE-PROTOCOL` on our
+   own laps (`why`, `protocol_ok`). But the inbound loader
+   (`load_rounds`, the `peer_latest` block) reads the peer lap's verdict and
+   release state without reading its version. Measured: our lap 3 declaring 5,
+   their lap 4 declaring **6**, `GO`, released — **our gate closes the round**,
+   *"peer GO resolved per v5 §5b from round-30-lap-04.md"*. Refusing rather than
+   guessing (C15) applies to the file we wrote and not to the file we act on.
+2. **Row C13a has no test, and our gate does the opposite of it.** C13a says a
+   lap arriving after a round is terminal is refused as an illegal transition,
+   and the round stays closed. The coverage meta-check,
+   `test_every_conformance_row_has_a_test()`, collects row IDs with
+   `^\| (C\d+) \|`, which cannot match `C13a`. So the row is invisible to the
+   check that exists to find uncovered rows. `test_latest_lap_can_reopen()`
+   claims `Covers: C13` and asserts that a complete `GO` followed by a `HOLD`
+   **reopens** the round. That is v2 behaviour, which v3 removed. Their
+   defect was that the coverage check exempted rows by heading; ours is that
+   the row pattern drops a row by spelling. Same outcome: a row in force with
+   no test.
+
+**Why neither is fixed yet.** Both are latent: no peer lap declares more than
+5, and no lap has followed a closed round. The C13a fix changes what our gate
+reports for a real record, which is gate behaviour both sides compare. It is
+better done with their answer to the §5b reading in hand, in one change. Queued
+for round 25, `NEXT-ROUND`, with regression tests naming this round.
+
 ### `docs/seam-commands.md` carries FIVE known-wrong statements
 
 **Consolidated here 2026-09-15.** They were recorded in two different files, one
@@ -874,7 +908,8 @@ version bump would carry, and round 24 proposes it rather than editing it.
 |---|---|---|---|---|
 | 1 | `PROTOCOL.md` | nothing on K1, K2 or K3 | all three agreed in round 22, and both sides practise them | the entry above |
 | 2 | `PROTOCOL.md` §8, *"Rows added in v3/v4"* | *"These are not yet in force."* | the heading's own condition, *"required once both gates implement 4"*, is met: ours implements 5 (`tools/release-gate.py`, `PROTOCOL_VERSION = 5`), theirs 4 (`platterpus@52b44282:scripts/handshake.py:1093`) | here |
-| 3 | `PROTOCOL.md` §8, *"Rows added in v5"* | *"Not yet in force."* | **true today**, because their gate implements 4. But it is row 2 again: it goes false the day their gate reaches 5, and a spec frozen by version cannot be edited when that happens. The conditional headings are already correct; the fix is to delete both body sentences | here |
+| 3 | `PROTOCOL.md` §8, *"Rows added in v5"* | *"Not yet in force."* | **False since `platterpus@c2f43d28`**, when their gate reached 5. This cell predicted that on the day it was written, and it happened the same evening. It is row 2 again: a spec frozen by version cannot be edited when a present-tense sentence goes stale. The conditional headings are already correct; the fix is to delete both body sentences | here |
+| 4a | `PROTOCOL.md` §5b step 1 and row C37 | the candidate lap must be declared in the closing file's own `HANDSHAKE-INBOUND-HELD` | then step 3 and C40, *"the whole of v5's saving"*, cannot fire on a real record, because the saving lap is written after the closing file | the v5 entry below |
 | 4 | `PROTOCOL.md` | `HANDSHAKE-FROM-COMMIT` defined once | the two projects read it two ways | round 23 lap 3 §D. v5 §13 says so itself, so this is a known gap rather than a false statement |
 | 5 | `OWNERSHIP.md` §3 | *"we cannot run their program, read their source, or reproduce their environment"* | **"read their source" has been false since 2026-09-13.** Both repositories are public, and this environment reads theirs anonymously on every `seam-sync-check --fetch`. The other two clauses were not checked, so this makes no claim about them | `CLAUDE.md`, *"This rule used to carry the clause…"* |
 | 6 | `OWNERSHIP.md` §5 | *"we cannot read each other's source"* | same as row 5 | same |
@@ -982,22 +1017,43 @@ hash. Lap 3 does declare lap 2's sha256 and byte count in
 property the proposal would make the rule.
 
 
-### The close condition cannot be satisfied by the side that speaks first — ADOPTED AS v5 §5b, NOT YET IN FORCE
+### The close condition cannot be satisfied by the side that speaks first — ADOPTED AS v5 §5b, AND AS WRITTEN IT CANNOT DO THAT
 
-**Status 2026-09-22: in the spec, built in our gate and not yet in theirs, and
-untested.**
-Round 23 adopted `PROTOCOL.md` v5, byte-identical in both trees, with this as
-§5b and Platterpus's readability condition as §5c. Our gate implements it and
-every path is keyed on the **file's** declared version; nothing in either tree
-declares 5, so no round has been graded by it. Their gate implements 4
-(`platterpus@52b44282:scripts/handshake.py:1093`), with a bootstrap reason
-naming §5b/§5c that their suite requires while gate and spec differ
-(`tests/test_handshake_tooling.py:1415` at the same commit). **A v4 gate
-refuses a file declaring 5**, so round 24 is its first *possible* test, and
-only once their gate reaches 5. `CLAUDE.md` sets the prediction and the
-measure: a round like 22 or 23, run under 5, closes in four laps, not five.
-Kept under *Open* until a round has actually closed under it — a fix nobody
-has exercised is a claim, and this file's headings are claims too.
+**Status 2026-09-22, evening: in the spec, built in both gates, and unable to
+save the lap it was adopted to save.** Round 23 adopted `PROTOCOL.md` v5,
+byte-identical in both trees, with this as §5b and Platterpus's readability
+condition as §5c. Our gate implements it, keyed on each file's declared
+version. Theirs implements it from `platterpus@c2f43d28` (21:30Z by commit
+date). At `52b44282` it still implemented 4, and this entry said so twelve
+minutes before it stopped being true.
+
+**The defect is in the text, and we drafted it.** Step 1 and row C37 require
+the candidate peer lap to be one the closing file *declares* in its own
+`HANDSHAKE-INBOUND-HELD`. The peer lap that would make a transcription lap
+unnecessary is always written after that file, so it can never be declared in
+it, and step 3 — *"the whole of v5's saving"* — cannot fire on any real
+record. Platterpus found it from the other end: C40 is unreachable under that
+reading, so they read *"enumerated"* as enumerated by the gate when it
+decides. Their post-round-23 status asks whether ours differs. **It does**,
+measured 2026-09-22 with our own loader:
+
+| record | our gate |
+|---|---|
+| our lap 3 holds their lap 2; their lap 4 (`GO`, released) arrives later | **not closed** — *"round-30-lap-04.md is not named in our HANDSHAKE-INBOUND-HELD"* |
+| the same, except lap 3 declares it holds lap 4 | closed — the only way C40 fires, and the lap could not have existed when lap 3 was written |
+
+**And our test proves the code, not the rule.** `test_v5_close_rule_and_the_v4_control`
+passes on the second record: `_v5_ours()` defaults to
+`held="round-30-lap-04.md"` (`tests/release_gate.py:2864`). A fixture that
+cannot occur made the one mechanism v5 exists for look exercised.
+
+**The remedy is v6 wording, not a gate edit by one side.** Their reading is
+the one under which §5b does what it says, and C42 already makes the gate print
+the lap it resolved from, so audit does not depend on the closing file's
+declaration. Proposed in round 24 lap 1 for round 25, with K1–K3. Until then
+the two gates implement two readings, which is the silent divergence
+`CLAUDE.md` warns about, now made visible. Kept under *Open* until a round has
+closed under §5b step 3.
 
 
 `PROTOCOL.md` §5 requires `HANDSHAKE-PEER-VERDICT: GO`, *"transcribed from the
