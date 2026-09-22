@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-22-lap-05.md
+STATUS-NEWEST-LAP: round-23-lap-01.md
 STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
@@ -30,9 +30,17 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-21, twice. **ROUND 22 IS CLOSED `GO`/`GO`** — five laps, 27 days before the close-by.
+## Rewritten 2026-09-22. **ROUND 23 IS OPEN** — lap 1 released by the operator, close-by 2026-10-22.
 
-**This is the state a consumer can assume until round 23 opens.**
+**This is the state a consumer can assume while round 23 runs.** Round 22 closed
+`GO`/`GO` on 2026-09-21 at five laps, 27 days before its close-by; round 23
+opened the next day on the hardware acceptance session.
+
+**NO RELEASE WHILE THIS ROUND IS OPEN**, either side, and that is the seam rule
+rather than a caution. `--release-gate` now exits **1** naming round 23, and a
+build from this tree stamps `Handshake:      round 23 lap 1 OPEN, verdict OPEN --
+NOT a released build` into every log it writes, permanently. **Build from
+`2cce60d`, which is the released commit; do not build from the tip.**
 
 **NOTHING A CONSUMER BUILDS CHANGED WHEN IT CLOSED.** The pin is still `2cce60d`,
 the released build is still `+platterpus.13`, and **`+platterpus.14` has NOT been
@@ -51,10 +59,12 @@ file.
 | round-21 pin | `fe4d2c4` — **never moved during the round**, and neither side asked |
 | test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
 | approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` — **and the release carries round 21's two P2 changes, which `fe4d2c4` does not** |
-| `--release-gate` | exits **0** — *"Release allowed: every round is closed"*. **Not a green light for `+platterpus.14`**, which waits on Platterpus's both-wordings release; the gate cannot see that prerequisite and does not claim to |
+| `--release-gate` | exits **1** since 2026-09-22, naming round 23. Until 2026-09-22 it exited **0** — *"Release allowed: every round is closed"*, which was never a green light for `+platterpus.14`**, which waits on Platterpus's both-wordings release; the gate cannot see that prerequisite and does not claim to |
 | **Platterpus `0.6.52`** | released 2026-09-21 at `platterpus@a0aed36`, **and it is NOT the both-wordings release.** Recorded because the inference is the obvious one and it is wrong: a Platterpus release landing right after round 22 closed looks like the `.14` prerequisite and is not it. `_TRACK_START` at `a0aed36:src/platterpus/parsers/cyanrip_log.py:212-215` still matches only `ripped and encoded successfully!`, `ripped and encoded with errors.` and `is data:`; `git diff --stat 267a696..a0aed36 -- src/platterpus/parsers/cyanrip_log.py` is **empty**, so the file is byte-untouched by the release; and `read successfully` appears nowhere in their `src/`, only in two filed copies of our own announcements. **`+platterpus.14` is still blocked** |
 | their `FORK_PIN` | rolled to **`2cce60d`** in `0.6.52` (`a0aed36:src/platterpus/deps/fork_source.py:183`) — the post-close act round 22 authorises. Their setup wizard and in-app ripper check now offer `+platterpus.13`, **which is how the rig gets off `.12`** without anyone installing by hand |
 | round 22 | **CLOSED `GO`/`GO`**, 2026-09-21, **five laps**, 27 days before the close-by. Lap 1 released at `f071b35`; their lap 2 filed; lap 3 released at `0110219`; **their lap 4 released and filed** — `614c6115…`, 15,283 bytes, read at `platterpus@267a696` — `GO` on `2cce60d`, resolving the circularity lap 3 named by conceding that the second clause of their own `GO` condition conflated a decision with an act; **our lap 5 released at `23c18d2`** and is the close. Five laps because `PROTOCOL.md` §5 needs `HANDSHAKE-PEER-VERDICT: GO` in a file of *ours* and lap 3 said `OPEN` — the only honest value when it was written — so their lap 4 closed the round on their gate and could not on ours (`SETTLED.md` row 102, round 17, roles reversed). Lap 5 §H1 proposes the v5 fix and does not make it |
+| round 23 | **OPEN**, opened 2026-09-22, lap 1 released by the operator at the commit named in that lap. Three close conditions, fixed at lap 1 and unable to grow: `PROTOCOL.md` v5's close rule, the `Handshake:` held-verdict qualifier, and the disposition of the acceptance run. We pre-commit to `GO` |
+| acceptance session | **ran 2026-09-22 on `2cce60d` + Platterpus 0.6.52**, 247 of 247 steps, filed byte-exact at `docs/rig-2026-09-22-2cce60d/`. It is round 23's evidence, not its opener |
 | `platterpus-fork` tip | **ahead of the release, with a P2 log change in it.** Build from `2cce60d`, not from the tip |
 
 **THIS TABLE CARRIED TWO `released` ROWS DISAGREEING**, one naming `.13` and one
