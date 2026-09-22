@@ -1,5 +1,25 @@
 # Release plan — `+platterpus.14`, now that its prerequisite is met
 
+> **THIS PLAN WAS EXECUTED. Marked 2026-09-22, the same day.**
+> `0.9.4-rc2+platterpus.14` shipped at **`3e01bb3`**, ledger row **24**,
+> `release_seq` 24, **stable**, authorised by **round 22**.
+>
+> **§3's decision was made by the operator, and it was option (A), not the
+> recommended (B).** Stable now, knowingly: Platterpus's app offers `.14` on its
+> default channel stamped `unapproved` until their `FORK_PIN` rolls, and the
+> operator accepted that window on the judgement that round 24 will be short.
+> Round 24's opening lap says so, by the operator's instruction.
+>
+> **The four-commit sequence §4 prescribes was followed exactly:** bump
+> (`2e6d97d`, red by construction), regenerate (`02bc6a7`), name the candidate
+> (`3e01bb3` — the release), publish (the commit carrying this banner). The
+> candidate was proved green before publication — 87/87 in a fresh worktree,
+> and the consumer's own tarball-plus-`-Ddeclare_released=true` build, which
+> reports `released build`.
+>
+> **The text below is kept verbatim as the record of what was intended**, and
+> its present-tense claims are now false.
+
 *Written 2026-09-22. **A plan, not a release.** Nothing here is executed.
 `meson.build` says `0.9.4-rc2+platterpus.13`, the ledger's last row is seq 23,
 and `tools/release-gate.py --release-gate` exits 0 — no round is open.*

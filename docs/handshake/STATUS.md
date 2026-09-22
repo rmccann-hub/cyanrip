@@ -36,30 +36,29 @@ record of what was said at a moment and this is a claim about *now*.
 closed 2026-09-21 at five laps; round 23 opened the next day on the hardware
 acceptance session and closed at five.
 
-**NOTHING A CONSUMER BUILDS CHANGED WHEN IT CLOSED.** The pin is still
-`2cce60d` and it never moved inside the round; the released build is still
-`+platterpus.13`. `--release-gate` exits **0** again — *"Release allowed: every
-round is closed"* — and **that is the gate's answer, not authorisation to ship
-`+platterpus.14`**, which still waits on Platterpus's both-wordings release.
-Nothing machine-checkable enforces that prerequisite: it is a `§1` condition in
-the `.14` plan and an operator act, and saying so here is the point of this
-file. **Build from `2cce60d`, the released commit, not from the tip** — the tip
-carries the §0.3 rename.
+**`+platterpus.14` SHIPPED 2026-09-22 at `3e01bb3`**, `release_seq` 24, stable,
+authorised by round 22. Its consumer-side prerequisite was met by Platterpus
+0.6.53, whose parser accepts both wordings of the renamed block delimiter. **Build
+from `3e01bb3`.** `--release-gate` exits 0 — no round is open.
 
-**NOTHING A CONSUMER BUILDS CHANGED WHEN IT CLOSED.** The pin is still `2cce60d`,
-the released build is still `+platterpus.13`, and **`+platterpus.14` has NOT been
-cut and must not be** until Platterpus's both-wordings release exists — their
-round-20 ordering, their act, and it comes after this close by their own §0.2.
-What the close changed is that `--release-gate` now prints *"Release allowed:
-every round is closed"*. **That is the gate's answer, not authorisation to ship**:
-nothing machine-checkable enforces the `.14` prerequisite, it is a `§1` condition
-in the `.14` plan and an operator act, and saying so here is the point of this
-file.
+**Stable by the operator's instruction, and the cost is on Platterpus's side.**
+Their `FORK_PIN` still names `2cce60d` and they have said it moves only once a
+round reviews `.14`, so their app offers `.14` on its default channel stamped
+`unapproved` until round 24 closes. That was weighed against a beta release in
+`docs/RELEASE-PLAN-platterpus.14.md` §3 and chosen knowingly, on the judgement
+that round 24 will be short. **Round 24's opening lap says so.**
+
+**THIS PARAGRAPH REPLACED TWO.** Both began *"NOTHING A CONSUMER BUILDS CHANGED
+WHEN IT CLOSED"*: one written at round 23's close, and one left over from round
+22's that nothing removed — and both said `.14` had not been cut. Two
+descriptions of one fact, and nothing checking the second: the defect this file
+recorded about its own `released` rows on 2026-09-18, reintroduced here on
+2026-09-22 by the session that wrote the first of them.
 
 | | |
 |---|---|
 | round 21 | **CLOSED `GO`/`GO`**, five laps, 32 days before the close-by |
-| **released** | **`0.9.4-rc2+platterpus.13` at `2cce60d`**, `release_seq` 23, stable — cut 2026-09-18 on round 21's authority |
+| **released** | **`0.9.4-rc2+platterpus.14` at `3e01bb3`**, `release_seq` 24, stable — cut 2026-09-22 on round 22's authority. The previous release, `.13` at `2cce60d`, seq 23, was cut 2026-09-18 on round 21's |
 | round-21 pin | `fe4d2c4` — **never moved during the round**, and neither side asked |
 | test pin | `3952c03` — never moved after lap 1, and **does not become a release** (§6a) |
 | approved pair | round 21, cyanrip `fe4d2c4` + Platterpus `0.6.50` — **and the release carries round 21's two P2 changes, which `fe4d2c4` does not** |
@@ -88,9 +87,9 @@ below, which were right the whole time. **Two descriptions of one fact, and the
 unchecked one was the wrong one**, in the document whose entire job is to be a
 claim about now. Removed 2026-09-18.
 
-**The release was authorised by round 21 and HAS been cut**, at `2cce60d`,
-`release_seq` 23 — `docs/RELEASE-PLAN-platterpus.13.md` is executed and
-bannered. Platterpus separately report that a release is *not due on their
+**The live release is `+platterpus.14` at `3e01bb3`**, `release_seq` 24,
+authorised by round 22 — `docs/RELEASE-PLAN-platterpus.14.md` is executed and
+bannered, as `.13`'s is. Platterpus separately report that a release is *not due on their
 side* — their version bar is `0.7.100` gated on a full hardware pass and their
 evidence ledger holds no full-green row. **That is their gate on their release
 and it is not an argument about ours**, which is recorded here so the two do not
@@ -2056,19 +2055,19 @@ identifier.
 
 | field | value |
 |---|---|
-| **stable version** | `0.9.4-rc2+platterpus.13` |
-| **stable commit** | **`2cce60d`** |
-| stable build tag | `platterpus-fork-g2cce60d` |
-| stable install | `https://github.com/rmccann-hub/cyanrip/archive/2cce60d.tar.gz` |
-| stable `release_seq` | 23 |
-| stable authorised by | handshake round 21, closed `GO`/`GO` on `fe4d2c4` / `4bedb45`, five laps |
+| **stable version** | `0.9.4-rc2+platterpus.14` |
+| **stable commit** | **`3e01bb3`** |
+| stable build tag | `platterpus-fork-g3e01bb3` |
+| stable install | `https://github.com/rmccann-hub/cyanrip/archive/3e01bb3.tar.gz` |
+| stable `release_seq` | 24 |
+| stable authorised by | handshake round 22, closed `GO`/`GO` on `2cce60d` / `417d61b` (Platterpus 0.6.51), five laps — the pins round 22 lap 5 declares |
 | | |
-| **beta version** | `0.9.4-rc2+platterpus.13` |
-| **beta commit** | **`2cce60d`** |
-| beta build tag | `platterpus-fork-g2cce60d` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/2cce60d.tar.gz` |
-| beta `release_seq` | 23 |
-| beta authorised by | handshake round 21, closed `GO`/`GO` — same build as stable |
+| **beta version** | `0.9.4-rc2+platterpus.14` |
+| **beta commit** | **`3e01bb3`** |
+| beta build tag | `platterpus-fork-g3e01bb3` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/3e01bb3.tar.gz` |
+| beta `release_seq` | 24 |
+| beta authorised by | handshake round 22, closed `GO`/`GO` — same build as stable |
 
 `beta` resolves to the newest row of *any* channel, so opting into pre-releases
 can never move a user backwards. Both channels resolve to `978f9b0`; there is no
