@@ -1917,13 +1917,27 @@ At `v0.6.52` the same constant carries **only** the old wording. So the ordering
 round 20 set and round 22 re-agreed — consumer accepts both, ships a release,
 *then* the provider ships — is satisfied, and `.14` is unblocked.
 
-**ONE QUESTION IS OPEN AND IT IS NOT OURS TO ANSWER ALONE: every `v0.*` tag of
-theirs is published as a PRE-RELEASE.** If "a release" in the ordering rule
-means a non-pre-release, their versioning scheme does not currently produce one
-and `.14` is gated on something unreachable — the shape this file keeps finding.
-If a pre-release counts, the condition is met today. **Ask; do not decide it by
-shipping.** There is still no `docs/RELEASE-PLAN-platterpus.14.md`, and writing
-one is the next step rather than the bump.
+**A PRE-RELEASE COUNTS — asked rather than decided, and answered by them with
+three pieces of evidence, each verified at `platterpus@52b44282`.** Every `v0.*`
+tag is published pre-release by construction (`.github/workflows/release.yml:343`),
+so the flag is a constant across their whole 0.x line; their updater ignores it
+on purpose and reads the version string instead (`update_check.py:99-117`); and
+round 20 already settled it by precedent — `Retry limit:` first appears in their
+parser at v0.6.50, a pre-release tagged 2026-09-16, and `.13` followed on
+2026-09-18. Requiring a non-pre-release would have gated `.14` on something
+their scheme does not produce.
+
+**SO `.14` IS UNBLOCKED, AND THE DECISION THAT REPLACES THE PREREQUISITE IS THE
+CHANNEL.** `docs/RELEASE-PLAN-platterpus.14.md` poses it. Their app reads **our**
+`release-manifest.json` from this branch's tip (`ripper_manifest.py:66-68`) and
+**offers** — never installs — a newer build on the user's channel, stable by
+default, stamping every rip with it `unapproved` until their `FORK_PIN` rolls;
+and they have said `FORK_PIN` stays at `2cce60d` **until a round reviews `.14`**.
+So a stable `.14` puts an unreviewed build in front of every default-channel
+user for as long as round 24 takes. The plan recommends
+`+platterpus.14-beta.1` on beta — the rig is already on it — with stable after
+round 24 reviews it. **Publication is the operator's act; this paragraph does
+not decide it.**
 
 **This paragraph said no plan existed, and before that it claimed one did for
 forty days** by pointing at `docs/RELEASE-PLAN-platterpus.5.md` as *"the plan
