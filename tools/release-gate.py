@@ -103,7 +103,7 @@ LAP_DECL_RE = re.compile(r"(?m)^HANDSHAKE-LAP:")
 # The shared spec both projects implement. A file declaring a version this gate
 # does not implement is refused rather than guessed at -- see docs/handshake/
 # PROTOCOL.md, which is copied into both repositories.
-PROTOCOL_VERSION = 4
+PROTOCOL_VERSION = 5
 PROTOCOL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(\d+)[ \t]*$", re.M)
 
 # Adopted from Platterpus round 7 lap 3 §1: the wire header both sides emit.
@@ -138,6 +138,14 @@ PEER_VERDICT_RE = re.compile(r"^HANDSHAKE-PEER-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]
 READY_TO_READ_RE = re.compile(r"^HANDSHAKE-READY-TO-READ:[ \t]*(yes|no)\b", re.M)
 READY_TO_READ_FROM_ROUND = 19
 PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
+# v5 §5b. The lap a PEER-VERDICT was transcribed FROM, so a gate can tell a
+# current transcription from one the peer has since superseded. The field is
+# Platterpus's, from round 23 lap 2, adopted verbatim. Only the lap NUMBER is
+# extracted: the rest of the cell is prose for a human, and a gate that parsed
+# prose would be the "transcribed, not judged" defect one level over.
+PEER_VERDICT_SOURCE_RE = re.compile(
+    r"^HANDSHAKE-PEER-VERDICT-SOURCE:[ \t]*(\S.*?)[ \t]*$", re.M)
+PEER_VERDICT_SOURCE_LAP_RE = re.compile(r"\blap[ \t]*(\d+)\b", re.I)
 PEER_PIN_RE = re.compile(r"^HANDSHAKE-PEER-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 OUR_VERSION_RE = re.compile(r"^HANDSHAKE-OUR-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
 OUR_PIN_RE = re.compile(r"^HANDSHAKE-OUR-PIN:[ \t]*(\S+)[ \t]*$", re.M)
@@ -380,6 +388,7 @@ class Lap:
         # (verdict, filename) of the newest peer lap of this round we hold, or
         # None when we hold none of theirs. Filled in by load_rounds().
         self.peer_latest = None
+        self.peer_verdict_source = None
         # True for a round that exists ONLY in inbound/ -- they opened it and we
         # have not answered. Such a round has no file of ours to parse, so every
         # per-file check below is meaningless on it; it is open by definition.
@@ -444,6 +453,11 @@ class Lap:
             "HANDSHAKE-OUR-PIN": self.our_pin,
             "HANDSHAKE-TESTED": self.tested,
         }
+        # C41. v5 §5b changes where the peer verdict is RESOLVED from, not
+        # whether it is required -- and the source field is what makes the
+        # resolution auditable, so a v5 file without it cannot close either.
+        if self.v5_active:
+            need["HANDSHAKE-PEER-VERDICT-SOURCE"] = self.peer_verdict_source
         return [k for k, v in need.items() if not v]
 
     @property
@@ -547,12 +561,98 @@ class Lap:
             return bool(self.withdrawn_reason)
         if self.verdict not in CLOSING:
             return False
+        # v5 §5b, and it is additive: a v4 file never reaches this branch and
+        # is graded exactly as before.
+        if self.v5_active:
+            resolved, _, refusal = self.peer_verdict_resolution
+            if refusal:
+                return False
+            if resolved is not None:
+                return resolved in CLOSING and not self.missing_for_close()
         # Our GO alone is not agreement.
         if self.peer_verdict not in CLOSING:
             return False
         if self.stale_peer_verdict:
             return False
         return not self.missing_for_close()
+
+    @property
+    def v5_active(self):
+        """Does THIS FILE ask to be judged by v5?
+
+        Keyed on the file's own declared version, never on the gate's. A v4 lap
+        must be graded exactly as it was before v5 existed -- a spec that
+        retroactively regrades files written under the previous one is the drift
+        the version number exists to prevent, and it would make two gates at
+        different versions disagree about a file neither of them wrote today.
+        """
+        try:
+            return self.protocol is not None and int(self.protocol) >= 5
+        except (TypeError, ValueError):
+            return False
+
+    @property
+    def peer_verdict_resolution(self):
+        """v5 §5b. Returns (verdict, source, refusal) for a v5 file.
+
+        `verdict` is what the close should be judged on, `source` says where it
+        came from so the gate can print it (C42), and `refusal` is non-None when
+        §5b forbids resolving at all.
+
+        THE ONLY THING v5 ADDS IS STEP 3: when the newest peer lap we hold is
+        NEWER than the one our own transcription names, the peer's own
+        declaration wins. Everything else here exists to keep that safe -- the
+        lap must be one we enumerated (C37), it must be released for reading
+        (C38), and where the two DO describe the same lap they must agree (C39).
+
+        Returns (None, None, None) for a v4 file, which is how every existing
+        path stays byte-identical.
+        """
+        if not self.v5_active or self.peer_latest is None:
+            return (None, None, None)
+        peer_verdict, peer_name, peer_ready = self.peer_latest
+        # C38, and it fails closed: a lap we cannot establish as released is
+        # treated as held. `ready is None` means the file declared nothing.
+        if peer_ready is not True:
+            state = "no" if peer_ready is False else "not declared"
+            return (None, None,
+                    f"§5c: {peer_name} is not released for reading "
+                    f"(HANDSHAKE-READY-TO-READ: {state}) -- a held lap is not a "
+                    f"readable verdict")
+        # C37. Enumeration is a claim we made in our own file; fetchability is
+        # not a substitute for it.
+        if not (self.inbound_held and peer_name in self.inbound_held):
+            return (None, None,
+                    f"§5b: {peer_name} is not named in our "
+                    f"HANDSHAKE-INBOUND-HELD -- we may only resolve from a lap "
+                    f"we have declared we hold")
+        named = None
+        if self.peer_verdict_source:
+            m = PEER_VERDICT_SOURCE_LAP_RE.search(self.peer_verdict_source)
+            if m:
+                named = int(m.group(1))
+        held_lap = None
+        m = re.search(r"lap-(\d+)", peer_name)
+        if m:
+            held_lap = int(m.group(1))
+        # C39 -- same lap, two values, and they disagree. Worse than either
+        # alone, because each side can cite one of them.
+        if named is not None and held_lap is not None and named == held_lap:
+            if self.peer_verdict != peer_verdict:
+                return (None, None,
+                        f"§5b: we transcribe peer {self.peer_verdict} sourced "
+                        f"from lap {named}, but {peer_name} itself declares "
+                        f"{peer_verdict}")
+            return (peer_verdict, f"{peer_name} (agrees with our transcription)", None)
+        # C40 -- the peer has spoken since we transcribed. Their file wins, and
+        # the gate must print both or the close cannot be audited.
+        if named is not None and held_lap is not None and held_lap > named:
+            return (peer_verdict,
+                    f"{peer_name}, which supersedes our transcription of "
+                    f"peer lap {named} ({self.peer_verdict})", None)
+        # No usable source field: fall back to the v4 reading rather than
+        # guessing which lap was meant. C41 is what refuses the file outright.
+        return (None, None, None)
 
     @property
     def stale_peer_verdict(self):
@@ -578,7 +678,7 @@ class Lap:
         """
         if self.peer_latest is None:
             return False
-        peer_verdict, _ = self.peer_latest
+        peer_verdict = self.peer_latest[0]
         return peer_verdict not in CLOSING
 
     @property
@@ -609,17 +709,47 @@ class Lap:
             return "NO VERDICT FIELD -- fails closed"
         if self.verdict not in CLOSING:
             return f"verdict {self.verdict}"
+        # v5 §5b, ABOVE the v4 answers: when this file asks to be judged by 5,
+        # "peer verdict OPEN" is no longer the reason for anything -- the
+        # resolution is, and a gate that reports the superseded transcription
+        # as its reason is telling the reader to go and fix the wrong file.
+        if self.v5_active:
+            resolved, source, refusal = self.peer_verdict_resolution
+            if refusal:
+                return refusal
+            if resolved is not None and resolved not in CLOSING:
+                return (f"peer verdict {resolved} per v5 §5b, resolved from "
+                        f"{source}")
+            if resolved is not None:
+                # Resolved to a close. Skip the v4 peer-verdict branches
+                # entirely -- our own transcription is superseded and reporting
+                # it here would name a value the close did not rest on. C42.
+                missing = self.missing_for_close()
+                if missing:
+                    return ("resolved per v5 §5b, but missing "
+                            + ", ".join(missing))
+                return (f"verdict GO, peer {resolved} resolved per v5 §5b "
+                        f"from {source}, versions/pins/testing declared")
         if self.peer_verdict is None:
             return "our verdict GO, but no peer verdict declared"
         if self.peer_verdict not in CLOSING:
             return f"our verdict GO, peer verdict {self.peer_verdict}"
         if self.stale_peer_verdict:
-            verdict, name = self.peer_latest
+            verdict, name = self.peer_latest[0], self.peer_latest[1]
             return (f"we transcribe peer {self.peer_verdict}, but the newest "
                     f"peer lap we hold ({name}) declares {verdict}")
         missing = self.missing_for_close()
         if missing:
             return "both verdicts GO, but missing " + ", ".join(missing)
+        if self.v5_active:
+            resolved, source, _ = self.peer_verdict_resolution
+            if resolved is not None and source:
+                # C42. Under §5b the close can rest on a file in the PEER's
+                # tree, so a summary that says only "peer GO" hides where the
+                # GO came from. An unauditable close is the failure §5 exists
+                # to prevent, one level in.
+                return (f"verdict GO, peer {resolved} resolved per v5 §5b from "
+                        f"{source}, versions/pins/testing declared")
         return "verdict GO, peer GO, versions/pins/testing declared"
 
 
@@ -712,6 +842,7 @@ def load_rounds(directory=None, every_lap=False):
         # for whoever tries to share code later.
         lp = all_laps[-1]
         lp.inbound_held = one(INBOUND_RE)
+        lp.peer_verdict_source = one(PEER_VERDICT_SOURCE_RE)
         lp.digest = one(DIGEST_RE)
         lp.to_repo = one(TO_REPO_RE)
         lp.from_repo = one(FROM_REPO_RE)
@@ -765,12 +896,17 @@ def load_rounds(directory=None, every_lap=False):
         if not (len(nums) == len(laps) == len(verdicts) == 1):
             continue
         n, lap, verdict = int(nums[0]), int(laps[0]), verdicts[0]
+        # v5 §5c needs the peer lap's OWN released state, so it is read here
+        # beside the verdict rather than re-derived later from a path. A file
+        # declaring neither yes nor no yields None, which §5b treats as held.
+        rr = READY_TO_READ_RE.search(text)
+        ready = None if rr is None else (rr.group(1) == "yes")
         if n not in peer_latest or lap > peer_latest[n][0]:
-            peer_latest[n] = (lap, verdict, path.name)
+            peer_latest[n] = (lap, verdict, path.name, ready)
     for lp in all_laps:
         got = peer_latest.get(lp.number)
         if got:
-            lp.peer_latest = (got[1], got[2])
+            lp.peer_latest = (got[1], got[2], got[3])
 
     # A round that exists ONLY in inbound/ is a round they opened and we have
     # not answered -- and it was INVISIBLE here, because this loader only ever
@@ -786,12 +922,12 @@ def load_rounds(directory=None, every_lap=False):
     #
     # Found by writing the test for THEIR hazard against our gate. The hazard
     # itself did not reproduce; the neighbouring one did.
-    for number, (lap, verdict, name) in sorted(peer_latest.items()):
+    for number, (lap, verdict, name, ready) in sorted(peer_latest.items()):
         if number in latest:
             continue
         synthetic = Lap(number, lap, (directory / "inbound" / name), None, None)
         synthetic.peer_only = True
-        synthetic.peer_latest = (verdict, name)
+        synthetic.peer_latest = (verdict, name, ready)
         latest[number] = synthetic
         all_laps.append(synthetic)
 

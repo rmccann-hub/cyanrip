@@ -2839,6 +2839,127 @@ def test_close_by_never_enforces():
           "must not reach the function that forms a verdict at all")
 
 
+# ---------------------------------------------------------------------------
+# v5 conformance, C37-C42. PROTOCOL.md §5b/§5c, drafted in round 23 lap 3 from
+# the two clauses §0.1 named: cyanrip's close rule and Platterpus's condition
+# on it.
+#
+# THE WHOLE OF v5's SAVING IS C40, and everything else here is what keeps it
+# safe. So the control below matters as much as the six rows: the identical
+# fixture declaring 4 must NOT close. Without it these tests would pass against
+# a gate that closes the round for some entirely different reason, which is the
+# ordering-test defect `resolve()` already exists to prevent.
+
+V5_WIRE = ("HANDSHAKE-FROM: cyanrip-fork\n"
+           "HANDSHAKE-APP-VERSION: platterpus 0.6.52\n"
+           "HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.13 (platterpus-fork-gccc3333)\n"
+           "HANDSHAKE-PIN: ccc3333\n"
+           "HANDSHAKE-FROM-REPO: https://github.com/rmccann-hub/cyanrip\n"
+           "HANDSHAKE-FROM-COMMIT: ccc3333\n"
+           "HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus\n"
+           "HANDSHAKE-TO-VERSION: platterpus 0.6.52\n")
+
+
+def _v5_ours(protocol=5, peer_verdict="OPEN", source="your round 30 lap 2",
+             held="round-30-lap-04.md"):
+    body = (f"HANDSHAKE-PROTOCOL: {protocol}\nHANDSHAKE-ROUND: 30\n"
+            "HANDSHAKE-LAP: 3\n" + V5_WIRE +
+            f"HANDSHAKE-INBOUND-HELD: {held}\n"
+            "HANDSHAKE-VERDICT: GO\n"
+            f"HANDSHAKE-PEER-VERDICT: {peer_verdict}\n" +
+            (f"HANDSHAKE-PEER-VERDICT-SOURCE: {source}\n" if source else "") +
+            "HANDSHAKE-PEER-VERSION: platterpus 0.6.52\n"
+            "HANDSHAKE-PEER-PIN: aaa1111\n"
+            "HANDSHAKE-OUR-VERSION: 0.9.4-rc2+platterpus.13\n"
+            "HANDSHAKE-OUR-PIN: ccc3333\n"
+            "HANDSHAKE-TESTED: the 2026-09-22 acceptance session\n"
+            "HANDSHAKE-READY-TO-READ: yes\n\n# round 30 lap 3\n")
+    return body
+
+
+def _v5_theirs(verdict="GO", ready="yes"):
+    return ("HANDSHAKE-PROTOCOL: 5\nHANDSHAKE-ROUND: 30\nHANDSHAKE-LAP: 4\n"
+            "HANDSHAKE-FROM: platterpus\n"
+            f"HANDSHAKE-VERDICT: {verdict}\n"
+            f"HANDSHAKE-READY-TO-READ: {ready}\n\n# their lap 4\n")
+
+
+def _v5_resolve(ours, theirs):
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "round-30-lap-03.md").write_text(ours, encoding="utf-8")
+    (d / "inbound").mkdir()
+    (d / "inbound" / "round-30-lap-04.md").write_text(theirs, encoding="utf-8")
+    return rg.load_rounds(d)[0]
+
+
+def test_v5_close_rule_and_the_v4_control():
+    """Covers: C40
+
+    The one thing v5 adds: our lap 3 honestly transcribed OPEN from their lap 2,
+    their lap 4 then declared GO, and the round closes on THEIR file rather than
+    waiting for a lap 5 of ours that exists only to carry the transcription.
+    That fifth lap is what round 22 spent and what round 17 cost them.
+    """
+    lp = _v5_resolve(_v5_ours(), _v5_theirs())
+    check(lp.closed,
+          f"v5 §5b did not close on the newer peer lap: {lp.why}")
+    # THE CONTROL. Same bytes but for the declared version. If this closes too,
+    # something other than v5 is doing the work and every row above is vacuous.
+    v4 = _v5_resolve(_v5_ours(protocol=4), _v5_theirs())
+    check(not v4.closed,
+          "the same fixture declaring 4 also closed -- v5 is not what closes it")
+
+
+def test_v5_refuses_a_held_or_unenumerated_peer_lap():
+    """Covers: C37, C38
+
+    C38 is Platterpus's clause and it is the load-bearing one: both repos are
+    public, so without it §5b would let a gate close a round on a draft its
+    operator never released.
+    """
+    held = _v5_resolve(_v5_ours(), _v5_theirs(ready="no"))
+    check(not held.closed, "closed on a peer lap that is NOT released for reading")
+    check("5c" in held.why and "round-30-lap-04.md" in held.why,
+          f"refused without naming the held lap and the clause: {held.why}")
+    # ...and a lap declaring the field not at all fails the same way.
+    silent = _v5_resolve(_v5_ours(), _v5_theirs(ready="maybe"))
+    check(not silent.closed, "closed on a peer lap declaring no READY-TO-READ")
+    # C37: fetchable is not the same as declared-held.
+    unenum = _v5_resolve(_v5_ours(held="none"), _v5_theirs())
+    check(not unenum.closed,
+          "closed on a peer lap we never enumerated in HANDSHAKE-INBOUND-HELD")
+    check("INBOUND-HELD" in unenum.why, f"refused for the wrong reason: {unenum.why}")
+
+
+def test_v5_refuses_a_transcription_that_contradicts_its_own_source():
+    """Covers: C39
+
+    Same lap, two values. Worse than either alone, because each side can cite
+    one of them and both are in the permanent record.
+    """
+    lp = _v5_resolve(_v5_ours(source="your round 30 lap 4"), _v5_theirs())
+    check(not lp.closed,
+          "closed although our transcription contradicts the lap it names")
+    check("lap 4" in lp.why and "OPEN" in lp.why,
+          f"refused without naming both values: {lp.why}")
+
+
+def test_v5_requires_the_source_field_and_prints_where_the_close_came_from():
+    """Covers: C41, C42
+
+    C42 is not decoration. Under §5b a close can rest on a file in the PEER's
+    tree, so a summary saying only "peer GO" hides where the GO came from and
+    the close cannot be audited a month later.
+    """
+    lp = _v5_resolve(_v5_ours(source=None), _v5_theirs())
+    check(not lp.closed, "a v5 file with no PEER-VERDICT-SOURCE closed")
+    check("HANDSHAKE-PEER-VERDICT-SOURCE" in ", ".join(lp.missing_for_close()),
+          f"refused without naming the missing field: {lp.missing_for_close()}")
+    ok = _v5_resolve(_v5_ours(), _v5_theirs())
+    check("round-30-lap-04.md" in ok.why and "5b" in ok.why,
+          f"closed without printing the lap the verdict came from: {ok.why}")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()
@@ -2847,4 +2968,3 @@ if failures:
     print(f"{failures} check(s) failed", file=sys.stderr)
     sys.exit(1)
 print("all release gate checks passed")
-
