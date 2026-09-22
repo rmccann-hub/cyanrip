@@ -108,7 +108,51 @@ session. The drive was usable immediately afterwards: the CTDB lookup and the
 
 ## Two findings
 
-### 1. Tracks 3 and 5 again, and this time nothing records the read that was kept
+### 1. ~~Tracks 3 and 5 again, and this time nothing records the read that was kept~~ — WRONG, CORRECTED 2026-09-22
+
+**THE HEADING ABOVE WAS FALSE AND IS KEPT SO THE CORRECTION HAS A SUBJECT.**
+Platterpus refuted it in round 23 lap 2 §A, and the refutation was verified here
+against their code and against a file that was in the bundle the whole time:
+
+```json
+"retried_tracks": [
+  {"track": 3, "reripped_z": 2, "converged": false, "replaced": false},
+  {"track": 5, "reripped_z": 2, "converged": false, "replaced": false}
+]
+```
+
+`replaced: false` on both. A track is swapped only by a **converged** re-read —
+`platterpus@a0aed36:src/platterpus/workers/rip_worker.py:2705-2708`, where
+`converged = getattr(track, "secure_rerip_converged", None) is True` guards
+`replaced = self._swap_in_reripped_track(...)`, read at that SHA rather than
+taken on their word. Neither track converged, **so nothing was swapped, the
+first pass's bytes are the bytes on disk, and the album log describing them is
+the correct log.**
+
+**And the absent addendum was a correct negative, not a missing record.** Their
+`SupersededTrack` addendum (`:2673`) and `_swapped_track_records` (`:1003`,
+populated at `:2723`) exist and are written **on a swap**. No swap happened, so
+no addendum was due. Reading its absence as a lost record is the
+did-not-happen versus happened-and-found-nothing rule, failed in the direction
+this file warns about in the other.
+
+**Root cause, and it is the filing decision above.** The eight
+`.platterpus.json` records were left out as *"Platterpus's artifact rather than
+ours"*, and then a claim was made about a question one field in them answers.
+**`/read_speed/retried_tracks` was in the tarball from the first minute.** Worse,
+the same file had already caught us out three days earlier: on the 2026-09-19
+bundle the `.log` carried no `-l` while the `.platterpus.json` carried `-l 3,5`.
+Same file, same blind spot, twice.
+
+**So `rips/secure-reread.platterpus.json` is now filed**, sha256
+`1d9c64d2b72243d8b446b9e081c5ed7d00ee355b8d8d2c8e257b22d88eb82773` — the one
+report a disputed claim turned on. The other seven stay unfiled and their
+sha256/16 are recorded here so they stay verifiable: `eaf4a0ca94cf0b2a`
+after-cancel, `856e6822b8f4df52` cancel-me, `344c15c18cfaca8e` derived-mp3,
+`be7d50df94dc7385` derived-wav, `f059a84efccaf06c` derived-wavpack,
+`a95c72be9b019b72` full-acceptance, `acda897a7fbc4119` full-acceptance-2.
+
+### What actually survives, which is narrower and mostly theirs
 
 `rips/secure-reread.log` reports, for tracks 3 and 5:
 
@@ -130,30 +174,27 @@ here, the one a consumer archives — is the first invocation's. Its blocks for
 tracks 3 and 5 carry that invocation's `EAC CRC32`, `Accurip`, `creation_time`
 and paranoia counts, describing reads that were superseded.
 
-This is the §5 age defect `CLAUDE.md` already names, on the same two tracks of
-the same disc, and it is one step worse here than when it was recorded: the
-2026-09-15b session filed `secure-reread.addendum.txt`, and **this bundle
-contains no addendum at all**. `session/SOURCES.txt` asks for six paths and the
-refix temp directory is not among them, so the superseding rip's own log was
-never collected.
+**Theirs, and they are fixing it.** The re-rip of tracks 3 and 5 ran 23 minutes
+in a `tempfile` root that a `finally` removes, taking cyanrip's log for that read
+with it. So the read that was **discarded** — the one worth diagnosing, because
+it is the one that failed — survives only in their debug lines.
+`session/SOURCES.txt` asks for six paths and that directory is not among them.
 
-**The halves fail separately and belong to different sides.**
+**Theirs, and conceded by them.** *"kept the best read, which may not be
+bit-perfect"* is their user-facing sentence, and when nothing converges no
+selection between copies happens, so the sentence describes something that did
+not occur. It is what this reading was built on.
 
-- **Not ours, and correctly so.** cyanrip wrote a complete and true record of
-  what *that invocation* did, including the non-convergence, with a `Scope:` line
-  on every track. It was never told a second invocation existed; it is a separate
-  process, and which read to keep is a judgement, which is Platterpus's by the
-  ownership rule.
-- **Ours, and unfixed.** *We give a consumer no way to say a file was
-  superseded.* There is no field a second invocation can write into the first
-  log, and no way to amend it — the log is immutable and `Log FUN512:` covers it.
-  The addendum convention exists because our format has no slot for this. A
-  record whose only honest description of itself lives in a sidecar file that
-  nothing requires is a record that can silently lose it, which is what happened
-  here.
+**Ours, and still real — but this run is not evidence for it.** *We give a
+consumer no way to say a file was superseded.* There is no field a second
+invocation can write into the first log and no way to amend one, because it is
+immutable and `Log FUN512:` covers it. That gap stands on its own merits and
+belongs in round 24; **it needs a case where a swap actually happened, and this
+is not one.** Their §E Q1 asks exactly that and they are right to.
 
-Reported to Platterpus in round 23; the provider half is a contract question for
-round 24 and is **not** a round-23 close condition.
+**What cyanrip did here was correct throughout.** It wrote a complete and true
+record of what that invocation did, including the non-convergence, with a
+`Scope:` line on all fourteen tracks.
 
 ### 2. Every number the log reports about the audio is measured before the filter graph
 

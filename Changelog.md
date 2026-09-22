@@ -22,14 +22,21 @@ because an artifact can never carry the hash of the build that produced it and
 folding the two together would leave the banner naming an unreachable commit.
 
 **Two findings from reading the acceptance session's artifacts**, neither a
-close condition and both in `docs/KNOWN-ISSUES.md`. Tracks 3 and 5 did not
-converge, Platterpus re-ripped exactly those two in a second invocation that
-also did not converge and kept the best read — so the album log describes reads
-that were superseded, and unlike the previous session no addendum was written.
-And `-H -E` against `-H -W` reports identical checksums, peaks, loudness and
-ReplayGain over audio that differs, because every audio figure in our log is
-measured upstream of the filter graph: the checksums correctly so, the loudness
-block not.
+close condition, and **one of the two was wrong and is retracted.** `-H -E`
+against `-H -W` reports identical checksums, peaks, loudness and ReplayGain over
+audio that differs, because every audio figure in our log is measured upstream of
+the filter graph: the checksums correctly so, the loudness block not. That one
+stands, in `docs/KNOWN-ISSUES.md`.
+
+**The retraction:** we reported that tracks 3 and 5 were superseded by an
+automatic re-rip and that no addendum recorded it. Platterpus refuted it in round
+23 lap 2 §A and the refutation checks out — the session's own report says
+`replaced: false` on both tracks, a swap happens only on a converged re-read, and
+neither converged, so the first pass's bytes are on disk and the album log is
+correct. The missing addendum was a correct negative. The cause was ours: the
+`.platterpus.json` records were left out of the filed session as the consumer's
+artifact, and the answer was one field inside them. The one that settles it is
+now filed.
 
 **THE PER-TRACK BLOCK NOW REPORTS THE READ AND THE FOOTER REPORTS THE ENCODE**
 — `89a57d6`, the first of round 22's fixes, and it is P2 contract surface:

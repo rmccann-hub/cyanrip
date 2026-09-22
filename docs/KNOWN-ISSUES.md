@@ -241,7 +241,15 @@ making the signal reliably land mid-read changes what the check exercises. **The
 comment is corrected now regardless**, because a docstring claiming a guarantee
 the code does not have is the defect that let this go unnoticed.
 
-### `Lap commit list names its range` has timed out FIVE times, and the call that hangs is now named
+### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
+
+**THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
+occurrence falsified it.** That is the number-incremented-rather-than-derived
+defect, in the file that records it, and it is the same one that turned three
+`SETTLED.md` rows stale on 2026-09-22. The dated occurrences below are the
+record; the heading states the property. **Sixth occurrence 2026-09-22** at
+`460599f`: `30.01s`, `SIGTERM`, **1.22 s** standalone immediately afterwards.
+Same bimodality, nothing new.
 
 **Fifth occurrence 2026-09-22**, at `11667d6`, in a full suite:
 `Ok: 85  Fail: 1  Timeout: 1`, exit 1, `30.01s`, `SIGTERM`. Standalone
@@ -904,29 +912,35 @@ and writes its own `creation_time`. Asked as round 8 `J14`. **Unrecoverable
 after the fact**, which is why it is asked at all: a read time is not derivable
 a month later from anything on disk.
 
-**AND ON 2026-09-22 IT LOST THE ADDENDUM TOO, so nothing on disk records the
-superseding read at all.** Measured in `docs/rig-2026-09-22-2cce60d/`. Tracks 3
-and 5 reported `Secure re-read:  did NOT converge after 3 reads (repeat limit
-hit)`; Platterpus re-ripped exactly those two in a second invocation
-(`session/platterpus-app-log.txt:49024`, `-Z 2 -l 3,5`, in
-`cwd=/tmp/platterpus-refix-_sf3v80t`), that run did not converge either, and
-their log records the disposition — *"kept the best read, which may not be
-bit-perfect"*. The album folder's log is the **first** invocation's: its blocks
-for tracks 3 and 5 carry that pass's `EAC CRC32`, `Accurip`, `creation_time` and
-paranoia counts. **No addendum was written, and `session/SOURCES.txt` does not
-ask for the refix directory**, so the superseding invocation's own log is in
-neither project.
+**A CLAIM THAT THIS HAPPENED ON 2026-09-22 STOOD HERE AND WAS FALSE.** It read
+that tracks 3 and 5 were superseded by an automatic re-rip whose log reached
+neither project. Platterpus refuted it in round 23 lap 2 §A and the refutation
+was verified rather than accepted: the session's own report carries
+`retried_tracks: [{track 3, converged false, replaced false}, {track 5, ...}]`,
+and a swap happens only on a **converged** re-read --
+`platterpus@a0aed36:src/platterpus/workers/rip_worker.py:2705-2708`, read at
+that SHA. Neither converged, nothing was swapped, the first pass's bytes are on
+disk, and the album log describing them is the correct log. Their
+`SupersededTrack` addendum exists (`:2673`) and was not due, so **its absence was
+a correct negative** -- this file's own `none` versus `unknown (reason)` rule,
+failed from the other direction.
 
-So the gap is wider than a missing timestamp: it is **the whole record of the
-read that was kept**. The halves belong to different sides and fail separately.
-Theirs is which read to keep and what to file, which is a judgement and is
-theirs by the ownership rule. **Ours is that we give a consumer no way to say a
-file was superseded** — there is no field a second invocation can write into the
-first log, and no way to amend one, because it is immutable and `Log FUN512:`
-covers it. The addendum convention exists because our format has no slot for
-this, and a record whose only honest self-description lives in a sidecar that
-nothing requires is one that can silently lose it. That is what happened here.
-Reported in round 23; the provider half is a contract question for round 24.
+**The cause was a filing decision.** The eight `.platterpus.json` records were
+left out of `docs/rig-2026-09-22-2cce60d/` as the consumer's artifact, and then a
+claim was made about a question one field in them answers. It is the second time
+in four days that file has carried an answer nobody opened -- the 2026-09-19
+bundle's `.log` showed no `-l` while its report showed `-l 3,5`. The one that
+settles this is now filed at
+`docs/rig-2026-09-22-2cce60d/rips/secure-reread.platterpus.json`.
+
+**So this entry is still open and still ours, and the 2026-09-22 run is NOT
+evidence for it.** It needs a case where a swap actually happened. Platterpus's
+§E Q1 asks whether it stands on other evidence; it does -- round 8 `J14`, and the
+2026-09-15b session, which filed a real `secure-reread.addendum.txt`. Their Q2
+offers the sharper version: they will capture the discarded re-rip's log in their
+own report, and would rather emit a marker we define than keep a private field.
+**That is the round-24 item** -- not the superseded-timestamp complaint, but
+whether our format grows a way to mark a superseded or abandoned read at all.
 
 ### A track's per-track lines are computed from the REQUEST, not the outcome
 
