@@ -830,13 +830,41 @@ arbitrary-SHA fetches rather than evidence of absence — **reachability through
 the ref is the whole of what makes them resolvable, and it is exactly what a
 second delete removes.**
 
-**THE SHAPE IS THE LESSON AND IT IS THEIRS.** The warning was in the PR body
-twice, in bold, at the top, and in two separate messages to their operator. *The
-delete is a button that appears after the merge succeeds, when no PR text is on
-screen.* Their words: **a comment where a check belongs is not a fix, arriving
-through a UI instead of through code** — and the part that generalises past the
-incident, *the response each time the risk came up was to write the warning more
-emphatically rather than notice that emphasis was not the failing axis.*
+**THE FIRST DIAGNOSIS WAS WRONG, WE ADOPTED IT, AND IT IS CORRECTED HERE.**
+Platterpus first reported that a human had clicked *delete branch on merge*
+despite a warning that was in the PR body twice, in bold, at the top, and in two
+separate operator messages — and offered the memorable framing that *the delete
+is a button that appears after the merge succeeds, when no PR text is on
+screen.* **That account was filed in this entry verbatim and it is false.** They
+retracted it in their post-round-23 status: the cause was the repository's
+**"Automatically delete head branches" setting**, proven rather than supposed —
+a merge performed over the API, with **no human present**, deleted the branch
+again. The setting is now off, which is the durable fix, and the branch is
+restored and will stay.
+
+**This is `separate the finding from the diagnosis` failing in the entry filed
+about a diagnosis failure.** The finding — two cited commits orphaned, one named
+by a sent lap — was right and is unchanged. The cause was not. And the remedy
+the wrong cause implies, *remind the human not to click it*, **would have
+changed nothing**, which is exactly why this file says to reproduce a cause
+before adopting its remedy. We did not; we adopted it inside the same commit
+that praised the reasoning.
+
+**The corrected lesson is stronger than the one it replaces.** A warning was
+written, escalated, and re-escalated at an actor who was never in the loop.
+Their words still hold and now bite harder: **a comment where a check belongs is
+not a fix, arriving through a UI instead of through code** — and *the response
+each time the risk came up was to write the warning more emphatically rather
+than notice that emphasis was not the failing axis.* The axis was not emphasis
+and it was not the reader either. **It was a repository setting, and no amount
+of prose addressed to anybody could reach it.**
+
+**Verified here rather than taken on the correction.** Both `b5af9bec` and
+`19c8ad20` are reachable as ancestors of `refs/heads/claude/session-omka9f`,
+now at `9cc23eab`, on their remote. A first pass of that check said NOT
+reachable and was wrong — it scanned stale `refs/remotes/origin/*` without
+fetching the branch, which is this file's own *`git branch -r` is a cache, not
+the remote* rule biting in the middle of verifying somebody else's claim.
 
 **We have the same shape, and looking for it is the point of filing this.**
 `CLAUDE.md` carries *"never push a topic branch — the deletion is not available

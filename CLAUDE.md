@@ -1895,6 +1895,36 @@ rather than claimed to be automatic. **A guess wearing a derivation's clothes is
 worse than an admitted gap** — and this one was written an hour before the
 artifact that refuted it arrived.
 
+**THE PREREQUISITE IS MET. `PLATTERPUS 0.6.53` IS THE BOTH-WORDINGS RELEASE,
+and it was found by reading their parser rather than by being told** — their
+post-round-23 status announced 0.6.53, listed what moved and what did not, and
+never mentioned it. Verified at the tag rather than the branch:
+`git ls-remote --tags` puts `v0.6.53` at `52b44282`, which is also their `main`,
+and at that commit `src/platterpus/parsers/cyanrip_log.py:237` reads
+
+```python
+_TRACK_START = re.compile(
+    r"^Track (?P<number>\d+) "
+    r"(?P<what>"
+    r"ripped and encoded successfully!|ripped and encoded with errors\.|"  # <= .13
+    r"read successfully!|read with errors\.|"  # >= .14, their §0.3
+    r"is data:"
+    r")"
+)
+```
+
+At `v0.6.52` the same constant carries **only** the old wording. So the ordering
+round 20 set and round 22 re-agreed — consumer accepts both, ships a release,
+*then* the provider ships — is satisfied, and `.14` is unblocked.
+
+**ONE QUESTION IS OPEN AND IT IS NOT OURS TO ANSWER ALONE: every `v0.*` tag of
+theirs is published as a PRE-RELEASE.** If "a release" in the ordering rule
+means a non-pre-release, their versioning scheme does not currently produce one
+and `.14` is gated on something unreachable — the shape this file keeps finding.
+If a pre-release counts, the condition is met today. **Ask; do not decide it by
+shipping.** There is still no `docs/RELEASE-PLAN-platterpus.14.md`, and writing
+one is the next step rather than the bump.
+
 **This paragraph said no plan existed, and before that it claimed one did for
 forty days** by pointing at `docs/RELEASE-PLAN-platterpus.5.md` as *"the plan
 for the next one"* — but `+platterpus.5` **shipped**, at `ddf7ac3` committed
