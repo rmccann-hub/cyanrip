@@ -4,10 +4,14 @@ Fully featured CD ripping program able to take out most of the tedium. Fully acc
 
 > **This is `platterpus-fork`, a fork of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip).**
 > It keeps upstream's version number and appends its own release as build
-> metadata: `cyanrip 0.9.4-rc1+platterpus.3 (platterpus-fork-g<commit>)` is
-> upstream's 0.9.4-rc1, fork release 3. Match on `platterpus-fork` or on the
-> `+platterpus.` suffix, never on `0.9.4-rc1` alone -- upstream answers to that
-> too. See [Fork differences](#fork-differences),
+> metadata: `cyanrip 0.9.4-rc2+platterpus.14 (platterpus-fork-g3e01bb3)` is
+> upstream's 0.9.4-rc2, fork release 14. That is an example, not a claim about
+> which release is current: `release-manifest.json` answers that, and nothing
+> keeps this sentence in step with it. Match on
+> `platterpus-fork` or on the `+platterpus.` suffix, never on `0.9.4-rc2` alone --
+> upstream answers to that too. **Never order two fork builds by that string**:
+> the part that advances is SemVer build metadata, which the spec says to ignore
+> for precedence. Order by `release_seq` in `release-manifest.json`. See [Fork differences](#fork-differences),
 > `Changelog.md` for what each fork release changed, `PROVIDER-CONTRACT.md` for
 > the generated interface contract, and `docs/handshake/` for the record of the
 > rounds that agreed it.
@@ -328,7 +332,13 @@ Behaviour differences from upstream:
  * **`-V` is accepted as an alias for `--version`.** Upstream moved this flag
    from `-V` to `-v` when it replaced getopt with genopt after 0.9.3, which
    makes any caller probing with `-V` see exit 1 and a parse error -- which
-   reads as "not installed" rather than "flag renamed". Prefer `--version`.
+   reads as "not installed" rather than "flag renamed". **Do not "prefer
+   `--version`" either**: builds before genopt use plain `getopt()` with no long
+   options and reject `--version` outright. Across stock builds `-V` and
+   `--version` are exactly complementary, so a probe that must work on both
+   needs both; this fork accepts `--version`, `-v` and `-V`. The measured matrix
+   is `PROVIDER-CONTRACT.md` P6, and this sentence used to give the advice that
+   matrix refutes.
  * **Log and cue files are line-buffered**, so a cancelled rip leaves a partial
    record rather than an empty file.
  * **Read liveness while a frame read is blocked.** A single frame read can sit

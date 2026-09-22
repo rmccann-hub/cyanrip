@@ -4,13 +4,18 @@
 conditions were fixed and could not grow (R1), so every item below was
 deliberately outside it.*
 
-> **STATUS, 2026-09-18 — round 22 is open and this file is being worked.** It
-> said *"nothing here is started"*, which was true for two days and is the kind
-> of sentence that goes quietly false. **Item 1 is executed** (`89a57d6`, option
-> 2 only; see its banner). **Items 1b, 2 and 3 are not started.** Each section
-> carries its own banner; this line is the index and nothing more, so a reader
-> who trusts it and reads no further is wrong about at most which section to
-> open.
+> **STATUS, 2026-09-22 — round 22 CLOSED `GO`/`GO` on 2026-09-21, and this
+> index was stale for a day saying it was open.** It said *"nothing here is
+> started"* before that, which is the kind of sentence that goes quietly false;
+> this one went false the same way. Each section carries its own banner; this
+> line is the index and nothing more.
+>
+> | item | state |
+> |---|---|
+> | **1** per-track block | **half shipped** — option 2 at `89a57d6`, released in `+platterpus.14` at `3e01bb3`. The `File(s):` half is **not started** |
+> | **1b** K1, K2, K3 | **agreed and NOT in the spec.** Round 22 agreed K1 and K3 as v5 text with no amendment; K2 needed "nothing but the shared-file edit". **None of the three reached `PROTOCOL.md`**: round 23's v5 carried only its own two clauses, and both sides verified it as complete. Round 24, as a v6 proposal — see `docs/KNOWN-ISSUES.md` |
+> | **2** cache calibration | **not started**; the figure is wrong on all ten filed sessions |
+> | **3** `probe-argv-surface.py` | **not started** |
 
 **Why this file exists.** Three defects are understood well enough to fix and
 were each deliberately left alone, for three different reasons. *"We decided
@@ -241,8 +246,9 @@ different wrong number while looking like progress.
 ## 3. `probe-argv-surface.py` asserts more than its method establishes
 
 **Found 2026-09-16, while checking a correction from Platterpus**, and it is the
-cause of two of the three known-wrong rows in `docs/seam-commands.md` rather than
-a coincidence.
+cause of two of the known-wrong rows in `docs/seam-commands.md` — rows 1 and 2 of
+the table in `docs/KNOWN-ISSUES.md`, which held three when this was written and
+holds five since the 2026-09-22 audit — rather than a coincidence.
 
 ### Three findings, one root
 

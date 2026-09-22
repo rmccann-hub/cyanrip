@@ -726,7 +726,7 @@ it. R4 says fixes queue; this one queues. **Raising the timeout was never the
 fix** — it keeps a network-dependent verdict in a gate and moves where it
 misfires.
 
-### `docs/seam-commands.md` carries THREE known-wrong statements
+### `docs/seam-commands.md` carries FIVE known-wrong statements
 
 **Consolidated here 2026-09-15.** They were recorded in two different files, one
 of them a 1,100-line standing status, which is how a set of three reads as three
@@ -738,6 +738,8 @@ documentation and never to evidence; this is documentation.
 | 1 | §7: *"Every value either took effect or was refused with a message"* | **48 of the 68 accepted rows** were graded from exit status alone — re-measured 2026-09-16, and the *"49 of 111"* this row carried was a count against an older binary | ours |
 | 2 | line 504: `-p '99=drop'` accepted, exit 0 | the binary **refuses** it | theirs, lap 16 §B3 |
 | 3 | line 97: `-D` is `directory` / `str, path` / `writable` / *"output directory"* | it is `folder_scheme`, *"Directory naming scheme"* (`cyanrip_main.c:1603` at the pin) — a **relative** scheme, with `-F` its per-track sibling | theirs, lap 16 §B3 |
+| 4 | the §1 provenance warning: *"The cyanrip column is `?` throughout below … Their half arrives in the round-8 return file"* | **0 of §1's 17 rows** carry `?` in the cyanrip column; all 17 say `HAVE`. Counted by reading the column, not the sentence | ours, 2026-09-22 audit |
+| 5 | §4 NEED item 4 asks for *"an escape mechanism in the `-a` / `-t` grammar — or a written statement that there is none"* and describes a U+2236 workaround | **§1's own `-a` row, in the same file**, says both sides `HAVE` it: *"there IS an escape: `\\:`"* and *"escape shipped lap 31"*. The file contradicts itself; whether Platterpus's U+2236 substitution is still in their code is theirs to say, and is not claimed here | ours, 2026-09-22 audit |
 
 **RE-MEASURED 2026-09-16, and the split of who fixes what is not what this entry
 said.** Platterpus pointed out that §7 carries its own *"This section is
@@ -749,9 +751,10 @@ hand-written prose in a jointly-owned section.
 `Invalid track number 99 for pregap, list has 2 tracks!`, exit 1.
 
 **Row 1 is NOT, and it is a defect in the generator rather than in the committed
-copy.** The sentence is emitted by the tool. Measured on the current binary:
-**116 rows, 48 refused, 68 accepted — and 48 of those 68 carry `(no header field
-exposes this)`.** `probe-argv-surface.py:99` returns `accepted` on exit status
+copy.** The sentence is emitted by the tool. Measured 2026-09-16 and **re-measured
+2026-09-22 on `0.9.4-rc2+platterpus.14`, unchanged**: **116 rows, 48 refused, 68
+accepted — and 48 of those 68 carry `(no header field exposes this)`.**
+`probe-argv-surface.py:99` returns `accepted` on exit status
 alone when no header field exists to check, so three quarters of the accepted
 rows were never observed to take effect while the summary says they were. The
 fix is a third outcome — `unobservable` — not a reword, and `--gate` must keep
@@ -764,7 +767,7 @@ delimiters"*. §7 has declared itself generated since it was written and
 **nothing has ever verified that it is.** Planned in
 `docs/ROUND-22-PLAN.md` §3.
 
-**Do not cite any of the three.** Row 3 is the one that has already cost
+**Do not cite any of the five.** Row 3 is the one that has already cost
 something: the real semantics are exactly why an empty leading component made a
 multi-component scheme resolve **absolute**, and a reader who believed line 97
 would not have looked.
@@ -776,8 +779,16 @@ in together at the next joint version bump.
 
 **Deliberately NOT added to round 20.** R1 fixes a round's close conditions at
 lap 1 and round 20 has two; a third arriving mid-round is the exact failure R1
-exists to stop, and these break nothing in `fe4d2c4`. They are a round-21
-bundle — one version bump, three rows, shipped by both sides on one day.
+exists to stop, and these break nothing in `fe4d2c4`.
+
+**This paragraph then called them *"a round-21 bundle"*, and rounds 21, 22 and
+23 all closed without it.** Nobody proposed the bump, because the entry that
+named the round was not something any lap-1 author read. It is the same gap as
+the joint entry below on K1–K3 — a change agreed or planned, and then left to
+memory across a round boundary. **They are now listed in that section's
+consolidated table of shared-document defects, which is what round 24's lap 1
+cites**, so the bundle has a place to be picked up from rather than a round
+number to go stale.
 
 ---
 
@@ -805,6 +816,85 @@ verified against the installed headers *and* the `.so` export table).
 ---
 
 ## Open, joint — belongs to the seam, not to one side
+
+### Three agreed protocol changes never reached the spec, and both sides certified v5 as complete
+
+**Found 2026-09-22 by the pre-round-24 document audit, and it is the most
+important thing that audit found.** Round 22 agreed three changes to the shared
+protocol and **none of them is in `PROTOCOL.md`**:
+
+| item | agreed where | what it says | in the spec? |
+|---|---|---|---|
+| **K1** | round 22 lap 1 §0.1, their lap 2 §0.1 *"agreed … with no amendment"* | a lap number is claimed on **release**, not on writing | **no** |
+| **K3** | the same two laps | a warning about a **held** lap cannot travel inside it — the one legitimate relay | **no** |
+| **K2** | round 21 lap 4 §K, *"needs nothing from round 22 but the shared-file edit"* | `HANDSHAKE-INBOUND-HELD` for sent laps, `HANDSHAKE-INBOUND-OBSERVED` for held ones | **no** — `grep -c INBOUND-OBSERVED docs/handshake/PROTOCOL.md` is `0`, though both sides have declared the field in every lap since |
+
+**How they fell out, and it is a gap between rounds rather than inside one.**
+Round 22 lap 1 declared protocol 4 *"deliberately not 5, although §K1 and §K3
+below propose the v5 text"* — correctly, because a version bump is something
+both sides ship. So the text waited for a v5. Round 23 then drafted v5 from
+**its own** §0.1 — the close rule and its readability condition — and its §13
+says *"v5 is v4 plus the two clauses round 23 §0.1 named, and nothing else."*
+Nobody carried round 22's agreed clauses across. **Platterpus re-derived v5's
+diff in their lap 4 §B and confirmed "the two clauses and nothing else"; we
+wrote that sentence.** Both sides certified it as complete, accurately, against
+the wrong list.
+
+**Round 23's own §0.2 is the same failure one level down**, and the audit found
+that too: the condition was *assent, an amendment or a refusal*, Platterpus
+assented, and the banner qualifier it agreed was never implemented. **A round
+closes on agreement, which is correct — and then the building is left to
+memory, and memory does not survive a round boundary.** Nothing in either
+tree tracks an agreed change from *agreed* to *landed*.
+
+**What it costs today: nothing that breaks, and something that will.** Both
+sides already behave as K1, K2 and K3 say — the rules are practised, just not
+written. But a third consumer, or either side in six months, reads the spec, and
+the spec is silent on three rules both projects follow. **A practised rule the
+spec does not state is the drift the shared spec exists to prevent.**
+
+**Round 24, and it is a proposal, not an edit:** a v6 carrying K1, K2 and K3 —
+their text is already agreed, so drafting is transcription — and a mechanism so
+this does not recur. The obvious shape is that a closing lap enumerates every
+change the round agreed, each with the commit that landed it or `not landed`,
+so a close cannot silently leave work behind. **That mechanism is itself a
+protocol change and needs their assent**, so it is proposed, not built.
+
+
+### The four shared documents: every known defect, in one table
+
+**Consolidated 2026-09-22 by the pre-round-24 audit**, read against the four
+files as they stand — byte-identical in both trees, `tools/seam-sync-check.py
+--fetch` exit 0 at `platterpus@52b4428`. None of these breaks a gate. Each is a
+statement a reader of the spec is entitled to believe and should not. **None can
+be fixed from one side** (`OWNERSHIP.md` §4), so this is the bundle a joint
+version bump would carry, and round 24 proposes it rather than editing it.
+
+| # | file | what it says | what is true | detail |
+|---|---|---|---|---|
+| 1 | `PROTOCOL.md` | nothing on K1, K2 or K3 | all three agreed in round 22, and both sides practise them | the entry above |
+| 2 | `PROTOCOL.md` §8, *"Rows added in v3/v4"* | *"These are not yet in force."* | the heading's own condition, *"required once both gates implement 4"*, is met: ours implements 5 (`tools/release-gate.py`, `PROTOCOL_VERSION = 5`), theirs 4 (`platterpus@52b44282:scripts/handshake.py:1093`) | here |
+| 3 | `PROTOCOL.md` §8, *"Rows added in v5"* | *"Not yet in force."* | **true today**, because their gate implements 4. But it is row 2 again: it goes false the day their gate reaches 5, and a spec frozen by version cannot be edited when that happens. The conditional headings are already correct; the fix is to delete both body sentences | here |
+| 4 | `PROTOCOL.md` | `HANDSHAKE-FROM-COMMIT` defined once | the two projects read it two ways | round 23 lap 3 §D. v5 §13 says so itself, so this is a known gap rather than a false statement |
+| 5 | `OWNERSHIP.md` §3 | *"we cannot run their program, read their source, or reproduce their environment"* | **"read their source" has been false since 2026-09-13.** Both repositories are public, and this environment reads theirs anonymously on every `seam-sync-check --fetch`. The other two clauses were not checked, so this makes no claim about them | `CLAUDE.md`, *"This rule used to carry the clause…"* |
+| 6 | `OWNERSHIP.md` §5 | *"we cannot read each other's source"* | same as row 5 | same |
+| 7 | `seam-rules.md` S-13 | round 7: *"laps to close: **37 and open**"*, *"releases produced: **0**"* | round 7 closed `GO` at **lap 39** (`round-07-lap-39.md`), and produced one release, `+platterpus.5`, at `release-ledger.tsv` row 11. `CLAUDE.md`'s copy of this table was corrected on 2026-09-16; the shared copy was not | here |
+| 8–12 | `seam-commands.md` | five statements | see that entry's table | *"`docs/seam-commands.md` carries FIVE known-wrong statements"*, above |
+
+**Fix row 5 first.** It is a false premise under a rule that may still be
+true. §3 argues that the systematic-gate duty is Platterpus's partly *because*
+we cannot read their source. The duty may well stay with them, since they hold
+the drive and run both sides' code. But part of the argument for it is now
+false, and a rule defended by a false reason can be dismissed by refuting that
+reason.
+
+**Scope, stated so a blank is not read as a pass.** Checked: every dated,
+versioned, counted or present-tense claim a grep for those shapes finds in all
+four files, plus `seam-rules.md` read through, S-1 to S-18 and §4–§5. Its one
+count about our binary, *"They document 41 flags"*, still matches `--help` on
+`+platterpus.14`. **Not checked:** counts about Platterpus's argv builder
+(*"we send 18"*, *"Seventeen flags reach the argv builder"*). Those are theirs
+to state, under S-9.
 
 ### A cited commit was orphaned by a squash merge and a branch delete — it HAPPENED, and the recovery was luck
 
@@ -892,7 +982,23 @@ hash. Lap 3 does declare lap 2's sha256 and byte count in
 property the proposal would make the rule.
 
 
-### The close condition cannot be satisfied by the side that speaks first — round-23 item
+### The close condition cannot be satisfied by the side that speaks first — ADOPTED AS v5 §5b, NOT YET IN FORCE
+
+**Status 2026-09-22: in the spec, built in our gate and not yet in theirs, and
+untested.**
+Round 23 adopted `PROTOCOL.md` v5, byte-identical in both trees, with this as
+§5b and Platterpus's readability condition as §5c. Our gate implements it and
+every path is keyed on the **file's** declared version; nothing in either tree
+declares 5, so no round has been graded by it. Their gate implements 4
+(`platterpus@52b44282:scripts/handshake.py:1093`), with a bootstrap reason
+naming §5b/§5c that their suite requires while gate and spec differ
+(`tests/test_handshake_tooling.py:1415` at the same commit). **A v4 gate
+refuses a file declaring 5**, so round 24 is its first *possible* test, and
+only once their gate reaches 5. `CLAUDE.md` sets the prediction and the
+measure: a round like 22 or 23, run under 5, closes in four laps, not five.
+Kept under *Open* until a round has actually closed under it — a fix nobody
+has exercised is a claim, and this file's headings are claims too.
+
 
 `PROTOCOL.md` §5 requires `HANDSHAKE-PEER-VERDICT: GO`, *"transcribed from the
 file they actually sent"*, in each side's own newest lap. **The side that speaks
@@ -962,7 +1068,27 @@ load-bearing element**. The publishing-is-not-sending distinction did work four
 times across rounds 21 and 22, including on our own lap 5, and we still missed
 it here. Their addition goes into round 23's lap 1 as part of the v5 clause.
 
-### A HELD lap's draft verdict reaches the compiled `Handshake:` line — round-23 item
+### A HELD lap's draft verdict reaches the compiled `Handshake:` line — AGREED IN ROUND 23, AND NOT BUILT
+
+**Status 2026-09-22, found by the pre-round-24 document audit: the change was
+agreed and nobody implemented it.** Round 23 §0.2 asked for a qualifier —
+`round N lap L OPEN, verdict GO (draft — lap not released for reading)` — and
+Platterpus assented in their lap 2 §C.2 after running four banner shapes
+through their real parser and their real classifier, both safe, ending *"Go
+ahead and land it."* Our laps 3 and 5 correctly say the **condition** closed,
+since the condition was assent, an amendment or a refusal. **But
+`grep -rn "not released for reading" src/ tools/gen-handshake-state.py` returns
+nothing**: the change itself was never written, and `+platterpus.14`, cut the
+same day, does not carry it.
+
+**A condition satisfied is not a change shipped, and the audit is the only thing
+that noticed.** Nothing in either gate checks that an agreed change landed; the
+round closed on the agreement, which is correct, and the building was left to
+memory. It is authorised by round 23 and is ours to build; the next release is
+the first that can carry it, the way `.14` carried round 22's. **Nothing is
+written for that release yet**, so that is a plan, not a fact. Round 24's
+opening lap should say the change was missed.
+
 
 `tools/gen-handshake-state.py` takes `latest.verdict` verbatim, so with lap 5
 published and `HANDSHAKE-READY-TO-READ: no` the banner reads `round 22 lap 5
@@ -1030,10 +1156,21 @@ whether our format grows a way to mark a superseded or abandoned read at all.
 
 ### A track's per-track lines are computed from the REQUEST, not the outcome
 
-**HALF FIXED IN ROUND 22, at `89a57d6`, and the half that remains is the harder
-one.** Kept here rather than moved to the fixed section, because a heading that
-said *fixed* over an entry describing a live defect is the label rule this
-repository applies to log lines, turned on its own notes.
+**HALF FIXED, AND THAT HALF SHIPPED IN `+platterpus.14` AT `3e01bb3` ON
+2026-09-22.** Written at `89a57d6` in round 22, released once Platterpus 0.6.53
+accepted both wordings. **The half that remains is the harder one** — `File(s):`
+still lists what was *requested* rather than what was written, because it prints
+before the encoders are joined — and it is why this entry stays under *Open*: a
+heading that said *fixed* over an entry describing a live defect is the label
+rule this repository applies to log lines, turned on its own notes.
+
+**Two sentences in the blockquote below were true when written and are now
+false**, and they are kept because the record of why a release waited is worth
+having: `+platterpus.14` *has* been cut, legitimately, after the release it
+waited for; and *"naming it there is what enforces the order"* was refuted before
+the round closed — a close cannot name a release that does not exist when it
+happens, which `CLAUDE.md` records. **Nothing machine-checkable enforced the
+order; the plan and the operator did.**
 
 > **THE FIX IS NOT RELEASABLE ON ITS OWN, and the reason came back from
 > Platterpus in round 22 after our lap 1 had already gone.** The renamed line is

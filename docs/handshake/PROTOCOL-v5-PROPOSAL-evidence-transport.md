@@ -1,5 +1,24 @@
 # Proposal for handshake protocol v5 — evidence transport
 
+> **v5 SHIPPED ON 2026-09-22, AND IT IS NOT THIS PROPOSAL.** Round 23 adopted a
+> different v5, byte-identical in both trees: the close rule as §5b and
+> Platterpus's readability clause as §5c, hash `d698d58a8130ab52`. **Nothing in
+> this file is in any shipped protocol.** The file keeps its name and path
+> because sent laps cite both, and a sent lap is immutable.
+>
+> **Its section numbers now collide with the spec's.** "§5b.7" and "§5b.8" below
+> are this proposal's items; shipped v5's §5b has no subsections and means
+> something else. Read every "§5b.N" here, and every citation of one elsewhere,
+> as *proposal item 5b.N*.
+>
+> **What became of its substance.** Pull transport (its §5b.7) is operative by
+> the operator's 2026-09-13 rule and by both projects' practice, not by the spec.
+> `HANDSHAKE-READY-TO-READ` (its §5b.8's dependency) **is** in the spec now, by
+> reference from v5 §5c. Envelopes and bundles remain legal because nothing
+> forbids them. If any of the rest is still wanted, it belongs to a v6 and to its
+> own round. **The paragraph below is kept verbatim; its present-tense claims
+> about the protocol's version are false.**
+
 **Status: a DRAFT PROPOSAL, not the spec.** `docs/handshake/PROTOCOL.md` is v4
 and is unchanged; its hash is declared in every lap and editing it mid-round
 would break `HANDSHAKE-SHARED-HASHES` on both sides and impose a rule on a

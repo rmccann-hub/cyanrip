@@ -1,10 +1,16 @@
 # cyanrip beta — `0.9.4-rc1+platterpus.5-beta.5`
 
-> **SUPERSEDED, AND BY SEVEN RELEASES. Marked 2026-09-13.** The beta this file
-> describes is long gone; the live release is **`0.9.4-rc2+platterpus.12` at
-> `fe4d2c4`**, `release_seq` 22. **Nothing here describes what a user installs
-> today** — read `release-manifest.json`, and order by `release_seq` rather than
+> **SUPERSEDED. Marked 2026-09-13; banner corrected 2026-09-22.** The beta this
+> file describes is long gone. **Nothing here describes what a user installs
+> today — read `release-manifest.json`**, and order by `release_seq` rather than
 > by parsing either version string.
+>
+> **This banner used to name the live release, and was wrong within six days.**
+> It said *"the live release is `+platterpus.12` at `fe4d2c4`"*; two releases
+> later it still did. A banner on a superseded file cannot be kept current by
+> anything, because nothing reads it on release day. So it points at the one
+> artifact that is regenerated and `--check`ed with every release, and states no
+> version of its own.
 >
 > Kept for the record of what that beta was for. Not updated in place, because
 > rewriting it would destroy the only account of a build that existed.

@@ -64,9 +64,11 @@ settled by building 0.9.3 and running it. The measured matrix is
 
   **AND THE NUMBER IT REPORTS IS WRONG BY ROUGHLY FIFTEEN TIMES.** `cd-paranoia
   -A` on the same drive says **137 sectors, then 140**; we say *at least 2048*
-  on **every** run that has produced the line — **nine** filed sessions as of
-  2026-09-17, derived by scanning the transcripts rather than counted from
-  memory; this said "all three" for a month while five more existed. **The ceiling is not why** — `miss_cost` is
+  on **every** run that has produced the line — **ten** filed sessions as of
+  2026-09-22, the tenth on `2cce60d` inside a full acceptance session, derived by
+  scanning the transcripts rather than counted from memory; this said "all three"
+  for a month while five more existed, and then "nine" for five days after the
+  tenth was filed. **The ceiling is not why** — `miss_cost` is
   calibrated with a full-stroke seek while the test read is a backseek of at
   most the current run length, so every test read scores as a hit and the search
   runs to whatever limit exists. **Raising `PROBE_MAX_SECTORS` moves the number
@@ -388,8 +390,14 @@ regardless of who is at the keyboard.
   counts as a lap.** Until it is settled, do not leave a lap unannounced across
   a lap boundary.
 
-  Proposed to Platterpus as `PROTOCOL.md` §5b.7/§5b.8 in
-  `docs/handshake/PROTOCOL-v5-PROPOSAL-evidence-transport.md`. Envelopes and
+  Proposed to Platterpus as §5b.7/§5b.8 of
+  `docs/handshake/PROTOCOL-v5-PROPOSAL-evidence-transport.md` — **and that proposal
+  is NOT the v5 that shipped.** v5 was adopted in round 23 carrying the close rule
+  as §5b and the readability clause as §5c; it contains no §5b.N subsection. So
+  **"§5b.7" names the proposal's numbering, not the spec's**, and the collision is
+  worth one sentence wherever it is cited. The pull transport it describes is
+  operative by operator rule and practice, not by any shipped protocol; the
+  `HANDSHAKE-READY-TO-READ` field it depends on **is** now in the spec, by §5c. Envelopes and
   bundles stay legal (§5b.6); pull is the default, not the only route, and a rig
   bundle still has to reach both projects byte-identical.
 
@@ -696,10 +704,14 @@ theirs. Ordering a round and ordering the work inside one are two questions, and
 conflating them is what made our two answers look opposed when only one of them
 was actually about round initiation.
 
-**Not yet in `seam-rules.md`.** It belongs there, it is a shared file neither
-project owns, and it goes in at the next version bump shipped by both sides on
-the same day. Restated here meanwhile because it changes what we do tomorrow —
-same reason the `[BOTH]` rules below are restated.
+**It IS in a shared file, and has been since protocol v3: `PROTOCOL.md` §1a**,
+normative — *"The provider opens. By default, every time"*, with the blocker
+rule as exception **E2** and an operator hand-off as **E3**. This paragraph said
+*"Not yet in `seam-rules.md`"* for five weeks after that, which was literally
+true and pointed a reader at the wrong file; corrected 2026-09-22 by grepping
+the four shared documents rather than remembering which one it went into.
+**Cite §1a, not this section** — this is a restatement, and a restatement is a
+second spec that can drift.
 
 ### Which project owns what
 
@@ -789,10 +801,12 @@ also why a hash must be computed over the *file the table names*, not over the
 path you expected to find it at.
 
 **Present tense would now be false, and this is checkable rather than hoped.**
-Measured **2026-09-16 against `platterpus@b0731ef`**, with `--fetch`: **all four
-shared documents are byte-identical** and all four hashes match the ones round
-20 lap 1 declared in `HANDSHAKE-SHARED-HASHES`. Their tip has moved twice since
-the previous reading here (`abd2eb8`, 2026-09-13) and the documents have not.
+Measured **2026-09-22 against `platterpus@52b4428`**, with `--fetch`: **all four
+shared documents are byte-identical**, and the protocol is **v5** —
+`d698d58a8130ab52` — adopted in round 23 by both sides. The reading before it said
+NOT IN SYNC for most of a day, correctly: v5 had been committed on their working
+branch and not yet on `main`, which is the ref this tool reads. **Commit the
+change where the other side reads, or it is not in their repository.**
 **Re-run it rather than quoting this line** — `tools/seam-sync-check.py
 --fetch` diffs the real files rather than comparing two hashes each side
 computed for itself, it prints the peer SHA it read at, and it is the check that
@@ -1640,7 +1654,10 @@ Four mechanisms, each measurable, each with a rule:
   §J may be empty; "no questions" is a complete section.
 
 And the move that actually ends a round, which costs nothing and neither side
-had used before lap 38:
+had used before lap 36 — `round-07-lap-36.md:30`, *"Say the word on them and
+lap 37 is a `GO` from us"*, honoured in lap 38. This said *"before lap 38"*
+until 2026-09-22, and `seam-rules.md` S-18 said lap 36; the lap agrees with the
+shared file:
 
 > **Pre-commit to the close.** A lap may declare *"our next lap is `GO` unless X"*,
 > naming X. It binds. It is the only thing that stops the reflex to find one more
@@ -1649,9 +1666,11 @@ had used before lap 38:
 
 **The failure mode is specific and worth naming: applying release-grade rigour
 to the *round* rather than to the *release*.** The rigour is right. Attaching it
-to a process that must terminate is what produced 36 laps, 8 pre-releases and no
-release. A round is a decision about one pin, not a standing invitation to audit
-the seam.
+to a process that must terminate is what produced 39 laps and 8 pre-releases
+before the round's one release — `+platterpus.5`, `release-ledger.tsv` row 11,
+after beta rows 3–10. This said *"36 laps, 8 pre-releases and no release"*,
+which was the count when it was written. A round is a decision about one pin,
+not a standing invitation to audit the seam.
 
 ### Round 14 did it again, and the maintainer stopped it — 2026-08-26
 
@@ -1697,9 +1716,15 @@ in three laps or the reform failed.
 2026-09-16, and this paragraph carried the prediction with no result beside it
 for a month:
 
-| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 |
-|---|---|---|---|---|---|---|---|---|---|
-| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** |
+| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** | **5** | **5** |
+
+**The measure, stated because two readings of it already exist:** laps is the
+highest `HANDSHAKE-LAP` **either** side declared for the round. Platterpus counts
+round 23 as *four*, because their gate closed on their own lap 4; ours needed a
+lap 5. Both are true, and a prediction scored in laps is only falsifiable if it
+names which one it means — this one.
 
 Round 15 took **sixteen** and round 16 took **seventeen**. Convergence to three
 laps began at **round 17** and held for four rounds; **round 21 took five, and
@@ -1715,8 +1740,28 @@ right and its own one-round test was wrong — which is worth more than either h
 alone, because **a falsifiable prediction that nobody scores is indistinguishable
 from one that was never made.** Set the test, and then go back and read it.
 
-Re-check: `for r in 15 16 17 18 19 20; do ... grep -m1 '^HANDSHAKE-LAP:' ...;
-done` over `docs/handshake/round-$r-lap-*.md` and
+**AND THEN ROUNDS 22 AND 23 TOOK FIVE TOO — three five-lap rounds in a row —
+and this time the extra lap is one mechanism, not two stories.** In both, their
+newest lap is 4 and ours is 5, and **our lap 5 existed only to carry a
+transcription**: §5 requires `HANDSHAKE-PEER-VERDICT: GO` in a file of ours, and
+the side that speaks first writes its lap before the answer exists. Round 22's
+lap 3 had to say `OPEN`; round 23's lap 3 had to say `OPEN`. That is what
+`PROTOCOL.md` v5 §5b removes, adopted in round 23 by both sides. **Round 24 is its
+first possible test, and the prediction is set in advance: a round like 22 or
+23, run with every lap declaring `HANDSHAKE-PROTOCOL: 5`, closes in four laps by
+the measure above. If round 24 runs under 5 and takes five with nothing new to
+explain it, v5 did not work.**
+
+**The condition is not a formality.** At `platterpus@52b44282` their gate still
+implements 4 (`scripts/handshake.py:1093`). Their round-23 lap 4 §C calls that
+v5's own instruction, because implementation follows adoption. **A v4 gate
+refuses a file declaring 5**, so a round run before their gate reaches 5 has to
+declare 4. §5b then cannot apply, and the extra lap comes back for a reason v5
+never addressed. Such a round is not a test of v5, and it should say so rather
+than score it.
+
+Re-check: `for r in 15 16 17 18 19 20 21 22 23; do ... grep '^HANDSHAKE-LAP:'
+...; done`, taking the maximum over `docs/handshake/round-$r-lap-*.md` and
 `docs/handshake/inbound/round-$r-lap-*.md`. Never from the filename — the
 declared field is the fact, and the name is a second description of it.
 
@@ -1863,103 +1908,67 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
-**`+platterpus.13` SHIPPED on 2026-09-18** at `2cce60d`, `release_seq` 23,
-authorised by round 21 — `docs/RELEASE-PLAN-platterpus.13.md` is executed and
-bannered. Every clause this paragraph used to carry is now false and each was
-checkable: `meson.build` says `.13`, the ledger's last row is seq 23, and the
-gate names round **22**. It carried the `Retry limit:` rename and
-`Ripping errors:` counting encoder failures, and the second is why it mattered
-rather than tidied — `+platterpus.12` stamps `No errors occurred` onto an
-archival artifact for a rip that lost data.
+**`+platterpus.14` SHIPPED on 2026-09-22** at `3e01bb3`, `release_seq` 24,
+stable, authorised by **round 22** — `docs/RELEASE-PLAN-platterpus.14.md` is
+executed and bannered. It carries round 22's per-track split — `Track %i read
+successfully!` / `read with errors.` and the new three-state `Encoder errors:`
+line — and it is the first release of this fork with a **consumer-side
+prerequisite**, because both renamed lines are Platterpus's `_TRACK_START` block
+delimiter: shipped ahead of their parser, it would have read as a disc with zero
+tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
+**The next release is `+platterpus.15` and nothing is written for it.**
 
-**The next release is `+platterpus.14` and IT HAS A CONSUMER-SIDE PREREQUISITE,
-which no release of this fork has had before.** It carries round 22's per-track
-split, and the renamed line is Platterpus's `_TRACK_START` block delimiter — so
-a `.14` shipped before their both-wordings release exists would make their
-current parser report a disc with zero tracks in it. **Their round-20 ordering
-governs: their release first, ours second.**
+**Four lessons from `.14`, each of which cost something to learn:**
 
-**AND NOTHING MACHINE-CHECKABLE ENFORCES THAT — say so rather than inventing a
-mechanism.** This paragraph first claimed the close enforced it, since round 22
-cannot close without `HANDSHAKE-PEER-VERSION`, so naming the both-wordings
-release there would do the work. **Their lap 2 §0.2 makes that impossible:**
-their own gate exits 1 while our round is open, so the release that accepts both
-wordings cannot be cut until round 22 has closed — at which point
-`HANDSHAKE-PEER-VERSION` necessarily names the release *before* it. The sequence
-is close, then their release, then ours, and **the close cannot name a release
-that does not exist when it happens.**
+- **Nothing machine-checkable enforces a consumer-side prerequisite — say so
+  rather than inventing a mechanism.** This file first claimed the close would
+  enforce it, since round 22 cannot close without `HANDSHAKE-PEER-VERSION`. It
+  cannot: their gate exits 1 while our round is open, so the release that
+  accepts both wordings could only be cut after round 22 closed — **a close
+  cannot name a release that does not exist when it happens.** It was a `§1`
+  condition in the plan and an operator act, like a ledger row.
+- **The prerequisite was met silently, and was found by reading their parser.**
+  Their status announced Platterpus 0.6.53 and never said it was the
+  both-wordings release. At the tag rather than the branch, `v0.6.53` =
+  `52b44282`, where `cyanrip_log.py:237-244` matches both wordings and no earlier
+  tag does — counted across four tags, `0, 0, 0, 1`. **An announcement's silence
+  is not an absence; read the artifact.**
+- **"A release" includes their pre-releases — asked, not decided.** Every `v0.*`
+  tag of theirs is published pre-release by construction (`release.yml:343`), so
+  the flag carries no information across their 0.x line; their updater ignores
+  it (`update_check.py:99-117`); and `.13` had already followed v0.6.50, a
+  pre-release, in round 20. Requiring a non-pre-release would have gated `.14`
+  on something their scheme cannot produce.
+- **Before choosing a channel, read what their updater does with it.** Their app
+  reads **our** `release-manifest.json` from this branch's tip
+  (`ripper_manifest.py:66-68`) and **offers** — never installs — a newer build on
+  the user's channel, stable by default. Their *approval* keys on `FORK_PIN`, a
+  different key. **So any stable release of ours opens a window in which their
+  default-channel users are offered a build stamped `unapproved`**, lasting until
+  they roll the pin. For `.13` that was about two and a half days: our publish
+  commit at 2026-09-18T16:33Z to their pin roll at `platterpus@267a6961`,
+  2026-09-21T07:44Z, both by commit date. For `.14` it lasts until round 24
+  reviews it. The plan recommended a beta; **the operator chose stable, knowingly, on the
+  judgement that round 24 will be short**, and round 24's opening lap says so.
+  That was the operator's call to make, and the plan's job was to put the cost in
+  front of them before it was made.
 
-So it is a `§1` condition in the `.14` plan and an operator act, exactly like
-appending a ledger row, and it is written down here where it can be checked
-rather than claimed to be automatic. **A guess wearing a derivation's clothes is
-worse than an admitted gap** — and this one was written an hour before the
-artifact that refuted it arrived.
+**Plans that exist, all executed and bannered:** `.5`, `.12`, `.13`, `.14`.
+**The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the
+newest, it followed the four-commit sequence exactly, and it is the first to pose
+a decision rather than recommend a default — its §3 laid out both channels with
+their costs, and the banner records which the operator chose. `.12`'s is still
+worth reading for the thing no plan can know in advance: it was written for
+round 15 and authorised by round 17. **A plan names a condition, not a round
+number.** `.5`'s banner is forty days late and `CLAUDE.md` pointed readers at it
+in the meantime.
 
-**THE PREREQUISITE IS MET. `PLATTERPUS 0.6.53` IS THE BOTH-WORDINGS RELEASE,
-and it was found by reading their parser rather than by being told** — their
-post-round-23 status announced 0.6.53, listed what moved and what did not, and
-never mentioned it. Verified at the tag rather than the branch:
-`git ls-remote --tags` puts `v0.6.53` at `52b44282`, which is also their `main`,
-and at that commit `src/platterpus/parsers/cyanrip_log.py:237` reads
-
-```python
-_TRACK_START = re.compile(
-    r"^Track (?P<number>\d+) "
-    r"(?P<what>"
-    r"ripped and encoded successfully!|ripped and encoded with errors\.|"  # <= .13
-    r"read successfully!|read with errors\.|"  # >= .14, their §0.3
-    r"is data:"
-    r")"
-)
-```
-
-At `v0.6.52` the same constant carries **only** the old wording. So the ordering
-round 20 set and round 22 re-agreed — consumer accepts both, ships a release,
-*then* the provider ships — is satisfied, and `.14` is unblocked.
-
-**A PRE-RELEASE COUNTS — asked rather than decided, and answered by them with
-three pieces of evidence, each verified at `platterpus@52b44282`.** Every `v0.*`
-tag is published pre-release by construction (`.github/workflows/release.yml:343`),
-so the flag is a constant across their whole 0.x line; their updater ignores it
-on purpose and reads the version string instead (`update_check.py:99-117`); and
-round 20 already settled it by precedent — `Retry limit:` first appears in their
-parser at v0.6.50, a pre-release tagged 2026-09-16, and `.13` followed on
-2026-09-18. Requiring a non-pre-release would have gated `.14` on something
-their scheme does not produce.
-
-**SO `.14` IS UNBLOCKED, AND THE DECISION THAT REPLACES THE PREREQUISITE IS THE
-CHANNEL.** `docs/RELEASE-PLAN-platterpus.14.md` poses it. Their app reads **our**
-`release-manifest.json` from this branch's tip (`ripper_manifest.py:66-68`) and
-**offers** — never installs — a newer build on the user's channel, stable by
-default, stamping every rip with it `unapproved` until their `FORK_PIN` rolls;
-and they have said `FORK_PIN` stays at `2cce60d` **until a round reviews `.14`**.
-So a stable `.14` puts an unreviewed build in front of every default-channel
-user for as long as round 24 takes. The plan recommends
-`+platterpus.14-beta.1` on beta — the rig is already on it — with stable after
-round 24 reviews it. **Publication is the operator's act; this paragraph does
-not decide it.**
-
-**This paragraph said no plan existed, and before that it claimed one did for
-forty days** by pointing at `docs/RELEASE-PLAN-platterpus.5.md` as *"the plan
-for the next one"* — but `+platterpus.5` **shipped**, at `ddf7ac3` committed
-2026-08-07 under round 7, `release-ledger.tsv` row 11. That file is history and
-carries a banner saying so; its §1 conditions and its four observable surfaces
-are still worth reading, and every present-tense claim in it about the pin and
-the version is wrong.
-
-**The worked example to copy is `docs/RELEASE-PLAN-platterpus.12.md`**, which is
-also executed and also bannered — and which records the thing a plan cannot know
-in advance: it was authorised by **round 17**, not by round 15, whose close it
-was written to wait for. A plan names a condition, not a round number.
-
-What both got right and any successor must keep: they named the observable
+What every plan got right and any successor must keep: it named the observable
 surfaces a consumer has to check, and the list of things the release would still
 not verify, so that a green suite could not be mistaken for hardware coverage.
 
 **And a plan is bannered on the day it is executed, not when somebody notices.**
-The `.12` banner is dated 2026-09-13 against a release commit of 2026-09-12 —
-one day. The `.5` one is dated forty days late, and in between `CLAUDE.md`
-pointed a reader at it.
+`.13`'s and `.14`'s were bannered the same day as their release commits.
 
 ### A close is affirmative, two-sided, and tested — never assumed
 

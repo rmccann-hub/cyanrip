@@ -1,5 +1,23 @@
 # Round 23 — a plan and a lap-1 draft, not a round
 
+> **EXECUTED, AND ROUND 23 CLOSED `GO`/`GO` ON 2026-09-22.** Marked the same day.
+> Lap 1 was copied from this draft and released at `8037b73`; the round closed at
+> our lap 5 (`4b2b84d`), five laps by the highest `HANDSHAKE-LAP` either side
+> declared. All three close conditions were met: §0.1 by `PROTOCOL.md` v5,
+> byte-identical in both trees; §0.2 by Platterpus's assent; §0.3 by the
+> disposition of the acceptance run.
+>
+> **One condition closed and its change was never built.** §0.2's condition was
+> *assent, an amendment or a refusal*; Platterpus assented, and the qualifier it
+> agreed — `(draft — lap not released for reading)` on a held lap's banner — was
+> not implemented. The pre-round-24 audit found it. It is authorised and ours to
+> build, and the next release is the first that can carry it.
+>
+> **The text below is kept verbatim as the record of what was intended**, and its
+> present-tense claims — that round 23 is not open, that the acceptance session
+> has not run — are now false. The `<<AT-RELEASE>>` markers are resolved in the
+> released lap, not here.
+
 **ROUND 23 IS NOT OPEN.** Nothing here is a lap. This file is deliberately
 `docs/ROUND-23-PLAN.md` and not `docs/handshake/round-23-lap-01.md`, and the
 distinction is mechanical rather than stylistic:

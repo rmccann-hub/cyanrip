@@ -1,5 +1,16 @@
 # Round 14 — what cyanrip expects the acceptance pass to observe
 
+> **HISTORICAL — a round-14 document. Marked 2026-09-22; it had no banner.**
+> Round 14 closed on 2026-08-26 and every present-tense state claim below is
+> about that week: its *"newest cyanrip"* is `+platterpus.8` and *"what the rig
+> runs"* is `ddf7ac3`. **For the live release read `release-manifest.json`.**
+>
+> **What is still worth reading is the method, not the table.** It specifies the
+> *observables* a hardware pass must record — measurement with provenance, and no
+> acceptance criteria, because judgements are the consumer's. That split is
+> still how every acceptance session is read here, most recently
+> `docs/rig-2026-09-22-2cce60d/`.
+
 **Status: a specification of observables, not a test plan.** Platterpus is writing
 the plan; this is the half only the provider can write, published so their plan
 can be built against it rather than reverse-engineered from a log.
