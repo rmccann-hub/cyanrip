@@ -241,7 +241,16 @@ making the signal reliably land mid-read changes what the check exercises. **The
 comment is corrected now regardless**, because a docstring claiming a guarantee
 the code does not have is the defect that let this go unnoticed.
 
-### `Lap commit list names its range` has timed out FOUR times, and the call that hangs is now named
+### `Lap commit list names its range` has timed out FIVE times, and the call that hangs is now named
+
+**Fifth occurrence 2026-09-22**, at `11667d6`, in a full suite:
+`Ok: 85  Fail: 1  Timeout: 1`, exit 1, `30.01s`, `SIGTERM`. Standalone
+immediately afterwards: **1.12 s**. Same test, same limit, same
+full-suite-only context, same bimodality — a 27-fold gap between the two
+modes with nothing in between. Nothing new; recorded because a timeout is
+neither a pass nor a fail, and an unrecorded one reads as a green suite.
+The same run's other failure (`Settled facts`) was real and is fixed —
+three rows pinned literals that a new rig session falsified.
 
 **Second occurrence 2026-09-17**, at the tip `dcd6f95`, in a full suite:
 `Ok: 85  Fail: 0  Timeout: 1`, exit 1.
@@ -409,6 +418,93 @@ enforcing `HANDSHAKE-CLOSE-BY`: *enforcement lets a clock skew block a release*.
 A 30-second default doing the same thing to a release is the same shape, one
 layer down.
 
+### Every figure the log reports about the audio is measured BEFORE the filter graph
+
+**Found by the 2026-09-22 acceptance session, and it is not the defect it looks
+like.** Section P3 of that run ripped track 1 of a real disc twice, back to
+back, changing one flag:
+
+| | `-H -E` | `-H -W` |
+|---|---|---|
+| `EAC CRC32` | `B0D122E7` | `B0D122E7` |
+| `Accurip v1` / `v2` | `5D3C90CB` / `22B9924D` | `5D3C90CB` / `22B9924D` |
+| `Sample peak level` | `94.3% (-0.5 dBFS)` | `94.3% (-0.5 dBFS)` |
+| `True peak level` | `0.3 dBFS` | `0.3 dBFS` |
+| `Integrated loudness (R128)` | `-13.9 LUFS` | `-13.9 LUFS` |
+| `REPLAYGAIN_TRACK_PEAK` | `1.029445` | `1.029445` |
+| `Preemphasis` | `none detected (deemphasis forced)` | `none detected` |
+
+`docs/rig-2026-09-22-2cce60d/session/script-report.json`, steps 217 and 221.
+Identical to the digit on everything except the one field that reads a setting.
+
+**That reads like the round-15 ternary cascade returning. It is not, and the
+difference was measured rather than argued.** Six invocations on disc images,
+`docs/rig-2026-09-22-2cce60d` notwithstanding — this part needs no drive:
+
+| flags | fixture | output PCM sha256/16 | bytes |
+|---|---|---|---|
+| `-H -E` | plain | `05f1fe8cedaff2a4` | 2,822,400 |
+| `-H` | pre-emphasised | `05f1fe8cedaff2a4` | 2,822,400 |
+| `-H -W` | plain | `efc8702f95ebc8b3` | 2,822,400 |
+| `-H -W` | pre-emphasised | `efc8702f95ebc8b3` | 2,822,400 |
+| `-E` | plain | `fea860467bdb5368` | 1,411,200 |
+| `-W` | plain | `e499ef1f978fe435` | 1,411,200 |
+
+**Four distinct audio streams. One set of reported numbers.** The fix works —
+forcing de-emphasis under `-H` changes the samples, disabling it changes them
+back, and the automatic path on a flagged disc lands exactly on the forced one.
+What the log cannot do is *witness* any of it.
+
+**The mechanism, read from the source rather than inferred.** `filter_frame()`
+pushes the **input** frame into the ebur128 graph
+(`src/cyanrip_encode.c:656`) and only afterwards pushes the same frame into the
+de-emphasis/HDCD graph (`:677`), whose *output* is what reaches the encoders
+(`:715`). The two graphs are **siblings off one source, not a series**.
+Separately, `crip_process_checksums()` takes the same `data` that is then handed
+to `cyanrip_send_pcm_to_encoders()` (`src/cyanrip_main.c:872`), so the checksums
+are over the raw disc bytes.
+
+**The two halves want opposite things, and collapsing them would be the fix
+going wrong.**
+
+- **`EAC CRC32` and the AccurateRip checksums are CORRECT pre-filter** and must
+  stay there. EAC and AccurateRip define theirs over the raw disc samples; a
+  post-filter value stops matching the database on every de-emphasised or HDCD
+  disc. What is missing is only that nothing says so — the same `Scope:`
+  problem the paranoia counters already solved, one field over.
+- **The loudness block is WRONG pre-filter.** `Sample peak level:`,
+  `True peak level:`, both R128 figures and all five `REPLAYGAIN_*` tags
+  (`src/cyanrip_main.c:433-449`) go into the delivered file and describe audio
+  that is not in it. ReplayGain exists to normalise playback of *this file*.
+
+**A source comment asserts the opposite of what the code does.**
+`src/cyanrip_encode.c:597-602` says the peak is *"deliberately measured on the
+same frames that go into the ebur128 filter rather than on the bytes off the
+disc: a raw-byte measurement would differ legitimately whenever deemphasis or
+HDCD decoding is active"*. The frames that go into the ebur128 filter **are** the
+bytes off the disc. The two methods agree because they read the same thing, and
+the case the comment names is exactly the case where that thing is the wrong
+one — *a fixture whose numbers agree by construction cannot discriminate*, with
+the comment as the tell.
+
+**Reach, stated because a 247-of-247 acceptance pass invites the wrong
+reading.** Only runs with `-H` and/or active de-emphasis. Without either,
+`dec_ctx->filt.buffersrc_ctx` is NULL and the raw frame goes straight to the
+encoders (`src/cyanrip_encode.c:674`), so pre- and post-filter are one frame and
+every figure is right. **No Platterpus rip is affected today** — none of the
+eight `Invoked as:` lines in the 2026-09-22 session carries `-H`, `-E`, `-W` or
+`-x`, read off the logs rather than off their rig-check summary. So it is a real
+defect with, right now, zero consumer exposure.
+
+**Not fixed here, deliberately.** Moving the measurement downstream changes the
+*values* of five P2 lines and five metadata tags on affected rips, which is
+contract surface and wants a round — and the round in flight is pinned at
+`2cce60d`, where a finding defaults to the next round. Reported in round 23 §H.
+
+`sc_deemph_with_hdcd()` now pins both halves with opposite intents and says
+which is which; the checksum half failing is a regression, the loudness half
+failing is the fix landing.
+
 ### The cache probe's calibration is wrong
 
 `-x` reports `at least 2048 sectors, upper bound unknown` on a drive
@@ -437,9 +533,13 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: eight of them**,
-derived 2026-09-15 by scanning `docs/rig-*/session/transcript.txt` rather than
-by adding the ones anyone remembered. The prediction this section made was *"an
+session that produced a `Cache probe:` line is here now: ten of them**, derived
+by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
+anyone remembered. **This sentence said "eight" while the table held nine rows**
+— written 2026-09-15 and never recounted when 09-17 was added, which is the same
+stale-tally defect the section is about. The count is now taken from the table
+and the table from the transcripts, and `sc_cache_table_matches_the_transcripts()`
+prints both totals when they disagree. The prediction this section made was *"an
 uncached read in the hundreds of milliseconds beside a cached read of a few."*
 
 | session | uncached (`miss_cost`) | cached | threshold (`miss_cost / 4`) | margin |
@@ -453,6 +553,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-15 `fe4d2c4` | 362.6 ms | 61.7 ms | 90.7 ms | 68% |
 | 2026-09-15b `fe4d2c4` | 362.7 ms | 81.6 ms | 90.7 ms | **90%** |
 | 2026-09-17 `fe4d2c4` | 362.8 ms | 62.2 ms | 90.7 ms | 69% |
+| 2026-09-22 `2cce60d` | 251.4 ms | 42.1 ms | 62.9 ms | 67% |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -460,9 +561,12 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, eight times. "A cached read of a few ms":
-FALSIFIED** — 42 to 82, not 2.2. All eight end identically, at
-`at least 2048 sectors … search ceiling reached`.
+**Hundreds of ms uncached: confirmed, ten times. "A cached read of a few ms":
+FALSIFIED** — 42 to 82, not 2.2. All ten end identically, at
+`at least 2048 sectors … search ceiling reached`. The tenth, 2026-09-22, is the
+first on `2cce60d` and the first taken inside a full acceptance session; it
+changes nothing, which is the point — **ten runs, three builds, four calibration
+clusters, one answer.**
 
 **THE FOUR-RUN CONTROL, which is what the missing rows were hiding.** Sessions
 09-10, 09-11, 09-15 and 09-15b calibrated `miss_cost` at **363.2, 362.5, 362.6
@@ -676,13 +780,13 @@ coverage.
 
 | gap | status |
 |---|---|
-| `-x` correctness on a real drive | measured twice, wrong both times — see above |
+| `-x` correctness on a real drive | **measured ten times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-22. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
 | damaged media | never tested; no damaged disc available |
 | CD-TEXT from a physical disc | `mmc_read_cdtext` is a different code path from the image parser, and no disc with CD-TEXT has been read |
-| the diagnosed-abort exit code | every rig rip so far had `Ripping errors: 0` |
-| a non-zero `Read stalls:` count | **a silent watchdog is not a working watchdog.** Zero heartbeats on healthy media is the expected result and is evidence of nothing |
+| ~~the diagnosed-abort exit code~~ | **RETIRED 2026-09-22.** `cyanrip -N -l 1` with no `-s` exited **1** with `Offset is unset!` at column 0, `Rip completed:  no (aborted, 0 of 14 tracks)` and a complete footer — `docs/rig-2026-09-22-2cce60d/session/script-report.json` step 212. The reason given here (*"every rig rip so far had `Ripping errors: 0`"*) had **already been false since 2026-09-10**: seven filed rig logs carry `Ripping errors: 1`, counted off `docs/rig-*/rips/*.log` rather than remembered |
+| ~~a non-zero `Read stalls:` count~~ | **RETIRED 2026-08-26**, and this row outlived the retirement by a month. **Five** filed rig logs carry a populated line, up to `5 reads exceeded 10s; longest 11s (track 1, LSN 8322)`, counted off `docs/rig-*/rips/*.log`. The rule it carried still holds and is why it is kept visible: **a silent watchdog is not a working watchdog**, and zero heartbeats on healthy media — which is what all eight rips of 2026-09-22 report — is the expected result and evidence of nothing |
 
 The remaining `TODO`s in `src/pregap.c` are upstream's, carried with the feature
 from PR #115, and are open questions rather than known defects: whether libcdio
@@ -799,6 +903,30 @@ The datum is not missing, only uncarried — their re-read is a cyanrip invocati
 and writes its own `creation_time`. Asked as round 8 `J14`. **Unrecoverable
 after the fact**, which is why it is asked at all: a read time is not derivable
 a month later from anything on disk.
+
+**AND ON 2026-09-22 IT LOST THE ADDENDUM TOO, so nothing on disk records the
+superseding read at all.** Measured in `docs/rig-2026-09-22-2cce60d/`. Tracks 3
+and 5 reported `Secure re-read:  did NOT converge after 3 reads (repeat limit
+hit)`; Platterpus re-ripped exactly those two in a second invocation
+(`session/platterpus-app-log.txt:49024`, `-Z 2 -l 3,5`, in
+`cwd=/tmp/platterpus-refix-_sf3v80t`), that run did not converge either, and
+their log records the disposition — *"kept the best read, which may not be
+bit-perfect"*. The album folder's log is the **first** invocation's: its blocks
+for tracks 3 and 5 carry that pass's `EAC CRC32`, `Accurip`, `creation_time` and
+paranoia counts. **No addendum was written, and `session/SOURCES.txt` does not
+ask for the refix directory**, so the superseding invocation's own log is in
+neither project.
+
+So the gap is wider than a missing timestamp: it is **the whole record of the
+read that was kept**. The halves belong to different sides and fail separately.
+Theirs is which read to keep and what to file, which is a judgement and is
+theirs by the ownership rule. **Ours is that we give a consumer no way to say a
+file was superseded** — there is no field a second invocation can write into the
+first log, and no way to amend one, because it is immutable and `Log FUN512:`
+covers it. The addendum convention exists because our format has no slot for
+this, and a record whose only honest self-description lives in a sidecar that
+nothing requires is one that can silently lose it. That is what happened here.
+Reported in round 23; the provider half is a contract question for round 24.
 
 ### A track's per-track lines are computed from the REQUEST, not the outcome
 

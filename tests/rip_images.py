@@ -729,6 +729,69 @@ def sc_deemph_with_hdcd():
         fail("deemph_with_hdcd: -H -W left the audio pre-emphasised and the "
              "cue does not flag it")
 
+    # WHAT THE LOG CAN WITNESS, and the two halves want opposite things.
+    #
+    # Found by the 2026-09-22 acceptance session. Its section P3 ran -H -E and
+    # -H -W on track 1 of a real disc back to back and every audio figure came
+    # out identical to the digit -- EAC CRC32, both Accurip checksums, sample
+    # peak, true peak, the R128 pair and all five REPLAYGAIN_* tags. That reads
+    # like the cascade defect above returning and it is not: the rips ABOVE
+    # prove the audio differs. What it shows is that no reported figure moves
+    # with it, and the two reasons need opposite treatment.
+    #
+    # KEEP. EAC CRC32 is defined over the raw samples off the disc, the way EAC
+    # and AccurateRip define theirs -- crip_process_checksums() takes the same
+    # `data` that is then handed to the encoders (src/cyanrip_main.c:872). It
+    # MUST NOT move when a filter is added, or a de-emphasised or HDCD rip
+    # stops matching the AccurateRip database. This half is a guarantee.
+    #
+    # GAP. The loudness block is measured pre-filter too, and that one is
+    # wrong. filter_frame() pushes the INPUT frame into the ebur128 graph
+    # (src/cyanrip_encode.c:656) and only afterwards into the de-emphasis/HDCD
+    # graph, whose output is what reaches the encoders -- siblings off one
+    # source, not a series. So Sample peak level, True peak level, the R128
+    # figures and every REPLAYGAIN_* tag describe audio that is not in the file
+    # they are written into. docs/KNOWN-ISSUES.md carries the measurement.
+    #
+    # If the loudness half here ever FAILS, that is the fix landing. Update
+    # this check and the KNOWN-ISSUES entry in the same commit; do not relax
+    # it. The checksum half failing is a regression either way.
+    KEEP = ["EAC CRC32:"]
+    GAP = ["Sample peak level:", "True peak level:",
+           "Integrated loudness (R128):", "REPLAYGAIN_TRACK_PEAK:"]
+
+    def fields(name, labels):
+        text = (WORK / f"{name}.log").read_text()
+        out = {}
+        for line in text.splitlines():
+            s = line.strip()
+            for lab in labels:
+                if s.startswith(lab):
+                    out[lab] = s[len(lab):].strip()
+        return out
+
+    for kind, labels in (("checksum", KEEP), ("loudness", GAP)):
+        both, hdcd = fields("hb_both", labels), fields("hb_hdcd", labels)
+        # A comparison of two empty dicts is satisfied by finding nothing --
+        # the defect this suite has hit three times. Require the labels first.
+        if not both or both.keys() != hdcd.keys():
+            fail(f"deemph_with_hdcd: expected {labels} in both logs, found "
+                 f"{sorted(both)} and {sorted(hdcd)} -- the comparison below "
+                 f"would have been vacuous")
+        for lab, v in both.items():
+            if v != hdcd[lab]:
+                if kind == "checksum":
+                    fail(f"deemph_with_hdcd: '{lab}' moved between -H -E and "
+                         f"-H ({v!r} vs {hdcd[lab]!r}). It is defined over the "
+                         f"raw disc samples; a post-filter value stops matching "
+                         f"AccurateRip on every de-emphasised disc")
+                else:
+                    fail(f"deemph_with_hdcd: '{lab}' now differs between -H -E "
+                         f"and -H ({v!r} vs {hdcd[lab]!r}). If the measurement "
+                         f"scope was deliberately moved downstream of the "
+                         f"filter graph, that is the fix -- update this check "
+                         f"and docs/KNOWN-ISSUES.md together")
+
 
 def sc_audio_checksums():
     """The audio on disk must match the checksums the log claims for it.
