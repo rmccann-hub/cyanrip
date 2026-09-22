@@ -98,7 +98,9 @@ def main():
     peer = pathlib.Path(args.peer)
     if not (peer / ".git").exists():
         print(f"CANNOT CHECK: no peer checkout at {peer}", file=sys.stderr)
-        print(f"  GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 {PEER_URL} {peer}",
+        # No `--depth`: a shallow clone is what the warning below exists to
+        # catch, and this hint used to be the way to make one.
+        print(f"  GIT_LFS_SKIP_SMUDGE=1 git clone {PEER_URL} {peer}",
               file=sys.stderr)
         print("  (public repository; this environment's git proxy serves "
               "anonymous reads)", file=sys.stderr)
