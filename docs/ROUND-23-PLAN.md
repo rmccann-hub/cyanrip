@@ -51,6 +51,65 @@ loud on purpose: a released lap must not carry one.
 
 ---
 
+## Settled 2026-09-22: round 23 is NOT the `.14` round, and one run was never meant to serve both
+
+Platterpus raised this before the session and were right to: *"Round 23 is about
+the `.14` wording change, and our both-wordings parser is still unreleased. So
+tonight's run almost certainly cannot be round 23's hardware evidence... If you
+were expecting one run to serve both, it won't."* They also said plainly that
+they could not confirm it until lap 1 was filed.
+
+**The premise is wrong and the flag was right.** Round 23 as drafted is the
+hardware-acceptance and `PROTOCOL.md` v5 round, pinned at `2cce60d`. Its §0.3 is
+the disposition of a `.13` run. `.14` and their release are named in this draft
+**explicitly as non-conditions**. Nobody expected one run to serve both.
+
+**That they had to infer it is our fault, not theirs**, and it is the relay
+problem in its quietest form: they were reasoning about an unfiled lap because
+there was nothing else to reason about. It is an argument for filing lap 1
+promptly, not for a longer relay.
+
+### `.14` does not need round 23, or any round
+
+Checked against the ledger rather than argued:
+
+| release | shipped at | round column | that round's reviewed pin |
+|---|---|---|---|
+| `+platterpus.12` | `fe4d2c4` | 17 | `fe4d2c4` — same commit |
+| `+platterpus.13` | `2cce60d` | 21 | **`fe4d2c4` — a different, earlier commit** |
+
+**`.13` is the precedent and it is exact:** it shipped at a commit later than
+round 21's reviewed pin, on round 21's authority, carrying two P2 changes
+`fe4d2c4` does not have. `CLAUDE.md` records that in as many words.
+
+So `+platterpus.14` ships on **round 22's** authority, which reviewed the §0.3
+rename, graded it P1 on their measurement and agreed the ordering in both
+directions. Its prerequisite is their both-wordings release — an act, not a
+round. Conditioning it on round 23 would be the deadlock their own C1
+dismantled.
+
+### But their underlying point survives, and it is worth more than the premise
+
+**Nobody has ever parsed a real log carrying the new wording.** Round 22 lap 4
+says exactly that: *"the §0.3 rename is still untested on both sides — nothing
+in either tree has yet run a real log carrying the new wording, because no build
+emits one."* Both sides signed that, knowingly.
+
+That gap is real, and it needs a session on `.14` + their both-wordings release.
+**It is not round 23's, and it does not gate `.14`:**
+
+- The rename is a `cyanrip_log()` call site with no drive I/O. The suite and the
+  golden reference exercise both wordings; a drive adds nothing to *emitting*
+  it.
+- The risk is entirely on the **parse** side, which is theirs, and which their
+  both-wordings release exists to handle and which they will test.
+- So the later session **verifies the pairing after the fact**; it does not
+  authorise it. Round 22 already authorised it with the gap named.
+
+**Where it lands:** a post-`.14` verification session, reported in round 24's
+lap 1 the way this round reports tonight's. If it finds something, that is what
+rounds are for.
+
 ## The lap-1 draft
 
 ```
@@ -207,6 +266,28 @@ under review, and we will hold ourselves to that.
 This binds. It is the move that actually ends rounds, it is what kept round 21 to
 five laps, and it is the only thing that stops the reflex to find one more thing
 — which this repository is built to find.
+
+## This round is not about `+platterpus.14`, and one run does not serve both
+
+You raised this before the session and flagged that you could not confirm it
+without this lap. **You were right to raise it and the premise is wrong**, and
+that you had to infer it is our doing: there was nothing filed to read.
+
+Round 23 is the hardware-acceptance and v5 round, pinned at `2cce60d`. **`.14`
+does not need it.** `+platterpus.13` shipped at `2cce60d` while round 21's
+reviewed pin was `fe4d2c4` — a later commit, on that round's authority,
+carrying two P2 changes the reviewed pin does not have. `.14` ships the same
+way on **round 22's** authority, and its prerequisite is your release, which is
+an act rather than a round.
+
+**Your underlying point survives and is the better half.** Nobody has ever
+parsed a real log carrying the new wording — your own lap 4 says so — and that
+gap wants a session on `.14` plus your both-wordings release. It is **not** this
+round's, and it does not gate `.14`: the rename is a `cyanrip_log()` call site
+with no drive I/O, so a drive adds nothing to emitting it, and the risk is on
+the parse side, which is yours. That session **verifies the pairing after the
+fact**; round 22 authorised it with the gap named and both of us signed that.
+We would report it in round 24's lap 1 as this lap reports tonight's run.
 
 ## Explicitly NOT close conditions, and each for a reason
 
