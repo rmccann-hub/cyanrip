@@ -231,6 +231,14 @@ SENT = {
 
     "round-16-lap-11.md":
         "418d790c28e49a946e8793d0a36e93cfe79d0a008a608736f00aeab7ae30834a",
+
+    # Round 24 lap 1, pinned in the commit that releases it. The operator
+    # released it before it was written ("draft and release it"), so the
+    # bytes committed with READY-TO-READ: yes are the bytes that leave, and
+    # this is a hash taken at send time rather than a recovered one. Rounds
+    # 17-23 stay unpinned for the reason given below the map.
+    "round-24-lap-01.md":
+        "78313e1053dd73b7fbeea5bc39694a4b4968a4fa2e7ceffbb64a84bfd72b63a8",
 }
 
 failures = 0

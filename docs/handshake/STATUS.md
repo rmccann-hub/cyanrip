@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-23-lap-05.md
+STATUS-NEWEST-LAP: round-24-lap-01.md
 STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
@@ -30,7 +30,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-09-22, after `+platterpus.14` shipped and before round 24 opens
+## Now — rewritten 2026-09-22, after `+platterpus.14` shipped and round 24 opened
 
 **This section is the whole of what this file claims.** Everything below it is
 either the release table a consumer reads or the rig procedure the suite
@@ -44,8 +44,8 @@ checks, and neither is a dated state.
 | build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/3e01bb3.tar.gz` — verified from exactly that tarball before publication, reporting `released build` |
 | previous | `.13` at `2cce60d`, seq 23, 2026-09-18, round 21 |
 | what `.14` changed | `Track %i read successfully!` / `read with errors.` replace the `ripped and encoded` pair, and a three-state `Encoder errors:` line is new. All P2, all agreed in round 22 |
-| gate | `--release-gate` exits **0** — no round is open |
-| the tip | ahead of `3e01bb3` by commits that change nothing the build compiles in — the ledger, the manifest, documentation and a tool. `git log 3e01bb3..platterpus-fork -- src/ meson.build 'docs/handshake/round-*.md'` is empty, and the round files are in that list because the `Handshake:` line is compiled from them. The tip's banner still names a different commit, so build from the release, not the tip |
+| gate | `--release-gate` exits **1** — round 24 is open. No release until it closes |
+| the tip | ahead of `3e01bb3` in no `src/` or `meson.build` change — but **it carries round 24's lap 1**, and the `Handshake:` line is compiled from the round files, so a build of the tip reports `round 24 lap 1 OPEN` and `NOT a released build`. `git log 3e01bb3..platterpus-fork -- src/ meson.build` is empty; add `'docs/handshake/round-*.md'` and it is not. Build from the release, not the tip |
 | next | `+platterpus.15`, not planned. It should carry round 23's agreed `Handshake:` qualifier, which was never built |
 
 **Stable by the operator's instruction, and the cost is on Platterpus's side.**
@@ -53,7 +53,7 @@ Their app reads our manifest from this branch's tip and offers `.14` on its
 default channel stamped `unapproved`, because their `FORK_PIN` still names
 `2cce60d` and moves only once a round reviews `.14`. That was weighed against a
 beta in `docs/RELEASE-PLAN-platterpus.14.md` §3 and chosen knowingly, on the
-judgement that round 24 will be short. **Round 24's opening lap says so.**
+judgement that round 24 will be short. **Round 24's lap 1 says so, in its §0.**
 
 ### The rounds
 
@@ -61,7 +61,7 @@ judgement that round 24 will be short. **Round 24's opening lap says so.**
 |---|---|
 | round 23 | **CLOSED `GO`/`GO`** 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
 | round 22 | CLOSED `GO`/`GO` 2026-09-21, five laps. Authorised `.14` |
-| round 24 | **not open**, and ours to open — the provider opens (§1a). Its lap 1 must say `.14` went stable by the operator's instruction |
+| round 24 | **OPEN**, 2026-09-22. Our lap 1 is released, declares protocol 5 and verdict `GO`, and fixes **one** close condition: Platterpus's verdict on `3e01bb3`, the released `.14`. Close-by 2026-10-06. Their answering lap can close it on their gate; our next lap closes it on ours. Round 25 is proposed in lap 1 §D |
 | lap counts | rounds 21, 22 and 23 all took five. In 22 and 23 the fifth lap existed only to carry a transcription, which v5 §5b was adopted to remove — and as written cannot, because step 3 needs a peer lap the closing file could not have declared. `CLAUDE.md` has the prediction, the measure, and why it cannot be scored yet |
 
 ### The protocol
