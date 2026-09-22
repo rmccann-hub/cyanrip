@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-23-lap-01.md
+STATUS-NEWEST-LAP: round-23-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
@@ -30,7 +30,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-22. **ROUND 23 IS OPEN** — lap 1 released by the operator, close-by 2026-10-22.
+## Rewritten 2026-09-22, twice. **ROUND 23 IS OPEN AT LAP 3** — close-by 2026-10-22.
 
 **This is the state a consumer can assume while round 23 runs.** Round 22 closed
 `GO`/`GO` on 2026-09-21 at five laps, 27 days before its close-by; round 23
@@ -63,7 +63,9 @@ file.
 | **Platterpus `0.6.52`** | released 2026-09-21 at `platterpus@a0aed36`, **and it is NOT the both-wordings release.** Recorded because the inference is the obvious one and it is wrong: a Platterpus release landing right after round 22 closed looks like the `.14` prerequisite and is not it. `_TRACK_START` at `a0aed36:src/platterpus/parsers/cyanrip_log.py:212-215` still matches only `ripped and encoded successfully!`, `ripped and encoded with errors.` and `is data:`; `git diff --stat 267a696..a0aed36 -- src/platterpus/parsers/cyanrip_log.py` is **empty**, so the file is byte-untouched by the release; and `read successfully` appears nowhere in their `src/`, only in two filed copies of our own announcements. **`+platterpus.14` is still blocked** |
 | their `FORK_PIN` | rolled to **`2cce60d`** in `0.6.52` (`a0aed36:src/platterpus/deps/fork_source.py:183`) — the post-close act round 22 authorises. Their setup wizard and in-app ripper check now offer `+platterpus.13`, **which is how the rig gets off `.12`** without anyone installing by hand |
 | round 22 | **CLOSED `GO`/`GO`**, 2026-09-21, **five laps**, 27 days before the close-by. Lap 1 released at `f071b35`; their lap 2 filed; lap 3 released at `0110219`; **their lap 4 released and filed** — `614c6115…`, 15,283 bytes, read at `platterpus@267a696` — `GO` on `2cce60d`, resolving the circularity lap 3 named by conceding that the second clause of their own `GO` condition conflated a decision with an act; **our lap 5 released at `23c18d2`** and is the close. Five laps because `PROTOCOL.md` §5 needs `HANDSHAKE-PEER-VERDICT: GO` in a file of *ours* and lap 3 said `OPEN` — the only honest value when it was written — so their lap 4 closed the round on their gate and could not on ours (`SETTLED.md` row 102, round 17, roles reversed). Lap 5 §H1 proposes the v5 fix and does not make it |
-| round 23 | **OPEN**, opened 2026-09-22, lap 1 released by the operator at the commit named in that lap. Three close conditions, fixed at lap 1 and unable to grow: `PROTOCOL.md` v5's close rule, the `Handshake:` held-verdict qualifier, and the disposition of the acceptance run. We pre-commit to `GO` |
+| round 23 | **OPEN at lap 3.** Opened 2026-09-22 on three close conditions, fixed at lap 1 and unable to grow. **§0.2 and §0.3 are closed by their lap 2; §0.1 is the only one open** and closes when Platterpus commits our v5 text byte-identical. Our lap 3 is `GO`, discharging lap 1's pre-commitment; their lap 2 pre-commits to `GO` in their next |
+| `PROTOCOL.md` | **v5 as of lap 3**, sha256 `d698d58a8130ab52…`. **Deliberately one-sided until their lap 4**: `seam-sync-check --fetch` exits **1** on the protocol and 0 on the other three. Custody is ours, authorship is joint, and §0.1 closes when their copy matches |
+| v5's reach | **none yet.** Every gate path is keyed on the FILE's declared version and nothing in either tree declares 5, so no round changes state. Round 23's laps all declare 4 and it still costs the extra lap v5 removes |
 | acceptance session | **ran 2026-09-22 on `2cce60d` + Platterpus 0.6.52**, 247 of 247 steps, filed byte-exact at `docs/rig-2026-09-22-2cce60d/`. It is round 23's evidence, not its opener |
 | `platterpus-fork` tip | **ahead of the release, with a P2 log change in it.** Build from `2cce60d`, not from the tip |
 
