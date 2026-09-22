@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-23-lap-03.md
+STATUS-NEWEST-LAP: round-23-lap-05.md
 STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
@@ -30,17 +30,21 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Rewritten 2026-09-22, twice. **ROUND 23 IS OPEN AT LAP 3** — close-by 2026-10-22.
+## Rewritten 2026-09-22. **ROUND 23 IS CLOSED `GO`/`GO`** — five laps, 30 days before the close-by.
 
-**This is the state a consumer can assume while round 23 runs.** Round 22 closed
-`GO`/`GO` on 2026-09-21 at five laps, 27 days before its close-by; round 23
-opened the next day on the hardware acceptance session.
+**This is the state a consumer can assume until round 24 opens.** Round 22
+closed 2026-09-21 at five laps; round 23 opened the next day on the hardware
+acceptance session and closed at five.
 
-**NO RELEASE WHILE THIS ROUND IS OPEN**, either side, and that is the seam rule
-rather than a caution. `--release-gate` now exits **1** naming round 23, and a
-build from this tree stamps `Handshake:      round 23 lap 1 OPEN, verdict OPEN --
-NOT a released build` into every log it writes, permanently. **Build from
-`2cce60d`, which is the released commit; do not build from the tip.**
+**NOTHING A CONSUMER BUILDS CHANGED WHEN IT CLOSED.** The pin is still
+`2cce60d` and it never moved inside the round; the released build is still
+`+platterpus.13`. `--release-gate` exits **0** again — *"Release allowed: every
+round is closed"* — and **that is the gate's answer, not authorisation to ship
+`+platterpus.14`**, which still waits on Platterpus's both-wordings release.
+Nothing machine-checkable enforces that prerequisite: it is a `§1` condition in
+the `.14` plan and an operator act, and saying so here is the point of this
+file. **Build from `2cce60d`, the released commit, not from the tip** — the tip
+carries the §0.3 rename.
 
 **NOTHING A CONSUMER BUILDS CHANGED WHEN IT CLOSED.** The pin is still `2cce60d`,
 the released build is still `+platterpus.13`, and **`+platterpus.14` has NOT been
@@ -64,8 +68,10 @@ file.
 | their `FORK_PIN` | rolled to **`2cce60d`** in `0.6.52` (`a0aed36:src/platterpus/deps/fork_source.py:183`) — the post-close act round 22 authorises. Their setup wizard and in-app ripper check now offer `+platterpus.13`, **which is how the rig gets off `.12`** without anyone installing by hand |
 | round 22 | **CLOSED `GO`/`GO`**, 2026-09-21, **five laps**, 27 days before the close-by. Lap 1 released at `f071b35`; their lap 2 filed; lap 3 released at `0110219`; **their lap 4 released and filed** — `614c6115…`, 15,283 bytes, read at `platterpus@267a696` — `GO` on `2cce60d`, resolving the circularity lap 3 named by conceding that the second clause of their own `GO` condition conflated a decision with an act; **our lap 5 released at `23c18d2`** and is the close. Five laps because `PROTOCOL.md` §5 needs `HANDSHAKE-PEER-VERDICT: GO` in a file of *ours* and lap 3 said `OPEN` — the only honest value when it was written — so their lap 4 closed the round on their gate and could not on ours (`SETTLED.md` row 102, round 17, roles reversed). Lap 5 §H1 proposes the v5 fix and does not make it |
 | round 23 | **OPEN at lap 3.** Opened 2026-09-22 on three close conditions, fixed at lap 1 and unable to grow. **§0.2 and §0.3 are closed by their lap 2; §0.1 is the only one open** and closes when Platterpus commits our v5 text byte-identical. Our lap 3 is `GO`, discharging lap 1's pre-commitment; their lap 2 pre-commits to `GO` in their next |
-| `PROTOCOL.md` | **v5 as of lap 3**, sha256 `d698d58a8130ab52…`. **Platterpus committed it byte-identical in their lap 4 — on their working branch.** Their `main`, which is their default branch and the ref `seam-sync-check --fetch` reads, still carries v4, so the check **still exits 1** on the protocol and 0 on the other three. Custody is ours, authorship is joint |
-| round 23's close | **NOT closed, and it is one merge away.** Their lap 4 declares `GO`/`GO` and their gate closes it. Ours cannot: §0.1's condition names `tools/seam-sync-check.py --fetch` reporting all four byte-identical, and it reports one disagreeing. Nothing is disputed — v5 is committed and correct at `platterpus@19c8ad20`; it is not on `platterpus@a0aed36`, where both the tool and their own `FROM-COMMIT-SOURCE` look |
+| `PROTOCOL.md` | **v5, byte-identical in both trees.** `seam-sync-check --fetch` exits **0**: all four shared documents identical, read at `platterpus@48776b0` on their default branch. Custody is ours, authorship is joint |
+| v5's reach | **none yet, by v5's own instruction.** Every gate path here is keyed on the FILE's declared version and nothing in either tree declares 5; their gate declares 4 with a non-empty bootstrap reason naming §5b/§5c. **Round 24 is v5's first test**, and it is falsifiable: if it also takes five laps, v5 did not work |
+| round 23 | **CLOSED `GO`/`GO`**, five laps, 30 days before the close-by. Four of substance and one that exists only to carry a transcription — the lap §5b removes |
+| a near miss, filed as an event | Platterpus's PR squash-merged and the branch was deleted four minutes later, orphaning the two commits round 23's citations name — one in a lap already sent. Recovered from a session clone before GitHub ran `gc`. **Recovered is not safe**, and lap 5 adopts their fix early: the sha256 is the anchor, the commit is a fetch hint |
 | v5's reach | **none yet.** Every gate path is keyed on the FILE's declared version and nothing in either tree declares 5, so no round changes state. Round 23's laps all declare 4 and it still costs the extra lap v5 removes |
 | acceptance session | **ran 2026-09-22 on `2cce60d` + Platterpus 0.6.52**, 247 of 247 steps, filed byte-exact at `docs/rig-2026-09-22-2cce60d/`. It is round 23's evidence, not its opener |
 | `platterpus-fork` tip | **ahead of the release, with a P2 log change in it.** Build from `2cce60d`, not from the tip |

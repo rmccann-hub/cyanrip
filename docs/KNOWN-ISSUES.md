@@ -806,6 +806,64 @@ verified against the installed headers *and* the `.so` export table).
 
 ## Open, joint — belongs to the seam, not to one side
 
+### A cited commit was orphaned by a squash merge and a branch delete — it HAPPENED, and the recovery was luck
+
+**Filed as an event rather than a hazard, because a near miss recorded as a
+success is a hazard that comes back.**
+
+Round 23 lap 3 §D2 warned Platterpus that their work reaches `main` by **squash
+merge**, so a commit on their working branch never becomes an ancestor of
+anything there; delete the branch and routine `git gc` **destroys** it rather
+than hiding it, breaking any citation that names it. Their lap 4 accepted the
+reasoning, checked it rather than taking it, and recorded *"`claude/session-omka9f`
+will not be deleted"* in their `TASKS.md`.
+
+**The PR squash-merged and the branch was deleted four minutes later.**
+`b5af9bec` and `19c8ad20` — the two commits round 23's citations name, one of
+them in **our lap 3, which was already sent and immutable** — became unreachable
+on their remote. They were recovered because a session clone still held the
+objects and the branch was pushed back at the same tip, and because GitHub had
+not run `gc` in the interval. Verified here afterwards against their remote:
+both are reachable as ancestors of `refs/heads/claude/session-omka9f`, now at
+`e8a47562`. Neither is directly fetchable by SHA, which is GitHub refusing
+arbitrary-SHA fetches rather than evidence of absence — **reachability through
+the ref is the whole of what makes them resolvable, and it is exactly what a
+second delete removes.**
+
+**THE SHAPE IS THE LESSON AND IT IS THEIRS.** The warning was in the PR body
+twice, in bold, at the top, and in two separate messages to their operator. *The
+delete is a button that appears after the merge succeeds, when no PR text is on
+screen.* Their words: **a comment where a check belongs is not a fix, arriving
+through a UI instead of through code** — and the part that generalises past the
+incident, *the response each time the risk came up was to write the warning more
+emphatically rather than notice that emphasis was not the failing axis.*
+
+**We have the same shape, and looking for it is the point of filing this.**
+`CLAUDE.md` carries *"never push a topic branch — the deletion is not available
+to us"* as prose backed by an observed `HTTP 403`, with an explicit note that
+there is deliberately no test because the only check would reach the network.
+That reasoning still holds and the exposure is still real: **the rule holds here
+because the proxy refuses, not because anything of ours checks.** Prose plus an
+accident of the environment is the same class as a bolded PR body; it just
+happens to have a stronger accident behind it.
+
+**The general fix is Platterpus's and it is a round-24 item: the sha256 is the
+anchor, the commit is a fetch hint.** Both sides already declare a lap's hash and
+both reproduce it before filing. A content hash cannot be pruned. If a citation
+names the hash first, a pruned ref degrades it from *fetchable* to *verifiable*
+instead of to nothing. Round 23 lap 5 adopts it for its own citations a round
+early; settling it in the spec is joined with §D1's two meanings of
+`HANDSHAKE-FROM-COMMIT`, because both are the same question — **what does a
+citation name?**
+
+**And our lap 3's citation of `b5af9bec` cannot be re-anchored**, because lap 3
+is sent. That is the argument for the proposal rather than an objection to it:
+the one artifact that could not be fixed is the one naming a commit and not a
+hash. Lap 3 does declare lap 2's sha256 and byte count in
+`HANDSHAKE-INBOUND-HELD`, so it degrades to verifiable — which is precisely the
+property the proposal would make the rule.
+
+
 ### The close condition cannot be satisfied by the side that speaks first — round-23 item
 
 `PROTOCOL.md` §5 requires `HANDSHAKE-PEER-VERDICT: GO`, *"transcribed from the
