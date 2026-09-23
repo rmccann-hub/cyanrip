@@ -30,7 +30,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-09-23, after round 26 opened
+## Now — rewritten 2026-09-23, after Platterpus 0.6.54
 
 **This section is the whole of what this file claims.** Everything below it is
 either the release table a consumer reads or the rig procedure the suite
@@ -46,7 +46,7 @@ checks, and neither is a dated state.
 | what `.15` changed | the per-frame retry limit is rounded up to a multiple of 5, so `-r 3` no longer hangs on an unreadable sector at the default paranoia level; `Retry limit:` gains a second form when the two limits differ. A held lap's `Handshake:` verdict is marked as a draft, which no release prints. `docs/RELEASE-PLAN-platterpus.15.md` |
 | gate | `--release-gate` exits **1** and names round 26, which is open. That is correct: `.15` is released on round 25's authority, and round 26 reviews it on a drive |
 | the tip | **the release's publish commit and after.** Build from the release commit, not the tip |
-| next | **Platterpus's release carrying `PIN_UNDER_REVIEW = df91ae7`**, which round 26 lap 1 asks for, so their app installs `.15` for the test and their acceptance run expects it. Their `FORK_PIN` stays `3e01bb3` until round 26 closes. Then the operator's real test |
+| next | **the operator's real test**: Platterpus **0.6.54** installs `.15` through its update dialog's *"Install it anyway"*, and its full acceptance run expects `df91ae7` at step A. The bundle goes into both repositories, then our round 26 lap 3 reads it |
 
 **`.15` is stable because round 25 authorised it, and the build itself is
 round 26's to review.** Round 25 reviewed its content as candidate `61711f1`.
@@ -61,7 +61,7 @@ mark: their offer states it, and a person decides. **Their users get the
 
 | | |
 |---|---|
-| **round 26** | **OPEN** since 2026-09-23, opened by our lap 1 on **`df91ae7`** (`.15`) **before** the real test, by the operator's override of R8 point 3. The reason is that Platterpus's acceptance run expects `PIN_UNDER_REVIEW`, which tracks the newest pin we send. Close conditions: the real test on `.15` installed through their app, both sides' reading of the bundle, and R8's two releases (their `FORK_PIN` roll to `df91ae7`, our `.16`). Close-by 2026-10-21. Next: their lap 2 |
+| **round 26** | **OPEN** since 2026-09-23, opened by our lap 1 on **`df91ae7`** (`.15`) **before** the real test, by the operator's override of R8 point 3. The reason is that Platterpus's acceptance run expects `PIN_UNDER_REVIEW`, which tracks the newest pin we send. Close conditions: the real test on `.15` installed through their app, both sides' reading of the bundle, and R8's two releases (their `FORK_PIN` roll to `df91ae7`, our `.16`). Close-by 2026-10-21. **Their lap 2** (`OPEN`, sha256 `8485afc7…`, read at `platterpus@b381c31`) moved `PIN_UNDER_REVIEW` to `df91ae7` and named **0.6.54** as the release carrying it, cut under their operator's §6b override. Next: the real test, then our lap 3 |
 | round 25 | **CLOSED `GO`/`GO`** 2026-09-23, **five laps**, 14 days before the close-by. Close conditions: the three texts byte-identical in both trees (lap 1 §0.1, §0.2), and both releases ready and agreed (lap 2 §0.3, by the operator's override of R1). Their lap 2 crossed ours, which cost one lap; their lap 4 (`GO`, sha256 `f6d18230…`) landed the merged v6, parsed our golden reference and named 0.6.54; our lap 5 (`GO`) closed it. Pin `3e01bb3`, never moved. Next, under R8: `.15`, then their 0.6.54, then the real test, which opens round 26 |
 | round 24 | **CLOSED `GO`/`GO`** 2026-09-23, **three laps**, 13 days before the close-by. One close condition, Platterpus's verdict on `3e01bb3`, met by their lap 2 (`GO`, their 0.6.53 parser reading our golden reference). It closed on their gate at their lap 2 and on ours at our lap 3: the two gates close on different laps, their round-25 item N1. Three laps is the lap-1 `GO`, not v5 |
 | round 25, their laps | lap 2: `GO` on the texts, sha256 `3ae11ad1…`, read at `platterpus@5374729`, answering our lap 1 only. Lap 4: `GO`, sha256 `f6d18230…`, 11,717 bytes, read at `platterpus@53b3c04`. Both filed byte-exact under `docs/handshake/inbound/` |
@@ -115,7 +115,7 @@ gates have said in a lap that they implement 6, and ours has said so in lap 5.
 | 0.6.53 is **the both-wordings release** — `_TRACK_START` matches both pairs, and no earlier tag does | read at `52b44282:src/platterpus/parsers/cyanrip_log.py:237-244`; counted across four tags |
 | on their `main`, **`FORK_PIN = "3e01bb3"`** and `PIN_UNDER_REVIEW = "3e01bb3"` — the roll, not yet released | read at `86f0547:src/platterpus/deps/fork_source.py:196` and `:568` |
 | `APPROVED_BY_ROUND = 24`, `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.53"` | read at `86f0547:src/platterpus/handshake_approval.py:229` and `:141` |
-| their `main` is **`53b3c04`**, untagged; **no `v0.6.54` tag exists yet**, and their lap 4 names it as their release candidate. Their gate implements protocol 5 from `c2f43d28`, and refuses a round in which any file declares more (`scripts/handshake.py:1920`) | `git ls-remote` on their repository, and a fetch |
+| **Platterpus 0.6.54 is released**, tag `v0.6.54` at `b381c31`, their `main`. In it `PIN_UNDER_REVIEW` is `df91ae7` (round 26) and `FORK_PIN` is still `3e01bb3`, which rolls to `df91ae7` when round 26 closes. Their gate implements protocol 5 and refuses a round in which any file declares more (`scripts/handshake.py:1920`) | `git ls-remote --tags` and a fetch; read at `b381c31:src/platterpus/deps/fork_source.py:196`, `:582`, `:596`, and `src/platterpus/__init__.py:13`. **Whether its GitHub release page and build are up was not checked**: this environment reads their git, not their API |
 | their app **offers, never installs**, a newer build from our manifest on the user's channel, and says it will report `unapproved` until a round verifies it | read at `52b44282:src/platterpus/deps/ripper_manifest.py:1-16`, `:66-68`, and `5374729:src/platterpus/config.py:383-393` |
 | their `FORK_PIN` must equal the pin of their newest closed round, so it cannot name a release cut after the close | read at `5374729:tests/test_fork_source.py:132-190` |
 | their standing status, as of 0.6.53 | filed byte-exact twice, because it was rewritten the same day under the same as-of: `docs/handshake/inbound/status-2026-09-22-v0.6.53.md` (read at `52b44282`, sha256 `2ac99eb5…09ab9`, 39,016 bytes) and `…-2026-09-22-v0.6.53-c2f43d28.md` (read at `c2f43d28`, sha256 `ddfcbbe6…62ac0`, 43,166 bytes) |
@@ -143,11 +143,12 @@ measure what it asserts.
 
 ### Where their statuses are filed
 
-Nine, each dated by the date **it declares**, not the day we received it:
+Ten, each dated by the date **it declares**, not the day we received it:
 `docs/handshake/inbound/status-2026-08-21-v0.6.21.md`, `…-2026-08-21-v0.6.23.md`,
 `…-2026-08-24-v0.6.23.md`, `…-2026-09-21-v0.6.52.md`, `…-2026-09-22-v0.6.53.md`,
 `…-2026-09-22-v0.6.53-c2f43d28.md`, `…-2026-09-23-v0.6.53.md`,
-`…-2026-09-23-v0.6.53-53747294.md` and `…-2026-09-23-v0.6.53-53b3c046.md`. Each later file of a pair that declares the
+`…-2026-09-23-v0.6.53-53747294.md`, `…-2026-09-23-v0.6.53-53b3c046.md` and
+`…-2026-09-23-v0.6.54.md`. Each later file of a pair that declares the
 same as-of carries the commit it was read at — the one identifier that tells
 them apart. **Theirs are evidence and are never consolidated;
 ours is a claim about now and is rewritten** — the two rules are opposite and
