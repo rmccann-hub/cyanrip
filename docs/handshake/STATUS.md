@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-25-lap-05.md
+STATUS-NEWEST-LAP: round-26-lap-01.md
 STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
@@ -30,7 +30,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-09-23, after round 25 closed
+## Now — rewritten 2026-09-23, after round 26 opened
 
 **This section is the whole of what this file claims.** Everything below it is
 either the release table a consumer reads or the rig procedure the suite
@@ -44,9 +44,9 @@ checks, and neither is a dated state.
 | build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/df91ae7.tar.gz` — verified from a `git archive` of exactly that commit before publication, reporting `released build` |
 | previous | `.14` at `3e01bb3`, seq 24, 2026-09-22, round 22; `.13` at `2cce60d`, seq 23 |
 | what `.15` changed | the per-frame retry limit is rounded up to a multiple of 5, so `-r 3` no longer hangs on an unreadable sector at the default paranoia level; `Retry limit:` gains a second form when the two limits differ. A held lap's `Handshake:` verdict is marked as a draft, which no release prints. `docs/RELEASE-PLAN-platterpus.15.md` |
-| gate | `--release-gate` exits **0**: round 25 closed `GO`/`GO` at our lap 5 |
+| gate | `--release-gate` exits **1** and names round 26, which is open. That is correct: `.15` is released on round 25's authority, and round 26 reviews it on a drive |
 | the tip | **the release's publish commit and after.** Build from the release commit, not the tip |
-| next | **Platterpus 0.6.54**, the second half of R8's pair: ours first, then theirs. It pins `3e01bb3`, because their `FORK_PIN` must be a closed round's pin (round 25 lap 3 §C). Then the operator's real test on the released pair, which opens round 26 |
+| next | **Platterpus's release carrying `PIN_UNDER_REVIEW = df91ae7`**, which round 26 lap 1 asks for, so their app installs `.15` for the test and their acceptance run expects it. Their `FORK_PIN` stays `3e01bb3` until round 26 closes. Then the operator's real test |
 
 **`.15` is stable because round 25 authorised it, and the build itself is
 round 26's to review.** Round 25 reviewed its content as candidate `61711f1`.
@@ -61,7 +61,8 @@ mark: their offer states it, and a person decides. **Their users get the
 
 | | |
 |---|---|
-| **round 25** | **CLOSED `GO`/`GO`** 2026-09-23, **five laps**, 14 days before the close-by. Close conditions: the three texts byte-identical in both trees (lap 1 §0.1, §0.2), and both releases ready and agreed (lap 2 §0.3, by the operator's override of R1). Their lap 2 crossed ours, which cost one lap; their lap 4 (`GO`, sha256 `f6d18230…`) landed the merged v6, parsed our golden reference and named 0.6.54; our lap 5 (`GO`) closed it. Pin `3e01bb3`, never moved. Next, under R8: `.15`, then their 0.6.54, then the real test, which opens round 26 |
+| **round 26** | **OPEN** since 2026-09-23, opened by our lap 1 on **`df91ae7`** (`.15`) **before** the real test, by the operator's override of R8 point 3. The reason is that Platterpus's acceptance run expects `PIN_UNDER_REVIEW`, which tracks the newest pin we send. Close conditions: the real test on `.15` installed through their app, both sides' reading of the bundle, and R8's two releases (their `FORK_PIN` roll to `df91ae7`, our `.16`). Close-by 2026-10-21. Next: their lap 2 |
+| round 25 | **CLOSED `GO`/`GO`** 2026-09-23, **five laps**, 14 days before the close-by. Close conditions: the three texts byte-identical in both trees (lap 1 §0.1, §0.2), and both releases ready and agreed (lap 2 §0.3, by the operator's override of R1). Their lap 2 crossed ours, which cost one lap; their lap 4 (`GO`, sha256 `f6d18230…`) landed the merged v6, parsed our golden reference and named 0.6.54; our lap 5 (`GO`) closed it. Pin `3e01bb3`, never moved. Next, under R8: `.15`, then their 0.6.54, then the real test, which opens round 26 |
 | round 24 | **CLOSED `GO`/`GO`** 2026-09-23, **three laps**, 13 days before the close-by. One close condition, Platterpus's verdict on `3e01bb3`, met by their lap 2 (`GO`, their 0.6.53 parser reading our golden reference). It closed on their gate at their lap 2 and on ours at our lap 3: the two gates close on different laps, their round-25 item N1. Three laps is the lap-1 `GO`, not v5 |
 | round 25, their laps | lap 2: `GO` on the texts, sha256 `3ae11ad1…`, read at `platterpus@5374729`, answering our lap 1 only. Lap 4: `GO`, sha256 `f6d18230…`, 11,717 bytes, read at `platterpus@53b3c04`. Both filed byte-exact under `docs/handshake/inbound/` |
 | round 23 | CLOSED `GO`/`GO` 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |

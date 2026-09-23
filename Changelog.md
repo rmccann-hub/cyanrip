@@ -1,7 +1,13 @@
 Unreleased
 ==========
-Nothing yet. `+platterpus.15` shipped at `df91ae7` on 2026-09-23; its notes are
-below, under its own heading.
+`+platterpus.15` shipped at `df91ae7` on 2026-09-23; its notes are below, under
+its own heading. Nothing in `src/` has changed since.
+
+**Round 26 is open** (lap 1, released 2026-09-23), on `df91ae7`. It opens
+before the real test, by the operator's override of v6 R8 point 3. Platterpus's
+acceptance run expects `PIN_UNDER_REVIEW`, which tracks the newest pin we send,
+so this is how their app comes to install `.15` for the test. Its close
+condition is the test.
 
 0.9.4-rc2+platterpus.15 — 2026-09-23 — **stable**
 =================================================

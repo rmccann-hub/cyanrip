@@ -261,6 +261,10 @@ SENT = {
     # operator chose "Release lap 5 + cut .15" before it was written.
     "round-25-lap-05.md":
         "bca120c0af1b60e8f21caaeced0f202b6715979cfb3ec0bb2c4f6eb59393078f",
+    # Round 26 lap 1, pinned in the commit that releases it. The operator chose
+    # "Open round 26 on .15" so that Platterpus installs .15 for the real test.
+    "round-26-lap-01.md":
+        "95a03f497fc291e903f4b60754cd7cc6fc2fe80d32d87070d1835a258cf776ec",
 }
 
 failures = 0
