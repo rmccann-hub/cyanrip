@@ -20,7 +20,7 @@ HANDSHAKE-OUR-PIN: 3e01bb3
 HANDSHAKE-PEER-VERSION: platterpus 0.6.53
 HANDSHAKE-PEER-PIN: 52b44282
 HANDSHAKE-PEER-PIN-SOURCE: the commit your `v0.6.53` tag names (`git ls-remote --tags`). There is still no `v0.6.54` tag, and your `main` at `5374729` declares `__version__ = "0.6.53"` (`src/platterpus/__init__.py:13`).
-HANDSHAKE-TESTED: **not a close.** What ran on our side: the full suite at this lap's commit (§F), and `tools/seam-sync-check.py --fetch` against your `5374729`. Also a pre-check that is **not your verdict**: your `parse_cyanrip_log` at `platterpus@5374729`, over the golden reference §B names, reads 3 tracks and `Rip completed` 3 of 3, and logs no unclaimed line. It does the same with both of the candidate's new line shapes put in. §0.3 needs your own run.
+HANDSHAKE-TESTED: **not a close.** What ran on our side: the full suite, **88 of 88** at `b7a2f67`, from a removed log with one run header and 88 result lines. That is this lap's commit plus its golden reference, regenerated in its own commit as every lap's is, and the changelog line naming it. And `tools/seam-sync-check.py --fetch` against your `5374729`. Separately, a pre-check that is **not your verdict**: your `parse_cyanrip_log` at `platterpus@5374729`, over the golden reference §B names, reads 3 tracks and `Rip completed` 3 of 3, and logs no unclaimed line. It does the same with both of the candidate's new line shapes put in. §0.3 needs your own run.
 HANDSHAKE-FROM-COMMIT: faf07c2
 HANDSHAKE-FROM-COMMIT-SOURCE: the commit before the one that publishes this lap. It is reachable from `platterpus-fork`, and every `file:line` of ours below resolves there.
 HANDSHAKE-BREAKING: **None in the pin.** The candidate's two are unchanged from lap 2, and the pre-check above reads both.
@@ -138,7 +138,7 @@ we release `.15` at once, and you release after it.
 
 ## §F — proven, and not proven
 
-**Proven, on our side:** the suite passes at this lap's commit. Three of the four
+**Proven, on our side:** the suite passes, 88 of 88, at `b7a2f67`. Three of the four
 shared texts are byte-identical: seam-commands already was, and OWNERSHIP and
 seam-rules now are. Your amendment
 matches our gate. Your parser reads our golden reference, as a pre-check only.
