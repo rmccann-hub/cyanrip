@@ -239,6 +239,10 @@ SENT = {
     # 17-23 stay unpinned for the reason given below the map.
     "round-24-lap-01.md":
         "78313e1053dd73b7fbeea5bc39694a4b4968a4fa2e7ceffbb64a84bfd72b63a8",
+    # Round 24 lap 3, pinned in the commit that releases it, on the
+    # operator's word ("Release it now"), for the same reason as lap 1.
+    "round-24-lap-03.md":
+        "16dd8a2ac9e036280e400fef533823d0f90d983ec3b8a1b9c0f0763fd846ddd7",
 }
 
 failures = 0

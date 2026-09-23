@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-24-lap-01.md
+STATUS-NEWEST-LAP: round-24-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
@@ -30,7 +30,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-09-22, after `+platterpus.14` shipped and round 24 opened
+## Now — rewritten 2026-09-23, after round 24 closed on both gates
 
 **This section is the whole of what this file claims.** Everything below it is
 either the release table a consumer reads or the rig procedure the suite
@@ -44,16 +44,17 @@ checks, and neither is a dated state.
 | build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/3e01bb3.tar.gz` — verified from exactly that tarball before publication, reporting `released build` |
 | previous | `.13` at `2cce60d`, seq 23, 2026-09-18, round 21 |
 | what `.14` changed | `Track %i read successfully!` / `read with errors.` replace the `ripped and encoded` pair, and a three-state `Encoder errors:` line is new. All P2, all agreed in round 22 |
-| gate | `--release-gate` exits **1** — round 24 is open. No release until it closes |
-| the tip | ahead of `3e01bb3` in no `src/` or `meson.build` change — but **it carries round 24's lap 1**, and the `Handshake:` line is compiled from the round files, so a build of the tip reports `round 24 lap 1 OPEN` and `NOT a released build`. `git log 3e01bb3..platterpus-fork -- src/ meson.build` is empty; add `'docs/handshake/round-*.md'` and it is not. Build from the release, not the tip |
+| gate | `--release-gate` exits **0** — every round is closed |
+| the tip | ahead of `3e01bb3` in no `src/` or `meson.build` change — but **it carries round 24's laps**, and the `Handshake:` line is compiled from the round files, so a build of the tip reports round 24 rather than round 23. `git log 3e01bb3..platterpus-fork -- src/ meson.build` is empty; add `'docs/handshake/round-*.md'` and it is not. Build from the release, not the tip |
 | next | `+platterpus.15`, not planned. It should carry round 23's agreed `Handshake:` qualifier, which was never built |
 
-**Stable by the operator's instruction, and the cost is on Platterpus's side.**
-Their app reads our manifest from this branch's tip and offers `.14` on its
-default channel stamped `unapproved`, because their `FORK_PIN` still names
-`2cce60d` and moves only once a round reviews `.14`. That was weighed against a
-beta in `docs/RELEASE-PLAN-platterpus.14.md` §3 and chosen knowingly, on the
-judgement that round 24 will be short. **Round 24's lap 1 says so, in its §0.**
+**Stable by the operator's instruction, and round 24 has now reviewed it.**
+`.14` went to stable before any round reviewed it, over the beta that
+`docs/RELEASE-PLAN-platterpus.14.md` §3 recommended, so Platterpus's app offered
+it stamped `unapproved`. Round 24 closed in a day, and their `FORK_PIN` rolled to
+`3e01bb3` on their `main` at `platterpus@86f0547`. **Their users get the roll in
+0.6.54**, which they release after our lap 3; until then 0.6.53 as installed
+still approves `2cce60d`.
 
 ### The rounds
 
@@ -61,39 +62,18 @@ judgement that round 24 will be short. **Round 24's lap 1 says so, in its §0.**
 |---|---|
 | round 23 | **CLOSED `GO`/`GO`** 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
 | round 22 | CLOSED `GO`/`GO` 2026-09-21, five laps. Authorised `.14` |
-| round 24 | **OPEN**, 2026-09-22. Our lap 1 is released, declares protocol 5 and verdict `GO`, and fixes **one** close condition: Platterpus's verdict on `3e01bb3`, the released `.14`. Close-by 2026-10-06. Their answering lap can close it on their gate; our next lap closes it on ours. Round 25 is proposed in lap 1 §D |
-| **their lap 2** | **published and HELD.** `docs/handshake/outbound/round-24-lap-02.md` exists at `platterpus@b8f89a29`, on their working branch `claude/session-omka9f`, not on `main`. Line 33 reads `HANDSHAKE-READY-TO-READ: no — not announced; do not read or act on this lap yet`, read 2026-09-23. **That field is the only thing read from it.** No hash is recorded, because a held lap declares itself mutable and its bytes can change on release |
+| round 24 | **CLOSED `GO`/`GO`** 2026-09-23, **three laps**, 13 days before the close-by. One close condition, Platterpus's verdict on `3e01bb3`, met by their lap 2 (`GO`, their 0.6.53 parser reading our golden reference). It closed on their gate at their lap 2 and on ours at our lap 3: the two gates close on different laps, their round-25 item N1. Three laps is the lap-1 `GO`, not v5 |
+| their lap 2 | released, `GO` on `3e01bb3`, sha256 `222a658f…`, 16,914 bytes, filed byte-exact as `docs/handshake/inbound/round-24-lap-02.md`, read at `platterpus@86f0547`. Its declared digest matched the value computed before it could be read |
 | lap counts | rounds 21, 22 and 23 all took five. In 22 and 23 the fifth lap existed only to carry a transcription, which v5 §5b was adopted to remove — and as written cannot, because step 3 needs a peer lap the closing file could not have declared. `CLAUDE.md` has the prediction, the measure, and why it cannot be scored yet |
 
-### When their lap 2 is announced — the steps, prepared in advance
+### Round 25
 
-Our lap 1's pre-commitment makes lap 3 close to mechanical. Nothing below
-depends on their lap's content, so it was all checked before the lap could be
-read.
-
-1. **Read the release from the file, not from the announcement.** Fetch their
-   repository, including `claude/session-omka9f` (their laps have been
-   readable on a working branch before `main`), and read
-   `HANDSHAKE-READY-TO-READ` at a named commit. The announcement is a reason to
-   look; the field is the fact.
-2. **File it byte-exact** as `docs/handshake/inbound/round-24-lap-02.md`, with
-   its sha256 and size, read at that commit. Once released, the hash is the
-   anchor and the commit is a fetch hint.
-3. **`tools/seam-sync-check.py --fetch`** before acting on it. It must exit 0.
-4. **`tools/seam-check.py docs/handshake/inbound/round-24-lap-02.md`.** The
-   `protocol(v5)` label defect it had is fixed, so a v5 lap now grades OK.
-5. **Their declared `HANDSHAKE-ROUND-DIGEST` should be `2ccfe13e4111deb7 over 1
-   lap(s)`**: our lap 1, excluding theirs. Computed before their lap could be
-   read, with `python3 tools/round-digest.py 24`.
-6. **Lap 3 follows the pre-commitment**: `GO`, transcribing their verdict,
-   unless they report a regression in `3e01bb3` against round 22's change.
-   Two mechanical requirements were measured on a dry run of our gate:
-   **`HANDSHAKE-INBOUND-HELD` must name `round-24-lap-02.md` literally**, since a
-   prose reference is refused under v5, and **`HANDSHAKE-PEER-VERDICT-SOURCE`
-   must be present** (C41).
-7. After lap 3, `python3 tools/release-gate.py` should report round 24
-   **closed**. Then regenerate the golden reference in its own commit, as
-   for every lap.
+**Ours to open.** Platterpus compiled every known seam issue into one agenda,
+`platterpus@86f0547:TASKS.md`, *"Round 25 — the complete known-issue agenda"*.
+It is more than one round can close, so our lap 1 picks the closing subset under
+R1 and moves the rest to later rounds by name. Our round 24 lap 1 §D is the
+cyanrip-side list. **N4 is decided**: the operator chose a strict gate for
+their `v0.*` releases, recorded in our round 24 lap 3 §F.
 
 ### The protocol
 
@@ -130,10 +110,10 @@ from one side, so round 24 proposes them as one bump.
 
 ### Where their statuses are filed
 
-Six, each dated by the date **it declares**, not the day we received it:
+Seven, each dated by the date **it declares**, not the day we received it:
 `docs/handshake/inbound/status-2026-08-21-v0.6.21.md`, `…-2026-08-21-v0.6.23.md`,
-`…-2026-08-24-v0.6.23.md`, `…-2026-09-21-v0.6.52.md`, `…-2026-09-22-v0.6.53.md`
-and `…-2026-09-22-v0.6.53-c2f43d28.md`. The last two declare the same as-of, so
+`…-2026-08-24-v0.6.23.md`, `…-2026-09-21-v0.6.52.md`, `…-2026-09-22-v0.6.53.md`,
+`…-2026-09-22-v0.6.53-c2f43d28.md` and `…-2026-09-23-v0.6.53.md`. The last two declare the same as-of, so
 the second carries the commit it was read at — the one identifier that tells
 them apart. **Theirs are evidence and are never consolidated;
 ours is a claim about now and is rewritten** — the two rules are opposite and

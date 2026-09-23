@@ -1716,9 +1716,9 @@ in three laps or the reform failed.
 2026-09-16, and this paragraph carried the prediction with no result beside it
 for a month:
 
-| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** | **5** | **5** |
+| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** | **5** | **5** | 3 |
 
 **The measure, stated because two readings of it already exist:** laps is the
 highest `HANDSHAKE-LAP` **either** side declared for the round. Platterpus counts
@@ -1775,6 +1775,9 @@ needs v6 wording, and until then the two gates implement two readings.
 **So round 24 is not a test of §5b either.** It declares 5, but its lap 1
 declares `GO`, so the structure that made rounds 22 and 23 take five does not
 arise. If it closes in three laps, that measures the lap-1 `GO`, not v5.
+**It did close in three**, on 2026-09-23. Their gate closed one lap earlier
+than ours, at their lap 2, under the decision-time reading, which is the
+divergence v6 is meant to remove.
 
 Re-check: `for r in 15 16 17 18 19 20 21 22 23; do ... grep '^HANDSHAKE-LAP:'
 ...; done`, taking the maximum over `docs/handshake/round-$r-lap-*.md` and
