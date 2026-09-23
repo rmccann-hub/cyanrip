@@ -2960,6 +2960,57 @@ def test_v5_requires_the_source_field_and_prints_where_the_close_came_from():
           f"closed without printing the lap the verdict came from: {ok.why}")
 
 
+def test_seam_check_reads_the_protocol_label_the_spec_declares():
+    """Round 24, found preparing for Platterpus's lap 2.
+
+    `tools/seam-check.py` spelled the shared-hash label `protocol(v4)` as a
+    literal. After v5 landed, every conforming lap -- ours included -- drew
+    "declares no hash for docs/handshake/PROTOCOL.md", and the suggested fix
+    filed the v5 hash under the v4 label. Their round 23 lap 4 §C reported the
+    same defect in their own checker; ours was found by running it on our own
+    round 24 lap 1. Three cases, each against real lap headers:
+
+      1. a v5 lap declaring `protocol(v5)=<this tree's hash>` is OK;
+      2. the same hash filed under `protocol(v4)` is a label WARN, not OK;
+      3. a v4-era lap declaring v4's hash is a version difference, not a FAIL.
+    """
+    import shutil
+    sc_path = HERE.parent / "tools" / "seam-check.py"
+    spec = importlib.util.spec_from_file_location("seam_check_v", sc_path)
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+
+    def graded(src, mutate=None):
+        header = (HERE.parent / "docs" / "handshake" / src).read_text(
+            encoding="utf-8").split("\n\n", 1)[0]
+        if mutate:
+            header = mutate(header)
+        d = pathlib.Path(tempfile.mkdtemp())
+        try:
+            (d / src).write_text(header + "\n\nbody\n", encoding="utf-8")
+            sc.FINDINGS.clear()
+            sc.check_lap(d / src)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+        return [(lv, m) for lv, cat, m, _f, _a in sc.FINDINGS
+                if cat.startswith("shared/protocol")]
+
+    got = graded("round-24-lap-01.md")
+    check(got and got[0][0] == "OK",
+          f"a v5 lap declaring this tree's protocol hash must be OK: {got}")
+
+    relabel = lambda h: h.replace("protocol(v5)=", "protocol(v4)=")
+    check("protocol(v4)=" in relabel("HANDSHAKE-SHARED-HASHES: protocol(v5)=x"),
+          "the relabel did not land; case 2 would grade the wrong text")
+    got = graded("round-24-lap-01.md", relabel)
+    check(got and got[0][0] == "WARN" and "label" in got[0][1],
+          f"the current hash under a stale label must WARN about the label: {got}")
+
+    got = graded("round-23-lap-01.md")
+    check(got and got[0][0] == "WARN" and "DIFFERENT VERSION" in got[0][1],
+          f"a v4-era lap must read as a version difference, not drift: {got}")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()

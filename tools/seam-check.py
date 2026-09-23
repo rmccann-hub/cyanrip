@@ -100,6 +100,26 @@ def _version_differs(text, label):
     return bool(theirs and local and theirs.group(1) != local)
 
 
+def _spec_version():
+    """The protocol version THIS TREE'S PROTOCOL.md defines.
+
+    Read from the spec's own "Changes in vN" headings, not hardcoded. The
+    shared-hash label is version-qualified (`protocol(v5)`), and this file
+    used to spell it `protocol(v4)` as a literal -- so the day v5 landed,
+    every conforming lap drew a WARN saying it declared no protocol hash, and
+    the suggested fix was to file the v5 hash under the v4 label. Found in
+    round 24 while preparing for Platterpus's lap 2; their round 23 lap 4 §C
+    reports the same defect in their own checker, which is how we knew to look.
+    """
+    spec = ROOT / "docs" / "handshake" / "PROTOCOL.md"
+    if spec.exists():
+        found = [int(v) for v in re.findall(r"^## \d+\. Changes in v(\d+)[ \t]*$",
+                                            spec.read_text(encoding="utf-8"), re.M)]
+        if found:
+            return max(found)
+    return rg.PROTOCOL_VERSION
+
+
 def check_lap(path):
     """Every mechanical thing round 14 spent a lap saying in prose."""
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -109,7 +129,7 @@ def check_lap(path):
     proto = rg.PROTOCOL_RE.findall(text)
     if not proto:
         note("FAIL", "wire/protocol", f"{name} declares no HANDSHAKE-PROTOCOL",
-             fix="add `HANDSHAKE-PROTOCOL: 4` at column 0. A reader that has to "
+             fix=f"add `HANDSHAKE-PROTOCOL: {_spec_version()}` at column 0. A reader that has to "
                  "guess the version grades the file by rules the sender is not "
                  "following.")
     elif len(set(proto)) > 1:
@@ -374,11 +394,21 @@ def check_lap(path):
     # different rules and NOTHING ELSE IN THE LAP HAS BEEN GRADED -- it was
     # graded against a spec the sender is not following. So this FAILs, and a
     # round cannot close over a failing lap.
-    for label, rel in (("protocol(v4)", "docs/handshake/PROTOCOL.md"),
+    spec_v = _spec_version()
+    for label, rel in ((f"protocol(v{spec_v})", "docs/handshake/PROTOCOL.md"),
                        ("seam-rules", "docs/seam-rules.md"),
                        ("seam-commands", "docs/seam-commands.md"),
                        ("ownership", "docs/OWNERSHIP.md")):
         declared = re.search(rf"{re.escape(label)}=([0-9a-f]{{64}})", text)
+        other_v = None
+        if label.startswith("protocol(") and not declared:
+            # The lap names the protocol under a DIFFERENT version label. That
+            # is a version difference to compare, not an undeclared file.
+            m = re.search(r"protocol\(v(\d+)\)=([0-9a-f]{64})", text)
+            if m:
+                other_v, declared = int(m.group(1)), m
+        declared_hash = None if not declared else (
+            declared.group(2) if other_v is not None else declared.group(1))
         local = ROOT / rel
         if not local.exists():
             note("WARN", "shared/" + label,
@@ -393,7 +423,21 @@ def check_lap(path):
                  fix=f"add `{label}={ours}` to HANDSHAKE-SHARED-HASHES. An "
                      f"undeclared shared file is one nobody can prove you hold "
                      f"the same copy of.")
-        elif declared.group(1) != ours and _version_differs(text, label):
+        elif other_v is not None and declared_hash == ours:
+            note("WARN", "shared/" + label,
+                 f"{name} declares this tree's {rel} under the label "
+                 f"protocol(v{other_v}), but the file is v{spec_v}",
+                 fix=f"label it `{label}`. The bytes match, so both sides hold "
+                     f"one spec; only the version in the label is wrong.")
+        elif other_v is not None:
+            note("WARN", "shared/" + label,
+                 f"{name} declares {rel} at protocol v{other_v}; this tree "
+                 f"holds v{spec_v}. A DIFFERENT VERSION, not a different copy "
+                 f"of the same one",
+                 fix="compare the two versions, agree the newer one, and ship "
+                     "it from cyanrip's canonical copy. A lap sent under an "
+                     "older version is correct under that version.")
+        elif declared_hash != ours and _version_differs(text, label):
             # A VERSION DIFFERENCE, not drift. OWNERSHIP.md §6a: a lap sent under
             # v1 is correct under v1, and a receiver who has moved to v2 must not
             # read it as a rules difference. Without this the very act of
@@ -407,9 +451,9 @@ def check_lap(path):
                      "declared *-VERSION fields, agree the newer one, and ship "
                      "it from cyanrip's canonical copy -- custody is there so "
                      "there is one address to fetch and one hash to check.")
-        elif declared.group(1) != ours:
+        elif declared_hash != ours:
             note("FAIL", "shared/" + label,
-                 f"{name} declares {rel} as {declared.group(1)[:16]}…; this tree "
+                 f"{name} declares {rel} as {declared_hash[:16]}…; this tree "
                  f"holds {ours[:16]}…",
                  fix="RECONCILE THE FILE BEFORE ANYTHING ELSE IN THIS LAP IS "
                      "JUDGED. The two sides are working from different rules, so "
