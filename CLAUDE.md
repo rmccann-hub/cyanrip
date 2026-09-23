@@ -1794,6 +1794,14 @@ set before their lap 2: three laps by the measure above**, provided their lap 2
 lands the texts. A fourth lap would mean either an amendment we did not accept,
 or step 3 failing on the one gate that reads it the way it works.
 
+**Overtaken the same day, before either lap was sent, and by the operator,
+not by the mechanism.** The operator's instruction of 2026-09-23 added a close
+condition (both releases ready, lap 2 §0.3), and our lap 2 carries it, so the
+record is now our laps 1 and 2, their lap 3, and our lap 4. **The rescored
+prediction is four laps**, with the step-3 point unchanged: their gate can
+close on our lap 4 with no lap 5 of theirs. The three-lap figure was never
+tested, because no lap had been sent when the shape changed.
+
 Re-check: `for r in 15 16 17 18 19 20 21 22 23; do ... grep '^HANDSHAKE-LAP:'
 ...; done`, taking the maximum over `docs/handshake/round-$r-lap-*.md` and
 `docs/handshake/inbound/round-$r-lap-*.md`. Never from the filename — the
