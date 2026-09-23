@@ -5044,6 +5044,96 @@ def sc_enhanced_cd():
         fail("enhanced_cd/wellformed: a disc with no data track reported a "
              "CD-Extra session gap")
 
+def sc_bad_sector():
+    """ONE UNREADABLE SECTOR, AND THE RETRY LIMIT THAT HUNG ON IT.
+
+    Found 2026-09-23 by fault injection, with no drive: tests/badsector.c
+    fails every read of the image overlapping one sector, as a drive fails the
+    whole command. At the DEFAULT paranoia level, the one every consumer uses,
+    `-r 3` never returned. libcdio-paranoia compares its per-frame retry
+    counter with the limit only at multiples of 5, so 3 is never matched and
+    the skip it gates never happens. Platterpus exposes -r to users, and their
+    rig was left at 3. crip_frame_retry_limit() rounds the per-frame half up.
+
+    What it asserts, each against something other than our own wording:
+      * the rip RETURNS, inside crip()'s timeout -- the hang is the defect;
+      * the shim really failed reads, so a green run is not a vacuous one;
+      * track 2 reports `read with errors.` and `Ripping errors:` counts them
+        -- the arm of the per-track line no test had reached (their D4);
+      * track 1 and every sector of track 2 outside the damage are the
+        source .bin's bytes, and the damaged ones are zero, not invented audio;
+      * the Retry limit line gives both numbers for -r 3, and is unchanged for
+        -r 10, the multiple-of-5 control.
+    """
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"bad_sector: the shim was not built or not passed ({shim!r})")
+        return
+    src = (FIX / "cdda.bin").read_bytes()
+    sec = 2352
+    bad = 400  # disc sector; track 2 is 300..599 in basic.cue
+
+    for r, want_retry in (
+            ("3", "Retry limit:    3 (per whole-track re-read; 5 per frame, "
+                  "rounded up to a multiple of 5, the only values "
+                  "libcdio-paranoia checks)"),
+            ("10", "Retry limit:    10 (per frame, and per whole-track re-read)")):
+        out = WORK / f"out_bad_sector_{r}"
+        count = WORK / f"bad_sector_{r}.count"
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+                   CRIP_BAD_SECTOR=str(bad), CRIP_BAD_OUT=str(count),
+                   # An instrumented binary insists on being first in the
+                   # link order; the shim only interposes stdio.
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        try:
+            ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                           "-r", r, "-o", "pcm", "-D", out, "-F", "{track}",
+                           "-L", "log", "-M", "sheet", env=env)
+        except subprocess.TimeoutExpired:
+            fail(f"bad_sector: -r {r} did not return within crip()'s timeout on "
+                 f"one unreadable sector -- the per-frame limit is not reaching "
+                 f"libcdio-paranoia as a multiple of 5")
+            continue
+        (WORK / f"bad_sector_{r}.log").write_text(log)
+        failed = int(count.read_text().strip()) if count.exists() else 0
+        if failed < 1:
+            fail(f"bad_sector: -r {r}: the shim failed no reads, so nothing "
+                 f"below tests a bad sector")
+            continue
+        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        if want_retry not in text.splitlines():
+            fail(f"bad_sector: -r {r}: no line {want_retry!r} in the log")
+        if "Track 1 read successfully!" not in text.splitlines():
+            fail(f"bad_sector: -r {r}: track 1 should read clean")
+        if "Track 2 read with errors." not in text.splitlines():
+            fail(f"bad_sector: -r {r}: track 2 does not report `read with errors.`")
+        m = re.search(r"^Ripping errors: (\d+)$", text, re.M)
+        if not m or int(m.group(1)) < 1:
+            fail(f"bad_sector: -r {r}: `Ripping errors:` does not count the "
+                 f"bad sector ({m.group(0) if m else 'absent'})")
+        t1 = (out / "1.pcm").read_bytes() if (out / "1.pcm").exists() else b""
+        t2 = (out / "2.pcm").read_bytes() if (out / "2.pcm").exists() else b""
+        if t1 != src[:300 * sec]:
+            fail(f"bad_sector: -r {r}: track 1 is not the source's bytes")
+        if len(t2) != 300 * sec:
+            fail(f"bad_sector: -r {r}: track 2 is {len(t2)} bytes, not {300 * sec}")
+            continue
+        differ = [i for i in range(300)
+                  if t2[i * sec:(i + 1) * sec] != src[(300 + i) * sec:(301 + i) * sec]]
+        if (bad - 300) not in differ:
+            fail(f"bad_sector: -r {r}: the bad sector came back as source audio, "
+                 f"so it was not bad")
+        if any(not (bad - 300 - 8 <= i <= bad - 300 + 8) for i in differ):
+            fail(f"bad_sector: -r {r}: sectors far from the bad one differ from "
+                 f"the source: {differ}")
+        if any(t2[i * sec:(i + 1) * sec] != bytes(sec) for i in differ):
+            fail(f"bad_sector: -r {r}: a damaged sector holds non-zero audio -- "
+                 f"invented rather than skipped")
+        note(f"bad_sector: -r {r}: {failed} failed read(s); sectors "
+             f"{[300 + i for i in differ]} zeroed, the rest identical to the source")
+
+
 def sc_abort_footer():
     """A run that ABORTS must still write a completion footer, and say so.
 

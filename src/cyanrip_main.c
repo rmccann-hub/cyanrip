@@ -531,7 +531,7 @@ static const uint8_t *cyanrip_read_frame(cyanrip_ctx *ctx, lsn_t lsn)
     crip_stall_read_begin(crip_reading_track, lsn);
 
     data = (void *)cdio_paranoia_read_limited(ctx->paranoia, &status_cb,
-                                              ctx->settings.max_retries);
+                                              crip_frame_retry_limit(ctx->settings.max_retries));
 
     crip_stall_read_end();
 

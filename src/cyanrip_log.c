@@ -817,8 +817,20 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
      * saying they were one knob. Renamed with Platterpus's assent, round
      * 20 lap 2 §0.2; their parser accepts both labels permanently so the
      * eight acceptance logs already filed under docs/ still read. */
-    cyanrip_log(ctx, 0, "Retry limit:    %i (per frame, and per whole-track re-read)\n",
-                ctx->settings.max_retries);
+    /* And one knob is not always one number: the per-frame half is rounded up
+     * to a multiple of 5 before it reaches libcdio-paranoia, which checks the
+     * limit only at multiples of 5 (crip_frame_retry_limit()). When the two
+     * differ the line says both, because "per frame" would otherwise claim a
+     * limit the library never applies. The leading number stays the -r value,
+     * which is what tools/probe-argv-surface.py and every consumer read. */
+    if (crip_frame_retry_limit(ctx->settings.max_retries) == ctx->settings.max_retries)
+        cyanrip_log(ctx, 0, "Retry limit:    %i (per frame, and per whole-track re-read)\n",
+                    ctx->settings.max_retries);
+    else
+        cyanrip_log(ctx, 0, "Retry limit:    %i (per whole-track re-read; %i per frame, "
+                    "rounded up to a multiple of 5, the only values libcdio-paranoia checks)\n",
+                    ctx->settings.max_retries,
+                    crip_frame_retry_limit(ctx->settings.max_retries));
     print_cache_model(ctx);
     cyanrip_log(ctx, 0, "HDCD decoding:  %s\n", ctx->settings.decode_hdcd ? "enabled" : "disabled");
 

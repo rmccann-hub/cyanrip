@@ -171,6 +171,15 @@ logrender_test = executable('logrender_test',
 )
 test('Log rendering', logrender_test)
 
+## One unreadable sector, for the image rips. An LD_PRELOAD shim, not a test
+## of its own: rip_images.py's `bad_sector` scenario rips through it. See the
+## file header for why a drive is not needed for this half of "damaged media".
+badsector_shim = shared_module('badsector',
+    sources: [ 'badsector.c' ],
+    name_prefix: '',
+    dependencies: [ dependency('dl') ],
+)
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the
@@ -557,6 +566,7 @@ rip_scenarios = [
     'outdir_is_a_file',
     'consumer_argv',
     'abort_footer',
+    'bad_sector',
 ]
 
 # The scenarios are told which build configuration they are testing, because
@@ -566,12 +576,14 @@ rip_scenarios = [
 # for is the one we ship: the shipping configuration failed 2 of 41 until this
 # existed. Derived from the option rather than sniffed from the binary.
 declared_env = 'CYANRIP_DECLARED_RELEASED=' + (get_option('declare_released') ? '1' : '0')
+badsector_env = 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path()
 
 foreach s : rip_scenarios
     test(s, python,
          args: [ files('rip_images.py'), cyanrip_exe,
                  meson.current_source_dir() / 'fixtures', s ],
-         env: [ declared_env ],
+         env: [ declared_env, badsector_env ],
+         depends: [ badsector_shim ],
          suite: 'images',
          timeout: 120)
 endforeach

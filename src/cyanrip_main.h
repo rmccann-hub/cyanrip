@@ -24,6 +24,7 @@
 #include <string.h>
 #include <math.h>
 #include <signal.h>
+#include <limits.h>
 #include "../config.h"
 #include "version.h"
 
@@ -500,3 +501,28 @@ extern char *crip_invocation;
 
 extern uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
 extern const int crip_max_paranoia_level;
+
+/* The per-frame retry limit actually handed to libcdio-paranoia.
+ *
+ * cdio_paranoia_read_limited() compares its retry counter with max_retries
+ * only when the counter is a multiple of 5 -- `if (retry_count % 5 == 0)`,
+ * then `retry_count == max_retries` (libcdio-paranoia lib/paranoia/paranoia.c,
+ * read at upstream 384f4da; the installed 10.2+2.0.1 behaves the same). Any
+ * other value is never matched, so the skip it gates never happens, and on a
+ * sector that will not read the call does not return. Measured 2026-09-23
+ * with one injected bad sector at the default paranoia level: -r 3 did not
+ * finish in 90 s, while -r 10 and -r 20 finished in about a second with the
+ * sector counted in `Ripping errors:`. Platterpus exposes -r to its users,
+ * and its rig was left at 3.
+ *
+ * So the value is rounded UP to a multiple of 5, with 5 as the floor: -r 0
+ * hung the same way. The whole-track re-read ceiling (-Z) is cyanrip's own
+ * loop and keeps the value as given, and the log says so when they differ. */
+static inline int crip_frame_retry_limit(int max_retries)
+{
+    if (max_retries <= 5)
+        return 5;
+    if (max_retries > INT_MAX - 4)
+        return INT_MAX - INT_MAX % 5;
+    return (max_retries + 4) / 5 * 5;
+}

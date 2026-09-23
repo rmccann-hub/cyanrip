@@ -23,6 +23,52 @@ say "probably" without saying what would settle it.
 
 ---
 
+## Fixed 2026-09-23 — a retry limit that could hang on one bad sector
+
+### `-r` values that are not a multiple of 5 never returned on an unreadable sector
+
+**Found by fault injection, not on a drive.** `tests/badsector.c` is an
+`LD_PRELOAD` shim that fails every read of a disc image overlapping one sector,
+the way a drive fails the whole command. At the **default** paranoia level with
+sector 400 of `basic.cue` bad:
+
+| `-r` | before | after |
+|---|---|---|
+| 3 | **did not return in 90 s** | 184 failed reads, returns in under a second |
+| 0 | did not return (same cause) | 184 failed reads |
+| 10 | 346 failed reads, returned in 1 s | unchanged |
+| 20 | 640 failed reads | unchanged |
+
+**Cause, read from the library rather than guessed.**
+`cdio_paranoia_read_limited()` compares its retry counter with the limit only
+inside `if (retry_count % 5 == 0)`, so no other value is ever matched and the
+skip it gates never happens. The code is at `lib/paranoia/paranoia.c` in
+upstream libcdio-paranoia, read at `384f4da`; the installed version is
+10.2+2.0.1. **Platterpus exposes `-r` to its users** (`cyanrip_backend.py:237`,
+range 0 up, default 5), and their rig was left at 3.
+
+**Fix:** `crip_frame_retry_limit()` rounds the per-frame limit up to a multiple
+of 5, with 5 as the floor. The whole-track `-Z` ceiling is our own loop and keeps
+the value as given. When the two differ, `Retry limit:` says both. The leading
+number is still the `-r` value, which is what `tools/probe-argv-surface.py` and
+their parser read; their matcher is the label alone
+(`platterpus@86f0547:src/platterpus/parsers/cyanrip_log.py:1983`). The `-j`
+record's `retry_limit` stays the `-r` value.
+
+**What the fix does to the audio**, checked against the source `.bin` rather than
+against the log: at `-r 3` and `-r 10` alike, sectors 400–402 come back as zeros
+and are counted in `Ripping errors:`, and every other sector of both tracks is
+byte-identical to the source. **One bad sector costs three**, which is the
+library's skip granularity. It is reported as errors, never presented as audio.
+
+**Pinned** by `bad_sector` in `tests/rip_images.py`, which also covers
+`Track N read with errors.`, the arm no test had reached (Platterpus's D4).
+Revert-proved: with the raw value restored and the binary rebuilt, the scenario
+fails on crip()'s 60-second timeout. **Upstream has the same exposure**, so it is
+a `docs/SETTLED.md` upstream row. **Hardware:** the error path is the same code
+on a drive. A real damaged disc also exercises the MMC read, which this does
+not.
+
 ## Fixed 2026-09-16, round 21 — both agreed in round 20 and neither shipped inside it
 
 *The middle row is the exception and says so in its own cell: it was FOUND
@@ -93,6 +139,31 @@ which is the only method that finds this class.
 ---
 
 ## Open, ours, and solvable — but deliberately not now
+
+### With paranoia disabled (`-P 0`), one unreadable sector hangs the rip at any retry limit
+
+**Measured 2026-09-23** with `tests/badsector.c`, at `-r 10` and at `-r 1`:
+the read of the sector after the bad one never returned, the stall watchdog
+reported it every 10 s, one SIGTERM printed `Trying to quit` and did not end
+the process, and a second SIGTERM ended it **with no footer**. A backtrace put
+the main thread in `cdio_paranoia_read_limited()` → `cdio_cddap_read_timed()`.
+It was retrying the same sector, and libcdio's error buffer had grown to 1.5 MB
+of `Unable to access sector 411: skipping...`.
+
+**Cause:** in disable mode the skip that the retry limit gates does not move
+the read forward, so the counter resets and the loop starts again (same
+function as the `-r` defect above). **Rounding the limit does not help**:
+`-r 10` hung too.
+
+**Why not now.** The remedy is ours to write: at level 0, read with
+`cdio_cddap_read()` and our own bounded retry instead of paranoia's loop. But
+that changes the read path on a real drive. Paranoia reads in chunks and a
+per-sector read may be much slower, so it is a drive change that needs a drive
+to verify. **Exposure today:** Platterpus never passes `-P`
+(`platterpus@86f0547:src/platterpus/adapters/cyanrip_backend.py`, no `-P` in
+its argv), so their rips run at level 3, where the fixed path above applies.
+Our own image suite passes `-P 0` and has no bad sectors. **An upstream report
+belongs to libcdio-paranoia**, not to cyanrip.
 
 ### `EXCLUDED_TESTS` rests on a premise we recorded as lapsed, and nothing reads that premise
 

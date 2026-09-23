@@ -175,7 +175,7 @@ list wrote two different claims the same way for months:**
 |---|---|---|
 | **C2** | `UNREACHABLE` | the rig's BDR-209D **reports C2 unsupported**. No procedure, tier or effort produces it — it needs a different drive or it stays unverified permanently. |
 | **`-f`** | not yet done | testable on the reference disc **now**: it is in AccurateRip and `+667` is known-correct, so ground truth exists. |
-| **damaged media** | not yet done | needs a damaged disc. |
+| **damaged media** | half done | **what happens after a read fails** is now tested with no drive: `tests/badsector.c` fails one sector of an image, and the `bad_sector` scenario pins the retry, the skip, `read with errors.`, `Ripping errors:` and the zeroed audio. That is how a real hang was found (`-r 3`, below). **The read itself on a damaged disc** still needs one: how a drive fails, how slowly, and whether C2 says anything. |
 | **CD-TEXT from a physical disc** | not yet done | needs a disc that has some; `mmc_read_cdtext` is a different path from the `.toc` image parser. |
 
 ***Cannot be done* and *not yet done* are different claims**, and listing them
@@ -879,10 +879,10 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is eight**, counted
-   off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather than
-   remembered, each with a re-check `tools/check-settled.py` runs against
-   `master`:
+   tally that said "all three" while five more existed. **It is nine**: eight
+   counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather than
+   remembered, and a ninth added there on 2026-09-23. Each has a re-check
+   `tools/check-settled.py` runs against `master`:
 
    1. `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a
       handler, the deadlock that hangs the process with the drive held.
@@ -902,8 +902,13 @@ should need rewriting. If it does, that is the defect.
       **corrupted audio with `Ripping errors: 0`** — still present at `f8ebf48`,
       and the only one with a report already written:
       `docs/upstream-cachemodel-report.md`, **drafted and not filed.**
+   9. `-r` reaches libcdio-paranoia **unrounded**, and the library checks the
+      per-frame limit only at multiples of 5, so **`-r 3` never returns on an
+      unreadable sector** at the default paranoia level. Found 2026-09-23 by
+      fault injection (`tests/badsector.c`); fixed here by
+      `crip_frame_retry_limit()`.
 
-   **Not filed is not fixed, and eight unfiled reports is the private garden
+   **Not filed is not fixed, and nine unfiled reports is the private garden
    this rule forbids.** Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — but the count belongs
    here where it can be checked, and it is checked by the same command as every
@@ -2198,6 +2203,22 @@ Record these rather than rediscovering them:
   **It must keep terminating**: libcdio's internal callers are written assuming
   `cdio_error()` does not return, so code after such a call runs in a state its
   author never intended it to reach.
+- **libcdio-paranoia checks the per-frame retry limit only at multiples of 5.**
+  `cdio_paranoia_read_limited()` tests `retry_count == max_retries` inside
+  `if (retry_count % 5 == 0)` (`lib/paranoia/paranoia.c`, read at upstream
+  `384f4da`). Any other limit is never matched, and on a sector that will not
+  read the call does not return. Measured with one injected bad sector at the
+  default level: `-r 3` hung past 90 s, and `-r 10` finished in a second.
+  `crip_frame_retry_limit()` rounds up (minimum 5) and the `Retry limit:` line
+  says both numbers when they differ. **The whole-track `-Z` ceiling is ours
+  and keeps the value as given.**
+- **And with paranoia disabled (`-P 0`), an unreadable sector never returns at
+  any retry limit.** The skip that the limit gates does not advance the read
+  in disable mode, so the loop resets and runs again. Measured at `-r 10` and
+  at `-r 1`. **Not worked around**: fixing it means bypassing paranoia's read
+  loop at level 0, a drive-path change with a speed cost on real drives.
+  Platterpus never passes `-P`, so their rips run at level 3. Recorded in
+  `docs/KNOWN-ISSUES.md`.
 - **genopt prints its own errors unless you take them.** `GEN_OPT_LOG` is
   documented in `genopt.h` and cyanrip did not define it, so every
   argument-parsing failure went to stdout via `vprintf` and reached no logfile
