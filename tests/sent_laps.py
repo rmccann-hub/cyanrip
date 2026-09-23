@@ -248,6 +248,11 @@ SENT = {
     # to release"), so these are the bytes that leave.
     "round-25-lap-01.md":
         "78485c98a66ec8897ec15cb94e74c0460295356ff7df50f7ce42430c4838a9d4",
+    # Round 25 lap 2, pinned in the commit that releases it. The operator asked
+    # for "the full released lap", which is the release, given before the lap
+    # was written.
+    "round-25-lap-02.md":
+        "932f86e10252ce79d10e59d9b0d41711273067c9275bf0236a61fadcf3c6c4e3",
 }
 
 failures = 0
