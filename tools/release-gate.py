@@ -105,6 +105,65 @@ LAP_DECL_RE = re.compile(r"(?m)^HANDSHAKE-LAP:")
 # PROTOCOL.md, which is copied into both repositories.
 PROTOCOL_VERSION = 5
 PROTOCOL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(\d+)[ \t]*$", re.M)
+PROTOCOL_DECL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(.*)$", re.M)
+
+
+def declared_version(text):
+    """The leading integer of a single HANDSHAKE-PROTOCOL declaration, or None
+    when there is none, more than one, or it is not an integer. `text` is
+    fence-stripped. version_refusal() is what reports the last two."""
+    decls = PROTOCOL_DECL_RE.findall(text)
+    if len(decls) != 1:
+        return None
+    try:
+        return int(decls[0].strip().split()[0])
+    except (ValueError, IndexError):
+        return None
+
+
+# C29 across both sides' laps, from this round on. NOT retroactive, and the
+# record says why rather than a principle: round 8's laps 3-15 of ours declared
+# 1 after their lap 2 declared 2 -- the under-declaration this row was written
+# about -- and that round is closed. A rule arrives at a round boundary or it
+# rewrites the past; the boundary is the round in which the gate learned it.
+C29_FROM_ROUND = 25
+
+
+def version_refusal(text):
+    """A reason to refuse a ROUND because one of its files declares a protocol
+    this gate does not implement, or None. `text` is fence-stripped.
+
+    **Applied to every file of the round, ours and theirs, not only the lap the
+    verdict is read from.** Until round 25 the inbound loader read a peer lap's
+    ROUND, LAP, VERDICT and READY-TO-READ and never its PROTOCOL, so a peer lap
+    declaring 6 was read by a gate implementing 5: under §5b step 3 a v6 `GO`
+    of theirs could close a round here, graded by rules we do not implement.
+    §3 says a gate reading a higher number must refuse the round rather than
+    guess, and C15 is that row; our C15 test only ever built our own file.
+
+    Platterpus reported it in round 24 lap 1 §B1 against
+    `cyanrip@ace22cf:tools/release-gate.py:468,768`, having found and fixed the
+    same defect in their own gate the day before
+    (`platterpus@86f0547:scripts/handshake.py:1920`, `refused_round_files`),
+    whose docstring gives the reason for "any file, not only the newest": a
+    newer lap may lean on a clause of the older one's version.
+
+    An absent field is not refused here -- the per-lap checks already fail our
+    own file closed on it, and every inbound lap we hold declares one."""
+    decls = PROTOCOL_DECL_RE.findall(text)
+    if not decls:
+        return None
+    if len(decls) > 1:
+        return "HANDSHAKE-PROTOCOL declared more than once"
+    raw = decls[0].strip()
+    try:
+        version = int(raw.split()[0])
+    except (ValueError, IndexError):
+        return f"HANDSHAKE-PROTOCOL: {raw!r} is not an integer"
+    if version > PROTOCOL_VERSION:
+        return (f"declares HANDSHAKE-PROTOCOL: {version}, this gate implements "
+                f"{PROTOCOL_VERSION} -- refusing rather than guessing")
+    return None
 
 # Adopted from Platterpus round 7 lap 3 §1: the wire header both sides emit.
 # FROM makes a crossed pair unambiguous without filename conventions;
@@ -389,6 +448,10 @@ class Lap:
         # None when we hold none of theirs. Filled in by load_rounds().
         self.peer_latest = None
         self.peer_verdict_source = None
+        # Every file of this round, ours or theirs, that declares a protocol
+        # this gate does not implement, as "dir/name: reason". Filled in by
+        # load_rounds(); non-empty means the round cannot be graded here.
+        self.version_refused = []
         # True for a round that exists ONLY in inbound/ -- they opened it and we
         # have not answered. Such a round has no file of ours to parse, so every
         # per-file check below is meaningless on it; it is open by definition.
@@ -540,6 +603,8 @@ class Lap:
         # stay green, and asking why rather than deleting the line.
         if self.peer_only:
             return False
+        if self.version_refused:
+            return False
         if self.grandfathered:
             return True
         if not self.protocol_ok:
@@ -686,6 +751,8 @@ class Lap:
         if self.peer_only:
             return (f"they opened it and we have not answered -- we hold "
                     f"{self.path.name} and no lap of our own")
+        if self.version_refused:
+            return "; ".join(self.version_refused)
         if self.grandfathered:
             return "no verdict field, grandfathered by number"
         if self.protocol is not None and int(self.protocol) > PROTOCOL_VERSION:
@@ -784,6 +851,8 @@ def load_rounds(directory=None, every_lap=False):
     if directory is None:
         directory = HANDSHAKE_DIR
     all_laps = []
+    refused_by_round = {}
+    versions_by_round = {}
     for path in sorted(directory.glob("round-*.md")):
         m = re.match(r"round-(\d+)", path.name)
         if not m:
@@ -852,6 +921,12 @@ def load_rounds(directory=None, every_lap=False):
         lp.override = one(OVERRIDE_RE)
         lp.override_by = one(OVERRIDE_BY_RE)
         lp.override_why = one(OVERRIDE_WHY_RE)
+        reason = version_refusal(text)
+        if reason:
+            refused_by_round.setdefault(lp.number, []).append(
+                f"{path.name}: {reason}")
+        versions_by_round.setdefault(lp.number, []).append(
+            (lp.lap, declared_version(text), path.name))
 
     # A round's state is its latest lap. An unparseable lap number sorts to the
     # end so it cannot be shadowed by a well-formed earlier one.
@@ -888,6 +963,20 @@ def load_rounds(directory=None, every_lap=False):
     peer_latest = {}
     for path in sorted((directory / "inbound").glob("round-*.md")):
         text = strip_fences(path.read_text(encoding="utf-8"))
+        # Before the ambiguity skip below: a file we cannot read unambiguously
+        # is still a file in this round, and one declaring rules we do not
+        # implement makes the round ungradable whatever else it says. Keyed on
+        # the filename's round, as our own files are.
+        fm = re.match(r"round-(\d+)", path.name)
+        reason = version_refusal(text)
+        if fm and reason:
+            refused_by_round.setdefault(int(fm.group(1)), []).append(
+                f"inbound/{path.name}: {reason}")
+        if fm:
+            ilaps = LAP_RE.findall(text)
+            versions_by_round.setdefault(int(fm.group(1)), []).append(
+                (int(ilaps[0]) if len(ilaps) == 1 else None,
+                 declared_version(text), f"inbound/{path.name}"))
         nums, laps, verdicts = (ROUND_RE.findall(text), LAP_RE.findall(text),
                                 VERDICT_RE.findall(text))
         # Same ambiguity rule as our own laps: a field declared twice is not
@@ -930,6 +1019,30 @@ def load_rounds(directory=None, every_lap=False):
         synthetic.peer_latest = (verdict, name, ready)
         latest[number] = synthetic
         all_laps.append(synthetic)
+
+    # C29, ours and theirs in one sequence by declared lap number. Before this
+    # the inbound loader never read a peer lap's version, so their lap 2
+    # declaring 4 after our lap 1 declared 5 closed round 24 in a dry run
+    # (docs/KNOWN-ISSUES.md, "Our gate has four defects", item 3). A lap with
+    # no readable number or version is left to the checks that already refuse
+    # it, rather than guessed into the order.
+    for number, seq in versions_by_round.items():
+        if number is None or number < C29_FROM_ROUND:
+            continue
+        high = None
+        for lap_no, version, label in sorted(
+                (x for x in seq if x[0] is not None and x[1] is not None),
+                key=lambda x: (x[0], x[2])):
+            if high is not None and version < high[0]:
+                refused_by_round.setdefault(number, []).append(
+                    f"{label}: declares HANDSHAKE-PROTOCOL: {version}, lower "
+                    f"than {high[1]}'s {high[0]} -- C29, a lap may not "
+                    f"under-declare the rules it is read by")
+            if high is None or version > high[0]:
+                high = (version, label)
+
+    for lp in all_laps:
+        lp.version_refused = list(refused_by_round.get(lp.number, []))
 
     if every_lap:
         return sorted(all_laps, key=lambda lp: (lp.number or 0, lp.lap or 0,

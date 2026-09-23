@@ -734,6 +734,20 @@ misfires.
 
 ### Our gate has four defects, two found by Platterpus's questions, and none was fixed on finding
 
+**Items 1 and 3 FIXED 2026-09-23, before round 25 opened**, by the change that
+added `version_refusal()`, `declared_version()` and `C29_FROM_ROUND` to
+`tools/release-gate.py`. Every file of a round, ours and inbound, is now read
+for its version: one declaring more than we implement refuses the round, naming
+the file (C15), and from round 25 a lap declaring less than an earlier lap of
+either side refuses it too (C29). Tests
+`test_a_peer_lap_above_our_protocol_refuses_the_round` and
+`test_a_peer_lap_below_an_earlier_lap_refuses_the_round`, revert-proved one half
+at a time. **The C29 boundary is load-bearing, not caution:** moved to 0, it
+reopens round 8, whose laps 3–15 of ours declared 1 after their lap 2 declared
+2, and the real gate refuses a release. Platterpus's gate already had the C15
+half (`platterpus@86f0547:scripts/handshake.py:1920`, `refused_round_files`).
+Items 2 and 4 remain, below.
+
 **Found 2026-09-22, answering their post-round-23 standing status**
 (`docs/handshake/inbound/status-2026-09-22-v0.6.53-c2f43d28.md`, the
 **protocol** row). They described two defects in their own gate as *"portable

@@ -2910,6 +2910,81 @@ def test_v5_close_rule_and_the_v4_control():
           "the same fixture declaring 4 also closed -- v5 is not what closes it")
 
 
+def test_a_peer_lap_above_our_protocol_refuses_the_round():
+    """Covers: C15
+
+    Found by Platterpus, round 24 lap 1 §B1, against
+    `cyanrip@ace22cf:tools/release-gate.py:468,768`: our inbound loader read a
+    peer lap's round, lap, verdict and release state and NEVER its protocol, so
+    C15 held for our own file and not for theirs. The fixture that shows it is
+    the C40 one with their lap declaring 6: under §5b step 3 a v6 `GO` closed
+    the round here, graded by rules this gate does not implement. Before
+    either side declares 6 (round 25 §0.3), that must be a refusal.
+
+    Any file of the round, not only the newest -- their rule, from
+    `platterpus@86f0547:scripts/handshake.py:1920`: a newer lap may lean on a
+    clause of the older one's version.
+    """
+    six = _v5_theirs().replace("HANDSHAKE-PROTOCOL: 5", "HANDSHAKE-PROTOCOL: 6")
+    check(six != _v5_theirs(), "fixture did not change the peer's version")
+    lp = _v5_resolve(_v5_ours(), six)
+    check(not lp.closed,
+          "a peer lap declaring a protocol above ours closed the round: "
+          f"{lp.why}")
+    check("inbound/round-30-lap-04.md" in lp.why and "refusing" in lp.why,
+          f"refused without naming the peer file and the reason: {lp.why}")
+    # THE CONTROL: the same bytes at 5 close, so the version is what refuses.
+    check(_v5_resolve(_v5_ours(), _v5_theirs()).closed,
+          "the control at protocol 5 does not close -- the test proves nothing")
+
+    # An OLDER peer lap at 6 refuses too, although the verdict is read from a
+    # newer lap at 5.
+    d = pathlib.Path(tempfile.mkdtemp())
+    (d / "round-30-lap-03.md").write_text(_v5_ours(), encoding="utf-8")
+    (d / "inbound").mkdir()
+    (d / "inbound" / "round-30-lap-04.md").write_text(_v5_theirs(),
+                                                      encoding="utf-8")
+    (d / "inbound" / "round-30-lap-02.md").write_text(
+        six.replace("HANDSHAKE-LAP: 4", "HANDSHAKE-LAP: 2"), encoding="utf-8")
+    older = rg.load_rounds(d)[0]
+    check(not older.closed and "inbound/round-30-lap-02.md" in older.why,
+          f"an older peer lap at 6 did not refuse the round: {older.why}")
+    ok, probs = rg.check(rg.load_rounds(d))
+    check(not ok and any("round-30-lap-02.md" in p for p in probs),
+          f"the release gate did not refuse, or did not name the file: {probs}")
+
+
+def test_a_peer_lap_below_an_earlier_lap_refuses_the_round():
+    """Covers: C29
+
+    The gate half of C29, across both sides. `test_protocol_must_not_go_backwards`
+    only shows the data is carried; this is the refusal. Found 2026-09-23 by
+    dry-running round 24's close: their lap declaring 4 after our lap declared 5
+    closed the round, because the inbound loader never read a peer lap's
+    version (`docs/KNOWN-ISSUES.md`, *"Our gate has four defects"*, item 3).
+
+    From round 25 only. Round 8's laps 3-15 of ours declared 1 after their lap
+    2 declared 2, and that round is closed; the rule arrives at a boundary.
+    """
+    four = _v5_theirs().replace("HANDSHAKE-PROTOCOL: 5", "HANDSHAKE-PROTOCOL: 4")
+    check(four != _v5_theirs(), "fixture did not change the peer's version")
+    lp = _v5_resolve(_v5_ours(), four)
+    check(not lp.closed and "inbound/round-30-lap-04.md" in lp.why
+          and "C29" in lp.why,
+          f"a peer lap under-declaring after ours did not refuse: {lp.why}")
+
+    # Before the boundary the same shape is graded as it always was.
+    d = pathlib.Path(tempfile.mkdtemp())
+    old = lambda t: t.replace("HANDSHAKE-ROUND: 30", "HANDSHAKE-ROUND: 20")
+    (d / "round-20-lap-03.md").write_text(
+        old(_v5_ours(held="round-20-lap-04.md")), encoding="utf-8")
+    (d / "inbound").mkdir()
+    (d / "inbound" / "round-20-lap-04.md").write_text(old(four), encoding="utf-8")
+    early = rg.load_rounds(d)[0]
+    check(early.number == 20 and not early.version_refused,
+          f"C29 reached back past round {rg.C29_FROM_ROUND}: {early.version_refused}")
+
+
 def test_v5_refuses_a_held_or_unenumerated_peer_lap():
     """Covers: C37, C38
 
