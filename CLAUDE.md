@@ -801,11 +801,14 @@ also why a hash must be computed over the *file the table names*, not over the
 path you expected to find it at.
 
 **Present tense would now be false, and this is checkable rather than hoped.**
-Measured **2026-09-22 against `platterpus@52b4428`**, with `--fetch`: **all four
-shared documents are byte-identical**, and the protocol is **v5** —
-`d698d58a8130ab52` — adopted in round 23 by both sides. The reading before it said
-NOT IN SYNC for most of a day, correctly: v5 had been committed on their working
-branch and not yet on `main`, which is the ref this tool reads. **Commit the
+Measured **2026-09-23 against `platterpus@5374729`**, with `--fetch`: **three of
+the four are byte-identical and the protocol is not.** Theirs is a v6,
+`522a18eb…`, landed from our round 25 lap **1** draft, which their lap 2 answered.
+Ours is still v5, `d698d58a8130ab52`, because the v6 both trees can hold is the
+one our lap 3 proposes. The reading of 2026-09-22 against `52b4428` said all four
+identical at v5, and the one before it said NOT IN SYNC for most of a day,
+correctly: v5 had been committed on their working branch and not yet on `main`,
+which is the ref this tool reads. **Commit the
 change where the other side reads, or it is not in their repository.**
 **Re-run it rather than quoting this line** — `tools/seam-sync-check.py
 --fetch` diffs the real files rather than comparing two hashes each side
@@ -1801,6 +1804,17 @@ record is now our laps 1 and 2, their lap 3, and our lap 4. **The rescored
 prediction is four laps**, with the step-3 point unchanged: their gate can
 close on our lap 4 with no lap 5 of theirs. The three-lap figure was never
 tested, because no lap had been sent when the shape changed.
+
+**The four-lap figure failed before it could be tested, and the mechanism is a
+crossing, not v5.** Their lap 2 was released at `5374729` on the same day as
+ours at `bceb35d`, hours later. It held only our lap 1, so it answered a record
+that had already moved. Both lap 2s stand, since a sent lap is not edited, and
+neither gate is confused by them. But our lap 2's added condition was still
+unanswered, so the fewest the round can now take is **five**: our lap 3, their
+lap 4, our lap 5. K1 already names the remedy on the sending side: re-read the
+other side's record **when you release**, not when you draft. A lap drafted
+against one reading and released against another is the elapsed-time defect
+this file records twice.
 
 Re-check: `for r in 15 16 17 18 19 20 21 22 23; do ... grep '^HANDSHAKE-LAP:'
 ...; done`, taking the maximum over `docs/handshake/round-$r-lap-*.md` and
