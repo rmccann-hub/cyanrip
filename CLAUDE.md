@@ -1766,11 +1766,13 @@ always written *after* that file, so step 3 — *"the whole of v5's saving"* —
 cannot fire on a real record. Measured on our gate: a record where lap 3 holds
 only lap 2 and lap 4 arrives later does not close. The one test that shows
 §5b closing, `test_v5_close_rule_and_the_v4_control`, passes only because its
-fixture has lap 3 declare it holds lap 4 (`tests/release_gate.py:2864`), a
+fixture has lap 3 declare it holds lap 4 (`tests/release_gate.py:2928`), a
 file that cannot have existed when lap 3 was written. **A test whose input
 cannot occur proves the code, not the rule.** Their reading — enumerated by
 the gate when it decides — is the one under which §5b does what it says. It
-needs v6 wording, and until then the two gates implement two readings.
+needs v6 wording, and until then the two gates implement two readings. **Round
+25 lap 1 proposes that wording**, in `docs/handshake/proposed/PROTOCOL-v6.md`
+§5b step 1 and C37.
 
 **So round 24 is not a test of §5b either.** It declares 5, but its lap 1
 declares `GO`, so the structure that made rounds 22 and 23 take five does not
@@ -1778,6 +1780,14 @@ arise. If it closes in three laps, that measures the lap-1 `GO`, not v5.
 **It did close in three**, on 2026-09-23. Their gate closed one lap earlier
 than ours, at their lap 2, under the decision-time reading, which is the
 divergence v6 is meant to remove.
+
+**Round 25 is the first round whose shape lets step 3 fire, and only on their
+gate.** Our lap 1 declares `OPEN`, so their lap 2 can only transcribe `OPEN`.
+If our lap 3 declares `GO`, their gate closes the round on it under step 3 with
+no lap 4, and ours closes on lap 3 by ordinary transcription. **The prediction,
+set before their lap 2: three laps by the measure above**, provided their lap 2
+lands the texts. A fourth lap would mean either an amendment we did not accept,
+or step 3 failing on the one gate that reads it the way it works.
 
 Re-check: `for r in 15 16 17 18 19 20 21 22 23; do ... grep '^HANDSHAKE-LAP:'
 ...; done`, taking the maximum over `docs/handshake/round-$r-lap-*.md` and

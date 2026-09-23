@@ -54,19 +54,19 @@ checks, and neither is a dated state.
 it stamped `unapproved`. Round 24 closed in a day, and their `FORK_PIN` rolled to
 `3e01bb3` on their `main` at `platterpus@86f0547`. **Their users get the roll in
 0.6.54**, which is not tagged yet; until it ships, 0.6.53 as installed still
-approves `2cce60d`. **Round 25 being open now holds 0.6.54 too**, under the strict
-gate the operator chose for their `v0.*` line, unless it goes out under a written
-override. Our round 25 lap 1 §D says so to them.
+approves `2cce60d`. **Round 25 being open now holds 0.6.54 too**, under the
+strict-gate policy the operator chose for their `v0.*` line, unless it goes out
+under a written override. Our round 25 lap 1 §D says so to them.
 
 ### The rounds
 
 | | |
 |---|---|
 | **round 25** | **OPEN** since 2026-09-23. Our lap 1 is released. Two close conditions, both text: `PROTOCOL.md` v6, and `OWNERSHIP.md` v3 with `seam-rules.md` v6, byte-identical in both trees. The proposed texts are in `docs/handshake/proposed/`. Pin `3e01bb3`, unchanged. Next: their lap 2 |
-| round 23 | CLOSED `GO`/`GO` 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
 | round 24 | **CLOSED `GO`/`GO`** 2026-09-23, **three laps**, 13 days before the close-by. One close condition, Platterpus's verdict on `3e01bb3`, met by their lap 2 (`GO`, their 0.6.53 parser reading our golden reference). It closed on their gate at their lap 2 and on ours at our lap 3: the two gates close on different laps, their round-25 item N1. Three laps is the lap-1 `GO`, not v5 |
-| their lap 2 | released, `GO` on `3e01bb3`, sha256 `222a658f…`, 16,914 bytes, filed byte-exact as `docs/handshake/inbound/round-24-lap-02.md`, read at `platterpus@86f0547`. Its declared digest matched the value computed before it could be read |
-| lap counts | rounds 21, 22 and 23 all took five. In 22 and 23 the fifth lap existed only to carry a transcription, which v5 §5b was adopted to remove — and as written cannot, because step 3 needs a peer lap the closing file could not have declared. `CLAUDE.md` has the prediction, the measure, and why it cannot be scored yet |
+| round 24, their lap 2 | released, `GO` on `3e01bb3`, sha256 `222a658f…`, 16,914 bytes, filed byte-exact as `docs/handshake/inbound/round-24-lap-02.md`, read at `platterpus@86f0547`. Its declared digest matched the value computed before it could be read |
+| round 23 | CLOSED `GO`/`GO` 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
+| lap counts | rounds 21, 22 and 23 all took five. In 22 and 23 the fifth lap existed only to carry a transcription, which v5 §5b was adopted to remove — and as written cannot, because step 3 needs a peer lap the closing file could not have declared. `CLAUDE.md` has the measure, why rounds 22–24 could not score v5, and round 25's prediction: three laps, the first with step 3 able to fire on their gate |
 
 ### Round 25
 

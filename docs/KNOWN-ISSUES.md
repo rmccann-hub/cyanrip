@@ -134,7 +134,7 @@ written three hundred lines away in a different file.
 
 **The counter-example is in our own tree and makes the point sharper rather than
 softer.** `GRANDFATHERED = {5, 6}` in `tools/release-gate.py:79` is the same kind
-of set resting on the same kind of premise, and `tests/release_gate.py:430`
+of set resting on the same kind of premise, and `tests/release_gate.py:448`
 pins it: *"grandfathered set changed"*. **We wrote the check once and not the
 other time**, so the shape is not that the check is hard — it is that nothing
 prompts you to write it when the premise is retired in prose instead of in code.
@@ -807,12 +807,14 @@ from Platterpus's real lap 2, which is held:
    literally.** That is a rule for whoever writes the lap, and a brittleness in
    the gate, not a defect in any lap already sent.
 
-**Why none is fixed yet.** All four are latent: no peer lap declares more than
-5 or less than an earlier lap, no lap has followed a closed round, and round
-24's closing lap can name the file. The C13a fix changes what our gate
-reports for a real record, which is gate behaviour both sides compare. It is
-better done with their answer to the §5b reading in hand, in one change. Queued
-for round 25, `NEXT-ROUND`, with regression tests naming this round.
+**Why none was fixed on finding, and why 2 and 4 still are not.** All four
+were latent: no peer lap declared more than 5 or less than an earlier lap, and a
+closing lap can name the file. This paragraph also said *"no lap has followed a
+closed round"*, which the replay above shows is false: six have, all `GO`.
+Items 1 and 3 are fixed. **Items 2 and 4 wait for v6, and on purpose.** Item 4
+is v5's literal reading of C37, which v6 replaces. Item 2's row is proposed for
+amendment rather than implementation, because as written it refuses those six
+laps.
 
 ### `docs/seam-commands.md` carries FIVE known-wrong statements
 
@@ -1111,13 +1113,14 @@ measured 2026-09-22 with our own loader:
 
 **And our test proves the code, not the rule.** `test_v5_close_rule_and_the_v4_control`
 passes on the second record: `_v5_ours()` defaults to
-`held="round-30-lap-04.md"` (`tests/release_gate.py:2864`). A fixture that
+`held="round-30-lap-04.md"` (`tests/release_gate.py:2928`). A fixture that
 cannot occur made the one mechanism v5 exists for look exercised.
 
 **The remedy is v6 wording, not a gate edit by one side.** Their reading is
 the one under which §5b does what it says, and C42 already makes the gate print
 the lap it resolved from, so audit does not depend on the closing file's
-declaration. Proposed in round 24 lap 1 for round 25, with K1–K3. Until then
+declaration. Proposed in round 24 lap 1, and drafted for round 25 as §5b step 1
+and C37 of `docs/handshake/proposed/PROTOCOL-v6.md`, with K1–K3. Until v6 lands
 the two gates implement two readings, which is the silent divergence
 `CLAUDE.md` warns about, now made visible. Kept under *Open* until a round has
 closed under §5b step 3.
