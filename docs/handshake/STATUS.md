@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-24-lap-03.md
+STATUS-NEWEST-LAP: round-25-lap-01.md
 STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
@@ -30,7 +30,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-09-23, after round 24 closed on both gates
+## Now — rewritten 2026-09-23, after we opened round 25
 
 **This section is the whole of what this file claims.** Everything below it is
 either the release table a consumer reads or the rig procedure the suite
@@ -44,45 +44,60 @@ checks, and neither is a dated state.
 | build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/3e01bb3.tar.gz` — verified from exactly that tarball before publication, reporting `released build` |
 | previous | `.13` at `2cce60d`, seq 23, 2026-09-18, round 21 |
 | what `.14` changed | `Track %i read successfully!` / `read with errors.` replace the `ripped and encoded` pair, and a three-state `Encoder errors:` line is new. All P2, all agreed in round 22 |
-| gate | `--release-gate` exits **0** — every round is closed |
-| the tip | ahead of `3e01bb3` in no `src/` or `meson.build` change — but **it carries round 24's laps**, and the `Handshake:` line is compiled from the round files, so a build of the tip reports round 24 rather than round 23. `git log 3e01bb3..platterpus-fork -- src/ meson.build` is empty; add `'docs/handshake/round-*.md'` and it is not. Build from the release, not the tip |
-| next | `+platterpus.15`, not planned. It should carry round 23's agreed `Handshake:` qualifier, which was never built |
+| gate | `--release-gate` exits **1** and names round 25, which is open. That is correct and is not being overridden |
+| the tip | ahead of `3e01bb3` in no `src/` or `meson.build` change — but **it carries rounds 24 and 25's laps**, and the `Handshake:` line is compiled from the round files, so a build of the tip reports round 25 lap 1 `OPEN` and `NOT a released build`. `git log 3e01bb3..platterpus-fork -- src/ meson.build` is empty; add `'docs/handshake/round-*.md'` and it is not. Build from the release, not the tip |
+| next | `+platterpus.15`, not planned, and not possible while round 25 is open. It should carry round 23's agreed `Handshake:` qualifier, which was never built |
 
 **Stable by the operator's instruction, and round 24 has now reviewed it.**
 `.14` went to stable before any round reviewed it, over the beta that
 `docs/RELEASE-PLAN-platterpus.14.md` §3 recommended, so Platterpus's app offered
 it stamped `unapproved`. Round 24 closed in a day, and their `FORK_PIN` rolled to
 `3e01bb3` on their `main` at `platterpus@86f0547`. **Their users get the roll in
-0.6.54**, which they release after our lap 3; until then 0.6.53 as installed
-still approves `2cce60d`.
+0.6.54**, which is not tagged yet; until it ships, 0.6.53 as installed still
+approves `2cce60d`. **Round 25 being open now holds 0.6.54 too**, under the strict
+gate the operator chose for their `v0.*` line, unless it goes out under a written
+override. Our round 25 lap 1 §D says so to them.
 
 ### The rounds
 
 | | |
 |---|---|
-| round 23 | **CLOSED `GO`/`GO`** 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
-| round 22 | CLOSED `GO`/`GO` 2026-09-21, five laps. Authorised `.14` |
+| **round 25** | **OPEN** since 2026-09-23. Our lap 1 is released. Two close conditions, both text: `PROTOCOL.md` v6, and `OWNERSHIP.md` v3 with `seam-rules.md` v6, byte-identical in both trees. The proposed texts are in `docs/handshake/proposed/`. Pin `3e01bb3`, unchanged. Next: their lap 2 |
+| round 23 | CLOSED `GO`/`GO` 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
 | round 24 | **CLOSED `GO`/`GO`** 2026-09-23, **three laps**, 13 days before the close-by. One close condition, Platterpus's verdict on `3e01bb3`, met by their lap 2 (`GO`, their 0.6.53 parser reading our golden reference). It closed on their gate at their lap 2 and on ours at our lap 3: the two gates close on different laps, their round-25 item N1. Three laps is the lap-1 `GO`, not v5 |
 | their lap 2 | released, `GO` on `3e01bb3`, sha256 `222a658f…`, 16,914 bytes, filed byte-exact as `docs/handshake/inbound/round-24-lap-02.md`, read at `platterpus@86f0547`. Its declared digest matched the value computed before it could be read |
 | lap counts | rounds 21, 22 and 23 all took five. In 22 and 23 the fifth lap existed only to carry a transcription, which v5 §5b was adopted to remove — and as written cannot, because step 3 needs a peer lap the closing file could not have declared. `CLAUDE.md` has the prediction, the measure, and why it cannot be scored yet |
 
 ### Round 25
 
-**Ours to open.** Platterpus compiled every known seam issue into one agenda,
-`platterpus@86f0547:TASKS.md`, *"Round 25 — the complete known-issue agenda"*.
-It is more than one round can close, so our lap 1 picks the closing subset under
-R1 and moves the rest to later rounds by name. Our round 24 lap 1 §D is the
-cyanrip-side list. **N4 is decided**: the operator chose a strict gate for
-their `v0.*` releases, recorded in our round 24 lap 3 §F.
+**Opened by our lap 1, released 2026-09-23.** Platterpus compiled every known
+seam issue into one agenda, `platterpus@86f0547:TASKS.md:57`. Our lap 1 closes
+the round on the three shared-document texts and names where every other agenda
+item goes (its §E).
+
+| proposed | sha256 | becomes |
+|---|---|---|
+| `docs/handshake/proposed/PROTOCOL-v6.md` | `0830887a41173133…` | `docs/handshake/PROTOCOL.md` |
+| `docs/handshake/proposed/OWNERSHIP-v3.md` | `6956d0b9908a7784…` | `docs/OWNERSHIP.md` |
+| `docs/handshake/proposed/seam-rules-v6.md` | `a0d2139338c6e2b7…` | `docs/seam-rules.md` |
+
+**Pre-committed:** our first lap after their answering lap lands the texts as
+their `main` then carries them and declares `GO`, unless their answer changes
+a conformance row's expected outcome or refuses a clause. **Landing v6 here
+means implementing it in our gate in the same change**, as `f748d15` did for v5:
+`test_protocol_version_matches_the_shared_spec()` requires it. Our gate fixes
+for their D1 and D2 landed first, at `cc235a1` and `12a85fd`. **N4 is decided**:
+the operator chose a strict gate for their `v0.*` releases, recorded in our
+round 24 lap 3 §F.
 
 ### The protocol
 
 | | |
 |---|---|
-| `PROTOCOL.md` | **v5**, byte-identical in both trees, `d698d58a8130ab52`; `seam-sync-check --fetch` exits 0 at `platterpus@52b4428` |
+| `PROTOCOL.md` | **v5**, byte-identical in both trees, `d698d58a8130ab52`; `seam-sync-check --fetch` exits 0 at `platterpus@86f0547`. **v6 is proposed**, above |
 | what v5 added | §5b, the close rule; §5c, Platterpus's readability condition; `HANDSHAKE-PEER-VERDICT-SOURCE`, their field; rows C37–C42 |
-| v5's reach | **Both gates implement 5**: ours since round 23, theirs from `platterpus@c2f43d28` (21:30Z 2026-09-22 by commit date; at `52b44282` it was 4). **The two gates read §5b's *"enumerated"* differently**, and under ours step 3 cannot fire on a real record. Measured, and in `docs/KNOWN-ISSUES.md`. v6 wording is proposed for round 25 |
-| **what v5 is missing** | **K1, K2 and K3**, agreed in round 22 and never written into the spec — found by the pre-round-24 audit. `docs/KNOWN-ISSUES.md` → *Three agreed protocol changes never reached the spec* |
+| v5's reach | **Both gates implement 5**: ours since round 23, theirs from `platterpus@c2f43d28` (21:30Z 2026-09-22 by commit date; at `52b44282` it was 4). **The two gates read §5b's *"enumerated"* differently**, and under ours step 3 cannot fire on a real record. Measured, and in `docs/KNOWN-ISSUES.md`. The proposed v6 adopts theirs |
+| **what v5 is missing** | **K1, K2 and K3**, agreed in rounds 21 and 22 and never written into the spec — found by the pre-round-24 audit. `docs/KNOWN-ISSUES.md` → *Three agreed protocol changes never reached the spec*. All three are in the proposed v6 |
 
 ### Platterpus's side, and how we know each part
 
@@ -90,9 +105,9 @@ their `v0.*` releases, recorded in our round 24 lap 3 §F.
 |---|---|
 | released **0.6.53**, 2026-09-22, at `52b44282`, tag `v0.6.53`, pre-release as every `v0.*` tag is | `git ls-remote --tags` and `--symref` on their repository |
 | 0.6.53 is **the both-wordings release** — `_TRACK_START` matches both pairs, and no earlier tag does | read at `52b44282:src/platterpus/parsers/cyanrip_log.py:237-244`; counted across four tags |
-| `FORK_PIN = "2cce60d"`, `PIN_UNDER_REVIEW = "2cce60d"` | read at `52b44282:src/platterpus/deps/fork_source.py:183` and `:538`, and unchanged at `c2f43d28` |
-| `APPROVED_BY_ROUND = 23`, `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.52"` | read at `52b44282:src/platterpus/handshake_approval.py:216` and `:132`, and unchanged at `c2f43d28` |
-| their `main` moved past the release to **`c2f43d28`**, 2026-09-22 21:30Z by commit date, untagged: their gate now implements protocol 5, and their standing status was rewritten | `git ls-remote --symref` and a fetch; `scripts/handshake.py:1109` reads `PROTOCOL_VERSION: int = 5` at that commit |
+| on their `main`, **`FORK_PIN = "3e01bb3"`** and `PIN_UNDER_REVIEW = "3e01bb3"` — the roll, not yet released | read at `86f0547:src/platterpus/deps/fork_source.py:196` and `:568` |
+| `APPROVED_BY_ROUND = 24`, `APPROVED_FOR_PLATTERPUS_VERSION = "0.6.53"` | read at `86f0547:src/platterpus/handshake_approval.py:229` and `:141` |
+| their `main` is **`86f0547`**, untagged; **no `v0.6.54` tag exists**. Their gate implements protocol 5 from `c2f43d28`, and refuses a round in which any file declares more (`scripts/handshake.py:1920`) | `git ls-remote` on their repository, and a fetch |
 | their app **offers, never installs**, a newer build from our manifest on the user's channel | read at `52b44282:src/platterpus/deps/ripper_manifest.py:1-16`, `:66-68` |
 | their standing status, as of 0.6.53 | filed byte-exact twice, because it was rewritten the same day under the same as-of: `docs/handshake/inbound/status-2026-09-22-v0.6.53.md` (read at `52b44282`, sha256 `2ac99eb5…09ab9`, 39,016 bytes) and `…-2026-09-22-v0.6.53-c2f43d28.md` (read at `c2f43d28`, sha256 `ddfcbbe6…62ac0`, 43,166 bytes) |
 | their branch-delete cause was a repository setting, now off | **relayed**, and corroborated rather than proven: the cited commits are reachable again as ancestors of `claude/session-omka9f` at `9cc23eab` |
@@ -106,7 +121,9 @@ block measured upstream of the filter graph; the cache figure wrong on all ten
 filed sessions; and no way in our format to mark a superseded or abandoned read.
 **The four shared documents carry thirteen known defects**, tabled in one place
 under *"The four shared documents: every known defect"*. None can be fixed
-from one side, so round 24 proposes them as one bump.
+from one side. Round 25 lap 1 proposes the fixes for three of the four
+documents as one bump; `seam-commands.md` waits for round 26, because its fix
+needs `tools/probe-argv-surface.py` to measure what it asserts.
 
 ### Where their statuses are filed
 
@@ -217,7 +234,7 @@ identifier.
 | beta authorised by | handshake round 22, closed `GO`/`GO` — same build as stable |
 
 `beta` resolves to the newest row of *any* channel, so opting into pre-releases
-can never move a user backwards. Both channels resolve to `978f9b0`; there is no
+can never move a user backwards. Both channels resolve to `3e01bb3`; there is no
 separate beta to take.
 
 **`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**
@@ -230,8 +247,7 @@ Build command: `meson setup build -Ddeclare_released=true && ninja -C build`.
 resolves these; this table is a human-readable copy of it and the test exists
 because a copy rots.
 
-**No release is coming while round 16 is open.**
-`tools/release-gate.py --release-gate` exits 1 on this tree and names round 16,
-which is correct and is not being overridden. Work has landed on
-`platterpus-fork` since the pin — all of it documentation, tests and tooling,
-none of it in `src/`.
+**No release while any round is open.** `tools/release-gate.py --release-gate`
+names the open round; the *Now* section above says which it is. The previous
+text of this paragraph named round 16 for five weeks after that round closed,
+which is why it no longer names one.

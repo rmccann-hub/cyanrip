@@ -907,6 +907,11 @@ verified against the installed headers *and* the `.so` export table).
 
 ### Three agreed protocol changes never reached the spec, and both sides certified v5 as complete
 
+**Proposed for landing in round 25 (2026-09-23).** All three are in
+`docs/handshake/proposed/PROTOCOL-v6.md`: K1 in §4a, K2 in §5a, K3 as §5d. So
+is the agreed-change ledger, §5e, which exists because of this entry. The entry
+stays until v6 is byte-identical in both trees.
+
 **Found 2026-09-22 by the pre-round-24 document audit, and it is the most
 important thing that audit found.** Round 22 agreed three changes to the shared
 protocol and **none of them is in `PROTOCOL.md`**:
@@ -950,6 +955,14 @@ protocol change and needs their assent**, so it is proposed, not built.
 
 
 ### The four shared documents: every known defect, in one table
+
+**Rows 1–7 are proposed for fixing in round 25 (2026-09-23)**, by
+`docs/handshake/proposed/PROTOCOL-v6.md`, `OWNERSHIP-v3.md` and
+`seam-rules-v6.md`. Drafting found an eighth, in `OWNERSHIP.md`'s opening
+paragraph: it says every consumer holds its copy at the same path, and
+Platterpus's protocol is at `docs/handshake-protocol.md`. `OWNERSHIP-v3.md`
+fixes that too. Rows 8–12, `seam-commands.md`, wait for round 26, because the
+fix needs `tools/probe-argv-surface.py` to measure what it asserts.
 
 **Consolidated 2026-09-22 by the pre-round-24 audit**, read against the four
 files as they stand — byte-identical in both trees, `tools/seam-sync-check.py

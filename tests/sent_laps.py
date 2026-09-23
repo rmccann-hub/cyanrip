@@ -243,6 +243,11 @@ SENT = {
     # operator's word ("Release it now"), for the same reason as lap 1.
     "round-24-lap-03.md":
         "16dd8a2ac9e036280e400fef533823d0f90d983ec3b8a1b9c0f0763fd846ddd7",
+    # Round 25 lap 1, pinned in the commit that releases it. The operator
+    # authorised the release before it was written ("You have my permission
+    # to release"), so these are the bytes that leave.
+    "round-25-lap-01.md":
+        "78485c98a66ec8897ec15cb94e74c0460295356ff7df50f7ce42430c4838a9d4",
 }
 
 failures = 0
