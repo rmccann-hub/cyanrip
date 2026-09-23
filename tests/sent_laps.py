@@ -253,6 +253,10 @@ SENT = {
     # was written.
     "round-25-lap-02.md":
         "932f86e10252ce79d10e59d9b0d41711273067c9275bf0236a61fadcf3c6c4e3",
+    # Round 25 lap 3, published held at 302896d and pinned in the commit that
+    # releases it, on the operator's "release it".
+    "round-25-lap-03.md":
+        "c21cd9fd56989f2ba7f441490fa66f8c8236dcb0c048237aead87c2a6df03d63",
 }
 
 failures = 0

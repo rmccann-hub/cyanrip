@@ -31,7 +31,7 @@ HANDSHAKE-SHARED-HASHES: protocol(v5)=d698d58a8130ab520c16880a1149782981b70b487a
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. Against your `5374729`, by `tools/seam-sync-check.py --fetch`: seam-rules, seam-commands and ownership are byte-identical. The protocol differs, ours v5 and yours `522a18eb…`, and §A is the text that ends that.
 HANDSHAKE-AGREED-CHANGES: OWNERSHIP v3 and seam-rules v6 landed at c07bf68 (ours) and at platterpus@5374729 (yours); PROTOCOL v6 not landed in the text both trees will hold, both (§A); round 23's Handshake: qualifier built at 20a5aca and not released, ours (+platterpus.15).
 HANDSHAKE-CLOSE-BY: 2026-10-07T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-23
 HANDSHAKE-NEXT-LAP: 4 (yours).
 HANDSHAKE-TO-VERSION: platterpus 0.6.53
 

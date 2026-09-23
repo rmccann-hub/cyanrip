@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-25-lap-03.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -63,7 +63,7 @@ lap 2 §C says their operator chose to wait.
 
 | | |
 |---|---|
-| **round 25** | **OPEN** since 2026-09-23. Our laps 1 and 2 are released. **Their lap 2 is released too, `GO`, and crossed ours**: it answers our lap 1 and holds no lap 2 of ours. Our lap 3 answers it. Close conditions: the three texts byte-identical in both trees (lap 1), and **both releases ready and agreed** (lap 2 §0.3, by the operator's override of R1). Pin `3e01bb3`, unchanged; `.15` candidate `61711f1`. Next: their lap 4 |
+| **round 25** | **OPEN** since 2026-09-23. Our laps 1 and 2 are released. **Their lap 2 is released too, `GO`, and crossed ours**: it answers our lap 1 and holds no lap 2 of ours. Our lap 3 answers it, and is released. Close conditions: the three texts byte-identical in both trees (lap 1), and **both releases ready and agreed** (lap 2 §0.3, by the operator's override of R1). Pin `3e01bb3`, unchanged; `.15` candidate `61711f1`. Next: their lap 4 |
 | round 24 | **CLOSED `GO`/`GO`** 2026-09-23, **three laps**, 13 days before the close-by. One close condition, Platterpus's verdict on `3e01bb3`, met by their lap 2 (`GO`, their 0.6.53 parser reading our golden reference). It closed on their gate at their lap 2 and on ours at our lap 3: the two gates close on different laps, their round-25 item N1. Three laps is the lap-1 `GO`, not v5 |
 | round 25, their lap 2 | released, `GO` on the three texts, sha256 `3ae11ad1…`, 15,042 bytes, filed byte-exact as `docs/handshake/inbound/round-25-lap-02.md`, read at `platterpus@5374729`. It lands our lap **1** v6 with one amendment, so it has no R8 or R9 |
 | round 23 | CLOSED `GO`/`GO` 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
