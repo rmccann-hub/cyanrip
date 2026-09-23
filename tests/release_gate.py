@@ -637,8 +637,10 @@ KNOWN_DIVERGENCES = {
              "the lap at which this gate first reads the round closed, and all "
              "six declare GO, so both readings agree on each. As written the "
              "row would refuse all six -- each is the other side's closing "
-             "lap. Neither gate implements it; round 25 lap 1 proposes the "
-             "amendment."),
+             "lap. v6 amends the row so a later lap declaring the SAME verdict "
+             "is not a transition, which covers all six. What remains is a later "
+             "lap declaring a DIFFERENT verdict, which this gate still reads as "
+             "the round's new state and the row refuses. No such lap exists."),
 }
 
 
@@ -3036,7 +3038,7 @@ def test_v5_close_rule_and_the_v4_control():
 
 
 def test_a_peer_lap_above_our_protocol_refuses_the_round():
-    """Covers: C15
+    """Covers: C15, C43
 
     Found by Platterpus, round 24 lap 1 §B1, against
     `cyanrip@ace22cf:tools/release-gate.py:468,768`: our inbound loader read a
@@ -3048,9 +3050,14 @@ def test_a_peer_lap_above_our_protocol_refuses_the_round():
 
     Any file of the round, not only the newest -- their rule, from
     `platterpus@86f0547:scripts/handshake.py:1920`: a newer lap may lean on a
-    clause of the older one's version.
+    clause of the older one's version. It is C43 since v6 landed.
+
+    "Above ours" is computed, not written as 6. The fixture said 6 while the
+    gate implemented 5, and the day the gate moved to 6 it stopped being above
+    anything and the test failed on its own premise.
     """
-    six = _v5_theirs().replace("HANDSHAKE-PROTOCOL: 5", "HANDSHAKE-PROTOCOL: 6")
+    above = rg.PROTOCOL_VERSION + 1
+    six = _v5_theirs().replace("HANDSHAKE-PROTOCOL: 5", f"HANDSHAKE-PROTOCOL: {above}")
     check(six != _v5_theirs(), "fixture did not change the peer's version")
     lp = _v5_resolve(_v5_ours(), six)
     check(not lp.closed,
@@ -3073,7 +3080,7 @@ def test_a_peer_lap_above_our_protocol_refuses_the_round():
         six.replace("HANDSHAKE-LAP: 4", "HANDSHAKE-LAP: 2"), encoding="utf-8")
     older = rg.load_rounds(d)[0]
     check(not older.closed and "inbound/round-30-lap-02.md" in older.why,
-          f"an older peer lap at 6 did not refuse the round: {older.why}")
+          f"an older peer lap at {above} did not refuse the round: {older.why}")
     ok, probs = rg.check(rg.load_rounds(d))
     check(not ok and any("round-30-lap-02.md" in p for p in probs),
           f"the release gate did not refuse, or did not name the file: {probs}")
@@ -3111,10 +3118,11 @@ def test_a_peer_lap_below_an_earlier_lap_refuses_the_round():
 
 
 class _AtProtocol:
-    """Run a block as though this gate implemented `n`. The proposed v6 is
-    written ahead of its landing, and a file declaring 6 is refused by a gate
-    at 5 (C15/C43), so its code paths are reachable only this way. Restored
-    on exit whatever happens."""
+    """Run a block as though this gate implemented `n`. Written while v6 was
+    proposed and the gate implemented 5, when a file declaring 6 was refused
+    (C15/C43) and the v6 paths were reachable only this way. Since v6 landed it
+    pins these tests to 6, so they stay about 6 when the gate moves on.
+    Restored on exit whatever happens."""
     def __init__(self, n):
         self.n = n
     def __enter__(self):
@@ -3133,7 +3141,7 @@ def _v6_theirs(verdict="GO", ready="yes", protocol=6):
 def test_v6_closes_on_a_record_that_can_occur():
     """Covers: C40
 
-    Proposed v6 §5b step 1 and C37: the candidate peer lap is the newest one
+    v6 §5b step 1 and C37: the candidate peer lap is the newest one
     filed in the gate's own record when it decides. The fixture is the one a
     real round produces -- our lap 3 declares it holds only your lap 2, and your
     lap 4 arrives after it -- which v5's C40 test could not use (D3).
@@ -3159,13 +3167,13 @@ def test_v6_closes_on_a_record_that_can_occur():
 
 
 def test_v6_closing_file_carries_the_agreed_change_ledger():
-    """Covers: C16
+    """Covers: C44, C45
 
-    Proposed v6 §5e, rows C44 and C45 once v6 lands: a GO file declaring 6
-    must carry HANDSHAKE-AGREED-CHANGES, and any value closes -- `none`, or a
-    ledger with changes not landed -- because it records delivery and does not
-    gate the close. Claims C16 (a complete close allows) until C44/C45 exist in
-    PROTOCOL.md; the landing commit moves the claim.
+    v6 §5e: a GO file declaring 6 must carry HANDSHAKE-AGREED-CHANGES (C44),
+    and any value closes -- `none`, or a ledger with changes not landed --
+    because it records delivery and does not gate the close (C45). It claimed
+    C16 while v6 was proposed, and moved to these rows in the commit that
+    landed v6.
     """
     real = dict(held="round-30-lap-02.md")
     with _AtProtocol(6):
@@ -3183,7 +3191,7 @@ def test_v6_closing_file_carries_the_agreed_change_ledger():
 
 
 def test_v6_gate_refuses_a_peer_lap_above_it():
-    """Covers: C15
+    """Covers: C15, C43
 
     C43 at the next version: a gate implementing 6 refuses a round holding a
     peer lap that declares 7, exactly as a gate at 5 refuses one declaring 6.

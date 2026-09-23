@@ -103,7 +103,7 @@ LAP_DECL_RE = re.compile(r"(?m)^HANDSHAKE-LAP:")
 # The shared spec both projects implement. A file declaring a version this gate
 # does not implement is refused rather than guessed at -- see docs/handshake/
 # PROTOCOL.md, which is copied into both repositories.
-PROTOCOL_VERSION = 5
+PROTOCOL_VERSION = 6
 PROTOCOL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(\d+)[ \t]*$", re.M)
 PROTOCOL_DECL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(.*)$", re.M)
 
@@ -222,7 +222,7 @@ WITHDRAWN_REASON_RE = re.compile(r"^HANDSHAKE-WITHDRAWN-REASON:[ \t]*(.+?)[ \t]*
 OVERRIDE_RE = re.compile(r"^HANDSHAKE-OVERRIDE:[ \t]*(.+?)[ \t]*$", re.M)
 OVERRIDE_BY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-BY:[ \t]*(.+?)[ \t]*$", re.M)
 OVERRIDE_WHY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-WHY:[ \t]*(.+?)[ \t]*$", re.M)
-# Proposed v6 §5e, the agreed-change ledger. Required on a GO file declaring 6
+# v6 §5e, the agreed-change ledger. Required on a GO file declaring 6
 # (C44); any value closes, `none` included (C45), because the ledger records
 # delivery and does not gate the close.
 AGREED_CHANGES_RE = re.compile(r"^HANDSHAKE-AGREED-CHANGES:[ \t]*(.+?)[ \t]*$", re.M)
@@ -526,7 +526,7 @@ class Lap:
         # resolution auditable, so a v5 file without it cannot close either.
         if self.v5_active:
             need["HANDSHAKE-PEER-VERDICT-SOURCE"] = self.peer_verdict_source
-        # C44, proposed v6 §5e. A round closes on agreement, and agreement is
+        # C44, v6 §5e. A round closes on agreement, and agreement is
         # not delivery: K1-K3 and round 23's banner qualifier were agreed,
         # closed on, and not built. The ledger makes that visible in the lap
         # that closes. Its content does not gate anything (C45).
@@ -675,13 +675,13 @@ class Lap:
 
     @property
     def v6_active(self):
-        """Does THIS FILE ask to be judged by the proposed v6?
+        """Does THIS FILE ask to be judged by v6?
 
-        Keyed on the file's declared version, as v5_active is. While this gate
-        implements 5, a file declaring 6 never gets here: C15 and C43 refuse
-        the round first. The code is written now so that landing v6 is a
-        change of PROTOCOL_VERSION and not a rewrite, and the tests exercise it
-        with the constant set to 6.
+        Keyed on the file's declared version, as v5_active is. Written while
+        this gate implemented 5, when a file declaring 6 never got here because
+        C15 and C43 refused the round first, so that landing v6 would be a
+        change of PROTOCOL_VERSION and not a rewrite. It was: round 25's
+        closing change set the constant to 6 and touched nothing here.
         """
         try:
             return self.protocol is not None and int(self.protocol) >= 6
@@ -717,7 +717,7 @@ class Lap:
                     f"(HANDSHAKE-READY-TO-READ: {state}) -- a held lap is not a "
                     f"readable verdict")
         # C37. Under v5, enumeration is a claim we made in our own file, and
-        # fetchability is not a substitute for it. Under the proposed v6 it is
+        # fetchability is not a substitute for it. Under v6 it is
         # the gate's own record when it decides: peer_latest comes only from
         # our inbound/, which holds laps we filed, so "held" is satisfied by
         # construction and the closing file's INBOUND-HELD is not consulted.
