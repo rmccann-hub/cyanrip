@@ -62,7 +62,38 @@ judgement that round 24 will be short. **Round 24's lap 1 says so, in its §0.**
 | round 23 | **CLOSED `GO`/`GO`** 2026-09-22 — five laps by the highest `HANDSHAKE-LAP` either side declared, four by Platterpus's own count. Pin `2cce60d`, reviewed for its behaviour on a drive |
 | round 22 | CLOSED `GO`/`GO` 2026-09-21, five laps. Authorised `.14` |
 | round 24 | **OPEN**, 2026-09-22. Our lap 1 is released, declares protocol 5 and verdict `GO`, and fixes **one** close condition: Platterpus's verdict on `3e01bb3`, the released `.14`. Close-by 2026-10-06. Their answering lap can close it on their gate; our next lap closes it on ours. Round 25 is proposed in lap 1 §D |
+| **their lap 2** | **published and HELD.** `docs/handshake/outbound/round-24-lap-02.md` exists at `platterpus@b8f89a29`, on their working branch `claude/session-omka9f`, not on `main`. Line 33 reads `HANDSHAKE-READY-TO-READ: no — not announced; do not read or act on this lap yet`, read 2026-09-23. **That field is the only thing read from it.** No hash is recorded, because a held lap declares itself mutable and its bytes can change on release |
 | lap counts | rounds 21, 22 and 23 all took five. In 22 and 23 the fifth lap existed only to carry a transcription, which v5 §5b was adopted to remove — and as written cannot, because step 3 needs a peer lap the closing file could not have declared. `CLAUDE.md` has the prediction, the measure, and why it cannot be scored yet |
+
+### When their lap 2 is announced — the steps, prepared in advance
+
+Our lap 1's pre-commitment makes lap 3 close to mechanical. Nothing below
+depends on their lap's content, so it was all checked before the lap could be
+read.
+
+1. **Read the release from the file, not from the announcement.** Fetch their
+   repository, including `claude/session-omka9f` (their laps have been
+   readable on a working branch before `main`), and read
+   `HANDSHAKE-READY-TO-READ` at a named commit. The announcement is a reason to
+   look; the field is the fact.
+2. **File it byte-exact** as `docs/handshake/inbound/round-24-lap-02.md`, with
+   its sha256 and size, read at that commit. Once released, the hash is the
+   anchor and the commit is a fetch hint.
+3. **`tools/seam-sync-check.py --fetch`** before acting on it. It must exit 0.
+4. **`tools/seam-check.py docs/handshake/inbound/round-24-lap-02.md`.** The
+   `protocol(v5)` label defect it had is fixed, so a v5 lap now grades OK.
+5. **Their declared `HANDSHAKE-ROUND-DIGEST` should be `2ccfe13e4111deb7 over 1
+   lap(s)`**: our lap 1, excluding theirs. Computed before their lap could be
+   read, with `python3 tools/round-digest.py 24`.
+6. **Lap 3 follows the pre-commitment**: `GO`, transcribing their verdict,
+   unless they report a regression in `3e01bb3` against round 22's change.
+   Two mechanical requirements were measured on a dry run of our gate:
+   **`HANDSHAKE-INBOUND-HELD` must name `round-24-lap-02.md` literally**, since a
+   prose reference is refused under v5, and **`HANDSHAKE-PEER-VERDICT-SOURCE`
+   must be present** (C41).
+7. After lap 3, `python3 tools/release-gate.py` should report round 24
+   **closed**. Then regenerate the golden reference in its own commit, as
+   for every lap.
 
 ### The protocol
 

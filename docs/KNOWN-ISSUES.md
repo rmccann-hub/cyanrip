@@ -726,7 +726,7 @@ it. R4 says fixes queue; this one queues. **Raising the timeout was never the
 fix** — it keeps a network-dependent verdict in a gate and moves where it
 misfires.
 
-### Our gate has two defects Platterpus's questions found, and neither was fixed on finding
+### Our gate has four defects, two found by Platterpus's questions, and none was fixed on finding
 
 **Found 2026-09-22, answering their post-round-23 standing status**
 (`docs/handshake/inbound/status-2026-09-22-v0.6.53-c2f43d28.md`, the
@@ -754,8 +754,27 @@ ours.** That is the compare-do-not-acknowledge rule paying out twice.
    the row pattern drops a row by spelling. Same outcome: a row in force with
    no test.
 
-**Why neither is fixed yet.** Both are latent: no peer lap declares more than
-5, and no lap has followed a closed round. The C13a fix changes what our gate
+**Two more, found 2026-09-23 by dry-running round 24's close on a throwaway
+record** — our real lap 1, a synthetic lap 2 and a draft lap 3, nothing read
+from Platterpus's real lap 2, which is held:
+
+3. **C29 is not applied to peer laps.** A peer lap 2 declaring protocol **4**
+   after our lap 1 declared 5 closes the round on our gate. C29 refuses a
+   lower version than an earlier lap of the same record. Same root as item 1:
+   the inbound loader never reads the peer lap's version at all.
+4. **Under v5, C37 matches the peer lap's FILENAME inside our
+   `HANDSHAKE-INBOUND-HELD`.** `peer_name in self.inbound_held`, so a closing
+   lap that describes the lap — *"your round 24 lap 2 — sha256 …"*, which is
+   how every one of our `INBOUND-HELD` lines has been written — is refused with
+   *"not named in our HANDSHAKE-INBOUND-HELD"*. Round 23 lap 5 is written that
+   way and declared 4, so it never met the check. **Until the gate reads a
+   `round N lap L` reference, a v5 closing lap must name `round-NN-lap-LL.md`
+   literally.** That is a rule for whoever writes the lap, and a brittleness in
+   the gate, not a defect in any lap already sent.
+
+**Why none is fixed yet.** All four are latent: no peer lap declares more than
+5 or less than an earlier lap, no lap has followed a closed round, and round
+24's closing lap can name the file. The C13a fix changes what our gate
 reports for a real record, which is gate behaviour both sides compare. It is
 better done with their answer to the §5b reading in hand, in one change. Queued
 for round 25, `NEXT-ROUND`, with regression tests naming this round.
