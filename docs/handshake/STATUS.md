@@ -40,23 +40,22 @@ checks, and neither is a dated state.
 
 | | |
 |---|---|
-| **released** | **`0.9.4-rc2+platterpus.14` at `3e01bb3`**, `release_seq` 24, stable, cut 2026-09-22 on round 22's authority |
-| build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/3e01bb3.tar.gz` — verified from exactly that tarball before publication, reporting `released build` |
-| previous | `.13` at `2cce60d`, seq 23, 2026-09-18, round 21 |
-| what `.14` changed | `Track %i read successfully!` / `read with errors.` replace the `ripped and encoded` pair, and a three-state `Encoder errors:` line is new. All P2, all agreed in round 22 |
+| **released** | **`0.9.4-rc2+platterpus.15` at `df91ae7`**, `release_seq` 25, stable, cut 2026-09-23 on round 25's authority, the first release under v6 R8 |
+| build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/df91ae7.tar.gz` — verified from a `git archive` of exactly that commit before publication, reporting `released build` |
+| previous | `.14` at `3e01bb3`, seq 24, 2026-09-22, round 22; `.13` at `2cce60d`, seq 23 |
+| what `.15` changed | the per-frame retry limit is rounded up to a multiple of 5, so `-r 3` no longer hangs on an unreadable sector at the default paranoia level; `Retry limit:` gains a second form when the two limits differ. A held lap's `Handshake:` verdict is marked as a draft, which no release prints. `docs/RELEASE-PLAN-platterpus.15.md` |
 | gate | `--release-gate` exits **0**: round 25 closed `GO`/`GO` at our lap 5 |
-| the tip | **the `.15` candidate, and not yet a release.** `src/` changed at `2af669e` (the per-frame retry limit, round 25 lap 2 §B1), `tools/gen-handshake-state.py` at `20a5aca` (the draft qualifier), and the gate went to protocol 6 at `643631b`. Build from the release, not the tip |
-| next | **`+platterpus.15`, cut now that round 25 has closed**, from the candidate its lap 5 names. It is the first release under the operator's rule that a round ends on releases of both applications: ours first, then Platterpus's 0.6.54. Theirs pins `3e01bb3`, because their `FORK_PIN` must be a closed round's pin, so their users are offered `.15` marked `unapproved` until round 26 reviews it (lap 3 §C). It carries the draft qualifier and the retry-limit fix |
+| the tip | **the release's publish commit and after.** Build from the release commit, not the tip |
+| next | **Platterpus 0.6.54**, the second half of R8's pair: ours first, then theirs. It pins `3e01bb3`, because their `FORK_PIN` must be a closed round's pin (round 25 lap 3 §C). Then the operator's real test on the released pair, which opens round 26 |
 
-**Stable by the operator's instruction, and round 24 has now reviewed it.**
-`.14` went to stable before any round reviewed it, over the beta that
-`docs/RELEASE-PLAN-platterpus.14.md` §3 recommended, so Platterpus's app offered
-it stamped `unapproved`. Round 24 closed in a day, and their `FORK_PIN` rolled to
-`3e01bb3` on their `main` at `platterpus@86f0547`. **Their users get the roll in
-0.6.54**, which is not tagged yet; until it ships, 0.6.53 as installed still
-approves `2cce60d`. Round 25 held 0.6.54 while it was open, under the
-strict-gate policy the operator chose for their `v0.*` line, and their operator
-chose to wait. **It has now closed**, and 0.6.54 follows `.15` (their lap 4 §C).
+**`.15` is stable because round 25 authorised it, and the build itself is
+round 26's to review.** Round 25 reviewed its content as candidate `61711f1`.
+Platterpus's parser read its golden reference, and their lap 4 named their own
+candidate. Their `FORK_PIN` stays round 25's pin, `3e01bb3`, so their app offers
+`.15` marked `unapproved` until round 26 closes on it. That is v6 R8 point 2's
+mark: their offer states it, and a person decides. **Their users get the
+`3e01bb3` roll in 0.6.54**, which follows `.15` (their lap 4 §C). Until it ships,
+0.6.53 as installed still approves `2cce60d`.
 
 ### The rounds
 
@@ -236,22 +235,22 @@ identifier.
 
 | field | value |
 |---|---|
-| **stable version** | `0.9.4-rc2+platterpus.14` |
-| **stable commit** | **`3e01bb3`** |
-| stable build tag | `platterpus-fork-g3e01bb3` |
-| stable install | `https://github.com/rmccann-hub/cyanrip/archive/3e01bb3.tar.gz` |
-| stable `release_seq` | 24 |
-| stable authorised by | handshake round 22, closed `GO`/`GO` on `2cce60d` / `417d61b` (Platterpus 0.6.51), five laps — the pins round 22 lap 5 declares |
+| **stable version** | `0.9.4-rc2+platterpus.15` |
+| **stable commit** | **`df91ae7`** |
+| stable build tag | `platterpus-fork-gdf91ae7` |
+| stable install | `https://github.com/rmccann-hub/cyanrip/archive/df91ae7.tar.gz` |
+| stable `release_seq` | 25 |
+| stable authorised by | handshake round 25, closed `GO`/`GO` on `3e01bb3` / `52b44282` (Platterpus 0.6.53), five laps — the pins round 25 lap 5 declares |
 | | |
-| **beta version** | `0.9.4-rc2+platterpus.14` |
-| **beta commit** | **`3e01bb3`** |
-| beta build tag | `platterpus-fork-g3e01bb3` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/3e01bb3.tar.gz` |
-| beta `release_seq` | 24 |
-| beta authorised by | handshake round 22, closed `GO`/`GO` — same build as stable |
+| **beta version** | `0.9.4-rc2+platterpus.15` |
+| **beta commit** | **`df91ae7`** |
+| beta build tag | `platterpus-fork-gdf91ae7` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/df91ae7.tar.gz` |
+| beta `release_seq` | 25 |
+| beta authorised by | handshake round 25, closed `GO`/`GO` — same build as stable |
 
 `beta` resolves to the newest row of *any* channel, so opting into pre-releases
-can never move a user backwards. Both channels resolve to `3e01bb3`; there is no
+can never move a user backwards. Both channels resolve to `df91ae7`; there is no
 separate beta to take.
 
 **`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**

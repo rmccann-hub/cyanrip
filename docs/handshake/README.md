@@ -15,8 +15,8 @@ record of the rounds themselves.
 
 ## Current pin
 
-**Two channels resolve to two different builds.** `stable` is what you get
-without opting in; `beta` is newer and has never been run on a drive. Pick by
+**Both channels resolve to the same build**, `+platterpus.15`. When they
+differ, `stable` is what you get without opting in and `beta` is newer. Pick by
 risk tolerance, not by recency — and never by comparing the version strings,
 which cannot be ordered at all.
 
@@ -25,9 +25,9 @@ which cannot be ordered at all.
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
-commit          3e01bb3                          <- build this
---version       cyanrip 0.9.4-rc2+platterpus.14 (platterpus-fork-g3e01bb3)
-release_seq     24                               <- the ONLY orderable identifier
+commit          df91ae7                          <- build this
+--version       cyanrip 0.9.4-rc2+platterpus.15 (platterpus-fork-gdf91ae7)
+release_seq     25                               <- the ONLY orderable identifier
 channel         stable
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
@@ -38,21 +38,21 @@ git tag         none published
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          3e01bb3
---version       cyanrip 0.9.4-rc2+platterpus.14 (platterpus-fork-g3e01bb3)
-release_seq     24                               <- newest of any channel
+commit          df91ae7
+--version       cyanrip 0.9.4-rc2+platterpus.15 (platterpus-fork-gdf91ae7)
+release_seq     25                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
 **`beta` resolves to the newest row of ANY channel**, so opting into
-pre-releases can never move a user backwards. `+platterpus.12` is the newest row
+pre-releases can never move a user backwards. `+platterpus.15` is the newest row
 overall, so both channels resolve to it and there is no separate beta to take.
 That property was not decorative: the first generated manifest had `beta` on seq
 10 while `stable` was seq 11, so opting in would have been a downgrade.
 
-**`0.9.4-rc2+platterpus.12` IS A STABLE RELEASE despite the `-rc2`.** That
+**`0.9.4-rc2+platterpus.15` IS A STABLE RELEASE despite the `-rc2`.** That
 string is upstream's, copied verbatim because we may not mint in
 `cyanreg/cyanrip`'s namespace; the part that advances is SemVer build metadata,
 which the spec says MUST be ignored for precedence. **A check that reads the
@@ -164,19 +164,16 @@ directory against `tools/release-gate.py`. **The warning above the table did not
 stop it happening a second time, so read the gate and treat the table as a
 convenience.**
 
-**Every round is closed**: `tools/release-gate.py --release-gate` exits 0, and
-round 25 authorises `+platterpus.15`. The live release is
-**`0.9.4-rc2+platterpus.14` at `3e01bb3`**, `release_seq` 24, authorised by
-round 22 — the first release of this fork with a **consumer-side
-prerequisite**, met by Platterpus 0.6.53, because both renamed lines are their
-`_TRACK_START` block delimiter. `Track %i read successfully!` / `read with
-errors.` and the new `Encoder errors:` line are P2. **Round 24 reviewed `.14`
-and closed in three laps.** Their `FORK_PIN` rolled to `3e01bb3` on their `main`
-at `platterpus@86f0547`, and users get it in 0.6.54. Until then their 0.6.53
-still approves `2cce60d` and offers `.14` stamped `unapproved`, the window the
-operator accepted when `.14` went to stable. 0.6.54 waited for round 25 to
-close under the strict gate the operator chose for their `v0.*` line, and under
-R8 it follows `.15`.
+**Every round is closed**: `tools/release-gate.py --release-gate` exits 0. The
+live release is **`0.9.4-rc2+platterpus.15` at `df91ae7`**, `release_seq` 25,
+authorised by **round 25**, the first release under v6 R8: a round's close
+authorises a release of both applications, ours first. It rounds the per-frame
+retry limit up to a multiple of 5, so `-r 3` no longer hangs on an unreadable
+sector, and `Retry limit:` gains a second form. There is no consumer-side
+prerequisite. **Platterpus releases 0.6.54 after it, pinning `3e01bb3`**, because
+their `FORK_PIN` must be a closed round's pin, so their app offers `.15` marked
+`unapproved` until round 26 reviews it. The operator's real test on the released
+pair opens round 26.
 
 **`proposed/` held shared-document texts under review, and is gone.** Round 25
 proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md` v6 there, by

@@ -1965,7 +1965,16 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
-**`+platterpus.14` SHIPPED on 2026-09-22** at `3e01bb3`, `release_seq` 24,
+**`+platterpus.15` SHIPPED on 2026-09-23** at `df91ae7`, `release_seq` 25,
+stable, authorised by **round 25** — `docs/RELEASE-PLAN-platterpus.15.md` is
+executed and bannered. It is the first release under v6 R8, so a round's close
+authorised a release of both applications: ours first, then Platterpus 0.6.54
+pinning `3e01bb3`. Their app offers `.15` marked `unapproved` until round 26
+reviews it. It rounds the per-frame retry limit up to a multiple of 5, and it
+has no consumer-side prerequisite. **The next release is `+platterpus.16` and
+nothing is written for it.**
+
+**`+platterpus.14` shipped on 2026-09-22** at `3e01bb3`, `release_seq` 24,
 stable, authorised by **round 22** — `docs/RELEASE-PLAN-platterpus.14.md` is
 executed and bannered. It carries round 22's per-track split — `Track %i read
 successfully!` / `read with errors.` and the new three-state `Encoder errors:`
@@ -1973,7 +1982,6 @@ line — and it is the first release of this fork with a **consumer-side
 prerequisite**, because both renamed lines are Platterpus's `_TRACK_START` block
 delimiter: shipped ahead of their parser, it would have read as a disc with zero
 tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
-**The next release is `+platterpus.15` and nothing is written for it.**
 
 **Four lessons from `.14`, each of which cost something to learn:**
 
@@ -2010,7 +2018,9 @@ tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
   That was the operator's call to make, and the plan's job was to put the cost in
   front of them before it was made.
 
-**Plans that exist, all executed and bannered:** `.5`, `.12`, `.13`, `.14`.
+**Plans that exist, all executed and bannered:** `.5`, `.12`, `.13`, `.14`,
+`.15`. `.15`'s is the short case: its round settled the channel, so it poses
+nothing.
 **The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the
 newest, it followed the four-commit sequence exactly, and it is the first to pose
 a decision rather than recommend a default — its §3 laid out both channels with
