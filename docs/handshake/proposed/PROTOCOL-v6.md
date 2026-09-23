@@ -441,8 +441,10 @@ verbatim rather than renamed.
 **The rule.** A gate resolving a close MUST:
 
 1. **Identify the candidate lap**: the newest peer lap **filed in the gate's own
-   record when it decides** — held, not merely fetchable — that declares
-   `HANDSHAKE-READY-TO-READ: yes` (§5c). **Amended in v6.** v5 also required the
+   record when it decides** — held, not merely fetchable. **It must declare
+   `HANDSHAKE-READY-TO-READ: yes` (§5c); if it does not, the round does not close
+   (C38).** An older released lap is never used in place of a newer one that is
+   not released. **Amended in v6.** v5 also required the
    lap to be enumerated in the closing file's own `HANDSHAKE-INBOUND-HELD`. The
    lap that makes step 3 useful is always written *after* the closing file, so
    under that reading step 3 could not fire on any real record, and cyanrip's one
@@ -744,15 +746,18 @@ of the round are able to be used as well. Updated to, used, etc. mark them if
 need be."* The operator of both projects, 2026-09-23. So:
 
 1. **A round's close authorises a release of both applications**, and both are
-   cut from it before anything else happens. The provider releases first. Then
-   the consumer releases, and its release approves the provider's: it pins the
-   provider's release commit. Each side's closing lap names what its release
-   will carry, so the close is on content both have seen.
+   cut from it before anything else happens. The provider releases first, then
+   the consumer. Each side's closing lap names what its release will carry, so
+   the close is on content both have seen. **The consumer's release does not pin
+   the provider's new one.** Its pin is a build a closed round approved, and a
+   close cannot approve a commit cut after it. The next round, which the real
+   test opens, reviews the provider's new release (point 3).
 2. **Both releases are usable.** Each is offered by its own project's update
    path on its default channel, so users can update to it and use it. **Marking
    is allowed, and withholding is not.** If a release has to carry a mark, such
-   as a pre-release flag or a note that the hardware run has not happened yet,
-   it carries the mark and says what the mark means.
+   as a pre-release flag, a note that the hardware run has not happened yet, or
+   a consumer reporting the provider's new release as not yet approved, it
+   carries the mark and says what the mark means.
 3. **Then the real test.** The operator runs the hardware acceptance on the
    released pair. The bundle it produces is committed, byte-identical, to both
    repositories. **The provider opens the next round from its results** (§1a).
@@ -1185,7 +1190,7 @@ matching hashes cannot.
 
 ## 14. Changes in v6
 
-**v6 is v5 plus what round 24 agreed for it, three corrections the record showed
+**v6 is v5 plus what round 24 agreed for it, four corrections the record showed
 the spec needed, the operator's two rules of 2026-09-23, and nothing else.**
 Nothing in v5 is withdrawn. cyanrip's round 24 lap 1 §D1 proposed the list and
 Platterpus's round 24 lap 2 §E agreed it. The corrections and the operator's
@@ -1201,6 +1206,15 @@ rules were not on it, and are marked.
 - **§5b step 1 and C37**: *held, and enumerated by the gate when it decides*.
   Platterpus's gate already read it that way; cyanrip's read the text cyanrip had
   drafted, under which step 3 cannot fire. Round 24 lap 1 §B3.
+- **A correction, not on round 24's list: §5b step 1's release condition is a
+  requirement on the candidate, not a filter.** v5 and the first v6 draft read
+  *"the newest peer lap … that declares `HANDSHAKE-READY-TO-READ: yes`"*. Read as
+  a filter, the candidate always declares `yes`, so C38 can never fire, and an
+  older released lap stands in for a newer held one. Both gates already read it
+  as the requirement: each takes its newest held peer lap and refuses if it is not
+  released (`cyanrip@39dee09:tools/release-gate.py:678-686`,
+  `platterpus@86f0547:scripts/handshake.py:2188-2197`). No row's expected outcome
+  changes. Platterpus's round 25 lap 2.
 - **§5e, the agreed-change ledger**, `HANDSHAKE-AGREED-CHANGES`, with C44 and
   C45. It exists because K1–K3 and round 23's `Handshake:` qualifier were agreed,
   closed on, and not built.
@@ -1229,7 +1243,9 @@ rules were not on it, and are marked.
   round ends on a release of both applications, both usable, and the real test
   on the released pair opens the next round, with its bundle in both
   repositories. And findings are fixed, not argued. Given in cyanrip's round 25
-  lap 2, in the operator's words.
+  lap 2, in the operator's words. R8 point 1 as first drafted had the consumer's
+  release pin the provider's new one, which a pin approved by a closed round
+  cannot do; cyanrip's round 25 lap 3 corrected it.
 - **§8 rows C43–C45.**
 
 **Why v6 rather than an edit to v5.** v5 was adopted byte-identical by both
