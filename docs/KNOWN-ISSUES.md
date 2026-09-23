@@ -247,7 +247,13 @@ the code does not have is the defect that let this go unnoticed.
 occurrence falsified it.** That is the number-incremented-rather-than-derived
 defect, in the file that records it, and it is the same one that turned three
 `SETTLED.md` rows stale on 2026-09-22. The dated occurrences below are the
-record; the heading states the property. **Sixth occurrence 2026-09-22** at
+record; the heading states the property. **Seventh occurrence 2026-09-23** at
+`9dccde7`, in a full suite: `Ok: 86  Timeout: 1`, `30.01s`, `SIGTERM`, and the
+instrument named the hung call — *"killed by signal 15 after 3 completed
+call(s) … THE CALL THAT HUNG IS #4: 16 9 --head 59cb5a9"*, the first three
+taking 1.90 s together. **1.17 s** standalone immediately afterwards. Call #4
+after three completed is the same stopping point `tests/lap_commits.py` records
+for the 2026-09-18 occurrences. **Sixth occurrence 2026-09-22** at
 `460599f`: `30.01s`, `SIGTERM`, **1.22 s** standalone immediately afterwards.
 Same bimodality, nothing new.
 
