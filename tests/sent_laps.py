@@ -330,6 +330,57 @@ def _confirmations():
     return out
 
 
+# THE EXTRACTOR MISSED EVERY HASH QUOTED AS "NAME — VERDICT, sha256 …", found
+# in round 25 while filing their lap 2, which writes "`round-25-lap-01.md` —
+# `OPEN`, sha256 `78485c98…`". The dash straight after the name was read as a
+# clause boundary, so the subject was gone before the hash arrived. Their round
+# 14 laps 10 and 18 use the shape, and so do four laps of ours, so the count
+# above called our round 25 lap 1 unconfirmed after the peer had quoted its
+# hash back. These are the shapes the real record holds, including the two
+# the fix must NOT loosen. Each case is revert-proved against its own clause in
+# held_claims().
+def _extractor_cases():
+    spec = importlib.util.spec_from_file_location(
+        "sc_cases", ROOT / "tools" / "seam-check.py")
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+    h64 = "78485c98a66ec8897ec15cb94e74c0460295356ff7df50f7ce42430c4838a9d4"
+    cases = [
+        # Their shape from round 24 on: name, dash, verdict, hash.
+        ("HANDSHAKE-INBOUND-HELD: `round-25-lap-01.md` \u2014 `OPEN`, sha256 "
+         f"`{h64}`, 18,791 bytes", [(25, 1, h64)]),
+        # A dash that is NOT straight after the name still ends the clause:
+        # round 16's rig-script hashes must not be paired with a lap.
+        ("HANDSHAKE-INBOUND-HELD: your round-16 lap 1 (`aaaaaaaaaaaaaaaa`), and "
+         "both rig scripts -- lap 1's draft (`7a5157a5572513ae`)",
+         [(16, 1, "aaaaaaaaaaaaaaaa")]),
+        # Words between the name and the dash end the exemption: the hash
+        # after this dash is a rig script's, and pairing it with lap 2 would
+        # invent a mismatch out of a correct record.
+        ("HANDSHAKE-INBOUND-HELD: your round-21 lap 2 (`GO`, released) \u2014 and "
+         "the rig script (`615243361882b881`)", []),
+        # A full stop straight after a name still ends the clause, dash or not.
+        ("HANDSHAKE-INBOUND-HELD: `round-25-lap-02.md` \u2014 `GO`, sha256 "
+         "`3ae11ad1d4e3f7f2`, filed as `docs/handshake/inbound/round-25-lap-02.md`"
+         ". We also hold your status (sha256 `f7510382dab187f0`)",
+         [(25, 2, "3ae11ad1d4e3f7f2")]),
+        # A git object id is not the file's sha256, and comes first in ours.
+        ("HANDSHAKE-INBOUND-HELD: at `docs/handshake/inbound/round-21-lap-02.md` "
+         "\u2014 git blob `e65abbd448f5292f5db224be4c7c096847f8f537`, sha256 "
+         "`f6fbc01fe61efea2`", [(21, 2, "f6fbc01fe61efea2")]),
+    ]
+    bad = 0
+    for line, want in cases:
+        got = sc.held_claims(line)
+        if got != want:
+            bad += 1
+            print(f"FAIL: held_claims read {got}, expected {want}, from:\n  {line}")
+    return bad
+
+
+failures += _extractor_cases()
+
+
 def _rl(name):
     m = re.match(r"round-(\d+)-lap-(\d+)\.md$", name)
     return (int(m.group(1)), int(m.group(2))) if m else None

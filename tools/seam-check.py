@@ -520,6 +520,8 @@ FILE_TOKEN = re.compile(r"\S+\.(?:md|sh|py|txt|json|log|tsv)\b")
 # earlier in the same clause -- never on its own.
 BARE_LAP = re.compile(r"\blap[- ](\d+)(?![-\d])")
 HASH_TOKEN = re.compile(r"\b([0-9a-f]{16,64})\b")
+# "git blob `<id>`" or "blob <id>": an object id, not a content hash.
+GIT_OBJECT_PREFIX = re.compile(r"\bblob\s*`?$")
 # Clause boundaries. Round-09 lap 6 puts a lap-1 hash three clauses after a
 # lap-5 reference; pairing by proximity alone gets that exactly wrong.
 BOUNDARY = re.compile(r"\.\s|;|\u2014|--|\bFor round\b|\bRound \d")
@@ -533,8 +535,10 @@ def held_claims(line):
     to that lap and clears the subject, so no hash is attributed twice.
     """
     events = []
+    lap_ends = {}
     for m in LAP_TOKEN.finditer(line):
         events.append((m.start(), 0, "lap", (int(m.group(1)), int(m.group(2)))))
+        lap_ends[m.start()] = m.end()
     for m in BARE_LAP.finditer(line):
         events.append((m.start(), 0, "bare", int(m.group(1))))
     for m in FILE_TOKEN.finditer(line):
@@ -542,15 +546,39 @@ def held_claims(line):
         if not LAP_TOKEN.fullmatch(stem):
             events.append((m.start(), 1, "file", None))
     for m in HASH_TOKEN.finditer(line):
+        # A git object id names the same bytes and is not their sha256. Our
+        # round 21 lap 3 quotes both, blob first: "…/round-21-lap-02.md — git
+        # blob `e65abbd4…`, sha256 `f6fbc01f…`". Pairing the blob id with the
+        # lap reports a mismatch on a correct record, so it is skipped and the
+        # sha256 after it is the one read.
+        if GIT_OBJECT_PREFIX.search(line[:m.start()]):
+            continue
         events.append((m.start(), 2, "hash", m.group(1)))
     for m in BOUNDARY.finditer(line):
-        events.append((m.start(), 3, "bound", None))
+        events.append((m.start(), 3, "bound", m.group(0)))
     events.sort()
 
-    out, subject, round_ctx = [], None, None
+    out, subject, round_ctx, subject_end = [], None, None, None
     for pos, _, kind, val in events:
         if kind == "lap":
             subject, round_ctx = val, val[0]
+            subject_end = lap_ends[pos]
+        elif (kind == "bound" and val in ("\u2014", "--") and subject is not None
+              and subject_end is not None and not line[subject_end:pos].strip("` ")):
+            # A DASH STRAIGHT AFTER THE LAP'S OWN NAME INTRODUCES THAT LAP, it
+            # does not end the clause. Platterpus's round 25 lap 2 writes
+            # "`round-25-lap-01.md` — `OPEN`, sha256 `78485c98…`", as their
+            # round 14 laps 10 and 18 did, and so do four laps of ours (rounds
+            # 21, 22, 24 and 25, lap 3 each). Treating that dash as a boundary
+            # cleared the subject before the hash arrived, so none of those
+            # hashes were read. Found in round 25 while filing their lap 2. Only a
+            # dash with nothing but backticks and spaces between it and the
+            # name is exempt, and only a dash: a full stop straight after a lap's
+            # name still ends the clause, as in our own "filed byte-exact as
+            # `…/round-25-lap-02.md`. We also hold your standing status
+            # (sha256 …)". Round 16's "rig scripts -- lap 1's draft" still ends
+            # its clause.
+            subject_end = None
         elif kind == "bare":
             # A bare `lap N` inherits the round ONLY from a fully qualified
             # reference earlier in the same clause. Their lap 5 writes "your
@@ -558,7 +586,7 @@ def held_claims(line):
             # two of the three confirmations are invisible.
             subject = (round_ctx, val) if round_ctx is not None else None
         elif kind in ("file", "bound"):
-            subject = None
+            subject, subject_end = None, None
             # THE ROUND CONTEXT DIES AT THE BOUNDARY TOO, and that is the whole
             # safety of this. The same INBOUND-HELD line continues "...and both
             # rig scripts -- lap 1's draft (`7a5157a5572513ae`) and lap 2's
@@ -568,7 +596,7 @@ def held_claims(line):
             round_ctx = None
         elif kind == "hash" and subject:
             out.append((subject[0], subject[1], val))
-            subject = None
+            subject, subject_end = None, None
     return out
 
 
