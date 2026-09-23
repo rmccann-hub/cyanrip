@@ -257,6 +257,10 @@ SENT = {
     # releases it, on the operator's "release it".
     "round-25-lap-03.md":
         "c21cd9fd56989f2ba7f441490fa66f8c8236dcb0c048237aead87c2a6df03d63",
+    # Round 25 lap 5, the close, pinned in the commit that releases it. The
+    # operator chose "Release lap 5 + cut .15" before it was written.
+    "round-25-lap-05.md":
+        "bca120c0af1b60e8f21caaeced0f202b6715979cfb3ec0bb2c4f6eb59393078f",
 }
 
 failures = 0

@@ -801,11 +801,11 @@ also why a hash must be computed over the *file the table names*, not over the
 path you expected to find it at.
 
 **Present tense would now be false, and this is checkable rather than hoped.**
-Measured **2026-09-23 against `platterpus@5374729`**, with `--fetch`: **three of
-the four are byte-identical and the protocol is not.** Theirs is a v6,
-`522a18eb…`, landed from our round 25 lap **1** draft, which their lap 2 answered.
-Ours is still v5, `d698d58a8130ab52`, because the v6 both trees can hold is the
-one our lap 3 proposes. The reading of 2026-09-22 against `52b4428` said all four
+Measured **2026-09-23 against `platterpus@53b3c04`**, with `--fetch`: **all four
+are byte-identical, and the protocol is v6**, `05abdfde706316f8`, landed in
+round 25 by both sides. Earlier the same day, against `5374729`, three matched
+and the protocol did not: their tree held a v6 landed from our lap **1** draft,
+which their crossed lap 2 answered. The reading of 2026-09-22 said all four
 identical at v5, and the one before it said NOT IN SYNC for most of a day,
 correctly: v5 had been committed on their working branch and not yet on `main`,
 which is the ref this tool reads. **Commit the
@@ -1724,9 +1724,9 @@ in three laps or the reform failed.
 2026-09-16, and this paragraph carried the prediction with no result beside it
 for a month:
 
-| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** | **5** | **5** | 3 |
+| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** | **5** | **5** | 3 | **5** |
 
 **The measure, stated because two readings of it already exist:** laps is the
 highest `HANDSHAKE-LAP` **either** side declared for the round. Platterpus counts
@@ -1778,9 +1778,9 @@ fixture has lap 3 declare it holds lap 4 (`tests/release_gate.py:2928`), a
 file that cannot have existed when lap 3 was written. **A test whose input
 cannot occur proves the code, not the rule.** Their reading — enumerated by
 the gate when it decides — is the one under which §5b does what it says. It
-needs v6 wording, and until then the two gates implement two readings. **Round
-25 lap 1 proposes that wording**, in `docs/handshake/proposed/PROTOCOL-v6.md`
-§5b step 1 and C37.
+needs v6 wording, and until then the two gates implement two readings. **v6
+carries it**, as §5b step 1 and C37, landed in round 25. It governs files
+declaring 6, and every lap so far declares 5.
 
 **So round 24 is not a test of §5b either.** It declares 5, but its lap 1
 declares `GO`, so the structure that made rounds 22 and 23 take five does not
@@ -1810,8 +1810,9 @@ crossing, not v5.** Their lap 2 was released at `5374729` on the same day as
 ours at `bceb35d`, hours later. It held only our lap 1, so it answered a record
 that had already moved. Both lap 2s stand, since a sent lap is not edited, and
 neither gate is confused by them. But our lap 2's added condition was still
-unanswered, so the fewest the round can now take is **five**: our lap 3, their
-lap 4, our lap 5. K1 already names the remedy on the sending side: re-read the
+unanswered, so the fewest the round could then take was **five**: our lap 3,
+their lap 4, our lap 5. **It took exactly five**, closing `GO`/`GO` on
+2026-09-23, fourteen days before its close-by. K1 already names the remedy on the sending side: re-read the
 other side's record **when you release**, not when you draft. A lap drafted
 against one reading and released against another is the elapsed-time defect
 this file records twice.

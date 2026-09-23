@@ -59,6 +59,16 @@ round 25 lap 2 and round 14 laps 10 and 18 use the shape, and so do four laps of
 ours. A git object id quoted before a sha256 is now skipped. Five cases in
 `tests/sent_laps.py` pin it, and each clause is revert-proved.
 
+**Round 25 closed `GO`/`GO` on 2026-09-23, at five laps.** `PROTOCOL.md` v6
+(`05abdfde…`) landed at `643631b`, byte-identical to Platterpus's `main` at
+`53b3c04`, and our gate implements it: `PROTOCOL_VERSION` is 6, and the v6 code
+written at `82a6154` needed no change. All four shared documents are identical
+in both trees. Their lap 4 landed the merged text, read our golden reference with
+their parser, and named 0.6.54 as their release candidate. Our lap 5 discharged
+lap 3's pre-commitment as `GO`, and carries the first agreed-change ledger with
+every entry named. The round took one lap more than predicted, because the two
+lap 2s crossed.
+
 **Round 24 closed `GO`/`GO` on 2026-09-23, at three laps.** It opened with
 `docs/handshake/round-24-lap-01.md`, released by the operator on 2026-09-22,
 which declared protocol 5, pin `3e01bb3`, verdict `GO`, and one close

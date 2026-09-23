@@ -837,14 +837,14 @@ uncovered. Item 4 remains, below.
 **Item 4, and v5's C40 fixture, are written out of the v6 path, 2026-09-23.**
 For a file declaring 6, `peer_verdict_resolution` no longer consults the
 closing file's `INBOUND-HELD`. The candidate is the newest peer lap in our own
-`inbound/`, which is what the proposed v6 §5b step 1 says. So no literal
+`inbound/`, which is what v6 §5b step 1 says. So no literal
 filename is matched. `test_v6_closes_on_a_record_that_can_occur` uses the
 fixture a real round produces, with v5 on the same bytes as the control, and
 the control does not close. The same change requires `HANDSHAKE-AGREED-CHANGES`
-on a v6 `GO` (proposed C44). **Neither is live**: this gate implements 5, so a
-file declaring 6 is refused before it gets there. The tests run with
-`PROTOCOL_VERSION` set to 6, and landing v6 flips the constant. Both halves are
-revert-proved.
+on a v6 `GO` (C44). **Both are live from `643631b`**, where v6 landed and
+`PROTOCOL_VERSION` went to 6 with no other change to this code. They apply to a
+file declaring 6, and no lap has declared 6 yet: v6 §14 waits for both gates to
+say in a lap that they implement it. Both halves are revert-proved.
 
 **Found 2026-09-22, answering their post-round-23 standing status**
 (`docs/handshake/inbound/status-2026-09-22-v0.6.53-c2f43d28.md`, the
@@ -990,12 +990,13 @@ verified against the installed headers *and* the `.so` export table).
 
 ## Open, joint — belongs to the seam, not to one side
 
-### Three agreed protocol changes never reached the spec, and both sides certified v5 as complete
+### Three agreed protocol changes never reached the spec, and both sides certified v5 as complete — LANDED IN v6, 2026-09-23
 
-**Proposed for landing in round 25 (2026-09-23).** All three are in
-`docs/handshake/proposed/PROTOCOL-v6.md`: K1 in §4a, K2 in §5a, K3 as §5d. So
-is the agreed-change ledger, §5e, which exists because of this entry. The entry
-stays until v6 is byte-identical in both trees.
+**Landed in round 25.** All three are in `docs/handshake/PROTOCOL.md` v6: K1 in
+§4a, K2 in §5a, K3 as §5d. So is the agreed-change ledger, §5e, which exists
+because of this entry. v6 is byte-identical in both trees (`643631b`,
+`platterpus@53b3c04`), and round 25's closing lap is the first to carry the
+ledger with every entry named. The history below is kept as the reason.
 
 **Found 2026-09-22 by the pre-round-24 document audit, and it is the most
 important thing that audit found.** Round 22 agreed three changes to the shared
@@ -1041,9 +1042,8 @@ protocol change and needs their assent**, so it is proposed, not built.
 
 ### The four shared documents: every known defect, in one table
 
-**Rows 1–7 are proposed for fixing in round 25 (2026-09-23)**, by
-`docs/handshake/proposed/PROTOCOL-v6.md`, `OWNERSHIP-v3.md` and
-`seam-rules-v6.md`. Drafting found an eighth, in `OWNERSHIP.md`'s opening
+**Rows 1–7 were fixed in round 25 (2026-09-23)**, by `PROTOCOL.md` v6,
+`OWNERSHIP.md` v3 and `seam-rules.md` v6, all byte-identical in both trees. Drafting found an eighth, in `OWNERSHIP.md`'s opening
 paragraph: it says every consumer holds its copy at the same path, and
 Platterpus's protocol is at `docs/handshake-protocol.md`. `OWNERSHIP-v3.md`
 fixes that too. Rows 8–12, `seam-commands.md`, wait for round 26, because the
@@ -1202,11 +1202,12 @@ cannot occur made the one mechanism v5 exists for look exercised.
 **The remedy is v6 wording, not a gate edit by one side.** Their reading is
 the one under which §5b does what it says, and C42 already makes the gate print
 the lap it resolved from, so audit does not depend on the closing file's
-declaration. Proposed in round 24 lap 1, and drafted for round 25 as §5b step 1
-and C37 of `docs/handshake/proposed/PROTOCOL-v6.md`, with K1–K3. Until v6 lands
-the two gates implement two readings, which is the silent divergence
-`CLAUDE.md` warns about, now made visible. Kept under *Open* until a round has
-closed under §5b step 3.
+declaration. Proposed in round 24 lap 1, and landed in round 25 as v6 §5b
+step 1 and C37. **The divergence is not gone yet.** Our gate reads a file
+declaring 6 the decision-time way, and every lap so far declares 5, which our
+gate still reads literally. So the two gates keep two readings until laps
+declare 6. Round 25 closed on our gate by ordinary transcription, not by
+step 3. Kept under *Open* until a round has closed under §5b step 3.
 
 
 `PROTOCOL.md` §5 requires `HANDSHAKE-PEER-VERDICT: GO`, *"transcribed from the
@@ -1286,8 +1287,8 @@ for reading)`. Closed and released states are unchanged. The test,
 Platterpus's round 23 lap 2 table, the shape they ran through their parser,
 rather than retyping it. It is revert-proved. **It ships in no release yet**: a
 build of the tip carries it, and `+platterpus.15` is the first release that
-can. The history below is kept because it is why the ledger in the proposed v6
-§5e exists.
+can. The history below is kept because it is why the ledger in v6 §5e
+exists.
 
 **Status 2026-09-22, found by the pre-round-24 document audit: the change was
 agreed and nobody implemented it.** Round 23 §0.2 asked for a qualifier —
