@@ -66,6 +66,14 @@ _TIMINGS = []
 # by duration and a sorted list cannot be read back as a sequence. Two timeouts
 # (2026-09-18, occurrences 3 and 4) both stopped after exactly 3 completed
 # calls, and neither could name the 4th. This holds it.
+#
+# AND IT HAS NOW NAMED IT, TWICE. Occurrences 5 and 6, both 2026-09-23, both
+# inside a full suite: "THE CALL THAT HUNG IS #4: 16 9 --head 59cb5a9", after
+# calls 1-3 finished in 2.26 s. Call 4 is the only one that takes ROUND and LAP,
+# so it is the only one that runs previous_lap() and send_pin(). Run alone 25
+# times in a row it took 0.16-0.19 s every time, and send_pin()'s history grep
+# takes 35 ms. The hang still needs the parallel suite, and nothing in the suite
+# was found writing to this repository while it runs. Still open.
 _IN_FLIGHT = [None]
 
 
