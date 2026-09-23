@@ -746,7 +746,22 @@ at a time. **The C29 boundary is load-bearing, not caution:** moved to 0, it
 reopens round 8, whose laps 3–15 of ours declared 1 after their lap 2 declared
 2, and the real gate refuses a release. Platterpus's gate already had the C15
 half (`platterpus@86f0547:scripts/handshake.py:1920`, `refused_round_files`).
-Items 2 and 4 remain, below.
+
+**Item 2's coverage half FIXED the same day; its behaviour is not, on purpose.**
+The meta-check now admits a letter suffix, so C13a is a row it can see. It
+turns rows on by the version each block's heading names rather than splitting
+once at v3. And it carries `KNOWN_DIVERGENCES`, printed on every run, which
+fails if an entry stops being true. C13a is the one entry. **Replaying every
+round lap by lap found the premise of "latent" was wrong and the conclusion
+right.** Six laps, in rounds 7, 8, 11, 12 and 15, follow the lap at which our
+gate first reads the round closed. All six declare `GO`, each the other side's
+closing lap, so reopening and staying closed agree on every one. **C13a as
+written would refuse all six**, which is why round 25 proposes amending the row
+rather than implementing it. Three labels were wrong too.
+`test_latest_lap_can_reopen` claimed C13 and built C13a's case. Two ambiguity
+tests claimed *"C13 (S2 rule 3)"*. So C13 read as covered three times and had
+no test of its own case. It has one now, and removing its claim leaves C13
+uncovered. Item 4 remains, below.
 
 **Found 2026-09-22, answering their post-round-23 standing status**
 (`docs/handshake/inbound/status-2026-09-22-v0.6.53-c2f43d28.md`, the

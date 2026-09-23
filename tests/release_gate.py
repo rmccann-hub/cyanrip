@@ -184,13 +184,31 @@ def test_a_later_go_lap_that_is_incomplete_does_not_close():
     check(not ok, "a later GO lap missing the peer fields must not close")
 
 
-def test_latest_lap_can_reopen():
+def test_a_hold_after_a_go_that_did_not_close_governs():
     """Covers: C13"""
-    # The converse, and it must work or a round could never be reopened by new
-    # evidence: lap 1 said GO, lap 2 found something.
+    # C13's own case: lap 1 said GO but was NOT a close (no peer verdict, no
+    # identity fields), lap 2 says HOLD. The round was never closed and the
+    # latest lap governs. Until 2026-09-23 the test claiming C13 built the
+    # OTHER case -- a complete close followed by a HOLD -- which is C13a's, and
+    # asserted the v2 reopen that v3 removed. The one below keeps that fixture
+    # and says what it is.
+    ok, probs = gate({"round-9.md": lap(1, 9, "GO"),
+                      "round-9-lap2.md": lap(2, 9, "HOLD")})
+    check(not ok and any("HOLD" in p for p in probs),
+          f"a HOLD after a GO that never closed must govern: {probs}")
+
+
+def test_a_hold_after_a_complete_close_still_refuses_a_release():
+    # NOT a conformance test, and it claims no row on purpose. This is the
+    # shape of C13a -- a later lap after a terminal state -- and this gate does
+    # the v2 thing: the HOLD becomes the round's state and the round reads
+    # open. C13a says the round stays closed and the FILE is refused. For a
+    # HOLD the release is refused either way, which is all this asserts. See
+    # KNOWN_DIVERGENCES["C13a"] for why the divergence is latent on the real
+    # record.
     ok, _ = gate({"round-9.md": lap(1, 9, "GO", complete=True),
                   "round-9-lap2.md": lap(2, 9, "HOLD")})
-    check(not ok, "a later lap declaring HOLD must reopen the round")
+    check(not ok, "a HOLD after a complete close permitted a release")
 
 
 def test_lap_order_is_by_declaration_not_filename():
@@ -608,6 +626,22 @@ def test_wire_header_exemption_boundary_is_pinned():
 
 
 
+# Conformance rows in force that this gate does NOT implement, each with its
+# reason. The meta-check prints every entry on every run and fails on an entry
+# that has stopped being true, so this can only shrink by being fixed.
+KNOWN_DIVERGENCES = {
+    "C13a": ("a lap after a terminal state becomes the round's state here "
+             "(v2's reopen), where the row says the round stays closed and the "
+             "file is refused. Latent, measured 2026-09-23 by replaying every "
+             "round lap by lap: six laps in rounds 7, 8, 11, 12 and 15 follow "
+             "the lap at which this gate first reads the round closed, and all "
+             "six declare GO, so both readings agree on each. As written the "
+             "row would refuse all six -- each is the other side's closing "
+             "lap. Neither gate implements it; round 25 lap 1 proposes the "
+             "amendment."),
+}
+
+
 def test_every_conformance_row_has_a_test():
     """Covers: none -- this is the meta-check.
 
@@ -621,26 +655,46 @@ def test_every_conformance_row_has_a_test():
     a row that does not exist.
     """
     proto = (HERE.parent / "docs" / "handshake" / "PROTOCOL.md").read_text(encoding="utf-8")
-    # Rows below the "added in v3" heading are not in force until this gate
-    # implements 3. Scoped by HEADING, not by a hardcoded list: bumping
-    # PROTOCOL_VERSION turns them on with no second edit, and a deferral that
-    # needs a human to remember it is a deferral that rots.
-    split = proto.find("### Rows added in v3")
-    in_force = proto if split < 0 else proto[:split]
-    deferred_text = "" if split < 0 else proto[split:]
-    rows = set(re.findall(r"^\| (C\d+) \|", in_force, re.M))
-    deferred = set(re.findall(r"^\| (C\d+) \|", deferred_text, re.M))
-    check(len(rows) >= 16, f"expected the conformance table, found {len(rows)} rows")
-
     import importlib.util as _ilu
     _s = _ilu.spec_from_file_location("rg2", HERE.parent / "tools" / "release-gate.py")
     _rg = _ilu.module_from_spec(_s); _s.loader.exec_module(_rg)
-    if _rg.PROTOCOL_VERSION >= 3:
-        rows |= deferred
-        deferred = set()
+
+    # A row is in force from the version its HEADING names: rows above the
+    # first "### Rows added in" heading always, rows under one from the N in
+    # its "required once both gates implement N". Scoped by heading, not by a
+    # hardcoded list: bumping PROTOCOL_VERSION turns a block on with no second
+    # edit, and a deferral that needs a human to remember it is a deferral
+    # that rots. Until 2026-09-23 this split once, at the v3 heading, and put
+    # every later block in force at 3 -- harmless while the newest block was
+    # v5 and this gate implemented 5, and wrong the moment a v6 block exists.
+    #
+    # The ID pattern admits a letter suffix. It was `C\d+`, which cannot
+    # match C13a, so the one row both gates list as unimplemented was
+    # invisible to the check that exists to find unimplemented rows.
+    rows, deferred, need = set(), {}, None
+    for line in proto.splitlines():
+        if line.startswith("### Rows added in"):
+            m = re.search(r"required once both gates implement (\d+)", line)
+            check(m is not None,
+                  f"a conformance block names no version, so nothing can say "
+                  f"when it is in force: {line!r}")
+            need = int(m.group(1)) if m else None
+            continue
+        m = re.match(r"\| (C\d+[a-z]?) \|", line)
+        if not m:
+            continue
+        if need is None or need <= _rg.PROTOCOL_VERSION:
+            rows.add(m.group(1))
+        else:
+            deferred[m.group(1)] = need
+    check(len(rows) >= 16, f"expected the conformance table, found {len(rows)} rows")
     if deferred:
-        print(f"  (deferred to protocol 3, not yet in force: "
-              f"{len(deferred)} row(s))")
+        print(f"  (not yet in force at protocol {_rg.PROTOCOL_VERSION}: "
+              f"{len(deferred)} row(s), {sorted(deferred)})")
+
+    def key(c):
+        m = re.match(r"C(\d+)([a-z]?)", c)
+        return (int(m.group(1)), m.group(2))
 
     claimed = set()
     for name, fn in globals().items():
@@ -649,13 +703,23 @@ def test_every_conformance_row_has_a_test():
         m = re.search(r"Covers:\s*([^\n]+)", fn.__doc__)
         if not m:
             continue
-        claimed.update(re.findall(r"C\d+", m.group(1)))
+        claimed.update(re.findall(r"C\d+[a-z]?", m.group(1)))
 
-    uncovered = sorted(rows - claimed, key=lambda c: int(c[1:]))
+    # A divergence is printed on every run, and it must be REAL: an entry for
+    # a row that is not in force, or that a test now claims, fails -- so the
+    # commit that implements a row has to delete its entry here.
+    for row, why in sorted(KNOWN_DIVERGENCES.items()):
+        print(f"  KNOWN DIVERGENCE {row}: {why}")
+        check(row in rows,
+              f"KNOWN_DIVERGENCES names {row}, which is not a row in force")
+        check(row not in claimed,
+              f"{row} is claimed by a test and still listed as a divergence")
+
+    uncovered = sorted(rows - claimed - set(KNOWN_DIVERGENCES), key=key)
     check(not uncovered,
           f"conformance rows with no test: {uncovered}")
 
-    invented = sorted(claimed - rows, key=lambda c: int(c[1:]))
+    invented = sorted(claimed - rows - set(deferred), key=key)
     check(not invented,
           f"tests claim conformance rows that do not exist: {invented}")
 
@@ -2470,7 +2534,7 @@ def test_from_commit_must_be_reachable_not_merely_resolvable():
 
 
 def test_a_field_declared_twice_is_ambiguous_even_when_one_value_is_prose():
-    """Covers: C13 (S2 rule 3) -- found in round 19 by Platterpus's lap 2 SSB1.
+    """Covers: C34 (§2 rule 3) -- found in round 19 by Platterpus's lap 2 SSB1.
 
     They asked whether our enumerator selects laps by filename. It does not --
     `is_a_lap()` applies S5a's content test. But the content test was being
@@ -2526,7 +2590,7 @@ def test_a_field_declared_twice_is_ambiguous_even_when_one_value_is_prose():
 
 
 def test_the_gate_reads_a_twice_declared_lap_as_ambiguous_not_as_the_parseable_one():
-    """Covers: C13 (S2 rule 3), the GATE half of round 19's envelope finding.
+    """Covers: C6, C34 (§2 rule 3), the GATE half of round 19's envelope finding.
 
     round-digest.py and release-gate.py had the same defect and the digest test
     does not cover this one -- reverting this guard alone left the suite green,
@@ -3045,8 +3109,9 @@ def test_seam_check_reads_the_protocol_label_the_spec_declares():
     same defect in their own checker; ours was found by running it on our own
     round 24 lap 1. Three cases, each against real lap headers:
 
-      1. a v5 lap declaring `protocol(v5)=<this tree's hash>` is OK;
-      2. the same hash filed under `protocol(v4)` is a label WARN, not OK;
+      1. a lap declaring `protocol(vN)=<this tree's hash>`, N this tree's
+         version, is OK;
+      2. the same hash filed under `protocol(vN-1)` is a label WARN, not OK;
       3. a v4-era lap declaring v4's hash is a version difference, not a FAIL.
     """
     import shutil
@@ -3070,12 +3135,27 @@ def test_seam_check_reads_the_protocol_label_the_spec_declares():
         return [(lv, m) for lv, cat, m, _f, _a in sc.FINDINGS
                 if cat.startswith("shared/protocol")]
 
-    got = graded("round-24-lap-01.md")
+    # Cases 1 and 2 are DERIVED from this tree rather than read off a sent
+    # lap, or the test is a claim about one version of PROTOCOL.md: pinned to
+    # round 24 lap 1's declared v5 hash, it failed on any edit to the file and
+    # would have failed on the commit that lands v6 -- measured 2026-09-23 by
+    # appending a v6 conformance block. The header is still a real lap's.
+    import hashlib
+    cur = sc._spec_version()
+    tree = hashlib.sha256((HERE.parent / "docs" / "handshake" / "PROTOCOL.md")
+                          .read_bytes()).hexdigest()
+    current = lambda h: re.sub(r"protocol\(v\d+\)=[0-9a-f]{64}",
+                               f"protocol(v{cur})={tree}", h)
+    probe = current("HANDSHAKE-SHARED-HASHES: protocol(v5)=" + "0" * 64)
+    check(probe.endswith(f"protocol(v{cur})={tree}"),
+          f"the substitution did not land; case 1 would grade the wrong text: {probe}")
+    got = graded("round-24-lap-01.md", current)
     check(got and got[0][0] == "OK",
-          f"a v5 lap declaring this tree's protocol hash must be OK: {got}")
+          f"a lap declaring this tree's protocol label and hash must be OK: {got}")
 
-    relabel = lambda h: h.replace("protocol(v5)=", "protocol(v4)=")
-    check("protocol(v4)=" in relabel("HANDSHAKE-SHARED-HASHES: protocol(v5)=x"),
+    relabel = lambda h: current(h).replace(f"protocol(v{cur})=",
+                                           f"protocol(v{cur - 1})=")
+    check(f"protocol(v{cur - 1})=" in relabel(probe),
           "the relabel did not land; case 2 would grade the wrong text")
     got = graded("round-24-lap-01.md", relabel)
     check(got and got[0][0] == "WARN" and "label" in got[0][1],
