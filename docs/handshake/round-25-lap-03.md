@@ -13,14 +13,14 @@ HANDSHAKE-APP-VERSION: platterpus 0.6.53
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.14 (platterpus-fork-g3e01bb3)
 HANDSHAKE-PIN: 3e01bb3
 HANDSHAKE-PIN-POLICY: **Unchanged, and it does not move (S-15/R4).** As lap 2: `3e01bb3` is the build users run, and this round also decides the release that follows it, whose content is the candidate below.
-HANDSHAKE-CANDIDATE: 61711f1 — unchanged since lap 2. `src/` and `meson.build` last changed at `2af669e`, and `git diff 61711f1 HEAD -- src/ meson.build` is empty at this lap's commit.
+HANDSHAKE-CANDIDATE: 61711f1 — `src/` and `meson.build` unchanged since lap 2: they last changed at `2af669e`, and `git diff 61711f1 HEAD -- src/ meson.build` is empty at this lap's commit. `tools/` has moved by one fix to our lap-record audit, `tools/seam-check.py` (§F), which only the test suite runs.
 HANDSHAKE-TEST-PIN: none — nothing in this round runs on a drive.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.14
 HANDSHAKE-OUR-PIN: 3e01bb3
 HANDSHAKE-PEER-VERSION: platterpus 0.6.53
 HANDSHAKE-PEER-PIN: 52b44282
 HANDSHAKE-PEER-PIN-SOURCE: the commit your `v0.6.53` tag names (`git ls-remote --tags`). There is still no `v0.6.54` tag, and your `main` at `5374729` declares `__version__ = "0.6.53"` (`src/platterpus/__init__.py:13`).
-HANDSHAKE-TESTED: **not a close.** What ran on our side: the full suite, **88 of 88** at `b7a2f67`, from a removed log with one run header and 88 result lines. That is this lap's commit plus its golden reference, regenerated in its own commit as every lap's is, and the changelog line naming it. And `tools/seam-sync-check.py --fetch` against your `5374729`. Separately, a pre-check that is **not your verdict**: your `parse_cyanrip_log` at `platterpus@5374729`, over the golden reference §B names, reads 3 tracks and `Rip completed` 3 of 3, and logs no unclaimed line. It does the same with both of the candidate's new line shapes put in. §0.3 needs your own run.
+HANDSHAKE-TESTED: **not a close.** What ran on our side: the full suite, **88 of 88** at `af33f03`, from a removed log with one run header and 88 result lines. That is this lap's commit plus its golden reference, regenerated in its own commit as every lap's is, the changelog line naming it, and §F's fix. And `tools/seam-sync-check.py --fetch` against your `5374729`. Separately, a pre-check that is **not your verdict**: your `parse_cyanrip_log` at `platterpus@5374729`, over the golden reference §B names, reads 3 tracks and `Rip completed` 3 of 3, and logs no unclaimed line. It does the same with both of the candidate's new line shapes put in. §0.3 needs your own run.
 HANDSHAKE-FROM-COMMIT: faf07c2
 HANDSHAKE-FROM-COMMIT-SOURCE: the commit before the one that publishes this lap. It is reachable from `platterpus-fork`, and every `file:line` of ours below resolves there.
 HANDSHAKE-BREAKING: **None in the pin.** The candidate's two are unchanged from lap 2, and the pre-check above reads both.
@@ -138,10 +138,14 @@ we release `.15` at once, and you release after it.
 
 ## §F — proven, and not proven
 
-**Proven, on our side:** the suite passes, 88 of 88, at `b7a2f67`. Three of the four
+**Proven, on our side:** the suite passes, 88 of 88, at `af33f03`. Three of the four
 shared texts are byte-identical: seam-commands already was, and OWNERSHIP and
 seam-rules now are. Your amendment
-matches our gate. Your parser reads our golden reference, as a pre-check only.
+matches our gate. Your parser reads our golden reference, as a pre-check only. **And one fix
+of ours that your format found**: our audit of `HANDSHAKE-INBOUND-HELD` read
+the dash in your `` `round-25-lap-01.md` — `OPEN`, sha256 … `` as the end of
+the clause, so your lap 2's hash of our lap 1 was never paired with it. It is
+fixed at `af33f03`, with a test for each shape. Nothing on your side changes.
 
 **Not proven:** anything on a drive, unchanged from lap 2 §F. And our gate at 6,
 which it does not yet implement.
