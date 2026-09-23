@@ -763,6 +763,18 @@ tests claimed *"C13 (S2 rule 3)"*. So C13 read as covered three times and had
 no test of its own case. It has one now, and removing its claim leaves C13
 uncovered. Item 4 remains, below.
 
+**Item 4, and v5's C40 fixture, are written out of the v6 path, 2026-09-23.**
+For a file declaring 6, `peer_verdict_resolution` no longer consults the
+closing file's `INBOUND-HELD`. The candidate is the newest peer lap in our own
+`inbound/`, which is what the proposed v6 §5b step 1 says. So no literal
+filename is matched. `test_v6_closes_on_a_record_that_can_occur` uses the
+fixture a real round produces, with v5 on the same bytes as the control, and
+the control does not close. The same change requires `HANDSHAKE-AGREED-CHANGES`
+on a v6 `GO` (proposed C44). **Neither is live**: this gate implements 5, so a
+file declaring 6 is refused before it gets there. The tests run with
+`PROTOCOL_VERSION` set to 6, and landing v6 flips the constant. Both halves are
+revert-proved.
+
 **Found 2026-09-22, answering their post-round-23 standing status**
 (`docs/handshake/inbound/status-2026-09-22-v0.6.53-c2f43d28.md`, the
 **protocol** row). They described two defects in their own gate as *"portable

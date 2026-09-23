@@ -2981,10 +2981,15 @@ V5_WIRE = ("HANDSHAKE-FROM: cyanrip-fork\n"
 
 
 def _v5_ours(protocol=5, peer_verdict="OPEN", source="your round 30 lap 2",
-             held="round-30-lap-04.md"):
+             held="round-30-lap-04.md", agreed=None):
+    # held= defaults to a lap written AFTER this one, which cannot occur in a
+    # real record (their round 24 lap 1 §B3, our D3). It stays the default
+    # because it is the only fixture on which v5's literal reading of C37 can
+    # close at all; the v6 tests below use the fixture that can occur.
     body = (f"HANDSHAKE-PROTOCOL: {protocol}\nHANDSHAKE-ROUND: 30\n"
             "HANDSHAKE-LAP: 3\n" + V5_WIRE +
-            f"HANDSHAKE-INBOUND-HELD: {held}\n"
+            f"HANDSHAKE-INBOUND-HELD: {held}\n" +
+            (f"HANDSHAKE-AGREED-CHANGES: {agreed}\n" if agreed else "") +
             "HANDSHAKE-VERDICT: GO\n"
             f"HANDSHAKE-PEER-VERDICT: {peer_verdict}\n" +
             (f"HANDSHAKE-PEER-VERDICT-SOURCE: {source}\n" if source else "") +
@@ -3103,6 +3108,91 @@ def test_a_peer_lap_below_an_earlier_lap_refuses_the_round():
     early = rg.load_rounds(d)[0]
     check(early.number == 20 and not early.version_refused,
           f"C29 reached back past round {rg.C29_FROM_ROUND}: {early.version_refused}")
+
+
+class _AtProtocol:
+    """Run a block as though this gate implemented `n`. The proposed v6 is
+    written ahead of its landing, and a file declaring 6 is refused by a gate
+    at 5 (C15/C43), so its code paths are reachable only this way. Restored
+    on exit whatever happens."""
+    def __init__(self, n):
+        self.n = n
+    def __enter__(self):
+        self.old = rg.PROTOCOL_VERSION
+        rg.PROTOCOL_VERSION = self.n
+    def __exit__(self, *exc):
+        rg.PROTOCOL_VERSION = self.old
+        return False
+
+
+def _v6_theirs(verdict="GO", ready="yes", protocol=6):
+    return _v5_theirs(verdict, ready).replace("HANDSHAKE-PROTOCOL: 5",
+                                              f"HANDSHAKE-PROTOCOL: {protocol}")
+
+
+def test_v6_closes_on_a_record_that_can_occur():
+    """Covers: C40
+
+    Proposed v6 §5b step 1 and C37: the candidate peer lap is the newest one
+    filed in the gate's own record when it decides. The fixture is the one a
+    real round produces -- our lap 3 declares it holds only your lap 2, and your
+    lap 4 arrives after it -- which v5's C40 test could not use (D3).
+
+    THE CONTROL is v5 on the same bytes, which must NOT close: that is the
+    defect, measured, and it is why the v5 test above needs an impossible
+    fixture to pass.
+    """
+    real = dict(held="round-30-lap-02.md", agreed="none")
+    with _AtProtocol(6):
+        lp = _v5_resolve(_v5_ours(protocol=6, **real), _v6_theirs())
+        check(lp.closed, f"v6 did not close on the record that can occur: {lp.why}")
+        check("round-30-lap-04.md" in lp.why,
+              f"the close does not name the peer lap it rests on (C42): {lp.why}")
+        # C38 is unchanged by v6: a held peer lap still is not a verdict.
+        held = _v5_resolve(_v5_ours(protocol=6, **real), _v6_theirs(ready="no"))
+        check(not held.closed and "5c" in held.why,
+              f"v6 closed on a held peer lap: {held.why}")
+    v5 = _v5_resolve(_v5_ours(protocol=5, held="round-30-lap-02.md"),
+                     _v5_theirs())
+    check(not v5.closed and "INBOUND-HELD" in v5.why,
+          f"the v5 control closed, so v6 is not what closes it: {v5.why}")
+
+
+def test_v6_closing_file_carries_the_agreed_change_ledger():
+    """Covers: C16
+
+    Proposed v6 §5e, rows C44 and C45 once v6 lands: a GO file declaring 6
+    must carry HANDSHAKE-AGREED-CHANGES, and any value closes -- `none`, or a
+    ledger with changes not landed -- because it records delivery and does not
+    gate the close. Claims C16 (a complete close allows) until C44/C45 exist in
+    PROTOCOL.md; the landing commit moves the claim.
+    """
+    real = dict(held="round-30-lap-02.md")
+    with _AtProtocol(6):
+        missing = _v5_resolve(_v5_ours(protocol=6, **real), _v6_theirs())
+        check(not missing.closed and "HANDSHAKE-AGREED-CHANGES" in missing.why,
+              f"a v6 GO without the ledger closed, or did not name it: {missing.why}")
+        for value in ("none",
+                      "the Handshake: qualifier landed at 20a5aca; A7 not landed, both"):
+            lp = _v5_resolve(_v5_ours(protocol=6, agreed=value, **real),
+                             _v6_theirs())
+            check(lp.closed, f"a v6 ledger of {value!r} did not close: {lp.why}")
+    # A v5 file is not asked for it.
+    v5 = _v5_resolve(_v5_ours(), _v5_theirs())
+    check(v5.closed, f"a v5 close now requires the v6 ledger: {v5.why}")
+
+
+def test_v6_gate_refuses_a_peer_lap_above_it():
+    """Covers: C15
+
+    C43 at the next version: a gate implementing 6 refuses a round holding a
+    peer lap that declares 7, exactly as a gate at 5 refuses one declaring 6.
+    """
+    with _AtProtocol(6):
+        lp = _v5_resolve(_v5_ours(protocol=6, held="round-30-lap-02.md",
+                                  agreed="none"), _v6_theirs(protocol=7))
+        check(not lp.closed and "HANDSHAKE-PROTOCOL: 7" in lp.why,
+              f"a gate at 6 read a peer lap declaring 7: {lp.why}")
 
 
 def test_v5_refuses_a_held_or_unenumerated_peer_lap():

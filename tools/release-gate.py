@@ -222,6 +222,10 @@ WITHDRAWN_REASON_RE = re.compile(r"^HANDSHAKE-WITHDRAWN-REASON:[ \t]*(.+?)[ \t]*
 OVERRIDE_RE = re.compile(r"^HANDSHAKE-OVERRIDE:[ \t]*(.+?)[ \t]*$", re.M)
 OVERRIDE_BY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-BY:[ \t]*(.+?)[ \t]*$", re.M)
 OVERRIDE_WHY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-WHY:[ \t]*(.+?)[ \t]*$", re.M)
+# Proposed v6 §5e, the agreed-change ledger. Required on a GO file declaring 6
+# (C44); any value closes, `none` included (C45), because the ledger records
+# delivery and does not gate the close.
+AGREED_CHANGES_RE = re.compile(r"^HANDSHAKE-AGREED-CHANGES:[ \t]*(.+?)[ \t]*$", re.M)
 
 # v4 6a-bis R7. A lap past this needs a recorded override.
 LAP_CEILING = 21
@@ -448,6 +452,7 @@ class Lap:
         # None when we hold none of theirs. Filled in by load_rounds().
         self.peer_latest = None
         self.peer_verdict_source = None
+        self.agreed_changes = None
         # Every file of this round, ours or theirs, that declares a protocol
         # this gate does not implement, as "dir/name: reason". Filled in by
         # load_rounds(); non-empty means the round cannot be graded here.
@@ -521,6 +526,12 @@ class Lap:
         # resolution auditable, so a v5 file without it cannot close either.
         if self.v5_active:
             need["HANDSHAKE-PEER-VERDICT-SOURCE"] = self.peer_verdict_source
+        # C44, proposed v6 §5e. A round closes on agreement, and agreement is
+        # not delivery: K1-K3 and round 23's banner qualifier were agreed,
+        # closed on, and not built. The ledger makes that visible in the lap
+        # that closes. Its content does not gate anything (C45).
+        if self.v6_active:
+            need["HANDSHAKE-AGREED-CHANGES"] = self.agreed_changes
         return [k for k, v in need.items() if not v]
 
     @property
@@ -657,6 +668,27 @@ class Lap:
             return False
 
     @property
+    def rule_5b(self):
+        """The §5b a close was resolved under, named by the file's version, so a
+        v6 close does not print v5's rule (whose step 1 v6 amends)."""
+        return "v6 §5b" if self.v6_active else "v5 §5b"
+
+    @property
+    def v6_active(self):
+        """Does THIS FILE ask to be judged by the proposed v6?
+
+        Keyed on the file's declared version, as v5_active is. While this gate
+        implements 5, a file declaring 6 never gets here: C15 and C43 refuse
+        the round first. The code is written now so that landing v6 is a
+        change of PROTOCOL_VERSION and not a rewrite, and the tests exercise it
+        with the constant set to 6.
+        """
+        try:
+            return self.protocol is not None and int(self.protocol) >= 6
+        except (TypeError, ValueError):
+            return False
+
+    @property
     def peer_verdict_resolution(self):
         """v5 §5b. Returns (verdict, source, refusal) for a v5 file.
 
@@ -684,9 +716,15 @@ class Lap:
                     f"§5c: {peer_name} is not released for reading "
                     f"(HANDSHAKE-READY-TO-READ: {state}) -- a held lap is not a "
                     f"readable verdict")
-        # C37. Enumeration is a claim we made in our own file; fetchability is
-        # not a substitute for it.
-        if not (self.inbound_held and peer_name in self.inbound_held):
+        # C37. Under v5, enumeration is a claim we made in our own file, and
+        # fetchability is not a substitute for it. Under the proposed v6 it is
+        # the gate's own record when it decides: peer_latest comes only from
+        # our inbound/, which holds laps we filed, so "held" is satisfied by
+        # construction and the closing file's INBOUND-HELD is not consulted.
+        # v5's reading made step 3 unreachable -- the saving lap is always
+        # written after the closing file -- and matched a literal filename.
+        if not self.v6_active and not (self.inbound_held
+                                       and peer_name in self.inbound_held):
             return (None, None,
                     f"§5b: {peer_name} is not named in our "
                     f"HANDSHAKE-INBOUND-HELD -- we may only resolve from a lap "
@@ -785,7 +823,7 @@ class Lap:
             if refusal:
                 return refusal
             if resolved is not None and resolved not in CLOSING:
-                return (f"peer verdict {resolved} per v5 §5b, resolved from "
+                return (f"peer verdict {resolved} per {self.rule_5b}, resolved from "
                         f"{source}")
             if resolved is not None:
                 # Resolved to a close. Skip the v4 peer-verdict branches
@@ -793,9 +831,9 @@ class Lap:
                 # it here would name a value the close did not rest on. C42.
                 missing = self.missing_for_close()
                 if missing:
-                    return ("resolved per v5 §5b, but missing "
+                    return (f"resolved per {self.rule_5b}, but missing "
                             + ", ".join(missing))
-                return (f"verdict GO, peer {resolved} resolved per v5 §5b "
+                return (f"verdict GO, peer {resolved} resolved per {self.rule_5b} "
                         f"from {source}, versions/pins/testing declared")
         if self.peer_verdict is None:
             return "our verdict GO, but no peer verdict declared"
@@ -815,7 +853,7 @@ class Lap:
                 # tree, so a summary that says only "peer GO" hides where the
                 # GO came from. An unauditable close is the failure §5 exists
                 # to prevent, one level in.
-                return (f"verdict GO, peer {resolved} resolved per v5 §5b from "
+                return (f"verdict GO, peer {resolved} resolved per {self.rule_5b} from "
                         f"{source}, versions/pins/testing declared")
         return "verdict GO, peer GO, versions/pins/testing declared"
 
@@ -921,6 +959,7 @@ def load_rounds(directory=None, every_lap=False):
         lp.override = one(OVERRIDE_RE)
         lp.override_by = one(OVERRIDE_BY_RE)
         lp.override_why = one(OVERRIDE_WHY_RE)
+        lp.agreed_changes = one(AGREED_CHANGES_RE)
         reason = version_refusal(text)
         if reason:
             refused_by_round.setdefault(lp.number, []).append(
