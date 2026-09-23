@@ -1194,7 +1194,17 @@ load-bearing element**. The publishing-is-not-sending distinction did work four
 times across rounds 21 and 22, including on our own lap 5, and we still missed
 it here. Their addition goes into round 23's lap 1 as part of the v5 clause.
 
-### A HELD lap's draft verdict reaches the compiled `Handshake:` line — AGREED IN ROUND 23, AND NOT BUILT
+### A HELD lap's draft verdict reaches the compiled `Handshake:` line — AGREED IN ROUND 23, BUILT 2026-09-23
+
+**Built 2026-09-23 in `tools/gen-handshake-state.py`, as `DRAFT_QUALIFIER`.**
+When the newest lap is held, the open state now ends ` (draft — lap not released
+for reading)`. Closed and released states are unchanged. The test,
+`test_a_held_lap_banner_says_it_is_a_draft`, reads the expected string out of
+Platterpus's round 23 lap 2 table, the shape they ran through their parser,
+rather than retyping it. It is revert-proved. **It ships in no release yet**: a
+build of the tip carries it, and `+platterpus.15` is the first release that
+can. The history below is kept because it is why the ledger in the proposed v6
+§5e exists.
 
 **Status 2026-09-22, found by the pre-round-24 document audit: the change was
 agreed and nobody implemented it.** Round 23 §0.2 asked for a qualifier —

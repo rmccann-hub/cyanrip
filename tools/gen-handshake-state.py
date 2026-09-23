@@ -52,6 +52,11 @@ rg = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(rg)
 
 
+# The exact text agreed in round 23 §0.2. It is a value of a parsed line, so it
+# is contract surface: change it only in a round.
+DRAFT_QUALIFIER = " (draft — lap not released for reading)"
+
+
 def c_string(s):
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
@@ -139,6 +144,16 @@ def main():
             released = 1 if (args.declare_released and not _known_dirty()) else 0
         else:
             state = f"round {latest.number}{lap} OPEN, verdict {verdict}"
+            # Round 23 §0.2, agreed in Platterpus's round 23 lap 2 ("Go ahead
+            # and land it") after they ran four banner shapes, this one
+            # included, through their real parser. A HELD lap's verdict is a
+            # draft: it may still be revised, and the banner published it as
+            # settled. Every held lap since the field existed did so, which
+            # our round 23 lap 1 measured at 623251c. Only the open state
+            # carries it. A released build cannot, because the gate refuses to
+            # close a round whose newest lap is held.
+            if latest.held:
+                state += DRAFT_QUALIFIER
             released = 0
         peer = latest.app_version or latest.peer_version or "not recorded"
 

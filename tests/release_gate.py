@@ -1277,6 +1277,62 @@ def test_released_is_declared_and_defaults_to_off():
     shutil.rmtree(repo.parent, ignore_errors=True)
 
 
+def test_a_held_lap_banner_says_it_is_a_draft():
+    """Covers: round 23 §0.2, agreed in Platterpus's round 23 lap 2.
+
+    A held lap's verdict is a draft, and the compiled banner used to publish it
+    as settled. The expected string is NOT typed here: it is read out of the
+    table in their lap 2, where they ran it through their real parser. So a
+    wording drift on our side fails against the text they accepted, not against
+    a copy of our own constant.
+    """
+    import subprocess, shutil
+    root = HERE.parent
+    theirs = (root / "docs" / "handshake" / "inbound" /
+              "round-23-lap-02.md").read_text(encoding="utf-8")
+    m = re.search(r"^\| `(round 23 lap 1 OPEN, verdict GO \(draft[^`]*\))` \|",
+                  theirs, re.M)
+    check(m is not None, "their lap 2 no longer carries the draft banner shape")
+    if m is None:
+        return
+    agreed = m.group(1).replace("round 23 lap 1", "round 99 lap 1")
+
+    work = pathlib.Path(tempfile.mkdtemp()) / "tree"
+    (work / "docs" / "handshake").mkdir(parents=True)
+    shutil.copytree(root / "tools", work / "tools")
+    shutil.copy(root / "docs" / "handshake" / "round-08-lap-17.md",
+                work / "docs" / "handshake")
+
+    def state():
+        out = subprocess.run(
+            [sys.executable, str(work / "tools" / "gen-handshake-state.py")],
+            capture_output=True, text=True, check=True).stdout
+        m = re.search(r'^#define HANDSHAKE_STATE\s+"(.*)"$', out, re.M)
+        return m.group(1) if m else None
+
+    closed = state()
+    check(closed == "round 8 lap 17 closed, verdict GO",
+          f"the closed control changed: {closed!r}")
+
+    lap = work / "docs" / "handshake" / "round-99-lap-01.md"
+    body = ("HANDSHAKE-PROTOCOL: 5\nHANDSHAKE-ROUND: 99\nHANDSHAKE-LAP: 1\n"
+            "HANDSHAKE-FROM: cyanrip-fork\nHANDSHAKE-VERDICT: GO\n{ready}")
+    lap.write_text(body.format(ready="HANDSHAKE-READY-TO-READ: no\n"),
+                   encoding="utf-8")
+    check(state() == agreed,
+          f"a held lap's banner is not the agreed shape: {state()!r} != {agreed!r}")
+    # Fails closed: a lap that does not say it is released is held.
+    lap.write_text(body.format(ready=""), encoding="utf-8")
+    check(state() == agreed,
+          f"a lap declaring no READY-TO-READ was not marked a draft: {state()!r}")
+    # The same lap released: no qualifier, and the round is still open.
+    lap.write_text(body.format(ready="HANDSHAKE-READY-TO-READ: yes\n"),
+                   encoding="utf-8")
+    check(state() == "round 99 lap 1 OPEN, verdict GO",
+          f"a released lap was marked a draft: {state()!r}")
+    shutil.rmtree(work.parent, ignore_errors=True)
+
+
 def test_the_tarball_install_path_can_still_declare():
     """Covers: round 10 §J1(b), the trap inside the fix.
 
