@@ -273,11 +273,13 @@ SENT = {
     # operator chose "Release lap 6 + cut .16".
     "round-26-lap-06.md":
         "a5338b204785ee5569432e38fc3ce0c6ba96e091b59c9938b32327d60c599bc3",
-    # Round 27 lap 1 is NOT pinned, and was once. It was marked released at
-    # 87facd5 (f44de648...) and returned to held under the operator's override
-    # of K1, because it had not been passed to Platterpus: "we have not send
-    # the lap, they have not seen the lap". The lap records that override. Pin
-    # it again in the commit that releases it.
+    # Round 27 lap 1, pinned in the commit that releases its revision. It was
+    # first marked released at 87facd5 (f44de648...), returned to held under
+    # the operator's override of K1 and revised to name Platterpus 0.6.59, and
+    # released again once v0.6.59's tag showed PIN_UNDER_REVIEW 221a1df.
+    # Platterpus's lap 2 answers the first version; the lap says so.
+    "round-27-lap-01.md":
+        "c3a7a2a4ae5856d401a9544acee010160b6c4cb8f65dbcf9eb117976edde183d",
 }
 
 failures = 0

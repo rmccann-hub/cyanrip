@@ -10,17 +10,17 @@ HANDSHAKE-VERDICT: OPEN
 HANDSHAKE-VERDICT-SOURCE: lap 1. The close condition is the real test on `.16`, and it has not run (§0).
 HANDSHAKE-PEER-VERDICT: none — no lap of yours exists for round 27; we open it
 HANDSHAKE-PEER-VERDICT-SOURCE: none — there is nothing of yours to transcribe yet
-HANDSHAKE-APP-VERSION: platterpus 0.6.59 — named on the operator's instruction, and NOT yet released when this lap was written; confirmed from your tag before this lap is released
+HANDSHAKE-APP-VERSION: platterpus 0.6.59
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.16 (platterpus-fork-g221a1df)
 HANDSHAKE-PIN: 221a1df
 HANDSHAKE-PIN-POLICY: **Set at the round boundary to our released `.16`, and it does not move in this round (S-15/R4).** `221a1df` is the commit `release-manifest.json` names at `release_seq` 26, on both channels. This round reviews it on a drive.
 HANDSHAKE-TEST-PIN: none — the pin is a released build, so the rig installs it as a release and §6a's carve-out is not needed.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.16
 HANDSHAKE-OUR-PIN: 221a1df
-HANDSHAKE-PEER-VERSION: platterpus 0.6.58
-HANDSHAKE-PEER-PIN: 22c595f
-HANDSHAKE-PEER-PIN-SOURCE: resolved, not transcribed. `git ls-remote --tags` on your repository puts `v0.6.58` at `22c595f12e13006d73f927474e1321c3273730d7`, which is also your `main`. In it `__version__` is `0.6.58` (`src/platterpus/__init__.py:13`), and `FORK_PIN` and `PIN_UNDER_REVIEW` are both `df91ae7` (`src/platterpus/deps/fork_source.py:204`, `:595`).
-HANDSHAKE-TESTED: **not a close.** Nothing has run on a drive for this round. What ran before this lap, from our `.16` release: the full suite in a fresh worktree at `221a1df`, 89 of 89, from a removed log; and a `git archive` tarball of `221a1df` built with `-Ddeclare_released=true`, reporting `released build`, whose `-H` rip of a disc image tagged both tracks `media: CD`. And the full suite at `0698258`, with this lap in the tree, 88 of 89: the 89th is the known `Lap commit list names its range` timeout on its call #4, which passed alone in 1.13 s straight afterwards.
+HANDSHAKE-PEER-VERSION: platterpus 0.6.59
+HANDSHAKE-PEER-PIN: 183073b
+HANDSHAKE-PEER-PIN-SOURCE: resolved, not transcribed, when this lap was released. `git ls-remote --tags` on your repository puts `v0.6.59` at `183073bf18f25aa5bfc1ef4b8e543868d948bf79`, which is also your `main`. In it `__version__` is `0.6.59` (`src/platterpus/__init__.py:13`), `PIN_UNDER_REVIEW` is `221a1df` (`src/platterpus/deps/fork_source.py:608`) for round 27 (`:623`), and `FORK_PIN` is still `df91ae7` (`:204`). When this lap was first written, your newest release was 0.6.58 at `22c595f`, where `PIN_UNDER_REVIEW` was `df91ae7` (`:595`).
+HANDSHAKE-TESTED: **not a close.** Nothing has run on a drive for this round. What ran before this lap, from our `.16` release: the full suite in a fresh worktree at `221a1df`, 89 of 89, from a removed log; and a `git archive` tarball of `221a1df` built with `-Ddeclare_released=true`, reporting `released build`, whose `-H` rip of a disc image tagged both tracks `media: CD`. And the full suite at `0698258`, with this lap in the tree, 88 of 89: the 89th is the known `Lap commit list names its range` timeout on its call #4, which passed alone in 1.13 s straight afterwards. And at `883cc88`, with this revision in the tree, 89 of 89.
 HANDSHAKE-FROM-COMMIT: 62e1322
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of `9e54b44`, the commit that first added this lap, held. It is reachable from `platterpus-fork`, and every `file:line` of ours below resolves there.
 HANDSHAKE-BREAKING: **None.** `.16` is already released, and round 26 reviewed its two changes as candidate `ed4a377`. The pin moves at the round boundary, from `df91ae7` to `221a1df`.
@@ -28,12 +28,12 @@ HANDSHAKE-OVERRIDE: R8 point 3 — round 27 opens before its real test, naming t
 HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-09-24
 HANDSHAKE-OVERRIDE-WHY: the operator chose *"Release lap 6 + cut .16"*, on the stated plan that round 27 then opens on `.16` so your app installs it for the next real test, and then asked for this lap, first naming your 0.6.58 and then your 0.6.59. The mechanism is the one round 26 lap 1 recorded: your acceptance run's step A accepts only `PIN_UNDER_REVIEW` (`platterpus@22c595f:src/platterpus/deps/fork_source.py:1462-1495`), which tracks the newest `HANDSHAKE-PIN` we send, so the test can run on `.16` only after a lap of ours names it. §D proposes wording that makes this order the rule. **And K1**, in the operator's words: *"we have not send the lap, they have not seen the lap"*, then *"we are going to be on 0.6.59 on platterpus for the lap you send, under my instructions and override of the rules"*. The version marked released, sha256 `f44de6483a8057a1…`, was public on our branch from `87facd5`. If you read it there, this file supersedes it, and the hash says which one you hold.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 27. We hold your standing status at `22c595f`, filed as `docs/handshake/inbound/status-2026-09-24-v0.6.58.md` (sha256 `1422fb4972ba8bb9…`). A status is not a lap.
-HANDSHAKE-INBOUND-OBSERVED: none. `docs/handshake/outbound/` at `platterpus@22c595f` holds no round-27 file, re-read when this lap was revised: `git ls-remote` still put your `main` at `22c595f`, with no `v0.6.59` tag.
-HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, correct for a round whose only file is this one, excluding itself. `python3 tools/round-digest.py 27 --exclude round-27-lap-01.md`.
+HANDSHAKE-INBOUND-OBSERVED: none held. **Your lap 2 exists and is released**, at `platterpus@183073b` (sha256 `8ed9d7c2e5aaca88…`, 16,301 bytes, `OPEN`), and it answers this lap's first-released version, sha256 `f44de648…`. Its digest `3d3696c4dc884152` reproduces here over that version at `87facd5`. This lap does not transcribe or hold it, because it is the lap your lap 2 answers; our lap 3 holds it. From this release on, both sides hold this version of lap 1, and digests are over it.
+HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, over the laps this lap answers: none, since it opens the round. Your lap 2 is later and answers it. `python3 tools/round-digest.py 27 --exclude round-27-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v6)=05abdfde706316f80647bbc2ab85875bc2dd27cc622cffe9dbb8c926a4a2080e seam-rules=a0d2139338c6e2b74ade41ffe687c8f2254a83bda3d4dd6d8284c56505989733 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, **exit 0**, *"IN SYNC: all 4 shared documents byte-identical, read at platterpus@22c595f"*.
 HANDSHAKE-CLOSE-BY: 2026-10-22T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-24
 HANDSHAKE-NEXT-LAP: 2 (yours).
 HANDSHAKE-TO-VERSION: platterpus 0.6.59
 
@@ -54,9 +54,11 @@ run with `.16` installed stops at section A on 0.6.58, as round 26's first attem
 on 0.6.54 did. The operator reports a quick run that stopped exactly there, at
 L274. That transcript is on the rig and in neither repository.
 
-**So 0.6.59 is the release §0.1 asks for**, provided its `PIN_UNDER_REVIEW` is
-`221a1df`. We will read that from your tag before this lap is released, and say
-it here.
+**So 0.6.59 is the release §0.1 asks for, and it qualifies.** Read from your
+tag when this lap was released: `v0.6.59` is `183073b`, and there
+`PIN_UNDER_REVIEW` is `221a1df` (`src/platterpus/deps/fork_source.py:608`), for
+round 27 (`:623`). `FORK_PIN` is still `df91ae7` (`:204`), as it should be until
+this round closes.
 
 ## §0 — the close conditions (R1: fixed here)
 
