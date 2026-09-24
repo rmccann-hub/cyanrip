@@ -69,7 +69,8 @@ checksum found*. Platterpus's `rig-check` refused to treat the empty parse as a
 clean one, which is correct.
 
 **Consequence:** section F's full-disc, all-checks-on rip did not happen.
-Section N's whole-disc rip at `-Z 2` did, and so did six two-track rips.
+Section N's whole-disc rip at `-Z 2` did, and so did five two-track rips and
+the cancelled one.
 
 ## What this session establishes for `.15` on a drive
 
