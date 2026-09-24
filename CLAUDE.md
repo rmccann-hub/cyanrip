@@ -1971,16 +1971,24 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
+**`+platterpus.16` SHIPPED on 2026-09-24** at `221a1df`, `release_seq` 26,
+stable, authorised by **round 26** — `docs/RELEASE-PLAN-platterpus.16.md` is
+executed and bannered. It carries the two fixes from round 26's real test: an
+interrupted track left out of the AccurateRip tally, and `media` tagged `CD`
+under `-H`. No line's text changes and there is no consumer-side prerequisite.
+Platterpus's 0.6.56 follows it, pinning `df91ae7`, so their app offers `.16`
+marked `unapproved` until round 27 reviews it. **Round 27 has to open on `.16`
+before its real test**, as round 26 did on `.15`, because their acceptance run
+expects the newest pin we send. **The next release is `+platterpus.17` and
+nothing is written for it.**
+
 **`+platterpus.15` SHIPPED on 2026-09-23** at `df91ae7`, `release_seq` 25,
 stable, authorised by **round 25** — `docs/RELEASE-PLAN-platterpus.15.md` is
 executed and bannered. It is the first release under v6 R8, so a round's close
 authorised a release of both applications: ours first, then Platterpus 0.6.54
 pinning `3e01bb3`. Their app offers `.15` marked `unapproved` until round 26
 reviews it. It rounds the per-frame retry limit up to a multiple of 5, and it
-has no consumer-side prerequisite. **The next release is `+platterpus.16`.**
-Round 26's real test (2026-09-24) produced its two fixes, both landed: an
-interrupted track left out of the AccurateRip tally, and `media` tagged `CD`
-under `-H`. No plan is written for it yet.
+has no consumer-side prerequisite.
 
 **`+platterpus.14` shipped on 2026-09-22** at `3e01bb3`, `release_seq` 24,
 stable, authorised by **round 22** — `docs/RELEASE-PLAN-platterpus.14.md` is
@@ -2027,7 +2035,7 @@ tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
   front of them before it was made.
 
 **Plans that exist, all executed and bannered:** `.5`, `.12`, `.13`, `.14`,
-`.15`. `.15`'s is the short case: its round settled the channel, so it poses
+`.15`, `.16`. `.15`'s is the short case: its round settled the channel, so it poses
 nothing.
 **The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the
 newest, it followed the four-commit sequence exactly, and it is the first to pose
