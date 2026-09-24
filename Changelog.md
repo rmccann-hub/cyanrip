@@ -55,7 +55,10 @@ its own heading.
 installed through their app, and the bundle is filed at
 `docs/rig-2026-09-24-df91ae7/`. 258 of 261 steps passed. The three failures
 are one event: the ripper's container was stopped 95 s into the whole-disc
-rip, from outside both programs, and the log it left claims nothing.
+rip, and the log it left claims nothing. Neither program's log shows a signal
+or a cancel. Platterpus's round 27 lap 2 later traced the container to an
+earlier Platterpus window's systemd unit, fixed in their 0.6.59. What struck it
+is still not identified.
 
 **Two fixes from it, both older than `.15`, both upstream's too:**
 

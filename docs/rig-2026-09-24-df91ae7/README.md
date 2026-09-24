@@ -35,7 +35,25 @@ carries `-l 1,2` and `-D "{album_artist}/{album} (2)"`, so it is section H's
 overwrite re-rip. `full-acceptance-angle-bracket` carries no `-l`: it is
 section F's whole-disc rip, the one that was killed.
 
-## Section F was killed from outside both programs
+## Section F was killed, and neither program's log shows why
+
+**This heading said *"killed from outside both programs"*, and that was half
+wrong.** Corrected 2026-09-24 from Platterpus's round 27 lap 2, Correction 1,
+which read the operator's host journal. **That journal is in neither
+repository, so what follows is their reading, and we have not checked it.** The container belonged to **an earlier
+Platterpus window's systemd unit**: that window started it at 20:20:29, updated
+and relaunched itself inside the same unit at 21:12:50, and was closed at
+21:13:02, and the unit stayed alive because the container's monitor (`conmon`)
+was still in it. The acceptance run's new window, from 21:13:48, used that
+container. The container died at 21:16:15 and that unit ended. Their account of
+why `conmon` was in the unit is `INVOCATION_ID` left in the ripper wrapper's
+environment (`containers/podman@5866b09:libpod/oci_conmon_linux.go:183-186`;
+not read here, because a shortened SHA cannot be fetched by name), fixed in
+their 0.6.59. **What struck the container is still not identified**:
+their journal reading found no podman stop or kill, no systemd stop job, no OOM
+kill and no logout. So the container's vulnerability came from Platterpus, and
+the trigger came from something not yet identified. What follows is kept as
+first written, from the logs in this bundle, which still say what they say.
 
 Section F is the full-disc rip with every post-rip check on. It ran 1m 35s,
 and the container it ran in was stopped. From
@@ -51,7 +69,9 @@ and the container it ran in was stopped. From
 | 744 | 21:16:15.798 | **exit 137, 87 ms later**. That is SIGKILL, which no process can catch |
 | 805 | 21:16:15.932 | `cyanrip -V` exits **125**: *"unable to start container … creating temporary passwd file … `/etc/passwd`: no such file or directory"*. The `ripping` container was not running |
 
-**Neither program started it.** Platterpus installed handlers for SIGTERM and
+**Neither program started it.** *(Still true of the stop, which neither
+program logged, but the container's ownership was Platterpus's: see the
+correction above.)* Platterpus installed handlers for SIGTERM and
 SIGINT at line 9 and logged nothing on either one. It logged no cancel before
 line 744. In section I, where Platterpus does cancel a rip, it logs the cancel,
 a single SIGTERM and the footer's arrival. None of that is here.
@@ -60,7 +80,9 @@ a single SIGTERM and the footer's arrival. None of that is here.
 the host journal, `journalctl --since "2026-09-23 21:15" --until "2026-09-23
 21:17"`, both system and `--user`. One candidate is an automatic update service
 that upgrades distrobox containers, which some Fedora Atomic images run. That
-is a guess, and nothing here supports it.
+is a guess, and nothing here supports it. *(Platterpus's journal reading
+found no podman stop or kill event, which such a service would be expected to
+leave, so the guess is weaker still.)*
 
 **The log it left is truthful.** `rips/full-acceptance-angle-bracket.log`
 stops after `Tracks:`. It has no track block, no footer and no `Log FUN512:`,
