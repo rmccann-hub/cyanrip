@@ -269,6 +269,10 @@ SENT = {
     # 884a566 and released on the operator's word, "release lap 4".
     "round-26-lap-04.md":
         "7a56b1d2c62c5d7cfa5a4b2804b323c78d62f62890d9b44b267fd156205fdd0d",
+    # Round 26 lap 6, the close, pinned in the commit that releases it. The
+    # operator chose "Release lap 6 + cut .16".
+    "round-26-lap-06.md":
+        "a5338b204785ee5569432e38fc3ce0c6ba96e091b59c9938b32327d60c599bc3",
 }
 
 failures = 0
