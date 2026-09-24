@@ -1900,6 +1900,23 @@ KNOWN_UNREPRODUCIBLE = {
     # Pinned to their declared value so an edit to their file fails here. Comes
     # out when one method is agreed and a later lap of theirs declares under it.
     "round-15-lap-02.md": "a1ff77af1fd6e3cb",
+    # Round 27 lap 2, theirs. Declares `3d3696c4dc884152 over 1`; we re-derive
+    # `972bff8c70e11ca5` over the SAME COUNT of 1.
+    #
+    # ANOTHER CAUSE, AND THE ONLY ONE THAT IS OURS BY AN OVERRIDE: the
+    # populations agree, the algorithm agrees, and the BYTES of our lap 1
+    # differ. Our lap 1 was marked released at `87facd5` (sha256 `f44de648…`),
+    # then returned to held and revised under the operator's K1 override before
+    # it was passed on, and released again at `3a5cfc0` (sha256 `c3a7a2a4…`).
+    # Their lap 2 answers the first version, as its own INBOUND-HELD says.
+    #
+    # Reproduced rather than accepted: the digest row for `git show
+    # 87facd5:docs/handshake/round-27-lap-01.md` IS 3d3696c4dc884152. Our lap 3
+    # holds the second version and declares over it.
+    #
+    # Pinned to their declared value so an edit to their file fails here. It
+    # never comes out: their lap 2 is sent and immutable, and so is ours.
+    "round-27-lap-02.md": "3d3696c4dc884152",
 }
 
 
