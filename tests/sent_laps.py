@@ -265,6 +265,10 @@ SENT = {
     # "Open round 26 on .15" so that Platterpus installs .15 for the real test.
     "round-26-lap-01.md":
         "95a03f497fc291e903f4b60754cd7cc6fc2fe80d32d87070d1835a258cf776ec",
+    # Round 26 lap 4, pinned in the commit that releases it. Published held at
+    # 884a566 and released on the operator's word, "release lap 4".
+    "round-26-lap-04.md":
+        "7a56b1d2c62c5d7cfa5a4b2804b323c78d62f62890d9b44b267fd156205fdd0d",
 }
 
 failures = 0
