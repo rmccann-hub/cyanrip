@@ -23,6 +23,23 @@ say "probably" without saying what would settle it.
 
 ---
 
+## Fixed 2026-09-24, from round 26's real test — two claims older than `.15`
+
+Both were in logs we had filed for weeks. Neither was listed here, because
+nobody had read them as claims. `docs/rig-2026-09-24-df91ae7/README.md` has
+the evidence.
+
+- **An interrupted track was counted in `Tracks ripped partially accurately:`.**
+  A read stopped past sector 450 leaves a complete one-sector `Accurip 450`
+  checksum, which matches, so every interrupted rip printed `1/14` above `0 of
+  14 tracks`. It is in eight filed `cancel-me.log` files, and Platterpus's
+  report flagged it before we did. The tally now counts only tracks with
+  `audio_ripped` set. Pinned by `test_disc_tally_skips_an_interrupted_track` in
+  `tests/logrender.c`.
+- **`-H` tagged every file `media: HDCD`**, from the setting, beside `HDCD
+  detected: no`. The tag is now `CD`. Pinned by the `media_tag` scenario, which
+  reads the tag out of the FLAC file itself. Upstream's code.
+
 ## Fixed 2026-09-23 — a retry limit that could hang on one bad sector
 
 ### `-r` values that are not a multiple of 5 never returned on an unreadable sector
@@ -503,6 +520,21 @@ enforcing `HANDSHAKE-CLOSE-BY`: *enforcement lets a clock skew block a release*.
 A 30-second default doing the same thing to a release is the same shape, one
 layer down.
 
+### The album loudness block describes whatever was read, and calls it the album
+
+**Found in round 26's real test.** `docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:75`
+prints `Album integrated loudness (R128): -14.4 LUFS` for a rip interrupted
+about 40% of the way into track 1, with `0 of 14 tracks` completed. It is the
+loudness of the audio that passed through the `ebur128` graph, which on an
+interrupted rip is a partial track, and on every `-l` rip is the selected
+tracks only. The four owned rows and libavfilter's block both say "Album".
+
+**Not fixed, because the fix is a wording decision.** The candidates are
+leaving the four owned rows out when not every track of the disc was ripped,
+or adding a scope line beside them as `Scope:` does for paranoia. Both change
+rows Platterpus parses into `album_loudness`. It belongs to the next round,
+with the consumer's answer first.
+
 ### Every figure the log reports about the audio is measured BEFORE the filter graph
 
 **Found by the 2026-09-22 acceptance session, and it is not the defect it looks
@@ -618,7 +650,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: ten of them**, derived
+session that produced a `Cache probe:` line is here now: eleven of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -639,6 +671,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-15b `fe4d2c4` | 362.7 ms | 81.6 ms | 90.7 ms | **90%** |
 | 2026-09-17 `fe4d2c4` | 362.8 ms | 62.2 ms | 90.7 ms | 69% |
 | 2026-09-22 `2cce60d` | 251.4 ms | 42.1 ms | 62.9 ms | 67% |
+| 2026-09-24 `df91ae7` | 382.7 ms | 82.2 ms | 95.7 ms | 86% |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -646,12 +679,14 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, ten times. "A cached read of a few ms":
-FALSIFIED** — 42 to 82, not 2.2. All ten end identically, at
+**Hundreds of ms uncached: confirmed, eleven times. "A cached read of a few ms":
+FALSIFIED** — 42 to 82, not 2.2. All eleven end identically, at
 `at least 2048 sectors … search ceiling reached`. The tenth, 2026-09-22, is the
 first on `2cce60d` and the first taken inside a full acceptance session; it
 changes nothing, which is the point — **ten runs, three builds, four calibration
-clusters, one answer.**
+clusters, one answer.** The eleventh, 2026-09-24 on `df91ae7`, round 26's real
+test, calibrated `miss_cost` at 382.7 ms, higher than any row above, and ended
+the same way.
 
 **THE FOUR-RUN CONTROL, which is what the missing rows were hiding.** Sessions
 09-10, 09-11, 09-15 and 09-15b calibrated `miss_cost` at **363.2, 362.5, 362.6
@@ -972,7 +1007,7 @@ coverage.
 
 | gap | status |
 |---|---|
-| `-x` correctness on a real drive | **measured ten times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-22. This cell said *"measured twice"* while the table above held nine rows |
+| `-x` correctness on a real drive | **measured eleven times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-24. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
 | damaged media | never tested; no damaged disc available |

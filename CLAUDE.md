@@ -64,8 +64,8 @@ settled by building 0.9.3 and running it. The measured matrix is
 
   **AND THE NUMBER IT REPORTS IS WRONG BY ROUGHLY FIFTEEN TIMES.** `cd-paranoia
   -A` on the same drive says **137 sectors, then 140**; we say *at least 2048*
-  on **every** run that has produced the line — **ten** filed sessions as of
-  2026-09-22, the tenth on `2cce60d` inside a full acceptance session, derived by
+  on **every** run that has produced the line — **eleven** filed sessions as of
+  2026-09-24, the eleventh on `df91ae7` in round 26's real test, derived by
   scanning the transcripts rather than counted from memory; this said "all three"
   for a month while five more existed, and then "nine" for five days after the
   tenth was filed. **The ceiling is not why** — `miss_cost` is
@@ -882,9 +882,10 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is nine**: eight
+   tally that said "all three" while five more existed. **It is eleven**: eight
    counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather than
-   remembered, and a ninth added there on 2026-09-23. Each has a re-check
+   remembered, a ninth added there on 2026-09-23, and two more on 2026-09-24
+   from round 26's real test. Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
    1. `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a
@@ -910,8 +911,13 @@ should need rewriting. If it does, that is the defect.
       unreadable sector** at the default paranoia level. Found 2026-09-23 by
       fault injection (`tests/badsector.c`); fixed here by
       `crip_frame_retry_limit()`.
+  10. `media` is tagged from the `-H` **setting**, so every `-H` rip says
+      `HDCD` beside `HDCD detected: no`. Fixed here: the tag is `CD`.
+  11. The AccurateRip tally counts a track whose read was **interrupted**,
+      because a one-sector `Accurip 450` over a partial read still matches.
+      Read from upstream's source, not run. Fixed here by `audio_ripped`.
 
-   **Not filed is not fixed, and nine unfiled reports is the private garden
+   **Not filed is not fixed, and eleven unfiled reports is the private garden
    this rule forbids.** Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — but the count belongs
    here where it can be checked, and it is checked by the same command as every
@@ -1971,8 +1977,10 @@ executed and bannered. It is the first release under v6 R8, so a round's close
 authorised a release of both applications: ours first, then Platterpus 0.6.54
 pinning `3e01bb3`. Their app offers `.15` marked `unapproved` until round 26
 reviews it. It rounds the per-frame retry limit up to a multiple of 5, and it
-has no consumer-side prerequisite. **The next release is `+platterpus.16` and
-nothing is written for it.**
+has no consumer-side prerequisite. **The next release is `+platterpus.16`.**
+Round 26's real test (2026-09-24) produced its two fixes, both landed: an
+interrupted track left out of the AccurateRip tally, and `media` tagged `CD`
+under `-H`. No plan is written for it yet.
 
 **`+platterpus.14` shipped on 2026-09-22** at `3e01bb3`, `release_seq` 24,
 stable, authorised by **round 22** — `docs/RELEASE-PLAN-platterpus.14.md` is
