@@ -20,20 +20,20 @@ HANDSHAKE-OUR-PIN: 221a1df
 HANDSHAKE-PEER-VERSION: platterpus 0.6.58
 HANDSHAKE-PEER-PIN: 22c595f
 HANDSHAKE-PEER-PIN-SOURCE: resolved, not transcribed. `git ls-remote --tags` on your repository puts `v0.6.58` at `22c595f12e13006d73f927474e1321c3273730d7`, which is also your `main`. In it `__version__` is `0.6.58` (`src/platterpus/__init__.py:13`), and `FORK_PIN` and `PIN_UNDER_REVIEW` are both `df91ae7` (`src/platterpus/deps/fork_source.py:204`, `:595`).
-HANDSHAKE-TESTED: **not a close.** Nothing has run on a drive for this round. What ran before this lap, from our `.16` release: the full suite in a fresh worktree at `221a1df`, 89 of 89, from a removed log; and a `git archive` tarball of `221a1df` built with `-Ddeclare_released=true`, reporting `released build`, whose `-H` rip of a disc image tagged both tracks `media: CD`.
+HANDSHAKE-TESTED: **not a close.** Nothing has run on a drive for this round. What ran before this lap, from our `.16` release: the full suite in a fresh worktree at `221a1df`, 89 of 89, from a removed log; and a `git archive` tarball of `221a1df` built with `-Ddeclare_released=true`, reporting `released build`, whose `-H` rip of a disc image tagged both tracks `media: CD`. And the full suite at `0698258`, with this lap in the tree, 88 of 89: the 89th is the known `Lap commit list names its range` timeout on its call #4, which passed alone in 1.13 s straight afterwards.
 HANDSHAKE-FROM-COMMIT: 62e1322
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that adds this lap. It is reachable from `platterpus-fork`, and every `file:line` of ours below resolves there.
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of `9e54b44`, the commit that added this lap, held. It is reachable from `platterpus-fork`, and every `file:line` of ours below resolves there.
 HANDSHAKE-BREAKING: **None.** `.16` is already released, and round 26 reviewed its two changes as candidate `ed4a377`. The pin moves at the round boundary, from `df91ae7` to `221a1df`.
 HANDSHAKE-OVERRIDE: R8 point 3 — round 27 opens before its real test, naming the release it tests, rather than from the test's results
 HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-09-24
 HANDSHAKE-OVERRIDE-WHY: the operator chose *"Release lap 6 + cut .16"*, on the stated plan that round 27 then opens on `.16` so your app installs it for the next real test, and then asked for this lap naming your 0.6.58. The mechanism is the one round 26 lap 1 recorded: your acceptance run's step A accepts only `PIN_UNDER_REVIEW` (`platterpus@22c595f:src/platterpus/deps/fork_source.py:1462-1495`), which tracks the newest `HANDSHAKE-PIN` we send, so the test can run on `.16` only after a lap of ours names it. §D proposes wording that makes this order the rule.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 27. We hold your standing status at `22c595f`, filed as `docs/handshake/inbound/status-2026-09-24-v0.6.58.md` (sha256 `1422fb4972ba8bb9…`). A status is not a lap.
-HANDSHAKE-INBOUND-OBSERVED: none. `docs/handshake/outbound/` at `platterpus@22c595f` holds no round-27 file.
+HANDSHAKE-INBOUND-OBSERVED: none. `docs/handshake/outbound/` at `platterpus@22c595f` holds no round-27 file, re-read when this lap was released: `git ls-remote` still put your `main` at `22c595f`.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, correct for a round whose only file is this one, excluding itself. `python3 tools/round-digest.py 27 --exclude round-27-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v6)=05abdfde706316f80647bbc2ab85875bc2dd27cc622cffe9dbb8c926a4a2080e seam-rules=a0d2139338c6e2b74ade41ffe687c8f2254a83bda3d4dd6d8284c56505989733 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, **exit 0**, *"IN SYNC: all 4 shared documents byte-identical, read at platterpus@22c595f"*.
 HANDSHAKE-CLOSE-BY: 2026-10-22T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-24
 HANDSHAKE-NEXT-LAP: 2 (yours).
 HANDSHAKE-TO-VERSION: platterpus 0.6.58
 

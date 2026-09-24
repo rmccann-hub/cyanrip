@@ -3,7 +3,8 @@ Unreleased
 `+platterpus.16` shipped at `221a1df` on 2026-09-24; its notes are below, under
 its own heading. Nothing in `src/` has changed since.
 
-**Round 27 lap 1 is published, held**: it opens round 27 on `.16` before its
+**Round 27 lap 1 was published held and released by the operator on
+2026-09-24**: it opens round 27 on `.16` before its
 real test, by the operator's override of R8 point 3, and names Platterpus 0.6.58
 as their newest release. It says, from their code, that 0.6.58 cannot run the
 test: its `PIN_UNDER_REVIEW` is still `df91ae7`.
