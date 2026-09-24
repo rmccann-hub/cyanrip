@@ -335,7 +335,10 @@ the code does not have is the defect that let this go unnoticed.
 occurrence falsified it.** That is the number-incremented-rather-than-derived
 defect, in the file that records it, and it is the same one that turned three
 `SETTLED.md` rows stale on 2026-09-22. The dated occurrences below are the
-record; the heading states the property. **Eighth occurrence 2026-09-24** at
+record; the heading states the property. **Ninth occurrence 2026-09-24** at
+`eb29e6b`, in a full suite: `Ok: 88  Timeout: 1`, `30.09s`, call #4 again after
+three calls took 3.29 s, and **1.20 s** standalone straight afterwards.
+**Eighth occurrence 2026-09-24** at
 `22dc7d7`, in a full suite: `Ok: 88  Timeout: 1`, `30.01s`, `SIGTERM`, and again
 *"THE CALL THAT HUNG IS #4: 16 9 --head 59cb5a9"* after three calls took
 2.22 s. **1.23 s** standalone immediately afterwards. **Seventh occurrence 2026-09-23** at
