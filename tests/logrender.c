@@ -969,6 +969,9 @@ static void setup_disc(cyanrip_ctx *ctx, int nb)
     for (int i = 0; i < nb; i++) {
         base_track(&ctx->tracks[i]);
         ctx->tracks[i].number = i + 1;
+        /* A finished read, which is what a track in the tally must be. The
+         * interrupted case clears it deliberately. */
+        ctx->tracks[i].audio_ripped = 1;
     }
 }
 
@@ -1090,6 +1093,7 @@ static void test_disc_tally_stops_at_the_track_count(void)
                                        .checksum_450 = 0x44444444 };
     /* Three tracks are prepared and only two are declared. */
     base_track(&ctx->tracks[2]);
+    ctx->tracks[2].audio_ripped = 1;
     for (int i = 0; i < 3; i++) {
         cyanrip_track *t = &ctx->tracks[i];
         t->ar_db_status = CYANRIP_ACCUDB_FOUND;
@@ -1161,6 +1165,51 @@ static void test_disc_tally_450_threshold_boundary(void)
         FAIL("disc-tally/450-boundary: a 450 match sitting exactly ON the 3/4 "
              "threshold was counted as partially accurate; the rule is above "
              "it, and it is written out three separate times");
+    free_ctx(ctx);
+}
+
+/* An interrupted track is not in the tally at all, and the partial line is
+ * the one that proved it.
+ *
+ * Round 26's real test: a SIGTERM mid-way through track 1 left the log
+ * printing `Tracks ripped partially accurately: 1/14` above `0 of 14 tracks`,
+ * with no track block to hold a matching `Accurip 450` line. The read had
+ * passed sector 450, so that one-sector checksum was complete and matched; v1
+ * and v2 over a partial read could not. Both arms are given a would-count
+ * checksum here, so the gate is tested on the exact line as well as on the
+ * partial one. */
+static void test_disc_tally_skips_an_interrupted_track(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 3);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 8, .checksum = 0x11111111,
+                                       .checksum_450 = 0x44444444 };
+    for (int i = 0; i < 3; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+        t->ar_db_entries = ar_entries;
+        t->ar_db_nb_entries = 1;
+        t->ar_db_max_confidence = 8;      /* threshold 6, so 8 counts */
+    }
+    /* Track 1 finished and matched exactly: the control. */
+    ctx->tracks[0].acurip_checksum_v1 = 0x11111111;
+    /* Track 2 was interrupted with only its 450 sector matching -- the rig's
+     * case. */
+    ctx->tracks[1].audio_ripped = 0;
+    ctx->tracks[1].acurip_checksum_v1 = 0xDEADBEEF;
+    ctx->tracks[1].acurip_checksum_v1_450 = 0x44444444;
+    /* Track 3 was interrupted with a v1 match, which a partial read cannot
+     * really produce; it is here so the exact arm is gated too. */
+    ctx->tracks[2].audio_ripped = 0;
+    ctx->tracks[2].acurip_checksum_v1 = 0x11111111;
+
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    expect_line(out, "Tracks ripped accurately: 1/3", "disc-tally/interrupted");
+    if (strstr(out, "Tracks ripped partially accurately"))
+        FAIL("disc-tally/interrupted: a track whose read did not finish was "
+             "counted as partially accurate -- it has no track block, and the "
+             "footer says it was not ripped");
     free_ctx(ctx);
 }
 
@@ -1325,6 +1374,7 @@ int main(void)
     test_disc_tally_stops_at_the_track_count();
     test_disc_tally_zero_confidence_is_not_a_verification();
     test_disc_tally_450_threshold_boundary();
+    test_disc_tally_skips_an_interrupted_track();
 
     test_embedded_cover_art_picks_front();
     test_embedded_cover_art_gating();

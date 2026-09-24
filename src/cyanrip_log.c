@@ -903,7 +903,21 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
         int accurip_partial = 0;
         for (int i = 0; i < ctx->nb_tracks; i++) {
             cyanrip_track *t = &ctx->tracks[i];
-            if (t->ar_db_status == CYANRIP_ACCUDB_FOUND) {
+            /* Only a track whose read FINISHED is in the tally, which makes it
+             * a count of per-track `Accurip` lines by construction: the track
+             * block is written at the one place audio_ripped is set.
+             *
+             * It used to count every track in the database. A read interrupted
+             * past sector 450 leaves a complete `Accurip 450` checksum -- one
+             * sector, so it matches -- beside v1 and v2 over a partial read,
+             * which cannot. So every interrupted rip on the rig printed
+             * `Tracks ripped partially accurately: 1/14` above `Rip completed:
+             * no (interrupted by SIGTERM, 0 of 14 tracks)`, for a track with
+             * no block at all: eight filed logs, 2026-09-10 to the round-26
+             * real test, and Platterpus's report flagged the disagreement
+             * before we did. The -j record already gates its checksums on the
+             * same flag for the same reason. */
+            if (t->ar_db_status == CYANRIP_ACCUDB_FOUND && t->audio_ripped) {
                 if ((crip_find_ar(t, t->acurip_checksum_v1, 0) > 0) ||
                     (crip_find_ar(t, t->acurip_checksum_v2, 0) > 0))
                     accurip_verified++;
