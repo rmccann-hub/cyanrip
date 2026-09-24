@@ -659,6 +659,43 @@ def audit_held_inbound():
     return fails
 
 
+# A lap of OURS that was marked released, then returned to held and revised
+# before the operator passed it on, under a recorded K1 override. The peer may
+# answer the first version, so their quote is a true claim about a file this
+# tree no longer holds. Each entry names the commit whose copy the quote must
+# match, and is CHECKED against it, not excused: the old copy must hash to the
+# quote, and the current file must declare a K1 override. Round 27 lap 1 is
+# the first: marked released at 87facd5, released again at 3a5cfc0, and
+# Platterpus's lap 2 holds the first version.
+REVISED_UNDER_OVERRIDE = {
+    ("round-27-lap-01.md", "f44de6483a8057a1"): "87facd5",
+}
+
+OVERRIDE_K1 = re.compile(r"^HANDSHAKE-OVERRIDE:.*\bK1\b", re.M)
+
+
+def revised_under_override(tgt, h):
+    """None when (tgt, h) is not listed; else (ok, detail)."""
+    commit = REVISED_UNDER_OVERRIDE.get((tgt.name, h[:16]))
+    if commit is None:
+        return None
+    rel = tgt.relative_to(ROOT).as_posix()
+    r = subprocess.run(["git", "-C", str(ROOT), "show", f"{commit}:{rel}"],
+                       capture_output=True)
+    if r.returncode != 0:
+        return False, f"git show {commit}:{rel} failed, so the listed copy " \
+                      f"cannot be checked"
+    old = hashlib.sha256(r.stdout).hexdigest()
+    if not old.startswith(h):
+        return False, f"the copy at {commit} hashes {old[:16]}\u2026, not the quote"
+    text = rg.strip_fences(tgt.read_text(encoding="utf-8", errors="replace"))
+    if not OVERRIDE_K1.search(text):
+        return False, f"{tgt.name} declares no K1 override, so the revision " \
+                      f"is an edit of a sent lap"
+    return True, f"the version at {commit}, revised under the K1 override " \
+                 f"its HANDSHAKE-OVERRIDE declares"
+
+
 def audit_held():
     """Check every hash the peer has quoted back at us against our own files."""
     inbound = sorted((HS / "inbound").glob("round-*.md"))
@@ -682,7 +719,19 @@ def audit_held():
                          artifact=str(p.relative_to(ROOT)))
                     continue
                 real = hashlib.sha256(tgt.read_bytes()).hexdigest()
-                if not real.startswith(h):
+                rev = None if real.startswith(h) else revised_under_override(tgt, h)
+                if rev and rev[0]:
+                    note("OK", "held/revised",
+                         f"{p.name} holds our round {r} lap {lap} at "
+                         f"{h[:16]}\u2026 \u2014 {rev[1]}")
+                elif rev:
+                    fails += 1
+                    note("FAIL", "held/revised",
+                         f"{p.name} quotes {h[:16]}\u2026 for our round {r} "
+                         f"lap {lap}, listed as revised under an override, "
+                         f"and {rev[1]}",
+                         artifact=str(tgt.relative_to(ROOT)))
+                elif not real.startswith(h):
                     fails += 1
                     note("FAIL", "held/mismatch",
                          f"{p.name} quotes {h[:16]}\u2026 for our round {r} "
