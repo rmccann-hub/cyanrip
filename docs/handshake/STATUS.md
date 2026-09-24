@@ -1,7 +1,7 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-26-lap-01.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-26-lap-04.md
+STATUS-NEWEST-LAP-STATE: held
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
@@ -30,7 +30,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-09-23, after Platterpus 0.6.54
+## Now — rewritten 2026-09-24, after round 26's real test
 
 **This section is the whole of what this file claims.** Everything below it is
 either the release table a consumer reads or the rig procedure the suite
@@ -46,7 +46,8 @@ checks, and neither is a dated state.
 | what `.15` changed | the per-frame retry limit is rounded up to a multiple of 5, so `-r 3` no longer hangs on an unreadable sector at the default paranoia level; `Retry limit:` gains a second form when the two limits differ. A held lap's `Handshake:` verdict is marked as a draft, which no release prints. `docs/RELEASE-PLAN-platterpus.15.md` |
 | gate | `--release-gate` exits **1** and names round 26, which is open. That is correct: `.15` is released on round 25's authority, and round 26 reviews it on a drive |
 | the tip | **the release's publish commit and after.** Build from the release commit, not the tip |
-| next | **the operator's real test**: Platterpus **0.6.54** installs `.15` through its update dialog's *"Install it anyway"*, and its full acceptance run expects `df91ae7` at step A. The bundle goes into both repositories, then our round 26 lap 3 reads it |
+| next | **`.16`**, once round 26 closes on our gate. Its `src/` is `ed4a377`'s: `.15`'s plus two fixes from the real test, an interrupted track left out of the AccurateRip tally (`f26668b`) and `media` tagged `CD` under `-H` (`ed4a377`). No plan is written yet |
+| the real test | **ran 2026-09-24** on Platterpus **0.6.55** with `.15`, and **did not pass**: 258 of 261. The three failures are one event, the ripper's container stopped from outside both programs during section F. Filed at `docs/rig-2026-09-24-df91ae7/`; our reading is in our lap 4 |
 
 **`.15` is stable because round 25 authorised it, and the build itself is
 round 26's to review.** Round 25 reviewed its content as candidate `61711f1`.
@@ -61,7 +62,7 @@ mark: their offer states it, and a person decides. **Their users get the
 
 | | |
 |---|---|
-| **round 26** | **OPEN** since 2026-09-23, opened by our lap 1 on **`df91ae7`** (`.15`) **before** the real test, by the operator's override of R8 point 3. The reason is that Platterpus's acceptance run expects `PIN_UNDER_REVIEW`, which tracks the newest pin we send. Close conditions: the real test on `.15` installed through their app, both sides' reading of the bundle, and R8's two releases (their `FORK_PIN` roll to `df91ae7`, our `.16`). Close-by 2026-10-21. **Their lap 2** (`OPEN`, sha256 `8485afc7…`, read at `platterpus@b381c31`) moved `PIN_UNDER_REVIEW` to `df91ae7` and named **0.6.54** as the release carrying it, cut under their operator's §6b override. Next: the real test, then our lap 3 |
+| **round 26** | **OPEN** since 2026-09-23, opened by our lap 1 on **`df91ae7`** (`.15`) **before** the real test, by the operator's override of R8 point 3. Close conditions: the real test on `.15` installed through their app, both sides' reading of the bundle, and R8's two releases (their `FORK_PIN` roll to `df91ae7`, our `.16`). Close-by 2026-10-21. Their lap 2 (`OPEN`, `8485afc7…`) moved `PIN_UNDER_REVIEW` and named 0.6.54. **Their lap 3** (`OPEN`, sha256 `ba57e7bd…`, read at `platterpus@629ffa2`) says 0.6.54's section A refused `.15`, and names **0.6.55** as the fix, cut under a second §6b override. The test then ran on 0.6.55. **Our lap 4** (`GO`) reads it; it is **published, held** until the operator releases it. Next: their lap 5, then our lap 6, which transcribes it |
 | round 25 | **CLOSED `GO`/`GO`** 2026-09-23, **five laps**, 14 days before the close-by. Close conditions: the three texts byte-identical in both trees (lap 1 §0.1, §0.2), and both releases ready and agreed (lap 2 §0.3, by the operator's override of R1). Their lap 2 crossed ours, which cost one lap; their lap 4 (`GO`, sha256 `f6d18230…`) landed the merged v6, parsed our golden reference and named 0.6.54; our lap 5 (`GO`) closed it. Pin `3e01bb3`, never moved. Next, under R8: `.15`, then their 0.6.54, then the real test, which opens round 26 |
 | round 24 | **CLOSED `GO`/`GO`** 2026-09-23, **three laps**, 13 days before the close-by. One close condition, Platterpus's verdict on `3e01bb3`, met by their lap 2 (`GO`, their 0.6.53 parser reading our golden reference). It closed on their gate at their lap 2 and on ours at our lap 3: the two gates close on different laps, their round-25 item N1. Three laps is the lap-1 `GO`, not v5 |
 | round 25, their laps | lap 2: `GO` on the texts, sha256 `3ae11ad1…`, read at `platterpus@5374729`, answering our lap 1 only. Lap 4: `GO`, sha256 `f6d18230…`, 11,717 bytes, read at `platterpus@53b3c04`. Both filed byte-exact under `docs/handshake/inbound/` |
