@@ -793,6 +793,73 @@ def sc_deemph_with_hdcd():
                          f"and docs/KNOWN-ISSUES.md together")
 
 
+
+def flac_vorbis_comments(path):
+    """The VORBIS_COMMENT block of a FLAC file, read from its bytes.
+
+    Read here rather than through ffprobe, which this environment lacks, and
+    because the file is the independent artifact: the log's Metadata block is
+    printed from the same dictionary the muxer was handed, so comparing the log
+    to itself would prove only that one dictionary agrees with itself."""
+    data = path.read_bytes()
+    if data[:4] != b"fLaC":
+        return None
+    pos, tags = 4, {}
+    while pos + 4 <= len(data):
+        head = data[pos]
+        size = int.from_bytes(data[pos + 1:pos + 4], "big")
+        body = data[pos + 4:pos + 4 + size]
+        if head & 0x7F == 4:
+            n = int.from_bytes(body[:4], "little")
+            q = 4 + n
+            count = int.from_bytes(body[q:q + 4], "little")
+            q += 4
+            for _ in range(count):
+                n = int.from_bytes(body[q:q + 4], "little")
+                k, _, v = body[q + 4:q + 4 + n].decode("utf-8", "replace").partition("=")
+                tags.setdefault(k.upper(), []).append(v)
+                q += 4 + n
+            return tags
+        if head & 0x80:
+            break
+        pos += 4 + size
+    return tags
+
+
+def sc_media_tag():
+    """The `media` tag says CD, whatever -H says. Round 26's real test.
+
+    It was `decode_hdcd ? "HDCD" : "CD"` -- upstream's -- set before a sample
+    is read, so every -H rip was tagged HDCD. The rig's P3 section runs -H on a
+    disc that is not HDCD, and every filed transcript of it prints
+    `HDCD detected: no` above `media: HDCD` in the same track block. -H is a
+    request to decode, not a statement about the disc, and the header is
+    written before the hdcd filter can say anything.
+
+    The fixture is not HDCD either, and the log is required to say so first:
+    if it ever reported `HDCD detected: yes`, CD would still be true, but this
+    test would no longer be about the case the rig found."""
+    for name, extra in (("media_h", ("-H",)), ("media_plain", ())):
+        rip(name, "basic.cue", *extra)
+        log = (WORK / f"{name}.log").read_text()
+        if extra and not re.search(r"^\s+HDCD detected: no$", log, re.M):
+            fail(f"media_tag: {name}: no `HDCD detected: no` line, so the "
+                 f"premise of this check is gone")
+        logged = re.findall(r"^\s+media:\s+(\S+)$", log, re.M)
+        if logged != ["CD", "CD"]:
+            fail(f"media_tag: {name}: the log's Metadata blocks say media "
+                 f"{logged}, wanted ['CD', 'CD']")
+        for track in (1, 2):
+            tags = flac_vorbis_comments(WORK / f"out_{name}" / f"{track}.flac")
+            if tags is None or not tags:
+                fail(f"media_tag: {name}: {track}.flac has no readable "
+                     f"VORBIS_COMMENT block, so nothing was checked")
+                continue
+            if tags.get("MEDIA") != ["CD"]:
+                fail(f"media_tag: {name}: {track}.flac is tagged MEDIA="
+                     f"{tags.get('MEDIA')}, wanted ['CD']. -H asks for a "
+                     f"decode; it does not make the disc an HDCD")
+
 def sc_audio_checksums():
     """The audio on disk must match the checksums the log claims for it.
 

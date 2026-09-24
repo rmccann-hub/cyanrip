@@ -2076,8 +2076,17 @@ static int cyanrip_run(int argc, char **argv)
     /* Default album title */
     av_dict_set(&ctx->meta, "album", "Unknown disc", AV_DICT_DONT_OVERWRITE);
     av_dict_set(&ctx->meta, "comment", "cyanrip "PROJECT_VERSION_STRING, 0);
-    av_dict_set(&ctx->meta, "media",
-                ctx->settings.decode_hdcd ? "HDCD" : "CD", 0);
+    /* "CD", whatever -H says. -H is a request to DECODE, not a statement
+     * about the disc, and this tag is written into every file's header
+     * before a sample is read -- so it cannot wait for the hdcd filter's
+     * `HDCD detected:` verdict, which is the line that reports HDCD. It was
+     * `decode_hdcd ? "HDCD" : "CD"`, upstream's, and the round-26 real test
+     * shows what that claims: `HDCD detected: no` above `media: HDCD` in the
+     * same track block, on a disc that is not HDCD, in all eight filed P3
+     * transcripts. Same shape as `(deemphasis applied)` printed from the
+     * settings. "CD" is true of every disc cyanrip reads, an HDCD one
+     * included. */
+    av_dict_set(&ctx->meta, "media", "CD", 0);
     const char *barcode_id = dict_get(ctx->meta, "barcode");
     const char *mcn_id = dict_get(ctx->meta, "disc_mcn");
     const char *did_id = dict_get(ctx->meta, "musicbrainz_discid");
