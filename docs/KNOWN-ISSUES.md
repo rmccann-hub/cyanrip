@@ -556,6 +556,19 @@ upstream's. **Not changed in `.16`**: it is a line Platterpus parses, so the
 wording is round 27's, with their answer first. Their side is re-reading by
 default and saying what matched.
 
+**Their answer is in, in round 27 lap 2 B1.** Inside the parenthetical they read
+only `confidence\s+(\d+)`, and treat confidence ≥ 1 with a non-zero CRC as a
+match. So the words can change freely, **provided `confidence N` appears only on
+a match**. `Tracks ripped partially accurately: N/M` they match by its exact
+label and use only as a cross-check, so renaming that label needs their
+both-wordings release first. Their EAC-compatible log's proposed wording is
+theirs, under H4. **Not yet reworded here.** It goes in `.17` or waits for round
+28, under the round-20 order.
+
+**A second defect was sitting under the same line, and it is fixed.** A 450
+lookup that missed fell through to the whole-track checksum
+(`crip_find_ar()`, their B1a). See `docs/SETTLED.md`'s upstream section.
+
 ### The album loudness block describes whatever was read, and calls it the album
 
 **Found in round 26's real test.** `docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:75`
@@ -570,6 +583,13 @@ leaving the four owned rows out when not every track of the disc was ripped,
 or adding a scope line beside them as `Scope:` does for paranoia. Both change
 rows Platterpus parses into `album_loudness`. It belongs to the next round,
 with the consumer's answer first.
+
+**Their answer is in, in round 27 lap 2 B2, and it asks for no change.** Since
+their 0.6.57 they label the figures by what they covered, read off our
+`Rip completed:` and `Interrupted at:` lines. If we add a qualifier, **it must be
+a NEW line**: their patterns anchor on the four labels, and a renamed row falls
+back silently to libavfilter's block, keeping the figure and losing the stable
+source.
 
 ### Every figure the log reports about the audio is measured BEFORE the filter graph
 
