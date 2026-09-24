@@ -306,11 +306,13 @@ int crip_find_ar(cyanrip_track *t, uint32_t checksum, int is_450)
     if (t->ar_db_status != CYANRIP_ACCUDB_FOUND)
         return 0;
 
+    /* One comparison per entry, chosen by is_450. This was an if/else-if, so
+     * a 450 lookup that missed an entry's frame checksum fell through and
+     * compared the one-frame value against its whole-track checksum. */
     for (int i = 0; i < t->ar_db_nb_entries; i++) {
         CRIPAccuDBEntry *e = &t->ar_db_entries[i];
-        if (is_450 && e->checksum_450 == checksum)
-            return e->confidence;
-        else if (e->checksum == checksum)
+        uint32_t want = is_450 ? e->checksum_450 : e->checksum;
+        if (want == checksum)
             return e->confidence;
     }
 

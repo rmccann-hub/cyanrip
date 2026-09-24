@@ -1,7 +1,16 @@
 Unreleased
 ==========
 `+platterpus.16` shipped at `221a1df` on 2026-09-24; its notes are below, under
-its own heading. Nothing in `src/` has changed since.
+its own heading.
+
+**A 450 lookup no longer compares against the whole-track checksum.**
+`crip_find_ar()` with `is_450` set tested the entry's frame checksum and, on a
+miss, fell through to its whole-track one. So an `Accurip 450` line, or the
+offset search, could report a match on one chance in 2^32 per entry. Found by
+Platterpus in round 27 lap 2 (B1a), reading our source. It is upstream's too
+(`docs/SETTLED.md`, item 12). No line's text changes. Pinned by
+`test_accurip_450_never_compares_the_whole_track_checksum`, which fails 3 checks
+with the fix reverted. It reaches the `-f` search, which has not run on a drive.
 
 **Round 27 lap 1 was marked released at `87facd5`, returned to held** under
 the operator's override, revised to name Platterpus 0.6.59, and **released

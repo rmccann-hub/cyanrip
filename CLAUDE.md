@@ -882,10 +882,11 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is eleven**: eight
+   tally that said "all three" while five more existed. **It is twelve**: eight
    counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather than
-   remembered, a ninth added there on 2026-09-23, and two more on 2026-09-24
-   from round 26's real test. Each has a re-check
+   remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
+   from round 26's real test, and a twelfth the same day from Platterpus's
+   reading of our source. Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
    1. `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a
@@ -916,8 +917,12 @@ should need rewriting. If it does, that is the defect.
   11. The AccurateRip tally counts a track whose read was **interrupted**,
       because a one-sector `Accurip 450` over a partial read still matches.
       Read from upstream's source, not run. Fixed here by `audio_ripped`.
+  12. `crip_find_ar()` with `is_450` **falls through on a miss** and compares
+      the one-frame checksum against an entry's whole-track one. One chance in
+      2^32 per entry, so no rip has shown it. Found by Platterpus, round 27
+      lap 2 B1a; fixed here, pinned by `tests/logrender.c`.
 
-   **Not filed is not fixed, and eleven unfiled reports is the private garden
+   **Not filed is not fixed, and twelve unfiled reports is the private garden
    this rule forbids.** Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — but the count belongs
    here where it can be checked, and it is checked by the same command as every

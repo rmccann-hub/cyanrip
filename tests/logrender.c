@@ -75,6 +75,7 @@
 #include "diagnostics.h"
 #include "fun512.h"
 #include "stall_watchdog.h"
+#include "accurip.h"
 
 static int failures;
 static char captured[65536];
@@ -502,6 +503,55 @@ static void test_accurip_both_fail_reaches_the_450_block(void)
                 "    Accurip v2:  FEEDFACE (not found, either a new pressing, or bad rip)",
                 "accurip/both-fail");
     expect_line(out, "    Accurip 450: 0BADF00D (not found)", "accurip/both-fail");
+    free_ctx(ctx);
+}
+
+/* accurip.c crip_find_ar() -- a 450 lookup must compare only 450 checksums.
+ *
+ * The loop tested `is_450 && e->checksum_450 == checksum` and then fell
+ * through to `else if (e->checksum == checksum)`, so a 450 lookup that missed
+ * an entry's frame checksum went on to compare the one-frame value against
+ * that entry's WHOLE-TRACK checksum. Found by Platterpus, round 27 lap 2 B1a,
+ * reading our source; it is upstream's too. One chance in 2^32 per entry, so
+ * no rip has shown it -- which is why only a constructed track can.
+ *
+ * Both callers are reached: the log's 450 line, and -- through the same
+ * function -- the offset search in cyanrip_main.c, which scans thousands of
+ * offsets per track and is not otherwise reachable here. */
+static void test_accurip_450_never_compares_the_whole_track_checksum(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    cyanrip_track t;
+    base_track(&t);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 9,
+                                       .checksum = 0x0BADF00D,
+                                       .checksum_450 = 0x9ABCDEF0 };
+    give_db(&t, 1, 9);
+
+    /* The function itself, all four pairings. */
+    if (crip_find_ar(&t, 0x0BADF00D, 1) != -1)
+        FAIL("accurip/450-lookup: a 450 lookup matched an entry's whole-track "
+             "checksum (got %i, want -1)", crip_find_ar(&t, 0x0BADF00D, 1));
+    if (crip_find_ar(&t, 0x9ABCDEF0, 1) != 9)
+        FAIL("accurip/450-lookup: a 450 lookup missed the entry's 450 checksum");
+    if (crip_find_ar(&t, 0x0BADF00D, 0) != 9)
+        FAIL("accurip/450-lookup: a whole-track lookup missed the entry");
+    if (crip_find_ar(&t, 0x9ABCDEF0, 0) != -1)
+        FAIL("accurip/450-lookup: a whole-track lookup matched a 450 checksum");
+
+    /* And what the log says. v1 and v2 both miss, so the 450 line is printed,
+     * and its checksum equals the entry's whole-track value only. */
+    t.acurip_checksum_v1 = 0xDEADBEEF;
+    t.acurip_checksum_v2 = 0xFEEDFACE;
+    t.acurip_checksum_v1_450 = 0x0BADF00D;
+
+    cyanrip_log_track_end(ctx, &t);
+    const char *out = drain(ctx);
+
+    expect_line(out, "    Accurip 450: 0BADF00D (not found)", "accurip/450-lookup");
+    if (strstr(out, "matches Accurip DB"))
+        FAIL("accurip/450-lookup: the log claims a 450 match for a checksum "
+             "that equals only an entry's whole-track checksum");
     free_ctx(ctx);
 }
 
@@ -1353,6 +1403,7 @@ int main(void)
     test_scope_line_marks_a_re_read();
     test_accurip_both_fail_reaches_the_450_block();
     test_accurip_450_partial_needs_three_quarters();
+    test_accurip_450_never_compares_the_whole_track_checksum();
     test_accurip_450_zero_checksum_claims_nothing();
 
     test_pregap_reasons_are_distinct();
