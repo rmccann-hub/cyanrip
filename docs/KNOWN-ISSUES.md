@@ -523,6 +523,33 @@ enforcing `HANDSHAKE-CLOSE-BY`: *enforcement lets a clock skew block a release*.
 A 30-second default doing the same thing to a release is the same shape, one
 layer down.
 
+### `track is partially accurately ripped` is said of a track whose bytes are wrong
+
+**Found by Platterpus in round 26's real test** (their lap 5 §B3), and
+confirmed here from our filed copy. `docs/rig-2026-09-24-df91ae7/rips/after-cancel.log`
+reads track 1 as `EAC CRC32: 0E91CD1A`, with 20 `FIXUP_ATOM`s and `Ripping
+errors: 0`. The five other rips of track 1 in that session read `B0D122E7`, each
+an exact AccurateRip match. Its v1 and v2 are `not found`, and only
+`Accurip 450: 57722DDE (matches Accurip DB, confidence 200, track is partially
+accurately ripped)` matched. The footer counts it in `Tracks ripped partially
+accurately: 1/14`.
+
+**It is not a one-off, and our own record held the proof for thirteen days.**
+`docs/rig-2026-09-11-ddc1e8c/rips/derived-wavpack.log` has the same track 1, the
+same `0E91CD1A` and the same `Accurip 450: 57722DDE`, on another build, in
+section K2, two rips after the cancel rather than straight after it, where that
+session's own J read track 1 correctly. So the drive returned the same wrong bytes twice, and paranoia
+accepted them twice. Found by scanning every filed track-1 read, not by memory.
+Nothing in this repository mentioned it until now.
+
+**What is wrong is the label, not a number.** Every checksum is truthful.
+`Accurip 450` covers one sector (`src/checksums.h`), so a match says that sector
+is right and says nothing about the other 14,486. *"Partially accurately
+ripped"* reads as mostly right, and here the track was wrong. The wording is
+upstream's. **Not changed in `.16`**: it is a line Platterpus parses, so the
+wording is round 27's, with their answer first. Their side is re-reading by
+default and saying what matched.
+
 ### The album loudness block describes whatever was read, and calls it the album
 
 **Found in round 26's real test.** `docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:75`
