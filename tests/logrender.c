@@ -585,9 +585,12 @@ static void test_accurip_450_partial_needs_three_quarters(void)
         char want[160];
         snprintf(want, sizeof(want),
                  "    Accurip 450: 0BADF00D (matches Accurip DB, confidence %i, "
-                 "track is partially accurately ripped)", cases[i].conf);
+                 "one frame only; whole-track checksums not found)", cases[i].conf);
         if (cases[i].partial) {
             expect_line(out, want, "accurip/450-over-threshold");
+            if (strstr(out, "accurately ripped"))
+                FAIL("accurip/450-over-threshold: a one-frame match is "
+                     "described as the track being accurately ripped");
         } else {
             expect_no_line(out, want, "accurip/450-under-threshold");
             expect_line(out, "    Accurip 450: 0BADF00D (not found)",

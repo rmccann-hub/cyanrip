@@ -614,7 +614,15 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                  * this is a log-shape fix rather than a correctness one. */
                 cyanrip_log(ctx, 0, " (no comparison possible, a checksum of 0 is meaningless)\n");
             } else if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4))) {
-                cyanrip_log(ctx, 0, " (matches Accurip DB, confidence %i, track is partially accurately ripped)\n",
+                /* The 450 checksum covers one frame, 588 samples, and this
+                 * block is reached only after v1 and v2 both missed. The old
+                 * tail, "track is partially accurately ripped", read as mostly
+                 * right, and round 26's real test showed it said of a track
+                 * whose bytes were wrong. The parenthetical now says what was
+                 * matched and what was not. Platterpus reads only
+                 * "confidence N" in it, and that stays on the match alone
+                 * (their round 27 lap 2 B1). Announced in round 27 lap 4. */
+                cyanrip_log(ctx, 0, " (matches Accurip DB, confidence %i, one frame only; whole-track checksums not found)\n",
                             match_450);
             } else if (has_ar) {
                 cyanrip_log(ctx, 0, " (not found)\n");

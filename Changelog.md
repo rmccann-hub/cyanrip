@@ -12,6 +12,16 @@ Platterpus in round 27 lap 2 (B1a), reading our source. It is upstream's too
 `test_accurip_450_never_compares_the_whole_track_checksum`, which fails 3 checks
 with the fix reverted. It reaches the `-f` search, which has not run on a drive.
 
+**The `Accurip 450` match no longer says the track was partially accurately
+ripped.** It now reads `(matches Accurip DB, confidence N, one frame only;
+whole-track checksums not found)`. The checksum covers one frame, the line is
+printed only after both whole-track checksums missed, and round 26's real test
+showed the old tail said of a track whose bytes were wrong. **A P2 line, so it is
+announced in round 27 lap 4.** Platterpus reads only `confidence N` in the
+parenthetical (their round 27 lap 2 B1), and that stays on the match alone, so
+nothing of theirs has to ship first. `Tracks ripped partially accurately:` is
+unchanged.
+
 **Round 27 lap 1 was marked released at `87facd5`, returned to held** under
 the operator's override, revised to name Platterpus 0.6.59, and **released
 again** once `v0.6.59` (`183073b`) showed `PIN_UNDER_REVIEW` `221a1df`. It opens round 27 on `.16` before its

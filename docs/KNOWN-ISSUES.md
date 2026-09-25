@@ -568,8 +568,15 @@ match. So the words can change freely, **provided `confidence N` appears only on
 a match**. `Tracks ripped partially accurately: N/M` they match by its exact
 label and use only as a cross-check, so renaming that label needs their
 both-wordings release first. Their EAC-compatible log's proposed wording is
-theirs, under H4. **Not yet reworded here.** It goes in `.17` or waits for round
-28, under the round-20 order.
+theirs, under H4.
+
+**Reworded for `.17`, not released.** The match now reads `(matches Accurip DB,
+confidence N, one frame only; whole-track checksums not found)`: `confidence N`
+stays on the match alone, as their condition asks, and `matches Accurip DB` is
+kept. No string they match is removed, so nothing of theirs has to ship first.
+It is a P2 line, so round 27 lap 4 announces it. `.16` and every filed log keep
+the old tail. The tally label is unchanged: renaming it needs their
+both-wordings release first.
 
 **Our answer to their EAC-log wording, for round 27 lap 4: amend one clause,
 accept the rest.** They proposed, per track, `Only one frame matched AccurateRip
