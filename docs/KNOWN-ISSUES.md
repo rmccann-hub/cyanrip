@@ -550,6 +550,9 @@ section K2, two rips after the cancel rather than straight after it, where that
 session's own J read track 1 correctly. So the drive returned the same wrong bytes twice, and paranoia
 accepted them twice. Found by scanning every filed track-1 read, not by memory.
 Nothing in this repository mentioned it until now.
+**That scan is now a tool**: `tools/cross-rip.py <bundle>` compares every read
+of each track across a bundle's cyanrip logs, grouped by disc and read offset,
+and names both of these logs. `tests/cross_rip.py` asserts it does.
 
 **What is wrong is the label, not a number.** Every checksum is truthful.
 `Accurip 450` covers one sector (`src/checksums.h`), so a match says that sector

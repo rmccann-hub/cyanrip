@@ -468,6 +468,15 @@ test('Black-box sweep', python,
 ## run in a clone, and the states that matter (no verdict file at all, a
 ## passing one, a failing one) are states no single real bundle supplies.
 test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
+
+## tools/cross-rip.py compares each track's EAC CRC32 across every cyanrip log
+## in a bundle. Round 26's reading read logs one at a time and missed a wrong
+## track-1 read that only shows beside the other rips of it (their round 26
+## lap 5 §B3), and the same wrong read had been filed thirteen days earlier.
+## The test asserts both are named, and pins the synthetic directions no real
+## bundle supplies: identical reads agree, another offset is not compared, and
+## an EAC-format export is not taken for a log.
+test('Cross-rip reader', python, args: [ files('cross_rip.py') ])
 ## A REPORT, NOT A CHECK. --gaps prints the absent lap numbers and exits 0 by
 ## design, because one side cannot tell a lost lap from an unused number. It
 ## was named "Seam record audit", which a green run made read like a passed
