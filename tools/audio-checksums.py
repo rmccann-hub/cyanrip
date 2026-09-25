@@ -15,10 +15,14 @@ the same file the ripper uses -- so the numbers this prints are comparable to
 the ones a cyanrip log states, and to the ones the AccurateRip database holds.
 
 Mirrored, not shared: this is Python and that is C, and **the two can drift**.
-`--self-test` is what catches that -- it recomputes against a known
-(file, expected) pair, so a change to `src/checksums.h` that this file does not
-follow shows up as a failure rather than as a quietly wrong number. There is no
-way to make one implementation serve both without linking libavutil here.
+**`self-test` does NOT catch that**, and this paragraph said it did until
+2026-09-25. It pins this Python against the values it computed when it was
+checked against three EAC-ripped tracks, so it catches a change HERE and none in
+`src/checksums.h`. What compares the two is the `audio_checksums` image
+scenario, which rips with the binary and checks the files against its log.
+Measured: with `src/checksums.h`'s v1 sum perturbed and the build green,
+`self-test` exited 0 and `audio_checksums` failed 3 checks. There is no way to
+make one implementation serve both without linking libavutil here.
 
 What it does NOT do
 -------------------

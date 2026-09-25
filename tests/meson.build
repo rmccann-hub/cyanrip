@@ -201,8 +201,13 @@ test('Compiler diagnostics', python,
 ## =====================
 ## tools/audio-checksums.py reimplements src/checksums.h in Python so a rip's
 ## files can be checked against a rip's log -- which is how "14/14 bit-perfect
-## vs EAC" stopped being somebody's report and became a command. Two
-## implementations of one algorithm drift silently; this is what notices.
+## vs EAC" stopped being somebody's report and became a command.
+##
+## THIS IS NOT WHAT NOTICES THE TWO DRIFTING, and this comment said it was
+## until 2026-09-25. self-test pins the Python against itself: with
+## src/checksums.h's v1 sum perturbed and the build green, it exited 0. The
+## comparison with the C is the audio_checksums image scenario, which failed 3
+## checks on the same build. Found reading our own tests by name, round 27.
 test('Audio checksum mirror', python,
      args: [ files('../tools/audio-checksums.py'), 'self-test' ])
 
