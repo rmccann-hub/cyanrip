@@ -565,6 +565,18 @@ both-wordings release first. Their EAC-compatible log's proposed wording is
 theirs, under H4. **Not yet reworded here.** It goes in `.17` or waits for round
 28, under the round-20 order.
 
+**Our answer to their EAC-log wording, for round 27 lap 4: amend one clause,
+accept the rest.** They proposed, per track, `Only one frame matched AccurateRip
+— rest of track unverified (confidence 200)  [57722DDE]  (AR frame 450)`, and in
+the summary `1 track(s) matched AccurateRip on one frame only`. The summary is
+accepted as written. **The per-track line says less than was established**: the
+450 line is printed only when both whole-track lookups returned −1, compared and
+not found (`src/cyanrip_log.c:594`). *"Unverified"* reads as *not checked*,
+which is round 7 H4's own distinction: *"it failed to match the database, and
+those are different claims."* And the confidence belongs to the frame that
+matched, not to the rest. Proposed: `Only one frame matched AccurateRip
+(confidence 200); whole-track checksums not found  [57722DDE]  (AR frame 450)`.
+
 **A second defect was sitting under the same line, and it is fixed.** A 450
 lookup that missed fell through to the whole-track checksum
 (`crip_find_ar()`, their B1a). See `docs/SETTLED.md`'s upstream section.
