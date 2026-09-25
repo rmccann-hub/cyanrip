@@ -177,12 +177,17 @@ docs/handshake/STATUS.md` has every version, and **the laps are the record** —
 this file never was. Consolidation applies to documentation and never to
 evidence.
 
-### The hardware procedure, pinned, and contained to one directory
+### Round 16's hardware procedure, kept as a record, not today's test
 
-**Round 18 decides what the release test IS.** This is the procedure that exists
-today — round 16's Run A, which settled that round's three clauses — kept here
-because it is the only pinned rig block either project has and round 18 will
-start from it rather than from nothing.
+**This is round 16's Run A, which settled that round's three clauses. It is not
+the real test any more.** That is Platterpus's Full acceptance run, which
+installs the build under review through their app. Run A's preflight accepts
+only round 16's two builds (`tools/rig-round16.sh:103-126`) and exits 1 on any
+other, so on `.16` it stops before the drive unless `ALLOW_ANY_BUILD=1`. **It
+installs nothing and restores nothing**, and neither does any other tool here:
+`tools/rig-check.py` only reads the installed build and names the channel it
+matches, and `release-manifest.json` names one build per channel with no
+rollback field. That is our answer to round 27 lap 3's question.
 
 **Everything it creates lives under `~/cyanrip-rig`, so cleanup is one
 `rm -rf`.** Operator's instruction, 2026-09-11, after a session left five
