@@ -468,7 +468,12 @@ test('Black-box sweep', python,
 ## run in a clone, and the states that matter (no verdict file at all, a
 ## passing one, a failing one) are states no single real bundle supplies.
 test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
-test('Seam record audit', python, args: [ files('../tools/seam-check.py'), '--gaps' ])
+## A REPORT, NOT A CHECK. --gaps prints the absent lap numbers and exits 0 by
+## design, because one side cannot tell a lost lap from an unused number. It
+## was named "Seam record audit", which a green run made read like a passed
+## audit of the record. It fails only if the tool itself breaks. The check is
+## the inbound-held audit below. Renamed in round 27.
+test('Seam gap report', python, args: [ files('../tools/seam-check.py'), '--gaps' ])
 
 ## --gaps prints which lap numbers WE are missing and then says, correctly,
 ## that no check on one side can tell a lost lap from a number nobody used:
