@@ -40,18 +40,19 @@ checks, and neither is a dated state.
 
 | | |
 |---|---|
-| **released** | **`0.9.4-rc2+platterpus.16` at `221a1df`**, `release_seq` 26, stable, cut 2026-09-24 on round 26's authority |
-| build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/221a1df.tar.gz` — verified from a `git archive` of exactly that commit before publication, reporting `released build` |
-| previous | `.15` at `df91ae7`, seq 25, 2026-09-23, round 25; `.14` at `3e01bb3`, seq 24 |
-| what `.16` changed | two fixes from round 26's real test: an interrupted track is left out of the AccurateRip tally, so an interrupted rip no longer prints `Tracks ripped partially accurately: 1/14` above `0 of 14 tracks`; and `media` is tagged `CD` whatever `-H` says. No line's text changes. `docs/RELEASE-PLAN-platterpus.16.md` |
-| tested on a drive | **the Full acceptance on `.16` with Platterpus 0.6.60 ran on 2026-09-26 from 04:13:08Z**: its script reported 320 of 320, 0 skipped, `counts_as_evidence: true` (`docs/rig-2026-09-26-221a1df/`), and Platterpus's ledger grades it `partial` by the operator's ruling, because the records carried errors no step could fail over, two of them lines of our log (`platterpus@d582d6a:docs/handshake/outbound/platterpusstatus.md:314`). Both `.16` changes ran on the drive, each with a before and after on the same disc. **This corrects our round 27 lap 6**, committed at 04:30:48Z during that run: its `HANDSHAKE-TESTED` says the quick run and not the Full run, and lists `.16`'s two changes, a whole-disc rip and a secure re-read as untested by any run. Lap 6 is sent and stays as it is; round 28 lap 1 carries the correction. Still untested: a sector that will not read, and `.17` |
-| gate | `--release-gate` exits **0**: every round is closed. Round 27 closed on our gate with our lap 6, which authorises `.17` under v6 R8 |
+| **released** | **`0.9.4-rc2+platterpus.17` at `e0471f4`**, `release_seq` 27, stable, cut 2026-09-26 on round 27's authority |
+| build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/e0471f4.tar.gz` — verified from a `git archive` of exactly that commit before publication, reporting `released build` |
+| previous | `.16` at `221a1df`, seq 26, 2026-09-24, round 26; `.15` at `df91ae7`, seq 25 |
+| what `.17` changed | three `src/` commits against `.16`: a 450 lookup compares only 450 checksums (`10f36fe`); the `Accurip 450` match reads `(matches Accurip DB, confidence N, one frame only; whole-track checksums not found)` (`ec0fe47`, a P2 line announced in round 27 lap 4); and a log opened by a run that then fails early starts with the banner and the identity lines (`ee0221c`). `docs/RELEASE-PLAN-platterpus.17.md` |
+| `.17` on a drive | **nothing yet.** Round 28's Full run on `.17` with Platterpus 0.6.61 is the first |
+| `.16` on a drive | **the Full acceptance on `.16` with Platterpus 0.6.60 ran on 2026-09-26 from 04:13:08Z**: its script reported 320 of 320, 0 skipped, `counts_as_evidence: true` (`docs/rig-2026-09-26-221a1df/`), and Platterpus's ledger grades it `partial` by the operator's ruling, because the records carried errors no step could fail over, two of them lines of our log (`platterpus@d582d6a:docs/handshake/outbound/platterpusstatus.md:314`). Both `.16` changes ran on the drive, each with a before and after on the same disc. **This corrects our round 27 lap 6**, committed at 04:30:48Z during that run: its `HANDSHAKE-TESTED` says the quick run and not the Full run, and lists `.16`'s two changes, a whole-disc rip and a secure re-read as untested by any run. Lap 6 is sent and stays as it is; round 28 lap 1 carries the correction. Still untested: a sector that will not read, and `.17` |
+| gate | `--release-gate` exits **0**: every round is closed. Round 27 closed on our gate with our lap 6, and it authorised `.17` under v6 R8 |
 | the tip | **the release's publish commit and after.** Build from the release commit, not the tip |
-| next | **`+platterpus.17`**, then our round 28 lap 1 naming its release commit. Its `src/` is `221a1df`'s plus `10f36fe`, `ec0fe47` and `ee0221c`. Platterpus then moves `PIN_UNDER_REVIEW` to `.17` and cuts 0.6.61, which also carries `FORK_PIN` `221a1df`, and the operator runs one Full acceptance on that pair (their round 27 lap 5 §D) |
+| next | **our round 28 lap 1**, naming `e0471f4`. Platterpus then moves `PIN_UNDER_REVIEW` to `.17` and cuts 0.6.61, which also carries `FORK_PIN` `221a1df`, and the operator runs one Full acceptance on that pair (their round 27 lap 5 §D) |
 
-**`.16` is stable because round 26 authorised it, and the build itself is
-round 27's to review.** Platterpus's `FORK_PIN` is `df91ae7` in their 0.6.56, so
-their app offers `.16` marked `unapproved` until round 27 closes on it. That is
+**`.17` is stable because round 27 authorised it, and the build itself is
+round 28's to review.** Platterpus's 0.6.61 carries `FORK_PIN` `221a1df`, so
+their app offers `.17` marked `unapproved` until round 28 closes on it. That is
 v6 R8 point 2's mark: their offer states it, and a person decides.
 
 ### The rounds
@@ -240,22 +241,22 @@ identifier.
 
 | field | value |
 |---|---|
-| **stable version** | `0.9.4-rc2+platterpus.16` |
-| **stable commit** | **`221a1df`** |
-| stable build tag | `platterpus-fork-g221a1df` |
-| stable install | `https://github.com/rmccann-hub/cyanrip/archive/221a1df.tar.gz` |
-| stable `release_seq` | 26 |
-| stable authorised by | handshake round 26, closed `GO`/`GO` on `df91ae7` / `629ffa2` (Platterpus 0.6.55), six laps — the pins round 26 lap 6 declares |
+| **stable version** | `0.9.4-rc2+platterpus.17` |
+| **stable commit** | **`e0471f4`** |
+| stable build tag | `platterpus-fork-ge0471f4` |
+| stable install | `https://github.com/rmccann-hub/cyanrip/archive/e0471f4.tar.gz` |
+| stable `release_seq` | 27 |
+| stable authorised by | handshake round 27, closed `GO`/`GO` on `221a1df` / `88c09dd` (Platterpus 0.6.60), six laps — the pins round 27 lap 6 declares |
 | | |
-| **beta version** | `0.9.4-rc2+platterpus.16` |
-| **beta commit** | **`221a1df`** |
-| beta build tag | `platterpus-fork-g221a1df` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/221a1df.tar.gz` |
-| beta `release_seq` | 26 |
-| beta authorised by | handshake round 26, closed `GO`/`GO` — same build as stable |
+| **beta version** | `0.9.4-rc2+platterpus.17` |
+| **beta commit** | **`e0471f4`** |
+| beta build tag | `platterpus-fork-ge0471f4` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/e0471f4.tar.gz` |
+| beta `release_seq` | 27 |
+| beta authorised by | handshake round 27, closed `GO`/`GO` — same build as stable |
 
 `beta` resolves to the newest row of *any* channel, so opting into pre-releases
-can never move a user backwards. Both channels resolve to `221a1df`; there is no
+can never move a user backwards. Both channels resolve to `e0471f4`; there is no
 separate beta to take.
 
 **`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**

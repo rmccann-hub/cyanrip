@@ -15,7 +15,7 @@ record of the rounds themselves.
 
 ## Current pin
 
-**Both channels resolve to the same build**, `+platterpus.16`. When they
+**Both channels resolve to the same build**, `+platterpus.17`. When they
 differ, `stable` is what you get without opting in and `beta` is newer. Pick by
 risk tolerance, not by recency — and never by comparing the version strings,
 which cannot be ordered at all.
@@ -25,9 +25,9 @@ which cannot be ordered at all.
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
-commit          221a1df                          <- build this
---version       cyanrip 0.9.4-rc2+platterpus.16 (platterpus-fork-g221a1df)
-release_seq     26                               <- the ONLY orderable identifier
+commit          e0471f4                          <- build this
+--version       cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-ge0471f4)
+release_seq     27                               <- the ONLY orderable identifier
 channel         stable
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
@@ -38,21 +38,21 @@ git tag         none published
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          221a1df
---version       cyanrip 0.9.4-rc2+platterpus.16 (platterpus-fork-g221a1df)
-release_seq     26                               <- newest of any channel
+commit          e0471f4
+--version       cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-ge0471f4)
+release_seq     27                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
 **`beta` resolves to the newest row of ANY channel**, so opting into
-pre-releases can never move a user backwards. `+platterpus.16` is the newest row
+pre-releases can never move a user backwards. `+platterpus.17` is the newest row
 overall, so both channels resolve to it and there is no separate beta to take.
 That property was not decorative: the first generated manifest had `beta` on seq
 10 while `stable` was seq 11, so opting in would have been a downgrade.
 
-**`0.9.4-rc2+platterpus.16` IS A STABLE RELEASE despite the `-rc2`.** That
+**`0.9.4-rc2+platterpus.17` IS A STABLE RELEASE despite the `-rc2`.** That
 string is upstream's, copied verbatim because we may not mint in
 `cyanreg/cyanrip`'s namespace; the part that advances is SemVer build metadata,
 which the spec says MUST be ignored for precedence. **A check that reads the
@@ -169,16 +169,17 @@ convenience.**
 **Every round is closed**: round 27 closed at our lap 6 on 2026-09-26, so
 `tools/release-gate.py --release-gate` exits 0. Round 27 reviewed `.16` on the
 quick run the operator's override put in place of the Full run, and the Full
-run moves to round 28, on `.17` and Platterpus 0.6.61 together. **Round 26 closed** at our lap 6. It reviewed `.15` on a drive, and it opened before the real test, on the
-operator's override, so that Platterpus's app installed `.15` for it. The live
-release is **`0.9.4-rc2+platterpus.16` at `221a1df`**, `release_seq` 26,
-authorised by **round 26**, under v6 R8: a round's close authorises a release of
-both applications, ours first. It carries two fixes from round 26's real test:
-an interrupted track is left out of the AccurateRip tally, and `media` is tagged
-`CD` under `-H`. There is no consumer-side prerequisite. **Platterpus releases
-0.6.56 after it, pinning `df91ae7`**, because their `FORK_PIN` must be a closed
-round's pin, so their app offers `.16` marked `unapproved` until round 27
-reviews it. Round 27 opens on `.16` before its real test, as round 26 did.
+run moves to round 28, on `.17` and Platterpus 0.6.61 together. The Full run
+then ran on `.16` after all, and Platterpus's ledger grades it `partial`. The live
+release is **`0.9.4-rc2+platterpus.17` at `e0471f4`**, `release_seq` 27,
+authorised by **round 27**, under v6 R8: a round's close authorises a release of
+both applications, ours first. It carries a 450 lookup that compares only 450
+checksums, the `Accurip 450` match reworded to say it covers one frame, and an
+early failure's log that opens with the banner. There is no consumer-side
+prerequisite. **Platterpus releases 0.6.61 after our round 28 lap 1 names it**,
+carrying `FORK_PIN` `221a1df` and `PIN_UNDER_REVIEW` `.17` together, so their app
+offers `.17` marked `unapproved` until round 28 reviews it. Round 28 opens on
+`.17` before its real test, as rounds 26 and 27 did.
 
 **`proposed/` held shared-document texts under review, and is gone.** Round 25
 proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md` v6 there, by

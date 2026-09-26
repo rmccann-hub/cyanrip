@@ -1976,6 +1976,17 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
+**`+platterpus.17` SHIPPED on 2026-09-26** at `e0471f4`, `release_seq` 27,
+stable, authorised by **round 27** — `docs/RELEASE-PLAN-platterpus.17.md` is
+executed and bannered. It carries a 450 lookup that compares only 450
+checksums, the `Accurip 450` match reworded to say it covers one frame, and an
+early failure's log that opens with the banner. There is no consumer-side
+prerequisite. Platterpus's 0.6.61 follows our round 28 lap 1, carrying
+`FORK_PIN` `221a1df` and `PIN_UNDER_REVIEW` `.17`, so their app offers `.17`
+marked `unapproved` until round 28 reviews it. **Round 28 opens on `.17` before
+its real test**, as rounds 26 and 27 did. **The next release is
+`+platterpus.18` and nothing is written for it.**
+
 **`+platterpus.16` SHIPPED on 2026-09-24** at `221a1df`, `release_seq` 26,
 stable, authorised by **round 26** — `docs/RELEASE-PLAN-platterpus.16.md` is
 executed and bannered. It carries the two fixes from round 26's real test: an
@@ -1984,8 +1995,7 @@ under `-H`. No line's text changes and there is no consumer-side prerequisite.
 Platterpus's 0.6.56 follows it, pinning `df91ae7`, so their app offers `.16`
 marked `unapproved` until round 27 reviews it. **Round 27 has to open on `.16`
 before its real test**, as round 26 did on `.15`, because their acceptance run
-expects the newest pin we send. **The next release is `+platterpus.17` and
-nothing is written for it.**
+expects the newest pin we send.
 
 **`+platterpus.15` SHIPPED on 2026-09-23** at `df91ae7`, `release_seq` 25,
 stable, authorised by **round 25** — `docs/RELEASE-PLAN-platterpus.15.md` is
@@ -2040,7 +2050,7 @@ tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
   front of them before it was made.
 
 **Plans that exist, all executed and bannered:** `.5`, `.12`, `.13`, `.14`,
-`.15`, `.16`. `.15`'s is the short case: its round settled the channel, so it poses
+`.15`, `.16`, `.17`. `.15`'s is the short case: its round settled the channel, so it poses
 nothing.
 **The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the
 newest, it followed the four-commit sequence exactly, and it is the first to pose
