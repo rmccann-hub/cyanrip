@@ -105,7 +105,9 @@ def send_pin(lap):
 def classify(sha):
     paths = git("show", "--name-only", "--format=", sha).split()
     binary = [p for p in paths if p.startswith(BINARY)]
-    diff = git("show", "--format=", "--unified=0", "--", "src/", sha)
+    # The SHA BEFORE `--`. After it, git reads the SHA as a pathspec and shows
+    # HEAD's diff, so every commit was judged by HEAD's -- found in round 27.
+    diff = git("show", "--format=", "--unified=0", sha, "--", "src/")
     logsite = any(re.match(r"[+-][^+-]", l) and "cyanrip_log(" in l
                   for l in diff.splitlines())
     return paths, binary, logsite

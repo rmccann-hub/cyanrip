@@ -214,6 +214,27 @@ def main():
              "job -- reporting evidence and issuing a verdict are different "
              "claims")
 
+    # 8. THE LOG-SITE FLAG IS ABOUT EACH COMMIT, NOT ABOUT HEAD. classify()
+    #    passed the SHA after `--`, so git read it as a PATH and every commit
+    #    was judged by HEAD's own diff of src/. It printed "No commit changes a
+    #    `cyanrip_log()` call site" over a range whose ec0fe47 rewords one --
+    #    found while writing round 27 lap 4, whose §D would have repeated it.
+    #    Both directions, because whichever one HEAD happens to satisfy passes
+    #    by accident: a range holding ec0fe47 must flag it, and a range of
+    #    docs commits must flag nothing.
+    if have("ec0fe47") and have("346bedb") and have("ed3b625"):
+        rc, out = run("--since", "346bedb", "--head", "ed3b625")
+        line = [l for l in out.splitlines() if l.strip().startswith("ec0fe47")]
+        if not line or "[log-site]" not in line[0]:
+            fail(f"ec0fe47 rewords a cyanrip_log() call and is not flagged\n{out}")
+        if "1 commit(s) change a `cyanrip_log()` call site: ec0fe47" not in out:
+            fail(f"the summary does not name ec0fe47 as the one log-site commit\n{out}")
+        rc, out = run("--since", "1a53bf9", "--head", "ed3b625")
+        if "[log-site]" in out or "No commit changes a `cyanrip_log()`" not in out:
+            fail(f"a docs-only range is reported as changing a log site\n{out}")
+    else:
+        print("UNPROBED: check 8 needs ec0fe47, 346bedb and ed3b625")
+
     print(f"{failures} failure(s)")
     return 1 if failures else 0
 
