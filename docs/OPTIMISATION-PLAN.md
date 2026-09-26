@@ -45,7 +45,12 @@ session before any work. `docs/KNOWN-ISSUES.md` is 108 KB and `docs/SETTLED.md`
 | `is_a_lap()` memoised on the text (`f482a91`) | Release gate 38.3 s | **8.0 s** | every round's digest, `--check` and `--list`, rounds 7–27, byte-identical before and after |
 | Settled-facts rows whose check is a meson test are delegated inside meson (`9465782`) | 78 s | **14.6 s** | standalone, nothing is delegated; with the target test renamed, its row runs again |
 
-The suite's new wall time is measured in §4.
+**Measured after both, full suite from a removed log at `9465782`'s build, 90 of
+90: 383 s wall, 495 s summed.** Settled facts 19.8 s, Release gate 9.1 s. The
+wall time moved only 21 s because the black-box sweep ran 334 s this time,
+26 s more than the baseline run's 308 s, which is run-to-run variance in the one
+test that runs alone. That is §1's conclusion measured: nothing but §3.A moves
+the wall time much.
 
 ## 3. Planned, each needing a decision
 
