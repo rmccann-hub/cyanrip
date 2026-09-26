@@ -345,7 +345,12 @@ the code does not have is the defect that let this go unnoticed.
 occurrence falsified it.** That is the number-incremented-rather-than-derived
 defect, in the file that records it, and it is the same one that turned three
 `SETTLED.md` rows stale on 2026-09-22. The dated occurrences below are the
-record; the heading states the property. **Twelfth occurrence 2026-09-25** at
+record; the heading states the property. **Thirteenth occurrence 2026-09-26**, with
+`2e9884d`'s tree before its commit, in a full suite of 91 that ran at about half
+speed throughout (the black-box sweep took 422 s against 217 s an hour earlier):
+`Ok: 90  Timeout: 1`, `30.02s`, call #4 again after three calls took 2.09 s, and
+**1.20 s** standalone straight afterwards, exit 0.
+**Twelfth occurrence 2026-09-25** at
 `2966369`, in a full suite of 90: `Ok: 89  Timeout: 1`, `30.01s`, call #4 again
 after three calls took 2.03 s, and **0.82 s** standalone straight afterwards, exit 0.
 **Eleventh occurrence 2026-09-25** at

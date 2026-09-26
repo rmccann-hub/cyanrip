@@ -104,7 +104,7 @@ sanitized CI row.
 
 ### E. The two flakes, because each one costs a full re-run
 
-- **`Lap commit list names its range`**: twelve recorded timeouts, always its
+- **`Lap commit list names its range`**: thirteen recorded timeouts, always its
   call #4, which takes about 1 s alone and over 27 s under load. The test's own
   git fixture is not the cause: it uses a throwaway repository. **Next step:
   time each git call under load.** If that finds nothing, raise its timeout to
