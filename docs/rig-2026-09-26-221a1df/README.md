@@ -26,7 +26,7 @@ operator's override of R1. This one ran from **04:13:08Z at size *full***, with
 | ripper | `cyanrip 0.9.4-rc2+platterpus.16 (platterpus-fork-g221a1df)` |
 | consumer | `platterpus/0.6.60`, build `88c09dd`, their `v0.6.60` tag (`session/COMPONENTS.json`) |
 | script | `fullacceptance.txt`, run size **full** |
-| outcome | **pass 320, fail 0, error 0, skipped 0, blocked 0, unreachable 0, info 1**, `ok: true`, `counts_as_evidence: true` (`session/script-report.json`) |
+| outcome | **pass 320, fail 0, error 0, skipped 0, blocked 0, unreachable 0, info 1**, `ok: true`, `counts_as_evidence: true` (`session/script-report.json`). That is the script's own verdict; Platterpus's ledger grades the run `partial` (below) |
 
 **Every file here but this README is byte-identical to a member of that
 tarball**, checked by hashing each copy against the tarball's members, 38 of 38. The rip files are
@@ -44,6 +44,13 @@ full-acceptance-angle-bracket-2, `67af4d42584c0c36` secure-reread,
 `706107f582aaa04a` derived-mp3, `75e62c94d39c8ea6` derived-wav,
 `8b45e667d7f41cc3` derived-wavpack, `ad4989c0a59bbd9b` after-cancel,
 `3432d387e8a2a431` cancel-me. No claim below depends on any of them.
+
+## How it is graded
+
+**Platterpus's ledger grades it `partial`, by the operator's ruling**, because the records carried errors no step could fail over: their rip report blaming our tally for a count their re-read changed (theirs, fixed), the two wrong reads logged `Ripping errors: 0`, and the interrupted rip's `Encoder errors: none; 1 track encoded` (`platterpus@d582d6a:docs/handshake/outbound/platterpusstatus.md:314`). The last two are lines of our log, both below.
+
+**So "passed" is the script's verdict, not the run's grade**, and this file's
+first version, like our report to the operator, said only the first.
 
 ## What this corrects, and where
 

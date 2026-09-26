@@ -74,7 +74,11 @@ the timings, the timestamps and the log checksum over them moved as they do on
 every run.
 
 **Round 27's Full acceptance ran after all**, on `.16` with Platterpus 0.6.60,
-from 04:13:08Z on 2026-09-26, and passed 320 of 320 with nothing skipped. It is
+from 04:13:08Z on 2026-09-26. Its script reported 320 of 320 with nothing
+skipped; Platterpus's ledger grades it `partial`, by the operator's ruling,
+because the records carried errors no step could fail over, two of them lines of
+our log (the wrong reads' `Ripping errors: 0` and the interrupted rip's
+`Encoder errors:`). It is
 filed as `docs/rig-2026-09-26-221a1df/`, 38 files byte-identical to the bundle.
 Both of `.16`'s fixes are confirmed on the drive against earlier builds' logs of
 the same steps. Its two wrong reads, both logged with `Ripping errors: 0`, are
