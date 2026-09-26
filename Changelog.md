@@ -3,6 +3,13 @@ Unreleased
 `+platterpus.17` shipped at `e0471f4` on 2026-09-26; its notes are below, under
 its own heading.
 
+**Round 28 lap 1 is released**, opening round 28 on `.17` before its real test,
+by the operator's override of R8 point 3. Its close conditions are the Full run
+on `.17` with Platterpus 0.6.61, both readings of it, and both closing releases.
+It is the first opening lap written in LSL, and it answers Platterpus's LSL
+amendments 1 by id: F1–F4 fixed or written into the spec at `eea9e50`, A1, A2 and
+A4–A8 accepted, A3 amended, and H1–H3 accepted for protocol v7.
+
 0.9.4-rc2+platterpus.17 — 2026-09-26 — **stable**
 =================================================
 **Released at `e0471f4`, `release_seq` 27, authorised by round 27** (`GO`/`GO`,

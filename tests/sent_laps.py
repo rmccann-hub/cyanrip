@@ -289,6 +289,10 @@ SENT = {
     # the handshake files". The first lap whose body is in LSL.
     "round-27-lap-06.md":
         "d95bb28e7238531ea682ec5464d8b6d3a75c7bba9a8b2552b55f19af9b60493f",
+    # Round 28 lap 1, released on the operator's "make new release and lap 1
+    # when ready". Opens round 28 on .17 and answers LSL amendments 1.
+    "round-28-lap-01.md":
+        "060fd2514c10d01e922500c622034639f1b59c9d5fa4f4902fdf6973de475a70",
 }
 
 failures = 0
