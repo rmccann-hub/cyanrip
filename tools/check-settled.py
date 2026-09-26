@@ -38,6 +38,7 @@ can re-run them; they are the rows to distrust first and the count is printed so
 their number is visible rather than implied.
 """
 
+import os
 import pathlib
 import re
 import shlex
@@ -46,6 +47,37 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SETTLED = ROOT / "docs" / "SETTLED.md"
+
+# ROWS WHOSE CHECK IS ITSELF A MESON TEST, delegated when this runs INSIDE
+# meson. Measured 2026-09-26: 64 of this test's 78 s were two rows re-running
+# tests/release_gate.py and probe-argv-surface.py --gate, which the same
+# `meson test` also runs as "Release gate" and "Argv surface probe". The fact
+# is still checked in that run, by that test, and the output names it.
+#
+# Standalone -- no MESON_TEST_ITERATION, which meson sets for every test --
+# every row runs as before. And a row is delegated only while its target is
+# still registered in tests/meson.build with the same script and arguments,
+# so renaming or removing that test makes the row run here again rather than
+# vanish.
+DELEGATED = {
+    "python3 tests/release_gate.py":
+        ("Release gate", "files('release_gate.py')"),
+    "python3 tools/probe-argv-surface.py --gate":
+        ("Argv surface probe", "files('../tools/probe-argv-surface.py'), '--gate'"),
+}
+
+
+def delegated_to(command):
+    """The meson test that checks this row in the same run, or None."""
+    if "MESON_TEST_ITERATION" not in os.environ:
+        return None
+    hit = DELEGATED.get(command.strip())
+    if not hit:
+        return None
+    name, args = hit
+    build = (ROOT / "tests" / "meson.build").read_text(encoding="utf-8")
+    pat = rf"test\('{re.escape(name)}', python,\s*args: \[ {re.escape(args)}"
+    return name if re.search(pat, build) else None
 
 # A row is `| fact | check |`, and the check is either a `backticked command`
 # or an em dash. Anything else is a malformed row and is reported as one rather
@@ -109,6 +141,7 @@ def cells(line):
 def main():
     text = SETTLED.read_text(encoding="utf-8")
     runnable, unrunnable, failures, malformed = 0, 0, [], []
+    delegated = []
     kinds, untagged = {}, []
 
     # THE LEGEND ABOVE THE MAIN TABLE IS A THREE-COLUMN TABLE, so a wrong cell
@@ -214,6 +247,11 @@ def main():
             runnable -= 1
             continue
 
+        target = delegated_to(command)
+        if target:
+            delegated.append((fact[:70], target))
+            continue
+
         r = subprocess.run(command, shell=True, cwd=ROOT,
                            capture_output=True, text=True)
         if r.returncode != 0:
@@ -238,6 +276,10 @@ def main():
 
     for fact in untagged:
         print(f"UNTAGGED (no command and no reason for having none): {fact}")
+
+    for fact, target in delegated:
+        print(f"DELEGATED to meson test '{target}', which checks it in this "
+              f"run: {fact}")
 
     breakdown = ", ".join(f"{n} {t.rstrip(':')}" for t, n in sorted(kinds.items()))
     print(f"{runnable} runnable check(s), {len(failures)} stale; "
