@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.16 (platterpus-fork-gec0fe47)
+cyanrip 0.9.4-rc2+platterpus.16 (platterpus-fork-g0f5f935)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 27 lap 1 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 27 lap 4 OPEN, verdict GO -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -92,5 +92,5 @@ Encoder errors: none; 1 track encoded
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-09-25T14:22:06+00:00
-Log FUN512: Lzu636W2BOgT_2cxMBPNSHjZIYTr5jF.SGO0kvTiJoG9SLnQ89n_j9y2o32.HsovE9h6iGBXcbPLndZwAKfMiA
+Ripping finished at 2026-09-26T00:28:14+00:00
+Log FUN512: zDTxe4q6N931NMt6rfZwYt4A_gD5wOOK2jRE8SthmPvW1Ih9n4lKe0rScbREAkb3dTDSvUWqynVO8xnlh_36Xw

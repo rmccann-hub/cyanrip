@@ -3,13 +3,13 @@
   "cyanrip": {
     "version": "0.9.4-rc2+platterpus.16",
     "fork_id": "platterpus-fork",
-    "vcs": "ec0fe47",
-    "handshake": "round 27 lap 1 OPEN, verdict OPEN",
+    "vcs": "0f5f935",
+    "handshake": "round 27 lap 4 OPEN, verdict GO",
     "released_build_declared": false
   },
   "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
-  "started_at": "2026-09-25T14:22:06+00:00",
-  "finished_at": "2026-09-25T14:22:06+00:00",
+  "started_at": "2026-09-26T00:28:14+00:00",
+  "finished_at": "2026-09-26T00:28:14+00:00",
   "exit_code": 1,
   "cache_probe": {
     "ran": false
@@ -36,7 +36,7 @@
     "interrupted": true,
     "interrupted_by": "SIGTERM",
     "track_state": [
-      {"number":1,"cd_track":1,"repeats":1,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":6343},
+      {"number":1,"cd_track":1,"repeats":1,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":6038},
       {"number":2,"cd_track":2,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
       {"number":3,"cd_track":3,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0}
     ]
@@ -50,9 +50,9 @@
     "Checking pregap.bin for cdrom...",
     "Opening drive...",
     "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!",
-    "cyanrip 0.9.4-rc2+platterpus.16 (platterpus-fork-gec0fe47)",
+    "cyanrip 0.9.4-rc2+platterpus.16 (platterpus-fork-g0f5f935)",
     "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
-    "Handshake:      round 27 lap 1 OPEN, verdict OPEN -- NOT a released build",
+    "Handshake:      round 27 lap 4 OPEN, verdict GO -- NOT a released build",
     "Consumer:       platterpus/0.6.21",
     "                (reported by the caller, not verified by cyanrip)",
     "Drive used:     libcdio CDRWIN (revision 2.1.)",
@@ -83,7 +83,6 @@
     "Tracks:",
     "Ripping track 1, progress - 100.00%, ETA - 0s",
     "Repeating ripping (0 out of 200 matches for current checksum 2C926D69)",
-    "Ripping track 1, progress - 4.89%, ETA - 0s  ",
     "Stopping, ripping incomplete!",
     "Flushing encoders...",
     "Album Loudness ",
@@ -98,7 +97,7 @@
     "Read stalls:    none (no read exceeded 10s)",
     "Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)",
     "Interrupted at: track 1, mid-read",
-    "Ripping finished at 2026-09-25T14:22:06+00:00"
+    "Ripping finished at 2026-09-26T00:28:14+00:00"
   ],
   "messages_tail": []
 }
