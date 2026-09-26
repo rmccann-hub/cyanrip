@@ -430,6 +430,14 @@ test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
 ## a clean serial run reports no invariant violations. Two classes are
 ## UNPROBED and say so: I4 needs a sanitizer build, and the three read-only
 ## filesystem probes cannot bind as root.
+##
+## Since 2026-09-26 its OWN invocations run four at once, each probe in a
+## sandbox cloned for it: 323 s serial, 173 s pooled, with all 838 exit codes
+## identical. That is inside the tool and changes nothing above: the suite
+## still runs it alone. The per-probe sandbox also found what one shared
+## sandbox hid -- four early-failure logs with no banner, because a log an
+## earlier probe had left was never "new" again. Fixed in the program at
+## `ee0221c`; the tool now checks rewritten logs as well as new ones.
 ## Which of P5's failure messages does anything here actually assert?
 ## ================================================================
 ## PROVIDER-CONTRACT.md P5 is the inventory of every string this program can

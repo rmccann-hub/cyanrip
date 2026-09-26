@@ -65,6 +65,19 @@ the wall time much.
 **Recommendation: A2**, then A1 once the parallel version has run clean for a
 round. A3 is the fallback if A2 turns out harder than it looks.
 
+**A2 is done.** Each probe runs in a sandbox cloned from the prepared one, four
+at once; `fam_rerun`'s three share one, in order, by design. An outside-root
+finding from a concurrent run is re-run alone before it is believed. Against
+`ee0221c`'s build: **323 s serial, 173 s pooled**, all 838 exit codes identical
+to the serial run, no violations.
+
+**It found a defect the serial sweep could not see.** Serially, every probe
+shared one sandbox, and I7 read only *new* files, so a log an earlier probe had
+left was never checked again. Pooled, four early-failure logs had no banner on
+line 1: `-M "{album"` and an over-long `-M` fail after the log is opened and
+before the banner was written. Fixed in the program at `ee0221c`, which writes
+the banner as soon as the log opens; the sweep now reads rewritten logs too.
+
 ### B. The argv surface probe (27 s)
 
 Its 116 invocations are independent, so a worker pool at 4 workers should cut it to about 8 s. Needs a

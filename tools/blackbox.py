@@ -75,9 +75,11 @@ Usage:
     tools/blackbox.py --gate                   # non-zero if any invariant broke
     tools/blackbox.py --family metadata        # one family
     tools/blackbox.py --list                   # what would run
+    tools/blackbox.py --jobs 1                 # one probe at a time
 """
 
 import argparse
+import concurrent.futures
 import os
 import re
 import shutil
@@ -148,7 +150,13 @@ def instrumented(binary):
 
 
 def snapshot(root):
-    return {p for p in root.rglob("*") if p.is_file()}
+    """Every file under `root`, with what would show it was rewritten."""
+    out = {}
+    for p in root.rglob("*"):
+        if p.is_file():
+            st = p.stat()
+            out[p] = (st.st_mtime_ns, st.st_size)
+    return out
 
 
 # THE SANDBOX IS NOT THE WORLD, and assuming it was is why this tool missed the
@@ -248,7 +256,15 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
     sig = -code if (code is not None and code < 0) else None
 
     after = snapshot(work)
-    new = after - before
+    new = set(after) - set(before)
+    # A FILE THAT ALREADY EXISTED AND WAS WRITTEN AGAIN. I7 is about every
+    # logfile a run writes, and reading only NEW files meant a run rewriting a
+    # log an earlier probe had left was never checked. Until 2026-09-26 every
+    # probe shared one sandbox, so `out/log.log` was new for its first writer
+    # only: four early-failure logs with no banner went unreported, and were
+    # found only when each probe got a sandbox of its own. fam_rerun still
+    # shares one, by design, so it still needs this.
+    rewritten = {q for q in after if q in before and after[q] != before[q]}
 
     # WHERE WAS THIS RUN TOLD TO WRITE? Derive it from the argv rather than
     # assuming `out/`: several probes deliberately pass a different -D, and a
@@ -354,7 +370,7 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
                 else:
                     unattributed.append(str(r / n))
     logs = []
-    for p in sorted(new):
+    for p in sorted(new | rewritten):
         if p.suffix == ".log":
             try:
                 first = p.read_text(encoding="utf-8",
@@ -775,6 +791,62 @@ FAMILIES = {
 }
 
 
+# PROBES THAT MUST SHARE ONE SANDBOX AND RUN IN ORDER. Every other probe runs
+# in a sandbox of its own, cloned from the prepared one, so any number can run
+# at once. fam_rerun's three rip into one directory ON PURPOSE: the finding, if
+# there is one, is in the second and third.
+SEQUENTIAL_PREFIXES = ("rerun/",)
+
+
+def clone(src, dst):
+    """A private copy of the prepared sandbox, for one probe or one group.
+
+    Small files are COPIED, so a probe that writes to one cannot change what
+    the next probe sees. The disc images, the only large files, are HARD
+    LINKED: cyanrip opens its inputs read-only, and 838 copies of 1.4 MB each
+    would spend the session's disk. Symlinks are recreated with their own
+    target -- `loop` must stay a loop -- and directories keep their mode, set
+    after their contents so a 0555 directory can be populated.
+    """
+    dst.mkdir()
+    for p in sorted(src.iterdir()):
+        q = dst / p.name
+        if p.is_symlink():
+            os.symlink(os.readlink(p), q)
+        elif p.is_dir():
+            clone(p, q)
+            os.chmod(q, p.stat().st_mode & 0o7777)
+        elif p.stat().st_size > 256 * 1024:
+            try:
+                os.link(p, q)
+            except OSError:
+                shutil.copy2(p, q)
+        else:
+            shutil.copy2(p, q)
+    return dst
+
+
+def remove_box(box):
+    """Delete a sandbox, making any read-only directory writable first."""
+    for d in [box, *box.rglob("*")]:
+        if d.is_dir() and not d.is_symlink():
+            try:
+                os.chmod(d, 0o755)
+            except OSError:
+                pass
+    shutil.rmtree(box, ignore_errors=True)
+
+
+def run_group(binary, group, box_root, idx):
+    """Run one group of probes, in order, in a fresh sandbox; return the Runs."""
+    template, boxes = box_root
+    box = clone(template, boxes / f"{idx:04d}")
+    runs = [invoke(binary, label, argv, box, box / "out", env)
+            for label, argv, env in group]
+    remove_box(box)
+    return runs
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--binary", default=str(ROOT / "build" / "src" / "cyanrip"))
@@ -784,6 +856,10 @@ def main():
     ap.add_argument("--list", action="store_true",
                     help="print the probes and exit without running them")
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--jobs", type=int,
+                    default=max(1, min(4, os.cpu_count() or 1)),
+                    help="probes run at once, each in its own sandbox "
+                         "(default: up to 4)")
     args = ap.parse_args()
 
     binary = Path(args.binary).resolve()
@@ -818,7 +894,12 @@ def main():
     print(f"families {', '.join(families)}\n")
 
     with tempfile.TemporaryDirectory() as tmp:
-        work = Path(tmp)
+        # The prepared sandbox is a TEMPLATE. No probe runs in it; each is
+        # cloned from it into boxes/, so no probe sees another's output.
+        work = Path(tmp) / "template"
+        boxes = Path(tmp) / "boxes"
+        work.mkdir()
+        boxes.mkdir()
         for f in FIX.glob("*.cue"):
             shutil.copy(f, work)
         shutil.copy(FIX / "cdda.nrg", work)
@@ -843,21 +924,60 @@ def main():
             print(f"\n{len(probes)} probe(s)")
             return 0
 
-        for i, (label, argv, env) in enumerate(probes, 1):
-            run = invoke(binary, label, argv, work, out_root, env)
-            runs.append(run)
-            check(run, banner_re, can_sanitize, findings, unprobed)
-            if args.verbose:
-                print(f"  [{i}/{len(probes)}] {label} -> "
-                      f"{'TIMEOUT' if run.timed_out else run.exit_code}")
-            elif i % 25 == 0:
-                print(f"  ... {i}/{len(probes)}", flush=True)
+        # GROUPS, IN ORDER. A group is one probe, or a run of consecutive
+        # probes that must share a sandbox (SEQUENTIAL_PREFIXES).
+        groups = []
+        for p in probes:
+            seq = p[0].startswith(SEQUENTIAL_PREFIXES)
+            if seq and groups and groups[-1][0][0].startswith(SEQUENTIAL_PREFIXES):
+                groups[-1].append(p)
+            else:
+                groups.append([p])
+
+        jobs = max(1, args.jobs)
+        print(f"jobs     {jobs} at once, each group in its own sandbox\n")
+        done = 0
+        results = [None] * len(groups)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as ex:
+            futs = {ex.submit(run_group, binary, g, (work, boxes), i): i
+                    for i, g in enumerate(groups)}
+            for fut in concurrent.futures.as_completed(futs):
+                results[futs[fut]] = fut.result()
+                done += len(results[futs[fut]])
+                if not args.verbose and done // 25 != (done - len(results[futs[fut]])) // 25:
+                    print(f"  ... {done}/{len(probes)}", flush=True)
+
+        # AN OUTSIDE-ROOT FINDING FROM A CONCURRENT RUN IS RE-RUN ALONE. The
+        # outside roots are the machine's, not the sandbox's, so while several
+        # probes run at once an appearance there falls inside every
+        # overlapping probe's window, and a common token can name the wrong
+        # one. The group that reported it is run again by itself, in a fresh
+        # sandbox, and its alone-result replaces the concurrent one: the
+        # attribution is then exactly what the sequential sweep gave.
+        if jobs > 1:
+            for i, g in enumerate(groups):
+                if any("OUTSIDE the sandbox" in e
+                       for r in results[i] for e in r.escaped):
+                    print(f"  re-running {g[0][0]} alone to attribute an "
+                          f"outside-root appearance exactly", flush=True)
+                    results[i] = run_group(binary, g, (work, boxes),
+                                           len(groups) + i)
+
+        i = 0
+        for group_runs in results:
+            for run in group_runs:
+                i += 1
+                runs.append(run)
+                check(run, banner_re, can_sanitize, findings, unprobed)
+                if args.verbose:
+                    print(f"  [{i}/{len(probes)}] {run.label} -> "
+                          f"{'TIMEOUT' if run.timed_out else run.exit_code}")
 
         # fam_filesystem chmods a directory to 0o555, and a file inside a
         # read-only directory cannot be unlinked -- so TemporaryDirectory's own
         # cleanup would fail and the sweep would end in a traceback AFTER doing
         # all its work. Restore every directory before leaving the block.
-        for d in work.rglob("*"):
+        for d in list(work.rglob("*")) + list(boxes.rglob("*")):
             if d.is_dir():
                 try:
                     os.chmod(d, 0o755)
