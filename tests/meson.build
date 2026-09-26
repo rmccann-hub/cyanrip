@@ -327,6 +327,17 @@ test('Contract delta names its section', python,
 test('Lap commit list names its range', python,
      args: [ files('lap_commits.py') ])
 
+## A lap body in LSL, the statement language proposed in round 27 lap 6
+## (docs/handshake/PROPOSAL-lap-statement-language.md). Every defect either
+## side has found in the other's laps was in the prose, never in a header, so
+## LSL makes the body fields: a closed set of kinds, each with the fields that
+## make it checkable, and references that name a commit. This builds a lap for
+## every refusal the spec lists and asserts the message as well as the exit
+## code, and it checks every committed lap of ours that declares `LSL: 1`, so
+## one cannot be sent malformed.
+test('Lap statements are well formed', python,
+     args: [ files('lap_statements.py') ])
+
 test('Handshake wire conformance', python,
      args: [ files('handshake_wire.py'), meson.project_source_root() ])
 
