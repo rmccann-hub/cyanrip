@@ -73,6 +73,16 @@ commit carrying this entry**. Its `Handshake:` line moved; the build tag,
 the timings, the timestamps and the log checksum over them moved as they do on
 every run.
 
+**Round 27's Full acceptance ran after all**, on `.16` with Platterpus 0.6.60,
+from 04:13:08Z on 2026-09-26, and passed 320 of 320 with nothing skipped. It is
+filed as `docs/rig-2026-09-26-221a1df/`, 38 files byte-identical to the bundle.
+Both of `.16`'s fixes are confirmed on the drive against earlier builds' logs of
+the same steps. Its two wrong reads, both logged with `Ripping errors: 0`, are
+the case `.17`'s 450 rewording addresses. **It overtakes our round 27 lap 6**,
+written seventeen minutes into the run, which called the round's evidence the
+quick run alone; the correction is in `docs/handshake/STATUS.md` and goes in
+round 28 lap 1.
+
 0.9.4-rc2+platterpus.16 — 2026-09-24 — **stable**
 =================================================
 **Released at `221a1df`, `release_seq` 26, authorised by round 26** (`GO`/`GO`,

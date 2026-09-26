@@ -64,8 +64,8 @@ settled by building 0.9.3 and running it. The measured matrix is
 
   **AND THE NUMBER IT REPORTS IS WRONG BY ROUGHLY FIFTEEN TIMES.** `cd-paranoia
   -A` on the same drive says **137 sectors, then 140**; we say *at least 2048*
-  on **every** run that has produced the line — **eleven** filed sessions as of
-  2026-09-24, the eleventh on `df91ae7` in round 26's real test, derived by
+  on **every** run that has produced the line — **twelve** filed sessions as of
+  2026-09-26, the twelfth on `221a1df` in round 27's Full run, derived by
   scanning the transcripts rather than counted from memory; this said "all three"
   for a month while five more existed, and then "nine" for five days after the
   tenth was filed. **The ceiling is not why** — `miss_cost` is
