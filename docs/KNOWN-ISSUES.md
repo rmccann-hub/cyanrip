@@ -238,7 +238,17 @@ and obvious — assert the exclusion set, and make the inert-edit probe a gate
 again or say out loud that it is not one — but "cheap" is not a reason to widen a
 round. `docs/ROUND-22-PLAN.md`.
 
-### `Interrupted sample freshness` has failed TWICE, and the second failure named the arm
+### `Interrupted sample freshness` fails intermittently, and the second failure named the arm
+
+**The heading used to say "TWICE", which the third occurrence falsified**; the
+dated occurrences below are the record. **Third occurrence 2026-09-26**, at
+`0f5f935`, run by hand straight after regenerating the sample, not in a suite:
+the fresh probe's log has `Repeating ripping (5 out of 200 …)`, then the album
+summary, `Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)` and
+`Interrupted at: track 1, mid-read`, with no `Stopping, ripping incomplete!`.
+So the SIGTERM landed between `-Z` passes, not inside a frame loop. Three
+re-runs straight afterwards exit 0.
+
 
 **Measured 2026-09-17, one occurrence, in a full suite run.** `Ok: 85 Fail: 1`,
 and the message was precise:
