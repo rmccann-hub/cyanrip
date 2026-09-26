@@ -285,6 +285,10 @@ SENT = {
     # 2026-09-26 that let it be ready without a Full run.
     "round-27-lap-04.md":
         "90b7f401f7b1cb0fed127c6686301e36ce010b87226373b98f68b58e1d922b89",
+    # Round 27 lap 6, the close, released on the operator's "start talking in
+    # the handshake files". The first lap whose body is in LSL.
+    "round-27-lap-06.md":
+        "d95bb28e7238531ea682ec5464d8b6d3a75c7bba9a8b2552b55f19af9b60493f",
 }
 
 failures = 0
