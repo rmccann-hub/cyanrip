@@ -44,6 +44,7 @@ Usage:
 """
 
 import argparse
+import functools
 import hashlib
 import pathlib
 import re
@@ -67,6 +68,13 @@ LAP_DECL_RE = re.compile(r"(?m)^HANDSHAKE-LAP:")
 FROM_DECL_RE = re.compile(r"(?m)^HANDSHAKE-FROM:")
 
 
+# CACHED ON THE TEXT, because it is a pure function of it and the callers ask
+# the same question hundreds of times. tests/release_gate.py's
+# scan_declarations() re-derives every declared digest, and each derivation
+# re-parsed every file in the record: 309,000 regex calls, 30 of that test's
+# 40 s (cProfile, 2026-09-26). Keyed on the whole text, not on a path or a
+# stat, so an edited file is a different key and can never hit a stale entry.
+@functools.lru_cache(maxsize=None)
 def is_a_lap(text):
     """PROTOCOL.md v4 §5a: one lap iff ROUND, LAP and FROM each appear exactly
     once after fenced blocks are stripped.
