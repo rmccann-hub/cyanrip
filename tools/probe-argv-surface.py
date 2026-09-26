@@ -46,6 +46,7 @@ import os
 import pathlib
 import re
 import shutil
+import concurrent.futures
 import subprocess
 import sys
 import tempfile
@@ -269,20 +270,40 @@ def main():
         shutil.copy(os.path.join(root, "tests/fixtures/basic.cue"), work)
         shutil.copy(os.path.join(root, "tests/fixtures/cdda.bin"),
                     os.path.join(work, "basic.bin"))
-        image = os.path.join(work, "basic.cue")
+        # ONE DIRECTORY PER INVOCATION, and a worker pool over them. The 116
+        # invocations are independent, and one at a time they were 27 s of
+        # the suite (2026-09-26). But they ran in ONE directory, and -I writes
+        # its logs into the working directory, so running them together there
+        # could let one see another's files. Each gets its own directory with
+        # links to the one image, so none can see another's output, and
+        # results come back in submission order. Measured byte-identical to
+        # the sequential run's --markdown output before this landed.
+        def fresh(n):
+            d = os.path.join(work, f"p{n:03d}")
+            os.mkdir(d)
+            for f in ("basic.cue", "basic.bin"):
+                os.symlink(os.path.join(work, f), os.path.join(d, f))
+            return os.path.join(d, "basic.cue")
 
-        rows, ignored = [], []
-        for flag, label, values in GRID + STRING_GRID:
-            for v in values:
-                outcome, rc, msg, obs = probe(binary, image, flag, v)
+        jobs = [(flag, label, v, None)
+                for flag, label, values in GRID + STRING_GRID for v in values]
+        jobs += [(None, label, None, flags) for flags, label in INTERACTIONS]
+        images = [fresh(n) for n in range(len(jobs))]
+        workers = max(1, min(8, os.cpu_count() or 1))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+            results = list(ex.map(
+                lambda ji: probe(binary, ji[1], ji[0][0], ji[0][2],
+                                 extra=ji[0][3]),
+                zip(jobs, images)))
+
+        rows, ignored, inter = [], [], []
+        for (flag, label, v, flags), (outcome, rc, msg, obs) in zip(jobs, results):
+            if flags is None:
                 rows.append((flag, label, repr(v), outcome, rc, msg, obs))
                 if outcome == "ignored":
                     ignored.append((flag, v))
-
-        inter = []
-        for flags, label in INTERACTIONS:
-            outcome, rc, msg, _ = probe(binary, image, None, None, extra=flags)
-            inter.append((" ".join(flags), label, outcome, rc, msg))
+            else:
+                inter.append((" ".join(flags), label, outcome, rc, msg))
 
     if a.gate:
         # A crash outranks every other finding: it is an undiagnosable failure
