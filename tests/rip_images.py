@@ -1565,6 +1565,34 @@ def sc_early_log():
         elif probe_line not in log:
             fail(f"early_log: {probe_line!r} reached stdout but not the log")
 
+    # A RUN THAT FAILS AFTER THE LOG OPENS AND BEFORE THE HEADER. Found by the
+    # black-box sweep once each probe got its own sandbox, round 27: an invalid
+    # -M scheme fails in cyanrip_cue_init(), after cyanrip_log_init() has
+    # opened the log and before cyanrip_log_start_report() writes the banner,
+    # so the log began with the error, carried no banner, no Handshake: line
+    # and no pre-log replay, and went on to a full footer. The shared sandbox
+    # had hidden it: an earlier probe's log.log was already there, so this one
+    # was never new and never checked.
+    ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac", "-D", WORK / "out_early_fail",
+                   "-L", "log", "-M", "{album")
+    flog = WORK / "out_early_fail" / "log.log"
+    if ec == 0:
+        fail("early_log/fail: an invalid -M scheme exited 0 -- probe is stale")
+    elif not flog.exists():
+        fail("early_log/fail: no log was written -- probe is stale")
+    else:
+        fl = flog.read_text().splitlines()
+        if not fl or not re.match(r"^cyanrip \S+ \(platterpus-fork-g", fl[0]):
+            fail(f"early_log/fail: first log line is not the version banner: "
+                 f"{(fl[0] if fl else '')!r}")
+        if not any(l.startswith("Handshake:") for l in fl[:6]):
+            fail("early_log/fail: no Handshake: line in the log's header")
+        if not any("Invalid scheme syntax" in l for l in fl):
+            fail("early_log/fail: the failure itself is not in the log")
+        if "--- output before this log was opened ---" not in fl:
+            fail("early_log/fail: the pre-log replay never reached the log")
+
     # A real diagnostic, not just progress chatter. Cover-art lookup reports
     # its own refusal before the log opens; -N makes it deterministic and
     # offline (no release ID to search with), so this exercises the case the

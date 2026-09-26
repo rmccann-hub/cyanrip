@@ -437,6 +437,11 @@ typedef struct cyanrip_ctx {
      * second always-present number invites a consumer to pick one, which will
      * occasionally be the wrong one silently. -INFINITY until measured. */
     double direct_sample_peak;
+    /* Set once the banner and the lines after it have been written. They go
+     * out as soon as the logs exist, so a run that fails before the header
+     * still says which build wrote its log; cyanrip_log_start_report() then
+     * skips them rather than writing them twice. */
+    int identity_logged;
 } cyanrip_ctx;
 
 typedef struct cyanrip_out_fmt {

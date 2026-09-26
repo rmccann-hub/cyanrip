@@ -727,8 +727,26 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
     cyanrip_log(ctx, 0, "\n");
 }
 
-void cyanrip_log_start_report(cyanrip_ctx *ctx)
+/* WHICH BUILD WROTE THIS LOG, for whom, and in what round state: the banner,
+ * which is contractually the logfile's first line, and the three lines after
+ * it. Written as soon as the logs exist, not with the rest of the header.
+ *
+ * Round 27 found why, through the black-box sweep once every probe had its own
+ * sandbox. An invalid -M scheme fails in cyanrip_cue_init(), after
+ * cyanrip_log_init() has opened the log and before cyanrip_log_start_report()
+ * ran, so the log began with the error, carried no banner and no Handshake:
+ * line, and still ended with a full footer and a FUN512. A log that cannot say
+ * which build wrote it is the one record a consumer cannot place. Any exit
+ * between the two calls did the same.
+ *
+ * Once only: cyanrip_log_start_report() calls this too, which is what prints
+ * the banner on -I and -J runs, where no log is opened. */
+static void crip_log_identity(cyanrip_ctx *ctx)
 {
+    if (ctx->identity_logged)
+        return;
+    ctx->identity_logged = 1;
+
     cyanrip_log(ctx, 0, "cyanrip %s (%s-g%s)\n", PROJECT_VERSION_STRING,
                 PROJECT_FORK_ID, vcstag);
     if (crip_invocation)
@@ -767,6 +785,11 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
                                           : "not identified (no --consumer given)");
     if (ctx->settings.consumer_id)
         cyanrip_log(ctx, 0, "                (reported by the caller, not verified by cyanrip)\n");
+}
+
+void cyanrip_log_start_report(cyanrip_ctx *ctx)
+{
+    crip_log_identity(ctx);
     cdio_hwinfo_t hwinfo;
     const int hwinfo_success = cdio_get_hwinfo(ctx->cdio, &hwinfo);
     if (!hwinfo_success)
@@ -905,6 +928,13 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
 {
     char t_s[64];
     crip_iso8601_now(t_s, sizeof(t_s));
+
+    /* A run that failed before the header never replayed what it said before
+     * the log opened -- that happens at the end of cyanrip_log_start_report().
+     * Replay it here instead, ahead of the footer, so the lines explaining an
+     * early failure reach the log. On every other run it has already happened
+     * and this does nothing. */
+    crip_early_flush(ctx);
 
     if (ctx->ar_db_status == CYANRIP_ACCUDB_FOUND) {
         int accurip_verified = 0;
@@ -1046,9 +1076,13 @@ int cyanrip_log_init(cyanrip_ctx *ctx)
             setvbuf(ctx->logfile[i], NULL, _IOLBF, 0);
 
         if (!ctx->logfile[i]) {
+            /* errno first: writing the identity lines can change it. Then the
+             * identity, so any log that DID open starts with the banner. */
+            const int err = errno;
+            crip_log_identity(ctx);
             cyanrip_log(ctx, 0, "Couldn't open path \"%s\" for writing: %s!\n"
                         "Invalid folder name? Try -D <folder>.\n",
-                        logfile, av_err2str(AVERROR(errno)));
+                        logfile, av_err2str(AVERROR(err)));
             av_freep(&logfile);
             return 1;
         }
@@ -1056,6 +1090,7 @@ int cyanrip_log_init(cyanrip_ctx *ctx)
         av_freep(&logfile);
     }
 
+    crip_log_identity(ctx);
     return 0;
 }
 
