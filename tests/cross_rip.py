@@ -102,6 +102,26 @@ with tempfile.TemporaryDirectory() as t:
     ec, out = run(d / "nothing-here")
     check(ec == 2, f"no files at all: exit {ec}, want 2")
 
+# --- a positive line that contains a negative phrase -------------------------
+# Platterpus's round 27 lap 5 §C: a classifier that decides NEGATIVE on a phrase
+# misreads a positive line containing it, and `.17`'s 450 match ends
+# "whole-track checksums not found". Ours matches the parenthetical's START and
+# tries the positive forms first; this pins that, on both wordings.
+import importlib.util
+_spec = importlib.util.spec_from_file_location("cross_rip_tool", TOOL)
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+for line, want in [
+    ("    Accurip 450: 57722DDE (matches Accurip DB, confidence 200, one frame "
+     "only; whole-track checksums not found)\n", "450 match, confidence 200"),
+    ("    Accurip 450: 57722DDE (matches Accurip DB, confidence 200, partially "
+     "accurately ripped)\n", "450 match, confidence 200"),
+    ("    Accurip v1:  1B28C061 (not found, either a new pressing, or bad rip)\n",
+     "v1 not found"),
+]:
+    got = _mod.ar_summary(line)
+    check(got == want, f"{line.strip()!r} read as {got!r}, want {want!r}")
+
 if failures:
     print(f"{failures} check(s) failed", file=sys.stderr)
     sys.exit(1)
