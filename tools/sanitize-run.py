@@ -115,11 +115,37 @@ def skip(msg):
     sys.exit(77)
 
 
+def sanitizer_symbols(binary):
+    """How many sanitizer symbols `binary` carries. Asked of the binary."""
+    nm = run(["nm", str(binary)])
+    symbols = sum(1 for line in nm.stdout.splitlines()
+                  if "ubsan" in line.lower() or "asan" in line.lower())
+    if nm.returncode != 0:
+        blob = pathlib.Path(binary).read_bytes()
+        symbols = (b"__ubsan_handle" in blob) + (b"__asan_report" in blob)
+    return symbols
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true",
                     help="a representative subset rather than all 37")
+    ap.add_argument("--unless-instrumented", metavar="BINARY",
+                    help="skip, saying why, when BINARY -- the build the rest "
+                         "of the suite runs -- is itself instrumented")
     args = ap.parse_args()
+
+    # IN A SANITIZED BUILD THIS SWEEP IS THE SUITE, TWICE. Two of CI's four
+    # rows build with -Db_sanitize, and there every image scenario already
+    # runs under ASan and UBSan; building build-asan and running them again
+    # checks nothing new. Asked of the binary, like the check below, so a
+    # sanitized option that did not reach the binary does not skip anything.
+    if args.unless_instrumented:
+        n = sanitizer_symbols(args.unless_instrumented)
+        if n:
+            skip(f"{args.unless_instrumented} carries {n} sanitizer symbol(s), "
+                 "so every image scenario in this suite already runs under "
+                 "ASan and UBSan; a second instrumented sweep would repeat it")
 
     if not shutil.which("meson") or not shutil.which("ninja"):
         skip("meson or ninja is not on PATH")
@@ -144,12 +170,7 @@ def main():
     # binary, not of the build options: a stale build directory configured
     # without sanitizers would otherwise report a clean sweep forever.
     binary = BUILD / "src" / "cyanrip"
-    nm = run(["nm", str(binary)])
-    symbols = sum(1 for line in nm.stdout.splitlines()
-                  if "ubsan" in line.lower() or "asan" in line.lower())
-    if nm.returncode != 0:
-        blob = binary.read_bytes()
-        symbols = (b"__ubsan_handle" in blob) + (b"__asan_report" in blob)
+    symbols = sanitizer_symbols(binary)
     if not symbols:
         print(f"FAIL: {binary} carries no sanitizer symbols, so a clean run "
               f"would prove nothing. Wipe {BUILD.name} and re-run.")

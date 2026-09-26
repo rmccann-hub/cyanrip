@@ -389,7 +389,13 @@ test('Release gate', python, args: [ files('release_gate.py') ],
 ## run -- a sanitizer sweep over an uninstrumented build reports zero findings
 ## and means nothing, the same shape as a mutation sweep whose mutants are all
 ## killed by a check that hashes the source.
-test('Sanitizer sweep', python, args: [ files('../tools/sanitize-run.py') ],
+## In a build that is itself instrumented -- two of CI's four rows -- the
+## sweep skips, saying so: every image scenario here already runs under the
+## sanitizers, and a second instrumented tree would repeat them.
+test('Sanitizer sweep', python,
+     args: [ files('../tools/sanitize-run.py'),
+             '--unless-instrumented', cyanrip_exe.full_path() ],
+     depends: cyanrip_exe,
      timeout: 900)
 
 ## Timeout raised from meson's 30 s default: these rows run git and python over
