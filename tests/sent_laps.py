@@ -280,6 +280,11 @@ SENT = {
     # Platterpus's lap 2 answers the first version; the lap says so.
     "round-27-lap-01.md":
         "c3a7a2a4ae5856d401a9544acee010160b6c4cb8f65dbcf9eb117976edde183d",
+    # Round 27 lap 4, released on the operator's standing word of 2026-09-25,
+    # "release the next lap when ready", and their override of R1 on
+    # 2026-09-26 that let it be ready without a Full run.
+    "round-27-lap-04.md":
+        "90b7f401f7b1cb0fed127c6686301e36ce010b87226373b98f68b58e1d922b89",
 }
 
 failures = 0
