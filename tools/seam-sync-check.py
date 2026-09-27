@@ -54,6 +54,12 @@ SHARED = [
 
 DEFAULT_PEER = "/home/user/rmccann-hub/platterpus"
 PEER_URL = "https://github.com/rmccann-hub/platterpus"
+# THEIR REF OF RECORD, BY NAME. --fetch used to take `origin HEAD`, which is a
+# pointer to "whichever branch is their default today" -- the shape Platterpus's
+# round 28 lap 2 S23-S24 named, trusting a pointer to the current one. Their
+# HEAD pointed at main when this was written, so nothing read differently; but
+# CLAUDE.md says this tool reads `main`, and the two only agreed by luck.
+PEER_REF = "main"
 
 SHARED_HASHES_RE = re.compile(r"(?m)^HANDSHAKE-SHARED-HASHES:[ \t]*(.+?)[ \t]*$")
 
@@ -92,7 +98,7 @@ def main():
     ap.add_argument("--peer", default=DEFAULT_PEER,
                     help=f"peer checkout (default {DEFAULT_PEER})")
     ap.add_argument("--fetch", action="store_true",
-                    help="git fetch the peer's default branch first")
+                    help=f"git fetch the peer's ref of record, {PEER_REF}, first")
     args = ap.parse_args()
 
     peer = pathlib.Path(args.peer)
@@ -125,7 +131,7 @@ def main():
         # the `fetch --unshallow` that repaired this peer clone the day before.
         # A tool that creates the hazard it warns about is worse than one that
         # does neither.
-        rc, _, err = git(peer, "fetch", "origin", "HEAD")
+        rc, _, err = git(peer, "fetch", "origin", PEER_REF)
         if rc != 0:
             print(f"CANNOT CHECK: fetch failed: {err}", file=sys.stderr)
             return 2
@@ -169,6 +175,8 @@ def main():
 
     print(f"ours   {ours_sha[:7]}  {ROOT}")
     print(f"theirs {peer_sha[:7]}  {peer}"
+          + (f"  (fetched {PEER_REF})" if args.fetch
+             else "  (as checked out; not fetched)")
           + ("  [WORKING TREE IS DIRTY]" if dirty else ""))
     if lap_name:
         print(f"lap    {lap_name} declares HANDSHAKE-SHARED-HASHES")
