@@ -627,16 +627,16 @@ label and use only as a cross-check, so renaming that label needs their
 both-wordings release first. Their EAC-compatible log's proposed wording is
 theirs, under H4.
 
-**Reworded for `.17`, not released.** The match now reads `(matches Accurip DB,
+**Reworded in `.17`, released 2026-09-26 at `e0471f4`.** The match reads `(matches Accurip DB,
 confidence N, one frame only; whole-track checksums not found)`: `confidence N`
 stays on the match alone, as their condition asks, and `matches Accurip DB` is
 kept. No string they match is removed, so nothing of theirs has to ship first.
-It is a P2 line, so round 27 lap 4 announces it. `.16` and every filed log keep
-the old tail. The tally label is unchanged: renaming it needs their
+It is a P2 line, and round 27 lap 4 announced it; their lap 5 accepted it.
+`.16` and every log filed before `.17` keep the old tail. The tally label is unchanged: renaming it needs their
 both-wordings release first.
 
-**Our answer to their EAC-log wording, for round 27 lap 4: amend one clause,
-accept the rest.** They proposed, per track, `Only one frame matched AccurateRip
+**Our answer to their EAC-log wording, sent in round 27 lap 4 and accepted in
+their lap 5: amend one clause, accept the rest.** They proposed, per track, `Only one frame matched AccurateRip
 — rest of track unverified (confidence 200)  [57722DDE]  (AR frame 450)`, and in
 the summary `1 track(s) matched AccurateRip on one frame only`. The summary is
 accepted as written. **The per-track line says less than was established**: the
@@ -660,7 +660,8 @@ loudness of the audio that passed through the `ebur128` graph, which on an
 interrupted rip is a partial track, and on every `-l` rip is the selected
 tracks only. The four owned rows and libavfilter's block both say "Album".
 
-**Not fixed, because the fix is a wording decision.** The candidates are
+**Status: left as it is, by the consumer's answer below.** It was not fixed at
+first because the fix is a wording decision. The candidates were
 leaving the four owned rows out when not every track of the disc was ripped,
 or adding a scope line beside them as `Scope:` does for paranoia. Both change
 rows Platterpus parses into `album_loudness`. It belongs to the next round,
