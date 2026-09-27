@@ -1,7 +1,13 @@
 # Upstream sync analysis — `f8ebf48`, 2026-08-24
 
-**Status: ANALYSIS ONLY. Nothing has been merged into `platterpus-fork`, and
-nothing should be until round 13 closes.** `master` (our clean mirror) has been
+**Status, 2026-09-27: STILL NOT MERGED.** `git merge-base --is-ancestor f8ebf48
+platterpus-fork` is false at `platterpus-fork`'s tip. The condition this line
+first named, round 13 closing, was met long ago; what holds it now is that a
+merge moves `PROVIDER-CONTRACT.md` P5 by the two lines in §2, so it is
+announced in a round before it lands, and the operator's instruction of
+2026-09-27 not to merge upstream. The line as first written: *"ANALYSIS ONLY.
+Nothing has been merged into `platterpus-fork`, and nothing should be until
+round 13 closes."* `master` (our clean mirror) has been
 fast-forwarded to `f8ebf48`; the fork is at `d024694` and does not contain it.
 Syncing the mirror is free and touches no consumer-facing reference — this
 document is what makes the delta visible, which is the only reason the mirror
