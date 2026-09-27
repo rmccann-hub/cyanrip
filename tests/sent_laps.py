@@ -293,6 +293,11 @@ SENT = {
     # when ready". Opens round 28 on .17 and answers LSL amendments 1.
     "round-28-lap-01.md":
         "060fd2514c10d01e922500c622034639f1b59c9d5fa4f4902fdf6973de475a70",
+    # Round 28 lap 3, released on the operator's "anything to do or send back
+    # to them in a lap? if so do it, then release the lap". Goes before the
+    # Full run: .17's contract, the .18 announcement, and LSL 2.
+    "round-28-lap-03.md":
+        "0a8f3e0fff31cc4d3a968754a17a8cf064e478557c9afd2b110999c251800373",
 }
 
 failures = 0
