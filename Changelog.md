@@ -44,6 +44,15 @@ that would downgrade it. No real response has had that shape, and Platterpus's
 parser ignores the disc-level line. No line's text changes; one line's value
 does, in a case no rip has reached. It is upstream's code too.
 
+**Upstream records corrected, from the operator's seam-automation proposal.**
+The cache-model report was re-measured on a build of upstream `f8ebf48`: its
+claim holds (`-P 1` to `3` give 0.3 % non-zero samples, `Ripping errors: 0`),
+and its title and its reproduction command were wrong and are fixed. The rc2
+sync note said *ANALYSIS ONLY* five weeks after rc2 merged at `1ee56fc`, and
+now says MERGED. `seam-check --held` names the 107 hashes it re-checks instead
+of printing `0 lap(s) checked`. A thirteenth defect shared with upstream, the
+AccurateRip status above, has a drafted report.
+
 **LSL 3 is written into the shared proposal and implemented** behind `LSL: 3`,
 as Platterpus's round 28 lap 4 S25 waits on: B1 as they amended it, B2 and B3.
 A `GO` needs a close condition to wait for (B2); `answers:` counts only on a
