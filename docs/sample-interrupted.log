@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-gf150c0c)
+cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-ge8e3cc2)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 28 lap 1 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 28 lap 3 OPEN, verdict OPEN -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -59,6 +59,16 @@ Gaps:
 
 Tracks:
 
+Repeating ripping (0 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (1 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (2 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (3 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (4 out of 200 matches for current checksum 2C926D69)
+
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -83,7 +93,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          12
+  READ:          89
 
 Ripping errors: 1
 Encoder errors: not applicable; no whole track was encoded
@@ -91,5 +101,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-09-27T15:08:51+00:00
-Log FUN512: jkLnHwVXsg6L6tKqObSRFTrqL3jIwaWO9pXeU3Ks58KIOEz5anWIxkVnKhKCyH2XRSyraLQnBi5Ucnp_21Rhcg
+Ripping finished at 2026-09-27T15:34:02+00:00
+Log FUN512: yNxkryYjqo4a6eP1gABl6OpYDxAoI7oT_sd27Pj271OZ.6nDoqg.gZxrVEFdhHkdGwCUNzoNjeYm.kO4p9fBZQ
