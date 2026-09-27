@@ -3871,14 +3871,15 @@ def sc_mutation_exclusions_are_pinned():
     here until somebody changes this line deliberately -- the same treatment
     `GRANDFATHERED` gets in `tests/release_gate.py`, and for the same reason.
 
-    It does NOT verify the premise the set rests on, which is that exactly one
-    test detects an EDIT rather than a DEFECT. A sweep is vacuous if a second
-    such test exists: every mutant dies on the edit and the score reads 100%.
-    Only the inert-edit probe establishes that, by making a behaviourally inert
-    change and asking which tests fail -- AND THE PROBE NO LONGER RUNS.
-    `docs/inert-edit-probe.log` opens with "FILED EVIDENCE, not a re-runnable
-    gate", and `sc_artifacts_are_tracked()` asserts it is TRACKED, not that it is
-    TRUE.
+    It does NOT itself verify the premise the set rests on, which is that
+    exactly one test detects an EDIT rather than a DEFECT. A sweep is vacuous if
+    a second such test exists: every mutant dies on the edit and the score reads
+    100%. Only the inert-edit probe establishes that, by making a behaviourally
+    inert change and asking which tests fail -- and for nine days THE PROBE DID
+    NOT RUN: `docs/inert-edit-probe.log` is filed evidence from one run. Since
+    2026-09-27 `mutate.py` runs it before every sweep and refuses to report a
+    score when the set is wrong. So this also asserts that the call is there:
+    a probe that is written and never called is the same prose premise again.
 
     WHY THAT GAP IS WORTH A CHECK ANYWAY. The premise lapsed once already, within
     hours: `tools/sanitize-run.py` ran the images suite in the instrumented tree,
@@ -3901,6 +3902,20 @@ def sc_mutation_exclusions_are_pinned():
         fail(f"mutation_exclusions: tools/mutate.py did not import ({exc}), so "
              f"this check is guarding nothing")
         return
+
+    import inspect
+    try:
+        sweep_src = inspect.getsource(mod.sweep)
+    except (AttributeError, OSError, TypeError) as exc:
+        sweep_src = ""
+        fail(f"mutation_exclusions: no sweep() to read in tools/mutate.py ({exc})")
+    if "inert_edit_probe()" not in sweep_src:
+        fail("mutation_exclusions: sweep() does not call inert_edit_probe(), so "
+             "a score is reported without checking that EXCLUDED_TESTS is "
+             "exactly the tests that detect an edit")
+    if "UNPROBED" not in sweep_src:
+        fail("mutation_exclusions: sweep() can skip the probe without printing "
+             "UNPROBED over the score")
 
     want = {"contract_build"}
     got = set(getattr(mod, "EXCLUDED_TESTS", {}))

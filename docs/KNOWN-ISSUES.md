@@ -184,6 +184,16 @@ belongs to libcdio-paranoia**, not to cyanrip.
 
 ### `EXCLUDED_TESTS` rests on a premise we recorded as lapsed, and nothing reads that premise
 
+**FIXED 2026-09-27: the premise is now read by code, before every sweep.**
+`tools/mutate.py`'s `inert_edit_probe()` appends a comment at EOF of
+`src/utils.c`, runs the whole suite, re-runs any failure alone with the edit
+still applied (this suite has a known timeout under load, and a flake is not an
+edit detector), and **refuses to report a score** if a test outside
+`EXCLUDED_TESTS` fails on the edit, or a test inside it no longer does.
+`--probe-only` runs just that; `--skip-probe` prints `UNPROBED` over the score.
+`sc_mutation_exclusions_are_pinned()` now also asserts that `sweep()` calls the
+probe, and fails with the call removed. The entry below is the record of why.
+
 **Found 2026-09-17 by checking Platterpus's round-21 lap 4 §H shape against our
 own tree rather than assuming it was not here.** Their shape: *a guard widened
 under an assumption, with the note recording that the assumption had lapsed

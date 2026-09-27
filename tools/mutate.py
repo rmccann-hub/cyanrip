@@ -62,6 +62,15 @@ pattern, and the exclusion is printed on every run. If another source-hashing
 check is ever added, this sweep silently returns to reporting 100% -- so the
 probe above is worth repeating rather than trusting this comment.
 
+**AND IT IS REPEATED, BEFORE EVERY SWEEP**, by inert_edit_probe() below. For
+nine days this paragraph said the probe was worth repeating while nothing
+repeated it: the premise EXCLUDED_TESTS rests on was retired in prose and read by
+no code (docs/KNOWN-ISSUES.md). Now a sweep makes the inert edit, runs the whole
+suite, and refuses to report a score if any test outside EXCLUDED_TESTS fails on
+it, or if a test inside it no longer does. `--probe-only` runs just that.
+`--skip-probe` exists for a sweep of a file the probe was just run for, and says
+UNPROBED over the score it prints.
+
 SAFETY, AND IT RUNS IN A WORKTREE. Mutating `src/` in the working tree left it
 dirty for the whole sweep -- forty minutes during which `git status` showed a
 deliberately broken file, no other work could touch `src/` or run the suite, and
@@ -220,7 +229,15 @@ def main():
     ap.add_argument("--count", action="store_true",
                     help="report the pool size per file and exit, so a sweep "
                          "is costed before it is started")
+    ap.add_argument("--probe-only", action="store_true",
+                    help="run the inert-edit probe and exit: which tests fail "
+                         "on an edit that changes no behaviour")
+    ap.add_argument("--skip-probe", action="store_true",
+                    help="sweep without the probe; the score is then printed "
+                         "as UNPROBED")
     args = ap.parse_args()
+    if args.probe_only and args.skip_probe:
+        ap.error("--probe-only and --skip-probe contradict each other")
 
     if args.count:
         total = 0
@@ -275,7 +292,80 @@ def main():
             run(["git", "worktree", "prune"])
 
 
+# The probe's edit: a comment at EOF of a file every build compiles, so it moves
+# no line number and changes no behaviour. The same edit docs/inert-edit-probe.log
+# records, in the same file.
+PROBE_FILE = "src/utils.c"
+PROBE_TEXT = "\n/* mutate.py inert-edit probe: behaviourally inert */\n"
+FAILED_LINE = re.compile(r"^\s*\d+/\d+ (.*?)\s+(?:FAIL|TIMEOUT)\b", re.M)
+
+
+def short_name(meson_name):
+    """`images - cyanrip:contract_build` -> `contract_build`."""
+    return meson_name.split(":", 1)[-1].strip()
+
+
+def inert_edit_probe():
+    """Which tests fail on an edit that changes no behaviour. Returns
+    (ok, report lines). A test that fails here detects the EDIT, not the
+    DEFECT, and would kill every mutant -- which is what EXCLUDED_TESTS is for,
+    so the set must be exactly the tests this finds."""
+    out = [f"inert-edit probe: a comment appended at EOF of {PROBE_FILE}"]
+    p = WORK / PROBE_FILE
+    original = p.read_text(encoding="utf-8")
+    try:
+        p.write_text(original + PROBE_TEXT, encoding="utf-8")
+        b = run(["ninja", "-C", "build"], timeout=600)
+        if b is None or b.returncode != 0:
+            return False, out + ["REFUSING: the inert edit did not build, so "
+                                 "the probe measured nothing"]
+        r = run(["meson", "test", "-C", "build"], timeout=1800)
+        if r is None:
+            return False, out + ["REFUSING: the suite did not finish under "
+                                 "the inert edit"]
+        failed = {short_name(n) for n in FAILED_LINE.findall(r.stdout)}
+        # A test that failed in the full suite is asked again, alone, with the
+        # edit still applied: this suite has a known timeout under parallel
+        # load, and a flake is not an edit detector.
+        detects = set()
+        for name in sorted(failed):
+            again = run(["meson", "test", "-C", "build", name], timeout=900)
+            if again is not None and again.returncode != 0:
+                detects.add(name)
+            else:
+                out.append(f"  failed in the suite, passed alone: {name} "
+                           f"(not counted)")
+    finally:
+        p.write_text(original, encoding="utf-8")
+    excluded = set(EXCLUDED_TESTS)
+    out.append(f"  tests that detect the edit: {sorted(detects) or 'none'}")
+    extra, gone = detects - excluded, excluded - detects
+    if extra:
+        out.append(f"REFUSING: {sorted(extra)} fail on an edit that changes no "
+                   f"behaviour, so they detect the EDIT and would kill every "
+                   f"mutant. Add each to EXCLUDED_TESTS with its reason, or the "
+                   f"score is vacuous.")
+    if gone:
+        out.append(f"REFUSING: EXCLUDED_TESTS names {sorted(gone)}, which no "
+                   f"longer fail on the edit. Excluding a test that detects "
+                   f"defects narrows the score; drop it, with its reason.")
+    if not extra and not gone:
+        out.append(f"  EXCLUDED_TESTS is exactly the set: {sorted(excluded)}")
+    return not extra and not gone, out
+
+
 def sweep(args, tree):
+    if args.skip_probe:
+        print("UNPROBED: --skip-probe, so nothing below establishes that "
+              "EXCLUDED_TESTS is exactly the tests that detect an edit. The "
+              "score is not a result until the probe has run.\n")
+    else:
+        ok, lines = inert_edit_probe()
+        print("\n".join(lines) + "\n")
+        if not ok:
+            return 2
+        if args.probe_only:
+            return 0
     targets = args.files or TARGETS
     pool = []
     for t in targets:
@@ -366,6 +456,8 @@ def sweep(args, tree):
               "answers: a REAL GAP in the tests, a line whose two behaviours "
               "are genuinely equivalent, or code no fixture can reach. Read "
               "each one; do not assume the first.")
+    if args.skip_probe:
+        print("\nUNPROBED: this score was reported with --skip-probe")
     print(f"\nsrc/ restored and verified clean: {clean}")
     return 0 if clean else 1
 
