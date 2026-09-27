@@ -869,7 +869,18 @@ def main():
         if level == "FAIL":
             fails += 1
 
-    print(f"\n{len(paths)} lap(s) checked, {fails} FAIL")
+    # NAME THE POPULATION. With --held and no lap argument this printed
+    # "0 lap(s) checked, 0 FAIL" after re-checking over a hundred hashes, a
+    # clean summary that reads as having checked nothing -- the shape
+    # Platterpus's round 28 lap 2 S20 named. The held checks are counted in
+    # their own words, and a --held run that found none to check says so.
+    summary = f"{len(paths)} lap(s) checked"
+    if args.held:
+        held = sum(1 for level, cat, *_ in FINDINGS
+                   if cat.startswith("held") and level in ("OK", "FAIL"))
+        summary += (f", {held} held hash(es) re-checked" if held else
+                    ", NO held hashes found to re-check")
+    print(f"\n{summary}, {fails} FAIL")
     return 1 if fails else 0
 
 

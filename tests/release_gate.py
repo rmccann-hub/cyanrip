@@ -3337,6 +3337,35 @@ def test_seam_check_reads_the_protocol_label_the_spec_declares():
           f"a v4-era lap must read as a version difference, not drift: {got}")
 
 
+
+def test_seam_check_held_names_what_it_rechecked():
+    """Round 28, the shape of Platterpus's round 28 lap 2 S20.
+
+    `seam-check.py --held` re-checked over a hundred hashes and then printed
+    `0 lap(s) checked, 0 FAIL`, because the summary counted only lap
+    arguments. A clean line that does not name its population reads as having
+    checked nothing, and the operator's P1 would put that line in a CI job
+    summary. The count is derived from the run's own OK lines, not written
+    here, so this cannot pass by the summary printing a fixed number.
+    """
+    import subprocess
+    sc_path = HERE.parent / "tools" / "seam-check.py"
+    r = subprocess.run([sys.executable, str(sc_path), "--held"],
+                       capture_output=True, text=True, timeout=120)
+    lines = [l for l in r.stdout.splitlines() if l.strip()]
+    check(r.returncode == 0 and lines,
+          f"seam-check --held exited {r.returncode}: {r.stderr[-400:]}")
+    if not lines:
+        return
+    ok = sum(1 for l in lines if l.startswith("OK ") and " held" in l)
+    check(ok > 0, "seam-check --held printed no OK held line, so this check "
+                  "would compare against nothing")
+    want = f"0 lap(s) checked, {ok} held hash(es) re-checked, 0 FAIL"
+    check(lines[-1] == want,
+          f"seam-check --held's summary must count what it re-checked: "
+          f"got {lines[-1]!r}, want {want!r}")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()
