@@ -1267,6 +1267,75 @@ static void test_disc_tally_skips_an_interrupted_track(void)
 }
 
 /* =====================================================================
+ * `Encoder errors:` and `Partial files:` with an encoder failure.
+ *
+ * No disc image makes an encoder fail, so the arms that print a failed
+ * count were reached by no scenario: the round-28 mutation sweep left
+ * cyanrip_log.c:323, :325 and :337 [== to !=] alive, each the singular or
+ * plural of a count in one of those arms. Each count is taken at 1 and at 2,
+ * so both directions of every one of them are asserted, and the expected
+ * text is written out in full rather than matched with a pattern that would
+ * accept either spelling.
+ * ===================================================================== */
+
+static void set_encoded(cyanrip_track *t, int read_done, int nb_failures)
+{
+    t->had_encoder = 1;
+    t->audio_ripped = read_done;
+    t->encode_failures = nb_failures;
+}
+
+static void test_encoder_failure_counts_say_one_and_many(void)
+{
+    /* One of each: track 1 whole and failed, track 2 whole and clean, track 3
+     * partial and failed, track 4 never given an encoder. */
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 4);
+    set_encoded(&ctx->tracks[0], 1, 1);
+    set_encoded(&ctx->tracks[1], 1, 0);
+    set_encoded(&ctx->tracks[2], 0, 1);
+
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    expect_line(out, "Encoder errors: 1 track failed (1); 2 tracks encoded",
+                "encoder-summary/one-failed");
+    expect_line(out, "Partial files:  1 track (3), read not completed; "
+                     "encoder failures: 1", "encoder-summary/one-partial");
+    free_ctx(ctx);
+
+    /* Two of each, and a single whole track: tracks 1 and 2 partial and
+     * failed, track 3 whole and failed. */
+    ctx = new_ctx();
+    setup_disc(ctx, 3);
+    set_encoded(&ctx->tracks[0], 0, 1);
+    set_encoded(&ctx->tracks[1], 0, 2);
+    set_encoded(&ctx->tracks[2], 1, 1);
+
+    cyanrip_log_finish_report(ctx);
+    out = drain(ctx);
+    expect_line(out, "Encoder errors: 1 track failed (3); 1 track encoded",
+                "encoder-summary/one-whole");
+    expect_line(out, "Partial files:  2 tracks (1, 2), read not completed; "
+                     "encoder failures: 2", "encoder-summary/two-partial");
+    free_ctx(ctx);
+
+    /* Two failed out of two whole. */
+    ctx = new_ctx();
+    setup_disc(ctx, 2);
+    set_encoded(&ctx->tracks[0], 1, 1);
+    set_encoded(&ctx->tracks[1], 1, 3);
+
+    cyanrip_log_finish_report(ctx);
+    out = drain(ctx);
+    expect_line(out, "Encoder errors: 2 tracks failed (1, 2); 2 tracks encoded",
+                "encoder-summary/two-failed");
+    if (strstr(out, "Partial files:"))
+        FAIL("encoder-summary/two-failed: a Partial files: line was written "
+             "for a rip whose every encoded track was read whole");
+    free_ctx(ctx);
+}
+
+/* =====================================================================
  * Embedded cover art: which art is described, and whether any is.
  *
  * NOT covered, and deliberately: cyanrip_log.c:626 `art->pkt && art->params`
@@ -1429,6 +1498,8 @@ int main(void)
     test_disc_tally_zero_confidence_is_not_a_verification();
     test_disc_tally_450_threshold_boundary();
     test_disc_tally_skips_an_interrupted_track();
+
+    test_encoder_failure_counts_say_one_and_many();
 
     test_embedded_cover_art_picks_front();
     test_embedded_cover_art_gating();
