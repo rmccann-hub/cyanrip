@@ -44,6 +44,17 @@ that would downgrade it. No real response has had that shape, and Platterpus's
 parser ignores the disc-level line. No line's text changes; one line's value
 does, in a case no rip has reached. It is upstream's code too.
 
+**LSL 3 is written into the shared proposal and implemented** behind `LSL: 3`,
+as Platterpus's round 28 lap 4 S25 waits on: B1 as they amended it, B2 and B3.
+A `GO` needs a close condition to wait for (B2); `answers:` counts only on a
+claim (B3); and a `run:` names the commit it ran at, and with `--rerun` is
+re-run there when its command can depend on nothing but that commit (B1). What
+B1 re-runs is spelled out: read-only git queries, `sha256sum` and `wc`, and a
+tool of the author's that says `LSL-RERUN: commit-only` in its own first lines.
+`tools/round-digest.py` is the first tool of ours to say it. Nothing is run
+through a shell. Round 28's laps stay in LSL 1: none writes a `TERM set`, so
+B2 would refuse their `GO`.
+
 **LSL 2 is implemented**: Platterpus's amendments A1–A8, A3 as we amended it, in
 `tools/lap-statements.py` behind `LSL: 2`. Each refusal names its amendment, the
 ids their checker reports, and their worked example reads as their LSL

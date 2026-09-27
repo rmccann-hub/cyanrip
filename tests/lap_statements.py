@@ -241,8 +241,8 @@ if got != 2 or "not an LSL lap" not in out:
     fail(f"a prose lap must be CANNOT CHECK, exit 2: exit {got}\n{out}")
 else:
     print("ok   a prose lap cannot be checked")
-got, out = run(GOOD, head=HEAD.replace("LSL: 1", "LSL: 3"))
-if got != 2 or "implements LSL 1 and LSL 2 only" not in out:
+got, out = run(GOOD, head=HEAD.replace("LSL: 1", "LSL: 4"))
+if got != 2 or "implements LSL 1, 2 and 3 only" not in out:
     fail(f"an unimplemented LSL version must exit 2: exit {got}\n{out}")
 else:
     print("ok   an unimplemented LSL version cannot be checked")
@@ -397,7 +397,7 @@ with tempfile.TemporaryDirectory() as tmp:
 #    same set, so a disagreement between the two checkers can name its rule.
 #    LSL 2's are A1-A8, Platterpus's ids; the ones REQUIRED2 carries are
 #    emitted through it, so they count as emitted there.
-ID = r"LSL\.[a-z0-9]+|A[1-8]"
+ID = r"LSL\.[a-z0-9]+|A[1-8]|B[1-3]"
 src = TOOL.read_text()
 body_src = src.split("class Lap")[1]
 emitted = {a or b for a, b in re.findall(
@@ -417,7 +417,7 @@ else:
 
 # 10. every committed LSL lap of ours is well formed
 laps = [p for p in sorted((ROOT / "docs" / "handshake").glob("round-*.md"))
-        if re.search(r"^LSL: [12]\s*$", p.read_text(encoding="utf-8"), re.M)]
+        if re.search(r"^LSL: [123]\s*$", p.read_text(encoding="utf-8"), re.M)]
 for p in laps:
     r = subprocess.run([sys.executable, str(TOOL), str(p)],
                        capture_output=True, text=True, cwd=ROOT)
@@ -715,6 +715,150 @@ with tempfile.TemporaryDirectory() as tmp:
         "S2 VERDICT: GO\n  basis: S1\n"))
     outcome("the lap under check stands in for a stale held copy of itself",
             check2(our_lap3("GO", GO3), rnd), 0, ["well formed"])
+
+# 13. LSL 3: B1-B3, accepted in round 28. Each refusal on a lap built for it,
+#     and B1's re-run against a repository built here, so no real tree or
+#     network can move a result.
+
+def lap3(author, rnd, lp, verdict, body, from_commit="ee0221c"):
+    head = (f"HANDSHAKE-PROTOCOL: 5\nHANDSHAKE-ROUND: {rnd}\n"
+            f"HANDSHAKE-LAP: {lp}\nHANDSHAKE-FROM: {author}\n"
+            f"HANDSHAKE-VERDICT: {verdict}\n")
+    if from_commit:
+        head += f"HANDSHAKE-FROM-COMMIT: {from_commit}\n"
+    return f"{head}\nLSL: 3\n\n{body}"
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    tmp = pathlib.Path(tmp)
+    empty = tmp / "empty"
+    (empty / "inbound").mkdir(parents=True)
+
+    def v3(body, verdict="GO", **kw):
+        return check2(lap3("cyanrip-fork", 30, 1, verdict,
+                           body.replace("{verdict}", verdict), **kw), empty)
+
+    outcome("LSL 3: LSL 2's example is well formed under it", v3(GOOD2), 0,
+            ["LSL 3:", "well formed", "B1: 4 run: result(s) in this lap, none "
+             "re-run: --rerun was not given"], absent=["REFUSED"])
+
+    # B2
+    BARE = ("S1 FACT measured: The suite passes.\n"
+            "  evidence: run: meson test -C build => Ok: 91\n"
+            "  holds: 0.9.4\n  examined: 91 tests, closed\n\n"
+            "S2 VERDICT: {verdict}\n  basis: S1\n")
+    outcome("B2: a GO over a round with no close condition is refused",
+            v3(BARE), 1,
+            ["[B2] S2 VERDICT: a GO in LSL 3 waits for at least one close "
+             "condition"])
+    outcome("B2 is LSL 3's: the same GO in LSL 2 only says A1 found none",
+            check2(lap2("cyanrip-fork", 30, 1, "GO",
+                        BARE.replace("{verdict}", "GO")), empty), 0,
+            ["none is, so A1 had nothing to wait for", "well formed"],
+            absent=["[B2]"])
+    outcome("B2: an OPEN over no close condition is not refused",
+            v3(BARE, verdict="OPEN"), 0, ["well formed"], absent=["[B2]"])
+
+    # B1, the shape
+    outcome("B1: a run: with no commit to have run at",
+            v3(GOOD2, from_commit=None), 1,
+            ["[B1] S2 FACT measured: a run: in LSL 3 names the commit it ran "
+             "at"])
+    outcome("B1: an at: that is not a commit of the author's tree",
+            v3(GOOD2.replace("  examined: 91 tests, closed\n",
+                             "  examined: 91 tests, closed\n"
+                             "  at: platterpus@183073b\n")), 1,
+            ["[B1] S2 FACT measured: at: names a commit of the author's tree"])
+
+    # B3, and what it does to A7, on a round whose other side asks BLOCKING
+    rnd3 = tmp / "round"
+    (rnd3 / "inbound").mkdir(parents=True)
+    (rnd3 / "round-32-lap-01.md").write_text(lap2("cyanrip-fork", 32, 1, "OPEN",
+        "S1 TERM set: The Full run passes.\n  requires: the Full run\n\n"
+        "S2 VERDICT: OPEN\n  basis: S1\n"))
+    (rnd3 / "inbound" / "round-32-lap-02.md").write_text(lap2(
+        "platterpus", 32, 2, "OPEN",
+        "S1 TERM met: It passed.\n  term: cyanrip:R32.L1.S1\n"
+        "  evidence: run: true => ok\n\n"
+        "S2 ASK: Will you name the pin?\n  target: BLOCKING\n"
+        "  breaks: the pin's approval\n\n"
+        "S3 VERDICT: OPEN\n  basis: S1\n"))
+    NOTE_ANSWER = ("S1 NOTE: We will get to it.\n  answers: platterpus:R32.L2.S2\n\n"
+                   "S2 FACT measured: x.\n  evidence: run: true => ok\n"
+                   "  holds: 0.9.4\n  examined: 1 run, closed\n\n"
+                   "S3 VERDICT: GO\n  basis: S2\n")
+    outcome("B3: answers: on a NOTE is refused, and answers nothing for A7",
+            check2(lap3("cyanrip-fork", 32, 3, "GO", NOTE_ANSWER), rnd3), 1,
+            ["[B3] S1 NOTE: answers: on a NOTE, which carries no claim",
+             "[A7] S3 VERDICT: platterpus:R32.L2.S2 is a BLOCKING question "
+             "with no answers: from the author"])
+    outcome("B3 is LSL 3's: under LSL 2 the NOTE's answers: still counts",
+            check2(lap2("cyanrip-fork", 32, 3, "GO", NOTE_ANSWER), rnd3), 0,
+            ["1 answered", "well formed"], absent=["[B3]"])
+    outcome("B3: an ACCEPT that answers is fine under LSL 3",
+            check2(lap3("cyanrip-fork", 32, 3, "GO", NOTE_ANSWER.replace(
+                "S1 NOTE: We will get to it.\n",
+                "S1 ACCEPT: Yes, the pin is named.\n  re: platterpus:R32.L2.S2\n")),
+                rnd3), 0, ["1 answered", "well formed"], absent=["[B3]"])
+
+    # B1 --rerun, against a repository of our own side built here: a marked
+    # tool, an unmarked one, and git itself.
+    repo = tmp / "ours"
+    repo.mkdir()
+    g(repo, "init", "-q", "-b", "platterpus-fork")
+    (repo / "tools").mkdir()
+    (repo / "tools" / "say.py").write_text(
+        "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\nprint('hello 42')\n")
+    (repo / "tools" / "unmarked.py").write_text("print('hello 42')\n")
+    g(repo, "add", "tools")
+    g(repo, "commit", "-q", "-m", "tools")
+    at = g(repo, "rev-parse", "--short=12", "HEAD")
+
+    def rr(cmd_result, *extra):
+        body = ("S1 FACT measured: The tool said so.\n"
+                f"  evidence: run: {cmd_result}\n"
+                "  holds: 0.9.4\n  examined: 1 run, closed\n\n"
+                "S2 VERDICT: OPEN\n  basis: S1\n")
+        return check2(lap3("cyanrip-fork", 30, 1, "OPEN", body,
+                           from_commit=at), empty, "--ours", str(repo), *extra)
+
+    outcome("B1: a marked tool re-run at its commit matches its quoted result",
+            rr('python3 tools/say.py => "hello 42"', "--rerun"), 0,
+            ["1 re-run and matched, 0 re-run and not matched", "well formed"],
+            absent=["UNCHECKED"])
+    outcome("B1: a quoted result the re-run did not print is refused",
+            rr('python3 tools/say.py => "hello 43"', "--rerun"), 1,
+            [f"[B1] S1 FACT measured: re-run at cyanrip@{at}, and its output "
+             "does not contain the quoted result \"hello 43\""])
+    outcome("B1: an elided quote matches its parts in order",
+            rr('python3 tools/say.py => "hel…42"', "--rerun"), 0,
+            ["1 re-run and matched"])
+    outcome("B1: parts in the wrong order do not match",
+            rr('python3 tools/say.py => "42…hel"', "--rerun"), 1, ["[B1]"])
+    outcome("B1: a read-only git query is re-run",
+            rr('git show HEAD:tools/say.py => "hello 42"', "--rerun"), 0,
+            ["1 re-run and matched"])
+    outcome("B1: a tool that does not declare itself is not re-run",
+            rr('python3 tools/unmarked.py => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: tools/unmarked.py does not declare "
+             "'LSL-RERUN: commit-only'", "0 re-run and matched"])
+    outcome("B1: a command that needs a shell is not re-run",
+            rr('python3 tools/say.py | cat => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: not a simple command"])
+    outcome("B1: a git command that is not a read-only query is not re-run",
+            rr('git commit -m x => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: git commit is not one of the read-only queries"])
+    outcome("B1: a result with nothing quoted is not compared",
+            rr('python3 tools/say.py => hello 42', "--rerun"), 0,
+            ["UNCHECKED run: its result quotes no output to compare"])
+    outcome("B1: without --rerun nothing is executed, and the checker says so",
+            rr('python3 tools/say.py => "hello 43"'), 0,
+            ["none re-run: --rerun was not given", "well formed"])
+    left = g(repo, "worktree", "list").splitlines()
+    if len(left) != 1:
+        fail(f"B1: --rerun left worktrees behind in the author's clone: {left}")
+    else:
+        print("ok   B1: --rerun leaves no worktree behind")
 
 # 12. Platterpus's worked example, filed byte-exact from platterpus@18823c8
 #     (sha256 ac34dbb7...). A second implementation's fixture, so agreement

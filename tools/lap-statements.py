@@ -48,7 +48,11 @@ shallow clone cannot tell a missing commit from one it never fetched (F3).
 Platterpus's LSL amendments 1, A3 as cyanrip amended it in round 28 lap 1 S21.
 Every refusal a rule of LSL 2 adds names the amendment that added it, `A1` to
 `A8`, the ids Platterpus's checker reports, so the two checkers can say which
-amendment they disagree about. A lap declaring `LSL: 1` is checked exactly as
+amendment they disagree about. `LSL: 3` IS LSL 2 PLUS B1-B3, accepted in
+round 28 (Platterpus's lap 2 S17 and lap 4 S22-S24): a GO needs a close
+condition to wait for (B2), `answers:` counts only on a claim (B3), and with
+--rerun a `run:` is re-run at the commit it names, when its command is one
+that can only depend on that commit (B1). A lap declaring `LSL: 1` is checked exactly as
 before: the new kinds and fields are still refused in it.
 
 Three amendments read other laps of the round: A1 (a GO waits for every close
@@ -69,8 +73,11 @@ claims.
 import argparse
 import pathlib
 import re
+import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -101,6 +108,10 @@ RULES = {
     "A6": "refused",            # only a checkable claim in basis: or because:
     "A7": "refused",            # answers:, and a GO that waits for blocking ASKs
     "A8": "refused",            # a CORRECT carries evidence
+    # LSL 3's, accepted in round 28 under the ids cyanrip proposed them by.
+    "B1": "refused",            # a run: names its commit, and re-runs to its result
+    "B2": "refused",            # a GO needs at least one close condition
+    "B3": "refused",            # answers: only on a statement that carries weight
 }
 
 # kind -> the grades it takes (empty: it takes none)
@@ -179,11 +190,26 @@ ART_RE = re.compile(r"^(cyanrip|platterpus)@([0-9a-f]{7,40}):([^\s:]+)"
 STMT_RE = re.compile(r"^(?:(cyanrip|platterpus):R(\d+)\.L(\d+)\.)?"
                      r"(S\d+|§[A-Za-z0-9.]+)$")
 DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
-LSL_RE = re.compile(r"^LSL: ([12])\s*$", re.M)
+LSL_RE = re.compile(r"^LSL: ([123])\s*$", re.M)
 # A4: holds: must name a commit or a version.
 HOLDS_RE = re.compile(r"\b[0-9a-f]{7,40}\b|\b\d+\.\d+(?:\.\d+)?\b")
 # A5: examined: <n> <unit>, closed|open
 EXAMINED_RE = re.compile(r"^(\d+) (\S.*), (closed|open)$")
+
+# LSL 3, B1: which `run:` commands a checker re-runs. Only what can depend on
+# nothing but the commit it names: a read-only git query, a checksum or count
+# over paths in the tree, or one of the author's committed tools that declares
+# as much in its own first lines. Everything else is reported unchecked, never
+# guessed at, and nothing is ever passed to a shell.
+FIELDS3 = {"at": "B1"}
+RERUN_MARK = "LSL-RERUN: commit-only"
+GIT_READ = {"log", "show", "diff", "rev-parse", "merge-base", "ls-tree",
+            "cat-file", "rev-list"}
+PLAIN = {"sha256sum", "wc"}
+INTERPRETERS = {"python3", "python"}
+NOT_SIMPLE = set("|;&<>`$()*?[]{}\\\n") | {"…"}
+QUOTED_RE = re.compile(r'"([^"]+)"')
+AT_RE = re.compile(r"^(?:(cyanrip|platterpus)@)?([0-9a-f]{7,40})$")
 
 # Where held laps are read from; --laps moves it (tests use it).
 LAPS = ROOT / "docs" / "handshake"
@@ -218,10 +244,10 @@ def parse(lap):
         if m and start is None:
             lap.headers.setdefault(m.group(1), []).append(m.group(2))
         if line.rstrip().startswith("LSL:") and start is None:
-            if line.rstrip() not in ("LSL: 1", "LSL: 2"):
+            if line.rstrip() not in ("LSL: 1", "LSL: 2", "LSL: 3"):
                 lap.refuse(i + 1, "LSL.version",
                            f"declares {line.strip()!r}; this checker "
-                           f"implements LSL 1 and LSL 2 only")
+                           f"implements LSL 1, 2 and 3 only")
                 return False
             lap.version = int(line.rstrip()[-1])
             start = i + 1
@@ -643,7 +669,15 @@ def check_v2(lap, s, tag, have, me, by_n, resolver):
             lap.refuse(fl, "A5", f"{tag}: an open population names what is "
                                  f"missing from it (missing:)")
 
-    # A7
+    # A7, and B3 in an LSL 3 lap: answers: only on a statement that carries
+    # weight, because a NOTE that answers a blocking question says nothing a
+    # reader could check (our round 28 lap 3 S20).
+    if lap.version is not None and lap.version >= 3 and have.get("answers") \
+            and weight_key(s) in UNWEIGHTED:
+        k = " ".join(x for x in weight_key(s) if x)
+        lap.refuse(have["answers"][0][1], "B3",
+                   f"{tag}: answers: on a {k}, which carries no claim, so it "
+                   f"answers nothing")
     for value, fl in have.get("answers", []):
         for token in re.split(r"[,\s]+", value.strip()):
             if not token:
@@ -665,7 +699,7 @@ def waits(lap, line, tag, me, resolver):
     # A1
     sets, status = {}, {}
     for (side, lpn), L in sorted(laps.items(), key=lambda kv: kv[0][1]):
-        if L.version != 2:
+        if L.version is None or L.version < 2:
             continue
         for s in L.statements:
             if s["kind"] != "TERM":
@@ -698,6 +732,13 @@ def waits(lap, line, tag, me, resolver):
                                    f"on the author's own side; a side may say "
                                    f"GO over the other side's pending half, "
                                    f"never over its own")
+    v3 = lap.version is not None and lap.version >= 3
+    if v3 and not sets:
+        # B2: A1 over no close condition passes by finding nothing, so an
+        # LSL 3 GO needs at least one to have waited for (round 28 lap 3 S19).
+        lap.refuse(line, "B2", f"{tag}: a GO in LSL 3 waits for at least one "
+                               f"close condition, and no lap of round {rnd} "
+                               f"this tree holds writes one as TERM set")
     lap.notes.append(f"A1: this GO was checked against {len(sets)} close "
                      f"condition(s) written as TERM set in the laps of round "
                      f"{rnd} this tree holds"
@@ -713,6 +754,8 @@ def waits(lap, line, tag, me, resolver):
         if side != me_side:
             continue
         for s in L.statements:
+            if v3 and weight_key(s) in UNWEIGHTED:
+                continue    # B3: an answer that carries no claim is none
             for value in field(s, "answers"):
                 for token in re.split(r"[,\s]+", value.strip()):
                     got = token and resolve_stmt(token, (side, rnd, lpn), L)
@@ -756,6 +799,109 @@ def pre_committed(lap, s, line, tag, me):
                        f"came true")
 
 
+def b1_run(lap, line, tag, value, have, me_side, resolver, counts):
+    """B1: a run: in LSL 3 names the commit it ran at, and with --rerun is
+    re-run there when its command can depend on nothing but that commit."""
+    cmd, _, result = value[len("run: "):].partition(" => ")
+    counts["seen"] += 1
+    ats = have.get("at", [])
+    if ats:
+        m = AT_RE.match(ats[0][0].strip())
+        if not m or (m.group(1) and m.group(1) != me_side):
+            lap.refuse(ats[0][1], "B1", f"{tag}: at: names a commit of the "
+                                        f"author's tree, as <sha> or "
+                                        f"{me_side}@<sha>")
+            return
+        sha = m.group(2)
+    else:
+        froms = [v.split()[0] for v in lap.headers.get("FROM-COMMIT", [])
+                 if v.split()]
+        if len(froms) != 1 or not re.fullmatch(r"[0-9a-f]{7,40}", froms[0]):
+            lap.refuse(line, "B1", f"{tag}: a run: in LSL 3 names the commit "
+                                   f"it ran at: an at: field on the statement, "
+                                   f"or the lap's HANDSHAKE-FROM-COMMIT")
+            return
+        sha = froms[0]
+    if not getattr(resolver, "rerun", False) or me_side is None:
+        return
+    verdict, detail = rerun(resolver, me_side, sha, cmd, result)
+    counts[verdict] += 1
+    if verdict == "mismatch":
+        lap.refuse(line, "B1", f"{tag}: re-run at {me_side}@{sha}, and "
+                               f"{detail}")
+    elif verdict == "unchecked":
+        lap.warn(line, "LSL.unchecked", f"UNCHECKED run: {detail}")
+
+
+def rerun(resolver, side, sha, cmd, result):
+    """Re-run one command at one commit of the author's tree, as (verdict,
+    detail), verdict one of ok, mismatch, unchecked."""
+    repo = resolver.repo.get(side)
+    if repo is None:
+        return "unchecked", f"no clone of {side}'s tree was given"
+    quoted = QUOTED_RE.findall(result)
+    if not quoted:
+        return "unchecked", "its result quotes no output to compare"
+    if any(ch in cmd for ch in NOT_SIMPLE):
+        return "unchecked", ("not a simple command: it needs a shell, a glob "
+                             "or an elision to mean what it says")
+    try:
+        argv = shlex.split(cmd)
+    except ValueError as e:
+        return "unchecked", f"does not split into words: {e}"
+    if not argv:
+        return "unchecked", "an empty command"
+    if any(a.startswith("/") or ".." in a.split("/") or
+           a.startswith("--output") for a in argv[1:]):
+        return "unchecked", ("names a path outside the tree, or asks to "
+                             "write a file")
+    if git(repo, "rev-parse", "--verify", "--quiet",
+           f"{sha}^{{commit}}").returncode != 0:
+        return "unchecked", f"commit {sha} is not in {side}'s clone"
+    if argv[0] == "git":
+        if len(argv) < 2 or argv[1] not in GIT_READ:
+            return "unchecked", (f"git {argv[1] if len(argv) > 1 else ''} is "
+                                 f"not one of the read-only queries "
+                                 f"{sorted(GIT_READ)}")
+    elif argv[0] not in PLAIN:
+        prog = argv[1] if argv[0] in INTERPRETERS and len(argv) > 1 else argv[0]
+        shown = git(repo, "show", f"{sha}:{prog}")
+        if shown.returncode != 0:
+            return "unchecked", (f"{prog} is not a file of {side}'s tree at "
+                                 f"{sha}, so it is not one of the author's "
+                                 f"committed tools")
+        if RERUN_MARK not in "\n".join(shown.stdout.splitlines()[:40]):
+            return "unchecked", (f"{prog} does not declare '{RERUN_MARK}' in "
+                                 f"its first 40 lines, so its output may "
+                                 f"depend on more than the commit")
+    work = pathlib.Path(tempfile.mkdtemp(prefix="lsl-rerun-"))
+    try:
+        if git(repo, "worktree", "add", "--detach", "--quiet", str(work),
+               sha).returncode != 0:
+            return "unchecked", f"could not check {sha} out"
+        try:
+            r = subprocess.run(argv, cwd=work, capture_output=True,
+                               text=True, timeout=120)
+            out = r.stdout + r.stderr
+        except (OSError, subprocess.TimeoutExpired) as e:
+            return "unchecked", f"did not run to completion: {e}"
+    finally:
+        git(repo, "worktree", "remove", "--force", str(work))
+        shutil.rmtree(work, ignore_errors=True)
+        git(repo, "worktree", "prune")
+    for q in quoted:
+        pos = 0
+        for frag in (f.strip() for f in q.split("…")):
+            if not frag:
+                continue
+            at = out.find(frag, pos)
+            if at < 0:
+                return "mismatch", (f"its output does not contain the quoted "
+                                    f"result \"{q}\"")
+            pos = at + len(frag)
+    return "ok", ""
+
+
 def check(lap, resolver):
     declared_from = (lap.headers.get("FROM") or [""])[0].strip()
     me_side = FROM_SIDE.get(declared_from)
@@ -792,9 +938,13 @@ def check(lap, resolver):
         lap.refuse(1, "LSL.5", f"{len(verdicts)} VERDICT statements; exactly "
                                f"one is required")
 
-    v2 = lap.version == 2
+    v2 = lap.version is not None and lap.version >= 2
+    v3 = lap.version is not None and lap.version >= 3
     kinds = dict(KINDS, **KINDS2) if v2 else KINDS
     fields = FIELDS | set(FIELDS2) if v2 else FIELDS
+    if v3:
+        fields = fields | set(FIELDS3)
+    rerun_counts = {"seen": 0, "ok": 0, "mismatch": 0, "unchecked": 0}
     for s in stmts:
         n, kind, grade = s["line"], s["kind"], s["grade"]
         tag = f"S{s['n']} {kind}" + (f" {grade}" if grade else "")
@@ -831,6 +981,9 @@ def check(lap, resolver):
                     lap.refuse(fl, "LSL.value",
                                f"{tag}: a run: names its command AND its "
                                f"result, as 'run: CMD => RESULT'")
+                elif v3:
+                    b1_run(lap, fl, tag, value, have, me_side, resolver,
+                           rerun_counts)
                 continue
             ref = art_ref(first)
             if ref is None:
@@ -934,6 +1087,18 @@ def check(lap, resolver):
         if v2 and kind == "VERDICT":
             pre_committed(lap, s, n, tag, me)
 
+    if v3:
+        c = rerun_counts
+        total = c["seen"]
+        if getattr(resolver, "rerun", False):
+            lap.notes.append(f"B1: {total} run: result(s) in this lap; "
+                             f"{c['ok']} re-run and matched, {c['mismatch']} "
+                             f"re-run and not matched, {c['unchecked']} not "
+                             f"re-runnable (each named above)")
+        else:
+            lap.notes.append(f"B1: {total} run: result(s) in this lap, none "
+                             f"re-run: --rerun was not given")
+
 
 def main():
     global LAPS
@@ -952,6 +1117,12 @@ def main():
     ap.add_argument("--laps", type=pathlib.Path, default=LAPS,
                     help="where held laps are read from: ours in DIR, theirs "
                          "in DIR/inbound (default: docs/handshake)")
+    ap.add_argument("--rerun", action="store_true",
+                    help="LSL 3, B1: re-run each run: whose command can "
+                         "depend only on the commit it names, at that "
+                         "commit, and refuse the lap when a quoted result is "
+                         "not in its output. It EXECUTES the author's "
+                         "committed tools: run it where that is acceptable")
     args = ap.parse_args()
     LAPS = args.laps
 
@@ -973,9 +1144,11 @@ def main():
             print(f"CANNOT CHECK  {args.lap}:{line}  [{rule}] {msg}")
         if not lap.refusals:
             print(f"CANNOT CHECK  {args.lap}  [LSL.version] not an LSL lap "
-                  f"-- no 'LSL: 1' or 'LSL: 2' line")
+                  f"-- no 'LSL: 1', 'LSL: 2' or 'LSL: 3' line")
         return 2
-    check(lap, Resolver(args.ours, args.peer, refs))
+    resolver = Resolver(args.ours, args.peer, refs)
+    resolver.rerun = args.rerun
+    check(lap, resolver)
 
     for line, rule, msg in sorted(lap.refusals):
         print(f"REFUSED  {args.lap.name}:{line}  [{rule}] {msg}")

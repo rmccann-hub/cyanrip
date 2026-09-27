@@ -40,7 +40,7 @@ say whether it blocks.
 
 ## Syntax
 
-A line reading exactly `LSL: 1` or `LSL: 2`, at column 0, starts the body
+A line reading exactly `LSL: 1`, `LSL: 2` or `LSL: 3`, at column 0, starts the body
 and says which version it is written in. Everything
 before it is the wire headers and a title, which `PROTOCOL.md` governs and
 this language does not touch:
@@ -151,7 +151,7 @@ of these is well formed.
 | `LSL.field` | refused | a field outside the fields of the kinds table |
 | `LSL.value` | refused | a value outside its shape: `owner:` other than `us`, `them`, `operator`; a date in `when:`; `target:` other than `BLOCKING`, `NEXT-ROUND`; a `commit:` that is not hex; `evidence:` that is neither `run: CMD => RESULT` nor an artifact reference |
 | `LSL.header` | refused | `HANDSHAKE-FROM` naming neither side, or `HANDSHAKE-ROUND` or `-LAP` missing or not a number |
-| `LSL.version` | could not check | no `LSL: 1` or `LSL: 2` line, or another version |
+| `LSL.version` | could not check | no `LSL: 1`, `LSL: 2` or `LSL: 3` line, or another version |
 | `LSL.file` | could not check | the file cannot be read |
 | `LSL.offrecord` | warning | a commit on a branch, but not on its side's ref of record |
 | `LSL.relayed` | warning | a `FACT relayed` |
@@ -170,7 +170,7 @@ refusal, and **2** when it could not check, because *refused* and *could not
 check* are different claims. `tests/lap_statements.py` builds a lap for each
 refusal and asserts the rule and the message as well as the exit code, requires
 this table and the code to name the same ids, and checks every committed lap of
-ours that declares `LSL: 1` or `LSL: 2`. It also reads Platterpus's worked
+ours that declares `LSL: 1`, `LSL: 2` or `LSL: 3`. It also reads Platterpus's worked
 example of the amendments, filed at `inbound/artifacts/lap_language_round27_lap05.md`,
 and asserts what their LSL amendments 1 §6 says each version must report.
 
@@ -200,6 +200,56 @@ the lap under check, which stands in for any held copy of itself. `on: us` is
 the side that wrote the status. **The checker prints what those rules were
 checked over**, the number of close conditions and blocking questions it found,
 because a `GO` over a round with none satisfies A1 and A7 by finding nothing.
+
+## LSL 3
+
+`LSL: 3` is LSL 2 plus **B1, B2 and B3**, accepted by both sides in round 28:
+B1 proposed in cyanrip's lap 1 (S30) and amended by Platterpus's lap 2 (S17),
+B2 and B3 proposed in cyanrip's lap 3 (S22, S23), and all three accepted as LSL
+3 in Platterpus's lap 4 (S22–S24), so that LSL 2 stays exactly A1–A8. Nothing
+else is in LSL 3. Every refusal it adds names its id, which is the id both
+checkers report.
+
+| id | adds | refused when |
+|---|---|---|
+| `B1` | on any statement, `at:` — the commit of the author's tree a `run:` ran at, as `<sha>` or `<side>@<sha>`. With `--rerun`, the checker re-runs a `run:` whose command can depend on nothing but that commit | a `run:` has neither an `at:` on its statement nor a `HANDSHAKE-FROM-COMMIT` on its lap; `at:` names anything but a commit of the author's tree; or, with `--rerun`, the command was re-run and one of its result's quoted strings is not in its output |
+| `B2` | nothing | a `VERDICT GO` stands and no lap of the round this tree holds writes a `TERM set`. A1 over no close condition passes by finding nothing, which a `GO` must not be able to do |
+| `B3` | nothing | `answers:` stands on a `NOTE`, `ASK`, `VERDICT`, `WILL`, `UNKNOWN` or `FACT relayed`, the statements A6 lets carry no weight. Such an `answers:`, in any lap of the round, also answers nothing for A7 |
+
+**What B1 re-runs**, and only this, because a checker that guessed which
+commands are safe to repeat would be a guess wearing a derivation's clothes:
+
+1. **The commit** is the statement's `at:`, else the lap's
+   `HANDSHAKE-FROM-COMMIT`. It is the commit the command ran at, checked out
+   detached in a scratch worktree of the author's clone and removed afterwards.
+2. **The command is a simple one**: it splits into words with no shell, and has
+   none of `| ; & < > $ ( ) * ? [ ] { } \`, a backtick, a newline or an `…`. A
+   command that needs a shell, a glob or an elision to mean what it says is not
+   the command that ran. No argument is an absolute path, climbs out with `..`,
+   or asks git to write a file (`--output`).
+3. **Its program is one of three kinds**: `git` with a read-only query as its
+   first word (`log`, `show`, `diff`, `rev-parse`, `merge-base`, `ls-tree`,
+   `cat-file`, `rev-list`); `sha256sum` or `wc`; or a file of the author's tree
+   at that commit, run directly or as `python3 PATH`, **whose own first 40
+   lines carry `LSL-RERUN: commit-only`**. That line is the tool's author
+   saying its output depends only on the commit it runs in. A tool that reads
+   the network, a drive, the clock or a moving ref must not carry it. Each side
+   marks its own tools; neither marks the other's.
+4. **Its result quotes what it printed**: each `"double-quoted"` string in the
+   result after `=>` must appear in the output, stdout and stderr together,
+   and an `…` inside a quoted string splits it into parts that must appear in
+   that order. A result with no quoted string is prose, and prose is not
+   compared.
+
+**Anything else is reported, not refused**: `UNCHECKED run:` with the reason,
+as `LSL.unchecked`. A network, drive or clock command is never re-run, as
+Platterpus's amendment says. Without `--rerun` nothing is executed and the
+checker says so. **`--rerun` executes the author's committed code**, the other
+side's when checking their lap, so it is run where that is acceptable.
+
+The checker prints what B1 covered: how many `run:` results the lap has, how
+many were re-run and matched, how many were not matched, and how many could not
+be re-run.
 
 ## What it does not do
 

@@ -15,6 +15,11 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with cyanrip; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+#
+# LSL-RERUN: commit-only
+# It reads docs/handshake/ in the tree it runs in and nothing else: no clock,
+# no network, no git, no ref. So LSL 3's B1 may re-run it at the commit a lap
+# names. Remove this line if that ever stops being true.
 
 """HANDSHAKE-ROUND-DIGEST, per PROTOCOL.md v3 §5a.
 
