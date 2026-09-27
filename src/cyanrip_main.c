@@ -862,11 +862,10 @@ repeat_ripping:;
             }
         }
 
-        /* Stop now if requested */
-        if (quit_now) {
-            cyanrip_log(ctx, 0, "\nStopping, ripping incomplete!\n");
+        /* Stop now if requested. The line saying so is printed at `fail:`,
+         * which every signal exit from this read reaches. */
+        if (quit_now)
             break;
-        }
 
         /* Update checksums */
         crip_process_checksums(&checksum_ctx, data, bytes);
@@ -1061,6 +1060,21 @@ finalize_ripping:
     }
 
 fail:
+    /* ONE PLACE FOR THE STOP MARKER, because every exit a signal can take
+     * out of this track's read reaches this label with ret still 0: the frame
+     * loop's break, the -Z repeat check above, and the end of a pass, where a
+     * signal landing after the last frame's check falls through to here.
+     *
+     * It was printed inside the frame loop only, so a signal in either of the
+     * other two left `Interrupted at: track N, mid-read` in the log with no
+     * `Stopping, ripping incomplete!` beside it. The interrupted sample's
+     * freshness check caught that three times, one of them between two -Z
+     * passes (docs/KNOWN-ISSUES.md). Nothing reaches the logfile between the
+     * frame loop and here, so the path that already printed it writes the
+     * same log as before. Every `goto fail` above sets ret. */
+    if (!ret && quit_now)
+        cyanrip_log(ctx, 0, "\nStopping, ripping incomplete!\n");
+
     if (!ret && !quit_now) {
         /* IT SAYS `read`, NOT `ripped and encoded`, AND THAT IS A P2 CHANGE.
          *

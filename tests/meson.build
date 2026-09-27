@@ -180,6 +180,15 @@ badsector_shim = shared_module('badsector',
     dependencies: [ dependency('dl') ],
 )
 
+## A signal at a named moment, for the image rips. Another LD_PRELOAD shim: it
+## raises SIGTERM straight after a named line reaches stdout, so a scenario can
+## put an interrupt in a window a timer only hits by luck. See its header.
+raisesig_shim = shared_module('raisesig',
+    sources: [ 'raisesig.c' ],
+    name_prefix: '',
+    dependencies: [ dependency('dl') ],
+)
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the
@@ -611,6 +620,7 @@ rip_scenarios = [
     # from the tools' own source.
     'runa_block_is_complete',
     'interrupt',
+    'signal_after_last_frame',
     'interrupt_deadlock',
     'cache_probe_only',
     'artifacts_are_tracked',
@@ -638,13 +648,14 @@ rip_scenarios = [
 # existed. Derived from the option rather than sniffed from the binary.
 declared_env = 'CYANRIP_DECLARED_RELEASED=' + (get_option('declare_released') ? '1' : '0')
 badsector_env = 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path()
+raisesig_env = 'CYANRIP_RAISESIG_SHIM=' + raisesig_shim.full_path()
 
 foreach s : rip_scenarios
     test(s, python,
          args: [ files('rip_images.py'), cyanrip_exe,
                  meson.current_source_dir() / 'fixtures', s ],
-         env: [ declared_env, badsector_env ],
-         depends: [ badsector_shim ],
+         env: [ declared_env, badsector_env, raisesig_env ],
+         depends: [ badsector_shim, raisesig_shim ],
          suite: 'images',
          timeout: 120)
 endforeach

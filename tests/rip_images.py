@@ -4528,6 +4528,81 @@ def sc_consumer_argv():
                      f"the fields after it")
 
 
+def sc_signal_after_last_frame():
+    """A SIGNAL AFTER A PASS'S LAST FRAME STILL SAYS THE RIP STOPPED.
+
+    `Stopping, ripping incomplete!` was printed inside the frame loop only, so
+    a signal that landed after the last frame's check, or between two -Z
+    passes, left `Interrupted at: track 1, mid-read` in the log with no stop
+    marker beside it. The interrupted sample's freshness check caught that
+    three times, each time on a timer, and passed on every re-run. The marker
+    is now printed at `fail:`, which every signal exit from a track's read
+    reaches, so the two lines agree however the signal lands.
+
+    tests/raisesig.c puts the signal in the window a timer misses: straight
+    after the console-only `Flushing encoders...` line, which is written after
+    the frame loop and before `fail:`. The -Z route between passes reaches the
+    same label with no console output to key on, so it is covered by the
+    fix's placement rather than by a run, and that is said here rather than
+    left for a green suite to imply.
+
+    What it asserts, each against the shim's own record or the file on disk:
+      * the shim fired, so the run is not vacuous;
+      * the log carries the stop marker exactly once, beside `Interrupted at:
+        track 1, mid-read` and `Rip completed:  no (interrupted by SIGTERM,`;
+      * track 1 is not reported read, and `Partial files:` names it, because
+        its encoder wrote a file over a read that never finished.
+    """
+    shim = os.environ.get("CYANRIP_RAISESIG_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"signal_after_last_frame: the shim was not built or not passed "
+             f"({shim!r})")
+        return
+    out = WORK / "out_signal_after_last_frame"
+    marker = WORK / "signal_after_last_frame.raised"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_RAISE_ON="Flushing encoders",
+               CRIP_RAISE_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                      "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                      "-L", "log", env=env)
+    (WORK / "signal_after_last_frame.stdout").write_text(stdout)
+    if not marker.exists():
+        fail("signal_after_last_frame: the shim never raised the signal, so "
+             "nothing below tests the window it targets")
+        return
+    if ec != 1:
+        fail(f"signal_after_last_frame: exited {ec}, expected 1 for an "
+             f"interrupted rip")
+    log = out / "log.log"
+    if not log.exists():
+        fail("signal_after_last_frame: no logfile was written")
+        return
+    lines = log.read_text(errors="replace").splitlines()
+    n = lines.count("Stopping, ripping incomplete!")
+    if n != 1:
+        fail(f"signal_after_last_frame: `Stopping, ripping incomplete!` "
+             f"appears {n} times; a signal after the last frame must still "
+             f"produce it, once")
+    if "Interrupted at: track 1, mid-read" not in lines:
+        fail("signal_after_last_frame: no `Interrupted at: track 1, mid-read`")
+    if not any(l.startswith("Rip completed:  no (interrupted by SIGTERM, 0 of ")
+               for l in lines):
+        fail("signal_after_last_frame: the footer does not record the "
+             "interrupt")
+    if "Track 1 read successfully!" in lines:
+        fail("signal_after_last_frame: track 1 is reported read, though the "
+             "signal arrived before its read finished")
+    want = ("Partial files:  1 track (1), read not completed; "
+            "encoder failures: none")
+    if want not in lines:
+        fail(f"signal_after_last_frame: no {want!r}")
+    if not (out / "1.flac").exists():
+        fail("signal_after_last_frame: `Partial files:` names track 1 and "
+             "1.flac is not on disk")
+
+
 def sc_interrupt_deadlock():
     """A signal arriving while the log lock is held must not wedge the process.
 

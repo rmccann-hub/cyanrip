@@ -243,9 +243,29 @@ INTERRUPTED_SHAPES = (
     re.compile(r"^Interrupted at: "
                r"(track \d+, mid-read|between tracks, no read in progress)$",
                re.M),
-    re.compile(r"^Stopping, ripping incomplete!$", re.M),
     re.compile(r"^Log FUN512: \S+$", re.M),
 )
+
+# THE STOP MARKER IS TIED TO THE ARM, NOT REQUIRED OUTRIGHT. It was in the list
+# above, and failed three times when the signal landed after a pass's last
+# frame, or between two -Z passes: cyanrip printed it from inside the frame
+# loop only. Since `.18` it is printed at `fail:`, which every signal exit from
+# a track's read reaches, so `mid-read` now implies it and `between tracks`
+# implies its absence. tests/rip_images.py's sc_signal_after_last_frame() pins
+# the window a timer missed.
+STOP_MARKER = re.compile(r"^Stopping, ripping incomplete!$", re.M)
+MID_READ = re.compile(r"^Interrupted at: track \d+, mid-read$", re.M)
+
+
+def interrupted_shape_problems(log):
+    """The shapes an interrupted log lacks, or carries when it must not."""
+    problems = [p.pattern for p in INTERRUPTED_SHAPES if not p.search(log)]
+    if MID_READ.search(log) and not STOP_MARKER.search(log):
+        problems.append(STOP_MARKER.pattern + "  (required with the mid-read arm)")
+    if not MID_READ.search(log) and STOP_MARKER.search(log):
+        problems.append(STOP_MARKER.pattern + "  (present without a read in "
+                        "progress)")
+    return problems
 
 
 def generate_interrupted(binary):
@@ -341,7 +361,7 @@ def main():
         log, js = generate_interrupted(binary)
         banner = log.splitlines()[0]
 
-        missing = [p.pattern for p in INTERRUPTED_SHAPES if not p.search(log)]
+        missing = interrupted_shape_problems(log)
         if missing:
             # KEEP THE EVIDENCE. Where a SIGTERM lands is not reproducible, so a
             # failing run's artifacts cannot be re-made -- and until 2026-09-17
@@ -372,8 +392,7 @@ def main():
             if not SAMPLE_LOG.exists():
                 sys.exit(f"{SAMPLE_LOG.relative_to(ROOT)} is missing")
             committed = SAMPLE_LOG.read_text()
-            stale = [p.pattern for p in INTERRUPTED_SHAPES
-                     if not p.search(committed)]
+            stale = interrupted_shape_problems(committed)
             if stale:
                 sys.exit("the committed interrupted sample no longer matches "
                          "what this binary writes -- these shapes are absent "

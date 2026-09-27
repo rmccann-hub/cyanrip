@@ -240,6 +240,24 @@ round. `docs/ROUND-22-PLAN.md`.
 
 ### `Interrupted sample freshness` fails intermittently, and the second failure named the arm
 
+**FIXED for `.18`, 2026-09-27, in the program, not in the check.** The third
+occurrence named the route this entry left open: a signal that lands after a
+pass's frame loop has finished reaches `goto finalize_ripping` (the `-Z` repeat
+check) or falls through to `finalize_ripping:` (a single pass) without passing
+the in-loop check that printed the marker. `Interrupted at: track 1, mid-read`
+and no `Stopping, ripping incomplete!` was the log telling two different
+stories about one stop. The marker is now printed once, at `fail:`, which every
+signal exit from a track's read reaches with `ret` still 0; nothing reaches the
+logfile between the frame loop and there, so the path that already printed it
+writes the same log. **Pinned deterministically**, not on a timer:
+`tests/raisesig.c` raises SIGTERM straight after the console-only `Flushing
+encoders...` line, inside the window, and `sc_signal_after_last_frame()` fails
+with the fix reverted (*"appears 0 times"*) and passes with it. The `-Z` route
+between passes has no console output to key on, so it is covered by where the
+fix sits rather than by a run. The generator now ties the marker to the arm:
+required with `mid-read`, refused with `between tracks`. **A P2 line gains a
+call site** (`cyanrip_main.c`, at `fail:`), so round 28's next lap announces it.
+
 **The heading used to say "TWICE", which the third occurrence falsified**; the
 dated occurrences below are the record. **Third occurrence 2026-09-26**, at
 `0f5f935`, run by hand straight after regenerating the sample, not in a suite:
