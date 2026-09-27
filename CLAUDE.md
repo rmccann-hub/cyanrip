@@ -1985,7 +1985,9 @@ prerequisite. Platterpus's 0.6.61, released 2026-09-27 at
 `platterpus@59f4c00`, carries `FORK_PIN` `221a1df` and `PIN_UNDER_REVIEW` `.17`,
 so their app offers `.17` marked `unapproved` until round 28 reviews it. **Round 28 opens on `.17` before
 its real test**, as rounds 26 and 27 did. **The next release is
-`+platterpus.18` and nothing is written for it.**
+`+platterpus.18`**, and `docs/RELEASE-PLAN-platterpus.18.md` is its plan,
+written before round 28's Full run: a sequence to follow at the close, with
+what `.18` carries so far.
 
 **`+platterpus.16` SHIPPED on 2026-09-24** at `221a1df`, `release_seq` 26,
 stable, authorised by **round 26** — `docs/RELEASE-PLAN-platterpus.16.md` is
@@ -2049,8 +2051,8 @@ tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
   That was the operator's call to make, and the plan's job was to put the cost in
   front of them before it was made.
 
-**Plans that exist, all executed and bannered:** `.5`, `.12`, `.13`, `.14`,
-`.15`, `.16`, `.17`. `.15`'s is the short case: its round settled the channel, so it poses
+**Plans that exist:** `.5`, `.12`, `.13`, `.14`, `.15`, `.16`, `.17`, all
+executed and bannered, and `.18`, written and not yet executed. `.15`'s is the short case: its round settled the channel, so it poses
 nothing.
 **The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the
 newest, it followed the four-commit sequence exactly, and it is the first to pose
