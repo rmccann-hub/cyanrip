@@ -905,8 +905,8 @@ should need rewriting. If it does, that is the defect.
       component makes a multi-component `-D` resolve **absolute**.
    8. `cdio_paranoia_cachemodel_size(…, 1)` on image drivers returns
       **corrupted audio with `Ripping errors: 0`** — still present at `f8ebf48`,
-      and the only one with a report already written:
-      `docs/upstream-cachemodel-report.md`, **drafted and not filed.**
+      and its report is `docs/upstream-cachemodel-report.md`, **drafted and
+      not filed.**
    9. `-r` reaches libcdio-paranoia **unrounded**, and the library checks the
       per-frame limit only at multiples of 5, so **`-r 3` never returns on an
       unreadable sector** at the default paranoia level. Found 2026-09-23 by
@@ -924,9 +924,12 @@ should need rewriting. If it does, that is the defect.
 
    **Not filed is not fixed, and twelve unfiled reports is the private garden
    this rule forbids.** Filing is on upstream's tracker and outside this
-   repository, so it is the maintainer's act, not ours — but the count belongs
-   here where it can be checked, and it is checked by the same command as every
-   other fact: `python3 tools/check-settled.py`.
+   repository, so it is the maintainer's act, not ours — but **every one is now
+   drafted** (2026-09-27): the other eleven are in
+   `docs/upstream/defect-reports.md`, each with upstream's `file:line` at
+   `f8ebf48` and our fixing commit, so filing is a copy and paste. The count
+   belongs here where it can be checked, and it is checked by the same command
+   as every other fact: `python3 tools/check-settled.py`.
 
 **And custody, which is the part that makes "source of truth" mean something
 without meaning "we decide".** The shared seam documents live here as the

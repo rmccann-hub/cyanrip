@@ -1,0 +1,233 @@
+# Drafts: upstream bug reports for cyanreg/cyanrip
+
+**Not filed.** These are drafts for the maintainer to review and submit. Filing
+on upstream's tracker is outside this repository, so it is the maintainer's act;
+what this file does is make each one a copy-and-paste. `CLAUDE.md`'s rule is that
+*"not filed is not fixed"*, and until 2026-09-27 only one of the twelve defects
+this fork found in upstream had a report written: the cache-model one, which
+stays in its own file, `docs/upstream-cachemodel-report.md`.
+
+**Checked against upstream `master` at `f8ebf48` on 2026-09-27**, which is also
+our `master` (`git ls-remote https://github.com/cyanreg/cyanrip
+refs/heads/master` returned `f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5`). Every
+`file:line` below was read at that commit, not recalled. Each defect's
+re-check command is its row in `docs/SETTLED.md`'s upstream section, which
+`tools/check-settled.py` runs, so a line here that stops being true fails
+there.
+
+Each report says what the fork did, by commit, so upstream can take the fix
+or write its own. None of the fork's fixes changes upstream's command line.
+
+---
+
+## 1. The signal handler calls `cyanrip_log()`, which is not async-signal-safe
+
+**Where:** `src/cyanrip_main.c:934-942`, `on_quit_signal()`.
+
+```c
+static void on_quit_signal(int signo)
+{
+    if (quit_now) {
+        cyanrip_log(NULL, 0, "Force quitting\n");
+        exit(1);
+    }
+    cyanrip_log(NULL, 0, "\r\nTrying to quit\n");
+    quit_now = 1;
+}
+```
+
+**What happens:** `cyanrip_log()` takes the log mutex and writes with stdio, and
+the second arm calls `exit()`, which runs `atexit` handlers and flushes stdio.
+None of these is async-signal-safe. If the signal arrives while the main
+thread holds the log mutex, the handler waits for a lock its own thread holds,
+and the process hangs with the drive still held. This is from the source, not
+from a reproduced hang.
+
+**What the fork did:** the handler writes its two messages with `write(2)`,
+records the signal and sets the flag, and the second arm calls `_exit()`, all
+async-signal-safe (`20c2f77`, "Make cancellation work: an unsafe signal handler,
+SIGTERM, and a -Z loop that ignored both").
+
+## 2. SIGTERM is not handled at all
+
+**Where:** `src/cyanrip_main.c:1144`, the only signal installation:
+`signal(SIGINT, on_quit_signal)`. `SIGTERM` occurs nowhere in the file.
+
+**What happens:** a supervising process, a service manager or `kill` stops
+cyanrip with the default disposition. The process dies where it stands: the log
+is cut off mid-line with no completion footer and no checksum, so a stopped rip
+cannot be told from a truncated or tampered log. Observed on this fork before
+the fix, with the same code: a supervisor's timeout left exactly that.
+
+**How to reproduce:** start a rip of any disc image with `-L log`, send
+`kill -TERM` once `Ripping track` has printed, and read the logfile.
+
+**What the fork did:** `SIGTERM` gets the same handler as `SIGINT`, and the
+footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
+`20c2f77`.
+
+## 3. `cyanrip_log_finish_report()` sits above `end:`, so every `goto end` skips it
+
+**Where:** `src/cyanrip_main.c:2110-2112`:
+
+```c
+    if (!ctx->settings.print_info_only)
+        cyanrip_log_finish_report(ctx);
+end:
+```
+
+Twenty-two `goto end` statements in `main()`, which starts at line 1133, jump
+to the label below the report.
+
+**What happens:** a run that takes any of them writes a log with no completion
+report, and then `cyanrip_log_end()` signs that log as though it were whole.
+Observed on this fork: a rip cancelled mid-track produced a signed log with no
+footer, which a consumer's audit read as *"the log was cut off"*.
+
+**What the fork did:** the footer is written on every route out, inside `end:`,
+after the encoders are joined, and says which route it was (`4cfbe4f`, "Write
+the completion footer on every route out, and give Rip completed: a third
+state").
+
+## 4. The filter graph is a ternary cascade, so `-H` discards de-emphasis
+
+**Where:** `src/cyanrip_encode.c:464-467`:
+
+```c
+    const char *filter_desc = hdcd ? "hdcd" :
+                              deemphasis ? "aemphasis=type=cd" :
+                              peak ? "ebur128=peak=true,anullsink" :
+                              NULL;
+```
+
+**What happens:** exactly one filter is ever built. With `-H`, de-emphasis is
+never in the graph, so a pre-emphasised disc ripped with `-H` keeps its
+emphasis, and `-E` (force de-emphasis) and `-W` (no de-emphasis) have no effect.
+The peak measurement is dropped whenever either of the first two is chosen.
+
+**What the fork did:** the graph is composed from the filters that apply, in
+order (`b866900`, "Compose the filter graph, so -H stops swallowing
+de-emphasis").
+
+## 5. `(deemphasis applied)` is printed from the settings, not from what happened
+
+**Where:** `src/cyanrip_log.c:85-86`:
+
+```c
+        if (ctx->settings.deemphasis || ctx->settings.force_deemphasis)
+            cyanrip_log(ctx, 0, " (deemphasis applied)\n");
+```
+
+**What happens:** under `-H`, report 4 means de-emphasis is not applied, but the
+log still says it was. The log is the only record of what was done to the audio,
+and this line claims a step that did not run.
+
+**What the fork did:** the line reports what the graph actually contained,
+fixed with report 4 in `b866900`.
+
+## 6. A bare apostrophe in `-a` or `-t` swallows every later field
+
+**Where:** `src/cyanrip_main.c:1704` and `:1789`,
+`av_dict_parse_string(…, "=", ":", 0)`.
+
+**What happens:** `av_dict_parse_string()`'s tokeniser treats `'` as a quote.
+A bare apostrophe opens a quoted run that never closes, so
+`-t "1=title=Don't Stop:artist=A:isrc=I"` sets the title to `Dont
+Stop:artist=A:isrc=I` and never sets `artist` or `isrc`, with no diagnostic.
+The corrupted value is written into the files and the log as though it were
+what was asked for. It is the defect in this list most likely to corrupt a real
+rip, because apostrophes are common in titles.
+
+**What the fork did:** a bare apostrophe is escaped before parsing, and an
+already-escaped one is left alone, so a caller that escapes correctly is not
+double-escaped (`c59dea3`, "Escape bare apostrophes in -a/-t, without
+double-escaping the consumer's").
+
+## 7. An invalid UTF-8 byte truncates a name, and can make `-D` absolute
+
+**Where:** `src/naming.c:121-123`:
+
+```c
+        ret = av_utf8_decode(&cp, (const uint8_t **)&str, end, AV_UTF8_FLAG_ACCEPT_ALL);
+        if (ret < 0) {
+            cyanrip_log(ctx, 0, "Error parsing string: %s!\n", av_err2str(ret));
+```
+
+**What happens:** the name is cut at the first invalid byte, from a MusicBrainz
+field, CD-TEXT or `-a`. A name that starts with one is cut to nothing, and an
+empty leading component makes a multi-component `-D` scheme resolve to an
+absolute path, so the rip is written outside the directory asked for.
+
+**What the fork did:** an invalid sequence becomes U+FFFD and the rest of the
+string is kept (`c3482b0`, "Substitute U+FFFD for invalid UTF-8 instead of
+truncating and logging").
+
+## 9. `-r` reaches libcdio-paranoia unrounded, and `-r 3` never returns on a bad sector
+
+(Report 8 is `docs/upstream-cachemodel-report.md`.)
+
+**Where:** `src/cyanrip_main.c:428`, `cdio_paranoia_read_limited(ctx->paranoia,
+&status_cb, …)` with the `-r` value as the per-frame retry limit.
+
+**What happens:** `cdio_paranoia_read_limited()` compares its retry counter with
+the limit only inside `if (retry_count % 5 == 0)` (`lib/paranoia/paranoia.c`,
+read at libcdio-paranoia `384f4da`). A limit that is not a multiple of 5 is
+never matched, so on a sector that will not read the call does not return.
+Measured on this fork before the fix, with the same call and one sector of a disc
+image made unreadable: at the default paranoia level `-r 3` did not finish in
+90 s, and `-r 10` finished in about a second. Upstream's default, 10, is safe;
+`-r 3`, `-r 0` and any other non-multiple of 5 are not.
+
+**What the fork did:** the per-frame half of `-r` is rounded up to a multiple of
+5, at least 5, and the log says both numbers when they differ (`2af669e`, "Round
+the per-frame retry limit up to a multiple of 5, which libcdio-paranoia needs").
+The library's check is arguably a libcdio-paranoia defect too, and worth a report
+there.
+
+## 10. `media` is tagged from the `-H` setting, so every `-H` rip says HDCD
+
+**Where:** `src/cyanrip_main.c:1610`, `ctx->settings.decode_hdcd ? "HDCD" :
+"CD"`, set before a sample is read.
+
+**What happens:** every file ripped with `-H` is tagged `media: HDCD`, whether or
+not the disc carries HDCD, and the log reports `HDCD detected: no` for the same
+rip. Observed on this fork on a real drive: every `-H` rip of a non-HDCD disc.
+
+**What the fork did:** the tag is `CD`. Whether a disc is HDCD is a measurement
+the log already reports, not a setting (`ed4a377`, "Tag media as CD whatever -H
+says").
+
+## 11. The AccurateRip tally counts a track whose read was interrupted
+
+**Where:** `src/cyanrip_log.c:318`, in `cyanrip_log_finish_report()`, which
+tests only `t->ar_db_status == CYANRIP_ACCUDB_FOUND`.
+
+**What happens:** a SIGINT during a track's read still reaches the report. If the
+read got past sector 450, the one-sector `Accurip 450` checksum can match the
+database, so the disc's partial-match tally counts a track that was not ripped.
+This is read from upstream's source, not run upstream; it was found on this fork
+in a real rip.
+
+**What the fork did:** the tally counts only tracks whose read completed
+(`f26668b`, "Leave an interrupted track out of the AccurateRip tally").
+
+## 12. A 450 lookup falls through to the whole-track checksum on a miss
+
+**Where:** `src/accurip.c:239-242`:
+
+```c
+        if (is_450 && e->checksum_450 == checksum)
+            return e->confidence;
+        else if (e->checksum == checksum)
+            return e->confidence;
+```
+
+**What happens:** when a 450 lookup misses an entry's frame checksum, the
+one-frame checksum is then compared with the entry's whole-track checksum. A
+false match has one chance in 2^32 per entry, so no real rip has been seen to
+show it. But it reaches the `Accurip 450` log line and the `-f` offset search,
+which scans thousands of offsets per track. Found by Platterpus, reading this
+fork's copy of the same code.
+
+**What the fork did:** a 450 lookup compares only 450 checksums (`10f36fe`,
+"Compare only 450 checksums on a 450 AccurateRip lookup").
