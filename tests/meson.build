@@ -324,8 +324,20 @@ test('Contract delta names its section', python,
 ## they had to guess two and report both. tools/lap-commits.py derives it, and
 ## the sharpest check here is the cross-check -- it must reproduce BOTH numbers
 ## a second, independent implementation got from our own history.
+##
+## AN EXPLICIT TIMEOUT, because meson's 30 s default is a library default in a
+## parallel run -- the shape Platterpus's round 28 lap 2 S21-S22 named from a
+## Hypothesis deadline that failed a correct test of theirs at 211 ms. This test
+## is the one of ours it fits: fourteen timeouts, every one inside a full suite
+## at exactly 30 s, and never slower than ~1 s alone -- except once, 48.4 s wall
+## over 0.73 s of CPU, on the first run after the container started. Its own
+## run() calls, timed in the next run, came to 0.84 s. So it waits rather than
+## works, and a limit with margin lets the next occurrence tell SLOW from HUNG:
+## a pass between 30 s and 120 s is a wait, a kill at 120 s is a hang. Every
+## other test still on the default was measured at 9.2 s or under.
 test('Lap commit list names its range', python,
-     args: [ files('lap_commits.py') ])
+     args: [ files('lap_commits.py') ],
+     timeout: 120)
 
 ## A lap body in LSL, the statement language proposed in round 27 lap 6
 ## (docs/handshake/PROPOSAL-lap-statement-language.md). Every defect either

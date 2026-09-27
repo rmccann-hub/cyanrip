@@ -345,7 +345,11 @@ the code does not have is the defect that let this go unnoticed.
 occurrence falsified it.** That is the number-incremented-rather-than-derived
 defect, in the file that records it, and it is the same one that turned three
 `SETTLED.md` rows stale on 2026-09-22. The dated occurrences below are the
-record; the heading states the property. **Thirteenth occurrence 2026-09-26**, with
+record; the heading states the property. **Fourteenth occurrence 2026-09-26**, in
+a fresh worktree at `e0471f4`, the first suite proving `.17`'s candidate, 91
+tests: `Timeout: 1`, `30.02s`, and **1.38 s** alone straight afterwards; the
+second proving suite passed. Which call hung was not captured.
+**Thirteenth occurrence 2026-09-26**, with
 `2e9884d`'s tree before its commit, in a full suite of 91 that ran at about half
 speed throughout (the black-box sweep took 422 s against 217 s an hour earlier):
 `Ok: 90  Timeout: 1`, `30.02s`, call #4 again after three calls took 2.09 s, and
@@ -528,21 +532,28 @@ runs trained the eye to look at, *"84 Ok, 0 Fail"* reads as a pass.
 tempting hypothesis, a background `git gc` holding a lock, is **not supported**.
 
 **What is narrowed but NOT established.** `tests/lap_commits.py` spawns a fresh
-Python interpreter per peer entry in a loop and shells out to git, and it has
-**no explicit `timeout:` in `tests/meson.build`**, so it gets meson's default 30
-seconds. Meson runs tests in parallel, and its neighbours include `Sanitizer
+Python interpreter per peer entry in a loop and shells out to git, and until
+2026-09-27 it had **no explicit `timeout:` in `tests/meson.build`**, so it got
+meson's default 30 seconds. Meson runs tests in parallel, and its neighbours include `Sanitizer
 sweep` — a full `meson setup` plus `ninja` build of a second tree — the
 838-invocation black-box sweep, and the argv probe. Contention is a plausible
 mechanism for a slowdown. **It is not a plausible mechanism for 30×, and saying
 so is the point of this entry.**
 
-**Deliberately NOT fixed by widening the timeout.** A number chosen without the
-mechanism is a guess, and changing a test so it stops reporting is the move this
-repository has a rule against. The flake is recorded instead, with what would
-settle it: **run the suite with `--num-processes 1` and time this test, and run
-it under a deliberate parallel load.** If it recurs, that is evidence to act on
-and an explicit `timeout:` becomes a *declaration* rather than a suppression —
-the same standing `Black-box sweep` already has.
+**The timeout is now explicit, 120 s, and it is a declaration, not a fix.**
+This paragraph said the flake would not be fixed by widening the timeout, and
+that if it recurred an explicit `timeout:` would become a declaration rather
+than a suppression. It recurred, fourteen times. Two things settled it on
+2026-09-27. Platterpus's round 28 lap 2 S21–S22 named the shape from their own
+tree: *a wall-clock limit set by a library default in a parallel run*. And one
+run, the first after this container started, took **48.4 s wall over 0.73 s of
+CPU**, while the next run's timed calls added up to **0.84 s**. So the test waits
+rather than works, and the wait can outlast 30 s. With 120 s, a pass between
+30 and 120 s says *slow*, and a kill at 120 s says *hung*. **The mechanism is
+still not established**, and the settling runs this paragraph named are still
+the ones to do: the suite at `--num-processes 1`, and this test under a deliberate
+parallel load. Every other test still on meson's default was measured at 9.2 s
+or under.
 
 **Why it matters beyond one flake.** A gate that can fail for a reason unrelated
 to the code is the exact disease `PROTOCOL.md` R2 names when it forbids
