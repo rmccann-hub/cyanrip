@@ -337,6 +337,14 @@ typedef struct cyanrip_track {
      * report a fact that comes into being at T+1; the only honest fix is to
      * split the claim, and this field is the half that lands in the footer. */
     int encode_failures;
+    /* Whether this track had at least one encoder to join, read from the
+     * encoder contexts themselves by the collection loop. With audio_ripped it
+     * splits the files on disk in two: a track that had an encoder and whose
+     * read completed has WHOLE files, and one whose read did not complete has
+     * files holding the part that was read. `Encoder errors:` counts the first
+     * and `Partial files:` names the second; counting both as "tracks encoded"
+     * read an interrupted track's partial file as a whole one. */
+    int had_encoder;
 
     struct cyanrip_dec_ctx *dec_ctx;
     struct cyanrip_enc_ctx *enc_ctx[CYANRIP_FORMATS_NB];
@@ -382,17 +390,6 @@ typedef struct cyanrip_ctx {
     int success;
     int total_error_count;
     int tracks_completed; /* Tracks fully ripped, for the completion line */
-    /* Tracks that had at least one encoder to join, counted by the collection
-     * loop from the encoder contexts themselves rather than inferred from
-     * tracks_completed -- which is a different population, because a track
-     * whose read failed has encoders started and is never counted completed.
-     *
-     * It exists so `Encoder errors: none` can name the set it is none OF. An
-     * absence over an unstated population is the `none` versus
-     * `unknown (reason)` defect wearing a number: on an interrupted rip, two
-     * encoded tracks with no failures and twelve tracks never attempted would
-     * otherwise render identically to a clean fourteen-track disc. */
-    int tracks_encoded;
     /* CD track number of a read that STARTED and has not completed, else 0.
      * Set as the read loop is entered and cleared only when that loop exits
      * normally, so every abort out of it -- a signal, an error, a goto --

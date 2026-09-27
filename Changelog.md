@@ -1,5 +1,25 @@
 Unreleased
 ==========
+**For `.18`: `Encoder errors:` counts only tracks whose read completed, and a
+partial file gets a line of its own.** Agreed in round 28, our lap 1 S15 and
+Platterpus's lap 2 S16. An interrupted rip read `Encoder errors: none; 1 track
+encoded` above `0 of 14 tracks`. It now reads `Encoder errors: not applicable;
+no whole track was encoded`, then the new P2 line `Partial files:  1 track (1),
+read not completed; encoder failures: none`. The zero arm keeps `no track was
+encoded` wherever that is still true. No other line changes.
+
+**LSL 2 is implemented**: Platterpus's amendments A1–A8, A3 as we amended it, in
+`tools/lap-statements.py` behind `LSL: 2`. Each refusal names its amendment, the
+ids their checker reports, and their worked example reads as their LSL
+amendments 1 §6 says it must, under both versions.
+
+**Three portable findings from Platterpus's round 28 lap 2 had instances here**,
+each fixed: a bundle's empty transcript printed a clean result over nothing
+(S19); two tests sat on meson's 30 s default in a parallel run, and the one that
+has timed out fourteen times now declares 120 s (S21); and `seam-sync-check.py
+--fetch` took their default branch rather than `main`, their ref of record
+(S23).
+
 `+platterpus.17` shipped at `e0471f4` on 2026-09-26; its notes are below, under
 its own heading.
 

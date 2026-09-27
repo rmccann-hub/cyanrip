@@ -2106,6 +2106,12 @@ def sc_encode_failure_reaches_the_log():
         fail(f"encfail: the line says {m2.group(1)} track(s) encoded and "
              f"{len(on_disk)} track(s) have files")
 
+    # Every read here completed, so nothing is a partial file, however many
+    # encoders failed. `Partial files:` is about the READ; an encode failure
+    # over a whole read is this line's, not that one's.
+    if re.search(r"(?m)^Partial files:", text):
+        fail("encfail: `Partial files:` on a rip whose every read completed")
+
     # `-j` is deliberately UNCHANGED and the schema did not move. Pinned so
     # that if per-track encode status is ever added there, it is visible as a
     # change and gets its own schema bump rather than arriving silently.
@@ -3705,6 +3711,30 @@ def sc_interrupt():
             fail(f"interrupt/{name}: no mid-read `Interrupted at:` line "
                  f"(found {got!r}). The log names how many tracks finished "
                  f"and must also name the one that did not")
+
+        # `Encoder errors:` COUNTS ONLY TRACKS WHOSE READ COMPLETED, and a
+        # partial file is named on a line of its own -- round 28, our lap 1
+        # S15 and Platterpus's lap 2 S16. Before `.18` this rip read
+        # `Encoder errors: none; 1 track encoded` two lines above `0 of 3
+        # tracks`, counting the interrupted track's partial file as a track
+        # encoded. Exact lines, derived from the track `Interrupted at:`
+        # names, and the partial file checked on disk: the line names a file,
+        # so the file is the artifact to assert against.
+        text = log.read_text()
+        enc = re.findall(r"^Encoder errors: .*$", text, re.M)
+        if enc != ["Encoder errors: not applicable; no whole track was encoded"]:
+            fail(f"interrupt/{name}: {enc!r}; no track's read completed, so "
+                 f"no whole track was encoded")
+        part = re.findall(r"^Partial files:.*$", text, re.M)
+        if at:
+            want = (f"Partial files:  1 track ({at.group(1)}), read not "
+                    f"completed; encoder failures: none")
+            if part != [want]:
+                fail(f"interrupt/{name}: {part!r}, expected [{want!r}]")
+            f = out / f"{at.group(1)}.flac"
+            if not f.exists() or f.stat().st_size == 0:
+                fail(f"interrupt/{name}: `Partial files:` names track "
+                     f"{at.group(1)} and {f.name} is not on disk")
 
         if not diag.exists():
             fail(f"interrupt/{name}: no diagnostics record -- it is written "

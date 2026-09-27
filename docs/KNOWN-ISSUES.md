@@ -654,17 +654,32 @@ of 14 tracks)` and `Interrupted at: track 1, mid-read`. `.15`'s
 `docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:88` says the same.
 
 **The count is exact about what it counts, and the noun is wider than that.**
-`ctx->tracks_encoded` is incremented for every track that had an encoder
-context, once each context closed without error (`src/cyanrip_main.c:2719-2740`).
+Through `.17`, `ctx->tracks_encoded` is incremented for every track that had an
+encoder context, once its contexts were joined (`cyanrip@e0471f4:src/cyanrip_main.c:2719-2740`).
 Track 1's encoder did close cleanly, over the part of the track that was read.
 So "1 track encoded" is true of an encoder and reads as a whole track. A reader
 who takes the three footer lines together is not misled; one who reads
 `Encoder errors:` alone is.
 
-**Not fixed.** The candidates are counting only tracks whose read completed, or
-saying which encoded tracks were partial. Either changes a P2 line Platterpus
-parses, so it belongs to a round, with the consumer's answer first, like the
-album loudness entry above.
+**Fixed for `.18`, not released.** Round 28 settled the wording: our lap 1 S15
+asked which form they would read, and Platterpus's lap 2 S16 chose both halves,
+*"count only tracks whose read completed, and name a partial file on its own
+line, because a count over the record should count what the record holds"*.
+Their parser reads only the failure count out of this line
+(`platterpus@18823c8:src/platterpus/parsers/cyanrip_log.py:480-489`), so the
+count can change under it. The same interrupted rip now reads:
+
+```
+Encoder errors: not applicable; no whole track was encoded
+Partial files:  1 track (1), read not completed; encoder failures: none
+```
+
+`Partial files:` is a **new P2 line**, printed directly below `Encoder errors:`
+and only when a track had an encoder and its read did not complete. The zero
+arm keeps `no track was encoded` verbatim wherever that is still true, which is
+every rip with no partial file. `.17` and every filed log keep the old count.
+Pinned by `sc_interrupt()`, against the partial file on disk, and
+`sc_encode_failure_reaches_the_log()`, where no read is partial.
 
 ### Every figure the log reports about the audio is measured BEFORE the filter graph
 

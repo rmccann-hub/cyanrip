@@ -259,49 +259,88 @@ static void print_stall_summary(cyanrip_ctx *ctx)
  * mutants for exactly that reason.
  *
  * It is NOT a verdict. It reports which tracks had an encoder return a
- * failure; whether the rip is usable is the consumer's judgement. */
+ * failure; whether the rip is usable is the consumer's judgement.
+ *
+ * ITS POPULATION IS THE TRACKS WHOSE READ COMPLETED, since `.18`. It counted
+ * every track that had an encoder, so an interrupted rip read `Encoder errors:
+ * none; 1 track encoded` two lines above `0 of 14 tracks`: true of an encoder
+ * that closed cleanly over a partial read, and read as a whole track. Agreed in
+ * round 28 (our lap 1 S15, Platterpus's lap 2 S16): count only tracks whose
+ * read completed, and name a partial file on its own line, `Partial files:`,
+ * printed only when there is one. */
+static void append_track(char *buf, size_t size, int *len, int *truncated,
+                         int number)
+{
+    if (*truncated)
+        return;
+    /* Bounded, and the bound is reported rather than silently applied. A
+     * list that stops without saying so is a count a reader would believe. */
+    int n = snprintf(buf + *len, size - *len, "%s%i", *len ? ", " : "", number);
+    if (n < 0 || (size_t)n >= size - *len)
+        *truncated = 1;
+    else
+        *len += n;
+}
+
 static void print_encode_failure_summary(cyanrip_ctx *ctx)
 {
-    char tracks[512];
-    int nb_failed = 0, len = 0, truncated = 0;
+    char tracks[512], partial[512];
+    int nb_whole = 0, nb_failed = 0, len = 0, truncated = 0;
+    int nb_partial = 0, nb_partial_failed = 0, plen = 0, ptruncated = 0;
 
-    tracks[0] = '\0';
+    tracks[0] = partial[0] = '\0';
 
     for (int i = 0; i < ctx->nb_tracks; i++) {
         const cyanrip_track *t = &ctx->tracks[i];
+        if (!t->had_encoder)
+            continue;
+        if (!t->audio_ripped) {
+            nb_partial++;
+            if (t->encode_failures)
+                nb_partial_failed++;
+            append_track(partial, sizeof(partial), &plen, &ptruncated,
+                         t->number);
+            continue;
+        }
+        nb_whole++;
         if (!t->encode_failures)
             continue;
         nb_failed++;
-        if (truncated)
-            continue;
-        /* Bounded, and the bound is reported rather than silently applied.
-         * A list that stops without saying so is a count a reader would
-         * believe. */
-        int n = snprintf(tracks + len, sizeof(tracks) - len, "%s%i",
-                         len ? ", " : "", t->number);
-        if (n < 0 || (size_t)n >= sizeof(tracks) - len)
-            truncated = 1;
-        else
-            len += n;
+        append_track(tracks, sizeof(tracks), &len, &truncated, t->number);
     }
 
-    if (!ctx->tracks_encoded) {
-        cyanrip_log(ctx, 0, "Encoder errors: not applicable; no track was "
-                            "encoded\n");
-        return;
-    }
-
-    if (!nb_failed) {
+    if (!nb_whole) {
+        /* Two zero arms, because "no track was encoded" is false the moment a
+         * partial file exists, and it is kept verbatim where it is true. */
+        cyanrip_log(ctx, 0, "Encoder errors: not applicable; no %strack was "
+                            "encoded\n", nb_partial ? "whole " : "");
+    } else if (!nb_failed) {
         cyanrip_log(ctx, 0, "Encoder errors: none; %i track%s encoded\n",
-                    ctx->tracks_encoded, ctx->tracks_encoded == 1 ? "" : "s");
-        return;
+                    nb_whole, nb_whole == 1 ? "" : "s");
+    } else {
+        cyanrip_log(ctx, 0, "Encoder errors: %i track%s failed (%s%s); "
+                            "%i track%s encoded\n",
+                    nb_failed, nb_failed == 1 ? "" : "s",
+                    tracks, truncated ? ", list truncated" : "",
+                    nb_whole, nb_whole == 1 ? "" : "s");
     }
 
-    cyanrip_log(ctx, 0, "Encoder errors: %i track%s failed (%s%s); "
-                        "%i track%s encoded\n",
-                nb_failed, nb_failed == 1 ? "" : "s",
-                tracks, truncated ? ", list truncated" : "",
-                ctx->tracks_encoded, ctx->tracks_encoded == 1 ? "" : "s");
+    if (!nb_partial)
+        return;
+
+    /* A file that holds part of a track: its read did not complete, and its
+     * encoder was closed over what was read. Its encoder's outcome is stated
+     * as a count, `none` included, rather than left out when it is zero. */
+    if (nb_partial_failed)
+        cyanrip_log(ctx, 0, "Partial files:  %i track%s (%s%s), read not "
+                            "completed; encoder failures: %i\n",
+                    nb_partial, nb_partial == 1 ? "" : "s", partial,
+                    ptruncated ? ", list truncated" : "", nb_partial_failed);
+    else
+        cyanrip_log(ctx, 0, "Partial files:  %i track%s (%s%s), read not "
+                            "completed; encoder failures: none\n",
+                    nb_partial, nb_partial == 1 ? "" : "s", partial,
+                    ptruncated ? ", list truncated" : "");
 }
 
 static int print_paranoia_counts(cyanrip_ctx *ctx, const uint64_t *counts,

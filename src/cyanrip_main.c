@@ -2735,8 +2735,7 @@ end:
                 t->encode_failures++;
             }
         }
-        if (had_encoder)
-            ctx->tracks_encoded++;
+        t->had_encoder = had_encoder;
     }
 
     /* THE FOOTER IS NOW BELOW THE ENCODER LOOP, AND THAT IS THE CHANGE.
