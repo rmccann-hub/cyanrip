@@ -3,9 +3,11 @@
 **Not filed.** These are drafts for the maintainer to review and submit. Filing
 on upstream's tracker is outside this repository, so it is the maintainer's act;
 what this file does is make each one a copy-and-paste. `CLAUDE.md`'s rule is that
-*"not filed is not fixed"*, and until 2026-09-27 only one of the twelve defects
-this fork found in upstream had a report written: the cache-model one, which
-stays in its own file, `docs/upstream-cachemodel-report.md`.
+*"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
+fork found in upstream had a report written: the cache-model one, which stays in
+its own file, `docs/upstream-cachemodel-report.md`. There are thirteen: twelve
+here, and that one. The thirteenth found, report 13, was found the day this file
+was written.
 
 **Checked against upstream `master` at `f8ebf48` on 2026-09-27**, which is also
 our `master` (`git ls-remote https://github.com/cyanreg/cyanrip
@@ -231,3 +233,37 @@ fork's copy of the same code.
 
 **What the fork did:** a 450 lookup compares only 450 checksums (`10f36fe`,
 "Compare only 450 checksums on a 450 AccurateRip lookup").
+
+## 13. The AccurateRip disc status can never read `mismatch`
+
+**Where:** `src/accurip.c:171`, in `crip_fill_accurip()`, before the loop over
+the response's entries:
+
+```c
+    ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
+```
+
+and the arm it disables, `:188-189`:
+
+```c
+            if (ctx->ar_db_status != CYANRIP_ACCUDB_FOUND)
+                ctx->ar_db_status = CYANRIP_ACCUDB_MISMATCH;
+```
+
+**What happens:** the status is already `FOUND` when the first entry is read,
+so the `MISMATCH` assignment never runs. A response whose entries all carry
+another disc's ids reads `AccurateRip:    found`, and so does an empty one. The
+report then prints `Tracks ripped accurately: 0/N`, which reads as a comparison
+that found nothing, over a comparison that never happened. Read from the
+source: no real response has been seen to have that shape, because a dBAR file
+is named by the ids it holds.
+
+**How to reproduce:** call the parse on any recorded dBAR response with one
+disc id changed, or with an empty body, and read the disc status.
+
+**What the fork did:** the status starts at `NOT_FOUND` and becomes `FOUND`
+only when an entry for this disc is read, so those two responses read
+`mismatch` and `not found` and print no tally (`64642db`, "Let the AccurateRip
+disc status say mismatch and not found"). The fork first split the parse out
+of the fetch, unchanged, so a recorded response can be tested with no network
+(`5b7493c`).
