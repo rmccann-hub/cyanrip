@@ -35,11 +35,19 @@ its condition rather than a date.
 |---|---|---|
 | **`Encoder errors:` counts only tracks whose read completed**; its zero arm reads `no whole track was encoded` when a partial file exists; a new P2 line, `Partial files:  N track(s) (list), read not completed; encoder failures: none\|N`, follows it when one does | `f150c0c` | a reader of an interrupted rip's log. Agreed in round 28 (our lap 1 S15, their lap 2 S16), announced in our lap 3 S6–S13 |
 | **`Stopping, ripping incomplete!` is printed whenever a signal stops a track's read**, from one place, `fail:`; it was printed only when the signal landed inside the frame loop | `9d52271` | a reader of a log whose signal landed after a pass's last frame or between `-Z` passes. Same string, one more path; **to announce in round 28's next lap of ours** |
+| **The disc-level `AccurateRip:` line reads `mismatch` or `not found` when a response holds no entry for this disc**, instead of `found`, and no `Tracks ripped accurately:` tally is printed over it, as for a disc not in the database. The status was set to `found` before the loop that would downgrade it | `64642db` | nobody so far: no real response has had that shape. Platterpus's parser ignores the disc-level line (`platterpus@59f4c00:src/platterpus/parsers/cyanrip_log.py:2171`) and reads the per-track rows, which do not change. **To announce in round 28's next lap of ours**, with the stop marker |
+| **The AccurateRip response parse is split out of the fetch**, unchanged, so a recorded response is tested with no network | `5b7493c` | no line changes. The contract's P5 moves one row, `AccuRIP DB data error, got unexpected number of bytes!`, out of the `goto end` class, because its exit is now a `return` with the same effect (`1268ccf`) |
 | whatever the Full run leads us to fix | — | round 28 lap 1 S8 |
-| tooling and tests: LSL 2 in the lap checker (`df67f5a`), a clean bundle transcript names its population (`f309743`), explicit test timeouts (`126c433`, `df67f5a`), `seam-sync-check.py` fetches `main` by name (`f5ba200`), the `raisesig` shim (`9d52271`), the inert-edit probe before every mutation sweep (`62aed42`), and the argv probe's `unobservable` grade (`9207def`) | as named | our test suite |
+| tooling and tests: LSL 2 in the lap checker (`df67f5a`), a clean bundle transcript names its population (`f309743`), explicit test timeouts (`126c433`, `df67f5a`), `seam-sync-check.py` fetches `main` by name (`f5ba200`), the `raisesig` shim (`9d52271`), the inert-edit probe before every mutation sweep (`62aed42`), the argv probe's `unobservable` grade (`9207def`), the recorded AccurateRip response test (`5b7493c`, `64642db`), the encoder-failure arms of the log (`27d1616`), and a `seam-check --held` summary that names what it re-checked (`70ac25c`) | as named | our test suite |
 
-`src/` changes at `f150c0c` and `9d52271` only, so far. The CLI is unchanged and
-`-j` stays `cyanrip-diagnostics/6`.
+`src/` changes at `f150c0c`, `9d52271`, `5b7493c` and `64642db`, so far. The CLI is
+unchanged and `-j` stays `cyanrip-diagnostics/6`.
+
+**A row-by-row diff of `.18`'s contract against `.17`'s should expect three
+changed stable rows, not two** (Platterpus's round 28 lap 4 S6, S7): the two
+`Partial files:` rows added, and `no track was encoded` reworded to `no %strack
+was encoded`. Beyond the stable table, P5 moves one row between classes (above),
+and line numbers move in `accurip.c` and `cyanrip_main.c`.
 
 ## 3. The channel
 
@@ -80,6 +88,9 @@ No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
   the stop marker by `sc_signal_after_last_frame()`, which raises the signal in
   the window a timer missed. **The `-Z` route between passes has no console
   output to key on**, so it is covered by where the fix sits, not by a run.
+- **The `mismatch` and `not found` statuses have never come from a real
+  response.** They are asserted on a recorded response altered to that shape
+  (`tests/arresp.c`), which is what the fix changes, and no rip has reached it.
 - **A wrong read still logs `Ripping errors: 0`.** `Ripping errors:` counts
   operational failures, not read quality, and that is documented, not changed.
 - **The album loudness block still covers whatever was read**, and Platterpus
