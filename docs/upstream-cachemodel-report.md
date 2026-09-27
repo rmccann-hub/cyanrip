@@ -6,13 +6,22 @@ H11) was *"yes, and I would not wait"* — if upstream picks a different value w
 want to know now rather than at the next rebase.
 
 Everything below was re-derived immediately before writing it, against the source
-bytes rather than against another build.
+bytes rather than against another build. **Re-measured 2026-09-27 against a
+build of upstream `f8ebf48`**, with `tests/fixtures/cdda.bin` as the image of
+`tests/fixtures/basic.cue`: at `-P 0` the decoded PCM is byte-identical to the
+source; at `-P 1`, `-P 2` and `-P 3` it is 0.3 % non-zero samples against the
+source's 100 %; every run exits 0 with `Ripping errors: 0`. This fork's build
+gave byte-identical output at the default level on the same image. **Two
+corrections came out of that re-measurement:** the title said *"at any
+paranoia level"*, which `-P 0` contradicts, and the reproduction compared a
+WAV file with the raw `.bin`, which differs even for a correct rip because of
+the WAV header and because `1.wav` is one track of two.
 
 ---
 
 ## Title
 
-Ripping a disc image at any paranoia level returns corrupted audio and reports `Ripping errors: 0`
+Ripping a disc image at any paranoia level above 0 returns corrupted audio and reports `Ripping errors: 0`
 
 ## Body
 
@@ -54,9 +63,14 @@ Any BIN/CUE image will do. With a 2-track synthetic image whose `.bin` is the
 ground truth:
 
 ```sh
-cyanrip -d image.cue -N -A -Q -s 0 -o wav -D out -F '{track}'
-cmp out/1.wav image.bin      # differs
+cyanrip -d image.cue -N -A -Q -s 0 -o pcm -D out -F '{track}'
+cat out/1.pcm out/2.pcm | cmp - image.bin      # differs
+cyanrip -d image.cue -N -A -Q -s 0 -o pcm -P 0 -D out0 -F '{track}'
+cat out0/1.pcm out0/2.pcm | cmp - image.bin    # identical
 ```
+
+`-o pcm` writes raw little-endian 16-bit stereo, so for an image with no
+pregaps the tracks concatenated are the `.bin` byte for byte.
 
 Sweeping the constant and comparing the decoded PCM against the source `.bin`
 directly — not against another cyanrip build:
@@ -100,7 +114,8 @@ with image size.
 
 ### Notes
 
-- Affects `0.9.4-rc1` and anything after `c431d58`.
+- Affects `0.9.4-rc1` and anything after `c431d58`, including `0.9.4-rc2` and
+  `master` at `f8ebf48`, measured there on 2026-09-27.
 - Real drives were never affected; the guard is on the image drivers only.
 - `-P 0` is byte-perfect on both, so a consumer pinned to `-P 0` sees nothing.
 - Found and fixed downstream in `rmccann-hub/cyanrip` (`platterpus-fork`), where
