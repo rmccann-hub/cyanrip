@@ -103,6 +103,23 @@ def test_no_verdict_file_is_NOT_read_as_a_pass():
           "and must be distinguished from a pass in words")
 
 
+def test_a_clean_transcript_names_what_it_read():
+    """Round 28 lap 2 S19-S20 (Platterpus): a clean result printed over nothing.
+
+    An empty transcript printed `no [ FAIL ] lines`, word for word what a
+    whole clean run prints, and with no report.json nothing else was said.
+    """
+    rc, out = run(make({"session/transcript.txt": b""}), "--verdict-only")
+    check("no [ FAIL ] lines" not in out,
+          f"an empty transcript must not read as a clean one: {out[:300]}")
+    check("EMPTY, 0 byte(s)" in out, f"it must say it is empty: {out[:300]}")
+    check("is NOT 'the run passed'" in out,
+          f"with no `ok` anywhere it must say nothing asserts a pass: {out[:300]}")
+    rc, out = run(make({"session/transcript.txt": b"a\nb\nc\n"}), "--verdict-only")
+    check("no [ FAIL ] lines in 3 line(s)" in out,
+          f"a clean transcript must name how many lines it read: {out[:300]}")
+
+
 def test_the_not_filed_list_is_derived_not_written():
     """Every archive member is either filed or named in SHA256SUMS. No third state."""
     files = {

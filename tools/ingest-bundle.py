@@ -88,8 +88,16 @@ def read_verdict(members):
                     line_no = text.count("\n", 0, m.start()) + 1
                     line = text[m.start():text.find("\n", m.start())]
                     out.append(f"      :{line_no}  {line.strip()[:96]}")
+            elif not text.strip():
+                # A clean result must name its population, or it prints the
+                # same over nothing as over a whole run. Platterpus's round 28
+                # lap 2 S19-S20: a secret scan that read 0 commits and said
+                # "no leaks found". An empty transcript is not a clean one.
+                out.append(f"  {name}: EMPTY, {len(data)} byte(s) -- it records "
+                           f"nothing, which is not 'no failures'")
             else:
-                out.append(f"  {name}: no [ FAIL ] lines")
+                n = len(text.splitlines())
+                out.append(f"  {name}: no [ FAIL ] lines in {n} line(s)")
     return ok, out
 
 
@@ -131,6 +139,9 @@ def main():
     elif ok is True:
         print("  The bundle asserts the run passed. Check the sections you")
         print("  care about anyway -- `ok` is their aggregate, not ours.")
+    elif lines:
+        print("  Nothing here asserts that the run passed or failed: no")
+        print("  report.json declares `ok`. This is NOT 'the run passed'.")
     print()
 
     if args.verdict_only:
