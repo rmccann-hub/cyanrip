@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-g74872db)
+cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-gf150c0c)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 27 lap 6 closed, verdict GO -- NOT a released build
+Handshake:      round 28 lap 1 OPEN, verdict OPEN -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -59,18 +59,6 @@ Gaps:
 
 Tracks:
 
-Repeating ripping (0 out of 200 matches for current checksum 2C926D69)
-
-Repeating ripping (1 out of 200 matches for current checksum 2C926D69)
-
-Repeating ripping (2 out of 200 matches for current checksum 2C926D69)
-
-Repeating ripping (3 out of 200 matches for current checksum 2C926D69)
-
-Repeating ripping (4 out of 200 matches for current checksum 2C926D69)
-
-Repeating ripping (5 out of 200 matches for current checksum 2C926D69)
-
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -95,12 +83,13 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          91
+  READ:          12
 
 Ripping errors: 1
-Encoder errors: none; 1 track encoded
+Encoder errors: not applicable; no whole track was encoded
+Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-09-26T17:25:47+00:00
-Log FUN512: gREtUBffVcfPbb_w7SFivq29lptwnZbTRXAzQF5FCZrtF2BfxInnrq2mWCB9T84KU_.S2fjDMg9DJDXLbiY7Jw
+Ripping finished at 2026-09-27T15:08:51+00:00
+Log FUN512: jkLnHwVXsg6L6tKqObSRFTrqL3jIwaWO9pXeU3Ks58KIOEz5anWIxkVnKhKCyH2XRSyraLQnBi5Ucnp_21Rhcg
