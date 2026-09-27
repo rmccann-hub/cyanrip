@@ -162,10 +162,99 @@ static void test_receive_data(void)
     av_freep(&rctx.data);
 }
 
-int main(void)
+/* A REAL RESPONSE, PARSED WITH NO NETWORK, CHECKED AGAINST A REAL DRIVE'S LOG.
+ *
+ * argv[1] is the reference disc's dBAR file, fetched once from accuraterip.com
+ * on 2026-09-27 and committed (tests/fixtures/, 1807 bytes, 13 entries). The
+ * request was derived from the rig log's TOC, and its CDDB ID reproduces the
+ * one that log printed, E20DFE0E. argv[2] is that rig log: a rip of the same
+ * disc on a real drive on 2026-09-10, whose `Accurip v1:` lines say which
+ * whole-track checksums matched the database, at what confidence. The parse
+ * is checked against those, which it did not produce, rather than against
+ * numbers read back out of the fixture. */
+static void test_recorded_response(const char *bin, const char *rig_log)
+{
+    enum { N = 14 };
+    FILE *f = fopen(bin, "rb");
+    uint8_t data[4096];
+    size_t size = f ? fread(data, 1, sizeof(data), f) : 0;
+    if (f)
+        fclose(f);
+    check(size == 1807, "the recorded response is the 1807 bytes committed");
+    if (size != 1807)
+        return;
+
+    /* The context is large (its track array is fixed-size), so it is on the
+     * heap rather than the stack. */
+    cyanrip_ctx *ctx = av_mallocz(sizeof(*ctx));
+    cyanrip_track *tracks = ctx->tracks;
+    for (int i = 0; i < N; i++)
+        tracks[i].number = i + 1;
+    ctx->nb_tracks = N;
+
+    crip_parse_accurip(ctx, data, size, N, 0x001d420f, 0x013bb370, 0xe20dfe0e);
+    check(ctx->ar_db_status == CYANRIP_ACCUDB_FOUND, "the disc is found");
+    for (int i = 0; i < N; i++) {
+        check(tracks[i].ar_db_nb_entries == 13, "every track holds all 13 entries");
+        /* Ascending: cmp_conf() returns a - b. This check first said
+         * "highest first", which was an assumption and not the code. */
+        for (int e = 1; e < tracks[i].ar_db_nb_entries; e++)
+            check(tracks[i].ar_db_entries[e - 1].confidence <=
+                  tracks[i].ar_db_entries[e].confidence,
+                  "entries are sorted by confidence, lowest first");
+    }
+
+    /* The independent half. Each `Accurip v1:  X (accurately ripped,
+     * confidence C)` line of the rig log, in track order, must be found by
+     * crip_find_ar() over the parsed entries, at confidence C. */
+    FILE *lf = fopen(rig_log, "r");
+    check(lf != NULL, "the rig log opens");
+    if (!lf) {
+        av_free(ctx);
+        return;
+    }
+    char line[512];
+    int track = 0, matched = 0, not_found = 0;
+    while (fgets(line, sizeof(line), lf) && track < N) {
+        unsigned crc;
+        int conf;
+        const char *p = strstr(line, "Accurip v1:");
+        if (!p)
+            continue;
+        if (sscanf(p, "Accurip v1: %8x (accurately ripped, confidence %d)",
+                   &crc, &conf) == 2) {
+            check(crip_find_ar(&tracks[track], crc, 0) == conf,
+                  "a checksum the real rip matched is found at its confidence");
+            matched++;
+        } else {
+            not_found++;
+        }
+        track++;
+    }
+    fclose(lf);
+    check(track == N, "the rig log has one Accurip v1 line per track");
+    check(matched == 12 && not_found == 2,
+          "the rig log matched 12 tracks and not 2, as it says");
+
+    /* And the one-frame checksum a wrong read of track 1 matched in round 26,
+     * 57722DDE at confidence 200, is the top entry's 450. */
+    check(crip_find_ar(&tracks[0], 0x57722DDE, 1) == 200,
+          "track 1's frame-450 checksum is found at confidence 200");
+
+    for (int i = 0; i < N; i++)
+        av_freep(&tracks[i].ar_db_entries);
+    av_free(ctx);
+}
+
+int main(int argc, char **argv)
 {
     test_html_marker();
     test_receive_data();
+    if (argc < 3) {
+        fprintf(stderr, "FAIL: usage: arresp_test RESPONSE.bin RIG.log\n");
+        return 1;
+    }
+    test_recorded_response(argv[1], argv[2]);
 
     if (failures) {
         fprintf(stderr, "%d check(s) failed\n", failures);

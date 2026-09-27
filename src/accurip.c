@@ -112,6 +112,75 @@ static int cmp_conf(const void *a, const void *b)
     return ((CRIPAccuDBEntry *)a)->confidence - ((CRIPAccuDBEntry *)b)->confidence;
 }
 
+/* THE RESPONSE PARSE, split out of crip_fill_accurip() so it runs on a recorded
+ * response with no network. It was inline after the fetch, so the one test that
+ * reached it, tools/accurip-live-probe.py, had to call accuraterip.com, and a
+ * settled fact about this parser was re-checked by somebody else's server
+ * (docs/KNOWN-ISSUES.md). tests/arresp.c now parses a real response recorded
+ * for the reference disc and checks it against the checksums that disc's rig
+ * log matched. Moved, not changed: the body is the same statements. */
+static void crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t size,
+                               int audio_tracks, uint32_t id_type_1,
+                               uint32_t id_type_2, uint32_t cddb_id)
+{
+    GetByteContext gbc = { 0 };
+    bytestream2_init(&gbc, data, size);
+
+    ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
+
+    int entry_size = 1 + 12 + audio_tracks * (1 + 8);
+
+    if (size % entry_size) {
+        cyanrip_log(ctx, 0, "AccuRIP DB data error, got unexpected number of bytes!\n");
+        ctx->ar_db_status = CYANRIP_ACCUDB_ERROR;
+        return;
+    }
+
+    int nb_entries = size / entry_size;
+
+    for (int i = 0; i < nb_entries; i++) {
+        if (bytestream2_get_byte(&gbc) != audio_tracks ||
+            bytestream2_get_le32(&gbc) != id_type_1 ||
+            bytestream2_get_le32(&gbc) != id_type_2 ||
+            bytestream2_get_le32(&gbc) != cddb_id) {
+            if (ctx->ar_db_status != CYANRIP_ACCUDB_FOUND)
+                ctx->ar_db_status = CYANRIP_ACCUDB_MISMATCH;
+            bytestream2_skip(&gbc, entry_size - (bytestream2_tell(&gbc) % entry_size));
+            continue;
+        }
+
+        ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
+
+        for (int j = 0; j < audio_tracks; j++) {
+            cyanrip_track *t = &ctx->tracks[j];
+
+            int confidence = bytestream2_get_byte(&gbc);
+            uint32_t checksum = bytestream2_get_le32(&gbc);
+            uint32_t checksum_450 = bytestream2_get_le32(&gbc);
+
+            if (t->track_is_data)
+                continue;
+
+            t->ar_db_entries = av_realloc(t->ar_db_entries,
+                                          sizeof(CRIPAccuDBEntry) * (t->ar_db_nb_entries + 1));
+
+            t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+            t->ar_db_entries[t->ar_db_nb_entries].confidence = confidence;
+            t->ar_db_entries[t->ar_db_nb_entries].checksum = checksum;
+            t->ar_db_entries[t->ar_db_nb_entries].checksum_450 = checksum_450;
+            t->ar_db_max_confidence = FFMAX(confidence, t->ar_db_max_confidence);
+
+            t->ar_db_nb_entries++;
+        }
+    }
+
+    for (int i = 0; i < audio_tracks; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        if (t->ar_db_nb_entries)
+            qsort(t->ar_db_entries, t->ar_db_nb_entries, sizeof(CRIPAccuDBEntry), cmp_conf);
+    }
+}
+
 int crip_fill_accurip(cyanrip_ctx *ctx)
 {
     int ret = 0;
@@ -237,62 +306,8 @@ int crip_fill_accurip(cyanrip_ctx *ctx)
         }
     }
 
-    GetByteContext gbc = { 0 };
-    bytestream2_init(&gbc, rctx.data, rctx.size);
-
-    ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
-
-    int entry_size = 1 + 12 + audio_tracks * (1 + 8);
-
-    if (rctx.size % entry_size) {
-        cyanrip_log(ctx, 0, "AccuRIP DB data error, got unexpected number of bytes!\n");
-        ctx->ar_db_status = CYANRIP_ACCUDB_ERROR;
-        goto end;
-    }
-
-    int nb_entries = rctx.size / entry_size;
-
-    for (int i = 0; i < nb_entries; i++) {
-        if (bytestream2_get_byte(&gbc) != audio_tracks ||
-            bytestream2_get_le32(&gbc) != id_type_1 ||
-            bytestream2_get_le32(&gbc) != id_type_2 ||
-            bytestream2_get_le32(&gbc) != cddb_id) {
-            if (ctx->ar_db_status != CYANRIP_ACCUDB_FOUND)
-                ctx->ar_db_status = CYANRIP_ACCUDB_MISMATCH;
-            bytestream2_skip(&gbc, entry_size - (bytestream2_tell(&gbc) % entry_size));
-            continue;
-        }
-
-        ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
-
-        for (int j = 0; j < audio_tracks; j++) {
-            cyanrip_track *t = &ctx->tracks[j];
-
-            int confidence = bytestream2_get_byte(&gbc);
-            uint32_t checksum = bytestream2_get_le32(&gbc);
-            uint32_t checksum_450 = bytestream2_get_le32(&gbc);
-
-            if (t->track_is_data)
-                continue;
-
-            t->ar_db_entries = av_realloc(t->ar_db_entries,
-                                          sizeof(CRIPAccuDBEntry) * (t->ar_db_nb_entries + 1));
-
-            t->ar_db_status = CYANRIP_ACCUDB_FOUND;
-            t->ar_db_entries[t->ar_db_nb_entries].confidence = confidence;
-            t->ar_db_entries[t->ar_db_nb_entries].checksum = checksum;
-            t->ar_db_entries[t->ar_db_nb_entries].checksum_450 = checksum_450;
-            t->ar_db_max_confidence = FFMAX(confidence, t->ar_db_max_confidence);
-
-            t->ar_db_nb_entries++;
-        }
-    }
-
-    for (int i = 0; i < audio_tracks; i++) {
-        cyanrip_track *t = &ctx->tracks[i];
-        if (t->ar_db_nb_entries)
-            qsort(t->ar_db_entries, t->ar_db_nb_entries, sizeof(CRIPAccuDBEntry), cmp_conf);
-    }
+    crip_parse_accurip(ctx, rctx.data, rctx.size, audio_tracks,
+                       id_type_1, id_type_2, cddb_id);
 
 end:
     curl_easy_cleanup(curl_ctx);

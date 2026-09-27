@@ -981,8 +981,8 @@ Two consequences, and the second is worse than the slowness:
    did not answer"* — which is this project's own `none` versus
    `unknown (reason)` rule, failing in the tool that indexes the rule.
 
-**HALF-FIXED 2026-09-15, and the half that is left is DEFERRED FOR A NAMED
-REASON.**
+**FIXED 2026-09-27; half-fixed 2026-09-15, and the second half was deferred
+for a named reason, below.**
 
 **Done: the network is out of the gate.** `SETTLED.md`'s AccurateRip row no
 longer re-runs the probe. The run is filed verbatim at `docs/accurip-probe.log`
@@ -1000,7 +1000,25 @@ wrong file is not a check; the flag stays as a tool affordance and the row's
 check moved to the claim-versus-artifact comparison, which fails when the
 artifact is edited.
 
-**Still to do: assert the parser against a recorded response.** That is the real
+**Done 2026-09-27: the parser is asserted against a recorded response.**
+`crip_parse_accurip()` is split out of `crip_fill_accurip()`, a pure move, and
+`tests/arresp.c` feeds it the rig disc's dBAR response, filed as
+`tests/fixtures/accurip-dBAR-014-001d420f-013bb370-e20dfe0e.bin` (1,807 bytes,
+fetched once, HTTP 200). The expected values come from an independent artifact,
+`docs/rig-2026-09-10-ddc1e8c/rips/secure-reread.log`: 12 of its 14
+`Accurip v1:` checksums are found at the confidence that log printed, and 2 are
+not found, as it says. No network is involved, and mutating the parser's
+checksum read fails it.
+
+**Found by writing it, and NOT fixed: `mismatch` cannot be reported.**
+`src/accurip.c:129` sets the disc status to `FOUND` before the parse loop, so the
+`MISMATCH` assignment at `:146-147` can never run, and a response whose disc ids
+match no entry reads `AccurateRip:    found` with nothing found. Read from the
+source, not run: no recorded response has that shape. The fix changes what a P2
+line can print, so it is announced before it lands, and it is upstream's code
+too.
+
+**What was still to do: assert the parser against a recorded response.** That is the real
 fix — offline, deterministic, and it would cover the parse rather than a
 recorded verdict about it. It needs the response parse split out of
 `crip_fill_accurip()`, which does the curl fetch inline, exactly as
