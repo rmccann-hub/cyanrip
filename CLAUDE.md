@@ -1981,9 +1981,9 @@ stable, authorised by **round 27** — `docs/RELEASE-PLAN-platterpus.17.md` is
 executed and bannered. It carries a 450 lookup that compares only 450
 checksums, the `Accurip 450` match reworded to say it covers one frame, and an
 early failure's log that opens with the banner. There is no consumer-side
-prerequisite. Platterpus's 0.6.61 follows our round 28 lap 1, carrying
-`FORK_PIN` `221a1df` and `PIN_UNDER_REVIEW` `.17`, so their app offers `.17`
-marked `unapproved` until round 28 reviews it. **Round 28 opens on `.17` before
+prerequisite. Platterpus's 0.6.61, released 2026-09-27 at
+`platterpus@59f4c00`, carries `FORK_PIN` `221a1df` and `PIN_UNDER_REVIEW` `.17`,
+so their app offers `.17` marked `unapproved` until round 28 reviews it. **Round 28 opens on `.17` before
 its real test**, as rounds 26 and 27 did. **The next release is
 `+platterpus.18` and nothing is written for it.**
 
