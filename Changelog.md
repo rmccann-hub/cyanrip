@@ -34,8 +34,15 @@ moved only in its build tag, timings, timestamps and log checksum.
 recorded dBAR response, with its expected values read from that disc's rig log
 rather than written by hand. The parse is split out of the fetch as
 `crip_parse_accurip()`, a pure move; no line of the log changes. Writing it
-found that `AccurateRip:    mismatch` cannot be printed, recorded in
-`docs/KNOWN-ISSUES.md` and not yet fixed.
+found that `AccurateRip:    mismatch` could not be printed.
+
+**For `.18`: the disc-level `AccurateRip:` line says `mismatch` or `not found`
+when a response holds no entry for this disc**, instead of `found`, and the
+report prints no `Tracks ripped accurately:` tally over it, as it already did
+for a disc not in the database. The status was set to `found` before the loop
+that would downgrade it. No real response has had that shape, and Platterpus's
+parser ignores the disc-level line. No line's text changes; one line's value
+does, in a case no rip has reached. It is upstream's code too.
 
 **LSL 2 is implemented**: Platterpus's amendments A1–A8, A3 as we amended it, in
 `tools/lap-statements.py` behind `LSL: 2`. Each refusal names its amendment, the

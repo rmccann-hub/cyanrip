@@ -1010,13 +1010,22 @@ fetched once, HTTP 200). The expected values come from an independent artifact,
 not found, as it says. No network is involved, and mutating the parser's
 checksum read fails it.
 
-**Found by writing it, and NOT fixed: `mismatch` cannot be reported.**
-`src/accurip.c:129` sets the disc status to `FOUND` before the parse loop, so the
-`MISMATCH` assignment at `:146-147` can never run, and a response whose disc ids
-match no entry reads `AccurateRip:    found` with nothing found. Read from the
-source, not run: no recorded response has that shape. The fix changes what a P2
-line can print, so it is announced before it lands, and it is upstream's code
-too.
+**Found by writing it, and FIXED the same day for `.18`: `mismatch` could not
+be reported.** The parse set the disc status to `FOUND` before its loop, so the
+`MISMATCH` assignment below it could never run. A response whose entries all
+carry another disc's ids read `AccurateRip:    found`, an empty one did too, and
+the report then printed `Tracks ripped accurately: 0/N` over a comparison that
+never happened. The status now starts at `NOT_FOUND`: those two responses read
+`mismatch` and `not found`, and print no tally, as a disc absent from the
+database already did. `tests/arresp.c` builds both from the recorded response,
+plus a foreign entry before and after the real ones, and fails on two checks
+with the old line put back. Read from the source first: no real response has
+had that shape. **What a consumer can notice:** the disc-level `AccurateRip:`
+line's value in those two cases, and the tally's absence. Platterpus's parser
+ignores the disc-level line (`platterpus@59f4c00:src/platterpus/parsers/cyanrip_log.py:2171`)
+and reads the per-track rows, which do not change; the `-f` offset search ends
+with the same message it did. It is upstream's code too, `accurip.c:171` at
+`f8ebf48`, and `docs/SETTLED.md` checks both trees.
 
 **What was still to do: assert the parser against a recorded response.** That is the real
 fix — offline, deterministic, and it would cover the parse rather than a

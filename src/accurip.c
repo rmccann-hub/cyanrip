@@ -118,7 +118,8 @@ static int cmp_conf(const void *a, const void *b)
  * settled fact about this parser was re-checked by somebody else's server
  * (docs/KNOWN-ISSUES.md). tests/arresp.c now parses a real response recorded
  * for the reference disc and checks it against the checksums that disc's rig
- * log matched. Moved, not changed: the body is the same statements. */
+ * log matched. Moved, and then changed in one place: the disc status starts
+ * at NOT_FOUND, below. */
 static void crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t size,
                                int audio_tracks, uint32_t id_type_1,
                                uint32_t id_type_2, uint32_t cddb_id)
@@ -126,7 +127,12 @@ static void crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t siz
     GetByteContext gbc = { 0 };
     bytestream2_init(&gbc, data, size);
 
-    ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
+    /* NOT_FOUND until an entry for this disc is read. This was FOUND, set
+     * before the loop, so the MISMATCH arm below could never run: a response
+     * holding only other discs' entries, or none, read as found, and the
+     * report then printed a tally of 0 of N over a comparison that never
+     * happened (docs/KNOWN-ISSUES.md). The same code is in upstream. */
+    ctx->ar_db_status = CYANRIP_ACCUDB_NOT_FOUND;
 
     int entry_size = 1 + 12 + audio_tracks * (1 + 8);
 

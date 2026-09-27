@@ -246,6 +246,68 @@ static void test_recorded_response(const char *bin, const char *rig_log)
     av_free(ctx);
 }
 
+/* The disc-level status says what the response held. It was set to FOUND
+ * before the loop that would downgrade it, so the MISMATCH arm could never
+ * run: a response whose entries all carry another disc's ids, or none at
+ * all, read `AccurateRip:    found`, and the report then printed a tally of
+ * 0 of N over a comparison that never happened. Built from the recorded
+ * response, so every entry is a real one and only the ids asked for, or the
+ * bytes around it, differ. */
+static int parse_status(const uint8_t *data, size_t size, uint32_t id1,
+                        int *entries_on_track_1)
+{
+    enum { N = 14 };
+    cyanrip_ctx *ctx = av_mallocz(sizeof(*ctx));
+    for (int i = 0; i < N; i++)
+        ctx->tracks[i].number = i + 1;
+    ctx->nb_tracks = N;
+    crip_parse_accurip(ctx, data, size, N, id1, 0x013bb370, 0xe20dfe0e);
+    int status = ctx->ar_db_status;
+    *entries_on_track_1 = ctx->tracks[0].ar_db_nb_entries;
+    for (int i = 0; i < N; i++)
+        av_freep(&ctx->tracks[i].ar_db_entries);
+    av_free(ctx);
+    return status;
+}
+
+static void test_disc_status_says_what_the_response_held(const char *bin)
+{
+    enum { ENTRY = 1 + 12 + 14 * 9 };
+    FILE *f = fopen(bin, "rb");
+    uint8_t data[4096], mixed[4096];
+    size_t size = f ? fread(data, 1, sizeof(data), f) : 0;
+    if (f)
+        fclose(f);
+    if (size != 1807 || size % ENTRY)
+        return;   /* test_recorded_response() has already failed on it */
+    int n;
+
+    check(parse_status(data, size, 0x001d420f, &n) == CYANRIP_ACCUDB_FOUND &&
+          n == 13, "status/control: the right ids find the disc");
+
+    check(parse_status(data, size, 0x001d4210, &n) == CYANRIP_ACCUDB_MISMATCH &&
+          n == 0, "status/mismatch: entries for other ids read as mismatch");
+
+    check(parse_status(data, 0, 0x001d420f, &n) == CYANRIP_ACCUDB_NOT_FOUND &&
+          n == 0, "status/empty: an empty response reads as not found");
+
+    /* One entry with a foreign id, before the real ones and after them. The
+     * foreign one is skipped either way, and a match anywhere is FOUND. */
+    memcpy(mixed, data, ENTRY);
+    mixed[1] ^= 0x01;                      /* id_type_1, little-endian */
+    memcpy(mixed + ENTRY, data, size);
+    check(parse_status(mixed, size + ENTRY, 0x001d420f, &n) ==
+          CYANRIP_ACCUDB_FOUND && n == 13,
+          "status/foreign-first: a match after a foreign entry is found");
+
+    memcpy(mixed, data, size);
+    memcpy(mixed + size, data, ENTRY);
+    mixed[size + 1] ^= 0x01;
+    check(parse_status(mixed, size + ENTRY, 0x001d420f, &n) ==
+          CYANRIP_ACCUDB_FOUND && n == 13,
+          "status/foreign-last: a foreign entry after a match leaves it found");
+}
+
 int main(int argc, char **argv)
 {
     test_html_marker();
@@ -255,6 +317,7 @@ int main(int argc, char **argv)
         return 1;
     }
     test_recorded_response(argv[1], argv[2]);
+    test_disc_status_says_what_the_response_held(argv[1]);
 
     if (failures) {
         fprintf(stderr, "%d check(s) failed\n", failures);
