@@ -25,6 +25,13 @@ have done:
                 the script graded four segfaults (-c /, -c //, -p =, -p ==) as
                 clean refusals and printed "0 silently ignored" in the same run
     accepted    exit 0 AND the value is visible in the header, so it took effect
+    unobservable  exit 0, and no header line exposes this flag's value, so
+                whether it took effect was NOT observed. It was graded
+                `accepted` until 2026-09-27, and three quarters of the accepted
+                rows were this: the summary then said every value "took
+                effect" over rows nobody saw take effect (docs/KNOWN-ISSUES.md,
+                seam-commands row 1). It is not a finding, and the gate does not
+                fire on it; it is a gap in what this probe can see.
     ignored     exit 0 and the value is NOT visible -- a silently dropped
                 argument, which is the outcome S-9 most wants written down
     n/a         the probe could not be run here; the row says why
@@ -97,7 +104,7 @@ def probe(binary, image, flag, value, extra=None):
 
     pat = EFFECT.get(flag)
     if not pat:
-        return "accepted", 0, "", "(no header field exposes this)"
+        return "unobservable", 0, "", "(no header field exposes this)"
     m = re.search(pat[0], out, re.M)
     if not m:
         return "ignored", 0, "", "(field absent from header)"
@@ -208,8 +215,10 @@ def markdown_block(rows, inter, ignored, banner):
         out.append(f"| `{f}` | {label} | **{outcome}** | {rc} | {msg} |")
     n_ref = sum(1 for r in rows if r[3] == "refused")
     n_acc = sum(1 for r in rows if r[3] == "accepted")
-    out += ["", f"**{len(rows)} probes: {n_acc} accepted, {n_ref} refused, "
-                f"{len(ignored)} silently ignored.**", "", END_MARK]
+    n_uno = sum(1 for r in rows if r[3] == "unobservable")
+    out += ["", f"**{len(rows)} probes: {n_acc} accepted, {n_uno} unobservable, "
+                f"{n_ref} refused, {len(ignored)} silently ignored.**", "",
+            END_MARK]
     return "\n".join(out)
 
 
@@ -336,7 +345,10 @@ def main():
             return 1
         print(f"{len(rows)} probes, 0 crashed, 0 refused-without-a-message, "
               f"0 silently ignored, "
-              f"{sum(1 for r in rows if r[3] == 'refused')} refused")
+              f"{sum(1 for r in rows if r[3] == 'refused')} refused, "
+              f"{sum(1 for r in rows if r[3] == 'accepted')} seen to take "
+              f"effect, {sum(1 for r in rows if r[3] == 'unobservable')} "
+              f"unobservable")
         return 0
 
     if a.check:
@@ -351,8 +363,11 @@ def main():
             print("\n**Silently-ignored values (findings):** " +
                   ", ".join(f"`{f} {v}`" for f, v in ignored))
         else:
-            print("\n**Silently-ignored values: none.** Every value either took "
-                  "effect or was refused with a message.")
+            n_uno = sum(1 for r in rows if r[3] == "unobservable")
+            print("\n**Silently-ignored values: none.** Every value was seen to "
+                  "take effect, was refused with a message, or could not be "
+                  f"observed ({n_uno} unobservable, which is not the same as "
+                  "taking effect).")
         return 0
 
     for r in rows:

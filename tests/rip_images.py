@@ -3861,6 +3861,35 @@ def sc_artifacts_are_tracked():
             fail(f"artifacts_are_tracked: {a} exists but was never git-added")
 
 
+def sc_argv_probe_names_what_it_did_not_see():
+    """The argv probe does not grade a value it could not see as accepted.
+
+    `tools/probe-argv-surface.py` returned `accepted` on exit status alone for a
+    flag no header line exposes, so 48 of its 64 accepted rows were never seen
+    to take effect while its summary said every value "took effect or was
+    refused". `docs/seam-commands.md` §7 is generated from it and carries that
+    sentence; the shared file waits for the joint version bump, and the tool
+    that writes it is ours and is fixed now (docs/KNOWN-ISSUES.md, row 1).
+
+    Both arms, each from one real invocation: `-b 256`, which no header line
+    shows, must be `unobservable`; `-s 667`, which `Offset:` shows, must still be
+    `accepted`, so the fix is not every row becoming unobservable.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "crip_argv_probe", ROOT / "tools" / "probe-argv-surface.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    image = str(WORK / "basic.cue")
+    got = mod.probe(str(CRIP), image, "-b", 256)
+    if got[0] != "unobservable":
+        fail(f"argv_probe: -b 256 graded {got[0]!r}; no header line exposes "
+             f"the bitrate, so it was not seen to take effect ({got!r})")
+    got = mod.probe(str(CRIP), image, "-s", 667)
+    if got[0] != "accepted" or str(got[3]).lstrip("+") != "667":
+        fail(f"argv_probe: -s 667 graded {got!r}; `Offset:` shows it, so it is "
+             f"seen to take effect")
+
+
 def sc_mutation_exclusions_are_pinned():
     """`tools/mutate.py`'s `EXCLUDED_TESTS` may not change silently.
 

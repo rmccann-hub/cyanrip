@@ -1120,7 +1120,7 @@ documentation and never to evidence; this is documentation.
 
 | # | what it publishes | what is true | found |
 |---|---|---|---|
-| 1 | §7: *"Every value either took effect or was refused with a message"* | **48 of the 68 accepted rows** were graded from exit status alone — re-measured 2026-09-16, and the *"49 of 111"* this row carried was a count against an older binary | ours |
+| 1 | §7: *"Every value either took effect or was refused with a message"* | **48 of the 68 accepted rows** were graded from exit status alone — re-measured 2026-09-16, and the *"49 of 111"* this row carried was a count against an older binary. **The generator is fixed, 2026-09-27**: those rows are now `unobservable` (`--gate`: 111 probes, 47 refused, 16 seen to take effect, 48 unobservable), pinned by `sc_argv_probe_names_what_it_did_not_see()`. §7 itself is regenerated at the joint bump | ours |
 | 2 | line 504: `-p '99=drop'` accepted, exit 0 | the binary **refuses** it | theirs, lap 16 §B3 |
 | 3 | line 97: `-D` is `directory` / `str, path` / `writable` / *"output directory"* | it is `folder_scheme`, *"Directory naming scheme"* (`cyanrip_main.c:1603` at the pin) — a **relative** scheme, with `-F` its per-track sibling | theirs, lap 16 §B3 |
 | 4 | the §1 provenance warning: *"The cyanrip column is `?` throughout below … Their half arrives in the round-8 return file"* | **0 of §1's 17 rows** carry `?` in the cyanrip column; all 17 say `HAVE`. Counted by reading the column, not the sentence | ours, 2026-09-22 audit |
