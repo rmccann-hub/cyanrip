@@ -347,8 +347,12 @@ test('Lap commit list names its range', python,
 ## every refusal the spec lists and asserts the message as well as the exit
 ## code, and it checks every committed lap of ours that declares `LSL: 1`, so
 ## one cannot be sent malformed.
+## An explicit timeout, not meson's 30 s default: this runs a subprocess per
+## case, about a hundred of them since LSL 2, and a library default in a parallel run
+## is the shape Platterpus's round 28 lap 2 S21-S22 named. 5.9 s alone.
 test('Lap statements are well formed', python,
-     args: [ files('lap_statements.py') ])
+     args: [ files('lap_statements.py') ],
+     timeout: 120)
 
 test('Handshake wire conformance', python,
      args: [ files('handshake_wire.py'), meson.project_source_root() ])

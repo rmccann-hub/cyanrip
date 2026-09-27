@@ -44,6 +44,18 @@ is every lap's own commits (F4). On no branch at all it is refused. And a
 commit a SHALLOW clone cannot see is LSL.unchecked, never refused, because a
 shallow clone cannot tell a missing commit from one it never fetched (F3).
 
+`LSL: 2` IS LSL 1 PLUS THE AMENDMENTS BOTH SIDES ACCEPTED, A1-A8 from
+Platterpus's LSL amendments 1, A3 as cyanrip amended it in round 28 lap 1 S21.
+Every refusal a rule of LSL 2 adds names the amendment that added it, `A1` to
+`A8`, the ids Platterpus's checker reports, so the two checkers can say which
+amendment they disagree about. A lap declaring `LSL: 1` is checked exactly as
+before: the new kinds and fields are still refused in it.
+
+Three amendments read other laps of the round: A1 (a GO waits for every close
+condition), A2 (a pre-commit binds the author's next lap) and A7 (a GO waits for
+the other side's blocking questions). They read the laps this tree holds, ours
+in docs/handshake/ and theirs in docs/handshake/inbound/, or --laps DIR.
+
     tools/lap-statements.py docs/handshake/round-28-lap-01.md
     tools/lap-statements.py LAP --peer ../platterpus
     tools/lap-statements.py LAP --ref cyanrip=HEAD     # judge ours against HEAD
@@ -80,6 +92,15 @@ RULES = {
     "LSL.offrecord": "warning",
     "LSL.relayed": "warning",
     "LSL.unchecked": "warning",
+    # LSL 2's amendments, each under the id Platterpus's checker reports.
+    "A1": "refused",            # TERM: close conditions, and a GO that waits for them
+    "A2": "refused",            # WILL verdict:/unless:, and the next lap's triggers:
+    "A3": "refused",            # FINDING, and whose it is
+    "A4": "refused",            # a FACT names what it holds for (holds:)
+    "A5": "refused",            # a measurement names its population (examined:)
+    "A6": "refused",            # only a checkable claim in basis: or because:
+    "A7": "refused",            # answers:, and a GO that waits for blocking ASKs
+    "A8": "refused",            # a CORRECT carries evidence
 }
 
 # kind -> the grades it takes (empty: it takes none)
@@ -111,6 +132,36 @@ REQUIRED = {
 FIELDS = {"evidence", "re", "source", "scope", "reason", "commit", "owner",
           "when", "to", "because", "was", "now", "target", "breaks", "basis"}
 
+# LSL 2: what each amendment adds. A kind, grade or field in these is refused
+# in an LSL 1 lap exactly as before, by LSL.1 and LSL.field.
+KINDS2 = {"TERM": {"set", "met", "unmet", "waived", "pending"},    # A1
+          "FINDING": {"ours", "yours", "upstream", "unknown"}}     # A3
+# (kind, grade) -> [(field, the amendment that requires it)]
+REQUIRED2 = {
+    ("FACT", "measured"): [("holds", "A4"), ("examined", "A5")],
+    ("FACT", "read"): [("holds", "A4")],
+    ("FACT", "reproduced"): [("holds", "A4")],
+    ("NONE", None): [("examined", "A5")],
+    ("CORRECT", None): [("evidence", "A8")],
+    ("TERM", "set"): [("requires", "A1")],
+    ("TERM", "met"): [("term", "A1"), ("evidence", "A1")],
+    ("TERM", "unmet"): [("term", "A1"), ("reason", "A1")],
+    ("TERM", "waived"): [("term", "A1"), ("override", "A1")],
+    ("TERM", "pending"): [("term", "A1"), ("on", "A1"), ("remains", "A1")],
+}
+for _g in KINDS2["FINDING"]:
+    REQUIRED2[("FINDING", _g)] = [("in", "A3"), ("shape", "A3"),
+                                  ("target", "A3"), ("evidence", "A3")]
+FIELDS2 = {"requires": "A1", "restates": "A1", "regression": "A1",
+           "term": "A1", "override": "A1", "on": "A1", "remains": "A1",
+           "verdict": "A2", "unless": "A2", "triggers": "A2",
+           "in": "A3", "shape": "A3", "landed": "A3", "portable": "A3",
+           "holds": "A4", "examined": "A5", "missing": "A5",
+           "answers": "A7"}
+# A6: what cannot carry a verdict or a refusal, because nothing checks it.
+UNWEIGHTED = {("NOTE", None), ("ASK", None), ("VERDICT", None),
+              ("WILL", None), ("UNKNOWN", None), ("FACT", "relayed")}
+
 SIDES = ("cyanrip", "platterpus")
 # What each side writes in HANDSHAKE-FROM.
 FROM_SIDE = {"cyanrip-fork": "cyanrip", "cyanrip": "cyanrip",
@@ -128,6 +179,14 @@ ART_RE = re.compile(r"^(cyanrip|platterpus)@([0-9a-f]{7,40}):([^\s:]+)"
 STMT_RE = re.compile(r"^(?:(cyanrip|platterpus):R(\d+)\.L(\d+)\.)?"
                      r"(S\d+|§[A-Za-z0-9.]+)$")
 DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+LSL_RE = re.compile(r"^LSL: ([12])\s*$", re.M)
+# A4: holds: must name a commit or a version.
+HOLDS_RE = re.compile(r"\b[0-9a-f]{7,40}\b|\b\d+\.\d+(?:\.\d+)?\b")
+# A5: examined: <n> <unit>, closed|open
+EXAMINED_RE = re.compile(r"^(\d+) (\S.*), (closed|open)$")
+
+# Where held laps are read from; --laps moves it (tests use it).
+LAPS = ROOT / "docs" / "handshake"
 
 
 class Lap:
@@ -138,6 +197,8 @@ class Lap:
         self.warnings = []
         self.headers = {}
         self.statements = []
+        self.version = None
+        self.notes = []     # what a check was run over, printed with the result
 
     def refuse(self, line, rule, msg):
         assert RULES[rule] in ("refused", "could not check"), rule
@@ -157,11 +218,12 @@ def parse(lap):
         if m and start is None:
             lap.headers.setdefault(m.group(1), []).append(m.group(2))
         if line.rstrip().startswith("LSL:") and start is None:
-            if line.rstrip() != "LSL: 1":
+            if line.rstrip() not in ("LSL: 1", "LSL: 2"):
                 lap.refuse(i + 1, "LSL.version",
                            f"declares {line.strip()!r}; this checker "
-                           f"implements LSL 1 only")
+                           f"implements LSL 1 and LSL 2 only")
                 return False
+            lap.version = int(line.rstrip()[-1])
             start = i + 1
     if start is None:
         return False
@@ -328,16 +390,75 @@ class Resolver:
 def lap_file(side, rnd, lp):
     name = f"round-{int(rnd):02d}-lap-{int(lp):02d}.md"
     if side == "cyanrip":
-        return ROOT / "docs" / "handshake" / name
-    return ROOT / "docs" / "handshake" / "inbound" / name
+        return LAPS / name
+    return LAPS / "inbound" / name
 
 
 def statement_ids(text):
     """The S-numbers of an LSL lap, or None for a prose lap."""
-    if not re.search(r"^LSL: 1\s*$", text, re.M):
+    if not LSL_RE.search(text):
         return None
     return {int(m.group(1)) for m in
             re.finditer(r"^S(\d+) [A-Z]+", text, re.M)}
+
+
+_HELD = {}
+
+
+def held(side, rnd, lp):
+    """A held lap, parsed but not checked, or None if not held or not LSL."""
+    key = (side, int(rnd), int(lp))
+    if key not in _HELD:
+        f = lap_file(*key)
+        lap = None
+        if f.exists():
+            lap = Lap(f, f.read_text(encoding="utf-8", errors="replace"))
+            if not parse(lap):
+                lap = None
+        _HELD[key] = lap
+    return _HELD[key]
+
+
+def round_laps(me, this):
+    """Every LSL lap of this round we hold, both sides, up to and including
+    this one, as {(side, lap): Lap}. The lap under check stands in for any
+    held copy of itself, which may be an older draft."""
+    side, rnd, lp = me
+    out = {}
+    for s in SIDES:
+        d = LAPS if s == "cyanrip" else LAPS / "inbound"
+        for f in d.glob(f"round-{rnd:02d}-lap-*.md"):
+            m = re.fullmatch(rf"round-{rnd:02d}-lap-(\d+)\.md", f.name)
+            if not m or int(m.group(1)) > lp or (s, int(m.group(1))) == (side, lp):
+                continue
+            h = held(s, rnd, int(m.group(1)))
+            if h is not None:
+                out[(s, int(m.group(1)))] = h
+    out[(side, lp)] = this
+    return out
+
+
+def field(s, name):
+    return [v for f, v, _ in s["fields"] if f == name]
+
+
+def resolve_stmt(token, me, this):
+    """The statement a reference names, as (side, lap, statement), or None."""
+    m = STMT_RE.match(token)
+    if not m or m.group(4).startswith("§"):
+        return None
+    side, rnd, lp, target = m.groups()
+    n = int(target[1:])
+    if side is None or (side, int(rnd), int(lp)) == me:
+        lap, side, lp = this, me[0], me[2]
+    else:
+        lap, lp = held(side, rnd, lp), int(lp)
+    if lap is None:
+        return None
+    for s in lap.statements:
+        if s["n"] == n:
+            return side, lp, s
+    return None
 
 
 def check_stmt_ref(lap, line, token, me, local_ids):
@@ -389,6 +510,252 @@ def art_ref(first):
             int(m.group(5)) if m.group(5) else None)
 
 
+def other(side):
+    return "platterpus" if side == "cyanrip" else "cyanrip"
+
+
+def weight_key(s):
+    return (s["kind"], s["grade"] if s["kind"] == "FACT" else None)
+
+
+def unweighted(lap, line, tag, name, token, me):
+    """A6: a basis: or because: must name a claim somebody can check."""
+    got = resolve_stmt(token, me, lap)
+    if got and weight_key(got[2]) in UNWEIGHTED:
+        k = " ".join(x for x in weight_key(got[2]) if x)
+        lap.refuse(line, "A6", f"{tag}: {name}: {token} is a {k}, which "
+                               f"nothing can check, so it carries no weight")
+
+
+def check_v2(lap, s, tag, have, me, by_n, resolver):
+    """LSL 2's field shapes and per-statement rules, one amendment at a time."""
+    kind, grade, n = s["kind"], s["grade"], s["line"]
+    me_side = me[0]
+
+    # A1: TERM
+    for value, fl in have.get("on", []):
+        if value not in ("us", "them"):
+            lap.refuse(fl, "A1", f"{tag}: on: is us or them, not {value!r}")
+    for value, fl in have.get("term", []):
+        for token in re.split(r"[,\s]+", value.strip()):
+            got = resolve_stmt(token, me, lap) if token else None
+            if not token:
+                continue
+            if got is None or (got[2]["kind"], got[2]["grade"]) != ("TERM", "set"):
+                lap.refuse(fl, "A1", f"{tag}: term: {token} does not name a "
+                                     f"TERM set this tree holds")
+    for value, fl in have.get("restates", []):
+        first = value.split()[0]
+        if check_stmt_ref(lap, fl, first, me, set(by_n)):
+            continue
+        ref = art_ref(first)
+        if ref:
+            resolver.artifact(lap, fl, *ref)
+        else:
+            lap.refuse(fl, "A1", f"{tag}: restates: {first!r} is neither a "
+                                 f"statement, a section nor an artifact")
+    if (kind, grade) == ("TERM", "set") and me[2] and me[2] > 1 \
+            and "restates" not in have and "regression" not in have:
+        lap.refuse(n, "A1", f"{tag}: close conditions are fixed in lap 1 "
+                            f"(S-13), so after it a TERM set restates one "
+                            f"(restates:) or names a regression (regression:)")
+
+    # A2: a pre-commit
+    if "verdict" in have and kind != "WILL":
+        lap.refuse(have["verdict"][0][1], "A2",
+                   f"{tag}: only a WILL carries a pre-committed verdict:")
+    for value, fl in have.get("verdict", []):
+        if value not in ("GO", "HOLD"):
+            lap.refuse(fl, "A2", f"{tag}: verdict: is GO or HOLD")
+        if kind == "WILL" and [v for v, _ in have.get("owner", [])] != ["us"]:
+            lap.refuse(fl, "A2", f"{tag}: a pre-committed verdict: is the "
+                                 f"author's, so owner: is us")
+    if "unless" in have and "verdict" not in have:
+        lap.refuse(have["unless"][0][1], "A2",
+                   f"{tag}: unless: qualifies a verdict:, and there is none")
+    for value, fl in have.get("triggers", []):
+        for token in re.split(r"[,\s]+", value.strip()):
+            if not token:
+                continue
+            got = resolve_stmt(token, me, lap)
+            if (got is None or got[0] != me_side or got[1] >= me[2]
+                    or got[2]["kind"] != "WILL" or not field(got[2], "verdict")):
+                lap.refuse(fl, "A2", f"{tag}: triggers: {token} does not name "
+                                     f"a pre-committed WILL in an earlier lap "
+                                     f"of the author's")
+
+    # A3: FINDING
+    if kind == "FINDING":
+        targets = [v for v, _ in have.get("target", [])]
+        for value, fl in have.get("target", []):
+            if value not in ("NEXT-ROUND", "BLOCKING", "FIXED"):
+                lap.refuse(fl, "A3", f"{tag}: a FINDING's target: is "
+                                     f"NEXT-ROUND, BLOCKING or FIXED")
+        if "BLOCKING" in targets and "breaks" not in have:
+            lap.refuse(n, "A3", f"{tag}: a BLOCKING finding names what it "
+                                f"breaks in the pin (breaks:)")
+        if "FIXED" in targets and "landed" not in have:
+            lap.refuse(n, "A3", f"{tag}: a FIXED finding names where the fix "
+                                f"landed (landed:)")
+        if grade == "ours" and "portable" not in have:
+            lap.refuse(n, "A3", f"{tag}: a finding of ours says whether its "
+                                f"shape could hold in the other side's code "
+                                f"(portable:)")
+        for value, fl in have.get("portable", []):
+            if value not in ("yes", "no"):
+                lap.refuse(fl, "A3", f"{tag}: portable: is yes or no")
+        # cyanrip's amendment, round 28 lap 1 S21: R9 puts a finding the
+        # other side need not act on in a commit, not a lap.
+        if (grade == "ours" and [v for v, _ in have.get("portable", [])] == ["no"]
+                and targets and "BLOCKING" not in targets):
+            lap.refuse(n, "A3", f"{tag}: a finding of ours that cannot hold in "
+                                f"the other side's code and blocks nothing is "
+                                f"for a commit, not a lap")
+        for name in ("in", "landed"):
+            for value, fl in have.get(name, []):
+                ref = art_ref(value.split()[0])
+                if ref is None:
+                    lap.refuse(fl, "A3", f"{tag}: {name}: is an artifact "
+                                         f"reference, side@commit:path")
+                    continue
+                if grade == "ours" and ref[0] != me_side:
+                    lap.refuse(fl, "A3", f"{tag}: a finding of ours is in "
+                                         f"{me_side}'s tree, not {ref[0]}'s")
+                elif grade == "yours" and name == "in" and ref[0] == me_side:
+                    lap.refuse(fl, "A3", f"{tag}: a finding of yours cannot be "
+                                         f"in the author's own tree")
+                resolver.artifact(lap, fl, *ref)
+
+    # A4, A5
+    for value, fl in have.get("holds", []):
+        if not HOLDS_RE.search(value):
+            lap.refuse(fl, "A4", f"{tag}: holds: names a commit or a version "
+                                 f"the fact covers")
+    for value, fl in have.get("examined", []):
+        m = EXAMINED_RE.match(value)
+        if not m:
+            lap.refuse(fl, "A5", f"{tag}: examined: is '<n> <unit>, closed' "
+                                 f"or '<n> <unit>, open'")
+        elif int(m.group(1)) < 1:
+            lap.refuse(fl, "A5", f"{tag}: examined: 0 -- a measurement over "
+                                 f"nothing is satisfied by finding nothing")
+        elif m.group(3) == "open" and "missing" not in have:
+            lap.refuse(fl, "A5", f"{tag}: an open population names what is "
+                                 f"missing from it (missing:)")
+
+    # A7
+    for value, fl in have.get("answers", []):
+        for token in re.split(r"[,\s]+", value.strip()):
+            if not token:
+                continue
+            got = resolve_stmt(token, me, lap)
+            if got is None or got[0] == me_side or got[2]["kind"] != "ASK":
+                lap.refuse(fl, "A7", f"{tag}: answers: {token} does not name "
+                                     f"an ASK of the other side's we hold")
+
+
+def waits(lap, line, tag, me, resolver):
+    """A1 and A7: a GO waits for every close condition, and for the other
+    side's blocking questions. Read over every lap of the round we hold."""
+    me_side, rnd, lp = me
+    if None in me:
+        return
+    laps = round_laps(me, lap)
+
+    # A1
+    sets, status = {}, {}
+    for (side, lpn), L in sorted(laps.items(), key=lambda kv: kv[0][1]):
+        if L.version != 2:
+            continue
+        for s in L.statements:
+            if s["kind"] != "TERM":
+                continue
+            if s["grade"] == "set":
+                sets[(side, lpn, s["n"])] = s
+                continue
+            for value in field(s, "term"):
+                for token in re.split(r"[,\s]+", value.strip()):
+                    got = token and resolve_stmt(token, (side, rnd, lpn), L)
+                    if not got:
+                        continue
+                    on = [v for v in field(s, "on")]
+                    on_side = (side if on == ["us"] else
+                               other(side) if on == ["them"] else None)
+                    status.setdefault((got[0], got[1], got[2]["n"]), []).append(
+                        (lpn, s["n"], s["grade"], on_side, side))
+    for key, s in sorted(sets.items()):
+        name = f"{key[0]}:R{rnd}.L{key[1]}.S{key[2]}"
+        got = sorted(status.get(key, []))
+        if not got:
+            lap.refuse(line, "A1", f"{tag}: close condition {name} has no "
+                                   f"status in any lap of round {rnd} we hold")
+            continue
+        _, sn, grade, on_side, by = got[-1]
+        if grade == "unmet":
+            lap.refuse(line, "A1", f"{tag}: close condition {name} is unmet")
+        elif grade == "pending" and on_side == me_side:
+            lap.refuse(line, "A1", f"{tag}: close condition {name} is pending "
+                                   f"on the author's own side; a side may say "
+                                   f"GO over the other side's pending half, "
+                                   f"never over its own")
+    lap.notes.append(f"A1: this GO was checked against {len(sets)} close "
+                     f"condition(s) written as TERM set in the laps of round "
+                     f"{rnd} this tree holds"
+                     + ("; none is, so A1 had nothing to wait for" if not sets
+                        else ""))
+
+    # A7
+    asks = {(side, lpn, s["n"]) for (side, lpn), L in laps.items()
+            if side != me_side and lpn < lp for s in L.statements
+            if s["kind"] == "ASK" and "BLOCKING" in field(s, "target")}
+    answered = set()
+    for (side, lpn), L in laps.items():
+        if side != me_side:
+            continue
+        for s in L.statements:
+            for value in field(s, "answers"):
+                for token in re.split(r"[,\s]+", value.strip()):
+                    got = token and resolve_stmt(token, (side, rnd, lpn), L)
+                    if got:
+                        answered.add((got[0], got[1], got[2]["n"]))
+    for key in sorted(asks - answered):
+        lap.refuse(line, "A7", f"{tag}: {key[0]}:R{rnd}.L{key[1]}.S{key[2]} is "
+                               f"a BLOCKING question with no answers: from "
+                               f"the author")
+    lap.notes.append(f"A7: {len(asks)} blocking question(s) of "
+                     f"{other(me_side)}'s in the laps held, "
+                     f"{len(asks & answered)} answered")
+
+
+def pre_committed(lap, s, line, tag, me):
+    """A2: the author's previous LSL lap's pre-commit binds this one."""
+    me_side, rnd, lp = me
+    if None in me:
+        return
+    said = s["sentence"].split()[0].rstrip(".")
+    prev = [(lpn, L) for (side, lpn), L in round_laps(me, lap).items()
+            if side == me_side and lpn < lp]
+    if not prev:
+        return
+    lpn, L = max(prev, key=lambda x: x[0])
+    triggered = set()
+    for t in lap.statements:
+        for value in field(t, "triggers"):
+            for token in re.split(r"[,\s]+", value.strip()):
+                got = token and resolve_stmt(token, me, lap)
+                if got:
+                    triggered.add((got[0], got[1], got[2]["n"]))
+    for w in L.statements:
+        promised = field(w, "verdict") if w["kind"] == "WILL" else []
+        if promised and promised[0] != said and \
+                (me_side, lpn, w["n"]) not in triggered:
+            lap.refuse(line, "A2",
+                       f"{tag}: says {said}, and {me_side}:R{rnd}.L{lpn}."
+                       f"S{w['n']} pre-committed {promised[0]}; a statement "
+                       f"with triggers: naming it must say which unless: "
+                       f"came true")
+
+
 def check(lap, resolver):
     declared_from = (lap.headers.get("FROM") or [""])[0].strip()
     me_side = FROM_SIDE.get(declared_from)
@@ -425,28 +792,36 @@ def check(lap, resolver):
         lap.refuse(1, "LSL.5", f"{len(verdicts)} VERDICT statements; exactly "
                                f"one is required")
 
+    v2 = lap.version == 2
+    kinds = dict(KINDS, **KINDS2) if v2 else KINDS
+    fields = FIELDS | set(FIELDS2) if v2 else FIELDS
     for s in stmts:
         n, kind, grade = s["line"], s["kind"], s["grade"]
         tag = f"S{s['n']} {kind}" + (f" {grade}" if grade else "")
-        if kind not in KINDS:
+        if kind not in kinds:
             lap.refuse(n, "LSL.1", f"{tag}: {kind} is not a kind")
             continue
-        if KINDS[kind] and grade not in KINDS[kind]:
+        if kinds[kind] and grade not in kinds[kind]:
             lap.refuse(n, "LSL.1", f"{tag}: a {kind} takes one grade of "
-                                   f"{sorted(KINDS[kind])}")
+                                   f"{sorted(kinds[kind])}")
             continue
-        if not KINDS[kind] and grade:
+        if not kinds[kind] and grade:
             lap.refuse(n, "LSL.1", f"{tag}: a {kind} takes no grade")
             continue
         have = {}
         for name, value, fl in s["fields"]:
-            if name not in FIELDS:
+            if name not in fields:
                 lap.refuse(fl, "LSL.field", f"{tag}: {name}: is not a field")
                 continue
             have.setdefault(name, []).append((value, fl))
-        for req in REQUIRED[(kind, grade)]:
+        for req in REQUIRED.get((kind, grade), []):
             if req not in have:
                 lap.refuse(n, "LSL.2", f"{tag}: needs a {req}: field")
+        if v2:
+            for req, rule in REQUIRED2.get((kind, grade), []):
+                if req not in have:
+                    lap.refuse(n, rule, f"{tag}: needs a {req}: field")
+            check_v2(lap, s, tag, have, me, by_n, resolver)
 
         # Every field value has a shape; check each one that has one.
         for value, fl in have.get("evidence", []):
@@ -496,6 +871,8 @@ def check(lap, resolver):
                 if token and not check_stmt_ref(lap, fl, token, me, local_ids):
                     lap.refuse(fl, "LSL.4", f"{tag}: because: {token!r} is not "
                                             f"a statement reference")
+                elif token and v2:
+                    unweighted(lap, fl, tag, "because", token, me)
         for value, fl in have.get("commit", []):
             sha = value.split()[0]
             if not re.fullmatch(r"[0-9a-f]{7,40}", sha):
@@ -514,6 +891,8 @@ def check(lap, resolver):
                 lap.refuse(fl, "LSL.value",
                            f"{tag}: when: is a condition, never a date")
         for value, fl in have.get("target", []):
+            if kind == "FINDING":
+                continue    # A3's targets, checked in check_v2()
             if value not in ("BLOCKING", "NEXT-ROUND"):
                 lap.refuse(fl, "LSL.value",
                            f"{tag}: target: is BLOCKING or NEXT-ROUND")
@@ -548,9 +927,16 @@ def check(lap, resolver):
                                    f"{tag}: basis: {token} is a "
                                    f"{by_n[int(token[1:])]['kind']}, "
                                    f"which carries no claim")
+                    elif v2:
+                        unweighted(lap, fl, tag, "basis", token, me)
+            if v2 and said == "GO":
+                waits(lap, n, tag, me, resolver)
+        if v2 and kind == "VERDICT":
+            pre_committed(lap, s, n, tag, me)
 
 
 def main():
+    global LAPS
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("lap", type=pathlib.Path)
     ap.add_argument("--peer", type=pathlib.Path,
@@ -563,7 +949,11 @@ def main():
                     metavar="SIDE=REF",
                     help="judge SIDE's commits against REF rather than its "
                          f"ref of record ({RECORD})")
+    ap.add_argument("--laps", type=pathlib.Path, default=LAPS,
+                    help="where held laps are read from: ours in DIR, theirs "
+                         "in DIR/inbound (default: docs/handshake)")
     args = ap.parse_args()
+    LAPS = args.laps
 
     refs = {}
     for item in args.ref:
@@ -583,7 +973,7 @@ def main():
             print(f"CANNOT CHECK  {args.lap}:{line}  [{rule}] {msg}")
         if not lap.refusals:
             print(f"CANNOT CHECK  {args.lap}  [LSL.version] not an LSL lap "
-                  f"-- no 'LSL: 1' line")
+                  f"-- no 'LSL: 1' or 'LSL: 2' line")
         return 2
     check(lap, Resolver(args.ours, args.peer, refs))
 
@@ -595,7 +985,10 @@ def main():
     for s in lap.statements:
         kinds[s["kind"]] = kinds.get(s["kind"], 0) + 1
     census = ", ".join(f"{v} {k}" for k, v in sorted(kinds.items()))
-    print(f"\n{len(lap.statements)} statement(s): {census or 'none'}")
+    print(f"\n{len(lap.statements)} statement(s), LSL {lap.version}: "
+          f"{census or 'none'}")
+    for note in lap.notes:
+        print(note)
     if lap.refusals:
         print(f"{len(lap.refusals)} refusal(s) -- not a well-formed LSL lap")
         return 1

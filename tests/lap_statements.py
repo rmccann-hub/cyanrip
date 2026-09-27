@@ -6,8 +6,9 @@ is prose with a stricter look. So each refusal in the spec's list gets a lap
 built to trigger exactly it, and each assertion names the MESSAGE as well as
 the exit code -- a lap refused for some other reason would otherwise pass a
 test written for this one. The well-formed lap is checked too, and so is every
-committed lap that declares `LSL: 1`, so a lap of ours cannot be sent
-malformed.
+committed lap that declares `LSL: 1` or `LSL: 2`, so a lap of ours cannot be
+sent malformed. LSL 2's amendments, A1-A8, are section 11, and section 12 reads
+Platterpus's own worked example of them.
 
 References resolve against this repository's real history (`ee0221c`, and the
 laps we hold), because a checker tested only against fixtures it invented can
@@ -240,8 +241,8 @@ if got != 2 or "not an LSL lap" not in out:
     fail(f"a prose lap must be CANNOT CHECK, exit 2: exit {got}\n{out}")
 else:
     print("ok   a prose lap cannot be checked")
-got, out = run(GOOD, head=HEAD.replace("LSL: 1", "LSL: 2"))
-if got != 2 or "implements LSL 1 only" not in out:
+got, out = run(GOOD, head=HEAD.replace("LSL: 1", "LSL: 3"))
+if got != 2 or "implements LSL 1 and LSL 2 only" not in out:
     fail(f"an unimplemented LSL version must exit 2: exit {got}\n{out}")
 else:
     print("ok   an unimplemented LSL version cannot be checked")
@@ -394,14 +395,18 @@ with tempfile.TemporaryDirectory() as tmp:
 
 # 9. The rule ids: the code, the table in RULES and the spec's table name the
 #    same set, so a disagreement between the two checkers can name its rule.
+#    LSL 2's are A1-A8, Platterpus's ids; the ones REQUIRED2 carries are
+#    emitted through it, so they count as emitted there.
+ID = r"LSL\.[a-z0-9]+|A[1-8]"
 src = TOOL.read_text()
 body_src = src.split("class Lap")[1]
 emitted = {a or b for a, b in re.findall(
-    r'"(LSL\.[a-z0-9]+)"|\[(LSL\.[a-z0-9]+)\]', body_src)}
-table = set(re.findall(r'^    "(LSL\.[a-z0-9]+)":', src, re.M))
+    rf'"({ID})"|\[({ID})\]', body_src)}
+emitted |= set(re.findall(r'\("[a-z]+", "(A[1-8])"\)', src))
+table = set(re.findall(rf'^    "({ID})":', src, re.M))
 spec_text = (ROOT / "docs" / "handshake" /
              "PROPOSAL-lap-statement-language.md").read_text()
-spec = set(re.findall(r"^\| `(LSL\.[a-z0-9]+)` \|", spec_text, re.M))
+spec = set(re.findall(rf"^\| `({ID})` \|", spec_text, re.M))
 if not (emitted == table == spec):
     fail(f"rule ids disagree: emitted-not-in-RULES {sorted(emitted - table)}, "
          f"RULES-not-emitted {sorted(table - emitted)}, "
@@ -412,7 +417,7 @@ else:
 
 # 10. every committed LSL lap of ours is well formed
 laps = [p for p in sorted((ROOT / "docs" / "handshake").glob("round-*.md"))
-        if re.search(r"^LSL: 1\s*$", p.read_text(encoding="utf-8"), re.M)]
+        if re.search(r"^LSL: [12]\s*$", p.read_text(encoding="utf-8"), re.M)]
 for p in laps:
     r = subprocess.run([sys.executable, str(TOOL), str(p)],
                        capture_output=True, text=True, cwd=ROOT)
@@ -421,6 +426,332 @@ for p in laps:
     else:
         print(f"ok   {p.name} is well formed")
 print(f"({len(laps)} committed LSL lap(s))")
+
+# 11. LSL 2: A1-A8, each refusal on a lap built to trigger it and nothing
+#     else, and each rule that reads other laps on a round built for it in a
+#     directory of its own (--laps), so the real record cannot move a result.
+
+def lap2(author, rnd, lp, verdict, body):
+    return (f"HANDSHAKE-PROTOCOL: 5\nHANDSHAKE-ROUND: {rnd}\n"
+            f"HANDSHAKE-LAP: {lp}\nHANDSHAKE-FROM: {author}\n"
+            f"HANDSHAKE-VERDICT: {verdict}\n\nLSL: 2\n\n{body}")
+
+
+GOOD2 = """S1 FACT read: The banner is written as soon as the log opens.
+  evidence: cyanrip@ee0221c:src/cyanrip_log.c:1-20
+  holds: cyanrip@ee0221c
+S2 FACT measured: The suite passes.
+  evidence: run: meson test -C build => Ok: 91
+  holds: 0.9.4-rc2+platterpus.17
+  examined: 91 tests, closed
+S3 NONE: No test reads the network.
+  scope: tests/*.py
+  evidence: run: grep -l urlopen tests/*.py => nothing
+  examined: 3 files, open
+  missing: the files added since
+S4 TERM set: The suite passes on the pin.
+  requires: 91 of 91
+S5 TERM met: It did.
+  term: S4
+  evidence: run: meson test -C build => Ok: 91
+S6 TERM set: Their release names the pin.
+  requires: their FORK_PIN at the pin
+S7 TERM pending: Ours is done, and theirs remains.
+  term: S6
+  on: them
+  remains: their release
+S8 FINDING ours: A clean result was printed over nothing.
+  in: cyanrip@ee0221c:src/cyanrip_log.c
+  shape: a success message that does not name its population
+  target: FIXED
+  landed: cyanrip@ee0221c:src/cyanrip_log.c:1
+  evidence: run: python3 tests/ingest_bundle.py => all ingest-bundle checks passed
+  portable: yes
+S9 CORRECT: S1 said the wrong thing.
+  re: S1
+  was: late
+  now: early
+  evidence: cyanrip@ee0221c:src/cyanrip_log.c:1-20
+S10 WILL: Our next lap is GO.
+  owner: us
+  when: once the run is filed
+  verdict: GO
+  unless: the run fails
+S11 UNKNOWN: Whether the drive caches.
+  reason: our probe is wrong
+S12 FACT relayed: The operator said so.
+  source: a chat message
+S13 VERDICT: {verdict}
+  basis: S1, S5
+"""
+
+
+def check2(text, laps, *extra):
+    return check_lap(text, "--laps", str(laps), *extra)
+
+
+def swap2(old, new):
+    assert GOOD2.count(old) == 1, old
+    return GOOD2.replace(old, new)
+
+
+with tempfile.TemporaryDirectory() as tmp:
+    empty = pathlib.Path(tmp) / "empty"
+    (empty / "inbound").mkdir(parents=True)
+
+    def expect2(name, body, code, needles, absent=(), verdict="GO", lp=1):
+        outcome(name, check2(lap2("cyanrip-fork", 30, lp, verdict,
+                                  body.replace("{verdict}", verdict)), empty),
+                code, needles, absent)
+
+    expect2("LSL 2: every new kind and field, well formed", GOOD2, 0,
+            ["LSL 2:", "well formed", "checked against 2 close condition(s)"],
+            absent=["REFUSED"])
+    outcome("LSL 1 still refuses LSL 2's kinds and fields",
+            check2(lap2("cyanrip-fork", 30, 1, "GO", GOOD2.replace(
+                "{verdict}", "GO")).replace("LSL: 2", "LSL: 1"), empty), 1,
+            ["[LSL.1] S4 TERM set: TERM is not a kind",
+             "[LSL.1] S8 FINDING ours: FINDING is not a kind",
+             "[LSL.field] S1 FACT read: holds: is not a field"],
+            absent=["[A1]", "[A4]"])
+
+    # A4
+    expect2("A4: a FACT with no holds:",
+            swap2("  holds: cyanrip@ee0221c\n", ""), 1,
+            ["[A4] S1 FACT read: needs a holds: field"])
+    expect2("A4: holds: naming neither a commit nor a version",
+            swap2("  holds: cyanrip@ee0221c", "  holds: the current build"), 1,
+            ["[A4] S1 FACT read: holds: names a commit or a version"])
+    # A5
+    expect2("A5: a measurement with no examined:",
+            swap2("  examined: 91 tests, closed\n", ""), 1,
+            ["[A5] S2 FACT measured: needs a examined: field"])
+    expect2("A5: a measurement over nothing",
+            swap2("  examined: 91 tests, closed", "  examined: 0 tests, closed"),
+            1, ["[A5] S2 FACT measured: examined: 0"])
+    expect2("A5: an open population with nothing named missing",
+            swap2("  missing: the files added since\n", ""), 1,
+            ["[A5] S3 NONE: an open population names what is missing"])
+    expect2("A5: examined: in the wrong shape",
+            swap2("  examined: 91 tests, closed", "  examined: all of them"), 1,
+            ["[A5] S2 FACT measured: examined: is '<n> <unit>, closed'"])
+    # A8
+    expect2("A8: a CORRECT with no evidence",
+            swap2("  now: early\n  evidence: cyanrip@ee0221c:src/cyanrip_log.c:1-20\n",
+                  "  now: early\n"), 1,
+            ["[A8] S9 CORRECT: needs a evidence: field"])
+    # A1, in one lap
+    expect2("A1: a status with no term:", swap2("  term: S4\n", ""), 1,
+            ["[A1] S5 TERM met: needs a term: field"])
+    expect2("A1: term: naming what is not a TERM set",
+            swap2("  term: S4\n", "  term: S1\n"), 1,
+            ["[A1] S5 TERM met: term: S1 does not name a TERM set"])
+    expect2("A1: on: that is neither side",
+            swap2("  on: them", "  on: somebody"), 1,
+            ["[A1] S7 TERM pending: on: is us or them"])
+    expect2("A1: a GO over a close condition with no status",
+            swap2("S5 TERM met: It did.\n  term: S4\n",
+                  "S5 TERM met: It did.\n  term: S6\n"), 1,
+            ["[A1] S13 VERDICT: close condition cyanrip:R30.L1.S4 has no status"])
+    expect2("A1: a GO over an unmet close condition",
+            swap2("S5 TERM met: It did.\n  term: S4\n  evidence: run: meson test -C build => Ok: 91\n",
+                  "S5 TERM unmet: It did not.\n  term: S4\n  reason: two failed\n"), 1,
+            ["[A1] S13 VERDICT: close condition cyanrip:R30.L1.S4 is unmet"])
+    expect2("A1: a GO over the author's own pending half",
+            swap2("  on: them", "  on: us"), 1,
+            ["[A1] S13 VERDICT: close condition cyanrip:R30.L1.S6 is pending "
+             "on the author's own side"])
+    expect2("A1: an OPEN over an unmet condition is not refused",
+            swap2("S5 TERM met: It did.\n  term: S4\n  evidence: run: meson test -C build => Ok: 91\n",
+                  "S5 TERM unmet: It did not.\n  term: S4\n  reason: two failed\n"), 0,
+            ["well formed"], verdict="OPEN")
+    expect2("A1: after lap 1, a TERM set that restates nothing",
+            GOOD2, 1, ["[A1] S4 TERM set: close conditions are fixed in lap 1"],
+            lp=3)
+    # A2, in one lap
+    expect2("A2: a verdict: on something other than a WILL",
+            swap2("  holds: cyanrip@ee0221c\n",
+                  "  holds: cyanrip@ee0221c\n  verdict: GO\n"), 1,
+            ["[A2] S1 FACT read: only a WILL carries a pre-committed verdict:"])
+    expect2("A2: a verdict: that is not GO or HOLD",
+            swap2("  verdict: GO\n", "  verdict: SOON\n"), 1,
+            ["[A2] S10 WILL: verdict: is GO or HOLD"])
+    expect2("A2: a pre-committed verdict owned by the other side",
+            swap2("S10 WILL: Our next lap is GO.\n  owner: us",
+                  "S10 WILL: Our next lap is GO.\n  owner: them"), 1,
+            ["[A2] S10 WILL: a pre-committed verdict: is the author's"])
+    expect2("A2: unless: with no verdict:",
+            swap2("  verdict: GO\n", ""), 1,
+            ["[A2] S10 WILL: unless: qualifies a verdict:"])
+    # A3
+    expect2("A3: a finding of ours with no portable:",
+            swap2("  portable: yes\n", ""), 1,
+            ["[A3] S8 FINDING ours: a finding of ours says whether"])
+    expect2("A3: a FIXED finding with no landed:",
+            swap2("  landed: cyanrip@ee0221c:src/cyanrip_log.c:1\n", ""), 1,
+            ["[A3] S8 FINDING ours: a FIXED finding names where"])
+    expect2("A3: a BLOCKING finding with no breaks:",
+            swap2("  target: FIXED\n  landed: cyanrip@ee0221c:src/cyanrip_log.c:1\n",
+                  "  target: BLOCKING\n"), 1,
+            ["[A3] S8 FINDING ours: a BLOCKING finding names what it breaks"])
+    expect2("A3: a FINDING target that is not one of its three",
+            swap2("  target: FIXED\n", "  target: SOON\n"), 1,
+            ["[A3] S8 FINDING ours: a FINDING's target: is NEXT-ROUND, "
+             "BLOCKING or FIXED"])
+    expect2("A3: a finding of ours in the other side's tree",
+            swap2("  in: cyanrip@ee0221c:src/cyanrip_log.c\n",
+                  "  in: platterpus@183073b:README\n"), 1,
+            ["[A3] S8 FINDING ours: a finding of ours is in cyanrip's tree"])
+    expect2("A3: a finding of yours in the author's own tree",
+            swap2("S8 FINDING ours:", "S8 FINDING yours:"), 1,
+            ["[A3] S8 FINDING yours: a finding of yours cannot be in the "
+             "author's own tree"])
+    nr = swap2("  target: FIXED\n  landed: cyanrip@ee0221c:src/cyanrip_log.c:1\n",
+               "  target: NEXT-ROUND\n")
+    expect2("A3 as amended: ours, not portable, blocking nothing, is for a commit",
+            nr.replace("  portable: yes", "  portable: no"), 1,
+            ["[A3] S8 FINDING ours: a finding of ours that cannot hold"])
+    expect2("A3 as amended: ours and not portable is fine when it blocks",
+            nr.replace("  target: NEXT-ROUND\n",
+                       "  target: BLOCKING\n  breaks: the pin's log\n")
+              .replace("  portable: yes", "  portable: no"), 0, ["well formed"])
+    # A6
+    expect2("A6: a basis naming a WILL",
+            swap2("  basis: S1, S5", "  basis: S1, S10"), 1,
+            ["[A6] S13 VERDICT: basis: S10 is a WILL"])
+    expect2("A6: a basis naming an UNKNOWN",
+            swap2("  basis: S1, S5", "  basis: S11"), 1,
+            ["[A6] S13 VERDICT: basis: S11 is a UNKNOWN"])
+    expect2("A6: a basis naming a relayed fact",
+            swap2("  basis: S1, S5", "  basis: S12"), 1,
+            ["[A6] S13 VERDICT: basis: S12 is a FACT relayed"])
+    expect2("A6: a refusal whose only reason is a relay",
+            GOOD2 + "S14 REFUSE: Their wording.\n  re: S1\n  because: S12\n", 1,
+            ["[A6] S14 REFUSE: because: S12 is a FACT relayed"])
+    # A7, in one lap
+    expect2("A7: answers: naming a statement of our own",
+            GOOD2 + "S14 ACCEPT: Our own point.\n  re: S1\n  answers: S1\n", 1,
+            ["[A7] S14 ACCEPT: answers: S1 does not name an ASK of the other side's"])
+
+    # Rules that read the round: A1 across laps, A2 and A7.
+    rnd = pathlib.Path(tmp) / "round"
+    (rnd / "inbound").mkdir(parents=True)
+    (rnd / "round-31-lap-01.md").write_text(lap2("cyanrip-fork", 31, 1, "OPEN",
+        "S1 TERM set: The Full run passes.\n  requires: the Full run\n\n"
+        "S2 WILL: Our lap 3 is GO.\n  owner: us\n  when: once lap 2 lands\n"
+        "  verdict: GO\n  unless: the run fails\n\n"
+        "S3 VERDICT: OPEN\n  basis: S1\n"))
+    theirs2 = ("S1 TERM {g}: Our half is done.\n  term: cyanrip:R31.L1.S1\n"
+               "{f}\n"
+               "S2 ASK: Will you name the pin?\n  target: BLOCKING\n"
+               "  breaks: the pin's approval\n\n"
+               "S3 VERDICT: OPEN\n  basis: S1\n")
+    lap2_path = rnd / "inbound" / "round-31-lap-02.md"
+
+    def their_lap2(g, f):
+        lap2_path.write_text(lap2("platterpus", 31, 2, "OPEN",
+                                  theirs2.format(g=g, f=f)))
+
+    ANSWER = ("S1 ACCEPT: Yes, the pin is named.\n  re: platterpus:R31.L2.S2\n"
+              "  answers: platterpus:R31.L2.S2\n\n")
+
+    def our_lap3(verdict, body):
+        return lap2("cyanrip-fork", 31, 3, verdict, body)
+
+    GO3 = ANSWER + "S2 VERDICT: GO\n  basis: S1\n"
+    their_lap2("met", "  evidence: run: true => ok")
+    outcome("A1/A7 across laps: met by them and answered by us, GO is fine",
+            check2(our_lap3("GO", GO3), rnd), 0,
+            ["checked against 1 close condition(s)", "1 answered", "well formed"])
+    outcome("A7: their blocking question unanswered holds our GO",
+            check2(our_lap3("GO", "S1 NOTE: no answer.\n\n"
+                            "S2 FACT measured: x.\n  evidence: run: true => ok\n"
+                            "  holds: 0.9.4\n  examined: 1 run, closed\n\n"
+                            "S3 VERDICT: GO\n  basis: S2\n"), rnd), 1,
+            ["[A7] S3 VERDICT: platterpus:R31.L2.S2 is a BLOCKING question "
+             "with no answers: from the author"])
+    their_lap2("pending", "  on: us\n  remains: their release")
+    outcome("A1: pending on THEIR side (their on: us) does not hold our GO",
+            check2(our_lap3("GO", GO3), rnd), 0, ["well formed"])
+    their_lap2("pending", "  on: them\n  remains: your release")
+    outcome("A1: pending on OUR side (their on: them) holds our GO",
+            check2(our_lap3("GO", GO3), rnd), 1,
+            ["[A1] S2 VERDICT: close condition cyanrip:R31.L1.S1 is pending on "
+             "the author's own side"])
+    lap2_path.unlink()
+    code, out = check2(our_lap3("GO", "S1 FACT measured: x.\n"
+                                "  evidence: run: true => ok\n  holds: 0.9.4\n"
+                                "  examined: 1 run, closed\n\n"
+                                "S2 VERDICT: GO\n  basis: S1\n"), rnd)
+    refused = re.findall(r"^REFUSED .*$", out, re.M)
+    if code != 1 or len(refused) != 1 or "[A1] S2 VERDICT: close condition " \
+            "cyanrip:R31.L1.S1 has no status" not in refused[0]:
+        fail(f"A1: without their lap, the condition has no status, and that "
+             f"is the only refusal: exit {code}\n{out}")
+    else:
+        print("ok   A1: without their lap, the condition has no status")
+    their_lap2("met", "  evidence: run: true => ok")
+    outcome("A2: our lap 1 pre-committed GO, and an OPEN lap 3 must say why",
+            check2(our_lap3("OPEN", ANSWER + "S2 VERDICT: OPEN\n  basis: S1\n"),
+                   rnd), 1,
+            ["[A2] S2 VERDICT: says OPEN, and cyanrip:R31.L1.S2 pre-committed GO"])
+    outcome("A2: the same OPEN naming the unless that came true is fine",
+            check2(our_lap3("OPEN", ANSWER +
+                   "S2 FACT measured: The run failed.\n  evidence: run: true => ok\n"
+                   "  holds: 0.9.4\n  examined: 1 run, closed\n"
+                   "  triggers: cyanrip:R31.L1.S2\n\n"
+                   "S3 VERDICT: OPEN\n  basis: S2\n"), rnd), 0, ["well formed"])
+    outcome("A2: triggers: naming a statement that is not a pre-commit",
+            check2(our_lap3("GO", ANSWER.replace(
+                "  answers:", "  triggers: cyanrip:R31.L1.S1\n  answers:")
+                + "S2 VERDICT: GO\n  basis: S1\n"), rnd), 1,
+            ["[A2] S1 ACCEPT: triggers: cyanrip:R31.L1.S1 does not name a "
+             "pre-committed WILL"])
+    # The lap under check stands in for a held copy of itself.
+    # The stale copy is well formed and answers nothing, so reading it in
+    # place of the lap under check would fail A7.
+    (rnd / "round-31-lap-03.md").write_text(our_lap3("GO", "S1 FACT measured: x.\n"
+        "  evidence: run: true => ok\n  holds: 0.9.4\n  examined: 1 run, closed\n\n"
+        "S2 VERDICT: GO\n  basis: S1\n"))
+    outcome("the lap under check stands in for a stale held copy of itself",
+            check2(our_lap3("GO", GO3), rnd), 0, ["well formed"])
+
+# 12. Platterpus's worked example, filed byte-exact from platterpus@18823c8
+#     (sha256 ac34dbb7...). A second implementation's fixture, so agreement
+#     here is two checkers built from one text, not one checker agreeing with
+#     itself. Their LSL amendments 1 §6 states what each checker must say.
+WEX = ROOT / "docs/handshake/inbound/artifacts/lap_language_round27_lap05.md"
+wex = WEX.read_text(encoding="utf-8")
+code, out = check_lap(wex)
+ids = re.findall(r"^REFUSED .*?\[([A-Za-z0-9.]+)\]", out, re.M)
+if (code, sorted(set(ids)), ids.count("LSL.1"), ids.count("LSL.field")) != \
+        (1, ["LSL.1", "LSL.field"], 12, 14):
+    fail(f"their example under LSL 1 must refuse exactly 12 kinds and 14 "
+         f"fields, as their §6 says: exit {code}\n{out}")
+else:
+    print("ok   their example under LSL 1: 12 kinds and 14 fields, nothing else")
+v2 = wex.replace("\nLSL: 1\n", "\nLSL: 2\n")
+assert v2 != wex
+outcome("their example under LSL 2 is well formed", check_lap(v2), 0,
+        ["well formed", "checked against 4 close condition(s)"],
+        absent=["REFUSED"])
+# Their §6: "Remove its TERM pending and A1 refuses the GO." S10 becomes a
+# status of S3 instead, so the numbering, the basis and every field stay
+# valid and the one thing removed is S6's status.
+pend = ("S10 TERM pending: Our half lands in the commit that releases this "
+        "lap, and yours remains.\n  term: S6\n  on: them\n"
+        "  remains: +platterpus.17, named in your closing lap\n")
+assert v2.count(pend) == 1
+code, out = check_lap(v2.replace(pend, "S10 TERM met: S3 again.\n  term: S3\n"
+        "  evidence: cyanrip@e9d3868:docs/handshake/round-27-lap-04.md:60\n"))
+refused = re.findall(r"^REFUSED .*$", out, re.M)
+if code != 1 or len(refused) != 1 or \
+        "[A1] S31 VERDICT: close condition platterpus:R27.L5.S6 has no status" \
+        not in refused[0]:
+    fail(f"their example with its pending half removed must be refused by "
+         f"A1 alone: exit {code}\n{out}")
+else:
+    print("ok   their example with its pending half removed: A1 alone holds the GO")
 
 if failures:
     print(f"\n{failures} failure(s)")

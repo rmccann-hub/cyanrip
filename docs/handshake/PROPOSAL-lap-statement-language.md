@@ -15,6 +15,11 @@ the refusal list is complete and each rule has an id (F2); a shallow clone
 cannot refuse a commit (F3); and a commit is judged against its side's ref of
 record (F4). Amendments to the language itself are LSL 2's, below.*
 
+*Revised 2026-09-27: **LSL 2 is defined and implemented**, below. Both sides
+accepted A1–A8 in round 28, A3 as cyanrip amended it (cyanrip's lap 1 S19–S27,
+Platterpus's lap 2 S10–S12). A lap declaring `LSL: 1` is checked exactly as
+before.*
+
 ## Why
 
 Every defect the two projects have found in each other's laps was in the
@@ -35,7 +40,8 @@ say whether it blocks.
 
 ## Syntax
 
-A line reading exactly `LSL: 1`, at column 0, starts the body. Everything
+A line reading exactly `LSL: 1` or `LSL: 2`, at column 0, starts the body
+and says which version it is written in. Everything
 before it is the wire headers and a title, which `PROTOCOL.md` governs and
 this language does not touch:
 
@@ -145,26 +151,55 @@ of these is well formed.
 | `LSL.field` | refused | a field outside the fields of the kinds table |
 | `LSL.value` | refused | a value outside its shape: `owner:` other than `us`, `them`, `operator`; a date in `when:`; `target:` other than `BLOCKING`, `NEXT-ROUND`; a `commit:` that is not hex; `evidence:` that is neither `run: CMD => RESULT` nor an artifact reference |
 | `LSL.header` | refused | `HANDSHAKE-FROM` naming neither side, or `HANDSHAKE-ROUND` or `-LAP` missing or not a number |
-| `LSL.version` | could not check | no `LSL: 1` line, or another version |
+| `LSL.version` | could not check | no `LSL: 1` or `LSL: 2` line, or another version |
 | `LSL.file` | could not check | the file cannot be read |
 | `LSL.offrecord` | warning | a commit on a branch, but not on its side's ref of record |
 | `LSL.relayed` | warning | a `FACT relayed` |
 | `LSL.unchecked` | warning | a reference into a tree not given or not visible, or a section heading not found in a prose lap |
+| `A1` | refused | LSL 2 only: a `TERM` statement malformed, or a `GO` over a close condition with no status, an unmet one, or one pending on the author's side |
+| `A2` | refused | LSL 2 only: a pre-committed `verdict:` malformed, or broken by the author's next LSL lap without `triggers:` |
+| `A3` | refused | LSL 2 only: a `FINDING` malformed, in the wrong tree, or ours, not portable and blocking nothing |
+| `A4` | refused | LSL 2 only: a `FACT measured`, `read` or `reproduced` with no `holds:`, or one naming no commit or version |
+| `A5` | refused | LSL 2 only: a `FACT measured` or `NONE` with no `examined:`, one over nothing, or an open one with no `missing:` |
+| `A6` | refused | LSL 2 only: a `basis:` or `because:` naming a `WILL`, `UNKNOWN` or `FACT relayed` (and, in `because:`, a `NOTE`, `ASK` or `VERDICT`) |
+| `A7` | refused | LSL 2 only: an `answers:` naming anything but the other side's `ASK`, or a `GO` over a `BLOCKING` one of theirs with no answer |
+| `A8` | refused | LSL 2 only: a `CORRECT` with no `evidence:` |
 
 `tools/lap-statements.py <lap>` exits **0** when nothing is refused, **1** on any
 refusal, and **2** when it could not check, because *refused* and *could not
 check* are different claims. `tests/lap_statements.py` builds a lap for each
 refusal and asserts the rule and the message as well as the exit code, requires
 this table and the code to name the same ids, and checks every committed lap of
-ours that declares `LSL: 1`.
+ours that declares `LSL: 1` or `LSL: 2`. It also reads Platterpus's worked
+example of the amendments, filed at `inbound/artifacts/lap_language_round27_lap05.md`,
+and asserts what their LSL amendments 1 §6 says each version must report.
 
 ## LSL 2
 
-`LSL: 2` will mean LSL 1 plus the amendments both sides accept, listed here by
-id. **None is accepted by both yet.** Platterpus proposed A1–A8 in LSL
-amendments 1; cyanrip answers them in round 28 lap 1. Until both have said so in
-a lap, neither side writes an amendment's kind or field in a sent lap, because
-every LSL 1 checker refuses it (`LSL.1`, `LSL.field`).
+`LSL: 2` is LSL 1 plus the amendments both sides accepted, by id. **A1–A8
+are accepted by both**, from Platterpus's LSL amendments 1 §2
+(`inbound/artifacts/lsl-amendments-1.md`, sha256 `72a4c65a…`), with A3 as
+cyanrip amended it. Nothing else is in LSL 2. Every refusal an amendment adds
+names that amendment's id, which is the id Platterpus's checker reports, so two
+checkers that disagree can say which amendment they disagree about.
+
+| id | adds | refused when |
+|---|---|---|
+| `A1` | kind `TERM`, grades `set` (`requires:`), `met` (`term:`, `evidence:`), `unmet` (`term:`, `reason:`), `waived` (`term:`, `override:`), `pending` (`term:`, `on:` `us` or `them`, `remains:`); fields `restates:`, `regression:` | a required field is missing; `term:` names no `TERM set` we hold; after lap 1 a `set` has neither `restates:` nor `regression:` (S-13); or a `VERDICT GO` stands while a `TERM set` of the round has no status, its latest status is `unmet`, or it is `pending` on the author's own side. A side may say `GO` over the other side's pending half, never over its own |
+| `A2` | on a `WILL` with `owner: us`: `verdict:` `GO` or `HOLD`, and `unless:` (repeatable); on any statement, `triggers:` | `verdict:` on anything but a `WILL`, or with an owner other than `us`; `unless:` with no `verdict:`; `triggers:` naming anything but a pre-committed `WILL` in an earlier lap of the author's; or the author's next LSL lap in the round declares another verdict and no statement's `triggers:` names the `WILL` |
+| `A3` | kind `FINDING`, grade its origin: `ours`, `yours`, `upstream`, `unknown`. Always `in:` (an artifact), `shape:`, `target:` (`NEXT-ROUND`, `BLOCKING`, `FIXED`), `evidence:`; `BLOCKING` needs `breaks:`, `FIXED` needs `landed:`, `ours` needs `portable:` (`yes` or `no`) | a required field is missing or out of shape; a finding of ours is not in the author's tree, or one of yours is; or, **cyanrip's amendment**, a finding of ours with `portable: no` and a target other than `BLOCKING`, which R9 puts in a commit, not a lap |
+| `A4` | `holds:` on `FACT measured`, `read` and `reproduced` | it is missing, or names no commit and no version |
+| `A5` | `examined: <n> <unit>, closed` or `…, open` on `FACT measured` and `NONE`; `missing:` | it is missing or out of shape, `n` is 0, or it is `open` with no `missing:` |
+| `A6` | nothing | a `basis:` or `because:` names a `WILL`, `UNKNOWN` or `FACT relayed`, or a `because:` names a `NOTE`, `ASK` or `VERDICT`. In a `basis:` those three stay `LSL.5`, as in LSL 1 |
+| `A7` | `answers:` on any statement | it names anything but an `ASK` of the other side's we hold; or a `VERDICT GO` stands while an `ASK` with `target: BLOCKING` from the other side, earlier in the round, has no `answers:` from the author |
+| `A8` | `evidence:` on `CORRECT` | it is missing |
+
+**A1, A2 and A7 read the round**, not only the lap: every lap of it this tree
+holds, ours in `docs/handshake/` and theirs in `docs/handshake/inbound/`, up to
+the lap under check, which stands in for any held copy of itself. `on: us` is
+the side that wrote the status. **The checker prints what those rules were
+checked over**, the number of close conditions and blocking questions it found,
+because a `GO` over a round with none satisfies A1 and A7 by finding nothing.
 
 ## What it does not do
 
