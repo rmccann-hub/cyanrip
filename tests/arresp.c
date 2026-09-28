@@ -308,6 +308,44 @@ static void test_disc_status_says_what_the_response_held(const char *bin)
           "status/foreign-last: a foreign entry after a match leaves it found");
 }
 
+/* A response whose size is not a whole number of entries is an ERROR, and the
+ * parser says so by its return value rather than by printing: the caller
+ * prints `AccuRIP DB data error, got unexpected number of bytes!` and leaves by
+ * `goto end`, which is what keeps that line in the provider contract's P5a
+ * (src/accurip.c, above crip_parse_accurip()). No test reached this branch
+ * until round 28 lap 5 found the row missing from the contract. */
+static void test_a_response_of_the_wrong_size_is_an_error(const char *bin)
+{
+    enum { N = 14 };
+    FILE *f = fopen(bin, "rb");
+    uint8_t data[4096];
+    size_t size = f ? fread(data, 1, sizeof(data), f) : 0;
+    if (f)
+        fclose(f);
+    if (size != 1807)
+        return;   /* test_recorded_response() has already failed on it */
+
+    cyanrip_ctx *ctx = av_mallocz(sizeof(*ctx));
+    for (int i = 0; i < N; i++)
+        ctx->tracks[i].number = i + 1;
+    ctx->nb_tracks = N;
+    int ret = crip_parse_accurip(ctx, data, size - 1, N, 0x001d420f,
+                                 0x013bb370, 0xe20dfe0e);
+    check(ret < 0, "size: a response one byte short returns an error");
+    check(ctx->ar_db_status == CYANRIP_ACCUDB_ERROR,
+          "size: a response one byte short reads as an error");
+    check(ctx->tracks[0].ar_db_nb_entries == 0,
+          "size: nothing is parsed from a response of the wrong size");
+
+    ret = crip_parse_accurip(ctx, data, size, N, 0x001d420f,
+                             0x013bb370, 0xe20dfe0e);
+    check(ret == 0 && ctx->ar_db_status == CYANRIP_ACCUDB_FOUND,
+          "size/control: the whole response parses and returns 0");
+    for (int i = 0; i < N; i++)
+        av_freep(&ctx->tracks[i].ar_db_entries);
+    av_free(ctx);
+}
+
 int main(int argc, char **argv)
 {
     test_html_marker();
@@ -318,6 +356,7 @@ int main(int argc, char **argv)
     }
     test_recorded_response(argv[1], argv[2]);
     test_disc_status_says_what_the_response_held(argv[1]);
+    test_a_response_of_the_wrong_size_is_an_error(argv[1]);
 
     if (failures) {
         fprintf(stderr, "%d check(s) failed\n", failures);

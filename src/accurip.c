@@ -118,11 +118,20 @@ static int cmp_conf(const void *a, const void *b)
  * settled fact about this parser was re-checked by somebody else's server
  * (docs/KNOWN-ISSUES.md). tests/arresp.c now parses a real response recorded
  * for the reference disc and checks it against the checksums that disc's rig
- * log matched. Moved, and then changed in one place: the disc status starts
- * at NOT_FOUND, below. */
-static void crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t size,
-                               int audio_tracks, uint32_t id_type_1,
-                               uint32_t id_type_2, uint32_t cddb_id)
+ * log matched. Moved, and then changed in two places: the disc status starts
+ * at NOT_FOUND, below, and a response of the wrong size is reported by the
+ * caller rather than here.
+ *
+ * That second change is for the provider contract, not the behaviour. The
+ * first version of the split logged the size error here and left with a bare
+ * `return;`, which tools/gen-provider-contract.py does not count as a jump, so
+ * the message dropped out of P5a altogether -- and Platterpus builds its error
+ * matcher from P5 and P5a and names this string in a test. Returning an error
+ * and letting the caller log it before its `goto end` keeps the row exactly
+ * where .17 had it. Found writing round 28 lap 5. */
+static int crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t size,
+                              int audio_tracks, uint32_t id_type_1,
+                              uint32_t id_type_2, uint32_t cddb_id)
 {
     GetByteContext gbc = { 0 };
     bytestream2_init(&gbc, data, size);
@@ -137,9 +146,8 @@ static void crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t siz
     int entry_size = 1 + 12 + audio_tracks * (1 + 8);
 
     if (size % entry_size) {
-        cyanrip_log(ctx, 0, "AccuRIP DB data error, got unexpected number of bytes!\n");
         ctx->ar_db_status = CYANRIP_ACCUDB_ERROR;
-        return;
+        return AVERROR_INVALIDDATA;
     }
 
     int nb_entries = size / entry_size;
@@ -185,6 +193,8 @@ static void crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t siz
         if (t->ar_db_nb_entries)
             qsort(t->ar_db_entries, t->ar_db_nb_entries, sizeof(CRIPAccuDBEntry), cmp_conf);
     }
+
+    return 0;
 }
 
 int crip_fill_accurip(cyanrip_ctx *ctx)
@@ -312,8 +322,11 @@ int crip_fill_accurip(cyanrip_ctx *ctx)
         }
     }
 
-    crip_parse_accurip(ctx, rctx.data, rctx.size, audio_tracks,
-                       id_type_1, id_type_2, cddb_id);
+    if (crip_parse_accurip(ctx, rctx.data, rctx.size, audio_tracks,
+                           id_type_1, id_type_2, cddb_id) < 0) {
+        cyanrip_log(ctx, 0, "AccuRIP DB data error, got unexpected number of bytes!\n");
+        goto end;
+    }
 
 end:
     curl_easy_cleanup(curl_ctx);

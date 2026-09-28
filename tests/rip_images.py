@@ -4057,6 +4057,19 @@ def sc_contract_fatal_inventory():
             fail(f"contract_fatal_inventory: {probe!r} is in neither table; "
                  "the generator stopped seeing a string a real rip prints")
 
+    # 2a. A consumer builds its error matcher from P5 and P5a together, so a
+    #     string that leaves both tables stops being surfaced as an error, and
+    #     nothing on our side notices. Round 28 lap 5: splitting the AccurateRip
+    #     response parse out of the fetch (5b7493c) turned the data error's
+    #     `goto end` into a bare `return;`, which the generator does not count,
+    #     and the row vanished from P5a while the source still printed it.
+    #     Platterpus names this string in a test of theirs
+    #     (platterpus@785925a:tests/test_ripper_error_surfacing.py:362).
+    for probe in ("AccuRIP DB data error, got unexpected number of bytes!",):
+        if probe not in p5 and probe not in p5a:
+            fail(f"contract_fatal_inventory: {probe!r} is in neither P5 nor "
+                 "P5a, so a consumer's error matcher built from them loses it")
+
     # 3. Both tallies must sum to their own table. The old summary said `128
     #    distinct strings` above a breakdown totalling 114, because it iterated
     #    a hardcoded tuple of class names -- so three classes were counted in
