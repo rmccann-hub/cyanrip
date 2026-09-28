@@ -29,6 +29,9 @@
 #include <libavutil/rational.h>
 #include <libavutil/mathematics.h>
 #include <libavutil/dict.h>
+#include <libavutil/avstring.h>
+#include <libavutil/error.h>
+#include <libavutil/mem.h>
 
 /* Sliding window */
 #define MAX_ROLLING_WIN_ENTRIES 1024 * 16
@@ -50,6 +53,42 @@ static inline const char *dict_get(AVDictionary *dict, const char *key)
 {
     AVDictionaryEntry *e = av_dict_get(dict, key, NULL, 0);
     return e ? e->value : NULL;
+}
+
+/* The tags as they are written: src's entries with every key in capitals,
+ * added to dst, and DISCTOTAL and TOTALDISCS written as a pair when src has
+ * one of them. Platterpus's operator's ruling, round 28 lap 6 S32; announced
+ * in round 29 lap 1.
+ *
+ * It is applied where tags leave the program -- the muxer's dictionary, and
+ * the log's Metadata block, which prints the same dictionary -- and nowhere
+ * else, so the keys this program sets and reads internally, and the naming
+ * templates that look them up, are unchanged. dict_get() is case-insensitive
+ * either way. Keys libavformat adds itself when it writes a header, such as
+ * `encoder`, are not ours and are not changed by this.
+ *
+ * av_toupper() is ASCII-only, so a key's non-ASCII bytes pass through. */
+static inline int crip_output_tags(AVDictionary **dst, AVDictionary *src)
+{
+    const AVDictionaryEntry *e = NULL;
+    while ((e = av_dict_get(src, "", e, AV_DICT_IGNORE_SUFFIX))) {
+        char *key = av_strdup(e->key);
+        if (!key)
+            return AVERROR(ENOMEM);
+        for (char *p = key; *p; p++)
+            *p = av_toupper(*p);
+        int ret = av_dict_set(dst, key, e->value, AV_DICT_DONT_STRDUP_KEY);
+        if (ret < 0)
+            return ret;
+    }
+
+    const char *totaldiscs = dict_get(*dst, "TOTALDISCS");
+    const char *disctotal = dict_get(*dst, "DISCTOTAL");
+    if (totaldiscs && !disctotal)
+        return av_dict_set(dst, "DISCTOTAL", totaldiscs, 0);
+    if (disctotal && !totaldiscs)
+        return av_dict_set(dst, "TOTALDISCS", disctotal, 0);
+    return 0;
 }
 
 static inline void cyanrip_frames_to_cue(uint32_t frames, char *str)

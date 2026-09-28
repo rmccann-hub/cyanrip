@@ -127,8 +127,10 @@ def wav(path, pcm):
                  + b"data" + struct.pack("<I", len(pcm)) + pcm)
 
 
-def log_for(path, track, vals, tracktotal=1):
-    """The fragment of a cyanrip log that parse_log() reads."""
+def log_for(path, track, vals, tracktotal=1, upper=False):
+    """The fragment of a cyanrip log that parse_log() reads. `upper` spells
+    the Metadata keys as `.19` prints them, in capitals (round 29 lap 1)."""
+    tk, tt = ("TRACK", "TRACKTOTAL") if upper else ("track", "tracktotal")
     with open(path, "w") as fh:
         fh.write(f"Track {track} read successfully!\n"
                  f"  Properties:\n"
@@ -138,8 +140,8 @@ def log_for(path, track, vals, tracktotal=1):
                  f"    Accurip v2:  {vals['v2']:08X}\n"
                  f"    Accurip 450: {vals['v1_450']:08X}\n"
                  f"\n  Metadata:\n"
-                 f"    track:                         {track}\n"
-                 f"    tracktotal:                    {tracktotal}\n")
+                 f"    {tk}:{' ' * (31 - len(tk))}{track}\n"
+                 f"    {tt}:{' ' * (31 - len(tt))}{tracktotal}\n")
 
 
 def run_check(audio, logpath, track):
@@ -148,6 +150,23 @@ def run_check(audio, logpath, track):
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return p.returncode
 
+
+# Round 29 lap 1: from `.19` the Metadata block prints its keys in capitals,
+# and every log before it is lower case. parse_log() must read both, and this
+# needs no decoder, so it runs where the exit-code cases below cannot. A
+# lower-case-only pattern finds no track in the capitals log, and fails here.
+_acs = load(TOOL, "audio_checksums")
+with tempfile.TemporaryDirectory() as _td:
+    _vals = {"samples": 588, "eac_crc": 0x12345678, "v1": 1, "v2": 2, "v1_450": 3}
+    for _upper, _label in ((False, "lower case, every log to .18"),
+                           (True, "capitals, from .19")):
+        _lg = os.path.join(_td, f"parse-{_upper}.log")
+        log_for(_lg, 3, _vals, tracktotal=5, upper=_upper)
+        _tracks, _total = _acs.parse_log(_lg)
+        check(f"parse_log reads track and tracktotal from Metadata keys in {_label}",
+              sorted(_tracks) == [3] and _tracks[3]["eac_crc"] == 0x12345678
+              and _total == 5,
+              f"got tracks {sorted(_tracks)}, total {_total}")
 
 if not shutil.which("ffmpeg"):
     print("  SKIP  ffmpeg is not installed, so the exit-code cases cannot run.")

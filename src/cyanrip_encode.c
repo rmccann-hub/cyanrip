@@ -1070,8 +1070,12 @@ static int open_output(cyanrip_ctx *ctx, cyanrip_enc_ctx *s)
 {
     int ret;
 
-    /* Add metadata */
-    av_dict_copy(&s->avf->metadata, s->t->meta, 0);
+    /* Add metadata, as it is written: keys in capitals (utils.h) */
+    ret = crip_output_tags(&s->avf->metadata, s->t->meta);
+    if (ret < 0) {
+        cyanrip_log(ctx, 0, "Couldn't set metadata: %s!\n", av_err2str(ret));
+        goto fail;
+    }
 
     /* Write header */
     ret = avformat_write_header(s->avf, NULL);

@@ -673,19 +673,28 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
 
     cyanrip_log(ctx, 0, "\n  Metadata:\n");
 
+    /* The tags as the muxer was handed them, so the block says what the files
+     * carry: keys in capitals, DISCTOTAL beside TOTALDISCS (utils.h). */
+    AVDictionary *out_meta = NULL;
+    if (crip_output_tags(&out_meta, t->meta) < 0) {
+        av_dict_free(&out_meta);
+        cyanrip_log(ctx, 0, "    (not listed: out of memory)\n");
+    }
+
     int max_key_len = 0;
     const AVDictionaryEntry *d = NULL;
-    while ((d = av_dict_get(t->meta, "", d, AV_DICT_IGNORE_SUFFIX)))
+    while ((d = av_dict_get(out_meta, "", d, AV_DICT_IGNORE_SUFFIX)))
         max_key_len = FFMAX(strlen(d->key), max_key_len);
 
     d = NULL;
-    while ((d = av_dict_get(t->meta, "", d, AV_DICT_IGNORE_SUFFIX))) {
+    while ((d = av_dict_get(out_meta, "", d, AV_DICT_IGNORE_SUFFIX))) {
         int key_len = strlen(d->key);
         cyanrip_log(ctx, 0, "    %s: ", d->key);
         for (int i = 0; i < (max_key_len - key_len); i++)
             cyanrip_log(ctx, 0, " ");
         cyanrip_log(ctx, 0, "%s\n", d->value);
     }
+    av_dict_free(&out_meta);
 
     /* The disc's own words for this track, verbatim and separate from the
      * Metadata block above, which by now may have been overwritten by

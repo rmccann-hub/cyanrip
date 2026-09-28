@@ -10,6 +10,7 @@ import re
 import shlex
 import shutil
 import signal
+import struct
 import subprocess
 import sys
 import tempfile
@@ -845,7 +846,7 @@ def sc_media_tag():
         if extra and not re.search(r"^\s+HDCD detected: no$", log, re.M):
             fail(f"media_tag: {name}: no `HDCD detected: no` line, so the "
                  f"premise of this check is gone")
-        logged = re.findall(r"^\s+media:\s+(\S+)$", log, re.M)
+        logged = re.findall(r"^\s+MEDIA:\s+(\S+)$", log, re.M)
         if logged != ["CD", "CD"]:
             fail(f"media_tag: {name}: the log's Metadata blocks say media "
                  f"{logged}, wanted ['CD', 'CD']")
@@ -859,6 +860,181 @@ def sc_media_tag():
                 fail(f"media_tag: {name}: {track}.flac is tagged MEDIA="
                      f"{tags.get('MEDIA')}, wanted ['CD']. -H asks for a "
                      f"decode; it does not make the disc an HDCD")
+
+
+def raw_tags(path):
+    """(key, value) pairs as the file spells them, case untouched: Vorbis
+    comments (FLAC, Opus, Ogg Vorbis), APEv2 (WavPack, TTA), and ID3v2 TXXX
+    descriptions (MP3, as `TXXX:<description>` with no value). None when the
+    container carries none of those. flac_vorbis_comments() upper-cases every
+    key, so it cannot see the case this scenario is about."""
+    d = path.read_bytes()
+
+    def vorbis_at(q):
+        n = int.from_bytes(d[q:q + 4], "little")
+        q += 4 + n
+        count = int.from_bytes(d[q:q + 4], "little")
+        q += 4
+        out = []
+        for _ in range(count):
+            q += 4
+            m = int.from_bytes(d[q - 4:q], "little")
+            k, _, v = d[q:q + m].decode("utf-8", "replace").partition("=")
+            out.append((k, v))
+            q += m
+        return out
+
+    if path.suffix == ".flac":
+        pos = 4
+        while pos + 4 <= len(d):
+            size = int.from_bytes(d[pos + 1:pos + 4], "big")
+            if d[pos] & 0x7F == 4:
+                return vorbis_at(pos + 4)
+            if d[pos] & 0x80:
+                return None
+            pos += 4 + size
+        return None
+    if path.suffix in (".opus", ".ogg"):
+        for magic in (b"OpusTags", b"\x03vorbis"):
+            i = d.find(magic)
+            if i >= 0:
+                return vorbis_at(i + len(magic))
+        return None
+    if path.suffix in (".wv", ".tta"):
+        i = d.rfind(b"APETAGEX")
+        if i < 0:
+            return None
+        _, size, count, _ = struct.unpack("<IIII", d[i + 8:i + 24])
+        q, out = i - (size - 32), []
+        for _ in range(count):
+            vlen, _ = struct.unpack("<II", d[q:q + 8])
+            e = d.index(b"\0", q + 8)
+            out.append((d[q + 8:e].decode("utf-8", "replace"),
+                        d[e + 1:e + 1 + vlen].decode("utf-8", "replace")))
+            q = e + 1 + vlen
+        return out
+    if path.suffix == ".mp3":
+        if d[:3] != b"ID3":
+            return None
+        size = 0
+        for x in d[6:10]:
+            size = size << 7 | x
+        pos, end, out = 10, 10 + size, []
+        while pos + 10 <= end and d[pos:pos + 4].strip(b"\0"):
+            fs = int.from_bytes(d[pos + 4:pos + 8], "big")
+            if d[3] == 4:
+                fs = 0
+                for x in d[pos + 4:pos + 8]:
+                    fs = fs << 7 | x
+            body = d[pos + 10:pos + 10 + fs]
+            if d[pos:pos + 4] == b"TXXX":
+                enc = body[0]
+                sep = b"\0\0" if enc in (1, 2) else b"\0"
+                desc = body[1:].split(sep)[0]
+                out.append(("TXXX:" + desc.decode(
+                    "utf-16" if enc in (1, 2) else "utf-8", "replace"), ""))
+            pos += 10 + fs
+        return out
+    return None
+
+
+def sc_tag_keys_in_capitals():
+    """Every tag key we write is in capitals, and DISCTOTAL and TOTALDISCS are
+    written as a pair. Platterpus's operator's ruling, their round 28 lap 6
+    S32, asked of us as a round-29 close condition in S33 with "the exact key
+    set and how the log describes it", and "check that your naming templates
+    still match after it".
+
+    Asserted against the files, read byte by byte with case untouched, not
+    against the log: the log prints the same dictionary the muxer is handed, so
+    a log-only check would prove one dictionary agrees with itself. The log is
+    checked too, because S33 asks what it says.
+
+    Two keys are not ours and stay as libavformat spells them, and each is
+    named rather than tolerated in general: `encoder`, which it adds when it
+    writes any of these headers, and `creation_time`, which the APEv2 writer
+    standardises and so replaces ours. MP4 and WAV write only their own fixed
+    atom and chunk IDs, so there is no key there to be in capitals, and they
+    are not ripped here."""
+    lavf = {".flac": {"encoder"}, ".opus": {"encoder"}, ".ogg": {"encoder"},
+            ".wv": {"encoder", "creation_time"},
+            ".tta": {"encoder", "creation_time"}, ".mp3": set()}
+    album = "album=Probe Album:album_artist=Probe AA:artist=Probe Artist:date=2001"
+    out = WORK / "out_tagkeys"
+    # The default track scheme and a log scheme that both read `totaldiscs`,
+    # so a template that stopped matching shows up as a wrong file name.
+    ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac,opus,vorbis,mp3,wavpack,tta",
+                   "-c", "1/2", "-a", album, "-t", "1=title=One", "-l", "1",
+                   "-D", f"{out}/{{format}}",
+                   "-F", "{if #totaldiscs# > #1#|disc|.}{track} - {title}",
+                   "-L", "{album}{if #totaldiscs# > #1# CD|disc|}")
+    (WORK / "tagkeys.log").write_text(log)
+    if ec != 0:
+        fail(f"tag_keys: cyanrip exited {ec}")
+        return
+    files = sorted(p for p in out.rglob("*") if p.suffix in lavf)
+    names = sorted(p.name for p in files)
+    want = sorted(f"1.1 - One{s}" for s in lavf)
+    if names != want:
+        fail(f"tag_keys: the naming templates gave {names}, wanted {want}. "
+             f"They look `totaldiscs`, `disc` and `title` up in a dictionary "
+             f"whose keys did not change case; a file name that moved means "
+             f"a lookup stopped matching")
+    logs = sorted(p.name for p in out.rglob("*.log"))
+    if not logs or set(logs) != {"Probe Album CD1.log"}:
+        fail(f"tag_keys: the log scheme gave {logs}, wanted `Probe Album "
+             f"CD1.log` in every folder")
+    for p in files:
+        tags = raw_tags(p)
+        if not tags or len(tags) < 10:
+            fail(f"tag_keys: {p.name} in {p.parent.name}: read {tags!r}, so "
+                 f"nothing was checked")
+            continue
+        keys = [k for k, _ in tags]
+        lower = {k for k in keys if k != k.upper()}
+        if lower - lavf[p.suffix]:
+            fail(f"tag_keys: {p.parent.name}/{p.name} carries keys not in "
+                 f"capitals: {sorted(lower - lavf[p.suffix])}")
+        if sum(k == k.upper() for k in keys) < 10:
+            fail(f"tag_keys: {p.parent.name}/{p.name}: fewer than ten keys in "
+                 f"capitals, {keys}")
+        pre = "TXXX:" if p.suffix == ".mp3" else ""
+        for k in ("DISCTOTAL", "TOTALDISCS"):
+            if pre + k not in keys:
+                fail(f"tag_keys: {p.parent.name}/{p.name} has no {pre}{k}")
+        if not pre:
+            vals = {k: v for k, v in tags}
+            if vals.get("DISCTOTAL") != "2" or vals.get("TOTALDISCS") != "2":
+                fail(f"tag_keys: {p.parent.name}/{p.name}: DISCTOTAL "
+                     f"{vals.get('DISCTOTAL')!r} and TOTALDISCS "
+                     f"{vals.get('TOTALDISCS')!r}, wanted '2' and '2'")
+    block = re.search(r"^  Metadata:\n((?:    \S.*\n)+)", log, re.M)
+    lkeys = re.findall(r"^    (\S+?):", block.group(1), re.M) if block else []
+    if len(lkeys) < 10 or any(k != k.upper() for k in lkeys) \
+            or "DISCTOTAL" not in lkeys or "TOTALDISCS" not in lkeys:
+        fail(f"tag_keys: the log's Metadata block lists {lkeys}; wanted every "
+             f"key in capitals, DISCTOTAL and TOTALDISCS among them")
+
+    # The pair works from either side: a caller who passes only disctotal
+    # gets TOTALDISCS beside it, and -c 1/1 writes both as 1, with the log
+    # scheme's `totaldiscs > 1` guard still false.
+    for tag, extra, want_v, want_log in (
+            ("only_disctotal", ("-a", album + ":disctotal=3"), "3",
+             "Probe Album.log"),
+            ("one_disc", ("-a", album, "-c", "1/1"), "1", "Probe Album.log")):
+        o = WORK / f"out_tagkeys_{tag}"
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-o", "flac", "-l", "1", "-D", o, "-F", "{track}",
+                     "-L", "{album}{if #totaldiscs# > #1# CD|disc|}", *extra)
+        vals = dict(raw_tags(o / "1.flac") or []) if ec == 0 else {}
+        if vals.get("DISCTOTAL") != want_v or vals.get("TOTALDISCS") != want_v:
+            fail(f"tag_keys: {tag}: exit {ec}, DISCTOTAL "
+                 f"{vals.get('DISCTOTAL')!r} and TOTALDISCS "
+                 f"{vals.get('TOTALDISCS')!r}, wanted {want_v!r} for both")
+        if ec == 0 and not (o / want_log).exists():
+            fail(f"tag_keys: {tag}: no {want_log}, found "
+                 f"{sorted(p.name for p in o.glob('*.log'))}")
 
 def sc_audio_checksums():
     """The audio on disk must match the checksums the log claims for it.

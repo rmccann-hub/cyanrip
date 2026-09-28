@@ -188,8 +188,12 @@ def parse_log(path):
         (re.compile(r"^\s+Accurip v2:\s+([0-9A-F]{8})"), "v2", lambda s: int(s, 16)),
         (re.compile(r"^\s+Accurip 450:\s+([0-9A-F]{8})"), "v1_450", lambda s: int(s, 16)),
     )
-    track_line = re.compile(r"^\s+track:\s+(\d+)\s*$")
-    total_line = re.compile(r"^\s+tracktotal:\s+(\d+)\s*$")
+    # Both spellings, and only those two: from `.19` the Metadata block prints
+    # its keys in capitals (round 29 lap 1), and every log before it is lower
+    # case. Neither pattern alone reads both, and a log this tool finds no
+    # track in is refused rather than misread.
+    track_line = re.compile(r"^\s+(?:track|TRACK):\s+(\d+)\s*$")
+    total_line = re.compile(r"^\s+(?:tracktotal|TRACKTOTAL):\s+(\d+)\s*$")
     total = None
 
     with open(path, encoding="utf-8", errors="replace") as fh:

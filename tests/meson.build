@@ -569,6 +569,7 @@ rip_scenarios = [
     'filters',
     'deemph_with_hdcd',
     'media_tag',
+    'tag_keys_in_capitals',
     'golden_reference_matches_a_fresh_rip',
 ## THE SUITE NEVER CHECKED THE AUDIO AGAINST THE LOG THAT DESCRIBES IT.
 ## tools/audio-checksums.py reimplements src/checksums.h in Python so a rip
