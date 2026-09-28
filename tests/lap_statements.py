@@ -275,12 +275,13 @@ def make_repo(path, branch, n):
     return shas
 
 
-def check_lap(text, *extra):
+def check_lap(text, *extra, stdin_text=None):
     with tempfile.TemporaryDirectory() as tmp:
         p = pathlib.Path(tmp) / "lap.md"
         p.write_text(text)
         r = subprocess.run([sys.executable, str(TOOL), str(p), *extra],
-                           capture_output=True, text=True, cwd=ROOT)
+                           capture_output=True, text=True, cwd=ROOT,
+                           input=stdin_text)
     return r.returncode, r.stdout + r.stderr
 
 
@@ -486,8 +487,8 @@ S13 VERDICT: {verdict}
 """
 
 
-def check2(text, laps, *extra):
-    return check_lap(text, "--laps", str(laps), *extra)
+def check2(text, laps, *extra, stdin_text=None):
+    return check_lap(text, "--laps", str(laps), *extra, stdin_text=stdin_text)
 
 
 def swap2(old, new):
@@ -810,17 +811,29 @@ with tempfile.TemporaryDirectory() as tmp:
     (repo / "tools" / "say.py").write_text(
         "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\nprint('hello 42')\n")
     (repo / "tools" / "unmarked.py").write_text("print('hello 42')\n")
+    # Round 28 lap 6 S27's cases: a marked tool that fails, one that reads its
+    # standard input, and one whose output is not UTF-8.
+    (repo / "tools" / "fails.py").write_text(
+        "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\n"
+        "import sys\nprint('hello 42')\nsys.exit(1)\n")
+    (repo / "tools" / "reads.py").write_text(
+        "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\n"
+        "import sys\nprint('read', len(sys.stdin.read()))\n")
+    (repo / "tools" / "bytes.py").write_text(
+        "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\n"
+        "import sys\nsys.stdout.buffer.write(b'\\xff\\xfe hello 42\\n')\n")
     g(repo, "add", "tools")
     g(repo, "commit", "-q", "-m", "tools")
     at = g(repo, "rev-parse", "--short=12", "HEAD")
 
-    def rr(cmd_result, *extra):
+    def rr(cmd_result, *extra, fields="", stdin_text=None):
         body = ("S1 FACT measured: The tool said so.\n"
-                f"  evidence: run: {cmd_result}\n"
+                f"  evidence: run: {cmd_result}\n{fields}"
                 "  holds: 0.9.4\n  examined: 1 run, closed\n\n"
                 "S2 VERDICT: OPEN\n  basis: S1\n")
         return check2(lap3("cyanrip-fork", 30, 1, "OPEN", body,
-                           from_commit=at), empty, "--ours", str(repo), *extra)
+                           from_commit=at), empty, "--ours", str(repo), *extra,
+                      stdin_text=stdin_text)
 
     outcome("B1: a marked tool re-run at its commit matches its quoted result",
             rr('python3 tools/say.py => "hello 42"', "--rerun"), 0,
@@ -854,6 +867,47 @@ with tempfile.TemporaryDirectory() as tmp:
     outcome("B1: without --rerun nothing is executed, and the checker says so",
             rr('python3 tools/say.py => "hello 43"'), 0,
             ["none re-run: --rerun was not given", "well formed"])
+
+    # Round 28 lap 6 S27: the four --rerun defects, each a case.
+    outcome("B1: a quote that is only an elision compares nothing, so it is "
+            "unchecked, not matched",
+            rr('python3 tools/say.py => "…"', "--rerun"), 0,
+            ["UNCHECKED run: its result quotes only an elision",
+             "0 re-run and matched"])
+    outcome("B1: a command that failed does not match on its output",
+            rr('python3 tools/fails.py => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: it exited 1, and its result does not say it "
+             "expected a non-zero exit", "0 re-run and matched"])
+    outcome("B1: a result that states its exit is held to it, and matches",
+            rr('python3 tools/fails.py => exit 1, "hello 42"', "--rerun"), 0,
+            ["1 re-run and matched"])
+    outcome("B1: a result that states the wrong exit is refused",
+            rr('python3 tools/say.py => exit 1, "hello 42"', "--rerun"), 1,
+            ["[B1]", "it exited 0, and its result says exit 1"])
+    outcome("B1: the re-run reads no standard input of the checker's",
+            rr('python3 tools/reads.py => "read 0"', "--rerun",
+               stdin_text="the checker's own input\n"), 0,
+            ["1 re-run and matched"])
+    outcome("B1: output that is not UTF-8 is compared, not raised",
+            rr('python3 tools/bytes.py => "hello 42"', "--rerun"), 0,
+            ["1 re-run and matched"])
+
+    # Round 28 lap 6 S26: at: as B1's text has it, on any statement, once,
+    # and naming a commit of the author's tree.
+    outcome("B1: a statement with two at: fields is refused",
+            rr('python3 tools/say.py => "hello 42"',
+               fields=f"  at: {at}\n  at: {at}\n"), 1,
+            ["[B1]", "this statement has 2"])
+    outcome("B1: an at: naming no commit of the author's tree is refused",
+            rr('python3 tools/say.py => "hello 42"',
+               fields="  at: 0123456789ab\n"), 1,
+            ["[B1]", "does not resolve"])
+    outcome("B1: an at: on a statement with no run: is checked too",
+            check2(lap3("cyanrip-fork", 30, 1, "OPEN",
+                        "S1 NOTE: Nothing ran.\n  at: 0123456789ab\n\n"
+                        "S2 VERDICT: OPEN\n  basis: S1\n", from_commit=at),
+                   empty, "--ours", str(repo)), 1,
+            ["[B1]", "does not resolve"])
     left = g(repo, "worktree", "list").splitlines()
     if len(left) != 1:
         fail(f"B1: --rerun left worktrees behind in the author's clone: {left}")

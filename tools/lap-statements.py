@@ -71,10 +71,12 @@ claims.
 """
 
 import argparse
+import os
 import pathlib
 import re
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -799,20 +801,49 @@ def pre_committed(lap, s, line, tag, me):
                        f"came true")
 
 
-def b1_run(lap, line, tag, value, have, me_side, resolver, counts):
+def b1_at(lap, tag, have, me_side, resolver):
+    """B1: `at:` on ANY statement names one commit of the author's tree.
+
+    Returns None when the statement has no at:, False when it has one that is
+    refused, else the commit. Round 28 lap 6 S26 found three places the first
+    version was laxer than the text: it read only the first at:, checked a
+    commit's shape and side but not that it is in the author's tree, and read
+    at: only on a statement whose evidence had a run:. All three are here."""
+    ats = have.get("at", [])
+    if not ats:
+        return None
+    if len(ats) > 1:
+        lap.refuse(ats[1][1], "B1", f"{tag}: at: names the one commit a run: "
+                                    f"ran at, and this statement has "
+                                    f"{len(ats)}")
+        return False
+    value, fl = ats[0]
+    m = AT_RE.match(value.strip())
+    if not m or (m.group(1) and m.group(1) != me_side):
+        lap.refuse(fl, "B1", f"{tag}: at: names a commit of the author's "
+                             f"tree, as <sha> or {me_side}@<sha>")
+        return False
+    sha = m.group(2)
+    if me_side is not None and resolver.repo.get(me_side) is not None:
+        verdict, detail = resolver.locate(me_side, sha)
+        if verdict == "missing":
+            lap.refuse(fl, "B1", f"{tag}: at: names a commit of the author's "
+                                 f"tree, and {detail}")
+            return False
+        if verdict == "unchecked":
+            lap.warn(fl, "LSL.unchecked", f"UNCHECKED at: {detail}")
+    return sha
+
+
+def b1_run(lap, line, tag, value, have, at_sha, me_side, resolver, counts):
     """B1: a run: in LSL 3 names the commit it ran at, and with --rerun is
     re-run there when its command can depend on nothing but that commit."""
     cmd, _, result = value[len("run: "):].partition(" => ")
     counts["seen"] += 1
-    ats = have.get("at", [])
-    if ats:
-        m = AT_RE.match(ats[0][0].strip())
-        if not m or (m.group(1) and m.group(1) != me_side):
-            lap.refuse(ats[0][1], "B1", f"{tag}: at: names a commit of the "
-                                        f"author's tree, as <sha> or "
-                                        f"{me_side}@<sha>")
-            return
-        sha = m.group(2)
+    if at_sha is False:
+        return
+    if at_sha:
+        sha = at_sha
     else:
         froms = [v.split()[0] for v in lap.headers.get("FROM-COMMIT", [])
                  if v.split()]
@@ -842,6 +873,14 @@ def rerun(resolver, side, sha, cmd, result):
     quoted = QUOTED_RE.findall(result)
     if not quoted:
         return "unchecked", "its result quotes no output to compare"
+    # A quote that is only an elision compares nothing, so it cannot match
+    # (round 28 lap 6 S27, first of four).
+    quoted = [q for q in quoted if any(f.strip() for f in q.split("…"))]
+    if not quoted:
+        return "unchecked", ("its result quotes only an elision, so there is "
+                             "nothing to compare")
+    # The result's own `exit N`, outside its quotes, if it states one.
+    declared = re.search(r"\bexit (\d+)\b", QUOTED_RE.sub("", result))
     if any(ch in cmd for ch in NOT_SIMPLE):
         return "unchecked", ("not a simple command: it needs a shell, a glob "
                              "or an elision to mean what it says")
@@ -879,16 +918,42 @@ def rerun(resolver, side, sha, cmd, result):
         if git(repo, "worktree", "add", "--detach", "--quiet", str(work),
                sha).returncode != 0:
             return "unchecked", f"could not check {sha} out"
+        # No standard input, so a command that reads it cannot wait on ours;
+        # its own session, so a timeout kills everything it started and no
+        # child is left holding its pipes; bytes decoded with replacement, so
+        # output that is not UTF-8 is compared rather than raised out of the
+        # checker as a refusal (round 28 lap 6 S27, S28).
         try:
-            r = subprocess.run(argv, cwd=work, capture_output=True,
-                               text=True, timeout=120)
-            out = r.stdout + r.stderr
-        except (OSError, subprocess.TimeoutExpired) as e:
-            return "unchecked", f"did not run to completion: {e}"
+            proc = subprocess.Popen(argv, cwd=work, stdin=subprocess.DEVNULL,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    start_new_session=True)
+        except OSError as e:
+            return "unchecked", f"did not start: {e}"
+        try:
+            so, se = proc.communicate(timeout=120)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except OSError:
+                pass
+            proc.communicate()
+            return "unchecked", "did not finish within 120 s, and was killed"
+        out = (so + se).decode("utf-8", errors="replace")
+        status = proc.returncode
     finally:
         git(repo, "worktree", "remove", "--force", str(work))
         shutil.rmtree(work, ignore_errors=True)
         git(repo, "worktree", "prune")
+    # The exit status is read (S27, second of four): a result that states
+    # `exit N` is held to it, and one that states none is not matched by a
+    # command that failed, whatever its error text happens to contain.
+    if declared and status != int(declared.group(1)):
+        return "mismatch", (f"it exited {status}, and its result says "
+                            f"exit {declared.group(1)}")
+    if not declared and status != 0:
+        return "unchecked", (f"it exited {status}, and its result does not "
+                             f"say it expected a non-zero exit")
     for q in quoted:
         pos = 0
         for frag in (f.strip() for f in q.split("…")):
@@ -973,6 +1038,8 @@ def check(lap, resolver):
                     lap.refuse(n, rule, f"{tag}: needs a {req}: field")
             check_v2(lap, s, tag, have, me, by_n, resolver)
 
+        at_sha = b1_at(lap, tag, have, me_side, resolver) if v3 else None
+
         # Every field value has a shape; check each one that has one.
         for value, fl in have.get("evidence", []):
             first = value.split()[0]
@@ -982,8 +1049,8 @@ def check(lap, resolver):
                                f"{tag}: a run: names its command AND its "
                                f"result, as 'run: CMD => RESULT'")
                 elif v3:
-                    b1_run(lap, fl, tag, value, have, me_side, resolver,
-                           rerun_counts)
+                    b1_run(lap, fl, tag, value, have, at_sha, me_side,
+                           resolver, rerun_counts)
                 continue
             ref = art_ref(first)
             if ref is None:
