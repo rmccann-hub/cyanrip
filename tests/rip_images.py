@@ -3520,6 +3520,19 @@ def sc_reference():
         if not re.search(pat, log, re.M):
             fail(f"reference: {what} missing -- -Z coverage lost")
 
+    # The checksum the repeat loop prints is the track's EAC CRC32 for the
+    # same read. It printed the running CRC before its final XOR, the
+    # complement, found by Platterpus in round 28 lap 9 S9. Every track here
+    # converges, so each Done; line's checksum is the kept read's, and the
+    # track block that follows it prints that read's EAC CRC32.
+    done = re.findall(r"^Done; \(\d+ out of \d+ matches for current checksum "
+                      r"([0-9A-F]{8})\)$", log, re.M)
+    crcs = re.findall(r"^\s+EAC CRC32:\s+([0-9A-F]{8})", log, re.M)
+    if not done or done != crcs:
+        fail(f"reference: the repeat loop printed checksums {done} and the "
+             f"track blocks {crcs}; each converged read's must be its "
+             f"track's EAC CRC32")
+
     # An intersample peak above full scale must survive into the tags, or the
     # consumer's >1.0 reconciliation path is never exercised.
     peaks = [float(m) for m in

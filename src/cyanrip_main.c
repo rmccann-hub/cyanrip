@@ -1000,10 +1000,19 @@ repeat_ripping:;
         for (int i = 0; i < nb_last_checksums; i++)
             matches += last_checksums[i] == checksum_ctx.eac_crc;
 
+        /* The checksum these lines print is the EAC CRC32 the track block
+         * prints for the same read. checksum_ctx.eac_crc is the running CRC
+         * before its final XOR (crip_finalize_checksums(), checksums.h), and
+         * printing it raw gave the complement: A62CAD22 here beside
+         * "EAC CRC32: 59D352DD" for one read, found by Platterpus in round 28
+         * lap 9 S9. Comparisons above keep the raw value, which is equal
+         * whenever the finalised one is. Announced in round 29 lap 1. */
+        const uint32_t shown_crc = checksum_ctx.eac_crc ^ UINT32_MAX;
+
         total_repeats++;
         if (matches >= ctx->settings.ripping_retries) {
             cyanrip_log(ctx, 0, "\nDone; (%i out of %i matches for current checksum %08X)\n",
-                        matches, ctx->settings.ripping_retries, checksum_ctx.eac_crc);
+                        matches, ctx->settings.ripping_retries, shown_crc);
             t->secure_rip_state = CYANRIP_SECURE_RIP_CONVERGED;
             goto finalize_ripping;
         }
@@ -1025,7 +1034,7 @@ repeat_ripping:;
         }
 
         cyanrip_log(ctx, 0, "\nRepeating ripping (%i out of %i matches for current checksum %08X)\n",
-                    matches, ctx->settings.ripping_retries, checksum_ctx.eac_crc);
+                    matches, ctx->settings.ripping_retries, shown_crc);
 
         last_checksums = av_realloc(last_checksums,
                                     (nb_last_checksums + 1)*sizeof(*last_checksums));
