@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-g9d52271)
+cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-ge554834)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 28 lap 3 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 28 lap 5 OPEN, verdict OPEN -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -61,6 +61,14 @@ Tracks:
 
 Repeating ripping (0 out of 200 matches for current checksum 2C926D69)
 
+Repeating ripping (1 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (2 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (3 out of 200 matches for current checksum 2C926D69)
+
+Repeating ripping (4 out of 200 matches for current checksum 2C926D69)
+
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -85,7 +93,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          16
+  READ:          82
 
 Ripping errors: 1
 Encoder errors: not applicable; no whole track was encoded
@@ -93,5 +101,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-09-27T16:13:19+00:00
-Log FUN512: H6XqxuK2uf7IJZIbS1se.b7SYAMIq.RgjuMlZaPyTOPNbki.UHMbKZXdPurJ_A_Av7Rr37mR9d738IeZ3TS.JA
+Ripping finished at 2026-09-28T01:38:33+00:00
+Log FUN512: 7W2aGVtIBV8Fw2BPVJnwls32q2x5gOsdt.FMGEeDYNGA3Z1lPfcuNymAr3GxPzGrTZv7y19SBwJthTHe3hjfww
