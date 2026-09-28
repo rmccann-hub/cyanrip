@@ -1,17 +1,10 @@
 # Upstream sync analysis — `f8ebf48`, 2026-08-24
 
-**Status, 2026-09-27: STILL NOT MERGED.** `git merge-base --is-ancestor f8ebf48
-platterpus-fork` is false at `platterpus-fork`'s tip. The condition this line
-first named, round 13 closing, was met long ago; what holds it now is that a
-merge moves `PROVIDER-CONTRACT.md` P5 by the two lines in §2, so it is
-announced in a round before it lands, and the operator's instruction of
-2026-09-27 not to merge upstream. The line as first written: *"ANALYSIS ONLY.
-Nothing has been merged into `platterpus-fork`, and nothing should be until
-round 13 closes."* `master` (our clean mirror) has been
-fast-forwarded to `f8ebf48`; the fork is at `d024694` and does not contain it.
-Syncing the mirror is free and touches no consumer-facing reference — this
-document is what makes the delta visible, which is the only reason the mirror
-is kept current.
+**Status: MERGED** into `platterpus-fork` at `1fb6f07`, 2026-09-28, on the
+operator's decision, for `.18`. It had stood unmerged since 2026-08-24; §5 below
+is the record of that day and §6 of the merge. The line as first written:
+*"ANALYSIS ONLY. Nothing has been merged into `platterpus-fork`, and nothing
+should be until round 13 closes."*
 
 | | |
 | --- | --- |
@@ -64,6 +57,15 @@ attempted and this document changes no code.
 Retrying in %_ seconds (attempt %_ out of %_)...
 MusicBrainz lookup failed, try again later,
 ```
+
+**AND TWO LINES GO, which this section did not say until the merge measured
+it (2026-09-28).** Upstream's rewrite of the error path replaces
+`Connection failed, try again? Or disable via -N` and `Error
+fetching/requesting/auth, this shouldn't happen.`, so the merged contract has
+two rows added and two removed. The tool's list above could not show it: it
+compares the two TREES, and in upstream's tree those two strings are simply
+absent, filed under *lines we have that upstream does not* beside seventy
+others this fork added. The diff of the merged contract is what showed it.
 
 **`MusicBrainz query failed: %_` is NOT new.** It exists at `4f28cf0`, at
 `f8ebf48` and in our fork — counted in all three rather than assumed from the
@@ -150,3 +152,20 @@ its own MusicBrainz lookups; it is invisible to our one known consumer.
 - This document written.
 
 Nothing else. No merge, no cherry-pick, no code change.
+
+## 6. The merge, 2026-09-28
+
+- `f2d0af3` measured the CLI surface first: no inbound flag, no dependency.
+- `1fb6f07` merges `master` (`f8ebf48`) into `platterpus-fork`. One conflict, in
+  `src/cyanrip_main.h`: upstream declares `extern int quit_now;` where this fork
+  declares `extern volatile sig_atomic_t quit_now;`, set from its signal
+  handler. Ours is kept. Built clean, no warnings.
+- `06be426` regenerates the provider contract: **four** rows move, two added
+  and two removed, all on the MusicBrainz path that `-N` disables. The removed
+  `Error fetching/requesting/auth, this shouldn't happen.` is an entry in
+  Platterpus's message inventory
+  (`platterpus@785925a:src/platterpus/ripper_message_inventory.py:774`), used
+  to classify a line rather than to delimit a block, so it goes dormant; our
+  next round-28 lap says so.
+- `.18` carries it, announced in that lap, released after round 28 closes.
+

@@ -37,10 +37,11 @@ its condition rather than a date.
 | **`Stopping, ripping incomplete!` is printed whenever a signal stops a track's read**, from one place, `fail:`; it was printed only when the signal landed inside the frame loop | `9d52271` | a reader of a log whose signal landed after a pass's last frame or between `-Z` passes. Same string, one more path; **to announce in round 28's next lap of ours** |
 | **The disc-level `AccurateRip:` line reads `mismatch` or `not found` when a response holds no entry for this disc**, instead of `found`, and no `Tracks ripped accurately:` tally is printed over it, as for a disc not in the database. The status was set to `found` before the loop that would downgrade it | `64642db` | nobody so far: no real response has had that shape. Platterpus's parser ignores the disc-level line (`platterpus@59f4c00:src/platterpus/parsers/cyanrip_log.py:2171`) and reads the per-track rows, which do not change. **To announce in round 28's next lap of ours**, with the stop marker |
 | **The AccurateRip response parse is split out of the fetch**, unchanged, so a recorded response is tested with no network | `5b7493c` | no line changes. The contract's P5 moves one row, `AccuRIP DB data error, got unexpected number of bytes!`, out of the `goto end` class, because its exit is now a `return` with the same effect (`1268ccf`) |
+| **Upstream's `f8ebf48`, merged**: MusicBrainz queries retry when the server is busy. Two log lines added (`Retrying in %i seconds (attempt %i out of %i)...`, `MusicBrainz lookup failed, try again later, or disable it via -N`) and two removed (`Connection failed, try again? Or disable via -N`, `Error fetching/requesting/auth, this shouldn't happen.`). No CLI or dependency change, measured from both binaries (`f2d0af3`) | `1fb6f07`, contract `06be426` | nobody who passes `-N`, which Platterpus does on every rip. The second removed string is an entry in their message inventory (`platterpus@785925a:src/platterpus/ripper_message_inventory.py:774`), which goes dormant. **To announce in our next round-28 lap**; merged on the operator's decision of 2026-09-28 |
 | whatever the Full run leads us to fix | — | round 28 lap 1 S8 |
 | tooling and tests: LSL 2 in the lap checker (`df67f5a`), a clean bundle transcript names its population (`f309743`), explicit test timeouts (`126c433`, `df67f5a`), `seam-sync-check.py` fetches `main` by name (`f5ba200`), the `raisesig` shim (`9d52271`), the inert-edit probe before every mutation sweep (`62aed42`), the argv probe's `unobservable` grade (`9207def`), the recorded AccurateRip response test (`5b7493c`, `64642db`), the encoder-failure arms of the log (`27d1616`), and a `seam-check --held` summary that names what it re-checked (`70ac25c`) | as named | our test suite |
 
-`src/` changes at `f150c0c`, `9d52271`, `5b7493c` and `64642db`, so far. The CLI is
+`src/` changes at `f150c0c`, `9d52271`, `5b7493c` and `64642db`, and by the upstream merge `1fb6f07`, so far. The CLI is
 unchanged and `-j` stays `cyanrip-diagnostics/6`.
 
 **A row-by-row diff of `.18`'s contract against `.17`'s should expect three
@@ -50,6 +51,11 @@ was encoded`. Beyond the stable table, P5 moves one row between classes (above),
 and line numbers move in `accurip.c` and `cyanrip_main.c`.
 
 ## 3. The channel
+
+**Decided 2026-09-28 by the operator: stable, after round 28 closes**, the Full
+run on `.17` first. A beta now was considered and not taken: Platterpus 0.6.61
+offers beta builds to a user who ticks it, and the operator's own app does, so
+a `.18` beta would be offered on the rig whose acceptance run accepts only `.17`.
 
 **Stable, both channels resolving to it**, as `.15`, `.16` and `.17` were, unless
 round 28 decides otherwise. Platterpus's next release carries `FORK_PIN`

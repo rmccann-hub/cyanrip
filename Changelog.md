@@ -44,6 +44,13 @@ that would downgrade it. No real response has had that shape, and Platterpus's
 parser ignores the disc-level line. No line's text changes; one line's value
 does, in a case no rip has reached. It is upstream's code too.
 
+**For `.18`: upstream's `f8ebf48` is merged** (`1fb6f07`), on the operator's
+decision of 2026-09-28. MusicBrainz queries retry when the server is busy. Its
+CLI surface was measured first from both binaries, and there is no change.
+The contract moves by four rows on the MusicBrainz path, two added and two
+removed, all unreachable under `-N`. One conflict, over `quit_now`'s
+declaration, resolved to the fork's `volatile sig_atomic_t`.
+
 **Upstream records corrected, from the operator's seam-automation proposal.**
 The cache-model report was re-measured on a build of upstream `f8ebf48`: its
 claim holds (`-P 1` to `3` give 0.3 % non-zero samples, `Ripping errors: 0`),

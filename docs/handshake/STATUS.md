@@ -47,7 +47,7 @@ checks, and neither is a dated state.
 | `.17` on a drive | **nothing yet.** Round 28's Full run on `.17` with Platterpus 0.6.61 is the first |
 | `.16` on a drive | **the Full acceptance on `.16` with Platterpus 0.6.60 ran on 2026-09-26 from 04:13:08Z**: its script reported 320 of 320, 0 skipped, `counts_as_evidence: true` (`docs/rig-2026-09-26-221a1df/`), and Platterpus's ledger grades it `partial` by the operator's ruling, because the records carried errors no step could fail over, two of them lines of our log (`platterpus@d582d6a:docs/handshake/outbound/platterpusstatus.md:314`). Both `.16` changes ran on the drive, each with a before and after on the same disc. **This corrects our round 27 lap 6**, committed at 04:30:48Z during that run: its `HANDSHAKE-TESTED` says the quick run and not the Full run, and lists `.16`'s two changes, a whole-disc rip and a secure re-read as untested by any run. Lap 6 is sent and stays as it is; round 28 lap 1 carries the correction. Still untested: a sector that will not read, and `.17` |
 | gate | `--release-gate` exits **1** and names round 28, which is open. That is correct: `.17` is released on round 27's authority, and round 28 reviews it |
-| the tip | **the release's publish commit and after.** Build from the release commit, not the tip. Since `f150c0c` the tip also carries `.18`'s changes, **not released**, four in `src/` (`docs/RELEASE-PLAN-platterpus.18.md` §2): `Encoder errors:` counts only tracks whose read completed and a new P2 line, `Partial files:`, names a partial file (`f150c0c`, announced in our lap 3); `Stopping, ripping incomplete!` prints on every signal stop of a read (`9d52271`); the AccurateRip parse is split out of the fetch, with no line change (`5b7493c`); and the disc-level `AccurateRip:` line can read `mismatch` or `not found` (`64642db`). The last three are for our lap 5 to announce |
+| the tip | **the release's publish commit and after.** Build from the release commit, not the tip. Since `f150c0c` the tip also carries `.18`'s changes, **not released**, four in `src/` (`docs/RELEASE-PLAN-platterpus.18.md` §2): `Encoder errors:` counts only tracks whose read completed and a new P2 line, `Partial files:`, names a partial file (`f150c0c`, announced in our lap 3); `Stopping, ripping incomplete!` prints on every signal stop of a read (`9d52271`); the AccurateRip parse is split out of the fetch, with no line change (`5b7493c`); and the disc-level `AccurateRip:` line can read `mismatch` or `not found` (`64642db`). It also carries upstream's `f8ebf48`, merged at `1fb6f07`: a MusicBrainz retry when busy, two log lines added and two removed on the path `-N` disables. All but the first are for our lap 5 to announce. **`.18` ships stable after round 28 closes**, by the operator's decision of 2026-09-28: the Full run on `.17` first |
 | next | **the operator's Full acceptance on `.17` installed through Platterpus 0.6.61**, round 28's close condition 1. Both halves of the pair are out: their lap 2 was released 2026-09-27, and 0.6.61 is tagged `v0.6.61` at `platterpus@59f4c00`, with `PIN_UNDER_REVIEW` `e0471f4` (`src/platterpus/deps/fork_source.py:635`) and `FORK_PIN` `221a1df` (`:213`). **Our lap 3 went first**, before the run, by the operator's choice, and **their lap 4 answered it**, also before the run. **Our lap 5 follows the run**, with our reading of the bundle, and it is `GO` unless that reading finds a defect in `.17` that breaks the pin or the run does not complete. That is lap 3 S29's pre-commitment, which names *"our lap 4"*: it was written before their lap 4 took the number, and it binds our first lap after the run. Their lap 4 S33 makes the same commitment for their lap after ours |
 
 **`.17` is stable because round 27 authorised it, and the build itself is
@@ -159,12 +159,15 @@ executes that rather than trusting it.
 ### Upstream
 
 Our `master` mirrors `cyanreg/cyanrip` at `f8ebf48` (2026-08-21), and
-**upstream has not moved since**: `git ls-remote` on 2026-09-22 returned
-`f8ebf48` for both `cyanreg/cyanrip` and our `origin`. Its analysis is
-`docs/upstream/sync-2026-08-24-mb-retry.md`. That is a reading of one moment;
-`tools/upstream-delta.py` is how to check again. **Nine defects of ours
-exist upstream and none is filed there** — each re-checked by
-`tools/check-settled.py` against `master`, listed in `CLAUDE.md`.
+**upstream has not moved since**: `git ls-remote` on 2026-09-28T00:15Z returned
+`f8ebf48` for `cyanreg/cyanrip`. **`f8ebf48` is merged into `platterpus-fork` at
+`1fb6f07`**, on the operator's decision of 2026-09-28, for `.18`; its analysis,
+measured CLI surface included, is `docs/upstream/sync-2026-08-24-mb-retry.md`.
+That is a reading of one moment; `tools/upstream-delta.py` is how to check again.
+**Thirteen defects of ours exist upstream and none is filed there**: twelve
+drafted in `docs/upstream/defect-reports.md` and the cache model in
+`docs/upstream-cachemodel-report.md`, each re-checked by `tools/check-settled.py`
+against `master`.
 
 ## Earlier states of this file are in git history, not here
 
