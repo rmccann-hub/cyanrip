@@ -882,11 +882,12 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is twelve**: eight
-   counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather than
-   remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
-   from round 26's real test, and a twelfth the same day from Platterpus's
-   reading of our source. Each has a re-check
+   tally that said "all three" while five more existed. **It is thirteen**:
+   eight counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather
+   than remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
+   from round 26's real test, a twelfth the same day from Platterpus's reading
+   of our source, and a thirteenth on 2026-09-27, found writing
+   `tests/arresp.c`. Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
    1. `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a
@@ -921,11 +922,16 @@ should need rewriting. If it does, that is the defect.
       the one-frame checksum against an entry's whole-track one. One chance in
       2^32 per entry, so no rip has shown it. Found by Platterpus, round 27
       lap 2 B1a; fixed here, pinned by `tests/logrender.c`.
+  13. The AccurateRip disc status is set to `FOUND` **before** the loop that
+      would downgrade it, so it can never read `mismatch`: a response with no
+      entry for this disc reads `found`, and the report prints a tally of 0 of
+      N over a comparison that never happened. Read from the source; fixed
+      here for `.18` (`64642db`), pinned by `tests/arresp.c`.
 
-   **Not filed is not fixed, and twelve unfiled reports is the private garden
+   **Not filed is not fixed, and thirteen unfiled reports is the private garden
    this rule forbids.** Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — but **every one is now
-   drafted** (2026-09-27): the other eleven are in
+   drafted** (2026-09-27): the other twelve are in
    `docs/upstream/defect-reports.md`, each with upstream's `file:line` at
    `f8ebf48` and our fixing commit, so filing is a copy and paste. The count
    belongs here where it can be checked, and it is checked by the same command
@@ -1990,7 +1996,9 @@ so their app offers `.17` marked `unapproved` until round 28 reviews it. **Round
 its real test**, as rounds 26 and 27 did. **The next release is
 `+platterpus.18`**, and `docs/RELEASE-PLAN-platterpus.18.md` is its plan,
 written before round 28's Full run: a sequence to follow at the close, with
-what `.18` carries so far.
+what `.18` carries so far, upstream's `f8ebf48` included (merged at `1fb6f07`).
+**The operator chose on 2026-09-28: stable, after round 28 closes**, the Full
+run on `.17` first.
 
 **`+platterpus.16` SHIPPED on 2026-09-24** at `221a1df`, `release_seq` 26,
 stable, authorised by **round 26** — `docs/RELEASE-PLAN-platterpus.16.md` is
