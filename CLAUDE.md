@@ -1998,6 +1998,17 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
+**`+platterpus.18` SHIPPED on 2026-09-28** at `51cc789`, `release_seq` 28,
+stable, authorised by **round 28** — `docs/RELEASE-PLAN-platterpus.18.md` is
+executed and bannered. It carries `Encoder errors:` counting whole tracks with
+a new `Partial files:` line, the stop marker on every signal stop of a read,
+the disc-level `AccurateRip:` line able to read `mismatch` or `not found`, the
+AccurateRip parse split out and tested, and upstream's `f8ebf48` (merged at
+`1fb6f07`). There is no consumer-side prerequisite. Platterpus's 0.6.63 carries
+`FORK_PIN` `e0471f4`, round 28's approval, so their app offers `.18` marked
+`unapproved` until round 29 reviews it. **Round 29 opens on `.18`, by our lap
+1. The next release is `+platterpus.19` and nothing is written for it.**
+
 **`+platterpus.17` SHIPPED on 2026-09-26** at `e0471f4`, `release_seq` 27,
 stable, authorised by **round 27** — `docs/RELEASE-PLAN-platterpus.17.md` is
 executed and bannered. It carries a 450 lookup that compares only 450
@@ -2005,13 +2016,10 @@ checksums, the `Accurip 450` match reworded to say it covers one frame, and an
 early failure's log that opens with the banner. There is no consumer-side
 prerequisite. Platterpus's 0.6.61, released 2026-09-27 at
 `platterpus@59f4c00`, carries `FORK_PIN` `221a1df` and `PIN_UNDER_REVIEW` `.17`,
-so their app offers `.17` marked `unapproved` until round 28 reviews it. **Round 28 opens on `.17` before
-its real test**, as rounds 26 and 27 did. **The next release is
-`+platterpus.18`**, and `docs/RELEASE-PLAN-platterpus.18.md` is its plan,
-written before round 28's Full run: a sequence to follow at the close, with
-what `.18` carries so far, upstream's `f8ebf48` included (merged at `1fb6f07`).
-**The operator chose on 2026-09-28: stable, after round 28 closes**, the Full
-run on `.17` first.
+so their app offers `.17` marked `unapproved` until round 28 reviews it. Round
+28 opened on `.17` before its real test, and closed on 2026-09-28 after the
+Full run on it with Platterpus 0.6.61. The operator chose that `.18` would ship
+stable after that close.
 
 **`+platterpus.16` SHIPPED on 2026-09-24** at `221a1df`, `release_seq` 26,
 stable, authorised by **round 26** — `docs/RELEASE-PLAN-platterpus.16.md` is
@@ -2075,8 +2083,8 @@ tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
   That was the operator's call to make, and the plan's job was to put the cost in
   front of them before it was made.
 
-**Plans that exist:** `.5`, `.12`, `.13`, `.14`, `.15`, `.16`, `.17`, all
-executed and bannered, and `.18`, written and not yet executed. `.15`'s is the short case: its round settled the channel, so it poses
+**Plans that exist:** `.5`, `.12`, `.13`, `.14`, `.15`, `.16`, `.17`, `.18`,
+all executed and bannered. `.15`'s is the short case: its round settled the channel, so it poses
 nothing.
 **The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the
 newest, it followed the four-commit sequence exactly, and it is the first to pose
