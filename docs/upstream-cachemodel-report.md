@@ -117,7 +117,7 @@ with image size.
 - Affects `0.9.4-rc1` and anything after `c431d58`, including `0.9.4-rc2` and
   `master` at `f8ebf48`, measured there on 2026-09-27.
 - Real drives were never affected; the guard is on the image drivers only.
-- `-P 0` is byte-perfect on both, so a consumer pinned to `-P 0` sees nothing.
+- `-P 0` is byte-perfect on both, so a caller that always passes `-P 0` sees nothing.
 - Found and fixed downstream in `rmccann-hub/cyanrip` (`platterpus-fork`), where
   the same table is recorded in a comment beside the constant. Happy to open a
   PR if the value is agreed — the reason it is not attached here is that the

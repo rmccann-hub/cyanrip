@@ -84,7 +84,7 @@ to the label below the report.
 **What happens:** a run that takes any of them writes a log with no completion
 report, and then `cyanrip_log_end()` signs that log as though it were whole.
 Observed on this fork: a rip cancelled mid-track produced a signed log with no
-footer, which a consumer's audit read as *"the log was cut off"*.
+footer, which a downstream program checking the log read as *"the log was cut off"*.
 
 **What the fork did:** the footer is written on every route out, inside `end:`,
 after the encoders are joined, and says which route it was (`4cfbe4f`, "Write
