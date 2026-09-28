@@ -308,6 +308,11 @@ SENT = {
     # operator chose closes the round, and names .18 as R8's release.
     "round-28-lap-08.md":
         "547872a5fb473762cae987440e9944a5df4330de4e0bf3a086563ee40b3ccaf9",
+    # Round 29 lap 1, released on the operator's "make and release the next
+    # round". Opens round 29 on .18, the first sent lap in LSL 3, with the
+    # tag change their operator ruled landed and a close condition.
+    "round-29-lap-01.md":
+        "2e275d2f0e82003dd12477eb44b07965eb4ae4e922914e09d7fc8021097a73ab",
 }
 
 failures = 0
