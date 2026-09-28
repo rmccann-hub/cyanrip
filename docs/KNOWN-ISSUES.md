@@ -1212,6 +1212,55 @@ consolidated table of shared-document defects, which is what round 24's lap 1
 cites**, so the bundle has a place to be picked up from rather than a round
 number to go stale.
 
+### The secure re-read's repeat loop: four things for round 29, all upstream's code
+
+**Found by Platterpus reading round 28's Full run**, in their round 28 lap 9
+(S9, S16, S17, S19), and each checked against our source at `e0471f4`, our own
+filed copy of the bundle (`docs/rig-2026-09-28-e0471f4/rips/secure-reread.log`,
+invoked with `-r 3 -Z 2`) and upstream's `f8ebf48`. The code is upstream's in
+all four. None is a defect in `.17` that breaks its pin, and none is fixed in
+`.18`; each changes a P1 or P2 surface, so each is round 29's to announce.
+
+1. **The loop prints its checksum before the final XOR, so it never equals
+   the track's `EAC CRC32:`.** `Repeating ripping (… current checksum %08X)`
+   and `Done; (N out of N matches for current checksum %08X)` print
+   `checksum_ctx.eac_crc` (`cyanrip@e0471f4:src/cyanrip_main.c:1006-1007`,
+   `:1028-1029`). The track block prints that value XORed with `UINT32_MAX`
+   (`src/checksums.h:86`). Track 3's converged read is `Done; (2 out of 2
+   matches for current checksum A62CAD22)` at `secure-reread.log:222` and
+   `EAC CRC32:     59D352DD` at `:260`, and `0x59D352DD ^ 0xFFFFFFFF` is
+   `0xA62CAD22`. So a reader comparing the loop's checksums with AccurateRip,
+   EAC, CTDB or our own track block compares complements, and nothing in the
+   log says so. Platterpus found it by working the arithmetic (their S9). Their
+   parser matches those lines on the counts only and captures no checksum
+   (`platterpus@41f92220:src/platterpus/parsers/cyanrip_log.py:269-273`), so
+   printing the finalised value would not break that parse. It still changes
+   what a P2 line's number means, which is why it needs a round.
+2. **At the repeat limit, the audio kept is the last read** (their S16).
+   Lines 1018-1021 switch encoding on for the read that may be the last, so
+   when the limit is hit, that read is encoded whatever the earlier reads agreed
+   on. Track 5 read `E0036697` twice and then `6902BCF0`, and `6902BCF0` is the
+   read kept (`secure-reread.log:381-385`, `:423`). Their proposal is to keep
+   the read that agreed most. Which bytes land on disk is ours to decide
+   (`docs/OWNERSHIP.md:61`, *"The audio bytes and every checksum over them"*).
+3. **`Done; (no matches found, but hit repeat limit of %i)` is printed whatever
+   the count** (their S17): line 1012's format has no count and never reads
+   `matches`. On track 5 it was true of the read it follows, which matched
+   neither earlier read. It was false of the track, whose first two reads
+   agreed, and that second sense is the one a consumer takes. Platterpus's own
+   parser comment reads the line as *"it gave up without any two reads
+   agreeing"* (`platterpus@41f92220:src/platterpus/parsers/cyanrip_log.py:251`).
+   A `-Z 3 -r 3` rip of three identical reads would print it with two matches.
+   Their `_SECURE_DONE_FAIL` matches `no matches found` (`:273`), so rewording
+   it removes a string a consumer matches on: their both-wordings release comes
+   first (round 20's ordering rule).
+4. **`-Z N` with `-r` of N or less can never converge** (their S19).
+   Convergence needs N matches against earlier reads, so N + 1 reads (`:1005`).
+   The limit counts every read from 0 (`:762`, `:1004`, `:1011`), so `-r N + 1`
+   tolerates no read that disagrees. Our argument parsing accepts `-Z 2 -r 2`.
+   Their settings refuse it now. Refusing it here would turn an invocation that
+   exits 0 today into exit 1, a P1/P4 change.
+
 ---
 
 ## Open, ours, and NOT solvable here — no drive in this environment
@@ -1298,7 +1347,8 @@ Platterpus's protocol is at `docs/handshake-protocol.md`. `OWNERSHIP-v3.md`
 fixes that too. Rows 8–12, `seam-commands.md`, wait for round 26, because the
 fix needs `tools/probe-argv-surface.py` to measure what it asserts.
 **Row 13 was found on 2026-09-28** by a control in the round-28 close
-rehearsal, and is for round 29: it is a gap in §5b, not a false statement.
+rehearsal, and **row 14** the same day, filing Platterpus's round 28 lap 9.
+Both are for round 29, and both are gaps in the spec, not false statements.
 
 **Consolidated 2026-09-22 by the pre-round-24 audit**, read against the four
 files as they stand — byte-identical in both trees, `tools/seam-sync-check.py
@@ -1319,6 +1369,7 @@ version bump would carry, and round 24 proposes it rather than editing it.
 | 7 | `seam-rules.md` S-13 | round 7: *"laps to close: **37 and open**"*, *"releases produced: **0**"* | round 7 closed `GO` at **lap 39** (`round-07-lap-39.md`), and produced one release, `+platterpus.5`, at `release-ledger.tsv` row 11. `CLAUDE.md`'s copy of this table was corrected on 2026-09-16; the shared copy was not | here |
 | 8–12 | `seam-commands.md` | five statements | see that entry's table | *"`docs/seam-commands.md` carries FIVE known-wrong statements"*, above |
 | 13 | `PROTOCOL.md` §5b, rows C39–C40 | step 2 cross-checks the closing file's transcription of the PEER's verdict against the lap its source names | **nothing asks a gate to check the peer's transcription of ITS OWN verdict**, so the two gates can split on one record. Rehearsed 2026-09-28 on copies of our record (control X-c3): our lap 6 `GO`, their lap 7 `GO`, released, at protocol 6, but transcribing our lap 6 as `OPEN`. **Our gate closes the round** on their lap 7 by step 3. **Theirs refuses it**: their closing file is their lap 7, its source names our lap 6, and the values disagree (`platterpus@785925a:scripts/handshake.py:2438-2447`, *"the transcription disagrees with its source"*). Their gate makes them correct their own file, so the split closes itself once they do; until then ours says CLOSED and theirs does not | found by a control in the round-28 close rehearsal, not by a real record. **For round 29, not round 28**: the candidate row is that a gate refuses when the newest peer lap's source names one of the gate's own laps and its `HANDSHAKE-PEER-VERDICT` disagrees with that lap's `HANDSHAKE-VERDICT` |
+| 14 | `PROTOCOL.md` §5, `HANDSHAKE-OUR-VERSION` / `HANDSHAKE-PEER-VERSION` | *"which two programs agreed"* | **the two closing files of round 28 name different Platterpus builds as the party.** Our lap 8 names the build that was tested, `platterpus 0.6.61` at `59f4c00`. Their lap 9 names its own current release, `platterpus 0.6.62` at `9e96fa0` (their `v0.6.62` tag), while its `HANDSHAKE-APP-VERSION` and `HANDSHAKE-TESTED` say 0.6.61. Both are defensible readings. Neither gate cross-checks the two files, so one closed round quotes two different agreements | found 2026-09-28 filing their round 28 lap 9. For round 29: say whether the field names the build under test or the build declaring the verdict |
 
 **Fix row 5 first.** It is a false premise under a rule that may still be
 true. §3 argues that the systematic-gate duty is Platterpus's partly *because*

@@ -1745,9 +1745,9 @@ in three laps or the reform failed.
 2026-09-16, and this paragraph carried the prediction with no result beside it
 for a month:
 
-| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** | **5** | **5** | 3 | **5** |
+| round | 7 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| laps | 39 | 19 | **16** | **17** | 3 | 3 | 3 | 3 | **5** | **5** | **5** | 3 | **5** | **6** | **6** | **9** |
 
 **The measure, stated because two readings of it already exist:** laps is the
 highest `HANDSHAKE-LAP` **either** side declared for the round. Platterpus counts
@@ -1838,7 +1838,19 @@ other side's record **when you release**, not when you draft. A lap drafted
 against one reading and released against another is the elapsed-time defect
 this file records twice.
 
-Re-check: `for r in 15 16 17 18 19 20 21 22 23; do ... grep '^HANDSHAKE-LAP:'
+**Rounds 26 and 27 took six, and round 28 took nine, the most since round 16.**
+All three opened before their real test, by the operator's override of R8 point
+3. In round 28, laps 3 to 7 were all written before either side held the Full
+run's bundle: our 3 and 5, and their 4, 6 and 7. They carried `.18`'s
+announcement, LSL 2 and 3, protocol 6 and the answers to the operator's
+proposal, because round 28 was the round that was open. Laps 8 and 9 are the
+two readings its close conditions require. **The one prediction set for it
+held**: lap 5 S6 said our gate would close on their reading lap with no lap 10
+of ours, and it did, by v6 §5b step 3, on their lap 9. **A round opened before
+its test stays open until the run, and everything either side has to say in
+that time goes into its laps.**
+
+Re-check: `for r in 15 16 17 18 19 20 21 22 23 24 25 26 27 28; do ... grep '^HANDSHAKE-LAP:'
 ...; done`, taking the maximum over `docs/handshake/round-$r-lap-*.md` and
 `docs/handshake/inbound/round-$r-lap-*.md`. Never from the filename — the
 declared field is the fact, and the name is a second description of it.
