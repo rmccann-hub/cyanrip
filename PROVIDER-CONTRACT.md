@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-g3770a32)`
+Build: `cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-gbf50705)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 761969b8752787f6` over `src/*.c` and
+**Source anchor:** `sha256/16 = 0b0b0baa7d92edee` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -212,18 +212,19 @@ requires a handshake round.
 | `cyanrip_encode.c:899` | `Album true peak level:            %.1f dBFS` |
 | `cyanrip_encode.c:914` | `Could not alloc swr context!` |
 | `cyanrip_encode.c:932` | `Could not init swr context!` |
-| `cyanrip_encode.c:1107` | `Error while encoding: %s!` |
-| `cyanrip_encode.c:1129` | `Error encoding: %s!` |
-| `cyanrip_encode.c:1160` | `Error pushing packet to FIFO: %s!` |
-| `cyanrip_encode.c:1167` | `Error writing packet: %s!` |
-| `cyanrip_encode.c:1197` | `Error writing to file: %s!` |
-| `cyanrip_encode.c:1320` | `Codec not found (not compiled in lavc?)!` |
-| `cyanrip_encode.c:1329` | `Unable to init output avctx!` |
-| `cyanrip_encode.c:1340` | `Could not open output codec context!` |
-| `cyanrip_encode.c:1347` | `Couldn't copy codec params!` |
-| `cyanrip_encode.c:1354` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
-| `cyanrip_log.c:1168` | `Log FUN512: %s` |
-| `cyanrip_log.c:1246` | `--- %zu earlier message(s) dropped: buffer full ---` |
+| `cyanrip_encode.c:1076` | `Couldn't set metadata: %s!` |
+| `cyanrip_encode.c:1111` | `Error while encoding: %s!` |
+| `cyanrip_encode.c:1133` | `Error encoding: %s!` |
+| `cyanrip_encode.c:1164` | `Error pushing packet to FIFO: %s!` |
+| `cyanrip_encode.c:1171` | `Error writing packet: %s!` |
+| `cyanrip_encode.c:1201` | `Error writing to file: %s!` |
+| `cyanrip_encode.c:1324` | `Codec not found (not compiled in lavc?)!` |
+| `cyanrip_encode.c:1333` | `Unable to init output avctx!` |
+| `cyanrip_encode.c:1344` | `Could not open output codec context!` |
+| `cyanrip_encode.c:1351` | `Couldn't copy codec params!` |
+| `cyanrip_encode.c:1358` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
+| `cyanrip_log.c:1177` | `Log FUN512: %s` |
+| `cyanrip_log.c:1255` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:58` | `%s%s:` |
 | `cyanrip_log.c:61` | `%s` |
 | `cyanrip_log.c:71` | `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)` |
@@ -289,64 +290,65 @@ requires a handshake round.
 | `cyanrip_log.c:664` | `(matches Accurip DB, confidence %i, one frame only; whole-track checksums not found)` |
 | `cyanrip_log.c:667` | `(not found)` |
 | `cyanrip_log.c:674` | `Metadata:` |
-| `cyanrip_log.c:684` | `%s:` |
-| `cyanrip_log.c:696` | `CD-TEXT:` |
-| `cyanrip_log.c:721` | `Paranoia status counts:` |
-| `cyanrip_log.c:723` | `Scope:         the last of %i reads; the disc totals below sum all of them` |
-| `cyanrip_log.c:727` | `none` |
-| `cyanrip_log.c:750` | `Embedded cover art:\n    %s: %s` |
-| `cyanrip_log.c:753` | `Embedded cover art:\n    %s: %ix%i %s` |
-| `cyanrip_log.c:757` | `File(s):` |
-| `cyanrip_log.c:789` | `cyanrip %s (%s-g%s)` |
-| `cyanrip_log.c:792` | `Invoked as:     %s` |
-| `cyanrip_log.c:813` | `Handshake:      %s%s` |
-| `cyanrip_log.c:817` | `(declared at build time, not verified by cyanrip)` |
-| `cyanrip_log.c:822` | `Consumer:       %s` |
-| `cyanrip_log.c:826` | `(reported by the caller, not verified by cyanrip)` |
-| `cyanrip_log.c:835` | `Drive used:     error retrieving drive info` |
-| `cyanrip_log.c:837` | `Drive used:     %s %s (revision %s)` |
-| `cyanrip_log.c:838` | `System device:  %s` |
-| `cyanrip_log.c:840` | `Device model:   %s` |
-| `cyanrip_log.c:849` | `Offset:         %c%u %s` |
-| `cyanrip_log.c:852` | `Underread:      %c%i %s` |
-| `cyanrip_log.c:852` | `Overread:       %c%i %s` |
-| `cyanrip_log.c:857` | `Underread mode: %s` |
-| `cyanrip_log.c:857` | `Overread mode:  %s` |
-| `cyanrip_log.c:861` | `Speed:          %ix` |
-| `cyanrip_log.c:863` | `Speed:          default (%s)` |
-| `cyanrip_log.c:865` | `C2 errors:      %s` |
-| `cyanrip_log.c:874` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
-| `cyanrip_log.c:879` | `Paranoia level: %s` |
-| `cyanrip_log.c:883` | `Paranoia level: %i` |
-| `cyanrip_log.c:897` | `Retry limit:    %i (per frame, and per whole-track re-read)` |
-| `cyanrip_log.c:900` | `Retry limit:    %i (per whole-track re-read; %i per frame, rounded up to a multiple of 5, the only values libcdio-paranoia checks)` |
-| `cyanrip_log.c:905` | `HDCD decoding:  %s` |
-| `cyanrip_log.c:907` | `Album Art:      %s` |
-| `cyanrip_log.c:911` | `%s%s%s%s%s` |
-| `cyanrip_log.c:919` | `Outputs:` |
-| `cyanrip_log.c:925` | `Disc tracks:    %i` |
-| `cyanrip_log.c:926` | `Tracks to rip:  %s` |
-| `cyanrip_log.c:929` | `%i%s` |
-| `cyanrip_log.c:943` | `AccurateRip:    %s` |
-| `cyanrip_log.c:949` | `Total time:     %s` |
-| `cyanrip_log.c:1013` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:1015` | `Tracks ripped partially accurately: %i/%i` |
-| `cyanrip_log.c:1025` | `Ripping errors: %i` |
-| `cyanrip_log.c:1055` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
-| `cyanrip_log.c:1058` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
-| `cyanrip_log.c:1076` | `Interrupted at: track %i, mid-read` |
-| `cyanrip_log.c:1079` | `Interrupted at: between tracks, no read in progress` |
-| `cyanrip_log.c:1092` | `Rip completed:  no (aborted, %i of %i tracks)` |
-| `cyanrip_log.c:1095` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:1098` | `Ripping finished at %s` |
-| `cyanrip_log.c:923` | `Disc number:    %s` |
-| `cyanrip_log.c:924` | `Total discs:    %s` |
-| `cyanrip_log.c:936` | `DiscID:         %s` |
-| `cyanrip_log.c:937` | `Release ID:     %s` |
-| `cyanrip_log.c:938` | `CDDB ID:        %s` |
-| `cyanrip_log.c:939` | `Disc MCN:       %s` |
-| `cyanrip_log.c:940` | `Album:          %s` |
-| `cyanrip_log.c:941` | `Album artist:   %s` |
+| `cyanrip_log.c:681` | `(not listed: out of memory)` |
+| `cyanrip_log.c:692` | `%s:` |
+| `cyanrip_log.c:705` | `CD-TEXT:` |
+| `cyanrip_log.c:730` | `Paranoia status counts:` |
+| `cyanrip_log.c:732` | `Scope:         the last of %i reads; the disc totals below sum all of them` |
+| `cyanrip_log.c:736` | `none` |
+| `cyanrip_log.c:759` | `Embedded cover art:\n    %s: %s` |
+| `cyanrip_log.c:762` | `Embedded cover art:\n    %s: %ix%i %s` |
+| `cyanrip_log.c:766` | `File(s):` |
+| `cyanrip_log.c:798` | `cyanrip %s (%s-g%s)` |
+| `cyanrip_log.c:801` | `Invoked as:     %s` |
+| `cyanrip_log.c:822` | `Handshake:      %s%s` |
+| `cyanrip_log.c:826` | `(declared at build time, not verified by cyanrip)` |
+| `cyanrip_log.c:831` | `Consumer:       %s` |
+| `cyanrip_log.c:835` | `(reported by the caller, not verified by cyanrip)` |
+| `cyanrip_log.c:844` | `Drive used:     error retrieving drive info` |
+| `cyanrip_log.c:846` | `Drive used:     %s %s (revision %s)` |
+| `cyanrip_log.c:847` | `System device:  %s` |
+| `cyanrip_log.c:849` | `Device model:   %s` |
+| `cyanrip_log.c:858` | `Offset:         %c%u %s` |
+| `cyanrip_log.c:861` | `Underread:      %c%i %s` |
+| `cyanrip_log.c:861` | `Overread:       %c%i %s` |
+| `cyanrip_log.c:866` | `Underread mode: %s` |
+| `cyanrip_log.c:866` | `Overread mode:  %s` |
+| `cyanrip_log.c:870` | `Speed:          %ix` |
+| `cyanrip_log.c:872` | `Speed:          default (%s)` |
+| `cyanrip_log.c:874` | `C2 errors:      %s` |
+| `cyanrip_log.c:883` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
+| `cyanrip_log.c:888` | `Paranoia level: %s` |
+| `cyanrip_log.c:892` | `Paranoia level: %i` |
+| `cyanrip_log.c:906` | `Retry limit:    %i (per frame, and per whole-track re-read)` |
+| `cyanrip_log.c:909` | `Retry limit:    %i (per whole-track re-read; %i per frame, rounded up to a multiple of 5, the only values libcdio-paranoia checks)` |
+| `cyanrip_log.c:914` | `HDCD decoding:  %s` |
+| `cyanrip_log.c:916` | `Album Art:      %s` |
+| `cyanrip_log.c:920` | `%s%s%s%s%s` |
+| `cyanrip_log.c:928` | `Outputs:` |
+| `cyanrip_log.c:934` | `Disc tracks:    %i` |
+| `cyanrip_log.c:935` | `Tracks to rip:  %s` |
+| `cyanrip_log.c:938` | `%i%s` |
+| `cyanrip_log.c:952` | `AccurateRip:    %s` |
+| `cyanrip_log.c:958` | `Total time:     %s` |
+| `cyanrip_log.c:1022` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:1024` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:1034` | `Ripping errors: %i` |
+| `cyanrip_log.c:1064` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
+| `cyanrip_log.c:1067` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
+| `cyanrip_log.c:1085` | `Interrupted at: track %i, mid-read` |
+| `cyanrip_log.c:1088` | `Interrupted at: between tracks, no read in progress` |
+| `cyanrip_log.c:1101` | `Rip completed:  no (aborted, %i of %i tracks)` |
+| `cyanrip_log.c:1104` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:1107` | `Ripping finished at %s` |
+| `cyanrip_log.c:932` | `Disc number:    %s` |
+| `cyanrip_log.c:933` | `Total discs:    %s` |
+| `cyanrip_log.c:945` | `DiscID:         %s` |
+| `cyanrip_log.c:946` | `Release ID:     %s` |
+| `cyanrip_log.c:947` | `CDDB ID:        %s` |
+| `cyanrip_log.c:948` | `Disc MCN:       %s` |
+| `cyanrip_log.c:949` | `Album:          %s` |
+| `cyanrip_log.c:950` | `Album artist:   %s` |
 | `cyanrip_main.c:224` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:232` | `Unable to open device: %s` |
 | `cyanrip_main.c:241` | `Unable to init cddap context!` |
@@ -479,7 +481,7 @@ requires a handshake round.
 | `naming.c:310` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:326` | `Invalid condition syntax!` |
 
-**308 distinct stable lines.**
+**310 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
@@ -751,16 +753,17 @@ must carry the same class.
 | `cyanrip_encode.c:750` | `Error allocating frame: %s!` | both | yes |
 | `cyanrip_encode.c:914` | `Could not alloc swr context!` | wording | yes |
 | `cyanrip_encode.c:932` | `Could not init swr context!` | wording | yes |
-| `cyanrip_encode.c:1107` | `Error while encoding: %s!` | both | yes |
-| `cyanrip_encode.c:1129` | `Error encoding: %s!` | both | yes |
-| `cyanrip_encode.c:1160` | `Error pushing packet to FIFO: %s!` | both | yes |
-| `cyanrip_encode.c:1167` | `Error writing packet: %s!` | both | yes |
-| `cyanrip_encode.c:1197` | `Error writing to file: %s!` | both | yes |
-| `cyanrip_encode.c:1320` | `Codec not found (not compiled in lavc?)!` | control flow | yes |
-| `cyanrip_encode.c:1329` | `Unable to init output avctx!` | both | yes |
-| `cyanrip_encode.c:1340` | `Could not open output codec context!` | both | yes |
-| `cyanrip_encode.c:1347` | `Couldn't copy codec params!` | both | yes |
-| `cyanrip_encode.c:1354` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
+| `cyanrip_encode.c:1076` | `Couldn't set metadata: %s!` | both | yes |
+| `cyanrip_encode.c:1111` | `Error while encoding: %s!` | both | yes |
+| `cyanrip_encode.c:1133` | `Error encoding: %s!` | both | yes |
+| `cyanrip_encode.c:1164` | `Error pushing packet to FIFO: %s!` | both | yes |
+| `cyanrip_encode.c:1171` | `Error writing packet: %s!` | both | yes |
+| `cyanrip_encode.c:1201` | `Error writing to file: %s!` | both | yes |
+| `cyanrip_encode.c:1324` | `Codec not found (not compiled in lavc?)!` | control flow | yes |
+| `cyanrip_encode.c:1333` | `Unable to init output avctx!` | both | yes |
+| `cyanrip_encode.c:1344` | `Could not open output codec context!` | both | yes |
+| `cyanrip_encode.c:1351` | `Couldn't copy codec params!` | both | yes |
+| `cyanrip_encode.c:1358` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
 | `cyanrip_main.c:224` | `No device specified and unable to get default device!` | both | yes |
 | `cyanrip_main.c:232` | `Unable to open device: %s` | both | yes |
 | `cyanrip_main.c:241` | `Unable to init cddap context!` | wording | yes |
@@ -840,9 +843,9 @@ must carry the same class.
 | `naming.c:310` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
 | `naming.c:326` | `Invalid condition syntax!` | both | yes |
 
-**120 distinct strings.** By evidence: 65 both, 19 control flow, 15 wording + goto end, 11 wording, 10 genopt.
+**121 distinct strings.** By evidence: 66 both, 19 control flow, 15 wording + goto end, 11 wording, 10 genopt.
 
-The `control flow` and `both` rows total 84 strings proven reachable on a
+The `control flow` and `both` rows total 85 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
 build a hard failure classifier on.
 
