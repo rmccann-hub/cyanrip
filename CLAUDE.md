@@ -933,7 +933,8 @@ should need rewriting. If it does, that is the defect.
    repository, so it is the maintainer's act, not ours — but **every one is now
    drafted** (2026-09-27): the other twelve are in
    `docs/upstream/defect-reports.md`, each with upstream's `file:line` at
-   `f8ebf48` and our fixing commit, so filing is a copy and paste. The count
+   `f8ebf48` and our fixing commit, and all thirteen are rendered ready to
+   paste in `docs/upstream/issues-to-file.md`. The count
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
 
