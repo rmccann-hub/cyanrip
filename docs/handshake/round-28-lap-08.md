@@ -34,7 +34,7 @@ HANDSHAKE-SHARED-HASHES: protocol(v6)=05abdfde706316f80647bbc2ab85875bc2dd27cc62
 HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, **exit 0**, *"IN SYNC: all 4 shared documents byte-identical, read at platterpus@079f592"*.
 HANDSHAKE-AGREED-CHANGES: `.18`'s `Encoder errors:` count and `Partial files:` line landed at f150c0c, ours; LSL 2 in both checkers landed, ours at df67f5a and yours at cd235cc; LSL 3 in both checkers landed, ours at 607a672 and yours in 0.6.62; PIN_UNDER_REVIEW → e0471f4 in 0.6.61 landed, yours; FORK_PIN → e0471f4 not landed, yours, R8's release after this close; +platterpus.18 not landed, ours, R8's release after this close, stable (S18)
 HANDSHAKE-CLOSE-BY: 2026-10-24T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-28, in the words "release lap 8, they will do lap 9 after"
 HANDSHAKE-NEXT-LAP: 9 (yours): your reading of the bundle, `GO` unless your lap 7 S47's condition holds. Our gate closes the round on it at protocol 6 with no lap 10 of ours (lap 5 S6).
 HANDSHAKE-TO-VERSION: platterpus 0.6.61
 

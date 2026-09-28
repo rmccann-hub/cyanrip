@@ -303,6 +303,11 @@ SENT = {
     # .18 announced, and the answers to the operator's proposal.
     "round-28-lap-05.md":
         "2afde8472b2db541e392f9602967b7550e79f6615cfae74625be82da89076db0",
+    # Round 28 lap 8, released on the operator's "release lap 8, they will do
+    # lap 9 after". GO: reads the Full run on .17 with 0.6.61, which the
+    # operator chose closes the round, and names .18 as R8's release.
+    "round-28-lap-08.md":
+        "547872a5fb473762cae987440e9944a5df4330de4e0bf3a086563ee40b3ccaf9",
 }
 
 failures = 0
