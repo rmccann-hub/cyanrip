@@ -3183,6 +3183,33 @@ def test_v6_closes_on_a_record_that_can_occur():
           f"the v5 control closed, so v6 is not what closes it: {v5.why}")
 
 
+
+def test_v6_step_3_reads_a_source_that_names_only_a_filename():
+    """Covers: C40
+
+    Found rehearsing round 28's close on a copy of the real record: our laps
+    write HANDSHAKE-PEER-VERDICT-SOURCE as "`round-28-lap-04.md`, sha256 ...",
+    and the gate read only "lap N", so a source naming only the filename named
+    no lap and step 3 could never close the round on the newer peer lap. It
+    now reads a filename first, then "lap N", the order Platterpus's gate
+    uses (their LSL amendments 1, H1). THE CONTROL is the same record with
+    the source naming the SAME lap the gate holds, which must resolve to
+    that lap's own verdict rather than supersede it.
+    """
+    src = ("`round-30-lap-02.md`, sha256 `" + "a" * 64 + "`, read at "
+           "`platterpus@1234567`; its S9 is `VERDICT: OPEN`")
+    real = dict(held="round-30-lap-02.md", agreed="none", source=src)
+    with _AtProtocol(6):
+        lp = _v5_resolve(_v5_ours(protocol=6, **real), _v6_theirs())
+        check(lp.closed and "supersedes our transcription of peer lap 2" in lp.why,
+              f"a filename-only source did not let step 3 close on lap 4: {lp.why}")
+        same = dict(real, source=src.replace("round-30-lap-02.md",
+                                             "round-30-lap-04.md"))
+        lp = _v5_resolve(_v5_ours(protocol=6, **same), _v6_theirs())
+        check(not lp.closed and "we transcribe peer OPEN sourced from lap 4" in lp.why,
+              f"a source naming the held lap's own file was not cross-checked "
+              f"against it (C39): {lp.why}")
+
 def test_v6_closing_file_carries_the_agreed_change_ledger():
     """Covers: C44, C45
 

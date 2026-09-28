@@ -205,6 +205,12 @@ PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S.*?)[ \t]*$", re
 PEER_VERDICT_SOURCE_RE = re.compile(
     r"^HANDSHAKE-PEER-VERDICT-SOURCE:[ \t]*(\S.*?)[ \t]*$", re.M)
 PEER_VERDICT_SOURCE_LAP_RE = re.compile(r"\blap[ \t]*(\d+)\b", re.I)
+# A FILENAME FIRST, then "lap N" -- the order Platterpus's gate reads it in
+# (their LSL amendments 1, H1). Reading only "lap N" missed the form our own
+# laps write, "`round-28-lap-04.md`, sha256 ...": no "lap N" in it, so the
+# source named no lap, and v6 §5b step 3 could never close a round on the
+# newer peer lap. Found rehearsing round 28's close on a copy of the record.
+PEER_VERDICT_SOURCE_FILE_RE = re.compile(r"\bround-\d+-lap-(\d+)\.md\b")
 PEER_PIN_RE = re.compile(r"^HANDSHAKE-PEER-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 OUR_VERSION_RE = re.compile(r"^HANDSHAKE-OUR-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
 OUR_PIN_RE = re.compile(r"^HANDSHAKE-OUR-PIN:[ \t]*(\S+)[ \t]*$", re.M)
@@ -731,7 +737,8 @@ class Lap:
                     f"we have declared we hold")
         named = None
         if self.peer_verdict_source:
-            m = PEER_VERDICT_SOURCE_LAP_RE.search(self.peer_verdict_source)
+            m = (PEER_VERDICT_SOURCE_FILE_RE.search(self.peer_verdict_source)
+                 or PEER_VERDICT_SOURCE_LAP_RE.search(self.peer_verdict_source))
             if m:
                 named = int(m.group(1))
         held_lap = None

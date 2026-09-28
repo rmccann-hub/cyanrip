@@ -44,6 +44,15 @@ that would downgrade it. No real response has had that shape, and Platterpus's
 parser ignores the disc-level line. No line's text changes; one line's value
 does, in a case no rip has reached. It is upstream's code too.
 
+**Our gate could not have closed round 28 at their lap 6, and now can.**
+Rehearsing the close on a copy of the real record, with our lap 5 draft at
+protocol 6 and a synthetic `GO` lap 6 of theirs, left the round open: the gate
+found the source lap in `HANDSHAKE-PEER-VERDICT-SOURCE` only as "lap N", and
+our laps write it as a filename, `round-28-lap-04.md`. It now reads a filename
+first, as Platterpus's gate does (their H1). Replaying all 113 laps on file
+changes no round's state; the rehearsal then closes, and its five controls
+stay open, each for its own reason.
+
 **For `.18`: upstream's `f8ebf48` is merged** (`1fb6f07`), on the operator's
 decision of 2026-09-28. MusicBrainz queries retry when the server is busy. Its
 CLI surface was measured first from both binaries, and there is no change.
