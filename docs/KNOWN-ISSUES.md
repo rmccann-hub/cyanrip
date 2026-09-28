@@ -635,6 +635,12 @@ It is a P2 line, and round 27 lap 4 announced it; their lap 5 accepted it.
 `.16` and every log filed before `.17` keep the old tail. The tally label is unchanged: renaming it needs their
 both-wordings release first.
 
+**The first `.17` rip to show it on the drive is round 28's Full run**
+(`docs/rig-2026-09-28-e0471f4/`): section F read track 3 as `15D16895`, a
+wrong read never filed before, and its 450 line reads *"one frame only;
+whole-track checksums not found"* (`rips/full-acceptance-angle-bracket.log:245`),
+while the footer still says `Tracks ripped partially accurately: 2/14`.
+
 **Our answer to their EAC-log wording, sent in round 27 lap 4 and accepted in
 their lap 5: amend one clause, accept the rest.** They proposed, per track, `Only one frame matched AccurateRip
 — rest of track unverified (confidence 200)  [57722DDE]  (AR frame 450)`, and in
@@ -825,7 +831,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: twelve of them**, derived
+session that produced a `Cache probe:` line is here now: thirteen of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -848,6 +854,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-22 `2cce60d` | 251.4 ms | 42.1 ms | 62.9 ms | 67% |
 | 2026-09-24 `df91ae7` | 382.7 ms | 82.2 ms | 95.7 ms | 86% |
 | 2026-09-26 `221a1df` | 362.8 ms | 62.2 ms | 90.7 ms | 69% |
+| 2026-09-28 `e0471f4` | 362.7 ms | 81.3 ms | 90.7 ms | **90%** |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -855,8 +862,8 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, twelve times. "A cached read of a few ms":
-FALSIFIED** — 42 to 82, not 2.2. All twelve end identically, at
+**Hundreds of ms uncached: confirmed, thirteen times. "A cached read of a few ms":
+FALSIFIED** — 42 to 82, not 2.2. All thirteen end identically, at
 `at least 2048 sectors … search ceiling reached`. The tenth, 2026-09-22, is the
 first on `2cce60d` and the first taken inside a full acceptance session; it
 changes nothing, which is the point — **ten runs, three builds, four calibration
@@ -864,7 +871,9 @@ clusters, one answer.** The eleventh, 2026-09-24 on `df91ae7`, round 26's real
 test, calibrated `miss_cost` at 382.7 ms, higher than any row above, and ended
 the same way. The twelfth, 2026-09-26 on `221a1df`, round 27's Full run,
 read 362.8 ms and 62.2 ms, the same two figures as 2026-09-17 to the tenth of a
-millisecond, and ended the same way again.
+millisecond, and ended the same way again. The thirteenth, 2026-09-28 on
+`e0471f4`, round 28's Full run, read 362.7 ms and 81.3 ms, a cached read at
+90% of its threshold, and ended the same way.
 
 **THE FOUR-RUN CONTROL, which is what the missing rows were hiding.** Sessions
 09-10, 09-11, 09-15 and 09-15b calibrated `miss_cost` at **363.2, 362.5, 362.6
@@ -1212,7 +1221,7 @@ coverage.
 
 | gap | status |
 |---|---|
-| `-x` correctness on a real drive | **measured twelve times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-26. This cell said *"measured twice"* while the table above held nine rows |
+| `-x` correctness on a real drive | **measured thirteen times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-28. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
 | damaged media | never tested; no damaged disc available |
