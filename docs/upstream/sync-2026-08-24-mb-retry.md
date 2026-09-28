@@ -93,18 +93,25 @@ prints it on every run rather than only when something changes.
 
 ---
 
-## 3. CLI surface — NOT MEASURED, and deliberately blank
+## 3. CLI surface — MEASURED 2026-09-28: no change
 
-`tools/upstream-delta.py` refuses to derive the flag list from the option
-table, and it is right to: a flag list read from source is a claim about
-behaviour nobody ran (seam-rules S-9). Measuring it needs an upstream build,
-which this analysis did not do.
+**Measured, not predicted.** `tools/upstream-delta.py --fork platterpus-fork
+--upstream master --fork-binary build/src/cyanrip --upstream-binary <a build of
+f8ebf48>`, with the fork at `889a375` and upstream `f8ebf48` built in a scratch
+worktree, reads `--help` from both binaries:
 
-**The file list makes a CLI change unlikely** — `musicbrainz.c` and a struct
-field are not where options live — but *unlikely* is not *measured*, and this
-section says so rather than filling itself in with a guess.
+- **inbound (upstream has, we lack): none**
+- ours only: `--cache-probe`, `--consumer`, `--diagnostics`, `--stall-secs`
 
-Build both and pass `--fork-binary` / `--upstream-binary` before the merge.
+Dependencies: none inbound, none ours only. This section said *NOT MEASURED* for
+five weeks, and said so rather than guessing; the file list's prediction held.
+
+**One reading of that run, to keep:** its log-text section lists **15** inbound
+lines, not 2. Thirteen of them are upstream strings this fork renamed or dropped
+long ago (`Track %_ ripped and encoded successfully!`, `Frame retries:  %_`, …).
+They are in upstream's tree and not in `f8ebf48`'s diff, so a merge, which
+applies the diff since the merge-base `4f28cf0`, brings back none of them. Only
+§2's two lines arrive, and the merged tree is checked for exactly that.
 
 ---
 
