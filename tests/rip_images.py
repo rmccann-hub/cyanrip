@@ -1529,7 +1529,7 @@ def sc_metadata():
         rip(f"meta_{given}", "basic.cue", "-a", f"{given}=Only This")
         log = (WORK / f"out_meta_{given}" / "log.log").read_text()
         for field in (given, other):
-            if not re.search(rf"^    {field}:\s+Only This$", log, re.M):
+            if not re.search(rf"^    {field.upper()}:\s+Only This$", log, re.M):
                 fail(f"metadata: -a {given}=Only This did not leave {field} as "
                      f"'Only This'; the gap-fill is the documented behaviour")
 
@@ -1541,7 +1541,7 @@ def sc_metadata():
     log = (WORK / "out_meta_both" / "log.log").read_text()
     for field, want in (("artist", "Disc Artist"),
                         ("album_artist", "Various Artists")):
-        got = re.findall(rf"^    {field}:\s+(.*)$", log, re.M)
+        got = re.findall(rf"^    {field.upper()}:\s+(.*)$", log, re.M)
         if not got:
             fail(f"metadata: no {field}: line at all with both set")
         elif any(g.strip() != want for g in got):
@@ -4282,9 +4282,13 @@ def _meta_blocks(text):
     against the position, not the file" -- CLAUDE.md already carried the rule
     from sc_status_is_current(); this is the same defect in a new scenario.
 
-    A parsed field renders as `artist:` with padding. A SWALLOWED one never
+    A parsed field renders as `ARTIST:` with padding. A SWALLOWED one never
     renders at all -- its text sits inside the previous value -- so the two
     readings differ in which KEYS EXIST, which is what this returns.
+
+    Keys are returned in lower case. From `.19` the block prints them in
+    capitals (round 29 lap 1), and what this answers is which keys exist, not
+    how they are spelled; sc_tag_keys_in_capitals() is the check on spelling.
     """
     blocks = {}
     for chunk in text.split("  Metadata:")[1:]:
@@ -4293,7 +4297,7 @@ def _meta_blocks(text):
             m = re.match(r"^    (\S+):[ ]+(.*)$", line)
             if not m:
                 break                      # blank line ends the block
-            fields[m.group(1)] = m.group(2).rstrip()
+            fields[m.group(1).lower()] = m.group(2).rstrip()
         if "track" in fields:
             blocks[int(fields["track"])] = fields
     return blocks

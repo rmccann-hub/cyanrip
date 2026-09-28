@@ -89,7 +89,10 @@ VOLATILE = (
     # banner's VERSION equals meson.build's and that the tree was not dirty,
     # which is the claim that matters. This check is about the log's body.
     (re.compile(r"^(cyanrip \S+ \()[^)]*(\))"), r"\1<normalised>\2"),
-    (re.compile(r"^(\s*creation_time:\s+).*$", re.M), r"\1<normalised>"),
+    # Both spellings, and only those: from `.19` the Metadata block prints its
+    # keys in capitals (round 29 lap 1), and every earlier log is lower case.
+    (re.compile(r"^(\s*(?:creation_time|CREATION_TIME):\s+).*$", re.M),
+     r"\1<normalised>"),
     (re.compile(r"^(Ripping finished at ).*$", re.M), r"\1<normalised>"),
     # FUN512 is a checksum OVER the log, so it cannot match across runs once a
     # timestamp inside the log differs. Normalised here because the body it
