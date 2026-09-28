@@ -83,16 +83,16 @@ released build`, which is what `.17` was released on.
   line, and the two `-H` rips of section P3 print `HDCD detected: no` and
   `media: CD` (`session/transcript.txt:1357`, `:1387`, `:1581`, `:1611`).
 - **`rips/cancel-me.log:87` reads `Encoder errors: none; 1 track encoded`**
-  over `0 of 14 tracks`, as every `.17` and earlier log does. That is the line
-  `.18` changes (`f150c0c`).
+  over `0 of 14 tracks`. That is the line `.18` changes (`f150c0c`), to count
+  only tracks whose read completed.
 
-### Track 5, the disc's two stable reads
+### Track 5, read two ways again
 
 `tools/cross-rip.py` over this session finds one track read two ways: track 5,
 `E0036697` in section F's rip and `6902BCF0` in the secure re-read. Both match
 AccurateRip on frame 450 only. Over every filed session including this one,
 `tools/cross-rip.py docs/rig-*` counts 33 reads of track 5: `E0036697` 18
-times, `6902BCF0` 14 and `4065BECC` once. **Each reproduced itself here**:
+times, `6902BCF0` 14 and `4065BECC` once. **Each of this session's two reproduced itself**:
 Platterpus's addendum says its re-read of section F's track 5 reproduced
 `E0036697` byte for byte and converged after 3 reads, and our `-Z 2` pass
 converged on `6902BCF0`. So the same drive, on the same day, converges on either
