@@ -87,6 +87,47 @@ exactly:
 
 No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
 
+### Rehearsed 2026-09-28, end to end, on commits that are on no branch
+
+In a scratch worktree of `3dc07d7`, with a stand-in for our lap 5 (the draft,
+protocol 6, `GO`, its ledger) and a synthetic `GO` lap 6 of theirs at protocol
+6, released. Nothing of it is on `platterpus-fork`.
+
+1. **Gate**: `--release-gate` exits 0, *"Release allowed: every round is
+   closed"*. **Before `3dc07d7` it could not**: the gate found no lap in a
+   source that names only a filename, and the round stayed open until a lap 7
+   of ours. That is the one defect the rehearsal found.
+2. **Bump**: the build reads `cyanrip 0.9.4-rc2+platterpus.18`.
+3. **Regenerate**: `tools/gen-provider-contract.py > PROVIDER-CONTRACT.md`,
+   `tools/gen-golden-reference.py --binary build/src/cyanrip`, and the same
+   with `--interrupted`. All three `--check` exit 0. The interrupted sample
+   carries both `.18` lines and the stop marker.
+4. **Prove**: the full suite passed 88 of 93. **The five failures are the
+   steps a rehearsal skips, and the real sequence must do each**:
+   - our lap 5, well formed, numbered and with its bundle statements
+     (`Lap statements are well formed`);
+   - the handshake README's round-28 row names `round-28-lap-05.md`
+     (`docs_do_not_contradict_themselves`);
+   - `STATUS.md` declares `STATUS-NEWEST-LAP: round-28-lap-05.md`
+     (`status_is_current`);
+   - the changelog names the bump that generated the golden reference and
+     the commit it is committed at (`reference`);
+   - and the `Sanitizer sweep`, which re-runs the three above.
+
+   A `git archive` tarball of the candidate, no `.git`, built with
+   `-Ddeclare_released=true`, reads `cyanrip 0.9.4-rc2+platterpus.18
+   (platterpus-fork-g<candidate>)`. Its rip of `pregap.cue`, with `pregap.bin`
+   copied from `cdda.bin`, logs `Handshake: round 28 lap 5 closed, verdict GO
+   -- released build` and verifies with `-Y`.
+5. **Publish**: ledger row `28 stable 0.9.4-rc2+platterpus.18 <candidate> 28`;
+   `tools/gen-release-manifest.py > release-manifest.json`; then
+   **`tools/gen-release-manifest.py --check release-manifest.json`**, which
+   takes the file as its argument, exits 0. Both channels resolve the
+   candidate at `release_seq` 28, `round_closed: true`.
+
+**With lap 5 at protocol 6, no lap 7 of ours is needed**: once their lap 6 is
+filed and released, the gate closes the round on it, and step 1 is exit 0.
+
 ## 5. What this release does NOT verify
 
 - **Neither `src/` change has run on a drive.** Both are exercised on disc
