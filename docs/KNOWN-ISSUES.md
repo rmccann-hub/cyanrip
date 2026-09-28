@@ -1220,6 +1220,8 @@ filed copy of the bundle (`docs/rig-2026-09-28-e0471f4/rips/secure-reread.log`,
 invoked with `-r 3 -Z 2`) and upstream's `f8ebf48`. The code is upstream's in
 all four. None is a defect in `.17` that breaks its pin, and none is fixed in
 `.18`; each changes a P1 or P2 surface, so each is round 29's to announce.
+**Item 1 is fixed for `.19` at `9669d84`**, announced in round 29 lap 1; the
+other three are proposed there.
 
 1. **The loop prints its checksum before the final XOR, so it never equals
    the track's `EAC CRC32:`.** `Repeating ripping (… current checksum %08X)`
@@ -1235,7 +1237,10 @@ all four. None is a defect in `.17` that breaks its pin, and none is fixed in
    parser matches those lines on the counts only and captures no checksum
    (`platterpus@41f92220:src/platterpus/parsers/cyanrip_log.py:269-273`), so
    printing the finalised value would not break that parse. It still changes
-   what a P2 line's number means, which is why it needs a round.
+   what a P2 line's number means, which is why it needs a round. **Fixed at
+   `9669d84`**: both lines print the finalised value, the comparisons keep the
+   raw one, and `sc_reference` requires each converged track's `Done;` checksum
+   to equal its `EAC CRC32:`.
 2. **At the repeat limit, the audio kept is the last read** (their S16).
    Lines 1018-1021 switch encoding on for the read that may be the last, so
    when the limit is hit, that read is encoded whatever the earlier reads agreed
@@ -1864,15 +1869,19 @@ non-zero everywhere including the edges. Whether Platterpus's is covered is roun
 
 ---
 
-## Open, theirs — tracked here only because it blocks us
+## Retired 2026-09-28: the five Platterpus defects that blocked round 8
 
-Full detail in `docs/handshake/round-08-lap-07.md` §0b and §H. Summarised so
-this file answers "why is the round not closing?" without a second lookup.
+This section was *"Open, theirs — tracked here only because it blocks us"*,
+five rows from `docs/handshake/round-08-lap-07.md` §0b and §H. None has blocked
+anything since round 8 closed. Platterpus's round 28 lap 6 S8 and S9 asked us to
+retire the first four as fixed and to read the fifth as their guard. **Read in
+their tree at `platterpus@764c3e7`, row by row, not taken on their word except
+where it says so:**
 
-| what | round 8 ref |
+| what the row said | now |
 |---|---|
-| a duplicate `drive changed` restarts disc info; the teardown gives the worker 0 ms and SIGKILLs an in-flight ripper | `J11` — **blocking**, this is why no rip exists |
-| a refused command leaves the previous result live, so the next assertion grades the wrong invocation | §H |
-| `wait-for-rip` returns `ok` after `rip` failed | §H |
-| the script language cannot express a literal `"`, so an assertion on a quoted message is unmatchable | §H |
-| the `-t` guard blocks a defect fixed in round 7 lap 32 | §H |
+| a duplicate `drive changed` restarts disc info, and the teardown SIGKILLs an in-flight ripper (`J11`) | **fixed**: the picker emits `drive_changed` only when the device actually changed (`src/platterpus/ui/drive_picker.py:216`) |
+| a refused command leaves the previous result live, so the next assertion grades the wrong invocation | **fixed at its root**: every `cyanrip` step clears the last result first, before anything can refuse it (`src/platterpus/uiscript/runner.py:1588-1599`) |
+| `wait-for-rip` returns `ok` after `rip` failed | **taken on their S8, not re-read**: we did not find the code path |
+| the script language cannot express a literal `"` | **fixed**: the tokeniser unescapes `\"` in a quoted run (`src/platterpus/uiscript/script.py:109`) |
+| the `-t` guard blocks a defect fixed in round 7 lap 32 | **their guard working**: it refuses a malformed `-t` before it reaches any build, and says which builds it protects (`src/platterpus/adapters/cyanrip_backend.py:1456-1463`) |
