@@ -34,7 +34,12 @@ moved only in its build tag, timings, timestamps and log checksum.
 recorded dBAR response, with its expected values read from that disc's rig log
 rather than written by hand. The parse is split out of the fetch as
 `crip_parse_accurip()`, a pure move; no line of the log changes. Writing it
-found that `AccurateRip:    mismatch` could not be printed.
+found that `AccurateRip:    mismatch` could not be printed. **The first version
+of the split also moved a row of the provider contract**: the data error's
+`goto end` became a bare `return;`, and the line left P5a, from which a
+consumer builds its error matcher. The parser now returns an error and the
+fetch prints the line before `goto end`, as `.17` did (`a646d54`), so P5a is
+unchanged against `.17`.
 
 **For `.18`: the disc-level `AccurateRip:` line says `mismatch` or `not found`
 when a response holds no entry for this disc**, instead of `found`, and the

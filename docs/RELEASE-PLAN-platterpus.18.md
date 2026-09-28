@@ -36,15 +36,16 @@ its condition rather than a date.
 | **`Encoder errors:` counts only tracks whose read completed**; its zero arm reads `no whole track was encoded` when a partial file exists; a new P2 line, `Partial files:  N track(s) (list), read not completed; encoder failures: none\|N`, follows it when one does | `f150c0c` | a reader of an interrupted rip's log. Agreed in round 28 (our lap 1 S15, their lap 2 S16), announced in our lap 3 S6–S13 |
 | **`Stopping, ripping incomplete!` is printed whenever a signal stops a track's read**, from one place, `fail:`; it was printed only when the signal landed inside the frame loop | `9d52271` | a reader of a log whose signal landed after a pass's last frame or between `-Z` passes. Same string, one more path; **to announce in round 28's next lap of ours** |
 | **The disc-level `AccurateRip:` line reads `mismatch` or `not found` when a response holds no entry for this disc**, instead of `found`, and no `Tracks ripped accurately:` tally is printed over it, as for a disc not in the database. The status was set to `found` before the loop that would downgrade it | `64642db` | nobody so far: no real response has had that shape. Platterpus's parser ignores the disc-level line (`platterpus@59f4c00:src/platterpus/parsers/cyanrip_log.py:2171`) and reads the per-track rows, which do not change. **To announce in round 28's next lap of ours**, with the stop marker |
-| **The AccurateRip response parse is split out of the fetch**, unchanged, so a recorded response is tested with no network | `5b7493c` | no line changes. **One row leaves the contract's P5a**, `AccuRIP DB data error, got unexpected number of bytes!`, and enters no other class: its exit is now a bare `return;` from the split-out parser, which the generator does not count as a jump, where it was a `goto end`. The text and the effect are unchanged: the disc status is set to error and the function returns 0, as before (`1268ccf`). This row said the line moved within P5, which measuring both contracts showed is not what happened |
+| **The AccurateRip response parse is split out of the fetch**, unchanged, so a recorded response is tested with no network | `5b7493c` | no line changes, and **since `a646d54` no contract row either**. The first version of the split dropped `AccuRIP DB data error, got unexpected number of bytes!` out of P5a altogether (`1268ccf`): its `goto end` became a bare `return;`, which the generator does not count. Platterpus builds its error matcher from P5 and P5a and names that string in a test (`platterpus@785925a:tests/test_ripper_error_surfacing.py:362`), so the parser now returns an error and the fetch prints the line before its `goto end`, as `.17` did. `contract_fatal_inventory` names the string (`108df7e` regenerates the contract) |
 | **Upstream's `f8ebf48`, merged**: MusicBrainz queries retry when the server is busy. Two log lines added (`Retrying in %i seconds (attempt %i out of %i)...`, `MusicBrainz lookup failed, try again later, or disable it via -N`) and two removed (`Connection failed, try again? Or disable via -N`, `Error fetching/requesting/auth, this shouldn't happen.`). No CLI or dependency change, measured from both binaries (`f2d0af3`) | `1fb6f07`, contract `06be426` | nobody who passes `-N`, which Platterpus does on every rip. The second removed string is an entry in their message inventory (`platterpus@785925a:src/platterpus/ripper_message_inventory.py:774`), which goes dormant. **To announce in our next round-28 lap**; merged on the operator's decision of 2026-09-28 |
 | whatever the Full run leads us to fix | — | round 28 lap 1 S8 |
 | tooling and tests: LSL 2 in the lap checker (`df67f5a`), a clean bundle transcript names its population (`f309743`), explicit test timeouts (`126c433`, `df67f5a`), `seam-sync-check.py` fetches `main` by name (`f5ba200`), the `raisesig` shim (`9d52271`), the inert-edit probe before every mutation sweep (`62aed42`), the argv probe's `unobservable` grade (`9207def`), the recorded AccurateRip response test (`5b7493c`, `64642db`), the encoder-failure arms of the log (`27d1616`), and a `seam-check --held` summary that names what it re-checked (`70ac25c`) | as named | our test suite |
 
-`src/` changes at `f150c0c`, `9d52271`, `5b7493c` and `64642db`, and by the upstream merge `1fb6f07`, so far. The CLI is
+`src/` changes at `f150c0c`, `9d52271`, `5b7493c`, `64642db` and `a646d54`, and by the upstream merge `1fb6f07`, so far. The CLI is
 unchanged and `-j` stays `cyanrip-diagnostics/6`.
 
-**A row-by-row diff of `.18`'s contract against `.17`'s, measured at `bd1cc1e`:**
+**A row-by-row diff of `.18`'s contract against `.17`'s, measured at `bd1cc1e` and
+again at `108df7e`:**
 the stable table has 308 rows against 306, **five only in `.18`** (the two
 `Partial files:` arms, `no %strack was encoded`, and upstream's two added
 MusicBrainz lines) and **three only in `.17`** (`no track was encoded` and
@@ -52,9 +53,10 @@ upstream's two removed lines). Platterpus's round 28 lap 4 S6–S7 counted three
 changes before the merge, and were right then. **P5 keeps 120 rows**:
 `MusicBrainz lookup failed, try again later, or disable it via -N` (control
 flow) replaces `Error fetching/requesting/auth, this shouldn't happen.` (both),
-and `Missing DiscID!` moves from `wording` to `wording + goto end`. **P5a has 6
-rows against 7**: the AccurateRip data error leaves (above). Line numbers move
-in `accurip.c`, `cyanrip_main.c` and `musicbrainz.c`.
+and `Missing DiscID!` moves from `wording` to `wording + goto end`. **P5a is
+unchanged**, seven rows, the same strings in the same classes, since `a646d54`
+(above); at `bd1cc1e` it had six. Line numbers move in `accurip.c`,
+`cyanrip_main.c` and `musicbrainz.c`.
 
 ## 3. The channel
 

@@ -1288,6 +1288,8 @@ paragraph: it says every consumer holds its copy at the same path, and
 Platterpus's protocol is at `docs/handshake-protocol.md`. `OWNERSHIP-v3.md`
 fixes that too. Rows 8–12, `seam-commands.md`, wait for round 26, because the
 fix needs `tools/probe-argv-surface.py` to measure what it asserts.
+**Row 13 was found on 2026-09-28** by a control in the round-28 close
+rehearsal, and is for round 29: it is a gap in §5b, not a false statement.
 
 **Consolidated 2026-09-22 by the pre-round-24 audit**, read against the four
 files as they stand — byte-identical in both trees, `tools/seam-sync-check.py
@@ -1307,6 +1309,7 @@ version bump would carry, and round 24 proposes it rather than editing it.
 | 6 | `OWNERSHIP.md` §5 | *"we cannot read each other's source"* | same as row 5 | same |
 | 7 | `seam-rules.md` S-13 | round 7: *"laps to close: **37 and open**"*, *"releases produced: **0**"* | round 7 closed `GO` at **lap 39** (`round-07-lap-39.md`), and produced one release, `+platterpus.5`, at `release-ledger.tsv` row 11. `CLAUDE.md`'s copy of this table was corrected on 2026-09-16; the shared copy was not | here |
 | 8–12 | `seam-commands.md` | five statements | see that entry's table | *"`docs/seam-commands.md` carries FIVE known-wrong statements"*, above |
+| 13 | `PROTOCOL.md` §5b, rows C39–C40 | step 2 cross-checks the closing file's transcription of the PEER's verdict against the lap its source names | **nothing asks a gate to check the peer's transcription of ITS OWN verdict**, so the two gates can split on one record. Rehearsed 2026-09-28 on copies of our record (control X-c3): our lap 6 `GO`, their lap 7 `GO`, released, at protocol 6, but transcribing our lap 6 as `OPEN`. **Our gate closes the round** on their lap 7 by step 3. **Theirs refuses it**: their closing file is their lap 7, its source names our lap 6, and the values disagree (`platterpus@785925a:scripts/handshake.py:2438-2447`, *"the transcription disagrees with its source"*). Their gate makes them correct their own file, so the split closes itself once they do; until then ours says CLOSED and theirs does not | found by a control in the round-28 close rehearsal, not by a real record. **For round 29, not round 28**: the candidate row is that a gate refuses when the newest peer lap's source names one of the gate's own laps and its `HANDSHAKE-PEER-VERDICT` disagrees with that lap's `HANDSHAKE-VERDICT` |
 
 **Fix row 5 first.** It is a false premise under a rule that may still be
 true. §3 argues that the systematic-gate duty is Platterpus's partly *because*
