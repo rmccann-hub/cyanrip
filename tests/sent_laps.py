@@ -298,6 +298,11 @@ SENT = {
     # Full run: .17's contract, the .18 announcement, and LSL 2.
     "round-28-lap-03.md":
         "0a8f3e0fff31cc4d3a968754a17a8cf064e478557c9afd2b110999c251800373",
+    # Round 28 lap 5, released on the operator's "release the lap when
+    # ready". Goes before the Full run: protocol 6 from here on, the rest of
+    # .18 announced, and the answers to the operator's proposal.
+    "round-28-lap-05.md":
+        "2afde8472b2db541e392f9602967b7550e79f6615cfae74625be82da89076db0",
 }
 
 failures = 0
