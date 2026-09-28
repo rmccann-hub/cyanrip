@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-g64642db)`
+Build: `cyanrip 0.9.4-rc2+platterpus.17 (platterpus-fork-g1fb6f07)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 7bcf3bb479999856` over `src/*.c` and
+**Source anchor:** `sha256/16 = c0bc34abeb462ab4` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -452,28 +452,28 @@ requires a handshake round.
 | `genopt.h:564` | `Programming error, incorrect type for: %s` |
 | `genopt.h:575` | `Missing value for argument \"%s\"` |
 | `genopt.h:598` | `Too many values for argument \"%s\" (at most %i)` |
-| `musicbrainz.c:117` | `Invalid disc number %i, release only has %i CDs` |
-| `musicbrainz.c:122` | `Got empty medium list.` |
-| `musicbrainz.c:128` | `No mediums match DiscID!` |
-| `musicbrainz.c:156` | `Medium has no track list.` |
-| `musicbrainz.c:197` | `Could not connect to MusicBrainz.` |
-| `musicbrainz.c:205` | `Missing DiscID!` |
-| `musicbrainz.c:216` | `MusicBrainz query failed: %s` |
-| `musicbrainz.c:223` | `Connection failed, try again? Or disable via -N` |
-| `musicbrainz.c:228` | `Error fetching/requesting/auth, this shouldn't happen.` |
-| `musicbrainz.c:251` | `MusicBrainz lookup failed: DiscID has no associated releases.` |
-| `musicbrainz.c:259` | `MusicBrainz lookup failed: no releases found for DiscID.` |
-| `musicbrainz.c:263` | `Multiple releases found in database for DiscID %s:` |
-| `musicbrainz.c:284` | `%i (ID: %s): %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s` |
-| `musicbrainz.c:298` | `Please specify which release to use by adding the -R argument with an index or ID.` |
-| `musicbrainz.c:303` | `Invalid release index %i specified, only have %i releases!` |
-| `musicbrainz.c:321` | `Release ID %s not found in release list for DiscID %s!` |
-| `musicbrainz.c:352` | `Found MusicBrainz release: %s - %s` |
-| `musicbrainz.c:366` | `MusicBrainz lookup failed, but DiscID has a matching stub, consider verifying the data and creating a release here:` |
-| `musicbrainz.c:370` | `Unable to find release info for this CD, and metadata hasn't been manually added!` |
-| `musicbrainz.c:374` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` |
-| `musicbrainz.c:380` | `Please help improve the MusicBrainz DB by submitting the disc info via the following URL:` |
-| `musicbrainz.c:387` | `To continue add metadata via -a or -t, or ignore via -N!` |
+| `musicbrainz.c:123` | `Invalid disc number %i, release only has %i CDs` |
+| `musicbrainz.c:128` | `Got empty medium list.` |
+| `musicbrainz.c:134` | `No mediums match DiscID!` |
+| `musicbrainz.c:162` | `Medium has no track list.` |
+| `musicbrainz.c:215` | `Could not connect to MusicBrainz.` |
+| `musicbrainz.c:226` | `Missing DiscID!` |
+| `musicbrainz.c:243` | `MusicBrainz query failed: %s` |
+| `musicbrainz.c:257` | `Retrying in %i seconds (attempt %i out of %i)...` |
+| `musicbrainz.c:268` | `MusicBrainz lookup failed, try again later, or disable it via -N` |
+| `musicbrainz.c:285` | `MusicBrainz lookup failed: DiscID has no associated releases.` |
+| `musicbrainz.c:293` | `MusicBrainz lookup failed: no releases found for DiscID.` |
+| `musicbrainz.c:297` | `Multiple releases found in database for DiscID %s:` |
+| `musicbrainz.c:318` | `%i (ID: %s): %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s` |
+| `musicbrainz.c:332` | `Please specify which release to use by adding the -R argument with an index or ID.` |
+| `musicbrainz.c:337` | `Invalid release index %i specified, only have %i releases!` |
+| `musicbrainz.c:355` | `Release ID %s not found in release list for DiscID %s!` |
+| `musicbrainz.c:386` | `Found MusicBrainz release: %s - %s` |
+| `musicbrainz.c:400` | `MusicBrainz lookup failed, but DiscID has a matching stub, consider verifying the data and creating a release here:` |
+| `musicbrainz.c:404` | `Unable to find release info for this CD, and metadata hasn't been manually added!` |
+| `musicbrainz.c:408` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` |
+| `musicbrainz.c:414` | `Please help improve the MusicBrainz DB by submitting the disc info via the following URL:` |
+| `musicbrainz.c:421` | `To continue add metadata via -a or -t, or ignore via -N!` |
 | `naming.c:282` | `Invalid scheme syntax, unterminated \"{\"!` |
 | `naming.c:296` | `Invalid scheme syntax, no \"#\"!` |
 | `naming.c:310` | `Invalid scheme syntax, no terminating \"#\"!` |
@@ -824,23 +824,23 @@ must carry the same class.
 | `genopt.h:564` | `Programming error, incorrect type for: %s` | genopt | yes |
 | `genopt.h:575` | `Missing value for argument \"%s\"` | genopt | yes |
 | `genopt.h:598` | `Too many values for argument \"%s\" (at most %i)` | genopt | yes |
-| `musicbrainz.c:117` | `Invalid disc number %i, release only has %i CDs` | both | yes |
-| `musicbrainz.c:122` | `Got empty medium list.` | control flow | yes |
-| `musicbrainz.c:197` | `Could not connect to MusicBrainz.` | both | yes |
-| `musicbrainz.c:205` | `Missing DiscID!` | wording | yes |
-| `musicbrainz.c:228` | `Error fetching/requesting/auth, this shouldn't happen.` | both | yes |
-| `musicbrainz.c:298` | `Please specify which release to use by adding the -R argument with an index or ID.` | control flow | yes |
-| `musicbrainz.c:303` | `Invalid release index %i specified, only have %i releases!` | both | yes |
-| `musicbrainz.c:321` | `Release ID %s not found in release list for DiscID %s!` | control flow | yes |
-| `musicbrainz.c:366` | `MusicBrainz lookup failed, but DiscID has a matching stub, consider verifying the data and creating a release here:` | control flow | yes |
-| `musicbrainz.c:370` | `Unable to find release info for this CD, and metadata hasn't been manually added!` | both | yes |
-| `musicbrainz.c:374` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` | wording | yes |
+| `musicbrainz.c:123` | `Invalid disc number %i, release only has %i CDs` | both | yes |
+| `musicbrainz.c:128` | `Got empty medium list.` | control flow | yes |
+| `musicbrainz.c:215` | `Could not connect to MusicBrainz.` | both | yes |
+| `musicbrainz.c:226` | `Missing DiscID!` | wording + goto end | yes |
+| `musicbrainz.c:268` | `MusicBrainz lookup failed, try again later, or disable it via -N` | control flow | yes |
+| `musicbrainz.c:332` | `Please specify which release to use by adding the -R argument with an index or ID.` | control flow | yes |
+| `musicbrainz.c:337` | `Invalid release index %i specified, only have %i releases!` | both | yes |
+| `musicbrainz.c:355` | `Release ID %s not found in release list for DiscID %s!` | control flow | yes |
+| `musicbrainz.c:400` | `MusicBrainz lookup failed, but DiscID has a matching stub, consider verifying the data and creating a release here:` | control flow | yes |
+| `musicbrainz.c:404` | `Unable to find release info for this CD, and metadata hasn't been manually added!` | both | yes |
+| `musicbrainz.c:408` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` | wording | yes |
 | `naming.c:282` | `Invalid scheme syntax, unterminated \"{\"!` | both | yes |
 | `naming.c:296` | `Invalid scheme syntax, no \"#\"!` | both | yes |
 | `naming.c:310` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
 | `naming.c:326` | `Invalid condition syntax!` | both | yes |
 
-**120 distinct strings.** By evidence: 66 both, 18 control flow, 14 wording + goto end, 12 wording, 10 genopt.
+**120 distinct strings.** By evidence: 65 both, 19 control flow, 15 wording + goto end, 11 wording, 10 genopt.
 
 The `control flow` and `both` rows total 84 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
@@ -878,8 +878,8 @@ says.
 | `cyanrip_main.c:1011` | `Done; (no matches found, but hit repeat limit of %i)` | goto finalize_ripping | yes |
 | `cyanrip_main.c:2064` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
 | `cyanrip_main.c:2408` | `%s` | goto end | yes |
-| `musicbrainz.c:251` | `MusicBrainz lookup failed: DiscID has no associated releases.` | goto end_meta | yes |
-| `musicbrainz.c:259` | `MusicBrainz lookup failed: no releases found for DiscID.` | goto end_meta | yes |
+| `musicbrainz.c:285` | `MusicBrainz lookup failed: DiscID has no associated releases.` | goto end_meta | yes |
+| `musicbrainz.c:293` | `MusicBrainz lookup failed: no releases found for DiscID.` | goto end_meta | yes |
 
 **6 distinct strings.** By evidence: 2 goto end, 2 goto end_meta, 2 goto finalize_ripping.
 
