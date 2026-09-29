@@ -3,13 +3,13 @@
   "cyanrip": {
     "version": "0.9.4-rc2+platterpus.18",
     "fork_id": "platterpus-fork",
-    "vcs": "51cc611",
-    "handshake": "round 29 lap 3 OPEN, verdict GO (draft — lap not released for reading)",
+    "vcs": "b89cbce",
+    "handshake": "round 29 lap 3 OPEN, verdict GO",
     "released_build_declared": false
   },
-  "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
-  "started_at": "2026-09-29T21:32:39+00:00",
-  "finished_at": "2026-09-29T21:32:40+00:00",
+  "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
+  "started_at": "2026-09-29T22:32:50+00:00",
+  "finished_at": "2026-09-29T22:32:50+00:00",
   "exit_code": 1,
   "cache_probe": {
     "ran": false
@@ -28,7 +28,7 @@
     "paranoia_level": 0,
     "retry_limit": 200,
     "offset_samples": 0,
-    "rip_repeats": 200,
+    "rip_repeats": 199,
     "cd_tracks": 3,
     "tracks": 3,
     "tracks_completed": 0,
@@ -36,7 +36,7 @@
     "interrupted": true,
     "interrupted_by": "SIGTERM",
     "track_state": [
-      {"number":1,"cd_track":1,"repeats":5,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":40993},
+      {"number":1,"cd_track":1,"repeats":5,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":45814},
       {"number":2,"cd_track":2,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
       {"number":3,"cd_track":3,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0}
     ]
@@ -50,9 +50,9 @@
     "Checking pregap.bin for cdrom...",
     "Opening drive...",
     "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!",
-    "cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-g51cc611)",
-    "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
-    "Handshake:      round 29 lap 3 OPEN, verdict GO (draft — lap not released for reading) -- NOT a released build",
+    "cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-gb89cbce)",
+    "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json",
+    "Handshake:      round 29 lap 3 OPEN, verdict GO -- NOT a released build",
     "Consumer:       platterpus/0.6.21",
     "                (reported by the caller, not verified by cyanrip)",
     "Drive used:     libcdio CDRWIN (revision 2.1.)",
@@ -82,16 +82,15 @@
     "    75 frame pregap in track 2, merging into track 1",
     "Tracks:",
     "Ripping track 1, progress - 100.00%, ETA - 0s",
-    "Repeating ripping (0 out of 200 matches for current checksum D36D9296)",
+    "Repeating ripping (0 out of 199 matches for current checksum D36D9296)",
     "Ripping track 1, progress - 100.00%, ETA - 0s",
-    "Repeating ripping (1 out of 200 matches for current checksum D36D9296)",
+    "Repeating ripping (1 out of 199 matches for current checksum D36D9296)",
     "Ripping track 1, progress - 100.00%, ETA - 0s",
-    "Repeating ripping (2 out of 200 matches for current checksum D36D9296)",
+    "Repeating ripping (2 out of 199 matches for current checksum D36D9296)",
     "Ripping track 1, progress - 100.00%, ETA - 0s",
-    "Repeating ripping (3 out of 200 matches for current checksum D36D9296)",
+    "Repeating ripping (3 out of 199 matches for current checksum D36D9296)",
     "Ripping track 1, progress - 100.00%, ETA - 0s",
-    "Repeating ripping (4 out of 200 matches for current checksum D36D9296)",
-    "Ripping track 1, progress - 5.33%, ETA - 0s  ",
+    "Repeating ripping (4 out of 199 matches for current checksum D36D9296)",
     "Flushing encoders...",
     "Stopping, ripping incomplete!",
     "Album Loudness ",
@@ -107,7 +106,7 @@
     "Read stalls:    none (no read exceeded 10s)",
     "Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)",
     "Interrupted at: track 1, mid-read",
-    "Ripping finished at 2026-09-29T21:32:40+00:00"
+    "Ripping finished at 2026-09-29T22:32:50+00:00"
   ],
   "messages_tail": []
 }

@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-g51cc611)
-Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 200 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 29 lap 3 OPEN, verdict GO (draft — lap not released for reading) -- NOT a released build
+cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-gb89cbce)
+Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
+Handshake:      round 29 lap 3 OPEN, verdict GO -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -59,15 +59,15 @@ Gaps:
 
 Tracks:
 
-Repeating ripping (0 out of 200 matches for current checksum D36D9296)
+Repeating ripping (0 out of 199 matches for current checksum D36D9296)
 
-Repeating ripping (1 out of 200 matches for current checksum D36D9296)
+Repeating ripping (1 out of 199 matches for current checksum D36D9296)
 
-Repeating ripping (2 out of 200 matches for current checksum D36D9296)
+Repeating ripping (2 out of 199 matches for current checksum D36D9296)
 
-Repeating ripping (3 out of 200 matches for current checksum D36D9296)
+Repeating ripping (3 out of 199 matches for current checksum D36D9296)
 
-Repeating ripping (4 out of 200 matches for current checksum D36D9296)
+Repeating ripping (4 out of 199 matches for current checksum D36D9296)
 
 Stopping, ripping incomplete!
 Album Loudness Summary:
@@ -101,5 +101,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-09-29T21:32:40+00:00
-Log FUN512: 9Qt0m14jyM8cmL_zJqSy9nNx.bMGNMM.nsR5EWav9.TjroH6tD0yThv1Tr7YS6toygmLUQsxq5lRUnFTNuId7w
+Ripping finished at 2026-09-29T22:32:50+00:00
+Log FUN512: HbIr17apjM0q.iGkqk0zudgVN62l5Wj4u97b95C2vLKfe6_VaK3O6If9XLSh5LS6z_5I9mwGZMgpEMDVkBz52Q
