@@ -222,24 +222,55 @@ commands are safe to repeat would be a guess wearing a derivation's clothes:
 1. **The commit** is the statement's `at:`, else the lap's
    `HANDSHAKE-FROM-COMMIT`. It is the commit the command ran at, checked out
    detached in a scratch worktree of the author's clone and removed afterwards.
+   When a `run:` needs it, `HANDSHAKE-FROM-COMMIT` must name exactly one
+   commit, and an `at:` is a commit and nothing else, `<sha>` or
+   `<side>@<sha>` with no prose beside it; either one otherwise is refused.
 2. **The command is a simple one**: it splits into words with no shell, and has
    none of `| ; & < > $ ( ) * ? [ ] { } \`, a backtick, a newline or an `…`. A
    command that needs a shell, a glob or an elision to mean what it says is not
-   the command that ran. No argument is an absolute path, climbs out with `..`,
-   or asks git to write a file (`--output`).
+   the command that ran. Quotes are allowed, and it is split as a shell would
+   split it, with no shell running. No argument is an absolute path, climbs
+   out with `..` (as a part between `/`, `=` or `:`, so `HEAD:../x` climbs
+   out), asks git to write a file (`--output`), or begins with `#`, which a
+   shell would read as a comment.
 3. **Its program is one of three kinds**: `git` with a read-only query as its
    first word (`log`, `show`, `diff`, `rev-parse`, `merge-base`, `ls-tree`,
    `cat-file`, `rev-list`); `sha256sum` or `wc`; or a file of the author's tree
-   at that commit, run directly or as `python3 PATH`, **whose own first 40
-   lines carry `LSL-RERUN: commit-only`**. That line is the tool's author
-   saying its output depends only on the commit it runs in. A tool that reads
-   the network, a drive, the clock or a moving ref must not carry it. Each side
-   marks its own tools; neither marks the other's.
+   at that commit, run directly or as `python3 PATH` (`python` is not
+   `python3`), **whose own first 40 lines include a line that begins with
+   `LSL-RERUN: commit-only`** once the file's comment marker (`#`, `//`, `/*`,
+   `*`, `--` or `;`) and the spaces after it are taken off. That line is the
+   tool's author saying its output depends only on the commit it runs in. A
+   tool that reads the network, a drive, the clock or a moving ref must not
+   carry it. Each side marks its own tools; neither marks the other's. **A git
+   query can still depend on more than its commit**, and is not re-run when
+   an argument before `--` names a ref other than `HEAD` (a branch, a tag, a
+   remote-tracking ref or a pseudo-ref such as `FETCH_HEAD`, alone, in a range,
+   or with `~`, `^` or `@`), uses `@{`, reads the clone's refs (`--all`,
+   `--branches`, `--tags`, `--remotes`, `--glob`, `--exclude`, `--reflog`),
+   reads the clock (`--since`, `--until`, `--after`, `--before`, `--max-age`,
+   `--min-age`, `--relative-date`, `--date=relative`, `--date=human`, or `%ar`,
+   `%cr`, `%ah` or `%ch` in a `--format` or `--pretty`), or prints where the
+   checkout is (`--show-toplevel`, `--show-prefix`, `--show-cdup`,
+   `--git-dir`, `--absolute-git-dir`, `--git-common-dir`,
+   `--show-superproject-working-tree`, `--git-path`, `--resolve-git-dir`).
 4. **Its result quotes what it printed**: each `"double-quoted"` string in the
    result after `=>` must appear in the output, stdout and stderr together,
    and an `…` inside a quoted string splits it into parts that must appear in
-   that order. A result with no quoted string is prose, and prose is not
-   compared.
+   that order. Only the spaces beside an `…` are taken off a part; a quoted
+   string with no `…` is compared with its spaces. A result with no quoted
+   string is prose, and prose is not compared.
+5. **Its exit status is held to what the result states.** A result states an
+   exit code as `exit N`: literally, lower case, one space between, `exit` a
+   word of its own (not `pre-exit`, not `exited`) and `N` digits not followed
+   by a word character, outside every quoted string, a quoted string being read
+   as a gap between words and never as nothing. A result that states one code
+   is held to it, and may state a non-zero one (`=> exit 1, "refused"`); one
+   that states two different codes is refused when re-run, since no run can
+   satisfy both; and one that states none is `UNCHECKED` when the command
+   exits non-zero. Proposed in cyanrip's round 29 lap 1 (S28), with the shape
+   of `exit N` from Platterpus's round 29 lap 2 (S15), and accepted by both
+   (their lap 2 S12, our lap 3 S27).
 
 **Anything else is reported, not refused**: `UNCHECKED run:` with the reason,
 as `LSL.unchecked`. A network, drive or clock command is never re-run, as

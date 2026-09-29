@@ -822,6 +822,9 @@ with tempfile.TemporaryDirectory() as tmp:
     (repo / "tools" / "bytes.py").write_text(
         "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\n"
         "import sys\nsys.stdout.buffer.write(b'\\xff\\xfe hello 42\\n')\n")
+    # Round 29 lap 1 S29: the marker is a line, not a substring anywhere.
+    (repo / "tools" / "codemark.py").write_text(
+        "#!/usr/bin/env python3\nx = 'LSL-RERUN: commit-only'\nprint('hello 42')\n")
     g(repo, "add", "tools")
     g(repo, "commit", "-q", "-m", "tools")
     at = g(repo, "rev-parse", "--short=12", "HEAD")
@@ -908,6 +911,53 @@ with tempfile.TemporaryDirectory() as tmp:
                         "S2 VERDICT: OPEN\n  basis: S1\n", from_commit=at),
                    empty, "--ours", str(repo)), 1,
             ["[B1]", "does not resolve"])
+    # Round 29 lap 1 S28-S29 and their lap 2 S15, as the shared text now
+    # states them: each case fails if its reading is undone alone.
+    outcome("B1: the marker inside a string of the tool's code does not mark it",
+            rr('python3 tools/codemark.py => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: tools/codemark.py does not declare "
+             "'LSL-RERUN: commit-only'", "0 re-run and matched"])
+    outcome("B1: python is not python3",
+            rr('python tools/say.py => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run:", "0 re-run and matched"])
+    outcome("B1: a word a shell would read as a comment is not re-run",
+            rr('git show HEAD:tools/say.py #x => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: a shell would read '#x' as the start of a comment"])
+    outcome("B1: .. after the colon of REV:path climbs out",
+            rr('git show HEAD:../x => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: names a path outside the tree"])
+    outcome("B1: a git query naming a branch is not re-run, since it moves",
+            rr('git show platterpus-fork:tools/say.py => "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: platterpus-fork:tools/say.py names the ref "
+             "platterpus-fork, which can move"])
+    outcome("B1: a git query reading the clock is not re-run",
+            rr('git log -1 --format=%ar => "ago"', "--rerun"), 0,
+            ["UNCHECKED run: --format=%ar reads the clock"])
+    outcome("B1: a git query printing the checkout's path is not re-run",
+            rr('git rev-parse --show-toplevel => "ours"', "--rerun"), 0,
+            ["UNCHECKED run: --show-toplevel prints where the checkout is"])
+    outcome("B1: a quoted string with no elision keeps its spaces",
+            rr('python3 tools/say.py => " hello 42"', "--rerun"), 1,
+            ["[B1]", "does not contain the quoted result \" hello 42\""])
+    outcome("B1: the spaces beside an elision come off",
+            rr('python3 tools/say.py => "hello …42"', "--rerun"), 0,
+            ["1 re-run and matched"])
+    outcome("B1: pre-exit 1 states no exit code",
+            rr('python3 tools/fails.py => pre-exit 1, "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: it exited 1, and its result does not say it "
+             "expected a non-zero exit"])
+    outcome("B1: exit with two spaces states no exit code",
+            rr('python3 tools/fails.py => exit  1, "hello 42"', "--rerun"), 0,
+            ["UNCHECKED run: it exited 1, and its result does not say it "
+             "expected a non-zero exit"])
+    outcome("B1: a result stating two different exit codes is refused",
+            rr('python3 tools/fails.py => exit 1, exit 2, "hello 42"', "--rerun"), 1,
+            ["[B1]", "its result states 2 different exit codes, 1, 2"])
+    outcome("B1: a quoted string is a gap between words, so ex\"…\"it 1 "
+            "states no code",
+            rr('python3 tools/fails.py => ex"hello 42"it 1', "--rerun"), 0,
+            ["UNCHECKED run: it exited 1, and its result does not say it "
+             "expected a non-zero exit"])
     left = g(repo, "worktree", "list").splitlines()
     if len(left) != 1:
         fail(f"B1: --rerun left worktrees behind in the author's clone: {left}")

@@ -208,8 +208,33 @@ RERUN_MARK = "LSL-RERUN: commit-only"
 GIT_READ = {"log", "show", "diff", "rev-parse", "merge-base", "ls-tree",
             "cat-file", "rev-list"}
 PLAIN = {"sha256sum", "wc"}
-INTERPRETERS = {"python3", "python"}
+# `python` is not `python3`: the text names python3, and which interpreter
+# `python` is depends on the machine (round 29 lap 1 S29).
+INTERPRETERS = {"python3"}
 NOT_SIMPLE = set("|;&<>`$()*?[]{}\\\n") | {"…"}
+# The marker counts as a LINE that begins with it once the file's comment
+# marker and the spaces after it are off, not as a substring anywhere, so a
+# string in the tool's code that happens to spell it does not mark it.
+MARK_LINE_RE = re.compile(r"^\s*(?:#+|//+|/\*+|\*+|--|;+)?\s*"
+                          + re.escape(RERUN_MARK))
+# `exit N` as a result states it (their round 29 lap 2 S15): lower case, one
+# space, `exit` a word of its own and N digits that are not the start of a
+# longer word, read outside the quotes with each quote a gap between words.
+EXIT_RE = re.compile(r"(?<![\w-])exit ([0-9]{1,9})(?!\w)")
+# What makes a read-only git query depend on more than its commit: a moving
+# ref, the clock, or where the checkout is (round 29 lap 1 S29).
+PSEUDO_REFS = {"FETCH_HEAD", "ORIG_HEAD", "MERGE_HEAD", "CHERRY_PICK_HEAD",
+               "REVERT_HEAD", "REBASE_HEAD", "BISECT_HEAD", "AUTO_MERGE"}
+REF_OPTIONS = {"--all", "--branches", "--tags", "--remotes", "--glob",
+               "--exclude", "--reflog"}
+CLOCK_OPTION_RE = re.compile(
+    r"^--(?:since|until|after|before|max-age|min-age)(?:=|$)"
+    r"|^--relative-date$|^--date=(?:relative|human)$")
+CLOCK_FORMAT_RE = re.compile(r"%[ac][rh]")
+LOCATION_OPTIONS = {"--show-toplevel", "--show-prefix", "--show-cdup",
+                    "--git-dir", "--absolute-git-dir", "--git-common-dir",
+                    "--show-superproject-working-tree", "--git-path",
+                    "--resolve-git-dir"}
 QUOTED_RE = re.compile(r'"([^"]+)"')
 AT_RE = re.compile(r"^(?:(cyanrip|platterpus)@)?([0-9a-f]{7,40})$")
 
@@ -864,6 +889,38 @@ def b1_run(lap, line, tag, value, have, at_sha, me_side, resolver, counts):
         lap.warn(line, "LSL.unchecked", f"UNCHECKED run: {detail}")
 
 
+def git_moves(repo, args):
+    """Why a read-only git query depends on more than its commit, or None.
+
+    A ref other than HEAD moves (in the scratch worktree HEAD is the commit),
+    so does anything reading the clone's refs or the clock, and a path to the
+    checkout names the scratch worktree, not what the commit holds. Each turns
+    a re-run into UNCHECKED and never into a refusal (round 29 lap 1 S29)."""
+    listed = git(repo, "for-each-ref", "--format=%(refname)%09%(refname:short)")
+    refs = {p for ln in listed.stdout.splitlines() for p in ln.split("\t") if p}
+    for arg in args:
+        if arg == "--":
+            return None  # the rest are paths
+        if arg.startswith("-"):
+            opt = arg.split("=", 1)[0]
+            if CLOCK_OPTION_RE.match(arg) or (
+                    opt in ("--format", "--pretty") and CLOCK_FORMAT_RE.search(arg)):
+                return f"{arg} reads the clock, so its answer is not the commit's alone"
+            if opt in REF_OPTIONS:
+                return f"{arg} reads the clone's refs, which move"
+            if opt in LOCATION_OPTIONS:
+                return f"{arg} prints where the checkout is, not what the commit holds"
+            continue
+        if "@{" in arg:
+            return f"{arg} reads a reflog, which moves"
+        for side in re.split(r"\.\.\.?", arg.split(":", 1)[0].lstrip("^")):
+            base = re.split(r"[~^@]", side, maxsplit=1)[0]
+            if base and base != "HEAD" and (base in refs or base in PSEUDO_REFS):
+                return (f"{arg} names the ref {base}, which can move; only a "
+                        f"SHA or HEAD names what the command ran at")
+    return None
+
+
 def rerun(resolver, side, sha, cmd, result):
     """Re-run one command at one commit of the author's tree, as (verdict,
     detail), verdict one of ok, mismatch, unchecked."""
@@ -879,8 +936,12 @@ def rerun(resolver, side, sha, cmd, result):
     if not quoted:
         return "unchecked", ("its result quotes only an elision, so there is "
                              "nothing to compare")
-    # The result's own `exit N`, outside its quotes, if it states one.
-    declared = re.search(r"\bexit (\d+)\b", QUOTED_RE.sub("", result))
+    # The exit codes the result states outside its quotes, each quote read as
+    # a gap between words so the words either side cannot join into one.
+    stated = []
+    for m in EXIT_RE.finditer(QUOTED_RE.sub(" ", result)):
+        if int(m.group(1)) not in stated:
+            stated.append(int(m.group(1)))
     if any(ch in cmd for ch in NOT_SIMPLE):
         return "unchecked", ("not a simple command: it needs a shell, a glob "
                              "or an elision to mean what it says")
@@ -890,8 +951,13 @@ def rerun(resolver, side, sha, cmd, result):
         return "unchecked", f"does not split into words: {e}"
     if not argv:
         return "unchecked", "an empty command"
-    if any(a.startswith("/") or ".." in a.split("/") or
-           a.startswith("--output") for a in argv[1:]):
+    for a in argv:
+        if a.startswith("#"):
+            return "unchecked", (f"a shell would read {a!r} as the start of "
+                                 f"a comment")
+    if any(a.startswith("/") or any(v.startswith("/") for v in a.split("=")[1:])
+           or ".." in re.split(r"[/=:]", a) or a.startswith("--output")
+           for a in argv[1:]):
         return "unchecked", ("names a path outside the tree, or asks to "
                              "write a file")
     if git(repo, "rev-parse", "--verify", "--quiet",
@@ -902,6 +968,9 @@ def rerun(resolver, side, sha, cmd, result):
             return "unchecked", (f"git {argv[1] if len(argv) > 1 else ''} is "
                                  f"not one of the read-only queries "
                                  f"{sorted(GIT_READ)}")
+        why = git_moves(repo, argv[2:])
+        if why:
+            return "unchecked", why
     elif argv[0] not in PLAIN:
         prog = argv[1] if argv[0] in INTERPRETERS and len(argv) > 1 else argv[0]
         shown = git(repo, "show", f"{sha}:{prog}")
@@ -909,10 +978,15 @@ def rerun(resolver, side, sha, cmd, result):
             return "unchecked", (f"{prog} is not a file of {side}'s tree at "
                                  f"{sha}, so it is not one of the author's "
                                  f"committed tools")
-        if RERUN_MARK not in "\n".join(shown.stdout.splitlines()[:40]):
+        if not any(MARK_LINE_RE.match(ln)
+                   for ln in shown.stdout.splitlines()[:40]):
             return "unchecked", (f"{prog} does not declare '{RERUN_MARK}' in "
                                  f"its first 40 lines, so its output may "
                                  f"depend on more than the commit")
+    if len(stated) > 1:
+        return "mismatch", (f"its result states {len(stated)} different exit "
+                            f"codes, {', '.join(map(str, stated))}, and no "
+                            f"run can satisfy them all")
     work = pathlib.Path(tempfile.mkdtemp(prefix="lsl-rerun-"))
     try:
         if git(repo, "worktree", "add", "--detach", "--quiet", str(work),
@@ -948,15 +1022,22 @@ def rerun(resolver, side, sha, cmd, result):
     # The exit status is read (S27, second of four): a result that states
     # `exit N` is held to it, and one that states none is not matched by a
     # command that failed, whatever its error text happens to contain.
-    if declared and status != int(declared.group(1)):
+    if stated and status != stated[0]:
         return "mismatch", (f"it exited {status}, and its result says "
-                            f"exit {declared.group(1)}")
-    if not declared and status != 0:
+                            f"exit {stated[0]}")
+    if not stated and status != 0:
         return "unchecked", (f"it exited {status}, and its result does not "
                              f"say it expected a non-zero exit")
     for q in quoted:
         pos = 0
-        for frag in (f.strip() for f in q.split("…")):
+        parts = q.split("…")
+        for i, frag in enumerate(parts):
+            # Only the spaces beside an elision come off: a quote with none is
+            # compared with its spaces (round 29 lap 1 S29).
+            if i > 0:
+                frag = frag.lstrip()
+            if i < len(parts) - 1:
+                frag = frag.rstrip()
             if not frag:
                 continue
             at = out.find(frag, pos)
