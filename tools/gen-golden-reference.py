@@ -299,12 +299,14 @@ def generate_interrupted(binary):
 
         out = work / "o"
         stdout = work / "run.out"
-        # -Z 200 -r 200 so the rip is long enough to interrupt without racing
-        # its own completion. Same fixture and the same relative -D/-j as the
+        # -Z 199 -r 200 so the rip is long enough to interrupt without racing
+        # its own completion: an image's reads always agree, so each track is
+        # read 200 times. It was -Z 200 -r 200, which round 29's refusal of a
+        # -Z that -r can never let converge now rejects. Same fixture and the same relative -D/-j as the
         # canonical rip, so the two artifacts differ in the interruption and
         # nothing else.
         argv = [str(binary), "-d", "pregap.cue", "-N", "-A", "-Q", "-s", "0",
-                "-o", "flac", "-Z", "200", "-r", "200", "-G",
+                "-o", "flac", "-Z", "199", "-r", "200", "-G",
                 "-F", "{track}", "-L", "sample", "-M", "sheet", "-P", "0",
                 "-u", "platterpus/0.6.21", "-D", "o",
                 "-j", "o/sample.diagnostics.json"]

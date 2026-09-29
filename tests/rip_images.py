@@ -3828,7 +3828,7 @@ def sc_interrupt():
             p = subprocess.Popen(
                 [CRIP, "-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                  "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
-                 "-L", "log", "-M", "sheet", "-Z", "200", "-r", "200",
+                 "-L", "log", "-M", "sheet", "-Z", "199", "-r", "200",
                  "-j", diag],
                 stdout=fh, stderr=subprocess.STDOUT)
 
@@ -4902,7 +4902,7 @@ def sc_interrupt_deadlock():
     p = subprocess.Popen(
         [CRIP, "-d", str(WORK / "basic.cue"), "-N", "-A", "-U", "-s", "0",
          "-P", "0", "-o", "flac", "-D", str(out), "-F", "{track}",
-         "-L", "log", "-M", "sheet", "-Z", "200", "-r", "200"],
+         "-L", "log", "-M", "sheet", "-Z", "199", "-r", "200"],
         stdout=wfd, stderr=subprocess.STDOUT)
     os.close(wfd)
 
@@ -5641,6 +5641,46 @@ def sc_repeat_limit():
         if "  Secure re-read:  did NOT converge after 3 reads (repeat limit hit)" not in lines:
             fail(f"repeat_limit: cycle {cycle} run {run}: the track block does not say the "
                  f"secure re-read hit the limit")
+
+
+def sc_zr_refusal():
+    """-Z N WITH -r OF N OR LESS IS REFUSED, BECAUSE IT CAN NEVER CONVERGE.
+
+    ROUND 29 LAP 1 S40. `-Z N` converges when N + 1 whole-track reads agree,
+    and -r stops re-reading after that many reads, counting the first, so `-Z
+    N -r N` read every track N times and verified none, on any disc -- while
+    each value was in range on its own. It is now refused before any disc is
+    opened, with both values and a remedy that exists. Platterpus refuses the
+    same pair at their argv chokepoint (their round 29 lap 2 S23).
+
+    The boundary is asserted both ways, -r N refused and -r N + 1 accepted, so
+    moving `<=` to `<` fails one of them. -Z INT32_MAX has no -r large enough,
+    so its remedy must not name one: `-r` is capped at INT32_MAX.
+    """
+    base = ("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0", "-I")
+    cases = (
+        (("-Z", "2", "-r", "2"), 1,
+         "-Z 2 can never converge with -r 2: it needs 3 reads to agree, and -r 2 "
+         "never allows that many. Use -r 3 or more!"),
+        (("-Z", "1", "-r", "0"), 1,
+         "-Z 1 can never converge with -r 0: it needs 2 reads to agree, and -r 0 "
+         "never allows that many. Use -r 2 or more!"),
+        (("-Z", "2147483647"), 1,
+         "-Z 2147483647 can never converge with -r 10: it needs 2147483648 reads "
+         "to agree, more than any -r allows. Use a smaller -Z!"),
+        (("-Z", "2", "-r", "3"), 0, None),
+        (("-Z", "0", "-r", "0"), 0, None),
+    )
+    for args, want_ec, want_line in cases:
+        ec, out = crip(*base, *args)
+        shown = " ".join(args)
+        if ec != want_ec:
+            fail(f"zr_refusal: {shown} exited {ec}, not {want_ec}")
+        lines = out.splitlines()
+        if want_line is not None and want_line not in lines:
+            fail(f"zr_refusal: {shown} did not print, at column 0, {want_line!r}")
+        if want_line is None and any("can never converge" in ln for ln in lines):
+            fail(f"zr_refusal: {shown} can converge, and was refused")
 
 
 def sc_abort_footer():

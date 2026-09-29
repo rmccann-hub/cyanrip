@@ -647,6 +647,7 @@ rip_scenarios = [
     'abort_footer',
     'bad_sector',
     'repeat_limit',
+    'zr_refusal',
 ]
 
 # The scenarios are told which build configuration they are testing, because

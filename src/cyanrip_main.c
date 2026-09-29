@@ -2055,6 +2055,27 @@ static int cyanrip_run(int argc, char **argv)
         return 1;
     }
 
+    /* -Z N converges when N + 1 whole-track reads agree, the latest matching N
+     * earlier ones, and -r stops re-reading after that many reads, counting
+     * the first. So -r of N or less reads every track -r times and verifies
+     * none, on any disc, and each value was in range on its own. Found in
+     * round 29 lap 1 (S40); Platterpus refuses the same pair before it reaches
+     * us. 64-bit, because -Z INT32_MAX + 1 does not fit an int. */
+    if (settings.ripping_retries > 0 &&
+        settings.max_retries <= settings.ripping_retries) {
+        const long long need = (long long)settings.ripping_retries + 1;
+        if (need <= INT32_MAX)
+            cyanrip_log(ctx, 0, "-Z %i can never converge with -r %i: it needs %lli reads "
+                        "to agree, and -r %i never allows that many. Use -r %lli or more!\n",
+                        settings.ripping_retries, settings.max_retries, need,
+                        settings.max_retries, need);
+        else
+            cyanrip_log(ctx, 0, "-Z %i can never converge with -r %i: it needs %lli reads "
+                        "to agree, more than any -r allows. Use a smaller -Z!\n",
+                        settings.ripping_retries, settings.max_retries, need);
+        return 1;
+    }
+
     if (settings.generate_cue_only) {
         /* No audio is read or checksummed, and no files to embed art into */
         settings.disable_accurip = 1;
