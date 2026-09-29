@@ -217,3 +217,52 @@ artifacts.
 
 Not filed: the eight `.platterpus.json` per-rip reports and the screenshots.
 Said out loud rather than left to be noticed.
+
+## Rename mapping
+
+**Backfilled 2026-09-29**, derived by hashing each file filed here against
+the members of `platterpusbundle20260915t120109z.tar.gz`; round 16 lap 14 §C's rule, which this filing
+had not followed until then. The first column is how the file is filed
+here, the second how it was delivered.
+
+| filed here | as delivered in their bundle | sha256/16 |
+|---|---|---|
+| `after-cancel.cue` | `album/after cancel 20260915t120109 platterpus-fork-gfe4d2c4/after cancel 20260915t120109 platterpus-fork-gfe4d2c4.cue` | `1b4ee16d1a64f7fd…` |
+| `after-cancel.eac.log` | `album/after cancel 20260915t120109 platterpus-fork-gfe4d2c4/after cancel 20260915t120109 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `db110f04dfc0cbb4…` |
+| `after-cancel.log` | `album/after cancel 20260915t120109 platterpus-fork-gfe4d2c4/after cancel 20260915t120109 platterpus-fork-gfe4d2c4.log` | `29e94d9862f136a4…` |
+| `cancel-me.cue` | `album/cancel me 20260915t120109 platterpus-fork-gfe4d2c4/cancel me 20260915t120109 platterpus-fork-gfe4d2c4.cue` | `0d06a0530376107b…` |
+| `cancel-me.eac.log` | `album/cancel me 20260915t120109 platterpus-fork-gfe4d2c4/cancel me 20260915t120109 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `1ade2f7a460a2087…` |
+| `cancel-me.log` | `album/cancel me 20260915t120109 platterpus-fork-gfe4d2c4/cancel me 20260915t120109 platterpus-fork-gfe4d2c4.log` | `7f779f3177f1e28f…` |
+| `derived-mp3.cue` | `album/derived mp3 20260915t120109 platterpus-fork-gfe4d2c4/derived mp3 20260915t120109 platterpus-fork-gfe4d2c4.cue` | `d00d209b8b2f29fb…` |
+| `derived-mp3.eac.log` | `album/derived mp3 20260915t120109 platterpus-fork-gfe4d2c4/derived mp3 20260915t120109 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `3a428f01320ead9c…` |
+| `derived-mp3.log` | `album/derived mp3 20260915t120109 platterpus-fork-gfe4d2c4/derived mp3 20260915t120109 platterpus-fork-gfe4d2c4.log` | `22dad887f27d8106…` |
+| `derived-wav.cue` | `album/derived wav 20260915t120109 platterpus-fork-gfe4d2c4/derived wav 20260915t120109 platterpus-fork-gfe4d2c4.cue` | `b4623464cac43ebd…` |
+| `derived-wav.eac.log` | `album/derived wav 20260915t120109 platterpus-fork-gfe4d2c4/derived wav 20260915t120109 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `73e8c601f5949228…` |
+| `derived-wav.log` | `album/derived wav 20260915t120109 platterpus-fork-gfe4d2c4/derived wav 20260915t120109 platterpus-fork-gfe4d2c4.log` | `154b6efe3eff2a71…` |
+| `derived-wavpack.cue` | `album/derived wavpack 20260915t120109 platterpus-fork-gfe4d2c4/derived wavpack 20260915t120109 platterpus-fork-gfe4d2c4.cue` | `4d6c9dc246790e12…` |
+| `derived-wavpack.eac.log` | `album/derived wavpack 20260915t120109 platterpus-fork-gfe4d2c4/derived wavpack 20260915t120109 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `ffcb49dc0e3a187f…` |
+| `derived-wavpack.log` | `album/derived wavpack 20260915t120109 platterpus-fork-gfe4d2c4/derived wavpack 20260915t120109 platterpus-fork-gfe4d2c4.log` | `9b9aacd5db48b874…` |
+| `full-acceptance-angle-bracket-2.cue` | `album/full acceptance_ angle_bracket 20260915t12__us-fork-gfe4d2c4 _2_/full acceptance∶ angle‹bracket 20260915t120109 platterpus-fork-gfe4d2c4.cue` | `f017e4e9d0ed0b96…` |
+| `full-acceptance-angle-bracket-2.eac.log` | `album/full acceptance_ angle_bracket 20260915t12__us-fork-gfe4d2c4 _2_/full acceptance∶ angle‹bracket 20260915t120109 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `b6530b1164dba745…` |
+| `full-acceptance-angle-bracket-2.log` | `album/full acceptance_ angle_bracket 20260915t12__us-fork-gfe4d2c4 _2_/full acceptance∶ angle‹bracket 20260915t120109 platterpus-fork-gfe4d2c4.log` | `e3f3ae77d2d9ffe6…` |
+| `full-acceptance-angle-bracket.addendum.txt` | `album/full acceptance_ angle_bracket 20260915t12__terpus-fork-gfe4d2c4/full acceptance∶ angle‹bracket 20260915t120109 platterpus-fork-gfe4d2c4.platterpus-addendum.txt` | `723f071014ceeb99…` |
+| `full-acceptance-angle-bracket.cue` | `album/full acceptance_ angle_bracket 20260915t12__terpus-fork-gfe4d2c4/full acceptance∶ angle‹bracket 20260915t120109 platterpus-fork-gfe4d2c4.cue` | `51580eddbfa6bbd8…` |
+| `full-acceptance-angle-bracket.eac.log` | `album/full acceptance_ angle_bracket 20260915t12__terpus-fork-gfe4d2c4/full acceptance∶ angle‹bracket 20260915t120109 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `6171787e3cd5eeec…` |
+| `full-acceptance-angle-bracket.log` | `album/full acceptance_ angle_bracket 20260915t12__terpus-fork-gfe4d2c4/full acceptance∶ angle‹bracket 20260915t120109 platterpus-fork-gfe4d2c4.log` | `9c639e26ccb2e04d…` |
+| `secure-reread.addendum.txt` | `album/secure reread 20260915t120109 platterpus-fork-gfe4d2c4/secure reread 20260915t120109 platterpus-fork-gfe4d2c4.platterpus-addendum.txt` | `961b8a371a866984…` |
+| `secure-reread.cue` | `album/secure reread 20260915t120109 platterpus-fork-gfe4d2c4/secure reread 20260915t120109 platterpus-fork-gfe4d2c4.cue` | `3af6aa4263d0945f…` |
+| `secure-reread.eac.log` | `album/secure reread 20260915t120109 platterpus-fork-gfe4d2c4/secure reread 20260915t120109 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `dd284bb667f9e321…` |
+| `secure-reread.log` | `album/secure reread 20260915t120109 platterpus-fork-gfe4d2c4/secure reread 20260915t120109 platterpus-fork-gfe4d2c4.log` | `904944ce7f2ac4f0…` |
+| `session/DIAGNOSTICS.txt` | `DIAGNOSTICS.txt` | `d5cedeca94a0ab00…` |
+| `session/MANIFEST.txt` | `MANIFEST.txt` | `fcbf45c60c29e03c…` |
+| `session/SOURCES.txt` | `SOURCES.txt` | `0e379df69e819562…` |
+| `session/config.toml` | `session/artifacts/09platterpus/config.toml` | `1eea184c717254a3…` |
+| `session/platterpus-app-log.txt` | `session/artifacts/02platterpus/log.txt` | `7ce4ae357b952dbd…` |
+| `session/rig-check-argv-probe-output.txt` | `extra1020260915T120109_0000/rig-check/argv-probe-output.txt` | `b43ba567e046a670…` |
+| `session/rig-check-argv-probe.json` | `extra1020260915T120109_0000/rig-check/argv-probe.json` | `44fa6b39b766604d…` |
+| `session/rig-check-manifest.txt` | `extra1020260915T120109_0000/rig-check/MANIFEST.txt` | `47af25b4934e7466…` |
+| `session/rig-check-ripper-version.txt` | `extra1020260915T120109_0000/rig-check/ripper-version.txt` | `d85fa20181278240…` |
+| `session/script-report.json` | `extra1020260915T120109_0000/report.json` | `f9c0eb4359cd354a…` |
+| `session/transcript.txt` | `session/transcript.txt` | `821b006fc180406e…` |
+
+`session/transcript.txt` is also byte-identical to the bundle's `extra1020260915T120109_0000/transcript.txt`.

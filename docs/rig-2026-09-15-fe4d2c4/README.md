@@ -230,3 +230,50 @@ bundle. No audio travelled; per-track CRCs are the record.
 Not filed: the eight `.platterpus.json` per-rip reports (6.2 MB for one of
 them) and 163 screenshots. Said out loud rather than left to be noticed —
 an absence somebody can read is a finding.
+
+## Rename mapping
+
+**Backfilled 2026-09-29**, derived by hashing each file filed here against
+the members of `platterpusbundle20260915t005848z.tar.gz`; round 16 lap 14 §C's rule, which this filing
+had not followed until then. The first column is how the file is filed
+here, the second how it was delivered.
+
+| filed here | as delivered in their bundle | sha256/16 |
+|---|---|---|
+| `after-cancel.cue` | `album/after cancel 20260915t005848 platterpus-fork-gfe4d2c4/after cancel 20260915t005848 platterpus-fork-gfe4d2c4.cue` | `57cc387364dd00d9…` |
+| `after-cancel.eac.log` | `album/after cancel 20260915t005848 platterpus-fork-gfe4d2c4/after cancel 20260915t005848 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `448331bf68309d57…` |
+| `after-cancel.log` | `album/after cancel 20260915t005848 platterpus-fork-gfe4d2c4/after cancel 20260915t005848 platterpus-fork-gfe4d2c4.log` | `b6e5bc77e99fcac4…` |
+| `cancel-me.cue` | `album/cancel me 20260915t005848 platterpus-fork-gfe4d2c4/cancel me 20260915t005848 platterpus-fork-gfe4d2c4.cue` | `0a9dcee2a423295a…` |
+| `cancel-me.eac.log` | `album/cancel me 20260915t005848 platterpus-fork-gfe4d2c4/cancel me 20260915t005848 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `c629e221392db27f…` |
+| `cancel-me.log` | `album/cancel me 20260915t005848 platterpus-fork-gfe4d2c4/cancel me 20260915t005848 platterpus-fork-gfe4d2c4.log` | `23b4108f450404b1…` |
+| `derived-mp3.cue` | `album/derived mp3 20260915t005848 platterpus-fork-gfe4d2c4/derived mp3 20260915t005848 platterpus-fork-gfe4d2c4.cue` | `66d0f69077fd8f4c…` |
+| `derived-mp3.eac.log` | `album/derived mp3 20260915t005848 platterpus-fork-gfe4d2c4/derived mp3 20260915t005848 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `d97cd23cd1b2b1d6…` |
+| `derived-mp3.log` | `album/derived mp3 20260915t005848 platterpus-fork-gfe4d2c4/derived mp3 20260915t005848 platterpus-fork-gfe4d2c4.log` | `092909610babded5…` |
+| `derived-wav.cue` | `album/derived wav 20260915t005848 platterpus-fork-gfe4d2c4/derived wav 20260915t005848 platterpus-fork-gfe4d2c4.cue` | `205decce086bb165…` |
+| `derived-wav.eac.log` | `album/derived wav 20260915t005848 platterpus-fork-gfe4d2c4/derived wav 20260915t005848 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `d931103b8c2d6ba6…` |
+| `derived-wav.log` | `album/derived wav 20260915t005848 platterpus-fork-gfe4d2c4/derived wav 20260915t005848 platterpus-fork-gfe4d2c4.log` | `54922f8d093957cb…` |
+| `derived-wavpack.cue` | `album/derived wavpack 20260915t005848 platterpus-fork-gfe4d2c4/derived wavpack 20260915t005848 platterpus-fork-gfe4d2c4.cue` | `7c2e805f0a3ca3d7…` |
+| `derived-wavpack.eac.log` | `album/derived wavpack 20260915t005848 platterpus-fork-gfe4d2c4/derived wavpack 20260915t005848 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `942443a983aa490a…` |
+| `derived-wavpack.log` | `album/derived wavpack 20260915t005848 platterpus-fork-gfe4d2c4/derived wavpack 20260915t005848 platterpus-fork-gfe4d2c4.log` | `6732fab03e4996ac…` |
+| `full-acceptance-angle-bracket-2.cue` | `album/full acceptance_ angle_bracket 20260915t00__us-fork-gfe4d2c4 _2_/full acceptance∶ angle‹bracket 20260915t005848 platterpus-fork-gfe4d2c4.cue` | `2425450a2f16362c…` |
+| `full-acceptance-angle-bracket-2.eac.log` | `album/full acceptance_ angle_bracket 20260915t00__us-fork-gfe4d2c4 _2_/full acceptance∶ angle‹bracket 20260915t005848 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `2f09cba4b5c4581b…` |
+| `full-acceptance-angle-bracket-2.log` | `album/full acceptance_ angle_bracket 20260915t00__us-fork-gfe4d2c4 _2_/full acceptance∶ angle‹bracket 20260915t005848 platterpus-fork-gfe4d2c4.log` | `5ffd2a13c1ff901b…` |
+| `full-acceptance-angle-bracket.cue` | `album/full acceptance_ angle_bracket 20260915t00__terpus-fork-gfe4d2c4/full acceptance∶ angle‹bracket 20260915t005848 platterpus-fork-gfe4d2c4.cue` | `844e7158282c6db2…` |
+| `full-acceptance-angle-bracket.eac.log` | `album/full acceptance_ angle_bracket 20260915t00__terpus-fork-gfe4d2c4/full acceptance∶ angle‹bracket 20260915t005848 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `887fe8ca851acc18…` |
+| `full-acceptance-angle-bracket.log` | `album/full acceptance_ angle_bracket 20260915t00__terpus-fork-gfe4d2c4/full acceptance∶ angle‹bracket 20260915t005848 platterpus-fork-gfe4d2c4.log` | `cb868a4b76343da7…` |
+| `secure-reread.cue` | `album/secure reread 20260915t005848 platterpus-fork-gfe4d2c4/secure reread 20260915t005848 platterpus-fork-gfe4d2c4.cue` | `01bce166c20e218f…` |
+| `secure-reread.eac.log` | `album/secure reread 20260915t005848 platterpus-fork-gfe4d2c4/secure reread 20260915t005848 platterpus-fork-gfe4d2c4 (EAC-compatible).log` | `110ca73a879134e3…` |
+| `secure-reread.log` | `album/secure reread 20260915t005848 platterpus-fork-gfe4d2c4/secure reread 20260915t005848 platterpus-fork-gfe4d2c4.log` | `a815ace67c58aa68…` |
+| `session/DIAGNOSTICS.txt` | `DIAGNOSTICS.txt` | `c609b13aba11ecb5…` |
+| `session/MANIFEST.txt` | `MANIFEST.txt` | `6b837aadd6f59bc0…` |
+| `session/SOURCES.txt` | `SOURCES.txt` | `e4c6c3a6c430d5c2…` |
+| `session/config.toml` | `session/artifacts/09platterpus/config.toml` | `1eea184c717254a3…` |
+| `session/platterpus-app-log.txt` | `session/artifacts/02platterpus/log.txt` | `d4e8d480862ce569…` |
+| `session/rig-check-argv-probe-output.txt` | `extra1020260915T005848_0000/rig-check/argv-probe-output.txt` | `b99a8e9654ece5f0…` |
+| `session/rig-check-argv-probe.json` | `extra1020260915T005848_0000/rig-check/argv-probe.json` | `da69e8dc8cd9f3bf…` |
+| `session/rig-check-manifest.txt` | `extra1020260915T005848_0000/rig-check/MANIFEST.txt` | `85811c9b344a64ed…` |
+| `session/rig-check-ripper-version.txt` | `extra1020260915T005848_0000/rig-check/ripper-version.txt` | `d85fa20181278240…` |
+| `session/script-report.json` | `extra1020260915T005848_0000/report.json` | `e9c39aa8c5f58259…` |
+| `session/transcript.txt` | `session/transcript.txt` | `da823a45eedc27ae…` |
+
+`session/transcript.txt` is also byte-identical to the bundle's `extra1020260915T005848_0000/transcript.txt`.

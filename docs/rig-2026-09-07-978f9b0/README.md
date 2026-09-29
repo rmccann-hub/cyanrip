@@ -157,3 +157,47 @@ never run on a drive.
    absence of `Interrupted at:` is the finding, not the expectation.
 4. The eight `-j` records were never collected. A relative `-j` path is the
    reason; an absolute one would put them beside the log.
+
+## Rename mapping
+
+**Backfilled 2026-09-29**, derived by hashing each file filed here against
+the members of `platterpusbundle20260907t030712z.tar.gz`; round 16 lap 14 §C's rule, which this filing
+had not followed until then. The first column is how the file is filed
+here, the second how it was delivered.
+
+| filed here | as delivered in their bundle | sha256/16 |
+|---|---|---|
+| `after-cancel.cue` | `album/after cancel 20260907t030712 platterpus-fork-g978f9b0/after cancel 20260907t030712 platterpus-fork-g978f9b0.cue` | `9e9cbb06902853a1…` |
+| `after-cancel.eac.log` | `album/after cancel 20260907t030712 platterpus-fork-g978f9b0/after cancel 20260907t030712 platterpus-fork-g978f9b0 (EAC-compatible).log` | `b6bfd36ff40ac84a…` |
+| `after-cancel.log` | `album/after cancel 20260907t030712 platterpus-fork-g978f9b0/after cancel 20260907t030712 platterpus-fork-g978f9b0.log` | `c7c1e66d19c75b41…` |
+| `cancel-me.cue` | `album/cancel me 20260907t030712 platterpus-fork-g978f9b0/cancel me 20260907t030712 platterpus-fork-g978f9b0.cue` | `59596a9b9a8d8b67…` |
+| `cancel-me.eac.log` | `album/cancel me 20260907t030712 platterpus-fork-g978f9b0/cancel me 20260907t030712 platterpus-fork-g978f9b0 (EAC-compatible).log` | `34bb14d1dab3a160…` |
+| `cancel-me.log` | `album/cancel me 20260907t030712 platterpus-fork-g978f9b0/cancel me 20260907t030712 platterpus-fork-g978f9b0.log` | `b3e31a518251d271…` |
+| `derived-mp3.cue` | `album/derived mp3 20260907t030712 platterpus-fork-g978f9b0/derived mp3 20260907t030712 platterpus-fork-g978f9b0.cue` | `fa5b68a5de4e13b7…` |
+| `derived-mp3.eac.log` | `album/derived mp3 20260907t030712 platterpus-fork-g978f9b0/derived mp3 20260907t030712 platterpus-fork-g978f9b0 (EAC-compatible).log` | `1ef4bbb3bbf870a6…` |
+| `derived-mp3.log` | `album/derived mp3 20260907t030712 platterpus-fork-g978f9b0/derived mp3 20260907t030712 platterpus-fork-g978f9b0.log` | `664bad5727c01f95…` |
+| `derived-wav.cue` | `album/derived wav 20260907t030712 platterpus-fork-g978f9b0/derived wav 20260907t030712 platterpus-fork-g978f9b0.cue` | `0857af578a7d2a9c…` |
+| `derived-wav.eac.log` | `album/derived wav 20260907t030712 platterpus-fork-g978f9b0/derived wav 20260907t030712 platterpus-fork-g978f9b0 (EAC-compatible).log` | `592947fae30d562c…` |
+| `derived-wav.log` | `album/derived wav 20260907t030712 platterpus-fork-g978f9b0/derived wav 20260907t030712 platterpus-fork-g978f9b0.log` | `9585d920a2fac334…` |
+| `derived-wavpack.cue` | `album/derived wavpack 20260907t030712 platterpus-fork-g978f9b0/derived wavpack 20260907t030712 platterpus-fork-g978f9b0.cue` | `3ba9e8884bdcf0c1…` |
+| `derived-wavpack.eac.log` | `album/derived wavpack 20260907t030712 platterpus-fork-g978f9b0/derived wavpack 20260907t030712 platterpus-fork-g978f9b0 (EAC-compatible).log` | `45f86f7d11736224…` |
+| `derived-wavpack.log` | `album/derived wavpack 20260907t030712 platterpus-fork-g978f9b0/derived wavpack 20260907t030712 platterpus-fork-g978f9b0.log` | `38d9009b21583687…` |
+| `full-acceptance-angle-bracket-2.cue` | `album/full acceptance_ angle_bracket 20260907t030712 platterpus-fork-g-2/full acceptance∶ angle‹bracket 20260907t030712 platterpus-fork-g978f9b0.cue` | `37dacf86f62a898a…` |
+| `full-acceptance-angle-bracket-2.eac.log` | `album/full acceptance_ angle_bracket 20260907t030712 platterpus-fork-g-2/full acceptance∶ angle‹bracket 20260907t030712 platterpus-fork-g978f9b0 (EAC-compatible).log` | `36e31897bbcdeaaa…` |
+| `full-acceptance-angle-bracket-2.log` | `album/full acceptance_ angle_bracket 20260907t030712 platterpus-fork-g-2/full acceptance∶ angle‹bracket 20260907t030712 platterpus-fork-g978f9b0.log` | `c5e6b4fc0d0d10b1…` |
+| `full-acceptance-angle-bracket.cue` | `album/full acceptance_ angle_bracket 20260907t030712 platterpus-fork-g/full acceptance∶ angle‹bracket 20260907t030712 platterpus-fork-g978f9b0.cue` | `e40114a30858e6d4…` |
+| `full-acceptance-angle-bracket.eac.log` | `album/full acceptance_ angle_bracket 20260907t030712 platterpus-fork-g/full acceptance∶ angle‹bracket 20260907t030712 platterpus-fork-g978f9b0 (EAC-compatible).log` | `6104da776c39c4d8…` |
+| `full-acceptance-angle-bracket.log` | `album/full acceptance_ angle_bracket 20260907t030712 platterpus-fork-g/full acceptance∶ angle‹bracket 20260907t030712 platterpus-fork-g978f9b0.log` | `319805614a27d006…` |
+| `secure-reread.cue` | `album/secure reread 20260907t030712 platterpus-fork-g978f9b0/secure reread 20260907t030712 platterpus-fork-g978f9b0.cue` | `7b81d88502483b25…` |
+| `secure-reread.eac.log` | `album/secure reread 20260907t030712 platterpus-fork-g978f9b0/secure reread 20260907t030712 platterpus-fork-g978f9b0 (EAC-compatible).log` | `880cb1d14e4be3be…` |
+| `secure-reread.log` | `album/secure reread 20260907t030712 platterpus-fork-g978f9b0/secure reread 20260907t030712 platterpus-fork-g978f9b0.log` | `10a401b061af0e42…` |
+| `session/DIAGNOSTICS.txt` | `DIAGNOSTICS.txt` | `1af2ebaa84534373…` |
+| `session/MANIFEST.txt` | `MANIFEST.txt` | `01ad05fe7709801d…` |
+| `session/SOURCES.txt` | `SOURCES.txt` | `3625671fa3005d6a…` |
+| `session/argv-probe-output.txt` | `extra0920260907T030712_0000/rig-check/argv-probe-output.txt` | `8adfa212a38c33f3…` |
+| `session/config.toml` | `session/artifacts/08platterpus/config.toml` | `bc466ae99ed84df8…` |
+| `session/platterpus-app-log.txt` | `session/artifacts/02platterpus/log.txt` | `b6a59505e4c354ff…` |
+| `session/ripper-version.txt` | `extra0920260907T030712_0000/rig-check/ripper-version.txt` | `e386e7ac571f38e2…` |
+| `session/transcript.txt` | `session/transcript.txt` | `78afdd896883bb50…` |
+
+`session/transcript.txt` is also byte-identical to the bundle's `extra0920260907T030712_0000/transcript.txt`.

@@ -3564,9 +3564,32 @@ def sc_filed_rig_is_mappable():
     row for a file that is gone. It cannot check the DELIVERED names -- the
     tarball is not in the repository, which is exactly why the table is.
     """
-    for bundle in ("rig-2026-09-10-ddc1e8c", "rig-2026-09-11-ddc1e8c",
-                   "rig-2026-09-12-fe4d2c4", "rig-2026-09-28c-51cc789"):
-        _mapping_holds(ROOT / "docs" / bundle)
+    # EVERY FILING WITH A rips/ DIRECTORY, derived from the tree. This listed
+    # three bundles by name, so the six filed after 2026-09-22 carried no
+    # mapping at all for a week and nothing noticed; backfilled 2026-09-29
+    # from their archives, with seven older ones. An exemption names why its
+    # mapping cannot be derived, and goes stale the moment it can.
+    exempt = {
+        "rig-2026-08-26-d9c058c": "its archive was handed to an earlier "
+                                  "session and is not held in this one, so its "
+                                  "mapping cannot be derived from it",
+    }
+    filings = sorted(p.parent.name for p in (ROOT / "docs").glob("rig-*/rips"))
+    if len(filings) < 10:
+        fail(f"filed_rig_is_mappable: only {len(filings)} filings found, so the "
+             f"glob moved and this is checking almost nothing")
+    for name in filings:
+        if name in exempt:
+            print(f"note: filed_rig_is_mappable: {name} not checked: {exempt[name]}")
+            continue
+        _mapping_holds(ROOT / "docs" / name)
+    for name, why in exempt.items():
+        readme = ROOT / "docs" / name / "README.md"
+        if name not in filings:
+            fail(f"filed_rig_is_mappable: {name} is exempt and is not a filing")
+        elif readme.exists() and "| filed here | as delivered" in readme.read_text():
+            fail(f"filed_rig_is_mappable: {name} now carries a mapping, so its "
+                 f"exemption ({why}) is stale")
 
 
 def _mapping_holds(base):
@@ -3598,12 +3621,16 @@ def _mapping_holds(base):
     # IDENTICAL basenames. Our `-2` suffix is the only thing separating them
     # here, so a mapping that collapsed them would lose a distinction their own
     # names could not carry. Four files, four hashes.
+    # A Full run since 2026-09-07 has four (section F's and H's, each with its
+    # EAC export); 09-03's predates section H and has two; a partial run has
+    # none. Whatever the count, the hashes must be distinct.
     ab = sorted(n for n in logs if "angle-bracket" in n)
-    if len(ab) != 4:
-        fail(f"expected 4 angle-bracket logs, found {len(ab)}")
-    elif len({rows[n] for n in ab}) != 4:
-        fail("the two angle-bracket rips do not have four distinct hashes -- "
-             "the -2 suffix is load-bearing and something has collapsed them")
+    if len(ab) not in (0, 2, 4):
+        fail(f"{base.name}: expected 0, 2 or 4 angle-bracket logs, found {len(ab)}")
+    elif len({rows.get(n) for n in ab}) != len(ab):
+        fail(f"{base.name}: the angle-bracket rips do not have {len(ab)} distinct "
+             "hashes -- the -2 suffix is load-bearing and something has "
+             "collapsed them")
 
 
 def sc_runa_block_is_complete():

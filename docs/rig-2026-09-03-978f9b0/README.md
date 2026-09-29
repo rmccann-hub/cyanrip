@@ -219,3 +219,47 @@ field is right. Round 15 is the round that changes it. It is also why
 `session/DIAGNOSTICS.txt`'s banner names `+platterpus.10` while every rip in
 this bundle was made by `+platterpus.11`: the banner names the **approved**
 pair, not the running one.
+
+## Rename mapping
+
+**Backfilled 2026-09-29**, derived by hashing each file filed here against
+the members of `platterpusbundle20260903t110812z.tar.gz`; round 16 lap 14 §C's rule, which this filing
+had not followed until then. The first column is how the file is filed
+here, the second how it was delivered.
+
+| filed here | as delivered in their bundle | sha256/16 |
+|---|---|---|
+| `after-cancel.cue` | `album/after cancel 20260903t110812 platterpus-fork-g978f9b0/after cancel 20260903t110812 platterpus-fork-g978f9b0.cue` | `441b9383300f5648…` |
+| `after-cancel.eac.log` | `album/after cancel 20260903t110812 platterpus-fork-g978f9b0/after cancel 20260903t110812 platterpus-fork-g978f9b0 (EAC-compatible).log` | `54ff56e544ba381e…` |
+| `after-cancel.log` | `album/after cancel 20260903t110812 platterpus-fork-g978f9b0/after cancel 20260903t110812 platterpus-fork-g978f9b0.log` | `4adaea2d71d47173…` |
+| `cancel-me.cue` | `album/cancel me 20260903t110812 platterpus-fork-g978f9b0/cancel me 20260903t110812 platterpus-fork-g978f9b0.cue` | `0fd7836a47d029ae…` |
+| `cancel-me.eac.log` | `album/cancel me 20260903t110812 platterpus-fork-g978f9b0/cancel me 20260903t110812 platterpus-fork-g978f9b0 (EAC-compatible).log` | `f1320766918297ec…` |
+| `cancel-me.log` | `album/cancel me 20260903t110812 platterpus-fork-g978f9b0/cancel me 20260903t110812 platterpus-fork-g978f9b0.log` | `e7a2427b9b1978cf…` |
+| `derived-mp3.cue` | `album/derived mp3 20260903t110812 platterpus-fork-g978f9b0/derived mp3 20260903t110812 platterpus-fork-g978f9b0.cue` | `90a3ce3a537aba0f…` |
+| `derived-mp3.eac.log` | `album/derived mp3 20260903t110812 platterpus-fork-g978f9b0/derived mp3 20260903t110812 platterpus-fork-g978f9b0 (EAC-compatible).log` | `ffc1b62334e0e04d…` |
+| `derived-mp3.log` | `album/derived mp3 20260903t110812 platterpus-fork-g978f9b0/derived mp3 20260903t110812 platterpus-fork-g978f9b0.log` | `2772ed14833daab5…` |
+| `derived-wav.cue` | `album/derived wav 20260903t110812 platterpus-fork-g978f9b0/derived wav 20260903t110812 platterpus-fork-g978f9b0.cue` | `fbdaba6753025d89…` |
+| `derived-wav.eac.log` | `album/derived wav 20260903t110812 platterpus-fork-g978f9b0/derived wav 20260903t110812 platterpus-fork-g978f9b0 (EAC-compatible).log` | `fd87cce5980ed5ce…` |
+| `derived-wav.log` | `album/derived wav 20260903t110812 platterpus-fork-g978f9b0/derived wav 20260903t110812 platterpus-fork-g978f9b0.log` | `a2e7afdb03dd041e…` |
+| `derived-wavpack.cue` | `album/derived wavpack 20260903t110812 platterpus-fork-g978f9b0/derived wavpack 20260903t110812 platterpus-fork-g978f9b0.cue` | `7a7a7ee793b5448c…` |
+| `derived-wavpack.eac.log` | `album/derived wavpack 20260903t110812 platterpus-fork-g978f9b0/derived wavpack 20260903t110812 platterpus-fork-g978f9b0 (EAC-compatible).log` | `ae0f9fa002bf7d57…` |
+| `derived-wavpack.log` | `album/derived wavpack 20260903t110812 platterpus-fork-g978f9b0/derived wavpack 20260903t110812 platterpus-fork-g978f9b0.log` | `e306274dec785b95…` |
+| `full-acceptance-angle-bracket.cue` | `album/full acceptance_ angle_bracket 20260903t110812 platterpus-fork-g/full acceptance∶ angle‹bracket 20260903t110812 platterpus-fork-g978f9b0.cue` | `94476a4028f325bd…` |
+| `full-acceptance-angle-bracket.eac.log` | `album/full acceptance_ angle_bracket 20260903t110812 platterpus-fork-g/full acceptance∶ angle‹bracket 20260903t110812 platterpus-fork-g978f9b0 (EAC-compatible).log` | `c7d52746ada05c58…` |
+| `full-acceptance-angle-bracket.log` | `album/full acceptance_ angle_bracket 20260903t110812 platterpus-fork-g/full acceptance∶ angle‹bracket 20260903t110812 platterpus-fork-g978f9b0.log` | `45097210fc26ac8c…` |
+| `full-acceptance-angle-bracket.platterpus-addendum.txt` | `album/full acceptance_ angle_bracket 20260903t110812 platterpus-fork-g/full acceptance∶ angle‹bracket 20260903t110812 platterpus-fork-g978f9b0.platterpus-addendum.txt` | `758652e2684e6c85…` |
+| `secure-reread.cue` | `album/secure reread 20260903t110812 platterpus-fork-g978f9b0/secure reread 20260903t110812 platterpus-fork-g978f9b0.cue` | `973d6a4455da939e…` |
+| `secure-reread.eac.log` | `album/secure reread 20260903t110812 platterpus-fork-g978f9b0/secure reread 20260903t110812 platterpus-fork-g978f9b0 (EAC-compatible).log` | `806f50deadcacbe2…` |
+| `secure-reread.log` | `album/secure reread 20260903t110812 platterpus-fork-g978f9b0/secure reread 20260903t110812 platterpus-fork-g978f9b0.log` | `1757ce0791d4db20…` |
+| `session/DIAGNOSTICS.txt` | `DIAGNOSTICS.txt` | `5a3dd28bcd1bb99e…` |
+| `session/MANIFEST.txt` | `MANIFEST.txt` | `9919ca4faf7a83b8…` |
+| `session/SOURCES.txt` | `SOURCES.txt` | `65d050165c5ec547…` |
+| `session/report.json` | `extra0920260903T110812_0000/report.json` | `4be8fa1662315484…` |
+| `session/rig-check/MANIFEST.txt` | `extra0920260903T110812_0000/rig-check/MANIFEST.txt` | `b3a1a877282c2338…` |
+| `session/rig-check/argv-probe-output.txt` | `extra0920260903T110812_0000/rig-check/argv-probe-output.txt` | `5203e22e53d8b54a…` |
+| `session/rig-check/argv-probe.json` | `extra0920260903T110812_0000/rig-check/argv-probe.json` | `8fd8a4bd133a4b6a…` |
+| `session/rig-check/ripper-version.txt` | `extra0920260903T110812_0000/rig-check/ripper-version.txt` | `e386e7ac571f38e2…` |
+| `session/transcript.txt` | `session/transcript.txt` | `63fab90d0c9353de…` |
+
+`SHA256SUMS` is ours, not in the bundle: the checksums of the files filed here, written when they were filed (`4153d09ef90f6f1c…`).
+`session/transcript.txt` is also byte-identical to the bundle's `extra0920260903T110812_0000/transcript.txt`.

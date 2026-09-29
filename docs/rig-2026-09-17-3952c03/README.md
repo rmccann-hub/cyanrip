@@ -237,3 +237,20 @@ exit 0
 ```
 
 by `platterpus-fork-g122af59`, not by `3952c03`.
+
+## Rename mapping
+
+**Backfilled 2026-09-29**, derived by hashing each file filed here against
+the members of `platterpusbundle20260917t233651z.tar.gz`; round 16 lap 14 §C's rule, which this filing
+had not followed until then. The first column is how the file is filed
+here, the second how it was delivered.
+
+| filed here | as delivered in their bundle | sha256/16 |
+|---|---|---|
+| `whole-disc-fast-verified.cue` | `album/Every Breath You Take∶ The Classics.cue` | `de2cd974abcc2a4e…` |
+| `whole-disc-fast-verified.eac.log` | `album/Every Breath You Take∶ The Classics (EAC-compatible).log` | `3320ef24eb1482e1…` |
+| `whole-disc-fast-verified.log` | `album/Every Breath You Take∶ The Classics.log` | `960169b78667781e…` |
+| `session/DIAGNOSTICS.txt` | `diagnostics.txt` | `7df2217d9a3d89b6…` |
+| `session/MANIFEST.txt` | `MANIFEST.txt` | `f3983f37256d80a3…` |
+
+`session/SOURCES.txt` is ours, not in the bundle: where each filed file came from, written when they were filed (`bc696fdde65d8427…`).

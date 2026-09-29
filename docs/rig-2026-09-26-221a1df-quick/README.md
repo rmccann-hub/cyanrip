@@ -77,3 +77,30 @@ tarball's `session/run/` order: `75ff5d221debb054` `c0639b3d7d5fc6fa`
 `session/report.json` has all 114 skips `declined_by_size: true` and the last
 step, L1290, passed, and the transcript ends *"every step this quick run ran
 passed"*. The outcome sentence reads a quick run's declined sections as a stop.
+
+## Rename mapping
+
+**Backfilled 2026-09-29**, derived by hashing each file filed here against
+the members of the archive this README names; round 16 lap 14 §C's rule,
+which this filing had not followed until then. The first column is how
+the file is filed here, the second how it was delivered.
+
+| filed here | as delivered in their bundle | sha256/16 |
+|---|---|---|
+| `derived-mp3.cue` | `album/derived mp3 20260926t000413 platterpus-fork-g221a1df.cue` | `424befb1cd88a2eb…` |
+| `derived-mp3.log` | `album/derived mp3 20260926t000413 platterpus-fork-g221a1df.log` | `49f4b6ef41b1e1df…` |
+| `derived-mp3.platterpus.json` | `album/derived mp3 20260926t000413 platterpus-fork-g221a1df.platterpus.json` | `be2cfa5db0bef61e…` |
+| `session/COMPONENTS.json` | `COMPONENTS.json` | `6d4c4dd66afa50fc…` |
+| `session/DIAGNOSTICS.txt` | `DIAGNOSTICS.txt` | `66781958ada452cd…` |
+| `session/MANIFEST.txt` | `MANIFEST.txt` | `82fdd94760d25c77…` |
+| `session/SETTINGS.json` | `SETTINGS.json` | `c370dd3f5555dcb8…` |
+| `session/SOURCES.txt` | `SOURCES.txt` | `4dd4b28124a6981c…` |
+| `session/config.toml` | `session/artifacts/03platterpus/config.toml` | `8d816eea558fa8c8…` |
+| `session/report.json` | `session/run/report.json` | `354ca837d0e6a1d7…` |
+| `session/rig-check-MANIFEST.txt` | `session/run/rig-check/MANIFEST.txt` | `283f43dba4e69989…` |
+| `session/rig-check-argv-probe-output.txt` | `session/run/rig-check/argv-probe-output.txt` | `dae8e715b1a6664c…` |
+| `session/rig-check-argv-probe.json` | `session/run/rig-check/argv-probe.json` | `e7dc0ffbdb5cd222…` |
+| `session/rig-check-ripper-version.txt` | `session/run/rig-check/ripper-version.txt` | `5f3153bbf48a5103…` |
+| `session/transcript.txt` | `session/transcript.txt` | `c2525b537e13e0a7…` |
+
+`session/transcript.txt` is also byte-identical to the bundle's `session/run/transcript.txt`.
