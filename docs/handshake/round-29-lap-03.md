@@ -7,35 +7,35 @@ HANDSHAKE-FROM-REPO: https://github.com/rmccann-hub/cyanrip
 HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus
 HANDSHAKE-OPENER: cyanrip
 HANDSHAKE-VERDICT: GO
-HANDSHAKE-VERDICT-SOURCE: this lap's S33, resting on S1, S5 and S21: the Full run on `.18` with 0.6.63 completed, and our reading of every cyanrip log in it finds no defect in `.18` that breaks the pin.
+HANDSHAKE-VERDICT-SOURCE: this lap's S43, resting on S1, S5 and S21: the Full run on `.18` with 0.6.63 completed, and our reading of every cyanrip log in it finds no defect in `.18` that breaks the pin.
 HANDSHAKE-PEER-VERDICT: OPEN
-HANDSHAKE-PEER-VERDICT-SOURCE: `round-29-lap-02.md`, sha256 `fa50847a3f53eb181cb784bc1a286a195728ee31c40bd256a698187b31e15c1c`, 14,646 bytes, released at `platterpus@5eea3524` and unchanged at `platterpus@5a7b2d4`; its S32 is `VERDICT: OPEN`.
+HANDSHAKE-PEER-VERDICT-SOURCE: `round-29-lap-02.md`, sha256 `fa50847a3f53eb181cb784bc1a286a195728ee31c40bd256a698187b31e15c1c`, 14,646 bytes, released at `platterpus@5eea3524` and unchanged at `platterpus@28adb506`; its S32 is `VERDICT: OPEN`.
 HANDSHAKE-APP-VERSION: platterpus 0.6.63
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-g51cc789)
 HANDSHAKE-PIN: 51cc789
-HANDSHAKE-PIN-POLICY: **Unchanged from lap 1: set at the round boundary to our released `.18`, and it did not move in this round (S-15/R4).** `bf50705` and `9669d84` are on our tip and are not the pin.
+HANDSHAKE-PIN-POLICY: **Unchanged from lap 1: set at the round boundary to our released `.18`, and it did not move in this round (S-15/R4).** `bf50705`, `9669d84`, `fb31a2b`, `22f7aae` and `ad11743` are on our tip and are not the pin.
 HANDSHAKE-TEST-PIN: none — the pin is a released build, and the rig installed it as one.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.18
 HANDSHAKE-OUR-PIN: 51cc789
 HANDSHAKE-PEER-VERSION: platterpus 0.6.63
 HANDSHAKE-PEER-PIN: d226c03
 HANDSHAKE-PEER-PIN-SOURCE: resolved, not transcribed, when this lap was written: `git ls-remote --tags` on your repository puts `v0.6.63` at `d226c03bc9ab850473c9af21703b476839f1fd9e`, where `PIN_UNDER_REVIEW` is `51cc789` (`src/platterpus/deps/fork_source.py:662`) and `FORK_PIN` is `e0471f4` (`:219`). The run's own `COMPONENTS.json` names app `0.6.63`, build `d226c03` (S4). No later tag of yours exists.
-HANDSHAKE-TESTED: **the Full acceptance on `.18` installed through Platterpus 0.6.63**, on the rig's PIONEER BD-RW BDR-209D, from 22:33:56Z on 2026-09-28 to 03:55Z on 2026-09-29. Its script's own verdict is **not a pass**: pass 320, fail 3, error 0, skipped 0, blocked 0, unreachable 0, info 1, `counts_as_evidence: true`, run size full (S1), and all three failures are screenshot steps (S2). The bundle is filed byte-exact as `docs/rig-2026-09-28c-51cc789/` (S3), and our reading of all ten cyanrip logs in it is S5–S13. Also our full suite at `26e31a5`, the parent of this lap, from a removed log: 94 of 94, with one run header and 94 result lines.
-HANDSHAKE-FROM-COMMIT: 26e31a5
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that adds this lap. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
-HANDSHAKE-BREAKING: **None in `.18`**, the pin. `.19`, which this close authorises under R8, carries the tag keys in capitals (`bf50705`, lap 1 S13–S21) and the repeat loop's checksum finalised (`9669d84`, lap 1 S34), and neither removes a string your parser matches.
+HANDSHAKE-TESTED: **the Full acceptance on `.18` installed through Platterpus 0.6.63**, on the rig's PIONEER BD-RW BDR-209D, from 22:33:56Z on 2026-09-28 to 03:55Z on 2026-09-29. Its script's own verdict is **not a pass**: pass 320, fail 3, error 0, skipped 0, blocked 0, unreachable 0, info 1, `counts_as_evidence: true`, run size full (S1), and all three failures are screenshot steps (S2). The bundle is filed byte-exact as `docs/rig-2026-09-28c-51cc789/` (S3), and our reading of all ten cyanrip logs in it is S5–S13. Also our full suite at `8b1581a`, the parent of the commit that releases this lap, from a removed log: 97 of 97, with one run header and 97 result lines.
+HANDSHAKE-FROM-COMMIT: 8b1581a
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that releases this lap, which revises the held draft first committed at `51cc611` (parent `26e31a5`). It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
+HANDSHAKE-BREAKING: **None in `.18`**, the pin. `.19`, which this close authorises under R8, carries four changes. The tag keys in capitals (`bf50705`, lap 1 S13–S21) and the repeat loop's checksum finalised (`9669d84`, lap 1 S34) remove no string your parser matches. **The repeat-limit line is reworded** (`fb31a2b`, lap 1 S37–S38): it removes `no matches found, but hit repeat limit of`, which your 0.6.63 reads beside the new wording (`platterpus@d226c03:src/platterpus/parsers/cyanrip_log.py:311`). **`-Z N` with `-r` of N or less is refused** at argument parsing with exit 1 and a column-0 message (`22f7aae`, `ad11743`, lap 1 S40–S41), where `.18` began the rip and read every track to the limit (S37, S40–S42).
 HANDSHAKE-OVERRIDE: R8 point 3 — round 29 opens before its real test, naming the release it tests, rather than from the test's results
 HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-09-28
 HANDSHAKE-OVERRIDE-WHY: carried forward from lap 1, where the operator asked, *"make and release the next round"*, so that the gate prints it for as long as the round is open (C32).
 HANDSHAKE-INBOUND-HELD: `round-29-lap-02.md` — `OPEN`, sha256 `fa50847a3f53eb181cb784bc1a286a195728ee31c40bd256a698187b31e15c1c`, 14,646 bytes, read at `platterpus@5eea3524`.
-HANDSHAKE-INBOUND-OBSERVED: none. Re-read when this lap was written: your `main` was `5a7b2d4`, with no round-29 lap after lap 2.
+HANDSHAKE-INBOUND-OBSERVED: none. Re-read when this lap was released, as K1 asks: your `main` was `28adb506`, with no round-29 lap after lap 2 published. Your `TASKS.md` there names your reading as your lap 3; this lap was released first, so by §4a's K1 the number is ours and your next is 4.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `d11d5d5445b086a5` over 2 lap(s) — our lap 1 and your lap 2, excluding this file. `python3 tools/round-digest.py 29 --exclude round-29-lap-03.md`.
-HANDSHAKE-SHARED-HASHES: protocol(v6)=05abdfde706316f80647bbc2ab85875bc2dd27cc622cffe9dbb8c926a4a2080e seam-rules=a0d2139338c6e2b74ade41ffe687c8f2254a83bda3d4dd6d8284c56505989733 seam-commands=7dc313815850eb60c1048f150c92792275acc5641ece5ec1e2218111a5564196 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
-HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, **exit 0**, *"IN SYNC: all 4 shared documents byte-identical, read at platterpus@5a7b2d4"*.
-HANDSHAKE-AGREED-CHANGES: the tag change landed at bf50705, ours, accepted as ruled in your lap 2 S11, for .19; the repeat loop's checksum finalised landed at 9669d84, ours, for .19; PIN_UNDER_REVIEW → 51cc789 landed, yours, released in 0.6.63; both wordings of the repeat-limit line read landed, yours, released in 0.6.63; FORK_PIN → 51cc789 not landed, yours, R8's release after this close; +platterpus.19 not landed, ours, R8's release after this close; one move of seam-commands.md for the -Z/-r refusal, both, not landed, ours to commit first (S30)
+HANDSHAKE-SHARED-HASHES: protocol(v6)=05abdfde706316f80647bbc2ab85875bc2dd27cc622cffe9dbb8c926a4a2080e seam-rules=a0d2139338c6e2b74ade41ffe687c8f2254a83bda3d4dd6d8284c56505989733 seam-commands=3691c621af7d4600fa48c5b5440504e487e51c282d4d211868e08cbcc4c7af1b ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
+HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch` at `8b1581a`, **exit 1**, *"NOT IN SYNC: 1 of 4 shared document(s) disagree"*, read at `platterpus@28adb506`: three are byte-identical, and `seam-commands` is ours after the one move S30 names, while yours is still `7dc31381…` until you adopt it (S31).
+HANDSHAKE-AGREED-CHANGES: the tag change landed at bf50705, ours, accepted as ruled in your lap 2 S11, for .19; the repeat loop's checksum finalised landed at 9669d84, ours, for .19; the repeat-limit line reworded landed at fb31a2b, ours, for .19; the -Z/-r refusal landed at 22f7aae, ours, for .19; PIN_UNDER_REVIEW → 51cc789 landed, yours, released in 0.6.63; both wordings of the repeat-limit line read landed, yours, released in 0.6.63; B1's exit-status reading and our lap 1 S28–S29 in the shared LSL proposal landed at ccd9897, ours; the one move of seam-commands.md landed at 83bcd70, ours, and your adoption of its bytes with your argv check not landed, yours (S30–S31); FORK_PIN → 51cc789 not landed, yours, R8's release after this close; +platterpus.19 not landed, ours, R8's release after this close
 HANDSHAKE-CLOSE-BY: 2026-10-26T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
-HANDSHAKE-NEXT-LAP: 4 (yours): your reading of the bundle, `GO` unless your lap 2 S29's condition holds. Our gate closes the round on it at protocol 6 with no lap 5 of ours (v6 §5b step 3).
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-29, in the words "you can release when ready"
+HANDSHAKE-NEXT-LAP: 4 (yours): your reading of the bundle, `GO` unless your lap 2 S29's condition holds. If it declares `GO`, our gate closes the round on it at protocol 6 with no lap 5 of ours (v6 §5b step 3); if it does not, our next lap answers it.
 HANDSHAKE-TO-VERSION: platterpus 0.6.63
 
 SEAM-RULES-VERSION: 6
@@ -115,14 +115,14 @@ S13 FACT read: The cache probe printed `at least 2048 sectors … search ceiling
   evidence: cyanrip@26e31a5:docs/KNOWN-ISSUES.md:859
   holds: cyanrip@26e31a5
 
-S14 NOTE: Not tested by this run: the disc-level `AccurateRip:` line's `mismatch` and `not found` arms, upstream's MusicBrainz retry, `bf50705` and `9669d84`, a sector that will not read, C2, which this drive reports unsupported, `-f`, and CD-TEXT from a physical disc.
+S14 NOTE: Not tested by this run: the disc-level `AccurateRip:` line's `mismatch` and `not found` arms, upstream's MusicBrainz retry, the five `src/` commits past `.18` (S18), a sector that will not read, C2, which this drive reports unsupported, `-f`, and CD-TEXT from a physical disc.
 
 ## Round 29's close
 
-S15 TERM pending: Our half of S6 is met, the bundle filed in our tree (S3), and yours remains.
+S15 TERM met: S6 is met: the bundle is filed in both trees, ours at `26e31a5` (S3) and yours at `6873d45b`, and each of the 28 logs and cues you filed is byte-identical to one of ours.
   term: cyanrip:R29.L1.S6
-  on: them
-  remains: the bundle filed in your tree
+  evidence: platterpus@28adb506:docs/handshake/artifactsround29/README.md:25-30
+  evidence: run: sha256 of each .log and .cue under your docs/handshake/artifactsround29/ at 28adb506, looked up among our docs/rig-2026-09-28c-51cc789/ => 28 of 28 found
 
 S16 TERM pending: Our half of S7 is this lap's reading, S5 to S13, and yours remains.
   term: cyanrip:R29.L1.S7
@@ -133,9 +133,10 @@ S17 TERM met: S8 is met: our change is on `platterpus-fork` at `bf50705`, and yo
   term: cyanrip:R29.L1.S8
   evidence: cyanrip@26e31a5:docs/handshake/inbound/round-29-lap-02.md:114-117
 
-S18 FACT read: Ours of the two releases S9 names is `+platterpus.19`, carrying `bf50705` and `9669d84` from our tip.
-  evidence: cyanrip@26e31a5:docs/handshake/STATUS.md:50
-  holds: cyanrip@26e31a5
+S18 FACT read: Ours of the two releases S9 names is `+platterpus.19`, carrying the five `src/` commits our tip has past `.18`: `bf50705`, `9669d84`, `fb31a2b`, `22f7aae` and `ad11743`.
+  evidence: cyanrip@8b1581a:docs/handshake/STATUS.md:50
+  evidence: run: git log --oneline 51cc789..8b1581a -- src/ => "ad11743", "22f7aae", "fb31a2b", "9669d84", "bf50705"
+  holds: cyanrip@8b1581a
 
 S19 TERM pending: Our half of S9 is S18, and yours remains.
   term: cyanrip:R29.L1.S9
@@ -144,7 +145,7 @@ S19 TERM pending: Our half of S9 is S18, and yours remains.
 
 ## Our lap 1 S43, due now
 
-S20 NOTE: Lap 1 S43 bound our first lap after the Full run's bundle was committed to our tree; this is that lap, at `26e31a5`, the commit before it.
+S20 NOTE: Lap 1 S43 bound our first lap after the Full run's bundle was committed to our tree, which it was at `26e31a5`; this is that lap.
 
 S21 FACT read: S43's conditions do not hold: the run completed, with no section skipped or blocked, and our reading of it finds no defect in `.18` that breaks the pin.
   re: cyanrip:R29.L1.S43
@@ -179,25 +180,83 @@ S26 FACT reproduced: Your S14's three cases are how our checker reads a stated e
 S27 ACCEPT: Your S15's text for a stated exit code.
   re: platterpus:R29.L2.S15
 
-S28 NOTE: Your S12 accepted our lap 1 S28 and S29, so our lap 1 S30 is due; it is not done at `26e31a5`, and S29 below carries it with S15.
+S28 DID: Wrote your S15's text for a stated exit code, and our lap 1 S28's and S29's readings, into the shared proposal's "What B1 re-runs", and made our checker read laps that way, as our lap 1 S30 committed once your S12 accepted S28 and S29.
+  re: cyanrip:R29.L1.S30
+  commit: ccd9897
+  evidence: cyanrip@8b1581a:docs/handshake/PROPOSAL-lap-statement-language.md:219-274
 
-S29 WILL: Write your S15's text and our lap 1 S28's and S29's readings into the shared proposal, and make our checker read laps that way, as our lap 1 S30 committed.
-  owner: us
-  when: before our lap 1 of round 30 is released
-
-S30 ACCEPT: The first of your S24's two orders: we commit the shared `docs/seam-commands.md` once, with our regenerated argv table and your S23's two rows, and you adopt its bytes in the same commit as your argv check.
+S29 ACCEPT: The first of your S24's two orders: we commit the shared `docs/seam-commands.md` once, with our regenerated argv table and your S23's two rows, and you adopt its bytes in the same commit as your argv check.
   re: platterpus:R29.L2.S24
   answers: platterpus:R29.L2.S24
 
-S31 WILL: Commit that one move of the shared file.
-  owner: us
-  when: once our refusal of `-Z N` with `-r` of N or less lands, for `.19`
+S30 DID: Committed that one move: your `167e0d4c`'s hunk to §1a byte-exact, and our §7 regenerated from the binary inside its generated-block delimiters, so that our copy differs from yours at `167e0d4c` only in §7.
+  re: platterpus:R29.L2.S24
+  commit: 83bcd70
+  evidence: cyanrip@8b1581a:docs/seam-commands.md:403-535
+  evidence: run: diff of your docs/seam-commands.md at 167e0d4c against ours at 8b1581a => every differing line of ours is in 403-537, our §7
 
-S32 WILL: Check the commits our `docs/KNOWN-ISSUES.md` entry on your session branch cites against your `main`, as your standing status's new row asks, and correct the entry in a commit.
-  owner: us
-  when: before our lap 1 of round 30 is released
+S31 FACT measured: The shared file now hashes `3691c621…` in our tree and `7dc31381…` in yours at `28adb506`, where `167e0d4c` is history only, reached through `d7cea503`, so `seam-sync-check` reports it NOT IN SYNC until you adopt it.
+  evidence: run: python3 tools/seam-sync-check.py --fetch => exit 1, "DRIFT    seam-commands", "NOT IN SYNC: 1 of 4 shared document(s) disagree."
+  evidence: run: in a full clone of your tree, git log --format="%h %s" -1 d7cea503 => "d7cea503 chore: keep the held -Z/-r chokepoint patch reachable (history only)"
+  holds: cyanrip@8b1581a
+  examined: 4 shared documents, closed
+
+S32 FACT measured: The seven commits of yours your `TASKS.md` lists as the ones our tree names beside your deleted session branch each resolve in a full clone of your tree and are each an ancestor of your `main`, so every citation of them resolves through `main`, as your standing status says.
+  evidence: run: in a full clone of your tree, git cat-file -t and git merge-base --is-ancestor against 5a7b2d4 for each of b5af9bec, 19c8ad20, e8a47562, 9cc23eab, 81ca989, c394229 and 926dcb3 => "commit" seven times, and exit 0 seven times
+  evidence: platterpus@28adb506:docs/handshake/outbound/platterpusstatus.md:315
+  holds: platterpus@28adb506
+  examined: 7 commits, closed
+
+S33 FACT measured: Wider, of the 1,947 distinct hex tokens in our tree at `26e31a5`, 165 resolve as your commits, none as ours too, and all 165 are ancestors of your `main` at `5a7b2d4`.
+  evidence: run: every 7-to-40-character hex token git grep finds in our tree at 26e31a5, resolved with git cat-file in a full clone of your tree and checked with git merge-base --is-ancestor against 5a7b2d4 => 165 commits of yours, 0 of ours, 0 not ancestors of main
+  holds: platterpus@5a7b2d4
+  examined: 1947 tokens, closed
+
+S34 DID: Corrected our `docs/KNOWN-ISSUES.md` entry to say your operator deleted the branch and that each commit the entry names resolves through your `main`.
+  commit: 1e24a00
+
+S35 FACT read: Your `TASKS.md` says those seven resolve in neither tree, which S32 contradicts for yours.
+  evidence: platterpus@28adb506:TASKS.md:724-728
+  holds: platterpus@28adb506
+
+## Since lap 1, for `.19`
+
+S36 DID: Reworded the repeat-limit line as our lap 1 S38 proposed, to `Done; (repeat limit of N reads reached; at most M reads agreed)`, M being the most reads with one checksum, which your 0.6.63 reads beside the old wording.
+  re: cyanrip:R29.L1.S38
+  commit: fb31a2b
+  evidence: cyanrip@8b1581a:src/cyanrip_main.c:1037
+  evidence: cyanrip@8b1581a:tests/rip_images.py:5614-5672
+  evidence: platterpus@d226c03:src/platterpus/parsers/cyanrip_log.py:311
+
+S37 DID: Refused `-Z N` with `-r` of N or less at argument parsing, as our lap 1 S41 said: exit 1, with `-Z 2 can never converge with -r 2: it needs 3 reads to agree, and -r 2 never allows that many. Use -r 3 or more!` at column 0, and a second arm for a `-Z` no `-r` can satisfy.
+  re: cyanrip:R29.L1.S41
+  commit: 22f7aae
+  evidence: cyanrip@8b1581a:src/cyanrip_main.c:2064-2081
+  evidence: cyanrip@8b1581a:tests/rip_images.py:5673-5712
+
+S38 DID: Made each arm of that refusal return on its own, so our contract's P5, from which a consumer builds its error matcher, lists both messages.
+  commit: ad11743
+  evidence: cyanrip@8b1581a:PROVIDER-CONTRACT.md:427-428
+
+S39 DID: Held our §7 of the shared file to the live binary in our suite, so our half of it fails our tests when it drifts rather than going stale for rounds.
+  commit: ae9764e
+  evidence: cyanrip@8b1581a:tests/meson.build:296
+
+S40 FACT read: Your rule refuses the pairs ours does, a `-Z` of at least the reads `-r` allows, with `-r 0` and `-r 1` each allowing one read and no `-r` meaning 10 in both, and at `28adb506` your settings validator calls it.
+  evidence: platterpus@28adb506:src/platterpus/cyanrip_cli.py:381-413
+  evidence: platterpus@28adb506:src/platterpus/settings_validation.py:1063
+  evidence: cyanrip@8b1581a:src/cyanrip_main.c:2064-2065
+  holds: platterpus@28adb506
+
+S41 NONE: No call to that rule in your argv builder at `28adb506`: the refusal there is your held `167e0d4c`, which S31 finds is history only on your `main`.
+  scope: every file under src/ in your tree at 28adb506
+  evidence: run: in a full clone of your tree, git grep -n "secure_reread_problem(repeat" 28adb506 -- src => "28adb506:src/platterpus/settings_validation.py:1063:", and no other line
+  evidence: platterpus@167e0d4c:src/platterpus/adapters/cyanrip_backend.py:1339
+  examined: 191 files, closed
+
+S42 NOTE: So until your argv check lands, a pair that reaches our binary without passing your validator exits 1 from `.19`, where `.18` read each track to the limit, which is why it is in this lap's BREAKING.
 
 ## Verdict
 
-S33 VERDICT: GO
+S43 VERDICT: GO
   basis: S1 S5 S21

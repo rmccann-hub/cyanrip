@@ -313,6 +313,8 @@ SENT = {
     # tag change their operator ruled landed and a close condition.
     "round-29-lap-01.md":
         "2e275d2f0e82003dd12477eb44b07965eb4ae4e922914e09d7fc8021097a73ab",
+    "round-29-lap-03.md":
+        "9c24b579451331cb12821d737f4df5caa927c6912495b9a6d0f51eff80aa0825",
 }
 
 failures = 0
