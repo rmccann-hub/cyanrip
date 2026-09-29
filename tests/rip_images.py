@@ -3565,7 +3565,7 @@ def sc_filed_rig_is_mappable():
     tarball is not in the repository, which is exactly why the table is.
     """
     for bundle in ("rig-2026-09-10-ddc1e8c", "rig-2026-09-11-ddc1e8c",
-                   "rig-2026-09-12-fe4d2c4"):
+                   "rig-2026-09-12-fe4d2c4", "rig-2026-09-28c-51cc789"):
         _mapping_holds(ROOT / "docs" / bundle)
 
 

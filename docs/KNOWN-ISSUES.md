@@ -831,7 +831,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: fourteen of them**, derived
+session that produced a `Cache probe:` line is here now: fifteen of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -856,6 +856,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-26 `221a1df` | 362.8 ms | 62.2 ms | 90.7 ms | 69% |
 | 2026-09-28 `e0471f4` | 362.7 ms | 81.3 ms | 90.7 ms | **90%** |
 | 2026-09-28b `e0471f4` | 362.6 ms | 62.4 ms | 90.7 ms | 69% |
+| 2026-09-28c `51cc789` | 362.0 ms | 81.6 ms | 90.5 ms | **90%** |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -863,8 +864,8 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, fourteen times. "A cached read of a few ms":
-FALSIFIED** — 42 to 82, not 2.2. All fourteen end identically, at
+**Hundreds of ms uncached: confirmed, fifteen times. "A cached read of a few ms":
+FALSIFIED** — 42 to 82, not 2.2. All fifteen end identically, at
 `at least 2048 sectors … search ceiling reached`. The tenth, 2026-09-22, is the
 first on `2cce60d` and the first taken inside a full acceptance session; it
 changes nothing, which is the point — **ten runs, three builds, four calibration
@@ -878,7 +879,9 @@ millisecond, and ended the same way again. The thirteenth, 2026-09-28 on
 the same build on the same day through Platterpus 0.6.62: 362.6 ms and 62.4 ms,
 a margin of 69%, and the same end. **Two runs of one build on one day
 calibrated 0.1 ms apart and landed in different clusters of the four-run
-control below**, 90% and 69%.
+control below**, 90% and 69%. The fifteenth, 2026-09-28c on `51cc789`, round
+29's real test and the first on `.18`, read 362.0 ms and 81.6 ms, 90% of its
+threshold, and ended the same way.
 
 **THE FOUR-RUN CONTROL, which is what the missing rows were hiding.** Sessions
 09-10, 09-11, 09-15 and 09-15b calibrated `miss_cost` at **363.2, 362.5, 362.6
@@ -1280,7 +1283,7 @@ coverage.
 
 | gap | status |
 |---|---|
-| `-x` correctness on a real drive | **measured fourteen times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-28b. This cell said *"measured twice"* while the table above held nine rows |
+| `-x` correctness on a real drive | **measured fifteen times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-28c. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
 | damaged media | never tested; no damaged disc available |
