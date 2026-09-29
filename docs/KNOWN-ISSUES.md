@@ -1266,13 +1266,21 @@ other three are proposed there.
    A `-Z 3 -r 3` rip of three identical reads would print it with two matches.
    Their `_SECURE_DONE_FAIL` matches `no matches found` (`:273`), so rewording
    it removes a string a consumer matches on: their both-wordings release comes
-   first (round 20's ordering rule).
+   first (round 20's ordering rule). **Fixed at `fb31a2b`, for `.19`**, after
+   that release: their 0.6.63 reads both wordings, and the line is now
+   `Done; (repeat limit of N reads reached; at most M reads agreed)`, M being the
+   largest number of reads that share one checksum. The `repeat_limit` scenario
+   reaches it on an image by varying one sector per read (`tests/badsector.c`),
+   including A, A, B, where the last read agrees with nobody and M is 2.
 4. **`-Z N` with `-r` of N or less can never converge** (their S19).
    Convergence needs N matches against earlier reads, so N + 1 reads (`:1005`).
    The limit counts every read from 0 (`:762`, `:1004`, `:1011`), so `-r N + 1`
-   tolerates no read that disagrees. Our argument parsing accepts `-Z 2 -r 2`.
-   Their settings refuse it now. Refusing it here would turn an invocation that
-   exits 0 today into exit 1, a P1/P4 change.
+   tolerates no read that disagrees. Our argument parsing accepted `-Z 2 -r 2`.
+   Their settings refuse it now. **Refused here too at `22f7aae`, for `.19`**,
+   before any disc is opened, at column 0 with both values and a remedy that
+   exists (`zr_refusal`); an invocation that exited 0 now exits 1, which is the
+   P1/P4 change round 29 carried, with the shared `seam-commands.md` moved once
+   for both sides' argv tables (`83bcd70`).
 
 ---
 
