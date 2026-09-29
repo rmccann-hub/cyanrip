@@ -2063,16 +2063,20 @@ static int cyanrip_run(int argc, char **argv)
      * us. 64-bit, because -Z INT32_MAX + 1 does not fit an int. */
     if (settings.ripping_retries > 0 &&
         settings.max_retries <= settings.ripping_retries) {
+        /* Each arm returns on its own, so the contract's fatal inventory
+         * (P5) can see both messages: an `else` hides the first arm's exit
+         * from its scan, and a consumer builds its error matcher from P5. */
         const long long need = (long long)settings.ripping_retries + 1;
-        if (need <= INT32_MAX)
+        if (need <= INT32_MAX) {
             cyanrip_log(ctx, 0, "-Z %i can never converge with -r %i: it needs %lli reads "
                         "to agree, and -r %i never allows that many. Use -r %lli or more!\n",
                         settings.ripping_retries, settings.max_retries, need,
                         settings.max_retries, need);
-        else
-            cyanrip_log(ctx, 0, "-Z %i can never converge with -r %i: it needs %lli reads "
-                        "to agree, more than any -r allows. Use a smaller -Z!\n",
-                        settings.ripping_retries, settings.max_retries, need);
+            return 1;
+        }
+        cyanrip_log(ctx, 0, "-Z %i can never converge with -r %i: it needs %lli reads "
+                    "to agree, more than any -r allows. Use a smaller -Z!\n",
+                    settings.ripping_retries, settings.max_retries, need);
         return 1;
     }
 
