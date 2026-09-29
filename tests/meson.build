@@ -289,6 +289,17 @@ test('Argv surface probe', python,
      depends: cyanrip_exe,
      timeout: 300)
 
+## And the table the probe publishes, in the shared docs/seam-commands.md §7,
+## bounded by its generated-block delimiters so the check never reads prose the
+## other side wrote. Without this the table went stale for weeks after the
+## probe's grading changed, while every test passed.
+test('Argv table in seam-commands.md', python,
+     args: [ files('../tools/probe-argv-surface.py'), '--check',
+             files('../docs/seam-commands.md'),
+             '--binary', cyanrip_exe.full_path() ],
+     depends: cyanrip_exe,
+     timeout: 300)
+
 ## Handshake wire conformance
 ## ==========================
 ## A lap can pass every other test in this suite and still be unfit to send.

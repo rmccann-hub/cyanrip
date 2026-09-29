@@ -222,6 +222,26 @@ def markdown_block(rows, inter, ignored, banner):
     return "\n".join(out)
 
 
+# THE BANNER NAMES THE BUILD THAT GENERATED THE BLOCK, which is never the
+# commit that contains it: the block is committed after the build, so every
+# commit after it moves the tag and nothing else. Compared byte for byte, the
+# check failed on the first commit after a regeneration, with no row changed
+# (found 2026-09-29, the first time §7 carried the delimiters). A clean tag is
+# compared only in shape, as gen-provider-contract.py --check does for its own
+# Build: line. The two sides differ on purpose. The COMMITTED banner must name a
+# clean build, so a `-dirty` one there is not matched and still differs: a dirty
+# build's commit does not describe it. The LIVE binary may be dirty, as it is
+# whenever the suite runs over uncommitted edits, and every mutant of
+# tools/mutate.py is; refusing that would make this a test that detects the
+# edit rather than the defect.
+BUILD_TAG_RE = re.compile(r"(platterpus-fork-g)[0-9a-f]{7,40}(?=\)`)")
+LIVE_TAG_RE = re.compile(r"(platterpus-fork-g)[0-9a-f]{7,40}(?:-dirty)?(?=\)`)")
+
+
+def _normalise_build(text, live=False):
+    return (LIVE_TAG_RE if live else BUILD_TAG_RE).sub(r"\1<build>", text)
+
+
 def check_against(path, block):
     """Non-zero when the committed block has drifted from the live binary.
 
@@ -243,8 +263,8 @@ def check_against(path, block):
         return 1
     start = text.index(BEGIN_MARK)
     end = text.index(END_MARK) + len(END_MARK)
-    have = text[start:end].strip()
-    want = block.strip()
+    have = _normalise_build(text[start:end].strip())
+    want = _normalise_build(block.strip(), live=True)
     if have == want:
         print(f"{path}: \u00a77 matches the live binary")
         return 0
