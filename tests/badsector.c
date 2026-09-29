@@ -34,6 +34,20 @@
  *   CRIP_BAD_SECTOR  the sector index within that file
  *   CRIP_BAD_OUT     where to write the number of reads failed, at exit, so a
  *                    test can prove the shim was active and not vacuous
+ *
+ * AND READS THAT DISAGREE, ON A SCHEDULE. An image reads the same bytes every
+ * time, so `-Z` always converges on one and the repeat limit is unreachable.
+ * With CRIP_FLIP_SECTOR set, the k-th read of that sector has its first byte
+ * XORed with (k / CRIP_FLIP_RUN % CRIP_FLIP_CYCLE) + 1, so a cycle of 2 gives
+ * reads A, B, A, a long cycle gives reads that all differ, and a run of 2 with
+ * a cycle of 2 gives A, A, B. It never fails a read, and it
+ * is independent of CRIP_BAD_SECTOR. Round 29 lap 1 S38's repeat-limit line is
+ * what it was added for.
+ *
+ *   CRIP_FLIP_SECTOR the sector index within the file to vary
+ *   CRIP_FLIP_CYCLE  how many distinct versions of it to cycle through
+ *   CRIP_FLIP_RUN    how many reads in a row get each version (default 1)
+ *   CRIP_FLIP_OUT    where to write the number of reads varied, at exit
  */
 
 /* The build passes -D_FILE_OFFSET_BITS=64, under which glibc renames fopen
@@ -51,6 +65,10 @@
 static FILE *victim;
 static long bad_sector = -1;
 static long failed_reads;
+static long flip_sector = -1;
+static long flip_cycle = 1;
+static long flip_run = 1;
+static long flipped_reads;
 
 static void report(void)
 {
@@ -60,6 +78,17 @@ static void report(void)
     if (!out || !real_fopen || !(f = real_fopen(out, "w")))
         return;
     fprintf(f, "%ld\n", failed_reads);
+    fclose(f);
+}
+
+static void report_flips(void)
+{
+    const char *out = getenv("CRIP_FLIP_OUT");
+    FILE *(*real_fopen)(const char *, const char *) = dlsym(RTLD_NEXT, "fopen");
+    FILE *f;
+    if (!out || !real_fopen || !(f = real_fopen(out, "w")))
+        return;
+    fprintf(f, "%ld\n", flipped_reads);
     fclose(f);
 }
 
@@ -74,7 +103,14 @@ FILE *fopen(const char *path, const char *mode)
         real = dlsym(RTLD_NEXT, "fopen");
         if (s)
             bad_sector = atol(s);
+        if ((s = getenv("CRIP_FLIP_SECTOR")))
+            flip_sector = atol(s);
+        if ((s = getenv("CRIP_FLIP_CYCLE")) && atol(s) > 0)
+            flip_cycle = atol(s);
+        if ((s = getenv("CRIP_FLIP_RUN")) && atol(s) > 0)
+            flip_run = atol(s);
         atexit(report);
+        atexit(report_flips);
     }
     f = real(path, mode);
     if (f && want && strstr(path, want))
@@ -100,6 +136,17 @@ size_t fread(void *ptr, size_t size, size_t n, FILE *f)
             errno = EIO;
             return 0;
         }
+    }
+    if (victim && f == victim && flip_sector >= 0) {
+        long a = ftell(f);
+        long lo = flip_sector * 2352;
+        size_t got = real(ptr, size, n, f);
+        long b = a + (long)(size * got);
+        if (a >= 0 && lo >= a && lo < b) {
+            ((unsigned char *)ptr)[lo - a] ^= (unsigned char)(flipped_reads / flip_run % flip_cycle + 1);
+            flipped_reads++;
+        }
+        return got;
     }
     return real(ptr, size, n, f);
 }

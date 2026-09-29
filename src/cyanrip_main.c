@@ -1017,8 +1017,27 @@ repeat_ripping:;
             goto finalize_ripping;
         }
         if (total_repeats >= ctx->settings.max_retries) {
-            cyanrip_log(ctx, 0, "\nDone; (no matches found, but hit repeat limit of %i)\n",
-                        ctx->settings.max_retries);
+            /* The largest number of reads that agree on one checksum, this
+             * read included, which is at least 1. The line said "no matches
+             * found" whatever that number was, so it was false of a track
+             * whose earlier reads agreed: the round-28 Full run's track 5
+             * printed "1 out of 2 matches" and then "no matches found".
+             * Found in round 29 lap 1 (S37); this wording is S38's, and
+             * Platterpus's 0.6.63 reads it beside the old one. */
+            int agreed = 0;
+            for (uint32_t i = 0; i <= nb_last_checksums; i++) {
+                const uint32_t ci = i < nb_last_checksums ? last_checksums[i]
+                                                          : checksum_ctx.eac_crc;
+                int n = 0;
+                for (uint32_t j = 0; j <= nb_last_checksums; j++)
+                    n += (j < nb_last_checksums ? last_checksums[j]
+                                                : checksum_ctx.eac_crc) == ci;
+                agreed = FFMAX(agreed, n);
+            }
+            cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed)\n",
+                        ctx->settings.max_retries,
+                        ctx->settings.max_retries == 1 ? "" : "s",
+                        agreed, agreed == 1 ? "" : "s");
             t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
             goto finalize_ripping;
         }

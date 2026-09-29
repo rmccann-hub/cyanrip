@@ -646,6 +646,7 @@ rip_scenarios = [
     'consumer_argv',
     'abort_footer',
     'bad_sector',
+    'repeat_limit',
 ]
 
 # The scenarios are told which build configuration they are testing, because

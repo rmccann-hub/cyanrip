@@ -4234,7 +4234,7 @@ def sc_contract_fatal_inventory():
 
     # 2. Named, so the two that were acted on cannot drift back silently. A
     #    structural rule can be satisfied by a renamed class; these cannot.
-    for probe in ("Done; (no matches found, but hit repeat limit of %i)",
+    for probe in ("Done; (repeat limit of %i read%s reached; at most %i read%s agreed)",
                   "Done; (%i out of %i matches for current checksum %08X)"):
         if probe in p5:
             fail(f"contract_fatal_inventory: {probe!r} is back in the fatal "
@@ -5582,6 +5582,65 @@ def sc_bad_sector():
                  f"invented rather than skipped")
         note(f"bad_sector: -r {r}: {failed} failed read(s); sectors "
              f"{[300 + i for i in differ]} zeroed, the rest identical to the source")
+
+
+def sc_repeat_limit():
+    """THE REPEAT-LIMIT LINE SAYS HOW MANY READS AGREED.
+
+    ROUND 29 LAP 1 S37-S38. The line was `Done; (no matches found, but hit
+    repeat limit of %i)` whatever the count, so it was false of a track whose
+    earlier reads agreed: the round-28 Full run's track 5 printed `1 out of 2
+    matches` and then `no matches found`. It now reads `Done; (repeat limit of N
+    reads reached; at most M reads agreed)`, M being the largest number of reads
+    that share one checksum. Platterpus's 0.6.63 reads both wordings (their
+    round 29 lap 2 S19-S20), so the consumer went first, round 20's order.
+
+    An image reads the same bytes every time, so `-Z` converges and the limit is
+    unreachable. tests/badsector.c's flip mode varies one sector on a schedule:
+    a cycle of 2 gives reads A, B, A, so two agree; a long cycle gives three
+    reads that all differ, so one does. `-P 0` so each pass is one read of it.
+
+    A, A, B is the case the other two cannot tell apart from counting only the
+    LAST read's matches: that read agrees with nobody, and two earlier reads
+    agree with each other, so M is 2 and `matches + 1` would print 1.
+    """
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"repeat_limit: the shim was not built or not passed ({shim!r})")
+        return
+    for cycle, run, agreed in ((2, 1, 2), (1000, 1, 1), (2, 2, 2)):
+        out = WORK / f"out_repeat_limit_{cycle}_{run}"
+        count = WORK / f"repeat_limit_{cycle}_{run}.count"
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+                   CRIP_FLIP_SECTOR="100", CRIP_FLIP_CYCLE=str(cycle),
+                   CRIP_FLIP_RUN=str(run), CRIP_FLIP_OUT=str(count),
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-Z", "2", "-r", "3", "-l", "1", "-o", "pcm",
+                     "-D", out, "-F", "{track}", "-L", "log", env=env)
+        if ec != 0:
+            fail(f"repeat_limit: cycle {cycle} run {run}: cyanrip exited {ec}; hitting "
+                 f"the repeat limit is not an error")
+        flips = int(count.read_text().strip()) if count.exists() else 0
+        # One read of the sector per pass, three passes: anything else means
+        # the schedule below is not the one the reads followed.
+        if flips != 3:
+            fail(f"repeat_limit: cycle {cycle} run {run}: the shim varied {flips} reads, "
+                 f"not 3, so the reads did not disagree as this test assumes")
+            continue
+        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        lines = text.splitlines()
+        noun = "read" if agreed == 1 else "reads"
+        want = f"Done; (repeat limit of 3 reads reached; at most {agreed} {noun} agreed)"
+        if want not in lines:
+            got = [ln for ln in lines if ln.startswith("Done;")]
+            fail(f"repeat_limit: cycle {cycle} run {run}: no line {want!r}; got {got}")
+        if any("no matches found" in ln for ln in lines):
+            fail(f"repeat_limit: cycle {cycle} run {run}: the old wording is still printed")
+        if "  Secure re-read:  did NOT converge after 3 reads (repeat limit hit)" not in lines:
+            fail(f"repeat_limit: cycle {cycle} run {run}: the track block does not say the "
+                 f"secure re-read hit the limit")
 
 
 def sc_abort_footer():
