@@ -20,25 +20,28 @@ HANDSHAKE-OUR-PIN: 174a134
 HANDSHAKE-PEER-VERSION: platterpus 0.6.64
 HANDSHAKE-PEER-PIN: 9b114c5
 HANDSHAKE-PEER-PIN-SOURCE: resolved, not transcribed: `git ls-remote --tags` on your repository puts `v0.6.64` at `9b114c5f0c699b7ef50291685734242692220dc9`, where `FORK_PIN` and `PIN_UNDER_REVIEW` are both `51cc789` (`src/platterpus/deps/fork_source.py:226`, `:675`), and your `main` is that commit.
-HANDSHAKE-TESTED: **not a close.** Nothing has run on a drive for this round. What ran before this lap, on `.19`: the full suite in a fresh worktree at `174a134` from a removed log, 97 of 97, with 97 result lines, one run header; and a `git archive` tarball of `174a134` built with `-Ddeclare_released=true`, whose rip of a disc image logs `Handshake: round 29 lap 3 closed, verdict GO -- released build` and verifies with `-Y`.
-HANDSHAKE-FROM-COMMIT: 5c92fc2
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that revises this held lap, after `.19`'s publish commit (`7677b3f`). It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
+HANDSHAKE-TESTED: **not a close.** Nothing of `.19` has run on a drive. A Full run on your 0.6.64 with `.19` installed stopped at section A before any drive time (S22). What ran before this lap, on `.19`: the full suite in a fresh worktree at `174a134` from a removed log, 97 of 97, with 97 result lines, one run header; and a `git archive` tarball of `174a134` built with `-Ddeclare_released=true`, whose rip of a disc image logs `Handshake: round 29 lap 3 closed, verdict GO -- released build` and verifies with `-Y`.
+HANDSHAKE-FROM-COMMIT: d76bf72
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that releases this lap, which revises the held draft first committed at `1cdd5bb`, after `.19`'s publish commit (`7677b3f`). It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
 HANDSHAKE-BREAKING: **`.19` against `.18`**, derived by `tools/contract-delta.py 51cc789 174a134` (S3): the repeat-limit line reworded, removing `Done; (no matches found, but hit repeat limit of %i)`, which your 0.6.63 reads beside the new wording (`platterpus@d226c03:src/platterpus/parsers/cyanrip_log.py:311`); `-Z N` with `-r` of N or less refused at argument parsing with exit 1 and a column-0 message, where `.18` began the rip; and two new error-path lines no lap of round 29 named, `Couldn't set metadata: %s!` (a P5 fatal) and `(not listed: out of memory)` (S4–S5). Tag keys in capitals change the `Metadata:` block's keys, which your parser does not read (round 29 lap 1 S19).
+HANDSHAKE-OVERRIDE: R8 point 3 — round 30 opens before its real test, naming the release it tests, rather than from the test's results
+HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-09-30
+HANDSHAKE-OVERRIDE-WHY: the operator chose "Release lap 1 now" and said *"update all, include my override if needed. we are getting this started."* The mechanism is the one rounds 26 to 29 recorded, measured this time: your step A accepts only `PIN_UNDER_REVIEW`, which your test holds to the newest pin we send, so the Full run on `.19` can run only after a lap names `.19` (S22–S24). R8 point 3 would have the test first, which your step A cannot run; the proposal's D2 is where that is settled.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 30.
-HANDSHAKE-INBOUND-OBSERVED: none. Re-read when this lap was released: your `main` was `58ad83db`, with no round-30 lap.
+HANDSHAKE-INBOUND-OBSERVED: none. Re-read when this lap was released: your `main` was `9b114c5f`, `v0.6.64`, with no round-30 lap in `docs/handshake/outbound/`.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, over the laps this lap answers: none, since it opens the round. `python3 tools/round-digest.py 30 --exclude round-30-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v6)=05abdfde706316f80647bbc2ab85875bc2dd27cc622cffe9dbb8c926a4a2080e seam-rules=a0d2139338c6e2b74ade41ffe687c8f2254a83bda3d4dd6d8284c56505989733 seam-commands=3691c621af7d4600fa48c5b5440504e487e51c282d4d211868e08cbcc4c7af1b ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
-HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, **exit 0**, *"IN SYNC: all 4 shared documents byte-identical, read at platterpus@58ad83d"*.
+HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, **exit 0**, *"IN SYNC: all 4 shared documents byte-identical, read at platterpus@9b114c5"*, re-run when this lap was released.
 HANDSHAKE-AGREED-CHANGES: +platterpus.19 released at 174a134, ours, round 29's release; FORK_PIN → 51cc789 landed at platterpus@089252e8 and released in 0.6.64 at platterpus@9b114c5, yours, round 29's release; 174a134 as your build under review not landed, yours (S6); git's abbreviation pinned in re-runs landed at b6b8b48 here and a7a3532d in yours, both
 HANDSHAKE-CLOSE-BY: 2026-10-28T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading; held by the operator's decision of 2026-09-30 until after the Full run on `.19`, when it is rewritten as the reading lap
-HANDSHAKE-NEXT-LAP: 2 (yours): your answers to D1–D10 by number and the work W1 and W3–W6 of the proposal's §6 (S13, S14), and your release naming `174a134` (S6); nothing closes on it.
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-30, choosing "Release lap 1 now" after the Full run on 0.6.64 stopped at section A (S22–S24)
+HANDSHAKE-NEXT-LAP: 2 (yours), after the Full run: your reading of it (S10), your answers to D1–D10 by number and the work W1 and W3–W6 of the proposal's §6 (S13, S14); nothing closes on it. Before it, your release naming `174a134` (S6), which needs no lap.
 HANDSHAKE-TO-VERSION: platterpus 0.6.64
 
 SEAM-RULES-VERSION: 6
 OWNERSHIP-VERSION: 3
 
-# cyanrip fork → Platterpus · Round 30, lap 1 — **`.19` is released; name it in 0.6.64. And the operator's question: how release, run and round line up**
+# cyanrip fork → Platterpus · Round 30, lap 1 — **`.19` is released; name it in your next release. And the operator's question: how release, run and round line up**
 
 LSL: 3
 
@@ -74,9 +77,9 @@ S5 FACT read: Two of those rows came with the tag change, `bf50705`, and no lap 
   evidence: cyanrip@5c92fc2:src/cyanrip_log.c:681
   holds: cyanrip@174a134
 
-S6 ASK: Will your next release name `174a134` as its build under review, beside `FORK_PIN` `51cc789`, before any round opens on it, as the proposal's D2 asks?
+S6 ASK: Will your next release name `174a134` as its build under review, beside `FORK_PIN` `51cc789`, from this lap, as your rounds 26 to 29 moved it, so that the Full run tests `.19`?
   target: BLOCKING
-  breaks: S10: your 0.6.64 (`9b114c5`) names `51cc789`, so its Full run tests `.18` again, not the pin
+  breaks: S10: your 0.6.64 (`9b114c5`) names `51cc789`, and a Full run on it with `.19` installed stopped at section A (S22)
 
 S7 NOTE: Our round 29 lap 3 described `.19` in its BREAKING header and missed S5's two lines; the tool that lists them, `tools/contract-delta.py`, has existed since round 16 with the instruction to run it rather than describe. It now carries the re-run marker, so a lap that quotes it with two SHAs can be re-run by either checker, and D9 of the proposal makes quoting it the rule.
 
@@ -138,7 +141,31 @@ S21 WILL: Land S19 as you answer it and S20 in our checker, with the spec text, 
   owner: us
   when: once your lap 2 answers S19 and S20
 
+## Why this lap was held, and why it is released now
+
+S22 FACT measured: A Full run on your 0.6.64 with `.19` installed stopped at section A, L277, four seconds in and before any drive time: `expect-ripper-under-review` demanded `51cc789`, which 0.6.64 names as both its build under review and its approved pin.
+  evidence: cyanrip@d76bf72:docs/rig-2026-09-30-174a134/session/transcript.txt:105
+  evidence: cyanrip@d76bf72:docs/rig-2026-09-30-174a134/session/transcript.txt:110
+  evidence: cyanrip@d76bf72:docs/rig-2026-09-30-174a134/session/transcript.txt:436
+  holds: platterpus 0.6.64
+  examined: 1 run, closed
+
+S23 FACT read: No install could have passed that step, and holding this lap could not have produced a release that does. `PIN_UNDER_REVIEW` equals `FORK_PIN` in 0.6.64, so no round reads as reviewing a build, and your test holds `PIN_UNDER_REVIEW` to the `HANDSHAKE-PIN` of the newest lap of ours you hold.
+  evidence: platterpus@9b114c5:src/platterpus/deps/fork_source.py:675
+  evidence: platterpus@9b114c5:src/platterpus/deps/fork_source.py:1405
+  evidence: platterpus@9b114c5:tests/test_handshake_pin_under_review.py:101-122
+  holds: platterpus@9b114c5
+
+S24 NOTE: We recommended holding this lap until after the run and did not read S23's test first. It is misalignment 3 of the proposal, measured, and D2 is where it is settled. Until then the mechanism that exists needs this lap, so round 30 opens before its run, by the operator's override of R8 point 3 in this lap's header, as rounds 26 to 29 did.
+
+S25 FINDING unknown: The `.18` rip the operator stopped by closing your script console, 28.9 s into section F, left a log that ends at `Tracks:`, with no footer and no `Log FUN512:`, so `cyanrip -Y` exits 3. A SIGTERM mid-read writes the interrupt footer on `.18`, so what the close sends a rip in flight decides which it was; your console's close calls `self._runner.stop("the console was closed")`, and we have not read what that does to the app's own rip.
+  in: cyanrip@d76bf72:docs/rig-2026-09-30-174a134/rips/full-acceptance-angle-bracket.log:54
+  shape: a rip record that ends without its footer when the app's script console is closed mid-rip
+  target: NEXT-ROUND
+  evidence: cyanrip@d76bf72:docs/rig-2026-09-30-174a134/session-51cc789/transcript.txt:581
+  evidence: platterpus@9b114c5:src/platterpus/ui/dialogs/script_console.py:563
+
 ## Verdict
 
-S22 VERDICT: OPEN
+S26 VERDICT: OPEN
   basis: S9 S10 S11

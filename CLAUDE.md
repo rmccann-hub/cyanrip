@@ -2006,9 +2006,9 @@ repeat-limit line that says how many reads agreed, and `-Z N` with `-r` of N or
 less refused. Its consumer-side prerequisite, a Platterpus release reading both
 wordings of the repeat-limit line, is their 0.6.63. **A first candidate failed
 its own suite and was never published**; the two fixes are the commits before
-`174a134`. Platterpus's 0.6.64 carries `FORK_PIN` `51cc789`. **Round 30 opens by
-our lap 1, naming `174a134` for 0.6.64 to review, and carries the operator's
-question of how release, run and round line up**
+`174a134`. Platterpus's 0.6.64 carries `FORK_PIN` `51cc789`. **Round 30 opened on
+2026-09-30 by our lap 1, naming `174a134` for their next release to review, and
+carries the operator's question of how release, run and round line up**
 (`docs/handshake/PROPOSAL-release-cycle.md`). **The next release is
 `+platterpus.20` and nothing is written for it.**
 
