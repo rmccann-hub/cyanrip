@@ -130,21 +130,21 @@ flatpak run com.github.cyanreg.cyanrip
 
 CLI
 ---
-Arguments are optional, except `-s`. By default cyanrip will rip all tracks from the default CD drive, output to flac only, enables all cd-paranoia error checking, performs a MusicBrainz lookup, and downloads and embeds the cover art if one is found.
+This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRACT.md`, derived from the binary's own `--help`. Arguments are optional, except `-s`. By default cyanrip will rip all tracks from the default CD drive, output to flac only, enables all cd-paranoia error checking, performs a MusicBrainz lookup, and downloads and embeds the cover art if one is found.
 
 | Argument             | Description                                                                                 |
 |----------------------|---------------------------------------------------------------------------------------------|
 |                      | **Ripping options**                                                                         |
 | -d `string`          | The path or name for a specific device, otherwise uses the default device                   |
 | -s `int`             | Specifies the CD drive offset in samples (same as EAC, default is 0)                        |
-| -r `int`             | Specifies how many times to retry a frame/ripping if it fails, (default is 10)              |
-| -Z `int`             | Rips tracks until their checksums match `<int>` number of times. For very damaged CDs.      |
+| -r `int`             | How many times to retry a frame/ripping if it fails (default 10). The per-frame limit is rounded up to a multiple of 5, minimum 5, because libcdio-paranoia only checks it there |
+| -Z `int`             | Rips tracks until their checksums match `<int>` number of times. For very damaged CDs. Refused when `-r` is too small to ever allow it (fork, `.19`) |
 | -S `int`             | Sets the drive speed if possible (default is unset, usually maximum)                        |
 | -p `number=string`   | Specifies what to do with the pregap, syntax is described below                             |
 | -P `int`             | Sets the [paranoia level](#paranoia-level), default is max, 0 disables checking completely  |
 | -O                   | Overread into lead-in/lead-out areas, if unsupported by drive may freeze ripping            |
 | -k `int`             | Seconds a frame read must stall before liveness is reported (default 10, 0 disables)        |
-| -x                   | Measure the drive's readback cache before ripping (off by default, costs seconds)           |
+| -x                   | Measure the drive's readback cache (off by default, costs seconds; with `-I`, measure without ripping). **The figure it reports is known to be wrong**, see `docs/KNOWN-ISSUES.md` |
 | -H                   | Enable HDCD decoding, read below for details                                                |
 | -E                   | Force CD deemphasis, for CDs mastered with preemphasis without actually signalling it       |
 | -W                   | Disable automatic CD deemphasis. Read [below](#deemphasis) for details.                     |
@@ -174,6 +174,8 @@ Arguments are optional, except `-s`. By default cyanrip will rip all tracks from
 |                      | **Misc. options**                                                                           |
 | -Q                   | Eject CD tray if ripping has been successfully completed                                    |
 | -Y `file`            | Verify that a rip log's checksum matches its contents                                       |
+| -u `string`          | `--consumer`: identify the calling program in the log, recorded verbatim and not verified (fork) |
+| -j `path`            | `--diagnostics`: write a machine-readable JSON record, even for a run that opens no log (fork) |
 | -v, -V               | Print version (`--version` also works; `-V` is a fork-only alias, see below)                 |
 | -h                   | Print usage (this)                                                                          |
 | -f                   | Find drive offset (requires a disc with an AccuRip DB entry)                                |
@@ -322,7 +324,9 @@ which parses this program's log as an archival record. That makes the log an
 interface, so the fork's additions are mostly *reporting* rather than behaviour,
 and it never renumbers upstream's version.
 
-Behaviour differences from upstream:
+Behaviour differences from upstream. **This list is kept by hand and names the
+main ones**; the complete, dated record is `Changelog.md`, and the defects found
+here that upstream still has are in `docs/upstream/defect-reports.md`:
 
  * **Disc images rip correctly at the default paranoia level.** Upstream sets
    paranoia's cache model to 1 sector for image drivers; because that size is
@@ -337,8 +341,33 @@ Behaviour differences from upstream:
    options and reject `--version` outright. Across stock builds `-V` and
    `--version` are exactly complementary, so a probe that must work on both
    needs both; this fork accepts `--version`, `-v` and `-V`. The measured matrix
-   is `PROVIDER-CONTRACT.md` P6, and this sentence used to give the advice that
-   matrix refutes.
+   is `PROVIDER-CONTRACT.md` P6.
+ * **A signal stops a rip with a complete, checksummed record.** SIGINT and
+   SIGTERM, and from `.20` SIGHUP, end the read, write the completion footer
+   naming the signal, the `Log FUN512:` checksum and the `-j` record. Upstream
+   handles only SIGINT, and logs from inside its signal handler, which can
+   deadlock. SIGQUIT and SIGKILL still end the process with no footer, and
+   SIGPIPE does not stop it at all: libneon, linked through libmusicbrainz5,
+   ignores SIGPIPE process-wide, so a caller that stops reading keeps the rip
+   running.
+ * **The completion footer is written on the abort paths too**: upstream's
+   `goto end` skips it on every one. A process killed outright still leaves
+   none, above.
+ * **`-r` is rounded up to a multiple of 5 for the per-frame limit**, because
+   libcdio-paranoia checks the limit only there: upstream's `-r 3` never returns
+   on an unreadable sector. The `Retry limit:` line says both numbers when they
+   differ. **`-Z N` with an `-r` too small to let it converge is refused** at
+   argument parsing, with the `-r` that would work.
+ * **`-H` with de-emphasis applies both**, and `(deemphasis applied)` is printed
+   only when it happened. Upstream's filter string is a ternary cascade that
+   drops de-emphasis under `-H`. `media` is tagged `CD` under `-H`, not `HDCD`.
+ * **`-a`/`-t` values keep apostrophes and colons**, and an invalid UTF-8 byte
+   no longer truncates a name.
+ * **AccurateRip**: an interrupted track is left out of the tally, a
+   `Accurip 450` lookup compares only 450 checksums, and the disc-level
+   `AccurateRip:` line can read `mismatch` or `not found` as well as `found`.
+ * **Tag keys are written in capitals**, with `DISCTOTAL` beside `TOTALDISCS`
+   (`.19`).
  * **Log and cue files are line-buffered**, so a cancelled rip leaves a partial
    record rather than an empty file.
  * **Read liveness while a frame read is blocked.** A single frame read can sit
@@ -349,23 +378,39 @@ Behaviour differences from upstream:
    on a bad sector blocks inside one SCSI command, where paranoia never calls
    back; the callback version shipped in r2 and was silent through two real
    three-minute stalls. **`-k`** sets the threshold in seconds (default 10, 0
-   disables). These lines go to stdout only and never to the logfile.
+   disables). These lines go to stdout only; the count of stalls and the
+   longest one reach the log as `Read stalls:`.
  * **`-x`** measures the drive's readback cache at rip time, on the disc in the
-   drive, rather than leaving the figure an assumption. Off by default because
-   it costs seconds of drive time, and it refuses to report a number for a disc
-   image, which has no cache to measure. **Not yet verified on hardware.**
+   drive. Off by default because it costs seconds of drive time, and it refuses
+   to report a number for a disc image, which has no cache to measure. It has
+   run on hardware (`-x -I` on 2026-08-25, `-x` ripping on 2026-09-11), and
+   **the number it reports is wrong by roughly fifteen times**: `cd-paranoia -A`
+   measures 137 to 140 sectors on the drive we report as *at least 2048*. The
+   mechanism is in `docs/KNOWN-ISSUES.md`. Do not cite the figure.
 
-Reporting additions, all in the rip log:
+Reporting additions, all in the rip log (P2 of `PROVIDER-CONTRACT.md` is the
+complete, derived list):
 
+ * `Handshake:` and `Consumer:`, saying which agreed pair a rip came from; a
+   build from an open round says `NOT a released build`
  * CD-TEXT, disc level and per track, kept verbatim and separate from the
    metadata dictionaries. It fills metadata only where nothing else claimed it:
    user `-a`/`-t` > MusicBrainz > CD-TEXT > defaults.
- * Per-track paranoia status counters, which sum exactly to the disc totals
- * Pregap provenance per track, distinguishing `none` from `unknown (reason)`
- * `-Z` convergence verdict per track, and per-track extraction speed/elapsed
- * `Encoder:`, naming the libavformat/libavcodec that wrote the audio
+ * Per-track paranoia status counters. **Under `-Z` a track's counters describe
+   its last read, while the disc totals sum every read**, so the two agree only
+   when every track was read once; the `Scope:` line says so on a rip where
+   they cannot agree.
+ * Pregap provenance per track (`Pregap source:`), distinguishing `none` from
+   `unknown (reason)`
+ * `-Z` convergence per track (`Secure re-read:`), the repeat loop's checksum
+   printed as the track's EAC CRC32, and per-track extraction speed and elapsed
+   time
+ * `Encoder:`, naming the libavformat/libavcodec that wrote the audio;
+   `Encoder errors:` and `Partial files:`, counting whole tracks encoded and
+   partial files left
  * `Cache model:`, reporting the size paranoia models and stating that the
    drive was not probed -- deliberately not phrased as a cache defeat
+ * `Retry limit:`, `Read stalls:`, and on an interrupted rip `Interrupted at:`
  * `Sample peak level:`, `True peak level:`, `Integrated loudness (R128):` and
    `Loudness range (R128):`
 

@@ -4,6 +4,14 @@
 else … if a refactor is needed we need to plan". **A plan, not a build.** §2 is
 done; §3 needs a decision per item before any of it is built.*
 
+> **Status, 2026-09-30.** Of §3: **A2, B and C are built** (`c085847`,
+> `08cb71d`, `0698174`); **E is built for both flakes** (`126c433` gives the lap
+> commit list test its 120 s timeout; `9d52271` fixes, in the program, the stop
+> the interrupted sample's freshness check kept catching, and pins it with a
+> shim instead of a timer); **D and F are not decided**: CI's workflow still exists and whether
+> it runs is the operator's call, and the `CLAUDE.md` cut needs the operator's
+> agreement on the target. The text below is the plan as written.
+
 **The rule that bounds all of it: nothing here may remove a check or weaken what
 one asserts.** A faster suite that checks less is not an optimisation. Every
 change is measured before and after, and a change to a checker carries the same
@@ -81,7 +89,7 @@ the banner as soon as the log opens; the sweep now reads rewritten logs too.
 ### B. The argv surface probe (27 s)
 
 Its 116 invocations are independent, so a worker pool at 4 workers should cut it to about 8 s. Needs a
-check that no two invocations share an output path. **Low risk.**
+check that no two invocations share an output path. **Low risk.** **Built at `08cb71d`.**
 
 ### C. The sanitizer sweep (29 s)
 
@@ -89,7 +97,7 @@ Locally it is our only sanitizer coverage, so it stays. In a sanitized build,
 which two of CI's four rows are, it repeats what the whole instrumented suite
 already does. **Skip it when the binary under test is itself instrumented** (it
 already asks `nm`), saying so. Saves nothing locally; saves one sweep per
-sanitized CI row.
+sanitized CI row. **Built at `0698174`.**
 
 ### D. GitHub CI — first decide whether it runs at all
 
