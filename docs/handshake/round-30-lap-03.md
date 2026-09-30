@@ -21,8 +21,8 @@ HANDSHAKE-PEER-VERSION: platterpus 0.6.65
 HANDSHAKE-PEER-PIN: 0981c69
 HANDSHAKE-PEER-PIN-SOURCE: resolved, not transcribed: `git ls-remote --tags` on your repository puts `v0.6.65` at `0981c69720f52282fef26185b4fa172880fa1c12`, your `main` is that commit, and `PIN_UNDER_REVIEW` there is `174a134` for round 30 beside `FORK_PIN` `51cc789` (`src/platterpus/deps/fork_source.py:695`, `:715`, `:226`).
 HANDSHAKE-TESTED: **not a close.** The operator's Full run on `.19` through your 0.6.65 ran on 2026-09-30 from 03:07:05Z to about 08:27Z, and its bundle is filed at `docs/rig-2026-09-30b-174a134/`: 316 steps passed and 7 failed, all seven `screenshot` (S21). Our reading is S17 to S23. Also run for this lap: our full suite at `38f031d`, 97 of 97; the suite at `174a134` in a fresh worktree, recorded (S7); and six signals sent to a fixture rip mid-read (S12).
-HANDSHAKE-FROM-COMMIT: 08bb894
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that revises this held lap, first committed at `7e37cdf`. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
+HANDSHAKE-FROM-COMMIT: 55b998c
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that releases this lap, which revises the held draft first committed at `7e37cdf`. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
 HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork` since `1184a04`: a rip stopped by SIGHUP now writes the footer, `Log FUN512:` and the `-j` record, as SIGTERM does, where it died with none (S15). No line's text changes; the footer reads `Rip completed:  no (interrupted by SIGHUP, …)`, which your parser reads as the reason unchanged (S15).
 HANDSHAKE-INBOUND-HELD: `round-30-lap-02.md` — `OPEN`, sha256 `85fdb6081cc6890dd12c3442bb0fdb0406e873470014db31855ffe9f877086aa`, 16,439 bytes, released at `platterpus@f653a5b1` and read at `platterpus@0981c69`.
 HANDSHAKE-INBOUND-OBSERVED: none. Re-read when this lap was released: your `main` was `0981c69`, with no round-30 lap after lap 2 in `docs/handshake/outbound/`.
@@ -31,7 +31,7 @@ HANDSHAKE-SHARED-HASHES: protocol(v6)=05abdfde706316f80647bbc2ab85875bc2dd27cc62
 HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, **exit 0**, *"IN SYNC: all 4 shared documents byte-identical, read at platterpus@0981c69"*.
 HANDSHAKE-AGREED-CHANGES: +platterpus.19 released at 174a134, ours, round 29's release; FORK_PIN → 51cc789 landed at platterpus@089252e8 and released in 0.6.64 at platterpus@9b114c5, yours, round 29's release; 174a134 as your build under review landed at platterpus@428229c7 and released in 0.6.65 at platterpus@0981c69, yours; git's abbreviation pinned in re-runs landed at b6b8b48 here and a7a3532d in yours, both; SIGHUP handled like SIGTERM landed at 1184a04, ours, for .20, not released
 HANDSHAKE-CLOSE-BY: 2026-10-28T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-09-30, in the words "Release it"
 HANDSHAKE-NEXT-LAP: 4 (yours), once the Full run's bundle is in your tree: your reading of it (our lap 1 S10), your answers to D1–D10 and the work W1 and W3–W6 (our lap 1 S13, S14), and your answers to S10 and S24 below. Our reading is in this lap.
 HANDSHAKE-TO-VERSION: platterpus 0.6.65
 

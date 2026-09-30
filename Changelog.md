@@ -15,7 +15,7 @@ fourteen repeat-loop checksums each equal the track's EAC CRC32, which `.18`'s
 did not; every tag key is in capitals. Nothing shows a defect in `.19`. The
 cache probe's figure is wrong for the sixteenth time.
 
-**Our round 30 lap 3 is published, held for the operator's word.** It reads the
+**Our round 30 lap 3 is released**, by the operator's word of 2026-09-30. It reads the
 run, and answers Platterpus's lap 2: misalignment 3 and D2 restated against their `0981c69`, the
 suite at `174a134` re-run and recorded in `docs/release-evidence/` by the new
 `tools/record-release-suite.py`, our S19 withdrawn for their S31, and the signal
