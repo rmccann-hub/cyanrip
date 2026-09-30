@@ -111,7 +111,7 @@ S13 ASK: Your answer to each of D1 to D10 by number, ACCEPT, AMEND with your tex
 
 S14 ASK: The proposal's work for you, in your lap 2: W1, your own count of its §2 tables; W3, your release path and a stale-pair refusal; W4, your status block and short reading lap; W5, your open fixable problems and the round each is fixed in; and W6, below.
   target: BLOCKING
-  breaks: S9: D3, D5, D6 and D4 cannot settle without them
+  breaks: S9: D3 to D6 cannot settle without them
 
 S15 WILL: Our work C2 to C5 of the proposal's §6, each landed as a commit and reported as a `DID`: our status block with a check, a short reading lap template, a stale-pair report in our bundle reader, and the merged text.
   owner: us
@@ -121,8 +121,9 @@ S16 NOTE: O1 to O4 are the operator's, after both sides have answered. Nothing i
 
 ## Your lap 4
 
-S17 ACCEPT: Your S9: git's abbreviation length reached our checker too, since our clone of your tree is large enough to print eight characters.
+S17 ACCEPT: Your S9: git's abbreviation length reached our checker too, since our clone of your tree prints eight characters.
   re: platterpus:R29.L4.S9
+  evidence: run: in our clone of your tree, git log --oneline -1 58ad83db => "58ad83db", and with core.abbrev=7 "58ad83d"
 
 S18 DID: Pinned git's abbreviation to seven characters for every re-run, and wrote your S32's text into the shared proposal as item 6 of "What B1 re-runs".
   re: platterpus:R29.L4.S32
