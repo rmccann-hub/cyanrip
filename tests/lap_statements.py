@@ -275,13 +275,13 @@ def make_repo(path, branch, n):
     return shas
 
 
-def check_lap(text, *extra, stdin_text=None):
+def check_lap(text, *extra, stdin_text=None, env=None):
     with tempfile.TemporaryDirectory() as tmp:
         p = pathlib.Path(tmp) / "lap.md"
         p.write_text(text)
         r = subprocess.run([sys.executable, str(TOOL), str(p), *extra],
                            capture_output=True, text=True, cwd=ROOT,
-                           input=stdin_text)
+                           input=stdin_text, env=env)
     return r.returncode, r.stdout + r.stderr
 
 
@@ -487,8 +487,9 @@ S13 VERDICT: {verdict}
 """
 
 
-def check2(text, laps, *extra, stdin_text=None):
-    return check_lap(text, "--laps", str(laps), *extra, stdin_text=stdin_text)
+def check2(text, laps, *extra, stdin_text=None, env=None):
+    return check_lap(text, "--laps", str(laps), *extra, stdin_text=stdin_text,
+                     env=env)
 
 
 def swap2(old, new):
@@ -829,14 +830,14 @@ with tempfile.TemporaryDirectory() as tmp:
     g(repo, "commit", "-q", "-m", "tools")
     at = g(repo, "rev-parse", "--short=12", "HEAD")
 
-    def rr(cmd_result, *extra, fields="", stdin_text=None):
+    def rr(cmd_result, *extra, fields="", stdin_text=None, env=None):
         body = ("S1 FACT measured: The tool said so.\n"
                 f"  evidence: run: {cmd_result}\n{fields}"
                 "  holds: 0.9.4\n  examined: 1 run, closed\n\n"
                 "S2 VERDICT: OPEN\n  basis: S1\n")
         return check2(lap3("cyanrip-fork", 30, 1, "OPEN", body,
                            from_commit=at), empty, "--ours", str(repo), *extra,
-                      stdin_text=stdin_text)
+                      stdin_text=stdin_text, env=env)
 
     outcome("B1: a marked tool re-run at its commit matches its quoted result",
             rr('python3 tools/say.py => "hello 42"', "--rerun"), 0,
@@ -867,6 +868,18 @@ with tempfile.TemporaryDirectory() as tmp:
     outcome("B1: a result with nothing quoted is not compared",
             rr('python3 tools/say.py => hello 42', "--rerun"), 0,
             ["UNCHECKED run: its result quotes no output to compare"])
+    # Platterpus round 29 lap 4 S9: git sizes an abbreviated hash by the
+    # clone's object count. core.abbrev=12 in the checker's own environment
+    # stands in for a clone big enough to print longer hashes; the re-run
+    # pins seven, so a seven-character quote followed by text still matches.
+    short7 = g(repo, "rev-parse", "--short=7", "HEAD")
+    abbrev12 = dict(os.environ, GIT_CONFIG_COUNT="1",
+                    GIT_CONFIG_KEY_0="core.abbrev", GIT_CONFIG_VALUE_0="12")
+    outcome("B1: a re-run pins git's abbreviation, whatever the clone would print",
+            rr(f'git log --oneline -1 {at} => "{short7} tools"', "--rerun",
+               env=abbrev12), 0,
+            ["1 re-run and matched, 0 re-run and not matched", "well formed"],
+            absent=["UNCHECKED"])
     outcome("B1: without --rerun nothing is executed, and the checker says so",
             rr('python3 tools/say.py => "hello 43"'), 0,
             ["none re-run: --rerun was not given", "well formed"])

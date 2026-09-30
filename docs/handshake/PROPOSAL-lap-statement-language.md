@@ -272,6 +272,14 @@ commands are safe to repeat would be a guess wearing a derivation's clothes:
    of `exit N` from Platterpus's round 29 lap 2 (S15), and accepted by both
    (their lap 2 S12, our lap 3 S27).
 
+6. **git's abbreviation is pinned to seven characters** for every re-run, so
+   a hash's length is not the clone's. git otherwise sizes an abbreviated
+   hash by the repository's object count, so the same `git log --oneline`
+   prints `f8ebf48` in one clone and `f8ebf48f` in a larger one, and a
+   correct quote of a hash followed by text is then not found. git still
+   lengthens a prefix that would be ambiguous. Found by Platterpus (round 29
+   lap 4 S9) and proposed by them for the text (S32); both checkers pin it.
+
 **Anything else is reported, not refused**: `UNCHECKED run:` with the reason,
 as `LSL.unchecked`. A network, drive or clock command is never re-run, as
 Platterpus's amendment says. Without `--rerun` nothing is executed and the

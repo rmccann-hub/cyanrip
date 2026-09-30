@@ -997,11 +997,22 @@ def rerun(resolver, side, sha, cmd, result):
         # child is left holding its pipes; bytes decoded with replacement, so
         # output that is not UTF-8 is compared rather than raised out of the
         # checker as a refusal (round 28 lap 6 S27, S28).
+        # git's abbreviation pinned to seven characters (Platterpus round 29
+        # lap 4 S9): git otherwise sizes it by the clone's object count, so a
+        # larger clone prints a longer hash and a correct quote of a hash
+        # followed by text is not found. Appended after any GIT_CONFIG_*
+        # entries already set, so it is the value git reads; git still
+        # lengthens a prefix that would be ambiguous.
+        env = dict(os.environ)
+        n = int(env.get("GIT_CONFIG_COUNT", "0") or "0")
+        env[f"GIT_CONFIG_KEY_{n}"] = "core.abbrev"
+        env[f"GIT_CONFIG_VALUE_{n}"] = "7"
+        env["GIT_CONFIG_COUNT"] = str(n + 1)
         try:
             proc = subprocess.Popen(argv, cwd=work, stdin=subprocess.DEVNULL,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
-                                    start_new_session=True)
+                                    start_new_session=True, env=env)
         except OSError as e:
             return "unchecked", f"did not start: {e}"
         try:
