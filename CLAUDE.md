@@ -1668,12 +1668,18 @@ Four mechanisms, each measurable, each with a rule:
   neither side will give up.
 - **Every finding was promoted to a blocker by default.** None of round 7's
   findings made the reviewed pin unsafe -- they made the *next* build better.
-  **Rule: a finding defaults to the next round.** Promoting one to blocking
-  requires naming what it breaks in the artifact under review. "It is a real
+  **Rule, as round 7 wrote it: a finding defaults to the next round. From
+  round 31 it is fixed within the round** (v7 R3, seam-rules S-14): a finding
+  that needs no drive, no code of the other side's and no decision of the
+  operator's is landed before that side's closing lap and ships in the release
+  the close authorises. Promoting one to blocking still requires naming what
+  it breaks in the artifact under review. "It is a real
   defect" is an argument for fixing it, never on its own for holding a release.
 - **The pin chased the work.** Ten test pins in one round, each invalidating the
   evidence gathered against the last. **Rule: once a test pin is agreed it does
-  not move for the rest of the round**, unless it is found unsafe. Fixes queue.
+  not move for the rest of the round**, unless it is found unsafe. Fixes land
+  past the pin within the round (v7 R3, R4, S-15) and ship in the release the
+  close authorises; the next round reviews them.
   A pin that moves whenever something is fixed guarantees the hardware evidence
   is always about a build nobody is reviewing any more.
 - **The return-file spec *requires* a questions section.** So every lap
@@ -2029,9 +2035,11 @@ carries the operator's question of how release, run and round line up
 `+platterpus.20`, on beta under the operator's O3, named in our round 30 lap 5**:
 SIGHUP handling (`1184a04`), the loudness figures measured on the delivered
 audio (`cc79c5b`), and a fresh filter for each `-Z` pass (`4c3bd3e`). Its plan
-is not written yet. The agreed text of D1 to D10 is proposed as PROTOCOL v7
-and seam-rules v7 in `docs/handshake/proposed/` (`09f39bc`), and lands in place
-once Platterpus accepts it.**
+is not written yet. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and
+Platterpus's lap 6 amendments as our lap 7 amends two of them, are landed in our
+tree by the commit carrying our round 30 lap 7 (proposed at `2abeb5d`). Theirs
+lands in the commit that files our lap 7. Our gate stays at 6 until both trees
+hold v7 (§15), and v7 binds from round 31.**
 
 **`+platterpus.18` SHIPPED on 2026-09-28** at `51cc789`, `release_seq` 28,
 stable, authorised by **round 28** — `docs/RELEASE-PLAN-platterpus.18.md` is

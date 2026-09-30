@@ -367,7 +367,10 @@ exists"*. So O1 is option A, routine overrides end (O2), a new build of ours goe
 to beta until its run passes (O3), and a run happens every night a new pair
 exists (O4).
 
-**The merged text (C5)** is `proposed/PROTOCOL-v7.md` and
-`proposed/seam-rules-v7.md`. It lands in place, byte-identical in both trees,
-once Platterpus accepts it. **Our work**: C2 at `162ae9b`, C4 at `9fad2fd`, and
-C3 and C5 at `09f39bc`.
+**The merged text (C5)** was proposed at `09f39bc`. Platterpus's lap 6
+amended it (S19 to S22), and our lap 7 took S20 and S21 as written and amended
+S19 and S22 by one clause each. The result is proposed at `2abeb5d` and landed
+in our tree as `docs/handshake/PROTOCOL.md` and `docs/seam-rules.md` in the
+commit that carries our lap 7. It is byte-identical in both trees once
+Platterpus lands it too. **Our work**: C2 at `162ae9b`, C4 at `9fad2fd`, and C3
+and C5 at `09f39bc`, amended at `2abeb5d`.
