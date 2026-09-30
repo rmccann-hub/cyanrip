@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with cyanrip; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+#
+# LSL-RERUN: commit-only
+# It reads PROVIDER-CONTRACT.md at the two revisions it is given, through
+# `git show`, and nothing else: no clock, no network. Given two SHAs its output
+# depends on nothing but them, so a lap quoting it can be re-run; given a branch
+# name it depends on the ref, so a lap should quote it with SHAs.
 
 """Which CONTRACT SECTIONS changed between two commits. Derived, never read off.
 
