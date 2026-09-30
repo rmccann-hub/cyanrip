@@ -234,11 +234,20 @@ def markdown_block(rows, inter, ignored, banner):
 # whenever the suite runs over uncommitted edits, and every mutant of
 # tools/mutate.py is; refusing that would make this a test that detects the
 # edit rather than the defect.
+#
+# THE VERSION IS NORMALISED TOO, for the same reason one release later: every
+# release moves it and nothing else, and the file is jointly owned, so without
+# this each release would force a change to a shared document for a banner. The
+# `.19` candidate's own suite failed on exactly that (2026-09-30). The banner
+# stays true -- it names the build the tables were generated from -- and what is
+# compared is what matters: every measured row against the live binary.
 BUILD_TAG_RE = re.compile(r"(platterpus-fork-g)[0-9a-f]{7,40}(?=\)`)")
 LIVE_TAG_RE = re.compile(r"(platterpus-fork-g)[0-9a-f]{7,40}(?:-dirty)?(?=\)`)")
+VERSION_RE = re.compile(r"(`cyanrip )[^ `]+(?= \(platterpus-fork-g)")
 
 
 def _normalise_build(text, live=False):
+    text = VERSION_RE.sub(r"\1<version>", text)
     return (LIVE_TAG_RE if live else BUILD_TAG_RE).sub(r"\1<build>", text)
 
 
