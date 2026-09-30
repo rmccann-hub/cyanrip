@@ -194,7 +194,17 @@ ART_RE = re.compile(r"^(cyanrip|platterpus)@([0-9a-f]{7,40}):([^\s:]+)"
 STMT_RE = re.compile(r"^(?:(cyanrip|platterpus):R(\d+)\.L(\d+)\.)?"
                      r"(S\d+|§[A-Za-z0-9.]+)$")
 DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
-LSL_RE = re.compile(r"^LSL: ([123])\s*$", re.M)
+# The versions this checker implements, in one place. LSL_RE listed 1-3 after
+# LSL 4 landed (049886f) while parse() accepted 4, so a held LSL 4 lap parsed
+# and a statement in it could not be cited: "a prose lap". Round 30 lap 7.
+LSL_VERSIONS = (1, 2, 3, 4)
+LSL_RE = re.compile(r"^LSL: (" + "|".join(map(str, LSL_VERSIONS)) + r")\s*$", re.M)
+
+
+def _versions_said():
+    """LSL_VERSIONS as a sentence says it: "1, 2, 3 and 4"."""
+    v = [str(n) for n in LSL_VERSIONS]
+    return v[0] if len(v) == 1 else ", ".join(v[:-1]) + " and " + v[-1]
 # A4: holds: must name a commit or a version.
 HOLDS_RE = re.compile(r"\b[0-9a-f]{7,40}\b|\b\d+\.\d+(?:\.\d+)?\b")
 # A5: examined: <n> <unit>, closed|open
@@ -273,10 +283,10 @@ def parse(lap):
         if m and start is None:
             lap.headers.setdefault(m.group(1), []).append(m.group(2))
         if line.rstrip().startswith("LSL:") and start is None:
-            if line.rstrip() not in ("LSL: 1", "LSL: 2", "LSL: 3", "LSL: 4"):
+            if not LSL_RE.fullmatch(line.rstrip()):
                 lap.refuse(i + 1, "LSL.version",
                            f"declares {line.strip()!r}; this checker "
-                           f"implements LSL 1, 2, 3 and 4 only")
+                           f"implements LSL {_versions_said()} only")
                 return False
             lap.version = int(line.rstrip()[-1])
             start = i + 1
@@ -1323,7 +1333,7 @@ def main():
             print(f"CANNOT CHECK  {args.lap}:{line}  [{rule}] {msg}")
         if not lap.refusals:
             print(f"CANNOT CHECK  {args.lap}  [LSL.version] not an LSL lap "
-                  f"-- no 'LSL: 1', 'LSL: 2', 'LSL: 3' or 'LSL: 4' line")
+                  f"-- no 'LSL: N' line for N in {', '.join(map(str, LSL_VERSIONS))}")
         return 2
     resolver = Resolver(args.ours, args.peer, refs)
     resolver.rerun = args.rerun

@@ -1128,6 +1128,28 @@ for name, body in (("every condition met (lap 6 S19 as written)", SD_SETS + SD_M
             ["well formed", "checked against 2 close condition(s)"],
             absent=["REFUSED"])
 
+# A statement in a held lap of every LSL version can be cited. The version
+# list lived in two places, parse() and LSL_RE, and LSL 4 (049886f) reached
+# only the first: a held LSL 4 lap parsed, and `re:` to one of its statements
+# was refused as "a prose lap and has no statement numbers". Found writing
+# our round 30 lap 7, whose AMENDs cite Platterpus's LSL 4 lap 6.
+for held_v in (3, 4):
+    with tempfile.TemporaryDirectory() as tmp:
+        laps = pathlib.Path(tmp)
+        (laps / "inbound").mkdir()
+        (laps / "inbound" / "round-31-lap-01.md").write_text(
+            "HANDSHAKE-PROTOCOL: 6\nHANDSHAKE-ROUND: 31\nHANDSHAKE-LAP: 1\n"
+            "HANDSHAKE-FROM: platterpus\nHANDSHAKE-VERDICT: OPEN\n\n"
+            f"LSL: {held_v}\n\nS1 ASK: Is the line stable?\n  target: NEXT-ROUND\n\n"
+            "S2 VERDICT: OPEN\n  basis: S1\n", encoding="utf-8")
+        ours = ("HANDSHAKE-PROTOCOL: 6\nHANDSHAKE-ROUND: 31\nHANDSHAKE-LAP: 2\n"
+                "HANDSHAKE-FROM: cyanrip-fork\nHANDSHAKE-VERDICT: OPEN\n\n"
+                "LSL: 4\n\nS1 ACCEPT: Yes.\n  re: platterpus:R31.L1.S1\n\n"
+                "S2 VERDICT: OPEN\n  basis: S1\n")
+        outcome(f"re: to a statement in a held LSL {held_v} lap",
+                check_lap(ours, "--laps", str(laps)), 0, ["well formed"],
+                absent=["prose lap", "REFUSED"])
+
 if failures:
     print(f"\n{failures} failure(s)")
     sys.exit(1)
