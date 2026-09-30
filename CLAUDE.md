@@ -1998,6 +1998,20 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
+**`+platterpus.19` SHIPPED on 2026-09-30** at `174a134`, `release_seq` 29,
+stable, authorised by **round 29** — `docs/RELEASE-PLAN-platterpus.19.md` is
+executed and bannered. It carries tag keys in capitals with `DISCTOTAL` beside
+`TOTALDISCS`, the repeat loop's checksum as the track's EAC CRC32, a
+repeat-limit line that says how many reads agreed, and `-Z N` with `-r` of N or
+less refused. Its consumer-side prerequisite, a Platterpus release reading both
+wordings of the repeat-limit line, is their 0.6.63. **A first candidate failed
+its own suite and was never published**; the two fixes are the commits before
+`174a134`. Platterpus's 0.6.64 carries `FORK_PIN` `51cc789`. **Round 30 opens by
+our lap 1, naming `174a134` for 0.6.64 to review, and carries the operator's
+question of how release, run and round line up**
+(`docs/handshake/PROPOSAL-release-cycle.md`). **The next release is
+`+platterpus.20` and nothing is written for it.**
+
 **`+platterpus.18` SHIPPED on 2026-09-28** at `51cc789`, `release_seq` 28,
 stable, authorised by **round 28** — `docs/RELEASE-PLAN-platterpus.18.md` is
 executed and bannered. It carries `Encoder errors:` counting whole tracks with
@@ -2006,8 +2020,8 @@ the disc-level `AccurateRip:` line able to read `mismatch` or `not found`, the
 AccurateRip parse split out and tested, and upstream's `f8ebf48` (merged at
 `1fb6f07`). There is no consumer-side prerequisite. Platterpus's 0.6.63 carries
 `FORK_PIN` `e0471f4`, round 28's approval, so their app offers `.18` marked
-`unapproved` until round 29 reviews it. **Round 29 opens on `.18`, by our lap
-1. The next release is `+platterpus.19` and nothing is written for it.**
+`unapproved` until round 29 reviews it. Round 29 opened on `.18`, by our lap
+1, and closed on 2026-09-29 after the Full run on it with Platterpus 0.6.63.
 
 **`+platterpus.17` SHIPPED on 2026-09-26** at `e0471f4`, `release_seq` 27,
 stable, authorised by **round 27** — `docs/RELEASE-PLAN-platterpus.17.md` is
@@ -2083,7 +2097,7 @@ tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
   That was the operator's call to make, and the plan's job was to put the cost in
   front of them before it was made.
 
-**Plans that exist:** `.5`, `.12`, `.13`, `.14`, `.15`, `.16`, `.17`, `.18`,
+**Plans that exist:** `.5`, `.12`, `.13`, `.14`, `.15`, `.16`, `.17`, `.18`, `.19`,
 all executed and bannered. `.15`'s is the short case: its round settled the channel, so it poses
 nothing.
 **The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the

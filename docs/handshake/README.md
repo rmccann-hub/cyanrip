@@ -15,7 +15,7 @@ record of the rounds themselves.
 
 ## Current pin
 
-**Both channels resolve to the same build**, `+platterpus.18`. When they
+**Both channels resolve to the same build**, `+platterpus.19`. When they
 differ, `stable` is what you get without opting in and `beta` is newer. Pick by
 risk tolerance, not by recency — and never by comparing the version strings,
 which cannot be ordered at all.
@@ -25,9 +25,9 @@ which cannot be ordered at all.
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
-commit          51cc789                          <- build this
---version       cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-g51cc789)
-release_seq     28                               <- the ONLY orderable identifier
+commit          174a134                          <- build this
+--version       cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)
+release_seq     29                               <- the ONLY orderable identifier
 channel         stable
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
@@ -38,21 +38,21 @@ git tag         none published
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          51cc789
---version       cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-g51cc789)
-release_seq     28                               <- newest of any channel
+commit          174a134
+--version       cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)
+release_seq     29                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
 **`beta` resolves to the newest row of ANY channel**, so opting into
-pre-releases can never move a user backwards. `+platterpus.18` is the newest row
+pre-releases can never move a user backwards. `+platterpus.19` is the newest row
 overall, so both channels resolve to it and there is no separate beta to take.
 That property was not decorative: the first generated manifest had `beta` on seq
 10 while `stable` was seq 11, so opting in would have been a downgrade.
 
-**`0.9.4-rc2+platterpus.18` IS A STABLE RELEASE despite the `-rc2`.** That
+**`0.9.4-rc2+platterpus.19` IS A STABLE RELEASE despite the `-rc2`.** That
 string is upstream's, copied verbatim because we may not mint in
 `cyanreg/cyanrip`'s namespace; the part that advances is SemVer build metadata,
 which the spec says MUST be ignored for precedence. **A check that reads the
@@ -168,19 +168,18 @@ directory against `tools/release-gate.py`. **The warning above the table did not
 stop it happening a second time, so read the gate and treat the table as a
 convenience.**
 
-**Every round is closed**: round 28 closed on 2026-09-28 on Platterpus's lap 9,
+**Every round is closed**: round 29 closed on 2026-09-29 on Platterpus's lap 4,
 by v6 §5b step 3, so `tools/release-gate.py --release-gate` exits 0. It reviewed
-`.17` on the Full run with Platterpus 0.6.61 (`docs/rig-2026-09-28-e0471f4/`).
-The live release is **`0.9.4-rc2+platterpus.18` at `51cc789`**, `release_seq`
-28, authorised by **round 28**, under v6 R8: a round's close authorises a
-release of both applications, ours first. It carries `Encoder errors:` counting
-whole tracks and a new `Partial files:` line, the stop marker on every signal
-stop of a read, the disc-level `AccurateRip:` line able to read `mismatch` or
-`not found`, the AccurateRip parse split out and tested, and upstream's
-MusicBrainz retry. There is no consumer-side prerequisite. **Platterpus's 0.6.63
-carries `FORK_PIN` `e0471f4`**, round 28's approval, so their app offers `.18`
-marked `unapproved` until round 29 reviews it. Round 29 opens on `.18`, by our
-lap 1.
+`.18` on the Full run with Platterpus 0.6.63 (`docs/rig-2026-09-28c-51cc789/`).
+The live release is **`0.9.4-rc2+platterpus.19` at `174a134`**, `release_seq`
+29, authorised by **round 29**, under v6 R8: a round's close authorises a
+release of both applications, ours first. It carries tag keys in capitals with
+`DISCTOTAL` beside `TOTALDISCS`, the repeat loop's checksum as the track's EAC
+CRC32, a repeat-limit line that says how many reads agreed, and `-Z N` with `-r`
+of N or less refused. Its one consumer-side prerequisite, a Platterpus release
+that reads both wordings of the repeat-limit line, is their 0.6.63. **Their
+0.6.64 carries `FORK_PIN` `51cc789`**, round 29's approval. Round 30 opens by
+our lap 1, which names `174a134` for 0.6.64 to review.
 
 **`proposed/` held shared-document texts under review, and is gone.** Round 25
 proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md` v6 there, by

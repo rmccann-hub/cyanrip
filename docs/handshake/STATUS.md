@@ -40,15 +40,15 @@ checks, and neither is a dated state.
 
 | | |
 |---|---|
-| **released** | **`0.9.4-rc2+platterpus.18` at `51cc789`**, `release_seq` 28, stable, cut 2026-09-28 on round 28's authority |
-| build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/51cc789.tar.gz` — verified from a `git archive` of exactly that commit before publication, reporting `released build` |
-| previous | `.17` at `e0471f4`, seq 27, 2026-09-26, round 27; `.16` at `221a1df`, seq 26 |
-| what `.18` changed | five `src/` commits of ours and one merge of upstream's, against `.17`: `Encoder errors:` counts only tracks whose read completed, and a new P2 line, `Partial files:`, names a partial file (`f150c0c`, announced in round 28 lap 3); `Stopping, ripping incomplete!` prints on every signal stop of a read (`9d52271`); the AccurateRip parse is split out of the fetch and tested on a recorded response, keeping its data error in the contract's P5a (`5b7493c`, `a646d54`); the disc-level `AccurateRip:` line can read `mismatch` or `not found` (`64642db`); and upstream's `f8ebf48`, merged at `1fb6f07`, a MusicBrainz retry when the server is busy. `docs/RELEASE-PLAN-platterpus.18.md` |
+| **released** | **`0.9.4-rc2+platterpus.19` at `174a134`**, `release_seq` 29, stable, cut 2026-09-30 on round 29's authority |
+| build it | `meson setup build -Ddeclare_released=true && ninja -C build` from `https://github.com/rmccann-hub/cyanrip/archive/174a134.tar.gz` — verified from a `git archive` of exactly that commit before publication, reporting `released build` |
+| previous | `.18` at `51cc789`, seq 28, 2026-09-28, round 28; `.17` at `e0471f4`, seq 27 |
+| what `.19` changed | five `src/` commits of ours against `.18`: every tag key in capitals, with `DISCTOTAL` beside `TOTALDISCS`, and two error-path lines that came with it, `Couldn't set metadata: %s!` and `(not listed: out of memory)` (`bf50705`); the repeat loop's checksum is the track's EAC CRC32 (`9669d84`); the repeat-limit line says how many reads agreed (`fb31a2b`); and `-Z N` with `-r` of N or less is refused, exit 1 (`22f7aae`, `ad11743`). The contract's sections that changed are named by `tools/contract-delta.py 51cc789 174a134` |
 | `.18` on a drive | **round 29's Full acceptance on `.18` with Platterpus 0.6.63 ran from 2026-09-28T22:33:56Z to 2026-09-29T03:55Z** (`docs/rig-2026-09-28c-51cc789/`). **Its script's verdict is not a pass**: 320 pass, 3 fail, `counts_as_evidence: true`, no section skipped or blocked, and all three failures are `screenshot` steps that found no window on screen. All ten cyanrip logs verify with `-Y`; nine completed with `Ripping errors: 0`, and the interrupted one printed `.18`'s stop marker and its `Encoder errors:` and `Partial files:` lines. The secure re-read converged on all fourteen tracks. Nothing in it is a defect in `.18`. The disc-level `AccurateRip:` line's `mismatch` and `not found` arms and upstream's MusicBrainz retry are not exercised |
 | `.17` on a drive | **the Full acceptance on `.17` with Platterpus 0.6.61 ran on 2026-09-28 from 01:48:08Z to 07:08Z**: its script reported 320 of 320, 0 skipped, `counts_as_evidence: true` (`docs/rig-2026-09-28-e0471f4/`). All eight cyanrip logs verify with `-Y`; seven completed with `Ripping errors: 0` and the interrupted one stopped as section I intends. `.17`'s `Accurip 450` wording printed on the drive for the first time. One wrong read, track 3 in section F with no `-Z`, a checksum never filed before; the secure re-read got track 3 right. **The operator chose on 2026-09-28 that this run closes round 28**, as lap 1 S6 names it, so Platterpus's lap 6 S36 override moving the run to their 0.6.62 falls away. **A second Full run of `.17`, through their 0.6.62, ran the same day from 14:42:38Z to 19:27Z** and is filed as `docs/rig-2026-09-28b-e0471f4/`: 320 of 320, all eight logs verify with `-Y`, and the secure re-read converged on all fourteen tracks. It is a close condition of neither round 28 nor round 29 |
 | gate | `--release-gate` exits **0**: every round is closed. Round 29 closed on our gate on Platterpus's lap 4 by v6 §5b step 3, with no lap 5 of ours, and it authorises `.19` under v6 R8 |
-| the tip | **the release's publish commit and after.** Build from the release commit, not the tip. The tip carries five `src/` commits beyond `.18`, none released: tag keys in capitals with `DISCTOTAL` beside `TOTALDISCS` (`bf50705`, round 29 lap 1's S8); the repeat loop's `Done;` checksum printed finalised, as the track's `EAC CRC32:` (`9669d84`); the repeat-limit line saying how many reads agreed (`fb31a2b`); and `-Z N` with `-r` of N or less refused (`22f7aae`, `ad11743`). No `.19` is written yet |
-| next | **`.19`, then round 30.** R8 cuts ours first: `+platterpus.19`, carrying the five `src/` commits past `.18`. Their closing release is 0.6.64 with `FORK_PIN` `51cc789`; at `platterpus@58ad83db` its build under review is still `51cc789`, so for the next Full run to test `.19`, 0.6.64 has to name it, which is why ours goes first. Round 30's lap 1 announces `.19` by version and commit, and carries the operator's question to both sides: how the release, the run and the round should line up, with laps as the cost to cut |
+| the tip | **the release's publish commit and after.** Build from the release commit, not the tip. No `src/` commit is past `.19` |
+| next | **Round 30, opened by our lap 1**, which names `174a134` for Platterpus's 0.6.64 to review, so that the next Full run tests `.19`, and carries the operator's question to both sides: how the release, the run and the round should line up, with laps as the cost to cut (`docs/handshake/PROPOSAL-release-cycle.md`) |
 
 **`.18` is stable because round 28 authorised it, and the build itself is
 round 29's to review.** Platterpus's `FORK_PIN` is `e0471f4` on their `main`
@@ -248,22 +248,22 @@ identifier.
 
 | field | value |
 |---|---|
-| **stable version** | `0.9.4-rc2+platterpus.18` |
-| **stable commit** | **`51cc789`** |
-| stable build tag | `platterpus-fork-g51cc789` |
-| stable install | `https://github.com/rmccann-hub/cyanrip/archive/51cc789.tar.gz` |
-| stable `release_seq` | 28 |
-| stable authorised by | handshake round 28, closed `GO`/`GO` on `e0471f4` / `59f4c00` (Platterpus 0.6.61), nine laps — the pins round 28 lap 8 declares |
+| **stable version** | `0.9.4-rc2+platterpus.19` |
+| **stable commit** | **`174a134`** |
+| stable build tag | `platterpus-fork-g174a134` |
+| stable install | `https://github.com/rmccann-hub/cyanrip/archive/174a134.tar.gz` |
+| stable `release_seq` | 29 |
+| stable authorised by | handshake round 29, closed `GO`/`GO` on `51cc789` / `d226c03` (Platterpus 0.6.63), four laps — the pins round 29 lap 3 declares |
 | | |
-| **beta version** | `0.9.4-rc2+platterpus.18` |
-| **beta commit** | **`51cc789`** |
-| beta build tag | `platterpus-fork-g51cc789` |
-| beta install | `https://github.com/rmccann-hub/cyanrip/archive/51cc789.tar.gz` |
-| beta `release_seq` | 28 |
-| beta authorised by | handshake round 28, closed `GO`/`GO` — same build as stable |
+| **beta version** | `0.9.4-rc2+platterpus.19` |
+| **beta commit** | **`174a134`** |
+| beta build tag | `platterpus-fork-g174a134` |
+| beta install | `https://github.com/rmccann-hub/cyanrip/archive/174a134.tar.gz` |
+| beta `release_seq` | 29 |
+| beta authorised by | handshake round 29, closed `GO`/`GO` — same build as stable |
 
 `beta` resolves to the newest row of *any* channel, so opting into pre-releases
-can never move a user backwards. Both channels resolve to `51cc789`; there is no
+can never move a user backwards. Both channels resolve to `174a134`; there is no
 separate beta to take.
 
 **`+platterpus.8` (`796df32`, seq 18) is superseded and should not be installed.**
