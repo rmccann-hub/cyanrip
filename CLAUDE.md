@@ -2022,7 +2022,8 @@ wordings of the repeat-limit line, is their 0.6.63. **A first candidate failed
 its own suite and was never published**; the two fixes are the commits before
 `174a134`. **Round 30 opened on 2026-09-30 by our lap 1**, and Platterpus's
 0.6.65 (`v0.6.65` = `platterpus@0981c69`) names `174a134` as its build under
-review beside `FORK_PIN` `51cc789`; the Full run on it is under way. The round
+review beside `FORK_PIN` `51cc789`; the Full run on it ran on 2026-09-30
+(`docs/rig-2026-09-30b-174a134/`) and shows no defect in `.19`. The round
 carries the operator's question of how release, run and round line up
 (`docs/handshake/PROPOSAL-release-cycle.md`). **The next release is
 `+platterpus.20`; nothing is written for it, and SIGHUP handling (`1184a04`) is
