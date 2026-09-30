@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g4c3bd3e)`
+Build: `cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-gfaf8ba6)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -164,9 +164,13 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
 
 ## P2 - Outputs: stable log lines (the API)
 
-Every line below reaches **both stdout and the logfile**. Changing the text,
-indentation, field order or units of any of them is a breaking change and
-requires a handshake round.
+Every line below is written by `cyanrip_log()`: to stdout, and to the logfile
+when the run opens one, which replays what was printed before it opened. **A
+run that ends before a logfile opens prints them to stdout only**, and every
+`-I`, `-J` and `-f` run is one: `-I` and `-J` skip the logfile by design, and
+`-f` ends after its search, before the logfile would open
+(`sc_probe_runs_open_no_logfile`). Changing the text, indentation, field order
+or units of any of them is a breaking change and requires a handshake round.
 
 | File:line | Line |
 |---|---|
