@@ -1309,6 +1309,33 @@ verified against the installed headers *and* the `.so` export table).
 
 ## Open, joint — belongs to the seam, not to one side
 
+### Closing Platterpus's script console mid-rip left a log with no footer — cause not determined
+
+**Observed once, 2026-09-30, on `.18` through Platterpus 0.6.64**
+(`docs/rig-2026-09-30-174a134/rips/full-acceptance-angle-bracket.log`). The
+operator closed the script console 28.9 s into section F's rip. The log is 54
+lines and ends at `Tracks:`: no track block, no completion footer, no `Log
+FUN512:`, so `-Y` exits 3. Platterpus's own record gives the ripper's exit code
+as 1.
+
+**`.18` writes the interrupt footer on a SIGTERM mid-read**
+(`docs/rig-2026-09-10-ddc1e8c/`), and on a SIGINT. We do not handle SIGHUP or
+SIGQUIT (the comment above `quit_signals` in `src/cyanrip_main.c` says so) or
+SIGPIPE (no handler for it anywhere in `src/`), and nobody can handle SIGKILL;
+any of those leaves this log. So does a
+cyanrip still running inside the distrobox container when the files were
+collected, which has happened before (2026-09-07, 15m33s past a cancel). The
+console's close calls `self._runner.stop("the console was closed")`
+(`platterpus@9b114c5:src/platterpus/ui/dialogs/script_console.py:563`), and what
+that does to the app's own rip in flight is theirs to read. Round 30 lap 1 S25
+asks it.
+
+**A local check did not settle it either way.** A fixture rip whose stdout
+reader had already exited finished with exit 0 and a valid footer, but a pipe
+buffers the output, so that is weak evidence against SIGPIPE, not a measurement
+of it. **Do not add a handler until the signal is known**: a guess here would
+decide what the record of a killed rip says.
+
 ### Three agreed protocol changes never reached the spec, and both sides certified v5 as complete — LANDED IN v6, 2026-09-23
 
 **Landed in round 25.** All three are in `docs/handshake/PROTOCOL.md` v6: K1 in
