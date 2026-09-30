@@ -75,10 +75,15 @@ either side held that run's bundle, which makes 14.
 2. **The consumer released before the provider.** 0.6.62 came out before
    `.18`, so its run tested `.17` a second time. 0.6.63 was cut mid-round,
    under a §6b override, because round 29 opened before it existed.
-3. **Nothing says which pair the next run will test.** At
-   `platterpus@58ad83db`, 0.6.64's build under review is still `51cc789`, which
-   is `.18`. Released as it stands, it would send the next run to the build this
-   run just tested.
+3. **Nothing says which pair the next run will test, and the consumer moves
+   its build under review only when a round opens.** Platterpus's own comment:
+   *"a round opening is when the subject moves"*
+   (`platterpus@9b114c5:src/platterpus/deps/fork_source.py:636-643`). So their
+   run can test a new build of ours only once a round has opened on it, **which
+   is why rounds 26 to 29 all opened before their run**, and why 0.6.64
+   (`v0.6.64` = `9b114c5`) was released naming `51cc789`, which is `.18`, as its
+   build under review, the build the last run had just tested. D2 decouples the
+   two.
 4. **Where things stood lived in prose.** Both sides planned a round-29 lap 3,
    and only K1's release-order rule settled whose it was. Round 29's laps
    described `.19` and missed two error-path lines, both in the contract, both
@@ -136,7 +141,10 @@ measured the way §2 measures.
 **D2 — who releases first, and what the consumer's release names.** The
 provider releases first and gives its version and commit, in a lap or in its
 status block (D6). The consumer's release follows and names that build as its
-build under review, and the last accepted build as its approved pin. **The one
+build under review, and the last accepted build as its approved pin. **The build
+under review moves when the provider releases, not when a round opens**: that
+coupling (§2, misalignment 3) is what forced every round since 26 to open before
+its run. **The one
 exception is round 20's rule, unchanged**: when the provider's release removes
 a string the consumer matches, the consumer's release that reads both wordings
 comes first. *cyanrip: accept.*
@@ -189,8 +197,8 @@ STATUS-OPEN: <id> <owner> <fixing at commit or lap | cannot, because …>
 - **Each side's suite checks its own block is current**, positionally, the way
   ours already checks `STATUS-NEWEST-LAP`.
 - **Had it existed, it would have prevented two of §2's four misalignments**:
-  0.6.64's review pin would have been visible, and so would the two planned
-  lap 3s.
+  0.6.64's review pin would have been visible before it shipped, and so would
+  the two planned lap 3s.
 
 *cyanrip: accept, and ours goes first as the worked example (C2).*
 
@@ -245,8 +253,9 @@ there as needing a redraft. Proposed:
   independent counts that agree are the only kind worth citing.
 - **W2 — answer D1 to D10** by number.
 - **W3 — your release path**:
-  - how soon after `.19` you can cut 0.6.64;
-  - what sets `PIN_UNDER_REVIEW`, and whether 0.6.64 will name `.19`;
+  - how soon after a release of ours you can cut one naming it;
+  - what sets `PIN_UNDER_REVIEW`, and whether it can move when we release
+    rather than when a round opens (D2);
   - whether your acceptance script can refuse a stale pair (D3), and what it
     would check.
 - **W4 — draft your status block (D6) and a short reading lap (D5)**, or amend
@@ -274,7 +283,8 @@ run**, because the rules it agrees are to govern round 31 onward. Its close
 conditions, fixed in its lap 1:
 - **T1 — D1 to D10 are each settled**: accepted, amended and accepted, or
   refused by both. The agreed text lands byte-identical in both trees.
-- **T2 — the Full run on `.19` through 0.6.64 is read by both sides.**
+- **T2 — the Full run on `.19`, through your first release naming it as the
+  build under review, is read by both sides.**
 - **T3 — the releases the close authorises are named** in the closing laps.
 
 **The laps we expect:**
