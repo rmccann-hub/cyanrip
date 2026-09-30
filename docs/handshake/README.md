@@ -211,6 +211,25 @@ Ours is rewritten in place; theirs are kept as they arrive. Both rules are right
 and they are opposite: ours claims something about now, theirs are evidence of
 what we were told and when. See `CLAUDE.md`.
 
+**It opens with the status block** (`STATUS-ROUND` to `STATUS-OPEN`), round 30's
+D6, which `sc_status_block_is_current()` checks against the gate's record and
+`release-manifest.json`. Its text is §6c of `proposed/PROTOCOL-v7.md` until v7
+lands in both trees.
+
+## Reading a run, and the short reading lap
+
+**Read a bundle with `tools/ingest-bundle.py`** before writing anything about
+it. It prints the run's own verdict first, then whether the pair was the newest
+when the run began and when it ended (round 30's D3), then files the text
+members and derives what it did not file. Pass `--peer` a clone of Platterpus's
+tree, or their app's side of the pair reads `unknown`.
+
+**When the reading finds nothing to act on, the lap is the short one**: the
+template is §6d of `proposed/PROTOCOL-v7.md`, converged from Platterpus's draft
+(their `docs/cyanrip-handshake.md` §7.5d) with the pair `FACT` and the `NONE`
+we added. It is a floor for a clean reading, never a ceiling: a finding, a
+disagreement or an answer that needs its reasoning carries it in full.
+
 ## What a consumer needs, and where it lives
 
 **Under pull transport (2026-09-13) this table is how the consumer finds a lap,
