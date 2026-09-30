@@ -9,7 +9,7 @@ STATUS-RELEASE-NEXT: +platterpus.20, round 30's closing release under option A (
 STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on round 30's close, then +platterpus.20 on beta, then 0.6.66 naming it (their S50)
 STATUS-OPEN: c5-merged-text both fixing at round 30: proposed at 09f39bc, and it lands in place in both trees once Platterpus accepts it
 STATUS-OPEN: album-graph-first-encoded-pass us cannot, because feeding it the kept pass needs each encoded pass's samples held, the design repeat-limit-kept-read needs, and our lap 5 proposes both
-STATUS-OPEN: suite-timeouts-at-default us fixing at round 30, before our closing lap (the settling runs KNOWN-ISSUES names)
+STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: repeat-limit-kept-read us cannot, because the rule our lap 5 proposes changes what every -Z rip costs, and you expose -Z to users
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse, and no design exists yet
 STATUS-OPEN: partially-accurate-tally-label us cannot, because renaming it needs your release that reads both wordings first (round 20's order)

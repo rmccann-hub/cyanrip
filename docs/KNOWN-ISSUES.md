@@ -612,6 +612,19 @@ that ended nine minutes before it, by its output file's time, the sweep took
 317.7 s and this test 3.82 s. So the load was no heavier than in a run where
 this test passed. **Not widened**, for the reason above.
 
+**THE TWO SETTLING RUNS ARE DONE, 2026-09-30, and neither reproduces a
+timeout.** The whole suite at `--num-processes 1`, at `97e8c4d`: 100 of 100 in
+8 min 40 s of wall time, one run header in its testlog, with `Round 16
+acceptance checker` at 3.26 s and `Lap commit list names its range` at 1.81 s,
+which is what each takes in a normal parallel run (3.46 to 3.82 s and 1.77 to
+2.04 s in the three full suites of the same afternoon). And each test ten times
+while `Black-box sweep` and `Sanitizer sweep` ran beside them: `Round 16` 2.99
+to 4.21 s of wall over 2.75 to 3.62 s of CPU, `Lap commit list` 1.41 to 1.79 s,
+every run exit 0. **So the load these experiments can make does not slow
+either test near 30 s**, and the timeouts stay rare events whose mechanism is
+not established. There is nothing to fix until one reproduces, and each
+occurrence is recorded here with the run it happened in.
+
 **Why it matters beyond one flake.** A gate that can fail for a reason unrelated
 to the code is the exact disease `PROTOCOL.md` R2 names when it forbids
 enforcing `HANDSHAKE-CLOSE-BY`: *enforcement lets a clock skew block a release*.
