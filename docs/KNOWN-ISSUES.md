@@ -583,6 +583,19 @@ the ones to do: the suite at `--num-processes 1`, and this test under a delibera
 parallel load. Every other test still on meson's default was measured at 9.2 s
 or under.
 
+**A second test has now timed out the same way, and it is not waiting: it is
+starved.** 2026-09-30, at `5a0dc2f`, in a full suite of 97 on 4 cores:
+`Round 16 acceptance checker` `TIMEOUT 30.07s`, `Ok: 96  Timeout: 1`, in the
+suite straight after another full suite and a fixture rip. Alone straight
+afterwards: **3.02 s, 2.94 s, 2.91 s**, and one run measured **2.97 s wall over
+2.63 s of CPU**. So unlike `Lap commit list`, which spent 48 s of wall over
+0.73 s of CPU, this one computes for its whole run, so what it lost in the
+suite was CPU share, not a wait. **Why it lost that much in this run is not
+established**: that run's `Black-box sweep` took 300.8 s, and in the green suite
+that ended nine minutes before it, by its output file's time, the sweep took
+317.7 s and this test 3.82 s. So the load was no heavier than in a run where
+this test passed. **Not widened**, for the reason above.
+
 **Why it matters beyond one flake.** A gate that can fail for a reason unrelated
 to the code is the exact disease `PROTOCOL.md` R2 names when it forbids
 enforcing `HANDSHAKE-CLOSE-BY`: *enforcement lets a clock skew block a release*.
