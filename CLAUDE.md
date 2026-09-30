@@ -1738,6 +1738,20 @@ contract and log-text changes need agreement; answer from the artifact; never
 state a mechanism in the other side's code without citing where it was read;
 revert-prove behavioural fixes; `none` versus `unknown (reason)`; a pin is a SHA.
 
+**AND AN ANSWER IS NOT A SETTLEMENT — operator, 2026-09-30.** *"just because you
+get a lap answer doesn't mean you can't push back and get more reasoning or an
+explanation or another answer. This is the point of laps. Not to use the least
+amount but the have full explainations before finishing a round."* The reform
+cut **choreography** — acknowledgements, transcriptions, crossings, runs on a
+stale pair. **It never cut explanation**, and reading it as *"fewest laps wins"*
+is the misreading this corrects. *Silence is acceptance* covers what the other
+side **said**; it does not cover what they left unexplained. When an answer
+arrives without its reasoning, or with reasoning that does not hold against the
+artifact, the next lap asks — say what is missing and why the round needs it. A
+lap that buys an explanation is the protocol working, and it does not count
+against a round the way a wasted lap does. **Close a round when both sides can
+state why, not when the other side has stopped talking.**
+
 **The measure of the reform is lap count, and it is checkable.** Round 15 closes
 in three laps or the reform failed.
 

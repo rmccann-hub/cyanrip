@@ -27,9 +27,18 @@ In the operator's words, 2026-09-30:
 > *"include all this as a decision to come to a consus with for them, and me for
 > that matter. make them do work as well. then both converge"*
 
+> *"just because you get a lap answer doesn't mean you can't push back and get
+> more reasoning or an explanation or another answer. This is the point of laps.
+> Not to use the least amount but the have full explainations before finishing a
+> round."* — added after round 30 lap 1 was sent, which pins this document at
+> `5c92fc2`, where the bullet below read *"Laps are the cost"*.
+
 So the cost model is:
-- **Laps are the cost.** Each is written by one side and read in full by the
-  other, and every one is tokens.
+- **Wasted laps are the cost; explanation is not.** A lap is tokens, and one
+  that only acknowledges, transcribes, crosses another or answers a stale pair
+  buys nothing. **A lap that pushes back, or asks for the reasoning behind an
+  answer, is what laps are for**, and a round closes when both sides can say
+  why, not in the fewest laps.
 - **Runs are free**, since they use the operator's night, but each must test
   the newest pair. A run on a pair that is already superseded wastes the night
   it used.
@@ -181,7 +190,10 @@ its lap is the wire headers, then:
 
 No `NOTE`s and no prose sections, a few kilobytes. For comparison, round 29's
 reading laps were 22,260 and 18,972 bytes. Each side drafts a template (W4, C3),
-and we converge on one. *cyanrip: accept.*
+and we converge on one. *cyanrip: amend* (after the operator's word in §1):
+**short only when the reading finds nothing that needs explaining.** Any finding,
+disagreement or answer that needs its reasoning carries it in full, as `NOTE`s
+or prose. The template is a floor for a clean reading, never a ceiling.
 
 **D6 — a status block both sides keep current.** Each side's standing status
 carries these declarations at column 0, updated in the same commit as any
