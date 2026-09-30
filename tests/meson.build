@@ -662,6 +662,7 @@ rip_scenarios = [
     'repeat_limit',
     'repeat_resets_filter',
     'zr_refusal',
+    'probe_runs_open_no_logfile',
 ]
 
 # The scenarios are told which build configuration they are testing, because

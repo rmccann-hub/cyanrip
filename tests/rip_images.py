@@ -2938,6 +2938,65 @@ def sc_status_block_is_current():
         seen.add(m.group(1))
 
 
+def sc_probe_runs_open_no_logfile():
+    """`-I`, `-J` and `-f` open no logfile, and P2 says so.
+
+    Platterpus's round 30 lap 6 S14 asked whether `Drive offset of %c%i found
+    (confidence: %i)!` is stable, because their acceptance run's section O now
+    reads it. It is a P2 line, and P2 said every line in it reaches both stdout
+    and the logfile. A `-f` run returns from its search before
+    `cyanrip_log_init()`, and `-I` and `-J` skip that call by design, so on
+    those runs every P2 line reaches stdout only. P2 now says which runs open
+    no logfile. This checks the runs and the sentence together, so neither can
+    move without the other failing here.
+
+    `-f` forces the AccurateRip lookup on. Its proxy is pointed at a closed
+    local port so the run cannot depend on the network: a lookup that fails
+    and one that finds nothing both end before a logfile would open.
+    """
+    offline = dict(os.environ)
+    for k in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY",
+              "all_proxy", "ALL_PROXY"):
+        offline[k] = "http://127.0.0.1:9"
+    offline.pop("no_proxy", None)
+    offline.pop("NO_PROXY", None)
+    runs = (("-I", ("-I", "-N", "-A", "-U"), "DiscID:"),
+            ("-J", ("-J", "-N", "-A", "-U"), "DiscID:"),
+            ("-f", ("-f", "-N"), "Searching for drive offset"))
+    for flag, args, witness in runs:
+        d = WORK / f"nolog_{flag[1:]}"
+        d.mkdir()
+        ec, out = crip("-d", WORK / "basic.cue", *args, "-D", d / "out",
+                       cwd=d, env=offline)
+        if ec != 0:
+            fail(f"probe_runs_open_no_logfile: {flag} exited {ec}")
+            print(out)
+            continue
+        if witness not in out:
+            fail(f"probe_runs_open_no_logfile: {flag} printed no {witness!r}, "
+                 f"so it did not run the mode this checks")
+            continue
+        logs = sorted(p.relative_to(d).as_posix() for p in d.rglob("*.log"))
+        if logs:
+            fail(f"probe_runs_open_no_logfile: a {flag} run wrote {logs}; P2 "
+                 f"says it opens no logfile, so one of the two is now wrong")
+        if flag == "-J" and not list(d.rglob("*.cue")):
+            fail("probe_runs_open_no_logfile: the -J run wrote no cue sheet, so "
+                 "an empty folder proves nothing about its logfile")
+
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    m = re.search(r"^## P2 - [^\n]*\n(.*?)^\| File:line", contract, re.S | re.M)
+    if not m:
+        fail("probe_runs_open_no_logfile: PROVIDER-CONTRACT.md has no P2 "
+             "preamble before its table")
+        return
+    preamble = " ".join(m.group(1).split())
+    if "stdout only" not in preamble or not all(
+            f"`{f}`" in preamble for f in ("-I", "-J", "-f")):
+        fail(f"probe_runs_open_no_logfile: P2's preamble does not say that "
+             f"-I, -J and -f runs print to stdout only: {preamble[:300]!r}")
+
+
 def sc_contract_exit_codes():
     """Every exit code the binary actually produces must be in P4.
 

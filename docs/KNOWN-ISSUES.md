@@ -173,6 +173,47 @@ which is the only method that finds this class.
 
 ## Open, ours, and solvable — but deliberately not now
 
+### `-f`: a stop is followed by a retry, and a search that finds no offset exits 0 — upstream's code
+
+Found 2026-09-30 answering Platterpus's round 30 lap 6 S13 and S14, whose
+acceptance run's section O now grades a `-f` run. The code was read at
+`174a134` (`src/cyanrip_main.c:594-692`) and at upstream's `f8ebf48`
+(`src/cyanrip_main.c:524-575`), where the structure is the same:
+
+- **A stop does not stop the search.** `Stopping, offset finding incomplete!`
+  jumps to `end:`. Whenever no offset has been found yet, `end:` retries with
+  twice the radius. So the run prints `Was not able to find drive offset with a
+  radius of %i frames, trying again with a larger radius...` after the stop,
+  reads one frame, stops again, and repeats. It ends on `No track was long
+  enough, unable to find drive offset!` once the radius outgrows every track.
+  If one track had already found an offset, the stop is followed by `Drive
+  offset of %c%i found (confidence: 1)!`. This is read from the source and not
+  run: the search starts only when AccurateRip has the disc, and no fixture's
+  disc is in AccurateRip.
+- **A search that finds no offset exits 0.** Measured: `-N -f` on `basic.cue`
+  printed `No track had AccuRip entry, cannot find offset!` and `Rip completed:
+  no (aborted, 0 of 2 tracks)`, and exited **0**.
+- **`-f` opens no logfile.** That follows from the structure, since the search
+  runs before `cyanrip_log_init()`. P2 used to say every line in it reaches the
+  logfile; it now names `-I`, `-J` and `-f` as runs that open none, and
+  `sc_probe_runs_open_no_logfile()` pins the runs and the sentence together.
+
+**Why not now:** a fix changes what a `-f` run prints, and section O grades
+those lines from Platterpus 0.6.66 on (their lap 6 S12 and S13). So it is
+handshake material under round 20's order. The stop path also cannot be reached
+without AccurateRip data for the disc. **Both are upstream's**, and neither is
+in `docs/upstream/defect-reports.md` yet.
+
+### A `-J` run that wrote its cue sheet ends `Rip completed:  no (aborted, 0 of 2 tracks)`
+
+Measured 2026-09-30: `-N -A -U -J` on `basic.cue` wrote `Unknown disc
+(ONPX).cue`, exited 0, and printed the aborted footer. A `-f` run prints the
+same footer. **Ours, not upstream's.** Upstream prints no footer on any `goto
+end` (`docs/SETTLED.md`'s upstream item 3), and round 14 moved the footer under
+`end:` so that every exit reaches it. `-J` reaches it with no track ripped
+because ripping tracks is not what `-J` does. **Why not now:** the footer is a
+P2 line, and it needs wording both sides agree for a run that is not a rip.
+
 ### With paranoia disabled (`-P 0`), one unreadable sector hangs the rip at any retry limit
 
 **Measured 2026-09-23** with `tests/badsector.c`, at `-r 10` and at `-r 1`:
