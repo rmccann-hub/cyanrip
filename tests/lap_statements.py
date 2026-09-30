@@ -1052,6 +1052,82 @@ if code != 1 or len(refused) != 1 or \
 else:
     print("ok   their example with its pending half removed: A1 alone holds the GO")
 
+# PROTOCOL v7 §6d, the short reading lap. Platterpus's round 30 lap 6 S18:
+# the template as first proposed carries no TERM, so the lap it specifies is
+# refused, because B2 will not let a GO stand over no close condition. Their
+# S19 adds the conditions; our lap 7 amends it so that the opener's lap 1,
+# whose reading comes before the other side's, says the other half is
+# pending rather than met. Filled in by hand as the opener's lap 1 of an
+# option-A round. The last two are both well formed, so a checker cannot
+# tell them apart; what separates them is whether "read by both sides" is
+# true when the second side has not read yet.
+SD_HEAD = """HANDSHAKE-PROTOCOL: 6
+HANDSHAKE-ROUND: 31
+HANDSHAKE-LAP: 1
+HANDSHAKE-FROM: cyanrip-fork
+HANDSHAKE-TO: platterpus
+HANDSHAKE-OPENER: cyanrip
+HANDSHAKE-VERDICT: GO
+
+LSL: 4
+
+## The run
+
+S1 FACT read: The bundle is filed at `docs/rig-2026-09-30b-174a134`.
+  evidence: cyanrip@c1a43dd:docs/rig-2026-09-30b-174a134/README.md:1
+  holds: cyanrip@174a134
+S2 FACT read: The pair was the newest when the run began, and still was when it ended.
+  evidence: cyanrip@c1a43dd:docs/rig-2026-09-30b-174a134/README.md:1
+  holds: cyanrip@174a134
+S3 FACT read: Every cyanrip log in the bundle verifies.
+  evidence: cyanrip@c1a43dd:docs/rig-2026-09-30b-174a134/README.md:1
+  holds: cyanrip@174a134
+S4 NONE: No defect in `+platterpus.19` in the run.
+  scope: every cyanrip log in the bundle
+  evidence: cyanrip@c1a43dd:docs/rig-2026-09-30b-174a134/README.md:1
+  examined: 10 logs, closed
+"""
+SD_SETS = """
+## Close conditions
+
+S5 TERM set: The Full run on the pair, read by both sides.
+  requires: our reading in this lap, and yours in your lap 2
+S6 TERM set: The closing releases, named in the closing laps.
+  requires: each side's closing lap naming its release
+"""
+SD_MET = """S7 TERM met: The Full run on the pair, read by both sides.
+  term: cyanrip:R31.L1.S5
+  evidence: cyanrip@c1a43dd:docs/rig-2026-09-30b-174a134/README.md:1
+S8 TERM met: The closing releases, named in the closing laps.
+  term: cyanrip:R31.L1.S6
+  evidence: cyanrip@c1a43dd:docs/rig-2026-09-30b-174a134/README.md:1
+"""
+SD_PENDING = """S7 TERM pending: The Full run on the pair, read by both sides.
+  term: cyanrip:R31.L1.S5
+  on: them
+  remains: your reading, in your lap 2
+S8 TERM pending: The closing releases, named in the closing laps.
+  term: cyanrip:R31.L1.S6
+  on: them
+  remains: your closing lap naming your release; ours is named in this lap
+"""
+def sd_verdict(n, basis):
+    return f"\n## Verdict\n\nS{n} VERDICT: GO\n  basis: {basis}\n"
+
+code, out = check_lap(SD_HEAD + sd_verdict(5, "S1 S2 S3 S4"))
+refused = re.findall(r"^REFUSED .*$", out, re.M)
+if code != 1 or len(refused) != 1 or "[B2]" not in refused[0]:
+    fail(f"§6d as first proposed, with no TERM, must be refused by B2 alone "
+         f"(round 30 lap 6 S18): exit {code}\n{out}")
+else:
+    print("ok   §6d as first proposed: B2 refuses its GO, as round 30 lap 6 S18 says")
+for name, body in (("every condition met (lap 6 S19 as written)", SD_SETS + SD_MET),
+                   ("the other half pending (lap 7's amendment)", SD_SETS + SD_PENDING)):
+    outcome(f"§6d with {name}",
+            check_lap(SD_HEAD + body + sd_verdict(9, "S1 S2 S3 S4")), 0,
+            ["well formed", "checked against 2 close condition(s)"],
+            absent=["REFUSED"])
+
 if failures:
     print(f"\n{failures} failure(s)")
     sys.exit(1)
