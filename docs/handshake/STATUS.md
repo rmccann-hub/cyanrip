@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-30-lap-03.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-30-lap-05.md
+STATUS-NEWEST-LAP-STATE: held
 
 STATUS-ROUND: 30, OPEN, waiting on D1–D10 settled with their text in both trees (our lap 1 S9), and each side's closing lap naming its release (S11)
-STATUS-LAPS: newest sent round-30-lap-03.md (ours), round-30-lap-04.md (theirs); next 5 (ours) carrying C2 to C5, the merged D1–D10 text with the operator's rulings, and our answers to their S27, S36, S41 and S42; held none
+STATUS-LAPS: newest sent round-30-lap-03.md (ours), round-30-lap-04.md (theirs); next 5 (ours) carrying C2 to C5, the proposed v7 texts, our answers to their S27, S36, S41 and S42, and GO on the texts as proposed; held 5 carrying the same, for the operator's word
 STATUS-RELEASE-NEXT: +platterpus.20, round 30's closing release under option A (the operator's O1), on beta until its run passes (O3), carrying SIGHUP handled like SIGTERM (1184a04), the loudness figures measured on the delivered audio (cc79c5b) and a fresh filter for each -Z pass; pins 174a134, reviews +platterpus.20
 STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on round 30's close, then +platterpus.20 on beta, then 0.6.66 naming it (their S50)
 STATUS-OPEN: c5-merged-text both fixing at round 30: proposed at 09f39bc, and it lands in place in both trees once Platterpus accepts it
@@ -75,7 +75,7 @@ checks, and neither is a dated state.
 | `.17` on a drive | **the Full acceptance on `.17` with Platterpus 0.6.61 ran on 2026-09-28 from 01:48:08Z to 07:08Z**: its script reported 320 of 320, 0 skipped, `counts_as_evidence: true` (`docs/rig-2026-09-28-e0471f4/`). All eight cyanrip logs verify with `-Y`; seven completed with `Ripping errors: 0` and the interrupted one stopped as section I intends. `.17`'s `Accurip 450` wording printed on the drive for the first time. One wrong read, track 3 in section F with no `-Z`, a checksum never filed before; the secure re-read got track 3 right. **The operator chose on 2026-09-28 that this run closes round 28**, as lap 1 S6 names it, so Platterpus's lap 6 S36 override moving the run to their 0.6.62 falls away. **A second Full run of `.17`, through their 0.6.62, ran the same day from 14:42:38Z to 19:27Z** and is filed as `docs/rig-2026-09-28b-e0471f4/`: 320 of 320, all eight logs verify with `-Y`, and the secure re-read converged on all fourteen tracks. It is a close condition of neither round 28 nor round 29 |
 | gate | `--release-gate` exits **1**, naming round 30, which our lap 1 opened on 2026-09-30. Round 29 closed on Platterpus's lap 4 by v6 §5b step 3 and authorised `.19`, which is released. No release of ours is due before round 30 closes |
 | the tip | **the release's publish commit and after.** Build from the release commit, `174a134`, not the tip. **One `src/` change is past `.19`**: SIGHUP stops a rip with a complete record, as SIGTERM does (`1184a04`), for `.20`. No log line's text changes |
-| next | **Ours, lap 5.** Platterpus's round 30 lap 4 is sent, `OPEN`: it reads the Full run on `.19` (their S10–S16: no defect in `.19`), answers D1–D10 (D10 amended, S27), amends our lap 3 S10 (S36), relays the operator's rulings on O1–O4 (S46: A; overrides end as routine; beta until the run passes; a run every night a new pair exists), and asks S41, `BLOCKING`: our lap 1 S15 promised C2–C5 before our lap 3 and lap 3 carried none. **That is right, and our lap 5 carries them**, with the merged text (C5), our answers to S27, S36 and S42, and our closing release, `+platterpus.20` on beta (their S50). Their S53 pre-commits their next lap to `GO` once the text has landed in both trees |
+| next | **Our round 30 lap 5 is published and held for the operator's word.** It delivers C2 to C5 as `DID`s (Platterpus's `BLOCKING` S41), proposes PROTOCOL v7 and seam-rules v7 (`09f39bc`), accepts their D10 amendment and amends their LSL one to a declared LSL 4, measures `-U` safe (S42), reports that their shutdown fix's 8 s grace is shorter than reads of 11 s filed on the rig's drive, names `+platterpus.20` on beta as our closing release, and declares `GO` on the texts as proposed. **Their lap 6 follows**: if it is `GO`, the round closes on it, and we land the texts in place in the commit that files it |
 
 **`.18` is stable because round 28 authorised it, and the build itself is
 round 29's to review.** Platterpus's `FORK_PIN` is `e0471f4` on their `main`

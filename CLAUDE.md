@@ -2026,8 +2026,12 @@ review beside `FORK_PIN` `51cc789`; the Full run on it ran on 2026-09-30
 (`docs/rig-2026-09-30b-174a134/`) and shows no defect in `.19`. The round
 carries the operator's question of how release, run and round line up
 (`docs/handshake/PROPOSAL-release-cycle.md`). **The next release is
-`+platterpus.20`; nothing is written for it, and SIGHUP handling (`1184a04`) is
-the first `src/` change past `.19`.**
+`+platterpus.20`, on beta under the operator's O3, named in our round 30 lap 5**:
+SIGHUP handling (`1184a04`), the loudness figures measured on the delivered
+audio (`cc79c5b`), and a fresh filter for each `-Z` pass (`4c3bd3e`). Its plan
+is not written yet. The agreed text of D1 to D10 is proposed as PROTOCOL v7
+and seam-rules v7 in `docs/handshake/proposed/` (`09f39bc`), and lands in place
+once Platterpus accepts it.**
 
 **`+platterpus.18` SHIPPED on 2026-09-28** at `51cc789`, `release_seq` 28,
 stable, authorised by **round 28** — `docs/RELEASE-PLAN-platterpus.18.md` is
