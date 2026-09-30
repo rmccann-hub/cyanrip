@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g1184a04)`
+Build: `cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g4c3bd3e)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 2ff755ffe408e1e4` over `src/*.c` and
+**Source anchor:** `sha256/16 = 204d68f8e94823d3` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -193,36 +193,36 @@ requires a handshake round.
 | `coverart.c:391` | `No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!` |
 | `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!\nInvalid folder name? Try -D <folder>.` |
 | `cue_writer.c:106` | `Refusing an INDEX 00 of %i frames into a %i frame file for track %i, writing none` |
-| `cyanrip_encode.c:364` | `Error creating filter source: %s!` |
-| `cyanrip_encode.c:375` | `Error creating filter sink: %s!` |
-| `cyanrip_encode.c:389` | `Error setting filter sample format: %s!` |
-| `cyanrip_encode.c:397` | `Error setting filter channel layout: %s!` |
-| `cyanrip_encode.c:406` | `Error setting filter sample rate: %s!` |
-| `cyanrip_encode.c:440` | `Error initializing filter sink: %s!` |
-| `cyanrip_encode.c:523` | `Error parsing filter graph: %s!` |
-| `cyanrip_encode.c:529` | `Error configuring filter graph: %s!` |
-| `cyanrip_encode.c:587` | `Error pushing frame to FIFO: %s!` |
-| `cyanrip_encode.c:660` | `Error filtering frame: %s!` |
-| `cyanrip_encode.c:738` | `Error allocating frame!` |
-| `cyanrip_encode.c:750` | `Error allocating frame: %s!` |
-| `cyanrip_encode.c:866` | `Album Loudness` |
-| `cyanrip_encode.c:893` | `Album integrated loudness (R128): %.1f LUFS` |
-| `cyanrip_encode.c:895` | `Album loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)` |
-| `cyanrip_encode.c:897` | `Album sample peak level:          %.1f dBFS` |
-| `cyanrip_encode.c:899` | `Album true peak level:            %.1f dBFS` |
-| `cyanrip_encode.c:914` | `Could not alloc swr context!` |
-| `cyanrip_encode.c:932` | `Could not init swr context!` |
-| `cyanrip_encode.c:1076` | `Couldn't set metadata: %s!` |
-| `cyanrip_encode.c:1111` | `Error while encoding: %s!` |
-| `cyanrip_encode.c:1133` | `Error encoding: %s!` |
-| `cyanrip_encode.c:1164` | `Error pushing packet to FIFO: %s!` |
-| `cyanrip_encode.c:1171` | `Error writing packet: %s!` |
-| `cyanrip_encode.c:1201` | `Error writing to file: %s!` |
-| `cyanrip_encode.c:1324` | `Codec not found (not compiled in lavc?)!` |
-| `cyanrip_encode.c:1333` | `Unable to init output avctx!` |
-| `cyanrip_encode.c:1344` | `Could not open output codec context!` |
-| `cyanrip_encode.c:1351` | `Couldn't copy codec params!` |
-| `cyanrip_encode.c:1358` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
+| `cyanrip_encode.c:376` | `Error creating filter source: %s!` |
+| `cyanrip_encode.c:387` | `Error creating filter sink: %s!` |
+| `cyanrip_encode.c:401` | `Error setting filter sample format: %s!` |
+| `cyanrip_encode.c:409` | `Error setting filter channel layout: %s!` |
+| `cyanrip_encode.c:418` | `Error setting filter sample rate: %s!` |
+| `cyanrip_encode.c:452` | `Error initializing filter sink: %s!` |
+| `cyanrip_encode.c:535` | `Error parsing filter graph: %s!` |
+| `cyanrip_encode.c:541` | `Error configuring filter graph: %s!` |
+| `cyanrip_encode.c:599` | `Error pushing frame to FIFO: %s!` |
+| `cyanrip_encode.c:727` | `Error filtering frame: %s!` |
+| `cyanrip_encode.c:843` | `Error allocating frame!` |
+| `cyanrip_encode.c:855` | `Error allocating frame: %s!` |
+| `cyanrip_encode.c:982` | `Album Loudness` |
+| `cyanrip_encode.c:1009` | `Album integrated loudness (R128): %.1f LUFS` |
+| `cyanrip_encode.c:1011` | `Album loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)` |
+| `cyanrip_encode.c:1013` | `Album sample peak level:          %.1f dBFS` |
+| `cyanrip_encode.c:1015` | `Album true peak level:            %.1f dBFS` |
+| `cyanrip_encode.c:1030` | `Could not alloc swr context!` |
+| `cyanrip_encode.c:1048` | `Could not init swr context!` |
+| `cyanrip_encode.c:1192` | `Couldn't set metadata: %s!` |
+| `cyanrip_encode.c:1227` | `Error while encoding: %s!` |
+| `cyanrip_encode.c:1249` | `Error encoding: %s!` |
+| `cyanrip_encode.c:1280` | `Error pushing packet to FIFO: %s!` |
+| `cyanrip_encode.c:1287` | `Error writing packet: %s!` |
+| `cyanrip_encode.c:1317` | `Error writing to file: %s!` |
+| `cyanrip_encode.c:1440` | `Codec not found (not compiled in lavc?)!` |
+| `cyanrip_encode.c:1449` | `Unable to init output avctx!` |
+| `cyanrip_encode.c:1460` | `Could not open output codec context!` |
+| `cyanrip_encode.c:1467` | `Couldn't copy codec params!` |
+| `cyanrip_encode.c:1474` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
 | `cyanrip_log.c:1177` | `Log FUN512: %s` |
 | `cyanrip_log.c:1255` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:58` | `%s%s:` |
@@ -579,8 +579,8 @@ P5 rows for error detection even when they appear here.
 
 | File:line | Line | Reaches logfile? |
 |---|---|---|
-| `cyanrip_encode.c:108` | `%s folder: [%s] extension: %s%s` | **not directly** - see legend |
-| `cyanrip_encode.c:128` | `Encoder for %s not compiled in ffmpeg!` | **not directly** - see legend |
+| `cyanrip_encode.c:113` | `%s folder: [%s] extension: %s%s` | **not directly** - see legend |
+| `cyanrip_encode.c:133` | `Encoder for %s not compiled in ffmpeg!` | **not directly** - see legend |
 | `cyanrip_main.c:887` | `\r` | **not directly** - see legend |
 | `cyanrip_main.c:953` | `%s` | **not directly** - see legend |
 | `cyanrip_main.c:1080` | `Flushing encoders...` | **not directly** - see legend |
@@ -740,32 +740,32 @@ must carry the same class.
 | `coverart.c:292` | `Unable to get cover image info: %s!` | wording + goto end | yes |
 | `coverart.c:322` | `Error demuxing cover image: %s!` | wording + goto end | yes |
 | `cue_writer.c:39` | `Couldn't open path \"%s\" for writing: %s!\nInvalid folder name? Try -D <folder>.` | both | yes |
-| `cyanrip_encode.c:128` | `Encoder for %s not compiled in ffmpeg!` | control flow | **not directly** - see legend |
-| `cyanrip_encode.c:364` | `Error creating filter source: %s!` | both | yes |
-| `cyanrip_encode.c:375` | `Error creating filter sink: %s!` | both | yes |
-| `cyanrip_encode.c:389` | `Error setting filter sample format: %s!` | both | yes |
-| `cyanrip_encode.c:397` | `Error setting filter channel layout: %s!` | both | yes |
-| `cyanrip_encode.c:406` | `Error setting filter sample rate: %s!` | both | yes |
-| `cyanrip_encode.c:440` | `Error initializing filter sink: %s!` | both | yes |
-| `cyanrip_encode.c:523` | `Error parsing filter graph: %s!` | both | yes |
-| `cyanrip_encode.c:529` | `Error configuring filter graph: %s!` | both | yes |
-| `cyanrip_encode.c:587` | `Error pushing frame to FIFO: %s!` | wording | yes |
-| `cyanrip_encode.c:660` | `Error filtering frame: %s!` | both | yes |
-| `cyanrip_encode.c:738` | `Error allocating frame!` | both | yes |
-| `cyanrip_encode.c:750` | `Error allocating frame: %s!` | both | yes |
-| `cyanrip_encode.c:914` | `Could not alloc swr context!` | wording | yes |
-| `cyanrip_encode.c:932` | `Could not init swr context!` | wording | yes |
-| `cyanrip_encode.c:1076` | `Couldn't set metadata: %s!` | both | yes |
-| `cyanrip_encode.c:1111` | `Error while encoding: %s!` | both | yes |
-| `cyanrip_encode.c:1133` | `Error encoding: %s!` | both | yes |
-| `cyanrip_encode.c:1164` | `Error pushing packet to FIFO: %s!` | both | yes |
-| `cyanrip_encode.c:1171` | `Error writing packet: %s!` | both | yes |
-| `cyanrip_encode.c:1201` | `Error writing to file: %s!` | both | yes |
-| `cyanrip_encode.c:1324` | `Codec not found (not compiled in lavc?)!` | control flow | yes |
-| `cyanrip_encode.c:1333` | `Unable to init output avctx!` | both | yes |
-| `cyanrip_encode.c:1344` | `Could not open output codec context!` | both | yes |
-| `cyanrip_encode.c:1351` | `Couldn't copy codec params!` | both | yes |
-| `cyanrip_encode.c:1358` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
+| `cyanrip_encode.c:133` | `Encoder for %s not compiled in ffmpeg!` | control flow | **not directly** - see legend |
+| `cyanrip_encode.c:376` | `Error creating filter source: %s!` | both | yes |
+| `cyanrip_encode.c:387` | `Error creating filter sink: %s!` | both | yes |
+| `cyanrip_encode.c:401` | `Error setting filter sample format: %s!` | both | yes |
+| `cyanrip_encode.c:409` | `Error setting filter channel layout: %s!` | both | yes |
+| `cyanrip_encode.c:418` | `Error setting filter sample rate: %s!` | both | yes |
+| `cyanrip_encode.c:452` | `Error initializing filter sink: %s!` | both | yes |
+| `cyanrip_encode.c:535` | `Error parsing filter graph: %s!` | both | yes |
+| `cyanrip_encode.c:541` | `Error configuring filter graph: %s!` | both | yes |
+| `cyanrip_encode.c:599` | `Error pushing frame to FIFO: %s!` | wording | yes |
+| `cyanrip_encode.c:727` | `Error filtering frame: %s!` | both | yes |
+| `cyanrip_encode.c:843` | `Error allocating frame!` | both | yes |
+| `cyanrip_encode.c:855` | `Error allocating frame: %s!` | both | yes |
+| `cyanrip_encode.c:1030` | `Could not alloc swr context!` | wording | yes |
+| `cyanrip_encode.c:1048` | `Could not init swr context!` | wording | yes |
+| `cyanrip_encode.c:1192` | `Couldn't set metadata: %s!` | both | yes |
+| `cyanrip_encode.c:1227` | `Error while encoding: %s!` | both | yes |
+| `cyanrip_encode.c:1249` | `Error encoding: %s!` | both | yes |
+| `cyanrip_encode.c:1280` | `Error pushing packet to FIFO: %s!` | both | yes |
+| `cyanrip_encode.c:1287` | `Error writing packet: %s!` | both | yes |
+| `cyanrip_encode.c:1317` | `Error writing to file: %s!` | both | yes |
+| `cyanrip_encode.c:1440` | `Codec not found (not compiled in lavc?)!` | control flow | yes |
+| `cyanrip_encode.c:1449` | `Unable to init output avctx!` | both | yes |
+| `cyanrip_encode.c:1460` | `Could not open output codec context!` | both | yes |
+| `cyanrip_encode.c:1467` | `Couldn't copy codec params!` | both | yes |
+| `cyanrip_encode.c:1474` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
 | `cyanrip_main.c:224` | `No device specified and unable to get default device!` | both | yes |
 | `cyanrip_main.c:232` | `Unable to open device: %s` | both | yes |
 | `cyanrip_main.c:241` | `Unable to init cddap context!` | wording | yes |
