@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-29-lap-04.md
+STATUS-NEWEST-LAP: round-29-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
