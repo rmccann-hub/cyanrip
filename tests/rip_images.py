@@ -3845,8 +3845,11 @@ def sc_interrupt():
     scenario costs nothing when the signal lands and cannot silently become a
     full rip if the signal is lost: it is killed and reported instead.
     """
+    # SIGHUP from round 30 (their lap 2 S22): measured leaving a 54-line log
+    # with no footer and no -j record before it was handled.
     for signo, name in ((signal.SIGINT, "SIGINT"),
-                        (signal.SIGTERM, "SIGTERM")):
+                        (signal.SIGTERM, "SIGTERM"),
+                        (signal.SIGHUP, "SIGHUP")):
         out = WORK / f"out_int_{name}"
         diag = WORK / f"int_{name}.json"
         stdout = WORK / f"int_{name}.out"

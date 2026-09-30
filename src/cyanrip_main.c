@@ -1528,13 +1528,33 @@ static int cyanrip_run(int argc, char **argv)
      * that will not stop on the signal a supervisor sends is worth naming
      * precisely.
      *
-     * Not handled, and said out loud rather than left to inference: SIGHUP,
-     * SIGQUIT, and SIGKILL. The first two keep their default dispositions; the
-     * third cannot be caught by anyone. A rip killed by any of them still
-     * leaves a footerless log, which is a real state Platterpus must handle --
-     * see -Y's exit code 3. */
-    static const int quit_signals[] = { SIGINT, SIGTERM };
+     * SIGHUP too, from 2026-09-30 (round 30, their lap 2 S22), measured the
+     * same way on a fixture ripping mid-read: SIGHUP, SIGQUIT and SIGKILL each
+     * left a 54-line log with no footer, no `Log FUN512:` and no -j record.
+     * A hangup is a way a rip really ends -- the terminal or session that
+     * started it goes away -- so it gets the same attested record as SIGTERM.
+     * A SIGHUP that arrives already IGNORED is left ignored: that is what
+     * `nohup` asks for, and installing a handler over it would turn a request
+     * to keep running into a stop.
+     *
+     * Not handled, and said out loud rather than left to inference: SIGQUIT,
+     * whose default -- quit and dump core -- is the debugging path it exists
+     * for, and SIGKILL, which cannot be caught by anyone. A rip killed by
+     * either still leaves a footerless log, which is a real state a consumer
+     * must handle -- see -Y's exit code 3.
+     *
+     * And SIGPIPE, which this code never touches and which is IGNORED anyway:
+     * libneon, linked through libmusicbrainz5, calls signal(SIGPIPE, SIG_IGN)
+     * from ne_sock_init() as a library constructor, before main() runs, under
+     * -N too (strace -k, 2026-09-30). So a consumer that stops reading our
+     * stdout does not stop the rip; it runs on, holding the drive, and writes
+     * its footer at the end. That is inherited, not chosen. */
+    static const int quit_signals[] = { SIGINT, SIGTERM, SIGHUP };
     for (size_t i = 0; i < FF_ARRAY_ELEMS(quit_signals); i++) {
+        struct sigaction was;
+        if (quit_signals[i] == SIGHUP && sigaction(SIGHUP, NULL, &was) == 0 &&
+            was.sa_handler == SIG_IGN)
+            continue;
         if (signal(quit_signals[i], on_quit_signal) == SIG_ERR)
             cyanrip_log(ctx, 0, "Can't init %s handler!\n",
                         crip_signal_name(quit_signals[i]));

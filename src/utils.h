@@ -193,6 +193,7 @@ static inline const char *crip_signal_name(int signo)
     switch (signo) {
     case SIGINT:  return "SIGINT";
     case SIGTERM: return "SIGTERM";
+    case SIGHUP:  return "SIGHUP";
     default:      return NULL;
     }
 }

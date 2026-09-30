@@ -1315,26 +1315,42 @@ verified against the installed headers *and* the `.so` export table).
 (`docs/rig-2026-09-30-174a134/rips/full-acceptance-angle-bracket.log`). The
 operator closed the script console 28.9 s into section F's rip. The log is 54
 lines and ends at `Tracks:`: no track block, no completion footer, no `Log
-FUN512:`, so `-Y` exits 3. Platterpus's own record gives the ripper's exit code
-as 1.
+FUN512:`, so `-Y` exits 3. Platterpus's record gives the wrapper's exit code as
+1 at 01:32:32Z, the second the console closed, and **no `-j` record was in the
+bundle**, which Platterpus collects from the rips root by name
+(`platterpus@0981c69:src/platterpus/adapters/cyanrip_backend.py:745-747`). So
+when the operator made the tarball, cyanrip had not exited through `atexit`.
 
-**`.18` writes the interrupt footer on a SIGTERM mid-read**
-(`docs/rig-2026-09-10-ddc1e8c/`), and on a SIGINT. We do not handle SIGHUP or
-SIGQUIT (the comment above `quit_signals` in `src/cyanrip_main.c` says so) or
-SIGPIPE (no handler for it anywhere in `src/`), and nobody can handle SIGKILL;
-any of those leaves this log. So does a
-cyanrip still running inside the distrobox container when the files were
-collected, which has happened before (2026-09-07, 15m33s past a cancel). The
-console's close calls `self._runner.stop("the console was closed")`
-(`platterpus@9b114c5:src/platterpus/ui/dialogs/script_console.py:563`), and what
-that does to the app's own rip in flight is theirs to read. Round 30 lap 1 S25
-asks it.
+**Which signals write the footer, measured 2026-09-30** on a fixture ripping
+mid-read, `.19`'s code (Platterpus's round 30 lap 2 S22 asked):
 
-**A local check did not settle it either way.** A fixture rip whose stdout
-reader had already exited finished with exit 0 and a valid footer, but a pipe
-buffers the output, so that is weak evidence against SIGPIPE, not a measurement
-of it. **Do not add a handler until the signal is known**: a guess here would
-decide what the record of a killed rip says.
+| signal | exit | footer, `Log FUN512:` | `-Y` | `-j` record |
+|---|---|---|---|---|
+| SIGTERM, SIGINT | 1 | written, names the signal | 0 | written |
+| SIGHUP | killed | **none** | 3 | none — **handled from `.20`**, below |
+| SIGQUIT, SIGKILL | killed | none | 3 | none |
+| SIGPIPE | **not stopped** | none while it runs on | 3 | none |
+
+**SIGPIPE is ignored, and not by us.** libneon, linked through libmusicbrainz5,
+calls `signal(SIGPIPE, SIG_IGN)` from `ne_sock_init()` as a library constructor,
+before `main()`, under `-N` too (`strace -k`). So a consumer that stops reading
+our stdout does not stop the rip: it runs on, holding the drive, and writes its
+footer when it ends. That is this environment's libraries; the rig's container
+links its own.
+
+**So the closed-console log is one of two things**: a default-disposition death
+(SIGHUP, SIGQUIT or SIGKILL), or a cyanrip still running inside the container
+when the tarball was made. The rig can say which: if the log in
+`~/platterpus-rig/platterpustestsession20260930t013138z/rips/` is now longer
+than 54 lines and a `cyanrip-diagnostics-20260930T013204Z.json` sits beside
+the album folder, it ran on; if neither, it was killed. What their console's
+close sends is theirs to trace (their round 30 lap 2 S21, S23).
+
+**SIGHUP is handled from `.20`**, like SIGTERM: the footer names it, `-Y`
+verifies, and the `-j` record is written. A SIGHUP that arrives already ignored
+stays ignored, so `nohup` still keeps a rip running (measured). `sc_interrupt`
+pins it, revert-proved. SIGQUIT keeps its default, quit and dump core, which is
+the debugging path it exists for.
 
 ### Three agreed protocol changes never reached the spec, and both sides certified v5 as complete — LANDED IN v6, 2026-09-23
 
