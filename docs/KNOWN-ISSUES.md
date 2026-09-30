@@ -696,7 +696,7 @@ So "1 track encoded" is true of an encoder and reads as a whole track. A reader
 who takes the three footer lines together is not misled; one who reads
 `Encoder errors:` alone is.
 
-**Fixed for `.18`, not released.** Round 28 settled the wording: our lap 1 S15
+**Fixed in `.18`, released 2026-09-28 at `51cc789`.** Round 28 settled the wording: our lap 1 S15
 asked which form they would read, and Platterpus's lap 2 S16 chose both halves,
 *"count only tracks whose read completed, and name a partial file on its own
 line, because a count over the record should count what the record holds"*.
@@ -793,6 +793,24 @@ every figure is right. **No Platterpus rip is affected today** — none of the
 eight `Invoked as:` lines in the 2026-09-22 session carries `-H`, `-E`, `-W` or
 `-x`, read off the logs rather than off their rig-check summary. So it is a real
 defect with, right now, zero consumer exposure.
+
+**"Zero consumer exposure" was wrong, corrected 2026-09-30: it counted flags,
+and the automatic path needs none.** De-emphasis is on by default
+(`settings.deemphasis = 1`, `src/cyanrip_main.c:1580`) and applies to any track
+whose TOC or sub-channel flags pre-emphasis (`crip_deemphasis_active()`,
+`src/cyanrip_main.h:479`). Platterpus passes none of `-E`, `-W`, `-H` or `-P`
+(`platterpus@0981c69:src/platterpus/adapters/cyanrip_backend.py`, the argv it
+builds), so **every Platterpus rip of a pre-emphasised disc takes this path**,
+and their parser reads the figures it produces: the `REPLAYGAIN_*` tags
+(`platterpus@0981c69:src/platterpus/parsers/cyanrip_log.py:643`), `Sample peak
+level:` (`:962`) and the album loudness rows (`:730-747`). The rig disc is not
+pre-emphasised, which is why no filed rip shows it. Measured at `8f4ae14` on
+`preemph.cue` to raw PCM, default flags against `-W`: the two delivered files
+differ (md5 `b1e6ed20…` against `63e60c84…`), and both logs print `-8.7 LUFS`,
+`REPLAYGAIN_TRACK_GAIN: -9.30 dB` and `REPLAYGAIN_TRACK_PEAK: 1.005757`. **The
+fixture cannot show the size of the error**: its square wave has little treble,
+and the two files' RMS differ by 0.10 dB, below the log's 0.1 LU precision. A
+test of the fix needs a pre-emphasised fixture with treble in it.
 
 **Not fixed here, deliberately.** Moving the measurement downstream changes the
 *values* of five P2 lines and five metadata tags on affected rips, which is
@@ -1259,6 +1277,12 @@ other three are proposed there.
    read kept (`secure-reread.log:381-385`, `:423`). Their proposal is to keep
    the read that agreed most. Which bytes land on disk is ours to decide
    (`docs/OWNERSHIP.md:61`, *"The audio bytes and every checksum over them"*).
+   **Still open, and the rule is owed**: round 29 lap 1 S36 said *"We will
+   propose the rule in a later lap"*, and no lap since has. Counted 2026-09-30
+   off `docs/rig-*/rips/*.log`: 24 limit hits in 15 filed logs, on tracks 3
+   (12), 5 (10) and 4 (2), every one under `-r 3 -Z 2`. The one filed `.19`
+   secure re-read, `-r 5 -Z 2`, converged on all 14 tracks
+   (`docs/rig-2026-09-30b-174a134/rips/secure-reread.log`).
 3. **`Done; (no matches found, but hit repeat limit of %i)` is printed whatever
    the count** (their S17): line 1012's format has no count and never reads
    `matches`. On track 5 it was true of the read it follows, which matched
