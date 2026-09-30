@@ -579,6 +579,7 @@ rip_scenarios = [
     'nrg',
     'filters',
     'deemph_with_hdcd',
+    'loudness_after_filter',
     'media_tag',
     'tag_keys_in_capitals',
     'golden_reference_matches_a_fresh_rip',

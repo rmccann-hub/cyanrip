@@ -86,8 +86,13 @@ struct cyanrip_dec_ctx {
     cyanrip_filt_ctx filt;
     cyanrip_filt_ctx peak;
     /* Running max |sample| in dBFS, measured directly, for the H6 cross-check
-     * against ebur128's own figure. -INFINITY until a frame is seen. */
+     * against ebur128's own figure, over the SAME frames ebur128 sees: the
+     * ones the encoders receive. -INFINITY until a frame is seen. */
     double direct_sample_peak;
+    /* The same scan over the frames built from the read buffer, before any
+     * filter: the read-path witness. It equals direct_sample_peak when nothing
+     * filters, and differs by design when de-emphasis or HDCD runs. */
+    double input_sample_peak;
 };
 
 void cyanrip_print_codecs(void)
@@ -354,9 +359,16 @@ static int init_filtering(cyanrip_ctx *ctx, cyanrip_filt_ctx *s,
 
     char args[512];
     uint64_t layout = AV_CH_LAYOUT_STEREO;
+    /* The loudness graphs take planar double, full scale 1.0, because what
+     * they measure is what the encoders receive: S16 when nothing filters,
+     * S32 from HDCD and planar double from de-emphasis alone. An album mixes
+     * flagged and unflagged tracks, so one fixed format is what lets one album
+     * graph see all of them (measure_frame()). */
     snprintf(args, sizeof(args),
             "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%"PRIx64,
-             1, 44100, 44100, av_get_sample_fmt_name(AV_SAMPLE_FMT_S16), layout);
+             1, 44100, 44100,
+             av_get_sample_fmt_name(peak ? AV_SAMPLE_FMT_DBLP : AV_SAMPLE_FMT_S16),
+             layout);
 
     ret = avfilter_graph_create_filter(&s->buffersrc_ctx, abuffersrc, "in",
                                        args, NULL, s->graph);
@@ -546,7 +558,7 @@ int cyanrip_create_dec_ctx(cyanrip_ctx *ctx, cyanrip_dec_ctx **s,
 
     cyanrip_dec_ctx *dec_ctx = av_mallocz(sizeof(*dec_ctx));
     if (dec_ctx)
-        dec_ctx->direct_sample_peak = -INFINITY;
+        dec_ctx->direct_sample_peak = dec_ctx->input_sample_peak = -INFINITY;
     if (!dec_ctx)
         return AVERROR(ENOMEM);
 
@@ -595,11 +607,13 @@ static int push_frame_to_encs(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
 /* Max |sample| over a frame, as a linear ratio of full scale, or -1 if the
  * frame's format is not one we can read directly.
  *
- * Deliberately measured on the *same frames* that go into the ebur128 filter
- * rather than on the bytes off the disc: a raw-byte measurement would differ
- * legitimately whenever deemphasis or HDCD decoding is active, and would report
- * a disagreement that means nothing. Same data, two methods, is the comparison
- * worth making -- comparing two different inputs is not. */
+ * Measured on the *same frames* that go into the ebur128 filter, so that it and
+ * ebur128's own sample peak are one measurement by two methods. Those are the
+ * frames the encoders receive (measure_frame()). This comment used to say they
+ * were chosen "rather than ... the bytes off the disc", and they WERE the bytes
+ * off the disc: ebur128 was fed the frame before the de-emphasis and HDCD
+ * graph, so every figure in the log and every REPLAYGAIN_* tag described audio
+ * that was not in the file whenever a filter ran (docs/KNOWN-ISSUES.md). */
 static double frame_abs_peak(const AVFrame *frame)
 {
     if (!frame || frame->nb_samples <= 0)
@@ -607,6 +621,16 @@ static double frame_abs_peak(const AVFrame *frame)
 
     const int ch = frame->ch_layout.nb_channels;
     int64_t peak = 0;
+
+    if (frame->format == AV_SAMPLE_FMT_DBLP) {
+        double dpeak = 0.0;
+        for (int c = 0; c < ch; c++) {
+            const double *p = (const double *)frame->extended_data[c];
+            for (int i = 0; i < frame->nb_samples; i++)
+                dpeak = FFMAX(dpeak, fabs(p[i]));
+        }
+        return dpeak;
+    }
 
     if (frame->format == AV_SAMPLE_FMT_S16) {
         const int16_t *p = (const int16_t *)frame->data[0];
@@ -642,6 +666,86 @@ static void note_direct_peak(double *dst, const AVFrame *frame)
         *dst = db;
 }
 
+/* A copy of `in` in planar double, full scale 1.0, the one format both
+ * loudness graphs take. S16 and S32 are scaled by 2^-15 and 2^-31, which is
+ * exact and is what libavfilter's own conversion to ebur128's double input
+ * does, so an unfiltered rip measures what it measured before. NULL on
+ * allocation failure or a format no encoder is fed. */
+static AVFrame *frame_as_dblp(const AVFrame *in)
+{
+    if (in->format != AV_SAMPLE_FMT_S16 && in->format != AV_SAMPLE_FMT_S32 &&
+        in->format != AV_SAMPLE_FMT_DBLP)
+        return NULL;
+    AVFrame *out = av_frame_alloc();
+    if (!out)
+        return NULL;
+    out->format = AV_SAMPLE_FMT_DBLP;
+    out->nb_samples = in->nb_samples;
+    out->sample_rate = in->sample_rate;
+    out->pts = in->pts;
+    if (av_channel_layout_copy(&out->ch_layout, &in->ch_layout) < 0 ||
+        av_frame_get_buffer(out, 0) < 0) {
+        av_frame_free(&out);
+        return NULL;
+    }
+    const int ch = in->ch_layout.nb_channels;
+    for (int c = 0; c < ch; c++) {
+        double *d = (double *)out->extended_data[c];
+        for (int i = 0; i < in->nb_samples; i++) {
+            if (in->format == AV_SAMPLE_FMT_S16)
+                d[i] = ((const int16_t *)in->data[0])[i*ch + c] / 32768.0;
+            else if (in->format == AV_SAMPLE_FMT_S32)
+                d[i] = ((const int32_t *)in->data[0])[i*ch + c] / 2147483648.0;
+            else
+                d[i] = ((const double *)in->extended_data[c])[i];
+        }
+    }
+    return out;
+}
+
+/* Measure a frame the encoders are about to receive, or end the track's
+ * measurement when `frame` is NULL.
+ *
+ * THE LOUDNESS FIGURES DESCRIBE THE DELIVERED AUDIO, and until this they did
+ * not. ebur128 and the direct scan were fed the frame built from the read
+ * buffer, and the de-emphasis and HDCD graph ran downstream of them on the way
+ * to the encoders only, so the sample and true peak lines, both R128 figures,
+ * the album rows and every REPLAYGAIN_* tag written into the file described
+ * the audio before the filter. Found in the 2026-09-22 session's P3 section
+ * (-H -E and -H -W gave four streams and one set of numbers), and fixed for
+ * .20. The checksums stay on the read buffer, where EAC and AccurateRip define
+ * them. */
+static int measure_frame(cyanrip_ctx *ctx, cyanrip_dec_ctx *dec_ctx,
+                         AVFrame *frame, int calc_global_peak)
+{
+    AVFrame *m = NULL;
+    int ret;
+
+    if (frame) {
+        m = frame_as_dblp(frame);
+        if (!m) {
+            cyanrip_log(ctx, 0, "Error filtering frame: %s!\n",
+                        av_err2str(AVERROR(ENOMEM)));
+            return AVERROR(ENOMEM);
+        }
+        note_direct_peak(&dec_ctx->direct_sample_peak, m);
+        if (calc_global_peak && ctx->peak_ctx)
+            note_direct_peak(&ctx->peak_ctx->direct_sample_peak, m);
+    }
+
+    ret = av_buffersrc_add_frame_flags(dec_ctx->peak.buffersrc_ctx, m,
+                                       AV_BUFFERSRC_FLAG_NO_CHECK_FORMAT |
+                                       AV_BUFFERSRC_FLAG_KEEP_REF | AV_BUFFERSRC_FLAG_PUSH);
+    if (ret >= 0 && m && calc_global_peak)
+        ret = av_buffersrc_add_frame_flags(ctx->peak_ctx->peak.buffersrc_ctx, m,
+                                           AV_BUFFERSRC_FLAG_NO_CHECK_FORMAT |
+                                           AV_BUFFERSRC_FLAG_KEEP_REF | AV_BUFFERSRC_FLAG_PUSH);
+    if (ret < 0)
+        cyanrip_log(ctx, 0, "Error filtering frame: %s!\n", av_err2str(ret));
+    av_frame_free(&m);
+    return ret;
+}
+
 static int filter_frame(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
                         int num_enc, cyanrip_dec_ctx *dec_ctx, AVFrame *frame,
                         int calc_global_peak)
@@ -649,30 +753,15 @@ static int filter_frame(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
     int ret = 0;
     AVFrame *dec_frame = NULL;
 
-    note_direct_peak(&dec_ctx->direct_sample_peak, frame);
-    if (frame && calc_global_peak && ctx->peak_ctx)
-        note_direct_peak(&ctx->peak_ctx->direct_sample_peak, frame);
+    /* The read-path witness, on the frame built from the read buffer. */
+    note_direct_peak(&dec_ctx->input_sample_peak, frame);
 
-    ret = av_buffersrc_add_frame_flags(dec_ctx->peak.buffersrc_ctx, frame,
-                                       AV_BUFFERSRC_FLAG_NO_CHECK_FORMAT |
-                                       AV_BUFFERSRC_FLAG_KEEP_REF | AV_BUFFERSRC_FLAG_PUSH);
-    if (ret < 0) {
-        cyanrip_log(ctx, 0, "Error filtering frame: %s!\n", av_err2str(ret));
-        goto fail;
-    }
-
-    if (frame && calc_global_peak) {
-        ret = av_buffersrc_add_frame_flags(ctx->peak_ctx->peak.buffersrc_ctx, frame,
-                                           AV_BUFFERSRC_FLAG_NO_CHECK_FORMAT |
-                                           AV_BUFFERSRC_FLAG_KEEP_REF | AV_BUFFERSRC_FLAG_PUSH);
-        if (ret < 0) {
-            cyanrip_log(ctx, 0, "Error filtering frame: %s!\n", av_err2str(ret));
-            goto fail;
-        }
-    }
-
-    if (!dec_ctx->filt.buffersrc_ctx)
+    if (!dec_ctx->filt.buffersrc_ctx) {
+        ret = measure_frame(ctx, dec_ctx, frame, calc_global_peak);
+        if (ret < 0)
+            return ret;
         return push_frame_to_encs(ctx, enc_ctx, num_enc, frame);
+    }
 
     ret = av_buffersrc_add_frame_flags(dec_ctx->filt.buffersrc_ctx, frame,
                                        AV_BUFFERSRC_FLAG_NO_CHECK_FORMAT |
@@ -684,6 +773,9 @@ static int filter_frame(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
 
     ret = avfilter_graph_request_oldest(dec_ctx->filt.graph);
     if (ret == AVERROR_EOF) {
+        ret = measure_frame(ctx, dec_ctx, NULL, 0);
+        if (ret < 0)
+            goto fail;
         return push_frame_to_encs(ctx, enc_ctx, num_enc, NULL);
     } else if (ret < 0) {
         cyanrip_log(ctx, 0, "Error filtering frame: %s!\n", av_err2str(ret));
@@ -705,16 +797,29 @@ static int filter_frame(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
             break;
         } else if (ret == AVERROR_EOF) {
             av_frame_free(&dec_frame);
-            ret = 0;
+            ret = measure_frame(ctx, dec_ctx, NULL, 0);
+            if (ret < 0)
+                goto fail;
             return push_frame_to_encs(ctx, enc_ctx, num_enc, NULL);
         } else if (ret < 0) {
             cyanrip_log(ctx, 0, "Error filtering frame: %s!\n", av_err2str(ret));
             goto fail;
         }
 
+        ret = measure_frame(ctx, dec_ctx, dec_frame, calc_global_peak);
+        if (ret < 0) {
+            av_frame_free(&dec_frame);
+            goto fail;
+        }
         push_frame_to_encs(ctx, enc_ctx, num_enc, dec_frame);
         av_frame_free(&dec_frame);
     }
+
+    /* The end of a track that the filter graph has not reported as EOF yet
+     * still ends its measurement: before this change the loudness graph was
+     * given NULL whenever this function was, so it must still be. */
+    if (!frame)
+        ret = measure_frame(ctx, dec_ctx, NULL, 0);
 
 fail:
     return ret;
@@ -803,6 +908,7 @@ int cyanrip_finalize_encoding(cyanrip_ctx *ctx, cyanrip_track *t)
     av_opt_get_double(filt_ctx, "sample_peak", AV_OPT_SEARCH_CHILDREN, &t->ebu_sample_peak);
     av_opt_get_double(filt_ctx, "true_peak", AV_OPT_SEARCH_CHILDREN, &t->ebu_true_peak);
     t->direct_sample_peak = t->dec_ctx->direct_sample_peak;
+    t->input_sample_peak = t->dec_ctx->input_sample_peak;
 
     cyanrip_free_filt_ctx(ctx, &t->dec_ctx->peak, 1);
     if (ctx->settings.decode_hdcd)
@@ -820,7 +926,7 @@ int cyanrip_initialize_ebur128(cyanrip_ctx *ctx)
 
     cyanrip_dec_ctx *dec_ctx = av_mallocz(sizeof(*dec_ctx));
     if (dec_ctx)
-        dec_ctx->direct_sample_peak = -INFINITY;
+        dec_ctx->direct_sample_peak = dec_ctx->input_sample_peak = -INFINITY;
     if (!dec_ctx)
         return AVERROR(ENOMEM);
     ctx->peak_ctx = dec_ctx;

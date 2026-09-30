@@ -292,23 +292,29 @@ typedef struct cyanrip_track {
     double ebu_lra_high;
     double ebu_sample_peak;
     double ebu_true_peak;
-    /* THREE measurements of one fact, and the reason there are three is that
-     * each is computed by a different route, so a disagreement localises a
-     * defect instead of merely announcing one.
+    /* FOUR measurements, two pairs, and each pair is one fact measured by two
+     * routes, so a disagreement localises a defect instead of merely
+     * announcing one.
      *
-     *   ebu_sample_peak      libavfilter's ebur128, dBFS
-     *   direct_sample_peak   our own max |sample| over the AVFrames handed to
-     *                        that filter, dBFS
+     *   ebu_sample_peak      libavfilter's ebur128, dBFS, over the frames the
+     *                        encoders receive
+     *   direct_sample_peak   our own max |sample| over those same frames, dBFS
+     *   input_sample_peak    our own max |sample| over the frames built from
+     *                        the read buffer, before any filter, dBFS
      *   sample_peak_rel_amp  upstream's max |int16| over the raw bytes read
      *                        from the disc, linear 0.0-1.0
      *
-     * They measure the SAME SAMPLES. The frames the first two see are built
-     * verbatim from the bytes the third sees (S16, nb_samples = bytes >> 2) and
-     * the deemphasis/HDCD filter is applied downstream of them, on the way to
-     * the encoders only -- so agreement is the expected case on every disc, not
-     * just an unfiltered one. Said plainly because the tempting reading is that
-     * upstream's measures the pre-emphasised audio and ours the de-emphasised
-     * one; it was checked in cyanrip_encode.c:filter_frame() and it does not.
+     * The first pair is the DELIVERED audio: after de-emphasis or HDCD when
+     * either runs, so the log's peak lines and the REPLAYGAIN_* tags describe
+     * what is in the file. The second pair is the READ audio, and asks whether
+     * the bytes survived into an AVFrame. With no filter all four measure the
+     * same samples.
+     *
+     * This block said the first two were over the read audio too, "checked in
+     * cyanrip_encode.c:filter_frame()", and that was true of the code and was
+     * the defect: ebur128 was fed the frame before the filter, so on a
+     * de-emphasised track every loudness figure described audio that was not
+     * in the file (docs/KNOWN-ISSUES.md, fixed for .20).
      *
      * NONE of the three is printed unconditionally beside another. Two
      * always-present numbers for one fact invite a consumer to pick one, and
@@ -316,10 +322,11 @@ typedef struct cyanrip_track {
      * Platterpus round 7). Agreement is not information; a disagreement is a
      * finding, and only the finding is logged.
      *
-     * direct_sample_peak is -INFINITY until measured; sample_peak_rel_amp is
-     * 0.0 until measured and is reset per -Z attempt so a discarded pass cannot
-     * leave a peak behind. */
+     * direct_sample_peak and input_sample_peak are -INFINITY until measured;
+     * sample_peak_rel_amp is 0.0 until measured. All are reset per -Z attempt
+     * so a discarded pass cannot leave a peak behind. */
     double direct_sample_peak;
+    double input_sample_peak;
     double sample_peak_rel_amp;
 
     struct cyanrip_track *pt;

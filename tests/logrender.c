@@ -226,6 +226,7 @@ static void base_track(cyanrip_track *t)
     t->ebu_sample_peak = -1.0;
     t->ebu_true_peak = -0.5;
     t->direct_sample_peak = -1.0;
+    t->input_sample_peak = -1.0;
     t->sample_peak_rel_amp = pow(10.0, -1.0 / 20.0);
     t->ebu_integrated = -12.0;
     t->ebu_range = 3.0;

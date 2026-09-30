@@ -731,6 +731,24 @@ Pinned by `sc_interrupt()`, against the partial file on disk, and
 
 ### Every figure the log reports about the audio is measured BEFORE the filter graph
 
+**FIXED for `.20`, 2026-09-30, not released.** `measure_frame()`
+(`src/cyanrip_encode.c`) feeds the loudness graphs and the direct peak scan the
+frames the encoders receive, converted to one planar-double format so one album
+graph takes flagged and unflagged tracks alike. The read-path check keeps its
+own scan of the frames built from the read buffer (`input_sample_peak`), since
+post-filter audio legitimately differs from the bytes read. The checksums stay
+on the read buffer. **An unfiltered rip measures exactly what it did**: the
+golden reference's recipe, `-Z 2` included, gives the same 68 loudness lines at
+the fix as in the committed log. **A filtered one now describes its file**:
+`sc_loudness_after_filter()` rips a pre-emphasised 10 kHz tone and checks the
+log's sample peak, album sample peak and `REPLAYGAIN_TRACK_PEAK` against the
+delivered bytes, and the R128 difference against the delivered files' RMS
+difference; with the fix reverted it fails seven checks. A `-H` rip of a
+non-HDCD disc delivers audio 6.02 dB below its source (measured on the tone,
+S32), and its log now says so, where it
+reported the read buffer's 0 dBFS. Values change on every de-emphasised or
+`-H` rip, and no line's text does. The history below is kept as the reason.
+
 **Found by the 2026-09-22 acceptance session, and it is not the defect it looks
 like.** Section P3 of that run ripped track 1 of a real disc twice, back to
 back, changing one flag:

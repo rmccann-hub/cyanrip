@@ -547,7 +547,7 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "    True peak level:   %.1f dBFS\n", t->ebu_true_peak);
         print_peak_disagreement(ctx, "    ", t->ebu_sample_peak,
                                 t->direct_sample_peak);
-        print_read_path_disagreement(ctx, "    ", t->direct_sample_peak,
+        print_read_path_disagreement(ctx, "    ", t->input_sample_peak,
                                      t->sample_peak_rel_amp);
         /* EBU R128 loudness, ours rather than libavfilter's. The values were
          * already computed and held per track and then discarded -- the same

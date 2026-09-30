@@ -5,6 +5,7 @@
 import hashlib
 import importlib.util
 import json
+import math
 import os
 import re
 import shlex
@@ -746,20 +747,18 @@ def sc_deemph_with_hdcd():
     # MUST NOT move when a filter is added, or a de-emphasised or HDCD rip
     # stops matching the AccurateRip database. This half is a guarantee.
     #
-    # GAP. The loudness block is measured pre-filter too, and that one is
-    # wrong. filter_frame() pushes the INPUT frame into the ebur128 graph
-    # (src/cyanrip_encode.c:656) and only afterwards into the de-emphasis/HDCD
-    # graph, whose output is what reaches the encoders -- siblings off one
-    # source, not a series. So Sample peak level, True peak level, the R128
-    # figures and every REPLAYGAIN_* tag describe audio that is not in the file
-    # they are written into. docs/KNOWN-ISSUES.md carries the measurement.
-    #
-    # If the loudness half here ever FAILS, that is the fix landing. Update
-    # this check and the KNOWN-ISSUES entry in the same commit; do not relax
-    # it. The checksum half failing is a regression either way.
+    # FOLLOWS. The loudness block was measured pre-filter too, and that was
+    # wrong: filter_frame() pushed the INPUT frame into the ebur128 graph and
+    # only afterwards into the de-emphasis/HDCD graph whose output reaches the
+    # encoders, so Sample peak level, True peak level, the R128 figures and
+    # every REPLAYGAIN_* tag described audio that was not in the file. FIXED for
+    # .20 (measure_frame(), src/cyanrip_encode.c): they are now measured on
+    # what the encoders receive, so between -H -E and -H, two rips delivering
+    # different audio, they MUST differ. That each one matches its own file is
+    # sc_loudness_after_filter()'s, against the delivered bytes.
     KEEP = ["EAC CRC32:"]
-    GAP = ["Sample peak level:", "True peak level:",
-           "Integrated loudness (R128):", "REPLAYGAIN_TRACK_PEAK:"]
+    FOLLOWS = ["Sample peak level:", "True peak level:",
+               "Integrated loudness (R128):", "REPLAYGAIN_TRACK_PEAK:"]
 
     def fields(name, labels):
         text = (WORK / f"{name}.log").read_text()
@@ -771,7 +770,7 @@ def sc_deemph_with_hdcd():
                     out[lab] = s[len(lab):].strip()
         return out
 
-    for kind, labels in (("checksum", KEEP), ("loudness", GAP)):
+    for kind, labels in (("checksum", KEEP), ("loudness", FOLLOWS)):
         both, hdcd = fields("hb_both", labels), fields("hb_hdcd", labels)
         # A comparison of two empty dicts is satisfied by finding nothing --
         # the defect this suite has hit three times. Require the labels first.
@@ -780,19 +779,129 @@ def sc_deemph_with_hdcd():
                  f"{sorted(both)} and {sorted(hdcd)} -- the comparison below "
                  f"would have been vacuous")
         for lab, v in both.items():
-            if v != hdcd[lab]:
-                if kind == "checksum":
-                    fail(f"deemph_with_hdcd: '{lab}' moved between -H -E and "
-                         f"-H ({v!r} vs {hdcd[lab]!r}). It is defined over the "
-                         f"raw disc samples; a post-filter value stops matching "
-                         f"AccurateRip on every de-emphasised disc")
-                else:
-                    fail(f"deemph_with_hdcd: '{lab}' now differs between -H -E "
-                         f"and -H ({v!r} vs {hdcd[lab]!r}). If the measurement "
-                         f"scope was deliberately moved downstream of the "
-                         f"filter graph, that is the fix -- update this check "
-                         f"and docs/KNOWN-ISSUES.md together")
+            if kind == "checksum" and v != hdcd[lab]:
+                fail(f"deemph_with_hdcd: '{lab}' moved between -H -E and "
+                     f"-H ({v!r} vs {hdcd[lab]!r}). It is defined over the "
+                     f"raw disc samples; a post-filter value stops matching "
+                     f"AccurateRip on every de-emphasised disc")
+            elif kind == "loudness" and v == hdcd[lab]:
+                fail(f"deemph_with_hdcd: '{lab}' is {v!r} for both -H -E and "
+                     f"-H, which deliver different audio. The figure is being "
+                     f"measured before the filter graph again")
 
+
+
+def sc_loudness_after_filter():
+    """THE LOUDNESS FIGURES DESCRIBE THE AUDIO IN THE FILE.
+
+    Found by the 2026-09-22 acceptance session's P3 section and measured on
+    images since; fixed for .20. ebur128 and the direct peak scan were fed the
+    frame built from the read buffer, and the de-emphasis and HDCD graph ran
+    downstream of them, so on a de-emphasised or HDCD rip the peak lines, the
+    R128 pair, the album rows and every REPLAYGAIN_* tag described audio that
+    was not in the file. It needs no flag: de-emphasis is on by default and
+    applies to any track the TOC flags, and Platterpus passes none of -E, -W
+    or -H, so their users meet it on every pre-emphasised disc.
+
+    THE FIXTURE HAS TO BE ABLE TO SHOW IT. preemph.cue carries the suite's
+    square wave, whose energy is mostly below the emphasis curve: its two
+    delivered files differ by 0.10 dB of RMS, under the log's 0.1 LU
+    precision. So this builds a 10 kHz tone at -1 dBFS flagged PRE, which
+    de-emphasis cuts by about 7.6 dB, and every figure is checked against the
+    DELIVERED BYTES, an artifact this program's measurement does not produce.
+
+    The -W rip must be byte-identical to its source, which also rules out
+    libcdio-paranoia's byte-order guess (CLAUDE.md, known external bugs): a
+    synthetic tone that ripped byte-swapped would make every figure here
+    about the wrong audio.
+    """
+    n = 44100 * 4
+    amp = 10 ** (-1 / 20) * 32767
+    tone = b"".join(struct.pack("<hh", v, v) for v in (
+        int(round(amp * math.sin(2 * math.pi * 10000 * i / 44100)))
+        for i in range(n)))
+    (WORK / "treble.bin").write_bytes(tone)
+    (WORK / "treble.cue").write_text(
+        'FILE "treble.bin" BINARY\n  TRACK 01 AUDIO\n    FLAGS PRE\n'
+        '    INDEX 01 00:00:00\n')
+
+    def logged(text, label):
+        for line in text.splitlines():
+            s = line.strip()
+            if s.startswith(label):
+                m = re.search(r"(-?\d+(?:\.\d+)?) (?:dBFS|LUFS)", s)
+                if m:
+                    return float(m.group(1))
+                m = re.search(r"(-?\d+\.\d+)$", s)
+                return float(m.group(1)) if m else None
+        return None
+
+    def delivered(name, width):
+        data = (WORK / f"out_{name}" / "1.pcm").read_bytes()
+        fmt, scale = ("h", 32768.0) if width == 2 else ("i", 2147483648.0)
+        s = struct.unpack(f"<{len(data) // width}{fmt}", data)
+        peak = max(abs(x) for x in s) / scale
+        rms = math.sqrt(sum(float(x) * x for x in s) / len(s)) / scale
+        return data, 20 * math.log10(peak), 20 * math.log10(rms), peak
+
+    runs = {}
+    for name, extra, width in (("tone_auto", [], 2), ("tone_off", ["-W"], 2),
+                               ("tone_hdcd", ["-H", "-W"], 4)):
+        ec, _ = crip("-d", WORK / "treble.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-o", "pcm", "-D", WORK / f"out_{name}",
+                     "-F", "{track}", "-L", "log", *extra)
+        if ec != 0:
+            fail(f"loudness_after_filter: {name}: cyanrip exited {ec}")
+            return
+        text = (WORK / f"out_{name}" / "log.log").read_text(errors="replace")
+        runs[name] = (text,) + delivered(name, width)
+
+    off_bytes = runs["tone_off"][1]
+    if off_bytes != tone:
+        fail("loudness_after_filter: -W did not deliver the source bytes, so "
+             "the tone was not ripped as written (byte order?) and nothing "
+             "below is about the audio this test built")
+        return
+    if runs["tone_auto"][1] == tone:
+        fail("loudness_after_filter: the flagged tone was delivered "
+             "unchanged, so de-emphasis did not run and this test cannot tell "
+             "a pre-filter measurement from a post-filter one")
+        return
+
+    for name, (text, _, peak_db, rms_db, peak_lin) in runs.items():
+        got = logged(text, "Sample peak level:")
+        if got is None or abs(got - peak_db) > 0.1:
+            fail(f"loudness_after_filter: {name}: the log's Sample peak level "
+                 f"is {got} dBFS and the delivered file peaks at "
+                 f"{peak_db:.2f} dBFS")
+        album = logged(text, "Album sample peak level:")
+        if album is None or abs(album - peak_db) > 0.1:
+            fail(f"loudness_after_filter: {name}: Album sample peak level is "
+                 f"{album} dBFS against the delivered {peak_db:.2f} dBFS")
+        tp = logged(text, "REPLAYGAIN_TRACK_PEAK:")
+        # A true peak is never below the sample peak, and on a 10 kHz tone it
+        # is within about 1.5 dB of it.
+        if tp is None or not (peak_lin * 0.999 <= tp <= peak_lin * 10 ** (1.5 / 20)):
+            fail(f"loudness_after_filter: {name}: REPLAYGAIN_TRACK_PEAK is {tp}, "
+                 f"not a true peak of a file whose samples peak at "
+                 f"{peak_lin:.6f}")
+        if "Read-path peak disagreement" in text:
+            fail(f"loudness_after_filter: {name}: the read-path check fired. It "
+                 f"compares the read buffer with the frames built from it, "
+                 f"before any filter, and those still agree")
+
+    # One tone at two levels: its K-weighted loudness moves exactly as its
+    # level does, so the two rips' R128 figures must differ by what the
+    # delivered files differ by.
+    auto, off = runs["tone_auto"], runs["tone_off"]
+    lufs_auto = logged(auto[0], "Integrated loudness (R128):")
+    lufs_off = logged(off[0], "Integrated loudness (R128):")
+    if lufs_auto is None or lufs_off is None:
+        fail("loudness_after_filter: no Integrated loudness (R128) line")
+    elif abs((lufs_auto - lufs_off) - (auto[3] - off[3])) > 0.3:
+        fail(f"loudness_after_filter: the R128 figures differ by "
+             f"{lufs_auto - lufs_off:.1f} LU and the delivered files by "
+             f"{auto[3] - off[3]:.2f} dB of RMS")
 
 
 def flac_vorbis_comments(path):
