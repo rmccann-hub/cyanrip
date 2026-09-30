@@ -3,6 +3,35 @@
 STATUS-NEWEST-LAP: round-30-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
+STATUS-ROUND: 30, OPEN, waiting on D1–D10 settled with their text in both trees (our lap 1 S9), and each side's closing lap naming its release (S11)
+STATUS-LAPS: newest sent round-30-lap-03.md (ours), round-30-lap-04.md (theirs); next 5 (ours) carrying C2 to C5, the merged D1–D10 text with the operator's rulings, and our answers to their S27, S36, S41 and S42; held none
+STATUS-RELEASE-NEXT: +platterpus.20, round 30's closing release under option A (the operator's O1), on beta until its run passes (O3), carrying SIGHUP handled like SIGTERM (1184a04) and the loudness figures measured after the filter graph; pins 174a134, reviews +platterpus.20
+STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on round 30's close, then +platterpus.20 on beta, then 0.6.66 naming it (their S50)
+STATUS-OPEN: c3-reading-lap-template us fixing at round 30 lap 5
+STATUS-OPEN: c4-stale-pair-report us fixing at round 30 lap 5
+STATUS-OPEN: c5-merged-text us fixing at round 30 lap 5, landed in our tree for theirs to land byte-identical
+STATUS-OPEN: loudness-before-filter us fixing at round 30, before our closing lap (loudness, peaks and ReplayGain measured before de-emphasis or HDCD)
+STATUS-OPEN: suite-timeouts-at-default us fixing at round 30, before our closing lap (the settling runs KNOWN-ISSUES names)
+STATUS-OPEN: repeat-limit-kept-read us cannot, because the rule our lap 5 proposes changes what every -Z rip costs, and you expose -Z to users
+STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse, and no design exists yet
+STATUS-OPEN: partially-accurate-tally-label us cannot, because renaming it needs your release that reads both wordings first (round 20's order)
+STATUS-OPEN: superseded-read-marker both cannot, because the format needs a design both sides agree (round 24's item)
+STATUS-OPEN: cache-probe-calibration us cannot, because the fix's baseline needs a drive to verify, and the next run's cd-paranoia -A (their S39) is its ground truth
+STATUS-OPEN: p0-unreadable-sector-hang us cannot, because the fix changes the drive read path and needs a drive to verify
+STATUS-OPEN: gate-c13a us cannot, because C13a as written refuses six sent laps, so it needs a protocol amendment
+STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act
+
+**The block above is the proposal's D6, and it is checked, not trusted**
+(`sc_status_block_is_current()`): the round and its state against the release
+gate's own loader; the newest laps of each side, the next lap and our held lap
+against the same loader; the next release against `release-manifest.json`, one
+past its newest release, with the pin it would stand beside being the
+manifest's stable commit; the run's provider build against the next release;
+and every `STATUS-OPEN` against the shape D6 gives it, each id once. It is
+rewritten in the same commit as any change to what it states. Platterpus keeps
+the same block in their standing status, checked by their own code, so the
+convention has two implementations.
+
 **Those two lines are declarations, not wire headers.** They carry a `STATUS-`
 prefix precisely so that no conforming enumerator counts this file as a lap —
 the rule in the paragraph below is unchanged. They exist because on 2026-09-16

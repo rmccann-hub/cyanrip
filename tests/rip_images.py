@@ -2623,6 +2623,167 @@ def sc_status_is_current():
              f"'sent'.")
 
 
+def sc_status_block_is_current():
+    """STATUS.md's D6 block says what the record and the manifest say.
+
+    Round 30's release-cycle proposal, D6, which both sides accepted: a status
+    block of `STATUS-*` declarations, each checked by its own side's suite,
+    positionally. Our lap 1 S15 promised it (C2) before our lap 3 and lap 3
+    did not carry it; Platterpus's round 30 lap 4 S41 said so. Theirs is
+    checked by their own test, so this is the second implementation of one
+    convention, written from the spec and not from their code.
+
+    Every cell below that can be derived is compared with its source: the round
+    and the laps with the release gate's own loader, imported rather than
+    reimplemented, and the release with `release-manifest.json`, which is what
+    the consumer resolves. The prose after each colon cannot be checked, and is
+    not.
+    """
+    text = (ROOT / "docs" / "handshake" / "STATUS.md").read_text()
+    decl = {}
+    for line in text.splitlines():
+        m = re.match(r"^(STATUS-(?:ROUND|LAPS|RELEASE-NEXT|RUN-NEXT|OPEN)):"
+                     r"[ \t]*(.*?)[ \t]*$", line)
+        if m:
+            decl.setdefault(m.group(1), []).append(m.group(2))
+    for field in ("STATUS-ROUND", "STATUS-LAPS", "STATUS-RELEASE-NEXT",
+                  "STATUS-RUN-NEXT"):
+        n = len(decl.get(field, []))
+        if n != 1:
+            fail(f"status_block_is_current: STATUS.md declares {field} {n} "
+                 f"times. D6 wants it once: none says nothing, and two are "
+                 f"ambiguous.")
+            return
+
+    spec = importlib.util.spec_from_file_location(
+        "rg_block", ROOT / "tools" / "release-gate.py")
+    rg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rg)
+    latest = rg.load_rounds()
+    if not latest:
+        fail("status_block_is_current: the gate's loader found no round")
+        return
+    current = max(latest, key=lambda r: r.number)
+
+    # STATUS-ROUND: <round>, OPEN|CLOSED[, what it waits on]
+    m = re.match(r"^(\d+), (OPEN|CLOSED)(?:, .+)?$", decl["STATUS-ROUND"][0])
+    if not m:
+        fail(f"status_block_is_current: STATUS-ROUND is not D6's shape "
+             f"'<round>, OPEN|CLOSED[, …]': {decl['STATUS-ROUND'][0]!r}")
+    else:
+        want_state = "CLOSED" if current.closed else "OPEN"
+        if int(m.group(1)) != current.number or m.group(2) != want_state:
+            fail(f"status_block_is_current: STATUS-ROUND says round "
+                 f"{m.group(1)} {m.group(2)}; the gate reads round "
+                 f"{current.number} {want_state}.")
+
+    # STATUS-LAPS: newest sent <ours> (ours), <theirs> (theirs);
+    #              next <n> (<side>) carrying …; held <n> carrying …|none
+    m = re.match(r"^newest sent (\S+) \(ours\), (\S+) \(theirs\); "
+                 r"next (\d+) \((ours|theirs)\) carrying .+; "
+                 r"held (none|(\d+) carrying .+)$", decl["STATUS-LAPS"][0])
+    if not m:
+        fail(f"status_block_is_current: STATUS-LAPS is not D6's shape: "
+             f"{decl['STATUS-LAPS'][0]!r}")
+    else:
+        ours = [lp for lp in rg.load_rounds(every_lap=True)
+                if lp.number == current.number and lp.lap is not None
+                and not lp.peer_only]
+        sent = [lp for lp in ours if not lp.held]
+        held = [lp for lp in ours if lp.held]
+        ours_newest = max(sent, key=lambda lp: lp.lap) if sent else None
+        peer = current.peer_latest
+        theirs_name = peer[1] if peer and peer[2] else None
+        theirs_lap = None
+        if theirs_name:
+            mm = re.match(r"round-\d+-lap-(\d+)\.md$", theirs_name)
+            theirs_lap = int(mm.group(1)) if mm else None
+        want_ours = ours_newest.path.name if ours_newest else "none"
+        if m.group(1) != want_ours:
+            fail(f"status_block_is_current: STATUS-LAPS names {m.group(1)} "
+                 f"as our newest sent lap; the gate's is {want_ours}.")
+        if m.group(2) != (theirs_name or "none"):
+            fail(f"status_block_is_current: STATUS-LAPS names {m.group(2)} "
+                 f"as their newest sent lap; the gate's is {theirs_name}.")
+        top = max(ours_newest.lap if ours_newest else 0, theirs_lap or 0)
+        want_side = "ours" if (theirs_lap or 0) > (
+            ours_newest.lap if ours_newest else 0) else "theirs"
+        if int(m.group(3)) != top + 1 or m.group(4) != want_side:
+            fail(f"status_block_is_current: STATUS-LAPS says the next lap is "
+                 f"{m.group(3)} ({m.group(4)}); after the newest sent lap, "
+                 f"{top}, it is {top + 1} ({want_side}).")
+        if m.group(5) == "none" and held:
+            fail(f"status_block_is_current: STATUS-LAPS says no lap of ours "
+                 f"is held, and {held[-1].path.name} is.")
+        if m.group(6) and int(m.group(6)) not in [lp.lap for lp in held]:
+            fail(f"status_block_is_current: STATUS-LAPS says our lap "
+                 f"{m.group(6)} is held, and the gate holds no such lap of "
+                 f"ours in round {current.number}.")
+
+    # STATUS-RELEASE-NEXT: <version>[ at <commit>], carrying …;
+    #                      pins <approved>, reviews <under review>
+    manifest = json.loads((ROOT / "release-manifest.json").read_text())
+    channels = manifest["channels"]
+    newest = max(channels.values(), key=lambda c: c["release_seq"])
+    n_now = int(re.search(r"\+platterpus\.(\d+)$", newest["version"]).group(1))
+    m = re.match(r"^\+platterpus\.(\d+)(?: at ([0-9a-f]{7,40}))?, .+; "
+                 r"pins ([0-9a-f]{7,40}), reviews (\S+)$",
+                 decl["STATUS-RELEASE-NEXT"][0])
+    next_version = None
+    if not m:
+        fail(f"status_block_is_current: STATUS-RELEASE-NEXT is not D6's "
+             f"shape '+platterpus.N[ at <commit>], …; pins <sha>, reviews "
+             f"<version>': {decl['STATUS-RELEASE-NEXT'][0]!r}")
+    else:
+        next_version = f"+platterpus.{m.group(1)}"
+        if int(m.group(1)) != n_now + 1:
+            fail(f"status_block_is_current: STATUS-RELEASE-NEXT names "
+                 f"{next_version}; the manifest's newest release is "
+                 f"+platterpus.{n_now}, so the next is +platterpus.{n_now + 1}.")
+        if not channels["stable"]["commit"].startswith(m.group(3)[:7]) or \
+                len(m.group(3)) < 7:
+            fail(f"status_block_is_current: STATUS-RELEASE-NEXT pins "
+                 f"{m.group(3)}; the manifest's stable commit, the build the "
+                 f"consumer approves beside it, is {channels['stable']['commit']}.")
+        if m.group(4) != next_version:
+            fail(f"status_block_is_current: STATUS-RELEASE-NEXT reviews "
+                 f"{m.group(4)}, and the release under review beside that pin "
+                 f"is the release itself, {next_version}.")
+
+    # STATUS-RUN-NEXT: <provider build> with <consumer build>; waiting on …|ready
+    m = re.match(r"^(\S+) with (\S+); (ready|waiting on .+)$",
+                 decl["STATUS-RUN-NEXT"][0])
+    released = {"+platterpus." + re.search(r"\+platterpus\.(\d+)$",
+                                            c["version"]).group(1)
+                for c in channels.values()}
+    if not m:
+        fail(f"status_block_is_current: STATUS-RUN-NEXT is not D6's shape: "
+             f"{decl['STATUS-RUN-NEXT'][0]!r}")
+    elif m.group(3) == "ready" and m.group(1) not in released:
+        fail(f"status_block_is_current: STATUS-RUN-NEXT says a run on "
+             f"{m.group(1)} is ready, and the manifest publishes no such "
+             f"release ({sorted(released)}).")
+    elif m.group(1) not in released and m.group(1) != next_version:
+        fail(f"status_block_is_current: STATUS-RUN-NEXT tests {m.group(1)}, "
+             f"which is neither published nor the next release, "
+             f"{next_version}.")
+
+    # STATUS-OPEN: <id> <owner> <fixing at … | cannot, because …>
+    seen = set()
+    for value in decl.get("STATUS-OPEN", []):
+        m = re.match(r"^([a-z0-9][a-z0-9-]*) (us|them|both) "
+                     r"(fixing at \S.*|cannot, because \S.*)$", value)
+        if not m:
+            fail(f"status_block_is_current: a STATUS-OPEN line is not D6's "
+                 f"shape '<id> <owner> <fixing at … | cannot, because …>': "
+                 f"{value!r}")
+            continue
+        if m.group(1) in seen:
+            fail(f"status_block_is_current: STATUS-OPEN id {m.group(1)!r} "
+                 f"appears twice")
+        seen.add(m.group(1))
+
+
 def sc_contract_exit_codes():
     """Every exit code the binary actually produces must be in P4.
 

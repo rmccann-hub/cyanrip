@@ -609,6 +609,7 @@ rip_scenarios = [
     'contract_build',
     'contract_exit_codes',
     'status_is_current',
+    'status_block_is_current',
     'docs_do_not_contradict_themselves',
     'changelog_names_every_release',
     'encode_failure_reaches_the_log',
