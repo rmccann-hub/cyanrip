@@ -320,6 +320,27 @@ with tempfile.TemporaryDirectory() as tmp:
             check_lap(theirs), 0,
             ["[LSL.unchecked] UNCHECKED platterpus@", "well formed, 2 warning(s)"],
             absent=["REFUSED"])
+    # Our round 30 lap 1 S20, accepting Platterpus's round 29 lap 4 S33: a
+    # file's final line counts whether or not it ends in a newline. Counting
+    # newline characters alone made the last line of such a file uncitable.
+    nl = tmp / "nl"
+    nl.mkdir()
+    g(nl, "init", "-q", "-b", "main")
+    (nl / "END").write_text("first\nsecond")
+    g(nl, "add", "END")
+    g(nl, "commit", "-q", "-m", "no final newline")
+    nl_sha = g(nl, "rev-parse", "HEAD")[:7]
+    last = lap_from("platterpus", "OPEN",
+                    f"S1 FACT read: The file's second line has no newline.\n"
+                    f"  evidence: platterpus@{nl_sha}:END:2\n\n"
+                    f"S2 VERDICT: OPEN\n  basis: S1\n")
+    outcome("S20: an unterminated final line can be cited",
+            check_lap(last, "--peer", str(nl)), 0,
+            ["well formed, 0 warning(s)"])
+    outcome("S20: the line after it still cannot",
+            check_lap(last.replace(":END:2", ":END:3"), "--peer", str(nl)), 1,
+            ["has 2 lines; line 3 does not exist"])
+
     ours_claim = lap_from("cyanrip-fork", "OPEN",
                           f"S1 FACT measured: Their README has four lines.\n"
                           f"  evidence: platterpus@{peer[1][:7]}:README:4\n\n"

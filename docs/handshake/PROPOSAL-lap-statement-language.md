@@ -107,7 +107,9 @@ Exactly one `VERDICT`. Nothing else is a verdict.
 | a section of a prose lap | `re: platterpus:R27.L5.§C` | parses it. Prose laps have no statement numbers |
 
 A citation always names a commit. A branch name is never a reference, and does
-not parse as one. `re:` takes a statement or an artifact; `because:` and
+not parse as one. **A file's lines are counted as git numbers them: a final
+line counts whether or not it ends in a newline** (cyanrip's round 30 lap 1
+S20, accepting Platterpus's round 29 lap 4 S33). `re:` takes a statement or an artifact; `because:` and
 `basis:` take statements only, so a refusal or a verdict rests on claims this
 language has already made checkable. A statement reference into a lap we do not
 hold is refused: a cited document must be one we hold.

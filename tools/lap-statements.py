@@ -426,7 +426,12 @@ class Resolver:
         if r.returncode != 0:
             lap.refuse(line, "LSL.4", f"{path} does not exist at {side}@{sha}")
             return
-        got = r.stdout.count("\n")
+        # A final line counts whether or not it ends in a newline (our
+        # round 30 lap 1 S20, accepting Platterpus's round 29 lap 4 S33).
+        # Counting newline characters alone made the last line of such a
+        # file uncitable.
+        got = r.stdout.count("\n") + (1 if r.stdout and
+                                      not r.stdout.endswith("\n") else 0)
         lo, hi = a, (b if b is not None else a)
         if lo is not None:
             if lo < 1 or hi < lo:
