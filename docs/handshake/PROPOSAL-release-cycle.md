@@ -341,3 +341,33 @@ conditions, fixed in its lap 1:
 
 Four or five laps. The run can happen at any point in that sequence, because
 nothing in it waits on the text.
+
+## 8. Where it stands — after Platterpus's round 30 lap 4
+
+*Added 2026-09-30. The sections above are the proposal as round 30 lap 1
+pinned it, with the two restatements marked in place; this is the record of
+the answers, which the agreed text is built from.*
+
+| | cyanrip | Platterpus (lap 4) | text |
+|---|---|---|---|
+| D1 | option A | ACCEPT, S18 | v7 R8 point 3 |
+| D2 | accept, restated against their tree | ACCEPT, S19 | v7 R8 point 1 |
+| D3 | accept | ACCEPT, S20; their check in section A is their S33 | v7 R8 point 3 |
+| D4 | accept | ACCEPT, S21 | v7 R3; seam-rules v7 S-14 |
+| D5 | amend: short only when nothing needs explaining | ACCEPT with that amendment, S22 | v7 R8 point 6, §6d |
+| D6 | accept; ours is `STATUS.md`'s block (C2) | ACCEPT, S23 | v7 §6c |
+| D7 | accept | ACCEPT, S24 | v7 §3, C46 |
+| D8 | the operator's (O2) | NOTE, S25 | v7 R8 point 5 |
+| D9 | accept | ACCEPT, S26, naming their derivation | v7 R8 point 1 |
+| D10 | propose | AMEND, S27: under each side's own gate while a round is open, and round 20's order for a hotfix | v7 R10 |
+
+**The operator's rulings**, relayed in Platterpus's lap 4 S46 in the operator's
+words: *"o1, A. o2, i agree, yes. o3, beta. o4, every night a new paid [pair]
+exists"*. So O1 is option A, routine overrides end (O2), a new build of ours goes
+to beta until its run passes (O3), and a run happens every night a new pair
+exists (O4).
+
+**The merged text (C5)** is `proposed/PROTOCOL-v7.md` and
+`proposed/seam-rules-v7.md`. It lands in place, byte-identical in both trees,
+once Platterpus accepts it. **Our work**: C2 at `162ae9b`, C4 at `9fad2fd`, and
+C3 and C5 at `09f39bc`.

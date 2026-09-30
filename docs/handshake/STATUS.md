@@ -7,9 +7,7 @@ STATUS-ROUND: 30, OPEN, waiting on D1–D10 settled with their text in both tree
 STATUS-LAPS: newest sent round-30-lap-03.md (ours), round-30-lap-04.md (theirs); next 5 (ours) carrying C2 to C5, the merged D1–D10 text with the operator's rulings, and our answers to their S27, S36, S41 and S42; held none
 STATUS-RELEASE-NEXT: +platterpus.20, round 30's closing release under option A (the operator's O1), on beta until its run passes (O3), carrying SIGHUP handled like SIGTERM (1184a04) and the loudness figures measured after the filter graph; pins 174a134, reviews +platterpus.20
 STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on round 30's close, then +platterpus.20 on beta, then 0.6.66 naming it (their S50)
-STATUS-OPEN: c3-reading-lap-template us fixing at round 30 lap 5
-STATUS-OPEN: c4-stale-pair-report us fixing at round 30 lap 5
-STATUS-OPEN: c5-merged-text us fixing at round 30 lap 5, landed in our tree for theirs to land byte-identical
+STATUS-OPEN: c5-merged-text both fixing at round 30: proposed at 09f39bc, and it lands in place in both trees once Platterpus accepts it
 STATUS-OPEN: loudness-before-filter us fixing at round 30, before our closing lap (loudness, peaks and ReplayGain measured before de-emphasis or HDCD)
 STATUS-OPEN: suite-timeouts-at-default us fixing at round 30, before our closing lap (the settling runs KNOWN-ISSUES names)
 STATUS-OPEN: repeat-limit-kept-read us cannot, because the rule our lap 5 proposes changes what every -Z rip costs, and you expose -Z to users
