@@ -79,12 +79,26 @@ def rows(body):
     return [l for l in body.splitlines() if l.startswith("| `")]
 
 
+# A row's location cell, `file.c:123` or `file.c:12-34`, which moves whenever
+# a line above it does. --text masks it, so what is left is the row's content.
+LOCATION = re.compile(r"^\| `[^`|]*:\d+(?:-\d+)?` \|")
+
+
+def content(row):
+    return LOCATION.sub("| `<location>` |", row, count=1)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("old")
     ap.add_argument("new")
     ap.add_argument("--rows", action="store_true",
                     help="also print the added and removed table rows")
+    ap.add_argument("--text", action="store_true",
+                    help="print the rows added and removed BY CONTENT, their "
+                         "file:line cell masked, so a row that only moved is "
+                         "not a change; counted, so a new call site of an "
+                         "existing message is one more of it")
     args = ap.parse_args()
 
     a, b = sections(contract_at(args.old)), sections(contract_at(args.new))
@@ -115,6 +129,24 @@ def main():
               "HUNK.\nP3 and P5 mean opposite things to a consumer: P5 is a "
               "fatal string they must\nsurface, P3 is unstable wording whose "
               "absence from a log proves nothing.")
+
+    if args.text:
+        from collections import Counter
+        moved_only = []
+        for n in changed:
+            ca = Counter(content(r) for r in rows(a.get(n, "")))
+            cb = Counter(content(r) for r in rows(b.get(n, "")))
+            plus, minus = cb - ca, ca - cb
+            if not plus and not minus:
+                moved_only.append(n)
+                continue
+            for r, k in sorted(plus.items()):
+                print(f"\n  + {n}{f'  (x{k})' if k > 1 else ''}\n    {r}")
+            for r, k in sorted(minus.items()):
+                print(f"\n  - {n}{f'  (x{k})' if k > 1 else ''}\n    {r}")
+        if moved_only:
+            print(f"\nBy content, unchanged, only rows moved: "
+                  f"{', '.join(moved_only)}")
 
     if args.rows:
         for n in changed:

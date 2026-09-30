@@ -83,6 +83,22 @@ def main():
     if "No section changed" not in out2:
         fail(f"comparing {NEW} to itself did not report an empty delta\n{out2}")
 
+    # 6. --text masks the file:line cell, so a real content change still shows
+    #    and a row that only moved does not. Round 30: D9 asks a release's lap
+    #    to quote the derived delta, and --rows over .19 -> the .20 candidate
+    #    printed 292 rows, nearly every one a line number that moved.
+    rc3, out3 = run(OLD, NEW, "--text")
+    if "+ ## P3" not in out3 or "-j given %i times" not in out3:
+        fail(f"--text hid a row whose content was added\n{out3}")
+    MOVED_OLD, MOVED_NEW = "174a134", "40dbeee"
+    if have(MOVED_OLD) and have(MOVED_NEW):
+        rc4, out4 = run(MOVED_OLD, MOVED_NEW, "--text")
+        if "By content, unchanged, only rows moved:" not in out4 or "\n  + ##" in out4:
+            fail(f"--text reported a content change between {MOVED_OLD} and "
+                 f"{MOVED_NEW}, whose rows only moved\n{out4}")
+    else:
+        print(f"UNPROBED: {MOVED_OLD} or {MOVED_NEW} is not in this clone")
+
     print(f"{failures} failure(s)")
     return 1 if failures else 0
 
