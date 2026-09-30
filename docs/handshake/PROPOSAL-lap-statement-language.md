@@ -40,7 +40,7 @@ say whether it blocks.
 
 ## Syntax
 
-A line reading exactly `LSL: 1`, `LSL: 2` or `LSL: 3`, at column 0, starts the body
+A line reading exactly `LSL: 1`, `LSL: 2`, `LSL: 3` or `LSL: 4`, at column 0, starts the body
 and says which version it is written in. Everything
 before it is the wire headers and a title, which `PROTOCOL.md` governs and
 this language does not touch:
@@ -153,7 +153,7 @@ of these is well formed.
 | `LSL.field` | refused | a field outside the fields of the kinds table |
 | `LSL.value` | refused | a value outside its shape: `owner:` other than `us`, `them`, `operator`; a date in `when:`; `target:` other than `BLOCKING`, `NEXT-ROUND`; a `commit:` that is not hex; `evidence:` that is neither `run: CMD => RESULT` nor an artifact reference |
 | `LSL.header` | refused | `HANDSHAKE-FROM` naming neither side, or `HANDSHAKE-ROUND` or `-LAP` missing or not a number |
-| `LSL.version` | could not check | no `LSL: 1`, `LSL: 2` or `LSL: 3` line, or another version |
+| `LSL.version` | could not check | no `LSL: 1`, `LSL: 2`, `LSL: 3` or `LSL: 4` line, or another version |
 | `LSL.file` | could not check | the file cannot be read |
 | `LSL.offrecord` | warning | a commit on a branch, but not on its side's ref of record |
 | `LSL.relayed` | warning | a `FACT relayed` |
@@ -172,7 +172,7 @@ refusal, and **2** when it could not check, because *refused* and *could not
 check* are different claims. `tests/lap_statements.py` builds a lap for each
 refusal and asserts the rule and the message as well as the exit code, requires
 this table and the code to name the same ids, and checks every committed lap of
-ours that declares `LSL: 1`, `LSL: 2` or `LSL: 3`. It also reads Platterpus's worked
+ours that declares `LSL: 1`, `LSL: 2`, `LSL: 3` or `LSL: 4`. It also reads Platterpus's worked
 example of the amendments, filed at `inbound/artifacts/lap_language_round27_lap05.md`,
 and asserts what their LSL amendments 1 §6 says each version must report.
 
@@ -291,6 +291,23 @@ side's when checking their lap, so it is run where that is acceptable.
 The checker prints what B1 covered: how many `run:` results the lap has, how
 many were re-run and matched, how many were not matched, and how many could not
 be re-run.
+
+## LSL 4
+
+`LSL: 4` is LSL 3 plus **one literal on A2**, from cyanrip's round 30 lap 3 S10
+as amended by Platterpus's round 30 lap 4 S36:
+
+- **A2 binds the author's next LSL lap in the round**, which it already did.
+- **A `WILL` carrying `verdict:` carries exactly `when: our next lap`**, and the
+  checker refuses any other `when:` on it, under `A2`. A pre-commit promised for
+  any other moment would be enforced at a lap it was not promised for, and no
+  checker can decide what *"before our closing lap"* means.
+
+**It applies to laps written after its text lands in both checkers**, and a
+lap says which rules it was written under by the version it declares. So a side
+declares `LSL: 4` only once both checkers implement it, and a pre-commit in an
+LSL 3 lap keeps the rule it was written under. The version is how a checker
+knows when a lap was written, which it cannot read from the lap's prose.
 
 ## What it does not do
 

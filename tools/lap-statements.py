@@ -52,7 +52,9 @@ amendment they disagree about. `LSL: 3` IS LSL 2 PLUS B1-B3, accepted in
 round 28 (Platterpus's lap 2 S17 and lap 4 S22-S24): a GO needs a close
 condition to wait for (B2), `answers:` counts only on a claim (B3), and with
 --rerun a `run:` is re-run at the commit it names, when its command is one
-that can only depend on that commit (B1). A lap declaring `LSL: 1` is checked exactly as
+that can only depend on that commit (B1). `LSL: 4` IS LSL 3 PLUS ONE LITERAL on
+A2, from round 30 (our lap 3 S10 as Platterpus's lap 4 S36 amends it): a WILL
+carrying verdict: says exactly `when: our next lap`. A lap declaring `LSL: 1` is checked exactly as
 before: the new kinds and fields are still refused in it.
 
 Three amendments read other laps of the round: A1 (a GO waits for every close
@@ -271,10 +273,10 @@ def parse(lap):
         if m and start is None:
             lap.headers.setdefault(m.group(1), []).append(m.group(2))
         if line.rstrip().startswith("LSL:") and start is None:
-            if line.rstrip() not in ("LSL: 1", "LSL: 2", "LSL: 3"):
+            if line.rstrip() not in ("LSL: 1", "LSL: 2", "LSL: 3", "LSL: 4"):
                 lap.refuse(i + 1, "LSL.version",
                            f"declares {line.strip()!r}; this checker "
-                           f"implements LSL 1, 2 and 3 only")
+                           f"implements LSL 1, 2, 3 and 4 only")
                 return False
             lap.version = int(line.rstrip()[-1])
             start = i + 1
@@ -631,6 +633,19 @@ def check_v2(lap, s, tag, have, me, by_n, resolver):
     if "unless" in have and "verdict" not in have:
         lap.refuse(have["unless"][0][1], "A2",
                    f"{tag}: unless: qualifies a verdict:, and there is none")
+    # LSL 4: a pre-commit's when: is the literal the binding reads (our round
+    # 30 lap 3 S10, amended by Platterpus's lap 4 S36). A2 binds the author's
+    # next LSL lap, so a verdict: promised for any other moment is one the
+    # checker would enforce at the wrong lap; and no checker can decide what
+    # "before our closing lap" means.
+    if lap.version is not None and lap.version >= 4 and kind == "WILL" \
+            and "verdict" in have:
+        whens = [v for v, _ in have.get("when", [])]
+        if whens != ["our next lap"]:
+            lap.refuse(have["verdict"][0][1], "A2",
+                       f"{tag}: in LSL 4 a WILL carrying verdict: says exactly "
+                       f"'when: our next lap', the lap A2 binds; it says "
+                       f"{whens or 'no when:'}")
     for value, fl in have.get("triggers", []):
         for token in re.split(r"[,\s]+", value.strip()):
             if not token:
@@ -1308,7 +1323,7 @@ def main():
             print(f"CANNOT CHECK  {args.lap}:{line}  [{rule}] {msg}")
         if not lap.refusals:
             print(f"CANNOT CHECK  {args.lap}  [LSL.version] not an LSL lap "
-                  f"-- no 'LSL: 1', 'LSL: 2' or 'LSL: 3' line")
+                  f"-- no 'LSL: 1', 'LSL: 2', 'LSL: 3' or 'LSL: 4' line")
         return 2
     resolver = Resolver(args.ours, args.peer, refs)
     resolver.rerun = args.rerun

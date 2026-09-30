@@ -241,8 +241,8 @@ if got != 2 or "not an LSL lap" not in out:
     fail(f"a prose lap must be CANNOT CHECK, exit 2: exit {got}\n{out}")
 else:
     print("ok   a prose lap cannot be checked")
-got, out = run(GOOD, head=HEAD.replace("LSL: 1", "LSL: 4"))
-if got != 2 or "implements LSL 1, 2 and 3 only" not in out:
+got, out = run(GOOD, head=HEAD.replace("LSL: 1", "LSL: 5"))
+if got != 2 or "implements LSL 1, 2, 3 and 4 only" not in out:
     fail(f"an unimplemented LSL version must exit 2: exit {got}\n{out}")
 else:
     print("ok   an unimplemented LSL version cannot be checked")
@@ -606,6 +606,23 @@ with tempfile.TemporaryDirectory() as tmp:
     expect2("A2: unless: with no verdict:",
             swap2("  verdict: GO\n", ""), 1,
             ["[A2] S10 WILL: unless: qualifies a verdict:"])
+    # LSL 4: a pre-commit's when: is the literal A2 binds (our round 30 lap 3
+    # S10, amended by Platterpus's lap 4 S36). GOOD2 is an LSL 2 lap, so under
+    # LSL 3 and 4 it also meets B1-B3; these assert on the A2 literal alone.
+    def at_lsl(n, body):
+        return check2(lap2("cyanrip-fork", 30, 1, "GO",
+                           body.replace("{verdict}", "GO")
+                           ).replace("LSL: 2", f"LSL: {n}"), empty)
+    literal = "in LSL 4 a WILL carrying verdict: says exactly 'when: our next lap'"
+    outcome("LSL 4: a pre-commit whose when: is not the literal is refused",
+            at_lsl(4, GOOD2), 1,
+            [f"[A2] S10 WILL: {literal}", "'once the run is filed'"])
+    code, out = at_lsl(4, swap2("  when: once the run is filed\n",
+                                "  when: our next lap\n"))
+    outcome("LSL 4: the literal is accepted", (0, out), 0, [], absent=[literal])
+    code, out = at_lsl(3, GOOD2)
+    outcome("LSL 3 keeps the rule it was written under", (0, out), 0, [],
+            absent=[literal])
     # A3
     expect2("A3: a finding of ours with no portable:",
             swap2("  portable: yes\n", ""), 1,
