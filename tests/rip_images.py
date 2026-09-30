@@ -2747,16 +2747,30 @@ def sc_status_block_is_current():
     reimplemented, and the release with `release-manifest.json`, which is what
     the consumer resolves. The prose after each colon cannot be checked, and is
     not.
+
+    `STATUS-RELEASED` is the line Platterpus's round 30 lap 6 S22 adds, placed,
+    once, as our lap 7 amends it: the newest published release, checked against
+    the manifest and against the commit that wrote its ledger row. And the
+    block is checked in order, because each side's suite checks it
+    positionally and a position nobody checks is a position nobody keeps.
     """
     text = (ROOT / "docs" / "handshake" / "STATUS.md").read_text()
     decl = {}
+    order = []
     for line in text.splitlines():
-        m = re.match(r"^(STATUS-(?:ROUND|LAPS|RELEASE-NEXT|RUN-NEXT|OPEN)):"
-                     r"[ \t]*(.*?)[ \t]*$", line)
+        m = re.match(r"^(STATUS-(?:ROUND|LAPS|RELEASED|RELEASE-NEXT|RUN-NEXT|"
+                     r"OPEN)):[ \t]*(.*?)[ \t]*$", line)
         if m:
             decl.setdefault(m.group(1), []).append(m.group(2))
-    for field in ("STATUS-ROUND", "STATUS-LAPS", "STATUS-RELEASE-NEXT",
-                  "STATUS-RUN-NEXT"):
+            if not order or order[-1] != m.group(1):
+                order.append(m.group(1))
+    want_order = ["STATUS-ROUND", "STATUS-LAPS", "STATUS-RELEASED",
+                  "STATUS-RELEASE-NEXT", "STATUS-RUN-NEXT", "STATUS-OPEN"]
+    if order != want_order[:len(order)] or len(order) < len(want_order) - 1:
+        fail(f"status_block_is_current: the block's lines run {order}; §6c's "
+             f"order is {want_order}, with STATUS-OPEN repeated at the end.")
+    for field in ("STATUS-ROUND", "STATUS-LAPS", "STATUS-RELEASED",
+                  "STATUS-RELEASE-NEXT", "STATUS-RUN-NEXT"):
         n = len(decl.get(field, []))
         if n != 1:
             fail(f"status_block_is_current: STATUS.md declares {field} {n} "
@@ -2829,12 +2843,43 @@ def sc_status_block_is_current():
                  f"{m.group(6)} is held, and the gate holds no such lap of "
                  f"ours in round {current.number}.")
 
-    # STATUS-RELEASE-NEXT: <version>[ at <commit>], carrying …;
-    #                      pins <approved>, reviews <under review>
     manifest = json.loads((ROOT / "release-manifest.json").read_text())
     channels = manifest["channels"]
     newest = max(channels.values(), key=lambda c: c["release_seq"])
     n_now = int(re.search(r"\+platterpus\.(\d+)$", newest["version"]).group(1))
+
+    # STATUS-RELEASED: <version> at <commit>, <UTC date>[, hotfix: <why>]
+    m = re.match(r"^\+platterpus\.(\d+) at ([0-9a-f]{7,40}), "
+                 r"(\d{4}-\d{2}-\d{2})(?:, hotfix: \S.*)?$",
+                 decl["STATUS-RELEASED"][0])
+    if not m:
+        fail(f"status_block_is_current: STATUS-RELEASED is not §6c's shape "
+             f"'+platterpus.N at <commit>, <UTC date>[, hotfix: …]': "
+             f"{decl['STATUS-RELEASED'][0]!r}")
+    else:
+        if int(m.group(1)) != n_now or not newest["commit"].startswith(m.group(2)[:7]):
+            fail(f"status_block_is_current: STATUS-RELEASED names "
+                 f"+platterpus.{m.group(1)} at {m.group(2)}; the manifest's "
+                 f"newest release is +platterpus.{n_now} at {newest['commit']}.")
+        spec = importlib.util.spec_from_file_location(
+            "ib_block", ROOT / "tools" / "ingest-bundle.py")
+        ib = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ib)
+        pubs = ib.publications(ROOT)
+        row = [p for p in (pubs or []) if p[0] == newest["release_seq"]]
+        if pubs is None:
+            print("UNPROBED: status_block_is_current: no git history, so "
+                  "STATUS-RELEASED's date was not checked")
+        elif not row:
+            fail(f"status_block_is_current: no commit wrote ledger row "
+                 f"{newest['release_seq']}, the manifest's newest release")
+        elif row[0][3].strftime("%Y-%m-%d") != m.group(3):
+            fail(f"status_block_is_current: STATUS-RELEASED dates the release "
+                 f"{m.group(3)}; its ledger row was written by {row[0][4]} on "
+                 f"{row[0][3]:%Y-%m-%d} (UTC).")
+
+    # STATUS-RELEASE-NEXT: <version>[ at <commit>], carrying …;
+    #                      pins <approved>, reviews <under review>
     m = re.match(r"^\+platterpus\.(\d+)(?: at ([0-9a-f]{7,40}))?, .+; "
                  r"pins ([0-9a-f]{7,40}), reviews (\S+)$",
                  decl["STATUS-RELEASE-NEXT"][0])

@@ -5,6 +5,7 @@ STATUS-NEWEST-LAP-STATE: sent
 
 STATUS-ROUND: 30, OPEN, waiting on D1–D10 settled with their text in both trees (our lap 1 S9), and each side's closing lap naming its release (S11)
 STATUS-LAPS: newest sent round-30-lap-05.md (ours), round-30-lap-06.md (theirs); next 7 (ours) carrying the v7 texts with their S19 to S22, proposed at a commit it names and landed in its commit, and our answer to their S14; held none
+STATUS-RELEASED: +platterpus.19 at 174a134, 2026-09-30
 STATUS-RELEASE-NEXT: +platterpus.20, round 30's closing release under option A (the operator's O1), on beta until its run passes (O3), carrying SIGHUP handled like SIGTERM (1184a04), the loudness figures measured on the delivered audio (cc79c5b) and a fresh filter for each -Z pass; pins 174a134, reviews +platterpus.20
 STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on round 30's close, then +platterpus.20 on beta, then 0.6.66 naming it (their S50)
 STATUS-OPEN: c5-merged-text both fixing at round 30: proposed at 09f39bc and amended by their lap 6 S19 to S22; our lap 7 proposes the amended texts and lands them in its commit, and theirs land in the commit that files it
