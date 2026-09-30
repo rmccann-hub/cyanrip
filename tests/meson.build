@@ -660,6 +660,7 @@ rip_scenarios = [
     'abort_footer',
     'bad_sector',
     'repeat_limit',
+    'repeat_resets_filter',
     'zr_refusal',
 ]
 

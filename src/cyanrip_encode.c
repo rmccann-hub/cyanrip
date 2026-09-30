@@ -894,7 +894,17 @@ int cyanrip_reset_encoding(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_init_track_encoding(ctx, &t->enc_ctx[i], t,
                                     ctx->settings.outputs[i]);
 
-    return 0;
+    /* AND A FRESH FILTER AND LOUDNESS GRAPH, as the encoders get. dec_ctx was
+     * made once per track, so when -Z encoded more than one pass, the pass
+     * that was kept began with the de-emphasis or HDCD filter still holding
+     * the previous pass's state, and the per-track loudness graph held every
+     * encoded pass, including the discarded ones. On an image, a -Z -E rip
+     * whose kept pass read what a single pass read delivered different
+     * audio in 31 of the file's first 38 sample frames, with the same EAC
+     * CRC32 in both logs. The album graph is fed once per track (calc_global_peak_set) and
+     * is not reset here. */
+    cyanrip_free_dec_ctx(ctx, &t->dec_ctx);
+    return cyanrip_create_dec_ctx(ctx, &t->dec_ctx, t);
 }
 
 int cyanrip_finalize_encoding(cyanrip_ctx *ctx, cyanrip_track *t)

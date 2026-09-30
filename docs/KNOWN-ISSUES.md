@@ -23,6 +23,22 @@ say "probably" without saying what would settle it.
 
 ---
 
+## Fixed for `.20`, 2026-09-30, not released — found fixing where loudness is measured
+
+- **A `-Z` rip's kept pass was filtered with the previous pass's state.** The
+  filter and loudness graphs were made once per track and
+  `cyanrip_reset_encoding()` rebuilt only the encoders, so when more than one
+  pass was encoded the kept one began with the de-emphasis or HDCD filter
+  holding the discarded pass's state, and the per-track loudness graph held
+  every encoded pass. On an image, a `-Z 2 -r 5 -E` rip whose kept read matched
+  a single pass's delivered different audio in 31 of its first 38 sample
+  frames, **with the same EAC CRC32 in both logs**: the checksum is over the
+  read buffer and the difference was the filter's. It is reached whenever an
+  encoded pass does not converge, as the `.19` Full run's track 5 did. Each
+  pass now gets a fresh graph. Pinned by `sc_repeat_resets_filter()`, against a
+  single-pass rip of the same final read; with the reset removed, 31 frames
+  differ. **The album graph is not reset**, and that half is open, below.
+
 ## Fixed 2026-09-24, from round 26's real test — two claims older than `.15`
 
 Both were in logs we had filed for weeks. Neither was listed here, because
@@ -669,6 +685,22 @@ matched, not to the rest. Proposed: `Only one frame matched AccurateRip
 **A second defect was sitting under the same line, and it is fixed.** A 450
 lookup that missed fell through to the whole-track checksum
 (`crip_find_ar()`, their B1a). See `docs/SETTLED.md`'s upstream section.
+
+### The album loudness block is fed the FIRST encoded pass of each track, not the kept one
+
+**Found 2026-09-30**, fixing the per-track half above. `calc_global_peak` is set
+once per track, on the first pass that may be the last (`calc_global_peak_set`,
+`src/cyanrip_main.c`), so the album graph receives that pass's audio. When it
+does not converge and a later pass is kept, the album rows and the
+`REPLAYGAIN_ALBUM_*` tags describe a read that is not on disk. The per-track
+graph can be reset each pass; the album graph spans every track and cannot.
+
+**Why not in round 30.** Feeding it the kept pass means holding each encoded
+pass's samples until the pass is known to be final, and that is the same
+mechanism the repeat limit's kept read needs (the repeat loop entry, item 2,
+whose rule round 29 lap 1 S36 owes). One design serves both, and it costs disk
+on every `-Z` rip that encodes more than one pass, which Platterpus exposes to
+its users. It is proposed in our round 30 lap 5, with both uses named.
 
 ### The album loudness block describes whatever was read, and calls it the album
 

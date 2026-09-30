@@ -5943,6 +5943,72 @@ def sc_repeat_limit():
                  f"secure re-read hit the limit")
 
 
+def sc_repeat_resets_filter():
+    """THE READ -Z KEEPS IS FILTERED AS IF IT WERE THE ONLY ONE.
+
+    Found 2026-09-30 while fixing where loudness is measured. The filter and
+    loudness graphs (dec_ctx) were made once per track, and cyanrip_reset_
+    encoding() rebuilt only the encoders between passes. So when -Z encoded
+    more than one pass, the kept pass began with the de-emphasis filter still
+    holding the previous pass's state, and the per-track loudness graph held
+    every encoded pass. It is reached whenever an encoded pass does not
+    converge: the .19 Full run's track 5 read five times, encoding from the
+    third.
+
+    Measured here against an INDEPENDENT artifact: a single-pass rip whose one
+    read is what the -Z rip's kept read was. tests/badsector.c flips sector
+    100 on a schedule of A, A, B, B, A, so -Z 2 -r 5 encodes passes 3 to 5 and
+    keeps pass 5, which reads A; the single pass reads A too. Their delivered
+    audio must be identical. Before the fix it differed in 31 of its first 38
+    sample frames, with the same EAC CRC32 in both logs, because the checksum
+    is over the read buffer and the difference was the filter's.
+    """
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"repeat_resets_filter: the shim was not built or not passed ({shim!r})")
+        return
+    outs = {}
+    for name, cycle, run, extra in (("z", 2, 2, ["-Z", "2", "-r", "5"]),
+                                    ("one", 1, 1, [])):
+        out = WORK / f"out_resets_{name}"
+        count = WORK / f"resets_{name}.count"
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+                   CRIP_FLIP_SECTOR="100", CRIP_FLIP_CYCLE=str(cycle),
+                   CRIP_FLIP_RUN=str(run), CRIP_FLIP_OUT=str(count),
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-E", "-l", "1", "-o", "pcm", *extra,
+                     "-D", out, "-F", "{track}", "-L", "log", env=env)
+        if ec != 0:
+            fail(f"repeat_resets_filter: {name}: cyanrip exited {ec}")
+            return
+        flips = int(count.read_text().strip()) if count.exists() else 0
+        want = 5 if name == "z" else 1
+        if flips != want:
+            fail(f"repeat_resets_filter: {name}: the shim varied {flips} reads, "
+                 f"not {want}, so the passes did not read what this test assumes")
+            return
+        outs[name] = out
+    log = (outs["z"] / "log.log").read_text(errors="replace")
+    if "  Secure re-read:  converged after 5 reads" not in log.splitlines():
+        fail("repeat_resets_filter: the -Z rip did not converge on its fifth "
+             "read, so its kept pass is not the one the single pass matches")
+        return
+    z, one = ((outs[n] / "1.pcm").read_bytes() for n in ("z", "one"))
+    if len(z) != len(one) or not any(z):
+        fail(f"repeat_resets_filter: {len(z)} and {len(one)} bytes, or silence, "
+             f"so the comparison below would mean nothing")
+        return
+    if z != one:
+        first = next(i for i in range(len(z)) if z[i] != one[i])
+        n = sum(1 for i in range(0, len(z), 4) if z[i:i + 4] != one[i:i + 4])
+        fail(f"repeat_resets_filter: the kept pass's delivered audio differs "
+             f"from a single read of the same bytes in {n} sample frames, the "
+             f"first at frame {first // 4}. The filter kept the previous "
+             f"pass's state")
+
+
 def sc_zr_refusal():
     """-Z N WITH -r OF N OR LESS IS REFUSED, BECAUSE IT CAN NEVER CONVERGE.
 
