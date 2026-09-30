@@ -82,8 +82,12 @@ either side held that run's bundle, which makes 14.
    run can test a new build of ours only once a round has opened on it, **which
    is why rounds 26 to 29 all opened before their run**, and why 0.6.64
    (`v0.6.64` = `9b114c5`) was released naming `51cc789`, which is `.18`, as its
-   build under review, the build the last run had just tested. D2 decouples the
-   two.
+   build under review, the build the last run had just tested. **And a test of
+   theirs derives that constant from our newest lap**, *"newest lap -> constant
+   -> assertion"* (`platterpus@9b114c5:src/platterpus/uiscript/verbs.py:557-560`),
+   which their Full run asserts at its step 277
+   (`src/platterpus/rig_scripts/fullacceptance.txt:277` there). So with `.19`
+   installed, 0.6.64's Full run stops in section A. D2 decouples the two.
 4. **Where things stood lived in prose.** Both sides planned a round-29 lap 3,
    and only K1's release-order rule settled whose it was. Round 29's laps
    described `.19` and missed two error-path lines, both in the contract, both
