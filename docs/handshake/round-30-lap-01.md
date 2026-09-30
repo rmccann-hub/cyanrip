@@ -24,9 +24,6 @@ HANDSHAKE-TESTED: **not a close.** Nothing has run on a drive for this round. Wh
 HANDSHAKE-FROM-COMMIT: 7677b3f
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that adds this lap, `.19`'s publish commit. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
 HANDSHAKE-BREAKING: **`.19` against `.18`**, derived by `tools/contract-delta.py 51cc789 174a134` (S3): the repeat-limit line reworded, removing `Done; (no matches found, but hit repeat limit of %i)`, which your 0.6.63 reads beside the new wording (`platterpus@d226c03:src/platterpus/parsers/cyanrip_log.py:311`); `-Z N` with `-r` of N or less refused at argument parsing with exit 1 and a column-0 message, where `.18` began the rip; and two new error-path lines no lap of round 29 named, `Couldn't set metadata: %s!` (a P5 fatal) and `(not listed: out of memory)` (S4–S5). Tag keys in capitals change the `Metadata:` block's keys, which your parser does not read (round 29 lap 1 S19).
-HANDSHAKE-OVERRIDE: R8 point 3 — round 30 opens before its real test, naming the release it tests, rather than from the test's results
-HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-09-30
-HANDSHAKE-OVERRIDE-WHY: the operator asked for the new plan as a decision for both sides, *"give them(and me) the plan, in the next lap, this can take multiple laps"*. The plan is how release, run and round line up, so it has to be agreed before the rules it changes govern a round, and the laps it takes need not wait on the run (S10), which is why the proposal calls this the last round opened before its run.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 30.
 HANDSHAKE-INBOUND-OBSERVED: none. Re-read when this lap was released: your `main` was `58ad83db`, with no round-30 lap.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, over the laps this lap answers: none, since it opens the round. `python3 tools/round-digest.py 30 --exclude round-30-lap-01.md`.
@@ -34,7 +31,7 @@ HANDSHAKE-SHARED-HASHES: protocol(v6)=05abdfde706316f80647bbc2ab85875bc2dd27cc62
 HANDSHAKE-SHARED-HASHES-SOURCE: `tools/seam-sync-check.py --fetch`, **exit 0**, *"IN SYNC: all 4 shared documents byte-identical, read at platterpus@58ad83d"*.
 HANDSHAKE-AGREED-CHANGES: +platterpus.19 released at 174a134, ours, round 29's release; FORK_PIN → 51cc789 landed at platterpus@089252e8, yours, round 29's release, shipping in 0.6.64; your 0.6.64 not landed, yours; git's abbreviation pinned in re-runs landed at b6b8b48 here and a7a3532d in yours, both
 HANDSHAKE-CLOSE-BY: 2026-10-28T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading; held by the operator's decision of 2026-09-30 until after the Full run on `.19`, when it is rewritten as the reading lap
 HANDSHAKE-NEXT-LAP: 2 (yours): your answers to D1–D10 by number and the work W1 and W3–W6 of the proposal's §6 (S13, S14), and whether 0.6.64 names `174a134` (S6); nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.6.63
 
