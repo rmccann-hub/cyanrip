@@ -545,7 +545,8 @@ def test_fenced_examples_are_not_declarations():
 
 
 def test_protocol_version_matches_the_shared_spec():
-    """The gate implements exactly the version PROTOCOL.md declares.
+    """The gate implements the version PROTOCOL.md declares, or the one before
+    it while the spec's own landing window is open.
 
     Was a hardcoded `== 2`, which made bumping the gate a two-place edit where
     one place could be forgotten -- and the forgettable one is the document
@@ -553,17 +554,45 @@ def test_protocol_version_matches_the_shared_spec():
     the single source, so a gate ahead of or behind the shared file fails here
     rather than at a close.
 
-    Bumping is still a deliberate, visible act -- it now requires editing the
-    shared spec, which is a version bump both projects ship.
+    THE WINDOW. Since v5 the spec has said *"Neither gate implements N until
+    this file is byte-identical in both trees"*, so the side that lands a new
+    version first holds it with its gate one behind until the other side lands
+    it too. This test used to demand equality, which only worked because in
+    round 25 Platterpus landed first and we landed and flipped in one commit;
+    their gate sat at 5 over their landed v6
+    (`platterpus@53b3c046:scripts/handshake.py:1170`). Round 30 lands the other
+    way. So one version behind passes, printed, and only while no lap this
+    tree holds declares the newer version, since a declared N needs a gate
+    that implements N (§15: nobody declares N until both gates do).
     """
     title = (HERE.parent / "docs" / "handshake" / "PROTOCOL.md").read_text(
         encoding="utf-8").splitlines()[0]
     m = re.search(r"v(\d+)\s*$", title)
     check(m is not None, f"PROTOCOL.md's title declares no version: {title!r}")
-    if m:
-        check(rg.PROTOCOL_VERSION == int(m.group(1)),
-              f"gate implements {rg.PROTOCOL_VERSION}, PROTOCOL.md declares "
-              f"v{m.group(1)} -- both repos must ship the same version")
+    if not m:
+        return
+    spec_v, gate_v = int(m.group(1)), rg.PROTOCOL_VERSION
+    if gate_v == spec_v:
+        return
+    if gate_v != spec_v - 1:
+        check(False,
+              f"gate implements {gate_v}, PROTOCOL.md declares v{spec_v} -- both "
+              f"repos must ship the same version, or the gate be one behind while "
+              f"the landing is not yet in both trees")
+        return
+    hs = HERE.parent / "docs" / "handshake"
+    declared = [f.relative_to(hs).as_posix()
+                for f in sorted(hs.glob("round-*.md")) + sorted(hs.glob("inbound/round-*.md"))
+                if re.search(rf"^HANDSHAKE-PROTOCOL:[ \t]*{spec_v}[ \t]*$",
+                             f.read_text(encoding="utf-8"), re.M)]
+    if declared:
+        check(False,
+              f"gate implements {gate_v} and these laps declare {spec_v}, which "
+              f"needs a gate that implements it: {declared}")
+        return
+    print(f"  (the landing window: PROTOCOL.md is v{spec_v} and the gate "
+          f"implements {gate_v} until v{spec_v} is byte-identical in both "
+          f"trees; tools/seam-sync-check.py --fetch says when)")
 
 
 
