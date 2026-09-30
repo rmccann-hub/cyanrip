@@ -37,16 +37,32 @@ So this tool does two things a human reading a tarball reliably does not:
 
 It deliberately does NOT judge rip quality. That is Platterpus's under
 OWNERSHIP.md §3. It reports what the bundle asserts about itself.
+
+AND IT SAYS WHETHER THE PAIR WAS THE NEWEST WHEN THE RUN BEGAN (round 30's
+release-cycle proposal, D3, C4): *"a run tests only the newest pair ... A run
+on anything else is not evidence"*. The 2026-09-28 14:42 run tested `.17` a
+second time while `.18` was published mid-run. The report compares the build
+the bundle ran with the newest release of ours at the run's start, by the
+commit that added its row to `docs/release-ledger.tsv`, and the app with the
+newest tag of theirs at that time when `--peer` names their tree. A commit
+date is when the row was written, not when it was pushed, and the report says
+so. A pair it cannot establish is `unknown`, never newest.
 """
 
 import argparse
+import datetime
 import hashlib
 import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
 import tarfile
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+LEDGER = "docs/release-ledger.tsv"
+BANNER = re.compile(r"cyanrip (\S+) \(platterpus-fork-g([0-9a-f]{7,40})\)")
 
 # Files whose CONTENT states the outcome of the run, as opposed to the outcome
 # of a rip inside it. Ordered by how directly they answer "did the run pass".
@@ -101,12 +117,220 @@ def read_verdict(members):
     return ok, out
 
 
+def when(text):
+    """An ISO 8601 time as an aware datetime, or None."""
+    try:
+        t = datetime.datetime.fromisoformat(text.strip().replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=datetime.timezone.utc)
+
+
+def read_pair(members):
+    """What the bundle says it ran: (start, end, ripper builds, app, start's file)."""
+    started, ended, app, builds, start_from = None, None, None, {}, None
+    for name, data in sorted(members.items()):
+        base = os.path.basename(name)
+        if base in ("script-report.json", "report.json"):
+            try:
+                d = json.loads(data)
+            except Exception:
+                continue
+            if started is None and when(str(d.get("started_at", ""))):
+                started = when(d["started_at"])
+                start_from = name
+                # No end field exists. The start plus the sum of the steps'
+                # own times is when the last step finished, not counting any
+                # gap between steps, so it is the earliest the run can have
+                # ended.
+                steps = d.get("steps") or []
+                total = sum(float(s.get("elapsed_s") or 0) for s in steps
+                            if isinstance(s, dict))
+                if steps:
+                    ended = started + datetime.timedelta(seconds=total)
+            if app is None and d.get("app_version"):
+                app = str(d["app_version"])
+        elif base == "COMPONENTS.json" and app is None:
+            try:
+                app = str(json.loads(data).get("app") or "") or None
+            except Exception:
+                pass
+        # The ripper is read from what the ripper printed: the version probe
+        # and each log's banner. Every build named is kept, so a bundle that
+        # ran two builds says two and is not reduced to the first.
+        if base == "rig-check-ripper-version.txt" or name.endswith(".log"):
+            first = data[:400].decode("utf-8", errors="replace")
+            m = BANNER.search(first.splitlines()[0] if first else "")
+            if m:
+                builds.setdefault(m.group(2)[:7], (m.group(1), []))[1].append(name)
+    return started, ended, builds, app, start_from
+
+
+def publications(root=ROOT):
+    """Each release row of the ledger with the commit that added it.
+
+    Returns [(seq, version, commit, published_at, by)], or None outside a git
+    checkout. published_at is that commit's committer date: when the row was
+    written, which is not when it was pushed.
+    """
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(root), "log", "--reverse", "-p", "--no-color",
+             "--format=@@commit %h %cI", "--", LEDGER],
+            capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if r.returncode != 0:
+        return None
+    out, seen, commit, date = [], set(), None, None
+    for line in r.stdout.splitlines():
+        if line.startswith("@@commit "):
+            _, commit, stamp = line.split(" ", 2)
+            date = when(stamp)
+            continue
+        if not line.startswith("+") or line.startswith("+++"):
+            continue
+        cols = line[1:].split("\t")
+        if len(cols) < 4 or not cols[0].strip().isdigit():
+            continue
+        seq = int(cols[0])
+        if seq in seen:
+            continue
+        seen.add(seq)
+        out.append((seq, cols[2].strip(), cols[3].strip(), date, commit))
+    return out
+
+
+def peer_releases(peer):
+    """Their tags v*, each with its creator date: [(tag, date)], or None."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(peer), "for-each-ref", "refs/tags/v*",
+             "--format=%(refname:short)\t%(creatordate:iso-strict)"],
+            capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if r.returncode != 0:
+        return None
+    tags = []
+    for line in r.stdout.splitlines():
+        tag, _, stamp = line.partition("\t")
+        if when(stamp):
+            tags.append((tag, when(stamp)))
+    return tags
+
+
+def report_pair(members, peer=None, root=ROOT):
+    """D3: was the bundle's pair the newest when its run began? Lines to print."""
+    started, ended, builds, app, start_from = read_pair(members)
+    out = []
+    if started is None:
+        out.append("  run start: unknown (no started_at in a script-report.json "
+                   "or report.json), so neither side can be judged newest")
+    else:
+        out.append(f"  run start: {started.isoformat()} (started_at in "
+                   f"{start_from})")
+        if ended is not None:
+            out.append(f"  run end:   {ended.isoformat()} at the earliest (the "
+                       f"start plus the sum of the report's step times)")
+
+    # ---- ours ----
+    if not builds:
+        out.append("  cyanrip: unknown (no banner in the version probe or any "
+                   "log), which is NOT newest")
+    elif len(builds) > 1:
+        names = ", ".join(f"{v} {sha}" for sha, (v, _) in sorted(builds.items()))
+        out.append(f"  cyanrip: the bundle ran {len(builds)} builds ({names}); a "
+                   f"run on more than one ripper is not one pair")
+    elif started is not None:
+        sha, (version, seen_in) = next(iter(builds.items()))
+        pubs = publications(root)
+        if pubs is None:
+            out.append(f"  cyanrip: ran {version} at {sha}; unknown whether "
+                       f"newest (no git history of {LEDGER} to read)")
+        else:
+            before = [p for p in pubs if p[3] is not None and p[3] <= started]
+            mine = [p for p in pubs if p[2][:7] == sha]
+            newest = max(before, key=lambda p: p[0]) if before else None
+            if newest and newest[2][:7] == sha:
+                out.append(f"  cyanrip: NEWEST -- ran {version} at {sha}, "
+                           f"release_seq {newest[0]}, the newest in {LEDGER} at "
+                           f"the run's start (its row added by {newest[4]} at "
+                           f"{newest[3].isoformat()}, a commit date, not a push)")
+            elif mine and mine[0][3] is not None and mine[0][3] > started:
+                out.append(f"  cyanrip: NOT YET PUBLISHED -- ran {version} at "
+                           f"{sha}, whose ledger row was added by {mine[0][4]} "
+                           f"at {mine[0][3].isoformat()}, after the run began")
+            elif mine:
+                out.append(f"  cyanrip: STALE -- ran {version} at {sha}, "
+                           f"release_seq {mine[0][0]}; {newest[1]} at "
+                           f"{newest[2]}, release_seq {newest[0]}, was published "
+                           f"by {newest[4]} at {newest[3].isoformat()}, before "
+                           f"the run began. Not evidence under D3")
+            else:
+                out.append(f"  cyanrip: NOT A RELEASE -- ran {version} at {sha}, "
+                           f"which no row of {LEDGER} names (a test pin, or an "
+                           f"unreleased build)")
+            # D3's own case: 2026-09-28 14:42 ran .17, newest at its start,
+            # and .18 was published at 17:32 while it ran.
+            base_seq = mine[0][0] if mine else None
+            during = [p for p in pubs if p[3] is not None and ended is not None
+                      and started < p[3] <= ended
+                      and (base_seq is None or p[0] > base_seq)]
+            for p in during:
+                out.append(f"  cyanrip: SUPERSEDED DURING THE RUN -- {p[1]} at "
+                           f"{p[2]}, release_seq {p[0]}, was published by {p[4]} "
+                           f"at {p[3].isoformat()}, before the run ended")
+
+    # ---- theirs ----
+    if app is None:
+        out.append("  app: unknown (no app_version in the report and no app in "
+                   "COMPONENTS.json), which is NOT newest")
+    elif peer is None:
+        out.append(f"  app: ran {app}; unknown whether newest (no --peer tree "
+                   f"given, and their releases are their tags)")
+    elif started is not None:
+        tags = peer_releases(peer)
+        if tags is None:
+            out.append(f"  app: ran {app}; unknown whether newest (no tags "
+                       f"readable in {peer})")
+        else:
+            before = [t for t in tags if t[1] <= started]
+            newest = max(before, key=lambda t: t[1]) if before else None
+            mine = [t for t in tags if t[0] == f"v{app}"]
+            if newest and newest[0] == f"v{app}":
+                out.append(f"  app: NEWEST -- ran {app}, tag {newest[0]} of "
+                           f"{newest[1].isoformat()}, the newest tag at the "
+                           f"run's start (a tag's creator date, not a push)")
+            elif mine and mine[0][1] > started:
+                out.append(f"  app: NOT YET TAGGED -- ran {app}, whose tag "
+                           f"{mine[0][0]} is dated {mine[0][1].isoformat()}, "
+                           f"after the run began")
+            elif mine:
+                out.append(f"  app: STALE -- ran {app}; {newest[0]} is dated "
+                           f"{newest[1].isoformat()}, before the run began. Not "
+                           f"evidence under D3")
+            else:
+                out.append(f"  app: NOT A RELEASE -- ran {app}, and {peer} has "
+                           f"no tag v{app}")
+            base = mine[0][1] if mine else None
+            for tag, stamp in sorted((t for t in tags if ended is not None
+                                      and started < t[1] <= ended
+                                      and (base is None or t[1] > base)),
+                                     key=lambda t: t[1]):
+                out.append(f"  app: SUPERSEDED DURING THE RUN -- {tag} is "
+                           f"dated {stamp.isoformat()}, before the run ended")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("archive")
     ap.add_argument("--into", help="directory to file into (docs/rig-...)")
     ap.add_argument("--verdict-only", action="store_true",
                     help="read and report the run's verdict; write nothing")
+    ap.add_argument("--peer", help="a clone of Platterpus's repository, whose "
+                    "tags say which app release was newest when the run began")
     args = ap.parse_args()
 
     blob = pathlib.Path(args.archive).read_bytes()
@@ -142,6 +366,13 @@ def main():
     elif lines:
         print("  Nothing here asserts that the run passed or failed: no")
         print("  report.json declares `ok`. This is NOT 'the run passed'.")
+    print()
+
+    # ---- 1b. THE PAIR: WAS IT THE NEWEST WHEN THE RUN BEGAN (D3) ---------
+    print("=" * 68)
+    print("PAIR -- was it the newest pair when the run began (D3)")
+    print("=" * 68)
+    print("\n".join(report_pair(members, args.peer)))
     print()
 
     if args.verdict_only:

@@ -22,6 +22,7 @@ single real bundle can supply.
 
 import io
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -147,6 +148,132 @@ def test_the_not_filed_list_is_derived_not_written():
     # and the binaries must be named as not filed rather than vanish
     for b in ("extra/shot.png", "extra/blob.bin"):
         check(f"(not filed) {b}" in sums, f"{b} must be NAMED as not filed")
+
+
+ROOT = HERE.parent
+BANNER19 = b"cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)\n"
+BANNER18 = b"cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-g51cc789)\n"
+
+
+def pair_bundle(started, banner, app="0.6.65", steps=None):
+    report = {"ok": True, "app_version": app}
+    if started:
+        report["started_at"] = started
+    if steps is not None:
+        report["steps"] = [{"elapsed_s": s} for s in steps]
+    return make({
+        "session/script-report.json": json.dumps(report).encode(),
+        "session/rig-check-ripper-version.txt": banner,
+        "rips/a.log": banner + b"Rip completed:  yes (14 of 14 tracks)\n",
+    })
+
+
+def pair_lines(out):
+    return [l for l in out.splitlines() if l.startswith("  cyanrip:")
+            or l.startswith("  app:") or l.startswith("  run ")]
+
+
+def peer_repo():
+    """A stand-in for their tree: two tags, dated as their real ones are."""
+    d = pathlib.Path(tempfile.mkdtemp()) / "peer"
+    d.mkdir()
+    env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+               GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+    subprocess.run(["git", "init", "-q", str(d)], check=True, env=env)
+    for tag, stamp in (("v0.6.64", "2026-09-29T20:00:00+00:00"),
+                       ("v0.6.65", "2026-09-30T02:51:29+00:00")):
+        e = dict(env, GIT_AUTHOR_DATE=stamp, GIT_COMMITTER_DATE=stamp)
+        subprocess.run(["git", "-C", str(d), "commit", "-q", "--allow-empty",
+                        "-m", tag], check=True, env=e)
+        subprocess.run(["git", "-C", str(d), "tag", tag], check=True, env=e)
+    return d
+
+
+def test_the_pair_is_judged_against_the_ledgers_own_history():
+    """Round 30 D3, C4: the report says whether the pair was the newest.
+
+    Our side is read from the commits that added each ledger row, so these
+    expectations are facts of this repository's history: `.19`'s row was
+    added by 7677b3f at 2026-09-30T00:52:10Z, and `.18`'s on 2026-09-28.
+    """
+    if not (ROOT / ".git").exists():
+        print("UNPROBED: not a git checkout, so the ledger has no history")
+        return
+    rc, out = run(pair_bundle("2026-09-30T03:07:05+00:00", BANNER19),
+                  "--verdict-only")
+    lines = "\n".join(pair_lines(out))
+    check("cyanrip: NEWEST -- ran 0.9.4-rc2+platterpus.19 at 174a134" in lines,
+          f".19 at the Full run's start is the newest release: {lines}")
+    check("7677b3f" in lines, f"it must name the commit that published it: {lines}")
+
+    rc, out = run(pair_bundle("2026-09-30T03:07:05+00:00", BANNER18),
+                  "--verdict-only")
+    lines = "\n".join(pair_lines(out))
+    check("cyanrip: STALE" in lines and "0.9.4-rc2+platterpus.19 at 174a134" in lines,
+          f".18 after .19 was published is stale, naming the newer: {lines}")
+
+    rc, out = run(pair_bundle("2026-09-29T12:00:00+00:00", BANNER18),
+                  "--verdict-only")
+    lines = "\n".join(pair_lines(out))
+    check("cyanrip: NEWEST -- ran 0.9.4-rc2+platterpus.18" in lines,
+          f".18 before .19 existed is the newest: {lines}")
+    check("SUPERSEDED" not in lines, f"with no step times there is no end: {lines}")
+
+    # D3's own case, in shape: newest at the start, overtaken before the end.
+    rc, out = run(pair_bundle("2026-09-29T20:00:00+00:00", BANNER18,
+                              steps=[3600.0] * 6), "--verdict-only")
+    lines = "\n".join(pair_lines(out))
+    check("cyanrip: NEWEST -- ran 0.9.4-rc2+platterpus.18" in lines
+          and "cyanrip: SUPERSEDED DURING THE RUN -- 0.9.4-rc2+platterpus.19" in lines,
+          f"a release published mid-run must be named: {lines}")
+
+    rc, out = run(pair_bundle("2026-09-30T03:07:05+00:00",
+                              b"cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g1234567)\n"),
+                  "--verdict-only")
+    check("cyanrip: NOT A RELEASE" in out, f"an unreleased build is named as one: {out[-600:]}")
+
+
+def test_an_unestablished_pair_is_never_newest():
+    """`unknown (reason)`, never newest: no start, no banner, no peer."""
+    rc, out = run(pair_bundle(None, BANNER19), "--verdict-only")
+    check("run start: unknown" in out, f"no started_at must be named: {out[-600:]}")
+    check("NEWEST" not in out, f"nothing is newest without a start: {out[-600:]}")
+    a = make({"session/script-report.json": json.dumps(
+        {"ok": True, "started_at": "2026-09-30T03:07:05+00:00"}).encode()})
+    rc, out = run(a, "--verdict-only")
+    check("cyanrip: unknown" in out and "app: unknown" in out,
+          f"no banner and no app version must each be unknown: {out[-600:]}")
+    rc, out = run(pair_bundle("2026-09-30T03:07:05+00:00", BANNER19),
+                  "--verdict-only")
+    check("app: ran 0.6.65; unknown whether newest (no --peer" in out,
+          f"without their tree the app cannot be judged: {out[-600:]}")
+    two = make({
+        "session/script-report.json": json.dumps(
+            {"ok": True, "started_at": "2026-09-30T03:07:05+00:00"}).encode(),
+        "rips/a.log": BANNER19, "rips/b.log": BANNER18})
+    rc, out = run(two, "--verdict-only")
+    check("the bundle ran 2 builds" in out, f"two rippers are not one pair: {out[-600:]}")
+
+
+def test_the_app_is_judged_against_their_tags():
+    peer = peer_repo()
+    rc, out = run(pair_bundle("2026-09-30T03:07:05+00:00", BANNER19, "0.6.65"),
+                  "--verdict-only", "--peer", str(peer))
+    check("app: NEWEST -- ran 0.6.65, tag v0.6.65" in out,
+          f"0.6.65 after its tag is the newest: {out[-600:]}")
+    rc, out = run(pair_bundle("2026-09-30T03:07:05+00:00", BANNER19, "0.6.64"),
+                  "--verdict-only", "--peer", str(peer))
+    check("app: STALE -- ran 0.6.64; v0.6.65" in out,
+          f"0.6.64 after 0.6.65 was tagged is stale: {out[-600:]}")
+    rc, out = run(pair_bundle("2026-09-30T01:00:00+00:00", BANNER19, "0.6.64",
+                              steps=[3600.0] * 4),
+                  "--verdict-only", "--peer", str(peer))
+    check("app: NEWEST -- ran 0.6.64" in out
+          and "app: SUPERSEDED DURING THE RUN -- v0.6.65" in out,
+          f"a tag dated mid-run must be named: {out[-600:]}")
+    rc, out = run(pair_bundle("2026-09-30T03:07:05+00:00", BANNER19, "0.6.99"),
+                  "--verdict-only", "--peer", str(peer))
+    check("app: NOT A RELEASE" in out, f"an untagged app is named as one: {out[-600:]}")
 
 
 for name, fn in sorted(globals().items()):
