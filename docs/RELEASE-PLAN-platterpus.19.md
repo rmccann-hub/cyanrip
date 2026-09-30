@@ -1,0 +1,105 @@
+# Release plan — `+platterpus.19`, round 29's fixes
+
+*Written 2026-09-30, after round 29 closed and not before, on the operator's
+instruction (*"write the plan after lap 4 is released, not before"*). **A plan,
+not a release.** `meson.build` says `0.9.4-rc2+platterpus.18`, the ledger's
+last row is seq 28, and `tools/release-gate.py --release-gate` exits 0.*
+
+## 1. The condition
+
+- **The authorising round: 29**, closed `GO`/`GO` on 2026-09-29, in four laps,
+  on Platterpus's lap 4 (released at `platterpus@58ad83db`) by v6 §5b step 3.
+  Both closing laps name this release (our lap 3 S18, their lap 4 S26).
+- **v6 R8** is the rule: a round's close authorises a release of both
+  applications, **provider first**. Theirs is 0.6.64, with `FORK_PIN`
+  `51cc789`. **At `platterpus@58ad83db` their build under review is still
+  `51cc789` too**, so for the next Full run to test `.19`, 0.6.64 has to name
+  it, and that is why this release goes first and round 30's lap 1 names its
+  commit.
+- **The consumer-side prerequisite is met, by a release.** `fb31a2b` removes
+  `Done; (no matches found, but hit repeat limit of %i)`, which Platterpus's
+  `_SECURE_DONE_FAIL` matched. Their 0.6.63 (`v0.6.63` = `d226c03b`) reads both
+  wordings (`platterpus@d226c03:src/platterpus/parsers/cyanrip_log.py:311`), so
+  round 20's ordering rule, *their both-wordings release first*, holds.
+- **The `-Z`/`-r` refusal needs nothing of theirs.** Their settings validator
+  refuses the same pairs in 0.6.63 (`settings_validation.py:1063` there), and
+  their argv chokepoint does from `68abbd95`, in 0.6.64.
+
+## 2. What `.19` contains, against `.18` at `51cc789`
+
+| change | commit | who can notice |
+|---|---|---|
+| **Every tag key is written in capitals**, and `DISCTOTAL` is written beside `TOTALDISCS` whenever either is set. The log's `Metadata:` block prints the keys as the muxer is handed them, so it reads `TRACK:`, `TITLE:` and so on in capitals | `bf50705` | a reader of the files' tags, or of the `Metadata:` block. Round 29 lap 1 S13–S21; their operator ruled it (their round 28 lap 6 S32–S33) |
+| **Two error-path lines came in with it**: `Couldn't set metadata: %s!` (P2, and P5 as a fatal, *both*), when a track's tags cannot be set; and `    (not listed: out of memory)` (P2, indented under `Metadata:`), when the block cannot be built | `bf50705` | a consumer building its error matcher from P5. **Neither was named in round 29's laps**; round 30's lap 1 says so |
+| **The repeat loop's checksum is the track's EAC CRC32**: `Repeating ripping (…)` and `Done; (… matches for current checksum %08X)` printed the CRC before its final XOR, so it matched no `EAC CRC32:` line | `9669d84` | a reader comparing that value with the track's `EAC CRC32:`. Same text, a different value. Round 29 lap 1 S34 |
+| **The repeat-limit line says how many reads agreed**: `Done; (repeat limit of N reads reached; at most M reads agreed)`, replacing `Done; (no matches found, but hit repeat limit of %i)`, which was false of a track whose earlier reads agreed | `fb31a2b` | **their parser**, which matched the old wording; their 0.6.63 reads both (§1). Round 29 lap 1 S37–S39 |
+| **`-Z N` with `-r` of N or less is refused** at argument parsing, exit 1, with `-Z %i can never converge with -r %i: it needs %lli reads to agree, and -r %i never allows that many. Use -r %lli or more!` at column 0, or `… more than any -r allows. Use a smaller -Z!` when no `-r` can. It began the rip and read every track to the limit | `22f7aae`, `ad11743` | a caller passing such a pair. Round 29 lap 1 S40–S41; lap 3 S37–S38 |
+| tooling and tests: capitals `Metadata:` keys read wherever the suite reads the log (`0fcf80b`); the four `--rerun` defects and three laxer `at:` checks (`4015eb4`); B1's exit status and eight readings (`ccd9897`); `seam-commands.md` §7 held to the binary (`ae9764e`), after the shared move (`83bcd70`); every filed rig bundle mappable (`2b27cce`); git's abbreviation pinned in re-runs (`b6b8b48`) | as named | our test suite, and the shared documents |
+
+**The contract against `.18`'s, derived, not described**:
+`tools/contract-delta.py --rows 51cc789 <candidate>`. At `b6b8b48`, with the
+contract `--check` exit 0, it reports **P2, P3, P4, P5, P5a and P7 changed**,
+and P1, P6 and P8 identical:
+
+- **P2**: 309 rows to 313. Five added: both `-Z` refusal messages, `Couldn't
+  set metadata: %s!`, `    (not listed: out of memory)`, and `Done; (repeat
+  limit of %i read%s reached; at most %i read%s agreed)`. One removed: `Done;
+  (no matches found, but hit repeat limit of %i)`.
+- **P4**: the count of exit-1 sites goes from 28 to 30, the two refusal arms.
+- **P5**: 121 rows to 124: both refusal messages (*control flow*) and
+  `Couldn't set metadata: %s!` (*both*).
+- **P5a**: the repeat-limit line replaced, same class.
+- **P3 and P7**: line numbers only; no string changes.
+
+The CLI is unchanged (P1 identical), and `-j` stays `cyanrip-diagnostics/6`.
+
+## 3. The channel
+
+**Stable, both channels resolving to it**, as `.15` to `.18` were, by v6 R8
+point 2: both releases are usable on their default channel, marking allowed and
+withholding not. Their 0.6.64 then marks `.19` *unapproved* until a round
+accepts it, which is the mark R8 allows. **The operator may choose otherwise**;
+a beta would keep `.19` off the default channel until its run, at the cost that
+their acceptance run has to be pointed at a beta.
+
+## 4. The sequence
+
+The same as `.18`'s (`docs/RELEASE-PLAN-platterpus.18.md` §4), which was
+followed exactly:
+
+1. **The gate**: `--release-gate` exits 0.
+2. **Bump** `meson.build` to `0.9.4-rc2+platterpus.19`. Red by construction.
+3. **Regenerate, never hand-edit**: the provider contract, the golden reference
+   and the interrupted sample, in their own commit, labelled *"generated by X,
+   committed at Y"*. Never `--amend`.
+4. **Name the candidate** at the first commit where the version and every
+   derived artifact agree. Prove it green on its own: the full suite in a fresh
+   worktree from a removed log, and a `git archive` tarball built with
+   `-Ddeclare_released=true` reporting `released build`. The tarball rip needs
+   `pregap.bin` copied from `cdda.bin`.
+5. **Publish**, in one commit: one ledger row (seq 29, round 29), the manifest
+   regenerated with `--check` exit 0, the changelog heading, the handshake
+   README's pin blocks, `STATUS.md`'s release rows, `CLAUDE.md`'s release
+   paragraph, and this file's banner.
+6. **Then round 30 lap 1**, naming the release commit, so that Platterpus's
+   0.6.64 can name it as the build under review.
+
+No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
+
+## 5. What this release does NOT verify
+
+- **None of the five `src/` commits has run on a drive.** The tag keys are
+  asserted on files ripped from images in six formats (`tag_keys_in_capitals`),
+  the repeat-limit line on an image whose reads are made to disagree
+  (`repeat_limit`, `tests/badsector.c`'s flip mode), and the refusal from the
+  argument table (`zr_refusal`). The next Full run is their first hardware test.
+- **The two error-path lines have never printed.** No test drives
+  `av_dict_set` or the tag copy out of memory.
+- **A wrong read still logs `Ripping errors: 0`.** `Ripping errors:` counts
+  operational failures, not read quality, and that is documented, not changed.
+- **A sector that will not read is still untested on a drive**, and at `-P 0`
+  one still hangs at any `-r`. Platterpus never passes `-P`.
+- **The cache figure is still wrong** by roughly fifteen times. **Do not cite
+  it.**
+- **C2 stays `UNREACHABLE`** on the rig's drive. `-f` and CD-TEXT from a
+  physical disc are *not yet done*, which is a different claim.
