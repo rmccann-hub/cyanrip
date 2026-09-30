@@ -238,7 +238,8 @@ second half stops, and it is why the first half could change without it.
 
 ### `[BOTH]` S-15 — An agreed test pin does not move for the rest of the round
 
-Unless it is found unsafe. Fixes queue for the next round.
+Unless it is found unsafe. Fixes land past the pin within the round (R3, S-14)
+and ship in the release the close authorises; the next round reviews them.
 
 A pin that moves whenever something is fixed guarantees that the hardware
 evidence is always about a build nobody is reviewing any more — ten test pins
@@ -391,10 +392,12 @@ while the round was open, at lap 37. Round 7 closed `GO` at lap 39 and produced
 one release, `+platterpus.5`. A version-frozen file keeps a present-tense figure
 until the next bump, and this is that bump.
 
-**v7 changes S-14 and nothing else**, to match `PROTOCOL.md` v7's R3, since the
-two stated one rule twice and a change to one would otherwise leave the other
-contradicting it. Agreed in round 30: D4 of cyanrip's release-cycle proposal,
-accepted in Platterpus's lap 4 S21, whose `CLAUDE.md` changes in the commit
-that lands this file.
+**v7 changes S-14, and S-15's sentence on fixes to agree with it, and nothing
+else**, to match `PROTOCOL.md` v7's R3 and R4, since the two stated one rule
+twice and a change to one would otherwise leave the other contradicting it.
+Agreed in round 30: D4 of cyanrip's release-cycle proposal, accepted in
+Platterpus's lap 4 S21, whose `CLAUDE.md` changes in the commit that lands this
+file, and S-15 by Platterpus's lap 6 S20. Round 30's laps declare
+SEAM-RULES-VERSION 6; v7 binds from round 31, as PROTOCOL v7 §15 says.
 
 ---

@@ -736,8 +736,10 @@ never on its own for holding a release. R9 is the operator's rule this extends:
 *"let's fix as much as we can"*.
 
 **R4 — Once agreed, the pin does not move for the rest of the round**, unless it
-is found unsafe. Fixes queue. A pin that moves whenever something is fixed
-guarantees the evidence is always about a build nobody is reviewing.
+is found unsafe. Fixes land past the pin within the round (R3, S-14) and ship
+in the release the close authorises; the next round reviews them. A pin that
+moves whenever something is fixed guarantees the evidence is always about a
+build nobody is reviewing.
 
 **R5 — Questions carry a target: `BLOCKING` or `NEXT-ROUND`.** `BLOCKING`
 must satisfy R3. **A questions section may be empty**, and *"no questions"* is a
@@ -775,12 +777,13 @@ need be."* The operator of both projects, 2026-09-23. So:
    test opens, reviews the provider's new release (point 3).
 
    **The build under review moves when the provider releases, not when a round
-   opens** (v7, D2). The provider gives its release's version and commit in a
-   lap or in its status block (§6c). The consumer's release names that build as
-   its build under review and the last build a closed round approved as its
-   approved pin. **Round 20's order is the one exception, unchanged**: when the
-   provider's release removes or rewords a string the consumer matches, the
-   consumer's release that reads both wordings comes first.
+   opens** (v7, D2). The provider gives its release's version and commit in its
+   release manifest, and in a lap or its status block (§6c). The consumer's
+   release names that build as its build under review and the last build a
+   closed round approved as its approved pin. **Round 20's order is the one
+   exception, unchanged**: when the provider's release removes or rewords a
+   string the consumer matches, the consumer's release that reads both wordings
+   comes first.
 
    **A release's contract change is derived, never described** (v7, D9). The
    lap or status line that announces a release quotes the releasing side's
@@ -982,11 +985,14 @@ updated in the same commit as any change to what they state:
 ```
 STATUS-ROUND: <round>, OPEN|CLOSED[, what it waits on]
 STATUS-LAPS: newest sent <file> (ours), <file> (theirs); next <n> (<side>) carrying <what>; held <n> carrying <what>|none
+STATUS-RELEASED: <version> at <commit>, <UTC date>[, hotfix: <why>]
 STATUS-RELEASE-NEXT: <version>[ at <commit>], carrying <what>; pins <approved>, reviews <under review>
 STATUS-RUN-NEXT: <provider build> with <consumer build>; waiting on <what>|ready
 STATUS-OPEN: <id> <owner> <fixing at <commit or lap> | cannot, because …>
 ```
 
+`STATUS-RELEASED` appears once, in this position, and names that side's newest
+published release, marked `hotfix:` while the newest is one (R10).
 `STATUS-OPEN` repeats, once per open item, and each item is fixed under R3 or
 says why it cannot be. **It is not a lap**: it declares no `HANDSHAKE-*`
 header, and changing it needs no reply. Chiming in costs a commit to your own
@@ -1023,6 +1029,18 @@ S<n> NONE: No defect in <build> in the run.
 S<n> DID: <each fix landed because of the run>              (none: omit the section)
   commit: <sha>
 
+## Close conditions
+
+S<n> TERM set: <condition>                                  (the opener's lap 1 only, one per condition)
+  requires: <what meets it>
+S<n> TERM met: <condition>                                  (every GO lap, one per condition met)
+  term: <side>:R<round>.L1.S<n>
+  evidence: <where>
+S<n> TERM pending: <condition>                              (a condition only the other side can still meet)
+  term: <side>:R<round>.L1.S<n>
+  on: them
+  remains: <what it still needs>
+
 ## Verdict
 
 S<n> VERDICT: GO
@@ -1035,7 +1053,10 @@ keeps**: the bundle's hash, so both sides are reading the same bytes; the pair,
 because a run on anything but the newest pair is not evidence (R8 point 3); one
 `FACT` per surface with its evidence, so the reading can be checked rather than
 trusted; a `NONE` naming its scope and its population, because a clean result
-must say what it was clean over; and the fixes as `DID`s, so R3 is visible.
+must say what it was clean over; the fixes as `DID`s, so R3 is visible; and the
+close conditions, set in the opener's lap 1 (R1) and given a status in every
+`GO`, met, or pending on the other side where only it can still meet one,
+because a `GO` over no condition passes by finding nothing.
 **What it drops**: `NOTE`s and prose sections. The template is a floor for a
 clean reading, never a ceiling.
 
@@ -1484,6 +1505,9 @@ night a new paid [pair] exists"*).
   converged from both sides' drafts: Platterpus's
   `docs/cyanrip-handshake.md` §7.5d with the pair `FACT` and the `NONE` cyanrip
   added).
+- **Amended before landing** by Platterpus's lap 6 S19 to S22: §6d's close
+  conditions, R4's fixes with S-15's, and §6c's `STATUS-RELEASED` with R8
+  point 1's manifest; S19 and S22 as cyanrip's lap 7 amended them.
 
 **Declaring 7.** Neither side declares 7 until both have said, in a lap, that
 their gate implements it. C43 makes a premature declaration fail closed on the
