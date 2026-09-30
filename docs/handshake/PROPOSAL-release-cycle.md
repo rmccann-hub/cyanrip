@@ -97,6 +97,21 @@ either side held that run's bundle, which makes 14.
    which their Full run asserts at its step 277
    (`src/platterpus/rig_scripts/fullacceptance.txt:277` there). So with `.19`
    installed, 0.6.64's Full run stops in section A. D2 decouples the two.
+
+   **Restated against their tree, 2026-09-30, at their request (round 30 lap
+   2 S8).** The paragraph above is true of `platterpus@9b114c5` and no longer
+   of their `main`. From `428229c7`, released in 0.6.65 (`v0.6.65` =
+   `platterpus@0981c69`), their check takes the build under review from our
+   published `release-manifest.json` whenever that names a build no lap of
+   ours names, on the authority of a round at least as new as our newest
+   lap's, and the reviewing round is the next one
+   (`platterpus@0981c69:tests/test_handshake_pin_under_review.py:129-160`).
+   The constant still moves by hand, in one commit of theirs that files our
+   manifest byte-exact and sets it (`fork_source.py:682-694` there). So the
+   run no longer waits on a round opening; it waits on a release of theirs
+   that follows ours, which is D2's order. **Measured on 2026-09-30**: 0.6.64
+   with `.19` stopped at section A (`docs/rig-2026-09-30-174a134/`), and
+   0.6.65, built that way, is what the Full run on `.19` is using.
 4. **Where things stood lived in prose.** Both sides planned a round-29 lap 3,
    and only K1's release-order rule settled whose it was. Round 29's laps
    described `.19` and missed two error-path lines, both in the contract, both
@@ -161,6 +176,20 @@ its run. **The one
 exception is round 20's rule, unchanged**: when the provider's release removes
 a string the consumer matches, the consumer's release that reads both wordings
 comes first. *cyanrip: accept.*
+
+*Restated 2026-09-30 against `platterpus@0981c69` (their round 30 lap 2 S8).*
+**Their `428229c7` is this decision's mechanism, already built**: their release
+files our manifest and names its build as the build under review, with no lap
+needed, and a lap naming a commit still takes precedence. D2's text stands as
+the rule and their mechanism is how they meet it. **It needs no change to their
+acceptance script**: section A asserts the constant, and the constant now moves
+when we release. **D3 is the one that changes the script**: section A checks
+that the installed build is the constant, not that the constant is our newest
+release or that the app is their newest, so a run on a stale pair still passes
+section A. The two hand steps, filing the manifest and moving the constant, are
+theirs to automate or keep; *cyanrip: keep them by hand*, since that commit is
+also where they read our contract, as 0.6.65's regenerated fatal-message
+inventory did.
 
 **D3 — a run tests only the newest pair.** The acceptance run refuses to start,
 in its section A, unless the installed ripper is the consumer's build under
