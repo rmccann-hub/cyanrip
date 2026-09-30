@@ -1412,10 +1412,14 @@ to state, under S-9.
 **Filed as an event rather than a hazard, because a near miss recorded as a
 success is a hazard that comes back.**
 
-**The branch is gone now, by their operator's choice, and no citation depended
-on it.** Platterpus's operator deleted `claude/session-omka9f` on 2026-09-29,
-after a re-check found it an ancestor of their `main` with no commits of its own
-(their standing status, `platterpus@5a7b2d4:docs/handshake/outbound/platterpusstatus.md:315`).
+**No citation depends on the branch any more, whether it exists or not.**
+Platterpus's operator deleted `claude/session-omka9f` on 2026-09-29, after a
+re-check found it an ancestor of their `main` with no commits of its own (their
+standing status, `platterpus@5a7b2d4:docs/handshake/outbound/platterpusstatus.md:315`),
+**and recreated it from `main` the same day** for later work. Read 2026-09-30 with
+`git ls-remote`: its tip `fdaa50bd` is an ancestor of their `main` at `58ad83db`,
+with no commits of its own. So whether the branch exists is no longer a fact any
+citation here rests on.
 **Checked here rather than taken on that**, in a full clone of their tree: the
 four commits this entry names, `b5af9bec`, `19c8ad20`, `e8a47562` and
 `9cc23eab`, and the three more their `TASKS.md` lists beside them, `81ca989`,
@@ -1423,8 +1427,9 @@ four commits this entry names, `b5af9bec`, `19c8ad20`, `e8a47562` and
 every citation of them resolves through `main`. Wider, at our `26e31a5`: of the
 1,947 distinct hex tokens in our tree, 165 resolve as their commits, none as
 ours too, and all 165 are ancestors of that `main`. **One sentence of theirs
-does not match**: `TASKS.md:692-695` at `5a7b2d4` says those seven resolve in
-neither tree, and all seven resolve in theirs. The paragraphs below are the
+did not match**: `TASKS.md:692-695` at `5a7b2d4` said those seven resolve in
+neither tree, and all seven resolve in theirs. Our round 29 lap 3 S35 said so,
+and their lap 4 S3–S4 corrected the row (`platterpus@b56d0b17`). The paragraphs below are the
 record of the entry before the delete, and stand as written.
 
 Round 23 lap 3 §D2 warned Platterpus that their work reaches `main` by **squash

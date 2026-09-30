@@ -1,5 +1,9 @@
 Unreleased
 ==========
+**Round 29 is closed**, `GO`/`GO`, in four laps, on Platterpus's lap 4 (released
+at `platterpus@58ad83db`, filed byte-exact) by v6 §5b step 3. It authorises
+`+platterpus.19` and their 0.6.64, with `FORK_PIN` `51cc789`.
+
 **Round 29 lap 3 is released**, on the operator's word: our reading of the
 Full run on `.18` through Platterpus 0.6.63, filed as
 `docs/rig-2026-09-28c-51cc789/`, and `GO` as lap 1 S43 bound it. The run's own
