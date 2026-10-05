@@ -1104,8 +1104,15 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
          * argument -- and calling those a failure would assert more than the
          * control flow supports. What is known is that the rip did not run to
          * the end, and that is what it says. */
-        cyanrip_log(ctx, 0, "Rip completed:  no (aborted, %i of %i tracks)\n",
-                    ctx->tracks_completed, ctx->nb_tracks);
+        if (ctx->not_a_rip == CRIP_CUE_SHEET_ONLY)
+            cyanrip_log(ctx, 0, "Rip completed:  no (cue sheet only, %i of %i tracks)\n",
+                        ctx->tracks_completed, ctx->nb_tracks);
+        else if (ctx->not_a_rip == CRIP_OFFSET_SEARCH_ONLY)
+            cyanrip_log(ctx, 0, "Rip completed:  no (offset search only, %i of %i tracks)\n",
+                        ctx->tracks_completed, ctx->nb_tracks);
+        else
+            cyanrip_log(ctx, 0, "Rip completed:  no (aborted, %i of %i tracks)\n",
+                        ctx->tracks_completed, ctx->nb_tracks);
     } else
         cyanrip_log(ctx, 0, "Rip completed:  yes (%i of %i tracks)\n",
                     ctx->tracks_completed, ctx->nb_tracks);

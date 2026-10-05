@@ -593,7 +593,7 @@ static int search_for_offset(cyanrip_track *t, int *offset_found,
 
 static void search_for_drive_offset(cyanrip_ctx *ctx, int range)
 {
-    int had_ar = 0, did_check = 0;
+    int had_ar = 0, did_check = 0, stopped = 0;
     int offset_found = 0, offset_found_samples = 0;
     uint8_t *mem = av_malloc(2 * range * CDIO_CD_FRAMESIZE_RAW);
 
@@ -632,6 +632,7 @@ static void search_for_drive_offset(cyanrip_ctx *ctx, int range)
             bytes += CDIO_CD_FRAMESIZE_RAW;
             if (quit_now) {
                 cyanrip_log(ctx, 0, "Stopping, offset finding incomplete!\n");
+                stopped = 1;
                 goto end;
             }
         }
@@ -674,7 +675,20 @@ static void search_for_drive_offset(cyanrip_ctx *ctx, int range)
 end:
     av_free(mem);
 
+    /* A STOP ENDS THE SEARCH. It used to fall through to the retry below
+     * whenever no offset had been found yet, so a stopped -f printed `trying
+     * again with a larger radius`, read a frame, stopped again, and repeated
+     * until the radius outgrew every track. Upstream's structure is the same
+     * (`src/cyanrip_main.c:524-575` at f8ebf48). A stop that lands outside
+     * the read loop, while a track's data is searched, is said here, so every
+     * stopped search prints the line. Read from the source, not run: no
+     * fixture's disc is in AccurateRip, which the search needs. Round 30. */
+    if (quit_now && !stopped)
+        cyanrip_log(ctx, 0, "Stopping, offset finding incomplete!\n");
+
     if (!offset_found) {
+        if (quit_now)
+            return;
         if (!had_ar) {
             cyanrip_log(ctx, 0, "No track had AccuRip entry, cannot find offset!\n");
         } else if (had_ar && !did_check) {
@@ -685,10 +699,10 @@ end:
             search_for_drive_offset(ctx, 2*range);
         }
         return;
-    } else {
-        cyanrip_log(ctx, 0, "Drive offset of %c%i found (confidence: %i)!\n",
-                    offset_found_samples >= 0 ? '+' : '-', abs(offset_found_samples), offset_found);
     }
+
+    cyanrip_log(ctx, 0, "Drive offset of %c%i found (confidence: %i)!\n",
+                offset_found_samples >= 0 ? '+' : '-', abs(offset_found_samples), offset_found);
 }
 
 static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
@@ -2267,6 +2281,7 @@ static int cyanrip_run(int argc, char **argv)
 
     if (find_drive_offset_range) {
         search_for_drive_offset(ctx, find_drive_offset_range);
+        ctx->not_a_rip = CRIP_OFFSET_SEARCH_ONLY;
         goto end;
     }
 
@@ -2499,6 +2514,7 @@ static int cyanrip_run(int argc, char **argv)
                 cyanrip_log(ctx, 0, "%s", line);
         }
 
+        ctx->not_a_rip = CRIP_CUE_SHEET_ONLY;
         goto end;
     }
 

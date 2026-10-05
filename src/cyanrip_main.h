@@ -418,6 +418,17 @@ typedef struct cyanrip_ctx {
      * turned a silent omission into a confident false claim, which is worse.
      * Both halves are fixed together for that reason. */
     int rip_ran_to_completion;
+
+    /* A run that is not a rip by design, which reached its own end: -J wrote
+     * its cue sheet, or -f finished its search. The footer then says what the
+     * run was instead of `aborted`, which was false of both. Set at the one
+     * place each mode finishes, so a refusal on the way still reads
+     * `aborted`. Round 30. */
+    enum {
+        CRIP_A_RIP = 0,
+        CRIP_CUE_SHEET_ONLY,
+        CRIP_OFFSET_SEARCH_ONLY,
+    } not_a_rip;
     lsn_t start_lsn;
     lsn_t end_lsn;
     lsn_t duration_frames;

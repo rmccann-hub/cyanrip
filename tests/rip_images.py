@@ -2960,22 +2960,37 @@ def sc_probe_runs_open_no_logfile():
         offline[k] = "http://127.0.0.1:9"
     offline.pop("no_proxy", None)
     offline.pop("NO_PROXY", None)
-    runs = (("-I", ("-I", "-N", "-A", "-U"), "DiscID:"),
-            ("-J", ("-J", "-N", "-A", "-U"), "DiscID:"),
-            ("-f", ("-f", "-N"), "Searching for drive offset"))
-    for flag, args, witness in runs:
+    # Round 30: each mode's footer says what the run was, where it said
+    # `aborted` of both. -I prints no footer at all. The search here finds no
+    # offset, since no fixture's disc is in AccurateRip, and still exits 0:
+    # docs/seam-commands.md §7 records that, and the shared document moves
+    # with the exit code or not at all.
+    runs = (("-I", ("-I", "-N", "-A", "-U"), "DiscID:", 0, None),
+            ("-J", ("-J", "-N", "-A", "-U"), "DiscID:", 0,
+             "Rip completed:  no (cue sheet only, 0 of 2 tracks)"),
+            ("-f", ("-f", "-N"), "Searching for drive offset", 0,
+             "Rip completed:  no (offset search only, 0 of 2 tracks)"))
+    for flag, args, witness, want_ec, footer in runs:
         d = WORK / f"nolog_{flag[1:]}"
         d.mkdir()
         ec, out = crip("-d", WORK / "basic.cue", *args, "-D", d / "out",
                        cwd=d, env=offline)
-        if ec != 0:
-            fail(f"probe_runs_open_no_logfile: {flag} exited {ec}")
+        if ec != want_ec:
+            fail(f"probe_runs_open_no_logfile: {flag} exited {ec}, not {want_ec}")
             print(out)
             continue
         if witness not in out:
             fail(f"probe_runs_open_no_logfile: {flag} printed no {witness!r}, "
                  f"so it did not run the mode this checks")
             continue
+        lines = out.splitlines()
+        if footer and footer not in lines:
+            got = [ln for ln in lines if ln.startswith("Rip completed:")]
+            fail(f"probe_runs_open_no_logfile: {flag}'s footer is not {footer!r}; "
+                 f"got {got}")
+        if any("(aborted," in ln for ln in lines):
+            fail(f"probe_runs_open_no_logfile: {flag} says `aborted` of a run "
+                 f"that did what it was asked")
         logs = sorted(p.relative_to(d).as_posix() for p in d.rglob("*.log"))
         if logs:
             fail(f"probe_runs_open_no_logfile: a {flag} run wrote {logs}; P2 "
