@@ -130,8 +130,11 @@ lap 3 closed, verdict GO -- released build`, the record `.19` was built from.
 
 - **AccurateRip**: the two whole-disc rips have `Tracks ripped accurately:
   12/14`, and the two not found are **tracks 3 and 5**, as on every run of this
-  disc. Their checksums differ between the two rips (track 3 `3D9B0781` in F and
-  `1B28C061` in N, track 5 `F5426D5F` and `7CE3F6E7`), and across every filed rip
+  disc. Their checksums differ between the two rips: EAC CRC32 track 3
+  `FB789B52` in F and `3D8FCF0C` in N, track 5 `E0036697` and `6902BCF0`; and
+  AccurateRip v1 track 3 `3D9B0781` and `1B28C061`, track 5 `F5426D5F` and
+  `7CE3F6E7`. **Corrected 2026-10-05**: this quoted only the v1 values, as
+  *"checksums"*, beside a count of EAC CRC32s. And across every filed rip
   `tools/cross-rip.py docs/rig-*` counts **19 distinct EAC CRC32s for track 3 in
   42 reads** and 3 for track 5 in 37: the disc does not read the same twice
   there. Platterpus's addendum re-read both in section F: track 3 replaced to

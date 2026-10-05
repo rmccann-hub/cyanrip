@@ -73,12 +73,16 @@ settled by building 0.9.3 and running it. The measured matrix is
   disagreed with this one.
 
   **AND THE NUMBER IT REPORTS IS WRONG BY ROUGHLY FIFTEEN TIMES.** `cd-paranoia
-  -A` on the same drive says **137 sectors, then 140**; we say *at least 2048*
-  on **every** run that has produced the line — **sixteen** filed sessions as of
-  2026-09-30, the sixteenth on `174a134` in round 30's Full run, derived by
-  scanning the transcripts rather than counted from memory; this said "all three"
-  for a month while five more existed, and then "nine" for five days after the
-  tenth was filed. **The ceiling is not why** — `miss_cost` is
+  -A` on the same drive says **137 sectors, then 140**; we said *at least 2048*
+  on **sixteen** filed sessions through 2026-09-30b, derived by scanning the
+  transcripts rather than counted from memory; this said "all three" for a month
+  while five more existed, and then "nine" for five days after the tenth was
+  filed. **The seventeenth, 2026-10-05 on the same `.19`, said `128 to 255`, and
+  that is the defect too, not a fix**: its calibration read was 304.2 ms, which
+  put the threshold under the ~82 ms backseeks earlier sessions scored as hits.
+  A broken predicate that brackets the right answer once is still broken; the
+  same row's `cached read 1.5 ms` is the first filed re-read under cd-paranoia's
+  6 ms. **The ceiling is not why** — `miss_cost` is
   calibrated with a full-stroke seek while the test read is a backseek of at
   most the current run length, so every test read scores as a hit and the search
   runs to whatever limit exists. **Raising `PROBE_MAX_SECTORS` moves the number

@@ -160,7 +160,7 @@ logs bears on it.
 | 19:14 → 20:33 | tracks 12, 13, 14, 15 and 17 each end `did NOT converge after 5 reads (repeat limit hit)` | `rips/…ripper-stdout.txt:3081`, `:3171`, `:3261`, `:3351`, `:3481` |
 | 22:03:36 | section F's 6-hour wait expires, the second pass still on track 18; sections G and H run against a rip still in progress | `session/transcript.txt:385`; `03…log.txt.1:57829` |
 | 23:07:10 | section I's cancel sends SIGTERM; 0.6 s later Platterpus logs `rip finished: success=True` for the album, noting the reaped process was the host wrapper | `03…log.txt.1:59790`, `:59794`, `:59795` |
-| 23:07:15 | Platterpus's *post-cancel rescue* sends `fuser -k TERM /dev/sr0`, a second TERM to whatever holds the drive, 4.9 s after the first | `03…log.txt.1:59806-59807` |
+| 23:07:15 | Platterpus's *post-cancel rescue* sends `fuser -k TERM /dev/sr0` to whatever holds the drive, 4.9 s after the cancel; `rc=0`, so a process still held it. **Corrected 2026-10-05**: this row said *"a second TERM"*. On this rig the cancel's TERM stops at the host wrapper, so the rescue's is most likely the first cyanrip received (`docs/rig-2026-10-05-174a134/README.md`) | `03…log.txt.1:59806-59807` |
 | 23:07:57 | section J's two-track rip starts and opens the drive | `03…log.txt.1:59836` |
 | 23:33:35 → 01:01:00 | section N reads the whole disc at `-Z 2`: tracks 1 to 10 each `converged after 3 reads`; track 11's four passes give four checksums | `03…log.txt.1:71329`; `rips/secure-reread.log` |
 | 01:01:01 | the script is stopped from the console, and the bundle is written in the same second | 160255z `02platterpus/log.txt:43366` |
@@ -188,10 +188,17 @@ with this distinction (`acfd48b`).
 a throwaway directory (`platterpus@0981c69:src/platterpus/workers/rip_worker.py:2790-2791`),
 so what our process wrote after the SIGTERM at 23:07:10 is not here. The
 captured stdout stops at *"Still reading track 18 - the read for LSN 247049 has
-not returned after 20s"* (`rips/…ripper-stdout.txt:5064`): the signal arrived
-during a read that had not returned. Our handler `_exit(1)`s on a second signal
-(`cyanrip@174a134:src/cyanrip_main.c:1219-1220`), and the rescue's TERM came
-4.9 s after the first. So whether that log was signed **cannot be established from this
+not returned after 20s"* (`rips/…ripper-stdout.txt:5064`): the capture ends
+there because the host wrapper exited at the cancel. Our handler `_exit(1)`s on a
+second signal (`cyanrip@174a134:src/cyanrip_main.c:1219-1220`), and this said the
+rescue's TERM, 4.9 s later, was that second signal. **Corrected 2026-10-05**: the
+next run's cancel shows the cancel's TERM stopping at the host wrapper and the
+rescue's being the first signal cyanrip receives
+(`docs/rig-2026-10-05-174a134/README.md`), which is what
+`platterpus@0981c69:src/platterpus/drive_control.py:58-68` says. Here the rescue
+found the drive still held, mid-way through a read that had not returned after
+20 s, and cyanrip stops only once its read returns. So whether that log was
+signed, and when that process ended, **still cannot be established from this
 bundle.**
 
 ### The disc did not read the same twice from track 11 on
@@ -259,10 +266,14 @@ footer's `Tracks ripped partially accurately: 6/18` (`:1489`) is the
   status line read *"Done — all 18 tracks ripped cleanly, no read errors"*, from
   the first pass's log. Their report says `status: "cancelled"` beside
   `health_status: "No errors occurred"`, and their own L711 failed on it.
-- **The cancel's rescue sends a second TERM 4.9 s after the first**, while this
-  disc's reads took up to 54 s, and a second signal ends cyanrip without its
-  footer. That is the cancel path, separate from the app-quit grace of their lap
-  6 S7.
+- ~~**The cancel's rescue sends a second TERM 4.9 s after the first**, while
+  this disc's reads took up to 54 s, and a second signal ends cyanrip without
+  its footer.~~ **Withdrawn 2026-10-05.** The cancel's TERM stops at the host
+  wrapper, so the rescue's is the first signal cyanrip receives; the 2026-10-05
+  run shows it (`docs/rig-2026-10-05-174a134/README.md`), and their own comment
+  at `platterpus@0981c69:src/platterpus/drive_control.py:58-68` said so before
+  we wrote this. Our held round 30 lap 9 drafted a finding on it, removed before
+  release.
 - **That grace's floor test reads their tree's filed logs**: twice this run's 54 s
   is 108 s, against the 40 s it sets.
 - **The re-read path's docstring still says `HARDWARE-GATED … not been exercised

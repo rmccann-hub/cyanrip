@@ -998,8 +998,9 @@ failing is the fix landing.
 The probe now asks `cd-paranoia -A`'s question: a re-read is a hit when it is
 faster than `MIN_SEEK_MS`, 6 ms (libcdio-paranoia `src/cachetest.c:41`, read at
 `384f4da`), on its reasoning that no seek on a CD costs under ~10 ms. By that
-criterion every "cached read" in the table below, 42 to 82 ms, was a seek, which
-is how all sixteen sessions ran to the ceiling. A slow re-read is tried three
+criterion every "cached read" in the first sixteen rows below, 42 to 82 ms,
+was a seek, which is how all sixteen sessions ran to the ceiling. A slow
+re-read is tried three
 times before it ends the search. `miss_cost` is still measured and printed, and
 a drive whose full-stroke read beats 6 ms is refused as untimeable. The `-j`
 record's `hit_ratio` is `hit_below_us` from `cyanrip-diagnostics/7`.
@@ -1010,6 +1011,17 @@ that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
 bracket. Everything below is the record of the defect, kept because the table is
 checked against the transcripts.
+
+**The seventeenth session, 2026-10-05 on `.19`, bracketed 128 to 255, and that
+is the defect, not a fix.** Its calibration read was 304.2 ms, so `.19`'s
+threshold was 76.05 ms, under the 81.3 to 82.2 ms classified reads of six
+earlier rows. The search stopped at 256 sectors because the re-read there took
+at least 76.05 ms, a figure the line does not print. Twelve rows calibrated
+near 363 ms, and on any of them that re-read would have scored a hit. The same
+row carries the first classified read under 6 ms in any filed transcript:
+`cached read 1.5 ms`, after a 128-sector run, inside the cache `cd-paranoia -A`
+measures. That is one sample in favour of `394ab17`'s premise and is not a test
+of it (`docs/rig-2026-10-05-174a134/README.md`).
 
 `-x` reports `at least 2048 sectors, upper bound unknown` on a drive
 `cd-paranoia -A` measures at 137–140 sectors. The mechanism is known: `miss_cost`
@@ -1037,7 +1049,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: sixteen of them**, derived
+session that produced a `Cache probe:` line is here now: seventeen of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -1064,6 +1076,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-28b `e0471f4` | 362.6 ms | 62.4 ms | 90.7 ms | 69% |
 | 2026-09-28c `51cc789` | 362.0 ms | 81.6 ms | 90.5 ms | **90%** |
 | 2026-09-30b `174a134` | 363.0 ms | 82.0 ms | 90.8 ms | **90%** |
+| 2026-10-05 `174a134` | 304.2 ms | 1.5 ms | 76.1 ms | 2%, and **not** the ceiling: `128 to 255 sectors` |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -1071,8 +1084,10 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, sixteen times. "A cached read of a few ms":
-FALSIFIED** — 42 to 82, not 2.2. All sixteen end identically, at
+**Hundreds of ms uncached: confirmed, seventeen times. "A cached read of a few
+ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen once, in the
+seventeenth, at 1.5 ms after a run inside the cache. The first sixteen end
+identically, at
 `at least 2048 sectors … search ceiling reached`. The tenth, 2026-09-22, is the
 first on `2cce60d` and the first taken inside a full acceptance session; it
 changes nothing, which is the point — **ten runs, three builds, four calibration
@@ -1090,7 +1105,10 @@ control below**, 90% and 69%. The fifteenth, 2026-09-28c on `51cc789`, round
 29's real test and the first on `.18`, read 362.0 ms and 81.6 ms, 90% of its
 threshold, and ended the same way. The sixteenth, 2026-09-30b on `174a134`,
 round 30's real test and the first on `.19`, read 363.0 ms and 82.0 ms, 90% of
-its threshold, and ended the same way.
+its threshold, and ended the same way. **The seventeenth, 2026-10-05 on the same
+build, did not**: a calibration read of 304.2 ms set the threshold under the
+82 ms cluster, and the search stopped at 256 sectors, as the paragraph at the
+head of this section says.
 
 **THE FOUR-RUN CONTROL, which is what the missing rows were hiding.** Sessions
 09-10, 09-11, 09-15 and 09-15b calibrated `miss_cost` at **363.2, 362.5, 362.6
@@ -1112,7 +1130,9 @@ does not merely swing the answer by a factor of sixteen on its third significant
 figure, it comes within five percent of swinging it on noise. **The table was
 understating its own case.**
 
-Evidence: `docs/rig-*/session/transcript.txt`, all eight. Re-derive with
+Evidence: `docs/rig-*/session/transcript.txt`, one per row: this said *"all
+eight"* from the day the table held eight until 2026-10-05, when it held
+seventeen, and the test below checks the rows rather than the count. Re-derive with
 `grep -h "Cache probe:" docs/rig-*/session/transcript.txt` — and note that
 `cached read` must be matched with a guard, because **`uncached` contains
 `cached`**: the first derivation of this table read the same number into both
@@ -1121,7 +1141,9 @@ pattern that nearly matches looks like when it is wrong in a plausible way.
 
 The gap is structural rather than noise, and it changes the fix. `last_hit_us`
 is overwritten on every hit, so the figure printed is the re-read after the
-**2048-sector** forward run — the longest backseek the search ever performs. The
+last run that hit: in the first sixteen rows the **2048-sector** forward run,
+the longest backseek the search ever performs, and in the seventeenth the
+128-sector one. The
 2.22 ms figure came from a 1-sector run. **They were never the same
 measurement**, and the earlier prediction compared them as though they were.
 
@@ -1524,7 +1546,7 @@ coverage.
 
 | gap | status |
 |---|---|
-| `-x` correctness on a real drive | **measured sixteen times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-30b. This cell said *"measured twice"* while the table above held nine rows |
+| `-x` correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). `.20`'s fix (`394ab17`) has not run on a drive. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
 | damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. The only `read with errors.` arm exercised is still the fixture's (`tests/badsector.c`). From `.20` that arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have; no `.20` rip has run on a drive |
@@ -1591,12 +1613,19 @@ did not reach a signed footer, and says what that can and cannot mean
 (`acfd48b`). **Their side** is to make the bundle say the ripper was still
 running, or wait for it.
 
-**The same run's cancel sent a second TERM 4.9 s after the first**
-(Platterpus's *post-cancel rescue*, `fuser -k TERM /dev/sr0`), while that disc's
-reads took up to 54 s. A second signal ends cyanrip with `_exit(1)` and no
-footer (`src/cyanrip_main.c:1219-1220`). The cancelled pass's log was in a
-temporary directory and is not in the bundle, so whether it was signed is not
-known.
+**The same run's cancel: what the rescue is, corrected 2026-10-05.** This
+said the cancel *"sent a second TERM 4.9 s after the first"*, Platterpus's
+*post-cancel rescue*, `fuser -k TERM /dev/sr0`, and that a second signal ends
+cyanrip with `_exit(1)` and no footer. The second half is true of our handler
+(`src/cyanrip_main.c:1219-1220`). The first is not true on this rig: the
+2026-10-05 run's cancel shows the cancel's own TERM stopping at the host
+wrapper, the rescue's TERM finding cyanrip still holding the drive, and a
+signed footer about 0.3 s later, which a second signal would have prevented
+(`docs/rig-2026-10-05-174a134/README.md`). So the rescue's signal is the first
+cyanrip receives. On 2026-10-04 it found cyanrip inside a read that had not
+returned after 20 s, and that disc's reads took up to 54 s; the cancelled pass's
+log was in a temporary directory and is not in the bundle, so whether it was
+signed is still not known.
 
 **SIGHUP is handled from `.20`**, like SIGTERM: the footer names it, `-Y`
 verifies, and the `-j` record is written. A SIGHUP that arrives already ignored
