@@ -75,7 +75,9 @@ static void expect(crip_cache_stop_t stop, int last_hit, int stop_run,
  * a quarter of a full-stroke seek, about 90 ms on the rig's drive, and every
  * re-read the sixteen filed sessions recorded, 42 to 82 ms, scored as a hit.
  * Each of those figures is asserted here as a miss, beside the boundary and
- * the 2.2 ms read that first looked like a hit. */
+ * the 2.2 ms read that first looked like a hit. The seventeenth session,
+ * 2026-10-05, printed the first filed re-read under 6 ms, after a run inside
+ * the cache cd-paranoia measures, and it is asserted a hit. */
 static void expect_hit(int64_t us, int want)
 {
     if (crip_cache_reread_hit(us) != want) {
@@ -92,9 +94,11 @@ int main(void)
     expect_hit(CRIP_CACHE_HIT_BELOW_US - 1, 1);
     expect_hit(CRIP_CACHE_HIT_BELOW_US, 0);
     expect_hit(2200, 1);    /* 2026-08-13: 2.22 ms, a one-sector backseek */
-    expect_hit(42100, 0);   /* the lowest "cached read" any session filed */
+    expect_hit(1500, 1);    /* 2026-10-05 on `.19`: after a 128-sector run */
+    expect_hit(42100, 0);   /* the lowest of the sixteen that hit the ceiling */
     expect_hit(61700, 0);
-    expect_hit(82000, 0);   /* the highest, 2026-09-30b on `.19` */
+    expect_hit(82000, 0);   /* 2026-09-30b, the first on `.19` */
+    expect_hit(82200, 0);   /* the highest, 2026-09-24 on `df91ae7` */
     expect_hit(-1, 0);      /* a read that could not be timed is never a hit */
     if (CRIP_CACHE_HIT_BELOW_US != 6000) {
         printf("FAIL: the threshold is cd-paranoia's MIN_SEEK_MS, 6 ms, and "
@@ -161,11 +165,37 @@ int main(void)
         }
 
         /* A miss ends the search, so there is a stop timing and it is the one
-         * that matters -- naming it "cached" would be exactly backwards. */
+         * that matters -- naming it "cached" would be exactly backwards. It
+         * said `first uncached re-read` until 2026-10-05, over the last of
+         * three tries; it is the fastest of them, so `or more` is exact. */
         crip_cache_probe_line(ev, sizeof(ev), CRIP_CACHE_MISS, 32, 64,
                               342900, -1, 120000);
-        if (!strstr(ev, "first uncached re-read 120.0 ms")) {
+        if (!strstr(ev, ", 3 re-reads after a 64-sector run took 120.0 ms or more)") ||
+            strstr(ev, ", cached read") ||
+            strstr(ev, "first uncached")) {
             printf("FAIL: the stop timing must be reported and not called cached: %s\n", ev);
+            fails++;
+        }
+
+        /* A BRACKET CARRIES BOTH OF ITS ENDS. 2026-10-05 on `.19` printed
+         * `128 to 255 sectors (..., cached read 1.5 ms)`: the evidence for 128
+         * and none for 255. The figures are that run's, with the re-read at
+         * 256 given a value, since the line did not print it. */
+        crip_cache_probe_line(ev, sizeof(ev), CRIP_CACHE_MISS, 128, 256,
+                              304200, 1500, 80300);
+        if (strcmp(ev, "128 to 255 sectors (294.0 to 585.7 KiB, uncached read "
+                       "304.2 ms, cached read 1.5 ms, 3 re-reads after a "
+                       "256-sector run took 80.3 ms or more)")) {
+            printf("FAIL: a bracket must carry the reads behind both ends: %s\n", ev);
+            fails++;
+        }
+
+        /* Only a miss has a stop timing. A ceiling or a failed read stopped
+         * for another reason, and must not borrow a miss's clause. */
+        crip_cache_probe_line(ev, sizeof(ev), CRIP_CACHE_CEILING, 2048, 2048,
+                              342900, 2200, 80300);
+        if (strstr(ev, "re-read")) {
+            printf("FAIL: a search that hit its ceiling reported a slow re-read: %s\n", ev);
             fails++;
         }
 

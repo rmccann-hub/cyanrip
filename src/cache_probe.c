@@ -220,11 +220,24 @@ void crip_cache_probe_line(char *buf, size_t buf_size, crip_cache_stop_t stop,
      * a 342.9 ms calibration and ~2 ms test reads made every run a "hit" up to
      * the search ceiling. The ratio is now in the artifact rather than in
      * somebody's reasoning about the artifact. */
-    char ev[64] = "";
+    /* AND THE READS THAT ENDED THE SEARCH, WHICH ARE THE UPPER BOUND'S WHOLE
+     * EVIDENCE. Through 2026-10-05 a bracket printed the last hit and not the
+     * miss: `128 to 255 sectors (..., cached read 1.5 ms)` said why 128 and
+     * nothing about why not 256, and that run's reading could only say the
+     * re-read there took "at least" the old threshold. And once a slow re-read
+     * was tried PROBE_MISS_TRIES times, the no-hit arm's `first uncached
+     * re-read` printed the LAST of them. stop_us is now the FASTEST of those
+     * tries, so `or more` covers every one, and the count and run length are
+     * printed beside it. */
+    char ev[128] = "";
+    int n = 0;
     if (last_hit_us >= 0)
-        snprintf(ev, sizeof(ev), ", cached read %.1f ms", last_hit_us / 1000.0);
-    else if (stop_us >= 0)
-        snprintf(ev, sizeof(ev), ", first uncached re-read %.1f ms", stop_us / 1000.0);
+        n = snprintf(ev, sizeof(ev), ", cached read %.1f ms", last_hit_us / 1000.0);
+    if (stop == CRIP_CACHE_MISS && stop_us >= 0 && n >= 0 && n < (int)sizeof(ev))
+        snprintf(ev + n, sizeof(ev) - n,
+                 ", %i re-read%s after a %i-sector run took %.1f ms or more",
+                 PROBE_MISS_TRIES, PROBE_MISS_TRIES == 1 ? "" : "s",
+                 stop_run, stop_us / 1000.0);
     const double lo_kib  = last_hit * CDIO_CD_FRAMESIZE_RAW / 1024.0;
 
     switch (stop) {
@@ -406,6 +419,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
         }
 
         int64_t t = time_one_read(ctx->cdio, buf, seed);
+        int64_t fastest = t;     /* of the tries at this run, for the line */
         int failed = 0;
         for (int try = 1; t >= 0; try++) {
             /* Every try is recorded: the series a verdict was formed from. */
@@ -422,6 +436,8 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
                 break;
             }
             t = time_one_read(ctx->cdio, buf, seed);
+            if (t >= 0 && t < fastest)
+                fastest = t;
         }
         if (failed) {
             stop = CRIP_CACHE_READ_FAIL;
@@ -438,7 +454,7 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
             stop = CRIP_CACHE_CEILING;   /* until a later iteration says otherwise */
         } else {
             stop = CRIP_CACHE_MISS;
-            stop_us = t;
+            stop_us = fastest;   /* every try was slow; this is the least slow */
             break;
         }
     }

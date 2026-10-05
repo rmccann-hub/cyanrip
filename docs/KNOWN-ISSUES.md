@@ -97,6 +97,20 @@ each to them.
   (`src/cyanrip_main.c:1937-1938` against `:2064-2067` at `f8ebf48`), where
   the loop over every track also finalises the album's loudness over a track
   that failed. **Not yet drafted as an upstream report.**
+- **A cache bracket printed the evidence for one end only**, found reading the
+  2026-10-05 run. `Cache probe:    128 to 255 sectors (…, cached read 1.5 ms)`
+  carried the read behind 128 and nothing behind 255: the composer printed the
+  stop read only when nothing had hit, so a bracket never showed the re-read
+  that ended it, and that run's reading could say only that it took "at least"
+  the threshold. And `394ab17` made a miss three slow tries, while the no-hit
+  arm went on printing `first uncached re-read` over the **last** of them. A
+  miss now adds `, 3 re-reads after a 256-sector run took X ms or more`, X the
+  fastest of the three, so `or more` holds for each. The clause fills the line's
+  `%s`, so no P2 row changes, and Platterpus reads nothing inside the line
+  (`platterpus@5ec71f4e:src/platterpus/parsers/cyanrip_log.py:2324-2346`).
+  `tests/cacheprobe.c` pins both arms and that a ceiling borrows no miss
+  clause, revert-proved. **Taking the fastest is in the probe loop, which needs
+  a drive: read from the source, not run.**
 
 **NOT fixed, and now the one open half: a `-f` search that finds no offset
 exits 0.** Measured: `-N -f` on `basic.cue` printed `No track had AccuRip

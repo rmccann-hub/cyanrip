@@ -110,8 +110,9 @@ int crip_cache_reread_hit(int64_t reread_us);
  * outcome does not use are ignored.
  *
  * last_hit_us and stop_us are the timings of the reads the probe CLASSIFIED --
- * the last one it called cached, and the one that ended the search. Pass -1
- * for either that does not apply. They exist because the line used to report
+ * the last one it called cached, and, for CRIP_CACHE_MISS, the fastest of the
+ * slow re-reads that ended the search. Pass -1 for either that does not
+ * apply. They exist because the line used to report
  * miss_cost_us alone, which is one side of a two-sided comparison: a reader
  * could see the verdict and not the evidence, and could not tell a real cache
  * from a threshold every read beats. */
