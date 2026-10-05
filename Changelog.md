@@ -1,5 +1,24 @@
 Unreleased
 ==========
+**Round 30 stays open until everything is fixed, on the operator's word of
+2026-10-05**: *"want this round to look at everything and not end until we fix
+it. doesnt matter how many laps. fix, then we release betas of both
+applications, and test to acceptance of both to close the round"*. So the four
+items put off to round 31 are fixed now, for `.20`, and none has run on a
+drive. A track paranoia skipped on reads `with errors` (`e5a0897`), as does a
+`-Z` track that hit the repeat limit (`4529810`), where both printed `read
+successfully!`; `sc_paranoia_skip()` reproduces the 2026-10-04 run's track 18
+with no drive. A slow extraction speed keeps two significant figures, so 0.033x
+no longer prints `0.0x` (`a72b162`). A `-J` or `-f` run's footer says what the
+run was where it said `aborted`, and a stop ends a `-f` search instead of
+retrying (`aa1f067`). A `-f` search that finds no offset still exits 0: making
+it exit 1 moves a row of the jointly owned `seam-commands.md` §7, so it is
+proposed to Platterpus rather than landed, which a dry run of `.20`'s release
+steps found before anything was pushed. By content, P2
+changes in three rows. Each was checked against Platterpus's parser before it
+landed; none changes a line they match on. The gate implements v7's C46, inert
+until it implements 7 (`76e2ba1`).
+
 **Three Full runs on `.19` with Platterpus 0.6.65, 2026-10-04, are filed** at
 `docs/rig-2026-10-04-174a134/`, none complete. Two stopped at section E on discs
 MusicBrainz does not know; both disc IDs return 404. The third ripped a disc the

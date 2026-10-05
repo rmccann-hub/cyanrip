@@ -175,7 +175,7 @@ list wrote two different claims the same way for months:**
 |---|---|---|
 | **C2** | `UNREACHABLE` | the rig's BDR-209D **reports C2 unsupported**. No procedure, tier or effort produces it — it needs a different drive or it stays unverified permanently. |
 | **`-f`** | not yet done | testable on the reference disc **now**: it is in AccurateRip and `+667` is known-correct, so ground truth exists. |
-| **damaged media** | **read on hardware 2026-10-04**, `174a134` | **what happens after a read fails** is tested with no drive (`tests/badsector.c`, the `bad_sector` scenario). **The read itself was measured on the BDR-209D** (`docs/rig-2026-10-04-174a134/`), on a disc it reads differently each time from track 11 on. The drive reported **no** error, C2 said nothing (unsupported), reads slowed to **54 s**, one track took **8,161 s**, paranoia skipped **2,586** times, and every track still printed `read successfully!` (`docs/KNOWN-ISSUES.md`, for round 31). **Still not seen: a drive that reports a read as failed.** |
+| **damaged media** | **read on hardware 2026-10-04**, `174a134` | **what happens after a read fails** is tested with no drive (`tests/badsector.c`, the `bad_sector` scenario). **The read itself was measured on the BDR-209D** (`docs/rig-2026-10-04-174a134/`), on a disc it reads differently each time from track 11 on. The drive reported **no** error, C2 said nothing (unsupported), reads slowed to **54 s**, one track took **8,161 s**, paranoia skipped **2,586** times, and every track still printed `read successfully!`. **Fixed for `.20`, not run on a drive**: a skip, or a `-Z` read that never agreed, now reads `with errors` (`e5a0897`, `4529810`; `docs/KNOWN-ISSUES.md`). **Still not seen: a drive that reports a read as failed.** |
 | **CD-TEXT from a physical disc** | not yet done | needs a disc that has some; `mmc_read_cdtext` is a different path from the `.toc` image parser. |
 
 ***Cannot be done* and *not yet done* are different claims**, and listing them
@@ -2032,10 +2032,18 @@ review beside `FORK_PIN` `51cc789`; the Full run on it ran on 2026-09-30
 (`docs/rig-2026-09-30b-174a134/`) and shows no defect in `.19`. The round
 carries the operator's question of how release, run and round line up
 (`docs/handshake/PROPOSAL-release-cycle.md`). **The next release is
-`+platterpus.20`, on beta under the operator's O3, named in our round 30 lap 5**:
-SIGHUP handling (`1184a04`), the loudness figures measured on the delivered
-audio (`cc79c5b`), and a fresh filter for each `-Z` pass (`4c3bd3e`). Its plan
-is not written yet. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and
+`+platterpus.20`, a beta inside round 30**, by the operator's word of
+2026-10-05: round 30 stays open until everything is fixed, then both
+applications ship betas, and an acceptance run of both closes it. Landed for
+it: SIGHUP handling (`1184a04`), the loudness figures measured on the delivered
+audio (`cc79c5b`), a fresh filter for each `-Z` pass (`4c3bd3e`), a skip or a
+non-converged `-Z` read as `read with errors.` (`e5a0897`, `4529810`), a slow
+extraction speed to two significant figures (`a72b162`), and `-J`/`-f` footers
+that say what the run was, with a stopped `-f` search ending (`aa1f067`). Still
+to land: the spool and the cache probe's calibration.
+`docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition, and
+poses one decision: what goes to stable after the close, since a beta cut with
+the round open logs `NOT a released build` forever. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and
 Platterpus's lap 6 amendments as our lap 7 amends two of them, are landed in our
 tree by the commit carrying our round 30 lap 7 (proposed at `2abeb5d`). Theirs
 lands in the commit that files our lap 7. Our gate stays at 6 until both trees

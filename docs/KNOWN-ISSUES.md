@@ -23,6 +23,68 @@ say "probably" without saying what would settle it.
 
 ---
 
+## Fixed for `.20`, 2026-10-05, not released — four that waited for round 31
+
+Put off on 2026-09-30 and 2026-10-04 because each changes what a P2 line says,
+and brought into round 30 on the operator's word of 2026-10-05. **None changes
+a line Platterpus matches on**: each was checked against their parser at
+`platterpus@5ec71f4e` before it landed, and round 30's next lap of ours puts
+each to them.
+
+- **`Track N read successfully!` over paranoia's skips** (`e5a0897`). The
+  2026-10-04 run on `.19` printed it for track 18 over **2,586 `SKIP`s**: the
+  arm was decided by `ctx->total_error_count - start_err`, which moves only
+  when the drive reports an error or returns no data, and a skip is neither.
+  The condition was upstream's (`src/cyanrip_main.c:911` at `f8ebf48`). The arm
+  now also counts the kept pass's `SKIP` counter, the baseline the per-track
+  paranoia block uses. `Ripping errors:` is unchanged and stays the drive's
+  count, so a track can now read `with errors` beside `Ripping errors: 0`; the
+  contract's units block says so. Reproduced with no drive by
+  `sc_paranoia_skip()`: `tests/badsector.c`'s flip mode returns different
+  bytes for one sector on every read at the default paranoia level, and before
+  the fix the log said `SKIP: 1`, `read successfully!`, `Ripping errors: 0`.
+  **Still Platterpus's question:** whether `Ripping errors:` should count skips
+  too, since their health status reads it.
+- **…and over `-Z` reads that never agreed** (`4529810`). Tracks 12 to 15 and
+  17 of the same run were read five times each with five different checksums
+  and each printed `read successfully!`, under a `Secure re-read:  did NOT
+  converge` line saying otherwise. A track that hits the repeat limit now reads
+  `with errors`. Pinned by `sc_repeat_limit()`, where `-P 0` rules out skips and
+  `Ripping errors: 0` rules out the drive. A separate commit from the skip
+  term, so either can be taken back alone.
+- **`Extraction speed: 0.0x` for 0.033x** (`a72b162`). One decimal from 1x up,
+  as before; two from 0.1x; three below that. Three is the most Platterpus's
+  `_TRACK_SPEED` reads (`\.\d{1,3}`), so **below 0.0005x it still prints
+  `0.000x`**, and the contract says so. Pinned in `tests/logrender.c` on each
+  side of each boundary and on track 18's own figures.
+- **`-J` and `-f` said `aborted`** (`aa1f067`). A `-J` run that wrote its cue
+  sheet now ends `Rip completed:  no (cue sheet only, 0 of N tracks)`, and a
+  `-f` run that finished its search `no (offset search only, …)`. Each is set
+  where the mode reaches its own end, so a refusal on the way still says
+  `aborted`. Both runs open no logfile, so the footer reaches stdout only.
+- **A stopped `-f` search retried** (`aa1f067`), upstream's structure too:
+  `Stopping, offset finding incomplete!` jumped to `end:`, which retried at
+  twice the radius whenever no offset had been found, so the run read on after
+  the stop until the radius outgrew every track. A stop now ends the search.
+  **Read from the source and not run**: the search needs AccurateRip data for
+  the disc, and no fixture's disc has any.
+
+**NOT fixed, and now the one open half: a `-f` search that finds no offset
+exits 0.** Measured: `-N -f` on `basic.cue` printed `No track had AccuRip
+entry, cannot find offset!` and exited 0. A fix was written and taken back
+before it was pushed: exiting 1 turns the `-f` row of `docs/seam-commands.md` §7
+from `unobservable | 0` into `refused | 1`, and §7 is generated from the binary
+by `tools/probe-argv-surface.py` into one of the four jointly owned documents,
+so the exit code and the row move together in a version both sides ship. A dry
+run of `.20`'s release steps found it, through `Argv table in seam-commands.md`.
+Platterpus's section O grades `-f` by its lines, not its exit code, so nothing
+of theirs depends on the change. Proposed in round 30.
+
+All four are pinned by `sc_probe_runs_open_no_logfile()`, `sc_paranoia_skip()`,
+`sc_repeat_limit()` and `tests/logrender.c`, each revert-proved with the build
+green. **None has run on a drive.** The skip and the speed are what the next
+acceptance run on a damaged disc would show.
+
 ## Fixed for `.20`, 2026-09-30, not released — found fixing where loudness is measured
 
 - **A `-Z` rip's kept pass was filtered with the previous pass's state.** The
@@ -171,87 +233,13 @@ which is the only method that finds this class.
 
 ---
 
-## Open, ours, and solvable — but deliberately not now
+## Open, ours, and solvable
 
-### `Track N read successfully!` is printed over paranoia's skips, and over reads that never agree
-
-**Measured on hardware, 2026-10-04** (`docs/rig-2026-10-04-174a134/`). Track 18
-of that disc printed `Track 18 read successfully!` over **2,586 `SKIP`s**:
-paranoia gave up verifying a section 2,586 times and kept what it had. Tracks
-12, 13, 14, 15 and 17 printed the same line with no skip, and each, read five
-more times at `-Z 2`, gave five different checksums. None matched AccurateRip on
-the whole track. Every log said `Ripping errors: 0`.
-
-**Why.** The line depends on `ctx->total_error_count - start_err`
-(`cyanrip@174a134:src/cyanrip_main.c:1128`), which moves only when the drive
-reports an error or returns no data (`cyanrip_read_frame()`). A paranoia skip is
-neither, so it never reaches the count. **The condition is upstream's**
-(`src/cyanrip_main.c:911` at `f8ebf48`, `ripped and encoded successfully!`).
-
-**What the line does establish**, stated so it is not read for more: the drive
-returned every frame without reporting an error. It does not say paranoia
-verified the data, and it does not say a second read would agree. The per-track
-`Paranoia status counts:` block and the AccurateRip lines are where those are
-reported, and on this disc both said so.
-
-**What a consumer did with it:** Platterpus's status line read *"Done — all 18
-tracks ripped cleanly, no read errors"* over this rip.
-
-**Why not now:** what the line means is a P2 contract question, and Platterpus
-derives its health status from it and from `Ripping errors:`. Counting skips
-there changes what a consumer reports for a rip, so it goes to round 31 with a
-proposal, not into `.20`, which is named. Options to put to them: count a track
-with `SKIP > 0` as `read with errors.`; or keep the line and add a per-track
-fact, such as `Skipped sectors: N`, so a skip is its own measurement.
-
-### `Extraction speed: 0.0x` for a read that took 8,161 s
-
-`Extraction speed:  %.1fx` (`src/cyanrip_log.c:574`, ours since `89eb849`)
-printed `0.0x` for track 18 of the 2026-10-04 disc: 267 s of audio in 8,161 s
-is **0.033x**. The line says the speed was zero, which is wrong. Printing more
-digits below 1x fixes it, but the value's format is P2, so it is a round 31
-change.
-
-### `-f`: a stop is followed by a retry, and a search that finds no offset exits 0 — upstream's code
-
-Found 2026-09-30 answering Platterpus's round 30 lap 6 S13 and S14, whose
-acceptance run's section O now grades a `-f` run. The code was read at
-`174a134` (`src/cyanrip_main.c:594-692`) and at upstream's `f8ebf48`
-(`src/cyanrip_main.c:524-575`), where the structure is the same:
-
-- **A stop does not stop the search.** `Stopping, offset finding incomplete!`
-  jumps to `end:`. Whenever no offset has been found yet, `end:` retries with
-  twice the radius. So the run prints `Was not able to find drive offset with a
-  radius of %i frames, trying again with a larger radius...` after the stop,
-  reads one frame, stops again, and repeats. It ends on `No track was long
-  enough, unable to find drive offset!` once the radius outgrows every track.
-  If one track had already found an offset, the stop is followed by `Drive
-  offset of %c%i found (confidence: 1)!`. This is read from the source and not
-  run: the search starts only when AccurateRip has the disc, and no fixture's
-  disc is in AccurateRip.
-- **A search that finds no offset exits 0.** Measured: `-N -f` on `basic.cue`
-  printed `No track had AccuRip entry, cannot find offset!` and `Rip completed:
-  no (aborted, 0 of 2 tracks)`, and exited **0**.
-- **`-f` opens no logfile.** That follows from the structure, since the search
-  runs before `cyanrip_log_init()`. P2 used to say every line in it reaches the
-  logfile; it now names `-I`, `-J` and `-f` as runs that open none, and
-  `sc_probe_runs_open_no_logfile()` pins the runs and the sentence together.
-
-**Why not now:** a fix changes what a `-f` run prints, and section O grades
-those lines from Platterpus 0.6.66 on (their lap 6 S12 and S13). So it is
-handshake material under round 20's order. The stop path also cannot be reached
-without AccurateRip data for the disc. **Both are upstream's**, and neither is
-in `docs/upstream/defect-reports.md` yet.
-
-### A `-J` run that wrote its cue sheet ends `Rip completed:  no (aborted, 0 of 2 tracks)`
-
-Measured 2026-09-30: `-N -A -U -J` on `basic.cue` wrote `Unknown disc
-(ONPX).cue`, exited 0, and printed the aborted footer. A `-f` run prints the
-same footer. **Ours, not upstream's.** Upstream prints no footer on any `goto
-end` (`docs/SETTLED.md`'s upstream item 3), and round 14 moved the footer under
-`end:` so that every exit reaches it. `-J` reaches it with no track ripped
-because ripping tracks is not what `-J` does. **Why not now:** the footer is a
-P2 line, and it needs wording both sides agree for a run that is not a rip.
+**Round 30 carries these, on the operator's word of 2026-10-05**: the round
+stays open until everything here that can be fixed is fixed, both applications
+ship betas, and an acceptance run of both passes. So *"not now"* and *"round
+31"* stopped being reasons. Where an entry below still says why it waited,
+that was the reason before 2026-10-05, kept as the record.
 
 ### With paranoia disabled (`-P 0`), one unreadable sector hangs the rip at any retry limit
 
@@ -1483,7 +1471,7 @@ coverage.
 | `-x` correctness on a real drive | **measured sixteen times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-30b. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
-| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. The only `read with errors.` arm exercised is still the fixture's (`tests/badsector.c`) |
+| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. The only `read with errors.` arm exercised is still the fixture's (`tests/badsector.c`). From `.20` that arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have; no `.20` rip has run on a drive |
 | CD-TEXT from a physical disc | `mmc_read_cdtext` is a different code path from the image parser, and no disc with CD-TEXT has been read |
 | ~~the diagnosed-abort exit code~~ | **RETIRED 2026-09-22.** `cyanrip -N -l 1` with no `-s` exited **1** with `Offset is unset!` at column 0, `Rip completed:  no (aborted, 0 of 14 tracks)` and a complete footer — `docs/rig-2026-09-22-2cce60d/session/script-report.json` step 212. The reason given here (*"every rig rip so far had `Ripping errors: 0`"*) had **already been false since 2026-09-10**: seven filed rig logs carry `Ripping errors: 1`, counted off `docs/rig-*/rips/*.log` rather than remembered |
 | ~~a non-zero `Read stalls:` count~~ | **RETIRED 2026-08-26**, and this row outlived the retirement by a month. **Five** filed rig logs carry a populated line, up to `5 reads exceeded 10s; longest 11s (track 1, LSN 8322)`, counted off `docs/rig-*/rips/*.log`. The rule it carried still holds and is why it is kept visible: **a silent watchdog is not a working watchdog**, and zero heartbeats on healthy media — which is what all eight rips of 2026-09-22 report — is the expected result and evidence of nothing |
