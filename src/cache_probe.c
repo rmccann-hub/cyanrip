@@ -89,11 +89,34 @@
  * refuses to run on an image.
  */
 
-/* A re-read this much faster than the measured uncached cost is taken as a
- * cache hit. Deliberately generous: the two populations differ by orders of
- * magnitude on any real drive, so a loose threshold costs nothing and avoids
- * calling a merely-quick platter read a hit. */
-#define CACHE_HIT_RATIO 4
+/* WHY A HIT IS NOW ANYTHING UNDER 6 MS, AND NOT A QUARTER OF ONE READ.
+ *
+ * Through `.19` a re-read was a hit when it took under a quarter of
+ * `miss_cost`, the median of three reads after a FULL-STROKE seek, about
+ * 363 ms on the rig's drive. The test read is a short backseek, so the
+ * threshold sat near 90 ms and every re-read beat it: sixteen filed sessions
+ * reported `at least 2048 sectors ... search ceiling reached`, where
+ * cd-paranoia -A measures 137 to 140. The "cached reads" those sessions
+ * recorded were 42 to 82 ms. By cd-paranoia's criterion every one of them was
+ * a seek (docs/KNOWN-ISSUES.md has the table).
+ *
+ * So the probe now asks what cd-paranoia asks: was the re-read faster than
+ * any seek could be? CRIP_CACHE_HIT_BELOW_US, in cache_probe.h. `miss_cost` is
+ * still measured and printed, as the uncached read it always described, and a
+ * drive whose full-stroke read beats the threshold cannot be timed this way at
+ * all, so it is refused rather than read.
+ *
+ * A slow re-read is tried PROBE_MISS_TRIES times before it ends the search,
+ * because a single slow read can be the drive being "easily distracted"
+ * (cd-paranoia's words) or another process seeking it; any fast one is a hit.
+ * Verifiable only on a drive: the next run with -x, beside its cd-paranoia -A
+ * in section P, is the measurement. */
+#define PROBE_MISS_TRIES 3
+
+int crip_cache_reread_hit(int64_t reread_us)
+{
+    return reread_us >= 0 && reread_us < CRIP_CACHE_HIT_BELOW_US;
+}
 
 /* Bounds on the search. Drives in the wild model out between roughly 64 KiB
  * and 8 MiB of audio cache; 1 to 2048 sectors spans that with room either
@@ -338,9 +361,11 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
      * then refused still carries the three reads that made it refuse. */
     evidence.ran          = 1;
     evidence.miss_cost_us = miss_cost;
-    evidence.hit_ratio    = CACHE_HIT_RATIO;
+    evidence.hit_below_us = CRIP_CACHE_HIT_BELOW_US;
 
-    if (miss_cost <= 0) {
+    /* A full-stroke seek that is itself faster than any seek can be is not a
+     * seek this method can see, so nothing it would classify means anything. */
+    if (miss_cost <= 0 || crip_cache_reread_hit(miss_cost)) {
         log_cache_probe(ctx, CRIP_CACHE_CALIB_TOO_FAST, 0, 0, 0, -1, -1);
         av_free(buf);
         return 0;
@@ -380,23 +405,34 @@ int crip_probe_drive_cache(cyanrip_ctx *ctx, int *sectors_out)
             break;
         }
 
-        const int64_t t = time_one_read(ctx->cdio, buf, seed);
+        int64_t t = time_one_read(ctx->cdio, buf, seed);
+        int failed = 0;
+        for (int try = 1; t >= 0; try++) {
+            /* Every try is recorded: the series a verdict was formed from. */
+            if (evidence.nb_steps < CRIP_CACHE_MAX_STEPS) {
+                const int k = evidence.nb_steps++;
+                evidence.step_run[k] = run;
+                evidence.step_us[k]  = t;
+                evidence.step_hit[k] = crip_cache_reread_hit(t);
+            }
+            if (crip_cache_reread_hit(t) || try >= PROBE_MISS_TRIES)
+                break;
+            if (probe_read_run(ctx->cdio, buf, seed, run) != DRIVER_OP_SUCCESS) {
+                failed = 1;
+                break;
+            }
+            t = time_one_read(ctx->cdio, buf, seed);
+        }
+        if (failed) {
+            stop = CRIP_CACHE_READ_FAIL;
+            break;
+        }
         if (t < 0) {
             stop = CRIP_CACHE_TIME_FAIL;
             break;
         }
 
-        /* RECORDED, NOT ACTED ON. The predicate below is unchanged in round
-         * 21; this only writes down what it was given and what it said, which
-         * is the pair a redesigned rule has to be checked against. */
-        if (evidence.nb_steps < CRIP_CACHE_MAX_STEPS) {
-            const int k = evidence.nb_steps++;
-            evidence.step_run[k] = run;
-            evidence.step_us[k]  = t;
-            evidence.step_hit[k] = (t * CACHE_HIT_RATIO < miss_cost);
-        }
-
-        if (t * CACHE_HIT_RATIO < miss_cost) {
+        if (crip_cache_reread_hit(t)) {
             last_hit = run;
             last_hit_us = t;
             stop = CRIP_CACHE_CEILING;   /* until a later iteration says otherwise */

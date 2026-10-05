@@ -123,7 +123,7 @@ static void test_cache_probe_evidence_reaches_the_record(void)
     memset(&fake_evidence, 0, sizeof(fake_evidence));
     fake_evidence.ran          = 1;
     fake_evidence.miss_cost_us = 342900;
-    fake_evidence.hit_ratio    = 4;
+    fake_evidence.hit_below_us = 6000;
     fake_evidence.calib_us[0]  = 341800;
     fake_evidence.calib_us[1]  = 342900;
     fake_evidence.calib_us[2]  = 343500;
@@ -161,7 +161,7 @@ static void test_cache_probe_evidence_reaches_the_record(void)
         { "\"ran\": true",         "a probe that ran must not read as absent" },
         { "342900",                 "the median that became the threshold"    },
         { "341800",                 "the calibration reads, all three"        },
-        { "\"hit_ratio\": 4",      "the ratio in force when it was decided"  },
+        { "\"hit_below_us\": 6000", "the threshold in force when it was decided" },
         { "\"run_sectors\": 2048", "the series must reach the ceiling"       },
         { "\"reread_us\": 2200",   "the first re-read, in full"              },
         { "\"scored_hit\": true",  "what the CURRENT rule said, recorded"    },

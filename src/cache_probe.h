@@ -63,16 +63,18 @@ typedef enum {
  * TOUCHED -- a rule redesigned before its evidence exists is the thing this
  * repository has a rule against.
  *
- * Bounded at 16: the search doubles from 1 to PROBE_MAX_SECTORS, which is 12
- * steps, and a bound that cannot be exceeded beats a growable buffer in a
- * process that must not fail here. */
-#define CRIP_CACHE_MAX_STEPS 16
+ * Bounded at 40: the search doubles from 1 to PROBE_MAX_SECTORS, which is 12
+ * runs, and since round 30 a run may take up to three tries (PROBE_MISS_TRIES),
+ * each recorded, so 36 at most. A bound that cannot be exceeded beats a
+ * growable buffer in a process that must not fail here. It was 16 while each
+ * run had one read. */
+#define CRIP_CACHE_MAX_STEPS 40
 
 typedef struct {
     int     ran;                /* the probe got as far as recording anything */
     int64_t calib_us[3];        /* the three calibration reads, in order */
     int64_t miss_cost_us;       /* the median of them, which is the threshold */
-    int     hit_ratio;          /* CACHE_HIT_RATIO as it was at the time */
+    int64_t hit_below_us;       /* CRIP_CACHE_HIT_BELOW_US as it was */
     int     nb_steps;
     int     step_run[CRIP_CACHE_MAX_STEPS];   /* run length in sectors */
     int64_t step_us[CRIP_CACHE_MAX_STEPS];    /* the re-read that classified it */
@@ -83,6 +85,18 @@ typedef struct {
 /* Process-lifetime, owned here, read by the diagnostics record at exit. Never
  * NULL; `ran` is 0 when the probe did not run or refused. */
 const crip_cache_evidence_t *crip_cache_evidence(void);
+
+/* A re-read faster than this is a cache hit, and anything slower paid for a
+ * seek. cd-paranoia -A's own criterion, MIN_SEEK_MS = 6 in libcdio-paranoia's
+ * src/cachetest.c (read at 384f4da), on its stated reason: no seek on a CD
+ * costs under ~10 ms, given the synchronisation it needs and the fastest the
+ * disc can turn, so a hit is always faster even over PIO. Absolute, so it does
+ * not depend on any one calibration read. Round 30. */
+#define CRIP_CACHE_HIT_BELOW_US 6000
+
+/* The decision itself, split out so it can be tested with no drive. A
+ * negative time is a read that could not be timed, and is never a hit. */
+int crip_cache_reread_hit(int64_t reread_us);
 
 /* Composes the value half of the `Cache probe:` line into buf.
  *

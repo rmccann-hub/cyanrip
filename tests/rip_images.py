@@ -2397,17 +2397,18 @@ def sc_encode_failure_reaches_the_log():
     if re.search(r"(?m)^Partial files:", text):
         fail("encfail: `Partial files:` on a rip whose every read completed")
 
-    # `-j` is deliberately UNCHANGED and the schema did not move. Pinned so
-    # that if per-track encode status is ever added there, it is visible as a
-    # change and gets its own schema bump rather than arriving silently.
+    # `-j` was deliberately UNCHANGED by round 22. Pinned so that if per-track
+    # encode status is ever added there, it is visible as a change and gets its
+    # own schema bump rather than arriving silently. /7 since round 30, for the
+    # cache probe's threshold, which is not this.
     try:
         schema = json.loads(diag.read_text())["schema"]
     except Exception as exc:
         fail(f"encfail: could not read the -j schema: {exc}")
     else:
-        if schema != "cyanrip-diagnostics/6":
+        if schema != "cyanrip-diagnostics/7":
             fail(f"encfail: -j schema is {schema!r}, not "
-                 f"'cyanrip-diagnostics/6'. Round 22 changed the log and not "
+                 f"'cyanrip-diagnostics/7'. Round 22 changed the log and not "
                  f"the record; a schema move here needs its own announcement")
 
 
@@ -3377,7 +3378,7 @@ def sc_diagnostics():
         fail(f"diagnostics: file is not valid JSON: {e}")
         return
 
-    if d.get("schema") != "cyanrip-diagnostics/6":
+    if d.get("schema") != "cyanrip-diagnostics/7":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so

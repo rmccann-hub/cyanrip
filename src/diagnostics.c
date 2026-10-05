@@ -367,8 +367,13 @@ void crip_diag_write(void)
      * So the bump stands on the reason that never needed them: two different
      * records both calling themselves /4 is the same defect as two builds
      * answering to one version string, which this fork already fixed once with
-     * +platterpus.N. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/6\",\n");
+     * +platterpus.N.
+     *
+     * /7 REPLACES cache_probe.hit_ratio WITH cache_probe.hit_below_us (round
+     * 30): the probe no longer scores a re-read against a quarter of one
+     * calibration read but against cd-paranoia's absolute 6 ms, so the ratio
+     * no longer exists to record. A removed key is not additive. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/7\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
@@ -447,7 +452,7 @@ void crip_diag_write(void)
                        ", %" PRId64 "],\n", ev->calib_us[0], ev->calib_us[1],
                        ev->calib_us[2]);
         av_bprintf(&b, "    \"miss_cost_us\": %" PRId64 ",\n", ev->miss_cost_us);
-        av_bprintf(&b, "    \"hit_ratio\": %i,\n", ev->hit_ratio);
+        av_bprintf(&b, "    \"hit_below_us\": %" PRId64 ",\n", ev->hit_below_us);
         av_bprintf(&b, "    \"steps\": [");
         for (int i = 0; i < ev->nb_steps; i++)
             av_bprintf(&b, "%s\n      {\"run_sectors\": %i, \"reread_us\": %"

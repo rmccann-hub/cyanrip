@@ -71,9 +71,36 @@ static void expect(crip_cache_stop_t stop, int last_hit, int stop_run,
     }
 }
 
+/* THE DECISION, round 30: a re-read under 6 ms is a hit. Through `.19` it was
+ * a quarter of a full-stroke seek, about 90 ms on the rig's drive, and every
+ * re-read the sixteen filed sessions recorded, 42 to 82 ms, scored as a hit.
+ * Each of those figures is asserted here as a miss, beside the boundary and
+ * the 2.2 ms read that first looked like a hit. */
+static void expect_hit(int64_t us, int want)
+{
+    if (crip_cache_reread_hit(us) != want) {
+        printf("FAIL: a re-read of %lld us should be %s\n", (long long)us,
+               want ? "a hit" : "a miss");
+        fails++;
+    }
+}
+
 int main(void)
 {
     const int64_t MS364 = 364300; /* the measured uncached read, in ss */
+
+    expect_hit(CRIP_CACHE_HIT_BELOW_US - 1, 1);
+    expect_hit(CRIP_CACHE_HIT_BELOW_US, 0);
+    expect_hit(2200, 1);    /* 2026-08-13: 2.22 ms, a one-sector backseek */
+    expect_hit(42100, 0);   /* the lowest "cached read" any session filed */
+    expect_hit(61700, 0);
+    expect_hit(82000, 0);   /* the highest, 2026-09-30b on `.19` */
+    expect_hit(-1, 0);      /* a read that could not be timed is never a hit */
+    if (CRIP_CACHE_HIT_BELOW_US != 6000) {
+        printf("FAIL: the threshold is cd-paranoia's MIN_SEEK_MS, 6 ms, and "
+               "reads %i us\n", CRIP_CACHE_HIT_BELOW_US);
+        fails++;
+    }
 
     /* Never searched. Each says why, because "could not tell" and "no cache"
      * are different claims about the drive. */

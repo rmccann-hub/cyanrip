@@ -76,7 +76,7 @@ four and loses the one. P5a's two `Done;` rows now name the jump that follows
 them, `goto spool_encode`, where they named `goto finalize_ripping`. P1, P3 and
 P7 only moved; P4, P6 and P8 are identical. The
 units block gains two paragraphs: what decides the per-track arm, and the
-speed's precision. `-j` stays `cyanrip-diagnostics/6`. **Re-derive it at the
+speed's precision. `-j` moves to `cyanrip-diagnostics/7`: `cache_probe.hit_ratio` is replaced by `hit_below_us`. **Re-derive it at the
 candidate**; this paragraph is a reading of one commit.
 
 ## 3. The channel, and the decision it poses
