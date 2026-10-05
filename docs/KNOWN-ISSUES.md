@@ -286,6 +286,41 @@ that was the reason before 2026-10-05, kept as the record.
 
 ### With paranoia disabled (`-P 0`), one unreadable sector hangs the rip at any retry limit
 
+**FIXED for `.20`, 2026-10-05, not released.** At `-P 0` cyanrip wraps the cdda
+layer's read (`crip_read_audio_salvaging()`, installed on `cdrom_drive_t`'s
+public `read_audio` hook, `cdio/paranoia/cdda.h:124`): a request that comes
+back short is completed one sector at a time, and a sector that still will not
+read is filled with zeros, as paranoia pads a short read itself. The cdda
+layer logs it (`010: Unable to access sector N: skipping...`), so the log
+carries that line, `Ripping errors:` counts it and the track reads `with
+errors`. **Reads that succeed take exactly the path they took before**, so
+paranoia's counters and every checksum are unchanged: the golden reference,
+ripped at `-P 0`, does not move. `sc_p0_bad_sector()` pins it: the rip returns
+in about a second where it hung, exactly the bad sector is zero, every other
+sector is the source `.bin`'s, and each track's `READ` count equals a clean
+rip's. Revert-proved with the build green: without the hook the scenario times
+out at 20 s. **Better than paranoia's own disable mode on a failure**: a
+request that failed used to cost every sector in it, and now costs only the
+unreadable ones. **Not run on a drive**, where the salvage reads one sector at
+a time across a failed request only; a clean read is unchanged.
+
+**The mechanism, corrected 2026-10-05 by tracing it rather than reading it.**
+The paragraphs below said the skip *"does not move the read forward"* and
+*"finds no block to graft from, the root does not grow"*. It does grow, in the
+wrong place. In disable mode `i_read_c_block()` starts every block read with
+`paranoia_resetall()`, so a block in which nothing reads leaves the root empty;
+`verify_skip_case()` then takes `post = 0` from the empty root and writes its
+zero frame at **word 0**, not at the cursor; and the next block read resets the
+root again. Read at libcdio-paranoia `384f4da`; seen on the installed
+10.2+2.0.1 as 17,498 of the same one-sector cache-defeat seek in six seconds
+under `strace`. **Why one sector was enough here**: an image's cache model is
+16 sectors (`src/cyanrip_main.c`), one read request, so one bad sector fails a
+whole block. On a drive at the default 1200 it takes a stretch long enough to
+fail every request in a block, which a long scratch or a dying drive can
+produce.
+
+The record before the fix:
+
 **Measured 2026-09-23** with `tests/badsector.c`, at `-r 10` and at `-r 1`:
 the read of the sector after the bad one never returned, the stall watchdog
 reported it every 10 s, one SIGTERM printed `Trying to quit` and did not end

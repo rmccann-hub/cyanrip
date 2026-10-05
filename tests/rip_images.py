@@ -6004,6 +6004,103 @@ def sc_bad_sector():
              f"{[300 + i for i in differ]} zeroed, the rest identical to the source")
 
 
+def sc_p0_bad_sector():
+    """WITH PARANOIA DISABLED, ONE UNREADABLE SECTOR NO LONGER HANGS THE RIP.
+
+    Round 30, our lap 9 S20. Measured 2026-09-23 and again 2026-10-05: at
+    `-P 0` the read of the block holding tests/badsector.c's bad sector never
+    returned, at `-r 1` or `-r 10`, and one SIGTERM did not end it. In disable
+    mode libcdio-paranoia resets its root at every block read, so a block in
+    which nothing reads leaves it empty, and its skip then fills at word 0
+    rather than at the cursor, forever (crip_read_audio_salvaging()).
+
+    What it asserts, each against something other than our own wording:
+      * the rip RETURNS, well inside a timeout the hang cannot meet;
+      * the shim really failed reads, so a green run is not a vacuous one;
+      * track 2 reads `with errors.`, `Ripping errors:` counts it, and the
+        log carries libcdio's own line for the sector;
+      * exactly the bad sector is zero and every other sector of both tracks
+        is the source .bin's bytes -- a request that failed no longer costs
+        the readable sectors around it;
+      * paranoia counted the same reads per track as a clean rip, because a
+        read that succeeds takes the path it always took.
+    """
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"p0_bad_sector: the shim was not built or not passed ({shim!r})")
+        return
+    src = (FIX / "cdda.bin").read_bytes()
+    sec = 2352
+    bad = 400  # disc sector; track 2 is 300..599 in basic.cue
+
+    def read_counts(text):
+        return [int(m) for m in re.findall(r"^    READ:\s+(\d+)$", text, re.M)]
+
+    control = WORK / "out_p0_control"
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-r", "10", "-o", "pcm", "-D", control, "-F", "{track}",
+                 "-L", "log")
+    clean = read_counts((control / "log.log").read_text(errors="replace")
+                        if (control / "log.log").exists() else "")
+    if ec != 0 or len(clean) != 2:
+        fail(f"p0_bad_sector: the control rip exited {ec} with READ counts {clean}")
+        return
+
+    out = WORK / "out_p0_bad_sector"
+    count = WORK / "p0_bad_sector.count"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+               CRIP_BAD_SECTOR=str(bad), CRIP_BAD_OUT=str(count),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    try:
+        # 20 s against a rip that takes well under one: the hang never ends,
+        # and subprocess.run kills it with SIGKILL, which it cannot ignore.
+        subprocess.run([CRIP, "-d", str(WORK / "basic.cue"), "-N", "-A", "-U",
+                        "-s", "0", "-P", "0", "-r", "10", "-o", "pcm",
+                        "-D", str(out), "-F", "{track}", "-L", "log"],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                       timeout=20, env=env)
+    except subprocess.TimeoutExpired:
+        fail("p0_bad_sector: -P 0 did not return on one unreadable sector -- "
+             "paranoia's disable mode is looping on an empty root again")
+        return
+    failed = int(count.read_text().strip()) if count.exists() else 0
+    if failed < 1:
+        fail("p0_bad_sector: the shim failed no reads, so nothing below tests a "
+             "bad sector")
+        return
+    text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+    lines = text.splitlines()
+    if "Track 1 read successfully!" not in lines:
+        fail("p0_bad_sector: track 1 should read clean")
+    if "Track 2 read with errors." not in lines:
+        fail("p0_bad_sector: track 2 does not report `read with errors.`")
+    m = re.search(r"^Ripping errors: (\d+)$", text, re.M)
+    if not m or int(m.group(1)) < 1:
+        fail(f"p0_bad_sector: `Ripping errors:` does not count the bad sector "
+             f"({m.group(0) if m else 'absent'})")
+    if f"010: Unable to access sector {bad}: skipping..." not in lines:
+        fail("p0_bad_sector: libcdio's line for the bad sector is not in the log")
+    got = (out / "1.pcm").read_bytes() if (out / "1.pcm").exists() else b""
+    got += (out / "2.pcm").read_bytes() if (out / "2.pcm").exists() else b""
+    if len(got) != len(src):
+        fail(f"p0_bad_sector: delivered {len(got)} bytes, the source is {len(src)}")
+        return
+    differ = [i for i in range(len(src) // sec)
+              if got[i * sec:(i + 1) * sec] != src[i * sec:(i + 1) * sec]]
+    if differ != [bad]:
+        fail(f"p0_bad_sector: sectors {differ} differ from the source; only "
+             f"{bad}, the bad one, should")
+    elif got[bad * sec:(bad + 1) * sec] != bytes(sec):
+        fail("p0_bad_sector: the bad sector holds non-zero audio -- invented "
+             "rather than skipped")
+    if read_counts(text) != clean:
+        fail(f"p0_bad_sector: paranoia counted READ {read_counts(text)} per track, "
+             f"a clean rip {clean}")
+    note(f"p0_bad_sector: {failed} failed read(s); sector {bad} zeroed, every "
+         f"other sector the source's; READ per track {clean} as a clean rip")
+
+
 def sc_repeat_limit():
     """THE REPEAT-LIMIT LINE SAYS HOW MANY READS AGREED.
 

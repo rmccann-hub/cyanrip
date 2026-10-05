@@ -207,6 +207,63 @@ static CdIo_t *cyanrip_open_dev(const char *dev_path)
     return cdio_open(dev_path, DRIVER_UNKNOWN);
 }
 
+/* WITH PARANOIA DISABLED (-P 0), A READ THAT FAILS OUTRIGHT NEVER RETURNED.
+ *
+ * In disable mode libcdio-paranoia starts every block read with
+ * paranoia_resetall(), so a block in which no sector reads leaves its root
+ * empty. Its skip then writes the zero frame it fills with at word 0, not at
+ * the cursor, because an empty root gives it nothing else to go by
+ * (verify_skip_case()), and the next read resets the root again: the loop
+ * never reaches the sector it was asked for. Read from libcdio-paranoia at
+ * 384f4da (lib/paranoia/paranoia.c, i_read_c_block() and verify_skip_case()),
+ * and seen on the installed 10.2+2.0.1: one sector failed by tests/badsector.c
+ * gave 17,498 of the same one-sector seek in six seconds and no return. On an
+ * image the block is the 16-sector cache model below, one read request, so one
+ * bad sector was enough; on a drive at the default 1200 it takes a stretch
+ * long enough to fail every request in a block. Every other level keeps
+ * paranoia's own handling, which does return.
+ *
+ * So at -P 0 the cdda layer's read is wrapped, and a request that comes back
+ * short is completed one sector at a time. A sector that still will not read
+ * is filled with zeros, the way paranoia pads a short read itself; the cdda
+ * layer has already logged it ("Unable to access sector N: skipping"), and
+ * cyanrip_read_frame() reports that and counts the error, so the track reads
+ * `with errors`. Reads that succeed take exactly the path they took before,
+ * so paranoia's counters and every checksum are unchanged. A missing medium is
+ * passed back as a failure, so paranoia still stops on it. */
+static long (*crip_cdda_read_audio)(cdrom_drive_t *d, void *p, lsn_t begin,
+                                    long sectors);
+
+static long crip_read_audio_salvaging(cdrom_drive_t *d, void *p, lsn_t begin,
+                                      long sectors)
+{
+    long got = crip_cdda_read_audio(d, p, begin, sectors);
+
+    /* A NULL buffer is paranoia's cache-defeat seek, which only times a read
+     * and checks for one sector; it is not data and is passed through. */
+    if (!p || sectors <= 0 || got >= sectors)
+        return got;
+#ifdef ENOMEDIUM
+    if (got < 0 && errno == ENOMEDIUM)
+        return got;
+#endif
+    if (got < 0)
+        got = 0;
+
+    for (long i = got; i < sectors; i++) {
+        uint8_t *dst = (uint8_t *)p + i * CDIO_CD_FRAMESIZE_RAW;
+        if (crip_cdda_read_audio(d, dst, begin + i, 1) == 1)
+            continue;
+#ifdef ENOMEDIUM
+        if (errno == ENOMEDIUM)
+            return -1;
+#endif
+        memset(dst, 0, CDIO_CD_FRAMESIZE_RAW);
+    }
+
+    return sectors;
+}
+
 static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 {
     cyanrip_ctx *ctx = av_mallocz(sizeof(cyanrip_ctx));
@@ -295,6 +352,13 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     }
 
     cdio_paranoia_modeset(ctx->paranoia, paranoia_level_map[settings->paranoia_level]);
+
+    /* See crip_read_audio_salvaging(): disable mode alone cannot get past a
+     * block in which nothing reads. */
+    if (!settings->paranoia_level && ctx->drive->read_audio) {
+        crip_cdda_read_audio = ctx->drive->read_audio;
+        ctx->drive->read_audio = crip_read_audio_salvaging;
+    }
 
     /* Disc images have no hardware cache to defeat; paranoia's cache probe
      * reads cachemodel sectors past the seek target on backseeks, which

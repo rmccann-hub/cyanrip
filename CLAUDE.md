@@ -2384,13 +2384,19 @@ Record these rather than rediscovering them:
   `crip_frame_retry_limit()` rounds up (minimum 5) and the `Retry limit:` line
   says both numbers when they differ. **The whole-track `-Z` ceiling is ours
   and keeps the value as given.**
-- **And with paranoia disabled (`-P 0`), an unreadable sector never returns at
-  any retry limit.** The skip that the limit gates does not advance the read
-  in disable mode, so the loop resets and runs again. Measured at `-r 10` and
-  at `-r 1`. **Not worked around**: fixing it means bypassing paranoia's read
-  loop at level 0, a drive-path change with a speed cost on real drives.
-  Platterpus never passes `-P`, so their rips run at level 3. Recorded in
-  `docs/KNOWN-ISSUES.md`.
+- **And with paranoia disabled (`-P 0`), an unreadable sector never returned
+  at any retry limit.** In disable mode every block read starts with
+  `paranoia_resetall()`, so a block in which nothing reads leaves the root
+  empty, and the skip then writes its zero frame at word 0 instead of at the
+  cursor; the next read resets the root again. Measured at `-r 10` and `-r 1`,
+  and traced 2026-10-05. **Worked around for `.20`** without leaving paranoia's
+  read path: at level 0 the cdda layer's public `read_audio` hook is wrapped
+  (`crip_read_audio_salvaging()`), so a short request is completed one sector
+  at a time and only an unreadable sector is zeroed. Reads that succeed are
+  untouched, so the counters and the golden reference do not move. Bypassing
+  paranoia at level 0 was rejected, because every image scenario runs at
+  `-P 0` and the counters it would have emptied are the ones the suite checks.
+  Platterpus never passes `-P`. Recorded in `docs/KNOWN-ISSUES.md`.
 - **genopt prints its own errors unless you take them.** `GEN_OPT_LOG` is
   documented in `genopt.h` and cyanrip did not define it, so every
   argument-parsing failure went to stdout via `vprintf` and reached no logfile

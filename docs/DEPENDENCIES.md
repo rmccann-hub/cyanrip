@@ -97,7 +97,7 @@ Each is a liability with a removal condition, not a fix. The details and what wo
 - EAC's `Pre-gap length` field is hundredths of a second, not CD frames.
 - libcdio terminates the process from inside a library call.
 - libcdio-paranoia checks the per-frame retry limit only at multiples of 5.
-- And with paranoia disabled (`-P 0`), an unreadable sector never returns at any retry limit.
+- And with paranoia disabled (`-P 0`), an unreadable sector never returned at any retry limit.
 - genopt prints its own errors unless you take them.
 
 ## Measured where this was generated

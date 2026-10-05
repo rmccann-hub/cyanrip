@@ -145,7 +145,7 @@
         },
         {
           "name": "cyanrip-fork:local-mitigation",
-          "value": "And with paranoia disabled (`-P 0`), an unreadable sector never returns at any retry limit."
+          "value": "And with paranoia disabled (`-P 0`), an unreadable sector never returned at any retry limit."
         },
         {
           "name": "cyanrip-fork:local-mitigation",
@@ -1149,5 +1149,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:0405a7ed-bfe7-5fc5-aa1f-995133f8bf7b"
+  "serialNumber": "urn:uuid:0ebaff2e-0408-5ae2-8b1b-3889d3d53d4b"
 }

@@ -672,6 +672,7 @@ rip_scenarios = [
     'consumer_argv',
     'abort_footer',
     'bad_sector',
+    'p0_bad_sector',
     'repeat_limit',
     'repeat_limit_keeps_most_agreed',
     'spool_refusal',
