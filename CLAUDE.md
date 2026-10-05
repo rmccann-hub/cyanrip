@@ -85,7 +85,10 @@ settled by building 0.9.3 and running it. The measured matrix is
   and fixes nothing.** Mechanism and the eight-run evidence are in
   `docs/KNOWN-ISSUES.md` — including four runs whose `miss_cost` agrees to
   within 0.7 ms and whose verdict margin still lands 22 points apart, and one
-  run at **95%** of its threshold. **Do not cite our cache figure.**
+  run at **95%** of its threshold. **Do not cite our cache figure from `.19` or
+  earlier.** **Fixed for `.20` and not yet measured** (`394ab17`): a re-read is
+  now a hit only under 6 ms, `cd-paranoia -A`'s own `MIN_SEEK_MS`, so the
+  first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is the test.
 - `src/stall_watchdog.c`/`.h` -- the read-liveness heartbeat, on its own thread.
   It is a separate translation unit for two reasons: it needs a thread of its
   own, and being linkable is what lets `tests/stall.c` prove the heartbeat fires
@@ -2052,8 +2055,9 @@ extraction speed to two significant figures (`a72b162`), and `-J`/`-f` footers
 that say what the run was, with a stopped `-f` search ending (`aa1f067`), the
 `-Z` spool, which encodes only the kept read and keeps the most-agreed one at
 the repeat limit (`d7ee6c4`), and a failed track aborting a rip of every track
-as it does under `-l` (`c1e1ab1`). Still to land: the cache probe's
-calibration and the `-P 0` hang.
+as it does under `-l` (`c1e1ab1`), and the cache probe scoring a re-read by
+cd-paranoia's 6 ms, with `-j` at `cyanrip-diagnostics/7` (`394ab17`). Still to
+land: the `-P 0` hang.
 `docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition, and
 poses one decision: what goes to stable after the close, since a beta cut with
 the round open logs `NOT a released build` forever. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and

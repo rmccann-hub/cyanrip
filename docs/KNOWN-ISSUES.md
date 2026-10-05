@@ -986,6 +986,23 @@ failing is the fix landing.
 
 ### The cache probe's calibration is wrong
 
+**FIXED for `.20`, 2026-10-05, not released and NOT YET MEASURED** (`394ab17`).
+The probe now asks `cd-paranoia -A`'s question: a re-read is a hit when it is
+faster than `MIN_SEEK_MS`, 6 ms (libcdio-paranoia `src/cachetest.c:41`, read at
+`384f4da`), on its reasoning that no seek on a CD costs under ~10 ms. By that
+criterion every "cached read" in the table below, 42 to 82 ms, was a seek, which
+is how all sixteen sessions ran to the ceiling. A slow re-read is tried three
+times before it ends the search. `miss_cost` is still measured and printed, and
+a drive whose full-stroke read beats 6 ms is refused as untimeable. The `-j`
+record's `hit_ratio` is `hit_below_us` from `cyanrip-diagnostics/7`.
+`tests/cacheprobe.c` pins the decision against the table's own figures,
+revert-proved. **What is not established is that it agrees with cd-paranoia on
+a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
+that measurement, and the doubling search can still only bracket the size
+between two powers of two, so agreement means 137 to 140 falling inside the
+bracket. Everything below is the record of the defect, kept because the table is
+checked against the transcripts.
+
 `-x` reports `at least 2048 sectors, upper bound unknown` on a drive
 `cd-paranoia -A` measures at 137–140 sectors. The mechanism is known: `miss_cost`
 is calibrated with a full-stroke seek (342.9 ms measured) while the test read is
