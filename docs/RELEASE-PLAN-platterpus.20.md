@@ -52,24 +52,29 @@ So `.20` is a **beta inside round 30**, not round 30's closing release:
 | **A `-Z` track that hit the repeat limit reads `with errors`**: five tracks read five ways each printed `read successfully!` | `4529810` | the same two; a separate commit so either can be dropped |
 | **`Extraction speed:` keeps two significant figures below 1x**: 0.033x printed `0.0x` | `a72b162` | their `_TRACK_SPEED`, which reads three decimals at most, the most this prints |
 | **A `-J` or `-f` run's footer says what it was**, `cue sheet only` or `offset search only`, where it said `aborted`; **a stop ends a `-f` search** instead of retrying | `aa1f067` | a caller of `-J` or `-f`. Both open no logfile. Their section O grades `-f` by its lines (`probe_grading.py:150-215` there). **A `-f` search that finds no offset still exits 0**: exiting 1 moves a row of the shared `seam-commands.md` §7, so it waits on a version of it both sides ship |
+| **The `-Z` spool**: no pass is encoded while it is read; each goes to a `tmpfile()`, one per distinct checksum, and one is encoded when the track is decided, the read that converged or, at the repeat limit, the read the most reads agreed on, newest on a tie. The album loudness graph is fed that read alone. A full disk now stops a `-Z` rip: `Error creating the -Z spool: %s!` and three more spool errors, all beginning `Error`; `Error in encoding: %s` is gone | `d7ee6c4` | which bytes a non-converged `-Z` track delivers, and its EAC CRC32 and AccurateRip values with them; the album rows and `REPLAYGAIN_ALBUM_*`; their error matcher, whose `Error` prefix takes the new lines, and their message inventory, which names the removed one (`ripper_message_inventory.py:469` at `5ec71f4e`) |
+| **A failed track aborts a rip of every track**, as it does under `-l`: `Error ripping: %s` and `Rip completed:  no (aborted, …)`, where the loop broke out and the footer said `yes` over a run that exited 1 | `c1e1ab1` | their tri-state footer reading, for a run that stopped on a failed track |
 
 **To land before the cut** — in this round, on the operator's word:
 
-- **The spool**: each encoded `-Z` pass held until it is known final, so the
-  album loudness graph is fed the kept pass, and at the repeat limit the read
-  the most reads agreed on is kept, the newest on a tie (our lap 5 S23). Their
-  lap 6 S9 relays the operator accepting its disk cost.
 - **The cache probe's calibration**: a baseline that tracks the run length,
   measured on the rig against `cd-paranoia -A`, which their section P now runs
   beside ours (their lap 6 S12). The acceptance run on this beta is where it is
   measured; it cannot be verified anywhere else.
+- **The hang with paranoia disabled** (`-P 0`), pinned on an image by
+  `tests/badsector.c`; its speed on a drive is not measurable here.
 - **Whatever the 2026-10-05 acceptance run and the laps add.**
 
 **The contract against `.19`'s, derived, not described**:
-`tools/contract-delta.py --text 174a134 <candidate>`. At `6cf16ec`, with the
-contract `--check` exit 0, **P2 changes by content in three rows**: `Extraction speed:  %.1fx` becomes `%.*fx`, and `Rip completed:`
-gains `no (cue sheet only, %i of %i tracks)` and `no (offset search only, %i of
-%i tracks)`. P1, P3, P5, P5a and P7 only moved; P4, P6 and P8 are identical. The
+`tools/contract-delta.py --text 174a134 <candidate>`. At `294b956`, with the
+contract `--check` exit 0, **P2 changes by content in eight rows**:
+`Extraction speed:  %.1fx` becomes `%.*fx`; `Rip completed:` gains `no (cue
+sheet only, %i of %i tracks)` and `no (offset search only, %i of %i tracks)`;
+four `-Z` spool errors are added, `Error creating`, `writing`, `reading` and
+`verifying the -Z spool`; and `Error in encoding: %s` is removed. P5 gains the
+four and loses the one. P5a's two `Done;` rows now name the jump that follows
+them, `goto spool_encode`, where they named `goto finalize_ripping`. P1, P3 and
+P7 only moved; P4, P6 and P8 are identical. The
 units block gains two paragraphs: what decides the per-track arm, and the
 speed's precision. `-j` stays `cyanrip-diagnostics/6`. **Re-derive it at the
 candidate**; this paragraph is a reading of one commit.
@@ -161,7 +166,7 @@ No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
 
 ## 5. What this release does NOT verify
 
-- **None of the seven `src/` commits has run on a drive.** The skip arm is
+- **None of the nine `src/` commits has run on a drive.** The skip arm is
   reproduced on an image by a shim that varies one sector's bytes on every
   read; a real disc's skips come from the drive. The acceptance run on a
   damaged disc is the first test, and only if the run includes one.

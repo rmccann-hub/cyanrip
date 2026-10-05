@@ -19,11 +19,24 @@ changes in three rows. Each was checked against Platterpus's parser before it
 landed; none changes a line they match on. The gate implements v7's C46, inert
 until it implements 7 (`76e2ba1`).
 
+**For `.20`: the `-Z` spool** (`d7ee6c4`), proposed in our round 30 lap 5 with
+its disk cost accepted by Platterpus. No `-Z` pass is encoded while it is read;
+each goes to a `tmpfile()`, one per distinct checksum, and the track is encoded
+once, from the read that converged or, at the repeat limit, the read the most
+reads agreed on, the newest of them on a tie, where the last read was kept
+before. The album loudness graph is fed that read alone, where it was fed the
+first encoded pass. Its checksums are derived again from the spool. A full disk
+now stops a `-Z` rip with `Error creating the -Z spool: %s!`. Testing that
+found **a failed track in a rip of every track printed `Rip completed:  yes`**
+over a run that exited 1, where the same failure under `-l` says `aborted`;
+both loops now abort alike (`c1e1ab1`). By content P2 now changes in eight rows
+against `.19`'s.
+
 **Our round 30 lap 9 is written and held**, `OPEN`, until the operator uploads
 the 2026-10-05 acceptance run and the lap reads it. It records the operator's
 instruction as an override of R1, releases our lap 7 S20's pre-committed `GO`,
-lands the five fixes above for `.20`, says what we fix next (the spool, the
-cache probe's calibration, the `-P 0` hang), corrects lap 7's protocol hash,
+lands the seven fixes above for `.20`, the spool among them, says what we fix
+next (the cache probe's calibration and the `-P 0` hang), corrects lap 7's protocol hash,
 which was 62 digits with two dropped by hand, and lists six findings on
 Platterpus's side from the 2026-10-04 runs. `tools/seam-check.py` now FAILs a
 declared shared hash that is not a sha256, where it read lap 7's as no hash at

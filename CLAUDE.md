@@ -2039,8 +2039,11 @@ it: SIGHUP handling (`1184a04`), the loudness figures measured on the delivered
 audio (`cc79c5b`), a fresh filter for each `-Z` pass (`4c3bd3e`), a skip or a
 non-converged `-Z` read as `read with errors.` (`e5a0897`, `4529810`), a slow
 extraction speed to two significant figures (`a72b162`), and `-J`/`-f` footers
-that say what the run was, with a stopped `-f` search ending (`aa1f067`). Still
-to land: the spool and the cache probe's calibration.
+that say what the run was, with a stopped `-f` search ending (`aa1f067`), the
+`-Z` spool, which encodes only the kept read and keeps the most-agreed one at
+the repeat limit (`d7ee6c4`), and a failed track aborting a rip of every track
+as it does under `-l` (`c1e1ab1`). Still to land: the cache probe's
+calibration and the `-P 0` hang.
 `docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition, and
 poses one decision: what goes to stable after the close, since a beta cut with
 the round open logs `NOT a released build` forever. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and

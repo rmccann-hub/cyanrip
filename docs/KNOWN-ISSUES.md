@@ -23,7 +23,7 @@ say "probably" without saying what would settle it.
 
 ---
 
-## Fixed for `.20`, 2026-10-05, not released — four that waited for round 31
+## Fixed for `.20`, 2026-10-05, not released — what waited for round 31, and what fixing it found
 
 Put off on 2026-09-30 and 2026-10-04 because each changes what a P2 line says,
 and brought into round 30 on the operator's word of 2026-10-05. **None changes
@@ -69,6 +69,35 @@ each to them.
   **Read from the source and not run**: the search needs AccurateRip data for
   the disc, and no fixture's disc has any.
 
+- **The -Z spool: the kept read at the repeat limit, and the album graph**
+  (`d7ee6c4`). -Z encoded while it read, from the pass that might be the
+  last, and rebuilt the encoders whenever that pass did not converge. So at
+  the limit the read kept was the last one, whatever the earlier reads agreed
+  on, and the album loudness graph, which spans every track and cannot be
+  reset, was fed the first encoded pass: when a later pass was kept, the album
+  rows and `REPLAYGAIN_ALBUM_*` described a read that was not on disk. Now each
+  pass goes to a `tmpfile()`, one per distinct checksum, and one is encoded
+  when the track is decided: the read that converged, or the read the most
+  reads agreed on, the newest on a tie. Its checksums are derived again from
+  the spool and must match. `sc_repeat_limit_keeps_most_agreed()` pins the
+  rule on two read schedules, against the source's bytes and zlib's CRC32 of
+  the delivered file, revert-proved three ways. **The album half is held by
+  construction, not by a test**: the graph is fed only during the one encode,
+  and the shim's flip moves one byte by at most 3, which no album row shows at
+  0.1 dB. A full disk now stops a -Z rip where it stopped only the encode:
+  `Error creating the -Z spool: %s!` at column 0, exit 1, pinned by
+  `sc_spool_refusal()` with the shim's new `CRIP_NO_TMPFILE`.
+- **A failed track in a rip of every track said `Rip completed:  yes`**
+  (`c1e1ab1`). Found by `sc_spool_refusal()`. Without `-l`, the loop broke out
+  on a failed track and fell through to the one assignment of
+  `rip_ran_to_completion`, so a run that exited 1 printed `yes (0 of 2
+  tracks)`; with `-l` the same failure aborts and prints `no (aborted, …)`.
+  Any failed track reached it, a changed medium included. Both loops now
+  abort and print `Error ripping: %s`. The asymmetry is upstream's too
+  (`src/cyanrip_main.c:1937-1938` against `:2064-2067` at `f8ebf48`), where
+  the loop over every track also finalises the album's loudness over a track
+  that failed. **Not yet drafted as an upstream report.**
+
 **NOT fixed, and now the one open half: a `-f` search that finds no offset
 exits 0.** Measured: `-N -f` on `basic.cue` printed `No track had AccuRip
 entry, cannot find offset!` and exited 0. A fix was written and taken back
@@ -99,7 +128,7 @@ acceptance run on a damaged disc would show.
   encoded pass does not converge, as the `.19` Full run's track 5 did. Each
   pass now gets a fresh graph. Pinned by `sc_repeat_resets_filter()`, against a
   single-pass rip of the same final read; with the reset removed, 31 frames
-  differ. **The album graph is not reset**, and that half is open, below.
+  differ. **The album graph was not reset**, and that half was fixed by the -Z spool on 2026-10-05, above.
 
 ## Fixed 2026-09-24, from round 26's real test — two claims older than `.15`
 
@@ -773,22 +802,6 @@ matched, not to the rest. Proposed: `Only one frame matched AccurateRip
 lookup that missed fell through to the whole-track checksum
 (`crip_find_ar()`, their B1a). See `docs/SETTLED.md`'s upstream section.
 
-### The album loudness block is fed the FIRST encoded pass of each track, not the kept one
-
-**Found 2026-09-30**, fixing the per-track half above. `calc_global_peak` is set
-once per track, on the first pass that may be the last (`calc_global_peak_set`,
-`src/cyanrip_main.c`), so the album graph receives that pass's audio. When it
-does not converge and a later pass is kept, the album rows and the
-`REPLAYGAIN_ALBUM_*` tags describe a read that is not on disk. The per-track
-graph can be reset each pass; the album graph spans every track and cannot.
-
-**Why not in round 30.** Feeding it the kept pass means holding each encoded
-pass's samples until the pass is known to be final, and that is the same
-mechanism the repeat limit's kept read needs (the repeat loop entry, item 2,
-whose rule round 29 lap 1 S36 owes). One design serves both, and it costs disk
-on every `-Z` rip that encodes more than one pass, which Platterpus exposes to
-its users. It is proposed in our round 30 lap 5, with both uses named.
-
 ### The album loudness block describes whatever was read, and calls it the album
 
 **Found in round 26's real test.** `docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:75`
@@ -1427,8 +1440,12 @@ other three are proposed there.
    read kept (`secure-reread.log:381-385`, `:423`). Their proposal is to keep
    the read that agreed most. Which bytes land on disk is ours to decide
    (`docs/OWNERSHIP.md:61`, *"The audio bytes and every checksum over them"*).
-   **Still open, and the rule is owed**: round 29 lap 1 S36 said *"We will
-   propose the rule in a later lap"*, and no lap since has. Counted 2026-09-30
+   **FIXED for `.20` by the -Z spool (`d7ee6c4`)**, the rule proposed in our
+   round 30 lap 5 S23 and its cost accepted in their lap 6 S9: the read the
+   most reads agreed on is kept, the newest of them on a tie, so track 5 above
+   would now deliver `E0036697`. Pinned by `sc_repeat_limit_keeps_most_agreed()`.
+   Before that: round 29 lap 1 S36 said *"We will propose the rule in a later
+   lap"*, and no lap until round 30's lap 5 did. Counted 2026-09-30
    off `docs/rig-*/rips/*.log`: 24 limit hits in 15 filed logs, on tracks 3
    (12), 5 (10) and 4 (2), every one under `-r 3 -Z 2`. The one filed `.19`
    secure re-read, `-r 5 -Z 2`, converged on all 14 tracks
