@@ -660,6 +660,7 @@ rip_scenarios = [
     'abort_footer',
     'bad_sector',
     'repeat_limit',
+    'paranoia_skip',
     'repeat_resets_filter',
     'zr_refusal',
     'probe_runs_open_no_logfile',

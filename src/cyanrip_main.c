@@ -1124,8 +1124,19 @@ fail:
          * this is the line catching up with what it was always computing.
          *
          * Announced to Platterpus in round 22; `docs/ROUND-22-PLAN.md` §1 has
-         * the two options that were rejected and why. */
-        if (ctx->total_error_count - start_err)
+         * the two options that were rejected and why.
+         *
+         * A PARANOIA SKIP IS A READ ERROR, even though the drive reported
+         * none. A skip is paranoia giving up on verifying a stretch and
+         * keeping what it had. It never reaches total_error_count, which
+         * moves only when the drive reports an error or returns no data, so
+         * the 2026-10-04 run on `.19` printed `Track 18 read successfully!`
+         * over 2,586 skips. The condition was upstream's. Counted over the
+         * kept pass, the same baseline as the per-track paranoia block, so
+         * this line and that block describe the same read. Round 30. */
+        const uint64_t skips = paranoia_status[PARANOIA_CB_SKIP] -
+                               start_paranoia[PARANOIA_CB_SKIP];
+        if ((ctx->total_error_count - start_err) || skips)
             cyanrip_log(ctx, 0, "Track %i read with errors.\n", t->number);
         else
             cyanrip_log(ctx, 0, "Track %i read successfully!\n", t->number);

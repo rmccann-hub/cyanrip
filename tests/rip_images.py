@@ -6047,6 +6047,83 @@ def sc_repeat_limit():
                  f"secure re-read hit the limit")
 
 
+def sc_paranoia_skip():
+    """A PARANOIA SKIP READS `with errors.`, THOUGH THE DRIVE REPORTED NONE.
+
+    Round 30. The 2026-10-04 run on `.19` printed `Track 18 read successfully!`
+    over 2,586 skips (docs/rig-2026-10-04-174a134/): the arm was decided by
+    total_error_count alone, which moves only when the drive reports an error
+    or returns no data, and a skip is neither. Reproduced with no drive:
+    tests/badsector.c's flip mode returns different bytes for sector 100 on
+    every read, at the default paranoia level, so paranoia can never verify
+    it and skips. The drive half of the shim is never used, so nothing reaches
+    total_error_count -- the hardware case exactly.
+
+    Asserted against the log's own paranoia block, not against our wording
+    alone: the arm must follow the SKIP counter of the same track. Track 2,
+    which the shim leaves alone, is the in-run control, and a cycle of 2
+    (A, B, A), which paranoia does verify, is the control for the flip itself.
+    `Ripping errors:` stays 0, because that counter is the drive's.
+    """
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"paranoia_skip: the shim was not built or not passed ({shim!r})")
+        return
+    for cycle, want_skip in ((1000, True), (2, False)):
+        out = WORK / f"out_paranoia_skip_{cycle}"
+        count = WORK / f"paranoia_skip_{cycle}.count"
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+                   CRIP_FLIP_SECTOR="100", CRIP_FLIP_CYCLE=str(cycle),
+                   CRIP_FLIP_RUN="1", CRIP_FLIP_OUT=str(count),
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-r", "5", "-o", "pcm", "-D", out, "-F", "{track}",
+                     "-L", "log", env=env)
+        if ec != 0:
+            fail(f"paranoia_skip: cycle {cycle}: cyanrip exited {ec}")
+        flips = int(count.read_text().strip()) if count.exists() else 0
+        if flips < 2:
+            fail(f"paranoia_skip: cycle {cycle}: the shim varied {flips} read(s), "
+                 f"so the sector did not change between reads")
+            continue
+        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        lines = text.splitlines()
+        # The per-track paranoia rows are indented four spaces and the disc's
+        # two, so a four-space SKIP row belongs to the outcome line above it.
+        arms, skip_of, cur = {}, {}, None
+        for ln in lines:
+            m = re.match(r"^Track (\d+) (read successfully!|read with errors\.)$", ln)
+            if m:
+                cur = int(m.group(1))
+                arms[cur], skip_of[cur] = ln, 0
+                continue
+            m = re.match(r"^    SKIP:\s+(\d+)$", ln)
+            if m and cur is not None:
+                skip_of[cur] += int(m.group(1))
+        for tr in (1, 2):
+            if tr not in arms:
+                fail(f"paranoia_skip: cycle {cycle}: no outcome line for track {tr}")
+                continue
+            skips, arm = skip_of[tr], arms[tr]
+            if tr == 1 and want_skip and skips < 1:
+                fail(f"paranoia_skip: cycle {cycle}: track 1's block records no "
+                     f"SKIP, so this run does not reach the case it tests")
+            if tr == 2 or not want_skip:
+                if skips:
+                    fail(f"paranoia_skip: cycle {cycle}: track {tr} skipped {skips} "
+                         f"time(s) and is meant to be the control")
+            want = (f"Track {tr} read with errors." if skips
+                    else f"Track {tr} read successfully!")
+            if arm != want:
+                fail(f"paranoia_skip: cycle {cycle}: track {tr} with {skips} "
+                     f"skip(s) printed {arm!r}, not {want!r}")
+        m = re.search(r"^Ripping errors: (\d+)$", text, re.M)
+        if not m or m.group(1) != "0":
+            fail(f"paranoia_skip: cycle {cycle}: `Ripping errors:` should stay the "
+                 f"drive's count, 0 here ({m.group(0) if m else 'absent'})")
+
+
 def sc_repeat_resets_filter():
     """THE READ -Z KEEPS IS FILTERED AS IF IT WERE THE ONLY ONE.
 
