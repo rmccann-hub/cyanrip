@@ -315,6 +315,11 @@ SENT = {
         "2e275d2f0e82003dd12477eb44b07965eb4ae4e922914e09d7fc8021097a73ab",
     "round-29-lap-03.md":
         "9c24b579451331cb12821d737f4df5caa927c6912495b9a6d0f51eff80aa0825",
+    # Round 30 lap 9, pinned in the commit that releases it, on the operator's
+    # "release when ready and everything is reviewed and corrected", given
+    # before the lap was final: these are the bytes that leave.
+    "round-30-lap-09.md":
+        "be2f763b63ef77b6989bedcaebd2e70b0d08c9754af2f2408ebe0418293cce03",
 }
 
 failures = 0
