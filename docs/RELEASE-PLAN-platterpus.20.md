@@ -170,11 +170,23 @@ Nothing else moved: the argv table's banner normalisation (`1f850a1`) and
 `STATUS-NEWEST-LAP` (`d93e56e`), the two things `.19`'s first candidate caught,
 both held at the bumped version.
 
+**A second dry run, 2026-10-05 at `f6d72c0`**, rehearsed the cut as it will
+now happen: the held `-f` change landed first, then
+`docs/handshake/proposed/seam-commands-round30.md` as `docs/seam-commands.md`
+with §7 regenerated from that clean build, then the bump and the regeneration.
+**The landed file differs from the proposal in one line, §7's banner**, as our
+lap 9 S16 said, and `--check` passes. The suite gave **105 of 106**, one run
+in its log. The one failure is real and belongs to the landing, not the bump:
+**`Settled facts`**, because `docs/SETTLED.md`'s row *"`docs/seam-commands.md`
+HAD TWO WRONG ROWS"* asserts the old `-D | directory` cell is still there, and
+is written to fail once it is corrected. **That row is rewritten in the commit
+that lands the text.**
+
 No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
 
 ## 5. What this release does NOT verify
 
-- **None of the eleven `src/` commits has run on a drive.** The skip arm is
+- **None of the thirteen behavioural `src/` commits has run on a drive.** The skip arm is
   reproduced on an image by a shim that varies one sector's bytes on every
   read; a real disc's skips come from the drive. The acceptance run on a
   damaged disc is the first test, and only if the run includes one.
@@ -183,9 +195,14 @@ No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
 - **A wrong read with no skip and no `-Z` still reads `successfully!`**: a
   drive that returns the same wrong bytes twice gives paranoia nothing to skip.
   AccurateRip is what reports that, and only for a disc in its database.
-- **`Ripping errors:` still counts only what the drive reports**, so a track
-  can say `with errors` beside `Ripping errors: 0`. Whether it should count
-  skips is Platterpus's question.
+- **`Ripping errors:` counts paranoia's skips from `0c692ed`, and the exit
+  code does not**, so a rip whose only errors are skips exits 0 beside a
+  non-zero count. Which way the exit code goes is Platterpus's answer to our
+  round 30 lap 9 S13; the other arm is written and tested, not landed. A
+  track at the repeat limit can still say `with errors` beside `Ripping
+  errors: 0`, since no count records the limit.
+- **The `-P 0` read hook (`c57b596`) has never run on a drive**, and its speed
+  there is unmeasured. Platterpus never passes `-P`.
 - **The cache figure's fix has never run on a drive.** Until the first `-x` run
   on `.20` agrees with `cd-paranoia -A`, do not cite it, and never cite `.19`'s.
 - **C2 stays `UNREACHABLE`** on the rig's drive. `-f` and CD-TEXT from a

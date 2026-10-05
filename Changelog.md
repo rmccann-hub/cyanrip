@@ -84,6 +84,17 @@ that will not read is zero-filled. **A `-f` search that finds no offset exits
 `docs/handshake/proposed/seam-commands-round30.md`, which moves §7's `-f` row
 with it and corrects three statements the shared file has carried wrong.
 
+**Every lap is now held to R6, the pre-commit** (`5dba13d`), as both sides
+read it in round 29: from lap 5, a lap whose own verdict is not `GO` says
+*"our next lap is `GO` unless X"*, in a sentence or as an LSL `WILL` with
+`verdict: GO` and `unless:`, and never names its lap by number. Our round 29
+lap 1 S25 said our gate would enforce it, and nothing did, so **our round 30
+lap 9 went out with none**; Platterpus's check refuses it. It is named in
+`tests/handshake_wire.py` by the sha256 that left, and our next lap carries
+the pre-commit. The suite's check of our laps against the lap language also
+skipped every LSL 4 lap, ours being round 30's laps 5, 7 and 9; it reads the
+versions from the checker now (`9b10326`), and all three are well formed.
+
 **Our round 30 lap 9 is sent**, released on the operator's word of 2026-10-05,
 *"release when ready and everything is reviewed and corrected"*. It records the
 operator's answers to nine questions, answers Platterpus's lap 8, and finds its

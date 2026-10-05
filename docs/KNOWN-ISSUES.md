@@ -139,7 +139,11 @@ row moves. **The text both trees would land is
 `docs/handshake/proposed/seam-commands-round30.md`**, proposed in round 30 lap
 9; the landing is two commits, the code and then §7 regenerated from it, so the
 banner names a clean build. Platterpus's section O grades `-f` by its lines, not
-its exit code, so nothing of theirs depends on the change.
+its exit code, so nothing of theirs depends on the change. **The landing commit
+must also rewrite `docs/SETTLED.md`'s row *"`docs/seam-commands.md` HAD TWO
+WRONG ROWS"***, whose check asserts the old `-D | directory` cell and fails
+once it is corrected: a rehearsal of the landing at `f6d72c0` gave 105 of 106
+on exactly that row.
 
 All four are pinned by `sc_probe_runs_open_no_logfile()`, `sc_paranoia_skip()`,
 `sc_repeat_limit()` and `tests/logrender.c`, each revert-proved with the build
