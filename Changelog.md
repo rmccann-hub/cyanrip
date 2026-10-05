@@ -19,6 +19,17 @@ changes in three rows. Each was checked against Platterpus's parser before it
 landed; none changes a line they match on. The gate implements v7's C46, inert
 until it implements 7 (`76e2ba1`).
 
+**Our round 30 lap 9 is written and held**, `OPEN`, until the operator uploads
+the 2026-10-05 acceptance run and the lap reads it. It records the operator's
+instruction as an override of R1, releases our lap 7 S20's pre-committed `GO`,
+lands the five fixes above for `.20`, says what we fix next (the spool, the
+cache probe's calibration, the `-P 0` hang), corrects lap 7's protocol hash,
+which was 62 digits with two dropped by hand, and lists six findings on
+Platterpus's side from the 2026-10-04 runs. `tools/seam-check.py` now FAILs a
+declared shared hash that is not a sha256, where it read lap 7's as no hash at
+all (`1760fc7`). `docs/RELEASE-PLAN-platterpus.20.md` is written, and a dry run
+of its release steps found the one defect above before anything was pushed.
+
 **Three Full runs on `.19` with Platterpus 0.6.65, 2026-10-04, are filed** at
 `docs/rig-2026-10-04-174a134/`, none complete. Two stopped at section E on discs
 MusicBrainz does not know; both disc IDs return 404. The third ripped a disc the
