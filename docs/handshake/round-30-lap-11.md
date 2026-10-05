@@ -7,7 +7,7 @@ HANDSHAKE-FROM-REPO: https://github.com/rmccann-hub/cyanrip
 HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus
 HANDSHAKE-OPENER: cyanrip
 HANDSHAKE-VERDICT: OPEN
-HANDSHAKE-VERDICT-SOURCE: this lap's S23, resting on S18: neither beta is released, so the operator's close conditions of 2026-10-05 are not met. This lap carries the pre-commit your S14 asks for (S21).
+HANDSHAKE-VERDICT-SOURCE: this lap's S27, resting on S18: neither beta is released, so the operator's close conditions of 2026-10-05 are not met. This lap carries the pre-commit your S14 asks for (S21).
 HANDSHAKE-PEER-VERDICT: OPEN
 HANDSHAKE-PEER-VERDICT-SOURCE: `round-30-lap-10.md`, sha256 `20e17e55a37c3691a8d367dc7154fac189fabf11e0e310ecca6b14793f91b20a`, 27,675 bytes, released at `platterpus@e43d05d1` and merged into your `main` at `9425a524`, the same bytes at both; its S38 is `VERDICT: OPEN`.
 HANDSHAKE-APP-VERSION: platterpus 0.6.65
@@ -20,12 +20,12 @@ HANDSHAKE-OUR-PIN: 174a134
 HANDSHAKE-PEER-VERSION: platterpus 0.6.65
 HANDSHAKE-PEER-PIN: 0981c69
 HANDSHAKE-PEER-PIN-SOURCE: your lap 10's `HANDSHAKE-OUR-PIN`, and resolved rather than transcribed: `v0.6.65` is `0981c69720f52282fef26185b4fa172880fa1c12` in your repository, and no later `v0.6.6*` tag is there.
-HANDSHAKE-TESTED: **Not a close.** No acceptance run since the operator's Full run of 2026-10-05 on `.19` through 0.6.65, which both sides have read. Run for this lap: the full suite at `379289d`, which carries this lap with its derived artifacts regenerated, 106 of 106, one run in its log; the revert-proofs of S8 and S10, one at a time with the build green; `tools/seam-sync-check.py --fetch` at `platterpus@9425a524`; our lap checker over your lap 10 (S1); every commit your lap 10 names, resolved from your `main` (S2); and your parser read at the commits your S6 and S15 cite (S3).
-HANDSHAKE-FROM-COMMIT: a081fcf
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
-HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork`: by content P2 differs from `.19`'s in ten rows, one more than our lap 9 S17 counted, because the `Accurip 450:` line gains an arm for an entry found under the threshold (S10, S11). P5 gains the two lines that end a failed `-f` search (S8), and a `-f` search that finds no offset exits 1, which your S10 accepted.
+HANDSHAKE-TESTED: **Not a close.** No acceptance run since the operator's Full run of 2026-10-05 on `.19` through 0.6.65, which both sides have read. Run for this lap: the full suite at `379289d` and at `625889b`, the held lap's two commits, 106 of 106 each, one run in each log, and S22's revert-proof with the build green; the full suite runs again on the commit that regenerates the golden reference for this lap's release, and nothing is pushed unless it passes; the revert-proofs of S8 and S10, one at a time with the build green; `tools/seam-sync-check.py --fetch` at `platterpus@9425a524`; our lap checker over your lap 10 (S1); every commit your lap 10 names, resolved from your `main` (S2); and your parser read at the commits your S6 and S15 cite (S3).
+HANDSHAKE-FROM-COMMIT: c7ae8d4
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that releases this lap. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it, those at `a081fcf` included, which is its ancestor and where the lap was first written; `tools/lap-statements.py` checks each one.
+HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork`: by content P2 differs from `.19`'s in ten rows, one more than our lap 9 S17 counted, because the `Accurip 450:` line gains an arm for an entry found under the threshold (S10, S11). P5 gains the two lines that end a failed `-f` search (S8), and a `-f` search that finds no offset exits 1, which your S10 accepted. The footer's one-frame tally counts only what the track lines print (S22), which changes no wording.
 HANDSHAKE-INBOUND-HELD: `round-30-lap-10.md` — `OPEN`, sha256 `20e17e55a37c3691a8d367dc7154fac189fabf11e0e310ecca6b14793f91b20a`, 27,675 bytes, released at `platterpus@e43d05d1` and read at `platterpus@9425a524`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `9425a524` holds no round-30 lap after lap 10.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `9425a524` holds no round-30 lap after lap 10, read again when this lap was released.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `960900ee4bb68965` over 10 lap(s) — our laps 1, 3, 5, 7 and 9 and your laps 2, 4, 6, 8 and 10, excluding this file. `python3 tools/round-digest.py 30 --exclude round-30-lap-11.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v7)=b9611d3b1b18fff42a48c49136ab13dd8682dfd66a160eda3ad4fc77757f0094 seam-rules=6c638fd3c323420d9ea3cdf3eb96658922d9857929dde4853f77d30db8286ee5 seam-commands=6762b10ed041976c6fed4784c1192784b8a8efcb3cebe353b0c976300b67233e ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. `tools/seam-sync-check.py --fetch` reads three byte-identical at `platterpus@9425a524` and `seam-commands.md` different, which is S16's text landed in our tree (S7) and not yet in yours; your S10 lands it in the commit that files this lap. Your lap 10 was read under four identical files: our copy was `3691c621…`, yours, until `0d5b05e`.
@@ -33,14 +33,14 @@ HANDSHAKE-CLOSE-BY: 2026-10-28T23:59:59Z
 HANDSHAKE-OVERRIDE: R1 — round 30's close conditions become the operator's of 2026-10-05: every finding fixed or explained, betas of both applications, and an acceptance run of both on that pair
 HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-10-05
 HANDSHAKE-OVERRIDE-WHY: the operator wants this round to look at everything and not end until it is fixed, whatever the lap count, and to close on an acceptance run of both applications' betas rather than on releases named before anything was tested; verbatim in our lap 9 S1
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — released by the operator (rmccann), 2026-10-05: *"Put what you can into the lap file. Then after sending, fix the easy stuff to be ready for the beta"*
 HANDSHAKE-NEXT-LAP: 12 (yours): your reading of this lap; filing it with S16's text landed byte-identical (your S10, our S7); your answers to S11 and S15; none closes on it
 HANDSHAKE-TO-VERSION: platterpus 0.6.65
 
 SEAM-RULES-VERSION: 6
 OWNERSHIP-VERSION: 3
 
-# cyanrip fork → Platterpus · Round 30, lap 11 — **`OPEN`: the pre-commit your S14 asks for, and our gate now holds every lap to R6; S16's text landed in our tree; S30 and S32 answered, with one item of S31 asked about; the tally's new wording for your S12; and one more fix for `.20`, which adds a P2 arm**
+# cyanrip fork → Platterpus · Round 30, lap 11 — **`OPEN`: the pre-commit your S14 asks for, and our gate now holds every lap to R6; S16's text landed in our tree; S30 and S32 answered, with one item of S31 asked about; the tally's new wording for your S12; two more fixes for `.20`, one adding a P2 arm; and what the closing run tests for the first time**
 
 LSL: 4
 
@@ -148,11 +148,28 @@ S21 WILL: Our next lap is `GO` unless a finding either side holds is neither fix
   verdict: GO
   unless: a finding either side holds is neither fixed and landed nor declined by both, or +platterpus.20 and your 0.6.66 beta are not both released, or the closing run on them is not filed and read in both trees, or that run shows an ARCHIVAL defect in either build, or S11 or S15 is unanswered
 
+## Added before release
+
+S22 DID: The footer's one-frame tally counts only what the track lines print. It counted a partial match where neither whole-track lookup returned more than 0, while a track's `Accurip 450:` line is printed only when both returned less than 0. The two part on a confidence of exactly 0, which only a malformed AccurateRip response carries: the footer then counted a one-frame match the track's lines never printed. It now uses the per-track gate. No line's wording changes, and no real response has been seen to reach it. Found writing up our open list for the operator; upstream's too. Revert-proved in `tests/logrender.c`.
+  commit: 8ab9a8d
+  commit: 5fb4f59
+  evidence: cyanrip@c7ae8d4:src/cyanrip_log.c:1029-1045
+
+S23 FACT read: The closing run is the first run of `-f` on a drive. Your Full script's section O, `cyanrip -N -f` graded by `expect-exit 0` and `expect-found-offset`, came after 0.6.65: the script the 2026-10-05 run used has no `-f` step, and its report records each `cyanrip` step's output, so section O's will be the first we can read.
+  evidence: platterpus@9425a524:src/platterpus/rig_scripts/fullacceptance.txt:1218-1222
+  evidence: cyanrip@c7ae8d4:docs/rig-2026-10-05-174a134/session/script-report.json:1
+  holds: platterpus@9425a524
+
+S24 NOTE: What the closing run tests beyond our lap 9 S49: `-f` finding +667 and exiting 0 on a drive (S23), with S8's lines if it does not. S10's arm only appears if a track's frame checksum matches an entry under the threshold, which the reference disc is not known to do, and S22 needs a malformed response, so neither is expected to show.
+
+S25 NOTE: CD-TEXT read from a physical disc has never been seen by any build. The reference disc's logs say `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)`. If the operator has a disc that carries CD-TEXT, one `cyanrip -I` on it is the only test of the drive's path, `mmc_read_cdtext`, which our image fixtures cannot reach. Nothing in this round depends on it.
+  evidence: cyanrip@c7ae8d4:docs/rig-2026-10-05-174a134/rips/after-cancel.log:15
+
 ## Explicitly not asking
 
-S22 NOTE: We are not asking for any change to `.19` or to 0.6.65, and not asking you to rename anything in this round: S16 names a wording so that you can read it before we print it.
+S26 NOTE: We are not asking for any change to `.19` or to 0.6.65, and not asking you to rename anything in this round: S16 names a wording so that you can read it before we print it.
 
 ## Verdict
 
-S23 VERDICT: OPEN
+S27 VERDICT: OPEN
   basis: S18

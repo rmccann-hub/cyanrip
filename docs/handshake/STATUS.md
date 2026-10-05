@@ -1,13 +1,13 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-30-lap-11.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
 STATUS-ROUND: 30, OPEN, waiting on the operator's close conditions of 2026-10-05 (our lap 9 S2): every finding fixed or explained, betas of both applications, and an acceptance run of both on that pair
-STATUS-LAPS: newest sent round-30-lap-09.md (ours), round-30-lap-10.md (theirs); next 11 (ours) carrying our reading of their lap 10, S16's text landed in our tree, our answers to their S30 and S32, the tally's new wording for their S12, one more P2 arm for +platterpus.20 put to them (S10, S11), and the pre-commit their S14 asks for (S21); held 11 carrying all of that until the operator releases it
+STATUS-LAPS: newest sent round-30-lap-11.md (ours), round-30-lap-10.md (theirs); next 12 (theirs) carrying their reading of our lap 11, our lap 9 S16's text landed in their tree, and their answers to our lap 11 S11 and S15; held none
 STATUS-RELEASED: +platterpus.19 at 174a134, 2026-09-30
 STATUS-RELEASE-NEXT: +platterpus.20, a beta inside round 30 by the operator's word of 2026-10-05, after the fixes (docs/RELEASE-PLAN-platterpus.20.md), carrying SIGHUP handled like SIGTERM, the loudness figures on the delivered audio, a fresh filter for each -Z pass, a skip or a non-converged -Z read as read with errors, a slow speed to two significant figures, the -J and -f footers, the -Z spool and a failed track aborting every loop alike, the cache probe scored by cd-paranoia's 6 ms with the re-reads that end its search printed, the -P 0 hang fixed by a read hook, and Ripping errors: counting paranoia's skips, with a -f search that finds no offset exiting 1 still to land with the shared seam-commands.md (our lap 9 S16); pins 174a134, reviews +platterpus.20
-STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on our lap 11's release, then their tree landing S16's text and their answer to our lap 11 S11, then +platterpus.20 on beta (our lap 11 S20), then 0.6.66 naming it, and that run closes round 30
+STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on their tree landing our lap 9 S16's text and their answer to our lap 11 S11, then +platterpus.20 on beta (our lap 11 S20), then 0.6.66 naming it, and that run closes round 30; it is the first run of -f on a drive (our lap 11 S23)
 STATUS-OPEN: album-graph-first-encoded-pass us fixing at round 30: landed at d7ee6c4 for +platterpus.20, not released; the -Z spool encodes only the kept read, so the album graph is fed that read alone
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: repeat-limit-kept-read us fixing at round 30: landed at d7ee6c4 for +platterpus.20, not released; at the repeat limit the read the most reads agreed on is kept, the newest of them on a tie
@@ -20,7 +20,6 @@ STATUS-OPEN: gate-c13a us cannot, because C13a as written refuses six sent laps,
 STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act, which the operator said on 2026-10-05 they will do
 STATUS-OPEN: read-successfully-over-skips us fixing at round 30: landed at e5a0897 (a paranoia skip) and 4529810 (a -Z read that never agreed) for +platterpus.20, not released; Ripping errors: counts the skips too, with a suffix saying how many, by the operator's word of 2026-10-05, landed at 0c692ed; whether a rip whose only errors are skips should exit 1 is yours to answer (our lap 9 S13)
 STATUS-OPEN: extraction-speed-below-1x us fixing at round 30: landed at a72b162 for +platterpus.20, not released; two significant figures below 1x, three decimals at most because your _TRACK_SPEED reads no more
-STATUS-OPEN: lap9-no-precommit us fixing at round 30: our lap 9 is OPEN at lap 9 and carries no R6 pre-commit, which your check refuses and ours did not; our check holds every lap to R6 from 5dba13d, as our round 29 lap 1 S25 said it would, and our held lap 11 carries the pre-commit lap 9 lacked (S21)
 STATUS-OPEN: f-and-j-runs us fixing at round 30: landed at aa1f067 for +platterpus.20, not released; a -J or -f run's footer says what it was where it said aborted, and a stop ends a -f search; a -f search that finds no offset exits 1 by the operator's word of 2026-10-05 (0645ddb), landed with the seam-commands.md text our lap 9 S16 proposed and their lap 10 S10 accepted; their tree lands the same bytes when it files our lap 11
 STATUS-OPEN: one-frame-under-threshold us fixing at round 30: landed at b1857d6 for +platterpus.20, not released; a one-frame AccurateRip entry found under the threshold says so where it said (not found), one P2 arm, put to you in our lap 11 S11
 
