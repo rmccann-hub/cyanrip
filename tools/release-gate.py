@@ -165,6 +165,38 @@ def version_refusal(text):
                 f"{PROTOCOL_VERSION} -- refusing rather than guessing")
     return None
 
+
+# v7 §3, C46: every lap of a file declaring 7 says where the round goes next.
+# The value opens with `<n> (ours):` or `<n> (yours):`, or is `none`; the rest
+# is prose for the reader and is not graded.
+NEXT_LAP_DECL_RE = re.compile(r"^HANDSHAKE-NEXT-LAP:[ \t]*(.*?)[ \t]*$", re.M)
+NEXT_LAP_VALUE_RE = re.compile(r"(?:\d+ \((?:ours|yours)\):|none(?![\w-]))")
+NEXT_LAP_FROM = 7
+
+
+def next_lap_refusal(text):
+    """C46. Why a file must be refused for its HANDSHAKE-NEXT-LAP, or None.
+
+    Keyed on the file's declared version, as v6_active is. Written while this
+    gate implemented 6, when a file declaring 7 never got here because
+    version_refusal() refused it first, so that implementing 7 is a change of
+    PROTOCOL_VERSION and not a rewrite. Called on our laps and on inbound/
+    alike: §3 binds every file declaring 7, and a peer lap without the field
+    is one a v7 gate would otherwise close on by §5b step 3."""
+    version = declared_version(text)
+    if version is None or version < NEXT_LAP_FROM:
+        return None
+    decls = NEXT_LAP_DECL_RE.findall(text)
+    if not decls:
+        return (f"declares HANDSHAKE-PROTOCOL: {version} and carries no "
+                f"HANDSHAKE-NEXT-LAP -- C46, v7 §3 requires it on every lap")
+    if len(decls) > 1:
+        return "HANDSHAKE-NEXT-LAP declared more than once -- C46"
+    if not NEXT_LAP_VALUE_RE.match(decls[0]):
+        return (f"HANDSHAKE-NEXT-LAP: {decls[0][:40]!r} is neither "
+                f"`<n> (ours):`, `<n> (yours):` nor `none` -- C46, v7 §3")
+    return None
+
 # Adopted from Platterpus round 7 lap 3 §1: the wire header both sides emit.
 # FROM makes a crossed pair unambiguous without filename conventions;
 # APP-VERSION and RIPPER-VERSION say which *pair* produced a file's results, so
@@ -967,7 +999,7 @@ def load_rounds(directory=None, every_lap=False):
         lp.override_by = one(OVERRIDE_BY_RE)
         lp.override_why = one(OVERRIDE_WHY_RE)
         lp.agreed_changes = one(AGREED_CHANGES_RE)
-        reason = version_refusal(text)
+        reason = version_refusal(text) or next_lap_refusal(text)
         if reason:
             refused_by_round.setdefault(lp.number, []).append(
                 f"{path.name}: {reason}")
@@ -1014,7 +1046,7 @@ def load_rounds(directory=None, every_lap=False):
         # implement makes the round ungradable whatever else it says. Keyed on
         # the filename's round, as our own files are.
         fm = re.match(r"round-(\d+)", path.name)
-        reason = version_refusal(text)
+        reason = version_refusal(text) or next_lap_refusal(text)
         if fm and reason:
             refused_by_round.setdefault(int(fm.group(1)), []).append(
                 f"inbound/{path.name}: {reason}")

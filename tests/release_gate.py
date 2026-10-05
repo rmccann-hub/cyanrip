@@ -3276,6 +3276,59 @@ def test_v6_gate_refuses_a_peer_lap_above_it():
               f"a gate at 6 read a peer lap declaring 7: {lp.why}")
 
 
+def test_v7_requires_next_lap_on_every_file_declaring_7():
+    """Covers: C46
+
+    v7 §3: a file declaring 7 says where the round goes next, as `<n> (ours):`,
+    `<n> (yours):` or `none`. Written while the gate implemented 6, so that
+    implementing 7 is a change of PROTOCOL_VERSION; run at 7 here. Both sides'
+    files are checked, because the lap a v7 gate closes on by §5b step 3 is
+    theirs.
+    """
+    def ours(next_lap):
+        body = _v5_ours(protocol=7, held="round-30-lap-02.md", agreed="none")
+        if next_lap is None:
+            return body
+        return body.replace("HANDSHAKE-VERDICT: GO\n",
+                            f"{next_lap}\nHANDSHAKE-VERDICT: GO\n")
+
+    def theirs(next_lap="HANDSHAKE-NEXT-LAP: none — the round closes on this lap"):
+        body = _v6_theirs(protocol=7)
+        return body if next_lap is None else body.replace(
+            "HANDSHAKE-VERDICT:", f"{next_lap}\nHANDSHAKE-VERDICT:")
+
+    good = ("HANDSHAKE-NEXT-LAP: 4 (yours): your reading; the round closes on it",
+            "HANDSHAKE-NEXT-LAP: 12 (ours): the closing lap; none",
+            "HANDSHAKE-NEXT-LAP: none — the round closes on this lap")
+    bad = ("HANDSHAKE-NEXT-LAP: 4: your reading",
+           "HANDSHAKE-NEXT-LAP: yours, lap 4",
+           "HANDSHAKE-NEXT-LAP: 4 (theirs): your reading",
+           "HANDSHAKE-NEXT-LAP: nonesuch",
+           "HANDSHAKE-NEXT-LAP: none-of-the-above",
+           "HANDSHAKE-NEXT-LAP: 4 (yours): a\nHANDSHAKE-NEXT-LAP: none")
+    with _AtProtocol(7):
+        for line in good:
+            lp = _v5_resolve(ours(line), theirs())
+            check(lp.closed, f"C46 refused a well-formed {line!r}: {lp.why}")
+        missing = _v5_resolve(ours(None), theirs())
+        check(not missing.closed and "HANDSHAKE-NEXT-LAP" in missing.why
+              and "round-30-lap-03.md" in missing.why,
+              f"a v7 file with no NEXT-LAP closed, or the refusal did not name "
+              f"the field and the file: {missing.why}")
+        for line in bad:
+            lp = _v5_resolve(ours(line), theirs())
+            check(not lp.closed and "HANDSHAKE-NEXT-LAP" in lp.why,
+                  f"C46 accepted {line!r}: {lp.why}")
+        peer = _v5_resolve(ours(good[0]), theirs(None))
+        check(not peer.closed and "inbound/round-30-lap-04.md" in peer.why
+              and "HANDSHAKE-NEXT-LAP" in peer.why,
+              f"a peer lap declaring 7 with no NEXT-LAP was closed on: {peer.why}")
+        # A file declaring 6 is not asked for it, at a gate implementing 7.
+        v6 = _v5_resolve(_v5_ours(protocol=6, held="round-30-lap-02.md",
+                                  agreed="none"), _v6_theirs())
+        check(v6.closed, f"a v6 close now requires the v7 field: {v6.why}")
+
+
 def test_v5_refuses_a_held_or_unenumerated_peer_lap():
     """Covers: C37, C38
 
