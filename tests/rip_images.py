@@ -6161,22 +6161,36 @@ def sc_spool_refusal():
     if not shim or not Path(shim).exists():
         fail(f"spool_refusal: the shim was not built or not passed ({shim!r})")
         return
-    out = WORK / "out_spool_refusal"
     env = dict(os.environ, LD_PRELOAD=shim, CRIP_NO_TMPFILE="1",
                ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
                + ":verify_asan_link_order=0")
-    ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
-                      "-P", "0", "-Z", "2", "-r", "3", "-o", "pcm", "-D", out,
-                      "-F", "{track}", "-L", "log", env=env)
-    if ec != 1:
-        fail(f"spool_refusal: a -Z rip that could not spool exited {ec}, not 1")
-    want = "Error creating the -Z spool: No space left on device!"
-    text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
-    for where, body in (("the log", text), ("stdout", stdout)):
-        if want not in body.splitlines():
-            fail(f"spool_refusal: {where} has no line {want!r} at column 0")
-    if re.search(r"(?m)^Track \d+ read successfully!$", text):
-        fail("spool_refusal: a track says it was read, and nothing was")
+    # Both rip loops: every track, and the tracks -l lists. The first said
+    # `Rip completed:  yes (0 of 2 tracks)` after a failed track, because it
+    # broke out where the second aborts; found by this test in round 30.
+    for name, extra in (("all", []), ("listed", ["-l", "1,2"])):
+        out = WORK / f"out_spool_refusal_{name}"
+        ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                          "-P", "0", "-Z", "2", "-r", "3", *extra, "-o", "pcm",
+                          "-D", out, "-F", "{track}", "-L", "log", env=env)
+        if ec != 1:
+            fail(f"spool_refusal: {name}: a -Z rip that could not spool exited "
+                 f"{ec}, not 1")
+        want = "Error creating the -Z spool: No space left on device!"
+        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        lines = text.splitlines()
+        for where, body in (("the log", lines), ("stdout", stdout.splitlines())):
+            if want not in body:
+                fail(f"spool_refusal: {name}: {where} has no line {want!r} at "
+                     f"column 0")
+        if re.search(r"(?m)^Track \d+ read successfully!$", text):
+            fail(f"spool_refusal: {name}: a track says it was read, and nothing was")
+        footer = "Rip completed:  no (aborted, 0 of 2 tracks)"
+        if footer not in lines:
+            got = [ln for ln in lines if ln.startswith("Rip completed:")]
+            fail(f"spool_refusal: {name}: the footer is not {footer!r}; got {got}")
+        if not any(ln.startswith("Error ripping: ") for ln in lines):
+            fail(f"spool_refusal: {name}: no `Error ripping:` line says the rip "
+                 f"stopped on a track")
 
 
 def sc_paranoia_skip():

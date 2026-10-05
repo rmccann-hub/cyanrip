@@ -2753,9 +2753,18 @@ static int cyanrip_run(int argc, char **argv)
                     }
                 }
 
-                if (cyanrip_rip_track(ctx, t)) {
+                /* A failed track ABORTS, as it does when -l lists the
+                 * tracks. This loop broke out instead, fell through to the
+                 * one assignment of rip_ran_to_completion below, and the
+                 * footer said `Rip completed:  yes (0 of 2 tracks)` over a
+                 * run that exited 1, where the -l loop says `aborted`. Found
+                 * in round 30 by the -Z spool's refusal; reached by any
+                 * failed track, a changed medium included. */
+                int rip_ret = cyanrip_rip_track(ctx, t);
+                if (rip_ret) {
+                    cyanrip_log(ctx, 0, "Error ripping: %s\n", av_err2str(rip_ret));
                     fatal_abort = 1;
-                    break;
+                    goto end;
                 }
             }
 
