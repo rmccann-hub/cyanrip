@@ -655,7 +655,10 @@ static int search_for_offset(cyanrip_track *t, int *offset_found,
     return 0;
 }
 
-static void search_for_drive_offset(cyanrip_ctx *ctx, int range)
+/* Returns 1 when it printed `Drive offset of ... found`, else 0: a search that
+ * ends without an offset exits 1 from round 30, so the exit code says whether
+ * the search succeeded (cyanrip_run()). */
+static int search_for_drive_offset(cyanrip_ctx *ctx, int range)
 {
     int had_ar = 0, did_check = 0, stopped = 0;
     int offset_found = 0, offset_found_samples = 0;
@@ -752,7 +755,7 @@ end:
 
     if (!offset_found) {
         if (quit_now)
-            return;
+            return 0;
         if (!had_ar) {
             cyanrip_log(ctx, 0, "No track had AccuRip entry, cannot find offset!\n");
         } else if (had_ar && !did_check) {
@@ -760,13 +763,14 @@ end:
         } else {
             cyanrip_log(ctx, 0, "Was not able to find drive offset with a radius of %i frames"
                         ", trying again with a larger radius...\n", range);
-            search_for_drive_offset(ctx, 2*range);
+            return search_for_drive_offset(ctx, 2*range);
         }
-        return;
+        return 0;
     }
 
     cyanrip_log(ctx, 0, "Drive offset of %c%i found (confidence: %i)!\n",
                 offset_found_samples >= 0 ? '+' : '-', abs(offset_found_samples), offset_found);
+    return 1;
 }
 
 static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
@@ -2476,7 +2480,15 @@ static int cyanrip_run(int argc, char **argv)
     }
 
     if (find_drive_offset_range) {
-        search_for_drive_offset(ctx, find_drive_offset_range);
+        /* A SEARCH THAT FINDS NO OFFSET EXITS 1. It exited 0, so the code
+         * did not say whether the search succeeded, and a caller had to read
+         * the text. fatal_abort and not total_error_count, because nothing
+         * failed to read and `Ripping errors:` must not claim it did. The
+         * footer still says `offset search only`. By the operator's word of
+         * 2026-10-05, with the `-f` row of the shared docs/seam-commands.md
+         * section 7 moving in the same change. */
+        if (!search_for_drive_offset(ctx, find_drive_offset_range))
+            fatal_abort = 1;
         ctx->not_a_rip = CRIP_OFFSET_SEARCH_ONLY;
         goto end;
     }

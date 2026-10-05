@@ -2986,13 +2986,14 @@ def sc_probe_runs_open_no_logfile():
     offline.pop("NO_PROXY", None)
     # Round 30: each mode's footer says what the run was, where it said
     # `aborted` of both. -I prints no footer at all. The search here finds no
-    # offset, since no fixture's disc is in AccurateRip, and still exits 0:
-    # docs/seam-commands.md §7 records that, and the shared document moves
-    # with the exit code or not at all.
+    # offset, since no fixture's disc is in AccurateRip, and from round 30 it
+    # exits 1 for it, by the operator's word of 2026-10-05: the exit code says
+    # whether the search succeeded. docs/seam-commands.md §7 records the exit
+    # code, and the shared document moves with it in the same change.
     runs = (("-I", ("-I", "-N", "-A", "-U"), "DiscID:", 0, None),
             ("-J", ("-J", "-N", "-A", "-U"), "DiscID:", 0,
              "Rip completed:  no (cue sheet only, 0 of 2 tracks)"),
-            ("-f", ("-f", "-N"), "Searching for drive offset", 0,
+            ("-f", ("-f", "-N"), "Searching for drive offset", 1,
              "Rip completed:  no (offset search only, 0 of 2 tracks)"))
     for flag, args, witness, want_ec, footer in runs:
         d = WORK / f"nolog_{flag[1:]}"
