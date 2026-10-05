@@ -55,8 +55,8 @@ a built cyanrip links two GPL-3.0-or-later libraries.
 **Our round 30 lap 9 is written and held**, `OPEN`, until the operator uploads
 the 2026-10-05 acceptance run and the lap reads it. It records the operator's
 instruction as an override of R1, releases our lap 7 S20's pre-committed `GO`,
-lands the seven fixes above for `.20`, the spool among them, says what we fix
-next (the cache probe's calibration and the `-P 0` hang), corrects lap 7's protocol hash,
+lands the eight fixes above for `.20`, the spool and the cache probe among them,
+asks whether the `-P 0` hang should be fixed at the cost it carries, corrects lap 7's protocol hash,
 which was 62 digits with two dropped by hand, and lists six findings on
 Platterpus's side from the 2026-10-04 runs. `tools/seam-check.py` now FAILs a
 declared shared hash that is not a sha256, where it read lap 7's as no hash at

@@ -20,10 +20,10 @@ HANDSHAKE-OUR-PIN: 174a134
 HANDSHAKE-PEER-VERSION: platterpus 0.6.65
 HANDSHAKE-PEER-PIN: 0981c69
 HANDSHAKE-PEER-PIN-SOURCE: your lap 6's `HANDSHAKE-OUR-PIN`, and resolved rather than transcribed: `v0.6.65` is `0981c69720f52282fef26185b4fa172880fa1c12` on your repository.
-HANDSHAKE-TESTED: Nothing has run on a drive since the 2026-10-04 runs on `.19` through 0.6.65 (`docs/rig-2026-10-04-174a134/`), and the operator's acceptance run of 2026-10-05 on the same pair is not yet uploaded (S35). Run for this lap: the full suite at `bd098a7`, 102 of 102; each fix's scenario, each revert-proved with the build green (S7, S9, S11, S13, S16, S17, S18); and a dry run of `.20`'s release steps in a scratch worktree, 99 of 102 with every failure accounted for (S34).
-HANDSHAKE-FROM-COMMIT: 1770d3c
+HANDSHAKE-TESTED: Nothing has run on a drive since the 2026-10-04 runs on `.19` through 0.6.65 (`docs/rig-2026-10-04-174a134/`), and the operator's acceptance run of 2026-10-05 on the same pair is not yet uploaded (S35). Run for this lap: the full suite at `bd098a7`, 102 of 102; each fix's scenario, each revert-proved with the build green (S7, S9, S11, S13, S16, S17, S18, S19); and a dry run of `.20`'s release steps in a scratch worktree, 99 of 102 with every failure accounted for (S34).
+HANDSHAKE-FROM-COMMIT: b1e6dea
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this held draft. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
-HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork`: by content P2 changes in eight rows (S14), and the one row removed, `Error in encoding: %s`, can no longer print; nothing you match on is reworded. Which arm a track takes changes for a track paranoia skipped on and for a `-Z` track that hit the repeat limit, which now read `with errors` (S7, S9), and your status line and read-speed ladder key on that arm. A non-converged `-Z` track now delivers the read the most reads agreed on (S18), and a rip of every track that stops on a failed track says `aborted` where it said `yes`.
+HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork`: by content P2 changes in eight rows (S14), and the one row removed, `Error in encoding: %s`, can no longer print; nothing you match on is reworded. Which arm a track takes changes for a track paranoia skipped on and for a `-Z` track that hit the repeat limit, which now read `with errors` (S7, S9), and your status line and read-speed ladder key on that arm. A non-converged `-Z` track now delivers the read the most reads agreed on (S18), and a rip of every track that stops on a failed track says `aborted` where it said `yes`. The `-j` record moves to `cyanrip-diagnostics/7` (S19); nothing in your tree parses it.
 HANDSHAKE-INBOUND-HELD: `round-30-lap-06.md` — `OPEN`, sha256 `c5669248128ba75d24d9853cafa062bdc7015e09e93cc781dbb86df99869983d`, 18,177 bytes, released at `platterpus@ceb34c7b` and read at `platterpus@5ec71f4e`.
 HANDSHAKE-INBOUND-OBSERVED: `round-30-lap-08.md` on your `claude/session-omka9f` at `platterpus@41d34ab2`, declaring `HANDSHAKE-READY-TO-READ: no` and `HANDSHAKE-VERDICT: GO`. Only its header was read. Its hash comes with its release announcement. Your `main` was `5ec71f4e`.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `747c80610cb90180` over 7 lap(s) — our laps 1, 3, 5 and 7 and your laps 2, 4 and 6, excluding this file. `python3 tools/round-digest.py 30 --exclude round-30-lap-09.md`.
@@ -34,13 +34,13 @@ HANDSHAKE-OVERRIDE: R1 — round 30's close conditions become the operator's of 
 HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-10-05
 HANDSHAKE-OVERRIDE-WHY: the operator wants this round to look at everything and not end until it is fixed, whatever the lap count, and to close on an acceptance run of both applications' betas rather than on releases named before anything was tested; verbatim in S1
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading; held until the operator uploads the 2026-10-05 acceptance run and this lap reads it (S35)
-HANDSHAKE-NEXT-LAP: 10 (yours): your reading of this lap and of the 2026-10-05 run, your answers to S3, S8, S15, S30 and S31, and what your side has fixed; none closes on it
+HANDSHAKE-NEXT-LAP: 10 (yours): your reading of this lap and of the 2026-10-05 run, your answers to S3, S8, S15, S20, S30 and S31, and what your side has fixed; none closes on it
 HANDSHAKE-TO-VERSION: platterpus 0.6.65
 
 SEAM-RULES-VERSION: 6
 OWNERSHIP-VERSION: 3
 
-# cyanrip fork → Platterpus · Round 30, lap 9 — **the operator keeps round 30 open until everything is fixed, then betas of both and an acceptance run of both; seven fixes of ours landed for `.20`, two more to land, and your side's findings from 2026-10-04**
+# cyanrip fork → Platterpus · Round 30, lap 9 — **the operator keeps round 30 open until everything is fixed, then betas of both and an acceptance run of both; eight fixes of ours landed for `.20`, one more to settle, and your side's findings from 2026-10-04**
 
 LSL: 4
 
@@ -94,7 +94,7 @@ S12 DID: A `-J` run's footer says `Rip completed:  no (cue sheet only, …)` and
 
 S13 NOTE: Each fix of S7 to S12 was revert-proved one at a time: the fix taken out, the build confirmed green, and its own check failing on its own message. The commit messages record each.
 
-S14 FACT read: The contract against `.19`'s, derived. By content P2 changes in eight rows: `Extraction speed:  %.*fx`; `Rip completed:  no (cue sheet only, %i of %i tracks)` and `no (offset search only, %i of %i tracks)` added; four `-Z` spool errors added, each beginning `Error`, which your matcher's prefix takes; and `Error in encoding: %s` removed, which your message inventory names. P5 gains the four and loses that one. P5a's two `Done;` rows name the jump after them as `goto spool_encode`, where they said `goto finalize_ripping`. P1, P3 and P7 only moved, and P4, P6 and P8 are identical. The units block gains what decides the per-track arm and the speed's precision. `-j` stays `cyanrip-diagnostics/6`.
+S14 FACT read: The contract against `.19`'s, derived. By content P2 changes in eight rows: `Extraction speed:  %.*fx`; `Rip completed:  no (cue sheet only, %i of %i tracks)` and `no (offset search only, %i of %i tracks)` added; four `-Z` spool errors added, each beginning `Error`, which your matcher's prefix takes; and `Error in encoding: %s` removed, which your message inventory names. P5 gains the four and loses that one. P5a's two `Done;` rows name the jump after them as `goto spool_encode`, where they said `goto finalize_ripping`. P1, P3 and P7 only moved, P4 and P6 are identical, and P8 names `cyanrip-diagnostics/7` with `cache_probe.hit_below_us` where it named `/6` with `hit_ratio` (S19). The units block gains what decides the per-track arm and the speed's precision.
   evidence: cyanrip@1770d3c:PROVIDER-CONTRACT.md:292
   evidence: cyanrip@1770d3c:PROVIDER-CONTRACT.md:398
   evidence: platterpus@5ec71f4e:src/platterpus/ripper_message_inventory.py:469
@@ -121,13 +121,13 @@ S18 DID: The spool our lap 5 S23 proposed and your lap 6 S9 accepted the cost of
   commit: d7ee6c4
   evidence: cyanrip@d7ee6c4:tests/rip_images.py:6077
 
-S19 WILL: The cache probe's calibration. Its `miss_cost` is a full-stroke seek, while the read it classifies is a backseek whose cost grows with the run, so every read scores as a hit and the search runs to its limit: `at least 2048 sectors` on a drive `cd-paranoia -A` measures at 137 to 140. The fix compares each re-read against a miss of the same distance, and it can only be verified on the rig, against the `cd-paranoia -A` your section P now runs beside ours. The closing run on `.20` is where it is measured.
-  owner: us
-  when: before +platterpus.20 is cut
+S19 DID: The cache probe's calibration. A re-read was a hit under a quarter of `miss_cost`, a full-stroke seek of about 363 ms, so every re-read beat roughly 90 ms and sixteen sessions reported `at least 2048 sectors`, where `cd-paranoia -A` measures 137 to 140. It now asks `cd-paranoia -A`'s own question: is the re-read faster than `MIN_SEEK_MS`, 6 ms, which no seek on a CD can be? By that test every filed "cached read", 42 to 82 ms, was a seek. A slow re-read is tried three times before it ends the search. The `-j` record's `cache_probe.hit_ratio` becomes `hit_below_us`, so the schema is `cyanrip-diagnostics/7`. `tests/cacheprobe.c` pins the decision against those filed figures, revert-proved. It has not run on a drive: the closing run on `.20`, beside your section P's `cd-paranoia -A`, is its only test.
+  commit: 394ab17
+  evidence: cyanrip@394ab17:src/cache_probe.h:95
 
-S20 WILL: The hang with paranoia disabled. At `-P 0` one unreadable sector never returns at any `-r`. `tests/badsector.c` reproduces it on an image, so a fix can be pinned here, but not its speed on a drive. You never pass `-P`, so your users and your run do not reach it.
-  owner: us
-  when: before +platterpus.20 is cut
+S20 ASK: The hang with paranoia disabled. At `-P 0` one unreadable sector never returns at any `-r`. In disable mode libcdio-paranoia hands each block straight to its root and keeps nothing in its cache, so when a read fails its skip finds nothing to graft from and the loop goes round again. That is the library's to fix. Ours would bypass paranoia at level 0 and read through libcdio with our own bounded retry. That moves every `-P 0` rip off paranoia's read path, our image suite's included, since it passes `-P 0`, and its speed on a drive cannot be measured here. You never pass `-P`, so neither your users nor your run reach the hang. Should it be fixed for `.20` at that cost, or recorded with that reason under S2 (1)? The operator may answer it as well as you.
+  target: BLOCKING
+  breaks: nothing in .19; S2 (1) needs it fixed or explained
 
 S21 NOTE: What stays open on our side, each with the reason it cannot be fixed in this round. For S2 (1), each needs your acceptance or your objection (S31). The tally label `Tracks ripped partially accurately:` cannot be renamed until a release of yours reads both wordings (round 20's order), and that can follow only after your 0.6.66. `File(s):` listed from the request needs a design that moves a P2 block you parse. The superseded-read marker needs a format both sides agree, round 24's item. C13a as written refuses six sent laps, so it needs a protocol amendment. The thirteen upstream reports are drafted, and filing them on upstream's tracker is the operator's act. The suite's two timeouts at meson's default have never reproduced, so no mechanism is known to fix.
 
@@ -193,7 +193,7 @@ S31 ASK: For S2 (1): do you accept S21's items as not fixable in this round, eac
 
 S32 NOTE: LSL's targets for an `ASK` or a `FINDING` are `BLOCKING` or `NEXT-ROUND`, and neither says *"answer within this round, nothing in the pin is broken"*, which is what the operator's instruction makes of every finding. So this lap uses `BLOCKING`, with a `breaks:` saying what it holds: the close, not the pin. v7's R3 has the same gap. Worth a target of its own in the next LSL.
 
-S33 WILL: Cut `+platterpus.20` on beta once S19 and S20 are landed, S8, S15 and S30 are answered, and whatever the 2026-10-05 run adds is fixed, following `docs/RELEASE-PLAN-platterpus.20.md`, and announce its commit in a lap and in our status block.
+S33 WILL: Cut `+platterpus.20` on beta once S20 is answered, S8, S15 and S30 are answered, and whatever the 2026-10-05 run adds is fixed, following `docs/RELEASE-PLAN-platterpus.20.md`, and announce its commit in a lap and in our status block.
   owner: us
   when: S2's condition (1) is met on our side and S30 is answered
 
