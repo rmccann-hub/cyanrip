@@ -1,0 +1,1153 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "version": 1,
+  "metadata": {
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "gen-dependency-map.py",
+          "group": "cyanrip-fork",
+          "externalReferences": [
+            {
+              "type": "vcs",
+              "url": "https://github.com/rmccann-hub/cyanrip/blob/platterpus-fork/tools/gen-dependency-map.py"
+            }
+          ]
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "bom-ref": "cyanrip",
+      "name": "cyanrip",
+      "version": "0.9.4-rc2+platterpus.19",
+      "description": "CD ripper; the Platterpus fork of cyanreg/cyanrip",
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/rmccann-hub/cyanrip"
+        },
+        {
+          "type": "documentation",
+          "url": "https://github.com/rmccann-hub/cyanrip/blob/platterpus-fork/PROVIDER-CONTRACT.md"
+        },
+        {
+          "type": "documentation",
+          "url": "https://github.com/rmccann-hub/cyanrip/blob/platterpus-fork/docs/DEPENDENCIES.md"
+        },
+        {
+          "type": "distribution",
+          "url": "https://github.com/rmccann-hub/cyanrip/blob/platterpus-fork/release-manifest.json"
+        }
+      ],
+      "pedigree": {
+        "ancestors": [
+          {
+            "type": "application",
+            "name": "cyanrip",
+            "group": "cyanreg",
+            "externalReferences": [
+              {
+                "type": "vcs",
+                "url": "https://github.com/cyanreg/cyanrip"
+              }
+            ],
+            "properties": [
+              {
+                "name": "cyanrip-fork:measured:fork-point",
+                "value": "f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5"
+              },
+              {
+                "name": "cyanrip-fork:measured:upstream-tip",
+                "value": "f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5"
+              }
+            ]
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "cyanrip-fork:fork-id",
+          "value": "platterpus-fork"
+        },
+        {
+          "name": "cyanrip-fork:language",
+          "value": "C (c99)"
+        },
+        {
+          "name": "cyanrip-fork:consumer",
+          "value": "https://github.com/rmccann-hub/Platterpus"
+        },
+        {
+          "name": "cyanrip-fork:shared-document",
+          "value": "protocol: ours docs/handshake/PROTOCOL.md, theirs docs/handshake-protocol.md"
+        },
+        {
+          "name": "cyanrip-fork:shared-document",
+          "value": "seam-rules: ours docs/seam-rules.md, theirs docs/seam-rules.md"
+        },
+        {
+          "name": "cyanrip-fork:shared-document",
+          "value": "seam-commands: ours docs/seam-commands.md, theirs docs/seam-commands.md"
+        },
+        {
+          "name": "cyanrip-fork:shared-document",
+          "value": "ownership: ours docs/OWNERSHIP.md, theirs docs/OWNERSHIP.md"
+        },
+        {
+          "name": "cyanrip-fork:release",
+          "value": "beta: 0.9.4-rc2+platterpus.19 at 174a134, release_seq 29"
+        },
+        {
+          "name": "cyanrip-fork:release",
+          "value": "stable: 0.9.4-rc2+platterpus.19 at 174a134, release_seq 29"
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "libcdio CDRDAO driver, relative `FILE` paths."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "libcdio-paranoia sniffs sample data to guess byte order."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "Paranoia's cache model doubles as its read chunk size."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "`cdio_get_device_fd()` is not in libcdio 2.1.0."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "libcdio does not distinguish \"no CD-TEXT on disc\" from \"driver cannot read CD-TEXT\"."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "EAC's `Pre-gap length` field is hundredths of a second, not CD frames."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "libcdio terminates the process from inside a library call."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "libcdio-paranoia checks the per-frame retry limit only at multiples of 5."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "And with paranoia disabled (`-P 0`), an unreadable sector never returns at any retry limit."
+        },
+        {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "genopt prints its own errors unless you take them."
+        },
+        {
+          "name": "cyanrip-fork:ci-runner",
+          "value": "macos-latest"
+        },
+        {
+          "name": "cyanrip-fork:ci-runner",
+          "value": "ubuntu-latest"
+        },
+        {
+          "name": "cyanrip-fork:ci-runner",
+          "value": "windows-latest"
+        },
+        {
+          "name": "cyanrip-fork:ci-action",
+          "value": "WebFreak001/deploy-nightly@v1.1.0"
+        },
+        {
+          "name": "cyanrip-fork:ci-action",
+          "value": "actions/checkout@v4"
+        },
+        {
+          "name": "cyanrip-fork:ci-action",
+          "value": "actions/upload-artifact@v4"
+        },
+        {
+          "name": "cyanrip-fork:ci-action",
+          "value": "actions/upload-release-asset@v1.0.2"
+        },
+        {
+          "name": "cyanrip-fork:ci-action",
+          "value": "mknejp/delete-release-assets@v1"
+        },
+        {
+          "name": "cyanrip-fork:ci-action",
+          "value": "msys2/setup-msys2@v2"
+        },
+        {
+          "name": "cyanrip-fork:ci-unpinned-clone",
+          "value": "https://github.com/curl/curl.git"
+        },
+        {
+          "name": "cyanrip-fork:ci-unpinned-clone",
+          "value": "https://github.com/notroj/neon.git"
+        },
+        {
+          "name": "cyanrip-fork:ci-unpinned-clone",
+          "value": "https://github.com/cyanreg/libmusicbrainz.git"
+        },
+        {
+          "name": "cyanrip-fork:ci-unpinned-clone",
+          "value": "https://github.com/fukuchi/libqrencode.git"
+        },
+        {
+          "name": "cyanrip-fork:ci-unpinned-clone",
+          "value": "https://github.com/FFmpeg/FFmpeg.git"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:os",
+          "value": "Ubuntu 24.04.4 LTS"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:python",
+          "value": "3.11.15"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:cc",
+          "value": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:meson",
+          "value": "1.3.2"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:ninja",
+          "value": "1.11.1"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:pkg_config",
+          "value": "1.8.1"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:git",
+          "value": "git version 2.43.0"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:ffmpeg",
+          "value": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:ffmpeg_gpl",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-cd-paranoia",
+          "value": "False"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-cdparanoia",
+          "value": "False"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-distrobox",
+          "value": "False"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-dpkg",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-ffmpeg",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-ffprobe",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-gcov",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-git",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-meson",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-ninja",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-nm",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-pkg-config",
+          "value": "True"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "lib:libavcodec",
+      "name": "libavcodec",
+      "scope": "required",
+      "description": "encodes each output format",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "FFmpeg"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 59.24.100"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "60.31.102"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libavcodec-dev/copyright contains \"LGPL-2.1+\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://ffmpeg.org/"
+        }
+      ],
+      "version": "60.31.102"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libavformat",
+      "name": "libavformat",
+      "scope": "required",
+      "description": "muxes each output file and writes its tags",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "FFmpeg"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 58.13.100"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "60.16.100"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libavformat-dev/copyright contains \"LGPL-2.1+\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://ffmpeg.org/"
+        }
+      ],
+      "version": "60.16.100"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libswresample",
+      "name": "libswresample",
+      "scope": "required",
+      "description": "sample-format conversion for each encoder",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "FFmpeg"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 4.5.100"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "4.12.100"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libswresample-dev/copyright contains \"LGPL-2.1+\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://ffmpeg.org/"
+        }
+      ],
+      "version": "4.12.100"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libavfilter",
+      "name": "libavfilter",
+      "scope": "required",
+      "description": "the de-emphasis, HDCD and loudness (ebur128) graphs",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "FFmpeg"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 7.16.100"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "9.12.100"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libavfilter-dev/copyright contains \"LGPL-2.1+\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://ffmpeg.org/"
+        }
+      ],
+      "version": "9.12.100"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libavutil",
+      "name": "libavutil",
+      "scope": "required",
+      "description": "CRC, dictionaries, frames, errors",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "FFmpeg"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 57.25.100"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "58.29.100"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libavutil-dev/copyright contains \"LGPL-2.1+\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://ffmpeg.org/"
+        }
+      ],
+      "version": "58.29.100"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libcdio",
+      "name": "libcdio",
+      "scope": "required",
+      "description": "drive and disc-image access: TOC, sub-channel, ISRC, MCN, CD-TEXT, MMC commands",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "GNU libcdio"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 2.0"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "2.1.0"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libcdio-dev/copyright contains \"either version 3 of the License, or\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://www.gnu.org/software/libcdio/"
+        }
+      ],
+      "version": "2.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libcdio_paranoia",
+      "name": "libcdio_paranoia",
+      "scope": "required",
+      "description": "the verified read and its status counters",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "libcdio-paranoia"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 10.2"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "10.2+2.0.0"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libcdio-paranoia-dev/copyright contains \"either version 3 of the License, or\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "GPL-3.0-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://github.com/rocky/libcdio-paranoia"
+        }
+      ],
+      "version": "10.2+2.0.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libmusicbrainz5",
+      "name": "libmusicbrainz5",
+      "scope": "required",
+      "description": "MusicBrainz lookups by disc ID",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "libmusicbrainz"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 5.1"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "5.1.0"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libmusicbrainz5-dev/copyright contains \"LGPL-2.1+\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://musicbrainz.org/doc/libmusicbrainz"
+        }
+      ],
+      "version": "5.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libcurl",
+      "name": "libcurl",
+      "scope": "required",
+      "description": "AccurateRip and Cover Art Archive requests",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "curl"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">=7.66.0"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "8.5.0"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libcurl4-openssl-dev/copyright contains \"License: curl\""
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "curl"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://curl.se/"
+        }
+      ],
+      "version": "8.5.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:threads",
+      "name": "threads",
+      "scope": "required",
+      "description": "encoder threads and the read-stall watchdog",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "POSIX threads (the C library)"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": "none"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "part of the C library, not a pkg-config package"
+        }
+      ],
+      "version": "part of the C library, not a pkg-config package"
+    },
+    {
+      "type": "library",
+      "bom-ref": "lib:libqrencode",
+      "name": "libqrencode",
+      "scope": "optional",
+      "description": "prints MusicBrainz submission links as QR codes",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "libqrencode"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 4.0"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "LGPL-2.1-or-later"
+          }
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://fukuchi.org/works/qrencode/"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "tool:meson",
+      "name": "meson",
+      "scope": "excluded",
+      "description": "build system: meson.build requires >=0.53.0"
+    },
+    {
+      "type": "application",
+      "bom-ref": "tool:ninja",
+      "name": "ninja",
+      "scope": "excluded",
+      "description": "build tool: meson's backend"
+    },
+    {
+      "type": "application",
+      "bom-ref": "tool:pkg-config",
+      "name": "pkg-config",
+      "scope": "excluded",
+      "description": "build tool: finds every library above"
+    },
+    {
+      "type": "application",
+      "bom-ref": "tool:c-compiler",
+      "name": "c-compiler",
+      "scope": "excluded",
+      "description": "compiler: C, c_std=c99, -Werror=format, -Werror=format-extra-args, -Werror=implicit-function-declaration"
+    },
+    {
+      "type": "application",
+      "bom-ref": "tool:python3",
+      "name": "python3",
+      "scope": "excluded",
+      "description": "language runtime: every tool and test script; standard library only"
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:cd-paranoia",
+      "name": "cd-paranoia",
+      "scope": "excluded",
+      "description": "on the rig only: the cache size the probe is measured against",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/rig-check.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:cdparanoia",
+      "name": "cdparanoia",
+      "scope": "excluded",
+      "description": "on the rig only: the same, under its older name",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/rig-check.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:distrobox",
+      "name": "distrobox",
+      "scope": "excluded",
+      "description": "on the rig only: the container the rig's ripper runs in",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/rig-check.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:dpkg",
+      "name": "dpkg",
+      "scope": "excluded",
+      "description": "this map: names the package that owns a library, to read its copyright file",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/gen-dependency-map.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:ffmpeg",
+      "name": "ffmpeg",
+      "scope": "excluded",
+      "description": "makes the disc-image fixtures' audio and decodes rips for checksums",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/gen_fixtures.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/rigcheck.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/audio-checksums.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/rig-check.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:ffprobe",
+      "name": "ffprobe",
+      "scope": "excluded",
+      "description": "reads ripped files' tags, durations and encoder strings, as a witness independent of cyanrip",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/rip_images.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:gcov",
+      "name": "gcov",
+      "scope": "excluded",
+      "description": "coverage",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/coverage-summary.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:git",
+      "name": "git",
+      "scope": "excluded",
+      "description": "reads history: lap commits, ledger publication dates, contract and upstream deltas",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/contract_delta.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/handshake_wire.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/ingest_bundle.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/lap_commits.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/lap_statements.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/release_gate.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/rip_images.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/contract-delta.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/gen-handshake-state.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/gen-release-manifest.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/gen-upstream-issues.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/ingest-bundle.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/lap-commits.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/lap-statements.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/seam-check.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/seam-sync-check.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/upstream-delta.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:meson",
+      "name": "meson",
+      "scope": "excluded",
+      "description": "configures the instrumented and mutated builds",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/sanitize-run.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:ninja",
+      "name": "ninja",
+      "scope": "excluded",
+      "description": "builds them",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/sanitize-run.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:nm",
+      "name": "nm",
+      "scope": "excluded",
+      "description": "asks a binary whether sanitizer symbols are in it",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/blackbox.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:pkg-config",
+      "name": "pkg-config",
+      "scope": "excluded",
+      "description": "this map's measured versions; the build finds every library through it too",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/gen-dependency-map.py"
+        }
+      ]
+    }
+  ],
+  "services": [
+    {
+      "bom-ref": "svc:coverartarchive.org",
+      "name": "Cover Art Archive",
+      "endpoints": [
+        "http://coverartarchive.org/release"
+      ],
+      "authenticated": false,
+      "x-trust-boundary": true,
+      "description": "the release's cover art",
+      "properties": [
+        {
+          "name": "cyanrip-fork:fetched-by-cyanrip",
+          "value": "yes"
+        },
+        {
+          "name": "cyanrip-fork:disabled-by",
+          "value": "-U"
+        },
+        {
+          "name": "cyanrip-fork:named-in",
+          "value": "src/coverart.c"
+        }
+      ]
+    },
+    {
+      "bom-ref": "svc:musicbrainz.org",
+      "name": "MusicBrainz",
+      "endpoints": [
+        "https://musicbrainz.org/cdtoc/attach?toc="
+      ],
+      "authenticated": false,
+      "x-trust-boundary": true,
+      "description": "the literal in src/ is the disc-submission link, printed and never fetched; lookups reach musicbrainz.org through libmusicbrainz5",
+      "properties": [
+        {
+          "name": "cyanrip-fork:fetched-by-cyanrip",
+          "value": "no"
+        },
+        {
+          "name": "cyanrip-fork:disabled-by",
+          "value": "-N"
+        },
+        {
+          "name": "cyanrip-fork:named-in",
+          "value": "src/discid.c"
+        }
+      ]
+    },
+    {
+      "bom-ref": "svc:www.accuraterip.com",
+      "name": "AccurateRip database",
+      "endpoints": [
+        "http://www.accuraterip.com/accuraterip"
+      ],
+      "authenticated": false,
+      "x-trust-boundary": true,
+      "description": "per-track checksums other rips of the disc produced, compared with this rip's",
+      "properties": [
+        {
+          "name": "cyanrip-fork:fetched-by-cyanrip",
+          "value": "yes"
+        },
+        {
+          "name": "cyanrip-fork:disabled-by",
+          "value": "-A"
+        },
+        {
+          "name": "cyanrip-fork:named-in",
+          "value": "src/accurip.c"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "cyanrip",
+      "dependsOn": [
+        "lib:libavcodec",
+        "lib:libavformat",
+        "lib:libswresample",
+        "lib:libavfilter",
+        "lib:libavutil",
+        "lib:libcdio",
+        "lib:libcdio_paranoia",
+        "lib:libmusicbrainz5",
+        "lib:libcurl",
+        "lib:threads",
+        "lib:libqrencode",
+        "svc:coverartarchive.org",
+        "svc:musicbrainz.org",
+        "svc:www.accuraterip.com"
+      ]
+    },
+    {
+      "ref": "lib:libavcodec",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libavformat",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libswresample",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libavfilter",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libavutil",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libcdio",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libcdio_paranoia",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libmusicbrainz5",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libcurl",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:threads",
+      "dependsOn": []
+    },
+    {
+      "ref": "lib:libqrencode",
+      "dependsOn": []
+    }
+  ],
+  "serialNumber": "urn:uuid:0405a7ed-bfe7-5fc5-aa1f-995133f8bf7b"
+}

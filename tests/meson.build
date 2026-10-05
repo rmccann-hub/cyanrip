@@ -276,6 +276,19 @@ test('Interrupted sample freshness', python,
      depends: cyanrip_exe,
      timeout: 300)
 
+## Dependency map freshness
+## =========================
+## sbom.cdx.json (CycloneDX 1.7) and docs/DEPENDENCIES.md are derived from the
+## tree: the libraries and minimums from src/meson.build, the programs the tools
+## and tests run, the URL literals in src/, CI, the shared seam documents and
+## CLAUDE.md's external-bug section. This fails when either file no longer says
+## what the tree declares, and the generator refuses outright when a library,
+## program or host is used and undescribed. What it MEASURED on the machine
+## that generated them -- installed versions, licences confirmed from copyright
+## files, the fork point -- is not compared, so CI is not drift.
+test('Dependency map is current', python,
+     args: [ files('../tools/gen-dependency-map.py'), '--check' ])
+
 ## Argument-surface probe (seam-rules S-9/S-11)
 ## ===========================================
 ## Black-box: runs the real binary across every numeric and string argument at
