@@ -1099,6 +1099,46 @@ static void test_disc_tally_counts_over_one_population(void)
     free_ctx(ctx);
 }
 
+/* The footer's one-frame tally counts exactly the per-track `Accurip 450:`
+ * lines that say `matches Accurip DB`. The per-track block is printed only when
+ * both whole-track lookups MISSED (< 0); the tally tested "neither > 0", and
+ * the two part on a confidence of exactly 0, which only a malformed response
+ * carries. Here v1 matches such an entry, so no 450 line is printed, while
+ * another entry carries this track's frame checksum at a confidence over the
+ * threshold: the footer counted a match the track's lines never showed.
+ * Round 30. */
+static void test_disc_tally_matches_the_per_track_450_gate(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 1);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 0, .checksum = 0x11111111,
+                                       .checksum_450 = 0x0 };
+    ar_entries[1] = (CRIPAccuDBEntry){ .confidence = 8, .checksum = 0x22222222,
+                                       .checksum_450 = 0x44444444 };
+    cyanrip_track *t = &ctx->tracks[0];
+    t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+    t->ar_db_entries = ar_entries;
+    t->ar_db_nb_entries = 2;
+    t->ar_db_max_confidence = 8;              /* threshold 3*(8+1)/4 = 6 */
+    t->acurip_checksum_v1 = 0x11111111;       /* the confidence-0 entry */
+    t->acurip_checksum_v2 = 0xFEEDFACE;       /* no entry, so -1 */
+    t->acurip_checksum_v1_450 = 0x44444444;   /* entry 1's, at 8 > 6 */
+
+    cyanrip_log_track_end(ctx, t);
+    const char *track = drain(ctx);
+    if (strstr(track, "Accurip 450"))
+        FAIL("disc-tally/450-gate: the per-track 450 line was printed, so this "
+             "input no longer separates the two gates");
+
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    expect_line(out, "Tracks ripped accurately: 0/1", "disc-tally/450-gate");
+    if (strstr(out, "Tracks ripped partially accurately"))
+        FAIL("disc-tally/450-gate: the footer counted a one-frame match that "
+             "the track's own lines never printed");
+    free_ctx(ctx);
+}
+
 /* cyanrip_log.c:825 [&& to ||] -- a zero 450 checksum must not be counted as a
  * partial match, for the same reason it carries no confidence figure on the
  * per-track line: zero compares equal to every other zero in the database. */
@@ -1528,6 +1568,7 @@ int main(void)
 
     test_disc_tally_counts_over_one_population();
     test_disc_tally_ignores_a_zero_450_checksum();
+    test_disc_tally_matches_the_per_track_450_gate();
     test_disc_tally_skips_tracks_not_in_the_database();
     test_disc_absent_reports_no_tally();
     test_disc_tally_stops_at_the_track_count();

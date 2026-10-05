@@ -1027,10 +1027,19 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
              * before we did. The -j record already gates its checksums on the
              * same flag for the same reason. */
             if (t->ar_db_status == CYANRIP_ACCUDB_FOUND && t->audio_ripped) {
-                if ((crip_find_ar(t, t->acurip_checksum_v1, 0) > 0) ||
-                    (crip_find_ar(t, t->acurip_checksum_v2, 0) > 0))
+                int match_v1 = crip_find_ar(t, t->acurip_checksum_v1, 0);
+                int match_v2 = crip_find_ar(t, t->acurip_checksum_v2, 0);
+                /* A one-frame match counts only where the track's own
+                 * `Accurip 450:` line says `matches Accurip DB`, which is
+                 * printed only when BOTH whole-track lookups missed (< 0).
+                 * This tested "not > 0", and the two part on a confidence of
+                 * exactly 0, which only a malformed response carries: the
+                 * footer then counted a one-frame match the track's lines
+                 * never printed. Round 30. */
+                if (match_v1 > 0 || match_v2 > 0)
                     accurip_verified++;
-                else if (crip_find_ar(t, t->acurip_checksum_v1_450, 1) > (3*(t->ar_db_max_confidence+1)/4) &&
+                else if (match_v1 < 0 && match_v2 < 0 &&
+                         crip_find_ar(t, t->acurip_checksum_v1_450, 1) > (3*(t->ar_db_max_confidence+1)/4) &&
                          t->acurip_checksum_v1_450)
                     accurip_partial++;
             }
