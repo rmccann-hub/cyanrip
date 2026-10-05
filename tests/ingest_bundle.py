@@ -328,6 +328,44 @@ def test_the_banner_is_read_where_a_raw_bundle_keeps_it():
           f"no banner anywhere is unknown, not a negative: {out[-600:]}")
 
 
+def test_every_log_says_how_it_ended():
+    """The operator's ask of 2026-10-04: check, in the logs, that the ripper
+    finished before the bundle was made.
+
+    A finished rip, an interrupted one and an aborted one each end in a signed
+    footer and are named by their own `Rip completed:` text. A log with no
+    footer, and one stopped inside its footer, are counted and flagged, with
+    the two causes the bundle cannot tell apart. Platterpus's EAC-layout export
+    is also a `.log`, and is not ours, so it is not read as one.
+    """
+    signed = b"Log FUN512: abc\n"
+    a = make({
+        "session/run/report.json": json.dumps({"ok": True}).encode(),
+        "album/done/done.log": BANNER19 + b"Rip completed:  yes (2 of 18 tracks)\n" + signed,
+        "album/stop/stop.log": BANNER19 + b"Rip completed:  no (interrupted by SIGTERM, 0 of 14 tracks)\n" + signed,
+        "album/cut/cut.log": BANNER19 + b"Tracks:\nRepeating ripping (0 out of 2 matches)\n",
+        "album/half/half.log": BANNER19 + b"Rip completed:  yes (1 of 1 tracks)\n",
+        "album/done/done (EAC-compatible).log": b"Platterpus rip log in EAC's layout\n",
+    })
+    rc, out = run(a, "--verdict-only")
+    check("ended:     album/done/done.log -- Rip completed:  yes (2 of 18 tracks)" in out,
+          f"a finished rip must be named by its own footer: {out[-1200:]}")
+    check("ended:     album/stop/stop.log -- Rip completed:  no (interrupted by SIGTERM" in out,
+          f"an interrupted rip ends in a footer too: {out[-1200:]}")
+    check("NO FOOTER: album/cut/cut.log" in out and "Repeating ripping" in out,
+          f"a log with no footer must be named with its last line: {out[-1200:]}")
+    check("UNSIGNED:  album/half/half.log" in out,
+          f"a footer with no signature stops inside the footer: {out[-1200:]}")
+    check("2 of 4 cyanrip log(s) did not reach a signed completion footer" in out,
+          f"the count is over cyanrip's logs alone: {out[-1200:]}")
+    check("EAC-compatible" not in out.split("ENDINGS")[1],
+          f"Platterpus's export is not a cyanrip log: {out[-1200:]}")
+    clean = make({"album/done/done.log": BANNER19 + b"Rip completed:  yes (2 of 18 tracks)\n" + signed})
+    rc, out = run(clean, "--verdict-only")
+    check("every one of the 1 cyanrip log(s) ends with a signed completion footer" in out,
+          f"a clean bundle must say what it checked: {out[-600:]}")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()

@@ -47,6 +47,11 @@ commit that added its row to `docs/release-ledger.tsv`, and the app with the
 newest tag of theirs at that time when `--peer` names their tree. A commit
 date is when the row was written, not when it was pushed, and the report says
 so. A pair it cannot establish is `unknown`, never newest.
+
+AND IT SAYS HOW EACH CYANRIP LOG ENDS (the operator, 2026-10-04): with a signed
+completion footer, inside its footer, or with none. A log with no footer was
+copied while cyanrip ran, or cyanrip was ended by a signal it cannot handle,
+and the bundle cannot say which -- so that is what it prints.
 """
 
 import argparse
@@ -345,6 +350,76 @@ def report_pair(members, peer=None, root=ROOT):
     return out
 
 
+FOOTER = re.compile(r"^Rip completed:  (.*)$", re.M)
+SIGNED = re.compile(r"^Log FUN512: \S+$", re.M)
+
+
+def report_endings(members):
+    """How each cyanrip log in the bundle ends. Lines to print, and how many
+    have no completion footer.
+
+    THE OPERATOR ASKED FOR THIS, 2026-10-04: *"maybe include a check to make
+    sure this is true on program close and in the logs"*, after a bundle whose
+    secure re-read log ended mid-track with no footer. That run's app log shows
+    the bundle was written in the second the script was stopped, with no line
+    signalling or reaping the ripper, which was still re-reading. So the log
+    was copied while cyanrip was writing it, and closing both programs
+    afterwards did not change what the bundle holds.
+
+    A log is read as cyanrip's own record: the banner on its first line, then
+    the `Rip completed:` line and the `Log FUN512:` signature that every exit
+    cyanrip handles writes (a finished rip; SIGTERM and SIGINT; SIGHUP from
+    `.20`). A log with neither was copied while cyanrip ran, or cyanrip was
+    ended by a signal it cannot handle (SIGKILL, SIGQUIT, a second signal).
+    The bundle cannot tell those apart, and this says so rather than choose.
+    """
+    out, unfinished = [], 0
+    logs = []
+    for name, data in sorted(members.items()):
+        if not name.endswith(".log"):
+            continue
+        text = data.decode("utf-8", errors="replace")
+        first = text.splitlines()[0] if text else ""
+        if BANNER.search(first):
+            logs.append((name, text))
+    if not logs:
+        return ["  no cyanrip log in the bundle (none opens with a banner)"], 0
+    for name, text in logs:
+        footer = FOOTER.search(text)
+        signed = SIGNED.search(text)
+        lines = text.splitlines()
+        if footer and signed:
+            out.append(f"  ended:     {name} -- Rip completed:  {footer.group(1)}")
+        elif footer:
+            out.append(f"  UNSIGNED:  {name} -- Rip completed:  {footer.group(1)}, "
+                       f"and no Log FUN512: line, so the log stops inside its "
+                       f"own footer")
+            unfinished += 1
+        else:
+            unfinished += 1
+            last = next((l for l in reversed(lines) if l.strip()), "")
+            out.append(f"  NO FOOTER: {name} -- {len(lines)} lines, the last "
+                       f"reading {last.strip()[:90]!r}")
+    if unfinished:
+        out.append("")
+        out.append(f"  ***  {unfinished} of {len(logs)} cyanrip log(s) did not "
+                   f"reach a signed completion footer.  ***")
+        out.append("  cyanrip writes one on every exit it handles: a finished "
+                   "rip, SIGTERM,")
+        out.append("  SIGINT, and SIGHUP from .20. Each log above without one "
+                   "was copied while")
+        out.append("  cyanrip was still running, or cyanrip was ended by a "
+                   "signal it cannot")
+        out.append("  handle (SIGKILL, SIGQUIT, a second signal). This bundle "
+                   "cannot say which;")
+        out.append("  the log on the rig's disk can: if it now ends with a "
+                   "footer, it ran on.")
+    else:
+        out.append(f"  every one of the {len(logs)} cyanrip log(s) ends with a "
+                   f"signed completion footer")
+    return out, unfinished
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("archive")
@@ -395,6 +470,13 @@ def main():
     print("PAIR -- was it the newest pair when the run began (D3)")
     print("=" * 68)
     print("\n".join(report_pair(members, args.peer)))
+    print()
+
+    # ---- 1c. HOW EACH CYANRIP LOG ENDS ------------------------------------
+    print("=" * 68)
+    print("ENDINGS -- did every cyanrip log reach its signed footer")
+    print("=" * 68)
+    print("\n".join(report_endings(members)[0]))
     print()
 
     if args.verdict_only:
