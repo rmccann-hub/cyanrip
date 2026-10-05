@@ -120,10 +120,34 @@ MusicBrainz holds either disc under a different ID, which would mean ours was
 computed wrongly. That needs the disc's TOC, and neither bundle carries the
 `-I` output.
 
+**A fourth attempt is in the app log and not in any bundle**: session
+`20261004T151939Z`, a minute before 152045z, on the 16-track disc, stopped the
+same way and wrote `platterpusbundle20261004t151939z.tar.gz`, which was not
+handed over (152045z app log `:59929`, `:60039`, `:60046`).
+
 Neither run's step L463 is right about itself: it passed with *"the disc
 identified unambiguously, so there was nothing to pick"* over a disc that was not
-identified at all, and L464 and L473 then failed. That is Platterpus's step to
-word.
+identified at all, and L464 and L473 then failed. The cause, read in their code
+at the build that ran: with no picker on screen, the step passes as soon as any
+track rows are loaded (`platterpus@0981c69:src/platterpus/uiscript/runner.py:3327-3335`),
+and an unknown disc loads placeholder rows too. It checks no MusicBrainz release
+ID, which `expect-identified` does. That is Platterpus's step to fix.
+
+**At app start their version probe timed out after 60 s** (152045z app log
+`:59918`), *"keeping the 99 character(s) it had already written"*, and it parsed
+version 0.9.4 from them, so our banner had arrived. `cyanrip --version` on
+`174a134`, measured here, prints 59 bytes and exits 0 in about 0.05 s with stdin
+open or closed. It returns inside option parsing
+(`cyanrip@174a134:src/cyanrip_main.c:1716`), before libcdio or the drive are
+touched (`:2112`). So the other 40 bytes, and the wait, came from between their
+probe and our process, most likely the container wrapper on its first start of
+the session, which a `cyanrip -I` launched in the same second was also starting
+(`:59910`). Later probes returned in under a second.
+
+In 160027z the snapshots read `read offset: —` and `cache defeat: —`, where the
+runs either side of it read `+667 — confirmed` on the same drive. That run's
+disc was unknown. Why their display changed is theirs to say; nothing in our
+logs bears on it.
 
 ### The third run: what happened, in UTC
 

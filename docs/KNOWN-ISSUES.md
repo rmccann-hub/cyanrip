@@ -173,6 +173,45 @@ which is the only method that finds this class.
 
 ## Open, ours, and solvable — but deliberately not now
 
+### `Track N read successfully!` is printed over paranoia's skips, and over reads that never agree
+
+**Measured on hardware, 2026-10-04** (`docs/rig-2026-10-04-174a134/`). Track 18
+of that disc printed `Track 18 read successfully!` over **2,586 `SKIP`s**:
+paranoia gave up verifying a section 2,586 times and kept what it had. Tracks
+12, 13, 14, 15 and 17 printed the same line with no skip, and each, read five
+more times at `-Z 2`, gave five different checksums. None matched AccurateRip on
+the whole track. Every log said `Ripping errors: 0`.
+
+**Why.** The line depends on `ctx->total_error_count - start_err`
+(`cyanrip@174a134:src/cyanrip_main.c:1128`), which moves only when the drive
+reports an error or returns no data (`cyanrip_read_frame()`). A paranoia skip is
+neither, so it never reaches the count. **The condition is upstream's**
+(`src/cyanrip_main.c:911` at `f8ebf48`, `ripped and encoded successfully!`).
+
+**What the line does establish**, stated so it is not read for more: the drive
+returned every frame without reporting an error. It does not say paranoia
+verified the data, and it does not say a second read would agree. The per-track
+`Paranoia status counts:` block and the AccurateRip lines are where those are
+reported, and on this disc both said so.
+
+**What a consumer did with it:** Platterpus's status line read *"Done — all 18
+tracks ripped cleanly, no read errors"* over this rip.
+
+**Why not now:** what the line means is a P2 contract question, and Platterpus
+derives its health status from it and from `Ripping errors:`. Counting skips
+there changes what a consumer reports for a rip, so it goes to round 31 with a
+proposal, not into `.20`, which is named. Options to put to them: count a track
+with `SKIP > 0` as `read with errors.`; or keep the line and add a per-track
+fact, such as `Skipped sectors: N`, so a skip is its own measurement.
+
+### `Extraction speed: 0.0x` for a read that took 8,161 s
+
+`Extraction speed:  %.1fx` (`src/cyanrip_log.c:574`, ours since `89eb849`)
+printed `0.0x` for track 18 of the 2026-10-04 disc: 267 s of audio in 8,161 s
+is **0.033x**. The line says the speed was zero, which is wrong. Printing more
+digits below 1x fixes it, but the value's format is P2, so it is a round 31
+change.
+
 ### `-f`: a stop is followed by a retry, and a search that finds no offset exits 0 — upstream's code
 
 Found 2026-09-30 answering Platterpus's round 30 lap 6 S13 and S14, whose
@@ -723,6 +762,12 @@ both-wordings release first.
 wrong read never filed before, and its 450 line reads *"one frame only;
 whole-track checksums not found"* (`rips/full-acceptance-angle-bracket.log:245`),
 while the footer still says `Tracks ripped partially accurately: 2/14`.
+
+**And 2026-10-04 is the plainest case yet** (`docs/rig-2026-10-04-174a134/`):
+`Tracks ripped partially accurately: 6/18` over tracks 12, 13, 14, 15, 17 and
+18, five of which were then read five times each with five distinct checksums.
+The label calls them partly right, and the record shows they never read the
+same way twice.
 
 **Our answer to their EAC-log wording, sent in round 27 lap 4 and accepted in
 their lap 5: amend one clause, accept the rest.** They proposed, per track, `Only one frame matched AccurateRip
@@ -1438,7 +1483,7 @@ coverage.
 | `-x` correctness on a real drive | **measured sixteen times, wrong every time** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140, latest 2026-09-30b. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
-| damaged media | never tested; no damaged disc available |
+| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. The only `read with errors.` arm exercised is still the fixture's (`tests/badsector.c`) |
 | CD-TEXT from a physical disc | `mmc_read_cdtext` is a different code path from the image parser, and no disc with CD-TEXT has been read |
 | ~~the diagnosed-abort exit code~~ | **RETIRED 2026-09-22.** `cyanrip -N -l 1` with no `-s` exited **1** with `Offset is unset!` at column 0, `Rip completed:  no (aborted, 0 of 14 tracks)` and a complete footer — `docs/rig-2026-09-22-2cce60d/session/script-report.json` step 212. The reason given here (*"every rig rip so far had `Ripping errors: 0`"*) had **already been false since 2026-09-10**: seven filed rig logs carry `Ripping errors: 1`, counted off `docs/rig-*/rips/*.log` rather than remembered |
 | ~~a non-zero `Read stalls:` count~~ | **RETIRED 2026-08-26**, and this row outlived the retirement by a month. **Five** filed rig logs carry a populated line, up to `5 reads exceeded 10s; longest 11s (track 1, LSN 8322)`, counted off `docs/rig-*/rips/*.log`. The rule it carried still holds and is why it is kept visible: **a silent watchdog is not a working watchdog**, and zero heartbeats on healthy media — which is what all eight rips of 2026-09-22 report — is the expected result and evidence of nothing |
@@ -1489,6 +1534,25 @@ when the tarball was made. The rig can say which: if the log in
 than 54 lines and a `cyanrip-diagnostics-20260930T013204Z.json` sits beside
 the album folder, it ran on; if neither, it was killed. What their console's
 close sends is theirs to trace (their round 30 lap 2 S21, S23).
+
+**2026-10-04 settles one such log as the second kind** (`docs/rig-2026-10-04-174a134/`).
+Section N's `secure-reread.log` has no footer. Its last line is the app log's
+line at 01:01:00.985Z. The script was stopped from the console 0.8 s later, and
+the bundle was written in the same second. No line in between signals or reaps
+the ripper, which was mid-re-read. The operator closed both programs before
+sending the bundle, but the copy had already been made. So a bundle can hold a
+log that is still being written, and the bundle did not say so. **Our side of
+the check exists now**: `tools/ingest-bundle.py` names every cyanrip log that
+did not reach a signed footer, and says what that can and cannot mean
+(`acfd48b`). **Their side** is to make the bundle say the ripper was still
+running, or wait for it.
+
+**The same run's cancel sent a second TERM 4.9 s after the first**
+(Platterpus's *post-cancel rescue*, `fuser -k TERM /dev/sr0`), while that disc's
+reads took up to 54 s. A second signal ends cyanrip with `_exit(1)` and no
+footer (`src/cyanrip_main.c:1219-1220`). The cancelled pass's log was in a
+temporary directory and is not in the bundle, so whether it was signed is not
+known.
 
 **SIGHUP is handled from `.20`**, like SIGTERM: the footer names it, `-Y`
 verifies, and the `-j` record is written. A SIGHUP that arrives already ignored
