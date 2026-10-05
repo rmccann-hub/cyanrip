@@ -2063,11 +2063,17 @@ the repeat limit (`d7ee6c4`), and a failed track aborting a rip of every track
 as it does under `-l` (`c1e1ab1`), and the cache probe scoring a re-read by
 cd-paranoia's 6 ms, with `-j` at `cyanrip-diagnostics/7` (`394ab17`), and a
 cache bracket printing the re-reads that ended its search (`6dd608c`), found
-reading the 2026-10-05 run (`docs/rig-2026-10-05-174a134/`). Still to land: the
-`-P 0` hang.
-`docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition, and
-poses one decision: what goes to stable after the close, since a beta cut with
-the round open logs `NOT a released build` forever. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and
+reading the 2026-10-05 run (`docs/rig-2026-10-05-174a134/`), and `-P 0` no
+longer hanging on a block in which nothing reads (`c57b596`), and `Ripping
+errors:` counting paranoia's skips with a suffix saying how many, by the
+operator's word of 2026-10-05, the exit code left as the drive's (`0c692ed`).
+Still to land: a `-f` search that finds no offset exiting 1, written and held
+until both trees land `docs/handshake/proposed/seam-commands-round30.md`.
+**What goes to stable after the close is decided: `.21`, cut from the closed
+tree** (the plan's §3).
+`docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition; the one
+decision it posed, what goes to stable after the close since a beta cut with
+the round open logs `NOT a released build` forever, the operator answered. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and
 Platterpus's lap 6 amendments as our lap 7 amends two of them, are landed in our
 tree by the commit carrying our round 30 lap 7 (proposed at `2abeb5d`), and in
 theirs at `platterpus@41d34ab2`, the commit that filed our lap 7: byte-identical,

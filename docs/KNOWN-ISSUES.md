@@ -352,7 +352,8 @@ the read forward, so the counter resets and the loop starts again (same
 function as the `-r` defect above). **Rounding the limit does not help**:
 `-r 10` hung too.
 
-**Asked in round 30, 2026-10-05** (our held lap 9 S20): fix it for `.20` at
+**Asked in round 30, 2026-10-05** (in our lap 9 as drafted; the lap as sent
+records the fix in its S14): fix it for `.20` at
 the cost below, or record it under the operator's close conditions with that
 reason. **The mechanism, read from libcdio-paranoia at `384f4da`**: in
 disable mode `paranoia_read_limited()` hands each block straight to its root
