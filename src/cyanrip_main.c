@@ -1133,10 +1133,17 @@ fail:
          * the 2026-10-04 run on `.19` printed `Track 18 read successfully!`
          * over 2,586 skips. The condition was upstream's. Counted over the
          * kept pass, the same baseline as the per-track paranoia block, so
-         * this line and that block describe the same read. Round 30. */
+         * this line and that block describe the same read. Round 30.
+         *
+         * SO IS A -Z READ THAT NEVER AGREED. -Z N is the check the caller
+         * asked for, and at the repeat limit it failed: the same run printed
+         * `read successfully!` over tracks read five times with five
+         * different checksums. The track block's `Secure re-read:` line says
+         * the limit was hit; this arm no longer contradicts it. */
         const uint64_t skips = paranoia_status[PARANOIA_CB_SKIP] -
                                start_paranoia[PARANOIA_CB_SKIP];
-        if ((ctx->total_error_count - start_err) || skips)
+        if ((ctx->total_error_count - start_err) || skips ||
+            t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT)
             cyanrip_log(ctx, 0, "Track %i read with errors.\n", t->number);
         else
             cyanrip_log(ctx, 0, "Track %i read successfully!\n", t->number);

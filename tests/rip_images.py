@@ -6045,6 +6045,18 @@ def sc_repeat_limit():
         if "  Secure re-read:  did NOT converge after 3 reads (repeat limit hit)" not in lines:
             fail(f"repeat_limit: cycle {cycle} run {run}: the track block does not say the "
                  f"secure re-read hit the limit")
+        # Round 30: a read -Z could not confirm is not `read successfully!`.
+        # Track 1 holds the flipped sector, and nothing else is wrong with it:
+        # -P 0 means no paranoia skip, and the drive reports no error, so the
+        # limit is the only reason left. A -Z track that converges is the
+        # golden reference's, which still reads `successfully!`.
+        if "Track 1 read with errors." not in lines:
+            got = [ln for ln in lines if ln.startswith("Track 1 ")]
+            fail(f"repeat_limit: cycle {cycle} run {run}: track 1 hit the repeat "
+                 f"limit and should print `read with errors.`; got {got}")
+        if not re.search(r"(?m)^Ripping errors: 0$", text):
+            fail(f"repeat_limit: cycle {cycle} run {run}: `Ripping errors:` should "
+                 f"stay 0, so the limit is the only reason for the arm")
 
 
 def sc_paranoia_skip():
