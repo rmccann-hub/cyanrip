@@ -409,6 +409,24 @@ def check_lap(path):
                 other_v, declared = int(m.group(1)), m
         declared_hash = None if not declared else (
             declared.group(2) if other_v is not None else declared.group(1))
+        # A DECLARED HASH THAT IS NOT A SHA256 IS NOT AN ABSENT ONE. Round 30
+        # lap 7 declared the protocol as 62 hex digits, two dropped by hand,
+        # and this check read it as "declares no hash": a WARN, and the wrong
+        # claim. A malformed hash compares equal to nothing, so the lap's
+        # statement of which rules it was written under cannot be checked.
+        if not declared:
+            pat = (r"protocol\(v\d+\)" if label.startswith("protocol(")
+                   else re.escape(label))
+            bad = re.search(rf"(?<![\w(-]){pat}=([^\s`]+)", text)
+            if bad and not re.fullmatch(r"[0-9a-f]{64}", bad.group(1)):
+                note("FAIL", "shared/" + label,
+                     f"{name} declares a hash for {rel} that is not a sha256: "
+                     f"{bad.group(1)[:20]}…, {len(bad.group(1))} characters",
+                     fix="re-derive it with sha256sum, never by hand. A "
+                         "malformed hash compares equal to nothing, so it "
+                         "neither proves nor disproves that both sides hold "
+                         "the same file.")
+                continue
         local = ROOT / rel
         if not local.exists():
             note("WARN", "shared/" + label,

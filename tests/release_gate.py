@@ -3379,6 +3379,53 @@ def test_v5_requires_the_source_field_and_prints_where_the_close_came_from():
           f"closed without printing the lap the verdict came from: {ok.why}")
 
 
+def test_seam_check_fails_a_malformed_shared_hash():
+    """Round 30, from our own sent lap 7.
+
+    Its HANDSHAKE-SHARED-HASHES gives the protocol as 62 hex digits,
+    `b9611d3b18fff…` for `b9611d3b1b18fff…`, two dropped by hand.
+    `tools/seam-check.py` matched only a 64-digit value, so it reported
+    "declares no hash", a WARN: an absence, where the lap had made a claim
+    that could not be checked. Graded against the sent lap itself, and against
+    the same header with the hash corrected, which must not FAIL.
+    """
+    import shutil, hashlib
+    sc_path = HERE.parent / "tools" / "seam-check.py"
+    spec = importlib.util.spec_from_file_location("seam_check_m", sc_path)
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+    src = "round-30-lap-07.md"
+    header = (HERE.parent / "docs" / "handshake" / src).read_text(
+        encoding="utf-8").split("\n\n", 1)[0]
+
+    def graded(text):
+        d = pathlib.Path(tempfile.mkdtemp())
+        try:
+            (d / src).write_text(text + "\n\nbody\n", encoding="utf-8")
+            sc.FINDINGS.clear()
+            sc.check_lap(d / src)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+        return [(lv, m) for lv, cat, m, _f, _a in sc.FINDINGS
+                if cat.startswith("shared/protocol")]
+
+    m = re.search(r"protocol\(v\d+\)=([0-9a-f]+)", header)
+    check(m is not None and len(m.group(1)) == 62,
+          f"the sent lap 7 no longer carries the 62-digit hash this test is "
+          f"about: {m.group(1) if m else None!r}")
+    got = graded(header)
+    check(got and got[0][0] == "FAIL" and "not a sha256" in got[0][1]
+          and "62 characters" in got[0][1],
+          f"a malformed declared hash must FAIL as malformed, not read as "
+          f"absent: {got}")
+    tree = hashlib.sha256((HERE.parent / "docs" / "handshake" / "PROTOCOL.md")
+                          .read_bytes()).hexdigest()
+    fixed = header.replace(m.group(0), f"protocol(v{sc._spec_version()})={tree}")
+    got = graded(fixed)
+    check(got and got[0][0] != "FAIL",
+          f"the same header with a real hash must not FAIL: {got}")
+
+
 def test_seam_check_reads_the_protocol_label_the_spec_declares():
     """Round 24, found preparing for Platterpus's lap 2.
 
