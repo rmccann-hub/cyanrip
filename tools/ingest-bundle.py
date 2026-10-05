@@ -157,12 +157,34 @@ def read_pair(members):
                 pass
         # The ripper is read from what the ripper printed: the version probe
         # and each log's banner. Every build named is kept, so a bundle that
-        # ran two builds says two and is not reduced to the first.
-        if base == "rig-check-ripper-version.txt" or name.endswith(".log"):
+        # ran two builds says two and is not reduced to the first. The probe
+        # is `rig-check-ripper-version.txt` once filed and
+        # `session/run/rig-check/ripper-version.txt` in their tarball; only
+        # the first was matched, so a raw bundle's probe was never read.
+        if base in ("rig-check-ripper-version.txt", "ripper-version.txt") \
+                or name.endswith(".log"):
             first = data[:400].decode("utf-8", errors="replace")
             m = BANNER.search(first.splitlines()[0] if first else "")
             if m:
                 builds.setdefault(m.group(2)[:7], (m.group(1), []))[1].append(name)
+        # And the transcript, where section A's `cyanrip --version` step and
+        # the wrapper probe relay the binary's banner verbatim. A run that
+        # stops before any rip has no log and no rig-check, and the
+        # transcript is then the only place the banner is (the 2026-10-04
+        # runs stopped at section E). Only a line that IS the banner counts,
+        # after an optional `output: `: the transcript also names builds in
+        # prose -- the approved pair, a rig-check INFO line -- and those are
+        # claims about a build, not a build printing itself.
+        elif base == "transcript.txt":
+            text = data.decode("utf-8", errors="replace")
+            for n, line in enumerate(text.splitlines(), 1):
+                bare = line.strip()
+                if bare.startswith("output: "):
+                    bare = bare[len("output: "):]
+                m = BANNER.fullmatch(bare)
+                if m:
+                    builds.setdefault(m.group(2)[:7], (m.group(1), []))[1] \
+                        .append(f"{name}:{n}")
     return started, ended, builds, app, start_from
 
 
@@ -236,8 +258,8 @@ def report_pair(members, peer=None, root=ROOT):
 
     # ---- ours ----
     if not builds:
-        out.append("  cyanrip: unknown (no banner in the version probe or any "
-                   "log), which is NOT newest")
+        out.append("  cyanrip: unknown (no banner in the version probe, the "
+                   "transcript or any log), so it cannot be shown newest")
     elif len(builds) > 1:
         names = ", ".join(f"{v} {sha}" for sha, (v, _) in sorted(builds.items()))
         out.append(f"  cyanrip: the bundle ran {len(builds)} builds ({names}); a "
@@ -285,7 +307,7 @@ def report_pair(members, peer=None, root=ROOT):
     # ---- theirs ----
     if app is None:
         out.append("  app: unknown (no app_version in the report and no app in "
-                   "COMPONENTS.json), which is NOT newest")
+                   "COMPONENTS.json), so it cannot be shown newest")
     elif peer is None:
         out.append(f"  app: ran {app}; unknown whether newest (no --peer tree "
                    f"given, and their releases are their tags)")

@@ -276,6 +276,58 @@ def test_the_app_is_judged_against_their_tags():
     check("app: NOT A RELEASE" in out, f"an untagged app is named as one: {out[-600:]}")
 
 
+def test_the_banner_is_read_where_a_raw_bundle_keeps_it():
+    """The 2026-10-04 runs: a banner the reader could not find, read as absent.
+
+    Two runs stopped at section E before any rip, so they hold no log and no
+    rig-check, and the reader printed `cyanrip: unknown (...), which is NOT
+    newest` -- while section A's `cyanrip --version` step had relayed the banner
+    into the transcript. A third probe path was missed too: the version probe
+    is `rig-check-ripper-version.txt` once we file it and
+    `session/run/rig-check/ripper-version.txt` in their tarball.
+
+    So: the raw probe is read; a transcript line that IS the banner is read,
+    with or without `output: `; a line that only NAMES a build in prose is
+    not, since the transcript and DIAGNOSTICS both mention the approved pair;
+    and unknown says it cannot be shown newest, which is not a claim that it
+    is not.
+    """
+    start = {"ok": False, "started_at": "2026-10-04T15:20:45+00:00"}
+    raw = make({
+        "session/run/report.json": json.dumps(start).encode(),
+        "session/run/rig-check/ripper-version.txt": BANNER19,
+    })
+    rc, out = run(raw, "--verdict-only")
+    check("ran 0.9.4-rc2+platterpus.19 at 174a134" in out,
+          f"the raw tarball's version probe must be read: {out[-600:]}")
+    transcript = (
+        b"[  ok  ] L274  cyanrip --version   (0.4s)\n"
+        b"           exit: 0\n"
+        b"           " + BANNER19 +
+        b"             [in-container binary] exits\n"
+        b"               output: " + BANNER19 +
+        b"           INFO  ripper/version  cyanrip 0.9.4-rc2+platterpus.18 "
+        b"(platterpus-fork-g51cc789)  [ripper-version.txt]\n"
+        b"Approved pair: Platterpus 0.6.63 + cyanrip 0.9.4-rc2+platterpus.18 "
+        b"(platterpus-fork-g51cc789) -- verified by handshake round 29.\n"
+    )
+    only = make({
+        "session/run/report.json": json.dumps(start).encode(),
+        "session/transcript.txt": transcript,
+    })
+    rc, out = run(only, "--verdict-only")
+    check("ran 0.9.4-rc2+platterpus.19 at 174a134" in out,
+          f"a transcript's relayed banner must be read: {out[-600:]}")
+    check("2 builds" not in out and "51cc789" not in out,
+          f"a build named in prose is not a build that ran: {out[-600:]}")
+    none = make({"session/run/report.json": json.dumps(start).encode(),
+                 "session/transcript.txt": b"[  ok  ] L1  log hello\n"})
+    rc, out = run(none, "--verdict-only")
+    check("cyanrip: unknown" in out and "cannot be shown newest" in out
+          and "NOT newest" not in out,
+          f"no banner anywhere is unknown, not a negative: {out[-600:]}")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()
