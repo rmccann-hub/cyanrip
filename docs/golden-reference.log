@@ -1,6 +1,6 @@
-cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-gce2e5a6)
+cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-gf8641b7)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -F {track} -L reference -M sheet -P 0 -u platterpus/0.6.4b12 -t 1=isrc=AAAAA0000001 -t 2=isrc=BBBBB0000002 -t 3=isrc=CCCCC0000003 -D o -j o/reference.diagnostics.json
-Handshake:      round 30 lap 9 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 30 lap 11 OPEN, verdict OPEN (draft — lap not released for reading) -- NOT a released build
 Consumer:       platterpus/0.6.4b12
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -72,8 +72,8 @@ Summary:
     True peak level:   0.0 dBFS
     Integrated loudness (R128): -7.7 LUFS
     Loudness range (R128):      20.0 LU (-27.7 to -7.7 LUFS)
-    Extraction speed:  49.7x
-    Elapsed:            0.06 s
+    Extraction speed:  58.4x
+    Elapsed:            0.05 s
     Pregap LSN:  0 (duration: 00:02.00)
     Pregap length: 150 frames
     Pregap source: TOC
@@ -97,7 +97,7 @@ Summary:
     ALBUM:                         Unknown disc (OMP2)
     TITLE:                         Unknown track
     ISRC:                          AAAAA0000001
-    CREATION_TIME:                 2026-10-05T15:34:05+00:00
+    CREATION_TIME:                 2026-10-05T22:04:48+00:00
     REPLAYGAIN_TRACK_GAIN:         -10.29 dB
     R128_TRACK_GAIN:               -1355
     REPLAYGAIN_TRACK_RANGE:        20.00 dB
@@ -171,7 +171,7 @@ Summary:
     ALBUM:                         Unknown disc (OMP2)
     TITLE:                         Unknown track
     ISRC:                          BBBBB0000002
-    CREATION_TIME:                 2026-10-05T15:34:05+00:00
+    CREATION_TIME:                 2026-10-05T22:04:48+00:00
     REPLAYGAIN_TRACK_GAIN:         -11.19 dB
     R128_TRACK_GAIN:               -1584
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -220,8 +220,8 @@ Summary:
     True peak level:   -11.3 dBFS
     Integrated loudness (R128): -22.6 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  24.9x
-    Elapsed:            0.04 s
+    Extraction speed:  35.8x
+    Elapsed:            0.03 s
     Pregap LSN:  unknown (sub-channel unreadable)
     Start LSN:   525
     End LSN:     599
@@ -243,7 +243,7 @@ Summary:
     ALBUM:                         Unknown disc (OMP2)
     TITLE:                         Unknown track
     ISRC:                          CCCCC0000003
-    CREATION_TIME:                 2026-10-05T15:34:05+00:00
+    CREATION_TIME:                 2026-10-05T22:04:48+00:00
     REPLAYGAIN_TRACK_GAIN:         4.63 dB
     R128_TRACK_GAIN:               2465
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -286,5 +286,5 @@ Ripping errors: 0
 Encoder errors: none; 3 tracks encoded
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  yes (3 of 3 tracks)
-Ripping finished at 2026-10-05T15:34:05+00:00
-Log FUN512: qtz19yMIZ.Gc2ELGqE1Wklm05uUmmiBdpvVxn4Wjn0OP4lzoup83nYuai1hCN5S96faWHHAiTgAUzw4fbskYbQ
+Ripping finished at 2026-10-05T22:04:48+00:00
+Log FUN512: IhlvYSd17lsrIU0oTi1CoG5fLsVc8ZYL38geJVurFpyGz3gdVcpU6L6FCLQjF6t2pJeiPmDbE5n3IzYMSV_Gvw
