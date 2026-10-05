@@ -191,7 +191,7 @@ list wrote two different claims the same way for months:**
 | item | state | why |
 |---|---|---|
 | **C2** | `UNREACHABLE` | the rig's BDR-209D **reports C2 unsupported**. No procedure, tier or effort produces it — it needs a different drive or it stays unverified permanently. |
-| **`-f`** | not yet done | testable on the reference disc **now**: it is in AccurateRip and `+667` is known-correct, so ground truth exists. |
+| **`-f`** | not yet done | testable on the reference disc **now**: it is in AccurateRip and `+667` is known-correct, so ground truth exists. **No filed run has done it**: Platterpus's Full script gained section O, `cyanrip -N -f` graded against `+667`, after 0.6.65, so the round 30 closing run on `.20` with 0.6.66 is the first (round 30 lap 11 S23). |
 | **damaged media** | **read on hardware 2026-10-04**, `174a134` | **what happens after a read fails** is tested with no drive (`tests/badsector.c`, the `bad_sector` scenario). **The read itself was measured on the BDR-209D** (`docs/rig-2026-10-04-174a134/`), on a disc it reads differently each time from track 11 on. The drive reported **no** error, C2 said nothing (unsupported), reads slowed to **54 s**, one track took **8,161 s**, paranoia skipped **2,586** times, and every track still printed `read successfully!`. **Fixed for `.20`, not run on a drive**: a skip, or a `-Z` read that never agreed, now reads `with errors` (`e5a0897`, `4529810`; `docs/KNOWN-ISSUES.md`). **Still not seen: a drive that reports a read as failed.** |
 | **CD-TEXT from a physical disc** | not yet done | needs a disc that has some; `mmc_read_cdtext` is a different path from the `.toc` image parser. |
 

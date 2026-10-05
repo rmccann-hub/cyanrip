@@ -25,17 +25,21 @@ So `.20` is a **beta inside round 30**, not round 30's closing release:
   operator's O3, puts a provider's new release on beta until its run passes in
   any case.
 - **Round 30's close conditions change, and that needs the operator's override
-  recorded in a lap** (§6a-ter), since R1 fixed them at our lap 1. Our next lap
-  carries it. As the instruction reads, the round closes when: (1) every finding
+  recorded in a lap** (§6a-ter), since R1 fixed them at our lap 1. Our lap 9
+  carries it, and every lap of both sides since. As the instruction reads, the round closes when: (1) every finding
   either side holds is fixed, or carries a reason it cannot be fixed in this
   round that both sides accept; (2) both betas are released, ours first; (3) the
   Full acceptance run on that pair is filed in both trees and read by both; and
   (4) both closing laps declare `GO`.
-- **Before the cut**, all of: every fix the round agrees is landed and the
-  candidate named in a lap of ours; Platterpus has answered the P2 changes in §2
-  (none removes a string they match, so round 20's order does not bind, but their
-  health status and read-speed ladder key on the per-track arm); and
-  `tools/release-gate.py --release-gate --prerelease` exits 0.
+- **Before the cut**, all of: every fix the round agrees is landed; Platterpus
+  has answered the P2 changes in §2 (none removes a string they match, so round
+  20's order does not bind, but their health status and read-speed ladder key on
+  the per-track arm), which their lap 10 did for all but `b1857d6`'s arm; and
+  `tools/release-gate.py --release-gate --prerelease` exits 0. **As our lap 11
+  S20 states it, the cut waits on two things of theirs**: their tree carrying our
+  lap 9 S16's `seam-commands.md` text, which `tools/seam-sync-check.py --fetch`
+  shows as exit 0, and their answer to our lap 11 S11 not refusing that arm. The
+  commit is announced afterwards, in our status block and a lap.
 - **Their beta follows ours**, under option A: 0.6.66 naming `.20` as its build
   under review, with `FORK_PIN` the build round 29 or 30 last approved.
 

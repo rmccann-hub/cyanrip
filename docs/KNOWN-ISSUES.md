@@ -320,13 +320,12 @@ which is the only method that finds this class.
 
 ---
 
-## Open, ours, and solvable
+## Fixed or decided — moved out of *Open* on 2026-10-05
 
-**Round 30 carries these, on the operator's word of 2026-10-05**: the round
-stays open until everything here that can be fixed is fixed, both applications
-ship betas, and an acceptance run of both passes. So *"not now"* and *"round
-31"* stopped being reasons. Where an entry below still says why it waited,
-that was the reason before 2026-10-05, kept as the record.
+These sat under *Open, ours, and solvable* after they were fixed, or, for the
+album loudness block, decided by the consumer's answer, so the heading said
+more was open than was. Each entry is moved verbatim; only the repeat loop's
+gains a first line, because its opening paragraph predates every fix.
 
 ### With paranoia disabled (`-P 0`), one unreadable sector hangs the rip at any retry limit
 
@@ -581,6 +580,463 @@ the failing run's artifacts costs nothing and settles the next occurrence, while
 making the signal reliably land mid-read changes what the check exercises. **The
 comment is corrected now regardless**, because a docstring claiming a guarantee
 the code does not have is the defect that let this go unnoticed.
+
+### The album loudness block describes whatever was read, and calls it the album
+
+**Found in round 26's real test.** `docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:75`
+prints `Album integrated loudness (R128): -14.4 LUFS` for a rip interrupted
+about 40% of the way into track 1, with `0 of 14 tracks` completed. It is the
+loudness of the audio that passed through the `ebur128` graph, which on an
+interrupted rip is a partial track, and on every `-l` rip is the selected
+tracks only. The four owned rows and libavfilter's block both say "Album".
+
+**Status: left as it is, by the consumer's answer below.** It was not fixed at
+first because the fix is a wording decision. The candidates were
+leaving the four owned rows out when not every track of the disc was ripped,
+or adding a scope line beside them as `Scope:` does for paranoia. Both change
+rows Platterpus parses into `album_loudness`. It belongs to the next round,
+with the consumer's answer first.
+
+**Their answer is in, in round 27 lap 2 B2, and it asks for no change.** Since
+their 0.6.57 they label the figures by what they covered, read off our
+`Rip completed:` and `Interrupted at:` lines. If we add a qualifier, **it must be
+a NEW line**: their patterns anchor on the four labels, and a renamed row falls
+back silently to libavfilter's block, keeping the figure and losing the stable
+source.
+
+### `Encoder errors:` counts an interrupted track's partial file as a track encoded
+
+**Found reading round 27's Full run** (`docs/rig-2026-09-26-221a1df/`), and it
+was already in round 26's. `rips/cancel-me.log:87` reads `Encoder errors: none;
+1 track encoded` two lines above `Rip completed:  no (interrupted by SIGTERM, 0
+of 14 tracks)` and `Interrupted at: track 1, mid-read`. `.15`'s
+`docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:88` says the same.
+
+**The count is exact about what it counts, and the noun is wider than that.**
+Through `.17`, `ctx->tracks_encoded` is incremented for every track that had an
+encoder context, once its contexts were joined (`cyanrip@e0471f4:src/cyanrip_main.c:2719-2740`).
+Track 1's encoder did close cleanly, over the part of the track that was read.
+So "1 track encoded" is true of an encoder and reads as a whole track. A reader
+who takes the three footer lines together is not misled; one who reads
+`Encoder errors:` alone is.
+
+**Fixed in `.18`, released 2026-09-28 at `51cc789`.** Round 28 settled the wording: our lap 1 S15
+asked which form they would read, and Platterpus's lap 2 S16 chose both halves,
+*"count only tracks whose read completed, and name a partial file on its own
+line, because a count over the record should count what the record holds"*.
+Their parser reads only the failure count out of this line
+(`platterpus@18823c8:src/platterpus/parsers/cyanrip_log.py:480-489`), so the
+count can change under it. The same interrupted rip now reads:
+
+```
+Encoder errors: not applicable; no whole track was encoded
+Partial files:  1 track (1), read not completed; encoder failures: none
+```
+
+`Partial files:` is a **new P2 line**, printed directly below `Encoder errors:`
+and only when a track had an encoder and its read did not complete. The zero
+arm keeps `no track was encoded` verbatim wherever that is still true, which is
+every rip with no partial file. `.17` and every filed log keep the old count.
+Pinned by `sc_interrupt()`, against the partial file on disk, and
+`sc_encode_failure_reaches_the_log()`, where no read is partial.
+
+### Every figure the log reports about the audio is measured BEFORE the filter graph
+
+**FIXED for `.20`, 2026-09-30, not released.** `measure_frame()`
+(`src/cyanrip_encode.c`) feeds the loudness graphs and the direct peak scan the
+frames the encoders receive, converted to one planar-double format so one album
+graph takes flagged and unflagged tracks alike. The read-path check keeps its
+own scan of the frames built from the read buffer (`input_sample_peak`), since
+post-filter audio legitimately differs from the bytes read. The checksums stay
+on the read buffer. **An unfiltered rip measures exactly what it did**: the
+golden reference's recipe, `-Z 2` included, gives the same 68 loudness lines at
+the fix as in the committed log. **A filtered one now describes its file**:
+`sc_loudness_after_filter()` rips a pre-emphasised 10 kHz tone and checks the
+log's sample peak, album sample peak and `REPLAYGAIN_TRACK_PEAK` against the
+delivered bytes, and the R128 difference against the delivered files' RMS
+difference; with the fix reverted it fails seven checks. A `-H` rip of a
+non-HDCD disc delivers audio 6.02 dB below its source (measured on the tone,
+S32), and its log now says so, where it
+reported the read buffer's 0 dBFS. Values change on every de-emphasised or
+`-H` rip, and no line's text does. The history below is kept as the reason.
+
+**Found by the 2026-09-22 acceptance session, and it is not the defect it looks
+like.** Section P3 of that run ripped track 1 of a real disc twice, back to
+back, changing one flag:
+
+| | `-H -E` | `-H -W` |
+|---|---|---|
+| `EAC CRC32` | `B0D122E7` | `B0D122E7` |
+| `Accurip v1` / `v2` | `5D3C90CB` / `22B9924D` | `5D3C90CB` / `22B9924D` |
+| `Sample peak level` | `94.3% (-0.5 dBFS)` | `94.3% (-0.5 dBFS)` |
+| `True peak level` | `0.3 dBFS` | `0.3 dBFS` |
+| `Integrated loudness (R128)` | `-13.9 LUFS` | `-13.9 LUFS` |
+| `REPLAYGAIN_TRACK_PEAK` | `1.029445` | `1.029445` |
+| `Preemphasis` | `none detected (deemphasis forced)` | `none detected` |
+
+`docs/rig-2026-09-22-2cce60d/session/script-report.json`, steps 217 and 221.
+Identical to the digit on everything except the one field that reads a setting.
+
+**That reads like the round-15 ternary cascade returning. It is not, and the
+difference was measured rather than argued.** Six invocations on disc images,
+`docs/rig-2026-09-22-2cce60d` notwithstanding — this part needs no drive:
+
+| flags | fixture | output PCM sha256/16 | bytes |
+|---|---|---|---|
+| `-H -E` | plain | `05f1fe8cedaff2a4` | 2,822,400 |
+| `-H` | pre-emphasised | `05f1fe8cedaff2a4` | 2,822,400 |
+| `-H -W` | plain | `efc8702f95ebc8b3` | 2,822,400 |
+| `-H -W` | pre-emphasised | `efc8702f95ebc8b3` | 2,822,400 |
+| `-E` | plain | `fea860467bdb5368` | 1,411,200 |
+| `-W` | plain | `e499ef1f978fe435` | 1,411,200 |
+
+**Four distinct audio streams. One set of reported numbers.** The fix works —
+forcing de-emphasis under `-H` changes the samples, disabling it changes them
+back, and the automatic path on a flagged disc lands exactly on the forced one.
+What the log cannot do is *witness* any of it.
+
+**The mechanism, read from the source rather than inferred.** `filter_frame()`
+pushes the **input** frame into the ebur128 graph
+(`src/cyanrip_encode.c:656`) and only afterwards pushes the same frame into the
+de-emphasis/HDCD graph (`:677`), whose *output* is what reaches the encoders
+(`:715`). The two graphs are **siblings off one source, not a series**.
+Separately, `crip_process_checksums()` takes the same `data` that is then handed
+to `cyanrip_send_pcm_to_encoders()` (`src/cyanrip_main.c:872`), so the checksums
+are over the raw disc bytes.
+
+**The two halves want opposite things, and collapsing them would be the fix
+going wrong.**
+
+- **`EAC CRC32` and the AccurateRip checksums are CORRECT pre-filter** and must
+  stay there. EAC and AccurateRip define theirs over the raw disc samples; a
+  post-filter value stops matching the database on every de-emphasised or HDCD
+  disc. What is missing is only that nothing says so — the same `Scope:`
+  problem the paranoia counters already solved, one field over.
+- **The loudness block is WRONG pre-filter.** `Sample peak level:`,
+  `True peak level:`, both R128 figures and all five `REPLAYGAIN_*` tags
+  (`src/cyanrip_main.c:433-449`) go into the delivered file and describe audio
+  that is not in it. ReplayGain exists to normalise playback of *this file*.
+
+**A source comment asserts the opposite of what the code does.**
+`src/cyanrip_encode.c:597-602` says the peak is *"deliberately measured on the
+same frames that go into the ebur128 filter rather than on the bytes off the
+disc: a raw-byte measurement would differ legitimately whenever deemphasis or
+HDCD decoding is active"*. The frames that go into the ebur128 filter **are** the
+bytes off the disc. The two methods agree because they read the same thing, and
+the case the comment names is exactly the case where that thing is the wrong
+one — *a fixture whose numbers agree by construction cannot discriminate*, with
+the comment as the tell.
+
+**Reach, stated because a 247-of-247 acceptance pass invites the wrong
+reading.** Only runs with `-H` and/or active de-emphasis. Without either,
+`dec_ctx->filt.buffersrc_ctx` is NULL and the raw frame goes straight to the
+encoders (`src/cyanrip_encode.c:674`), so pre- and post-filter are one frame and
+every figure is right. **No Platterpus rip is affected today** — none of the
+eight `Invoked as:` lines in the 2026-09-22 session carries `-H`, `-E`, `-W` or
+`-x`, read off the logs rather than off their rig-check summary. So it is a real
+defect with, right now, zero consumer exposure.
+
+**"Zero consumer exposure" was wrong, corrected 2026-09-30: it counted flags,
+and the automatic path needs none.** De-emphasis is on by default
+(`settings.deemphasis = 1`, `src/cyanrip_main.c:1580`) and applies to any track
+whose TOC or sub-channel flags pre-emphasis (`crip_deemphasis_active()`,
+`src/cyanrip_main.h:479`). Platterpus passes none of `-E`, `-W`, `-H` or `-P`
+(`platterpus@0981c69:src/platterpus/adapters/cyanrip_backend.py`, the argv it
+builds), so **every Platterpus rip of a pre-emphasised disc takes this path**,
+and their parser reads the figures it produces: the `REPLAYGAIN_*` tags
+(`platterpus@0981c69:src/platterpus/parsers/cyanrip_log.py:643`), `Sample peak
+level:` (`:962`) and the album loudness rows (`:730-747`). The rig disc is not
+pre-emphasised, which is why no filed rip shows it. Measured at `8f4ae14` on
+`preemph.cue` to raw PCM, default flags against `-W`: the two delivered files
+differ (md5 `b1e6ed20…` against `63e60c84…`), and both logs print `-8.7 LUFS`,
+`REPLAYGAIN_TRACK_GAIN: -9.30 dB` and `REPLAYGAIN_TRACK_PEAK: 1.005757`. **The
+fixture cannot show the size of the error**: its square wave has little treble,
+and the two files' RMS differ by 0.10 dB, below the log's 0.1 LU precision. A
+test of the fix needs a pre-emphasised fixture with treble in it.
+
+**Not fixed here, deliberately.** Moving the measurement downstream changes the
+*values* of five P2 lines and five metadata tags on affected rips, which is
+contract surface and wants a round — and the round in flight is pinned at
+`2cce60d`, where a finding defaults to the next round. Reported in round 23 §H.
+
+`sc_deemph_with_hdcd()` now pins both halves with opposite intents and says
+which is which; the checksum half failing is a regression, the loudness half
+failing is the fix landing.
+
+### A settled fact is re-checked by calling the internet, and it times the suite out
+
+**Measured 2026-09-13**, by profiling `tools/check-settled.py` rather than
+guessing at it: 136.8 s over 67 commands, of which **`tools/accurip-live-probe.py`
+is 80.2 s — 59% of the whole check**. `probe-argv-surface.py --gate` is 26.7 s
+and `tests/release_gate.py` 17.3 s; the remaining **64 commands total ~13 s**.
+
+`tests/meson.build` gives `Settled facts` a 120 s timeout, chosen as roughly 4x
+headroom over a measured 27-30 s. It now **exceeds that and the meson test
+TIMEOUTs**, so the suite reports 80 OK and 1 timeout rather than 81 OK. The
+check itself still returns **0 stale**; it is the clock that fails, not the
+facts.
+
+**Measured again on 2026-09-15 morning, at 101.20 s against the same 120 s
+timeout over 72 runnable commands — and FIXED that afternoon**, so this
+paragraph is the record of the last measurement taken while the network was
+still in the gate, not a current state. It said *"whether it passes on any given
+day is still decided by how fast `accuraterip.com` answers rather than by
+anything in this tree."* That stopped being true a few hours later; see the
+half-fix below, which took it to **54.6 s** over **77** commands.
+
+**Left standing rather than deleted, because it is also an example.** A document
+edited twice in one session contradicted itself in the same file — the exact
+thing `sc_docs_do_not_contradict_themselves()` exists to catch, and it was
+caught by grepping this file for its own numbers rather than by the test, which
+checks CLAUDE.md and the handshake README and not this one.
+
+**The cause is not size, and the first diagnosis of it here was wrong.** It was
+attributed to documentation growth — ~380 lines added to `STATUS.md`,
+`KNOWN-ISSUES.md` and `Changelog.md` in one session — on the reasoning that the
+check greps `docs/`. Profiling says those greps are in the ~13 s tail. **80 of
+the 137 seconds are one HTTP conversation with `accuraterip.com`**, and its
+duration is set by the network that day.
+
+**The defect is that the row exists in this form at all.** `SETTLED.md` row 84
+states a fact about **our parser** — that the AccurateRip response parser runs
+in this sandbox with no drive — and re-checks it by contacting a third-party
+service. This repository already has the rule, and paid for it:
+
+> *A check that reaches the network is not evidence about this program.* The
+> first diagnostics refusal test drove cyanrip into a refusal reached **via a
+> MusicBrainz lookup**, so what it asserted depended on whether the lookup
+> failed by not-found or by timeout. It failed once and would not reproduce.
+
+Two consequences, and the second is worse than the slowness:
+
+1. **The runtime is unpredictable**, so any timeout is either too tight (today)
+   or too loose to catch a real regression.
+2. **A settled fact can go red because someone else's server is down.**
+   `check-settled` cannot distinguish *"the parser broke"* from *"accuraterip.com
+   did not answer"* — which is this project's own `none` versus
+   `unknown (reason)` rule, failing in the tool that indexes the rule.
+
+**FIXED 2026-09-27; half-fixed 2026-09-15, and the second half was deferred
+for a named reason, below.**
+
+**Done: the network is out of the gate.** `SETTLED.md`'s AccurateRip row no
+longer re-runs the probe. The run is filed verbatim at `docs/accurip-probe.log`
+(2026-09-15, `found`, confidence 200) and the row's check asserts the **claim
+against the artifact** — edit the row's numbers without re-running the probe and
+it fails. Measured: `check-settled.py` went from ~100 s to **54.6 s**, so
+`Settled facts` now sits at 45% of its 120 s timeout instead of 84%, and no
+verdict in the suite depends on somebody else's server.
+
+**A first attempt at that check was near-vacuous and the revert-proof said so.**
+`--toc-only` re-derived the reference TOC, on the theory that the query's one
+local input could rot. Pointed at a *different* session's log it returned the
+same `14 268707` — every session is the same disc. A check satisfied by the
+wrong file is not a check; the flag stays as a tool affordance and the row's
+check moved to the claim-versus-artifact comparison, which fails when the
+artifact is edited.
+
+**Done 2026-09-27: the parser is asserted against a recorded response.**
+`crip_parse_accurip()` is split out of `crip_fill_accurip()`, a pure move, and
+`tests/arresp.c` feeds it the rig disc's dBAR response, filed as
+`tests/fixtures/accurip-dBAR-014-001d420f-013bb370-e20dfe0e.bin` (1,807 bytes,
+fetched once, HTTP 200). The expected values come from an independent artifact,
+`docs/rig-2026-09-10-ddc1e8c/rips/secure-reread.log`: 12 of its 14
+`Accurip v1:` checksums are found at the confidence that log printed, and 2 are
+not found, as it says. No network is involved, and mutating the parser's
+checksum read fails it.
+
+**Found by writing it, and FIXED the same day for `.18`: `mismatch` could not
+be reported.** The parse set the disc status to `FOUND` before its loop, so the
+`MISMATCH` assignment below it could never run. A response whose entries all
+carry another disc's ids read `AccurateRip:    found`, an empty one did too, and
+the report then printed `Tracks ripped accurately: 0/N` over a comparison that
+never happened. The status now starts at `NOT_FOUND`: those two responses read
+`mismatch` and `not found`, and print no tally, as a disc absent from the
+database already did. `tests/arresp.c` builds both from the recorded response,
+plus a foreign entry before and after the real ones, and fails on two checks
+with the old line put back. Read from the source first: no real response has
+had that shape. **What a consumer can notice:** the disc-level `AccurateRip:`
+line's value in those two cases, and the tally's absence. Platterpus's parser
+ignores the disc-level line (`platterpus@59f4c00:src/platterpus/parsers/cyanrip_log.py:2171`)
+and reads the per-track rows, which do not change; the `-f` offset search ends
+with the same message it did. It is upstream's code too, `accurip.c:171` at
+`f8ebf48`, and `docs/SETTLED.md` checks both trees.
+
+**What was still to do: assert the parser against a recorded response.** That is the real
+fix — offline, deterministic, and it would cover the parse rather than a
+recorded verdict about it. It needs the response parse split out of
+`crip_fill_accurip()`, which does the curl fetch inline, exactly as
+`tests/subq.c` needed the Q sub-channel decode split out.
+
+**And it is NOT being done while round 20 is open.** Splitting it touches
+`src/`, and round 20's own `HANDSHAKE-PIN-POLICY` — and Platterpus's round-19
+§F1, which calls it *"a stronger statement than the pin has not moved"* — rest
+on the span from `fe4d2c4` containing **exactly one `src/` commit changing zero
+non-comment lines**. A refactor would end that, during the round that relies on
+it. R4 says fixes queue; this one queues. **Raising the timeout was never the
+fix** — it keeps a network-dependent verdict in a gate and moves where it
+misfires.
+
+### `docs/seam-commands.md` carried FIVE known-wrong statements — ALL FIXED in round 30
+
+**Consolidated here 2026-09-15.** They were recorded in two different files, one
+of them a 1,100-line standing status, which is how a set of three reads as three
+unrelated one-offs instead of a document to fix. Consolidation applies to
+documentation and never to evidence; this is documentation.
+
+| # | what it publishes | what is true | found |
+|---|---|---|---|
+| 1 | §7: *"Every value either took effect or was refused with a message"* | **48 of the 68 accepted rows** were graded from exit status alone — re-measured 2026-09-16, and the *"49 of 111"* this row carried was a count against an older binary. **The generator is fixed, 2026-09-27**: those rows are now `unobservable` (`--gate`: 111 probes, 47 refused, 16 seen to take effect, 48 unobservable), pinned by `sc_argv_probe_names_what_it_did_not_see()`. §7 itself is regenerated at the joint bump | ours |
+| 2 | line 504: `-p '99=drop'` accepted, exit 0 | the binary **refuses** it | theirs, lap 16 §B3 |
+| 3 | line 97: `-D` is `directory` / `str, path` / `writable` / *"output directory"* | it is `folder_scheme`, *"Directory naming scheme"* (`cyanrip_main.c:1603` at the pin) — a **relative** scheme, with `-F` its per-track sibling | theirs, lap 16 §B3 |
+| 4 | the §1 provenance warning: *"The cyanrip column is `?` throughout below … Their half arrives in the round-8 return file"* | **0 of §1's 17 rows** carry `?` in the cyanrip column; all 17 say `HAVE`. Counted by reading the column, not the sentence | ours, 2026-09-22 audit |
+| 5 | §4 NEED item 4 asks for *"an escape mechanism in the `-a` / `-t` grammar — or a written statement that there is none"* and describes a U+2236 workaround | **§1's own `-a` row, in the same file**, says both sides `HAVE` it: *"there IS an escape: `\\:`"* and *"escape shipped lap 31"*. The file contradicts itself; whether Platterpus's U+2236 substitution is still in their code is theirs to say, and is not claimed here | ours, 2026-09-22 audit |
+
+**RE-MEASURED 2026-09-16, and the split of who fixes what is not what this entry
+said.** Platterpus pointed out that §7 carries its own *"This section is
+GENERATED by `tools/probe-argv-surface.py --markdown` … Never hand-edit it"*.
+That is **our** tool, so rows 1 and 2 are ours to regenerate; only row 3 is
+hand-written prose in a jointly-owned section.
+
+**Row 2 is fixed by regenerating.** The live binary refuses `-p '99=drop'` with
+`Invalid track number 99 for pregap, list has 2 tracks!`, exit 1.
+
+**Row 1 is NOT, and it is a defect in the generator rather than in the committed
+copy.** The sentence is emitted by the tool. Measured 2026-09-16 and **re-measured
+2026-09-22 on `0.9.4-rc2+platterpus.14`, unchanged**: **116 rows, 48 refused, 68
+accepted — and 48 of those 68 carry `(no header field exposes this)`.**
+`probe-argv-surface.py:99` returns `accepted` on exit status
+alone when no header field exists to check, so three quarters of the accepted
+rows were never observed to take effect while the summary says they were. The
+fix is a third outcome — `unobservable` — not a reword, and `--gate` must keep
+firing only on a genuine silent drop.
+
+**AND THE REASON ALL THREE DRIFTED IS A CHECK THAT COULD NOT FIRE.**
+`python3 tools/probe-argv-surface.py --binary build/src/cyanrip --check
+docs/seam-commands.md` refuses outright: *"carries no generated-block
+delimiters"*. §7 has declared itself generated since it was written and
+**nothing has ever verified that it is.** Planned in
+`docs/ROUND-22-PLAN.md` §3.
+
+**Do not cite any of the five.** Row 3 is the one that has already cost
+something: the real semantics are exactly why an empty leading component made a
+multi-component scheme resolve **absolute**, and a reader who believed line 97
+would not have looked.
+
+**Rows 1 and 2 are FIXED, at `83bcd70` (2026-09-29), round 29's one joint move
+of the file**, which regenerated §7 with the `unobservable` outcome and the
+refused `-p '99=drop'`. This entry said *"NONE of them is fixed"* for a week
+after that; found in round 30 by diffing §7 against the binary. **Rows 3 to 5
+are FIXED in our tree by the text our round 30 lap 9 S16 proposed and
+Platterpus's lap 10 S10 accepted**, landed with the `-f` exit row in the commit
+after `0645ddb`; Platterpus lands the same bytes in the commit that files our
+lap 11. Row 5's answer was checked against their code, which no longer writes
+the U+2236 substitute
+(`platterpus@bd508bf1:src/platterpus/adapters/cyanrip_backend.py:825-835`).
+
+**Until then they were not fixed, and not for want of knowing the answer.** The file is
+shared and neither project owns it — a one-sided edit is how two copies of one
+spec come to disagree, which has already happened once to `PROTOCOL.md`. They go
+in together at the next joint version bump.
+
+**Deliberately NOT added to round 20.** R1 fixes a round's close conditions at
+lap 1 and round 20 has two; a third arriving mid-round is the exact failure R1
+exists to stop, and these break nothing in `fe4d2c4`.
+
+**This paragraph then called them *"a round-21 bundle"*, and rounds 21, 22 and
+23 all closed without it.** Nobody proposed the bump, because the entry that
+named the round was not something any lap-1 author read. It is the same gap as
+the joint entry below on K1–K3 — a change agreed or planned, and then left to
+memory across a round boundary. **They are now listed in that section's
+consolidated table of shared-document defects, which is what round 24's lap 1
+cites**, so the bundle has a place to be picked up from rather than a round
+number to go stale.
+
+### The secure re-read's repeat loop: four things for round 29, all upstream's code
+
+**All four are fixed**, added 2026-10-05: items 1, 3 and 4 for `.19` (`9669d84`,
+`fb31a2b`, `22f7aae`), item 2 for `.20` by the `-Z` spool (`d7ee6c4`). The
+paragraph below is how the entry read before any of them landed.
+
+**Found by Platterpus reading round 28's Full run**, in their round 28 lap 9
+(S9, S16, S17, S19), and each checked against our source at `e0471f4`, our own
+filed copy of the bundle (`docs/rig-2026-09-28-e0471f4/rips/secure-reread.log`,
+invoked with `-r 3 -Z 2`) and upstream's `f8ebf48`. The code is upstream's in
+all four. None is a defect in `.17` that breaks its pin, and none is fixed in
+`.18`; each changes a P1 or P2 surface, so each is round 29's to announce.
+**Item 1 is fixed for `.19` at `9669d84`**, announced in round 29 lap 1; the
+other three are proposed there.
+
+1. **The loop prints its checksum before the final XOR, so it never equals
+   the track's `EAC CRC32:`.** `Repeating ripping (… current checksum %08X)`
+   and `Done; (N out of N matches for current checksum %08X)` print
+   `checksum_ctx.eac_crc` (`cyanrip@e0471f4:src/cyanrip_main.c:1006-1007`,
+   `:1028-1029`). The track block prints that value XORed with `UINT32_MAX`
+   (`src/checksums.h:86`). Track 3's converged read is `Done; (2 out of 2
+   matches for current checksum A62CAD22)` at `secure-reread.log:222` and
+   `EAC CRC32:     59D352DD` at `:260`, and `0x59D352DD ^ 0xFFFFFFFF` is
+   `0xA62CAD22`. So a reader comparing the loop's checksums with AccurateRip,
+   EAC, CTDB or our own track block compares complements, and nothing in the
+   log says so. Platterpus found it by working the arithmetic (their S9). Their
+   parser matches those lines on the counts only and captures no checksum
+   (`platterpus@41f92220:src/platterpus/parsers/cyanrip_log.py:269-273`), so
+   printing the finalised value would not break that parse. It still changes
+   what a P2 line's number means, which is why it needs a round. **Fixed at
+   `9669d84`**: both lines print the finalised value, the comparisons keep the
+   raw one, and `sc_reference` requires each converged track's `Done;` checksum
+   to equal its `EAC CRC32:`.
+2. **At the repeat limit, the audio kept is the last read** (their S16).
+   Lines 1018-1021 switch encoding on for the read that may be the last, so
+   when the limit is hit, that read is encoded whatever the earlier reads agreed
+   on. Track 5 read `E0036697` twice and then `6902BCF0`, and `6902BCF0` is the
+   read kept (`secure-reread.log:381-385`, `:423`). Their proposal is to keep
+   the read that agreed most. Which bytes land on disk is ours to decide
+   (`docs/OWNERSHIP.md:61`, *"The audio bytes and every checksum over them"*).
+   **FIXED for `.20` by the -Z spool (`d7ee6c4`)**, the rule proposed in our
+   round 30 lap 5 S23 and its cost accepted in their lap 6 S9: the read the
+   most reads agreed on is kept, the newest of them on a tie, so track 5 above
+   would now deliver `E0036697`. Pinned by `sc_repeat_limit_keeps_most_agreed()`.
+   Before that: round 29 lap 1 S36 said *"We will propose the rule in a later
+   lap"*, and no lap until round 30's lap 5 did. Counted 2026-09-30
+   off `docs/rig-*/rips/*.log`: 24 limit hits in 15 filed logs, on tracks 3
+   (12), 5 (10) and 4 (2), every one under `-r 3 -Z 2`. The one filed `.19`
+   secure re-read, `-r 5 -Z 2`, converged on all 14 tracks
+   (`docs/rig-2026-09-30b-174a134/rips/secure-reread.log`).
+3. **`Done; (no matches found, but hit repeat limit of %i)` is printed whatever
+   the count** (their S17): line 1012's format has no count and never reads
+   `matches`. On track 5 it was true of the read it follows, which matched
+   neither earlier read. It was false of the track, whose first two reads
+   agreed, and that second sense is the one a consumer takes. Platterpus's own
+   parser comment reads the line as *"it gave up without any two reads
+   agreeing"* (`platterpus@41f92220:src/platterpus/parsers/cyanrip_log.py:251`).
+   A `-Z 3 -r 3` rip of three identical reads would print it with two matches.
+   Their `_SECURE_DONE_FAIL` matches `no matches found` (`:273`), so rewording
+   it removes a string a consumer matches on: their both-wordings release comes
+   first (round 20's ordering rule). **Fixed at `fb31a2b`, for `.19`**, after
+   that release: their 0.6.63 reads both wordings, and the line is now
+   `Done; (repeat limit of N reads reached; at most M reads agreed)`, M being the
+   largest number of reads that share one checksum. The `repeat_limit` scenario
+   reaches it on an image by varying one sector per read (`tests/badsector.c`),
+   including A, A, B, where the last read agrees with nobody and M is 2.
+4. **`-Z N` with `-r` of N or less can never converge** (their S19).
+   Convergence needs N matches against earlier reads, so N + 1 reads (`:1005`).
+   The limit counts every read from 0 (`:762`, `:1004`, `:1011`), so `-r N + 1`
+   tolerates no read that disagrees. Our argument parsing accepted `-Z 2 -r 2`.
+   Their settings refuse it now. **Refused here too at `22f7aae`, for `.19`**,
+   before any disc is opened, at column 0 with both values and a remedy that
+   exists (`zr_refusal`); an invocation that exited 0 now exits 1, which is the
+   P1/P4 change round 29 carried, with the shared `seam-commands.md` moved once
+   for both sides' argv tables (`83bcd70`).
+
+---
+
+## Open, ours, and solvable
+
+**Round 30 carries these, on the operator's word of 2026-10-05**: the round
+stays open until everything here that can be fixed is fixed, both applications
+ship betas, and an acceptance run of both passes. So *"not now"* and *"round
+31"* stopped being reasons. Where an entry below still says why it waited,
+that was the reason before 2026-10-05, kept as the record.
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
@@ -904,188 +1360,6 @@ matched, not to the rest. Proposed: `Only one frame matched AccurateRip
 lookup that missed fell through to the whole-track checksum
 (`crip_find_ar()`, their B1a). See `docs/SETTLED.md`'s upstream section.
 
-### The album loudness block describes whatever was read, and calls it the album
-
-**Found in round 26's real test.** `docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:75`
-prints `Album integrated loudness (R128): -14.4 LUFS` for a rip interrupted
-about 40% of the way into track 1, with `0 of 14 tracks` completed. It is the
-loudness of the audio that passed through the `ebur128` graph, which on an
-interrupted rip is a partial track, and on every `-l` rip is the selected
-tracks only. The four owned rows and libavfilter's block both say "Album".
-
-**Status: left as it is, by the consumer's answer below.** It was not fixed at
-first because the fix is a wording decision. The candidates were
-leaving the four owned rows out when not every track of the disc was ripped,
-or adding a scope line beside them as `Scope:` does for paranoia. Both change
-rows Platterpus parses into `album_loudness`. It belongs to the next round,
-with the consumer's answer first.
-
-**Their answer is in, in round 27 lap 2 B2, and it asks for no change.** Since
-their 0.6.57 they label the figures by what they covered, read off our
-`Rip completed:` and `Interrupted at:` lines. If we add a qualifier, **it must be
-a NEW line**: their patterns anchor on the four labels, and a renamed row falls
-back silently to libavfilter's block, keeping the figure and losing the stable
-source.
-
-### `Encoder errors:` counts an interrupted track's partial file as a track encoded
-
-**Found reading round 27's Full run** (`docs/rig-2026-09-26-221a1df/`), and it
-was already in round 26's. `rips/cancel-me.log:87` reads `Encoder errors: none;
-1 track encoded` two lines above `Rip completed:  no (interrupted by SIGTERM, 0
-of 14 tracks)` and `Interrupted at: track 1, mid-read`. `.15`'s
-`docs/rig-2026-09-24-df91ae7/rips/cancel-me.log:88` says the same.
-
-**The count is exact about what it counts, and the noun is wider than that.**
-Through `.17`, `ctx->tracks_encoded` is incremented for every track that had an
-encoder context, once its contexts were joined (`cyanrip@e0471f4:src/cyanrip_main.c:2719-2740`).
-Track 1's encoder did close cleanly, over the part of the track that was read.
-So "1 track encoded" is true of an encoder and reads as a whole track. A reader
-who takes the three footer lines together is not misled; one who reads
-`Encoder errors:` alone is.
-
-**Fixed in `.18`, released 2026-09-28 at `51cc789`.** Round 28 settled the wording: our lap 1 S15
-asked which form they would read, and Platterpus's lap 2 S16 chose both halves,
-*"count only tracks whose read completed, and name a partial file on its own
-line, because a count over the record should count what the record holds"*.
-Their parser reads only the failure count out of this line
-(`platterpus@18823c8:src/platterpus/parsers/cyanrip_log.py:480-489`), so the
-count can change under it. The same interrupted rip now reads:
-
-```
-Encoder errors: not applicable; no whole track was encoded
-Partial files:  1 track (1), read not completed; encoder failures: none
-```
-
-`Partial files:` is a **new P2 line**, printed directly below `Encoder errors:`
-and only when a track had an encoder and its read did not complete. The zero
-arm keeps `no track was encoded` verbatim wherever that is still true, which is
-every rip with no partial file. `.17` and every filed log keep the old count.
-Pinned by `sc_interrupt()`, against the partial file on disk, and
-`sc_encode_failure_reaches_the_log()`, where no read is partial.
-
-### Every figure the log reports about the audio is measured BEFORE the filter graph
-
-**FIXED for `.20`, 2026-09-30, not released.** `measure_frame()`
-(`src/cyanrip_encode.c`) feeds the loudness graphs and the direct peak scan the
-frames the encoders receive, converted to one planar-double format so one album
-graph takes flagged and unflagged tracks alike. The read-path check keeps its
-own scan of the frames built from the read buffer (`input_sample_peak`), since
-post-filter audio legitimately differs from the bytes read. The checksums stay
-on the read buffer. **An unfiltered rip measures exactly what it did**: the
-golden reference's recipe, `-Z 2` included, gives the same 68 loudness lines at
-the fix as in the committed log. **A filtered one now describes its file**:
-`sc_loudness_after_filter()` rips a pre-emphasised 10 kHz tone and checks the
-log's sample peak, album sample peak and `REPLAYGAIN_TRACK_PEAK` against the
-delivered bytes, and the R128 difference against the delivered files' RMS
-difference; with the fix reverted it fails seven checks. A `-H` rip of a
-non-HDCD disc delivers audio 6.02 dB below its source (measured on the tone,
-S32), and its log now says so, where it
-reported the read buffer's 0 dBFS. Values change on every de-emphasised or
-`-H` rip, and no line's text does. The history below is kept as the reason.
-
-**Found by the 2026-09-22 acceptance session, and it is not the defect it looks
-like.** Section P3 of that run ripped track 1 of a real disc twice, back to
-back, changing one flag:
-
-| | `-H -E` | `-H -W` |
-|---|---|---|
-| `EAC CRC32` | `B0D122E7` | `B0D122E7` |
-| `Accurip v1` / `v2` | `5D3C90CB` / `22B9924D` | `5D3C90CB` / `22B9924D` |
-| `Sample peak level` | `94.3% (-0.5 dBFS)` | `94.3% (-0.5 dBFS)` |
-| `True peak level` | `0.3 dBFS` | `0.3 dBFS` |
-| `Integrated loudness (R128)` | `-13.9 LUFS` | `-13.9 LUFS` |
-| `REPLAYGAIN_TRACK_PEAK` | `1.029445` | `1.029445` |
-| `Preemphasis` | `none detected (deemphasis forced)` | `none detected` |
-
-`docs/rig-2026-09-22-2cce60d/session/script-report.json`, steps 217 and 221.
-Identical to the digit on everything except the one field that reads a setting.
-
-**That reads like the round-15 ternary cascade returning. It is not, and the
-difference was measured rather than argued.** Six invocations on disc images,
-`docs/rig-2026-09-22-2cce60d` notwithstanding — this part needs no drive:
-
-| flags | fixture | output PCM sha256/16 | bytes |
-|---|---|---|---|
-| `-H -E` | plain | `05f1fe8cedaff2a4` | 2,822,400 |
-| `-H` | pre-emphasised | `05f1fe8cedaff2a4` | 2,822,400 |
-| `-H -W` | plain | `efc8702f95ebc8b3` | 2,822,400 |
-| `-H -W` | pre-emphasised | `efc8702f95ebc8b3` | 2,822,400 |
-| `-E` | plain | `fea860467bdb5368` | 1,411,200 |
-| `-W` | plain | `e499ef1f978fe435` | 1,411,200 |
-
-**Four distinct audio streams. One set of reported numbers.** The fix works —
-forcing de-emphasis under `-H` changes the samples, disabling it changes them
-back, and the automatic path on a flagged disc lands exactly on the forced one.
-What the log cannot do is *witness* any of it.
-
-**The mechanism, read from the source rather than inferred.** `filter_frame()`
-pushes the **input** frame into the ebur128 graph
-(`src/cyanrip_encode.c:656`) and only afterwards pushes the same frame into the
-de-emphasis/HDCD graph (`:677`), whose *output* is what reaches the encoders
-(`:715`). The two graphs are **siblings off one source, not a series**.
-Separately, `crip_process_checksums()` takes the same `data` that is then handed
-to `cyanrip_send_pcm_to_encoders()` (`src/cyanrip_main.c:872`), so the checksums
-are over the raw disc bytes.
-
-**The two halves want opposite things, and collapsing them would be the fix
-going wrong.**
-
-- **`EAC CRC32` and the AccurateRip checksums are CORRECT pre-filter** and must
-  stay there. EAC and AccurateRip define theirs over the raw disc samples; a
-  post-filter value stops matching the database on every de-emphasised or HDCD
-  disc. What is missing is only that nothing says so — the same `Scope:`
-  problem the paranoia counters already solved, one field over.
-- **The loudness block is WRONG pre-filter.** `Sample peak level:`,
-  `True peak level:`, both R128 figures and all five `REPLAYGAIN_*` tags
-  (`src/cyanrip_main.c:433-449`) go into the delivered file and describe audio
-  that is not in it. ReplayGain exists to normalise playback of *this file*.
-
-**A source comment asserts the opposite of what the code does.**
-`src/cyanrip_encode.c:597-602` says the peak is *"deliberately measured on the
-same frames that go into the ebur128 filter rather than on the bytes off the
-disc: a raw-byte measurement would differ legitimately whenever deemphasis or
-HDCD decoding is active"*. The frames that go into the ebur128 filter **are** the
-bytes off the disc. The two methods agree because they read the same thing, and
-the case the comment names is exactly the case where that thing is the wrong
-one — *a fixture whose numbers agree by construction cannot discriminate*, with
-the comment as the tell.
-
-**Reach, stated because a 247-of-247 acceptance pass invites the wrong
-reading.** Only runs with `-H` and/or active de-emphasis. Without either,
-`dec_ctx->filt.buffersrc_ctx` is NULL and the raw frame goes straight to the
-encoders (`src/cyanrip_encode.c:674`), so pre- and post-filter are one frame and
-every figure is right. **No Platterpus rip is affected today** — none of the
-eight `Invoked as:` lines in the 2026-09-22 session carries `-H`, `-E`, `-W` or
-`-x`, read off the logs rather than off their rig-check summary. So it is a real
-defect with, right now, zero consumer exposure.
-
-**"Zero consumer exposure" was wrong, corrected 2026-09-30: it counted flags,
-and the automatic path needs none.** De-emphasis is on by default
-(`settings.deemphasis = 1`, `src/cyanrip_main.c:1580`) and applies to any track
-whose TOC or sub-channel flags pre-emphasis (`crip_deemphasis_active()`,
-`src/cyanrip_main.h:479`). Platterpus passes none of `-E`, `-W`, `-H` or `-P`
-(`platterpus@0981c69:src/platterpus/adapters/cyanrip_backend.py`, the argv it
-builds), so **every Platterpus rip of a pre-emphasised disc takes this path**,
-and their parser reads the figures it produces: the `REPLAYGAIN_*` tags
-(`platterpus@0981c69:src/platterpus/parsers/cyanrip_log.py:643`), `Sample peak
-level:` (`:962`) and the album loudness rows (`:730-747`). The rig disc is not
-pre-emphasised, which is why no filed rip shows it. Measured at `8f4ae14` on
-`preemph.cue` to raw PCM, default flags against `-W`: the two delivered files
-differ (md5 `b1e6ed20…` against `63e60c84…`), and both logs print `-8.7 LUFS`,
-`REPLAYGAIN_TRACK_GAIN: -9.30 dB` and `REPLAYGAIN_TRACK_PEAK: 1.005757`. **The
-fixture cannot show the size of the error**: its square wave has little treble,
-and the two files' RMS differ by 0.10 dB, below the log's 0.1 LU precision. A
-test of the fix needs a pre-emphasised fixture with treble in it.
-
-**Not fixed here, deliberately.** Moving the measurement downstream changes the
-*values* of five P2 lines and five metadata tags on affected rips, which is
-contract surface and wants a round — and the round in flight is pinned at
-`2cce60d`, where a finding defaults to the next round. Reported in round 23 §H.
-
-`sc_deemph_with_hdcd()` now pins both halves with opposite intents and says
-which is which; the checksum half failing is a regression, the loudness half
-failing is the fix landing.
-
 ### The cache probe's calibration is wrong
 
 **FIXED for `.20`, 2026-10-05, not released and NOT YET MEASURED** (`394ab17`).
@@ -1271,120 +1545,6 @@ the probe reports and changes nothing about whether it is right. Recorded
 because the question keeps arising from the `search ceiling reached` wording,
 which is accurate and reads like a complaint about the ceiling.
 
-### A settled fact is re-checked by calling the internet, and it times the suite out
-
-**Measured 2026-09-13**, by profiling `tools/check-settled.py` rather than
-guessing at it: 136.8 s over 67 commands, of which **`tools/accurip-live-probe.py`
-is 80.2 s — 59% of the whole check**. `probe-argv-surface.py --gate` is 26.7 s
-and `tests/release_gate.py` 17.3 s; the remaining **64 commands total ~13 s**.
-
-`tests/meson.build` gives `Settled facts` a 120 s timeout, chosen as roughly 4x
-headroom over a measured 27-30 s. It now **exceeds that and the meson test
-TIMEOUTs**, so the suite reports 80 OK and 1 timeout rather than 81 OK. The
-check itself still returns **0 stale**; it is the clock that fails, not the
-facts.
-
-**Measured again on 2026-09-15 morning, at 101.20 s against the same 120 s
-timeout over 72 runnable commands — and FIXED that afternoon**, so this
-paragraph is the record of the last measurement taken while the network was
-still in the gate, not a current state. It said *"whether it passes on any given
-day is still decided by how fast `accuraterip.com` answers rather than by
-anything in this tree."* That stopped being true a few hours later; see the
-half-fix below, which took it to **54.6 s** over **77** commands.
-
-**Left standing rather than deleted, because it is also an example.** A document
-edited twice in one session contradicted itself in the same file — the exact
-thing `sc_docs_do_not_contradict_themselves()` exists to catch, and it was
-caught by grepping this file for its own numbers rather than by the test, which
-checks CLAUDE.md and the handshake README and not this one.
-
-**The cause is not size, and the first diagnosis of it here was wrong.** It was
-attributed to documentation growth — ~380 lines added to `STATUS.md`,
-`KNOWN-ISSUES.md` and `Changelog.md` in one session — on the reasoning that the
-check greps `docs/`. Profiling says those greps are in the ~13 s tail. **80 of
-the 137 seconds are one HTTP conversation with `accuraterip.com`**, and its
-duration is set by the network that day.
-
-**The defect is that the row exists in this form at all.** `SETTLED.md` row 84
-states a fact about **our parser** — that the AccurateRip response parser runs
-in this sandbox with no drive — and re-checks it by contacting a third-party
-service. This repository already has the rule, and paid for it:
-
-> *A check that reaches the network is not evidence about this program.* The
-> first diagnostics refusal test drove cyanrip into a refusal reached **via a
-> MusicBrainz lookup**, so what it asserted depended on whether the lookup
-> failed by not-found or by timeout. It failed once and would not reproduce.
-
-Two consequences, and the second is worse than the slowness:
-
-1. **The runtime is unpredictable**, so any timeout is either too tight (today)
-   or too loose to catch a real regression.
-2. **A settled fact can go red because someone else's server is down.**
-   `check-settled` cannot distinguish *"the parser broke"* from *"accuraterip.com
-   did not answer"* — which is this project's own `none` versus
-   `unknown (reason)` rule, failing in the tool that indexes the rule.
-
-**FIXED 2026-09-27; half-fixed 2026-09-15, and the second half was deferred
-for a named reason, below.**
-
-**Done: the network is out of the gate.** `SETTLED.md`'s AccurateRip row no
-longer re-runs the probe. The run is filed verbatim at `docs/accurip-probe.log`
-(2026-09-15, `found`, confidence 200) and the row's check asserts the **claim
-against the artifact** — edit the row's numbers without re-running the probe and
-it fails. Measured: `check-settled.py` went from ~100 s to **54.6 s**, so
-`Settled facts` now sits at 45% of its 120 s timeout instead of 84%, and no
-verdict in the suite depends on somebody else's server.
-
-**A first attempt at that check was near-vacuous and the revert-proof said so.**
-`--toc-only` re-derived the reference TOC, on the theory that the query's one
-local input could rot. Pointed at a *different* session's log it returned the
-same `14 268707` — every session is the same disc. A check satisfied by the
-wrong file is not a check; the flag stays as a tool affordance and the row's
-check moved to the claim-versus-artifact comparison, which fails when the
-artifact is edited.
-
-**Done 2026-09-27: the parser is asserted against a recorded response.**
-`crip_parse_accurip()` is split out of `crip_fill_accurip()`, a pure move, and
-`tests/arresp.c` feeds it the rig disc's dBAR response, filed as
-`tests/fixtures/accurip-dBAR-014-001d420f-013bb370-e20dfe0e.bin` (1,807 bytes,
-fetched once, HTTP 200). The expected values come from an independent artifact,
-`docs/rig-2026-09-10-ddc1e8c/rips/secure-reread.log`: 12 of its 14
-`Accurip v1:` checksums are found at the confidence that log printed, and 2 are
-not found, as it says. No network is involved, and mutating the parser's
-checksum read fails it.
-
-**Found by writing it, and FIXED the same day for `.18`: `mismatch` could not
-be reported.** The parse set the disc status to `FOUND` before its loop, so the
-`MISMATCH` assignment below it could never run. A response whose entries all
-carry another disc's ids read `AccurateRip:    found`, an empty one did too, and
-the report then printed `Tracks ripped accurately: 0/N` over a comparison that
-never happened. The status now starts at `NOT_FOUND`: those two responses read
-`mismatch` and `not found`, and print no tally, as a disc absent from the
-database already did. `tests/arresp.c` builds both from the recorded response,
-plus a foreign entry before and after the real ones, and fails on two checks
-with the old line put back. Read from the source first: no real response has
-had that shape. **What a consumer can notice:** the disc-level `AccurateRip:`
-line's value in those two cases, and the tally's absence. Platterpus's parser
-ignores the disc-level line (`platterpus@59f4c00:src/platterpus/parsers/cyanrip_log.py:2171`)
-and reads the per-track rows, which do not change; the `-f` offset search ends
-with the same message it did. It is upstream's code too, `accurip.c:171` at
-`f8ebf48`, and `docs/SETTLED.md` checks both trees.
-
-**What was still to do: assert the parser against a recorded response.** That is the real
-fix — offline, deterministic, and it would cover the parse rather than a
-recorded verdict about it. It needs the response parse split out of
-`crip_fill_accurip()`, which does the curl fetch inline, exactly as
-`tests/subq.c` needed the Q sub-channel decode split out.
-
-**And it is NOT being done while round 20 is open.** Splitting it touches
-`src/`, and round 20's own `HANDSHAKE-PIN-POLICY` — and Platterpus's round-19
-§F1, which calls it *"a stronger statement than the pin has not moved"* — rest
-on the span from `fe4d2c4` containing **exactly one `src/` commit changing zero
-non-comment lines**. A refactor would end that, during the round that relies on
-it. R4 says fixes queue; this one queues. **Raising the timeout was never the
-fix** — it keeps a network-dependent verdict in a gate and moves where it
-misfires.
-
 ### Our gate has four defects, two found by Platterpus's questions, and none was fixed on finding
 
 **Items 1 and 3 FIXED 2026-09-23, before round 25 opened**, by the change that
@@ -1480,155 +1640,6 @@ Items 1 and 3 are fixed. **Items 2 and 4 wait for v6, and on purpose.** Item 4
 is v5's literal reading of C37, which v6 replaces. Item 2's row is proposed for
 amendment rather than implementation, because as written it refuses those six
 laps.
-
-### `docs/seam-commands.md` carried FIVE known-wrong statements — ALL FIXED in round 30
-
-**Consolidated here 2026-09-15.** They were recorded in two different files, one
-of them a 1,100-line standing status, which is how a set of three reads as three
-unrelated one-offs instead of a document to fix. Consolidation applies to
-documentation and never to evidence; this is documentation.
-
-| # | what it publishes | what is true | found |
-|---|---|---|---|
-| 1 | §7: *"Every value either took effect or was refused with a message"* | **48 of the 68 accepted rows** were graded from exit status alone — re-measured 2026-09-16, and the *"49 of 111"* this row carried was a count against an older binary. **The generator is fixed, 2026-09-27**: those rows are now `unobservable` (`--gate`: 111 probes, 47 refused, 16 seen to take effect, 48 unobservable), pinned by `sc_argv_probe_names_what_it_did_not_see()`. §7 itself is regenerated at the joint bump | ours |
-| 2 | line 504: `-p '99=drop'` accepted, exit 0 | the binary **refuses** it | theirs, lap 16 §B3 |
-| 3 | line 97: `-D` is `directory` / `str, path` / `writable` / *"output directory"* | it is `folder_scheme`, *"Directory naming scheme"* (`cyanrip_main.c:1603` at the pin) — a **relative** scheme, with `-F` its per-track sibling | theirs, lap 16 §B3 |
-| 4 | the §1 provenance warning: *"The cyanrip column is `?` throughout below … Their half arrives in the round-8 return file"* | **0 of §1's 17 rows** carry `?` in the cyanrip column; all 17 say `HAVE`. Counted by reading the column, not the sentence | ours, 2026-09-22 audit |
-| 5 | §4 NEED item 4 asks for *"an escape mechanism in the `-a` / `-t` grammar — or a written statement that there is none"* and describes a U+2236 workaround | **§1's own `-a` row, in the same file**, says both sides `HAVE` it: *"there IS an escape: `\\:`"* and *"escape shipped lap 31"*. The file contradicts itself; whether Platterpus's U+2236 substitution is still in their code is theirs to say, and is not claimed here | ours, 2026-09-22 audit |
-
-**RE-MEASURED 2026-09-16, and the split of who fixes what is not what this entry
-said.** Platterpus pointed out that §7 carries its own *"This section is
-GENERATED by `tools/probe-argv-surface.py --markdown` … Never hand-edit it"*.
-That is **our** tool, so rows 1 and 2 are ours to regenerate; only row 3 is
-hand-written prose in a jointly-owned section.
-
-**Row 2 is fixed by regenerating.** The live binary refuses `-p '99=drop'` with
-`Invalid track number 99 for pregap, list has 2 tracks!`, exit 1.
-
-**Row 1 is NOT, and it is a defect in the generator rather than in the committed
-copy.** The sentence is emitted by the tool. Measured 2026-09-16 and **re-measured
-2026-09-22 on `0.9.4-rc2+platterpus.14`, unchanged**: **116 rows, 48 refused, 68
-accepted — and 48 of those 68 carry `(no header field exposes this)`.**
-`probe-argv-surface.py:99` returns `accepted` on exit status
-alone when no header field exists to check, so three quarters of the accepted
-rows were never observed to take effect while the summary says they were. The
-fix is a third outcome — `unobservable` — not a reword, and `--gate` must keep
-firing only on a genuine silent drop.
-
-**AND THE REASON ALL THREE DRIFTED IS A CHECK THAT COULD NOT FIRE.**
-`python3 tools/probe-argv-surface.py --binary build/src/cyanrip --check
-docs/seam-commands.md` refuses outright: *"carries no generated-block
-delimiters"*. §7 has declared itself generated since it was written and
-**nothing has ever verified that it is.** Planned in
-`docs/ROUND-22-PLAN.md` §3.
-
-**Do not cite any of the five.** Row 3 is the one that has already cost
-something: the real semantics are exactly why an empty leading component made a
-multi-component scheme resolve **absolute**, and a reader who believed line 97
-would not have looked.
-
-**Rows 1 and 2 are FIXED, at `83bcd70` (2026-09-29), round 29's one joint move
-of the file**, which regenerated §7 with the `unobservable` outcome and the
-refused `-p '99=drop'`. This entry said *"NONE of them is fixed"* for a week
-after that; found in round 30 by diffing §7 against the binary. **Rows 3 to 5
-are FIXED in our tree by the text our round 30 lap 9 S16 proposed and
-Platterpus's lap 10 S10 accepted**, landed with the `-f` exit row in the commit
-after `0645ddb`; Platterpus lands the same bytes in the commit that files our
-lap 11. Row 5's answer was checked against their code, which no longer writes
-the U+2236 substitute
-(`platterpus@bd508bf1:src/platterpus/adapters/cyanrip_backend.py:825-835`).
-
-**Until then they were not fixed, and not for want of knowing the answer.** The file is
-shared and neither project owns it — a one-sided edit is how two copies of one
-spec come to disagree, which has already happened once to `PROTOCOL.md`. They go
-in together at the next joint version bump.
-
-**Deliberately NOT added to round 20.** R1 fixes a round's close conditions at
-lap 1 and round 20 has two; a third arriving mid-round is the exact failure R1
-exists to stop, and these break nothing in `fe4d2c4`.
-
-**This paragraph then called them *"a round-21 bundle"*, and rounds 21, 22 and
-23 all closed without it.** Nobody proposed the bump, because the entry that
-named the round was not something any lap-1 author read. It is the same gap as
-the joint entry below on K1–K3 — a change agreed or planned, and then left to
-memory across a round boundary. **They are now listed in that section's
-consolidated table of shared-document defects, which is what round 24's lap 1
-cites**, so the bundle has a place to be picked up from rather than a round
-number to go stale.
-
-### The secure re-read's repeat loop: four things for round 29, all upstream's code
-
-**Found by Platterpus reading round 28's Full run**, in their round 28 lap 9
-(S9, S16, S17, S19), and each checked against our source at `e0471f4`, our own
-filed copy of the bundle (`docs/rig-2026-09-28-e0471f4/rips/secure-reread.log`,
-invoked with `-r 3 -Z 2`) and upstream's `f8ebf48`. The code is upstream's in
-all four. None is a defect in `.17` that breaks its pin, and none is fixed in
-`.18`; each changes a P1 or P2 surface, so each is round 29's to announce.
-**Item 1 is fixed for `.19` at `9669d84`**, announced in round 29 lap 1; the
-other three are proposed there.
-
-1. **The loop prints its checksum before the final XOR, so it never equals
-   the track's `EAC CRC32:`.** `Repeating ripping (… current checksum %08X)`
-   and `Done; (N out of N matches for current checksum %08X)` print
-   `checksum_ctx.eac_crc` (`cyanrip@e0471f4:src/cyanrip_main.c:1006-1007`,
-   `:1028-1029`). The track block prints that value XORed with `UINT32_MAX`
-   (`src/checksums.h:86`). Track 3's converged read is `Done; (2 out of 2
-   matches for current checksum A62CAD22)` at `secure-reread.log:222` and
-   `EAC CRC32:     59D352DD` at `:260`, and `0x59D352DD ^ 0xFFFFFFFF` is
-   `0xA62CAD22`. So a reader comparing the loop's checksums with AccurateRip,
-   EAC, CTDB or our own track block compares complements, and nothing in the
-   log says so. Platterpus found it by working the arithmetic (their S9). Their
-   parser matches those lines on the counts only and captures no checksum
-   (`platterpus@41f92220:src/platterpus/parsers/cyanrip_log.py:269-273`), so
-   printing the finalised value would not break that parse. It still changes
-   what a P2 line's number means, which is why it needs a round. **Fixed at
-   `9669d84`**: both lines print the finalised value, the comparisons keep the
-   raw one, and `sc_reference` requires each converged track's `Done;` checksum
-   to equal its `EAC CRC32:`.
-2. **At the repeat limit, the audio kept is the last read** (their S16).
-   Lines 1018-1021 switch encoding on for the read that may be the last, so
-   when the limit is hit, that read is encoded whatever the earlier reads agreed
-   on. Track 5 read `E0036697` twice and then `6902BCF0`, and `6902BCF0` is the
-   read kept (`secure-reread.log:381-385`, `:423`). Their proposal is to keep
-   the read that agreed most. Which bytes land on disk is ours to decide
-   (`docs/OWNERSHIP.md:61`, *"The audio bytes and every checksum over them"*).
-   **FIXED for `.20` by the -Z spool (`d7ee6c4`)**, the rule proposed in our
-   round 30 lap 5 S23 and its cost accepted in their lap 6 S9: the read the
-   most reads agreed on is kept, the newest of them on a tie, so track 5 above
-   would now deliver `E0036697`. Pinned by `sc_repeat_limit_keeps_most_agreed()`.
-   Before that: round 29 lap 1 S36 said *"We will propose the rule in a later
-   lap"*, and no lap until round 30's lap 5 did. Counted 2026-09-30
-   off `docs/rig-*/rips/*.log`: 24 limit hits in 15 filed logs, on tracks 3
-   (12), 5 (10) and 4 (2), every one under `-r 3 -Z 2`. The one filed `.19`
-   secure re-read, `-r 5 -Z 2`, converged on all 14 tracks
-   (`docs/rig-2026-09-30b-174a134/rips/secure-reread.log`).
-3. **`Done; (no matches found, but hit repeat limit of %i)` is printed whatever
-   the count** (their S17): line 1012's format has no count and never reads
-   `matches`. On track 5 it was true of the read it follows, which matched
-   neither earlier read. It was false of the track, whose first two reads
-   agreed, and that second sense is the one a consumer takes. Platterpus's own
-   parser comment reads the line as *"it gave up without any two reads
-   agreeing"* (`platterpus@41f92220:src/platterpus/parsers/cyanrip_log.py:251`).
-   A `-Z 3 -r 3` rip of three identical reads would print it with two matches.
-   Their `_SECURE_DONE_FAIL` matches `no matches found` (`:273`), so rewording
-   it removes a string a consumer matches on: their both-wordings release comes
-   first (round 20's ordering rule). **Fixed at `fb31a2b`, for `.19`**, after
-   that release: their 0.6.63 reads both wordings, and the line is now
-   `Done; (repeat limit of N reads reached; at most M reads agreed)`, M being the
-   largest number of reads that share one checksum. The `repeat_limit` scenario
-   reaches it on an image by varying one sector per read (`tests/badsector.c`),
-   including A, A, B, where the last read agrees with nobody and M is 2.
-4. **`-Z N` with `-r` of N or less can never converge** (their S19).
-   Convergence needs N matches against earlier reads, so N + 1 reads (`:1005`).
-   The limit counts every read from 0 (`:762`, `:1004`, `:1011`), so `-r N + 1`
-   tolerates no read that disagrees. Our argument parsing accepted `-Z 2 -r 2`.
-   Their settings refuse it now. **Refused here too at `22f7aae`, for `.19`**,
-   before any disc is opened, at column 0 with both values and a remedy that
-   exists (`zr_refusal`); an invocation that exited 0 now exits 1, which is the
-   P1/P4 change round 29 carried, with the shared `seam-commands.md` moved once
-   for both sides' argv tables (`83bcd70`).
-
----
 
 ### The Windows CI build clones five dependencies unpinned
 
