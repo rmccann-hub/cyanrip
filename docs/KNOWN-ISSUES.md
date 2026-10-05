@@ -285,7 +285,15 @@ the read forward, so the counter resets and the loop starts again (same
 function as the `-r` defect above). **Rounding the limit does not help**:
 `-r 10` hung too.
 
-**Why not now.** The remedy is ours to write: at level 0, read with
+**Asked in round 30, 2026-10-05** (our held lap 9 S20): fix it for `.20` at
+the cost below, or record it under the operator's close conditions with that
+reason. **The mechanism, read from libcdio-paranoia at `384f4da`**: in
+disable mode `paranoia_read_limited()` hands each block straight to its root
+and keeps none in its cache (`lib/paranoia/paranoia.c:3025-3036`), so when a
+read fails, `verify_skip_case()` (`:2350`) finds no block to graft from, the
+root does not grow, and the loop repeats. It is the library's to fix.
+
+**Why not now, as it stood before 2026-10-05.** The remedy is ours to write: at level 0, read with
 `cdio_cddap_read()` and our own bounded retry instead of paranoia's loop. But
 that changes the read path on a real drive. Paranoia reads in chunks and a
 per-sector read may be much slower, so it is a drive change that needs a drive
@@ -1494,6 +1502,20 @@ other three are proposed there.
    for both sides' argv tables (`83bcd70`).
 
 ---
+
+### The Windows CI build clones five dependencies unpinned
+
+**Found 2026-10-05** by `tools/gen-dependency-map.py`. `.github/mingw-build.sh`
+runs `git clone --depth 1` of curl, neon, `cyanreg/libmusicbrainz`, libqrencode
+and FFmpeg, each at whatever its default branch holds that day, so the Windows
+artifact is a build of five moving targets and no two runs need agree. The six
+GitHub Actions the workflow uses are pinned by tag, not by commit. **Both are
+upstream's** (the workflow and script came with the fork) and no consumer of
+this fork uses the Windows artifact: Platterpus builds from source on Linux.
+**Why not now:** pinning means choosing five versions and keeping them current,
+which is a decision about what the Windows build is for, and nobody has said it
+is for anything. Recorded so the choice is visible; the dependency map prints
+it every time it is regenerated.
 
 ## Open, ours, and NOT solvable here — no drive in this environment
 
