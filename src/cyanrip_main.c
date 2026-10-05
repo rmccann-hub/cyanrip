@@ -752,6 +752,58 @@ static double sample_peak_rel_amp(const uint8_t *data, const int bytes)
     return (double)sample_peak/32768.0;
 }
 
+/* THE -Z SPOOL. Round 30: our lap 5 S23 proposed it, Platterpus's lap 6 S9
+ * accepted its disk cost, and our lap 9 S18 lands it.
+ *
+ * -Z used to encode while it read, from the pass that might be the last, and
+ * start again whenever that pass did not converge. Two things followed. The
+ * album loudness graph was fed the FIRST encoded pass of each track, since it
+ * spans every track and cannot be reset, so when a later pass was kept the
+ * album rows and REPLAYGAIN_ALBUM_* described a read that was not on disk.
+ * And at the repeat limit the read kept was simply the last one, whichever
+ * read the most passes agreed on.
+ *
+ * Now no pass is encoded while it is read. Each pass's bytes, exactly as they
+ * are checksummed, go to an anonymous temporary file, one per distinct
+ * checksum: a read whose checksum is already spooled adds a count and keeps
+ * no second copy. When the track is decided, ONE spool is encoded, and the
+ * album graph sees only that. Converged: the read that converged. At the
+ * repeat limit: the read the most reads agreed on, and of those the one read
+ * most recently. The checksums are derived again from the spool's bytes and
+ * must equal the ones it was filed under, so the log's EAC CRC32 and
+ * AccurateRip values are the kept read's.
+ *
+ * tmpfile() leaves no name on disk, so a run that dies leaves nothing behind.
+ * It costs at most one track's audio per distinct checksum while that track
+ * is read, and no extra drive time. */
+typedef struct crip_spool {
+    uint32_t crc;   /* raw, before the final XOR, as last_checksums holds it */
+    int reads;      /* how many reads gave it */
+    int last_read;  /* the newest of them, counting from 1 */
+    FILE *f;        /* their bytes, as checksummed */
+} crip_spool;
+
+static int crip_spool_write(cyanrip_ctx *ctx, FILE *f, const uint8_t *data, int bytes)
+{
+    if (bytes <= 0 || fwrite(data, 1, bytes, f) == (size_t)bytes)
+        return 0;
+    int err = AVERROR(errno ? errno : EIO);
+    cyanrip_log(ctx, 0, "\nError writing the -Z spool: %s!\n", av_err2str(err));
+    return err;
+}
+
+/* At the repeat limit: the most reads, and on a tie the newest. */
+static int crip_spool_kept_at_limit(const crip_spool *spools, int nb_spools)
+{
+    int k = 0;
+    for (int i = 1; i < nb_spools; i++)
+        if (spools[i].reads > spools[k].reads ||
+            (spools[i].reads == spools[k].reads &&
+             spools[i].last_read > spools[k].last_read))
+            k = i;
+    return k;
+}
+
 static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     int ret = 0;
@@ -772,10 +824,11 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
     uint32_t start_frames_read;
     uint32_t *last_checksums = NULL;
     uint32_t nb_last_checksums = 0;
-    uint32_t repeat_mode_encode = 0;
     uint32_t total_repeats = 0;
-    int calc_global_peak_set = 0;
     int calc_global_peak = !ctx->settings.ripping_retries;
+    crip_spool *spools = NULL;
+    int nb_spools = 0, kept = -1;
+    FILE *pass_spool = NULL;
     t->secure_rip_state = CYANRIP_SECURE_RIP_NA;
     int64_t track_start_time = av_gettime_relative();
 
@@ -815,6 +868,15 @@ repeat_ripping:;
     cyanrip_checksum_ctx checksum_ctx;
     crip_init_checksum_ctx(ctx, &checksum_ctx, t);
 
+    if (ctx->settings.ripping_retries) {
+        pass_spool = tmpfile();
+        if (!pass_spool) {
+            ret = AVERROR(errno ? errno : EIO);
+            cyanrip_log(ctx, 0, "Error creating the -Z spool: %s!\n", av_err2str(ret));
+            goto fail;
+        }
+    }
+
     /* Reset sample peak for this attempt - a bad sample from a discarded
      * (non-matching) repeat ripping pass must not stick around forever. */
     t->sample_peak_rel_amp = 0.0;
@@ -831,13 +893,15 @@ repeat_ripping:;
 
         crip_process_checksums(&checksum_ctx, data, bytes);
 
-        if (!ctx->settings.ripping_retries || repeat_mode_encode) {
+        if (!ctx->settings.ripping_retries) {
             ret = cyanrip_send_pcm_to_encoders(ctx, t->enc_ctx, ctx->settings.outputs_num,
                                                t->dec_ctx, data, bytes, calc_global_peak);
             if (ret) {
                 cyanrip_log(ctx, 0, "Error in decoding/sending frame: %s\n", av_err2str(ret));
                 goto fail;
             }
+        } else if ((ret = crip_spool_write(ctx, pass_spool, data, bytes)) < 0) {
+            goto fail;
         }
     }
 
@@ -887,14 +951,16 @@ repeat_ripping:;
          /* Update sample peak */
         t->sample_peak_rel_amp = FFMAX(sample_peak_rel_amp(data, bytes), t->sample_peak_rel_amp);
 
-        /* Decode and encode */
-        if (!ctx->settings.ripping_retries || repeat_mode_encode) {
+        /* Decode and encode, or under -Z keep the bytes for later */
+        if (!ctx->settings.ripping_retries) {
             ret = cyanrip_send_pcm_to_encoders(ctx, t->enc_ctx, ctx->settings.outputs_num,
                                                t->dec_ctx, data, bytes, calc_global_peak);
             if (ret < 0) {
                 cyanrip_log(ctx, 0, "\nError in decoding/sending frame: %s\n", av_err2str(ret));
                 goto fail;
             }
+        } else if ((ret = crip_spool_write(ctx, pass_spool, data, bytes)) < 0) {
+            goto fail;
         }
 
         if (line_len > 0) {
@@ -905,7 +971,7 @@ repeat_ripping:;
         /* Report progress */
         line_len += snprintf(line, sizeof(line),
                              "Ripping%strack %i, progress - %0.2f%%",
-                             (!ctx->settings.ripping_retries || repeat_mode_encode) ? " and encoding " : " ",
+                             !ctx->settings.ripping_retries ? " and encoding " : " ",
                              t->number, ((double)(i + 1)/frames)*100.0f);
 
         ctx->frames_read++;
@@ -977,13 +1043,15 @@ repeat_ripping:;
 
         crip_process_checksums(&checksum_ctx, data, bytes);
 
-        if (!ctx->settings.ripping_retries || repeat_mode_encode) {
+        if (!ctx->settings.ripping_retries) {
             ret = cyanrip_send_pcm_to_encoders(ctx, t->enc_ctx, ctx->settings.outputs_num,
                                                t->dec_ctx, data, bytes, calc_global_peak);
             if (ret < 0) {
                 cyanrip_log(ctx, 0, "Error in decoding/sending frame: %s\n", av_err2str(ret));
                 goto fail;
             }
+        } else if ((ret = crip_spool_write(ctx, pass_spool, data, bytes)) < 0) {
+            goto fail;
         }
     }
 
@@ -995,8 +1063,8 @@ repeat_ripping:;
         /* Stop repeating when we have been told to stop. Without this the
          * quit_now break above ends the READ, the partial pass then fails to
          * match, and the loop goes round again -- for as many passes as -r
-         * allows, each one tearing down and rebuilding the encoders in
-         * cyanrip_reset_encoding(), each one breaking out of the read
+         * allows, each one tearing down and rebuilding the encoders in what
+         * was then cyanrip_reset_encoding(), each one breaking out of the read
          * immediately. A cancelled `-Z 200 -r 200` therefore did 200 encoder
          * resets before it would exit, which is felt as "the ripper ignored
          * the kill" and is what a supervisor's timeout gives up waiting for
@@ -1009,6 +1077,29 @@ repeat_ripping:;
          * made. */
         if (quit_now)
             goto finalize_ripping;
+
+        /* File this read's bytes under its checksum: a checksum already
+         * spooled gains a read and keeps its one copy. */
+        int filed = -1;
+        for (int i = 0; i < nb_spools; i++)
+            if (spools[i].crc == checksum_ctx.eac_crc)
+                filed = i;
+        if (filed >= 0) {
+            spools[filed].reads++;
+            spools[filed].last_read = total_repeats + 1;
+            fclose(pass_spool);
+        } else {
+            crip_spool *grown = av_realloc_array(spools, nb_spools + 1, sizeof(*spools));
+            if (!grown) {
+                ret = AVERROR(ENOMEM);
+                goto end;
+            }
+            spools = grown;
+            spools[nb_spools] = (crip_spool){ checksum_ctx.eac_crc, 1,
+                                              total_repeats + 1, pass_spool };
+            filed = nb_spools++;
+        }
+        pass_spool = NULL;
 
         int matches = 0;
         for (int i = 0; i < nb_last_checksums; i++)
@@ -1028,7 +1119,8 @@ repeat_ripping:;
             cyanrip_log(ctx, 0, "\nDone; (%i out of %i matches for current checksum %08X)\n",
                         matches, ctx->settings.ripping_retries, shown_crc);
             t->secure_rip_state = CYANRIP_SECURE_RIP_CONVERGED;
-            goto finalize_ripping;
+            kept = filed;
+            goto spool_encode;
         }
         if (total_repeats >= ctx->settings.max_retries) {
             /* The largest number of reads that agree on one checksum, this
@@ -1053,17 +1145,8 @@ repeat_ripping:;
                         ctx->settings.max_retries == 1 ? "" : "s",
                         agreed, agreed == 1 ? "" : "s");
             t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
-            goto finalize_ripping;
-        }
-
-        /* If the next match may be the last one, start encoding */
-        if ((matches + 1) >= ctx->settings.ripping_retries ||
-            (total_repeats + 1) >= ctx->settings.max_retries) {
-            repeat_mode_encode = 1;
-            if (!calc_global_peak_set) {
-                calc_global_peak_set = 1;
-                calc_global_peak = 1;
-            }
+            kept = crip_spool_kept_at_limit(spools, nb_spools);
+            goto spool_encode;
         }
 
         cyanrip_log(ctx, 0, "\nRepeating ripping (%i out of %i matches for current checksum %08X)\n",
@@ -1079,15 +1162,46 @@ repeat_ripping:;
         last_checksums[nb_last_checksums] = checksum_ctx.eac_crc;
         nb_last_checksums++;
 
-        int err = cyanrip_reset_encoding(ctx, t);
-        if (err < 0) {
-            cyanrip_log(ctx, 0, "Error in encoding: %s\n", av_err2str(err));
-            ret = err;
-            goto end;
-        }
-
         ctx->frames_read = start_frames_read;
         goto repeat_ripping;
+    }
+    goto finalize_ripping;
+
+    /* The one encode of a -Z track: the kept read, from its spool, with the
+     * album graph fed. Its checksums are derived again from these bytes and
+     * must be the ones the read was filed under. */
+spool_encode: {
+        crip_spool *k = &spools[kept];
+        cyanrip_checksum_ctx kept_ctx;
+        uint8_t buf[CDIO_CD_FRAMESIZE_RAW];
+        size_t n;
+
+        crip_init_checksum_ctx(ctx, &kept_ctx, t);
+        t->sample_peak_rel_amp = 0.0;
+        rewind(k->f);
+        while (!quit_now && (n = fread(buf, 1, sizeof(buf), k->f)) > 0) {
+            crip_process_checksums(&kept_ctx, buf, n);
+            t->sample_peak_rel_amp = FFMAX(sample_peak_rel_amp(buf, n), t->sample_peak_rel_amp);
+            ret = cyanrip_send_pcm_to_encoders(ctx, t->enc_ctx, ctx->settings.outputs_num,
+                                               t->dec_ctx, buf, n, 1);
+            if (ret < 0) {
+                cyanrip_log(ctx, 0, "\nError in decoding/sending frame: %s\n", av_err2str(ret));
+                goto fail;
+            }
+        }
+        if (!quit_now) {
+            if (ferror(k->f)) {
+                ret = AVERROR(EIO);
+                cyanrip_log(ctx, 0, "\nError reading the -Z spool: %s!\n", av_err2str(ret));
+                goto fail;
+            }
+            crip_finalize_checksums(&kept_ctx, t);
+            if (kept_ctx.eac_crc != k->crc) {
+                ret = AVERROR_BUG;
+                cyanrip_log(ctx, 0, "\nError verifying the -Z spool: it does not match the read it was kept for!\n");
+                goto fail;
+            }
+        }
     }
 
 finalize_ripping:
@@ -1165,6 +1279,11 @@ fail:
 
 end:
     av_free(last_checksums);
+    if (pass_spool)
+        fclose(pass_spool);
+    for (int i = 0; i < nb_spools; i++)
+        fclose(spools[i].f);
+    av_free(spools);
 
     t->total_repeats = total_repeats;
     t->rip_time_us = av_gettime_relative() - track_start_time;

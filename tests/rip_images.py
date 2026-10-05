@@ -6074,6 +6074,111 @@ def sc_repeat_limit():
                  f"stay 0, so the limit is the only reason for the arm")
 
 
+def sc_repeat_limit_keeps_most_agreed():
+    """AT THE REPEAT LIMIT, THE READ THE MOST READS AGREED ON IS KEPT.
+
+    Round 30, our lap 9 S18: the -Z spool. Before it, -Z kept the LAST read
+    whatever the others said, so a track read A, A, B delivered B. Each pass
+    now goes to a spool, one per distinct checksum, and the track is encoded
+    once, from the read the most reads agreed on, the newest of them on a tie.
+
+    tests/badsector.c's flip mode XORs the first byte of sector 100 with
+    (k / RUN % CYCLE) + 1 on the k-th read, so each version is known exactly:
+
+      * RUN 2, CYCLE 2, -r 3: v1, v1, v2. Kept: v1. The last read is v2.
+      * RUN 2, CYCLE 3, -r 5: v1, v1, v2, v2, v3. v1 and v2 tie on two reads;
+        the newest of them is v2. The last read is v3, and the oldest of the
+        tied is v1, so each wrong rule delivers a different byte.
+
+    Asserted against independent artifacts: the delivered file's bytes against
+    the source .bin with the expected XOR, and the log's EAC CRC32 against
+    zlib's CRC32 of the delivered file, which is what EAC CRC32 is. -P 0 so
+    each pass is one read of the sector, as in sc_repeat_limit().
+    """
+    import zlib
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"repeat_limit_keeps_most_agreed: the shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    src = (FIX / "cdda.bin").read_bytes()
+    sec, flip = 2352, 100
+    for run, cycle, limit, want, last in ((2, 2, 3, 1, 2), (2, 3, 5, 2, 3)):
+        tag = f"run {run} cycle {cycle} -r {limit}"
+        out = WORK / f"out_keeps_{run}_{cycle}"
+        count = WORK / f"keeps_{run}_{cycle}.count"
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+                   CRIP_FLIP_SECTOR=str(flip), CRIP_FLIP_CYCLE=str(cycle),
+                   CRIP_FLIP_RUN=str(run), CRIP_FLIP_OUT=str(count),
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-Z", "2", "-r", str(limit), "-l", "1",
+                     "-o", "pcm", "-D", out, "-F", "{track}", "-L", "log",
+                     env=env)
+        if ec != 0:
+            fail(f"repeat_limit_keeps_most_agreed: {tag}: cyanrip exited {ec}")
+            continue
+        flips = int(count.read_text().strip()) if count.exists() else 0
+        if flips != limit:
+            fail(f"repeat_limit_keeps_most_agreed: {tag}: the shim varied "
+                 f"{flips} reads, not {limit}, so the schedule is not the one "
+                 f"this test assumes")
+            continue
+        got = (out / "1.pcm").read_bytes() if (out / "1.pcm").exists() else b""
+        expect = bytearray(src[:300 * sec])
+        expect[flip * sec] ^= want
+        if got != bytes(expect):
+            seen = got[flip * sec] ^ src[flip * sec] if len(got) > flip * sec else None
+            fail(f"repeat_limit_keeps_most_agreed: {tag}: the delivered track is "
+                 f"not read v{want}, the one the most reads agreed on (newest on "
+                 f"a tie); sector {flip}'s first byte carries v{seen}"
+                 + (f", the last read's" if seen == last else ""))
+            continue
+        text = (out / "log.log").read_text(errors="replace")
+        m = re.search(r"^  EAC CRC32:\s+([0-9A-F]{8})", text, re.M)
+        crc = f"{zlib.crc32(got) & 0xFFFFFFFF:08X}"
+        if not m or m.group(1) != crc:
+            fail(f"repeat_limit_keeps_most_agreed: {tag}: the log's EAC CRC32 "
+                 f"is {m.group(1) if m else 'absent'}, and the delivered file's "
+                 f"CRC32 is {crc}; the log describes a read that is not on disk")
+        if "Track 1 read with errors." not in text.splitlines():
+            fail(f"repeat_limit_keeps_most_agreed: {tag}: a track that hit the "
+                 f"limit should still read `with errors`")
+
+
+def sc_spool_refusal():
+    """A -Z RIP THAT CANNOT SPOOL SAYS SO, AT COLUMN 0, AND EXITS 1.
+
+    Round 30, the -Z spool: each pass is written to a tmpfile() before the kept
+    one is encoded, so a full disk now stops a -Z rip where it used to stop
+    only the encode. tests/badsector.c's CRIP_NO_TMPFILE makes tmpfile() fail
+    with ENOSPC. The rule this holds the new path to is the seam's: every fatal
+    path prints a diagnosable line, at column 0, to a stream the caller
+    captures, and no track that was not ripped says it was read.
+    """
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"spool_refusal: the shim was not built or not passed ({shim!r})")
+        return
+    out = WORK / "out_spool_refusal"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_NO_TMPFILE="1",
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                      "-P", "0", "-Z", "2", "-r", "3", "-o", "pcm", "-D", out,
+                      "-F", "{track}", "-L", "log", env=env)
+    if ec != 1:
+        fail(f"spool_refusal: a -Z rip that could not spool exited {ec}, not 1")
+    want = "Error creating the -Z spool: No space left on device!"
+    text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+    for where, body in (("the log", text), ("stdout", stdout)):
+        if want not in body.splitlines():
+            fail(f"spool_refusal: {where} has no line {want!r} at column 0")
+    if re.search(r"(?m)^Track \d+ read successfully!$", text):
+        fail("spool_refusal: a track says it was read, and nothing was")
+
+
 def sc_paranoia_skip():
     """A PARANOIA SKIP READS `with errors.`, THOUGH THE DRIVE REPORTED NONE.
 
@@ -6170,6 +6275,11 @@ def sc_repeat_resets_filter():
     audio must be identical. Before the fix it differed in 31 of its first 38
     sample frames, with the same EAC CRC32 in both logs, because the checksum
     is over the read buffer and the difference was the filter's.
+
+    Since the -Z spool (round 30), no pass is encoded while it is read: the
+    kept read is encoded once, from its spool, so the filter it meets is fresh
+    by construction and cyanrip_reset_encoding() is gone. The schedule and the
+    assertion are unchanged.
     """
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():

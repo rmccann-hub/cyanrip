@@ -48,6 +48,8 @@
  *   CRIP_FLIP_CYCLE  how many distinct versions of it to cycle through
  *   CRIP_FLIP_RUN    how many reads in a row get each version (default 1)
  *   CRIP_FLIP_OUT    where to write the number of reads varied, at exit
+ *
+ * And CRIP_NO_TMPFILE, set to anything, makes tmpfile() fail with ENOSPC.
  */
 
 /* The build passes -D_FILE_OFFSET_BITS=64, under which glibc renames fopen
@@ -121,6 +123,26 @@ FILE *fopen(const char *path, const char *mode)
 FILE *fopen64(const char *path, const char *mode)
 {
     return fopen(path, mode);
+}
+
+/* CRIP_NO_TMPFILE makes tmpfile() fail with ENOSPC, as a full disk would, so
+ * the refusal of the -Z spool (round 30) can be driven with no full disk.
+ * Both names, for the same reason as fopen above. */
+FILE *tmpfile(void)
+{
+    static FILE *(*real)(void);
+    if (getenv("CRIP_NO_TMPFILE")) {
+        errno = ENOSPC;
+        return NULL;
+    }
+    if (!real)
+        real = dlsym(RTLD_NEXT, "tmpfile");
+    return real ? real() : NULL;
+}
+
+FILE *tmpfile64(void)
+{
+    return tmpfile();
 }
 
 size_t fread(void *ptr, size_t size, size_t n, FILE *f)
