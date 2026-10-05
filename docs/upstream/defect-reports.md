@@ -2,17 +2,17 @@
 
 **Not filed.** These are drafts for the maintainer to review and submit. Filing
 on upstream's tracker is outside this repository, so it is the maintainer's act;
-what this file does is make each one a copy-and-paste. All seventeen are
+what this file does is make each one a copy-and-paste. All eighteen are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. `CLAUDE.md`'s rule is that
 *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
-its own file, `docs/upstream-cachemodel-report.md`. There are seventeen:
-sixteen here, and that one. The thirteenth found, report 13, was found the day
-this file was written. Reports 14 to 17 were drafted on 2026-10-05, when
-`master` was still `f8ebf48` (`git ls-remote` again): 14 found that day, and
-15 to 17 found earlier in round 30 and fixed for the fork's `.20` without a
-report until then.
+its own file, `docs/upstream-cachemodel-report.md`. There are eighteen:
+seventeen here, and that one. The thirteenth found, report 13, was found the
+day this file was written. Reports 14 to 18 were drafted on 2026-10-05, when
+`master` was still `f8ebf48` (`git ls-remote` again): 14 and 18 found that
+day, and 15 to 17 found earlier in round 30 and fixed for the fork's `.20`
+without a report until then.
 
 **Checked against upstream `master` at `f8ebf48` on 2026-09-27**, which is also
 our `master` (`git ls-remote https://github.com/cyanreg/cyanrip
@@ -412,3 +412,39 @@ during the search.
 **What the fork did:** a stop ends the search, and every stopped search prints
 `Stopping, offset finding incomplete!` (`aa1f067`, "Say what a -J or -f run
 was, and end a -f search on a stop").
+
+## 18. The footer can count a one-frame match the track's lines never printed
+
+**Where:** `src/cyanrip_log.c:319-324`, the disc tally in
+`cyanrip_log_finish_report()`:
+
+```c
+                if ((crip_find_ar(t, t->acurip_checksum_v1, 0) > 0) ||
+                    (crip_find_ar(t, t->acurip_checksum_v2, 0) > 0))
+                    accurip_verified++;
+                else if (crip_find_ar(t, t->acurip_checksum_v1_450, 1) > (3*(t->ar_db_max_confidence+1)/4) &&
+                         t->acurip_checksum_v1_450)
+                    accurip_partial++;
+```
+
+against the gate on the track's own `Accurip 450:` line, `:148`:
+
+```c
+        if (!has_ar || ((match_v1 < 0) && (match_v2 < 0))) {
+```
+
+**What happens:** the track prints its 450 line only when both whole-track
+lookups missed (`< 0`); the tally counts a partial match whenever neither
+matched (`not > 0`). The two part on a confidence of exactly 0, which only a
+malformed AccurateRip response carries: a track whose v1 matches such an entry
+prints no 450 line, while the footer counts it in `Tracks ripped partially
+accurately:` if another entry carries its frame checksum above the threshold.
+Read from the source, not seen on a real response.
+
+**How to reproduce:** feed the report a track whose v1 checksum matches an
+entry of confidence 0, beside a second entry carrying the track's frame-450
+checksum at a confidence over `3*(max+1)/4`.
+
+**What the fork did:** the tally uses the per-track gate, so it counts exactly
+the 450 lines that say `matches Accurip DB` (`8ab9a8d`, "Count a one-frame
+match in the footer only where the track's line says so").

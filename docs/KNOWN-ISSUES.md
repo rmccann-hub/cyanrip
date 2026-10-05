@@ -137,6 +137,14 @@ each to them.
   tally is unchanged. Upstream's too (`src/cyanrip_log.c:152-159` at
   `f8ebf48`), drafted as upstream report 14. `tests/logrender.c` had pinned
   the old wording as expected; it now pins the new, revert-proved four ways.
+- **The footer could count a one-frame match no track line printed**
+  (`8ab9a8d`), found writing up the open list for the operator. The tally
+  counted a partial match where neither whole-track lookup returned more than
+  0, while the track's `Accurip 450:` line is printed only when both returned
+  less than 0; they part on a confidence of 0, which only a malformed response
+  carries. The tally now uses the per-track gate. No wording changes, and no
+  real response has been seen to reach it. Upstream's too, report 18.
+  `tests/logrender.c` pins it, revert-proved.
 
 **FIXED for `.20` (`0645ddb`): a `-f` search that finds no offset exits 1.**
 It exited 0 (measured: `-N -f` on `basic.cue` printed `No track had AccuRip

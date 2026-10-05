@@ -16,12 +16,12 @@
 # License along with cyanrip; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-"""Generate docs/upstream/issues-to-file.md: the seventeen upstream bug
+"""Generate docs/upstream/issues-to-file.md: the eighteen upstream bug
 reports, rendered as issues ready to paste into cyanreg/cyanrip's tracker.
 
 The reports themselves are written in two files, and this renders them:
 
-  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-17;
+  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-18;
   * `docs/upstream-cachemodel-report.md`, report 8.
 
 It exists because filing is the maintainer's act, done in a browser, and a
@@ -54,7 +54,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 FORK = "https://github.com/rmccann-hub/cyanrip"
 DEFECTS = "docs/upstream/defect-reports.md"
 CACHEMODEL = "docs/upstream-cachemodel-report.md"
-COUNT = 17
+COUNT = 18
 
 
 def is_commit(sha):

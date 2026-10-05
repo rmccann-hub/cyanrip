@@ -899,13 +899,14 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is seventeen**:
+   tally that said "all three" while five more existed. **It is eighteen**:
    eight counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather
    than remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
    from round 26's real test, a twelfth the same day from Platterpus's reading
    of our source, a thirteenth on 2026-09-27, found writing
    `tests/arresp.c`, a fourteenth on 2026-10-05, found reading the tally for
-   round 30, and three fixed earlier in round 30 and drafted the same day.
+   round 30, three fixed earlier in round 30 and drafted the same day, and an
+   eighteenth found that evening, writing up the open list.
    Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
@@ -961,13 +962,17 @@ should need rewriting. If it does, that is the defect.
   17. A stopped `-f` search is retried with a larger radius, or reported as
       `No track was long enough`, because nothing after `end:` asks whether
       it was stopped. Fixed for `.20` (`aa1f067`).
+  18. The footer tally counts a one-frame match where neither whole-track
+      lookup returned more than 0, while the track's 450 line needs both
+      below 0, so a confidence-0 entry (a malformed response) makes the
+      footer count a match no track line shows. Fixed for `.20` (`8ab9a8d`).
 
-   **Not filed is not fixed, and seventeen unfiled reports is the private
+   **Not filed is not fixed, and eighteen unfiled reports is the private
    garden this rule forbids.** Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — but **every one is
-   drafted** (2026-09-27, the last four 2026-10-05): the other sixteen are in
+   drafted** (2026-09-27, the last five 2026-10-05): the other seventeen are in
    `docs/upstream/defect-reports.md`, each with upstream's `file:line` at
-   `f8ebf48` and our fixing commit, and all seventeen are rendered ready to
+   `f8ebf48` and our fixing commit, and all eighteen are rendered ready to
    paste in `docs/upstream/issues-to-file.md`. The count
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
@@ -2094,7 +2099,8 @@ errors:` counting paranoia's skips with a suffix saying how many, by the
 operator's word of 2026-10-05, the exit code left as the drive's (`0c692ed`),
 and a `-f` search that finds no offset exiting 1 (`0645ddb`), landed with the
 `seam-commands.md` text both trees agreed in round 30, and a one-frame
-AccurateRip entry under the threshold saying it was found (`b1857d6`).
+AccurateRip entry under the threshold saying it was found (`b1857d6`), and the
+footer's one-frame tally counting only what the track lines print (`8ab9a8d`).
 **What goes to stable after the close is decided: `.21`, cut from the closed
 tree** (the plan's §3).
 `docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition; the one

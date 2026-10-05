@@ -91,7 +91,11 @@ for a checksum no entry carries, here and upstream. It now reads `(found in
 Accurip DB with a confidence of N, not above T, the threshold for a one-frame
 match; whole-track checksums not found)`, worded so Platterpus's `confidence N`
 pattern reads no match, which it is not; a zero checksum's caveat holds at any
-confidence. One P2 row is added, and it is upstream report 14.
+confidence. One P2 row is added, and it is upstream report 14. **The footer's
+one-frame tally counts only what the track lines print** (`8ab9a8d`): it
+counted a match where neither whole-track lookup was above 0, while a track's
+450 line needs both below 0, and a confidence-0 entry, which only a malformed
+response carries, separated them. Upstream report 18.
 
 **Platterpus's round 30 lap 10 is filed**
 (`docs/handshake/inbound/round-30-lap-10.md`, sha256 `20e17e55…`, 27,675 bytes,
