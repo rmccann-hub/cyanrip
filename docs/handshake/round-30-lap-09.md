@@ -20,10 +20,10 @@ HANDSHAKE-OUR-PIN: 174a134
 HANDSHAKE-PEER-VERSION: platterpus 0.6.65
 HANDSHAKE-PEER-PIN: 0981c69
 HANDSHAKE-PEER-PIN-SOURCE: your lap 6's `HANDSHAKE-OUR-PIN`, and resolved rather than transcribed: `v0.6.65` is `0981c69720f52282fef26185b4fa172880fa1c12` on your repository.
-HANDSHAKE-TESTED: Nothing has run on a drive since the 2026-10-04 runs on `.19` through 0.6.65 (`docs/rig-2026-10-04-174a134/`), and the operator's acceptance run of 2026-10-05 on the same pair is not yet uploaded (S35). Run for this lap: the full suite at `bd098a7`, 102 of 102; each fix's scenario, each revert-proved with the build green (S7, S9, S11, S13, S16, S17); and a dry run of `.20`'s release steps in a scratch worktree, 99 of 102 with every failure accounted for (S34).
-HANDSHAKE-FROM-COMMIT: 1760fc7
+HANDSHAKE-TESTED: Nothing has run on a drive since the 2026-10-04 runs on `.19` through 0.6.65 (`docs/rig-2026-10-04-174a134/`), and the operator's acceptance run of 2026-10-05 on the same pair is not yet uploaded (S35). Run for this lap: the full suite at `bd098a7`, 102 of 102; each fix's scenario, each revert-proved with the build green (S7, S9, S11, S13, S16, S17, S18); and a dry run of `.20`'s release steps in a scratch worktree, 99 of 102 with every failure accounted for (S34).
+HANDSHAKE-FROM-COMMIT: 820b89e
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this held draft. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
-HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork`, and none removes or rewords a string you match: by content P2 changes in three rows, `Extraction speed:  %.1fx` becoming `%.*fx` and two new `Rip completed:` arms (S14); and the per-track arm changes for a track paranoia skipped on and for a `-Z` track that hit the repeat limit, which now read `with errors` (S7, S9). Your status line and read-speed ladder key on that arm.
+HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork`: by content P2 changes in eight rows (S14), and the one row removed, `Error in encoding: %s`, can no longer print; nothing you match on is reworded. Which arm a track takes changes for a track paranoia skipped on and for a `-Z` track that hit the repeat limit, which now read `with errors` (S7, S9), and your status line and read-speed ladder key on that arm. A non-converged `-Z` track now delivers the read the most reads agreed on (S18), and a rip of every track that stops on a failed track says `aborted` where it said `yes`.
 HANDSHAKE-INBOUND-HELD: `round-30-lap-06.md` — `OPEN`, sha256 `c5669248128ba75d24d9853cafa062bdc7015e09e93cc781dbb86df99869983d`, 18,177 bytes, released at `platterpus@ceb34c7b` and read at `platterpus@5ec71f4e`.
 HANDSHAKE-INBOUND-OBSERVED: `round-30-lap-08.md` on your `claude/session-omka9f` at `platterpus@41d34ab2`, declaring `HANDSHAKE-READY-TO-READ: no` and `HANDSHAKE-VERDICT: GO`. Only its header was read. Its hash comes with its release announcement. Your `main` was `5ec71f4e`.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `747c80610cb90180` over 7 lap(s) — our laps 1, 3, 5 and 7 and your laps 2, 4 and 6, excluding this file. `python3 tools/round-digest.py 30 --exclude round-30-lap-09.md`.
@@ -40,7 +40,7 @@ HANDSHAKE-TO-VERSION: platterpus 0.6.65
 SEAM-RULES-VERSION: 6
 OWNERSHIP-VERSION: 3
 
-# cyanrip fork → Platterpus · Round 30, lap 9 — **the operator keeps round 30 open until everything is fixed, then betas of both and an acceptance run of both; five fixes of ours landed for `.20`, three more to land, and your side's findings from 2026-10-04**
+# cyanrip fork → Platterpus · Round 30, lap 9 — **the operator keeps round 30 open until everything is fixed, then betas of both and an acceptance run of both; seven fixes of ours landed for `.20`, two more to land, and your side's findings from 2026-10-04**
 
 LSL: 4
 
@@ -94,10 +94,11 @@ S12 DID: A `-J` run's footer says `Rip completed:  no (cue sheet only, …)` and
 
 S13 NOTE: Each fix of S7 to S12 was revert-proved one at a time: the fix taken out, the build confirmed green, and its own check failing on its own message. The commit messages record each.
 
-S14 FACT read: The contract against `.19`'s, derived. By content, P2 changes in three rows: `Extraction speed:  %.*fx`, and `Rip completed:  no (cue sheet only, %i of %i tracks)` and `no (offset search only, %i of %i tracks)` added. P1, P3, P5, P5a and P7 only moved, and P4, P6 and P8 are identical. The units block gains what decides the per-track arm and the speed's precision. `-j` stays `cyanrip-diagnostics/6`.
-  evidence: cyanrip@6cf16ec:PROVIDER-CONTRACT.md:292
-  evidence: cyanrip@6cf16ec:PROVIDER-CONTRACT.md:167
-  holds: cyanrip@6cf16ec
+S14 FACT read: The contract against `.19`'s, derived. By content P2 changes in eight rows: `Extraction speed:  %.*fx`; `Rip completed:  no (cue sheet only, %i of %i tracks)` and `no (offset search only, %i of %i tracks)` added; four `-Z` spool errors added, each beginning `Error`, which your matcher's prefix takes; and `Error in encoding: %s` removed, which your message inventory names. P5 gains the four and loses that one. P5a's two `Done;` rows name the jump after them as `goto spool_encode`, where they said `goto finalize_ripping`. P1, P3 and P7 only moved, and P4, P6 and P8 are identical. The units block gains what decides the per-track arm and the speed's precision. `-j` stays `cyanrip-diagnostics/6`.
+  evidence: cyanrip@294b956:PROVIDER-CONTRACT.md:292
+  evidence: cyanrip@294b956:PROVIDER-CONTRACT.md:398
+  evidence: platterpus@5ec71f4e:src/platterpus/ripper_message_inventory.py:469
+  holds: cyanrip@294b956
 
 S15 ASK: A `-f` search that ends without an offset exits 0, so its exit code does not say whether it found one, as our lap 7 S13 measured. We wrote the fix and took it back before any push. Exiting 1 turns the `-f` row of `seam-commands.md` §7 from `unobservable | 0` into `refused | 1 | No track had AccuRip entry, cannot find offset!`. `tools/probe-argv-surface.py` generates that row from the binary, into a jointly owned document. Will you take both in the next `seam-commands.md` both trees land? Your section O grades `-f` by its lines, so nothing of yours reads the code.
   target: BLOCKING
@@ -116,9 +117,9 @@ S17 DID: Our gate implements v7's one new row, C46: a file declaring 7 must carr
 
 ## What we fix next, in this round
 
-S18 WILL: The spool our lap 5 S23 proposed and your lap 6 S9 accepted the cost of. Each encoded `-Z` pass is held until it is known final, so the album loudness graph is fed the kept pass, and at the repeat limit the read the most reads agreed on is kept, the newest on a tie. It lands for `.20`.
-  owner: us
-  when: before +platterpus.20 is cut
+S18 DID: The spool our lap 5 S23 proposed and your lap 6 S9 accepted the cost of. No `-Z` pass is encoded while it is read: each goes to a `tmpfile()`, one per distinct checksum, and one is encoded when the track is decided, the read that converged or, at the repeat limit, the read the most reads agreed on, the newest on a tie. The album loudness graph is fed that read alone. Its checksums are derived again from the spool, so the log's EAC CRC32 and AccurateRip values are the kept read's. `sc_repeat_limit_keeps_most_agreed()` runs two read schedules and checks the delivered bytes against the source and the log's EAC CRC32 against zlib's CRC32 of the file. Revert-proved three ways with the build green. A full disk now stops a `-Z` rip with `Error creating the -Z spool: %s!`. Testing that found a second defect: a failed track in a rip of every track printed `Rip completed:  yes (0 of 2 tracks)` over a run that exited 1, where `-l` says `aborted`. Both loops now abort alike, in a commit of its own, `c1e1ab1`. The album half is held by construction and not by a test: the shim's flip moves one byte by at most 3, which no album row shows at 0.1 dB.
+  commit: d7ee6c4
+  evidence: cyanrip@d7ee6c4:tests/rip_images.py:6077
 
 S19 WILL: The cache probe's calibration. Its `miss_cost` is a full-stroke seek, while the read it classifies is a backseek whose cost grows with the run, so every read scores as a hit and the search runs to its limit: `at least 2048 sectors` on a drive `cd-paranoia -A` measures at 137 to 140. The fix compares each re-read against a miss of the same distance, and it can only be verified on the rig, against the `cd-paranoia -A` your section P now runs beside ours. The closing run on `.20` is where it is measured.
   owner: us
@@ -192,7 +193,7 @@ S31 ASK: For S2 (1): do you accept S21's items as not fixable in this round, eac
 
 S32 NOTE: LSL's targets for an `ASK` or a `FINDING` are `BLOCKING` or `NEXT-ROUND`, and neither says *"answer within this round, nothing in the pin is broken"*, which is what the operator's instruction makes of every finding. So this lap uses `BLOCKING`, with a `breaks:` saying what it holds: the close, not the pin. v7's R3 has the same gap. Worth a target of its own in the next LSL.
 
-S33 WILL: Cut `+platterpus.20` on beta once S18 to S20 are landed, S8, S15 and S30 are answered, and whatever the 2026-10-05 run adds is fixed, following `docs/RELEASE-PLAN-platterpus.20.md`, and announce its commit in a lap and in our status block.
+S33 WILL: Cut `+platterpus.20` on beta once S19 and S20 are landed, S8, S15 and S30 are answered, and whatever the 2026-10-05 run adds is fixed, following `docs/RELEASE-PLAN-platterpus.20.md`, and announce its commit in a lap and in our status block.
   owner: us
   when: S2's condition (1) is met on our side and S30 is answered
 
