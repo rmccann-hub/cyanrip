@@ -4,11 +4,10 @@ STATUS-NEWEST-LAP: round-30-lap-09.md
 STATUS-NEWEST-LAP-STATE: held
 
 STATUS-ROUND: 30, OPEN, waiting on the operator's close conditions of 2026-10-05 (our held lap 9 S2): every finding fixed or explained, betas of both applications, and an acceptance run of both on that pair
-STATUS-LAPS: newest sent round-30-lap-07.md (ours), round-30-lap-06.md (theirs); next 8 (theirs) carrying their reading of the 2026-10-05 run, held OPEN at platterpus@22de130c; held 9 carrying the operator's close conditions of 2026-10-05, nine fixes for +platterpus.20, their side's findings from 2026-10-04 and 2026-10-05, and our reading of the 2026-10-05 run, released after their lap 8
+STATUS-LAPS: newest sent round-30-lap-07.md (ours), round-30-lap-08.md (theirs); next 9 (ours) carrying our answer to their lap 8; held 9 carrying the operator's close conditions of 2026-10-05, nine fixes for +platterpus.20, their side's findings from 2026-10-04 and 2026-10-05, and our reading of the 2026-10-05 run, released after their lap 8
 STATUS-RELEASED: +platterpus.19 at 174a134, 2026-09-30
 STATUS-RELEASE-NEXT: +platterpus.20, a beta inside round 30 by the operator's word of 2026-10-05, after the fixes (docs/RELEASE-PLAN-platterpus.20.md), carrying SIGHUP handled like SIGTERM, the loudness figures on the delivered audio, a fresh filter for each -Z pass, a skip or a non-converged -Z read as read with errors, a slow speed to two significant figures, the -J and -f footers, the -Z spool and a failed track aborting every loop alike, the cache probe scored by cd-paranoia's 6 ms with the re-reads that end its search printed, and the -P 0 hang still to land; pins 174a134, reviews +platterpus.20
 STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on the fixes (our lap 9 S20), then +platterpus.20 on beta, then 0.6.66 naming it, and that run closes round 30
-STATUS-OPEN: c5-merged-text both fixing at round 30: amended and proposed at 2abeb5d, and landed in our tree by our lap 7's commit with our gate held at 6 (§15); theirs lands in the commit that files it, and our gate moves to 7 then
 STATUS-OPEN: album-graph-first-encoded-pass us fixing at round 30: landed at d7ee6c4 for +platterpus.20, not released; the -Z spool encodes only the kept read, so the album graph is fed that read alone
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: repeat-limit-kept-read us fixing at round 30: landed at d7ee6c4 for +platterpus.20, not released; at the repeat limit the read the most reads agreed on is kept, the newest of them on a tie
@@ -176,9 +175,9 @@ gates have said in a lap that they implement 6, and ours has said so in lap 5.
 
 | | |
 |---|---|
-| `PROTOCOL.md` | **v6**, `05abdfde706316f8`, byte-identical in both trees. `seam-sync-check --fetch` exits **0**, read at `platterpus@53b3c04` |
+| `PROTOCOL.md` | **v7**, `b9611d3b1b18fff4`, byte-identical in both trees, landed by our lap 7's commit and their `41d34ab2`. `seam-sync-check --fetch` exits **0**, read at `platterpus@bd508bf` |
 | what v5 added | §5b, the close rule; §5c, Platterpus's readability condition; `HANDSHAKE-PEER-VERDICT-SOURCE`, their field; rows C37–C42 |
-| the gates | **ours implements 6** from `643631b`, **theirs 5**, with 6 next (their lap 4). For a file declaring 5, ours still reads §5b's *"enumerated"* literally and theirs at decision time; v6 adopts theirs, and applies to files declaring 6. `docs/KNOWN-ISSUES.md` keeps it open until a round closes under step 3 |
+| the gates | **ours implements 7** from the commit that files their round 30 lap 8, **theirs 6**, moving to 7 before their round 31 lap 1 (their lap 8 S41); round 30's laps declare 6. Before that: ours implemented 6 from `643631b`, theirs 5, with 6 next (their lap 4). For a file declaring 5, ours still reads §5b's *"enumerated"* literally and theirs at decision time; v6 adopts theirs, and applies to files declaring 6. `docs/KNOWN-ISSUES.md` keeps it open until a round closes under step 3 |
 | **what v6 added** | **K1, K2 and K3**, agreed in rounds 21 and 22 and missing from v5; §5e, the agreed-change ledger; the decision-time §5b; C43–C45; and the operator's **R8** and **R9** |
 
 ### Platterpus's side, and how we know each part

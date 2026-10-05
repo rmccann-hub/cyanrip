@@ -103,7 +103,7 @@ LAP_DECL_RE = re.compile(r"(?m)^HANDSHAKE-LAP:")
 # The shared spec both projects implement. A file declaring a version this gate
 # does not implement is refused rather than guessed at -- see docs/handshake/
 # PROTOCOL.md, which is copied into both repositories.
-PROTOCOL_VERSION = 6
+PROTOCOL_VERSION = 7
 PROTOCOL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(\d+)[ \t]*$", re.M)
 PROTOCOL_DECL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(.*)$", re.M)
 

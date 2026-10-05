@@ -2068,9 +2068,12 @@ reading the 2026-10-05 run (`docs/rig-2026-10-05-174a134/`). Still to land: the
 poses one decision: what goes to stable after the close, since a beta cut with
 the round open logs `NOT a released build` forever. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and
 Platterpus's lap 6 amendments as our lap 7 amends two of them, are landed in our
-tree by the commit carrying our round 30 lap 7 (proposed at `2abeb5d`). Theirs
-lands in the commit that files our lap 7. Our gate stays at 6 until both trees
-hold v7 (§15), and v7 binds from round 31.**
+tree by the commit carrying our round 30 lap 7 (proposed at `2abeb5d`), and in
+theirs at `platterpus@41d34ab2`, the commit that filed our lap 7: byte-identical,
+`seam-sync-check --fetch` exit 0 at `platterpus@bd508bf`. **Our gate implements 7
+from the commit that files their round 30 lap 8**, as our lap 9 S5 said; theirs
+moves to 7 before their round 31 lap 1 (their lap 8 S41). Round 30's laps still
+declare 6 and it closes under v6; v7 binds from round 31.**
 
 **`+platterpus.18` SHIPPED on 2026-09-28** at `51cc789`, `release_seq` 28,
 stable, authorised by **round 28** — `docs/RELEASE-PLAN-platterpus.18.md` is

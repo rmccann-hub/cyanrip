@@ -9,7 +9,7 @@ HANDSHAKE-OPENER: cyanrip
 HANDSHAKE-VERDICT: OPEN
 HANDSHAKE-VERDICT-SOURCE: this lap's S44, resting on S2: the operator's word of 2026-10-05 keeps round 30 open until every finding is fixed or explained, both applications ship betas, and an acceptance run of both passes. Our lap 7's GO rested on the conditions this replaces (S4).
 HANDSHAKE-PEER-VERDICT: OPEN
-HANDSHAKE-PEER-VERDICT-SOURCE: `round-30-lap-06.md`, sha256 `c5669248128ba75d24d9853cafa062bdc7015e09e93cc781dbb86df99869983d`, 18,177 bytes, released at `platterpus@ceb34c7b` and merged into your `main` at `5ec71f4e`; its S30 is `VERDICT: OPEN`. Your lap 8 is held (S6), so it is not read here.
+HANDSHAKE-PEER-VERDICT-SOURCE: `round-30-lap-08.md`, sha256 `ef9b1dbbb80d366e3e93e395c26c9db3948e650c7866d7292b6b41a1b1ee1946`, 35,138 bytes, released at `platterpus@61b505e1` and merged into your `main` at `bd508bf1`; its S47 is `VERDICT: OPEN`.
 HANDSHAKE-APP-VERSION: platterpus 0.6.65
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)
 HANDSHAKE-PIN: 174a134
@@ -24,9 +24,9 @@ HANDSHAKE-TESTED: The operator's Full run of 2026-10-05 on `.19` through 0.6.65,
 HANDSHAKE-FROM-COMMIT: fa6ed53
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this held draft. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
 HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork`: by content P2 changes in eight rows (S14), and the one row removed, `Error in encoding: %s`, can no longer print; nothing you match on is reworded. Which arm a track takes changes for a track paranoia skipped on and for a `-Z` track that hit the repeat limit, which now read `with errors` (S7, S9), and your status line and read-speed ladder key on that arm. A non-converged `-Z` track now delivers the read the most reads agreed on (S18), and a rip of every track that stops on a failed track says `aborted` where it said `yes`. The `-j` record moves to `cyanrip-diagnostics/7` (S19); nothing in your tree parses it. The rendered `Cache probe:` line gains a clause on a miss (S39); it fills the line's `%s`, so no P2 row changes, and nothing in your tree reads inside the line.
-HANDSHAKE-INBOUND-HELD: `round-30-lap-06.md` — `OPEN`, sha256 `c5669248128ba75d24d9853cafa062bdc7015e09e93cc781dbb86df99869983d`, 18,177 bytes, released at `platterpus@ceb34c7b` and read at `platterpus@5ec71f4e`.
-HANDSHAKE-INBOUND-OBSERVED: `round-30-lap-08.md` on your `claude/session-omka9f` at `platterpus@22de130c`, declaring `HANDSHAKE-READY-TO-READ: no` and `HANDSHAKE-VERDICT: OPEN`, held until it reads the 2026-10-05 run. At `platterpus@41d34ab2` it declared `GO`. Only its header was read. Its hash comes with its release announcement. Your `main` was `5ec71f4e`.
-HANDSHAKE-ROUND-DIGEST: sha256/16 = `747c80610cb90180` over 7 lap(s) — our laps 1, 3, 5 and 7 and your laps 2, 4 and 6, excluding this file. `python3 tools/round-digest.py 30 --exclude round-30-lap-09.md`.
+HANDSHAKE-INBOUND-HELD: `round-30-lap-08.md` — `OPEN`, sha256 `ef9b1dbbb80d366e3e93e395c26c9db3948e650c7866d7292b6b41a1b1ee1946`, 35,138 bytes, released at `platterpus@61b505e1` and read at `platterpus@bd508bf1`.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `bd508bf1` holds no round-30 lap after lap 8.
+HANDSHAKE-ROUND-DIGEST: sha256/16 = `525abc43c7d759b7` over 8 lap(s) — our laps 1, 3, 5 and 7 and your laps 2, 4, 6 and 8, excluding this file. `python3 tools/round-digest.py 30 --exclude round-30-lap-09.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v7)=b9611d3b1b18fff42a48c49136ab13dd8682dfd66a160eda3ad4fc77757f0094 seam-rules=6c638fd3c323420d9ea3cdf3eb96658922d9857929dde4853f77d30db8286ee5 seam-commands=3691c621af7d4600fa48c5b5440504e487e51c282d4d211868e08cbcc4c7af1b ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit, pasted from its output. Our lap 7 gave the protocol's as 62 digits, two dropped by hand (S16).
 HANDSHAKE-CLOSE-BY: 2026-10-28T23:59:59Z
