@@ -445,14 +445,13 @@ static void test_accurip_other_matched_at_confidence_one(void)
     free_ctx(ctx);
 }
 
-/* cyanrip_log.c:530 [> to >=] -- the threshold inside the ZERO-checksum arm.
+/* The ZERO-checksum arm at a confidence the match threshold does not credit.
  *
- * The same 3/4 threshold is written twice, and the copy at :548 decides the
- * ordinary partial match while this one guards the zero-checksum caveat. A
- * test with a non-zero 450 checksum exercises :548 only, which is why :530's
- * comparison survived a sweep that killed :548's. This is the input that
- * separates them: a zero checksum whose database confidence sits exactly ON
- * the threshold. */
+ * The arm used to share the match arm's 3/4 threshold, and this test pinned
+ * that copy of it (a mutant that survived a sweep, round 7): a zero checksum
+ * found exactly ON the threshold printed `(not found)`. That was the defect
+ * and not the contract. The entry WAS found, and a zero is meaningless at any
+ * confidence, so the caveat now holds from confidence 1 up. Round 30. */
 static void test_accurip_450_zero_checksum_at_the_threshold(void)
 {
     cyanrip_ctx *ctx = new_ctx();
@@ -471,10 +470,10 @@ static void test_accurip_450_zero_checksum_at_the_threshold(void)
     cyanrip_log_track_end(ctx, &t);
     const char *out = drain(ctx);
 
-    expect_line(out, "    Accurip 450: 00000000 (not found)",
+    expect_line(out,
+                "    Accurip 450: 00000000 (no comparison possible, a checksum of 0 is meaningless)",
                 "accurip/450-zero-at-threshold");
-    expect_no_line(out,
-                   "    Accurip 450: 00000000 (no comparison possible, a checksum of 0 is meaningless)",
+    expect_no_line(out, "    Accurip 450: 00000000 (not found)",
                    "accurip/450-zero-at-threshold");
     free_ctx(ctx);
 }
@@ -556,8 +555,15 @@ static void test_accurip_450_never_compares_the_whole_track_checksum(void)
     free_ctx(ctx);
 }
 
-/* cyanrip_log.c:530 and :548 [> to >=] and [&& to ||] -- the partial-match
- * threshold, which is 3/4 of (max confidence + 1) and appears twice. */
+/* The partial-match threshold, 3*(max confidence + 1)/4 in integers, from
+ * both sides, and what the line says under it.
+ *
+ * Under the threshold this printed `(not found)` for an entry that WAS found,
+ * here and upstream: the record denied a lookup result it had. It now says
+ * found, with the confidence and the threshold, and never in the shape
+ * `confidence N`, which Platterpus reads in this parenthetical as a match
+ * (their round 27 lap 2 B1). Confidence 1 is the input that separates the
+ * found arm's `> 0` from `> 1`. Round 30. */
 static void test_accurip_450_partial_needs_three_quarters(void)
 {
     /* max_conf 7 -> threshold is 3*(7+1)/4 = 6, so 7 is over and 6 is not.
@@ -566,6 +572,7 @@ static void test_accurip_450_partial_needs_three_quarters(void)
     const struct { int conf; int partial; } cases[] = {
         { 7, 1 },
         { 6, 0 },
+        { 1, 0 },
     };
 
     for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
@@ -583,10 +590,15 @@ static void test_accurip_450_partial_needs_three_quarters(void)
         cyanrip_log_track_end(ctx, &t);
         const char *out = drain(ctx);
 
-        char want[160];
+        char want[160], found[200], bare[32];
         snprintf(want, sizeof(want),
                  "    Accurip 450: 0BADF00D (matches Accurip DB, confidence %i, "
                  "one frame only; whole-track checksums not found)", cases[i].conf);
+        snprintf(found, sizeof(found),
+                 "    Accurip 450: 0BADF00D (found in Accurip DB with a confidence of %i, "
+                 "not above 6, the threshold for a one-frame match; whole-track "
+                 "checksums not found)", cases[i].conf);
+        snprintf(bare, sizeof(bare), "confidence %i", cases[i].conf);
         if (cases[i].partial) {
             expect_line(out, want, "accurip/450-over-threshold");
             if (strstr(out, "accurately ripped"))
@@ -594,8 +606,13 @@ static void test_accurip_450_partial_needs_three_quarters(void)
                      "described as the track being accurately ripped");
         } else {
             expect_no_line(out, want, "accurip/450-under-threshold");
-            expect_line(out, "    Accurip 450: 0BADF00D (not found)",
-                        "accurip/450-under-threshold");
+            expect_line(out, found, "accurip/450-under-threshold");
+            expect_no_line(out, "    Accurip 450: 0BADF00D (not found)",
+                           "accurip/450-under-threshold");
+            /* The shape a consumer reads as a match must not appear. */
+            if (strstr(out, bare))
+                FAIL("accurip/450-under-threshold: an uncounted entry was "
+                     "published as `confidence N`, the shape of a match");
         }
         free_ctx(ctx);
     }

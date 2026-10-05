@@ -638,9 +638,13 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
 
         if (!has_ar || ((match_v1 < 0) && (match_v2 < 0))) {
             int match_450 = has_ar ? crip_find_ar(t, t->acurip_checksum_v1_450, 1) : 0;
+            int threshold_450 = 3*(t->ar_db_max_confidence+1)/4;
 
             cyanrip_log(ctx, 0, "    Accurip 450: %08X", t->acurip_checksum_v1_450);
-            if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4)) && (t->acurip_checksum_v1_450 == 0x0)) {
+            /* A zero checksum is meaningless at ANY confidence, not only above
+             * the threshold: this arm used to share the match arm's threshold,
+             * so a zero found below it printed `(not found)`. */
+            if (has_ar && (match_450 > 0) && (t->acurip_checksum_v1_450 == 0x0)) {
                 /* A zero checksum compares equal to every other zero in the
                  * database, so the "match" is an artifact of the value and not
                  * evidence about this audio. The old wording said so -- in a
@@ -658,7 +662,7 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                  * omits the caveat, which is the stronger invariant and is why
                  * this is a log-shape fix rather than a correctness one. */
                 cyanrip_log(ctx, 0, " (no comparison possible, a checksum of 0 is meaningless)\n");
-            } else if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4))) {
+            } else if (has_ar && (match_450 > threshold_450)) {
                 /* The 450 checksum covers one frame, 588 samples, and this
                  * block is reached only after v1 and v2 both missed. The old
                  * tail, "track is partially accurately ripped", read as mostly
@@ -669,6 +673,19 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                  * (their round 27 lap 2 B1). Announced in round 27 lap 4. */
                 cyanrip_log(ctx, 0, " (matches Accurip DB, confidence %i, one frame only; whole-track checksums not found)\n",
                             match_450);
+            } else if (has_ar && (match_450 > 0)) {
+                /* FOUND, AND NOT COUNTED. An entry carries this checksum, at a
+                 * confidence the threshold above does not credit, and this
+                 * printed `(not found)`, here and upstream (f8ebf48), so the
+                 * record denied a lookup result it had. Said with both numbers,
+                 * because the threshold is 3*(max+1)/4 in integers and no
+                 * fraction of the `max confidence` printed above names it.
+                 * "a confidence of %i", never "confidence %i": Platterpus reads
+                 * `confidence\s+\d+` in this parenthetical as a match (their
+                 * round 27 lap 2 B1), and this is not one. Round 30. */
+                cyanrip_log(ctx, 0, " (found in Accurip DB with a confidence of %i, not above %i, "
+                            "the threshold for a one-frame match; whole-track checksums not found)\n",
+                            match_450, threshold_450);
             } else if (has_ar) {
                 cyanrip_log(ctx, 0, " (not found)\n");
             } else {
