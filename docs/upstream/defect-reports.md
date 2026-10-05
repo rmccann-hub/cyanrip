@@ -2,14 +2,15 @@
 
 **Not filed.** These are drafts for the maintainer to review and submit. Filing
 on upstream's tracker is outside this repository, so it is the maintainer's act;
-what this file does is make each one a copy-and-paste. All thirteen are
+what this file does is make each one a copy-and-paste. All fourteen are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. `CLAUDE.md`'s rule is that
 *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
-its own file, `docs/upstream-cachemodel-report.md`. There are thirteen: twelve
-here, and that one. The thirteenth found, report 13, was found the day this file
-was written.
+its own file, `docs/upstream-cachemodel-report.md`. There are fourteen:
+thirteen here, and that one. The thirteenth found, report 13, was found the day
+this file was written, and report 14 on 2026-10-05, when `master` was still
+`f8ebf48` (`git ls-remote` again).
 
 **Checked against upstream `master` at `f8ebf48` on 2026-09-27**, which is also
 our `master` (`git ls-remote https://github.com/cyanreg/cyanrip
@@ -269,3 +270,34 @@ only when an entry for this disc is read, so those two responses read
 disc status say mismatch and not found"). The fork first split the parse out
 of the fetch, unchanged, so a recorded response can be tested with no network
 (`5b7493c`).
+
+## 14. A one-frame AccurateRip entry under the threshold is logged as `(not found)`
+
+**Where:** `src/cyanrip_log.c:152-159`, the `Accurip 450:` line, reached when
+both whole-track checksums missed:
+
+```c
+            if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4)) && (t->acurip_checksum_v1_450 == 0x0)) {
+                ...
+            } else if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4))) {
+                ...
+            } else if (has_ar) {
+                cyanrip_log(ctx, 0, " (not found)\n");
+```
+
+**What happens:** `crip_find_ar()` returns the matching entry's confidence, or
+-1 when no entry carries the checksum. Every result at or below the threshold
+falls to the last arm, so an entry that was found at a lower confidence is
+logged as `(not found)`, the same words as a checksum no entry carries. The
+log then denies a lookup result the program had. The threshold itself is not
+in question; the words are. A zero checksum found under the threshold gets the
+same `(not found)`, where above it the line says a zero is meaningless.
+
+**How to reproduce:** any track whose whole-track checksums miss and whose
+frame-450 checksum matches an entry at a confidence of at most
+`3*(max+1)/4`, for example confidence 6 on a track whose top entry is 7.
+
+**What the fork did:** the line says the entry was found, with its confidence
+and the threshold it needed to pass, and a zero checksum's caveat holds at any
+confidence (`b1857d6`, "Say a one-frame AccurateRip entry was found when the
+threshold rejects it"). The tally of partial matches is unchanged.

@@ -899,12 +899,13 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is thirteen**:
+   tally that said "all three" while five more existed. **It is fourteen**:
    eight counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather
    than remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
    from round 26's real test, a twelfth the same day from Platterpus's reading
-   of our source, and a thirteenth on 2026-09-27, found writing
-   `tests/arresp.c`. Each has a re-check
+   of our source, a thirteenth on 2026-09-27, found writing
+   `tests/arresp.c`, and a fourteenth on 2026-10-05, found reading the tally
+   for round 30. Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
    1. `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a
@@ -944,13 +945,17 @@ should need rewriting. If it does, that is the defect.
       entry for this disc reads `found`, and the report prints a tally of 0 of
       N over a comparison that never happened. Read from the source; fixed
       here for `.18` (`64642db`), pinned by `tests/arresp.c`.
+  14. A one-frame AccurateRip entry found **under the threshold** is logged
+      `(not found)`, the words for a checksum no entry carries, so the log
+      denies a lookup result it had. Read from the source; fixed here for
+      `.20` (`b1857d6`), pinned by `tests/logrender.c`.
 
-   **Not filed is not fixed, and thirteen unfiled reports is the private garden
+   **Not filed is not fixed, and fourteen unfiled reports is the private garden
    this rule forbids.** Filing is on upstream's tracker and outside this
-   repository, so it is the maintainer's act, not ours — but **every one is now
-   drafted** (2026-09-27): the other twelve are in
+   repository, so it is the maintainer's act, not ours — but **every one is
+   drafted** (2026-09-27, the fourteenth 2026-10-05): the other thirteen are in
    `docs/upstream/defect-reports.md`, each with upstream's `file:line` at
-   `f8ebf48` and our fixing commit, and all thirteen are rendered ready to
+   `f8ebf48` and our fixing commit, and all fourteen are rendered ready to
    paste in `docs/upstream/issues-to-file.md`. The count
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.

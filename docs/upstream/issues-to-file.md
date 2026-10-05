@@ -1,12 +1,12 @@
-# 13 upstream issues for cyanreg/cyanrip, ready to paste
+# 14 upstream issues for cyanreg/cyanrip, ready to paste
 
-**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `aa4189c53689e670`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public.
+**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `863d2c7e7aebce52`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public.
 
 **How to file.** For each item: open <https://github.com/cyanreg/cyanrip/issues/new>, paste the **Title** line into the title box and everything between the two `BODY` markers into the body. File them in order: item 5 refers to item 4, so once item 4 is filed you can replace *"item 4 of this set"* in item 5 with its issue link. Before filing, a quick search of upstream's open issues for each title's key words avoids a duplicate; this list was not checked against their tracker.
 
 **Suggested order of importance**, if you file only some: 6 (apostrophes corrupt metadata on real rips), 8 (disc images rip corrupted audio with `Ripping errors: 0`), 1 and 2 (a hung or cut-off process with the drive held), 4 and 5 (`-H` silently drops de-emphasis and the log claims it), then the rest.
 
-## Item 1 of 13
+## Item 1 of 14
 
 **Title:** The signal handler calls `cyanrip_log()`, which is not async-signal-safe
 
@@ -43,7 +43,7 @@ SIGTERM, and a -Z loop that ignored both").
 
 <!-- BODY END -->
 
-## Item 2 of 13
+## Item 2 of 14
 
 **Title:** SIGTERM is not handled at all
 
@@ -70,7 +70,7 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 
 <!-- BODY END -->
 
-## Item 3 of 13
+## Item 3 of 14
 
 **Title:** `cyanrip_log_finish_report()` sits above `end:`, so every `goto end` skips it
 
@@ -102,7 +102,7 @@ state").
 
 <!-- BODY END -->
 
-## Item 4 of 13
+## Item 4 of 14
 
 **Title:** The filter graph is a ternary cascade, so `-H` discards de-emphasis
 
@@ -131,7 +131,7 @@ de-emphasis").
 
 <!-- BODY END -->
 
-## Item 5 of 13
+## Item 5 of 14
 
 **Title:** `(deemphasis applied)` is printed from the settings, not from what happened
 
@@ -156,7 +156,7 @@ fixed with the filter-graph issue (item 4 of this set) in [`b866900`](https://gi
 
 <!-- BODY END -->
 
-## Item 6 of 13
+## Item 6 of 14
 
 **Title:** A bare apostrophe in `-a` or `-t` swallows every later field
 
@@ -183,7 +183,7 @@ double-escaping the consumer's").
 
 <!-- BODY END -->
 
-## Item 7 of 13
+## Item 7 of 14
 
 **Title:** An invalid UTF-8 byte truncates a name, and can make `-D` absolute
 
@@ -211,7 +211,7 @@ truncating and logging").
 
 <!-- BODY END -->
 
-## Item 8 of 13
+## Item 8 of 14
 
 **Title:** Ripping a disc image at any paranoia level above 0 returns corrupted audio and reports `Ripping errors: 0`
 
@@ -320,7 +320,7 @@ with image size.
 
 <!-- BODY END -->
 
-## Item 9 of 13
+## Item 9 of 14
 
 **Title:** `-r` reaches libcdio-paranoia unrounded, and `-r 3` never returns on a bad sector
 
@@ -349,7 +349,7 @@ there.
 
 <!-- BODY END -->
 
-## Item 10 of 13
+## Item 10 of 14
 
 **Title:** `media` is tagged from the `-H` setting, so every `-H` rip says HDCD
 
@@ -371,7 +371,7 @@ says").
 
 <!-- BODY END -->
 
-## Item 11 of 13
+## Item 11 of 14
 
 **Title:** The AccurateRip tally counts a track whose read was interrupted
 
@@ -394,7 +394,7 @@ in a real rip.
 
 <!-- BODY END -->
 
-## Item 12 of 13
+## Item 12 of 14
 
 **Title:** A 450 lookup falls through to the whole-track checksum on a miss
 
@@ -424,7 +424,7 @@ fork's copy of the same code.
 
 <!-- BODY END -->
 
-## Item 13 of 13
+## Item 13 of 14
 
 **Title:** The AccurateRip disc status can never read `mismatch`
 
@@ -461,6 +461,46 @@ only when an entry for this disc is read, so those two responses read
 disc status say mismatch and not found"). The fork first split the parse out
 of the fetch, unchanged, so a recorded response can be tested with no network
 ([`5b7493c`](https://github.com/rmccann-hub/cyanrip/commit/5b7493c)).
+
+---
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+
+<!-- BODY END -->
+
+## Item 14 of 14
+
+**Title:** A one-frame AccurateRip entry under the threshold is logged as `(not found)`
+
+<!-- BODY START -->
+
+**Where:** `src/cyanrip_log.c:152-159`, the `Accurip 450:` line, reached when
+both whole-track checksums missed:
+
+```c
+            if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4)) && (t->acurip_checksum_v1_450 == 0x0)) {
+                ...
+            } else if (has_ar && (match_450 > (3*(t->ar_db_max_confidence+1)/4))) {
+                ...
+            } else if (has_ar) {
+                cyanrip_log(ctx, 0, " (not found)\n");
+```
+
+**What happens:** `crip_find_ar()` returns the matching entry's confidence, or
+-1 when no entry carries the checksum. Every result at or below the threshold
+falls to the last arm, so an entry that was found at a lower confidence is
+logged as `(not found)`, the same words as a checksum no entry carries. The
+log then denies a lookup result the program had. The threshold itself is not
+in question; the words are. A zero checksum found under the threshold gets the
+same `(not found)`, where above it the line says a zero is meaningless.
+
+**How to reproduce:** any track whose whole-track checksums miss and whose
+frame-450 checksum matches an entry at a confidence of at most
+`3*(max+1)/4`, for example confidence 6 on a track whose top entry is 7.
+
+**What the fork did:** the line says the entry was found, with its confidence
+and the threshold it needed to pass, and a zero checksum's caveat holds at any
+confidence ([`b1857d6`](https://github.com/rmccann-hub/cyanrip/commit/b1857d6), "Say a one-frame AccurateRip entry was found when the
+threshold rejects it"). The tally of partial matches is unchanged.
 
 ---
 *Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
