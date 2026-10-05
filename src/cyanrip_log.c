@@ -571,8 +571,14 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                     t->ebu_range, t->ebu_lra_low, t->ebu_lra_high);
     }
     if (t->rip_time_us > 0) {
-        cyanrip_log(ctx, 0, "    Extraction speed:  %.1fx\n",
-                    (t->frames / 75.0) / (t->rip_time_us / 1000000.0));
+        /* Two significant figures below 1x, and one decimal from 1x up as
+         * before. One decimal printed `0.0x` for track 18 of the 2026-10-04
+         * run, 267 s of audio in 8,161 s, which is 0.033x: a speed of zero.
+         * Three decimals at most, because Platterpus's `_TRACK_SPEED` reads
+         * `\.\d{1,3}`, so below 0.0005x this still prints 0.000x. Round 30. */
+        const double speed = (t->frames / 75.0) / (t->rip_time_us / 1000000.0);
+        cyanrip_log(ctx, 0, "    Extraction speed:  %.*fx\n",
+                    speed >= 1.0 ? 1 : speed >= 0.1 ? 2 : 3, speed);
         cyanrip_log(ctx, 0, "    Elapsed:            %.2f s\n", t->rip_time_us / 1000000.0);
     }
 

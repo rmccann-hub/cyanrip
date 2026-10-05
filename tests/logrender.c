@@ -929,6 +929,24 @@ static void test_timing_block_only_when_measured(void)
     out = drain(ctx);
     expect_line(out, "    Extraction speed:  2.0x", "timing/speed");
     expect_line(out, "    Elapsed:            2.00 s", "timing/elapsed");
+
+    /* Below 1x, two significant figures. Track 18 of the 2026-10-04 run read
+     * 267 s of audio in 8,161 s and printed `0.0x`. Each case sits on one side
+     * of a boundary, so moving either one fails a line. */
+    static const struct { int frames; int64_t us; const char *want; } slow[] = {
+        { 300,   4000000, "    Extraction speed:  1.0x"   }, /* exactly 1x */
+        { 300,   5000000, "    Extraction speed:  0.80x"  },
+        { 300,  40000000, "    Extraction speed:  0.10x"  }, /* exactly 0.1x */
+        { 300,  50000000, "    Extraction speed:  0.080x" },
+        { 20025, 8161000000LL, "    Extraction speed:  0.033x" }, /* track 18 */
+    };
+    for (size_t i = 0; i < sizeof(slow) / sizeof(slow[0]); i++) {
+        base_track(&t);
+        t.frames = slow[i].frames;
+        t.rip_time_us = slow[i].us;
+        cyanrip_log_track_end(ctx, &t);
+        expect_line(drain(ctx), slow[i].want, "timing/slow");
+    }
     free_ctx(ctx);
 }
 
