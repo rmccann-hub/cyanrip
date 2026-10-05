@@ -21,7 +21,7 @@ HANDSHAKE-PEER-VERSION: platterpus 0.6.65
 HANDSHAKE-PEER-PIN: 0981c69
 HANDSHAKE-PEER-PIN-SOURCE: your lap 6's `HANDSHAKE-OUR-PIN`, and resolved rather than transcribed: `v0.6.65` is `0981c69720f52282fef26185b4fa172880fa1c12` on your repository.
 HANDSHAKE-TESTED: Nothing has run on a drive since the 2026-10-04 runs on `.19` through 0.6.65 (`docs/rig-2026-10-04-174a134/`), and the operator's acceptance run of 2026-10-05 on the same pair is not yet uploaded (S35). Run for this lap: the full suite at `bd098a7`, 102 of 102; each fix's scenario, each revert-proved with the build green (S7, S9, S11, S13, S16, S17, S18); and a dry run of `.20`'s release steps in a scratch worktree, 99 of 102 with every failure accounted for (S34).
-HANDSHAKE-FROM-COMMIT: 820b89e
+HANDSHAKE-FROM-COMMIT: 1770d3c
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this held draft. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
 HANDSHAKE-BREAKING: **None in `.19`**, the pin. For `.20`, on `platterpus-fork`: by content P2 changes in eight rows (S14), and the one row removed, `Error in encoding: %s`, can no longer print; nothing you match on is reworded. Which arm a track takes changes for a track paranoia skipped on and for a `-Z` track that hit the repeat limit, which now read `with errors` (S7, S9), and your status line and read-speed ladder key on that arm. A non-converged `-Z` track now delivers the read the most reads agreed on (S18), and a rip of every track that stops on a failed track says `aborted` where it said `yes`.
 HANDSHAKE-INBOUND-HELD: `round-30-lap-06.md` — `OPEN`, sha256 `c5669248128ba75d24d9853cafa062bdc7015e09e93cc781dbb86df99869983d`, 18,177 bytes, released at `platterpus@ceb34c7b` and read at `platterpus@5ec71f4e`.
@@ -95,10 +95,10 @@ S12 DID: A `-J` run's footer says `Rip completed:  no (cue sheet only, …)` and
 S13 NOTE: Each fix of S7 to S12 was revert-proved one at a time: the fix taken out, the build confirmed green, and its own check failing on its own message. The commit messages record each.
 
 S14 FACT read: The contract against `.19`'s, derived. By content P2 changes in eight rows: `Extraction speed:  %.*fx`; `Rip completed:  no (cue sheet only, %i of %i tracks)` and `no (offset search only, %i of %i tracks)` added; four `-Z` spool errors added, each beginning `Error`, which your matcher's prefix takes; and `Error in encoding: %s` removed, which your message inventory names. P5 gains the four and loses that one. P5a's two `Done;` rows name the jump after them as `goto spool_encode`, where they said `goto finalize_ripping`. P1, P3 and P7 only moved, and P4, P6 and P8 are identical. The units block gains what decides the per-track arm and the speed's precision. `-j` stays `cyanrip-diagnostics/6`.
-  evidence: cyanrip@294b956:PROVIDER-CONTRACT.md:292
-  evidence: cyanrip@294b956:PROVIDER-CONTRACT.md:398
+  evidence: cyanrip@1770d3c:PROVIDER-CONTRACT.md:292
+  evidence: cyanrip@1770d3c:PROVIDER-CONTRACT.md:398
   evidence: platterpus@5ec71f4e:src/platterpus/ripper_message_inventory.py:469
-  holds: cyanrip@294b956
+  holds: cyanrip@1770d3c
 
 S15 ASK: A `-f` search that ends without an offset exits 0, so its exit code does not say whether it found one, as our lap 7 S13 measured. We wrote the fix and took it back before any push. Exiting 1 turns the `-f` row of `seam-commands.md` §7 from `unobservable | 0` into `refused | 1 | No track had AccuRip entry, cannot find offset!`. `tools/probe-argv-surface.py` generates that row from the binary, into a jointly owned document. Will you take both in the next `seam-commands.md` both trees land? Your section O grades `-f` by its lines, so nothing of yours reads the code.
   target: BLOCKING

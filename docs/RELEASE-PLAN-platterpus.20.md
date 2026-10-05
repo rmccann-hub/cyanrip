@@ -66,7 +66,7 @@ So `.20` is a **beta inside round 30**, not round 30's closing release:
 - **Whatever the 2026-10-05 acceptance run and the laps add.**
 
 **The contract against `.19`'s, derived, not described**:
-`tools/contract-delta.py --text 174a134 <candidate>`. At `294b956`, with the
+`tools/contract-delta.py --text 174a134 <candidate>`. At `1770d3c`, with the
 contract `--check` exit 0, **P2 changes by content in eight rows**:
 `Extraction speed:  %.1fx` becomes `%.*fx`; `Rip completed:` gains `no (cue
 sheet only, %i of %i tracks)` and `no (offset search only, %i of %i tracks)`;
