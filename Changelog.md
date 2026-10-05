@@ -11,10 +11,7 @@ successfully!`; `sc_paranoia_skip()` reproduces the 2026-10-04 run's track 18
 with no drive. A slow extraction speed keeps two significant figures, so 0.033x
 no longer prints `0.0x` (`a72b162`). A `-J` or `-f` run's footer says what the
 run was where it said `aborted`, and a stop ends a `-f` search instead of
-retrying (`aa1f067`). A `-f` search that finds no offset still exits 0: making
-it exit 1 moves a row of the jointly owned `seam-commands.md` §7, so it is
-proposed to Platterpus rather than landed, which a dry run of `.20`'s release
-steps found before anything was pushed. By content, P2
+retrying (`aa1f067`). By content, P2
 changes in three rows. Each was checked against Platterpus's parser before it
 landed; none changes a line they match on. The gate implements v7's C46, inert
 until it implements 7 (`76e2ba1`).
@@ -80,9 +77,12 @@ tracks, and which way it goes is theirs to answer. **And `-P 0` no longer
 hangs** on a block in which nothing reads (`c57b596`): paranoia's read hook is
 wrapped at level 0, so a short read is retried sector by sector and a sector
 that will not read is zero-filled. **A `-f` search that finds no offset exits
-1**, by the operator's word too; it is written and held until both trees land
-`docs/handshake/proposed/seam-commands-round30.md`, which moves §7's `-f` row
-with it and corrects three statements the shared file has carried wrong.
+1** (`0645ddb`), by the operator's word too, and sets no ripping error. It
+moves a row of the jointly owned `docs/seam-commands.md` §7, so it landed with
+the text both trees agreed in round 30 (our lap 9 S16, their lap 10 S10), which
+also corrects three statements the shared file had carried wrong; a dry run of
+`.20`'s release steps had found that before anything was pushed. Platterpus
+lands the same bytes when it files our lap 11.
 
 **Every lap is now held to R6, the pre-commit** (`5dba13d`), as both sides
 read it in round 29: from lap 5, a lap whose own verdict is not `GO` says

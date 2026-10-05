@@ -2066,9 +2066,9 @@ cache bracket printing the re-reads that ended its search (`6dd608c`), found
 reading the 2026-10-05 run (`docs/rig-2026-10-05-174a134/`), and `-P 0` no
 longer hanging on a block in which nothing reads (`c57b596`), and `Ripping
 errors:` counting paranoia's skips with a suffix saying how many, by the
-operator's word of 2026-10-05, the exit code left as the drive's (`0c692ed`).
-Still to land: a `-f` search that finds no offset exiting 1, written and held
-until both trees land `docs/handshake/proposed/seam-commands-round30.md`.
+operator's word of 2026-10-05, the exit code left as the drive's (`0c692ed`),
+and a `-f` search that finds no offset exiting 1 (`0645ddb`), landed with the
+`seam-commands.md` text both trees agreed in round 30.
 **What goes to stable after the close is decided: `.21`, cut from the closed
 tree** (the plan's §3).
 `docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition; the one

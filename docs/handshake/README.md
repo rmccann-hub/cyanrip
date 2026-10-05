@@ -186,13 +186,12 @@ review; the Full run on it ran on 2026-09-30 and is filed.
 **`proposed/` holds shared-document texts under review**, each removed when it
 lands. Round 25 proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md`
 v6 there, landed at `c07bf68` and `643631b`; round 30 proposed `PROTOCOL.md` v7
-and `seam-rules.md` v7, landed at `a3a4964`. **It holds
-`seam-commands-round30.md` now**, round 30 lap 9's proposal: the `-f` row of §7
-regenerated from a build where a search that finds no offset exits 1, and three
-hand-written statements corrected (`docs/KNOWN-ISSUES.md`, *"carries FIVE
-known-wrong statements"*, rows 3 to 5). Its §7 banner names a dirty tree, which
-is true of it: the code lands with the file, and §7 is regenerated from that
-clean build when it does.
+and `seam-rules.md` v7, landed at `a3a4964`. Round 30 lap 9 proposed
+`seam-commands-round30.md` there, the `-f` row of §7 and three hand-written
+corrections; Platterpus's lap 10 S10 accepted it, and it landed as
+`docs/seam-commands.md` in the commit after `0645ddb`, §7 regenerated from that
+clean build, so the landed file differs from the proposal in §7's banner
+alone. **It is empty again.**
 
 **Round 13 carried one close condition out with it, and that is a first.** CC-2
 required a hardware acceptance pass, and it was mis-specified: it named a *test

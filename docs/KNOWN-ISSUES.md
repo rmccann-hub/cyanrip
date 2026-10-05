@@ -123,27 +123,21 @@ each to them.
   clause, revert-proved. **Taking the fastest is in the probe loop, which needs
   a drive: read from the source, not run.**
 
-**NOT fixed, and now the one open half: a `-f` search that finds no offset
-exits 0.** Measured: `-N -f` on `basic.cue` printed `No track had AccuRip
-entry, cannot find offset!` and exited 0. **The operator decided on 2026-10-05
-that it exits 1**, and the fix is written and revert-proved but not landed:
-`search_for_drive_offset()` returns whether it printed `Drive offset of ...
-found`, the call site sets `fatal_abort` when it did not (not
-`total_error_count`, so `Ripping errors:` claims no failed read), and
-`sc_probe_runs_open_no_logfile()` expects 1 for `-f`; with the assignment
-removed, the build green, it fails `-f exited 0, not 1`. It waits because
-exiting 1 turns the `-f` row of `docs/seam-commands.md` §7 from `unobservable |
-0` into `refused | 1`, §7 is generated from the binary into one of the four
-jointly owned documents, and `Argv table in seam-commands.md` fails until the
-row moves. **The text both trees would land is
-`docs/handshake/proposed/seam-commands-round30.md`**, proposed in round 30 lap
-9; the landing is two commits, the code and then §7 regenerated from it, so the
-banner names a clean build. Platterpus's section O grades `-f` by its lines, not
-its exit code, so nothing of theirs depends on the change. **The landing commit
-must also rewrite `docs/SETTLED.md`'s row *"`docs/seam-commands.md` HAD TWO
-WRONG ROWS"***, whose check asserts the old `-D | directory` cell and fails
-once it is corrected: a rehearsal of the landing at `f6d72c0` gave 105 of 106
-on exactly that row.
+**FIXED for `.20` (`0645ddb`): a `-f` search that finds no offset exits 1.**
+It exited 0 (measured: `-N -f` on `basic.cue` printed `No track had AccuRip
+entry, cannot find offset!` and exited 0). By the operator's word of
+2026-10-05, agreed with Platterpus in round 30 (our lap 9 S16, their lap 10
+S10): `search_for_drive_offset()` returns whether it printed `Drive offset of
+... found`, and the call site sets `fatal_abort` when it did not, not
+`total_error_count`, so `Ripping errors:` claims no failed read.
+`sc_probe_runs_open_no_logfile()` expects 1, revert-proved. **It moved the `-f`
+row of the jointly owned `docs/seam-commands.md` §7**, so it landed with the
+text both trees agreed, §7 regenerated from `0645ddb`'s clean build, and with
+`docs/SETTLED.md`'s row on the file rewritten, since its old check asserted
+the `-D | directory` cell the text corrects; a rehearsal at `f6d72c0` had
+found that row. Platterpus's section O grades `-f` by its lines, and their Full
+script's `expect-exit 0` holds on the reference disc, where the search finds
+an offset.
 
 All four are pinned by `sc_probe_runs_open_no_logfile()`, `sc_paranoia_skip()`,
 `sc_repeat_limit()` and `tests/logrender.c`, each revert-proved with the build
@@ -1459,7 +1453,7 @@ is v5's literal reading of C37, which v6 replaces. Item 2's row is proposed for
 amendment rather than implementation, because as written it refuses those six
 laps.
 
-### `docs/seam-commands.md` carries FIVE known-wrong statements
+### `docs/seam-commands.md` carried FIVE known-wrong statements — ALL FIXED in round 30
 
 **Consolidated here 2026-09-15.** They were recorded in two different files, one
 of them a 1,100-line standing status, which is how a set of three reads as three
@@ -1509,9 +1503,11 @@ would not have looked.
 of the file**, which regenerated §7 with the `unobservable` outcome and the
 refused `-p '99=drop'`. This entry said *"NONE of them is fixed"* for a week
 after that; found in round 30 by diffing §7 against the binary. **Rows 3 to 5
-are proposed in `docs/handshake/proposed/seam-commands-round30.md`**, round 30
-lap 9, with the `-f` exit row; row 5's answer was checked against Platterpus's
-code, which no longer writes the U+2236 substitute
+are FIXED in our tree by the text our round 30 lap 9 S16 proposed and
+Platterpus's lap 10 S10 accepted**, landed with the `-f` exit row in the commit
+after `0645ddb`; Platterpus lands the same bytes in the commit that files our
+lap 11. Row 5's answer was checked against their code, which no longer writes
+the U+2236 substitute
 (`platterpus@bd508bf1:src/platterpus/adapters/cyanrip_backend.py:825-835`).
 
 **Until then they were not fixed, and not for want of knowing the answer.** The file is
@@ -1800,7 +1796,7 @@ version bump would carry, and round 24 proposes it rather than editing it.
 | 5 | `OWNERSHIP.md` §3 | *"we cannot run their program, read their source, or reproduce their environment"* | **"read their source" has been false since 2026-09-13.** Both repositories are public, and this environment reads theirs anonymously on every `seam-sync-check --fetch`. The other two clauses were not checked, so this makes no claim about them | `CLAUDE.md`, *"This rule used to carry the clause…"* |
 | 6 | `OWNERSHIP.md` §5 | *"we cannot read each other's source"* | same as row 5 | same |
 | 7 | `seam-rules.md` S-13 | round 7: *"laps to close: **37 and open**"*, *"releases produced: **0**"* | round 7 closed `GO` at **lap 39** (`round-07-lap-39.md`), and produced one release, `+platterpus.5`, at `release-ledger.tsv` row 11. `CLAUDE.md`'s copy of this table was corrected on 2026-09-16; the shared copy was not | here |
-| 8–12 | `seam-commands.md` | five statements | see that entry's table | *"`docs/seam-commands.md` carries FIVE known-wrong statements"*, above |
+| 8–12 | `seam-commands.md` | five statements | **all fixed in round 30**, two at `83bcd70` and three by the text landed after `0645ddb` | *"`docs/seam-commands.md` carried FIVE known-wrong statements"*, above |
 | 13 | `PROTOCOL.md` §5b, rows C39–C40 | step 2 cross-checks the closing file's transcription of the PEER's verdict against the lap its source names | **nothing asks a gate to check the peer's transcription of ITS OWN verdict**, so the two gates can split on one record. Rehearsed 2026-09-28 on copies of our record (control X-c3): our lap 6 `GO`, their lap 7 `GO`, released, at protocol 6, but transcribing our lap 6 as `OPEN`. **Our gate closes the round** on their lap 7 by step 3. **Theirs refuses it**: their closing file is their lap 7, its source names our lap 6, and the values disagree (`platterpus@785925a:scripts/handshake.py:2438-2447`, *"the transcription disagrees with its source"*). Their gate makes them correct their own file, so the split closes itself once they do; until then ours says CLOSED and theirs does not | found by a control in the round-28 close rehearsal, not by a real record. **For round 29, not round 28**: the candidate row is that a gate refuses when the newest peer lap's source names one of the gate's own laps and its `HANDSHAKE-PEER-VERDICT` disagrees with that lap's `HANDSHAKE-VERDICT` |
 | 14 | `PROTOCOL.md` §5, `HANDSHAKE-OUR-VERSION` / `HANDSHAKE-PEER-VERSION` | *"which two programs agreed"* | **the two closing files of round 28 name different Platterpus builds as the party.** Our lap 8 names the build that was tested, `platterpus 0.6.61` at `59f4c00`. Their lap 9 names its own current release, `platterpus 0.6.62` at `9e96fa0` (their `v0.6.62` tag), while its `HANDSHAKE-APP-VERSION` and `HANDSHAKE-TESTED` say 0.6.61. Both are defensible readings. Neither gate cross-checks the two files, so one closed round quotes two different agreements | found 2026-09-28 filing their round 28 lap 9. For round 29: say whether the field names the build under test or the build declaring the verdict |
 | 15 | `PROTOCOL.md` v7 and `seam-rules.md` v7 | nine wording items | each is a sentence v7 leaves imprecise, none a false rule: `HANDSHAKE-NEXT-LAP` with two grammars (§3, C46); R9 keeping the sentence §15 calls misleading; R8 point 2's unscoped *"the consumer follows a build on beta"*; §6d asking for the pair newest at the run's end where D3 checks only its start; a mid-round hotfix reading as a pin move against R4; §15 saying one v6 item was withdrawn; §6c's *"opens with"* and undefined `<owner>`; and five smaller | Platterpus's round 30 lap 6 S23, which gives each with its v7 line numbers at `09f39bc` |

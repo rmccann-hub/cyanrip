@@ -52,19 +52,16 @@ So `.20` is a **beta inside round 30**, not round 30's closing release:
 | **`Ripping errors:` counts paranoia's skips**, by the operator's word of 2026-10-05, and says so: `Ripping errors: N (including M paranoia skips)` whenever M is non-zero, M the disc block's `SKIP:`. The `-j` record's `rip.ripping_errors` follows it and `rip.paranoia_skips` is new; the progress line's `errors - N` counts the same for the read in progress. **The exit code does not follow the skips** | `0c692ed` | their health status and their read-speed ladder, which read the count first (`read_speed_ladder.py:246` at `bd508bf1`): a skip-only rip now exits 0 with a non-zero count, which steps their ladder down unless they subtract M. Their pattern is a prefix match (`cyanrip_log.py:542`), so the parse is unchanged. Put to them in round 30 lap 9 |
 | **A `-Z` track that hit the repeat limit reads `with errors`**: five tracks read five ways each printed `read successfully!` | `4529810` | the same two; a separate commit so either can be dropped |
 | **`Extraction speed:` keeps two significant figures below 1x**: 0.033x printed `0.0x` | `a72b162` | their `_TRACK_SPEED`, which reads three decimals at most, the most this prints |
-| **A `-J` or `-f` run's footer says what it was**, `cue sheet only` or `offset search only`, where it said `aborted`; **a stop ends a `-f` search** instead of retrying | `aa1f067` | a caller of `-J` or `-f`. Both open no logfile. Their section O grades `-f` by its lines (`probe_grading.py:150-215` there). **A `-f` search that finds no offset still exits 0**: exiting 1 moves a row of the shared `seam-commands.md` §7, so it waits on a version of it both sides ship |
+| **A `-J` or `-f` run's footer says what it was**, `cue sheet only` or `offset search only`, where it said `aborted`; **a stop ends a `-f` search** instead of retrying | `aa1f067` | a caller of `-J` or `-f`. Both open no logfile. Their section O grades `-f` by its lines (`probe_grading.py:150-215` there) |
 | **The `-Z` spool**: no pass is encoded while it is read; each goes to a `tmpfile()`, one per distinct checksum, and one is encoded when the track is decided, the read that converged or, at the repeat limit, the read the most reads agreed on, newest on a tie. The album loudness graph is fed that read alone. A full disk now stops a `-Z` rip: `Error creating the -Z spool: %s!` and three more spool errors, all beginning `Error`; `Error in encoding: %s` is gone | `d7ee6c4` | which bytes a non-converged `-Z` track delivers, and its EAC CRC32 and AccurateRip values with them; the album rows and `REPLAYGAIN_ALBUM_*`; their error matcher, whose `Error` prefix takes the new lines, and their message inventory, which names the removed one (`ripper_message_inventory.py:469` at `5ec71f4e`) |
 | **A failed track aborts a rip of every track**, as it does under `-l`: `Error ripping: %s` and `Rip completed:  no (aborted, …)`, where the loop broke out and the footer said `yes` over a run that exited 1 | `c1e1ab1` | their tri-state footer reading, for a run that stopped on a failed track |
 | **The cache probe scores a re-read by cd-paranoia's 6 ms** (`MIN_SEEK_MS`), not a quarter of a full-stroke seek, which every re-read beat; a slow re-read is tried three times. The `-j` record's `cache_probe.hit_ratio` becomes `hit_below_us`, schema `cyanrip-diagnostics/7` | `394ab17` | their section P, which runs `cd-paranoia -A` beside our probe: the two should now agree, and that run is the only test of it. Nothing of theirs parses the `-j` record |
 | **`-P 0` no longer hangs on a block in which nothing reads**: at level 0 paranoia's read hook is wrapped so that a short read is retried sector by sector and a sector that will not read is zero-filled, which the cdda layer has already logged | `c57b596` | nobody who passes no `-P`, which Platterpus never does; every `-P 0` rip reads through the hook, our image suite's included, and `READ` counts on the golden reference are unchanged. Its speed on a drive is not measurable here |
+| **A `-f` search that finds no offset exits 1**, by the operator's word of 2026-10-05, where it exited 0 after `No track had AccuRip entry, cannot find offset!`. It sets `fatal_abort`, not `total_error_count`, so `Ripping errors:` claims no failed read. It moves §7's `-f` row of the shared `docs/seam-commands.md`, which landed in the next commit with the text both trees agreed in round 30 (our lap 9 S16, their lap 10 S10) | `0645ddb` | a caller of `-f` on a disc AccurateRip does not know. Their Full script's `expect-exit 0` holds on the reference disc, where the search finds an offset |
 | **A cache bracket carries the reads behind both ends**: on a miss the line adds `, 3 re-reads after a N-sector run took X ms or more`, the fastest of the three tries, where `128 to 255 sectors` on 2026-10-05 carried only the read behind 128; and it replaces `first uncached re-read`, which since `394ab17` printed the last of three | `6dd608c` | a reader of the line verbatim, as their rig-check surfaces it. No P2 row changes, since the clause fills the line's `%s`, and their parser reads nothing inside the line (`cyanrip_log.py:2324-2346` at `5ec71f4e`) |
 
 **To land before the cut** — in this round, on the operator's word:
 
-- **A `-f` search that finds no offset exits 1**, by the operator's word of
-  2026-10-05: written and revert-proved, held until both trees land
-  `docs/handshake/proposed/seam-commands-round30.md`, which moves §7's `-f` row
-  with it. Then two commits: the code, and §7 regenerated from it.
 - **Whatever the laps add.** The 2026-10-05 acceptance run
   (`docs/rig-2026-10-05-174a134/`) added `6dd608c`, above, and showed no defect
   in `.19` that was not already recorded.
@@ -180,13 +177,14 @@ in its log. The one failure is real and belongs to the landing, not the bump:
 **`Settled facts`**, because `docs/SETTLED.md`'s row *"`docs/seam-commands.md`
 HAD TWO WRONG ROWS"* asserts the old `-D | directory` cell is still there, and
 is written to fail once it is corrected. **That row is rewritten in the commit
-that lands the text.**
+that lands the text**, and was: the text landed in the commit after `0645ddb`,
+with the row, and the landed file matched the rehearsal's.
 
 No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
 
 ## 5. What this release does NOT verify
 
-- **None of the thirteen behavioural `src/` commits has run on a drive.** The skip arm is
+- **None of the fourteen behavioural `src/` commits has run on a drive.** The skip arm is
   reproduced on an image by a shim that varies one sector's bytes on every
   read; a real disc's skips come from the drive. The acceptance run on a
   damaged disc is the first test, and only if the run includes one.
