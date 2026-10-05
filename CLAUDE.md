@@ -1066,8 +1066,9 @@ repo has been a word doing more work than the evidence behind it:
 6. **Ask what a reader would be entitled to conclude**, then confirm the
    evidence entitles them to conclude exactly that, no more.
 
-When a word is imprecise but frozen by the contract — `Ripping errors:` counts
-operational failures and not read quality — **do not reword it silently.**
+When a word is imprecise but frozen by the contract — `Ripping errors:` counted
+operational failures and not read quality until round 30 moved it in the open —
+**do not reword it silently.**
 Document the precise meaning, and propose the rename in a handshake round.
 
 ## Verifying your own work

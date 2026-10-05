@@ -46,8 +46,16 @@ each to them.
   `sc_paranoia_skip()`: `tests/badsector.c`'s flip mode returns different
   bytes for one sector on every read at the default paranoia level, and before
   the fix the log said `SKIP: 1`, `read successfully!`, `Ripping errors: 0`.
-  **Still Platterpus's question:** whether `Ripping errors:` should count skips
-  too, since their health status reads it.
+  **And `Ripping errors:` now counts the skips too**, by the operator's word
+  of 2026-10-05, with a suffix whenever it does: `Ripping errors: N (including
+  M paranoia skips)`, M being the disc block's `SKIP:`. A line with no suffix
+  counts no skips, whichever build wrote it. The `-j` record's
+  `rip.ripping_errors` follows it and `rip.paranoia_skips` is new. **The exit
+  code does not follow it**: a rip whose only errors are skips exits 0, because
+  exiting 1 makes Platterpus skip the securing pass
+  (`platterpus@bd508bf1:src/platterpus/workers/rip_worker.py:1905`, `if
+  success`). Which way it should go is put to them in round 30 lap 9.
+  `sc_paranoia_skip()` pins all four, each revert-proved.
 - **…and over `-Z` reads that never agreed** (`4529810`). Tracks 12 to 15 and
   17 of the same run were read five times each with five different checksums
   and each printed `read successfully!`, under a `Secure re-read:  did NOT

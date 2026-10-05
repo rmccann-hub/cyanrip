@@ -1084,9 +1084,14 @@ repeat_ripping:;
             line_len += snprintf(line + line_len, sizeof(line) - line_len,
                                  ", ETA - %" PRId64 "s", seconds);
 
-        if (ctx->total_error_count - start_err)
+        /* This read's share of what `Ripping errors:` counts, skips included
+         * from round 30, so the live figure and the disc's agree in kind. */
+        const uint64_t read_errors = (uint64_t)(ctx->total_error_count - start_err) +
+                                     paranoia_status[PARANOIA_CB_SKIP] -
+                                     start_paranoia[PARANOIA_CB_SKIP];
+        if (read_errors)
             line_len += snprintf(line + line_len, sizeof(line) - line_len,
-                                 ", errors - %i", ctx->total_error_count - start_err);
+                                 ", errors - %" PRIu64, read_errors);
 
         max_line_len = FFMAX(line_len, max_line_len);
         if (line_len < max_line_len) {
@@ -3092,6 +3097,7 @@ end:
      *
      * Still inside `end:`, so the round-14 property is untouched: all
      * twenty-four `goto end` sites still reach it. */
+    ctx->paranoia_skips = paranoia_status[PARANOIA_CB_SKIP];
     if (!ctx->settings.print_info_only)
         cyanrip_log_finish_report(ctx);
 

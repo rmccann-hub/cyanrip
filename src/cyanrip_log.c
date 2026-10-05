@@ -1037,7 +1037,20 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
         cyanrip_log(ctx, 0, "  none\n");
     cyanrip_log(ctx, 0, "\n");
 
-    cyanrip_log(ctx, 0, "Ripping errors: %i\n", ctx->total_error_count);
+    /* FROM ROUND 30 THIS COUNTS PARANOIA'S SKIPS, and says so when there are
+     * any (crip_ripping_errors()). The suffix is what lets a reader tell the
+     * two meanings apart: a log with no suffix counts no skips, whichever
+     * build wrote it, because an earlier build never counted them and this
+     * one prints the suffix whenever it does. The number it gives is the
+     * disc block's `SKIP:` directly above. The leading count is unchanged in
+     * form, and Platterpus's pattern is a prefix match
+     * (platterpus@bd508bf1:src/platterpus/parsers/cyanrip_log.py:542, 2470). */
+    if (ctx->paranoia_skips)
+        cyanrip_log(ctx, 0, "Ripping errors: %" PRIu64 " (including %" PRIu64 " paranoia skip%s)\n",
+                    crip_ripping_errors(ctx), ctx->paranoia_skips,
+                    ctx->paranoia_skips == 1 ? "" : "s");
+    else
+        cyanrip_log(ctx, 0, "Ripping errors: %i\n", ctx->total_error_count);
 
     /* Directly below `Ripping errors:`, because since round 21 that count
      * INCLUDES encoder failures and this is the breakdown of that part of it.

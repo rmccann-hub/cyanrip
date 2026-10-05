@@ -106,7 +106,8 @@ static int diag_have_snapshot;
 static int snap_nb_tracks;
 static int snap_nb_cd_tracks;
 static int snap_tracks_completed;
-static int snap_total_error_count;
+static uint64_t snap_ripping_errors;
+static uint64_t snap_paranoia_skips;
 static char *snap_device;
 static char *snap_consumer;
 static int snap_paranoia_level;
@@ -242,7 +243,8 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
     snap_nb_tracks         = ctx->nb_tracks;
     snap_nb_cd_tracks      = ctx->nb_cd_tracks;
     snap_tracks_completed  = ctx->tracks_completed;
-    snap_total_error_count = ctx->total_error_count;
+    snap_ripping_errors    = crip_ripping_errors(ctx);
+    snap_paranoia_skips    = ctx->paranoia_skips;
     snap_paranoia_level    = ctx->settings.paranoia_level;
     snap_max_retries       = ctx->settings.max_retries;
     snap_offset            = ctx->settings.offset;
@@ -372,7 +374,10 @@ void crip_diag_write(void)
      * /7 REPLACES cache_probe.hit_ratio WITH cache_probe.hit_below_us (round
      * 30): the probe no longer scores a re-read against a quarter of one
      * calibration read but against cd-paranoia's absolute 6 ms, so the ratio
-     * no longer exists to record. A removed key is not additive. */
+     * no longer exists to record. A removed key is not additive. In the same
+     * version, which no released build has written, rip.ripping_errors counts
+     * paranoia's skips as the log line does and rip.paranoia_skips says how
+     * many of it they are. */
     av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/7\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
@@ -512,7 +517,11 @@ void crip_diag_write(void)
         av_bprintf(&b, "    \"cd_tracks\": %i,\n", snap_nb_cd_tracks);
         av_bprintf(&b, "    \"tracks\": %i,\n", snap_nb_tracks);
         av_bprintf(&b, "    \"tracks_completed\": %i,\n", snap_tracks_completed);
-        av_bprintf(&b, "    \"ripping_errors\": %i,\n", snap_total_error_count);
+        /* The log's `Ripping errors:`, skips included from round 30, and how
+         * many of it are skips, so the record never needs the log to split
+         * them. */
+        av_bprintf(&b, "    \"ripping_errors\": %" PRIu64 ",\n", snap_ripping_errors);
+        av_bprintf(&b, "    \"paranoia_skips\": %" PRIu64 ",\n", snap_paranoia_skips);
         /* Deliberately no "success" field. cyanrip_ctx has one and nothing
          * in the program ever assigns it, so emitting it would have put a
          * permanent "success": false into every record of a rip that

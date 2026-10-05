@@ -92,6 +92,29 @@ def crip(*args, cwd=None, env=None):
     return r.returncode, r.stdout.decode(errors="replace")
 
 
+def ripping_errors(text):
+    """The log's `Ripping errors:` line as (count, skips, line), or None.
+
+    From round 30 the count includes paranoia's skips, and a suffix says how
+    many of it they are; `skips` is that figure, 0 with no suffix. The suffix
+    is printed whenever skips were counted, so a line without one counts
+    none. Matched to the end of the line: a pattern anchored after the digits
+    alone stopped matching the moment the suffix existed, which is the shape
+    a strict consumer would hit, and this file had three of them."""
+    m = re.search(r"(?m)^Ripping errors: (\d+)"
+                  r"(?: \(including (\d+) paranoia skips?\))?$", text)
+    if not m:
+        return None
+    return int(m.group(1)), int(m.group(2) or 0), m.group(0)
+
+
+def disc_skips(text):
+    """The disc block's `SKIP:` -- two-space indent, where a track's is four
+    -- or 0 when the block has no SKIP row."""
+    m = re.search(r"(?m)^  SKIP:\s+(\d+)$", text)
+    return int(m.group(1)) if m else 0
+
+
 def rip(name, img, *extra, cwd=None):
     # libcdio's cdrdao driver opens a .toc's FILE with the raw relative path
     # instead of the absolute one it just computed (lib/driver/image/cdrdao.c,
@@ -2246,12 +2269,12 @@ def sc_encode_failure_reaches_the_log():
         return
     text = logs[0].read_text(encoding="utf-8", errors="replace")
 
-    m = re.search(r"(?m)^Ripping errors: (\d+)$", text)
+    m = ripping_errors(text)
     if not m:
         fail("encfail: no `Ripping errors:` line -- the footer did not run, "
              "which is a different defect and not the one under test")
         return
-    in_log = int(m.group(1))
+    in_log = m[0]
 
     try:
         in_json = json.loads(diag.read_text())["rip"]["ripping_errors"]
@@ -5978,10 +6001,15 @@ def sc_bad_sector():
             fail(f"bad_sector: -r {r}: track 1 should read clean")
         if "Track 2 read with errors." not in text.splitlines():
             fail(f"bad_sector: -r {r}: track 2 does not report `read with errors.`")
-        m = re.search(r"^Ripping errors: (\d+)$", text, re.M)
-        if not m or int(m.group(1)) < 1:
+        # The drive's half -- the count less the skips the suffix names -- is
+        # what counts the failed reads; the skips must be the disc block's.
+        m = ripping_errors(text)
+        if not m or m[0] - m[1] < 1:
             fail(f"bad_sector: -r {r}: `Ripping errors:` does not count the "
-                 f"bad sector ({m.group(0) if m else 'absent'})")
+                 f"bad sector ({m[2] if m else 'absent'})")
+        elif m[1] != disc_skips(text):
+            fail(f"bad_sector: -r {r}: {m[2]!r} names {m[1]} skip(s) and the "
+                 f"disc block records {disc_skips(text)}")
         t1 = (out / "1.pcm").read_bytes() if (out / "1.pcm").exists() else b""
         t2 = (out / "2.pcm").read_bytes() if (out / "2.pcm").exists() else b""
         if t1 != src[:300 * sec]:
@@ -6075,6 +6103,10 @@ def sc_p0_bad_sector():
         fail("p0_bad_sector: track 1 should read clean")
     if "Track 2 read with errors." not in lines:
         fail("p0_bad_sector: track 2 does not report `read with errors.`")
+    # -P 0 verifies nothing, so it never skips: the count is the drive's.
+    m = ripping_errors(text)
+    if m and m[1]:
+        fail(f"p0_bad_sector: {m[2]!r} counts skips at -P 0, which cannot skip")
     m = re.search(r"^Ripping errors: (\d+)$", text, re.M)
     if not m or int(m.group(1)) < 1:
         fail(f"p0_bad_sector: `Ripping errors:` does not count the bad sector "
@@ -6307,7 +6339,14 @@ def sc_paranoia_skip():
     alone: the arm must follow the SKIP counter of the same track. Track 2,
     which the shim leaves alone, is the in-run control, and a cycle of 2
     (A, B, A), which paranoia does verify, is the control for the flip itself.
-    `Ripping errors:` stays 0, because that counter is the drive's.
+
+    `Ripping errors:` COUNTS THE SKIPS TOO from round 30, by the operator's
+    word of 2026-10-05, with a suffix saying how many of it are skips. Asserted
+    against the disc block's `SKIP:`, which is printed from the counter itself,
+    and against the -j record, which is written by a different file. The exit
+    code stays the drive's -- 0 here -- and `ec != 0` below is that assertion:
+    exiting 1 would make Platterpus skip the securing pass (crip_ripping_errors()
+    says where), and that choice is theirs to answer in round 30 lap 9.
     """
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
@@ -6316,16 +6355,18 @@ def sc_paranoia_skip():
     for cycle, want_skip in ((1000, True), (2, False)):
         out = WORK / f"out_paranoia_skip_{cycle}"
         count = WORK / f"paranoia_skip_{cycle}.count"
+        diag = WORK / f"paranoia_skip_{cycle}.diagnostics.json"
         env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
                    CRIP_FLIP_SECTOR="100", CRIP_FLIP_CYCLE=str(cycle),
                    CRIP_FLIP_RUN="1", CRIP_FLIP_OUT=str(count),
                    ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
                    + ":verify_asan_link_order=0")
-        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
-                     "-r", "5", "-o", "pcm", "-D", out, "-F", "{track}",
-                     "-L", "log", env=env)
+        ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                          "-r", "5", "-o", "pcm", "-D", out, "-F", "{track}",
+                          "-L", "log", "-j", diag, env=env)
         if ec != 0:
-            fail(f"paranoia_skip: cycle {cycle}: cyanrip exited {ec}")
+            fail(f"paranoia_skip: cycle {cycle}: cyanrip exited {ec}; a rip whose "
+                 f"only errors are skips exits as the drive's count says")
         flips = int(count.read_text().strip()) if count.exists() else 0
         if flips < 2:
             fail(f"paranoia_skip: cycle {cycle}: the shim varied {flips} read(s), "
@@ -6362,10 +6403,34 @@ def sc_paranoia_skip():
             if arm != want:
                 fail(f"paranoia_skip: cycle {cycle}: track {tr} with {skips} "
                      f"skip(s) printed {arm!r}, not {want!r}")
-        m = re.search(r"^Ripping errors: (\d+)$", text, re.M)
-        if not m or m.group(1) != "0":
-            fail(f"paranoia_skip: cycle {cycle}: `Ripping errors:` should stay the "
-                 f"drive's count, 0 here ({m.group(0) if m else 'absent'})")
+        m = re.search(r"^  SKIP:\s+(\d+)$", text, re.M)
+        disc_skips = int(m.group(1)) if m else 0
+        if want_skip and disc_skips < 1:
+            fail(f"paranoia_skip: cycle {cycle}: the disc block records no SKIP")
+        if not want_skip and disc_skips:
+            fail(f"paranoia_skip: cycle {cycle}: the control skipped {disc_skips} time(s)")
+        # The drive's count is 0 here, so the line is the disc block's SKIP.
+        want = (f"Ripping errors: {disc_skips} (including {disc_skips} paranoia "
+                f"skip{'' if disc_skips == 1 else 's'})" if disc_skips
+                else "Ripping errors: 0")
+        m = re.search(r"^Ripping errors:.*$", text, re.M)
+        if not m or m.group(0) != want:
+            fail(f"paranoia_skip: cycle {cycle}: printed "
+                 f"{m.group(0) if m else 'no Ripping errors: line'!r}, not {want!r}")
+        try:
+            rec = json.loads(diag.read_text())["rip"]
+            got = (rec["ripping_errors"], rec["paranoia_skips"])
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            got = f"unreadable ({e})"
+        if got != (disc_skips, disc_skips):
+            fail(f"paranoia_skip: cycle {cycle}: the -j record says "
+                 f"(ripping_errors, paranoia_skips) = {got}, not "
+                 f"{(disc_skips, disc_skips)}")
+        # The live progress line counts the same things as the disc's line.
+        if (", errors - " in stdout) != bool(disc_skips):
+            fail(f"paranoia_skip: cycle {cycle}: the progress line "
+                 f"{'never' if disc_skips else 'did'} showed `errors - N` over "
+                 f"{disc_skips} skip(s)")
 
 
 def sc_repeat_resets_filter():

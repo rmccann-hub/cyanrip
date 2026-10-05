@@ -396,6 +396,11 @@ typedef struct cyanrip_ctx {
     /* State */
     int success;
     int total_error_count;
+    /* Paranoia's SKIP callbacks over the whole run, every -Z read included,
+     * which is the disc block's `SKIP:`. Copied from the process-global
+     * counter at `end:`, because diagnostics.c reads the context and does not
+     * link the read loop. See crip_ripping_errors(). */
+    uint64_t paranoia_skips;
     int tracks_completed; /* Tracks fully ripped, for the completion line */
     /* CD track number of a read that STARTED and has not completed, else 0.
      * Set as the read loop is entered and cleared only when that loop exits
@@ -521,6 +526,25 @@ extern char *crip_invocation;
 
 extern uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
 extern const int crip_max_paranoia_level;
+
+/* What `Ripping errors:` counts: total_error_count -- reads the drive failed
+ * or returned nothing for, encoder failures, operational errors -- plus
+ * paranoia's skips. A skip is paranoia giving up on verifying a stretch and
+ * keeping what it had, and the drive reports nothing, so the 2026-10-04 run
+ * on `.19` printed `Ripping errors: 0` over 2,586 of them. Counted from round
+ * 30, by the operator's word of 2026-10-05.
+ *
+ * THE EXIT CODE DOES NOT FOLLOW IT, deliberately. It stays keyed on
+ * total_error_count, so a rip whose only errors are skips now prints a
+ * non-zero `Ripping errors:` and exits 0, which no earlier build could do.
+ * Exiting 1 there would make Platterpus treat the rip as failed and skip the
+ * securing pass that re-reads exactly those tracks
+ * (platterpus@bd508bf1:src/platterpus/workers/rip_worker.py:2536 and 1905).
+ * Which way it should go is put to them in round 30 lap 9. */
+static inline uint64_t crip_ripping_errors(const cyanrip_ctx *ctx)
+{
+    return (uint64_t)ctx->total_error_count + ctx->paranoia_skips;
+}
 
 /* The per-frame retry limit actually handed to libcdio-paranoia.
  *
