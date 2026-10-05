@@ -1116,10 +1116,15 @@ repeat_ripping:;
 
         total_repeats++;
         if (matches >= ctx->settings.ripping_retries) {
-            cyanrip_log(ctx, 0, "\nDone; (%i out of %i matches for current checksum %08X)\n",
-                        matches, ctx->settings.ripping_retries, shown_crc);
+            /* The state and the kept read are settled BEFORE the line, so the
+             * goto stays beside it: tools/gen-provider-contract.py credits a
+             * log call with the jump that follows it within 320 characters,
+             * and with the assignments between them the limit's line below
+             * fell out of P5a (contract_fatal_inventory caught it). */
             t->secure_rip_state = CYANRIP_SECURE_RIP_CONVERGED;
             kept = filed;
+            cyanrip_log(ctx, 0, "\nDone; (%i out of %i matches for current checksum %08X)\n",
+                        matches, ctx->settings.ripping_retries, shown_crc);
             goto spool_encode;
         }
         if (total_repeats >= ctx->settings.max_retries) {
@@ -1140,12 +1145,12 @@ repeat_ripping:;
                                                 : checksum_ctx.eac_crc) == ci;
                 agreed = FFMAX(agreed, n);
             }
+            t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
+            kept = crip_spool_kept_at_limit(spools, nb_spools);
             cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed)\n",
                         ctx->settings.max_retries,
                         ctx->settings.max_retries == 1 ? "" : "s",
                         agreed, agreed == 1 ? "" : "s");
-            t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
-            kept = crip_spool_kept_at_limit(spools, nb_spools);
             goto spool_encode;
         }
 
