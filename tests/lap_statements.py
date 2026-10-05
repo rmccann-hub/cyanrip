@@ -438,8 +438,17 @@ else:
     print(f"ok   {len(table)} rule ids, the same in the code, RULES and the spec")
 
 # 10. every committed LSL lap of ours is well formed
+#     The versions come from the checker's own LSL_VERSIONS. This read
+#     `LSL: [123]` after LSL 4 landed, so round 30's laps 5, 7 and 9, the only
+#     LSL 4 laps of ours, were never checked here; found preparing for their
+#     lap 10, round 30, with all three well formed when first run.
+import importlib.util as _ilu
+_spec = _ilu.spec_from_file_location("lapstatements", TOOL)
+_lsl = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(_lsl)
+_LSL_LINE = re.compile(r"^LSL: (?:%s)\s*$" % "|".join(map(str, _lsl.LSL_VERSIONS)), re.M)
 laps = [p for p in sorted((ROOT / "docs" / "handshake").glob("round-*.md"))
-        if re.search(r"^LSL: [123]\s*$", p.read_text(encoding="utf-8"), re.M)]
+        if _LSL_LINE.search(p.read_text(encoding="utf-8"))]
 for p in laps:
     r = subprocess.run([sys.executable, str(TOOL), str(p)],
                        capture_output=True, text=True, cwd=ROOT)
