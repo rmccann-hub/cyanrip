@@ -2060,8 +2060,10 @@ that say what the run was, with a stopped `-f` search ending (`aa1f067`), the
 `-Z` spool, which encodes only the kept read and keeps the most-agreed one at
 the repeat limit (`d7ee6c4`), and a failed track aborting a rip of every track
 as it does under `-l` (`c1e1ab1`), and the cache probe scoring a re-read by
-cd-paranoia's 6 ms, with `-j` at `cyanrip-diagnostics/7` (`394ab17`). Still to
-land: the `-P 0` hang.
+cd-paranoia's 6 ms, with `-j` at `cyanrip-diagnostics/7` (`394ab17`), and a
+cache bracket printing the re-reads that ended its search (`6dd608c`), found
+reading the 2026-10-05 run (`docs/rig-2026-10-05-174a134/`). Still to land: the
+`-P 0` hang.
 `docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition, and
 poses one decision: what goes to stable after the close, since a beta cut with
 the round open logs `NOT a released build` forever. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and

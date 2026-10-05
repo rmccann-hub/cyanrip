@@ -55,12 +55,15 @@ So `.20` is a **beta inside round 30**, not round 30's closing release:
 | **The `-Z` spool**: no pass is encoded while it is read; each goes to a `tmpfile()`, one per distinct checksum, and one is encoded when the track is decided, the read that converged or, at the repeat limit, the read the most reads agreed on, newest on a tie. The album loudness graph is fed that read alone. A full disk now stops a `-Z` rip: `Error creating the -Z spool: %s!` and three more spool errors, all beginning `Error`; `Error in encoding: %s` is gone | `d7ee6c4` | which bytes a non-converged `-Z` track delivers, and its EAC CRC32 and AccurateRip values with them; the album rows and `REPLAYGAIN_ALBUM_*`; their error matcher, whose `Error` prefix takes the new lines, and their message inventory, which names the removed one (`ripper_message_inventory.py:469` at `5ec71f4e`) |
 | **A failed track aborts a rip of every track**, as it does under `-l`: `Error ripping: %s` and `Rip completed:  no (aborted, …)`, where the loop broke out and the footer said `yes` over a run that exited 1 | `c1e1ab1` | their tri-state footer reading, for a run that stopped on a failed track |
 | **The cache probe scores a re-read by cd-paranoia's 6 ms** (`MIN_SEEK_MS`), not a quarter of a full-stroke seek, which every re-read beat; a slow re-read is tried three times. The `-j` record's `cache_probe.hit_ratio` becomes `hit_below_us`, schema `cyanrip-diagnostics/7` | `394ab17` | their section P, which runs `cd-paranoia -A` beside our probe: the two should now agree, and that run is the only test of it. Nothing of theirs parses the `-j` record |
+| **A cache bracket carries the reads behind both ends**: on a miss the line adds `, 3 re-reads after a N-sector run took X ms or more`, the fastest of the three tries, where `128 to 255 sectors` on 2026-10-05 carried only the read behind 128; and it replaces `first uncached re-read`, which since `394ab17` printed the last of three | `6dd608c` | a reader of the line verbatim, as their rig-check surfaces it. No P2 row changes, since the clause fills the line's `%s`, and their parser reads nothing inside the line (`cyanrip_log.py:2324-2346` at `5ec71f4e`) |
 
 **To land before the cut** — in this round, on the operator's word:
 
 - **The hang with paranoia disabled** (`-P 0`), pinned on an image by
   `tests/badsector.c`; its speed on a drive is not measurable here.
-- **Whatever the 2026-10-05 acceptance run and the laps add.**
+- **Whatever the laps add.** The 2026-10-05 acceptance run
+  (`docs/rig-2026-10-05-174a134/`) added `6dd608c`, above, and showed no defect
+  in `.19` that was not already recorded.
 
 **The contract against `.19`'s, derived, not described**:
 `tools/contract-delta.py --text 174a134 <candidate>`. At `1770d3c`, with the
@@ -163,7 +166,7 @@ No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
 
 ## 5. What this release does NOT verify
 
-- **None of the ten `src/` commits has run on a drive.** The skip arm is
+- **None of the eleven `src/` commits has run on a drive.** The skip arm is
   reproduced on an image by a shim that varies one sector's bytes on every
   read; a real disc's skips come from the drive. The acceptance run on a
   damaged disc is the first test, and only if the run includes one.
