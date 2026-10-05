@@ -36,8 +36,11 @@ each to them.
   arm was decided by `ctx->total_error_count - start_err`, which moves only
   when the drive reports an error or returns no data, and a skip is neither.
   The condition was upstream's (`src/cyanrip_main.c:911` at `f8ebf48`). The arm
-  now also counts the kept pass's `SKIP` counter, the baseline the per-track
-  paranoia block uses. `Ripping errors:` is unchanged and stays the drive's
+  now also counts the last read's `SKIP` counter, the baseline the per-track
+  paranoia block uses (*"the last of N reads"*, its `Scope:` line). This said
+  *"the kept pass's"*, true when written and made false at the repeat limit by
+  the `-Z` spool, which can keep an earlier read there; the limit arm reads
+  `with errors` in that case whatever the counts, so no outcome changed. `Ripping errors:` is unchanged and stays the drive's
   count, so a track can now read `with errors` beside `Ripping errors: 0`; the
   contract's units block says so. Reproduced with no drive by
   `sc_paranoia_skip()`: `tests/badsector.c`'s flip mode returns different

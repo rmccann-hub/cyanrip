@@ -1329,8 +1329,11 @@ fail:
          * moves only when the drive reports an error or returns no data, so
          * the 2026-10-04 run on `.19` printed `Track 18 read successfully!`
          * over 2,586 skips. The condition was upstream's. Counted over the
-         * kept pass, the same baseline as the per-track paranoia block, so
-         * this line and that block describe the same read. Round 30.
+         * LAST read, the baseline of the per-track paranoia block (its
+         * `Scope:` line says so), so this line and that block describe the
+         * same read. That was the kept read until the -Z spool; at the repeat
+         * limit the kept read can now be an earlier one, and the limit arm
+         * says `with errors` there whatever the counts. Round 30.
          *
          * SO IS A -Z READ THAT NEVER AGREED. -Z N is the check the caller
          * asked for, and at the repeat limit it failed: the same run printed

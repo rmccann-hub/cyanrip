@@ -1580,7 +1580,7 @@ def emit(binary):
     w("  keeps two significant figures. Below 0.0005x it prints `0.000x`. Before")
     w("  round 30 it was one decimal throughout, and 0.033x printed `0.0x`.")
     w("- **`Track N read successfully!` / `read with errors.` - what decides the")
-    w("  arm.** `read with errors.` when, **over the kept pass**, the drive")
+    w("  arm.** `read with errors.` when, **over the track's last read**, the drive")
     w("  reported an error or returned no data (`Ripping errors:` counts these),")
     w("  **or** paranoia skipped (`SKIP` in that track's block, which the drive")
     w("  does not report and `Ripping errors:` does not count), **or** `-Z` hit")
