@@ -271,6 +271,13 @@ footer's `Tracks ripped partially accurately: 6/18` (`:1489`) is the
 - **A bundle written while the ripper was still running** says only *"stopped
   from the console"*. Their bundle could say the ripper was still running, or
   wait for it to finish.
+- **No `-j` record is in any of the three bundles**, for any rip, and none is
+  named as missing. Their bundler collects a record only when its caller names
+  it (`platterpus@0981c69:src/platterpus/evidence_bundle.py:534-546`), and the
+  acceptance session names none. cyanrip writes that record through `atexit`,
+  with its exit code and whether and how the rip was interrupted, so it is the
+  record of how each ripper ended. Its absence beside a footerless log would
+  have said the process had not exited.
 
 ### Not established
 

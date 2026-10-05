@@ -102,6 +102,12 @@ gives the lines:
 - **A bundle written while the ripper was still running** says only *"stopped
   from the console"*. Our reader now names such a log (`acfd48b`). Yours could
   say so in the bundle, or wait for the ripper to finish first.
+- **None of the three bundles carries a `-j` record**, and none names one as
+  missing: your bundler collects one only when its caller names it
+  (`evidence_bundle.py:534-546`), and the acceptance session names none. That
+  record is written through `atexit`, with the exit code and how the rip was
+  interrupted. It is the check the operator asked for, that each ripper really
+  ended, and it already exists on our side.
 - **Your re-read path's docstring still says it has not been exercised on a
   real drive** (`rip_worker.py:2795`). This run exercised it, and no track
   converged.
