@@ -99,6 +99,70 @@ for lap in sorted(laps, key=lambda l: (l.number or 0, l.lap or 0)):
           "PROTOCOL.md C9 tells the receiving gate to refuse this file")
     fails += 1
 
+# --- R6, the pre-commit: every lap of ours and every lap we hold ------------
+#
+# PROTOCOL.md §6a-bis R6, read as both sides agreed it in round 29. Our round 29
+# lap 1 S25 said our gate would enforce it, and nothing did: our round 30 lap 9
+# went out OPEN with no pre-commit, and Platterpus's check refused it while ours
+# passed it. A sent lap is evidence and cannot be edited, so it is named here
+# by its sha256 -- the bytes that left -- and a lap of ours carries the missing
+# pre-commit. An edited copy no longer matches the pin and fails like any other.
+SENT_WITHOUT_PRECOMMIT = {
+    "round-30-lap-09.md":
+        "be2f763b63ef77b6989bedcaebd2e70b0d08c9754af2f2408ebe0418293cce03",
+}
+import hashlib
+
+hs = root / "docs" / "handshake"
+for path in sorted(list(hs.glob("round-*-lap-*.md")) +
+                   list((hs / "inbound").glob("round-*-lap-*.md"))):
+    reason = relgate.precommit_refusal(path.read_text(encoding="utf-8"))
+    if not reason:
+        continue
+    name = path.relative_to(hs).as_posix()
+    pin = SENT_WITHOUT_PRECOMMIT.get(name)
+    if pin and hashlib.sha256(path.read_bytes()).hexdigest() == pin:
+        print(f"known-bad (sent, cannot be edited): {name} -- {reason}")
+        continue
+    print(f"FAIL: {name}: {reason}")
+    fails += 1
+
+# And the rule itself, on laps built to sit on each side of each half of it, so
+# a check that refuses everything or nothing fails here rather than passing on
+# a record that happens to hold one bad lap.
+def _r6_lap(rnd, lap, verdict, body):
+    return (f"HANDSHAKE-PROTOCOL: 6\nHANDSHAKE-ROUND: {rnd}\nHANDSHAKE-LAP: {lap}\n"
+            f"HANDSHAKE-VERDICT: {verdict}\n\nLSL: 4\n\n{body}\n")
+
+_WILL = ("S9 WILL: Our next lap is `GO` unless the run fails.\n  owner: us\n"
+         "  when: our next lap\n  verdict: GO\n  unless: the run fails\n")
+for label, text, refused in (
+    ("an OPEN lap 5 with no pre-commit", _r6_lap(30, 5, "OPEN", "S1 NOTE: nothing."), True),
+    ("a prose pre-commit", _r6_lap(30, 5, "OPEN",
+        "S1 NOTE: Our next lap is `GO` unless the run fails."), False),
+    ("a structured WILL", _r6_lap(30, 9, "HOLD", _WILL), False),
+    ("a GO lap, exempt", _r6_lap(30, 9, "GO", "S1 NOTE: nothing."), False),
+    ("round 28, before the rule was held", _r6_lap(28, 9, "OPEN", "S1 NOTE: x."), False),
+    ("lap 4, before the rule applies", _r6_lap(30, 4, "OPEN", "S1 NOTE: x."), False),
+    ("our lap named by number", _r6_lap(30, 5, "OPEN",
+        "S1 NOTE: Our lap 15 is `GO` unless the run fails."), True),
+    ("a WILL whose when: names our lap 15",
+        _r6_lap(30, 5, "OPEN", _WILL.replace("our next lap", "our lap 15")), True),
+    ("only a quotation of another lap's pre-commit", _r6_lap(30, 5, "OPEN",
+        'S1 NOTE: Your lap 4 said "our next lap is `GO` unless X".'), True),
+    ("a peer's lap number inside the event", _r6_lap(30, 5, "OPEN",
+        "S1 NOTE: Our first lap after we receive your lap 10 is `GO` unless "
+        "it finds a defect."), False),
+    ("a version string in the subject", _r6_lap(30, 5, "OPEN",
+        "S1 NOTE: Our next lap after v0.6.66 ships is `GO` unless it fails."), False),
+):
+    got = relgate.precommit_refusal(text) is not None
+    if got != refused:
+        print(f"FAIL: R6 on {label}: refused={got}, should be {refused}")
+        fails += 1
+    else:
+        print(f"ok   R6 on {label}: {'refused' if refused else 'passes'}")
+
 # --- the envelope's artifact-provenance refusal ---------------------------
 #
 # make-envelope.py had no test at all until round 13, and it shipped the defect

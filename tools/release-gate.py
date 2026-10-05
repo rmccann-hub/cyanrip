@@ -197,6 +197,72 @@ def next_lap_refusal(text):
                 f"`<n> (ours):`, `<n> (yours):` nor `none` -- C46, v7 §3")
     return None
 
+# §6a-bis R6: from lap 5 every lap says "our next lap is `GO` unless X", naming
+# an event and never the lap's number. Read as both sides agreed it in round 29
+# (their round 28 lap 6 S20, our round 29 lap 1 S25): a lap whose own verdict is
+# `GO` needs none, an LSL `WILL` carrying `verdict: GO` and `unless:` is one,
+# and the rule is held from round 29, so laps sent before it are not re-graded.
+# Our round 29 lap 1 S25 said this gate would enforce it; it did not until
+# round 30, when Platterpus's check refused our lap 9 for having none. Not a
+# round refusal: a sent lap cannot be corrected, so a refusal here would hold
+# its round shut forever. tests/handshake_wire.py applies it to every lap, ours
+# and inbound, and names the sent ones that fail.
+R6_FROM_ROUND = 29
+R6_FROM_LAP = 5
+# The subject runs to the end of its sentence: a dot followed by a word
+# character (`v0.6.66`, `round-30-lap-09.md`) ends no sentence.
+_R6_SUBJ = r"(?:[^.\n]|\.(?=\w))"
+R6_PROSE_RE = re.compile(
+    r"\blap\b" + _R6_SUBJ + r"{0,200}?\bis\s+[`*_]*GO[`*_]*\s+unless\b", re.I)
+# "Our lap 15 is `GO` unless" names the lap by number, which R6 forbids. "Our"
+# is the writer's own lap; a peer's number inside the event ("after we receive
+# your lap 10") is R6's own example of the right form.
+R6_NUMBERED_RE = re.compile(
+    r"\bour\s+lap\s+\d+\b(?:(?!\blap\b)[^\n\"\u201c\u201d:;]){0,120}?"
+    r"\bis\s+[`*_]*GO[`*_]*\s+unless\b", re.I)
+# Quotations of another lap's pre-commit are not this lap's promise.
+_R6_QUOTE_RE = re.compile(r"(`[^`\n]*`)|\"[^\"\n]*\"|\u201c[^\u201d\n]*\u201d")
+_LSL_HEAD_RE = re.compile(r"^S\d+ ([A-Z]+)(?: [a-z]+)?: ", re.M)
+
+
+def precommit_refusal(text):
+    """R6. Why a lap fails the pre-commit rule, or None when it meets it or
+    the rule does not apply to it."""
+    body = strip_fences(text)
+    rounds, laps = ROUND_RE.findall(body), LAP_RE.findall(body)
+    verdicts = VERDICT_RE.findall(body)
+    if len(rounds) != 1 or len(laps) != 1:
+        return None            # an ambiguous header is C9's and §2's to report
+    rnd, lap = int(rounds[0]), int(laps[0])
+    if rnd < R6_FROM_ROUND or lap < R6_FROM_LAP or verdicts == ["GO"]:
+        return None
+    numbered = R6_NUMBERED_RE.search(body)
+    if numbered:
+        return (f"R6: a pre-commit names its lap by number, not by an event: "
+                f"{numbered.group(0)!r}")
+    # The structured form: one LSL statement, from its head to the next, that
+    # is a WILL and carries both fields.
+    heads = list(_LSL_HEAD_RE.finditer(body))
+    for i, h in enumerate(heads):
+        if h.group(1) != "WILL":
+            continue
+        stmt = body[h.start():heads[i + 1].start() if i + 1 < len(heads) else len(body)]
+        if re.search(r"^  verdict: GO\s*$", stmt, re.M) and \
+                re.search(r"^  unless: \S", stmt, re.M):
+            when = re.findall(r"^  when: (.*)$", stmt, re.M)
+            if any(re.search(r"\bour\s+lap\s+\d+\b", w, re.I) for w in when):
+                return (f"R6: a pre-commit's when: names our lap by number: "
+                        f"{when!r}")
+            return None
+    unquoted = _R6_QUOTE_RE.sub(lambda m: m.group(1) or " ", body)
+    if R6_PROSE_RE.search(unquoted):
+        return None
+    return (f"R6: lap {lap} of round {rnd} declares {verdicts[:1] or ['no verdict']} "
+            f"and carries no pre-commit: from lap {R6_FROM_LAP} every lap says "
+            f"\"our next lap is `GO` unless X\", in a sentence or as a WILL with "
+            f"verdict: GO and unless:")
+
+
 # Adopted from Platterpus round 7 lap 3 §1: the wire header both sides emit.
 # FROM makes a crossed pair unambiguous without filename conventions;
 # APP-VERSION and RIPPER-VERSION say which *pair* produced a file's results, so
