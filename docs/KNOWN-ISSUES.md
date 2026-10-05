@@ -125,14 +125,21 @@ each to them.
 
 **NOT fixed, and now the one open half: a `-f` search that finds no offset
 exits 0.** Measured: `-N -f` on `basic.cue` printed `No track had AccuRip
-entry, cannot find offset!` and exited 0. A fix was written and taken back
-before it was pushed: exiting 1 turns the `-f` row of `docs/seam-commands.md` §7
-from `unobservable | 0` into `refused | 1`, and §7 is generated from the binary
-by `tools/probe-argv-surface.py` into one of the four jointly owned documents,
-so the exit code and the row move together in a version both sides ship. A dry
-run of `.20`'s release steps found it, through `Argv table in seam-commands.md`.
-Platterpus's section O grades `-f` by its lines, not its exit code, so nothing
-of theirs depends on the change. Proposed in round 30.
+entry, cannot find offset!` and exited 0. **The operator decided on 2026-10-05
+that it exits 1**, and the fix is written and revert-proved but not landed:
+`search_for_drive_offset()` returns whether it printed `Drive offset of ...
+found`, the call site sets `fatal_abort` when it did not (not
+`total_error_count`, so `Ripping errors:` claims no failed read), and
+`sc_probe_runs_open_no_logfile()` expects 1 for `-f`; with the assignment
+removed, the build green, it fails `-f exited 0, not 1`. It waits because
+exiting 1 turns the `-f` row of `docs/seam-commands.md` §7 from `unobservable |
+0` into `refused | 1`, §7 is generated from the binary into one of the four
+jointly owned documents, and `Argv table in seam-commands.md` fails until the
+row moves. **The text both trees would land is
+`docs/handshake/proposed/seam-commands-round30.md`**, proposed in round 30 lap
+9; the landing is two commits, the code and then §7 regenerated from it, so the
+banner names a clean build. Platterpus's section O grades `-f` by its lines, not
+its exit code, so nothing of theirs depends on the change.
 
 All four are pinned by `sc_probe_runs_open_no_logfile()`, `sc_paranoia_skip()`,
 `sc_repeat_limit()` and `tests/logrender.c`, each revert-proved with the build
@@ -1493,7 +1500,16 @@ something: the real semantics are exactly why an empty leading component made a
 multi-component scheme resolve **absolute**, and a reader who believed line 97
 would not have looked.
 
-**NONE of them is fixed, and not for want of knowing the answer.** The file is
+**Rows 1 and 2 are FIXED, at `83bcd70` (2026-09-29), round 29's one joint move
+of the file**, which regenerated §7 with the `unobservable` outcome and the
+refused `-p '99=drop'`. This entry said *"NONE of them is fixed"* for a week
+after that; found in round 30 by diffing §7 against the binary. **Rows 3 to 5
+are proposed in `docs/handshake/proposed/seam-commands-round30.md`**, round 30
+lap 9, with the `-f` exit row; row 5's answer was checked against Platterpus's
+code, which no longer writes the U+2236 substitute
+(`platterpus@bd508bf1:src/platterpus/adapters/cyanrip_backend.py:825-835`).
+
+**Until then they were not fixed, and not for want of knowing the answer.** The file is
 shared and neither project owns it — a one-sided edit is how two copies of one
 spec come to disagree, which has already happened once to `PROTOCOL.md`. They go
 in together at the next joint version bump.

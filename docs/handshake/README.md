@@ -183,10 +183,16 @@ that reads both wordings of the repeat-limit line, is their 0.6.63. **Their
 2026-09-30 by our lap 1, and their 0.6.65 names `174a134` as its build under
 review; the Full run on it ran on 2026-09-30 and is filed.
 
-**`proposed/` held shared-document texts under review, and is gone.** Round 25
-proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md` v6 there, by
-sha256, and each was removed when it landed: the last two at `c07bf68`, the
-protocol at `643631b`. A future bump starts it again.
+**`proposed/` holds shared-document texts under review**, each removed when it
+lands. Round 25 proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md`
+v6 there, landed at `c07bf68` and `643631b`; round 30 proposed `PROTOCOL.md` v7
+and `seam-rules.md` v7, landed at `a3a4964`. **It holds
+`seam-commands-round30.md` now**, round 30 lap 9's proposal: the `-f` row of §7
+regenerated from a build where a search that finds no offset exits 1, and three
+hand-written statements corrected (`docs/KNOWN-ISSUES.md`, *"carries FIVE
+known-wrong statements"*, rows 3 to 5). Its §7 banner names a dirty tree, which
+is true of it: the code lands with the file, and §7 is regenerated from that
+clean build when it does.
 
 **Round 13 carried one close condition out with it, and that is a first.** CC-2
 required a hardware acceptance pass, and it was mis-specified: it named a *test
