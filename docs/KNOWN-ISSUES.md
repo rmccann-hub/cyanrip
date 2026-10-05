@@ -1610,10 +1610,12 @@ artifact is a build of five moving targets and no two runs need agree. The six
 GitHub Actions the workflow uses are pinned by tag, not by commit. **Both are
 upstream's** (the workflow and script came with the fork) and no consumer of
 this fork uses the Windows artifact: Platterpus builds from source on Linux.
-**Why not now:** pinning means choosing five versions and keeping them current,
-which is a decision about what the Windows build is for, and nobody has said it
-is for anything. Recorded so the choice is visible; the dependency map prints
-it every time it is regenerated.
+**Decided by the operator, 2026-10-05: left as upstream ships it.** Pinning
+means choosing five versions and keeping them current, which is a decision
+about what the Windows build is for, and nobody uses it for anything; removing
+the workflow would be a divergence from upstream for no consumer's benefit.
+Recorded so the choice stays visible; the dependency map prints it every time
+it is regenerated.
 
 ## Open, ours, and NOT solvable here — no drive in this environment
 
@@ -1772,6 +1774,9 @@ rehearsal, and **row 14** the same day, filing Platterpus's round 28 lap 9.
 Both are for round 29, and both are gaps in the spec, not false statements.
 **Rows 15 and 16 are for v8**, from Platterpus's round 30 lap 6 S23 and S24,
 read against v7 as proposed at `09f39bc` and still true of it at `2abeb5d`.
+**Carried to round 31 by the operator's decision of 2026-10-05**: v7 governs
+from round 31, so a v8 drafted in round 30 could govern nothing sooner, and
+drafting it would add laps to a round whose close waits on a run.
 
 **Consolidated 2026-09-22 by the pre-round-24 audit**, read against the four
 files as they stand — byte-identical in both trees, `tools/seam-sync-check.py
