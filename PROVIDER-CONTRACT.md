@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g2be0d95)`
+Build: `cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g8ab9a8d)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 5f3631797868b443` over `src/*.c` and
+**Source anchor:** `sha256/16 = dc9c689334dacfbd` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -253,8 +253,8 @@ or units of any of them is a breaking change and requires a handshake round.
 | `cyanrip_encode.c:1427` | `Could not open output codec context!` |
 | `cyanrip_encode.c:1434` | `Couldn't copy codec params!` |
 | `cyanrip_encode.c:1441` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
-| `cyanrip_log.c:1220` | `Log FUN512: %s` |
-| `cyanrip_log.c:1298` | `--- %zu earlier message(s) dropped: buffer full ---` |
+| `cyanrip_log.c:1229` | `Log FUN512: %s` |
+| `cyanrip_log.c:1307` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:58` | `%s%s:` |
 | `cyanrip_log.c:61` | `%s` |
 | `cyanrip_log.c:71` | `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)` |
@@ -362,19 +362,19 @@ or units of any of them is a breaking change and requires a handshake round.
 | `cyanrip_log.c:961` | `%i%s` |
 | `cyanrip_log.c:975` | `AccurateRip:    %s` |
 | `cyanrip_log.c:981` | `Total time:     %s` |
-| `cyanrip_log.c:1045` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:1047` | `Tracks ripped partially accurately: %i/%i` |
-| `cyanrip_log.c:1066` | `Ripping errors: %llu (including %llu paranoia skip%s)` |
-| `cyanrip_log.c:1070` | `Ripping errors: %i` |
-| `cyanrip_log.c:1100` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
-| `cyanrip_log.c:1103` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
-| `cyanrip_log.c:1121` | `Interrupted at: track %i, mid-read` |
-| `cyanrip_log.c:1124` | `Interrupted at: between tracks, no read in progress` |
-| `cyanrip_log.c:1138` | `Rip completed:  no (cue sheet only, %i of %i tracks)` |
-| `cyanrip_log.c:1141` | `Rip completed:  no (offset search only, %i of %i tracks)` |
-| `cyanrip_log.c:1144` | `Rip completed:  no (aborted, %i of %i tracks)` |
-| `cyanrip_log.c:1147` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:1150` | `Ripping finished at %s` |
+| `cyanrip_log.c:1054` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:1056` | `Tracks ripped partially accurately: %i/%i` |
+| `cyanrip_log.c:1075` | `Ripping errors: %llu (including %llu paranoia skip%s)` |
+| `cyanrip_log.c:1079` | `Ripping errors: %i` |
+| `cyanrip_log.c:1109` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
+| `cyanrip_log.c:1112` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
+| `cyanrip_log.c:1130` | `Interrupted at: track %i, mid-read` |
+| `cyanrip_log.c:1133` | `Interrupted at: between tracks, no read in progress` |
+| `cyanrip_log.c:1147` | `Rip completed:  no (cue sheet only, %i of %i tracks)` |
+| `cyanrip_log.c:1150` | `Rip completed:  no (offset search only, %i of %i tracks)` |
+| `cyanrip_log.c:1153` | `Rip completed:  no (aborted, %i of %i tracks)` |
+| `cyanrip_log.c:1156` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:1159` | `Ripping finished at %s` |
 | `cyanrip_log.c:955` | `Disc number:    %s` |
 | `cyanrip_log.c:956` | `Total discs:    %s` |
 | `cyanrip_log.c:968` | `DiscID:         %s` |
