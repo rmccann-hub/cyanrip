@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g394ab17)`
+Build: `cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g6dd608c)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 97713b995f22db8a` over `src/*.c` and
+**Source anchor:** `sha256/16 = 0eea8e80cb336750` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -192,7 +192,7 @@ or units of any of them is a breaking change and requires a handshake round.
 | `accurip.c:281` | `Unable to get AccuRIP DB data: %s%s` |
 | `accurip.c:284` | `Unable to get AccuRIP DB data: %s\n!` |
 | `accurip.c:327` | `AccuRIP DB data error, got unexpected number of bytes!` |
-| `cache_probe.c:296` | `Cache probe:    %s` |
+| `cache_probe.c:309` | `Cache probe:    %s` |
 | `coverart.c:34` | `Cover art has no packet!` |
 | `coverart.c:51` | `Unable to init lavf context: %s!` |
 | `coverart.c:57` | `Unable to alloc stream!` |
@@ -555,7 +555,7 @@ emits arbitrary text - here, the generated CUE sheet echoed back to
 the terminal a line at a time. **Do not pattern-match this row**; a
 pattern built from its `"%s"` would match every line in the log.
 
-**`cache_probe.c:296`** - reaches logfile: yes
+**`cache_probe.c:309`** - reaches logfile: yes
 
 Fixed prefix: `Cache probe:    `
 
