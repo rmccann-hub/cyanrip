@@ -102,6 +102,40 @@ with tempfile.TemporaryDirectory() as t:
     ec, out = run(d / "nothing-here")
     check(ec == 2, f"no files at all: exit {ec}, want 2")
 
+# --- the repeat loop's own reads, and a single read ---------------------------
+# 2026-10-04: track 12 of that day's disc read six different ways -- once in the
+# first pass, five times in a `-Z` pass at the repeat limit -- and this tool said
+# `1 read(s), 1 distinct EAC CRC32  agree`. From `.19` each `Repeating ripping`
+# line names the EAC CRC32 of a whole-track read, so it is a read; before `.19`
+# it named the value before the final XOR and is not comparable; and one read
+# agrees with nothing.
+R0930 = ROOT / "docs" / "rig-2026-09-30b-174a134" / "rips"
+loop = (R0930 / "secure-reread.log").read_text(encoding="utf-8")
+first = "Repeating ripping (0 out of 2 matches for current checksum B0D122E7)"
+check(loop.count(first) == 1 and loop.startswith(
+      "cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)"),
+      "fixture drift: secure-reread.log of 2026-09-30b changed")
+with tempfile.TemporaryDirectory() as t:
+    d = pathlib.Path(t)
+    (d / "n.log").write_text(loop, encoding="utf-8")
+    ec, out = run(d)
+    check(re.search(r"^  track 1: 3 read\(s\), 1 distinct EAC CRC32  agree$", out, re.M),
+          f"a converged loop of 3 passes is 3 agreeing reads:\n{out}")
+    (d / "n.log").write_text(loop.replace(first, first.replace("B0D122E7", "0E91CD1A")),
+                             encoding="utf-8")
+    ec, out = run(d)
+    check(ec == 1 and re.search(r"^  track 1: 3 read\(s\), 2 distinct EAC CRC32  DISAGREE$",
+                                out, re.M),
+          f"a loop pass that read differently is a disagreement: exit {ec}\n{out}")
+    old = loop.replace(first, first.replace("B0D122E7", "0E91CD1A")).replace(
+        "+platterpus.19 (", "+platterpus.18 (", 1)
+    (d / "n.log").write_text(old, encoding="utf-8")
+    ec, out = run(d)
+    check(ec == 0 and "track 1: 1 read, nothing to compare it with" in out,
+          f"before .19 the loop's checksum is not a read's EAC CRC32: exit {ec}\n{out}")
+    check("were read once, which nothing here can compare" in out,
+          f"the summary must count the tracks read once: {out[-300:]}")
+
 # --- a positive line that contains a negative phrase -------------------------
 # Platterpus's round 27 lap 5 §C: a classifier that decides NEGATIVE on a phrase
 # misreads a positive line containing it, and `.17`'s 450 match ends

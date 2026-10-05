@@ -18,6 +18,14 @@ group, each track's `EAC CRC32` is compared across every log that read it. A
 track read with more than one checksum is reported as a DISAGREEMENT, with each
 checksum's logs and what AccurateRip said about that read.
 
+FROM `.19` THE REPEAT LOOP'S PASSES ARE READS TOO. Each `Repeating ripping (...
+current checksum X)` line before a track's block names the EAC CRC32 of a
+whole-track read, so a `-Z` track contributes every pass, not only the kept one;
+before `.19` the loop printed the value before the final XOR, and the banner
+decides. A track read once is said to be read once: one read agrees with
+nothing, and on 2026-10-04 `1 read(s) ... agree` stood over a track the filed
+second-pass output shows read six ways.
+
 WHAT IT DOES NOT DO. It does not say which read is right. That is a judgement
 and it belongs downstream; the AccurateRip status beside each checksum is the
 evidence, printed as the log states it. It reads cyanrip's logs only, found by
@@ -56,6 +64,15 @@ DISC_ID = re.compile(r"^DiscID:\s+(\S+)", re.M)
 OFFSET = re.compile(r"^Offset:\s+(.+?)\s*$", re.M)
 EAC_CRC = re.compile(r"^\s+EAC CRC32:\s+([0-9A-F]{8})\b(.*)$", re.M)
 AR_LINE = re.compile(r"^\s+Accurip (v1|v2|450):\s+[0-9A-F]{8}(?: \((.*)\))?\s*$", re.M)
+# Each pass of the `-Z` repeat loop prints the checksum of the whole-track read
+# it just made, before the block of the track it belongs to. From `.19` that
+# checksum IS the read's EAC CRC32 (round 29, `Print the repeat loop's checksum
+# finalised`); before it, it was the value before the final XOR, so counting it
+# would report a disagreement nobody caused. The banner decides which.
+REPEAT = re.compile(r"^Repeating ripping \(\d+ out of \d+ matches for current "
+                    r"checksum ([0-9A-F]{8})\)\s*$", re.M)
+FORK_N = re.compile(r"^cyanrip \S*\+platterpus\.(\d+) \(platterpus-fork-g", re.M)
+REPEAT_IS_EAC_FROM = 19
 
 
 def ar_summary(block):
@@ -84,6 +101,8 @@ def reads_in(path):
     disc = disc.group(1) if disc else "unknown disc"
     off = off.group(1) if off else "unknown offset"
     heads = list(TRACK_BLOCK.finditer(text))
+    fork = FORK_N.search(text)
+    loop_is_eac = bool(fork) and int(fork.group(1)) >= REPEAT_IS_EAC_FROM
     out = []
     for i, h in enumerate(heads):
         end = heads[i + 1].start() if i + 1 < len(heads) else len(text)
@@ -93,6 +112,17 @@ def reads_in(path):
             continue
         out.append((disc, off, int(h.group(1)), crc.group(1),
                     crc.group(2).strip(), ar_summary(block)))
+        # The loop's earlier passes for this track sit between the previous
+        # block and this one's header. The last pass is the kept read, already
+        # counted above, and a converged loop prints it as `Done; (...)`, not
+        # as `Repeating ripping`, so nothing is counted twice. AccurateRip is
+        # run on the kept read alone.
+        if loop_is_eac:
+            start = heads[i - 1].end() if i else 0
+            for m in REPEAT.finditer(text, start, h.start()):
+                out.append((disc, off, int(h.group(1)), m.group(1),
+                            "(an earlier pass of the repeat loop)",
+                            "no AccurateRip result: only the kept read is looked up"))
     return out
 
 
@@ -118,7 +148,7 @@ def main():
               "and none has a track block with an EAC CRC32")
         return 2
 
-    disagree = 0
+    disagree = once = 0
     for (disc, off), tracks in sorted(groups.items()):
         print(f"disc {disc} at offset {off}: {len(logs_per_group[(disc, off)])} "
               f"log(s), {len(tracks)} track(s) read at least once")
@@ -127,6 +157,14 @@ def main():
             by_crc = collections.defaultdict(list)
             for crc, suffix, ar, f in reads:
                 by_crc[crc].append((f, suffix, ar))
+            # One read agrees with nothing: saying `agree` over it is a check
+            # satisfied by finding nothing. On 2026-10-04 track 12 was `1
+            # read(s) ... agree` here while the filed second-pass output shows
+            # it read six ways.
+            if len(reads) == 1:
+                once += 1
+                print(f"  track {tr}: 1 read, nothing to compare it with")
+                continue
             state = "agree" if len(by_crc) == 1 else "DISAGREE"
             disagree += state == "DISAGREE"
             print(f"  track {tr}: {len(reads)} read(s), {len(by_crc)} distinct "
@@ -143,7 +181,9 @@ def main():
               "is right is not decided here; the AccurateRip result beside each "
               "is the log's own.")
         return 1
-    print("\nevery track that was read more than once was read the same way")
+    print("\nevery track that was read more than once was read the same way"
+          + (f"; {once} track(s) were read once, which nothing here can "
+             f"compare" if once else ""))
     return 0
 
 
