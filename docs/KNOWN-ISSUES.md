@@ -35,7 +35,8 @@ each to them.
   2026-10-04 run on `.19` printed it for track 18 over **2,586 `SKIP`s**: the
   arm was decided by `ctx->total_error_count - start_err`, which moves only
   when the drive reports an error or returns no data, and a skip is neither.
-  The condition was upstream's (`src/cyanrip_main.c:911` at `f8ebf48`). The arm
+  The condition was upstream's (`src/cyanrip_main.c:911` at `f8ebf48`), and is
+  drafted as upstream report 15, with the repeat limit's arm. The arm
   now also counts the last read's `SKIP` counter, the baseline the per-track
   paranoia block uses (*"the last of N reads"*, its `Scope:` line). This said
   *"the kept pass's"*, true when written and made false at the repeat limit by
@@ -78,7 +79,8 @@ each to them.
   twice the radius whenever no offset had been found, so the run read on after
   the stop until the radius outgrew every track. A stop now ends the search.
   **Read from the source and not run**: the search needs AccurateRip data for
-  the disc, and no fixture's disc has any.
+  the disc, and no fixture's disc has any. Drafted as upstream report 17,
+  2026-10-05.
 
 - **The -Z spool: the kept read at the repeat limit, and the album graph**
   (`d7ee6c4`). -Z encoded while it read, from the pass that might be the
@@ -107,7 +109,7 @@ each to them.
   abort and print `Error ripping: %s`. The asymmetry is upstream's too
   (`src/cyanrip_main.c:1937-1938` against `:2064-2067` at `f8ebf48`), where
   the loop over every track also finalises the album's loudness over a track
-  that failed. **Not yet drafted as an upstream report.**
+  that failed. Drafted as upstream report 16, 2026-10-05.
 - **A cache bracket printed the evidence for one end only**, found reading the
   2026-10-05 run. `Cache probe:    128 to 255 sectors (…, cached read 1.5 ms)`
   carried the read behind 128 and nothing behind 255: the composer printed the

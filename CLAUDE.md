@@ -899,13 +899,14 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is fourteen**:
+   tally that said "all three" while five more existed. **It is seventeen**:
    eight counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather
    than remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
    from round 26's real test, a twelfth the same day from Platterpus's reading
    of our source, a thirteenth on 2026-09-27, found writing
-   `tests/arresp.c`, and a fourteenth on 2026-10-05, found reading the tally
-   for round 30. Each has a re-check
+   `tests/arresp.c`, a fourteenth on 2026-10-05, found reading the tally for
+   round 30, and three fixed earlier in round 30 and drafted the same day.
+   Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
    1. `cyanrip_log()` **inside the signal handler** — a mutex and stdio in a
@@ -949,28 +950,35 @@ should need rewriting. If it does, that is the defect.
       `(not found)`, the words for a checksum no entry carries, so the log
       denies a lookup result it had. Read from the source; fixed here for
       `.20` (`b1857d6`), pinned by `tests/logrender.c`.
+  15. A track's success line is decided by `total_error_count` alone, so a
+      track paranoia skipped on, or a `-Z` track that hit the repeat limit,
+      prints `successfully!`. Seen on a drive on `.19`: 2,586 skips. Fixed
+      for `.20` (`e5a0897`, `4529810`).
+  16. A failed track `break`s out of the loop over every track with no
+      message, and the album's loudness and ReplayGain are finalised over
+      it, where `-l` prints `Error ripping:` and ends the run. Fixed for
+      `.20` (`c1e1ab1`).
+  17. A stopped `-f` search is retried with a larger radius, or reported as
+      `No track was long enough`, because nothing after `end:` asks whether
+      it was stopped. Fixed for `.20` (`aa1f067`).
 
-   **Not filed is not fixed, and fourteen unfiled reports is the private garden
-   this rule forbids.** Filing is on upstream's tracker and outside this
+   **Not filed is not fixed, and seventeen unfiled reports is the private
+   garden this rule forbids.** Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — but **every one is
-   drafted** (2026-09-27, the fourteenth 2026-10-05): the other thirteen are in
+   drafted** (2026-09-27, the last four 2026-10-05): the other sixteen are in
    `docs/upstream/defect-reports.md`, each with upstream's `file:line` at
-   `f8ebf48` and our fixing commit, and all fourteen are rendered ready to
+   `f8ebf48` and our fixing commit, and all seventeen are rendered ready to
    paste in `docs/upstream/issues-to-file.md`. The count
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
 
-   **And fourteen is the count DRAFTED, not the count FOUND.** Round 30 fixed
-   three more for `.20` that `docs/KNOWN-ISSUES.md` and `Changelog.md` record
-   as upstream's too, each checked against `master` on 2026-10-05 rather than
-   carried over: a track's success line decided by `total_error_count` alone,
-   so paranoia's skips print `successfully!` (`e5a0897`; `cyanrip_main.c:909-912`
-   at `f8ebf48`); a failed track that `break`s out of the loop over every track
-   where `-l` aborts (`c1e1ab1`; `:1937-1938` against `:2064-2067`); and a
-   stopped `-f` search that, once a track has been checked, retries with a
-   larger radius (`aa1f067`; the stop's `goto end` at `:523-526` falls to the
-   retry at `:568-575`). **None is drafted yet**, and until each is, the sentence above
-   saying every one is drafted is about the fourteen and no more.
+   **Drafted is a separate claim from found, and for a day they differed.**
+   Reports 15 to 17 were fixed for `.20` and recorded in
+   `docs/KNOWN-ISSUES.md` and `Changelog.md` as upstream's too, while this list
+   said fourteen and *"every one is drafted"*. Found 2026-10-05 adding the
+   fourteenth, by grepping those two files for *"upstream's too"*, and drafted
+   the same day, each re-checked against `master`'s source rather than carried
+   over. **Grep the fixes for upstream's code before quoting this count.**
 
 **And custody, which is the part that makes "source of truth" mean something
 without meaning "we decide".** The shared seam documents live here as the
