@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-gf8641b7)
+cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-gc887165)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 30 lap 11 OPEN, verdict OPEN (draft — lap not released for reading) -- NOT a released build
+Handshake:      round 30 lap 11 OPEN, verdict OPEN -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -59,16 +59,6 @@ Gaps:
 
 Tracks:
 
-Repeating ripping (0 out of 199 matches for current checksum D36D9296)
-
-Repeating ripping (1 out of 199 matches for current checksum D36D9296)
-
-Repeating ripping (2 out of 199 matches for current checksum D36D9296)
-
-Repeating ripping (3 out of 199 matches for current checksum D36D9296)
-
-Repeating ripping (4 out of 199 matches for current checksum D36D9296)
-
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -93,7 +83,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          82
+  READ:          11
 
 Ripping errors: 1
 Encoder errors: not applicable; no whole track was encoded
@@ -101,5 +91,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-10-05T22:04:49+00:00
-Log FUN512: r.ULCS..E9Hl.3Te4SbiyzdrLHaQudJ_0XdoaXNMFeMgavK_yrfr5lga4HjNUoZqyembg9FFsxRR8EH_QkvSTw
+Ripping finished at 2026-10-05T22:23:37+00:00
+Log FUN512: r3UZpbE5wH71AmDU9VofD3Vx03n2osT.ts7SNm_XBXsLNkyFWHd_zhlL.ebdiOfiitpIM8MgVZxcWLJwqPsnpQ
