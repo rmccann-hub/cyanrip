@@ -127,9 +127,14 @@ each to them.
 It exited 0 (measured: `-N -f` on `basic.cue` printed `No track had AccuRip
 entry, cannot find offset!` and exited 0). By the operator's word of
 2026-10-05, agreed with Platterpus in round 30 (our lap 9 S16, their lap 10
-S10): `search_for_drive_offset()` returns whether it printed `Drive offset of
-... found`, and the call site sets `fatal_abort` when it did not, not
-`total_error_count`, so `Ripping errors:` claims no failed read.
+S10): `search_for_drive_offset()` returns 1 when it did not print `Drive
+offset of ... found`, and the call site then sets `fatal_abort`, not
+`total_error_count`, so `Ripping errors:` claims no failed read. **`0645ddb`
+had the return the other way, 1 for found**, and the contract's P5, which
+reads a `return 1` after a message as its failure path, filed the success
+line as fatal and the two lines that end a failed search as neither; found
+reading the regenerated contract before committing it, and put in the
+program's 0-for-success convention by `68f22ef`, the exit codes unchanged.
 `sc_probe_runs_open_no_logfile()` expects 1, revert-proved. **It moved the `-f`
 row of the jointly owned `docs/seam-commands.md` §7**, so it landed with the
 text both trees agreed, §7 regenerated from `0645ddb`'s clean build, and with

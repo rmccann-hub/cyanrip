@@ -77,7 +77,7 @@ tracks, and which way it goes is theirs to answer. **And `-P 0` no longer
 hangs** on a block in which nothing reads (`c57b596`): paranoia's read hook is
 wrapped at level 0, so a short read is retried sector by sector and a sector
 that will not read is zero-filled. **A `-f` search that finds no offset exits
-1** (`0645ddb`), by the operator's word too, and sets no ripping error. It
+1** (`0645ddb`, `68f22ef`), by the operator's word too, and sets no ripping error. It
 moves a row of the jointly owned `docs/seam-commands.md` §7, so it landed with
 the text both trees agreed in round 30 (our lap 9 S16, their lap 10 S10), which
 also corrects three statements the shared file had carried wrong; a dry run of
