@@ -655,9 +655,12 @@ static int search_for_offset(cyanrip_track *t, int *offset_found,
     return 0;
 }
 
-/* Returns 1 when it printed `Drive offset of ... found`, else 0: a search that
+/* Returns 0 when it printed `Drive offset of ... found`, else 1: a search that
  * ends without an offset exits 1 from round 30, so the exit code says whether
- * the search succeeded (cyanrip_run()). */
+ * the search succeeded (cyanrip_run()). 0 for success, as everywhere else here:
+ * the provider contract reads a `return 1` after a message as that message's
+ * failure path, and with 1 for success it filed `Drive offset ... found` as a
+ * fatal message and the two lines that end a failed search as neither. */
 static int search_for_drive_offset(cyanrip_ctx *ctx, int range)
 {
     int had_ar = 0, did_check = 0, stopped = 0;
@@ -755,22 +758,23 @@ end:
 
     if (!offset_found) {
         if (quit_now)
-            return 0;
+            return 1;
         if (!had_ar) {
             cyanrip_log(ctx, 0, "No track had AccuRip entry, cannot find offset!\n");
-        } else if (had_ar && !did_check) {
-            cyanrip_log(ctx, 0, "No track was long enough, unable to find drive offset!\n");
-        } else {
-            cyanrip_log(ctx, 0, "Was not able to find drive offset with a radius of %i frames"
-                        ", trying again with a larger radius...\n", range);
-            return search_for_drive_offset(ctx, 2*range);
+            return 1;
         }
-        return 0;
+        if (!did_check) {
+            cyanrip_log(ctx, 0, "No track was long enough, unable to find drive offset!\n");
+            return 1;
+        }
+        cyanrip_log(ctx, 0, "Was not able to find drive offset with a radius of %i frames"
+                    ", trying again with a larger radius...\n", range);
+        return search_for_drive_offset(ctx, 2*range);
     }
 
     cyanrip_log(ctx, 0, "Drive offset of %c%i found (confidence: %i)!\n",
                 offset_found_samples >= 0 ? '+' : '-', abs(offset_found_samples), offset_found);
-    return 1;
+    return 0;
 }
 
 static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
@@ -2487,7 +2491,7 @@ static int cyanrip_run(int argc, char **argv)
          * footer still says `offset search only`. By the operator's word of
          * 2026-10-05, with the `-f` row of the shared docs/seam-commands.md
          * section 7 moving in the same change. */
-        if (!search_for_drive_offset(ctx, find_drive_offset_range))
+        if (search_for_drive_offset(ctx, find_drive_offset_range))
             fatal_abort = 1;
         ctx->not_a_rip = CRIP_OFFSET_SEARCH_ONLY;
         goto end;
