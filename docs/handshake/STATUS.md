@@ -19,6 +19,8 @@ STATUS-OPEN: cache-probe-calibration us cannot, because the fix's baseline needs
 STATUS-OPEN: p0-unreadable-sector-hang us cannot, because the fix changes the drive read path and needs a drive to verify
 STATUS-OPEN: gate-c13a us cannot, because C13a as written refuses six sent laps, so it needs a protocol amendment
 STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act
+STATUS-OPEN: read-successfully-over-skips us cannot, because what that P2 line means is a contract question your health status rests on, so it goes to round 31 with a proposal (2026-10-04, track 18: 2,586 skips under "read successfully!")
+STATUS-OPEN: extraction-speed-below-1x us cannot, because the value's format is P2, so it goes to round 31 (2026-10-04, track 18: 0.033x printed as 0.0x)
 
 **The block above is the proposal's D6, and it is checked, not trusted**
 (`sc_status_block_is_current()`): the round and its state against the release
@@ -75,8 +77,34 @@ checks, and neither is a dated state.
 | `.18` on a drive | **round 29's Full acceptance on `.18` with Platterpus 0.6.63 ran from 2026-09-28T22:33:56Z to 2026-09-29T03:55Z** (`docs/rig-2026-09-28c-51cc789/`). **Its script's verdict is not a pass**: 320 pass, 3 fail, `counts_as_evidence: true`, no section skipped or blocked, and all three failures are `screenshot` steps that found no window on screen. All ten cyanrip logs verify with `-Y`; nine completed with `Ripping errors: 0`, and the interrupted one printed `.18`'s stop marker and its `Encoder errors:` and `Partial files:` lines. The secure re-read converged on all fourteen tracks. Nothing in it is a defect in `.18`. The disc-level `AccurateRip:` line's `mismatch` and `not found` arms and upstream's MusicBrainz retry are not exercised |
 | `.17` on a drive | **the Full acceptance on `.17` with Platterpus 0.6.61 ran on 2026-09-28 from 01:48:08Z to 07:08Z**: its script reported 320 of 320, 0 skipped, `counts_as_evidence: true` (`docs/rig-2026-09-28-e0471f4/`). All eight cyanrip logs verify with `-Y`; seven completed with `Ripping errors: 0` and the interrupted one stopped as section I intends. `.17`'s `Accurip 450` wording printed on the drive for the first time. One wrong read, track 3 in section F with no `-Z`, a checksum never filed before; the secure re-read got track 3 right. **The operator chose on 2026-09-28 that this run closes round 28**, as lap 1 S6 names it, so Platterpus's lap 6 S36 override moving the run to their 0.6.62 falls away. **A second Full run of `.17`, through their 0.6.62, ran the same day from 14:42:38Z to 19:27Z** and is filed as `docs/rig-2026-09-28b-e0471f4/`: 320 of 320, all eight logs verify with `-Y`, and the secure re-read converged on all fourteen tracks. It is a close condition of neither round 28 nor round 29 |
 | gate | `--release-gate` exits **1**, naming round 30, which our lap 1 opened on 2026-09-30. Round 29 closed on Platterpus's lap 4 by v6 §5b step 3 and authorised `.19`, which is released. No release of ours is due before round 30 closes |
-| the tip | **the release's publish commit and after.** Build from the release commit, `174a134`, not the tip. **One `src/` change is past `.19`**: SIGHUP stops a rip with a complete record, as SIGTERM does (`1184a04`), for `.20`. No log line's text changes |
+| the tip | **the release's publish commit and after.** Build from the release commit, `174a134`, not the tip. **Three `src/` changes are past `.19`, all for `.20`**: SIGHUP stops a rip with a complete record, as SIGTERM does (`1184a04`); the loudness figures are measured on the audio the encoders receive (`cc79c5b`); and each `-Z` pass gets a fresh filter and loudness graph (`4c3bd3e`). No log line's text changes; on de-emphasised and `-H` rips the loudness values do |
+| `.19` on a drive, 2026-10-04 | **three Full runs, none complete** (`docs/rig-2026-10-04-174a134/`). Two stopped at section E on discs MusicBrainz does not know (both disc IDs 404). The third ripped *Roots Music* disc 1 of 4, which the drive reads differently each time from track 11 on: track 18 took **8,161 s**, with **2,586** paranoia skips and reads of up to **54 s**, and a `-Z 2` pass hit the repeat limit on five tracks, five checksums each. That is the first filed rip with a skip, and `.19`'s reworded limit line printing on a drive. Five of six logs verify. The sixth was copied while cyanrip was still writing it. **No defect in `.19`**; two inherited behaviours of ours go to round 31, below |
 | next | **Our round 30 lap 7 is sent**, released on the operator's word 2026-09-30 (sha256 `108fcb1a…`, 17,371 bytes). It takes Platterpus's lap 6 S20 and S21 as written and amends S19 and S22 by one clause each: the opener's short reading lap may say the other side's half is pending, and `STATUS-RELEASED` has a place, a count and a rule for which release it names. It proposes the texts at `2abeb5d` and lands them in its own commit, with our gate held at 6 until they are in both trees (§15). It answers S14: the `-f` summary line is stable, and P2 now says `-I`, `-J` and `-f` runs open no logfile. It reports that their lap checker lacks the A3 amendment they accepted, and it declares `GO`. **Their lap 8 follows**: pre-committed to `GO` on the texts if it takes both amendments, and if it is `GO` the round closes on it |
+
+**What the 2026-10-04 runs show on your side**, for you to weigh; each is read
+in the bundles or in your code at `0981c69`, and `docs/rig-2026-10-04-174a134/README.md`
+gives the lines:
+
+- **`pick-release` passes on placeholder rows.** With no picker on screen it
+  passes once any track rows are loaded (`src/platterpus/uiscript/runner.py:3327-3335`),
+  and an unknown disc loads placeholders, so L463 said *"identified
+  unambiguously"* over discs MusicBrainz did not know.
+- **A cancelled re-read reported as a clean rip.** After section I's cancel the
+  status read *"Done — all 18 tracks ripped cleanly, no read errors"*, from the
+  first pass's log, over a pass that had just been cancelled and five tracks that
+  never read the same twice. Your L711 failed on it.
+- **The cancel's rescue sends a second TERM 4.9 s after the first.** That disc's
+  reads took up to 54 s, and a second signal ends cyanrip with no footer. The
+  cancelled pass's log was in a temporary directory, so whether it was signed is
+  not in the bundle.
+- **Your shutdown grace's floor reads your own filed logs**: twice this run's
+  54 s is 108 s, against the 40 s of your lap 6 S7.
+- **A bundle written while the ripper was still running** says only *"stopped
+  from the console"*. Our reader now names such a log (`acfd48b`). Yours could
+  say so in the bundle, or wait for the ripper to finish first.
+- **Your re-read path's docstring still says it has not been exercised on a
+  real drive** (`rip_worker.py:2795`). This run exercised it, and no track
+  converged.
 
 **`.18` is stable because round 28 authorised it, and the build itself is
 round 29's to review.** Platterpus's `FORK_PIN` is `e0471f4` on their `main`

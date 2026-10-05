@@ -1,5 +1,25 @@
 Unreleased
 ==========
+**Three Full runs on `.19` with Platterpus 0.6.65, 2026-10-04, are filed** at
+`docs/rig-2026-10-04-174a134/`, none complete. Two stopped at section E on discs
+MusicBrainz does not know; both disc IDs return 404. The third ripped a disc the
+BDR-209D reads differently each time from track 11 on. Track 18 took 8,161 s
+with 2,586 paranoia skips and reads of up to 54 s, the first filed skip and the
+longest filed read. A `-Z 2` pass hit the repeat limit on five tracks, five
+checksums each, and `.19`'s reworded limit line printed on a drive for the
+first time. Five of six cyanrip logs verify. The sixth was copied while
+cyanrip was still writing it. There is no defect in `.19`. Two inherited
+behaviours of ours go to round 31 (`docs/KNOWN-ISSUES.md`): `read successfully!`
+printed over paranoia's skips, and `Extraction speed: 0.0x` for 0.033x.
+
+**The bundle tools read these runs correctly now.** `tools/ingest-bundle.py`
+finds the ripper's banner in a raw tarball's version probe and in the
+transcript, and says "cannot be shown newest" rather than "NOT newest" when it
+finds none (`b01bf31`). At the operator's request it also names every cyanrip
+log that did not reach a signed footer (`acfd48b`). `tools/cross-rip.py` counts
+each `-Z` pass's read from `.19` on, and no longer calls a single read
+agreement (`664e177`).
+
 **Round 30 is open: our lap 1 is released**, by the operator's word of 2026-09-30,
 with the operator's override of R8 point 3, after a Full run on Platterpus 0.6.64
 with `.19` installed stopped at section A (`docs/rig-2026-09-30-174a134/`). It
