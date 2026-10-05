@@ -58,6 +58,7 @@ So `.20` is a **beta inside round 30**, not round 30's closing release:
 | **The cache probe scores a re-read by cd-paranoia's 6 ms** (`MIN_SEEK_MS`), not a quarter of a full-stroke seek, which every re-read beat; a slow re-read is tried three times. The `-j` record's `cache_probe.hit_ratio` becomes `hit_below_us`, schema `cyanrip-diagnostics/7` | `394ab17` | their section P, which runs `cd-paranoia -A` beside our probe: the two should now agree, and that run is the only test of it. Nothing of theirs parses the `-j` record |
 | **`-P 0` no longer hangs on a block in which nothing reads**: at level 0 paranoia's read hook is wrapped so that a short read is retried sector by sector and a sector that will not read is zero-filled, which the cdda layer has already logged | `c57b596` | nobody who passes no `-P`, which Platterpus never does; every `-P 0` rip reads through the hook, our image suite's included, and `READ` counts on the golden reference are unchanged. Its speed on a drive is not measurable here |
 | **A `-f` search that finds no offset exits 1**, by the operator's word of 2026-10-05, where it exited 0 after `No track had AccuRip entry, cannot find offset!`. It sets `fatal_abort`, not `total_error_count`, so `Ripping errors:` claims no failed read. It moves §7's `-f` row of the shared `docs/seam-commands.md`, which landed in the next commit with the text both trees agreed in round 30 (our lap 9 S16, their lap 10 S10). `68f22ef` returns 0 for found, so P5 files the two lines that end a failed search as fatal and the success line as not | `0645ddb`, `68f22ef` | a caller of `-f` on a disc AccurateRip does not know. Their Full script's `expect-exit 0` holds on the reference disc, where the search finds an offset |
+| **A one-frame AccurateRip entry under the threshold says it was found**: `Accurip 450:` printed `(not found)` for an entry found at or below `3*(max+1)/4`, and now prints `(found in Accurip DB with a confidence of N, not above T, the threshold for a one-frame match; whole-track checksums not found)`; a zero checksum's caveat holds at any confidence. Upstream's too, report 14 | `b1857d6` | their 450 parse, which reads `confidence\s+\d+` as a match (`cyanrip_log.py:613`, applied at `:3312`, at `9425a524`): `a confidence of N` does not match it, so they read no match, as before. One P2 row is added |
 | **A cache bracket carries the reads behind both ends**: on a miss the line adds `, 3 re-reads after a N-sector run took X ms or more`, the fastest of the three tries, where `128 to 255 sectors` on 2026-10-05 carried only the read behind 128; and it replaces `first uncached re-read`, which since `394ab17` printed the last of three | `6dd608c` | a reader of the line verbatim, as their rig-check surfaces it. No P2 row changes, since the clause fills the line's `%s`, and their parser reads nothing inside the line (`cyanrip_log.py:2324-2346` at `5ec71f4e`) |
 
 **To land before the cut** — in this round, on the operator's word:
@@ -69,12 +70,15 @@ So `.20` is a **beta inside round 30**, not round 30's closing release:
 **The contract against `.19`'s, derived, not described**:
 `tools/contract-delta.py --text 174a134 <candidate>`. At `1770d3c`, with the
 contract `--check` exit 0, **P2 changed by content in eight rows, and in nine
-from `0c692ed`**: `Extraction speed:  %.1fx` becomes `%.*fx`; `Ripping errors:
+from `0c692ed`, and in ten from `b1857d6`**: `Extraction speed:  %.1fx` becomes `%.*fx`; `Ripping errors:
 %llu (including %llu paranoia skip%s)` is added; `Rip completed:` gains `no (cue
 sheet only, %i of %i tracks)` and `no (offset search only, %i of %i tracks)`;
 four `-Z` spool errors are added, `Error creating`, `writing`, `reading` and
-`verifying the -Z spool`; and `Error in encoding: %s` is removed. P5 gains the
-four and loses the one. P5a's two `Done;` rows now name the jump that follows
+`verifying the -Z spool`; `Error in encoding: %s` is removed; and the `Accurip
+450:` line gains an arm for an entry found under the threshold (`b1857d6`). P5
+gains the four and loses the one, and from `68f22ef` gains the two lines that
+end a failed `-f` search, `No track had AccuRip entry, cannot find offset!` and
+`No track was long enough, unable to find drive offset!`, 128 rows in all. P5a's two `Done;` rows now name the jump that follows
 them, `goto spool_encode`, where they named `goto finalize_ripping`. P1, P3 and
 P7 only moved; P4, P6 and P8 are identical. The
 units block gains two paragraphs: what decides the per-track arm, and the
@@ -184,7 +188,7 @@ No tag: tag push is `HTTP 403` here, and the commit SHA is the identifier.
 
 ## 5. What this release does NOT verify
 
-- **None of the fourteen behavioural `src/` commits has run on a drive.** The skip arm is
+- **None of the fifteen behavioural `src/` commits has run on a drive.** The skip arm is
   reproduced on an image by a shim that varies one sector's bytes on every
   read; a real disc's skips come from the drive. The acceptance run on a
   damaged disc is the first test, and only if the run includes one.

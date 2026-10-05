@@ -960,6 +960,18 @@ should need rewriting. If it does, that is the defect.
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
 
+   **And fourteen is the count DRAFTED, not the count FOUND.** Round 30 fixed
+   three more for `.20` that `docs/KNOWN-ISSUES.md` and `Changelog.md` record
+   as upstream's too, each checked against `master` on 2026-10-05 rather than
+   carried over: a track's success line decided by `total_error_count` alone,
+   so paranoia's skips print `successfully!` (`e5a0897`; `cyanrip_main.c:909-912`
+   at `f8ebf48`); a failed track that `break`s out of the loop over every track
+   where `-l` aborts (`c1e1ab1`; `:1937-1938` against `:2064-2067`); and a
+   stopped `-f` search that, once a track has been checked, retries with a
+   larger radius (`aa1f067`; the stop's `goto end` at `:523-526` falls to the
+   retry at `:568-575`). **None is drafted yet**, and until each is, the sentence above
+   saying every one is drafted is about the fourteen and no more.
+
 **And custody, which is the part that makes "source of truth" mean something
 without meaning "we decide".** The shared seam documents live here as the
 canonical copy: one address a fork can fetch, one hash it can check against.
@@ -2073,7 +2085,8 @@ longer hanging on a block in which nothing reads (`c57b596`), and `Ripping
 errors:` counting paranoia's skips with a suffix saying how many, by the
 operator's word of 2026-10-05, the exit code left as the drive's (`0c692ed`),
 and a `-f` search that finds no offset exiting 1 (`0645ddb`), landed with the
-`seam-commands.md` text both trees agreed in round 30.
+`seam-commands.md` text both trees agreed in round 30, and a one-frame
+AccurateRip entry under the threshold saying it was found (`b1857d6`).
 **What goes to stable after the close is decided: `.21`, cut from the closed
 tree** (the plan's §3).
 `docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition; the one

@@ -122,6 +122,19 @@ each to them.
   `tests/cacheprobe.c` pins both arms and that a ceiling borrows no miss
   clause, revert-proved. **Taking the fastest is in the probe loop, which needs
   a drive: read from the source, not run.**
+- **A one-frame AccurateRip entry under the threshold read `(not found)`**
+  (`b1857d6`), found reading the tally for Platterpus's round 30 lap 10 S12.
+  The `Accurip 450:` line credits a match only above `3*(max+1)/4`, and every
+  result at or below it fell to `(not found)`, the words for a checksum no
+  entry carries, so the log denied a lookup result it had. It now reads
+  `(found in Accurip DB with a confidence of N, not above T, the threshold for
+  a one-frame match; whole-track checksums not found)`. *"A confidence of N"*,
+  never `confidence N`, which Platterpus reads in this parenthetical as a match
+  (`platterpus@9425a524:src/platterpus/parsers/cyanrip_log.py:613`, applied at `:3312`). A zero
+  checksum's caveat now holds at any confidence. One P2 row is added and the
+  tally is unchanged. Upstream's too (`src/cyanrip_log.c:152-159` at
+  `f8ebf48`), drafted as upstream report 14. `tests/logrender.c` had pinned
+  the old wording as expected; it now pins the new, revert-proved four ways.
 
 **FIXED for `.20` (`0645ddb`): a `-f` search that finds no offset exits 1.**
 It exited 0 (measured: `-N -f` on `basic.cue` printed `No track had AccuRip

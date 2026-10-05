@@ -84,6 +84,15 @@ also corrects three statements the shared file had carried wrong; a dry run of
 `.20`'s release steps had found that before anything was pushed. Platterpus
 lands the same bytes when it files our lap 11.
 
+**A one-frame AccurateRip entry under the threshold says it was found**
+(`b1857d6`). The `Accurip 450:` line credits a match only above
+`3*(max+1)/4`, and every result at or below it printed `(not found)`, the words
+for a checksum no entry carries, here and upstream. It now reads `(found in
+Accurip DB with a confidence of N, not above T, the threshold for a one-frame
+match; whole-track checksums not found)`, worded so Platterpus's `confidence N`
+pattern reads no match, which it is not; a zero checksum's caveat holds at any
+confidence. One P2 row is added, and it is upstream report 14.
+
 **Every lap is now held to R6, the pre-commit** (`5dba13d`), as both sides
 read it in round 29: from lap 5, a lap whose own verdict is not `GO` says
 *"our next lap is `GO` unless X"*, in a sentence or as an LSL `WILL` with
