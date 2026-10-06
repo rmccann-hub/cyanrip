@@ -130,7 +130,7 @@ def main():
         log = (d / "out" / "ar.log")
         logtext = log.read_text(errors="replace") if log.exists() else ""
 
-    status = re.search(r"^AccurateRip:\s+(\S.*?)\s*$", logtext, re.M)
+    status = re.search(r"^AccurateRip:\s+(\S(?:.*\S)?)\s*$", logtext, re.M)
     conf = re.search(r"max confidence:\s*(\d+)", out)
     print(f"  exit {r.returncode}")
     print(f"  AccurateRip: {status.group(1) if status else '<no line>'}")

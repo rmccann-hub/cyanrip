@@ -1178,7 +1178,7 @@ def sanitize_availability():
         if re.match(r"#\s*el(se|if)\b", s):
             pend = None; continue
         m = re.match(r"#\s*define\s+(HAS_[A-Z0-9_]*)\s+(-?\d+)\s*"
-                     r"(?://\s*(.*?)\s*)?$", s)
+                     r"(?://\s*((?:\S(?:.*\S)?)?)\s*)?$", s)
         if m:
             name, val, cmt = m.group(1), int(m.group(2)), m.group(3) or ""
             if pend == name:

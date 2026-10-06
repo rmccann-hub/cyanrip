@@ -75,7 +75,7 @@ is_cyanrip_log = _rc.is_cyanrip_log
 # old one. A block DELIMITER over a format with a history, as in rig-check.py.
 TRACK_BLOCK = re.compile(r"^Track (\d+) (?:ripped|read)\b.*$", re.M)
 DISC_ID = re.compile(r"^DiscID:\s+(\S+)", re.M)
-OFFSET = re.compile(r"^Offset:\s+(.+?)\s*$", re.M)
+OFFSET = re.compile(r"^Offset:\s+(\S(?:.*\S)?)\s*$", re.M)
 EAC_CRC = re.compile(r"^\s+EAC CRC32:\s+([0-9A-F]{8})\b(.*)$", re.M)
 AR_LINE = re.compile(r"^\s+Accurip (v1|v2|450):\s+[0-9A-F]{8}(?: \((.*)\))?\s*$", re.M)
 # Each pass of the `-Z` repeat loop prints the checksum of the whole-track read

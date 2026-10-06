@@ -147,7 +147,7 @@ def clause1(out):
              f"{out}/accurip.stdout for why. NOT a pass and NOT a failure",
              "accurip.stdout")
         return
-    status = re.search(r"^AccurateRip:\s+(\S.*?)\s*$", text, re.M)
+    status = re.search(r"^AccurateRip:\s+(\S(?:.*\S)?)\s*$", text, re.M)
     if not status:
         note("FAIL", "clause1/status",
              "the logfile has no `AccurateRip:` line at all, so the query path "
@@ -186,7 +186,7 @@ def clause1(out):
             # It IS distinguishable, but from the argv rather than from the
             # status line, so that is what we read. Absent that, say which two
             # remain and that this cannot choose between them.
-            inv = re.search(r"^Invoked as:\s+(.*?)\s*$", text, re.M)
+            inv = re.search(r"^Invoked as:\s+((?:\S(?:.*\S)?)?)\s*$", text, re.M)
             argv = inv.group(1).split() if inv else None
             if argv is None:
                 note("WARN", "clause1/disabled",

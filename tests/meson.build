@@ -557,6 +557,10 @@ test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
 ## bundle supplies: identical reads agree, another offset is not compared, and
 ## an EAC-format export is not taken for a log.
 test('Cross-rip reader', python, args: [ files('cross_rip.py') ])
+## Platterpus's round 30 lap 14 S20: a lazy capture before trailing blanks is
+## quadratic in a run of blanks. Five of our tools' patterns had it; this
+## sweeps tools/ and tests/ for the shape and times the rewritten patterns.
+test('Tool patterns are linear', python, args: [ files('tool_patterns.py') ])
 ## A REPORT, NOT A CHECK. --gaps prints the absent lap numbers and exits 0 by
 ## design, because one side cannot tell a lost lap from an unused number. It
 ## was named "Seam record audit", which a green run made read like a passed
