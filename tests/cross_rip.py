@@ -136,6 +136,37 @@ with tempfile.TemporaryDirectory() as t:
     check("were read once, which nothing here can compare" in out,
           f"the summary must count the tracks read once: {out[-300:]}")
 
+# --- from .20 the kept read at the repeat limit is not always the last -------
+# The -Z spool (d7ee6c4) keeps the read the most reads agreed on, newest on a
+# tie, and the loop prints no line for its last read. On the 2026-10-06 run,
+# section N's track 5 read E0036697, C96464AB, C96464AB, BBB13C9B and a fifth
+# read, and kept E0036697: a two-two tie the fifth read must have made, so it
+# was E0036697 and the log carries all five. Changing the fourth pass to
+# E0036697 makes the case where it does not: E and C tie on the printed passes,
+# E is the newer, so E is kept, and the fifth read was neither. Counting the
+# kept block as that read would report E three times and lose the fifth.
+R1006 = ROOT / "docs" / "rig-2026-10-06-5704062" / "rips"
+spool = (R1006 / "secure-reread.log").read_text(encoding="utf-8")
+fourth = "Repeating ripping (0 out of 2 matches for current checksum BBB13C9B)"
+check(spool.count(fourth) == 1 and spool.startswith(
+      "cyanrip 0.9.4-rc2+platterpus.20 (platterpus-fork-g5704062)"),
+      "fixture drift: secure-reread.log of 2026-10-06 changed")
+with tempfile.TemporaryDirectory() as t:
+    d = pathlib.Path(t)
+    (d / "s.log").write_text(spool, encoding="utf-8")
+    ec, out = run(d)
+    check(re.search(r"^  track 5: 5 read\(s\), 3 distinct EAC CRC32  DISAGREE$", out, re.M)
+          and crc_line(out, "E0036697")[0] == 2,
+          f"a tie the last read made: all five reads are in the log:\n{out}")
+    (d / "s.log").write_text(spool.replace(fourth, "Repeating ripping (1 out of 2 "
+                             "matches for current checksum E0036697)"), encoding="utf-8")
+    ec, out = run(d)
+    check(re.search(r"^  track 5: 5 read\(s\), 2 distinct EAC CRC32 in the log and 1 "
+                    r"read\(s\) whose checksum it does not carry  DISAGREE$", out, re.M),
+          f"a kept read that is not the last: the last read is not in the log:\n{out}")
+    check(crc_line(out, "E0036697")[0] == 2,
+          f"the kept read was counted as the last read too:\n{out}")
+
 # --- a positive line that contains a negative phrase -------------------------
 # Platterpus's round 27 lap 5 §C: a classifier that decides NEGATIVE on a phrase
 # misreads a positive line containing it, and `.17`'s 450 match ends

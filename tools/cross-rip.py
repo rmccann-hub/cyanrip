@@ -26,6 +26,20 @@ decides. A track read once is said to be read once: one read agrees with
 nothing, and on 2026-10-04 `1 read(s) ... agree` stood over a track the filed
 second-pass output shows read six ways.
 
+FROM `.20` THE KEPT READ IS NOT ALWAYS THE LAST ONE. At the repeat limit `.20`
+keeps the read the most reads agreed on, the newest of them on a tie (the `-Z`
+spool, `d7ee6c4`), and the loop prints no `Repeating ripping` line for its last
+read. So when the kept read is an earlier pass, the last read's checksum is in
+no line of the log, and counting the kept block as the last read counts the
+kept checksum once too often and loses the last read. That is told from the
+log alone: the kept checksum K, the `at most M reads agreed` of the limit line,
+and how many printed passes read K. If they number M, the last read cannot be
+K, since K would then have M + 1, so it is a read the log does not carry, and
+it differs from K. Otherwise the last read is K, as on every build before
+`.20`, where the count can never reach M. Found reading the 2026-10-06 run
+(`docs/rig-2026-10-06-5704062/`), where it did not happen, and shown with
+`tests/badsector.c`'s flip schedule, where it does.
+
 WHAT IT DOES NOT DO. It does not say which read is right. That is a judgement
 and it belongs downstream; the AccurateRip status beside each checksum is the
 evidence, printed as the log states it. It reads cyanrip's logs only, found by
@@ -71,6 +85,8 @@ AR_LINE = re.compile(r"^\s+Accurip (v1|v2|450):\s+[0-9A-F]{8}(?: \((.*)\))?\s*$"
 # would report a disagreement nobody caused. The banner decides which.
 REPEAT = re.compile(r"^Repeating ripping \(\d+ out of \d+ matches for current "
                     r"checksum ([0-9A-F]{8})\)\s*$", re.M)
+LIMIT = re.compile(r"^Done; \(repeat limit of \d+ reads? reached; at most "
+                   r"(\d+) reads? agreed\)\s*$", re.M)
 FORK_N = re.compile(r"^cyanrip \S*\+platterpus\.(\d+) \(platterpus-fork-g", re.M)
 REPEAT_IS_EAC_FROM = 19
 
@@ -94,7 +110,9 @@ def ar_summary(block):
 
 
 def reads_in(path):
-    """[(disc, offset, track, crc, suffix, ar)] for one log."""
+    """[(disc, offset, track, crc, suffix, ar)] for one log.
+
+    A read whose checksum the log does not carry has crc None."""
     text = path.read_text(encoding="utf-8", errors="replace")
     disc = DISC_ID.search(text)
     off = OFFSET.search(text)
@@ -110,19 +128,33 @@ def reads_in(path):
         crc = EAC_CRC.search(block)
         if not crc:
             continue
-        out.append((disc, off, int(h.group(1)), crc.group(1),
-                    crc.group(2).strip(), ar_summary(block)))
+        tr = int(h.group(1))
+        kept = (disc, off, tr, crc.group(1), crc.group(2).strip(), ar_summary(block))
         # The loop's earlier passes for this track sit between the previous
-        # block and this one's header. The last pass is the kept read, already
-        # counted above, and a converged loop prints it as `Done; (...)`, not
-        # as `Repeating ripping`, so nothing is counted twice. AccurateRip is
-        # run on the kept read alone.
-        if loop_is_eac:
-            start = heads[i - 1].end() if i else 0
-            for m in REPEAT.finditer(text, start, h.start()):
-                out.append((disc, off, int(h.group(1)), m.group(1),
-                            "(an earlier pass of the repeat loop)",
-                            "no AccurateRip result: only the kept read is looked up"))
+        # block and this one's header. The last pass is normally the kept read,
+        # counted once as the block, and a converged loop prints it as `Done;
+        # (...)`, not as `Repeating ripping`, so nothing is counted twice.
+        # AccurateRip is run on the kept read alone.
+        if not loop_is_eac:
+            out.append(kept)
+            continue
+        start = heads[i - 1].end() if i else 0
+        passes = [m.group(1) for m in REPEAT.finditer(text, start, h.start())]
+        limit = LIMIT.search(text, start, h.start())
+        unrecorded = limit and passes.count(crc.group(1)) == int(limit.group(1))
+        if unrecorded:
+            # The kept read is one of the printed passes, so it stands for one
+            # of them rather than adding a read, and the last read is counted
+            # with no checksum. See the module docstring.
+            passes.remove(crc.group(1))
+            out.append(kept[:4] + (kept[4] + " (the kept read: a pass printed "
+                       "above, not the last read)",) + kept[5:])
+            out.append((disc, off, tr, None, "", ""))
+        else:
+            out.append(kept)
+        for p in passes:
+            out.append((disc, off, tr, p, "(an earlier pass of the repeat loop)",
+                        "no AccurateRip result: only the kept read is looked up"))
     return out
 
 
@@ -155,8 +187,12 @@ def main():
         for tr in sorted(tracks):
             reads = tracks[tr]
             by_crc = collections.defaultdict(list)
+            missing = []
             for crc, suffix, ar, f in reads:
-                by_crc[crc].append((f, suffix, ar))
+                if crc is None:
+                    missing.append(f)
+                else:
+                    by_crc[crc].append((f, suffix, ar))
             # One read agrees with nothing: saying `agree` over it is a check
             # satisfied by finding nothing. On 2026-10-04 track 12 was `1
             # read(s) ... agree` here while the filed second-pass output shows
@@ -165,10 +201,15 @@ def main():
                 once += 1
                 print(f"  track {tr}: 1 read, nothing to compare it with")
                 continue
-            state = "agree" if len(by_crc) == 1 else "DISAGREE"
+            # A read the log does not carry differs from the kept read, so its
+            # track disagrees whatever the printed reads say.
+            state = "agree" if len(by_crc) == 1 and not missing else "DISAGREE"
             disagree += state == "DISAGREE"
             print(f"  track {tr}: {len(reads)} read(s), {len(by_crc)} distinct "
-                  f"EAC CRC32  {state}")
+                  f"EAC CRC32"
+                  + (f" in the log and {len(missing)} read(s) whose checksum it "
+                     f"does not carry" if missing else "")
+                  + f"  {state}")
             if state == "agree":
                 continue
             for crc, rs in sorted(by_crc.items(), key=lambda kv: -len(kv[1])):
@@ -176,6 +217,10 @@ def main():
                 names = ", ".join(sorted(f"{f.name}{' ' + s if s else ''}"
                                          for f, s, _ in rs))
                 print(f"      {crc}  x{len(rs)}  [{' | '.join(ars)}]  {names}")
+            if missing:
+                print(f"      (not in the log)  x{len(missing)}  [the last read of "
+                      f"a repeat loop that kept an earlier one; it differs from "
+                      f"the kept read]  {', '.join(sorted(f.name for f in missing))}")
     if disagree:
         print(f"\n{disagree} track(s) read with more than one checksum. Which read "
               "is right is not decided here; the AccurateRip result beside each "
