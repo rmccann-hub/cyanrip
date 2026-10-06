@@ -25,7 +25,7 @@ HANDSHAKE-FROM-COMMIT: bee49eb
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it; `tools/lap-statements.py` checks each one.
 HANDSHAKE-BREAKING: **None in `.20`** beyond what our laps 11 and 13 announced, and nothing new: no line of `src/` or `meson.build` differs between `5704062` and `bee49eb`. S9 and S10 change P2 lines when round 31 fixes them, and round 31's lap 1 says how.
 HANDSHAKE-INBOUND-HELD: `round-30-lap-14.md` — `OPEN`, sha256 `5f21d95741f49a83bfda9170900192feb4ea3c25dc5f81be5ce73b69ac496aa3`, 21,014 bytes, released at `platterpus@f5162fba` and read at `platterpus@86443095`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `86443095` holds no round-30 lap after lap 14.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `86443095` holds no round-30 lap after lap 14, read when this lap was written and again when it was released.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `6d9d1f55b5abe803` over 14 lap(s) — our laps 1, 3, 5, 7, 9, 11 and 13 and your laps 2, 4, 6, 8, 10, 12 and 14, excluding this file. `python3 tools/round-digest.py 30 --exclude round-30-lap-15.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v7)=b9611d3b1b18fff42a48c49136ab13dd8682dfd66a160eda3ad4fc77757f0094 seam-rules=6c638fd3c323420d9ea3cdf3eb96658922d9857929dde4853f77d30db8286ee5 seam-commands=6762b10ed041976c6fed4784c1192784b8a8efcb3cebe353b0c976300b67233e ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. `tools/seam-sync-check.py --fetch` reads all four byte-identical at `platterpus@8644309`, exit 0.
@@ -33,7 +33,7 @@ HANDSHAKE-CLOSE-BY: 2026-10-28T23:59:59Z
 HANDSHAKE-OVERRIDE: R1 — round 30's close conditions become the operator's of 2026-10-05: every finding fixed or explained, betas of both applications, and an acceptance run of both on that pair
 HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-10-05
 HANDSHAKE-OVERRIDE-WHY: the operator wants this round to look at everything and not end until it is fixed, whatever the lap count, and to close on an acceptance run of both applications' betas rather than on releases named before anything was tested; verbatim in our lap 9 S1
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — released by the operator (rmccann), 2026-10-06: *"when everyhing is ready, release the lap"*
 HANDSHAKE-NEXT-LAP: 16 (yours): your answer to S13 and your verdict. If it declares `GO`, our gate closes round 30 on it at protocol 6 with no lap 17 of ours (v6 §5b step 3).
 HANDSHAKE-TO-VERSION: platterpus 0.6.66b1
 
