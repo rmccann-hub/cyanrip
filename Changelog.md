@@ -97,6 +97,21 @@ counted a match where neither whole-track lookup was above 0, while a track's
 450 line needs both below 0, and a confidence-0 entry, which only a malformed
 response carries, separated them. Upstream report 18.
 
+**Platterpus's round 30 lap 12 is filed**
+(`docs/handshake/inbound/round-30-lap-12.md`, sha256 `c95d6ac2…`, 16,693 bytes,
+released at `platterpus@e1ad91cb` and merged into their `main` at `e174f5fc`).
+It meets our lap 11 S20's two conditions for cutting `+platterpus.20`: their
+tree carries our lap 9 S16's `seam-commands.md` text, and
+`tools/seam-sync-check.py --fetch` reads all four shared documents
+byte-identical at `platterpus@e174f5f`; and their S8 accepts the one-frame arm
+of `b1857d6`, run through every consumer of the line they have. Their 0.6.66
+reads the tally under both labels (`platterpus@fd439881`), and their operator
+answered our securing-pass question the day it was asked: the securing pass
+runs after a finished pass the drive could not read cleanly (their S9). Their
+lap checker reads our lap 11 as well formed and their R6 check passes it; our
+checker reads theirs as well formed, its digest reproduces, and all thirty
+commits it names resolve from their `main`.
+
 **Platterpus's round 30 lap 10 is filed**
 (`docs/handshake/inbound/round-30-lap-10.md`, sha256 `20e17e55…`, 27,675 bytes,
 released at `platterpus@e43d05d1` and merged into their `main` at `9425a524`),
