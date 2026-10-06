@@ -2066,6 +2066,19 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
+**`+platterpus.20` SHIPPED ON BETA on 2026-10-06** at `5704062`, `release_seq`
+30, inside round 30, by the operator's word of 2026-10-05 —
+`docs/RELEASE-PLAN-platterpus.20.md` is executed and bannered. `stable` stays
+`.19`; `beta` resolves `.20`, and every rip it makes logs `NOT a released
+build`, which is true of it. Its conditions in our round 30 lap 11 S20 were met
+by Platterpus's lap 12: their tree carries the shared `seam-commands.md` text,
+and their S8 accepts `b1857d6`'s arm. There is no consumer-side prerequisite.
+Platterpus's 0.6.66 beta names it (their lap 12 S19), and the closing run of
+that pair closes round 30; **`.21`, cut from the closed tree, goes to stable**.
+Proved before publication: 106 of 106 in a fresh worktree
+(`docs/release-evidence/5704062-suite.txt`), and a `git archive` build whose
+rip says `NOT a released build` and verifies with `-Y`.
+
 **`+platterpus.19` SHIPPED on 2026-09-30** at `174a134`, `release_seq` 29,
 stable, authorised by **round 29** — `docs/RELEASE-PLAN-platterpus.19.md` is
 executed and bannered. It carries tag keys in capitals with `DISCTOTAL` beside
@@ -2079,9 +2092,9 @@ its own suite and was never published**; the two fixes are the commits before
 review beside `FORK_PIN` `51cc789`; the Full run on it ran on 2026-09-30
 (`docs/rig-2026-09-30b-174a134/`) and shows no defect in `.19`. The round
 carries the operator's question of how release, run and round line up
-(`docs/handshake/PROPOSAL-release-cycle.md`). **The next release is
-`+platterpus.20`, a beta inside round 30**, by the operator's word of
-2026-10-05: round 30 stays open until everything is fixed, then both
+(`docs/handshake/PROPOSAL-release-cycle.md`). **The release after it is
+`+platterpus.20`, a beta inside round 30, shipped 2026-10-06 (above)**, by the
+operator's word of 2026-10-05: round 30 stays open until everything is fixed, then both
 applications ship betas, and an acceptance run of both closes it. Landed for
 it: SIGHUP handling (`1184a04`), the loudness figures measured on the delivered
 audio (`cc79c5b`), a fresh filter for each `-Z` pass (`4c3bd3e`), a skip or a
@@ -2200,7 +2213,7 @@ tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
   front of them before it was made.
 
 **Plans that exist:** `.5`, `.12`, `.13`, `.14`, `.15`, `.16`, `.17`, `.18`, `.19`,
-all executed and bannered. `.15`'s is the short case: its round settled the channel, so it poses
+`.20`, all executed and bannered. `.15`'s is the short case: its round settled the channel, so it poses
 nothing.
 **The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the
 newest, it followed the four-commit sequence exactly, and it is the first to pose

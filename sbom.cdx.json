@@ -105,7 +105,7 @@
         },
         {
           "name": "cyanrip-fork:release",
-          "value": "beta: 0.9.4-rc2+platterpus.19 at 174a134, release_seq 29"
+          "value": "beta: 0.9.4-rc2+platterpus.20 at 5704062, release_seq 30"
         },
         {
           "name": "cyanrip-fork:release",
@@ -1149,5 +1149,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:ee9d423f-9b10-5c74-ba00-fee09cfd671c"
+  "serialNumber": "urn:uuid:d4364f95-a36d-5b04-be7d-6bb00e1f1b8f"
 }

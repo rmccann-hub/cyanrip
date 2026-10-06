@@ -15,9 +15,9 @@ record of the rounds themselves.
 
 ## Current pin
 
-**Both channels resolve to the same build**, `+platterpus.19`. When they
-differ, `stable` is what you get without opting in and `beta` is newer. Pick by
-risk tolerance, not by recency — and never by comparing the version strings,
+**The two channels resolve to different builds**: `stable` is `+platterpus.19`
+and `beta` is `+platterpus.20`. `stable` is what you get without opting in and
+`beta` is newer. Pick by risk tolerance, not by recency — and never by comparing the version strings,
 which cannot be ordered at all.
 
 ### `stable` — the default
@@ -33,22 +33,24 @@ build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
-### `beta` — currently the SAME BUILD as stable
+### `beta` — `+platterpus.20`, a beta inside round 30
 
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          174a134
---version       cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)
-release_seq     29                               <- newest of any channel
+commit          5704062
+--version       cyanrip 0.9.4-rc2+platterpus.20 (platterpus-fork-g5704062)
+release_seq     30                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
 **`beta` resolves to the newest row of ANY channel**, so opting into
-pre-releases can never move a user backwards. `+platterpus.19` is the newest row
-overall, so both channels resolve to it and there is no separate beta to take.
+pre-releases can never move a user backwards. `+platterpus.20` is the newest row
+overall, so `beta` resolves to it, and `stable` stays `+platterpus.19` until
+round 30 closes and `.21` is cut from the closed tree. **Every rip `.20` makes
+logs `NOT a released build`**, because round 30 is open, and that is true of it.
 That property was not decorative: the first generated manifest had `beta` on seq
 10 while `stable` was seq 11, so opting in would have been a downgrade.
 
@@ -169,8 +171,9 @@ directory against `tools/release-gate.py`. **The warning above the table did not
 stop it happening a second time, so read the gate and treat the table as a
 convenience.**
 
-**Every round is closed**: round 29 closed on 2026-09-29 on Platterpus's lap 4,
-by v6 §5b step 3, so `tools/release-gate.py --release-gate` exits 0. It reviewed
+**Round 30 is open**, and this said *"every round is closed"* from round 30's
+opening until `.20`'s publish corrected it. Round 29 closed on 2026-09-29 on
+Platterpus's lap 4, by v6 §5b step 3. It reviewed
 `.18` on the Full run with Platterpus 0.6.63 (`docs/rig-2026-09-28c-51cc789/`).
 The live release is **`0.9.4-rc2+platterpus.19` at `174a134`**, `release_seq`
 29, authorised by **round 29**, under v6 R8: a round's close authorises a
@@ -181,7 +184,12 @@ of N or less refused. Its one consumer-side prerequisite, a Platterpus release
 that reads both wordings of the repeat-limit line, is their 0.6.63. **Their
 0.6.64 carries `FORK_PIN` `51cc789`**, round 29's approval. Round 30 opened on
 2026-09-30 by our lap 1, and their 0.6.65 names `174a134` as its build under
-review; the Full run on it ran on 2026-09-30 and is filed.
+review; the Full run on it ran on 2026-09-30 and is filed. **The beta is
+`0.9.4-rc2+platterpus.20` at `5704062`**, `release_seq` 30, cut inside round 30
+on 2026-10-06 by the operator's word of 2026-10-05, once Platterpus's lap 12
+met our lap 11 S20's conditions. Their 0.6.66 beta names it, and the closing
+run of that pair closes round 30. `tools/release-gate.py --release-gate`
+refuses a stable while round 30 is open, and `--prerelease` permits the beta.
 
 **`proposed/` holds shared-document texts under review**, each removed when it
 lands. Round 25 proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md`
