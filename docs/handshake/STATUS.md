@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-30-lap-11.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-30-lap-13.md
+STATUS-NEWEST-LAP-STATE: held
 
 STATUS-ROUND: 30, OPEN, waiting on the operator's close conditions of 2026-10-05 (our lap 9 S2): every finding fixed or explained, betas of both applications, and an acceptance run of both on that pair
-STATUS-LAPS: newest sent round-30-lap-11.md (ours), round-30-lap-12.md (theirs); next 13 (ours) carrying our reading of their lap 12 and +platterpus.20 cut on beta with its commit; held none
+STATUS-LAPS: newest sent round-30-lap-11.md (ours), round-30-lap-12.md (theirs); next 13 (ours) carrying our reading of their lap 12, +platterpus.20 on beta at 5704062, and answers to their S14 to S16; held 13 carrying all of that until the operator releases it
 STATUS-RELEASED: +platterpus.20 at 5704062, 2026-10-06
 STATUS-RELEASE-NEXT: +platterpus.21, stable once round 30 closes, cut from the closed tree with src/ byte-identical to +platterpus.20's (docs/RELEASE-PLAN-platterpus.20.md §3); pins 174a134, reviews +platterpus.21
 STATUS-RUN-NEXT: +platterpus.20 with 0.6.66; waiting on 0.6.66 on beta naming +platterpus.20 (their lap 12 S19), and that run closes round 30; it is the first run of -f on a drive (our lap 11 S23)

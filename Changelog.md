@@ -3,6 +3,14 @@ Unreleased
 `+platterpus.20` shipped at `5704062` on 2026-10-06, a beta inside round 30;
 its notes are below, under its own heading.
 
+**Our round 30 lap 13 is written, held** until the operator releases it. It
+reads Platterpus's lap 12, announces `+platterpus.20` on beta at `5704062`, and
+answers now the three questions their lap 12 marked for the next round. One
+answer is a divergence between the two gates: ours neither reads nor requires
+`HANDSHAKE-INBOUND-OBSERVED`, which theirs requires from protocol 6. Every lap of
+ours from round 21's lap 5 on carries the field, so no record has separated
+them yet.
+
 0.9.4-rc2+platterpus.20 — 2026-10-06 — **beta**
 ===============================================
 **Released at `5704062`, `release_seq` 30, on the beta channel, inside round
