@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.20 (platterpus-fork-g476b316)
+cyanrip 0.9.4-rc2+platterpus.20 (platterpus-fork-g4943e5d)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
-Handshake:      round 30 lap 13 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 30 lap 15 OPEN, verdict GO (draft — lap not released for reading) -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -59,6 +59,18 @@ Gaps:
 
 Tracks:
 
+Repeating ripping (0 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (1 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (2 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (3 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (4 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (5 out of 199 matches for current checksum D36D9296)
+
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -83,7 +95,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          4
+  READ:          103
 
 Ripping errors: 1
 Encoder errors: not applicable; no whole track was encoded
@@ -91,5 +103,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-10-06T01:15:57+00:00
-Log FUN512: 18skke9nyGHa1G46b2bYZD.iZLDL7mU.MiWQ18LuCW54SOHJ_9NCoPgePcTQ16hmKzF9T5S21XM8_ZG.zohu0g
+Ripping finished at 2026-10-06T21:58:34+00:00
+Log FUN512: xmUKALFKe3d5LH6OJnWxv5yeTZb5Jj0BEwuEFMJ06ogpGd88IZfJ.v6uiDNHSYDN8Bvzjg6Ex9jB1m0lEtOp.g
