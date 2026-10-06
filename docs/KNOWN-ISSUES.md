@@ -1038,6 +1038,76 @@ ship betas, and an acceptance run of both passes. So *"not now"* and *"round
 31"* stopped being reasons. Where an entry below still says why it waited,
 that was the reason before 2026-10-05, kept as the record.
 
+### At the repeat limit the last read's checksum is not printed, and the spool can leave it in no line
+
+**Found 2026-10-06, reading the closing run on `.20`**
+(`docs/rig-2026-10-06-5704062/`), and **introduced by `.20`'s `-Z` spool**
+(`d7ee6c4`). The repeat loop prints `Repeating ripping (... current checksum X)`
+after every read but the last, then `Done; (repeat limit of N reads reached; at
+most M reads agreed)`, and the block's `EAC CRC32` is the kept read's. Up to
+`.19` the kept read was the last read, so the log carried every checksum. From
+`.20` it is the read the most reads agreed on, the newest on a tie
+(`crip_spool_kept_at_limit()`, `src/cyanrip_main.c:868`), so **a track read A,
+A, B, B, C keeps B, and C is in no line of the log**. The block's paranoia
+counters are the last read's (`Scope:  the last of 5 reads`), so in that case
+they describe C while every other figure in the block describes B, and nothing
+says which pass was kept.
+
+**Reproduced with no drive**: `tests/badsector.c`'s flip schedule `CRIP_FLIP_RUN=2
+CRIP_FLIP_CYCLE=3` at `-Z 2 -r 5` on `basic.cue` (the second case of
+`sc_repeat_limit_keeps_most_agreed()`) prints `B664A115` twice and `2FFECF45`
+twice, keeps `2FFECF45`, and the fifth read, `EE58174A` by `zlib.crc32` of the
+source with the flip applied, is nowhere. **The closing run did not show it**:
+in all three limit-hit tracks the kept read was the last one, which for section
+N's track 5 is known only by the rule (the README says how).
+
+**It already cost a wrong count.** `tools/cross-rip.py` counted the kept block
+as the last read, so over that log it reported `2FFECF45` three times and two
+distinct checksums where there were three. Fixed in the commit after the run's
+filing: the tool now tells the case from the log (the kept checksum, `M`, and how many printed passes read
+it), counts the missing read as one the log does not carry, and
+`tests/cross_rip.py` pins both cases on the filed log.
+
+**The fix to the log, not yet made, and what it costs.** Name the last read
+when it is not the kept one, inside the line that ends the loop: `Done; (repeat
+limit of 5 reads reached; at most 2 reads agreed; last read EE58174A, not kept)`.
+It is a P2 line. Platterpus reads it with two patterns, the prefix `Done;
+(repeat limit` and the fragment `at most M reads? agreed`
+(`platterpus@9ecd1147:src/platterpus/parsers/cyanrip_log.py:341-352`), and an
+addition after `agreed` leaves both matching, so no string they match is
+removed and nothing of theirs has to ship first. It wants announcing in a lap.
+
+### The `Gaps:` list leaves out a pregap it could not determine, so it reads as none
+
+**Found 2026-10-06, reading the closing run on `.20`**, and older than it: our
+sub-channel pregap search, carried from upstream PR #115, is what makes a
+pregap undeterminable. `setup_track_offsets_and_report()` skips a track whose
+pregap LSN is `CDIO_INVALID_LSN` without a line (`src/cyanrip_main.c:1535-1536`),
+and that is what a failed search returns. The track's own block says `Pregap
+LSN:  unknown (sub-channel unreadable)` or `(sub-channel CRC mismatches)`, but a
+rip of selected tracks prints only their blocks, so for every other track the
+list is the only record, and its silence reads as no pregap. With every search
+failed, the list reads `None signalled`.
+
+**On the drive**: section P3 of the closing run ripped track 1 twice; the `-H -E`
+log lists nine pregaps and the `-H -W` log eight, without `158 frame pregap in
+track 4` (`docs/rig-2026-10-06-5704062/rips/r16deemphoff.log`). That is two of
+the 153 filed logs of the reference disc that carry the list; the other is
+`docs/rig-2026-09-22-2cce60d/rips/derived-wavpack.log`. Whether track 4's search
+failed or returned a pregap of zero, which the list also leaves out, the log
+cannot say. **With no drive**: `-l 1` of `tests/fixtures/basic.cue` prints
+`None signalled` while the whole-disc rip's track 2 block reads `unknown
+(sub-channel unreadable)`.
+
+**No audio byte depends on it**: the default action merges a pregap into the
+track before it, whose end the TOC already gives. The cue sheet's `INDEX 00` for
+that track does, and is the next thing to check. **The fix, not yet made**: a
+line in the list for each undetermined pregap, `pregap of track N unknown
+(reason)`, and `None signalled` only when every search succeeded. P2 again;
+Platterpus renders the list's first line as EAC's `Gap handling` row
+(`platterpus@9ecd1147:src/platterpus/parsers/cyanrip_log.py:199-204`), so a
+first line that changes is a value they show.
+
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
@@ -1362,7 +1432,8 @@ lookup that missed fell through to the whole-track checksum
 
 ### The cache probe's calibration is wrong
 
-**FIXED for `.20`, 2026-10-05, not released and NOT YET MEASURED** (`394ab17`).
+**FIXED for `.20`, 2026-10-05, released on beta 2026-10-06, and MEASURED ONCE,
+IN AGREEMENT** (`394ab17`).
 The probe now asks `cd-paranoia -A`'s question: a re-read is a hit when it is
 faster than `MIN_SEEK_MS`, 6 ms (libcdio-paranoia `src/cachetest.c:41`, read at
 `384f4da`), on its reasoning that no seek on a CD costs under ~10 ms. By that
@@ -1373,12 +1444,16 @@ times before it ends the search. `miss_cost` is still measured and printed, and
 a drive whose full-stroke read beats 6 ms is refused as untimeable. The `-j`
 record's `hit_ratio` is `hit_below_us` from `cyanrip-diagnostics/7`.
 `tests/cacheprobe.c` pins the decision against the table's own figures,
-revert-proved. **What is not established is that it agrees with cd-paranoia on
+revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
 that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
-bracket. Everything below is the record of the defect, kept because the table is
-checked against the transcripts.
+bracket. **It did, once**: the 2026-10-06 run on `.20` printed `128 to 255
+sectors`, with a 1.7 ms re-read after 128 sectors and three re-reads of at
+least 32.6 ms after 256, and `cd-paranoia -A`, run straight after it, reported
+137 (`docs/rig-2026-10-06-5704062/`, the table's last row). One run, and the
+search can say no more than a power of two. Everything below is the record of
+the defect, kept because the table is checked against the transcripts.
 
 **The seventeenth session, 2026-10-05 on `.19`, bracketed 128 to 255, and that
 is the defect, not a fix.** Its calibration read was 304.2 ms, so `.19`'s
@@ -1417,7 +1492,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: seventeen of them**, derived
+session that produced a `Cache probe:` line is here now: eighteen of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -1426,7 +1501,7 @@ and the table from the transcripts, and `sc_cache_table_matches_the_transcripts(
 prints both totals when they disagree. The prediction this section made was *"an
 uncached read in the hundreds of milliseconds beside a cached read of a few."*
 
-| session | uncached (`miss_cost`) | cached | threshold (`miss_cost / 4`) | margin |
+| session | uncached (`miss_cost`) | cached | threshold (`miss_cost / 4` to `.19`) | margin |
 |---|---|---|---|---|
 | 2026-09-03 `978f9b0` | 244.7 ms | 43.1 ms | 61.2 ms | 70% |
 | 2026-09-05 `978f9b0` | 237.6 ms | 56.4 ms | 59.4 ms | **95%** |
@@ -1445,6 +1520,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-28c `51cc789` | 362.0 ms | 81.6 ms | 90.5 ms | **90%** |
 | 2026-09-30b `174a134` | 363.0 ms | 82.0 ms | 90.8 ms | **90%** |
 | 2026-10-05 `174a134` | 304.2 ms | 1.5 ms | 76.1 ms | 2%, and **not** the ceiling: `128 to 255 sectors` |
+| 2026-10-06 `5704062` | 251.0 ms | 1.7 ms | **6 ms**, `.20`'s threshold, `cd-paranoia`'s `MIN_SEEK_MS` | 28%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.6 ms or more |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -1452,9 +1528,10 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, seventeen times. "A cached read of a few
-ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen once, in the
-seventeenth, at 1.5 ms after a run inside the cache. The first sixteen end
+**Hundreds of ms uncached: confirmed, eighteen times. "A cached read of a few
+ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen twice, in the
+seventeenth at 1.5 ms and the eighteenth at 1.7 ms, each after a run inside the
+cache. The first sixteen end
 identically, at
 `at least 2048 sectors … search ceiling reached`. The tenth, 2026-09-22, is the
 first on `2cce60d` and the first taken inside a full acceptance session; it
@@ -1664,7 +1741,7 @@ coverage.
 
 | gap | status |
 |---|---|
-| `-x` correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). `.20`'s fix (`394ab17`) has not run on a drive. This cell said *"measured twice"* while the table above held nine rows |
+| `-x` correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). **`.20`'s fix (`394ab17`) ran once on a drive, 2026-10-06, and agreed**: `128 to 255` beside `cd-paranoia -A`'s 137. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
 | damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. The only `read with errors.` arm exercised is still the fixture's (`tests/badsector.c`). From `.20` that arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have; no `.20` rip has run on a drive |
