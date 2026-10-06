@@ -1040,6 +1040,10 @@ that was the reason before 2026-10-05, kept as the record.
 
 ### At the repeat limit the last read's checksum is not printed, and the spool can leave it in no line
 
+**Left for round 31 by the operator's word of 2026-10-06**, which closes round
+30 on the run that found it; the exception to the rule above is theirs, and
+round 31 fixes it within the round (v7 R3).
+
 **Found 2026-10-06, reading the closing run on `.20`**
 (`docs/rig-2026-10-06-5704062/`), and **introduced by `.20`'s `-Z` spool**
 (`d7ee6c4`). The repeat loop prints `Repeating ripping (... current checksum X)`
@@ -1078,6 +1082,8 @@ addition after `agreed` leaves both matching, so no string they match is
 removed and nothing of theirs has to ship first. It wants announcing in a lap.
 
 ### The `Gaps:` list leaves out a pregap it could not determine, so it reads as none
+
+**Left for round 31 by the operator's word of 2026-10-06**, as the entry above.
 
 **Found 2026-10-06, reading the closing run on `.20`**, and older than it: our
 sub-channel pregap search, carried from upstream PR #115, is what makes a

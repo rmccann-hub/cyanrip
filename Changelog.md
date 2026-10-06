@@ -31,7 +31,8 @@ and not yet fixed in the log. From `.20`, at the repeat limit, a kept read that
 is not the last leaves the last read's checksum in no line, and the run did not
 show it, but the bad-sector shim does. And the `Gaps:` list leaves out a pregap
 it could not determine, so a rip of selected tracks reads it as none, as the
-run's `-H -W` rip did for track 4.
+run's `-H -W` rip did for track 4. **The operator left both for round 31 on
+2026-10-06**, and round 30 closes on this run.
 
 0.9.4-rc2+platterpus.20 — 2026-10-06 — **beta**
 ===============================================
