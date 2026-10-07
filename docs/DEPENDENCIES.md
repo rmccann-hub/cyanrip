@@ -6,7 +6,7 @@ Everything above **Measured where this was generated** is declared by the tree a
 
 ## The project
 
-- **cyanrip 0.9.4-rc2+platterpus.20**, the `platterpus-fork` build of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip), at [rmccann-hub/cyanrip](https://github.com/rmccann-hub/cyanrip). The only branch a consumer builds is `platterpus-fork`; `master` mirrors upstream.
+- **cyanrip 0.9.4-rc2+platterpus.21**, the `platterpus-fork` build of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip), at [rmccann-hub/cyanrip](https://github.com/rmccann-hub/cyanrip). The only branch a consumer builds is `platterpus-fork`; `master` mirrors upstream.
 - **Language: C**, `c_std=c99`, built with meson (`meson_version: '>=0.53.0'`), and `-Werror=format`, `-Werror=format-extra-args`, `-Werror=implicit-function-declaration`.
 - **Tools and tests: Python 3, standard library only** — derived: no third-party import in `tools/` or `tests/`. No minimum Python version is declared anywhere in the tree.
 - **Licence: LGPL-2.1-or-later**, read from `src/utils.c`'s header. The binary links libcdio and libcdio-paranoia, both GPL-3.0-or-later, so a built binary is subject to the GPL's terms; upstream's is too.
