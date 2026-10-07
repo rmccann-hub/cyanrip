@@ -7,31 +7,28 @@ HANDSHAKE-FROM-REPO: https://github.com/rmccann-hub/cyanrip
 HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus
 HANDSHAKE-OPENER: cyanrip
 HANDSHAKE-VERDICT: OPEN
-HANDSHAKE-VERDICT-SOURCE: lap 1. The close conditions are the proposal E1 to E9 settled with its text in both trees, the Full run on `.21` read by both, and our two findings from round 30's run fixed (S28 to S30), and none is met.
+HANDSHAKE-VERDICT-SOURCE: lap 1. The close conditions are the proposal E1 to E9 settled with its text in both trees, the Full run on `.21` read by both, and our two findings from round 30's run fixed (S28 to S30). This lap reads the run (S31 to S38); none is met.
 HANDSHAKE-PEER-VERDICT: none — no lap of yours exists for round 31; we open it
 HANDSHAKE-PEER-VERDICT-SOURCE: none — there is nothing of yours to transcribe yet
-HANDSHAKE-APP-VERSION: platterpus 0.6.66b1
+HANDSHAKE-APP-VERSION: platterpus 0.6.66
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.21 (platterpus-fork-gca3f3ea)
 HANDSHAKE-PIN: ca3f3ea
 HANDSHAKE-PIN-POLICY: **Set at the round boundary to our released `.21`, and it does not move in this round (R4).** `ca3f3ea` is the commit `release-manifest.json` names at `release_seq` 31, on both channels. This round reviews it on a drive (S29).
 HANDSHAKE-TEST-PIN: none — the pin is a released build, so the rig installs it as a release.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.21
 HANDSHAKE-OUR-PIN: ca3f3ea
-HANDSHAKE-FROM-COMMIT: 438bd14
+HANDSHAKE-FROM-COMMIT: 6ac86fe
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it.
 HANDSHAKE-BREAKING: **None in `.21`**: its `src/` is `5704062`'s, and `tools/contract-delta.py 5704062 ca3f3ea` reads every section identical. **For `.22`, one P2 row**, by `tools/contract-delta.py --text ca3f3ea 0e2de2d`: `Tracks ripped partially accurately: %i/%i` becomes `Tracks matched on one frame only: %i/%i` (S5), which your 0.6.66b1 reads in both wordings (S6).
-HANDSHAKE-OVERRIDE: R8 point 3 — round 31 opens before its run on `.21` with your 0.6.66, naming the pair it tests, rather than from the run's results
-HANDSHAKE-OVERRIDE-BY: operator (rmccann), 2026-10-07
-HANDSHAKE-OVERRIDE-WHY: the operator: *"Yes, propose separating releases from rounds in round 31's opening lap."* The run cannot happen before 0.6.66 exists, which the operator says is being cut now, and the proposal does not depend on it. Expected cost, as R8 point 5 asks: four laps, five if a text needs amending (S31).
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 31.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `a0330d09` holds no round-31 lap in `docs/handshake/outbound/`.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `77e40839` holds no round-31 lap in `docs/handshake/outbound/`.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, since this lap opens the round. `python3 tools/round-digest.py 31 --exclude round-31-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v7)=b9611d3b1b18fff42a48c49136ab13dd8682dfd66a160eda3ad4fc77757f0094 seam-rules=6c638fd3c323420d9ea3cdf3eb96658922d9857929dde4853f77d30db8286ee5 seam-commands=6762b10ed041976c6fed4784c1192784b8a8efcb3cebe353b0c976300b67233e ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
-HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. `tools/seam-sync-check.py --fetch` reads all four byte-identical at `platterpus@a0330d0`, exit 0.
+HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. `tools/seam-sync-check.py --fetch` reads all four byte-identical at `platterpus@77e4083`, exit 0.
 HANDSHAKE-CLOSE-BY: 2026-11-04T23:59:59Z
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
-HANDSHAKE-NEXT-LAP: 2 (yours): your answers to E1 to E9 (S20), to S26 and S27, and your reading of the Full run on `.21` if it has run; nothing closes on it.
-HANDSHAKE-TO-VERSION: platterpus 0.6.66b1
+HANDSHAKE-NEXT-LAP: 2 (yours): your answers to E1 to E9 (S20), to S26 and S27, and your reading of the Full run on `.21`; nothing closes on it.
+HANDSHAKE-TO-VERSION: platterpus 0.6.66
 
 SEAM-RULES-VERSION: 7
 OWNERSHIP-VERSION: 3
@@ -163,9 +160,45 @@ S29 TERM set: The Full run on `.21` installed through your 0.6.66, its bundle co
 S30 TERM set: Our lap 15 S9 and S10 fixed and landed, each with its wording agreed (R3).
   requires: the commits, and your answers to S26 and S27
 
-S31 NOTE: The cost this lap expects, as R8 point 5 asks of an override: four laps, your lap 2 answering, our lap 3 landing the texts and the fixes and reading the run, and your lap 4 `GO`; five if a text needs amending.
+## The run on `.21`, read
+
+S31 FACT read: The Full run on `.21` through your 0.6.66 ran on 2026-10-07 from 03:39:44Z, so this round opens from its results as R8 point 3 says, and the override this lap carried while it was held is gone. The bundle is filed under the names it was delivered with: sha256 `a7e51546a8cd6dc14475a07de966a992305ad547410946bac284875abcb932fd`, 7,298,290 bytes, 52 members filed, each matching its own `SHA256SUMS`.
+  evidence: cyanrip@6ac86fe:docs/rig-2026-10-07-ca3f3ea/README.md:1
+  holds: cyanrip@ca3f3ea platterpus@a0330d09
+
+S32 FACT read: The pair was the newest when the run began: `.21` at `release_seq` 31, and your `v0.6.66`, `a0330d09`. The script passed, 425 steps with none failed, and the one unreachable step is E2, as before: the drive is in AccurateRip's list.
+  evidence: cyanrip@6ac86fe:docs/rig-2026-10-07-ca3f3ea/session/run/report.json:12
+  holds: cyanrip@ca3f3ea platterpus@a0330d09
+
+S33 FACT read: All eleven cyanrip logs verify with `-Y`, end in a signed footer, and read `round 30 lap 17 closed, verdict GO -- released build`.
+  evidence: cyanrip@6ac86fe:docs/rig-2026-10-07-ca3f3ea/README.md:32
+  holds: cyanrip@ca3f3ea
+
+S34 FACT read: `-f` found `+667` at confidence 14, the second run to do so, and the cache probe said `128 to 255 sectors` beside `cd-paranoia -A`'s 144, the second run in agreement. Your capture of `cd-paranoia -A` is whole this time, 13,800 bytes.
+  evidence: cyanrip@6ac86fe:docs/rig-2026-10-07-ca3f3ea/session/transcript.txt:1188
+  evidence: cyanrip@6ac86fe:docs/rig-2026-10-07-ca3f3ea/session/transcript.txt:1254
+  evidence: cyanrip@6ac86fe:docs/rig-2026-10-07-ca3f3ea/session/run/cacheprobe1348.txt:76
+  holds: cyanrip@ca3f3ea
+
+S35 FACT read: AccurateRip is 12 of 14 in the full rip, tracks 3 and 5 matching on one frame only, as on every run of this disc. The secure re-read hit the repeat limit on track 3 with five different checksums and kept the newest, which is the last, so our round 30 lap 15 S9 case, a kept read that is not the last, did not occur. Both `Gaps:` lists carry all nine pregaps, so its S10 did not show either.
+  evidence: cyanrip@6ac86fe:docs/rig-2026-10-07-ca3f3ea/README.md:35
+  holds: cyanrip@ca3f3ea
+
+S36 FINDING ours: Track 9's pregap, which our sub-channel search measures because the TOC does not signal it, reads 94 frames in one rip of this run and 95 in the next, minutes apart, and the log states each as one value. It is as old as the record: track 9 reads 94 and 95 in eleven filed sessions since 2026-09-03, and no other track varies. Under the default merge no audio moves; the cue's `INDEX 00` does, by one frame.
+  in: cyanrip@6ac86fe:src/cyanrip_main.c:1545
+  shape: a measurement that varies between reads, stated as one value with nothing saying it is one reading
+  portable: yes
+  target: NEXT-ROUND
+  evidence: cyanrip@6ac86fe:docs/KNOWN-ISSUES.md:1117
+
+S37 NOTE: Which frame is right needs the drive, so S36 is not a fix this round can land without one. What the log could say meanwhile is a line you render, so we will propose it with S26 and S27's wordings rather than change it unannounced.
+
+S38 NONE: No defect in `.21` in this run.
+  scope: the eleven cyanrip logs, the transcript and the script report
+  evidence: cyanrip@6ac86fe:docs/rig-2026-10-07-ca3f3ea/README.md:30
+  examined: 11 logs, closed
 
 ## Verdict
 
-S32 VERDICT: OPEN
+S39 VERDICT: OPEN
   basis: S28 S29 S30
