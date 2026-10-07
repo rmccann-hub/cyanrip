@@ -2855,10 +2855,17 @@ def sc_status_block_is_current():
         top = max(ours_newest.lap if ours_newest else 0, theirs_lap or 0)
         want_side = "ours" if (theirs_lap or 0) > (
             ours_newest.lap if ours_newest else 0) else "theirs"
-        if int(m.group(3)) != top + 1 or m.group(4) != want_side:
+        want_next = top + 1
+        # A CLOSED round has no next lap. The next is the next round's lap 1,
+        # and the provider opens every round (PROTOCOL.md §1a), so it is ours.
+        # Round 30 was the first round the block outlived; counting on from
+        # its last lap would name a lap 18 nobody will write.
+        if current.closed:
+            want_next, want_side = 1, "ours"
+        if int(m.group(3)) != want_next or m.group(4) != want_side:
             fail(f"status_block_is_current: STATUS-LAPS says the next lap is "
                  f"{m.group(3)} ({m.group(4)}); after the newest sent lap, "
-                 f"{top}, it is {top + 1} ({want_side}).")
+                 f"{top}, it is {want_next} ({want_side}).")
         if m.group(5) == "none" and held:
             fail(f"status_block_is_current: STATUS-LAPS says no lap of ours "
                  f"is held, and {held[-1].path.name} is.")
