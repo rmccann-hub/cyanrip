@@ -10,6 +10,12 @@ round checks stay. A release plan is now written only when it poses a decision
 for the operator. `STATUS.md` now says Platterpus's `FORK_PIN` is `174a134`,
 read at `platterpus@a0330d09`, where it said `5704062`.
 
+**The one-frame AccurateRip tally is renamed**: `Tracks matched on one frame
+only: N/M`, where it read `Tracks ripped partially accurately: N/M`, with the
+same numbers. One frame's checksum says nothing about the rest of the track.
+Agreed in round 30 and landed in round 31, after Platterpus's 0.6.66b1 reads
+both wordings.
+
 0.9.4-rc2+platterpus.21 — 2026-10-07 — **stable**
 =================================================
 **The stable release round 30's close authorises**, cut from the tree in which

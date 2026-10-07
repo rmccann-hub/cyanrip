@@ -1420,6 +1420,12 @@ while the footer still says `Tracks ripped partially accurately: 2/14`.
 The label calls them partly right, and the record shows they never read the
 same way twice.
 
+**The tally is renamed for `.22`, in round 31**: `Tracks matched on one frame
+only: N/M`, the same numerator and denominator, as agreed in round 30 (our lap
+11 S16, their lap 12 S11). Round 20's order is met: their both-wordings reader,
+`platterpus@fd439881`, is an ancestor of their `v0.6.66b1`, a release.
+`tests/logrender.c` pins the new wording and refuses the old one.
+
 **Our answer to their EAC-log wording, sent in round 27 lap 4 and accepted in
 their lap 5: amend one clause, accept the rest.** They proposed, per track, `Only one frame matched AccurateRip
 — rest of track unverified (confidence 200)  [57722DDE]  (AR frame 450)`, and in

@@ -1050,10 +1050,16 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
          * tracks that were *not* fully verified, so a disc with 13 of 14 exact
          * and the 14th partial printed "13/14" above "1/1" -- self-referential,
          * and read as a disc-level tally it over-reports. Proposed to
-         * Platterpus in round 7 lap 25; the numerators are unchanged. */
+         * Platterpus in round 7 lap 25; the numerators are unchanged.
+         *
+         * The second line said `Tracks ripped partially accurately`, which
+         * claims more than one frame's checksum can: the rest of the track was
+         * never compared. Renamed in round 31, as agreed in round 30 (our lap
+         * 11 S16, their lap 12 S11), after Platterpus's 0.6.66b1 read both
+         * wordings: round 20's order. Same numerator and denominator. */
         cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, ctx->nb_tracks);
         if (accurip_partial)
-            cyanrip_log(ctx, 0, "Tracks ripped partially accurately: %i/%i\n",
+            cyanrip_log(ctx, 0, "Tracks matched on one frame only: %i/%i\n",
                         accurip_partial, ctx->nb_tracks);
         cyanrip_log(ctx, 0, "\n");
     }

@@ -1095,7 +1095,12 @@ static void test_disc_tally_counts_over_one_population(void)
      * partial printed "13/14" above "1/1" -- self-referential, and read as a
      * disc-level tally it over-reports. */
     expect_line(out, "Tracks ripped accurately: 2/3", "disc-tally/exact");
-    expect_line(out, "Tracks ripped partially accurately: 1/3", "disc-tally/partial");
+    expect_line(out, "Tracks matched on one frame only: 1/3", "disc-tally/partial");
+    /* Round 31's rename: the old wording claimed the track was partly
+     * verified, where one frame's checksum is all that was compared. */
+    if (strstr(out, "Tracks ripped partially accurately"))
+        FAIL("disc-tally/partial: the one-frame tally still uses the wording "
+             "round 31 replaced");
     free_ctx(ctx);
 }
 
@@ -1133,7 +1138,8 @@ static void test_disc_tally_matches_the_per_track_450_gate(void)
     cyanrip_log_finish_report(ctx);
     const char *out = drain(ctx);
     expect_line(out, "Tracks ripped accurately: 0/1", "disc-tally/450-gate");
-    if (strstr(out, "Tracks ripped partially accurately"))
+    if (strstr(out, "Tracks matched on one frame only") ||
+        strstr(out, "Tracks ripped partially accurately"))
         FAIL("disc-tally/450-gate: the footer counted a one-frame match that "
              "the track's own lines never printed");
     free_ctx(ctx);
@@ -1163,7 +1169,8 @@ static void test_disc_tally_ignores_a_zero_450_checksum(void)
     const char *out = drain(ctx);
 
     expect_line(out, "Tracks ripped accurately: 0/2", "disc-tally/zero-450");
-    if (strstr(out, "Tracks ripped partially accurately"))
+    if (strstr(out, "Tracks matched on one frame only") ||
+        strstr(out, "Tracks ripped partially accurately"))
         FAIL("disc-tally/zero-450: a zero 450 checksum was counted as a "
              "partial match -- it compares equal to every other zero");
     free_ctx(ctx);
@@ -1290,7 +1297,8 @@ static void test_disc_tally_450_threshold_boundary(void)
     cyanrip_log_finish_report(ctx);
     const char *out = drain(ctx);
     expect_line(out, "Tracks ripped accurately: 0/1", "disc-tally/450-boundary");
-    if (strstr(out, "Tracks ripped partially accurately"))
+    if (strstr(out, "Tracks matched on one frame only") ||
+        strstr(out, "Tracks ripped partially accurately"))
         FAIL("disc-tally/450-boundary: a 450 match sitting exactly ON the 3/4 "
              "threshold was counted as partially accurate; the rule is above "
              "it, and it is written out three separate times");
@@ -1335,7 +1343,8 @@ static void test_disc_tally_skips_an_interrupted_track(void)
     cyanrip_log_finish_report(ctx);
     const char *out = drain(ctx);
     expect_line(out, "Tracks ripped accurately: 1/3", "disc-tally/interrupted");
-    if (strstr(out, "Tracks ripped partially accurately"))
+    if (strstr(out, "Tracks matched on one frame only") ||
+        strstr(out, "Tracks ripped partially accurately"))
         FAIL("disc-tally/interrupted: a track whose read did not finish was "
              "counted as partially accurate -- it has no track block, and the "
              "footer says it was not ripped");
