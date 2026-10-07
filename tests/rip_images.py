@@ -2734,6 +2734,12 @@ def sc_status_block_is_current():
         # its last lap would name a lap 18 nobody will write.
         if current.closed:
             want_next, want_side = 1, "ours"
+        # And a round with no lap sent yet, its lap 1 held: the next is that
+        # lap 1, ours for the same reason. Counting from "the other side of
+        # the newest sent lap" named theirs when there was none, which round
+        # 31's held opening lap was the first to show.
+        elif top == 0:
+            want_next, want_side = 1, "ours"
         if int(m.group(3)) != want_next or m.group(4) != want_side:
             fail(f"status_block_is_current: STATUS-LAPS says the next lap is "
                  f"{m.group(3)} ({m.group(4)}); after the newest sent lap, "

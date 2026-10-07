@@ -16,6 +16,12 @@ same numbers. One frame's checksum says nothing about the rest of the track.
 Agreed in round 30 and landed in round 31, after Platterpus's 0.6.66b1 reads
 both wordings.
 
+**Our round 31 lap 1 is published, held**, on `.21`. It proposes, on the
+operator's word, that either side releases when its own suite is green and a
+round reviews the released pair, naming each rule in the shared files that
+changes (E1 to E9). A suite check now refuses a `GO` lap of ours at protocol 6
+or later without `HANDSHAKE-AGREED-CHANGES`, which our round 30 lap 15 lacked.
+
 0.9.4-rc2+platterpus.21 — 2026-10-07 — **stable**
 =================================================
 **The stable release round 30's close authorises**, cut from the tree in which
