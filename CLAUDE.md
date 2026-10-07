@@ -94,7 +94,9 @@ settled by building 0.9.3 and running it. The measured matrix is
   now a hit only under 6 ms, `cd-paranoia -A`'s own `MIN_SEEK_MS`, so the
   first `-x` run on `.20`, beside section P's `cd-paranoia -A`, was the test:
   on 2026-10-06 it printed `128 to 255 sectors` and cd-paranoia 137
-  (`docs/rig-2026-10-06-5704062/`). One run, bracketed to a power of two.
+  (`docs/rig-2026-10-06-5704062/`). A second, on `.21` on 2026-10-07, printed
+  `128 to 255` again beside cd-paranoia's 144
+  (`docs/rig-2026-10-07-ca3f3ea/`). Two runs, bracketed to a power of two.
 - `src/stall_watchdog.c`/`.h` -- the read-liveness heartbeat, on its own thread.
   It is a separate translation unit for two reasons: it needs a thread of its
   own, and being linkable is what lets `tests/stall.c` prove the heartbeat fires
@@ -193,7 +195,7 @@ list wrote two different claims the same way for months:**
 | item | state | why |
 |---|---|---|
 | **C2** | `UNREACHABLE` | the rig's BDR-209D **reports C2 unsupported**. No procedure, tier or effort produces it — it needs a different drive or it stays unverified permanently. |
-| **`-f`** | **done on hardware 2026-10-06**, `5704062` | the reference disc is in AccurateRip and `+667` is known-correct, so ground truth exists. Section O of the round 30 closing run, `.20` with Platterpus 0.6.66b1, ran `cyanrip -N -f`: `Drive offset of +667 found (confidence: 14)!`, every one of the 14 tracks confirming it, exit 0 in 34.1 s (`docs/rig-2026-10-06-5704062/`). One drive, one disc; a stopped search and a search that finds nothing, which exits 1 from `.20`, have not run on a drive. |
+| **`-f`** | **done on hardware 2026-10-06**, `5704062` | the reference disc is in AccurateRip and `+667` is known-correct, so ground truth exists. Section O of the round 30 closing run, `.20` with Platterpus 0.6.66b1, ran `cyanrip -N -f`: `Drive offset of +667 found (confidence: 14)!`, every one of the 14 tracks confirming it, exit 0 in 34.1 s (`docs/rig-2026-10-06-5704062/`), and again on `.21` (`docs/rig-2026-10-07-ca3f3ea/`). One drive, one disc; a stopped search and a search that finds nothing, which exits 1 from `.20`, have not run on a drive. |
 | **damaged media** | **read on hardware 2026-10-04**, `174a134` | **what happens after a read fails** is tested with no drive (`tests/badsector.c`, the `bad_sector` scenario). **The read itself was measured on the BDR-209D** (`docs/rig-2026-10-04-174a134/`), on a disc it reads differently each time from track 11 on. The drive reported **no** error, C2 said nothing (unsupported), reads slowed to **54 s**, one track took **8,161 s**, paranoia skipped **2,586** times, and every track still printed `read successfully!`. **Fixed for `.20`**: a skip, or a `-Z` read that never agreed, now reads `with errors` (`e5a0897`, `4529810`; `docs/KNOWN-ISSUES.md`). **The `-Z` arm ran on a drive on 2026-10-06**, on the reference disc's tracks 3 and 5 (`docs/rig-2026-10-06-5704062/`); **the skip arm has not**. **Still not seen: a drive that reports a read as failed.** |
 | **CD-TEXT from a physical disc** | not yet done | needs a disc that has some; `mmc_read_cdtext` is a different path from the `.toc` image parser. |
 

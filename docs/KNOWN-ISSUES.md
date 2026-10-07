@@ -1114,6 +1114,28 @@ Platterpus renders the list's first line as EAC's `Gap handling` row
 (`platterpus@9ecd1147:src/platterpus/parsers/cyanrip_log.py:199-204`), so a
 first line that changes is a value they show.
 
+### A sub-channel pregap reads one frame different between rips, and the log states one value
+
+**Found 2026-10-07, reading the run on `.21`** (`docs/rig-2026-10-07-ca3f3ea/`),
+and as old as the filed record: section P3 ripped track 1 twice, minutes apart,
+and one `Gaps:` list says `94 frame pregap in track 9` and the other `95`.
+Counted over every filed log of the reference disc, track 9's pregap reads 94
+and 95 in eleven sessions from 2026-09-03 (`978f9b0`) to this one; no other
+track's does. The TOC does not signal it, so the value is our sub-channel
+search's, and the track block says so (`Pregap source: sub-channel`).
+
+**What it costs**: under the default action the pregap merges into track 8,
+which ends at track 9's `INDEX 01` either way, so no audio byte moves; the cue
+sheet's `INDEX 00` for track 9 does, by one frame. With `-p` set to drop or to
+a track of its own, the audio would move by 588 samples.
+
+**Not fixed, and why**: which frame is right, and why the search lands on
+either, needs the drive. The search reads Q sub-channel frames near the index
+boundary, and whether a frame there reads with a bad CRC or a stale index is a
+question of the drive's reporting, which no image reproduces. What the log can
+say without a drive is that the value is one reading; how it should say it is a
+line a consumer renders, so it is round 31's to agree.
+
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
@@ -1533,6 +1555,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-09-30b `174a134` | 363.0 ms | 82.0 ms | 90.8 ms | **90%** |
 | 2026-10-05 `174a134` | 304.2 ms | 1.5 ms | 76.1 ms | 2%, and **not** the ceiling: `128 to 255 sectors` |
 | 2026-10-06 `5704062` | 251.0 ms | 1.7 ms | **6 ms**, `.20`'s threshold, `cd-paranoia`'s `MIN_SEEK_MS` | 28%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.6 ms or more |
+| 2026-10-07 `ca3f3ea` | 243.5 ms | 1.8 ms | **6 ms** | 30%; `128 to 255 sectors`, three re-reads after 256 sectors at 31.8 ms or more, beside `cd-paranoia -A`'s 144 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
