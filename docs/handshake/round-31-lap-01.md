@@ -17,16 +17,16 @@ HANDSHAKE-PIN-POLICY: **Set at the round boundary to our released `.21`, and it 
 HANDSHAKE-TEST-PIN: none — the pin is a released build, so the rig installs it as a release.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.21
 HANDSHAKE-OUR-PIN: ca3f3ea
-HANDSHAKE-FROM-COMMIT: 6ac86fe
+HANDSHAKE-FROM-COMMIT: bf60e3d
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it.
 HANDSHAKE-BREAKING: **None in `.21`**: its `src/` is `5704062`'s, and `tools/contract-delta.py 5704062 ca3f3ea` reads every section identical. **For `.22`, one P2 row**, by `tools/contract-delta.py --text ca3f3ea 0e2de2d`: `Tracks ripped partially accurately: %i/%i` becomes `Tracks matched on one frame only: %i/%i` (S5), which your 0.6.66b1 reads in both wordings (S6).
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 31.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `77e40839` holds no round-31 lap in `docs/handshake/outbound/`.
+HANDSHAKE-INBOUND-OBSERVED: none. Re-read when this lap was released: your `main` at `8b7e4383`, which carries your 0.7.100 and files the same run, holds no round-31 lap in `docs/handshake/outbound/`.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, since this lap opens the round. `python3 tools/round-digest.py 31 --exclude round-31-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v7)=b9611d3b1b18fff42a48c49136ab13dd8682dfd66a160eda3ad4fc77757f0094 seam-rules=6c638fd3c323420d9ea3cdf3eb96658922d9857929dde4853f77d30db8286ee5 seam-commands=6762b10ed041976c6fed4784c1192784b8a8efcb3cebe353b0c976300b67233e ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
-HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. `tools/seam-sync-check.py --fetch` reads all four byte-identical at `platterpus@77e4083`, exit 0.
+HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. `tools/seam-sync-check.py --fetch` reads all four byte-identical at `platterpus@8b7e438`, exit 0, re-run when this lap was released.
 HANDSHAKE-CLOSE-BY: 2026-11-04T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — released by the operator (rmccann), 2026-10-07: *"Release"*
 HANDSHAKE-NEXT-LAP: 2 (yours): your answers to E1 to E9 (S20), to S26 and S27, and your reading of the Full run on `.21`; nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.6.66
 

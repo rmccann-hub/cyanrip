@@ -16,7 +16,7 @@ same numbers. One frame's checksum says nothing about the rest of the track.
 Agreed in round 30 and landed in round 31, after Platterpus's 0.6.66b1 reads
 both wordings.
 
-**Our round 31 lap 1 is published, held**, on `.21`. It proposes, on the
+**Our round 31 lap 1 is sent**, released by the operator on 2026-10-07, on `.21`, reading the Full run on it with Platterpus 0.6.66. It proposes, on the
 operator's word, that either side releases when its own suite is green and a
 round reviews the released pair, naming each rule in the shared files that
 changes (E1 to E9). A suite check now refuses a `GO` lap of ours at protocol 6
