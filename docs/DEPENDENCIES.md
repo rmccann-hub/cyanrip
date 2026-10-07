@@ -81,8 +81,8 @@ GitHub Actions, `.github/workflows/main.yml`, on pushes to `master`, `workflow` 
 | ownership | `docs/OWNERSHIP.md` | `docs/OWNERSHIP.md` |
 
 - **Releases this tree publishes**, from `release-manifest.json`:
-  - `beta`: `0.9.4-rc2+platterpus.20` at `5704062`, release_seq 30
-  - `stable`: `0.9.4-rc2+platterpus.19` at `174a134`, release_seq 29
+  - `beta`: `0.9.4-rc2+platterpus.21` at `ca3f3ea`, release_seq 31
+  - `stable`: `0.9.4-rc2+platterpus.21` at `ca3f3ea`, release_seq 31
 - **Libraries whose defects are worked around here** are named in the next section; their upstreams are in the libraries table.
 
 ## External defects worked around (local mitigations)

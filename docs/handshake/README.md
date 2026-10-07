@@ -15,9 +15,9 @@ record of the rounds themselves.
 
 ## Current pin
 
-**The two channels resolve to different builds**: `stable` is `+platterpus.19`
-and `beta` is `+platterpus.20`. `stable` is what you get without opting in and
-`beta` is newer. Pick by risk tolerance, not by recency — and never by comparing the version strings,
+**Both channels resolve to one build**, `+platterpus.21`, the newest row of
+the ledger and a stable one. `stable` is what you get without opting in. Pick
+by risk tolerance, not by recency — and never by comparing the version strings,
 which cannot be ordered at all.
 
 ### `stable` — the default
@@ -25,32 +25,33 @@ which cannot be ordered at all.
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork                  <- the only branch to build from
-commit          174a134                          <- build this
---version       cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)
-release_seq     29                               <- the ONLY orderable identifier
+commit          ca3f3ea                          <- build this
+--version       cyanrip 0.9.4-rc2+platterpus.21 (platterpus-fork-gca3f3ea)
+release_seq     31                               <- the ONLY orderable identifier
 channel         stable
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
-### `beta` — `+platterpus.20`, a beta inside round 30
+### `beta` — the same build as `stable`
 
 ```
 repo            rmccann-hub/cyanrip
 branch          platterpus-fork
-commit          5704062
---version       cyanrip 0.9.4-rc2+platterpus.20 (platterpus-fork-g5704062)
-release_seq     30                               <- newest of any channel
+commit          ca3f3ea
+--version       cyanrip 0.9.4-rc2+platterpus.21 (platterpus-fork-gca3f3ea)
+release_seq     31                               <- newest of any channel
 channel         beta
 build           meson setup build -Ddeclare_released=true && ninja -C build
 git tag         none published
 ```
 
 **`beta` resolves to the newest row of ANY channel**, so opting into
-pre-releases can never move a user backwards. `+platterpus.20` is the newest row
-overall, so `beta` resolves to it, and `stable` stays `+platterpus.19` until
-round 30 closes and `.21` is cut from the closed tree. **Every rip `.20` makes
-logs `NOT a released build`**, because round 30 is open, and that is true of it.
+pre-releases can never move a user backwards. `+platterpus.21` is the newest row
+overall and a stable one, so both channels resolve to it. `.20`, the beta at
+`5704062` that round 30's closing run tested, has the same `src/`; every rip it
+makes logs `NOT a released build`, because round 30 was open when it was cut,
+and `.21`'s logs `released build`.
 That property was not decorative: the first generated manifest had `beta` on seq
 10 while `stable` was seq 11, so opting in would have been a downgrade.
 
@@ -176,8 +177,10 @@ beside Platterpus's lap 16, approving `.20` at `5704062` with their 0.6.66b1;
 this said *"Round 30 is open"* from `.20`'s publish until then. Round 29 closed on 2026-09-29 on
 Platterpus's lap 4, by v6 §5b step 3. It reviewed
 `.18` on the Full run with Platterpus 0.6.63 (`docs/rig-2026-09-28c-51cc789/`).
-The live release is **`0.9.4-rc2+platterpus.19` at `174a134`**, `release_seq`
-29, authorised by **round 29**, under v6 R8: a round's close authorises a
+**The live release is `0.9.4-rc2+platterpus.21` at `ca3f3ea`**, `release_seq`
+31, stable, cut 2026-10-07 on round 30's authority from the closed tree, with
+`src/` byte-identical to `.20`'s. Before it, `0.9.4-rc2+platterpus.19` at
+`174a134`, `release_seq` 29, was authorised by **round 29**, under v6 R8: a round's close authorises a
 release of both applications, ours first. It carries tag keys in capitals with
 `DISCTOTAL` beside `TOTALDISCS`, the repeat loop's checksum as the track's EAC
 CRC32, a repeat-limit line that says how many reads agreed, and `-Z N` with `-r`
@@ -189,8 +192,8 @@ review; the Full run on it ran on 2026-09-30 and is filed. **The beta is
 `0.9.4-rc2+platterpus.20` at `5704062`**, `release_seq` 30, cut inside round 30
 on 2026-10-06 by the operator's word of 2026-10-05, once Platterpus's lap 12
 met our lap 11 S20's conditions. Their 0.6.66 beta names it, and the closing
-run of that pair closes round 30. `tools/release-gate.py --release-gate`
-refuses a stable while round 30 is open, and `--prerelease` permits the beta.
+run of that pair closed round 30. `tools/release-gate.py --release-gate`
+exits 0, which is what permitted `.21` on stable.
 
 **`proposed/` holds shared-document texts under review**, each removed when it
 lands. Round 25 proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md`

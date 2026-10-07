@@ -2068,6 +2068,15 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
+**`+platterpus.21` SHIPPED ON STABLE on 2026-10-07** at `ca3f3ea`,
+`release_seq` 31, authorised by round 30's close, cut from the closed tree as
+`docs/RELEASE-PLAN-platterpus.20.md` §3 decided, so it has no plan of its own.
+Its `src/` is `.20`'s; only the version and the compiled `Handshake:` line,
+which reads round 30 closed, differ. Proved before publication the same two
+ways as `.20` (`docs/release-evidence/ca3f3ea-suite.txt`, and a `git archive`
+build whose rip says `released build` and verifies with `-Y`). Round 31 opens
+on it.
+
 **`+platterpus.20` SHIPPED ON BETA on 2026-10-06** at `5704062`, `release_seq`
 30, inside round 30, by the operator's word of 2026-10-05 —
 `docs/RELEASE-PLAN-platterpus.20.md` is executed and bannered. `stable` stays

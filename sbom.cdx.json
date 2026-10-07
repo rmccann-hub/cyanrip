@@ -105,11 +105,11 @@
         },
         {
           "name": "cyanrip-fork:release",
-          "value": "beta: 0.9.4-rc2+platterpus.20 at 5704062, release_seq 30"
+          "value": "beta: 0.9.4-rc2+platterpus.21 at ca3f3ea, release_seq 31"
         },
         {
           "name": "cyanrip-fork:release",
-          "value": "stable: 0.9.4-rc2+platterpus.19 at 174a134, release_seq 29"
+          "value": "stable: 0.9.4-rc2+platterpus.21 at ca3f3ea, release_seq 31"
         },
         {
           "name": "cyanrip-fork:local-mitigation",
@@ -1149,5 +1149,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:0db2bd4b-e2b2-5be4-a01b-725fe4f6e34c"
+  "serialNumber": "urn:uuid:63d728ac-2477-5e34-9ae6-652343b26046"
 }
