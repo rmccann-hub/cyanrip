@@ -16,6 +16,17 @@ a lazy `*?` or `+?`, then any closing groups, then optional blanks, then the
 end of the line, optionally inside an optional group. It reads source text, so
 it is exact about the spelling and blind to an equivalent written another way;
 the timing check below covers the five rewritten patterns themselves.
+
+AND IT WAS BLIND TO NINETEEN MORE, found the next day. Its first version
+matched the blanks only as `\s*`, and seventeen wire-header patterns in
+`tools/release-gate.py`, one in `tools/seam-sync-check.py` and one in this
+suite spell them `[ \t]*`: the same shape, quadratic the same way (1.9 s on a
+20,000-blank `HANDSHAKE-AGREED-CHANGES:` line), in the gate that reads every
+lap of either side. Our round 30 lap 15 told Platterpus there were five. The
+sweep below matches every spelling of the blank class we use, and the gate's
+rewrite captures what the old patterns captured: 4,882 matches over the 529
+lap files of both trees and a set of edge lines (an empty value, an all-blank
+value, a trailing `\r`), with the gate's whole report byte-identical.
 """
 
 import pathlib
@@ -27,7 +38,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SELF = pathlib.Path(__file__).resolve()
 
 # The shape, as it is spelled in a Python source file.
-SHAPE = re.compile(r"[*+]\?\)*\\s\*(?:\)\?)?\$")
+SHAPE = re.compile(r"[*+]\?\)*(?:\\s|\[ ?\\t\]|\[\\t ?\]|\[ \]| )[*+](?:\)\?)?\$")
 
 failures = 0
 

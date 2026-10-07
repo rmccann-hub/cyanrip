@@ -2783,7 +2783,7 @@ def sc_status_block_is_current():
     order = []
     for line in text.splitlines():
         m = re.match(r"^(STATUS-(?:ROUND|LAPS|RELEASED|RELEASE-NEXT|RUN-NEXT|"
-                     r"OPEN)):[ \t]*(.*?)[ \t]*$", line)
+                     r"OPEN)):[ \t]*((?:[^ \t\n](?:[^\n]*[^ \t\n])?)?)[ \t]*$", line)
         if m:
             decl.setdefault(m.group(1), []).append(m.group(2))
             if not order or order[-1] != m.group(1):

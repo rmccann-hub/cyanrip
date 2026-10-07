@@ -61,7 +61,7 @@ PEER_URL = "https://github.com/rmccann-hub/platterpus"
 # CLAUDE.md says this tool reads `main`, and the two only agreed by luck.
 PEER_REF = "main"
 
-SHARED_HASHES_RE = re.compile(r"(?m)^HANDSHAKE-SHARED-HASHES:[ \t]*(.+?)[ \t]*$")
+SHARED_HASHES_RE = re.compile(r"(?m)^HANDSHAKE-SHARED-HASHES:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$")
 
 
 def sha256(path):

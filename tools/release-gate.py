@@ -169,7 +169,7 @@ def version_refusal(text):
 # v7 §3, C46: every lap of a file declaring 7 says where the round goes next.
 # The value opens with `<n> (ours):` or `<n> (yours):`, or is `none`; the rest
 # is prose for the reader and is not graded.
-NEXT_LAP_DECL_RE = re.compile(r"^HANDSHAKE-NEXT-LAP:[ \t]*(.*?)[ \t]*$", re.M)
+NEXT_LAP_DECL_RE = re.compile(r"^HANDSHAKE-NEXT-LAP:[ \t]*((?:[^ \t\n](?:[^\n]*[^ \t\n])?)?)[ \t]*$", re.M)
 NEXT_LAP_VALUE_RE = re.compile(r"(?:\d+ \((?:ours|yours)\):|none(?![\w-]))")
 NEXT_LAP_FROM = 7
 
@@ -268,8 +268,8 @@ def precommit_refusal(text):
 # APP-VERSION and RIPPER-VERSION say which *pair* produced a file's results, so
 # a result carries its provenance rather than needing it reconstructed.
 FROM_RE = re.compile(r"^HANDSHAKE-FROM:[ \t]*(\S+)[ \t]*$", re.M)
-APP_VERSION_RE = re.compile(r"^HANDSHAKE-APP-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
-RIPPER_VERSION_RE = re.compile(r"^HANDSHAKE-RIPPER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
+APP_VERSION_RE = re.compile(r"^HANDSHAKE-APP-VERSION:[ \t]*(\S(?:[^\n]*[^ \t\n])?)[ \t]*$", re.M)
+RIPPER_VERSION_RE = re.compile(r"^HANDSHAKE-RIPPER-VERSION:[ \t]*(\S(?:[^\n]*[^ \t\n])?)[ \t]*$", re.M)
 PIN_RE = re.compile(r"^HANDSHAKE-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 
 # A build designated to gather the hardware evidence a close requires. It is
@@ -294,14 +294,14 @@ PEER_VERDICT_RE = re.compile(r"^HANDSHAKE-PEER-VERDICT:[ \t]*([A-Z][A-Z-]*)[ \t]
 # the announcement -- the act was never separate until transport moved.
 READY_TO_READ_RE = re.compile(r"^HANDSHAKE-READY-TO-READ:[ \t]*(yes|no)\b", re.M)
 READY_TO_READ_FROM_ROUND = 19
-PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
+PEER_VERSION_RE = re.compile(r"^HANDSHAKE-PEER-VERSION:[ \t]*(\S(?:[^\n]*[^ \t\n])?)[ \t]*$", re.M)
 # v5 §5b. The lap a PEER-VERDICT was transcribed FROM, so a gate can tell a
 # current transcription from one the peer has since superseded. The field is
 # Platterpus's, from round 23 lap 2, adopted verbatim. Only the lap NUMBER is
 # extracted: the rest of the cell is prose for a human, and a gate that parsed
 # prose would be the "transcribed, not judged" defect one level over.
 PEER_VERDICT_SOURCE_RE = re.compile(
-    r"^HANDSHAKE-PEER-VERDICT-SOURCE:[ \t]*(\S.*?)[ \t]*$", re.M)
+    r"^HANDSHAKE-PEER-VERDICT-SOURCE:[ \t]*(\S(?:[^\n]*[^ \t\n])?)[ \t]*$", re.M)
 PEER_VERDICT_SOURCE_LAP_RE = re.compile(r"\blap[ \t]*(\d+)\b", re.I)
 # A FILENAME FIRST, then "lap N" -- the order Platterpus's gate reads it in
 # (their LSL amendments 1, H1). Reading only "lap N" missed the form our own
@@ -310,33 +310,33 @@ PEER_VERDICT_SOURCE_LAP_RE = re.compile(r"\blap[ \t]*(\d+)\b", re.I)
 # newer peer lap. Found rehearsing round 28's close on a copy of the record.
 PEER_VERDICT_SOURCE_FILE_RE = re.compile(r"\bround-\d+-lap-(\d+)\.md\b")
 PEER_PIN_RE = re.compile(r"^HANDSHAKE-PEER-PIN:[ \t]*(\S+)[ \t]*$", re.M)
-OUR_VERSION_RE = re.compile(r"^HANDSHAKE-OUR-VERSION:[ \t]*(\S.*?)[ \t]*$", re.M)
+OUR_VERSION_RE = re.compile(r"^HANDSHAKE-OUR-VERSION:[ \t]*(\S(?:[^\n]*[^ \t\n])?)[ \t]*$", re.M)
 OUR_PIN_RE = re.compile(r"^HANDSHAKE-OUR-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 
 # v4 fields. Captured to end-of-line rather than \S+ because every one of them
 # carries prose: an INBOUND-HELD that says "none" and a digest that explains why
 # it could not be computed are both legal and both meaningful.
-INBOUND_RE = re.compile(r"^HANDSHAKE-INBOUND-HELD:[ \t]*(.+?)[ \t]*$", re.M)
-DIGEST_RE = re.compile(r"^HANDSHAKE-ROUND-DIGEST:[ \t]*(.+?)[ \t]*$", re.M)
-TO_REPO_RE = re.compile(r"^HANDSHAKE-TO-REPO:[ \t]*(.+?)[ \t]*$", re.M)
+INBOUND_RE = re.compile(r"^HANDSHAKE-INBOUND-HELD:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
+DIGEST_RE = re.compile(r"^HANDSHAKE-ROUND-DIGEST:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
+TO_REPO_RE = re.compile(r"^HANDSHAKE-TO-REPO:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
 FROM_REPO_RE = re.compile(r"^HANDSHAKE-FROM-REPO:[ \t]*(\S+)[ \t]*$", re.M)
-FROM_COMMIT_RE = re.compile(r"^HANDSHAKE-FROM-COMMIT:[ \t]*(.+?)[ \t]*$", re.M)
-TO_VERSION_RE = re.compile(r"^HANDSHAKE-TO-VERSION:[ \t]*(.+?)[ \t]*$", re.M)
-WITHDRAWN_REASON_RE = re.compile(r"^HANDSHAKE-WITHDRAWN-REASON:[ \t]*(.+?)[ \t]*$", re.M)
-OVERRIDE_RE = re.compile(r"^HANDSHAKE-OVERRIDE:[ \t]*(.+?)[ \t]*$", re.M)
-OVERRIDE_BY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-BY:[ \t]*(.+?)[ \t]*$", re.M)
-OVERRIDE_WHY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-WHY:[ \t]*(.+?)[ \t]*$", re.M)
+FROM_COMMIT_RE = re.compile(r"^HANDSHAKE-FROM-COMMIT:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
+TO_VERSION_RE = re.compile(r"^HANDSHAKE-TO-VERSION:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
+WITHDRAWN_REASON_RE = re.compile(r"^HANDSHAKE-WITHDRAWN-REASON:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
+OVERRIDE_RE = re.compile(r"^HANDSHAKE-OVERRIDE:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
+OVERRIDE_BY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-BY:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
+OVERRIDE_WHY_RE = re.compile(r"^HANDSHAKE-OVERRIDE-WHY:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
 # v6 §5e, the agreed-change ledger. Required on a GO file declaring 6
 # (C44); any value closes, `none` included (C45), because the ledger records
 # delivery and does not gate the close.
-AGREED_CHANGES_RE = re.compile(r"^HANDSHAKE-AGREED-CHANGES:[ \t]*(.+?)[ \t]*$", re.M)
+AGREED_CHANGES_RE = re.compile(r"^HANDSHAKE-AGREED-CHANGES:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
 
 # v4 6a-bis R7. A lap past this needs a recorded override.
 LAP_CEILING = 21
 
 # v4 3a: required from round 9, the way v2's four are required from round 8.
 ADDRESSING_FROM_ROUND = 9
-TESTED_RE = re.compile(r"^HANDSHAKE-TESTED:[ \t]*(\S.*?)[ \t]*$", re.M)
+TESTED_RE = re.compile(r"^HANDSHAKE-TESTED:[ \t]*(\S(?:[^\n]*[^ \t\n])?)[ \t]*$", re.M)
 
 # v4 §6a-bis R2. ADVISORY, AND THE GATE MUST NEVER ENFORCE IT: "a gate *prints*
 # whether it has passed and never enforces it, because enforcement lets a clock
