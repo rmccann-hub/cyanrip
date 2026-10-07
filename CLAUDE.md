@@ -2068,125 +2068,24 @@ as a round file that cannot name its own commit. The remedy is the announcement:
 the release is the first commit where the version and every derived artifact
 agree, and it is named once that is true rather than when the version moves.
 
-**`+platterpus.21` SHIPPED ON STABLE on 2026-10-07** at `ca3f3ea`,
-`release_seq` 31, authorised by round 30's close, cut from the closed tree as
-`docs/RELEASE-PLAN-platterpus.20.md` §3 decided, so it has no plan of its own.
-Its `src/` is `.20`'s; only the version and the compiled `Handshake:` line,
-which reads round 30 closed, differ. Proved before publication the same two
-ways as `.20` (`docs/release-evidence/ca3f3ea-suite.txt`, and a `git archive`
-build whose rip says `released build` and verifies with `-Y`). Round 31 opens
-on it.
+**Which build is released, on which channel, is in `release-manifest.json` and
+nowhere else; what each release changed is in `Changelog.md`.** This section
+carried a paragraph per release restating both, and `STATUS.md` and the
+handshake README carried tables and pin blocks doing the same, each with a test
+to catch it rotting. All of it was removed on the operator's word of
+2026-10-07: *"We should be able to release a new version and use it, for either
+app, and test them, without so much paperwork that does so little."* **A
+release is the sequence above and nothing more**: bump; regenerate; prove the
+candidate from a clean checkout (`tools/record-release-suite.py`, recorded under
+`docs/release-evidence/`, and a `git archive` build whose rip verifies with
+`-Y`); then one publish commit carrying the ledger row and the manifest.
 
-**`+platterpus.20` SHIPPED ON BETA on 2026-10-06** at `5704062`, `release_seq`
-30, inside round 30, by the operator's word of 2026-10-05 —
-`docs/RELEASE-PLAN-platterpus.20.md` is executed and bannered. `stable` stays
-`.19`; `beta` resolves `.20`, and every rip it makes logs `NOT a released
-build`, which is true of it. Its conditions in our round 30 lap 11 S20 were met
-by Platterpus's lap 12: their tree carries the shared `seam-commands.md` text,
-and their S8 accepts `b1857d6`'s arm. There is no consumer-side prerequisite.
-Platterpus's 0.6.66 beta names it (their lap 12 S19), and the closing run of
-that pair closes round 30; **`.21`, cut from the closed tree, goes to stable**.
-Proved before publication: 106 of 106 in a fresh worktree
-(`docs/release-evidence/5704062-suite.txt`), and a `git archive` build whose
-rip says `NOT a released build` and verifies with `-Y`.
+PROTOCOL v7 and seam-rules v7 are landed byte-identical in both trees and bind
+from round 31; our gate implements 7.
 
-**`+platterpus.19` SHIPPED on 2026-09-30** at `174a134`, `release_seq` 29,
-stable, authorised by **round 29** — `docs/RELEASE-PLAN-platterpus.19.md` is
-executed and bannered. It carries tag keys in capitals with `DISCTOTAL` beside
-`TOTALDISCS`, the repeat loop's checksum as the track's EAC CRC32, a
-repeat-limit line that says how many reads agreed, and `-Z N` with `-r` of N or
-less refused. Its consumer-side prerequisite, a Platterpus release reading both
-wordings of the repeat-limit line, is their 0.6.63. **A first candidate failed
-its own suite and was never published**; the two fixes are the commits before
-`174a134`. **Round 30 opened on 2026-09-30 by our lap 1**, and Platterpus's
-0.6.65 (`v0.6.65` = `platterpus@0981c69`) names `174a134` as its build under
-review beside `FORK_PIN` `51cc789`; the Full run on it ran on 2026-09-30
-(`docs/rig-2026-09-30b-174a134/`) and shows no defect in `.19`. The round
-carries the operator's question of how release, run and round line up
-(`docs/handshake/PROPOSAL-release-cycle.md`). **The release after it is
-`+platterpus.20`, a beta inside round 30, shipped 2026-10-06 (above)**, by the
-operator's word of 2026-10-05: round 30 stays open until everything is fixed, then both
-applications ship betas, and an acceptance run of both closes it. Landed for
-it: SIGHUP handling (`1184a04`), the loudness figures measured on the delivered
-audio (`cc79c5b`), a fresh filter for each `-Z` pass (`4c3bd3e`), a skip or a
-non-converged `-Z` read as `read with errors.` (`e5a0897`, `4529810`), a slow
-extraction speed to two significant figures (`a72b162`), and `-J`/`-f` footers
-that say what the run was, with a stopped `-f` search ending (`aa1f067`), the
-`-Z` spool, which encodes only the kept read and keeps the most-agreed one at
-the repeat limit (`d7ee6c4`), and a failed track aborting a rip of every track
-as it does under `-l` (`c1e1ab1`), and the cache probe scoring a re-read by
-cd-paranoia's 6 ms, with `-j` at `cyanrip-diagnostics/7` (`394ab17`), and a
-cache bracket printing the re-reads that ended its search (`6dd608c`), found
-reading the 2026-10-05 run (`docs/rig-2026-10-05-174a134/`), and `-P 0` no
-longer hanging on a block in which nothing reads (`c57b596`), and `Ripping
-errors:` counting paranoia's skips with a suffix saying how many, by the
-operator's word of 2026-10-05, the exit code left as the drive's (`0c692ed`),
-and a `-f` search that finds no offset exiting 1 (`0645ddb`), landed with the
-`seam-commands.md` text both trees agreed in round 30, and a one-frame
-AccurateRip entry under the threshold saying it was found (`b1857d6`), and the
-footer's one-frame tally counting only what the track lines print (`8ab9a8d`).
-**What goes to stable after the close is decided: `.21`, cut from the closed
-tree** (the plan's §3).
-`docs/RELEASE-PLAN-platterpus.20.md` is written, before its condition; the one
-decision it posed, what goes to stable after the close since a beta cut with
-the round open logs `NOT a released build` forever, the operator answered. PROTOCOL v7 and seam-rules v7, carrying D1 to D10 and
-Platterpus's lap 6 amendments as our lap 7 amends two of them, are landed in our
-tree by the commit carrying our round 30 lap 7 (proposed at `2abeb5d`), and in
-theirs at `platterpus@41d34ab2`, the commit that filed our lap 7: byte-identical,
-`seam-sync-check --fetch` exit 0 at `platterpus@bd508bf`. **Our gate implements 7
-from the commit that files their round 30 lap 8**, as our lap 9 S5 said; theirs
-moves to 7 before their round 31 lap 1 (their lap 8 S41). Round 30's laps still
-declare 6 and it closes under v6; v7 binds from round 31.**
-
-**`+platterpus.18` SHIPPED on 2026-09-28** at `51cc789`, `release_seq` 28,
-stable, authorised by **round 28** — `docs/RELEASE-PLAN-platterpus.18.md` is
-executed and bannered. It carries `Encoder errors:` counting whole tracks with
-a new `Partial files:` line, the stop marker on every signal stop of a read,
-the disc-level `AccurateRip:` line able to read `mismatch` or `not found`, the
-AccurateRip parse split out and tested, and upstream's `f8ebf48` (merged at
-`1fb6f07`). There is no consumer-side prerequisite. Platterpus's 0.6.63 carries
-`FORK_PIN` `e0471f4`, round 28's approval, so their app offers `.18` marked
-`unapproved` until round 29 reviews it. Round 29 opened on `.18`, by our lap
-1, and closed on 2026-09-29 after the Full run on it with Platterpus 0.6.63.
-
-**`+platterpus.17` SHIPPED on 2026-09-26** at `e0471f4`, `release_seq` 27,
-stable, authorised by **round 27** — `docs/RELEASE-PLAN-platterpus.17.md` is
-executed and bannered. It carries a 450 lookup that compares only 450
-checksums, the `Accurip 450` match reworded to say it covers one frame, and an
-early failure's log that opens with the banner. There is no consumer-side
-prerequisite. Platterpus's 0.6.61, released 2026-09-27 at
-`platterpus@59f4c00`, carries `FORK_PIN` `221a1df` and `PIN_UNDER_REVIEW` `.17`,
-so their app offers `.17` marked `unapproved` until round 28 reviews it. Round
-28 opened on `.17` before its real test, and closed on 2026-09-28 after the
-Full run on it with Platterpus 0.6.61. The operator chose that `.18` would ship
-stable after that close.
-
-**`+platterpus.16` SHIPPED on 2026-09-24** at `221a1df`, `release_seq` 26,
-stable, authorised by **round 26** — `docs/RELEASE-PLAN-platterpus.16.md` is
-executed and bannered. It carries the two fixes from round 26's real test: an
-interrupted track left out of the AccurateRip tally, and `media` tagged `CD`
-under `-H`. No line's text changes and there is no consumer-side prerequisite.
-Platterpus's 0.6.56 follows it, pinning `df91ae7`, so their app offers `.16`
-marked `unapproved` until round 27 reviews it. **Round 27 has to open on `.16`
-before its real test**, as round 26 did on `.15`, because their acceptance run
-expects the newest pin we send.
-
-**`+platterpus.15` SHIPPED on 2026-09-23** at `df91ae7`, `release_seq` 25,
-stable, authorised by **round 25** — `docs/RELEASE-PLAN-platterpus.15.md` is
-executed and bannered. It is the first release under v6 R8, so a round's close
-authorised a release of both applications: ours first, then Platterpus 0.6.54
-pinning `3e01bb3`. Their app offers `.15` marked `unapproved` until round 26
-reviews it. It rounds the per-frame retry limit up to a multiple of 5, and it
-has no consumer-side prerequisite.
-
-**`+platterpus.14` shipped on 2026-09-22** at `3e01bb3`, `release_seq` 24,
-stable, authorised by **round 22** — `docs/RELEASE-PLAN-platterpus.14.md` is
-executed and bannered. It carries round 22's per-track split — `Track %i read
-successfully!` / `read with errors.` and the new three-state `Encoder errors:`
-line — and it is the first release of this fork with a **consumer-side
-prerequisite**, because both renamed lines are Platterpus's `_TRACK_START` block
-delimiter: shipped ahead of their parser, it would have read as a disc with zero
-tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
+**`.14` was the first release with a consumer-side prerequisite**: both lines
+it renamed are Platterpus's `_TRACK_START` block delimiter, so shipped ahead of
+their parser it would have read as a disc with zero tracks.
 
 **Four lessons from `.14`, each of which cost something to learn:**
 
@@ -2223,24 +2122,15 @@ tracks. `.13` shipped 2026-09-18 at `2cce60d`, seq 23, on round 21's authority.
   That was the operator's call to make, and the plan's job was to put the cost in
   front of them before it was made.
 
-**Plans that exist:** `.5`, `.12`, `.13`, `.14`, `.15`, `.16`, `.17`, `.18`, `.19`,
-`.20`, all executed and bannered. `.15`'s is the short case: its round settled the channel, so it poses
-nothing.
-**The worked example to copy is `docs/RELEASE-PLAN-platterpus.14.md`**: it is the
-newest, it followed the four-commit sequence exactly, and it is the first to pose
-a decision rather than recommend a default — its §3 laid out both channels with
-their costs, and the banner records which the operator chose. `.12`'s is still
-worth reading for the thing no plan can know in advance: it was written for
-round 15 and authorised by round 17. **A plan names a condition, not a round
-number.** `.5`'s banner is forty days late and `CLAUDE.md` pointed readers at it
-in the meantime.
-
-What every plan got right and any successor must keep: it named the observable
-surfaces a consumer has to check, and the list of things the release would still
-not verify, so that a green suite could not be mistaken for hardware coverage.
-
-**And a plan is bannered on the day it is executed, not when somebody notices.**
-`.13`'s and `.14`'s were bannered the same day as their release commits.
+**Write a release plan only when there is a decision for the operator** — a
+channel, an order against a consumer release, a prerequisite — and banner it
+the day it executes. A plan that poses nothing is paperwork: `.21` had none.
+`docs/RELEASE-PLAN-platterpus.14.md` is the example of one that posed a
+decision, and `.12`'s shows the thing no plan can know in advance: it was
+written for round 15 and authorised by round 17, so **a plan names a
+condition, not a round number.** Whatever a plan says, it names the surfaces a
+consumer has to check and what the release still does not verify, so a green
+suite cannot be mistaken for hardware coverage.
 
 ### A close is affirmative, two-sided, and tested — never assumed
 

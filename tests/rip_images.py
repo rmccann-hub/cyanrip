@@ -2521,158 +2521,30 @@ def sc_changelog_names_every_release():
 
 
 def sc_status_is_current():
-    """Every doc in docs/handshake/ that names the current pin must name it.
+    """STATUS.md and the handshake README say what the lap record says.
 
-    Two files claim it: STATUS.md's release table and README.md's pin block.
-    They are checked together because it is ONE property -- a document that says
-    what to build has to say what to build -- and splitting it would let one
-    drift while the other passed.
+    Two mechanical rots, both measured: the README's round table advertising an
+    open round while the gate reads every round closed, and STATUS.md naming a
+    lap as held after it was released. Both are checked against the gate's own
+    loader, never against prose.
 
-    It is the one document here that claims things about *now* rather than about
-    a moment, and it says so itself: rewritten in place, never appended to,
-    because a stale standing status is worse than none. That property is a rule
-    and a rule nothing executes is not a rule -- the whole reason it exists is
-    that Platterpus reads it between rounds, when no lap is coming to correct it.
-
-    Checked against `release-manifest.json` rather than against the ledger,
-    because the manifest is what the consumer actually resolves. Three fields,
-    all of which a reader would act on: the commit they clone, the version they
-    expect the binary to print, and the build tag their capability table keys on.
-
-    Deliberately NOT a check that the prose is up to date -- nothing can check
-    that. It catches the one way this file rots that is mechanical, which is a
-    release being cut and this file still naming the previous one.
+    THIS USED TO CHECK THE RELEASE TOO, and no longer does. STATUS.md carried a
+    per-channel table and the README a pin block per channel, each a
+    hand-written copy of `release-manifest.json`, and this test existed to
+    catch them going stale. The operator, 2026-10-07, on releasing: *"We should
+    be able to release a new version and use it ... without so much paperwork
+    that does so little."* The copies are gone, so the checks that only
+    guarded them went with them. The manifest is the one place a release is
+    named, and `tests/release_gate.py` checks it against the ledger.
     """
     status = ROOT / "docs" / "handshake" / "STATUS.md"
-    manifest = ROOT / "release-manifest.json"
-    if not status.exists():
-        fail("status_is_current: docs/handshake/STATUS.md is missing")
-        return
-    if not manifest.exists():
-        fail("status_is_current: release-manifest.json is missing")
-        return
-
-    text = status.read_text()
-    channels = json.loads(manifest.read_text())["channels"]
-
-    # POSITIONAL, not a substring sweep of the file. The first version of this
-    # check asked whether the SHA appeared ANYWHERE in the document, and its
-    # revert-proof did not fail: the release commit is also in the install URL,
-    # the build tag and a paragraph of prose, so corrupting the table cell left
-    # the string present three times over. A check satisfied by the string
-    # being somewhere is satisfied by the document being wrong.
-    rows = {}
-    for line in text.splitlines():
-        cells = [c.strip() for c in line.split("|")]
-        if len(cells) >= 4:
-            key = cells[1].strip("* `")
-            rows.setdefault(key, cells[2])
-
-    # CHANNEL-QUALIFIED row labels, and both channels checked.
-    #
-    # This read a row labelled plainly `commit` against the stable channel, and
-    # nothing looked at the beta channel at all. That was correct while the
-    # manifest resolved one channel to a real build -- and it stopped being
-    # correct the moment +platterpus.8 was published on `beta`, because a
-    # document with two releases in it has two commits and a row called `commit`
-    # names neither. Same shape as `Peak level:` becoming ambiguous the instant
-    # `True peak level:` was printed below it: a name that does not discriminate
-    # is fine alone and ambiguous as soon as a sibling appears.
-    #
-    # `rows` uses setdefault, so under the old unqualified labels whichever
-    # table came first in the file would silently win and the other would go
-    # unchecked -- a document reordering could have moved the beta commit into
-    # the cell this check reads against stable, and it would have passed.
-    for channel in ("stable", "beta"):
-        if channel not in channels:
-            continue
-        want_c = channels[channel]
-        for key, want in (
-            (f"{channel} commit", want_c["commit"]),
-            (f"{channel} version", want_c["version"]),
-            (f"{channel} build tag", f"platterpus-fork-g{want_c['commit']}"),
-            (f"{channel} install", f"archive/{want_c['commit']}.tar.gz"),
-        ):
-            cell = rows.get(key)
-            if cell is None:
-                fail(f"status_is_current: the release table has no {key!r} row. "
-                     f"It is the table a consumer reads to find what to clone, "
-                     f"and the manifest resolves a {channel!r} channel.")
-            elif want not in cell:
-                fail(f"status_is_current: the release table's {key!r} row says "
-                     f"{cell!r}, but the manifest's {channel} channel says "
-                     f"{want!r}. A release was cut and the standing status "
-                     f"still describes another one.")
-
-    stable = channels["stable"]
-
-    # README.md's pin block. Found five releases stale -- it named d5d12ec and
-    # +platterpus.3 while the manifest resolved to +platterpus.7, and its round
-    # table still said "round 7 is open" through five closed rounds. A consumer
-    # landing on the directory's index would have built a binary from July.
-    #
-    # A fenced block rather than a table, so this reads the lines inside the
-    # fence positionally: `commit  <sha>`. Same rule as above -- the whole file
-    # contains the right SHA in several places, and asking whether it is
-    # "somewhere" is a check the wrong document passes.
     readme = ROOT / "docs" / "handshake" / "README.md"
-    if not readme.exists():
-        fail("status_is_current: docs/handshake/README.md is missing")
-        return
-
-    # There is one block PER CHANNEL, and each is matched to the channel it
-    # declares rather than to its position in the file.
-    #
-    # This used to take the first `repo ...` block and check it against stable,
-    # which was unambiguous while there was one block. With a beta block added
-    # below it, "first" and "stable" are two different facts that happen to
-    # coincide today -- reorder the two sections and the check would compare the
-    # beta block against the stable channel and fail for a reason that has
-    # nothing to do with what went wrong. Every block carries a `channel` line;
-    # reading it is what makes the pairing a fact rather than a layout accident.
+    for f in (status, readme):
+        if not f.exists():
+            fail(f"status_is_current: {f.relative_to(ROOT)} is missing")
+            return
+    text = status.read_text()
     rtext = readme.read_text()
-    blocks = re.findall(r"^```\n(repo\s+.*?)^```", rtext, re.M | re.S)
-    if not blocks:
-        fail("status_is_current: README.md has no `repo ...` pin block. It is "
-             "the first thing a consumer reads to find what to build.")
-
-    seen_channels = set()
-    for raw in blocks:
-        fields = {}
-        for line in raw.splitlines():
-            parts = line.split(None, 1)
-            if len(parts) == 2:
-                fields[parts[0]] = parts[1].split("<-")[0].strip()
-        chan = fields.get("channel")
-        if chan is None:
-            fail("status_is_current: a README.md pin block declares no "
-                 "'channel'. With more than one release live, a block that "
-                 "does not say which channel it is cannot be checked at all.")
-            continue
-        if chan not in channels:
-            fail(f"status_is_current: README.md has a pin block for channel "
-                 f"{chan!r}, which release-manifest.json does not resolve.")
-            continue
-        seen_channels.add(chan)
-        want_c = channels[chan]
-        for key, want in (("commit", want_c["commit"]),
-                          ("--version", want_c["version"]),
-                          ("release_seq", str(want_c["release_seq"]))):
-            got = fields.get(key)
-            if got is None:
-                fail(f"status_is_current: README.md's {chan!r} pin block has "
-                     f"no {key!r}")
-            elif want not in got:
-                fail(f"status_is_current: README.md's {chan!r} pin block says "
-                     f"{key} = {got!r}, but the manifest's {chan} channel says "
-                     f"{want!r}. The index a consumer lands on names a build "
-                     f"that is not the release.")
-
-    # A channel the manifest resolves and the index never mentions is the same
-    # rot one release earlier: the consumer cannot pin what they cannot see.
-    for missing in sorted(set(channels) - seen_channels):
-        fail(f"status_is_current: release-manifest.json resolves a {missing!r} "
-             f"channel and README.md has no pin block for it.")
 
     # And the round table must not advertise an open round while the gate says
     # every round is closed. That exact disagreement is what let "round 7 is

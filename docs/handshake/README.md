@@ -13,95 +13,32 @@ record of the rounds themselves.
 
 ---
 
-## Current pin
+## What to build
 
-**Both channels resolve to one build**, `+platterpus.21`, the newest row of
-the ledger and a stable one. `stable` is what you get without opting in. Pick
-by risk tolerance, not by recency — and never by comparing the version strings,
-which cannot be ordered at all.
+**`release-manifest.json` names the release on each channel, and nothing in
+this directory copies it.** Read it from `platterpus-fork`'s tip,
+`https://raw.githubusercontent.com/rmccann-hub/cyanrip/platterpus-fork/release-manifest.json`,
+and build the commit it names with
+`meson setup build -Ddeclare_released=true && ninja -C build`. What each
+release changed is in `Changelog.md`. This section used to carry a pin block per
+channel, a hand-written copy of the manifest with a test to catch it going
+stale; both were removed on the operator's word of 2026-10-07.
 
-### `stable` — the default
-
-```
-repo            rmccann-hub/cyanrip
-branch          platterpus-fork                  <- the only branch to build from
-commit          ca3f3ea                          <- build this
---version       cyanrip 0.9.4-rc2+platterpus.21 (platterpus-fork-gca3f3ea)
-release_seq     31                               <- the ONLY orderable identifier
-channel         stable
-build           meson setup build -Ddeclare_released=true && ninja -C build
-git tag         none published
-```
-
-### `beta` — the same build as `stable`
-
-```
-repo            rmccann-hub/cyanrip
-branch          platterpus-fork
-commit          ca3f3ea
---version       cyanrip 0.9.4-rc2+platterpus.21 (platterpus-fork-gca3f3ea)
-release_seq     31                               <- newest of any channel
-channel         beta
-build           meson setup build -Ddeclare_released=true && ninja -C build
-git tag         none published
-```
-
-**`beta` resolves to the newest row of ANY channel**, so opting into
-pre-releases can never move a user backwards. `+platterpus.21` is the newest row
-overall and a stable one, so both channels resolve to it. `.20`, the beta at
-`5704062` that round 30's closing run tested, has the same `src/`; every rip it
-makes logs `NOT a released build`, because round 30 was open when it was cut,
-and `.21`'s logs `released build`.
-That property was not decorative: the first generated manifest had `beta` on seq
-10 while `stable` was seq 11, so opting in would have been a downgrade.
-
-**`0.9.4-rc2+platterpus.19` IS A STABLE RELEASE despite the `-rc2`.** That
-string is upstream's, copied verbatim because we may not mint in
-`cyanreg/cyanrip`'s namespace; the part that advances is SemVer build metadata,
-which the spec says MUST be ignored for precedence. **A check that reads the
-shape of the version will call this a pre-release and will be wrong.** Order by
-`release_seq`; read the `channel` column.
-
-**Authorised by handshake round 14, closed `GO`/`GO`** on `d9c058c` /
-Platterpus `b524936`, with its single close condition met by two independent
-hardware runs on that build — including T1, the whole-disc secure re-read, which
-had never run anywhere before 2026-08-26.
-
-**`+platterpus.8` (`796df32`, seq 18) is superseded** — still in the ledger,
-because a published build is a fact and the ledger is append-only, but no channel
-resolves to it.
-
-`release-manifest.json` is the machine-readable form and is authoritative;
-this block is a convenience copy, and `sc_status_is_current()` compares the two
-on every test run. That check exists because **this block had gone five releases
-stale** — it named `d5d12ec` / `+platterpus.3` long after the manifest resolved
-to `+platterpus.7`, so anyone following the directory's own index would have
-built a binary from July. A document that claims something about *now* and is
-checked by nobody is the shape this directory keeps finding wrong.
-
-**Pin the commit, not the tag, and not the branch tip.** The git proxy in this
-environment refuses tag pushes (`HTTP 403` — re-probed each round rather than
-assumed); `git ls-remote --tags origin` returns nothing, and no tag from this
-fork has ever reached the remote. The commit SHA is the only release identifier a
-consumer can resolve.
-
-`237a4ff` is **the released commit, not the last commit that changes the
-binary** — the two are different questions and this file used to answer the
-second. A release is the first commit at which the version and every derived
-artifact agree AND the round that reviewed it has closed; commits after the
-version bump that only regenerate artifacts are part of the release, not noise
-before it. Verified at `237a4ff` itself, from a fresh clone rather than a working
-tree: the whole suite as it stood at that commit — 47 tests — passed in four
-build configurations including ASAN and UBSAN. The suite has grown since; that
-number describes the release's verification, not the tree today.
-
-**Do not use `0.9.4-rc3`.** That string was committed locally, never released,
-and withdrawn: it mints an identifier in upstream's namespace, which upstream can
-also mint. See `round-07-lap-01.md` §2.
-
-**Superseded, do not build:** `2f950c8` (r2 — carries the read-liveness heartbeat
-that never fired, `round-07-lap-01.md` §0), `ad65a244` and `e1d800e` (both carry the
-disc-image silence defect fixed in r2).
+- **Order by `release_seq`, never by the version string.** `0.9.4-rc2` is
+  upstream's, copied verbatim because we may not mint in `cyanreg/cyanrip`'s
+  namespace, and the part that advances, `+platterpus.N`, is SemVer build
+  metadata, which the spec says MUST be ignored for precedence. A check that
+  reads the version's shape calls every release a pre-release.
+- **`beta` resolves to the newest row of any channel**, so opting in can never
+  move a user backwards.
+- **Pin the commit, not a tag or a branch tip.** Tag pushes are `HTTP 403` from
+  this environment and no tag of this fork has reached the remote.
+- **Do not use `0.9.4-rc3`.** It was committed locally, never released, and
+  withdrawn, because upstream can mint the same string (`round-07-lap-01.md`
+  §2).
+- **Superseded, do not build:** `796df32` (`+platterpus.8`, seq 18, still in the
+  append-only ledger), `2f950c8` (r2, whose read-liveness heartbeat never
+  fired), and `ad65a244` and `e1d800e` (the disc-image silence defect).
 
 ### Branches on the remote
 
@@ -173,27 +110,12 @@ stop it happening a second time, so read the gate and treat the table as a
 convenience.**
 
 **Every round is closed**: round 30 closed on 2026-10-07 on our lap 17, `GO`
-beside Platterpus's lap 16, approving `.20` at `5704062` with their 0.6.66b1;
-this said *"Round 30 is open"* from `.20`'s publish until then. Round 29 closed on 2026-09-29 on
-Platterpus's lap 4, by v6 §5b step 3. It reviewed
-`.18` on the Full run with Platterpus 0.6.63 (`docs/rig-2026-09-28c-51cc789/`).
-**The live release is `0.9.4-rc2+platterpus.21` at `ca3f3ea`**, `release_seq`
-31, stable, cut 2026-10-07 on round 30's authority from the closed tree, with
-`src/` byte-identical to `.20`'s. Before it, `0.9.4-rc2+platterpus.19` at
-`174a134`, `release_seq` 29, was authorised by **round 29**, under v6 R8: a round's close authorises a
-release of both applications, ours first. It carries tag keys in capitals with
-`DISCTOTAL` beside `TOTALDISCS`, the repeat loop's checksum as the track's EAC
-CRC32, a repeat-limit line that says how many reads agreed, and `-Z N` with `-r`
-of N or less refused. Its one consumer-side prerequisite, a Platterpus release
-that reads both wordings of the repeat-limit line, is their 0.6.63. **Their
-0.6.64 carries `FORK_PIN` `51cc789`**, round 29's approval. Round 30 opened on
-2026-09-30 by our lap 1, and their 0.6.65 names `174a134` as its build under
-review; the Full run on it ran on 2026-09-30 and is filed. **The beta is
-`0.9.4-rc2+platterpus.20` at `5704062`**, `release_seq` 30, cut inside round 30
-on 2026-10-06 by the operator's word of 2026-10-05, once Platterpus's lap 12
-met our lap 11 S20's conditions. Their 0.6.66 beta names it, and the closing
-run of that pair closed round 30. `tools/release-gate.py --release-gate`
-exits 0, which is what permitted `.21` on stable.
+beside Platterpus's lap 16, on the closing run of `.20` at `5704062` with their
+0.6.66b1. Our lap 17 names `5704062`, the build that run tested, as its pin;
+Platterpus's `FORK_PIN` is `174a134`, `.19`, round 30's declared pin
+(`platterpus@a0330d09:src/platterpus/deps/fork_source.py:242`), and round 31
+reviews `.21`, whose `src/` is `5704062`'s, so the difference stops mattering
+when round 31 closes. `tools/release-gate.py --release-gate` exits 0.
 
 **`proposed/` holds shared-document texts under review**, each removed when it
 lands. Round 25 proposed `PROTOCOL.md` v6, `OWNERSHIP.md` v3 and `seam-rules.md`

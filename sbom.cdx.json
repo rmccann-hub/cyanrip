@@ -104,14 +104,6 @@
           "value": "ownership: ours docs/OWNERSHIP.md, theirs docs/OWNERSHIP.md"
         },
         {
-          "name": "cyanrip-fork:release",
-          "value": "beta: 0.9.4-rc2+platterpus.21 at ca3f3ea, release_seq 31"
-        },
-        {
-          "name": "cyanrip-fork:release",
-          "value": "stable: 0.9.4-rc2+platterpus.21 at ca3f3ea, release_seq 31"
-        },
-        {
           "name": "cyanrip-fork:local-mitigation",
           "value": "libcdio CDRDAO driver, relative `FILE` paths."
         },
@@ -1149,5 +1141,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:63d728ac-2477-5e34-9ae6-652343b26046"
+  "serialNumber": "urn:uuid:61260248-f8f0-58cb-ad9c-bf420349baec"
 }

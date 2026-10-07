@@ -20,8 +20,10 @@ the file that decides it: the libraries and their minimum versions from
 src/meson.build, the toolchain from meson.build, the programs the tools and
 tests run from their subprocess calls, the network endpoints from src/'s
 string literals, CI from .github/, the shared seam documents from
-tools/seam-sync-check.py, the local workarounds from CLAUDE.md's section on
-them, and the releases from release-manifest.json. What cannot be derived --
+tools/seam-sync-check.py, and the local workarounds from CLAUDE.md's section
+on them. It does not copy release-manifest.json, which names the releases: a
+copy made every release regenerate this map for no new fact (operator,
+2026-10-07). What cannot be derived --
 what a library is FOR -- sits in a table keyed by the derived name, and the
 generator refuses when the two key sets differ, so a new dependency cannot
 arrive undescribed and a removed one cannot linger.
@@ -267,13 +269,6 @@ def mitigations():
     return out
 
 
-def releases():
-    man = json.loads((ROOT / "release-manifest.json").read_text())
-    return {ch: dict(version=c["version"], commit=c["commit"],
-                     seq=c["release_seq"])
-            for ch, c in sorted(man["channels"].items())}
-
-
 def describe():
     """The whole model, minus what is measured. Refuses on a key mismatch."""
     libs = libraries()
@@ -293,8 +288,7 @@ def describe():
                  + "\n  ".join(problems))
     return dict(project=project(), libs=libs, programs=progs,
                 python_third_party=python_imports(), endpoints=eps, ci=ci(),
-                shared=shared_documents(), mitigations=mitigations(),
-                releases=releases())
+                shared=shared_documents(), mitigations=mitigations())
 
 
 # ---------------------------------------------------------------- measuring
@@ -441,10 +435,6 @@ def bom(model, meas):
     props += [{"name": "cyanrip-fork:shared-document",
                "value": f"{d['key']}: ours {d['ours']}, theirs {d['theirs']}"}
               for d in model["shared"]]
-    props += [{"name": "cyanrip-fork:release",
-               "value": f"{ch}: {r['version']} at {r['commit']}, "
-                        f"release_seq {r['seq']}"}
-              for ch, r in model["releases"].items()]
     props += [{"name": "cyanrip-fork:local-mitigation", "value": t}
               for t in model["mitigations"]]
     props += [{"name": "cyanrip-fork:ci-runner", "value": r}
@@ -539,8 +529,8 @@ def markdown(model, meas):
       "each list: `meson.build`, `src/meson.build`, the subprocess calls in "
       "`tools/` and `tests/`, the URL literals in `src/`, "
       "`.github/workflows/main.yml` and `.github/mingw-build.sh`, "
-      "`tools/seam-sync-check.py`, `CLAUDE.md`'s section on external bugs, and "
-      "`release-manifest.json`. **The machine-readable form is "
+      "`tools/seam-sync-check.py` and `CLAUDE.md`'s section on external "
+      "bugs. **The machine-readable form is "
       "`sbom.cdx.json`**, CycloneDX 1.7 (ECMA-424, 2nd edition), for any "
       "application that reads a bill of materials. Regenerate with "
       "`tools/gen-dependency-map.py`; the suite's `Dependency map is current` "
@@ -645,10 +635,8 @@ def markdown(model, meas):
     for d in model["shared"]:
         a(f"| {d['key']} | `{d['ours']}` | `{d['theirs']}` |")
     a("")
-    a("- **Releases this tree publishes**, from `release-manifest.json`:")
-    for ch, r in model["releases"].items():
-        a(f"  - `{ch}`: `{r['version']}` at `{r['commit']}`, release_seq "
-          f"{r['seq']}")
+    a("- **Releases this tree publishes** are named by "
+      "`release-manifest.json`, and only there.")
     a("- **Libraries whose defects are worked around here** are named in the "
       "next section; their upstreams are in the libraries table.")
     a("")

@@ -1,6 +1,14 @@
 Unreleased
 ==========
-Nothing yet.
+**Release paperwork cut, on the operator's word of 2026-10-07.** The
+hand-written copies of `release-manifest.json` are gone: `STATUS.md`'s
+per-channel table and release rows, the handshake README's pin blocks,
+`CLAUDE.md`'s paragraph per release, and the channels the dependency map
+copied, so a release no longer regenerates it. The checks in
+`status_is_current` that only guarded those copies went with them; its lap and
+round checks stay. A release plan is now written only when it poses a decision
+for the operator. `STATUS.md` now says Platterpus's `FORK_PIN` is `174a134`,
+read at `platterpus@a0330d09`, where it said `5704062`.
 
 0.9.4-rc2+platterpus.21 — 2026-10-07 — **stable**
 =================================================
