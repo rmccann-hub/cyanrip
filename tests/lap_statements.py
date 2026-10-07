@@ -340,6 +340,24 @@ with tempfile.TemporaryDirectory() as tmp:
     outcome("S20: the line after it still cannot",
             check_lap(last.replace(":END:2", ":END:3"), "--peer", str(nl)), 1,
             ["has 2 lines; line 3 does not exist"])
+    # Platterpus's round 30 lap 16 S15: EAC writes its logs in UTF-16 with
+    # CRLF, and a checker decoding every cited file as strict UTF-8 raised on
+    # one and stopped. A cited UTF-16 file is counted as an editor shows it.
+    (nl / "EAC.log").write_bytes("Exact Audio Copy\r\n\r\nTrack  5\r\n"
+                                 "     Cannot be verified\r\n".encode("utf-16"))
+    g(nl, "add", "EAC.log")
+    g(nl, "commit", "-q", "-m", "a UTF-16 log with CRLF")
+    u16 = g(nl, "rev-parse", "HEAD")[:7]
+    eac = lap_from("platterpus", "OPEN",
+                   f"S1 FACT read: EAC's log says track 5 cannot be verified.\n"
+                   f"  evidence: platterpus@{u16}:EAC.log:4\n\n"
+                   f"S2 VERDICT: OPEN\n  basis: S1\n")
+    outcome("S15: a cited UTF-16 file is read, not raised on",
+            check_lap(eac, "--peer", str(nl)), 0,
+            ["well formed, 0 warning(s)"], absent=["Traceback"])
+    outcome("S15: and its lines are counted as an editor shows them",
+            check_lap(eac.replace(":EAC.log:4", ":EAC.log:5"), "--peer", str(nl)), 1,
+            ["has 4 lines; line 5 does not exist"], absent=["Traceback"])
 
     ours_claim = lap_from("cyanrip-fork", "OPEN",
                           f"S1 FACT measured: Their README has four lines.\n"

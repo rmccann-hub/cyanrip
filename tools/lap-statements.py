@@ -73,6 +73,7 @@ claims.
 """
 
 import argparse
+import codecs
 import os
 import pathlib
 import re
@@ -326,9 +327,30 @@ def parse(lap):
     return True
 
 
+def _decoded(data):
+    """git's output as text, whatever encoding a cited file is in.
+
+    `text=True` decoded every `git show` as strict UTF-8, so citing a UTF-16
+    file, which is how EAC writes its logs, raised and stopped the whole
+    check. Platterpus's checker had the same defect and found it first
+    (their round 30 lap 16 S15). A byte-order mark names the codec;
+    anything else is UTF-8 with undecodable bytes replaced, so a line is
+    counted as an editor shows it. Newlines are normalised as `text=True`
+    did, so nothing that decoded before reads differently now.
+    """
+    if data.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        text = data.decode("utf-16", "replace")
+    elif data.startswith(codecs.BOM_UTF8):
+        text = data.decode("utf-8-sig", "replace")
+    else:
+        text = data.decode("utf-8", "replace")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def git(repo, *args):
-    return subprocess.run(["git", "-C", str(repo), *args],
-                          capture_output=True, text=True)
+    r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True)
+    return subprocess.CompletedProcess(r.args, r.returncode,
+                                       _decoded(r.stdout), _decoded(r.stderr))
 
 
 class Resolver:
