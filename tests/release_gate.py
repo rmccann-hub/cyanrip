@@ -3522,6 +3522,54 @@ def test_seam_check_held_names_what_it_rechecked():
           f"got {lines[-1]!r}, want {want!r}")
 
 
+# Sent laps of ours that declare GO at protocol 6 or later without the ledger.
+# Each is sent, so it cannot be edited; each needs the lap that restated it.
+GO_WITHOUT_LEDGER = {
+    "round-30-lap-15.md": "restated with the ledger by round-30-lap-17.md",
+}
+
+
+def test_our_go_laps_carry_the_ledger():
+    """Covers: none -- a check on our own sent record, not on the gate.
+
+    Round 30: our lap 15 declared `GO` at protocol 6 without
+    `HANDSHAKE-AGREED-CHANGES`, which C44 requires, and went out that way. The
+    gate refused it correctly, but only once the round's record was read after
+    the lap was released, and our lap checker reads statements, not wire
+    headers, so nothing before release looked. Platterpus's round 30 lap 16
+    S14 asked whether a lap writer should refuse to emit one. This is ours: the
+    suite refuses a lap of ours that does it, so it cannot be pushed.
+    """
+    hs = HERE.parent / "docs" / "handshake"
+    seen = set()
+    for path in sorted(hs.glob("round-*-lap-*.md")):
+        text = rg.strip_fences(path.read_text(encoding="utf-8", errors="replace"))
+        def one(field):
+            got = re.findall(rf"^HANDSHAKE-{field}:[ \t]*(\S+)", text, re.M)
+            return got[0] if len(got) == 1 else None
+        if one("FROM") != "cyanrip-fork" or one("VERDICT") != "GO":
+            continue
+        try:
+            proto = int(one("PROTOCOL") or 0)
+        except ValueError:
+            continue
+        if proto < 6:
+            continue
+        has = re.search(r"^HANDSHAKE-AGREED-CHANGES:[ \t]*\S", text, re.M)
+        if has:
+            continue
+        seen.add(path.name)
+        check(path.name in GO_WITHOUT_LEDGER,
+              f"{path.name} declares GO at protocol {proto} with no "
+              f"HANDSHAKE-AGREED-CHANGES, which C44 requires; a gate will not "
+              f"close on it")
+    # The exemption must stay true, so it cannot quietly cover a lap that
+    # has the field, and cannot widen without this list changing.
+    for name in sorted(set(GO_WITHOUT_LEDGER) - seen):
+        check(False, f"GO_WITHOUT_LEDGER names {name}, which is not a GO lap "
+                     f"of ours at protocol 6 or later lacking the ledger")
+
+
 for name, fn in sorted(globals().items()):
     if name.startswith("test_") and callable(fn):
         fn()
