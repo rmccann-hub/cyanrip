@@ -198,17 +198,78 @@ def test_a_hold_after_a_go_that_did_not_close_governs():
           f"a HOLD after a GO that never closed must govern: {probs}")
 
 
-def test_a_hold_after_a_complete_close_still_refuses_a_release():
-    # NOT a conformance test, and it claims no row on purpose. This is the
-    # shape of C13a -- a later lap after a terminal state -- and this gate does
-    # the v2 thing: the HOLD becomes the round's state and the round reads
-    # open. C13a says the round stays closed and the FILE is refused. For a
-    # HOLD the release is refused either way, which is all this asserts. See
-    # KNOWN_DIVERGENCES["C13a"] for why the divergence is latent on the real
-    # record.
-    ok, _ = gate({"round-9.md": lap(1, 9, "GO", complete=True),
-                  "round-9-lap2.md": lap(2, 9, "HOLD")})
-    check(not ok, "a HOLD after a complete close permitted a release")
+def test_a_different_verdict_after_a_close_is_refused_and_the_round_stays_closed():
+    """Covers: C13a
+
+    A terminal state is final (§4a). Until round 31 this gate did v2's thing:
+    the HOLD became the round's state and the round read open, which refused a
+    release for the wrong reason and would have reopened a closed round.
+    Asserted on what the gate RESOLVED as well as on the refusal, because a
+    refusal alone is satisfied by the old behaviour too.
+    """
+    files = {"round-9.md": lap(1, 9, "GO", complete=True),
+             "round-9-lap2.md": lap(2, 9, "HOLD")}
+    (r,) = resolve(files)
+    check(r.closed and r.path.name == "round-9.md",
+          f"a HOLD after a complete close became the round's state: "
+          f"{r.path.name}, closed={r.closed}")
+    ok, probs = gate(files)
+    check(not ok and any("C13a" in p and "round-9-lap2.md" in p for p in probs),
+          f"the HOLD after a complete close was not refused as a file: {probs}")
+
+    # The same verdict is not a transition: under §5b it is the second side's
+    # closing lap, and all six such laps on the real record are this shape.
+    ok, probs = gate({"round-9.md": lap(1, 9, "GO", complete=True),
+                      "round-9-lap2.md": lap(2, 9, "GO", complete=True)})
+    check(ok, f"a later GO after a close was refused: {probs}")
+
+    # WITHDRAWN is terminal too, and a GO after it is no more legal than a HOLD
+    # after a close.
+    w = lap(1, 9, "WITHDRAWN").replace(
+        "HANDSHAKE-VERDICT: WITHDRAWN\n",
+        "HANDSHAKE-VERDICT: WITHDRAWN\n"
+        "HANDSHAKE-WITHDRAWN-REASON: the rig disc was destroyed\n")
+    (r,) = resolve({"round-9.md": w,
+                    "round-9-lap2.md": lap(2, 9, "GO", complete=True)})
+    check(r.withdrawn and any("round-9-lap2.md" in m for m in r.c13a_refused),
+          f"a GO after a WITHDRAWN round was not refused: {r.path.name}, "
+          f"{r.c13a_refused}")
+
+
+def test_a_peer_lap_after_a_close_is_refused_too():
+    """Covers: C13a
+
+    Either side's lap can be the illegal one. Our lap 3 closes on their lap 2;
+    their released lap 4 then says HOLD. The round stays closed, judged with
+    the lap it closed on, and their file is refused by name. A HELD lap of
+    theirs declares nothing, so it is no transition.
+    """
+    def record(lap4_ready):
+        d = pathlib.Path(tempfile.mkdtemp())
+        (d / "inbound").mkdir()
+        (d / "round-09-lap-01.md").write_text(lap(1, 9, "OPEN"), encoding="utf-8")
+        (d / "round-09-lap-03.md").write_text(lap(3, 9, "GO", complete=True),
+                                              encoding="utf-8")
+        peer = ("HANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: {}\nHANDSHAKE-VERDICT: {}\n"
+                "HANDSHAKE-READY-TO-READ: {}\n")
+        (d / "inbound" / "round-09-lap-02.md").write_text(
+            peer.format(2, "GO", "yes"), encoding="utf-8")
+        (d / "inbound" / "round-09-lap-04.md").write_text(
+            peer.format(4, "HOLD", lap4_ready), encoding="utf-8")
+        return rg.load_rounds(d)
+
+    (r,) = record("yes")
+    check(r.closed and any("inbound/round-09-lap-04.md" in m
+                           for m in r.c13a_refused),
+          f"their HOLD after the close was not refused, or reopened the "
+          f"round: closed={r.closed}, {r.c13a_refused}")
+    ok, probs = rg.check([r])
+    check(not ok and any("C13a" in p for p in probs),
+          f"the refused file did not reach the gate's problems: {probs}")
+
+    (r,) = record("no")
+    check(not r.c13a_refused,
+          f"a held lap of theirs was refused as a transition: {r.c13a_refused}")
 
 
 def test_lap_order_is_by_declaration_not_filename():
@@ -355,17 +416,40 @@ def test_legacy_named_no_lap_file_cannot_shadow_a_canonical_lap():
     # reverted, this fixture still failed to close, because an unknown lap is
     # separately treated as ambiguous. That is a second safety net, not this
     # rule, and a test that cannot tell them apart pins neither.
+    #
+    # Since C13a (round 31) this fixture is also a HOLD after a complete close:
+    # the round stays CLOSED at lap 1 and lap 16 is refused as a file. The
+    # refusal still says which came first -- lap 16 AFTER lap 1 -- and the
+    # release is still refused.
     rounds = resolve(files)
     check(len(rounds) == 1, f"expected one round, got {len(rounds)}")
     won = rounds[0]
-    check(won.lap == 16 and won.path.name == "round-09-lap-16.md",
-          "the later canonical lap must win the round; got "
-          f"lap={won.lap} from {won.path.name}")
+    check(won.lap == 1 and won.path.name == "round-9.md" and won.closed
+          and any("round-09-lap-16.md" in m and "at lap 1" in m
+                  for m in won.c13a_refused),
+          "the canonical lap 16 must be read as AFTER the legacy lap 1, and "
+          f"refused under C13a; got lap={won.lap} from {won.path.name}, "
+          f"{won.c13a_refused}")
 
     ok, probs = gate(files)
     check(not ok,
           "a legacy-named no-lap GO must not shadow a later canonical HOLD -- "
           f"this is the filename-ordering bug: {probs}")
+
+    # And the ordering itself, where C13a cannot decide it: the same two names
+    # with the verdicts swapped. By declared number lap 16's GO closes the
+    # round; by name the legacy HOLD would be newest and the round would read
+    # open. With no-lap-is-lap-1 reverted the legacy file sorts last as
+    # ambiguous and wins, so this pins that rule too.
+    swapped = {"round-9.md": files["round-9.md"].replace(
+                   "HANDSHAKE-VERDICT: GO\n", "HANDSHAKE-VERDICT: HOLD\n"),
+               "round-09-lap-16.md": lap(16, 9, "GO", complete=True)}
+    (won,) = resolve(swapped)
+    check(won.lap == 16 and won.path.name == "round-09-lap-16.md",
+          "the later canonical lap must win the round; got "
+          f"lap={won.lap} from {won.path.name}")
+    ok, probs = gate(swapped)
+    check(ok, f"a later canonical GO lost to a legacy-named HOLD: {probs}")
 
 
 def test_ambiguous_lap_is_not_shadowed_by_a_good_one():
@@ -659,17 +743,6 @@ def test_wire_header_exemption_boundary_is_pinned():
 # reason. The meta-check prints every entry on every run and fails on an entry
 # that has stopped being true, so this can only shrink by being fixed.
 KNOWN_DIVERGENCES = {
-    "C13a": ("a lap after a terminal state becomes the round's state here "
-             "(v2's reopen), where the row says the round stays closed and the "
-             "file is refused. Latent, measured 2026-09-23 by replaying every "
-             "round lap by lap: six laps in rounds 7, 8, 11, 12 and 15 follow "
-             "the lap at which this gate first reads the round closed, and all "
-             "six declare GO, so both readings agree on each. As written the "
-             "row would refuse all six -- each is the other side's closing "
-             "lap. v6 amends the row so a later lap declaring the SAME verdict "
-             "is not a transition, which covers all six. What remains is a later "
-             "lap declaring a DIFFERENT verdict, which this gate still reads as "
-             "the round's new state and the row refuses. No such lap exists."),
 }
 
 

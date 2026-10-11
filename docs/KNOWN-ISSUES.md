@@ -1706,6 +1706,18 @@ tests claimed *"C13 (S2 rule 3)"*. So C13 read as covered three times and had
 no test of its own case. It has one now, and removing its claim leaves C13
 uncovered. Item 4 remains, below.
 
+**Item 2's behaviour FIXED 2026-10-11, for round 31** (our lap 1 S25 said it
+would land before our closing lap). The gate replays each round in one
+sequence by declared lap number, ours and theirs, finds where it first became
+terminal, and refuses as a file any later lap of either side that declares a
+different verdict; the round stays where it was. A later lap of the same
+verdict is no transition, so the six laps above are untouched, and every one
+of the 27 rounds on the record resolves as before. A lap of theirs counts only
+when it declares itself released, as C38 reads one. `KNOWN_DIVERGENCES` is now
+empty. Tests `test_a_different_verdict_after_a_close_is_refused_and_the_round_stays_closed`
+and `test_a_peer_lap_after_a_close_is_refused_too`, revert-proved one piece at
+a time.
+
 **Item 4, and v5's C40 fixture, are written out of the v6 path, 2026-09-23.**
 For a file declaring 6, `peer_verdict_resolution` no longer consults the
 closing file's `INBOUND-HELD`. The candidate is the newest peer lap in our own

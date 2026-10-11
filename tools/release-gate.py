@@ -565,6 +565,9 @@ class Lap:
         # have not answered. Such a round has no file of ours to parse, so every
         # per-file check below is meaningless on it; it is open by definition.
         self.peer_only = False
+        # C13a: later files refused as illegal transitions after this lap
+        # made the round terminal. Set by load_rounds().
+        self.c13a_refused = []
         self.override = None
         self.override_by = None
         self.override_why = None
@@ -1105,6 +1108,7 @@ def load_rounds(directory=None, every_lap=False):
     # that reads only our own outbox and cannot tell a current peer verdict
     # from a superseded one. See Lap.stale_peer_verdict.
     peer_latest = {}
+    peer_laps = {}
     for path in sorted((directory / "inbound").glob("round-*.md")):
         text = strip_fences(path.read_text(encoding="utf-8"))
         # Before the ambiguity skip below: a file we cannot read unambiguously
@@ -1136,6 +1140,7 @@ def load_rounds(directory=None, every_lap=False):
         ready = None if rr is None else (rr.group(1) == "yes")
         if n not in peer_latest or lap > peer_latest[n][0]:
             peer_latest[n] = (lap, verdict, path.name, ready)
+        peer_laps.setdefault(n, []).append((lap, verdict, path.name, ready))
     for lp in all_laps:
         got = peer_latest.get(lp.number)
         if got:
@@ -1188,10 +1193,80 @@ def load_rounds(directory=None, every_lap=False):
     for lp in all_laps:
         lp.version_refused = list(refused_by_round.get(lp.number, []))
 
+    # C13a, as v6 amends it. A terminal state is final (§4a): once a round is
+    # CLOSED or WITHDRAWN, a later lap of either side declaring a DIFFERENT
+    # verdict is an illegal transition, so the FILE is refused and the round
+    # stays where it was. A later lap declaring the same verdict is the second
+    # side's closing lap under §5b and no transition at all.
+    #
+    # Until round 31 this gate did v2's thing: the later lap became the round's
+    # state and the round read open. KNOWN_DIVERGENCES carried it, latent on
+    # the real record, and our round 31 lap 1 S25 said it would go before our
+    # closing lap of that round.
+    for number, win in list(latest.items()):
+        if win.peer_only:
+            continue
+        ours = [lp for lp in all_laps
+                if lp.number == number and lp.lap is not None and not lp.peer_only]
+        hit = c13a_terminal(ours, peer_laps.get(number, []))
+        if hit is None:
+            continue
+        term, k, judged_with = hit
+        refused = [f"{lp.path.name} declares {lp.verdict} after the round was "
+                   f"{term_state(term)} at lap {k}"
+                   for lp in ours
+                   if lp.lap > k and not lp.held and lp.verdict != term.verdict]
+        # A lap of theirs counts only when it declares itself released, as
+        # C38 reads one for step 3: a held lap declares nothing, and one that
+        # cannot be established as released is treated as held.
+        refused += [f"inbound/{name} declares {verdict} after the round was "
+                    f"{term_state(term)} at lap {k}"
+                    for lap_no, verdict, name, ready in peer_laps.get(number, [])
+                    if lap_no > k and ready is True and verdict != term.verdict]
+        if refused:
+            term.c13a_refused = [
+                f"C13a, an illegal transition, so the file is refused and the "
+                f"round stays {term_state(term)}: {r}" for r in refused]
+            term.peer_latest = judged_with
+            latest[number] = term
+
     if every_lap:
         return sorted(all_laps, key=lambda lp: (lp.number or 0, lp.lap or 0,
                                                 lp.path.name))
     return [latest[k] for k in sorted(latest)]
+
+
+def term_state(lp):
+    return "WITHDRAWN" if lp.withdrawn else "CLOSED"
+
+
+def c13a_terminal(ours, peer_laps):
+    """The lap of ours at which a round first became terminal, and the lap
+    number at which it did, or None. Replayed in one sequence by declared lap
+    number, ours and theirs, because a §5b step 3 close happens on THEIR lap:
+    at each point our newest lap is judged against their newest lap up to it.
+    Returns the peer lap it was judged with too, and restores every lap's
+    peer_latest: the caller applies it only when C13a refuses a file, so a
+    round with no illegal lap is judged exactly as before."""
+    points = sorted({lp.lap for lp in ours} | {p[0] for p in peer_laps})
+    saved = [(lp, lp.peer_latest) for lp in ours]
+    hit = None
+    try:
+        for k in points:
+            mine = [lp for lp in ours if lp.lap <= k]
+            if not mine:
+                continue
+            t = max(mine, key=lambda lp: lp.lap)
+            theirs = [p for p in peer_laps if p[0] <= k]
+            newest = max(theirs, key=lambda p: p[0]) if theirs else None
+            t.peer_latest = (newest[1], newest[2], newest[3]) if newest else None
+            if t.closed:
+                hit = (t, k, t.peer_latest)
+                break
+    finally:
+        for lp, pl in saved:
+            lp.peer_latest = pl
+    return hit
 
 
 def check(rounds):
@@ -1216,6 +1291,8 @@ def check(rounds):
                 f"round {r.number} ({r.path.name}) is missing required v2 wire "
                 f"header fields: {', '.join(wire)}"
             )
+        for msg in r.c13a_refused:
+            problems.append(f"round {r.number}: {msg}")
         if not r.closed:
             problems.append(f"round {r.number} is not closed ({r.why}): {r.path.name}")
         elif r.withdrawn:
