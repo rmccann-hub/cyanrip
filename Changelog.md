@@ -30,6 +30,18 @@ there. Image rips change too: their sub-channel cannot be read, so a track the
 image's TOC gives no pregap for now has a line. Agreed in round 31;
 Platterpus's 0.7.101 reads it.
 
+**The release gate implements C13a**: once a round is closed or withdrawn, a
+later lap of either side declaring a different verdict is refused as a file,
+and the round stays where it was; it used to become the round's state, which
+read a closed round as open again. Nothing on the record moves. A test now
+reads the logfile and cue of a `-W` rip, which Platterpus passes on every rip
+from its 0.7.102.
+
+**`PROTOCOL.md` v8 and `seam-rules.md` v8 are landed**, E1 to E11 as round 31
+agreed them, for Platterpus to land byte-identical. Round 31 still closes under
+v7, and neither gate implements 8 until both trees hold the same texts. **Our
+round 31 lap 4 is published, held**, declaring `GO`.
+
 **Our round 31 lap 1 is sent**, released by the operator on 2026-10-07, on `.21`, reading the Full run on it with Platterpus 0.6.66. It proposes, on the
 operator's word, that either side releases when its own suite is green and a
 round reviews the released pair, naming each rule in the shared files that

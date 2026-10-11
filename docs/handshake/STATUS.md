@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-31-lap-01.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-31-lap-04.md
+STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 31, OPEN, on our lap 1 (released 2026-10-07) and your laps 2 and 3; your lap 2 accepts E1 to E9 and both wordings and meets S29, so it waits on S28, v8 landed in both trees, and S30, our S9 and S10 fixes
-STATUS-LAPS: newest sent round-31-lap-01.md (ours), round-31-lap-03.md (theirs); next 4 (ours) carrying the v8 drafts, our S9 and S10 fixes and answers to your lap 3; held none
+STATUS-ROUND: 31, OPEN, on our lap 1 (released 2026-10-07) and your laps 2 and 3, with our lap 4 held: it declares GO with S29 and S30 met and S28 pending on your side alone, the v8 texts landed byte-identical in your tree
+STATUS-LAPS: newest sent round-31-lap-01.md (ours), round-31-lap-03.md (theirs); next 4 (ours) carrying our GO, the v8 texts, our S9 and S10 fixes and answers to your lap 3, once the operator releases it; held 4 carrying the same
 STATUS-RELEASED: +platterpus.21 at ca3f3ea, 2026-10-07
 STATUS-RELEASE-NEXT: +platterpus.22, carrying round 31's fixes: the repeat limit's last read, the Gaps: list's undetermined pregap and the one-frame tally's label; pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.22 with 0.6.66; waiting on +platterpus.22, which carries round 31's fixes; the Full run on +platterpus.21 with 0.6.66 ran on 2026-10-07 and is filed
@@ -16,14 +16,14 @@ STATUS-OPEN: partially-accurate-tally-label us fixing at round 31: renamed Track
 STATUS-OPEN: superseded-read-marker both cannot, because the format needs a design both sides agree (round 24's item)
 STATUS-OPEN: cache-probe-calibration us fixing at round 30: landed at 394ab17 released in +platterpus.20 on beta at 5704062, and measured once on 2026-10-06: 128 to 255 sectors beside your section P's cd-paranoia -A at 137 (docs/rig-2026-10-06-5704062/); a re-read is a hit under cd-paranoia's 6 ms, and .19's 128 to 255 on 2026-10-05 was the old defect landing on the other side of its threshold, not a measurement
 STATUS-OPEN: p0-unreadable-sector-hang us fixing at round 30: landed at c57b596 released in +platterpus.20 on beta at 5704062; at -P 0 a short read is retried sector by sector and a sector that will not read is zero-filled, and its speed on a drive is not measured
-STATUS-OPEN: gate-c13a us fixing at round 31: v6 amended the row (PROTOCOL.md C13a), so no amendment is needed, where this line said one was; our gate still reads a later lap of a different verdict as the round's new state, and will refuse it (our round 31 lap 1 S25)
+STATUS-OPEN: gate-c13a us fixing at round 31: landed at b9cb721; a lap of either side declaring a different verdict after a round is terminal is refused as a file, and the round stays terminal (our round 31 lap 1 S25)
 STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act, which the operator said on 2026-10-05 they will do
 STATUS-OPEN: read-successfully-over-skips us fixing at round 30: landed at e5a0897 (a paranoia skip) and 4529810 (a -Z read that never agreed) released in +platterpus.20 on beta at 5704062; Ripping errors: counts the skips too, with a suffix saying how many, by the operator's word of 2026-10-05, landed at 0c692ed; a rip whose only errors are skips still exits 0, as our lap 9 S13 asked and your lap 10 S11 accepted
 STATUS-OPEN: extraction-speed-below-1x us fixing at round 30: landed at a72b162 released in +platterpus.20 on beta at 5704062; two significant figures below 1x, three decimals at most because your _TRACK_SPEED reads no more
 STATUS-OPEN: f-and-j-runs us fixing at round 30: landed at aa1f067 released in +platterpus.20 on beta at 5704062; a -J or -f run's footer says what it was where it said aborted, and a stop ends a -f search; a -f search that finds no offset exits 1 by the operator's word of 2026-10-05 (0645ddb), landed with the seam-commands.md text our lap 9 S16 proposed and their lap 10 S10 accepted; their tree carries the same bytes from platterpus@0769c61e (their lap 12 S6)
 STATUS-OPEN: one-frame-under-threshold us fixing at round 30: landed at b1857d6 released in +platterpus.20 on beta at 5704062; a one-frame AccurateRip entry found under the threshold says so where it said (not found), one P2 arm, which your lap 12 S8 accepted
-STATUS-OPEN: repeat-limit-last-read us fixing at round 31: found 2026-10-06 reading the closing run, not landed, and left for round 31 by the operator's word of 2026-10-06, round 30 closing on that run; at the repeat limit the loop prints no checksum for its last read, and since the -Z spool (d7ee6c4) keeps the most-agreed read, a kept read that is not the last leaves the last one in no line of the log; the proposed fix names it in the Done; (repeat limit …) line after `agreed`, which both your patterns still match (platterpus@9ecd1147:src/platterpus/parsers/cyanrip_log.py:341-352)
-STATUS-OPEN: gaps-undetermined-pregap us fixing at round 31: found 2026-10-06 reading the closing run, not landed, older than .20, and left for round 31 by the operator's word of 2026-10-06, round 30 closing on that run; the Gaps: list skips a pregap whose sub-channel search failed with no line, so a rip of selected tracks reads it as no pregap, and with every search failed the list says None signalled; the proposed fix gives each a line, which changes the first line you render as EAC's Gap handling row (platterpus@9ecd1147:src/platterpus/parsers/cyanrip_log.py:199-204)
+STATUS-OPEN: repeat-limit-last-read us fixing at round 31: landed at ab0f49b with the wording your lap 2 S14 accepted, not yet released, and it ships in +platterpus.22; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
+STATUS-OPEN: gaps-undetermined-pregap us fixing at round 31: landed at 4a0fc55 with the wording your lap 2 S15 accepted, not yet released, and it ships in +platterpus.22; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
 STATUS-OPEN: subchannel-pregap-varies us cannot, because which frame is right needs the drive: track 9's sub-channel pregap reads 94 frames in one rip and 95 in the next, in eleven filed sessions since 2026-09-03, and the log states one value; under the default merge only the cue's INDEX 00 moves (docs/KNOWN-ISSUES.md)
 
 **The block above is the proposal's D6, and it is checked, not trusted**
