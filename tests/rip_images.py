@@ -680,6 +680,20 @@ def sc_filters():
     if pcm_md5("off", 1) != pcm_md5("plain", 1):
         fail("-W did not disable deemphasis")
 
+    # Platterpus passes -W on every rip from its 0.7.102 (their round 31
+    # lap 3 S3), so this is the record their reader gets for a flagged
+    # track: the flag, no claim of de-emphasis, and FLAGS PRE telling a
+    # player the file still needs it. Read from the logfile and the cue, the
+    # two artifacts that persist; sc_deemph_with_hdcd covers -H -W.
+    off_log = (WORK / "out_off" / "log.log").read_text()
+    emph = re.findall(r"^  Preemphasis:   (.*)$", off_log, re.M)
+    if emph != ["present (TOC)", "present (TOC)"]:
+        fail(f"-W: the logfile's Preemphasis lines are {emph}, wanted "
+             "'present (TOC)' on both flagged tracks and nothing after it")
+    off_cue = (WORK / "out_off" / "sheet.cue").read_text()
+    if off_cue.count("    FLAGS PRE\n") != 2:
+        fail("-W: the cue does not flag both pre-emphasised tracks PRE")
+
 
 def sc_deemph_with_hdcd():
     """-H must not silently swallow de-emphasis. Round 15 lap 14 §5 item 2.
