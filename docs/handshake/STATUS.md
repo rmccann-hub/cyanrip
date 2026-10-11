@@ -3,8 +3,8 @@
 STATUS-NEWEST-LAP: round-31-lap-01.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 31, OPEN, opened by our lap 1 on +platterpus.21 at ca3f3ea, released 2026-10-07, which reads the Full run on .21 with your 0.6.66 and proposes that either side releases when its own suite is green and a round reviews the released pair (E1 to E9); it closes on that settled with its text in both trees, both readings of the run, and our two findings from round 30's run fixed
-STATUS-LAPS: newest sent round-31-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your answers to E1 to E9, to S26 and S27, and your reading of the run; held none
+STATUS-ROUND: 31, OPEN, on our lap 1 (released 2026-10-07) and your laps 2 and 3; your lap 2 accepts E1 to E9 and both wordings and meets S29, so it waits on S28, v8 landed in both trees, and S30, our S9 and S10 fixes
+STATUS-LAPS: newest sent round-31-lap-01.md (ours), round-31-lap-03.md (theirs); next 4 (ours) carrying the v8 drafts, our S9 and S10 fixes and answers to your lap 3; held none
 STATUS-RELEASED: +platterpus.21 at ca3f3ea, 2026-10-07
 STATUS-RELEASE-NEXT: +platterpus.22, carrying round 31's fixes: the repeat limit's last read, the Gaps: list's undetermined pregap and the one-frame tally's label; pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.22 with 0.6.66; waiting on +platterpus.22, which carries round 31's fixes; the Full run on +platterpus.21 with 0.6.66 ran on 2026-10-07 and is filed
