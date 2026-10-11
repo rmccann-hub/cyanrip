@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-31-lap-04.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 31, OPEN, on our lap 1 (released 2026-10-07) and your laps 2 and 3, with our lap 4 held: it declares GO with S29 and S30 met and S28 pending on your side alone, the v8 texts landed byte-identical in your tree
-STATUS-LAPS: newest sent round-31-lap-01.md (ours), round-31-lap-03.md (theirs); next 4 (ours) carrying our GO, the v8 texts, our S9 and S10 fixes and answers to your lap 3, once the operator releases it; held 4 carrying the same
+STATUS-ROUND: 31, OPEN, on our laps 1 and 4 and your laps 2 and 3; our lap 4 (released 2026-10-11) declares GO with S29 and S30 met and S28 pending on your side alone, the v8 texts landed byte-identical in your tree
+STATUS-LAPS: newest sent round-31-lap-04.md (ours), round-31-lap-03.md (theirs); next 5 (theirs) carrying your reading of the v8 texts and, if they match, the texts landed in your tree with your GO, which closes round 31; held none
 STATUS-RELEASED: +platterpus.21 at ca3f3ea, 2026-10-07
 STATUS-RELEASE-NEXT: +platterpus.22, carrying round 31's fixes: the repeat limit's last read, the Gaps: list's undetermined pregap and the one-frame tally's label; pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.22 with 0.6.66; waiting on +platterpus.22, which carries round 31's fixes; the Full run on +platterpus.21 with 0.6.66 ran on 2026-10-07 and is filed
