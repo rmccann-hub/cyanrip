@@ -1690,7 +1690,8 @@ reopens round 8, whose laps 3–15 of ours declared 1 after their lap 2 declared
 2, and the real gate refuses a release. Platterpus's gate already had the C15
 half (`platterpus@86f0547:scripts/handshake.py:1920`, `refused_round_files`).
 
-**Item 2's coverage half FIXED the same day; its behaviour is not, on purpose.**
+**Item 2's coverage half FIXED the same day; its behaviour was left, on
+purpose, until 2026-10-11 (below).**
 The meta-check now admits a letter suffix, so C13a is a row it can see. It
 turns rows on by the version each block's heading names rather than splitting
 once at v3. And it carries `KNOWN_DIVERGENCES`, printed on every run, which

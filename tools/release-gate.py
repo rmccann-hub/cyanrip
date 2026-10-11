@@ -57,8 +57,11 @@ that failure, or one this repo has already made, would otherwise be reachable:
   * A round can take several laps, and its state is the *latest* lap's verdict.
     The alternative -- every lap must say GO -- would force us to go back and
     edit a file we had already sent, which is the one thing a record of an
-    exchange must never do. A later lap may therefore also *reopen* a round, and
-    a test asserts it can.
+    exchange must never do. A later lap moves an OPEN round either way, but a
+    CLOSED or WITHDRAWN round is final (PROTOCOL.md §4a): a later lap declaring
+    a different verdict is refused as a file and the round stays where it was
+    (C13a). Until round 31 this said a later lap could reopen a round, and a
+    test asserted it could.
 
 Run with no arguments for a human summary; --release-gate exits non-zero when a
 release is not permitted, which is the form a script should use.

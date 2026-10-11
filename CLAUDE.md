@@ -1984,9 +1984,12 @@ close**; a gate reading a version it does not implement refuses rather than
 guesses.
 
 A round may take several laps. **Each lap is a new file** — never edit one
-already sent — and **a round's state is its latest lap's verdict**, so a later
-lap can close a round *or* reopen one on new evidence. Lap order comes from the
-declared number, not the filename.
+already sent — and **a round's state is its latest lap's verdict** while it is
+open, so a later lap can close it. **A closed or withdrawn round is final**
+(`PROTOCOL.md` §4a): a later lap declaring a different verdict is refused as a
+file, and new evidence opens a new round (C13a, in our gate since round 31).
+This said a later lap could *reopen* a round, which v3 removed and our gate kept
+doing until then. Lap order comes from the declared number, not the filename.
 
 **Files are named `round-NN-lap-LL.md`, both fields zero-padded to two digits**,
 agreed with Platterpus in round 7 lap 17 and used by both projects. The name

@@ -2294,9 +2294,15 @@ def test_a_superseded_peer_verdict_does_not_close_a_round():
     make us stale. `HANDSHAKE-INBOUND-HELD` is what catches that, from their
     side, and this does not replace it.
     """
+    # Numbered as the real case was: our lap 7, after their laps 4 and 6. It
+    # was our lap 1 until round 31, which made every peer lap follow our
+    # close, so the HOLD below "reopened" a closed round -- the v2 reading
+    # C13a forbids. Numbered truthfully, the round never closed at lap 7,
+    # because their HOLD came first, and no step below reopens anything.
     d = pathlib.Path(tempfile.mkdtemp())
     (d / "inbound").mkdir()
-    (d / "round-9.md").write_text(GO, encoding="utf-8")
+    (d / "round-09-lap-07.md").write_text(
+        GO.replace("HANDSHAKE-LAP: 1\n", "HANDSHAKE-LAP: 7\n"), encoding="utf-8")
     peer = ("HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 9\nHANDSHAKE-LAP: {}\n"
             "HANDSHAKE-FROM: platterpus\nHANDSHAKE-VERDICT: {}\n")
 
@@ -2316,12 +2322,12 @@ def test_a_superseded_peer_verdict_does_not_close_a_round():
     check(any("round-09-lap-06.md" in p and "HOLD" in p for p in probs),
           f"refused without naming the newer peer lap: {probs}")
 
-    # And it reopens correctly: a later peer GO closes it again. A check that
-    # only ever refuses is a check nobody can satisfy.
+    # And a later peer GO closes it: a check that only ever refuses is a
+    # check nobody can satisfy.
     (d / "inbound" / "round-09-lap-10.md").write_text(
         peer.format(10, "GO"), encoding="utf-8")
     check(rg.check(rg.load_rounds(d))[0],
-          "a newer peer GO did not close the round again")
+          "a newer peer GO did not close the round")
 
     # Lap ORDER, not filename order. CLAUDE.md states the rule outright -- "lap
     # order comes from the declared number, not the filename" -- and our padded
