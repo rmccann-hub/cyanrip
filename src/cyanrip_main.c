@@ -1224,6 +1224,20 @@ repeat_ripping:;
             }
             t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
             kept = crip_spool_kept_at_limit(spools, nb_spools);
+            /* Every read but the last prints its checksum on a `Repeating`
+             * line, and the track block prints the kept read's. Since the
+             * spool, the kept read can be an earlier one, and then the last
+             * read was in no line at all: A, A, B, B, C keeps B and C was
+             * lost. Found in round 30 lap 15 (S9); this wording is round 31
+             * lap 1 S26's, which Platterpus's lap 2 S14 accepted and their
+             * 0.7.101 reads. */
+            if (kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; last read %08X, not kept)\n",
+                            ctx->settings.max_retries,
+                            ctx->settings.max_retries == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", shown_crc);
+                goto spool_encode;
+            }
             cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed)\n",
                         ctx->settings.max_retries,
                         ctx->settings.max_retries == 1 ? "" : "s",

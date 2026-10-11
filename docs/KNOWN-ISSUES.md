@@ -1040,6 +1040,14 @@ that was the reason before 2026-10-05, kept as the record.
 
 ### At the repeat limit the last read's checksum is not printed, and the spool can leave it in no line
 
+**Fixed for `.22`, in round 31**: when the kept read is not the last, the
+line that ends the loop names it, `Done; (repeat limit of 5 reads reached; at
+most 2 reads agreed; last read EE58174A, not kept)`, our round 31 lap 1 S26's
+wording, which Platterpus's lap 2 S14 accepted and their 0.7.101 reads.
+`sc_repeat_limit_keeps_most_agreed()` and `sc_repeat_limit()` pin it, with the
+last read's checksum computed from the source bytes. The entry below is the
+record of the defect.
+
 **Left for round 31 by the operator's word of 2026-10-06**, which closes round
 30 on the run that found it; the exception to the rule above is theirs, and
 round 31 fixes it within the round (v7 R3).

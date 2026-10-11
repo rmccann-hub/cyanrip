@@ -6068,6 +6068,12 @@ def sc_repeat_limit():
         lines = text.splitlines()
         noun = "read" if agreed == 1 else "reads"
         want = f"Done; (repeat limit of 3 reads reached; at most {agreed} {noun} agreed)"
+        # Round 31: when the kept read is not the last, the line names the
+        # last. A, B, A keeps A, the last; three different reads keep the
+        # newest, the last; v1, v1, v2 (run 2) keeps v1, and v2 is named, by
+        # zlib's CRC32 of the source with v2's flip, which is the EAC CRC32.
+        if run == 2:
+            want = want[:-1] + f"; last read {_flip_crc(2)}, not kept)"
         if want not in lines:
             got = [ln for ln in lines if ln.startswith("Done;")]
             fail(f"repeat_limit: cycle {cycle} run {run}: no line {want!r}; got {got}")
@@ -6088,6 +6094,16 @@ def sc_repeat_limit():
         if not re.search(r"(?m)^Ripping errors: 0$", text):
             fail(f"repeat_limit: cycle {cycle} run {run}: `Ripping errors:` should "
                  f"stay 0, so the limit is the only reason for the arm")
+
+
+def _flip_crc(v, flip=100, sec=2352, sectors=300):
+    """The EAC CRC32 of basic.cue's track 1 with the shim's flip v applied:
+    zlib's CRC32 of cdda.bin's first 300 sectors, sector 100's first byte
+    XORed with v. Derived from the source, never read from a log."""
+    import zlib
+    b = bytearray((FIX / "cdda.bin").read_bytes()[:sectors * sec])
+    b[flip * sec] ^= v
+    return f"{zlib.crc32(b) & 0xFFFFFFFF:08X}"
 
 
 def sc_repeat_limit_keeps_most_agreed():
@@ -6161,6 +6177,14 @@ def sc_repeat_limit_keeps_most_agreed():
         if "Track 1 read with errors." not in text.splitlines():
             fail(f"repeat_limit_keeps_most_agreed: {tag}: a track that hit the "
                  f"limit should still read `with errors`")
+        # Round 31, our round 30 lap 15 S9: the last read is not the kept one
+        # in both schedules, and it used to be in no line of the log.
+        want = (f"Done; (repeat limit of {limit} reads reached; at most 2 reads "
+                f"agreed; last read {_flip_crc(last)}, not kept)")
+        if want not in text.splitlines():
+            got = [ln for ln in text.splitlines() if ln.startswith("Done;")]
+            fail(f"repeat_limit_keeps_most_agreed: {tag}: no line {want!r}, so "
+                 f"the last read, v{last}, is in no line of the log; got {got}")
 
 
 def sc_spool_refusal():
