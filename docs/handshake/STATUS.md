@@ -3,11 +3,11 @@
 STATUS-NEWEST-LAP: round-31-lap-04.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 31, OPEN, on our laps 1 and 4 and your laps 2 and 3; our lap 4 (released 2026-10-11) declares GO with S29 and S30 met and S28 pending on your side alone, the v8 texts landed byte-identical in your tree
-STATUS-LAPS: newest sent round-31-lap-04.md (ours), round-31-lap-03.md (theirs); next 5 (theirs) carrying your reading of the v8 texts and, if they match, the texts landed in your tree with your GO, which closes round 31; held none
+STATUS-ROUND: 31, CLOSED, 2026-10-11, on our lap 4 and your lap 5, both GO, approving +platterpus.21 at ca3f3ea with your 0.6.66; round 32 opens on our lap 1
+STATUS-LAPS: newest sent round-31-lap-04.md (ours), round-31-lap-05.md (theirs); next 1 (ours) carrying round 32's opening, on the newest release of each side, with our gate at protocol 8 and our S27 to S29 proposals; held none
 STATUS-RELEASED: +platterpus.21 at ca3f3ea, 2026-10-07
 STATUS-RELEASE-NEXT: +platterpus.22, carrying round 31's fixes: the repeat limit's last read, the Gaps: list's undetermined pregap and the one-frame tally's label; pins ca3f3ea, reviews +platterpus.22
-STATUS-RUN-NEXT: +platterpus.22 with 0.6.66; waiting on +platterpus.22, which carries round 31's fixes; the Full run on +platterpus.21 with 0.6.66 ran on 2026-10-07 and is filed
+STATUS-RUN-NEXT: +platterpus.22 with 0.7.103; waiting on +platterpus.22, which carries round 31's fixes, and on your 0.7.103, which installs .21 by default; the Full run on +platterpus.21 with 0.6.66 ran on 2026-10-07 and is filed
 STATUS-OPEN: album-graph-first-encoded-pass us fixing at round 30: landed at d7ee6c4 released in +platterpus.20 on beta at 5704062; the -Z spool encodes only the kept read, so the album graph is fed that read alone
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: repeat-limit-kept-read us fixing at round 30: landed at d7ee6c4 released in +platterpus.20 on beta at 5704062; at the repeat limit the read the most reads agreed on is kept, the newest of them on a tie
