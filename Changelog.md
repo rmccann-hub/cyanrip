@@ -22,6 +22,14 @@ XXXXXXXX, not kept)`. Since the `-Z` spool kept the most-agreed read, a track
 read A, A, B, B, C kept B and C was in no line of the log. Agreed in round 31;
 Platterpus's 0.7.101 reads it.
 
+**A pregap the sub-channel search could not determine is in the `Gaps:`
+list**, as `pregap of track N unknown (reason)`, and `None signalled` is printed
+only when every search succeeded. The list used to skip it, so a rip of
+selected tracks, which prints only their blocks, read as having no pregap
+there. Image rips change too: their sub-channel cannot be read, so a track the
+image's TOC gives no pregap for now has a line. Agreed in round 31;
+Platterpus's 0.7.101 reads it.
+
 **Our round 31 lap 1 is sent**, released by the operator on 2026-10-07, on `.21`, reading the Full run on it with Platterpus 0.6.66. It proposes, on the
 operator's word, that either side releases when its own suite is green and a
 round reviews the released pair, naming each rule in the shared files that

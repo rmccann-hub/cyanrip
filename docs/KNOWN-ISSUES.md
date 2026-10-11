@@ -1091,6 +1091,16 @@ removed and nothing of theirs has to ship first. It wants announcing in a lap.
 
 ### The `Gaps:` list leaves out a pregap it could not determine, so it reads as none
 
+**Fixed for `.22`, in round 31**: each pregap whose search failed has a line,
+`pregap of track N unknown (sub-channel unreadable)` or `(sub-channel CRC
+mismatches)`, the track block's own reason, and `None signalled` is printed
+only when every search succeeded. Our round 31 lap 1 S27's wording, which
+Platterpus's lap 2 S15 accepted and their 0.7.101 reads.
+`sc_gaps_unknown_pregap()` pins it on `basic.cue`, whole and with `-l 1`, with
+`cdda.nrg` as the control. **Every image rip changes with it**: an image's
+sub-channel cannot be read, so a track whose pregap the image's TOC does not
+give now has a line. The entry below is the record of the defect.
+
 **Left for round 31 by the operator's word of 2026-10-06**, as the entry above.
 
 **Found 2026-10-06, reading the closing run on `.20`**, and older than it: our

@@ -6187,6 +6187,59 @@ def sc_repeat_limit_keeps_most_agreed():
                  f"the last read, v{last}, is in no line of the log; got {got}")
 
 
+def sc_gaps_unknown_pregap():
+    """A PREGAP THE SEARCH COULD NOT DETERMINE IS IN THE `Gaps:` LIST.
+
+    Round 30 lap 15 S10, fixed in round 31 with lap 1 S27's wording, which
+    Platterpus's lap 2 S15 accepted. The list skipped a track whose search
+    failed, with no line, so its silence read as no pregap: a rip of selected
+    tracks prints only their blocks, so for every other track the list is the
+    only record, and the reference disc's track 4 went missing from it on the
+    drive (docs/rig-2026-10-06-5704062/). With every search failed it said
+    `None signalled`.
+
+    An image's sub-channel cannot be read, so on basic.cue track 2's search
+    fails exactly as a drive's did. The reason is asserted against the
+    track's own block in a whole-disc rip, an independent line, and the list
+    must carry it in a rip of track 1 alone, the case that lost it. cdda.nrg
+    is the control: its pregap comes from the image's TOC, so no search fails
+    and no line says unknown.
+    """
+    full = WORK / "out_gaps_full"
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-o", "pcm", "-D", full, "-F", "{track}", "-L", "log")
+    text = (full / "log.log").read_text(errors="replace") if (full / "log.log").exists() else ""
+    m = re.search(r"^    Pregap LSN:  unknown \(([^)]+)\)$", text, re.M)
+    if ec != 0 or not m:
+        fail(f"gaps_unknown_pregap: the whole-disc rip exited {ec} and its track "
+             f"blocks carry no unknown pregap, so this test has nothing to check")
+        return
+    want = f"    pregap of track 2 unknown ({m.group(1)})"
+    for name, extra in (("whole disc", None), ("track 1 alone", ["-l", "1"])):
+        if extra is None:
+            lines = text.splitlines()
+        else:
+            out = WORK / "out_gaps_one"
+            ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                         "-P", "0", *extra, "-o", "pcm", "-D", out, "-F",
+                         "{track}", "-L", "log")
+            lines = ((out / "log.log").read_text(errors="replace")
+                     if (out / "log.log").exists() else "").splitlines()
+        if want not in lines:
+            fail(f"gaps_unknown_pregap: {name}: the Gaps: list has no line "
+                 f"{want!r}, so its silence reads as no pregap")
+        if "    None signalled" in lines:
+            fail(f"gaps_unknown_pregap: {name}: the list says `None signalled` "
+                 f"over a search that failed")
+    _, out = crip("-d", WORK / "cdda.nrg", "-I", "-N", "-A", "-U", "-P", "0")
+    if "frame pregap in track 2" not in out:
+        fail("gaps_unknown_pregap: control: cdda.nrg lists no pregap for track 2, "
+             "so it no longer controls for a search that succeeded")
+    if re.search(r"pregap of track \d+ unknown", out):
+        fail("gaps_unknown_pregap: control: cdda.nrg's pregap comes from its TOC, "
+             "and the list calls a pregap unknown")
+
+
 def sc_spool_refusal():
     """A -Z RIP THAT CANNOT SPOOL SAYS SO, AT COLUMN 0, AND EXITS 1.
 

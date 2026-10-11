@@ -1546,6 +1546,23 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
         cyanrip_track *ct = &ctx->tracks[i - 0];
         cyanrip_track *lt = ct->number > 1 ? &ctx->tracks[i - 1] : NULL;
 
+        /* A search that failed has no LSN either, and skipping it silently
+         * made the list's silence read as no pregap: a rip of selected tracks
+         * prints only their blocks, so for every other track this list is
+         * the only record, and with every search failed it said `None
+         * signalled`. Found in round 30 lap 15 (S10); this wording is round
+         * 31 lap 1 S27's, which Platterpus's lap 2 S15 accepted and their
+         * 0.7.101 reads. Its reason is the track block's, in the same words. */
+        if (ct->pregap_lsn == CDIO_INVALID_LSN &&
+            (ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ ||
+             ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC)) {
+            cyanrip_log(ctx, 0, "    pregap of track %i unknown (%s)\n", ct->number,
+                        ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ ?
+                        "sub-channel unreadable" : "sub-channel CRC mismatches");
+            gaps++;
+            continue;
+        }
+
         if (ct->pregap_lsn == CDIO_INVALID_LSN)
             continue;
 
