@@ -19,7 +19,7 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc2+platterpus.21 (platterpus-fork-g60cc48a)
+cyanrip 0.9.4-rc2+platterpus.21 (platterpus-fork-gf9ea167)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 -u platterpus/0.6.21 -D o -j o/sample.diagnostics.json
 Handshake:      round 31 lap 1 OPEN, verdict OPEN -- NOT a released build
 Consumer:       platterpus/0.6.21
@@ -56,6 +56,7 @@ No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!
 Gaps:
     150 frame pregap in track 1, unmerged
     75 frame pregap in track 2, merging into track 1
+    pregap of track 3 unknown (sub-channel unreadable)
 
 Tracks:
 
@@ -68,6 +69,8 @@ Repeating ripping (2 out of 199 matches for current checksum D36D9296)
 Repeating ripping (3 out of 199 matches for current checksum D36D9296)
 
 Repeating ripping (4 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (5 out of 199 matches for current checksum D36D9296)
 
 Stopping, ripping incomplete!
 Album Loudness Summary:
@@ -93,7 +96,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          81
+  READ:          97
 
 Ripping errors: 1
 Encoder errors: not applicable; no whole track was encoded
@@ -101,5 +104,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-10-07T10:58:51+00:00
-Log FUN512: QsALcMBvfeZ2sUUtmx8Pu22rG33.p.wGCQ28KIwYFnVAt4Qo5KfXEBxnq1VvmmDrmjJIi2BDGqEr90o7i9m3tQ
+Ripping finished at 2026-10-11T15:41:49+00:00
+Log FUN512: peWmiJsCG5BLtnHVMvoM2HQe7Px.APWBj3PV1w6BopHX2WCtbnr2C_5yTmwAtLPSReo.CCTOQifk0ooaeu0Ccg
