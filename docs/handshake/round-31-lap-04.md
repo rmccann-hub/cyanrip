@@ -152,7 +152,7 @@ S17 FACT read: The `-j` record's one per-track array, `rip.track_state[]`, carri
   evidence: cyanrip@b9cb721:PROVIDER-CONTRACT.md:1102-1110
   holds: cyanrip@b9cb721
 
-S18 FACT read: Under `-O` each frame past the disc's last sector is read like any other, after a seek that resets paranoia's cache: one `cdio_paranoia_read_limited` call retried up to the frame retry limit, `-r` (10 by default) rounded up to a multiple of 5, with no timeout of ours.
+S18 FACT read: Under `-O` each frame past the disc's last sector is read like any other, after a `cdio_paranoia_seek` our code commented as flushing paranoia's cache: one `cdio_paranoia_read_limited` call retried up to the frame retry limit, `-r` (10 by default) rounded up to a multiple of 5, with no timeout of ours.
   answers: platterpus:R31.L3.S6
   evidence: cyanrip@b9cb721:src/cyanrip_main.c:990-996
   evidence: cyanrip@b9cb721:src/cyanrip_main.c:588-599
@@ -182,7 +182,7 @@ S22 FACT read: The CD-TEXT lines are P2 rows: the header, `present (%s, %i disc 
   evidence: cyanrip@b9cb721:PROVIDER-CONTRACT.md:258-261
   holds: cyanrip@b9cb721
 
-S23 NOTE: No run has read CD-TEXT from a physical disc: `tests/fixtures/cdtext.toc` exercises libcdio's image parser, and a drive goes through `mmc_read_cdtext`, a different path. What libcdio does with a block in a character set other than ISO 8859-1 or UTF-8 we have not checked.
+S23 NOTE: No run has read CD-TEXT from a physical disc: `tests/fixtures/cdtext.toc` exercises libcdio's image parser, and a drive goes through `mmc_read_cdtext`, a different path. Which encoding libcdio returns a CD-TEXT value in, we have not checked.
 
 S24 FACT measured: libcdio's drive capability mask has no accurate-stream bit, but the MMC capabilities page that carries one, 2Ah, can be read through libcdio's `mmc_mode_sense`.
   answers: platterpus:R31.L3.S10
