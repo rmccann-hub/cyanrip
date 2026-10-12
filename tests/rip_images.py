@@ -6107,11 +6107,14 @@ def sc_sanitize():
     contract described the substitutions; P1 documented only that the flag
     existed.
 
-    WHICH COLUMN. P7c reports both compile-time branches, because availability
+    WHICH COLUMN. P7c reports every compile-time branch, because availability
     is a property of the build and this suite runs on one platform. The column
-    is chosen from os.name and stated out loud rather than inferred from the
-    behaviour under test -- picking the column by measuring the thing the column
-    is supposed to predict would make the assertion circular.
+    is chosen from the platform and stated out loud rather than inferred from
+    the behaviour under test -- picking the column by measuring the thing the
+    column is supposed to predict would make the assertion circular. It is
+    found by its header, not by position: P7c had two branches until
+    upstream's dad28a4 made a third (`__MACH__`) real, and CI's macOS job
+    then compared its filenames with the column for every other system.
 
     QUOTES ARE HELD BACK from the per-character pass on purpose. They have two
     table rows and a parity rule, so folding them in would test the parity and
@@ -6141,6 +6144,19 @@ def sc_sanitize():
         # the one escape the table parser honours, so it is the one to undo.
         return m.group(1).replace("\\|", "|")
 
+    header = next((l for l in section.group(0).splitlines()
+                   if l.startswith("| character |")), None)
+    if not header:
+        fail("sanitize: P7c has no header row")
+        return
+    heads = [h.strip() for h in header.strip().strip("|").split("|")]
+    if os.name == "nt":
+        state = "`HAVE_WMAIN`"
+    elif sys.platform == "darwin":
+        state = "`__MACH__`"
+    else:
+        state = "elsewhere"
+
     rows = {}
     for line in section.group(0).splitlines():
         if not line.startswith("| `"):
@@ -6149,9 +6165,9 @@ def sc_sanitize():
         # boundary -- splitting on it drops the `|` row entirely, and a row
         # missing from a completeness check is the failure this test is for.
         cells = re.split(r"(?<!\\)\|", line.strip().strip("|"))
-        if len(cells) != 7:
-            fail(f"sanitize: P7c row has {len(cells)} cells, expected 7: "
-                 f"{line}")
+        if len(cells) != len(heads):
+            fail(f"sanitize: P7c row has {len(cells)} cells, and its header "
+                 f"{len(heads)}: {line}")
             continue
         ch = unwrap(cells[0])
         rows.setdefault(ch, []).append([unwrap(c) for c in cells[1:]])
@@ -6160,12 +6176,18 @@ def sc_sanitize():
              "finding nothing is the failure it guards")
         return
 
-    win = os.name == "nt"
-    col = {"simple": 0, "unicode": 1,
-           "os_simple": 4 if win else 2, "os_unicode": 5 if win else 3}
-    print(f"sanitize: asserting the "
-          f"{'HAVE_WMAIN' if win else 'non-HAVE_WMAIN'} columns of P7c "
-          f"(os.name={os.name!r})")
+    # Column indices count from the first cell after the character's.
+    try:
+        col = {"simple": heads.index("`simple`") - 1,
+               "unicode": heads.index("`unicode`") - 1,
+               "os_simple": heads.index(f"`os_simple` {state}") - 1,
+               "os_unicode": heads.index(f"`os_unicode` {state}") - 1}
+    except ValueError:
+        fail(f"sanitize: P7c has no {state} columns for this platform "
+             f"(os.name={os.name!r}, sys.platform={sys.platform!r}): {heads}")
+        return
+    print(f"sanitize: asserting the {state} columns of P7c "
+          f"(os.name={os.name!r}, sys.platform={sys.platform!r})")
 
     # `/` is excluded: P7c footnotes it because its result depends on the call
     # site rather than the mode, and it is asserted separately below.
