@@ -155,15 +155,23 @@ def normalise(text):
 LIBCDIO_RE = re.compile(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
                         re.M)
 LIBAVCODEC_RE = re.compile(r"^Encoder:\s+.*\blibavcodec (\d+)\.", re.M)
+# libchromaprint is optional, and whether the build has it is printed on the
+# `AcoustID:` line, from the upstream sync of 2026-10-12. A build without it
+# says exactly this; any other value is a build with it.
+ACOUSTID_RE = re.compile(r"^AcoustID:\s+(.*)$", re.M)
+NO_CHROMAPRINT = "unsupported (built without libchromaprint)"
 
 
 def library_set(log):
-    """(libcdio "major.minor", libavcodec "major"), each None when the log
-    does not say it exactly once."""
+    """(libcdio "major.minor", libavcodec "major", libchromaprint "absent" or
+    "present"), each None when the log does not say it exactly once."""
     a = LIBCDIO_RE.findall(log)
     b = LIBAVCODEC_RE.findall(log)
+    c = ACOUSTID_RE.findall(log)
     return (".".join(a[0]) if len(a) == 1 else None,
-            b[0] if len(b) == 1 else None)
+            b[0] if len(b) == 1 else None,
+            (("absent" if c[0].strip() == NO_CHROMAPRINT else "present")
+             if len(c) == 1 else None))
 
 
 def library_mismatch(reference, fresh):
@@ -172,9 +180,10 @@ def library_mismatch(reference, fresh):
     ref, new = library_set(reference), library_set(fresh)
     if None in ref or None in new or ref == new:
         return None
-    return (f"the reference was made with libcdio {ref[0]} and libavcodec "
-            f"{ref[1]}, and this rip with libcdio {new[0]} and libavcodec "
-            f"{new[1]}; they differ in text those libraries write, so the "
+    return (f"the reference was made with libcdio {ref[0]}, libavcodec "
+            f"{ref[1]} and libchromaprint {ref[2]}, and this rip with "
+            f"libcdio {new[0]}, libavcodec {new[1]} and libchromaprint "
+            f"{new[2]}; they differ in text those libraries write, so the "
             f"comparison runs where the reference was made")
 
 

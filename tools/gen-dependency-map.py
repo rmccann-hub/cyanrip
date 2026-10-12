@@ -91,6 +91,13 @@ LIBS = {
     "libqrencode": ("libqrencode", "https://fukuchi.org/works/qrencode/",
                     "LGPL-2.1-or-later",
                     "prints MusicBrainz submission links as QR codes"),
+    # Debian's copyright file gives `Files: *` as Expat (MIT) and two of the
+    # resampler sources the library is built with as LGPL-2.1+, so the binary
+    # carries both.
+    "libchromaprint": ("Chromaprint", "https://acoustid.org/chromaprint",
+                       "MIT AND LGPL-2.1-or-later",
+                       "AcoustID fingerprints of each audio track, tagged, or "
+                       "submitted with --acoustid-key; -B turns it off"),
 }
 
 # A phrase each library's copyright file must contain for its licence above to
@@ -137,6 +144,10 @@ SERVICES = {
                         "the literal in src/ is the disc-submission link, "
                         "printed and never fetched; lookups reach "
                         "musicbrainz.org through libmusicbrainz5"),
+    "api.acoustid.org": ("AcoustID", True, "-B",
+                         "fingerprints of an accurately ripped disc, sent only "
+                         "when --acoustid-key gives a user key and only in a "
+                         "build with libchromaprint"),
 }
 
 
@@ -409,7 +420,11 @@ def bom(model, meas):
                              "value": lib["declared"] or "none"},
                             {"name": "cyanrip-fork:declared-in",
                              "value": "src/meson.build"}]}
-        if lic:
+        if lic and (" AND " in lic or " OR " in lic):
+            # A compound licence is an SPDX expression, which CycloneDX takes
+            # in its own field; `id` holds one licence only.
+            c["licenses"] = [{"expression": lic}]
+        elif lic:
             c["licenses"] = [{"license": {"id": lic}}]
         if url:
             c["externalReferences"] = [{"type": "website", "url": url}]
