@@ -76,7 +76,9 @@ printed with `%lu` from a `uint64_t`, which macOS and Windows refuse under
 compiles there only because upstream's `cyanrip_log()` carries no format
 attribute. The MinGW
 job builds only `cyanrip.exe` and moves from MINGW64, which setup-msys2
-marks deprecated, to UCRT64. The actions move off Node 20, to
+marks deprecated, to UCRT64; once it reached cyanrip's own sources, this
+fork's `SIGHUP` handling did not compile on Windows, which has neither
+`SIGHUP` nor `sigaction()`, and it is now built only where they exist. The actions move off Node 20, to
 `actions/checkout` v7.0.1, `upload-artifact` v7.0.2 and `download-artifact`
 v8.0.2, and the runners are pinned to `ubuntu-24.04`, `macos-26` and
 `windows-2025`, the images the first run used. No log line, flag or exit
