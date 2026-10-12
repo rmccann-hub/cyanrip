@@ -3795,6 +3795,42 @@ def sc_golden_reference_matches_a_fresh_rip():
         return
     fresh = fresh_path.read_text()
 
+    # A RELEASED build writes two lines differently, by design: `Handshake:`
+    # ends `-- released build`, and the disclaimer line under it says the
+    # declaration was not verified (crip_log_identity()). The reference is an
+    # unreleased build's, so CI's `-Ddeclare_released=true` jobs failed here on
+    # their first run while the format had not moved. Those two lines go back
+    # to the unreleased shape and the rest is compared as before -- but only
+    # when the same run's own record says the build is released, because a
+    # build that is not, printing that it is, is a defect and not a variant.
+    lines = fresh.splitlines()
+    at = next((i for i, l in enumerate(lines) if l.startswith("Handshake:")),
+              None)
+    if at is not None and lines[at].endswith(" -- released build"):
+        try:
+            declared = json.loads((WORK / "o" / "reference.diagnostics.json")
+                                  .read_text())["cyanrip"][
+                                      "released_build_declared"]
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            fail(f"golden_shape: the log says released build and the run's "
+                 f"own record cannot say whether it is: {e}")
+            return
+        if declared is not True:
+            fail(f"golden_shape: the log says released build and the run's "
+                 f"record says released_build_declared {declared!r}")
+            return
+        disclaimer = "(declared at build time, not verified by cyanrip)"
+        if at + 1 >= len(lines) or lines[at + 1].strip() != disclaimer:
+            fail("golden_shape: a released build's Handshake: line is not "
+                 f"followed by its disclaimer, {disclaimer!r}")
+            return
+        lines[at] = lines[at][:-len(" -- released build")] + \
+            " -- NOT a released build"
+        del lines[at + 1]
+        fresh = "\n".join(lines) + "\n"
+        note("golden_shape: this build is released; its two release lines "
+             "were compared in the unreleased shape the reference records")
+
     # A `-dirty` marker is a property of the TREE, not of the log format, and
     # it is already sc_golden_reference_is_from_a_clean_build()'s job. Left in,
     # the banner's shape differs on any working tree with an uncommitted change
