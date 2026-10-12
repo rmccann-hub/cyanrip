@@ -240,6 +240,11 @@ test('Compiler diagnostics', python,
     args: [ files('../tools/warn-gate.py') ],
     timeout: 300,
 )
+## Which of those diagnostics gate: the ones located in this tree. A flag of
+## ours firing in a dependency's header (clang, Homebrew's cdda.h, on CI's
+## first macOS run) is listed and not counted.
+test('Compiler diagnostics gate only this tree', python,
+    args: [ files('warn_gate.py') ])
 
 
 ## Audio checksum mirror
