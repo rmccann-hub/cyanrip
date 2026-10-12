@@ -1,5 +1,9 @@
 Unreleased
 ==========
+**Our round 32 lap 3 is published, held**: it takes Platterpus's lap 2 S3,
+moving round 32's run to their 0.7.104, and S8, and reports the commits that
+land the `-j` fields and track 1's pregap count. Their lap 2 is filed.
+
 **The `-j` record is `cyanrip-diagnostics/8`**, every new field an addition,
 as round 32 agreed (our lap 1 S10, Platterpus's lap 2 S7, with S8's
 amendment). Each `rip.track_state[]` entry adds `preemphasis` (`none`, `toc`

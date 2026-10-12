@@ -1,18 +1,18 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-32-lap-01.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-32-lap-03.md
+STATUS-NEWEST-LAP-STATE: held
 
 STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; your lap 2, sent on 2026-10-12, moves its run to your 0.7.104, since 0.7.103's section A accepts .21 alone, and accepts our -j fields and track 1's pregap count; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent round-32-lap-01.md (ours), round-32-lap-02.md (theirs); next 3 (ours) carrying our word on your S3 and S8 and our commits for what your S7 and S10 accept; held none
+STATUS-LAPS: newest sent round-32-lap-01.md (ours), round-32-lap-02.md (theirs); next 3 (ours) carrying our word on your S3 and S8 and our commits for what your S7 and S10 accept; held 3 carrying the same, S10's question on EAC's track-1 convention and a pre-commitment to GO
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
-STATUS-RELEASE-NEXT: +platterpus.23, whenever it is ready (v8 §6b), carrying what round 32 accepts of our lap 1 S11 and S14; pins ca3f3ea, reviews +platterpus.22
+STATUS-RELEASE-NEXT: +platterpus.23, whenever it is ready (v8 §6b), carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32; pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.22 with 0.7.104; waiting on your 0.7.104, whose section A accepts .22 (your lap 2 S5)
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
 STATUS-OPEN: partially-accurate-tally-label us fixing at 200530e, priority 1: landed at 113c05f, released in +platterpus.22, and open until round 32's Full run reads it on a drive; the one-frame tally reads Tracks matched on one frame only:, which your 0.6.66b1 and every release since reads
-STATUS-OPEN: j-record-fields us fixing at round 32, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landing before our lap 3
-STATUS-OPEN: track1-pregap-base us fixing at round 32, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landing before our lap 3
+STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, ships in +platterpus.23, and the disc ISRC read has run on no drive
+STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, ships in +platterpus.23
 STATUS-OPEN: version-field-meaning both fixing at round 32, priority 4: round 31's closing files name different Platterpus builds as the party, 0.6.66 in ours and 0.7.102 in yours, as round 28's did; our lap 1 S16's reading, the build the round reviewed, accepted in your lap 2 S12, and both closing laps of round 32 use it
 STATUS-OPEN: overread-bounded us fixing at round 32, priority 5: under -O a frame past the disc's last sector is retried up to the retry limit with no timeout of ours; a bounded read proposed in our round 32 lap 1 S18, verifiable only on a drive
 STATUS-OPEN: accurate-stream-declared us fixing at round 32, priority 5: a header line saying what the drive's capabilities page declares about accurate stream, proposed in our round 32 lap 1 S19, readable only on a drive
@@ -96,8 +96,11 @@ changed is in `Changelog.md`.
   acceptance script accepts `.21` alone (S2, S3), accepts our `-j` fields with
   `cdtext`'s keys to be listed in P8b (S7, S8), accepts track 1's pregap from
   LBA 0 with no release of theirs first (S10, S11), and takes our reading of the
-  version fields (S12). Our lap 3 is next, with our word on S3 and S8 and the
-  commits.
+  version fields (S12).
+- **Our lap 3 is published and held** (`round-32-lap-03.md`). It takes S3 and
+  S8, reports the commits that land S10 and S13, asks whether an EAC log shows
+  the additive half of track 1's convention, and pre-commits our closing lap
+  to `GO` unless the Full run on `.22` with 0.7.104 shows a defect of ours.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
