@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.23 (platterpus-fork-g3cdd4bc)`
+Build: `cyanrip 0.9.4-rc3+platterpus.23 (platterpus-fork-gefc83ae)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -1301,33 +1301,38 @@ given build an `os_` mode is therefore the **least** substituting of the
 four, never the most, and `-T os_unicode` is not a way to ask for the
 unicode glyphs -- it is a way to ask for fewer of them.
 
-Availability is a **compile-time** property (P7e). Two columns cover it,
-because `os_compat.h` has exactly two states for these macros: the
-`HAVE_WMAIN` build and everything else. `HAVE_WMAIN` is set by
-`src/meson.build:150` when the compiler links `wmain` with `-municode`,
-so in practice it means a Windows/MinGW build. The build that generated
-this document is named in the banner at the top; which branch **your**
-build took is a property of your build, not of this file.
+Availability is a **compile-time** property (P7e). `os_compat.h` has
+**3 states** for these macros, so 6 columns cover the
+`os_` modes: one per `#if defined()` block that sets any of them -- `HAVE_WMAIN`, `__MACH__` --
+and *elsewhere*, a build in none of them. They are exclusive in
+practice. `HAVE_WMAIN` is set by `src/meson.build` when the compiler
+links `wmain` with `-municode`, so it means a Windows/MinGW build;
+`__MACH__` is defined by the compiler on macOS. The build that
+generated this document is named in the banner at the top; which
+branch **your** build took is a property of your build, not of this
+file.
 
-| character | `simple` | `unicode` | `os_simple` non-`HAVE_WMAIN` | `os_unicode` non-`HAVE_WMAIN` | `os_simple` `HAVE_WMAIN` | `os_unicode` `HAVE_WMAIN` |
-|---|---|---|---|---|---|---|
-| `<` | `_` | `‹` | unchanged | unchanged | `_` | `‹` |
-| `>` | `_` | `›` | unchanged | unchanged | `_` | `›` |
-| `:` | `_` | `∶` | unchanged | unchanged | `_` | `∶` |
-| `\|` | `_` | `│` | unchanged | unchanged | `_` | `│` |
-| `?` | `_` | `？` | unchanged | unchanged | `_` | `？` |
-| `*` | `_` | `∗` | unchanged | unchanged | `_` | `∗` |
-| `/` † | `_` | `∕` | `_` | `∕` | `_` | `∕` |
-| `\` | `_` | `⧹` | unchanged | unchanged | `_` | `⧹` |
-| `"` | `'` | `“` | unchanged | unchanged | `'` | `“` |
-| `"` | `'` | `”` | unchanged | unchanged | `'` | `”` |
+| character | `simple` | `unicode` | `os_simple` elsewhere | `os_unicode` elsewhere | `os_simple` `HAVE_WMAIN` | `os_unicode` `HAVE_WMAIN` | `os_simple` `__MACH__` | `os_unicode` `__MACH__` |
+|---|---|---|---|---|---|---|---|---|
+| `<` | `_` | `‹` | unchanged | unchanged | `_` | `‹` | unchanged | unchanged |
+| `>` | `_` | `›` | unchanged | unchanged | `_` | `›` | unchanged | unchanged |
+| `:` | `_` | `∶` | unchanged | unchanged | `_` | `∶` | `_` | `∶` |
+| `\|` | `_` | `│` | unchanged | unchanged | `_` | `│` | unchanged | unchanged |
+| `?` | `_` | `？` | unchanged | unchanged | `_` | `？` | unchanged | unchanged |
+| `*` | `_` | `∗` | unchanged | unchanged | `_` | `∗` | unchanged | unchanged |
+| `/` † | `_` | `∕` | `_` | `∕` | `_` | `∕` | `_` | `∕` |
+| `\` | `_` | `⧹` | unchanged | unchanged | `_` | `⧹` | unchanged | unchanged |
+| `"` | `'` | `“` | unchanged | unchanged | `'` | `“` | unchanged | unchanged |
+| `"` | `'` | `”` | unchanged | unchanged | `'` | `”` | unchanged | unchanged |
 
-Read the two `non-HAVE_WMAIN` columns before treating an `os_` mode as
-a safe substitute for a plain one. On such a build **8 of the 9 distinct
-characters** are left unchanged by both `os_` modes: `<`, `>`, `:`, `\|`, `?`, `*`, `\`, `"`.
+On a build in none of those blocks, **8 of the 9 distinct characters** are left
+unchanged by both `os_` modes: `<`, `>`, `:`, `\|`, `?`, `*`, `\`, `"`.
 
-Which leaves `os_simple` and `os_unicode` differing, on such a
-build, on `/` and nothing else.
+On a build under `__MACH__`, **7 of the 9 distinct characters** are left
+unchanged by both `os_` modes: `<`, `>`, `\|`, `?`, `*`, `\`, `"`.
+
+Read the columns for your build before treating an `os_` mode as a
+safe substitute for a plain one.
 
 **† `/` is the exception, and it is not a property of the mode.** See
 P7d.
