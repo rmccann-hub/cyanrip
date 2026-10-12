@@ -3,14 +3,14 @@
 STATUS-NEWEST-LAP: round-32-lap-01.md
 STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 32, OPEN, opened by our lap 1, held until +platterpus.22 and your 0.7.103 are both released and it is revised to name them; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
+STATUS-ROUND: 32, OPEN, opened by our lap 1, held until it is revised to name +platterpus.22 at 200530e and your 0.7.103 at 2f7855be, both now released; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
 STATUS-LAPS: newest sent none (ours), none (theirs); next 1 (ours) carrying round 32's opening, our open list in priority and what needs you, once the operator releases it; held 1 carrying the same
-STATUS-RELEASED: +platterpus.21 at ca3f3ea, 2026-10-07
-STATUS-RELEASE-NEXT: +platterpus.22, carrying round 31's fixes: the repeat limit's last read, the Gaps: list's undetermined pregap and the one-frame tally's label; pins ca3f3ea, reviews +platterpus.22
-STATUS-RUN-NEXT: +platterpus.22 with 0.7.103; waiting on +platterpus.22, which carries round 31's fixes, and on your 0.7.103, which installs .21 by default; the Full run on +platterpus.21 with 0.6.66 ran on 2026-10-07 and is filed
-STATUS-OPEN: repeat-limit-last-read us fixing at round 31, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, and it ships in +platterpus.22, which waits on the operator; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
-STATUS-OPEN: gaps-undetermined-pregap us fixing at round 31, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, and it ships in +platterpus.22; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
-STATUS-OPEN: partially-accurate-tally-label us fixing at round 31, priority 1: landed at 113c05f, and it ships in +platterpus.22; the one-frame tally reads Tracks matched on one frame only:, which your 0.6.66b1 and every release since reads
+STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
+STATUS-RELEASE-NEXT: +platterpus.23, whenever it is ready (v8 §6b), carrying what round 32 accepts of our lap 1 S11 and S14; pins ca3f3ea, reviews +platterpus.22
+STATUS-RUN-NEXT: +platterpus.22 with 0.7.103; waiting on round 32's lap 1, which names the pair; the Full run on +platterpus.21 with 0.6.66 ran on 2026-10-07 and is filed
+STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
+STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
+STATUS-OPEN: partially-accurate-tally-label us fixing at 200530e, priority 1: landed at 113c05f, released in +platterpus.22, and open until round 32's Full run reads it on a drive; the one-frame tally reads Tracks matched on one frame only:, which your 0.6.66b1 and every release since reads
 STATUS-OPEN: j-record-fields us fixing at round 32, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12 and proposed in our round 32 lap 1 S10 for your answer
 STATUS-OPEN: track1-pregap-base us fixing at round 32, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; one base proposed in our round 32 lap 1 S13
 STATUS-OPEN: version-field-meaning both fixing at round 32, priority 4: round 31's closing files name different Platterpus builds as the party, 0.6.66 in ours and 0.7.102 in yours, as round 28's did; asked in our round 32 lap 1 S17 which build the field names
@@ -64,7 +64,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-10-12: round 31 closed, round 32 being opened
+## Now — rewritten 2026-10-12: `.22` released, round 32 being opened
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -78,9 +78,10 @@ changed is in `Changelog.md`.
   lap 5, both `GO`, by v6 §5b step 3 on both gates. It approves `.21` at
   `ca3f3ea` with their 0.6.66, and their `FORK_PIN` is `ca3f3ea`
   (`platterpus@2f7855be:src/platterpus/deps/fork_source.py:252`).
-- **Round 32's lap 1 is ours, published and held** (`round-32-lap-01.md`). It
-  waits for `.22` and their 0.7.103, and is revised to name that pair before
-  the operator releases it. It presents our open list in priority and, in
+- **Round 32's lap 1 is ours, published and held** (`round-32-lap-01.md`).
+  Both releases it waited for exist, `.22` at `200530e` and their 0.7.103 at
+  `2f7855be`, and it is revised to name that pair before the operator releases
+  it. It presents our open list in priority and, in
   S9 to S22, what needs them, in the same order.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
@@ -90,7 +91,7 @@ changed is in `Changelog.md`.
 | | |
 |---|---|
 | newest | **`.21` with Platterpus 0.6.66, Full, on the reference disc, 2026-10-07** (`docs/rig-2026-10-07-ca3f3ea/`): 425 pass, 0 fail, the one unreachable step E2, read by both sides in round 31 |
-| next | **`.22` with their 0.7.103**, round 32's test, once both are released |
+| next | **`.22` with their 0.7.103**, round 32's test; both are released |
 
 Every earlier run is a `docs/rig-*` folder with its own README.
 
@@ -104,8 +105,8 @@ and 8 from our next lap.
 
 ### Platterpus's side, read and not run
 
-Their newest release is 0.7.102, tag `v0.7.102` at `b2000117`. Their `main` at
-`2f7855be` carries 0.7.103's release commit, with no `v0.7.103` tag yet. Their
+Their newest release is 0.7.103, tag `v0.7.103` at `2f7855be`, read with
+`git ls-remote` on 2026-10-12. Their
 standing status is `docs/handshake/outbound/platterpusstatus.md` in their tree,
 read at `2f7855be`: its block names six open items of theirs, and its
 `STATUS-RUN-NEXT` expects round 32 on `.22` with 0.7.103, as ours does.
@@ -118,7 +119,8 @@ rewritten.
 
 **The block's `STATUS-OPEN` lines are the list, in priority order**, each saying
 whether it is being fixed or stays open and why; `docs/KNOWN-ISSUES.md` has the
-detail. Priority 1 ships with `.22`. Priorities 2 to 4 are what round 32 asks
+detail. Priority 1 is released in `.22` and stays listed until round 32's
+Full run reads it on a drive. Priorities 2 to 4 are what round 32 asks
 of Platterpus to close, and priority 5 needs a drive. The rest stay open, each
 with its reason.
 
