@@ -2352,6 +2352,22 @@ code.** Anything that changes either is handshake material even though we did
 not write it — and say plainly that it came from upstream, because it changes
 whether "roll back to stock" is an escape hatch for the other side.
 
+**An option this fork adds is long-only, and is named by its feature.** Rule
+from 2026-10-12. Upstream allocates short letters and a fork cannot reserve
+one: `-k` was `--stall-secs` here, in Platterpus's argv, when upstream's
+`b40c1f0` gave `-k` to `--acoustid-key`. So the sync made upstream's option
+long-only here, and the two projects now spell different options `-k`. A long
+name can still collide, but only on the same word, and a sync's diff of
+`--help` shows it. **Name an option by what it does (`--cache-probe`), never
+by who asked for it (`--platterpus-…`).** The obligations here are to any
+consumer, and a consumer's name in the CLI says otherwise. **A letter already
+shipped stays**: `-j`, `-k`, `-u`, `-x`, and `-V`, which is upstream's own
+spelling up to 0.9.3. Renaming one breaks every caller that uses it, which is
+the failure this rule exists to avoid. `tests/option_letters.py` reads
+upstream's option table at the last upstream commit merged, and fails on a new
+fork option with a letter, a renamed shipped letter, an upstream letter changed
+without a recorded reason, and a letter given twice.
+
 **That diff is a tool and a record, not a habit.** `tools/upstream-delta.py`
 generates it — versions, inbound commits, CLI flags *measured from both
 binaries' `--help`* rather than read from the option table, log-line inventories

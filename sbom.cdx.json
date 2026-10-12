@@ -941,6 +941,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/option_letters.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tests/personal_details.py"
         },
         {
@@ -1227,5 +1231,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:b00f120e-61a6-5e4b-b7b1-5136fc43cbd9"
+  "serialNumber": "urn:uuid:236acf73-aff9-5802-bf48-bc7c446f974e"
 }
