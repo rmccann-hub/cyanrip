@@ -4,8 +4,11 @@ This fork feeds **Platterpus** (`rmccann-hub/Platterpus`), which parses this
 program's log as an archival record. That makes the log an interface and the two
 projects each other's dependency, so changes to what a consumer can observe go
 through a **round**: we send a file, they verify it against their real parser,
-they send a verification file back. A round stays **OPEN** until that arrives,
-and neither side releases while one is open.
+they send a verification file back. A round stays **OPEN** until that arrives.
+From round 32 a release does not wait for one (`PROTOCOL.md` v8 §6b): either
+side releases when its own suite passes, and a round reviews the released pair;
+its close moves the consumer's approved pin. Until v8 neither side released
+while a round was open.
 
 The protocol itself — what a round must contain, and the rules both sides hold
 to — lives in `CLAUDE.md` under *The Platterpus seam*. This directory is the
@@ -68,7 +71,8 @@ bisect our own topic work, and an upstream sync is not that.
 
 **Do not read this table as authoritative — run the gate.**
 `python3 tools/release-gate.py` prints the live state from the declared verdicts
-in `docs/handshake/`, and it is what blocks a release. This table went stale
+in `docs/handshake/`. Until v8 it blocked a release while a round was open; from
+8 it prints the open rounds and blocks only on a fault in the record. This table went stale
 once already, stopping at *"round 7 is open"* through five closed rounds.
 
 | Round | State | Pin it settled on | Record |

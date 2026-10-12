@@ -472,9 +472,14 @@ regardless of who is at the keyboard.
   `PROTOCOL.md` §1 says the spec does not govern how files move.
 - **Each round is two files and two verifications.** We send a handshake file
   (sections A–J, spec below); they verify it against their real parser; they send a
-  verification file back. A round stays **OPEN** until that arrives. **No release and
-  no pin switch while a round is open**, with one carve-out that had to be
-  invented because the rule as written deadlocks: a **test pin**
+  verification file back. A round stays **OPEN** until that arrives. **No pin
+  switch while a round is open**: the consumer's approved pin moves only on a
+  close (`PROTOCOL.md` v8 R8 point 1). **A release no longer waits for a round**
+  (v8 §6b, E1, binding from round 32): either side releases when its whole suite
+  passes on the release commit from a clean checkout, and a round reviews the
+  released pair afterwards. Until v8 this bullet said *"No release and no pin
+  switch while a round is open"*, and that rule needed one carve-out because as
+  written it deadlocked: a **test pin**
   (`HANDSHAKE-TEST-PIN`) may be installed on the rig to gather the hardware
   evidence a close requires. A close needs `HANDSHAKE-TESTED`; that evidence
   needs the reviewed build installed; installing it was forbidden; so the round
@@ -1619,9 +1624,10 @@ a housekeeping one. The rules, in force from r3:
   logfile permanently, so pruning turns that line into a dangling reference: the
   log still claims a build and the build no longer exists, which looks checkable
   and is not. Session and topic branches stay prunable; nothing points at them.
-- **Tags** `platterpus-fork-rN` mark releases, and **a release is tagged only
-  once the handshake round that reviewed it has closed** — the seam rule already
-  says no release while a round is open, and the tag is where that rule bites.
+- **Tags** `platterpus-fork-rN` would mark releases. Until v8 a release was
+  tagged only once the round that reviewed it had closed, since no release could
+  happen while one was open; from v8 a release does not wait for a round, so a
+  tag would mark the release itself.
   **But a tag cannot currently be published from this environment.** The git
   proxy refuses tag pushes with `HTTP 403`, and `git ls-remote --tags origin`
   returns nothing, so no release of this fork has ever been reachable by tag from
@@ -1951,9 +1957,12 @@ evidence.
 
 ## The release plan, and what enforces it
 
-Rolling a fork release is four things in a fixed order. The order is the point:
-every step depends on the one before, and skipping one is how a release ships a
-claim nobody checked.
+Rolling a fork release is the steps below. **From v8 (round 32 on) step 4 does
+not wait for step 3**: a release follows steps 1 and 2 and its suite passing on
+the release commit from a clean checkout, and a round reviews the released pair
+afterwards (`PROTOCOL.md` §6b, R8). Until v8 the four were a fixed order and a
+release waited for a closed round; the steps are kept in that order because the
+round mechanics in step 3 are unchanged.
 
 **1. Land the work.** Topic branch → `platterpus-fork`, fast-forward only, one
 logical change per commit, every commit building and testing green on its own.
@@ -2016,7 +2025,7 @@ agree — at which point the verdict becomes `GO`. A round may take several laps
 a mid-round lap is `HOLD`, not `GO`, and a lap that changes nothing is still a
 complete lap.
 
-**4. Only then, release.** Bump `+platterpus.N`, write the `Changelog.md` entry,
+**4. Release.** Bump `+platterpus.N`, write the `Changelog.md` entry,
 regenerate the contract and golden reference at the new version, and announce the
 pin as a **commit SHA** -- tags cannot be published from here.
 
@@ -2044,10 +2053,14 @@ and misses theirs, reporting a Platterpus beta user as stable. Order by
 `release_seq`. Read the channel from the `channel` column. Never parse the
 version.
 
-**Four properties the generator asserts, each blocking a way a user gets hurt:**
+**Three properties the generator asserts, each blocking a way a user gets hurt,
+and one it retired:**
 
-- **`stable` never points at an unclosed round.** A stable release claims joint
-  verification; an open round means it does not have it.
+- **Retired by v8 (E1, our side of E9): `stable` never points at an unclosed
+  round.** It held while a stable release claimed joint verification. From v8 a
+  release claims its own side's testing, and joint verification is the
+  consumer's approved pin, so the generator publishes a stable release over an
+  open round and records `round_closed: false` beside it.
 - **`stable` is retained when a beta exists**, so downgrade is always possible.
 - **A channel is a risk tolerance, not a lineage.** `beta` resolves to the newest
   row of *any* channel, so opting into pre-releases can never move a user
@@ -2085,8 +2098,10 @@ candidate from a clean checkout (`tools/record-release-suite.py`, recorded under
 `docs/release-evidence/`, and a `git archive` build whose rip verifies with
 `-Y`); then one publish commit carrying the ledger row and the manifest.
 
-PROTOCOL v7 and seam-rules v7 are landed byte-identical in both trees and bind
-from round 31; our gate implements 7.
+PROTOCOL v8 and seam-rules v8 are landed byte-identical in both trees, measured
+by `tools/seam-sync-check.py --fetch` at `platterpus@2d8644a` on 2026-10-11, and
+bind from round 32. Both gates implement 8: Platterpus's from `platterpus@01fd8eac`,
+ours from the commit that carries this sentence.
 
 **`.14` was the first release with a consumer-side prerequisite**: both lines
 it renamed are Platterpus's `_TRACK_START` block delimiter, so shipped ahead of
@@ -2139,9 +2154,12 @@ suite cannot be mistaken for hardware coverage.
 
 ### A close is affirmative, two-sided, and tested — never assumed
 
-**Neither project releases until both have said yes in writing and testing has
-happened.** This is the rule; everything below is machinery for it. Our own `GO`
-is a statement about our tree, not agreement. A round closes only with *all* of:
+**A round closes only when both have said yes in writing and testing has
+happened**, and a close is what moves the consumer's approved pin. Until v8 this
+said *"Neither project releases until both have said yes"*; from round 32 a
+release does not wait for a round (§6b), and joint verification is claimed by
+the approved pin, not by a release. Our own `GO` is a statement about our tree,
+not agreement. A round closes only with *all* of:
 
 ```
 HANDSHAKE-VERDICT: GO                 <- ours
@@ -2186,7 +2204,12 @@ caller claimed, with provenance; the judgement stays downstream.
 ### What enforces it
 
 `tools/release-gate.py` executes step 3, because until r3 it was prose and prose
-enforces nothing. It exits non-zero while any round is not closed:
+enforces nothing. **From protocol 8** `--release-gate` prints every open round
+first and permits (C19 as amended); it exits non-zero only on a fault in the
+record it cannot read past, an ambiguous lap, a refused file, a missing field.
+What refuses a release is the suite on the release commit from a clean checkout
+(`tools/record-release-suite.py`). Until v8 it exited non-zero while any round
+was open:
 
     python3 tools/release-gate.py                 # human summary
     python3 tools/release-gate.py --release-gate  # non-zero blocks a release

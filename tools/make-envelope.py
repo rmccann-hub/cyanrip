@@ -64,12 +64,22 @@ for m in PART.finditer(open("ENVELOPE", encoding="utf-8").read()):
     open(m["name"], "wb").write(data)
 ```'''
 
-FENCE_RE = re.compile(r"^```.*?^```", re.M | re.S)
+def _round_digest():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "round_digest_fences", pathlib.Path(__file__).resolve().parent / "round-digest.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# The fence rule every reader of a lap shares (v8 §2 rule 2, E10).
+_FENCES = _round_digest()
 
 
 def not_a_lap(text):
     """PROTOCOL.md v4 §5a, asserted against our own output before it ships."""
-    stripped = FENCE_RE.sub("", text)
+    stripped = _FENCES.strip_fences(text)
     for field in ("HANDSHAKE-ROUND", "HANDSHAKE-LAP", "HANDSHAKE-FROM"):
         if len(re.findall(rf"^{field}:", stripped, re.M)) == 1:
             return False

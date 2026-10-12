@@ -69,6 +69,7 @@ release is not permitted, which is the form a script should use.
 
 import argparse
 import datetime
+import importlib.util
 import pathlib
 import re
 import sys
@@ -106,7 +107,7 @@ LAP_DECL_RE = re.compile(r"(?m)^HANDSHAKE-LAP:")
 # The shared spec both projects implement. A file declaring a version this gate
 # does not implement is refused rather than guessed at -- see docs/handshake/
 # PROTOCOL.md, which is copied into both repositories.
-PROTOCOL_VERSION = 7
+PROTOCOL_VERSION = 8
 PROTOCOL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(\d+)[ \t]*$", re.M)
 PROTOCOL_DECL_RE = re.compile(r"^HANDSHAKE-PROTOCOL:[ \t]*(.*)$", re.M)
 
@@ -320,6 +321,7 @@ OUR_PIN_RE = re.compile(r"^HANDSHAKE-OUR-PIN:[ \t]*(\S+)[ \t]*$", re.M)
 # carries prose: an INBOUND-HELD that says "none" and a digest that explains why
 # it could not be computed are both legal and both meaningful.
 INBOUND_RE = re.compile(r"^HANDSHAKE-INBOUND-HELD:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
+OBSERVED_RE = re.compile(r"^HANDSHAKE-INBOUND-OBSERVED:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
 DIGEST_RE = re.compile(r"^HANDSHAKE-ROUND-DIGEST:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
 TO_REPO_RE = re.compile(r"^HANDSHAKE-TO-REPO:[ \t]*([^ \t\n](?:[^\n]*[^ \t\n])?|[ \t])[ \t]*$", re.M)
 FROM_REPO_RE = re.compile(r"^HANDSHAKE-FROM-REPO:[ \t]*(\S+)[ \t]*$", re.M)
@@ -549,6 +551,7 @@ class Lap:
         # unknown-fields-are-ignored cuts both ways, and a gate that broke on
         # an older file would make the version bump a flag day.
         self.inbound_held = None
+        self.inbound_observed = None
         self.digest = None
         self.to_repo = None
         self.from_repo = None
@@ -668,6 +671,13 @@ class Lap:
                 "HANDSHAKE-TO-REPO": self.to_repo,
                 "HANDSHAKE-TO-VERSION": self.to_version,
                 "HANDSHAKE-INBOUND-HELD": self.inbound_held}
+        # C47, v8 §5a (E11). Keyed on the DECLARED version, as the row says,
+        # unlike the fields above: v8 asks it of files declaring 8, and C29
+        # already refuses a lap that under-declares within a round. Until v8
+        # this gate never read the field, though every lap of ours since round
+        # 21 carries it, and Platterpus's required it from 6.
+        if self.v8_active:
+            want["HANDSHAKE-INBOUND-OBSERVED"] = self.inbound_observed
         return [k for k, v in want.items() if not v]
 
     def bad_override(self):
@@ -782,6 +792,15 @@ class Lap:
         """The §5b a close was resolved under, named by the file's version, so a
         v6 close does not print v5's rule (whose step 1 v6 amends)."""
         return "v6 §5b" if self.v6_active else "v5 §5b"
+
+    @property
+    def v8_active(self):
+        """Does THIS FILE ask to be judged by v8? Keyed on its declared version,
+        as v5_active and v6_active are."""
+        try:
+            return self.protocol is not None and int(self.protocol) >= 8
+        except (TypeError, ValueError):
+            return False
 
     @property
     def v6_active(self):
@@ -912,6 +931,19 @@ class Lap:
         wire = self.missing_wire_header()
         if wire:
             return "missing required v2 wire header: " + ", ".join(wire)
+        # The three refusals `closed` makes next, in its order. `why` did not
+        # report them, so a lap missing a v4 field -- C47's from v8 -- read
+        # "versions/pins/testing declared" beside a round that was not closed.
+        # Found 2026-10-12 writing the C47 test, which asks `why` to name it.
+        v4 = self.missing_v4()
+        if v4:
+            return "missing required field: " + ", ".join(v4)
+        bad = self.bad_override()
+        if bad:
+            return bad
+        if self.over_ceiling:
+            return (f"lap {self.lap} is past the {LAP_CEILING}-lap ceiling with "
+                    f"no override (R7)")
         if self.tied_with:
             return ("two files declare lap "
                     f"{self.lap}, so there is no order between them: "
@@ -969,16 +1001,27 @@ class Lap:
         return "verdict GO, peer GO, versions/pins/testing declared"
 
 
-FENCE_RE = re.compile(r"^```.*?^```", re.M | re.S)
+def _round_digest():
+    spec = importlib.util.spec_from_file_location(
+        "round_digest_fences", pathlib.Path(__file__).resolve().parent / "round-digest.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def strip_fences(text):
-    """Remove fenced code blocks, preserving line structure elsewhere.
+    """Fenced blocks blanked, line structure kept elsewhere.
 
     A declaration is a statement the file makes, not one it quotes. Examples,
     templates and conformance tables all legitimately contain field lines at
-    column 0, and none of them is a declaration."""
-    return FENCE_RE.sub(lambda m: "\n" * m.group(0).count("\n"), text)
+    column 0, and none of them is a declaration. What a fence IS is v8 §2
+    rule 2's answer (E10), asked of the one function every reader of a lap in
+    this tree shares, beside the digest; until v8 this gate kept a backtick,
+    column-0 regex of its own."""
+    return _FENCES.strip_fences(text)
+
+
+_FENCES = _round_digest()
 
 
 def load_rounds(directory=None, every_lap=False):
@@ -1060,6 +1103,7 @@ def load_rounds(directory=None, every_lap=False):
         # for whoever tries to share code later.
         lp = all_laps[-1]
         lp.inbound_held = one(INBOUND_RE)
+        lp.inbound_observed = one(OBSERVED_RE)
         lp.peer_verdict_source = one(PEER_VERDICT_SOURCE_RE)
         lp.digest = one(DIGEST_RE)
         lp.to_repo = one(TO_REPO_RE)
@@ -1272,15 +1316,21 @@ def c13a_terminal(ours, peer_laps):
     return hit
 
 
-def check(rounds):
-    """Returns (ok, problems). Problems are reasons a release is not allowed."""
+def check(rounds, split=False):
+    """Returns (ok, problems). Problems are reasons a release is not allowed.
+
+    With split=True, returns (defects, still_open) instead: faults in the
+    record itself, and rounds that are merely open. From protocol 8 only the
+    first refuses a release (§6b, E1, C19 as amended); an open round is
+    printed, never quiet, and is not a reason (E9)."""
     problems = []
+    still_open = []
     for r in rounds:
         # A peer-opened round we have not answered has no file of ours, so
         # every per-file check below would report on THEIR file against OUR
         # requirements. One problem, naming the real one.
         if r.peer_only:
-            problems.append(
+            still_open.append(
                 f"round {r.number} is not closed ({r.why}): {r.path.name}")
             continue
         if r.lap is None:
@@ -1297,7 +1347,7 @@ def check(rounds):
         for msg in r.c13a_refused:
             problems.append(f"round {r.number}: {msg}")
         if not r.closed:
-            problems.append(f"round {r.number} is not closed ({r.why}): {r.path.name}")
+            still_open.append(f"round {r.number} is not closed ({r.why}): {r.path.name}")
         elif r.withdrawn:
             # v4 §4b, C27. WITHDRAWN is terminal -- the round is over and no
             # further lap can reopen it -- but it records NO agreement, so a
@@ -1328,6 +1378,9 @@ def check(rounds):
                 f"round {r.number} has a verdict but no unambiguous "
                 f"HANDSHAKE-ROUND declaration: {r.path.name}"
             )
+    if split:
+        return problems, still_open
+    problems = problems + still_open
     return (not problems), problems
 
 
@@ -1386,6 +1439,25 @@ def main():
         print("Release allowed: every round is closed.")
         return 0
 
+    # Protocol 8 (§6b, E1; C19 as amended; our side of E9). A release claims
+    # its own side's testing and nothing more: what refuses one is the whole
+    # suite failing on the release commit from a clean checkout, recorded by
+    # tools/record-release-suite.py, not a round being open. Joint
+    # verification is claimed by the consumer's approved pin, which moves only
+    # on a close. So an open round is printed, first and every time, and
+    # permits; a fault in the record itself still refuses, because a gate that
+    # cannot read its record cannot say which rounds are open.
+    if PROTOCOL_VERSION >= 8:
+        defects, still_open = check(rounds, split=True)
+        if not defects:
+            print("Release permitted (PROTOCOL.md v8 §6b): a release claims "
+                  "this side's own testing, and its suite on the release "
+                  "commit from a clean checkout is what refuses one. Open:")
+            for p in still_open:
+                print(f"  - {p}")
+            return 0
+        problems = defects + still_open
+
     print("Release NOT allowed:")
     for p in problems:
         print(f"  - {p}")
@@ -1405,7 +1477,7 @@ def main():
     #
     # The open rounds are printed FIRST and unconditionally, so permitting a
     # beta is never quiet.
-    if args.prerelease:
+    if args.prerelease and PROTOCOL_VERSION < 8:
         print()
         print("PRE-RELEASE permitted: the rounds above are open, and a beta "
               "claims no joint verification. A STABLE release is still "

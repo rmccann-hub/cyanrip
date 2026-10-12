@@ -1433,13 +1433,11 @@ def sc_handshake():
         if not re.match(r"round \d+( lap \d+)? (OPEN|closed), verdict \S+", state) \
            and "unknown" not in state:
             fail(f"handshake: state not in the derived form: {state!r}")
-        # An unreleased build must say so where a reader will see it, not
-        # leave "closed" to be inferred from the absence of a warning.
-        gate = subprocess.run([sys.executable, str(ROOT / "tools" / "release-gate.py"),
-                               "--release-gate"], capture_output=True)
-        open_round = gate.returncode != 0
-        if open_round and "NOT a released build" not in state:
-            fail(f"handshake: round is open but the log does not say so: {state!r}")
+        # Whether a round is open is in the state itself ("OPEN"), and from
+        # protocol 8 it no longer decides the released arm (§7, E7): the build
+        # does. This used to read the gate's --release-gate exit as "a round
+        # is open", which v8 stopped making non-zero for an open round.
+        open_round = " OPEN, verdict " in state
 
         # A CLOSED ROUND IS NOT A RELEASED BUILD. That is still the rule; what
         # changed in round 10 is how the second half is established.
@@ -1477,17 +1475,18 @@ def sc_handshake():
         _spec.loader.exec_module(_ghs)
         expect_released = declared and not _ghs._known_dirty()
 
-        if not open_round and not expect_released and "NOT a released build" not in state:
-            fail(f"handshake: the round is closed and this build makes no "
-                 f"effective release declaration, so the log must still "
-                 f"disclaim: {state!r}")
+        if not expect_released and "NOT a released build" not in state:
+            fail(f"handshake: this build makes no effective release "
+                 f"declaration, so the log must disclaim, whatever the round "
+                 f"state: {state!r}")
 
         # The declared rendering, which nothing tested until now -- it was
         # verified only by hand-run transcripts pasted into handshake laps.
-        if not open_round and expect_released:
+        if expect_released:
             if "-- released build" not in state or "NOT a released build" in state:
-                fail(f"handshake: built with -Ddeclare_released=true on a closed "
-                     f"round, but the log does not say so: {state!r}")
+                fail(f"handshake: built with -Ddeclare_released=true "
+                     f"({'open' if open_round else 'closed'} round), but the "
+                     f"log does not say so: {state!r}")
             # ...and it must NOT go silent. Before round 10 a released build
             # printed no suffix at all, which made the strongest claim in the
             # line by omission. The qualifier is the whole fix: it says who

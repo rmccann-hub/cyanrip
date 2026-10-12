@@ -933,11 +933,24 @@ def _gate_main(files, argv):
     return code, buf.getvalue()
 
 
-def test_stable_release_refused_with_a_round_open():
-    """Covers: C19"""
+def test_stable_release_permitted_with_a_round_open_from_v8():
+    """Covers: C19
+
+    v8 §6b (E1) amends the row: a release claims its own side's testing, so
+    an open round is printed first and permits. Until v8 this test asserted a
+    refusal. What still refuses is a fault in the record itself, because a gate
+    that cannot read its record cannot say which rounds are open.
+    """
     body = lap(1, 9, "HOLD")
-    code, _ = _gate_main({"round-9.md": body}, ["--release-gate"])
-    check(code != 0, "a stable release must be refused with a round open")
+    code, out = _gate_main({"round-9.md": body}, ["--release-gate"])
+    check(code == 0, f"v8: a release was refused because a round is open: {out!r}")
+    check("round 9" in out and "Release permitted" in out
+          and out.rindex("round 9") > out.index("Release permitted"),
+          f"the open round was not printed with the permission: {out!r}")
+    ambiguous = body + "HANDSHAKE-LAP: 2\n"
+    code, out = _gate_main({"round-9.md": ambiguous}, ["--release-gate"])
+    check(code != 0 and "ambiguous" in out,
+          f"a record the gate cannot read permitted a release: {out!r}")
 
 
 def test_prerelease_permitted_but_never_quietly():
@@ -953,10 +966,11 @@ def test_prerelease_permitted_but_never_quietly():
     check(code == 0, "a pre-release must be permitted with a round open")
     check("round 9" in out,
           f"the open round must be printed before permitting: {out!r}")
-    check("PRE-RELEASE permitted" in out,
+    # From v8 a pre-release and a stable release are permitted alike (§6b),
+    # so the flag stays and says the same thing; until v8 it also said a
+    # stable release was still refused.
+    check("Release permitted" in out,
           "permitting a pre-release must say so explicitly")
-    check("STABLE release is still refused" in out,
-          "must state that a stable release is still refused")
 
 
 def test_prerelease_does_not_close_the_round():
@@ -1079,9 +1093,11 @@ def test_manifest_committed_copy_is_current():
           "tools/gen-release-manifest.py")
 
 
-def test_manifest_stable_never_points_at_an_open_round():
-    """A stable release claims joint verification. An open round means it does
-    not have it, so the generator must refuse rather than publish."""
+def test_manifest_stable_on_an_open_round_publishes_and_says_so():
+    """From protocol 8 (§6b, E1, our side of E9) a stable release claims its
+    own side's testing, so the generator no longer refuses one on an unclosed
+    round. Until v8 it did, and this test asserted the refusal. What must not
+    be lost is the information: the channel still says the round is open."""
     m = _manifest_mod()
     import tempfile, pathlib as _p
     with tempfile.TemporaryDirectory() as d:
@@ -1091,11 +1107,13 @@ def test_manifest_stable_never_points_at_an_open_round():
         try:
             m.LEDGER = f
             try:
-                m.build()
-                check(False, "stable on an unclosed round 999 was published")
+                man = m.build()
             except m.LedgerError as e:
-                check("NOT closed" in str(e),
-                      f"refused, but not for the round reason: {e}")
+                check(False, f"stable on an unclosed round was refused under v8: {e}")
+            else:
+                ch = man["channels"]["stable"]
+                check(ch["handshake_round"] == 999 and ch["round_closed"] is False,
+                      f"the open round is not recorded in the channel: {ch}")
         finally:
             m.LEDGER = orig
 
@@ -1350,19 +1368,25 @@ def test_released_is_declared_and_defaults_to_off():
           "a declared release could not claim to be one -- the flag is "
           "unreachable again, which is the defect round 10 exists to fix")
 
-    # 3. An open round withdraws it. Same tree, same flag, no git: `ok` is the
-    #    only term that moved.
+    # 3. An open round does NOT withdraw it, from protocol 8 (§7, E7): the
+    #    build alone decides, and the round state stays in the line as
+    #    information. Until v8 this step asserted the opposite, which is why
+    #    every rip of a release cut inside a round read NOT a released build.
     open_lap = hs / "round-99-lap-01.md"
     open_lap.write_text(
         "HANDSHAKE-PROTOCOL: 4\nHANDSHAKE-ROUND: 99\nHANDSHAKE-LAP: 1\n"
         "HANDSHAKE-FROM: cyanrip-fork\nHANDSHAKE-VERDICT: OPEN\n",
         encoding="utf-8")
-    check(released_in(work, "--declare-released") == "0",
-          "a build from a tree with an OPEN round declared itself released")
-    open_lap.unlink()
     check(released_in(work, "--declare-released") == "1",
-          "removing the open lap did not restore the claim -- then step 3 "
-          "proved nothing about the round state")
+          "an OPEN round withdrew a declared release, which v8 §7 retired")
+    check(released_in(work) == "0",
+          "an OPEN round with no declaration claimed release")
+    state = subprocess.run(
+        [sys.executable, str(work / "tools" / "gen-handshake-state.py"),
+         "--declare-released"], capture_output=True, text=True, check=True).stdout
+    check("round 99 lap 1 OPEN" in state,
+          f"the round state left the line when the build was released: {state!r}")
+    open_lap.unlink()
 
     # --- a real repo: the visibly-dirty withdrawal --------------------------
     repo = build_tree(with_git=True)
@@ -3353,6 +3377,89 @@ def test_v6_gate_refuses_a_peer_lap_above_it():
                                   agreed="none"), _v6_theirs(protocol=7))
         check(not lp.closed and "HANDSHAKE-PROTOCOL: 7" in lp.why,
               f"a gate at 6 read a peer lap declaring 7: {lp.why}")
+
+
+def _v8_pair(observed=True, protocol=8):
+    ours = _v5_ours(protocol=protocol, held="round-30-lap-02.md", agreed="none")
+    extra = "HANDSHAKE-NEXT-LAP: 4 (yours): your reading; the round closes on it\n"
+    if observed:
+        extra += "HANDSHAKE-INBOUND-OBSERVED: none. Your main holds no lap after lap 2.\n"
+    ours = ours.replace("HANDSHAKE-VERDICT: GO\n", extra + "HANDSHAKE-VERDICT: GO\n")
+    theirs = _v6_theirs(protocol=protocol).replace(
+        "HANDSHAKE-VERDICT:",
+        "HANDSHAKE-NEXT-LAP: none — the round closes on this lap\nHANDSHAKE-VERDICT:")
+    return ours, theirs
+
+
+def test_v8_requires_inbound_observed_on_a_file_declaring_8():
+    """Covers: C47
+
+    v8 §5a (E11): a file declaring 8 carries HANDSHAKE-INBOUND-OBSERVED, and a
+    gate implementing 8 refuses one without it, naming the field. Below 8 it is
+    not asked, which is where Platterpus's gate now stands too (their round 31
+    lap 5 S6); until v8 this gate never read the field.
+    """
+    lp = _v5_resolve(*_v8_pair(observed=True))
+    check(lp.closed, f"a complete v8 close did not close: {lp.why}")
+    lp = _v5_resolve(*_v8_pair(observed=False))
+    check(not lp.closed and "HANDSHAKE-INBOUND-OBSERVED" in lp.why,
+          f"a v8 file without INBOUND-OBSERVED closed, or the refusal did not "
+          f"name the field: {lp.why}")
+    lp = _v5_resolve(*_v8_pair(observed=False, protocol=7))
+    check(lp.closed, f"a v7 file was asked for INBOUND-OBSERVED: {lp.why}")
+
+
+def test_every_reader_of_a_lap_follows_the_commonmark_fence():
+    """Covers: C48, C49
+
+    v8 §2 rule 2 (E10): a field line inside a fence that CommonMark recognises
+    and the old column-0 backtick reading did not -- a tilde fence, an indented
+    one, a backtick block a shorter run does not close -- or after a fence that
+    is never closed, is not a declaration, for the gate, the digest, the lap
+    checker and the envelope tool alike. Until v8 each kept a backtick-only
+    regex, and the lap checker none. Each reader is asked about the same
+    quoted lines, so a reader reverted to its old rule fails here by name.
+    """
+    import importlib.util as _ilu
+    def _load(name, rel):
+        spec = _ilu.spec_from_file_location(name, HERE.parent / "tools" / rel)
+        mod = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    lsl = _load("lapstatements_fences", "lap-statements.py")
+    env = _load("make_envelope_fences", "make-envelope.py")
+    # All three identity fields, or the envelope tool -- which calls a file
+    # "not a lap" only when none of them appears exactly once -- passes with
+    # its old rule by the round line alone, as the first draft of this test did.
+    quoted = ("HANDSHAKE-ROUND: 9\nHANDSHAKE-VERDICT: GO\nHANDSHAKE-LAP: 7\n"
+              "HANDSHAKE-FROM: platterpus\nLSL: 4\n")
+    shapes = {
+        "a tilde fence (C48)": "~~~\n" + quoted + "~~~\n",
+        "an indented fence (C48)": "   ```\n" + quoted + "   ```\n",
+        "a block a shorter run does not close (C48)":
+            "````\n```\n" + quoted + "````\n",
+        "a fence never closed (C49)": "```\n" + quoted,
+    }
+    for label, block in shapes.items():
+        text = lap(1, 9, "OPEN") + block
+        (r,) = resolve({"round-09-lap-01.md": text})
+        check(r.verdict == "OPEN" and r.lap == 1,
+              f"the gate read the quoted fields in {label}: verdict "
+              f"{r.verdict!r}, lap {r.lap!r}")
+        check(rdg.is_a_lap(text) == ("9", "1", "cyanrip-fork"),
+              f"the digest counted the quoted fields in {label}: "
+              f"{rdg.is_a_lap(text)!r}")
+        check(not env.not_a_lap(text),
+              f"the envelope tool counted the quoted fields in {label}")
+        checked = lsl.Lap(pathlib.Path("round-09-lap-01.md"), text)
+        lsl.parse(checked)
+        # The checker keys a header by its name after `HANDSHAKE-`.
+        check(checked.headers.get("FROM") == ["cyanrip-fork"]
+              and checked.headers.get("LAP") == ["1"]
+              and checked.version is None,
+              f"the lap checker read the quoted fields in {label}: FROM "
+              f"{checked.headers.get('FROM')!r}, LAP {checked.headers.get('LAP')!r}, "
+              f"LSL {checked.version!r}")
 
 
 def test_v7_requires_next_lap_on_every_file_declaring_7():

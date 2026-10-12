@@ -30,6 +30,39 @@ there. Image rips change too: their sub-channel cannot be read, so a track the
 image's TOC gives no pregap for now has a line. Agreed in round 31;
 Platterpus's 0.7.101 reads it.
 
+**Round 31 is closed**, on 2026-10-11, on our lap 4 and Platterpus's lap 5,
+both `GO`, approving `.21` at `ca3f3ea` with their 0.6.66. `PROTOCOL.md` v8 and
+`seam-rules.md` v8 are byte-identical in both trees and bind from round 32.
+
+**Our gate and build implement protocol 8**, as our round 31 lap 4 S5 said
+they would once both trees held v8:
+
+- **A release no longer waits for a round** (§6b, E1, our side of E9).
+  `tools/release-gate.py --release-gate` prints every open round and permits;
+  it refuses only on a fault in the record, an ambiguous lap, a refused file, a
+  missing field. `tools/gen-release-manifest.py` publishes a stable release
+  over an open round and records `round_closed: false` beside it. What refuses
+  a release is the suite on the release commit from a clean checkout.
+- **`released build` is decided by the build alone** (§7, E7). A build made
+  with `-Ddeclare_released=true` from a clean tree now reads
+  `round N lap M OPEN, verdict V -- released build` while a round is open,
+  where it read `NOT a released build`. Both arms of the line are unchanged,
+  and Platterpus's reader of the open arm shipped first, in their 0.7.101.
+- **One fence rule for every reader of a lap** (§2 rule 2, E10, C48, C49):
+  the gate, the round digest, the lap checker and the envelope tool ask one
+  function, CommonMark's fence. Until v8 each kept a column-0 backtick regex,
+  and the lap checker read fenced headers. Run beside Platterpus's own
+  `fenced_lines` over our 300 handshake files and 20,000 generated documents,
+  the two agree on every line, after taking their backtick info-string rule,
+  which ours lacked. On our record it changes no declaration and no round
+  digest: three files strip differently, each an indented fence in a list item
+  with no field line in it.
+- **`HANDSHAKE-INBOUND-OBSERVED` is required on a lap declaring 8** (§5a, E11,
+  C47). Until v8 this gate never read it.
+- **The gate's reason line now names every refusal its close makes.** A lap
+  missing a v4 field, a bad override or a lap past the ceiling read
+  *"versions/pins/testing declared"* beside a round that was not closed.
+
 **The release gate implements C13a**: once a round is closed or withdrawn, a
 later lap of either side declaring a different verdict is refused as a file,
 and the round stays where it was; it used to become the round's state, which

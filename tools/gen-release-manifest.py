@@ -250,11 +250,12 @@ def build():
         if any(r["channel"] != "stable" for r in rows
                if r["seq"] == stable["release_seq"]):
             raise LedgerError("stable channel resolved to a non-stable row")
-        if not stable["round_closed"]:
-            raise LedgerError(
-                f"stable points at round {stable['handshake_round']}, which is "
-                "NOT closed. A stable release claims joint verification; an open "
-                "round means it does not have it.")
+        # Until protocol 8 a stable release on an unclosed round was refused
+        # here, because a stable release claimed joint verification. v8 §6b
+        # (E1, and our side of E9) retired that claim: a release claims its own
+        # side's testing, and joint verification is the consumer's approved
+        # pin, which moves only on a close. `round_closed` stays in every
+        # channel as information, derived as before.
 
     # Property 2. A beta must never be the only thing on offer.
     if beta is not None and stable is None:

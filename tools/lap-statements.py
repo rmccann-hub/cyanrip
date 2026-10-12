@@ -275,11 +275,31 @@ class Lap:
         self.warnings.append((line, rule, msg))
 
 
+def _fenced_lines(text):
+    """v8 §2 rule 2's fence (E10), from the one function every reader of a lap
+    in this tree shares, beside the digest."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "round_digest_fences", pathlib.Path(__file__).resolve().parent / "round-digest.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.fenced_lines(text)
+
+
 def parse(lap):
-    """Split the file into wire headers and statements; return False if not LSL."""
+    """Split the file into wire headers and statements; return False if not LSL.
+
+    A header line or an `LSL:` line inside a fenced block is a quotation, not a
+    declaration, so the header pass skips fenced lines (E10). Until v8 this
+    checker read every line before the marker, fenced or not. The statements
+    after the marker are read as they stand: a fence there is not LSL, and is
+    refused as any other prose line is."""
     lines = lap.text.splitlines()
+    fenced = _fenced_lines("\n".join(lines))
     start = None
     for i, line in enumerate(lines):
+        if start is None and i in fenced:
+            continue
         m = WIRE_RE.match(line)
         if m and start is None:
             lap.headers.setdefault(m.group(1), []).append(m.group(2))

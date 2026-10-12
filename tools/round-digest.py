@@ -61,7 +61,52 @@ HS = ROOT / "docs" / "handshake"
 LAP_RE = re.compile(r"^HANDSHAKE-LAP:[ \t]*(\d+)[ \t]*$", re.M)
 ROUND_RE = re.compile(r"^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", re.M)
 FROM_RE = re.compile(r"^HANDSHAKE-FROM:[ \t]*(\S+)[ \t]*$", re.M)
-FENCE_RE = re.compile(r"^```.*?^```", re.M | re.S)
+# PROTOCOL.md §2 rule 2 as v8 states it (E10): CommonMark's fence. Until v8
+# this was `^```.*?^```` across lines, which saw only a column-0 backtick block,
+# closed it on any later line opening with three backticks, and left an
+# unclosed one unstripped. Every reader of a lap in this tree asks this one
+# function -- the gate, this digest, the lap checker and the envelope tool --
+# because two readers that toggle on different lines disagree about what a
+# file declares and which files are laps (C48, C49).
+# A backtick fence's info string may not contain a backtick (CommonMark), so
+# "``` `x` ```" is inline code, not a fence. Found 2026-10-12 by running this
+# beside Platterpus's fenced_lines, which had it and we did not.
+FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}(?!.*`)|~{3,})")
+FENCE_CLOSE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})[ \t\r]*$")
+
+
+def fenced_lines(text):
+    """The indexes, in text.split("\n"), of every line inside a fenced block,
+    its fence lines included.
+
+    A line indented by at most three spaces and opening with three or more
+    backticks or tildes opens a block. It closes only on a line indented by at
+    most three spaces made of the same character, at least as many of it, and
+    nothing after them but blanks. A block left open runs to the end of the
+    file."""
+    fenced = set()
+    fence = None
+    for i, line in enumerate(text.split("\n")):
+        if fence is None:
+            m = FENCE_OPEN_RE.match(line)
+            if m:
+                fence = (m.group(1)[0], len(m.group(1)))
+                fenced.add(i)
+            continue
+        fenced.add(i)
+        m = FENCE_CLOSE_RE.match(line)
+        if m and m.group(1)[0] == fence[0] and len(m.group(1)) >= fence[1]:
+            fence = None
+    return fenced
+
+
+def strip_fences(text):
+    """Every fenced line blanked and every other line kept, so a line number
+    still names the same line of the file. A declaration is a statement the
+    file makes, not one it quotes."""
+    fenced = fenced_lines(text)
+    return "\n".join("" if i in fenced else line
+                     for i, line in enumerate(text.split("\n")))
 
 # A DECLARATION is the field name at column 0, whatever follows it. The value
 # patterns above are strict -- `(\d+)$` for a number -- so they cannot see a
@@ -100,7 +145,7 @@ def is_a_lap(text):
     Deliberately NOT a filename or container-format exclusion. A list only ever
     excludes the container someone has already met; this excludes the next one.
     """
-    stripped = FENCE_RE.sub("", text)
+    stripped = strip_fences(text)
     got = []
     for decl_rx, rx in ((ROUND_DECL_RE, ROUND_RE),
                         (LAP_DECL_RE, LAP_RE),
@@ -186,7 +231,7 @@ def why_not_a_lap(raw):
     answer that sends someone to read the whole file. A transport envelope and a
     truncated lap are both "not a lap" and the remedies are opposite.
     """
-    stripped = FENCE_RE.sub("", raw.decode("utf-8", errors="replace"))
+    stripped = strip_fences(raw.decode("utf-8", errors="replace"))
     bits = []
     for name, rx in (("ROUND", ROUND_RE), ("LAP", LAP_RE), ("FROM", FROM_RE)):
         n = len(rx.findall(stripped))
@@ -391,7 +436,7 @@ def check_lap(path):
     if parts is None:
         return "not-a-lap", None, None, []
     rnd, lap, _frm = parts
-    got = declared_digest(FENCE_RE.sub("", text))
+    got = declared_digest(strip_fences(text))
     if got is None:
         return "undeclared", None, None, []
     if got == "unparsed":
