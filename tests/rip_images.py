@@ -2918,10 +2918,23 @@ def sc_diag_record_v8():
             "arranger", "isrc", "upc_ean", "genre", "discid"]
 
     # 1. A rip with a -t ISRC on track 1 only. The files carry it, and the
-    # disc's own is asked for whatever the files carry; an image driver never
-    # reports the capability, so the reason says that.
+    # disc's own is asked for whatever the files carry. Which reason an image
+    # gives depends on the libcdio that ran: before 2.3.0 its image drivers do
+    # not report the capability, and from 2.3.0 (libcdio 998d123, "Image
+    # driver supports ISRC") they do, and this fixture's cue has no ISRC, so
+    # libcdio returns none. The version comes from the rip's own log, whose
+    # `Drive used:` revision is libcdio's CDIO_VERSION cut to four characters.
     rec = WORK / "v8_rip.json"
     rip("v8_rip", "pregap.cue", "-t", "1=isrc=AAAAA0000001", "-j", rec)
+    m = re.search(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
+                  (WORK / "out_v8_rip" / "log.log").read_text(), re.M)
+    if not m:
+        fail("diag_record_v8: the log names no libcdio revision, so which "
+             "ISRC reason an image gives cannot be decided")
+        return
+    want_isrc_reason = ("libcdio returned none"
+                        if (int(m.group(1)), int(m.group(2))) >= (2, 3)
+                        else "the driver does not report reading ISRC")
     d = json.loads(rec.read_text())
     if d.get("schema") != "cyanrip-diagnostics/8":
         fail(f"diag_record_v8: schema is {d.get('schema')!r}, so none of the "
@@ -2941,9 +2954,11 @@ def sc_diag_record_v8():
             fail(f"diag_record_v8: track {tr['number']} isrc_written is "
                  f"{tr['isrc_written']!r}, and its file carries {in_file!r}")
         if (tr["isrc_disc"], tr["isrc_disc_reason"]) != \
-                (None, "the driver does not report reading ISRC"):
+                (None, want_isrc_reason):
             fail(f"diag_record_v8: track {tr['number']} isrc_disc "
-                 f"{tr['isrc_disc']!r} ({tr['isrc_disc_reason']!r}) on an image")
+                 f"{tr['isrc_disc']!r} ({tr['isrc_disc_reason']!r}) on an "
+                 f"image read by libcdio {m.group(1)}.{m.group(2)}, where "
+                 f"{want_isrc_reason!r} is expected")
         if (tr["preemphasis"], tr["deemphasis_applied"]) != ("none", False):
             fail(f"diag_record_v8: track {tr['number']} pre-emphasis "
                  f"{tr['preemphasis']!r}/{tr['deemphasis_applied']!r} on a disc "
