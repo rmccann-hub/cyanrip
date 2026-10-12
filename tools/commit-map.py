@@ -95,6 +95,31 @@ def read_maps(repo, ref=None):
     return sorted(found, key=lambda m: (MAP_NAME.match(m[0]).group(1), m[0]))
 
 
+def read_maps_from(repo, refs):
+    """read_maps() over every ref in `refs`, merged by file name.
+
+    A clone's refs of record can disagree about the maps: a local `main` from
+    before the rewrite carries none while `origin/main` carries them. Reading
+    the first ref alone missed them, and an old ID then resolved in the clone
+    against HR-1.6 (d), refused as on no branch in one clone and accepted in
+    another (Platterpus round 32 lap 4 S9). A map is append-only, so every ref
+    of record is read and the union kept. The same file reading differently on
+    two refs is not guessed at: it is a map that does not read cleanly
+    (HR-1.6 (f)). With no refs, the working tree is read."""
+    if not refs:
+        return read_maps(repo)
+    merged, where = {}, {}
+    for ref in refs:
+        for name, text in read_maps(repo, ref):
+            if name in merged and merged[name] != text:
+                raise MapError(f"{name} reads differently at {where[name]} "
+                               f"and at {ref}")
+            merged.setdefault(name, text)
+            where.setdefault(name, ref)
+    return sorted(merged.items(), key=lambda m: (MAP_NAME.match(m[0]).group(1),
+                                                 m[0]))
+
+
 def parse(maps):
     """[(name, {old: new})] in the order given, or MapError naming the first
     defect HR-1.6 (f) lists."""
