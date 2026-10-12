@@ -266,8 +266,8 @@ static enum AVSampleFormat pick_codec_sample_fmt(const AVCodec *codec, int hdcd)
 
 static int pick_codec_sample_rate(const AVCodec *codec)
 {
-    int i = 0, ret;
     int irate = 44100;
+    int i = 0, ret = irate;
     const int *samplerates = CODEC_SAMPLERATES(codec);
 
     if (!samplerates)
