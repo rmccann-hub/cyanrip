@@ -1405,6 +1405,9 @@ def diag_records(binary):
         ("an -I run on a disc image carrying CD-TEXT",
          ["-d", "cdtext.toc", "-I", "-N", "-A"]),
     ]
+    # Absolute: the runs below start in the image's directory, so a binary
+    # named relative to ours would not be found from there.
+    binary = os.path.abspath(binary)
     with tempfile.TemporaryDirectory() as td:
         write_cdtext_image(td)
         for what, extra in produced:
