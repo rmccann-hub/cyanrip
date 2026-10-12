@@ -2107,7 +2107,7 @@ def emit(binary):
     w("  the `: invalid option -- 'X'` suffix is stable.")
     w("- **One line each**, no usage block follows.")
     w("")
-    w("## P8 - The `-j` diagnostics record")
+    w("## P8 - The `--diagnostics` record")
     w("")
     w("**DERIVED, from two sources that must agree.** The key names come from")
     w("`diagnostics.c`'s emitter, where they are spelled into the format")
