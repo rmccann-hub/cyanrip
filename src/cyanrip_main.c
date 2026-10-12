@@ -1303,6 +1303,8 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
             ret = cyanrip_rip_data_track(ctx, t);
             if (ret < 0 || quit_now)
                 return ret;
+            t->data_ripped = 1;
+            ctx->tracks_completed++;
             ctx->track_read_incomplete = 0;
         }
 

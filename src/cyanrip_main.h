@@ -234,19 +234,27 @@ typedef struct cyanrip_track {
      * that forces the sum arithmetically. */
     uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
     enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
-    /* Whether this track's audio was ripped AND finalised. Set in the one
-     * place ctx->tracks_completed is incremented, so the per-track flag and
-     * the disc counter agree by construction rather than by two readings of
-     * the same condition.
+    /* Whether this track's audio was ripped AND finalised. Set beside one of
+     * the two places ctx->tracks_completed is incremented, data_ripped beside
+     * the other, so the disc counter is the sum of the two per-track flags by
+     * construction rather than by two readings of the same condition.
      *
      * Named for what it is, not "completed": a DATA track is false here and
-     * nothing went wrong -- it is never ripped. An interrupted audio track is
+     * nothing went wrong -- it has no audio; data_ripped says whether its
+     * sectors were copied. An interrupted audio track is
      * also false, and the diagnostics record uses this to decide that its
      * checksum fields carry nothing. Before that, a rip stopped mid-track
      * published `crcs_computed: true` and an eac_crc computed over a partial
      * read, for audio that is not on disk: a confident wrong field in an
      * archival record, which is worse than a missing one. */
     int audio_ripped;
+    /* Whether this DATA track's sectors were all copied to its .bin, errors
+     * or not, as audio_ripped says it of an audio track's read. 0 under -X,
+     * which copies nothing. Data tracks are copied from the upstream sync of
+     * 2026-10-12; until then a disc with one could never report all of its
+     * tracks completed, and from then the footer said `2 of 3 tracks` over a
+     * rip that had written all three until this was added. */
+    int data_ripped;
     /* Frames removed from end_lsn as a CD-Extra inter-session gap, else 0.
      * end_lsn differs from end_lsn_sig for TWO independent reasons -- the read
      * offset and this -- and the log said "with offset" for both, so an
@@ -449,7 +457,7 @@ typedef struct cyanrip_ctx {
      * counter at `end:`, because diagnostics.c reads the context and does not
      * link the read loop. See crip_ripping_errors(). */
     uint64_t paranoia_skips;
-    int tracks_completed; /* Tracks fully ripped, for the completion line */
+    int tracks_completed; /* Tracks fully ripped, audio or data, for the completion line */
     /* CD track number of a read that STARTED and has not completed, else 0.
      * Set as the read loop is entered and cleared only when that loop exits
      * normally, so every abort out of it -- a signal, an error, a goto --

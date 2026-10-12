@@ -542,6 +542,53 @@ def data_track(name, img, track, lsn, frames):
         fail(f"{name}: {track}.bin does not match sectors {lsn}-{lsn + frames}")
 
 
+def sc_data_track_completed():
+    """A data track copied whole counts as a completed track.
+
+    From the upstream sync of 2026-10-12 data tracks are copied to a .bin, and
+    the footer kept counting audio tracks alone, so mixed.cue, all three of
+    whose tracks were written, read `Rip completed:  yes (2 of 3 tracks)`. The
+    count is checked against the files on disk, which it did not write, and
+    the -j record's per-track flags must sum to its disc counter. Under -X the
+    data track is not copied, and the count says so.
+    """
+    for name, args, want_files, want_data in (
+            ("dtc", (), 3, True),
+            ("dtc_x", ("-X",), 2, False)):
+        rec = WORK / f"{name}.json"
+        rip(name, "mixed.cue", *args, "-j", rec)
+        out = WORK / f"out_{name}"
+        on_disk = sorted(p.name for p in out.iterdir()
+                         if p.suffix in (".flac", ".bin"))
+        if len(on_disk) != want_files:
+            fail(f"{name}: {on_disk} on disk, expected {want_files} files")
+        log = (out / "log.log").read_text()
+        m = re.search(r"^Rip completed:  yes \((\d+) of (\d+) tracks\)$",
+                      log, re.M)
+        if not m:
+            fail(f"{name}: no `Rip completed:  yes` line")
+            continue
+        if (int(m.group(1)), int(m.group(2))) != (len(on_disk), 3):
+            fail(f"{name}: the footer says {m.group(1)} of {m.group(2)} "
+                 f"tracks, and {len(on_disk)} of 3 tracks' files are on disk")
+        d = json.loads(rec.read_text())
+        ts = {t["number"]: t for t in d["rip"]["track_state"]}
+        if ts[1].get("data_ripped") is not want_data or ts[1]["audio_ripped"]:
+            fail(f"{name}: track 1 is data and reads data_ripped="
+                 f"{ts[1].get('data_ripped')!r} audio_ripped="
+                 f"{ts[1]['audio_ripped']!r}")
+        for n in (2, 3):
+            if ts[n].get("data_ripped") is not False or not ts[n]["audio_ripped"]:
+                fail(f"{name}: audio track {n} reads data_ripped="
+                     f"{ts[n].get('data_ripped')!r} audio_ripped="
+                     f"{ts[n]['audio_ripped']!r}")
+        flags = sum(1 for t in ts.values()
+                    if t["audio_ripped"] or t.get("data_ripped"))
+        if flags != d["rip"]["tracks_completed"] or flags != len(on_disk):
+            fail(f"{name}: {flags} tracks flagged, tracks_completed "
+                 f"{d['rip']['tracks_completed']}, {len(on_disk)} files")
+
+
 def sc_mixed():
     # The data track rips to a raw MODE1/2352 binary
     rip("mixed", "mixed.cue")
@@ -2767,9 +2814,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the -j record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/8":
+        if rec["schema"] != "cyanrip-diagnostics/9":
             fail(f"encfail: -j schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/8'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/9'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -3245,7 +3292,9 @@ def sc_diag_record_v8():
                         if (int(m.group(1)), int(m.group(2))) >= (2, 3)
                         else "the driver does not report reading ISRC")
     d = json.loads(rec.read_text())
-    if d.get("schema") != "cyanrip-diagnostics/8":
+    # /8 or later: every move since has been an addition (/9, data_ripped).
+    sv = re.fullmatch(r"cyanrip-diagnostics/(\d+)", str(d.get("schema")))
+    if not sv or int(sv.group(1)) < 8:
         fail(f"diag_record_v8: schema is {d.get('schema')!r}, so none of the "
              f"/8 fields can be checked")
         return
@@ -4962,11 +5011,13 @@ def sc_interrupt():
                      f"crcs_computed for an unfinished track")
 
         # The per-track flags and the disc counter must agree. They are set
-        # together today; this is what notices if they ever stop being.
-        ripped = sum(1 for st in states if st and st.get("audio_ripped"))
+        # together today; this is what notices if they ever stop being. From
+        # /9 a data track copied whole counts too, as data_ripped.
+        ripped = sum(1 for st in states
+                     if st and (st.get("audio_ripped") or st.get("data_ripped")))
         if ripped != rip_d.get("tracks_completed"):
-            fail(f"interrupt/{name}: {ripped} tracks report audio_ripped but "
-                 f"the disc says tracks_completed="
+            fail(f"interrupt/{name}: {ripped} tracks report audio_ripped or "
+                 f"data_ripped but the disc says tracks_completed="
                  f"{rip_d.get('tracks_completed')!r}")
 
 
