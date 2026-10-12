@@ -62,7 +62,19 @@ build stopped at the shims, after clang had warned twice in `src/pregap.c`'s
 macOS path, now fixed, and once in Homebrew's libcdio-paranoia `cdda.h`, which
 `Compiler diagnostics` would have counted: it now gates only diagnostics
 located in this tree and lists the rest, and `tests/warn_gate.py` pins that.
-The MinGW
+Once it built, macOS's suite, on Homebrew's libcdio 2.4 and FFmpeg 9.0.1,
+found three defects the Linux jobs cannot reach. **Every image rip without
+`-s` stopped at `Offset is unset!` on libcdio 2.3.0 and later**, and every
+track tried a sub-channel read no image driver implements, because cyanrip
+took `CDIO_DRIVE_CAP_READ_ISRC` to mean a drive and libcdio `998d123` began
+reporting it for images; it now asks the driver, and `tests/imagecap.c` makes
+libcdio 2.1 report the bit so the Linux jobs hold the fix. `-Y` on a log that
+cannot be read said it had no checksum where `fread` failed, as it does on a
+macOS directory; that is now an I/O error. And the paranoia counters were
+printed with `%lu` from a `uint64_t`, which macOS and Windows refuse under
+`-Werror=format`. All three are in upstream's code at `b40c1f0`; the last
+compiles there only because upstream's `cyanrip_log()` carries no format
+attribute. The MinGW
 job builds only `cyanrip.exe` and moves from MINGW64, which setup-msys2
 marks deprecated, to UCRT64. The actions move off Node 20, to
 `actions/checkout` v7.0.1, `upload-artifact` v7.0.2 and `download-artifact`
