@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**The 2026-10-12 Full run is filed**, `.21` with Platterpus 0.7.103 on the
+reference disc, in `docs/rig-2026-10-12-ca3f3ea/`: 424 pass, 0 fail, the one
+unreachable step E2, and all eleven logs verify with `-Y`. It began before
+`.22` was published, so it is not round 32's test. `-f` found `+667` at
+confidence 14 and the cache probe bracketed 128 to 255 beside `cd-paranoia
+-A`'s 137, the third run of each. Its securing pass read track 5's one
+AccurateRip-matching checksum once and kept another read twice. The cache
+table's prose, which still said eighteen sessions and two sub-6 ms reads after
+the nineteenth was added, is recounted at twenty and four.
+
 **Our round 32 lap 1 is sent**, on the operator's word of 2026-10-12, *"Release
 with all open tasks as well"*. It opens round 32 on `.22` with Platterpus
 0.7.103, both released, presents our open list in priority with what needs

@@ -98,7 +98,7 @@ changed is in `Changelog.md`.
 
 | | |
 |---|---|
-| newest | **`.21` with Platterpus 0.6.66, Full, on the reference disc, 2026-10-07** (`docs/rig-2026-10-07-ca3f3ea/`): 425 pass, 0 fail, the one unreachable step E2, read by both sides in round 31 |
+| newest | **`.21` with Platterpus 0.7.103, Full, on the reference disc, 2026-10-12** (`docs/rig-2026-10-12-ca3f3ea/`): 424 pass, 0 fail, the one unreachable step E2; the approved `.21` through their newest app, begun before `.22` was published, so not round 32's test |
 | next | **`.22` with their 0.7.103**, round 32's test; both are released |
 
 Every earlier run is a `docs/rig-*` folder with its own README.
