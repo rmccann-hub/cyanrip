@@ -235,6 +235,20 @@ shim_env += [ 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path(),
 shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim ]
 endif
 
+json_test = executable('json_test',
+    sources: [ 'json.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'json.c' ]),
+    dependencies: unit_test_deps,
+)
+test('JSON reader', json_test)
+
+genopt_test = executable('genopt_test',
+    sources: [ 'genopt.c' ],
+    include_directories: [ '../src' ],
+)
+test('Option parsing', genopt_test)
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the
@@ -650,6 +664,9 @@ test('Seam gap report', python, args: [ files('../tools/seam-check.py'), '--gaps
 test('Seam inbound-held audit', python,
      args: [ files('../tools/seam-check.py'), '--held' ])
 
+# From 2.2.1 on, libcdio numbers a CUE sheet's tracks from 1, whatever the
+# first one's number is
+cue_track_numbers = dependency('libcdio').version().version_compare('< 2.2.1')
 
 rip_scenarios = [
     'info',
@@ -657,6 +674,8 @@ rip_scenarios = [
     'basic',
     'pregap',
     'mixed',
+    'trailing',
+    'discid',
     'nrg',
     'filters',
     'deemph_with_hdcd',
@@ -679,6 +698,7 @@ rip_scenarios = [
     'album_loudness',
     'contract_covers_log',
     'art',
+    'acoustid',
     'cue_only',
     'errors',
     'cdtext',
@@ -765,7 +785,8 @@ foreach s : rip_scenarios
     test(s, python,
          args: [ files('rip_images.py'), cyanrip_exe,
                  meson.current_source_dir() / 'fixtures', s ],
-         env: [ declared_env ] + shim_env,
+         env: [ declared_env,
+                'CUE_TRACK_NUMBERS=' + (cue_track_numbers ? '1' : '0') ] + shim_env,
          depends: shim_deps,
          suite: 'images',
          timeout: 120)

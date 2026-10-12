@@ -39,6 +39,11 @@
 #include <libavutil/intreadwrite.h>
 #include <libavcodec/avcodec.h>
 
+/* Session 1's lead-out, session 2's lead-in and the pregap, the gap that
+ * separates a trailing data track from the audio. libdiscid calls this
+ * XA_INTERVAL and applies it to the lead-out used for the disc IDs. */
+#define CRIP_XA_INTERVAL ((60 + 90 + 2) * 75)
+
 enum cyanrip_output_formats {
     CYANRIP_FORMAT_FLAC = 0,
     CYANRIP_FORMAT_TTA,
@@ -62,6 +67,12 @@ enum cyanrip_pregap_action {
     CYANRIP_PREGAP_DROP,
     CYANRIP_PREGAP_MERGE,
     CYANRIP_PREGAP_TRACK,
+};
+
+enum CRIPDataReadMethod {
+    CRIP_DATA_READ_UNKNOWN = 0,
+    CRIP_DATA_READ_MMC,  /* Raw reads via MMC READ CD */
+    CRIP_DATA_READ_CDIO, /* libcdio's raw reads, used by the image drivers */
 };
 
 enum CRIPAccuDBStatus {
@@ -166,6 +177,9 @@ typedef struct cyanrip_settings {
     int cache_probe;
     char *consumer_id; /* -x: measure the drive's readback cache before ripping */
     int generate_cue_only;
+    int disable_data_tracks;
+    int disable_acoustid;
+    char *acoustid_key; /* User API key, to submit fingerprints with */
 
     enum cyanrip_output_formats outputs[CYANRIP_FORMATS_NB];
     int outputs_num;
@@ -243,6 +257,7 @@ typedef struct cyanrip_track {
     int index; /* Array position + 1 */
 
     int track_is_data;
+    int data_mode; /* Sector mode of a data track, 1 or 2 */
     int preemphasis;
     int preemphasis_in_subcode;
     /* Whether track_read_extra() ran for this track, so the -j record can say
@@ -283,6 +298,8 @@ typedef struct cyanrip_track {
 
     int computed_crcs;
     uint32_t eac_crc;
+    int edc_sectors; /* Data track sectors with an EDC to check */
+    int edc_errors; /* Of those, the ones that never matched it */
     uint32_t acurip_checksum_v1;
     uint32_t acurip_checksum_v1_450;
     uint32_t acurip_checksum_v2;
@@ -338,6 +355,9 @@ typedef struct cyanrip_track {
     double input_sample_peak;
     double sample_peak_rel_amp;
 
+    char *acoustid_fingerprint;
+    int mb_length_ms; /* Length of the track on MusicBrainz, 0 if unknown */
+
     struct cyanrip_track *pt;
     struct cyanrip_track *nt;
 
@@ -366,6 +386,8 @@ typedef struct cyanrip_track {
     struct cyanrip_enc_ctx *enc_ctx[CYANRIP_FORMATS_NB];
 } cyanrip_track;
 
+typedef struct CRIPFingerprint CRIPFingerprint;
+
 typedef struct cyanrip_ctx {
     cdrom_drive_t     *drive;
     cdrom_paranoia_t  *paranoia;
@@ -392,10 +414,14 @@ typedef struct cyanrip_ctx {
     int offset_search_confidence;
 
     char *mb_submission_url;
+    int mb_release_forced; /* Release given via -R, rather than found by the DiscID */
 
     /* Non-track bound cover art */
     CRIPArt cover_arts[32];
     int nb_cover_arts;
+
+    /* How data track sectors are read, latched on the first success */
+    enum CRIPDataReadMethod data_read_method;
 
     /* Drive caps */
     cdio_drive_read_cap_t  rcap;
@@ -416,6 +442,7 @@ typedef struct cyanrip_ctx {
 
     /* State */
     int success;
+    int separate_writeout; /* Files are only written once the disc is ripped */
     int total_error_count;
     /* Paranoia's SKIP callbacks over the whole run, every -Z read included,
      * which is the disc block's `SKIP:`. Copied from the process-global
@@ -458,11 +485,15 @@ typedef struct cyanrip_ctx {
     lsn_t start_lsn;
     lsn_t end_lsn;
     lsn_t duration_frames;
+    lsn_t id_leadout_lsn; /* Lead-out the MusicBrainz and CDDB IDs derive from */
 
     /* ETA */
     CRSlidingWinCtx eta_ctx;
     lsn_t frames_read;
     lsn_t frames_to_read;
+
+    /* AcoustID fingerprinter, reused for every track */
+    CRIPFingerprint *fingerprint;
 
     /* Album EBUR128 values */
     struct cyanrip_dec_ctx *peak_ctx;
@@ -497,6 +528,10 @@ typedef struct cyanrip_out_fmt {
 } cyanrip_out_fmt;
 
 extern const cyanrip_out_fmt crip_fmt_info[];
+
+/* Whether a naming scheme parses, which doesn't depend on the metadata,
+ * logging why not */
+int crip_check_scheme(cyanrip_ctx *ctx, const char *scheme);
 
 char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
                     const cyanrip_out_fmt *fmt, void *arg);

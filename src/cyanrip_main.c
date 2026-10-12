@@ -25,8 +25,14 @@
 #include <locale.h>
 #endif
 
+#include <cdio/mmc.h>
+#include <cdio/mmc_ll_cmds.h>
+#include <cdio/read.h>
+#include <cdio/util.h>
+
 #include <libavutil/bprint.h>
 #include <libavutil/avstring.h>
+#include <libavutil/crc.h>
 #include <libavutil/time.h>
 
 #include "cyanrip_main.h"
@@ -43,6 +49,7 @@
 #include "qrcode.h"
 #include "coverart.h"
 #include "accurip.h"
+#include "acoustid.h"
 #include "os_compat.h"
 #include "cyanrip_encode.h"
 #include "pregap.h"
@@ -74,16 +81,6 @@ static inline void crip_genopt_log(void *log_ctx, int level, const char *fmt, ..
 #define GEN_OPT_MAX_ARR 198
 #define GEN_OPT_HELPSTRING cyanrip_helpstr
 
-/* The CD-Extra inter-session gap, in CD frames: 11400 frames is 152 s at 75
- * fps. Upstream spells it as a bare 11400 at the one place it is used; it is
- * named here so the diagnostic that reports it cannot drift from the
- * arithmetic that applies it.
- *
- * Deliberately NOT decomposed into run-out/lead-in/run-in components here. The
- * value is inherited from upstream and this fork has never checked it against
- * the Orange Book, so a breakdown would be a claim nobody in this tree has
- * evidence for -- and a plausible wrong one is worse than none. */
-#define CDEXTRA_SESSION_GAP 11400
 #include "genopt.h"
 
 static int genopt_nb_vals(GenOpt *opts_list, int n, const char *name)
@@ -133,6 +130,7 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
     av_dict_free(&t->cdtext);
     av_freep(&t->isrc_disc);
     av_free(t->ar_db_entries);
+    av_free(t->acoustid_fingerprint);
 }
 
 static void cyanrip_ctx_end(cyanrip_ctx **s)
@@ -149,6 +147,7 @@ static void cyanrip_ctx_end(cyanrip_ctx **s)
         crip_free_art(&ctx->cover_arts[i]);
 
     cyanrip_finalize_ebur128(ctx, 0);
+    crip_free_fingerprint(ctx);
     av_free(ctx->mb_submission_url);
 
     if (ctx->paranoia)
@@ -274,6 +273,11 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     if (ctx->settings.print_info_only)
         ctx->settings.eject_on_success_rip = 0;
 
+    /* Both ReplayGain and AcoustID tags are only known once every track has
+     * been ripped, so the files must be written after */
+    ctx->separate_writeout = ctx->settings.enable_replaygain ||
+                             crip_acoustid_enabled(ctx);
+
     cdio_init();
 
     if (!ctx->settings.dev_path) {
@@ -329,21 +333,19 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
     cdio_cddap_verbose_set(ctx->drive, CDDA_MESSAGE_LOGIT, CDDA_MESSAGE_FORGETIT);
 
+    /* Drives may not advertise a speed setting they honour, so try anyway */
     if (settings->speed) {
-        if (!(ctx->mcap & CDIO_DRIVE_CAP_MISC_SELECT_SPEED)) {
-            cyanrip_log(ctx, 0, "Device does not support changing speeds!\n");
-            cyanrip_ctx_end(&ctx);
-            return AVERROR(EINVAL);
-        }
-
         ret = cdio_cddap_speed_set(ctx->drive, settings->speed);
         msg = cdio_cddap_errors(ctx->drive);
         if (msg) {
             cyanrip_log(ctx, 0, "cdio error: %s\n", msg);
             cdio_cddap_free_messages(msg);
         }
-        if (ret)
+        if (ret) {
+            cyanrip_log(ctx, 0, "Device does not support changing speeds!\n");
+            cyanrip_ctx_end(&ctx);
             return AVERROR(EINVAL);
+        }
     }
 
     ctx->paranoia = cdio_paranoia_init(ctx->drive);
@@ -407,12 +409,24 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     }
 
     int first_track_nb = cdio_get_first_track_num(ctx->cdio);
+
+    /* Drives report where the last session starts, disc images usually don't */
+    lsn_t last_session_lsn;
+    int single_session =
+        cdio_get_last_session(ctx->cdio, &last_session_lsn) == DRIVER_OP_SUCCESS &&
+        last_session_lsn <= cdio_get_track_lsn(ctx->cdio, first_track_nb);
+
     for (int i = 0; i < ctx->nb_cd_tracks; i++) {
         cyanrip_track *t = &ctx->tracks[i];
 
         t->index = i + 1;
         t->number = t->cd_track_number = i + first_track_nb;
         t->track_is_data = !cdio_cddap_track_audiop(ctx->drive, t->number);
+        if (t->track_is_data) {
+            track_format_t format = cdio_get_track_format(ctx->cdio, t->number);
+            t->data_mode = (format == TRACK_FORMAT_XA || format == TRACK_FORMAT_CDI ||
+                            format == TRACK_FORMAT_PSX) ? 2 : 1;
+        }
         t->pregap_lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number,
                                                      &t->pregap_source);
         t->dropped_pregap_start = CDIO_INVALID_LSN;
@@ -439,6 +453,15 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
              * reports the inter-session link area as part of the last audio
              * track -- so the standard gap comes off that track's end.
              *
+             * Only when the TOC gave the data track no pregap to go by, and the
+             * drive did not say the disc is single session, which a mixed mode
+             * CD is (upstream's b40c1f0; tests/fixtures/trailing.cue is the
+             * disc it keeps whole). "No pregap" is libcdio's, the TOC source,
+             * and deliberately not t->pregap_lsn: this fork also finds a pregap
+             * from the sub-channel, which upstream never asks for here, so
+             * testing the LSN would skip the gap on exactly the drives
+             * upstream applies it to.
+             *
              * The subtraction used to be unguarded, and on a TOC where the gap
              * does not FIT it ran the LSN negative: discid.c then left-shifted
              * a negative int (undefined behaviour, and UBSan says so) and the
@@ -453,11 +476,12 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
              * because cdio_cddap_open() refuses it first ("Unable to open
              * device!", exit 1). Written down because nothing else asserts
              * that ordering. */
-            if ((i == (ctx->nb_cd_tracks - 1)) && (i > 0)) {
+            if ((i == (ctx->nb_cd_tracks - 1)) && (i > 0) &&
+                (t->pregap_source != CYANRIP_PREGAP_SRC_TOC) && !single_session) {
                 cyanrip_track *pt = &ctx->tracks[i - 1];
-                if ((pt->end_lsn - CDEXTRA_SESSION_GAP) >= pt->start_lsn) {
-                    pt->end_lsn -= CDEXTRA_SESSION_GAP;
-                    pt->end_lsn_session_gap = CDEXTRA_SESSION_GAP;
+                if ((pt->end_lsn - CRIP_XA_INTERVAL) >= pt->start_lsn) {
+                    pt->end_lsn -= CRIP_XA_INTERVAL;
+                    pt->end_lsn_session_gap = CRIP_XA_INTERVAL;
                     t->pregap_lsn = pt->end_lsn + 1;
                 } else {
                     cyanrip_log(ctx, 0, "Track %i is data and last, but track "
@@ -465,10 +489,24 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
                                 "session gap does not fit; TOC left unadjusted\n",
                                 t->number, pt->number,
                                 pt->end_lsn - pt->start_lsn + 1,
-                                CDEXTRA_SESSION_GAP);
+                                CRIP_XA_INTERVAL);
                 }
             }
         }
+    }
+
+    /* MusicBrainz and CDDB identify a disc by its audio tracks alone.
+     * libdiscid's mb_disc_load_toc() stands the first track following the
+     * last audio one in for the lead-out, one session gap earlier, no
+     * matter whether the disc really has a second session. Do the same,
+     * or neither ID will match. AccurateRip keeps the real lead-out. */
+    ctx->id_leadout_lsn = ctx->end_lsn + 1;
+    for (int i = ctx->nb_cd_tracks - 1; i >= 0; i--) {
+        if (ctx->tracks[i].track_is_data)
+            continue;
+        if (i < (ctx->nb_cd_tracks - 1))
+            ctx->id_leadout_lsn = ctx->tracks[i + 1].start_lsn - CRIP_XA_INTERVAL;
+        break;
     }
 
     for (int i = 0; i < ctx->nb_cd_tracks; i++) {
@@ -539,13 +577,19 @@ static int crip_replaygain_meta_album(cyanrip_ctx *ctx)
     return 0;
 }
 
+/* An MCN or ISRC of nothing but zeroes is none at all */
+static int crip_code_is_set(const char *code)
+{
+    return code[strspn(code, "0")] != '\0';
+}
+
 static void crip_fill_mcn(cyanrip_ctx *ctx)
 {
     /* Get disc MCN */
     if (ctx->rcap & CDIO_DRIVE_CAP_READ_MCN) {
         const char *mcn = cdio_get_mcn(ctx->cdio);
         if (mcn) {
-            if (strlen(mcn))
+            if (crip_code_is_set(mcn))
                 av_dict_set(&ctx->meta, "disc_mcn", mcn, 0);
             cdio_free((void *)mcn);
         }
@@ -825,8 +869,14 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                 if (!isrc_str) {
                     t->isrc_disc_reason = "libcdio returned none";
                 } else {
+                    /* All zeroes is what a drive returns for a track with
+                     * no ISRC, so it is none (upstream's crip_code_is_set(),
+                     * b40c1f0), with its own reason: the record says what
+                     * libcdio returned and why it was not taken. */
                     if (!isrc_str[0])
                         t->isrc_disc_reason = "libcdio returned an empty ISRC";
+                    else if (!crip_code_is_set(isrc_str))
+                        t->isrc_disc_reason = "libcdio returned an all-zero ISRC";
                     else if (!(t->isrc_disc = av_strdup(isrc_str)))
                         t->isrc_disc_reason = "out of memory";
                     cdio_free((void *)isrc_str);
@@ -843,20 +893,112 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
         /* TOC preemphasis flag*/
         t->preemphasis = cdio_cddap_track_preemp(ctx->drive, t->cd_track_number);
 
-        /* Subcode preemphasis flag. No image driver implements this read. */
+        /* Subcode preemphasis flag. The subchannel is given for wherever the
+         * drive last read, so read from inside the track first, and only
+         * take it if it's this track's (upstream's 59b3f2d). No image driver
+         * implements this read. */
         if (!t->preemphasis && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) &&
             !crip_is_image_driver(ctx)) {
+            uint8_t frame[CDIO_CD_FRAMESIZE_RAW];
             cdio_subchannel_t subchannel_data = { 0 };
-            driver_return_code_t ret = cdio_audio_read_subchannel(ctx->cdio, &subchannel_data);
+            lsn_t lsn = cdio_get_track_lsn(ctx->cdio, t->cd_track_number) + 75;
+            driver_return_code_t ret = cdio_read_audio_sectors(ctx->cdio, frame, lsn, 1);
+            if (ret == DRIVER_OP_SUCCESS)
+                ret = cdio_audio_read_subchannel(ctx->cdio, &subchannel_data);
             if (ret != DRIVER_OP_SUCCESS) {
                 cyanrip_log(ctx, 0, "Unable to read track %i subchannel info!\n", t->number);
-            } else {
+            } else if (subchannel_data.track == t->cd_track_number ||
+                       subchannel_data.track == cdio_to_bcd8(t->cd_track_number)) {
                 t->preemphasis = t->preemphasis_in_subcode = subchannel_data.control & 0x01;
             }
         }
 
         t->extra_read = 1;
     }
+}
+
+/* Terminal progress line state, shared by the audio and data track rippers */
+typedef struct CRIPRipProgress {
+    char line[4096];
+    int line_len;
+    int max_line_len;
+    int64_t frame_last_read;
+} CRIPRipProgress;
+
+static void crip_progress_init(CRIPRipProgress *p)
+{
+    memset(p, 0, sizeof(*p));
+    p->frame_last_read = av_gettime_relative();
+}
+
+/* Reprints the progress line for a track that has just read frame "done" out
+ * of "total". ctx->frames_read must already account for the frame. */
+static void crip_progress_report(cyanrip_ctx *ctx, CRIPRipProgress *p,
+                                 const char *action, int track_number,
+                                 int done, int total, uint64_t errors)
+{
+    if (p->line_len > 0) {
+        cyanrip_log(NULL, 0, "\r");
+        p->line_len = 0;
+    }
+
+    p->line_len += snprintf(p->line, sizeof(p->line),
+                            "%s track %i, progress - %0.2f%%",
+                            action, track_number, ((double)done/total)*100.0f);
+
+    int64_t cur_time   = av_gettime_relative();
+    int64_t frame_diff = cur_time - p->frame_last_read;
+    p->frame_last_read = cur_time;
+
+    int64_t diff = cr_sliding_win(&ctx->eta_ctx, frame_diff, cur_time,
+                                  av_make_q(1, 1000000),
+                                  1000000LL * 1200LL, 1);
+
+    int64_t seconds = (ctx->frames_to_read - ctx->frames_read) * diff;
+
+    int hours = 0;
+    while (seconds >= (3600LL * 1000000LL)) {
+        seconds -= (3600LL * 1000000LL);
+        hours++;
+    }
+
+    int minutes = 0;
+    while (seconds >= (60LL * 1000000LL)) {
+        seconds -= (60LL * 1000000LL);
+        minutes++;
+    }
+
+    seconds = av_rescale(seconds, 1, 1000000);
+
+    if (seconds == 60) {
+        minutes++;
+        seconds = 0;
+    }
+
+    if (minutes == 60) {
+        hours++;
+        minutes = 0;
+    }
+
+    if (hours)
+        p->line_len += snprintf(p->line + p->line_len, sizeof(p->line) - p->line_len,
+                                ", ETA - %ih %im", hours, minutes);
+    else if (minutes)
+        p->line_len += snprintf(p->line + p->line_len, sizeof(p->line) - p->line_len,
+                                ", ETA - %im", minutes);
+    else
+        p->line_len += snprintf(p->line + p->line_len, sizeof(p->line) - p->line_len,
+                                ", ETA - %" PRId64 "s", seconds);
+
+    if (errors)
+        p->line_len += snprintf(p->line + p->line_len, sizeof(p->line) - p->line_len,
+                                ", errors - %" PRIu64, errors);
+
+    p->max_line_len = FFMAX(p->line_len, p->max_line_len);
+    for (int c = p->line_len; c < p->max_line_len; c++)
+        p->line_len += snprintf(p->line + p->line_len, sizeof(p->line) - p->line_len, " ");
+
+    cyanrip_log(NULL, 0, "%s", p->line);
 }
 
 static double sample_peak_rel_amp(const uint8_t *data, const int bytes)
@@ -925,15 +1067,245 @@ static int crip_spool_kept_at_limit(const crip_spool *spools, int nb_spools)
     return k;
 }
 
+/* Reads one raw 2352 byte sector. Data tracks can't go through paranoia,
+ * which only knows how to read audio, so go to the device directly. */
+static int crip_read_raw_frame(cyanrip_ctx *ctx, uint8_t *data, lsn_t lsn)
+{
+    int ret = AVERROR_EXTERNAL;
+
+    /* Watched like an audio read: a drive can block on a data sector exactly
+     * as it can on an audio one, and nothing calls back while it does. */
+    crip_stall_read_begin(crip_reading_track, lsn);
+
+    /* MMC READ CD asking for every field but the subchannel. Sync (12),
+     * header (4), subheader (8, mode 2 only), user data and EDC/ECC add up
+     * to a full frame no matter which mode the sector turns out to be in. */
+    if (ctx->data_read_method != CRIP_DATA_READ_CDIO &&
+        mmc_read_cd(ctx->cdio, data, lsn, CDIO_MMC_READ_TYPE_ANY, false, true,
+                    0x3, true, true, 0, 0, CDIO_CD_FRAMESIZE_RAW,
+                    1) == DRIVER_OP_SUCCESS) {
+        ctx->data_read_method = CRIP_DATA_READ_MMC;
+        ret = 0;
+    }
+
+    /* Disc images and anything else without raw MMC reads. Despite the name
+     * the image drivers hand back whole unprocessed sectors here. */
+    else if (ctx->data_read_method != CRIP_DATA_READ_MMC &&
+             cdio_read_audio_sectors(ctx->cdio, data, lsn, 1) == DRIVER_OP_SUCCESS) {
+        ctx->data_read_method = CRIP_DATA_READ_CDIO;
+        ret = 0;
+    }
+
+    crip_stall_read_end();
+
+    return ret;
+}
+
+/* Whether a raw sector's EDC matches its contents, -1 if it has none: mode 0,
+ * formless mode 2, or a mode 2 form 2 sector without the optional EDC */
+static int data_sector_edc_ok(const AVCRC *edc, const uint8_t *s)
+{
+    static const uint8_t sync[12] = { 0x00, 0xff, 0xff, 0xff, 0xff, 0xff,
+                                      0xff, 0xff, 0xff, 0xff, 0xff, 0x00 };
+    if (memcmp(s, sync, sizeof(sync)))
+        return 0;
+
+    switch (s[15]) {
+    case 1:
+        return av_crc(edc, 0, s, 2064) == AV_RL32(&s[2064]);
+    case 2:
+        /* CD-ROM XA repeats the subheader, formless mode 2 has none */
+        if (memcmp(&s[16], &s[20], 4))
+            return -1;
+        if (!(s[18] & 0x20))
+            return av_crc(edc, 0, &s[16], 2056) == AV_RL32(&s[2072]);
+        if (!AV_RL32(&s[2348]))
+            return -1;
+        return av_crc(edc, 0, &s[16], 2332) == AV_RL32(&s[2348]);
+    default:
+        return -1;
+    }
+}
+
+/* Copies a data track out sector by sector, as a raw 2352 byte binary,
+ * which is what the CUE sheet the rip generates references. */
+static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
+{
+    int ret = 0;
+    int nb_files = 0;
+    char *paths[CYANRIP_FORMATS_NB] = { NULL };
+    FILE *files[CYANRIP_FORMATS_NB] = { NULL };
+    uint8_t *data = NULL;
+
+    /* One file per output format, but nothing stops the naming scheme from
+     * pointing several formats at the same file, so write each path once */
+    for (int i = 0; i < ctx->settings.outputs_num; i++) {
+        char *path = crip_get_path(ctx, CRIP_PATH_DATA, 1,
+                                   &crip_fmt_info[ctx->settings.outputs[i]], t);
+        if (!path) {
+            ret = AVERROR(ENOMEM);
+            goto end;
+        }
+
+        int duplicate = 0;
+        for (int j = 0; j < nb_files; j++)
+            duplicate |= !strcmp(paths[j], path);
+
+        if (duplicate) {
+            av_free(path);
+            continue;
+        }
+
+        files[nb_files] = fopen(path, "wb");
+        if (!files[nb_files]) {
+            ret = AVERROR(errno);
+            cyanrip_log(ctx, 0, "Couldn't open path \"%s\" for writing: %s!\n"
+                        "Invalid folder name? Try -D <folder>.\n",
+                        path, av_err2str(ret));
+            av_free(path);
+            goto end;
+        }
+
+        paths[nb_files++] = path;
+    }
+
+    data = av_malloc(CDIO_CD_FRAMESIZE_RAW);
+    if (!data) {
+        ret = AVERROR(ENOMEM);
+        goto end;
+    }
+
+    track_set_creation_time(ctx, t);
+
+    const AVCRC *crc_table = av_crc_get_table(AV_CRC_32_IEEE_LE);
+    uint32_t crc = UINT32_MAX;
+
+    /* ECMA-130's EDC, x^32 + x^31 + x^16 + x^15 + x^4 + x^3 + x + 1, LSB first */
+    AVCRC edc_table[257];
+    av_crc_init(edc_table, 1, 32, 0xD8018001, sizeof(edc_table));
+
+    t->edc_sectors = t->edc_errors = 0;
+
+    /* What the TOC says the track is can be wrong, the sectors can't */
+    int nb_mode[3] = { 0 };
+
+    const int start_err = ctx->total_error_count;
+
+    CRIPRipProgress prog;
+    crip_progress_init(&prog);
+
+    for (int i = 0; i < t->frames; i++) {
+        /* Detect disc removals */
+        if (get_media_changed(ctx->cdio)) {
+            cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
+            ret = AVERROR(EINVAL);
+            goto end;
+        }
+
+        /* Some drives return damaged sectors without signalling an error,
+         * which only the EDC tells apart */
+        int err = crip_read_raw_frame(ctx, data, t->start_lsn + i);
+        int edc = err ? 0 : data_sector_edc_ok(edc_table, data);
+        for (int j = 0; (err || !edc) && (j < ctx->settings.max_retries); j++) {
+            err = crip_read_raw_frame(ctx, data, t->start_lsn + i);
+            edc = err ? 0 : data_sector_edc_ok(edc_table, data);
+        }
+
+        if (err) {
+            cyanrip_log(ctx, 0, "\nFrame read failed at LSN %i!\n", t->start_lsn + i);
+            memset(data, 0, CDIO_CD_FRAMESIZE_RAW);
+            ctx->total_error_count++;
+        } else {
+            if (data[15] == 1 || data[15] == 2)
+                nb_mode[data[15]]++;
+
+            if (edc >= 0)
+                t->edc_sectors++;
+            if (!edc) {
+                cyanrip_log(ctx, 0, "\nSector EDC mismatch at LSN %i!\n", t->start_lsn + i);
+                t->edc_errors++;
+                ctx->total_error_count++;
+            }
+        }
+
+        /* Stop now if requested */
+        if (quit_now) {
+            cyanrip_log(ctx, 0, "\nStopping, ripping incomplete!\n");
+            ctx->total_error_count++;
+            goto end;
+        }
+
+        crc = av_crc(crc_table, crc, data, CDIO_CD_FRAMESIZE_RAW);
+
+        for (int j = 0; j < nb_files; j++) {
+            if (fwrite(data, CDIO_CD_FRAMESIZE_RAW, 1, files[j]) != 1) {
+                ret = AVERROR(errno);
+                cyanrip_log(ctx, 0, "\nError writing to \"%s\": %s!\n",
+                            paths[j], av_err2str(ret));
+                goto end;
+            }
+        }
+
+        ctx->frames_read++;
+
+        /* Report progress */
+        crip_progress_report(ctx, &prog, "Ripping", t->number, i + 1, t->frames,
+                             ctx->total_error_count - start_err);
+    }
+
+    if (nb_mode[1] || nb_mode[2])
+        t->data_mode = nb_mode[2] > nb_mode[1] ? 2 : 1;
+
+    t->eac_crc = crc ^ UINT32_MAX;
+    t->computed_crcs = 1;
+
+    cyanrip_log(NULL, 0, "\n");
+
+    if (ctx->total_error_count - start_err)
+        cyanrip_log(ctx, 0, "Track %i ripped with errors.\n", t->number);
+    else
+        cyanrip_log(ctx, 0, "Track %i ripped successfully!\n", t->number);
+
+end:
+    for (int i = 0; i < nb_files; i++) {
+        if (fclose(files[i]) && !ret) {
+            ret = AVERROR(errno);
+            cyanrip_log(ctx, 0, "Error writing to \"%s\": %s!\n",
+                        paths[i], av_err2str(ret));
+        }
+        av_free(paths[i]);
+    }
+
+    av_free(data);
+
+    if (ret)
+        ctx->total_error_count++;
+
+    return ret;
+}
+
 static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     int ret = 0;
-    int line_len = 0;
-    int max_line_len = 0;
-    char line[4096];
+    CRIPRipProgress prog;
 
     if (t->track_is_data) {
-        cyanrip_log(ctx, 0, "Track %i is data:\n", t->number);
+        if (ctx->settings.disable_data_tracks) {
+            cyanrip_log(ctx, 0, "Track %i is data, skipping:\n", t->number);
+        } else {
+            cyanrip_log(ctx, 0, "Track %i is data:\n", t->number);
+            /* Named while its sectors are read, as an audio track is, so an
+             * interrupt here says `mid-read` and the stall heartbeat names
+             * the track. A failed copy leaves it set, as a failed audio read
+             * does: the read did not finish. */
+            ctx->track_read_incomplete = t->number;
+            crip_reading_track = t->number;
+            ret = cyanrip_rip_data_track(ctx, t);
+            if (ret < 0 || quit_now)
+                return ret;
+            ctx->track_read_incomplete = 0;
+        }
+
         cyanrip_log_track_end(ctx, t);
         cyanrip_cue_track(ctx, t);
         return 0;
@@ -998,6 +1370,18 @@ repeat_ripping:;
         }
     }
 
+    /* AcoustID fingerprints the read that is KEPT. Without -Z that is this
+     * one, as it is read. Under -Z it is the kept spool, at spool_encode:
+     * the kept read need not be the last, and upstream, which fingerprints
+     * every pass, has no spool to keep an earlier one. */
+    if (!ctx->settings.ripping_retries) {
+        ret = crip_init_fingerprint(ctx);
+        if (ret < 0) {
+            cyanrip_log(ctx, 0, "Error initializing fingerprinting: %s\n", av_err2str(ret));
+            goto fail;
+        }
+    }
+
     /* Reset sample peak for this attempt - a bad sample from a discarded
      * (non-matching) repeat ripping pass must not stick around forever. */
     t->sample_peak_rel_amp = 0.0;
@@ -1013,6 +1397,8 @@ repeat_ripping:;
         }
 
         crip_process_checksums(&checksum_ctx, data, bytes);
+        if (!ctx->settings.ripping_retries)
+            crip_process_fingerprint(ctx, data, bytes);
 
         if (!ctx->settings.ripping_retries) {
             ret = cyanrip_send_pcm_to_encoders(ctx, t->enc_ctx, ctx->settings.outputs_num,
@@ -1026,7 +1412,7 @@ repeat_ripping:;
         }
     }
 
-    int64_t frame_last_read = av_gettime_relative();
+    crip_progress_init(&prog);
 
     /* Read the actual CD data */
     for (int i = 0; i < frames; i++) {
@@ -1068,6 +1454,8 @@ repeat_ripping:;
 
         /* Update checksums */
         crip_process_checksums(&checksum_ctx, data, bytes);
+        if (!ctx->settings.ripping_retries)
+            crip_process_fingerprint(ctx, data, bytes);
 
          /* Update sample peak */
         t->sample_peak_rel_amp = FFMAX(sample_peak_rel_amp(data, bytes), t->sample_peak_rel_amp);
@@ -1084,79 +1472,17 @@ repeat_ripping:;
             goto fail;
         }
 
-        if (line_len > 0) {
-            cyanrip_log(NULL, 0, "\r");
-            line_len = 0;
-        }
-
-        /* Report progress */
-        line_len += snprintf(line, sizeof(line),
-                             "Ripping%strack %i, progress - %0.2f%%",
-                             !ctx->settings.ripping_retries ? " and encoding " : " ",
-                             t->number, ((double)(i + 1)/frames)*100.0f);
-
         ctx->frames_read++;
 
-        int64_t cur_time   = av_gettime_relative();
-        int64_t frame_diff = cur_time - frame_last_read;
-        frame_last_read = cur_time;
-
-        int64_t diff = cr_sliding_win(&ctx->eta_ctx, frame_diff, cur_time,
-                                      av_make_q(1, 1000000),
-                                      1000000LL * 1200LL, 1);
-
-        int64_t seconds = (ctx->frames_to_read - ctx->frames_read) * diff;
-
-        int hours = 0;
-        while (seconds >= (3600LL * 1000000LL)) {
-            seconds -= (3600LL * 1000000LL);
-            hours++;
-        }
-
-        int minutes = 0;
-        while (seconds >= (60LL * 1000000LL)) {
-            seconds -= (60LL * 1000000LL);
-            minutes++;
-        }
-
-        seconds = av_rescale(seconds, 1, 1000000);
-
-        if (seconds == 60) {
-            minutes++;
-            seconds = 0;
-        }
-
-        if (minutes == 60) {
-            hours++;
-            minutes = 0;
-        }
-
-        if (hours)
-            line_len += snprintf(line + line_len, sizeof(line) - line_len,
-                                 ", ETA - %ih %im", hours, minutes);
-        else if (minutes)
-            line_len += snprintf(line + line_len, sizeof(line) - line_len,
-                                 ", ETA - %im", minutes);
-        else
-            line_len += snprintf(line + line_len, sizeof(line) - line_len,
-                                 ", ETA - %" PRId64 "s", seconds);
-
-        /* This read's share of what `Ripping errors:` counts, skips included
-         * from round 30, so the live figure and the disc's agree in kind. */
-        const uint64_t read_errors = (uint64_t)(ctx->total_error_count - start_err) +
-                                     paranoia_status[PARANOIA_CB_SKIP] -
-                                     start_paranoia[PARANOIA_CB_SKIP];
-        if (read_errors)
-            line_len += snprintf(line + line_len, sizeof(line) - line_len,
-                                 ", errors - %" PRIu64, read_errors);
-
-        max_line_len = FFMAX(line_len, max_line_len);
-        if (line_len < max_line_len) {
-            for (int c = line_len; c < max_line_len; c++)
-                line_len += snprintf(line + line_len, sizeof(line) - line_len, " ");
-        }
-
-        cyanrip_log(NULL, 0, "%s", line);
+        /* Report progress. The error count is this read's share of what
+         * `Ripping errors:` counts, skips included from round 30, so the live
+         * figure and the disc's agree in kind. */
+        crip_progress_report(ctx, &prog,
+                             !ctx->settings.ripping_retries ? "Ripping and encoding" : "Ripping",
+                             t->number, i + 1, frames,
+                             (uint64_t)(ctx->total_error_count - start_err) +
+                             paranoia_status[PARANOIA_CB_SKIP] -
+                             start_paranoia[PARANOIA_CB_SKIP]);
     }
 
     /* Fill with silence to maintain track length */
@@ -1168,6 +1494,8 @@ repeat_ripping:;
             bytes = offs;
 
         crip_process_checksums(&checksum_ctx, data, bytes);
+        if (!ctx->settings.ripping_retries)
+            crip_process_fingerprint(ctx, data, bytes);
 
         if (!ctx->settings.ripping_retries) {
             ret = cyanrip_send_pcm_to_encoders(ctx, t->enc_ctx, ctx->settings.outputs_num,
@@ -1184,6 +1512,8 @@ repeat_ripping:;
     calc_global_peak = 0;
 
     crip_finalize_checksums(&checksum_ctx, t);
+    if (!ctx->settings.ripping_retries)
+        crip_finalize_fingerprint(ctx, t);
 
     if (ctx->settings.ripping_retries) {
         /* Stop repeating when we have been told to stop. Without this the
@@ -1322,10 +1652,16 @@ spool_encode: {
         size_t n;
 
         crip_init_checksum_ctx(ctx, &kept_ctx, t);
+        ret = crip_init_fingerprint(ctx);
+        if (ret < 0) {
+            cyanrip_log(ctx, 0, "Error initializing fingerprinting: %s\n", av_err2str(ret));
+            goto fail;
+        }
         t->sample_peak_rel_amp = 0.0;
         rewind(k->f);
         while (!quit_now && (n = fread(buf, 1, sizeof(buf), k->f)) > 0) {
             crip_process_checksums(&kept_ctx, buf, n);
+            crip_process_fingerprint(ctx, buf, n);
             t->sample_peak_rel_amp = FFMAX(sample_peak_rel_amp(buf, n), t->sample_peak_rel_amp);
             ret = cyanrip_send_pcm_to_encoders(ctx, t->enc_ctx, ctx->settings.outputs_num,
                                                t->dec_ctx, buf, n, 1);
@@ -1346,6 +1682,7 @@ spool_encode: {
                 cyanrip_log(ctx, 0, "\nError verifying the -Z spool: it does not match the read it was kept for!\n");
                 goto fail;
             }
+            crip_finalize_fingerprint(ctx, t);
         }
     }
 
@@ -1593,7 +1930,7 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
     /* Pregaps */
     for (int i = 0; i < ctx->nb_tracks; i++) {
         cyanrip_track *ct = &ctx->tracks[i - 0];
-        cyanrip_track *lt = ct->number > 1 ? &ctx->tracks[i - 1] : NULL;
+        cyanrip_track *lt = i ? &ctx->tracks[i - 1] : NULL;
 
         /* A search that failed has no LSN either, and skipping it silently
          * made the list's silence read as no pregap: a rip of selected tracks
@@ -1633,7 +1970,7 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
             else
                 cyanrip_log(ctx, 0, "merging into track %i\n", lt->number);
 
-            if ((ct->number - 1) == 0)
+            if (!lt)
                 ct->dropped_pregap_start = ct->pregap_lsn;
             break;
         case CYANRIP_PREGAP_DROP:
@@ -1650,14 +1987,16 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
                 lt->end_lsn = ct->pregap_lsn - 1;
             break;
         case CYANRIP_PREGAP_TRACK:
-            cyanrip_log(ctx, 0, "splitting off into a new track, number %i\n", ct->number > 1 ? ct->number : 0);
+            cyanrip_log(ctx, 0, "splitting off into a new track, number %i\n",
+                        lt ? ct->number : ct->number - 1);
 
-            if (lt)
+            /* The first track's pregap gets the number before it, others
+             * push the numbers up */
+            if (lt) {
                 lt->end_lsn = ct->pregap_lsn - 1;
-
-            if (ct->number > 1) /* Push all track numbers up if needed */
                 for (int j = i; j < ctx->nb_tracks; j++)
                     ctx->tracks[j].number++;
+            }
 
             memmove(&ctx->tracks[i + 1], &ctx->tracks[i],
                     sizeof(cyanrip_track)*(ctx->nb_tracks - i));
@@ -1717,6 +2056,19 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
     /* Finally set up the internals with the set start_lsn/end_lsn */
     for (int i = 0; i < ctx->nb_tracks; i++) {
         cyanrip_track *t = &ctx->tracks[i];
+
+        /* What the log and CUE sheet report: the files' bounds, with the
+         * pregaps handled, but before the offset shifts them.
+         *
+         * Except for a CD-Extra session gap, whose end stays where the TOC
+         * put it. The cut is not a pregap but a correction of libcdio's TOC,
+         * made before this, and `End LSN: ... (less N frame CD-Extra session
+         * gap, read to: ...)` is the log's only record that it happened. With
+         * the cut inside the signature, as upstream's a95bc41 alone has it,
+         * that line prints a bare 599 for a track the TOC ends at 11999 and
+         * says nothing about the 11400 frames between. */
+        t->start_lsn_sig = t->start_lsn;
+        t->end_lsn_sig = t->end_lsn + t->end_lsn_session_gap;
 
         if (t->track_is_data)
             t->frames = t->end_lsn - t->start_lsn + 1;
@@ -1914,6 +2266,7 @@ static int cyanrip_run(int argc, char **argv)
     settings.outputs_num = 1;
     settings.disable_coverart_embedding = 0;
     settings.enable_replaygain = 1;
+    settings.disable_data_tracks = 0;
     settings.paranoia_level = FF_ARRAY_ELEMS(paranoia_level_map) - 1;
 
     memset(settings.pregap_action, CYANRIP_PREGAP_DEFAULT, 198*sizeof(*settings.pregap_action));
@@ -2001,6 +2354,8 @@ static int cyanrip_run(int argc, char **argv)
                 "Disable automatic CD deemphasis");
     GEN_OPT_ONE(opts_list, bool,    no_replaygain, "K", 0, 0, 0, 0, 0,
                 "Disable ReplayGain tagging");
+    GEN_OPT_ONE(opts_list, bool,    no_data_tracks, "X", 0, 0, 0, 0, 0,
+                "Skip data tracks instead of ripping them to raw binaries");
 
     GEN_OPT_SEC(opts_list, "Output options");
     GEN_OPT_ARR(opts_list, char *,  outputs, "o", ',', 0, 32, 0, 0,
@@ -2043,6 +2398,14 @@ static int cyanrip_run(int argc, char **argv)
                 "Disable MusicBrainz lookup");
     GEN_OPT_ONE(opts_list, bool,    no_accurip, "A", 0, 0, 0, 0, 0,
                 "Disable AccurateRip database query and validation");
+    GEN_OPT_ONE(opts_list, bool,    no_acoustid, "B", 0, 0, 0, 0, 0,
+                "Disable AcoustID fingerprinting");
+    /* Long-only: upstream gives it -k, which has been --stall-secs here since
+     * round 30 and is in Platterpus's argv. A user typing upstream's -k KEY
+     * gets a stall-seconds parse error naming the argument, never a silent
+     * misreading (docs/upstream/sync-2026-10-12-rc3.md section 2). */
+    GEN_OPT_ONE(opts_list, char *,  acoustid_key, "", 1, 1, NULL, 0, 0,
+                "AcoustID user API key, to submit fingerprints of verified rips");
     GEN_OPT_ONE(opts_list, bool,    no_coverart_db, "U", 0, 0, 0, 0, 0,
                 "Disable Cover art DB query and retrieval");
     GEN_OPT_ONE(opts_list, int32_t, cover_size, "m", 1, 1, -1, -1, 1200,
@@ -2135,8 +2498,11 @@ static int cyanrip_run(int argc, char **argv)
     settings.force_deemphasis           = force_deemphasis;
     settings.deemphasis                 = !no_deemphasis;
     settings.enable_replaygain          = !no_replaygain;
+    settings.disable_data_tracks        = no_data_tracks;
     settings.disable_mb                 = no_musicbrainz;
     settings.disable_accurip            = no_accurip;
+    settings.disable_acoustid           = no_acoustid;
+    settings.acoustid_key               = acoustid_key;
     settings.disable_coverart_db        = no_coverart_db;
     settings.disable_coverart_embedding = no_coverart_embed;
     settings.print_info_only            = info;
@@ -2458,6 +2824,25 @@ static int cyanrip_run(int argc, char **argv)
     if (cyanrip_ctx_init(&ctx, &settings))
         return 1;
 
+    /* Syntax errors would otherwise only come up mid-rip, for every path */
+    const char *schemes[][2] = {
+        { "directory", ctx->settings.folder_name_scheme },
+        { "track",     ctx->settings.track_name_scheme  },
+        { "log",       ctx->settings.log_name_scheme    },
+        { "CUE",       ctx->settings.cue_name_scheme    },
+    };
+    for (int i = 0; i < FF_ARRAY_ELEMS(schemes); i++) {
+        if (crip_check_scheme(ctx, schemes[i][1]) < 0) {
+            cyanrip_log(ctx, 0, "Invalid %s naming scheme \"%s\"!\n",
+                        schemes[i][0], schemes[i][1]);
+            /* A refusal to start, so fatal_abort, as `Offset is unset!`
+             * below: upstream counts it in total_error_count, which here is
+             * `Ripping errors:`, and nothing failed to read. */
+            fatal_abort = 1;
+            goto end;
+        }
+    }
+
     if (!settings.offset && !offset_set && !settings.print_info_only &&
         !find_drive_offset_range && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) &&
         !crip_is_image_driver(ctx)) {
@@ -2550,7 +2935,7 @@ static int cyanrip_run(int argc, char **argv)
     }
 
     /* Print this for easy access */
-    if (ctx->settings.print_info_only) {
+    if (ctx->settings.print_info_only && ctx->mb_submission_url) {
         cyanrip_log(ctx, 0, "MusicBrainz URL:\n%s\n", ctx->mb_submission_url);
         crip_print_qrcode(ctx->mb_submission_url);
     }
@@ -2877,8 +3262,10 @@ static int cyanrip_run(int argc, char **argv)
             if (!paths)
                 break;
             for (int i = 0; i < ctx->nb_tracks; i++)
-                paths[i] = crip_get_path(ctx, CRIP_PATH_TRACK, 0, cfmt,
-                                         &ctx->tracks[i]);
+                paths[i] = crip_get_path(ctx,
+                                         ctx->tracks[i].track_is_data ?
+                                         CRIP_PATH_DATA : CRIP_PATH_TRACK,
+                                         0, cfmt, &ctx->tracks[i]);
             for (int i = 0; i < ctx->nb_tracks; i++)
                 for (int j = i + 1; j < ctx->nb_tracks; j++)
                     if (paths[i] && paths[j] && !strcmp(paths[i], paths[j]))
@@ -2896,6 +3283,11 @@ static int cyanrip_run(int argc, char **argv)
     cyanrip_log(ctx, 0, "Tracks:\n");
     if (ctx->settings.rip_indices_count == -1) {
         ctx->frames_to_read = ctx->duration_frames;
+
+        if (ctx->settings.disable_data_tracks)
+            for (int i = 0; i < ctx->nb_tracks; i++)
+                if (ctx->tracks[i].track_is_data)
+                    ctx->frames_to_read -= ctx->tracks[i].frames;
 
         if (!ctx->settings.print_info_only)
             cyanrip_initialize_ebur128(ctx);
@@ -2959,9 +3351,11 @@ static int cyanrip_run(int argc, char **argv)
         if (!ctx->settings.print_info_only)
             cyanrip_finalize_ebur128(ctx, 1);
 
-        if (ctx->settings.enable_replaygain &&
+        if (ctx->separate_writeout &&
             !ctx->settings.print_info_only) {
-            crip_replaygain_meta_album(ctx);
+            if (ctx->settings.enable_replaygain)
+                crip_replaygain_meta_album(ctx);
+            crip_acoustid_finish(ctx);
 
             /**
              * Writeout tracks.
@@ -3001,7 +3395,8 @@ static int cyanrip_run(int argc, char **argv)
                 goto end;
             }
 
-            ctx->frames_to_read += ctx->tracks[j].frames;
+            if (!ctx->tracks[j].track_is_data || !ctx->settings.disable_data_tracks)
+                ctx->frames_to_read += ctx->tracks[j].frames;
         }
 
         /**
@@ -3088,8 +3483,10 @@ static int cyanrip_run(int argc, char **argv)
 
         cyanrip_finalize_ebur128(ctx, 1);
 
-        if (ctx->settings.enable_replaygain) {
-            crip_replaygain_meta_album(ctx);
+        if (ctx->separate_writeout) {
+            if (ctx->settings.enable_replaygain)
+                crip_replaygain_meta_album(ctx);
+            crip_acoustid_finish(ctx);
 
             /**
              * Writeout tracks.

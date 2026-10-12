@@ -4661,16 +4661,50 @@ Everything below this line is upstream cyanreg/cyanrip's changelog, unmodified.
 0.9.4-rc1
 =========
  - New option parser: long options, typed values, saner errors
+ - Option values out of their range, overflowing, or NaN, are refused rather than clamped
  - CUE sheet-only mode, without ripping anything (-J)
  - Rip log checksum verification (-Y)
  - Label and catalog number tagging from MusicBrainz
+ - The MusicBrainz recording ID is tagged as musicbrainz_trackid too, as
+   taggers and players expect it
+ - -R takes releases the disc isn't attached to, e.g. for discs not on
+   MusicBrainz yet, or for pseudo-releases
+ - Discs and tracks without an MCN or ISRC are no longer tagged with zeroes
+ - -S sets the speed of drives which don't advertise it, rather than refusing to
  - MusicBrainz submission URLs are printed as a QR code (needs libqrencode)
+ - AcoustID fingerprinting (needs libchromaprint): fingerprints are submitted
+   when the disc is accurately ripped and on MusicBrainz, and tagged otherwise
  - Embedded cover art is now typed as a front cover, so file managers thumbnail it
  - Automatic deemphasis of preemphasized discs now actually happens
+ - Preemphasis signalled in the subcode is read from each track itself, rather
+   than from wherever the drive last read
  - CUE sheets reference their files relative to the sheet
+ - Quotes and line breaks in metadata no longer break CUE sheet lines
+ - CUE sheets of discs with split off pregaps number their tracks right, and
+   give a split off hidden track as track 1's INDEX 00 rather than as track 0
  - Naming schemes: stricter parsing, whitespace trimming, filename collision warnings
+ - Naming schemes are checked before ripping, and condition tokens matching no
+   key compare as written
+ - Naming schemes with braces inside braces are refused, rather than mangled
+ - Absolute Windows paths in naming schemes keep their drive letter
+ - The OS specific sanitation methods replace colons on macOS too
+ - Merged pregaps get the right INDEX 01 in CUE sheets, and the log gives
+   the bounds of pregap tracks and of the tracks they were split from
+ - The first track's pregap on discs not starting at track 1 is handled
+   like track 1's, rather than written to memory before the track list
+ - Data tracks are ripped to raw MODE1/2352 binaries and referenced from the CUE sheet
  - Data tracks no longer leave stray files
+ - Data track sectors are checked against their EDC, which catches damaged
+   reads the drive doesn't report
+ - CUE sheets give CD-ROM XA data tracks, as on Enhanced CDs, as MODE2/2352
+ - Mixed mode CDs no longer lose 152 seconds of the last audio track
+ - DiscID, CDDB ID and the MusicBrainz submission URL now match libdiscid on
+   discs with data tracks and on discs not starting at track 1
+ - AccurateRip lookups now find discs with data tracks, and each track is
+   checked against its own database entry; the AccurateRip ID is logged
  - Fixed a crash on overlong filenames
+ - Fixed crashes on unexpected AccurateRip replies
+ - Refusing to rip without an offset, and finding no offset with -f, exit with an error
  - FFmpeg 8.0+ compatibility
 
 0.9.3

@@ -190,7 +190,7 @@ static void test_recorded_response(const char *bin, const char *rig_log)
     cyanrip_track *tracks = ctx->tracks;
     for (int i = 0; i < N; i++)
         tracks[i].number = i + 1;
-    ctx->nb_tracks = N;
+    ctx->nb_tracks = ctx->nb_cd_tracks = N;
 
     crip_parse_accurip(ctx, data, size, N, 0x001d420f, 0x013bb370, 0xe20dfe0e);
     check(ctx->ar_db_status == CYANRIP_ACCUDB_FOUND, "the disc is found");
@@ -260,7 +260,7 @@ static int parse_status(const uint8_t *data, size_t size, uint32_t id1,
     cyanrip_ctx *ctx = av_mallocz(sizeof(*ctx));
     for (int i = 0; i < N; i++)
         ctx->tracks[i].number = i + 1;
-    ctx->nb_tracks = N;
+    ctx->nb_tracks = ctx->nb_cd_tracks = N;
     crip_parse_accurip(ctx, data, size, N, id1, 0x013bb370, 0xe20dfe0e);
     int status = ctx->ar_db_status;
     *entries_on_track_1 = ctx->tracks[0].ar_db_nb_entries;
@@ -328,7 +328,7 @@ static void test_a_response_of_the_wrong_size_is_an_error(const char *bin)
     cyanrip_ctx *ctx = av_mallocz(sizeof(*ctx));
     for (int i = 0; i < N; i++)
         ctx->tracks[i].number = i + 1;
-    ctx->nb_tracks = N;
+    ctx->nb_tracks = ctx->nb_cd_tracks = N;
     int ret = crip_parse_accurip(ctx, data, size - 1, N, 0x001d420f,
                                  0x013bb370, 0xe20dfe0e);
     check(ret < 0, "size: a response one byte short returns an error");
@@ -346,6 +346,62 @@ static void test_a_response_of_the_wrong_size_is_an_error(const char *bin)
     av_free(ctx);
 }
 
+/* A data track has no entry in the response: entries run over the AUDIO
+ * tracks only, in order. The loop that read them walked the first
+ * audio_tracks slots of the track table instead, so on a disc whose data track
+ * comes first the data track swallowed audio track 1's entry, every audio
+ * track after it got its neighbour's, and the last got none (upstream's
+ * e159954, found on a real mixed mode disc). Built from the recorded response
+ * with one data track put in front of its 14 audio tracks, and checked against
+ * a parse of the same response without it, so each audio track must hold
+ * exactly the entries its own position holds there. */
+static void test_a_data_track_holds_no_entry(const char *bin)
+{
+    enum { N = 14 };
+    FILE *f = fopen(bin, "rb");
+    uint8_t data[4096];
+    size_t size = f ? fread(data, 1, sizeof(data), f) : 0;
+    if (f)
+        fclose(f);
+    if (size != 1807)
+        return;   /* test_recorded_response() has already failed on it */
+
+    cyanrip_ctx *ref = av_mallocz(sizeof(*ref));
+    for (int i = 0; i < N; i++)
+        ref->tracks[i].number = i + 1;
+    ref->nb_tracks = ref->nb_cd_tracks = N;
+    crip_parse_accurip(ref, data, size, N, 0x001d420f, 0x013bb370, 0xe20dfe0e);
+
+    cyanrip_ctx *ctx = av_mallocz(sizeof(*ctx));
+    for (int i = 0; i < N + 1; i++)
+        ctx->tracks[i].number = i + 1;
+    ctx->tracks[0].track_is_data = 1;
+    ctx->nb_tracks = ctx->nb_cd_tracks = N + 1;
+    crip_parse_accurip(ctx, data, size, N, 0x001d420f, 0x013bb370, 0xe20dfe0e);
+
+    check(ctx->ar_db_status == CYANRIP_ACCUDB_FOUND,
+          "data: the disc is found with a data track in front");
+    check(ctx->tracks[0].ar_db_nb_entries == 0,
+          "data: the data track holds no entry");
+    for (int i = 0; i < N; i++) {
+        const cyanrip_track *want = &ref->tracks[i], *got = &ctx->tracks[i + 1];
+        int same = want->ar_db_nb_entries == 13 &&
+                   got->ar_db_nb_entries == want->ar_db_nb_entries;
+        for (int e = 0; same && e < want->ar_db_nb_entries; e++)
+            same = got->ar_db_entries[e].confidence == want->ar_db_entries[e].confidence &&
+                   got->ar_db_entries[e].checksum == want->ar_db_entries[e].checksum &&
+                   got->ar_db_entries[e].checksum_450 == want->ar_db_entries[e].checksum_450;
+        check(same, "data: each audio track holds its own position's entries");
+    }
+
+    for (int i = 0; i < N + 1; i++) {
+        av_freep(&ref->tracks[i].ar_db_entries);
+        av_freep(&ctx->tracks[i].ar_db_entries);
+    }
+    av_free(ref);
+    av_free(ctx);
+}
+
 int main(int argc, char **argv)
 {
     test_html_marker();
@@ -357,6 +413,7 @@ int main(int argc, char **argv)
     test_recorded_response(argv[1], argv[2]);
     test_disc_status_says_what_the_response_held(argv[1]);
     test_a_response_of_the_wrong_size_is_an_error(argv[1]);
+    test_a_data_track_holds_no_entry(argv[1]);
 
     if (failures) {
         fprintf(stderr, "%d check(s) failed\n", failures);

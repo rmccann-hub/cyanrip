@@ -45,6 +45,8 @@
  *     GEN_OPT_INIT(opts_list, 16);
  *     // Adds an optional boolean option called unround, with a -u flag
  *     GEN_OPT_ONE(opts_list, bool  , unround, "u", 0, 0, 0, 0, "Boolean option called unround");
+ *     // An empty flag string gives a long-only option (--verbose)
+ *     GEN_OPT_ONE(opts_list, bool  , verbose, "",  0, 0, 0, 0, "Long-only boolean option");
  *     // Adds a mandatory string option called output
  *     GEN_OPT_ONE(opts_list, char *, output,  "o", 1, 1, 0, 0, "Destination file");
  *     // Adds a mandatory string option array called input, with at most 8
@@ -154,7 +156,7 @@ typedef struct GenOpt {
     do {                                                                       \
         optlist[opts_list_nb] = (GenOpt) {                                     \
             .name = #valname,                                                  \
-            .flag = "-"valflag,                                                \
+            .flag = (valflag)[0] ? "-"valflag : NULL,                          \
             .flagname = "--"#valname,                                          \
             .type = _Generic((val),                                            \
                 bool:                 GEN_OPT_TYPE_BOOL,                       \
@@ -230,10 +232,11 @@ typedef struct GenOpt {
                     minvals, maxvals, rangelow, rangehigh, helpstr);           \
         optlist[opts_list_nb].sep = sepchar;                                   \
                                                                                \
-        for (int i = 0; i < maxvals; i++) {                                    \
-            optlist[opts_list_nb].val[i] = _Generic((valname[i]),              \
-                                                    char *: (&(valname[i])),   \
-                                                    default: (&(valname[i]))); \
+        for (int genopt_i = 0; genopt_i < maxvals; genopt_i++) {               \
+            optlist[opts_list_nb].val[genopt_i] =                              \
+                _Generic((valname[genopt_i]),                                  \
+                         char *: (&(valname[genopt_i])),                       \
+                         default: (&(valname[genopt_i])));                     \
         }                                                                      \
         opts_list_nb++;                                                        \
     } while (0)
@@ -268,7 +271,11 @@ typedef struct GenOpt {
                         data, l->name);                                        \
             return -EINVAL;                                                    \
         }                                                                      \
-        if (lval > l->range_high_f || lval < l->range_low_f) {                 \
+        /* Written so that NaN is out of range too. The value is printed as  \
+         * parsed, %f, not as typed as upstream's b40c1f0 prints it: the      \
+         * refusal is quoted in the shared docs/seam-commands.md table, and   \
+         * a shared document moves by a round (sync-2026-10-12-rc3.md). */    \
+        if (!(lval >= l->range_low_f && lval <= l->range_high_f)) {            \
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_ERROR,                            \
                         "Error parsing %f for argument \"%s\": "               \
                         "not in [%f:%f] range!\n",                             \
@@ -280,6 +287,7 @@ typedef struct GenOpt {
 
 #define GEN_OPT_PARSE_INT(opt, idx, data, type, fn, base)                      \
     do {                                                                       \
+        errno = 0;                                                             \
         int64_t lval = fn(data, &endp, base);                                  \
         if (endp == data || *endp != '\0') {                                   \
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_ERROR,                            \
@@ -288,11 +296,12 @@ typedef struct GenOpt {
                         data, l->name);                                        \
             return -EINVAL;                                                    \
         }                                                                      \
-        if (lval > l->range_high_i || lval < l->range_low_i) {                 \
+        if (errno == ERANGE ||                                                 \
+            lval > l->range_high_i || lval < l->range_low_i) {                 \
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_ERROR,                            \
-                        "Error parsing %" PRIi64 " for argument \"%s\": "      \
+                        "Error parsing %s for argument \"%s\": "               \
                         "not in [%" PRIi64 ":%" PRIi64 "] range!\n",           \
-                        lval, l->name, l->range_low_i, l->range_high_i);       \
+                        data, l->name, l->range_low_i, l->range_high_i);       \
             return -EINVAL;                                                    \
         }                                                                      \
         *((type *)opt->val[idx]) = lval;                                       \
@@ -300,6 +309,7 @@ typedef struct GenOpt {
 
 #define GEN_OPT_PARSE_UINT(opt, idx, data, type, fn, base)                     \
     do {                                                                       \
+        errno = 0;                                                             \
         uint64_t lval = fn(data, &endp, base);                                 \
         if (endp == data || *endp != '\0') {                                   \
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_ERROR,                            \
@@ -308,11 +318,13 @@ typedef struct GenOpt {
                         data, l->name);                                        \
             return -EINVAL;                                                    \
         }                                                                      \
-        if (lval > l->range_high_u || lval < l->range_low_u) {                 \
+        /* strtoull() takes negative numbers, wrapping them around */          \
+        if (errno == ERANGE || data[strspn(data, " \t")] == '-' ||             \
+            lval > l->range_high_u || lval < l->range_low_u) {                 \
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_ERROR,                            \
-                        "Error parsing %" PRIu64 " for argument \"%s\": "      \
+                        "Error parsing %s for argument \"%s\": "               \
                         "not in [%" PRIu64 ":%" PRIu64 "] range!\n",           \
-                        lval, l->name, l->range_low_u, l->range_high_u);       \
+                        data, l->name, l->range_low_u, l->range_high_u);       \
             return -EINVAL;                                                    \
         }                                                                      \
         *((type *)opt->val[idx]) = lval;                                       \
@@ -329,19 +341,19 @@ typedef struct GenOpt {
             GEN_OPT_PARSE_FLT(opt, idx, data, double, strtod);                 \
             break;                                                             \
         case GEN_OPT_TYPE_I16:                                                 \
-            GEN_OPT_PARSE_INT(opt, idx, data, int16_t, strtol, 10);            \
+            GEN_OPT_PARSE_INT(opt, idx, data, int16_t, strtoll, 10);            \
             break;                                                             \
         case GEN_OPT_TYPE_I32:                                                 \
-            GEN_OPT_PARSE_INT(opt, idx, data, int32_t, strtol, 10);            \
+            GEN_OPT_PARSE_INT(opt, idx, data, int32_t, strtoll, 10);            \
             break;                                                             \
         case GEN_OPT_TYPE_I64:                                                 \
-            GEN_OPT_PARSE_INT(opt, idx, data, int64_t, strtol, 10);            \
+            GEN_OPT_PARSE_INT(opt, idx, data, int64_t, strtoll, 10);            \
             break;                                                             \
         case GEN_OPT_TYPE_U16:                                                 \
-            GEN_OPT_PARSE_UINT(opt, idx, data, uint16_t, strtol, 10);          \
+            GEN_OPT_PARSE_UINT(opt, idx, data, uint16_t, strtoull, 10);        \
             break;                                                             \
         case GEN_OPT_TYPE_U32:                                                 \
-            GEN_OPT_PARSE_UINT(opt, idx, data, uint32_t, strtol, 10);          \
+            GEN_OPT_PARSE_UINT(opt, idx, data, uint32_t, strtoull, 10);        \
             break;                                                             \
         case GEN_OPT_TYPE_U64:                                                 \
             GEN_OPT_PARSE_UINT(opt, idx, data, uint64_t, strtoull, 10);        \
@@ -533,11 +545,14 @@ static inline int gen_opt_parse_fn(void *log_ctx, GenOpt *opts_list,
                     continue;
                 }
                 char fnbuf[64];
-                GEN_OPT_LOG(GEN_OPT_PHDR,
+                const char *flag = opts_list[j].flag;
+                /* Long-only options have no "(-x)", pad its width instead */
+                GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_INFO, "    %s%s%s%s:%*s%s",
                             genopt_flagname_fmt(fnbuf, sizeof(fnbuf),
                                                 opts_list[j].flagname),
-                            opts_list[j].flag,
-                            pad_to - (int)strlen(opts_list[j].flagname), " ",
+                            flag ? " (" : "", flag ? flag : "", flag ? ")" : "",
+                            pad_to - (int)strlen(opts_list[j].flagname) +
+                            (flag ? 0 : (int)strlen(" (-x)")), " ",
                             opts_list[j].help);
                 GEN_OPT_PRINT_DEFAULT_VAL(opts_list[j], 0);
                 GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_INFO, "\n");
