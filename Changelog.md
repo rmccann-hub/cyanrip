@@ -19,9 +19,12 @@ hand: it creates the annotated tag `platterpus-fork-rN` for a release the
 manifest names, once `tools/tag-release-check.py` has checked it, and records
 `release_seq`. **It has not been run**: the owner may rewrite history first.
 `tests/workflows.py` keeps the hardening and `tests/tag_release.py` the tag's
-refusals, both revert-proved property by property. Actions had never run here
-because it is switched off, the owner said, which settles a `SETTLED.md` row
-that read `unknown`. And `master` was found synced to upstream's `b40c1f0` that
+refusals, both revert-proved property by property. **CI first ran on
+2026-10-12**, from this change's own pull request, on the hardened workflow:
+`linux (default)` passed the whole suite, and every other configuration, none
+of which anything had built before, failed for reasons older than this change.
+They are listed in `SETTLED.md`; one, a leak in `tests/diagrecord.c` that only
+the sanitizer build sees, is fixed here. And `master` was found synced to upstream's `b40c1f0` that
 day, where the offset search returns `int`: one upstream re-check anchored on
 `static void` and would have failed in any fresh clone. The defect it checks is
 still there.
