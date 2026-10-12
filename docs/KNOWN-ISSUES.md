@@ -2492,8 +2492,12 @@ those regions are digital silence, so the skip is a no-op and any golden log
 derived from the disc is silent on that logic — **in both implementations.**
 
 Ours is covered by three synthetic vectors in `audio-checksums.py self-test`,
-non-zero everywhere including the edges. Whether Platterpus's is covered is round
-8 `J13`.
+non-zero everywhere including the edges. **Platterpus has none to cover**: it
+computes no AccurateRip checksum and reads ours from the log (their round 28
+lap 6 S7). Checked at `platterpus@808f8fb1` on 2026-10-12: nothing under their
+`src/` computes one, and `ctdb/crc.py` is the CTDB CRC with CTDB's own trims.
+So round 8 `J13` is answered, and this stays a note about the disc, not an open
+question about them.
 
 ---
 

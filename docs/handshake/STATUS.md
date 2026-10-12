@@ -17,12 +17,20 @@ STATUS-OPEN: version-field-meaning both fixing at round 32, priority 4: round 31
 STATUS-OPEN: overread-bounded us fixing at round 32, priority 5: under -O a frame past the disc's last sector is retried up to the retry limit with no timeout of ours; a bounded read proposed in our round 32 lap 1 S18, verifiable only on a drive
 STATUS-OPEN: accurate-stream-declared us fixing at round 32, priority 5: a header line saying what the drive's capabilities page declares about accurate stream, proposed in our round 32 lap 1 S19, readable only on a drive
 STATUS-OPEN: subchannel-pregap-varies us fixing at round 32, priority 5: track 9's sub-channel pregap reads 94 or 95 frames between rips in eleven filed sessions and the log states one value; a line giving both counts when two searches disagree proposed in our round 32 lap 1 S19, and which frame is right still needs the drive
+STATUS-OPEN: error-positions us fixing at round 33, priority 8: each track's positions of read errors and skips in the -j record, your F5's second addition, from the position paranoia passes our status callback, which we discard today; re-read mismatch positions are not computed at all, since -Z compares whole-track checksums
+STATUS-OPEN: exit-classes us fixing at round 33, priority 8: round 8's three exit classes, a flag this build lacks, a disc or drive failure apart from a refused argument, and cancelled or signalled, and a sixth -Y code, from your F8; 1 is the generic code at 30 sites today and 2 to 5 are -Y's, so it is a P4 change proposed in a lap before it lands
+STATUS-OPEN: unsent-flag-rows us fixing at round 33, priority 8: docs/seam-commands.md has rows for the flags you send, and every other flag of ours needs one reading NO: <reason> or ?, from your F8
+STATUS-OPEN: flag-limits us fixing at round 33, priority 9: a boundary row in docs/seam-commands.md for each flag you send, min, max and one past each, from tools/probe-argv-surface.py's runs, -d, -c, -l and -t first, from your F9
+STATUS-OPEN: recordable-medium-line us fixing at round 33, priority 9: a tri-state line saying whether the drive reports the disc as recordable, from your F9, readable only on a drive
+STATUS-OPEN: all-pass-paranoia-counters us fixing at round 33, priority 9: a -Z track's paranoia counters summed over every read, beside the last read's, which the Scope: line qualifies, from your F9
+STATUS-OPEN: encoder-options-flag us fixing at round 33, priority 9: a repeatable key=value flag passing options to the encoder, not -O, from your F9
 STATUS-OPEN: hardware-unverified us cannot, because each needs a disc or a drive this environment lacks: C2, which the rig's drive reports unsupported; CD-TEXT from a physical disc; -W on a pre-emphasised disc; a paranoia skip on a drive; -f on a second drive, and a -f search that finds nothing on a drive; and -P 0's sector-by-sector salvage on a drive; asked of your rig in our round 32 lap 1 S21
 STATUS-OPEN: superseded-read-marker both cannot, because the format needs a design both sides agree (round 24's item, with round 8 J14's read time); asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse and no design exists; asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act, which the operator said on 2026-10-05 they will do; all eighteen are drafted in docs/upstream/issues-to-file.md
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: windows-ci-unpinned us cannot, because the operator decided on 2026-10-05 to leave the Windows build as upstream ships it, and no consumer uses its artifact
+STATUS-OPEN: release-markers us cannot, because building or retiring the release/* markers of docs/UPGRADE-CHANNELS-PLAN.md §6a is the operator's decision, now that v8 decouples releases from rounds; put to the operator on 2026-10-12
 
 **The block above is the proposal's D6, and it is checked, not trusted**
 (`sc_status_block_is_current()`): the round and its state against the release
@@ -121,8 +129,11 @@ rewritten.
 whether it is being fixed or stays open and why; `docs/KNOWN-ISSUES.md` has the
 detail. Priority 1 is released in `.22` and stays listed until round 32's
 Full run reads it on a drive. Priorities 2 to 4 are what round 32 asks
-of Platterpus to close, and priority 5 needs a drive. The rest stay open, each
-with its reason.
+of Platterpus to close, and priority 5 needs a drive. Round 32's lap 1 gives
+priorities 6 and 7 to runs only a drive can give and to four parked joint
+items. Priorities 8 and 9 are what Platterpus's standing status ranked for us
+on 2026-10-12, F5's second addition and F8 and F9, for round 33. The rest stay
+open, each with its reason.
 
 **Removed on 2026-10-12, because they are done**: the eight fixed in `.20`,
 and so in the `.21` round 31 approved, which the block still listed as open:
