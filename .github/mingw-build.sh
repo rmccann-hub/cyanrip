@@ -129,7 +129,10 @@ build_cyanrip() {
     CFLAGS+=" -DLIBXML_STATIC -DCURL_STATICLIB $(printf ' -I%s' "$(cygpath -m "$CYANRIPINSTALLDIR/include")")" \
         LDFLAGS+="$(printf ' -L%s' "$(cygpath -m "$CYANRIPINSTALLDIR/lib")")" \
         meson setup build --default-library=static --buildtype=release --prefix="$CYANRIPINSTALLDIR" --backend=ninja &&
-    ninja -C build && strip --strip-all build/src/cyanrip.exe -o cyanrip.exe
+    # The program this job ships, not every target: tests/diagrecord.c uses
+    # fork() and <sys/wait.h>, which Windows lacks, and this job never ran the
+    # tests. The suite runs on the Linux and macOS jobs.
+    ninja -C build src/cyanrip.exe && strip --strip-all build/src/cyanrip.exe -o cyanrip.exe
 }
 
 cd "$(dirname "$0")"
