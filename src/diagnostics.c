@@ -330,6 +330,13 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
                            (t->audio_ripped && t->computed_crcs) ? "true" : "false",
                            crc, (long long)t->rip_time_us);
 
+                /* /9. The other half of tracks_completed: a data track whose
+                 * sectors were all copied. Its CRC32 is in the log; eac_crc
+                 * and crcs_computed stay about audio, so they are null and
+                 * false for it as they always were. */
+                av_bprintf(&b, ",\"data_ripped\":%s",
+                           t->data_ripped ? "true" : "false");
+
                 /* /8, round 32 (our lap 1 S10, Platterpus's lap 2 S7). Each
                  * is null where it was never read, which is a different claim
                  * from `none`: track_read_extra() reads pre-emphasis and the
@@ -490,8 +497,12 @@ void crip_diag_write(void)
      * isrc_disc_reason, and encode_failures; and at the top level cdtext and
      * offset_search. Every field is an addition, and the exit codes do not
      * move. The version moves anyway, for the reason /4 did: two different
-     * records must not both call themselves /7. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/8\",\n");
+     * records must not both call themselves /7.
+     *
+     * /9 ADDS per track data_ripped, from the upstream sync of 2026-10-12,
+     * which made data tracks copied at all, and tracks_completed counts them.
+     * An addition; the version moves for the same reason. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/9\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");

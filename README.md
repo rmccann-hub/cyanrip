@@ -22,6 +22,7 @@ Features
  * Encoded and muxed via FFmpeg (currently supports flac, opus, mp3, tta, wavpack, alac, vorbis and aac)
  * Drive offset compensation and error recovery via cd-paranoia
  * [Full pregap handling](#pregap-handling)
+ * [Data track ripping](#data-tracks) for mixed mode and Enhanced CDs
  * [HDCD detection and decoding](#hdcd-decoding)
  * [CD Deemphasis (TOC + subcode)](#deemphasis)
  * [Multi-disc album ripping](#multi-disc-albums)
@@ -103,6 +104,7 @@ Complete list of dependencies:
 Optional dependencies:
 
  * libqrencode (to print MusicBrainz submission URLs as scannable QR codes)
+ * libchromaprint (to fingerprint tracks for [AcoustID](#acoustid))
 
 All are available on any up-to-date Linux distribution's package repositories. To compile and install on any *NIX platform:
 
@@ -150,6 +152,7 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -E                   | Force CD deemphasis, for CDs mastered with preemphasis without actually signalling it       |
 | -W                   | Disable automatic CD deemphasis. Read [below](#deemphasis) for details.                     |
 | -K                   | Disable ReplayGain tag generation. Read [replaygain](#replaygain) for details.              |
+| -X                   | Skip data tracks rather than ripping them, read [below](#data-tracks) for details           |
 |                      | **Output options**                                                                          |
 | -o `list`            | Comma separated list of output formats (encodings). Use "help" to list all. Default is flac |
 | -b `int`             | Bitrate in kbps for lossy formats, 256 by default                                           |
@@ -163,11 +166,13 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -I                   | Only print CD metadata and information, will not rip or eject the CD                        |
 | -a `string`          | Album metadata, syntax is described below                                                   |
 | -t `number=string`   | Track metadata, syntax is described below                                                   |
-| -R `int` or `string` | Sets the MusicBrainz release to use, either as an index starting from 1 or an ID string     |
+| -R `int` or `string` | Sets the MusicBrainz release to use, as an index from 1 or an ID, read [below](#metadata)   |
 | -c `int/int`         | Tag multi-disc albums as such, syntax is `disc/totaldiscs`, read below                      |
 | -C `path` or `url`   | Sets cover image to embed into each track, syntax is described below                        |
 | -N                   | Disables MusicBrainz lookup and ignores lack of manual metadata to continue                 |
 | -A                   | Disables AccurateRip database query and comparison                                          |
+| -B                   | Disables AcoustID fingerprinting, read [below](#acoustid) for details                       |
+| --acoustid-key `str` | AcoustID user API key, to submit fingerprints of verified rips, read [below](#acoustid)     |
 | -U                   | Disables Cover art DB database query and retrieval                                          |
 | -m                   | Lookup cover art with max size: 250, 500, 1200, -1 (no limit, default)                      |
 | -G                   | Disables embedding of cover art images                                                      |
@@ -184,6 +189,10 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 
 Metadata
 --------
+If the disc is on MusicBrainz under several releases, cyanrip lists them, and `-R` picks one, by its index in the list or its ID.
+
+`-R` also takes the ID of a release the disc isn't attached to, such as a release whose disc isn't on MusicBrainz yet, or a pseudo-release with translated titles. The release's tracks are then matched to the disc's in order. Of a multi-disc release, the disc with as many tracks as this one is used, or the one given via `-c`. Fingerprints of such rips are never submitted to [AcoustID](#acoustid), as nothing ties the disc to the release.
+
 In case the MusicBrainz database doesn't contain the disc information, is incomplete, or incorrect, you can manually add metadata via the -a argument for album metadata and -t argument for track metadata:
 
 `-a album="Name":album_artist="Artist":date="2018":random_tag="Value"`
@@ -242,7 +251,20 @@ You can override what's done with each pregap on a per-track basis using the `-p
 
 If the pregap offset isn't available for a given track, this argument will do nothing.
 
+Splitting off track 1's pregap, the hidden track of discs which have one, gives it its own file as track 0. As CUE sheets have no track 0, the sheet gives that file as track 1's `INDEX 00`.
+
 cyanrip guarantees that there will be no discontinuities between tracks, unless the drop action is used to delete a pregap.
+
+
+Data tracks
+-----------
+Mixed mode CDs and Enhanced CDs (CD-Extra) carry one or more data tracks alongside the audio. cyanrip rips those too, as raw 2352 byte sectors written to a `.bin` file next to the audio tracks, and references them from the generated CUE sheet, as `MODE1/2352`, or `MODE2/2352` for the CD-ROM XA tracks of Enhanced CDs. Sectors are read whole, with their sync pattern, header and EDC/ECC intact, so the result is what a disc image would contain rather than just the 2048 bytes of user data per sector.
+
+Data tracks are read directly rather than through cd-paranoia, which only knows how to read audio. There is no drive offset correction: a data sector is addressed by its own header, so unlike audio it is never off by a fraction of a sector. Damaged sectors are retried as many times as `-r` allows, and a sector that never reads is written out as zeroes and counted as an error. Every sector is also checked against its EDC, as some drives return damaged sectors without reporting an error, and the log says how many matched. One that never does is kept as read, and counted as an error.
+
+A data track's own pregap is dropped by default, as it holds no user data. Pass `-p track_number=merge` to prepend it to the `.bin` instead, which the CUE sheet will reflect. The [pregap handling](#pregap-handling) section covers the rest.
+
+Pass `-X` to skip data tracks entirely. The CUE sheet will still describe them, so it will reference a `.bin` that was never written.
 
 
 Cover art embedding
@@ -313,9 +335,19 @@ An incomplete list of releases mastered with preemphasis can be found at [this w
 
 ReplayGain
 ----------
-cyanrip will automatically compute ReplayGain tags and add them to all files while ripping. Note, that this requires to hold all **compressed** audio data for the entire CD in RAM while ripping, which may be from 300 to 600 megabytes, depending on the output used. Low-power and low-RAM devices can turn this off via the `-K` switch.
+cyanrip will automatically compute ReplayGain tags and add them to all files while ripping. Note, that this requires to hold all **compressed** audio data for the entire CD in RAM while ripping, which may be from 300 to 600 megabytes, depending on the output used. Low-power and low-RAM devices can turn this off via the `-K` switch, along with [AcoustID](#acoustid) fingerprinting via `-B`, which needs the same.
 
 The tags generated are ReplayGain 2.0 compliant, which is backwards-compatible with ReplayGain 1.0. The **true peak** value is calculated and used.
+
+AcoustID
+--------
+When built with libchromaprint, cyanrip computes an [AcoustID](https://acoustid.org/) fingerprint of every audio track while ripping. Like `fpcalc` and MusicBrainz Picard, it fingerprints the first 2 minutes of each track.
+
+If the whole disc checks out, the fingerprints are submitted to AcoustID, each linked to its MusicBrainz recording. Every audio track must be accurately ripped according to AccurateRip, and must have a MusicBrainz recording within 30 seconds of the track's length. Submitting needs your own user API key, found on your [AcoustID account page](https://acoustid.org/api-key) and given via `--acoustid-key` (long-only on this fork, where `-k` is `--stall-secs`). Nothing is submitted without it.
+
+Otherwise, the fingerprints are saved in the files' tags instead, in the same tag Picard uses: `ACOUSTID_FINGERPRINT`, or `TXXX:Acoustid Fingerprint` for MP3. Picard submits a fingerprint it finds there, rather than computing it again. MP4 based outputs don't get the tag, as FFmpeg can't write freeform iTunes tags.
+
+Whether to submit or tag is only known once the whole disc is ripped, so like ReplayGain, this holds the compressed audio in RAM until the end. `-B` disables fingerprinting.
 
 
 Fork differences
@@ -463,15 +495,33 @@ If the condition is a direct comparison (`==` or `!=`), then the 2 tokens are co
 
 If an arithmetic comparison is used when both tokens are strings, the result of `strcmp` is used. If only one is a string, its pointer (always above 0, __unless__ the token did not match a metadata key, in which case 0) is used.
 
-If the condition is true, everything after the last token's `#` is copied, with any metadata tags there wrapped with `|`. Otherwise, nothing is copied.
+If the condition is true, everything after the last token's `#` is copied, with any metadata tags there wrapped with `|`. Otherwise, nothing is copied. Braces don't nest: inside a condition, a tag is written as `|year|`, never as `{year}`, and cyanrip refuses schemes which try.
 
 Examples are easier to understand, by default the folder value of `{album}{if #releasecomment# > #0# (|releasecomment|)} [{format}]` is used. This resolves to `Album [FLAC]` if there's nothing in the `releasecomment` key, or `Album (Release comment) [FLAC]` if there is.
 
-The default track file name syntax is: `{if #totaldiscs# > #1#|disc|.}{track} - {title}`. So this resolves to `01 - Title.flac` if there's a single CD, or `1.01 - Title.flac` if there are more than 1 CDs and you're ripping the first one.
+The default track file name syntax is: `{if #totaldiscs# > #1#|disc|.}{track} - {title}`. So this resolves to `1 - Title.flac` if there's a single CD, or `1.1 - Title.flac` if there are more than 1 CDs and you're ripping the first one.
+
+The track number is only zero-padded to the number of digits the disc's track count needs: `1` on a disc of 9 tracks, but `01` on one of 12. For two digits regardless, use `{if #tracktotal# < #10#0}{track}`.
 
 A useful example is to have separate directories for each disc: `-D "{album}{if #totaldiscs# > #1# CD|disc|} [{format}]" -F "{track} - {title}"`.
 
+Characters a file name can't hold are replaced in the literal text of a scheme too, except for the drive letter of an absolute Windows path, as in `-D "D:/Music/{album}"`. Use `/` to separate directories.
+
 Whitespace at the edges of every path component, and between the file name and its extension, is trimmed. Conditional bodies containing spaces (like the example above, when used as its own subdirectory) would otherwise leave dangling spaces on one of their branches.
+
+Besides any tags given via `-a` and `-t`, these metadata keys are available:
+
+| Key | Value |
+|-----|-------|
+| `album`, `album_artist`, `date`, `releasecomment` | The release's, from MusicBrainz |
+| `year` | The year part of `date` |
+| `label`, `catalognumber`, `barcode`, `country`, `packaging`, `releasestatus` | The release's, from MusicBrainz |
+| `disc`, `totaldiscs`, `discname` | The disc's position in the release, and its title if it has one |
+| `track`, `tracktotal` | The track's number (padded as described above), and the disc's track count |
+| `title`, `artist`, `isrc` | The track's |
+| `mbid`, `musicbrainz_trackid` | The track's MusicBrainz recording ID, the latter being the tag taggers and players read it from |
+| `musicbrainz_albumid`, `musicbrainz_discid`, `cddb`, `disc_mcn` | The release and disc IDs, and the barcode the disc itself carries |
+| `format` | The output format, e.g. `FLAC` |
 
 The ripping log name and location can be modified via the `-L` argument. By default its set to `{album}{if #totaldiscs# > #1# CD|disc|}`, which resolves to `Album name.log` for 1 CD and `Album name CD1.log` if there are multiple CDs and you're ripping the first.
 
@@ -485,6 +535,8 @@ In case you're on an operating system with more liberal allowance on filenames, 
 CUE sheet
 ---------
 cyanrip will generate a CUE sheet from which a byte-exact duplicate of the disc can be made. By default, pregaps are kept in the CUE sheet as being appended to the previous track (except for the first track, where the pregap is dropped and signalled as silence). This is reffered to as "noncompliant" by [hydrogenaudio](https://wiki.hydrogenaud.io/index.php?title=Cue_sheet#Multiple_files_with_gaps_.28Noncompliant.29).
+
+Data tracks are referenced as `BINARY` files holding `MODE1/2352` or `MODE2/2352` sectors, unless skipped with `-X`, in which case the CUE sheet still names a file that isn't there.
 
 Custom changes in the way pregaps are handled will be reflected in the CUE file. For example, dropping a pregap will signal [silence](https://wiki.hydrogenaud.io/index.php?title=Cue_sheet#Multiple_files_with_gaps_left_out) in the CUE sheet. Appending a pregap to the track will accordingly mark the track as [having two audio indices](https://wiki.hydrogenaud.io/index.php?title=Cue_sheet#Multiple_files_with_corrected_gaps).
 

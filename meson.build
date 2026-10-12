@@ -2,8 +2,8 @@ project('cyanrip', 'c',
     license: 'LGPL2.1+',
     default_options: [ 'buildtype=debugoptimized', 'c_std=c99', 'warning_level=1' ],
     # Upstream's version verbatim, with the fork release appended as SemVer
-    # build metadata. The base moved rc1 -> rc2 because we merged upstream's
-    # 4f28cf0; only upstream may change that half, and it changes exactly when
+    # build metadata. The base moved rc2 -> rc3 because we merged upstream's
+    # b40c1f0; only upstream may change that half, and it changes exactly when
     # we sync. `+platterpus.N` is ours and is the only number we advance.
     #
     # The bump happens HERE, before release time, on purpose: CLAUDE.md's
@@ -18,7 +18,7 @@ project('cyanrip', 'c',
     # that fails a test when it drifts.
     # Nothing here claims to be a release: `declare_released` defaults false and
     # the Handshake: line says so in every log this build writes.
-    version: '0.9.4-rc2+platterpus.22',
+    version: '0.9.4-rc3+platterpus.23',
     meson_version: '>=0.53.0',
 )
 

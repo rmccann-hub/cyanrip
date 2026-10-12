@@ -55,11 +55,12 @@ def fail(msg):
 ref = (ROOT / "docs" / "golden-reference.log").read_text()
 drive = next(l for l in ref.splitlines() if l.startswith("Drive used:"))
 encoder = next(l for l in ref.splitlines() if l.startswith("Encoder:"))
+acoustid = next(l for l in ref.splitlines() if l.startswith("AcoustID:"))
 
 # 1. The reference itself, from its own lines.
-if gen.library_set(ref) != ("2.1", "60"):
-    fail(f"the reference reads as {gen.library_set(ref)!r}, from {drive!r} and "
-         f"{encoder!r}")
+if gen.library_set(ref) != ("2.1", "60", "absent"):
+    fail(f"the reference reads as {gen.library_set(ref)!r}, from {drive!r}, "
+         f"{encoder!r} and {acoustid!r}")
 
 # 2. The lines CI's macOS job printed for the same rip (run 38292984001).
 mac = (ref.replace(drive, "Drive used:     libcdio CDRWIN (revision 2.4.)")
@@ -69,14 +70,19 @@ why = gen.library_mismatch(ref, mac)
 if not why:
     fail("macOS's libcdio 2.4 and libavcodec 63 were compared with the "
          "reference's 2.1 and 60")
-elif not all(v in why for v in ("2.1", "60", "2.4", "63")):
+elif not all(v in why for v in ("2.1", "60", "2.4", "63", "absent")):
     fail(f"the reason does not name both sets: {why!r}")
 
 # Each library alone is enough.
 for label, fresh in (
         ("libcdio alone", ref.replace(drive, drive.replace("2.1.", "2.4."))),
         ("libavcodec alone", ref.replace(encoder, encoder.replace(
-            "libavcodec 60.", "libavcodec 61.")))):
+            "libavcodec 60.", "libavcodec 61."))),
+        # A build with libchromaprint prints another AcoustID: value
+        # (cyanrip_log.c), and nothing else about the library.
+        ("libchromaprint alone", ref.replace(
+            acoustid, "AcoustID:       fingerprinting, no user API key to "
+                      "submit with"))):
     if fresh == ref:
         fail(f"{label}: the substitution did not land, so this case tests "
              f"nothing")
@@ -100,7 +106,10 @@ for label, fresh in (
         ("no Drive used line", ref.replace(drive + "\n", "")),
         ("no Encoder line", ref.replace(encoder + "\n", "")),
         ("two Drive used lines", ref.replace(
-            drive, drive + "\nDrive used:     libcdio CDRWIN (revision 2.4.)"))):
+            drive, drive + "\nDrive used:     libcdio CDRWIN (revision 2.4.)")),
+        ("no AcoustID line", ref.replace(acoustid + "\n", "")),
+        ("two AcoustID lines", ref.replace(
+            acoustid, acoustid + "\nAcoustID:       disabled"))):
     if fresh == ref:
         fail(f"{label}: the substitution did not land")
     elif gen.library_mismatch(ref, fresh) is not None:

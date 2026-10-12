@@ -286,6 +286,12 @@ static int process_cond(cyanrip_ctx *ctx, AVBPrint *buf, AVDictionary *meta,
         char *tok = pos + 1;
         pos = end + 1;
 
+        if (strchr(tok, '{')) {
+            cyanrip_log(ctx, 0, "Invalid scheme syntax, \"{\" inside \"{\", "
+                        "tags in conditions are written as |tag|!\n");
+            goto fail;
+        }
+
         if (!strncmp(tok, "if", strlen("if")) &&
             (tok[strlen("if")] == ' ' || tok[strlen("if")] == '#')) {
             char *cond = av_strdup(tok);
@@ -301,7 +307,7 @@ static int process_cond(cyanrip_ctx *ctx, AVBPrint *buf, AVDictionary *meta,
             int val1_origin_is_tag = 1;
             char *val1 = get_dir_tag_val(ctx, meta, ofmt, cond_tok);
             if (!val1) {
-                val1 = av_strdup(tok);
+                val1 = av_strdup(cond_tok);
                 val1_origin_is_tag = 0;
             }
 
@@ -332,6 +338,8 @@ static int process_cond(cyanrip_ctx *ctx, AVBPrint *buf, AVDictionary *meta,
             cond_tok = av_strtok(NULL, "#", &cond_save);
             if (!cond_tok) {
                 cyanrip_log(ctx, 0, "Invalid scheme syntax, no terminating \"#\"!\n");
+                av_free(cond);
+                av_free(val1);
                 goto fail;
             }
 
@@ -345,6 +353,9 @@ static int process_cond(cyanrip_ctx *ctx, AVBPrint *buf, AVDictionary *meta,
             cond_tok = av_strtok(NULL, "#", &cond_save);
             if (!cond_tok) {
                 cyanrip_log(ctx, 0, "Invalid scheme syntax, no terminating \"#\"!\n");
+                av_free(cond);
+                av_free(val1);
+                av_free(val2);
                 goto fail;
             }
 
@@ -411,6 +422,15 @@ fail:
     return AVERROR(EINVAL);
 }
 
+int crip_check_scheme(cyanrip_ctx *ctx, const char *scheme)
+{
+    AVBPrint buf;
+    av_bprint_init(&buf, 0, AV_BPRINT_SIZE_AUTOMATIC);
+    int ret = process_cond(ctx, &buf, NULL, "", scheme);
+    av_bprint_finalize(&buf, NULL);
+    return ret;
+}
+
 /* Schemes with conditionals easily produce spaces at the edges of path
  * components or before the extension, which no one ever wants */
 static void crip_trim_path_components(char *path)
@@ -456,8 +476,15 @@ char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
     AVBPrint buf;
     av_bprint_init(&buf, 0, AV_BPRINT_SIZE_AUTOMATIC);
 
-    if (process_cond(ctx, &buf, ctx->meta, fmt->folder_suffix,
-                     ctx->settings.folder_name_scheme))
+    /* A drive letter's colon would get sanitized like any other */
+    const char *folder = ctx->settings.folder_name_scheme;
+    if (av_toupper(folder[0]) >= 'A' && av_toupper(folder[0]) <= 'Z' &&
+        folder[1] == ':' && (folder[2] == '/' || folder[2] == '\\')) {
+        av_bprint_append_data(&buf, folder, 2);
+        folder += 2;
+    }
+
+    if (process_cond(ctx, &buf, ctx->meta, fmt->folder_suffix, folder))
         goto end;
 
     av_bprint_chars(&buf, OS_DIR_CHAR, 1);

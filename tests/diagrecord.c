@@ -197,8 +197,10 @@ static void test_track_fields(void)
     t->preemphasis = 1;
     t->isrc_disc_reason = "libcdio returned an empty ISRC";
 
-    /* 4: a data track: nothing is read, and the reason says why. */
+    /* 4: a data track whose sectors were copied: no extra read, the reason
+     * says why, and data_ripped, not audio_ripped, is true. */
     ctx->tracks[3].track_is_data = 1;
+    ctx->tracks[3].data_ripped = 1;
 
     /* 5: an audio track track_read_extra() never ran for. */
 
@@ -213,38 +215,38 @@ static void test_track_fields(void)
     if (!out)
         return;
 
-    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/8\""),
-          "the schema is not cyanrip-diagnostics/8");
+    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/9\""),
+          "the schema is not cyanrip-diagnostics/9");
 
     expect_line(out, "{\"number\":1,\"cd_track\":1,\"repeats\":0,\"audio_ripped\":true,"
-                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,"
+                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":\"AA\\\"BB\\\\CC\",\"isrc_disc\":\"ZZZZZ9999999\","
                      "\"isrc_disc_reason\":null,\"encode_failures\":1}", "track 1");
     expect_line(out, "{\"number\":2,\"cd_track\":2,\"repeats\":0,\"audio_ripped\":false,"
-                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,"
+                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"subcode\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"libcdio returned none\",\"encode_failures\":0}",
                 "track 2");
     expect_line(out, "{\"number\":3,\"cd_track\":3,\"repeats\":0,\"audio_ripped\":true,"
-                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,"
+                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"toc\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"libcdio returned an empty ISRC\","
                      "\"encode_failures\":0}", "track 3");
     expect_line(out, "{\"number\":4,\"cd_track\":4,\"repeats\":0,\"audio_ripped\":false,"
-                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,"
+                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":true,"
                      "\"preemphasis\":null,\"deemphasis_applied\":null,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"data track\",\"encode_failures\":0}", "track 4");
     expect_line(out, "{\"number\":5,\"cd_track\":5,\"repeats\":0,\"audio_ripped\":false,"
-                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,"
+                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":null,\"deemphasis_applied\":null,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"not read\",\"encode_failures\":0}", "track 5");
     expect_line(out, "{\"number\":6,\"cd_track\":6,\"repeats\":0,\"audio_ripped\":true,"
-                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,"
+                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"the driver does not report reading ISRC\","
@@ -275,7 +277,7 @@ static void test_deemphasis_forced(void)
     if (!out)
         return;
     expect_line(out, "{\"number\":1,\"cd_track\":1,\"repeats\":0,\"audio_ripped\":false,"
-                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,"
+                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":null,\"encode_failures\":0}", "forced");
@@ -357,7 +359,7 @@ int main(void)
     if (failures)
         fprintf(stderr, "%d check(s) failed\n", failures);
     else
-        printf("all /8 record checks passed\n");
+        printf("all /9 record checks passed\n");
 
     return !!failures;
 }

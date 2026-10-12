@@ -22,7 +22,7 @@
       "type": "application",
       "bom-ref": "cyanrip",
       "name": "cyanrip",
-      "version": "0.9.4-rc2+platterpus.22",
+      "version": "0.9.4-rc3+platterpus.23",
       "description": "CD ripper; the Platterpus fork of cyanreg/cyanrip",
       "licenses": [
         {
@@ -64,7 +64,7 @@
             "properties": [
               {
                 "name": "cyanrip-fork:measured:fork-point",
-                "value": "f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5"
+                "value": "b40c1f006a000a8bbd2d7ccc438a17006b9b71a0"
               },
               {
                 "name": "cyanrip-fork:measured:upstream-tip",
@@ -743,6 +743,38 @@
       ]
     },
     {
+      "type": "library",
+      "bom-ref": "lib:libchromaprint",
+      "name": "libchromaprint",
+      "scope": "optional",
+      "description": "AcoustID fingerprints of each audio track, tagged, or submitted with --acoustid-key; -B turns it off",
+      "properties": [
+        {
+          "name": "cyanrip-fork:project",
+          "value": "Chromaprint"
+        },
+        {
+          "name": "cyanrip-fork:declared-constraint",
+          "value": ">= 1.4"
+        },
+        {
+          "name": "cyanrip-fork:declared-in",
+          "value": "src/meson.build"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT AND LGPL-2.1-or-later"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://acoustid.org/chromaprint"
+        }
+      ]
+    },
+    {
       "type": "application",
       "bom-ref": "tool:meson",
       "name": "meson",
@@ -909,6 +941,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/personal_details.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tests/release_gate.py"
         },
         {
@@ -1024,6 +1060,30 @@
   ],
   "services": [
     {
+      "bom-ref": "svc:api.acoustid.org",
+      "name": "AcoustID",
+      "endpoints": [
+        "https://api.acoustid.org/v2/submit"
+      ],
+      "authenticated": false,
+      "x-trust-boundary": true,
+      "description": "fingerprints of an accurately ripped disc, sent only when --acoustid-key gives a user key and only in a build with libchromaprint",
+      "properties": [
+        {
+          "name": "cyanrip-fork:fetched-by-cyanrip",
+          "value": "yes"
+        },
+        {
+          "name": "cyanrip-fork:disabled-by",
+          "value": "-B"
+        },
+        {
+          "name": "cyanrip-fork:named-in",
+          "value": "src/acoustid.c"
+        }
+      ]
+    },
+    {
       "bom-ref": "svc:coverartarchive.org",
       "name": "Cover Art Archive",
       "endpoints": [
@@ -1111,6 +1171,8 @@
         "lib:libcurl",
         "lib:threads",
         "lib:libqrencode",
+        "lib:libchromaprint",
+        "svc:api.acoustid.org",
         "svc:coverartarchive.org",
         "svc:musicbrainz.org",
         "svc:www.accuraterip.com"
@@ -1159,7 +1221,11 @@
     {
       "ref": "lib:libqrencode",
       "dependsOn": []
+    },
+    {
+      "ref": "lib:libchromaprint",
+      "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:f07943a1-e4a0-5735-ae3e-9cf0d5e536de"
+  "serialNumber": "urn:uuid:b00f120e-61a6-5e4b-b7b1-5136fc43cbd9"
 }

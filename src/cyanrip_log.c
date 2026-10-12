@@ -33,6 +33,7 @@
 #include "accurip.h"
 #include "stall_watchdog.h"
 #include "diagnostics.h"
+#include "acoustid.h"
 
 #define CLOG(FORMAT, DICT, TAG)                                                \
     if (dict_get(DICT, TAG))                                                   \
@@ -403,9 +404,15 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
          * ordinary disc and for one with two seconds before track 1 alike,
          * told apart only by `Pregap source:` (round 32 lap 1 S12). */
         const int lead_in_sectors = 2*75;
-        int pregap_frames = t->start_lsn_sig - t->pregap_lsn;
+        /* Where the pregap ends: the track's INDEX 01, which for a merged
+         * pregap is where the merge ended rather than where the file starts
+         * (upstream's a95bc41, which takes the signature LSNs after the
+         * pregap handling). */
+        lsn_t pregap_end = t->merged_pregap_end != CDIO_INVALID_LSN ?
+                           t->merged_pregap_end : t->start_lsn_sig;
+        int pregap_frames = pregap_end - t->pregap_lsn;
         if (t->number == 1)
-            pregap_frames = t->start_lsn_sig + lead_in_sectors;
+            pregap_frames = pregap_end + lead_in_sectors;
 
         cyanrip_frames_to_duration(pregap_frames, pregap_duration);
 
@@ -469,6 +476,7 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
 
 void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
 {
+    /* What's read includes the frames the offset needs, the track doesn't */
     char length[16];
 
     /* From nb_samples, not t->frames. setup_track_lsn() widens t->frames by a
@@ -487,12 +495,16 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
      * therefore wrong on the boundary track of every disc.
      *
      * Not from end_lsn_sig - start_lsn_sig either, which is what the Frames:
-     * line below prints: those are captured from the raw TOC before pregap
-     * merging and lead-out padding move start_lsn/end_lsn, so for a merged
-     * pregap they describe a different span than was ripped. nb_samples is
-     * computed after the merge and before the offset, which is exactly the
-     * span whose duration this is. */
-    cyanrip_frames_to_duration(t->nb_samples / (CDIO_CD_FRAMESIZE_RAW >> 2),
+     * line below prints. Since upstream's a95bc41 those are taken after the
+     * pregap handling, but a CD-Extra session gap is left inside them (see
+     * where they are set), so on that track they describe the TOC's span and
+     * not what was ripped. nb_samples is computed after the merge and before
+     * the offset, which is exactly the span whose duration this is.
+     *
+     * A data track has no samples, and no offset moves it: its frames are its
+     * length (upstream's 7ba4a3f, the same fix, with this branch). */
+    cyanrip_frames_to_duration(t->track_is_data ? t->frames :
+                               t->nb_samples / (CDIO_CD_FRAMESIZE_RAW >> 2),
                                length);
 
     cyanrip_log(ctx, 0, "  Preemphasis:   ");
@@ -523,6 +535,29 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                     t->frames*CDIO_CD_FRAMESIZE_RAW / (1024.0 * 1024.0));
         cyanrip_log(ctx, 0, "    Frames:      %u\n", t->end_lsn_sig - t->start_lsn_sig + 1);
         print_offsets(ctx, t);
+
+        if (t->computed_crcs) {
+            cyanrip_log(ctx, 0, "\n  CRC32:         %08X\n", t->eac_crc);
+            if (!t->edc_sectors)
+                cyanrip_log(ctx, 0, "  Sector EDC:    none to check\n");
+            else if (t->edc_errors)
+                cyanrip_log(ctx, 0, "  Sector EDC:    %i of %i sectors mismatched\n",
+                            t->edc_errors, t->edc_sectors);
+            else
+                cyanrip_log(ctx, 0, "  Sector EDC:    all %i sectors match\n", t->edc_sectors);
+        }
+
+        if (!ctx->settings.disable_data_tracks) {
+            cyanrip_log(ctx, 0, "\n  File(s):\n");
+            for (int f = 0; f < ctx->settings.outputs_num; f++) {
+                char *path = crip_get_path(ctx, CRIP_PATH_DATA, 0,
+                                           &crip_fmt_info[ctx->settings.outputs[f]],
+                                           t);
+                cyanrip_log(ctx, 0, "    %s\n", path);
+                av_free(path);
+            }
+        }
+
         cyanrip_log(ctx, 0, "\n");
         return;
     }
@@ -884,7 +919,7 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "%s%s\n",
                 ctx->settings.over_under_read_frames < 0 ? "Underread mode: " : "Overread mode:  ",
                 ctx->settings.overread_leadinout ? "read in lead-in/lead-out" : "fill with silence in lead-in/lead-out");
-    if (ctx->settings.speed && (ctx->mcap & CDIO_DRIVE_CAP_MISC_SELECT_SPEED))
+    if (ctx->settings.speed)
         cyanrip_log(ctx, 0, "Speed:          %ix\n", ctx->settings.speed);
     else
         cyanrip_log(ctx, 0, "Speed:          default (%s)\n",
@@ -967,11 +1002,23 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     CLOG("Album:          %s\n", ctx->meta, "album")
     CLOG("Album artist:   %s\n", ctx->meta, "album_artist")
 
+    uint32_t ar_id1, ar_id2, ar_cddb;
+    if (crip_get_accurip_ids(ctx, &ar_id1, &ar_id2, &ar_cddb))
+        cyanrip_log(ctx, 0, "AccurateRip ID: %08x-%08x-%08x\n", ar_id1, ar_id2, ar_cddb);
+
     cyanrip_log(ctx, 0, "AccurateRip:    %s\n", ctx->ar_db_status == CYANRIP_ACCUDB_ERROR ? "error" :
                                                 ctx->ar_db_status == CYANRIP_ACCUDB_NOT_FOUND ? "not found" :
                                                 ctx->ar_db_status == CYANRIP_ACCUDB_FOUND ? "found" :
                                                 ctx->ar_db_status == CYANRIP_ACCUDB_MISMATCH ? "mismatch" :
                                                 "disabled");
+
+#ifdef HAVE_CHROMAPRINT
+    cyanrip_log(ctx, 0, "AcoustID:       %s\n", !crip_acoustid_enabled(ctx) ? "disabled" :
+                                                ctx->settings.acoustid_key ? "fingerprinting, submitting accurate rips" :
+                                                "fingerprinting, no user API key to submit with");
+#else
+    cyanrip_log(ctx, 0, "AcoustID:       unsupported (built without libchromaprint)\n");
+#endif
 
     cyanrip_log(ctx, 0, "Total time:     %s\n", duration);
 

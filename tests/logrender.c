@@ -223,6 +223,10 @@ static void base_track(cyanrip_track *t)
     t->start_lsn = t->start_lsn_sig = 450;
     t->end_lsn = t->end_lsn_sig = 749;
     t->pregap_lsn = CDIO_INVALID_LSN;
+    /* As cyanrip_main.c sets them for a track whose pregap was neither
+     * dropped nor merged. 0 is an LSN, so a zeroed track says otherwise. */
+    t->dropped_pregap_start = CDIO_INVALID_LSN;
+    t->merged_pregap_end = CDIO_INVALID_LSN;
     t->ebu_sample_peak = -1.0;
     t->ebu_true_peak = -0.5;
     t->direct_sample_peak = -1.0;
@@ -822,6 +826,40 @@ static void test_track_one_counts_from_disc_start(void)
         char want[80];
         snprintf(want, sizeof(want), "    Pregap length: %i frames", cases[i].want);
         expect_line(out, want, "pregap/lead-in");
+        free_ctx(ctx);
+    }
+}
+
+/* A merged pregap ends where the merge ended, at the track's INDEX 01.
+ *
+ * Merging moves start_lsn back to the pregap and keeps the old start in
+ * merged_pregap_end, and since upstream's a95bc41 the signature LSNs are taken
+ * after that, so start_lsn_sig is the pregap's own start. Measuring from it
+ * gives 0 frames; the gap is pregap_lsn to merged_pregap_end. Track 1 adds the
+ * lead-in to that as it does to any other end (round 32, our lap 1 S13). */
+static void test_merged_pregap_counts_to_index_01(void)
+{
+    const struct { int number; lsn_t pregap; lsn_t merged_end; int want; } cases[] = {
+        { 2, 300, 450, 150 },   /* a later track, two seconds merged in */
+        { 1, 0,   150, 300 },   /* track 1: lead-in plus the merged span */
+    };
+
+    for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
+        cyanrip_ctx *ctx = new_ctx();
+        cyanrip_track t;
+        base_track(&t);
+        t.number = cases[i].number;
+        t.pregap_source = CYANRIP_PREGAP_SRC_TOC;
+        t.pregap_lsn = cases[i].pregap;
+        t.start_lsn = t.start_lsn_sig = cases[i].pregap;
+        t.merged_pregap_end = cases[i].merged_end;
+
+        cyanrip_log_track_end(ctx, &t);
+        const char *out = drain(ctx);
+
+        char want[80];
+        snprintf(want, sizeof(want), "    Pregap length: %i frames", cases[i].want);
+        expect_line(out, want, "pregap/merged");
         free_ctx(ctx);
     }
 }
@@ -1565,6 +1603,7 @@ int main(void)
     test_accurip_450_zero_checksum_claims_nothing();
 
     test_pregap_reasons_are_distinct();
+    test_merged_pregap_counts_to_index_01();
     test_track_one_counts_from_disc_start();
 
     test_preemphasis_states();

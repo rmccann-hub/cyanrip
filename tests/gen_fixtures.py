@@ -29,6 +29,15 @@
 # 29.6 MB, is built by the enhanced_cd scenario in its own temp workdir and
 # costs this directory nothing.
 #
+# trailing.bin, mixed-mode CD for trailing.cue, 525 sectors (7 s), with the
+# data track last and a pregap in front of it (upstream's, from b40c1f0). A
+# trailing data track with no pregap to go by is taken for a CD-Extra second
+# session instead, which is ecd.cue above; the pregap is what keeps this one a
+# single-session mixed-mode disc:
+#   0-300   (4 s)  audio A + first second of audio B
+#   300-375 (1 s)  MODE1/2352 pregap sectors, no payload
+#   375-525 (2 s)  MODE1/2352 data sectors
+#
 # The NRG reuses the first 6 s of cdda.bin audio as a 2-track DAO image with
 # a 1 s pregap on track 2.
 
@@ -60,15 +69,26 @@ def bcd(v):
     return ((v // 10) << 4) | (v % 10)
 
 
+def edc(data):
+    """ECMA-130's EDC: CRC-32 with polynomial 0x8001801B, LSB first."""
+    crc = 0
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            crc = (crc >> 1) ^ (0xD8018001 if crc & 1 else 0)
+    return crc
+
+
 def mode1_sector(lba, payload):
     """A MODE1/2352 sector: sync, BCD MSF header, mode byte, 2048 bytes of
-    payload; EDC/ECC left zeroed (nothing in the tests parses it)."""
+    payload and the EDC; ECC left zeroed (nothing in the tests checks it)."""
     m, rem = divmod(lba + PREGAP_SECTORS, 60 * SECTORS_PER_SEC)
     s, f = divmod(rem, SECTORS_PER_SEC)
     sync = b"\x00" + b"\xff" * 10 + b"\x00"
     header = bytes([bcd(m), bcd(s), bcd(f), 0x01])
     data = payload[:2048].ljust(2048, b"\x00")
-    return (sync + header + data).ljust(SECTOR, b"\x00")
+    sector = sync + header + data
+    return (sector + struct.pack("<I", edc(sector))).ljust(SECTOR, b"\x00")
 
 
 def gen_bins(audio):
@@ -80,6 +100,14 @@ def gen_bins(audio):
         data += mode1_sector(i, payload)
     data += audio[:300 * SECTOR]
     (FIXTURES / "mixed.bin").write_bytes(data)
+
+    data = bytearray(audio[:300 * SECTOR])
+    for i in range(300, 375):
+        data += mode1_sector(i, b"")
+    for i in range(375, 525):
+        payload = (f"CYANRIP TEST DATA sector {i:03d} " * 64).encode()
+        data += mode1_sector(i, payload)
+    (FIXTURES / "trailing.bin").write_bytes(data)
 
 
 def cuex_entry(track, index, lsn):

@@ -35,8 +35,21 @@ FFPROBE = shutil.which("ffprobe")
 SANITIZED = b"__ubsan_handle" in Path(CRIP).read_bytes() \
     or b"__asan_report" in Path(CRIP).read_bytes()
 
+# Whether libcdio keeps the track numbers of CUE sheets not starting at 1
+CUE_TRACK_NUMBERS = os.environ.get("CUE_TRACK_NUMBERS", "1") == "1"
+
 fails = 0
 unprobed_notes = []
+
+
+def edc(data):
+    """ECMA-130's EDC, as gen_fixtures.py computes it"""
+    crc = 0
+    for byte in data:
+        crc ^= byte
+        for _ in range(8):
+            crc = (crc >> 1) ^ (0xD8018001 if crc & 1 else 0)
+    return crc
 
 
 def fail(msg):
@@ -170,7 +183,11 @@ def expect(name, *specs):
 
         if dur and FFPROBE:
             d = probe(path, "-show_entries", "format=duration")
-            if abs(float(d) - float(dur)) > 0.1:
+            try:
+                ok = abs(float(d) - float(dur)) <= 0.1
+            except ValueError:
+                ok = False
+            if not ok:
                 fail(f"{name}: {f} duration {d} != {dur}")
 
 
@@ -363,6 +380,20 @@ def sc_basic():
     rip("basic", "basic.cue")
     expect("basic", "1.flac:4", "2.flac:4", "log.log", "sheet.cue")
 
+    # The frames an offset needs read are no part of the track's duration
+    rip("offset", "basic.cue", "-s", "48")
+    log = (WORK / "out_offset" / "log.log").read_text()
+    durations = [l.split()[1] for l in log.splitlines() if l.strip().startswith("Duration:")]
+    if durations != ["00:04.00", "00:04.00"]:
+        fail(f"offset: logged durations {durations}")
+
+
+def log_frames(name):
+    """Frame counts the log reports, one per track"""
+    log = (WORK / f"out_{name}" / "log.log").read_text()
+    return [int(l.split()[1]) for l in log.splitlines()
+            if l.strip().startswith("Frames:")]
+
 
 def sc_pregap():
     # Track 1 HTOA stays unmerged by default, track 2 pregap merges into track 1
@@ -373,6 +404,22 @@ def sc_pregap():
     rip("track", "pregap.cue", "-p", "1=track", "-p", "2=track")
     expect("track", "0.flac:2", "1.flac:2", "2.flac:1", "3.flac:2",
            "4.flac:1", "log.log", "sheet.cue")
+
+    # The log describes the files, split off tracks and the ones they were
+    # split from included
+    if log_frames("track") != [150, 150, 75, 150, 75]:
+        fail(f"track: logged frames {log_frames('track')}")
+
+    # A split off HTOA holds track 1's INDEX 00, there being no track 0, and
+    # tracks are numbered by their number, not by their position
+    rip("htoa", "pregap.cue", "-p", "1=track", "-J")
+    sheet = (WORK / "out_htoa" / "sheet.cue").read_text()
+    tracks = [l.split()[1] for l in sheet.splitlines() if l.strip().startswith("TRACK")]
+    if tracks != ["01", "02", "03"]:
+        fail(f"htoa: CUE sheet tracks {tracks}")
+    if 'FILE "0.flac" WAVE\n  TRACK 01 AUDIO\n' not in sheet or \
+       'INDEX 00 00:00:00\nFILE "1.flac" WAVE\n    INDEX 01 00:00:00' not in sheet:
+        fail("htoa: hidden track not given as track 1's INDEX 00")
 
     rip("drop", "pregap.cue", "-p", "2=drop")
     expect("drop", "1.flac:2", "2.flac:2", "3.flac:1", "log.log", "sheet.cue")
@@ -453,15 +500,243 @@ def sc_pregap():
             fail(f"pregap: track {num} Start LSN - Pregap LSN = {span}, "
                  f"but the fixture says {want}")
 
+    # A merged pregap starts the file, so index 1 comes a second in
+    rip("merge", "pregap.cue", "-p", "2=merge")
+    expect("merge", "1.flac:2", "2.flac:3", "3.flac:1", "log.log", "sheet.cue")
+    if log_frames("merge") != [150, 225, 75]:
+        fail(f"merge: logged frames {log_frames('merge')}")
+
+    sheet = (WORK / "out_merge" / "sheet.cue").read_text()
+    if "INDEX 00 00:00:00\n    INDEX 01 00:01:00" not in sheet:
+        fail("merge: track 2 indices don't match its merged pregap")
+
+    if not CUE_TRACK_NUMBERS:
+        print("first3: libcdio renumbers CUE sheet tracks, skipping")
+        return
+
+    # A disc starting at track 3 handles its first pregap as track 1's would
+    # be, rather than as if a track came before it
+    shutil.copy(WORK / "pregap.bin", WORK / "first3gap.bin")
+    (WORK / "first3gap.cue").write_text(
+        'FILE "first3gap.bin" BINARY\n'
+        "  TRACK 03 AUDIO\n    INDEX 00 00:00:00\n    INDEX 01 00:02:00\n"
+        "  TRACK 04 AUDIO\n    INDEX 01 00:04:00\n"
+        "  TRACK 05 AUDIO\n    INDEX 01 00:06:00\n")
+    rip("first3", "first3gap.cue")
+    expect("first3", "3.flac:2", "4.flac:2", "5.flac:2", "log.log", "sheet.cue")
+    if "unmerged" not in (WORK / "first3.log").read_text():
+        fail("first3: first pregap taken for one following a track")
+
+    rip("first3_track", "first3gap.cue", "-p", "3=track")
+    expect("first3_track", "2.flac:2", "3.flac:2", "4.flac:2", "5.flac:2",
+           "log.log", "sheet.cue")
+
+    rip("first3_merge", "first3gap.cue", "-p", "3=merge")
+    expect("first3_merge", "3.flac:4", "4.flac:2", "5.flac:2", "log.log", "sheet.cue")
+
+
+def data_track(name, img, track, lsn, frames):
+    """The ripped data track must be the image's sectors, byte for byte"""
+    want = (WORK / img).read_bytes()[lsn * 2352:(lsn + frames) * 2352]
+    if (WORK / f"out_{name}" / f"{track}.bin").read_bytes() != want:
+        fail(f"{name}: {track}.bin does not match sectors {lsn}-{lsn + frames}")
+
+
+def sc_data_track_completed():
+    """A data track copied whole counts as a completed track.
+
+    From the upstream sync of 2026-10-12 data tracks are copied to a .bin, and
+    the footer kept counting audio tracks alone, so mixed.cue, all three of
+    whose tracks were written, read `Rip completed:  yes (2 of 3 tracks)`. The
+    count is checked against the files on disk, which it did not write, and
+    the -j record's per-track flags must sum to its disc counter. Under -X the
+    data track is not copied, and the count says so.
+    """
+    for name, args, want_files, want_data in (
+            ("dtc", (), 3, True),
+            ("dtc_x", ("-X",), 2, False)):
+        rec = WORK / f"{name}.json"
+        rip(name, "mixed.cue", *args, "-j", rec)
+        out = WORK / f"out_{name}"
+        on_disk = sorted(p.name for p in out.iterdir()
+                         if p.suffix in (".flac", ".bin"))
+        if len(on_disk) != want_files:
+            fail(f"{name}: {on_disk} on disk, expected {want_files} files")
+        log = (out / "log.log").read_text()
+        m = re.search(r"^Rip completed:  yes \((\d+) of (\d+) tracks\)$",
+                      log, re.M)
+        if not m:
+            fail(f"{name}: no `Rip completed:  yes` line")
+            continue
+        if (int(m.group(1)), int(m.group(2))) != (len(on_disk), 3):
+            fail(f"{name}: the footer says {m.group(1)} of {m.group(2)} "
+                 f"tracks, and {len(on_disk)} of 3 tracks' files are on disk")
+        d = json.loads(rec.read_text())
+        ts = {t["number"]: t for t in d["rip"]["track_state"]}
+        if ts[1].get("data_ripped") is not want_data or ts[1]["audio_ripped"]:
+            fail(f"{name}: track 1 is data and reads data_ripped="
+                 f"{ts[1].get('data_ripped')!r} audio_ripped="
+                 f"{ts[1]['audio_ripped']!r}")
+        for n in (2, 3):
+            if ts[n].get("data_ripped") is not False or not ts[n]["audio_ripped"]:
+                fail(f"{name}: audio track {n} reads data_ripped="
+                     f"{ts[n].get('data_ripped')!r} audio_ripped="
+                     f"{ts[n]['audio_ripped']!r}")
+        flags = sum(1 for t in ts.values()
+                    if t["audio_ripped"] or t.get("data_ripped"))
+        if flags != d["rip"]["tracks_completed"] or flags != len(on_disk):
+            fail(f"{name}: {flags} tracks flagged, tracks_completed "
+                 f"{d['rip']['tracks_completed']}, {len(on_disk)} files")
+
 
 def sc_mixed():
-    # Data track must be skipped, and produce no stray file
+    # The data track rips to a raw MODE1/2352 binary
     rip("mixed", "mixed.cue")
-    expect("mixed", "2.flac:2", "3.flac:2", "log.log", "sheet.cue")
+    expect("mixed", "1.bin", "2.flac:2", "3.flac:2", "log.log", "sheet.cue")
+    data_track("mixed", "mixed.bin", 1, 0, 150)
+
+    sheet = (WORK / "out_mixed" / "sheet.cue").read_text()
+    if 'FILE "1.bin" BINARY' not in sheet or "TRACK 01 MODE1/2352" not in sheet:
+        fail("mixed: the CUE sheet does not reference the data track")
 
     # Data track selected via rip indices
     rip("idx", "mixed.cue", "-l", "1,2")
-    expect("idx", "2.flac:2", "log.log", "sheet.cue")
+    expect("idx", "1.bin", "2.flac:2", "log.log", "sheet.cue")
+
+    # -X leaves data tracks alone, and produces no stray file
+    rip("nodata", "mixed.cue", "-X")
+    expect("nodata", "2.flac:2", "3.flac:2", "log.log", "sheet.cue")
+
+    # Every sector's EDC is checked, so a damaged one is caught even when the
+    # read itself succeeds
+    if "Sector EDC:    all 150 sectors match" not in (WORK / "mixed.log").read_text():
+        fail("mixed: data track EDCs not verified")
+
+    damaged = bytearray((WORK / "mixed.bin").read_bytes())
+    damaged[10 * 2352 + 100] ^= 0x01
+    (WORK / "damaged.bin").write_bytes(damaged)
+    (WORK / "damaged.cue").write_text((WORK / "mixed.cue").read_text()
+                                      .replace("mixed.bin", "damaged.bin"))
+    ec, log = crip("-d", WORK / "damaged.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-r", "1", "-o", "flac", "-D", WORK / "out_damaged",
+                   "-L", "log", "-M", "sheet")
+    if ec == 0 or "Sector EDC mismatch at LSN 10!" not in log or \
+       "1 of 150 sectors mismatched" not in log:
+        fail(f"damaged: EDC mismatch not reported (exit {ec})")
+
+
+def sc_trailing():
+    # A trailing data track with a pregap: the pregap is dropped rather than
+    # taken for a CD-Extra session gap, so no audio is lost to it
+    rip("trailing", "trailing.cue")
+    expect("trailing", "1.flac:2", "2.flac:2", "3.bin", "log.log", "sheet.cue")
+    data_track("trailing", "trailing.bin", 3, 375, 150)
+
+    # Merging the pregap prepends it to the data track instead
+    rip("merge", "trailing.cue", "-p", "3=merge")
+    expect("merge", "1.flac:2", "2.flac:2", "3.bin", "log.log", "sheet.cue")
+    data_track("merge", "trailing.bin", 3, 300, 225)
+
+    # CD-Extra data tracks are CD-ROM XA, the CUE sheet must say mode 2, and
+    # the form 1 EDC covers the subheader rather than the sync and header
+    xa = bytearray((WORK / "trailing.bin").read_bytes())
+    for lsn in range(375, 525):
+        sector = xa[lsn * 2352:(lsn + 1) * 2352]
+        sector[15] = 2
+        sector[16:2072] = bytes([0, 0, 0x08, 0] * 2) + sector[16:2064]
+        sector[2072:2076] = edc(sector[16:2072]).to_bytes(4, "little")
+        xa[lsn * 2352:(lsn + 1) * 2352] = sector
+    (WORK / "xa.bin").write_bytes(xa)
+    (WORK / "xa.cue").write_text((WORK / "trailing.cue").read_text()
+                                 .replace("trailing.bin", "xa.bin")
+                                 .replace("MODE1/2352", "MODE2/2352"))
+
+    # The sectors win over a TOC calling them mode 1
+    shutil.copy(WORK / "xa.bin", WORK / "xa_toc.bin")
+    (WORK / "xa_toc.cue").write_text((WORK / "trailing.cue").read_text()
+                                     .replace("trailing.bin", "xa_toc.bin"))
+
+    for name, img, extra in (("xa", "xa.cue", ()), ("xa_cue", "xa.cue", ("-J",)),
+                             ("xa_toc", "xa_toc.cue", ())):
+        rip(name, img, *extra)
+        if "TRACK 03 MODE2/2352" not in (WORK / f"out_{name}" / "sheet.cue").read_text():
+            fail(f"{name}: CUE sheet doesn't give the data track as mode 2")
+    if "Sector EDC:    all 150 sectors match" not in (WORK / "xa.log").read_text():
+        fail("xa: mode 2 form 1 EDCs not verified")
+
+
+def write_toc(name, sectors, tracks):
+    """A CUE sheet and a matching (sparse) BIN, tracks are number/type/LSN"""
+    with open(WORK / f"{name}.bin", "wb") as f:
+        f.truncate(sectors * 2352)
+
+    lines = [f'FILE "{name}.bin" BINARY']
+    for number, kind, lsn in tracks:
+        lines.append(f"  TRACK {number:02d} {kind}")
+        lines.append("    INDEX 01 %02d:%02d:%02d"
+                     % (lsn // (75 * 60), lsn // 75 % 60, lsn % 75))
+    (WORK / f"{name}.cue").write_text("\n".join(lines) + "\n")
+
+
+def check_ids(img, discid, cddb, toc, arid):
+    ec, log = crip("-d", WORK / img, "-I", "-N", "-A", "-U", "-P", "0")
+    if ec != 0:
+        fail(f"discid {img}: cyanrip exited with {ec}")
+        return
+
+    have = {}
+    for line in log.splitlines():
+        line = line.strip()
+        if line.startswith("DiscID:"):
+            have["discid"] = line.split()[-1]
+        elif line.startswith("CDDB ID:"):
+            have["cddb"] = line.split()[-1]
+        elif line.startswith("AccurateRip ID:"):
+            have["arid"] = line.split()[-1]
+        elif "attach?toc=" in line:
+            have["toc"] = line.split("attach?toc=")[1].split("&")[0]
+
+    for key, want in (("discid", discid), ("cddb", cddb), ("toc", toc),
+                      ("arid", arid)):
+        if have.get(key) != want:
+            fail(f"discid {img}: {key} {have.get(key)} != {want}")
+
+
+def sc_discid():
+    # The DiscID, CDDB ID and TOC are what libdiscid's mb_disc_load_toc() and
+    # create_disc_id() produce for the same TOC. The AccurateRip ID weights
+    # audio tracks by list position, uses the real lead-out, and carries a
+    # FreeDB ID computed over the full TOC, data tracks included; the whole
+    # combination was verified against live AccurateRip database entries.
+
+    # A data track at the front is still a part of the hashed TOC
+    check_ids("mixed.cue", "IWFVjcDW_sHbcouxZ99EXu2rOyw-", "0C000603",
+              "1+3+600+150+300+450", "00000384-00000834-0c000603")
+
+    # A trailing data track stands in for the lead-out, one session gap
+    # early, in the MusicBrainz IDs alone - AccurateRip keeps the real one
+    write_toc("extra", 14400, [(1, "AUDIO", 0), (2, "AUDIO", 1000),
+                               (3, "MODE1/2352", 13400)])
+    check_ids("extra.cue", "1R2GmWmzvVJpk3OOqrZc8TEHcmQ-", "08001A02",
+              "1+2+2150+150+1150", "00003c28-0000b091-1100c003")
+
+    # Only the first of several trailing data tracks decides the lead-out;
+    # the extra data track still counts towards AccurateRip's FreeDB ID
+    write_toc("extra2", 14400, [(1, "AUDIO", 0), (2, "AUDIO", 1000),
+                                (3, "MODE1/2352", 13400),
+                                (4, "MODE1/2352", 14000)])
+    check_ids("extra2.cue", "1R2GmWmzvVJpk3OOqrZc8TEHcmQ-", "08001A02",
+              "1+2+2150+150+1150", "00003c28-0000b091-2200c004")
+
+    if not CUE_TRACK_NUMBERS:
+        print("first3: libcdio renumbers CUE sheet tracks, skipping")
+        return
+
+    # Offsets are hashed by track number rather than by position
+    write_toc("first3", 3000, [(3, "AUDIO", 0), (4, "AUDIO", 1000),
+                               (5, "AUDIO", 2000)])
+    check_ids("first3.cue", "Hq2wagZiFOC__Il_nRSlGDfLpzc-", "12002A05",
+              "3+5+3150+150+1150+2150", "00001770-00004e21-12002803")
 
 
 def sc_nrg():
@@ -1274,6 +1549,42 @@ def sc_art():
                 fail(f"art: {f}.flac picture type {ptype!r}")
 
 
+def fingerprint(name, track):
+    return probe(WORK / f"out_{name}" / f"{track}.flac", "-show_entries",
+                 "format_tags=acoustid_fingerprint")
+
+
+def sc_acoustid():
+    # Nothing can be verified without the AccurateRip and MusicBrainz
+    # lookups, so the fingerprints go in the tags rather than to AcoustID
+    rip("fp", "basic.cue")
+    log = (WORK / "fp.log").read_text()
+    if "built without libchromaprint" in log:
+        print("acoustid: built without libchromaprint, skipping")
+        return
+    if "2 fingerprints saved to tags, not submitted: AccurateRip disabled" not in log:
+        fail("fp: fingerprints not reported as saved to tags")
+    if not FFPROBE:
+        return
+
+    fps = [fingerprint("fp", t) for t in (1, 2)]
+    if not all(fp.startswith("AQ") for fp in fps) or fps[0] == fps[1]:
+        fail(f"fp: fingerprint tags {fps!r}")
+
+    # Fingerprints are kilobytes long on real tracks, they stay out of the log
+    if fps[0] and fps[0] in (WORK / "out_fp" / "log.log").read_text():
+        fail("fp: fingerprint written to the rip log")
+
+    # The files must wait for the fingerprints even without ReplayGain
+    rip("fp_norg", "basic.cue", "-K")
+    if fingerprint("fp_norg", 1) != fps[0]:
+        fail("fp_norg: no fingerprint tag without ReplayGain")
+
+    rip("fp_off", "basic.cue", "-B")
+    if fingerprint("fp_off", 1):
+        fail("fp_off: fingerprint tagged despite -B")
+
+
 def sc_cue_only():
     # -J generates and prints the CUE sheet without ripping anything
     rip("cue", "pregap.cue", "-J")
@@ -1293,8 +1604,28 @@ def sc_cue_only():
     if crip("-d", WORK / "basic.cue", "-J", "-I")[0] != 1:
         fail("cue_only: -J with -I did not error out")
 
+    # A quote in a value can't be escaped, and must not end the string
+    rip("quotes", "basic.cue", "-J", "-a", 'album=12" Mix:album_artist=A "B"',
+        "-t", '1=title=Say "Hi"\nagain')
+    for line in (WORK / "out_quotes" / "sheet.cue").read_text().splitlines():
+        if line.strip().startswith(("TITLE", "PERFORMER")) and line.count('"') != 2:
+            fail(f"quotes: broken CUE line {line!r}")
+    if 'TITLE "Say \u201cHi\u201d again"' not in (WORK / "out_quotes" / "sheet.cue").read_text():
+        fail("quotes: quotes and line breaks not replaced")
+
 
 def sc_errors():
+    # Finding no offset is a failure, not a successful run
+    if crip("-d", WORK / "basic.cue", "-f", "-N", "-A", "-U")[0] != 1:
+        fail("offset finding on a disc without AccurateRip entries didn't fail")
+
+    # A broken scheme stops the rip before anything is written
+    ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                   "-o", "flac", "-D", WORK / "out_badscheme", "-F", "{track")
+    if ec != 1 or "Invalid track naming scheme" not in log or \
+       (WORK / "out_badscheme").exists():
+        fail(f"badscheme: not refused up front (exit {ec})")
+
     # Schemes sending multiple tracks to one file must be warned about
     rip("collide", "basic.cue", "-F", "{album}")
     if "resolve to the same file" not in (WORK / "collide.log").read_text():
@@ -1908,12 +2239,33 @@ def sc_early_log():
     # and no pre-log replay, and went on to a full footer. The shared sandbox
     # had hidden it: an earlier probe's log.log was already there, so this one
     # was never new and never checked.
+    #
+    # THE PROVOCATION MOVED IN THE UPSTREAM SYNC OF 2026-10-12. Upstream's
+    # b40c1f0 checks every naming scheme before anything is opened, so an
+    # invalid -M is now refused with no log at all, which is asserted first.
+    # The state this probe is about is still reachable, and one step later: a
+    # directory where the CUE sheet goes fails the same cyanrip_cue_init(),
+    # after the log has opened.
+    ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac", "-D", WORK / "out_early_scheme",
+                   "-L", "log", "-M", "{album")
+    if ec == 0:
+        fail("early_log/scheme: an invalid -M scheme exited 0")
+    if (WORK / "out_early_scheme" / "log.log").exists():
+        fail("early_log/scheme: an invalid -M scheme wrote a log; it is "
+             "checked before anything is opened")
+    if not re.search(r"^Invalid scheme syntax", out, re.M):
+        fail("early_log/scheme: the refusal printed no diagnosable line at "
+             "column 0")
+
+    (WORK / "out_early_fail" / "sheet.cue").mkdir(parents=True)
     ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                    "-P", "0", "-o", "flac", "-D", WORK / "out_early_fail",
-                   "-L", "log", "-M", "{album")
+                   "-L", "log", "-M", "sheet")
     flog = WORK / "out_early_fail" / "log.log"
     if ec == 0:
-        fail("early_log/fail: an invalid -M scheme exited 0 -- probe is stale")
+        fail("early_log/fail: a CUE path that is a directory exited 0 -- "
+             "probe is stale")
     elif not flog.exists():
         fail("early_log/fail: no log was written -- probe is stale")
     else:
@@ -1923,7 +2275,7 @@ def sc_early_log():
                  f"{(fl[0] if fl else '')!r}")
         if not any(l.startswith("Handshake:") for l in fl[:6]):
             fail("early_log/fail: no Handshake: line in the log's header")
-        if not any("Invalid scheme syntax" in l for l in fl):
+        if not any(l.startswith("Couldn't open path") for l in fl):
             fail("early_log/fail: the failure itself is not in the log")
         if "--- output before this log was opened ---" not in fl:
             fail("early_log/fail: the pre-log replay never reached the log")
@@ -2270,8 +2622,12 @@ def sc_encode_failure_reaches_the_log():
         signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
 
     r = subprocess.run(
+        # -X: from the upstream sync of 2026-10-12 the data track is copied
+        # to a 352,800-byte .bin, which the cap stops before any audio track
+        # is read. That failure is reported (`Error writing to ...`, then
+        # `Error ripping:`), and it is not the encoder failure under test.
         [CRIP, "-d", str(WORK / "mixed.cue"), "-N", "-A", "-U", "-s", "0",
-         "-P", "0", "-o", "flac", "-D", str(out), "-F", "{track}",
+         "-P", "0", "-X", "-o", "flac", "-D", str(out), "-F", "{track}",
          "-L", "log", "-M", "sheet", "-j", str(diag)],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60,
         preexec_fn=cap)
@@ -2458,9 +2814,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the -j record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/8":
+        if rec["schema"] != "cyanrip-diagnostics/9":
             fail(f"encfail: -j schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/8'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/9'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -2936,7 +3292,9 @@ def sc_diag_record_v8():
                         if (int(m.group(1)), int(m.group(2))) >= (2, 3)
                         else "the driver does not report reading ISRC")
     d = json.loads(rec.read_text())
-    if d.get("schema") != "cyanrip-diagnostics/8":
+    # /8 or later: every move since has been an addition (/9, data_ripped).
+    sv = re.fullmatch(r"cyanrip-diagnostics/(\d+)", str(d.get("schema")))
+    if not sv or int(sv.group(1)) < 8:
         fail(f"diag_record_v8: schema is {d.get('schema')!r}, so none of the "
              f"/8 fields can be checked")
         return
@@ -3583,8 +3941,9 @@ def sc_diagnostics():
         return
 
     # /8 from round 32 (our lap 1 S10, Platterpus's lap 2 S7): every field an
-    # addition, each checked in sc_diag_record_v8().
-    if d.get("schema") != "cyanrip-diagnostics/8":
+    # addition, each checked in sc_diag_record_v8(). /9 from the upstream sync
+    # of 2026-10-12 adds data_ripped, checked in sc_data_track_completed().
+    if d.get("schema") != "cyanrip-diagnostics/9":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
@@ -4653,11 +5012,13 @@ def sc_interrupt():
                      f"crcs_computed for an unfinished track")
 
         # The per-track flags and the disc counter must agree. They are set
-        # together today; this is what notices if they ever stop being.
-        ripped = sum(1 for st in states if st and st.get("audio_ripped"))
+        # together today; this is what notices if they ever stop being. From
+        # /9 a data track copied whole counts too, as data_ripped.
+        ripped = sum(1 for st in states
+                     if st and (st.get("audio_ripped") or st.get("data_ripped")))
         if ripped != rip_d.get("tracks_completed"):
-            fail(f"interrupt/{name}: {ripped} tracks report audio_ripped but "
-                 f"the disc says tracks_completed="
+            fail(f"interrupt/{name}: {ripped} tracks report audio_ripped or "
+                 f"data_ripped but the disc says tracks_completed="
                  f"{rip_d.get('tracks_completed')!r}")
 
 
@@ -5746,11 +6107,14 @@ def sc_sanitize():
     contract described the substitutions; P1 documented only that the flag
     existed.
 
-    WHICH COLUMN. P7c reports both compile-time branches, because availability
+    WHICH COLUMN. P7c reports every compile-time branch, because availability
     is a property of the build and this suite runs on one platform. The column
-    is chosen from os.name and stated out loud rather than inferred from the
-    behaviour under test -- picking the column by measuring the thing the column
-    is supposed to predict would make the assertion circular.
+    is chosen from the platform and stated out loud rather than inferred from
+    the behaviour under test -- picking the column by measuring the thing the
+    column is supposed to predict would make the assertion circular. It is
+    found by its header, not by position: P7c had two branches until
+    upstream's dad28a4 made a third (`__MACH__`) real, and CI's macOS job
+    then compared its filenames with the column for every other system.
 
     QUOTES ARE HELD BACK from the per-character pass on purpose. They have two
     table rows and a parity rule, so folding them in would test the parity and
@@ -5780,6 +6144,19 @@ def sc_sanitize():
         # the one escape the table parser honours, so it is the one to undo.
         return m.group(1).replace("\\|", "|")
 
+    header = next((l for l in section.group(0).splitlines()
+                   if l.startswith("| character |")), None)
+    if not header:
+        fail("sanitize: P7c has no header row")
+        return
+    heads = [h.strip() for h in header.strip().strip("|").split("|")]
+    if os.name == "nt":
+        state = "`HAVE_WMAIN`"
+    elif sys.platform == "darwin":
+        state = "`__MACH__`"
+    else:
+        state = "elsewhere"
+
     rows = {}
     for line in section.group(0).splitlines():
         if not line.startswith("| `"):
@@ -5788,9 +6165,9 @@ def sc_sanitize():
         # boundary -- splitting on it drops the `|` row entirely, and a row
         # missing from a completeness check is the failure this test is for.
         cells = re.split(r"(?<!\\)\|", line.strip().strip("|"))
-        if len(cells) != 7:
-            fail(f"sanitize: P7c row has {len(cells)} cells, expected 7: "
-                 f"{line}")
+        if len(cells) != len(heads):
+            fail(f"sanitize: P7c row has {len(cells)} cells, and its header "
+                 f"{len(heads)}: {line}")
             continue
         ch = unwrap(cells[0])
         rows.setdefault(ch, []).append([unwrap(c) for c in cells[1:]])
@@ -5799,12 +6176,18 @@ def sc_sanitize():
              "finding nothing is the failure it guards")
         return
 
-    win = os.name == "nt"
-    col = {"simple": 0, "unicode": 1,
-           "os_simple": 4 if win else 2, "os_unicode": 5 if win else 3}
-    print(f"sanitize: asserting the "
-          f"{'HAVE_WMAIN' if win else 'non-HAVE_WMAIN'} columns of P7c "
-          f"(os.name={os.name!r})")
+    # Column indices count from the first cell after the character's.
+    try:
+        col = {"simple": heads.index("`simple`") - 1,
+               "unicode": heads.index("`unicode`") - 1,
+               "os_simple": heads.index(f"`os_simple` {state}") - 1,
+               "os_unicode": heads.index(f"`os_unicode` {state}") - 1}
+    except ValueError:
+        fail(f"sanitize: P7c has no {state} columns for this platform "
+             f"(os.name={os.name!r}, sys.platform={sys.platform!r}): {heads}")
+        return
+    print(f"sanitize: asserting the {state} columns of P7c "
+          f"(os.name={os.name!r}, sys.platform={sys.platform!r})")
 
     # `/` is excluded: P7c footnotes it because its result depends on the call
     # site rather than the mode, and it is asserted separately below.
@@ -5965,7 +6348,7 @@ def sc_enhanced_cd():
     """A trailing data track must not be able to publish a garbage disc ID.
 
     THE DEFECT. cyanrip treats a data track in LAST position as a CD-Extra
-    second session and takes CDEXTRA_SESSION_GAP frames off the preceding audio
+    second session and takes CRIP_XA_INTERVAL frames off the preceding audio
     track, because libcdio reports the inter-session link area as part of it.
     The subtraction was unguarded. On a TOC where the gap does not fit, the LSN
     went negative, discid.c left-shifted a negative int -- undefined behaviour,
@@ -6007,7 +6390,11 @@ def sc_enhanced_cd():
     invariant between two fields of one artifact, which is what a negative LSN
     breaks and what a plausible-looking wrong number cannot satisfy.
     """
-    rip("ecd", "ecd.cue")
+    # -X: track 3 is cdda.bin's audio sectors under a MODE1 label, so ripping
+    # it, as cyanrip does from the upstream sync of 2026-10-12, reports every
+    # sector's EDC as failed and exits 1. That is true of the fixture and is
+    # not what this scenario is about.
+    rip("ecd", "ecd.cue", "-X")
     out = (WORK / "ecd.log").read_text()
     log = (WORK / "out_ecd" / "log.log").read_text()
 
@@ -6042,14 +6429,17 @@ def sc_enhanced_cd():
     # The last AUDIO track is track 2 here; track 3 is the data track and is
     # excluded from the disc ID by design. Read that from the log rather than
     # assuming it, so the assertion still means something if the fixture grows.
-    if "Track 3 is data:" not in log:
+    if not re.search(r"^Track 3 is data", log, re.M):
         fail("enhanced_cd: track 3 was not identified as data")
-    last_audio_end = ends[1]
 
-    # The TOC string is printed by the lookup path, not by a rip, so it takes
-    # its own -I run. Same fixture, same numbers; asserting it separately is
-    # what pins the leadout itself rather than only the length field derived
-    # from it.
+    # NO DISC ID, FROM THE UPSTREAM SYNC OF 2026-10-12. The IDs now follow
+    # libdiscid (upstream's b40c1f0): the lead-out they use stands one session
+    # gap before the data track whatever the TOC was adjusted to, and here that
+    # is before track 1, so no ID is generated and the run says so. Until the
+    # sync the IDs were computed from the TOC the guard had just left alone,
+    # which no other implementation would produce for this disc. The TOC and
+    # CDDB checks moved to the well-formed disc below, whose IDs are libdiscid's
+    # and this fork's old ones alike.
     _, info = crip("-d", WORK / "ecd.cue", "-I", "-N", "-A", "-U", "-P", "0")
     if not SANITIZED:
         unprobed("enhanced_cd/-I: UBSan/ASan is not compiled into this build, so "
@@ -6058,31 +6448,13 @@ def sc_enhanced_cd():
     elif "runtime error" in info:
         fail(f"enhanced_cd: the sanitizer fired during -I: "
              f"{[l for l in info.splitlines() if 'runtime error' in l]}")
-    m = re.search(r"toc=(\d+)\+(\d+)\+(\d+)((?:\+\d+)*)", info)
-    if not m:
-        fail("enhanced_cd: no MusicBrainz TOC string in the -I output")
-        return
-    leadout = int(m.group(3))
-    if leadout != last_audio_end + 151:
-        fail(f"enhanced_cd: the TOC leadout is {leadout} but the last audio "
-             f"track's End LSN is {last_audio_end}, so it should be "
-             f"{last_audio_end + 151}. These are two fields of one artifact "
-             f"and they disagree")
-    if int(m.group(2)) != 2:
-        fail(f"enhanced_cd: the TOC's last track is {m.group(2)}, expected 2 "
-             f"-- the data track must not appear in the disc ID")
-
-    # And the CDDB ID's middle 16 bits are the disc length in seconds, which is
-    # the field that read 0xFF6E when the LSN went negative.
-    c = re.search(r"^CDDB ID:\s+([0-9A-F]{8})$", log, re.M)
-    if not c:
-        fail("enhanced_cd: no CDDB ID line in the log")
-        return
-    want = leadout // 75 - (starts[0] + 150) // 75
-    have = (int(c.group(1), 16) >> 8) & 0xFFFF
-    if have != want:
-        fail(f"enhanced_cd: CDDB ID {c.group(1)} carries a length field of "
-             f"{have}, and the TOC says {want}")
+    if not re.search(r"^Disc TOC is invalid, skipping DiscID generation!$",
+                     info, re.M):
+        fail("enhanced_cd: no `Disc TOC is invalid` line in the -I output, so "
+             "the run said nothing about the IDs it did not generate")
+    if "toc=" in info or re.search(r"^(DiscID|CDDB ID):", log, re.M):
+        fail("enhanced_cd: a disc ID was published for a TOC whose lead-out "
+             "stands before track 1")
 
     expect("ecd", "1.flac", "2.flac", "log.log", "sheet.cue")
 
@@ -6097,7 +6469,7 @@ def sc_enhanced_cd():
     # test. CLAUDE.md's rule is to check whether a different image can reach it
     # before accepting that nothing can; the answer here was a `for` loop.
     #
-    # Track 2 spans 150..11999, which is 11850 frames, so CDEXTRA_SESSION_GAP
+    # Track 2 spans 150..11999, which is 11850 frames, so CRIP_XA_INTERVAL
     # fits with room: 11999 - 11400 = 599, still past the track's own start.
     # The read is therefore 150..599 -- 450 frames -- so the fixture is large
     # and the rip is not.
@@ -6115,7 +6487,7 @@ def sc_enhanced_cd():
         "  TRACK 03 MODE1/2352\n"
         "    INDEX 01 02:40:00\n")
 
-    rip("ecdbig", "ecdbig.cue")
+    rip("ecdbig", "ecdbig.cue", "-X")        # -X: as for ecd.cue above
     bigout = (WORK / "ecdbig.log").read_text()
     biglog = (WORK / "out_ecdbig" / "log.log").read_text()
 
@@ -6154,7 +6526,42 @@ def sc_enhanced_cd():
         # this fires instead of silently checking something weaker.
         if gap != 11400:
             fail(f"enhanced_cd/wellformed: the gap is reported as {gap} frames "
-                 f"and CDEXTRA_SESSION_GAP is 11400")
+                 f"and CRIP_XA_INTERVAL is 11400")
+
+        # The disc IDs. The TOC string is printed by the lookup path, not by a
+        # rip, so it takes its own -I run; asserting it separately is what pins
+        # the lead-out itself rather than only the length field derived from
+        # it. libdiscid's lead-out, one session gap before the data track, is
+        # where the cut leaves track 2's end, so the two must agree.
+        _, info = crip("-d", WORK / "ecdbig.cue", "-I", "-N", "-A", "-U",
+                       "-P", "0")
+        t = re.search(r"toc=(\d+)\+(\d+)\+(\d+)((?:\+\d+)*)", info)
+        if not t:
+            fail("enhanced_cd/wellformed: no MusicBrainz TOC string in the -I "
+                 "output")
+        else:
+            leadout = int(t.group(3))
+            if leadout != read_to + 151:
+                fail(f"enhanced_cd/wellformed: the TOC leadout is {leadout} "
+                     f"but track 2 reads to {read_to}, so it should be "
+                     f"{read_to + 151}. These are two fields of one artifact "
+                     f"and they disagree")
+            if int(t.group(2)) != 2:
+                fail(f"enhanced_cd/wellformed: the TOC's last track is "
+                     f"{t.group(2)}, expected 2 -- the data track must not "
+                     f"appear in the disc ID")
+            # The CDDB ID's middle 16 bits are the disc length in seconds,
+            # the field that read 0xFF6E when the LSN went negative.
+            c = re.search(r"^CDDB ID:\s+([0-9A-F]{8})$", biglog, re.M)
+            if not c:
+                fail("enhanced_cd/wellformed: no CDDB ID line in the log")
+            else:
+                want = leadout // 75 - 150 // 75
+                have = (int(c.group(1), 16) >> 8) & 0xFFFF
+                if have != want:
+                    fail(f"enhanced_cd/wellformed: CDDB ID {c.group(1)} "
+                         f"carries a length field of {have}, and the TOC "
+                         f"says {want}")
 
     # An offset-only line must still read exactly as it always has, on a disc
     # with no trailing data track. This is the half that must NOT have moved.
@@ -7228,7 +7635,8 @@ with tempfile.TemporaryDirectory() as tmpdir:
     shutil.copy(FIX / "cdda.bin", WORK / "cdtext.bin")
     for name in ("basic", "pregap", "preemph", "ecd"):
         shutil.copy(FIX / "cdda.bin", WORK / f"{name}.bin")
-    shutil.copy(FIX / "mixed.bin", WORK / "mixed.bin")
+    for name in ("mixed", "trailing"):
+        shutil.copy(FIX / f"{name}.bin", WORK / f"{name}.bin")
 
     globals()[f"sc_{SCENARIO}"]()
 

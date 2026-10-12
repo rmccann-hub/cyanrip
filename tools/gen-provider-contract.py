@@ -2345,53 +2345,69 @@ def emit(binary):
     w("four, never the most, and `-T os_unicode` is not a way to ask for the")
     w("unicode glyphs -- it is a way to ask for fewer of them.")
     w("")
-    w("Availability is a **compile-time** property (P7e). Two columns cover it,")
-    w("because `os_compat.h` has exactly two states for these macros: the")
-    w("`HAVE_WMAIN` build and everything else. `HAVE_WMAIN` is set by")
-    w("`src/meson.build:150` when the compiler links `wmain` with `-municode`,")
-    w("so in practice it means a Windows/MinGW build. The build that generated")
-    w("this document is named in the banner at the top; which branch **your**")
-    w("build took is a property of your build, not of this file.")
+    # ONE COLUMN PAIR PER STATE os_compat.h HAS, derived from its own #if
+    # blocks. This was two columns, HAVE_WMAIN and everything else, written
+    # when that was all there was -- and stayed two after upstream's dad28a4
+    # made the `__MACH__` block real (it had defined a misspelled macro
+    # nothing read), so the contract said a macOS `os_` mode leaves `:`
+    # alone while the binary replaced it. CI's macOS job caught it, in
+    # sc_sanitize(), on the upstream sync of 2026-10-12.
+    conds = sorted(c for c in overrides if c != "?")
+    states = [None] + conds
+
+    def label(cond):
+        return "elsewhere" if cond is None else f"`{cond}`"
+
+    w(f"Availability is a **compile-time** property (P7e). `os_compat.h` has")
+    w(f"**{len(states)} states** for these macros, so {2 * len(states)} columns cover the")
+    w(f"`os_` modes: one per `#if defined()` block that sets any of them -- "
+      + ", ".join(f"`{c}`" for c in conds) + " --")
+    w("and *elsewhere*, a build in none of them. They are exclusive in")
+    w("practice. `HAVE_WMAIN` is set by `src/meson.build` when the compiler")
+    w("links `wmain` with `-municode`, so it means a Windows/MinGW build;")
+    w("`__MACH__` is defined by the compiler on macOS. The build that")
+    w("generated this document is named in the banner at the top; which")
+    w("branch **your** build took is a property of your build, not of this")
+    w("file.")
     w("")
 
-    def avail(macro, win):
-        if win and macro in overrides.get("HAVE_WMAIN", {}):
-            return overrides["HAVE_WMAIN"][macro][0]
+    def avail(macro, cond):
+        if cond and macro in overrides.get(cond, {}):
+            return overrides[cond][macro][0]
         if macro in defaults:
             return defaults[macro][0]
         return None
 
-    def cell(macro, glyph, win):
-        a = avail(macro, win)
+    def cell(macro, glyph, cond):
+        a = avail(macro, cond)
         if a is None:
             return "**unresolved**"
         return "unchanged" if a else f"`{md_cell(glyph)}`"
 
-    w("| character | `simple` | `unicode` | `os_simple` non-`HAVE_WMAIN` | `os_unicode` non-`HAVE_WMAIN` | `os_simple` `HAVE_WMAIN` | `os_unicode` `HAVE_WMAIN` |")
-    w("|---|---|---|---|---|---|---|")
+    w("| character | `simple` | `unicode` | "
+      + " | ".join(f"`os_simple` {label(c)} | `os_unicode` {label(c)}"
+                   for c in states) + " |")
+    w("|---|---|---|" + "---|---|" * len(states))
     for idx, frm, to, to_u, macro in rows:
         f_ch, t_ch = c_char(frm), c_char(to)
         note = " †" if f_ch == "/" else ""
         w(f"| `{md_cell(f_ch)}`{note} | `{md_cell(t_ch)}` | `{md_cell(to_u)}` | "
-          f"{cell(macro, t_ch, False)} | {cell(macro, to_u, False)} | "
-          f"{cell(macro, t_ch, True)} | {cell(macro, to_u, True)} |")
+          + " | ".join(f"{cell(macro, t_ch, c)} | {cell(macro, to_u, c)}"
+                       for c in states) + " |")
     w("")
-    same = list(dict.fromkeys(c_char(f) for _i, f, _t, _u, m in rows
-                              if avail(m, False)))
-    diff = list(dict.fromkeys(c_char(f) for _i, f, _t, _u, m in rows
-                              if not avail(m, False)))
-    if same:
-        w("Read the two `non-HAVE_WMAIN` columns before treating an `os_` mode as")
-        w("a safe substitute for a plain one. On such a build "
-          f"**{len(same)} of the {len(set(c_char(r[1]) for r in rows))} distinct")
-        w("characters** are left unchanged by both `os_` modes: "
-          + ", ".join(f"`{md_cell(c)}`" for c in same) + ".")
-        w("")
-        if diff:
-            w("Which leaves `os_simple` and `os_unicode` differing, on such a")
-            w("build, on " + ", ".join(f"`{md_cell(c)}`" for c in diff) +
-              " and nothing else.")
+    distinct = len(set(c_char(r[1]) for r in rows))
+    for cond in states:
+        same = list(dict.fromkeys(c_char(f) for _i, f, _t, _u, m in rows
+                                  if avail(m, cond)))
+        if same:
+            w(f"On a build {'in none of those blocks' if cond is None else 'under ' + label(cond)}, "
+              f"**{len(same)} of the {distinct} distinct characters** are left")
+            w("unchanged by both `os_` modes: "
+              + ", ".join(f"`{md_cell(c)}`" for c in same) + ".")
             w("")
+    w("Read the columns for your build before treating an `os_` mode as a")
+    w("safe substitute for a plain one.")
+    w("")
     w("**† `/` is the exception, and it is not a property of the mode.** See")
     w("P7d.")
     w("")

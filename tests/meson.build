@@ -235,6 +235,20 @@ shim_env += [ 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path(),
 shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim ]
 endif
 
+json_test = executable('json_test',
+    sources: [ 'json.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'json.c' ]),
+    dependencies: unit_test_deps,
+)
+test('JSON reader', json_test)
+
+genopt_test = executable('genopt_test',
+    sources: [ 'genopt.c' ],
+    include_directories: [ '../src' ],
+)
+test('Option parsing', genopt_test)
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the
@@ -581,6 +595,13 @@ test('P5 message witnesses', python,
      args: [ files('../tools/message-witness.py'), '--gate' ],
      timeout: 120)
 
+## A citation that fills a conversion is citing the message: upstream's test
+## asserts `Invalid track naming scheme`, which the binary prints for
+## `Invalid %s naming scheme "%s"!`. tests/message_witness.py checks fills()
+## both ways, so a reworded message cannot hide behind a conversion.
+test('P5 citations fill conversions', python,
+     args: [ files('message_witness.py') ])
+
 test('Black-box sweep', python,
      args: [ files('../tools/blackbox.py'), '--binary', cyanrip_exe, '--gate' ],
      is_parallel: false,
@@ -600,6 +621,18 @@ test('Black-box sweep', python,
 ## run in a clone, and the states that matter (no verdict file at all, a
 ## passing one, a failing one) are states no single real bundle supplies.
 test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
+
+## The owner's rule of 2026-10-12: home folders, the hostname and the owner's
+## real name stay out of anything newly committed, through the export and
+## filing tools. tests/redaction.py checks tools/redact.py and the two tools
+## that use it, with invented names; the -Y case runs on the golden reference,
+## a real signed log with a home path in it. tests/personal_details.py checks
+## the laps and evidence committed since the rule, and skips (77) where the
+## clone cannot tell new from old.
+test('Redaction in the filing tools', python,
+     args: [ files('redaction.py'), cyanrip_exe ])
+test('No personal details in new laps or evidence', python,
+     args: [ files('personal_details.py') ])
 
 ## tools/cross-rip.py compares each track's EAC CRC32 across every cyanrip log
 ## in a bundle. Round 26's reading read logs one at a time and missed a wrong
@@ -650,6 +683,9 @@ test('Seam gap report', python, args: [ files('../tools/seam-check.py'), '--gaps
 test('Seam inbound-held audit', python,
      args: [ files('../tools/seam-check.py'), '--held' ])
 
+# From 2.2.1 on, libcdio numbers a CUE sheet's tracks from 1, whatever the
+# first one's number is
+cue_track_numbers = dependency('libcdio').version().version_compare('< 2.2.1')
 
 rip_scenarios = [
     'info',
@@ -657,6 +693,9 @@ rip_scenarios = [
     'basic',
     'pregap',
     'mixed',
+    'data_track_completed',
+    'trailing',
+    'discid',
     'nrg',
     'filters',
     'deemph_with_hdcd',
@@ -679,6 +718,7 @@ rip_scenarios = [
     'album_loudness',
     'contract_covers_log',
     'art',
+    'acoustid',
     'cue_only',
     'errors',
     'cdtext',
@@ -765,7 +805,8 @@ foreach s : rip_scenarios
     test(s, python,
          args: [ files('rip_images.py'), cyanrip_exe,
                  meson.current_source_dir() / 'fixtures', s ],
-         env: [ declared_env ] + shim_env,
+         env: [ declared_env,
+                'CUE_TRACK_NUMBERS=' + (cue_track_numbers ? '1' : '0') ] + shim_env,
          depends: shim_deps,
          suite: 'images',
          timeout: 120)
