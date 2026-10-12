@@ -34,12 +34,30 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import redact  # noqa: E402  tools/redact.py, beside this file
+
+# EVERYTHING THIS WRITES IS UPLOADED, AND WHAT IS UPLOADED IS COMMITTED. The
+# owner's rule of 2026-10-12 keeps home folders, the hostname and the owner's
+# real name out of anything newly committed, through the export and filing
+# tools. This script knows the first two exactly -- its own home and its own
+# hostname -- so it replaces them as it writes, and tools/ingest-bundle.py
+# does it again when the bundle is filed. What it prints to the terminal is
+# not touched: that stays on the machine.
+SCRUB_HOSTS = {socket.gethostname()} - {""}
+
+
+def scrub(text):
+    text = text.replace(str(Path.home()), "~")
+    return redact.redact(text, hosts=SCRUB_HOSTS,
+                         names=redact.local_names())[0]
 
 OK, FAIL, SKIP, INFO = "OK", "FAIL", "SKIP", "INFO"
 results = []
@@ -66,7 +84,7 @@ def run(argv, timeout=300, cwd=None):
 
 def save(out, name, text):
     p = out / name
-    p.write_text(text, encoding="utf-8")
+    p.write_text(scrub(text), encoding="utf-8")
     return p.name
 
 
@@ -631,7 +649,8 @@ def main():
     for name, status, detail, artifact in results:
         manifest.append(f"{status:5}  {name:22}  {detail}"
                         + (f"   [{artifact}]" if artifact else ""))
-    (out / "MANIFEST.txt").write_text("\n".join(manifest) + "\n", encoding="utf-8")
+    (out / "MANIFEST.txt").write_text(scrub("\n".join(manifest) + "\n"),
+                                      encoding="utf-8")
 
     n_fail = sum(1 for r in results if r[1] == FAIL)
     n_skip = sum(1 for r in results if r[1] == SKIP)

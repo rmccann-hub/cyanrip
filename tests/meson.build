@@ -622,6 +622,18 @@ test('Black-box sweep', python,
 ## passing one, a failing one) are states no single real bundle supplies.
 test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
 
+## The owner's rule of 2026-10-12: home folders, the hostname and the owner's
+## real name stay out of anything newly committed, through the export and
+## filing tools. tests/redaction.py checks tools/redact.py and the two tools
+## that use it, with invented names; the -Y case runs on the golden reference,
+## a real signed log with a home path in it. tests/personal_details.py checks
+## the laps and evidence committed since the rule, and skips (77) where the
+## clone cannot tell new from old.
+test('Redaction in the filing tools', python,
+     args: [ files('redaction.py'), cyanrip_exe ])
+test('No personal details in new laps or evidence', python,
+     args: [ files('personal_details.py') ])
+
 ## tools/cross-rip.py compares each track's EAC CRC32 across every cyanrip log
 ## in a bundle. Round 26's reading read logs one at a time and missed a wrong
 ## track-1 read that only shows beside the other rips of it (their round 26

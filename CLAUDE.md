@@ -1112,6 +1112,33 @@ operational failures and not read quality until round 30 moved it in the open â€
 **do not reword it silently.**
 Document the precise meaning, and propose the rename in a handshake round.
 
+## Personal details stay out of what is committed
+
+The owner's rule, 2026-10-12: *"keep personal details out of anything newly
+committed: home-folder paths become ~, the hostname becomes host, and the
+owner's real name isn't written. Apply this to new evidence and laps, through
+the export or filing tools rather than by hand. Leave the shared protocol
+document's wire values as they are unless both sides agree to change them.
+History stays as it is."*
+
+- **`tools/redact.py` is the one implementation.** `tools/ingest-bundle.py`
+  applies it to every file it files, records each file's hash as filed and
+  the bundle's, and checks a cyanrip log's original with `-Y` first, since a
+  changed path breaks the signature. `tools/rig-check.py` scrubs its own home
+  and hostname as it writes.
+- **Hostnames are read from the material** (`uname -a` lines, `host:`
+  fields), never from a list here: a list of the owner's would be the thing
+  the rule forbids. **The owner's name comes only from a list outside the
+  repository** (`$CYANRIP_REDACT_NAMES`, else
+  `~/.config/cyanrip/redact-names`), and without one every tool says the name
+  was **not checked**, which is not *not present*.
+- **A `HANDSHAKE-` line is a wire value and is never rewritten.** Platterpus's
+  laps under `docs/handshake/inbound/` are filed byte-exact, as the protocol
+  requires.
+- **In a lap, write `~` and `host` yourself.** `tests/personal_details.py`
+  fails on a home path or a `uname` hostname in any lap or evidence file
+  added since the rule; everything older is history and is left as it is.
+
 ## Verifying your own work
 
 Every rule here exists because the obvious method produced a confident wrong

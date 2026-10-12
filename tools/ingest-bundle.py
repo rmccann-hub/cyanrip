@@ -52,6 +52,16 @@ AND IT SAYS HOW EACH CYANRIP LOG ENDS (the operator, 2026-10-04): with a signed
 completion footer, inside its footer, or with none. A log with no footer was
 copied while cyanrip ran, or cyanrip was ended by a signal it cannot handle,
 and the bundle cannot say which -- so that is what it prints.
+
+AND WHAT IT FILES CARRIES NO PERSONAL DETAILS (the owner, 2026-10-12): home
+folders become `~`, hostnames `host`, and the owner's real name, from a list
+kept outside the repository, `the owner` (tools/redact.py says how each is
+found). A redacted file is not the bundle's bytes, so SHA256SUMS gives the
+filed file's hash AND the bundle's, and the archive's own hash still verifies
+the delivery. A cyanrip log stops verifying with -Y once a path in it
+changes, so its ORIGINAL is checked with -Y first, and the verdict is
+recorded beside it: a filed log whose signature can no longer be checked is
+only evidence if somebody checked it while it still could be.
 """
 
 import argparse
@@ -64,8 +74,11 @@ import re
 import subprocess
 import sys
 import tarfile
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tools"))
+import redact  # noqa: E402
 LEDGER = "docs/release-ledger.tsv"
 BANNER = re.compile(r"cyanrip (\S+) \(platterpus-fork-g([0-9a-f]{7,40})\)")
 
@@ -420,6 +433,24 @@ def report_endings(members):
     return out, unfinished
 
 
+def verify_original(crip, name, data):
+    """`-Y` on a cyanrip log's delivered bytes, before redaction changes them.
+    Returns a phrase for SHA256SUMS. Never raises: a check that could not run
+    says why, which is a different claim from one that failed."""
+    if not crip or not pathlib.Path(crip).is_file():
+        return f"not run (no cyanrip binary at {crip})"
+    with tempfile.TemporaryDirectory() as d:
+        p = pathlib.Path(d) / os.path.basename(name)
+        p.write_bytes(data)
+        try:
+            r = subprocess.run([str(crip), "-Y", str(p)], capture_output=True,
+                               text=True, timeout=60)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            return f"not run ({e})"
+    return "verifies" if r.returncode == 0 else \
+        f"does NOT verify (exit {r.returncode})"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("archive")
@@ -428,6 +459,12 @@ def main():
                     help="read and report the run's verdict; write nothing")
     ap.add_argument("--peer", help="a clone of Platterpus's repository, whose "
                     "tags say which app release was newest when the run began")
+    ap.add_argument("--cyanrip", default=str(ROOT / "build" / "src" / "cyanrip"),
+                    help="the binary that checks a log's signature with -Y "
+                         "before redaction changes it")
+    ap.add_argument("--names", help="the owner's names, one per line, in a "
+                    "file outside the repository (default: $"
+                    f"{redact.NAMES_ENV}, else {redact.NAMES_FILE})")
     args = ap.parse_args()
 
     blob = pathlib.Path(args.archive).read_bytes()
@@ -489,6 +526,16 @@ def main():
     # ---- 2. FILE, AND DERIVE WHAT WAS NOT FILED ---------------------------
     dest = pathlib.Path(args.into)
     filed, dropped = [], []
+    # Hostnames are gathered across the whole bundle first: a manifest names
+    # the machine, and every other file that mentions it is then redacted too.
+    names = redact.local_names(args.names)
+    hosts = set()
+    for data in members.values():
+        try:
+            hosts |= redact.hostnames_in(data.decode("utf-8"))
+        except UnicodeDecodeError:
+            pass
+    redacted = {}
     for name, data in sorted(members.items()):
         # A VERDICT FILE IS ALWAYS FILED, whatever its extension. The first
         # draft of this tool keyed only on TEXT_SUFFIXES, so `report.json` --
@@ -499,7 +546,16 @@ def main():
         if is_verdict or pathlib.PurePosixPath(name).suffix.lower() in TEXT_SUFFIXES:
             out = dest / name
             out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_bytes(data)
+            new, rep = redact.redact_bytes(data, hosts, names)
+            if rep.changed():
+                text = data.decode("utf-8", errors="replace")
+                first = text.splitlines()[0] if text else ""
+                signed = BANNER.search(first) and SIGNED.search(text)
+                redacted[name] = (rep, verify_original(args.cyanrip, name, data)
+                                  if signed else None)
+            elif not rep.names_checked:
+                redacted[name] = (rep, None)
+            out.write_bytes(new)
             filed.append(name)
         else:
             dropped.append(name)
@@ -509,9 +565,20 @@ def main():
     print("=" * 68)
     sums = dest / "SHA256SUMS"
     with sums.open("w") as fh:
-        fh.write("# Filed here, byte-exact from the bundle.\n")
+        fh.write("# Filed here: each file's hash as filed. A file whose\n"
+                 "# personal details were replaced (tools/redact.py) says so\n"
+                 "# under it, with the bundle's hash of it, so the delivery\n"
+                 "# still verifies against the archive below.\n")
         for n in filed:
-            fh.write(f"{sha256(members[n])}  {n}\n")
+            filed_bytes = (dest / n).read_bytes()
+            fh.write(f"{sha256(filed_bytes)}  {n}\n")
+            if n in redacted and redacted[n][0].changed():
+                rep, verdict = redacted[n]
+                fh.write(f"#   redacted: {rep.summary()}; the bundle's bytes "
+                         f"were {sha256(members[n])}\n")
+                if verdict:
+                    fh.write(f"#   -Y on the bundle's bytes, before redaction: "
+                             f"{verdict}\n")
         fh.write("\n# NOT filed. This list is the SET DIFFERENCE between the\n"
                  "# archive's contents and what was written -- never a\n"
                  "# hand-written note, which is how two files carrying the\n"
@@ -522,6 +589,28 @@ def main():
         fh.write(f"\n# The archive as delivered.\n{sha256(blob)}  (not filed) "
                  f"{os.path.basename(args.archive)}\n")
     print(f"  SHA256SUMS written: {len(filed)} filed + {len(dropped)} named-not-filed")
+
+    print()
+    print("=" * 68)
+    print("PERSONAL DETAILS -- replaced in what was filed (tools/redact.py)")
+    print("=" * 68)
+    changed = {n: v for n, v in redacted.items() if v[0].changed()}
+    for n, (rep, verdict) in sorted(changed.items()):
+        print(f"  {n}: {rep.summary()}" + (f"; -Y before: {verdict}"
+                                           if verdict else ""))
+    if not changed:
+        print("  nothing replaced in any filed file")
+    if hosts:
+        print(f"  {len(hosts)} hostname(s) found in the bundle and replaced "
+              f"wherever they appear (not printed)")
+    if names is None:
+        print(f"  THE OWNER'S NAME WAS NOT CHECKED: no list at "
+              f"{args.names or os.environ.get(redact.NAMES_ENV) or redact.NAMES_FILE}."
+              f" 'Not checked' is not 'not present'.")
+    bad = [n for n, (_, v) in changed.items() if v and v != "verifies"]
+    if bad:
+        print(f"\n  WARNING: {len(bad)} cyanrip log(s) did not verify with -Y "
+              f"BEFORE redaction, or could not be checked: {', '.join(bad)}")
 
     missing = [v for v in VERDICT_FILES
                if not any(os.path.basename(n) == v for n in filed)]
