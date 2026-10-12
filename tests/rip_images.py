@@ -253,17 +253,17 @@ def sc_cli():
     # -k (read-liveness threshold) must be accepted across its range, including
     # 0, which disables the reporting entirely.
     for k in ("0", "1", "45"):
-        if crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0", "-k", k)[0] != 0:
-            fail(f"cli: -k {k} was rejected")
+        if crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0", "--stall-secs", k)[0] != 0:
+            fail(f"cli: --stall-secs {k} was rejected")
 
     # -x (drive cache probe) must be accepted, must refuse to guess on an
     # image rather than print a meaningless number, and must not appear at all
     # unless asked for. The measurement itself needs a real drive.
-    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0", "-x")
+    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0", "--cache-probe")
     if ec != 0:
-        fail(f"cli: -x was rejected (exit {ec})")
+        fail(f"cli: --cache-probe was rejected (exit {ec})")
     if "Cache probe:    not run (disc image has no drive cache)" not in out:
-        fail("cli: -x on an image did not refuse to measure")
+        fail("cli: --cache-probe on an image did not refuse to measure")
     if "Cache probe:" in crip("-d", WORK / "basic.cue", "-I", "-N", "-A",
                              "-U", "-P", "0")[1]:
         fail("cli: Cache probe line appeared without -x")
@@ -549,14 +549,14 @@ def sc_data_track_completed():
     the footer kept counting audio tracks alone, so mixed.cue, all three of
     whose tracks were written, read `Rip completed:  yes (2 of 3 tracks)`. The
     count is checked against the files on disk, which it did not write, and
-    the -j record's per-track flags must sum to its disc counter. Under -X the
+    the --diagnostics record's per-track flags must sum to its disc counter. Under -X the
     data track is not copied, and the count says so.
     """
     for name, args, want_files, want_data in (
             ("dtc", (), 3, True),
             ("dtc_x", ("-X",), 2, False)):
         rec = WORK / f"{name}.json"
-        rip(name, "mixed.cue", *args, "-j", rec)
+        rip(name, "mixed.cue", *args, "--diagnostics", rec)
         out = WORK / f"out_{name}"
         on_disk = sorted(p.name for p in out.iterdir()
                          if p.suffix in (".flac", ".bin"))
@@ -1861,7 +1861,7 @@ def sc_handshake():
     # check what the caller calls itself, and must not imply that it did.
     ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
                  "-o", "flac", "-D", WORK / "out_hs2", "-F", "{track}",
-                 "-L", "log", "-u", "platterpus/9.9.9-test")
+                 "-L", "log", "--consumer", "platterpus/9.9.9-test")
     if ec != 0:
         fail(f"handshake: --consumer was rejected (exit {ec})")
     log2 = (WORK / "out_hs2" / "log.log").read_text()
@@ -2628,7 +2628,7 @@ def sc_encode_failure_reaches_the_log():
         # `Error ripping:`), and it is not the encoder failure under test.
         [CRIP, "-d", str(WORK / "mixed.cue"), "-N", "-A", "-U", "-s", "0",
          "-P", "0", "-X", "-o", "flac", "-D", str(out), "-F", "{track}",
-         "-L", "log", "-M", "sheet", "-j", str(diag)],
+         "-L", "log", "-M", "sheet", "--diagnostics", str(diag)],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=60,
         preexec_fn=cap)
 
@@ -2676,7 +2676,7 @@ def sc_encode_failure_reaches_the_log():
     # literal, so a fixture whose track count changes does not silently turn
     # this into a check on the number 2.
     if in_log != in_json:
-        fail(f"encfail: the log says `Ripping errors: {in_log}` and -j says "
+        fail(f"encfail: the log says `Ripping errors: {in_log}` and --diagnostics says "
              f"ripping_errors {in_json}. Two records of one run, disagreeing, "
              f"and the human-readable one is the archival record -- this is "
              f"the defect round 21 moved the completion footer to fix")
@@ -2689,7 +2689,7 @@ def sc_encode_failure_reaches_the_log():
         # log 0 and -j 2 and told the reader both said 0.
         fail("encfail: both records say 0 errors under a 32 KiB cap that "
              "truncated the output. They agree by both being wrong, which is "
-             "the pre-fix log behaviour with the -j side broken to match")
+             "the pre-fix log behaviour with the --diagnostics side broken to match")
 
     # `Rip completed:` is UNCHANGED and that is deliberate, not an oversight.
     # It reports whether the rip loop ran to completion, which it did; the
@@ -2812,10 +2812,10 @@ def sc_encode_failure_reaches_the_log():
     try:
         rec = json.loads(diag.read_text())
     except Exception as exc:
-        fail(f"encfail: could not read the -j record: {exc}")
+        fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
         if rec["schema"] != "cyanrip-diagnostics/9":
-            fail(f"encfail: -j schema is {rec['schema']!r}, not "
+            fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
                  f"'cyanrip-diagnostics/9'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
@@ -2826,7 +2826,7 @@ def sc_encode_failure_reaches_the_log():
             in_record = {tr["number"] for tr in rec["rip"]["track_state"]
                          if tr["encode_failures"]}
             if not truncated or in_record != truncated:
-                fail(f"encfail: -j encode_failures names tracks "
+                fail(f"encfail: --diagnostics encode_failures names tracks "
                      f"{sorted(in_record)}, and the files truncated on disk "
                      f"are tracks {sorted(truncated)}")
 
@@ -3261,7 +3261,7 @@ def sc_status_block_is_current():
 
 
 def sc_diag_record_v8():
-    """The -j record's /8 fields, each against an artifact it does not share.
+    """The --diagnostics record's /8 fields, each against an artifact it does not share.
 
     Round 32 added them (our lap 1 S10, Platterpus's lap 2 S7 and S8). Every
     check reads the value from somewhere the record did not write: the ISRC
@@ -3281,7 +3281,7 @@ def sc_diag_record_v8():
     # libcdio returns none. The version comes from the rip's own log, whose
     # `Drive used:` revision is libcdio's CDIO_VERSION cut to four characters.
     rec = WORK / "v8_rip.json"
-    rip("v8_rip", "pregap.cue", "-t", "1=isrc=AAAAA0000001", "-j", rec)
+    rip("v8_rip", "pregap.cue", "-t", "1=isrc=AAAAA0000001", "--diagnostics", rec)
     m = re.search(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
                   (WORK / "out_v8_rip" / "log.log").read_text(), re.M)
     if not m:
@@ -3347,7 +3347,7 @@ def sc_diag_record_v8():
     seen = set()
     for name, extra in (("v8_pre", ()), ("v8_pre_w", ("-W",))):
         rec = WORK / f"{name}.json"
-        rip(name, "preemph.cue", "-j", rec, *extra)
+        rip(name, "preemph.cue", "--diagnostics", rec, *extra)
         ts = json.loads(rec.read_text())["rip"]["track_state"]
         cue = (WORK / f"out_{name}" / "sheet.cue").read_text()
         blocks = re.split(r"(?m)^  TRACK ", cue)[1:]
@@ -3383,7 +3383,7 @@ def sc_diag_record_v8():
             fields[toc_key[kw]] = val
         want.append(fields)
     rec = WORK / "v8_cdtext.json"
-    ec, out = crip("-d", "cdtext.toc", "-I", "-N", "-A", "-j", rec, cwd=WORK)
+    ec, out = crip("-d", "cdtext.toc", "-I", "-N", "-A", "--diagnostics", rec, cwd=WORK)
     if ec != 0:
         fail(f"diag_record_v8: -I on cdtext.toc exited {ec}")
     ct = json.loads(rec.read_text())["cdtext"]
@@ -3408,7 +3408,7 @@ def sc_diag_record_v8():
     dd = WORK / "v8_f"
     dd.mkdir()
     rec = dd / "f.json"
-    ec, out = crip("-d", WORK / "basic.cue", "-f", "-N", "-j", rec, cwd=dd,
+    ec, out = crip("-d", WORK / "basic.cue", "-f", "-N", "--diagnostics", rec, cwd=dd,
                    env=offline)
     printed = "No track had AccuRip entry, cannot find offset!" in out
     got = json.loads(rec.read_text())["offset_search"]
@@ -3433,7 +3433,7 @@ def sc_image_reports_isrc():
         offset is unset;
       * a rip makes no sub-channel read and logs no failure of one;
       * the disc's ISRC is still asked for, which is what the bit now does
-        mean for an image: the -j record says libcdio returned none.
+        mean for an image: the --diagnostics record says libcdio returned none.
 
     Each of the two gates in crip_is_image_driver()'s callers is pinned by
     one of the first two checks, and the shim's marker file proves each run
@@ -3473,7 +3473,7 @@ def sc_image_reports_isrc():
     outdir = WORK / "out_image_reports_isrc"
     ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                    "-P", "0", "-o", "flac", "-D", outdir, "-F", "{track}",
-                   "-L", "log", "-j", rec, env=env)
+                   "-L", "log", "--diagnostics", rec, env=env)
     (WORK / "image_reports_isrc.stdout").write_text(out)
     if not marker.exists():
         fail("image_reports_isrc: the shim never added the capability, so "
@@ -3492,7 +3492,7 @@ def sc_image_reports_isrc():
     try:
         ts = json.loads(rec.read_text())["rip"]["track_state"]
     except (OSError, ValueError, KeyError, TypeError) as e:
-        fail(f"image_reports_isrc: no readable -j record: {e}")
+        fail(f"image_reports_isrc: no readable --diagnostics record: {e}")
         return
     reasons = {tr["isrc_disc_reason"] for tr in ts}
     if reasons != {"libcdio returned none"}:
@@ -3933,7 +3933,7 @@ def sc_diagnostics():
     # 2. A normal rip: valid JSON, and the structured facts are the *measured*
     #    ones. Parsed with json.load, so a malformed file fails here rather
     #    than in the consumer.
-    rip("diag", "basic.cue", "-j", diag)
+    rip("diag", "basic.cue", "--diagnostics", diag)
     try:
         d = json.loads(diag.read_text())
     except Exception as e:
@@ -3951,7 +3951,7 @@ def sc_diagnostics():
     # it for when the rip HAPPENED -- event time and processing time collapsed,
     # which is the defect this project already found in its own log.
     #
-    # Round 15 lap 14 §5 item 7 named this half ("the -j record carries no wall
+    # Round 15 lap 14 §5 item 7 named this half ("the --diagnostics record carries no wall
     # clock at all") and the fix that shipped addressed only the two log lines.
     # A record whose reason to exist is the runs that open NO LOGFILE could say
     # what happened and never when.
@@ -4097,7 +4097,7 @@ def sc_diagnostics():
     #    reproduce. A check whose result depends on the network is not
     #    evidence about this program.
     refusal = WORK / "refusal.json"
-    ec, out = crip("-J", "-I", "-D", WORK / "out_refusal", "-j", refusal)
+    ec, out = crip("-J", "-I", "-D", WORK / "out_refusal", "--diagnostics", refusal)
     if ec == 0:
         fail("diagnostics: -J with -I stopped refusing -- probe is stale")
     if (WORK / "out_refusal").exists():
@@ -4120,7 +4120,7 @@ def sc_diagnostics():
     #    never sees the only message explaining the failure.
     cdio = WORK / "cdio.json"
     ec, out = crip("-d", WORK / "no-such-image.cue", "-N", "-o", "flac",
-                   "-j", cdio)
+                   "--diagnostics", cdio)
     if ec == 0:
         fail("diagnostics: opening a nonexistent CUE succeeded -- probe is stale")
     if not cdio.exists():
@@ -4141,7 +4141,7 @@ def sc_diagnostics():
     #    This is the exact shape of the -V incident: a parse error that read to
     #    a consumer as "cyanrip is not installed".
     argf = WORK / "argfail.json"
-    ec, out = crip("--not-a-real-flag", "-j", argf)
+    ec, out = crip("--not-a-real-flag", "--diagnostics", argf)
     if ec == 0:
         fail("diagnostics: an unknown flag was accepted -- probe is stale")
     if not argf.exists():
@@ -4826,7 +4826,7 @@ def sc_interrupt():
     found by them running a flag for the first time. Before this only SIGINT
     was handled, so a supervising process's kill took the default disposition
     and cyanrip died where it stood: the logfile was cut off mid-sentence with
-    no `Log FUN512:` footer, and the -j record -- which is written from atexit
+    no `Log FUN512:` footer, and the --diagnostics record -- which is written from atexit
     and therefore never ran -- was not written at all. -j exists for runs that
     open no logfile, so that lost it exactly where it was most needed, and the
     footerless log is the case Platterpus then has to tell apart from a
@@ -4849,7 +4849,7 @@ def sc_interrupt():
     full rip if the signal is lost: it is killed and reported instead.
     """
     # SIGHUP from round 30 (their lap 2 S22): measured leaving a 54-line log
-    # with no footer and no -j record before it was handled.
+    # with no footer and no --diagnostics record before it was handled.
     for signo, name in ((signal.SIGINT, "SIGINT"),
                         (signal.SIGTERM, "SIGTERM"),
                         (signal.SIGHUP, "SIGHUP")):
@@ -4862,7 +4862,7 @@ def sc_interrupt():
                 [CRIP, "-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                  "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
                  "-L", "log", "-M", "sheet", "-Z", "199", "-r", "200",
-                 "-j", diag],
+                 "--diagnostics", diag],
                 stdout=fh, stderr=subprocess.STDOUT)
 
         # Signal only once the rip is demonstrably under way. Signalling on a
@@ -4910,7 +4910,7 @@ def sc_interrupt():
             fail(f"interrupt/{name}: log says {got!r}, expected {want!r}")
 
         # WHICH track, from the log alone. Platterpus carried this across two
-        # rounds: the -j record has always answered it and the log has not, so
+        # rounds: the --diagnostics record has always answered it and the log has not, so
         # a consumer holding only the log knew a rip stopped after N tracks and
         # not which track the drive was on.
         #
@@ -4921,7 +4921,7 @@ def sc_interrupt():
         # contract, it is UNEXERCISED, and that is said out loud rather than
         # left for a green suite to imply.
         #
-        # The track number is cross-checked against the -j record below rather
+        # The track number is cross-checked against the --diagnostics record below rather
         # than hardcoded: two surfaces reporting one fact must not be able to
         # drift, and pinning "track 1" here would pass even if the two
         # disagreed.
@@ -4992,7 +4992,7 @@ def sc_interrupt():
                           if st and st.get("audio_ripped") is False]
             if unfinished and int(at.group(1)) != unfinished[0]:
                 fail(f"interrupt/{name}: the log says the rip stopped in "
-                     f"track {at.group(1)} and the -j record's first "
+                     f"track {at.group(1)} and the --diagnostics record's first "
                      f"unfinished track is {unfinished[0]}. Two surfaces, one "
                      f"fact, and they disagree")
         for st in states:
@@ -5493,7 +5493,7 @@ def sc_timestamp_offset():
     Round 15 lap 14 §5 item 7. Both sites emitted `%Y-%m-%dT%H:%M:%S` and
     nothing else -- ISO SHAPED, naming no instant. Two rips on machines in
     different zones could not be ordered, and a DST fall-back names two instants
-    an hour apart with identical text. The `-j` record carries no wall clock at
+    an hour apart with identical text. The `--diagnostics` record carries no wall clock at
     all, so it cannot recover the instant either.
 
     PLATTERPUS ASKED FOR THIS rather than merely permitting it (lap 15 §C3):
@@ -6021,7 +6021,7 @@ def sc_interrupt_deadlock():
 
 
 def sc_cache_probe_only():
-    """-x is a modifier; -x -I is the probe-only invocation, and both are pinned.
+    """-x is a modifier; --cache-probe -I is the probe-only invocation, and both are pinned.
 
     Platterpus standing status 2026-08-21, ask 1: they read `--cache-probe` as
     a command, ran it on the rig, and got a full rip with a 1h03m ETA. The flag
@@ -6033,8 +6033,8 @@ def sc_cache_probe_only():
     Three assertions, and the first two are the ones that would catch a future
     change to -x's meaning before a consumer does:
 
-      * -x -I writes no audio. This is the probe-only guarantee.
-      * -x alone DOES rip. If someone later makes -x exit after measuring --
+      * --cache-probe -I writes no audio. This is the probe-only guarantee.
+      * --cache-probe alone DOES rip. If someone later makes -x exit after measuring --
         which is what was asked for, and which we declined with reasons -- this
         fails and forces the question back through a round instead of letting a
         documented flag change meaning quietly.
@@ -6045,7 +6045,7 @@ def sc_cache_probe_only():
     here. cache_probe.c refuses on image drivers, which have no cache to
     measure, so what is exercised is the DISPATCH around it -- whether -x
     proceeds into a rip -- and not a single cdio_read_audio_sectors() call.
-    -x -I HAS now run to completion on real hardware -- 2026-08-25, PIONEER
+    --cache-probe -I HAS now run to completion on real hardware -- 2026-08-25, PIONEER
     BD-RW BDR-209D, exit 0 in 15.9 s, drive returned, `Cache probe: at least
     2048 sectors ... search ceiling reached`. What this scenario exercises is
     still only the dispatch; the sentence is corrected rather than deleted
@@ -6055,26 +6055,26 @@ def sc_cache_probe_only():
     out = WORK / "out_xprobe"
     ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                    "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
-                   "-L", "log", "-M", "sheet", "-x", "-I")
+                   "-L", "log", "-M", "sheet", "--cache-probe", "-I")
     if ec != 0:
-        fail(f"cache_probe_only: -x -I exited {ec}")
+        fail(f"cache_probe_only: --cache-probe -I exited {ec}")
     if out.exists() and any(p.suffix == ".flac" for p in out.iterdir()):
-        fail("cache_probe_only: -x -I ripped audio -- the probe-only "
+        fail("cache_probe_only: --cache-probe -I ripped audio -- the probe-only "
              "invocation is gone, and a caller measuring a drive now waits "
              "for a whole disc")
     if "Cache probe:" not in log:
-        fail("cache_probe_only: -x -I reported no cache probe result at all")
+        fail("cache_probe_only: --cache-probe -I reported no cache probe result at all")
 
     # The modifier half. Separate output directory so a leftover from the
     # check above cannot satisfy this one.
     out2 = WORK / "out_xrip"
     ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                  "-P", "0", "-o", "flac", "-D", out2, "-F", "{track}",
-                 "-L", "log", "-M", "sheet", "-x")
+                 "-L", "log", "-M", "sheet", "--cache-probe")
     if ec != 0:
-        fail(f"cache_probe_only: -x exited {ec}")
+        fail(f"cache_probe_only: --cache-probe exited {ec}")
     if not (out2.exists() and any(p.suffix == ".flac" for p in out2.iterdir())):
-        fail("cache_probe_only: -x alone did not rip. That may be an "
+        fail("cache_probe_only: --cache-probe alone did not rip. That may be an "
              "improvement, but it is a change to a documented flag and it "
              "belongs in a handshake round, not in a passing test")
 
@@ -7064,7 +7064,7 @@ def sc_paranoia_skip():
     `Ripping errors:` COUNTS THE SKIPS TOO from round 30, by the operator's
     word of 2026-10-05, with a suffix saying how many of it are skips. Asserted
     against the disc block's `SKIP:`, which is printed from the counter itself,
-    and against the -j record, which is written by a different file. The exit
+    and against the --diagnostics record, which is written by a different file. The exit
     code stays the drive's -- 0 here -- and `ec != 0` below is that assertion:
     exiting 1 would make Platterpus skip the securing pass (crip_ripping_errors()
     says where), and that choice is theirs to answer in round 30 lap 9.
@@ -7085,7 +7085,7 @@ def sc_paranoia_skip():
                    + ":verify_asan_link_order=0")
         ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                           "-r", "5", "-o", "pcm", "-D", out, "-F", "{track}",
-                          "-L", "log", "-j", diag, env=env)
+                          "-L", "log", "--diagnostics", diag, env=env)
         if ec != 0:
             fail(f"paranoia_skip: cycle {cycle}: cyanrip exited {ec}; a rip whose "
                  f"only errors are skips exits as the drive's count says")
@@ -7145,7 +7145,7 @@ def sc_paranoia_skip():
         except (OSError, ValueError, KeyError, TypeError) as e:
             got = f"unreadable ({e})"
         if got != (disc_skips, disc_skips):
-            fail(f"paranoia_skip: cycle {cycle}: the -j record says "
+            fail(f"paranoia_skip: cycle {cycle}: the --diagnostics record says "
                  f"(ripping_errors, paranoia_skips) = {got}, not "
                  f"{(disc_skips, disc_skips)}")
         # The live progress line counts the same things as the disc's line.
@@ -7400,14 +7400,14 @@ def sc_contract_composed():
              "matcher that never matches.")
 
     ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
-                   "-P", "0", "-x", "-I")
+                   "-P", "0", "--cache-probe", "-I")
     if ec != 0:
-        fail(f"contract_composed: -x -I exited {ec}")
+        fail(f"contract_composed: --cache-probe -I exited {ec}")
         return
     line = next((l for l in log.splitlines() if l.startswith("Cache probe:")),
                 None)
     if line is None:
-        fail("contract_composed: -x -I emitted no `Cache probe:` line")
+        fail("contract_composed: --cache-probe -I emitted no `Cache probe:` line")
         return
     value = line.split(":", 1)[1].strip()
 
@@ -7437,7 +7437,7 @@ def sc_diag_repeated_flag():
     check watched the first.
 
     Underneath was a real defect of ours. The pre-pass in main() took the
-    FIRST -j and broke; genopt takes the LAST. So a repeated -j armed two
+    FIRST -j and broke; genopt takes the LAST. So a repeated --diagnostics armed two
     sinks and WHICH ONE RECEIVED THE RECORD DEPENDED ON WHEN THE PROCESS
     DIED -- before genopt, the first; after, the second. The pre-pass exists
     for deaths in exactly that window.
@@ -7455,22 +7455,22 @@ def sc_diag_repeated_flag():
 
     # -I lists the disc and writes no audio; it needs no network and no drive.
     ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
-                   "-P", "0", "-I", "-j", a, "-j", b)
+                   "-P", "0", "-I", "--diagnostics", a, "--diagnostics", b)
 
     # 1. The last path wins, and it is the ONLY file written.
     if not b.exists():
-        fail(f"diag_repeated_flag: the last -j path was not written (exit {ec})")
+        fail(f"diag_repeated_flag: the last --diagnostics path was not written (exit {ec})")
         return
     if a.exists():
-        fail("diag_repeated_flag: BOTH -j paths were written. One flag, one "
+        fail("diag_repeated_flag: BOTH --diagnostics paths were written. One flag, one "
              "record: two sinks is how a consumer ends up watching the wrong "
              "file, which is the round-16 finding this pins")
         return
 
     # 2. The announcement names the count and the winning path, at column 0.
-    want = f'-j given 2 times; the diagnostics record goes to the last one: "{b}"'
+    want = f'--diagnostics given 2 times; the diagnostics record goes to the last one: "{b}"'
     if want not in out:
-        fail("diag_repeated_flag: a repeated -j was accepted silently. A "
+        fail("diag_repeated_flag: a repeated --diagnostics was accepted silently. A "
              f"discarded sink a caller is watching must be said out loud.\n"
              f"    wanted: {want}\n    output: {out[:400]}")
         return
@@ -7480,8 +7480,8 @@ def sc_diag_repeated_flag():
     if single.exists():
         single.unlink()
     _, out1 = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
-                   "-P", "0", "-I", "-j", single)
-    if "-j given" in out1:
+                   "-P", "0", "-I", "--diagnostics", single)
+    if "--diagnostics given" in out1:
         fail("diag_repeated_flag: the announcement is printed for a SINGLE "
              "-j too, so it distinguishes nothing")
         return
@@ -7493,7 +7493,7 @@ def sc_diag_repeated_flag():
     except ValueError as e:
         fail(f"diag_repeated_flag: the record is not JSON: {e}")
         return
-    if not any("-j given 2 times" in m for m in rec.get("messages", [])):
+    if not any("--diagnostics given 2 times" in m for m in rec.get("messages", [])):
         fail("diag_repeated_flag: the announcement never reached the record. "
              "A run whose only artifact is this file must carry it, or the "
              "one reader who cannot see the terminal cannot see it at all")
@@ -7541,7 +7541,7 @@ def sc_contract_diagnostics():
     out = WORK / "out_cd"
     ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                  "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
-                 "-L", "log", "-M", "sheet", "-j", diag)
+                 "-L", "log", "-M", "sheet", "--diagnostics", diag)
     if ec != 0:
         fail(f"contract_diagnostics: the rip exited {ec}")
         return

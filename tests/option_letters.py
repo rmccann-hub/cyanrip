@@ -6,16 +6,18 @@ Upstream allocates short letters and a fork cannot reserve one. `-k` was
 --stall-secs here when upstream's b40c1f0 gave it to --acoustid-key, so the
 two projects now spell different options `-k`, and the sync had to make
 upstream's long-only here. A long name can still collide, but only on the
-same word, which a sync's diff of --help shows. So from 2026-10-12 a new fork
-option has no short letter (CLAUDE.md, "Watching upstream").
+same word, which a sync's diff of --help shows. So from 2026-10-12 a fork
+option has no short letter (CLAUDE.md, "Watching upstream"), and the four the
+fork had shipped, -j, -k, -u and -x, were retired the same day on the owner's
+word, while nobody but the owner used either project.
 
 What this checks, against the binary's own --help:
 
   * the option table read from src/cyanrip_main.c is exactly what the binary
     prints, so the same reader can be trusted on upstream's source;
-  * every option upstream does not have is long-only, unless it is one of
-    the letters the fork already shipped, which stay: renaming one breaks
-    every caller;
+  * every option upstream does not have is long-only;
+  * the retired letters are given to nothing, and the binary refuses each:
+    a letter that meant one thing here must not quietly mean another;
   * every upstream option keeps upstream's letter, unless it is recorded as
     long-only here with the reason;
   * no letter is given twice, and upstream's table never takes a letter the
@@ -36,19 +38,23 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = "src/cyanrip_main.c"
 
-# The fork's shipped letters. They stay; nothing new joins this list.
-FORK_LETTERS = {
-    "stall-secs": "k",
-    "cache-probe": "x",
-    "consumer": "u",
-    "diagnostics": "j",
+# Letters the fork once gave its own options, retired 2026-10-12. Each stays
+# unassigned until a decision removes it from here: -k in particular is
+# upstream's --acoustid-key, and taking it before old `-k 10` invocations are
+# gone would read a stall threshold as an AcoustID key.
+RETIRED = {
+    "j": "--diagnostics",
+    "k": "--stall-secs",
+    "u": "--consumer",
+    "x": "--cache-probe",
 }
 # Accepted outside the option table, so the table reader cannot see it.
 OUTSIDE_TABLE = {"V": "--version's alias in src/genopt.h, upstream's own "
                       "spelling up to 0.9.3"}
 # Upstream options that are long-only here, and why.
 LONG_ONLY_HERE = {
-    "acoustid-key": "upstream's -k, which was --stall-secs here first",
+    "acoustid-key": "upstream's -k, which was --stall-secs here until "
+                    "2026-10-12 and is retired for now (RETIRED)",
 }
 # genopt prints these itself; they are not in the table.
 BUILTIN = {"help": "h", "version": "v"}
@@ -107,11 +113,18 @@ def main():
             fail(f"-{letter} is given to --{names[0]}, and is already "
                  f"{OUTSIDE_TABLE[letter]}")
 
-    for name, letter in FORK_LETTERS.items():
-        if shown.get(name) != letter:
-            fail(f"--{name} was -{letter} and is now {shown.get(name)!r}: a "
-                 "shipped letter is never renamed, since every caller using "
-                 "it breaks")
+    for letter, was in RETIRED.items():
+        if letter in letters:
+            fail(f"-{letter} is given to --{letters[letter][0]}; it was {was} "
+                 "here until 2026-10-12 and is retired (RETIRED)")
+        if shown.get(was.lstrip("-")) is None:
+            fail(f"{was} is gone; it was renamed from -{letter}, not removed")
+        r = subprocess.run([sys.argv[1], f"-{letter}", "1", "-I"],
+                           capture_output=True, text=True)
+        said = r.stdout + r.stderr
+        if r.returncode == 0 or f"-{letter}" not in said:
+            fail(f"the binary did not refuse -{letter}, naming it: exit "
+                 f"{r.returncode}, {said.strip()[:120]!r}")
 
     base = None
     for ref in ("master", "origin/master"):
@@ -134,7 +147,7 @@ def main():
     for name, letter in shown.items():
         if name in upstream:
             continue
-        if letter and FORK_LETTERS.get(name) != letter:
+        if letter:
             fail(f"--{name} takes -{letter}. An option this fork adds is "
                  "long-only (CLAUDE.md, 'Watching upstream'): upstream "
                  "allocates short letters and can take this one in any sync")

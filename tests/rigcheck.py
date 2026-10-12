@@ -508,7 +508,7 @@ with tempfile.TemporaryDirectory() as td:
     check("the absent binary produces exactly one argv/shim row",
           len(argv_rows) == 1, f"got {[r[0] for r in rig.results]}")
     detail = argv_rows[0][2] if argv_rows else ""
-    check("it does not claim -j wrote no record",
+    check("it does not claim --diagnostics wrote no record",
           "wrote no record" not in detail, detail)
     check("it names the reason the probe did not complete",
           "never completed" in detail and "not found" in detail, detail)

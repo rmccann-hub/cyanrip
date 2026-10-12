@@ -198,7 +198,7 @@ echo
 # so the ONLY network call this run makes is the AccurateRip query -- which is
 # the thing under test, with the fewest other variables in play.
 run accurip "clause 1 -- AccurateRip path, rewritten parser" -- \
-    -d "$DEV" -s "$OFFSET" -l 1,2,3 -N -U -o flac -u "$CONSUMER" \
+    -d "$DEV" -s "$OFFSET" -l 1,2,3 -N -U -o flac --consumer "$CONSUMER" \
     -D "$OUT/accurip" -F "{track}" -L accurip -M accurip
 
 # ------------------------------------------- clause 2: -H with de-emphasis
@@ -213,11 +213,11 @@ run accurip "clause 1 -- AccurateRip path, rewritten parser" -- \
 # difference is necessary and not sufficient, and settling it needed a decoder
 # that may not be installed. Now nothing is needed.
 run hdcd-deemph "clause 2 -- -H with de-emphasis forced" -- \
-    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -E -u "$CONSUMER" \
+    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -E --consumer "$CONSUMER" \
     -D "$OUT/hdcd-deemph" -F "{track}" -L hdcd-deemph -M hdcd-deemph
 
 run hdcd-nodeemph "clause 2 -- the control: same rip, de-emphasis OFF" -- \
-    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -W -u "$CONSUMER" \
+    -d "$DEV" -s "$OFFSET" -l 1 -N -A -U -o pcm -H -W --consumer "$CONSUMER" \
     -D "$OUT/hdcd-nodeemph" -F "{track}" -L hdcd-nodeemph -M hdcd-nodeemph
 
 # --------------------------------- clause 3 + the -j record's new schema
@@ -234,8 +234,8 @@ run hdcd-nodeemph "clause 2 -- the control: same rip, de-emphasis OFF" -- \
 # on. {format} in -D is REQUIRED with more than one output -- cyanrip refuses
 # otherwise, with a clear message, which is how this was found.
 run plain-j "clause 3 -- parsed lines unmoved, -Z, -u, and the /4 record" -- \
-    -d "$DEV" -s "$OFFSET" -l 1,2 -N -A -U -o flac,pcm -Z 2 -u "$CONSUMER" \
-    -D "$OUT/plain/{format}" -F "{track}" -L plain -M plain -j "$OUT/plain.json"
+    -d "$DEV" -s "$OFFSET" -l 1,2 -N -A -U -o flac,pcm -Z 2 --consumer "$CONSUMER" \
+    -D "$OUT/plain/{format}" -F "{track}" -L plain -M plain --diagnostics "$OUT/plain.json"
 
 # ================================================================ summary
 echo "================================ measurements ================================"

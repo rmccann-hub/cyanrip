@@ -2325,7 +2325,7 @@ static int cyanrip_run(int argc, char **argv)
                 "Rip tracks until checksums match N times (for damaged CDs)");
     GEN_OPT_ONE(opts_list, int32_t, speed, "S", 1, 1, 0, 0, INT32_MAX,
                 "Set drive speed");
-    GEN_OPT_ONE(opts_list, int32_t, stall_secs, "k", 1, 1, 10, 0, INT32_MAX,
+    GEN_OPT_ONE(opts_list, int32_t, stall_secs, "", 1, 1, 10, 0, INT32_MAX,
                 "Seconds a frame read must stall before reporting liveness (0 disables)");
     /* "with -I to measure without ripping" is not padding. -x is a MODIFIER,
      * not a command: it measures and then rips, which is what its old help
@@ -2336,11 +2336,11 @@ static int cyanrip_run(int argc, char **argv)
      * "only do this" idiom -I and -J already use -- so the fix is to say so
      * where a caller reads it, rather than to change what a documented flag
      * does. sc_cache_probe_only() runs both halves so this stays true. */
-    GEN_OPT_ONE(opts_list, bool,    cache_probe, "x", 0, 0, 0, 0, 0,
+    GEN_OPT_ONE(opts_list, bool,    cache_probe, "", 0, 0, 0, 0, 0,
                 "Measure the drive's readback cache before ripping (costs seconds; with -I to measure without ripping)");
-    GEN_OPT_ONE(opts_list, char *,  consumer, "u", 1, 1, NULL, 0, 0,
+    GEN_OPT_ONE(opts_list, char *,  consumer, "", 1, 1, NULL, 0, 0,
                 "Identify the calling program in the log (recorded verbatim, not verified)");
-    GEN_OPT_ONE(opts_list, char *,  diagnostics, "j", 1, 1, NULL, 0, 0,
+    GEN_OPT_ONE(opts_list, char *,  diagnostics, "", 1, 1, NULL, 0, 0,
                 "Write a machine-readable diagnostics record to this path (JSON)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
                 "Track pregap handling: N=default|drop|merge|track (repeatable)");
@@ -2402,10 +2402,11 @@ static int cyanrip_run(int argc, char **argv)
                 "Disable AccurateRip database query and validation");
     GEN_OPT_ONE(opts_list, bool,    no_acoustid, "B", 0, 0, 0, 0, 0,
                 "Disable AcoustID fingerprinting");
-    /* Long-only: upstream gives it -k, which has been --stall-secs here since
-     * round 30 and is in Platterpus's argv. A user typing upstream's -k KEY
-     * gets a stall-seconds parse error naming the argument, never a silent
-     * misreading (docs/upstream/sync-2026-10-12-rc3.md section 2). */
+    /* Long-only for now: upstream gives it -k, which was --stall-secs here
+     * until 2026-10-12. Every option this fork adds is long-only from that day
+     * (CLAUDE.md, "Watching upstream"), so -k is now refused, and stays refused
+     * for a release before it means anything else: an old `-k 10` must not
+     * become an AcoustID key. tests/option_letters.py records the choice. */
     GEN_OPT_ONE(opts_list, char *,  acoustid_key, "", 1, 1, NULL, 0, 0,
                 "AcoustID user API key, to submit fingerprints of verified rips");
     GEN_OPT_ONE(opts_list, bool,    no_coverart_db, "U", 0, 0, 0, 0, 0,
@@ -3645,7 +3646,7 @@ int main(int argc, char **argv)
      * grammar. cyanrip_run() calls crip_diag_enable() again with genopt's
      * value.
      *
-     * TAKE THE LAST -j, NOT THE FIRST, BECAUSE GENOPT TAKES THE LAST. This
+     * TAKE THE LAST --diagnostics, NOT THE FIRST: GENOPT TAKES THE LAST. This
      * loop used to `break` on the first one while genopt kept the last, so a
      * repeated -j armed two different sinks and WHICH FILE GOT THE RECORD
      * DEPENDED ON WHEN THE PROCESS DIED: before genopt, the first path; after
@@ -3661,7 +3662,7 @@ int main(int argc, char **argv)
     const char *diag_arg = NULL;
     int diag_given = 0;
     for (int i = 1; i + 1 < argc; i++) {
-        if (!strcmp(argv[i], "-j") || !strcmp(argv[i], "--diagnostics")) {
+        if (!strcmp(argv[i], "--diagnostics")) {
             diag_arg = argv[i + 1];
             diag_given++;
         }
@@ -3675,8 +3676,9 @@ int main(int argc, char **argv)
      * is a file somebody is watching that will never appear, so say which one
      * won. Emitted after crip_diag_enable() so the record carries it too. */
     if (diag_given > 1)
-        cyanrip_log(NULL, 0, "-j given %i times; the diagnostics record goes "
-                    "to the last one: \"%s\"\n", diag_given, diag_arg);
+        cyanrip_log(NULL, 0, "--diagnostics given %i times; the diagnostics "
+                    "record goes to the last one: \"%s\"\n", diag_given,
+                    diag_arg);
 
     const int rc = cyanrip_run(argc, argv);
     crip_diag_set_exit(rc);

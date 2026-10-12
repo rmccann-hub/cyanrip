@@ -1,5 +1,22 @@
 Unreleased
 ==========
+**The fork's short options are gone; each is its long name only. This breaks
+every caller that uses one.** On the owner's word of 2026-10-12, while nobody
+but the owner uses either project: `-j` is `--diagnostics`, `-k`
+`--stall-secs`, `-u` `--consumer` and `-x` `--cache-probe`, and each retired
+letter now exits 1 with `Unable to parse command line argument`. Upstream
+allocates short letters and its `b40c1f0` had already taken `-k`, so from now
+on an option this fork adds is long-only (CLAUDE.md, "Watching upstream").
+**Platterpus passes `-j` on every rip, so it must send `--diagnostics` before
+this build is released to it**; every fork build that accepts `-j` already
+accepts `--diagnostics`, so that change can ship first. `-k` is given to
+nothing for now, though upstream's `--acoustid-key` wants it, so that an old
+`-k 10` is refused rather than read as an AcoustID key. Two texts change with
+it: the `Read stalls:` value and the `--diagnostics` reason for a run with
+stall reporting off now say `--stall-secs 0`, and a repeated flag is reported
+as `--diagnostics given N times`. `tests/option_letters.py` fails on any fork
+option with a letter and on any retired letter given or accepted.
+
 **Personal details stay out of what the filing and export tools write**, by
 the owner's rule of 2026-10-12: home folders become `~`, hostnames `host`,
 and the owner's real name `the owner`, in new evidence and laps, while a

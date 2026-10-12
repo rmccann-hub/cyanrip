@@ -146,8 +146,8 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -p `number=string`   | Specifies what to do with the pregap, syntax is described below                             |
 | -P `int`             | Sets the [paranoia level](#paranoia-level), default is max, 0 disables checking completely  |
 | -O                   | Overread into lead-in/lead-out areas, if unsupported by drive may freeze ripping            |
-| -k `int`             | Seconds a frame read must stall before liveness is reported (default 10, 0 disables)        |
-| -x                   | Measure the drive's readback cache (off by default, costs seconds; with `-I`, measure without ripping). **The figure it reports is known to be wrong**, see `docs/KNOWN-ISSUES.md` |
+| --stall-secs `int`   | Seconds a frame read must stall before liveness is reported (default 10, 0 disables)        |
+| --cache-probe        | Measure the drive's readback cache (off by default, costs seconds; with `-I`, measure without ripping). **The figure it reports is known to be wrong**, see `docs/KNOWN-ISSUES.md` |
 | -H                   | Enable HDCD decoding, read below for details                                                |
 | -E                   | Force CD deemphasis, for CDs mastered with preemphasis without actually signalling it       |
 | -W                   | Disable automatic CD deemphasis. Read [below](#deemphasis) for details.                     |
@@ -180,8 +180,8 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 |                      | **Misc. options**                                                                           |
 | -Q                   | Eject CD tray if ripping has been successfully completed                                    |
 | -Y `file`            | Verify that a rip log's checksum matches its contents                                       |
-| -u `string`          | `--consumer`: identify the calling program in the log, recorded verbatim and not verified (fork) |
-| -j `path`            | `--diagnostics`: write a machine-readable JSON record, even for a run that opens no log (fork) |
+| --consumer `string`  | Identify the calling program in the log, recorded verbatim and not verified (fork) |
+| --diagnostics `path` | Write a machine-readable JSON record, even for a run that opens no log (fork) |
 | -v, -V               | Print version (`--version` also works; `-V` is a fork-only alias, see below)                 |
 | -h                   | Print usage (this)                                                                          |
 | -f                   | Find drive offset (requires a disc with an AccuRip DB entry)                                |
@@ -343,7 +343,7 @@ AcoustID
 --------
 When built with libchromaprint, cyanrip computes an [AcoustID](https://acoustid.org/) fingerprint of every audio track while ripping. Like `fpcalc` and MusicBrainz Picard, it fingerprints the first 2 minutes of each track.
 
-If the whole disc checks out, the fingerprints are submitted to AcoustID, each linked to its MusicBrainz recording. Every audio track must be accurately ripped according to AccurateRip, and must have a MusicBrainz recording within 30 seconds of the track's length. Submitting needs your own user API key, found on your [AcoustID account page](https://acoustid.org/api-key) and given via `--acoustid-key` (long-only on this fork, where `-k` is `--stall-secs`). Nothing is submitted without it.
+If the whole disc checks out, the fingerprints are submitted to AcoustID, each linked to its MusicBrainz recording. Every audio track must be accurately ripped according to AccurateRip, and must have a MusicBrainz recording within 30 seconds of the track's length. Submitting needs your own user API key, found on your [AcoustID account page](https://acoustid.org/api-key) and given via `--acoustid-key` (long-only on this fork, where `-k` was `--stall-secs` until 2026-10-12 and is now given to nothing). Nothing is submitted without it.
 
 Otherwise, the fingerprints are saved in the files' tags instead, in the same tag Picard uses: `ACOUSTID_FINGERPRINT`, or `TXXX:Acoustid Fingerprint` for MP3. Picard submits a fingerprint it finds there, rather than computing it again. MP4 based outputs don't get the tag, as FFmpeg can't write freeform iTunes tags.
 
@@ -377,7 +377,7 @@ here that upstream still has are in `docs/upstream/defect-reports.md`:
    is `PROVIDER-CONTRACT.md` P6.
  * **A signal stops a rip with a complete, checksummed record.** SIGINT and
    SIGTERM, and from `.20` SIGHUP, end the read, write the completion footer
-   naming the signal, the `Log FUN512:` checksum and the `-j` record. Upstream
+   naming the signal, the `Log FUN512:` checksum and the `--diagnostics` record. Upstream
    handles only SIGINT, and logs from inside its signal handler, which can
    deadlock. SIGQUIT and SIGKILL still end the process with no footer, and
    SIGPIPE does not stop it at all: libneon, linked through libmusicbrainz5,
@@ -410,11 +410,11 @@ here that upstream still has are in `docs/upstream/defect-reports.md`:
    blocked. It is a thread and not a paranoia callback because a drive grinding
    on a bad sector blocks inside one SCSI command, where paranoia never calls
    back; the callback version shipped in r2 and was silent through two real
-   three-minute stalls. **`-k`** sets the threshold in seconds (default 10, 0
-   disables). These lines go to stdout only; the count of stalls and the
+   three-minute stalls. **`--stall-secs`** sets the threshold in seconds (default
+   10, 0 disables). These lines go to stdout only; the count of stalls and the
    longest one reach the log as `Read stalls:`.
- * **`-x`** measures the drive's readback cache at rip time, on the disc in the
-   drive. Off by default because it costs seconds of drive time, and it refuses
+ * **`--cache-probe`** (`-x` until 2026-10-12) measures the drive's readback
+   cache at rip time, on the disc in the drive. Off by default because it costs seconds of drive time, and it refuses
    to report a number for a disc image, which has no cache to measure. It has
    run on hardware (`-x -I` on 2026-08-25, `-x` ripping on 2026-09-11), and
    **the number it reports is wrong by roughly fifteen times**: `cd-paranoia -A`

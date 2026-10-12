@@ -62,7 +62,8 @@ settled by building 0.9.3 and running it. The measured matrix is
   the gap-fill into metadata (`user -a/-t > MusicBrainz > CD-TEXT > defaults`).
 - `src/pregap.c`/`.h` -- Q sub-channel pregap search for physical discs, carried
   from upstream PR #115 with fixes; see `docs/pregap-carry.md`.
-- `src/cache_probe.c`/`.h` -- `-x` drive readback cache measurement. Refuses on
+- `src/cache_probe.c`/`.h` -- `--cache-probe` (`-x` until 2026-10-12, so every
+  dated result below says `-x`) drive readback cache measurement. Refuses on
   image drivers, which have no cache to measure. **Verified on hardware
   2026-08-25** -- `-x -I` completed in 15.9 s on a PIONEER BD-RW BDR-209D, exit
   0, drive returned, reporting `at least 2048 sectors ... search ceiling
@@ -108,9 +109,10 @@ settled by building 0.9.3 and running it. The measured matrix is
   accumulates the stall count and the longest wait, because the heartbeat is
   progress output and the *fact* of a stall is a measurement that cannot be
   re-taken; `Read stalls:` in the disc summary is where it lands.
-- `src/diagnostics.c`/`.h` -- `-j`, the machine-readable record. Its reason to
+- `src/diagnostics.c`/`.h` -- `--diagnostics` (`-j` until 2026-10-12), the
+  machine-readable record. Its reason to
   exist is the runs that open **no logfile at all**, so it is written from
-  `atexit` and `-j` is found by a pre-pass before genopt. Read its header
+  `atexit` and `--diagnostics` is found by a pre-pass before genopt. Read its header
   before adding a field: it deliberately claims no severity and has no
   `success` flag, and both absences are load-bearing.
 - `tests/` -- meson-driven unit tests (`fun512.c`, `naming.c`, `subq.c`,
@@ -2360,13 +2362,18 @@ long-only here, and the two projects now spell different options `-k`. A long
 name can still collide, but only on the same word, and a sync's diff of
 `--help` shows it. **Name an option by what it does (`--cache-probe`), never
 by who asked for it (`--platterpus-…`).** The obligations here are to any
-consumer, and a consumer's name in the CLI says otherwise. **A letter already
-shipped stays**: `-j`, `-k`, `-u`, `-x`, and `-V`, which is upstream's own
-spelling up to 0.9.3. Renaming one breaks every caller that uses it, which is
-the failure this rule exists to avoid. `tests/option_letters.py` reads
-upstream's option table at the last upstream commit merged, and fails on a new
-fork option with a letter, a renamed shipped letter, an upstream letter changed
-without a recorded reason, and a letter given twice.
+consumer, and a consumer's name in the CLI says otherwise. **The four letters
+the fork had shipped were retired the same day**, on the owner's word, while
+nobody but the owner used either project: `-j` is `--diagnostics`, `-k`
+`--stall-secs`, `-u` `--consumer` and `-x` `--cache-probe`. Only `-V` stays,
+because it is upstream's own spelling up to 0.9.3. **A retired letter is given
+to nothing** until a decision says otherwise. `-k` is upstream's
+`--acoustid-key`, and taking it while an old `-k 10` might still run would
+read a stall threshold as an AcoustID key. `tests/option_letters.py` reads
+upstream's option table at the last upstream commit merged, and fails on a
+fork option with a letter, a retired letter given to anything or accepted by
+the binary, an upstream letter changed without a recorded reason, and a letter
+given twice.
 
 **That diff is a tool and a record, not a habit.** `tools/upstream-delta.py`
 generates it — versions, inbound commits, CLI flags *measured from both

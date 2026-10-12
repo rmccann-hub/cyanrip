@@ -597,7 +597,7 @@ void crip_diag_write(void)
     av_bprintf(&b, "  \"read_stalls\": {\n");
     if (!st.threshold_us) {
         av_bprintf(&b, "    \"watched\": false,\n");
-        av_bprintf(&b, "    \"reason\": \"stall reporting disabled with -k 0\",\n");
+        av_bprintf(&b, "    \"reason\": \"stall reporting disabled with --stall-secs 0\",\n");
         av_bprintf(&b, "    \"count\": null, \"longest_seconds\": null,\n");
         av_bprintf(&b, "    \"longest_track\": null, \"longest_lsn\": null\n");
     } else {
