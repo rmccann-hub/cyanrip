@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**HR-1 is adopted, word for word**, as `docs/handshake/HR-1.md`: Platterpus
+rewrites its own history once, to remove one address from commit metadata, so
+every Platterpus commit ID changes while every file, message and date stays
+byte-identical. Ours do not change. Old IDs stay as sent, and an old
+Platterpus ID now resolves through Platterpus's committed
+`docs/handshake/commit-map-<date>.txt`: `tools/lap-statements.py` looks every
+Platterpus value up there before resolving it in the clone, follows a chain of
+maps, refuses a prefix two old IDs share, and checks a path or line claim at
+the mapped commit (`tools/commit-map.py`, HR-1.6). A map that does not read
+cleanly is reported, by the checker and by `tools/seam-sync-check.py`, and
+nothing is resolved through it. A cyanrip ID is never looked up in their map.
+Each step has a case in `tests/lap_statements.py`, revert-proved one at a time.
+Until HR-1.7's check passes, neither side releases or sends a lap that cites a
+commit.
+
 **The CI workflow is hardened and has moved to `.github/workflows/ci.yml`**,
 from an outside read of 2026-10-12, alongside the owner's settings of that
 day: `platterpus-fork` is the default branch, pull requests merge with merge

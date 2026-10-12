@@ -921,6 +921,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tools/commit-map.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tools/contract-delta.py"
         },
         {
@@ -1157,5 +1161,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:d6474d5f-1bcb-5a74-a3c7-c988466fb9eb"
+  "serialNumber": "urn:uuid:3741ada9-d845-5d20-8e19-7bf6cda7a8ef"
 }

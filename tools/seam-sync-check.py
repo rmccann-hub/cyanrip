@@ -33,6 +33,7 @@ collapsing them is the defect this whole seam is built to avoid.
 
 import argparse
 import hashlib
+import importlib.util
 import pathlib
 import re
 import subprocess
@@ -210,7 +211,28 @@ def main():
             tag = "matches lap" if d is not None else "no lap value"
             print(f"OK       {key:14s} {a[:16]}  ({tag})")
 
+    # HR-1.6 (f): a commit map of theirs that does not read cleanly is
+    # reported by our own checks and never guessed at. Read at the commit this
+    # check read, which is the record every resolution would use.
+    spec = importlib.util.spec_from_file_location(
+        "commit_map", ROOT / "tools" / "commit-map.py")
+    cm = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cm)
+    try:
+        maps = cm.parse(cm.read_maps(peer, peer_sha))
+        print(f"OK       commit maps    {len(maps)} map(s), "
+              f"{sum(len(t) for _, t in maps)} old ID(s), read cleanly (HR-1)")
+        map_bad = None
+    except cm.MapError as e:
+        print(f"MAP NOT CLEAN  {e} (HR-1.6 (f))")
+        map_bad = str(e)
+
     print()
+    if map_bad:
+        print("NOT IN SYNC: their commit map does not read cleanly, so no old "
+              "Platterpus ID can be resolved through it (HR-1.6 (f)). Report "
+              "it to them; do not guess at it.")
+        return 1
     if bad:
         print(f"NOT IN SYNC: {bad} of {len(SHARED)} shared document(s) disagree.")
         print("Do not act on their lap until this is resolved -- two projects "

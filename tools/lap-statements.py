@@ -82,6 +82,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import importlib.util
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -367,6 +368,13 @@ def _decoded(data):
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
+# HR-1.6: one reading of Platterpus's commit maps, shared with seam-sync-check.
+_spec = importlib.util.spec_from_file_location(
+    "commit_map", pathlib.Path(__file__).resolve().parent / "commit-map.py")
+COMMIT_MAP = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(COMMIT_MAP)
+
+
 def git(repo, *args):
     r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True)
     return subprocess.CompletedProcess(r.args, r.returncode,
@@ -378,6 +386,7 @@ class Resolver:
 
     def __init__(self, ours, peer, refs):
         self.repo = {"cyanrip": ours, "platterpus": peer}
+        self.maps = {}
         self.refs = dict(RECORD)
         self.refs.update(refs)
         self.located = {}
@@ -408,6 +417,34 @@ class Resolver:
             self.record_ref[side] = found
         return self.record_ref[side]
 
+    def mapped(self, side, sha):
+        """`sha` through HR-1.6, as (sha, problem).
+
+        Platterpus rewrote its history once and old IDs stay as sent, so a
+        Platterpus value is looked up in the commit maps in Platterpus's own
+        tree BEFORE it is resolved in the clone: a clone made before the
+        rewrite still holds the old objects, which are not on the new history
+        (HR-1.6 (d)). problem is None, or (verdict, detail) to report instead
+        of resolving. A cyanrip ID is never looked up in a map."""
+        if side != "platterpus" or self.repo.get(side) is None:
+            return sha, None
+        if side not in self.maps:
+            rec = self._record(side)
+            try:
+                self.maps[side] = COMMIT_MAP.parse(COMMIT_MAP.read_maps(
+                    self.repo[side], rec[0] if rec else None))
+            except COMMIT_MAP.MapError as e:
+                self.maps[side] = e
+        maps = self.maps[side]
+        if isinstance(maps, COMMIT_MAP.MapError):
+            return sha, ("unchecked", f"{side}'s commit map does not read "
+                                      f"cleanly, so {sha} is not resolved "
+                                      f"through it: {maps} (HR-1.6 (f))")
+        verdict, new, note = COMMIT_MAP.resolve(maps, sha)
+        if verdict == "ambiguous":
+            return sha, ("missing", note)
+        return (new if verdict == "mapped" else sha), None
+
     def locate(self, side, sha):
         """Where `sha` is in `side`'s tree, as (verdict, detail).
 
@@ -415,8 +452,11 @@ class Resolver:
         key = (side, sha)
         if key in self.located:
             return self.located[key]
+        sha, problem = self.mapped(side, sha)
         repo = self.repo[side]
-        if repo is None:
+        if problem:
+            got = problem
+        elif repo is None:
             got = ("unchecked", f"no clone of {side}'s tree was given (--peer)")
         elif git(repo, "rev-parse", "--verify", "--quiet",
                  f"{sha}^{{commit}}").returncode != 0:
@@ -476,6 +516,8 @@ class Resolver:
     def artifact(self, lap, line, side, sha, path, a, b):
         if not self._report(lap, line, side, sha):
             return
+        # A path or line claim is checked at the mapped commit (HR-1.6 (e)).
+        sha = self.mapped(side, sha)[0]
         r = git(self.repo[side], "show", f"{sha}:{path}")
         if r.returncode != 0:
             lap.refuse(line, "LSL.4", f"{path} does not exist at {side}@{sha}")
@@ -999,6 +1041,9 @@ def rerun(resolver, side, sha, cmd, result):
     repo = resolver.repo.get(side)
     if repo is None:
         return "unchecked", f"no clone of {side}'s tree was given"
+    sha, problem = resolver.mapped(side, sha)
+    if problem:
+        return "unchecked", problem[1]
     quoted = QUOTED_RE.findall(result)
     if not quoted:
         return "unchecked", "its result quotes no output to compare"
