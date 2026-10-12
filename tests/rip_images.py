@@ -2436,19 +2436,32 @@ def sc_encode_failure_reaches_the_log():
     if re.search(r"(?m)^Partial files:", text):
         fail("encfail: `Partial files:` on a rip whose every read completed")
 
-    # `-j` was deliberately UNCHANGED by round 22. Pinned so that if per-track
-    # encode status is ever added there, it is visible as a change and gets its
-    # own schema bump rather than arriving silently. /7 since round 30, for the
-    # cache probe's threshold, which is not this.
+    # `-j` was deliberately UNCHANGED by round 22, and this pinned the schema
+    # so that per-track encode status, if ever added, would arrive as a change
+    # with its own announcement. It did: round 32 (our lap 1 S10, Platterpus's
+    # lap 2 S7) added `encode_failures` to each track in /8. So the record must
+    # now name exactly the tracks whose files the cap truncated, read from the
+    # files on disk rather than from the log's own `Encoder errors:` line.
     try:
-        schema = json.loads(diag.read_text())["schema"]
+        rec = json.loads(diag.read_text())
     except Exception as exc:
-        fail(f"encfail: could not read the -j schema: {exc}")
+        fail(f"encfail: could not read the -j record: {exc}")
     else:
-        if schema != "cyanrip-diagnostics/7":
-            fail(f"encfail: -j schema is {schema!r}, not "
-                 f"'cyanrip-diagnostics/7'. Round 22 changed the log and not "
-                 f"the record; a schema move here needs its own announcement")
+        if rec["schema"] != "cyanrip-diagnostics/8":
+            fail(f"encfail: -j schema is {rec['schema']!r}, not "
+                 f"'cyanrip-diagnostics/8'; a schema move needs its own "
+                 f"announcement, as round 32's had")
+        else:
+            truncated = {int(Path(path).stem) for path in named
+                         if Path(path).exists()
+                         and Path(path).stat().st_size == 32768
+                         and Path(path).stem.isdigit()}
+            in_record = {tr["number"] for tr in rec["rip"]["track_state"]
+                         if tr["encode_failures"]}
+            if not truncated or in_record != truncated:
+                fail(f"encfail: -j encode_failures names tracks "
+                     f"{sorted(in_record)}, and the files truncated on disk "
+                     f"are tracks {sorted(truncated)}")
 
 
 def sc_changelog_names_every_release():
@@ -3461,7 +3474,9 @@ def sc_diagnostics():
         fail(f"diagnostics: file is not valid JSON: {e}")
         return
 
-    if d.get("schema") != "cyanrip-diagnostics/7":
+    # /8 from round 32 (our lap 1 S10, Platterpus's lap 2 S7): every field an
+    # addition, each checked in sc_diag_record_v8().
+    if d.get("schema") != "cyanrip-diagnostics/8":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
