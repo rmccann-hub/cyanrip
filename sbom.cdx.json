@@ -145,15 +145,15 @@
         },
         {
           "name": "cyanrip-fork:ci-runner",
-          "value": "macos-latest"
+          "value": "macos-26"
         },
         {
           "name": "cyanrip-fork:ci-runner",
-          "value": "ubuntu-latest"
+          "value": "ubuntu-24.04"
         },
         {
           "name": "cyanrip-fork:ci-runner",
-          "value": "windows-latest"
+          "value": "windows-2025"
         },
         {
           "name": "cyanrip-fork:ci-workflow",
@@ -1161,5 +1161,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:15413036-00c0-5a74-aeec-b788facdd3f4"
+  "serialNumber": "urn:uuid:f07943a1-e4a0-5735-ae3e-9cf0d5e536de"
 }

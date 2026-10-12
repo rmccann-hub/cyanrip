@@ -56,7 +56,7 @@ GitHub Actions. Each workflow, and what starts it:
 - `.github/workflows/ci.yml`, *CI (platterpus-fork)*: `push` to `platterpus-fork`; `pull_request` to `platterpus-fork`; `release`; by hand.
 - `.github/workflows/tag-release.yml`, *Tag a release*: by hand.
 
-- **Runners:** `macos-latest`, `ubuntu-latest`, `windows-latest`.
+- **Runners:** `macos-26`, `ubuntu-24.04`, `windows-2025`.
 - **Actions:** `WebFreak001/deploy-nightly` v1.1.0 at `c25135b42f3c`, `actions/checkout` v7.0.1 at `3d3c42e5aac5`, `actions/download-artifact` v8.0.2 at `9000827ccba6`, `actions/upload-artifact` v7.0.2 at `cf430e030ddb`, `mknejp/delete-release-assets` v1 at `a40d39558932`, `msys2/setup-msys2` v2.33.0 at `ec48f7c5447b`. Each is pinned by full commit SHA, with the version in a comment.
 - **Linux packages (apt):** `ffmpeg`, `libavcodec-dev`, `libavfilter-dev`, `libavformat-dev`, `libavutil-dev`, `libcdio-cdda-dev`, `libcdio-dev`, `libcdio-paranoia-dev`, `libcurl4-openssl-dev`, `libmusicbrainz5-dev`, `libqrencode-dev`, `libswresample-dev`, `meson`, `ninja-build`, `pkg-config`.
 - **macOS packages (brew):** `curl`, `ffmpeg`, `libcdio-paranoia`, `libmusicbrainz`, `meson`, `nasm`, `ninja`, `pkg-config`, `qrencode`.

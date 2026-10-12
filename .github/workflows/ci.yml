@@ -29,7 +29,7 @@ permissions:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Four configurations, because a configuration nobody builds is a
     # configuration nobody knows the state of -- and that is not theoretical
@@ -77,7 +77,7 @@ jobs:
         run: meson test -C build --print-errorlogs
 
   macos:
-    runs-on: macos-latest
+    runs-on: macos-26
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -101,8 +101,13 @@ jobs:
 
   # Builds curl, neon, libmusicbrainz, libqrencode and FFmpeg from source
   # before cyanrip (.github/mingw-build.sh), hence the longer limit.
+  # Runner labels are pinned to the images the first runs used: ubuntu-24.04,
+  # macos-26 (macOS 26, arm64) and windows-2025 (Server 2025 with VS 2026),
+  # per actions/runner-images' README as read on 2026-10-12. A -latest label
+  # moves to a newer OS over one to two months, and Ubuntu 26.04 is already
+  # listed there, so a pinned label changes only when this file does.
   mingw:
-    runs-on: windows-latest
+    runs-on: windows-2025
     timeout-minutes: 120
     env:
       MSYSTEM: MINGW64
@@ -134,7 +139,7 @@ jobs:
   mingw-release:
     needs: mingw
     if: github.event_name == 'release'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: write
@@ -157,7 +162,7 @@ jobs:
   mingw-nightly:
     needs: mingw
     if: github.repository == 'cyanreg/cyanrip' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: write

@@ -33,7 +33,7 @@ jobs:
     # Only the copy of this file on platterpus-fork may create a tag; a run
     # started from another branch would run that branch's version of it.
     if: github.ref == 'refs/heads/platterpus-fork'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
