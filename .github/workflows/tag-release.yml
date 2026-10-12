@@ -1,0 +1,68 @@
+name: Tag a release
+
+# Creates the annotated tag `platterpus-fork-rN` for a published release, by
+# hand from the Actions tab. Tags cannot be pushed from a cloud session (HTTP
+# 403), so until this existed no release of this fork was reachable by tag.
+#
+# Every check is in tools/tag-release-check.py, which the suite tests
+# (tests/tag_release.py): the commit is on platterpus-fork, the manifest at
+# platterpus-fork's tip names the release at that commit, and an existing tag
+# is never moved. Releases are ordered by release_seq, which the tag's message
+# records; the version string cannot be ordered.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Release, exactly as release-manifest.json names its version (e.g. 0.9.4-rc2+platterpus.22)"
+        required: true
+        type: string
+      commit:
+        description: "Full 40-character SHA of the commit the manifest names for it"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tag-release
+
+jobs:
+  tag:
+    # Only the copy of this file on platterpus-fork may create a tag; a run
+    # started from another branch would run that branch's version of it.
+    if: github.ref == 'refs/heads/platterpus-fork'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: platterpus-fork
+          fetch-depth: 0
+
+      - name: Check the release and create its tag
+        env:
+          RELEASE: ${{ inputs.release }}
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          set +e
+          python3 tools/tag-release-check.py "$RELEASE" "$COMMIT" \
+            --ref origin/platterpus-fork \
+            --message-file "$RUNNER_TEMP/tag-message" > "$RUNNER_TEMP/tag-out"
+          rc=$?
+          set -e
+          tag=$(sed -n 's/^tag=//p' "$RUNNER_TEMP/tag-out")
+          case $rc in
+            0) ;;
+            3) echo "::notice::$tag already exists at $COMMIT; nothing to do"
+               exit 0 ;;
+            *) exit 1 ;;
+          esac
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" "$COMMIT" -F "$RUNNER_TEMP/tag-message"
+          git push origin "refs/tags/$tag"
+          echo "::notice::created $tag at $COMMIT"

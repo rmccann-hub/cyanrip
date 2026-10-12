@@ -81,8 +81,9 @@ docker pull ep76/cyanrip
 ### Automated Windows builds ![upstream cyanreg/cyanrip Windows CI](https://github.com/cyanreg/cyanrip/workflows/CI/badge.svg)
 **That badge and every link in this section are UPSTREAM's**, and are left here
 because upstream is where the Windows builds come from. It is not a status for
-this fork: `platterpus-fork` publishes no Windows build, and its own CI
-workflow has never executed a single run (`docs/SETTLED.md`). A green badge on
+this fork: `platterpus-fork` publishes no Windows build, and its own CI,
+`.github/workflows/ci.yml`, first ran on 2026-10-12 and has no badge here
+(`docs/SETTLED.md`). A green badge on
 a fork's README reads as the fork's, which is why it now says whose it is.
 
 [Latest release Windows build](https://github.com/cyanreg/cyanrip/releases/latest/download/cyanrip-win64.exe)

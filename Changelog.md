@@ -1,5 +1,34 @@
 Unreleased
 ==========
+**The CI workflow is hardened and has moved to `.github/workflows/ci.yml`**,
+from an outside read of 2026-10-12, alongside the owner's settings of that
+day: `platterpus-fork` is the default branch, pull requests merge with merge
+commits, and rulesets are to block deleting and force-pushing it and `master`.
+The token is read-only unless a job publishes; every job has a timeout; every
+action is pinned to a full commit SHA with its version in a comment;
+`::set-output` gives way to `$GITHUB_OUTPUT`, and the archived
+`upload-release-asset` to `gh release upload`. Upstream's nightly steps run
+only in `cyanreg/cyanrip`. No expression is pasted into a shell script. The
+suite's jobs check out the whole history, which the suite reads, and the
+Windows artifact is named `cyanrip-win64` rather than `cyanrip-`. **It moved
+because GitHub keys a workflow by its path**, and `master` carries upstream's
+own `main.yml`: a *Sync fork* runs that file, which named `master` where ours
+only appeared to, and only under its own path can ours be kept while
+upstream's is disabled. **`.github/workflows/tag-release.yml` is new**, run by
+hand: it creates the annotated tag `platterpus-fork-rN` for a release the
+manifest names, once `tools/tag-release-check.py` has checked it, and records
+`release_seq`. **It has not been run**: the owner may rewrite history first.
+`tests/workflows.py` keeps the hardening and `tests/tag_release.py` the tag's
+refusals, both revert-proved property by property. **CI first ran on
+2026-10-12**, from this change's own pull request, on the hardened workflow:
+`linux (default)` passed the whole suite, and every other configuration, none
+of which anything had built before, failed for reasons older than this change.
+They are listed in `SETTLED.md`; one, a leak in `tests/diagrecord.c` that only
+the sanitizer build sees, is fixed here. And `master` was found synced to upstream's `b40c1f0` that
+day, where the offset search returns `int`: one upstream re-check anchored on
+`static void` and would have failed in any fresh clone. The defect it checks is
+still there.
+
 **Our round 32 lap 3 is sent**, released by the operator on 2026-10-12: it
 takes Platterpus's lap 2 S3, moving round 32's run to their 0.7.104, and S8,
 and reports the commits that land the `-j` fields and track 1's pregap count.

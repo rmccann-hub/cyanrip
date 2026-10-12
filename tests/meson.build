@@ -575,6 +575,18 @@ test('Cross-rip reader', python, args: [ files('cross_rip.py') ])
 ## quadratic in a run of blanks. Five of our tools' patterns had it; this
 ## sweeps tools/ and tests/ for the shape and times the rewritten patterns.
 test('Tool patterns are linear', python, args: [ files('tool_patterns.py') ])
+## The workflows, as hardened on 2026-10-12: a read-only token by default and
+## write only where a job publishes, a timeout on every job, every action at a
+## full commit SHA, no ::set-output, upstream's nightly steps confined to
+## cyanreg/cyanrip, no expression pasted into a shell script, triggers on
+## platterpus-fork, and no main.yml beside upstream's. Actions had never run
+## here, so a regression would have shown first in a run with a write token.
+test('Workflows are hardened', python, args: [ files('workflows.py') ])
+## tools/tag-release-check.py decides every tag the tag workflow creates, on a
+## repository this builds: on platterpus-fork, named by the manifest at that
+## commit, ordered by release_seq, never moved. The workflow itself cannot be
+## tried out, because what it makes is a tag.
+test('Release tag check', python, args: [ files('tag_release.py') ])
 ## A REPORT, NOT A CHECK. --gaps prints the absent lap numbers and exits 0 by
 ## design, because one side cannot tell a lost lap from an unused number. It
 ## was named "Seam record audit", which a green run made read like a passed

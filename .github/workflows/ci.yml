@@ -1,0 +1,211 @@
+name: CI (platterpus-fork)
+
+# This file was .github/workflows/main.yml until 2026-10-12. It moved because
+# GitHub keys a workflow by its PATH, and `master` -- upstream's copy, never
+# committed to -- carries upstream's own main.yml. A push to master (a "Sync
+# fork") runs the workflow file in the pushed commit, which is upstream's, so
+# the `master` entry this file's push trigger used to carry never did anything,
+# and the two files were one workflow that could only be disabled together.
+# Under its own path this is a separate workflow, and the inherited one can be
+# disabled without touching master.
+
+on:
+  push:
+    # platterpus-fork is where this fork's work lands and its default branch.
+    # The inherited trigger fired only on master and on a `workflow` branch
+    # that does not exist, so this fork had CI configured and none running.
+    branches: [ platterpus-fork ]
+  pull_request:
+    branches: [ platterpus-fork ]
+  release:
+    types: [ released ]
+  # A run by hand, from the Actions tab. GitHub offers it only for a workflow
+  # on the default branch, which is now platterpus-fork.
+  workflow_dispatch:
+
+# Read-only unless a job says otherwise, and only the two upload jobs below do.
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Four configurations, because a configuration nobody builds is a
+    # configuration nobody knows the state of -- and that is not theoretical
+    # here. `-Ddeclare_released=true` is the build our release manifest tells
+    # the consumer to make, nothing had ever compiled it, and when it finally
+    # was it failed 2 of 41. The sanitizer rows are the same argument one level
+    # down: they pass today, and nothing was running them.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default
+            opts: ""
+          - name: released
+            opts: "-Ddeclare_released=true"
+          - name: sanitizers
+            opts: "-Db_sanitize=address,undefined -Db_lundef=false"
+          - name: released+sanitizers
+            opts: "-Ddeclare_released=true -Db_sanitize=address,undefined -Db_lundef=false"
+    name: linux (${{ matrix.name }})
+    steps:
+      # The whole history, not checkout's default of one commit: the suite
+      # reads the handshake record and its commits, and `version_matrix` reads
+      # upstream's tree at origin/master. A one-commit clone has neither.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build pkg-config ffmpeg \
+            libavcodec-dev libavformat-dev libavfilter-dev libavutil-dev \
+            libswresample-dev libcdio-dev libcdio-cdda-dev libcdio-paranoia-dev \
+            libmusicbrainz5-dev libcurl4-openssl-dev libqrencode-dev
+
+      - name: Build
+        env:
+          OPTS: ${{ matrix.opts }}
+        run: |
+          meson setup build $OPTS
+          ninja -C build
+
+      - name: Test
+        run: meson test -C build --print-errorlogs
+
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          brew install meson ninja pkg-config nasm ffmpeg libcdio-paranoia libmusicbrainz curl qrencode
+
+      - name: Build
+        run: |
+          export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          meson setup build
+          ninja -C build
+
+      - name: Test
+        run: |
+          export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          meson test -C build --print-errorlogs
+
+  # Builds curl, neon, libmusicbrainz, libqrencode and FFmpeg from source
+  # before cyanrip (.github/mingw-build.sh), hence the longer limit.
+  mingw:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      MSYSTEM: MINGW64
+    defaults:
+       run:
+          shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0
+        with:
+          install: git base-devel zip autoconf automake libtool mingw-w64-x86_64-toolchain mingw-w64-x86_64-meson mingw-w64-x86_64-ninja mingw-w64-x86_64-cmake mingw-w64-x86_64-nasm mingw-w64-x86_64-libcdio-paranoia mingw-w64-x86_64-opus mingw-w64-x86_64-lame mingw-w64-x86_64-libvorbis mingw-w64-x86_64-libxml2 mingw-w64-x86_64-nghttp2
+          update: true
+
+      - name: Build
+        run: |
+          .github/mingw-build.sh
+          zip cyanrip cyanrip.exe
+
+      # The name was `cyanrip-${{ matrix.runs-on }}`, in a job with no matrix,
+      # so it came out as `cyanrip-`. The upload jobs below fetch it by name.
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cyanrip-win64
+          path: cyanrip.exe
+
+  # The Windows build attached to a published GitHub release. The only job
+  # that runs here with write access, and only on a release event.
+  mingw-release:
+    needs: mingw
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: cyanrip-win64
+
+      - name: Upload the release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          cp cyanrip.exe cyanrip-win64.exe
+          gh release upload "$TAG" cyanrip-win64.exe --repo "$GITHUB_REPOSITORY"
+
+  # Upstream's nightly channel: a release tagged `nightly` in cyanreg/cyanrip,
+  # which this fork does not have. Carried from upstream's file and kept
+  # upstream's, so it never runs in a fork.
+  mingw-nightly:
+    needs: mingw
+    if: github.repository == 'cyanreg/cyanrip' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: cyanrip-win64
+
+      - name: Find the nightly release
+        id: nightly
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/releases/tags/nightly" > nightly.json; then
+            echo "upload_url=$(jq -r .upload_url nightly.json)" >> "$GITHUB_OUTPUT"
+            echo "id=$(jq -r .id nightly.json)" >> "$GITHUB_OUTPUT"
+          else
+            echo "No release is tagged nightly; nothing to upload."
+          fi
+
+      - name: Upload versioned Nightly asset
+        if: steps.nightly.outputs.id != ''
+        uses: WebFreak001/deploy-nightly@c25135b42f3c555fd914ad3e22821d2f5a8d45c2 # v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.nightly.outputs.upload_url }}
+          release_id: ${{ steps.nightly.outputs.id }}
+          asset_path: ./cyanrip.exe
+          asset_name: cyanrip-win64-$$.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+          max_releases: 4
+
+      - name: Delete existing nightly latest
+        id: del_nightly_release
+        if: steps.nightly.outputs.id != ''
+        # The repository publishes no tags; v1 is a branch, pinned at its head.
+        uses: mknejp/delete-release-assets@a40d395589329c6e93ab51a02fc2e4c60fdfe48f # v1
+        with:
+          token: ${{ github.token }}
+          tag: nightly
+          assets: cyanrip-win64-latest.exe
+          fail-if-no-assets: false
+
+      - name: Upload latest Nightly asset
+        if: steps.del_nightly_release.conclusion == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp cyanrip.exe cyanrip-win64-latest.exe
+          gh release upload nightly cyanrip-win64-latest.exe --repo "$GITHUB_REPOSITORY"

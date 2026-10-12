@@ -1569,74 +1569,75 @@ behaviour we do not have. Two ways it has still managed to lie:
 Platterpus builds from this repo, so "which branch?" is a contract question, not
 a housekeeping one. The rules, in force from r3:
 
+**Repository settings changed on 2026-10-12, by the owner, and three rules
+below changed with them:** `platterpus-fork` is the **default branch** (it was
+`master`); pull requests merge with **merge commits only**; and rulesets, still
+to come, **block deleting and force-pushing `platterpus-fork` and `master`**.
+Nothing in `tools/` or `tests/` force-pushes, deletes a remote branch, or amends
+a pushed commit — the only `--force` is `git worktree remove` on local scratch
+trees — so nothing here has to change to work under them.
+
 - **`master`** is a clean mirror of upstream `cyanreg/cyanrip`. Never commit to it.
-- **`platterpus-fork`** is the single integration branch and **the only ref a
-  consumer should ever build from**. It only ever fast-forwards.
+  It is synced with GitHub's *Sync fork* → *Update branch*, a fast-forward
+  because nothing here is ever committed to it. *Discard commits* would be a
+  force-push, which the rulesets refuse, and there is never anything to discard.
+- **`platterpus-fork`** is the single integration branch, the default branch,
+  and **the only ref a consumer should ever build from**. It only ever moves
+  forward: every update descends from the one before, and nothing rewrites it.
 - **Session/topic branches** (`claude/*`, and anything else) are where work is
-  developed. They merge into `platterpus-fork` **fast-forward only** — no merge
-  commits, so `platterpus-fork`'s history stays a straight line a consumer can
-  bisect.
-- **Never push a topic branch to the remote. Develop locally; push only
-  `platterpus-fork`.** This is the standing rule, and it overrides a session
-  harness that nominates a `claude/*` branch to "develop on and push to" — do
-  develop on it, locally, and land the work on `platterpus-fork`, which is the
-  only ref a consumer builds from and therefore the only one that needs to
-  exist.
+  developed. **They land through a pull request into `platterpus-fork`, merged
+  with a merge commit**, once the gates pass. Until 2026-10-12 they landed
+  fast-forward only, with no merge commits, so the history was a straight line;
+  it no longer is, and the line a consumer bisects is the **first-parent**
+  history — `git bisect start --first-parent`, `git log --first-parent`. A merge
+  brings every commit of the topic branch onto the line, so each must still
+  build and test green on its own, exactly as before.
+- **Push a topic branch only to open its pull request, and never push to it
+  again once that request has merged.** Until 2026-10-12 the rule was never to
+  push one at all, and the reason still holds: **branch delete is `HTTP 403`
+  from a session's proxy**, so a pushed topic branch outlives its merge unless
+  the owner deletes it, or GitHub's *Automatically delete head branches* does.
+  A merged branch left at its old tip looks current and answers *"which branch
+  do I build?"* wrongly — measured the hard way, when a queued push recreated
+  one, one commit stale, just after the maintainer had removed it by hand.
 
-  The reason is not tidiness, it is that **the deletion is not available to
-  us**: branch delete is `HTTP 403` from this proxy (below), so a topic branch
-  pushed once is permanent from inside a session. It then has exactly two
-  futures, both bad — abandoned at the commit it was last pushed to, where it
-  looks current and answers *"which branch do I build?"* wrongly, or kept in
-  step with `platterpus-fork` forever, which is a second name for one line and
-  the ambiguity `git branch -r` already caused here once.
-
-  Measured the hard way: a session pushed one, tried to delete it, got 403, and
-  a queued push then **recreated it one commit stale** immediately after the
-  maintainer had removed it by hand. The repo owner can delete it; a session
-  cannot. **So do not create the problem, because you cannot undo it.**
+  New work after a merge starts from `origin/platterpus-fork`, and that never
+  needs a force-push even under the old name: the merge made the topic branch's
+  tip an ancestor of `platterpus-fork`, so moving it to the new base is a
+  fast-forward.
 
   There is deliberately no test for this. The only check would query the remote,
   and a check that reaches the network is not evidence about this program — it
-  would fail offline for reasons unrelated to anything. Prose plus the 403 below
-  is what there is.
-- **Branches are publishable here; tags are not — and branches cannot be
-  *deleted* either.** Measured on this proxy, not inferred from one probe:
-  branch create/update succeeds, **branch delete is `HTTP 403`**, tag push is
-  `HTTP 403`. The middle one was found by trying to remove a landed topic branch
-  and is the correction to what this bullet used to say ("branch pushes work",
-  which is true only of updates).
-
-  **Consequence, and it changes the convention above**: "delete the topic branch
-  after it lands" **cannot be carried out from here.** A topic branch pushed to
-  the remote is permanent. So either do not push one at all, or keep it in step
-  with `platterpus-fork` forever — a ref left behind at an old commit is worse
-  than both, because it looks current and answers "which branch do I build?"
-  wrongly. That is the stale-ref hazard this file already warns about, created
-  by our own tidying.
-
-  So a `release/*` **marker** — a branch pointing
-  at a released commit already on the fast-forward line, never committed to and
-  never moved — is the only named ref this environment can publish. It keeps the
-  ancestor property a marker-into-the-line preserves and a separate development
-  line would destroy. Planned, not built: `docs/UPGRADE-CHANNELS-PLAN.md` §6a.
+  would fail offline for reasons unrelated to anything.
+- **Branch create and update work from a session; branch delete and tag push
+  are `HTTP 403`.** Measured on this proxy, not inferred from one probe. A
+  `release/*` **marker** — a branch pointing at a released commit, never
+  committed to and never moved — was the only named ref a session could
+  publish, and was planned for that reason (`docs/UPGRADE-CHANNELS-PLAN.md`
+  §6a). From 2026-10-12 a tag can be made another way, below.
 - **Never prune a ref that a released or beta artifact can reference.** A commit
   reachable only from a deleted branch is *destroyed* by routine `git gc`, not
   hidden — measured, not assumed. Every rip writes its build SHA into the
   logfile permanently, so pruning turns that line into a dangling reference: the
   log still claims a build and the build no longer exists, which looks checkable
   and is not. Session and topic branches stay prunable; nothing points at them.
-- **Tags** `platterpus-fork-rN` would mark releases. Until v8 a release was
-  tagged only once the round that reviewed it had closed, since no release could
-  happen while one was open; from v8 a release does not wait for a round, so a
-  tag would mark the release itself.
-  **But a tag cannot currently be published from this environment.** The git
-  proxy refuses tag pushes with `HTTP 403`, and `git ls-remote --tags origin`
-  returns nothing, so no release of this fork has ever been reachable by tag from
-  the remote. This is recorded in `docs/handshake/README.md` and was re-probed
-  with a throwaway tag rather than assumed. Until it changes, **the commit SHA is
-  the only durable release identifier a consumer can resolve** — which is why the
-  handshake pins a SHA and says plainly that the tag is local-only.
+- **Tags** `platterpus-fork-rN` mark releases, N from `+platterpus.N`. From v8
+  a release does not wait for a round, so a tag marks the release itself.
+  **A session still cannot push one** (`HTTP 403`), and `git ls-remote --tags
+  origin` returned nothing through 2026-10-12, so no release of this fork has
+  been reachable by tag. **`.github/workflows/tag-release.yml` makes one**, by
+  hand from the Actions tab, with the job's own token: it takes the release as
+  the manifest names its version and a full commit SHA, and
+  `tools/tag-release-check.py` refuses unless the commit is on
+  `platterpus-fork`, the manifest at its tip names that release at that commit,
+  and no tag of that name points anywhere else. It records `release_seq` in the
+  tag's message, because releases are ordered by that and never by the version.
+  **It had not been run on 2026-10-12, on the owner's word**: history may be
+  rewritten first, and a tag made before that would name the old commits. The
+  manifest names only the current channel heads, so it can tag only a release
+  still published on some channel. Until tags exist, **the commit SHA is the
+  only durable release identifier a consumer can resolve** — which is why the
+  handshake pins a SHA.
 - **"Which commit changes the binary" includes `docs/handshake/round-*.md`.**
   Since r3 the handshake state is *compiled in* by `tools/gen-handshake-state.py`,
   so adding a lap file changes the binary — the `Handshake:` line moves. A pin
@@ -1966,10 +1967,10 @@ afterwards (`PROTOCOL.md` §6b, R8). Until v8 the four were a fixed order and a
 release waited for a closed round; the steps are kept in that order because the
 round mechanics in step 3 are unchanged.
 
-**1. Land the work.** Topic branch → `platterpus-fork`, fast-forward only, one
-logical change per commit, every commit building and testing green on its own.
-Behavioural fixes revert-proved *and* the build confirmed green during the
-revert.
+**1. Land the work.** Topic branch → pull request into `platterpus-fork`, merged
+with a merge commit once the gates pass, one logical change per commit, every
+commit building and testing green on its own. Behavioural fixes revert-proved
+*and* the build confirmed green during the revert.
 
 **2. Regenerate what is derived.** `tools/gen-provider-contract.py >
 PROVIDER-CONTRACT.md`, and the golden reference if any log line moved. Never
@@ -2032,9 +2033,10 @@ regenerate the contract and golden reference at the new version, and announce th
 pin as a **commit SHA** -- tags cannot be published from here.
 
 **A release is not published until `release-manifest.json` names it.** This is
-how the consumer installs and upgrades -- there is no other mechanism, and there
-cannot be: tag pushes are `HTTP 403` from here and no release API is reachable,
-so a design resting on tags cannot ship. The sequence is:
+how the consumer installs and upgrades -- there is no other mechanism, and from
+a session there cannot be: tag pushes are `HTTP 403` and no release API is
+reachable. The tag workflow of 2026-10-12 adds a tag beside a published release
+and reads the manifest to do it; it does not replace it. The sequence is:
 
 1. Append one row to `docs/release-ledger.tsv`. **Append only** -- never edit or
    delete a row; a mistake is corrected by appending, exactly like a lap. It is
@@ -2257,11 +2259,13 @@ got to it" stay distinguishable.
 
 - **Release markers — `release/*` branches** — `docs/UPGRADE-CHANNELS-PLAN.md`
   §6a, and it is now the **only** undone part of that plan. A marker is a branch
-  pointing at a released commit already on the fast-forward line, never committed
-  to and never moved: the one named ref this environment can publish, since tag
-  push is `HTTP 403`. Checked against the remote 2026-09-16 rather than against
+  pointing at a released commit already on `platterpus-fork`, never committed
+  to and never moved: the one named ref a session can publish, since tag push is
+  `HTTP 403`. Checked against the remote 2026-09-16 rather than against
   `git branch -r`: `git ls-remote --heads origin` returns exactly `master` and
-  `platterpus-fork`.
+  `platterpus-fork`. **The tag workflow of 2026-10-12 may make it unnecessary**:
+  a tag made by Actions is the named ref a marker stood in for. Not decided,
+  and nothing is tagged yet.
 
   **The rest of that plan shipped at `3492a65` on 2026-08-07** — the ledger's
   `channel` and `seq` columns, `release-manifest.json` and its generator, and

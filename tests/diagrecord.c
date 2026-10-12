@@ -155,6 +155,19 @@ static cyanrip_ctx *new_ctx(void)
     return ctx;
 }
 
+/* Every dictionary and string a test sets, for all six tracks whatever
+ * nb_tracks was cut to: the sanitizer build's LeakSanitizer aborts on them. */
+static void free_ctx(cyanrip_ctx *ctx)
+{
+    for (int i = 0; i < 6; i++) {
+        av_dict_free(&ctx->tracks[i].meta);
+        av_dict_free(&ctx->tracks[i].cdtext);
+        av_freep(&ctx->tracks[i].isrc_disc);
+    }
+    av_dict_free(&ctx->cdtext);
+    free(ctx);
+}
+
 static void test_track_fields(void)
 {
     cyanrip_ctx *ctx = new_ctx();
@@ -196,6 +209,7 @@ static void test_track_fields(void)
     t->isrc_disc_reason = "the driver does not report reading ISRC";
 
     char *out = write_record(ctx, "diagrecord_tracks.json");
+    free_ctx(ctx);
     if (!out)
         return;
 
@@ -257,6 +271,7 @@ static void test_deemphasis_forced(void)
     ctx->nb_tracks = 1;
 
     char *out = write_record(ctx, "diagrecord_forced.json");
+    free_ctx(ctx);
     if (!out)
         return;
     expect_line(out, "{\"number\":1,\"cd_track\":1,\"repeats\":0,\"audio_ripped\":false,"
@@ -279,6 +294,7 @@ static void test_cdtext_present(void)
     av_dict_set(&ctx->tracks[0].cdtext, "discid", "D1", 0);
 
     char *out = write_record(ctx, "diagrecord_cdtext.json");
+    free_ctx(ctx);
     if (!out)
         return;
     expect_line(out, "\"status\": \"present\"", "cdtext status");
@@ -316,6 +332,7 @@ static void test_offset_search(void)
         char path[64];
         snprintf(path, sizeof(path), "diagrecord_offset_%zu.json", i);
         char *out = write_record(ctx, path);
+        free_ctx(ctx);
         if (!out)
             continue;
         expect_line(out, cases[i].want, "offset_search result");

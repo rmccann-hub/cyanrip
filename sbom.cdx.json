@@ -68,7 +68,7 @@
               },
               {
                 "name": "cyanrip-fork:measured:upstream-tip",
-                "value": "f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5"
+                "value": "b40c1f006a000a8bbd2d7ccc438a17006b9b71a0"
               }
             ]
           }
@@ -156,28 +156,36 @@
           "value": "windows-latest"
         },
         {
-          "name": "cyanrip-fork:ci-action",
-          "value": "WebFreak001/deploy-nightly@v1.1.0"
+          "name": "cyanrip-fork:ci-workflow",
+          "value": ".github/workflows/ci.yml: CI (platterpus-fork)"
+        },
+        {
+          "name": "cyanrip-fork:ci-workflow",
+          "value": ".github/workflows/tag-release.yml: Tag a release"
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "actions/checkout@v4"
+          "value": "WebFreak001/deploy-nightly@c25135b42f3c555fd914ad3e22821d2f5a8d45c2 (v1.1.0)"
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "actions/upload-artifact@v4"
+          "value": "actions/checkout@11d5960a326750d5838078e36cf38b85af677262 (v4.4.0)"
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "actions/upload-release-asset@v1.0.2"
+          "value": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 (v4.3.0)"
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "mknejp/delete-release-assets@v1"
+          "value": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 (v4.6.2)"
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "msys2/setup-msys2@v2"
+          "value": "mknejp/delete-release-assets@a40d395589329c6e93ab51a02fc2e4c60fdfe48f (v1)"
+        },
+        {
+          "name": "cyanrip-fork:ci-action",
+          "value": "msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e (v2.33.0)"
         },
         {
           "name": "cyanrip-fork:ci-unpinned-clone",
@@ -909,6 +917,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/tag_release.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tools/contract-delta.py"
         },
         {
@@ -942,6 +954,10 @@
         {
           "name": "cyanrip-fork:run-by",
           "value": "tools/seam-sync-check.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/tag-release-check.py"
         },
         {
           "name": "cyanrip-fork:run-by",
@@ -1141,5 +1157,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:52facb29-2f89-5661-a2a0-93667490a528"
+  "serialNumber": "urn:uuid:d6474d5f-1bcb-5a74-a3c7-c988466fb9eb"
 }
