@@ -57,7 +57,12 @@ header-only NRG, as libc's does, and shows the warning as NOTED rather than
 as a finding. Two source fixes, both in upstream's code too: `ret` in
 `pick_codec_sample_rate()` starts initialised, which silences a
 false-positive GCC warning and changes no output, and the failure to create
-the cddap context now tears down like the two failures before it. The MinGW
+the cddap context now tears down like the two failures before it. The macOS
+build stopped at the shims, after clang had warned twice in `src/pregap.c`'s
+macOS path, now fixed, and once in Homebrew's libcdio-paranoia `cdda.h`, which
+`Compiler diagnostics` would have counted: it now gates only diagnostics
+located in this tree and lists the rest, and `tests/warn_gate.py` pins that.
+The MinGW
 job builds only `cyanrip.exe` and moves from MINGW64, which setup-msys2
 marks deprecated, to UCRT64. The actions move off Node 20, to
 `actions/checkout` v7.0.1, `upload-artifact` v7.0.2 and `download-artifact`
