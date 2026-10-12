@@ -78,7 +78,13 @@ attribute. The MinGW
 job builds only `cyanrip.exe` and moves from MINGW64, which setup-msys2
 marks deprecated, to UCRT64; once it reached cyanrip's own sources, this
 fork's `SIGHUP` handling did not compile on Windows, which has neither
-`SIGHUP` nor `sigaction()`, and it is now built only where they exist. The actions move off Node 20, to
+`SIGHUP` nor `sigaction()`, and it is now built only where they exist.
+The golden reference is a byte record of a rip on Ubuntu 24.04's libcdio
+2.1 and FFmpeg 6.1, and on macOS's libraries the same rip differs only in
+text those libraries write and in paranoia's `READ` counter, with every
+checksum identical. So, by the owner's decision, both golden checks compare
+only on the library set the reference names and say SKIP, with both sets,
+anywhere else; `check-settled.py` counts such a row as unprobed. The actions move off Node 20, to
 `actions/checkout` v7.0.1, `upload-artifact` v7.0.2 and `download-artifact`
 v8.0.2, and the runners are pinned to `ubuntu-24.04`, `macos-26` and
 `windows-2025`, the images the first run used. No log line, flag or exit
