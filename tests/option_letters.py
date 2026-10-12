@@ -21,7 +21,11 @@ What this checks, against the binary's own --help:
   * every upstream option keeps upstream's letter, unless it is recorded as
     long-only here with the reason;
   * no letter is given twice, and upstream's table never takes a letter the
-    fork uses outside the table (-V, in src/genopt.h).
+    fork uses outside the table (-V, in src/genopt.h);
+  * the contract's P1, which calls itself every flag, lists every option
+    --help prints. Its reader required a "(-x)" and dropped every long-only
+    option, --acoustid-key from the upstream merge and the four retired here
+    with it, though the consumer reads P1 for --consumer by name.
 
 UPSTREAM'S TABLE is read at `git merge-base HEAD master` (or origin/master):
 the last upstream commit merged, not master's tip, so syncing master ahead
@@ -30,10 +34,13 @@ shallow clone, the upstream half cannot run; the rest still does, and the
 test then skips (77) and says what it did not check.
 """
 
+import importlib.util
 import pathlib
 import re
 import subprocess
 import sys
+
+sys.dont_write_bytecode = True
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = "src/cyanrip_main.c"
@@ -101,6 +108,17 @@ def main():
                 for k in set(ours) | set(shown) if ours.get(k) != shown.get(k)}
         fail(f"the table read from {SRC} is not what --help prints, so it "
              f"cannot be trusted on upstream's source either: {diff}")
+
+    spec = importlib.util.spec_from_file_location(
+        "gen_provider_contract", ROOT / "tools" / "gen-provider-contract.py")
+    gpc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gpc)
+    p1 = {row[2][2:]: (row[1] or "")[1:] for row in gpc.flags(sys.argv[1])}
+    if p1 != shown:
+        diff = {k: (shown.get(k), p1.get(k))
+                for k in set(p1) | set(shown) if p1.get(k) != shown.get(k)}
+        fail(f"the contract's P1 does not list what --help prints "
+             f"(--help, P1): {diff}")
 
     letters = {}
     for name, letter in shown.items():

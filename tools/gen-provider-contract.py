@@ -769,14 +769,23 @@ def collect():
 
 
 def flags(binary):
-    """Every flag, from the binary's own --help so it cannot drift from reality."""
+    """Every flag, from the binary's own --help so it cannot drift from reality.
+
+    A LONG-ONLY OPTION HAS NO "(-x)" AND IS STILL A FLAG. This used to require
+    the short letter, so every long-only option vanished from a table that
+    calls itself every flag: --acoustid-key from the upstream merge on, and on
+    2026-10-12, when the fork's own four letters were retired, --consumer,
+    --diagnostics, --stall-secs and --cache-probe with it, though a consumer
+    reads P1 for --consumer by name. Its Short cell says `none`.
+    """
     out = subprocess.run([binary, "--help"], capture_output=True, text=True).stdout
     rows, section = [], "General"
     for ln in out.splitlines():
         if ln.endswith(":") and not ln.startswith(" "):
             section = ln.rstrip(":")
             continue
-        m = re.match(r"\s+--(?P<long>[a-z0-9-]+)\s+\((?P<short>-[A-Za-z])\):\s+(?P<desc>.+)", ln)
+        m = re.match(r"\s+--(?P<long>[a-z0-9-]+)(?:\s+\((?P<short>-[A-Za-z])\))?:"
+                     r"\s+(?P<desc>.+)", ln)
         if m:
             rows.append((section, m.group("short"), "--" + m.group("long"),
                          m.group("desc").strip()))
@@ -1575,7 +1584,7 @@ def emit(binary):
             w("")
             w("| Short | Long | Meaning |")
             w("|---|---|---|")
-        w(f"| `{short}` | `{long}` | {desc} |")
+        w(f"| {f'`{short}`' if short else 'none'} | `{long}` | {desc} |")
     w("")
     w(f"**{len(rows)} flags total.** Notes that are not derivable from `--help`:")
     w("")
