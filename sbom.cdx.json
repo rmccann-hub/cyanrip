@@ -941,6 +941,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/personal_details.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tests/release_gate.py"
         },
         {
@@ -1223,5 +1227,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:2c6ee1b8-a99d-5b21-bf0a-4a87b612c75b"
+  "serialNumber": "urn:uuid:b00f120e-61a6-5e4b-b7b1-5136fc43cbd9"
 }

@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**Personal details stay out of what the filing and export tools write**, by
+the owner's rule of 2026-10-12: home folders become `~`, hostnames `host`,
+and the owner's real name `the owner`, in new evidence and laps, while a
+`HANDSHAKE-` wire line is left as it is and history is not touched.
+`tools/redact.py` is the one implementation. `tools/ingest-bundle.py` applies
+it to every file it files, gives each file's hash as filed and the bundle's,
+and checks a cyanrip log's delivered bytes with `-Y` before redaction breaks
+its signature; `tools/rig-check.py` scrubs its own home and hostname as it
+writes. Hostnames are read from the material and the name only from a list
+outside the repository, and without that list every tool says the name was
+not checked. `tests/redaction.py` and `tests/personal_details.py` keep it,
+the second on every lap or evidence file committed since the rule.
+
 **Upstream's 0.9.4-rc3 is merged, `b40c1f0`, and the version is
 `0.9.4-rc3+platterpus.23`. Nothing is released by it**: HR-1.3 holds every
 release until HR-1.7 passes, and Platterpus's parser must first accept the
