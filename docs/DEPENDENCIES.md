@@ -6,7 +6,7 @@ Everything above **Measured where this was generated** is declared by the tree a
 
 ## The project
 
-- **cyanrip 0.9.4-rc2+platterpus.22**, the `platterpus-fork` build of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip), at [rmccann-hub/cyanrip](https://github.com/rmccann-hub/cyanrip). The only branch a consumer builds is `platterpus-fork`; `master` mirrors upstream.
+- **cyanrip 0.9.4-rc3+platterpus.23**, the `platterpus-fork` build of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip), at [rmccann-hub/cyanrip](https://github.com/rmccann-hub/cyanrip). The only branch a consumer builds is `platterpus-fork`; `master` mirrors upstream.
 - **Language: C**, `c_std=c99`, built with meson (`meson_version: '>=0.53.0'`), and `-Werror=format`, `-Werror=format-extra-args`, `-Werror=implicit-function-declaration`.
 - **Tools and tests: Python 3, standard library only** — derived: no third-party import in `tools/` or `tests/`. No minimum Python version is declared anywhere in the tree.
 - **Licence: LGPL-2.1-or-later**, read from `src/utils.c`'s header. The binary links libcdio and libcdio-paranoia, both GPL-3.0-or-later, so a built binary is subject to the GPL's terms; upstream's is too.
@@ -28,6 +28,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `libcurl` | [curl](https://curl.se/) | >=7.66.0 | yes | curl | AccurateRip and Cover Art Archive requests |
 | `threads` | POSIX threads (the C library) | none | yes | — | encoder threads and the read-stall watchdog |
 | `libqrencode` | [libqrencode](https://fukuchi.org/works/qrencode/) | >= 4.0 | no | LGPL-2.1-or-later | prints MusicBrainz submission links as QR codes |
+| `libchromaprint` | [Chromaprint](https://acoustid.org/chromaprint) | >= 1.4 | no | MIT AND LGPL-2.1-or-later | AcoustID fingerprints of each audio track, tagged, or submitted with --acoustid-key; -B turns it off |
 
 ## Building and testing
 
@@ -67,6 +68,7 @@ GitHub Actions. Each workflow, and what starts it:
 
 | service | endpoint in `src/` | fetched by cyanrip | disabled by | what for |
 |---|---|---|---|---|
+| AcoustID | `https://api.acoustid.org/v2/submit` (src/acoustid.c) | yes | `-B` | fingerprints of an accurately ripped disc, sent only when --acoustid-key gives a user key and only in a build with libchromaprint |
 | Cover Art Archive | `http://coverartarchive.org/release` (src/coverart.c) | yes | `-U` | the release's cover art |
 | MusicBrainz | `https://musicbrainz.org/cdtoc/attach?toc=` (src/discid.c) | no | `-N` | the literal in src/ is the disc-submission link, printed and never fetched; lookups reach musicbrainz.org through libmusicbrainz5 |
 | AccurateRip database | `http://www.accuraterip.com/accuraterip` (src/accurip.c) | yes | `-A` | per-track checksums other rips of the disc produced, compared with this rip's |
@@ -105,7 +107,7 @@ Each is a liability with a removal condition, not a fix. The details and what wo
 
 - **Machine:** Ubuntu 24.04.4 LTS; Python 3.11.15; cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; meson 1.3.2; ninja 1.11.1; pkg-config 1.8.1; git version 2.43.0.
 - **FFmpeg:** ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers; configured `--enable-gpl`, so the FFmpeg libraries as built here are GPL-2.0-or-later rather than LGPL.
-- **Fork point against upstream:** `f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5` (`git merge-base HEAD master`); upstream mirror tip `b40c1f006a000a8bbd2d7ccc438a17006b9b71a0`.
+- **Fork point against upstream:** `b40c1f006a000a8bbd2d7ccc438a17006b9b71a0` (`git merge-base HEAD master`); upstream mirror tip `b40c1f006a000a8bbd2d7ccc438a17006b9b71a0`.
 - **Programs above not installed here:** `cd-paranoia`, `cdparanoia`, `distrobox`. The rig-only ones are expected to be missing.
 
 | library | installed here | licence confirmed from |
@@ -121,3 +123,4 @@ Each is a liability with a removal condition, not a fix. The details and what wo
 | `libcurl` | 8.5.0 | /usr/share/doc/libcurl4-openssl-dev/copyright contains "License: curl" |
 | `threads` | part of the C library, not a pkg-config package | not confirmed here |
 | `libqrencode` | not found | not confirmed here |
+| `libchromaprint` | not found | not confirmed here |
