@@ -2,17 +2,21 @@
 
 **Not filed.** These are drafts for the maintainer to review and submit. Filing
 on upstream's tracker is outside this repository, so it is the maintainer's act;
-what this file does is make each one a copy-and-paste. All eighteen are
+what this file does is make each one a copy-and-paste. All twenty-three are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. `CLAUDE.md`'s rule is that
 *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
-its own file, `docs/upstream-cachemodel-report.md`. There are eighteen:
-seventeen here, and that one. The thirteenth found, report 13, was found the
+its own file, `docs/upstream-cachemodel-report.md`. There are twenty-three:
+twenty-two here, and that one. The thirteenth found, report 13, was found the
 day this file was written. Reports 14 to 18 were drafted on 2026-10-05, when
 `master` was still `f8ebf48` (`git ls-remote` again): 14 and 18 found that
 day, and 15 to 17 found earlier in round 30 and fixed for the fork's `.20`
-without a report until then.
+without a report until then. Reports 19 to 23 were drafted on 2026-10-12, the
+day the fork merged upstream's `b40c1f0`: 19, 21, 22 and the first arm of 23
+were found by the fork's first macOS and sanitizer CI runs on the merged tree,
+and 20 and the other two arms of 23 were fixed here on 2026-09-06 and had no
+report until a grep of the fork's history for upstream's code found them.
 
 **Checked against upstream `master` at `f8ebf48` on 2026-09-27**, which is also
 our `master` (`git ls-remote https://github.com/cyanreg/cyanrip
@@ -21,6 +25,14 @@ refs/heads/master` returned `f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5`). Every
 re-check command is its row in `docs/SETTLED.md`'s upstream section, which
 `tools/check-settled.py` runs, so a line here that stops being true fails
 there.
+
+**Reports 19 to 23 were checked against `b40c1f0`**, upstream's `master` on
+2026-10-12 (`git ls-remote` returned
+`b40c1f006a000a8bbd2d7ccc438a17006b9b71a0`), and each names that commit in its
+**Where:** line. Each says whether it was run on a build of `b40c1f0` or read
+from the source. The same day, with `master` at `b40c1f0`, every re-check in
+`docs/SETTLED.md`'s upstream section passed, so reports 1 to 18 still hold
+there too, though their line numbers are `f8ebf48`'s.
 
 Each report says what the fork did, by commit, so upstream can take the fix
 or write its own. None of the fork's fixes changes upstream's command line.
@@ -448,3 +460,189 @@ checksum at a confidence over `3*(max+1)/4`.
 **What the fork did:** the tally uses the per-track gate, so it counts exactly
 the 450 lines that say `matches Accurip DB` (`8ab9a8d`, "Count a one-frame
 match in the footer only where the track's line says so").
+
+## 19. A disc image is taken for a drive with libcdio 2.3.0 or later
+
+**Where:** `src/cyanrip_main.c:1933-1938` at `b40c1f0`, the offset check:
+
+```c
+    if (!settings.offset && !offset_set && !settings.print_info_only &&
+        !find_drive_offset_range && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
+        cyanrip_log(ctx, 0, "Offset is unset! To continue with an offset of 0, run with -s 0!\n");
+        ctx->total_error_count++;
+        goto end;
+    }
+```
+
+and `:660`, the gate on the sub-channel pre-emphasis read:
+
+```c
+        if (!t->preemphasis && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
+```
+
+**What happens:** both use `CDIO_DRIVE_CAP_READ_ISRC` to tell a drive from a
+disc image. libcdio's `998d123` ("Image driver supports ISRC", 2025-03-29,
+first released in 2.3.0) added that bit to the capabilities of all three image
+drivers. So with libcdio 2.3.0 or later, ripping a CUE, NRG or TOC image
+without `-s` stops at `Offset is unset!` and exits 1. With `-s 0`, every track
+that lacks the TOC pre-emphasis flag logs `Unable to read track N subchannel
+info!`, because no image driver implements `cdio_audio_read_subchannel()`
+(read from libcdio's source at 2.4.0). It showed on macOS, against Homebrew's
+libcdio 2.4.
+
+**How to reproduce:** with libcdio 2.3.0 or later, `cyanrip -d disc.cue -N -A
+-U -o flac` exits 1 at `Offset is unset!`; add `-s 0` and every track logs the
+sub-channel failure. Run here on a build of `b40c1f0` against libcdio 2.1,
+through an `LD_PRELOAD` shim that adds the bit for an image driver as 2.3.0
+does. Without the shim, a two-track CUE image rips and exits 0. With it, the
+same command exits 1 at `Offset is unset!`, and with `-s 0` both tracks log
+`Unable to read track N subchannel info!`.
+
+**What the fork did:** both checks ask the driver, with `cdio_get_driver_id()`
+against the three image drivers, as upstream's own cache-model switch already
+does (`:264-267`). The ISRC read at `:641` is left alone, because from 2.3.0
+an image really does serve one (`faec396`, "Tell an image from a drive by its
+driver, not by CDIO_DRIVE_CAP_READ_ISRC").
+
+## 20. `-Y` on a directory overflows a signed length
+
+**Where:** `src/fun512.c:69-75` at `b40c1f0`, in `cyanrip_verify_log()`:
+
+```c
+    fseek(f, 0, SEEK_END);
+    long int len = ftell(f);
+    rewind(f);
+    if (len <= 0 || !(data = av_mallocz(len + 1))) {
+        fclose(f);
+        return CRIP_LOG_IO_ERROR;
+    }
+```
+
+**What happens:** `fopen()` on a directory succeeds, and on ext4 `ftell()`
+then returns `LONG_MAX`. So `len <= 0` is false, and `len + 1` is signed
+overflow, which C leaves undefined. A release build survives it only because
+the wrapped value makes `av_mallocz()` fail, and the run then prints
+`Couldn't read "<dir>"!`: the right answer, reached through undefined
+behaviour.
+
+**How to reproduce:** build with `-Db_sanitize=undefined` and run `cyanrip -Y
+<a directory>` on ext4. Run here on a build of `b40c1f0`: `fun512.c:72:45:
+runtime error: signed integer overflow: 9223372036854775807 + 1 cannot be
+represented in type 'long int'`, then `Couldn't read "adir"!`, exit 1.
+
+**What the fork did:** the length is bounded before anything is added to it,
+by a cap of 64 MiB, far above any rip log, and a file over the cap is an I/O
+error (`72975de`, "Bound the FUN512 read, and run the teardown on the two
+paths that skipped it").
+
+## 21. A failed read in `-Y` is reported as a log with no checksum
+
+**Where:** `src/fun512.c:76-77` at `b40c1f0`, in `cyanrip_verify_log()`:
+
+```c
+    len = fread(data, 1, len, f);
+    data[len] = '\0';
+```
+
+**What happens:** what `fread()` returns becomes the length, and is never
+compared with what `ftell()` gave; `ferror()` is not asked either. A read that
+fails leaves an empty buffer, which is parsed, holds no checksum line, and is
+reported as `No FUN512 checksum found`: a read that did not happen, reported as
+a fact about the log. On macOS, `fopen()` on a directory succeeds, `ftell()`
+gives the directory's own small size, and `fread()` fails, so `cyanrip -Y <a
+directory>` says the log has no checksum rather than that it could not be
+read. A file that shrinks between `ftell()` and `fread()` is parsed short in
+the same way.
+
+**How to reproduce:** on macOS, `cyanrip -Y <a directory>`. Not run here: no
+filesystem in this Linux container gives a directory a small positive size.
+It was seen in the fork's CI on macOS, where this read was still upstream's
+line for line.
+
+**What the fork did:** a read that fails, or returns fewer bytes than
+`ftell()` gave, is an I/O error (`d109c56`, "Report a log that cannot be read
+as an I/O error, not as one without a checksum").
+
+## 22. The paranoia counters are printed with `%lu` from `uint64_t`
+
+**Where:** `src/cyanrip_log.c:383` at `b40c1f0`, in the `PCHECK()` macro,
+which `:387-402` use sixteen times:
+
+```c
+        cyanrip_log(ctx, 0, "%lu\n", paranoia_status[PARANOIA_CB_ ## PROP]);   \
+```
+
+with `paranoia_status` declared `uint64_t` (`src/cyanrip_main.h:315`,
+`src/cyanrip_main.c:465`).
+
+**What happens:** `%lu` takes an `unsigned long`. `uint64_t` is
+`unsigned long` on 64-bit Linux, so the line is right there. On macOS it is
+`unsigned long long`, and on Windows `long` is 32 bits, so there the
+conversion does not match its argument, which C99 7.19.6.1p9 makes undefined
+behaviour. No compiler says so, because `cyanrip_log()` has no format
+attribute (`src/cyanrip_log.h:33`). What a build for either platform prints
+was not run here.
+
+**How to reproduce:** give `cyanrip_log()` a printf format attribute and build
+for macOS or Windows with `-Wformat`; all sixteen lines warn. Checked here with
+clang on a minimal file holding the same call, `uint64_t` through `%lu` to a
+function with that attribute: `--target=arm64-apple-darwin`,
+`x86_64-apple-darwin`, `x86_64-w64-windows-gnu` and `i686-w64-windows-gnu`
+each warn `format specifies type 'unsigned long' but the argument has type
+'uint64_t' (aka 'unsigned long long')`, and `x86_64-linux-gnu` does not.
+
+**What the fork did:** each counter is cast to `unsigned long long` and
+printed with `%llu`, which prints the same digits everywhere (`09492a5`,
+"Print the paranoia counters with %llu, which fits uint64_t everywhere"). The
+fork's `cyanrip_log()` carries a format attribute, which is how its macOS
+build found this.
+
+## 23. Three start-up failures return without tearing the context down
+
+**Where:** `src/cyanrip_main.c:211-218` at `b40c1f0`, in `cyanrip_ctx_init()`:
+
+```c
+    if (!(ctx->drive = cdio_cddap_identify_cdio(ctx->cdio, CDDA_MESSAGE_LOGIT, &msg))) {
+        cyanrip_log(ctx, 0, "Unable to init cddap context!\n");
+        if (msg) {
+            cyanrip_log(ctx, 0, "cdio: \"%s\"\n", msg);
+            cdio_cddap_free_messages(msg);
+        }
+        return AVERROR(EINVAL);
+    }
+```
+
+and `:2075-2079`, in `main()`:
+
+```c
+    if (!ctx->settings.print_info_only) {
+        if (!ctx->settings.generate_cue_only && cyanrip_log_init(ctx))
+            return 1;
+        if (cyanrip_cue_init(ctx))
+            return 1;
+```
+
+**What happens:** the two failure paths before the first of these, in the same
+function, call `cyanrip_ctx_end()`. These three return without it, so the
+context is not freed and the device is not closed before the process exits.
+Because the process exits straight after, what a user can see is small:
+LeakSanitizer reports the context, and when the CUE sheet cannot be opened,
+the logfile already created is left at 0 bytes, with nothing in it to say why.
+
+**How to reproduce:** on a build of `b40c1f0` with `-Db_sanitize=address`, run
+here:
+
+- `cyanrip -d /dev/null -I`: `Unable to init cddap context!`, exit 1, and
+  LeakSanitizer reports the 479,824-byte context.
+- `cyanrip -d disc.cue -N -A -U -s 0 -o flac -D <a regular file>/out -L log`:
+  `Couldn't open path ... Not a directory!`, exit 1, and 12,834,961 bytes
+  leaked in 36 allocations.
+- The same with `-D dir -M sheet`, where `dir/sheet.cue` is a directory: the
+  CUE sheet fails the same way, with the same leak, and `dir/log.log` is left
+  at 0 bytes.
+
+**What the fork did:** all three call `cyanrip_ctx_end()` (`3f0e161` for the
+first, `72975de` for the other two). The fork later sent the log and CUE
+failures to `end:` instead, so the log that was opened carries the run's
+completion footer (`a79ac9e`, "Emit the completion footer on the last two
+paths that skipped it").

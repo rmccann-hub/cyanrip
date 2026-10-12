@@ -910,14 +910,17 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is eighteen**:
+   tally that said "all three" while five more existed. **It is twenty-three**:
    eight counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather
    than remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
    from round 26's real test, a twelfth the same day from Platterpus's reading
    of our source, a thirteenth on 2026-09-27, found writing
    `tests/arresp.c`, a fourteenth on 2026-10-05, found reading the tally for
-   round 30, three fixed earlier in round 30 and drafted the same day, and an
-   eighteenth found that evening, writing up the open list.
+   round 30, three fixed earlier in round 30 and drafted the same day, an
+   eighteenth found that evening, writing up the open list, and five on
+   2026-10-12, the day upstream's `b40c1f0` was merged: from the merged tree's
+   first macOS and sanitizer CI runs, and from a fix of 2026-09-06 that no
+   report had named.
    Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
@@ -977,13 +980,29 @@ should need rewriting. If it does, that is the defect.
       lookup returned more than 0, while the track's 450 line needs both
       below 0, so a confidence-0 entry (a malformed response) makes the
       footer count a match no track line shows. Fixed for `.20` (`8ab9a8d`).
+  19. The offset check and the sub-channel pre-emphasis read tell a drive
+      from an image by `CDIO_DRIVE_CAP_READ_ISRC`, which libcdio 2.3.0 gives
+      every image driver, so an image rip without `-s` stops at `Offset is
+      unset!`. Fixed here (`faec396`).
+  20. `-Y` on a directory is signed overflow: on ext4 `ftell()` returns
+      `LONG_MAX`, and `len + 1` follows. Fixed here on 2026-09-06 (`72975de`).
+  21. `-Y` never checks `fread()`, so a failed read is reported as a log
+      with no checksum, which macOS shows on a directory. Fixed here
+      (`d109c56`).
+  22. The paranoia counters are printed with `%lu` from `uint64_t`, wrong
+      on macOS and Windows, and silent there because `cyanrip_log()` has no
+      format attribute. Fixed here (`09492a5`).
+  23. Three start-up failures, the cddap context, the log and the CUE
+      sheet, return without `cyanrip_ctx_end()`. Fixed here (`3f0e161`,
+      `72975de`).
 
-   **Not filed is not fixed, and eighteen unfiled reports is the private
+   **Not filed is not fixed, and twenty-three unfiled reports is the private
    garden this rule forbids.** Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — but **every one is
-   drafted** (2026-09-27, the last five 2026-10-05): the other seventeen are in
-   `docs/upstream/defect-reports.md`, each with upstream's `file:line` at
-   `f8ebf48` and our fixing commit, and all eighteen are rendered ready to
+   drafted** (2026-09-27, five more 2026-10-05, the last five 2026-10-12):
+   the other twenty-two are in `docs/upstream/defect-reports.md`, each with
+   upstream's `file:line`, at `f8ebf48` for 1 to 18 and at `b40c1f0` for 19
+   to 23, and our fixing commit, and all twenty-three are rendered ready to
    paste in `docs/upstream/issues-to-file.md`. The count
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
@@ -995,6 +1014,13 @@ should need rewriting. If it does, that is the defect.
    fourteenth, by grepping those two files for *"upstream's too"*, and drafted
    the same day, each re-checked against `master`'s source rather than carried
    over. **Grep the fixes for upstream's code before quoting this count.**
+
+   **And grep the commit messages, not only those two files.** Report 20 and
+   two arms of 23 were fixed on 2026-09-06 (`72975de`), and the commit said
+   *"Both upstream's"*, but neither file recorded them, so the 2026-10-05
+   grep could not see them. `git log -i -E --grep="upstream's (code|too)|both
+   upstream's|same at [0-9a-f]{7}"` found them on 2026-10-12, beside what
+   CI had just found.
 
 **And custody, which is the part that makes "source of truth" mean something
 without meaning "we decide".** The shared seam documents live here as the

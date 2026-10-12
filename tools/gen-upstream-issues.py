@@ -16,12 +16,12 @@
 # License along with cyanrip; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-"""Generate docs/upstream/issues-to-file.md: the eighteen upstream bug
+"""Generate docs/upstream/issues-to-file.md: the twenty-three upstream bug
 reports, rendered as issues ready to paste into cyanreg/cyanrip's tracker.
 
 The reports themselves are written in two files, and this renders them:
 
-  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-18;
+  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-23;
   * `docs/upstream-cachemodel-report.md`, report 8.
 
 It exists because filing is the maintainer's act, done in a browser, and a
@@ -54,7 +54,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 FORK = "https://github.com/rmccann-hub/cyanrip"
 DEFECTS = "docs/upstream/defect-reports.md"
 CACHEMODEL = "docs/upstream-cachemodel-report.md"
-COUNT = 18
+COUNT = 23
+
+
+# The commit a report was checked at. Reports 1-18 were checked at the commit
+# the defect file's header names; a later report names its own on its first
+# **Where:** line ("... at `b40c1f0`"), and the footer says that one. Read
+# from the reports, so the footer cannot claim a check nobody made.
+HEADER_AT = re.compile(r"\*\*Checked against upstream `master` at `([0-9a-f]{7})`")
+WHERE_AT = re.compile(r"\A\*\*Where:\*\*[^\n]* at `([0-9a-f]{7})`")
 
 
 def is_commit(sha):
@@ -78,6 +86,11 @@ def render():
     cm = (ROOT / CACHEMODEL).read_text()
 
     issues = {}
+    m = HEADER_AT.search(dr)
+    if not m:
+        sys.exit(f"gen-upstream-issues: {DEFECTS} no longer names the commit "
+                 "its reports were checked at")
+    checked_at = m.group(1)
     parts = re.split(r"(?m)^## (\d+)\. (.+)$", dr)
     for i in range(1, len(parts), 3):
         n, title, body = int(parts[i]), parts[i + 1].strip(), parts[i + 2]
@@ -89,12 +102,14 @@ def render():
         if n in issues:
             sys.exit(f"gen-upstream-issues: report {n} appears twice in "
                      f"{DEFECTS}")
-        issues[n] = (title, body)
+        w = WHERE_AT.search(body)
+        issues[n] = (title, body, w.group(1) if w else checked_at)
     m = re.search(r"(?ms)^## Title\s*\n+(.+?)\n\s*\n## Body", cm)
     if not m or 8 in issues:
         sys.exit(f"gen-upstream-issues: report 8 is {CACHEMODEL}'s, and "
                  f"that file must carry a '## Title' then a '## Body'")
-    issues[8] = (m.group(1).strip(), cm.split("\n## Body", 1)[1].strip())
+    issues[8] = (m.group(1).strip(), cm.split("\n## Body", 1)[1].strip(),
+                 checked_at)
     if sorted(issues) != list(range(1, COUNT + 1)):
         sys.exit(f"gen-upstream-issues: expected reports 1-{COUNT}, found "
                  f"{sorted(issues)}")
@@ -119,15 +134,17 @@ def render():
         "duplicate; this list was not checked against their tracker.", "",
         "**Suggested order of importance**, if you file only some: 6 "
         "(apostrophes corrupt metadata on real rips), 8 (disc images rip "
-        "corrupted audio with `Ripping errors: 0`), 1 and 2 (a hung or cut-off "
+        "corrupted audio with `Ripping errors: 0`), 19 (with libcdio 2.3.0 or "
+        "later, every image rip without `-s` stops at `Offset is unset!`), "
+        "1 and 2 (a hung or cut-off "
         "process with the drive held), 4 and 5 (`-H` silently drops "
         "de-emphasis and the log claims it), then the rest.", ""]
-    footer = ("\n\n---\n*Found in the fork `rmccann-hub/cyanrip` (branch "
-              "`platterpus-fork`), which feeds the Platterpus ripper. Checked "
-              "against `master` at `f8ebf48`. The fix is linked above; happy "
-              "to open a PR if it helps.*")
     for n in range(1, COUNT + 1):
-        title, body = issues[n]
+        title, body, at = issues[n]
+        footer = ("\n\n---\n*Found in the fork `rmccann-hub/cyanrip` (branch "
+                  "`platterpus-fork`), which feeds the Platterpus ripper. "
+                  f"Checked against `master` at `{at}`. The fix is linked "
+                  "above; happy to open a PR if it helps.*")
         out += [f"## Item {n} of {COUNT}", "",
                 f"**Title:** {title.replace('**', '')}", "",
                 "<!-- BODY START -->", "", link_commits(body) + footer, "",
