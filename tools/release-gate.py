@@ -20,7 +20,10 @@
 
 The rule has existed in prose since r1 -- "no release and no pin switch while a
 handshake round is open" -- and until now nothing executed it. Prose that
-nothing executes is a rule only for as long as somebody remembers it.
+nothing executes is a rule only for as long as somebody remembers it. **From
+protocol 8 that rule is retired** (§6b, E1): `--release-gate` prints every open
+round and permits, and refuses only on a fault in the record; the suite on the
+release commit from a clean checkout is what refuses a release.
 
 Platterpus found the specific way a gate like this goes wrong (their round-7
 verification, section 11): theirs derived "round closed" from three *files
@@ -1389,8 +1392,10 @@ def main():
     ap.add_argument("--release-gate", action="store_true",
                     help="exit non-zero if a release is not permitted")
     ap.add_argument("--prerelease", action="store_true",
-                    help="permit a BETA/pre-release while a round is open, "
-                         "after printing every open round")
+                    help="protocol 7 and earlier: permit a BETA/pre-release "
+                         "while a round is open, after printing every open "
+                         "round; from protocol 8 every release is permitted "
+                         "over an open round and this changes nothing")
     args = ap.parse_args()
 
     rounds = load_rounds()

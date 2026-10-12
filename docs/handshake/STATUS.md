@@ -227,7 +227,8 @@ Build command: `meson setup build -Ddeclare_released=true && ninja -C build`.
 `release-manifest.json` is the only mechanism to install from, and the only
 place a release is named.
 
-**No release while any round is open.** `tools/release-gate.py --release-gate`
-names the open round; the *Now* section above says which it is. The previous
-text of this paragraph named round 16 for five weeks after that round closed,
-which is why it no longer names one.
+**A release does not wait for a round** (`PROTOCOL.md` v8 §6b). `tools/release-gate.py
+--release-gate` names every open round and permits; the suite on the release
+commit from a clean checkout is what refuses one, and a round reviews the
+released pair afterwards. Until v8 this paragraph said *"No release while any
+round is open"*, and it outlived that rule by a release.
