@@ -1337,6 +1337,15 @@ def diag_walk(node, path, acc):
             t.add("string")
 
 
+# Every proxy variable pointed at a closed local port, so a run that would
+# reach the network is refused locally instead. A check that reaches the
+# network is not evidence about this program.
+OFFLINE = dict(os.environ, **{k: "http://127.0.0.1:9" for k in (
+    "http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "all_proxy",
+    "ALL_PROXY")})
+OFFLINE.pop("no_proxy", None)
+OFFLINE.pop("NO_PROXY", None)
+
 CDTEXT_TOC_FIELDS = ("TITLE", "PERFORMER", "SONGWRITER", "COMPOSER",
                      "ARRANGER", "MESSAGE", "DISC_ID", "GENRE", "UPC_EAN",
                      "ISRC")
@@ -1404,6 +1413,12 @@ def diag_records(binary):
         # written below, every field libcdio reads at disc and track level.
         ("an -I run on a disc image carrying CD-TEXT",
          ["-d", "cdtext.toc", "-I", "-N", "-A"]),
+        # From /8: offset_search, which only -f writes. -f forces the
+        # AccurateRip lookup on, so the run is pointed at a closed local port
+        # (OFFLINE below): it reaches no network and ends with no entry,
+        # the one ending an image can reach.
+        ("an -f run whose AccurateRip lookup is refused offline",
+         ["-d", "cdtext.toc", "-f", "-N"]),
     ]
     # Absolute: the runs below start in the image's directory, so a binary
     # named relative to ours would not be found from there.
@@ -1416,7 +1431,8 @@ def diag_records(binary):
             # cwd: libcdio's cdrdao driver opens a .toc's FILE by its raw
             # relative path, so the image loads only from its own directory.
             subprocess.run(argv, stdout=subprocess.DEVNULL, cwd=td,
-                           stderr=subprocess.DEVNULL, timeout=60)
+                           stderr=subprocess.DEVNULL, timeout=60,
+                           env=OFFLINE if "-f" in extra else None)
             shown = "produced by " + " ".join(extra + ["-j"])
             if os.path.exists(out):
                 try:
