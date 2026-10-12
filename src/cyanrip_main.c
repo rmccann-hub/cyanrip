@@ -1864,13 +1864,23 @@ static int cyanrip_run(int argc, char **argv)
      * from ne_sock_init() as a library constructor, before main() runs, under
      * -N too (strace -k, 2026-09-30). So a consumer that stops reading our
      * stdout does not stop the rip; it runs on, holding the drive, and writes
-     * its footer at the end. That is inherited, not chosen. */
-    static const int quit_signals[] = { SIGINT, SIGTERM, SIGHUP };
+     * its footer at the end. That is inherited, not chosen.
+     *
+     * Windows has neither SIGHUP nor sigaction(): its C runtime delivers
+     * SIGINT and SIGTERM, and those two are installed there as here. */
+    static const int quit_signals[] = {
+        SIGINT, SIGTERM,
+#ifdef SIGHUP
+        SIGHUP,
+#endif
+    };
     for (size_t i = 0; i < FF_ARRAY_ELEMS(quit_signals); i++) {
+#ifdef SIGHUP
         struct sigaction was;
         if (quit_signals[i] == SIGHUP && sigaction(SIGHUP, NULL, &was) == 0 &&
             was.sa_handler == SIG_IGN)
             continue;
+#endif
         if (signal(quit_signals[i], on_quit_signal) == SIG_ERR)
             cyanrip_log(ctx, 0, "Can't init %s handler!\n",
                         crip_signal_name(quit_signals[i]));
