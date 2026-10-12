@@ -28,8 +28,10 @@ STATUS-OPEN: windows-ci-unpinned us cannot, because the operator decided on 2026
 (`sc_status_block_is_current()`): the round and its state against the release
 gate's own loader; the newest laps of each side, the next lap and our held lap
 against the same loader; the next release against `release-manifest.json`, one
-past its newest release, with the pin it would stand beside being the
-manifest's stable commit; the run's provider build against the next release;
+past its newest release, with the pin it would stand beside being one a closed
+round agreed, since v8 E8 makes it the consumer's approved pin and not our
+stable commit, and the release it reviews being published or the next; the
+run's provider build against a published release or the next one;
 and every `STATUS-OPEN` against the shape D6 gives it, each id once. It is
 rewritten in the same commit as any change to what it states. Platterpus keeps
 the same block in their standing status, checked by their own code, so the

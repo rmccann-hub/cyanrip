@@ -2816,15 +2816,32 @@ def sc_status_block_is_current():
             fail(f"status_block_is_current: STATUS-RELEASE-NEXT names "
                  f"{next_version}; the manifest's newest release is "
                  f"+platterpus.{n_now}, so the next is +platterpus.{n_now + 1}.")
-        if not channels["stable"]["commit"].startswith(m.group(3)[:7]) or \
-                len(m.group(3)) < 7:
+        # `pins` is the consumer's approved pin as their tree declares it (v8
+        # §6c, E8), which this suite cannot read without the network. Until v8
+        # it was the manifest's stable commit, and this compared the two; from
+        # v8 a stable release can stand over an open round, so `.22` made them
+        # differ and this check would have demanded the unapproved build. What
+        # can be derived is the weaker, true half: the consumer's approved pin
+        # moves only on a close (R8 point 1), so it is a pin a closed round
+        # agreed.
+        approved = {r.our_pin for r in latest if r.closed and r.our_pin}
+        if len(m.group(3)) < 7 or not any(
+                a.startswith(m.group(3)[:7]) for a in approved):
             fail(f"status_block_is_current: STATUS-RELEASE-NEXT pins "
-                 f"{m.group(3)}; the manifest's stable commit, the build the "
-                 f"consumer approves beside it, is {channels['stable']['commit']}.")
-        if m.group(4) != next_version:
+                 f"{m.group(3)}, which no closed round agreed; the consumer's "
+                 f"approved pin moves only on a close, and the newest closed "
+                 f"round's is "
+                 f"{max((r for r in latest if r.closed), key=lambda r: r.number).our_pin}.")
+        # `reviews` is the release under review beside that pin. Until v8 that
+        # was the next release; from v8 a round reviews a released pair, so it
+        # is a published release or the next one.
+        published = {"+platterpus." + re.search(r"\+platterpus\.(\d+)$",
+                                                c["version"]).group(1)
+                     for c in channels.values()}
+        if m.group(4) not in published | {next_version}:
             fail(f"status_block_is_current: STATUS-RELEASE-NEXT reviews "
-                 f"{m.group(4)}, and the release under review beside that pin "
-                 f"is the release itself, {next_version}.")
+                 f"{m.group(4)}, which is neither published "
+                 f"({sorted(published)}) nor the next release, {next_version}.")
 
     # STATUS-RUN-NEXT: <provider build> with <consumer build>; waiting on …|ready
     m = re.match(r"^(\S+) with (\S+); (ready|waiting on .+)$",
