@@ -32,7 +32,8 @@ only appeared to, and only under its own path can ours be kept while
 upstream's is disabled. **`.github/workflows/tag-release.yml` is new**, run by
 hand: it creates the annotated tag `platterpus-fork-rN` for a release the
 manifest names, once `tools/tag-release-check.py` has checked it, and records
-`release_seq`. **It has not been run**: the owner may rewrite history first.
+`release_seq`. **It has not been run.** It waited on a possible rewrite of
+this fork's history, and on 2026-10-12 the owner decided there will be none.
 `tests/workflows.py` keeps the hardening and `tests/tag_release.py` the tag's
 refusals, both revert-proved property by property. **CI first ran on
 2026-10-12**, from this change's own pull request, on the hardened workflow:
@@ -43,6 +44,27 @@ the sanitizer build sees, is fixed here. And `master` was found synced to upstre
 day, where the offset search returns `int`: one upstream re-check anchored on
 `static void` and would have failed in any fresh clone. The defect it checks is
 still there.
+
+**Every failure of CI's first run is root-caused from its job log and
+fixed**, and `SETTLED.md` lists them. The `LD_PRELOAD` shims behind eight
+image scenarios use Linux's loader, so they are built on Linux only, and
+elsewhere those scenarios exit 77, which meson reports as SKIP with the
+reason. A released build's rip is compared against the golden reference with
+its two release lines put back in the unreleased shape, and only when the
+same run's diagnostics record says it is released. The black-box sweep lets
+ASan's allocator refuse libcdio's request for about 2^64 bytes on a
+header-only NRG, as libc's does, and shows the warning as NOTED rather than
+as a finding. Two source fixes, both in upstream's code too: `ret` in
+`pick_codec_sample_rate()` starts initialised, which silences a
+false-positive GCC warning and changes no output, and the failure to create
+the cddap context now tears down like the two failures before it. The MinGW
+job builds only `cyanrip.exe` and moves from MINGW64, which setup-msys2
+marks deprecated, to UCRT64. The actions move off Node 20, to
+`actions/checkout` v7.0.1, `upload-artifact` v7.0.2 and `download-artifact`
+v8.0.2, and the runners are pinned to `ubuntu-24.04`, `macos-26` and
+`windows-2025`, the images the first run used. No log line, flag or exit
+code changes; the provider contract moved only in line numbers and its
+source anchor.
 
 **Our round 32 lap 3 is sent**, released by the operator on 2026-10-12: it
 takes Platterpus's lap 2 S3, moving round 32's run to their 0.7.104, and S8,
