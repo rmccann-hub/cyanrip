@@ -1,6 +1,19 @@
 Unreleased
 ==========
-Nothing yet.
+**Our round 32 lap 1 is sent**, on the operator's word of 2026-10-12, *"Release
+with all open tasks as well"*. It opens round 32 on `.22` with Platterpus
+0.7.103, both released, presents our open list in priority with what needs
+Platterpus first, and answers the nine items their standing status ranked for
+us, F1 to F9. Those that are work are in `STATUS.md`'s open list at priorities
+8 and 9, for round 33. `KNOWN-ISSUES.md`'s question whether Platterpus's
+AccurateRip skip is tested is answered: they compute no AccurateRip checksum.
+
+**`STATUS.md`'s block check reads `pins` as v8 E8 defines it**: a pin some
+closed round agreed, where it compared the manifest's stable commit, which from
+v8 can be a release no round has approved yet; and `reviews` may name a
+published release. Three statements of the retired no-release rule are
+rewritten: `STATUS.md`'s Releases section, the release gate's docstring and
+`--prerelease`'s help.
 
 0.9.4-rc2+platterpus.22 — 2026-10-12 — **stable**
 =================================================

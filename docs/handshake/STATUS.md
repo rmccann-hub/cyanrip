@@ -1,13 +1,13 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-32-lap-01.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 32, OPEN, opened by our lap 1, held until it is revised to name +platterpus.22 at 200530e and your 0.7.103 at 2f7855be, both now released; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent none (ours), none (theirs); next 1 (ours) carrying round 32's opening, our open list in priority and what needs you, once the operator releases it; held 1 carrying the same
+STATUS-ROUND: 32, OPEN, opened by our lap 1, sent on 2026-10-12, on +platterpus.22 at 200530e with your 0.7.103 at 2f7855be; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
+STATUS-LAPS: newest sent round-32-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your open list in priority and your answers to S9, S11, S14 and S17; held none
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
 STATUS-RELEASE-NEXT: +platterpus.23, whenever it is ready (v8 §6b), carrying what round 32 accepts of our lap 1 S11 and S14; pins ca3f3ea, reviews +platterpus.22
-STATUS-RUN-NEXT: +platterpus.22 with 0.7.103; waiting on round 32's lap 1, which names the pair; the Full run on +platterpus.21 with 0.6.66 ran on 2026-10-07 and is filed
+STATUS-RUN-NEXT: +platterpus.22 with 0.7.103; ready
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
 STATUS-OPEN: partially-accurate-tally-label us fixing at 200530e, priority 1: landed at 113c05f, released in +platterpus.22, and open until round 32's Full run reads it on a drive; the one-frame tally reads Tracks matched on one frame only:, which your 0.6.66b1 and every release since reads
@@ -86,11 +86,11 @@ changed is in `Changelog.md`.
   lap 5, both `GO`, by v6 §5b step 3 on both gates. It approves `.21` at
   `ca3f3ea` with their 0.6.66, and their `FORK_PIN` is `ca3f3ea`
   (`platterpus@2f7855be:src/platterpus/deps/fork_source.py:252`).
-- **Round 32's lap 1 is ours, published and held** (`round-32-lap-01.md`).
-  Both releases it waited for exist, `.22` at `200530e` and their 0.7.103 at
-  `2f7855be`, and it is revised to name that pair before the operator releases
-  it. It presents our open list in priority and, in
-  S9 to S22, what needs them, in the same order.
+- **Round 32's lap 1 is ours, sent** on 2026-10-12 on the operator's word,
+  *"Release with all open tasks as well"* (`round-32-lap-01.md`). It names
+  `.22` at `200530e` with their 0.7.103 at `2f7855be`, presents our open list
+  in priority and, in S9 to S22, what needs them, and answers their F1 to F9
+  in S23 to S31. Their lap 2 is next.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
@@ -108,16 +108,17 @@ Every earlier run is a `docs/rig-*` folder with its own README.
 `PROTOCOL.md` v8 and `seam-rules.md` v8 are byte-identical in both trees
 (`tools/seam-sync-check.py --fetch` at `platterpus@2d8644a`, exit 0) and govern
 from round 32. **Both gates implement 8**: ours from `2e800f4`, theirs from
-`platterpus@01fd8eac`. Laps declare 7 until our round 32 lap 1 says ours does,
-and 8 from our next lap.
+`platterpus@01fd8eac`. Our round 32 lap 1, which declares 7, says so, and our
+laps declare 8 from our next one.
 
 ### Platterpus's side, read and not run
 
 Their newest release is 0.7.103, tag `v0.7.103` at `2f7855be`, read with
 `git ls-remote` on 2026-10-12. Their
 standing status is `docs/handshake/outbound/platterpusstatus.md` in their tree,
-read at `2f7855be`: its block names six open items of theirs, and its
-`STATUS-RUN-NEXT` expects round 32 on `.22` with 0.7.103, as ours does.
+read at `808f8fb1`: its block names nine open items of theirs, it ranks F1 to
+F9 for us, which our round 32 lap 1 answers, and its `STATUS-RUN-NEXT` expects
+round 32 on `.22` with 0.7.103, as ours does.
 Seventeen of their earlier statuses are filed under
 `docs/handshake/inbound/status-*.md`, each dated by the date it declares; theirs
 are evidence and are never consolidated, and ours is a claim about now and is
