@@ -109,8 +109,10 @@ jobs:
   mingw:
     runs-on: windows-2025
     timeout-minutes: 120
+    # UCRT64: setup-msys2 marks MINGW64 deprecated. The build script follows
+    # $MINGW_PREFIX, so only the environment and the package prefix move.
     env:
-      MSYSTEM: MINGW64
+      MSYSTEM: UCRT64
     defaults:
        run:
           shell: msys2 {0}
@@ -118,7 +120,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0
         with:
-          install: git base-devel zip autoconf automake libtool mingw-w64-x86_64-toolchain mingw-w64-x86_64-meson mingw-w64-x86_64-ninja mingw-w64-x86_64-cmake mingw-w64-x86_64-nasm mingw-w64-x86_64-libcdio-paranoia mingw-w64-x86_64-opus mingw-w64-x86_64-lame mingw-w64-x86_64-libvorbis mingw-w64-x86_64-libxml2 mingw-w64-x86_64-nghttp2
+          msystem: UCRT64
+          install: git base-devel zip autoconf automake libtool mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-meson mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-nasm mingw-w64-ucrt-x86_64-libcdio-paranoia mingw-w64-ucrt-x86_64-opus mingw-w64-ucrt-x86_64-lame mingw-w64-ucrt-x86_64-libvorbis mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-nghttp2
           update: true
 
       - name: Build

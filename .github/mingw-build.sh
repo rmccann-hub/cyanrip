@@ -40,7 +40,8 @@ cyan_do_vcs() {
 
 cyan_do_hide_all_sharedlibs() {
     local files
-    files="$(find /mingw{32,64}/lib /mingw{32/i686,64/x86_64}-w64-mingw32/lib -name "*.dll.a" 2> /dev/null)"
+    # The environment's own prefix, so this holds under UCRT64 as under MINGW64
+    files="$(find "$MINGW_PREFIX/lib" "$MINGW_PREFIX/$MINGW_CHOST/lib" -name "*.dll.a" 2> /dev/null)"
     local tomove=()
     for file in $files; do
         [[ -f ${file%*.dll.a}.a ]] && tomove+=("$file")
