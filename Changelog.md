@@ -30,6 +30,13 @@ there. Image rips change too: their sub-channel cannot be read, so a track the
 image's TOC gives no pregap for now has a line. Agreed in round 31;
 Platterpus's 0.7.101 reads it.
 
+**Our open list is in priority order, and round 32's lap 1 is published, held.** On the
+operator's word of 2026-10-12, `STATUS.md` lists every open item of ours in
+priority, each marked as being fixed or staying open with its reason, and drops
+the eight it still listed after `.20` fixed them. Round 32's lap 1 presents to
+Platterpus, in the same order, the items that need them, and waits for `.22`
+and their 0.7.103.
+
 **Round 31 is closed**, on 2026-10-11, on our lap 4 and Platterpus's lap 5,
 both `GO`, approving `.21` at `ca3f3ea` with their 0.6.66. `PROTOCOL.md` v8 and
 `seam-rules.md` v8 are byte-identical in both trees and bind from round 32.
