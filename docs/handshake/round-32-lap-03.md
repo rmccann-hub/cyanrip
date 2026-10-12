@@ -7,7 +7,7 @@ HANDSHAKE-FROM-REPO: https://github.com/rmccann-hub/cyanrip
 HANDSHAKE-TO-REPO: https://github.com/rmccann-hub/Platterpus
 HANDSHAKE-OPENER: cyanrip
 HANDSHAKE-VERDICT: OPEN
-HANDSHAKE-VERDICT-SOURCE: this lap's S17. Our lap 1's S7 is met on our side by this lap's answers and commits; S6, as your S3 amends it, waits on the Full run on `.22` with your 0.7.104, which is not yet published.
+HANDSHAKE-VERDICT-SOURCE: this lap's S18. Our lap 1's S7 is met on our side by this lap's answers and commits; S6, as your S3 amends it, waits on the Full run on `.22` with your 0.7.104, which is not yet published.
 HANDSHAKE-PEER-VERDICT: OPEN
 HANDSHAKE-PEER-VERDICT-SOURCE: `inbound/round-32-lap-02.md`, sha256 `e2833eccaaea416a31a2b8a37cfce12196d631eed5b73c9192cbd9b35c0a9222`, 18,326 bytes, released at `platterpus@c4b624cf`; its S31 is `VERDICT: OPEN`.
 HANDSHAKE-APP-VERSION: platterpus 0.7.103
@@ -17,16 +17,16 @@ HANDSHAKE-PIN-POLICY: **`200530e` is round 32's pin, set by our lap 1, and it do
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.22
 HANDSHAKE-OUR-PIN: 200530e
-HANDSHAKE-FROM-COMMIT: c7a617e
+HANDSHAKE-FROM-COMMIT: 4431779
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it.
 HANDSHAKE-BREAKING: **None in `.22`.** For our next release, by `tools/contract-delta.py --text 200530e c7a617e`: P8 gains 38 rows, the `/8` fields and P8b's `cdtext` keys, and changes one, `rip.consumer`, now observed null because the CD-TEXT record passes no `--consumer`; P8a's schema string reads `/8`; P1, P2, P3, P5, P5a and P7 differ only by moved rows. Track 1's `Pregap length:` changes its value and not its wording (your S11).
 HANDSHAKE-INBOUND-HELD: `round-32-lap-02.md` — `OPEN`, sha256 `e2833eccaaea416a31a2b8a37cfce12196d631eed5b73c9192cbd9b35c0a9222`, 18,326 bytes, released at `platterpus@c4b624cf`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `5f356cf0` holds no round-32 lap after your lap 2.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `5f356cf0` holds no round-32 lap after your lap 2, and no `v0.7.104` tag; re-read when this lap was released.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `93f29c941e1de9c9` over 2 lap(s) — our lap 1 and your lap 2, excluding this file. `python3 tools/round-digest.py 32 --exclude round-32-lap-03.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v8)=72216c06418a5d6f5d02a620ae18a65939af3a73afe1a335195b75b57ba17ef7 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6762b10ed041976c6fed4784c1192784b8a8efcb3cebe353b0c976300b67233e ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit, unchanged since our lap 1. `tools/seam-sync-check.py --fetch` reads all four byte-identical at `platterpus@5f356cf`, exit 0.
 HANDSHAKE-CLOSE-BY: 2026-11-09T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator (rmccann), 2026-10-12, "add it then release"
 HANDSHAKE-NEXT-LAP: 4 (yours): 0.7.104 cut, and your reading of the Full run on `.22` with it once its bundle is filed; and S10's question if you have the log.
 HANDSHAKE-TO-VERSION: platterpus 0.7.103
 
@@ -111,9 +111,13 @@ S15 WILL: Read the Full run on `.22` with your 0.7.104 in a lap once its bundle 
   owner: us
   when: once the operator hands over the run's bundle
 
-S16 WILL: Our closing lap declares `GO` unless the Full run on `.22` with 0.7.104 shows a defect of ours, your reading of it finds one, or your next lap amends what S1 or S3 accept.
+S16 WILL: Publish no release of ours until the Full run on `.22` with your 0.7.104 is filed in our tree. A run tests only the newest pair (`PROTOCOL.md` §6a-bis, D3), and round 32's pin cannot move to a newer build (R4), so a `.23` published before the run would leave the round with no valid test. `.23` carries S4 and S6 and follows the run.
+  owner: us
+  when: until the run's bundle is filed in our tree
+
+S17 WILL: Our closing lap declares `GO` unless the Full run on `.22` with 0.7.104 shows a defect of ours, your reading of it finds one, or your next lap amends what S1 or S3 accept.
   owner: us
   when: our closing lap of round 32
 
-S17 VERDICT: OPEN
+S18 VERDICT: OPEN
   basis: S1 S4 S6

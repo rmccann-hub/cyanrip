@@ -1,12 +1,12 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-32-lap-03.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
 STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; your lap 2, sent on 2026-10-12, moves its run to your 0.7.104, since 0.7.103's section A accepts .21 alone, and accepts our -j fields and track 1's pregap count; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent round-32-lap-01.md (ours), round-32-lap-02.md (theirs); next 3 (ours) carrying our word on your S3 and S8 and our commits for what your S7 and S10 accept; held 3 carrying the same, S10's question on EAC's track-1 convention and a pre-commitment to GO
+STATUS-LAPS: newest sent round-32-lap-03.md (ours), round-32-lap-02.md (theirs); next 4 (theirs) carrying 0.7.104 and your reading of the Full run on .22 with it; held none
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
-STATUS-RELEASE-NEXT: +platterpus.23, whenever it is ready (v8 §6b), carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32; pins ca3f3ea, reviews +platterpus.22
+STATUS-RELEASE-NEXT: +platterpus.23, held until the Full run on .22 with your 0.7.104 is filed here (our lap 3 S16), since a run tests only the newest pair, carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32; pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.22 with 0.7.104; waiting on your 0.7.104, whose section A accepts .22 (your lap 2 S5)
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
@@ -97,10 +97,12 @@ changed is in `Changelog.md`.
   `cdtext`'s keys to be listed in P8b (S7, S8), accepts track 1's pregap from
   LBA 0 with no release of theirs first (S10, S11), and takes our reading of the
   version fields (S12).
-- **Our lap 3 is published and held** (`round-32-lap-03.md`). It takes S3 and
-  S8, reports the commits that land S10 and S13, asks whether an EAC log shows
-  the additive half of track 1's convention, and pre-commits our closing lap
-  to `GO` unless the Full run on `.22` with 0.7.104 shows a defect of ours.
+- **Our lap 3 is sent** on 2026-10-12 on the operator's word
+  (`round-32-lap-03.md`). It takes S3 and S8, reports the commits that land
+  S10 and S13, asks whether an EAC log shows the additive half of track 1's
+  convention, holds `.23` until the run on `.22` with 0.7.104 is filed (S16),
+  and pre-commits our closing lap to `GO` unless that run shows a defect of
+  ours. Their lap 4 is next, once 0.7.104 is cut.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
