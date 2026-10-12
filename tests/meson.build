@@ -595,6 +595,13 @@ test('P5 message witnesses', python,
      args: [ files('../tools/message-witness.py'), '--gate' ],
      timeout: 120)
 
+## A citation that fills a conversion is citing the message: upstream's test
+## asserts `Invalid track naming scheme`, which the binary prints for
+## `Invalid %s naming scheme "%s"!`. tests/message_witness.py checks fills()
+## both ways, so a reworded message cannot hide behind a conversion.
+test('P5 citations fill conversions', python,
+     args: [ files('message_witness.py') ])
+
 test('Black-box sweep', python,
      args: [ files('../tools/blackbox.py'), '--binary', cyanrip_exe, '--gate' ],
      is_parallel: false,

@@ -54,8 +54,10 @@ CORPUS = [
 CORPUS_SUFFIXES = {".py", ".c", ".h"}
 
 # This file is the census, not a witness: every message appears in its own
-# output, so counting itself would make the number meaningless.
-EXCLUDED = {"message-witness.py"}
+# output, so counting itself would make the number meaningless. Its test,
+# tests/message_witness.py, is excluded too: it holds citations that are wrong
+# on purpose, to check they are refused.
+EXCLUDED = {"message-witness.py", "message_witness.py"}
 
 # The shortest literal prefix that identifies a message rather than matching
 # any diagnostic. Below this a probe cannot discriminate, so the row is
@@ -85,6 +87,44 @@ def looks_like_a_regex(s):
         if s.count(opener) != s.count(closer):
             return True
     return any(tok in s for tok in (".*", ".+", "\\\\s", "\\\\d", "\\\\w", "$", "^", "|"))
+
+
+# A conversion as the contract prints it: C's own, or an inttypes macro, which
+# the source spells `%" PRIu64 "`.
+CONVERSION = re.compile(r'%" ?PRI[diouxX](?:8|16|32|64|MAX|PTR) ?"?'
+                        r'|%[-+ #0]*\d*(?:\.\d+)?(?:hh|h|ll|l|L|q|j|z|t)?'
+                        r'[diouxXeEfgGcsp]')
+
+
+def fills(message, cited):
+    """Does `cited` read as the start of `message` with text in place of each
+    conversion it crosses?
+
+    The prefix match above compares a citation with a message's literal text
+    up to its first conversion, so a test citing what the binary PRINTS for
+    `Invalid %s naming scheme "%s"!` -- `Invalid track naming scheme` -- was
+    reported as text the binary cannot print: the literal prefix, `Invalid`, is
+    too short to probe. Found by the upstream sync of 2026-10-12, whose test
+    cites exactly that.
+
+    Two conditions keep a conversion from swallowing a reworded message: every
+    conversion the citation crosses must be followed by literal text it
+    matches, unless the citation ends inside that conversion, and the literal
+    text matched must be at least MIN_PROBE long. So `Invalid frob naming
+    schema` does not fill it, and `Invalid CUE naming scheme "{album` does.
+    """
+    chunks = CONVERSION.split(message.replace('\\"', '"'))
+    for k in range(1, len(chunks)):
+        head = ".+?".join(re.escape(c) for c in chunks[:k]) + ".+?"
+        literal = sum(len(c) for c in chunks[:k])
+        if literal >= MIN_PROBE and re.fullmatch(head, cited, re.S):
+            return True
+        for j in range(len(chunks[k]), 0, -1):
+            if literal + j < MIN_PROBE:
+                break
+            if re.fullmatch(head + re.escape(chunks[k][:j]), cited, re.S):
+                return True
+    return False
 
 
 def p5_rows(contract):
@@ -190,9 +230,11 @@ def main():
     # the opposite of true. The contract only started rendering that newline in
     # 1c96c8d; before it, the segment could not have been found at all.
     published = set()
+    segments = []
     for _, message in rows:
         for seg in message.split("\\n"):
             published.add(probe_for(seg))
+            segments.append(seg)
     published.discard(None)
     for path, text in corpus.items():
         for cited in re.findall(r'"((?:Unable to|Couldn\'t|Error |Invalid )'
@@ -203,7 +245,8 @@ def main():
             if looks_like_a_regex(head):
                 continue
             if not any(head.startswith(p) or p.startswith(head)
-                       for p in published):
+                       for p in published) and \
+               not any(fills(seg, head) for seg in segments):
                 problems.append(
                     f"{path.name} asserts \"{cited}\", which P5 does not "
                     f"publish -- the message was reworded or removed and this "

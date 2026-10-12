@@ -3941,8 +3941,9 @@ def sc_diagnostics():
         return
 
     # /8 from round 32 (our lap 1 S10, Platterpus's lap 2 S7): every field an
-    # addition, each checked in sc_diag_record_v8().
-    if d.get("schema") != "cyanrip-diagnostics/8":
+    # addition, each checked in sc_diag_record_v8(). /9 from the upstream sync
+    # of 2026-10-12 adds data_ripped, checked in sc_data_track_completed().
+    if d.get("schema") != "cyanrip-diagnostics/9":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
