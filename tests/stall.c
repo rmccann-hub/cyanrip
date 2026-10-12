@@ -261,7 +261,8 @@ static void test_silent_when_reads_are_fast(void)
           "resumed line printed with no preceding heartbeat");
 }
 
-/* -k 0. A consumer that does its own liveness tracking can turn ours off. */
+/* --stall-secs 0. A consumer that does its own liveness tracking can turn
+ * ours off. */
 static void test_threshold_zero_disables(void)
 {
     cap_reset();
@@ -341,10 +342,11 @@ static void test_summary_line_shapes(void)
     char buf[160];
     crip_stall_stats_t s;
 
-    /* -k 0: we did not look. Not the same claim as "there were none". */
+    /* --stall-secs 0: we did not look. Not the same claim as "there were
+     * none". */
     s = (crip_stall_stats_t){ .threshold_us = 0 };
     crip_stall_summary_line(buf, sizeof(buf), &s);
-    CHECK(!strcmp(buf, "unknown (stall reporting disabled with -k 0)"),
+    CHECK(!strcmp(buf, "unknown (stall reporting disabled with --stall-secs 0)"),
           "disabled shape is %s", buf);
 
     /* Watched, saw none. */

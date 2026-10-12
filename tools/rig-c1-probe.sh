@@ -158,7 +158,7 @@ say ""
 
 T0=$(date -u +%s)
 say "--- launching at epoch $T0"
-say "    argv: timeout -k $GRACE $BUDGET $CRIP${DEV:+ -d $DEV} -j $DIAG -D $OUT/scratch -o flac -N -l 1 --consumer platterpus/c1-probe"
+say "    argv: timeout -k $GRACE $BUDGET $CRIP${DEV:+ -d $DEV} --diagnostics $DIAG -D $OUT/scratch -o flac -N -l 1 --consumer platterpus/c1-probe"
 say ""
 
 # No pipe. A plain redirect, for the reason in the header above.
