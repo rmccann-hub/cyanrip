@@ -82,7 +82,8 @@ docker pull ep76/cyanrip
 **That badge and every link in this section are UPSTREAM's**, and are left here
 because upstream is where the Windows builds come from. It is not a status for
 this fork: `platterpus-fork` publishes no Windows build, and its own CI
-workflow has never executed a single run (`docs/SETTLED.md`). A green badge on
+workflow had not executed a single run as of 2026-10-12, when GitHub Actions
+was still switched off for this repository (`docs/SETTLED.md`). A green badge on
 a fork's README reads as the fork's, which is why it now says whose it is.
 
 [Latest release Windows build](https://github.com/cyanreg/cyanrip/releases/latest/download/cyanrip-win64.exe)
