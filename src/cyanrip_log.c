@@ -355,7 +355,8 @@ static int print_paranoia_counts(cyanrip_ctx *ctx, const uint64_t *counts,
         int padding = strlen("FIXUP_DROPPED: ") - strlen(pstr);                \
         for (int i = 0; i < padding; i++)                                      \
             cyanrip_log(ctx, 0, " ");                                          \
-        cyanrip_log(ctx, 0, "%lu\n", counts[PARANOIA_CB_ ## PROP]);            \
+        cyanrip_log(ctx, 0, "%llu\n",                                          \
+                    (unsigned long long)counts[PARANOIA_CB_ ## PROP]);         \
         printed++;                                                             \
     }
 
