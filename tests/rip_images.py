@@ -2126,7 +2126,7 @@ def sc_cache_table_matches_the_transcripts():
 
     ON THE LOOKBEHIND, WHICH IS BELT-AND-BRACES AND SAYS SO. `uncached`
     CONTAINS `cached`, and the first derivation of this table used two
-    INDEPENDENT searches -- so `cached read ([\d.]+) ms` matched the uncached
+    INDEPENDENT searches -- so `cached read ([\\d.]+) ms` matched the uncached
     figure, the same number went into both columns, and every row came out at a
     margin of exactly 400%. The pattern below reads both figures in ONE
     anchored match, and the literal `uncached read … ms, ` in front already

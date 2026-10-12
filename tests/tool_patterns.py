@@ -18,7 +18,7 @@ it is exact about the spelling and blind to an equivalent written another way;
 the timing check below covers the five rewritten patterns themselves.
 
 AND IT WAS BLIND TO NINETEEN MORE, found the next day. Its first version
-matched the blanks only as `\s*`, and seventeen wire-header patterns in
+matched the blanks only as `\\s*`, and seventeen wire-header patterns in
 `tools/release-gate.py`, one in `tools/seam-sync-check.py` and one in this
 suite spell them `[ \t]*`: the same shape, quadratic the same way (1.9 s on a
 20,000-blank `HANDSHAKE-AGREED-CHANGES:` line), in the gate that reads every

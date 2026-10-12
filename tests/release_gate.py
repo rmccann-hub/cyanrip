@@ -2749,7 +2749,7 @@ def test_a_field_declared_twice_is_ambiguous_even_when_one_value_is_prose():
     transport envelope out of our digest, which is the exclusion S5a forbids.
 
     THE COUNTER WAS COUNTING WELL-FORMED VALUES, NOT DECLARATIONS. ROUND_RE and
-    friends require `(\d+)$`, so a second declaration reading
+    friends require `(\\d+)$`, so a second declaration reading
     `HANDSHAKE-ROUND: not-a-lap (transport envelope)` matched nothing and
     `len(m) != 1` never fired. The envelope declares all three identity fields
     TWICE and read as declaring them once.
@@ -2805,7 +2805,7 @@ def test_the_gate_reads_a_twice_declared_lap_as_ambiguous_not_as_the_parseable_o
     catching a fix of ours within the hour of writing it.
 
     A container committed under a lap's filename declares HANDSHAKE-LAP twice.
-    LAP_RE requires `(\d+)$` and matches only the well-formed one, so the gate
+    LAP_RE requires `(\\d+)$` and matches only the well-formed one, so the gate
     read a doubly-declared file as an unambiguous lap. S2 rule 3 says ambiguity
     is never resolved by taking the first or the last, and a value the pattern
     cannot parse is still a declaration.
