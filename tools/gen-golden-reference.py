@@ -132,6 +132,52 @@ def normalise(text):
     return text
 
 
+# THE LIBRARY SET A REFERENCE DESCRIBES. The reference is a byte record of a
+# rip made with one libcdio and one FFmpeg, and a rip made with others differs
+# in text those libraries supply -- libcdio's revision, FFmpeg's version
+# string, libcdio-paranoia's `Checking <device> for cdrom...` -- and in
+# paranoia's READ counter. CI's macOS job, on Homebrew's libcdio 2.4 and
+# FFmpeg 9.0.1 against the reference's Ubuntu 24.04 libcdio 2.1 and FFmpeg
+# 6.1, showed exactly those and nothing else: every checksum and every other
+# line matched, and READ was doubled on every track. No change to cyanrip
+# makes the two agree, so on 2026-10-12 the owner chose that the golden checks
+# compare only on the reference's library set and say SKIP, naming both sets,
+# anywhere else. The reference's own platform, the Linux jobs, runs them.
+#
+# The set is libcdio's major.minor and libavcodec's major, both read from the
+# logs themselves: `Drive used:` carries libcdio's CDIO_VERSION cut to four
+# characters on an image, and `Encoder:` carries libavcodec's version. A
+# patch-level bump on the reference's platform still compares, and fails,
+# which is what asks for the reference to be regenerated. A log that names
+# either one ambiguously or not at all is compared as before: skipping needs
+# evidence that the libraries differ, and a rip that failed before writing
+# those lines must fail, not skip.
+LIBCDIO_RE = re.compile(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
+                        re.M)
+LIBAVCODEC_RE = re.compile(r"^Encoder:\s+.*\blibavcodec (\d+)\.", re.M)
+
+
+def library_set(log):
+    """(libcdio "major.minor", libavcodec "major"), each None when the log
+    does not say it exactly once."""
+    a = LIBCDIO_RE.findall(log)
+    b = LIBAVCODEC_RE.findall(log)
+    return (".".join(a[0]) if len(a) == 1 else None,
+            b[0] if len(b) == 1 else None)
+
+
+def library_mismatch(reference, fresh):
+    """Why a byte comparison of the two logs tests nothing about cyanrip, or
+    None when they were made with the same library set."""
+    ref, new = library_set(reference), library_set(fresh)
+    if None in ref or None in new or ref == new:
+        return None
+    return (f"the reference was made with libcdio {ref[0]} and libavcodec "
+            f"{ref[1]}, and this rip with libcdio {new[0]} and libavcodec "
+            f"{new[1]}; they differ in text those libraries write, so the "
+            f"comparison runs where the reference was made")
+
+
 def refuse_if_released_build(log, what):
     """The reference is DEFINED as generated at `declare_released`'s default.
 
@@ -479,6 +525,10 @@ def main():
     if args.check:
         if not OUT_LOG.exists():
             sys.exit("docs/golden-reference.log is missing")
+        mismatch = library_mismatch(OUT_LOG.read_text(), log)
+        if mismatch:
+            print(f"SKIP: the golden reference was not compared: {mismatch}")
+            return 77
         old = normalise(OUT_LOG.read_text())
         new = normalise(log)
         if old != new:

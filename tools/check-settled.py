@@ -141,6 +141,7 @@ def cells(line):
 def main():
     text = SETTLED.read_text(encoding="utf-8")
     runnable, unrunnable, failures, malformed = 0, 0, [], []
+    unprobed = []
     delegated = []
     kinds, untagged = {}, []
 
@@ -254,10 +255,22 @@ def main():
 
         r = subprocess.run(command, shell=True, cwd=ROOT,
                            capture_output=True, text=True)
+        # 77 is the suite's own "cannot be checked here" (meson's SKIP, and
+        # rip_images.py's skip()), never a verdict on the fact. The golden
+        # reference row returns it on a library set other than the one the
+        # reference was made with: CI's macOS job, since 2026-10-12, on the
+        # owner's decision. Counted and printed with its reason, so it cannot
+        # pass as checked; nothing on the reference's platform returns it.
+        if r.returncode == 77:
+            unprobed.append((fact[:70], (r.stdout or r.stderr).strip()[:200]))
+            continue
         if r.returncode != 0:
             failures.append((fact[:70], command, r.returncode,
                              (r.stderr or r.stdout).strip()[:200]))
 
+    for fact, why in unprobed:
+        print(f"UNPROBED (exit 77, cannot be checked here): {fact}")
+        print(f"       {why}")
     for fact, cmd, rc, err in failures:
         print(f"STALE: {fact}")
         print(f"       {cmd}")
@@ -282,7 +295,8 @@ def main():
               f"run: {fact}")
 
     breakdown = ", ".join(f"{n} {t.rstrip(':')}" for t, n in sorted(kinds.items()))
-    print(f"{runnable} runnable check(s), {len(failures)} stale; "
+    print(f"{runnable} runnable check(s), {len(failures)} stale, "
+          f"{len(unprobed)} unprobed here; "
           f"{unrunnable} row(s) carry no command ({breakdown})")
 
     if runnable < 8:

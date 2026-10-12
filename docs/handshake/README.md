@@ -215,6 +215,15 @@ from memory:
 | Their state vocabulary | `src/platterpus/uiscript/report.py` — six outcomes; **their `SKIPPED`/`BLOCKED` are swapped against ours** |
 | Their version | `src/platterpus/__init__.py`, `__version__` |
 | Their changelog | `CHANGELOG.md` (upper case; ours is `Changelog.md`) |
+| Their commit maps | `docs/handshake/commit-map-<YYYY-MM-DD>.txt`, from HR-1: an old Platterpus commit ID resolves through them, never through the clone first |
+
+**Platterpus rewrote its own history once, and every Platterpus commit ID
+changed with it.** `HR-1.md` beside this file is the amendment both sides
+adopted word for word: old IDs stay as sent in every lap and record, and an old
+ID resolves through the maps above. `tools/lap-statements.py` does that for
+every Platterpus value it checks (`tools/commit-map.py`, HR-1.6), and
+`tools/seam-sync-check.py` reports a map that does not read cleanly. A cyanrip
+ID is never looked up in their map, and ours did not change.
 
 **Clone it read-only; we cannot push to it:**
 

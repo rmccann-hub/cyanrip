@@ -15,6 +15,7 @@ laps we hold), because a checker tested only against fixtures it invented can
 agree with itself. Temporary files are removed when the test ends.
 """
 
+import importlib.util
 import os
 import pathlib
 import re
@@ -1176,6 +1177,146 @@ for held_v in (3, 4):
         outcome(f"re: to a statement in a held LSL {held_v} lap",
                 check_lap(ours, "--laps", str(laps)), 0, ["well formed"],
                 absent=["prose lap", "REFUSED"])
+
+# 14. HR-1.6 (docs/handshake/HR-1.md): Platterpus rewrote its history once, and
+#     an old Platterpus ID resolves through the commit maps in Platterpus's own
+#     tree, before the clone, and a cyanrip ID never does. Each case is built
+#     so that the wrong reading gives a different answer: the old objects stay
+#     in the clone, so resolving there first (against (d)) would see them, and
+#     one map names a cyanrip commit as a new ID, so mapping a cyanrip value
+#     would make it pass.
+_spec = importlib.util.spec_from_file_location(
+    "commit_map", ROOT / "tools" / "commit-map.py")
+CM = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(CM)
+
+with tempfile.TemporaryDirectory() as t:
+    tmp = pathlib.Path(t)
+    pl = tmp / "pl"
+    old = make_repo(pl, "main", 2)
+    # The rewrite: the same trees recommitted with another author address,
+    # so every ID changes and no tree does (HR-1.1). The old commits are then
+    # on no branch, but their objects are still in this clone.
+    renv = dict(GIT_ENV, GIT_AUTHOR_EMAIL="other@example.invalid")
+    new, parent = [], []
+    for sha in old:
+        tree = g(pl, "rev-parse", f"{sha}^{{tree}}")
+        r = subprocess.run(["git", "-C", str(pl), "commit-tree", tree,
+                            *parent, "-m", "rewritten"], capture_output=True,
+                           text=True, env=renv, check=True)
+        new.append(r.stdout.strip())
+        parent = ["-p", new[-1]]
+    g(pl, "update-ref", "refs/heads/main", new[-1])
+    g(pl, "reset", "-q", "--hard", "main")
+    g(pl, "branch", "nomap")
+    (pl / "docs" / "handshake").mkdir(parents=True)
+    (pl / "docs/handshake/commit-map-2026-10-13.txt").write_text(
+        "old                                      new\n"
+        + "".join(f"{o} {n}\n" for o, n in zip(old, new)))
+    g(pl, "add", "docs")
+    g(pl, "commit", "-q", "-m", "commit map")
+
+    def pl_lap(x, line=4):
+        return lap_from("platterpus", "OPEN",
+                        f"S1 FACT read: Their README has {line} lines.\n"
+                        f"  evidence: platterpus@{x}:README:{line}\n\n"
+                        f"S2 VERDICT: OPEN\n  basis: S1\n")
+
+    outcome("HR-1.6 (b)(d): an old ID resolves through the map, though its "
+            "object is still in the clone",
+            check_lap(pl_lap(old[1][:7]), "--peer", str(pl)), 0,
+            ["well formed, 0 warning(s)"])
+    outcome("HR-1.6: the control, the same lap where the record has no map, "
+            "is refused",
+            check_lap(pl_lap(old[1][:7]), "--peer", str(pl),
+                      "--ref", "platterpus=nomap"), 1,
+            ["[LSL.4]", "on no branch"])
+    outcome("HR-1.6 (e): a line claim is checked at the mapped commit",
+            check_lap(pl_lap(old[1][:7], 5), "--peer", str(pl)), 1,
+            ["has 4 lines; line 5 does not exist"])
+    g(tmp, "clone", "-q", f"file://{pl}", "fresh")
+    outcome("HR-1.6: a fresh clone, which has no old object at all, resolves "
+            "the same way",
+            check_lap(pl_lap(old[0][:7], 3), "--peer", str(tmp / "fresh")), 0,
+            ["well formed, 0 warning(s)"])
+
+    ours = make_repo(tmp / "ours", "platterpus-fork", 1)
+    amb = ["abcdef1" + "0" * 33, "abcdef1" + "1" * 33]
+    chain_old, chain_mid = "fedcba9" + "2" * 33, "1234567" + "4" * 33
+    fake_cyanrip = "9876543" + "5" * 33
+    (pl / "docs/handshake/commit-map-2026-10-14.txt").write_text(
+        "old new\n" + f"{amb[0]} {new[1]}\n{amb[1]} {new[0]}\n"
+        f"{chain_old} {chain_mid}\n{fake_cyanrip} {ours[0]}\n")
+    (pl / "docs/handshake/commit-map-2026-10-15.txt").write_text(
+        f"old new\n{chain_mid} {new[1]}\n")
+    g(pl, "add", "docs")
+    g(pl, "commit", "-q", "-m", "two more maps")
+    outcome("HR-1.6 (c): two old IDs beginning with the value name no commit",
+            check_lap(pl_lap("abcdef1"), "--peer", str(pl)), 1,
+            ["[LSL.4]", "2 old IDs in the maps begin with abcdef1"])
+    outcome("HR-1.6 (b): one more character makes it one old ID",
+            check_lap(pl_lap("abcdef10"), "--peer", str(pl)), 0,
+            ["well formed, 0 warning(s)"])
+    outcome("HR-1.6 (b): a new ID that is an old ID in a later map is followed",
+            check_lap(pl_lap(chain_old[:7]), "--peer", str(pl)), 0,
+            ["well formed, 0 warning(s)"])
+    did_ours = lap_from("cyanrip-fork", "OPEN",
+                        f"S1 DID: A thing.\n  commit: {fake_cyanrip[:7]}\n\n"
+                        f"S2 VERDICT: OPEN\n  basis: S1\n")
+    outcome("HR-1.6: a cyanrip ID is never looked up in Platterpus's map, "
+            "though the map would carry it to a cyanrip commit",
+            check_lap(did_ours, "--ours", str(tmp / "ours"),
+                      "--peer", str(pl)), 1,
+            ["[LSL.4]", f"commit {fake_cyanrip[:7]} does not resolve in "
+                        f"cyanrip's tree"])
+
+    g(pl, "checkout", "-q", "-b", "badmap")
+    (pl / "docs/handshake/commit-map-2026-10-15.txt").write_text(
+        f"old\tnew\n{chain_mid} {new[1]}\n")
+    g(pl, "commit", "-q", "-am", "a map that does not read cleanly")
+    outcome("HR-1.6 (f): a map that does not read cleanly is reported, and "
+            "nothing is guessed through it",
+            check_lap(pl_lap(old[1][:7]), "--peer", str(pl),
+                      "--ref", "platterpus=badmap"), 0,
+            ["[LSL.unchecked]", "does not read cleanly", "HR-1.6 (f)",
+             "'old\\tnew'"], absent=["REFUSED"])
+
+A, B, C = "a" * 40, "b" * 40, "c" * 40
+for name, maps, needle in (
+        ("a wrong header", [("commit-map-2026-10-13.txt", f"old\tnew\n{A} {B}\n")],
+         "not 'old new'"),
+        ("a malformed line", [("commit-map-2026-10-13.txt", f"old new\n{A}  {B}\n")],
+         "is not an old ID, one space and a new ID"),
+        ("upper-case hex", [("commit-map-2026-10-13.txt",
+                             f"old new\n{A.upper()} {B}\n")],
+         "is not an old ID, one space and a new ID"),
+        ("an old ID listed twice", [("commit-map-2026-10-13.txt",
+                                     f"old new\n{A} {B}\n{A} {C}\n")],
+         "is listed twice"),
+        ("an old ID listed twice across maps",
+         [("commit-map-2026-10-13.txt", f"old new\n{A} {B}\n"),
+          ("commit-map-2026-10-14.txt", f"old new\n{A} {C}\n")],
+         "also in commit-map-2026-10-13.txt"),
+        ("an ID mapped to itself", [("commit-map-2026-10-13.txt",
+                                     f"old new\n{A} {A}\n")],
+         "is mapped to itself"),
+        ("an ID both old and new", [("commit-map-2026-10-13.txt",
+                                     f"old new\n{A} {B}\n{B} {C}\n")],
+         "is both an old ID and a new ID")):
+    try:
+        CM.parse(maps)
+        fail(f"HR-1.6 (f): {name} read cleanly")
+    except CM.MapError as e:
+        if needle not in str(e):
+            fail(f"HR-1.6 (f): {name}: {e!r} does not say {needle!r}")
+        else:
+            print(f"ok   HR-1.6 (f): {name} is refused")
+for header in ("old new\n", "old      new\n"):
+    try:
+        CM.parse([("commit-map-2026-10-13.txt", f"{header}{A} {B}\n")])
+        print(f"ok   HR-1.6: header {header.strip()!r} reads cleanly")
+    except CM.MapError as e:
+        fail(f"HR-1.6: header {header!r} refused: {e}")
 
 if failures:
     print(f"\n{failures} failure(s)")

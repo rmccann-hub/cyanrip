@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**HR-1 is adopted, word for word**, as `docs/handshake/HR-1.md`: Platterpus
+rewrites its own history once, to remove one address from commit metadata, so
+every Platterpus commit ID changes while every file, message and date stays
+byte-identical. Ours do not change. Old IDs stay as sent, and an old
+Platterpus ID now resolves through Platterpus's committed
+`docs/handshake/commit-map-<date>.txt`: `tools/lap-statements.py` looks every
+Platterpus value up there before resolving it in the clone, follows a chain of
+maps, refuses a prefix two old IDs share, and checks a path or line claim at
+the mapped commit (`tools/commit-map.py`, HR-1.6). A map that does not read
+cleanly is reported, by the checker and by `tools/seam-sync-check.py`, and
+nothing is resolved through it. A cyanrip ID is never looked up in their map.
+Each step has a case in `tests/lap_statements.py`, revert-proved one at a time.
+Until HR-1.7's check passes, neither side releases or sends a lap that cites a
+commit.
+
 **The CI workflow is hardened and has moved to `.github/workflows/ci.yml`**,
 from an outside read of 2026-10-12, alongside the owner's settings of that
 day: `platterpus-fork` is the default branch, pull requests merge with merge
@@ -17,7 +32,8 @@ only appeared to, and only under its own path can ours be kept while
 upstream's is disabled. **`.github/workflows/tag-release.yml` is new**, run by
 hand: it creates the annotated tag `platterpus-fork-rN` for a release the
 manifest names, once `tools/tag-release-check.py` has checked it, and records
-`release_seq`. **It has not been run**: the owner may rewrite history first.
+`release_seq`. **It has not been run.** It waited on a possible rewrite of
+this fork's history, and on 2026-10-12 the owner decided there will be none.
 `tests/workflows.py` keeps the hardening and `tests/tag_release.py` the tag's
 refusals, both revert-proved property by property. **CI first ran on
 2026-10-12**, from this change's own pull request, on the hardened workflow:
@@ -28,6 +44,52 @@ the sanitizer build sees, is fixed here. And `master` was found synced to upstre
 day, where the offset search returns `int`: one upstream re-check anchored on
 `static void` and would have failed in any fresh clone. The defect it checks is
 still there.
+
+**Every failure of CI's first run is root-caused from its job log and
+fixed**, and `SETTLED.md` lists them. The `LD_PRELOAD` shims behind eight
+image scenarios use Linux's loader, so they are built on Linux only, and
+elsewhere those scenarios exit 77, which meson reports as SKIP with the
+reason. A released build's rip is compared against the golden reference with
+its two release lines put back in the unreleased shape, and only when the
+same run's diagnostics record says it is released. The black-box sweep lets
+ASan's allocator refuse libcdio's request for about 2^64 bytes on a
+header-only NRG, as libc's does, and shows the warning as NOTED rather than
+as a finding. Two source fixes, both in upstream's code too: `ret` in
+`pick_codec_sample_rate()` starts initialised, which silences a
+false-positive GCC warning and changes no output, and the failure to create
+the cddap context now tears down like the two failures before it. The macOS
+build stopped at the shims, after clang had warned twice in `src/pregap.c`'s
+macOS path, now fixed, and once in Homebrew's libcdio-paranoia `cdda.h`, which
+`Compiler diagnostics` would have counted: it now gates only diagnostics
+located in this tree and lists the rest, and `tests/warn_gate.py` pins that.
+Once it built, macOS's suite, on Homebrew's libcdio 2.4 and FFmpeg 9.0.1,
+found three defects the Linux jobs cannot reach. **Every image rip without
+`-s` stopped at `Offset is unset!` on libcdio 2.3.0 and later**, and every
+track tried a sub-channel read no image driver implements, because cyanrip
+took `CDIO_DRIVE_CAP_READ_ISRC` to mean a drive and libcdio `998d123` began
+reporting it for images; it now asks the driver, and `tests/imagecap.c` makes
+libcdio 2.1 report the bit so the Linux jobs hold the fix. `-Y` on a log that
+cannot be read said it had no checksum where `fread` failed, as it does on a
+macOS directory; that is now an I/O error. And the paranoia counters were
+printed with `%lu` from a `uint64_t`, which macOS and Windows refuse under
+`-Werror=format`. All three are in upstream's code at `b40c1f0`; the last
+compiles there only because upstream's `cyanrip_log()` carries no format
+attribute. The MinGW
+job builds only `cyanrip.exe` and moves from MINGW64, which setup-msys2
+marks deprecated, to UCRT64; once it reached cyanrip's own sources, this
+fork's `SIGHUP` handling did not compile on Windows, which has neither
+`SIGHUP` nor `sigaction()`, and it is now built only where they exist.
+The golden reference is a byte record of a rip on Ubuntu 24.04's libcdio
+2.1 and FFmpeg 6.1, and on macOS's libraries the same rip differs only in
+text those libraries write and in paranoia's `READ` counter, with every
+checksum identical. So, by the owner's decision, both golden checks compare
+only on the library set the reference names and say SKIP, with both sets,
+anywhere else; `check-settled.py` counts such a row as unprobed. The actions move off Node 20, to
+`actions/checkout` v7.0.1, `upload-artifact` v7.0.2 and `download-artifact`
+v8.0.2, and the runners are pinned to `ubuntu-24.04`, `macos-26` and
+`windows-2025`, the images the first run used. No log line, flag or exit
+code changes; the provider contract moved only in line numbers and its
+source anchor.
 
 **Our round 32 lap 3 is sent**, released by the operator on 2026-10-12: it
 takes Platterpus's lap 2 S3, moving round 32's run to their 0.7.104, and S8,

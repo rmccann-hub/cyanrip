@@ -1632,8 +1632,9 @@ trees — so nothing here has to change to work under them.
   `platterpus-fork`, the manifest at its tip names that release at that commit,
   and no tag of that name points anywhere else. It records `release_seq` in the
   tag's message, because releases are ordered by that and never by the version.
-  **It had not been run on 2026-10-12, on the owner's word**: history may be
-  rewritten first, and a tag made before that would name the old commits. The
+  **It had not been run on 2026-10-12.** It waited on a possible rewrite of
+  this fork's history, since a tag made first would name the old commits, and
+  the owner decided that day there will be none: history stays as it is. The
   manifest names only the current channel heads, so it can tag only a release
   still published on some channel. Until tags exist, **the commit SHA is the
   only durable release identifier a consumer can resolve** — which is why the

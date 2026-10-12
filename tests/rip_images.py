@@ -86,6 +86,16 @@ def skip(msg):
     sys.exit(77)
 
 
+def needs_preload_shim(scenario):
+    """Skip, out loud, a scenario that rips through an LD_PRELOAD shim, on a
+    platform whose loader has no LD_PRELOAD. tests/meson.build builds the
+    shims on Linux only and says so in CYANRIP_PRELOAD_SHIMS; where it says 1,
+    or says nothing, a missing shim is still a failure."""
+    if os.environ.get("CYANRIP_PRELOAD_SHIMS") == "0":
+        skip(f"{scenario}: rips through an LD_PRELOAD shim, and this build is "
+             f"not on Linux, whose loader is the one that honours it")
+
+
 def crip(*args, cwd=None, env=None):
     r = subprocess.run([CRIP, *map(str, args)], stdout=subprocess.PIPE,
                        stderr=subprocess.STDOUT, timeout=60, cwd=cwd, env=env)
@@ -1382,8 +1392,9 @@ def sc_exit_codes():
     # reachable from a disc image --
     #
     #   * "Offset is unset!" is gated on the drive reporting
-    #     CDIO_DRIVE_CAP_READ_ISRC, which no image driver does, so it can only
-    #     fire on real hardware.
+    #     CDIO_DRIVE_CAP_READ_ISRC and on the device not being an image
+    #     (crip_is_image_driver(): libcdio 2.3.0 began reporting the bit for
+    #     images), so it can only fire on real hardware.
     #   * the two cyanrip_rip_track failure paths need a rip that genuinely
     #     fails, which a synthetic image does not do.
     #
@@ -2116,7 +2127,7 @@ def sc_cache_table_matches_the_transcripts():
 
     ON THE LOOKBEHIND, WHICH IS BELT-AND-BRACES AND SAYS SO. `uncached`
     CONTAINS `cached`, and the first derivation of this table used two
-    INDEPENDENT searches -- so `cached read ([\d.]+) ms` matched the uncached
+    INDEPENDENT searches -- so `cached read ([\\d.]+) ms` matched the uncached
     figure, the same number went into both columns, and every row came out at a
     margin of exactly 400%. The pattern below reads both figures in ONE
     anchored match, and the literal `uncached read … ms, ` in front already
@@ -2907,10 +2918,23 @@ def sc_diag_record_v8():
             "arranger", "isrc", "upc_ean", "genre", "discid"]
 
     # 1. A rip with a -t ISRC on track 1 only. The files carry it, and the
-    # disc's own is asked for whatever the files carry; an image driver never
-    # reports the capability, so the reason says that.
+    # disc's own is asked for whatever the files carry. Which reason an image
+    # gives depends on the libcdio that ran: before 2.3.0 its image drivers do
+    # not report the capability, and from 2.3.0 (libcdio 998d123, "Image
+    # driver supports ISRC") they do, and this fixture's cue has no ISRC, so
+    # libcdio returns none. The version comes from the rip's own log, whose
+    # `Drive used:` revision is libcdio's CDIO_VERSION cut to four characters.
     rec = WORK / "v8_rip.json"
     rip("v8_rip", "pregap.cue", "-t", "1=isrc=AAAAA0000001", "-j", rec)
+    m = re.search(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
+                  (WORK / "out_v8_rip" / "log.log").read_text(), re.M)
+    if not m:
+        fail("diag_record_v8: the log names no libcdio revision, so which "
+             "ISRC reason an image gives cannot be decided")
+        return
+    want_isrc_reason = ("libcdio returned none"
+                        if (int(m.group(1)), int(m.group(2))) >= (2, 3)
+                        else "the driver does not report reading ISRC")
     d = json.loads(rec.read_text())
     if d.get("schema") != "cyanrip-diagnostics/8":
         fail(f"diag_record_v8: schema is {d.get('schema')!r}, so none of the "
@@ -2930,9 +2954,11 @@ def sc_diag_record_v8():
             fail(f"diag_record_v8: track {tr['number']} isrc_written is "
                  f"{tr['isrc_written']!r}, and its file carries {in_file!r}")
         if (tr["isrc_disc"], tr["isrc_disc_reason"]) != \
-                (None, "the driver does not report reading ISRC"):
+                (None, want_isrc_reason):
             fail(f"diag_record_v8: track {tr['number']} isrc_disc "
-                 f"{tr['isrc_disc']!r} ({tr['isrc_disc_reason']!r}) on an image")
+                 f"{tr['isrc_disc']!r} ({tr['isrc_disc_reason']!r}) on an "
+                 f"image read by libcdio {m.group(1)}.{m.group(2)}, where "
+                 f"{want_isrc_reason!r} is expected")
         if (tr["preemphasis"], tr["deemphasis_applied"]) != ("none", False):
             fail(f"diag_record_v8: track {tr['number']} pre-emphasis "
                  f"{tr['preemphasis']!r}/{tr['deemphasis_applied']!r} on a disc "
@@ -3033,6 +3059,88 @@ def sc_diag_record_v8():
         fail(f"diag_record_v8: -f printed the no-entry line: {printed}; "
              f"offset_search {got}")
 
+
+def sc_image_reports_isrc():
+    """An image whose driver reports reading ISRC is still an image.
+
+    libcdio 998d123 ("Image driver supports ISRC", first released in 2.3.0)
+    added CDIO_DRIVE_CAP_READ_ISRC to what its image drivers report, and
+    cyanrip took that bit to mean a drive. On CI's first macOS run, against
+    Homebrew's libcdio 2.4, `-J` on an image stopped at `Offset is unset!` and
+    exited 1, and every track logged `Unable to read track N subchannel info!`
+    for a read no image driver implements. The Linux jobs build against 2.1,
+    so tests/imagecap.c makes it report the bit the way 2.3.0 does, and:
+
+      * `-J` on an image without -s finishes with exit 0 and never says the
+        offset is unset;
+      * a rip makes no sub-channel read and logs no failure of one;
+      * the disc's ISRC is still asked for, which is what the bit now does
+        mean for an image: the -j record says libcdio returned none.
+
+    Each of the two gates in crip_is_image_driver()'s callers is pinned by
+    one of the first two checks, and the shim's marker file proves each run
+    went through it.
+    """
+    needs_preload_shim("image_reports_isrc")
+    shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"image_reports_isrc: the shim was not built or not passed "
+             f"({shim!r})")
+        return
+    marker = WORK / "image_reports_isrc.added"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_IMAGE_CAP_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+
+    # 1. The offset check: -J, and no -s.
+    d = WORK / "image_reports_isrc_cue"
+    d.mkdir(exist_ok=True)
+    ec, out = crip("-d", WORK / "basic.cue", "-J", "-N", "-A", "-U",
+                   "-D", d / "out", cwd=d, env=env)
+    (WORK / "image_reports_isrc_cue.stdout").write_text(out)
+    if not marker.exists():
+        fail("image_reports_isrc: the shim never added the capability, so "
+             "the -J run tests nothing")
+        return
+    if "Offset is unset!" in out:
+        fail("image_reports_isrc: -J on an image said `Offset is unset!`")
+    if ec != 0:
+        fail(f"image_reports_isrc: -J on an image exited {ec}, not 0")
+        print(out)
+
+    # 2. The sub-channel read: a rip, with -s 0 so the offset check above is
+    # not what decides it.
+    marker.unlink()
+    rec = WORK / "image_reports_isrc.json"
+    outdir = WORK / "out_image_reports_isrc"
+    ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac", "-D", outdir, "-F", "{track}",
+                   "-L", "log", "-j", rec, env=env)
+    (WORK / "image_reports_isrc.stdout").write_text(out)
+    if not marker.exists():
+        fail("image_reports_isrc: the shim never added the capability, so "
+             "the rip tests nothing")
+        return
+    if ec != 0:
+        fail(f"image_reports_isrc: the rip exited {ec}, not 0")
+        print(out)
+        return
+    logp = outdir / "log.log"
+    text = out + (logp.read_text(errors="replace") if logp.exists() else "")
+    n = text.count("subchannel info!")
+    if n:
+        fail(f"image_reports_isrc: {n} `Unable to read track N subchannel "
+             f"info!` line(s) from a read no image driver implements")
+    try:
+        ts = json.loads(rec.read_text())["rip"]["track_state"]
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        fail(f"image_reports_isrc: no readable -j record: {e}")
+        return
+    reasons = {tr["isrc_disc_reason"] for tr in ts}
+    if reasons != {"libcdio returned none"}:
+        fail(f"image_reports_isrc: the disc ISRC reasons are {reasons!r}; "
+             f"with the bit reported, the ISRC is asked for and this image "
+             f"has none")
 
 def sc_probe_runs_open_no_logfile():
     """`-I`, `-J` and `-f` open no logfile, and P2 says so.
@@ -3784,6 +3892,54 @@ def sc_golden_reference_matches_a_fresh_rip():
              f"and wrote no log -- the recorded invocation no longer works")
         return
     fresh = fresh_path.read_text()
+
+    # The reference describes one library set, and a rip made with another
+    # differs in text those libraries write (CI's macOS job, on libcdio 2.4
+    # and FFmpeg 9.0.1). Decided by gen-golden-reference.py's own parser, so
+    # the two golden checks cannot disagree about when they apply.
+    spec = importlib.util.spec_from_file_location(
+        "gen_golden", ROOT / "tools" / "gen-golden-reference.py")
+    gen_golden = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen_golden)
+    mismatch = gen_golden.library_mismatch(ref, fresh)
+    if mismatch:
+        skip(f"golden_shape: not compared: {mismatch}")
+
+    # A RELEASED build writes two lines differently, by design: `Handshake:`
+    # ends `-- released build`, and the disclaimer line under it says the
+    # declaration was not verified (crip_log_identity()). The reference is an
+    # unreleased build's, so CI's `-Ddeclare_released=true` jobs failed here on
+    # their first run while the format had not moved. Those two lines go back
+    # to the unreleased shape and the rest is compared as before -- but only
+    # when the same run's own record says the build is released, because a
+    # build that is not, printing that it is, is a defect and not a variant.
+    lines = fresh.splitlines()
+    at = next((i for i, l in enumerate(lines) if l.startswith("Handshake:")),
+              None)
+    if at is not None and lines[at].endswith(" -- released build"):
+        try:
+            declared = json.loads((WORK / "o" / "reference.diagnostics.json")
+                                  .read_text())["cyanrip"][
+                                      "released_build_declared"]
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            fail(f"golden_shape: the log says released build and the run's "
+                 f"own record cannot say whether it is: {e}")
+            return
+        if declared is not True:
+            fail(f"golden_shape: the log says released build and the run's "
+                 f"record says released_build_declared {declared!r}")
+            return
+        disclaimer = "(declared at build time, not verified by cyanrip)"
+        if at + 1 >= len(lines) or lines[at + 1].strip() != disclaimer:
+            fail("golden_shape: a released build's Handshake: line is not "
+                 f"followed by its disclaimer, {disclaimer!r}")
+            return
+        lines[at] = lines[at][:-len(" -- released build")] + \
+            " -- NOT a released build"
+        del lines[at + 1]
+        fresh = "\n".join(lines) + "\n"
+        note("golden_shape: this build is released; its two release lines "
+             "were compared in the unreleased shape the reference records")
 
     # A `-dirty` marker is a property of the TREE, not of the log format, and
     # it is already sc_golden_reference_is_from_a_clean_build()'s job. Left in,
@@ -5321,6 +5477,7 @@ def sc_signal_after_last_frame():
       * track 1 is not reported read, and `Partial files:` names it, because
         its encoder wrote a file over a read that never finished.
     """
+    needs_preload_shim("signal_after_last_frame")
     shim = os.environ.get("CYANRIP_RAISESIG_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"signal_after_last_frame: the shim was not built or not passed "
@@ -6033,6 +6190,7 @@ def sc_bad_sector():
       * the Retry limit line gives both numbers for -r 3, and is unchanged for
         -r 10, the multiple-of-5 control.
     """
+    needs_preload_shim("bad_sector")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"bad_sector: the shim was not built or not passed ({shim!r})")
@@ -6128,6 +6286,7 @@ def sc_p0_bad_sector():
       * paranoia counted the same reads per track as a clean rip, because a
         read that succeeds takes the path it always took.
     """
+    needs_preload_shim("p0_bad_sector")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"p0_bad_sector: the shim was not built or not passed ({shim!r})")
@@ -6228,6 +6387,7 @@ def sc_repeat_limit():
     LAST read's matches: that read agrees with nobody, and two earlier reads
     agree with each other, so M is 2 and `matches + 1` would print 1.
     """
+    needs_preload_shim("repeat_limit")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"repeat_limit: the shim was not built or not passed ({shim!r})")
@@ -6317,6 +6477,7 @@ def sc_repeat_limit_keeps_most_agreed():
     each pass is one read of the sector, as in sc_repeat_limit().
     """
     import zlib
+    needs_preload_shim("repeat_limit_keeps_most_agreed")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"repeat_limit_keeps_most_agreed: the shim was not built or not "
@@ -6439,6 +6600,7 @@ def sc_spool_refusal():
     path prints a diagnosable line, at column 0, to a stream the caller
     captures, and no track that was not ripped says it was read.
     """
+    needs_preload_shim("spool_refusal")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"spool_refusal: the shim was not built or not passed ({shim!r})")
@@ -6500,6 +6662,7 @@ def sc_paranoia_skip():
     exiting 1 would make Platterpus skip the securing pass (crip_ripping_errors()
     says where), and that choice is theirs to answer in round 30 lap 9.
     """
+    needs_preload_shim("paranoia_skip")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"paranoia_skip: the shim was not built or not passed ({shim!r})")
@@ -6610,6 +6773,7 @@ def sc_repeat_resets_filter():
     by construction and cyanrip_reset_encoding() is gone. The schedule and the
     assertion are unchanged.
     """
+    needs_preload_shim("repeat_resets_filter")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"repeat_resets_filter: the shim was not built or not passed ({shim!r})")

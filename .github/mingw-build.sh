@@ -40,7 +40,8 @@ cyan_do_vcs() {
 
 cyan_do_hide_all_sharedlibs() {
     local files
-    files="$(find /mingw{32,64}/lib /mingw{32/i686,64/x86_64}-w64-mingw32/lib -name "*.dll.a" 2> /dev/null)"
+    # The environment's own prefix, so this holds under UCRT64 as under MINGW64
+    files="$(find "$MINGW_PREFIX/lib" "$MINGW_PREFIX/$MINGW_CHOST/lib" -name "*.dll.a" 2> /dev/null)"
     local tomove=()
     for file in $files; do
         [[ -f ${file%*.dll.a}.a ]] && tomove+=("$file")
@@ -129,7 +130,10 @@ build_cyanrip() {
     CFLAGS+=" -DLIBXML_STATIC -DCURL_STATICLIB $(printf ' -I%s' "$(cygpath -m "$CYANRIPINSTALLDIR/include")")" \
         LDFLAGS+="$(printf ' -L%s' "$(cygpath -m "$CYANRIPINSTALLDIR/lib")")" \
         meson setup build --default-library=static --buildtype=release --prefix="$CYANRIPINSTALLDIR" --backend=ninja &&
-    ninja -C build && strip --strip-all build/src/cyanrip.exe -o cyanrip.exe
+    # The program this job ships, not every target: tests/diagrecord.c uses
+    # fork() and <sys/wait.h>, which Windows lacks, and this job never ran the
+    # tests. The suite runs on the Linux and macOS jobs.
+    ninja -C build src/cyanrip.exe && strip --strip-all build/src/cyanrip.exe -o cyanrip.exe
 }
 
 cd "$(dirname "$0")"

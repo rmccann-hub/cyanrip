@@ -879,7 +879,7 @@ def exit_surface():
     """Every distinct process exit value, and every path we could NOT resolve.
 
     WHY THIS IS NOT A LIST OF DIGITS ANY MORE. The previous version scanned for
-    `exit\((\d+)\)` across src/*.c and for `^\s*return (\d+);` inside main().
+    `exit\\((\\d+)\\)` across src/*.c and for `^\\s*return (\\d+);` inside main().
     Both halves were wrong in the same direction:
 
       * main() does not return a literal. It returns `rc`, which is

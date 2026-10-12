@@ -191,6 +191,18 @@ logrender_test = executable('logrender_test',
 )
 test('Log rendering', logrender_test)
 
+## The two shims below are LD_PRELOAD interposers on glibc's names (fopen64,
+## __vfprintf_chk) through dlsym(RTLD_NEXT). That is Linux's dynamic loader:
+## macOS ignores LD_PRELOAD and hides RTLD_NEXT under the _XOPEN_SOURCE this
+## project sets, and Windows has neither, so CI's first macOS and MinGW runs
+## failed to build them. They are built on Linux only, and elsewhere the
+## scenarios that rip through them say UNPROBED -- they never pass silently,
+## and on Linux a missing shim is still a failure.
+preload_shims = host_machine.system() == 'linux'
+shim_env = [ 'CYANRIP_PRELOAD_SHIMS=' + (preload_shims ? '1' : '0') ]
+shim_deps = []
+
+if preload_shims
 ## One unreadable sector, for the image rips. An LD_PRELOAD shim, not a test
 ## of its own: rip_images.py's `bad_sector` scenario rips through it. See the
 ## file header for why a drive is not needed for this half of "damaged media".
@@ -209,6 +221,20 @@ raisesig_shim = shared_module('raisesig',
     dependencies: [ dependency('dl') ],
 )
 
+## An image that reports reading ISRC, as libcdio 2.3.0 and later make every
+## image do. The Linux jobs build against 2.1, so without this nothing here
+## would notice cyanrip again taking that bit to mean a drive. See its header.
+imagecap_shim = shared_module('imagecap',
+    sources: [ 'imagecap.c' ],
+    name_prefix: '',
+    dependencies: [ dependency('dl'), dependency('libcdio') ],
+)
+shim_env += [ 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path(),
+              'CYANRIP_RAISESIG_SHIM=' + raisesig_shim.full_path(),
+              'CYANRIP_IMAGECAP_SHIM=' + imagecap_shim.full_path() ]
+shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim ]
+endif
+
 ## Integration tests
 ## =================
 ## Rip the disc image fixtures with the built binary and verify the
@@ -224,6 +250,11 @@ test('Compiler diagnostics', python,
     args: [ files('../tools/warn-gate.py') ],
     timeout: 300,
 )
+## Which of those diagnostics gate: the ones located in this tree. A flag of
+## ours firing in a dependency's header (clang, Homebrew's cdda.h, on CI's
+## first macOS run) is listed and not counted.
+test('Compiler diagnostics gate only this tree', python,
+    args: [ files('warn_gate.py') ])
 
 
 ## Audio checksum mirror
@@ -270,6 +301,13 @@ test('Golden reference freshness', python,
              '--binary', cyanrip_exe.full_path() ],
      depends: cyanrip_exe,
      timeout: 300)
+## Where the golden checks apply: the reference is a byte record of one
+## libcdio and one FFmpeg, and both checks say SKIP, naming both sets, on any
+## other (CI's macOS job, owner's decision of 2026-10-12). This pins that
+## decision, its fail-closed edges, and check-settled counting a 77 as
+## unprobed rather than as checked or as stale.
+test('Golden reference library set', python,
+     args: [ files('golden_libraries.py') ])
 
 ## Interrupted sample freshness
 ## ===========================
@@ -712,6 +750,7 @@ rip_scenarios = [
     'zr_refusal',
     'probe_runs_open_no_logfile',
     'diag_record_v8',
+    'image_reports_isrc',
 ]
 
 # The scenarios are told which build configuration they are testing, because
@@ -721,15 +760,13 @@ rip_scenarios = [
 # for is the one we ship: the shipping configuration failed 2 of 41 until this
 # existed. Derived from the option rather than sniffed from the binary.
 declared_env = 'CYANRIP_DECLARED_RELEASED=' + (get_option('declare_released') ? '1' : '0')
-badsector_env = 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path()
-raisesig_env = 'CYANRIP_RAISESIG_SHIM=' + raisesig_shim.full_path()
 
 foreach s : rip_scenarios
     test(s, python,
          args: [ files('rip_images.py'), cyanrip_exe,
                  meson.current_source_dir() / 'fixtures', s ],
-         env: [ declared_env, badsector_env, raisesig_env ],
-         depends: [ badsector_shim, raisesig_shim ],
+         env: [ declared_env ] + shim_env,
+         depends: shim_deps,
          suite: 'images',
          timeout: 120)
 endforeach

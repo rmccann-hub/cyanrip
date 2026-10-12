@@ -43,7 +43,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `ffmpeg` | `tests/gen_fixtures.py`, `tests/rigcheck.py`, `tools/audio-checksums.py`, `tools/rig-check.py` | makes the disc-image fixtures' audio and decodes rips for checksums |
 | `ffprobe` | `tests/rip_images.py` | reads ripped files' tags, durations and encoder strings, as a witness independent of cyanrip |
 | `gcov` | `tools/coverage-summary.py` | coverage |
-| `git` | `tests/contract_delta.py`, `tests/handshake_wire.py`, `tests/ingest_bundle.py`, `tests/lap_commits.py` and 15 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
+| `git` | `tests/contract_delta.py`, `tests/handshake_wire.py`, `tests/ingest_bundle.py`, `tests/lap_commits.py` and 16 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
 | `meson` | `tools/sanitize-run.py` | configures the instrumented and mutated builds |
 | `ninja` | `tools/sanitize-run.py` | builds them |
 | `nm` | `tools/blackbox.py` | asks a binary whether sanitizer symbols are in it |
@@ -56,11 +56,11 @@ GitHub Actions. Each workflow, and what starts it:
 - `.github/workflows/ci.yml`, *CI (platterpus-fork)*: `push` to `platterpus-fork`; `pull_request` to `platterpus-fork`; `release`; by hand.
 - `.github/workflows/tag-release.yml`, *Tag a release*: by hand.
 
-- **Runners:** `macos-latest`, `ubuntu-latest`, `windows-latest`.
-- **Actions:** `WebFreak001/deploy-nightly` v1.1.0 at `c25135b42f3c`, `actions/checkout` v4.4.0 at `11d5960a3267`, `actions/download-artifact` v4.3.0 at `d3f86a106a0b`, `actions/upload-artifact` v4.6.2 at `ea165f8d65b6`, `mknejp/delete-release-assets` v1 at `a40d39558932`, `msys2/setup-msys2` v2.33.0 at `ec48f7c5447b`. Each is pinned by full commit SHA, with the version in a comment.
+- **Runners:** `macos-26`, `ubuntu-24.04`, `windows-2025`.
+- **Actions:** `WebFreak001/deploy-nightly` v1.1.0 at `c25135b42f3c`, `actions/checkout` v7.0.1 at `3d3c42e5aac5`, `actions/download-artifact` v8.0.2 at `9000827ccba6`, `actions/upload-artifact` v7.0.2 at `cf430e030ddb`, `mknejp/delete-release-assets` v1 at `a40d39558932`, `msys2/setup-msys2` v2.33.0 at `ec48f7c5447b`. Each is pinned by full commit SHA, with the version in a comment.
 - **Linux packages (apt):** `ffmpeg`, `libavcodec-dev`, `libavfilter-dev`, `libavformat-dev`, `libavutil-dev`, `libcdio-cdda-dev`, `libcdio-dev`, `libcdio-paranoia-dev`, `libcurl4-openssl-dev`, `libmusicbrainz5-dev`, `libqrencode-dev`, `libswresample-dev`, `meson`, `ninja-build`, `pkg-config`.
 - **macOS packages (brew):** `curl`, `ffmpeg`, `libcdio-paranoia`, `libmusicbrainz`, `meson`, `nasm`, `ninja`, `pkg-config`, `qrencode`.
-- **Windows packages (MSYS2):** `autoconf`, `automake`, `base-devel`, `git`, `libtool`, `mingw-w64-x86_64-cmake`, `mingw-w64-x86_64-lame`, `mingw-w64-x86_64-libcdio-paranoia`, `mingw-w64-x86_64-libvorbis`, `mingw-w64-x86_64-libxml2`, `mingw-w64-x86_64-meson`, `mingw-w64-x86_64-nasm`, `mingw-w64-x86_64-nghttp2`, `mingw-w64-x86_64-ninja`, `mingw-w64-x86_64-opus`, `mingw-w64-x86_64-toolchain`, `zip`.
+- **Windows packages (MSYS2):** `autoconf`, `automake`, `base-devel`, `git`, `libtool`, `mingw-w64-ucrt-x86_64-cmake`, `mingw-w64-ucrt-x86_64-lame`, `mingw-w64-ucrt-x86_64-libcdio-paranoia`, `mingw-w64-ucrt-x86_64-libvorbis`, `mingw-w64-ucrt-x86_64-libxml2`, `mingw-w64-ucrt-x86_64-meson`, `mingw-w64-ucrt-x86_64-nasm`, `mingw-w64-ucrt-x86_64-nghttp2`, `mingw-w64-ucrt-x86_64-ninja`, `mingw-w64-ucrt-x86_64-opus`, `mingw-w64-ucrt-x86_64-toolchain`, `zip`.
 - **Sources the Windows build clones**, `.github/mingw-build.sh`, **unpinned: `git clone --depth 1` of each default branch, so the Windows build is of whatever those branches held that day**: <https://github.com/curl/curl.git>, <https://github.com/notroj/neon.git>, <https://github.com/cyanreg/libmusicbrainz.git>, <https://github.com/fukuchi/libqrencode.git>, <https://github.com/FFmpeg/FFmpeg.git>.
 
 ## Network services cyanrip contacts

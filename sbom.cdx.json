@@ -145,15 +145,15 @@
         },
         {
           "name": "cyanrip-fork:ci-runner",
-          "value": "macos-latest"
+          "value": "macos-26"
         },
         {
           "name": "cyanrip-fork:ci-runner",
-          "value": "ubuntu-latest"
+          "value": "ubuntu-24.04"
         },
         {
           "name": "cyanrip-fork:ci-runner",
-          "value": "windows-latest"
+          "value": "windows-2025"
         },
         {
           "name": "cyanrip-fork:ci-workflow",
@@ -169,15 +169,15 @@
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "actions/checkout@11d5960a326750d5838078e36cf38b85af677262 (v4.4.0)"
+          "value": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 (v7.0.1)"
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 (v4.3.0)"
+          "value": "actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 (v8.0.2)"
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 (v4.6.2)"
+          "value": "actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 (v7.0.2)"
         },
         {
           "name": "cyanrip-fork:ci-action",
@@ -921,6 +921,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tools/commit-map.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tools/contract-delta.py"
         },
         {
@@ -1157,5 +1161,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:d6474d5f-1bcb-5a74-a3c7-c988466fb9eb"
+  "serialNumber": "urn:uuid:f07943a1-e4a0-5735-ae3e-9cf0d5e536de"
 }

@@ -47,6 +47,14 @@ the settings anyway. The compiler has been pointing at it the whole time.
 (Counts are over src/ only. compile_commands.json also carries test units,
 which is why an earlier hand count said 29 and 26.)
 
+ONLY DIAGNOSTICS LOCATED IN THIS TREE ARE GATED, and the rest are printed.
+CI's first macOS run showed why: clang reports `-Wundef`, one of our flags,
+inside Homebrew's libcdio-paranoia `cdda.h` (`TESTING_IS_FINISHED`), because
+pkg-config hands that header over by -I and not as a system header, where the
+same flag says nothing on Linux. A count that moves when a dependency moves is
+the thing this gate exists not to be, so a diagnostic whose file is outside
+this repository is listed as NOT GATED, with its count, and never hidden.
+
 THE TRAP, and it made an earlier attempt report a false zero. Every compile line
 carries `-fdiagnostics-color=always`, so a checker that greps for `: warning:`
 matches nothing when the text is wrapped in ANSI escapes. Colour is disabled
@@ -90,6 +98,19 @@ def diagnostics(entry, extra):
     return [m for m in (DIAG.match(l) for l in r.stdout.splitlines()) if m]
 
 
+def partition(entry, found):
+    """(ours, theirs): the diagnostics located in this tree, which gate, and
+    those located anywhere else, such as a dependency's header, which do not.
+    A relative path is relative to the compile's directory."""
+    ours, theirs = [], []
+    for m in found:
+        p = pathlib.Path(m.group("file"))
+        if not p.is_absolute():
+            p = pathlib.Path(entry["directory"]) / p
+        (ours if p.resolve().is_relative_to(ROOT) else theirs).append(m)
+    return ours, theirs
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--build", default="build")
@@ -115,9 +136,11 @@ def main():
         print("FAIL: no src/ translation unit in compile_commands.json")
         return 1
 
-    found = []
+    found, outside = [], []
     for e in ours:
-        found += diagnostics(e, args.extra)
+        mine, other = partition(e, diagnostics(e, args.extra))
+        found += mine
+        outside += other
 
     by_kind = collections.Counter(m.group("kind") for m in found)
     by_flag = collections.Counter(
@@ -131,6 +154,13 @@ def main():
         print(f"    {n:4d}  -W{flag}")
     for m in found[:25]:
         print(f"  {m.group('file')}: {m.group('kind')}: {m.group('msg')[:110]}")
+    if outside:
+        seen = collections.Counter((m.group("file"), m.group("kind"),
+                                    m.group("msg")[:110]) for m in outside)
+        print(f"NOT GATED: {len(outside)} diagnostic(s) located outside this "
+              f"tree, in {len({f for f, _, _ in seen})} file(s)")
+        for (f, kind, msg), n in seen.most_common(10):
+            print(f"  {n:4d}x {f}: {kind}: {msg}")
 
     if args.extra:
         print("\n--extra is informational and never gates. Gating on it means "

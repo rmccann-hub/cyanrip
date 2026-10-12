@@ -227,6 +227,15 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
     outside_before = outside_snapshot()
     timed_out = False
     env = dict(os.environ)
+    # A request no allocator can meet returns NULL from libc's malloc, and
+    # ASan's default instead aborts the process, so an instrumented sweep
+    # turned a refusal the program handles into a crash it never has. Found on
+    # CI's first sanitizer run: libcdio's NRG reader asks for about 2^64 bytes
+    # on a header-only image, refuses it itself under a real allocator, and
+    # exits 1 either way. The warning ASan still prints is NOTED, not counted.
+    env["ASAN_OPTIONS"] = ":".join(
+        o for o in (os.environ.get("ASAN_OPTIONS"),
+                    "allocator_may_return_null=1") if o)
     for k, v in (env_overlay or {}).items():
         if v is None:
             env.pop(k, None)
@@ -382,6 +391,12 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
                unattributed=unattributed)
 
 
+# An allocation the allocator refused, which libc's malloc refuses too: shown
+# beside the findings, never counted as one, and never hidden.
+REFUSED_RE = re.compile(r"WARNING: AddressSanitizer failed to allocate ")
+REFUSED = []
+
+
 def check(run, banner_re, can_sanitize, findings, unprobed):
     """Apply every invariant to one run. One run may break several."""
     def note(inv, what):
@@ -404,10 +419,16 @@ def check(run, banner_re, can_sanitize, findings, unprobed):
         note("I3", f"exit {run.exit_code} with no output at all")
 
     if can_sanitize:
+        lines = []
+        for line in run.out.splitlines():
+            if REFUSED_RE.search(line):
+                REFUSED.append((run.label, line.strip()[:160]))
+            else:
+                lines.append(line)
         for pat in ("runtime error", "AddressSanitizer", "LeakSanitizer",
                     "UndefinedBehaviorSanitizer"):
-            if pat in run.out:
-                line = next((l for l in run.out.splitlines() if pat in l), pat)
+            line = next((l for l in lines if pat in l), None)
+            if line is not None:
                 note("I4", f"sanitizer: {line.strip()[:160]}")
                 break
     elif can_sanitize is None:
@@ -1051,6 +1072,9 @@ def main():
 
     for u in sorted(unprobed | UNPROBED_STATIC):
         print(f"UNPROBED  {u}")
+    for label, line in REFUSED:
+        print(f"NOTED     {label}: {line} -- an allocation the allocator "
+              f"refused, as libc's malloc does; not a finding")
 
     # An exit-code census, because "no invariant broke" is not "nothing
     # happened", and a reader is entitled to see the shape of what did.

@@ -84,9 +84,18 @@ enum CRIPLogVerify cyanrip_verify_log(const char *path)
         fclose(f);
         return CRIP_LOG_IO_ERROR;
     }
-    len = fread(data, 1, len, f);
-    data[len] = '\0';
+    /* A read that fails is an I/O error, not a log without a checksum. On
+     * macOS fopen() on a directory succeeds, ftell() gives the directory's own
+     * small size rather than LONG_MAX, and fread() then fails, so the empty
+     * buffer was parsed and reported as CRIP_LOG_NO_CHECKSUM. CI's first macOS
+     * run found it. A file shorter than ftell() said changed under us, and is
+     * refused the same way. */
+    size_t got = fread(data, 1, len, f);
+    int read_failed = got != (size_t)len || ferror(f);
     fclose(f);
+    if (read_failed)
+        goto end;
+    data[len] = '\0';
 
     /* The checksum line is the last thing written, use the last marker */
     char *pos = NULL, *next = (char *)data;
