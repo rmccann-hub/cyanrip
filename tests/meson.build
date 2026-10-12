@@ -220,9 +220,19 @@ raisesig_shim = shared_module('raisesig',
     name_prefix: '',
     dependencies: [ dependency('dl') ],
 )
+
+## An image that reports reading ISRC, as libcdio 2.3.0 and later make every
+## image do. The Linux jobs build against 2.1, so without this nothing here
+## would notice cyanrip again taking that bit to mean a drive. See its header.
+imagecap_shim = shared_module('imagecap',
+    sources: [ 'imagecap.c' ],
+    name_prefix: '',
+    dependencies: [ dependency('dl'), dependency('libcdio') ],
+)
 shim_env += [ 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path(),
-              'CYANRIP_RAISESIG_SHIM=' + raisesig_shim.full_path() ]
-shim_deps = [ badsector_shim, raisesig_shim ]
+              'CYANRIP_RAISESIG_SHIM=' + raisesig_shim.full_path(),
+              'CYANRIP_IMAGECAP_SHIM=' + imagecap_shim.full_path() ]
+shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim ]
 endif
 
 ## Integration tests
@@ -733,6 +743,7 @@ rip_scenarios = [
     'zr_refusal',
     'probe_runs_open_no_logfile',
     'diag_record_v8',
+    'image_reports_isrc',
 ]
 
 # The scenarios are told which build configuration they are testing, because

@@ -1392,8 +1392,9 @@ def sc_exit_codes():
     # reachable from a disc image --
     #
     #   * "Offset is unset!" is gated on the drive reporting
-    #     CDIO_DRIVE_CAP_READ_ISRC, which no image driver does, so it can only
-    #     fire on real hardware.
+    #     CDIO_DRIVE_CAP_READ_ISRC and on the device not being an image
+    #     (crip_is_image_driver(): libcdio 2.3.0 began reporting the bit for
+    #     images), so it can only fire on real hardware.
     #   * the two cyanrip_rip_track failure paths need a rip that genuinely
     #     fails, which a synthetic image does not do.
     #
@@ -3043,6 +3044,88 @@ def sc_diag_record_v8():
         fail(f"diag_record_v8: -f printed the no-entry line: {printed}; "
              f"offset_search {got}")
 
+
+def sc_image_reports_isrc():
+    """An image whose driver reports reading ISRC is still an image.
+
+    libcdio 998d123 ("Image driver supports ISRC", first released in 2.3.0)
+    added CDIO_DRIVE_CAP_READ_ISRC to what its image drivers report, and
+    cyanrip took that bit to mean a drive. On CI's first macOS run, against
+    Homebrew's libcdio 2.4, `-J` on an image stopped at `Offset is unset!` and
+    exited 1, and every track logged `Unable to read track N subchannel info!`
+    for a read no image driver implements. The Linux jobs build against 2.1,
+    so tests/imagecap.c makes it report the bit the way 2.3.0 does, and:
+
+      * `-J` on an image without -s finishes with exit 0 and never says the
+        offset is unset;
+      * a rip makes no sub-channel read and logs no failure of one;
+      * the disc's ISRC is still asked for, which is what the bit now does
+        mean for an image: the -j record says libcdio returned none.
+
+    Each of the two gates in crip_is_image_driver()'s callers is pinned by
+    one of the first two checks, and the shim's marker file proves each run
+    went through it.
+    """
+    needs_preload_shim("image_reports_isrc")
+    shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"image_reports_isrc: the shim was not built or not passed "
+             f"({shim!r})")
+        return
+    marker = WORK / "image_reports_isrc.added"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_IMAGE_CAP_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+
+    # 1. The offset check: -J, and no -s.
+    d = WORK / "image_reports_isrc_cue"
+    d.mkdir(exist_ok=True)
+    ec, out = crip("-d", WORK / "basic.cue", "-J", "-N", "-A", "-U",
+                   "-D", d / "out", cwd=d, env=env)
+    (WORK / "image_reports_isrc_cue.stdout").write_text(out)
+    if not marker.exists():
+        fail("image_reports_isrc: the shim never added the capability, so "
+             "the -J run tests nothing")
+        return
+    if "Offset is unset!" in out:
+        fail("image_reports_isrc: -J on an image said `Offset is unset!`")
+    if ec != 0:
+        fail(f"image_reports_isrc: -J on an image exited {ec}, not 0")
+        print(out)
+
+    # 2. The sub-channel read: a rip, with -s 0 so the offset check above is
+    # not what decides it.
+    marker.unlink()
+    rec = WORK / "image_reports_isrc.json"
+    outdir = WORK / "out_image_reports_isrc"
+    ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac", "-D", outdir, "-F", "{track}",
+                   "-L", "log", "-j", rec, env=env)
+    (WORK / "image_reports_isrc.stdout").write_text(out)
+    if not marker.exists():
+        fail("image_reports_isrc: the shim never added the capability, so "
+             "the rip tests nothing")
+        return
+    if ec != 0:
+        fail(f"image_reports_isrc: the rip exited {ec}, not 0")
+        print(out)
+        return
+    logp = outdir / "log.log"
+    text = out + (logp.read_text(errors="replace") if logp.exists() else "")
+    n = text.count("subchannel info!")
+    if n:
+        fail(f"image_reports_isrc: {n} `Unable to read track N subchannel "
+             f"info!` line(s) from a read no image driver implements")
+    try:
+        ts = json.loads(rec.read_text())["rip"]["track_state"]
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        fail(f"image_reports_isrc: no readable -j record: {e}")
+        return
+    reasons = {tr["isrc_disc_reason"] for tr in ts}
+    if reasons != {"libcdio returned none"}:
+        fail(f"image_reports_isrc: the disc ISRC reasons are {reasons!r}; "
+             f"with the bit reported, the ISRC is asked for and this image "
+             f"has none")
 
 def sc_probe_runs_open_no_logfile():
     """`-I`, `-J` and `-f` open no logfile, and P2 says so.

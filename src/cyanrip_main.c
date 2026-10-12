@@ -790,6 +790,24 @@ end:
     return 0;
 }
 
+/* Whether the device is a disc image. The offset check and the subcode
+ * preemphasis read below used CDIO_DRIVE_CAP_READ_ISRC to tell a drive from
+ * an image, which held until libcdio 2.3.0 began reporting that bit for all
+ * three image drivers (libcdio 998d123, "Image driver supports ISRC"). From
+ * then on every image rip without -s stopped at "Offset is unset!", and every
+ * track tried a sub-channel read no image driver implements. Ask the driver. */
+static int crip_is_image_driver(cyanrip_ctx *ctx)
+{
+    switch (cdio_get_driver_id(ctx->cdio)) {
+    case DRIVER_BINCUE:
+    case DRIVER_NRG:
+    case DRIVER_CDRDAO:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     if (!t->track_is_data) {
@@ -825,8 +843,9 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
         /* TOC preemphasis flag*/
         t->preemphasis = cdio_cddap_track_preemp(ctx->drive, t->cd_track_number);
 
-        /* Subcode preemphasis flag */
-        if (!t->preemphasis && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
+        /* Subcode preemphasis flag. No image driver implements this read. */
+        if (!t->preemphasis && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) &&
+            !crip_is_image_driver(ctx)) {
             cdio_subchannel_t subchannel_data = { 0 };
             driver_return_code_t ret = cdio_audio_read_subchannel(ctx->cdio, &subchannel_data);
             if (ret != DRIVER_OP_SUCCESS) {
@@ -2430,7 +2449,8 @@ static int cyanrip_run(int argc, char **argv)
         return 1;
 
     if (!settings.offset && !offset_set && !settings.print_info_only &&
-        !find_drive_offset_range && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
+        !find_drive_offset_range && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) &&
+        !crip_is_image_driver(ctx)) {
         cyanrip_log(ctx, 0, "Offset is unset! To continue with an offset of 0, run with -s 0!\n");
         fatal_abort = 1;
         goto end;
