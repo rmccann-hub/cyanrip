@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Track 1's `Pregap length:` counts from the start of the disc**: the
+150-frame lead-in plus any span from LSN 0 to its start, so an ordinary disc
+reads 150 and a disc with two seconds before track 1 reads 300, with its
+duration `00:04.00`. It read 150 for both, told apart only by `Pregap source:`.
+That is EAC's convention for track 1, agreed in round 32 (our lap 1 S13,
+Platterpus's lap 2 S10), which needs no release of theirs first (their S11).
+The `Gaps:` row, the LSN arithmetic and the cue sheet are unchanged. Round 7
+lap 13 §C had read the sum as the same sectors counted twice; they are
+different sectors, LSN -150..-1 and LSN 0 onward.
+
 **The 2026-10-12 Full run is filed**, `.21` with Platterpus 0.7.103 on the
 reference disc, in `docs/rig-2026-10-12-ca3f3ea/`: 424 pass, 0 fail, the one
 unreachable step E2, and all eleven logs verify with `-Y`. It began before

@@ -385,32 +385,26 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     if (t->pregap_lsn != CDIO_INVALID_LSN) {
         char pregap_duration[16];
-        /* 2-second lead-in is conventionally counted as part of track 1 pre-gap
-         * duration. It physically occupies LSN -150..-1, so it cannot be
-         * expressed by the pregap LSN itself, which is 0 for track 1 -- only the
-         * length below carries it.
+        /* Track 1's length counts from the start of the disc, LSN -150: the
+         * 2-second lead-in, which occupies LSN -150..-1 and cannot be expressed
+         * by the pregap LSN, plus any span from LSN 0 to track 1's start. An
+         * ordinary disc reads 150; a disc with two seconds before track 1, the
+         * pregap.cue fixture, reads 300. That is EAC's convention for track 1's
+         * `Pre-gap length`, and round 32 agreed it (our lap 1 S13, Platterpus's
+         * lap 2 S10). Every other line about the span is unchanged: the Gaps:
+         * row, the LSN arithmetic and the cue sheet state LSN 0 to the start.
          *
-         * Added ONLY when the TOC has not already expressed the gap. On a disc
-         * with no HTOA the arithmetic yields 0 and the 150 is the whole story,
-         * which is the case this was written for and the case the rig ran. But
-         * when track 1 signals its own pregap -- INDEX 00 before INDEX 01, an
-         * HTOA -- the subtraction already *is* those 150 frames, and adding the
-         * lead-in counted the same sectors twice: the pregap.cue fixture
-         * reported `300 frames` and `00:04.00` for a gap its own Gaps: block,
-         * its LSN arithmetic and the cue sheet all put at 150.
-         *
-         * They are never additive. Track 1's pregap on a real disc *is* the
-         * lead-in, at most 150 sectors, and an HTOA is audio recorded inside it
-         * -- so the two readings describe the same sectors rather than two
-         * stretches to be summed. cyanrip_main.c's Gaps: block already drew this
-         * distinction (it skips track 1 when start_lsn == pregap_lsn, noting the
-         * only real pregap is then the lead-in); this block did not, which is
-         * how one log came to disagree with itself. Found by Platterpus reading
-         * the golden reference, round 7 lap 13 §C. */
+         * Until round 32 the lead-in was added only when that span was 0, after
+         * round 7 lap 13 §C read 300 as the same sectors counted twice, on the
+         * reasoning that an HTOA is audio recorded inside the lead-in. The two
+         * cover different sectors: the lead-in is LSN -150..-1, and the span
+         * the TOC signals is LSN 0 to the start, so the line then printed 150 for an
+         * ordinary disc and for one with two seconds before track 1 alike,
+         * told apart only by `Pregap source:` (round 32 lap 1 S12). */
         const int lead_in_sectors = 2*75;
         int pregap_frames = t->start_lsn_sig - t->pregap_lsn;
-        if (t->number == 1 && !pregap_frames)
-            pregap_frames += lead_in_sectors;
+        if (t->number == 1)
+            pregap_frames = t->start_lsn_sig + lead_in_sectors;
 
         cyanrip_frames_to_duration(pregap_frames, pregap_duration);
 

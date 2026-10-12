@@ -790,19 +790,20 @@ static void test_pregap_reasons_are_distinct(void)
     }
 }
 
-/* cyanrip_log.c:305 [== to !=] -- the track-1 lead-in.
+/* The track-1 lead-in, counted from the start of the disc.
  *
- * A disc with no HTOA expresses track 1's pregap only as the 2-second lead-in,
- * which the LSN arithmetic yields as 0 -- so 150 is added. When track 1 DOES
- * signal a pregap the subtraction already is those sectors, and adding them
- * counts the same physical sectors twice: the pregap.cue fixture once reported
- * `300 frames` for a gap its own cue sheet put at 150. Both halves are pinned,
- * plus a non-first track, which must never get the addition. */
-static void test_track_one_lead_in_is_added_once(void)
+ * From round 32 (our lap 1 S13, Platterpus's lap 2 S10) track 1's length is the
+ * 2-second lead-in, LSN -150..-1, plus the span from LSN 0 to its start: 150 on
+ * an ordinary disc, 300 on pregap.cue's two seconds before track 1. Until then
+ * the lead-in was added only when that span was 0, so both read 150. The third
+ * case starts track 1 a few frames past LSN 0, which a rule of "add 150 when
+ * the span is 0" also gets wrong; and a later track never gets the lead-in. */
+static void test_track_one_counts_from_disc_start(void)
 {
     const struct { int number; lsn_t pregap; lsn_t start; int want; } cases[] = {
-        { 1, 0,   0,   150 },   /* no HTOA: arithmetic gives 0, lead-in is all of it */
-        { 1, 0,   150, 150 },   /* HTOA of 150: already the lead-in, not doubled */
+        { 1, 0,   0,   150 },   /* ordinary disc: the lead-in is all of it */
+        { 1, 0,   150, 300 },   /* two seconds before track 1: lead-in plus span */
+        { 1, 0,   33,  183 },   /* a short span: lead-in plus 33 */
         { 2, 300, 450, 150 },   /* a later track: no lead-in involved */
     };
 
@@ -1564,7 +1565,7 @@ int main(void)
     test_accurip_450_zero_checksum_claims_nothing();
 
     test_pregap_reasons_are_distinct();
-    test_track_one_lead_in_is_added_once();
+    test_track_one_counts_from_disc_start();
 
     test_preemphasis_states();
     test_secure_reread_verdicts();

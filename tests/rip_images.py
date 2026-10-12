@@ -390,21 +390,24 @@ def sc_pregap():
 
     # One log must not disagree with itself about the same gap.
     #
-    # Four places state track N's pregap length, and they were not all saying
-    # the same thing: the per-track block added the 2-second lead-in to track 1
-    # unconditionally, so on a disc whose TOC already signals an HTOA the same
-    # 150 sectors were counted twice -- `300 frames` and `00:04.00` against a
-    # `Gaps:` block, an LSN subtraction and a cue sheet that all said 150.
+    # Four places state track N's pregap, and for track 2 all four state the
+    # same span. Track 1 differs by one quantity on purpose: from round 32 (our
+    # lap 1 S13, Platterpus's lap 2 S10) its `Pregap length:` counts from the
+    # start of the disc, so it is the 2-second lead-in, LSN -150..-1, plus the
+    # span from LSN 0 to the start, which the `Gaps:` row, the LSN subtraction
+    # and the cue sheet state. Round 7 lap 13 §C had read that sum as the same
+    # sectors counted twice; they are different sectors.
     #
-    # Track 2 is the control: its four agreed all along, which is what made
-    # track 1 a finding rather than a doubt about the arithmetic. Both are
-    # checked, so a "fix" that made every source equally wrong would fail here.
+    # Track 2 is the control, and every number is checked against an
+    # independent one, so a change that moved all of them together fails here.
     log = (WORK / "out_def" / "log.log").read_text()
     gaps = dict((int(n), int(f)) for f, n in
                 re.findall(r"^ +(\d+) frame pregap in track (\d+),", log, re.M))
     # Track 1's Gaps: row is absent when its gap is the bare lead-in, so the
     # expectation comes from the fixture's own INDEX 00/01 pair: 2 s and 1 s.
+    # `want` is the span; track 1's length adds the 150-frame lead-in.
     for num, want in ((1, 150), (2, 75)):
+        want_len = want + 150 if num == 1 else want
         blk = re.search(rf"^Track {num} read.*?(?=^Track |\Z)", log,
                         re.M | re.S)
         if not blk:
@@ -418,18 +421,18 @@ def sc_pregap():
             fail(f"pregap: track {num} is missing a pregap/LSN row")
             continue
 
-        if int(m_len.group(1)) != want:
+        if int(m_len.group(1)) != want_len:
             fail(f"pregap: track {num} 'Pregap length' is "
-                 f"{m_len.group(1)}, not {want}")
+                 f"{m_len.group(1)}, not {want_len}")
 
         # The duration must be the same quantity in MM:SS.FF, not a second
         # opinion -- both are printed from one variable and must stay that way.
         mm, ss_ff = m_lsn.group(2).split(":")
         ss, ff = ss_ff.split(".")
         as_frames = (int(mm) * 60 + int(ss)) * 75 + int(ff)
-        if as_frames != want:
+        if as_frames != want_len:
             fail(f"pregap: track {num} duration {m_lsn.group(2)} is "
-                 f"{as_frames} frames, not {want}")
+                 f"{as_frames} frames, not {want_len}")
 
         # And the LSN arithmetic, which is the independent artifact: it comes
         # from the TOC rather than from the line above it.
@@ -438,7 +441,7 @@ def sc_pregap():
             fail(f"pregap: track {num} Gaps: row says {gaps[num]}, not {want}")
         if span and span != want:
             fail(f"pregap: track {num} Start LSN - Pregap LSN = {span}, "
-                 f"but the block says {want}")
+                 f"but the fixture says {want}")
 
 
 def sc_mixed():
