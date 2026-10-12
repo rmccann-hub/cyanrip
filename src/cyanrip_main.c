@@ -301,6 +301,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
             cyanrip_log(ctx, 0, "cdio: \"%s\"\n", msg);
             cdio_cddap_free_messages(msg);
         }
+        cyanrip_ctx_end(&ctx);
         return AVERROR(EINVAL);
     }
 
