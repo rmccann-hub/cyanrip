@@ -181,17 +181,17 @@ static driver_return_code_t read_audio_subq_sectors_mac(
     };
     if (!ioctl(fd, DKIOCCDREAD, &cd_read))
         return DRIVER_OP_SUCCESS;
-    const int ioctl_errno = errno;
     // TODO More detailed error handling? errno will be one of:
     // EBADF
     // EINVAL
     // ENOTTY
-    // printf("ioctl() errno: %d\n", ioctl_errno);
     return DRIVER_OP_ERROR;
 }
 #endif
 
 
+// Not on macOS, which reads through read_audio_subq_sectors_mac() above.
+#ifndef __APPLE__
 static driver_return_code_t read_audio_subq_sectors_mmc(
     const CdIo_t *p_cdio,
     uint8_t *audio_subq_buf,
@@ -212,6 +212,7 @@ static driver_return_code_t read_audio_subq_sectors_mmc(
         b_digital_audio_play, b_sync, header_codes, b_user_data, b_edc_ecc,
         c2_error_information, subchannel_selection, i_blocksize, blocks);
 }
+#endif
 
 
 // Reading Q subchannel using the READ CD command is an MMC-2 feature. Ancient
