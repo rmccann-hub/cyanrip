@@ -1,5 +1,23 @@
 Unreleased
 ==========
+**The `-j` record is `cyanrip-diagnostics/8`**, every new field an addition,
+as round 32 agreed (our lap 1 S10, Platterpus's lap 2 S7, with S8's
+amendment). Each `rip.track_state[]` entry adds `preemphasis` (`none`, `toc`
+or `subcode`, as the `Preemphasis:` line says), `deemphasis_applied` (the one
+predicate behind `(deemphasis applied)` and the cue's `FLAGS PRE`),
+`isrc_written` (the ISRC the files carry), `isrc_disc` with `isrc_disc_reason`
+(the disc's own, read whatever the files carry), and `encode_failures`, the
+count behind `Encoder errors:`. Each is null where it was never read. At the
+top level, `cdtext` writes every key `cdtext.h` lists, null where the disc
+gave none, on `-I` runs too, and `offset_search` says how a `-f` search ended,
+with the offset and its confidence only when one was found. P8b lists every
+key with its type, from a fifth record the generator makes on a CD-TEXT image.
+**New drive I/O, not yet run on a drive**: the disc's ISRC is now read for
+every audio track, one sub-channel read a track, where the first track
+without one used to stop the reads. Which ISRC the files carry is decided as
+before. Image drivers never report the ISRC capability, so on every image
+`isrc_disc` is null with that reason.
+
 **Track 1's `Pregap length:` counts from the start of the disc**: the
 150-frame lead-in plus any span from LSN 0 to its start, so an ordinary disc
 reads 150 and a disc with two seconds before track 1 reads 300, with its

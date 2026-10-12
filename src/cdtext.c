@@ -25,22 +25,6 @@
  * addressed by their CD track number. */
 #define CDTEXT_DISC_TRACK 0
 
-/* Lower-cased libcdio field names, used as the dictionary keys so the log and
- * anything reading it see the field names the CD-TEXT spec uses rather than
- * cyanrip's tag names. Indexed by cdtext_field_t. */
-static const char *const field_keys[MAX_CDTEXT_FIELDS] = {
-    [CDTEXT_FIELD_TITLE]      = "title",
-    [CDTEXT_FIELD_PERFORMER]  = "performer",
-    [CDTEXT_FIELD_SONGWRITER] = "songwriter",
-    [CDTEXT_FIELD_COMPOSER]   = "composer",
-    [CDTEXT_FIELD_MESSAGE]    = "message",
-    [CDTEXT_FIELD_ARRANGER]   = "arranger",
-    [CDTEXT_FIELD_ISRC]       = "isrc",
-    [CDTEXT_FIELD_UPC_EAN]    = "upc_ean",
-    [CDTEXT_FIELD_GENRE]      = "genre",
-    [CDTEXT_FIELD_DISCID]     = "discid",
-};
-
 /* Reads every field of one CD-TEXT track into dst. Returns how many were set.
  *
  * cdtext_get_const() hands back a pointer libcdio owns; av_dict_set() copies,
@@ -53,14 +37,14 @@ static int read_track_fields(const cdtext_t *cdt, track_t track,
     int count = 0;
 
     for (int f = MIN_CDTEXT_FIELD; f < MAX_CDTEXT_FIELDS; f++) {
-        if (!field_keys[f])
+        if (!crip_cdtext_field_keys[f])
             continue;
 
         const char *val = cdtext_get_const(cdt, (cdtext_field_t)f, track);
         if (!val || !val[0])
             continue;
 
-        av_dict_set(dst, field_keys[f], val, 0);
+        av_dict_set(dst, crip_cdtext_field_keys[f], val, 0);
         count++;
     }
 

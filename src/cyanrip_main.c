@@ -131,6 +131,7 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
     crip_free_art(&t->art);
     av_dict_free(&t->meta);
     av_dict_free(&t->cdtext);
+    av_freep(&t->isrc_disc);
     av_free(t->ar_db_entries);
 }
 
@@ -756,14 +757,22 @@ end:
     if (quit_now && !stopped)
         cyanrip_log(ctx, 0, "Stopping, offset finding incomplete!\n");
 
+    /* Each ending also records itself for the -j record's offset_search
+     * (round 32, our lap 1 S10), where it prints its line, so the two cannot
+     * name different endings. A retry with a larger radius records nothing:
+     * the search it calls ends somewhere, and that is what is recorded. */
     if (!offset_found) {
-        if (quit_now)
+        if (quit_now) {
+            ctx->offset_search = CRIP_OFFSET_SEARCH_STOPPED;
             return 1;
+        }
         if (!had_ar) {
+            ctx->offset_search = CRIP_OFFSET_SEARCH_NO_AR;
             cyanrip_log(ctx, 0, "No track had AccuRip entry, cannot find offset!\n");
             return 1;
         }
         if (!did_check) {
+            ctx->offset_search = CRIP_OFFSET_SEARCH_NO_TRACK;
             cyanrip_log(ctx, 0, "No track was long enough, unable to find drive offset!\n");
             return 1;
         }
@@ -772,6 +781,9 @@ end:
         return search_for_drive_offset(ctx, 2*range);
     }
 
+    ctx->offset_search = CRIP_OFFSET_SEARCH_FOUND;
+    ctx->offset_search_samples = offset_found_samples;
+    ctx->offset_search_confidence = offset_found;
     cyanrip_log(ctx, 0, "Drive offset of %c%i found (confidence: %i)!\n",
                 offset_found_samples >= 0 ? '+' : '-', abs(offset_found_samples), offset_found);
     return 0;
@@ -780,18 +792,33 @@ end:
 static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
 {
     if (!t->track_is_data) {
-        /* ISRC code */
-        if (!ctx->disregard_cd_isrc && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) && !dict_get(t->meta, "isrc")) {
-            const char *isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
-            if (isrc_str) {
-                if (strlen(isrc_str))
-                    av_dict_set(&t->meta, "isrc", isrc_str, 0);
-                else
-                    ctx->disregard_cd_isrc = 1;
-                cdio_free((void *)isrc_str);
+        /* ISRC code. Since round 32 (our lap 1 S10, Platterpus's lap 2 S7)
+         * the disc's own ISRC is read for every audio track, one passed in
+         * with -t included, and kept apart from the one the files carry, so
+         * the -j record states both. It is one sub-channel read a track, made
+         * once. Which ISRC the files carry is decided exactly as before: the
+         * disc's, only when -t gave none and no earlier track reported none. */
+        if (!t->extra_read) {
+            if (!(ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
+                t->isrc_disc_reason = "the driver does not report reading ISRC";
             } else {
-                ctx->disregard_cd_isrc = 1;
+                const char *isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
+                if (!isrc_str) {
+                    t->isrc_disc_reason = "libcdio returned none";
+                } else {
+                    if (!isrc_str[0])
+                        t->isrc_disc_reason = "libcdio returned an empty ISRC";
+                    else if (!(t->isrc_disc = av_strdup(isrc_str)))
+                        t->isrc_disc_reason = "out of memory";
+                    cdio_free((void *)isrc_str);
+                }
             }
+        }
+        if (!ctx->disregard_cd_isrc && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) && !dict_get(t->meta, "isrc")) {
+            if (t->isrc_disc)
+                av_dict_set(&t->meta, "isrc", t->isrc_disc, 0);
+            else
+                ctx->disregard_cd_isrc = 1;
         }
 
         /* TOC preemphasis flag*/
@@ -807,6 +834,8 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                 t->preemphasis = t->preemphasis_in_subcode = subchannel_data.control & 0x01;
             }
         }
+
+        t->extra_read = 1;
     }
 }
 

@@ -39,3 +39,35 @@ int crip_fill_cdtext(cyanrip_ctx *ctx);
  * before the MusicBrainz fill, so precedence ends up
  * user -a/-t > MusicBrainz > CD-TEXT > defaults. */
 void crip_cdtext_to_meta(cyanrip_ctx *ctx);
+
+/* Lower-cased libcdio field names, used as the dictionary keys so the log and
+ * anything reading it see the field names the CD-TEXT spec uses rather than
+ * cyanrip's tag names. Indexed by cdtext_field_t.
+ *
+ * In the header, not cdtext.c, because the -j record writes every key and
+ * diagnostics.c is linked into unit tests that do not link cdtext.c. One
+ * table, read by both. */
+static const char *const crip_cdtext_field_keys[MAX_CDTEXT_FIELDS] = {
+    [CDTEXT_FIELD_TITLE]      = "title",
+    [CDTEXT_FIELD_PERFORMER]  = "performer",
+    [CDTEXT_FIELD_SONGWRITER] = "songwriter",
+    [CDTEXT_FIELD_COMPOSER]   = "composer",
+    [CDTEXT_FIELD_MESSAGE]    = "message",
+    [CDTEXT_FIELD_ARRANGER]   = "arranger",
+    [CDTEXT_FIELD_ISRC]       = "isrc",
+    [CDTEXT_FIELD_UPC_EAN]    = "upc_ean",
+    [CDTEXT_FIELD_GENRE]      = "genre",
+    [CDTEXT_FIELD_DISCID]     = "discid",
+};
+
+/* The i-th CD-TEXT key cyanrip reads, in libcdio's field order, or NULL past
+ * the last. The -j record writes every one, null where nothing was read, so
+ * its key set is this table and not whatever a disc happened to carry
+ * (round 32, Platterpus's lap 2 S8). */
+static inline const char *crip_cdtext_key(int i)
+{
+    for (int f = MIN_CDTEXT_FIELD; f < MAX_CDTEXT_FIELDS; f++)
+        if (crip_cdtext_field_keys[f] && !i--)
+            return crip_cdtext_field_keys[f];
+    return NULL;
+}

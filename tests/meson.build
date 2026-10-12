@@ -155,6 +155,20 @@ diagcache_test = executable('diagcache_test',
 )
 test('Cache probe evidence', diagcache_test)
 
+## The -j record's /8 fields, round 32 (our lap 1 S10, Platterpus's lap 2 S7
+## and S8). Their states are mostly out of an image's reach: libcdio's image
+## drivers never report the ISRC capability, no image has sub-channel
+## pre-emphasis, and -f on an image ends only with no AccurateRip entry. So the
+## context is BUILT, as for diagcache_test, and each record is written by a
+## forked child because crip_diag_write() writes one record per process.
+diagrecord_test = executable('diagrecord_test',
+    sources: [ 'diagrecord.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c' ]),
+    dependencies: unit_test_deps + [ dependency('threads') ],
+)
+test('Diagnostics record fields', diagrecord_test)
+
 ## Drives the record writer itself and reads back what it wrote.
 ##
 ## A mutation sweep of src/cyanrip_log.c scored 44.3%: of 88 single-operator
@@ -685,6 +699,7 @@ rip_scenarios = [
     'repeat_resets_filter',
     'zr_refusal',
     'probe_runs_open_no_logfile',
+    'diag_record_v8',
 ]
 
 # The scenarios are told which build configuration they are testing, because

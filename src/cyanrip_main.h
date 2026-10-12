@@ -245,6 +245,15 @@ typedef struct cyanrip_track {
     int track_is_data;
     int preemphasis;
     int preemphasis_in_subcode;
+    /* Whether track_read_extra() ran for this track, so the -j record can say
+     * `null` for a pre-emphasis and an ISRC nobody read rather than `none`. */
+    int extra_read;
+    /* The ISRC read from the disc's sub-channel, whatever the files carry,
+     * since round 32 (our lap 1 S10): read for every audio track, one passed
+     * in with -t included. NULL with the reason beside it when there is none;
+     * the reason is a string literal and is never freed. */
+    char *isrc_disc;
+    const char *isrc_disc_reason;
 
     size_t nb_samples; /* Track duration in samples */
 
@@ -369,6 +378,18 @@ typedef struct cyanrip_ctx {
     int nb_tracks; /* Total number of output tracks */
     int nb_cd_tracks; /* Total tracks the CD signals */
     int disregard_cd_isrc; /* If one track doesn't have ISRC, universally the rest won't */
+
+    /* How a -f search ended, for the -j record (round 32, our lap 1 S10):
+     * NONE when -f did not run. Set where each ending prints its line. */
+    enum {
+        CRIP_OFFSET_SEARCH_NONE = 0,
+        CRIP_OFFSET_SEARCH_FOUND,
+        CRIP_OFFSET_SEARCH_NO_AR,
+        CRIP_OFFSET_SEARCH_NO_TRACK,
+        CRIP_OFFSET_SEARCH_STOPPED,
+    } offset_search;
+    int offset_search_samples;
+    int offset_search_confidence;
 
     char *mb_submission_url;
 

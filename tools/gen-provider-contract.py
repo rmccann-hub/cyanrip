@@ -1289,7 +1289,15 @@ def diag_source_keys():
     out = []
     for i, line in enumerate(text.splitlines(), 1):
         for m in re.finditer(r'\\"([A-Za-z_][A-Za-z0-9_]*)\\":', line):
-            out.append((m.group(1), i))
+            out.append((m.group(1), f"diagnostics.c:{i}"))
+    # From /8 the `cdtext` object writes one key per entry of cdtext.h's
+    # table, every one on every record (round 32, Platterpus's lap 2 S8), so
+    # those keys are spelled there and not in a format string.
+    path = os.path.join(SRC, "cdtext.h")
+    for i, line in enumerate(open(path, encoding="utf-8").read().splitlines(), 1):
+        m = re.match(r'\s*\[CDTEXT_FIELD_\w+\]\s*=\s*"([a-z_]+)"', line)
+        if m:
+            out.append((m.group(1), f"cdtext.h:{i}"))
     return out
 
 
@@ -1327,6 +1335,30 @@ def diag_walk(node, path, acc):
             t.add("float")
         else:
             t.add("string")
+
+
+CDTEXT_TOC_FIELDS = ("TITLE", "PERFORMER", "SONGWRITER", "COMPOSER",
+                     "ARRANGER", "MESSAGE", "DISC_ID", "GENRE", "UPC_EAN",
+                     "ISRC")
+
+
+def write_cdtext_image(td):
+    """A two-track cdrdao image whose CD-TEXT sets every field at disc level
+    and on track 1, and none on track 2, over 8 seconds of silence. ISRC is
+    written too: libcdio's TOC parser does not read it into CD-TEXT, and the
+    table then says so by typing it from nulls alone."""
+    with open(os.path.join(td, "cdtext.bin"), "wb") as f:
+        f.write(bytes(600 * 2352))
+
+    def block(prefix):
+        return "\n".join(f'    {k} "{prefix} {k.lower()}"' for k in CDTEXT_TOC_FIELDS)
+
+    toc = ("CD_DA\n\nCD_TEXT {\n  LANGUAGE_MAP { 0 : EN }\n  LANGUAGE 0 {\n"
+           + block("Disc") + "\n  }\n}\n\nTRACK AUDIO\nCD_TEXT {\n  LANGUAGE 0 {\n"
+           + block("Track") + "\n  }\n}\nFILE \"cdtext.bin\" 0 00:04:00\n\n"
+           "TRACK AUDIO\nFILE \"cdtext.bin\" 00:04:00 00:04:00\n")
+    with open(os.path.join(td, "cdtext.toc"), "w", encoding="utf-8") as f:
+        f.write(toc)
 
 
 def diag_records(binary):
@@ -1367,12 +1399,20 @@ def diag_records(binary):
     produced = [
         ("a run refused during argument validation", ["-J", "-I"]),
         ("a run with stall reporting off (-k 0)", ["-J", "-I", "-k", "0"]),
+        # From /8: CD-TEXT, which no other record carries, so without it
+        # every `cdtext` value would be typed from nulls alone. The image is
+        # written below, every field libcdio reads at disc and track level.
+        ("an -I run on a disc image carrying CD-TEXT",
+         ["-d", "cdtext.toc", "-I", "-N", "-A"]),
     ]
     with tempfile.TemporaryDirectory() as td:
+        write_cdtext_image(td)
         for what, extra in produced:
             out = os.path.join(td, re.sub(r"\W+", "_", what) + ".json")
             argv = [binary] + extra + ["-j", out]
-            subprocess.run(argv, stdout=subprocess.DEVNULL,
+            # cwd: libcdio's cdrdao driver opens a .toc's FILE by its raw
+            # relative path, so the image loads only from its own directory.
+            subprocess.run(argv, stdout=subprocess.DEVNULL, cwd=td,
                            stderr=subprocess.DEVNULL, timeout=60)
             shown = "produced by " + " ".join(extra + ["-j"])
             if os.path.exists(out):
@@ -2043,7 +2083,8 @@ def emit(binary):
     w("")
     w("**DERIVED, from two sources that must agree.** The key names come from")
     w("`diagnostics.c`'s emitter, where they are spelled into the format")
-    w("strings; the types and nullability come from real records. Neither half")
+    w("strings, and from `cdtext.h`'s key table, which `cdtext` writes in full")
+    w("on every record; the types and nullability come from real records. Neither half")
     w("is sufficient alone, and the failure mode each one covers is the other's")
     w("blind spot: a record-only derivation lists whatever the samples happened")
     w("to exercise and calls it a schema, and a source-only derivation cannot")
@@ -2067,10 +2108,12 @@ def emit(binary):
     w("")
     w("The number after the slash is not a version to compare, it is an")
     w("identity to recognise. A field ADDED to this record is harmless to a")
-    w("reader that ignores unknown keys, and every change so far has been an")
-    w("addition -- so a consumer that rejects an unrecognised schema string")
-    w("rejects records it could have read. Gate on the prefix, and widen the")
-    w("accepted set rather than pinning one value.")
+    w("reader that ignores unknown keys, and most changes have been additions,")
+    w("`/8` among them; `/5` renamed one key and `/7` replaced one, each said in")
+    w("`diagnostics.c` where the schema string is. So a consumer that rejects an")
+    w("unrecognised schema string rejects records it could have read. Gate on")
+    w("the prefix, read the keys you know, and widen the accepted set rather")
+    w("than pinning one value.")
     w("")
 
     w("### P8b - Every field")
@@ -2127,7 +2170,7 @@ def emit(binary):
     w("")
 
     # Source-vs-record reconciliation. Reported, never silently merged.
-    src_names = {k for k, _ln in source_keys}
+    src_names = {k for k, _loc in source_keys}
     rec_leaves = {k.split(".")[-1].replace("[]", "") for k in acc}
     only_src = sorted(src_names - rec_leaves)
     only_rec = sorted(rec_leaves - src_names)
@@ -2142,8 +2185,8 @@ def emit(binary):
               " -- so reachable only under conditions none of them met:")
             w("")
             for k in only_src:
-                lines = sorted(ln for name, ln in source_keys if name == k)
-                w(f"- `{k}` (`diagnostics.c:{lines[0]}`)")
+                locs = [loc for name, loc in source_keys if name == k]
+                w(f"- `{k}` (`{locs[0]}`)")
             w("")
         if only_rec:
             w("Present in a record and not found in the source scan -- this")

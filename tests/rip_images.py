@@ -2880,6 +2880,147 @@ def sc_status_block_is_current():
         seen.add(m.group(1))
 
 
+def sc_diag_record_v8():
+    """The -j record's /8 fields, each against an artifact it does not share.
+
+    Round 32 added them (our lap 1 S10, Platterpus's lap 2 S7 and S8). Every
+    check reads the value from somewhere the record did not write: the ISRC
+    from the FLAC file's own bytes, de-emphasis from the cue sheet's FLAGS PRE,
+    CD-TEXT from the fixture's .toc text, the -f ending from the line the
+    search printed. The states no image reaches -- a disc ISRC, sub-channel
+    pre-emphasis, a found offset -- are built in tests/diagrecord.c.
+    """
+    keys = ["title", "performer", "songwriter", "composer", "message",
+            "arranger", "isrc", "upc_ean", "genre", "discid"]
+
+    # 1. A rip with a -t ISRC on track 1 only. The files carry it, and the
+    # disc's own is asked for whatever the files carry; an image driver never
+    # reports the capability, so the reason says that.
+    rec = WORK / "v8_rip.json"
+    rip("v8_rip", "pregap.cue", "-t", "1=isrc=AAAAA0000001", "-j", rec)
+    d = json.loads(rec.read_text())
+    if d.get("schema") != "cyanrip-diagnostics/8":
+        fail(f"diag_record_v8: schema is {d.get('schema')!r}, so none of the "
+             f"/8 fields can be checked")
+        return
+    ts = d["rip"]["track_state"]
+    written = []
+    for tr in ts:
+        flac = WORK / "out_v8_rip" / f"{tr['number']}.flac"
+        tags = flac_vorbis_comments(flac)
+        if tags is None:
+            fail(f"diag_record_v8: {flac.name} is not a FLAC file")
+            continue
+        in_file = (tags.get("ISRC") or [None])[0]
+        written.append(tr["isrc_written"])
+        if tr["isrc_written"] != in_file:
+            fail(f"diag_record_v8: track {tr['number']} isrc_written is "
+                 f"{tr['isrc_written']!r}, and its file carries {in_file!r}")
+        if (tr["isrc_disc"], tr["isrc_disc_reason"]) != \
+                (None, "the driver does not report reading ISRC"):
+            fail(f"diag_record_v8: track {tr['number']} isrc_disc "
+                 f"{tr['isrc_disc']!r} ({tr['isrc_disc_reason']!r}) on an image")
+        if (tr["preemphasis"], tr["deemphasis_applied"]) != ("none", False):
+            fail(f"diag_record_v8: track {tr['number']} pre-emphasis "
+                 f"{tr['preemphasis']!r}/{tr['deemphasis_applied']!r} on a disc "
+                 f"without it")
+        if tr["encode_failures"] != 0:
+            fail(f"diag_record_v8: track {tr['number']} encode_failures "
+                 f"{tr['encode_failures']!r}")
+    # Not vacuous: one file carries an ISRC and the others none.
+    if written[:1] != ["AAAAA0000001"] or any(written[1:]):
+        fail(f"diag_record_v8: isrc_written {written}, where -t set track 1's")
+
+    # No CD-TEXT: every key is still written, null, and so is every track's.
+    ct = d["cdtext"]
+    if ct["status"] != "none reported by libcdio" or ct["language"] is not None:
+        fail(f"diag_record_v8: cdtext {ct['status']!r}/{ct['language']!r} on a "
+             f"cue sheet, which carries no CD-TEXT")
+    if list(ct["disc"]) != keys or any(v is not None for v in ct["disc"].values()):
+        fail(f"diag_record_v8: cdtext.disc {ct['disc']}")
+    if [tr["number"] for tr in ct["tracks"]] != [tr["number"] for tr in ts] or \
+            any(list(tr) != ["number"] + keys for tr in ct["tracks"]):
+        fail(f"diag_record_v8: cdtext.tracks {ct['tracks']}")
+    if d["offset_search"] is not None:
+        fail(f"diag_record_v8: offset_search {d['offset_search']} with no -f")
+
+    # 2. Pre-emphasis, ripped with automatic de-emphasis and with -W. The cue
+    # writes FLAGS PRE exactly when pre-emphasised audio was NOT de-emphasised,
+    # so it is the independent statement of deemphasis_applied.
+    seen = set()
+    for name, extra in (("v8_pre", ()), ("v8_pre_w", ("-W",))):
+        rec = WORK / f"{name}.json"
+        rip(name, "preemph.cue", "-j", rec, *extra)
+        ts = json.loads(rec.read_text())["rip"]["track_state"]
+        cue = (WORK / f"out_{name}" / "sheet.cue").read_text()
+        blocks = re.split(r"(?m)^  TRACK ", cue)[1:]
+        for tr, blk in zip(ts, blocks):
+            flags_pre = bool(re.search(r"(?m)^    FLAGS PRE$", blk))
+            if tr["preemphasis"] != "toc":
+                fail(f"diag_record_v8: {name} track {tr['number']} preemphasis "
+                     f"{tr['preemphasis']!r}, and preemph.cue flags it")
+            if tr["deemphasis_applied"] is not (not flags_pre):
+                fail(f"diag_record_v8: {name} track {tr['number']} "
+                     f"deemphasis_applied {tr['deemphasis_applied']!r}, and the "
+                     f"cue {'writes' if flags_pre else 'omits'} FLAGS PRE")
+            seen.add(tr["deemphasis_applied"])
+        if len(blocks) != len(ts) or not ts:
+            fail(f"diag_record_v8: {name}: {len(ts)} tracks against "
+                 f"{len(blocks)} cue blocks")
+    if seen != {True, False}:
+        fail(f"diag_record_v8: deemphasis_applied only ever {seen}, so the two "
+             f"runs did not separate it")
+
+    # 3. CD-TEXT from the .toc, with -I. The expected values are the fixture's
+    # own text, keyed by the TOC's keywords.
+    toc_key = {"TITLE": "title", "PERFORMER": "performer",
+               "SONGWRITER": "songwriter", "COMPOSER": "composer",
+               "MESSAGE": "message", "ARRANGER": "arranger", "ISRC": "isrc",
+               "UPC_EAN": "upc_ean", "GENRE": "genre", "DISC_ID": "discid"}
+    toc = (FIX / "cdtext.toc").read_text()
+    chunks = re.split(r"(?m)^TRACK AUDIO$", toc)
+    want = []
+    for chunk in chunks:
+        fields = dict.fromkeys(keys)
+        for kw, val in re.findall(r'(?m)^\s+([A-Z_]+) "([^"]*)"$', chunk):
+            fields[toc_key[kw]] = val
+        want.append(fields)
+    rec = WORK / "v8_cdtext.json"
+    ec, out = crip("-d", "cdtext.toc", "-I", "-N", "-A", "-j", rec, cwd=WORK)
+    if ec != 0:
+        fail(f"diag_record_v8: -I on cdtext.toc exited {ec}")
+    ct = json.loads(rec.read_text())["cdtext"]
+    if (ct["status"], ct["language"]) != ("present", "English"):
+        fail(f"diag_record_v8: cdtext {ct['status']!r}/{ct['language']!r}, and "
+             f"the fixture declares English CD-TEXT")
+    if ct["disc"] != want[0]:
+        fail(f"diag_record_v8: cdtext.disc {ct['disc']}, the fixture {want[0]}")
+    got_tracks = [{k: v for k, v in tr.items() if k != "number"}
+                  for tr in ct["tracks"]]
+    if got_tracks != want[1:] or not any(any(w.values()) for w in want[1:]):
+        fail(f"diag_record_v8: cdtext.tracks {got_tracks}, the fixture {want[1:]}")
+
+    # 4. -f, offline, so the lookup cannot find an entry: the ending the
+    # search printed is the one the record names, with no offset.
+    offline = dict(os.environ)
+    for k in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY",
+              "all_proxy", "ALL_PROXY"):
+        offline[k] = "http://127.0.0.1:9"
+    offline.pop("no_proxy", None)
+    offline.pop("NO_PROXY", None)
+    dd = WORK / "v8_f"
+    dd.mkdir()
+    rec = dd / "f.json"
+    ec, out = crip("-d", WORK / "basic.cue", "-f", "-N", "-j", rec, cwd=dd,
+                   env=offline)
+    printed = "No track had AccuRip entry, cannot find offset!" in out
+    got = json.loads(rec.read_text())["offset_search"]
+    if not printed or got != {"result": "no AccurateRip entry",
+                              "offset_samples": None, "confidence": None}:
+        fail(f"diag_record_v8: -f printed the no-entry line: {printed}; "
+             f"offset_search {got}")
+
+
 def sc_probe_runs_open_no_logfile():
     """`-I`, `-J` and `-f` open no logfile, and P2 says so.
 

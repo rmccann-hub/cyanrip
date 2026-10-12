@@ -49,6 +49,7 @@
 #include "cache_probe.h"
 #include "version.h"
 #include "handshake_state.h"
+#include "cdtext.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -116,6 +117,38 @@ static int snap_offset;
 static int snap_ripping_retries;
 static char **snap_track_state;
 static int snap_nb_track_state;
+/* Built at snapshot time, as the track lines are: the record is written from
+ * atexit, after the context and its dictionaries are gone. */
+static char *snap_cdtext;
+static int snap_offset_search;
+static int snap_offset_samples;
+static int snap_offset_confidence;
+
+static void diag_json_str(AVBPrint *b, const char *s);
+
+static void diag_json_str_or_null(AVBPrint *b, const char *s)
+{
+    if (s)
+        diag_json_str(b, s);
+    else
+        av_bprintf(b, "null");
+}
+
+/* One CD-TEXT block as a JSON object: every key cyanrip reads, in libcdio's
+ * order, null where nothing was read -- so the key set is the list in
+ * cdtext.c and not whatever this disc carried (round 32, Platterpus's lap 2
+ * S8). The values are verbatim, the same strings the log prints. */
+static void diag_cdtext_fields(AVBPrint *b, const AVDictionary *d)
+{
+    const char *key;
+    for (int i = 0; (key = crip_cdtext_key(i)); i++) {
+        const AVDictionaryEntry *e = d ? av_dict_get(d, key, NULL, 0) : NULL;
+        av_bprintf(b, "%s", i ? "," : "");
+        diag_json_str(b, key);
+        av_bprintf(b, ":");
+        diag_json_str_or_null(b, e ? e->value : NULL);
+    }
+}
 
 static void diag_commit_line(void)
 {
@@ -280,25 +313,98 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
         if (snap_track_state) {
             snap_nb_track_state = ctx->nb_tracks;
             for (int i = 0; i < ctx->nb_tracks; i++) {
-                const cyanrip_track *t = &ctx->tracks[i];
-                char line[256];
+                cyanrip_track *t = &ctx->tracks[i];
+                AVBPrint b;
                 char crc[16];
                 if (t->audio_ripped && t->computed_crcs)
                     snprintf(crc, sizeof(crc), "\"%08X\"", t->eac_crc);
                 else
                     snprintf(crc, sizeof(crc), "null");
-                snprintf(line, sizeof(line),
-                         "{\"number\":%i,\"cd_track\":%i,\"repeats\":%i,"
-                         "\"audio_ripped\":%s,\"crcs_computed\":%s,"
-                         "\"eac_crc\":%s,\"rip_time_us\":%lli}",
-                         t->number, t->cd_track_number, t->total_repeats,
-                         t->audio_ripped ? "true" : "false",
-                         (t->audio_ripped && t->computed_crcs) ? "true" : "false",
-                         crc, (long long)t->rip_time_us);
-                snap_track_state[i] = av_strdup(line);
+                av_bprint_init(&b, 0, AV_BPRINT_SIZE_UNLIMITED);
+                av_bprintf(&b,
+                           "{\"number\":%i,\"cd_track\":%i,\"repeats\":%i,"
+                           "\"audio_ripped\":%s,\"crcs_computed\":%s,"
+                           "\"eac_crc\":%s,\"rip_time_us\":%lli",
+                           t->number, t->cd_track_number, t->total_repeats,
+                           t->audio_ripped ? "true" : "false",
+                           (t->audio_ripped && t->computed_crcs) ? "true" : "false",
+                           crc, (long long)t->rip_time_us);
+
+                /* /8, round 32 (our lap 1 S10, Platterpus's lap 2 S7). Each
+                 * is null where it was never read, which is a different claim
+                 * from `none`: track_read_extra() reads pre-emphasis and the
+                 * disc's ISRC, and an -I run or a data track never calls it.
+                 *
+                 * `preemphasis` is what the log's `Preemphasis:` line says,
+                 * and `deemphasis_applied` is the one predicate behind both
+                 * `(deemphasis applied)` and the cue's FLAGS PRE. */
+                av_bprintf(&b, ",\"preemphasis\":");
+                if (!t->extra_read)
+                    av_bprintf(&b, "null");
+                else
+                    diag_json_str(&b, !t->preemphasis ? "none" :
+                                      t->preemphasis_in_subcode ? "subcode" : "toc");
+                av_bprintf(&b, ",\"deemphasis_applied\":%s",
+                           !t->extra_read ? "null" :
+                           crip_deemphasis_active(ctx, t) ? "true" : "false");
+
+                /* The ISRC the files carry, which is the tag the encoders were
+                 * handed, and only when there are files of this track; and the
+                 * disc's own, read whatever the files carry, with the reason
+                 * when there is none. */
+                av_bprintf(&b, ",\"isrc_written\":");
+                diag_json_str_or_null(&b, t->audio_ripped ? dict_get(t->meta, "isrc")
+                                                          : NULL);
+                av_bprintf(&b, ",\"isrc_disc\":");
+                diag_json_str_or_null(&b, t->isrc_disc);
+                av_bprintf(&b, ",\"isrc_disc_reason\":");
+                diag_json_str_or_null(&b, t->isrc_disc ? NULL :
+                                          t->track_is_data ? "data track" :
+                                          !t->extra_read ? "not read" :
+                                          t->isrc_disc_reason);
+
+                /* The count behind the footer's `Encoder errors:` (Platterpus's
+                 * F5, accepted as an addition to S10). */
+                av_bprintf(&b, ",\"encode_failures\":%i}", t->encode_failures);
+
+                if (av_bprint_is_complete(&b))
+                    snap_track_state[i] = av_strdup(b.str);
+                av_bprint_finalize(&b, NULL);
             }
         }
     }
+
+    /* The disc's CD-TEXT, kept verbatim and apart from the tags, written by
+     * an -I run too. `status` says what the log's `CD-TEXT:` line says:
+     * libcdio hands back one NULL for "the disc has none" and "the driver
+     * cannot read it", so the absent arm claims only what libcdio reported. */
+    av_freep(&snap_cdtext);
+    {
+        AVBPrint b;
+        av_bprint_init(&b, 0, AV_BPRINT_SIZE_UNLIMITED);
+        const int present = ctx->cdtext_status == CYANRIP_CDTEXT_PRESENT;
+        av_bprintf(&b, "{\n    \"status\": ");
+        diag_json_str(&b, present ? "present" : "none reported by libcdio");
+        av_bprintf(&b, ",\n    \"language\": ");
+        diag_json_str_or_null(&b, present ? ctx->cdtext_language : NULL);
+        av_bprintf(&b, ",\n    \"disc\": {");
+        diag_cdtext_fields(&b, ctx->cdtext);
+        av_bprintf(&b, "},\n    \"tracks\": [");
+        for (int i = 0; i < ctx->nb_tracks; i++) {
+            const cyanrip_track *t = &ctx->tracks[i];
+            av_bprintf(&b, "%s\n      {\"number\":%i,", i ? "," : "", t->number);
+            diag_cdtext_fields(&b, t->cdtext);
+            av_bprintf(&b, "}");
+        }
+        av_bprintf(&b, "%s]\n  }", ctx->nb_tracks ? "\n    " : "");
+        if (av_bprint_is_complete(&b))
+            snap_cdtext = av_strdup(b.str);
+        av_bprint_finalize(&b, NULL);
+    }
+
+    snap_offset_search     = ctx->offset_search;
+    snap_offset_samples    = ctx->offset_search_samples;
+    snap_offset_confidence = ctx->offset_search_confidence;
 }
 
 /* RFC 8259 string escaping. Anything below 0x20 becomes \uXXXX, so a stray
@@ -377,8 +483,15 @@ void crip_diag_write(void)
      * no longer exists to record. A removed key is not additive. In the same
      * version, which no released build has written, rip.ripping_errors counts
      * paranoia's skips as the log line does and rip.paranoia_skips says how
-     * many of it they are. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/7\",\n");
+     * many of it they are.
+     *
+     * /8 ADDS, round 32 (our lap 1 S10, Platterpus's lap 2 S7 and S8): per
+     * track preemphasis, deemphasis_applied, isrc_written, isrc_disc with
+     * isrc_disc_reason, and encode_failures; and at the top level cdtext and
+     * offset_search. Every field is an addition, and the exit codes do not
+     * move. The version moves anyway, for the reason /4 did: two different
+     * records must not both call themselves /7. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/8\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
@@ -562,6 +675,29 @@ void crip_diag_write(void)
         }
         av_bprintf(&b, "%s]\n", snap_nb_track_state ? "\n    " : "");
         av_bprintf(&b, "  },\n");
+    }
+
+    /* The disc's CD-TEXT, null when no disc was opened. */
+    av_bprintf(&b, "  \"cdtext\": %s,\n",
+               diag_have_snapshot && snap_cdtext ? snap_cdtext : "null");
+
+    /* How a -f search ended: null on any run that did not search. The offset
+     * and its confidence are null unless one was found, so a stopped search
+     * cannot be read as offset 0 at confidence 0. */
+    if (!diag_have_snapshot || snap_offset_search == CRIP_OFFSET_SEARCH_NONE) {
+        av_bprintf(&b, "  \"offset_search\": null,\n");
+    } else {
+        const int found = snap_offset_search == CRIP_OFFSET_SEARCH_FOUND;
+        av_bprintf(&b, "  \"offset_search\": {\n    \"result\": ");
+        diag_json_str(&b, found ? "found" :
+                          snap_offset_search == CRIP_OFFSET_SEARCH_NO_AR ? "no AccurateRip entry" :
+                          snap_offset_search == CRIP_OFFSET_SEARCH_NO_TRACK ? "no track long enough" :
+                          "stopped");
+        if (found)
+            av_bprintf(&b, ",\n    \"offset_samples\": %i,\n    \"confidence\": %i\n  },\n",
+                       snap_offset_samples, snap_offset_confidence);
+        else
+            av_bprintf(&b, ",\n    \"offset_samples\": null,\n    \"confidence\": null\n  },\n");
     }
 
     /* Every message, in order, unclassified -- and saying so, because a
