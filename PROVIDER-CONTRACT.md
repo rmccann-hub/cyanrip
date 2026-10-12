@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.23 (platterpus-fork-g8a59ec2)`
+Build: `cyanrip 0.9.4-rc3+platterpus.23 (platterpus-fork-g3f71347)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -1044,7 +1044,7 @@ Three things a consumer would otherwise have to discover the hard way:
   the `: invalid option -- 'X'` suffix is stable.
 - **One line each**, no usage block follows.
 
-## P8 - The `-j` diagnostics record
+## P8 - The `--diagnostics` record
 
 **DERIVED, from two sources that must agree.** The key names come from
 `diagnostics.c`'s emitter, where they are spelled into the format
