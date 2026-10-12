@@ -68,7 +68,7 @@
               },
               {
                 "name": "cyanrip-fork:measured:upstream-tip",
-                "value": "f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5"
+                "value": "b40c1f006a000a8bbd2d7ccc438a17006b9b71a0"
               }
             ]
           }
@@ -909,6 +909,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/tag_release.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tools/contract-delta.py"
         },
         {
@@ -942,6 +946,10 @@
         {
           "name": "cyanrip-fork:run-by",
           "value": "tools/seam-sync-check.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/tag-release-check.py"
         },
         {
           "name": "cyanrip-fork:run-by",
@@ -1141,5 +1149,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:52facb29-2f89-5661-a2a0-93667490a528"
+  "serialNumber": "urn:uuid:c9086d3e-2302-5e75-8e40-c6f26932d3d9"
 }

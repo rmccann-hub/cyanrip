@@ -575,6 +575,11 @@ test('Cross-rip reader', python, args: [ files('cross_rip.py') ])
 ## quadratic in a run of blanks. Five of our tools' patterns had it; this
 ## sweeps tools/ and tests/ for the shape and times the rewritten patterns.
 test('Tool patterns are linear', python, args: [ files('tool_patterns.py') ])
+## tools/tag-release-check.py decides every tag the tag workflow creates, on a
+## repository this builds: on platterpus-fork, named by the manifest at that
+## commit, ordered by release_seq, never moved. The workflow itself cannot be
+## tried out, because what it makes is a tag.
+test('Release tag check', python, args: [ files('tag_release.py') ])
 ## A REPORT, NOT A CHECK. --gaps prints the absent lap numbers and exits 0 by
 ## design, because one side cannot tell a lost lap from an unused number. It
 ## was named "Seam record audit", which a green run made read like a passed

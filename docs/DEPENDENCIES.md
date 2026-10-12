@@ -43,7 +43,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `ffmpeg` | `tests/gen_fixtures.py`, `tests/rigcheck.py`, `tools/audio-checksums.py`, `tools/rig-check.py` | makes the disc-image fixtures' audio and decodes rips for checksums |
 | `ffprobe` | `tests/rip_images.py` | reads ripped files' tags, durations and encoder strings, as a witness independent of cyanrip |
 | `gcov` | `tools/coverage-summary.py` | coverage |
-| `git` | `tests/contract_delta.py`, `tests/handshake_wire.py`, `tests/ingest_bundle.py`, `tests/lap_commits.py` and 13 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
+| `git` | `tests/contract_delta.py`, `tests/handshake_wire.py`, `tests/ingest_bundle.py`, `tests/lap_commits.py` and 15 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
 | `meson` | `tools/sanitize-run.py` | configures the instrumented and mutated builds |
 | `ninja` | `tools/sanitize-run.py` | builds them |
 | `nm` | `tools/blackbox.py` | asks a binary whether sanitizer symbols are in it |
@@ -102,7 +102,7 @@ Each is a liability with a removal condition, not a fix. The details and what wo
 
 - **Machine:** Ubuntu 24.04.4 LTS; Python 3.11.15; cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; meson 1.3.2; ninja 1.11.1; pkg-config 1.8.1; git version 2.43.0.
 - **FFmpeg:** ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers; configured `--enable-gpl`, so the FFmpeg libraries as built here are GPL-2.0-or-later rather than LGPL.
-- **Fork point against upstream:** `f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5` (`git merge-base HEAD master`); upstream mirror tip `f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5`.
+- **Fork point against upstream:** `f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5` (`git merge-base HEAD master`); upstream mirror tip `b40c1f006a000a8bbd2d7ccc438a17006b9b71a0`.
 - **Programs above not installed here:** `cd-paranoia`, `cdparanoia`, `distrobox`. The rig-only ones are expected to be missing.
 
 | library | installed here | licence confirmed from |
