@@ -3893,6 +3893,18 @@ def sc_golden_reference_matches_a_fresh_rip():
         return
     fresh = fresh_path.read_text()
 
+    # The reference describes one library set, and a rip made with another
+    # differs in text those libraries write (CI's macOS job, on libcdio 2.4
+    # and FFmpeg 9.0.1). Decided by gen-golden-reference.py's own parser, so
+    # the two golden checks cannot disagree about when they apply.
+    spec = importlib.util.spec_from_file_location(
+        "gen_golden", ROOT / "tools" / "gen-golden-reference.py")
+    gen_golden = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen_golden)
+    mismatch = gen_golden.library_mismatch(ref, fresh)
+    if mismatch:
+        skip(f"golden_shape: not compared: {mismatch}")
+
     # A RELEASED build writes two lines differently, by design: `Handshake:`
     # ends `-- released build`, and the disclaimer line under it says the
     # declaration was not verified (crip_log_identity()). The reference is an

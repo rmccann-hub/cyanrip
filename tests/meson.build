@@ -301,6 +301,13 @@ test('Golden reference freshness', python,
              '--binary', cyanrip_exe.full_path() ],
      depends: cyanrip_exe,
      timeout: 300)
+## Where the golden checks apply: the reference is a byte record of one
+## libcdio and one FFmpeg, and both checks say SKIP, naming both sets, on any
+## other (CI's macOS job, owner's decision of 2026-10-12). This pins that
+## decision, its fail-closed edges, and check-settled counting a 77 as
+## unprobed rather than as checked or as stale.
+test('Golden reference library set', python,
+     args: [ files('golden_libraries.py') ])
 
 ## Interrupted sample freshness
 ## ===========================
