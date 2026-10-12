@@ -803,7 +803,7 @@ def audit_gaps():
         if m:
             missing = [f for f, rx in (("ROUND", rdg.ROUND_RE),
                                        ("LAP", rdg.LAP_RE), ("FROM", rdg.FROM_RE))
-                       if len(rx.findall(rdg.FENCE_RE.sub("", text))) != 1]
+                       if len(rx.findall(rdg.strip_fences(text))) != 1]
             unconforming[int(m.group(1))][int(m.group(2))] = ",".join(missing)
 
     total = held_unconforming = 0
