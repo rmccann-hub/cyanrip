@@ -86,6 +86,16 @@ def skip(msg):
     sys.exit(77)
 
 
+def needs_preload_shim(scenario):
+    """Skip, out loud, a scenario that rips through an LD_PRELOAD shim, on a
+    platform whose loader has no LD_PRELOAD. tests/meson.build builds the
+    shims on Linux only and says so in CYANRIP_PRELOAD_SHIMS; where it says 1,
+    or says nothing, a missing shim is still a failure."""
+    if os.environ.get("CYANRIP_PRELOAD_SHIMS") == "0":
+        skip(f"{scenario}: rips through an LD_PRELOAD shim, and this build is "
+             f"not on Linux, whose loader is the one that honours it")
+
+
 def crip(*args, cwd=None, env=None):
     r = subprocess.run([CRIP, *map(str, args)], stdout=subprocess.PIPE,
                        stderr=subprocess.STDOUT, timeout=60, cwd=cwd, env=env)
@@ -5321,6 +5331,7 @@ def sc_signal_after_last_frame():
       * track 1 is not reported read, and `Partial files:` names it, because
         its encoder wrote a file over a read that never finished.
     """
+    needs_preload_shim("signal_after_last_frame")
     shim = os.environ.get("CYANRIP_RAISESIG_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"signal_after_last_frame: the shim was not built or not passed "
@@ -6033,6 +6044,7 @@ def sc_bad_sector():
       * the Retry limit line gives both numbers for -r 3, and is unchanged for
         -r 10, the multiple-of-5 control.
     """
+    needs_preload_shim("bad_sector")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"bad_sector: the shim was not built or not passed ({shim!r})")
@@ -6128,6 +6140,7 @@ def sc_p0_bad_sector():
       * paranoia counted the same reads per track as a clean rip, because a
         read that succeeds takes the path it always took.
     """
+    needs_preload_shim("p0_bad_sector")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"p0_bad_sector: the shim was not built or not passed ({shim!r})")
@@ -6228,6 +6241,7 @@ def sc_repeat_limit():
     LAST read's matches: that read agrees with nobody, and two earlier reads
     agree with each other, so M is 2 and `matches + 1` would print 1.
     """
+    needs_preload_shim("repeat_limit")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"repeat_limit: the shim was not built or not passed ({shim!r})")
@@ -6317,6 +6331,7 @@ def sc_repeat_limit_keeps_most_agreed():
     each pass is one read of the sector, as in sc_repeat_limit().
     """
     import zlib
+    needs_preload_shim("repeat_limit_keeps_most_agreed")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"repeat_limit_keeps_most_agreed: the shim was not built or not "
@@ -6439,6 +6454,7 @@ def sc_spool_refusal():
     path prints a diagnosable line, at column 0, to a stream the caller
     captures, and no track that was not ripped says it was read.
     """
+    needs_preload_shim("spool_refusal")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"spool_refusal: the shim was not built or not passed ({shim!r})")
@@ -6500,6 +6516,7 @@ def sc_paranoia_skip():
     exiting 1 would make Platterpus skip the securing pass (crip_ripping_errors()
     says where), and that choice is theirs to answer in round 30 lap 9.
     """
+    needs_preload_shim("paranoia_skip")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"paranoia_skip: the shim was not built or not passed ({shim!r})")
@@ -6610,6 +6627,7 @@ def sc_repeat_resets_filter():
     by construction and cyanrip_reset_encoding() is gone. The schedule and the
     assertion are unchanged.
     """
+    needs_preload_shim("repeat_resets_filter")
     shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"repeat_resets_filter: the shim was not built or not passed ({shim!r})")
