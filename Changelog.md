@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**Round 32's Full run is filed**: `.22` with Platterpus 0.7.104 on the
+reference disc, 2026-10-13, in `docs/rig-2026-10-13-200530e/`. It shows 424
+pass, 0 fail and the one unreachable step E2, and all eleven logs verify
+with `-Y`. Of the three fixes `.22` shipped, the one-frame tally's label
+printed on a drive. The other two had no cause to print: track 3's two
+repeat-limit cases kept the last read, and no pregap search failed. 0.7.104
+sends `--diagnostics`, and each of the nine logs that asks for a record has
+it in the bundle. The securing pass's record is absent because Platterpus
+runs that pass in a temporary folder it deletes. `-f` found `+667` at
+confidence 14, and the cache probe bracketed 128 to 255 beside `cd-paranoia
+-A`'s 144, the fourth run of each. Our reading, in that folder's README,
+finds no defect of ours.
+
 **Our round 32 lap 7 is sent**, released by the operator on 2026-10-13.
 It is HR-1.7 (6) from our side: our lap checker reads Platterpus's lap 6
 well formed, with their tree as its peer. It takes their reading of C29 and

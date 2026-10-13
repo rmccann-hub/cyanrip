@@ -4,13 +4,13 @@ STATUS-NEWEST-LAP: round-32-lap-07.md
 STATUS-NEWEST-LAP-STATE: sent
 
 STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; HR-1.7 (4) and (5) hold on both sides, our check passes your lap 6, and our lap 7, sent on 2026-10-13, waits on yours, which completes HR-1.7 (6), after which your 0.7.104 follows; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent round-32-lap-07.md (ours), round-32-lap-06.md (theirs); next 8 (theirs) carrying your reading of the Full run on .22 with 0.7.104, which you cut once your check passes our lap 7; held none
+STATUS-LAPS: newest sent round-32-lap-07.md (ours), round-32-lap-06.md (theirs); next 8 (theirs) carrying your reading of the Full run on .22 with 0.7.104, made on 2026-10-13 and filed here; held none
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
-STATUS-RELEASE-NEXT: +platterpus.23, held until HR-1.7's check passes (HR-1.3) and the Full run on .22 with your 0.7.104 is filed here (our lap 3 S16), since a run tests only the newest pair, carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32, and upstream's 0.9.4-rc3, merged at 79da685, with -j at /9 and two new disc lines and data-track rows your parser must accept first (docs/upstream/sync-2026-10-12-rc3.md section 4), and with the short options -j, -k, -u and -x retired for their long names, so your argv must send --diagnostics rather than -j before it can run this build (Changelog.md), which your 0.7.104 does (your lap 6 S14); pins ca3f3ea, reviews +platterpus.22
-STATUS-RUN-NEXT: +platterpus.22 with 0.7.104; waiting on your 0.7.104, whose section A accepts .22 (your lap 2 S5)
-STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
-STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
-STATUS-OPEN: partially-accurate-tally-label us fixing at 200530e, priority 1: landed at 113c05f, released in +platterpus.22, and open until round 32's Full run reads it on a drive; the one-frame tally reads Tracks matched on one frame only:, which your 0.6.66b1 and every release since reads
+STATUS-RELEASE-NEXT: +platterpus.23, no longer held by HR-1.3, since HR-1.7's check passed on 2026-10-13, or by the Full run on .22 with your 0.7.104, filed here on 2026-10-13 (our lap 3 S16, docs/rig-2026-10-13-200530e/), carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32, and upstream's 0.9.4-rc3, merged at 79da685, with -j at /9 and two new disc lines and data-track rows your parser must accept first (docs/upstream/sync-2026-10-12-rc3.md section 4), and with the short options -j, -k, -u and -x retired for their long names, so your argv must send --diagnostics rather than -j before it can run this build (Changelog.md), which your 0.7.104 does (your lap 6 S14); pins ca3f3ea, reviews +platterpus.22
+STATUS-RUN-NEXT: +platterpus.23 with 0.7.105; waiting on both releases: +platterpus.23, once your parser accepts upstream 0.9.4-rc3's new lines (STATUS-RELEASE-NEXT), and your 0.7.105, your next release by your status at platterpus@39b6c366, or the first later one whose section A accepts +platterpus.23; round 32's run, +platterpus.22 with 0.7.104, was made on 2026-10-13 and is filed in docs/rig-2026-10-13-200530e/
+STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until a drive prints it: round 32's Full run on 2026-10-13 hit the repeat limit twice, on track 3 in the secure re-read and in the securing pass, each with five checksums in five reads, so the newest read was kept, which is the last, and the clause rightly did not print; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
+STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until a drive prints it: no pregap search failed in round 32's Full run on 2026-10-13, so the line had no cause to print; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
+STATUS-OPEN: partially-accurate-tally-label us fixing at 200530e, priority 1: landed at 113c05f, released in +platterpus.22, and read on a drive by round 32's Full run on 2026-10-13, where both whole-disc rips print Tracks matched on one frame only: 2/14, so it leaves this list when round 32 closes; the one-frame tally reads Tracks matched on one frame only:, which your 0.6.66b1 and every release since reads
 STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, ships in +platterpus.23, and the disc ISRC read has run on no drive
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, ships in +platterpus.23
 STATUS-OPEN: version-field-meaning both fixing at round 32, priority 4: round 31's closing files name different Platterpus builds as the party, 0.6.66 in ours and 0.7.102 in yours, as round 28's did; our lap 1 S16's reading, the build the round reviewed, accepted in your lap 2 S12, and both closing laps of round 32 use it
@@ -123,8 +123,14 @@ changed is in `Changelog.md`.
 - **Our lap 7 is sent**, released on the operator's word of 2026-10-13
   (`round-32-lap-07.md`): HR-1.7 (6) from our side, C29 and C46 refusing the
   file and not the round at `9fca98a`, as their S8 asks, and a suite check
-  that would have stopped our lap 5. Their check of it completes HR-1.7 (6),
-  then 0.7.104 and the Full run on `.22` with it; their lap 8 reads that run.
+  that would have stopped our lap 5.
+- **HR-1.7 (6) holds**: Platterpus filed our lap 7 byte for byte, and their
+  `--check` and lap checker pass it (`platterpus@7d6b412f`, a commit message,
+  not a lap). They released 0.7.104 at `platterpus@3577be65`.
+- **Round 32's Full run is made and filed**, `.22` with 0.7.104, 2026-10-13
+  (`docs/rig-2026-10-13-200530e/`): 424 pass, 0 fail, the one unreachable
+  step E2, and our reading in that folder's README finds no defect of ours.
+  Their lap 8, with their reading, is next.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
@@ -132,8 +138,8 @@ changed is in `Changelog.md`.
 
 | | |
 |---|---|
-| newest | **`.21` with Platterpus 0.7.103, Full, on the reference disc, 2026-10-12** (`docs/rig-2026-10-12-ca3f3ea/`): 424 pass, 0 fail, the one unreachable step E2; the approved `.21` through their newest app, begun before `.22` was published, so not round 32's test |
-| next | **`.22` with their 0.7.104**, round 32's test by their lap 2 S3, once 0.7.104 is published |
+| newest | **`.22` with Platterpus 0.7.104, Full, on the reference disc, 2026-10-13** (`docs/rig-2026-10-13-200530e/`): 424 pass, 0 fail, the one unreachable step E2; round 32's test, read by us in that folder's README; Platterpus's reading is their lap 8, not yet published |
+| next | the first run of `.23`, once it is released; none scheduled |
 
 Every earlier run is a `docs/rig-*` folder with its own README.
 
