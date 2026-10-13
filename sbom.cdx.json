@@ -933,6 +933,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/lap_and_run_tools.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tests/lap_commits.py"
         },
         {
@@ -1002,6 +1006,10 @@
         {
           "name": "cyanrip-fork:run-by",
           "value": "tools/tag-release-check.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/take-in-lap.py"
         },
         {
           "name": "cyanrip-fork:run-by",
@@ -1231,5 +1239,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:236acf73-aff9-5802-bf48-bc7c446f974e"
+  "serialNumber": "urn:uuid:7e0036a2-abe0-564f-aff1-2cf5e9e0a15b"
 }

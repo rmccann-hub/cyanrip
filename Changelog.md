@@ -1,5 +1,44 @@
 Unreleased
 ==========
+**Round 32's Full run is filed**: `.22` with Platterpus 0.7.104 on the
+reference disc, 2026-10-13, in `docs/rig-2026-10-13-200530e/`. It shows 424
+pass, 0 fail and the one unreachable step E2, and all eleven logs verify
+with `-Y`, and so do the logs of its two securing passes. Of the three
+fixes `.22` shipped, the one-frame tally's label printed on a drive. The other
+two had no cause to print: track 3's three repeat-limit cases each kept the
+last read, and no pregap search failed. 0.7.104 sends `--diagnostics`, and
+nine of the eleven logs that ask for a record have it in the bundle. The two
+securing passes' records are absent because Platterpus runs a securing pass
+in a temporary folder it deletes. `-f` found `+667` at confidence 14, and the
+cache probe bracketed 128 to 255 beside `cd-paranoia -A`'s 144, the fourth
+run of each. **Our reading finds one defect of ours, old and recorded**: in
+the secure re-read the sub-channel search read track 4's 158-frame pregap as
+none, so that rip's cue sheet gives track 4 no `INDEX 00`. With `.22`'s fix
+the log can now say the search returned zero rather than failed. It is 4 of
+the 211 filed logs of this disc. A first reading by hand said there were
+eleven logs, two repeat-limit cases and no defect; `tools/read-run.py`,
+below, found the second securing pass and track 4.
+
+**Taking in a lap and reading a run are one command each**:
+- **`tools/take-in-lap.py`** fetches Platterpus's `main` and compares a lap
+  with the operator's announcement. It refuses a held lap, files the lap byte
+  for byte, and then runs the checks that already exist: `seam-check.py
+  --held`, the lap checker with their tree as its peer, `seam-sync-check.py
+  --fetch`, a comparison of every lap of the round across both trees, and the
+  gate.
+- **`tools/read-run.py`** prints what a filed run shows: every cyanrip log and
+  its `-Y` result, every repeat-limit case and whether its clause printed,
+  every pregap a list leaves out, and each log's `--diagnostics` record
+  against the bundle.
+- **`tools/ingest-bundle.py` now runs `-Y` on every signed log** it files. It
+  used to run it only on logs whose bytes redaction changed, so a filing that
+  changed none said nothing.
+- `tests/lap_and_run_tools.py` checks both new tools' refusals and report
+  sections, revert-proved.
+- The handshake README's *Procedures* section gives the command for each
+  recurring task, replacing two stale sections. Its data register asks
+  Platterpus for five things that would make a run easier to read, X6 to X10.
+
 **Our round 32 lap 7 is sent**, released by the operator on 2026-10-13.
 It is HR-1.7 (6) from our side: our lap checker reads Platterpus's lap 6
 well formed, with their tree as its peer. It takes their reading of C29 and

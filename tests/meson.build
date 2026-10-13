@@ -631,6 +631,15 @@ test('Black-box sweep', python,
 ## passing one, a failing one) are states no single real bundle supplies.
 test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
 
+## tools/take-in-lap.py takes in a peer lap and runs every check that exists
+## on it; tools/read-run.py prints what a filed run shows. Both were written on
+## 2026-10-13, when a lap's checks and a run's reading were still rebuilt by
+## hand each time, and the hand reading of that day's run missed a securing
+## pass and a pregap one list left out. The refusals and the report sections
+## are checked on a peer repository and logs built here.
+test('Lap intake and run reader', python,
+     args: [ files('lap_and_run_tools.py'), cyanrip_exe ])
+
 ## The owner's rule of 2026-10-12: home folders, the hostname and the owner's
 ## real name stay out of anything newly committed, through the export and
 ## filing tools. tests/redaction.py checks tools/redact.py and the two tools
