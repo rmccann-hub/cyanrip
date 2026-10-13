@@ -1119,7 +1119,23 @@ track 4` (`docs/rig-2026-10-06-5704062/rips/r16deemphoff.log`). That is two of
 the 153 filed logs of the reference disc that carry the list; the other is
 `docs/rig-2026-09-22-2cce60d/rips/derived-wavpack.log`. Whether track 4's search
 failed or returned a pregap of zero, which the list also leaves out, the log
-cannot say. **With no drive**: `-l 1` of `tests/fixtures/basic.cue` prints
+cannot say.
+
+**Recounted 2026-10-13, and that count was short**: 4 of the 211 filed logs
+of the reference disc that carry a `Gaps:` list leave track 4 out. The two
+above, and two secure re-reads, which rip track 4 and so print its block:
+2026-09-05 on `978f9b0`, which the count above missed, and 2026-10-13 on `.22`
+(`docs/rig-2026-10-13-200530e/`). Both blocks read `Pregap length: 0 frames`
+and `Pregap source: sub-channel (not signalled by TOC)`, where a failed search
+reads `Pregap LSN: unknown (...)`, and on `.22` the list would also have
+printed `pregap of track 4 unknown (...)`. So **in those two, the search
+returned zero**: the sub-channel variation of the next entry, at 158 frames
+rather than one. The `.22` rip's cue sheet gives track 4 no `INDEX 00`, where
+the same run's whole-disc rip gives `INDEX 00 04:49:20`; no audio byte moves
+under the default action. The secure re-reads of 2026-10-07 and 2026-10-12
+read 158, so a secure re-read does not always read it as zero; why these two
+did is not known. `tools/read-run.py`
+reports a pregap one list leaves out, which is how this one was found. **With no drive**: `-l 1` of `tests/fixtures/basic.cue` prints
 `None signalled` while the whole-disc rip's track 2 block reads `unknown
 (sub-channel unreadable)`.
 
