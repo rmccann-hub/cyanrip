@@ -570,6 +570,12 @@ class Lap:
         # this gate does not implement, as "dir/name: reason". Filled in by
         # load_rounds(); non-empty means the round cannot be graded here.
         self.version_refused = []
+        # Files of this round refused as FILES -- C29 and C46 -- keyed by
+        # "name" for ours and "inbound/name" for theirs. Filled in by
+        # load_rounds(). A refused file cannot be what a round closes on, as
+        # our newest lap or as the peer lap §5b reads; it does not stop a
+        # later lap from closing the round.
+        self.refused_files = {}
         # True for a round that exists ONLY in inbound/ -- they opened it and we
         # have not answered. Such a round has no file of ours to parse, so every
         # per-file check below is meaningless on it; it is open by definition.
@@ -713,6 +719,23 @@ class Lap:
                 and not self.override)
 
     @property
+    def own_refusal(self):
+        """Why this lap itself is refused as a file (C29, C46), or []."""
+        label = (f"inbound/{self.path.name}" if self.peer_only
+                 else self.path.name)
+        return self.refused_files.get(label, [])
+
+    @property
+    def peer_refusal(self):
+        """Why the newest peer lap held is refused as a file, or [].
+
+        Read through peer_latest rather than fixed at load, because C13a's
+        replay moves peer_latest back to the lap each point was judged with."""
+        if self.peer_latest is None:
+            return []
+        return self.refused_files.get(f"inbound/{self.peer_latest[1]}", [])
+
+    @property
     def withdrawn(self):
         """v4 §4b. Terminal, and requires only a reason -- there is no
         agreement to record. A gate must additionally refuse any release that
@@ -738,6 +761,8 @@ class Lap:
         if self.peer_only:
             return False
         if self.version_refused:
+            return False
+        if self.own_refusal or self.peer_refusal:
             return False
         if self.grandfathered:
             return True
@@ -924,6 +949,13 @@ class Lap:
                     f"{self.path.name} and no lap of our own")
         if self.version_refused:
             return "; ".join(self.version_refused)
+        if self.own_refusal:
+            return (f"{self.path.name} is refused as a file: "
+                    + "; ".join(self.own_refusal))
+        if self.peer_refusal:
+            return (f"the newest peer lap we hold, inbound/{self.peer_latest[1]}, "
+                    f"is refused as a file: " + "; ".join(self.peer_refusal)
+                    + " -- a refused lap is not a readable verdict")
         if self.grandfathered:
             return "no verdict field, grandfathered by number"
         if self.protocol is not None and int(self.protocol) > PROTOCOL_VERSION:
@@ -1046,7 +1078,16 @@ def load_rounds(directory=None, every_lap=False):
     if directory is None:
         directory = HANDSHAKE_DIR
     all_laps = []
+    # Two kinds of refusal, and the protocol names both. C15/C43 refuse the
+    # ROUND: a file declaring rules this gate does not implement makes every
+    # file of it ungradable here (C43: "refuse the round, naming the file").
+    # C29 and C46 refuse the FILE: their subject is a lap, and nothing in either
+    # row reaches the laps after it. Until round 32 this gate attached both
+    # kinds to every lap of the round, so a refused lap -- immutable once sent
+    # (§4a) -- kept its round from closing on any later lap, for ever.
+    # Platterpus found it, round 32 lap 6 S6, against our lap 5's own output.
     refused_by_round = {}
+    refused_files = {}
     versions_by_round = {}
     for path in sorted(directory.glob("round-*.md")):
         m = re.match(r"round-(\d+)", path.name)
@@ -1118,10 +1159,15 @@ def load_rounds(directory=None, every_lap=False):
         lp.override_by = one(OVERRIDE_BY_RE)
         lp.override_why = one(OVERRIDE_WHY_RE)
         lp.agreed_changes = one(AGREED_CHANGES_RE)
-        reason = version_refusal(text) or next_lap_refusal(text)
+        reason = version_refusal(text)
         if reason:
             refused_by_round.setdefault(lp.number, []).append(
                 f"{path.name}: {reason}")
+        else:
+            reason = next_lap_refusal(text)
+            if reason:
+                refused_files.setdefault(lp.number, {}).setdefault(
+                    path.name, []).append(reason)
         versions_by_round.setdefault(lp.number, []).append(
             (lp.lap, declared_version(text), path.name))
 
@@ -1166,10 +1212,15 @@ def load_rounds(directory=None, every_lap=False):
         # implement makes the round ungradable whatever else it says. Keyed on
         # the filename's round, as our own files are.
         fm = re.match(r"round-(\d+)", path.name)
-        reason = version_refusal(text) or next_lap_refusal(text)
+        reason = version_refusal(text)
         if fm and reason:
             refused_by_round.setdefault(int(fm.group(1)), []).append(
                 f"inbound/{path.name}: {reason}")
+        elif fm:
+            reason = next_lap_refusal(text)
+            if reason:
+                refused_files.setdefault(int(fm.group(1)), {}).setdefault(
+                    f"inbound/{path.name}", []).append(reason)
         if fm:
             ilaps = LAP_RE.findall(text)
             versions_by_round.setdefault(int(fm.group(1)), []).append(
@@ -1233,8 +1284,9 @@ def load_rounds(directory=None, every_lap=False):
                 (x for x in seq if x[0] is not None and x[1] is not None),
                 key=lambda x: (x[0], x[2])):
             if high is not None and version < high[0]:
-                refused_by_round.setdefault(number, []).append(
-                    f"{label}: declares HANDSHAKE-PROTOCOL: {version}, lower "
+                refused_files.setdefault(number, {}).setdefault(
+                    label, []).append(
+                    f"declares HANDSHAKE-PROTOCOL: {version}, lower "
                     f"than {high[1]}'s {high[0]} -- C29, a lap may not "
                     f"under-declare the rules it is read by")
             if high is None or version > high[0]:
@@ -1242,6 +1294,8 @@ def load_rounds(directory=None, every_lap=False):
 
     for lp in all_laps:
         lp.version_refused = list(refused_by_round.get(lp.number, []))
+        lp.refused_files = {k: list(v) for k, v in
+                            refused_files.get(lp.number, {}).items()}
 
     # C13a, as v6 amends it. A terminal state is final (§4a): once a round is
     # CLOSED or WITHDRAWN, a later lap of either side declaring a DIFFERENT
@@ -1420,6 +1474,11 @@ def main():
         state = "closed" if r.closed else "OPEN"
         lap = f"lap {r.lap}" if r.lap is not None else "lap ?"
         print(f"  round {r.number} ({lap}, {r.path.name}): {state:6}  ({r.why})")
+        # Every file the round refuses as a file, every time: it no longer
+        # holds the round, and a refusal nobody prints is one nobody made.
+        for label, reasons in sorted(r.refused_files.items()):
+            for reason in reasons:
+                print(f"      refused file: {label}: {reason}")
         if r.override and not r.bad_override():
             # C32: every time the state is printed, not once. An override
             # that becomes invisible after the session that made it is
