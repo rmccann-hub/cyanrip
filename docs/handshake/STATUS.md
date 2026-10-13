@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-32-lap-05.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; your lap 4, sent on 2026-10-12, does HR-1 on your side, and your 0.7.104 follows our lap 5, the HR-1.7 (4) lap; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent round-32-lap-03.md (ours), round-32-lap-04.md (theirs); next 5 (ours) carrying HR-1 in our ledger and our checker's word on your lap 4; held 5 carrying HR-1.7 (4) from our side, your S9 fixed, the ask to declare protocol 8 under C29, and the retired letters and the upstream sync for our next release
+STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; your lap 4, sent on 2026-10-12, does HR-1 on your side, and our lap 5, sent on 2026-10-13, does it on ours, so your 0.7.104 follows; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
+STATUS-LAPS: newest sent round-32-lap-05.md (ours), round-32-lap-04.md (theirs); next 6 (theirs) carrying 0.7.104 and your reading of the Full run on .22 with it, declaring protocol 8; held none
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
 STATUS-RELEASE-NEXT: +platterpus.23, held until HR-1.7's check passes (HR-1.3) and the Full run on .22 with your 0.7.104 is filed here (our lap 3 S16), since a run tests only the newest pair, carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32, and upstream's 0.9.4-rc3, merged at 79da685, with -j at /9 and two new disc lines and data-track rows your parser must accept first (docs/upstream/sync-2026-10-12-rc3.md section 4), and with the short options -j, -k, -u and -x retired for their long names, so your argv must send --diagnostics rather than -j before it can run this build (Changelog.md); pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.22 with 0.7.104; waiting on your 0.7.104, whose section A accepts .22 (your lap 2 S5)
@@ -109,11 +109,11 @@ changed is in `Changelog.md`.
   verified, and 0.7.104 to follow our HR-1 lap. Our lap checker reads it well
   formed through their map; our gate refuses it as a file under C29, because
   it declares protocol 7 after our lap 3 declared 8.
-- **Our lap 5 is published and held** (`round-32-lap-05.md`): HR-1.7 (4) from
-  our side, HR-1 in our ledger, their S9 fixed at `f5ffbb4`, a blocking ask to
-  declare 8, and the retired letters and the upstream sync announced for our
-  next release. It is released on the operator's word once its branch reaches
-  `platterpus-fork`.
+- **Our lap 5 is sent**, released on the operator's word of 2026-10-13
+  (`round-32-lap-05.md`): HR-1.7 (4) from our side, HR-1 in our ledger, their
+  S9 fixed at `f5ffbb4`, a blocking ask to declare 8, and the retired letters
+  and the upstream sync announced for our next release. Their lap 6 is next,
+  with 0.7.104 cut.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
