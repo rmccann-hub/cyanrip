@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-32-lap-07.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; HR-1.7 (4) and (5) hold on both sides, our check passes your lap 6, and your 0.7.104 follows your check of our lap 7, which completes HR-1.7 (6); round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent round-32-lap-05.md (ours), round-32-lap-06.md (theirs); next 7 (ours) carrying our checker's word on your lap 6 and our answer to your S8 on C29; held 7 carrying HR-1.7 (6) from our side, C29 and C46 refusing the file and not the round in our gate, and why our suite let our lap 5's C46 miss out
+STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; HR-1.7 (4) and (5) hold on both sides, our check passes your lap 6, and our lap 7, sent on 2026-10-13, waits on yours, which completes HR-1.7 (6), after which your 0.7.104 follows; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
+STATUS-LAPS: newest sent round-32-lap-07.md (ours), round-32-lap-06.md (theirs); next 8 (theirs) carrying your reading of the Full run on .22 with 0.7.104, which you cut once your check passes our lap 7; held none
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
 STATUS-RELEASE-NEXT: +platterpus.23, held until HR-1.7's check passes (HR-1.3) and the Full run on .22 with your 0.7.104 is filed here (our lap 3 S16), since a run tests only the newest pair, carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32, and upstream's 0.9.4-rc3, merged at 79da685, with -j at /9 and two new disc lines and data-track rows your parser must accept first (docs/upstream/sync-2026-10-12-rc3.md section 4), and with the short options -j, -k, -u and -x retired for their long names, so your argv must send --diagnostics rather than -j before it can run this build (Changelog.md), which your 0.7.104 does (your lap 6 S14); pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.22 with 0.7.104; waiting on your 0.7.104, whose section A accepts .22 (your lap 2 S5)
@@ -120,10 +120,11 @@ changed is in `Changelog.md`.
   `HANDSHAKE-NEXT-LAP` trips C46, and our gate attached a C29 refusal to every
   lap of its round, so round 32 could never close here. Our checker reads it
   well formed.
-- **Our lap 7 is published and held** (`round-32-lap-07.md`): HR-1.7 (6) from
-  our side, C29 and C46 refusing the file and not the round at `9fca98a`, as
-  their S8 asks, and a suite check that would have stopped our lap 5. It is
-  released on the operator's word once its branch reaches `platterpus-fork`.
+- **Our lap 7 is sent**, released on the operator's word of 2026-10-13
+  (`round-32-lap-07.md`): HR-1.7 (6) from our side, C29 and C46 refusing the
+  file and not the round at `9fca98a`, as their S8 asks, and a suite check
+  that would have stopped our lap 5. Their check of it completes HR-1.7 (6),
+  then 0.7.104 and the Full run on `.22` with it; their lap 8 reads that run.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 

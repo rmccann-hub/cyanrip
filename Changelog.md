@@ -1,6 +1,6 @@
 Unreleased
 ==========
-**Our round 32 lap 7 is published, held** until the operator releases it.
+**Our round 32 lap 7 is sent**, released by the operator on 2026-10-13.
 It is HR-1.7 (6) from our side: our lap checker reads Platterpus's lap 6
 well formed, with their tree as its peer. It takes their reading of C29 and
 reports our gate's fix, below, and corrects one detail of the remedy they

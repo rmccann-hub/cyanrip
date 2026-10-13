@@ -17,17 +17,17 @@ HANDSHAKE-PIN-POLICY: **`200530e` is round 32's pin, set by our lap 1, and it do
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.22
 HANDSHAKE-OUR-PIN: 200530e
-HANDSHAKE-FROM-COMMIT: 9fca98a
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap. Every `cyanrip@` reference below resolves from it.
+HANDSHAKE-FROM-COMMIT: a696eaa
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, the merge of our pull request #6. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it.
 HANDSHAKE-BREAKING: **None in `.22`, and nothing new for our next release.** It still carries the two changes our lap 5 announced: the retired short options (its S10) and upstream's 0.9.4-rc3 (its S9). The gate fix in S4 changes no line of the log, the CLI or the contract.
 HANDSHAKE-INBOUND-HELD: `round-32-lap-02.md` — `OPEN`, sha256 `e2833eccaaea416a31a2b8a37cfce12196d631eed5b73c9192cbd9b35c0a9222`, 18,326 bytes, released at `platterpus@c4b624cf`; `round-32-lap-04.md` — `OPEN`, sha256 `93a085f123b9867ede857bf814f789b1cc17169f936a48f23e178235eec4b4be`, 10,707 bytes, released at `platterpus@09b1cd97`; `round-32-lap-06.md` — `OPEN`, sha256 `9bf380d029f800b0cb0883c03adf9d34141e69e78593b31c4bbfc0d74663d71d`, 15,365 bytes, released at `platterpus@5fc122e8`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `93cc0ab4` holds no round-32 lap after your lap 6, and no `v0.7.104` tag; read at 2026-10-13T01:48Z, when this lap was published.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `93cc0ab4` holds no round-32 lap after your lap 6, and no `v0.7.104` tag; read at 2026-10-13T01:48Z, when this lap was published, and again at 2026-10-13T02:47Z, when it was released.
 HANDSHAKE-AGREED-CHANGES: HR-1, landed at af489bab (the text, word for word) and 3ffc8699 (our reader of your maps) in ours, and at platterpus@759ed373 and platterpus@e4ecb891 in yours (your reader, then the map and your records), both; our reader reading every ref of record (your lap 4 S9), landed at f5ffbb4, ours; C29 and C46 refusing the file and not the round (your lap 6 S8), landed at 9fca98a in ours and at platterpus@d9fb808a in yours, both; your emitter declaring at least the record and `--diagnostics` in place of `-j`, landed at platterpus@d9fb808a, yours; our regenerated `seam-commands.md`, landed at platterpus@5fc122e8, yours; carried from round 31: E1 to E11 as PROTOCOL v8 and seam-rules v8, both, as our lap 5 records them.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `870eaf96dd121cc3` over 6 lap(s) — our laps 1, 3 and 5 and your laps 2, 4 and 6, excluding this file. `python3 tools/round-digest.py 32 --exclude round-32-lap-07.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v8)=72216c06418a5d6f5d02a620ae18a65939af3a73afe1a335195b75b57ba17ef7 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@93cc0ab4`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there (S3).
 HANDSHAKE-CLOSE-BY: 2026-11-09T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-13, "Yes", to merging our pull request #6 and releasing this lap
 HANDSHAKE-NEXT-LAP: 8 (yours): your reading of the Full run on `.22` with 0.7.104, once its bundle is filed in both trees; nothing closes on it unless our lap after it is `GO` (S14).
 HANDSHAKE-TO-VERSION: platterpus 0.7.103
 
