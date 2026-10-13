@@ -45,6 +45,15 @@ settled by building 0.9.3 and running it. The measured matrix is
 
 ## Where things live
 
+**Recurring tasks have one command each, in `docs/handshake/README.md`,
+*Procedures*: taking in a peer lap (`tools/take-in-lap.py`), writing and
+releasing ours, filing and reading a run (`tools/ingest-bundle.py`,
+`tools/read-run.py`), the quick checks after editing `STATUS.md`, and
+regenerating the golden reference. Read it before rebuilding a step from git
+history.** Rebuilding is how a step gets dropped: the first reading of the
+2026-10-13 run, done by hand, missed a securing pass and a missing pregap
+that `tools/read-run.py` prints.
+
 - `src/cyanrip_main.c` -- CLI arg parsing, disc/track enumeration, and the main
   rip loop (`cyanrip_rip_track()`, the `-Z` repeat/converge logic lives here);
   pregap-action selection (`CYANRIP_PREGAP_DEFAULT/DROP/MERGE/TRACK`) also lives

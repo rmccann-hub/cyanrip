@@ -291,6 +291,11 @@ to `266c353`.
 | X3 | **`cd-paranoia -A`'s own output in every bundle**, as a file | Section P is the only independent measure of the cache figure `-x` reports, and `.20`'s `-x` is tested only beside it | **In your tree for 0.6.66**: section P runs your `cache-probe` verb beside our `-x -I` and saves its whole output as `cacheprobe<line>.txt` (`probe_verbs.py:223-234` and `fullacceptance.txt:1177-1192` at `bd508bf1`), added at `22af4bc4`, after 0.6.65 — so the 2026-10-05 run carries none. **The closing run's is cut at 2,000 bytes**: `cacheprobe1348.txt` ends inside the timing table, before the cache result, so the 137 is in your step's summary and in no line of cd-paranoia's the bundle holds (`docs/rig-2026-10-06-5704062/session/cd-paranoia-A.txt`) | yours, in 0.6.66b1, and truncated |
 | X4 | **The securing pass's own log in the bundle** | Since `32985e07` you keep it beside the album's, byte for byte, so `-Y` verifies it | **In your tree for 0.6.66**: the session bundle collects every cyanrip-written `.log` under the rips folder, judged by content (`test_session.py:905-915` at `bd508bf1`), which takes it in; `32985e07` is after 0.6.65 | yours, landing in 0.6.66 |
 | X5 | **Every track outcome line in the captured stdout** | Our S41: the capture classes them as progress and drops them (`rip_worker.py:2334-2335`, `3546-3550` at `bd508bf1`) | Yours to rate | proposed |
+| X6 | **Each securing pass's `--diagnostics` record in the bundle** | Every cyanrip run of a session would have its record; two of eleven are lost on every Full run (2026-10-12 and 2026-10-13), and those are the passes that re-read the tracks in doubt | A securing pass runs in a temporary folder deleted afterwards, so its record is not collected (`rip_worker.py:2338-2341` at `39b6c366`). A copy kept as its log is kept (X4) would do | proposed, 2026-10-13 |
+| X7 | **A sha256 for each member, from the sender** | A filing could be checked against your own hashes, not only against the archive as it reached us, so a member changed by an exporter or in transit is caught | `MANIFEST.txt` gives each member's size and no hash (`docs/rig-2026-10-13-200530e/MANIFEST.txt:88-96`) | proposed, 2026-10-13 |
+| X8 | **`--consumer` and `--diagnostics` on the pre-emphasis rips** | Every log of a run would name its caller and have a record; the two pre-emphasis rips read `Consumer: not identified (no --consumer given)` and write none | Section R16 runs cyanrip directly (`-N -s 667 -l 1 -H -W`, and `-E`), not through the argv builder | proposed, 2026-10-13 |
+| X9 | **Home paths replaced at export** | A bundle would never carry them; our filing of 2026-10-13 replaced home paths in nine files | Yours to rate. The owner's rule of 2026-10-12 names export tools as well as filing ones, and `tools/redact.py` is ours to compare against | proposed, 2026-10-13 |
+| X10 | **Your reading lap names the bundle's sha256 and where you filed it** | Round 32's S6 needs the bundle filed in both trees, and one hash compared against ours would show it is the same bundle | Yours to rate | proposed, 2026-10-13 |
 
 ### What we can give Platterpus — rated by us
 
@@ -307,42 +312,115 @@ release is derivable afterwards, which `OWNERSHIP.md` puts on your side. **G1**,
 **G4** and **G5** need nothing new from us: `-k` takes a per-drive value today,
 and we already read your reports and filed timings.
 
-## Regenerating the golden reference
+## Procedures — one command each, so none is rebuilt from history
+
+**Each recurring task here was rebuilt from git history every time it came
+round**, until 2026-10-13: a lap's checks run one by one, a run read with a grep
+per question, a release's three edits recalled from the last release's diff.
+Rebuilding is how steps get dropped, and `tools/seam-check.py`, which
+re-derives a peer lap's digest and every hash it quotes, went unused while the
+same checks were done by hand. So each task is one command, or a short list,
+and this section is where to look first.
+
+### Taking in a peer lap
 
 ```sh
-mkdir /tmp/g && cp tests/fixtures/pregap.cue /tmp/g/ && cp tests/fixtures/cdda.bin /tmp/g/pregap.bin
-cd /tmp/g && cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G \
-                     -D o -F "{track}" -L reference -M sheet -P 0
+python3 tools/take-in-lap.py NN LL --sha256 <announced> --bytes <announced> --file
 ```
 
-**Every flag there is load-bearing**, and a reference generated without them
-silently guards less than it appears to:
+It fetches their `main`, compares the lap with the operator's announcement,
+refuses a held one (§5c), files it byte for byte, and runs `seam-check.py
+--held`, `lap-statements.py --peer`, `seam-sync-check.py --fetch`, a
+byte-for-byte comparison of every lap of the round across both trees, and the
+gate. Then verify each claim the lap makes about **our** tree against our tree,
+and answer in our next lap.
 
-- `-P 0` — without it the audio is silence on any build before r2, and the
-  reference describes a rip that never happened properly
-- `-Z 2` — without it the secure-re-read surface is not exercised at all
-- `-G` — keeps the ReplayGain tags, including the over-full-scale peaks that
-  exercise a consumer's `> 1.0` reconciliation
+### Writing our lap, held
 
-Varying per run: `Invoked as:`, `creation_time`, `Extraction speed:`,
-`Elapsed:`, the paranoia counters, `Encoder:`, and the `Log FUN512:` covering
-them. Everything else is reproducible.
+- `HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading`, and
+  `HANDSHAKE-FROM-COMMIT` the parent of the commit that carries it.
+- `python3 tools/lap-statements.py docs/handshake/round-NN-lap-LL.md --peer
+  <clone>` must read it well formed; its warnings about our own commits clear
+  when the branch merges.
+- `python3 tools/round-digest.py NN --exclude round-NN-lap-LL.md` gives the
+  digest.
+- `meson test -C build 'Handshake wire conformance'` checks R6's pre-commit, and
+  fails on any file of ours the gate refuses (C29, C46).
+- Then the golden reference, `STATUS.md` and a Changelog paragraph, all below;
+  the suite; a pull request.
 
-## Open hardware gates
+### Releasing our lap, on the operator's word
 
-Three, all needing a disc in a real drive. None blocks a release; all three are
-about paths that have never executed rather than paths that might regress.
+After the pull request that published it has merged:
 
-1. **`Pregap source: sub-channel` succeeding on real media.** *(See the note
-   below — this may now be closed.)*
-2. **A cancelled rip on the rig**, proving the `setvbuf` fix under podman, which
-   does not forward signals into the container.
-3. **The read-liveness heartbeat firing on a real stall.** `-k` now lets the
-   threshold match a consumer's own stall detector.
+- `HANDSHAKE-READY-TO-READ: yes — operator, <date>, "<their words>"`, with no
+  personal name, by the owner's rule of 2026-10-12.
+- `HANDSHAKE-FROM-COMMIT` the merge commit, which is the release commit's
+  parent and is on `platterpus-fork`.
+- `HANDSHAKE-INBOUND-OBSERVED` re-read at release: `git ls-remote
+  https://github.com/rmccann-hub/Platterpus refs/heads/main`, and their laps of
+  the round at that tip.
+- The lap checker again, now with no warnings; the golden reference;
+  `STATUS-NEWEST-LAP-STATE: sent`; the Changelog; the suite; a pull request;
+  merge; then the one line to the operator: *"Our round NN lap LL is published
+  on `platterpus-fork` at `<merge>` (written from `<from-commit>`): `<path>`,
+  sha256 `<hex>`, N bytes, READY-TO-READ: yes, verdict V."*
 
-> **Gate 1 appears closed.** A rig rip on 2026-08-03 with fork build
-> `g2f950c8` reports `Pregap source: sub-channel (not signalled by TOC)` on
-> thirteen of fourteen tracks, with plausible lengths (85–160 frames) that the
-> TOC did not declare. That is the first sub-channel success observed anywhere,
-> on either side. It needs confirming against a second disc before the gate is
-> struck, and belongs in the next round.
+### Filing and reading a run
+
+```sh
+python3 tools/ingest-bundle.py --verdict-only --peer <clone> <archive>
+python3 tools/ingest-bundle.py --into docs/rig-<date>-<build> \
+        --peer <clone> --cyanrip build/src/cyanrip <archive>
+python3 tools/read-run.py docs/rig-<date>-<build> --cyanrip build/src/cyanrip
+python3 tools/cross-rip.py docs/rig-*
+```
+
+Write the folder's README from `read-run.py`'s output, which prints every log,
+every repeat-limit case and whether its clause printed, every pregap a list
+leaves out, each log's `--diagnostics` record against the bundle, and `-f` and
+the cache probe. Then the records a run moves: `KNOWN-ISSUES.md`'s cache table
+(`cache_table_matches_the_transcripts` fails until the row exists), the `-f`
+row and the cache-probe bullet in `CLAUDE.md`, `STATUS.md`'s runs table and
+`STATUS-RUN-NEXT`, and the Changelog.
+
+### After editing `STATUS.md`
+
+```sh
+meson test -C build status_block_is_current status_is_current
+```
+
+It takes seconds; the full suite takes far longer. The block's shapes are
+`PROTOCOL.md` §6c. `STATUS-RUN-NEXT` reads `<provider build> with <consumer
+build>; waiting on …|ready`, and a consumer build not yet released is named
+from the consumer's own status.
+
+### Regenerating the golden reference and the interrupted sample
+
+After any lap file changes, since the `Handshake:` line moves with it, or any
+log line:
+
+```sh
+ninja -C build && python3 tools/gen-golden-reference.py \
+               && python3 tools/gen-golden-reference.py --interrupted
+```
+
+Build from a clean commit, so the banner names it. Commit the outputs in a
+commit of their own, with the Changelog sentence *"generated by `X`,
+committed in the commit carrying this sentence"*, which
+`sc_golden_reference_is_from_a_clean_build()` in `tests/rip_images.py` looks
+for. The flags the reference is
+made with are in the tool. The interrupted sample's body changes with where the
+signal lands, and is checked by line shape.
+
+### Running cyanrip by hand on a disc image
+
+`tests/fixtures/pregap.cue` reads `pregap.bin`, which is `cdda.bin` copied, as
+the image suite makes it. The suite's flags are `-s 0 -P 0 -N -A`.
+
+### What has run on a drive
+
+`CLAUDE.md`'s table under *No physical CD drive in this environment*, and
+`STATUS.md`'s `hardware-unverified` line. This file listed three "open hardware
+gates" until 2026-10-13: two had closed in August, and the third cited `-k`,
+which is retired.
