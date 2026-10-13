@@ -44,7 +44,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `ffmpeg` | `tests/gen_fixtures.py`, `tests/rigcheck.py`, `tools/audio-checksums.py`, `tools/rig-check.py` | makes the disc-image fixtures' audio and decodes rips for checksums |
 | `ffprobe` | `tests/rip_images.py` | reads ripped files' tags, durations and encoder strings, as a witness independent of cyanrip |
 | `gcov` | `tools/coverage-summary.py` | coverage |
-| `git` | `tests/contract_delta.py`, `tests/handshake_wire.py`, `tests/ingest_bundle.py`, `tests/lap_commits.py` and 18 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
+| `git` | `tests/contract_delta.py`, `tests/handshake_wire.py`, `tests/ingest_bundle.py`, `tests/lap_and_run_tools.py` and 20 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
 | `meson` | `tools/sanitize-run.py` | configures the instrumented and mutated builds |
 | `ninja` | `tools/sanitize-run.py` | builds them |
 | `nm` | `tools/blackbox.py` | asks a binary whether sanitizer symbols are in it |

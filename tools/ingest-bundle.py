@@ -536,6 +536,12 @@ def main():
         except UnicodeDecodeError:
             pass
     redacted = {}
+    # -Y on EVERY signed cyanrip log filed, not only on the ones redaction
+    # changed. Until 2026-10-13 it ran only where a path was replaced, so a
+    # filing that replaced nothing in any log said nothing about whether any
+    # log verified, and the reading ran -Y by hand. Checked on the delivered
+    # bytes, which for an unredacted log are the filed bytes too.
+    signatures = {}
     for name, data in sorted(members.items()):
         # A VERDICT FILE IS ALWAYS FILED, whatever its extension. The first
         # draft of this tool keyed only on TEXT_SUFFIXES, so `report.json` --
@@ -547,12 +553,13 @@ def main():
             out = dest / name
             out.parent.mkdir(parents=True, exist_ok=True)
             new, rep = redact.redact_bytes(data, hosts, names)
+            text = data.decode("utf-8", errors="replace")
+            first = text.splitlines()[0] if text else ""
+            signed = BANNER.search(first) and SIGNED.search(text)
+            if signed:
+                signatures[name] = verify_original(args.cyanrip, name, data)
             if rep.changed():
-                text = data.decode("utf-8", errors="replace")
-                first = text.splitlines()[0] if text else ""
-                signed = BANNER.search(first) and SIGNED.search(text)
-                redacted[name] = (rep, verify_original(args.cyanrip, name, data)
-                                  if signed else None)
+                redacted[name] = (rep, signatures.get(name))
             elif not rep.names_checked:
                 redacted[name] = (rep, None)
             out.write_bytes(new)
@@ -579,6 +586,8 @@ def main():
                 if verdict:
                     fh.write(f"#   -Y on the bundle's bytes, before redaction: "
                              f"{verdict}\n")
+            elif n in signatures:
+                fh.write(f"#   -Y on the bundle's bytes: {signatures[n]}\n")
         fh.write("\n# NOT filed. This list is the SET DIFFERENCE between the\n"
                  "# archive's contents and what was written -- never a\n"
                  "# hand-written note, which is how two files carrying the\n"
@@ -607,10 +616,18 @@ def main():
         print(f"  THE OWNER'S NAME WAS NOT CHECKED: no list at "
               f"{args.names or os.environ.get(redact.NAMES_ENV) or redact.NAMES_FILE}."
               f" 'Not checked' is not 'not present'.")
-    bad = [n for n, (_, v) in changed.items() if v and v != "verifies"]
+    print()
+    print("=" * 68)
+    print("SIGNATURES -- -Y on every signed cyanrip log filed")
+    print("=" * 68)
+    for n, v in sorted(signatures.items()):
+        print(f"  {v:12} {n}")
+    good = sum(1 for v in signatures.values() if v == "verifies")
+    print(f"  {good} of {len(signatures)} verify")
+    bad = [n for n, v in signatures.items() if v != "verifies"]
     if bad:
-        print(f"\n  WARNING: {len(bad)} cyanrip log(s) did not verify with -Y "
-              f"BEFORE redaction, or could not be checked: {', '.join(bad)}")
+        print(f"\n  WARNING: {len(bad)} cyanrip log(s) did not verify with -Y, "
+              f"or could not be checked: {', '.join(bad)}")
 
     missing = [v for v in VERDICT_FILES
                if not any(os.path.basename(n) == v for n in filed)]
