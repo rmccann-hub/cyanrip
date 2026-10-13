@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Our round 32 lap 5 is sent**, released by the operator on 2026-10-13. It
+is HR-1.7 (4) from our side: our lap checker reads Platterpus's lap 4 well
+formed through their commit map, and HR-1 is in our ledger. It fixes their
+S9, asks them to declare protocol 8, since our gate refuses their lap 4 under
+C29, and announces the retired letters and the upstream sync for our next
+release. Their lap 4 is filed.
+
 **The fork's short options are gone; each is its long name only. This breaks
 every caller that uses one.** On the owner's word of 2026-10-12, while nobody
 but the owner uses either project: `-j` is `--diagnostics`, `-k`
