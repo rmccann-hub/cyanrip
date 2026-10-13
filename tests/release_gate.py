@@ -3246,6 +3246,10 @@ def test_a_peer_lap_below_an_earlier_lap_refuses_the_round():
 
     From round 25 only. Round 8's laps 3-15 of ours declared 1 after their lap
     2 declared 2, and that round is closed; the rule arrives at a boundary.
+
+    Since round 32 the refusal is the FILE's (`test_a_refused_lap_does_not_
+    refuse_its_round`). Here the refused file is the newest peer lap, the one
+    §5b would read, so the round still cannot close on it.
     """
     four = _v5_theirs().replace("HANDSHAKE-PROTOCOL: 5", "HANDSHAKE-PROTOCOL: 4")
     check(four != _v5_theirs(), "fixture did not change the peer's version")
@@ -3262,8 +3266,95 @@ def test_a_peer_lap_below_an_earlier_lap_refuses_the_round():
     (d / "inbound").mkdir()
     (d / "inbound" / "round-20-lap-04.md").write_text(old(four), encoding="utf-8")
     early = rg.load_rounds(d)[0]
-    check(early.number == 20 and not early.version_refused,
-          f"C29 reached back past round {rg.C29_FROM_ROUND}: {early.version_refused}")
+    # Both lists: C29 has written to refused_files since round 32, so asking
+    # only version_refused here would pass whatever the boundary was.
+    check(early.number == 20 and not early.version_refused
+          and not early.refused_files,
+          f"C29 reached back past round {rg.C29_FROM_ROUND}: "
+          f"{early.version_refused} {early.refused_files}")
+
+
+def test_a_refused_lap_does_not_refuse_its_round():
+    """Covers: C29, C46
+
+    Both rows refuse a FILE: their subject is a lap, and neither reaches the
+    laps after it. C43 is the row that says "refuse the round". Until round 32
+    this gate attached C29 and C46 refusals to every lap of the round, so a
+    refused lap -- immutable once sent -- held its round open for ever: no
+    later lap of either side could close it. Platterpus found it, round 32
+    lap 6 S6, from our gate's own output on our lap 5, and asked for this
+    reading in S8; their gate already read it so
+    (`platterpus@d9fb808a:scripts/handshake.py:2579-2612`).
+
+    The record is round 32's shape at round 30: an early lap of theirs
+    under-declares (C29), an early lap of ours carries a NEXT-LAP C46 refuses,
+    and a later pair at 8 closes the round by §5b step 3. Each refused file
+    must still be carried, so it can be printed; and a refused file must never
+    be what the round closes ON, ours or theirs, which the controls show.
+    """
+    def ours_early(next_lap="2 (yours): your reading"):
+        return ("HANDSHAKE-PROTOCOL: 8\nHANDSHAKE-ROUND: 30\nHANDSHAKE-LAP: 1\n"
+                "HANDSHAKE-FROM: cyanrip-fork\n"
+                f"HANDSHAKE-NEXT-LAP: {next_lap}\n"
+                "HANDSHAKE-VERDICT: OPEN\nHANDSHAKE-READY-TO-READ: yes\n\n# lap 1\n")
+
+    def theirs_early(protocol=8):
+        return (f"HANDSHAKE-PROTOCOL: {protocol}\nHANDSHAKE-ROUND: 30\n"
+                "HANDSHAKE-LAP: 2\nHANDSHAKE-FROM: platterpus\n"
+                "HANDSHAKE-NEXT-LAP: 3 (yours): your answer\n"
+                "HANDSHAKE-VERDICT: OPEN\nHANDSHAKE-READY-TO-READ: yes\n\n# lap 2\n")
+
+    def record(lap1, lap2, lap3, lap4):
+        d = pathlib.Path(tempfile.mkdtemp())
+        (d / "inbound").mkdir()
+        (d / "round-30-lap-01.md").write_text(lap1, encoding="utf-8")
+        (d / "inbound" / "round-30-lap-02.md").write_text(lap2, encoding="utf-8")
+        (d / "round-30-lap-03.md").write_text(lap3, encoding="utf-8")
+        (d / "inbound" / "round-30-lap-04.md").write_text(lap4, encoding="utf-8")
+        return rg.load_rounds(d)[0]
+
+    closing, theirs_closing = _v8_pair()
+    clean = record(ours_early(), theirs_early(), closing, theirs_closing)
+    check(clean.closed and not clean.refused_files,
+          f"the control record without a refused lap did not close: {clean.why}")
+
+    c29 = record(ours_early(), theirs_early(protocol=7), closing, theirs_closing)
+    check(c29.closed,
+          f"a C29-refused earlier peer lap held the round open: {c29.why}")
+    check(any("C29" in r for r in
+              c29.refused_files.get("inbound/round-30-lap-02.md", [])),
+          f"the C29 refusal was not carried against the file: "
+          f"{c29.refused_files}")
+
+    bad = "2 (yours), declaring protocol 8: your reading"
+    c46 = record(ours_early(bad), theirs_early(), closing, theirs_closing)
+    check(c46.closed,
+          f"a C46-refused earlier lap of ours held the round open: {c46.why}")
+    check(any("HANDSHAKE-NEXT-LAP" in r for r in
+              c46.refused_files.get("round-30-lap-01.md", [])),
+          f"the C46 refusal was not carried against the file: "
+          f"{c46.refused_files}")
+
+    both = record(ours_early(bad), theirs_early(protocol=7), closing,
+                  theirs_closing)
+    check(both.closed and len(both.refused_files) == 2,
+          f"round 32's shape, both refusals at once: closed={both.closed}, "
+          f"{both.why}, {both.refused_files}")
+
+    # THE CONTROLS: a refused file is never what the round closes on.
+    own = record(ours_early(), theirs_early(),
+                 closing.replace("HANDSHAKE-NEXT-LAP: 4 (yours):",
+                                 "HANDSHAKE-NEXT-LAP: 4 (yours),"),
+                 theirs_closing)
+    check(not own.closed and "round-30-lap-03.md" in own.why
+          and "HANDSHAKE-NEXT-LAP" in own.why,
+          f"our newest lap, refused under C46, closed the round: {own.why}")
+    peer = record(ours_early(), theirs_early(), closing,
+                  theirs_closing.replace("HANDSHAKE-PROTOCOL: 8",
+                                         "HANDSHAKE-PROTOCOL: 7"))
+    check(not peer.closed and "inbound/round-30-lap-04.md" in peer.why
+          and "C29" in peer.why,
+          f"the round closed by §5b on a C29-refused peer lap: {peer.why}")
 
 
 class _AtProtocol:

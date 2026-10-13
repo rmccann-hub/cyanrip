@@ -127,6 +127,42 @@ for path in sorted(list(hs.glob("round-*-lap-*.md")) +
     print(f"FAIL: {name}: {reason}")
     fails += 1
 
+# --- C29 and C46: every file the gate refuses as a FILE --------------------
+#
+# Our round 32 lap 5 went out with `HANDSHAKE-NEXT-LAP: 6 (yours), declaring
+# protocol 8 (S8): ...`, which C46 refuses, and this suite was green: nothing
+# here asked the gate what it refused among OUR files. Platterpus's check
+# refused it (their round 32 lap 6 S10). Since round 32 such a refusal no longer
+# holds its round open (their S8), so an open round in the gate's output will
+# not catch the next one either; this does. Theirs is checked too: a peer lap
+# we file refused is a fact to state in our next lap, not to find later.
+#
+# A sent lap cannot be edited, so each is pinned by the sha256 of the bytes that
+# left and by the one row it breaks. A pinned file refused under another row,
+# or edited, fails; and a pinned file the gate stops refusing fails, because
+# that is the gate regressing, not the file improving.
+SENT_REFUSED_AS_FILE = {
+    "round-32-lap-05.md":
+        ("7952b240830441dd9dc925238533fbae980b0cb808e048d3faa1f5f00ab889e7", "C46"),
+    "inbound/round-32-lap-04.md":
+        ("93a085f123b9867ede857bf814f789b1cc17169f936a48f23e178235eec4b4be", "C29"),
+}
+refused = {}
+for lap in relgate.load_rounds(hs, every_lap=True):
+    refused.update(lap.refused_files)
+for name, reasons in sorted(refused.items()):
+    pin = SENT_REFUSED_AS_FILE.get(name)
+    if (pin and hashlib.sha256((hs / name).read_bytes()).hexdigest() == pin[0]
+            and all(pin[1] in r for r in reasons)):
+        print(f"known-bad (sent, cannot be edited): {name} -- {'; '.join(reasons)}")
+        continue
+    print(f"FAIL: {name} is refused as a file: {'; '.join(reasons)}")
+    fails += 1
+for name in sorted(set(SENT_REFUSED_AS_FILE) - set(refused)):
+    print(f"FAIL: {name} is pinned as refused under "
+          f"{SENT_REFUSED_AS_FILE[name][1]} and the gate no longer refuses it")
+    fails += 1
+
 # And the rule itself, on laps built to sit on each side of each half of it, so
 # a check that refuses everything or nothing fails here rather than passing on
 # a record that happens to hold one bad lap.
