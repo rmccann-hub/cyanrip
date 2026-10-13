@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**Our round 32 lap 7 is published, held** until the operator releases it.
+It is HR-1.7 (6) from our side: our lap checker reads Platterpus's lap 6
+well formed, with their tree as its peer. It takes their reading of C29 and
+reports our gate's fix, below, and corrects one detail of the remedy they
+gave for our lap 5. Their lap 6 is filed.
+
 **Our gate refuses a lap under C29 or C46 as a file, not its round.**
 Platterpus's round 32 lap 6 S6 found that `tools/release-gate.py` attached
 both refusals to every lap of the round, so a refused lap, which cannot be
