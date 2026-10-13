@@ -58,24 +58,29 @@ def main():
         print("SKIP: not a git checkout, so a new file cannot be told from an "
               "old one, and nothing was checked")
         return 77
+    # Every path list is read with -z. Without it git quotes a path holding a
+    # byte above 0x7f -- `full acceptance∶ angle‹bracket` -- and a quoted path
+    # starts with `"`, fails in_scope(), and is skipped without a word: eight
+    # files of the 2026-10-13 bundle went unchecked that way.
     added = (git("log", "--diff-filter=A", "--format=%H", "--", THIS) or "")
     added = added.split()
     if not added:
         # This file is not committed yet: everything committed is history,
         # and the working tree's new files are what is being added.
-        before = set((git("ls-files") or "").split("\n"))
-        candidates = set((git("ls-files", "--others", "--exclude-standard")
-                          or "").split("\n")) | set(
-            (git("diff", "--name-only", "--diff-filter=A", "HEAD") or "").split("\n"))
+        before = set((git("ls-files", "-z") or "").split("\0"))
+        candidates = set((git("ls-files", "-z", "--others", "--exclude-standard")
+                          or "").split("\0")) | set(
+            (git("diff", "-z", "--name-only", "--diff-filter=A", "HEAD")
+             or "").split("\0"))
     else:
-        tree = git("ls-tree", "-r", "--name-only", added[-1] + "^")
+        tree = git("ls-tree", "-r", "-z", "--name-only", added[-1] + "^")
         if tree is None:
             print(f"SKIP: the parent of {added[-1][:12]}, which added {THIS}, "
                   f"is not in this clone, so a new file cannot be told from "
                   f"an old one, and nothing was checked")
             return 77
-        before = set(tree.split("\n"))
-        candidates = set((git("ls-files") or "").split("\n"))
+        before = set(tree.split("\0"))
+        candidates = set((git("ls-files", "-z") or "").split("\0"))
     new = sorted(p for p in candidates
                  if p and p not in before and in_scope(p))
 
