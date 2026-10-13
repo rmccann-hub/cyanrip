@@ -107,6 +107,11 @@ static int cap_count(const char *needle)
  *
  * Runs first, and stalls longer than anything else in this file, so
  * test_stats_keep_the_longest() below can assert against a known winner.
+ * By a wide margin: test_nothing_printed_after_end() holds track 4's read
+ * open across two sleeps, 700 ms nominal, and on 2026-10-13 a macOS runner
+ * busy with the sanitizer and black-box sweeps stretched those past this
+ * read's 900 ms, so track 4 became the longest. 1800 ms is two and a half
+ * times the nominal 700.
  */
 static void test_stats_count_and_longest(void)
 {
@@ -120,7 +125,7 @@ static void test_stats_count_and_longest(void)
     crip_stall_watchdog_start();
 
     crip_stall_read_begin(9, 999);
-    av_usleep(900000);
+    av_usleep(1800000);
     crip_stall_read_end();
 
     crip_stall_watchdog_end();
@@ -133,9 +138,9 @@ static void test_stats_count_and_longest(void)
     CHECK(s.threshold_us == 200000,
           "threshold reported as %lldus, not the 200000 configured",
           (long long)s.threshold_us);
-    CHECK(s.count == 1, "one 900ms stall counted as %i", s.count);
-    CHECK(s.longest_us >= 900000,
-          "longest stall reported as %lldus for a 900ms read",
+    CHECK(s.count == 1, "one 1800ms stall counted as %i", s.count);
+    CHECK(s.longest_us >= 1800000,
+          "longest stall reported as %lldus for a 1800ms read",
           (long long)s.longest_us);
     CHECK(s.longest_track == 9 && s.longest_lsn == 999,
           "longest stall attributed to track %i LSN %i, not track 9 LSN 999",
@@ -155,7 +160,7 @@ static void test_stats_keep_the_longest(void)
     CHECK(s.longest_track == 9 && s.longest_lsn == 999,
           "longest stall is now track %i LSN %i -- the last stall overwrote "
           "the longest one", s.longest_track, (int)s.longest_lsn);
-    CHECK(s.longest_us >= 900000,
+    CHECK(s.longest_us >= 1800000,
           "longest stall shrank to %lldus", (long long)s.longest_us);
 }
 
