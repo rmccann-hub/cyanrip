@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**Our round 32 lap 9 is published, held, and declares `GO`.** Platterpus's
+lap 8, filed here, reads round 32's Full run and declares `GO`, so round 32
+closes on both gates when ours is released. Our lap 9 reads the run too and
+names the track-4 defect it shows. Our lap 7 promised `GO` unless the run
+showed a defect of ours, so lap 9 says why this one does not hold the round:
+it is older than `.22`, it was already recorded, it needs a drive to
+diagnose, and no audio byte moves. Lap 9 also asks Platterpus for X7 to X9
+in round 33.
+
 **Round 32's Full run is filed**: `.22` with Platterpus 0.7.104 on the
 reference disc, 2026-10-13, in `docs/rig-2026-10-13-200530e/`. It shows 424
 pass, 0 fail and the one unreachable step E2, and all eleven logs verify
