@@ -29,6 +29,7 @@ second securing pass and a pregap one list left out, so each is asserted on a
 log built to carry exactly that.
 """
 
+import os
 import pathlib
 import shutil
 import subprocess
@@ -51,17 +52,28 @@ def check(ok, msg):
         fails += 1
 
 
+# No automatic gc or maintenance in the repositories built here. Git may
+# start them detached after a commit or a fetch, and on CI's git one was
+# still writing into `.git` when the temporary directory was removed, so the
+# test failed after every check had passed. Passed to every git process,
+# the tool's own fetch included, through the environment.
+GIT_ENV = {"GIT_CONFIG_COUNT": "2",
+           "GIT_CONFIG_KEY_0": "gc.auto", "GIT_CONFIG_VALUE_0": "0",
+           "GIT_CONFIG_KEY_1": "maintenance.auto", "GIT_CONFIG_VALUE_1": "false"}
+
+
 def run(*args, cwd=ROOT):
     r = subprocess.run([sys.executable, *map(str, args)], capture_output=True,
                        text=True, cwd=cwd, env={"PYTHONDONTWRITEBYTECODE": "1",
-                                                "PATH": "/usr/bin:/bin"})
+                                                "PATH": "/usr/bin:/bin",
+                                                **GIT_ENV})
     return r.returncode, r.stdout + r.stderr
 
 
 def git(repo, *args):
     subprocess.run(["git", "-C", str(repo), "-c", "user.name=t",
                     "-c", "user.email=t@t", *args], check=True,
-                   capture_output=True)
+                   capture_output=True, env={**os.environ, **GIT_ENV})
 
 
 def lap(ready, rnd=99, number=2):
@@ -75,12 +87,14 @@ def take_in(tmp):
     up, peer, laps = tmp / "up", tmp / "peer", tmp / "laps"
     out = up / "docs" / "handshake" / "outbound"
     out.mkdir(parents=True)
-    subprocess.run(["git", "init", "-q", "-b", "main", str(up)], check=True)
+    subprocess.run(["git", "init", "-q", "-b", "main", str(up)], check=True,
+                   env={**os.environ, **GIT_ENV})
     name = "round-99-lap-02.md"
     (out / name).write_text(lap("no — published, NOT yet released"))
     git(up, "add", "-A")
     git(up, "commit", "-q", "-m", "held")
-    subprocess.run(["git", "clone", "-q", str(up), str(peer)], check=True)
+    subprocess.run(["git", "clone", "-q", str(up), str(peer)], check=True,
+                   env={**os.environ, **GIT_ENV})
     (laps / "inbound").mkdir(parents=True)
     tool = ROOT / "tools" / "take-in-lap.py"
     base = [tool, "99", "2", "--peer", peer, "--laps", laps]
@@ -173,9 +187,10 @@ def read_run(tmp):
 
 
 def main():
-    with tempfile.TemporaryDirectory() as d:
+    # A leftover the cleanup cannot remove is not a result of the test.
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         take_in(pathlib.Path(d) / "take")
-    with tempfile.TemporaryDirectory() as d:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as d:
         read_run(pathlib.Path(d))
     if fails:
         print(f"{fails} check(s) failed")
