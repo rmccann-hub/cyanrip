@@ -1240,6 +1240,39 @@ with tempfile.TemporaryDirectory() as t:
             check_lap(pl_lap(old[0][:7], 3), "--peer", str(tmp / "fresh")), 0,
             ["well formed, 0 warning(s)"])
 
+    # Platterpus round 32 lap 4 S9: a clone whose LOCAL main predates the
+    # rewrite, and predates the commit cited, while origin/main carries the
+    # map. The maps were read from the first ref of record, the local branch,
+    # which has none, so the old ID was resolved in the clone and refused as on
+    # no branch. Every ref of record is read now. The old objects are fetched
+    # in, as a clone made before the rewrite holds them.
+    g(pl, "tag", "oldtip", old[-1])
+    g(tmp, "clone", "-q", f"file://{pl}", "stale")
+    st = tmp / "stale"
+    g(st, "fetch", "-q", "origin", "refs/tags/oldtip:refs/tags/oldtip")
+    g(st, "tag", "-d", "oldtip")
+    g(pl, "tag", "-d", "oldtip")
+    g(st, "update-ref", "refs/heads/main", old[0])
+    outcome("HR-1.6 (a)(d): a clone whose local main predates the rewrite "
+            "reads the map on origin/main (their round 32 lap 4 S9)",
+            check_lap(pl_lap(old[1][:7]), "--peer", str(st)), 0,
+            ["well formed, 0 warning(s)"], absent=["on no branch"])
+    g(pl, "checkout", "-q", "-b", "conflict", "main")
+    (pl / "docs/handshake/commit-map-2026-10-13.txt").write_text(
+        "old new\n" + "".join(f"{o} {n}\n" for o, n in zip(old[:1], new[:1])))
+    g(pl, "commit", "-q", "-am", "a different map of the same name")
+    g(pl, "checkout", "-q", "main")
+    try:
+        CM.read_maps_from(pl, ["main", "conflict"])
+        fail("HR-1.6 (f): one map reading differently on two refs was merged")
+    except CM.MapError as e:
+        if "reads differently" not in str(e):
+            fail(f"HR-1.6 (f): two readings of one map: {e!r}")
+        else:
+            print("ok   HR-1.6 (f): one map reading differently on two refs "
+                  "is refused, not guessed at")
+    g(pl, "branch", "-q", "-D", "conflict")
+
     ours = make_repo(tmp / "ours", "platterpus-fork", 1)
     amb = ["abcdef1" + "0" * 33, "abcdef1" + "1" * 33]
     chain_old, chain_mid = "fedcba9" + "2" * 33, "1234567" + "4" * 33

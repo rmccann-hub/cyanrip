@@ -71,7 +71,7 @@ OUT_JSON = ROOT / "docs" / "golden-reference.diagnostics.json"
 CANONICAL = [
     "-d", "pregap.cue", "-N", "-A", "-Q", "-s", "0", "-o", "flac",
     "-Z", "2", "-G", "-F", "{track}", "-L", "reference", "-M", "sheet",
-    "-P", "0", "-u", "platterpus/0.6.4b12",
+    "-P", "0", "--consumer", "platterpus/0.6.4b12",
     "-t", "1=isrc=AAAAA0000001",
     "-t", "2=isrc=BBBBB0000002",
     "-t", "3=isrc=CCCCC0000003",
@@ -231,7 +231,7 @@ def generate(binary):
         # was handed, so an absolute -D rewrites every `File(s):` line and the
         # artifact stops being comparable to the committed one.
         argv = [str(binary)] + CANONICAL + ["-D", "o",
-                                            "-j", "o/reference.diagnostics.json"]
+                                            "--diagnostics", "o/reference.diagnostics.json"]
         p = subprocess.run(argv, cwd=work, stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT, timeout=300)
         log = out / "reference.log"
@@ -363,8 +363,8 @@ def generate_interrupted(binary):
         argv = [str(binary), "-d", "pregap.cue", "-N", "-A", "-Q", "-s", "0",
                 "-o", "flac", "-Z", "199", "-r", "200", "-G",
                 "-F", "{track}", "-L", "sample", "-M", "sheet", "-P", "0",
-                "-u", "platterpus/0.6.21", "-D", "o",
-                "-j", "o/sample.diagnostics.json"]
+                "--consumer", "platterpus/0.6.21", "-D", "o",
+                "--diagnostics", "o/sample.diagnostics.json"]
         with stdout.open("wb") as fh:
             p = subprocess.Popen(argv, cwd=work, stdout=fh,
                                  stderr=subprocess.STDOUT)
@@ -443,7 +443,7 @@ def main():
                 where = f"(could not be saved: {exc})"   # failure with this one
             sys.exit("a rip interrupted right now does not produce:\n  "
                      + "\n  ".join(missing)
-                     + f"\n\nthe failing run's log and -j record are kept at:"
+                     + f"\n\nthe failing run's log and --diagnostics record are kept at:"
                        f"\n  {where}\n"
                        "they are NOT reproducible -- where the signal lands is "
                        "not schedulable -- so read them before re-running.")

@@ -1,12 +1,12 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-32-lap-03.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-32-lap-05.md
+STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; your lap 2, sent on 2026-10-12, moves its run to your 0.7.104, since 0.7.103's section A accepts .21 alone, and accepts our -j fields and track 1's pregap count; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent round-32-lap-03.md (ours), round-32-lap-02.md (theirs); next 4 (theirs) carrying 0.7.104 and your reading of the Full run on .22 with it; held none
+STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; your lap 4, sent on 2026-10-12, does HR-1 on your side, and your 0.7.104 follows our lap 5, the HR-1.7 (4) lap; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
+STATUS-LAPS: newest sent round-32-lap-03.md (ours), round-32-lap-04.md (theirs); next 5 (ours) carrying HR-1 in our ledger and our checker's word on your lap 4; held 5 carrying HR-1.7 (4) from our side, your S9 fixed, the ask to declare protocol 8 under C29, and the retired letters and the upstream sync for our next release
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
-STATUS-RELEASE-NEXT: +platterpus.23, held until the Full run on .22 with your 0.7.104 is filed here (our lap 3 S16), since a run tests only the newest pair, carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32; pins ca3f3ea, reviews +platterpus.22
+STATUS-RELEASE-NEXT: +platterpus.23, held until HR-1.7's check passes (HR-1.3) and the Full run on .22 with your 0.7.104 is filed here (our lap 3 S16), since a run tests only the newest pair, carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32, and upstream's 0.9.4-rc3, merged at 79da685, with -j at /9 and two new disc lines and data-track rows your parser must accept first (docs/upstream/sync-2026-10-12-rc3.md section 4), and with the short options -j, -k, -u and -x retired for their long names, so your argv must send --diagnostics rather than -j before it can run this build (Changelog.md); pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.22 with 0.7.104; waiting on your 0.7.104, whose section A accepts .22 (your lap 2 S5)
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until round 32's Full run reads it on a drive; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
@@ -27,7 +27,7 @@ STATUS-OPEN: encoder-options-flag us fixing at round 33, priority 9: a repeatabl
 STATUS-OPEN: hardware-unverified us cannot, because each needs a disc or a drive this environment lacks: C2, which the rig's drive reports unsupported; CD-TEXT from a physical disc; -W on a pre-emphasised disc; a paranoia skip on a drive; -f on a second drive, and a -f search that finds nothing on a drive; and -P 0's sector-by-sector salvage on a drive; asked of your rig in our round 32 lap 1 S21
 STATUS-OPEN: superseded-read-marker both cannot, because the format needs a design both sides agree (round 24's item, with round 8 J14's read time); asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse and no design exists; asked in our round 32 lap 1 S22 whether to keep it
-STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act, which the operator said on 2026-10-05 they will do; all eighteen are drafted in docs/upstream/issues-to-file.md
+STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act, which the operator said on 2026-10-05 they will do; all twenty-three are drafted in docs/upstream/issues-to-file.md
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: windows-ci-unpinned us cannot, because the operator decided on 2026-10-05 to leave the Windows build as upstream ships it, and no consumer uses its artifact
 STATUS-OPEN: release-markers us cannot, because building or retiring the release/* markers of docs/UPGRADE-CHANNELS-PLAN.md §6a is the operator's decision, now that v8 decouples releases from rounds; put to the operator on 2026-10-12
@@ -102,7 +102,18 @@ changed is in `Changelog.md`.
   S10 and S13, asks whether an EAC log shows the additive half of track 1's
   convention, holds `.23` until the run on `.22` with 0.7.104 is filed (S16),
   and pre-commits our closing lap to `GO` unless that run shows a defect of
-  ours. Their lap 4 is next, once 0.7.104 is cut.
+  ours.
+- **Their lap 4 is sent**, released on 2026-10-12 at `platterpus@09b1cd97`
+  and on their `main` at `e27cee5b` (`inbound/round-32-lap-04.md`). It is
+  their HR-1 lap: the rewrite done, the commit map committed, our side of HR-1
+  verified, and 0.7.104 to follow our HR-1 lap. Our lap checker reads it well
+  formed through their map; our gate refuses it as a file under C29, because
+  it declares protocol 7 after our lap 3 declared 8.
+- **Our lap 5 is published and held** (`round-32-lap-05.md`): HR-1.7 (4) from
+  our side, HR-1 in our ledger, their S9 fixed at `f5ffbb4`, a blocking ask to
+  declare 8, and the retired letters and the upstream sync announced for our
+  next release. It is released on the operator's word once its branch reaches
+  `platterpus-fork`.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
@@ -159,13 +170,13 @@ lacks on hardware is the `hardware-unverified` line.
 
 ### Upstream
 
-Our `master` mirrors `cyanreg/cyanrip` at `f8ebf48`, merged into
-`platterpus-fork` at `1fb6f07`. That is a reading of 2026-09-28T00:15Z, when
+Our `master` mirrors `cyanreg/cyanrip` at `b40c1f0`, 0.9.4-rc3, merged into
+`platterpus-fork` at `79da685`. That is a reading of 2026-10-12T22:46Z, when
 `git ls-remote` last returned it; `tools/upstream-delta.py` is how to check
-again. **Eighteen defects of ours exist upstream and none is filed there**: all
-are drafted, ready to paste, in `docs/upstream/issues-to-file.md`, each
-re-checked against `master` by `tools/check-settled.py`. Filing them is the
-maintainer's act.
+again. **Twenty-three defects this fork found in upstream's code are not filed
+there**: all are drafted, ready to paste, in `docs/upstream/issues-to-file.md`,
+each re-checked against `master` by `tools/check-settled.py`. Filing them is
+the maintainer's act.
 
 ## Earlier states of this file are in git history, not here
 

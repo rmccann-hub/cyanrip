@@ -769,14 +769,23 @@ def collect():
 
 
 def flags(binary):
-    """Every flag, from the binary's own --help so it cannot drift from reality."""
+    """Every flag, from the binary's own --help so it cannot drift from reality.
+
+    A LONG-ONLY OPTION HAS NO "(-x)" AND IS STILL A FLAG. This used to require
+    the short letter, so every long-only option vanished from a table that
+    calls itself every flag: --acoustid-key from the upstream merge on, and on
+    2026-10-12, when the fork's own four letters were retired, --consumer,
+    --diagnostics, --stall-secs and --cache-probe with it, though a consumer
+    reads P1 for --consumer by name. Its Short cell says `none`.
+    """
     out = subprocess.run([binary, "--help"], capture_output=True, text=True).stdout
     rows, section = [], "General"
     for ln in out.splitlines():
         if ln.endswith(":") and not ln.startswith(" "):
             section = ln.rstrip(":")
             continue
-        m = re.match(r"\s+--(?P<long>[a-z0-9-]+)\s+\((?P<short>-[A-Za-z])\):\s+(?P<desc>.+)", ln)
+        m = re.match(r"\s+--(?P<long>[a-z0-9-]+)(?:\s+\((?P<short>-[A-Za-z])\))?:"
+                     r"\s+(?P<desc>.+)", ln)
         if m:
             rows.append((section, m.group("short"), "--" + m.group("long"),
                          m.group("desc").strip()))
@@ -1407,7 +1416,7 @@ def diag_records(binary):
     # documented hole where a covered field was one flag away.
     produced = [
         ("a run refused during argument validation", ["-J", "-I"]),
-        ("a run with stall reporting off (-k 0)", ["-J", "-I", "-k", "0"]),
+        ("a run with stall reporting off (--stall-secs 0)", ["-J", "-I", "--stall-secs", "0"]),
         # From /8: CD-TEXT, which no other record carries, so without it
         # every `cdtext` value would be typed from nulls alone. The image is
         # written below, every field libcdio reads at disc and track level.
@@ -1427,13 +1436,13 @@ def diag_records(binary):
         write_cdtext_image(td)
         for what, extra in produced:
             out = os.path.join(td, re.sub(r"\W+", "_", what) + ".json")
-            argv = [binary] + extra + ["-j", out]
+            argv = [binary] + extra + ["--diagnostics", out]
             # cwd: libcdio's cdrdao driver opens a .toc's FILE by its raw
             # relative path, so the image loads only from its own directory.
             subprocess.run(argv, stdout=subprocess.DEVNULL, cwd=td,
                            stderr=subprocess.DEVNULL, timeout=60,
                            env=OFFLINE if "-f" in extra else None)
-            shown = "produced by " + " ".join(extra + ["-j"])
+            shown = "produced by " + " ".join(extra + ["--diagnostics"])
             if os.path.exists(out):
                 try:
                     records.append((what, shown,
@@ -1549,7 +1558,7 @@ def emit(binary):
         w(f"**Fork identifier:** `{fork_id}`. This is `PROJECT_FORK_ID`, and it is")
         w("**the only reliable answer to \"is this the fork?\"** -- it appears in the")
         w("version banner, in the first line of every logfile, and as `cyanrip.fork_id`")
-        w("in the `-j` record. **Match on it. Never match on the leading version")
+        w("in the `--diagnostics` record. **Match on it. Never match on the leading version")
         w("number**, which is upstream's string copied verbatim and which upstream can")
         w("mint identically; and never on the `-g<tag>` suffix, which names a commit")
         w("rather than a build. Derived here from the banner, so it cannot drift from")
@@ -1575,7 +1584,7 @@ def emit(binary):
             w("")
             w("| Short | Long | Meaning |")
             w("|---|---|---|")
-        w(f"| `{short}` | `{long}` | {desc} |")
+        w(f"| {f'`{short}`' if short else 'none'} | `{long}` | {desc} |")
     w("")
     w(f"**{len(rows)} flags total.** Notes that are not derivable from `--help`:")
     w("")
@@ -1659,7 +1668,7 @@ def emit(binary):
     w("  any skip is counted the line says how many of the count they are,")
     w("  `Ripping errors: N (including M paranoia skips)`, so **a line with no")
     w("  suffix counts no skips, whichever build wrote it**: no earlier build")
-    w("  counted them. The `-j` record's `rip.ripping_errors` is the same N and")
+    w("  counted them. The `--diagnostics` record's `rip.ripping_errors` is the same N and")
     w("  `rip.paranoia_skips` is M. **The exit code does not follow the skips**:")
     w("  it is `1` when N less M is non-zero or the run aborted, so a rip whose")
     w("  only errors are skips prints a non-zero count and exits `0`, which no")
@@ -1850,8 +1859,8 @@ def emit(binary):
     w("buffered and replayed into the logfile if one is later opened, so a consumer")
     w("reading the log does see them. **But a run that refuses during argument")
     w("validation opens no logfile at all**, and for that class the only artifact is")
-    w("the `-j` diagnostics record, which is written for those runs and is off unless")
-    w("asked for. Without `-j`, a refused run leaves its reason on stdout and nowhere")
+    w("the `--diagnostics` record, which is written for those runs and is off unless")
+    w("asked for. Without `--diagnostics`, a refused run leaves its reason on stdout and nowhere")
     w("else.")
     w("")
 
@@ -2098,7 +2107,7 @@ def emit(binary):
     w("  the `: invalid option -- 'X'` suffix is stable.")
     w("- **One line each**, no usage block follows.")
     w("")
-    w("## P8 - The `-j` diagnostics record")
+    w("## P8 - The `--diagnostics` record")
     w("")
     w("**DERIVED, from two sources that must agree.** The key names come from")
     w("`diagnostics.c`'s emitter, where they are spelled into the format")
@@ -2229,7 +2238,7 @@ def emit(binary):
     w("  The record says so in its own `messages_note` field rather than only")
     w("  in this document.")
     w("- **No `success` flag.** A record is written for runs that produce no")
-    w("  logfile at all, which is the reason `-j` exists; a boolean verdict")
+    w("  logfile at all, which is the reason `--diagnostics` exists; a boolean verdict")
     w("  would be cyanrip making a judgement, and judgements are the")
     w("  consumer's. `exit_code`, `ripping_errors`, `interrupted` and the")
     w("  per-track `audio_ripped` are the measurements a verdict would be")
@@ -2241,7 +2250,7 @@ def emit(binary):
     w("")
 
     w("On **this fork** the genopt message is routed through `cyanrip_log()`, so")
-    w("it reaches stdout, the logfile if one is open, and the `-j` record. That")
+    w("it reaches stdout, the logfile if one is open, and the `--diagnostics` record. That")
     w("is a fork property; stock does neither.")
     w("")
     w("## P7 - Filename sanitisation (`-T`)")

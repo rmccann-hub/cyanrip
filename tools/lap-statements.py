@@ -431,8 +431,8 @@ class Resolver:
         if side not in self.maps:
             rec = self._record(side)
             try:
-                self.maps[side] = COMMIT_MAP.parse(COMMIT_MAP.read_maps(
-                    self.repo[side], rec[0] if rec else None))
+                self.maps[side] = COMMIT_MAP.parse(COMMIT_MAP.read_maps_from(
+                    self.repo[side], rec))
             except COMMIT_MAP.MapError as e:
                 self.maps[side] = e
         maps = self.maps[side]

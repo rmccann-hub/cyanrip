@@ -368,6 +368,15 @@ test('Argv surface probe', python,
      depends: cyanrip_exe,
      timeout: 300)
 
+## Short letters (CLAUDE.md, "Watching upstream")
+## ==============================================
+## An option this fork adds is long-only: upstream allocates short letters,
+## and its b40c1f0 gave -k to --acoustid-key while -k was --stall-secs here.
+## Reads upstream's option table at the last upstream commit merged, and
+## skips (77), saying what it did not check, where git cannot give it one.
+test('Fork options are long-only', python,
+     args: [ files('option_letters.py'), cyanrip_exe ])
+
 ## And the table the probe publishes, in the shared docs/seam-commands.md §7,
 ## bounded by its generated-block delimiters so the check never reads prose the
 ## other side wrote. Without this the table went stale for weeks after the

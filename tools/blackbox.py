@@ -283,7 +283,7 @@ def invoke(binary, label, argv, work, out_root, env_overlay=None):
     allowed = set()
     scheme_valued = False
     for i, a in enumerate(argv[:-1]):
-        if a not in ("-D", "-j"):
+        if a not in ("-D", "--diagnostics"):
             continue
         v = str(argv[i + 1])
         # EVERY occurrence, not argv.index()'s first. genopt takes the LAST
@@ -682,14 +682,14 @@ def fam_combo(work):
     pairs = [
         ["-I", "-J"], ["-I", "-Y", "log"], ["-J", "-Y", "log"],
         ["-H", "-E"], ["-H", "-W"], ["-E", "-W"], ["-H", "-E", "-W"],
-        ["-x", "-I"], ["-x", "-J"], ["-f", "-I"], ["-Q", "-I"],
+        ["--cache-probe", "-I"], ["--cache-probe", "-J"], ["-f", "-I"], ["-Q", "-I"],
         ["-Z", "0", "-r", "0"], ["-Z", "1", "-r", "1"],
-        ["-k", "0"], ["-k", "1"], ["-O"], ["-K"], ["-G"], ["-N", "-R", "1"],
+        ["--stall-secs", "0"], ["--stall-secs", "1"], ["-O"], ["-K"], ["-G"], ["-N", "-R", "1"],
         ["-A", "-f"], ["-m", "0"], ["-m", "1"], ["-m", "-2"],
         ["-b", "0"], ["-b", "-1"], ["-b", "999999"],
         ["-P", "none"], ["-P", "max"], ["-P", "-1"], ["-P", "99999"],
-        ["-j", "diag.json"], ["-j", "/dev/full"], ["-j", "."],
-        ["-u", ""], ["-u", "x" * 65535], ["-u", "a\nb"],
+        ["--diagnostics", "diag.json"], ["--diagnostics", "/dev/full"], ["--diagnostics", "."],
+        ["--consumer", ""], ["--consumer", "x" * 65535], ["--consumer", "a\nb"],
     ]
     out = []
     for p in pairs:
@@ -755,8 +755,8 @@ def fam_filesystem(work):
                      "-o", "flac", "-D", "readonly/out", "-L", "log",
                      "-M", "sheet"]))
         out.append(("fs/diagnostics-to-readonly",
-                    base(work, ["-j", "readonly/d.json"])))
-        out.append(("fs/diagnostics-to-dir", base(work, ["-j", "readonly"])))
+                    base(work, ["--diagnostics", "readonly/d.json"])))
+        out.append(("fs/diagnostics-to-dir", base(work, ["--diagnostics", "readonly"])))
 
     afile = work / "afile"
     afile.write_text("not a directory\n")
@@ -780,7 +780,7 @@ def fam_filesystem(work):
 
     # /dev/full accepts writes and fails them. A writer that never checks is
     # how a truncated archival record gets written and reported as complete.
-    out.append(("fs/diagnostics-to-dev-full", base(work, ["-j", "/dev/full"])))
+    out.append(("fs/diagnostics-to-dev-full", base(work, ["--diagnostics", "/dev/full"])))
     return out
 
 

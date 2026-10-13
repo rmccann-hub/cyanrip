@@ -62,7 +62,8 @@ settled by building 0.9.3 and running it. The measured matrix is
   the gap-fill into metadata (`user -a/-t > MusicBrainz > CD-TEXT > defaults`).
 - `src/pregap.c`/`.h` -- Q sub-channel pregap search for physical discs, carried
   from upstream PR #115 with fixes; see `docs/pregap-carry.md`.
-- `src/cache_probe.c`/`.h` -- `-x` drive readback cache measurement. Refuses on
+- `src/cache_probe.c`/`.h` -- `--cache-probe` (`-x` until 2026-10-12, so every
+  dated result below says `-x`) drive readback cache measurement. Refuses on
   image drivers, which have no cache to measure. **Verified on hardware
   2026-08-25** -- `-x -I` completed in 15.9 s on a PIONEER BD-RW BDR-209D, exit
   0, drive returned, reporting `at least 2048 sectors ... search ceiling
@@ -108,9 +109,10 @@ settled by building 0.9.3 and running it. The measured matrix is
   accumulates the stall count and the longest wait, because the heartbeat is
   progress output and the *fact* of a stall is a measurement that cannot be
   re-taken; `Read stalls:` in the disc summary is where it lands.
-- `src/diagnostics.c`/`.h` -- `-j`, the machine-readable record. Its reason to
+- `src/diagnostics.c`/`.h` -- `--diagnostics` (`-j` until 2026-10-12), the
+  machine-readable record. Its reason to
   exist is the runs that open **no logfile at all**, so it is written from
-  `atexit` and `-j` is found by a pre-pass before genopt. Read its header
+  `atexit` and `--diagnostics` is found by a pre-pass before genopt. Read its header
   before adding a field: it deliberately claims no severity and has no
   `success` flag, and both absences are load-bearing.
 - `tests/` -- meson-driven unit tests (`fun512.c`, `naming.c`, `subq.c`,
@@ -910,14 +912,17 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is eighteen**:
+   tally that said "all three" while five more existed. **It is twenty-three**:
    eight counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather
    than remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
    from round 26's real test, a twelfth the same day from Platterpus's reading
    of our source, a thirteenth on 2026-09-27, found writing
    `tests/arresp.c`, a fourteenth on 2026-10-05, found reading the tally for
-   round 30, three fixed earlier in round 30 and drafted the same day, and an
-   eighteenth found that evening, writing up the open list.
+   round 30, three fixed earlier in round 30 and drafted the same day, an
+   eighteenth found that evening, writing up the open list, and five on
+   2026-10-12, the day upstream's `b40c1f0` was merged: from the merged tree's
+   first macOS and sanitizer CI runs, and from a fix of 2026-09-06 that no
+   report had named.
    Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
@@ -977,13 +982,29 @@ should need rewriting. If it does, that is the defect.
       lookup returned more than 0, while the track's 450 line needs both
       below 0, so a confidence-0 entry (a malformed response) makes the
       footer count a match no track line shows. Fixed for `.20` (`8ab9a8d`).
+  19. The offset check and the sub-channel pre-emphasis read tell a drive
+      from an image by `CDIO_DRIVE_CAP_READ_ISRC`, which libcdio 2.3.0 gives
+      every image driver, so an image rip without `-s` stops at `Offset is
+      unset!`. Fixed here (`faec396`).
+  20. `-Y` on a directory is signed overflow: on ext4 `ftell()` returns
+      `LONG_MAX`, and `len + 1` follows. Fixed here on 2026-09-06 (`72975de`).
+  21. `-Y` never checks `fread()`, so a failed read is reported as a log
+      with no checksum, which macOS shows on a directory. Fixed here
+      (`d109c56`).
+  22. The paranoia counters are printed with `%lu` from `uint64_t`, wrong
+      on macOS and Windows, and silent there because `cyanrip_log()` has no
+      format attribute. Fixed here (`09492a5`).
+  23. Three start-up failures, the cddap context, the log and the CUE
+      sheet, return without `cyanrip_ctx_end()`. Fixed here (`3f0e161`,
+      `72975de`).
 
-   **Not filed is not fixed, and eighteen unfiled reports is the private
+   **Not filed is not fixed, and twenty-three unfiled reports is the private
    garden this rule forbids.** Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — but **every one is
-   drafted** (2026-09-27, the last five 2026-10-05): the other seventeen are in
-   `docs/upstream/defect-reports.md`, each with upstream's `file:line` at
-   `f8ebf48` and our fixing commit, and all eighteen are rendered ready to
+   drafted** (2026-09-27, five more 2026-10-05, the last five 2026-10-12):
+   the other twenty-two are in `docs/upstream/defect-reports.md`, each with
+   upstream's `file:line`, at `f8ebf48` for 1 to 18 and at `b40c1f0` for 19
+   to 23, and our fixing commit, and all twenty-three are rendered ready to
    paste in `docs/upstream/issues-to-file.md`. The count
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
@@ -995,6 +1016,13 @@ should need rewriting. If it does, that is the defect.
    fourteenth, by grepping those two files for *"upstream's too"*, and drafted
    the same day, each re-checked against `master`'s source rather than carried
    over. **Grep the fixes for upstream's code before quoting this count.**
+
+   **And grep the commit messages, not only those two files.** Report 20 and
+   two arms of 23 were fixed on 2026-09-06 (`72975de`), and the commit said
+   *"Both upstream's"*, but neither file recorded them, so the 2026-10-05
+   grep could not see them. `git log -i -E --grep="upstream's (code|too)|both
+   upstream's|same at [0-9a-f]{7}"` found them on 2026-10-12, beside what
+   CI had just found.
 
 **And custody, which is the part that makes "source of truth" mean something
 without meaning "we decide".** The shared seam documents live here as the
@@ -2325,6 +2353,27 @@ So: **when syncing upstream, diff the CLI surface and the log text, not just the
 code.** Anything that changes either is handshake material even though we did
 not write it — and say plainly that it came from upstream, because it changes
 whether "roll back to stock" is an escape hatch for the other side.
+
+**An option this fork adds is long-only, and is named by its feature.** Rule
+from 2026-10-12. Upstream allocates short letters and a fork cannot reserve
+one: `-k` was `--stall-secs` here, in Platterpus's argv, when upstream's
+`b40c1f0` gave `-k` to `--acoustid-key`. So the sync made upstream's option
+long-only here, and the two projects now spell different options `-k`. A long
+name can still collide, but only on the same word, and a sync's diff of
+`--help` shows it. **Name an option by what it does (`--cache-probe`), never
+by who asked for it (`--platterpus-…`).** The obligations here are to any
+consumer, and a consumer's name in the CLI says otherwise. **The four letters
+the fork had shipped were retired the same day**, on the owner's word, while
+nobody but the owner used either project: `-j` is `--diagnostics`, `-k`
+`--stall-secs`, `-u` `--consumer` and `-x` `--cache-probe`. Only `-V` stays,
+because it is upstream's own spelling up to 0.9.3. **A retired letter is given
+to nothing** until a decision says otherwise. `-k` is upstream's
+`--acoustid-key`, and taking it while an old `-k 10` might still run would
+read a stall threshold as an AcoustID key. `tests/option_letters.py` reads
+upstream's option table at the last upstream commit merged, and fails on a
+fork option with a letter, a retired letter given to anything or accepted by
+the binary, an upstream letter changed without a recorded reason, and a letter
+given twice.
 
 **That diff is a tool and a record, not a habit.** `tools/upstream-delta.py`
 generates it — versions, inbound commits, CLI flags *measured from both

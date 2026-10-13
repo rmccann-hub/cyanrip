@@ -149,7 +149,7 @@ def check_argv(out, crip, container):
     seen = {}
     for label, prefix in probes:
         j = out / f"argv-{label}.json"
-        ec, txt = run(prefix + ["-j", str(j), "-Z", "3", "-l", "1,2", "-N",
+        ec, txt = run(prefix + ["--diagnostics", str(j), "-Z", "3", "-l", "1,2", "-N",
                                 "-d", "/nonexistent.cue"], timeout=240)
         save(out, f"argv-{label}.txt", txt if isinstance(txt, str) else "")
         # A RUN THAT NEVER HAPPENED IS NOT A -j DEFECT. `run()` returns an exit
@@ -172,7 +172,7 @@ def check_argv(out, crip, container):
             continue
         if not j.exists():
             record(f"argv/{label}", FAIL,
-                   f"cyanrip exited {ec} and -j wrote no record at all, which "
+                   f"cyanrip exited {ec} and --diagnostics wrote no record at all, which "
                    "is the one job it has on a run that fails early")
             continue
         try:
@@ -489,7 +489,7 @@ def check_cache_probe(out, crip, device):
     """-x, and -j for a complete record. Read-only: rips nothing, writes no
     audio. -D keeps the logfile -I announces inside --out instead of cwd."""
     j = out / "cache-probe.diagnostics.json"
-    ec, txt = run([crip, "-x", "-j", str(j), "-I", "-N", "-d", device,
+    ec, txt = run([crip, "--cache-probe", "--diagnostics", str(j), "-I", "-N", "-d", device,
                    "-D", str(out / "probe-out")], timeout=600)
     save(out, "cache-probe.txt", txt if isinstance(txt, str) else "")
     m = re.search(r"^Cache probe:\s+(.*)$", txt or "", re.M)

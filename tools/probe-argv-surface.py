@@ -70,7 +70,7 @@ EFFECT = {
     "-r": (r"^Retry limit:\s+(\d+)", lambda v: int(v)),
     "-P": (r"^Paranoia level:\s+(\S+)", None),
     "-O": (r"^Overread:\s+([+-]?\d+) frames", None),
-    "-u": (r"^Consumer:\s+(\S+)", None),
+    "--consumer": (r"^Consumer:\s+(\S+)", None),
 }
 
 
@@ -128,7 +128,7 @@ GRID = [
     ("-r", "frame/rip retries", [-1, 0, 1, 10, 2147483647, 2147483648]),
     ("-Z", "repeat rips until N matches", [-1, 0, 1, 2, 10, 2147483647]),
     ("-S", "drive speed multiplier", [-1, 0, 1, 48, 2147483647]),
-    ("-k", "stall threshold, seconds", [-1, 0, 1, 10, 2147483647]),
+    ("--stall-secs", "stall threshold, seconds", [-1, 0, 1, 10, 2147483647]),
     ("-P", "paranoia level", [-1, 0, 1, 3, 4, 999]),
     ("-m", "cover art max size", [-2, -1, 250, 500, 1200, 999]),
     ("-b", "lossy bitrate, kbps", [-1, 0, 1, 256, 100000]),
@@ -147,7 +147,7 @@ GRID = [
 # for every structured argument, is the generalisation of that one fix.
 
 STRING_GRID = [
-    ("-u", "consumer tag", ["", "x", "platterpus/0.6.4b12", "a" * 4096]),
+    ("--consumer", "consumer tag", ["", "x", "platterpus/0.6.4b12", "a" * 4096]),
     ("-a", "album metadata blob", ["", "album=x", "album=a:b", "album=" + "z" * 8192,
                                    "album", "=x", "album=", "a=b:", "a=b::c=d",
                                    "a==b", "album=x\\"]),
@@ -168,7 +168,7 @@ INTERACTIONS = [
     (["-I", "-J"], "info-only with cue-only"),
     (["-J"], "cue-only alone"),
     (["-E", "-W"], "force deemphasis with no-deemphasis"),
-    (["-x"], "cache probe on an image"),
+    (["--cache-probe"], "cache probe on an image"),
     (["-f"], "find-offset on an image"),
 ]
 

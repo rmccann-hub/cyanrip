@@ -294,7 +294,7 @@ void crip_stall_summary_line(char *buf, size_t buf_size,
 {
     if (!s->threshold_us) {
         snprintf(buf, buf_size,
-                 "unknown (stall reporting disabled with -k 0)");
+                 "unknown (stall reporting disabled with --stall-secs 0)");
         return;
     }
 

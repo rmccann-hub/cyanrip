@@ -158,7 +158,7 @@ say ""
 
 T0=$(date -u +%s)
 say "--- launching at epoch $T0"
-say "    argv: timeout -k $GRACE $BUDGET $CRIP${DEV:+ -d $DEV} -j $DIAG -D $OUT/scratch -o flac -N -l 1 -u platterpus/c1-probe"
+say "    argv: timeout -k $GRACE $BUDGET $CRIP${DEV:+ -d $DEV} --diagnostics $DIAG -D $OUT/scratch -o flac -N -l 1 --consumer platterpus/c1-probe"
 say ""
 
 # No pipe. A plain redirect, for the reason in the header above.
@@ -167,11 +167,11 @@ say ""
 # be a device named "", not an absent flag, and cyanrip would refuse on it.
 if [ -n "$DEV" ]; then
     timeout -k "$GRACE" "$BUDGET" "$CRIP" -d "$DEV" \
-        -j "$DIAG" -D "$OUT/scratch" -o flac -N -l 1 -u platterpus/c1-probe \
+        --diagnostics "$DIAG" -D "$OUT/scratch" -o flac -N -l 1 --consumer platterpus/c1-probe \
         > "$RAW" 2>&1 &
 else
     timeout -k "$GRACE" "$BUDGET" "$CRIP" \
-        -j "$DIAG" -D "$OUT/scratch" -o flac -N -l 1 -u platterpus/c1-probe \
+        --diagnostics "$DIAG" -D "$OUT/scratch" -o flac -N -l 1 --consumer platterpus/c1-probe \
         > "$RAW" 2>&1 &
 fi
 SHELL_PID=$!
@@ -329,10 +329,10 @@ say "                           the -k SIGKILL that ends it either way."
 say "    stdout capture bytes : $BYTES"
 say "    capture mtime        : $(date -u -r "$RAW" +%Y-%m-%dT%H:%M:%S 2>/dev/null || echo '?')"
 if [ -f "$DIAG" ]; then
-    say "    -j record            : written, $(wc -c < "$DIAG") bytes,"
+    say "    --diagnostics record : written, $(wc -c < "$DIAG") bytes,"
     say "                           mtime $(date -u -r "$DIAG" +%Y-%m-%dT%H:%M:%S 2>/dev/null || echo '?')"
 else
-    say "    -j record            : NOT WRITTEN -- the exit path did not complete"
+    say "    --diagnostics record : NOT WRITTEN -- the exit path did not complete"
 fi
 say ""
 
