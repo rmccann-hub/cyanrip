@@ -29,6 +29,7 @@ evidence job, as a failure (6b, 8a), the manifest's strictness (4), tags kept
 off evidence (8a), and a later run filed on the tip (10a).
 """
 
+import datetime
 import os
 import pathlib
 import subprocess
@@ -148,9 +149,14 @@ with tempfile.TemporaryDirectory() as d:
     check(all(r.sha256 == evidence.sha256(FILES[r.path]) and
               r.size == len(FILES[r.path]) for r in rows),
           "each row's size and SHA-256 are the file's")
-    who = git(origin, "log", "-1", "--format=%an <%ae> %aI|%cn <%ce> %cI|%P", C)
-    check(who == ("evidence <evidence@invalid> 2026-10-14T00:00:00+00:00|"
-                  "evidence <evidence@invalid> 2026-10-14T00:00:00+00:00|"),
+    # Each date as the instant it records, in seconds since the epoch: git's
+    # text for an instant is not stable across versions (2.43 prints
+    # 2026-10-14T00:00:00+00:00 for %aI and CI's 2.55 prints ...Z).
+    instant = int(datetime.datetime(2026, 10, 14, tzinfo=datetime.timezone.utc)
+                  .timestamp())
+    who = git(origin, "log", "-1", "--format=%an <%ae> %at|%cn <%ce> %ct|%P", C)
+    check(who == (f"evidence <evidence@invalid> {instant}|"
+                  f"evidence <evidence@invalid> {instant}|"),
           f"identity, both dates and no parent are HR-2 5c's: {who}")
     check(git(origin, "rev-parse", "evidence") == C, "the push made evidence")
     rc, o = tool(work, "build", "--folders", lst, "--date", DATE,
