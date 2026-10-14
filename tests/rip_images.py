@@ -99,6 +99,43 @@ def skip(msg):
     sys.exit(77)
 
 
+def _evidence_store():
+    """This tree's run evidence, wherever HR-2 put it (tools/evidence.py):
+    in the checkout until the move, on the evidence branch after it."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    import evidence
+    return evidence.Store(ROOT)
+
+
+def _read_evidence(store, path, unfetched):
+    """A file's bytes, or None after noting it unfetched or failing on it."""
+    import evidence
+    try:
+        return store.read(path)
+    except evidence.NotFetched:
+        unfetched.append(path)
+    except evidence.Mismatch as e:
+        fail(str(e))
+    return None
+
+
+def _evidence_unfetched(what, unfetched):
+    """Skip a scenario whose evidence this clone has not fetched -- or, in
+    CI's evidence job, fail it, since that job exists so these run (HR-2 6b,
+    8a). A failure already found is never hidden behind the skip."""
+    if not unfetched:
+        return
+    import evidence
+    msg = (f"{what}: {len(unfetched)} file(s) of run evidence not fetched, "
+           f"first {unfetched[0]}; tools/evidence.py fetch reads them")
+    if evidence.required():
+        fail(f"{msg} ({evidence.REQUIRED_ENV}=1)")
+    elif fails:
+        print(f"note: {msg}")
+    else:
+        skip(msg)
+
+
 def needs_preload_shim(scenario):
     """Skip, out loud, a scenario that rips through an LD_PRELOAD shim, on a
     platform whose loader has no LD_PRELOAD. tests/meson.build builds the
@@ -2513,14 +2550,22 @@ def sc_cache_table_matches_the_transcripts():
     # `uncached` contains `cached`; the lookbehind is the whole point.
     probe_re = re.compile(r"Cache probe:.*?uncached read ([\d.]+) ms, "
                           r"(?<!un)cached read ([\d.]+) ms")
-    found = {}
-    for d in sorted((ROOT / "docs").glob("rig-*/")):
-        t = d / "session" / "transcript.txt"
-        if not t.exists():
+    # Every filed session, in this checkout or on the evidence branch (HR-2):
+    # read through tools/evidence.py, and unprobed rather than "no line found"
+    # when a transcript is one this clone has not fetched.
+    store = _evidence_store()
+    found, unfetched = {}, []
+    for folder in store.folders():
+        t = f"{folder}/session/transcript.txt"
+        if not folder.startswith("docs/rig-") or t not in store.files(folder):
             continue
-        m = probe_re.search(t.read_text(encoding="utf-8", errors="replace"))
+        data = _read_evidence(store, t, unfetched)
+        if data is None:
+            continue
+        m = probe_re.search(data.decode("utf-8", errors="replace"))
         if m:
-            found[d.name] = (float(m.group(1)), float(m.group(2)))
+            found[folder.split("/")[1]] = (float(m.group(1)), float(m.group(2)))
+    _evidence_unfetched("cache_table", unfetched)
     if not found:
         fail("cache_table: no `Cache probe:` line found in any filed "
              "transcript -- the sessions moved and this check is guarding "
@@ -4577,7 +4622,13 @@ def sc_filed_rig_is_mappable():
                                   "session and is not held in this one, so its "
                                   "mapping cannot be derived from it",
     }
-    filings = sorted(p.parent.name for p in (ROOT / "docs").glob("rig-*/rips"))
+    # Every filing with a rips/ directory, in this checkout or on the evidence
+    # branch (HR-2), read through tools/evidence.py.
+    store = _evidence_store()
+    filings = sorted(f.split("/")[1] for f in store.folders()
+                     if f.startswith("docs/rig-")
+                     and any(p.startswith(f + "/rips/") for p in store.files(f)))
+    unfetched = []
     if len(filings) < 10:
         fail(f"filed_rig_is_mappable: only {len(filings)} filings found, so the "
              f"glob moved and this is checking almost nothing")
@@ -4585,7 +4636,8 @@ def sc_filed_rig_is_mappable():
         if name in exempt:
             print(f"note: filed_rig_is_mappable: {name} not checked: {exempt[name]}")
             continue
-        _mapping_holds(ROOT / "docs" / name)
+        _mapping_holds(store, f"docs/{name}", unfetched)
+    _evidence_unfetched("filed_rig_is_mappable", unfetched)
     for name, why in exempt.items():
         readme = ROOT / "docs" / name / "README.md"
         if name not in filings:
@@ -4595,15 +4647,21 @@ def sc_filed_rig_is_mappable():
                  f"exemption ({why}) is stale")
 
 
-def _mapping_holds(base):
-    readme, rips = base / "README.md", base / "rips"
-    if not readme.exists() or not rips.is_dir():
-        fail(f"{base.name} is missing")
+def _mapping_holds(store, folder, unfetched):
+    readme = f"{folder}/README.md"
+    rips = [p for p in store.files(f"{folder}/rips")
+            if p.count("/") == 3 and p.endswith(".log")]
+    run = folder.split("/")[1]
+    if not store.in_tree(readme) and readme not in store.rows or not rips:
+        fail(f"{run} is missing")
         return
-    text = readme.read_text()
+    data = _read_evidence(store, readme, unfetched)
+    if data is None:
+        return
+    text = data.decode("utf-8")
     rows = dict(re.findall(r"^\| `([^`]+\.log)` \| `[^`]+` \| `([0-9a-f]{16})…` \|$",
                            text, re.M))
-    logs = sorted(p.name for p in rips.glob("*.log"))
+    logs = sorted(p.rsplit("/", 1)[1] for p in rips)
     if not rows:
         fail("the README carries no rename mapping -- a filed bundle that "
              "cannot be mapped back to the delivered names is not evidence")
@@ -4612,7 +4670,10 @@ def _mapping_holds(base):
         if name not in rows:
             fail(f"{name} is filed but absent from the README's mapping")
             continue
-        got = hashlib.sha256((rips / name).read_bytes()).hexdigest()[:16]
+        data = _read_evidence(store, f"{folder}/rips/{name}", unfetched)
+        if data is None:
+            continue
+        got = hashlib.sha256(data).hexdigest()[:16]
         if got != rows[name]:
             fail(f"{name} hashes {got}, the mapping says {rows[name]} -- "
                  f"archived evidence was modified, or the table went stale")
@@ -4629,9 +4690,9 @@ def _mapping_holds(base):
     # none. Whatever the count, the hashes must be distinct.
     ab = sorted(n for n in logs if "angle-bracket" in n)
     if len(ab) not in (0, 2, 4):
-        fail(f"{base.name}: expected 0, 2 or 4 angle-bracket logs, found {len(ab)}")
+        fail(f"{run}: expected 0, 2 or 4 angle-bracket logs, found {len(ab)}")
     elif len({rows.get(n) for n in ab}) != len(ab):
-        fail(f"{base.name}: the angle-bracket rips do not have {len(ab)} distinct "
+        fail(f"{run}: the angle-bracket rips do not have {len(ab)} distinct "
              "hashes -- the -2 suffix is load-bearing and something has "
              "collapsed them")
 
@@ -4674,12 +4735,25 @@ def sc_runa_block_is_complete():
              "2026-09-11")
 
     # DERIVED, not listed: every repo-relative path the pinned grader resolves
-    # against ROOT. Today that is its clause-1 reference log.
-    grader = ROOT / "tools" / "round16-accept.py"
+    # against ROOT. Today that is its clause-1 reference log. READ AT THE
+    # COMMIT THE BLOCK CHECKS OUT, not from this tree: the block pins its tools,
+    # and the grader here has moved on (HR-2 points it at a fixture copy of the
+    # log, while the one at the pinned commit still reads it under docs/).
+    pin = re.search(r"(?m)^\s*git checkout ([0-9a-f]{7,40}) --", block)
+    if not pin:
+        fail("the Run A block checks nothing out at a commit, so the tools it "
+             "runs are whatever the clone's branch holds")
+        return
+    pin = pin.group(1)
+    grader = subprocess.run(["git", "show", f"{pin}:tools/round16-accept.py"],
+                            cwd=ROOT, capture_output=True, text=True, timeout=60)
+    if grader.returncode != 0:
+        skip(f"runa_block_is_complete: commit {pin}, which the Run A block "
+             f"checks out, is not in this clone, so its grader cannot be read")
     needed = {"tools/rig-round16.sh", "tools/audio-checksums.py",
               "tools/round16-accept.py"}
     for parts in re.findall(r'ROOT\s*/\s*((?:"[^"]+"\s*/\s*)*"[^"]+")',
-                            grader.read_text()):
+                            grader.stdout):
         needed.add("/".join(re.findall(r'"([^"]+)"', parts)))
 
     for path in sorted(needed):
@@ -4690,8 +4764,10 @@ def sc_runa_block_is_complete():
     # And the file must actually be in the tree at the pinned commit, or the
     # block names something the operator cannot fetch.
     for path in sorted(needed):
-        if not (ROOT / path).exists():
-            fail(f"{path} is named in the Run A block but is not in this tree")
+        if subprocess.run(["git", "cat-file", "-e", f"{pin}:{path}"], cwd=ROOT,
+                          capture_output=True, timeout=60).returncode != 0:
+            fail(f"{path} is named in the Run A block but is not in the tree "
+                 f"at {pin}, which it checks out")
 
 
 def sc_verify_log():
@@ -4796,7 +4872,9 @@ def sc_verify_log():
     # file is rejected, and that removing exactly the appended block makes the
     # same bytes verify. The second half is what makes this a finding about the
     # addendum rather than about the log.
-    rig = ROOT / "docs" / "rig-2026-08-04" / "cyanrip.log"
+    # A byte-for-byte copy of the 2026-08-04 session's log, made before HR-2
+    # moved the session to the evidence branch.
+    rig = ROOT / "tests" / "fixtures" / "evidence" / "rig-2026-08-04" / "cyanrip.log"
     if not rig.exists():
         fail("rig log evidence is missing")
     else:

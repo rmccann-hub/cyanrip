@@ -165,6 +165,41 @@ if "tools/tag-release-check.py" not in tag:
 if re.search(r"git push[^\n]*(--force|\s-f\b|\+refs/)", tag):
     fail("tag-release.yml force-pushes a tag")
 
+# HR-2 (PROTOCOL.md v9 §17), point 8: every job fetches only what it reads,
+# by explicit refspec, and exactly one fetches the evidence branch, the job
+# that runs every check reading run evidence.
+evidence_jobs = []
+for p in files:
+    text = p.read_text(encoding="utf-8")
+    if re.search(r"^\s*fetch-depth:\s*0\s*$", text, re.M):
+        fail(f"{p.name}: fetch-depth: 0 fetches every branch and every tag, "
+             "the evidence branch among them; fetch by refspec with "
+             ".github/fetch-history.sh (HR-2 8b)")
+    for job, body in jobs(text.splitlines()).items():
+        block = "\n".join(ln for ln in body if not ln.lstrip().startswith("#"))
+        if "--evidence" in block or "refs/heads/evidence" in block:
+            evidence_jobs.append(f"{p.name}:{job}")
+if evidence_jobs != ["ci.yml:evidence"]:
+    fail(f"the jobs that fetch the evidence branch are {evidence_jobs}; HR-2 "
+         "8a says exactly one, ci.yml's evidence job")
+ci_jobs = jobs(ci.splitlines())
+for job in ("linux", "macos"):
+    cond = re.search(r"^    if:\s*(.+)$", "\n".join(ci_jobs.get(job, [])), re.M)
+    if not cond or "github.event_name != 'release'" not in cond.group(1):
+        fail(f"ci.yml: job {job} re-runs on a release event, on a commit its "
+             "push already tested; give it `if: github.event_name != "
+             "'release'`")
+rel = "\n".join(ci_jobs.get("mingw-release", []))
+if "merge-base --is-ancestor" not in rel or "origin/platterpus-fork" not in rel:
+    fail("ci.yml: mingw-release attaches a binary without checking that the "
+         "released commit is on platterpus-fork")
+ev = "\n".join(ci_jobs.get("evidence", []))
+for need in ("CYANRIP_EVIDENCE_REQUIRED", "verify-rows", "check-tags",
+             "'Settled facts'", "cache_table_matches_the_transcripts",
+             "filed_rig_is_mappable", "'No personal details in new evidence'"):
+    if need not in ev:
+        fail(f"ci.yml: the evidence job does not run {need}")
+
 if failures:
     print(f"{failures} failure(s)")
     sys.exit(1)

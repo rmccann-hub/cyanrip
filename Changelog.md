@@ -1,5 +1,31 @@
 Unreleased
 ==========
+**HR-2's step 1, with nothing moved: protocol v9 and every reader of run
+evidence ready for the evidence branch.** The operator gave both sides HR-2's
+agreed text on 2026-10-14 as round 33's first task. It moves what a run
+produced, and nothing on the default branch reads, to an orphan `evidence`
+branch, with one row per file in `docs/evidence-manifest.tsv`. Its text is
+`PROTOCOL.md` v9's §17, word for word, shipped from custody, and the gate
+stays at 8 until Platterpus holds the same bytes. The lap-statement language
+is amended to match: an evidence citation is `cyanrip@<evidence commit>:<path>`
+with its SHA-256, the evidence branch is a second ref of record for those
+citations only, and `tools/lap-statements.py` refuses one with no manifest
+row at the lap's `HANDSHAKE-FROM-COMMIT` (`HR-2.6a`, `HR-2.6b`), fetches a
+missing commit into a separate repository, and places cited evidence before a
+B1 re-run. Measured first in a clone with the move simulated: `meson setup`
+failed on one file named as a build input, ten tests failed and thirty SETTLED
+rows went stale. Each reader now reads a byte-for-byte copy under
+`tests/fixtures/evidence/` or goes through the new `tools/evidence.py`, which
+reads a moved file from the checkout, the clone or a separate cache and says
+77 when it is not fetched. `tests/evidence_readers.py` refuses a new reader.
+The release gate's envelope check passed on nothing when its file was
+missing, and now fails. CI fetches by refspec through
+`.github/fetch-history.sh`; one job, `evidence`, fetches the branch and runs
+every check that reads it. Linux and macOS no longer re-run on a release
+event, and `mingw-release` refuses a commit not on `platterpus-fork`. A
+committed SessionStart hook keeps the branch out of later fetches. The move
+itself waits on the instant round 33's lap 1 fixes (HR-2 point 5c).
+
 **Our round 32 lap 9 is sent, and round 32 is closed** on both gates,
 2026-10-14, approving `.22` at `200530e` with Platterpus 0.7.104. The
 operator released lap 9 on 2026-10-13, and `release-manifest.json` now

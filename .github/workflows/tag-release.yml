@@ -41,7 +41,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: platterpus-fork
-          fetch-depth: 0
+
+      # platterpus-fork's whole history and the tags, which are what the check
+      # reads, by explicit refspec rather than `fetch-depth: 0`, which would
+      # fetch the evidence branch too (PROTOCOL.md v9 §17, HR-2 8b).
+      - name: Fetch platterpus-fork's history and the tags
+        run: .github/fetch-history.sh platterpus-fork --tags
 
       - name: Check the release and create its tag
         env:

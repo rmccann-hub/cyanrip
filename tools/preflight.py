@@ -55,6 +55,11 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BRANCH = "platterpus-fork"
+sys.path.insert(0, str(ROOT / "tools"))
+import evidence  # noqa: E402
+# HR-2 6a's form: a file on the evidence branch, cited by commit, with its hash.
+EVIDENCE_CITE = re.compile(r"\bcyanrip@([0-9a-f]{7,40}):([^\s:`]+)"
+                           r"(?::[0-9-]+)?\s+sha256\s+([0-9a-f]{64})")
 
 SHA_LINE = re.compile(r"sha256\s*=\s*([0-9a-f]{64})")
 RAW_URL = re.compile(r"https://github\.com/[^/\s]+/[^/\s]+/raw/([^/\s]+)/(\S+?)(?=[\s`)]|$)")
@@ -105,6 +110,26 @@ def check_suite():
 def check_lap(path):
     """The quoted hashes and fetch URLs in an outbound lap."""
     text = path.read_text(encoding="utf-8", errors="replace")
+    store = evidence.Store(ROOT)
+
+    # HR-2 6a: every `cyanrip@<evidence commit>:<path> sha256 <hex>` must be a
+    # row of this tree's manifest, which is what the lap's FROM-COMMIT will
+    # hold. The row is enough: it is what the reader's checker refuses on.
+    for m in EVIDENCE_CITE.finditer(text):
+        sha, rel, digest = m.groups()
+        row = store.rows.get(rel)
+        if row is None or not row.commit.startswith(sha):
+            check(False, "lap/evidence", f"cyanrip@{sha}:{rel}",
+                  fix=f"no row of {evidence.MANIFEST} names it. File it on the "
+                      f"evidence branch and land its row before the lap that "
+                      f"cites it (HR-2 10).")
+        else:
+            check(row.sha256 == digest, "lap/evidence",
+                  f"cyanrip@{sha}:{rel}: "
+                  + ("matches its manifest row" if row.sha256 == digest else
+                     f"quotes {digest[:16]}..., its row says "
+                     f"{row.sha256[:16]}..."),
+                  fix="quote the hash its manifest row gives.")
 
     # Every `sha256 = ...` next to a path we can resolve locally.
     quoted = SHA_LINE.findall(text)
@@ -127,7 +152,7 @@ def check_lap(path):
             for c in reversed(cands):
                 for tail in (c, c[c.find("docs/"):] if "docs/" in c else c,
                              c.split("/")[-1]):
-                    if tail and (ROOT / tail).exists():
+                    if tail and ((ROOT / tail).exists() or tail in store.rows):
                         local, rel = ROOT / tail, tail
                         break
                 if local:
@@ -136,7 +161,10 @@ def check_lap(path):
                 continue
             paths = [rel]
             found += 1
-            ours = hashlib.sha256(local.read_bytes()).hexdigest()
+            # A moved file resolves through the manifest (HR-2 6d), whose row
+            # gives its SHA-256, so nothing needs fetching to check the quote.
+            ours = (hashlib.sha256(local.read_bytes()).hexdigest()
+                    if local.exists() else store.rows[rel].sha256)
             if ours == m.group(1):
                 check(True, "lap/hash", f"{rel}: matches")
                 continue

@@ -62,6 +62,15 @@ the delivery. A cyanrip log stops verifying with -Y once a path in it
 changes, so its ORIGINAL is checked with -Y first, and the verdict is
 recorded beside it: a filed log whose signature can no longer be checked is
 only evidence if somebody checked it while it still could be.
+
+AND AFTER HR-2'S MOVE A RUN IS NOT FILED INTO THIS CHECKOUT (PROTOCOL.md v9
+§17, point 10). Once docs/evidence-manifest.tsv exists, --into a run folder
+under docs/ is refused: file into a staging directory outside the checkout,
+write the folder's README there, then `tools/evidence.py file STAGING --as
+docs/rig-NAME --push URL` builds the evidence commit on the branch's tip,
+adds the manifest rows and copies the README here, and prints each file's
+citation in point 6a's form. A pull request carrying those rows lands before
+any lap cites them; the lap checker refuses a citation with no row.
 """
 
 import argparse
@@ -79,6 +88,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import redact  # noqa: E402
+import evidence  # noqa: E402
 LEDGER = "docs/release-ledger.tsv"
 BANNER = re.compile(r"cyanrip (\S+) \(platterpus-fork-g([0-9a-f]{7,40})\)")
 
@@ -525,6 +535,18 @@ def main():
 
     # ---- 2. FILE, AND DERIVE WHAT WAS NOT FILED ---------------------------
     dest = pathlib.Path(args.into)
+    try:
+        rel = dest.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        rel = None
+    if rel and evidence.run_folder(rel + "/x") and evidence.Store(ROOT).moved():
+        print(f"REFUSED: {rel} is a run folder in this checkout, and HR-2 has "
+              f"moved run evidence to the {evidence.BRANCH} branch. File into "
+              f"a staging directory outside the checkout, write its README, "
+              f"then run tools/evidence.py file STAGING --as "
+              f"{evidence.run_folder(rel + '/x')} --push URL (PROTOCOL.md v9 "
+              f"§17, point 10)")
+        return 2
     filed, dropped = [], []
     # Hostnames are gathered across the whole bundle first: a manifest names
     # the machine, and every other file that mentions it is then redacted too.
@@ -634,6 +656,11 @@ def main():
     if missing:
         print(f"\n  WARNING: verdict file(s) not filed: {', '.join(missing)}")
         print("  They carry the run's outcome. File them.")
+    if rel is None:
+        print(f"\n  Filed outside the checkout. Write its README there, then: "
+              f"tools/evidence.py file {dest} --as docs/rig-NAME --push URL "
+              f"(HR-2 10a), and land the manifest rows it adds before a lap "
+              f"cites them (10b, 10c).")
     return 0 if ok is not False else 1
 
 

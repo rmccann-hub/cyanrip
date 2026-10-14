@@ -28,7 +28,8 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TOOL = ROOT / "tools" / "round16-accept.py"
-REFERENCE = ROOT / "docs" / "rig-2026-08-05" / "cyanrip.log"
+# A byte-for-byte copy of the 2026-08-05 session's log (HR-2).
+REFERENCE = ROOT / "tests" / "fixtures" / "evidence" / "rig-2026-08-05" / "cyanrip.log"
 
 failures = 0
 

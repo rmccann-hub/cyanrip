@@ -45,6 +45,8 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tools"))
+import evidence  # noqa: E402
 
 BANNER = re.compile(r"^cyanrip \S+ \(")
 NOT_PASS = ("fail", "error", "skipped", "blocked", "unreachable", "info")
@@ -173,6 +175,31 @@ def main():
                                       "with -Y")
     args = ap.parse_args()
     run = pathlib.Path(args.run)
+    # A FILED SESSION MAY BE ON THE EVIDENCE BRANCH (HR-2), with only its
+    # README in this checkout. It is then read from an overlay where the
+    # session, and every earlier session's report.json the comparison below
+    # reads, are at their own paths, read through tools/evidence.py.
+    overlay_dir = None
+    try:
+        rel = run.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        rel = None
+    if rel and evidence.run_folder(rel + "/x") == rel:
+        store = evidence.Store(ROOT)
+        need = [p for p in store.files(rel) if not store.in_tree(p)]
+        need += [f"{f}/session/run/report.json" for f in store.folders()
+                 if f"{f}/session/run/report.json" in store.rows
+                 and not store.in_tree(f"{f}/session/run/report.json")]
+        if need:
+            import tempfile
+            overlay_dir = tempfile.TemporaryDirectory(prefix="read-run-")
+            try:
+                evidence.overlay(store, set(need), overlay_dir.name)
+            except evidence.NotFetched as e:
+                print(f"{rel} is on the evidence branch and not fetched here: "
+                      f"{e}", file=sys.stderr)
+                return evidence.UNPROBED
+            run = pathlib.Path(overlay_dir.name) / rel
     if not any((run / d).is_dir() for d in LOG_DIRS):
         print(f"{run} has neither album/ nor rips/: not a filed session",
               file=sys.stderr)

@@ -134,6 +134,26 @@ from `HEAD`" (F4). So each side names the branch it publishes laps from:
 | absent from a full clone | refuses, `LSL.4` |
 | anywhere, when the clone given lacks the ref of record | warns, `LSL.unchecked` |
 
+**Amended by HR-2** (`PROTOCOL.md` v9 §17, points 6a, 6b and 6d), in every
+LSL version, from each side's move of its run evidence to its `evidence`
+branch. For an **evidence citation**, and nothing else, that branch is a
+second ref of record. A citation is one when a row of
+`docs/evidence-manifest.tsv` names its path and commit, or when its commit is
+on the `evidence` branch; it is written `<side>@<evidence commit>:<path>`
+followed, in the same value, by the file's SHA-256:
+
+| where the citation is | the checker |
+|---|---|
+| a row at the lap's `HANDSHAKE-FROM-COMMIT` names it, its commit is on `refs/heads/evidence`, and the SHA-256 quoted, the row and the bytes agree | fine; lines are counted as for any artifact |
+| on `evidence`, with no row at `HANDSHAKE-FROM-COMMIT` | refuses, `HR-2.6b`: a lap is written from a commit that already has its rows |
+| a row names a commit not on `refs/heads/evidence` | refuses, `HR-2.6a` |
+| no SHA-256 quoted, or one the row does not give | refuses, `HR-2.6a` |
+| the commit is not in the clone given | fetched by its hash into a separate repository, never into that clone; if that fails, warns `LSL.unchecked`, or refuses `HR-2.6b` where `CYANRIP_EVIDENCE_REQUIRED=1` says this is CI's evidence job |
+
+A citation of the other side's evidence is looked up in that side's manifest
+at its ref of record. B1 re-runs a `run:` with each evidence file the same
+statement cites placed at its own path in the tree it runs in (6d).
+
 ## Rules, and what the checker does about each
 
 Every problem the checker reports names one of these ids. They are Platterpus's
@@ -166,6 +186,8 @@ of these is well formed.
 | `A6` | refused | LSL 2 only: a `basis:` or `because:` naming a `WILL`, `UNKNOWN` or `FACT relayed` (and, in `because:`, a `NOTE`, `ASK` or `VERDICT`) |
 | `A7` | refused | LSL 2 only: an `answers:` naming anything but the other side's `ASK`, or a `GO` over a `BLOCKING` one of theirs with no answer |
 | `A8` | refused | LSL 2 only: a `CORRECT` with no `evidence:` |
+| `HR-2.6a` | refused | an evidence citation (below) quoting no SHA-256, or one its manifest row does not give, or naming a commit not reachable from its side's `refs/heads/evidence` |
+| `HR-2.6b` | refused | an evidence citation with no manifest row at the lap's `HANDSHAKE-FROM-COMMIT`, or whose bytes are not its row's, or, in CI's evidence job only, whose commit could not be fetched |
 
 `tools/lap-statements.py <lap>` exits **0** when nothing is refused, **1** on any
 refusal, and **2** when it could not check, because *refused* and *could not

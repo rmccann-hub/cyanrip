@@ -118,6 +118,9 @@ RULES = {
     "B1": "refused",            # a run: names its commit, and re-runs to its result
     "B2": "refused",            # a GO needs at least one close condition
     "B3": "refused",            # answers: only on a statement that carries weight
+    # HR-2's (PROTOCOL.md v9 §17), for every LSL version from a side's move.
+    "HR-2.6a": "refused",       # an evidence citation's SHA-256 and branch
+    "HR-2.6b": "refused",       # its manifest row, its bytes, or no fetch in CI
 }
 
 # kind -> the grades it takes (empty: it takes none)
@@ -373,6 +376,10 @@ _spec = importlib.util.spec_from_file_location(
     "commit_map", pathlib.Path(__file__).resolve().parent / "commit-map.py")
 COMMIT_MAP = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(COMMIT_MAP)
+# HR-2 (PROTOCOL.md v9 §17): where run evidence is, and how it is fetched.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import evidence as EVIDENCE  # noqa: E402
+SHA256_RE = re.compile(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])")
 
 
 def git(repo, *args):
@@ -391,6 +398,10 @@ class Resolver:
         self.refs.update(refs)
         self.located = {}
         self.record_ref = {}
+        self.ev_stores = {}
+        # HR-2 6d: the bytes of each evidence citation judged, so B1 can
+        # place them at their own paths before it re-runs a command.
+        self.ev_files = {}
 
     def _record(self, side):
         """Every ref in this clone that stands for the ref of record.
@@ -513,21 +524,139 @@ class Resolver:
             lap.warn(line, "LSL.offrecord", detail)
         return True
 
-    def artifact(self, lap, line, side, sha, path, a, b):
-        if not self._report(lap, line, side, sha):
-            return
-        # A path or line claim is checked at the mapped commit (HR-1.6 (e)).
-        sha = self.mapped(side, sha)[0]
-        r = git(self.repo[side], "show", f"{sha}:{path}")
-        if r.returncode != 0:
-            lap.refuse(line, "LSL.4", f"{path} does not exist at {side}@{sha}")
-            return
+    def _ev_store(self, side):
+        """A store over side's clone: its evidence tips and its cache."""
+        if side not in self.ev_stores:
+            repo = self.repo.get(side)
+            self.ev_stores[side] = EVIDENCE.Store(
+                repo, manifest=EVIDENCE.HEADER + "\n") if repo else None
+        return self.ev_stores[side]
+
+    def evidence_row(self, lap, side, sha, path):
+        """(row, problem, decided): the manifest row naming side@sha:path.
+        decided is False when the manifest could not be read at all, which
+        is a reason to report the citation unchecked, never to refuse it.
+
+        For the author's own evidence, the manifest at the lap's
+        HANDSHAKE-FROM-COMMIT (HR-2 6b); for the other side's, at that
+        side's ref of record, since the author's manifest lists only its own
+        branch (a copy the author holds is on its own branch, 6c)."""
+        repo = self.repo[side]
+        author = FROM_SIDE.get((lap.headers.get("FROM") or [""])[0].strip())
+        if side == author:
+            froms = [v.split()[0] for v in lap.headers.get("FROM-COMMIT", [])
+                     if v.split()]
+            if len(froms) != 1:
+                return (None, "the lap declares no single "
+                              "HANDSHAKE-FROM-COMMIT", True)
+            rev = self.mapped(side, froms[0])[0]
+            where = f"the lap's HANDSHAKE-FROM-COMMIT, {froms[0]}"
+        else:
+            rec = self._record(side)
+            if not rec:
+                return (None, f"{side}'s ref of record is not in the clone "
+                              f"given", False)
+            rev, where = rec[0], f"{side}'s {self.refs[side]}"
+        if git(repo, "rev-parse", "--verify", "--quiet",
+               f"{rev}^{{commit}}").returncode != 0:
+            return None, f"{where} is not in {side}'s clone", False
+        try:
+            rows = EVIDENCE.manifest_at(repo, rev)
+        except EVIDENCE.ManifestError as e:
+            return (None, f"{side}'s manifest at {where} does not read: "
+                          f"{e}", True)
+        hits = [r for r in rows if r.path == path and r.commit.startswith(sha)]
+        if len(hits) != 1:
+            return None, (f"no row in {EVIDENCE.MANIFEST} at {where} names "
+                          f"{path} at {sha}"), True
+        return hits[0], None, True
+
+    def evidence_citation(self, lap, line, side, sha, path, a, b, rest):
+        """HR-2 6a and 6b. True when side@sha:path is an evidence citation and
+        has been judged; False to judge it as any other artifact.
+
+        It is one when the manifest names it, or when the commit is on the
+        side's evidence branch: the evidence branch is a second ref of record
+        for these citations, and only for these."""
+        repo = self.repo.get(side)
+        store = self._ev_store(side)
+        if repo is None or store is None:
+            return False
+        row, problem, decided = self.evidence_row(lap, side, sha, path)
+        present = git(repo, "rev-parse", "--verify", "--quiet",
+                      f"{sha}^{{commit}}").returncode == 0
+        on = EVIDENCE.on_evidence(store, sha) if present else None
+        if row is None:
+            if on is not True:
+                return False
+            if not decided:
+                lap.warn(line, "LSL.unchecked",
+                         f"UNCHECKED {side}@{sha}:{path}: on {side}'s evidence "
+                         f"branch, and {problem}, so its manifest row cannot "
+                         f"be looked for")
+                return True
+            lap.refuse(line, "HR-2.6b",
+                       f"{side}@{sha}:{path} is on {side}'s evidence branch, "
+                       f"and {problem}: a lap is written from a commit that "
+                       f"already has the rows (HR-2 10)")
+            return True
+        quoted = SHA256_RE.findall(rest)
+        if not quoted:
+            lap.refuse(line, "HR-2.6a",
+                       f"{side}@{sha}:{path} cites evidence without its "
+                       f"SHA-256; the manifest row gives {row.sha256}")
+        elif quoted[0] != row.sha256:
+            lap.refuse(line, "HR-2.6a",
+                       f"{side}@{sha}:{path} quotes SHA-256 {quoted[0][:16]}..."
+                       f", and its manifest row says {row.sha256[:16]}...")
+        full, why = row.commit, ""
+        data = store._blob(repo, full, path) or store._blob(store.cache, full,
+                                                              path)
+        reach = EVIDENCE.on_evidence(store, full)
+        if data is None or reach is None:
+            # A missing commit is fetched by its hash into a separate
+            # repository, never into the clone given (HR-2 6b, 7).
+            try:
+                EVIDENCE.fetch(store, [full], EVIDENCE.remote_url(repo),
+                               branch=True)
+            except (RuntimeError, OSError) as e:
+                why = str(e).splitlines()[0][:160]
+            data = data or store._blob(store.cache, full, path)
+            reach = EVIDENCE.on_evidence(store, full)
+        if data is None or reach is None:
+            msg = (f"UNCHECKED {side}@{sha}:{path}: an evidence citation "
+                   f"whose commit could not be fetched"
+                   + (f" ({why})" if why else ""))
+            if EVIDENCE.required():
+                lap.refuse(line, "HR-2.6b", msg + f"; refused, as "
+                           f"{EVIDENCE.REQUIRED_ENV}=1 says this is CI's "
+                           f"evidence job")
+            else:
+                lap.warn(line, "LSL.unchecked", msg)
+            return True
+        if reach is False:
+            lap.refuse(line, "HR-2.6a",
+                       f"{full[:12]} is not reachable from {side}'s "
+                       f"refs/heads/{EVIDENCE.BRANCH}")
+            return True
+        if len(data) != row.size or EVIDENCE.sha256(data) != row.sha256:
+            lap.refuse(line, "HR-2.6b",
+                       f"{side}@{sha}:{path} is {len(data)} bytes, sha256 "
+                       f"{EVIDENCE.sha256(data)[:16]}..., and its manifest row "
+                       f"says {row.size} bytes, {row.sha256[:16]}...")
+            return True
+        self.ev_files[(side, sha, path)] = data
+        self._lines(lap, line, side, full, path, data.decode(
+            "utf-8", "replace"), a, b)
+        return True
+
+    def _lines(self, lap, line, side, sha, path, text, a, b):
         # A final line counts whether or not it ends in a newline (our
         # round 30 lap 1 S20, accepting Platterpus's round 29 lap 4 S33).
         # Counting newline characters alone made the last line of such a
         # file uncitable.
-        got = r.stdout.count("\n") + (1 if r.stdout and
-                                      not r.stdout.endswith("\n") else 0)
+        got = text.count("\n") + (1 if text and not text.endswith("\n")
+                                  else 0)
         lo, hi = a, (b if b is not None else a)
         if lo is not None:
             if lo < 1 or hi < lo:
@@ -536,6 +665,20 @@ class Resolver:
                 lap.refuse(line, "LSL.4",
                            f"{side}@{sha}:{path} has {got} lines; "
                            f"line {hi} does not exist")
+
+    def artifact(self, lap, line, side, sha, path, a, b, rest=""):
+        if self.locate(side, sha)[0] != "ok" and self.evidence_citation(
+                lap, line, side, sha, path, a, b, rest):
+            return
+        if not self._report(lap, line, side, sha):
+            return
+        # A path or line claim is checked at the mapped commit (HR-1.6 (e)).
+        sha = self.mapped(side, sha)[0]
+        r = git(self.repo[side], "show", f"{sha}:{path}")
+        if r.returncode != 0:
+            lap.refuse(line, "LSL.4", f"{path} does not exist at {side}@{sha}")
+            return
+        self._lines(lap, line, side, sha, path, r.stdout, a, b)
 
     def commit(self, lap, line, side, sha):
         self._report(lap, line, side, sha)
@@ -704,7 +847,7 @@ def check_v2(lap, s, tag, have, me, by_n, resolver):
             continue
         ref = art_ref(first)
         if ref:
-            resolver.artifact(lap, fl, *ref)
+            resolver.artifact(lap, fl, *ref, rest=value[len(first):])
         else:
             lap.refuse(fl, "A1", f"{tag}: restates: {first!r} is neither a "
                                  f"statement, a section nor an artifact")
@@ -791,7 +934,8 @@ def check_v2(lap, s, tag, have, me, by_n, resolver):
                 elif grade == "yours" and name == "in" and ref[0] == me_side:
                     lap.refuse(fl, "A3", f"{tag}: a finding of yours cannot be "
                                          f"in the author's own tree")
-                resolver.artifact(lap, fl, *ref)
+                resolver.artifact(lap, fl, *ref,
+                                  rest=value[len(value.split()[0]):])
 
     # A4, A5
     for value, fl in have.get("holds", []):
@@ -994,7 +1138,16 @@ def b1_run(lap, line, tag, value, have, at_sha, me_side, resolver, counts):
         sha = froms[0]
     if not getattr(resolver, "rerun", False) or me_side is None:
         return
-    verdict, detail = rerun(resolver, me_side, sha, cmd, result)
+    # HR-2 6d: the evidence this statement cites, at its own paths, in the
+    # tree the command is re-run in. After a move the run's files are on the
+    # evidence branch and not in that tree.
+    cited = {}
+    for v, _ in have.get("evidence", []):
+        ref = art_ref(v.split()[0])
+        if ref and ref[0] == me_side and \
+                (me_side, ref[1], ref[2]) in resolver.ev_files:
+            cited[ref[2]] = resolver.ev_files[(me_side, ref[1], ref[2])]
+    verdict, detail = rerun(resolver, me_side, sha, cmd, result, cited)
     counts[verdict] += 1
     if verdict == "mismatch":
         lap.refuse(line, "B1", f"{tag}: re-run at {me_side}@{sha}, and "
@@ -1035,9 +1188,10 @@ def git_moves(repo, args):
     return None
 
 
-def rerun(resolver, side, sha, cmd, result):
+def rerun(resolver, side, sha, cmd, result, evidence_files=None):
     """Re-run one command at one commit of the author's tree, as (verdict,
-    detail), verdict one of ok, mismatch, unchecked."""
+    detail), verdict one of ok, mismatch, unchecked. evidence_files, path to
+    bytes, are placed at their paths in that tree first (HR-2 6d)."""
     repo = resolver.repo.get(side)
     if repo is None:
         return "unchecked", f"no clone of {side}'s tree was given"
@@ -1109,6 +1263,10 @@ def rerun(resolver, side, sha, cmd, result):
         if git(repo, "worktree", "add", "--detach", "--quiet", str(work),
                sha).returncode != 0:
             return "unchecked", f"could not check {sha} out"
+        for path, data in (evidence_files or {}).items():
+            target = work / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
         # No standard input, so a command that reads it cannot wait on ours;
         # its own session, so a timeout kills everything it started and no
         # child is left holding its pipes; bytes decoded with replacement, so
@@ -1249,8 +1407,13 @@ def check(lap, resolver):
 
         at_sha = b1_at(lap, tag, have, me_side, resolver) if v3 else None
 
-        # Every field value has a shape; check each one that has one.
-        for value, fl in have.get("evidence", []):
+        # Every field value has a shape; check each one that has one. Artifact
+        # citations first, so a run: re-run below can place the evidence
+        # files this statement cites at their own paths (HR-2 6d).
+        evs = have.get("evidence", [])
+        evs = ([e for e in evs if not e[0].startswith("run: ")]
+               + [e for e in evs if e[0].startswith("run: ")])
+        for value, fl in evs:
             first = value.split()[0]
             if value.startswith("run: "):
                 if " => " not in value:
@@ -1268,7 +1431,7 @@ def check(lap, resolver):
                            f"'run: CMD => RESULT' nor side@commit:path"
                            f"[:line[-line]]")
                 continue
-            resolver.artifact(lap, fl, *ref)
+            resolver.artifact(lap, fl, *ref, rest=value[len(first):])
         if kind == "FACT" and grade == "measured" and have.get("evidence"):
             if not any(v.startswith("run: ") or v.startswith(f"{me_side}@")
                        for v, _ in have["evidence"]):
@@ -1291,7 +1454,7 @@ def check(lap, resolver):
                 continue
             ref = art_ref(first)
             if ref:
-                resolver.artifact(lap, fl, *ref)
+                resolver.artifact(lap, fl, *ref, rest=value[len(first):])
             else:
                 lap.refuse(fl, "LSL.4", f"{tag}: re: {first!r} is neither a "
                                         f"statement nor an artifact reference")

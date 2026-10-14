@@ -19,6 +19,9 @@ build-asan
 # rather than a fourth name, and sc_artifacts_are_tracked() is what notices next
 # time -- a negation only helps a file somebody remembered to add.
 !docs/**/*.log
+# And tests/fixtures/evidence/: byte-for-byte copies of run logs the suite
+# reads, made before HR-2 moved the originals to the evidence branch.
+!tests/fixtures/**/*.log
 .github/_build
 .github/_install
 __pycache__/

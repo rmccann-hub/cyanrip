@@ -46,10 +46,14 @@ arresp_test = executable('arresp_test',
 ## The recorded response is the reference disc's dBAR file, fetched once on
 ## 2026-09-27; the rig log is a real drive's rip of that disc, whose matches the
 ## parse is checked against. So the parser's settled fact no longer needs the
-## network to re-check (docs/KNOWN-ISSUES.md, docs/SETTLED.md).
+## network to re-check (docs/KNOWN-ISSUES.md, docs/SETTLED.md). The log is a
+## byte-for-byte copy of the 2026-09-10 session's, made before HR-2 moved run
+## evidence off this branch: a file the build names must be in the checkout,
+## and `meson setup` failed outright without it (tests/fixtures/evidence/
+## SOURCES.tsv names each copy's source and SHA-256).
 test('AccurateRip response', arresp_test,
      args: [ files('fixtures/accurip-dBAR-014-001d420f-013bb370-e20dfe0e.bin'),
-             files('../docs/rig-2026-09-10-ddc1e8c/rips/secure-reread.log') ])
+             files('fixtures/evidence/rig-2026-09-10-ddc1e8c/rips/secure-reread.log') ])
 
 ## Whether a pre-gap earns an INDEX 00. Header-only, no objects: the case it
 ## exists to get right needs a pre-gap that is signalled AND zero frames long,
@@ -651,6 +655,19 @@ test('Redaction in the filing tools', python,
      args: [ files('redaction.py'), cyanrip_exe ])
 test('No personal details in new laps or evidence', python,
      args: [ files('personal_details.py') ])
+
+## HR-2 (PROTOCOL.md v9 §17) moves run evidence to the `evidence` branch.
+## tools/evidence.py is the one place that knows where a file is; its test
+## runs a whole move on repositories built here, by file:// URL. The readers
+## check refuses a new test, tool or SETTLED row that names an evidence path
+## (HR-2 point 2) and checks each fixture copy against its source. Files filed
+## straight to evidence never pass through a checkout, so their personal-
+## details check runs where they are fetched: CI's evidence job, 77 elsewhere.
+test('Evidence tool', python, args: [ files('evidence_tool.py') ], timeout: 120)
+test('Evidence readers and fixture copies', python,
+     args: [ files('evidence_readers.py') ])
+test('No personal details in new evidence', python,
+     args: [ files('personal_details.py'), '--evidence' ])
 
 ## tools/cross-rip.py compares each track's EAC CRC32 across every cyanrip log
 ## in a bundle. Round 26's reading read logs one at a time and missed a wrong

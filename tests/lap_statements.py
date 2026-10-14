@@ -438,7 +438,7 @@ with tempfile.TemporaryDirectory() as tmp:
 #    same set, so a disagreement between the two checkers can name its rule.
 #    LSL 2's are A1-A8, Platterpus's ids; the ones REQUIRED2 carries are
 #    emitted through it, so they count as emitted there.
-ID = r"LSL\.[a-z0-9]+|A[1-8]|B[1-3]"
+ID = r"LSL\.[a-z0-9]+|A[1-8]|B[1-3]|HR-2\.6[ab]"
 src = TOOL.read_text()
 body_src = src.split("class Lap")[1]
 emitted = {a or b for a, b in re.findall(
@@ -1350,6 +1350,125 @@ for header in ("old new\n", "old      new\n"):
         print(f"ok   HR-1.6: header {header.strip()!r} reads cleanly")
     except CM.MapError as e:
         fail(f"HR-1.6: header {header!r} refused: {e}")
+
+# 13. HR-2 (PROTOCOL.md v9 §17, points 6a, 6b and 6d): a lap citing a file on
+#     the evidence branch, on an origin and clones built here and reached by
+#     file:// URL, so nothing leaves this machine.
+sys.path.insert(0, str(ROOT / "tools"))
+import evidence as EV  # noqa: E402
+with tempfile.TemporaryDirectory() as tmp:
+    tmp = pathlib.Path(tmp)
+    env0 = {k: v for k, v in GIT_ENV.items()
+            if k not in (EV.REQUIRED_ENV, EV.CACHE_ENV, EV.URL_ENV)}
+    origin = tmp / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "platterpus-fork",
+                    str(origin)], check=True, env=env0)
+    g(origin, "config", "uploadpack.allowAnySHA1InWant", "true")
+    url = f"file://{origin}"
+    ours = tmp / "ours"
+    subprocess.run(["git", "clone", "-q", url, str(ours)], check=True,
+                   env=env0, capture_output=True)
+    g(ours, "checkout", "-q", "-b", "platterpus-fork")
+    (ours / "README").write_text("a tree\n")
+    g(ours, "add", "README")
+    g(ours, "commit", "-q", "-m", "start")
+    before = g(ours, "rev-parse", "HEAD")
+    run = "docs/rig-2026-01-01-aaaaaaa"
+    rel = f"{run}/rips/a.log"
+    data = b"one\ntwo\nthree\n"
+    g(ours, "checkout", "-q", "--orphan", "evidence")
+    g(ours, "rm", "-rqf", ".")
+    (ours / run / "rips").mkdir(parents=True)
+    (ours / rel).write_bytes(data)
+    g(ours, "add", rel)
+    g(ours, "commit", "-q", "-m", "evidence")
+    E = g(ours, "rev-parse", "HEAD")
+    g(ours, "checkout", "-q", "-b", "side", before)
+    (ours / run / "rips").mkdir(parents=True, exist_ok=True)
+    (ours / f"{run}/rips/b.log").write_bytes(data)
+    g(ours, "add", f"{run}/rips/b.log")
+    g(ours, "commit", "-q", "-m", "not evidence")
+    S = g(ours, "rev-parse", "HEAD")
+    g(ours, "checkout", "-q", "platterpus-fork")
+    sha = EV.sha256(data)
+    rows = [EV.Row(rel, len(data), sha, E, ""),
+            EV.Row(f"{run}/rips/b.log", len(data), sha, S, "")]
+    (ours / "docs").mkdir(exist_ok=True)
+    (ours / EV.MANIFEST).write_text(EV.format_manifest(rows))
+    g(ours, "add", EV.MANIFEST)
+    g(ours, "commit", "-q", "-m", "manifest")
+    M = g(ours, "rev-parse", "HEAD")
+    g(ours, "push", "-q", "origin", "platterpus-fork", "evidence", "side")
+
+    def ev(cite, from_commit=M, repo=ours, extra=(), env=None, run_line=""):
+        body = ("S1 FACT measured: The run's log has three lines.\n"
+                f"  evidence: {cite}\n{run_line}"
+                "  holds: 0.9.4\n  examined: 1 log, closed\n\n"
+                "S2 VERDICT: OPEN\n  basis: S1\n")
+        return check2(lap3("cyanrip-fork", 33, 1, "OPEN", body,
+                           from_commit=from_commit[:12]), empty, "--ours",
+                      str(repo), *extra, env=env)
+
+    good = f"cyanrip@{E[:7]}:{rel}:3 sha256 {sha}"
+    outcome("HR-2 6a: an evidence citation with its row and its SHA-256",
+            ev(good, env=env0), 0, ["well formed, 0 warning(s)"])
+    outcome("HR-2 6a: without its SHA-256 it is refused",
+            ev(f"cyanrip@{E[:7]}:{rel}:3", env=env0), 1,
+            ["[HR-2.6a]", "without its SHA-256"])
+    outcome("HR-2 6a: with a SHA-256 its row does not give it is refused",
+            ev(f"cyanrip@{E[:7]}:{rel}:3 sha256 {'0' * 64}", env=env0), 1,
+            ["[HR-2.6a]", "its manifest row says"])
+    outcome("HR-2 6a: a line past the file's end is refused as any is",
+            ev(f"cyanrip@{E[:7]}:{rel}:4 sha256 {sha}", env=env0), 1,
+            ["[LSL.4]", "has 3 lines"])
+    outcome("HR-2 6b: on evidence with no row at FROM-COMMIT is refused",
+            ev(good, from_commit=before, env=env0), 1,
+            ["[HR-2.6b]", "no row in docs/evidence-manifest.tsv"])
+    outcome("HR-2 6a: a row naming a commit not on evidence is refused",
+            ev(f"cyanrip@{S[:7]}:{run}/rips/b.log sha256 {sha}", env=env0), 1,
+            ["[HR-2.6a]", "not reachable from cyanrip's refs/heads/evidence"])
+    outcome("HR-2 6b: an ordinary artifact is judged as before",
+            ev(f"cyanrip@{M[:7]}:README:1", env=env0), 0,
+            ["well formed, 0 warning(s)"])
+
+    # A clone that never fetched evidence, as every session's is once the
+    # hook excludes the branch: the commit is fetched by its hash into a
+    # separate repository, and the clone itself is left as it was.
+    fresh = tmp / "fresh"
+    subprocess.run(["git", "clone", "-q", "--single-branch", "-b",
+                    "platterpus-fork", url, str(fresh)], check=True, env=env0,
+                   capture_output=True)
+    outcome("HR-2 6b: a commit this clone lacks is fetched, and passes",
+            ev(good, repo=fresh, env=env0), 0, ["well formed, 0 warning(s)"])
+    r = subprocess.run(["git", "-C", str(fresh), "cat-file", "-e", E],
+                       capture_output=True, env=env0)
+    if r.returncode == 0 or g(fresh, "rev-parse",
+                              "--is-shallow-repository") != "false":
+        fail("HR-2 7: the fetch must go to a separate repository, leaving the "
+             "clone without the commit and not shallow")
+    else:
+        print("ok   HR-2 7: the clone is untouched and not shallow")
+    cut = tmp / "cut"
+    subprocess.run(["git", "clone", "-q", "--single-branch", "-b",
+                    "platterpus-fork", url, str(cut)], check=True, env=env0,
+                   capture_output=True)
+    g(cut, "remote", "set-url", "origin", str(tmp / "nowhere.git"))
+    outcome("HR-2 6b: one that cannot be fetched is unchecked, not refused",
+            ev(good, repo=cut, env=env0), 0,
+            ["[LSL.unchecked]", "could not be fetched"], absent=["REFUSED"])
+    outcome("HR-2 6b: in CI's evidence job it is refused instead",
+            ev(good, repo=cut, env=dict(env0, **{EV.REQUIRED_ENV: "1"})), 1,
+            ["[HR-2.6b]", "CI's evidence job"])
+
+    # 6d: B1 re-runs a run: with the cited evidence at its own paths. At M the
+    # run's log is on evidence only, so without the overlay `wc` finds nothing.
+    wc = f'  evidence: run: wc -l {rel} => "3 {rel}"\n'
+    outcome("HR-2 6d: B1 re-runs with the cited evidence placed in its tree",
+            ev(good, run_line=wc, extra=("--rerun",), env=env0), 0,
+            ["1 re-run and matched, 0 re-run and not matched", "well formed"])
+    outcome("HR-2 6d: and without the citation the file is not there",
+            ev(f"cyanrip@{M[:7]}:README:1", run_line=wc, extra=("--rerun",),
+               env=env0), 0, ["0 re-run and matched"], absent=["REFUSED"])
 
 if failures:
     print(f"\n{failures} failure(s)")

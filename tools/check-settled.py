@@ -47,6 +47,8 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SETTLED = ROOT / "docs" / "SETTLED.md"
+sys.path.insert(0, str(ROOT / "tools"))
+import evidence  # noqa: E402
 
 # ROWS WHOSE CHECK IS ITSELF A MESON TEST, delegated when this runs INSIDE
 # meson. Measured 2026-09-26: 64 of this test's 78 s were two rows re-running
@@ -138,8 +140,32 @@ def cells(line):
     return MALFORMED
 
 
+def run_row(store, command):
+    """Run one row's command, with any run evidence it names in place.
+
+    HR-2 moves run folders to the evidence branch, and 30 rows re-check a
+    fact against a file in one. Before the move every such file is in the
+    checkout and the row runs here as it always did; after it, the row runs
+    in an overlay of this checkout where those folders are read through
+    tools/evidence.py. A file this clone has not fetched raises NotFetched,
+    which the caller counts as unprobed -- or, in CI's evidence job, as a
+    failure, because that job exists so these rows are actually run."""
+    folders = evidence.folders_named(command, store)
+    lacking = [p for f in folders for p in store.files(f)
+               if not store.in_tree(p)]
+    if not lacking:
+        return subprocess.run(command, shell=True, cwd=ROOT,
+                              capture_output=True, text=True)
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="settled-evidence-") as d:
+        evidence.overlay(store, lacking, d)
+        return subprocess.run(command, shell=True, cwd=d,
+                              capture_output=True, text=True)
+
+
 def main():
     text = SETTLED.read_text(encoding="utf-8")
+    store = evidence.Store(ROOT)
     runnable, unrunnable, failures, malformed = 0, 0, [], []
     unprobed = []
     delegated = []
@@ -253,8 +279,16 @@ def main():
             delegated.append((fact[:70], target))
             continue
 
-        r = subprocess.run(command, shell=True, cwd=ROOT,
-                           capture_output=True, text=True)
+        try:
+            r = run_row(store, command)
+        except evidence.NotFetched as e:
+            if evidence.required():
+                failures.append((fact[:70], command, "not run",
+                                 f"{e} ({evidence.REQUIRED_ENV}=1)"))
+            else:
+                unprobed.append((fact[:70], f"reads run evidence this clone "
+                                            f"has not fetched: {e}"))
+            continue
         # 77 is the suite's own "cannot be checked here" (meson's SKIP, and
         # rip_images.py's skip()), never a verdict on the fact. The golden
         # reference row returns it on a library set other than the one the
