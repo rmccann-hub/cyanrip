@@ -1,8 +1,10 @@
 Unreleased
 ==========
-**Our round 32 lap 9 is published, held, and declares `GO`.** Platterpus's
-lap 8, filed here, reads round 32's Full run and declares `GO`, so round 32
-closes on both gates when ours is released. Our lap 9 reads the run too and
+**Our round 32 lap 9 is sent, and round 32 is closed** on both gates,
+2026-10-14, approving `.22` at `200530e` with Platterpus 0.7.104. The
+operator released lap 9 on 2026-10-13, and `release-manifest.json` now
+records `round_closed: true` for `.22`. Platterpus's lap 8, filed here, reads
+round 32's Full run and declares `GO`. Our lap 9 reads the run too and
 names the track-4 defect it shows. Our lap 7 promised `GO` unless the run
 showed a defect of ours, so lap 9 says why this one does not hold the round:
 it is older than `.22`, it was already recorded, it needs a drive to

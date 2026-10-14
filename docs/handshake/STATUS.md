@@ -1,19 +1,17 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-32-lap-09.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; the Full run on .22 with your 0.7.104 is filed in both trees and read by both, your lap 8 declares GO, and our lap 9, held, declares GO, on which round 32 closes on both gates when it is released; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent round-32-lap-07.md (ours), round-32-lap-08.md (theirs); next 9 (ours) carrying our reading of the Full run and our GO; held 9 carrying GO, our reading, the track-4 defect and why it does not hold the round, and X7 to X9 for round 33
+STATUS-ROUND: 32, CLOSED, 2026-10-14, on our lap 9 and your lap 8, both GO, approving +platterpus.22 at 200530e with your 0.7.104 on the Full run of that pair, filed in both trees and read by both; round 33 opens on our lap 1
+STATUS-LAPS: newest sent round-32-lap-09.md (ours), round-32-lap-08.md (theirs); next 1 (ours) carrying round 33's opening, on +platterpus.23 and your 0.7.105 once both are released (STATUS-RUN-NEXT); held none
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
-STATUS-RELEASE-NEXT: +platterpus.23, no longer held by HR-1.3, since HR-1.7's check passed on 2026-10-13, or by the Full run on .22 with your 0.7.104, filed here on 2026-10-13 (our lap 3 S16, docs/rig-2026-10-13-200530e/), carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32, and upstream's 0.9.4-rc3, merged at 79da685, with -j at /9 and two new disc lines and data-track rows your parser must accept first (docs/upstream/sync-2026-10-12-rc3.md section 4), and with the short options -j, -k, -u and -x retired for their long names, so your argv must send --diagnostics rather than -j before it can run this build (Changelog.md), which your 0.7.104 does (your lap 6 S14); pins ca3f3ea, reviews +platterpus.22
+STATUS-RELEASE-NEXT: +platterpus.23, no longer held by HR-1.3, since HR-1.7's check passed on 2026-10-13, or by the Full run on .22 with your 0.7.104, filed here on 2026-10-13 (our lap 3 S16, docs/rig-2026-10-13-200530e/), carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32, and upstream's 0.9.4-rc3, merged at 79da685, with -j at /9 and two new disc lines and data-track rows your parser must accept first (docs/upstream/sync-2026-10-12-rc3.md section 4), and with the short options -j, -k, -u and -x retired for their long names, so your argv must send --diagnostics rather than -j before it can run this build (Changelog.md), which your 0.7.104 does (your lap 6 S14); pins ca3f3ea, reviews +platterpus.23
 STATUS-RUN-NEXT: +platterpus.23 with 0.7.105; waiting on both releases: +platterpus.23, once your parser accepts upstream 0.9.4-rc3's new lines (STATUS-RELEASE-NEXT), and your 0.7.105, your next release by your status at platterpus@39b6c366, or the first later one whose section A accepts +platterpus.23; round 32's run, +platterpus.22 with 0.7.104, was made on 2026-10-13 and is filed in docs/rig-2026-10-13-200530e/
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until a drive prints it: round 32's Full run on 2026-10-13 hit the repeat limit three times, all on track 3, in the secure re-read and in both securing passes, each with five checksums in five reads, so the newest read was kept, which is the last, and the clause rightly did not print; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until a drive prints it: no pregap search failed in round 32's Full run on 2026-10-13, so the line had no cause to print; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
-STATUS-OPEN: partially-accurate-tally-label us fixing at 200530e, priority 1: landed at 113c05f, released in +platterpus.22, and read on a drive by round 32's Full run on 2026-10-13, where both whole-disc rips print Tracks matched on one frame only: 2/14, so it leaves this list when round 32 closes; the one-frame tally reads Tracks matched on one frame only:, which your 0.6.66b1 and every release since reads
 STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, ships in +platterpus.23, and the disc ISRC read has run on no drive
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, ships in +platterpus.23
-STATUS-OPEN: version-field-meaning both fixing at round 32, priority 4: round 31's closing files name different Platterpus builds as the party, 0.6.66 in ours and 0.7.102 in yours, as round 28's did; our lap 1 S16's reading, the build the round reviewed, accepted in your lap 2 S12, and both closing laps of round 32 use it
 STATUS-OPEN: overread-bounded us fixing at round 32, priority 5: under -O a frame past the disc's last sector is retried up to the retry limit with no timeout of ours; a bounded read proposed in our round 32 lap 1 S18, verifiable only on a drive
 STATUS-OPEN: accurate-stream-declared us fixing at round 32, priority 5: a header line saying what the drive's capabilities page declares about accurate stream, proposed in our round 32 lap 1 S19, readable only on a drive
 STATUS-OPEN: subchannel-pregap-varies us fixing at round 32, priority 5: track 9's sub-channel pregap reads 94 or 95 frames between rips in eleven filed sessions and the log states one value, and track 4's 158-frame pregap reads 0 in 4 of the 211 filed logs of the reference disc, once on .22 on 2026-10-13, where the search returned zero rather than failing and that rip's cue sheet gives track 4 no INDEX 00; a line giving both counts when two searches disagree proposed in our round 32 lap 1 S19, and which frame is right still needs the drive
@@ -137,10 +135,17 @@ changed is in `Changelog.md`.
 - **Their lap 8 is sent**, released on 2026-10-13 at `platterpus@ecdbceab`
   and on their `main` at `be180d4c` (`inbound/round-32-lap-08.md`): their
   reading of the run, filed in their tree from the same bundle, and `GO`.
-- **Our lap 9 is published and held** (`round-32-lap-09.md`): our reading
-  and `GO`. It says the track-4 defect does not hold the round, because it is
-  older than `.22`, was already recorded, needs a drive to diagnose, and moves
-  no audio byte. Round 32 closes on both gates when it is released.
+- **Our lap 9 is sent**, released on the operator's word of 2026-10-13
+  (`round-32-lap-09.md`): our reading and `GO`. It says the track-4 defect
+  does not hold the round, because it is older than `.22`, was already
+  recorded, needs a drive to diagnose, and moves no audio byte.
+- **Round 32 is closed**, 2026-10-14, on our lap 9 and their lap 8, both
+  `GO`: ours with their lap 8's verdict, theirs by v6 §5b step 3 on our lap 9
+  (their lap 8 S17). It approves `.22` at `200530e` with their 0.7.104. Their
+  lap 8 S17 moves their `FORK_PIN` from `ca3f3ea` to `200530e`. Two items
+  leave the open list with it: the one-frame tally's label, which printed on a
+  drive in the run, and the version fields, which both closing laps fill with
+  the builds the round reviewed.
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the
