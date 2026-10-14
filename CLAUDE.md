@@ -1217,6 +1217,14 @@ instant), every run folder is still under `docs/` and is read in place.**
   request with the rows it adds, and only then the lap. A lap cites the file as
   `cyanrip@<evidence commit>:<path> sha256 <hex>`, and `tools/lap-statements.py`
   refuses a citation with no row at the lap's `HANDSHAKE-FROM-COMMIT`.
+- **The move and its removal** (point 5, HR-2.1): `tools/evidence.py build
+  --folders LIST --date INSTANT --manifest-out ROWS --push URL` builds the
+  evidence commit in a temporary clone and prints the default commit it was
+  built from. The removal pull request's first commit is built on that commit,
+  deletes every moved file except each README, and adds the rows. CI's
+  evidence job refuses it while a moved folder on the default branch differs
+  from the evidence commit (`verify-rows --current`, HR-2.1 b), and the other
+  side checks it with `verify-move`.
 - **Exactly one CI job fetches the branch**, ci.yml's `evidence`; every other
   fetches by refspec through `.github/fetch-history.sh`, never with
   `fetch-depth: 0`. `tests/workflows.py` checks both.
