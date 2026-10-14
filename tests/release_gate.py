@@ -679,6 +679,22 @@ def test_protocol_version_matches_the_shared_spec():
           f"trees; tools/seam-sync-check.py --fetch says when)")
 
 
+def test_gate_implements_9_once_both_trees_hold_it():
+    """Our gate implements 9, as round 33 lap 1 says.
+
+    v9 (PROTOCOL.md §17, HR-2 and HR-2.1) was byte-identical in both trees from
+    platterpus@37826a5f, measured on 2026-10-14 with tools/seam-sync-check.py
+    --fetch, which ends the landing window above. The test above cannot see the
+    other tree, so it still passes with the gate one behind until a lap
+    declares 9; this pins the version the window closed at, so reverting the
+    gate fails here and not at the first lap declaring 9."""
+    check(rg.version_refusal("HANDSHAKE-PROTOCOL: 9\n") is None,
+          f"the gate refuses a lap declaring 9: "
+          f"{rg.version_refusal('HANDSHAKE-PROTOCOL: 9')}")
+    check(rg.version_refusal("HANDSHAKE-PROTOCOL: 10\n") is not None,
+          "the gate reads a lap declaring 10, which no shared file defines")
+
+
 
 
 def test_v2_wire_header_required_from_round_8():
