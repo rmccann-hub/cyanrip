@@ -1,0 +1,113 @@
+=== Platterpus diagnostics ===
+
+Platterpus 0.6.34 + cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-gd9c058c) — pair verified by handshake round 14 (approved for Platterpus 0.6.28)
+
+--- Environment ---
+install_channel: appimage
+platform: Linux-7.2.0-ogc6.1.fc44.x86_64-x86_64-with-glibc2.43
+pyside6: 6.11.2
+python: 3.12.14
+
+--- Dependencies ---
+(not probed yet this session — the launch-time check had not completed, or it crashed; see the diagnostics below)
+
+--- Diagnostics ---
+errors: 13  warnings: 1  info: 0
+worst: error
+scope: process session (not only this rip)
+
+[error] ripper.fatal_message @ 2026-09-03T11:37:27+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T11:50:14+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T12:00:23+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T13:50:53+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T14:13:52+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.log_verify_failed @ 2026-09-03T14:15:25+00:00
+  cyanrip exit 3: No FUN512 checksum found in "/home/rmccann/Music/rips/Platterpus Acceptance/cancel me 20260903t110812 platterpus-fork-g978f9b0/cancel me 20260903t110812 platterpus-fork-g978f9b0.log"!
+  tool: cyanrip
+  exit code: 3
+  argv: /home/rmccann/.local/bin/cyanrip --verify-log /home/rmccann/Music/rips/Platterpus Acceptance/cancel me 20260903t110812 platterpus-fork-g978f9b0/cancel me 20260903t110812 platterpus-fork-g978f9b0.log
+  where: verifying the ripper's own log against its FUN512 checksum
+  detail:
+    No FUN512 checksum found in "/home/rmccann/Music/rips/Platterpus Acceptance/cancel me 20260903t110812 platterpus-fork-g978f9b0/cancel me 20260903t110812 platterpus-fork-g978f9b0.log"!
+
+[error] ripper.log_verify_failed @ 2026-09-03T14:15:25+00:00
+  cancel me 20260903t110812 platterpus-fork-g978f9b0.log carries NO 'Log FUN512:' checksum line at all, so the ripper had nothing to verify it against (exit 3). This is what a rip stopped part-way looks like — the ripper is killed before it writes its own signature — and it is a different finding from a checksum that disagrees with the log body: nothing here says the file was altered. Either way it is not a complete archival record, so do not cite it as one
+  exit code: 3
+  argv: /home/rmccann/.local/bin/cyanrip --verify-log /home/rmccann/Music/rips/Platterpus Acceptance/cancel me 20260903t110812 platterpus-fork-g978f9b0/cancel me 20260903t110812 platterpus-fork-g978f9b0.log
+  detail:
+    No FUN512 checksum found in "/home/rmccann/Music/rips/Platterpus Acceptance/cancel me 20260903t110812 platterpus-fork-g978f9b0/cancel me 20260903t110812 platterpus-fork-g978f9b0.log"!
+
+[error] ripper.fatal_message @ 2026-09-03T16:24:41+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T16:37:30+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T16:47:41+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T18:38:10+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T18:50:58+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-09-03T19:01:08+00:00
+  Done; (no matches found, but hit repeat limit of 3)
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[warning] deps.command_failed @ 2026-09-03T19:01:24+00:00
+  cyanrip exited 1
+  tool: cyanrip
+  exit code: 1
+  argv: /home/rmccann/.local/bin/cyanrip -N -l 1
+  where: adapters.rip_backend.run_capture
+  detail:
+    Checking /dev/cdrom for cdrom...
+    		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+    
+    
+    Opening drive...
+    Offset is unset! To continue with an offset of 0, run with -s 0!
+    Paranoia status counts:
+      none
+    
+    Ripping errors: 0
+    Read stalls:    none (no read exceeded 10s)
+    Rip completed:  no (aborted, 0 of 14 tracks)
+    Ripping finished at 2026-09-03T15:01:24
+
+--- Where the rest lives ---
+app log: /home/rmccann/.local/share/platterpus/log.txt
+per-rip report: a `.platterpus.json` beside each album's audio — it embeds the ripper's own output and that session's debug log.

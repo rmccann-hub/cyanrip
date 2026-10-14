@@ -1,0 +1,223 @@
+2026-08-25 05:01:06,872 INFO platterpus.app: platterpus 0.6.25 (build 5f374aa) starting; args: --audit-rips /home/rmccann/Music
+2026-08-25 05:01:06,886 WARNING platterpus.config: unknown config keys ignored: ['working_dir']
+2026-08-25 05:01:06,931 INFO platterpus.logging_setup: debug logging disabled
+Platterpus rip audit — /var/home/rmccann/Music
+========================================================================
+
+cancel me platterpus-fork-gd9c058c
+  /var/home/rmccann/Music/rips/Platterpus Acceptance/cancel me platterpus-fork-gd9c058c
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gd9c058c)
+  [ note ] the ripper's completion footer is absent — the log was cut off, or predates the fork pin (disc has 3 tracks)
+  [ WARN ] outcome cancelled: no diagnosis captured
+  [ note ] ripper exit code: 1
+  [ note ] command: /home/rmccann/.local/bin/cyanrip -d /dev/sr0 -s 667 -o flac -T unicode -r 3 -l 1,2,3 -N -c 1/1 -a album=cancel me platterpus-fork-gd9c058c:album_artist=Platterpus Acceptance:date=2003:musicbrainz_albumid=65282302-368b-4ba2-953a-483bcdef2410 -t 1=title=Roxanne:artist=Platterpus Acceptance:isrc=GBAAM0201086 -t 2=title=Can’t Stand Losing You:artist=Platterpus Acceptance:isrc=GBAAM0201089 -t 3=title=Message in a Bottle:artist=Platterpus Acceptance:isrc=GBAAM0201170 -t 4=title=Walking on the Moon:artist=Platterpus Acceptance:isrc=GBAAM0201175 -t 5=title=Don’t Stand So Close to Me:artist=Platterpus Acceptance:isrc=GBAAM0201148 -t 6=title=De Do Do Do, De Da Da Da:artist=Platterpus Acceptance:isrc=GBAAM0201154 -t 7=title=Every Little Thing She Does Is Magic:artist=Platterpus Acceptance:isrc=GBAAM0201127 -t 8=title=Invisible Sun:artist=Platterpus Acceptance:isrc=GBAAM0201128 -t 9=title=Spirits in the Material World:artist=Platterpus Acceptance:isrc=GBAAM0201126 -t 10=title=Every Breath You Take:artist=Platterpus Acceptance:isrc=GBAAM0201110 -t 11=title=King of Pain:artist=Platterpus Acceptance:isrc=GBAAM0201111 -t 12=title=Wrapped Around Your Finger:artist=Platterpus Acceptance:isrc=GBAAM0201112 -t 13=title=Don’t Stand So Close to Me ’86:artist=Platterpus Acceptance:isrc=GBAAM0201252 -t 14=title=Message in a Bottle (new classic rock mix):artist=Platterpus Acceptance:isrc=GBAAM0201253 -D {album_artist}/{album} -F {track} - {title} -G
+  [ WARN ] the ripper says it was built from an OPEN round: 'round 14 lap 3 OPEN, verdict HOLD -- NOT a released build' — rips from this build carry that sentence permanently in their log
+  [ note ] no track list in the report — checksum inventory not determined
+  [  ok  ] disc identified by disc-id
+  [ note ] no pre-gap provenance recorded for any of 0 track(s) — pre-gap length and source are fork-only rows, so a rip made with unmodified upstream cyanrip cannot report them
+  [  ok  ] 3 audio files, all with content
+  [  ok  ] the ripper received the 13 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [ note ] cancel me platterpus-fork-gd9c058c.log was not verified: the ripper exited 3, and we cannot establish that this build accepts --verify-log (build tag 'platterpus-fork-gd9c058c') — a non-zero exit from a build whose flag support is unknown is not evidence against the log
+  [ WARN ] cue sheet — the file parses as a cue (11 recognised line(s)) but declares no TRACK at all, so nothing can reconstruct the disc from it
+  [ WARN ] cue sheet — 3 track(s) we sent an ISRC for do not appear in the cue at all: 1, 2, 3
+  [ note ] cue sheet — pre-gap markers not determined: no measured pre-gap length was recorded for any track (pre-gap rows are fork-only, so a rip made with unmodified upstream cyanrip cannot report them)
+  [ note ] cue sheet — INDEX 00 placement not determined: this cue carries no pre-gap marker on any track after track 1, and no measured pre-gap length says whether one was due
+  [  ok  ] cue sheet — 1 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 11 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+
+cancel me platterpus-fork-gddf7ac3
+  /var/home/rmccann/Music/rips/Platterpus Acceptance/cancel me platterpus-fork-gddf7ac3
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gddf7ac3)
+  [ note ] the ripper's completion footer is absent — the log was cut off, or predates the fork pin (disc has 3 tracks)
+  [ WARN ] outcome cancelled: no diagnosis captured
+  [ note ] ripper exit code: 1
+  [ note ] command: /home/rmccann/.local/bin/cyanrip -d /dev/sr0 -s 667 -o flac -r 5 -l 1,2,3 -N --consumer platterpus/0.6.23 -c 1/1 -a album=cancel me platterpus-fork-gddf7ac3:album_artist=Platterpus Acceptance:date=2003:musicbrainz_albumid=65282302-368b-4ba2-953a-483bcdef2410 -t 1=title=Roxanne:artist=Platterpus Acceptance:isrc=GBAAM0201086 -t 2=title=Can’t Stand Losing You:artist=Platterpus Acceptance:isrc=GBAAM0201089 -t 3=title=Message in a Bottle:artist=Platterpus Acceptance:isrc=GBAAM0201170 -t 4=title=Walking on the Moon:artist=Platterpus Acceptance:isrc=GBAAM0201175 -t 5=title=Don’t Stand So Close to Me:artist=Platterpus Acceptance:isrc=GBAAM0201148 -t 6=title=De Do Do Do, De Da Da Da:artist=Platterpus Acceptance:isrc=GBAAM0201154 -t 7=title=Every Little Thing She Does Is Magic:artist=Platterpus Acceptance:isrc=GBAAM0201127 -t 8=title=Invisible Sun:artist=Platterpus Acceptance:isrc=GBAAM0201128 -t 9=title=Spirits in the Material World:artist=Platterpus Acceptance:isrc=GBAAM0201126 -t 10=title=Every Breath You Take:artist=Platterpus Acceptance:isrc=GBAAM0201110 -t 11=title=King of Pain:artist=Platterpus Acceptance:isrc=GBAAM0201111 -t 12=title=Wrapped Around Your Finger:artist=Platterpus Acceptance:isrc=GBAAM0201112 -t 13=title=Don’t Stand So Close to Me ’86:artist=Platterpus Acceptance:isrc=GBAAM0201252 -t 14=title=Message in a Bottle (new classic rock mix):artist=Platterpus Acceptance:isrc=GBAAM0201253 -D {album_artist}/{album} -F {track} - {title}
+  [  ok  ] ripper built from a closed round: 'round 7 lap 39 closed, verdict GO'
+  [ note ] no track list in the report — checksum inventory not determined
+  [  ok  ] disc identified by disc-id
+  [ note ] no pre-gap provenance recorded for any of 0 track(s) — pre-gap length and source are fork-only rows, so a rip made with unmodified upstream cyanrip cannot report them
+  [  ok  ] 3 audio files, all with content
+  [  ok  ] the ripper received the 12 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [ WARN ] cancel me platterpus-fork-gddf7ac3.log carries NO 'Log FUN512:' checksum line at all, so the ripper had nothing to verify it against (exit 1). This is what a rip stopped part-way looks like — the ripper is killed before it writes its own signature — and it is a different finding from a checksum that disagrees with the log body: nothing here says the file was altered. Either way it is not a complete archival record, so do not cite it as one — verified with `/home/rmccann/.local/bin/cyanrip --verify-log /home/rmccann/Music/rips/Platterpus Acceptance/cancel me platterpus-fork-gddf7ac3/cancel me platterpus-fork-gddf7ac3.log`, which exited 1
+  [ WARN ] cue sheet — the file parses as a cue (11 recognised line(s)) but declares no TRACK at all, so nothing can reconstruct the disc from it
+  [ WARN ] cue sheet — 3 track(s) we sent an ISRC for do not appear in the cue at all: 1, 2, 3
+  [ note ] cue sheet — pre-gap markers not determined: no measured pre-gap length was recorded for any track (pre-gap rows are fork-only, so a rip made with unmodified upstream cyanrip cannot report them)
+  [ note ] cue sheet — INDEX 00 placement not determined: this cue carries no pre-gap marker on any track after track 1, and no measured pre-gap length says whether one was due
+  [  ok  ] cue sheet — 1 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 11 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+
+full acceptance∶ angle‹bracket platterpus-fork-gd9c058c
+  /var/home/rmccann/Music/rips/Platterpus Acceptance/full acceptance∶ angle‹bracket platterpus-fork-gd9c058c
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gd9c058c)
+  [  ok  ] rip completed (14 of 14 tracks)
+  [ WARN ] the ripper says it was built from an OPEN round: 'round 14 lap 3 OPEN, verdict HOLD -- NOT a released build' — rips from this build carry that sentence permanently in their log
+  [  ok  ] checksum inventory: 14/14 tracks carry a copy CRC
+  [  ok  ] AccurateRip inventory complete: 29/29 (14 tracks × 2, plus 1 where both v1 and v2 missed and a 450 line could appear)
+  [  ok  ] disc identified by disc-id
+  [  ok  ] pre-gap provenance across 14 track(s): lead-in, sub-channel (not signalled by TOC)
+  [  ok  ] 14 audio files, all with content
+  [  ok  ] the ripper received the 12 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [  ok  ] the ripper verified full acceptance∶ angle‹bracket platterpus-fork-gd9c058c.log against its own FUN512 checksum — the log is a faithful, unmodified record of this rip
+  [  ok  ] cue sheet — well formed: 14 track(s), numbered 1..N in order, each with an INDEX 01
+  [  ok  ] cue sheet — all 14 ISRC(s) we sent round-tripped into the cue
+  [  ok  ] cue sheet — INDEX 00 markers agree with the measured pre-gap lengths on all 13 track(s) checked (track 1's lead-in pre-gap is never marked, by design)
+  [  ok  ] cue sheet — all 9 INDEX 00 pre-gap marker(s) are nested under the previous track's own file, and none sits past the end of it
+  [  ok  ] cue sheet — 15 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 39 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+  [  ok  ] ⚠ 13 of 14 tracks verified exactly against AccurateRip; the other 1 matched an offset-variant pressing (partially accurate — see the table)
+
+full acceptance∶ angle‹bracket platterpus-fork-gd9c058c (2)
+  /var/home/rmccann/Music/rips/Platterpus Acceptance/full acceptance∶ angle‹bracket platterpus-fork-gd9c058c (2)
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gd9c058c)
+  [  ok  ] rip completed (2 of 14 tracks)
+  [ WARN ] the ripper says it was built from an OPEN round: 'round 14 lap 3 OPEN, verdict HOLD -- NOT a released build' — rips from this build carry that sentence permanently in their log
+  [  ok  ] checksum inventory: 2/2 tracks carry a copy CRC
+  [  ok  ] AccurateRip inventory complete: 4/4 (2 tracks × 2, plus 0 where both v1 and v2 missed and a 450 line could appear)
+  [  ok  ] disc identified by disc-id
+  [  ok  ] pre-gap provenance across 2 track(s): lead-in, sub-channel (not signalled by TOC)
+  [  ok  ] 2 audio files, all with content
+  [  ok  ] the ripper received the 13 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [  ok  ] the ripper verified full acceptance∶ angle‹bracket platterpus-fork-gd9c058c.log against its own FUN512 checksum — the log is a faithful, unmodified record of this rip
+  [  ok  ] cue sheet — well formed: 2 track(s), numbered 1..N in order, each with an INDEX 01
+  [  ok  ] cue sheet — all 2 ISRC(s) we sent round-tripped into the cue
+  [  ok  ] cue sheet — INDEX 00 markers agree with the measured pre-gap lengths on all 1 track(s) checked (track 1's lead-in pre-gap is never marked, by design)
+  [  ok  ] cue sheet — all 1 INDEX 00 pre-gap marker(s) are nested under the previous track's own file, and none sits past the end of it
+  [  ok  ] cue sheet — 3 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 15 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+  [  ok  ] ✓ Bit-perfect: all 2 tracks verified against AccurateRip (confidence 129+)
+
+full acceptance∶ angle‹bracket platterpus-fork-gddf7ac3
+  /var/home/rmccann/Music/rips/Platterpus Acceptance/full acceptance∶ angle‹bracket platterpus-fork-gddf7ac3
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gddf7ac3)
+  [  ok  ] rip completed (2 of 14 tracks)
+  [  ok  ] ripper built from a closed round: 'round 7 lap 39 closed, verdict GO'
+  [  ok  ] checksum inventory: 2/2 tracks carry a copy CRC
+  [  ok  ] AccurateRip inventory complete: 4/4 (2 tracks × 2, plus 0 where both v1 and v2 missed and a 450 line could appear)
+  [  ok  ] disc identified by disc-id
+  [  ok  ] pre-gap provenance across 2 track(s): lead-in, sub-channel (not signalled by TOC)
+  [  ok  ] 14 audio files, all with content
+  [  ok  ] the ripper received the 12 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [  ok  ] the ripper verified full acceptance∶ angle‹bracket platterpus-fork-gddf7ac3.log against its own FUN512 checksum — the log is a faithful, unmodified record of this rip
+  [  ok  ] cue sheet — well formed: 2 track(s), numbered 1..N in order, each with an INDEX 01
+  [  ok  ] cue sheet — all 2 ISRC(s) we sent round-tripped into the cue
+  [  ok  ] cue sheet — INDEX 00 markers agree with the measured pre-gap lengths on all 1 track(s) checked (track 1's lead-in pre-gap is never marked, by design)
+  [  ok  ] cue sheet — all 1 INDEX 00 pre-gap marker(s) are nested under the previous track's own file, and none sits past the end of it
+  [  ok  ] cue sheet — 3 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 15 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+  [  ok  ] ✓ Bit-perfect: all 2 tracks verified against AccurateRip (confidence 129+)
+
+after cancel platterpus-fork-gd9c058c
+  /var/home/rmccann/Music/rips/The Police/after cancel platterpus-fork-gd9c058c
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gd9c058c)
+  [  ok  ] rip completed (2 of 14 tracks)
+  [ WARN ] the ripper says it was built from an OPEN round: 'round 14 lap 3 OPEN, verdict HOLD -- NOT a released build' — rips from this build carry that sentence permanently in their log
+  [  ok  ] checksum inventory: 2/2 tracks carry a copy CRC
+  [  ok  ] AccurateRip inventory complete: 4/4 (2 tracks × 2, plus 0 where both v1 and v2 missed and a 450 line could appear)
+  [  ok  ] disc identified by disc-id
+  [  ok  ] pre-gap provenance across 2 track(s): lead-in, sub-channel (not signalled by TOC)
+  [  ok  ] 2 audio files, all with content
+  [  ok  ] the ripper received the 13 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [  ok  ] the ripper verified after cancel platterpus-fork-gd9c058c.log against its own FUN512 checksum — the log is a faithful, unmodified record of this rip
+  [  ok  ] cue sheet — well formed: 2 track(s), numbered 1..N in order, each with an INDEX 01
+  [  ok  ] cue sheet — all 2 ISRC(s) we sent round-tripped into the cue
+  [  ok  ] cue sheet — INDEX 00 markers agree with the measured pre-gap lengths on all 1 track(s) checked (track 1's lead-in pre-gap is never marked, by design)
+  [  ok  ] cue sheet — all 1 INDEX 00 pre-gap marker(s) are nested under the previous track's own file, and none sits past the end of it
+  [  ok  ] cue sheet — 3 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 15 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+  [  ok  ] ✓ Bit-perfect: all 2 tracks verified against AccurateRip (confidence 129+)
+
+derived mp3 platterpus-fork-gd9c058c
+  /var/home/rmccann/Music/rips/The Police/derived mp3 platterpus-fork-gd9c058c
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gd9c058c)
+  [  ok  ] rip completed (2 of 14 tracks)
+  [ WARN ] the ripper says it was built from an OPEN round: 'round 14 lap 3 OPEN, verdict HOLD -- NOT a released build' — rips from this build carry that sentence permanently in their log
+  [  ok  ] checksum inventory: 2/2 tracks carry a copy CRC
+  [  ok  ] AccurateRip inventory complete: 4/4 (2 tracks × 2, plus 0 where both v1 and v2 missed and a 450 line could appear)
+  [  ok  ] disc identified by disc-id
+  [  ok  ] pre-gap provenance across 2 track(s): lead-in, sub-channel (not signalled by TOC)
+  [  ok  ] 2 audio files, all with content
+  [  ok  ] the ripper received the 13 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [  ok  ] the ripper verified derived mp3 platterpus-fork-gd9c058c.log against its own FUN512 checksum — the log is a faithful, unmodified record of this rip
+  [  ok  ] cue sheet — well formed: 2 track(s), numbered 1..N in order, each with an INDEX 01
+  [  ok  ] cue sheet — all 2 ISRC(s) we sent round-tripped into the cue
+  [  ok  ] cue sheet — INDEX 00 markers agree with the measured pre-gap lengths on all 1 track(s) checked (track 1's lead-in pre-gap is never marked, by design)
+  [  ok  ] cue sheet — all 1 INDEX 00 pre-gap marker(s) are nested under the previous track's own file, and none sits past the end of it
+  [  ok  ] cue sheet — 3 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 15 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+  [  ok  ] ✓ Bit-perfect: all 2 tracks verified against AccurateRip (confidence 129+)
+
+derived wav platterpus-fork-gd9c058c
+  /var/home/rmccann/Music/rips/The Police/derived wav platterpus-fork-gd9c058c
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gd9c058c)
+  [  ok  ] rip completed (2 of 14 tracks)
+  [ WARN ] the ripper says it was built from an OPEN round: 'round 14 lap 3 OPEN, verdict HOLD -- NOT a released build' — rips from this build carry that sentence permanently in their log
+  [  ok  ] checksum inventory: 2/2 tracks carry a copy CRC
+  [  ok  ] AccurateRip inventory complete: 4/4 (2 tracks × 2, plus 0 where both v1 and v2 missed and a 450 line could appear)
+  [  ok  ] disc identified by disc-id
+  [  ok  ] pre-gap provenance across 2 track(s): lead-in, sub-channel (not signalled by TOC)
+  [  ok  ] 2 audio files, all with content
+  [  ok  ] the ripper received the 13 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [  ok  ] the ripper verified derived wav platterpus-fork-gd9c058c.log against its own FUN512 checksum — the log is a faithful, unmodified record of this rip
+  [  ok  ] cue sheet — well formed: 2 track(s), numbered 1..N in order, each with an INDEX 01
+  [  ok  ] cue sheet — all 2 ISRC(s) we sent round-tripped into the cue
+  [  ok  ] cue sheet — INDEX 00 markers agree with the measured pre-gap lengths on all 1 track(s) checked (track 1's lead-in pre-gap is never marked, by design)
+  [  ok  ] cue sheet — all 1 INDEX 00 pre-gap marker(s) are nested under the previous track's own file, and none sits past the end of it
+  [  ok  ] cue sheet — 3 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 15 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+  [  ok  ] ✓ Bit-perfect: all 2 tracks verified against AccurateRip (confidence 129+)
+
+derived wavpack platterpus-fork-gd9c058c
+  /var/home/rmccann/Music/rips/The Police/derived wavpack platterpus-fork-gd9c058c
+  [  ok  ] ripped by the Platterpus fork (platterpus-fork-gd9c058c)
+  [  ok  ] rip completed (2 of 14 tracks)
+  [ WARN ] the ripper says it was built from an OPEN round: 'round 14 lap 3 OPEN, verdict HOLD -- NOT a released build' — rips from this build carry that sentence permanently in their log
+  [  ok  ] checksum inventory: 2/2 tracks carry a copy CRC
+  [  ok  ] AccurateRip inventory complete: 4/4 (2 tracks × 2, plus 0 where both v1 and v2 missed and a 450 line could appear)
+  [  ok  ] disc identified by disc-id
+  [  ok  ] pre-gap provenance across 2 track(s): lead-in, sub-channel (not signalled by TOC)
+  [  ok  ] 2 audio files, all with content
+  [  ok  ] the ripper received the 13 flags we sent on the whole-disc pass
+  [  ok  ] the EAC-style log matches its own SHA-256 footer
+  [  ok  ] the ripper verified derived wavpack platterpus-fork-gd9c058c.log against its own FUN512 checksum — the log is a faithful, unmodified record of this rip
+  [  ok  ] cue sheet — well formed: 2 track(s), numbered 1..N in order, each with an INDEX 01
+  [  ok  ] cue sheet — all 2 ISRC(s) we sent round-tripped into the cue
+  [  ok  ] cue sheet — INDEX 00 markers agree with the measured pre-gap lengths on all 1 track(s) checked (track 1's lead-in pre-gap is never marked, by design)
+  [  ok  ] cue sheet — all 1 INDEX 00 pre-gap marker(s) are nested under the previous track's own file, and none sits past the end of it
+  [  ok  ] cue sheet — 3 title(s) match the text we handed the ripper exactly, and no metadata value carries the U+2236 colon substitute (checked 15 value(s))
+  [  ok  ] disc identity — MusicBrainz pNtImOkdBm9RMBIalzx0w9cfsYY- / CDDB E20DFE0E
+  [  ok  ] ✓ Bit-perfect: all 2 tracks verified against AccurateRip (confidence 129+)
+
+========================================================================
+SUMMARY
+
+albums audited: 9
+  ripper: 9× fork
+  completed: 7
+  completion not stated (older rip or cut-off log): 2
+
+pre-gap provenance seen across the library:
+  - lead-in
+  - sub-channel (not signalled by TOC)
+
+  *** A SUB-CHANNEL pre-gap read SUCCEEDED. ***
+  As of v0.6.1 this path had never executed successfully anywhere —
+  disc images always fail into 'unknown'. This is new information;
+  please send that album's `.platterpus.json` report.
+
+albums needing attention: 8
+  - cancel me platterpus-fork-gd9c058c
+  - cancel me platterpus-fork-gddf7ac3
+  - full acceptance∶ angle‹bracket platterpus-fork-gd9c058c
+  - full acceptance∶ angle‹bracket platterpus-fork-gd9c058c (2)
+  - after cancel platterpus-fork-gd9c058c
+  - derived mp3 platterpus-fork-gd9c058c
+  - derived wav platterpus-fork-gd9c058c
+  - derived wavpack platterpus-fork-gd9c058c

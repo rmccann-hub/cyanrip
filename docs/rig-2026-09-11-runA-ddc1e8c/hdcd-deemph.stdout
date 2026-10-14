@@ -1,0 +1,28 @@
+Checking /dev/sr0 for cdrom...
+		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+
+
+Opening drive...
+cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gddc1e8c)
+Invoked as:     /usr/local/bin/cyanrip -d /dev/sr0 -s 667 -l 1 -N -A -U -o pcm -H -E -u cyanrip-rig/round-16 -D ./runA/hdcd-deemph -F {track} -L hdcd-deemph -M hdcd-deemph
+Handshake:      round 16 lap 1 OPEN, verdict OPEN -- NOT a released build
+Consumer:       cyanrip-rig/round-16
+                (reported by the caller, not verified by cyanrip)
+Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+System device:  /dev/sr0
+Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+Offset:         +667 samples
+Overread:       +2 frames
+Overread mode:  fill with silence in lead-in/lead-out
+Speed:          default (unchangeable)
+C2 errors:      unsupported by drive
+CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+Paranoia level: max
+Frame retries:  10
+Cache model:    1200 sectors (drive cache size not probed)
+HDCD decoding:  enabled
+Album Art:      none
+Outputs:        pcm
+Disc tracks:    14
+Tracks to rip:  1

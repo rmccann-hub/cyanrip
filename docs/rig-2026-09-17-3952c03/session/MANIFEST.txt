@@ -1,0 +1,72 @@
+PLATTERPUS EVIDENCE BUNDLE
+==========================
+
+created            20260917T233651Z
+platterpus         0.6.50
+build              4bedb45
+rip outcome        success
+album folder       /home/rmccann/Music/rips/The Police/Every Breath You Take∶ The Classics
+
+Raw facts this outcome was derived from (a label can be wrong; these
+are what it was computed from):
+  cancel requested       False
+  ripper exit ok         True
+  ripper log parsed      True
+  ripper log path        /home/rmccann/Music/rips/The Police/Every Breath You Take∶ The Classics/Every Breath You Take∶ The Classics.log
+  tracks in log          14
+  tracks on disc         14
+  tracks requested       14
+  waited for post-rip    yes — every post-rip check had finished and the report was flushed
+
+INCLUDED (13 file(s))
+----------------------------------------
+  applog/log.txt                                          2862343 B
+  album/Every Breath You Take∶ The Classics (EAC-compatible).log       8576 B
+  album/Every Breath You Take∶ The Classics.cue              3000 B
+  album/Every Breath You Take∶ The Classics.log             39261 B
+  album/Every Breath You Take∶ The Classics.platterpus.json    3763605 B
+  applog/log.txt.1                                        8388496 B
+  applog/log.txt.2                                        8388514 B
+  applog/log.txt.3                                        8388560 B
+  applog/log.txt.4                                        8388526 B
+  applog/log.txt.5                                        8388606 B
+  applog/log.txt.6                                        8388566 B
+  applog/log.txt.7                                        8388551 B
+  diagnostics.txt                                            1059 B
+
+NOT INCLUDED (16 file(s))
+----------------------------------------
+  Listed so an absence is visible. A bundle quietly missing an artifact
+  looks exactly like a complete one.
+  album/01 - Roxanne.flac                              excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/02 - Can’t Stand Losing You.flac               excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/03 - Message in a Bottle.flac                  excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/04 - Walking on the Moon.flac                  excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/05 - Don’t Stand So Close to Me.flac           excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/06 - De Do Do Do, De Da Da Da.flac             excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/07 - Every Little Thing She Does Is Magic.flac excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/08 - Invisible Sun.flac                        excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/09 - Spirits in the Material World.flac        excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/10 - Every Breath You Take.flac                excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/11 - King of Pain.flac                         excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/12 - Wrapped Around Your Finger.flac           excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/13 - Don’t Stand So Close to Me ’86.flac       excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/14 - Message in a Bottle (new classic rock mix).flac excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/Every Breath You Take∶ The Classics.platterpus.json.tmp excluded: '.tmp' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  album/back.jpg                                       excluded: '.jpg' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+
+NO AUDIO IS PRESENT — no file of any audio type can enter this archive.
+Everything here passed an allowlist: .cue .json .log .md .md5 .sha256 .toml .txt
+Plus, from this program's own run folder ONLY: .png
+A name is not a guarantee, so two more checks run on every file: its
+first bytes are compared against 14 audio-container
+signatures, and a symbolic link is judged by the name of the file it
+points at as well as by its own.
+(those are screenshots Platterpus took of its own window. An album folder
+is never judged by that wider rule, because its images are record-label
+artwork.) The per-track CRCs in the logs prove bit-perfection without the
+audio.
+
+Caps in force: 16777216 B per file (head+tail kept, elision
+marked inline), 67108864 B across the whole payload, and the
+newest 20 bundles are kept in the bundles folder.

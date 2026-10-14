@@ -1,0 +1,51 @@
+PLATTERPUS MORNING COLLECTION
+collected:       20260826T125323Z
+host:            Linux bazzite 7.2.0-ogc6.1.fc44.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Aug 24 03:42:13 UTC 2026 x86_64 GNU/Linux
+appimage:        /home/rmccann/Applications/platterpus-x86_64.AppImage
+rip search:      /home/rmccann/Music
+rip artifacts:   24
+album folders:   6
+app bundles:     3
+app logs:        1
+files staged:    34
+audio found:     0  (must be 0)
+problems:        1
+
+NO AUDIO IS PRESENT. Only these suffixes were copied: txt cue md5 json toml md log sha256
+
+--- full file list ---
+   5137352  bundles/platterpusbundle20260826t0914280000.tar.gz
+     51181  bundles/platterpusbundle20260826t095614z.tar.gz
+    364913  bundles/platterpusbundle20260826t125255z.tar.gz
+     70424  logs/log.txt
+       560  MANIFEST.txt
+      1563  probes/doctor.txt
+       269  probes/versions.txt
+       685  rips/Music/rips/The Police/after cancel 20260826t091428 platterpus-fork-gd9c058c/after cancel 20260826t091428 platterpus-fork-gd9c058c.cue
+      3290  rips/Music/rips/The Police/after cancel 20260826t091428 platterpus-fork-gd9c058c/after cancel 20260826t091428 platterpus-fork-gd9c058c (EAC-compatible).log
+      8995  rips/Music/rips/The Police/after cancel 20260826t091428 platterpus-fork-gd9c058c/after cancel 20260826t091428 platterpus-fork-gd9c058c.log
+    854929  rips/Music/rips/The Police/after cancel 20260826t091428 platterpus-fork-gd9c058c/after cancel 20260826t091428 platterpus-fork-gd9c058c.platterpus.json
+       907  rips/Music/rips/The Police/cancel me 20260826t091428 platterpus-fork-gd9c058c/cancel me 20260826t091428 platterpus-fork-gd9c058c.cue
+      2286  rips/Music/rips/The Police/cancel me 20260826t091428 platterpus-fork-gd9c058c/cancel me 20260826t091428 platterpus-fork-gd9c058c (EAC-compatible).log
+     11919  rips/Music/rips/The Police/cancel me 20260826t091428 platterpus-fork-gd9c058c/cancel me 20260826t091428 platterpus-fork-gd9c058c.log
+    139767  rips/Music/rips/The Police/cancel me 20260826t091428 platterpus-fork-gd9c058c/cancel me 20260826t091428 platterpus-fork-gd9c058c.platterpus.json
+       684  rips/Music/rips/The Police/derived mp3 20260826t091428 platterpus-fork-gd9c058c/derived mp3 20260826t091428 platterpus-fork-gd9c058c.cue
+      3327  rips/Music/rips/The Police/derived mp3 20260826t091428 platterpus-fork-gd9c058c/derived mp3 20260826t091428 platterpus-fork-gd9c058c (EAC-compatible).log
+      8947  rips/Music/rips/The Police/derived mp3 20260826t091428 platterpus-fork-gd9c058c/derived mp3 20260826t091428 platterpus-fork-gd9c058c.log
+    637965  rips/Music/rips/The Police/derived mp3 20260826t091428 platterpus-fork-gd9c058c/derived mp3 20260826t091428 platterpus-fork-gd9c058c.platterpus.json
+       684  rips/Music/rips/The Police/derived wav 20260826t091428 platterpus-fork-gd9c058c/derived wav 20260826t091428 platterpus-fork-gd9c058c.cue
+      3327  rips/Music/rips/The Police/derived wav 20260826t091428 platterpus-fork-gd9c058c/derived wav 20260826t091428 platterpus-fork-gd9c058c (EAC-compatible).log
+      8947  rips/Music/rips/The Police/derived wav 20260826t091428 platterpus-fork-gd9c058c/derived wav 20260826t091428 platterpus-fork-gd9c058c.log
+    481677  rips/Music/rips/The Police/derived wav 20260826t091428 platterpus-fork-gd9c058c/derived wav 20260826t091428 platterpus-fork-gd9c058c.platterpus.json
+       688  rips/Music/rips/The Police/derived wavpack 20260826t091428 platterpus-fork-gd9c058c/derived wavpack 20260826t091428 platterpus-fork-gd9c058c.cue
+      3339  rips/Music/rips/The Police/derived wavpack 20260826t091428 platterpus-fork-gd9c058c/derived wavpack 20260826t091428 platterpus-fork-gd9c058c (EAC-compatible).log
+      8971  rips/Music/rips/The Police/derived wavpack 20260826t091428 platterpus-fork-gd9c058c/derived wavpack 20260826t091428 platterpus-fork-gd9c058c.log
+    473004  rips/Music/rips/The Police/derived wavpack 20260826t091428 platterpus-fork-gd9c058c/derived wavpack 20260826t091428 platterpus-fork-gd9c058c.platterpus.json
+      2956  rips/Music/rips/The Police/secure reread 20260826t091428 platterpus-fork-gd9c058c/secure reread 20260826t091428 platterpus-fork-gd9c058c.cue
+     10124  rips/Music/rips/The Police/secure reread 20260826t091428 platterpus-fork-gd9c058c/secure reread 20260826t091428 platterpus-fork-gd9c058c (EAC-compatible).log
+     42604  rips/Music/rips/The Police/secure reread 20260826t091428 platterpus-fork-gd9c058c/secure reread 20260826t091428 platterpus-fork-gd9c058c.log
+   6173556  rips/Music/rips/The Police/secure reread 20260826t091428 platterpus-fork-gd9c058c/secure reread 20260826t091428 platterpus-fork-gd9c058c.platterpus.json
+       468  session/00-summary.txt
+        28  session/01-app-version.txt
+         0  session/02-ripper-version.txt
+       996  session/rigsession-stdout.txt

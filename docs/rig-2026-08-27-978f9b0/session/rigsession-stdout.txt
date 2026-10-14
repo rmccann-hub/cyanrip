@@ -1,0 +1,15 @@
+2026-08-26 21:33:03,893 INFO platterpus.app: platterpus 0.6.29 (build 43a33b4) starting; args: --rig-session /home/rmccann/platterpusmorning20260827T013150Z/session
+2026-08-26 21:33:03,951 INFO platterpus.logging_setup: debug logging ENABLED
+2026-08-26 21:33:03,953 INFO platterpus.app: rig session starting: bash /tmp/.mount_plattebgoGjp/opt/python3.12/lib/python3.12/site-packages/platterpus/rig_session.sh /var/home/rmccann/platterpusmorning20260827T013150Z/session /var/home/rmccann/Applications/platterpus-x86_64.AppImage
+
+=== rig session 2026-08-27T01:33:03Z
+    app:    /var/home/rmccann/Applications/platterpus-x86_64.AppImage
+    ripper: /home/rmccann/.local/bin/cyanrip
+    out:    /var/home/rmccann/platterpusmorning20260827T013150Z/session
+
+=== P1  app version
+    argv: /var/home/rmccann/Applications/platterpus-x86_64.AppImage --version
+    exit: 0   elapsed: 1s   artifact: 01-app-version.txt (28 bytes)
+
+=== P3  ripper banner
+    argv: /home/rmccann/.local/bin/cyanrip --version

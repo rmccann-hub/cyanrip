@@ -1,0 +1,5065 @@
+Checking /dev/sr0 for cdrom...
+		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+
+
+Opening drive...
+No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!
+cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)
+Invoked as:     /usr/local/bin/cyanrip -d /dev/sr0 -s 667 -o flac -T unicode -r 5 -N --consumer platterpus/0.6.65 -c 1/4 -a "album=full acceptance\: angle<bracket 20261004t160255 platterpus-fork-g174a134:album_artist=Platterpus Acceptance:date=2001-10-09:catalognumber=11661-0501-2:barcode=011661050129:label=Rounder:musicbrainz_albumid=53d0f596-95a3-4e60-b4aa-09f5f7532b1e" -t "1=title=Tennessee Mountain Fox Chase:artist=Platterpus Acceptance" -t "2=title=Banjo Picking Girl:artist=Platterpus Acceptance" -t "3=title=Old Corn Liquor:artist=Platterpus Acceptance" -t "4=title=Rain and Snow:artist=Platterpus Acceptance" -t "5=title=The Orphan Child:artist=Platterpus Acceptance" -t "6=title=Working on a Building:artist=Platterpus Acceptance" -t "7=title=You Better Mind:artist=Platterpus Acceptance:isrc=USRO27501510" -t "8=title=Dry Bones:artist=Platterpus Acceptance" -t "9=title=Did You Hear John Hurt?:artist=Platterpus Acceptance" -t "10=title=One‐Dime Blues:artist=Platterpus Acceptance:isrc=USRO29111201" -t "11=title=All the Way From East St. Louis:artist=Platterpus Acceptance" -t "12=title=Juke Medley:artist=Platterpus Acceptance" -t "13=title=Black’s Ball:artist=Platterpus Acceptance" -t "14=title=Just a Little While to Stay Here:artist=Platterpus Acceptance" -t "15=title=Iko, Iko:artist=Platterpus Acceptance" -t "16=title=Mai Kai No Kauai:artist=Platterpus Acceptance" -t "17=title=Texas Cowboy:artist=Platterpus Acceptance" -t "18=title=Streets of Laredo:artist=Platterpus Acceptance" -D {album_artist}/{album} -F "{track} - {title}" -G -j cyanrip-diagnostics-20261004T160336Z.json
+Handshake:      round 29 lap 3 closed, verdict GO -- released build
+                (declared at build time, not verified by cyanrip)
+Consumer:       platterpus/0.6.65
+                (reported by the caller, not verified by cyanrip)
+Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+System device:  /dev/sr0
+Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+Offset:         +667 samples
+Overread:       +2 frames
+Overread mode:  fill with silence in lead-in/lead-out
+Speed:          default (unchangeable)
+C2 errors:      unsupported by drive
+CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+Paranoia level: max
+Retry limit:    5 (per frame, and per whole-track re-read)
+Cache model:    1200 sectors (drive cache size not probed)
+HDCD decoding:  disabled
+Album Art:      none
+Outputs:        flac
+Disc number:    1
+Total discs:    4
+Disc tracks:    18
+Tracks to rip:  all
+DiscID:         zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+Release ID:     53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+CDDB ID:        000DAC12
+Album:          full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+Album artist:   Platterpus Acceptance
+AccurateRip:    found
+Total time:     58:20.25
+
+Gaps:
+    180 frame pregap in track 2, merging into track 1
+    190 frame pregap in track 3, merging into track 2
+    185 frame pregap in track 4, merging into track 3
+    180 frame pregap in track 5, merging into track 4
+    90 frame pregap in track 6, merging into track 5
+    165 frame pregap in track 8, merging into track 7
+    158 frame pregap in track 9, merging into track 8
+    145 frame pregap in track 10, merging into track 9
+    190 frame pregap in track 11, merging into track 10
+    105 frame pregap in track 12, merging into track 11
+    143 frame pregap in track 13, merging into track 12
+    109 frame pregap in track 15, merging into track 14
+    202 frame pregap in track 16, merging into track 15
+    140 frame pregap in track 17, merging into track 16
+    187 frame pregap in track 18, merging into track 17
+
+Tracks:
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -15.7 LUFS
+    Threshold: -25.7 LUFS
+
+  Loudness range:
+    LRA:         4.0 LU
+    Threshold: -35.7 LUFS
+    LRA low:   -17.9 LUFS
+    LRA high:  -13.9 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:        0.2 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    02:53.60
+    Samples:     7664580
+    Frames:      13035
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   0.2 dBFS
+    Integrated loudness (R128): -15.7 LUFS
+    Loudness range (R128):      4.0 LU (-17.9 to -13.9 LUFS)
+    Extraction speed:  1.1x
+    Elapsed:            153.18 s
+    Pregap LSN:  0 (duration: 00:02.00)
+    Pregap length: 150 frames
+    Pregap source: lead-in
+    Start LSN:   0 (with offset: 1)
+    End LSN:     13034 (with offset: 13036)
+
+  EAC CRC32:     A0E382F5
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  5ED2CE6E (accurately ripped, confidence 12)
+    Accurip v2:  0E80A467 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         1
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Tennessee Mountain Fox Chase
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:03:44-04:00
+    REPLAYGAIN_TRACK_GAIN:         -2.34 dB
+    R128_TRACK_GAIN:               681
+    REPLAYGAIN_TRACK_RANGE:        4.04 dB
+    REPLAYGAIN_TRACK_PEAK:         1.022951
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1058
+    VERIFY:        71
+    OVERLAP:       13
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/01 - Tennessee Mountain Fox Chase.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -12.8 LUFS
+    Threshold: -22.9 LUFS
+
+  Loudness range:
+    LRA:         4.0 LU
+    Threshold: -32.9 LUFS
+    LRA low:   -14.7 LUFS
+    LRA high:  -10.7 LUFS
+
+  Sample peak:
+    Peak:       -0.4 dBFS
+
+  True peak:
+    Peak:       -0.4 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:06.37
+    Samples:     8224356
+    Frames:      13987
+    Sample peak level: 95.0% (-0.4 dBFS)
+    True peak level:   -0.4 dBFS
+    Integrated loudness (R128): -12.8 LUFS
+    Loudness range (R128):      4.0 LU (-14.7 to -10.7 LUFS)
+    Extraction speed:  1.1x
+    Elapsed:            163.04 s
+    Pregap LSN:  12855 (duration: 00:02.30)
+    Pregap length: 180 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   13035 (with offset: 13036)
+    End LSN:     27021 (with offset: 27023)
+
+  EAC CRC32:     ABC106DC
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  45CB37DF (accurately ripped, confidence 12)
+    Accurip v2:  F383C874 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         2
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Banjo Picking Girl
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:06:17-04:00
+    REPLAYGAIN_TRACK_GAIN:         -5.19 dB
+    R128_TRACK_GAIN:               -48
+    REPLAYGAIN_TRACK_RANGE:        3.99 dB
+    REPLAYGAIN_TRACK_PEAK:         0.950732
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1153
+    VERIFY:        74
+    OVERLAP:       23
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/02 - Banjo Picking Girl.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -13.6 LUFS
+    Threshold: -23.7 LUFS
+
+  Loudness range:
+    LRA:         1.5 LU
+    Threshold: -33.7 LUFS
+    LRA low:   -14.4 LUFS
+    LRA high:  -12.9 LUFS
+
+  Sample peak:
+    Peak:       -0.9 dBFS
+
+  True peak:
+    Peak:       -0.8 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:25.58
+    Samples:     9074604
+    Frames:      15433
+    Sample peak level: 90.6% (-0.9 dBFS)
+    True peak level:   -0.8 dBFS
+    Integrated loudness (R128): -13.6 LUFS
+    Loudness range (R128):      1.5 LU (-14.4 to -12.9 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            177.57 s
+    Pregap LSN:  26832 (duration: 00:02.40)
+    Pregap length: 190 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   27022 (with offset: 27023)
+    End LSN:     42454 (with offset: 42456)
+
+  EAC CRC32:     1389CBEE
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  C58E05DB (accurately ripped, confidence 12)
+    Accurip v2:  181EA470 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         3
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Old Corn Liquor
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:09:01-04:00
+    REPLAYGAIN_TRACK_GAIN:         -4.39 dB
+    R128_TRACK_GAIN:               157
+    REPLAYGAIN_TRACK_RANGE:        1.47 dB
+    REPLAYGAIN_TRACK_PEAK:         0.907293
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1249
+    VERIFY:        78
+    OVERLAP:       25
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/03 - Old Corn Liquor.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -14.4 LUFS
+    Threshold: -25.8 LUFS
+
+  Loudness range:
+    LRA:        14.0 LU
+    Threshold: -35.8 LUFS
+    LRA low:   -24.6 LUFS
+    LRA high:  -10.5 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.2 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    02:15.25
+    Samples:     5968200
+    Frames:      10150
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   -0.2 dBFS
+    Integrated loudness (R128): -14.4 LUFS
+    Loudness range (R128):      14.0 LU (-24.6 to -10.5 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            115.90 s
+    Pregap LSN:  42270 (duration: 00:02.35)
+    Pregap length: 185 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   42455 (with offset: 42456)
+    End LSN:     52604 (with offset: 52606)
+
+  EAC CRC32:     24FE4A40
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  EC8A29CB (accurately ripped, confidence 12)
+    Accurip v2:  D4F7193B (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         4
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Rain and Snow
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:11:58-04:00
+    REPLAYGAIN_TRACK_GAIN:         -3.61 dB
+    R128_TRACK_GAIN:               356
+    REPLAYGAIN_TRACK_RANGE:        14.03 dB
+    REPLAYGAIN_TRACK_PEAK:         0.979291
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          817
+    VERIFY:        51
+    OVERLAP:       16
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/04 - Rain and Snow.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -13.2 LUFS
+    Threshold: -23.4 LUFS
+
+  Loudness range:
+    LRA:         6.7 LU
+    Threshold: -33.4 LUFS
+    LRA low:   -17.0 LUFS
+    LRA high:  -10.3 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.1 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    04:04.50
+    Samples:     10789800
+    Frames:      18350
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   -0.1 dBFS
+    Integrated loudness (R128): -13.2 LUFS
+    Loudness range (R128):      6.7 LU (-17.0 to -10.3 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            208.36 s
+    Pregap LSN:  52425 (duration: 00:02.30)
+    Pregap length: 180 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   52605 (with offset: 52606)
+    End LSN:     70954 (with offset: 70956)
+
+  EAC CRC32:     8F45D726
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  8F231F5C (accurately ripped, confidence 12)
+    Accurip v2:  DD6CF2E3 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         5
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         The Orphan Child
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:13:54-04:00
+    REPLAYGAIN_TRACK_GAIN:         -4.80 dB
+    R128_TRACK_GAIN:               51
+    REPLAYGAIN_TRACK_RANGE:        6.71 dB
+    REPLAYGAIN_TRACK_PEAK:         0.990117
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1489
+    VERIFY:        93
+    OVERLAP:       30
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/05 - The Orphan Child.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -15.2 LUFS
+    Threshold: -25.4 LUFS
+
+  Loudness range:
+    LRA:         8.8 LU
+    Threshold: -35.4 LUFS
+    LRA low:   -20.8 LUFS
+    LRA high:  -11.9 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.1 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:18.10
+    Samples:     8737680
+    Frames:      14860
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   -0.1 dBFS
+    Integrated loudness (R128): -15.2 LUFS
+    Loudness range (R128):      8.8 LU (-20.8 to -11.9 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            167.56 s
+    Pregap LSN:  70865 (duration: 00:01.15)
+    Pregap length: 90 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   70955 (with offset: 70956)
+    End LSN:     85814 (with offset: 85816)
+
+  EAC CRC32:     E288567D
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  B3AE9A69 (accurately ripped, confidence 12)
+    Accurip v2:  07520D28 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         6
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Working on a Building
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:17:22-04:00
+    REPLAYGAIN_TRACK_GAIN:         -2.84 dB
+    R128_TRACK_GAIN:               552
+    REPLAYGAIN_TRACK_RANGE:        8.82 dB
+    REPLAYGAIN_TRACK_PEAK:         0.992383
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1201
+    VERIFY:        75
+    OVERLAP:       24
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/06 - Working on a Building.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -14.7 LUFS
+    Threshold: -24.8 LUFS
+
+  Loudness range:
+    LRA:         5.0 LU
+    Threshold: -34.8 LUFS
+    LRA low:   -17.2 LUFS
+    LRA high:  -12.2 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:        0.4 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    02:50.00
+    Samples:     7497000
+    Frames:      12750
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   0.4 dBFS
+    Integrated loudness (R128): -14.7 LUFS
+    Loudness range (R128):      5.0 LU (-17.2 to -12.2 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            143.57 s
+    Pregap LSN:  85815 (duration: 00:00.00)
+    Pregap length: 0 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   85815 (with offset: 85816)
+    End LSN:     98564 (with offset: 98566)
+
+  EAC CRC32:     61C7DB00
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  3AB1B6D4 (accurately ripped, confidence 12)
+    Accurip v2:  61D04911 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         7
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         You Better Mind
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    ISRC:                          USRO27501510
+    CREATION_TIME:                 2026-10-04T12:20:10-04:00
+    REPLAYGAIN_TRACK_GAIN:         -3.34 dB
+    R128_TRACK_GAIN:               425
+    REPLAYGAIN_TRACK_RANGE:        4.99 dB
+    REPLAYGAIN_TRACK_PEAK:         1.041513
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1057
+    VERIFY:        66
+    OVERLAP:       21
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/07 - You Better Mind.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -15.1 LUFS
+    Threshold: -25.2 LUFS
+
+  Loudness range:
+    LRA:         6.4 LU
+    Threshold: -35.2 LUFS
+    LRA low:   -18.9 LUFS
+    LRA high:  -12.5 LUFS
+
+  Sample peak:
+    Peak:       -5.1 dBFS
+
+  True peak:
+    Peak:       -5.1 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    02:17.25
+    Samples:     6056400
+    Frames:      10300
+    Sample peak level: 55.4% (-5.1 dBFS)
+    True peak level:   -5.1 dBFS
+    Integrated loudness (R128): -15.1 LUFS
+    Loudness range (R128):      6.4 LU (-18.9 to -12.5 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            114.96 s
+    Pregap LSN:  98400 (duration: 00:02.15)
+    Pregap length: 165 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   98565 (with offset: 98566)
+    End LSN:     108864 (with offset: 108866)
+
+  EAC CRC32:     5F45E1CA
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  27978F9B (accurately ripped, confidence 12)
+    Accurip v2:  CC2D266D (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         8
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Dry Bones
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:22:34-04:00
+    REPLAYGAIN_TRACK_GAIN:         -2.95 dB
+    R128_TRACK_GAIN:               525
+    REPLAYGAIN_TRACK_RANGE:        6.40 dB
+    REPLAYGAIN_TRACK_PEAK:         0.553725
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          817
+    VERIFY:        58
+    OVERLAP:       16
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/08 - Dry Bones.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -17.5 LUFS
+    Threshold: -27.8 LUFS
+
+  Loudness range:
+    LRA:         9.3 LU
+    Threshold: -37.8 LUFS
+    LRA low:   -23.6 LUFS
+    LRA high:  -14.3 LUFS
+
+  Sample peak:
+    Peak:       -2.6 dBFS
+
+  True peak:
+    Peak:       -2.6 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:15.35
+    Samples:     8620080
+    Frames:      14660
+    Sample peak level: 74.1% (-2.6 dBFS)
+    True peak level:   -2.6 dBFS
+    Integrated loudness (R128): -17.5 LUFS
+    Loudness range (R128):      9.3 LU (-23.6 to -14.3 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            163.73 s
+    Pregap LSN:  108707 (duration: 00:02.08)
+    Pregap length: 158 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   108865 (with offset: 108866)
+    End LSN:     123524 (with offset: 123526)
+
+  EAC CRC32:     2C99746D
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 28)
+    Accurip v1:  52015BEE (accurately ripped, confidence 11)
+    Accurip v2:  D498DC33 (accurately ripped, confidence 28)
+
+  Metadata:
+    TRACK:                         9
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Did You Hear John Hurt?
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:24:28-04:00
+    REPLAYGAIN_TRACK_GAIN:         -0.48 dB
+    R128_TRACK_GAIN:               1157
+    REPLAYGAIN_TRACK_RANGE:        9.28 dB
+    REPLAYGAIN_TRACK_PEAK:         0.741168
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1201
+    VERIFY:        77
+    OVERLAP:       24
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/09 - Did You Hear John Hurt？.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -16.7 LUFS
+    Threshold: -26.8 LUFS
+
+  Loudness range:
+    LRA:         6.0 LU
+    Threshold: -36.8 LUFS
+    LRA low:   -20.5 LUFS
+    LRA high:  -14.5 LUFS
+
+  Sample peak:
+    Peak:       -2.9 dBFS
+
+  True peak:
+    Peak:       -2.8 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    02:34.72
+    Samples:     6833736
+    Frames:      11622
+    Sample peak level: 71.8% (-2.9 dBFS)
+    True peak level:   -2.8 dBFS
+    Integrated loudness (R128): -16.7 LUFS
+    Loudness range (R128):      6.0 LU (-20.5 to -14.5 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            128.86 s
+    Pregap LSN:  123380 (duration: 00:01.70)
+    Pregap length: 145 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   123525 (with offset: 123526)
+    End LSN:     135146 (with offset: 135148)
+
+  EAC CRC32:     C8871689
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  5B0147F4 (accurately ripped, confidence 12)
+    Accurip v2:  C6614049 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         10
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         One‐Dime Blues
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    ISRC:                          USRO29111201
+    CREATION_TIME:                 2026-10-04T12:27:12-04:00
+    REPLAYGAIN_TRACK_GAIN:         -1.32 dB
+    R128_TRACK_GAIN:               943
+    REPLAYGAIN_TRACK_RANGE:        5.97 dB
+    REPLAYGAIN_TRACK_PEAK:         0.721192
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          913
+    VERIFY:        57
+    OVERLAP:       18
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/10 - One‐Dime Blues.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -14.4 LUFS
+    Threshold: -24.4 LUFS
+
+  Loudness range:
+    LRA:         6.3 LU
+    Threshold: -34.4 LUFS
+    LRA low:   -17.7 LUFS
+    LRA high:  -11.4 LUFS
+
+  Sample peak:
+    Peak:       -1.9 dBFS
+
+  True peak:
+    Peak:       -1.8 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:08.13
+    Samples:     8298444
+    Frames:      14113
+    Sample peak level: 80.7% (-1.9 dBFS)
+    True peak level:   -1.8 dBFS
+    Integrated loudness (R128): -14.4 LUFS
+    Loudness range (R128):      6.3 LU (-17.7 to -11.4 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            158.50 s
+    Pregap LSN:  134957 (duration: 00:02.40)
+    Pregap length: 190 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   135147 (with offset: 135148)
+    End LSN:     149259 (with offset: 149261)
+
+  EAC CRC32:     10248071
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  9FCC4FB0 (accurately ripped, confidence 12)
+    Accurip v2:  F90C8B07 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         11
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         All the Way From East St. Louis
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:29:21-04:00
+    REPLAYGAIN_TRACK_GAIN:         -3.62 dB
+    R128_TRACK_GAIN:               353
+    REPLAYGAIN_TRACK_RANGE:        6.29 dB
+    REPLAYGAIN_TRACK_PEAK:         0.812234
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1249
+    VERIFY:        129
+    FIXUP_ATOM:    28
+    OVERLAP:       34
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/11 - All the Way From East St. Louis.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -11.2 LUFS
+    Threshold: -21.3 LUFS
+
+  Loudness range:
+    LRA:         2.5 LU
+    Threshold: -31.3 LUFS
+    LRA low:   -12.5 LUFS
+    LRA high:  -10.0 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.2 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    01:38.20
+    Samples:     4333560
+    Frames:      7370
+    Sample peak level: 97.4% (-0.2 dBFS)
+    True peak level:   -0.2 dBFS
+    Integrated loudness (R128): -11.2 LUFS
+    Loudness range (R128):      2.5 LU (-12.5 to -10.0 LUFS)
+    Extraction speed:  1.0x
+    Elapsed:            98.39 s
+    Pregap LSN:  149155 (duration: 00:01.30)
+    Pregap length: 105 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   149260 (with offset: 149261)
+    End LSN:     156629 (with offset: 156631)
+
+  EAC CRC32:     DB1D3463
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 28)
+    Accurip v1:  49662EC0 (not found, either a new pressing, or bad rip)
+    Accurip v2:  D89681D6 (not found, either a new pressing, or bad rip)
+    Accurip 450: E360656C (matches Accurip DB, confidence 28, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         12
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Juke Medley
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:32:00-04:00
+    REPLAYGAIN_TRACK_GAIN:         -6.80 dB
+    R128_TRACK_GAIN:               -461
+    REPLAYGAIN_TRACK_RANGE:        2.51 dB
+    REPLAYGAIN_TRACK_PEAK:         0.974213
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1777
+    VERIFY:        8000
+    FIXUP_ATOM:    52936
+    OVERLAP:       3635
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/12 - Juke Medley.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -12.2 LUFS
+    Threshold: -22.3 LUFS
+
+  Loudness range:
+    LRA:         4.5 LU
+    Threshold: -32.3 LUFS
+    LRA low:   -14.6 LUFS
+    LRA high:  -10.1 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:        0.2 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    02:57.05
+    Samples:     7808640
+    Frames:      13280
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   0.2 dBFS
+    Integrated loudness (R128): -12.2 LUFS
+    Loudness range (R128):      4.5 LU (-14.6 to -10.1 LUFS)
+    Extraction speed:  1.1x
+    Elapsed:            157.86 s
+    Pregap LSN:  156487 (duration: 00:01.68)
+    Pregap length: 143 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   156630 (with offset: 156631)
+    End LSN:     169909 (with offset: 169911)
+
+  EAC CRC32:     2C73891E
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  94C4492C (not found, either a new pressing, or bad rip)
+    Accurip v2:  C44A1B7A (not found, either a new pressing, or bad rip)
+    Accurip 450: 82AB8C94 (matches Accurip DB, confidence 29, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         13
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Black’s Ball
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:33:38-04:00
+    REPLAYGAIN_TRACK_GAIN:         -5.84 dB
+    R128_TRACK_GAIN:               -214
+    REPLAYGAIN_TRACK_RANGE:        4.50 dB
+    REPLAYGAIN_TRACK_PEAK:         1.026073
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1825
+    VERIFY:        3401
+    FIXUP_ATOM:    18891
+    OVERLAP:       1436
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/13 - Black’s Ball.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -13.8 LUFS
+    Threshold: -24.3 LUFS
+
+  Loudness range:
+    LRA:         9.5 LU
+    Threshold: -34.3 LUFS
+    LRA low:   -20.0 LUFS
+    LRA high:  -10.5 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:        0.8 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    06:17.45
+    Samples:     16652160
+    Frames:      28320
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   0.8 dBFS
+    Integrated loudness (R128): -13.8 LUFS
+    Loudness range (R128):      9.5 LU (-20.0 to -10.5 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            324.52 s
+    Pregap LSN:  169910 (duration: 00:00.00)
+    Pregap length: 0 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   169910 (with offset: 169911)
+    End LSN:     198229 (with offset: 198231)
+
+  EAC CRC32:     C49A31B8
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  F20F4787 (not found, either a new pressing, or bad rip)
+    Accurip v2:  807D09B9 (not found, either a new pressing, or bad rip)
+    Accurip 450: 5719821C (matches Accurip DB, confidence 29, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         14
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Just a Little While to Stay Here
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:36:16-04:00
+    REPLAYGAIN_TRACK_GAIN:         -4.17 dB
+    R128_TRACK_GAIN:               213
+    REPLAYGAIN_TRACK_RANGE:        9.49 dB
+    REPLAYGAIN_TRACK_PEAK:         1.092516
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          3265
+    VERIFY:        2317
+    FIXUP_ATOM:    8275
+    OVERLAP:       829
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/14 - Just a Little While to Stay Here.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -15.1 LUFS
+    Threshold: -25.4 LUFS
+
+  Loudness range:
+    LRA:         6.6 LU
+    Threshold: -35.4 LUFS
+    LRA low:   -20.0 LUFS
+    LRA high:  -13.4 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.0 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:42.47
+    Samples:     9817836
+    Frames:      16697
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   -0.0 dBFS
+    Integrated loudness (R128): -15.1 LUFS
+    Loudness range (R128):      6.6 LU (-20.0 to -13.4 LUFS)
+    Extraction speed:  1.0x
+    Elapsed:            215.00 s
+    Pregap LSN:  198121 (duration: 00:01.34)
+    Pregap length: 109 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   198230 (with offset: 198231)
+    End LSN:     214926 (with offset: 214928)
+
+  EAC CRC32:     87C12BDD
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  64A4992B (not found, either a new pressing, or bad rip)
+    Accurip v2:  CACA98F6 (not found, either a new pressing, or bad rip)
+    Accurip 450: 3D0BD8AD (matches Accurip DB, confidence 29, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         15
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Iko, Iko
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:41:40-04:00
+    REPLAYGAIN_TRACK_GAIN:         -2.89 dB
+    R128_TRACK_GAIN:               540
+    REPLAYGAIN_TRACK_RANGE:        6.60 dB
+    REPLAYGAIN_TRACK_PEAK:         0.996300
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          3793
+    VERIFY:        12054
+    FIXUP_ATOM:    85969
+    OVERLAP:       5995
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/15 - Iko, Iko.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -11.3 LUFS
+    Threshold: -21.4 LUFS
+
+  Loudness range:
+    LRA:         2.3 LU
+    Threshold: -31.4 LUFS
+    LRA low:   -12.3 LUFS
+    LRA high:  -10.0 LUFS
+
+  Sample peak:
+    Peak:       -1.7 dBFS
+
+  True peak:
+    Peak:       -1.6 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    02:46.48
+    Samples:     7348824
+    Frames:      12498
+    Sample peak level: 82.3% (-1.7 dBFS)
+    True peak level:   -1.6 dBFS
+    Integrated loudness (R128): -11.3 LUFS
+    Loudness range (R128):      2.3 LU (-12.3 to -10.0 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            137.94 s
+    Pregap LSN:  214725 (duration: 00:02.52)
+    Pregap length: 202 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   214927 (with offset: 214928)
+    End LSN:     227424 (with offset: 227426)
+
+  EAC CRC32:     0B225E6A
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  53A5B42B (accurately ripped, confidence 12)
+    Accurip v2:  01B34686 (accurately ripped, confidence 29)
+
+  Metadata:
+    TRACK:                         16
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Mai Kai No Kauai
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:45:15-04:00
+    REPLAYGAIN_TRACK_GAIN:         -6.73 dB
+    R128_TRACK_GAIN:               -443
+    REPLAYGAIN_TRACK_RANGE:        2.33 dB
+    REPLAYGAIN_TRACK_PEAK:         0.827230
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1105
+    VERIFY:        114
+    FIXUP_ATOM:    204
+    OVERLAP:       37
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/16 - Mai Kai No Kauai.flac
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -15.7 LUFS
+    Threshold: -25.8 LUFS
+
+  Loudness range:
+    LRA:         5.8 LU
+    Threshold: -35.8 LUFS
+    LRA low:   -18.6 LUFS
+    LRA high:  -12.8 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.2 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:20.37
+    Samples:     8841756
+    Frames:      15037
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   -0.2 dBFS
+    Integrated loudness (R128): -15.7 LUFS
+    Loudness range (R128):      5.8 LU (-18.6 to -12.8 LUFS)
+    Extraction speed:  1.2x
+    Elapsed:            167.65 s
+    Pregap LSN:  227285 (duration: 00:01.65)
+    Pregap length: 140 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   227425 (with offset: 227426)
+    End LSN:     242461 (with offset: 242463)
+
+  EAC CRC32:     1ADD8B39
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  6C7FEF39 (not found, either a new pressing, or bad rip)
+    Accurip v2:  853AB46F (not found, either a new pressing, or bad rip)
+    Accurip 450: 6F607D10 (matches Accurip DB, confidence 29, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         17
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Texas Cowboy
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:47:33-04:00
+    REPLAYGAIN_TRACK_GAIN:         -2.28 dB
+    R128_TRACK_GAIN:               695
+    REPLAYGAIN_TRACK_RANGE:        5.83 dB
+    REPLAYGAIN_TRACK_PEAK:         0.982111
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          1489
+    VERIFY:        823
+    FIXUP_ATOM:    5577
+    OVERLAP:       418
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/17 - Texas Cowboy.flac
+
+Still reading track 18 - the read for LSN 244149 has not returned after 10s
+
+Track 18 - the read for LSN 244149 returned after 11s
+
+Still reading track 18 - the read for LSN 244332 has not returned after 10s
+
+Track 18 - the read for LSN 244332 returned after 11s
+
+Still reading track 18 - the read for LSN 244515 has not returned after 10s
+
+Still reading track 18 - the read for LSN 244515 has not returned after 20s
+
+Track 18 - the read for LSN 244515 returned after 28s
+
+Still reading track 18 - the read for LSN 244516 has not returned after 10s
+
+Track 18 - the read for LSN 244516 returned after 15s
+
+Still reading track 18 - the read for LSN 244533 has not returned after 10s
+
+Track 18 - the read for LSN 244533 returned after 15s
+
+Still reading track 18 - the read for LSN 244552 has not returned after 10s
+
+Track 18 - the read for LSN 244552 returned after 15s
+
+Still reading track 18 - the read for LSN 244570 has not returned after 10s
+
+Track 18 - the read for LSN 244570 returned after 16s
+
+Still reading track 18 - the read for LSN 244699 has not returned after 10s
+
+Still reading track 18 - the read for LSN 244699 has not returned after 20s
+
+Track 18 - the read for LSN 244699 returned after 25s
+
+Still reading track 18 - the read for LSN 244973 has not returned after 10s
+
+Track 18 - the read for LSN 244973 returned after 12s
+
+Still reading track 18 - the read for LSN 244992 has not returned after 10s
+
+Track 18 - the read for LSN 244992 returned after 19s
+
+Still reading track 18 - the read for LSN 245010 has not returned after 10s
+
+Track 18 - the read for LSN 245010 returned after 11s
+
+Still reading track 18 - the read for LSN 245028 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245028 has not returned after 20s
+
+Track 18 - the read for LSN 245028 returned after 21s
+
+Still reading track 18 - the read for LSN 245029 has not returned after 10s
+
+Track 18 - the read for LSN 245029 returned after 12s
+
+Still reading track 18 - the read for LSN 245047 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245047 has not returned after 20s
+
+Track 18 - the read for LSN 245047 returned after 27s
+
+Still reading track 18 - the read for LSN 245065 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245065 has not returned after 20s
+
+Track 18 - the read for LSN 245065 returned after 24s
+
+Still reading track 18 - the read for LSN 245066 has not returned after 10s
+
+Track 18 - the read for LSN 245066 returned after 18s
+
+Still reading track 18 - the read for LSN 245083 has not returned after 10s
+
+Track 18 - the read for LSN 245083 returned after 12s
+
+Still reading track 18 - the read for LSN 245084 has not returned after 10s
+
+Track 18 - the read for LSN 245084 returned after 12s
+
+Still reading track 18 - the read for LSN 245120 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245120 has not returned after 20s
+
+Track 18 - the read for LSN 245120 returned after 21s
+
+Still reading track 18 - the read for LSN 245121 has not returned after 10s
+
+Track 18 - the read for LSN 245121 returned after 12s
+
+Still reading track 18 - the read for LSN 245139 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245139 has not returned after 20s
+
+Track 18 - the read for LSN 245139 returned after 21s
+
+Still reading track 18 - the read for LSN 245157 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245157 has not returned after 20s
+
+Still reading track 18 - the read for LSN 245157 has not returned after 30s
+
+Still reading track 18 - the read for LSN 245157 has not returned after 40s
+
+Track 18 - the read for LSN 245157 returned after 43s
+
+Still reading track 18 - the read for LSN 245175 has not returned after 10s
+
+Track 18 - the read for LSN 245175 returned after 19s
+
+Still reading track 18 - the read for LSN 245176 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245176 has not returned after 20s
+
+Track 18 - the read for LSN 245176 returned after 21s
+
+Still reading track 18 - the read for LSN 245212 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245212 has not returned after 20s
+
+Still reading track 18 - the read for LSN 245212 has not returned after 30s
+
+Track 18 - the read for LSN 245212 returned after 33s
+
+Still reading track 18 - the read for LSN 245230 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245230 has not returned after 20s
+
+Still reading track 18 - the read for LSN 245230 has not returned after 30s
+
+Track 18 - the read for LSN 245230 returned after 31s
+
+Still reading track 18 - the read for LSN 245249 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245249 has not returned after 20s
+
+Track 18 - the read for LSN 245249 returned after 21s
+
+Still reading track 18 - the read for LSN 246056 has not returned after 10s
+
+Track 18 - the read for LSN 246056 returned after 10s
+
+Still reading track 18 - the read for LSN 246057 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246057 has not returned after 20s
+
+Still reading track 18 - the read for LSN 246057 has not returned after 30s
+
+Track 18 - the read for LSN 246057 returned after 30s
+
+Still reading track 18 - the read for LSN 246075 has not returned after 10s
+
+Track 18 - the read for LSN 246075 returned after 18s
+
+Still reading track 18 - the read for LSN 246130 has not returned after 10s
+
+Track 18 - the read for LSN 246130 returned after 10s
+
+Still reading track 18 - the read for LSN 246167 has not returned after 10s
+
+Track 18 - the read for LSN 246167 returned after 13s
+
+Still reading track 18 - the read for LSN 246185 has not returned after 10s
+
+Track 18 - the read for LSN 246185 returned after 12s
+
+Still reading track 18 - the read for LSN 246222 has not returned after 10s
+
+Track 18 - the read for LSN 246222 returned after 19s
+
+Still reading track 18 - the read for LSN 246240 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246240 has not returned after 20s
+
+Still reading track 18 - the read for LSN 246240 has not returned after 30s
+
+Track 18 - the read for LSN 246240 returned after 35s
+
+Still reading track 18 - the read for LSN 246277 has not returned after 10s
+
+Track 18 - the read for LSN 246277 returned after 16s
+
+Still reading track 18 - the read for LSN 246296 has not returned after 10s
+
+Track 18 - the read for LSN 246296 returned after 16s
+
+Still reading track 18 - the read for LSN 246314 has not returned after 10s
+
+Track 18 - the read for LSN 246314 returned after 12s
+
+Still reading track 18 - the read for LSN 246332 has not returned after 10s
+
+Track 18 - the read for LSN 246332 returned after 12s
+
+Still reading track 18 - the read for LSN 246351 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246351 has not returned after 20s
+
+Track 18 - the read for LSN 246351 returned after 22s
+
+Still reading track 18 - the read for LSN 246369 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246369 has not returned after 20s
+
+Still reading track 18 - the read for LSN 246369 has not returned after 30s
+
+Track 18 - the read for LSN 246369 returned after 35s
+
+Still reading track 18 - the read for LSN 246424 has not returned after 10s
+
+Track 18 - the read for LSN 246424 returned after 13s
+
+Still reading track 18 - the read for LSN 246479 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246479 has not returned after 20s
+
+Track 18 - the read for LSN 246479 returned after 25s
+
+Still reading track 18 - the read for LSN 247012 has not returned after 10s
+
+Track 18 - the read for LSN 247012 returned after 17s
+
+Still reading track 18 - the read for LSN 247067 has not returned after 10s
+
+Track 18 - the read for LSN 247067 returned after 14s
+
+Still reading track 18 - the read for LSN 247086 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247086 has not returned after 20s
+
+Track 18 - the read for LSN 247086 returned after 27s
+
+Still reading track 18 - the read for LSN 247104 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247104 has not returned after 20s
+
+Track 18 - the read for LSN 247104 returned after 20s
+
+Still reading track 18 - the read for LSN 247123 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247123 has not returned after 20s
+
+Track 18 - the read for LSN 247123 returned after 21s
+
+Still reading track 18 - the read for LSN 247178 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247178 has not returned after 20s
+
+Track 18 - the read for LSN 247178 returned after 23s
+
+Still reading track 18 - the read for LSN 247380 has not returned after 10s
+
+Track 18 - the read for LSN 247380 returned after 11s
+
+Still reading track 18 - the read for LSN 247399 has not returned after 10s
+
+Track 18 - the read for LSN 247399 returned after 18s
+
+Still reading track 18 - the read for LSN 247454 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247454 has not returned after 20s
+
+Track 18 - the read for LSN 247454 returned after 26s
+
+Still reading track 18 - the read for LSN 247473 has not returned after 10s
+
+Track 18 - the read for LSN 247473 returned after 11s
+
+Still reading track 18 - the read for LSN 247675 has not returned after 10s
+
+Track 18 - the read for LSN 247675 returned after 19s
+
+Still reading track 18 - the read for LSN 247822 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247822 has not returned after 20s
+
+Still reading track 18 - the read for LSN 247822 has not returned after 30s
+
+Track 18 - the read for LSN 247822 returned after 32s
+
+Still reading track 18 - the read for LSN 247841 has not returned after 10s
+
+Track 18 - the read for LSN 247841 returned after 14s
+
+Still reading track 18 - the read for LSN 247877 has not returned after 10s
+
+Track 18 - the read for LSN 247877 returned after 11s
+
+Still reading track 18 - the read for LSN 247878 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247878 has not returned after 20s
+
+Track 18 - the read for LSN 247878 returned after 24s
+
+Still reading track 18 - the read for LSN 247896 has not returned after 10s
+
+Track 18 - the read for LSN 247896 returned after 16s
+
+Still reading track 18 - the read for LSN 247915 has not returned after 10s
+
+Track 18 - the read for LSN 247915 returned after 12s
+
+Still reading track 18 - the read for LSN 247933 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247933 has not returned after 20s
+
+Track 18 - the read for LSN 247933 returned after 21s
+
+Still reading track 18 - the read for LSN 247951 has not returned after 10s
+
+Track 18 - the read for LSN 247951 returned after 17s
+
+Still reading track 18 - the read for LSN 247970 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247970 has not returned after 20s
+
+Track 18 - the read for LSN 247970 returned after 23s
+
+Still reading track 18 - the read for LSN 247988 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247988 has not returned after 20s
+
+Track 18 - the read for LSN 247988 returned after 20s
+
+Still reading track 18 - the read for LSN 247989 has not returned after 10s
+
+Track 18 - the read for LSN 247989 returned after 14s
+
+Still reading track 18 - the read for LSN 248006 has not returned after 10s
+
+Track 18 - the read for LSN 248006 returned after 18s
+
+Still reading track 18 - the read for LSN 248007 has not returned after 10s
+
+Track 18 - the read for LSN 248007 returned after 15s
+
+Still reading track 18 - the read for LSN 248025 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248025 has not returned after 20s
+
+Track 18 - the read for LSN 248025 returned after 24s
+
+Still reading track 18 - the read for LSN 248043 has not returned after 10s
+
+Track 18 - the read for LSN 248043 returned after 11s
+
+Still reading track 18 - the read for LSN 248062 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248062 has not returned after 20s
+
+Still reading track 18 - the read for LSN 248062 has not returned after 30s
+
+Track 18 - the read for LSN 248062 returned after 30s
+
+Still reading track 18 - the read for LSN 248136 has not returned after 10s
+
+Track 18 - the read for LSN 248136 returned after 12s
+
+Still reading track 18 - the read for LSN 248154 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248154 has not returned after 20s
+
+Track 18 - the read for LSN 248154 returned after 26s
+
+Still reading track 18 - the read for LSN 248191 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248191 has not returned after 20s
+
+Track 18 - the read for LSN 248191 returned after 27s
+
+Still reading track 18 - the read for LSN 248210 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248210 has not returned after 20s
+
+Track 18 - the read for LSN 248210 returned after 25s
+
+Still reading track 18 - the read for LSN 248228 has not returned after 10s
+
+Track 18 - the read for LSN 248228 returned after 15s
+
+Still reading track 18 - the read for LSN 248246 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248246 has not returned after 20s
+
+Track 18 - the read for LSN 248246 returned after 22s
+
+Still reading track 18 - the read for LSN 248247 has not returned after 10s
+
+Track 18 - the read for LSN 248247 returned after 15s
+
+Still reading track 18 - the read for LSN 248265 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248265 has not returned after 20s
+
+Still reading track 18 - the read for LSN 248265 has not returned after 30s
+
+Still reading track 18 - the read for LSN 248265 has not returned after 40s
+
+Track 18 - the read for LSN 248265 returned after 41s
+
+Still reading track 18 - the read for LSN 248283 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248283 has not returned after 20s
+
+Track 18 - the read for LSN 248283 returned after 22s
+
+Still reading track 18 - the read for LSN 248301 has not returned after 10s
+
+Track 18 - the read for LSN 248301 returned after 18s
+
+Still reading track 18 - the read for LSN 248302 has not returned after 10s
+
+Still reading track 18 - the read for LSN 248302 has not returned after 20s
+
+Track 18 - the read for LSN 248302 returned after 23s
+
+Still reading track 18 - the read for LSN 248320 has not returned after 10s
+
+Track 18 - the read for LSN 248320 returned after 19s
+
+Still reading track 18 - the read for LSN 248394 has not returned after 10s
+
+Track 18 - the read for LSN 248394 returned after 16s
+
+Still reading track 18 - the read for LSN 248412 has not returned after 10s
+
+Track 18 - the read for LSN 248412 returned after 14s
+
+Still reading track 18 - the read for LSN 248431 has not returned after 10s
+
+Track 18 - the read for LSN 248431 returned after 17s
+
+Still reading track 18 - the read for LSN 248652 has not returned after 10s
+
+Track 18 - the read for LSN 248652 returned after 11s
+
+Still reading track 18 - the read for LSN 249021 has not returned after 10s
+
+Track 18 - the read for LSN 249021 returned after 13s
+
+Still reading track 18 - the read for LSN 249741 has not returned after 10s
+
+Track 18 - the read for LSN 249741 returned after 14s
+
+Still reading track 18 - the read for LSN 249963 has not returned after 10s
+
+Still reading track 18 - the read for LSN 249963 has not returned after 20s
+
+Track 18 - the read for LSN 249963 returned after 20s
+
+Still reading track 18 - the read for LSN 250129 has not returned after 10s
+
+Track 18 - the read for LSN 250129 returned after 13s
+
+Still reading track 18 - the read for LSN 250314 has not returned after 10s
+
+Track 18 - the read for LSN 250314 returned after 13s
+
+Still reading track 18 - the read for LSN 251036 has not returned after 10s
+
+Track 18 - the read for LSN 251036 returned after 12s
+
+Still reading track 18 - the read for LSN 251073 has not returned after 10s
+
+Track 18 - the read for LSN 251073 returned after 17s
+
+Still reading track 18 - the read for LSN 251091 has not returned after 10s
+
+Track 18 - the read for LSN 251091 returned after 13s
+
+Still reading track 18 - the read for LSN 251184 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251184 has not returned after 20s
+
+Still reading track 18 - the read for LSN 251184 has not returned after 30s
+
+Track 18 - the read for LSN 251184 returned after 39s
+
+Still reading track 18 - the read for LSN 251239 has not returned after 10s
+
+Track 18 - the read for LSN 251239 returned after 11s
+
+Still reading track 18 - the read for LSN 251258 has not returned after 10s
+
+Track 18 - the read for LSN 251258 returned after 16s
+
+Still reading track 18 - the read for LSN 251276 has not returned after 10s
+
+Track 18 - the read for LSN 251276 returned after 11s
+
+Still reading track 18 - the read for LSN 251277 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251277 has not returned after 20s
+
+Track 18 - the read for LSN 251277 returned after 22s
+
+Still reading track 18 - the read for LSN 251295 has not returned after 10s
+
+Track 18 - the read for LSN 251295 returned after 20s
+
+Still reading track 18 - the read for LSN 251332 has not returned after 10s
+
+Track 18 - the read for LSN 251332 returned after 17s
+
+Still reading track 18 - the read for LSN 251333 has not returned after 10s
+
+Track 18 - the read for LSN 251333 returned after 15s
+
+Still reading track 18 - the read for LSN 251351 has not returned after 10s
+
+Track 18 - the read for LSN 251351 returned after 18s
+
+Still reading track 18 - the read for LSN 251369 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251369 has not returned after 20s
+
+Track 18 - the read for LSN 251369 returned after 28s
+
+Still reading track 18 - the read for LSN 251370 has not returned after 10s
+
+Track 18 - the read for LSN 251370 returned after 15s
+
+Still reading track 18 - the read for LSN 251462 has not returned after 10s
+
+Track 18 - the read for LSN 251462 returned after 11s
+
+Still reading track 18 - the read for LSN 251555 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251555 has not returned after 20s
+
+Track 18 - the read for LSN 251555 returned after 21s
+
+Still reading track 18 - the read for LSN 251573 has not returned after 10s
+
+Track 18 - the read for LSN 251573 returned after 11s
+
+Still reading track 18 - the read for LSN 251591 has not returned after 10s
+
+Track 18 - the read for LSN 251591 returned after 12s
+
+Still reading track 18 - the read for LSN 251592 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251592 has not returned after 20s
+
+Still reading track 18 - the read for LSN 251592 has not returned after 30s
+
+Track 18 - the read for LSN 251592 returned after 30s
+
+Still reading track 18 - the read for LSN 251610 has not returned after 10s
+
+Track 18 - the read for LSN 251610 returned after 15s
+
+Still reading track 18 - the read for LSN 251629 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251629 has not returned after 20s
+
+Still reading track 18 - the read for LSN 251629 has not returned after 30s
+
+Track 18 - the read for LSN 251629 returned after 36s
+
+Still reading track 18 - the read for LSN 251647 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251647 has not returned after 20s
+
+Track 18 - the read for LSN 251647 returned after 24s
+
+Still reading track 18 - the read for LSN 252092 has not returned after 10s
+
+Track 18 - the read for LSN 252092 returned after 14s
+
+Still reading track 18 - the read for LSN 252111 has not returned after 10s
+
+Track 18 - the read for LSN 252111 returned after 11s
+
+Still reading track 18 - the read for LSN 252129 has not returned after 10s
+
+Track 18 - the read for LSN 252129 returned after 11s
+
+Still reading track 18 - the read for LSN 252222 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252222 has not returned after 20s
+
+Track 18 - the read for LSN 252222 returned after 26s
+
+Still reading track 18 - the read for LSN 252315 has not returned after 10s
+
+Track 18 - the read for LSN 252315 returned after 14s
+
+Still reading track 18 - the read for LSN 252426 has not returned after 10s
+
+Track 18 - the read for LSN 252426 returned after 11s
+
+Still reading track 18 - the read for LSN 252463 has not returned after 10s
+
+Track 18 - the read for LSN 252463 returned after 13s
+
+Still reading track 18 - the read for LSN 252500 has not returned after 10s
+
+Track 18 - the read for LSN 252500 returned after 10s
+
+Still reading track 18 - the read for LSN 252519 has not returned after 10s
+
+Track 18 - the read for LSN 252519 returned after 14s
+
+Still reading track 18 - the read for LSN 252556 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252556 has not returned after 20s
+
+Track 18 - the read for LSN 252556 returned after 29s
+
+Still reading track 18 - the read for LSN 252575 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252575 has not returned after 20s
+
+Track 18 - the read for LSN 252575 returned after 26s
+
+Still reading track 18 - the read for LSN 252593 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252593 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252593 has not returned after 30s
+
+Track 18 - the read for LSN 252593 returned after 37s
+
+Still reading track 18 - the read for LSN 252612 has not returned after 10s
+
+Track 18 - the read for LSN 252612 returned after 10s
+
+Still reading track 18 - the read for LSN 252630 has not returned after 10s
+
+Track 18 - the read for LSN 252630 returned after 14s
+
+Still reading track 18 - the read for LSN 252649 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252649 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252649 has not returned after 30s
+
+Track 18 - the read for LSN 252649 returned after 31s
+
+Still reading track 18 - the read for LSN 252667 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252667 has not returned after 20s
+
+Track 18 - the read for LSN 252667 returned after 25s
+
+Still reading track 18 - the read for LSN 252686 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252686 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252686 has not returned after 30s
+
+Track 18 - the read for LSN 252686 returned after 34s
+
+Still reading track 18 - the read for LSN 252704 has not returned after 10s
+
+Track 18 - the read for LSN 252704 returned after 11s
+
+Still reading track 18 - the read for LSN 252705 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252705 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252705 has not returned after 30s
+
+Track 18 - the read for LSN 252705 returned after 31s
+
+Still reading track 18 - the read for LSN 252723 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252723 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252723 has not returned after 30s
+
+Track 18 - the read for LSN 252723 returned after 37s
+
+Still reading track 18 - the read for LSN 252742 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252742 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252742 has not returned after 30s
+
+Track 18 - the read for LSN 252742 returned after 30s
+
+Still reading track 18 - the read for LSN 252760 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252760 has not returned after 20s
+
+Track 18 - the read for LSN 252760 returned after 22s
+
+Still reading track 18 - the read for LSN 252779 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252779 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252779 has not returned after 30s
+
+Track 18 - the read for LSN 252779 returned after 31s
+
+Still reading track 18 - the read for LSN 252797 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252797 has not returned after 20s
+
+Track 18 - the read for LSN 252797 returned after 22s
+
+Still reading track 18 - the read for LSN 252798 has not returned after 10s
+
+Track 18 - the read for LSN 252798 returned after 16s
+
+Still reading track 18 - the read for LSN 252816 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252816 has not returned after 20s
+
+Track 18 - the read for LSN 252816 returned after 25s
+
+Still reading track 18 - the read for LSN 252834 has not returned after 10s
+
+Track 18 - the read for LSN 252834 returned after 13s
+
+Still reading track 18 - the read for LSN 252835 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252835 has not returned after 20s
+
+Track 18 - the read for LSN 252835 returned after 25s
+
+Still reading track 18 - the read for LSN 252853 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252853 has not returned after 20s
+
+Track 18 - the read for LSN 252853 returned after 28s
+
+Still reading track 18 - the read for LSN 252871 has not returned after 10s
+
+Track 18 - the read for LSN 252871 returned after 13s
+
+Still reading track 18 - the read for LSN 252872 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252872 has not returned after 20s
+
+Track 18 - the read for LSN 252872 returned after 24s
+
+Still reading track 18 - the read for LSN 252890 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252890 has not returned after 20s
+
+Track 18 - the read for LSN 252890 returned after 27s
+
+Still reading track 18 - the read for LSN 252908 has not returned after 10s
+
+Track 18 - the read for LSN 252908 returned after 12s
+
+Still reading track 18 - the read for LSN 252909 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252909 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252909 has not returned after 30s
+
+Track 18 - the read for LSN 252909 returned after 31s
+
+Still reading track 18 - the read for LSN 252927 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252927 has not returned after 20s
+
+Track 18 - the read for LSN 252927 returned after 21s
+
+Still reading track 18 - the read for LSN 252928 has not returned after 10s
+
+Track 18 - the read for LSN 252928 returned after 18s
+
+Still reading track 18 - the read for LSN 252946 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252946 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252946 has not returned after 30s
+
+Still reading track 18 - the read for LSN 252946 has not returned after 40s
+
+Track 18 - the read for LSN 252946 returned after 48s
+
+Still reading track 18 - the read for LSN 252964 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252964 has not returned after 20s
+
+Track 18 - the read for LSN 252964 returned after 21s
+
+Still reading track 18 - the read for LSN 252965 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252965 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252965 has not returned after 30s
+
+Track 18 - the read for LSN 252965 returned after 30s
+
+Still reading track 18 - the read for LSN 252983 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252983 has not returned after 20s
+
+Track 18 - the read for LSN 252983 returned after 23s
+
+Still reading track 18 - the read for LSN 253001 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253001 has not returned after 20s
+
+Track 18 - the read for LSN 253001 returned after 21s
+
+Still reading track 18 - the read for LSN 253002 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253002 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253002 has not returned after 30s
+
+Track 18 - the read for LSN 253002 returned after 35s
+
+Still reading track 18 - the read for LSN 253020 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253020 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253020 has not returned after 30s
+
+Track 18 - the read for LSN 253020 returned after 36s
+
+Still reading track 18 - the read for LSN 253038 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253038 has not returned after 20s
+
+Track 18 - the read for LSN 253038 returned after 20s
+
+Still reading track 18 - the read for LSN 253039 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253039 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253039 has not returned after 30s
+
+Still reading track 18 - the read for LSN 253039 has not returned after 40s
+
+Track 18 - the read for LSN 253039 returned after 45s
+
+Still reading track 18 - the read for LSN 253057 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253057 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253057 has not returned after 30s
+
+Track 18 - the read for LSN 253057 returned after 39s
+
+Still reading track 18 - the read for LSN 253058 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253058 has not returned after 20s
+
+Track 18 - the read for LSN 253058 returned after 23s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 30s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 40s
+
+Track 18 - the read for LSN 253076 returned after 45s
+
+Still reading track 18 - the read for LSN 253094 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253094 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253094 has not returned after 30s
+
+Track 18 - the read for LSN 253094 returned after 32s
+
+Still reading track 18 - the read for LSN 253113 has not returned after 10s
+
+Track 18 - the read for LSN 253113 returned after 19s
+
+Still reading track 18 - the read for LSN 253132 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253132 has not returned after 20s
+
+Track 18 - the read for LSN 253132 returned after 27s
+
+Still reading track 18 - the read for LSN 253150 has not returned after 10s
+
+Track 18 - the read for LSN 253150 returned after 13s
+
+Still reading track 18 - the read for LSN 253280 has not returned after 10s
+
+Track 18 - the read for LSN 253280 returned after 12s
+
+Still reading track 18 - the read for LSN 253652 has not returned after 10s
+
+Track 18 - the read for LSN 253652 returned after 18s
+
+Still reading track 18 - the read for LSN 255253 has not returned after 10s
+
+Track 18 - the read for LSN 255253 returned after 10s
+
+Still reading track 18 - the read for LSN 256036 has not returned after 10s
+
+Track 18 - the read for LSN 256036 returned after 14s
+
+Still reading track 18 - the read for LSN 256167 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256167 has not returned after 20s
+
+Track 18 - the read for LSN 256167 returned after 25s
+
+Still reading track 18 - the read for LSN 256185 has not returned after 10s
+
+Track 18 - the read for LSN 256185 returned after 14s
+
+Still reading track 18 - the read for LSN 256223 has not returned after 10s
+
+Track 18 - the read for LSN 256223 returned after 12s
+
+Still reading track 18 - the read for LSN 256241 has not returned after 10s
+
+Track 18 - the read for LSN 256241 returned after 19s
+
+Still reading track 18 - the read for LSN 256260 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256260 has not returned after 20s
+
+Track 18 - the read for LSN 256260 returned after 29s
+
+Still reading track 18 - the read for LSN 256279 has not returned after 10s
+
+Track 18 - the read for LSN 256279 returned after 11s
+
+Still reading track 18 - the read for LSN 256316 has not returned after 10s
+
+Track 18 - the read for LSN 256316 returned after 17s
+
+Still reading track 18 - the read for LSN 256335 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256335 has not returned after 20s
+
+Track 18 - the read for LSN 256335 returned after 26s
+
+Still reading track 18 - the read for LSN 256372 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256372 has not returned after 20s
+
+Track 18 - the read for LSN 256372 returned after 29s
+
+Still reading track 18 - the read for LSN 256391 has not returned after 10s
+
+Track 18 - the read for LSN 256391 returned after 15s
+
+Still reading track 18 - the read for LSN 256428 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256428 has not returned after 20s
+
+Track 18 - the read for LSN 256428 returned after 21s
+
+Still reading track 18 - the read for LSN 256447 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256447 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256447 has not returned after 30s
+
+Still reading track 18 - the read for LSN 256447 has not returned after 40s
+
+Track 18 - the read for LSN 256447 returned after 41s
+
+Still reading track 18 - the read for LSN 256465 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256465 has not returned after 20s
+
+Track 18 - the read for LSN 256465 returned after 20s
+
+Still reading track 18 - the read for LSN 256466 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256466 has not returned after 20s
+
+Track 18 - the read for LSN 256466 returned after 26s
+
+Still reading track 18 - the read for LSN 256484 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256484 has not returned after 20s
+
+Track 18 - the read for LSN 256484 returned after 24s
+
+Still reading track 18 - the read for LSN 256503 has not returned after 10s
+
+Track 18 - the read for LSN 256503 returned after 11s
+
+Still reading track 18 - the read for LSN 256540 has not returned after 10s
+
+Track 18 - the read for LSN 256540 returned after 11s
+
+Still reading track 18 - the read for LSN 256559 has not returned after 10s
+
+Track 18 - the read for LSN 256559 returned after 14s
+
+Still reading track 18 - the read for LSN 256577 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256577 has not returned after 20s
+
+Track 18 - the read for LSN 256577 returned after 28s
+
+Still reading track 18 - the read for LSN 256596 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256596 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256596 has not returned after 30s
+
+Track 18 - the read for LSN 256596 returned after 32s
+
+Still reading track 18 - the read for LSN 256615 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256615 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256615 has not returned after 30s
+
+Track 18 - the read for LSN 256615 returned after 31s
+
+Still reading track 18 - the read for LSN 256633 has not returned after 10s
+
+Track 18 - the read for LSN 256633 returned after 14s
+
+Still reading track 18 - the read for LSN 256634 has not returned after 10s
+
+Track 18 - the read for LSN 256634 returned after 16s
+
+Still reading track 18 - the read for LSN 256652 has not returned after 10s
+
+Track 18 - the read for LSN 256652 returned after 14s
+
+Still reading track 18 - the read for LSN 256671 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256671 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256671 has not returned after 30s
+
+Track 18 - the read for LSN 256671 returned after 32s
+
+Still reading track 18 - the read for LSN 256689 has not returned after 10s
+
+Track 18 - the read for LSN 256689 returned after 19s
+
+Still reading track 18 - the read for LSN 256690 has not returned after 10s
+
+Track 18 - the read for LSN 256690 returned after 14s
+
+Still reading track 18 - the read for LSN 256708 has not returned after 10s
+
+Track 18 - the read for LSN 256708 returned after 20s
+
+Still reading track 18 - the read for LSN 256727 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256727 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256727 has not returned after 30s
+
+Still reading track 18 - the read for LSN 256727 has not returned after 40s
+
+Track 18 - the read for LSN 256727 returned after 40s
+
+Still reading track 18 - the read for LSN 256746 has not returned after 10s
+
+Track 18 - the read for LSN 256746 returned after 20s
+
+Still reading track 18 - the read for LSN 256764 has not returned after 10s
+
+Track 18 - the read for LSN 256764 returned after 17s
+
+Still reading track 18 - the read for LSN 256765 has not returned after 10s
+
+Track 18 - the read for LSN 256765 returned after 17s
+
+Still reading track 18 - the read for LSN 256783 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256783 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256783 has not returned after 30s
+
+Still reading track 18 - the read for LSN 256783 has not returned after 40s
+
+Track 18 - the read for LSN 256783 returned after 43s
+
+Still reading track 18 - the read for LSN 256802 has not returned after 10s
+
+Track 18 - the read for LSN 256802 returned after 11s
+
+Still reading track 18 - the read for LSN 256820 has not returned after 10s
+
+Track 18 - the read for LSN 256820 returned after 12s
+
+Still reading track 18 - the read for LSN 256839 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256839 has not returned after 20s
+
+Track 18 - the read for LSN 256839 returned after 20s
+
+Still reading track 18 - the read for LSN 256858 has not returned after 10s
+
+Track 18 - the read for LSN 256858 returned after 19s
+
+Still reading track 18 - the read for LSN 256876 has not returned after 10s
+
+Track 18 - the read for LSN 256876 returned after 11s
+
+Still reading track 18 - the read for LSN 256895 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256895 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256895 has not returned after 30s
+
+Still reading track 18 - the read for LSN 256895 has not returned after 40s
+
+Track 18 - the read for LSN 256895 returned after 43s
+
+Still reading track 18 - the read for LSN 256913 has not returned after 10s
+
+Track 18 - the read for LSN 256913 returned after 11s
+
+Still reading track 18 - the read for LSN 256914 has not returned after 10s
+
+Track 18 - the read for LSN 256914 returned after 17s
+
+Still reading track 18 - the read for LSN 256932 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256932 has not returned after 20s
+
+Track 18 - the read for LSN 256932 returned after 21s
+
+Still reading track 18 - the read for LSN 256951 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256951 has not returned after 20s
+
+Track 18 - the read for LSN 256951 returned after 23s
+
+Still reading track 18 - the read for LSN 256970 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256970 has not returned after 20s
+
+Track 18 - the read for LSN 256970 returned after 20s
+
+Still reading track 18 - the read for LSN 257007 has not returned after 10s
+
+Track 18 - the read for LSN 257007 returned after 11s
+
+Still reading track 18 - the read for LSN 257026 has not returned after 10s
+
+Track 18 - the read for LSN 257026 returned after 14s
+
+Still reading track 18 - the read for LSN 257045 has not returned after 10s
+
+Track 18 - the read for LSN 257045 returned after 10s
+
+Still reading track 18 - the read for LSN 257063 has not returned after 10s
+
+Track 18 - the read for LSN 257063 returned after 11s
+
+Still reading track 18 - the read for LSN 257082 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257082 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257082 has not returned after 30s
+
+Still reading track 18 - the read for LSN 257082 has not returned after 40s
+
+Still reading track 18 - the read for LSN 257082 has not returned after 50s
+
+Track 18 - the read for LSN 257082 returned after 54s
+
+Still reading track 18 - the read for LSN 257119 has not returned after 10s
+
+Track 18 - the read for LSN 257119 returned after 19s
+
+Still reading track 18 - the read for LSN 257120 has not returned after 10s
+
+Track 18 - the read for LSN 257120 returned after 11s
+
+Still reading track 18 - the read for LSN 257138 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257138 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257138 has not returned after 30s
+
+Still reading track 18 - the read for LSN 257138 has not returned after 40s
+
+Track 18 - the read for LSN 257138 returned after 44s
+
+Still reading track 18 - the read for LSN 257156 has not returned after 10s
+
+Track 18 - the read for LSN 257156 returned after 10s
+
+Still reading track 18 - the read for LSN 257157 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257157 has not returned after 20s
+
+Track 18 - the read for LSN 257157 returned after 25s
+
+Still reading track 18 - the read for LSN 257175 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257175 has not returned after 20s
+
+Track 18 - the read for LSN 257175 returned after 23s
+
+Still reading track 18 - the read for LSN 257194 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257194 has not returned after 20s
+
+Track 18 - the read for LSN 257194 returned after 25s
+
+Still reading track 18 - the read for LSN 257213 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257213 has not returned after 20s
+
+Track 18 - the read for LSN 257213 returned after 22s
+
+Still reading track 18 - the read for LSN 257231 has not returned after 10s
+
+Track 18 - the read for LSN 257231 returned after 14s
+
+Still reading track 18 - the read for LSN 257232 has not returned after 10s
+
+Track 18 - the read for LSN 257232 returned after 13s
+
+Still reading track 18 - the read for LSN 257325 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257325 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257325 has not returned after 30s
+
+Track 18 - the read for LSN 257325 returned after 37s
+
+Still reading track 18 - the read for LSN 257344 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257344 has not returned after 20s
+
+Track 18 - the read for LSN 257344 returned after 23s
+
+Still reading track 18 - the read for LSN 257362 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257362 has not returned after 20s
+
+Track 18 - the read for LSN 257362 returned after 23s
+
+Still reading track 18 - the read for LSN 257363 has not returned after 10s
+
+Track 18 - the read for LSN 257363 returned after 16s
+
+Still reading track 18 - the read for LSN 257381 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257381 has not returned after 20s
+
+Track 18 - the read for LSN 257381 returned after 26s
+
+Still reading track 18 - the read for LSN 257400 has not returned after 10s
+
+Track 18 - the read for LSN 257400 returned after 17s
+
+Still reading track 18 - the read for LSN 257438 has not returned after 10s
+
+Track 18 - the read for LSN 257438 returned after 11s
+
+Still reading track 18 - the read for LSN 257512 has not returned after 10s
+
+Track 18 - the read for LSN 257512 returned after 12s
+
+Still reading track 18 - the read for LSN 257587 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257587 has not returned after 20s
+
+Track 18 - the read for LSN 257587 returned after 26s
+
+Still reading track 18 - the read for LSN 257606 has not returned after 10s
+
+Track 18 - the read for LSN 257606 returned after 11s
+
+Still reading track 18 - the read for LSN 257624 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257624 has not returned after 20s
+
+Track 18 - the read for LSN 257624 returned after 20s
+
+Still reading track 18 - the read for LSN 257625 has not returned after 10s
+
+Track 18 - the read for LSN 257625 returned after 19s
+
+Still reading track 18 - the read for LSN 257643 has not returned after 10s
+
+Track 18 - the read for LSN 257643 returned after 14s
+
+Still reading track 18 - the read for LSN 257662 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257662 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257662 has not returned after 30s
+
+Track 18 - the read for LSN 257662 returned after 31s
+
+Still reading track 18 - the read for LSN 257699 has not returned after 10s
+
+Track 18 - the read for LSN 257699 returned after 14s
+
+Still reading track 18 - the read for LSN 257718 has not returned after 10s
+
+Track 18 - the read for LSN 257718 returned after 17s
+
+Still reading track 18 - the read for LSN 257736 has not returned after 10s
+
+Track 18 - the read for LSN 257736 returned after 14s
+
+Still reading track 18 - the read for LSN 257737 has not returned after 10s
+
+Track 18 - the read for LSN 257737 returned after 16s
+
+Still reading track 18 - the read for LSN 257755 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257755 has not returned after 20s
+
+Track 18 - the read for LSN 257755 returned after 29s
+
+Still reading track 18 - the read for LSN 257849 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257849 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257849 has not returned after 30s
+
+Track 18 - the read for LSN 257849 returned after 33s
+
+Still reading track 18 - the read for LSN 257942 has not returned after 10s
+
+Track 18 - the read for LSN 257942 returned after 11s
+
+Still reading track 18 - the read for LSN 257943 has not returned after 10s
+
+Track 18 - the read for LSN 257943 returned after 17s
+
+Still reading track 18 - the read for LSN 257961 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257961 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257961 has not returned after 30s
+
+Track 18 - the read for LSN 257961 returned after 40s
+
+Still reading track 18 - the read for LSN 257998 has not returned after 10s
+
+Track 18 - the read for LSN 257998 returned after 14s
+
+Still reading track 18 - the read for LSN 257999 has not returned after 10s
+
+Track 18 - the read for LSN 257999 returned after 13s
+
+Still reading track 18 - the read for LSN 258017 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258017 has not returned after 20s
+
+Still reading track 18 - the read for LSN 258017 has not returned after 30s
+
+Track 18 - the read for LSN 258017 returned after 35s
+
+Still reading track 18 - the read for LSN 258018 has not returned after 10s
+
+Track 18 - the read for LSN 258018 returned after 11s
+
+Still reading track 18 - the read for LSN 258036 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258036 has not returned after 20s
+
+Still reading track 18 - the read for LSN 258036 has not returned after 30s
+
+Track 18 - the read for LSN 258036 returned after 37s
+
+Still reading track 18 - the read for LSN 258055 has not returned after 10s
+
+Track 18 - the read for LSN 258055 returned after 11s
+
+Still reading track 18 - the read for LSN 258092 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258092 has not returned after 20s
+
+Track 18 - the read for LSN 258092 returned after 25s
+
+Still reading track 18 - the read for LSN 258111 has not returned after 10s
+
+Track 18 - the read for LSN 258111 returned after 17s
+
+Still reading track 18 - the read for LSN 258129 has not returned after 10s
+
+Track 18 - the read for LSN 258129 returned after 11s
+
+Still reading track 18 - the read for LSN 258130 has not returned after 10s
+
+Track 18 - the read for LSN 258130 returned after 11s
+
+Still reading track 18 - the read for LSN 258186 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258186 has not returned after 20s
+
+Track 18 - the read for LSN 258186 returned after 24s
+
+Still reading track 18 - the read for LSN 258261 has not returned after 10s
+
+Track 18 - the read for LSN 258261 returned after 11s
+
+Still reading track 18 - the read for LSN 258279 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258279 has not returned after 20s
+
+Track 18 - the read for LSN 258279 returned after 20s
+
+Still reading track 18 - the read for LSN 258317 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258317 has not returned after 20s
+
+Track 18 - the read for LSN 258317 returned after 27s
+
+Still reading track 18 - the read for LSN 258373 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258373 has not returned after 20s
+
+Track 18 - the read for LSN 258373 returned after 26s
+
+Still reading track 18 - the read for LSN 258411 has not returned after 10s
+
+Track 18 - the read for LSN 258411 returned after 16s
+
+Still reading track 18 - the read for LSN 258429 has not returned after 10s
+
+Track 18 - the read for LSN 258429 returned after 15s
+
+Still reading track 18 - the read for LSN 258523 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258523 has not returned after 20s
+
+Track 18 - the read for LSN 258523 returned after 22s
+
+Still reading track 18 - the read for LSN 258541 has not returned after 10s
+
+Track 18 - the read for LSN 258541 returned after 17s
+
+Still reading track 18 - the read for LSN 258560 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258560 has not returned after 20s
+
+Track 18 - the read for LSN 258560 returned after 26s
+
+Still reading track 18 - the read for LSN 258561 has not returned after 10s
+
+Track 18 - the read for LSN 258561 returned after 11s
+
+Still reading track 18 - the read for LSN 258579 has not returned after 10s
+
+Track 18 - the read for LSN 258579 returned after 11s
+
+Still reading track 18 - the read for LSN 258598 has not returned after 10s
+
+Track 18 - the read for LSN 258598 returned after 17s
+
+Still reading track 18 - the read for LSN 258635 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258635 has not returned after 20s
+
+Track 18 - the read for LSN 258635 returned after 28s
+
+Still reading track 18 - the read for LSN 258710 has not returned after 10s
+
+Track 18 - the read for LSN 258710 returned after 11s
+
+Still reading track 18 - the read for LSN 258729 has not returned after 10s
+
+Track 18 - the read for LSN 258729 returned after 10s
+
+Still reading track 18 - the read for LSN 258766 has not returned after 10s
+
+Track 18 - the read for LSN 258766 returned after 13s
+
+Still reading track 18 - the read for LSN 259048 has not returned after 10s
+
+Track 18 - the read for LSN 259048 returned after 15s
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -17.8 LUFS
+    Threshold: -28.0 LUFS
+
+  Loudness range:
+    LRA:         4.9 LU
+    Threshold: -38.0 LUFS
+    LRA low:   -20.8 LUFS
+    LRA high:  -15.9 LUFS
+
+  Sample peak:
+    Peak:       -1.4 dBFS
+
+  True peak:
+    Peak:       -1.4 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    04:27.38
+    Samples:     11797044
+    Frames:      20063
+    Sample peak level: 85.5% (-1.4 dBFS)
+    True peak level:   -1.4 dBFS
+    Integrated loudness (R128): -17.8 LUFS
+    Loudness range (R128):      4.9 LU (-20.8 to -15.9 LUFS)
+    Extraction speed:  0.0x
+    Elapsed:            8161.25 s
+    Pregap LSN:  242275 (duration: 00:02.37)
+    Pregap length: 187 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   242462 (with offset: 242463)
+    End LSN:     262524
+    Appended:    2 frames of silence
+
+  EAC CRC32:     0AC0374D
+  Secure re-read:  not attempted
+  Accurip:       disc found in database (max confidence: 28)
+    Accurip v1:  C1B5CFC4 (not found, either a new pressing, or bad rip)
+    Accurip v2:  A7CEDEA9 (not found, either a new pressing, or bad rip)
+    Accurip 450: 57033EE7 (matches Accurip DB, confidence 28, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         18
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Streets of Laredo
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T12:50:21-04:00
+    REPLAYGAIN_TRACK_GAIN:         -0.19 dB
+    R128_TRACK_GAIN:               1233
+    REPLAYGAIN_TRACK_RANGE:        4.90 dB
+    REPLAYGAIN_TRACK_PEAK:         0.855304
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    READ:          654215
+    VERIFY:        1215890
+    FIXUP_EDGE:    134
+    FIXUP_ATOM:    72840286
+    SKIP:          2586
+    OVERLAP:       3691667
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/18 - Streets of Laredo.flac
+
+Album Loudness Summary:
+
+  Integrated loudness:
+    I:         -14.1 LUFS
+    Threshold: -24.4 LUFS
+
+  Loudness range:
+    LRA:         8.9 LU
+    Threshold: -34.5 LUFS
+    LRA low:   -19.7 LUFS
+    LRA high:  -10.8 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:        0.8 dBFS
+
+Album integrated loudness (R128): -14.1 LUFS
+Album loudness range (R128):      8.9 LU (-19.7 to -10.8 LUFS)
+Album sample peak level:          -0.2 dBFS
+Album true peak level:            0.8 dBFS
+Tracks ripped accurately: 12/18
+Tracks ripped partially accurately: 6/18
+
+Paranoia status counts:
+  READ:          679673
+  VERIFY:        1243428
+  FIXUP_EDGE:    134
+  FIXUP_ATOM:    73012166
+  SKIP:          2586
+  OVERLAP:       3704261
+
+Ripping errors: 0
+Encoder errors: none; 18 tracks encoded
+Read stalls:    279 reads exceeded 10s; longest 54s (track 18, LSN 257082)
+Rip completed:  yes (18 of 18 tracks)
+Ripping finished at 2026-10-04T15:06:22-04:00
+Checking /dev/sr0 for cdrom...
+		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+
+
+Opening drive...
+No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!
+cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)
+Invoked as:     /usr/local/bin/cyanrip -d /dev/sr0 -s 667 -o flac -T unicode -r 5 -Z 2 -l 12,13,14,15,17,18 -N --consumer platterpus/0.6.65 -c 1/4 -a "album=full acceptance\: angle<bracket 20261004t160255 platterpus-fork-g174a134:album_artist=Platterpus Acceptance:date=2001-10-09:catalognumber=11661-0501-2:barcode=011661050129:label=Rounder:musicbrainz_albumid=53d0f596-95a3-4e60-b4aa-09f5f7532b1e" -t "1=title=Tennessee Mountain Fox Chase:artist=Platterpus Acceptance" -t "2=title=Banjo Picking Girl:artist=Platterpus Acceptance" -t "3=title=Old Corn Liquor:artist=Platterpus Acceptance" -t "4=title=Rain and Snow:artist=Platterpus Acceptance" -t "5=title=The Orphan Child:artist=Platterpus Acceptance" -t "6=title=Working on a Building:artist=Platterpus Acceptance" -t "7=title=You Better Mind:artist=Platterpus Acceptance:isrc=USRO27501510" -t "8=title=Dry Bones:artist=Platterpus Acceptance" -t "9=title=Did You Hear John Hurt?:artist=Platterpus Acceptance" -t "10=title=One‐Dime Blues:artist=Platterpus Acceptance:isrc=USRO29111201" -t "11=title=All the Way From East St. Louis:artist=Platterpus Acceptance" -t "12=title=Juke Medley:artist=Platterpus Acceptance" -t "13=title=Black’s Ball:artist=Platterpus Acceptance" -t "14=title=Just a Little While to Stay Here:artist=Platterpus Acceptance" -t "15=title=Iko, Iko:artist=Platterpus Acceptance" -t "16=title=Mai Kai No Kauai:artist=Platterpus Acceptance" -t "17=title=Texas Cowboy:artist=Platterpus Acceptance" -t "18=title=Streets of Laredo:artist=Platterpus Acceptance" -D {album_artist}/{album} -F "{track} - {title}" -G -j cyanrip-diagnostics-20261004T190623Z.json
+Handshake:      round 29 lap 3 closed, verdict GO -- released build
+                (declared at build time, not verified by cyanrip)
+Consumer:       platterpus/0.6.65
+                (reported by the caller, not verified by cyanrip)
+Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+System device:  /dev/sr0
+Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+Offset:         +667 samples
+Overread:       +2 frames
+Overread mode:  fill with silence in lead-in/lead-out
+Speed:          default (unchangeable)
+C2 errors:      unsupported by drive
+CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+Paranoia level: max
+Retry limit:    5 (per frame, and per whole-track re-read)
+Cache model:    1200 sectors (drive cache size not probed)
+HDCD decoding:  disabled
+Album Art:      none
+Outputs:        flac
+Disc number:    1
+Total discs:    4
+Disc tracks:    18
+Tracks to rip:  12, 13, 14, 15, 17, 18
+DiscID:         zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+Release ID:     53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+CDDB ID:        000DAC12
+Album:          full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+Album artist:   Platterpus Acceptance
+AccurateRip:    found
+Total time:     58:20.25
+
+Gaps:
+    180 frame pregap in track 2, merging into track 1
+    190 frame pregap in track 3, merging into track 2
+    185 frame pregap in track 4, merging into track 3
+    180 frame pregap in track 5, merging into track 4
+    90 frame pregap in track 6, merging into track 5
+    165 frame pregap in track 8, merging into track 7
+    158 frame pregap in track 9, merging into track 8
+    145 frame pregap in track 10, merging into track 9
+    190 frame pregap in track 11, merging into track 10
+    105 frame pregap in track 12, merging into track 11
+    143 frame pregap in track 13, merging into track 12
+    98 frame pregap in track 15, merging into track 14
+    202 frame pregap in track 16, merging into track 15
+    140 frame pregap in track 17, merging into track 16
+
+Tracks:
+Repeating ripping (0 out of 2 matches for current checksum EC5C501D)
+
+Repeating ripping (0 out of 2 matches for current checksum A3E9CD1C)
+
+Repeating ripping (0 out of 2 matches for current checksum 9CA29D96)
+
+Repeating ripping (0 out of 2 matches for current checksum BA7FA935)
+
+Done; (repeat limit of 5 reads reached; at most 1 read agreed)
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -11.2 LUFS
+    Threshold: -21.3 LUFS
+
+  Loudness range:
+    LRA:         2.5 LU
+    Threshold: -31.3 LUFS
+    LRA low:   -12.5 LUFS
+    LRA high:  -10.0 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.2 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    01:38.20
+    Samples:     4333560
+    Frames:      7370
+    Sample peak level: 97.4% (-0.2 dBFS)
+    True peak level:   -0.2 dBFS
+    Integrated loudness (R128): -11.2 LUFS
+    Loudness range (R128):      2.5 LU (-12.5 to -10.0 LUFS)
+    Extraction speed:  0.2x
+    Elapsed:            494.47 s
+    Pregap LSN:  149155 (duration: 00:01.30)
+    Pregap length: 105 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   149260 (with offset: 149261)
+    End LSN:     156629 (with offset: 156631)
+
+  EAC CRC32:     B4CD369A (after 5 rips)
+  Secure re-read:  did NOT converge after 5 reads (repeat limit hit)
+  Accurip:       disc found in database (max confidence: 28)
+    Accurip v1:  0F3BDA90 (not found, either a new pressing, or bad rip)
+    Accurip v2:  A3B58A80 (not found, either a new pressing, or bad rip)
+    Accurip 450: E360656C (matches Accurip DB, confidence 28, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         12
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Juke Medley
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T15:06:32-04:00
+    REPLAYGAIN_TRACK_GAIN:         -6.80 dB
+    R128_TRACK_GAIN:               -461
+    REPLAYGAIN_TRACK_RANGE:        2.51 dB
+    REPLAYGAIN_TRACK_PEAK:         0.974213
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    Scope:         the last of 5 reads; the disc totals below sum all of them
+    READ:          2066
+    VERIFY:        10391
+    FIXUP_ATOM:    75274
+    OVERLAP:       4846
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/12 - Juke Medley.flac
+
+Repeating ripping (0 out of 2 matches for current checksum 317B9D11)
+
+Repeating ripping (0 out of 2 matches for current checksum 0322687E)
+
+Repeating ripping (0 out of 2 matches for current checksum 024172CF)
+
+Repeating ripping (0 out of 2 matches for current checksum F287D250)
+
+Done; (repeat limit of 5 reads reached; at most 1 read agreed)
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -12.2 LUFS
+    Threshold: -22.3 LUFS
+
+  Loudness range:
+    LRA:         4.5 LU
+    Threshold: -32.3 LUFS
+    LRA low:   -14.6 LUFS
+    LRA high:  -10.1 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:        0.2 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    02:57.05
+    Samples:     7808640
+    Frames:      13280
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   0.2 dBFS
+    Integrated loudness (R128): -12.2 LUFS
+    Loudness range (R128):      4.5 LU (-14.6 to -10.1 LUFS)
+    Extraction speed:  0.2x
+    Elapsed:            802.90 s
+    Pregap LSN:  156487 (duration: 00:01.68)
+    Pregap length: 143 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   156630 (with offset: 156631)
+    End LSN:     169909 (with offset: 169911)
+
+  EAC CRC32:     2863DD03 (after 5 rips)
+  Secure re-read:  did NOT converge after 5 reads (repeat limit hit)
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  FBF73C00 (not found, either a new pressing, or bad rip)
+    Accurip v2:  2B57C799 (not found, either a new pressing, or bad rip)
+    Accurip 450: 82AB8C94 (matches Accurip DB, confidence 29, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         13
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Black’s Ball
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T15:14:46-04:00
+    REPLAYGAIN_TRACK_GAIN:         -5.84 dB
+    R128_TRACK_GAIN:               -214
+    REPLAYGAIN_TRACK_RANGE:        4.50 dB
+    REPLAYGAIN_TRACK_PEAK:         1.026073
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    Scope:         the last of 5 reads; the disc totals below sum all of them
+    READ:          1827
+    VERIFY:        3768
+    FIXUP_ATOM:    20736
+    OVERLAP:       1543
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/13 - Black’s Ball.flac
+
+Repeating ripping (0 out of 2 matches for current checksum 39F33841)
+
+Repeating ripping (0 out of 2 matches for current checksum B8FF279F)
+
+Repeating ripping (0 out of 2 matches for current checksum DBE82C32)
+
+Repeating ripping (0 out of 2 matches for current checksum 23A51107)
+
+Done; (repeat limit of 5 reads reached; at most 1 read agreed)
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -13.8 LUFS
+    Threshold: -24.3 LUFS
+
+  Loudness range:
+    LRA:         9.5 LU
+    Threshold: -34.3 LUFS
+    LRA low:   -20.0 LUFS
+    LRA high:  -10.5 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:        0.8 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    06:17.45
+    Samples:     16652160
+    Frames:      28320
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   0.8 dBFS
+    Integrated loudness (R128): -13.8 LUFS
+    Loudness range (R128):      9.5 LU (-20.0 to -10.5 LUFS)
+    Extraction speed:  0.2x
+    Elapsed:            1639.52 s
+    Pregap LSN:  169910 (duration: 00:00.00)
+    Pregap length: 0 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   169910 (with offset: 169911)
+    End LSN:     198229 (with offset: 198231)
+
+  EAC CRC32:     C787E0E2 (after 5 rips)
+  Secure re-read:  did NOT converge after 5 reads (repeat limit hit)
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  515498DA (not found, either a new pressing, or bad rip)
+    Accurip v2:  E50A1321 (not found, either a new pressing, or bad rip)
+    Accurip 450: 5719821C (matches Accurip DB, confidence 29, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         14
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Just a Little While to Stay Here
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T15:28:09-04:00
+    REPLAYGAIN_TRACK_GAIN:         -4.17 dB
+    R128_TRACK_GAIN:               213
+    REPLAYGAIN_TRACK_RANGE:        9.49 dB
+    REPLAYGAIN_TRACK_PEAK:         1.092516
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    Scope:         the last of 5 reads; the disc totals below sum all of them
+    READ:          3458
+    VERIFY:        3518
+    FIXUP_ATOM:    15267
+    OVERLAP:       1256
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/14 - Just a Little While to Stay Here.flac
+
+Repeating ripping (0 out of 2 matches for current checksum D0FFD719)
+
+Repeating ripping (0 out of 2 matches for current checksum 397494DF)
+
+Repeating ripping (0 out of 2 matches for current checksum CEBE76B0)
+
+Repeating ripping (0 out of 2 matches for current checksum CEFB6084)
+
+Done; (repeat limit of 5 reads reached; at most 1 read agreed)
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -15.1 LUFS
+    Threshold: -25.4 LUFS
+
+  Loudness range:
+    LRA:         6.6 LU
+    Threshold: -35.4 LUFS
+    LRA low:   -20.0 LUFS
+    LRA high:  -13.4 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.0 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:42.47
+    Samples:     9817836
+    Frames:      16697
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   -0.0 dBFS
+    Integrated loudness (R128): -15.1 LUFS
+    Loudness range (R128):      6.6 LU (-20.0 to -13.4 LUFS)
+    Extraction speed:  0.2x
+    Elapsed:            1071.70 s
+    Pregap LSN:  198132 (duration: 00:01.23)
+    Pregap length: 98 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   198230 (with offset: 198231)
+    End LSN:     214926 (with offset: 214928)
+
+  EAC CRC32:     A1A86710 (after 5 rips)
+  Secure re-read:  did NOT converge after 5 reads (repeat limit hit)
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  8024A17C (not found, either a new pressing, or bad rip)
+    Accurip v2:  E947B979 (not found, either a new pressing, or bad rip)
+    Accurip 450: 3D0BD8AD (matches Accurip DB, confidence 29, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         15
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Iko, Iko
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T15:55:28-04:00
+    REPLAYGAIN_TRACK_GAIN:         -2.89 dB
+    R128_TRACK_GAIN:               540
+    REPLAYGAIN_TRACK_RANGE:        6.60 dB
+    REPLAYGAIN_TRACK_PEAK:         0.996300
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    Scope:         the last of 5 reads; the disc totals below sum all of them
+    READ:          3843
+    VERIFY:        14401
+    FIXUP_ATOM:    100488
+    OVERLAP:       7018
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/15 - Iko, Iko.flac
+
+Still reading track 17 - the read for LSN 238697 has not returned after 10s
+
+Track 17 - the read for LSN 238697 returned after 11s
+
+Still reading track 17 - the read for LSN 239660 has not returned after 10s
+
+Track 17 - the read for LSN 239660 returned after 11s
+
+Still reading track 17 - the read for LSN 241262 has not returned after 10s
+
+Track 17 - the read for LSN 241262 returned after 12s
+
+Still reading track 17 - the read for LSN 241481 has not returned after 10s
+
+Still reading track 17 - the read for LSN 241481 has not returned after 20s
+
+Track 17 - the read for LSN 241481 returned after 27s
+
+Still reading track 17 - the read for LSN 241572 has not returned after 10s
+
+Track 17 - the read for LSN 241572 returned after 13s
+
+Still reading track 17 - the read for LSN 241718 has not returned after 10s
+
+Track 17 - the read for LSN 241718 returned after 15s
+
+Still reading track 17 - the read for LSN 241772 has not returned after 10s
+
+Track 17 - the read for LSN 241772 returned after 13s
+
+Still reading track 17 - the read for LSN 241809 has not returned after 10s
+
+Still reading track 17 - the read for LSN 241809 has not returned after 20s
+
+Track 17 - the read for LSN 241809 returned after 28s
+
+Still reading track 17 - the read for LSN 241845 has not returned after 10s
+
+Track 17 - the read for LSN 241845 returned after 13s
+
+Repeating ripping (0 out of 2 matches for current checksum 0746BF00)
+
+Repeating ripping (0 out of 2 matches for current checksum 79A5D13E)
+
+Repeating ripping (0 out of 2 matches for current checksum 813154B6)
+
+Repeating ripping (0 out of 2 matches for current checksum 2B130F75)
+
+Done; (repeat limit of 5 reads reached; at most 1 read agreed)
+
+Flushing encoders...
+Summary:
+
+  Integrated loudness:
+    I:         -15.7 LUFS
+    Threshold: -25.8 LUFS
+
+  Loudness range:
+    LRA:         5.8 LU
+    Threshold: -35.8 LUFS
+    LRA low:   -18.6 LUFS
+    LRA high:  -12.8 LUFS
+
+  Sample peak:
+    Peak:       -0.2 dBFS
+
+  True peak:
+    Peak:       -0.2 dBFS
+
+  Preemphasis:   none detected
+
+  Properties:
+    Duration:    03:20.37
+    Samples:     8841756
+    Frames:      15037
+    Sample peak level: 97.7% (-0.2 dBFS)
+    True peak level:   -0.2 dBFS
+    Integrated loudness (R128): -15.7 LUFS
+    Loudness range (R128):      5.8 LU (-18.6 to -12.8 LUFS)
+    Extraction speed:  0.2x
+    Elapsed:            1228.72 s
+    Pregap LSN:  227285 (duration: 00:01.65)
+    Pregap length: 140 frames
+    Pregap source: sub-channel (not signalled by TOC)
+    Start LSN:   227425 (with offset: 227426)
+    End LSN:     242461 (with offset: 242463)
+
+  EAC CRC32:     B688DC2F (after 5 rips)
+  Secure re-read:  did NOT converge after 5 reads (repeat limit hit)
+  Accurip:       disc found in database (max confidence: 29)
+    Accurip v1:  AB86FA97 (not found, either a new pressing, or bad rip)
+    Accurip v2:  C1A81EF9 (not found, either a new pressing, or bad rip)
+    Accurip 450: 6F607D10 (matches Accurip DB, confidence 29, one frame only; whole-track checksums not found)
+
+  Metadata:
+    TRACK:                         17
+    TRACKTOTAL:                    18
+    MUSICBRAINZ_DISCID:            zxtbw2JgJ.kZBiyIcKOQvn2ZTUM-
+    CDDB:                          000DAC12
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc2+platterpus.19
+    TOTALDISCS:                    4
+    TITLE:                         Texas Cowboy
+    DISC:                          1
+    ALBUM:                         full acceptance: angle<bracket 20261004t160255 platterpus-fork-g174a134
+    ALBUM_ARTIST:                  Platterpus Acceptance
+    DATE:                          2001-10-09
+    CATALOGNUMBER:                 11661-0501-2
+    BARCODE:                       011661050129
+    LABEL:                         Rounder
+    MUSICBRAINZ_ALBUMID:           53d0f596-95a3-4e60-b4aa-09f5f7532b1e
+    ARTIST:                        Platterpus Acceptance
+    CREATION_TIME:                 2026-10-04T16:13:20-04:00
+    REPLAYGAIN_TRACK_GAIN:         -2.28 dB
+    R128_TRACK_GAIN:               695
+    REPLAYGAIN_TRACK_RANGE:        5.83 dB
+    REPLAYGAIN_TRACK_PEAK:         0.982111
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+    DISCTOTAL:                     4
+
+  Paranoia status counts:
+    Scope:         the last of 5 reads; the disc totals below sum all of them
+    READ:          1586
+    VERIFY:        2488
+    FIXUP_ATOM:    28984
+    SKIP:          1
+    OVERLAP:       1750
+    FIXUP_DROPPED: 2
+
+  File(s):
+    Platterpus Acceptance/full acceptance∶ angle‹bracket 20261004t160255 platterpus-fork-g174a134/17 - Texas Cowboy.flac
+
+Still reading track 18 - the read for LSN 244112 has not returned after 10s
+
+Track 18 - the read for LSN 244112 returned after 10s
+
+Still reading track 18 - the read for LSN 244149 has not returned after 10s
+
+Track 18 - the read for LSN 244149 returned after 17s
+
+Still reading track 18 - the read for LSN 244167 has not returned after 10s
+
+Track 18 - the read for LSN 244167 returned after 11s
+
+Still reading track 18 - the read for LSN 244185 has not returned after 10s
+
+Track 18 - the read for LSN 244185 returned after 14s
+
+Still reading track 18 - the read for LSN 244643 has not returned after 10s
+
+Track 18 - the read for LSN 244643 returned after 11s
+
+Still reading track 18 - the read for LSN 245451 has not returned after 10s
+
+Track 18 - the read for LSN 245451 returned after 15s
+
+Still reading track 18 - the read for LSN 245487 has not returned after 10s
+
+Track 18 - the read for LSN 245487 returned after 18s
+
+Still reading track 18 - the read for LSN 245488 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245488 has not returned after 20s
+
+Track 18 - the read for LSN 245488 returned after 21s
+
+Still reading track 18 - the read for LSN 245524 has not returned after 10s
+
+Track 18 - the read for LSN 245524 returned after 15s
+
+Still reading track 18 - the read for LSN 245561 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245561 has not returned after 20s
+
+Track 18 - the read for LSN 245561 returned after 27s
+
+Still reading track 18 - the read for LSN 245598 has not returned after 10s
+
+Track 18 - the read for LSN 245598 returned after 11s
+
+Still reading track 18 - the read for LSN 245616 has not returned after 10s
+
+Track 18 - the read for LSN 245616 returned after 18s
+
+Still reading track 18 - the read for LSN 245652 has not returned after 10s
+
+Track 18 - the read for LSN 245652 returned after 13s
+
+Still reading track 18 - the read for LSN 245671 has not returned after 10s
+
+Track 18 - the read for LSN 245671 returned after 17s
+
+Still reading track 18 - the read for LSN 245745 has not returned after 10s
+
+Track 18 - the read for LSN 245745 returned after 15s
+
+Still reading track 18 - the read for LSN 245763 has not returned after 10s
+
+Track 18 - the read for LSN 245763 returned after 12s
+
+Still reading track 18 - the read for LSN 245818 has not returned after 10s
+
+Track 18 - the read for LSN 245818 returned after 14s
+
+Still reading track 18 - the read for LSN 245836 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245836 has not returned after 20s
+
+Track 18 - the read for LSN 245836 returned after 22s
+
+Still reading track 18 - the read for LSN 245928 has not returned after 10s
+
+Track 18 - the read for LSN 245928 returned after 12s
+
+Still reading track 18 - the read for LSN 245965 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245965 has not returned after 20s
+
+Track 18 - the read for LSN 245965 returned after 24s
+
+Still reading track 18 - the read for LSN 245983 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245983 has not returned after 20s
+
+Track 18 - the read for LSN 245983 returned after 22s
+
+Still reading track 18 - the read for LSN 246001 has not returned after 10s
+
+Track 18 - the read for LSN 246001 returned after 13s
+
+Still reading track 18 - the read for LSN 246002 has not returned after 10s
+
+Track 18 - the read for LSN 246002 returned after 12s
+
+Still reading track 18 - the read for LSN 246020 has not returned after 10s
+
+Track 18 - the read for LSN 246020 returned after 18s
+
+Still reading track 18 - the read for LSN 246038 has not returned after 10s
+
+Track 18 - the read for LSN 246038 returned after 18s
+
+Still reading track 18 - the read for LSN 246075 has not returned after 10s
+
+Track 18 - the read for LSN 246075 returned after 19s
+
+Still reading track 18 - the read for LSN 246093 has not returned after 10s
+
+Track 18 - the read for LSN 246093 returned after 18s
+
+Still reading track 18 - the read for LSN 246111 has not returned after 10s
+
+Track 18 - the read for LSN 246111 returned after 15s
+
+Still reading track 18 - the read for LSN 246112 has not returned after 10s
+
+Track 18 - the read for LSN 246112 returned after 18s
+
+Still reading track 18 - the read for LSN 246130 has not returned after 10s
+
+Track 18 - the read for LSN 246130 returned after 15s
+
+Still reading track 18 - the read for LSN 246148 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246148 has not returned after 20s
+
+Track 18 - the read for LSN 246148 returned after 23s
+
+Still reading track 18 - the read for LSN 246149 has not returned after 10s
+
+Track 18 - the read for LSN 246149 returned after 13s
+
+Still reading track 18 - the read for LSN 246167 has not returned after 10s
+
+Track 18 - the read for LSN 246167 returned after 15s
+
+Still reading track 18 - the read for LSN 246185 has not returned after 10s
+
+Track 18 - the read for LSN 246185 returned after 15s
+
+Still reading track 18 - the read for LSN 246203 has not returned after 10s
+
+Track 18 - the read for LSN 246203 returned after 12s
+
+Still reading track 18 - the read for LSN 246204 has not returned after 10s
+
+Track 18 - the read for LSN 246204 returned after 15s
+
+Still reading track 18 - the read for LSN 246240 has not returned after 10s
+
+Track 18 - the read for LSN 246240 returned after 16s
+
+Still reading track 18 - the read for LSN 246258 has not returned after 10s
+
+Track 18 - the read for LSN 246258 returned after 18s
+
+Still reading track 18 - the read for LSN 246259 has not returned after 10s
+
+Track 18 - the read for LSN 246259 returned after 19s
+
+Still reading track 18 - the read for LSN 246277 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246277 has not returned after 20s
+
+Track 18 - the read for LSN 246277 returned after 21s
+
+Still reading track 18 - the read for LSN 246700 has not returned after 10s
+
+Track 18 - the read for LSN 246700 returned after 19s
+
+Still reading track 18 - the read for LSN 246718 has not returned after 10s
+
+Track 18 - the read for LSN 246718 returned after 10s
+
+Still reading track 18 - the read for LSN 246755 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246755 has not returned after 20s
+
+Track 18 - the read for LSN 246755 returned after 21s
+
+Still reading track 18 - the read for LSN 246773 has not returned after 10s
+
+Track 18 - the read for LSN 246773 returned after 15s
+
+Still reading track 18 - the read for LSN 246792 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246792 has not returned after 20s
+
+Track 18 - the read for LSN 246792 returned after 27s
+
+Still reading track 18 - the read for LSN 246829 has not returned after 10s
+
+Track 18 - the read for LSN 246829 returned after 13s
+
+Still reading track 18 - the read for LSN 246847 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246847 has not returned after 20s
+
+Still reading track 18 - the read for LSN 246847 has not returned after 30s
+
+Still reading track 18 - the read for LSN 246847 has not returned after 40s
+
+Track 18 - the read for LSN 246847 returned after 43s
+
+Still reading track 18 - the read for LSN 246865 has not returned after 10s
+
+Track 18 - the read for LSN 246865 returned after 15s
+
+Still reading track 18 - the read for LSN 246884 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246884 has not returned after 20s
+
+Track 18 - the read for LSN 246884 returned after 20s
+
+Still reading track 18 - the read for LSN 246994 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246994 has not returned after 20s
+
+Track 18 - the read for LSN 246994 returned after 20s
+
+Still reading track 18 - the read for LSN 247067 has not returned after 10s
+
+Track 18 - the read for LSN 247067 returned after 11s
+
+Still reading track 18 - the read for LSN 247086 has not returned after 10s
+
+Track 18 - the read for LSN 247086 returned after 12s
+
+Still reading track 18 - the read for LSN 247104 has not returned after 10s
+
+Track 18 - the read for LSN 247104 returned after 17s
+
+Still reading track 18 - the read for LSN 247105 has not returned after 10s
+
+Track 18 - the read for LSN 247105 returned after 17s
+
+Still reading track 18 - the read for LSN 247123 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247123 has not returned after 20s
+
+Still reading track 18 - the read for LSN 247123 has not returned after 30s
+
+Still reading track 18 - the read for LSN 247123 has not returned after 40s
+
+Track 18 - the read for LSN 247123 returned after 42s
+
+Still reading track 18 - the read for LSN 247159 has not returned after 10s
+
+Track 18 - the read for LSN 247159 returned after 12s
+
+Still reading track 18 - the read for LSN 247178 has not returned after 10s
+
+Track 18 - the read for LSN 247178 returned after 12s
+
+Still reading track 18 - the read for LSN 247196 has not returned after 10s
+
+Track 18 - the read for LSN 247196 returned after 12s
+
+Still reading track 18 - the read for LSN 247307 has not returned after 10s
+
+Track 18 - the read for LSN 247307 returned after 11s
+
+Still reading track 18 - the read for LSN 247380 has not returned after 10s
+
+Track 18 - the read for LSN 247380 returned after 11s
+
+Still reading track 18 - the read for LSN 247399 has not returned after 10s
+
+Track 18 - the read for LSN 247399 returned after 11s
+
+Still reading track 18 - the read for LSN 247565 has not returned after 10s
+
+Track 18 - the read for LSN 247565 returned after 17s
+
+Still reading track 18 - the read for LSN 247583 has not returned after 10s
+
+Track 18 - the read for LSN 247583 returned after 11s
+
+Still reading track 18 - the read for LSN 247638 has not returned after 10s
+
+Track 18 - the read for LSN 247638 returned after 14s
+
+Still reading track 18 - the read for LSN 247694 has not returned after 10s
+
+Track 18 - the read for LSN 247694 returned after 15s
+
+Still reading track 18 - the read for LSN 247712 has not returned after 10s
+
+Track 18 - the read for LSN 247712 returned after 15s
+
+Still reading track 18 - the read for LSN 247785 has not returned after 10s
+
+Track 18 - the read for LSN 247785 returned after 11s
+
+Still reading track 18 - the read for LSN 247804 has not returned after 10s
+
+Track 18 - the read for LSN 247804 returned after 12s
+
+Still reading track 18 - the read for LSN 247823 has not returned after 10s
+
+Track 18 - the read for LSN 247823 returned after 14s
+
+Still reading track 18 - the read for LSN 247841 has not returned after 10s
+
+Track 18 - the read for LSN 247841 returned after 13s
+
+Still reading track 18 - the read for LSN 247859 has not returned after 10s
+
+Track 18 - the read for LSN 247859 returned after 18s
+
+Still reading track 18 - the read for LSN 247878 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247878 has not returned after 20s
+
+Still reading track 18 - the read for LSN 247878 has not returned after 30s
+
+Track 18 - the read for LSN 247878 returned after 30s
+
+Still reading track 18 - the read for LSN 247896 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247896 has not returned after 20s
+
+Still reading track 18 - the read for LSN 247896 has not returned after 30s
+
+Track 18 - the read for LSN 247896 returned after 37s
+
+Still reading track 18 - the read for LSN 247970 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247970 has not returned after 20s
+
+Still reading track 18 - the read for LSN 247970 has not returned after 30s
+
+Track 18 - the read for LSN 247970 returned after 37s
+
+Still reading track 18 - the read for LSN 248007 has not returned after 10s
+
+Track 18 - the read for LSN 248007 returned after 14s
+
+Still reading track 18 - the read for LSN 248062 has not returned after 10s
+
+Track 18 - the read for LSN 248062 returned after 14s
+
+Still reading track 18 - the read for LSN 248099 has not returned after 10s
+
+Track 18 - the read for LSN 248099 returned after 17s
+
+Still reading track 18 - the read for LSN 248117 has not returned after 10s
+
+Track 18 - the read for LSN 248117 returned after 16s
+
+Still reading track 18 - the read for LSN 248135 has not returned after 10s
+
+Track 18 - the read for LSN 248135 returned after 14s
+
+Still reading track 18 - the read for LSN 248154 has not returned after 10s
+
+Track 18 - the read for LSN 248154 returned after 12s
+
+Still reading track 18 - the read for LSN 248228 has not returned after 10s
+
+Track 18 - the read for LSN 248228 returned after 10s
+
+Still reading track 18 - the read for LSN 248929 has not returned after 10s
+
+Track 18 - the read for LSN 248929 returned after 12s
+
+Still reading track 18 - the read for LSN 248966 has not returned after 10s
+
+Track 18 - the read for LSN 248966 returned after 11s
+
+Still reading track 18 - the read for LSN 249021 has not returned after 10s
+
+Track 18 - the read for LSN 249021 returned after 12s
+
+Still reading track 18 - the read for LSN 249095 has not returned after 10s
+
+Track 18 - the read for LSN 249095 returned after 15s
+
+Still reading track 18 - the read for LSN 249187 has not returned after 10s
+
+Track 18 - the read for LSN 249187 returned after 13s
+
+Still reading track 18 - the read for LSN 249224 has not returned after 10s
+
+Track 18 - the read for LSN 249224 returned after 12s
+
+Still reading track 18 - the read for LSN 249261 has not returned after 10s
+
+Track 18 - the read for LSN 249261 returned after 15s
+
+Still reading track 18 - the read for LSN 249963 has not returned after 10s
+
+Still reading track 18 - the read for LSN 249963 has not returned after 20s
+
+Track 18 - the read for LSN 249963 returned after 20s
+
+Still reading track 18 - the read for LSN 250148 has not returned after 10s
+
+Track 18 - the read for LSN 250148 returned after 11s
+
+Still reading track 18 - the read for LSN 250185 has not returned after 10s
+
+Track 18 - the read for LSN 250185 returned after 14s
+
+Still reading track 18 - the read for LSN 250629 has not returned after 10s
+
+Still reading track 18 - the read for LSN 250629 has not returned after 20s
+
+Still reading track 18 - the read for LSN 250629 has not returned after 30s
+
+Track 18 - the read for LSN 250629 returned after 35s
+
+Still reading track 18 - the read for LSN 251314 has not returned after 10s
+
+Track 18 - the read for LSN 251314 returned after 12s
+
+Still reading track 18 - the read for LSN 251369 has not returned after 10s
+
+Track 18 - the read for LSN 251369 returned after 16s
+
+Still reading track 18 - the read for LSN 251370 has not returned after 10s
+
+Track 18 - the read for LSN 251370 returned after 19s
+
+Still reading track 18 - the read for LSN 251407 has not returned after 10s
+
+Track 18 - the read for LSN 251407 returned after 19s
+
+Still reading track 18 - the read for LSN 251443 has not returned after 10s
+
+Track 18 - the read for LSN 251443 returned after 18s
+
+Still reading track 18 - the read for LSN 251444 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251444 has not returned after 20s
+
+Track 18 - the read for LSN 251444 returned after 24s
+
+Still reading track 18 - the read for LSN 251462 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251462 has not returned after 20s
+
+Track 18 - the read for LSN 251462 returned after 29s
+
+Still reading track 18 - the read for LSN 251481 has not returned after 10s
+
+Track 18 - the read for LSN 251481 returned after 12s
+
+Still reading track 18 - the read for LSN 251499 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251499 has not returned after 20s
+
+Track 18 - the read for LSN 251499 returned after 28s
+
+Still reading track 18 - the read for LSN 251517 has not returned after 10s
+
+Track 18 - the read for LSN 251517 returned after 20s
+
+Still reading track 18 - the read for LSN 251518 has not returned after 10s
+
+Still reading track 18 - the read for LSN 251518 has not returned after 20s
+
+Track 18 - the read for LSN 251518 returned after 21s
+
+Still reading track 18 - the read for LSN 251592 has not returned after 10s
+
+Track 18 - the read for LSN 251592 returned after 11s
+
+Still reading track 18 - the read for LSN 251629 has not returned after 10s
+
+Track 18 - the read for LSN 251629 returned after 14s
+
+Still reading track 18 - the read for LSN 251647 has not returned after 10s
+
+Track 18 - the read for LSN 251647 returned after 15s
+
+Still reading track 18 - the read for LSN 251666 has not returned after 10s
+
+Track 18 - the read for LSN 251666 returned after 18s
+
+Still reading track 18 - the read for LSN 251703 has not returned after 10s
+
+Track 18 - the read for LSN 251703 returned after 18s
+
+Still reading track 18 - the read for LSN 251833 has not returned after 10s
+
+Track 18 - the read for LSN 251833 returned after 10s
+
+Still reading track 18 - the read for LSN 251888 has not returned after 10s
+
+Track 18 - the read for LSN 251888 returned after 11s
+
+Still reading track 18 - the read for LSN 251889 has not returned after 10s
+
+Track 18 - the read for LSN 251889 returned after 15s
+
+Still reading track 18 - the read for LSN 251907 has not returned after 10s
+
+Track 18 - the read for LSN 251907 returned after 13s
+
+Still reading track 18 - the read for LSN 252055 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252055 has not returned after 20s
+
+Track 18 - the read for LSN 252055 returned after 24s
+
+Still reading track 18 - the read for LSN 252129 has not returned after 10s
+
+Track 18 - the read for LSN 252129 returned after 15s
+
+Still reading track 18 - the read for LSN 252148 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252148 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252148 has not returned after 30s
+
+Track 18 - the read for LSN 252148 returned after 30s
+
+Still reading track 18 - the read for LSN 252222 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252222 has not returned after 20s
+
+Track 18 - the read for LSN 252222 returned after 27s
+
+Still reading track 18 - the read for LSN 252296 has not returned after 10s
+
+Track 18 - the read for LSN 252296 returned after 17s
+
+Still reading track 18 - the read for LSN 252463 has not returned after 10s
+
+Track 18 - the read for LSN 252463 returned after 17s
+
+Still reading track 18 - the read for LSN 252500 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252500 has not returned after 20s
+
+Track 18 - the read for LSN 252500 returned after 20s
+
+Still reading track 18 - the read for LSN 252519 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252519 has not returned after 20s
+
+Track 18 - the read for LSN 252519 returned after 20s
+
+Still reading track 18 - the read for LSN 252556 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252556 has not returned after 20s
+
+Track 18 - the read for LSN 252556 returned after 20s
+
+Still reading track 18 - the read for LSN 252593 has not returned after 10s
+
+Track 18 - the read for LSN 252593 returned after 18s
+
+Still reading track 18 - the read for LSN 252612 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252612 has not returned after 20s
+
+Track 18 - the read for LSN 252612 returned after 22s
+
+Still reading track 18 - the read for LSN 252630 has not returned after 10s
+
+Track 18 - the read for LSN 252630 returned after 20s
+
+Still reading track 18 - the read for LSN 252631 has not returned after 10s
+
+Track 18 - the read for LSN 252631 returned after 12s
+
+Still reading track 18 - the read for LSN 252649 has not returned after 10s
+
+Track 18 - the read for LSN 252649 returned after 19s
+
+Still reading track 18 - the read for LSN 252668 has not returned after 10s
+
+Track 18 - the read for LSN 252668 returned after 12s
+
+Still reading track 18 - the read for LSN 252686 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252686 has not returned after 20s
+
+Track 18 - the read for LSN 252686 returned after 23s
+
+Still reading track 18 - the read for LSN 252704 has not returned after 10s
+
+Track 18 - the read for LSN 252704 returned after 12s
+
+Still reading track 18 - the read for LSN 252705 has not returned after 10s
+
+Track 18 - the read for LSN 252705 returned after 12s
+
+Still reading track 18 - the read for LSN 252723 has not returned after 10s
+
+Track 18 - the read for LSN 252723 returned after 13s
+
+Still reading track 18 - the read for LSN 252741 has not returned after 10s
+
+Track 18 - the read for LSN 252741 returned after 12s
+
+Still reading track 18 - the read for LSN 252742 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252742 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252742 has not returned after 30s
+
+Track 18 - the read for LSN 252742 returned after 36s
+
+Still reading track 18 - the read for LSN 252760 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252760 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252760 has not returned after 30s
+
+Track 18 - the read for LSN 252760 returned after 36s
+
+Still reading track 18 - the read for LSN 252761 has not returned after 10s
+
+Track 18 - the read for LSN 252761 returned after 18s
+
+Still reading track 18 - the read for LSN 252779 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252779 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252779 has not returned after 30s
+
+Still reading track 18 - the read for LSN 252779 has not returned after 40s
+
+Track 18 - the read for LSN 252779 returned after 43s
+
+Still reading track 18 - the read for LSN 252797 has not returned after 10s
+
+Track 18 - the read for LSN 252797 returned after 16s
+
+Still reading track 18 - the read for LSN 252798 has not returned after 10s
+
+Track 18 - the read for LSN 252798 returned after 16s
+
+Still reading track 18 - the read for LSN 252816 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252816 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252816 has not returned after 30s
+
+Track 18 - the read for LSN 252816 returned after 32s
+
+Still reading track 18 - the read for LSN 252853 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252853 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252853 has not returned after 30s
+
+Still reading track 18 - the read for LSN 252853 has not returned after 40s
+
+Track 18 - the read for LSN 252853 returned after 47s
+
+Still reading track 18 - the read for LSN 252872 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252872 has not returned after 20s
+
+Track 18 - the read for LSN 252872 returned after 24s
+
+Still reading track 18 - the read for LSN 252890 has not returned after 10s
+
+Track 18 - the read for LSN 252890 returned after 18s
+
+Still reading track 18 - the read for LSN 252891 has not returned after 10s
+
+Track 18 - the read for LSN 252891 returned after 16s
+
+Still reading track 18 - the read for LSN 252909 has not returned after 10s
+
+Track 18 - the read for LSN 252909 returned after 12s
+
+Still reading track 18 - the read for LSN 252927 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252927 has not returned after 20s
+
+Still reading track 18 - the read for LSN 252927 has not returned after 30s
+
+Track 18 - the read for LSN 252927 returned after 30s
+
+Still reading track 18 - the read for LSN 252928 has not returned after 10s
+
+Track 18 - the read for LSN 252928 returned after 19s
+
+Still reading track 18 - the read for LSN 252946 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252946 has not returned after 20s
+
+Track 18 - the read for LSN 252946 returned after 28s
+
+Still reading track 18 - the read for LSN 252983 has not returned after 10s
+
+Still reading track 18 - the read for LSN 252983 has not returned after 20s
+
+Track 18 - the read for LSN 252983 returned after 23s
+
+Still reading track 18 - the read for LSN 253020 has not returned after 10s
+
+Track 18 - the read for LSN 253020 returned after 16s
+
+Still reading track 18 - the read for LSN 253039 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253039 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253039 has not returned after 30s
+
+Track 18 - the read for LSN 253039 returned after 39s
+
+Still reading track 18 - the read for LSN 253057 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253057 has not returned after 20s
+
+Track 18 - the read for LSN 253057 returned after 21s
+
+Still reading track 18 - the read for LSN 253058 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253058 has not returned after 20s
+
+Track 18 - the read for LSN 253058 returned after 26s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 30s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 40s
+
+Still reading track 18 - the read for LSN 253076 has not returned after 50s
+
+Track 18 - the read for LSN 253076 returned after 54s
+
+Still reading track 18 - the read for LSN 253094 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253094 has not returned after 20s
+
+Track 18 - the read for LSN 253094 returned after 25s
+
+Still reading track 18 - the read for LSN 253113 has not returned after 10s
+
+Track 18 - the read for LSN 253113 returned after 17s
+
+Still reading track 18 - the read for LSN 253132 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253132 has not returned after 20s
+
+Track 18 - the read for LSN 253132 returned after 27s
+
+Still reading track 18 - the read for LSN 253150 has not returned after 10s
+
+Track 18 - the read for LSN 253150 returned after 17s
+
+Still reading track 18 - the read for LSN 253652 has not returned after 10s
+
+Track 18 - the read for LSN 253652 returned after 17s
+
+Still reading track 18 - the read for LSN 253671 has not returned after 10s
+
+Still reading track 18 - the read for LSN 253671 has not returned after 20s
+
+Still reading track 18 - the read for LSN 253671 has not returned after 30s
+
+Track 18 - the read for LSN 253671 returned after 35s
+
+Still reading track 18 - the read for LSN 254824 has not returned after 10s
+
+Still reading track 18 - the read for LSN 254824 has not returned after 20s
+
+Track 18 - the read for LSN 254824 returned after 28s
+
+Still reading track 18 - the read for LSN 254843 has not returned after 10s
+
+Still reading track 18 - the read for LSN 254843 has not returned after 20s
+
+Track 18 - the read for LSN 254843 returned after 28s
+
+Still reading track 18 - the read for LSN 254861 has not returned after 10s
+
+Still reading track 18 - the read for LSN 254861 has not returned after 20s
+
+Still reading track 18 - the read for LSN 254861 has not returned after 30s
+
+Track 18 - the read for LSN 254861 returned after 30s
+
+Still reading track 18 - the read for LSN 254862 has not returned after 10s
+
+Still reading track 18 - the read for LSN 254862 has not returned after 20s
+
+Track 18 - the read for LSN 254862 returned after 21s
+
+Still reading track 18 - the read for LSN 256092 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256092 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256092 has not returned after 30s
+
+Track 18 - the read for LSN 256092 returned after 30s
+
+Still reading track 18 - the read for LSN 256148 has not returned after 10s
+
+Track 18 - the read for LSN 256148 returned after 18s
+
+Still reading track 18 - the read for LSN 256167 has not returned after 10s
+
+Track 18 - the read for LSN 256167 returned after 17s
+
+Still reading track 18 - the read for LSN 256241 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256241 has not returned after 20s
+
+Track 18 - the read for LSN 256241 returned after 25s
+
+Still reading track 18 - the read for LSN 256260 has not returned after 10s
+
+Track 18 - the read for LSN 256260 returned after 18s
+
+Still reading track 18 - the read for LSN 256297 has not returned after 10s
+
+Track 18 - the read for LSN 256297 returned after 18s
+
+Still reading track 18 - the read for LSN 256316 has not returned after 10s
+
+Track 18 - the read for LSN 256316 returned after 15s
+
+Still reading track 18 - the read for LSN 256335 has not returned after 10s
+
+Track 18 - the read for LSN 256335 returned after 15s
+
+Still reading track 18 - the read for LSN 256372 has not returned after 10s
+
+Track 18 - the read for LSN 256372 returned after 11s
+
+Still reading track 18 - the read for LSN 256391 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256391 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256391 has not returned after 30s
+
+Still reading track 18 - the read for LSN 256391 has not returned after 40s
+
+Track 18 - the read for LSN 256391 returned after 42s
+
+Still reading track 18 - the read for LSN 256410 has not returned after 10s
+
+Track 18 - the read for LSN 256410 returned after 11s
+
+Still reading track 18 - the read for LSN 256428 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256428 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256428 has not returned after 30s
+
+Track 18 - the read for LSN 256428 returned after 33s
+
+Still reading track 18 - the read for LSN 256447 has not returned after 10s
+
+Track 18 - the read for LSN 256447 returned after 14s
+
+Still reading track 18 - the read for LSN 256466 has not returned after 10s
+
+Track 18 - the read for LSN 256466 returned after 18s
+
+Still reading track 18 - the read for LSN 256484 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256484 has not returned after 20s
+
+Track 18 - the read for LSN 256484 returned after 21s
+
+Still reading track 18 - the read for LSN 256503 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256503 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256503 has not returned after 30s
+
+Track 18 - the read for LSN 256503 returned after 39s
+
+Still reading track 18 - the read for LSN 256521 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256521 has not returned after 20s
+
+Track 18 - the read for LSN 256521 returned after 21s
+
+Still reading track 18 - the read for LSN 256540 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256540 has not returned after 20s
+
+Track 18 - the read for LSN 256540 returned after 24s
+
+Still reading track 18 - the read for LSN 256559 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256559 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256559 has not returned after 30s
+
+Track 18 - the read for LSN 256559 returned after 33s
+
+Still reading track 18 - the read for LSN 256577 has not returned after 10s
+
+Track 18 - the read for LSN 256577 returned after 18s
+
+Still reading track 18 - the read for LSN 256578 has not returned after 10s
+
+Track 18 - the read for LSN 256578 returned after 15s
+
+Still reading track 18 - the read for LSN 256596 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256596 has not returned after 20s
+
+Track 18 - the read for LSN 256596 returned after 24s
+
+Still reading track 18 - the read for LSN 256615 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256615 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256615 has not returned after 30s
+
+Track 18 - the read for LSN 256615 returned after 37s
+
+Still reading track 18 - the read for LSN 256671 has not returned after 10s
+
+Track 18 - the read for LSN 256671 returned after 18s
+
+Still reading track 18 - the read for LSN 256689 has not returned after 10s
+
+Track 18 - the read for LSN 256689 returned after 15s
+
+Still reading track 18 - the read for LSN 256690 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256690 has not returned after 20s
+
+Track 18 - the read for LSN 256690 returned after 24s
+
+Still reading track 18 - the read for LSN 256708 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256708 has not returned after 20s
+
+Track 18 - the read for LSN 256708 returned after 27s
+
+Still reading track 18 - the read for LSN 256727 has not returned after 10s
+
+Track 18 - the read for LSN 256727 returned after 18s
+
+Still reading track 18 - the read for LSN 256745 has not returned after 10s
+
+Track 18 - the read for LSN 256745 returned after 12s
+
+Still reading track 18 - the read for LSN 256746 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256746 has not returned after 20s
+
+Track 18 - the read for LSN 256746 returned after 29s
+
+Still reading track 18 - the read for LSN 256764 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256764 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256764 has not returned after 30s
+
+Track 18 - the read for LSN 256764 returned after 30s
+
+Still reading track 18 - the read for LSN 256765 has not returned after 10s
+
+Track 18 - the read for LSN 256765 returned after 14s
+
+Still reading track 18 - the read for LSN 256783 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256783 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256783 has not returned after 30s
+
+Track 18 - the read for LSN 256783 returned after 36s
+
+Still reading track 18 - the read for LSN 256802 has not returned after 10s
+
+Track 18 - the read for LSN 256802 returned after 12s
+
+Still reading track 18 - the read for LSN 256820 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256820 has not returned after 20s
+
+Track 18 - the read for LSN 256820 returned after 21s
+
+Still reading track 18 - the read for LSN 256821 has not returned after 10s
+
+Track 18 - the read for LSN 256821 returned after 18s
+
+Still reading track 18 - the read for LSN 256839 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256839 has not returned after 20s
+
+Still reading track 18 - the read for LSN 256839 has not returned after 30s
+
+Track 18 - the read for LSN 256839 returned after 37s
+
+Still reading track 18 - the read for LSN 256877 has not returned after 10s
+
+Track 18 - the read for LSN 256877 returned after 12s
+
+Still reading track 18 - the read for LSN 256914 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256914 has not returned after 20s
+
+Track 18 - the read for LSN 256914 returned after 26s
+
+Still reading track 18 - the read for LSN 256932 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256932 has not returned after 20s
+
+Track 18 - the read for LSN 256932 returned after 25s
+
+Still reading track 18 - the read for LSN 256951 has not returned after 10s
+
+Track 18 - the read for LSN 256951 returned after 12s
+
+Still reading track 18 - the read for LSN 256970 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256970 has not returned after 20s
+
+Track 18 - the read for LSN 256970 returned after 21s
+
+Still reading track 18 - the read for LSN 256988 has not returned after 10s
+
+Track 18 - the read for LSN 256988 returned after 11s
+
+Still reading track 18 - the read for LSN 256989 has not returned after 10s
+
+Still reading track 18 - the read for LSN 256989 has not returned after 20s
+
+Track 18 - the read for LSN 256989 returned after 20s
+
+Still reading track 18 - the read for LSN 257007 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257007 has not returned after 20s
+
+Track 18 - the read for LSN 257007 returned after 23s
+
+Still reading track 18 - the read for LSN 257026 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257026 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257026 has not returned after 30s
+
+Still reading track 18 - the read for LSN 257026 has not returned after 40s
+
+Still reading track 18 - the read for LSN 257026 has not returned after 50s
+
+Track 18 - the read for LSN 257026 returned after 56s
+
+Still reading track 18 - the read for LSN 257044 has not returned after 10s
+
+Track 18 - the read for LSN 257044 returned after 17s
+
+Still reading track 18 - the read for LSN 257045 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257045 has not returned after 20s
+
+Track 18 - the read for LSN 257045 returned after 23s
+
+Still reading track 18 - the read for LSN 257063 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257063 has not returned after 20s
+
+Track 18 - the read for LSN 257063 returned after 22s
+
+Still reading track 18 - the read for LSN 257064 has not returned after 10s
+
+Track 18 - the read for LSN 257064 returned after 14s
+
+Still reading track 18 - the read for LSN 257082 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257082 has not returned after 20s
+
+Track 18 - the read for LSN 257082 returned after 24s
+
+Still reading track 18 - the read for LSN 257101 has not returned after 10s
+
+Track 18 - the read for LSN 257101 returned after 12s
+
+Still reading track 18 - the read for LSN 257138 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257138 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257138 has not returned after 30s
+
+Track 18 - the read for LSN 257138 returned after 30s
+
+Still reading track 18 - the read for LSN 257157 has not returned after 10s
+
+Track 18 - the read for LSN 257157 returned after 15s
+
+Still reading track 18 - the read for LSN 257175 has not returned after 10s
+
+Track 18 - the read for LSN 257175 returned after 18s
+
+Still reading track 18 - the read for LSN 257194 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257194 has not returned after 20s
+
+Track 18 - the read for LSN 257194 returned after 26s
+
+Still reading track 18 - the read for LSN 257213 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257213 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257213 has not returned after 30s
+
+Still reading track 18 - the read for LSN 257213 has not returned after 40s
+
+Track 18 - the read for LSN 257213 returned after 44s
+
+Still reading track 18 - the read for LSN 257231 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257231 has not returned after 20s
+
+Track 18 - the read for LSN 257231 returned after 21s
+
+Still reading track 18 - the read for LSN 257232 has not returned after 10s
+
+Track 18 - the read for LSN 257232 returned after 12s
+
+Still reading track 18 - the read for LSN 257250 has not returned after 10s
+
+Track 18 - the read for LSN 257250 returned after 11s
+
+Still reading track 18 - the read for LSN 257288 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257288 has not returned after 20s
+
+Track 18 - the read for LSN 257288 returned after 20s
+
+Still reading track 18 - the read for LSN 257306 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257306 has not returned after 20s
+
+Track 18 - the read for LSN 257306 returned after 25s
+
+Still reading track 18 - the read for LSN 257325 has not returned after 10s
+
+Track 18 - the read for LSN 257325 returned after 15s
+
+Still reading track 18 - the read for LSN 257344 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257344 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257344 has not returned after 30s
+
+Track 18 - the read for LSN 257344 returned after 30s
+
+Still reading track 18 - the read for LSN 257362 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257362 has not returned after 20s
+
+Track 18 - the read for LSN 257362 returned after 20s
+
+Still reading track 18 - the read for LSN 257400 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257400 has not returned after 20s
+
+Track 18 - the read for LSN 257400 returned after 22s
+
+Still reading track 18 - the read for LSN 257475 has not returned after 10s
+
+Track 18 - the read for LSN 257475 returned after 11s
+
+Still reading track 18 - the read for LSN 257568 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257568 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257568 has not returned after 30s
+
+Track 18 - the read for LSN 257568 returned after 33s
+
+Still reading track 18 - the read for LSN 257587 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257587 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257587 has not returned after 30s
+
+Track 18 - the read for LSN 257587 returned after 33s
+
+Still reading track 18 - the read for LSN 257606 has not returned after 10s
+
+Track 18 - the read for LSN 257606 returned after 15s
+
+Still reading track 18 - the read for LSN 257662 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257662 has not returned after 20s
+
+Track 18 - the read for LSN 257662 returned after 30s
+
+Still reading track 18 - the read for LSN 257680 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257680 has not returned after 20s
+
+Track 18 - the read for LSN 257680 returned after 23s
+
+Still reading track 18 - the read for LSN 257681 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257681 has not returned after 20s
+
+Track 18 - the read for LSN 257681 returned after 22s
+
+Still reading track 18 - the read for LSN 257699 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257699 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257699 has not returned after 30s
+
+Track 18 - the read for LSN 257699 returned after 31s
+
+Still reading track 18 - the read for LSN 257718 has not returned after 10s
+
+Track 18 - the read for LSN 257718 returned after 19s
+
+Still reading track 18 - the read for LSN 257736 has not returned after 10s
+
+Track 18 - the read for LSN 257736 returned after 14s
+
+Still reading track 18 - the read for LSN 257737 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257737 has not returned after 20s
+
+Track 18 - the read for LSN 257737 returned after 26s
+
+Still reading track 18 - the read for LSN 257755 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257755 has not returned after 20s
+
+Track 18 - the read for LSN 257755 returned after 21s
+
+Still reading track 18 - the read for LSN 257756 has not returned after 10s
+
+Track 18 - the read for LSN 257756 returned after 15s
+
+Still reading track 18 - the read for LSN 257774 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257774 has not returned after 20s
+
+Track 18 - the read for LSN 257774 returned after 30s
+
+Still reading track 18 - the read for LSN 257793 has not returned after 10s
+
+Track 18 - the read for LSN 257793 returned after 18s
+
+Still reading track 18 - the read for LSN 257867 has not returned after 10s
+
+Track 18 - the read for LSN 257867 returned after 15s
+
+Still reading track 18 - the read for LSN 257868 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257868 has not returned after 20s
+
+Track 18 - the read for LSN 257868 returned after 20s
+
+Still reading track 18 - the read for LSN 257886 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257886 has not returned after 20s
+
+Track 18 - the read for LSN 257886 returned after 25s
+
+Still reading track 18 - the read for LSN 257924 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257924 has not returned after 20s
+
+Track 18 - the read for LSN 257924 returned after 30s
+
+Still reading track 18 - the read for LSN 257942 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257942 has not returned after 20s
+
+Track 18 - the read for LSN 257942 returned after 23s
+
+Still reading track 18 - the read for LSN 257943 has not returned after 10s
+
+Track 18 - the read for LSN 257943 returned after 17s
+
+Still reading track 18 - the read for LSN 257961 has not returned after 10s
+
+Track 18 - the read for LSN 257961 returned after 18s
+
+Still reading track 18 - the read for LSN 257980 has not returned after 10s
+
+Still reading track 18 - the read for LSN 257980 has not returned after 20s
+
+Still reading track 18 - the read for LSN 257980 has not returned after 30s
+
+Track 18 - the read for LSN 257980 returned after 36s
+
+Still reading track 18 - the read for LSN 258111 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258111 has not returned after 20s
+
+Track 18 - the read for LSN 258111 returned after 27s
+
+Still reading track 18 - the read for LSN 258130 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258130 has not returned after 20s
+
+Track 18 - the read for LSN 258130 returned after 23s
+
+Still reading track 18 - the read for LSN 258148 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258148 has not returned after 20s
+
+Still reading track 18 - the read for LSN 258148 has not returned after 30s
+
+Track 18 - the read for LSN 258148 returned after 33s
+
+Still reading track 18 - the read for LSN 258167 has not returned after 10s
+
+Still reading track 18 - the read for LSN 258167 has not returned after 20s
+
+Track 18 - the read for LSN 258167 returned after 26s
+
+Still reading track 18 - the read for LSN 258204 has not returned after 10s
+
+Track 18 - the read for LSN 258204 returned after 18s
+
+Still reading track 18 - the read for LSN 258224 has not returned after 10s
+
+Track 18 - the read for LSN 258224 returned after 11s
+
+Repeating ripping (0 out of 2 matches for current checksum A2889B45)
+
+Still reading track 18 - the read for LSN 242959 has not returned after 10s
+
+Track 18 - the read for LSN 242959 returned after 11s
+
+Still reading track 18 - the read for LSN 243966 has not returned after 10s
+
+Track 18 - the read for LSN 243966 returned after 11s
+
+Still reading track 18 - the read for LSN 243984 has not returned after 10s
+
+Track 18 - the read for LSN 243984 returned after 13s
+
+Still reading track 18 - the read for LSN 244002 has not returned after 10s
+
+Track 18 - the read for LSN 244002 returned after 11s
+
+Still reading track 18 - the read for LSN 244039 has not returned after 10s
+
+Track 18 - the read for LSN 244039 returned after 15s
+
+Still reading track 18 - the read for LSN 244094 has not returned after 10s
+
+Track 18 - the read for LSN 244094 returned after 15s
+
+Still reading track 18 - the read for LSN 244112 has not returned after 10s
+
+Track 18 - the read for LSN 244112 returned after 18s
+
+Still reading track 18 - the read for LSN 244131 has not returned after 10s
+
+Track 18 - the read for LSN 244131 returned after 10s
+
+Still reading track 18 - the read for LSN 244222 has not returned after 10s
+
+Still reading track 18 - the read for LSN 244222 has not returned after 20s
+
+Track 18 - the read for LSN 244222 returned after 21s
+
+Still reading track 18 - the read for LSN 244240 has not returned after 10s
+
+Track 18 - the read for LSN 244240 returned after 12s
+
+Still reading track 18 - the read for LSN 244259 has not returned after 10s
+
+Track 18 - the read for LSN 244259 returned after 11s
+
+Still reading track 18 - the read for LSN 244277 has not returned after 10s
+
+Track 18 - the read for LSN 244277 returned after 18s
+
+Still reading track 18 - the read for LSN 244314 has not returned after 10s
+
+Track 18 - the read for LSN 244314 returned after 12s
+
+Still reading track 18 - the read for LSN 244332 has not returned after 10s
+
+Track 18 - the read for LSN 244332 returned after 16s
+
+Still reading track 18 - the read for LSN 244350 has not returned after 10s
+
+Still reading track 18 - the read for LSN 244350 has not returned after 20s
+
+Track 18 - the read for LSN 244350 returned after 21s
+
+Still reading track 18 - the read for LSN 244387 has not returned after 10s
+
+Still reading track 18 - the read for LSN 244387 has not returned after 20s
+
+Still reading track 18 - the read for LSN 244387 has not returned after 30s
+
+Track 18 - the read for LSN 244387 returned after 31s
+
+Still reading track 18 - the read for LSN 244588 has not returned after 10s
+
+Track 18 - the read for LSN 244588 returned after 10s
+
+Still reading track 18 - the read for LSN 244625 has not returned after 10s
+
+Track 18 - the read for LSN 244625 returned after 17s
+
+Still reading track 18 - the read for LSN 245212 has not returned after 10s
+
+Track 18 - the read for LSN 245212 returned after 15s
+
+Still reading track 18 - the read for LSN 245597 has not returned after 10s
+
+Track 18 - the read for LSN 245597 returned after 10s
+
+Still reading track 18 - the read for LSN 245615 has not returned after 10s
+
+Track 18 - the read for LSN 245615 returned after 15s
+
+Still reading track 18 - the read for LSN 245616 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245616 has not returned after 20s
+
+Track 18 - the read for LSN 245616 returned after 28s
+
+Still reading track 18 - the read for LSN 245652 has not returned after 10s
+
+Track 18 - the read for LSN 245652 returned after 10s
+
+Still reading track 18 - the read for LSN 245671 has not returned after 10s
+
+Track 18 - the read for LSN 245671 returned after 12s
+
+Still reading track 18 - the read for LSN 245708 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245708 has not returned after 20s
+
+Track 18 - the read for LSN 245708 returned after 22s
+
+Still reading track 18 - the read for LSN 245726 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245726 has not returned after 20s
+
+Track 18 - the read for LSN 245726 returned after 22s
+
+Still reading track 18 - the read for LSN 245781 has not returned after 10s
+
+Track 18 - the read for LSN 245781 returned after 14s
+
+Still reading track 18 - the read for LSN 245836 has not returned after 10s
+
+Track 18 - the read for LSN 245836 returned after 15s
+
+Still reading track 18 - the read for LSN 245873 has not returned after 10s
+
+Track 18 - the read for LSN 245873 returned after 12s
+
+Still reading track 18 - the read for LSN 245928 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245928 has not returned after 20s
+
+Track 18 - the read for LSN 245928 returned after 21s
+
+Still reading track 18 - the read for LSN 245964 has not returned after 10s
+
+Track 18 - the read for LSN 245964 returned after 18s
+
+Still reading track 18 - the read for LSN 245965 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245965 has not returned after 20s
+
+Track 18 - the read for LSN 245965 returned after 24s
+
+Still reading track 18 - the read for LSN 245983 has not returned after 10s
+
+Still reading track 18 - the read for LSN 245983 has not returned after 20s
+
+Still reading track 18 - the read for LSN 245983 has not returned after 30s
+
+Still reading track 18 - the read for LSN 245983 has not returned after 40s
+
+Track 18 - the read for LSN 245983 returned after 40s
+
+Still reading track 18 - the read for LSN 246020 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246020 has not returned after 20s
+
+Track 18 - the read for LSN 246020 returned after 27s
+
+Still reading track 18 - the read for LSN 246038 has not returned after 10s
+
+Track 18 - the read for LSN 246038 returned after 19s
+
+Still reading track 18 - the read for LSN 246057 has not returned after 10s
+
+Track 18 - the read for LSN 246057 returned after 12s
+
+Still reading track 18 - the read for LSN 246075 has not returned after 10s
+
+Track 18 - the read for LSN 246075 returned after 15s
+
+Still reading track 18 - the read for LSN 246093 has not returned after 10s
+
+Track 18 - the read for LSN 246093 returned after 15s
+
+Still reading track 18 - the read for LSN 246111 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246111 has not returned after 20s
+
+Still reading track 18 - the read for LSN 246111 has not returned after 30s
+
+Track 18 - the read for LSN 246111 returned after 30s
+
+Still reading track 18 - the read for LSN 246112 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246112 has not returned after 20s
+
+Track 18 - the read for LSN 246112 returned after 27s
+
+Still reading track 18 - the read for LSN 246148 has not returned after 10s
+
+Still reading track 18 - the read for LSN 246148 has not returned after 20s
+
+Track 18 - the read for LSN 246148 returned after 24s
+
+Still reading track 18 - the read for LSN 246166 has not returned after 10s
+
+Track 18 - the read for LSN 246166 returned after 12s
+
+Still reading track 18 - the read for LSN 246222 has not returned after 10s
+
+Track 18 - the read for LSN 246222 returned after 18s
+
+Still reading track 18 - the read for LSN 247049 has not returned after 10s
+
+Still reading track 18 - the read for LSN 247049 has not returned after 20s

@@ -1,0 +1,25 @@
+PLATTERPUS MORNING COLLECTION
+collected:       20260827T013150Z
+host:            Linux P-RJMWin11-PC1.home.local 7.2.0-ogc6.1.fc44.x86_64 #1 SMP PREEMPT_DYNAMIC Mon Aug 24 03:42:13 UTC 2026 x86_64 GNU/Linux
+appimage:        /home/rmccann/Applications/platterpus-x86_64.AppImage
+rip search:      /home/rmccann/Music
+rip artifacts:   0
+album folders:   0
+app bundles:     1
+app logs:        1
+files staged:    8
+audio found:     0  (must be 0)
+problems:        3
+
+NO AUDIO IS PRESENT. Only these suffixes were copied: txt cue md5 json toml md log sha256
+
+--- full file list ---
+     19572  bundles/platterpusbundle20260827t0131450000.tar.gz
+     17432  logs/log.txt
+       576  MANIFEST.txt
+      1562  probes/doctor.txt
+       329  probes/versions.txt
+       468  session/00-summary.txt
+        28  session/01-app-version.txt
+        59  session/02-ripper-version.txt
+       995  session/rigsession-stdout.txt

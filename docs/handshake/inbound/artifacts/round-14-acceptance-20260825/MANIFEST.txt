@@ -1,0 +1,208 @@
+PLATTERPUS EVIDENCE BUNDLE
+==========================
+
+created            2026-08-25T21:57:21+00:00
+platterpus         0.6.26
+rip outcome        test script run
+album folder       (none)
+
+Raw facts this outcome was derived from (a label can be wrong; these
+are what it was computed from):
+  results                blocked=0, error=0, fail=17, pass=201, skipped=0
+  run folder             /home/rmccann/.local/share/platterpus/uiscript/20260825T215721+0000
+  steps                  218
+
+INCLUDED (174 file(s))
+----------------------------------------
+  applog/log.txt                                            23907 B
+  scriptrun/aftercancel-1-QMenu.png                           726 B
+  scriptrun/aftercancel-10-Run-test-script.png             107766 B
+  scriptrun/aftercancel-11-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/aftercancel-12-QFrame.png                         100 B
+  scriptrun/aftercancel-13-QMenu.png                         9692 B
+  scriptrun/aftercancel-14-QFrame.png                         100 B
+  scriptrun/aftercancel-15-QMenu.png                         3300 B
+  scriptrun/aftercancel-2-QMenu.png                         12543 B
+  scriptrun/aftercancel-3-Platterpus-0.6.26.png            140376 B
+  scriptrun/aftercancel-4-Pick-a-MusicBrainz-release.png      47191 B
+  scriptrun/aftercancel-5-Settings.png                     146800 B
+  scriptrun/aftercancel-6-QFrame.png                          100 B
+  scriptrun/aftercancel-7-QFrame.png                          100 B
+  scriptrun/aftercancel-8-QFrame.png                          100 B
+  scriptrun/aftercancel-9-QFrame.png                          100 B
+  scriptrun/aftercancel.png                                 25325 B
+  scriptrun/afterfullrip-1-QMenu.png                          726 B
+  scriptrun/afterfullrip-10-Run-test-script.png            120672 B
+  scriptrun/afterfullrip-11-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/afterfullrip-12-QFrame.png                        100 B
+  scriptrun/afterfullrip-13-QMenu.png                        9692 B
+  scriptrun/afterfullrip-14-QFrame.png                        100 B
+  scriptrun/afterfullrip-15-QMenu.png                        3300 B
+  scriptrun/afterfullrip-2-QMenu.png                        12543 B
+  scriptrun/afterfullrip-3-Platterpus-0.6.26.png           106266 B
+  scriptrun/afterfullrip-4-Pick-a-MusicBrainz-release.png      47191 B
+  scriptrun/afterfullrip-5-Settings.png                    146800 B
+  scriptrun/afterfullrip-6-QFrame.png                         100 B
+  scriptrun/afterfullrip-7-QFrame.png                         100 B
+  scriptrun/afterfullrip-8-QFrame.png                         100 B
+  scriptrun/afterfullrip-9-QFrame.png                         100 B
+  scriptrun/afterfullrip.png                                28056 B
+  scriptrun/aftermp3-1-QMenu.png                            12543 B
+  scriptrun/aftermp3-10-Run-test-script.png                105231 B
+  scriptrun/aftermp3-11-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/aftermp3-12-QFrame.png                            100 B
+  scriptrun/aftermp3-13-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/aftermp3-14-QMenu.png                            9692 B
+  scriptrun/aftermp3-15-QFrame.png                            100 B
+  scriptrun/aftermp3-16-QMenu.png                            3300 B
+  scriptrun/aftermp3-2-Platterpus-0.6.26.png               128328 B
+  scriptrun/aftermp3-3-Pick-a-MusicBrainz-release.png       47191 B
+  scriptrun/aftermp3-4-Settings.png                        146800 B
+  scriptrun/aftermp3-5-QFrame.png                             100 B
+  scriptrun/aftermp3-6-Album-already-ripped.png             25325 B
+  scriptrun/aftermp3-7-QFrame.png                             100 B
+  scriptrun/aftermp3-8-QFrame.png                             100 B
+  scriptrun/aftermp3-9-QFrame.png                             100 B
+  scriptrun/aftermp3.png                                      726 B
+  scriptrun/afteroverwrite-1-QMenu.png                      12543 B
+  scriptrun/afteroverwrite-10-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/afteroverwrite-11-QFrame.png                      100 B
+  scriptrun/afteroverwrite-12-QMenu.png                      9692 B
+  scriptrun/afteroverwrite-13-QFrame.png                      100 B
+  scriptrun/afteroverwrite-14-QMenu.png                      3300 B
+  scriptrun/afteroverwrite-2-Platterpus-0.6.26.png         137427 B
+  scriptrun/afteroverwrite-3-Pick-a-MusicBrainz-release.png      47191 B
+  scriptrun/afteroverwrite-4-Settings.png                  146800 B
+  scriptrun/afteroverwrite-5-QFrame.png                       100 B
+  scriptrun/afteroverwrite-6-QFrame.png                       100 B
+  scriptrun/afteroverwrite-7-QFrame.png                       100 B
+  scriptrun/afteroverwrite-8-QFrame.png                       100 B
+  scriptrun/afteroverwrite-9-Run-test-script.png           106533 B
+  scriptrun/afteroverwrite.png                                726 B
+  scriptrun/afterrecovery-1-QMenu.png                       12543 B
+  scriptrun/afterrecovery-10-Run-test-script.png           105906 B
+  scriptrun/afterrecovery-11-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/afterrecovery-12-QFrame.png                       100 B
+  scriptrun/afterrecovery-13-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/afterrecovery-14-QMenu.png                       9692 B
+  scriptrun/afterrecovery-15-QFrame.png                       100 B
+  scriptrun/afterrecovery-16-QMenu.png                       3300 B
+  scriptrun/afterrecovery-2-Platterpus-0.6.26.png          127861 B
+  scriptrun/afterrecovery-3-Pick-a-MusicBrainz-release.png      47191 B
+  scriptrun/afterrecovery-4-Settings.png                   146800 B
+  scriptrun/afterrecovery-5-QFrame.png                        100 B
+  scriptrun/afterrecovery-6-Album-already-ripped.png        25325 B
+  scriptrun/afterrecovery-7-QFrame.png                        100 B
+  scriptrun/afterrecovery-8-QFrame.png                        100 B
+  scriptrun/afterrecovery-9-QFrame.png                        100 B
+  scriptrun/afterrecovery.png                                 726 B
+  scriptrun/aftersecurereread-1-QMenu.png                     726 B
+  scriptrun/aftersecurereread-10-QFrame.png                   100 B
+  scriptrun/aftersecurereread-11-Run-test-script.png       105888 B
+  scriptrun/aftersecurereread-12-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/aftersecurereread-13-QFrame.png                   100 B
+  scriptrun/aftersecurereread-14-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/aftersecurereread-15-QMenu.png                   9692 B
+  scriptrun/aftersecurereread-16-QFrame.png                   100 B
+  scriptrun/aftersecurereread-17-QMenu.png                   3300 B
+  scriptrun/aftersecurereread-2-QMenu.png                   12543 B
+  scriptrun/aftersecurereread-3-Platterpus-0.6.26.png      128699 B
+  scriptrun/aftersecurereread-4-Pick-a-MusicBrainz-release.png      47191 B
+  scriptrun/aftersecurereread-5-Settings.png               146800 B
+  scriptrun/aftersecurereread-6-QFrame.png                    100 B
+  scriptrun/aftersecurereread-7-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/aftersecurereread-8-QFrame.png                    100 B
+  scriptrun/aftersecurereread-9-QFrame.png                    100 B
+  scriptrun/aftersecurereread.png                           25325 B
+  scriptrun/afterwav-1-QMenu.png                            12543 B
+  scriptrun/afterwav-10-Run-test-script.png                105129 B
+  scriptrun/afterwav-11-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/afterwav-12-QFrame.png                            100 B
+  scriptrun/afterwav-13-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/afterwav-14-QMenu.png                            9692 B
+  scriptrun/afterwav-15-QFrame.png                            100 B
+  scriptrun/afterwav-16-QMenu.png                            3300 B
+  scriptrun/afterwav-2-Platterpus-0.6.26.png               128569 B
+  scriptrun/afterwav-3-Pick-a-MusicBrainz-release.png       47191 B
+  scriptrun/afterwav-4-Settings.png                        146800 B
+  scriptrun/afterwav-5-QFrame.png                             100 B
+  scriptrun/afterwav-6-Album-already-ripped.png             25325 B
+  scriptrun/afterwav-7-QFrame.png                             100 B
+  scriptrun/afterwav-8-QFrame.png                             100 B
+  scriptrun/afterwav-9-QFrame.png                             100 B
+  scriptrun/afterwav.png                                      726 B
+  scriptrun/dialogdependencies-1-QMenu.png                    726 B
+  scriptrun/dialogdependencies-10-Run-test-script.png      118268 B
+  scriptrun/dialogdependencies-11-QFrame.png                  100 B
+  scriptrun/dialogdependencies-12-QMenu.png                  9692 B
+  scriptrun/dialogdependencies-13-QFrame.png                  100 B
+  scriptrun/dialogdependencies-14-QMenu.png                  3300 B
+  scriptrun/dialogdependencies-2-QMenu.png                  12543 B
+  scriptrun/dialogdependencies-3-Platterpus-0.6.26.png      66239 B
+  scriptrun/dialogdependencies-4-Settings.png              146800 B
+  scriptrun/dialogdependencies-5-QFrame.png                   100 B
+  scriptrun/dialogdependencies-6-Dependency-check-complete.png      29052 B
+  scriptrun/dialogdependencies-7-QFrame.png                   100 B
+  scriptrun/dialogdependencies-8-QFrame.png                   100 B
+  scriptrun/dialogdependencies-9-QFrame.png                   100 B
+  scriptrun/dialogdependencies.png                          47610 B
+  scriptrun/dialogdiagnostics-1-QMenu.png                     726 B
+  scriptrun/dialogdiagnostics-10-Pick-a-MusicBrainz-release.png      47488 B
+  scriptrun/dialogdiagnostics-11-QFrame.png                   100 B
+  scriptrun/dialogdiagnostics-12-QMenu.png                   9692 B
+  scriptrun/dialogdiagnostics-13-QFrame.png                   100 B
+  scriptrun/dialogdiagnostics-14-QMenu.png                   3300 B
+  scriptrun/dialogdiagnostics-2-QMenu.png                   12543 B
+  scriptrun/dialogdiagnostics-3-Platterpus-0.6.26.png       66239 B
+  scriptrun/dialogdiagnostics-4-Settings.png               146800 B
+  scriptrun/dialogdiagnostics-5-QFrame.png                    100 B
+  scriptrun/dialogdiagnostics-6-QFrame.png                    100 B
+  scriptrun/dialogdiagnostics-7-QFrame.png                    100 B
+  scriptrun/dialogdiagnostics-8-QFrame.png                    100 B
+  scriptrun/dialogdiagnostics-9-Run-test-script.png        107055 B
+  scriptrun/dialogdiagnostics.png                           80427 B
+  scriptrun/dialogdrive-1-QMenu.png                           726 B
+  scriptrun/dialogdrive-2-QMenu.png                         12543 B
+  scriptrun/dialogdrive-3-Platterpus-0.6.26.png             61396 B
+  scriptrun/dialogdrive-4-Run-test-script.png              115948 B
+  scriptrun/dialogdrive-5-QFrame.png                          100 B
+  scriptrun/dialogdrive-6-QMenu.png                          9692 B
+  scriptrun/dialogdrive-7-QMenu.png                          3300 B
+  scriptrun/dialogdrive.png                                 71059 B
+  scriptrun/dialogsettings-1-QMenu.png                        726 B
+  scriptrun/dialogsettings-10-QMenu.png                      9692 B
+  scriptrun/dialogsettings-11-QFrame.png                      100 B
+  scriptrun/dialogsettings-12-QMenu.png                      3300 B
+  scriptrun/dialogsettings-2-QMenu.png                      12543 B
+  scriptrun/dialogsettings-3-Platterpus-0.6.26.png          65027 B
+  scriptrun/dialogsettings-4-QFrame.png                       100 B
+  scriptrun/dialogsettings-5-QFrame.png                       100 B
+  scriptrun/dialogsettings-6-QFrame.png                       100 B
+  scriptrun/dialogsettings-7-QFrame.png                       100 B
+  scriptrun/dialogsettings-8-Run-test-script.png           117422 B
+  scriptrun/dialogsettings-9-QFrame.png                       100 B
+  scriptrun/dialogsettings.png                             146800 B
+  scriptrun/report.json                                    126475 B
+  scriptrun/rig-check/MANIFEST.txt                          14940 B
+  scriptrun/rig-check/argv-probe-output.txt                   472 B
+  scriptrun/rig-check/argv-probe.json                        1485 B
+  scriptrun/rig-check/ripper-version.txt                       58 B
+  scriptrun/transcript.txt                                  86612 B
+
+NOT INCLUDED (0 file(s))
+----------------------------------------
+  Listed so an absence is visible. A bundle quietly missing an artifact
+  looks exactly like a complete one.
+  (nothing was excluded)
+
+NO AUDIO IS PRESENT — no file of any audio type can enter this archive.
+Everything here passed an allowlist: .cue .json .log .md .md5 .sha256 .toml .txt
+Plus, from this program's own run folder ONLY: .png
+(those are screenshots Platterpus took of its own window. An album folder
+is never judged by that wider rule, because its images are record-label
+artwork.) The per-track CRCs in the logs prove bit-perfection without the
+audio.
+
+Caps in force: 16777216 B per file (head+tail kept, elision
+marked inline), 67108864 B across the whole payload, and the
+newest 20 bundles are kept in the bundles folder.

@@ -1,0 +1,80 @@
+PROVENANCE — rig session 20260917T233651Z, build 3952c03
+========================================================
+
+Handed over by the operator as one tarball. Nothing here was fetched, and
+nothing here was edited.
+
+  bundle    platterpusbundle20260917t233651z.tar.gz
+  sha256    901d6f7e8896ebdf1ed76b0bc091cba059b1b216c8d9830bf0cb7e52f2ae8dac
+  size      3,968,724 bytes
+  entries   14 files, 14 distinct content hashes (no duplicates)
+
+Every file in this directory is byte-identical to a file in that tarball,
+checked by hashing all 14 bundle objects and requiring each filed file to
+match one. The whole inventory is below so an ABSENCE is visible: a
+directory quietly missing an artifact looks exactly like a complete one.
+
+FILED HERE (5)
+--------------
+f3983f37256d80a35c0b0afd12bf4e2a49739f10bbf63383bc659009879fce94        6073  MANIFEST.txt
+                                                                              -> session/MANIFEST.txt
+7df2217d9a3d89b60830cc899a1eb63fc00b7af4c8e99e5ac0099c7b52035e72        1059  diagnostics.txt
+                                                                              -> session/DIAGNOSTICS.txt
+960169b78667781e050fa09a79d419b995c87a712dea193e52efc755a9739ad1       39261  album/Every Breath You Take: The Classics.log
+                                                                              -> rips/whole-disc-fast-verified.log
+de2cd974abcc2a4ee252ba994539ae586421819aee8c33895d3681f2983d6cea        3000  album/Every Breath You Take: The Classics.cue
+                                                                              -> rips/whole-disc-fast-verified.cue
+3320ef24eb1482e1d8b9cc0ccc2b4fcdcb7adb644b39ce828ed28907dccaa8b6        8576  album/Every Breath You Take: The Classics (EAC-compatible).log
+                                                                              -> rips/whole-disc-fast-verified.eac.log
+
+NOT FILED (9), AND WHY
+----------------------
+The album's own name carries U+2236 MODIFIER LETTER COLON where a real
+colon would sit; the three names above are written with a plain colon for
+legibility, and the bundle paths are the U+2236 ones. Renaming a filed
+artifact is safe -- its content is what carries the checksum. The real
+names are in MANIFEST.txt.
+
+9ebac2e7e4a70eb11e60a20a4f17c2bf6a732223a2f79e9ecb363ba0b9a55ffb     3763605  album/...platterpus.json
+    Platterpus's own per-rip report, and 3.7 MB of it. Their artifact, not
+    ours, and the same call as the eight 12 MB records of the 2026-09-17
+    fe4d2c4 session. Every field this session's README quotes from it is
+    cited by its JSON path, and the hash above is what makes the quote
+    checkable against the operator's copy.
+c402027c3d5806fe8f08c4aae179ee8474be3791962f7b577f3ccb129360cdda     2862343  applog/log.txt
+4adc5e97deff8ce2df520c9878a725d21d1eb20b79a33262d46cc23f080a0365     8388496  applog/log.txt.1
+5481a0789277b79bfa88b2ce4f29f491e0ea267145874dd45ddeb522bdfc95a3     8388514  applog/log.txt.2
+62c1e33b697dbebf0db1cae3f9d9fc91e2f378aa9afc95c6570b5adab93bb78c     8388560  applog/log.txt.3
+af3105a618624f84756d0e52ff0bee07d927b106da1722640108241e6b869134     8388526  applog/log.txt.4
+3c513e9611a4b212a9264751335297a7e6c2a8e566f33e0811e17fea8a4eeb06     8388606  applog/log.txt.5
+f951df7602412d7c08d24aa0631d3e57693902cdf189026cd68b47e3c8cb792a     8388566  applog/log.txt.6
+83e8b5ab9f62a3f27a3f2b527890722fd195f0f251c93afd26bb925a5988e6a7     8388551  applog/log.txt.7
+    Platterpus's rolling application log, 66 MB across eight rotations
+    spanning 2026-08-27 .. 2026-09-17. Theirs, and three of the eight
+    carry the bundle's own inline elision marker, so they are a capped
+    view rather than the whole file. The session window is log.txt alone
+    (18:45:25 .. 19:37:15, 23,702 lines dated 2026-09-17).
+
+    TWO FACTS IN THE README COME FROM HERE AND FROM NOWHERE ELSE, so they
+    are quoted with their timestamps:
+      - log.txt.1, 2026-09-17 18:38:19,346 -- `rip_worker` echoing
+        `cyanrip | Retry limit:    3 (per frame, and per whole-track
+        re-read)`, which is the new label arriving in their process.
+      - log.txt, 2026-09-17 19:36:50,838 -- `adapters.rip_backend:
+        cyanrip: /home/rmccann/.local/bin/cyanrip -V`, the spawn path and
+        the version probe, against which our own log's `Invoked as:`
+        records `/usr/local/bin/cyanrip`.
+
+INDEPENDENT CHECK OF THE FILED LOG
+----------------------------------
+Platterpus ran `cyanrip --verify-log` with the binary on the rig and
+recorded `checksum valid` at `/ripper_log_verification`. That is one
+program checking itself. Re-run here against a DIFFERENT build on a
+different machine:
+
+    $ ./build/src/cyanrip --verify-log rips/whole-disc-fast-verified.log
+    Log ".../whole-disc-fast-verified.log" checksum valid.
+    exit 0
+
+Run by cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-g122af59), not by
+3952c03. The filed log is a faithful, unmodified record of the rip.

@@ -1,0 +1,22 @@
+2026-08-25 04:29:59,895 INFO platterpus.app: platterpus 0.6.25 (build 5f374aa) starting; args: --doctor
+2026-08-25 04:29:59,907 WARNING platterpus.config: unknown config keys ignored: ['working_dir']
+2026-08-25 04:29:59,954 INFO platterpus.logging_setup: debug logging disabled
+2026-08-25 04:30:00,029 INFO platterpus.composition: using cyanrip backend (/home/rmccann/.local/bin/cyanrip)
+2026-08-25 04:30:00,307 INFO platterpus.deps.manager: dependency cyanrip build: the Platterpus fork (ok=True)
+2026-08-25 04:30:06,571 INFO platterpus.adapters.ctdb_client: CTDB lookup: http://db.cuetools.net/lookup2.php?version=3&ctdb=1&fuzzy=0&metadata=none&toc=0%3A19850%3A39850%3A59850
+2026-08-25 04:30:06,701 INFO platterpus.adapters.ctdb_client: CTDB has no entry for this TOC (HTTP 404)
+Platterpus 0.6.25 (build 5f374aa) preflight — backend: cyanrip
+
+[✓] Configuration — backend=cyanrip, output=/home/rmccann/Music/rips
+[✓] Output location — writable (/home/rmccann/Music/rips)
+[✓] Dependencies — all 7 dependencies present
+[✓] cyanrip reachable — cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-gd9c058c)
+[✓] cyanrip build — cyanrip 0.9.4-rc2+platterpus.10 (platterpus-fork-gd9c058c) — the Platterpus fork
+[✓] Optical drive detected — 1 drive(s) found
+[✓] Read offset — +667 samples (applied as cyanrip's -s)
+[✓] Drive access — The optical drive is accessible.
+[✓] MusicBrainz reachable — reachable (1 release(s) for the probe disc id)
+[✓] Cover Art Archive reachable — reachable (HTTP 200)
+[✓] CTDB reachable — reachable (not in DB (expected for the probe))
+
+Preflight: 11 OK, 0 warning(s), 0 blocker(s) — ready

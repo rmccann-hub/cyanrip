@@ -1,0 +1,17 @@
+report:      /home/rmccann/Music/rips/The Police/derived wav platterpus-fork-gd9c058c/derived wav platterpus-fork-gd9c058c.platterpus.json
+album dir:   /home/rmccann/Music/rips/The Police/derived wav platterpus-fork-gd9c058c
+modified:    2026-08-25T04:16:04Z
+
+--- directory listing (audio sizes only; no audio is copied) ---
+total 107244
+drwx------. 1 rmccann rmccann      596 Aug 25 00:16 .
+drwxr-xr-x. 1 rmccann rmccann      374 Aug 25 00:17 ..
+-rw-r--r--. 1 rmccann rmccann 22829196 Aug 25 00:16 01 - Roxanne.flac
+-rw-r--r--. 1 rmccann rmccann 34073648 Aug 25 00:16 01 - Roxanne.wav
+-rw-r--r--. 1 rmccann rmccann 20403572 Aug 25 00:16 02 - Can’t Stand Losing You.flac
+-rw-r--r--. 1 rmccann rmccann 31940402 Aug 25 00:16 02 - Can’t Stand Losing You.wav
+-rw-r--r--. 1 rmccann rmccann    72415 Aug 25 00:16 cover.jpg
+-rw-r--r--. 1 rmccann rmccann      668 Aug 25 00:15 derived wav platterpus-fork-gd9c058c.cue
+-rw-r--r--. 1 rmccann rmccann     3279 Aug 25 00:15 derived wav platterpus-fork-gd9c058c (EAC-compatible).log
+-rw-r--r--. 1 rmccann rmccann     8763 Aug 25 00:15 derived wav platterpus-fork-gd9c058c.log
+-rw-r--r--. 1 rmccann rmccann   468181 Aug 25 00:16 derived wav platterpus-fork-gd9c058c.platterpus.json

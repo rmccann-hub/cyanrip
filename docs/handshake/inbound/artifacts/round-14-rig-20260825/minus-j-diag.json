@@ -1,0 +1,62 @@
+{
+  "schema": "cyanrip-diagnostics/3",
+  "cyanrip": {
+    "version": "0.9.4-rc2+platterpus.10",
+    "fork_id": "platterpus-fork",
+    "vcs": "d9c058c",
+    "handshake": "round 14 lap 3 OPEN, verdict HOLD",
+    "released_build_declared": false
+  },
+  "invocation": "/usr/local/bin/cyanrip -j /var/home/rmccann/platterpus-rig-20260825-042959/scratch/diag.json -D /var/home/rmccann/platterpus-rig-20260825-042959/scratch -o flac -N -l 1 -u platterpus/rig-session",
+  "exit_code": 1,
+  "read_stalls": {
+    "watched": true,
+    "threshold_seconds": 10,
+    "count": 0,
+    "longest_seconds": 0,
+    "longest_track": null, "longest_lsn": null
+  },
+  "rip": {
+    "device": "/dev/cdrom",
+    "consumer": "platterpus/rig-session",
+    "consumer_verified": false,
+    "paranoia_level": 3,
+    "frame_retries": 10,
+    "offset_samples": 0,
+    "rip_repeats": 0,
+    "cd_tracks": 14,
+    "tracks": 14,
+    "tracks_completed": 0,
+    "ripping_errors": 0,
+    "interrupted": false,
+    "interrupted_by": null,
+    "track_state": [
+      {"number":1,"cd_track":1,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":2,"cd_track":2,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":3,"cd_track":3,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":4,"cd_track":4,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":5,"cd_track":5,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":6,"cd_track":6,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":7,"cd_track":7,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":8,"cd_track":8,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":9,"cd_track":9,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":10,"cd_track":10,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":11,"cd_track":11,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":12,"cd_track":12,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":13,"cd_track":13,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0},
+      {"number":14,"cd_track":14,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0}
+    ]
+  },
+  "messages_are_classified": false,
+  "messages_note": "cyanrip_log() carries no severity, so no severity is asserted here. Progress lines that were overwritten on the terminal are collapsed to the final state of each line.",
+  "messages_dropped": 0,
+  "messages_scope": "cyanrip_log() only. Output libavfilter writes directly -- the ebur128 loudness blocks -- reaches the logfile and not this array, and is not counted in messages_dropped because it was never seen here.",
+  "messages_complete_within_scope": true,
+  "messages": [
+    "Checking /dev/cdrom for cdrom...",
+    "\t\tCDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM",
+    "Opening drive...",
+    "Offset is unset! To continue with an offset of 0, run with -s 0!"
+  ],
+  "messages_tail": []
+}

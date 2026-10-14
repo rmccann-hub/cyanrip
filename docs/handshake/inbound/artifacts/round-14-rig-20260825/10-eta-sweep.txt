@@ -1,0 +1,12 @@
+    1.17h peak      40 samples   full acceptance∶ angle‹bracket platterpus-fork-gddf7ac3.platterpus.json
+    1.08h peak       8 samples   cancel me platterpus-fork-gddf7ac3.platterpus.json
+    1.08h peak     416 samples   full acceptance∶ angle‹bracket platterpus-fork-gd9c058c.platterpus.json
+    1.17h peak      40 samples   full acceptance∶ angle‹bracket platterpus-fork-gd9c058c.platterpus.json
+    1.08h peak       8 samples   cancel me platterpus-fork-gd9c058c.platterpus.json
+    2.58h peak      76 samples   after cancel platterpus-fork-gd9c058c.platterpus.json
+    2.25h peak      56 samples   derived mp3 platterpus-fork-gd9c058c.platterpus.json
+    1.17h peak      40 samples   derived wavpack platterpus-fork-gd9c058c.platterpus.json
+    1.17h peak      39 samples   derived wav platterpus-fork-gd9c058c.platterpus.json
+
+reports with an ETA trace: 9
+absurd (>24h) peaks: 0  <-- must be 0 from v0.6.4b7 on
