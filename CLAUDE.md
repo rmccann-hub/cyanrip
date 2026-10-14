@@ -1181,6 +1181,65 @@ History stays as it is."*
   fails on a home path or a `uname` hostname in any lap or evidence file
   added since the rule; everything older is history and is left as it is.
 
+## Reporting to the operator
+
+The operator's rule of 2026-10-14, items 2 to 4 of their message, word for
+word.
+
+2. DIAGNOSTICS IN EVERY LAP. From your next lap on, end every lap with a "## Diagnostics"
+   section: these eight keys, in this order, one line each, as NOTE statements in your
+   lap-statement language. Write "none" where nothing applies. Facts carry a commit, file:line,
+   run or command, as everywhere else.
+   D1 Instructions: anything in HR-2, HR-2.1, the protocol or an operator message that didn't
+      match your tree or didn't work as written since your last lap, and what you did instead.
+   D2 Defects: defects found and fixed since your last lap, each with its commit, and whether a
+      test now holds it.
+   D3 Environment: what got in the way (pushes, the git proxy, branch rules, hooks, disk,
+      timeouts, permission prompts, the stop hook) and how you got past it.
+   D4 CI: runs since your last lap, failures, re-runs and their causes.
+   D5 Sizes: checkout MB at your default branch's tip; evidence branch commits and bytes;
+      manifest rows.
+   D6 Time: roughly how long this lap's work took, and what it waited on.
+   D7 Versions: your git version, and the tool versions your gates ran.
+   D8 Questions: anything you need from the operator, or none.
+
+3. ROUND SUMMARY IN YOUR LAST LAP. Your last lap of each round, round 33 included, carries a
+   "## Round summary" section before its Diagnostics, short and complete, under these headings:
+   1. Timeline: the round's steps, with PR, commit or lap, when, and how long each took.
+   2. Instructions that were wrong or incomplete, what was true, and what you did instead.
+   3. Defects found, with fixes and commits, and whether a test now holds each.
+   4. Measurements, before and after, and how each was measured.
+   5. Environment limits, and how you got past them.
+   6. What should become a general rule, with exact wording where you have it.
+   7. What you'd do differently, and what's left open, with who owns each.
+   It's read by the claude-code-skills session, which keeps the standard and skills you work
+   under. Keep notes as the round goes so it's quick to write.
+
+4. A HANDOFF PROMPT AT THE END OF EVERY REPLY. Whenever you release a lap, push to evidence,
+   merge a pull request the other side needs, or need something from anyone, end your reply to
+   me with this block, filled in, and nothing after it. I copy it as-is to the other session
+   and to the claude-code-skills session. Keep it to these lines:
+
+   HANDOFF from <platterpus|fork>, <UTC time>
+   DONE: <one line: what happened>
+   READ: <repo> <branch> <path, PR or evidence commit> at <commit>
+   NEXT: <one line: what the reader should do now, or "nothing, for information">
+   ASK: <a question for the operator, or none>
+
+   If a reply needs no handoff, end it with: HANDOFF: none
+
+**How the two sections are written so both lap checkers read them**, checked
+2026-10-14 against ours at `b20eb2d` and Platterpus's `scripts/lap_language.py`
+at `platterpus@37826a5f`, on our round 33 lap 1 with each shape appended. Every
+line after `LSL:` must be a statement, a field, a continuation or a `## `
+heading, so prose, bullet lists and `###` subheadings are refused (`LSL.syntax`,
+by both). So each key is one NOTE whose text opens with it (`S24 NOTE: D1
+Instructions: none.`), numbered on from the lap's last statement; the summary's
+seven headings are `## 1. Timeline` to `## 7. …`, with NOTEs under each; and a
+fact goes in an `evidence:` field under its NOTE, which both checkers resolve (a
+missing path is refused as `LSL.4` by both). `## Diagnostics` may follow
+`## Verdict`: neither checker requires the verdict last.
+
 ## Run evidence lives on the `evidence` branch (HR-2)
 
 HR-2 is `PROTOCOL.md` v9 §17, the operator's agreed text of 2026-10-14: what
