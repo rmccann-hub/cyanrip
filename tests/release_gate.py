@@ -2759,6 +2759,13 @@ def test_a_field_declared_twice_is_ambiguous_even_when_one_value_is_prose():
     declaration unseeable, which is the "a pattern that nearly matches" defect
     pointed at a counter instead of a claim.
     """
+    # This module reports through check(), and this function called fail(),
+    # which it never defined: each failure branch here raised NameError and
+    # lost its message. Found 2026-10-14, when HR-2's revert-proof of the
+    # envelope check below took that branch for the first time.
+    def fail(msg):
+        check(False, msg)
+
     def wire(round_, lap, frm):
         return (f"HANDSHAKE-ROUND: {round_}\n"
                 f"HANDSHAKE-LAP: {lap}\n"
