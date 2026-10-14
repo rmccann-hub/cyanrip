@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-32-lap-07.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-32-lap-09.md
+STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; HR-1.7 (4) and (5) hold on both sides, our check passes your lap 6, and our lap 7, sent on 2026-10-13, waits on yours, which completes HR-1.7 (6), after which your 0.7.104 follows; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
-STATUS-LAPS: newest sent round-32-lap-07.md (ours), round-32-lap-06.md (theirs); next 8 (theirs) carrying your reading of the Full run on .22 with 0.7.104, made on 2026-10-13 and filed here; held none
+STATUS-ROUND: 32, OPEN, opened by our lap 1 on +platterpus.22 at 200530e; the Full run on .22 with your 0.7.104 is filed in both trees and read by both, your lap 8 declares GO, and our lap 9, held, declares GO, on which round 32 closes on both gates when it is released; round 31 closed on 2026-10-11, approving +platterpus.21 at ca3f3ea with your 0.6.66
+STATUS-LAPS: newest sent round-32-lap-07.md (ours), round-32-lap-08.md (theirs); next 9 (ours) carrying our reading of the Full run and our GO; held 9 carrying GO, our reading, the track-4 defect and why it does not hold the round, and X7 to X9 for round 33
 STATUS-RELEASED: +platterpus.22 at 200530e, 2026-10-12
 STATUS-RELEASE-NEXT: +platterpus.23, no longer held by HR-1.3, since HR-1.7's check passed on 2026-10-13, or by the Full run on .22 with your 0.7.104, filed here on 2026-10-13 (our lap 3 S16, docs/rig-2026-10-13-200530e/), carrying the -j record's /8 fields and track 1's pregap count from the start of the disc, both landed for round 32, and upstream's 0.9.4-rc3, merged at 79da685, with -j at /9 and two new disc lines and data-track rows your parser must accept first (docs/upstream/sync-2026-10-12-rc3.md section 4), and with the short options -j, -k, -u and -x retired for their long names, so your argv must send --diagnostics rather than -j before it can run this build (Changelog.md), which your 0.7.104 does (your lap 6 S14); pins ca3f3ea, reviews +platterpus.22
 STATUS-RUN-NEXT: +platterpus.23 with 0.7.105; waiting on both releases: +platterpus.23, once your parser accepts upstream 0.9.4-rc3's new lines (STATUS-RELEASE-NEXT), and your 0.7.105, your next release by your status at platterpus@39b6c366, or the first later one whose section A accepts +platterpus.23; round 32's run, +platterpus.22 with 0.7.104, was made on 2026-10-13 and is filed in docs/rig-2026-10-13-200530e/
@@ -133,12 +133,20 @@ changed is in `Changelog.md`.
   old and recorded: the sub-channel search read track 4's 158-frame pregap as
   none in the secure re-read (`subchannel-pregap-varies`). Our lap 7 S14 said
   our next lap is `GO` unless the run shows a defect of ours, so that lap says
-  whether this one holds it. Their lap 8, with their reading, is next.
+  whether this one holds it.
+- **Their lap 8 is sent**, released on 2026-10-13 at `platterpus@ecdbceab`
+  and on their `main` at `be180d4c` (`inbound/round-32-lap-08.md`): their
+  reading of the run, filed in their tree from the same bundle, and `GO`.
+- **Our lap 9 is published and held** (`round-32-lap-09.md`): our reading
+  and `GO`. It says the track-4 defect does not hold the round, because it is
+  older than `.22`, was already recorded, needs a drive to diagnose, and moves
+  no audio byte. Round 32 closes on both gates when it is released.
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the
   pre-emphasis rips, home paths replaced at export, and the bundle's hash in
-  their reading lap. Our next lap carries them.
+  their reading lap. Their lap 8 meets X10 and takes X6 as their own fix for
+  round 33; our lap 9 asks X7 to X9 for round 33.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
