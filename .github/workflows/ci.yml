@@ -29,6 +29,11 @@ permissions:
 
 jobs:
   linux:
+    # A release event names a commit this job already tested when it was
+    # pushed to platterpus-fork, and the banner is the commit's, not the
+    # tag's, so a re-run here tests nothing new. Only mingw-release needs the
+    # event, for the binary it attaches.
+    if: github.event_name != 'release'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Four configurations, because a configuration nobody builds is a
@@ -51,12 +56,15 @@ jobs:
             opts: "-Ddeclare_released=true -Db_sanitize=address,undefined -Db_lundef=false"
     name: linux (${{ matrix.name }})
     steps:
-      # The whole history, not checkout's default of one commit: the suite
-      # reads the handshake record and its commits, and `version_matrix` reads
-      # upstream's tree at origin/master. A one-commit clone has neither.
+      # One commit, then the whole history of what the suite reads: the
+      # handshake record and its commits on platterpus-fork, and upstream's
+      # tree at origin/master for `version_matrix`. By explicit refspec, not
+      # `fetch-depth: 0`, which fetches every branch and tag, the evidence
+      # branch among them (PROTOCOL.md v9 §17, HR-2 8b).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
+
+      - name: Fetch the history the suite reads
+        run: .github/fetch-history.sh platterpus-fork master
 
       - name: Install dependencies
         run: |
@@ -77,12 +85,14 @@ jobs:
         run: meson test -C build --print-errorlogs
 
   macos:
+    if: github.event_name != 'release'
     runs-on: macos-26
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
+
+      - name: Fetch the history the suite reads
+        run: .github/fetch-history.sh platterpus-fork master
 
       - name: Install dependencies
         run: |
@@ -98,6 +108,60 @@ jobs:
         run: |
           export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
           meson test -C build --print-errorlogs
+
+  # THE ONE JOB THAT FETCHES THE EVIDENCE BRANCH (PROTOCOL.md v9 §17, HR-2
+  # 8a). It checks every manifest row a change adds against its file at its
+  # commit, fails if a tag reaches the branch, and runs every check that reads
+  # run evidence with CYANRIP_EVIDENCE_REQUIRED=1, so a file it cannot read is
+  # a failure here and not an unprobed 77. Before the move there is no evidence
+  # branch, the files are in the checkout, and each check runs on them there.
+  evidence:
+    if: github.event_name != 'release'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Fetch the history, the tags and the evidence branch
+        run: .github/fetch-history.sh platterpus-fork master --tags --evidence
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build pkg-config ffmpeg \
+            libavcodec-dev libavformat-dev libavfilter-dev libavutil-dev \
+            libswresample-dev libcdio-dev libcdio-cdda-dev libcdio-paranoia-dev \
+            libmusicbrainz5-dev libcurl4-openssl-dev libqrencode-dev
+
+      - name: Build
+        run: |
+          meson setup build
+          ninja -C build
+
+      - name: Manifest rows against their files
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CYANRIP_EVIDENCE_REQUIRED: "1"
+        run: |
+          if [ -n "$BASE" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            python3 tools/evidence.py verify-rows --base "$BASE"
+          else
+            python3 tools/evidence.py verify-rows
+          fi
+
+      - name: No tag reaches the evidence branch
+        env:
+          CYANRIP_EVIDENCE_REQUIRED: "1"
+        run: python3 tools/evidence.py check-tags
+
+      - name: Every check that reads run evidence
+        env:
+          CYANRIP_EVIDENCE_REQUIRED: "1"
+        run: >-
+          meson test -C build --print-errorlogs
+          'Settled facts' cache_table_matches_the_transcripts
+          filed_rig_is_mappable 'No personal details in new evidence'
+          'Evidence readers and fixture copies' 'Evidence tool'
 
   # Builds curl, neon, libmusicbrainz, libqrencode and FFmpeg from source
   # before cyanrip (.github/mingw-build.sh), hence the longer limit.
@@ -147,6 +211,21 @@ jobs:
     permissions:
       contents: write
     steps:
+      # A release can be published on a tag made in the browser at any commit,
+      # and then this is the only job that runs on it. Attach nothing to a
+      # commit that is not on platterpus-fork, the only ref a consumer builds.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Refuse a release whose commit is not on platterpus-fork
+        run: |
+          .github/fetch-history.sh platterpus-fork
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/platterpus-fork; then
+            echo "::error::$GITHUB_SHA, the released commit, is not on platterpus-fork; no binary is attached to it"
+            exit 1
+          fi
+
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: cyanrip-win64
