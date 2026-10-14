@@ -55,8 +55,9 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 # The reference disc, read from the log of the rig session that ripped it
 # rather than typed. A TOC transcribed by hand is a second description of a
-# fact, and this one has fourteen chances to be wrong.
-REF_LOG = ROOT / "docs" / "rig-2026-09-10-ddc1e8c" / "rips" / "secure-reread.log"
+# fact, and this one has fourteen chances to be wrong. A byte-for-byte copy,
+# since HR-2 moved the session itself to the evidence branch.
+REF_LOG = ROOT / "tests" / "fixtures" / "evidence" / "rig-2026-09-10-ddc1e8c" / "rips" / "secure-reread.log"
 SECTOR = 2352
 
 

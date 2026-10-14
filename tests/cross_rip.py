@@ -21,8 +21,11 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TOOL = ROOT / "tools" / "cross-rip.py"
-R0924 = ROOT / "docs" / "rig-2026-09-24-df91ae7" / "rips"
-R0911 = ROOT / "docs" / "rig-2026-09-11-ddc1e8c" / "rips"
+# Byte-for-byte copies of two filed sessions' rips/, made before HR-2 moved
+# run evidence to the evidence branch (tests/fixtures/evidence/SOURCES.tsv).
+EVIDENCE = ROOT / "tests" / "fixtures" / "evidence"
+R0924 = EVIDENCE / "rig-2026-09-24-df91ae7" / "rips"
+R0911 = EVIDENCE / "rig-2026-09-11-ddc1e8c" / "rips"
 failures = 0
 
 
@@ -109,7 +112,7 @@ with tempfile.TemporaryDirectory() as t:
 # line names the EAC CRC32 of a whole-track read, so it is a read; before `.19`
 # it named the value before the final XOR and is not comparable; and one read
 # agrees with nothing.
-R0930 = ROOT / "docs" / "rig-2026-09-30b-174a134" / "rips"
+R0930 = EVIDENCE / "rig-2026-09-30b-174a134" / "rips"
 loop = (R0930 / "secure-reread.log").read_text(encoding="utf-8")
 first = "Repeating ripping (0 out of 2 matches for current checksum B0D122E7)"
 check(loop.count(first) == 1 and loop.startswith(
@@ -145,7 +148,7 @@ with tempfile.TemporaryDirectory() as t:
 # E0036697 makes the case where it does not: E and C tie on the printed passes,
 # E is the newer, so E is kept, and the fifth read was neither. Counting the
 # kept block as that read would report E three times and lose the fifth.
-R1006 = ROOT / "docs" / "rig-2026-10-06-5704062" / "rips"
+R1006 = EVIDENCE / "rig-2026-10-06-5704062" / "rips"
 spool = (R1006 / "secure-reread.log").read_text(encoding="utf-8")
 fourth = "Repeating ripping (0 out of 2 matches for current checksum BBB13C9B)"
 check(spool.count(fourth) == 1 and spool.startswith(

@@ -2788,12 +2788,19 @@ def test_a_field_declared_twice_is_ambiguous_even_when_one_value_is_prose():
 
     # And the exclusion must not depend on the name: the committed envelope is
     # refused on CONTENT, whatever it is called.
+    # A MISSING ENVELOPE FAILS. This was `if envelope.exists():`, so with the
+    # file gone the check passed having checked nothing -- measured on
+    # 2026-10-14 in a clone with HR-2's move simulated, where the whole test
+    # stayed green. HR-2 point 2: a test that passes on nothing when its input
+    # is missing is a defect. The envelope is not run evidence and stays.
     envelope = (HERE.parent / "docs" / "handshake" / "inbound" /
                 "envelope-round-18-lap-02.md")
-    if envelope.exists():
-        if rdg.is_a_lap(envelope.read_text(encoding="utf-8")) is not None:
-            fail("the committed transport envelope is still read as a lap; "
-                 "renaming it is not what excludes it and must not be")
+    if not envelope.exists():
+        fail(f"{envelope.relative_to(HERE.parent)} is missing, so nothing "
+             f"shows the envelope is refused on its content")
+    elif rdg.is_a_lap(envelope.read_text(encoding="utf-8")) is not None:
+        fail("the committed transport envelope is still read as a lap; "
+             "renaming it is not what excludes it and must not be")
 
 
 def test_the_gate_reads_a_twice_declared_lap_as_ambiguous_not_as_the_parseable_one():

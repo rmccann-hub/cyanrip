@@ -66,7 +66,10 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-REFERENCE = ROOT / "docs" / "rig-2026-08-05" / "cyanrip.log"
+# The 2026-08-05 session's log, as a byte-for-byte copy since HR-2 moved the
+# session to the evidence branch. Run A checks this tool out at 5bbb5ae, whose
+# copy still reads docs/rig-2026-08-05/cyanrip.log from that commit.
+REFERENCE = ROOT / "tests" / "fixtures" / "evidence" / "rig-2026-08-05" / "cyanrip.log"
 
 # The two builds whose evidence can close round 16. Both, because
 # `git diff a9aedf0..ddc1e8c -- src/ meson.build` is empty: one program, two
@@ -304,7 +307,7 @@ def clause1(out):
     else:
         note("OK", "clause1/checksums",
              f"all {n - len(unusable)} comparable checksum(s) identical to "
-             f"docs/rig-2026-08-05/cyanrip.log ({len(got)} produced, "
+             f"{REFERENCE.relative_to(ROOT)} ({len(got)} produced, "
              f"{len(want)} on record, {n} overlap). {rose} confidence(s) rose, "
              f"0 fell -- a rise is the database moving and is expected")
 

@@ -46,10 +46,14 @@ arresp_test = executable('arresp_test',
 ## The recorded response is the reference disc's dBAR file, fetched once on
 ## 2026-09-27; the rig log is a real drive's rip of that disc, whose matches the
 ## parse is checked against. So the parser's settled fact no longer needs the
-## network to re-check (docs/KNOWN-ISSUES.md, docs/SETTLED.md).
+## network to re-check (docs/KNOWN-ISSUES.md, docs/SETTLED.md). The log is a
+## byte-for-byte copy of the 2026-09-10 session's, made before HR-2 moved run
+## evidence off this branch: a file the build names must be in the checkout,
+## and `meson setup` failed outright without it (tests/fixtures/evidence/
+## SOURCES.tsv names each copy's source and SHA-256).
 test('AccurateRip response', arresp_test,
      args: [ files('fixtures/accurip-dBAR-014-001d420f-013bb370-e20dfe0e.bin'),
-             files('../docs/rig-2026-09-10-ddc1e8c/rips/secure-reread.log') ])
+             files('fixtures/evidence/rig-2026-09-10-ddc1e8c/rips/secure-reread.log') ])
 
 ## Whether a pre-gap earns an INDEX 00. Header-only, no objects: the case it
 ## exists to get right needs a pre-gap that is signalled AND zero frames long,

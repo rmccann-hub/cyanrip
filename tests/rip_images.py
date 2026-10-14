@@ -4674,12 +4674,25 @@ def sc_runa_block_is_complete():
              "2026-09-11")
 
     # DERIVED, not listed: every repo-relative path the pinned grader resolves
-    # against ROOT. Today that is its clause-1 reference log.
-    grader = ROOT / "tools" / "round16-accept.py"
+    # against ROOT. Today that is its clause-1 reference log. READ AT THE
+    # COMMIT THE BLOCK CHECKS OUT, not from this tree: the block pins its tools,
+    # and the grader here has moved on (HR-2 points it at a fixture copy of the
+    # log, while the one at the pinned commit still reads it under docs/).
+    pin = re.search(r"(?m)^\s*git checkout ([0-9a-f]{7,40}) --", block)
+    if not pin:
+        fail("the Run A block checks nothing out at a commit, so the tools it "
+             "runs are whatever the clone's branch holds")
+        return
+    pin = pin.group(1)
+    grader = subprocess.run(["git", "show", f"{pin}:tools/round16-accept.py"],
+                            cwd=ROOT, capture_output=True, text=True, timeout=60)
+    if grader.returncode != 0:
+        skip(f"runa_block_is_complete: commit {pin}, which the Run A block "
+             f"checks out, is not in this clone, so its grader cannot be read")
     needed = {"tools/rig-round16.sh", "tools/audio-checksums.py",
               "tools/round16-accept.py"}
     for parts in re.findall(r'ROOT\s*/\s*((?:"[^"]+"\s*/\s*)*"[^"]+")',
-                            grader.read_text()):
+                            grader.stdout):
         needed.add("/".join(re.findall(r'"([^"]+)"', parts)))
 
     for path in sorted(needed):
@@ -4690,8 +4703,10 @@ def sc_runa_block_is_complete():
     # And the file must actually be in the tree at the pinned commit, or the
     # block names something the operator cannot fetch.
     for path in sorted(needed):
-        if not (ROOT / path).exists():
-            fail(f"{path} is named in the Run A block but is not in this tree")
+        if subprocess.run(["git", "cat-file", "-e", f"{pin}:{path}"], cwd=ROOT,
+                          capture_output=True, timeout=60).returncode != 0:
+            fail(f"{path} is named in the Run A block but is not in the tree "
+                 f"at {pin}, which it checks out")
 
 
 def sc_verify_log():
@@ -4796,7 +4811,9 @@ def sc_verify_log():
     # file is rejected, and that removing exactly the appended block makes the
     # same bytes verify. The second half is what makes this a finding about the
     # addendum rather than about the log.
-    rig = ROOT / "docs" / "rig-2026-08-04" / "cyanrip.log"
+    # A byte-for-byte copy of the 2026-08-04 session's log, made before HR-2
+    # moved the session to the evidence branch.
+    rig = ROOT / "tests" / "fixtures" / "evidence" / "rig-2026-08-04" / "cyanrip.log"
     if not rig.exists():
         fail("rig log evidence is missing")
     else:
