@@ -193,7 +193,9 @@ rel = "\n".join(ci_jobs.get("mingw-release", []))
 if "merge-base --is-ancestor" not in rel or "origin/platterpus-fork" not in rel:
     fail("ci.yml: mingw-release attaches a binary without checking that the "
          "released commit is on platterpus-fork")
-ev = "\n".join(ci_jobs.get("evidence", []))
+# Comments left out: a step named in a comment is not a step that runs.
+ev = "\n".join(ln for ln in ci_jobs.get("evidence", [])
+               if not ln.lstrip().startswith("#"))
 for need in ("CYANRIP_EVIDENCE_REQUIRED", "verify-rows", "check-tags",
              "'Settled facts'", "cache_table_matches_the_transcripts",
              "filed_rig_is_mappable", "'No personal details in new evidence'"):
