@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc3+platterpus.23 (platterpus-fork-ge20271f)
+cyanrip 0.9.4-rc3+platterpus.23 (platterpus-fork-g3b9d670)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 --consumer platterpus/0.6.21 -D o --diagnostics o/sample.diagnostics.json
-Handshake:      round 32 lap 9 OPEN, verdict GO (draft — lap not released for reading) -- NOT a released build
+Handshake:      round 32 lap 9 closed, verdict GO -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     libcdio CDRWIN (revision 2.1.)
@@ -62,16 +62,6 @@ Gaps:
 
 Tracks:
 
-Repeating ripping (0 out of 199 matches for current checksum D36D9296)
-
-Repeating ripping (1 out of 199 matches for current checksum D36D9296)
-
-Repeating ripping (2 out of 199 matches for current checksum D36D9296)
-
-Repeating ripping (3 out of 199 matches for current checksum D36D9296)
-
-Repeating ripping (4 out of 199 matches for current checksum D36D9296)
-
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -96,7 +86,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          81
+  READ:          8
 
 Ripping errors: 1
 Encoder errors: not applicable; no whole track was encoded
@@ -104,5 +94,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-10-13T23:29:46+00:00
-Log FUN512: .ONw78kgPC56YJ29vsHU5qSYNmsjspj05E0NpY6nmvHUeIvSi_i3rRRmxmZojpW0mqnrjTaAQkfOBs8AqZvxnA
+Ripping finished at 2026-10-14T00:10:22+00:00
+Log FUN512: zCPULgRvxIludJTFNgOQ90i05SEaZyHPZKLOv5YmYkyG22Ab4dRARcUC4dBZ9n0CEQGkP7_o4dUhRe1MJkQlqA
