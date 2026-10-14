@@ -138,13 +138,23 @@ jobs:
           meson setup build
           ninja -C build
 
+      # With --current, a removal's moved folders are also compared with the
+      # evidence commit (HR-2.1 b) on the default branch as it stands: on a
+      # pull request, platterpus-fork as fetched above, which may be newer
+      # than the base the event names; on a push, the tip the push replaced.
       - name: Manifest rows against their files
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT: ${{ github.event_name }}
           CYANRIP_EVIDENCE_REQUIRED: "1"
         run: |
           if [ -n "$BASE" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            python3 tools/evidence.py verify-rows --base "$BASE"
+            CURRENT=$BASE
+            if [ "$EVENT" = pull_request ]; then
+              CURRENT=refs/remotes/origin/platterpus-fork
+            fi
+            python3 tools/evidence.py verify-rows --base "$BASE" \
+              --current "$CURRENT"
           else
             python3 tools/evidence.py verify-rows
           fi

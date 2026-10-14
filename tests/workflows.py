@@ -196,9 +196,12 @@ if "merge-base --is-ancestor" not in rel or "origin/platterpus-fork" not in rel:
 # Comments left out: a step named in a comment is not a step that runs.
 ev = "\n".join(ln for ln in ci_jobs.get("evidence", [])
                if not ln.lstrip().startswith("#"))
-for need in ("CYANRIP_EVIDENCE_REQUIRED", "verify-rows", "check-tags",
-             "'Settled facts'", "cache_table_matches_the_transcripts",
-             "filed_rig_is_mappable", "'No personal details in new evidence'"):
+# --current is HR-2.1 b: a removal's folders compared with the evidence commit
+# on the default branch as it stands, before the removal merges.
+for need in ("CYANRIP_EVIDENCE_REQUIRED", "verify-rows", "--current",
+             "check-tags", "'Settled facts'",
+             "cache_table_matches_the_transcripts", "filed_rig_is_mappable",
+             "'No personal details in new evidence'"):
     if need not in ev:
         fail(f"ci.yml: the evidence job does not run {need}")
 
