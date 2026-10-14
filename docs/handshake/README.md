@@ -196,6 +196,7 @@ so it has to name the laps — it did not, because laps used to be mailed.**
 | What a user installs, and from which commit | `release-manifest.json` |
 | Behaviour that differs from upstream | `README.md`, *Fork differences* |
 | Why the pregap carry looks the way it does | `docs/pregap-carry.md` |
+| Run evidence: rig sessions, their logs, transcripts and diagnostics | `docs/rig-*/` until HR-2's move; then the `evidence` branch, one row per file in `docs/evidence-manifest.tsv`, each run folder's README still here (`PROTOCOL.md` v9 §17) |
 
 ## Where WE read from, in THEIR repository
 
@@ -383,6 +384,25 @@ the cache probe. Then the records a run moves: `KNOWN-ISSUES.md`'s cache table
 (`cache_table_matches_the_transcripts` fails until the row exists), the `-f`
 row and the cache-probe bullet in `CLAUDE.md`, `STATUS.md`'s runs table and
 `STATUS-RUN-NEXT`, and the Changelog.
+
+**After HR-2's move** (`PROTOCOL.md` v9 §17) a run is not filed into this
+checkout: `ingest-bundle.py` refuses `--into docs/rig-*` once
+`docs/evidence-manifest.tsv` exists. File into a staging directory outside the
+checkout and write its README there, then:
+
+```sh
+python3 tools/evidence.py file <staging> --as docs/rig-<date>-<build> \
+        --push https://github.com/rmccann-hub/cyanrip
+python3 tools/read-run.py docs/rig-<date>-<build> --cyanrip build/src/cyanrip
+python3 tools/evidence.py run --folder docs/rig-<date>-<build> -- \
+        python3 tools/cross-rip.py docs/rig-<date>-<build>
+```
+
+The first builds one commit on the evidence branch's tip, pushes it, adds the
+manifest rows and copies the README here, and prints each file's citation as
+`cyanrip@<commit>:<path> sha256 <hex>`. The rows land by pull request before
+any lap cites them (point 10). `read-run.py` and `evidence.py run` read a moved
+run through `tools/evidence.py fetch`'s cache; unfetched is exit 77.
 
 ### After editing `STATUS.md`
 

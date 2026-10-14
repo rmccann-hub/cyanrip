@@ -50,7 +50,8 @@ settled by building 0.9.3 and running it. The measured matrix is
 releasing ours, filing and reading a run (`tools/ingest-bundle.py`,
 `tools/read-run.py`), the quick checks after editing `STATUS.md`, and
 regenerating the golden reference. Read it before rebuilding a step from git
-history.** Rebuilding is how a step gets dropped: the first reading of the
+history.** Run evidence is read and filed through `tools/evidence.py`; see
+*Run evidence lives on the `evidence` branch* below. Rebuilding is how a step gets dropped: the first reading of the
 2026-10-13 run, done by hand, missed a securing pass and a missing pregap
 that `tools/read-run.py` prints.
 
@@ -530,9 +531,12 @@ regardless of who is at the keyboard.
   Expect to need the same escape, and do not read a status correcting a lap as
   sloppiness — it is the mechanism working.
 
-  A cited document must be one we hold. The first status they sent was quoted
-  in round 12 lap 1 and had never been committed — a claim sourced from outside
-  the repository, which is the failure the next rule exists to stop.
+  **A cited document must be one our repository holds: committed on our
+  default branch, or on our evidence branch with a manifest row giving its
+  SHA-256** (HR-2 6c, `PROTOCOL.md` v9 §17; until 2026-10-14 this read *"one
+  we hold"*). The first status they sent was quoted in round 12 lap 1 and had
+  never been committed — a claim sourced from outside the repository, which is
+  the failure the next rule exists to stop.
 - **Answer from the artifact, not from memory of the artifact.** Name the artifact in
   the claim. "EAC reports N" is unfalsifiable; "EAC's *log* reports N, its *cue*
   reports M" is checkable. Both projects have shipped a wrong claim by reasoning about
@@ -1176,6 +1180,46 @@ History stays as it is."*
 - **In a lap, write `~` and `host` yourself.** `tests/personal_details.py`
   fails on a home path or a `uname` hostname in any lap or evidence file
   added since the rule; everything older is history and is left as it is.
+
+## Run evidence lives on the `evidence` branch (HR-2)
+
+HR-2 is `PROTOCOL.md` v9 §17, the operator's agreed text of 2026-10-14: what
+a run produced and nothing on the default branch reads moves, whole run folder
+by whole run folder, to an orphan branch named `evidence` that only ever gains
+commits; `docs/evidence-manifest.tsv` on the default branch has one row per
+file; each run folder's README stays here as its index; laps never move.
+**Until the move lands (HR-2 point 12, after round 33's lap 1 fixes its
+instant), every run folder is still under `docs/` and is read in place.**
+
+- **`tools/evidence.py` is the one place that knows where a file is**: this
+  checkout, then this clone's objects at the manifest's commit, then a separate
+  cache repository that `tools/evidence.py fetch` fills. A file in none of them
+  is *not fetched*, which a check reports as 77, unprobed, and CI's evidence
+  job (`CYANRIP_EVIDENCE_REQUIRED=1`) as a failure. Never fetch evidence into
+  the working clone with `--depth`: it makes a full clone shallow, and a
+  shallow clone turns the lap checker's refusals into warnings.
+- **No new reader of an evidence path.** `tests/evidence_readers.py` counts
+  every mention in `tools/`, `tests/` and CI, and the SETTLED rows that
+  re-check one. A test reads a byte-for-byte copy under
+  `tests/fixtures/evidence/` (`SOURCES.tsv` names each source and its
+  SHA-256), or goes through the tool.
+- **Where hooks do not run** (a session holding several repositories), run the
+  hook's lines yourself, so later fetches leave the branch out (git 2.29+):
+
+      for r in $(git remote); do
+        git config --get-all "remote.$r.fetch" | grep -qx '\^refs/heads/evidence' ||
+          git config --add "remote.$r.fetch" '^refs/heads/evidence'
+      done
+
+- **Filing a run after the move** (point 10): `tools/ingest-bundle.py ARCHIVE
+  --into STAGING` outside the checkout, write the README there, then
+  `tools/evidence.py file STAGING --as docs/rig-NAME --push URL`, a pull
+  request with the rows it adds, and only then the lap. A lap cites the file as
+  `cyanrip@<evidence commit>:<path> sha256 <hex>`, and `tools/lap-statements.py`
+  refuses a citation with no row at the lap's `HANDSHAKE-FROM-COMMIT`.
+- **Exactly one CI job fetches the branch**, ci.yml's `evidence`; every other
+  fetches by refspec through `.github/fetch-history.sh`, never with
+  `fetch-depth: 0`. `tests/workflows.py` checks both.
 
 ## Verifying your own work
 
