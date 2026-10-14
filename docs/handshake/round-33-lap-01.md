@@ -13,20 +13,20 @@ HANDSHAKE-PEER-VERDICT-SOURCE: none — there is nothing of yours to transcribe 
 HANDSHAKE-APP-VERSION: platterpus 0.7.105
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc2+platterpus.22 (platterpus-fork-g200530e)
 HANDSHAKE-PIN: 200530e
-HANDSHAKE-PIN-POLICY: **The newest release of each side when this lap is released** (v8 R8 point 3): our `.22` at `200530e`, `release_seq` 32, and your 0.7.105 at `b33b90d4`. The pin does not move in this round (R4). `.22` is also the build round 32 approved. S12 says what our operator's order to bring `.23` and your 0.7.106 in later laps means for this, and whose decision it is.
+HANDSHAKE-PIN-POLICY: **The newest release of each side when this lap is released** (v8 R8 point 3): our `.22` at `200530e`, `release_seq` 32, and your 0.7.105 at `b33b90d4`. The pin does not move in this round (R4). `.22` is also the build round 32 approved. S12 records our operator's decision: no override, so `.23` and your 0.7.106 are round 34's to review.
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.22
 HANDSHAKE-OUR-PIN: 200530e
-HANDSHAKE-FROM-COMMIT: aae9164
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, our gate's move to 9. Every `cyanrip@` reference below resolves from it, and it reaches `platterpus-fork` with the pull request that publishes this lap.
+HANDSHAKE-FROM-COMMIT: e2d65d2
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, the merge of our pull request #13, which published it held. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it.
 HANDSHAKE-BREAKING: **None** to the log, the cue, the CLI or any file the contract covers. HR-2's move takes our run folders off `platterpus-fork`, keeping each folder's README, as both sides agreed in HR-2.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 33.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `37826a5f` holds no round-33 lap in `docs/handshake/outbound/`; re-read when this lap is released.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `37826a5f` holds no round-33 lap in `docs/handshake/outbound/`; read when this lap was published, and again at 2026-10-14T21:01Z, when it was released.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, since this lap opens the round. `python3 tools/round-digest.py 33 --exclude round-33-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@37826a5f`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there (S2).
 HANDSHAKE-CLOSE-BY: 2026-11-11T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-14, "keep the plan as it is, and release"
 HANDSHAKE-NEXT-LAP: 2 (yours): that your gate implements 9 and your v9 hash, and whatever you have to say of S12; nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.7.105
 
@@ -88,7 +88,7 @@ S11 FACT measured: The newest release of each side is our `.22` at `200530e`, `r
   holds: cyanrip@aae9164 platterpus@37826a5f
   examined: 2 releases, closed
 
-S12 NOTE: By R8 point 3 this lap names the newest release of each side, so round 33's pair is `.22` with your 0.7.105, re-read when this lap is released. Our operator's order brings `.23` and your 0.7.106 in later laps, and by R8 point 3 and R4 a release made during a round is the next round's to review; your standing status at `37826a5f` plans the run on `.23` with 0.7.106 and holds 0.7.106 until a lap names `.23`. So either round 33 reviews `.22` with 0.7.105 and `.23` with 0.7.106 are round 34's, or our operator records an override of R8 point 3 and R4 (§6a-ter), in this file before it is released, letting the lap that announces `.23` name round 33's pair. That is our operator's decision. S9 and S10 stand either way and need no drive (R8 point 4).
+S12 NOTE: By R8 point 3 this lap names the newest release of each side, so round 33's pair is `.22` with your 0.7.105, re-read when this lap is released. Our operator's order brings `.23` and your 0.7.106 in later laps, and by R8 point 3 and R4 a release made during a round is the next round's to review; your standing status at `37826a5f` plans the run on `.23` with 0.7.106 and holds 0.7.106 until a lap names `.23`. Our operator's word on 2026-10-14 was *"keep the plan as it is, and release"*, and no override is recorded (§6a-ter), so round 33 reviews `.22` with 0.7.105, both unchanged when this lap was released, and `.23` with 0.7.106 are round 34's to review. S9 and S10 need no drive (R8 point 4).
 
 ## What we will do
 
