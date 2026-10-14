@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**Our gate implements protocol 9, and our round 33 lap 1 is published,
+held.** v9 is byte-identical in both trees, ours at `8f84727` and
+Platterpus's at `37826a5f`, so §17's wait is over: the gate reads a lap
+declaring 9, and a test pins it. Lap 1 opens round 33 on HR-2, its main
+task, and fixes the move instant at `2026-10-14T20:00:00Z`. It closes on
+HR-2 point 12's proof in both directions. It also gives our move as our
+builder makes it from `aae9164`: 35 run folders, 1,032 files, 114,751,962
+bytes, evidence commit `0f9375ad`, not pushed. Our checker needs no
+allowance for the v8 hash in either side's round 32 closing lap, since
+`seam-check` reads it as a different version. Lap 1 also says whose decision
+it is whether `.23` with Platterpus's 0.7.106 is round 33's pair or round
+34's.
+
 **HR-2.1 is in `PROTOCOL.md` v9, and every run folder has a README.** The
 operator's clarifications of 2026-10-14 follow HR-2's text in §17, word for
 word: a file that stays on the default branch inside a folder that moves is on
