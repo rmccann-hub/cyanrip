@@ -150,6 +150,37 @@ def test_the_not_filed_list_is_derived_not_written():
         check(f"(not filed) {b}" in sums, f"{b} must be NAMED as not filed")
 
 
+def test_after_the_move_a_run_is_not_filed_into_the_checkout():
+    """HR-2 point 10: once a manifest exists, --into docs/rig-* is refused.
+
+    Run from a copy of the three tools in a directory built here, holding a
+    manifest, so this tree's own state is never what decides it."""
+    import shutil
+    t = pathlib.Path(tempfile.mkdtemp())
+    (t / "tools").mkdir()
+    for n in ("ingest-bundle.py", "redact.py", "evidence.py"):
+        shutil.copy(HERE.parent / "tools" / n, t / "tools" / n)
+    a = make({"album/x/x.log": RIP, "extra/report.json": b'{"ok": true}'})
+    tool = t / "tools" / "ingest-bundle.py"
+
+    def go(*extra):
+        r = subprocess.run([sys.executable, str(tool), str(a), *extra],
+                           capture_output=True, text=True, timeout=120)
+        return r.returncode, r.stdout + r.stderr
+    rc, out = go("--into", str(t / "docs" / "rig-2026-01-01-aaaaaaa"))
+    check(rc == 0, f"before the move a run is filed in place: {out[-300:]}")
+    (t / "docs" / "evidence-manifest.tsv").write_text(
+        "path\tbytes\tsha256\tevidence_commit\tlast_default_commit\n"
+        f"docs/rig-2026-01-01-aaaaaaa/x\t1\t{'a' * 64}\t{'b' * 40}\t\n")
+    rc, out = go("--into", str(t / "docs" / "rig-2026-01-02-bbbbbbb"))
+    check(rc == 2 and "REFUSED" in out and "evidence.py file" in out
+          and not (t / "docs" / "rig-2026-01-02-bbbbbbb").exists(),
+          f"after the move --into a run folder is refused: {rc} {out[-400:]}")
+    rc, out = go("--into", str(t.parent / (t.name + "-staging")))
+    check(rc == 0 and "tools/evidence.py file" in out,
+          f"filing into a staging directory names the next step: {out[-400:]}")
+
+
 ROOT = HERE.parent
 BANNER19 = b"cyanrip 0.9.4-rc2+platterpus.19 (platterpus-fork-g174a134)\n"
 BANNER18 = b"cyanrip 0.9.4-rc2+platterpus.18 (platterpus-fork-g51cc789)\n"

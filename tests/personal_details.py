@@ -26,6 +26,13 @@ Hostnames are found as tools/redact.py finds them, in the file itself; a
 list of the owner's would be the thing the rule forbids. The owner's name is
 checked only from the local list outside the repository, and without one the
 run says it was not checked.
+
+WITH --evidence it checks what HR-2 files straight to the evidence branch
+(PROTOCOL.md v9 §17): every docs/evidence-manifest.tsv row with no default
+commit, read through tools/evidence.py. Those files never pass through this
+checkout, so the check on them runs where they are fetched, which is CI's
+evidence job; elsewhere it says it could not run (77). Files moved there from
+this branch were committed here first, and are history.
 """
 
 import pathlib
@@ -35,6 +42,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import redact  # noqa: E402
+import evidence  # noqa: E402
 
 THIS = "tests/personal_details.py"
 
@@ -53,7 +61,39 @@ def in_scope(path):
         p.parts[1].startswith("rig-")
 
 
+def check_evidence():
+    store = evidence.Store(ROOT)
+    rows = [r for r in store.rows.values() if not r.last_default]
+    names = redact.local_names()
+    problems = unfetched = 0
+    for r in rows:
+        try:
+            data = store.read(r.path)
+        except evidence.NotFetched:
+            unfetched += 1
+            continue
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError:
+            continue
+        for line, kind in redact.findings(text, names):
+            problems += 1
+            print(f"FAIL: {r.path}:{line} (evidence {r.commit[:12]}): {kind}")
+    print(f"{len(rows) - unfetched} of {len(rows)} file(s) filed straight to "
+          f"evidence checked for home paths and hostnames"
+          + ("" if names is not None else
+             "; THE OWNER'S NAME WAS NOT CHECKED (no local list at "
+             f"${redact.NAMES_ENV} or {redact.NAMES_FILE})"))
+    if problems:
+        return 1
+    if unfetched:
+        return evidence.unprobed_or_fail(f"{unfetched} file(s) not fetched")
+    return 0
+
+
 def main():
+    if "--evidence" in sys.argv[1:]:
+        return check_evidence()
     if git("rev-parse", "--is-inside-work-tree") is None:
         print("SKIP: not a git checkout, so a new file cannot be told from an "
               "old one, and nothing was checked")

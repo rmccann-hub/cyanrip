@@ -925,6 +925,14 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/evidence_readers.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/evidence_tool.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tests/handshake_wire.py"
         },
         {
@@ -970,6 +978,10 @@
         {
           "name": "cyanrip-fork:run-by",
           "value": "tools/contract-delta.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tools/evidence.py"
         },
         {
           "name": "cyanrip-fork:run-by",
@@ -1239,5 +1251,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:7e0036a2-abe0-564f-aff1-2cf5e9e0a15b"
+  "serialNumber": "urn:uuid:d9cca706-aa7b-5078-a1c8-9e48a0e565af"
 }

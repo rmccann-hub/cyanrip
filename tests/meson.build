@@ -656,6 +656,19 @@ test('Redaction in the filing tools', python,
 test('No personal details in new laps or evidence', python,
      args: [ files('personal_details.py') ])
 
+## HR-2 (PROTOCOL.md v9 §17) moves run evidence to the `evidence` branch.
+## tools/evidence.py is the one place that knows where a file is; its test
+## runs a whole move on repositories built here, by file:// URL. The readers
+## check refuses a new test, tool or SETTLED row that names an evidence path
+## (HR-2 point 2) and checks each fixture copy against its source. Files filed
+## straight to evidence never pass through a checkout, so their personal-
+## details check runs where they are fetched: CI's evidence job, 77 elsewhere.
+test('Evidence tool', python, args: [ files('evidence_tool.py') ], timeout: 120)
+test('Evidence readers and fixture copies', python,
+     args: [ files('evidence_readers.py') ])
+test('No personal details in new evidence', python,
+     args: [ files('personal_details.py'), '--evidence' ])
+
 ## tools/cross-rip.py compares each track's EAC CRC32 across every cyanrip log
 ## in a bundle. Round 26's reading read logs one at a time and missed a wrong
 ## track-1 read that only shows beside the other rips of it (their round 26
