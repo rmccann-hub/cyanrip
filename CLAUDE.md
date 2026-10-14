@@ -2223,7 +2223,13 @@ candidate from a clean checkout (`tools/record-release-suite.py`, recorded under
 PROTOCOL v8 and seam-rules v8 are landed byte-identical in both trees, measured
 by `tools/seam-sync-check.py --fetch` at `platterpus@2d8644a` on 2026-10-11, and
 bind from round 32. Both gates implement 8: Platterpus's from `platterpus@01fd8eac`,
-ours from the commit that carries this sentence.
+ours from `2e800f4`.
+
+PROTOCOL v9, which is v8 plus HR-2 and HR-2.1 (§17), is byte-identical in both
+trees from `platterpus@37826a5f`, measured by `tools/seam-sync-check.py
+--fetch` on 2026-10-14. Our gate implements 9 from the commit that carries this
+sentence, and round 33 lap 1 says so. Neither side declares 9 until both have
+said, in a lap, that their gate implements it (§17, *Declaring 9*).
 
 **`.14` was the first release with a consumer-side prerequisite**: both lines
 it renamed are Platterpus's `_TRACK_START` block delimiter, so shipped ahead of
