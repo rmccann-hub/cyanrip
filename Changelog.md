@@ -1,5 +1,23 @@
 Unreleased
 ==========
+**HR-2.1 is in `PROTOCOL.md` v9, and every run folder has a README.** The
+operator's clarifications of 2026-10-14 follow HR-2's text in §17, word for
+word: a file that stays on the default branch inside a folder that moves is on
+both branches; `last_default_commit` is the commit the evidence commit was
+built from, and the removal's first commit is built on it; a temporary
+repository's fetch may be blobless; and where GitHub's secret scanning and
+push protection are both on, as they are here, they are the secret scan over
+evidence. `tools/evidence.py verify-rows --current` is HR-2.1 b's check, run
+by CI's evidence job: before a removal merges, each folder it moves must be
+the same on the default branch as it now stands as at the evidence commit.
+`verify-move` also checks the removal's parent. Four run folders had no
+README, the index HR-2 keeps on the default branch:
+`docs/rig-2026-08-05b-0.6.4b8/`, `docs/rig-2026-09-11-runA-ddc1e8c/` and the
+two round 14 folders under `docs/handshake/inbound/artifacts/`. Each now has
+one, written before the move so the evidence commit holds it too.
+`tests/workflows.py` counted a step named only in a comment as a step the
+evidence job runs; it now reads the job without its comments.
+
 **HR-2's step 1, with nothing moved: protocol v9 and every reader of run
 evidence ready for the evidence branch.** The operator gave both sides HR-2's
 agreed text on 2026-10-14 as round 33's first task. It moves what a run

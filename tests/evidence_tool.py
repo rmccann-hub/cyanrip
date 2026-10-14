@@ -23,7 +23,10 @@ Every step is asserted on an origin and clones made in a temporary directory,
 reached by file:// URL, so nothing here touches the network or this tree:
 the move commit built from an enumerated folder list (5b), rebuilt to the same
 ID from the same list and instant (5c), its rows matching its files (5d), the
-removal checked against the manifest (5d), a moved file read from a cache and
+removal checked against the manifest (5d) and built on the commit the move
+was built from (HR-2.1 b), the default branch's folders compared with the
+evidence commit's before a removal merges (HR-2.1 b), a moved file read from a
+cache and
 never from the working clone (7), unfetched reported as 77 or, in CI's
 evidence job, as a failure (6b, 8a), the manifest's strictness (4), tags kept
 off evidence (8a), and a later run filed on the tip (10a).
@@ -218,6 +221,9 @@ with tempfile.TemporaryDirectory() as d:
     probs = evidence.verify_move(s2, C, R)
     check(any("b.log is deleted" in p and "no manifest row" in p
               for p in probs), f"a deleted path with no row is named: {probs}")
+    check(git(work, "rev-parse", f"{R}^") == held,
+          "the removal's first commit has the build's default commit as its "
+          "parent (HR-2.1 b)")
 
     # --- 8a: rows against their files, the commit on evidence
     rc, o = tool(work, "verify-rows")
@@ -233,6 +239,42 @@ with tempfile.TemporaryDirectory() as d:
     base = d / "base"
     subprocess.run(["git", "clone", "-q", url, str(base)], check=True,
                    capture_output=True)
+
+    # --- HR-2.1 b: before a removal merges, each folder it moves is the same
+    # on the default branch as it stands as at the evidence commit
+    rc, o = tool(work, "verify-rows", "--base", held)
+    check(rc == 0 and "3 moved folder(s) the same on the default branch" in o,
+          f"a removal over an unchanged default branch passes: {o.strip()}")
+    rc, o = tool(work, "verify-rows", "--current", held)
+    check(rc == 2 and "--current needs --base" in o,
+          f"--current alone is refused: {rc}")
+    git(base, "checkout", "-q", "-b", "late")
+    (base / A / "rips" / "a.log").write_bytes(b"changed after the build\n")
+    git(base, "rm", "-q", "-r", "--", X)
+    git(base, "commit", "-q", "-am", "late")
+    late = git(base, "rev-parse", "HEAD")
+    git(work, "fetch", "-q", str(base), "late")
+    rc, o = tool(work, "verify-rows", "--base", held, "--current", late)
+    check(rc == 1 and f"FAIL: {A}: tree" in o
+          and "a file changed after the build, so the removal waits" in o
+          and f"FAIL: {X} is not on the default branch" in o and B not in o,
+          f"a folder changed or gone since the build holds the removal, and "
+          f"only those are named: {o.strip()}")
+    # The removal built on a later commit than the move was built from.
+    git(base, "checkout", "-q", "-b", "slow", held)
+    (base / "docs" / "other.md").write_bytes(b"prose, edited first\n")
+    git(base, "commit", "-q", "-am", "first")
+    for p in moved:
+        if not p.endswith("/README.md"):
+            git(base, "rm", "-q", "--", p)
+    (base / evidence.MANIFEST).write_text((d / "m.tsv").read_text())
+    git(base, "add", evidence.MANIFEST)
+    git(base, "commit", "-q", "-m", "move, second")
+    R2 = git(base, "rev-parse", "HEAD")
+    git(work, "fetch", "-q", str(base), "slow")
+    probs = evidence.verify_move(evidence.Store(work), C, R2)
+    check(len(probs) == 1 and "parent is" in probs[0] and "HR-2.1 b" in probs[0],
+          f"a removal not built on the move's default commit is named: {probs}")
 
     # --- 4: the manifest is read strictly
     head = evidence.HEADER + "\n"

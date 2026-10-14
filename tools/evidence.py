@@ -49,7 +49,8 @@ program.
     tools/evidence.py cat PATH > out
     tools/evidence.py fetch [--branch]          # every commit the manifest names
     tools/evidence.py run [--folder F]... -- CMD...
-    tools/evidence.py verify-rows [--base REV]  # CI: each row against its file
+    tools/evidence.py verify-rows [--base REV [--current REV]]
+                                                # CI: each row against its file
     tools/evidence.py check-tags                # CI: no tag reaches evidence
     tools/evidence.py build --folders LIST --date ISO --manifest-out FILE [--push]
     tools/evidence.py verify-move EVIDENCE_COMMIT REMOVAL_COMMIT
@@ -584,11 +585,25 @@ def file_run(store, staging, dest, date=None, push_url=None):
 
 
 def verify_move(store, evidence_commit, removal_commit):
-    """HR-2 5d's second half. Returns a list of problems, empty when it holds."""
+    """HR-2 5d's second half, and HR-2.1 b's parent: the removal commit is
+    built on the commit the evidence commit was built from. Returns a list of
+    problems, empty when it holds."""
     problems = []
     rows = [r for r in store.rows.values() if r.commit == evidence_commit]
     if not rows:
         return [f"no manifest row names {evidence_commit}"]
+    lasts = sorted({r.last_default for r in rows if r.last_default})
+    parent = git(store.root, "rev-parse", "--verify", "-q",
+                 f"{removal_commit}^")
+    if len(lasts) != 1:
+        problems.append(f"the rows naming {evidence_commit[:12]} name "
+                        f"{len(lasts)} last default commits; a move is built "
+                        f"from one (HR-2.1 b)")
+    elif parent.returncode != 0 or out(parent) != lasts[0]:
+        problems.append(f"{removal_commit[:12]}'s parent is "
+                        f"{out(parent)[:12] or 'none'}, and the evidence "
+                        f"commit was built from {lasts[0][:12]}: the removal's "
+                        f"first commit has that as its parent (HR-2.1 b)")
     folders = sorted({run_folder(r.path) for r in rows if r.last_default})
     for f in folders:
         lasts = {r.last_default for r in rows if run_folder(r.path) == f}
@@ -615,6 +630,57 @@ def verify_move(store, evidence_commit, removal_commit):
             problems.append(f"{p} is deleted by {removal_commit[:12]} and has "
                             f"no manifest row")
     return problems
+
+
+def moved_folders_unchanged(store, base, current=None):
+    """HR-2.1 b: before a removal merges, each folder it moves holds, on the
+    default branch as it now stands, the tree it has at the evidence commit.
+    If not, a file changed after the build, and the removal waits.
+
+    A removal is told by its rows: those added since `base` that name a last
+    default commit, where a filing's name none (HR-2 4). `current` is the
+    default branch now, `base` when not given. Returns (problems, unfetched,
+    checked), checked being the (folder, evidence commit) pairs compared."""
+    old = {r.path for r in manifest_at(store.root, base)}
+    added = [r for p, r in store.rows.items() if p not in old and r.last_default]
+    problems, unfetched = [], []
+    for r in added:
+        if run_folder(r.path) is None:
+            problems.append(f"{r.path} names a last default commit and is in "
+                            f"no run folder; a move takes whole folders "
+                            f"(HR-2 5a, HR-2.1 a)")
+    pairs = sorted({(run_folder(r.path), r.commit) for r in added
+                    if run_folder(r.path)})
+    ref = current or base
+    now = git(store.root, "rev-parse", "--verify", "-q", f"{ref}^{{commit}}")
+    if now.returncode != 0:
+        raise RuntimeError(f"{ref} is not a commit in this clone, so the "
+                           f"default branch as it stands cannot be read")
+    now = out(now)
+    for folder, commit in pairs:
+        theirs = None
+        for repo in (store.root, store.cache):
+            if repo is not None and pathlib.Path(repo).exists():
+                r = git(repo, "rev-parse", "--verify", "-q",
+                        f"{commit}:{folder}")
+                if r.returncode == 0:
+                    theirs = out(r)
+                    break
+        if theirs is None:
+            unfetched.append(f"{folder} at {commit[:12]}")
+            continue
+        ours = git(store.root, "rev-parse", "--verify", "-q", f"{now}:{folder}")
+        if ours.returncode != 0:
+            problems.append(f"{folder} is not on the default branch at "
+                            f"{now[:12]}, and {commit[:12]} holds it: it "
+                            f"changed after the build, so the removal waits "
+                            f"(HR-2.1 b)")
+        elif out(ours) != theirs:
+            problems.append(f"{folder}: tree {out(ours)[:12]} on the default "
+                            f"branch at {now[:12]} is not {theirs[:12]} at "
+                            f"{commit[:12]}: a file changed after the build, "
+                            f"so the removal waits (HR-2.1 b)")
+    return problems, unfetched, pairs
 
 
 def verify_rows(store, base=None):
@@ -713,6 +779,8 @@ def main():
     p.add_argument("argv", nargs=argparse.REMAINDER)
     p = sub.add_parser("verify-rows")
     p.add_argument("--base")
+    p.add_argument("--current", help="the default branch as it stands, for "
+                   "HR-2.1 b's check of a removal (default: --base)")
     sub.add_parser("check-tags")
     p = sub.add_parser("build")
     p.add_argument("--folders", required=True, type=pathlib.Path,
@@ -761,7 +829,16 @@ def main():
             return run_with_evidence(store, args.folder or store.folders(),
                                      argv)
         if args.cmd == "verify-rows":
+            if args.current and not args.base:
+                ap.error("--current needs --base: the rows a removal adds are "
+                         "those since --base")
             problems, unfetched = verify_rows(store, args.base)
+            moved = []
+            if args.base:
+                more, missing, moved = moved_folders_unchanged(
+                    store, args.base, args.current)
+                problems += more
+                unfetched += missing
             for pr in problems:
                 print(f"FAIL: {pr}")
             if problems:
@@ -772,7 +849,10 @@ def main():
             print(f"ok: {len(store.rows)} row(s) read cleanly"
                   + (f", those added since {args.base} checked against their "
                      f"files" if args.base else ", each checked against its "
-                     f"file"))
+                     f"file")
+                  + (f"; {len(moved)} moved folder(s) the same on the default "
+                     f"branch at {args.current or args.base} as at their "
+                     f"evidence commit (HR-2.1 b)" if moved else ""))
             return 0
         if args.cmd == "check-tags":
             problems = check_tags(store)

@@ -1626,12 +1626,13 @@ round 32.
 
 ## 17. Changes in v9
 
-**v9 is v8 plus HR-2, and nothing else.** The operator gave both sides HR-2's
-agreed text on 2026-10-14, built from both sides' reviews, as round 33's first
-task. It moves run evidence off each default branch onto an `evidence` branch,
-and says how laps cite it, how checkers resolve it and how CI fetches it. Its
-text follows, word for word, and is normative; the rest of this file is
-unchanged except §3b's last bullet, which points here.
+**v9 is v8 plus HR-2 and its clarifications HR-2.1, and nothing else.** The
+operator gave both sides HR-2's agreed text on 2026-10-14, built from both
+sides' reviews, as round 33's first task, and HR-2.1 later the same day. HR-2
+moves run evidence off each default branch onto an `evidence` branch, and says
+how laps cite it, how checkers resolve it and how CI fetches it. Both texts
+follow, word for word, and are normative; the rest of this file is unchanged
+except §3b's last bullet, which points here.
 
 ```text
 HR-2 (protocol v9, with the lap-statement language amended to match)
@@ -1725,6 +1726,23 @@ HR-2 (protocol v9, with the lap-statement language amended to match)
     fetching by hash. Then each side sends one lap citing one file on its own evidence branch,
     and the other side's checker must pass it with only the default branch and the cited commit
     fetched. Only after that do laps use the new form.
+```
+
+```text
+HR-2.1 (clarifications, part of v9; added to PROTOCOL §17 after HR-2's text, word for word)
+a. (5a) A file that must stay on the default branch but sits in a folder that moves, such as a
+   README or a specification like outbound/artifacts/lsl-amendments-1.md, is on both branches:
+   evidence holds the whole folder, and the default branch keeps that file. Run files outside
+   any folder stay on the default branch.
+b. (4, 5d) last_default_commit is the default-branch commit the evidence commit was built from.
+   The removal pull request's first commit has it as its parent. Before that pull request
+   merges, CI checks that each moved folder's tree on the current default branch still equals
+   its tree at the evidence commit. If it doesn't, a file changed after the build, and the
+   removal waits until that's resolved.
+c. (7) The temporary repository's fetch may add `--filter=blob:none`, so it downloads only the
+   files it reads.
+d. (8a) Where GitHub's secret scanning and push protection are both enabled for the repository,
+   they are the secret scan over evidence. A side may also run its own scanner.
 ```
 
 **Declaring 9.** As for 8: neither side declares 9 until both have said, in a
