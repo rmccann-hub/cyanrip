@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**Run evidence has moved to the `evidence` branch (HR-2 point 5).**
+Evidence commit `0f9375adafdee7e5b16f93d9c1fc387fb1151586`, with no parent,
+holds the 35 run folders, 1,032 files and 114,751,962 bytes, and is the ID
+round 33 lap 1 S7 gave: our builder made it from `c0a49ab` at the instant
+lap 1 fixes, and no moved folder differs between `aae9164`, where lap 1
+built it, and `c0a49ab`. The removal deletes 997 files and keeps each
+folder's README as its index (HR-2.1 a); `docs/evidence-manifest.tsv` has
+one row per moved file, each naming that commit and `c0a49ab`, the
+removal's parent (HR-2.1 b). Every reader goes through
+`tools/evidence.py`, so nothing else changes.
+
 **Our round 33 lap 1 is sent**, on the operator's word of 2026-10-14,
 *"keep the plan as it is, and release"*. `HANDSHAKE-READY-TO-READ` is now
 `yes`, `HANDSHAKE-FROM-COMMIT` moves to `e2d65d2`, the merge that published

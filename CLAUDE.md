@@ -1247,8 +1247,11 @@ a run produced and nothing on the default branch reads moves, whole run folder
 by whole run folder, to an orphan branch named `evidence` that only ever gains
 commits; `docs/evidence-manifest.tsv` on the default branch has one row per
 file; each run folder's README stays here as its index; laps never move.
-**Until the move lands (HR-2 point 12, after round 33's lap 1 fixes its
-instant), every run folder is still under `docs/` and is read in place.**
+**The move landed in round 33**: evidence commit `0f9375ad`, built from
+`c0a49ab` at the instant round 33's lap 1 fixed, holds the 35 run folders
+that were under `docs/`, and the commit removing them is the first of the
+pull request that carries this sentence. A run folder under `docs/` is now
+its README; every other file of it is read through the tool below.
 
 - **`tools/evidence.py` is the one place that knows where a file is**: this
   checkout, then this clone's objects at the manifest's commit, then a separate
