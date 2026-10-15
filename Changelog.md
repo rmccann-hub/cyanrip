@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**Our round 33 lap 3 is published, held.** It is the first lap of ours to
+declare protocol 9, since both gates now say they implement it: ours in our
+lap 1, Platterpus's in their lap 2, filed here byte for byte. It names our
+move: evidence commit `0f9375ad`, 1,032 files and 114,751,962 bytes, pushed
+to our `evidence` branch, with its removal merged at `7e33f4c` after CI's
+evidence job passed HR-2.1 b's check. It also gives Platterpus's move,
+`c737fb6b` with its removal merged at `platterpus@f82392bb`. That move
+passes HR-2 5d's checks here, run by plain git ahead of the lap of theirs
+that will name it. The lap ends with the operator's Diagnostics, D1 to D8.
+The round stays open until each side's checker has verified the other's
+move and each side has sent a lap citing a file on its own evidence branch.
+
 **Run evidence has moved to the `evidence` branch (HR-2 point 5).**
 Evidence commit `0f9375adafdee7e5b16f93d9c1fc387fb1151586`, with no parent,
 holds the 35 run folders, 1,032 files and 114,751,962 bytes, and is the ID
