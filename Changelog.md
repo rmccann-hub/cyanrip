@@ -1,6 +1,23 @@
 Unreleased
 ==========
-Nothing yet.
+**Our round 34 lap 1 is published, held** (`docs/handshake/round-34-lap-01.md`).
+On the operator's rule of 2026-10-15, now in `CLAUDE.md`, *"Give what you
+know, wait for the test"*, it opens round 34 on `.23` before Platterpus's next
+release, and carries only what is established. For them: their message
+inventory is `.22`'s P5 exactly, so four rows go and thirteen come in to match
+`.23`'s (S5); and no Full run can pass their section A until a release of
+theirs names `891c79e` as its build under review, which their own rule gives
+once our manifest at `b06d20e` is filed, with no lap of ours needed (S3, S4).
+For us: `Settled facts` timing out on CI's macOS runner (S8), and our checker
+cutting hashes to 16 characters (S9). It names the run by condition, their
+first release naming `891c79e`, so it needs no amendment when that release
+lands (S14), and leaves what only the run can show to the run (S12, S13).
+
+**`Settled facts` timed out on CI's macOS runner on the push of `b06d20e`**,
+at 120.03 s, with every other test OK or skipped; the pull request's run on
+the same tree had passed it in 93.08 s, and the one re-run passed it in 28.26
+s. Recorded in `docs/KNOWN-ISSUES.md` as the second occurrence, and kept open
+as `settled-facts-macos`; no cause is established.
 
 0.9.4-rc3+platterpus.23 — 2026-10-15 — **beta**
 ===============================================
