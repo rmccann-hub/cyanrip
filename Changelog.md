@@ -13,7 +13,7 @@ met, and our lap 5's pre-committed `GO` holds; round 33 closes on both gates
 when lap 7 is released. The lap carries our round summary and Diagnostics.
 `docs/KNOWN-ISSUES.md` records pull request #20's macOS `Settled facts`
 timeout, which has no known mechanism, and a measurement beside it. With the
-evidence fetched, that test took 80.7 to 87.8 s here, against its 120 s
+evidence fetched, that test took 80.7 to 91.8 s here, against its 120 s
 timeout. `STATUS.md` plans I16, pinning the Windows build's libraries, for
 round 34. It also lists the 16-character hashes in our checker's refusals,
 from Platterpus's lap 6 S5. The golden reference and the interrupted
