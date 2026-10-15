@@ -877,6 +877,27 @@ it. R4 says fixes queue; this one queues. **Raising the timeout was never the
 fix** — it keeps a network-dependent verdict in a gate and moves where it
 misfires.
 
+**A timeout again on 2026-10-15, on CI's macOS runner, with no network in the
+check.** Pull request #20 at `3e467b3`, `macos` job: `Settled facts TIMEOUT
+120.05s`, killed by SIGTERM, every other test OK or skipped (116 OK, 12
+skipped). On the same commit, `linux (default)` ran it in **53.07 s**; on the
+base `21382e4`, `macos` ran it in **30.73 s**; the one re-run of the failed job
+passed in 4 min 28 s. No `SETTLED.md` row reaches the network, and the pull
+request changed a lap's ready line, `STATUS.md`, the round table, the changelog
+and the golden reference. **No mechanism is established**, so it is recorded
+here, as `STATUS.md`'s `suite-timeouts-at-default` says each occurrence is.
+
+**And a measurement that is a warning, not yet a fault.** Since HR-2's move,
+the 30 rows that re-check a file on the evidence branch run only where that
+file is fetched (`tools/check-settled.py` counts them unprobed otherwise). In
+this environment's checkout with `tools/evidence.py fetch --branch` done,
+`Settled facts` took **80.7 to 103.9 s** in seven full suites on 2026-10-15,
+the last at `10f2352`, against **47.7 to 52.8 s** in two with nothing
+fetched: up to about 87% of its 120 s timeout, and rising. CI's evidence job, which runs those rows, took 34.3 s on Linux
+(pull request #16). Where a check reads evidence, its time now depends on
+whether the evidence is fetched, and a timeout chosen before the move did not
+account for that.
+
 ### `docs/seam-commands.md` carried FIVE known-wrong statements — ALL FIXED in round 30
 
 **Consolidated here 2026-09-15.** They were recorded in two different files, one
