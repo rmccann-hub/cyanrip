@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**Our round 33 lap 5 is sent**, on the operator's word of 2026-10-15:
+*"Release lap 5 on this message once its PR is green and merged: set
+READY-TO-READ to yes quoting this sentence, and change nothing else."*
+Its publishing pull request, #19, merged as `21382e4` with CI green.
+`HANDSHAKE-READY-TO-READ` is now `yes`, quoting that sentence, and nothing
+else in the lap changes. `HANDSHAKE-FROM-COMMIT` stays `b96de9d`, which is
+on `platterpus-fork`.
+
+Before the release, both lap checkers read lap 5 from a fresh single-branch
+clone of `platterpus-fork` with evidence required: ours, and Platterpus's in
+strict mode. Each fetched `0f9375ad` by hash into a separate repository and
+passed S5's citation, with 0 warnings.
+
 **Our round 33 lap 5 is published, held.** It files Platterpus's lap 4,
 which names their move and verifies ours with their checker, fetching by
 hash. Lap 5 confirms that lap 4 names the commit and removal our lap 3 S7

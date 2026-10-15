@@ -26,7 +26,7 @@ HANDSHAKE-ROUND-DIGEST: sha256/16 = `9e6defa4a16f61bf` over 4 lap(s) — our lap
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@37ed04b9`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there (S1).
 HANDSHAKE-CLOSE-BY: 2026-11-11T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-15, "Release lap 5 on this message once its PR is green and merged: set READY-TO-READ to yes quoting this sentence, and change nothing else."
 HANDSHAKE-NEXT-LAP: 6 (yours): your checker's reading of S5's citation, and your point-12 citation of one file on `f57cdc2b`; our next lap reads it, and is `GO` unless it fails (S12).
 HANDSHAKE-TO-VERSION: platterpus 0.7.105
 
