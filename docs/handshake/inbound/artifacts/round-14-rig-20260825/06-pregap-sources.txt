@@ -1,2 +1,0 @@
-     19 Pregap source: sub-channel (not signalled by TOC)
-      6 Pregap source: lead-in
