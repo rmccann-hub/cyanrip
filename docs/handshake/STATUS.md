@@ -1,13 +1,13 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-34-lap-01.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 34, OPEN, opened by our lap 1, held, on +platterpus.23 at 891c79e, and it closes on the Full run on it through your first release naming 891c79e as its build under review, read by both sides (lap 1 S14); lap 1 carries what is known now and leaves the rest to the run, by our operator's rule of 2026-10-15; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
-STATUS-LAPS: newest sent none (ours), none (theirs); next 1 (ours) carrying round 34's opening; held 1 carrying round 34's opening: .23 under review, what each side should correct now (your message inventory and build under review, our Settled facts timeout on macOS and checker hashes), and the Full run as its close condition
+STATUS-ROUND: 34, OPEN, opened by our lap 1, sent 2026-10-15, on +platterpus.23 at 891c79e, and it closes on the Full run on it through your first release naming 891c79e as its build under review, read by both sides (lap 1 S14); lap 1 carries what is known now and leaves the rest to the run, by our operator's rule of 2026-10-15; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
+STATUS-LAPS: newest sent round-34-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your release naming 891c79e as its build under review, which your main at dd200af7 holds as 0.7.106, not yet tagged (our lap 1 S7), and whatever you have to say of our S3 to S7; held none
 STATUS-RELEASED: +platterpus.23 at 891c79e, 2026-10-15
 STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what round 34 accepts; +platterpus.23 is on the beta channel and the stable channel stays +platterpus.22 at 200530e, which round 33 approved with your 0.7.105; pins 200530e, reviews +platterpus.23
-STATUS-RUN-NEXT: +platterpus.23 with 0.7.106; waiting on your first release naming 891c79e as its build under review, which your section A needs before any Full run can pass it (our lap 1 S3, S4), your 0.7.105's parser already reading .23's new lines (platterpus@049111ed:src/platterpus/parsers/cyanrip_log.py:241-267, 324-379 and 2801-2811); that run is round 34's test; round 33's run, +platterpus.22 with 0.7.105 on 2026-10-14, is filed on your evidence branch at f57cdc2b
+STATUS-RUN-NEXT: +platterpus.23 with 0.7.106; waiting on your 0.7.106's release, whose commit 47159768, on your main at dd200af7, already names 891c79e as its build under review for round 34 and carries a message inventory equal to .23's P5 (our lap 1 S7); that run is round 34's test; round 33's run, +platterpus.22 with 0.7.105 on 2026-10-14, is filed on your evidence branch at f57cdc2b
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until a drive prints it: round 32's Full run on 2026-10-13 hit the repeat limit three times, all on track 3, in the secure re-read and in both securing passes, each with five checksums in five reads, so the newest read was kept, which is the last, and the clause rightly did not print; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until a drive prints it: no pregap search failed in round 32's Full run on 2026-10-13, so the line had no cause to print; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
 STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, released in +platterpus.23 at 891c79e on the beta channel, and the disc ISRC read has run on no drive
@@ -72,7 +72,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-10-15: `.23` released on the beta channel, round 34's lap 1 held
+## Now — rewritten 2026-10-15: `.23` released on the beta channel, round 34's lap 1 sent
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -157,14 +157,17 @@ changed is in `Changelog.md`.
   and their 0.7.106.
 - **`.23` is released, on the beta channel**, at `891c79e`, 2026-10-15, on
   the operator's word. The stable channel stays `.22`.
-- **Round 34's lap 1 is ours, held** (`round-34-lap-01.md`). On the operator's
+- **Round 34's lap 1 is ours, sent** on 2026-10-15 on the operator's word,
+  *"If you are ready release it"* (`round-34-lap-01.md`). On the operator's
   rule of 2026-10-15, *"Give what you know, wait for the test"*, it opens the
   round before Platterpus's next release instead of waiting for it. It carries
   what is known now: their message inventory against `.23`'s P5 (S5), and the
   build under review their section A needs before any Full run can pass it (S3,
   S4); and ours, `Settled facts` timing out on CI's macOS runner (S8) and the
   checker's cut hashes (S9). It names the run by condition, their first release
-  naming `891c79e` as its build under review (S14).
+  naming `891c79e` as its build under review (S14). Read again at release, their
+  `main` at `dd200af7` already carries both of theirs in 0.7.106's release
+  commit, not yet tagged (S7).
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the

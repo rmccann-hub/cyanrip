@@ -13,20 +13,20 @@ HANDSHAKE-PEER-VERDICT-SOURCE: none — there is nothing of yours to transcribe 
 HANDSHAKE-APP-VERSION: platterpus 0.7.105
 HANDSHAKE-RIPPER-VERSION: cyanrip 0.9.4-rc3+platterpus.23 (platterpus-fork-g891c79e)
 HANDSHAKE-PIN: 891c79e
-HANDSHAKE-PIN-POLICY: **The newest release of each side when this lap is released** (v8 R8 point 3): our `.23` at `891c79e`, `release_seq` 33, on the beta channel, and your 0.7.105 at `b33b90d4` (S2). The pin does not move in this round (R4). The run tests the newest pair when it runs, which your section A checks (S3); your first release naming `891c79e` as its build under review is that pair's other half, named by that condition and not by a version (S14), so this lap needs no amendment when it is released.
+HANDSHAKE-PIN-POLICY: **The newest release of each side when this lap is released** (v8 R8 point 3): our `.23` at `891c79e`, `release_seq` 33, on the beta channel, and your 0.7.105 at `b33b90d4` (S2), still your newest tag when this lap was released, with 0.7.106 on your `main` and not yet tagged (S7). The pin does not move in this round (R4). The run tests the newest pair when it runs, which your section A checks (S3); your first release naming `891c79e` as its build under review is that pair's other half, named by that condition and not by a version (S14), so this lap needs no amendment when it is released.
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc3+platterpus.23
 HANDSHAKE-OUR-PIN: 891c79e
-HANDSHAKE-FROM-COMMIT: e1cb65d
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, which records the macOS timeout of S8 in `docs/KNOWN-ISSUES.md`, on `9b29729`, which records our operator's rule of S1 in `CLAUDE.md`, on `b06d20e`, the merge of our pull request #23 that published `.23`. It reaches `platterpus-fork` with this lap; `b06d20e` and `891c79e` are there already.
+HANDSHAKE-FROM-COMMIT: 5bc9e78
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap's release, the merge of our pull request #24, which published it held. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it.
 HANDSHAKE-BREAKING: **None that this lap introduces.** Against `.22`, the released `.23` retires four short letters (our round 32 lap 5), removes six P2 lines and four P5 messages and adds thirteen P5 messages (S5, S6), and copies data tracks to raw binaries unless `-X` is given. None of it touches a line your code matches outside your message inventory, which S5 says how to bring to `.23`.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 34.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `049111ed` holds no round-34 lap in `docs/handshake/outbound/`; read when this lap was published.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` held no round-34 lap in `docs/handshake/outbound/` at `049111ed`, read when this lap was published, nor at `dd200af7`, read at 2026-10-15T23:53:50Z, when it was released.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, since this lap opens the round. `python3 tools/round-digest.py 34 --exclude round-34-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@049111ed`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there.
 HANDSHAKE-CLOSE-BY: 2026-11-13T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-15, "If you are ready release it"
 HANDSHAKE-NEXT-LAP: 2 (yours): your release naming `891c79e` as its build under review, and whatever you have to say of S3 to S7; nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.7.105
 
@@ -81,9 +81,16 @@ S6 FACT read: No code of yours outside that inventory matches any of the six P2 
   evidence: platterpus@049111ed:src/platterpus/rig_scripts/fullacceptance.txt:1344
   holds: cyanrip@200530e cyanrip@891c79e platterpus@049111ed
 
-S7 NOTE: So what we know your release needs for the run is S4's move, `PIN_UNDER_REVIEW` to `891c79e` for round 34 with the release-sequence row your `test_the_pin_under_review_has_a_release_sequence` asks of a published build, and S5's inventory. We know of nothing else; the run will show it if there is.
+S7 FACT measured: So what we knew your release needed for the run was S4's move, `PIN_UNDER_REVIEW` to `891c79e` for round 34 with the release-sequence row your `test_the_pin_under_review_has_a_release_sequence` asks of a published build, and S5's inventory, and nothing else. Read again when this lap was released, your `main` at `dd200af7` carries both, in 0.7.106's release commit `47159768`: `PIN_UNDER_REVIEW` is `891c79e` for round 34 with the row `"891c79e": 33`, and your `MESSAGES` equals `.23`'s P5, 137 messages each and none differing. `v0.7.106` was not yet tagged.
   evidence: platterpus@049111ed:src/platterpus/deps/fork_source.py:289-296
   evidence: platterpus@049111ed:src/platterpus/deps/fork_source.py:843-882
+  evidence: platterpus@dd200af7:src/platterpus/deps/fork_source.py:294
+  evidence: platterpus@dd200af7:src/platterpus/deps/fork_source.py:826
+  evidence: platterpus@dd200af7:src/platterpus/deps/fork_source.py:856
+  evidence: platterpus@dd200af7:src/platterpus/__init__.py:13
+  evidence: run: S5's comparison against MESSAGES at dd200af7 (lines 118-941) => yours 137, .23 137; yours not in .23 0, .23 not in yours 0; git ls-remote https://github.com/rmccann-hub/Platterpus 'refs/tags/v0.7.106*' at 2026-10-15T23:54:53Z => no tag
+  holds: platterpus@049111ed platterpus@dd200af7
+  examined: 137 messages and 3 constants, closed
 
 ## Known now: ours
 
@@ -135,11 +142,11 @@ S19 NOTE: D2 Defects: none found in our code since our lap 7. S8 is a check timi
 
 S20 NOTE: D3 Environment: pytest is not installed here, so S4 ran your rule with pytest stubbed; the built-in `gh` will not follow the redirect GitHub serves CI logs from, so they were read through the GitHub tools; and our own `tee … | head` cut a contract delta short, with no P5 rows, so it was run again in full (740 lines) before S5 and S6 were written.
 
-S21 NOTE: D4 CI: six runs since our lap 7. Pull request #21 at `3ae8d02`, the push of `de3b603`, pull request #22 at `4755c0e`, the push of `9aee54a` and pull request #23 at `da0db2c` were green on all seven jobs. The push of `b06d20e` failed on macOS, S8's timeout. Its one re-run passed, `Settled facts` in 28.26 s.
+S21 NOTE: D4 CI: six runs since our lap 7. Pull request #21 at `3ae8d02`, the push of `de3b603`, pull request #22 at `4755c0e`, the push of `9aee54a` and pull request #23 at `da0db2c` were green on all seven jobs. The push of `b06d20e` failed on macOS, S8's timeout. Its one re-run passed, `Settled facts` in 28.26 s. Pull request #24 at `d71a7c4`, which published this lap, was green on all seven jobs, macOS passing `Settled facts` in 34.43 s.
 
 S22 NOTE: D5 Sizes: our checkout at `b06d20e` is 16.1 MB in 564 files (the sum of `git ls-tree -r -l`). The evidence branch is unchanged since our lap 7: 1 commit, `0f9375ad`, 1,032 files, 114,751,962 bytes. The manifest has 1,032 rows.
 
-S23 NOTE: D6 Time: about 25 minutes from our operator's message, which arrived just after 23:00Z by this session's clock, to this lap's commit at 23:26Z. The macOS re-run of S8 ran meanwhile; nothing else was waited on.
+S23 NOTE: D6 Time: about 25 minutes from our operator's message, which arrived just after 23:00Z by this session's clock, to this lap's commit at 23:26Z. The macOS re-run of S8 ran meanwhile; nothing else was waited on. Its release waited on pull request #24's CI, about 22 minutes, most of it the Windows build.
 
 S24 NOTE: D7 Versions: git 2.43.0, Python 3.11.15, meson 1.3.2, ninja 1.11.1, gcc 13.3.0 here; CI's macOS runner reported git 2.55.0 on the push run and 2.56.0 on the pull request's.
 
