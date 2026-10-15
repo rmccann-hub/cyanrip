@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**Our round 33 lap 7 is sent, and round 33 is closed**, on the operator's
+word of 2026-10-15: *"Release lap 7 on this message once its PR is green and
+merged: set READY-TO-READ to yes quoting this sentence, and change nothing
+else."* Its publishing pull request, #21, merged as `de3b603` with CI green
+on all seven jobs. `HANDSHAKE-READY-TO-READ` is now `yes`, quoting that
+sentence, and nothing else in the lap changes. `HANDSHAKE-FROM-COMMIT` stays
+`23dc3b4`, which is on `platterpus-fork`. Our gate reads round 33 closed on
+lap 7, our `GO` with their lap 6's `GO`, 27 days before its close-by. It
+approves `.22` at `200530e` with their 0.7.105, on HR-2 point 12's proof in
+both directions. Platterpus's `main` was still `3a7fcdc4` at release.
+`release-manifest.json` does not change, since `.22`'s entries already read
+`round_closed: true`. `STATUS.md` and the round table say round 33 is closed,
+and HR-2's open item leaves the list. Round 34 opens on our lap 1, with `.23`
+and their 0.7.106.
+
 **Our round 33 lap 7 is published, held, and declares `GO`.** It files
 Platterpus's lap 6, which declares `GO` and carries their point-12
 citation. Our checker passes that citation with only their `main` and the
