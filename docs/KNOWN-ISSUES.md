@@ -887,6 +887,18 @@ request changed a lap's ready line, `STATUS.md`, the round table, the changelog
 and the golden reference. **No mechanism is established**, so it is recorded
 here, as `STATUS.md`'s `suite-timeouts-at-default` says each occurrence is.
 
+**And again the same day, on the push of `b06d20e`**, the merge that published
+`.23`: `macos`, `Settled facts TIMEOUT 120.03s`, killed by SIGTERM, 116 OK, 12
+skipped and none failed (run 38820348425, job 116715137866). **One tree, three
+times on macOS within an hour**: `b06d20e`'s tree is the pull request head
+`da0db2c`'s (`353b5ad`), whose own run passed it in **93.08 s**; the push
+timed out at **120.03 s**; and the one re-run of the failed job passed it in
+**28.26 s**. Earlier that day it took 30.73 s at `21382e4` and 37.06 s at
+`9aee54a`. So the time does not follow the tree, and the content of the
+change is not the cause; **what is, is still not established**, since CI keeps
+no per-row timing and the runner's other load is not visible from the job's
+log. It is our round 34 lap 1 S8, and `STATUS.md`'s `settled-facts-macos`.
+
 **And a measurement that is a warning, not yet a fault.** Since HR-2's move,
 the 30 rows that re-check a file on the evidence branch run only where that
 file is fetched (`tools/check-settled.py` counts them unprobed otherwise). In

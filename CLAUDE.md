@@ -1999,6 +1999,20 @@ lap that buys an explanation is the protocol working, and it does not count
 against a round the way a wasted lap does. **Close a round when both sides can
 state why, not when the other side has stopped talking.**
 
+**GIVE WHAT YOU KNOW, WAIT FOR THE TEST — operator, 2026-10-15.** *"send me
+what you know for a fact should be corrected. Wait on the rest. This should be
+a general rule of thumb for laps. Give what you know, wait for the test"*. Said
+while our round 34 lap 1 was being held until Platterpus's next release
+existed. **A lap goes out as soon as it carries something established**: each
+fact that should be corrected, with its evidence and its owner. What only the
+run can settle is named as waiting for the run, and is neither guessed at nor a
+reason to hold the lap. It stops two wrong turns: holding a lap until
+everything is known, which delays what already is; and filling one with what
+the test will probably show, which the test then has to correct. A condition
+that needs a release not yet cut names it by what it must do (*"your first
+release naming `891c79e` as its build under review"*), never by a version
+number, so the lap needs no amendment when the release lands.
+
 **The measure of the reform is lap count, and it is checkable.** Round 15 closes
 in three laps or the reform failed.
 
