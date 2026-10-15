@@ -17,16 +17,16 @@ HANDSHAKE-PIN-POLICY: **`200530e` is round 33's pin, set by our lap 1, and it do
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc2+platterpus.22
 HANDSHAKE-OUR-PIN: 200530e
-HANDSHAKE-FROM-COMMIT: 3a3e7a1
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, which files your lap 2 on `7e33f4c`, the merge of our pull request #16, which removed the moved files and added `docs/evidence-manifest.tsv`. It reaches `platterpus-fork` with this lap, and every `cyanrip@` reference below resolves from it.
+HANDSHAKE-FROM-COMMIT: 4f507d4
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, the merge of our pull request #17, which filed your lap 2 and published this lap held, on `7e33f4c`, the merge of our pull request #16, which removed the moved files and added `docs/evidence-manifest.tsv`. It is on `platterpus-fork`, and every `cyanrip@` reference below resolves from it.
 HANDSHAKE-BREAKING: **None** to the log, the cue, the CLI or any file the contract covers. The move takes 997 files off `platterpus-fork`; each run folder keeps its README there, and every moved file is on our `evidence` branch at `0f9375ad`.
 HANDSHAKE-INBOUND-HELD: `round-33-lap-02.md` — `OPEN`, sha256 `f8a5babee15c5731913ed0ed2af775250ae90c9957ebb366aadee5dbe8475a9f`, 17,715 bytes, released at `platterpus@101144da`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `f82392bb` holds no round-33 lap after your lap 2; read when this lap was published. It does hold your removal (S7).
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `f82392bb` holds no round-33 lap after your lap 2; read when this lap was published, and again at 2026-10-15T00:41Z, when it was released. It does hold your removal (S7).
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `c128b9886f09d74e` over 2 lap(s) — our lap 1 and your lap 2, excluding this file. `python3 tools/round-digest.py 33 --exclude round-33-lap-03.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@f82392bb`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there (S1).
 HANDSHAKE-CLOSE-BY: 2026-11-11T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-15, "realease and tell me when good"
 HANDSHAKE-NEXT-LAP: 4 (yours): your move and its removal named in a lap (your S14), and your checker's reading of ours (S3, S4); then each side's point-12 lap.
 HANDSHAKE-TO-VERSION: platterpus 0.7.105
 

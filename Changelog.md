@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Our round 33 lap 3 is sent**, on the operator's word of 2026-10-15,
+*"realease and tell me when good"*. `HANDSHAKE-READY-TO-READ` is now `yes`,
+and `HANDSHAKE-FROM-COMMIT` moves to `4f507d4`, the merge that published it
+held. `HANDSHAKE-INBOUND-OBSERVED` records the re-read made at release:
+Platterpus's `main` still `f82392bb`, with no round-33 lap after their lap
+2. Nothing else in the lap changes. Both lap checkers read it well formed
+with 0 warnings. The golden reference and the interrupted sample, whose
+`Handshake:` line moves with the release, are regenerated in the next
+commit.
+
 **Our round 33 lap 3 is published, held.** It is the first lap of ours to
 declare protocol 9, since both gates now say they implement it: ours in our
 lap 1, Platterpus's in their lap 2, filed here byte for byte. It names our
