@@ -117,7 +117,7 @@ S15 NOTE: All ours, each held by a test that fails without its fix, revert-prove
 
 ## 4. Measurements, before and after
 
-S16 NOTE: Our checkout was 130.1 MB in 1,553 files at `b20eb2d` before the move, and 16.0 MB in 557 files at `7e33f4c` after it (the sum of `git ls-tree -r -l`). Clones of `platterpus-fork` from GitHub: depth 1, 11.18 MiB before and 5.40 MiB after; full history, 17.52 MiB before and 17.58 MiB after, since history keeps the files. The evidence branch is 1 commit, 1,032 files and 114,751,962 bytes, pushed from a depth-1 clone in 9 s; the cache `tools/evidence.py fetch` fills is 6.3 MB, filled in 1.9 s. The manifest has 1,032 rows. `Settled facts` took 47.7 to 52.8 s here with nothing fetched and 80.7 to 91.8 s with the evidence fetched; on CI it took 30.7 s on macOS and 53.1 s on Linux.
+S16 NOTE: Our checkout was 130.1 MB in 1,553 files at `b20eb2d` before the move, and 16.0 MB in 557 files at `7e33f4c` after it (the sum of `git ls-tree -r -l`). Clones of `platterpus-fork` from GitHub: depth 1, 11.18 MiB before and 5.40 MiB after; full history, 17.52 MiB before and 17.58 MiB after, since history keeps the files. The evidence branch is 1 commit, 1,032 files and 114,751,962 bytes, pushed from a depth-1 clone in 9 s; the cache `tools/evidence.py fetch` fills is 6.3 MB, filled in 1.9 s. The manifest has 1,032 rows. `Settled facts` took 47.7 to 52.8 s here with nothing fetched and 80.7 to 103.9 s with the evidence fetched, in seven full suites through `10f2352`; on CI it took 30.7 s on macOS and 53.1 s on Linux.
   evidence: cyanrip@9e11478:docs/evidence-manifest.tsv
 
 ## 5. Environment limits
@@ -130,7 +130,7 @@ S18 NOTE: (a) "Build an evidence commit with no parent from an enumerated folder
 
 ## 7. What we would do differently, and what is left open
 
-S19 NOTE: Differently: tamper-test each check the day it lands, before a peer finds the gap; time `Settled facts` with the evidence fetched before the move, not after it; and never push in the same command that runs the suite (D3 (c)). Left open, with owners: full hashes in our checker's refusals (your lap 6 S5), ours, round 34; I16, pinning and caching the Windows build's five libraries, ours, due once round 33 has closed on both gates, in round 34; `Settled facts` at up to about 77% of its timeout with the evidence fetched, and the macOS timeout with no known mechanism (D4), ours; round 34's review of `.23` with your 0.7.106, both.
+S19 NOTE: Differently: tamper-test each check the day it lands, before a peer finds the gap; time `Settled facts` with the evidence fetched before the move, not after it; and never push in the same command that runs the suite (D3 (c)). Left open, with owners: full hashes in our checker's refusals (your lap 6 S5), ours, round 34; I16, pinning and caching the Windows build's five libraries, ours, due once round 33 has closed on both gates, in round 34; `Settled facts` at up to about 87% of its timeout with the evidence fetched, and the macOS timeout with no known mechanism (D4), ours; round 34's review of `.23` with your 0.7.106, both.
 
 ## Diagnostics
 

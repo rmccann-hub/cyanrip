@@ -891,9 +891,9 @@ here, as `STATUS.md`'s `suite-timeouts-at-default` says each occurrence is.
 the 30 rows that re-check a file on the evidence branch run only where that
 file is fetched (`tools/check-settled.py` counts them unprobed otherwise). In
 this environment's checkout with `tools/evidence.py fetch --branch` done,
-`Settled facts` took **80.7 to 91.8 s** in six full suites on 2026-10-15,
-against **47.7 to 52.8 s** in two with nothing fetched: up to about 77% of
-its 120 s timeout. CI's evidence job, which runs those rows, took 34.3 s on Linux
+`Settled facts` took **80.7 to 103.9 s** in seven full suites on 2026-10-15,
+the last at `10f2352`, against **47.7 to 52.8 s** in two with nothing
+fetched: up to about 87% of its 120 s timeout, and rising. CI's evidence job, which runs those rows, took 34.3 s on Linux
 (pull request #16). Where a check reads evidence, its time now depends on
 whether the evidence is fetched, and a timeout chosen before the move did not
 account for that.
