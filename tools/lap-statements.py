@@ -722,14 +722,22 @@ def held(side, rnd, lp):
 def round_laps(me, this):
     """Every LSL lap of this round we hold, both sides, up to and including
     this one, as {(side, lap): Lap}. The lap under check stands in for any
-    held copy of itself, which may be an older draft."""
+    held copy of itself, which may be an older draft.
+
+    The other side's laps count only below this one's number. A lap N is
+    written holding the other side's laps before N; the other side has a lap
+    N too only in a K1 collision, where one of the two is renumbered, so it is
+    nothing this lap could have answered. Found 2026-10-16: our held round 34
+    lap 2's TERM pending, numbered after theirs, was read as the latest status
+    of their lap 2's close condition, and their GO was refused."""
     side, rnd, lp = me
     out = {}
     for s in SIDES:
         d = LAPS if s == "cyanrip" else LAPS / "inbound"
         for f in d.glob(f"round-{rnd:02d}-lap-*.md"):
             m = re.fullmatch(rf"round-{rnd:02d}-lap-(\d+)\.md", f.name)
-            if not m or int(m.group(1)) > lp or (s, int(m.group(1))) == (side, lp):
+            if not m or int(m.group(1)) > lp or (s, int(m.group(1))) == (side, lp) \
+                    or (s != side and int(m.group(1)) == lp):
                 continue
             h = held(s, rnd, int(m.group(1)))
             if h is not None:
