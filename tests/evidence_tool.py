@@ -350,5 +350,25 @@ with tempfile.TemporaryDirectory() as d:
     check(rc == 1 and "already on evidence" in o,
           "a folder already on evidence is refused (HR-2 3)")
 
+    # --- reachability through a cache that fetched the tip by hash first.
+    # `fetch` takes each commit at depth 1, which marks the tip shallow; a
+    # branch fetch after it did not deepen past that mark, so the earlier
+    # commit read as NOT on evidence, and the lap checker refused a citation
+    # of it. Found 2026-10-16, the first time the branch had two commits.
+    late = {evidence.CACHE_ENV: str(d / "late.git")}
+    rc, o = tool(work, "fetch", env=late)
+    check(rc == 0, f"fetch every commit by hash first: {o.strip()}")
+    rc, o = tool(work, "fetch", "--branch", env=late)
+    check(rc == 0, f"then the branch: {o.strip()}")
+    os.environ.update(late)
+    try:
+        s3 = evidence.Store(work)
+        check(evidence.on_evidence(s3, C) is True,
+              "the earlier evidence commit is on evidence after the branch "
+              "fetch, though its child was fetched shallow first")
+        check(evidence.on_evidence(s3, E2) is True, "and so is the tip")
+    finally:
+        del os.environ[evidence.CACHE_ENV]
+
 print(f"\n{'all ok' if not fails else f'{fails} failure(s)'}")
 sys.exit(1 if fails else 0)

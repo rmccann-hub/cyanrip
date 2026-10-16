@@ -357,7 +357,14 @@ def fetch(store, commits, url=None, branch=False):
         raise RuntimeError("no URL: this clone has no origin and "
                            f"{URL_ENV} is unset")
     if branch:
-        git(cache, "fetch", "-q", "--no-tags", url,
+        # A commit fetched by hash below is taken at depth 1, which makes it a
+        # shallow boundary, and a later branch fetch does not deepen past it:
+        # reachability from the tip then stopped there, and an earlier evidence
+        # commit read as not on the branch (found 2026-10-16, when the branch
+        # first had two commits). So the branch fetch deepens the cache.
+        shallow = out(git(cache, "rev-parse", "--is-shallow-repository"))
+        git(cache, "fetch", "-q", "--no-tags",
+            *(["--unshallow"] if shallow == "true" else []), url,
             f"+refs/heads/{BRANCH}:refs/remotes/origin/{BRANCH}", check=True)
     for c in sorted(set(commits)):
         if git(cache, "cat-file", "-e", f"{c}^{{commit}}").returncode == 0:
