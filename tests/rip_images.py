@@ -3549,6 +3549,96 @@ def sc_image_reports_isrc():
              f"has none")
 
 
+def sc_overread_bounded():
+    """Under -O, a frame outside the disc is read once (round 35).
+
+    Through paranoia it was retried to the retry limit with no timeout of
+    ours, and on a disc image at -P 0 the read of the first frame past the
+    disc never returned: cdio_paranoia_read_limited() spun, through the
+    SIGTERM `timeout` sent at 120 s, until killed. Measured before the fix:
+    `-s 667 -O` on pregap.cue ran 10 m 21 s. Each such frame is now read once,
+    through the cdda layer, a refused one is written as silence, and the
+    track block says `    Beyond disc: N of M frames refused (written as
+    silence)`. Both offsets are checked, past the end and before the start.
+
+    M is the disc header's own `Overread:`/`Underread:` frame count. The
+    audio is compared with the same rip without -O, which writes those frames
+    as silence by another path (`Appended:`/`Prepended:`), so a paranoia
+    re-seek after a frame read outside the disc that went wrong, shifting
+    every later sample, shows as a difference.
+    """
+    d = WORK / "overread"
+    d.mkdir(exist_ok=True)
+    # basic.cue starts track 1 at LSN 0, so a negative offset reads before it.
+    shutil.copy(FIX / "basic.cue", d / "basic.cue")
+    shutil.copy(FIX / "cdda.bin", d / "basic.bin")
+
+    def run(name, *extra):
+        out = d / name
+        try:
+            r = subprocess.run([CRIP, "-d", "basic.cue", "-N", "-A", "-U",
+                                "-P", "0", "-o", "pcm", "-D", str(out),
+                                "-F", "{track}", "-L", "log", *extra],
+                               cwd=d, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, timeout=30)
+        except subprocess.TimeoutExpired:
+            fail(f"overread_bounded: {name} ({' '.join(extra)}) did not "
+                 f"finish in 30 s")
+            return None
+        logp = out / "log.log"
+        if r.returncode != 0 or not logp.exists():
+            fail(f"overread_bounded: {name} exited {r.returncode}")
+            print(r.stdout.decode(errors="replace"))
+            return None
+        text = logp.read_text(errors="replace")
+        blocks = {int(m.group(1)): m.group(0) for m in re.finditer(
+            r"^Track (\d+) .*?(?=^Track \d+ |\Z)", text, re.M | re.S)}
+        return text, blocks, out
+
+    for offset, edge in (("667", "last"), ("-667", "first")):
+        plain = run(f"plain{offset}", "-s", offset)
+        over = run(f"over{offset}", "-s", offset, "-O")
+        if not plain or not over:
+            continue
+        text, blocks, out = over
+        m = re.search(r"^(?:Over|Under)read:\s+([+-]?\d+) frames", text, re.M)
+        if not m or not blocks:
+            fail(f"overread_bounded: -s {offset} -O: no `Overread:` frame "
+                 f"count or no track blocks in the log")
+            continue
+        n = abs(int(m.group(1)))
+        track = max(blocks) if edge == "last" else min(blocks)
+        want = f"    Beyond disc: {n} of {n} frames refused (written as silence)"
+        for num, block in sorted(blocks.items()):
+            got = re.findall(r"^    Beyond disc: .*$", block, re.M)
+            if got != ([want] if num == track else []):
+                fail(f"overread_bounded: -s {offset} -O: track {num}'s "
+                     f"Beyond disc: line(s) {got!r}, where "
+                     f"{[want] if num == track else []!r} is expected")
+        rip_errors = ripping_errors(text)
+        if not rip_errors or rip_errors[0] != 0:
+            fail(f"overread_bounded: -s {offset} -O: {rip_errors!r}; a "
+                 f"refused frame outside the disc is not a ripping error")
+        if "Frame read failed" in text or "cdio error" in text:
+            fail(f"overread_bounded: -s {offset} -O: a frame outside the "
+                 f"disc was reported as a failed read")
+        for num in sorted(blocks):
+            a = (plain[2] / f"{num}.pcm").read_bytes()
+            b = (out / f"{num}.pcm").read_bytes()
+            if not a.strip(b"\0"):
+                fail(f"overread_bounded: -s {offset}: track {num}'s audio is "
+                     f"all silence, so the comparison proves nothing")
+            elif a != b:
+                fail(f"overread_bounded: -s {offset}: track {num}'s audio "
+                     f"differs with -O from without it")
+
+    # No frame outside the disc, no line: -O with no offset to overread.
+    zero = run("over0", "-s", "0", "-O")
+    if zero and "Beyond disc:" in zero[0]:
+        fail("overread_bounded: -s 0 -O printed a Beyond disc: line, and no "
+             "frame was read outside the disc")
+
+
 # What each reason a track's disc ISRC read can give says, as the log's
 # `Disc ISRC:` line spells it. A reason not listed here fails the scenario
 # below, so a new one cannot reach the log without a decision about it.
