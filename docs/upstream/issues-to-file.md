@@ -1,6 +1,6 @@
 # 23 upstream issues for cyanreg/cyanrip, ready to paste
 
-**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `ee63037238d7f74c`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public.
+**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `bded7785c9814699`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
 
 **How to file.** For each item: open <https://github.com/cyanreg/cyanrip/issues/new>, paste the **Title** line into the title box and everything between the two `BODY` markers into the body. File them in order: item 5 refers to item 4, so once item 4 is filed you can replace *"item 4 of this set"* in item 5 with its issue link. Before filing, a quick search of upstream's open issues for each title's key words avoids a duplicate; this list was not checked against their tracker.
 
@@ -12,7 +12,7 @@
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:934-942`, `on_quit_signal()`.
+**Where:** `src/cyanrip_main.c:1250-1258`, `on_quit_signal()`.
 
 ```c
 static void on_quit_signal(int signo)
@@ -39,7 +39,7 @@ async-signal-safe ([`20c2f77`](https://github.com/rmccann-hub/cyanrip/commit/20c
 SIGTERM, and a -Z loop that ignored both").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -49,7 +49,7 @@ SIGTERM, and a -Z loop that ignored both").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:1144`, the only signal installation:
+**Where:** `src/cyanrip_main.c:1467`, the only signal installation:
 `signal(SIGINT, on_quit_signal)`. `SIGTERM` occurs nowhere in the file.
 
 **What happens:** a supervising process, a service manager or `kill` stops
@@ -66,7 +66,7 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 [`20c2f77`](https://github.com/rmccann-hub/cyanrip/commit/20c2f77).
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -76,7 +76,7 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:2110-2112`:
+**Where:** `src/cyanrip_main.c:2473-2475`:
 
 ```c
     if (!ctx->settings.print_info_only)
@@ -84,8 +84,8 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 end:
 ```
 
-Twenty-two `goto end` statements in `main()`, which starts at line 1133, jump
-to the label below the report.
+Twenty-three `goto end` statements in `main()`, which starts at line 1456,
+jump to the label below the report.
 
 **What happens:** a run that takes any of them writes a log with no completion
 report, and then `cyanrip_log_end()` signs that log as though it were whole.
@@ -98,7 +98,7 @@ the completion footer on every route out, and give Rip completed: a third
 state").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -127,7 +127,7 @@ order ([`b866900`](https://github.com/rmccann-hub/cyanrip/commit/b866900), "Comp
 de-emphasis").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -137,7 +137,7 @@ de-emphasis").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_log.c:85-86`:
+**Where:** `src/cyanrip_log.c:90-91`:
 
 ```c
         if (ctx->settings.deemphasis || ctx->settings.force_deemphasis)
@@ -152,7 +152,7 @@ and this line claims a step that did not run.
 fixed with the filter-graph issue (item 4 of this set) in [`b866900`](https://github.com/rmccann-hub/cyanrip/commit/b866900).
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -162,7 +162,7 @@ fixed with the filter-graph issue (item 4 of this set) in [`b866900`](https://gi
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:1704` and `:1789`,
+**Where:** `src/cyanrip_main.c:2055` and `:2140`,
 `av_dict_parse_string(…, "=", ":", 0)`.
 
 **What happens:** `av_dict_parse_string()`'s tokeniser treats `'` as a quote.
@@ -179,7 +179,7 @@ double-escaped ([`c59dea3`](https://github.com/rmccann-hub/cyanrip/commit/c59dea
 double-escaping the consumer's").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -207,7 +207,7 @@ string is kept ([`c3482b0`](https://github.com/rmccann-hub/cyanrip/commit/c3482b
 truncating and logging").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -217,7 +217,7 @@ truncating and logging").
 
 <!-- BODY START -->
 
-Since [`c431d58`](https://github.com/rmccann-hub/cyanrip/commit/c431d58) ("Disable paranoia's drive cache modelling for disc images"),
+Since [`c431d58`](https://github.com/cyanreg/cyanrip/commit/c431d58) ("Disable paranoia's drive cache modelling for disc images"),
 ripping a BIN/CUE, NRG or CDRDAO image at the default paranoia level returns
 audio that does not match the source, and reports success while doing it.
 
@@ -306,8 +306,12 @@ with image size.
 
 ### Notes
 
-- Affects `0.9.4-rc1` and anything after [`c431d58`](https://github.com/rmccann-hub/cyanrip/commit/c431d58), including `0.9.4-rc2` and
-  `master` at [`f8ebf48`](https://github.com/rmccann-hub/cyanrip/commit/f8ebf48), measured there on 2026-09-27.
+- Affects `0.9.4-rc1` and anything after [`c431d58`](https://github.com/cyanreg/cyanrip/commit/c431d58), including `0.9.4-rc2`,
+  `0.9.4-rc3` ([`e129ad9`](https://github.com/cyanreg/cyanrip/commit/e129ad9)) and `master` at `7dbe56a`, where the switch above is
+  unchanged (`src/cyanrip_main.c:271-276`); measured on [`f8ebf48`](https://github.com/cyanreg/cyanrip/commit/f8ebf48) on
+  2026-09-27.
+- Upstream's own image tests all rip at `-P 0` (`tests/rip_images.py` at
+  `7dbe56a`), which may be why it has not been seen there.
 - Real drives were never affected; the guard is on the image drivers only.
 - `-P 0` is byte-perfect on both, so a caller that always passes `-P 0` sees nothing.
 - Found and fixed downstream in `rmccann-hub/cyanrip` (`platterpus-fork`), where
@@ -316,7 +320,7 @@ with image size.
   right number is a judgement about the margin, not a mechanical change.
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -326,7 +330,7 @@ with image size.
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:428`, `cdio_paranoia_read_limited(ctx->paranoia,
+**Where:** `src/cyanrip_main.c:486`, `cdio_paranoia_read_limited(ctx->paranoia,
 &status_cb, …)` with the `-r` value as the per-frame retry limit.
 
 **What happens:** `cdio_paranoia_read_limited()` compares its retry counter with
@@ -345,7 +349,7 @@ The library's check is arguably a libcdio-paranoia defect too, and worth a repor
 there.
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -355,8 +359,8 @@ there.
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:1610`, `ctx->settings.decode_hdcd ? "HDCD" :
-"CD"`, set before a sample is read.
+**Where:** `src/cyanrip_main.c:1960`, `ctx->settings.decode_hdcd ? "HDCD" :
+"CD"`, set before a sample is read. Related, not a duplicate: #50.
 
 **What happens:** every file ripped with `-H` is tagged `media: HDCD`, whether or
 not the disc carries HDCD, and the log reports `HDCD detected: no` for the same
@@ -367,7 +371,7 @@ the log already reports, not a setting ([`ed4a377`](https://github.com/rmccann-h
 says").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -377,7 +381,7 @@ says").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_log.c:318`, in `cyanrip_log_finish_report()`, which
+**Where:** `src/cyanrip_log.c:357`, in `cyanrip_log_finish_report()`, which
 tests only `t->ar_db_status == CYANRIP_ACCUDB_FOUND`.
 
 **What happens:** a SIGINT during a track's read still reaches the report. If the
@@ -390,7 +394,7 @@ in a real rip.
 ([`f26668b`](https://github.com/rmccann-hub/cyanrip/commit/f26668b), "Leave an interrupted track out of the AccurateRip tally").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -400,7 +404,7 @@ in a real rip.
 
 <!-- BODY START -->
 
-**Where:** `src/accurip.c:239-242`:
+**Where:** `src/accurip.c:264-267`:
 
 ```c
         if (is_450 && e->checksum_450 == checksum)
@@ -420,7 +424,7 @@ fork's copy of the same code.
 "Compare only 450 checksums on a 450 AccurateRip lookup").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -430,14 +434,14 @@ fork's copy of the same code.
 
 <!-- BODY START -->
 
-**Where:** `src/accurip.c:171`, in `crip_fill_accurip()`, before the loop over
+**Where:** `src/accurip.c:196`, in `crip_fill_accurip()`, before the loop over
 the response's entries:
 
 ```c
     ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
 ```
 
-and the arm it disables, `:188-189`:
+and the arm it disables, `:213-214`:
 
 ```c
             if (ctx->ar_db_status != CYANRIP_ACCUDB_FOUND)
@@ -446,24 +450,28 @@ and the arm it disables, `:188-189`:
 
 **What happens:** the status is already `FOUND` when the first entry is read,
 so the `MISMATCH` assignment never runs. A response whose entries all carry
-another disc's ids reads `AccurateRip:    found`, and so does an empty one. The
-report then prints `Tracks ripped accurately: 0/N`, which reads as a comparison
+another disc's ids reads `AccurateRip:    found`. The report then prints `Tracks ripped accurately: 0/N`, which reads as a comparison
 that found nothing, over a comparison that never happened. Read from the
 source: no real response has been seen to have that shape, because a dBAR file
 is named by the ids it holds.
 
+Upstream's [`76dcd5d`](https://github.com/cyanreg/cyanrip/commit/76dcd5d) ("Don't trust AccurateRip and cover art replies to be
+well formed") fixed part of this: a reply with no body is now taken as no
+entry, and reads `not found` (`:177-180`). A response holding only another
+disc's entries still reads `found`. Related, not a duplicate: #24.
+
 **How to reproduce:** call the parse on any recorded dBAR response with one
-disc id changed, or with an empty body, and read the disc status.
+disc id changed, and read the disc status.
 
 **What the fork did:** the status starts at `NOT_FOUND` and becomes `FOUND`
-only when an entry for this disc is read, so those two responses read
-`mismatch` and `not found` and print no tally ([`64642db`](https://github.com/rmccann-hub/cyanrip/commit/64642db), "Let the AccurateRip
+only when an entry for this disc is read, so that response reads `mismatch`
+and prints no tally ([`64642db`](https://github.com/rmccann-hub/cyanrip/commit/64642db), "Let the AccurateRip
 disc status say mismatch and not found"). The fork first split the parse out
 of the fetch, unchanged, so a recorded response can be tested with no network
 ([`5b7493c`](https://github.com/rmccann-hub/cyanrip/commit/5b7493c)).
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -473,7 +481,7 @@ of the fetch, unchanged, so a recorded response can be tested with no network
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_log.c:152-159`, the `Accurip 450:` line, reached when
+**Where:** `src/cyanrip_log.c:180-187`, the `Accurip 450:` line, reached when
 both whole-track checksums missed:
 
 ```c
@@ -503,7 +511,7 @@ confidence ([`b1857d6`](https://github.com/rmccann-hub/cyanrip/commit/b1857d6), 
 threshold rejects it"). The tally of partial matches is unchanged.
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -513,7 +521,7 @@ threshold rejects it"). The tally of partial matches is unchanged.
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:911-914`, at the end of `cyanrip_rip_track()`:
+**Where:** `src/cyanrip_main.c:1227-1230`, at the end of `cyanrip_rip_track()`:
 
 ```c
         if (ctx->total_error_count - start_err)
@@ -522,7 +530,7 @@ threshold rejects it"). The tally of partial matches is unchanged.
             cyanrip_log(ctx, 0, "Track %i ripped and encoded successfully!\n", t->number);
 ```
 
-and the repeat limit at `:858-861`, which reaches the same lines:
+and the repeat limit at `:1174-1177`, which reaches the same lines:
 
 ```c
         if (total_repeats >= ctx->settings.max_retries) {
@@ -538,6 +546,11 @@ successfully!`. So does a `-Z` track whose reads never agreed. On a real
 damaged disc in the fork's testing, one track printed the success line over
 2,586 skips, and five tracks read five ways each printed it too.
 
+Upstream's #70, closed in October 2023, reported the same symptom, and the
+maintainer declined it. What is new here is where it shows: the success line
+itself, which a reader takes as the verdict on the track, and the `-Z` repeat
+limit, which reaches the same line over reads that never agreed.
+
 **How to reproduce:** rip a disc paranoia has to skip on, and compare the
 track's success line with the per-track `SKIP` counter; or rip with `-Z 2`
 and a repeat limit on a disc that reads differently each time.
@@ -548,7 +561,7 @@ or when `-Z` hit the repeat limit ([`4529810`](https://github.com/rmccann-hub/cy
 repeat limit as read with errors").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -558,14 +571,14 @@ repeat limit as read with errors").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:1937-1938`, the loop over every track:
+**Where:** `src/cyanrip_main.c:2295-2296`, the loop over every track:
 
 ```c
                 if (cyanrip_rip_track(ctx, t))
                     break;
 ```
 
-against the loop over the tracks `-l` names, `:2064-2067`:
+against the loop over the tracks `-l` names, `:2425-2428`:
 
 ```c
             ret = cyanrip_rip_track(ctx, t);
@@ -577,8 +590,8 @@ against the loop over the tracks `-l` names, `:2064-2067`:
 
 **What happens:** with `-l`, a failed track prints `Error ripping:` and ends
 the run. Without it, the same failure leaves the loop with no message and
-carries on: the album's loudness is finalised (`:1945-1946`) and, with
-ReplayGain on, the album tags are written (`:1948-1950`), over a disc whose
+carries on: the album's loudness is finalised (`:2303-2304`) and, with
+ReplayGain on, the album tags are written (`:2306-2309`), over a disc whose
 tracks were not all ripped. Any failure `cyanrip_rip_track()` returns reaches
 it, a changed medium included.
 
@@ -590,17 +603,17 @@ under `-l`.
 ([`c1e1ab1`](https://github.com/rmccann-hub/cyanrip/commit/c1e1ab1), "Abort the rip of every track on a failed track, as -l does").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
 ## Item 17 of 23
 
-**Title:** A stopped `-f` search is retried or misreported
+**Title:** A stopped `-f` search is retried with a larger radius
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:523-526`, where a stop during a track's read
+**Where:** `src/cyanrip_main.c:582-585`, where a stop during a track's read
 leaves the search:
 
 ```c
@@ -610,7 +623,7 @@ leaves the search:
             }
 ```
 
-and `:564-576`, which the `goto` lands in:
+and `:623-635`, which the `goto` lands in:
 
 ```c
     if (!offset_found) {
@@ -621,15 +634,15 @@ and `:564-576`, which the `goto` lands in:
         } else {
             cyanrip_log(ctx, 0, "Was not able to find drive offset with a radius of %i frames"
                         ", trying again with a larger radius...\n", range);
-            search_for_drive_offset(ctx, 2*range);
+            return search_for_drive_offset(ctx, 2*range);
         }
 ```
 
 **What happens:** nothing after `end:` asks whether the search was stopped.
-Once a track has been checked, a stop prints `trying again with a larger
-radius`, reads a frame, stops again, and repeats until the radius outgrows
-every track. Before any track has been checked, a stop prints `No track was
-long enough`, which is not why the search ended.
+A track is marked checked (`did_check`, `:568`) before the frame-read loop
+that holds the stop, so a stop always reaches the last arm: it prints `trying
+again with a larger radius`, reads a frame, stops again, and repeats until the
+radius outgrows every track.
 
 **How to reproduce:** run `-f` on a disc in AccurateRip and send SIGINT
 during the search.
@@ -639,7 +652,7 @@ during the search.
 was, and end a -f search on a stop").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -649,7 +662,7 @@ was, and end a -f search on a stop").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_log.c:319-324`, the disc tally in
+**Where:** `src/cyanrip_log.c:358-363`, the disc tally in
 `cyanrip_log_finish_report()`:
 
 ```c
@@ -661,7 +674,7 @@ was, and end a -f search on a stop").
                     accurip_partial++;
 ```
 
-against the gate on the track's own `Accurip 450:` line, `:148`:
+against the gate on the track's own `Accurip 450:` line, `:176`:
 
 ```c
         if (!has_ar || ((match_v1 < 0) && (match_v2 < 0))) {
@@ -684,7 +697,7 @@ the 450 lines that say `matches Accurip DB` ([`8ab9a8d`](https://github.com/rmcc
 match in the footer only where the track's line says so").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `f8ebf48`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -694,7 +707,7 @@ match in the footer only where the track's line says so").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:1933-1938` at [`b40c1f0`](https://github.com/rmccann-hub/cyanrip/commit/b40c1f0), the offset check:
+**Where:** `src/cyanrip_main.c:1940-1945` at `7dbe56a`, the offset check:
 
 ```c
     if (!settings.offset && !offset_set && !settings.print_info_only &&
@@ -705,7 +718,7 @@ match in the footer only where the track's line says so").
     }
 ```
 
-and `:660`, the gate on the sub-channel pre-emphasis read:
+and `:667`, the gate on the sub-channel pre-emphasis read:
 
 ```c
         if (!t->preemphasis && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
@@ -723,7 +736,7 @@ libcdio 2.4.
 
 **How to reproduce:** with libcdio 2.3.0 or later, `cyanrip -d disc.cue -N -A
 -U -o flac` exits 1 at `Offset is unset!`; add `-s 0` and every track logs the
-sub-channel failure. Run here on a build of [`b40c1f0`](https://github.com/rmccann-hub/cyanrip/commit/b40c1f0) against libcdio 2.1,
+sub-channel failure. Run here on a build of [`b40c1f0`](https://github.com/cyanreg/cyanrip/commit/b40c1f0) against libcdio 2.1,
 through an `LD_PRELOAD` shim that adds the bit for an image driver as 2.3.0
 does. Without the shim, a two-track CUE image rips and exits 0. With it, the
 same command exits 1 at `Offset is unset!`, and with `-s 0` both tracks log
@@ -731,12 +744,12 @@ same command exits 1 at `Offset is unset!`, and with `-s 0` both tracks log
 
 **What the fork did:** both checks ask the driver, with `cdio_get_driver_id()`
 against the three image drivers, as upstream's own cache-model switch already
-does (`:264-267`). The ISRC read at `:641` is left alone, because from 2.3.0
+does (`:271-274`). The ISRC read at `:648` is left alone, because from 2.3.0
 an image really does serve one ([`faec396`](https://github.com/rmccann-hub/cyanrip/commit/faec396), "Tell an image from a drive by its
 driver, not by CDIO_DRIVE_CAP_READ_ISRC").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `b40c1f0`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -746,7 +759,7 @@ driver, not by CDIO_DRIVE_CAP_READ_ISRC").
 
 <!-- BODY START -->
 
-**Where:** `src/fun512.c:69-75` at [`b40c1f0`](https://github.com/rmccann-hub/cyanrip/commit/b40c1f0), in `cyanrip_verify_log()`:
+**Where:** `src/fun512.c:69-75` at `7dbe56a`, in `cyanrip_verify_log()`:
 
 ```c
     fseek(f, 0, SEEK_END);
@@ -766,7 +779,7 @@ the wrapped value makes `av_mallocz()` fail, and the run then prints
 behaviour.
 
 **How to reproduce:** build with `-Db_sanitize=undefined` and run `cyanrip -Y
-<a directory>` on ext4. Run here on a build of [`b40c1f0`](https://github.com/rmccann-hub/cyanrip/commit/b40c1f0): `fun512.c:72:45:
+<a directory>` on ext4. Run here on a build of [`b40c1f0`](https://github.com/cyanreg/cyanrip/commit/b40c1f0): `fun512.c:72:45:
 runtime error: signed integer overflow: 9223372036854775807 + 1 cannot be
 represented in type 'long int'`, then `Couldn't read "adir"!`, exit 1.
 
@@ -776,7 +789,7 @@ error ([`72975de`](https://github.com/rmccann-hub/cyanrip/commit/72975de), "Boun
 paths that skipped it").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `b40c1f0`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -786,7 +799,7 @@ paths that skipped it").
 
 <!-- BODY START -->
 
-**Where:** `src/fun512.c:76-77` at [`b40c1f0`](https://github.com/rmccann-hub/cyanrip/commit/b40c1f0), in `cyanrip_verify_log()`:
+**Where:** `src/fun512.c:76-77` at `7dbe56a`, in `cyanrip_verify_log()`:
 
 ```c
     len = fread(data, 1, len, f);
@@ -813,7 +826,7 @@ line for line.
 as an I/O error, not as one without a checksum").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `b40c1f0`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -823,15 +836,15 @@ as an I/O error, not as one without a checksum").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_log.c:383` at [`b40c1f0`](https://github.com/rmccann-hub/cyanrip/commit/b40c1f0), in the `PCHECK()` macro,
+**Where:** `src/cyanrip_log.c:383` at `7dbe56a`, in the `PCHECK()` macro,
 which `:387-402` use sixteen times:
 
 ```c
         cyanrip_log(ctx, 0, "%lu\n", paranoia_status[PARANOIA_CB_ ## PROP]);   \
 ```
 
-with `paranoia_status` declared `uint64_t` (`src/cyanrip_main.h:315`,
-`src/cyanrip_main.c:465`).
+with `paranoia_status` declared `uint64_t` (`src/cyanrip_main.h:316`,
+`src/cyanrip_main.c:472`).
 
 **What happens:** `%lu` takes an `unsigned long`. `uint64_t` is
 `unsigned long` on 64-bit Linux, so the line is right there. On macOS it is
@@ -856,7 +869,7 @@ fork's `cyanrip_log()` carries a format attribute, which is how its macOS
 build found this.
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `b40c1f0`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 
@@ -866,7 +879,7 @@ build found this.
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:211-218` at [`b40c1f0`](https://github.com/rmccann-hub/cyanrip/commit/b40c1f0), in `cyanrip_ctx_init()`:
+**Where:** `src/cyanrip_main.c:218-225` at `7dbe56a`, in `cyanrip_ctx_init()`:
 
 ```c
     if (!(ctx->drive = cdio_cddap_identify_cdio(ctx->cdio, CDDA_MESSAGE_LOGIT, &msg))) {
@@ -879,7 +892,7 @@ build found this.
     }
 ```
 
-and `:2075-2079`, in `main()`:
+and `:2082-2086`, in `main()`:
 
 ```c
     if (!ctx->settings.print_info_only) {
@@ -896,7 +909,7 @@ Because the process exits straight after, what a user can see is small:
 LeakSanitizer reports the context, and when the CUE sheet cannot be opened,
 the logfile already created is left at 0 bytes, with nothing in it to say why.
 
-**How to reproduce:** on a build of [`b40c1f0`](https://github.com/rmccann-hub/cyanrip/commit/b40c1f0) with `-Db_sanitize=address`, run
+**How to reproduce:** on a build of [`b40c1f0`](https://github.com/cyanreg/cyanrip/commit/b40c1f0) with `-Db_sanitize=address`, run
 here:
 
 - `cyanrip -d /dev/null -I`: `Unable to init cddap context!`, exit 1, and
@@ -915,7 +928,7 @@ completion footer ([`a79ac9e`](https://github.com/rmccann-hub/cyanrip/commit/a79
 paths that skipped it").
 
 ---
-*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `b40c1f0`. The fix is linked above; happy to open a PR if it helps.*
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 

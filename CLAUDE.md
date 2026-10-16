@@ -1018,8 +1018,9 @@ should need rewriting. If it does, that is the defect.
    repository, so it is the maintainer's act, not ours — but **every one is
    drafted** (2026-09-27, five more 2026-10-05, the last five 2026-10-12):
    the other twenty-two are in `docs/upstream/defect-reports.md`, each with
-   upstream's `file:line`, at `f8ebf48` for 1 to 18 and at `b40c1f0` for 19
-   to 23, and our fixing commit, and all twenty-three are rendered ready to
+   upstream's `file:line` at `7dbe56a`, re-checked against it on 2026-10-16
+   (first checked at `f8ebf48` for 1 to 18 and at `b40c1f0` for 19 to 23),
+   and our fixing commit, and all twenty-three are rendered ready to
    paste in `docs/upstream/issues-to-file.md`. The count
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
@@ -2224,8 +2225,11 @@ a mid-round lap is `HOLD`, not `GO`, and a lap that changes nothing is still a
 complete lap.
 
 **4. Release.** Bump `+platterpus.N`, write the `Changelog.md` entry,
-regenerate the contract and golden reference at the new version, and announce the
-pin as a **commit SHA** -- tags cannot be published from here.
+regenerate at the new version every derived file that names it -- the contract,
+the golden reference and interrupted sample, and the dependency map
+(`sbom.cdx.json`, `docs/DEPENDENCIES.md`), which `.24`'s first candidate
+missed -- and announce the pin as a **commit SHA** -- tags cannot be published
+from here.
 
 **A release is not published until `release-manifest.json` names it.** This is
 how the consumer installs and upgrades -- there is no other mechanism, and from
