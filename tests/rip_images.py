@@ -3312,8 +3312,11 @@ def sc_diag_record_v8():
     check reads the value from somewhere the record did not write: the ISRC
     from the FLAC file's own bytes, de-emphasis from the cue sheet's FLAGS PRE,
     CD-TEXT from the fixture's .toc text, the -f ending from the line the
-    search printed. The states no image reaches -- a disc ISRC, sub-channel
-    pre-emphasis, a found offset -- are built in tests/diagrecord.c.
+    search printed. The states no plain image rip reaches -- a disc ISRC,
+    sub-channel pre-emphasis, a found offset -- are built in
+    tests/diagrecord.c. A disc ISRC IS reachable from an image through the
+    imagecap shim and a cue sheet's ISRC lines, which sc_disc_isrc_line()
+    does; this said no image reaches one until round 35 found otherwise.
     """
     keys = ["title", "performer", "songwriter", "composer", "message",
             "arranger", "isrc", "upc_ean", "genre", "discid"]
@@ -3544,6 +3547,165 @@ def sc_image_reports_isrc():
         fail(f"image_reports_isrc: the disc ISRC reasons are {reasons!r}; "
              f"with the bit reported, the ISRC is asked for and this image "
              f"has none")
+
+
+# What each reason a track's disc ISRC read can give says, as the log's
+# `Disc ISRC:` line spells it. A reason not listed here fails the scenario
+# below, so a new one cannot reach the log without a decision about it.
+DISC_ISRC_KIND = {
+    "libcdio returned none": "none",
+    "libcdio returned an empty ISRC": "none",
+    "libcdio returned an all-zero ISRC": "none",
+    "the driver does not report reading ISRC": "unknown",
+    "out of memory": "unknown",
+    "not read": "unknown",
+}
+
+
+def sc_disc_isrc_line():
+    """The `Disc ISRC:` line, and --prefer-disc-isrc (round 35, TASKS R20).
+
+    `.23` read each track's ISRC from the disc and kept it only in the
+    --diagnostics record. The log's `ISRC:` is the Metadata block's, which a
+    caller's -t decides, so a reader of the log could not tell the two apart,
+    and Platterpus's round 34 lap 2 read theirs as the disc's (our lap 3
+    S26). Each audio track block now prints the disc read, and
+    --prefer-disc-isrc makes a code the disc returned win over -t, track by
+    track.
+
+    AN IMAGE REACHES A DISC ISRC, which sc_diag_record_v8()'s docstring said
+    none could: through the imagecap shim the image driver reports the
+    capability as libcdio 2.3.0 does, and libcdio then returns a cue sheet's
+    ISRC lines. Every check reads a source the line does not share: the cue
+    text for the codes, the record's isrc_disc and isrc_disc_reason for the
+    line, and each FLAC file's own Vorbis comment for what was written.
+    """
+    needs_preload_shim("disc_isrc_line")
+    shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"disc_isrc_line: the shim was not built or not passed "
+             f"({shim!r})")
+        return
+    marker = WORK / "disc_isrc_line.added"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_IMAGE_CAP_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+
+    # libcdio's bincue driver looks for the .bin named after the cue, so the
+    # two share a stem. Track 2 has no ISRC line, so the disc gives none.
+    d = WORK / "disc_isrc"
+    d.mkdir(exist_ok=True)
+    cue = ('FILE "isrc.bin" BINARY\n'
+           '  TRACK 01 AUDIO\n    ISRC USRC17607839\n'
+           '    INDEX 00 00:00:00\n    INDEX 01 00:02:00\n'
+           '  TRACK 02 AUDIO\n    INDEX 00 00:04:00\n    INDEX 01 00:05:00\n'
+           '  TRACK 03 AUDIO\n    ISRC GBAYE0601498\n    INDEX 01 00:07:00\n')
+    (d / "isrc.cue").write_text(cue)
+    shutil.copy(FIX / "cdda.bin", d / "isrc.bin")
+    disc, n = {}, 0
+    for line in cue.splitlines():
+        if line.strip().startswith("TRACK "):
+            n += 1
+        elif line.strip().startswith("ISRC "):
+            disc[n] = line.split()[1]
+    passed = {1: "AAAAA0000001", 2: "BBBBB0000002"}
+
+    results = {}
+    for prefer in (False, True):
+        name = "prefer" if prefer else "plain"
+        marker.unlink(missing_ok=True)
+        rec = d / f"{name}.json"
+        outdir = d / f"out_{name}"
+        ec, out = crip("-d", "isrc.cue", "-N", "-A", "-U", "-s", "0",
+                       "-P", "0", "-o", "flac", "-D", outdir, "-F", "{track}",
+                       "-L", "log", "--diagnostics", rec,
+                       *[a for k, v in passed.items()
+                         for a in ("-t", f"{k}=isrc={v}")],
+                       *(["--prefer-disc-isrc"] if prefer else []),
+                       cwd=d, env=env)
+        (WORK / f"disc_isrc_{name}.stdout").write_text(out)
+        if not marker.exists():
+            fail(f"disc_isrc_line: {name}: the shim never added the "
+                 f"capability, so the rip reads no ISRC")
+            return
+        if ec != 0:
+            fail(f"disc_isrc_line: {name}: the rip exited {ec}, not 0")
+            print(out)
+            return
+        logp = outdir / "log.log"
+        blocks = {int(m.group(1)): m.group(0) for m in re.finditer(
+            r"^Track (\d+) .*?(?=^Track \d+ |\Z)",
+            logp.read_text(errors="replace"), re.M | re.S)}
+        try:
+            ts = {tr["number"]: tr for tr in
+                  json.loads(rec.read_text())["rip"]["track_state"]}
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            fail(f"disc_isrc_line: {name}: no readable --diagnostics "
+                 f"record: {e}")
+            return
+        written = {}
+        for num in (1, 2, 3):
+            tr, block = ts.get(num), blocks.get(num, "")
+            if tr is None:
+                fail(f"disc_isrc_line: {name}: track {num} is not in the record")
+                continue
+            if tr["isrc_disc"] != disc.get(num):
+                fail(f"disc_isrc_line: {name}: track {num} isrc_disc "
+                     f"{tr['isrc_disc']!r}, and the cue gives "
+                     f"{disc.get(num)!r}")
+            reason = tr["isrc_disc_reason"]
+            if tr["isrc_disc"]:
+                want = tr["isrc_disc"]
+            elif reason in DISC_ISRC_KIND:
+                want = f"{DISC_ISRC_KIND[reason]} ({reason})"
+            else:
+                fail(f"disc_isrc_line: track {num}: reason {reason!r} has no "
+                     f"entry in DISC_ISRC_KIND, so what the line should say "
+                     f"is undecided")
+                continue
+            lines = re.findall(r"^  Disc ISRC:     (.*)$", block, re.M)
+            if lines != [want]:
+                fail(f"disc_isrc_line: {name}: track {num}'s Disc ISRC "
+                     f"line(s) {lines!r}; the record says {want!r}")
+            tags = flac_vorbis_comments(outdir / f"{num}.flac")
+            in_file = (tags.get("ISRC") or [None])[0] if tags else None
+            meta = re.findall(r"^    ISRC:\s+(\S+)$", block, re.M)
+            if meta != ([in_file] if in_file else []):
+                fail(f"disc_isrc_line: {name}: track {num}'s Metadata ISRC: "
+                     f"{meta!r}, and its file carries {in_file!r}")
+            written[num] = in_file
+        # The disc's code over -t with the option, -t's without it; a track
+        # whose disc gave none keeps -t's either way, and one -t left alone
+        # takes the disc's either way.
+        want_written = {num: (disc.get(num) if prefer and num in disc
+                              else passed.get(num, disc.get(num)))
+                        for num in (1, 2, 3)}
+        if written != want_written:
+            fail(f"disc_isrc_line: {name}: the files carry {written}, where "
+                 f"{want_written} is expected")
+        results[name] = written
+    # Not vacuous: the option changed what a file carries.
+    if results.get("plain") == results.get("prefer"):
+        fail(f"disc_isrc_line: --prefer-disc-isrc changed no file "
+             f"({results})")
+
+    # Without the shim, the read this libcdio gives an image, from the record.
+    rec = WORK / "disc_isrc_noshim.json"
+    rip("disc_isrc_noshim", "pregap.cue", "--diagnostics", rec)
+    try:
+        ts = json.loads(rec.read_text())["rip"]["track_state"]
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        fail(f"disc_isrc_line: no readable record without the shim: {e}")
+        return
+    got = re.findall(r"^  Disc ISRC:     (.*)$",
+                     (WORK / "out_disc_isrc_noshim" / "log.log").read_text(),
+                     re.M)
+    want = [tr["isrc_disc"] or
+            f"{DISC_ISRC_KIND.get(tr['isrc_disc_reason'], '?')} "
+            f"({tr['isrc_disc_reason']})" for tr in ts]
+    if got != want or len(got) != 3:
+        fail(f"disc_isrc_line: without the shim the lines are {got!r}, and "
+             f"the record says {want!r}")
 
 def sc_probe_runs_open_no_logfile():
     """`-I`, `-J` and `-f` open no logfile, and P2 says so.

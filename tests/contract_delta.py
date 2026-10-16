@@ -99,6 +99,22 @@ def main():
     else:
         print(f"UNPROBED: {MOVED_OLD} or {MOVED_NEW} is not in this clone")
 
+    # 7. A long-only flag's P1 row is a row. It opens `| none |`, not with a
+    #    code span, and until round 35 rows() kept only the latter, so --text
+    #    called P1 unchanged over the commit that added --prefer-disc-isrc,
+    #    the delta a release's announcement quotes (v7 D9).
+    FLAG_OLD, FLAG_NEW = "891c79e", "4bff589"
+    if have(FLAG_OLD) and have(FLAG_NEW):
+        rc5, out5 = run(FLAG_OLD, FLAG_NEW, "--text")
+        moved = next((l for l in out5.splitlines()
+                      if l.startswith("By content, unchanged")), "")
+        if "+ ## P1" not in out5 or "`--prefer-disc-isrc`" not in out5 \
+                or "## P1" in moved:
+            fail(f"--text did not report the long-only flag P1 gained "
+                 f"between {FLAG_OLD} and {FLAG_NEW}\n{out5}")
+    else:
+        print(f"UNPROBED: {FLAG_OLD} or {FLAG_NEW} is not in this clone")
+
     print(f"{failures} failure(s)")
     return 1 if failures else 0
 

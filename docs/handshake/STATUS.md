@@ -1,16 +1,17 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-34-lap-03.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-35-lap-01.md
+STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 34, CLOSED, 2026-10-16, on our lap 3 and your lap 2, both GO, approving +platterpus.23 at 891c79e with your 0.7.106, on the Full run of that pair on 2026-10-16, filed in both trees from one bundle, ours at 79b36c97 and yours at fe13de0c, and read GO by both; your FORK_PIN rolls to 891c79e on this close (your lap 2 S15); round 35 opens on our lap 1; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
-STATUS-LAPS: newest sent round-34-lap-03.md (ours), round-34-lap-02.md (theirs); next 1 (ours) carrying round 35's opening, on +platterpus.24 and your next release once both are released (STATUS-RUN-NEXT); held none
+STATUS-ROUND: 35, OPEN, opened by our lap 1, published and held until +platterpus.24 is released, carrying the Disc ISRC: line and --prefer-disc-isrc, your TASKS R20 (lap 1 S4, S5); it closes on the Full run on our first release carrying them through your first release that parses Disc ISRC: and sends --prefer-disc-isrc, read by both sides (lap 1 S14), once you answer lap 1 S11 on their wording; round 34 closed on 2026-10-16, approving +platterpus.23 at 891c79e with your 0.7.106
+STATUS-LAPS: newest sent none (ours), none (theirs); next 1 (ours) carrying round 35's opening, released once +platterpus.24 is and revised to name it; held 1 carrying the Disc ISRC: line and --prefer-disc-isrc, landed at dd60143 for +platterpus.24, their wording asked of you (S11), our contract delta fix (S9), and the Full run as the close condition (S14)
 STATUS-RELEASED: +platterpus.23 at 891c79e, 2026-10-16
-STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what has landed since +platterpus.23; +platterpus.23, approved by round 34 with your 0.7.106, is on both channels, beta from 2026-10-15 and stable from 2026-10-16 on our operator's word; pins 891c79e, reviews +platterpus.24
-STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on both releases, which round 35 names; round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
+STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying the Disc ISRC: line and --prefer-disc-isrc (dd60143, our round 35 lap 1 S4 and S5) and our contract delta's fix (b8c6489, S9); +platterpus.23, approved by round 34 with your 0.7.106, is on both channels, beta from 2026-10-15 and stable from 2026-10-16 on our operator's word; pins 891c79e, reviews +platterpus.24
+STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on both releases, +platterpus.24 and your first release that parses Disc ISRC: and sends --prefer-disc-isrc (our round 35 lap 1 S14); round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until a drive prints it: round 32's Full run on 2026-10-13 and round 34's on 2026-10-16 each hit the repeat limit three times, all on track 3, in the secure re-read and in both securing passes, each with five checksums in five reads, so the newest read was kept, which is the last, and the clause rightly did not print; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until a drive prints it: no pregap search failed in round 32's Full run on 2026-10-13 or in round 34's on 2026-10-16, so the line had no cause to print; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
 STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, released in +platterpus.23 at 891c79e, on both channels from 2026-10-16, and run on a drive in round 34's run on 2026-10-16, where all thirteen records carry them: deemphasis_applied true under -E and false under -W, isrc_disc null with libcdio returned none for each track read and not read for each other, cdtext none reported by libcdio; offset_search did not run, since the run's -f step asks for no record
+STATUS-OPEN: disc-isrc-line us fixing at dd60143, priority 2: the ISRC read from the disc on a line of its own in each audio track block, Disc ISRC:, and --prefer-disc-isrc to make it win over -t track by track, your TASKS R20, which our operator chose on 2026-10-16; landed at dd60143 for +platterpus.24 and proposed in our round 35 lap 1 S4 and S5, the wording open until you answer S11; a drive's read is the MMC path, which only a run shows
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, released in +platterpus.23 at 891c79e, on both channels from 2026-10-16; round 34's run reads 150 from the lead-in, and the reference disc's track 1 starts at LSN 0, so it cannot tell the two counts apart
 STATUS-OPEN: overread-bounded us fixing at round 35, priority 5: under -O a frame past the disc's last sector is retried up to the retry limit with no timeout of ours; a bounded read proposed in our round 32 lap 1 S18, verifiable only on a drive; first in your order of our round 32 lap 1 S18 and S19 (your round 32 lap 2 S19)
 STATUS-OPEN: accurate-stream-declared us fixing at round 35, priority 5: a header line saying what the drive's capabilities page declares about accurate stream, proposed in our round 32 lap 1 S19, readable only on a drive
@@ -70,7 +71,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-10-16: round 34 closed `GO`/`GO`, approving `.23` with their 0.7.106
+## Now — rewritten 2026-10-16: round 34 closed, `.23` on stable; round 35's lap 1 held for `.24`
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -194,7 +195,14 @@ changed is in `Changelog.md`.
   one bundle and read `GO` by both. Their lap 2 S15 moves their approved pin to
   `891c79e` on this close, and their 0.7.107 is the first release of theirs
   to install it by default. `.23` moved to our stable channel the same day.
-  Round 35 opens on our lap 1.
+- **Round 35's lap 1 is ours, held** (`round-35-lap-01.md`). It carries
+  Platterpus's TASKS R20, the route the operator chose: each audio track block
+  prints the ISRC read from the disc, `Disc ISRC:`, and `--prefer-disc-isrc`
+  makes it win over `-t`, both landed at `dd60143` for `.24`. It asks
+  Platterpus to accept or amend the wording (S11), and closes on the Full run
+  on `.24` through their first release that parses the line and sends the
+  option (S14). It is held until `.24` is cut, and revised then to name it, as
+  round 32's lap 1 was.
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the

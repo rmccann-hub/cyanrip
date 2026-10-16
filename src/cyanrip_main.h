@@ -176,6 +176,7 @@ typedef struct cyanrip_settings {
     int enable_replaygain;
     int cache_probe;
     char *consumer_id; /* -x: measure the drive's readback cache before ripping */
+    int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
     int generate_cue_only;
     int disable_data_tracks;
     int disable_acoustid;
@@ -274,9 +275,13 @@ typedef struct cyanrip_track {
     /* The ISRC read from the disc's sub-channel, whatever the files carry,
      * since round 32 (our lap 1 S10): read for every audio track, one passed
      * in with -t included. NULL with the reason beside it when there is none;
-     * the reason is a string literal and is never freed. */
+     * the reason is a string literal and is never freed. isrc_disc_none is
+     * set beside the reasons that mean libcdio answered with no usable ISRC,
+     * so the log can say `none` for those and `unknown` for a read that was
+     * not made, without classifying a reason by its wording. */
     char *isrc_disc;
     const char *isrc_disc_reason;
+    int isrc_disc_none;
 
     size_t nb_samples; /* Track duration in samples */
 

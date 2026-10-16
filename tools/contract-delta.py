@@ -75,8 +75,21 @@ def sections(text):
     return out
 
 
+# A table's |---|---| line, which is layout and not a row.
+SEPARATOR = re.compile(r"^\|[\s:|-]+$")
+
+
 def rows(body):
-    return [l for l in body.splitlines() if l.startswith("| `")]
+    """Every row of every table in a section, its header included.
+
+    Until round 35 this kept only rows whose first cell opens with a code
+    span, `| \\`...`. A P1 row for a long-only flag opens `| none |`, so every
+    option the fork adds was invisible to --rows and --text, and --text called
+    P1 unchanged when `--prefer-disc-isrc` had been added to it. A header
+    appears in both versions and cancels.
+    """
+    return [l for l in body.splitlines()
+            if l.startswith("|") and not SEPARATOR.match(l.rstrip())]
 
 
 # A row's location cell, `file.c:123` or `file.c:12-34`, which moves whenever
