@@ -3,18 +3,18 @@
 STATUS-NEWEST-LAP: round-34-lap-02.md
 STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 34, OPEN, opened by our lap 1, sent 2026-10-15, on +platterpus.23 at 891c79e, and it closes on the Full run on it through your first release naming 891c79e as its build under review, read by both sides (lap 1 S14); lap 1 carries what is known now and leaves the rest to the run, by our operator's rule of 2026-10-15; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
-STATUS-LAPS: newest sent round-34-lap-01.md (ours), none (theirs); next 2 (theirs) carrying whatever you have to say of our lap 1, and your reading of the Full run once it is filed; held 2 carrying our answers to your TASKS R12 and X9's narrowing, two stale lines of yours, and what we landed of lap 1's known items, renumbered under K1 if your lap 2 is released first
+STATUS-ROUND: 34, OPEN, opened by our lap 1, sent 2026-10-15, on +platterpus.23 at 891c79e, and it closes on the Full run on it through your first release naming 891c79e as its build under review, read by both sides (lap 1 S14); lap 1 carries what is known now and leaves the rest to the run, by our operator's rule of 2026-10-15; the run ran on 2026-10-16 and is filed on our evidence branch at 79b36c97, and our lap 2, held, reads it GO; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
+STATUS-LAPS: newest sent round-34-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your reading of the Full run and your verdict, and whatever you have to say of our lap 1; held 2 carrying our reading of the Full run and GO, our answers to your TASKS R12 and X9's narrowing, two stale lines of yours, and what we landed, I16 among it, renumbered under K1 if your lap 2 is released first
 STATUS-RELEASED: +platterpus.23 at 891c79e, 2026-10-15
 STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what round 34 accepts; +platterpus.23 is on the beta channel and the stable channel stays +platterpus.22 at 200530e, which round 33 approved with your 0.7.105; pins 200530e, reviews +platterpus.23
-STATUS-RUN-NEXT: +platterpus.23 with 0.7.106; waiting on your 0.7.106's release, whose commit 47159768, on your main at dd200af7, already names 891c79e as its build under review for round 34 and carries a message inventory equal to .23's P5 (our lap 1 S7); that run is round 34's test; round 33's run, +platterpus.22 with 0.7.105 on 2026-10-14, is filed on your evidence branch at f57cdc2b
-STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until a drive prints it: round 32's Full run on 2026-10-13 hit the repeat limit three times, all on track 3, in the secure re-read and in both securing passes, each with five checksums in five reads, so the newest read was kept, which is the last, and the clause rightly did not print; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
-STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until a drive prints it: no pregap search failed in round 32's Full run on 2026-10-13, so the line had no cause to print; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
-STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, released in +platterpus.23 at 891c79e on the beta channel, and the disc ISRC read has run on no drive
-STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, released in +platterpus.23 at 891c79e on the beta channel
+STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on both releases, which round 35 names; round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
+STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until a drive prints it: round 32's Full run on 2026-10-13 and round 34's on 2026-10-16 each hit the repeat limit three times, all on track 3, in the secure re-read and in both securing passes, each with five checksums in five reads, so the newest read was kept, which is the last, and the clause rightly did not print; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
+STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until a drive prints it: no pregap search failed in round 32's Full run on 2026-10-13 or in round 34's on 2026-10-16, so the line had no cause to print; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
+STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, released in +platterpus.23 at 891c79e on the beta channel, and run on a drive in round 34's run on 2026-10-16, where all thirteen records carry them: deemphasis_applied true under -E and false under -W, isrc_disc null with libcdio returned none for each track read and not read for each other, cdtext none reported by libcdio; offset_search did not run, since the run's -f step asks for no record
+STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, released in +platterpus.23 at 891c79e on the beta channel; round 34's run reads 150 from the lead-in, and the reference disc's track 1 starts at LSN 0, so it cannot tell the two counts apart
 STATUS-OPEN: overread-bounded us fixing at round 34, priority 5: under -O a frame past the disc's last sector is retried up to the retry limit with no timeout of ours; a bounded read proposed in our round 32 lap 1 S18, verifiable only on a drive; first in your order of our round 32 lap 1 S18 and S19 (your round 32 lap 2 S19)
 STATUS-OPEN: accurate-stream-declared us fixing at round 34, priority 5: a header line saying what the drive's capabilities page declares about accurate stream, proposed in our round 32 lap 1 S19, readable only on a drive
-STATUS-OPEN: subchannel-pregap-varies us fixing at round 34, priority 5: track 9's sub-channel pregap reads 94 or 95 frames between rips in eleven filed sessions and the log states one value, and track 4's 158-frame pregap reads 0 in 4 of the 211 filed logs of the reference disc, once on .22 on 2026-10-13, where the search returned zero rather than failing and that rip's cue sheet gives track 4 no INDEX 00; a line giving both counts when two searches disagree proposed in our round 32 lap 1 S19, and which frame is right still needs the drive
+STATUS-OPEN: subchannel-pregap-varies us fixing at round 34, priority 5: track 9's sub-channel pregap reads 94 or 95 frames between rips in twelve filed sessions and the log states one value, and track 4's 158-frame pregap reads 0 in 6 filed logs of the reference disc, once on .22 on 2026-10-13 and twice on .23 on 2026-10-16, where each search returned zero rather than failing; a line giving both counts when two searches disagree proposed in our round 32 lap 1 S19, and which frame is right still needs the drive
 STATUS-OPEN: error-positions us fixing at round 34, priority 8: each track's positions of read errors and skips in the -j record, your F5's second addition, from the position paranoia passes our status callback, which we discard today; re-read mismatch positions are not computed at all, since -Z compares whole-track checksums
 STATUS-OPEN: exit-classes us fixing at round 34, priority 8: round 8's three exit classes, a flag this build lacks, a disc or drive failure apart from a refused argument, and cancelled or signalled, and a sixth -Y code, from your F8; 1 is the generic code at 30 sites today and 2 to 5 are -Y's, so it is a P4 change proposed in a lap before it lands
 STATUS-OPEN: unsent-flag-rows us fixing at round 34, priority 8: docs/seam-commands.md has rows for the flags you send, and every other flag of ours needs one reading NO: <reason> or ?, from your F8
@@ -28,7 +28,6 @@ STATUS-OPEN: superseded-read-marker both cannot, because the format needs a desi
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse and no design exists; asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act, which the operator said on 2026-10-05 they will do; all twenty-three are drafted in docs/upstream/issues-to-file.md
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
-STATUS-OPEN: windows-ci-unpinned us fixing at round 34, priority 5: I16, pinning and caching the five libraries the Windows build compiles, due once round 33 has closed on both gates, by our operator's word of 2026-10-15; until then the build stays as upstream ships it, as the operator decided on 2026-10-05, and no consumer uses its artifact
 STATUS-OPEN: release-markers us cannot, because building or retiring the release/* markers of docs/UPGRADE-CHANNELS-PLAN.md §6a is the operator's decision, now that v8 decouples releases from rounds; put to the operator on 2026-10-12
 
 **The block above is the proposal's D6, and it is checked, not trusted**
@@ -71,7 +70,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-10-16: round 34's lap 1 sent and lap 2 held, the run ready on `.23` with 0.7.106
+## Now — rewritten 2026-10-16: round 34's Full run filed and read, and our lap 2, held, reads it `GO`
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -167,14 +166,23 @@ changed is in `Changelog.md`.
   naming `891c79e` as its build under review (S14). Read again at release, their
   `main` at `dd200af7` already carries both of theirs in 0.7.106's release
   commit, not yet tagged (S7).
-- **Round 34's lap 2 is ours, held** (`round-34-lap-02.md`). It answers what
-  Platterpus's status and TASKS ask of us: R12's two questions (the flag table
-  for `-X` and `-B` is P1 of `.23`'s contract, and whether a build fingerprints
-  shows in its `AcoustID:` line), X9 as they narrowed it, accepted, and two
-  stale lines of theirs. It reports three commits: the lap checker printing
-  hashes whole, X6 to X10 recorded as landed, and three open items moved off
-  round 32. Their 0.7.106 was tagged at `dd200af7` on 2026-10-16, so the run
-  can run.
+- **Round 34's Full run is filed and read**, `.23` with their 0.7.106 on
+  2026-10-16: 426 pass, 0 fail, the one unreachable step E2, every bundle
+  member matching their MANIFEST's hash, filed on our evidence branch at
+  `79b36c97` (`docs/rig-2026-10-16-891c79e/`, whose README is our reading).
+  No defect in what `.23` changed. One old defect of ours shows again, track
+  4's pregap read as zero twice (`subchannel-pregap-varies`), and one finding
+  is theirs: their runner took `no read exceeded 10s` as the ripper's build
+  tag from a refused rip, so one pre-emphasis rip sent no `--consumer`.
+- **Round 34's lap 2 is ours, held** (`round-34-lap-02.md`), revised after
+  the run into our reading of it and `GO`, as lap 1 S16 pre-committed. It
+  also answers Platterpus's TASKS R12 (the flag table for `-X` and `-B` is P1
+  of `.23`'s contract, and the rig's build does not fingerprint), accepts X9
+  as they narrowed it, notes two stale lines of theirs, and reports what
+  landed: the lap checker printing hashes whole, X6 to X10 recorded, our
+  filing checking their hashes, I16, and our run reader finding their renamed
+  securing-pass records. It carries our round summary. If their next lap is
+  `GO`, the round closes on it on both gates.
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the
@@ -188,8 +196,8 @@ changed is in `Changelog.md`.
 
 | | |
 |---|---|
-| newest | **`.22` with Platterpus 0.7.105, Full, on the reference disc, 2026-10-14** from 11:07:56Z: 425 pass, 0 fail, 1 blocked (the Cover Art Archive answered HTTP 500), the one unreachable step E2; round 33's test, filed on Platterpus's evidence branch at `f57cdc2b` and read in our round 33 lap 7 (S2, S3) |
-| next | **`.23` with their 0.7.106**, round 34's test, once 0.7.106 is released; `.23` is published, on the beta channel, at `891c79e` |
+| newest | **`.23` with Platterpus 0.7.106, Full, on the reference disc, 2026-10-16** from 00:20:45Z: 426 pass, 0 fail, the one unreachable step E2; round 34's test, filed on our evidence branch at `79b36c97` (`docs/rig-2026-10-16-891c79e/`), whose README is our reading: no defect in what `.23` changed, and one finding for Platterpus, the build tag their runner took from a refused rip |
+| next | **`.24` with Platterpus's next release**, whatever round 35 asks for |
 
 Every earlier run is a `docs/rig-*` folder with its own README.
 

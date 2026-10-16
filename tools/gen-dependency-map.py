@@ -279,11 +279,16 @@ def ci():
     msys = re.search(r"install:\s*([^\n]+)", text)
     msys = sorted(msys.group(1).split()) if msys else []
     script = (ROOT / ".github" / "mingw-build.sh").read_text(encoding="utf-8")
-    clones = re.findall(r"cyan_do_vcs\s+\"(https://[^\"]+)\"", script)
+    # Each source as (url, commit, release): the commit is the value of the
+    # variable the call names, and is "" unless it is a full SHA, so a call
+    # that names no commit, or names a branch, reads as unpinned (I16).
+    pins = dict(re.findall(r"^(\w+)=([0-9a-f]{40})\s*$", script, re.M))
+    clones = [(u, pins.get(var, ""), rel.strip('"'))
+              for u, var, rel in re.findall(
+                  r"cyan_do_vcs\s+\"(https://[^\"]+)\"(?:\s+\"\$(\w+)\")?"
+                  r"(?:\s+(\"[^\"]*\"|[^\s&]+))?", script)]
     return dict(workflows=workflows, runners=runners, actions=actions,
-                apt=apt, brew=brew,
-                msys=msys, clones=clones,
-                clone_pinned="--branch" in script or " -b " in script)
+                apt=apt, brew=brew, msys=msys, clones=clones)
 
 
 def shared_documents():
@@ -486,8 +491,11 @@ def bom(model, meas):
     props += [{"name": "cyanrip-fork:ci-action",
                "value": f"{a}@{ref}" + (f" ({ver})" if ver else "")}
               for a, ref, ver in model["ci"]["actions"]]
+    props += [{"name": "cyanrip-fork:ci-pinned-clone",
+               "value": f"{u}@{c}" + (f" ({r})" if r else "")}
+              for u, c, r in model["ci"]["clones"] if c]
     props += [{"name": "cyanrip-fork:ci-unpinned-clone", "value": u}
-              for u in model["ci"]["clones"]]
+              for u, c, _ in model["ci"]["clones"] if not c]
     ancestor = {"type": "application", "name": "cyanrip", "group": "cyanreg",
                 "externalReferences": [{"type": "vcs", "url": UPSTREAM}]}
     if meas and meas.get("_fork_point"):
@@ -661,11 +669,14 @@ def markdown(model, meas):
       + ".")
     a("- **Windows packages (MSYS2):** " + ", ".join(f"`{x}`" for x in c["msys"])
       + ".")
-    a("- **Sources the Windows build clones**, `.github/mingw-build.sh`, "
-      + ("pinned" if c["clone_pinned"] else
-         "**unpinned: `git clone --depth 1` of each default branch, so the "
-         "Windows build is of whatever those branches held that day**")
-      + ": " + ", ".join(f"<{u}>" for u in c["clones"]) + ".")
+    pinned = [x for x in c["clones"] if x[1]]
+    loose = [u for u, ci, _ in c["clones"] if not ci]
+    a("- **Sources the Windows build compiles**, `.github/mingw-build.sh`, "
+      "each fetched as one commit by its full SHA, with the release it is: "
+      + ", ".join(f"<{u}> at `{ci[:12]}` ({r})" for u, ci, r in pinned) + ". "
+      + ("Every one is pinned." if not loose else
+         "**Not pinned to a commit, so built from whatever the branch held "
+         "that day:** " + ", ".join(f"<{u}>" for u in loose) + "."))
     a("")
     a("## Network services cyanrip contacts")
     a("")

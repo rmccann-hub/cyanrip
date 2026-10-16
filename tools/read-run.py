@@ -331,8 +331,25 @@ def main():
             continue
         asked += 1
         name = pathlib.PurePosixPath(m.group(1)).name
-        print(f"  {short(run, p)}: {name} "
-              f"{'in the bundle' if name in listed else 'NOT IN THE BUNDLE'}")
+        if name in listed:
+            print(f"  {short(run, p)}: {name} in the bundle")
+            continue
+        # Platterpus keeps a securing pass's record under the name the log
+        # gives plus `-securingpass` before the suffix, numbered if that is
+        # taken (their X6, platterpus@dd200af7:src/platterpus/record_fate.py:
+        # 49, 102). Only a securing pass's: an album pass's record is kept
+        # under its own name, so a renamed copy of one is not looked for.
+        # Found reading 2026-10-16, which reported both of the first two kept
+        # records missing.
+        stem, dot, ext = name.rpartition(".")
+        kept = re.compile(re.escape(stem) + r"-securingpass\d*"
+                          + re.escape(dot + ext) + "$")
+        copies = sorted(n for n in listed if kept.match(n))
+        if "securing-pass" in p.name and copies:
+            print(f"  {short(run, p)}: {name} in the bundle as "
+                  f"{', '.join(copies)}")
+        else:
+            print(f"  {short(run, p)}: {name} NOT IN THE BUNDLE")
     print(f"  {asked} log(s) ask for a record; the bundle lists {len(listed)}")
 
     # ---- the transcript ---------------------------------------------------
