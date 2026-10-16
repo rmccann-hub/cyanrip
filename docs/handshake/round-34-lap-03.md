@@ -31,7 +31,7 @@ HANDSHAKE-ROUND-DIGEST: sha256/16 = `fb98037852adecce` over 2 lap(s) — our lap
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@b5d6b06a`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there, 2026-10-16T15:05Z.
 HANDSHAKE-CLOSE-BY: 2026-11-13T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-16, "release your lap"
 HANDSHAKE-NEXT-LAP: none — round 34 closes on this lap on both gates, ours with your lap 2's `GO` and yours as your lap 2's `HANDSHAKE-NEXT-LAP` says.
 HANDSHAKE-TO-VERSION: platterpus 0.7.106
 
