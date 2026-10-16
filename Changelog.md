@@ -1,5 +1,66 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.24 — 2026-10-16 — **beta**
+===============================================
+**Released on the beta channel**, for round 35 to review with Platterpus's first
+release that parses `Disc ISRC:` and sends `--prefer-disc-isrc` (our round 35
+lap 1 S14). The operator's message of 2026-10-16 asked for `.24` (*"When you
+cut it, say in its announcement exactly what my acceptance run on the drive
+must cover"*); beta is this side's choice under v8 E3, as `.23`'s was, and the
+stable channel stays `.23`, which round 34 approved, until round 35 closes.
+**What it ships since `.23`**, each in its entry below: each audio track's
+`Disc ISRC:` line, the ISRC read from the disc, kept apart from the
+`Metadata:` block's; `--prefer-disc-isrc`, which makes a code the disc returned
+win over `-t`, track by track; and under `-O`, a frame outside the disc read
+once and a refused one written as silence, with a `Beyond disc:` line, where it
+was retried with no timeout of ours and on an image never returned. The Windows
+build (`cyanrip.exe`) is the first built from five pinned libraries (I16:
+curl 8.23.0, neon 0.37.1, libmusicbrainz at `2398b87`, libqrencode 4.1.1,
+FFmpeg n8.1.3). **No release of Platterpus's had to come first**: their parser
+skims every indented line no rule claims (`platterpus@8a36f487:
+src/platterpus/parsers/cyanrip_log.py:3710-3717`), and both new lines are
+indented, and the option changes nothing unless their app sends it.
+
+**The contract's change from `.23`**, derived by `tools/contract-delta.py
+--text 891c79e` against this release: P1 adds `--prefer-disc-isrc`; P2 adds
+`Disc ISRC:     %s`, `Disc ISRC:     %s (%s)` and `Beyond disc: %i of %i
+frames refused (written as silence)`; P3, P5, P5a and P7 only have rows that
+moved; P4, P6 and P8 are identical. Nothing is removed.
+
+**What the acceptance run on the drive must cover**, item by item, for the
+operator's run on `.24`:
+
+1. **The sub-channel ISRC read**, the MMC path no image reaches, on two discs:
+   one whose sub-channel carries ISRCs, and one that does not. The reference
+   disc is the second: on `.23` its read returned `libcdio returned none` for
+   every track (round 34's run). For each track, the `Disc ISRC:` line equals
+   the `--diagnostics` record's `isrc_disc`, or `none (` its `isrc_disc_reason`
+   `)`.
+2. **`--prefer-disc-isrc`**, with and without, on the disc that carries ISRCs:
+   without it each file's `ISRC` tag is the value Platterpus passed; with it,
+   the disc's code wherever the disc returned one. On the reference disc it
+   changes no file.
+3. **A bounded `-O` read, once, on the BDR-209D**: the last track only
+   (`-l 14`), with `-O` at the drive's `+667`, which reads two frames past the
+   lead-out. Platterpus's script records that `-O` once hung that drive for
+   about 23 minutes, and keeps it off (section Q); this step is the test of
+   the fix. It passes if the rip finishes, prints `Beyond disc: N of 2 frames
+   refused (written as silence)`, and the track's audio up to the lead-out
+   matches the same track ripped without `-O`. A time limit of a few minutes
+   on the step keeps a failure from holding the drive.
+4. **The Windows build**, only if a step of the run uses `cyanrip.exe`: I16
+   changed its five libraries. If no step does, it is verified by CI's build
+   alone, and the run should say so.
+
+**What the run can skip**: nothing of the Full run need be skipped, and it also
+opens round 36 (the operator's message of 2026-10-16, point 3). Beyond 1 to 4,
+`.24` changes no code path round 34's Full run on `.23` already covers:
+AccurateRip, the secure re-read and its securing passes, `-f`, the cache probe,
+pre-emphasis, CD-TEXT's absence, the record's fields and the data-track copy
+are as they were, so those sections are regression checks, not new evidence.
+
 **The twenty-three upstream reports are re-checked against upstream's `master`
 at `7dbe56a`**, on the operator's request of 2026-10-15 (its part 2) and
 2026-10-16. Every `file:line` in `docs/upstream/defect-reports.md`, the
