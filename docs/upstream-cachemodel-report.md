@@ -114,8 +114,12 @@ with image size.
 
 ### Notes
 
-- Affects `0.9.4-rc1` and anything after `c431d58`, including `0.9.4-rc2` and
-  `master` at `f8ebf48`, measured there on 2026-09-27.
+- Affects `0.9.4-rc1` and anything after `c431d58`, including `0.9.4-rc2`,
+  `0.9.4-rc3` (`e129ad9`) and `master` at `7dbe56a`, where the switch above is
+  unchanged (`src/cyanrip_main.c:271-276`); measured on `f8ebf48` on
+  2026-09-27.
+- Upstream's own image tests all rip at `-P 0` (`tests/rip_images.py` at
+  `7dbe56a`), which may be why it has not been seen there.
 - Real drives were never affected; the guard is on the image drivers only.
 - `-P 0` is byte-perfect on both, so a caller that always passes `-P 0` sees nothing.
 - Found and fixed downstream in `rmccann-hub/cyanrip` (`platterpus-fork`), where

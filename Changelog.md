@@ -1,5 +1,33 @@
 Unreleased
 ==========
+**The twenty-three upstream reports are re-checked against upstream's `master`
+at `7dbe56a`**, on the operator's request of 2026-10-15 (its part 2) and
+2026-10-16. Every `file:line` in `docs/upstream/defect-reports.md`, the
+cache-model report and their `docs/SETTLED.md` rows is now `7dbe56a`'s, mapped
+from `f8ebf48` and `b40c1f0` by diffing each file and read by hand where a line
+changed; every quoted line of code was checked to be at `7dbe56a`; and every
+SETTLED row passed against it, run in a clone of upstream. `7dbe56a`, one
+commit after `b40c1f0`, checks for a changed medium at most once a second; it
+changes no report's substance, only `cyanrip_main.c`'s line numbers, and
+`.24` does not take it: a later upstream sync does. Corrections:
+- **3**: twenty-three `goto end` in `main()`, not twenty-two (upstream's
+  `a9dfb79` added one), and `main()` starts at line 1456.
+- **8**: affects `0.9.4-rc3` (`e129ad9`) and `7dbe56a` too, and upstream's own
+  image tests all rip at `-P 0`. Its `c431d58` and `f8ebf48` were linked as
+  commits of the fork; `tools/gen-upstream-issues.py` now links a commit on our
+  `master` mirror to upstream.
+- **13**: upstream's `76dcd5d` takes a reply with no body as no entry, so it
+  reads `not found`; the empty-body arm is gone from the report.
+- **15**: cites upstream's #70, which reported the symptom and was declined,
+  and says what is new: the success line itself, and the `-Z` repeat limit.
+- **17**: a stop never prints `No track was long enough`: `did_check` is set
+  before the frame-read loop that holds the stop, so a stop always takes the
+  larger-radius arm. Its title and SETTLED row said otherwise.
+- **10** and **13** name #50 and #24 as related. The issue numbers are the
+  operator's reading of upstream's tracker; this session cannot open it.
+`docs/upstream/issues-to-file.md` is regenerated, and every footer names
+`7dbe56a`.
+
 **Under `-O`, a frame outside the disc is read once, and a refused one is
 written as silence** (round 35; proposed in our round 32 lap 1 S18, first in
 Platterpus's order of their lap 2 S19). Through paranoia such a frame was

@@ -18,21 +18,30 @@ were found by the fork's first macOS and sanitizer CI runs on the merged tree,
 and 20 and the other two arms of 23 were fixed here on 2026-09-06 and had no
 report until a grep of the fork's history for upstream's code found them.
 
-**Checked against upstream `master` at `f8ebf48` on 2026-09-27**, which is also
-our `master` (`git ls-remote https://github.com/cyanreg/cyanrip
-refs/heads/master` returned `f8ebf48fc0d6926796c785fe2dbd9dec54ac15a5`). Every
-`file:line` below was read at that commit, not recalled. Each defect's
-re-check command is its row in `docs/SETTLED.md`'s upstream section, which
-`tools/check-settled.py` runs, so a line here that stops being true fails
-there.
+**Checked against upstream `master` at `7dbe56a` on 2026-10-16** (`git ls-remote
+https://github.com/cyanreg/cyanrip refs/heads/master` returned
+`7dbe56aad2f0ab039ab7b238a30ed662b1c017de`). Every `file:line` below was read
+at that commit, in a clone of upstream, not recalled, and every quoted line of
+code was checked to be there. Each defect's re-check command is its row in
+`docs/SETTLED.md`'s upstream section, which `tools/check-settled.py` runs, so a
+line here that stops being true fails there; on 2026-10-16 every row passed
+against `7dbe56a`. Reports 1 to 18 were first checked against `f8ebf48`, on
+2026-09-27, and reports 19 to 23 against `b40c1f0`, on 2026-10-12; a report
+that was run says which build it was run on.
 
-**Reports 19 to 23 were checked against `b40c1f0`**, upstream's `master` on
-2026-10-12 (`git ls-remote` returned
-`b40c1f006a000a8bbd2d7ccc438a17006b9b71a0`), and each names that commit in its
-**Where:** line. Each says whether it was run on a build of `b40c1f0` or read
-from the source. The same day, with `master` at `b40c1f0`, every re-check in
-`docs/SETTLED.md`'s upstream section passed, so reports 1 to 18 still hold
-there too, though their line numbers are `f8ebf48`'s.
+**What `7dbe56a` changes.** It is one commit after `b40c1f0`, the last upstream
+commit merged into the fork, and it checks for a changed medium at most once a
+second, where every frame read asked before ("check for media changes at most
+once a second", fixing upstream's #165). It changes no report's substance; it
+moves `cyanrip_main.c`'s line numbers, which are `7dbe56a`'s below. The fork's
+`+platterpus.24` does not take it: a later upstream sync does, written up in
+`docs/upstream/` before it merges, as every sync is. The fork asks once a frame
+too, so the slowdown it fixes is the fork's as well.
+
+**The upstream issues cited** in reports 10, 13 and 15 (#50, #24 and #70) are
+the operator's reading of upstream's tracker on 2026-10-15. This file's author
+could not open the tracker (its proxy answers HTTP 403), so they are relayed,
+not read.
 
 Each report says what the fork did, by commit, so upstream can take the fix
 or write its own. None of the fork's fixes changes upstream's command line.
@@ -41,7 +50,7 @@ or write its own. None of the fork's fixes changes upstream's command line.
 
 ## 1. The signal handler calls `cyanrip_log()`, which is not async-signal-safe
 
-**Where:** `src/cyanrip_main.c:934-942`, `on_quit_signal()`.
+**Where:** `src/cyanrip_main.c:1250-1258`, `on_quit_signal()`.
 
 ```c
 static void on_quit_signal(int signo)
@@ -69,7 +78,7 @@ SIGTERM, and a -Z loop that ignored both").
 
 ## 2. SIGTERM is not handled at all
 
-**Where:** `src/cyanrip_main.c:1144`, the only signal installation:
+**Where:** `src/cyanrip_main.c:1467`, the only signal installation:
 `signal(SIGINT, on_quit_signal)`. `SIGTERM` occurs nowhere in the file.
 
 **What happens:** a supervising process, a service manager or `kill` stops
@@ -87,7 +96,7 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 
 ## 3. `cyanrip_log_finish_report()` sits above `end:`, so every `goto end` skips it
 
-**Where:** `src/cyanrip_main.c:2110-2112`:
+**Where:** `src/cyanrip_main.c:2473-2475`:
 
 ```c
     if (!ctx->settings.print_info_only)
@@ -95,8 +104,8 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 end:
 ```
 
-Twenty-two `goto end` statements in `main()`, which starts at line 1133, jump
-to the label below the report.
+Twenty-three `goto end` statements in `main()`, which starts at line 1456,
+jump to the label below the report.
 
 **What happens:** a run that takes any of them writes a log with no completion
 report, and then `cyanrip_log_end()` signs that log as though it were whole.
@@ -130,7 +139,7 @@ de-emphasis").
 
 ## 5. `(deemphasis applied)` is printed from the settings, not from what happened
 
-**Where:** `src/cyanrip_log.c:85-86`:
+**Where:** `src/cyanrip_log.c:90-91`:
 
 ```c
         if (ctx->settings.deemphasis || ctx->settings.force_deemphasis)
@@ -146,7 +155,7 @@ fixed with report 4 in `b866900`.
 
 ## 6. A bare apostrophe in `-a` or `-t` swallows every later field
 
-**Where:** `src/cyanrip_main.c:1704` and `:1789`,
+**Where:** `src/cyanrip_main.c:2055` and `:2140`,
 `av_dict_parse_string(…, "=", ":", 0)`.
 
 **What happens:** `av_dict_parse_string()`'s tokeniser treats `'` as a quote.
@@ -185,7 +194,7 @@ truncating and logging").
 
 (Report 8 is `docs/upstream-cachemodel-report.md`.)
 
-**Where:** `src/cyanrip_main.c:428`, `cdio_paranoia_read_limited(ctx->paranoia,
+**Where:** `src/cyanrip_main.c:486`, `cdio_paranoia_read_limited(ctx->paranoia,
 &status_cb, …)` with the `-r` value as the per-frame retry limit.
 
 **What happens:** `cdio_paranoia_read_limited()` compares its retry counter with
@@ -205,8 +214,8 @@ there.
 
 ## 10. `media` is tagged from the `-H` setting, so every `-H` rip says HDCD
 
-**Where:** `src/cyanrip_main.c:1610`, `ctx->settings.decode_hdcd ? "HDCD" :
-"CD"`, set before a sample is read.
+**Where:** `src/cyanrip_main.c:1960`, `ctx->settings.decode_hdcd ? "HDCD" :
+"CD"`, set before a sample is read. Related, not a duplicate: #50.
 
 **What happens:** every file ripped with `-H` is tagged `media: HDCD`, whether or
 not the disc carries HDCD, and the log reports `HDCD detected: no` for the same
@@ -218,7 +227,7 @@ says").
 
 ## 11. The AccurateRip tally counts a track whose read was interrupted
 
-**Where:** `src/cyanrip_log.c:318`, in `cyanrip_log_finish_report()`, which
+**Where:** `src/cyanrip_log.c:357`, in `cyanrip_log_finish_report()`, which
 tests only `t->ar_db_status == CYANRIP_ACCUDB_FOUND`.
 
 **What happens:** a SIGINT during a track's read still reaches the report. If the
@@ -232,7 +241,7 @@ in a real rip.
 
 ## 12. A 450 lookup falls through to the whole-track checksum on a miss
 
-**Where:** `src/accurip.c:239-242`:
+**Where:** `src/accurip.c:264-267`:
 
 ```c
         if (is_450 && e->checksum_450 == checksum)
@@ -253,14 +262,14 @@ fork's copy of the same code.
 
 ## 13. The AccurateRip disc status can never read `mismatch`
 
-**Where:** `src/accurip.c:171`, in `crip_fill_accurip()`, before the loop over
+**Where:** `src/accurip.c:196`, in `crip_fill_accurip()`, before the loop over
 the response's entries:
 
 ```c
     ctx->ar_db_status = CYANRIP_ACCUDB_FOUND;
 ```
 
-and the arm it disables, `:188-189`:
+and the arm it disables, `:213-214`:
 
 ```c
             if (ctx->ar_db_status != CYANRIP_ACCUDB_FOUND)
@@ -269,25 +278,29 @@ and the arm it disables, `:188-189`:
 
 **What happens:** the status is already `FOUND` when the first entry is read,
 so the `MISMATCH` assignment never runs. A response whose entries all carry
-another disc's ids reads `AccurateRip:    found`, and so does an empty one. The
-report then prints `Tracks ripped accurately: 0/N`, which reads as a comparison
+another disc's ids reads `AccurateRip:    found`. The report then prints `Tracks ripped accurately: 0/N`, which reads as a comparison
 that found nothing, over a comparison that never happened. Read from the
 source: no real response has been seen to have that shape, because a dBAR file
 is named by the ids it holds.
 
+Upstream's `76dcd5d` ("Don't trust AccurateRip and cover art replies to be
+well formed") fixed part of this: a reply with no body is now taken as no
+entry, and reads `not found` (`:177-180`). A response holding only another
+disc's entries still reads `found`. Related, not a duplicate: #24.
+
 **How to reproduce:** call the parse on any recorded dBAR response with one
-disc id changed, or with an empty body, and read the disc status.
+disc id changed, and read the disc status.
 
 **What the fork did:** the status starts at `NOT_FOUND` and becomes `FOUND`
-only when an entry for this disc is read, so those two responses read
-`mismatch` and `not found` and print no tally (`64642db`, "Let the AccurateRip
+only when an entry for this disc is read, so that response reads `mismatch`
+and prints no tally (`64642db`, "Let the AccurateRip
 disc status say mismatch and not found"). The fork first split the parse out
 of the fetch, unchanged, so a recorded response can be tested with no network
 (`5b7493c`).
 
 ## 14. A one-frame AccurateRip entry under the threshold is logged as `(not found)`
 
-**Where:** `src/cyanrip_log.c:152-159`, the `Accurip 450:` line, reached when
+**Where:** `src/cyanrip_log.c:180-187`, the `Accurip 450:` line, reached when
 both whole-track checksums missed:
 
 ```c
@@ -318,7 +331,7 @@ threshold rejects it"). The tally of partial matches is unchanged.
 
 ## 15. A track's success line ignores paranoia's skips and a `-Z` repeat limit
 
-**Where:** `src/cyanrip_main.c:911-914`, at the end of `cyanrip_rip_track()`:
+**Where:** `src/cyanrip_main.c:1227-1230`, at the end of `cyanrip_rip_track()`:
 
 ```c
         if (ctx->total_error_count - start_err)
@@ -327,7 +340,7 @@ threshold rejects it"). The tally of partial matches is unchanged.
             cyanrip_log(ctx, 0, "Track %i ripped and encoded successfully!\n", t->number);
 ```
 
-and the repeat limit at `:858-861`, which reaches the same lines:
+and the repeat limit at `:1174-1177`, which reaches the same lines:
 
 ```c
         if (total_repeats >= ctx->settings.max_retries) {
@@ -343,6 +356,11 @@ successfully!`. So does a `-Z` track whose reads never agreed. On a real
 damaged disc in the fork's testing, one track printed the success line over
 2,586 skips, and five tracks read five ways each printed it too.
 
+Upstream's #70, closed in October 2023, reported the same symptom, and the
+maintainer declined it. What is new here is where it shows: the success line
+itself, which a reader takes as the verdict on the track, and the `-Z` repeat
+limit, which reaches the same line over reads that never agreed.
+
 **How to reproduce:** rip a disc paranoia has to skip on, and compare the
 track's success line with the per-track `SKIP` counter; or rip with `-Z 2`
 and a repeat limit on a disc that reads differently each time.
@@ -354,14 +372,14 @@ repeat limit as read with errors").
 
 ## 16. A failed track ends a rip of every track silently, and the album is finalised over it
 
-**Where:** `src/cyanrip_main.c:1937-1938`, the loop over every track:
+**Where:** `src/cyanrip_main.c:2295-2296`, the loop over every track:
 
 ```c
                 if (cyanrip_rip_track(ctx, t))
                     break;
 ```
 
-against the loop over the tracks `-l` names, `:2064-2067`:
+against the loop over the tracks `-l` names, `:2425-2428`:
 
 ```c
             ret = cyanrip_rip_track(ctx, t);
@@ -373,8 +391,8 @@ against the loop over the tracks `-l` names, `:2064-2067`:
 
 **What happens:** with `-l`, a failed track prints `Error ripping:` and ends
 the run. Without it, the same failure leaves the loop with no message and
-carries on: the album's loudness is finalised (`:1945-1946`) and, with
-ReplayGain on, the album tags are written (`:1948-1950`), over a disc whose
+carries on: the album's loudness is finalised (`:2303-2304`) and, with
+ReplayGain on, the album tags are written (`:2306-2309`), over a disc whose
 tracks were not all ripped. Any failure `cyanrip_rip_track()` returns reaches
 it, a changed medium included.
 
@@ -385,9 +403,9 @@ under `-l`.
 **What the fork did:** both loops print `Error ripping: %s` and end the run
 (`c1e1ab1`, "Abort the rip of every track on a failed track, as -l does").
 
-## 17. A stopped `-f` search is retried or misreported
+## 17. A stopped `-f` search is retried with a larger radius
 
-**Where:** `src/cyanrip_main.c:523-526`, where a stop during a track's read
+**Where:** `src/cyanrip_main.c:582-585`, where a stop during a track's read
 leaves the search:
 
 ```c
@@ -397,7 +415,7 @@ leaves the search:
             }
 ```
 
-and `:564-576`, which the `goto` lands in:
+and `:623-635`, which the `goto` lands in:
 
 ```c
     if (!offset_found) {
@@ -408,15 +426,15 @@ and `:564-576`, which the `goto` lands in:
         } else {
             cyanrip_log(ctx, 0, "Was not able to find drive offset with a radius of %i frames"
                         ", trying again with a larger radius...\n", range);
-            search_for_drive_offset(ctx, 2*range);
+            return search_for_drive_offset(ctx, 2*range);
         }
 ```
 
 **What happens:** nothing after `end:` asks whether the search was stopped.
-Once a track has been checked, a stop prints `trying again with a larger
-radius`, reads a frame, stops again, and repeats until the radius outgrows
-every track. Before any track has been checked, a stop prints `No track was
-long enough`, which is not why the search ended.
+A track is marked checked (`did_check`, `:568`) before the frame-read loop
+that holds the stop, so a stop always reaches the last arm: it prints `trying
+again with a larger radius`, reads a frame, stops again, and repeats until the
+radius outgrows every track.
 
 **How to reproduce:** run `-f` on a disc in AccurateRip and send SIGINT
 during the search.
@@ -427,7 +445,7 @@ was, and end a -f search on a stop").
 
 ## 18. The footer can count a one-frame match the track's lines never printed
 
-**Where:** `src/cyanrip_log.c:319-324`, the disc tally in
+**Where:** `src/cyanrip_log.c:358-363`, the disc tally in
 `cyanrip_log_finish_report()`:
 
 ```c
@@ -439,7 +457,7 @@ was, and end a -f search on a stop").
                     accurip_partial++;
 ```
 
-against the gate on the track's own `Accurip 450:` line, `:148`:
+against the gate on the track's own `Accurip 450:` line, `:176`:
 
 ```c
         if (!has_ar || ((match_v1 < 0) && (match_v2 < 0))) {
@@ -463,7 +481,7 @@ match in the footer only where the track's line says so").
 
 ## 19. A disc image is taken for a drive with libcdio 2.3.0 or later
 
-**Where:** `src/cyanrip_main.c:1933-1938` at `b40c1f0`, the offset check:
+**Where:** `src/cyanrip_main.c:1940-1945` at `7dbe56a`, the offset check:
 
 ```c
     if (!settings.offset && !offset_set && !settings.print_info_only &&
@@ -474,7 +492,7 @@ match in the footer only where the track's line says so").
     }
 ```
 
-and `:660`, the gate on the sub-channel pre-emphasis read:
+and `:667`, the gate on the sub-channel pre-emphasis read:
 
 ```c
         if (!t->preemphasis && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
@@ -500,13 +518,13 @@ same command exits 1 at `Offset is unset!`, and with `-s 0` both tracks log
 
 **What the fork did:** both checks ask the driver, with `cdio_get_driver_id()`
 against the three image drivers, as upstream's own cache-model switch already
-does (`:264-267`). The ISRC read at `:641` is left alone, because from 2.3.0
+does (`:271-274`). The ISRC read at `:648` is left alone, because from 2.3.0
 an image really does serve one (`faec396`, "Tell an image from a drive by its
 driver, not by CDIO_DRIVE_CAP_READ_ISRC").
 
 ## 20. `-Y` on a directory overflows a signed length
 
-**Where:** `src/fun512.c:69-75` at `b40c1f0`, in `cyanrip_verify_log()`:
+**Where:** `src/fun512.c:69-75` at `7dbe56a`, in `cyanrip_verify_log()`:
 
 ```c
     fseek(f, 0, SEEK_END);
@@ -537,7 +555,7 @@ paths that skipped it").
 
 ## 21. A failed read in `-Y` is reported as a log with no checksum
 
-**Where:** `src/fun512.c:76-77` at `b40c1f0`, in `cyanrip_verify_log()`:
+**Where:** `src/fun512.c:76-77` at `7dbe56a`, in `cyanrip_verify_log()`:
 
 ```c
     len = fread(data, 1, len, f);
@@ -565,15 +583,15 @@ as an I/O error, not as one without a checksum").
 
 ## 22. The paranoia counters are printed with `%lu` from `uint64_t`
 
-**Where:** `src/cyanrip_log.c:383` at `b40c1f0`, in the `PCHECK()` macro,
+**Where:** `src/cyanrip_log.c:383` at `7dbe56a`, in the `PCHECK()` macro,
 which `:387-402` use sixteen times:
 
 ```c
         cyanrip_log(ctx, 0, "%lu\n", paranoia_status[PARANOIA_CB_ ## PROP]);   \
 ```
 
-with `paranoia_status` declared `uint64_t` (`src/cyanrip_main.h:315`,
-`src/cyanrip_main.c:465`).
+with `paranoia_status` declared `uint64_t` (`src/cyanrip_main.h:316`,
+`src/cyanrip_main.c:472`).
 
 **What happens:** `%lu` takes an `unsigned long`. `uint64_t` is
 `unsigned long` on 64-bit Linux, so the line is right there. On macOS it is
@@ -599,7 +617,7 @@ build found this.
 
 ## 23. Three start-up failures return without tearing the context down
 
-**Where:** `src/cyanrip_main.c:211-218` at `b40c1f0`, in `cyanrip_ctx_init()`:
+**Where:** `src/cyanrip_main.c:218-225` at `7dbe56a`, in `cyanrip_ctx_init()`:
 
 ```c
     if (!(ctx->drive = cdio_cddap_identify_cdio(ctx->cdio, CDDA_MESSAGE_LOGIT, &msg))) {
@@ -612,7 +630,7 @@ build found this.
     }
 ```
 
-and `:2075-2079`, in `main()`:
+and `:2082-2086`, in `main()`:
 
 ```c
     if (!ctx->settings.print_info_only) {

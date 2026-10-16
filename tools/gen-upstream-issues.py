@@ -52,6 +52,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 FORK = "https://github.com/rmccann-hub/cyanrip"
+UPSTREAM = "https://github.com/cyanreg/cyanrip"
 DEFECTS = "docs/upstream/defect-reports.md"
 CACHEMODEL = "docs/upstream-cachemodel-report.md"
 COUNT = 23
@@ -71,10 +72,34 @@ def is_commit(sha):
     return r.returncode == 0
 
 
+def upstream_ref():
+    """Our mirror of upstream's `master`: the local branch, or its remote
+    copy in a checkout that has only that, as CI's has."""
+    for ref in ("master", "origin/master"):
+        if subprocess.run(["git", "-C", str(ROOT), "rev-parse", "-q",
+                           "--verify", ref], capture_output=True).returncode == 0:
+            return ref
+    return None
+
+
+def is_upstream(sha, ref):
+    """A commit upstream made, which the fork merged and did not write. Its
+    link goes to upstream: report 8 linked `c431d58` and `f8ebf48`, both
+    upstream's, as commits of the fork (the operator, 2026-10-15)."""
+    return ref is not None and subprocess.run(
+        ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", sha, ref],
+        capture_output=True).returncode == 0
+
+
 def link_commits(text):
-    return re.sub(r"`([0-9a-f]{7})`",
-                  lambda m: f"[`{m.group(1)}`]({FORK}/commit/{m.group(1)})"
-                  if is_commit(m.group(1)) else m.group(0), text)
+    ref = upstream_ref()
+
+    def link(m):
+        sha = m.group(1)
+        if not is_commit(sha):
+            return m.group(0)
+        return f"[`{sha}`]({UPSTREAM if is_upstream(sha, ref) else FORK}/commit/{sha})"
+    return re.sub(r"`([0-9a-f]{7})`", link, text)
 
 
 def render():
@@ -123,7 +148,7 @@ def render():
         "below is upstream's, at the commit its source file names, and each "
         "report's row in `docs/SETTLED.md` re-checks it against `master`. "
         "Every fork commit linked below is on `platterpus-fork`, which is "
-        "public.", "",
+        "public, and every upstream commit links to upstream.", "",
         "**How to file.** For each item: open "
         "<https://github.com/cyanreg/cyanrip/issues/new>, paste the "
         "**Title** line into the title box and everything between the two "
