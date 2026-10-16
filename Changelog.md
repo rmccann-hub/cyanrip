@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**Our round 34 lap 3 is published, held, and closes the round when
+released** (`docs/handshake/round-34-lap-03.md`). Platterpus's lap 2 was
+released first, at `platterpus@b5d6b06a`, `GO` on their reading of the same
+run, filed from the same bundle at their `fe13de0c`; it is filed byte for
+byte as `inbound/round-34-lap-02.md`. So our held lap 2 is renumbered 3 under
+K1, with their verdict transcribed, both halves of lap 1 S14 met, and two
+counts in their lap 2 corrected: the 14 `ISRC:` lines are the ones their app
+passed, not the disc's, and track 5's secure re-read agreed on three reads.
+Taking their lap in found two defects in our lap checker, each fixed with a
+test that fails without it: under K1 it read our held lap 2 into theirs and
+refused their `GO` (`18e2f34`), and it read their evidence rows on a clone's
+stale local `main` alone (`4c8b846`).
+
 **`tools/evidence.py fetch --branch` deepens a shallow cache.** `fetch`
 takes each evidence commit by hash at depth 1, which leaves it a shallow
 boundary, and a branch fetch after it did not deepen past that: once our

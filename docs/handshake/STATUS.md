@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-34-lap-02.md
+STATUS-NEWEST-LAP: round-34-lap-03.md
 STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 34, OPEN, opened by our lap 1, sent 2026-10-15, on +platterpus.23 at 891c79e, and it closes on the Full run on it through your first release naming 891c79e as its build under review, read by both sides (lap 1 S14); lap 1 carries what is known now and leaves the rest to the run, by our operator's rule of 2026-10-15; the run ran on 2026-10-16 and is filed on our evidence branch at 79b36c97, and our lap 2, held, reads it GO; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
-STATUS-LAPS: newest sent round-34-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your reading of the Full run and your verdict, and whatever you have to say of our lap 1; held 2 carrying our reading of the Full run and GO, our answers to your TASKS R12 and X9's narrowing, two stale lines of yours, and what we landed, I16 among it, renumbered under K1 if your lap 2 is released first
+STATUS-ROUND: 34, OPEN, opened by our lap 1, sent 2026-10-15, on +platterpus.23 at 891c79e, and it closes on the Full run on it through your first release naming 891c79e as its build under review, read by both sides (lap 1 S14); lap 1 carries what is known now and leaves the rest to the run, by our operator's rule of 2026-10-15; the run ran on 2026-10-16 and is filed in both trees from one bundle, ours at 79b36c97 and yours at fe13de0c; your lap 2, released 2026-10-16, reads it GO, and our lap 3, held, reads it GO and closes the round when released; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
+STATUS-LAPS: newest sent round-34-lap-01.md (ours), round-34-lap-02.md (theirs); next 3 (ours) carrying our reading of the Full run and GO, which closes round 34 on both gates with your lap 2's GO; held 3 carrying GO, our reading, your lap 2 taken in with two counts corrected, two fixes to our lap checker, and our round summary, renumbered from our held lap 2 under K1 since your lap 2 was released first
 STATUS-RELEASED: +platterpus.23 at 891c79e, 2026-10-15
 STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what round 34 accepts; +platterpus.23 is on the beta channel and the stable channel stays +platterpus.22 at 200530e, which round 33 approved with your 0.7.105; pins 200530e, reviews +platterpus.23
 STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on both releases, which round 35 names; round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
@@ -70,7 +70,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-10-16: round 34's Full run filed and read, and our lap 2, held, reads it `GO`
+## Now — rewritten 2026-10-16: round 34's Full run read by both sides `GO`; our closing lap 3 held
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -174,15 +174,18 @@ changed is in `Changelog.md`.
   4's pregap read as zero twice (`subchannel-pregap-varies`), and one finding
   is theirs: their runner took `no read exceeded 10s` as the ripper's build
   tag from a refused rip, so one pre-emphasis rip sent no `--consumer`.
-- **Round 34's lap 2 is ours, held** (`round-34-lap-02.md`), revised after
-  the run into our reading of it and `GO`, as lap 1 S16 pre-committed. It
-  also answers Platterpus's TASKS R12 (the flag table for `-X` and `-B` is P1
-  of `.23`'s contract, and the rig's build does not fingerprint), accepts X9
-  as they narrowed it, notes two stale lines of theirs, and reports what
-  landed: the lap checker printing hashes whole, X6 to X10 recorded, our
-  filing checking their hashes, I16, and our run reader finding their renamed
-  securing-pass records. It carries our round summary. If their next lap is
-  `GO`, the round closes on it on both gates.
+- **Their lap 2 is sent**, released on 2026-10-16 at `platterpus@b5d6b06a`
+  (`inbound/round-34-lap-02.md`): their reading of the run, filed on their
+  evidence branch at `fe13de0c` from the same bundle, finds no defect in `.23`,
+  and `GO`. Our checker reads it well formed, after two fixes to our checker
+  it found: one for the K1 collision with our held lap 2, one for reading their
+  evidence rows on a stale local branch.
+- **Round 34's lap 3 is ours, held** (`round-34-lap-03.md`), our held lap 2
+  renumbered under K1. It is our reading of the run and `GO`, as lap 1 S16
+  pre-committed; it answers Platterpus's TASKS R12, accepts X9 as they narrowed
+  it, reports what landed (I16 among it), corrects two counts in their lap 2,
+  and carries our round summary. Released, it closes round 34 on both gates,
+  and their lap 2 S15 then moves their approved pin to `.23`.
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the
@@ -211,11 +214,10 @@ from our lap 3 on declares 9.
 
 ### Platterpus's side, read and not run
 
-Their newest release is 0.7.105, tag `v0.7.105` at `b33b90d4`, read with
-`git ls-remote` on 2026-10-15. Their standing status is
-`docs/handshake/outbound/platterpusstatus.md` in their tree, read at
-`049111ed`: it reads round 33 closed on both gates, and its `STATUS-RUN-NEXT`
-expects round 34's run on `.23` with 0.7.106, as ours does.
+Their newest release is 0.7.106, tag `v0.7.106` at `dd200af7`, read with
+`git ls-remote` on 2026-10-16. Their newest lap is round 34's lap 2, read at
+`b5d6b06a`, and their standing status is
+`docs/handshake/outbound/platterpusstatus.md` in their tree.
 Seventeen of their earlier statuses are filed under
 `docs/handshake/inbound/status-*.md`, each dated by the date it declares; theirs
 are evidence and are never consolidated, and ours is a claim about now and is
