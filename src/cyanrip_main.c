@@ -631,12 +631,62 @@ static void status_cb(long int n, paranoia_cb_mode_t status)
         paranoia_status[status]++;
 }
 
+/* Under -O, a frame outside the disc is read once, through the cdda layer
+ * and not through paranoia, and a refused one is written as silence (round
+ * 35; proposed in our round 32 lap 1 S18, first in Platterpus's order of
+ * their lap 2 S19). Through paranoia it was retried to the retry limit with
+ * no timeout of ours, and on a disc image at -P 0 the read of the first
+ * frame past the disc never returned at all: cdio_paranoia_read_limited()
+ * spun until killed, through a SIGTERM.
+ *
+ * cdio_cddap_read() is what paranoia reads through, so the frame gets the
+ * byte order the rest of the track gets. The -P 0 salvaging hook is set
+ * aside for the one sector, because it zeroes a sector it cannot read and
+ * reports it read, and the refusal is the thing being counted. A refusal is
+ * not a ripping error: the track's `Beyond disc:` line counts it, and the
+ * cdda layer's message for it is drained rather than logged. */
+static const uint8_t *crip_read_frame_beyond_disc(cyanrip_ctx *ctx, lsn_t lsn)
+{
+    static uint8_t frame[CDIO_CD_FRAMESIZE_RAW];
+    long (*hook)(cdrom_drive_t *, void *, lsn_t, long) = ctx->drive->read_audio;
+
+    if (hook == crip_read_audio_salvaging)
+        ctx->drive->read_audio = crip_cdda_read_audio;
+
+    crip_stall_read_begin(crip_reading_track, lsn);
+    long got = cdio_cddap_read(ctx->drive, frame, lsn, 1);
+    crip_stall_read_end();
+
+    ctx->drive->read_audio = hook;
+
+    char *msg = cdio_cddap_errors(ctx->drive);
+    if (msg)
+        cdio_cddap_free_messages(msg);
+
+    ctx->overread_frames++;
+    ctx->overread_resync = 1;
+    if (got != 1) {
+        ctx->overread_refused++;
+        return silent_frame;
+    }
+    return frame;
+}
+
 static const uint8_t *cyanrip_read_frame(cyanrip_ctx *ctx, lsn_t lsn)
 {
     int err = 0;
     char *msg = NULL;
 
     const uint8_t *data;
+
+    if (ctx->settings.overread_leadinout &&
+        (lsn < ctx->start_lsn || lsn > ctx->end_lsn))
+        return crip_read_frame_beyond_disc(ctx, lsn);
+
+    if (ctx->overread_resync) {
+        cdio_paranoia_seek(ctx->paranoia, lsn, SEEK_SET);
+        ctx->overread_resync = 0;
+    }
 
     crip_stall_read_begin(crip_reading_track, lsn);
 
@@ -1369,6 +1419,8 @@ repeat_ripping:;
      * carries no context pointer to hang them off. */
     uint64_t start_paranoia[PARANOIA_CB_FINISHED + 1];
     memcpy(start_paranoia, paranoia_status, sizeof(start_paranoia));
+    const int start_overread = ctx->overread_frames;
+    const int start_overread_refused = ctx->overread_refused;
 
     crip_reading_track = t->number;
 
@@ -1499,6 +1551,11 @@ repeat_ripping:;
                              paranoia_status[PARANOIA_CB_SKIP] -
                              start_paranoia[PARANOIA_CB_SKIP]);
     }
+
+    /* This read's frames outside the disc, the last read's under -Z, as the
+     * per-track paranoia counters are, since each read reads them again. */
+    t->overread_frames = ctx->overread_frames - start_overread;
+    t->overread_refused = ctx->overread_refused - start_overread_refused;
 
     /* Fill with silence to maintain track length */
     for (int i = 0; i < frames_after_disc_end; i++) {

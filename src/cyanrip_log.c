@@ -472,6 +472,14 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
 
     if (t->frames_after_disc_end)
         cyanrip_log(ctx, 0, "    Appended:    %i frames of silence\n", t->frames_after_disc_end);
+
+    /* Under -O, the frames this track read outside the disc, each read once,
+     * and how many the drive refused (round 35). Not `Overread:`, which is the
+     * disc header's frame count from the offset: a second line of one name at
+     * another level is the ambiguity this log has already paid for twice. */
+    if (t->overread_frames)
+        cyanrip_log(ctx, 0, "    Beyond disc: %i of %i frames refused (written as silence)\n",
+                    t->overread_refused, t->overread_frames);
 }
 
 void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)

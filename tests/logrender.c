@@ -952,6 +952,44 @@ static void test_disc_isrc_states(void)
 }
 
 /* =====================================================================
+ * Under -O, the frames a track read outside the disc (round 35). An image
+ * refuses every one, which sc_overread_bounded() rips; a drive that reads
+ * them, and a track that read none, are built here.
+ * ===================================================================== */
+
+static void test_beyond_disc_states(void)
+{
+    const struct {
+        int frames, refused;
+        const char *want;
+    } cases[] = {
+        { 2, 2, "    Beyond disc: 2 of 2 frames refused (written as silence)" },
+        { 2, 0, "    Beyond disc: 0 of 2 frames refused (written as silence)" },
+        { 3, 1, "    Beyond disc: 1 of 3 frames refused (written as silence)" },
+    };
+
+    for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
+        cyanrip_ctx *ctx = new_ctx();
+        cyanrip_track t;
+        base_track(&t);
+        t.overread_frames = cases[i].frames;
+        t.overread_refused = cases[i].refused;
+
+        cyanrip_log_track_end(ctx, &t);
+        expect_line(drain(ctx), cases[i].want, "beyond-disc");
+        free_ctx(ctx);
+    }
+
+    cyanrip_ctx *ctx = new_ctx();
+    cyanrip_track t;
+    base_track(&t);
+    cyanrip_log_track_end(ctx, &t);
+    if (strstr(drain(ctx), "Beyond disc:"))
+        FAIL("beyond-disc: a track that read nothing outside the disc has the line");
+    free_ctx(ctx);
+}
+
+/* =====================================================================
  * The secure re-read verdict, all three arms. `not attempted` and `did NOT
  * converge` are the two a consumer must never confuse, and only `converged`
  * appears in any committed artifact.
@@ -1659,6 +1697,7 @@ int main(void)
 
     test_preemphasis_states();
     test_disc_isrc_states();
+    test_beyond_disc_states();
     test_secure_reread_verdicts();
     test_eac_crc_repeat_suffix();
     test_timing_block_only_when_measured();

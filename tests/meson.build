@@ -827,6 +827,7 @@ rip_scenarios = [
     'diag_record_v8',
     'image_reports_isrc',
     'disc_isrc_line',
+    'overread_bounded',
 ]
 
 # The scenarios are told which build configuration they are testing, because

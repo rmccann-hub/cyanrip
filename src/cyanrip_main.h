@@ -288,6 +288,11 @@ typedef struct cyanrip_track {
     int frames_before_disc_start;
     lsn_t frames; /* Actual number of frames to read, != samples */
     int frames_after_disc_end;
+    /* Under -O, the frames of this track's last read that lay outside the
+     * disc, each read once (crip_read_frame_beyond_disc()), and how many of
+     * them were refused and written as silence. */
+    int overread_frames;
+    int overread_refused;
 
     lsn_t pregap_lsn;
     enum cyanrip_pregap_source pregap_source; /* Provenance of pregap_lsn */
@@ -457,6 +462,13 @@ typedef struct cyanrip_ctx {
     int success;
     int separate_writeout; /* Files are only written once the disc is ripped */
     int total_error_count;
+    /* Frames read outside the disc under -O, and those refused, over the
+     * whole run; a track's share is taken as a delta. overread_resync makes
+     * the next read inside the disc seek paranoia first, because a frame
+     * read outside it does not move paranoia's cursor. */
+    int overread_frames;
+    int overread_refused;
+    int overread_resync;
     /* Paranoia's SKIP callbacks over the whole run, every -Z read included,
      * which is the disc block's `SKIP:`. Copied from the process-global
      * counter at `end:`, because diagnostics.c reads the context and does not

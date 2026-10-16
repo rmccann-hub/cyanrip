@@ -1,5 +1,34 @@
 Unreleased
 ==========
+**Under `-O`, a frame outside the disc is read once, and a refused one is
+written as silence** (round 35; proposed in our round 32 lap 1 S18, first in
+Platterpus's order of their lap 2 S19). Through paranoia such a frame was
+retried to the retry limit with no timeout of ours, and on a disc image at
+`-P 0` the read of the first frame past the disc **never returned**:
+`cdio_paranoia_read_limited()` spun, through the SIGTERM `timeout` sent at
+120 s, until killed. Measured: `-s 667 -O` on `pregap.cue` ran 10 m 21 s; with
+the fix it finishes in 0.3 s. Each such frame is now read through the cdda
+layer, which gives it the byte order the rest of the track gets, with the
+`-P 0` salvaging hook set aside for that one sector so a refusal is seen as
+one. A refusal is not a ripping error. Each track that read a frame outside
+the disc says so, in a new P2 line after `Appended:`:
+
+    Beyond disc: N of M frames refused (written as silence)
+
+Not `Overread:`, the label proposed in round 32: that is already the disc
+header's frame count from the offset, and one name at two levels is the
+ambiguity this log has paid for before. `sc_overread_bounded()` rips both
+offsets with and without `-O` on an image whose track 1 starts at LSN 0, takes
+M from the header's own `Overread:`/`Underread:` count, and checks the audio
+against the rip without `-O`, which writes the same frames as silence by
+another path; `tests/logrender.c` builds a drive that reads them. Five
+mutations, each reverted alone with the build green, are each caught: the
+bounded read removed (the rip hangs past the scenario's 30 s), the paranoia
+re-seek after it removed, the salvaging hook left in, the line removed, and the
+line printed for a track that read nothing outside the disc. Needs
+verification on real hardware: what a drive does with a read past its
+lead-out, and whether one that supports overreading returns data.
+
 **Our round 35 lap 1 is published, held** (`docs/handshake/round-35-lap-01.md`).
 It opens round 35 on Platterpus's TASKS R20, the route the operator chose on
 2026-10-16: the `Disc ISRC:` line and `--prefer-disc-isrc` below, landed for
