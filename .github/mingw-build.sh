@@ -82,11 +82,13 @@ cyan_hide_conflicting_libs() {
     cyan_hide_files "${installed[@]//$CYANRIPINSTALLDIR/$MINGW_PREFIX}"
 }
 
+# CYAN_INSTALL_TARGETS names the make targets that install, `install` unless
+# a caller says otherwise.
 cyan_do_separate_confmakeinstall() {
     rm -rf ./_build &&
     mkdir _build && cd _build &&
     ../configure --disable-shared --enable-static --prefix="$CYANRIPINSTALLDIR" "$@" &&
-    make && make install
+    make && make ${CYAN_INSTALL_TARGETS:-install}
 }
 
 cyan_do_cmakeinstall() {
@@ -111,9 +113,15 @@ build_curl() {
 }
 
 build_neon() {
+    # Its library, headers and neon.pc only. `make install` also installs the
+    # man pages, which a git checkout lacks (a release tarball ships them
+    # built), so it fails at install-man. The script ignored that until each
+    # step's failure stopped the build: every earlier Windows log carries
+    # "cannot stat 'doc/man/*.3'" (2026-10-16).
     cyan_do_vcs "https://github.com/notroj/neon.git" "$NEON_COMMIT" 0.37.1 &&
     ./autogen.sh &&
-    cyan_do_separate_confmakeinstall --disable-{nls,debug,webdav}
+    CYAN_INSTALL_TARGETS="install-lib install-headers install-config" \
+        cyan_do_separate_confmakeinstall --disable-{nls,debug,webdav}
 }
 
 build_libmusicbrainz() {

@@ -52,7 +52,10 @@ release (curl 8.23.0, neon 0.37.1, libqrencode 4.1.1, FFmpeg 8.1.3, and
 libmusicbrainz, which has none, at its branch's commit of 2026-10-16). The
 `mingw` job caches what they install under the script's hash and the MSYS2
 packages they were built against. `tests/workflows.py` fails on a source
-that names no full SHA, and the dependency map reads the pins.
+that names no full SHA, and the dependency map reads the pins. Its first CI
+run found a failure the old script had always ignored: neon's `make install`
+fails installing man pages a git checkout lacks, and now that a failing step
+stops the build, neon installs only its library, headers and `neon.pc`.
 
 **`tools/ingest-bundle.py` checks every member against the sender's own
 hash**, our round 34 lap 2 S10. Platterpus's `MANIFEST.txt` has given each

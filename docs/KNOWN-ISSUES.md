@@ -55,6 +55,19 @@ reads each pin. **Its first measurement is CI's**: the `mingw` job runs only
 on GitHub's Windows runner, so whether the pinned build and its cache work is
 known from that job's log, not from this environment.
 
+**That first measurement found a failure the old script had always hidden.**
+The pinned build stops at the first library that fails, where the old script
+ran each step whatever the last one returned. neon's `make install` fails at
+`install-man`, `cannot stat 'doc/man/*.3'`, because a git checkout has no
+built man pages; every earlier Windows log carries that line (the last green
+one, job `116784046263` at `d38e28d`, at its line 2634), and the build went on
+because neon's library, headers and `neon.pc` install before the man pages. So
+the first pinned run stopped at neon, and cyanrip's `meson setup` then found no
+FFmpeg. The script now installs neon with `install-lib install-headers
+install-config`, the three targets `install` runs before the documentation;
+built here on Linux at the pinned commit, `make install` exits 2 with the same
+line and those three exit 0, installing `libneon.a`, `neon.pc` and the headers.
+
 ## Fixed for `.20`, 2026-10-05, not released — what waited for round 31, and what fixing it found
 
 Put off on 2026-09-30 and 2026-10-04 because each changes what a P2 line says,
