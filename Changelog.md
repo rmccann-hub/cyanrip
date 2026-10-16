@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**Our round 34 lap 2 is revised, still held, into our reading of the run:
+`GO`** (`docs/handshake/round-34-lap-02.md`). Lap 1 S16 pre-committed our first
+lap after reading the Full run to `GO` unless it showed a defect in `.23` that
+makes the pin unsafe, and it shows none (S14 to S23): the one defect of ours
+it shows, track 4's pregap read as zero, is old and moves no audio byte, and
+the one finding is Platterpus's, the build tag their runner took from a refused
+rip. Lap 1 S14's close condition is pending on their half, their reading in a
+lap (S24); if that lap is `GO`, round 34 closes on it on both gates. The lap
+also reports I16 and the run reader's fix as landed, says that lap 1 S8's
+macOS timeout has no cause found, and carries our round summary.
+
 **Round 34's Full run is filed and read**, `.23` with Platterpus 0.7.106 on
 2026-10-16 (`docs/rig-2026-10-16-891c79e/`, evidence commit `79b36c97`): 426
 pass, 0 fail, the one unreachable step E2, and the newest pair when it began.
