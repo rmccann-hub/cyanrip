@@ -5,13 +5,13 @@ STATUS-NEWEST-LAP-STATE: sent
 
 STATUS-ROUND: 34, CLOSED, 2026-10-16, on our lap 3 and your lap 2, both GO, approving +platterpus.23 at 891c79e with your 0.7.106, on the Full run of that pair on 2026-10-16, filed in both trees from one bundle, ours at 79b36c97 and yours at fe13de0c, and read GO by both; your FORK_PIN rolls to 891c79e on this close (your lap 2 S15); round 35 opens on our lap 1; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
 STATUS-LAPS: newest sent round-34-lap-03.md (ours), round-34-lap-02.md (theirs); next 1 (ours) carrying round 35's opening, on +platterpus.24 and your next release once both are released (STATUS-RUN-NEXT); held none
-STATUS-RELEASED: +platterpus.23 at 891c79e, 2026-10-15
-STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what has landed since +platterpus.23; +platterpus.23 is on the beta channel, approved by round 34 with your 0.7.106, and the stable channel stays +platterpus.22 at 200530e until a release of ours moves it; pins 891c79e, reviews +platterpus.24
+STATUS-RELEASED: +platterpus.23 at 891c79e, 2026-10-16
+STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what has landed since +platterpus.23; +platterpus.23, approved by round 34 with your 0.7.106, is on both channels, beta from 2026-10-15 and stable from 2026-10-16 on our operator's word; pins 891c79e, reviews +platterpus.24
 STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on both releases, which round 35 names; round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until a drive prints it: round 32's Full run on 2026-10-13 and round 34's on 2026-10-16 each hit the repeat limit three times, all on track 3, in the secure re-read and in both securing passes, each with five checksums in five reads, so the newest read was kept, which is the last, and the clause rightly did not print; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until a drive prints it: no pregap search failed in round 32's Full run on 2026-10-13 or in round 34's on 2026-10-16, so the line had no cause to print; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
-STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, released in +platterpus.23 at 891c79e on the beta channel, and run on a drive in round 34's run on 2026-10-16, where all thirteen records carry them: deemphasis_applied true under -E and false under -W, isrc_disc null with libcdio returned none for each track read and not read for each other, cdtext none reported by libcdio; offset_search did not run, since the run's -f step asks for no record
-STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, released in +platterpus.23 at 891c79e on the beta channel; round 34's run reads 150 from the lead-in, and the reference disc's track 1 starts at LSN 0, so it cannot tell the two counts apart
+STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, released in +platterpus.23 at 891c79e, on both channels from 2026-10-16, and run on a drive in round 34's run on 2026-10-16, where all thirteen records carry them: deemphasis_applied true under -E and false under -W, isrc_disc null with libcdio returned none for each track read and not read for each other, cdtext none reported by libcdio; offset_search did not run, since the run's -f step asks for no record
+STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, released in +platterpus.23 at 891c79e, on both channels from 2026-10-16; round 34's run reads 150 from the lead-in, and the reference disc's track 1 starts at LSN 0, so it cannot tell the two counts apart
 STATUS-OPEN: overread-bounded us fixing at round 35, priority 5: under -O a frame past the disc's last sector is retried up to the retry limit with no timeout of ours; a bounded read proposed in our round 32 lap 1 S18, verifiable only on a drive; first in your order of our round 32 lap 1 S18 and S19 (your round 32 lap 2 S19)
 STATUS-OPEN: accurate-stream-declared us fixing at round 35, priority 5: a header line saying what the drive's capabilities page declares about accurate stream, proposed in our round 32 lap 1 S19, readable only on a drive
 STATUS-OPEN: subchannel-pregap-varies us fixing at round 35, priority 5: track 9's sub-channel pregap reads 94 or 95 frames between rips in twelve filed sessions and the log states one value, and track 4's 158-frame pregap reads 0 in 6 filed logs of the reference disc, once on .22 on 2026-10-13 and twice on .23 on 2026-10-16, where each search returned zero rather than failing; a line giving both counts when two searches disagree proposed in our round 32 lap 1 S19, and which frame is right still needs the drive
@@ -153,8 +153,10 @@ changed is in `Changelog.md`.
   `c737fb6b`, and each side's evidence citation passed by the other's. HR-2's
   open item leaves the list with it. Round 34 opens on our lap 1, with `.23`
   and their 0.7.106.
-- **`.23` is released, on the beta channel**, at `891c79e`, 2026-10-15, on
-  the operator's word. The stable channel stays `.22`.
+- **`.23` is released on both channels**, at `891c79e`: on beta on
+  2026-10-15 and on stable on 2026-10-16, each on the operator's word, the
+  second once round 34 approved it. Ledger rows 33 and 34 name the same
+  commit, so nothing was rebuilt.
 - **Round 34's lap 1 is ours, sent** on 2026-10-15 on the operator's word,
   *"If you are ready release it"* (`round-34-lap-01.md`). On the operator's
   rule of 2026-10-15, *"Give what you know, wait for the test"*, it opens the
@@ -190,8 +192,9 @@ changed is in `Changelog.md`.
   2, both `GO`, 28 days before the close-by. It approves `.23` at `891c79e`
   with their 0.7.106, on the Full run of that pair, filed in both trees from
   one bundle and read `GO` by both. Their lap 2 S15 moves their approved pin to
-  `891c79e` on this close. `.23` stays on the beta channel and `.22` on stable
-  until a release of ours moves them. Round 35 opens on our lap 1.
+  `891c79e` on this close, and their 0.7.107 is the first release of theirs
+  to install it by default. `.23` moved to our stable channel the same day.
+  Round 35 opens on our lap 1.
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the
