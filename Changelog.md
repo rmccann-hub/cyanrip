@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**`tools/contract-delta.py` no longer hides a long-only flag.** Its `rows()`
+kept only table rows whose first cell opens with a code span, and a P1 row
+for a long-only flag opens `| none |`, so every option the fork adds was
+invisible to `--rows` and `--text`, and `--text` called P1 *"unchanged, only
+rows moved"* over the commit that added `--prefer-disc-isrc`. That is the
+delta a release's announcement quotes (v7 D9). Every table row but a
+separator is now a row; `tests/contract_delta.py` case 7 fails with the old
+`rows()` and passes with the new.
+
 **Each audio track's block prints the ISRC read from the disc, and
 `--prefer-disc-isrc` lets it win over `-t`** (round 35, Platterpus's TASKS
 R20, the route the operator chose on 2026-10-16). `.23` read the disc's ISRC
