@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**Our round 35 lap 1 is published, held** (`docs/handshake/round-35-lap-01.md`).
+It opens round 35 on Platterpus's TASKS R20, the route the operator chose on
+2026-10-16: the `Disc ISRC:` line and `--prefer-disc-isrc` below, landed for
+`.24`, with their wording put to Platterpus to accept or amend (S11), and the
+Full run on our first release carrying them, through their first release that
+parses the line and sends the option, as the close condition (S14). v8 R8
+point 3 has a lap 1 name the newest release of each side, and `.24` is not cut,
+so the lap names `.23` and their 0.7.107 and is held until `.24` exists, then
+revised to name it, as round 32's lap 1 was. `STATUS.md`, the round table and
+the open list say so.
+
 **`tools/contract-delta.py` no longer hides a long-only flag.** Its `rows()`
 kept only table rows whose first cell opens with a code span, and a P1 row
 for a long-only flag opens `| none |`, so every option the fork adds was
