@@ -3650,6 +3650,11 @@ DISC_ISRC_KIND = {
     "out of memory": "unknown",
     "not read": "unknown",
 }
+# The one reason that comes with a code: one the disc returned that is not an
+# ISO 3901 code (round 35, our lap 4 S4 and S5). The line prints the code
+# where `none` or `unknown` stands, and nothing writes it to a file.
+DISC_ISRC_MALFORMED = "not an ISO 3901 code, so not used"
+ISO_3901 = re.compile(r"[A-Z]{2}[A-Z0-9]{3}[0-9]{7}")
 
 
 def sc_disc_isrc_line():
@@ -3669,6 +3674,13 @@ def sc_disc_isrc_line():
     ISRC lines. Every check reads a source the line does not share: the cue
     text for the codes, the record's isrc_disc and isrc_disc_reason for the
     line, and each FLAC file's own Vorbis comment for what was written.
+
+    Two of the cue's codes are not ISO 3901 codes (round 35, Platterpus's
+    lap 2 S7, our lap 4 S4 and S5): track 3's, which -t overrides, and track
+    4's, which nothing does. Neither reaches a file in either mode, and track
+    4's does not stop track 5's valid code being written without the option,
+    as a `none` would. Which codes are malformed is decided here from the
+    standard's pattern, not from the record.
     """
     needs_preload_shim("disc_isrc_line")
     shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
@@ -3683,22 +3695,33 @@ def sc_disc_isrc_line():
 
     # libcdio's bincue driver looks for the .bin named after the cue, so the
     # two share a stem. Track 2 has no ISRC line, so the disc gives none.
+    # Tracks 3 and 4 carry codes that are not ISO 3901 codes, and libcdio's
+    # bincue driver returns a cue's ISRC as written. The fixture is played
+    # twice so that five tracks fit.
     d = WORK / "disc_isrc"
     d.mkdir(exist_ok=True)
     cue = ('FILE "isrc.bin" BINARY\n'
            '  TRACK 01 AUDIO\n    ISRC USRC17607839\n'
            '    INDEX 00 00:00:00\n    INDEX 01 00:02:00\n'
            '  TRACK 02 AUDIO\n    INDEX 00 00:04:00\n    INDEX 01 00:05:00\n'
-           '  TRACK 03 AUDIO\n    ISRC GBAYE0601498\n    INDEX 01 00:07:00\n')
+           '  TRACK 03 AUDIO\n    ISRC 1234567890AB\n    INDEX 01 00:07:00\n'
+           '  TRACK 04 AUDIO\n    ISRC usrc17607839\n    INDEX 01 00:09:00\n'
+           '  TRACK 05 AUDIO\n    ISRC GBAYE0601498\n    INDEX 01 00:11:00\n')
     (d / "isrc.cue").write_text(cue)
-    shutil.copy(FIX / "cdda.bin", d / "isrc.bin")
+    (d / "isrc.bin").write_bytes((FIX / "cdda.bin").read_bytes() * 2)
     disc, n = {}, 0
     for line in cue.splitlines():
         if line.strip().startswith("TRACK "):
             n += 1
         elif line.strip().startswith("ISRC "):
             disc[n] = line.split()[1]
-    passed = {1: "AAAAA0000001", 2: "BBBBB0000002"}
+    passed = {1: "AAAAA0000001", 2: "BBBBB0000002", 3: "CCCCC0000003"}
+    usable = {n: c for n, c in disc.items() if ISO_3901.fullmatch(c)}
+    tracks = range(1, n + 1)
+    if sorted(disc) != [1, 3, 4, 5] or sorted(usable) != [1, 5]:
+        fail(f"disc_isrc_line: the cue's codes {disc} are not the ones this "
+             f"scenario is written for")
+        return
 
     results = {}
     for prefer in (False, True):
@@ -3734,7 +3757,7 @@ def sc_disc_isrc_line():
                  f"record: {e}")
             return
         written = {}
-        for num in (1, 2, 3):
+        for num in tracks:
             tr, block = ts.get(num), blocks.get(num, "")
             if tr is None:
                 fail(f"disc_isrc_line: {name}: track {num} is not in the record")
@@ -3744,7 +3767,18 @@ def sc_disc_isrc_line():
                      f"{tr['isrc_disc']!r}, and the cue gives "
                      f"{disc.get(num)!r}")
             reason = tr["isrc_disc_reason"]
-            if tr["isrc_disc"]:
+            if num in disc and num not in usable:
+                if reason != DISC_ISRC_MALFORMED:
+                    fail(f"disc_isrc_line: {name}: track {num}'s code "
+                         f"{disc[num]!r} is not an ISO 3901 code, and the "
+                         f"record's reason is {reason!r}")
+                    continue
+                want = f"{tr['isrc_disc']} ({reason})"
+            elif tr["isrc_disc"]:
+                if reason is not None:
+                    fail(f"disc_isrc_line: {name}: track {num}'s code "
+                         f"{tr['isrc_disc']!r} is an ISO 3901 code, and the "
+                         f"record gives the reason {reason!r}")
                 want = tr["isrc_disc"]
             elif reason in DISC_ISRC_KIND:
                 want = f"{DISC_ISRC_KIND[reason]} ({reason})"
@@ -3766,10 +3800,11 @@ def sc_disc_isrc_line():
             written[num] = in_file
         # The disc's code over -t with the option, -t's without it; a track
         # whose disc gave none keeps -t's either way, and one -t left alone
-        # takes the disc's either way.
-        want_written = {num: (disc.get(num) if prefer and num in disc
-                              else passed.get(num, disc.get(num)))
-                        for num in (1, 2, 3)}
+        # takes the disc's either way. A code that is not an ISO 3901 code
+        # is never written: -t's stands, or nothing.
+        want_written = {num: (usable.get(num) if prefer and num in usable
+                              else passed.get(num, usable.get(num)))
+                        for num in tracks}
         if written != want_written:
             fail(f"disc_isrc_line: {name}: the files carry {written}, where "
                  f"{want_written} is expected")

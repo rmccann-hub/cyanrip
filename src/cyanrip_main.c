@@ -930,8 +930,12 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                     } else if (!crip_code_is_set(isrc_str)) {
                         t->isrc_disc_reason = "libcdio returned an all-zero ISRC";
                         t->isrc_disc_none = 1;
-                    } else if (!(t->isrc_disc = av_strdup(isrc_str)))
+                    } else if (!(t->isrc_disc = av_strdup(isrc_str))) {
                         t->isrc_disc_reason = "out of memory";
+                    } else if (!crip_isrc_is_iso3901(isrc_str)) {
+                        t->isrc_disc_reason = "not an ISO 3901 code, so not used";
+                        t->isrc_disc_malformed = 1;
+                    }
                     cdio_free((void *)isrc_str);
                 }
             }
@@ -941,15 +945,20 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
          * track, so a track whose read returned none keeps the caller's. A
          * MusicBrainz ISRC names a recording, which can carry several; the
          * disc's is a measurement of this pressing. Without the option,
-         * exactly as before: the disc's only when -t gave none and no earlier
-         * track reported none. */
+         * as before: the disc's only when -t gave none and no earlier track
+         * reported none. In both, a code that is not an ISO 3901 code is
+         * never written (round 35, Platterpus's lap 2 S7, our lap 4 S5): the
+         * record and the Disc ISRC: line keep it, saying it was not used, and
+         * it is not a `none`, so it does not stop a later track's code. */
+        const char *disc_isrc_usable = t->isrc_disc && !t->isrc_disc_malformed ?
+                                       t->isrc_disc : NULL;
         if (ctx->settings.prefer_disc_isrc) {
-            if (t->isrc_disc)
-                av_dict_set(&t->meta, "isrc", t->isrc_disc, 0);
+            if (disc_isrc_usable)
+                av_dict_set(&t->meta, "isrc", disc_isrc_usable, 0);
         } else if (!ctx->disregard_cd_isrc && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) && !dict_get(t->meta, "isrc")) {
-            if (t->isrc_disc)
-                av_dict_set(&t->meta, "isrc", t->isrc_disc, 0);
-            else
+            if (disc_isrc_usable)
+                av_dict_set(&t->meta, "isrc", disc_isrc_usable, 0);
+            else if (!t->isrc_disc)
                 ctx->disregard_cd_isrc = 1;
         }
 

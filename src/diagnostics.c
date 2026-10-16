@@ -365,7 +365,7 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
                 av_bprintf(&b, ",\"isrc_disc\":");
                 diag_json_str_or_null(&b, t->isrc_disc);
                 av_bprintf(&b, ",\"isrc_disc_reason\":");
-                diag_json_str_or_null(&b, t->isrc_disc ? NULL :
+                diag_json_str_or_null(&b, t->isrc_disc && !t->isrc_disc_malformed ? NULL :
                                           t->track_is_data ? "data track" :
                                           !t->extra_read ? "not read" :
                                           t->isrc_disc_reason);

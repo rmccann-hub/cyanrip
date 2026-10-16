@@ -282,6 +282,11 @@ typedef struct cyanrip_track {
     char *isrc_disc;
     const char *isrc_disc_reason;
     int isrc_disc_none;
+    /* A code the disc returned that is not an ISO 3901 code (round 35,
+     * Platterpus's lap 2 S7, our lap 4 S4 and S5): kept in isrc_disc, as
+     * the measurement it is, with its reason beside it, and never written to
+     * the files, with or without --prefer-disc-isrc. */
+    int isrc_disc_malformed;
 
     size_t nb_samples; /* Track duration in samples */
 
@@ -625,6 +630,26 @@ extern const int crip_max_paranoia_level;
 static inline uint64_t crip_ripping_errors(const cyanrip_ctx *ctx)
 {
     return (uint64_t)ctx->total_error_count + ctx->paranoia_skips;
+}
+
+/* ISO 3901: a country code of two letters, a registrant of three letters or
+ * digits, then seven digits, the year's two and a designation's five. The
+ * pattern Platterpus's report applies to a disc's code
+ * (platterpus@9872c0b:src/platterpus/isrc_provenance.py:62-64), so a code this
+ * passes is never one their report calls malformed (our round 35 lap 4 S4).
+ * Not the converse: theirs removes hyphens and spaces and upper-cases first
+ * (lines 114-122), and this reads the bytes libcdio returned, as they would
+ * be written. Upper case only: the standard's letters are capitals. */
+static inline int crip_isrc_is_iso3901(const char *code)
+{
+    for (int i = 0; i < 12; i++) {
+        const char c = code[i];
+        const int letter = c >= 'A' && c <= 'Z';
+        const int digit  = c >= '0' && c <= '9';
+        if (!(i < 2 ? letter : i < 5 ? letter || digit : digit))
+            return 0;
+    }
+    return code[12] == '\0';
 }
 
 /* The per-frame retry limit actually handed to libcdio-paranoia.

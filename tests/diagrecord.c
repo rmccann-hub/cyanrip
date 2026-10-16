@@ -284,6 +284,32 @@ static void test_deemphasis_forced(void)
     free(out);
 }
 
+/* A code the disc returned that is not an ISO 3901 code (round 35, our lap 4
+ * S5): kept as isrc_disc, with the reason beside it that a code alone never
+ * has, the words the Disc ISRC: line prints. */
+static void test_isrc_disc_malformed(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    ctx->tracks[0].extra_read = 1;
+    ctx->tracks[0].audio_ripped = 1;
+    ctx->tracks[0].isrc_disc = av_strdup("1234567890AB");
+    ctx->tracks[0].isrc_disc_reason = "not an ISO 3901 code, so not used";
+    ctx->tracks[0].isrc_disc_malformed = 1;
+    ctx->nb_tracks = 1;
+
+    char *out = write_record(ctx, "diagrecord_malformed.json");
+    free_ctx(ctx);
+    if (!out)
+        return;
+    expect_line(out, "{\"number\":1,\"cd_track\":1,\"repeats\":0,\"audio_ripped\":true,"
+                     "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
+                     "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
+                     "\"isrc_written\":null,\"isrc_disc\":\"1234567890AB\","
+                     "\"isrc_disc_reason\":\"not an ISO 3901 code, so not used\","
+                     "\"encode_failures\":0}", "malformed");
+    free(out);
+}
+
 static void test_cdtext_present(void)
 {
     cyanrip_ctx *ctx = new_ctx();
@@ -353,6 +379,7 @@ int main(void)
 {
     test_track_fields();
     test_deemphasis_forced();
+    test_isrc_disc_malformed();
     test_cdtext_present();
     test_offset_search();
 

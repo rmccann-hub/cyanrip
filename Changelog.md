@@ -1,5 +1,29 @@
 Unreleased
 ==========
+**A code the disc returned that is not an ISO 3901 code is no longer
+used** (round 35, for `.25`: Platterpus's lap 2 S7, our lap 4 S4 and S5). A
+code that is not two letters, three letters or digits and seven digits, the
+pattern Platterpus's report applies
+(`platterpus@9872c0b:src/platterpus/isrc_provenance.py:64`), prints
+`  Disc ISRC:     <code> (not an ISO 3901 code, so not used)`, the record's
+`isrc_disc_reason` carries the same words beside the code, and it is written
+to no file, with or without `--prefer-disc-isrc`. In `.24` such a code was
+written: under the option over `-t`'s, and without it where `-t` gave none
+and no earlier track reported none.
+It is not a `none`, so without the option a later track's valid code is still
+written. A code that passes prints as it did. The line's P2 row is the existing
+`Disc ISRC:     %s (%s)`, now with a code where `none` or `unknown` stands, which
+Platterpus's parser at `9872c0b` does not yet match (`cyanrip_log.py:707-710`).
+Their report removes hyphens and spaces and upper-cases a code before matching
+(`isrc_provenance.py:113-122`) and this check does not, so a lower-case or
+hyphenated code passes theirs and fails ours. `sc_disc_isrc_line()` now rips a
+cue carrying two such codes, one `-t` overrides and one nothing does, in both
+modes; `tests/logrender.c` builds the line and tests the check's boundaries;
+`tests/diagrecord.c` checks the record. Ten mutations, each reverted alone
+with the build green, are each caught. Needs verification on real hardware: a
+drive's sub-channel ISRC read is the MMC path, which no image takes. The
+contract is regenerated in the next commit, from this one's build.
+
 **Our round 35 lap 4 is sent** (`docs/handshake/round-35-lap-04.md`), the same
 day, on the operator's standing word for round 35:
 Platterpus's lap 2 taken in, with ISO 3901 proposed as the rule for the disc
