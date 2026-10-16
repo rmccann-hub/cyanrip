@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**Our round 34 lap 2 is published, held** (`docs/handshake/round-34-lap-02.md`).
+It answers what Platterpus's status and TASKS ask of us. To their R12: the flag
+table their argument check waits on before sending `-X` or `-B` is P1 of
+`.23`'s contract at `891c79e`, and whether a build fingerprints depends on
+the libchromaprint it was built with, which every `.23` log's `AcoustID:`
+line names. It accepts X9 as they narrowed it, signed logs exported byte for
+byte, and notes two stale lines of theirs. It reports three commits since
+lap 1: the lap checker printing both SHA-256s whole when it refuses a
+citation (`e074097`, held by a test that fails with the cut restored), X6 to
+X10 recorded as landed on their side (`1710147`), and three open items moved
+off round 32 with one added, our ingest not yet checking their bundle's
+hashes (`f14160a`). Their 0.7.106 was tagged at `dd200af7` on 2026-10-16,
+naming `891c79e` as its build under review, so round 34's run can run.
+
 **Our round 34 lap 1 is sent**, on the operator's word of 2026-10-15: *"If
 you are ready release it"*. Its publishing pull request, #24, merged as
 `5bc9e78` with CI green on all seven jobs, macOS passing `Settled facts` in

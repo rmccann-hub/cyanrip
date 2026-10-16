@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-34-lap-01.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-34-lap-02.md
+STATUS-NEWEST-LAP-STATE: held
 
 STATUS-ROUND: 34, OPEN, opened by our lap 1, sent 2026-10-15, on +platterpus.23 at 891c79e, and it closes on the Full run on it through your first release naming 891c79e as its build under review, read by both sides (lap 1 S14); lap 1 carries what is known now and leaves the rest to the run, by our operator's rule of 2026-10-15; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
-STATUS-LAPS: newest sent round-34-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your release naming 891c79e as its build under review, which your main at dd200af7 holds as 0.7.106, not yet tagged (our lap 1 S7), and whatever you have to say of our S3 to S7; held none
+STATUS-LAPS: newest sent round-34-lap-01.md (ours), none (theirs); next 2 (theirs) carrying whatever you have to say of our lap 1, and your reading of the Full run once it is filed; held 2 carrying our answers to your TASKS R12 and X9's narrowing, two stale lines of yours, and what we landed of lap 1's known items, renumbered under K1 if your lap 2 is released first
 STATUS-RELEASED: +platterpus.23 at 891c79e, 2026-10-15
 STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what round 34 accepts; +platterpus.23 is on the beta channel and the stable channel stays +platterpus.22 at 200530e, which round 33 approved with your 0.7.105; pins 200530e, reviews +platterpus.23
 STATUS-RUN-NEXT: +platterpus.23 with 0.7.106; waiting on your 0.7.106's release, whose commit 47159768, on your main at dd200af7, already names 891c79e as its build under review for round 34 and carries a message inventory equal to .23's P5 (our lap 1 S7); that run is round 34's test; round 33's run, +platterpus.22 with 0.7.105 on 2026-10-14, is filed on your evidence branch at f57cdc2b
@@ -72,7 +72,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-10-15: `.23` released on the beta channel, round 34's lap 1 sent
+## Now — rewritten 2026-10-16: round 34's lap 1 sent and lap 2 held, the run ready on `.23` with 0.7.106
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -168,6 +168,14 @@ changed is in `Changelog.md`.
   naming `891c79e` as its build under review (S14). Read again at release, their
   `main` at `dd200af7` already carries both of theirs in 0.7.106's release
   commit, not yet tagged (S7).
+- **Round 34's lap 2 is ours, held** (`round-34-lap-02.md`). It answers what
+  Platterpus's status and TASKS ask of us: R12's two questions (the flag table
+  for `-X` and `-B` is P1 of `.23`'s contract, and whether a build fingerprints
+  shows in its `AcoustID:` line), X9 as they narrowed it, accepted, and two
+  stale lines of theirs. It reports three commits: the lap checker printing
+  hashes whole, X6 to X10 recorded as landed, and three open items moved off
+  round 32. Their 0.7.106 was tagged at `dd200af7` on 2026-10-16, so the run
+  can run.
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the
