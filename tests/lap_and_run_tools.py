@@ -162,23 +162,36 @@ def read_run(tmp):
         "\nDone; (repeat limit of 3 reads reached; at most 1 read agreed)\n"
         "Track 1 read with errors.\n"))
     (album / "a" / "a (EAC-compatible).log").write_text(BANNER + "not ours\n")
+    # A second album whose securing pass's record Platterpus kept renamed
+    # (their X6), beside an album pass whose record is missing and whose
+    # renamed form, which is a securing pass's only, must not count for it.
+    (album / "c").mkdir()
+    (album / "c" / "c.log").write_text(log(
+        "-d /dev/sr0 --diagnostics rec-c.json", full, ""))
+    (album / "c" / "c.platterpus-securing-pass.txt").write_text(log(
+        "-d /dev/sr0 -Z 2 -l 1 --diagnostics rec-d.json", full, ""))
     (run_dir / "SHA256SUMS").write_text(
-        f"{'0' * 64}  (not filed) ripperdiagnostics/rec-a.json\n")
+        f"{'0' * 64}  (not filed) ripperdiagnostics/rec-a.json\n"
+        f"{'0' * 64}  (not filed) ripperdiagnostics/rec-c-securingpass.json\n"
+        f"{'0' * 64}  (not filed) ripperdiagnostics/rec-d-securingpass.json\n")
     if CRIP:
         (album / "g").mkdir()
         shutil.copy(ROOT / "docs" / "golden-reference.log", album / "g" / "g.log")
     rc, o = run(ROOT / "tools" / "read-run.py", run_dir,
                 *(["--cyanrip", CRIP] if CRIP else []))
     check(rc == 0, f"read-run exits 0 on a filed session (exit {rc})")
-    check(f"LOGS -- {3 if CRIP else 2} cyanrip log(s)" in o,
+    check(f"LOGS -- {5 if CRIP else 4} cyanrip log(s)" in o,
           "a securing pass's log counts as a log, an EAC rendering does not")
     check("clause naming a last read not kept: PRINTED" in o
           and "clause naming a last read not kept: not printed" in o,
           "each repeat-limit Done; line says whether the clause printed")
-    check("track 3's pregap is in 1 list(s) and absent from 1" in o,
+    check("track 3's pregap is in 3 list(s) and absent from 1" in o,
           "a pregap one list gives and another leaves out is reported")
     check("rec-a.json in the bundle" in o and "rec-b.json NOT IN THE BUNDLE" in o,
           "each log's --diagnostics record is looked up in the bundle")
+    check("rec-d.json in the bundle as rec-d-securingpass.json" in o
+          and "rec-c.json NOT IN THE BUNDLE" in o,
+          "a securing pass's record kept renamed is found, an album pass's not")
     if CRIP:
         check("-Y:         verifies" in o and "DOES NOT VERIFY" in o,
               "-Y is run on every log, and a log that does not verify says so")
