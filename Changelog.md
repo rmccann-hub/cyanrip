@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**`tools/evidence.py fetch --branch` deepens a shallow cache.** `fetch`
+takes each evidence commit by hash at depth 1, which leaves it a shallow
+boundary, and a branch fetch after it did not deepen past that: once our
+evidence branch had two commits, the earlier one read as off the branch, and
+our own suite refused round 33 lap 5's citation of `0f9375ad`. A branch fetch
+into a shallow cache now passes `--unshallow`; `tests/evidence_tool.py` files a
+second commit and fails without the fix.
+
 **Our round 34 lap 2 is revised, still held, into our reading of the run:
 `GO`** (`docs/handshake/round-34-lap-02.md`). Lap 1 S16 pre-committed our first
 lap after reading the Full run to `GO` unless it showed a defect in `.23` that

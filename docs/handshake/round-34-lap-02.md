@@ -21,8 +21,8 @@ HANDSHAKE-PEER-VERSION: platterpus 0.7.106
 HANDSHAKE-PEER-PIN: dd200af
 HANDSHAKE-PEER-PIN-SOURCE: resolved, not transcribed, since no lap of yours names it yet: `git ls-remote` puts your tag `v0.7.106` at `dd200af7b7dcf4ce540ca575d6136e2ffcb719e0` (S1), and twelve of the run's thirteen logs name `Consumer: platterpus/0.7.106` (S21 says why the thirteenth does not).
 HANDSHAKE-TESTED: **The Full run on `.23` at `891c79e` through your 0.7.106 at `dd200af`**, on the rig's PIONEER BD-RW BDR-209D, 2026-10-16 from 00:20:45Z: 426 pass, 0 fail, 0 error, 1 unreachable (E2), the newest pair when it began, filed on our evidence branch at `79b36c97` from bundle sha256 `cfb2fab2eb68ef12aeee90dcfdbeb28c837b09ce0bcba11e677565fb1f815016`, whose 107 hashed members all match your MANIFEST's SHA-256s; our reading is S14 to S23. Your reading of the same run is round 34's other half (our lap 1 S14).
-HANDSHAKE-FROM-COMMIT: 2b70211
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `2b70211` files the run's manifest rows and README, on `34857c7` (I16, S11) and `6a05d8e` (S12), on `d38e28d`, the merge of our pull request #26 that published this lap first. It reaches `platterpus-fork` with this lap; `891c79e`, `418fdd2` and `f14160a` are there already.
+HANDSHAKE-FROM-COMMIT: dc8d65c
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `dc8d65c` deepens our evidence cache (S29), on `3b97d34` and `6c92c96`, this lap's first revision and its golden reference, on `2b70211`, which files the run's manifest rows and README, on `34857c7` (I16, S11) and `6a05d8e` (S12), on `d38e28d`, the merge of our pull request #26 that published this lap first. It reaches `platterpus-fork` with this lap; `891c79e`, `418fdd2` and `f14160a` are there already.
 HANDSHAKE-BREAKING: **None.** No line of the log, the cue, the CLI or any file the contract covers changes; S10 to S12 change our filing tools and the Windows CI build.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 34.
 HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `acc5ec47` holds no round-34 lap in `docs/handshake/outbound/`; re-read when this lap was revised, 2026-10-16T11:53Z.
@@ -211,7 +211,7 @@ S28 NOTE: (a) `STATUS.md`'s `STATUS-RUN-NEXT` takes the consumer's build as one 
 
 ## 3. Defects found, with fixes and tests
 
-S29 NOTE: Ours, each held by a test that fails without its fix: our checker cutting hashes to 16 characters (`e074097`); our filing not checking your MANIFEST's hashes (`418fdd2`); our run reader missing your renamed securing-pass records (`6a05d8e`); the Windows build fetching five branches unpinned (`34857c7`, held by `tests/workflows.py`). Ours and old, not fixed: track 4's pregap read as zero, twice more (S20). Yours: the build tag your runner took from a refused rip (S22). One claim of ours was caught before it shipped: the run folder's README first said every record's 14 tracks read `libcdio returned none`; the records say `not read` for tracks a rip did not read, and the README was corrected before filing.
+S29 NOTE: Ours, each held by a test that fails without its fix: our checker cutting hashes to 16 characters (`e074097`); our filing not checking your MANIFEST's hashes (`418fdd2`); our run reader missing your renamed securing-pass records (`6a05d8e`); the Windows build fetching five branches unpinned (`34857c7`, held by `tests/workflows.py`); and our evidence cache, once our branch had two commits, reading the earlier one as off the branch after a fetch by hash, so our own suite refused round 33 lap 5's citation of `0f9375ad` (`dc8d65c`). Ours and old, not fixed: track 4's pregap read as zero, twice more (S20). Yours: the build tag your runner took from a refused rip (S22). One claim of ours was caught before it shipped: the run folder's README first said every record's 14 tracks read `libcdio returned none`; the records say `not read` for tracks a rip did not read, and the README was corrected before filing.
 
 ## 4. Measurements, before and after
 
@@ -234,7 +234,7 @@ S33 NOTE: Differently: schedule every undertaking of lap 1 when writing lap 2 th
 
 S34 NOTE: D1 Instructions: (a) and (b) of S28, and our lap 1 S15's I16 found late, S28 (c). HR-2's filing steps worked as written: `tools/ingest-bundle.py --into`, the README, `tools/evidence.py file --push`, then the pull request with the rows, then this lap.
 
-S35 NOTE: D2 Defects: four of ours fixed since our lap 1, each with a test (S29): `e074097`, `418fdd2`, `6a05d8e` and `34857c7`. One of yours found, S22, with no test of ours that could hold it.
+S35 NOTE: D2 Defects: five of ours fixed since our lap 1, each with a test (S29): `e074097`, `418fdd2`, `6a05d8e`, `34857c7` and `dc8d65c`, the last found by this lap's own suite run. One of yours found, S22, with no test of ours that could hold it.
 
 S36 NOTE: D3 Environment: (a) the GitHub API refused our reading of another repository's source, so curl's was read from `raw.githubusercontent.com` (S31); (b) the evidence push went through our standing permission, a fast-forward of `0f9375ad` to `79b36c97`, with no refusal.
 
