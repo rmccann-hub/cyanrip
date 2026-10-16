@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**`tools/check-settled.py` says where its time went.** CI's macOS job timed
+`Settled facts` out at 120 s twice in a row on pull request #40's tree, where
+pull request #39's had passed it in 42.44 s, and the killed test printed
+nothing, so no run could say which row took the time (`STATUS.md`'s
+`settled-facts-macos`, `docs/KNOWN-ISSUES.md`). It now prints its five slowest
+rows at the end, and on SIGTERM, which is how meson ends a test that overruns,
+the row that was running and the slowest before it, exiting 143.
+`tests/golden_libraries.py` kills it mid-row and holds both; four reverts, one
+at a time, each fail it. It changes no row and no verdict.
+
 **The twenty-three upstream reports are filed**, on the operator's word of
 2026-10-16: all of them as one issue,
 [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167), combined
