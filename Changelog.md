@@ -1,5 +1,38 @@
 Unreleased
 ==========
+**Each audio track's block prints the ISRC read from the disc, and
+`--prefer-disc-isrc` lets it win over `-t`** (round 35, Platterpus's TASKS
+R20, the route the operator chose on 2026-10-16). `.23` read the disc's ISRC
+for every audio track and kept it only in the `--diagnostics` record; the
+log's `ISRC:` is the `Metadata:` block's, which a caller's `-t` decides, so a
+reader of the log could not tell the two apart, and Platterpus's round 34
+lap 2 read their app's values as the disc's (our lap 3 S26). Two additions,
+and nothing that exists changes:
+
+- A P2 line after `Preemphasis:`, `  Disc ISRC:     <code>`, or
+  `none (<reason>)` where libcdio answered with no usable ISRC, or
+  `unknown (<reason>)` where the read was not made or did not finish. The
+  reason is the record's `isrc_disc_reason`, word for word. A data track has
+  no line.
+- `--prefer-disc-isrc`, long-only: a code the disc returned is what the files
+  and the `Metadata:` block carry, over one `-t` gave, track by track, so a
+  track whose disc gave none keeps the caller's. Without it, nothing changes:
+  the disc's ISRC only where `-t` gave none and no earlier track reported
+  none, as upstream does.
+
+**An image reaches a disc ISRC**, which `sc_diag_record_v8()`'s docstring
+said none could: through the imagecap shim the image driver reports the
+capability, as libcdio 2.3.0 does for every image, and libcdio returns a cue
+sheet's `ISRC` lines. `sc_disc_isrc_line()` rips such a cue with and without
+the option, and checks each line against the record, each code against the
+cue, and each file's own Vorbis comment against what should have been
+written; `tests/logrender.c` builds the arms no rip reaches, a track never
+read and a data track. Five mutations, each reverted alone with the build
+green, are each caught: the option made a no-op, the line removed, `none`
+given to a track never read, libcdio's none left unflagged, and a data track
+given the line. Needs verification on real hardware: a drive's sub-channel
+ISRC read is the MMC path, which no image takes.
+
 **Our round 34 lap 3 is sent, and round 34 is closed**, on the operator's
 word of 2026-10-16: *"release your lap"*. Its publishing pull request, #28,
 merged as `6c27bd5` with CI green on all seven jobs.

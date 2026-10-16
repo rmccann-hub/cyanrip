@@ -901,6 +901,57 @@ static void test_preemphasis_states(void)
 }
 
 /* =====================================================================
+ * The ISRC read from the disc (round 35, Platterpus's TASKS R20). An image
+ * reaches a code, `none` and the driver's `unknown` through the imagecap
+ * shim (sc_disc_isrc_line()); the arms built here are the ones no rip
+ * reaches: a track whose read never ran, whatever a stale flag says, and a
+ * data track, which has no line at all.
+ * ===================================================================== */
+
+static void test_disc_isrc_states(void)
+{
+    const struct {
+        int extra_read, none;
+        const char *isrc, *reason, *want;
+    } cases[] = {
+        { 1, 0, "USRC17607839", NULL, "  Disc ISRC:     USRC17607839" },
+        { 1, 1, NULL, "libcdio returned none",
+          "  Disc ISRC:     none (libcdio returned none)" },
+        { 1, 1, NULL, "libcdio returned an all-zero ISRC",
+          "  Disc ISRC:     none (libcdio returned an all-zero ISRC)" },
+        { 1, 0, NULL, "the driver does not report reading ISRC",
+          "  Disc ISRC:     unknown (the driver does not report reading ISRC)" },
+        { 1, 0, NULL, "out of memory", "  Disc ISRC:     unknown (out of memory)" },
+        { 0, 1, NULL, "libcdio returned none", "  Disc ISRC:     unknown (not read)" },
+        { 0, 0, NULL, NULL, "  Disc ISRC:     unknown (not read)" },
+    };
+
+    for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
+        cyanrip_ctx *ctx = new_ctx();
+        cyanrip_track t;
+        base_track(&t);
+        t.extra_read = cases[i].extra_read;
+        t.isrc_disc_none = cases[i].none;
+        t.isrc_disc = (char *)cases[i].isrc;
+        t.isrc_disc_reason = cases[i].reason;
+
+        cyanrip_log_track_end(ctx, &t);
+        expect_line(drain(ctx), cases[i].want, "disc-isrc");
+        free_ctx(ctx);
+    }
+
+    cyanrip_ctx *ctx = new_ctx();
+    cyanrip_track t;
+    base_track(&t);
+    t.track_is_data = 1;
+    t.frames = 1000;
+    cyanrip_log_track_end(ctx, &t);
+    if (strstr(drain(ctx), "Disc ISRC:"))
+        FAIL("disc-isrc: a data track was given a Disc ISRC: line");
+    free_ctx(ctx);
+}
+
+/* =====================================================================
  * The secure re-read verdict, all three arms. `not attempted` and `did NOT
  * converge` are the two a consumer must never confuse, and only `converged`
  * appears in any committed artifact.
@@ -1607,6 +1658,7 @@ int main(void)
     test_track_one_counts_from_disc_start();
 
     test_preemphasis_states();
+    test_disc_isrc_states();
     test_secure_reread_verdicts();
     test_eac_crc_repeat_suffix();
     test_timing_block_only_when_measured();

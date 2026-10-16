@@ -826,6 +826,7 @@ rip_scenarios = [
     'probe_runs_open_no_logfile',
     'diag_record_v8',
     'image_reports_isrc',
+    'disc_isrc_line',
 ]
 
 # The scenarios are told which build configuration they are testing, because

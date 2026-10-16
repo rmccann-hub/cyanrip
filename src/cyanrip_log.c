@@ -527,6 +527,23 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
             cyanrip_log(ctx, 0, "\n");
     }
 
+    /* The ISRC read from the disc, as the --diagnostics record's isrc_disc
+     * and isrc_disc_reason give it (round 35, Platterpus's TASKS R20). The
+     * Metadata block's ISRC: is what the files carry, which a caller's -t
+     * decides unless --prefer-disc-isrc is given, so it says nothing of what
+     * the disc holds; this line does. `none` is libcdio answering with no
+     * usable ISRC, and `unknown` a read that was not made or did not finish:
+     * each with its reason, word for word the record's. */
+    if (!t->track_is_data) {
+        if (t->isrc_disc)
+            cyanrip_log(ctx, 0, "  Disc ISRC:     %s\n", t->isrc_disc);
+        else
+            cyanrip_log(ctx, 0, "  Disc ISRC:     %s (%s)\n",
+                        t->extra_read && t->isrc_disc_none ? "none" : "unknown",
+                        t->extra_read && t->isrc_disc_reason ?
+                        t->isrc_disc_reason : "not read");
+    }
+
     cyanrip_log(ctx, 0, "\n  Properties:\n");
 
     if (t->track_is_data) {

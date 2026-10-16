@@ -868,22 +868,35 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                 const char *isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
                 if (!isrc_str) {
                     t->isrc_disc_reason = "libcdio returned none";
+                    t->isrc_disc_none = 1;
                 } else {
                     /* All zeroes is what a drive returns for a track with
                      * no ISRC, so it is none (upstream's crip_code_is_set(),
                      * b40c1f0), with its own reason: the record says what
                      * libcdio returned and why it was not taken. */
-                    if (!isrc_str[0])
+                    if (!isrc_str[0]) {
                         t->isrc_disc_reason = "libcdio returned an empty ISRC";
-                    else if (!crip_code_is_set(isrc_str))
+                        t->isrc_disc_none = 1;
+                    } else if (!crip_code_is_set(isrc_str)) {
                         t->isrc_disc_reason = "libcdio returned an all-zero ISRC";
-                    else if (!(t->isrc_disc = av_strdup(isrc_str)))
+                        t->isrc_disc_none = 1;
+                    } else if (!(t->isrc_disc = av_strdup(isrc_str)))
                         t->isrc_disc_reason = "out of memory";
                     cdio_free((void *)isrc_str);
                 }
             }
         }
-        if (!ctx->disregard_cd_isrc && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) && !dict_get(t->meta, "isrc")) {
+        /* --prefer-disc-isrc (round 35, Platterpus's TASKS R20): an ISRC the
+         * disc returned is what the files carry, over one -t gave, track by
+         * track, so a track whose read returned none keeps the caller's. A
+         * MusicBrainz ISRC names a recording, which can carry several; the
+         * disc's is a measurement of this pressing. Without the option,
+         * exactly as before: the disc's only when -t gave none and no earlier
+         * track reported none. */
+        if (ctx->settings.prefer_disc_isrc) {
+            if (t->isrc_disc)
+                av_dict_set(&t->meta, "isrc", t->isrc_disc, 0);
+        } else if (!ctx->disregard_cd_isrc && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) && !dict_get(t->meta, "isrc")) {
             if (t->isrc_disc)
                 av_dict_set(&t->meta, "isrc", t->isrc_disc, 0);
             else
@@ -2342,6 +2355,8 @@ static int cyanrip_run(int argc, char **argv)
                 "Identify the calling program in the log (recorded verbatim, not verified)");
     GEN_OPT_ONE(opts_list, char *,  diagnostics, "", 1, 1, NULL, 0, 0,
                 "Write a machine-readable diagnostics record to this path (JSON)");
+    GEN_OPT_ONE(opts_list, bool,    prefer_disc_isrc, "", 0, 0, 0, 0, 0,
+                "Tag a track with the ISRC read from the disc, where one is, over one given with -t");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
                 "Track pregap handling: N=default|drop|merge|track (repeatable)");
     GEN_OPT_ONE(opts_list, char *,  paranoia, "P", 1, 1, NULL, 0, 0,
@@ -2487,6 +2502,7 @@ static int cyanrip_run(int argc, char **argv)
     settings.max_retries                = retries;
     settings.cache_probe                = cache_probe;
     settings.consumer_id                = consumer;
+    settings.prefer_disc_isrc           = prefer_disc_isrc;
     /* Registers the atexit writer, so every route out of main() is covered
      * rather than the ones someone remembered to instrument. Messages are
      * recorded from process start regardless; this only decides whether they
