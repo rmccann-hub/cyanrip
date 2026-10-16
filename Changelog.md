@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**Our round 34 lap 3 is sent, and round 34 is closed**, on the operator's
+word of 2026-10-16: *"release your lap"*. Its publishing pull request, #28,
+merged as `6c27bd5` with CI green on all seven jobs.
+`HANDSHAKE-READY-TO-READ` is now `yes`, quoting those words, and nothing
+else in the lap changes; `HANDSHAKE-FROM-COMMIT` stays `4c8b846`, which is
+on `platterpus-fork`. Our gate reads round 34 closed on lap 3, our `GO` with
+their lap 2's `GO`, 28 days before its close-by. It approves `.23` at
+`891c79e` with their 0.7.106, on the Full run of that pair filed in both
+trees from one bundle. Platterpus's `main` was still `b5d6b06a` at release,
+their newest lap still their lap 2, and both lap checkers, ours and theirs
+at `b5d6b06a`, read lap 3 well formed with 0 warnings.
+`release-manifest.json` is regenerated: `.23`'s beta entry now reads
+`round_closed: true`, and no channel moves. `STATUS.md` and the round table
+say round 34 is closed, and the open items it did not reach move to round
+35.
+
 **Our round 34 lap 3 is published, held, and closes the round when
 released** (`docs/handshake/round-34-lap-03.md`). Platterpus's lap 2 was
 released first, at `platterpus@b5d6b06a`, `GO` on their reading of the same

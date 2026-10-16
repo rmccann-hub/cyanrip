@@ -1,28 +1,28 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-34-lap-03.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 34, OPEN, opened by our lap 1, sent 2026-10-15, on +platterpus.23 at 891c79e, and it closes on the Full run on it through your first release naming 891c79e as its build under review, read by both sides (lap 1 S14); lap 1 carries what is known now and leaves the rest to the run, by our operator's rule of 2026-10-15; the run ran on 2026-10-16 and is filed in both trees from one bundle, ours at 79b36c97 and yours at fe13de0c; your lap 2, released 2026-10-16, reads it GO, and our lap 3, held, reads it GO and closes the round when released; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
-STATUS-LAPS: newest sent round-34-lap-01.md (ours), round-34-lap-02.md (theirs); next 3 (ours) carrying our reading of the Full run and GO, which closes round 34 on both gates with your lap 2's GO; held 3 carrying GO, our reading, your lap 2 taken in with two counts corrected, two fixes to our lap checker, and our round summary, renumbered from our held lap 2 under K1 since your lap 2 was released first
+STATUS-ROUND: 34, CLOSED, 2026-10-16, on our lap 3 and your lap 2, both GO, approving +platterpus.23 at 891c79e with your 0.7.106, on the Full run of that pair on 2026-10-16, filed in both trees from one bundle, ours at 79b36c97 and yours at fe13de0c, and read GO by both; your FORK_PIN rolls to 891c79e on this close (your lap 2 S15); round 35 opens on our lap 1; round 33 closed on 2026-10-15, approving +platterpus.22 at 200530e with your 0.7.105
+STATUS-LAPS: newest sent round-34-lap-03.md (ours), round-34-lap-02.md (theirs); next 1 (ours) carrying round 35's opening, on +platterpus.24 and your next release once both are released (STATUS-RUN-NEXT); held none
 STATUS-RELEASED: +platterpus.23 at 891c79e, 2026-10-15
-STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what round 34 accepts; +platterpus.23 is on the beta channel and the stable channel stays +platterpus.22 at 200530e, which round 33 approved with your 0.7.105; pins 200530e, reviews +platterpus.23
+STATUS-RELEASE-NEXT: +platterpus.24, whenever it is ready (v8 §6b), carrying what has landed since +platterpus.23; +platterpus.23 is on the beta channel, approved by round 34 with your 0.7.106, and the stable channel stays +platterpus.22 at 200530e until a release of ours moves it; pins 891c79e, reviews +platterpus.24
 STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on both releases, which round 35 names; round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
 STATUS-OPEN: repeat-limit-last-read us fixing at 200530e, priority 1: landed at ab0f49b with the wording your lap 2 S14 accepted, released in +platterpus.22, and open until a drive prints it: round 32's Full run on 2026-10-13 and round 34's on 2026-10-16 each hit the repeat limit three times, all on track 3, in the secure re-read and in both securing passes, each with five checksums in five reads, so the newest read was kept, which is the last, and the clause rightly did not print; when the read kept at the repeat limit is not the last, the Done; line names the last read's checksum
 STATUS-OPEN: gaps-undetermined-pregap us fixing at 200530e, priority 1: landed at 4a0fc55 with the wording your lap 2 S15 accepted, released in +platterpus.22, and open until a drive prints it: no pregap search failed in round 32's Full run on 2026-10-13 or in round 34's on 2026-10-16, so the line had no cause to print; a pregap whose search failed is a pregap of track N unknown (reason) line in the Gaps: list, and None signalled prints only when no line did
 STATUS-OPEN: j-record-fields us fixing at 51445c1, priority 2: -j fields for pre-emphasis, the disc's own ISRC beside the one written, CD-TEXT and the -f result, asked by your round 31 lap 3 S5, S8, S9 and S12, proposed in our round 32 lap 1 S10, and accepted in your lap 2 S7 with S8's amendment, cdtext's keys listed in P8b with their types; landed at 51445c1, released in +platterpus.23 at 891c79e on the beta channel, and run on a drive in round 34's run on 2026-10-16, where all thirteen records carry them: deemphasis_applied true under -E and false under -W, isrc_disc null with libcdio returned none for each track read and not read for each other, cdtext none reported by libcdio; offset_search did not run, since the run's -f step asks for no record
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: prints 150 frames for an ordinary disc's lead-in and for two seconds before track 1 alike, told apart only by Pregap source:; counting from LBA 0, proposed in our round 32 lap 1 S13, accepted in your lap 2 S10 with no release of yours first (S11); landed at a64d58d, released in +platterpus.23 at 891c79e on the beta channel; round 34's run reads 150 from the lead-in, and the reference disc's track 1 starts at LSN 0, so it cannot tell the two counts apart
-STATUS-OPEN: overread-bounded us fixing at round 34, priority 5: under -O a frame past the disc's last sector is retried up to the retry limit with no timeout of ours; a bounded read proposed in our round 32 lap 1 S18, verifiable only on a drive; first in your order of our round 32 lap 1 S18 and S19 (your round 32 lap 2 S19)
-STATUS-OPEN: accurate-stream-declared us fixing at round 34, priority 5: a header line saying what the drive's capabilities page declares about accurate stream, proposed in our round 32 lap 1 S19, readable only on a drive
-STATUS-OPEN: subchannel-pregap-varies us fixing at round 34, priority 5: track 9's sub-channel pregap reads 94 or 95 frames between rips in twelve filed sessions and the log states one value, and track 4's 158-frame pregap reads 0 in 6 filed logs of the reference disc, once on .22 on 2026-10-13 and twice on .23 on 2026-10-16, where each search returned zero rather than failing; a line giving both counts when two searches disagree proposed in our round 32 lap 1 S19, and which frame is right still needs the drive
-STATUS-OPEN: error-positions us fixing at round 34, priority 8: each track's positions of read errors and skips in the -j record, your F5's second addition, from the position paranoia passes our status callback, which we discard today; re-read mismatch positions are not computed at all, since -Z compares whole-track checksums
-STATUS-OPEN: exit-classes us fixing at round 34, priority 8: round 8's three exit classes, a flag this build lacks, a disc or drive failure apart from a refused argument, and cancelled or signalled, and a sixth -Y code, from your F8; 1 is the generic code at 30 sites today and 2 to 5 are -Y's, so it is a P4 change proposed in a lap before it lands
-STATUS-OPEN: unsent-flag-rows us fixing at round 34, priority 8: docs/seam-commands.md has rows for the flags you send, and every other flag of ours needs one reading NO: <reason> or ?, from your F8
-STATUS-OPEN: flag-limits us fixing at round 34, priority 9: a boundary row in docs/seam-commands.md for each flag you send, min, max and one past each, from tools/probe-argv-surface.py's runs, -d, -c, -l and -t first, from your F9
-STATUS-OPEN: recordable-medium-line us fixing at round 34, priority 9: a tri-state line saying whether the drive reports the disc as recordable, from your F9, readable only on a drive
-STATUS-OPEN: all-pass-paranoia-counters us fixing at round 34, priority 9: a -Z track's paranoia counters summed over every read, beside the last read's, which the Scope: line qualifies, from your F9
-STATUS-OPEN: encoder-options-flag us fixing at round 34, priority 9: a repeatable key=value flag passing options to the encoder, not -O, from your F9
-STATUS-OPEN: settled-facts-macos us fixing at round 34, priority 4: Settled facts timed out on CI's macOS runner on the push of b06d20e at 120.03 s, after 93.08 s on the same tree at da0db2c and 30.73 s at 21382e4 the same day, and once before at 3e467b3 at 120.05 s; no cause is established (our lap 1 S8, docs/KNOWN-ISSUES.md)
+STATUS-OPEN: overread-bounded us fixing at round 35, priority 5: under -O a frame past the disc's last sector is retried up to the retry limit with no timeout of ours; a bounded read proposed in our round 32 lap 1 S18, verifiable only on a drive; first in your order of our round 32 lap 1 S18 and S19 (your round 32 lap 2 S19)
+STATUS-OPEN: accurate-stream-declared us fixing at round 35, priority 5: a header line saying what the drive's capabilities page declares about accurate stream, proposed in our round 32 lap 1 S19, readable only on a drive
+STATUS-OPEN: subchannel-pregap-varies us fixing at round 35, priority 5: track 9's sub-channel pregap reads 94 or 95 frames between rips in twelve filed sessions and the log states one value, and track 4's 158-frame pregap reads 0 in 6 filed logs of the reference disc, once on .22 on 2026-10-13 and twice on .23 on 2026-10-16, where each search returned zero rather than failing; a line giving both counts when two searches disagree proposed in our round 32 lap 1 S19, and which frame is right still needs the drive
+STATUS-OPEN: error-positions us fixing at round 35, priority 8: each track's positions of read errors and skips in the -j record, your F5's second addition, from the position paranoia passes our status callback, which we discard today; re-read mismatch positions are not computed at all, since -Z compares whole-track checksums
+STATUS-OPEN: exit-classes us fixing at round 35, priority 8: round 8's three exit classes, a flag this build lacks, a disc or drive failure apart from a refused argument, and cancelled or signalled, and a sixth -Y code, from your F8; 1 is the generic code at 30 sites today and 2 to 5 are -Y's, so it is a P4 change proposed in a lap before it lands
+STATUS-OPEN: unsent-flag-rows us fixing at round 35, priority 8: docs/seam-commands.md has rows for the flags you send, and every other flag of ours needs one reading NO: <reason> or ?, from your F8
+STATUS-OPEN: flag-limits us fixing at round 35, priority 9: a boundary row in docs/seam-commands.md for each flag you send, min, max and one past each, from tools/probe-argv-surface.py's runs, -d, -c, -l and -t first, from your F9
+STATUS-OPEN: recordable-medium-line us fixing at round 35, priority 9: a tri-state line saying whether the drive reports the disc as recordable, from your F9, readable only on a drive
+STATUS-OPEN: all-pass-paranoia-counters us fixing at round 35, priority 9: a -Z track's paranoia counters summed over every read, beside the last read's, which the Scope: line qualifies, from your F9
+STATUS-OPEN: encoder-options-flag us fixing at round 35, priority 9: a repeatable key=value flag passing options to the encoder, not -O, from your F9
+STATUS-OPEN: settled-facts-macos us fixing at round 35, priority 4: Settled facts timed out on CI's macOS runner on the push of b06d20e at 120.03 s, after 93.08 s on the same tree at da0db2c and 30.73 s at 21382e4 the same day, and once before at 3e467b3 at 120.05 s; no cause is established (our lap 1 S8, docs/KNOWN-ISSUES.md)
 STATUS-OPEN: hardware-unverified us cannot, because each needs a disc or a drive this environment lacks: C2, which the rig's drive reports unsupported; CD-TEXT from a physical disc; -W on a pre-emphasised disc; a paranoia skip on a drive; -f on a second drive, and a -f search that finds nothing on a drive; and -P 0's sector-by-sector salvage on a drive; asked of your rig in our round 32 lap 1 S21
 STATUS-OPEN: superseded-read-marker both cannot, because the format needs a design both sides agree (round 24's item, with round 8 J14's read time); asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse and no design exists; asked in our round 32 lap 1 S22 whether to keep it
@@ -70,7 +70,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-10-16: round 34's Full run read by both sides `GO`; our closing lap 3 held
+## Now — rewritten 2026-10-16: round 34 closed `GO`/`GO`, approving `.23` with their 0.7.106
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -180,12 +180,18 @@ changed is in `Changelog.md`.
   and `GO`. Our checker reads it well formed, after two fixes to our checker
   it found: one for the K1 collision with our held lap 2, one for reading their
   evidence rows on a stale local branch.
-- **Round 34's lap 3 is ours, held** (`round-34-lap-03.md`), our held lap 2
-  renumbered under K1. It is our reading of the run and `GO`, as lap 1 S16
-  pre-committed; it answers Platterpus's TASKS R12, accepts X9 as they narrowed
-  it, reports what landed (I16 among it), corrects two counts in their lap 2,
-  and carries our round summary. Released, it closes round 34 on both gates,
-  and their lap 2 S15 then moves their approved pin to `.23`.
+- **Round 34's lap 3 is ours, sent** on 2026-10-16 on the operator's word,
+  *"release your lap"* (`round-34-lap-03.md`), our held lap 2 renumbered under
+  K1. It is our reading of the run and `GO`, as lap 1 S16 pre-committed; it
+  answers Platterpus's TASKS R12, accepts X9 as they narrowed it, reports what
+  landed (I16 among it), corrects two counts in their lap 2, and carries our
+  round summary.
+- **Round 34 is closed**, 2026-10-16, three laps, on our lap 3 and their lap
+  2, both `GO`, 28 days before the close-by. It approves `.23` at `891c79e`
+  with their 0.7.106, on the Full run of that pair, filed in both trees from
+  one bundle and read `GO` by both. Their lap 2 S15 moves their approved pin to
+  `891c79e` on this close. `.23` stays on the beta channel and `.22` on stable
+  until a release of ours moves them. Round 35 opens on our lap 1.
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
   the handshake README's data register, X6 to X10: each securing pass's
   record, a hash per bundle member, `--consumer` and `--diagnostics` on the
