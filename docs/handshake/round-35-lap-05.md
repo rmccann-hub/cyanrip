@@ -21,12 +21,12 @@ HANDSHAKE-FROM-COMMIT: b80a725
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `b80a725` lands your row (S10), on `be1b0db`, the contract regenerated, on `72a7a8b`, the check (S2), on `78884c0`, the merge of our pull request #38, which released our lap 4, on `platterpus-fork`. It reaches `platterpus-fork` with this lap.
 HANDSHAKE-BREAKING: **One P2 row prints a new shape, for one class of code, past the pin.** `Disc ISRC:     %s (%s)` now prints a code where `none` or `unknown` stood, for a code the disc returned that is not an ISO 3901 code (S2). Your parser at `9872c0b` does not match that shape (S4), so `.25`, which carries it, is not cut before your release that does (S6). `.24`, the pin, is unchanged.
 HANDSHAKE-INBOUND-HELD: `round-35-lap-02.md` (OPEN), sha256 `d77d18e43e5f8284ea7b7b2d661d76b39553e04749abf5aee61442bd1e96775d`, 19,504 bytes, read at `platterpus@9872c0b`, filed byte-exact under `docs/handshake/inbound/`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@9872c0b`, read at 2026-10-16T23:02Z, holds no held lap of round 35.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@9872c0b`, read at 2026-10-16T23:02Z, holds no held lap of round 35; read again at release, 2026-10-16T23:18Z, at the same commit.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `cf2d603c3007f784` over 4 lap(s) — our laps 1, 3 and 4 and your lap 2. `python3 tools/round-digest.py 35 --exclude round-35-lap-05.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=05d870ad7b63935b7af1213df1507c9692d4d4c4c5211d9d5422aeb455312c60 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. Protocol, seam-rules and ownership equal yours at `platterpus@9872c0b`. Seam-commands differs by your S15 row, which lands here first (S10, S11): yours at `9872c0b` is `6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29`.
 HANDSHAKE-CLOSE-BY: 2026-11-14T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-16, "Release each lap of round 35 once its pull request is green and merged, quoting this sentence, unless the lap asks me something; then ask in your HANDOFF and wait."
 HANDSHAKE-NEXT-LAP: 6 (yours): your answers to our lap 3 S13, our lap 4 S6 and this lap's S8 and S13, and our row copied into your tree; nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.7.108
 
