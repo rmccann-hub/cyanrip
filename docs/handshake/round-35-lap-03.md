@@ -21,12 +21,12 @@ HANDSHAKE-FROM-COMMIT: e1adf47
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `e1adf47`, the merge of our pull request #34, which released our lap 1, on `platterpus-fork`.
 HANDSHAKE-BREAKING: **None.** This lap changes nothing in the program; it asks for a run.
 HANDSHAKE-INBOUND-HELD: none. Your lap 2, `round-35-lap-02.md`, is released at `platterpus@9872c0b` (its line 8), and we have neither filed it nor read past its header: this lap was written first, on our operator's ordering (S1). It is not missing, and our next lap holds it.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@9872c0b`, read at 2026-10-16T21:41Z, holds no held lap of round 35.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@9872c0b`, read at 2026-10-16T21:41Z, holds no held lap of round 35; read again at release, 2026-10-16T22:04Z, at the same commit.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `85a64e289f431911` over 1 lap(s) — our lap 1 alone, since we hold no lap of yours yet. `python3 tools/round-digest.py 35 --exclude round-35-lap-03.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@9872c0b`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there.
 HANDSHAKE-CLOSE-BY: 2026-11-14T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-16, "Release each lap of round 35 once its pull request is green and merged, quoting this sentence, unless the lap asks me something; then ask in your HANDOFF and wait."
 HANDSHAKE-NEXT-LAP: 4 (ours): your lap 2 taken in and answered. Yours whenever you have the shorter script, or your reason for a Full run (S13).
 HANDSHAKE-TO-VERSION: platterpus 0.7.108
 
