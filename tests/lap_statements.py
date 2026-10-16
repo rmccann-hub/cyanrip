@@ -746,6 +746,28 @@ with tempfile.TemporaryDirectory() as tmp:
             check2(our_lap3("GO", GO3), rnd), 1,
             ["[A1] S2 VERDICT: close condition cyanrip:R31.L1.S1 is pending on "
              "the author's own side"])
+    # A K1 collision: our lap 2, held, says their half is pending, and their
+    # lap 2, released first, says their half is met and ours pending. Their
+    # lap could not have held ours, so its GO is judged without it. Found
+    # 2026-10-16 taking in their round 34 lap 2, whose GO our held lap 2's
+    # later-numbered TERM pending refused.
+    ours2 = rnd / "round-31-lap-02.md"
+    ours2.write_text(lap2("cyanrip-fork", 31, 2, "OPEN",
+        "S1 NOTE: a.\n\nS2 NOTE: b.\n\nS3 NOTE: c.\n\n"
+        "S4 TERM pending: Theirs remains.\n  term: cyanrip:R31.L1.S1\n"
+        "  on: them\n  remains: their reading\n\n"
+        "S5 VERDICT: OPEN\n  basis: S4\n"))
+    outcome("A1: our same-numbered lap is not a status their lap answers to",
+            check2(lap2("platterpus", 31, 2, "GO",
+                        "S1 TERM met: Our half is done.\n"
+                        "  term: cyanrip:R31.L1.S1\n"
+                        "  evidence: run: true => ok\n\n"
+                        "S2 TERM pending: Your half.\n"
+                        "  term: cyanrip:R31.L1.S1\n  on: them\n"
+                        "  remains: your reading\n\n"
+                        "S3 VERDICT: GO\n  basis: S1 S2\n"), rnd), 0,
+            ["checked against 1 close condition(s)", "well formed"])
+    ours2.unlink()
     lap2_path.unlink()
     code, out = check2(our_lap3("GO", "S1 FACT measured: x.\n"
                                 "  evidence: run: true => ok\n  holds: 0.9.4\n"
@@ -1439,6 +1461,27 @@ with tempfile.TemporaryDirectory() as tmp:
     outcome("HR-2 6b: an ordinary artifact is judged as before",
             ev(f"cyanrip@{M[:7]}:README:1", env=env0), 0,
             ["well formed, 0 warning(s)"])
+
+    # The other side's evidence is looked up at their ref of record, and a
+    # clone's local branch can predate the rows its origin/ copy carries.
+    # Found 2026-10-16 citing Platterpus's round 34 run: the local main was
+    # read alone and the citation refused. This repository stands in for
+    # theirs, its main stale and origin/main at the manifest.
+    pe = tmp / "peer"
+    subprocess.run(["git", "clone", "-q", url, str(pe)], check=True,
+                   env=env0, capture_output=True)
+    g(pe, "update-ref", "refs/heads/main", before)
+    g(pe, "update-ref", "refs/remotes/origin/main", M)
+    body = ("S1 FACT read: Their run's log has three lines.\n"
+            f"  evidence: platterpus@{E[:7]}:{rel}:3 sha256 {sha}\n"
+            "  holds: 0.9.4\n\n"
+            "S2 VERDICT: OPEN\n  basis: S1\n")
+    outcome("HR-2 6b: the other side's row is read on origin/main when their "
+            "local main predates it",
+            check2(lap3("cyanrip-fork", 33, 1, "OPEN", body,
+                        from_commit=M[:12]), empty, "--ours", str(ours),
+                   "--peer", str(pe), env=env0), 0,
+            ["well formed"], absent=["REFUSED"])
 
     # A clone that never fetched evidence, as every session's is once the
     # hook excludes the branch: the commit is fetched by its hash into a

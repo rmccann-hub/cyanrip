@@ -538,9 +538,10 @@ class Resolver:
         is a reason to report the citation unchecked, never to refuse it.
 
         For the author's own evidence, the manifest at the lap's
-        HANDSHAKE-FROM-COMMIT (HR-2 6b); for the other side's, at that
-        side's ref of record, since the author's manifest lists only its own
-        branch (a copy the author holds is on its own branch, 6c)."""
+        HANDSHAKE-FROM-COMMIT (HR-2 6b); for the other side's, at each ref
+        that stands for that side's ref of record, since the author's
+        manifest lists only its own branch (a copy the author holds is on its
+        own branch, 6c)."""
         repo = self.repo[side]
         author = FROM_SIDE.get((lap.headers.get("FROM") or [""])[0].strip())
         if side == author:
@@ -550,13 +551,27 @@ class Resolver:
                 return (None, "the lap declares no single "
                               "HANDSHAKE-FROM-COMMIT", True)
             rev = self.mapped(side, froms[0])[0]
-            where = f"the lap's HANDSHAKE-FROM-COMMIT, {froms[0]}"
-        else:
-            rec = self._record(side)
-            if not rec:
-                return (None, f"{side}'s ref of record is not in the clone "
-                              f"given", False)
-            rev, where = rec[0], f"{side}'s {self.refs[side]}"
+            return self._row_at(repo, rev, f"the lap's HANDSHAKE-FROM-COMMIT, "
+                                           f"{froms[0]}", side, sha, path)
+        rec = self._record(side)
+        if not rec:
+            return (None, f"{side}'s ref of record is not in the clone given",
+                    False)
+        # Every ref that stands for the ref of record, as _record says: a
+        # local branch can predate the rows its remote-tracking copy carries,
+        # and a manifest only gains rows, so the row is wherever it is found.
+        # Found 2026-10-16: citing Platterpus's round 34 run from a clone
+        # whose local main predated the rows, the first ref was read alone.
+        tried = [self._row_at(repo, ref, f"{side}'s {ref}", side, sha, path)
+                 for ref in rec]
+        found = [t for t in tried if t[0] is not None]
+        if found:
+            return found[0]
+        decided = [t for t in tried if t[2]]
+        return (decided or tried)[0]
+
+    def _row_at(self, repo, rev, where, side, sha, path):
+        """evidence_row's lookup in the manifest at one revision."""
         if git(repo, "rev-parse", "--verify", "--quiet",
                f"{rev}^{{commit}}").returncode != 0:
             return None, f"{where} is not in {side}'s clone", False
@@ -722,14 +737,22 @@ def held(side, rnd, lp):
 def round_laps(me, this):
     """Every LSL lap of this round we hold, both sides, up to and including
     this one, as {(side, lap): Lap}. The lap under check stands in for any
-    held copy of itself, which may be an older draft."""
+    held copy of itself, which may be an older draft.
+
+    The other side's laps count only below this one's number. A lap N is
+    written holding the other side's laps before N; the other side has a lap
+    N too only in a K1 collision, where one of the two is renumbered, so it is
+    nothing this lap could have answered. Found 2026-10-16: our held round 34
+    lap 2's TERM pending, numbered after theirs, was read as the latest status
+    of their lap 2's close condition, and their GO was refused."""
     side, rnd, lp = me
     out = {}
     for s in SIDES:
         d = LAPS if s == "cyanrip" else LAPS / "inbound"
         for f in d.glob(f"round-{rnd:02d}-lap-*.md"):
             m = re.fullmatch(rf"round-{rnd:02d}-lap-(\d+)\.md", f.name)
-            if not m or int(m.group(1)) > lp or (s, int(m.group(1))) == (side, lp):
+            if not m or int(m.group(1)) > lp or (s, int(m.group(1))) == (side, lp) \
+                    or (s != side and int(m.group(1)) == lp):
                 continue
             h = held(s, rnd, int(m.group(1)))
             if h is not None:
