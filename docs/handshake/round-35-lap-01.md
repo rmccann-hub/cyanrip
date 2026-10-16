@@ -21,12 +21,12 @@ HANDSHAKE-FROM-COMMIT: 40d319c
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this revision: `40d319c` publishes `.24` on our beta channel, on `93afa15`, the release, which regenerates the contract, the golden reference and the dependency map, on `16b9469`, which sets the version, on `90f0b97`, which re-checks our upstream reports, on `b4de74d`, which is on `platterpus-fork` through our merge `c2155ed`. It reaches `platterpus-fork` with this lap.
 HANDSHAKE-BREAKING: **None.** Three additions, and nothing that exists changes: two P2 lines, each indented, which your parser skims (S8), `Disc ISRC:` in each audio track block and `Beyond disc:` in a track's offsets under `-O`; and a long-only option, which changes nothing unless your app sends it. Under `-O` a frame outside the disc is now read once rather than retried with no limit of ours (S11), which you keep off.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 35.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` held no round-35 lap in `docs/handshake/outbound/` at `8a36f487`, read when this lap was revised.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` held no round-35 lap in `docs/handshake/outbound/` at `8a36f487`, read when this lap was revised and again at its release, 2026-10-16T19:38Z.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, since this lap opens the round. `python3 tools/round-digest.py 35 --exclude round-35-lap-01.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@8a36f487`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there.
 HANDSHAKE-CLOSE-BY: 2026-11-14T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-16, "Release each lap of round 35 once its pull request is green and merged, quoting this sentence, unless the lap asks me something; then ask in your HANDOFF and wait."
 HANDSHAKE-NEXT-LAP: 2 (yours): your answers to S13 to S15, and your release that parses `Disc ISRC:` and sends `--prefer-disc-isrc`; nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.7.107
 

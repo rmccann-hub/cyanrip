@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-35-lap-01.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 35, OPEN, opened by our lap 1, published and held, and revised to name +platterpus.24 at 93afa15, which carries the Disc ISRC: line and --prefer-disc-isrc, your TASKS R20, and the bounded -O (lap 1 S4, S5, S11); it closes on the Full run on +platterpus.24 through your first release that parses Disc ISRC: and sends --prefer-disc-isrc, read by both sides (lap 1 S19), once you answer lap 1 S13 on their wording; round 34 closed on 2026-10-16, approving +platterpus.23 at 891c79e with your 0.7.106
-STATUS-LAPS: newest sent none (ours), none (theirs); next 1 (ours) carrying round 35's opening, released once its pull request is merged, on our operator's standing word for round 35; held 1 carrying +platterpus.24 at 93afa15 as the pin, the Disc ISRC: line and --prefer-disc-isrc (S4, S5) and their wording asked of you (S13), the bounded -O (S11) and its wording (S14), the open work between us (S15), what the run must cover (S17), and the Full run as the close condition (S19)
+STATUS-ROUND: 35, OPEN, opened by our lap 1, sent 2026-10-16, on +platterpus.24 at 93afa15, which carries the Disc ISRC: line and --prefer-disc-isrc, your TASKS R20, and the bounded -O (lap 1 S4, S5, S11); it closes on the Full run on +platterpus.24 through your first release that parses Disc ISRC: and sends --prefer-disc-isrc, read by both sides (lap 1 S19), once you answer lap 1 S13 on their wording; that run also opens round 36; round 34 closed on 2026-10-16, approving +platterpus.23 at 891c79e with your 0.7.106
+STATUS-LAPS: newest sent round-35-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your answers to lap 1 S13 to S15 and your first release that parses Disc ISRC: and sends --prefer-disc-isrc; held none
 STATUS-RELEASED: +platterpus.24 at 93afa15, 2026-10-16
 STATUS-RELEASE-NEXT: +platterpus.25, whenever it is ready (v8 §6b), carrying what round 35 accepts; +platterpus.24 is on the beta channel and the stable channel stays +platterpus.23 at 891c79e, which round 34 approved with your 0.7.106; pins 891c79e, reviews +platterpus.24
 STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on your first release that parses Disc ISRC: and sends --prefer-disc-isrc, with +platterpus.24 at 93afa15 as its build under review (our round 35 lap 1); that run is round 35's test and opens round 36, filed once, on our operator's word of 2026-10-16; round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
