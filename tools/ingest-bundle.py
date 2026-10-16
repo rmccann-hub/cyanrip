@@ -63,6 +63,14 @@ changes, so its ORIGINAL is checked with -Y first, and the verdict is
 recorded beside it: a filed log whose signature can no longer be checked is
 only evidence if somebody checked it while it still could be.
 
+AND BEFORE ANY OF IT, EACH MEMBER IS CHECKED AGAINST THE SENDER'S OWN HASH
+(our data register's X7, in Platterpus's bundles since 2026-10-14). Their
+MANIFEST.txt gives every member's SHA-256 of the bytes they wrote, in
+sha256sum's format; a member whose bytes differ, or one listed and absent,
+means the archive is not the bundle they wrote, and the tool stops with exit
+3 having filed nothing. A bundle with no such hashes is reported as not
+checked, which is not the same as intact.
+
 AND AFTER HR-2'S MOVE A RUN IS NOT FILED INTO THIS CHECKOUT (PROTOCOL.md v9
 §17, point 10). Once docs/evidence-manifest.tsv exists, --into a run folder
 under docs/ is refused: file into a staging directory outside the checkout,
@@ -104,6 +112,64 @@ FAIL_LINE = re.compile(r"^\s*\[\s*FAIL\s*\]", re.M)
 
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
+
+
+# The sender's hash of each member, in sha256sum's own format at column 0 of
+# MANIFEST.txt (Platterpus since 2026-10-14, our data register's X7): a hash,
+# two spaces, the member's name, with a leading backslash when the name
+# escapes a backslash or a newline, as GNU sha256sum writes it.
+MANIFEST_HASH = re.compile(r"^(\\?)([0-9a-f]{64})  (.+)$", re.M)
+
+
+def check_sender_hashes(members):
+    """Each member against the SHA-256 the sender's MANIFEST.txt gives it.
+
+    Returns (refused, lines). A hash the sender computed from the bytes it
+    wrote is a second witness: without it a member changed after the export
+    is filed as though it were the sender's. When the bundle gives no hashes
+    the lines say so, because "nothing was checked" is not "every member is
+    intact"."""
+    manifest = members.get("MANIFEST.txt")
+    if manifest is None:
+        return False, ["  NO MANIFEST.txt at the archive's root: no member is "
+                       "checked against a sender's hash.",
+                       "  This is NOT 'every member is intact'."]
+    listed = {}
+    for esc, digest, name in MANIFEST_HASH.findall(
+            manifest.decode("utf-8", "replace")):
+        if esc:
+            name = re.sub(r"\\(.)", lambda m: "\n" if m.group(1) == "n"
+                          else m.group(1), name)
+        listed[name] = digest
+    if not listed:
+        return False, ["  MANIFEST.txt gives no SHA-256 for any member (a "
+                       "bundle exported before 2026-10-14): no member is "
+                       "checked against a sender's hash.",
+                       "  This is NOT 'every member is intact'."]
+    changed = [n for n, d in sorted(listed.items())
+               if n in members and sha256(members[n]) != d]
+    missing = sorted(n for n in listed if n not in members)
+    unlisted = sorted(n for n in members
+                      if n not in listed and n != "MANIFEST.txt")
+    lines = []
+    for n in changed:
+        lines.append(f"  CHANGED: {n} -- the sender's SHA-256 is "
+                     f"{listed[n]}, the archive's member is "
+                     f"{sha256(members[n])}")
+    for n in missing:
+        lines.append(f"  LISTED, NOT IN THE ARCHIVE: {n}")
+    good = len(listed) - len(changed) - len(missing)
+    lines.append(f"  {good} of {len(listed)} member(s) the MANIFEST hashes "
+                 f"match it byte for byte.")
+    if unlisted:
+        lines.append(f"  {len(unlisted)} member(s) carry no hash of the "
+                     f"sender's, so are not checked: " + ", ".join(unlisted))
+    refused = bool(changed or missing)
+    if refused:
+        lines.append(f"  REFUSED: {len(changed) + len(missing)} member(s) "
+                     f"differ from the sender's MANIFEST, so this archive is "
+                     f"not the bundle the sender wrote. Nothing is filed.")
+    return refused, lines
 
 
 def read_verdict(members):
@@ -488,6 +554,18 @@ def main():
                 continue
             f = tf.extractfile(m)
             members[m.name] = f.read() if f else b""
+
+    # ---- 0. EACH MEMBER AGAINST THE SENDER'S OWN HASH (X7) ----------------
+    # Before the verdict: a member changed after the export makes every
+    # reading below a reading of something the sender did not write.
+    print("=" * 68)
+    print("INTEGRITY -- each member against the sender's SHA-256 (X7)")
+    print("=" * 68)
+    refused, lines = check_sender_hashes(members)
+    print("\n".join(lines))
+    print()
+    if refused:
+        return 3
 
     # ---- 1. THE RUN'S OWN VERDICT, BEFORE ANYTHING ELSE -------------------
     print("=" * 68)

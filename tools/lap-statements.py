@@ -606,9 +606,12 @@ class Resolver:
                        f"{side}@{sha}:{path} cites evidence without its "
                        f"SHA-256; the manifest row gives {row.sha256}")
         elif quoted[0] != row.sha256:
+            # Both whole: cut to 16 characters, a quote wrong only after
+            # the sixteenth read as two equal values (Platterpus's round 33
+            # lap 6 S5).
             lap.refuse(line, "HR-2.6a",
-                       f"{side}@{sha}:{path} quotes SHA-256 {quoted[0][:16]}..."
-                       f", and its manifest row says {row.sha256[:16]}...")
+                       f"{side}@{sha}:{path} quotes SHA-256 {quoted[0]}"
+                       f", and its manifest row says {row.sha256}")
         full, why = row.commit, ""
         data = store._blob(repo, full, path) or store._blob(store.cache, full,
                                                               path)

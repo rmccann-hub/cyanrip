@@ -1418,6 +1418,15 @@ with tempfile.TemporaryDirectory() as tmp:
     outcome("HR-2 6a: with a SHA-256 its row does not give it is refused",
             ev(f"cyanrip@{E[:7]}:{rel}:3 sha256 {'0' * 64}", env=env0), 1,
             ["[HR-2.6a]", "its manifest row says"])
+    # Platterpus's round 33 lap 6 S5: the refusal printed both hashes cut to
+    # 16 characters, so a quote wrong only after the sixteenth read as two
+    # equal values. Both are printed whole.
+    last = sha[:-1] + ("1" if sha[-1] == "0" else "0")
+    outcome("HR-2 6a: a SHA-256 wrong only in its last digit is refused, "
+            "both printed whole",
+            ev(f"cyanrip@{E[:7]}:{rel}:3 sha256 {last}", env=env0), 1,
+            ["[HR-2.6a]", f"quotes SHA-256 {last}",
+             f"its manifest row says {sha}"])
     outcome("HR-2 6a: a line past the file's end is refused as any is",
             ev(f"cyanrip@{E[:7]}:{rel}:4 sha256 {sha}", env=env0), 1,
             ["[LSL.4]", "has 3 lines"])
