@@ -541,12 +541,15 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
      * decides unless --prefer-disc-isrc is given, so it says nothing of what
      * the disc holds; this line does. `none` is libcdio answering with no
      * usable ISRC, and `unknown` a read that was not made or did not finish:
-     * each with its reason, word for word the record's. */
+     * each with its reason, word for word the record's. A code that is not
+     * an ISO 3901 code is printed with its reason in the same shape, the code
+     * where `none` or `unknown` stands (round 35, our lap 4 S5). */
     if (!t->track_is_data) {
-        if (t->isrc_disc)
+        if (t->isrc_disc && !t->isrc_disc_malformed)
             cyanrip_log(ctx, 0, "  Disc ISRC:     %s\n", t->isrc_disc);
         else
             cyanrip_log(ctx, 0, "  Disc ISRC:     %s (%s)\n",
+                        t->isrc_disc ? t->isrc_disc :
                         t->extra_read && t->isrc_disc_none ? "none" : "unknown",
                         t->extra_read && t->isrc_disc_reason ?
                         t->isrc_disc_reason : "not read");

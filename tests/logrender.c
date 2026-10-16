@@ -911,19 +911,23 @@ static void test_preemphasis_states(void)
 static void test_disc_isrc_states(void)
 {
     const struct {
-        int extra_read, none;
+        int extra_read, none, malformed;
         const char *isrc, *reason, *want;
     } cases[] = {
-        { 1, 0, "USRC17607839", NULL, "  Disc ISRC:     USRC17607839" },
-        { 1, 1, NULL, "libcdio returned none",
+        { 1, 0, 0, "USRC17607839", NULL, "  Disc ISRC:     USRC17607839" },
+        { 1, 1, 0, NULL, "libcdio returned none",
           "  Disc ISRC:     none (libcdio returned none)" },
-        { 1, 1, NULL, "libcdio returned an all-zero ISRC",
+        { 1, 1, 0, NULL, "libcdio returned an all-zero ISRC",
           "  Disc ISRC:     none (libcdio returned an all-zero ISRC)" },
-        { 1, 0, NULL, "the driver does not report reading ISRC",
+        { 1, 0, 0, NULL, "the driver does not report reading ISRC",
           "  Disc ISRC:     unknown (the driver does not report reading ISRC)" },
-        { 1, 0, NULL, "out of memory", "  Disc ISRC:     unknown (out of memory)" },
-        { 0, 1, NULL, "libcdio returned none", "  Disc ISRC:     unknown (not read)" },
-        { 0, 0, NULL, NULL, "  Disc ISRC:     unknown (not read)" },
+        { 1, 0, 0, NULL, "out of memory", "  Disc ISRC:     unknown (out of memory)" },
+        { 0, 1, 0, NULL, "libcdio returned none", "  Disc ISRC:     unknown (not read)" },
+        { 0, 0, 0, NULL, NULL, "  Disc ISRC:     unknown (not read)" },
+        /* A code that is not an ISO 3901 code: the code where `none` or
+         * `unknown` stands, with its reason (round 35, our lap 4 S5). */
+        { 1, 0, 1, "1234567890AB", "not an ISO 3901 code, so not used",
+          "  Disc ISRC:     1234567890AB (not an ISO 3901 code, so not used)" },
     };
 
     for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
@@ -932,6 +936,7 @@ static void test_disc_isrc_states(void)
         base_track(&t);
         t.extra_read = cases[i].extra_read;
         t.isrc_disc_none = cases[i].none;
+        t.isrc_disc_malformed = cases[i].malformed;
         t.isrc_disc = (char *)cases[i].isrc;
         t.isrc_disc_reason = cases[i].reason;
 
@@ -949,6 +954,33 @@ static void test_disc_isrc_states(void)
     if (strstr(drain(ctx), "Disc ISRC:"))
         FAIL("disc-isrc: a data track was given a Disc ISRC: line");
     free_ctx(ctx);
+}
+
+/* crip_isrc_is_iso3901(): two letters, three letters or digits, seven digits,
+ * and nothing after (round 35, our lap 4 S4). Each rejected code breaks one
+ * position's class, and each accepted one has a digit or a letter where only
+ * the wider class allows it, so moving a boundary by one fails a case. */
+static void test_isrc_iso3901(void)
+{
+    const struct { const char *code; int want; } cases[] = {
+        { "USRC17607839", 1 },
+        { "GBAYE0601498", 1 },  /* a letter at 4, the registrant's last */
+        { "FR6V81200001", 1 },  /* a digit at 2, the registrant's first */
+        { "usrc17607839", 0 },  /* lower case */
+        { "1234567890AB", 0 },  /* digits where the country is */
+        { "U1RC17607839", 0 },  /* a digit at 1, in the country */
+        { "USRC1A607839", 0 },  /* a letter at 5, the year's first */
+        { "USRC1760783A", 0 },  /* a letter at 11, the designation's last */
+        { "USR-17607839", 0 },
+        { "USRC1760783", 0 },   /* eleven */
+        { "USRC176078390", 0 }, /* thirteen */
+        { "", 0 },
+    };
+
+    for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++)
+        if (crip_isrc_is_iso3901(cases[i].code) != cases[i].want)
+            FAIL("isrc-iso3901: %s gave %i, not %i", cases[i].code,
+                 !cases[i].want, cases[i].want);
 }
 
 /* =====================================================================
@@ -1697,6 +1729,7 @@ int main(void)
 
     test_preemphasis_states();
     test_disc_isrc_states();
+    test_isrc_iso3901();
     test_beyond_disc_states();
     test_secure_reread_verdicts();
     test_eac_crc_repeat_suffix();
