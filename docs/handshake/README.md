@@ -436,6 +436,26 @@ for. The flags the reference is
 made with are in the tool. The interrupted sample's body changes with where the
 signal lands, and is checked by line shape.
 
+### Cutting a release
+
+Set the version in `meson.build` and write the `Changelog.md` entry, and commit
+that. Then, from that clean commit, regenerate every derived file that names
+the version, and commit them as the candidate:
+
+```sh
+ninja -C build && python3 tools/gen-provider-contract.py > PROVIDER-CONTRACT.md \
+               && python3 tools/gen-golden-reference.py \
+               && python3 tools/gen-golden-reference.py --interrupted \
+               && python3 tools/gen-dependency-map.py
+```
+
+The dependency map was missing from this list until `.24`, whose first
+candidate failed `Dependency map is current` on it. Prove the candidate from a
+clean checkout, `python3 tools/record-release-suite.py <candidate>`, and file
+its output under `docs/release-evidence/<candidate>-suite.txt` with the
+publish commit, which appends the ledger row and regenerates the manifest
+(`tools/gen-release-manifest.py`, then `--check`).
+
 ### Running cyanrip by hand on a disc image
 
 `tests/fixtures/pregap.cue` reads `pregap.bin`, which is `cdda.bin` copied, as

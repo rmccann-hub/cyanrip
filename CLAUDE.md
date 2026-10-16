@@ -2225,8 +2225,11 @@ a mid-round lap is `HOLD`, not `GO`, and a lap that changes nothing is still a
 complete lap.
 
 **4. Release.** Bump `+platterpus.N`, write the `Changelog.md` entry,
-regenerate the contract and golden reference at the new version, and announce the
-pin as a **commit SHA** -- tags cannot be published from here.
+regenerate at the new version every derived file that names it -- the contract,
+the golden reference and interrupted sample, and the dependency map
+(`sbom.cdx.json`, `docs/DEPENDENCIES.md`), which `.24`'s first candidate
+missed -- and announce the pin as a **commit SHA** -- tags cannot be published
+from here.
 
 **A release is not published until `release-manifest.json` names it.** This is
 how the consumer installs and upgrades -- there is no other mechanism, and from
