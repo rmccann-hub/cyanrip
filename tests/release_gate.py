@@ -2059,6 +2059,23 @@ KNOWN_UNREPRODUCIBLE = {
     # Pinned to their declared value so an edit to their file fails here. It
     # never comes out: their lap 2 is sent and immutable, and so is ours.
     "round-27-lap-02.md": "3d3696c4dc884152",
+    # Round 35 lap 3, OURS. Declares `85a64e289f431911 over 1`, our lap 1
+    # alone; this re-derives over our lap 1 and their lap 2. The declaration
+    # was true of what we held when it was written: their lap 2 was released
+    # at platterpus@9872c0b, and we wrote lap 3 before filing it, on the
+    # operator's ordering of 2026-10-16 ("Before you look at the lap ... I
+    # have one other thing to ask"), and said so in its INBOUND-HELD.
+    #
+    # It is the case check_lap()'s docstring names, a lap written while a
+    # lower-numbered lap was not yet held, and the check failing is the
+    # correct outcome: Platterpus holds their own lap 2, so they cannot
+    # reproduce this either. Not a RECONCILE: our lap 4 holds all three and
+    # declares over three, which they can reproduce once they file lap 3.
+    # The cost was avoidable: filing a released peer lap commits to holding
+    # it, not to answering it, so it can be filed before an unrelated lap
+    # is written. Reported in our lap 4. Pinned to the declared value, and
+    # it never comes out: lap 3 is sent and immutable.
+    "round-35-lap-03.md": "85a64e289f431911",
 }
 
 
