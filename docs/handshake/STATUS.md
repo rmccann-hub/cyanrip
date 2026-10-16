@@ -28,7 +28,6 @@ STATUS-OPEN: superseded-read-marker both cannot, because the format needs a desi
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse and no design exists; asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act, which the operator said on 2026-10-05 they will do; all twenty-three are drafted in docs/upstream/issues-to-file.md
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
-STATUS-OPEN: windows-ci-unpinned us fixing at round 34, priority 5: I16, pinning and caching the five libraries the Windows build compiles, due once round 33 has closed on both gates, by our operator's word of 2026-10-15; until then the build stays as upstream ships it, as the operator decided on 2026-10-05, and no consumer uses its artifact
 STATUS-OPEN: release-markers us cannot, because building or retiring the release/* markers of docs/UPGRADE-CHANNELS-PLAN.md §6a is the operator's decision, now that v8 decouples releases from rounds; put to the operator on 2026-10-12
 
 **The block above is the proposal's D6, and it is checked, not trusted**

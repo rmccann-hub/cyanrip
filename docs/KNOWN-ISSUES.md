@@ -23,6 +23,38 @@ say "probably" without saying what would settle it.
 
 ---
 
+## Fixed 2026-10-16, round 34 — the Windows build's libraries pinned (I16)
+
+### The Windows CI build cloned five dependencies unpinned
+
+**Found 2026-10-05** by `tools/gen-dependency-map.py`. `.github/mingw-build.sh`
+ran `git clone --depth 1` of curl, neon, `cyanreg/libmusicbrainz`, libqrencode
+and FFmpeg, each at whatever its default branch held that day, so the Windows
+artifact was a build of five moving targets and no two runs needed agree.
+**Both halves were upstream's** (the workflow and script came with the fork),
+and no consumer of this fork uses the Windows artifact: Platterpus builds from
+source on Linux. **The operator first left it as upstream ships it**
+(2026-10-05), since pinning means choosing five versions and keeping them
+current, and then **asked for it in round 34** (2026-10-15, our round 34 lap 1
+S10). The actions were pinned by commit on 2026-10-12.
+
+**Now each library is one commit, fetched by its full SHA and named by the
+release it is**: curl `curl-8_23_0`, neon `0.37.1`, libqrencode `v4.1.1` and
+FFmpeg `n8.1.3`, the newest release of each on 2026-10-16, read with `git
+ls-remote`, and `cyanreg/libmusicbrainz` at its default branch's commit that
+day, since it has no releases. A new version is a change to the script. The
+`mingw` job caches what the five install, `.github/_install`, under a key made
+from the script's hash and from the MSYS2 packages they were compiled
+against, which `update: true` moves; a restored cache carries a stamp the
+script writes only once all five installed, and a failed job saves nothing.
+Each at its tag builds as it did at its branch's head: curl's `Makefile.am`
+has the same `SUBDIRS` line at both, so the script's `sed` on it is a no-op at
+both, as it was. `tests/workflows.py` fails on a `cyan_do_vcs` call that
+names no full SHA, or on a `git clone` in the script, and the dependency map
+reads each pin. **Its first measurement is CI's**: the `mingw` job runs only
+on GitHub's Windows runner, so whether the pinned build and its cache work is
+known from that job's log, not from this environment.
+
 ## Fixed for `.20`, 2026-10-05, not released — what waited for round 31, and what fixing it found
 
 Put off on 2026-09-30 and 2026-10-04 because each changes what a P2 line says,
@@ -1839,22 +1871,6 @@ Items 1 and 3 are fixed. **Items 2 and 4 wait for v6, and on purpose.** Item 4
 is v5's literal reading of C37, which v6 replaces. Item 2's row is proposed for
 amendment rather than implementation, because as written it refuses those six
 laps.
-
-### The Windows CI build clones five dependencies unpinned
-
-**Found 2026-10-05** by `tools/gen-dependency-map.py`. `.github/mingw-build.sh`
-runs `git clone --depth 1` of curl, neon, `cyanreg/libmusicbrainz`, libqrencode
-and FFmpeg, each at whatever its default branch holds that day, so the Windows
-artifact is a build of five moving targets and no two runs need agree. The six
-GitHub Actions the workflow uses are pinned by tag, not by commit. **Both are
-upstream's** (the workflow and script came with the fork) and no consumer of
-this fork uses the Windows artifact: Platterpus builds from source on Linux.
-**Decided by the operator, 2026-10-05: left as upstream ships it.** Pinning
-means choosing five versions and keeping them current, which is a decision
-about what the Windows build is for, and nobody uses it for anything; removing
-the workflow would be a divergence from upstream for no consumer's benefit.
-Recorded so the choice stays visible; the dependency map prints it every time
-it is regenerated.
 
 ## Open, ours, and NOT solvable here — no drive in this environment
 

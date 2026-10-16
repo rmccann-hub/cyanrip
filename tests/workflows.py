@@ -9,6 +9,8 @@ outside read of 2026-10-12 asked for, checked on the files rather than on a run:
     only by the jobs named in WRITERS;
   * every job has `timeout-minutes`;
   * every action is pinned to a full commit SHA, with its version in a comment;
+  * every library the Windows build compiles is fetched as one commit, named
+    by a full SHA, and nothing in that script clones a branch (I16);
   * no `::set-output`, and no actions/upload-release-asset (archived);
   * upstream's nightly steps run only in cyanreg/cyanrip;
   * no `${{ }}` expression is pasted into a shell script, where a branch name
@@ -205,8 +207,27 @@ for need in ("CYANRIP_EVIDENCE_REQUIRED", "verify-rows", "--current",
     if need not in ev:
         fail(f"ci.yml: the evidence job does not run {need}")
 
+# I16 (round 34): the Windows build's sources, pinned as the actions are. A
+# call that names no commit, or a variable that is not a full SHA, would build
+# whatever a branch held that day, which is what this replaced.
+mingw = ROOT / ".github" / "mingw-build.sh"
+script = mingw.read_text(encoding="utf-8") if mingw.exists() else ""
+shas = dict(re.findall(r"^(\w+)=([0-9a-f]{40})\s*$", script, re.M))
+calls = re.findall(r"^\s*cyan_do_vcs\s+(.*)$", script, re.M)
+for call in calls:
+    m = re.match(r'"https://[^"]+"\s+"\$(\w+)"\s+\S', call)
+    if not m or m.group(1) not in shas:
+        fail(f"mingw-build.sh: `cyan_do_vcs {call}` is not one commit named "
+             "by a full SHA and its release")
+if len(calls) < 5:
+    fail(f"mingw-build.sh: {len(calls)} cyan_do_vcs calls found, expected the "
+         "five libraries; the pattern has stopped matching")
+if re.search(r"^[^#\n]*git clone", script, re.M):
+    fail("mingw-build.sh runs git clone, which fetches a branch, not a commit")
+
 if failures:
     print(f"{failures} failure(s)")
     sys.exit(1)
 print(f"ok: {len(files)} workflows, {pins} pinned actions, "
-      f"{writers} jobs with contents: write")
+      f"{writers} jobs with contents: write, {len(calls)} pinned Windows "
+      "sources")

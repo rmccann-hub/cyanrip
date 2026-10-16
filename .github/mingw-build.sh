@@ -1,12 +1,30 @@
 #!/bin/bash
 
+# The five libraries this build compiles, each pinned to one commit and named
+# by the release it is (I16, round 34), so two runs build the same sources and
+# a new version is a change to this file. ci.yml caches what they install under
+# a key made from this file's hash, so a pin moved here is a fresh build, and a
+# restored cache carries the stamp written once all five installed.
+# cyanreg/libmusicbrainz has no releases: its commit is its default branch's
+# on 2026-10-16. Resolved with `git ls-remote` on 2026-10-16.
+CURL_COMMIT=3163ec065643ba20709f190111f42c3e1fe95273
+NEON_COMMIT=170c36704bfc2ac8b0e5607c3e1fdd4c159674db
+LIBMUSICBRAINZ_COMMIT=2398b8765ed8fa2644bdcef70f764ce6ec209431
+LIBQRENCODE_COMMIT=715e29fd4cd71b6e452ae0f4e36d917b43122ce8
+FFMPEG_COMMIT=1041abdc962f4cc4f394aa8de9dc5236c0c3b9e7
+
 buildCyanrip() {
     cyan_prepare
-    build_curl
-    build_neon
-    build_libmusicbrainz
-    build_libqrencode
-    build_ffmpeg
+    if [[ -f $CYANRIPINSTALLDIR/.libs-built ]]; then
+        echo "curl, neon, libmusicbrainz, libqrencode and FFmpeg: restored from the cache"
+    else
+        build_curl &&
+        build_neon &&
+        build_libmusicbrainz &&
+        build_libqrencode &&
+        build_ffmpeg &&
+        touch "$CYANRIPINSTALLDIR/.libs-built"
+    fi
     build_cyanrip
 }
 
@@ -28,14 +46,20 @@ cyan_prepare() {
     cyan_do_hide_all_sharedlibs
 }
 
+# One commit of a repository, by its full SHA, and nothing else; the release
+# it is goes in the log, so a run says what it built.
 cyan_do_vcs() {
-    local vcsURL=${1#*::} vcsFolder=$2
-    local vcsBranch=${vcsURL#*#} ref=origin/HEAD
-    : "${vcsFolder:=$(basename "$vcsURL" .git)}"
+    local vcsURL=$1 vcsCommit=$2 vcsRelease=$3
+    local vcsFolder
+    vcsFolder=$(basename "$vcsURL" .git)
 
-    cd "$CYANRIPBUILDDIR"
-    git clone --depth 1 "$vcsURL" "$vcsFolder"
-    cd "$vcsFolder"
+    echo "$vcsFolder: $vcsRelease at $vcsCommit"
+    cd "$CYANRIPBUILDDIR" &&
+    rm -rf "$vcsFolder" &&
+    git init -q "$vcsFolder" &&
+    cd "$vcsFolder" &&
+    git fetch -q --depth 1 "$vcsURL" "$vcsCommit" &&
+    git checkout -q FETCH_HEAD
 }
 
 cyan_do_hide_all_sharedlibs() {
@@ -77,7 +101,7 @@ cyan_do_cmakeinstall() {
 }
 
 build_curl() {
-    cyan_do_vcs "https://github.com/curl/curl.git" &&
+    cyan_do_vcs "https://github.com/curl/curl.git" "$CURL_COMMIT" curl-8_23_0 &&
     autoreconf -fi &&
     sed -ri "s;(^SUBDIRS = lib) src (include) scripts;\1 \2;" Makefile.in &&
 #    CPPFLAGS+=" -DNGHTTP2_STATICLIB" \
@@ -87,13 +111,13 @@ build_curl() {
 }
 
 build_neon() {
-    cyan_do_vcs "https://github.com/notroj/neon.git" &&
+    cyan_do_vcs "https://github.com/notroj/neon.git" "$NEON_COMMIT" 0.37.1 &&
     ./autogen.sh &&
     cyan_do_separate_confmakeinstall --disable-{nls,debug,webdav}
 }
 
 build_libmusicbrainz() {
-    cyan_do_vcs "https://github.com/cyanreg/libmusicbrainz.git" &&
+    cyan_do_vcs "https://github.com/cyanreg/libmusicbrainz.git" "$LIBMUSICBRAINZ_COMMIT" "no release" &&
     cyan_do_cmakeinstall
 }
 
@@ -101,13 +125,13 @@ build_libqrencode() {
     # The MSYS2 package only ships an import library, which would leave the
     # binary needing a DLL, so build it here. The tools pull in libpng and are
     # of no use to us.
-    cyan_do_vcs "https://github.com/fukuchi/libqrencode.git" &&
+    cyan_do_vcs "https://github.com/fukuchi/libqrencode.git" "$LIBQRENCODE_COMMIT" v4.1.1 &&
     cyan_do_cmakeinstall -DWITH_TOOLS=NO -DWITH_TESTS=NO -DWITHOUT_PNG=YES &&
     pkg-config --exists libqrencode
 }
 
 build_ffmpeg() {
-    cyan_do_vcs "https://github.com/FFmpeg/FFmpeg.git"
+    cyan_do_vcs "https://github.com/FFmpeg/FFmpeg.git" "$FFMPEG_COMMIT" n8.1.3 &&
     cyan_do_separate_confmakeinstall --pkg-config-flags=--static \
         --disable-{programs,devices,filters,decoders,hwaccels,encoders,muxers} \
         --disable-{debug,protocols,demuxers,parsers,doc,swscale,network} \

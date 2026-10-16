@@ -198,6 +198,19 @@ jobs:
           install: git base-devel zip autoconf automake libtool mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-meson mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-nasm mingw-w64-ucrt-x86_64-libcdio-paranoia mingw-w64-ucrt-x86_64-opus mingw-w64-ucrt-x86_64-lame mingw-w64-ucrt-x86_64-libvorbis mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-nghttp2
           update: true
 
+      # I16: what the five pinned libraries install, cached under the build
+      # script's hash, so a pin moved there is a fresh build, and under the
+      # MSYS2 packages they were compiled against, which `update: true` moves.
+      - name: Name the libraries' cache
+        id: libs
+        run: |
+          echo "packages=$(pacman -Q | grep '^mingw-w64-ucrt-x86_64-' | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: .github/_install
+          key: mingw-libs-${{ hashFiles('.github/mingw-build.sh') }}-${{ steps.libs.outputs.packages }}
+
       - name: Build
         run: |
           .github/mingw-build.sh
