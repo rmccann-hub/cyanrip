@@ -1,7 +1,9 @@
-# Draft: upstream bug report for cyanreg/cyanrip
+# Upstream bug report for cyanreg/cyanrip
 
-**Not filed.** This is a draft for the maintainer to review and submit; filing on
-upstream's tracker is outside this repository. Platterpus's ruling (round 7,
+**Filed on 2026-10-16 in [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by the operator, with the other
+twenty-two reports in `docs/upstream/defect-reports.md`, as one issue. That is
+the operator's word, relayed, not read: this session cannot open upstream's
+tracker. Filing on upstream's tracker is outside this repository. Platterpus's ruling (round 7,
 H11) was *"yes, and I would not wait"* — if upstream picks a different value we
 want to know now rather than at the next rebase.
 

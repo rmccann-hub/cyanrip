@@ -1,8 +1,11 @@
-# Drafts: upstream bug reports for cyanreg/cyanrip
+# Upstream bug reports for cyanreg/cyanrip
 
-**Not filed.** These are drafts for the maintainer to review and submit. Filing
-on upstream's tracker is outside this repository, so it is the maintainer's act;
-what this file does is make each one a copy-and-paste. All twenty-three are
+**Filed on 2026-10-16, all twenty-three as one issue: [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by the
+operator, combined in the order of importance `issues-to-file.md` suggests.
+That is the operator's word: this file's author could not open it, since this session's proxy answers HTTP 403 for upstream's tracker and refuses to attach upstream beside the fork, so the link is relayed, not read. A reply that asks for a pull request, or for any report as
+an issue of its own, goes to the operator, who files it. Filing on upstream's
+tracker is outside this repository, so it is the maintainer's act; what this
+file does is make each one a copy-and-paste. All twenty-three are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. `CLAUDE.md`'s rule is that
 *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this

@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**The twenty-three upstream reports are filed**, on the operator's word of
+2026-10-16: all of them as one issue,
+[cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167), combined
+in the order of importance `docs/upstream/issues-to-file.md` suggests. The link
+is recorded where the reports are tracked: `docs/upstream/defect-reports.md`,
+the cache-model report, each report's row in `docs/SETTLED.md`, the generated
+`issues-to-file.md`, `STATUS.md` and `CLAUDE.md`, none of which says *not
+filed* any more. It is the operator's word, relayed, not read: this session's
+proxy answers HTTP 403 for upstream's tracker, and attaching upstream is refused
+because the fork occupies the same checkout path, so watching the issue for the
+maintainer's reply needs another session or the operator.
+
 **Our round 35 lap 5 is published, held** (`docs/handshake/round-35-lap-05.md`),
 right after lap 4, on the operator's word of 2026-10-16 (*"get it all in for
 platterpus to look at and test"*): it carries the ISO 3901 check below,
