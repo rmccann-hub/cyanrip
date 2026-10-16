@@ -1,5 +1,36 @@
 Unreleased
 ==========
+**Round 34's Full run is filed and read**, `.23` with Platterpus 0.7.106 on
+2026-10-16 (`docs/rig-2026-10-16-891c79e/`, evidence commit `79b36c97`): 426
+pass, 0 fail, the one unreachable step E2, and the newest pair when it began.
+It is the first bundle checked member by member against the sender's
+hashes, 107 of 107 matching, and every one of its thirteen logs verifies with
+`-Y`. `.23`'s `AccurateRip ID:` and `AcoustID:` lines printed on a drive, the
+rig's build reading `unsupported (built without libchromaprint)`, and the
+`/9` record's pre-emphasis, disc-ISRC and CD-TEXT fields ran in all thirteen
+records; the `-f` result did not, since the run's `-f` step asks for no
+record. The repeat limit's clause and the `Gaps:` list's unknown line again
+had no cause to print. Two searches read track 4's pregap as zero, the old
+defect `subchannel-pregap-varies` records, now in six filed logs; and `-f`
+and the cache probe agreed with the earlier runs for the fifth time, `+667`
+and `128 to 255` beside `cd-paranoia -A`'s 137. Its one finding for
+Platterpus: their runner took `no read exceeded 10s` as the ripper's build
+tag from a refused rip's output, so the next rip it ran sent no
+`--consumer`. `tools/read-run.py` now finds a securing pass's record that
+Platterpus keeps renamed, `-securingpass` before the suffix, which it
+reported missing on this run; a test holds it, failing with the lookup
+disabled.
+
+**The Windows build's five libraries are pinned and cached** (I16, our round
+34 lap 1 S10). `.github/mingw-build.sh` fetched curl, neon,
+`cyanreg/libmusicbrainz`, libqrencode and FFmpeg at whatever each default
+branch held that day; each is now one commit by its full SHA, named by its
+release (curl 8.23.0, neon 0.37.1, libqrencode 4.1.1, FFmpeg 8.1.3, and
+libmusicbrainz, which has none, at its branch's commit of 2026-10-16). The
+`mingw` job caches what they install under the script's hash and the MSYS2
+packages they were built against. `tests/workflows.py` fails on a source
+that names no full SHA, and the dependency map reads the pins.
+
 **`tools/ingest-bundle.py` checks every member against the sender's own
 hash**, our round 34 lap 2 S10. Platterpus's `MANIFEST.txt` has given each
 member's SHA-256, of the bytes they wrote, since 2026-10-14 (X7 in our data
