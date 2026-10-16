@@ -56,6 +56,8 @@ UPSTREAM = "https://github.com/cyanreg/cyanrip"
 DEFECTS = "docs/upstream/defect-reports.md"
 CACHEMODEL = "docs/upstream-cachemodel-report.md"
 COUNT = 23
+# Where the operator filed all of them, as one issue, on 2026-10-16.
+FILED = f"{UPSTREAM}/issues/167"
 
 
 # The commit a report was checked at. Reports 1-18 were checked at the commit
@@ -149,6 +151,11 @@ def render():
         "report's row in `docs/SETTLED.md` re-checks it against `master`. "
         "Every fork commit linked below is on `platterpus-fork`, which is "
         "public, and every upstream commit links to upstream.", "",
+        "**Filed on 2026-10-16**, by the operator, as one issue combining all "
+        f"{COUNT} in the order of importance below: <{FILED}>. That link is "
+        "the operator's word; this file's generator does not read upstream's "
+        "tracker. An item asked for as an issue of its own is pasted from "
+        "here.", "",
         "**How to file.** For each item: open "
         "<https://github.com/cyanreg/cyanrip/issues/new>, paste the "
         "**Title** line into the title box and everything between the two "

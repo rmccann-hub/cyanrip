@@ -944,6 +944,21 @@ change is not the cause; **what is, is still not established**, since CI keeps
 no per-row timing and the runner's other load is not visible from the job's
 log. It is our round 34 lap 1 S8, and `STATUS.md`'s `settled-facts-macos`.
 
+**And twice in a row on one tree on 2026-10-16**, pull request #40 at
+`b45029f`: `Settled facts TIMEOUT 120.04s` on the run and on its one re-run
+(jobs 117241909752 and 117244235906), where pull request #39's tree had passed
+it in **42.44 s** on macOS minutes earlier. The second run shows it is not
+only load: `Black-box sweep` is `is_parallel: false`, so meson ran nothing
+else beside `Settled facts` from 23:34:12, when the last other test ended,
+until it killed it at 23:35:08, and it did not finish in those 56 s alone.
+The killed test printed nothing, because `tools/check-settled.py` printed only
+at the end. **It now prints each run's five slowest rows, and on SIGTERM, which
+is how meson ends a test that overruns, the row that was running and the
+slowest before it** (`tests/golden_libraries.py` case 6). Locally the same
+tree takes 44.8 s inside meson, the slowest rows those reading run evidence at
+about 6 s each. The next timeout names its row; the cause is still not
+established.
+
 **And a measurement that is a warning, not yet a fault.** Since HR-2's move,
 the 30 rows that re-check a file on the evidence branch run only where that
 file is fetched (`tools/check-settled.py` counts them unprobed otherwise). In

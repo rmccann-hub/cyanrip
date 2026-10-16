@@ -42,8 +42,10 @@ import os
 import pathlib
 import re
 import shlex
+import signal
 import subprocess
 import sys
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SETTLED = ROOT / "docs" / "SETTLED.md"
@@ -163,9 +165,50 @@ def run_row(store, command):
                               capture_output=True, text=True)
 
 
+# WHERE THE TIME WENT, printed whether the run ends or is killed. CI's macOS
+# job has timed this test out at 120 s five times since 2026-10-15, twice in a
+# row on one tree, and a tree that timed out has passed in 28 s on a re-run; no
+# cause was established, because CI kept no per-row timing and a killed run
+# printed nothing (docs/KNOWN-ISSUES.md, STATUS.md's settled-facts-macos). Meson ends a
+# test that overruns with SIGTERM, so the handler names the row that was
+# running and the slowest ones before it, and exits 143 as a SIGTERM would.
+SLOWEST = 5
+
+
+def slowest(timings):
+    return [f"  {t:7.2f} s  {cmd[:160]}"
+            for t, cmd in sorted(timings, reverse=True)[:SLOWEST]]
+
+
 def main():
     text = SETTLED.read_text(encoding="utf-8")
     store = evidence.Store(ROOT)
+    started = time.monotonic()
+    timings, in_flight = [], {}
+
+    def on_term(signo, frame):
+        now = time.monotonic()
+        lines = [f"KILLED by signal {signo} after {now - started:.1f} s, with "
+                 f"{len(timings)} row(s) run"]
+        if in_flight:
+            lines.append(f"  running for {now - in_flight['t']:.1f} s: "
+                         f"{in_flight['cmd'][:160]}")
+        lines.append(f"the slowest of those {len(timings)}:")
+        print("\n".join(lines + slowest(timings)), flush=True)
+        os._exit(128 + signo)
+
+    try:
+        previous = signal.signal(signal.SIGTERM, on_term)
+    except ValueError:  # not the main thread: a caller that imports this
+        previous = None
+    try:
+        return run_rows(text, store, started, timings, in_flight)
+    finally:
+        if previous is not None:
+            signal.signal(signal.SIGTERM, previous)
+
+
+def run_rows(text, store, started, timings, in_flight):
     runnable, unrunnable, failures, malformed = 0, 0, [], []
     unprobed = []
     delegated = []
@@ -279,6 +322,7 @@ def main():
             delegated.append((fact[:70], target))
             continue
 
+        in_flight.update(t=time.monotonic(), cmd=command)
         try:
             r = run_row(store, command)
         except evidence.NotFetched as e:
@@ -289,6 +333,9 @@ def main():
                 unprobed.append((fact[:70], f"reads run evidence this clone "
                                             f"has not fetched: {e}"))
             continue
+        finally:
+            timings.append((time.monotonic() - in_flight.pop("t"),
+                            in_flight.pop("cmd")))
         # 77 is the suite's own "cannot be checked here" (meson's SKIP, and
         # rip_images.py's skip()), never a verdict on the fact. The golden
         # reference row returns it on a library set other than the one the
@@ -327,6 +374,10 @@ def main():
     for fact, target in delegated:
         print(f"DELEGATED to meson test '{target}', which checks it in this "
               f"run: {fact}")
+
+    print(f"TIMING: {time.monotonic() - started:.1f} s, {len(timings)} row(s) "
+          f"run here; the slowest:")
+    print("\n".join(slowest(timings)))
 
     breakdown = ", ".join(f"{n} {t.rstrip(':')}" for t, n in sorted(kinds.items()))
     print(f"{runnable} runnable check(s), {len(failures)} stale, "

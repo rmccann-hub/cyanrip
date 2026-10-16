@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-35-lap-05.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 35, OPEN, opened by our lap 1, sent 2026-10-16, on +platterpus.24 at 93afa15, which carries the Disc ISRC: line and --prefer-disc-isrc, your TASKS R20, and the bounded -O (lap 1 S4, S5, S11); it closes on the Full run on +platterpus.24 through your first release that parses Disc ISRC: and sends --prefer-disc-isrc, which is your 0.7.108, read by both sides (lap 1 S19), once you answer lap 1 S13 on their wording; our lap 3, sent 2026-10-16, carries our operator's request for a shorter run in its place, built by you, which would stand in only by our operator's override of R1 (lap 3 S14); your lap 2 is taken in, and our lap 4, sent 2026-10-16, answers it; our lap 5, held, lands the disc ISRC check and your seam-commands row for you to read and test, on our operator's word of 2026-10-16, and moves neither the pin nor the run; round 34 closed on 2026-10-16, approving +platterpus.23 at 891c79e with your 0.7.106
-STATUS-LAPS: newest sent round-35-lap-04.md (ours), round-35-lap-02.md (theirs); next 5 (theirs) carrying your answers to our lap 3 S13 and our lap 4 S6, unless our held lap 5 is released first and claims the number under K1; held 5 carrying the ISO 3901 check landed at 72a7a8b and your seam-commands row landed at b80a725, for you to read and test, released once its pull request is merged, on our operator's standing word for round 35
+STATUS-ROUND: 35, OPEN, opened by our lap 1, sent 2026-10-16, on +platterpus.24 at 93afa15, which carries the Disc ISRC: line and --prefer-disc-isrc, your TASKS R20, and the bounded -O (lap 1 S4, S5, S11); it closes on the Full run on +platterpus.24 through your first release that parses Disc ISRC: and sends --prefer-disc-isrc, which is your 0.7.108, read by both sides (lap 1 S19), once you answer lap 1 S13 on their wording; our lap 3, sent 2026-10-16, carries our operator's request for a shorter run in its place, built by you, which would stand in only by our operator's override of R1 (lap 3 S14); your lap 2 is taken in, and our lap 4, sent 2026-10-16, answers it; our lap 5, sent 2026-10-16, lands the disc ISRC check and your seam-commands row for you to read and test, on our operator's word of 2026-10-16, and moves neither the pin nor the run; round 34 closed on 2026-10-16, approving +platterpus.23 at 891c79e with your 0.7.106
+STATUS-LAPS: newest sent round-35-lap-05.md (ours), round-35-lap-02.md (theirs); next 6 (theirs) carrying your answers to our lap 3 S13, our lap 4 S6 and our lap 5 S8 and S13, and our seam-commands line copied into your tree; held none
 STATUS-RELEASED: +platterpus.24 at 93afa15, 2026-10-16
 STATUS-RELEASE-NEXT: +platterpus.25, whenever it is ready (v8 §6b), carrying what round 35 accepts, the ISO 3901 check among it, and not cut before your release that parses Disc ISRC: <code> (<reason>) (our lap 5 S6); +platterpus.24 is on the beta channel and the stable channel stays +platterpus.23 at 891c79e, which round 34 approved with your 0.7.106; pins 891c79e, reviews +platterpus.24
 STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on your first release that parses Disc ISRC: and sends --prefer-disc-isrc, with +platterpus.24 at 93afa15 as its build under review (our round 35 lap 1); that run is round 35's test and opens round 36, filed once, on our operator's word of 2026-10-16; round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
@@ -24,11 +24,11 @@ STATUS-OPEN: flag-limits us fixing at round 35, priority 9: a boundary row in do
 STATUS-OPEN: recordable-medium-line us fixing at round 35, priority 9: a tri-state line saying whether the drive reports the disc as recordable, from your F9, readable only on a drive
 STATUS-OPEN: all-pass-paranoia-counters us fixing at round 35, priority 9: a -Z track's paranoia counters summed over every read, beside the last read's, which the Scope: line qualifies, from your F9
 STATUS-OPEN: encoder-options-flag us fixing at round 35, priority 9: a repeatable key=value flag passing options to the encoder, not -O, from your F9
-STATUS-OPEN: settled-facts-macos us fixing at round 35, priority 4: Settled facts timed out on CI's macOS runner on the push of b06d20e at 120.03 s, after 93.08 s on the same tree at da0db2c and 30.73 s at 21382e4 the same day, once before at 3e467b3 at 120.05 s, and again on pull request #34 at 7bbc660 at 120.02 s, which passed in 40.40 s on one re-run of the same tree; no cause is established (our lap 1 S8, docs/KNOWN-ISSUES.md)
+STATUS-OPEN: settled-facts-macos us fixing at round 35, priority 4: Settled facts timed out on CI's macOS runner on the push of b06d20e at 120.03 s, after 93.08 s on the same tree at da0db2c and 30.73 s at 21382e4 the same day, once before at 3e467b3 at 120.05 s, again on pull request #34 at 7bbc660 at 120.02 s, which passed in 40.40 s on one re-run of the same tree, and twice on pull request #40 at b45029f at 120.04 s, the run and its one re-run, while pull request #39's tree passed it in 42.44 s minutes earlier; no cause is established, so tools/check-settled.py now prints each run's slowest rows and, when meson kills it, the row that was running, and the next timeout names its row (our lap 1 S8, docs/KNOWN-ISSUES.md)
 STATUS-OPEN: hardware-unverified us cannot, because each needs a disc or a drive this environment lacks: C2, which the rig's drive reports unsupported; CD-TEXT from a physical disc; -W on a pre-emphasised disc; a paranoia skip on a drive; -f on a second drive, and a -f search that finds nothing on a drive; and -P 0's sector-by-sector salvage on a drive; asked of your rig in our round 32 lap 1 S21
 STATUS-OPEN: superseded-read-marker both cannot, because the format needs a design both sides agree (round 24's item, with round 8 J14's read time); asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse and no design exists; asked in our round 32 lap 1 S22 whether to keep it
-STATUS-OPEN: upstream-reports-unfiled us cannot, because filing on upstream's tracker is the maintainer's act, which the operator said on 2026-10-05 they will do; all twenty-three are drafted in docs/upstream/issues-to-file.md
+STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed all twenty-three on 2026-10-16 as one issue, https://github.com/cyanreg/cyanrip/issues/167, in the order of importance docs/upstream/issues-to-file.md suggests; a reply asking for a pull request or for an item as an issue of its own goes to our operator, who files it
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: release-markers us cannot, because building or retiring the release/* markers of docs/UPGRADE-CHANNELS-PLAN.md §6a is the operator's decision, now that v8 decouples releases from rounds; put to the operator on 2026-10-12
 
@@ -267,10 +267,11 @@ lacks on hardware is the `hardware-unverified` line.
 Our `master` mirrors `cyanreg/cyanrip` at `b40c1f0`, 0.9.4-rc3, merged into
 `platterpus-fork` at `79da685`. That is a reading of 2026-10-12T22:46Z, when
 `git ls-remote` last returned it; `tools/upstream-delta.py` is how to check
-again. **Twenty-three defects this fork found in upstream's code are not filed
-there**: all are drafted, ready to paste, in `docs/upstream/issues-to-file.md`,
-each re-checked against `master` by `tools/check-settled.py`. Filing them is
-the maintainer's act.
+again. **Twenty-three defects this fork found in upstream's code are filed
+there, as one issue, [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by our operator on 2026-10-16, in the
+order of importance `docs/upstream/issues-to-file.md` suggests, each
+re-checked against `master` by `tools/check-settled.py`. The link is our
+operator's word: this session cannot open upstream's tracker.
 
 ## Earlier states of this file are in git history, not here
 

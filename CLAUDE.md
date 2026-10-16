@@ -957,8 +957,8 @@ should need rewriting. If it does, that is the defect.
       component makes a multi-component `-D` resolve **absolute**.
    8. `cdio_paranoia_cachemodel_size(…, 1)` on image drivers returns
       **corrupted audio with `Ripping errors: 0`** — still present at `f8ebf48`,
-      and its report is `docs/upstream-cachemodel-report.md`, **drafted and
-      not filed.**
+      and its report is `docs/upstream-cachemodel-report.md`, **filed with
+      the rest in cyanreg/cyanrip#167 on 2026-10-16.**
    9. `-r` reaches libcdio-paranoia **unrounded**, and the library checks the
       per-frame limit only at multiples of 5, so **`-r 3` never returns on an
       unreadable sector** at the default paranoia level. Found 2026-09-23 by
@@ -1013,10 +1013,14 @@ should need rewriting. If it does, that is the defect.
       sheet, return without `cyanrip_ctx_end()`. Fixed here (`3f0e161`,
       `72975de`).
 
-   **Not filed is not fixed, and twenty-three unfiled reports is the private
-   garden this rule forbids.** Filing is on upstream's tracker and outside this
-   repository, so it is the maintainer's act, not ours — but **every one is
-   drafted** (2026-09-27, five more 2026-10-05, the last five 2026-10-12):
+   **Not filed is not fixed, and twenty-three unfiled reports was the private
+   garden this rule forbids. All twenty-three were filed on 2026-10-16**, by
+   the operator, as one issue, [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167), in the order of importance
+   `docs/upstream/issues-to-file.md` suggests; a reply asking for a pull
+   request, or for an item as an issue of its own, goes to the operator, who
+   files it. Filing is on upstream's tracker and outside this
+   repository, so it is the maintainer's act, not ours — and **every one was
+   drafted here first** (2026-09-27, five more 2026-10-05, the last five 2026-10-12):
    the other twenty-two are in `docs/upstream/defect-reports.md`, each with
    upstream's `file:line` at `7dbe56a`, re-checked against it on 2026-10-16
    (first checked at `f8ebf48` for 1 to 18 and at `b40c1f0` for 19 to 23),

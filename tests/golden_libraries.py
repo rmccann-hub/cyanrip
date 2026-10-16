@@ -20,15 +20,21 @@ UNPROBED when it exits 77. Each case below is one way either could go wrong:
   * a log that names a library ambiguously or not at all must be compared,
     because a rip that failed before writing those lines must fail;
   * check-settled must count a 77 as unprobed, print its reason, and still
-    report any other non-zero exit as stale.
+    report any other non-zero exit as stale;
+  * and it must say where its time went, and, killed mid-row as meson kills
+    a test that overruns, name the row it was running and exit 143.
 """
 
 import contextlib
 import importlib.util
 import io
+import os
 import pathlib
+import signal
+import subprocess
 import sys
 import tempfile
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -149,6 +155,40 @@ if "1 unprobed here" not in out:
 rc, out = run_settled(["| a real failure | `exit 3` |"])
 if rc == 0 or "STALE" not in out:
     fail(f"check-settled did not report exit 3 as stale (rc {rc}):\n{out}")
+if "TIMING:" not in out or "  exit 3" not in out:
+    fail(f"check-settled did not say where its time went:\n{out}")
+
+# 6. Killed mid-row, as meson kills a test that overruns its timeout, it
+# names the row that was running (CI's macOS timeouts printed nothing at all,
+# so no run could say where 120 s went: STATUS.md's settled-facts-macos).
+with tempfile.TemporaryDirectory() as d:
+    table = ["| fact | check |", "|---|---|"]
+    table += [f"| fact {i} | `true` |" for i in range(8)]
+    table += ["| a slow fact | `sleep 30` |",
+              "| a structural fact | — structural: none |",
+              "| a fact of theirs | — theirs: none |"]
+    (pathlib.Path(d) / "SETTLED.md").write_text("\n".join(table) + "\n")
+    code = ("import importlib.util, pathlib, sys\n"
+            "spec = importlib.util.spec_from_file_location('cs', sys.argv[1])\n"
+            "cs = importlib.util.module_from_spec(spec)\n"
+            "spec.loader.exec_module(cs)\n"
+            "cs.SETTLED = pathlib.Path(sys.argv[2])\n"
+            "sys.exit(cs.main())\n")
+    proc = subprocess.Popen(
+        [sys.executable, "-c", code, str(ROOT / "tools" / "check-settled.py"),
+         str(pathlib.Path(d) / "SETTLED.md")],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+        start_new_session=True)
+    time.sleep(3)
+    os.killpg(proc.pid, signal.SIGTERM)
+    out = proc.communicate(timeout=20)[0]
+    if proc.returncode != 143:
+        fail(f"check-settled killed mid-row exited {proc.returncode}, not 143:"
+             f"\n{out}")
+    if "KILLED by signal 15" not in out or "running for" not in out \
+            or "sleep 30" not in out or "with 8 row(s) run" not in out:
+        fail(f"check-settled killed mid-row did not name the row it was "
+             f"running:\n{out}")
 
 if failures:
     print(f"{failures} check(s) failed")
