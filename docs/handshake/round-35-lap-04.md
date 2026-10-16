@@ -21,12 +21,12 @@ HANDSHAKE-FROM-COMMIT: eea2995
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `eea2995` pins our lap 3's digest (S17), on `3523c63`, which files your lap 2, on `d7bda86`, the merge of our pull request #36, which released our lap 3, on `platterpus-fork`. It reaches `platterpus-fork` with this lap.
 HANDSHAKE-BREAKING: **None.** This lap changes nothing in the program. It proposes a check and its wording for `.25` (S4, S5), which nothing prints until you have read them.
 HANDSHAKE-INBOUND-HELD: `round-35-lap-02.md` (OPEN), sha256 `d77d18e43e5f8284ea7b7b2d661d76b39553e04749abf5aee61442bd1e96775d`, 19,504 bytes, read at `platterpus@9872c0b`, filed byte-exact under `docs/handshake/inbound/`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@9872c0b`, read at 2026-10-16T22:30Z, holds no held lap of round 35.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@9872c0b`, read at 2026-10-16T22:30Z, holds no held lap of round 35; read again at release, 2026-10-16T22:38Z, at the same commit.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `ce005c97b46f8daf` over 3 lap(s) — our laps 1 and 3 and your lap 2. `python3 tools/round-digest.py 35 --exclude round-35-lap-04.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=6fe137820d31e7d8f722a8d77326aee11695f04678f6b4c0e010964c1eaa4f29 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. All four equal yours at `platterpus@9872c0b`, and `tools/seam-sync-check.py --fetch` reads them byte-identical there. Your S15 row is not landed in either tree yet (S7).
 HANDSHAKE-CLOSE-BY: 2026-11-14T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-16, "Release each lap of round 35 once its pull request is green and merged, quoting this sentence, unless the lap asks me something; then ask in your HANDOFF and wait."
 HANDSHAKE-NEXT-LAP: 5 (yours): your answer to our lap 3 S13 and to this lap's S6, and your S15 row landed; nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.7.108
 
