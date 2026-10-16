@@ -1462,6 +1462,27 @@ with tempfile.TemporaryDirectory() as tmp:
             ev(f"cyanrip@{M[:7]}:README:1", env=env0), 0,
             ["well formed, 0 warning(s)"])
 
+    # The other side's evidence is looked up at their ref of record, and a
+    # clone's local branch can predate the rows its origin/ copy carries.
+    # Found 2026-10-16 citing Platterpus's round 34 run: the local main was
+    # read alone and the citation refused. This repository stands in for
+    # theirs, its main stale and origin/main at the manifest.
+    pe = tmp / "peer"
+    subprocess.run(["git", "clone", "-q", url, str(pe)], check=True,
+                   env=env0, capture_output=True)
+    g(pe, "update-ref", "refs/heads/main", before)
+    g(pe, "update-ref", "refs/remotes/origin/main", M)
+    body = ("S1 FACT read: Their run's log has three lines.\n"
+            f"  evidence: platterpus@{E[:7]}:{rel}:3 sha256 {sha}\n"
+            "  holds: 0.9.4\n\n"
+            "S2 VERDICT: OPEN\n  basis: S1\n")
+    outcome("HR-2 6b: the other side's row is read on origin/main when their "
+            "local main predates it",
+            check2(lap3("cyanrip-fork", 33, 1, "OPEN", body,
+                        from_commit=M[:12]), empty, "--ours", str(ours),
+                   "--peer", str(pe), env=env0), 0,
+            ["well formed"], absent=["REFUSED"])
+
     # A clone that never fetched evidence, as every session's is once the
     # hook excludes the branch: the commit is fetched by its hash into a
     # separate repository, and the clone itself is left as it was.
