@@ -161,8 +161,17 @@ the same tree had passed it in 93.08 s, and the one re-run passed it in 28.26
 s. Recorded in `docs/KNOWN-ISSUES.md` as the second occurrence, and kept open
 as `settled-facts-macos`; no cause is established.
 
-0.9.4-rc3+platterpus.23 — 2026-10-15 — **beta**
+0.9.4-rc3+platterpus.23 — 2026-10-15 — **beta**; **stable** from 2026-10-16
 ===============================================
+**On the stable channel from 2026-10-16**, once round 34 approved it with
+Platterpus 0.7.106, on the operator's word, given in Platterpus's session and
+relayed by the operator to this one the same day: *"The fork still has to
+move .23 to its stable channel, which you approved."* Ledger row 34 names `891c79e`, the commit row 33 published on
+beta, so the build is the one released on 2026-10-15 and nothing was
+rebuilt; its suite from a clean checkout is
+`docs/release-evidence/891c79e-suite.txt`. Platterpus 0.7.107, released the
+same day, is the first release of theirs that installs `.23` by default.
+
 **Released on the beta channel**, on the operator's word of 2026-10-15:
 *"then after, you do your release"*, and, asked which channel, *beta*. The
 stable channel stays `.22`, so Platterpus's default-channel users are not
