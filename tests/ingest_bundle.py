@@ -20,6 +20,7 @@ with no verdict file at all, a passing one, a failing one -- are states no
 single real bundle can supply.
 """
 
+import hashlib
 import io
 import json
 import os
@@ -395,6 +396,78 @@ def test_every_log_says_how_it_ended():
     rc, out = run(clean, "--verdict-only")
     check("every one of the 1 cyanrip log(s) ends with a signed completion footer" in out,
           f"a clean bundle must say what it checked: {out[-600:]}")
+
+
+def manifest_for(files, extra=b""):
+    """MANIFEST.txt as Platterpus writes it since 2026-10-14 (X7): each
+    member's SHA-256 in sha256sum's format, a name holding a backslash or a
+    newline escaped and its line prefixed with a backslash."""
+    out = [b"SHA-256 OF EVERY INCLUDED MEMBER (%d)" % len(files), b"-" * 40]
+    for name, data in files.items():
+        h = hashlib.sha256(data).hexdigest()
+        if "\\" in name or "\n" in name:
+            esc = name.replace("\\", "\\\\").replace("\n", "\\n")
+            out.append(f"\\{h}  {esc}".encode())
+        else:
+            out.append(f"{h}  {name}".encode())
+    return b"BUNDLE\n" + extra + b"\n".join(out) + b"\n"
+
+
+def test_a_member_changed_after_export_is_refused():
+    """X7: the sender's hash is a second witness. A member whose bytes
+    differ from it means the archive is not the bundle they wrote."""
+    files = {"album/x/x.log": RIP, "session/transcript.txt": b"log --- ok\n",
+             "album/a\\b.cue": b"FILE x\n"}
+    sent = manifest_for(files)
+    files["session/transcript.txt"] = b"log --- ok, edited\n"
+    into = pathlib.Path(tempfile.mkdtemp()) / "staging"
+    rc, out = run(make({**files, "MANIFEST.txt": sent}), "--into", str(into))
+    check(rc == 3, f"a changed member must stop the tool with 3: {rc} {out[-600:]}")
+    check("CHANGED: session/transcript.txt" in out,
+          f"the changed member must be named: {out[-600:]}")
+    check("REFUSED" in out and "Nothing is filed" in out,
+          f"it must say nothing was filed: {out[-600:]}")
+    check(not into.exists() or not any(into.iterdir()),
+          "and must file nothing")
+    check("2 of 3 member(s) the MANIFEST hashes match it byte for byte" in out,
+          f"the escaped name must still be matched: {out[-600:]}")
+
+
+def test_a_listed_member_missing_from_the_archive_is_refused():
+    files = {"album/x/x.log": RIP, "session/transcript.txt": b"log --- ok\n"}
+    sent = manifest_for(files)
+    del files["session/transcript.txt"]
+    rc, out = run(make({**files, "MANIFEST.txt": sent}), "--verdict-only")
+    check(rc == 3, f"a missing member must stop the tool with 3: {rc}")
+    check("LISTED, NOT IN THE ARCHIVE: session/transcript.txt" in out,
+          f"the missing member must be named: {out[-600:]}")
+
+
+def test_matching_hashes_are_counted_and_unlisted_ones_named():
+    files = {"album/x/x.log": RIP, "album/a\\b.cue": b"FILE x\n"}
+    sent = manifest_for(files)
+    rc, out = run(make({**files, "MANIFEST.txt": sent,
+                        "extra/late.txt": b"added after\n"}), "--verdict-only")
+    check("REFUSED" not in out, f"matching members must not be refused: {out[:800]}")
+    check("2 of 2 member(s) the MANIFEST hashes match it byte for byte" in out,
+          f"the check must say how many it checked: {out[:800]}")
+    check("1 member(s) carry no hash of the sender's, so are not checked: "
+          "extra/late.txt" in out,
+          f"a member the sender did not hash must be named: {out[:800]}")
+
+
+def test_a_bundle_with_no_hashes_is_not_called_intact():
+    """`none` against `unknown (reason)`: no hash checked is not intact."""
+    rc, out = run(make({"album/x/x.log": RIP,
+                        "MANIFEST.txt": b"BUNDLE\nsizes only\n"}),
+                  "--verdict-only")
+    check("gives no SHA-256 for any member" in out
+          and "This is NOT 'every member is intact'." in out,
+          f"an unhashed bundle must say nothing was checked: {out[:600]}")
+    rc, out = run(make({"album/x/x.log": RIP}), "--verdict-only")
+    check("NO MANIFEST.txt" in out
+          and "This is NOT 'every member is intact'." in out,
+          f"a bundle with no MANIFEST must say so: {out[:600]}")
 
 
 for name, fn in sorted(globals().items()):

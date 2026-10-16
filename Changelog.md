@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**`tools/ingest-bundle.py` checks every member against the sender's own
+hash**, our round 34 lap 2 S10. Platterpus's `MANIFEST.txt` has given each
+member's SHA-256, of the bytes they wrote, since 2026-10-14 (X7 in our data
+register), and we read it only for hostnames. Now, before the verdict, a
+member whose bytes differ, or one listed and absent, stops the tool with exit
+3, named, with nothing filed; a member the sender did not hash is named as
+not checked; and a bundle with no hashes says nothing was checked, which is
+not "intact". Five cases in `tests/ingest_bundle.py` hold it, including a name
+the sender escaped as `sha256sum` does; with the check disabled eleven of
+their checks fail, and with the unescaping disabled four do.
+
 **Our round 34 lap 2 is published, held** (`docs/handshake/round-34-lap-02.md`).
 It answers what Platterpus's status and TASKS ask of us. To their R12: the flag
 table their argument check waits on before sending `-X` or `-B` is P1 of
