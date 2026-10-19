@@ -897,10 +897,13 @@ because they change what a commit must contain:
   Report three numbers every round: `verified`, `documented-untested`,
   `not-probed`, plus the tests added.
 - **S-12 — an error code that distinguishes nothing is a defect row, not a
-  datum.** Ours is `1` for every failure but `--verify-log`'s, whose codes 2 to
-  5 distinguish (P4); elsewhere the *messages* distinguish, so they
-  are contract surface and S-11 asserts on them. The `generic` grade stays
-  visible until fixed or accepted with a reason.
+  datum.** Ours were `1` for every failure but `--verify-log`'s 2 to 5 until
+  round 35, which added three classes (P4, Platterpus's lap 8 S9): `64` an
+  argument refused or a flag this build lacks, `74` the disc or drive, and
+  `128 + N` a run signal N stopped. `1` is still every other failure, so within
+  it, and within each class, the *messages* distinguish, and they are contract
+  surface that S-11 asserts on. The `generic` grade stays visible until fixed
+  or accepted with a reason.
 
 **And a rule about documents, adopted in round 7 lap 29:**
 
