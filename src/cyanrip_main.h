@@ -211,6 +211,18 @@ typedef struct CRIPArt {
  * -offset stay defined; see the note at the option table. */
 #define CRIP_MAX_OFFSET_SAMPLES 1048576
 
+/* The process's exit status, round 35 (our lap 7 S19, Platterpus's lap 8 S9).
+ * Three classes beside the generic failure, each clear of 125 to 127, which
+ * podman exec takes for errors of its own; --verify-log's 2 to 5 are its own
+ * enum (fun512.h) and do not move. The comment on each line is its meaning in
+ * PROVIDER-CONTRACT.md's P4, which is derived from it. */
+enum CRIPExitCode {
+    CRIP_EXIT_FAILURE     = 1,   /* every failure no class below names */
+    CRIP_EXIT_USAGE       = 64,  /* an argument refused, or a flag this build lacks (EX_USAGE) */
+    CRIP_EXIT_IOERR       = 74,  /* the disc or drive failed: no device, unopenable, TOC unreadable, medium changed (EX_IOERR) */
+    CRIP_EXIT_SIGNAL_BASE = 128, /* plus N: a run stopped by signal N, after its log and footer were written */
+};
+
 /* One position paranoia's status callback reported, as the sector it names:
  * the callback passes a position in 16-bit words, which cd-paranoia itself
  * divides by CD_FRAMEWORDS. */
@@ -546,6 +558,10 @@ typedef struct cyanrip_ctx {
         CRIP_CUE_SHEET_ONLY,
         CRIP_OFFSET_SEARCH_ONLY,
     } not_a_rip;
+    /* The exit class a failure set where it happened, CRIP_EXIT_USAGE or
+     * CRIP_EXIT_IOERR, or 0 for the generic one; cyanrip_run() reads it at
+     * the end, before the context is freed. Round 35. */
+    int exit_class;
     lsn_t start_lsn;
     lsn_t end_lsn;
     lsn_t duration_frames;
