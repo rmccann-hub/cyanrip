@@ -1298,6 +1298,18 @@ headers and statements, commit dates, `STATUS.md`, and anything else either
 side's tools read, because both projects' records are in UTC and a second zone
 in them is a second description of one instant.
 
+**A lap a standing release word covers is released in the pull request that
+publishes it**, the operator's word of 2026-10-19: it is written with
+`HANDSHAKE-READY-TO-READ: yes` and the word quoted, and it is sent when that
+pull request merges green. One pull request, one suite and one CI run, where
+publishing held and releasing after took two of each. The topic branch reads
+released for the minutes before the merge, which the operator accepted; a lap
+on `platterpus-fork` is what the other side reads. Re-read the other side's
+record before the merge as at any release (K1), and renumber the lap if theirs
+has taken its number. A lap no standing word covers, or one asking the operator
+something, is still published held. **The full local suite still runs before
+every push**: the operator kept that rule the same day.
+
 ## Run evidence lives on the `evidence` branch (HR-2)
 
 HR-2 is `PROTOCOL.md` v9 §17, the operator's agreed text of 2026-10-14: what
@@ -1858,7 +1870,8 @@ trees — so nothing here has to change to work under them.
   `release/*` **marker** — a branch pointing at a released commit, never
   committed to and never moved — was the only named ref a session could
   publish, and was planned for that reason (`docs/UPGRADE-CHANNELS-PLAN.md`
-  §6a). From 2026-10-12 a tag can be made another way, below.
+  §6a). From 2026-10-12 a tag can be made another way, below, and the marker
+  plan was retired for it on 2026-10-19, on the operator's word.
 - **Never prune a ref that a released or beta artifact can reference.** A commit
   reachable only from a deleted branch is *destroyed* by routine `git gc`, not
   hidden — measured, not assumed. Every rip writes its build SHA into the
@@ -2536,15 +2549,11 @@ Designs agreed in principle but deliberately unimplemented. Each states what it
 would cost and why it is not built yet, so "we decided against it" and "nobody
 got to it" stay distinguishable.
 
-- **Release markers — `release/*` branches** — `docs/UPGRADE-CHANNELS-PLAN.md`
-  §6a, and it is now the **only** undone part of that plan. A marker is a branch
-  pointing at a released commit already on `platterpus-fork`, never committed
-  to and never moved: the one named ref a session can publish, since tag push is
-  `HTTP 403`. Checked against the remote 2026-09-16 rather than against
-  `git branch -r`: `git ls-remote --heads origin` returns exactly `master` and
-  `platterpus-fork`. **The tag workflow of 2026-10-12 may make it unnecessary**:
-  a tag made by Actions is the named ref a marker stood in for. Not decided,
-  and nothing is tagged yet.
+- **Release channels** — `docs/UPGRADE-CHANNELS-PLAN.md`. **Its one undone
+  part, the `release/*` marker branches of §6a, was retired on 2026-10-19, on
+  the operator's word**: a marker was the named ref a session could publish
+  while tag push is `HTTP 403`, and a tag made by `tag-release.yml` from the
+  Actions tab is that ref. Nothing of the plan is left to build.
 
   **The rest of that plan shipped at `3492a65` on 2026-08-07** — the ledger's
   `channel` and `seq` columns, `release-manifest.json` and its generator, and

@@ -14,10 +14,10 @@
 > | **4** — a generated manifest, because tags do not work | **BUILT.** `tools/gen-release-manifest.py`, schema 2, `--check` is a gate. The properties it asserts, and the one v8 retired since, are in `CLAUDE.md`. |
 > | **5** — warning and option | **BUILT, and it was already half true when written.** (1) every logfile carries `Handshake:` and the fork banner, so a beta is identifiable offline; (2) `default_channel` is `stable`; (3) the fact is in *every* log, so a UI re-derives rather than remembers; (4) declining changes nothing. |
 > | **5, the open question** — should a beta expire? | **STILL OPEN.** Put to Platterpus; our inclination remains no expiry, louder notice. |
-> | **6a** — `release/*` marker branches | **NOT BUILT.** Checked against the remote on 2026-09-16, not against `git branch -r`: `git ls-remote --heads origin` returns exactly `master` and `platterpus-fork`. |
+> | **6a** — `release/*` marker branches | **RETIRED 2026-10-19, never built**, on the operator's word: a tag made by `tag-release.yml` from the Actions tab is the named release ref a marker stood in for. Checked against the remote on 2026-09-16, not against `git branch -r`: `git ls-remote --heads origin` returned exactly `master` and `platterpus-fork`. |
 >
-> **So this is the one place a reader should still look for undone work, and it
-> is §6a alone.** `CLAUDE.md`'s *"Planned, not built"* entry said the whole thing
+> **§6a was the one undone part, and it is retired, so nothing here is left to
+> build.** `CLAUDE.md`'s *"Planned, not built"* entry said the whole thing
 > was unimplemented and gated on the round-7 rig session — a session that ran on
 > 2026-08-04 and is filed in `docs/rig-2026-08-04/`. That gate is spent and the
 > entry is corrected.

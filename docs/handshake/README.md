@@ -365,7 +365,12 @@ and answer in our next lap.
 
 ### Releasing our lap, on the operator's word
 
-After the pull request that published it has merged:
+**Under a standing word, in the same pull request** (the operator's word of
+2026-10-19): write the lap with `HANDSHAKE-READY-TO-READ: yes` and the word
+quoted, `STATUS-NEWEST-LAP-STATE: sent`, regenerate the golden reference from
+the commit carrying the lap, run the suite, push, and re-read the other side's
+`main` before the merge; the lap is sent when the pull request merges green.
+Otherwise, after the pull request that published it held has merged:
 
 - `HANDSHAKE-READY-TO-READ: yes — operator, <date>, "<their words>"`, with no
   personal name, by the owner's rule of 2026-10-12.
