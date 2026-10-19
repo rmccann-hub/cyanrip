@@ -27,7 +27,7 @@ release changed is in `Changelog.md`. This section used to carry a pin block per
 channel, a hand-written copy of the manifest with a test to catch it going
 stale; both were removed on the operator's word of 2026-10-07.
 
-- **Order by `release_seq`, never by the version string.** `0.9.4-rc2` is
+- **Order by `release_seq`, never by the version string.** `0.9.4-rc3` is
   upstream's, copied verbatim because we may not mint in `cyanreg/cyanrip`'s
   namespace, and the part that advances, `+platterpus.N`, is SemVer build
   metadata, which the spec says MUST be ignored for precedence. A check that
@@ -36,12 +36,13 @@ stale; both were removed on the operator's word of 2026-10-07.
   move a user backwards.
 - **Pin the commit, not a tag or a branch tip.** Tag pushes are `HTTP 403` from
   this environment and no tag of this fork has reached the remote.
-- **Do not use `0.9.4-rc3`.** It was committed locally, never released, and
-  withdrawn, because upstream can mint the same string (`round-07-lap-01.md`
-  §2).
+- **Do not use a bare `0.9.4-rc3`, with no `+platterpus.N`.** Ours of that
+  string was committed locally, never released, and withdrawn, because upstream
+  could mint the same string (`round-07-lap-01.md` §2), and upstream has since
+  minted it (`e129ad9`). Every fork release carries `+platterpus.N`.
 - **Superseded, do not build:** `796df32` (`+platterpus.8`, seq 18, still in the
   append-only ledger), `2f950c8` (r2, whose read-liveness heartbeat never
-  fired), and `ad65a244` and `e1d800e` (the disc-image silence defect).
+  fired), and `ad65a24` and `e1d800e` (the disc-image silence defect).
 
 ### Branches on the remote
 
@@ -53,19 +54,21 @@ that did not exist.
 |---|---|
 | `platterpus-fork` | integration branch — **build from this** |
 | `master` | clean mirror of upstream `cyanreg/cyanrip`, never committed to |
+| `evidence` | orphan branch of run evidence (HR-2, `PROTOCOL.md` §17), which only ever gains commits |
 
-**Two, and only two.** This table used to list a third,
-`claude/pending-task-vg2afd`, and it is gone from the remote. It is worth saying
-why rather than quietly dropping the row: a session branch pushed once is
-**permanent from inside a session** — branch delete is `HTTP 403` from this git
-proxy, measured by trying it — so it can only be removed by the repository
-owner, and one was. The standing rule is therefore not to create the problem:
-develop on a session branch locally, land on `platterpus-fork`, push only that.
+**These three are the long-lived ones.** A topic branch is on the remote too
+while its pull request is open (`claude/pending-task-vg2afd` is the one this
+file's sessions use), and is not a ref to build from. A session branch pushed
+once is **permanent from inside a session** — branch delete is `HTTP 403` from
+this git proxy, measured by trying it — so after its merge it can only be
+removed by the repository owner. The standing rule since 2026-10-12: push a
+topic branch only to open its pull request into `platterpus-fork`, and never
+push to it again once that request has merged.
 
-`platterpus-fork` is no longer strictly fast-forward: `1ee56fc` is a merge
-commit, the upstream `0.9.4-rc2` sync. That carve-out is deliberate and is
-recorded in `CLAUDE.md` — the straight-line rule exists so a consumer can
-bisect our own topic work, and an upstream sync is not that.
+`platterpus-fork` is not a straight line: `1ee56fc`, the upstream `0.9.4-rc2`
+sync, was the first merge commit, and since 2026-10-12 every pull request lands
+with one, so the history a consumer bisects is the first-parent line
+(`git bisect start --first-parent`).
 
 ## Round status
 
@@ -80,14 +83,14 @@ once already, stopping at *"round 7 is open"* through five closed rounds.
 | 5 | closed, GO | `e1d800e` *(superseded)* | `round-5.md` |
 | 6 | closed from our side by round 7; verification file never received | `2f950c8` *(superseded)* | `round-6.md` |
 | 7 | closed, GO/GO — 39 laps | `5bc654d` *(superseded)* | `round-07-lap-39.md` |
-| 8 | closed, GO/GO | `ddf7ac3` — **the build Platterpus installs** | `round-08-lap-17.md` |
+| 8 | closed, GO/GO | `ddf7ac3` *(superseded)* | `round-08-lap-17.md` |
 | 9 | closed, GO/GO | *(no pin move)* | `round-09-lap-11.md` |
 | 10 | closed, GO/GO | `56413d2` *(superseded)* | `round-10-lap-05.md` |
 | 11 | closed, GO/GO | `beb9fba` *(superseded)* | `round-11-lap-03.md` |
 | 12 | closed, GO/GO — 4 laps | `64ae7bc`, released as `237a4ff` | `round-12-lap-03.md` |
 | 13 | closed, GO/GO — 8 laps | `9f8592e`, released as `796df32` (`beta`) | `round-13-lap-08.md` |
 
-| 14 | closed, GO/GO — 16 laps | `d9c058c`, released as `+platterpus.11` | `round-14-lap-*.md` |
+| 14 | closed, GO/GO — 19 laps | `d9c058c` (`+platterpus.10`), released on stable as `978f9b0` (`+platterpus.11`) | `round-14-lap-*.md` |
 | 15 | closed, GO/GO | *(see the gate)* | `round-15-lap-*.md` |
 | 16 | closed, GO/GO — 17 laps | `fe4d2c4` line; closed on Run A hardware | `round-16-lap-17.md` |
 | 17 | closed, GO/GO — 3 laps | **`fe4d2c4`, released as `+platterpus.12`** | `round-17-lap-03.md` |
@@ -118,7 +121,7 @@ directory against `tools/release-gate.py`. **The warning above the table did not
 stop it happening a second time, so read the gate and treat the table as a
 convenience.**
 
-**Round 35's lap 1 is ours, sent 2026-10-16**, naming `.24` at `93afa15`, which carries the `Disc ISRC:` line, `--prefer-disc-isrc` and the bounded `-O`; their lap 2 is released at `platterpus@9872c0b`, and our lap 3, sent 2026-10-16, asks them for a shorter acceptance run; our lap 4, sent 2026-10-16, takes their lap 2 in; our lap 5, sent 2026-10-16, lands the ISO 3901 check and their `seam-commands.md` row. **Round 34 closed on 2026-10-16**, on our lap 3 and their lap 2, both `GO`, approving `.23` at `891c79e` with their 0.7.106, on the Full run of that pair filed in both trees from one bundle; round 35 opens on our lap 1. **Round 33 closed on 2026-10-15**, on our lap 7 and their lap 6, both `GO`, approving `.22` at `200530e` with their 0.7.105, on HR-2 point 12's proof in both directions; round 34 opens on our lap 1, with `.23` and their 0.7.106. **Round 32 closed on 2026-10-14**, on our lap 9 and their lap 8, both `GO`, approving `.22` at `200530e` with their 0.7.104, on the Full run of that pair filed in both trees from one bundle. Round 33's lap 1 is ours, sent 2026-10-14: it opens round 33 on HR-2, says our gate implements 9, and fixes the move instant at `2026-10-14T20:00:00Z`; `.23` with their 0.7.106 are round 34's, since the operator recorded no override (its S12). Their lap 2 is sent, both moves are pushed with their removals merged, and our lap 3, sent 2026-10-15, names ours; their lap 4 verifies ours, and our lap 5, sent 2026-10-15, meets lap 1's S9 and carries our point-12 citation; their lap 6 declares `GO`, and our lap 7, sent 2026-10-15, declares `GO` too. **Round 31 closed on 2026-10-11**, on our lap 4 and their lap 5, both `GO`, by v6 §5b step 3 on both gates, approving `.21` at `ca3f3ea` with their 0.6.66; v8 is byte-identical in both trees. Round 32's lap 1 is ours, published and held until `.22` and their 0.7.103 are both released. Round 30 closed on 2026-10-07 on our lap 17, `GO`
+**Round 35's lap 1 is ours, sent 2026-10-16**, naming `.24` at `93afa15`, which carries the `Disc ISRC:` line, `--prefer-disc-isrc` and the bounded `-O`; their lap 2 is released at `platterpus@9872c0b`, and our lap 3, sent 2026-10-16, asks them for a shorter acceptance run; our lap 4, sent 2026-10-16, takes their lap 2 in; our lap 5, sent 2026-10-16, lands the ISO 3901 check and their `seam-commands.md` row. **Round 34 closed on 2026-10-16**, on our lap 3 and their lap 2, both `GO`, approving `.23` at `891c79e` with their 0.7.106, on the Full run of that pair filed in both trees from one bundle; round 35 opens on our lap 1. **Round 33 closed on 2026-10-15**, on our lap 7 and their lap 6, both `GO`, approving `.22` at `200530e` with their 0.7.105, on HR-2 point 12's proof in both directions; round 34 opens on our lap 1, with `.23` and their 0.7.106. **Round 32 closed on 2026-10-14**, on our lap 9 and their lap 8, both `GO`, approving `.22` at `200530e` with their 0.7.104, on the Full run of that pair filed in both trees from one bundle. Round 33's lap 1 is ours, sent 2026-10-14: it opens round 33 on HR-2, says our gate implements 9, and fixes the move instant at `2026-10-14T20:00:00Z`; `.23` with their 0.7.106 are round 34's, since the operator recorded no override (its S12). Their lap 2 is sent, both moves are pushed with their removals merged, and our lap 3, sent 2026-10-15, names ours; their lap 4 verifies ours, and our lap 5, sent 2026-10-15, meets lap 1's S9 and carries our point-12 citation; their lap 6 declares `GO`, and our lap 7, sent 2026-10-15, declares `GO` too. **Round 31 closed on 2026-10-11**, on our lap 4 and their lap 5, both `GO`, by v6 §5b step 3 on both gates, approving `.21` at `ca3f3ea` with their 0.6.66; v8 is byte-identical in both trees. Round 32's lap 1 is ours, sent 2026-10-12. Round 30 closed on 2026-10-07 on our lap 17, `GO`
 beside Platterpus's lap 16, on the closing run of `.20` at `5704062` with their
 0.6.66b1. Our lap 17 names `5704062`, the build that run tested, as its pin;
 Platterpus's `FORK_PIN` is `174a134`, `.19`, round 30's declared pin
@@ -146,7 +149,8 @@ they are `seam-rules.md` v5's newest row rather than an improvisation.
 
 Round 14 opens from our side with CC-2 as its only close condition.
 
-Per the protocol a "no changes" round is still a round; silence is not.
+Since round 14, silence is acceptance: only disagreement or a correction needs
+a lap, and nothing to say is a complete answer.
 
 ## Between rounds
 
@@ -161,8 +165,7 @@ what we were told and when. See `CLAUDE.md`.
 
 **It opens with the status block** (`STATUS-ROUND` to `STATUS-OPEN`), round 30's
 D6, which `sc_status_block_is_current()` checks against the gate's record and
-`release-manifest.json`. Its text is §6c of `proposed/PROTOCOL-v7.md` until v7
-lands in both trees.
+`release-manifest.json`. Its text is `PROTOCOL.md` §6c.
 
 ## Reading a run, and the short reading lap
 
@@ -173,7 +176,7 @@ members and derives what it did not file. Pass `--peer` a clone of Platterpus's
 tree, or their app's side of the pair reads `unknown`.
 
 **When the reading finds nothing to act on, the lap is the short one**: the
-template is §6d of `proposed/PROTOCOL-v7.md`, converged from Platterpus's draft
+template is `PROTOCOL.md` §6d, converged from Platterpus's draft
 (their `docs/cyanrip-handshake.md` §7.5d) with the pair `FACT` and the `NONE`
 we added. It is a floor for a clean reading, never a ceiling: a finding, a
 disagreement or an answer that needs its reasoning carries it in full.
@@ -296,7 +299,7 @@ to `266c353`.
 | X4 | **The securing pass's own log in the bundle** | Since `32985e07` you keep it beside the album's, byte for byte, so `-Y` verifies it | **In your tree for 0.6.66**: the session bundle collects every cyanrip-written `.log` under the rips folder, judged by content (`test_session.py:905-915` at `bd508bf1`), which takes it in; `32985e07` is after 0.6.65 | yours, landing in 0.6.66 |
 | X5 | **Every track outcome line in the captured stdout** | Our S41: the capture classes them as progress and drops them (`rip_worker.py:2334-2335`, `3546-3550` at `bd508bf1`) | Yours to rate | proposed |
 | X6 | **Each securing pass's `--diagnostics` record in the bundle** | Every cyanrip run of a session would have its record; two of eleven are lost on every Full run (2026-10-12 and 2026-10-13), and those are the passes that re-read the tracks in doubt | **Landed in theirs on 2026-10-14**: the worker copies a securing pass's record into the rips root before its temporary folder goes, on every way the pass ends, and when it cannot, the report and the session MANIFEST name the missing record and why (`record_fate.keep_securing_record`, `platterpus@acc5ec47:src/platterpus/record_fate.py:182`; their TASKS R9). Was: the record went with the temporary folder (`rip_worker.py:2338-2341` at `39b6c366`) | landed, 2026-10-14; first seen on a bundle in round 34's run |
-| X7 | **A sha256 for each member, from the sender** | A filing could be checked against your own hashes, not only against the archive as it reached us, so a member changed by an exporter or in transit is caught | **Landed in theirs on 2026-10-14**: `MANIFEST.txt` gives every included member's SHA-256 in `sha256sum` format, of the bytes written (`platterpus@acc5ec47:src/platterpus/bundle_integrity.py:52`; their TASKS R11). **Ours to use**: `tools/ingest-bundle.py` reads the MANIFEST only for hostnames (`tools/ingest-bundle.py:551`), so it does not yet check a member against it. Was: sizes and no hash (`docs/rig-2026-10-13-200530e/MANIFEST.txt:88-96`) | landed, 2026-10-14; ours to check on ingest |
+| X7 | **A sha256 for each member, from the sender** | A filing could be checked against your own hashes, not only against the archive as it reached us, so a member changed by an exporter or in transit is caught | **Landed in theirs on 2026-10-14**: `MANIFEST.txt` gives every included member's SHA-256 in `sha256sum` format, of the bytes written (`platterpus@acc5ec47:src/platterpus/bundle_integrity.py:52`; their TASKS R11). **Used since `418fdd2`** (2026-10-16): `tools/ingest-bundle.py` checks every member against the MANIFEST's SHA-256 and refuses a mismatch before filing. Was: sizes and no hash (`docs/rig-2026-10-13-200530e/MANIFEST.txt:88-96`) | landed, 2026-10-14; checked on ingest |
 | X8 | **`--consumer` and `--diagnostics` on the pre-emphasis rips** | Every log of a run would name its caller and have a record; the two pre-emphasis rips read `Consumer: not identified (no --consumer given)` and write none | **Landed in theirs on 2026-10-14**: section R16's two rips carry `(consumer) (diagnostics)`, the words their argument builder sends (`platterpus@acc5ec47:src/platterpus/rig_scripts/fullacceptance.txt:1525`, `:1531`; their TASKS R11). Was: run directly, naming no caller and writing no record | landed, 2026-10-14; first seen on a bundle in round 34's run |
 | X9 | **Home paths replaced at export** | A bundle would never carry them; our filing of 2026-10-13 replaced home paths in nine files | **Landed in theirs on 2026-10-14, narrowed**: every text member is written with home-folder paths replaced by `~` and counted (`platterpus@acc5ec47:src/platterpus/export_redaction.py:167`), except a signed cyanrip log and their checksummed EAC-layout log, written byte for byte because a changed path breaks the signature; hostnames and names are not replaced (their TASKS R11, R16). The narrowing is theirs to ask and ours to accept: our round 34 lap 2 | landed, narrowed, 2026-10-14 |
 | X10 | **Your reading lap names the bundle's sha256 and where you filed it** | Round 32's S6 needs the bundle filed in both trees, and one hash compared against ours would show it is the same bundle | **Met in their round 32 lap 8 S6**: *"filed byte for byte from bundle sha256 `8ef9c63f…`"*, with the folder it was filed in (`inbound/round-32-lap-08.md:79`) | met, round 32 lap 8 |
@@ -306,14 +309,14 @@ to `266c353`.
 | # | datum | ease, from our source | accuracy, and what breaks it | status |
 |---|---|---|---|---|
 | Y1 | **Each skip's position**, as an LSN, in the `-j` record | **easy to moderate**: `status_cb()` receives paranoia's position with every callback (`:582-586`) and discards it; a bounded list per track, `/8` | **exact** for where a skip began, in paranoia's word position divided into sectors; it says nothing of how far the skip reached | proposed |
-| Y2 | **Every read over `-k`, not only the longest** | **moderate**: the watchdog keeps a count and the longest (`stall_watchdog.c`), so a bounded list is new | **exact** clock; a stall that ends the process is recorded only if the record is written, which `atexit` covers and `SIGKILL` does not | proposed |
+| Y2 | **Every read over `--stall-secs`, not only the longest** | **moderate**: the watchdog keeps a count and the longest (`stall_watchdog.c`), so a bounded list is new | **exact** clock; a stall that ends the process is recorded only if the record is written, which `atexit` covers and `SIGKILL` does not | proposed |
 | Y3 | **The cache probe's steps**: each run length tried, its re-read time and how it was scored | **given**: `cache_probe.steps` in the `-j` record (`src/diagnostics.c:461-467`), beside the three calibration reads and the threshold. | **exact** clocks; what `scored_hit` means is the probe's premise, which only a run beside `cd-paranoia -A` tests | given; yours to read |
 
 **Declined, with the reason.** Your **G2** — the release's TOC from MusicBrainz,
 to flag a different pressing before ripping — would put a judgement about the
 disc into the ripper. Comparing our TOC table, which the log prints, with a
 release is derivable afterwards, which `OWNERSHIP.md` puts on your side. **G1**,
-**G4** and **G5** need nothing new from us: `-k` takes a per-drive value today,
+**G4** and **G5** need nothing new from us: `--stall-secs` takes a per-drive value today,
 and we already read your reports and filed timings.
 
 ## Procedures — one command each, so none is rebuilt from history

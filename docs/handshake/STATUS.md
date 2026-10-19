@@ -62,7 +62,8 @@ sees it because it is not named `round-NN-lap-LL.md`.
 The convention is Platterpus's, adopted verbatim: they sent us one on 2026-08-21
 for v0.6.21, explicitly outside the round mechanism, and it was the right shape.
 Rounds are the *formal* channel and they cost something — S-13 fixes a round's
-close conditions at lap 1, and an open round blocks both sides' releases. Between
+close conditions at lap 1, and an open round holds the consumer's approved pin
+(from v8 it no longer blocks a release). Between
 rounds each side still needs somewhere to say where it is.
 
 **Rewritten in place, never appended to.** A stale standing status is worse than
@@ -196,20 +197,17 @@ changed is in `Changelog.md`.
   one bundle and read `GO` by both. Their lap 2 S15 moves their approved pin to
   `891c79e` on this close, and their 0.7.107 is the first release of theirs
   to install it by default. `.23` moved to our stable channel the same day.
-- **Round 35's lap 1 is ours, held** (`round-35-lap-01.md`). It carries
-  Platterpus's TASKS R20, the route the operator chose: each audio track block
-  prints the ISRC read from the disc, `Disc ISRC:`, and `--prefer-disc-isrc`
-  makes it win over `-t`, both landed at `dd60143` for `.24`. It asks
-  Platterpus to accept or amend the wording (S11), and closes on the Full run
-  on `.24` through their first release that parses the line and sends the
-  option (S14). It is held until `.24` is cut, and revised then to name it, as
-  round 32's lap 1 was.
+- **Round 35's lap 1 is ours, sent 2026-10-16** (`round-35-lap-01.md`),
+  naming `.24` at `93afa15`. It carries Platterpus's TASKS R20, the route the
+  operator chose: each audio track block prints the ISRC read from the disc,
+  `Disc ISRC:`, and `--prefer-disc-isrc` makes it win over `-t`, both landed at
+  `dd60143` for `.24`. It asks Platterpus to accept or amend the wording (S13),
+  and closes on the Full run on `.24` through their first release that parses
+  the line and sends the option (S19).
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
-  the handshake README's data register, X6 to X10: each securing pass's
-  record, a hash per bundle member, `--consumer` and `--diagnostics` on the
-  pre-emphasis rips, home paths replaced at export, and the bundle's hash in
-  their reading lap. Their lap 8 meets X10 and takes X6 as their own fix for
-  round 33; our lap 9 asks X7 to X9 for round 33.
+  the handshake README's data register. X6 to X9 landed in theirs on
+  2026-10-14 and X10 is met (round 32 lap 8); the asks still open are X1, X2
+  and X5, each `proposed`.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
@@ -243,15 +241,10 @@ rewritten.
 
 ### Open items
 
-**The block's `STATUS-OPEN` lines are the list, in priority order**, each saying
+**The block's `STATUS-OPEN` lines are the list**, each with its priority and
 whether it is being fixed or stays open and why; `docs/KNOWN-ISSUES.md` has the
-detail. Priority 1 is released in `.22` and stays listed until round 32's
-Full run reads it on a drive. Priorities 2 to 4 are what round 32 asks
-of Platterpus to close, and priority 5 needs a drive. Round 32's lap 1 gives
-priorities 6 and 7 to runs only a drive can give and to four parked joint
-items. Priorities 8 and 9 are what Platterpus's standing status ranked for us
-on 2026-10-12, F5's second addition and F8 and F9, for round 33. The rest stay
-open, each with its reason.
+detail. Priorities 8 and 9 are what Platterpus's standing status ranked for us
+on 2026-10-12, F5's second addition and F8 and F9.
 
 **Removed on 2026-10-12, because they are done**: the eight fixed in `.20`,
 and so in the `.21` round 31 approved, which the block still listed as open:
@@ -335,8 +328,8 @@ will hit its ceiling.
 
 ## Releases — read the channel, never the version string
 
-**Every `0.9.4-rc2+platterpus.N` the manifest calls stable IS stable.** The
-`-rc2` is upstream's own string, copied verbatim because we may not mint in `cyanreg/cyanrip`'s namespace;
+**Every `0.9.4-rcN+platterpus.N` the manifest calls stable IS stable.** The
+`-rcN`, `-rc3` now, is upstream's own string, copied verbatim because we may not mint in `cyanreg/cyanrip`'s namespace;
 the part that advances is `+platterpus.N`, which SemVer says MUST be ignored for
 precedence. **A check that reads the shape of the version will call this a
 pre-release, and it will be wrong.** Order by `release_seq`, read the `channel`
