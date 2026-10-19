@@ -152,9 +152,12 @@ def run_row(store, command):
     in an overlay of this checkout where those folders are read through
     tools/evidence.py. A file this clone has not fetched raises NotFetched,
     which the caller counts as unprobed -- or, in CI's evidence job, as a
-    failure, because that job exists so these rows are actually run."""
-    folders = evidence.folders_named(command, store)
-    lacking = [p for f in folders for p in store.files(f)
+    failure, because that job exists so these rows are actually run.
+
+    Only the files the command names are read: every file of every folder it
+    named took a row 20 to 25 s on CI's macOS runner once another test had
+    filled the evidence cache (evidence.files_named)."""
+    lacking = [p for p in evidence.files_named(command, store)
                if not store.in_tree(p)]
     if not lacking:
         return subprocess.run(command, shell=True, cwd=ROOT,

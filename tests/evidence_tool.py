@@ -322,6 +322,23 @@ with tempfile.TemporaryDirectory() as d:
     check(not (work / B / "rips").exists(),
           "the overlay wrote nothing into the checkout")
 
+    # --- a row is given the files it names, not every file of its folders:
+    # every file took a Settled facts row 20 to 25 s on CI's macOS runner
+    # (2026-10-19, pull request #43), four such rows, and the test was killed
+    s2 = evidence.Store(work)
+    in_b = sorted(p for p in FILES if p.startswith(B + "/"))
+    got = evidence.files_named(f"grep x {A[:18]}*/rips/b.log", s2)
+    check(got == [f"{B}/rips/b.log"],
+          f"a glob over two folders naming one file gives that file: {got}")
+    got = evidence.files_named(f"grep -r x {B}/session", s2)
+    check(got == [f"{B}/session/transcript.txt"],
+          f"a folder inside a run folder gives the files under it: {got}")
+    got = evidence.files_named(f"ls {B}/", s2)
+    check(got == in_b, f"a run folder gives every file in it: {got}")
+    got = evidence.files_named(f"cat {B}/rips/{{a,b}}.log", s2)
+    check(got == in_b, f"a pattern fnmatch cannot read gives every file of "
+                       f"its folder: {got}")
+
     # --- 10a: a later run, filed on the tip, never changing what is there
     staging = d / "staging"
     (staging / "rips").mkdir(parents=True)
