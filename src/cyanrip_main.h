@@ -175,12 +175,13 @@ typedef struct cyanrip_settings {
     enum coverart_lookup_sizes coverart_lookup_size;
     int enable_replaygain;
     int cache_probe;
-    char *consumer_id; /* -x: measure the drive's readback cache before ripping */
+    char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
     int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
     int generate_cue_only;
     int disable_data_tracks;
     int disable_acoustid;
     char *acoustid_key; /* User API key, to submit fingerprints with */
+    AVDictionary *encoder_opts; /* --encoder-option, to every output's encoder */
 
     enum cyanrip_output_formats outputs[CYANRIP_FORMATS_NB];
     int outputs_num;

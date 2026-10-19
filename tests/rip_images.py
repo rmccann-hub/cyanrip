@@ -5641,6 +5641,79 @@ def sc_argv_probe_reads_the_record():
              f"value silently ignored, which --gate must refuse")
 
 
+def sc_encoder_option():
+    """`--encoder-option key=value` reaches every output's encoder, and an
+    encoder that refuses one ends the run in its own words before anything is
+    read (round 35, our lap 7 S21, Platterpus's lap 8 S11).
+
+    Each arm against something other than our own wording where one exists:
+      * it takes effect: FLAC at compression_level=0 is larger than at the
+        default, measured on the files;
+      * an unknown key, a bad value and a value only the encoder's own init
+        refuses each exit 1 with `Encoder option "k=v" refused by <encoder>:`
+        and a reason, and write no file at all. The reasons are FFmpeg's and
+        differ between its versions, so only their presence is asserted;
+      * a key one output's encoder does not take is refused by that encoder,
+        not by the first: lpc_type is FLAC's, so -o flac,tta names tta;
+      * a malformed argument is ours to refuse, with its own line;
+      * a key given twice keeps the last.
+    """
+    base = ["-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+            "-F", "{track}", "-L", "log", "-M", "sheet", "-l", "1"]
+
+    def run(name, *extra, fmt="flac"):
+        out = WORK / f"encopt_{name}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, log = crip(*base, "-o", fmt, "-D", f"{out}" + ("_{format}" if "," in fmt else ""),
+                       *extra)
+        return ec, log, out
+
+    ec, log, ctl = run("default")
+    ec0, log0, lvl0 = run("level0", "--encoder-option", "compression_level=0")
+    a, b = ctl / "1.flac", lvl0 / "1.flac"
+    if ec or ec0 or not a.is_file() or not b.is_file():
+        fail(f"encoder_option: control exit {ec}, compression_level=0 exit {ec0}; "
+             f"{log0.splitlines()[-1:] }")
+    elif b.stat().st_size <= a.stat().st_size:
+        fail(f"encoder_option: compression_level=0 wrote {b.stat().st_size} bytes "
+             f"against the default's {a.stat().st_size}, so the option did not "
+             f"reach the encoder")
+
+    for name, opt in (("unknown", "bogus=1"), ("badvalue", "compression_level=abc"),
+                      ("initrefuses", "compression_level=99")):
+        ec, log, out = run(name, "--encoder-option", opt)
+        last = log.rstrip().splitlines()[-1] if log.strip() else ""
+        want = f'Encoder option "{opt}" refused by flac: '
+        if ec != 1 or not last.startswith(want) or len(last) == len(want):
+            fail(f"encoder_option: {opt}: exit {ec}, last line {last!r}; want exit 1 "
+                 f"and {want!r} with a reason")
+        if out.exists():
+            fail(f"encoder_option: {opt} was refused and {out.name} was created")
+    ec, log, _ = run("unknown2", "--encoder-option", "bogus=1")
+    if 'refused by flac: it has no option "bogus"' not in log:
+        fail(f"encoder_option: an unknown key does not say the encoder has no such "
+             f"option: {log.splitlines()[-1:]}")
+
+    ec, log, out = run("second", "--encoder-option", "lpc_type=none", fmt="flac,tta")
+    last = log.rstrip().splitlines()[-1] if log.strip() else ""
+    if ec != 1 or not last.startswith('Encoder option "lpc_type=none" refused by tta: '):
+        fail(f"encoder_option: lpc_type under -o flac,tta: exit {ec}, {last!r}; FLAC "
+             f"takes it and TTA does not, so TTA must be the one refusing")
+
+    for opt in ("noequals", "=x"):
+        ec, log, _ = run("malformed", "--encoder-option", opt)
+        want = f'Invalid encoder option "{opt}", must be key=value!'
+        if ec != 1 or want not in log.splitlines():
+            fail(f"encoder_option: {opt!r}: exit {ec}, want 1 and {want!r}")
+
+    ec, log, twice = run("twice", "--encoder-option", "compression_level=99",
+                         "--encoder-option", "compression_level=0")
+    c = twice / "1.flac"
+    if ec or not c.is_file() or not b.is_file() or c.stat().st_size != b.stat().st_size:
+        fail(f"encoder_option: compression_level=99 then =0 exit {ec}; the last "
+             f"given should win and match the =0 rip byte count")
+
+
 def sc_mutation_exclusions_are_pinned():
     """`tools/mutate.py`'s `EXCLUDED_TESTS` may not change silently.
 

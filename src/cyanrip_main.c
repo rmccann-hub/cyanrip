@@ -162,6 +162,7 @@ static void cyanrip_ctx_end(cyanrip_ctx **s)
         cdio_destroy(ctx->cdio);
 
     free(ctx->settings.dev_path);
+    av_dict_free(&ctx->settings.encoder_opts);
     av_dict_free(&ctx->meta);
     av_dict_free(&ctx->cdtext);
     av_freep(&ctx);
@@ -2447,6 +2448,8 @@ static int cyanrip_run(int argc, char **argv)
                 "Write a machine-readable diagnostics record to this path (JSON)");
     GEN_OPT_ONE(opts_list, bool,    prefer_disc_isrc, "", 0, 0, 0, 0, 0,
                 "Tag a track with the ISRC read from the disc, where one is, over one given with -t");
+    GEN_OPT_ARR(opts_list, char *,  encoder_option, "", 0, 0, 32, 0, 0,
+                "Pass key=value to every output's encoder, as FFmpeg names its options (repeatable)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
                 "Track pregap handling: N=default|drop|merge|track (repeatable)");
     GEN_OPT_ONE(opts_list, char *,  paranoia, "P", 1, 1, NULL, 0, 0,
@@ -2942,6 +2945,36 @@ static int cyanrip_run(int argc, char **argv)
      * after the last refusal cannot leak by construction. Found by running the
      * suite under ASAN, which aborts on the leak and so cannot be used at all
      * until it is gone. */
+    /* --encoder-option, round 35 (our lap 7 S21, Platterpus's lap 8 S11).
+     * Built here, after the last refusal above, for dev_path's reason below,
+     * and tried on every chosen output's encoder before anything is opened,
+     * so a key an encoder refuses ends the run in the encoder's own words
+     * rather than at the first track. A key given twice keeps the last. */
+    for (int i = 0; i < 32 && encoder_option[i]; i++) {
+        const char *eq = strchr(encoder_option[i], '=');
+        if (!eq || eq == encoder_option[i]) {
+            cyanrip_log(ctx, 0, "Invalid encoder option \"%s\", must be key=value!\n",
+                        encoder_option[i]);
+            av_dict_free(&settings.encoder_opts);
+            return 1;
+        }
+        char *key = av_strndup(encoder_option[i], eq - encoder_option[i]);
+        if (!key || av_dict_set(&settings.encoder_opts, key, eq + 1,
+                                AV_DICT_DONT_STRDUP_KEY) < 0) {
+            cyanrip_log(ctx, 0, "Unable to store encoder option \"%s\"!\n",
+                        encoder_option[i]);
+            av_dict_free(&settings.encoder_opts);
+            return 1;
+        }
+    }
+    if (settings.encoder_opts &&
+        crip_check_encoder_options(settings.encoder_opts, settings.outputs,
+                                   settings.outputs_num, settings.bitrate,
+                                   settings.decode_hdcd) < 0) {
+        av_dict_free(&settings.encoder_opts);
+        return 1;
+    }
+
     if (device)
         settings.dev_path = strdup(device);
 

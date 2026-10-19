@@ -804,6 +804,7 @@ rip_scenarios = [
     'artifacts_are_tracked',
     'argv_probe_names_what_it_did_not_see',
     'argv_probe_reads_the_record',
+    'encoder_option',
     'mutation_exclusions_are_pinned',
     'sanitize',
     'enhanced_cd',
