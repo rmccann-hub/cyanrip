@@ -994,6 +994,12 @@ rows' overlays go from 4,721 files to 317 and those two rows take 0.11 and
 0.12 s here; `tests/evidence_tool.py` fails when either half is reverted.
 **Still open, and not fixed by it:** whether those rows run or are unprobed
 in a suite job still depends on which test reaches the cache first.
+**And no run could show which, until 2026-10-19**: the timing step CI runs
+after the suite printed only the slowest rows, so pull request #46's macOS job
+(`45799e2`, job 118237544275) passed `Settled facts` in 42.5 s, 102 rows run
+and the slowest 4.73 s, without saying whether those rows were among them. It
+now prints each row it could not check, with its reason, and the count;
+`tests/golden_libraries.py` fails when either is reverted.
 
 ### `docs/seam-commands.md` carried FIVE known-wrong statements — ALL FIXED in round 30
 

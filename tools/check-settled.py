@@ -432,6 +432,15 @@ def timing_from(testlog):
         print(f"Settled facts: {rec.get('result')} in "
               f"{rec.get('duration', 0):.1f} s")
         out = (rec.get("stdout") or "").splitlines()
+        # A row that could not be checked here takes no time, so a fast pass
+        # says nothing about it: the rows CI's macOS job was waiting to see
+        # run passed PR #46's job in 42.5 s, and nothing printed said whether
+        # they ran. So the UNPROBED rows, each with its reason, and the count.
+        for i, l in enumerate(out):
+            if l.startswith("UNPROBED"):
+                print(l)
+                if i + 1 < len(out) and out[i + 1].startswith("       "):
+                    print(out[i + 1])
         start = next((i for i, l in enumerate(out)
                       if l.startswith(("TIMING:", "KILLED by signal"))), None)
         if start is None:
@@ -440,6 +449,10 @@ def timing_from(testlog):
             if not l.startswith(("TIMING:", "KILLED", "  ", "the slowest")):
                 break
             print(l)
+        for l in out:
+            if re.match(r"\d+ runnable check\(s\), \d+ stale, \d+ unprobed "
+                        r"here", l):
+                print(l)
         return 0
     print(f"{path}: no Settled facts record")
     return 0
