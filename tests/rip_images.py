@@ -405,6 +405,49 @@ def sc_cli():
                 flag, val)[0] != 0:
             fail(f"cli: {flag} {val!r} was rejected")
 
+    # A number past INT_MAX was read by strtol() straight into an int, so it
+    # wrapped and was used: -c 4294967297/4294967297 tagged disc 1 of 1,
+    # -P 4294967296 ripped at paranoia none, and -t or -p 4294967297= named
+    # track 1, all with exit 0. And "-c /2" read its total as the disc number.
+    # Each is refused now, naming what the caller typed; the message words
+    # are the ones a smaller bad value always got.
+    for flag, val, want in (
+            ("-P", "4294967296",
+             "Invalid paranoia level 4294967296 must be between 0 and "),
+            ("-P", "4294967297",
+             "Invalid paranoia level 4294967297 must be between 0 and "),
+            ("-c", "4294967297/4294967297", "Invalid discnumber 4294967297"),
+            ("-c", "2147483648/2147483648", "Invalid discnumber 2147483648"),
+            ("-c", "1/4294967298", "Invalid totaldiscs 4294967298"),
+            ("-c", "/2", "Missing discnumber"),
+            ("-p", "4294967297=drop",
+             "Invalid track idx for pregap: 4294967297"),
+            ("-C", "4294967297=/nonexistent.png",
+             "Invalid track idx for cover art: 4294967297"),
+            ("-R", "4294967297", "Invalid release index 4294967297!"),
+            ("-t", "4294967297=title=wrapped",
+             "Invalid track number 4294967297, list has 2 tracks!")):
+        ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
+                       flag, val)
+        if ec != 1:
+            fail(f"cli: {flag} {val!r} exited {ec}, wanted 1: it is used "
+                 f"as a value the caller did not type")
+        elif want not in out:
+            fail(f"cli: {flag} {val!r} was refused without naming the value "
+                 f"typed; wanted {want!r}, got {out.strip()[-120:]!r}")
+
+    # ...and the largest value each takes is still taken, and used as given.
+    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
+                   "-c", "2147483647/2147483647")
+    if ec != 0 or not re.search(r"^Disc number:\s+2147483647$", out, re.M):
+        fail(f"cli: -c 2147483647/2147483647 was not taken as given "
+             f"(exit {ec})")
+    for flag, val in (("-P", "3"), ("-t", "2=title=last"), ("-p", "2=drop")):
+        ec, _ = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
+                     flag, val)
+        if ec != 0:
+            fail(f"cli: {flag} {val!r} exited {ec}, wanted 0")
+
     # A genuinely unknown flag must still fail, diagnosably, on stdout
     ec, out = crip("--no-such-flag")
     if ec != 1:

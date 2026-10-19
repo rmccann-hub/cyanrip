@@ -2601,20 +2601,27 @@ static int cyanrip_run(int argc, char **argv)
     find_drive_offset_range = find_offset ? 6 : 0;
     album_metadata_ptr = album_meta;
 
+    /* The integers below that genopt does not parse are read wide and
+     * range-checked before they are narrowed to an int. strtol() straight
+     * into an int wrapped past INT_MAX, so -P 4294967296 ran at paranoia
+     * none, -c 4294967297/4294967297 tagged disc 1 of 1, and -t or -p
+     * 4294967297= meant track 1, each with exit 0. Each message prints the
+     * value as read, so a refusal names the number the caller typed. */
     if (paranoia) {
+        long long level;
         if (!strcmp(paranoia, "none"))
-            settings.paranoia_level = 0;
+            level = 0;
         else if (!strcmp(paranoia, "max"))
-            settings.paranoia_level = crip_max_paranoia_level;
+            level = crip_max_paranoia_level;
         else
-            settings.paranoia_level = (int)strtol(paranoia, NULL, 10);
-        if (settings.paranoia_level < 0 ||
-            settings.paranoia_level > crip_max_paranoia_level) {
+            level = strtoll(paranoia, NULL, 10);
+        if (level < 0 || level > crip_max_paranoia_level) {
             cyanrip_log(ctx, 0,
-                        "Invalid paranoia level %i must be between 0 and %i!\n",
-                        settings.paranoia_level, crip_max_paranoia_level);
+                        "Invalid paranoia level %lli must be between 0 and %i!\n",
+                        level, crip_max_paranoia_level);
             return 1;
         }
+        settings.paranoia_level = level;
     }
 
     switch (cover_size) {
@@ -2642,13 +2649,15 @@ static int cyanrip_run(int argc, char **argv)
 
     if (release) {
         p = NULL;
-        mb_release_idx = strtol(release, &p, 10);
+        long long wide = strtoll(release, &p, 10);
         if (p != NULL && p[0] != ' ' && p[0] != '\0') {
             mb_release_str = release;
             mb_release_idx = -1;
-        } else if (mb_release_idx <= 0) {
-            cyanrip_log(ctx, 0, "Invalid release index %i!\n", mb_release_idx);
+        } else if (wide <= 0 || wide > INT_MAX) {
+            cyanrip_log(ctx, 0, "Invalid release index %lli!\n", wide);
             return 1;
+        } else {
+            mb_release_idx = wide;
         }
     }
 
@@ -2656,23 +2665,27 @@ static int cyanrip_run(int argc, char **argv)
         p = av_strtok(disc, "/", &p_save);
         /* A string of nothing but delimiters yields no token at all, so this
          * is NULL for "-c /" and strtol() then dereferences it. The second
-         * av_strtok below has always been checked; the first never was. */
-        if (!p) {
+         * av_strtok below has always been checked; the first never was.
+         * And av_strtok skips a leading delimiter, so "-c /2" read the total
+         * as the disc number and tagged disc 2 of nothing. */
+        if (!p || disc[0] == '/') {
             cyanrip_log(ctx, 0, "Missing discnumber\n");
             return 1;
         }
-        discnumber = strtol(p, NULL, 10);
-        if (discnumber <= 0) {
-            cyanrip_log(ctx, 0, "Invalid discnumber %i\n", discnumber);
+        long long wide = strtoll(p, NULL, 10);
+        if (wide <= 0 || wide > INT_MAX) {
+            cyanrip_log(ctx, 0, "Invalid discnumber %lli\n", wide);
             return 1;
         }
+        discnumber = wide;
         p = av_strtok(NULL, "/", &p_save);
         if (p) {
-            totaldiscs = strtol(p, NULL, 10);
-            if (totaldiscs <= 0) {
-                cyanrip_log(ctx, 0, "Invalid totaldiscs %i\n", totaldiscs);
+            wide = strtoll(p, NULL, 10);
+            if (wide <= 0 || wide > INT_MAX) {
+                cyanrip_log(ctx, 0, "Invalid totaldiscs %lli\n", wide);
                 return 1;
             }
+            totaldiscs = wide;
             if (discnumber > totaldiscs) {
                 cyanrip_log(ctx, 0,
                             "discnumber %i is larger than totaldiscs %i\n",
@@ -2752,11 +2765,12 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Missing track idx for pregap\n");
             return 1;
         }
-        idx = strtol(p, NULL, 10);
-        if (idx < 1 || idx > 197) {
-            cyanrip_log(ctx, 0, "Invalid track idx for pregap: %i\n", idx);
+        long long wide = strtoll(p, NULL, 10);
+        if (wide < 1 || wide > 197) {
+            cyanrip_log(ctx, 0, "Invalid track idx for pregap: %lli\n", wide);
             return 1;
         }
+        idx = wide;
         enum cyanrip_pregap_action act = CYANRIP_PREGAP_DEFAULT;
         p = av_strtok(NULL, "=", &p_save);
         if (!p) {
@@ -2807,12 +2821,13 @@ static int cyanrip_run(int argc, char **argv)
         }
 
         if (crip_is_integer(p)) {
-            idx = strtol(p, NULL, 10);
-            if (idx < 0 || idx > 198) {
+            long long wide = strtoll(p, NULL, 10);
+            if (wide < 0 || wide > 198) {
                 cyanrip_log(ctx, 0,
-                            "Invalid track idx for cover art: %i\n", idx);
+                            "Invalid track idx for cover art: %lli\n", wide);
                 return 1;
             }
+            idx = wide;
             for (int k = 0; k < nb_track_cover_arts; k++) {
                 if (track_cover_arts_map[k] == idx) {
                     cyanrip_log(ctx, 0,
@@ -3222,7 +3237,7 @@ static int cyanrip_run(int argc, char **argv)
             continue;
 
         char *end = NULL;
-        int u_nb = strtol(track_metadata_ptr[i], &end, 10);
+        long long u_nb = strtoll(track_metadata_ptr[i], &end, 10);
 
         /* Verify all indices */
         int track_idx = 0;
@@ -3231,7 +3246,7 @@ static int cyanrip_run(int argc, char **argv)
                 break;
         }
         if (track_idx >= ctx->nb_tracks) {
-            cyanrip_log(ctx, 0, "Invalid track number %i, list has %i tracks!\n",
+            cyanrip_log(ctx, 0, "Invalid track number %lli, list has %i tracks!\n",
                         u_nb, ctx->nb_tracks);
             ctx->total_error_count++;
             goto end;

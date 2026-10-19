@@ -1,5 +1,22 @@
 Unreleased
 ==========
+**A number past `INT_MAX` is refused, not wrapped and used.** Six arguments
+genopt does not parse were read with `strtol()` straight into an `int`, so a
+value past `INT_MAX` became whatever it wrapped to, with exit 0:
+`-c 4294967297/4294967297` tagged disc 1 of 1, `-P 4294967296` ripped at
+paranoia none and `-P 4294967297` at 1, `-t 4294967297=title=x` titled track 1,
+`-p 4294967297=drop` dropped track 1's pregap, and `-R` and `-C` did the same
+with a release and a cover-art index. Each is now read wide and range-checked
+before it is narrowed, and refused with the message a smaller bad value always
+got, now naming the number typed: `Invalid discnumber 4294967297`, where
+`2147483648/…` used to print `-2147483648`. Every message that rendered before
+renders byte for byte the same. And `-c /2`, which `av_strtok` read as disc 2
+by skipping the `/`, is refused as `Missing discnumber`. Found adding F9's
+boundary rows to `tools/probe-argv-surface.py`, which now probes each at
+`INT_MAX` and past it, and reads `-c` and `-P`'s effect from the header, so its
+gate grades a wrapped value as ignored. `sc_cli()` holds all eight sites; each
+reverted alone, with the build green, fails it. Upstream's too, at `7dbe56a`.
+
 **`docs/seam-commands.md` rows every flag cyanrip accepts.** §1 tabled the
 flags Platterpus's rip path sends, and nothing said which of ours it does not,
 so a flag added here could go unseen there (their F8). A new §1b rows the other

@@ -68,7 +68,13 @@ BASE = ["-I", "-N", "-A", "-U", "-P", "0"]
 EFFECT = {
     "-s": (r"^Offset:\s+([+-]?\d+) samples", lambda v: int(v)),
     "-r": (r"^Retry limit:\s+(\d+)", lambda v: int(v)),
-    "-P": (r"^Paranoia level:\s+(\S+)", None),
+    # The header prints 0 as "none" and the top level, 3, as "max".
+    "-P": (r"^Paranoia level:\s+(\S+)",
+           lambda v: {0: "none", 3: "max"}.get(int(v), int(v))),
+    # The disc number, the part before "/". A value strtol() wrapped past
+    # INT_MAX reads here as what it wrapped to, so it grades ignored.
+    "-c": (r"^Disc number:\s+(\S+)",
+           lambda v: int(str(v).split("/")[0])),
     "-O": (r"^Overread:\s+([+-]?\d+) frames", None),
     "--consumer": (r"^Consumer:\s+(\S+)", None),
 }
@@ -129,11 +135,14 @@ GRID = [
     ("-Z", "repeat rips until N matches", [-1, 0, 1, 2, 10, 2147483647]),
     ("-S", "drive speed multiplier", [-1, 0, 1, 48, 2147483647]),
     ("--stall-secs", "stall threshold, seconds", [-1, 0, 1, 10, 2147483647]),
-    ("-P", "paranoia level", [-1, 0, 1, 3, 4, 999]),
+    ("-P", "paranoia level", [-1, 0, 1, 3, 4, 999, 4294967296, 4294967297]),
     ("-m", "cover art max size", [-2, -1, 250, 500, 1200, 999]),
     ("-b", "lossy bitrate, kbps", [-1, 0, 1, 256, 100000]),
     ("-l", "track list", [0, 1, 2, 3, 99]),
     ("-c", "disc/totaldiscs", ["0/0", "1/1", "2/1", "1/2",
+                               "2147483647/2147483647",
+                               "2147483648/2147483648", "1/2147483648",
+                               "4294967297/4294967297", "1/4294967298",
                                # malformed shapes: separator missing, doubled,
                                # empty either side. See MALFORMED_SHAPES below.
                                "1", "1/", "/2", "1//2", "/", "//"]),
@@ -155,10 +164,12 @@ STRING_GRID = [
     # terminator and publish adjacent process memory as track metadata; it is
     # refused since 3923dee. Reported by Platterpus in round 7 lap 31.
     ("-t", "track metadata", ["1=title=x", "1=title=a:b", "0=title=x",
-                              "99=title=x", "1", "99", "1="]),
+                              "2=title=x", "3=title=x", "99=title=x",
+                              "4294967297=title=x", "1", "99", "1="]),
     ("-o", "output formats", ["flac", "", "nosuchformat", "flac,flac"]),
     ("-T", "filename sanitation", ["simple", "os_simple", "unicode", "os_unicode", "bogus"]),
     ("-p", "pregap action", ["1=default", "1=drop", "1=merge", "1=track", "1=bogus", "99=drop",
+                             "197=drop", "198=drop", "4294967297=drop",
                              "1", "=drop", "1=", "1==drop", "1=drop=", "=", "=="]),
     ("-C", "cover art location", ["Front=/nonexistent.png", "Front=", "=/nonexistent.png",
                                   "Front", "1=", "="]),
