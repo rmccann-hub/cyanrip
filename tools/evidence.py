@@ -456,6 +456,31 @@ def folders_named(text, store):
     return sorted(found)
 
 
+def files_named(text, store):
+    """The files a command names, its globs expanded against every file of
+    the folders folders_named() finds for it. A token naming no more than a
+    folder stands for every file in it, and so does one that matches no file,
+    such as a brace fnmatch cannot read, so a command is never given fewer
+    files than the folders it names would have given it.
+
+    Every file of every folder was the overlay until 2026-10-19, and a row
+    naming every run folder's `rips/secure-reread.log` copied 1,015 files,
+    about 114 MB, one `git cat-file` each, to read 19: 20 to 25 s a row on
+    CI's macOS runner, four such rows, and Settled facts killed at 120 s."""
+    import fnmatch
+    found = set()
+    for token in EVIDENCE_TOKEN.findall(text):
+        token = token.rstrip(".,")
+        parts = token.split("/")
+        depth = 2 if parts[1].startswith("rig-") else 5
+        files = [p for f in folders_named(token, store) for p in store.files(f)]
+        rest = token.rstrip("/")
+        hit = [p for p in files if fnmatch.fnmatchcase(p, rest)
+               or fnmatch.fnmatchcase(p, rest + "/*")]
+        found |= set(hit if any(parts[depth:]) and hit else files)
+    return sorted(found)
+
+
 def run_with_evidence(store, folders, argv, shell=False):
     """Run argv (or a shell string) where every file of `folders` is present.
 

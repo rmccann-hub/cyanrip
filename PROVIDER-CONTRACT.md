@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.24 (platterpus-fork-g716a99b)`
+Build: `cyanrip 0.9.4-rc3+platterpus.24 (platterpus-fork-gb9b604c)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = 3683c12024a97a1b` over `src/*.c` and
+**Source anchor:** `sha256/16 = 34da0688ce2cdc69` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -58,6 +58,7 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
 | none | `--consumer` | Identify the calling program in the log (recorded verbatim, not verified) |
 | none | `--diagnostics` | Write a machine-readable diagnostics record to this path (JSON) |
 | none | `--prefer-disc-isrc` | Tag a track with the ISRC read from the disc, where one is, over one given with -t (default: false) |
+| none | `--encoder-option` | Pass key=value to every output's encoder, as FFmpeg names its options (repeatable) |
 | `-p` | `--pregap` | Track pregap handling: N=default|drop|merge|track (repeatable) |
 | `-P` | `--paranoia` | Paranoia level (0..max, or 'none'/'max') |
 | `-O` | `--overread` | Enable overreading into lead-in and lead-out (default: false) |
@@ -107,17 +108,17 @@ From the binary's own `--help`, so it cannot drift from what the build accepts.
 | `-f` | `--find-offset` | Find drive offset (requires a disc with an AccuRip entry) (default: false) |
 | `-Y` | `--verify-log` | Verify a rip log's FUN512 checksum |
 
-**45 flags total.** Notes that are not derivable from `--help`:
+**46 flags total.** Notes that are not derivable from `--help`:
 
 - `-O` is **overread**, not an options passthrough. Never repurpose it.
 - `-v`, `-V` and `--version` all print the version banner and exit 0 **on
   this fork**. Across the stock line they are not interchangeable and there
   is no single spelling that works everywhere -- see P6.
-- `-J` and `-I` are mutually exclusive; combining them exits 1.
+- `-J` and `-I` are mutually exclusive; combining them exits 64, an argument refused.
 - `-d` accepts a device path **or** a TOC/CUE/NRG image file.
 - `-a`/`-t` values are `:`-separated; a literal colon must be escaped `\:`.
 - `-t N=` and `-l N` are 1-based and validated against the disc's real track
-  count; out of range exits 1 with a message naming both numbers.
+  count; out of range exits 64 with a message naming both numbers.
 - Multiple `-o` formats produce **one logfile and one cue per format**.
 
 **Units that are not obvious from the line itself:**
@@ -235,36 +236,36 @@ or units of any of them is a breaking change and requires a handshake round.
 | `coverart.c:392` | `No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!` |
 | `cue_writer.c:41` | `Couldn't open path \"%s\" for writing: %s!\nInvalid folder name? Try -D <folder>.` |
 | `cue_writer.c:141` | `Refusing an INDEX 00 of %i frames into a %i frame file for track %i, writing none` |
-| `cyanrip_encode.c:376` | `Error creating filter source: %s!` |
-| `cyanrip_encode.c:387` | `Error creating filter sink: %s!` |
-| `cyanrip_encode.c:401` | `Error setting filter sample format: %s!` |
-| `cyanrip_encode.c:409` | `Error setting filter channel layout: %s!` |
-| `cyanrip_encode.c:418` | `Error setting filter sample rate: %s!` |
-| `cyanrip_encode.c:452` | `Error initializing filter sink: %s!` |
-| `cyanrip_encode.c:535` | `Error parsing filter graph: %s!` |
-| `cyanrip_encode.c:541` | `Error configuring filter graph: %s!` |
-| `cyanrip_encode.c:599` | `Error pushing frame to FIFO: %s!` |
-| `cyanrip_encode.c:727` | `Error filtering frame: %s!` |
-| `cyanrip_encode.c:843` | `Error allocating frame!` |
-| `cyanrip_encode.c:855` | `Error allocating frame: %s!` |
-| `cyanrip_encode.c:949` | `Album Loudness` |
-| `cyanrip_encode.c:976` | `Album integrated loudness (R128): %.1f LUFS` |
-| `cyanrip_encode.c:978` | `Album loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)` |
-| `cyanrip_encode.c:980` | `Album sample peak level:          %.1f dBFS` |
-| `cyanrip_encode.c:982` | `Album true peak level:            %.1f dBFS` |
-| `cyanrip_encode.c:997` | `Could not alloc swr context!` |
-| `cyanrip_encode.c:1015` | `Could not init swr context!` |
-| `cyanrip_encode.c:1159` | `Couldn't set metadata: %s!` |
-| `cyanrip_encode.c:1202` | `Error while encoding: %s!` |
-| `cyanrip_encode.c:1224` | `Error encoding: %s!` |
-| `cyanrip_encode.c:1255` | `Error pushing packet to FIFO: %s!` |
-| `cyanrip_encode.c:1262` | `Error writing packet: %s!` |
-| `cyanrip_encode.c:1292` | `Error writing to file: %s!` |
-| `cyanrip_encode.c:1415` | `Codec not found (not compiled in lavc?)!` |
-| `cyanrip_encode.c:1424` | `Unable to init output avctx!` |
-| `cyanrip_encode.c:1435` | `Could not open output codec context!` |
-| `cyanrip_encode.c:1442` | `Couldn't copy codec params!` |
-| `cyanrip_encode.c:1449` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
+| `cyanrip_encode.c:476` | `Error creating filter source: %s!` |
+| `cyanrip_encode.c:487` | `Error creating filter sink: %s!` |
+| `cyanrip_encode.c:501` | `Error setting filter sample format: %s!` |
+| `cyanrip_encode.c:509` | `Error setting filter channel layout: %s!` |
+| `cyanrip_encode.c:518` | `Error setting filter sample rate: %s!` |
+| `cyanrip_encode.c:552` | `Error initializing filter sink: %s!` |
+| `cyanrip_encode.c:635` | `Error parsing filter graph: %s!` |
+| `cyanrip_encode.c:641` | `Error configuring filter graph: %s!` |
+| `cyanrip_encode.c:699` | `Error pushing frame to FIFO: %s!` |
+| `cyanrip_encode.c:827` | `Error filtering frame: %s!` |
+| `cyanrip_encode.c:943` | `Error allocating frame!` |
+| `cyanrip_encode.c:955` | `Error allocating frame: %s!` |
+| `cyanrip_encode.c:1049` | `Album Loudness` |
+| `cyanrip_encode.c:1076` | `Album integrated loudness (R128): %.1f LUFS` |
+| `cyanrip_encode.c:1078` | `Album loudness range (R128):      %.1f LU (%.1f to %.1f LUFS)` |
+| `cyanrip_encode.c:1080` | `Album sample peak level:          %.1f dBFS` |
+| `cyanrip_encode.c:1082` | `Album true peak level:            %.1f dBFS` |
+| `cyanrip_encode.c:1097` | `Could not alloc swr context!` |
+| `cyanrip_encode.c:1115` | `Could not init swr context!` |
+| `cyanrip_encode.c:1259` | `Couldn't set metadata: %s!` |
+| `cyanrip_encode.c:1302` | `Error while encoding: %s!` |
+| `cyanrip_encode.c:1324` | `Error encoding: %s!` |
+| `cyanrip_encode.c:1355` | `Error pushing packet to FIFO: %s!` |
+| `cyanrip_encode.c:1362` | `Error writing packet: %s!` |
+| `cyanrip_encode.c:1392` | `Error writing to file: %s!` |
+| `cyanrip_encode.c:1510` | `Codec not found (not compiled in lavc?)!` |
+| `cyanrip_encode.c:1519` | `Unable to init output avctx!` |
+| `cyanrip_encode.c:1534` | `Could not open output codec context!` |
+| `cyanrip_encode.c:1541` | `Couldn't copy codec params!` |
+| `cyanrip_encode.c:1548` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
 | `cyanrip_log.c:1305` | `Log FUN512: %s` |
 | `cyanrip_log.c:1383` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:59` | `%s%s:` |
@@ -405,116 +406,118 @@ or units of any of them is a breaking change and requires a handshake round.
 | `cyanrip_log.c:1029` | `Disc MCN:       %s` |
 | `cyanrip_log.c:1030` | `Album:          %s` |
 | `cyanrip_log.c:1031` | `Album artist:   %s` |
-| `cyanrip_main.c:286` | `No device specified and unable to get default device!` |
-| `cyanrip_main.c:294` | `Unable to open device: %s` |
-| `cyanrip_main.c:303` | `Unable to init cddap context!` |
-| `cyanrip_main.c:305` | `cdio: \"%s\"` |
-| `cyanrip_main.c:317` | `Opening drive...` |
-| `cyanrip_main.c:329` | `Unable to open device!` |
-| `cyanrip_main.c:341` | `cdio error: %s` |
-| `cyanrip_main.c:345` | `Device does not support changing speeds!` |
-| `cyanrip_main.c:353` | `Unable to init paranoia!` |
-| `cyanrip_main.c:405` | `Invalid number of tracks: %i!` |
-| `cyanrip_main.c:440` | `CDIO returned invalid track %i end LSN` |
-| `cyanrip_main.c:487` | `Track %i is data and last, but track %i is %i frames and the %i frame CD-Extra session gap does not fit; TOC left unadjusted` |
-| `cyanrip_main.c:707` | `Frame read failed!` |
-| `cyanrip_main.c:790` | `Loading data for track %i...` |
-| `cyanrip_main.c:800` | `Stopping, offset finding incomplete!` |
-| `cyanrip_main.c:809` | `Data loaded, searching for offsets...` |
-| `cyanrip_main.c:818` | `Nothing found for track %i%s` |
-| `cyanrip_main.c:823` | `Offset of %c%i found in track %i%s` |
-| `cyanrip_main.c:828` | `Offset of %c%i confirmed (confidence: %i) in track %i%s` |
-| `cyanrip_main.c:832` | `New offset of %c%i found at track %i, scrapping old offset of %c%i%s` |
-| `cyanrip_main.c:866` | `No track had AccuRip entry, cannot find offset!` |
-| `cyanrip_main.c:871` | `No track was long enough, unable to find drive offset!` |
-| `cyanrip_main.c:874` | `Was not able to find drive offset with a radius of %i frames, trying again with a larger radius...` |
-| `cyanrip_main.c:882` | `Drive offset of %c%i found (confidence: %i)!` |
-| `cyanrip_main.c:981` | `Unable to read track %i subchannel info!` |
-| `cyanrip_main.c:1126` | `Error writing the -Z spool: %s!` |
-| `cyanrip_main.c:1272` | `Drive media changed, stopping!` |
-| `cyanrip_main.c:1287` | `Frame read failed at LSN %i!` |
-| `cyanrip_main.c:1297` | `Sector EDC mismatch at LSN %i!` |
-| `cyanrip_main.c:1305` | `Stopping, ripping incomplete!` |
-| `cyanrip_main.c:1315` | `Error writing to \"%s\": %s!` |
-| `cyanrip_main.c:1337` | `Track %i ripped with errors.` |
-| `cyanrip_main.c:1339` | `Track %i ripped successfully!` |
-| `cyanrip_main.c:1366` | `Track %i is data, skipping:` |
-| `cyanrip_main.c:1368` | `Track %i is data:` |
-| `cyanrip_main.c:1444` | `Error creating the -Z spool: %s!` |
-| `cyanrip_main.c:1456` | `Error initializing fingerprinting: %s` |
-| `cyanrip_main.c:1483` | `Error in decoding/sending frame: %s` |
-| `cyanrip_main.c:1663` | `Done; (%i out of %i matches for current checksum %08X)` |
-| `cyanrip_main.c:1695` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed; last read %08X, not kept)` |
-| `cyanrip_main.c:1701` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed)` |
-| `cyanrip_main.c:1708` | `Repeating ripping (%i out of %i matches for current checksum %08X)` |
-| `cyanrip_main.c:1757` | `Error reading the -Z spool: %s!` |
-| `cyanrip_main.c:1763` | `Error verifying the -Z spool: it does not match the read it was kept for!` |
-| `cyanrip_main.c:1777` | `Error sending flush signal to encoders: %s` |
-| `cyanrip_main.c:1841` | `Track %i read with errors.` |
-| `cyanrip_main.c:1843` | `Track %i read successfully!` |
-| `cyanrip_main.c:1992` | `Gaps:` |
-| `cyanrip_main.c:1997` | `%i frame gap between lead-in and track 1 pregap, merging into pregap` |
-| `cyanrip_main.c:2004` | `%i frame unmarked gap between lead-in and track 1, marking as a pregap` |
-| `cyanrip_main.c:2026` | `pregap of track %i unknown (%s)` |
-| `cyanrip_main.c:2043` | `%i frame pregap in track %i,` |
-| `cyanrip_main.c:2050` | `unmerged` |
-| `cyanrip_main.c:2052` | `merging into track %i` |
-| `cyanrip_main.c:2058` | `dropping` |
-| `cyanrip_main.c:2064` | `merging` |
-| `cyanrip_main.c:2071` | `splitting off into a new track, number %i` |
-| `cyanrip_main.c:2114` | `%i frame discontinuity between tracks %i and %i,` |
-| `cyanrip_main.c:2119` | `padding track %i` |
-| `cyanrip_main.c:2122` | `ignoring` |
-| `cyanrip_main.c:2130` | `%i frame gap between last track and lead-out, padding track` |
-| `cyanrip_main.c:2169` | `` |
-| `cyanrip_main.c:2169` | `    None signalled\n` |
-| `cyanrip_main.c:2318` | `Can't init %s handler!` |
-| `cyanrip_main.c:2619` | `Invalid paranoia level %lli must be between 0 and %i!` |
-| `cyanrip_main.c:2633` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` |
-| `cyanrip_main.c:2645` | `Invalid sanitation method %s` |
-| `cyanrip_main.c:2657` | `Invalid release index %lli!` |
-| `cyanrip_main.c:2672` | `Missing discnumber` |
-| `cyanrip_main.c:2677` | `Invalid discnumber %lli` |
-| `cyanrip_main.c:2685` | `Invalid totaldiscs %lli` |
-| `cyanrip_main.c:2690` | `discnumber %i is larger than totaldiscs %i` |
-| `cyanrip_main.c:2703` | `Supported output codecs:` |
-| `cyanrip_main.c:2711` | `Invalid format \"%s\"` |
-| `cyanrip_main.c:2716` | `Duplicated format \"%s\"` |
-| `cyanrip_main.c:2731` | `Duplicated rip idx %i` |
-| `cyanrip_main.c:2765` | `Missing track idx for pregap` |
-| `cyanrip_main.c:2770` | `Invalid track idx for pregap: %lli` |
-| `cyanrip_main.c:2777` | `Missing pregap action` |
-| `cyanrip_main.c:2785` | `Invalid pregap action %s` |
-| `cyanrip_main.c:2817` | `No cover art location specified for \"%s\"` |
-| `cyanrip_main.c:2826` | `Invalid track idx for cover art: %lli` |
-| `cyanrip_main.c:2833` | `Cover art already specified for track idx %i!` |
-| `cyanrip_main.c:2845` | `Cover art \"%s\" already specified!` |
-| `cyanrip_main.c:2851` | `Too many cover arts specified!` |
-| `cyanrip_main.c:2861` | `Directory name scheme must contain {format} with multiple output formats!` |
-| `cyanrip_main.c:2866` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` |
-| `cyanrip_main.c:2883` | `-Z %i can never converge with -r %i: it needs %lli reads to agree, and -r %i never allows that many. Use -r %lli or more!` |
-| `cyanrip_main.c:2889` | `-Z %i can never converge with -r %i: it needs %lli reads to agree, more than any -r allows. Use a smaller -Z!` |
-| `cyanrip_main.c:2907` | `Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...` |
-| `cyanrip_main.c:2936` | `Invalid %s naming scheme \"%s\"!` |
-| `cyanrip_main.c:2949` | `Offset is unset! To continue with an offset of 0, run with -s 0!` |
-| `cyanrip_main.c:3039` | `MusicBrainz URL:\n%s` |
-| `cyanrip_main.c:3096` | `Error reading album tags: %s` |
-| `cyanrip_main.c:3161` | `Log(s) will be written to:` |
-| `cyanrip_main.c:3169` | `CUE files will be written to:` |
-| `cyanrip_main.c:3228` | `Invalid track number %i for pregap, list has %i tracks!` |
-| `cyanrip_main.c:3249` | `Invalid track number %lli, list has %i tracks!` |
-| `cyanrip_main.c:3262` | `Missing \"=\" in track metadata \"%s\"` |
-| `cyanrip_main.c:3280` | `Error reading track tags: %s` |
-| `cyanrip_main.c:3318` | `Invalid track number %i, list has %i tracks!` |
-| `cyanrip_main.c:3335` | `Cover art destination(s):` |
-| `cyanrip_main.c:3372` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
-| `cyanrip_main.c:3383` | `Tracks:` |
-| `cyanrip_main.c:3398` | `Track %i info:` |
-| `cyanrip_main.c:3416` | `Error initializing decoder: %s` |
-| `cyanrip_main.c:3425` | `Error initializing encoder: %s` |
-| `cyanrip_main.c:3441` | `Error ripping: %s` |
-| `cyanrip_main.c:3472` | `Error encoding: %s` |
-| `cyanrip_main.c:3492` | `Invalid rip index %i, list has %i tracks!` |
+| `cyanrip_main.c:288` | `No device specified and unable to get default device!` |
+| `cyanrip_main.c:296` | `Unable to open device: %s` |
+| `cyanrip_main.c:305` | `Unable to init cddap context!` |
+| `cyanrip_main.c:307` | `cdio: \"%s\"` |
+| `cyanrip_main.c:319` | `Opening drive...` |
+| `cyanrip_main.c:331` | `Unable to open device!` |
+| `cyanrip_main.c:343` | `cdio error: %s` |
+| `cyanrip_main.c:347` | `Device does not support changing speeds!` |
+| `cyanrip_main.c:355` | `Unable to init paranoia!` |
+| `cyanrip_main.c:407` | `Invalid number of tracks: %i!` |
+| `cyanrip_main.c:442` | `CDIO returned invalid track %i end LSN` |
+| `cyanrip_main.c:489` | `Track %i is data and last, but track %i is %i frames and the %i frame CD-Extra session gap does not fit; TOC left unadjusted` |
+| `cyanrip_main.c:721` | `Frame read failed!` |
+| `cyanrip_main.c:804` | `Loading data for track %i...` |
+| `cyanrip_main.c:814` | `Stopping, offset finding incomplete!` |
+| `cyanrip_main.c:823` | `Data loaded, searching for offsets...` |
+| `cyanrip_main.c:832` | `Nothing found for track %i%s` |
+| `cyanrip_main.c:837` | `Offset of %c%i found in track %i%s` |
+| `cyanrip_main.c:842` | `Offset of %c%i confirmed (confidence: %i) in track %i%s` |
+| `cyanrip_main.c:846` | `New offset of %c%i found at track %i, scrapping old offset of %c%i%s` |
+| `cyanrip_main.c:880` | `No track had AccuRip entry, cannot find offset!` |
+| `cyanrip_main.c:885` | `No track was long enough, unable to find drive offset!` |
+| `cyanrip_main.c:888` | `Was not able to find drive offset with a radius of %i frames, trying again with a larger radius...` |
+| `cyanrip_main.c:896` | `Drive offset of %c%i found (confidence: %i)!` |
+| `cyanrip_main.c:995` | `Unable to read track %i subchannel info!` |
+| `cyanrip_main.c:1140` | `Error writing the -Z spool: %s!` |
+| `cyanrip_main.c:1286` | `Drive media changed, stopping!` |
+| `cyanrip_main.c:1302` | `Frame read failed at LSN %i!` |
+| `cyanrip_main.c:1312` | `Sector EDC mismatch at LSN %i!` |
+| `cyanrip_main.c:1320` | `Stopping, ripping incomplete!` |
+| `cyanrip_main.c:1330` | `Error writing to \"%s\": %s!` |
+| `cyanrip_main.c:1352` | `Track %i ripped with errors.` |
+| `cyanrip_main.c:1354` | `Track %i ripped successfully!` |
+| `cyanrip_main.c:1381` | `Track %i is data, skipping:` |
+| `cyanrip_main.c:1383` | `Track %i is data:` |
+| `cyanrip_main.c:1466` | `Error creating the -Z spool: %s!` |
+| `cyanrip_main.c:1478` | `Error initializing fingerprinting: %s` |
+| `cyanrip_main.c:1505` | `Error in decoding/sending frame: %s` |
+| `cyanrip_main.c:1686` | `Done; (%i out of %i matches for current checksum %08X)` |
+| `cyanrip_main.c:1718` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed; last read %08X, not kept)` |
+| `cyanrip_main.c:1724` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed)` |
+| `cyanrip_main.c:1731` | `Repeating ripping (%i out of %i matches for current checksum %08X)` |
+| `cyanrip_main.c:1780` | `Error reading the -Z spool: %s!` |
+| `cyanrip_main.c:1786` | `Error verifying the -Z spool: it does not match the read it was kept for!` |
+| `cyanrip_main.c:1800` | `Error sending flush signal to encoders: %s` |
+| `cyanrip_main.c:1864` | `Track %i read with errors.` |
+| `cyanrip_main.c:1866` | `Track %i read successfully!` |
+| `cyanrip_main.c:2019` | `Gaps:` |
+| `cyanrip_main.c:2024` | `%i frame gap between lead-in and track 1 pregap, merging into pregap` |
+| `cyanrip_main.c:2031` | `%i frame unmarked gap between lead-in and track 1, marking as a pregap` |
+| `cyanrip_main.c:2053` | `pregap of track %i unknown (%s)` |
+| `cyanrip_main.c:2070` | `%i frame pregap in track %i,` |
+| `cyanrip_main.c:2077` | `unmerged` |
+| `cyanrip_main.c:2079` | `merging into track %i` |
+| `cyanrip_main.c:2085` | `dropping` |
+| `cyanrip_main.c:2091` | `merging` |
+| `cyanrip_main.c:2098` | `splitting off into a new track, number %i` |
+| `cyanrip_main.c:2141` | `%i frame discontinuity between tracks %i and %i,` |
+| `cyanrip_main.c:2146` | `padding track %i` |
+| `cyanrip_main.c:2149` | `ignoring` |
+| `cyanrip_main.c:2157` | `%i frame gap between last track and lead-out, padding track` |
+| `cyanrip_main.c:2196` | `` |
+| `cyanrip_main.c:2196` | `    None signalled\n` |
+| `cyanrip_main.c:2347` | `Can't init %s handler!` |
+| `cyanrip_main.c:2650` | `Invalid paranoia level %lli must be between 0 and %i!` |
+| `cyanrip_main.c:2664` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` |
+| `cyanrip_main.c:2676` | `Invalid sanitation method %s` |
+| `cyanrip_main.c:2688` | `Invalid release index %lli!` |
+| `cyanrip_main.c:2703` | `Missing discnumber` |
+| `cyanrip_main.c:2708` | `Invalid discnumber %lli` |
+| `cyanrip_main.c:2716` | `Invalid totaldiscs %lli` |
+| `cyanrip_main.c:2721` | `discnumber %i is larger than totaldiscs %i` |
+| `cyanrip_main.c:2734` | `Supported output codecs:` |
+| `cyanrip_main.c:2742` | `Invalid format \"%s\"` |
+| `cyanrip_main.c:2747` | `Duplicated format \"%s\"` |
+| `cyanrip_main.c:2762` | `Duplicated rip idx %i` |
+| `cyanrip_main.c:2796` | `Missing track idx for pregap` |
+| `cyanrip_main.c:2801` | `Invalid track idx for pregap: %lli` |
+| `cyanrip_main.c:2808` | `Missing pregap action` |
+| `cyanrip_main.c:2816` | `Invalid pregap action %s` |
+| `cyanrip_main.c:2848` | `No cover art location specified for \"%s\"` |
+| `cyanrip_main.c:2857` | `Invalid track idx for cover art: %lli` |
+| `cyanrip_main.c:2864` | `Cover art already specified for track idx %i!` |
+| `cyanrip_main.c:2876` | `Cover art \"%s\" already specified!` |
+| `cyanrip_main.c:2882` | `Too many cover arts specified!` |
+| `cyanrip_main.c:2892` | `Directory name scheme must contain {format} with multiple output formats!` |
+| `cyanrip_main.c:2897` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` |
+| `cyanrip_main.c:2914` | `-Z %i can never converge with -r %i: it needs %lli reads to agree, and -r %i never allows that many. Use -r %lli or more!` |
+| `cyanrip_main.c:2920` | `-Z %i can never converge with -r %i: it needs %lli reads to agree, more than any -r allows. Use a smaller -Z!` |
+| `cyanrip_main.c:2938` | `Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...` |
+| `cyanrip_main.c:2960` | `Invalid encoder option \"%s\", must be key=value!` |
+| `cyanrip_main.c:2968` | `Unable to store encoder option \"%s\"!` |
+| `cyanrip_main.c:2997` | `Invalid %s naming scheme \"%s\"!` |
+| `cyanrip_main.c:3011` | `Offset is unset! To continue with an offset of 0, run with -s 0!` |
+| `cyanrip_main.c:3102` | `MusicBrainz URL:\n%s` |
+| `cyanrip_main.c:3159` | `Error reading album tags: %s` |
+| `cyanrip_main.c:3225` | `Log(s) will be written to:` |
+| `cyanrip_main.c:3233` | `CUE files will be written to:` |
+| `cyanrip_main.c:3292` | `Invalid track number %i for pregap, list has %i tracks!` |
+| `cyanrip_main.c:3314` | `Invalid track number %lli, list has %i tracks!` |
+| `cyanrip_main.c:3328` | `Missing \"=\" in track metadata \"%s\"` |
+| `cyanrip_main.c:3347` | `Error reading track tags: %s` |
+| `cyanrip_main.c:3386` | `Invalid track number %i, list has %i tracks!` |
+| `cyanrip_main.c:3404` | `Cover art destination(s):` |
+| `cyanrip_main.c:3441` | `WARNING: tracks %i and %i resolve to the same file \"%s\", one will overwrite the other!` |
+| `cyanrip_main.c:3452` | `Tracks:` |
+| `cyanrip_main.c:3467` | `Track %i info:` |
+| `cyanrip_main.c:3486` | `Error initializing decoder: %s` |
+| `cyanrip_main.c:3495` | `Error initializing encoder: %s` |
+| `cyanrip_main.c:3511` | `Error ripping: %s` |
+| `cyanrip_main.c:3542` | `Error encoding: %s` |
+| `cyanrip_main.c:3562` | `Invalid rip index %i, list has %i tracks!` |
 | `discid.c:52` | `Disc has no audio tracks, skipping DiscID generation!` |
 | `discid.c:70` | `Disc TOC is invalid, skipping DiscID generation!` |
 | `discid.c:77` | `Unable to init SHA for DiscID: %s!` |
@@ -562,7 +565,7 @@ or units of any of them is a breaking change and requires a handshake round.
 | `naming.c:316` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:332` | `Invalid condition syntax!` |
 
-**353 distinct stable lines.**
+**355 distinct stable lines.**
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
@@ -581,7 +584,7 @@ and until this generator could follow that hop the contract published it as a
 bare `%s` with none of its wordings, in the document whose whole purpose is
 that the contract cannot describe behaviour we do not have.
 
-**`cyanrip_main.c:3302`** - reaches logfile: yes
+**`cyanrip_main.c:3370`** - reaches logfile: yes
 
 Not derivable: the buffer is built neither by `snprintf` in this
 function nor by a `helper(buf, sizeof(buf), ...)` call in it. It
@@ -636,17 +639,20 @@ P5 rows for error detection even when they appear here.
 | File:line | Line | Reaches logfile? |
 |---|---|---|
 | `cyanrip_encode.c:113` | `%s folder: [%s] extension: %s%s` | **not directly** - see legend |
-| `cyanrip_encode.c:133` | `Encoder for %s not compiled in ffmpeg!` | **not directly** - see legend |
-| `cyanrip_main.c:1013` | `\r` | **not directly** - see legend |
-| `cyanrip_main.c:1073` | `%s` | **not directly** - see legend |
-| `cyanrip_main.c:1771` | `Flushing encoders...` | **not directly** - see legend |
-| `cyanrip_main.c:2225` | `libcdio %s: %s` | **not directly** - see legend |
-| `cyanrip_main.c:2538` | `Log \"%s\" checksum valid.` | **not directly** - see legend |
-| `cyanrip_main.c:2541` | `Log \"%s\" checksum mismatch, the file has been modified!` | **not directly** - see legend |
-| `cyanrip_main.c:2546` | `Log \"%s\" has data after the checksum, the file has been modified!` | **not directly** - see legend |
-| `cyanrip_main.c:2551` | `No FUN512 checksum found in \"%s\"!` | **not directly** - see legend |
-| `cyanrip_main.c:2556` | `Couldn't read \"%s\"!` | **not directly** - see legend |
-| `cyanrip_main.c:3776` | `--diagnostics given %i times; the diagnostics record goes to the last one: \"%s\"` | **not directly** - see legend |
+| `cyanrip_encode.c:164` | `Unable to set up the %s encoder to try encoder options!` | **not directly** - see legend |
+| `cyanrip_encode.c:178` | `Encoder option %s refused by %s: %s` | **not directly** - see legend |
+| `cyanrip_encode.c:181` | `Encoder option %s refused by %s: it has no option \"%s\"` | **not directly** - see legend |
+| `cyanrip_encode.c:230` | `Encoder for %s not compiled in ffmpeg!` | **not directly** - see legend |
+| `cyanrip_main.c:1027` | `\r` | **not directly** - see legend |
+| `cyanrip_main.c:1087` | `%s` | **not directly** - see legend |
+| `cyanrip_main.c:1794` | `Flushing encoders...` | **not directly** - see legend |
+| `cyanrip_main.c:2252` | `libcdio %s: %s` | **not directly** - see legend |
+| `cyanrip_main.c:2569` | `Log \"%s\" checksum valid.` | **not directly** - see legend |
+| `cyanrip_main.c:2572` | `Log \"%s\" checksum mismatch, the file has been modified!` | **not directly** - see legend |
+| `cyanrip_main.c:2577` | `Log \"%s\" has data after the checksum, the file has been modified!` | **not directly** - see legend |
+| `cyanrip_main.c:2582` | `No FUN512 checksum found in \"%s\"!` | **not directly** - see legend |
+| `cyanrip_main.c:2587` | `Couldn't read \"%s\"!` | **not directly** - see legend |
+| `cyanrip_main.c:3859` | `--diagnostics given %i times; the diagnostics record goes to the last one: \"%s\"` | **not directly** - see legend |
 | `genopt.h:411` | `(default: %f)` | yes |
 | `genopt.h:421` | `(default: %hi)` | yes |
 | `genopt.h:426` | `(default: %i)` | yes |
@@ -681,13 +687,16 @@ opposite of the binary's `--verify-log` codes. Platterpus found it.
 | Code | Return/exit sites | Meaning, where the source states one |
 |---|---|---|
 | `0` | 4 | `CRIP_LOG_EXIT_VALID` -- footer present and matching |
-| `1` | 30 | *(the source annotates none)* |
+| `1` | 4 | `CRIP_EXIT_FAILURE` -- every failure no class below names |
 | `2` | 1 | `CRIP_LOG_EXIT_MISMATCH` -- footer present, does not match: modified |
 | `3` | 1 | `CRIP_LOG_EXIT_NO_CHECKSUM` -- no footer: incomplete, NOT a tamper claim |
 | `4` | 1 | `CRIP_LOG_EXIT_TRAILING_DATA` -- footer present, content after it: modified |
 | `5` | 1 | `CRIP_LOG_EXIT_IO_ERROR` -- unreadable: no verdict was reached |
+| `64` | 36 | `CRIP_EXIT_USAGE` -- an argument refused, or a flag this build lacks (EX_USAGE) |
+| `74` | 6 | `CRIP_EXIT_IOERR` -- the disc or drive failed: no device, unopenable, TOC unreadable, medium changed (EX_IOERR) |
+| `128 + quit_signal` | 1 | `CRIP_EXIT_SIGNAL_BASE` -- plus N: a run stopped by signal N, after its log and footer were written |
 
-**Values resolved: `0`, `1`, `2`, `3`, `4`, `5`.** Exit paths that could not be resolved: **none**.
+**Values resolved: `0`, `1`, `2`, `3`, `4`, `5`, `64`, `74`, `128 + quit_signal`.** Exit paths that could not be resolved: **none**.
 
 Followed from the entry point, one hop at a time, so the scope is checkable
 rather than asserted: `main()` -> `cyanrip_run()`.
@@ -695,15 +704,18 @@ Comments and string literals are blanked before scanning, because this file's
 own comments discuss returns and exits and the first version of this
 derivation reported three of them as real paths.
 
-**`1` is the generic failure and carries no class.** For everything except
-`--verify-log`, classification must come from the text, which is why P5
-exists. `--verify-log` is the one surface that discriminates, and its five
-values are wire format: the enum's ORDER is an implementation detail, the
+**Classes, from round 35** (our lap 7 S19, Platterpus's lap 8 S9): `64` an
+argument refused or a flag this build lacks, `74` the disc or drive failed,
+and `128 + N` a run signal N stopped after its footer said so; each meaning
+above is the comment beside its enumerator in the source. **`1` is the
+generic failure and carries no class**, and within any class the text says
+which failure it was, which is why P5 exists. `--verify-log`'s values are
+its own, and wire format: the enum's ORDER is an implementation detail, the
 numbers are not, and they are mapped explicitly for that reason.
 
 No non-zero exit is silent: argument parse failures print before returning,
-and every other `return 1` reachable from the entry point is preceded by a
-`cyanrip_log()` call.
+and every other non-zero return reachable from the entry point is preceded
+by a `cyanrip_log()` call.
 
 Argument validation runs **before the logfile is opened**. Those diagnostics are
 buffered and replayed into the logfile if one is later opened, so a consumer
@@ -796,97 +808,91 @@ must carry the same class.
 | `coverart.c:293` | `Unable to get cover image info: %s!` | wording + goto end | yes |
 | `coverart.c:323` | `Error demuxing cover image: %s!` | wording + goto end | yes |
 | `cue_writer.c:41` | `Couldn't open path \"%s\" for writing: %s!\nInvalid folder name? Try -D <folder>.` | both | yes |
-| `cyanrip_encode.c:133` | `Encoder for %s not compiled in ffmpeg!` | control flow | **not directly** - see legend |
-| `cyanrip_encode.c:376` | `Error creating filter source: %s!` | both | yes |
-| `cyanrip_encode.c:387` | `Error creating filter sink: %s!` | both | yes |
-| `cyanrip_encode.c:401` | `Error setting filter sample format: %s!` | both | yes |
-| `cyanrip_encode.c:409` | `Error setting filter channel layout: %s!` | both | yes |
-| `cyanrip_encode.c:418` | `Error setting filter sample rate: %s!` | both | yes |
-| `cyanrip_encode.c:452` | `Error initializing filter sink: %s!` | both | yes |
-| `cyanrip_encode.c:535` | `Error parsing filter graph: %s!` | both | yes |
-| `cyanrip_encode.c:541` | `Error configuring filter graph: %s!` | both | yes |
-| `cyanrip_encode.c:599` | `Error pushing frame to FIFO: %s!` | wording | yes |
-| `cyanrip_encode.c:727` | `Error filtering frame: %s!` | both | yes |
-| `cyanrip_encode.c:843` | `Error allocating frame!` | both | yes |
-| `cyanrip_encode.c:855` | `Error allocating frame: %s!` | both | yes |
-| `cyanrip_encode.c:997` | `Could not alloc swr context!` | wording | yes |
-| `cyanrip_encode.c:1015` | `Could not init swr context!` | wording | yes |
-| `cyanrip_encode.c:1159` | `Couldn't set metadata: %s!` | both | yes |
-| `cyanrip_encode.c:1202` | `Error while encoding: %s!` | both | yes |
-| `cyanrip_encode.c:1224` | `Error encoding: %s!` | both | yes |
-| `cyanrip_encode.c:1255` | `Error pushing packet to FIFO: %s!` | both | yes |
-| `cyanrip_encode.c:1262` | `Error writing packet: %s!` | both | yes |
-| `cyanrip_encode.c:1292` | `Error writing to file: %s!` | both | yes |
-| `cyanrip_encode.c:1415` | `Codec not found (not compiled in lavc?)!` | control flow | yes |
-| `cyanrip_encode.c:1424` | `Unable to init output avctx!` | both | yes |
-| `cyanrip_encode.c:1435` | `Could not open output codec context!` | both | yes |
-| `cyanrip_encode.c:1442` | `Couldn't copy codec params!` | both | yes |
-| `cyanrip_encode.c:1449` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
-| `cyanrip_main.c:286` | `No device specified and unable to get default device!` | both | yes |
-| `cyanrip_main.c:294` | `Unable to open device: %s` | both | yes |
-| `cyanrip_main.c:303` | `Unable to init cddap context!` | wording | yes |
-| `cyanrip_main.c:305` | `cdio: \"%s\"` | control flow | yes |
-| `cyanrip_main.c:329` | `Unable to open device!` | both | yes |
-| `cyanrip_main.c:345` | `Device does not support changing speeds!` | control flow | yes |
-| `cyanrip_main.c:353` | `Unable to init paranoia!` | both | yes |
-| `cyanrip_main.c:405` | `Invalid number of tracks: %i!` | both | yes |
-| `cyanrip_main.c:440` | `CDIO returned invalid track %i end LSN` | control flow | yes |
-| `cyanrip_main.c:700` | `cdio error: %s` | control flow | yes |
-| `cyanrip_main.c:707` | `Frame read failed!` | control flow | yes |
-| `cyanrip_main.c:800` | `Stopping, offset finding incomplete!` | wording + goto end | yes |
-| `cyanrip_main.c:866` | `No track had AccuRip entry, cannot find offset!` | control flow | yes |
-| `cyanrip_main.c:871` | `No track was long enough, unable to find drive offset!` | control flow | yes |
-| `cyanrip_main.c:981` | `Unable to read track %i subchannel info!` | wording | yes |
-| `cyanrip_main.c:1126` | `Error writing the -Z spool: %s!` | wording | yes |
-| `cyanrip_main.c:1272` | `Drive media changed, stopping!` | wording + goto end | yes |
-| `cyanrip_main.c:1287` | `Frame read failed at LSN %i!` | control flow | yes |
-| `cyanrip_main.c:1297` | `Sector EDC mismatch at LSN %i!` | control flow | yes |
-| `cyanrip_main.c:1305` | `Stopping, ripping incomplete!` | both | yes |
-| `cyanrip_main.c:1315` | `Error writing to \"%s\": %s!` | wording + goto end | yes |
-| `cyanrip_main.c:1444` | `Error creating the -Z spool: %s!` | both | yes |
-| `cyanrip_main.c:1456` | `Error initializing fingerprinting: %s` | both | yes |
-| `cyanrip_main.c:1483` | `Error in decoding/sending frame: %s` | both | yes |
-| `cyanrip_main.c:1757` | `Error reading the -Z spool: %s!` | both | yes |
-| `cyanrip_main.c:1763` | `Error verifying the -Z spool: it does not match the read it was kept for!` | both | yes |
-| `cyanrip_main.c:1777` | `Error sending flush signal to encoders: %s` | wording | yes |
-| `cyanrip_main.c:2556` | `Couldn't read \"%s\"!` | wording | **not directly** - see legend |
-| `cyanrip_main.c:2619` | `Invalid paranoia level %lli must be between 0 and %i!` | both | yes |
-| `cyanrip_main.c:2633` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` | both | yes |
-| `cyanrip_main.c:2645` | `Invalid sanitation method %s` | both | yes |
-| `cyanrip_main.c:2657` | `Invalid release index %lli!` | both | yes |
-| `cyanrip_main.c:2672` | `Missing discnumber` | both | yes |
-| `cyanrip_main.c:2677` | `Invalid discnumber %lli` | both | yes |
-| `cyanrip_main.c:2685` | `Invalid totaldiscs %lli` | both | yes |
-| `cyanrip_main.c:2690` | `discnumber %i is larger than totaldiscs %i` | control flow | yes |
-| `cyanrip_main.c:2711` | `Invalid format \"%s\"` | both | yes |
-| `cyanrip_main.c:2716` | `Duplicated format \"%s\"` | control flow | yes |
-| `cyanrip_main.c:2731` | `Duplicated rip idx %i` | control flow | yes |
-| `cyanrip_main.c:2765` | `Missing track idx for pregap` | both | yes |
-| `cyanrip_main.c:2770` | `Invalid track idx for pregap: %lli` | both | yes |
-| `cyanrip_main.c:2777` | `Missing pregap action` | both | yes |
-| `cyanrip_main.c:2785` | `Invalid pregap action %s` | both | yes |
-| `cyanrip_main.c:2817` | `No cover art location specified for \"%s\"` | both | yes |
-| `cyanrip_main.c:2826` | `Invalid track idx for cover art: %lli` | both | yes |
-| `cyanrip_main.c:2833` | `Cover art already specified for track idx %i!` | control flow | yes |
-| `cyanrip_main.c:2845` | `Cover art \"%s\" already specified!` | control flow | yes |
-| `cyanrip_main.c:2851` | `Too many cover arts specified!` | control flow | yes |
-| `cyanrip_main.c:2861` | `Directory name scheme must contain {format} with multiple output formats!` | control flow | yes |
-| `cyanrip_main.c:2866` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | both | yes |
-| `cyanrip_main.c:2883` | `-Z %i can never converge with -r %i: it needs %lli reads to agree, and -r %i never allows that many. Use -r %lli or more!` | control flow | yes |
-| `cyanrip_main.c:2889` | `-Z %i can never converge with -r %i: it needs %lli reads to agree, more than any -r allows. Use a smaller -Z!` | control flow | yes |
-| `cyanrip_main.c:2936` | `Invalid %s naming scheme \"%s\"!` | wording | yes |
-| `cyanrip_main.c:3096` | `Error reading album tags: %s` | both | yes |
-| `cyanrip_main.c:3228` | `Invalid track number %i for pregap, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:3249` | `Invalid track number %lli, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:3262` | `Missing \"=\" in track metadata \"%s\"` | both | yes |
-| `cyanrip_main.c:3280` | `Error reading track tags: %s` | both | yes |
-| `cyanrip_main.c:3318` | `Invalid track number %i, list has %i tracks!` | both | yes |
-| `cyanrip_main.c:3416` | `Error initializing decoder: %s` | both | yes |
-| `cyanrip_main.c:3425` | `Error initializing encoder: %s` | both | yes |
-| `cyanrip_main.c:3441` | `Error ripping: %s` | wording + goto end | yes |
-| `cyanrip_main.c:3472` | `Error encoding: %s` | wording + goto end | yes |
-| `cyanrip_main.c:3492` | `Invalid rip index %i, list has %i tracks!` | both | yes |
-| `diagnostics.c:779` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
+| `cyanrip_encode.c:164` | `Unable to set up the %s encoder to try encoder options!` | both | **not directly** - see legend |
+| `cyanrip_encode.c:230` | `Encoder for %s not compiled in ffmpeg!` | control flow | **not directly** - see legend |
+| `cyanrip_encode.c:476` | `Error creating filter source: %s!` | both | yes |
+| `cyanrip_encode.c:487` | `Error creating filter sink: %s!` | both | yes |
+| `cyanrip_encode.c:501` | `Error setting filter sample format: %s!` | both | yes |
+| `cyanrip_encode.c:509` | `Error setting filter channel layout: %s!` | both | yes |
+| `cyanrip_encode.c:518` | `Error setting filter sample rate: %s!` | both | yes |
+| `cyanrip_encode.c:552` | `Error initializing filter sink: %s!` | both | yes |
+| `cyanrip_encode.c:635` | `Error parsing filter graph: %s!` | both | yes |
+| `cyanrip_encode.c:641` | `Error configuring filter graph: %s!` | both | yes |
+| `cyanrip_encode.c:699` | `Error pushing frame to FIFO: %s!` | wording | yes |
+| `cyanrip_encode.c:827` | `Error filtering frame: %s!` | both | yes |
+| `cyanrip_encode.c:943` | `Error allocating frame!` | both | yes |
+| `cyanrip_encode.c:955` | `Error allocating frame: %s!` | both | yes |
+| `cyanrip_encode.c:1097` | `Could not alloc swr context!` | wording | yes |
+| `cyanrip_encode.c:1115` | `Could not init swr context!` | wording | yes |
+| `cyanrip_encode.c:1259` | `Couldn't set metadata: %s!` | both | yes |
+| `cyanrip_encode.c:1302` | `Error while encoding: %s!` | both | yes |
+| `cyanrip_encode.c:1324` | `Error encoding: %s!` | both | yes |
+| `cyanrip_encode.c:1355` | `Error pushing packet to FIFO: %s!` | both | yes |
+| `cyanrip_encode.c:1362` | `Error writing packet: %s!` | both | yes |
+| `cyanrip_encode.c:1392` | `Error writing to file: %s!` | both | yes |
+| `cyanrip_encode.c:1510` | `Codec not found (not compiled in lavc?)!` | control flow | yes |
+| `cyanrip_encode.c:1519` | `Unable to init output avctx!` | both | yes |
+| `cyanrip_encode.c:1534` | `Could not open output codec context!` | both | yes |
+| `cyanrip_encode.c:1541` | `Couldn't copy codec params!` | both | yes |
+| `cyanrip_encode.c:1548` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
+| `cyanrip_main.c:288` | `No device specified and unable to get default device!` | both | yes |
+| `cyanrip_main.c:296` | `Unable to open device: %s` | both | yes |
+| `cyanrip_main.c:305` | `Unable to init cddap context!` | wording | yes |
+| `cyanrip_main.c:307` | `cdio: \"%s\"` | control flow | yes |
+| `cyanrip_main.c:331` | `Unable to open device!` | both | yes |
+| `cyanrip_main.c:347` | `Device does not support changing speeds!` | control flow | yes |
+| `cyanrip_main.c:355` | `Unable to init paranoia!` | both | yes |
+| `cyanrip_main.c:407` | `Invalid number of tracks: %i!` | both | yes |
+| `cyanrip_main.c:442` | `CDIO returned invalid track %i end LSN` | control flow | yes |
+| `cyanrip_main.c:714` | `cdio error: %s` | control flow | yes |
+| `cyanrip_main.c:721` | `Frame read failed!` | control flow | yes |
+| `cyanrip_main.c:814` | `Stopping, offset finding incomplete!` | wording + goto end | yes |
+| `cyanrip_main.c:880` | `No track had AccuRip entry, cannot find offset!` | control flow | yes |
+| `cyanrip_main.c:885` | `No track was long enough, unable to find drive offset!` | control flow | yes |
+| `cyanrip_main.c:995` | `Unable to read track %i subchannel info!` | wording | yes |
+| `cyanrip_main.c:1140` | `Error writing the -Z spool: %s!` | wording | yes |
+| `cyanrip_main.c:1286` | `Drive media changed, stopping!` | wording + goto end | yes |
+| `cyanrip_main.c:1302` | `Frame read failed at LSN %i!` | control flow | yes |
+| `cyanrip_main.c:1312` | `Sector EDC mismatch at LSN %i!` | control flow | yes |
+| `cyanrip_main.c:1320` | `Stopping, ripping incomplete!` | both | yes |
+| `cyanrip_main.c:1330` | `Error writing to \"%s\": %s!` | wording + goto end | yes |
+| `cyanrip_main.c:1466` | `Error creating the -Z spool: %s!` | both | yes |
+| `cyanrip_main.c:1478` | `Error initializing fingerprinting: %s` | both | yes |
+| `cyanrip_main.c:1505` | `Error in decoding/sending frame: %s` | both | yes |
+| `cyanrip_main.c:1780` | `Error reading the -Z spool: %s!` | both | yes |
+| `cyanrip_main.c:1786` | `Error verifying the -Z spool: it does not match the read it was kept for!` | both | yes |
+| `cyanrip_main.c:1800` | `Error sending flush signal to encoders: %s` | wording | yes |
+| `cyanrip_main.c:2587` | `Couldn't read \"%s\"!` | wording | **not directly** - see legend |
+| `cyanrip_main.c:2650` | `Invalid paranoia level %lli must be between 0 and %i!` | wording | yes |
+| `cyanrip_main.c:2664` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` | wording | yes |
+| `cyanrip_main.c:2676` | `Invalid sanitation method %s` | wording | yes |
+| `cyanrip_main.c:2688` | `Invalid release index %lli!` | wording | yes |
+| `cyanrip_main.c:2703` | `Missing discnumber` | wording | yes |
+| `cyanrip_main.c:2708` | `Invalid discnumber %lli` | wording | yes |
+| `cyanrip_main.c:2716` | `Invalid totaldiscs %lli` | wording | yes |
+| `cyanrip_main.c:2742` | `Invalid format \"%s\"` | wording | yes |
+| `cyanrip_main.c:2796` | `Missing track idx for pregap` | wording | yes |
+| `cyanrip_main.c:2801` | `Invalid track idx for pregap: %lli` | wording | yes |
+| `cyanrip_main.c:2808` | `Missing pregap action` | wording | yes |
+| `cyanrip_main.c:2816` | `Invalid pregap action %s` | wording | yes |
+| `cyanrip_main.c:2848` | `No cover art location specified for \"%s\"` | wording | yes |
+| `cyanrip_main.c:2857` | `Invalid track idx for cover art: %lli` | wording | yes |
+| `cyanrip_main.c:2897` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | wording | yes |
+| `cyanrip_main.c:2960` | `Invalid encoder option \"%s\", must be key=value!` | wording | yes |
+| `cyanrip_main.c:2968` | `Unable to store encoder option \"%s\"!` | wording | yes |
+| `cyanrip_main.c:2997` | `Invalid %s naming scheme \"%s\"!` | wording | yes |
+| `cyanrip_main.c:3159` | `Error reading album tags: %s` | both | yes |
+| `cyanrip_main.c:3292` | `Invalid track number %i for pregap, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:3314` | `Invalid track number %lli, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:3328` | `Missing \"=\" in track metadata \"%s\"` | both | yes |
+| `cyanrip_main.c:3347` | `Error reading track tags: %s` | both | yes |
+| `cyanrip_main.c:3386` | `Invalid track number %i, list has %i tracks!` | both | yes |
+| `cyanrip_main.c:3486` | `Error initializing decoder: %s` | both | yes |
+| `cyanrip_main.c:3495` | `Error initializing encoder: %s` | both | yes |
+| `cyanrip_main.c:3511` | `Error ripping: %s` | wording + goto end | yes |
+| `cyanrip_main.c:3542` | `Error encoding: %s` | wording + goto end | yes |
+| `cyanrip_main.c:3562` | `Invalid rip index %i, list has %i tracks!` | both | yes |
+| `diagnostics.c:895` | `Couldn't open diagnostics path \"%s\" for writing!` | wording | **not directly** - see legend |
 | `discid.c:77` | `Unable to init SHA for DiscID: %s!` | wording | yes |
 | `genopt.h:268` | `Error parsing \"%s\" as a <type> for argument \"%s\"` | genopt | yes |
 | `genopt.h:279` | `Error parsing %f for argument \"%s\": not in [%f:%f] range!` | genopt | yes |
@@ -919,9 +925,9 @@ must carry the same class.
 | `naming.c:316` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
 | `naming.c:332` | `Invalid condition syntax!` | both | yes |
 
-**138 distinct strings.** By evidence: 72 both, 29 control flow, 15 wording + goto end, 12 wording, 10 genopt.
+**132 distinct strings.** By evidence: 58 both, 29 wording, 20 control flow, 15 wording + goto end, 10 genopt.
 
-The `control flow` and `both` rows total 101 strings proven reachable on a
+The `control flow` and `both` rows total 78 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
 build a hard failure classifier on.
 
@@ -957,11 +963,11 @@ says.
 | `accurip.c:354` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
 | `acoustid.c:281` | `AcoustID submission failed: %s` | goto end | yes |
 | `acoustid.c:299` | `AcoustID: submitted %i fingerprint%s, pending import` | goto end | yes |
-| `cyanrip_main.c:1663` | `Done; (%i out of %i matches for current checksum %08X)` | goto spool_encode | yes |
-| `cyanrip_main.c:1695` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed; last read %08X, not kept)` | goto spool_encode | yes |
-| `cyanrip_main.c:1701` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed)` | goto spool_encode | yes |
-| `cyanrip_main.c:2949` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
-| `cyanrip_main.c:3302` | `%s` | goto end | yes |
+| `cyanrip_main.c:1686` | `Done; (%i out of %i matches for current checksum %08X)` | goto spool_encode | yes |
+| `cyanrip_main.c:1718` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed; last read %08X, not kept)` | goto spool_encode | yes |
+| `cyanrip_main.c:1724` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed)` | goto spool_encode | yes |
+| `cyanrip_main.c:3011` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
+| `cyanrip_main.c:3370` | `%s` | goto end | yes |
 | `musicbrainz.c:396` | `MusicBrainz lookup failed: DiscID has no associated releases.` | goto end_meta | yes |
 | `musicbrainz.c:404` | `MusicBrainz lookup failed: no releases found for DiscID.` | goto end_meta | yes |
 | `musicbrainz.c:466` | `Release ID %s not found in release list for DiscID %s, looking it up` | goto end_meta | yes |
@@ -1066,7 +1072,7 @@ Platterpus asked for this in round 12 §F1 and carried it into round 13.
 
 ### P8a - The schema string, and what a consumer should do with it
 
-This build emits `"schema": "cyanrip-diagnostics/9"` (`diagnostics.c:505`).
+This build emits `"schema": "cyanrip-diagnostics/10"` (`diagnostics.c:621`).
 
 The number after the slash is not a version to compare, it is an
 identity to recognise. A field ADDED to this record is harmless to a
@@ -1176,10 +1182,29 @@ observed null by any record here; that is not a guarantee it cannot be.
 | `rip.track_state[].deemphasis_applied` | bool | **yes** | **no** |
 | `rip.track_state[].eac_crc` | string | **yes** | **no** |
 | `rip.track_state[].encode_failures` | int | -- | **no** |
+| `rip.track_state[].error_positions` | array | **yes** | **no** |
+| `rip.track_state[].error_positions_dropped` | int | **yes** | **no** |
 | `rip.track_state[].isrc_disc` | *(null in every record here)* | **yes** | **no** |
 | `rip.track_state[].isrc_disc_reason` | string | -- | **no** |
 | `rip.track_state[].isrc_written` | string | **yes** | **no** |
 | `rip.track_state[].number` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads` | object | **yes** | **no** |
+| `rip.track_state[].paranoia_all_reads.BACKOFF` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.CACHEERR` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.DRIFT` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.FINISHED` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.FIXUP_ATOM` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.FIXUP_DROPPED` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.FIXUP_DUPED` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.FIXUP_EDGE` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.OVERLAP` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.READ` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.READERR` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.REPAIR` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.SCRATCH` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.SKIP` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.VERIFY` | int | -- | **no** |
+| `rip.track_state[].paranoia_all_reads.WROTE` | int | -- | **no** |
 | `rip.track_state[].preemphasis` | string | **yes** | **no** |
 | `rip.track_state[].repeats` | int | -- | **no** |
 | `rip.track_state[].rip_time_us` | int | -- | **no** |
@@ -1195,13 +1220,35 @@ different fixes.
 
 Emitted by `diagnostics.c` and absent from every record read here -- so reachable only under conditions none of them met:
 
-- `calibration_us` (`diagnostics.c:580`)
-- `hit_below_us` (`diagnostics.c:584`)
-- `miss_cost_us` (`diagnostics.c:583`)
-- `reread_us` (`diagnostics.c:587`)
-- `run_sectors` (`diagnostics.c:587`)
-- `scored_hit` (`diagnostics.c:588`)
-- `steps` (`diagnostics.c:585`)
+- `calibration_us` (`diagnostics.c:696`)
+- `hit_below_us` (`diagnostics.c:700`)
+- `kind` (`diagnostics.c:304`)
+- `lsn` (`diagnostics.c:304`)
+- `miss_cost_us` (`diagnostics.c:699`)
+- `reread_us` (`diagnostics.c:703`)
+- `run_sectors` (`diagnostics.c:703`)
+- `scored_hit` (`diagnostics.c:704`)
+- `steps` (`diagnostics.c:701`)
+
+Present in a record and not found in the source scan -- this
+generator's key extraction is incomplete for these:
+
+- `BACKOFF`
+- `CACHEERR`
+- `DRIFT`
+- `FINISHED`
+- `FIXUP_ATOM`
+- `FIXUP_DROPPED`
+- `FIXUP_DUPED`
+- `FIXUP_EDGE`
+- `OVERLAP`
+- `READ`
+- `READERR`
+- `REPAIR`
+- `SCRATCH`
+- `SKIP`
+- `VERIFY`
+- `WROTE`
 
 ### P8c - Two absences that are deliberate
 
@@ -1248,7 +1295,7 @@ program does.
 
 ### P7a - The default, and the four spellings
 
-**The default is `unicode`.** `cyanrip_main.c:2328` assigns `CRIP_SANITIZE_UNICODE`, and it
+**The default is `unicode`.** `cyanrip_main.c:2357` assigns `CRIP_SANITIZE_UNICODE`, and it
 is the only assignment to `settings.sanitize_method` that is not
 guarded by a `-T` value -- which is how this generator identifies it,
 and why a second unguarded one would be reported here as ambiguous

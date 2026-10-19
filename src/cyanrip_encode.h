@@ -25,6 +25,12 @@ typedef struct cyanrip_enc_ctx cyanrip_enc_ctx;
 
 void cyanrip_print_codecs(void);
 int cyanrip_validate_fmt(const char *fmt);
+
+/* --encoder-option: tries each key=value on every chosen output's encoder,
+ * opened as a rip opens it, before anything is read. 0, or -1 having logged
+ * the encoder's own reason for the first refusal. */
+int crip_check_encoder_options(const AVDictionary *opts, const enum cyanrip_output_formats *outputs,
+                               int nb_outputs, float bitrate, int decode_hdcd);
 const char *cyanrip_fmt_desc(enum cyanrip_output_formats format);
 const char *cyanrip_fmt_folder(enum cyanrip_output_formats format);
 

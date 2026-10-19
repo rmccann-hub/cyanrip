@@ -175,6 +175,87 @@ def disc_skips(text):
     return int(m.group(1)) if m else 0
 
 
+def paranoia_counts(text):
+    """The log's `Paranoia status counts:` blocks, each track's in order
+    (four-space rows) and the disc's (two-space rows). A zero is not printed,
+    so a key that is absent is 0; `Scope:` is not a counter."""
+    tracks, disc, cur, ind = [], None, None, None
+    for line in text.splitlines():
+        if line == "  Paranoia status counts:":
+            cur, ind = {}, "    "
+            tracks.append(cur)
+            continue
+        if line == "Paranoia status counts:":
+            cur, ind = {}, "  "
+            disc = cur
+            continue
+        if cur is None:
+            continue
+        m = re.match(rf"^{ind}([A-Z_]+):\s+(\d+)$", line)
+        if m:
+            cur[m.group(1)] = int(m.group(2))
+        elif not line.startswith(ind + "Scope:"):
+            cur = None
+    return tracks, disc
+
+
+def check_error_positions(label, rec_path, text, first, last, bad, reads_once):
+    """The record's /10 fields against the log of the same rip and against the
+    sector the shim failed (round 35, our lap 7 S18 and S20, Platterpus's
+    lap 8 S8 and S10). Returns nothing; each mismatch is a fail()."""
+    try:
+        rec = json.loads(Path(rec_path).read_text())
+    except Exception as exc:
+        fail(f"{label}: no --diagnostics record to read: {exc}")
+        return
+    states = rec["rip"]["track_state"]
+    blocks, disc = paranoia_counts(text)
+    if len(blocks) != len(states) or disc is None:
+        fail(f"{label}: {len(blocks)} track counter block(s) and disc block "
+             f"{'present' if disc is not None else 'absent'} for {len(states)} "
+             f"track(s)")
+        return
+    total = {}
+    for st, block in zip(states, blocks):
+        n = st["number"]
+        alls = st["paranoia_all_reads"]
+        if not isinstance(alls, dict):
+            fail(f"{label}: track {n} read, and paranoia_all_reads is {alls!r}")
+            continue
+        for k, v in alls.items():
+            total[k] = total.get(k, 0) + v
+        nonzero = {k: v for k, v in alls.items() if v}
+        # The log's block is the last read; a single read makes it the whole.
+        if reads_once and nonzero != block:
+            fail(f"{label}: track {n} read once, so paranoia_all_reads "
+                 f"{nonzero} should be its log block {block}")
+        pos = st["error_positions"]
+        kinds = [e["kind"] for e in pos]
+        if (kinds.count("read_error"), kinds.count("skip"),
+                st["error_positions_dropped"]) != (alls["READERR"], alls["SKIP"], 0):
+            fail(f"{label}: track {n} lists {kinds.count('read_error')} "
+                 f"read_error and {kinds.count('skip')} skip, "
+                 f"{st['error_positions_dropped']} dropped, where its counters "
+                 f"say READERR {alls['READERR']} and SKIP {alls['SKIP']}")
+    # Summed over the tracks, every read of every track is the disc's total,
+    # which the log counts from the process-wide counters, not per track.
+    if {k: v for k, v in total.items() if v} != disc:
+        fail(f"{label}: paranoia_all_reads summed over the tracks is "
+             f"{ {k: v for k, v in total.items() if v} }, the disc block {disc}")
+    if states[0]["error_positions"] != []:
+        fail(f"{label}: track 1 read clean and lists "
+             f"{states[0]['error_positions'][:4]}")
+    lsns = [e["lsn"] for e in states[1]["error_positions"]]
+    errs = [e["lsn"] for e in states[1]["error_positions"] if e["kind"] == "read_error"]
+    if not lsns or any(not (first <= x < last) for x in lsns):
+        fail(f"{label}: track 2's positions {sorted(set(lsns))} are not all "
+             f"inside it, {first}..{last - 1}")
+    if bad not in errs or any(x > bad for x in errs):
+        fail(f"{label}: track 2's read errors start at {sorted(set(errs))}; "
+             f"the failed reads all overlap sector {bad}, so one starts there "
+             f"and none after it")
+
+
 def rip(name, img, *extra, cwd=None):
     # libcdio's cdrdao driver opens a .toc's FILE with the raw relative path
     # instead of the absolute one it just computed (lib/driver/image/cdrdao.c,
@@ -316,8 +397,8 @@ def sc_cli():
     # round).
     #
     # Boundary and one past each, which is what S-9 asks for.
-    for v, want in ((-1048576, 0), (1048576, 0), (-1048577, 1), (1048577, 1),
-                    (-2147483648, 1)):
+    for v, want in ((-1048576, 0), (1048576, 0), (-1048577, 64), (1048577, 64),
+                    (-2147483648, 64)):
         ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
                        "-P", "0", "-s", str(v))
         if ec != want:
@@ -351,8 +432,8 @@ def sc_cli():
     # This pair is the discriminator -- reverting the fix makes "-t 1" exit 0.
     ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0",
                    "-t", "1")
-    if ec != 1:
-        fail(f"cli: bare -t 1 exited {ec}, wanted 1")
+    if ec != 64:
+        fail(f"cli: bare -t 1 exited {ec}, wanted 64, an argument refused")
     if "Missing \"=\" in track metadata" not in out:
         fail(f"cli: bare -t 1 gave no diagnosable message: {out.strip()[:90]!r}")
 
@@ -393,8 +474,8 @@ def sc_cli():
                        "-P", "0", flag, val)
         if ec < 0 or ec == 139:
             fail(f"cli: {flag} {val!r} died by signal (exit {ec})")
-        if ec != 1:
-            fail(f"cli: {flag} {val!r} exited {ec}, wanted 1")
+        if ec != 64:
+            fail(f"cli: {flag} {val!r} exited {ec}, wanted 64, an argument refused")
         if "Missing" not in out:
             fail(f"cli: {flag} {val!r} exited non-zero with no diagnosis: "
                  f"{out.strip()[:90]!r}")
@@ -429,8 +510,8 @@ def sc_cli():
              "Invalid track number 4294967297, list has 2 tracks!")):
         ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
                        flag, val)
-        if ec != 1:
-            fail(f"cli: {flag} {val!r} exited {ec}, wanted 1: it is used "
+        if ec != 64:
+            fail(f"cli: {flag} {val!r} exited {ec}, wanted 64: it is used "
                  f"as a value the caller did not type")
         elif want not in out:
             fail(f"cli: {flag} {val!r} was refused without naming the value "
@@ -450,8 +531,8 @@ def sc_cli():
 
     # A genuinely unknown flag must still fail, diagnosably, on stdout
     ec, out = crip("--no-such-flag")
-    if ec != 1:
-        fail(f"cli: unknown flag exited {ec}, wanted 1")
+    if ec != 64:
+        fail(f"cli: unknown flag exited {ec}, wanted 64, a flag this build lacks")
     if "Unable to parse" not in out:
         fail(f"cli: unknown flag gave no diagnosable message: {out.strip()!r}")
 
@@ -1681,8 +1762,8 @@ def sc_cue_only():
     if "TRACK 01 AUDIO" not in (WORK / "cue.log").read_text():
         fail("cue_only: cue sheet not printed to the terminal")
 
-    if crip("-d", WORK / "basic.cue", "-J", "-I")[0] != 1:
-        fail("cue_only: -J with -I did not error out")
+    if crip("-d", WORK / "basic.cue", "-J", "-I")[0] != 64:
+        fail("cue_only: -J with -I did not error out with 64, an argument refused")
 
     # A quote in a value can't be escaped, and must not end the string
     rip("quotes", "basic.cue", "-J", "-a", 'album=12" Mix:album_artist=A "B"',
@@ -1702,7 +1783,7 @@ def sc_errors():
     # A broken scheme stops the rip before anything is written
     ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
                    "-o", "flac", "-D", WORK / "out_badscheme", "-F", "{track")
-    if ec != 1 or "Invalid track naming scheme" not in log or \
+    if ec != 64 or "Invalid track naming scheme" not in log or \
        (WORK / "out_badscheme").exists():
         fail(f"badscheme: not refused up front (exit {ec})")
 
@@ -1813,15 +1894,21 @@ def sc_exit_codes():
     # rig session rather than something a fixture can retire. What this scenario
     # does pin is that the already-correct cases stay correct, and that a
     # non-zero exit is never silent.
+    #
+    # FROM ROUND 35 EACH CASE ALSO PINS ITS CLASS (our lap 7 S19, Platterpus's
+    # lap 8 S9): 64 for an argument refused or a flag this build lacks, 74 for
+    # the disc or drive, and 1 for a failure with no class, which -f on an
+    # image with no AccurateRip entry is.
     cases = [
         # (argv, expected exit, a string the output must contain)
-        (("-d", str(WORK / "nonexistent.cue"), "-I", "-N", "-A", "-U"), 1, None),
-        (("--no-such-flag",), 1, "Unable to parse command line argument"),
+        (("-d", str(WORK / "nonexistent.cue"), "-I", "-N", "-A", "-U"), 74, None),
+        (("--no-such-flag",), 64, "Unable to parse command line argument"),
         (("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
           "-o", "flac", "-D", WORK / "out_ec", "-F", "{track}", "-t", "99"),
-         1, "Invalid track number 99"),
+         64, "Invalid track number 99"),
         (("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-S", "8"),
-         1, "Device does not support changing speeds"),
+         74, "Device does not support changing speeds"),
+        (("-d", WORK / "basic.cue", "-f", "-N", "-A", "-U"), 1, None),
     ]
     for argv, want_ec, want_text in cases:
         ec, out = crip(*argv)
@@ -2902,9 +2989,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/9":
+        if rec["schema"] != "cyanrip-diagnostics/10":
             fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/9'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/10'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -3985,6 +4072,10 @@ def sc_contract_exit_codes():
         return
     declared = {int(m) for m in re.findall(r"^\| `(\d+)` \|", section.group(0),
                                            re.M)}
+    # `128 + quit_signal` is a value per signal (round 35): the base declares
+    # 128 + 1 to 128 + 64, the signals Linux numbers, and nothing past them.
+    for base in re.findall(r"^\| `(\d+) \+ [a-z_]+` \|", section.group(0), re.M):
+        declared |= {int(base) + n for n in range(1, 65)}
     if not declared:
         fail("contract_exit_codes: P4 declares no codes at all -- a check that "
              "can be satisfied by finding nothing is the failure it guards")
@@ -4014,6 +4105,7 @@ def sc_contract_exit_codes():
         ("help",            ["--help"]),
         ("-I and -J",       ["-d", WORK / "basic.cue", "-I", "-J", "-N", "-A",
                              "-U", "-s", "0"]),
+        ("no device",       ["-d", WORK / "ec_no_such_device", "-I", "-N"]),
     ]
 
     observed = {}
@@ -4318,7 +4410,9 @@ def sc_diagnostics():
     # /8 from round 32 (our lap 1 S10, Platterpus's lap 2 S7): every field an
     # addition, each checked in sc_diag_record_v8(). /9 from the upstream sync
     # of 2026-10-12 adds data_ripped, checked in sc_data_track_completed().
-    if d.get("schema") != "cyanrip-diagnostics/9":
+    # /10 from round 35 adds paranoia_all_reads and error_positions, checked
+    # in sc_bad_sector() and tests/diagrecord.c.
+    if d.get("schema") != "cyanrip-diagnostics/10":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
@@ -4484,8 +4578,9 @@ def sc_diagnostics():
         fail("diagnostics: no record written for a run that wrote no log")
     else:
         r = json.loads(refusal.read_text())
-        if r.get("exit_code") != 1:
-            fail(f"diagnostics: refusal recorded exit_code {r.get('exit_code')!r}")
+        if r.get("exit_code") != 64 or ec != 64:
+            fail(f"diagnostics: refusal exited {ec} and recorded exit_code "
+                 f"{r.get('exit_code')!r}; an argument refused is 64")
         if not any("cannot be used with -I" in m for m in r.get("messages", [])):
             fail(f"diagnostics: the refusal's reason is not in the record: "
                  f"{r.get('messages')}")
@@ -4505,6 +4600,11 @@ def sc_diagnostics():
         if not any("libcdio" in m for m in c.get("messages", [])):
             fail(f"diagnostics: libcdio's own message is not in the record: "
                  f"{c.get('messages')}")
+        # libcdio's error is the disc or drive layer's: 74, in the exit status
+        # and in the record its handler writes before exiting (round 35).
+        if ec != 74 or c.get("exit_code") != 74:
+            fail(f"diagnostics: a libcdio-terminated run exited {ec} and "
+                 f"recorded exit_code {c.get('exit_code')!r}; want 74 for both")
         # rip is null, not absent: "no disc was ever opened" and "a disc with
         # no tracks" are different claims.
         if "rip" not in c or c["rip"] is not None:
@@ -4523,8 +4623,9 @@ def sc_diagnostics():
         fail("diagnostics: no record written for an argument-parsing failure")
     else:
         a = json.loads(argf.read_text())
-        if a.get("exit_code") != 1:
-            fail(f"diagnostics: argfail recorded exit_code {a.get('exit_code')!r}")
+        if a.get("exit_code") != 64 or ec != 64:
+            fail(f"diagnostics: argfail exited {ec} and recorded exit_code "
+                 f"{a.get('exit_code')!r}; a flag this build lacks is 64")
         if not any("Unable to parse command line argument" in m
                    for m in a.get("messages", [])):
             fail(f"diagnostics: genopt's own error is not in the record: "
@@ -5155,15 +5256,18 @@ def sc_verify_log():
     if len(set(observed.values())) != len(observed):
         fail(f"verify_log: verdicts share an exit code: {observed}")
 
-    # And 1 stays reserved for "no verdict was reached": it is what cyanrip
-    # exits with for a rejected command line, so a verdict taking it would make
-    # a modified log indistinguishable from an argv cyanrip refused. Checked
-    # against a real refusal, so it is a statement about this binary.
-    if crip("--verify-log")[0] != 1:
-        fail("verify_log: a --verify-log with no argument no longer exits 1, "
-             "so the reserved 'no verdict' code has moved")
-    if 1 in observed.values():
-        fail(f"verify_log: a verdict took exit code 1: {observed}")
+    # And a rejected command line has a code no verdict takes, so a modified
+    # log is never indistinguishable from an argv cyanrip refused. It is 64
+    # from round 35, an argument refused, and was 1 before it; 1, the generic
+    # failure, is still taken by no verdict. Checked against a real refusal,
+    # so it is a statement about this binary.
+    refused = crip("--verify-log")[0]
+    if refused != 64:
+        fail(f"verify_log: a --verify-log with no argument exited {refused}, "
+             f"not 64, an argument refused")
+    if refused in observed.values() or 1 in observed.values():
+        fail(f"verify_log: a verdict took the refusal's code {refused} or the "
+             f"generic 1: {observed}")
 
     # docs/sample-interrupted.log carries a header explaining what it is, and
     # that header makes two checkable claims about --verify-log: that the file
@@ -5297,8 +5401,10 @@ def sc_interrupt():
             fail(f"interrupt/{name}: still running 60s after the signal")
             continue
 
-        if ec != 1:
-            fail(f"interrupt/{name}: exited {ec}, expected 1")
+        # 128 plus the signal, as a shell reports one, after the footer
+        # said so (round 35, Platterpus's lap 8 S9).
+        if ec != 128 + signo:
+            fail(f"interrupt/{name}: exited {ec}, expected {128 + signo}")
 
         log = out / "log.log"
         if not log.exists():
@@ -5520,6 +5626,115 @@ def sc_argv_probe_names_what_it_did_not_see():
     if got[0] != "accepted" or str(got[3]).lstrip("+") != "667":
         fail(f"argv_probe: -s 667 graded {got!r}; `Offset:` shows it, so it is "
              f"seen to take effect")
+
+
+def sc_argv_probe_reads_the_record():
+    """The argv probe grades `--diagnostics` by the file, not the exit status.
+
+    Platterpus's round 35 lap 8 S7 asked for `--diagnostics` in
+    `docs/seam-commands.md` §7, at an unwritable path and with an empty value.
+    Both exit 0 and write no record, so an exit-status probe calls them
+    accepted, the defect `sc_argv_probe_names_what_it_did_not_see()` holds for
+    header fields. Three arms, each from one real invocation or the grading
+    function itself: a writable path is `accepted` only because the record is
+    there and parses; an unwritable one is `no record` carrying cyanrip's own
+    line; and no record with no line is `ignored`, which `--gate` refuses.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "crip_argv_probe", ROOT / "tools" / "probe-argv-surface.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    image = str(WORK / "basic.cue")
+    rec = WORK / "argv-probe-record.json"
+    rec.unlink(missing_ok=True)
+    got = mod.probe(str(CRIP), image, "--diagnostics", rec.name)
+    if got[0] != "accepted" or not rec.is_file():
+        fail(f"argv_probe: --diagnostics {rec.name} graded {got!r}, record "
+             f"{'present' if rec.is_file() else 'absent'}; accepted means the "
+             f"record was found")
+    rec.unlink(missing_ok=True)
+    got = mod.probe(str(CRIP), image, "--diagnostics", "/nonexistent/rec.json")
+    want = 'Couldn\'t open diagnostics path "/nonexistent/rec.json" for writing!'
+    if got[0] != "no record" or got[2] != want:
+        fail(f"argv_probe: --diagnostics at an unwritable path graded {got!r}; "
+             f"it writes no record and says {want!r}")
+    got = mod.record_outcome("", str(WORK), "never-written.json")
+    if got[0] != "ignored":
+        fail(f"argv_probe: no record and no line graded {got!r}; that is a "
+             f"value silently ignored, which --gate must refuse")
+
+
+def sc_encoder_option():
+    """`--encoder-option key=value` reaches every output's encoder, and an
+    encoder that refuses one ends the run in its own words before anything is
+    read (round 35, our lap 7 S21, Platterpus's lap 8 S11).
+
+    Each arm against something other than our own wording where one exists:
+      * it takes effect: FLAC at compression_level=0 is larger than at the
+        default, measured on the files;
+      * an unknown key, a bad value and a value only the encoder's own init
+        refuses each exit 64 with `Encoder option "k=v" refused by <encoder>:`
+        and a reason, and write no file at all. The reasons are FFmpeg's and
+        differ between its versions, so only their presence is asserted;
+      * a key one output's encoder does not take is refused by that encoder,
+        not by the first: lpc_type is FLAC's, so -o flac,tta names tta;
+      * a malformed argument is ours to refuse, with its own line;
+      * a key given twice keeps the last.
+    """
+    base = ["-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+            "-F", "{track}", "-L", "log", "-M", "sheet", "-l", "1"]
+
+    def run(name, *extra, fmt="flac"):
+        out = WORK / f"encopt_{name}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, log = crip(*base, "-o", fmt, "-D", f"{out}" + ("_{format}" if "," in fmt else ""),
+                       *extra)
+        return ec, log, out
+
+    ec, log, ctl = run("default")
+    ec0, log0, lvl0 = run("level0", "--encoder-option", "compression_level=0")
+    a, b = ctl / "1.flac", lvl0 / "1.flac"
+    if ec or ec0 or not a.is_file() or not b.is_file():
+        fail(f"encoder_option: control exit {ec}, compression_level=0 exit {ec0}; "
+             f"{log0.splitlines()[-1:] }")
+    elif b.stat().st_size <= a.stat().st_size:
+        fail(f"encoder_option: compression_level=0 wrote {b.stat().st_size} bytes "
+             f"against the default's {a.stat().st_size}, so the option did not "
+             f"reach the encoder")
+
+    for name, opt in (("unknown", "bogus=1"), ("badvalue", "compression_level=abc"),
+                      ("initrefuses", "compression_level=99")):
+        ec, log, out = run(name, "--encoder-option", opt)
+        last = log.rstrip().splitlines()[-1] if log.strip() else ""
+        want = f'Encoder option "{opt}" refused by flac: '
+        if ec != 64 or not last.startswith(want) or len(last) == len(want):
+            fail(f"encoder_option: {opt}: exit {ec}, last line {last!r}; want exit 64 "
+                 f"and {want!r} with a reason")
+        if out.exists():
+            fail(f"encoder_option: {opt} was refused and {out.name} was created")
+    ec, log, _ = run("unknown2", "--encoder-option", "bogus=1")
+    if 'refused by flac: it has no option "bogus"' not in log:
+        fail(f"encoder_option: an unknown key does not say the encoder has no such "
+             f"option: {log.splitlines()[-1:]}")
+
+    ec, log, out = run("second", "--encoder-option", "lpc_type=none", fmt="flac,tta")
+    last = log.rstrip().splitlines()[-1] if log.strip() else ""
+    if ec != 64 or not last.startswith('Encoder option "lpc_type=none" refused by tta: '):
+        fail(f"encoder_option: lpc_type under -o flac,tta: exit {ec}, {last!r}; FLAC "
+             f"takes it and TTA does not, so TTA must be the one refusing")
+
+    for opt in ("noequals", "=x"):
+        ec, log, _ = run("malformed", "--encoder-option", opt)
+        want = f'Invalid encoder option "{opt}", must be key=value!'
+        if ec != 64 or want not in log.splitlines():
+            fail(f"encoder_option: {opt!r}: exit {ec}, want 64 and {want!r}")
+
+    ec, log, twice = run("twice", "--encoder-option", "compression_level=99",
+                         "--encoder-option", "compression_level=0")
+    c = twice / "1.flac"
+    if ec or not c.is_file() or not b.is_file() or c.stat().st_size != b.stat().st_size:
+        fail(f"encoder_option: compression_level=99 then =0 exit {ec}; the last "
+             f"given should win and match the =0 rip byte count")
 
 
 def sc_mutation_exclusions_are_pinned():
@@ -6266,9 +6481,9 @@ def sc_signal_after_last_frame():
         fail("signal_after_last_frame: the shim never raised the signal, so "
              "nothing below tests the window it targets")
         return
-    if ec != 1:
-        fail(f"signal_after_last_frame: exited {ec}, expected 1 for an "
-             f"interrupted rip")
+    if ec != 128 + signal.SIGTERM:
+        fail(f"signal_after_last_frame: exited {ec}, expected "
+             f"{128 + signal.SIGTERM} for a rip SIGTERM interrupted")
     log = out / "log.log"
     if not log.exists():
         fail("signal_after_last_frame: no logfile was written")
@@ -6416,8 +6631,8 @@ def sc_interrupt_deadlock():
         finally:
             t.join(timeout=5)
 
-        if ec != 1:
-            fail(f"interrupt_deadlock: exited {ec}, expected 1")
+        if ec != 128 + signal.SIGINT:
+            fail(f"interrupt_deadlock: exited {ec}, expected {128 + signal.SIGINT}")
 
         log = out / "log.log"
         if not log.exists():
@@ -7027,10 +7242,12 @@ def sc_bad_sector():
                    # link order; the shim only interposes stdio.
                    ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
                    + ":verify_asan_link_order=0")
+        rec = WORK / f"bad_sector_{r}.json"
         try:
             ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                            "-r", r, "-o", "pcm", "-D", out, "-F", "{track}",
-                           "-L", "log", "-M", "sheet", env=env)
+                           "-L", "log", "-M", "sheet", "--diagnostics", rec,
+                           env=env)
         except subprocess.TimeoutExpired:
             fail(f"bad_sector: -r {r} did not return within crip()'s timeout on "
                  f"one unreadable sector -- the per-frame limit is not reaching "
@@ -7076,8 +7293,38 @@ def sc_bad_sector():
         if any(t2[i * sec:(i + 1) * sec] != bytes(sec) for i in differ):
             fail(f"bad_sector: -r {r}: a damaged sector holds non-zero audio -- "
                  f"invented rather than skipped")
+        check_error_positions(f"bad_sector: -r {r}", rec, text, 300, 600, bad, True)
         note(f"bad_sector: -r {r}: {failed} failed read(s); sectors "
              f"{[300 + i for i in differ]} zeroed, the rest identical to the source")
+
+    # -Z 2: every track read three times, so a track's log block is the last
+    # read and paranoia_all_reads is all three. On a fixture read once the two
+    # agree by construction and cannot tell each other apart, which is the
+    # round-5 defect the record exists to avoid; this run separates them.
+    out, rec = WORK / "out_bad_sector_z", WORK / "bad_sector_z.json"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+               CRIP_BAD_SECTOR=str(bad), CRIP_BAD_OUT=str(WORK / "bad_sector_z.count"),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    try:
+        ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                       "-r", "10", "-Z", "2", "-o", "pcm", "-D", out,
+                       "-F", "{track}", "-L", "log", "-M", "sheet",
+                       "--diagnostics", rec, env=env)
+    except subprocess.TimeoutExpired:
+        fail("bad_sector: -Z 2 did not return within crip()'s timeout")
+        return
+    text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+    check_error_positions("bad_sector: -Z 2", rec, text, 300, 600, bad, False)
+    blocks, _ = paranoia_counts(text)
+    try:
+        alls = json.loads(rec.read_text())["rip"]["track_state"][1]["paranoia_all_reads"]
+    except Exception:
+        alls = None
+    if len(blocks) == 2 and alls and alls["READ"] <= blocks[1].get("READ", 0):
+        fail(f"bad_sector: -Z 2: track 2's paranoia_all_reads READ {alls['READ']} "
+             f"is not above its last read's {blocks[1].get('READ', 0)}, so it "
+             f"does not cover every read")
 
 
 def sc_p0_bad_sector():
@@ -7651,13 +7898,13 @@ def sc_zr_refusal():
     """
     base = ("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0", "-I")
     cases = (
-        (("-Z", "2", "-r", "2"), 1,
+        (("-Z", "2", "-r", "2"), 64,
          "-Z 2 can never converge with -r 2: it needs 3 reads to agree, and -r 2 "
          "never allows that many. Use -r 3 or more!"),
-        (("-Z", "1", "-r", "0"), 1,
+        (("-Z", "1", "-r", "0"), 64,
          "-Z 1 can never converge with -r 0: it needs 2 reads to agree, and -r 0 "
          "never allows that many. Use -r 2 or more!"),
-        (("-Z", "2147483647"), 1,
+        (("-Z", "2147483647"), 64,
          "-Z 2147483647 can never converge with -r 10: it needs 2147483648 reads "
          "to agree, more than any -r allows. Use a smaller -Z!"),
         (("-Z", "2", "-r", "3"), 0, None),

@@ -115,6 +115,103 @@ void cyanrip_print_codecs(void)
     }
 }
 
+static AVCodecContext *setup_out_avctx(cyanrip_ctx *ctx, AVFormatContext *avf,
+                                       const AVCodec *codec, const cyanrip_out_fmt *cfmt,
+                                       float bitrate, int decode_hdcd, int deemphasis);
+
+static const AVCodec *crip_out_codec(const cyanrip_out_fmt *cfmt, int decode_hdcd)
+{
+    if (cfmt->codec == AV_CODEC_ID_NONE)
+        return avcodec_find_encoder(decode_hdcd ? AV_CODEC_ID_PCM_S32 :
+                                                  AV_CODEC_ID_PCM_S16);
+    return avcodec_find_encoder(cfmt->codec);
+}
+
+/* FFmpeg's own words for a refusal. Its log is silenced for the whole run
+ * (main() sets AV_LOG_QUIET), so they are taken here, while one option is
+ * tried, rather than switched on for everything. The line is formatted with
+ * no "[flac @ 0x...]" prefix: an address would make two runs' logs differ. */
+static char crip_enc_refusal[512];
+
+static void crip_enc_refusal_log(void *avcl, int lvl, const char *fmt, va_list vl)
+{
+    if (lvl > AV_LOG_ERROR)
+        return;
+    /* Every error line, joined: a bad value gets two, the parser's and the
+     * option system's, and the second is the one that names the value. */
+    char line[256];
+    int print_prefix = 0;
+    av_log_format_line2(avcl, lvl, fmt, vl, line, sizeof(line), &print_prefix);
+    size_t n = strlen(line);
+    while (n && (line[n - 1] == '\n' || line[n - 1] == ' '))
+        line[--n] = '\0';
+    if (!n)
+        return;
+    size_t have = strlen(crip_enc_refusal);
+    snprintf(crip_enc_refusal + have, sizeof(crip_enc_refusal) - have, "%s%s",
+             have ? "; " : "", line);
+}
+
+/* Opens cfmt's encoder as a rip would, with opts, and says whether it took
+ * them: 0, or -1 having logged why, naming `what`. */
+static int crip_try_encoder_options(const AVDictionary *opts, const cyanrip_out_fmt *cfmt,
+                                    float bitrate, int decode_hdcd, const char *what)
+{
+    const AVCodec *codec = crip_out_codec(cfmt, decode_hdcd);
+    AVCodecContext *avctx = codec ? setup_out_avctx(NULL, NULL, codec, cfmt, bitrate,
+                                                    decode_hdcd, 0) : NULL;
+    if (!avctx) {
+        cyanrip_log(NULL, 0, "Unable to set up the %s encoder to try encoder options!\n",
+                    cfmt->name);
+        return -1;
+    }
+
+    AVDictionary *left = NULL;
+    av_dict_copy(&left, opts, 0);
+    crip_enc_refusal[0] = '\0';
+    av_log_set_callback(crip_enc_refusal_log);
+    int ret = avcodec_open2(avctx, codec, &left);
+    av_log_set_callback(av_log_default_callback);
+
+    const AVDictionaryEntry *e = av_dict_get(left, "", NULL, AV_DICT_IGNORE_SUFFIX);
+    if (ret < 0)
+        cyanrip_log(NULL, 0, "Encoder option %s refused by %s: %s\n", what, codec->name,
+                    crip_enc_refusal[0] ? crip_enc_refusal : av_err2str(ret));
+    else if (e)
+        cyanrip_log(NULL, 0, "Encoder option %s refused by %s: it has no option \"%s\"\n",
+                    what, codec->name, e->key);
+
+    avcodec_free_context(&avctx);
+    av_dict_free(&left);
+    return (ret < 0 || e) ? -1 : 0;
+}
+
+int crip_check_encoder_options(const AVDictionary *opts, const enum cyanrip_output_formats *outputs,
+                               int nb_outputs, float bitrate, int decode_hdcd)
+{
+    /* One key at a time first, so a refusal names the option it was for:
+     * FFmpeg's words for a bad value ("Unable to parse option value") do not
+     * always name the key. Then all of them together, as a rip passes them. */
+    for (int i = 0; i < nb_outputs; i++) {
+        const cyanrip_out_fmt *cfmt = &crip_fmt_info[outputs[i]];
+        const AVDictionaryEntry *e = NULL;
+        while ((e = av_dict_get(opts, "", e, AV_DICT_IGNORE_SUFFIX))) {
+            AVDictionary *one = NULL;
+            av_dict_set(&one, e->key, e->value, 0);
+            char what[256];
+            snprintf(what, sizeof(what), "\"%s=%s\"", e->key, e->value);
+            int ret = crip_try_encoder_options(one, cfmt, bitrate, decode_hdcd, what);
+            av_dict_free(&one);
+            if (ret < 0)
+                return ret;
+        }
+        if (av_dict_count(opts) > 1 &&
+            crip_try_encoder_options(opts, cfmt, bitrate, decode_hdcd, "set") < 0)
+            return -1;
+    }
+    return 0;
+}
+
 int cyanrip_validate_fmt(const char *fmt)
 {
     for (int i = 0; i < CYANRIP_FORMATS_NB; i++) {
@@ -292,16 +389,19 @@ static int pick_codec_sample_rate(const AVCodec *codec)
     return ret;
 }
 
+/* ctx and avf may be NULL: crip_check_encoder_options() sets an encoder up
+ * this way before there is a context or a file, so that it is tried exactly
+ * as a rip will open it. */
 static AVCodecContext *setup_out_avctx(cyanrip_ctx *ctx, AVFormatContext *avf,
                                        const AVCodec *codec, const cyanrip_out_fmt *cfmt,
-                                       int decode_hdcd, int deemphasis)
+                                       float bitrate, int decode_hdcd, int deemphasis)
 {
     AVCodecContext *avctx = avcodec_alloc_context3(codec);
     if (!avctx)
         return NULL;
 
     avctx->opaque                = ctx;
-    avctx->bit_rate              = cfmt->lossless ? 0 : lrintf(ctx->settings.bitrate*1000.0f);
+    avctx->bit_rate              = cfmt->lossless ? 0 : lrintf(bitrate*1000.0f);
     avctx->sample_fmt            = pick_codec_sample_fmt(codec, decode_hdcd);
     avctx->ch_layout             = pick_codec_channel_layout(codec);
     avctx->compression_level     = cfmt->compression_level;
@@ -314,7 +414,7 @@ static AVCodecContext *setup_out_avctx(cyanrip_ctx *ctx, AVFormatContext *avf,
     else if (cfmt->lossless)
         avctx->bits_per_raw_sample = 16;
 
-    if (avf->oformat->flags & AVFMT_GLOBALHEADER)
+    if (avf && (avf->oformat->flags & AVFMT_GLOBALHEADER))
         avctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
     return avctx;
@@ -1404,12 +1504,7 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
     }
 
     /* Find encoder */
-    if (cfmt->codec == AV_CODEC_ID_NONE)
-        out_codec = avcodec_find_encoder(ctx->settings.decode_hdcd ?
-                                         AV_CODEC_ID_PCM_S32 :
-                                         AV_CODEC_ID_PCM_S16);
-    else
-        out_codec = avcodec_find_encoder(cfmt->codec);
+    out_codec = crip_out_codec(cfmt, ctx->settings.decode_hdcd);
 
     if (!out_codec) {
         cyanrip_log(ctx, 0, "Codec not found (not compiled in lavc?)!\n");
@@ -1418,7 +1513,7 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
     }
 
     /* Output avctx */
-    s->out_avctx = setup_out_avctx(ctx, s->avf, out_codec, cfmt,
+    s->out_avctx = setup_out_avctx(ctx, s->avf, out_codec, cfmt, ctx->settings.bitrate,
                                    ctx->settings.decode_hdcd, deemphasis);
     if (!s->out_avctx) {
         cyanrip_log(ctx, 0, "Unable to init output avctx!\n");
@@ -1429,8 +1524,12 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
     s->st_aud->time_base = (AVRational){ 1, s->out_avctx->sample_rate };
     s->audio_stream_index = s->st_aud->index;
 
-    /* Open encoder */
-    ret = avcodec_open2(s->out_avctx, out_codec, NULL);
+    /* Open encoder, with --encoder-option's keys, which were each tried on
+     * this encoder before anything was read (crip_check_encoder_options()) */
+    AVDictionary *enc_opts = NULL;
+    av_dict_copy(&enc_opts, ctx->settings.encoder_opts, 0);
+    ret = avcodec_open2(s->out_avctx, out_codec, &enc_opts);
+    av_dict_free(&enc_opts);
     if (ret < 0) {
         cyanrip_log(ctx, 0, "Could not open output codec context!\n");
         goto fail;

@@ -175,12 +175,13 @@ typedef struct cyanrip_settings {
     enum coverart_lookup_sizes coverart_lookup_size;
     int enable_replaygain;
     int cache_probe;
-    char *consumer_id; /* -x: measure the drive's readback cache before ripping */
+    char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
     int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
     int generate_cue_only;
     int disable_data_tracks;
     int disable_acoustid;
     char *acoustid_key; /* User API key, to submit fingerprints with */
+    AVDictionary *encoder_opts; /* --encoder-option, to every output's encoder */
 
     enum cyanrip_output_formats outputs[CYANRIP_FORMATS_NB];
     int outputs_num;
@@ -210,6 +211,31 @@ typedef struct CRIPArt {
  * -offset stay defined; see the note at the option table. */
 #define CRIP_MAX_OFFSET_SAMPLES 1048576
 
+/* The process's exit status, round 35 (our lap 7 S19, Platterpus's lap 8 S9).
+ * Three classes beside the generic failure, each clear of 125 to 127, which
+ * podman exec takes for errors of its own; --verify-log's 2 to 5 are its own
+ * enum (fun512.h) and do not move. The comment on each line is its meaning in
+ * PROVIDER-CONTRACT.md's P4, which is derived from it. */
+enum CRIPExitCode {
+    CRIP_EXIT_FAILURE     = 1,   /* every failure no class below names */
+    CRIP_EXIT_USAGE       = 64,  /* an argument refused, or a flag this build lacks (EX_USAGE) */
+    CRIP_EXIT_IOERR       = 74,  /* the disc or drive failed: no device, unopenable, TOC unreadable, medium changed (EX_IOERR) */
+    CRIP_EXIT_SIGNAL_BASE = 128, /* plus N: a run stopped by signal N, after its log and footer were written */
+};
+
+/* One position paranoia's status callback reported, as the sector it names:
+ * the callback passes a position in 16-bit words, which cd-paranoia itself
+ * divides by CD_FRAMEWORDS. */
+#define CRIP_ERROR_POS_HALF 500
+enum CRIPErrorPosKind {
+    CRIP_ERROR_POS_READ_ERROR,  /* PARANOIA_CB_READERR */
+    CRIP_ERROR_POS_SKIP,        /* PARANOIA_CB_SKIP */
+};
+typedef struct CRIPErrorPos {
+    lsn_t lsn;
+    enum CRIPErrorPosKind kind;
+} CRIPErrorPos;
+
 typedef struct cyanrip_track {
     int number; /* Human readable track number, may be 0 */
     int cd_track_number; /* Actual track on the CD, may be 0 */
@@ -234,6 +260,26 @@ typedef struct cyanrip_track {
      * where every track reported `not attempted`, which is the one condition
      * that forces the sum arithmetically. */
     uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1];
+    /* The same counters over EVERY read of this track, -Z re-reads included,
+     * from a baseline taken once, before `repeat_ripping:`. The record's
+     * paranoia_all_reads (round 35, our lap 7 S20, Platterpus's lap 8 S10).
+     * For a track read once it equals paranoia_status. Meaningful only when
+     * read_attempted is set. */
+    uint64_t paranoia_status_all[PARANOIA_CB_FINISHED + 1];
+    /* The track's read ran and reached its end, interrupted or not: what
+     * separates "read, nothing counted" from "never read" in the record. */
+    int read_attempted;
+    /* Where paranoia reported a hard read error or a skip, over every read of
+     * this track: the record's error_positions (round 35, our lap 7 S18,
+     * Platterpus's lap 8 S8). The first CRIP_ERROR_POS_HALF entries, then a
+     * ring of the last CRIP_ERROR_POS_HALF, so a run of errors near the end
+     * of a track is not what a cap loses; error_pos_dropped counts the middle.
+     * See crip_error_pos_add(). */
+    CRIPErrorPos *error_pos;
+    int nb_error_pos_head;
+    int nb_error_pos_tail;
+    int error_pos_tail_next;
+    uint64_t error_pos_dropped;
     enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
     /* Whether this track's audio was ripped AND finalised. Set beside one of
      * the two places ctx->tracks_completed is incremented, data_ripped beside
@@ -512,6 +558,10 @@ typedef struct cyanrip_ctx {
         CRIP_CUE_SHEET_ONLY,
         CRIP_OFFSET_SEARCH_ONLY,
     } not_a_rip;
+    /* The exit class a failure set where it happened, CRIP_EXIT_USAGE or
+     * CRIP_EXIT_IOERR, or 0 for the generic one; cyanrip_run() reads it at
+     * the end, before the context is freed. Round 35. */
+    int exit_class;
     lsn_t start_lsn;
     lsn_t end_lsn;
     lsn_t duration_frames;

@@ -156,6 +156,7 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 |                      | **Output options**                                                                          |
 | -o `list`            | Comma separated list of output formats (encodings). Use "help" to list all. Default is flac |
 | -b `int`             | Bitrate in kbps for lossy formats, 256 by default                                           |
+| --encoder-option `k=v` | Pass an option to every output's encoder, as FFmpeg names it, e.g. `compression_level=0`; repeatable, the last of a key wins, and one an encoder refuses ends the run in its words before anything is read (fork) |
 | -D `string`          | Directory naming scheme, see [below](#naming-scheme)                                        |
 | -F `string`          | File naming scheme, see [below](#naming-scheme)                                             |
 | -L `string`          | Log naming scheme, see [below](#naming-scheme)                                              |

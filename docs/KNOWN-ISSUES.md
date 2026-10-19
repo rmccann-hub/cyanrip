@@ -972,6 +972,29 @@ fetched: up to about 87% of its 120 s timeout, and rising. CI's evidence job, wh
 whether the evidence is fetched, and a timeout chosen before the move did not
 account for that.
 
+**The cause, established 2026-10-19 from the first killed run to name its
+rows.** Pull request #43 at `8ee5138`, `macos`, `Settled facts TIMEOUT
+120.03s` (job 118191184329): the slowest rows were `grep -h '^Rip
+completed:' docs/rig-2026-0*/rips/cancel-me.log` at 25.39 s, two
+`docs/rig-*/rips/secure-reread.log` rows at 22.95 and 19.80 s, and a third
+running for 22.2 s when killed. Each named run evidence through a glob, and
+`run_row` overlaid **every file of every folder** a path named: 660 files for
+the first, 1,015 (about 114 MB) for the others, one `git cat-file` each, to
+read 16 and 19. That only happens once the evidence can be read, and in a
+suite job it becomes readable part-way through: `Lap statements are well
+formed` fetches the evidence branch into `.git/cyanrip-evidence.git` when a
+lap cites evidence (`tools/lap-statements.py`), beside `Settled facts`. A row
+reached before the fetch is unprobed in milliseconds; one reached after it
+reads the whole overlay, about 6 s here and 20 to 25 s on the macOS runner.
+**That race is why the time never followed the tree**, and why the
+measurement above found evidence rows slow wherever the branch was fetched.
+**Fixed by `783ee7c`**: `evidence.files_named()` gives a row the files it
+names, a folder or an unreadable pattern still giving every file, so the 36
+rows' overlays go from 4,721 files to 317 and those two rows take 0.11 and
+0.12 s here; `tests/evidence_tool.py` fails when either half is reverted.
+**Still open, and not fixed by it:** whether those rows run or are unprobed
+in a suite job still depends on which test reaches the cache first.
+
 ### `docs/seam-commands.md` carried FIVE known-wrong statements — ALL FIXED in round 30
 
 **Consolidated here 2026-09-15.** They were recorded in two different files, one

@@ -897,10 +897,13 @@ because they change what a commit must contain:
   Report three numbers every round: `verified`, `documented-untested`,
   `not-probed`, plus the tests added.
 - **S-12 — an error code that distinguishes nothing is a defect row, not a
-  datum.** Ours is `1` for every failure but `--verify-log`'s, whose codes 2 to
-  5 distinguish (P4); elsewhere the *messages* distinguish, so they
-  are contract surface and S-11 asserts on them. The `generic` grade stays
-  visible until fixed or accepted with a reason.
+  datum.** Ours were `1` for every failure but `--verify-log`'s 2 to 5 until
+  round 35, which added three classes (P4, Platterpus's lap 8 S9): `64` an
+  argument refused or a flag this build lacks, `74` the disc or drive, and
+  `128 + N` a run signal N stopped. `1` is still every other failure, so within
+  it, and within each class, the *messages* distinguish, and they are contract
+  surface that S-11 asserts on. The `generic` grade stays visible until fixed
+  or accepted with a reason.
 
 **And a rule about documents, adopted in round 7 lap 29:**
 
@@ -1285,6 +1288,15 @@ seven headings are `## 1. Timeline` to `## 7. …`, with NOTEs under each; and a
 fact goes in an `evidence:` field under its NOTE, which both checkers resolve (a
 missing path is refused as `LSL.4` by both). `## Diagnostics` may follow
 `## Verdict`: neither checker requires the verdict last.
+
+**A time written to the operator is US Eastern time (`America/New_York`) on a
+12-hour clock, with the zone**: `1:45 PM EDT`, `9:10 AM EST`. The operator's
+word of 2026-10-19, *"moving forward, and forever"*. It covers replies and the
+HANDOFF block, whose template says `<UTC time>`, so the block gives both:
+`HANDOFF from fork, 2:35 PM EDT (18:35 UTC)`. Wire values stay UTC: a lap's
+headers and statements, commit dates, `STATUS.md`, and anything else either
+side's tools read, because both projects' records are in UTC and a second zone
+in them is a second description of one instant.
 
 ## Run evidence lives on the `evidence` branch (HR-2)
 

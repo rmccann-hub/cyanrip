@@ -129,6 +129,7 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
     av_dict_free(&t->meta);
     av_dict_free(&t->cdtext);
     av_freep(&t->isrc_disc);
+    crip_error_pos_free(t);
     av_free(t->ar_db_entries);
     av_free(t->acoustid_fingerprint);
 }
@@ -161,6 +162,7 @@ static void cyanrip_ctx_end(cyanrip_ctx **s)
         cdio_destroy(ctx->cdio);
 
     free(ctx->settings.dev_path);
+    av_dict_free(&ctx->settings.encoder_opts);
     av_dict_free(&ctx->meta);
     av_dict_free(&ctx->cdtext);
     av_freep(&ctx);
@@ -625,10 +627,22 @@ uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1] = { 0 };
  * why the earlier callback-driven version could not. */
 static int crip_reading_track;
 
+/* The track whose read is in progress, for the positions the callback
+ * reports; NULL outside a track's read. The callback carries no context
+ * pointer, as the counters above say. */
+static cyanrip_track *crip_positions_track;
+
 static void status_cb(long int n, paranoia_cb_mode_t status)
 {
     if (status >= PARANOIA_CB_READ && status <= PARANOIA_CB_FINISHED)
         paranoia_status[status]++;
+    /* n is in 16-bit words for both, as cd-paranoia reads it: the first
+     * sector of a read that failed, and the end of what was verified. */
+    if (crip_positions_track &&
+        (status == PARANOIA_CB_READERR || status == PARANOIA_CB_SKIP))
+        crip_error_pos_add(crip_positions_track, n / CD_FRAMEWORDS,
+                           status == PARANOIA_CB_SKIP ? CRIP_ERROR_POS_SKIP :
+                                                        CRIP_ERROR_POS_READ_ERROR);
 }
 
 /* Under -O, a frame outside the disc is read once, through the cdda layer
@@ -1270,6 +1284,7 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
         /* Detect disc removals */
         if (get_media_changed(ctx->cdio)) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
+            ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
             goto end;
         }
@@ -1412,6 +1427,13 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
      * correct: the read did not finish. */
     ctx->track_read_incomplete = t->number;
 
+    /* Every read of this track, taken once, before the label a -Z re-read
+     * returns to: paranoia_all_reads and error_positions cover them all. */
+    uint64_t start_paranoia_all[PARANOIA_CB_FINISHED + 1];
+    memcpy(start_paranoia_all, paranoia_status, sizeof(start_paranoia_all));
+    crip_error_pos_free(t);
+    crip_positions_track = t;
+
 repeat_ripping:;
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;
@@ -1495,6 +1517,7 @@ repeat_ripping:;
         /* Detect disc removals */
         if (get_media_changed(ctx->cdio)) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
+            ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
             goto fail;
         }
@@ -1853,8 +1876,12 @@ end:
 
     t->total_repeats = total_repeats;
     t->rip_time_us = av_gettime_relative() - track_start_time;
-    for (int i = 0; i <= PARANOIA_CB_FINISHED; i++)
+    for (int i = 0; i <= PARANOIA_CB_FINISHED; i++) {
         t->paranoia_status[i] = paranoia_status[i] - start_paranoia[i];
+        t->paranoia_status_all[i] = paranoia_status[i] - start_paranoia_all[i];
+    }
+    t->read_attempted = 1;
+    crip_positions_track = NULL;
     if (!quit_now && !ret) {
         cyanrip_finalize_encoding(ctx, t);
         if (ctx->settings.enable_replaygain)
@@ -2227,9 +2254,11 @@ static void crip_cdio_log_handler(cdio_log_level_t level, const char message[])
     /* crip_diag_write() is idempotent, and abort() does not run atexit
      * handlers -- so the record has to be written here or not at all. */
     if (level == CDIO_LOG_ERROR) {
-        crip_diag_set_exit(1);
+        /* libcdio is the disc and drive layer, so its error is one of those:
+         * an image it cannot parse, a device it cannot open (round 35). */
+        crip_diag_set_exit(CRIP_EXIT_IOERR);
         crip_diag_write();
-        exit(1);
+        exit(CRIP_EXIT_IOERR);
     }
     if (level == CDIO_LOG_ASSERT) {
         /* No exit code is set: abort() does not produce one, and claiming a
@@ -2423,6 +2452,8 @@ static int cyanrip_run(int argc, char **argv)
                 "Write a machine-readable diagnostics record to this path (JSON)");
     GEN_OPT_ONE(opts_list, bool,    prefer_disc_isrc, "", 0, 0, 0, 0, 0,
                 "Tag a track with the ISRC read from the disc, where one is, over one given with -t");
+    GEN_OPT_ARR(opts_list, char *,  encoder_option, "", 0, 0, 32, 0, 0,
+                "Pass key=value to every output's encoder, as FFmpeg names its options (repeatable)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
                 "Track pregap handling: N=default|drop|merge|track (repeatable)");
     GEN_OPT_ONE(opts_list, char *,  paranoia, "P", 1, 1, NULL, 0, 0,
@@ -2510,7 +2541,7 @@ static int cyanrip_run(int argc, char **argv)
         if (r == -EAGAIN)
             return 0;
         if (r < 0)
-            return 1;
+            return CRIP_EXIT_USAGE;
     }
 
     for (int i = 1; i < argc; i++) {
@@ -2619,7 +2650,7 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0,
                         "Invalid paranoia level %lli must be between 0 and %i!\n",
                         level, crip_max_paranoia_level);
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
         settings.paranoia_level = level;
     }
@@ -2633,7 +2664,7 @@ static int cyanrip_run(int argc, char **argv)
         cyanrip_log(ctx, 0,
                     "Invalid max coverart size %i (must be 250, 500, 1200 or -1)\n",
                     cover_size);
-        return 1;
+        return CRIP_EXIT_USAGE;
     }
 
     if (sanitize) {
@@ -2643,7 +2674,7 @@ static int cyanrip_run(int argc, char **argv)
         else if (!strcmp(sanitize, "os_unicode")) settings.sanitize_method = CRIP_SANITIZE_OS_UNICODE;
         else {
             cyanrip_log(ctx, 0, "Invalid sanitation method %s\n", sanitize);
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
     }
 
@@ -2655,7 +2686,7 @@ static int cyanrip_run(int argc, char **argv)
             mb_release_idx = -1;
         } else if (wide <= 0 || wide > INT_MAX) {
             cyanrip_log(ctx, 0, "Invalid release index %lli!\n", wide);
-            return 1;
+            return CRIP_EXIT_USAGE;
         } else {
             mb_release_idx = wide;
         }
@@ -2670,12 +2701,12 @@ static int cyanrip_run(int argc, char **argv)
          * as the disc number and tagged disc 2 of nothing. */
         if (!p || disc[0] == '/') {
             cyanrip_log(ctx, 0, "Missing discnumber\n");
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
         long long wide = strtoll(p, NULL, 10);
         if (wide <= 0 || wide > INT_MAX) {
             cyanrip_log(ctx, 0, "Invalid discnumber %lli\n", wide);
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
         discnumber = wide;
         p = av_strtok(NULL, "/", &p_save);
@@ -2683,14 +2714,14 @@ static int cyanrip_run(int argc, char **argv)
             wide = strtoll(p, NULL, 10);
             if (wide <= 0 || wide > INT_MAX) {
                 cyanrip_log(ctx, 0, "Invalid totaldiscs %lli\n", wide);
-                return 1;
+                return CRIP_EXIT_USAGE;
             }
             totaldiscs = wide;
             if (discnumber > totaldiscs) {
                 cyanrip_log(ctx, 0,
                             "discnumber %i is larger than totaldiscs %i\n",
                             discnumber, totaldiscs);
-                return 1;
+                return CRIP_EXIT_USAGE;
             }
         }
     }
@@ -2709,12 +2740,12 @@ static int cyanrip_run(int argc, char **argv)
             int res = cyanrip_validate_fmt(outputs[i]);
             if (res == -1) {
                 cyanrip_log(ctx, 0, "Invalid format \"%s\"\n", outputs[i]);
-                return 1;
+                return CRIP_EXIT_USAGE;
             }
             for (int k = 0; k < settings.outputs_num; k++) {
                 if (settings.outputs[k] == res) {
                     cyanrip_log(ctx, 0, "Duplicated format \"%s\"\n", outputs[i]);
-                    return 1;
+                    return CRIP_EXIT_USAGE;
                 }
             }
             settings.outputs[settings.outputs_num++] = res;
@@ -2729,7 +2760,7 @@ static int cyanrip_run(int argc, char **argv)
             for (int k = 0; k < settings.rip_indices_count; k++) {
                 if (settings.rip_indices[k] == t) {
                     cyanrip_log(ctx, 0, "Duplicated rip idx %i\n", t);
-                    return 1;
+                    return CRIP_EXIT_USAGE;
                 }
             }
             settings.rip_indices[settings.rip_indices_count++] = t;
@@ -2763,19 +2794,19 @@ static int cyanrip_run(int argc, char **argv)
         /* Same shape as -c above: "-p =" tokenises to nothing. */
         if (!p) {
             cyanrip_log(ctx, 0, "Missing track idx for pregap\n");
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
         long long wide = strtoll(p, NULL, 10);
         if (wide < 1 || wide > 197) {
             cyanrip_log(ctx, 0, "Invalid track idx for pregap: %lli\n", wide);
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
         idx = wide;
         enum cyanrip_pregap_action act = CYANRIP_PREGAP_DEFAULT;
         p = av_strtok(NULL, "=", &p_save);
         if (!p) {
             cyanrip_log(ctx, 0, "Missing pregap action\n");
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
         if      (!strncmp(p, "default", strlen("default"))) act = CYANRIP_PREGAP_DEFAULT;
         else if (!strncmp(p, "drop",    strlen("drop")))    act = CYANRIP_PREGAP_DROP;
@@ -2783,7 +2814,7 @@ static int cyanrip_run(int argc, char **argv)
         else if (!strncmp(p, "track",   strlen("track")))   act = CYANRIP_PREGAP_TRACK;
         else {
             cyanrip_log(ctx, 0, "Invalid pregap action %s\n", p);
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
         settings.pregap_action[idx - 1] = act;
         pregap_idx_seen[nb_pregap_idx++] = idx;
@@ -2816,7 +2847,7 @@ static int cyanrip_run(int argc, char **argv)
             } else {
                 cyanrip_log(ctx, 0,
                             "No cover art location specified for \"%s\"\n", p);
-                return 1;
+                return CRIP_EXIT_USAGE;
             }
         }
 
@@ -2825,7 +2856,7 @@ static int cyanrip_run(int argc, char **argv)
             if (wide < 0 || wide > 198) {
                 cyanrip_log(ctx, 0,
                             "Invalid track idx for cover art: %lli\n", wide);
-                return 1;
+                return CRIP_EXIT_USAGE;
             }
             idx = wide;
             for (int k = 0; k < nb_track_cover_arts; k++) {
@@ -2833,7 +2864,7 @@ static int cyanrip_run(int argc, char **argv)
                     cyanrip_log(ctx, 0,
                                 "Cover art already specified for track idx %i!\n",
                                 idx);
-                    return 1;
+                    return CRIP_EXIT_USAGE;
                 }
             }
             track_cover_arts_map[nb_track_cover_arts] = idx;
@@ -2843,13 +2874,13 @@ static int cyanrip_run(int argc, char **argv)
             for (int k = 0; k < nb_cover_arts; k++) {
                 if (!strcmp(cover_arts[k].title, p)) {
                     cyanrip_log(ctx, 0, "Cover art \"%s\" already specified!\n", p);
-                    return 1;
+                    return CRIP_EXIT_USAGE;
                 }
             }
             dst = &cover_arts[nb_cover_arts++];
             if (nb_cover_arts > 31) {
                 cyanrip_log(ctx, 0, "Too many cover arts specified!\n");
-                return 1;
+                return CRIP_EXIT_USAGE;
             }
         }
         dst->source_url = next;
@@ -2859,12 +2890,12 @@ static int cyanrip_run(int argc, char **argv)
 
     if (settings.outputs_num > 1 && !strstr(settings.folder_name_scheme, "{format}")) {
         cyanrip_log(ctx, 0, "Directory name scheme must contain {format} with multiple output formats!\n");
-        return 1;
+        return CRIP_EXIT_USAGE;
     }
 
     if (settings.print_info_only && settings.generate_cue_only) {
         cyanrip_log(ctx, 0, "-J (only generate a CUE sheet) cannot be used with -I (only print info)!\n");
-        return 1;
+        return CRIP_EXIT_USAGE;
     }
 
     /* -Z N converges when N + 1 whole-track reads agree, the latest matching N
@@ -2884,12 +2915,12 @@ static int cyanrip_run(int argc, char **argv)
                         "to agree, and -r %i never allows that many. Use -r %lli or more!\n",
                         settings.ripping_retries, settings.max_retries, need,
                         settings.max_retries, need);
-            return 1;
+            return CRIP_EXIT_USAGE;
         }
         cyanrip_log(ctx, 0, "-Z %i can never converge with -r %i: it needs %lli reads "
                     "to agree, more than any -r allows. Use a smaller -Z!\n",
                     settings.ripping_retries, settings.max_retries, need);
-        return 1;
+        return CRIP_EXIT_USAGE;
     }
 
     if (settings.generate_cue_only) {
@@ -2918,11 +2949,41 @@ static int cyanrip_run(int argc, char **argv)
      * after the last refusal cannot leak by construction. Found by running the
      * suite under ASAN, which aborts on the leak and so cannot be used at all
      * until it is gone. */
+    /* --encoder-option, round 35 (our lap 7 S21, Platterpus's lap 8 S11).
+     * Built here, after the last refusal above, for dev_path's reason below,
+     * and tried on every chosen output's encoder before anything is opened,
+     * so a key an encoder refuses ends the run in the encoder's own words
+     * rather than at the first track. A key given twice keeps the last. */
+    for (int i = 0; i < 32 && encoder_option[i]; i++) {
+        const char *eq = strchr(encoder_option[i], '=');
+        if (!eq || eq == encoder_option[i]) {
+            cyanrip_log(ctx, 0, "Invalid encoder option \"%s\", must be key=value!\n",
+                        encoder_option[i]);
+            av_dict_free(&settings.encoder_opts);
+            return CRIP_EXIT_USAGE;
+        }
+        char *key = av_strndup(encoder_option[i], eq - encoder_option[i]);
+        if (!key || av_dict_set(&settings.encoder_opts, key, eq + 1,
+                                AV_DICT_DONT_STRDUP_KEY) < 0) {
+            cyanrip_log(ctx, 0, "Unable to store encoder option \"%s\"!\n",
+                        encoder_option[i]);
+            av_dict_free(&settings.encoder_opts);
+            return CRIP_EXIT_FAILURE;
+        }
+    }
+    if (settings.encoder_opts &&
+        crip_check_encoder_options(settings.encoder_opts, settings.outputs,
+                                   settings.outputs_num, settings.bitrate,
+                                   settings.decode_hdcd) < 0) {
+        av_dict_free(&settings.encoder_opts);
+        return CRIP_EXIT_USAGE;
+    }
+
     if (device)
         settings.dev_path = strdup(device);
 
     if (cyanrip_ctx_init(&ctx, &settings))
-        return 1;
+        return CRIP_EXIT_IOERR;
 
     /* Syntax errors would otherwise only come up mid-rip, for every path */
     const char *schemes[][2] = {
@@ -2939,6 +3000,7 @@ static int cyanrip_run(int argc, char **argv)
              * below: upstream counts it in total_error_count, which here is
              * `Ripping errors:`, and nothing failed to read. */
             fatal_abort = 1;
+            ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;
         }
     }
@@ -2948,6 +3010,7 @@ static int cyanrip_run(int argc, char **argv)
         !crip_is_image_driver(ctx)) {
         cyanrip_log(ctx, 0, "Offset is unset! To continue with an offset of 0, run with -s 0!\n");
         fatal_abort = 1;
+        ctx->exit_class = CRIP_EXIT_USAGE;
         goto end;
     }
 
@@ -3096,6 +3159,7 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Error reading album tags: %s\n",
                         av_err2str(err));
             ctx->total_error_count++;
+            ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;
         }
 
@@ -3228,6 +3292,7 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Invalid track number %i for pregap, list has "
                         "%i tracks!\n", pregap_idx_seen[i], ctx->nb_tracks);
             ctx->total_error_count++;
+            ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;
         }
     }
@@ -3249,6 +3314,7 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Invalid track number %lli, list has %i tracks!\n",
                         u_nb, ctx->nb_tracks);
             ctx->total_error_count++;
+            ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;
         }
 
@@ -3262,6 +3328,7 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Missing \"=\" in track metadata \"%s\"\n",
                         track_metadata_ptr[i]);
             ctx->total_error_count++;
+            ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;
         }
 
@@ -3280,6 +3347,7 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Error reading track tags: %s\n",
                         av_err2str(err));
             ctx->total_error_count++;
+            ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;
         }
     }
@@ -3318,6 +3386,7 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Invalid track number %i, list has %i tracks!\n",
                         idx, ctx->nb_tracks);
             ctx->total_error_count++;
+            ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;
         }
         ctx->tracks[track_idx].art.source_url = av_strdup(track_cover_arts[i].source_url);
@@ -3401,6 +3470,7 @@ static int cyanrip_run(int argc, char **argv)
 
                 if (get_media_changed(ctx->cdio)) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
+                    ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
                 }
             } else {
@@ -3492,6 +3562,7 @@ static int cyanrip_run(int argc, char **argv)
                 cyanrip_log(ctx, 0, "Invalid rip index %i, list has %i tracks!\n",
                             idx, ctx->nb_tracks);
                 ctx->total_error_count++;
+                ctx->exit_class = CRIP_EXIT_USAGE;
                 goto end;
             }
 
@@ -3520,6 +3591,7 @@ static int cyanrip_run(int argc, char **argv)
 
                 if (get_media_changed(ctx->cdio)) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
+                    ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
                 }
             }
@@ -3709,6 +3781,7 @@ end:
     cyanrip_cue_end(ctx);
 
     int err_cnt = ctx->total_error_count;
+    const int exit_class = ctx->exit_class;
 
     /* Before the context is freed: the diagnostics file is written from
      * atexit, long after this pointer is invalid, so it must own its copy. */
@@ -3724,8 +3797,18 @@ end:
      * classified from control flow and needed a run to settle it; this is that
      * run.
      *
-     * Still within {0, 1} -- Platterpus's standing requirement 3. */
-    return (err_cnt || fatal_abort) ? 1 : 0;
+     * {0, 1} was Platterpus's standing requirement 3 until their round 35
+     * lap 8 S9 asked for classes, and this is where they are chosen. A run a
+     * signal stopped exits 128 plus the signal, as a shell reports one: its
+     * footer has just said `interrupted by` that signal, and the code agrees
+     * with it. A second signal's forced quit (on_quit_signal()) writes no
+     * footer and keeps 1. Otherwise the class a failure set where it happened,
+     * and the generic 1 for any failure without one. */
+    if (quit_now && quit_signal > 0)
+        return CRIP_EXIT_SIGNAL_BASE + quit_signal;
+    if (exit_class)
+        return exit_class;
+    return (err_cnt || fatal_abort) ? CRIP_EXIT_FAILURE : 0;
 }
 
 /* main() is a wrapper so that the exit code reaches the diagnostics record

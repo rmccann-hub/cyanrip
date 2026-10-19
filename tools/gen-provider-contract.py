@@ -912,8 +912,20 @@ def exit_surface():
     consumer needs, and silently omitting it is how a contract comes to describe
     a program that does not exist.
 
+    Two shapes beyond those, both from round 35's exit classes (our lap 7
+    S19, Platterpus's lap 8 S9), and each resolved only as far as the source
+    says, never guessed past:
+
+      * `ENUM + <variable>` -- `CRIP_EXIT_SIGNAL_BASE + quit_signal` -- is a
+        value per signal, so it resolves to the enumerator's value and the
+        variable's NAME, reported as `128 + quit_signal`, not as one number.
+      * a variable assigned from a context field, `x = ctx->field;`, resolves
+        to every enumerator or literal assigned to `->field` anywhere in src/,
+        each with where it was assigned: the class is set where a failure
+        happens, which is several functions away from the return.
+
     Returns (resolved, unresolved, chain):
-      resolved   {int: [evidence strings]}
+      resolved   {int or "BASE + var": [evidence strings]}
       unresolved [(where, expression)]
       chain      the functions followed, in order, so a reader can check the
                  hop rather than trust it.
@@ -924,11 +936,35 @@ def exit_surface():
     def note(value, where):
         resolved.setdefault(value, []).append(where)
 
+    def field_values(field, where, expr):
+        """Every value assigned to `->field` in src/*.c, or False if any
+        assignment is not a literal or a known enumerator."""
+        found = []
+        for name in sorted(os.listdir(SRC)):
+            if not name.endswith(".c"):
+                continue
+            text = blank_noncode(open(os.path.join(SRC, name), encoding="utf-8").read())
+            for i, line in enumerate(text.splitlines(), 1):
+                for m in re.finditer(rf"->{re.escape(field)}\s*=\s*([^;=]+);", line):
+                    v = m.group(1).strip()
+                    if re.fullmatch(r"-?\d+", v):
+                        found.append((int(v), f"{where} (via `{expr}`, {name}:{i})"))
+                    elif v in enums:
+                        found.append((enums[v][0], f"{where} (via `{expr}` = `{v}`, {name}:{i})"))
+                    else:
+                        return False
+        return found
+
     def resolve(expr, where, body):
         """expr -> value(s), or record it as unresolved."""
         expr = " ".join(expr.split())
         if re.fullmatch(r"-?\d+", expr):
             note(int(expr), where)
+            return
+        plus = re.fullmatch(r"([A-Z][A-Z0-9_]*)\s*\+\s*([a-z_][a-z0-9_]*)", expr)
+        if plus and plus.group(1) in enums:
+            note(f"{enums[plus.group(1)][0]} + {plus.group(2)}",
+                 f"{where} (`{plus.group(1)}` + `{plus.group(2)}`)")
             return
         # `cond ? A : B` where both arms are constants. Resolved rather than
         # reported, because this IS the normal rip's exit -- `(err_cnt ||
@@ -953,14 +989,21 @@ def exit_surface():
         # analysis, and a wrong one would be indistinguishable from a right one
         # in the output.
         if re.fullmatch(r"[a-z_][a-z0-9_]*", expr) and body is not None:
-            hits = re.findall(rf"\b{re.escape(expr)}\s*=\s*([^;]+);", body)
+            # The variable itself, never a field of the same name: `x =` and
+            # not `ctx->x =`, which the field scan below accounts for once.
+            hits = re.findall(rf"(?<![\w.>]){re.escape(expr)}\s*=\s*([^;=][^;]*);", body)
             if hits:
                 for h in hits:
                     h = h.strip()
+                    fld = re.fullmatch(r"[a-z_][a-z0-9_]*->([a-z_][a-z0-9_]*)", h)
+                    vals = field_values(fld.group(1), where, expr) if fld else None
                     if re.fullmatch(r"-?\d+", h):
                         note(int(h), f"{where} (via `{expr}`)")
                     elif h in enums:
                         note(enums[h][0], f"{where} (via `{expr}` = `{h}`)")
+                    elif vals:
+                        for v, ev in vals:
+                            note(v, ev)
                     else:
                         unresolved.append((where, f"{expr} = {h}"))
                 return
@@ -1592,11 +1635,11 @@ def emit(binary):
     w("- `-v`, `-V` and `--version` all print the version banner and exit 0 **on")
     w("  this fork**. Across the stock line they are not interchangeable and there")
     w("  is no single spelling that works everywhere -- see P6.")
-    w("- `-J` and `-I` are mutually exclusive; combining them exits 1.")
+    w("- `-J` and `-I` are mutually exclusive; combining them exits 64, an argument refused.")
     w("- `-d` accepts a device path **or** a TOC/CUE/NRG image file.")
     w("- `-a`/`-t` values are `:`-separated; a literal colon must be escaped `\\:`.")
     w("- `-t N=` and `-l N` are 1-based and validated against the disc's real track")
-    w("  count; out of range exits 1 with a message naming both numbers.")
+    w("  count; out of range exits 64 with a message naming both numbers.")
     w("- Multiple `-o` formats produce **one logfile and one cue per format**.")
     w("")
     w("**Units that are not obvious from the line itself:**")
@@ -1823,7 +1866,10 @@ def emit(binary):
     enums = enum_values()
     w("| Code | Return/exit sites | Meaning, where the source states one |")
     w("|---|---|---|")
-    for code in sorted(resolved):
+    # Numbers in order, then the per-signal values, which are not one number.
+    order = sorted((c for c in resolved if isinstance(c, int))) + \
+        sorted(c for c in resolved if not isinstance(c, int))
+    for code in order:
         named = []
         for ev in resolved[code]:
             for m in re.finditer(r"`([A-Z][A-Z0-9_]*)`", ev):
@@ -1833,7 +1879,7 @@ def emit(binary):
         w(f"| `{code}` | {len(resolved[code])} | {meaning} |")
     w("")
     w(f"**Values resolved: "
-      f"{', '.join('`'+str(c)+'`' for c in sorted(resolved))}.** "
+      f"{', '.join('`'+str(c)+'`' for c in order)}.** "
       f"Exit paths that could not be resolved: "
       + (f"**{len(unresolved)}** -- "
          + "; ".join(f"`{w_}` (`{e}`)" for w_, e in unresolved)
@@ -1845,15 +1891,18 @@ def emit(binary):
     w("own comments discuss returns and exits and the first version of this")
     w("derivation reported three of them as real paths.")
     w("")
-    w("**`1` is the generic failure and carries no class.** For everything except")
-    w("`--verify-log`, classification must come from the text, which is why P5")
-    w("exists. `--verify-log` is the one surface that discriminates, and its five")
-    w("values are wire format: the enum's ORDER is an implementation detail, the")
+    w("**Classes, from round 35** (our lap 7 S19, Platterpus's lap 8 S9): `64` an")
+    w("argument refused or a flag this build lacks, `74` the disc or drive failed,")
+    w("and `128 + N` a run signal N stopped after its footer said so; each meaning")
+    w("above is the comment beside its enumerator in the source. **`1` is the")
+    w("generic failure and carries no class**, and within any class the text says")
+    w("which failure it was, which is why P5 exists. `--verify-log`'s values are")
+    w("its own, and wire format: the enum's ORDER is an implementation detail, the")
     w("numbers are not, and they are mapped explicitly for that reason.")
     w("")
     w("No non-zero exit is silent: argument parse failures print before returning,")
-    w("and every other `return 1` reachable from the entry point is preceded by a")
-    w("`cyanrip_log()` call.")
+    w("and every other non-zero return reachable from the entry point is preceded")
+    w("by a `cyanrip_log()` call.")
     w("")
     w("Argument validation runs **before the logfile is opened**. Those diagnostics are")
     w("buffered and replayed into the logfile if one is later opened, so a consumer")
