@@ -173,7 +173,7 @@ def run_row(store, command):
 # job has timed this test out at 120 s five times since 2026-10-15, twice in a
 # row on one tree, and a tree that timed out has passed in 28 s on a re-run; no
 # cause was established, because CI kept no per-row timing and a killed run
-# printed nothing (docs/KNOWN-ISSUES.md, STATUS.md's settled-facts-macos). Meson ends a
+# printed nothing (docs/KNOWN-ISSUES.md). Meson ends a
 # test that overruns with SIGTERM, so the handler names the row that was
 # running and the slowest ones before it, and exits 143 as a SIGTERM would.
 SLOWEST = 5
@@ -432,6 +432,15 @@ def timing_from(testlog):
         print(f"Settled facts: {rec.get('result')} in "
               f"{rec.get('duration', 0):.1f} s")
         out = (rec.get("stdout") or "").splitlines()
+        # A row that could not be checked here takes no time, so a fast pass
+        # says nothing about it: the rows CI's macOS job was waiting to see
+        # run passed PR #46's job in 42.5 s, and nothing printed said whether
+        # they ran. So the UNPROBED rows, each with its reason, and the count.
+        for i, l in enumerate(out):
+            if l.startswith("UNPROBED"):
+                print(l)
+                if i + 1 < len(out) and out[i + 1].startswith("       "):
+                    print(out[i + 1])
         start = next((i for i, l in enumerate(out)
                       if l.startswith(("TIMING:", "KILLED by signal"))), None)
         if start is None:
@@ -440,6 +449,10 @@ def timing_from(testlog):
             if not l.startswith(("TIMING:", "KILLED", "  ", "the slowest")):
                 break
             print(l)
+        for l in out:
+            if re.match(r"\d+ runnable check\(s\), \d+ stale, \d+ unprobed "
+                        r"here", l):
+                print(l)
         return 0
     print(f"{path}: no Settled facts record")
     return 0

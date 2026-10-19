@@ -234,6 +234,15 @@ jobs:
           .github/mingw-build.sh
           zip cyanrip cyanrip.exe
 
+      # Until 2026-10-19 this job built cyanrip.exe and nothing ran it, here
+      # or anywhere (round 35 lap 3 S11). Its banner, and an info read of a
+      # committed disc image, which needs no drive, network or Python.
+      - name: Smoke test
+        run: |
+          ./cyanrip.exe --version | tee version.out
+          grep -q 'platterpus-fork' version.out
+          ./cyanrip.exe -d tests/fixtures/cdda.nrg -I -N -A -U -P 0
+
       # The name was `cyanrip-${{ matrix.runs-on }}`, in a job with no matrix,
       # so it came out as `cyanrip-`. The upload jobs below fetch it by name.
       - name: "Upload artifact"

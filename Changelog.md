@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**From the operator's review of 2026-10-19, four changes, none to the
+binary.** `+platterpus.25`'s contents are fixed at the five changes to the
+binary since `.24`, listed in `STATUS.md`'s `STATUS-RELEASE-NEXT`; anything
+else lands after it is cut. CI's Windows job now runs the `cyanrip.exe` it
+builds, its banner and an info read of `tests/fixtures/cdda.nrg`, where
+nothing had run it before, and `tests/workflows.py` fails without the step.
+CI's timing step after the suite (`check-settled.py --timing-from`) now
+prints each Settled facts row it could not check and the count, so a macOS
+pass can show whether the evidence rows ran. The first to print it, pull
+request #47's at `1dd06da`, ran them and passed in 46.1 s, which closes
+`STATUS.md`'s `settled-facts-macos`. And commit messages and pull
+request text name upstream's issue as *upstream issue 167* (`CLAUDE.md`).
+
 **Our round 35 lap 12 is sent** (`docs/handshake/round-35-lap-12.md`),
 released in the pull request that publishes it, on the operator's standing
 word for round 35: it answers Platterpus's lap 11, lands the `--encoder-option`

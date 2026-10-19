@@ -162,7 +162,7 @@ if "TIMING:" not in out or "  exit 3" not in out:
 
 # 6. Killed mid-row, as meson kills a test that overruns its timeout, it
 # names the row that was running (CI's macOS timeouts printed nothing at all,
-# so no run could say where 120 s went: STATUS.md's settled-facts-macos).
+# so no run could say where 120 s went: docs/KNOWN-ISSUES.md).
 with tempfile.TemporaryDirectory() as d:
     table = ["| fact | check |", "|---|---|"]
     table += [f"| fact {i} | `true` |" for i in range(8)]
@@ -197,9 +197,15 @@ with tempfile.TemporaryDirectory() as d:
 # after every suite, so a pass near the limit names its slow rows too.
 with tempfile.TemporaryDirectory() as d:
     log = pathlib.Path(d) / "testlog.json"
-    stdout = ("STALE: nothing\nTIMING: 106.5 s, 99 row(s) run here; the "
+    # And the rows it could not check, with the count: an unprobed row takes
+    # no time, so the slowest list cannot show it.
+    stdout = ("STALE: nothing\n"
+              "UNPROBED (exit 77, cannot be checked here): a row\n"
+              "       reads run evidence this clone has not fetched: x\n"
+              "TIMING: 106.5 s, 99 row(s) run here; the "
               "slowest:\n    40.00 s  sleep 40\n     1.00 s  true\n"
-              "99 runnable check(s), 0 stale, 0 unprobed here\n")
+              "99 runnable check(s), 0 stale, 1 unprobed here; 3 row(s) "
+              "carry no command (3 past)\n")
     log.write_text(json.dumps({"name": "cyanrip / Release gate",
                                "stdout": "TIMING: not this one\n"}) + "\n" +
                    json.dumps({"name": "cyanrip / Settled facts",
@@ -209,8 +215,12 @@ with tempfile.TemporaryDirectory() as d:
                         "--timing-from", str(log)], capture_output=True,
                        text=True)
     want = ["Settled facts: OK in 106.5 s",
+            "UNPROBED (exit 77, cannot be checked here): a row",
+            "       reads run evidence this clone has not fetched: x",
             "TIMING: 106.5 s, 99 row(s) run here; the slowest:",
-            "    40.00 s  sleep 40", "     1.00 s  true"]
+            "    40.00 s  sleep 40", "     1.00 s  true",
+            "99 runnable check(s), 0 stale, 1 unprobed here; 3 row(s) "
+            "carry no command (3 past)"]
     if r.returncode != 0 or r.stdout.splitlines() != want:
         fail(f"--timing-from printed {r.stdout.splitlines()!r} (exit "
              f"{r.returncode}), not {want!r}")
