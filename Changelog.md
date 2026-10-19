@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**The living documentation is audited against the tree**, on the operator's
+word of 2026-10-19 (*"update and audite all documentation. it needs to be
+correct"*). Five read-only audits covered `CLAUDE.md`, `README.md`,
+`docs/KNOWN-ISSUES.md`, `docs/SETTLED.md`, `docs/handshake/STATUS.md` and
+the handshake README, the upstream reports, and six plan documents; each of their 103
+findings was re-checked here against the source, the binary, git, the ledger,
+the manifest or the gate before it changed (`354cc01`, `a21638e`, `7ee5642`,
+`5c7674a`). Most were present-tense sentences the tree had moved past: a fix
+described as open, a release as not released, a retired flag letter, a count
+or a `file:line` that had drifted. Two were instructions that would not work as
+written: `meson setup -C` in `docs/upstream/README.md`, and a round template
+declaring protocol 1. Dated history, laps, run evidence, released Changelog
+entries and the four documents shared with Platterpus were not edited; two
+sentences of the shared `seam-commands.md` that our §1b made false are in its
+proposal (`316c837`). Every generated document's own check passes.
+
 **`seam-commands.md` §7 has boundary rows for `-d`, `-c`, `-l` and `-t`**,
 Platterpus's F9. `-c` and `-t` gained their limits and one past each, and the
 wrapping values that found the defect below; `-c`'s effect is now read from
