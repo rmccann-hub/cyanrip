@@ -28,7 +28,7 @@ STATUS-OPEN: settled-facts-macos us fixing at round 35, priority 4: Settled fact
 STATUS-OPEN: hardware-unverified us cannot, because each needs a disc or a drive this environment lacks: C2, which the rig's drive reports unsupported; CD-TEXT from a physical disc; -W on a pre-emphasised disc; a paranoia skip on a drive; -f on a second drive, and a -f search that finds nothing on a drive; and -P 0's sector-by-sector salvage on a drive; asked of your rig in our round 32 lap 1 S21
 STATUS-OPEN: superseded-read-marker both cannot, because the format needs a design both sides agree (round 24's item, with round 8 J14's read time); asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse and no design exists; asked in our round 32 lap 1 S22 whether to keep it
-STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed all twenty-three on 2026-10-16 as one issue, https://github.com/cyanreg/cyanrip/issues/167, in the order of importance docs/upstream/issues-to-file.md suggests; a reply asking for a pull request or for an item as an issue of its own goes to our operator, who files it
+STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed reports 1 to 23 on 2026-10-16 as one issue, https://github.com/cyanreg/cyanrip/issues/167, in the order of importance docs/upstream/issues-to-file.md suggests, and reports 24 and 25, drafted on 2026-10-19, are rendered there for our operator to file; a reply asking for a pull request or for an item as an issue of its own goes to our operator, who files it
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: release-markers us cannot, because building or retiring the release/* markers of docs/UPGRADE-CHANNELS-PLAN.md §6a is the operator's decision, now that v8 decouples releases from rounds; put to the operator on 2026-10-12
 
@@ -267,8 +267,8 @@ lacks on hardware is the `hardware-unverified` line.
 Our `master` mirrors `cyanreg/cyanrip` at `b40c1f0`, 0.9.4-rc3, merged into
 `platterpus-fork` at `79da685`. That is a reading of 2026-10-12T22:46Z, when
 `git ls-remote` last returned it; `tools/upstream-delta.py` is how to check
-again. **Twenty-three defects this fork found in upstream's code are filed
-there, as one issue, [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by our operator on 2026-10-16, in the
+again. **Twenty-five defects this fork found in upstream's code are
+reported; the first twenty-three are filed there, as one issue, [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by our operator on 2026-10-16, in the
 order of importance `docs/upstream/issues-to-file.md` suggests, each
 re-checked against `master` by `tools/check-settled.py`. The link is our
 operator's word: this session cannot open upstream's tracker.

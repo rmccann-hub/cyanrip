@@ -927,7 +927,7 @@ should need rewriting. If it does, that is the defect.
 6. **A defect we find that exists upstream goes upstream.** We are a fork of a
    working project, not a private garden. **This said "three" from 2026-08-26
    (`3181add`) and was never re-counted** — the same failure as the cache-run
-   tally that said "all three" while five more existed. **It is twenty-three**:
+   tally that said "all three" while five more existed. **It is twenty-five**:
    eight counted off `docs/SETTLED.md`'s upstream section on 2026-09-16 rather
    than remembered, a ninth added there on 2026-09-23, two more on 2026-09-24
    from round 26's real test, a twelfth the same day from Platterpus's reading
@@ -937,7 +937,9 @@ should need rewriting. If it does, that is the defect.
    eighteenth found that evening, writing up the open list, and five on
    2026-10-12, the day upstream's `b40c1f0` was merged: from the merged tree's
    first macOS and sanitizer CI runs, and from a fix of 2026-09-06 that no
-   report had named.
+   report had named, and two on 2026-10-19, one found adding boundary rows
+   to the argument probe and one a fix of 2026-08-06 that no report had
+   named either.
    Each has a re-check
    `tools/check-settled.py` runs against `master`:
 
@@ -1012,19 +1014,29 @@ should need rewriting. If it does, that is the defect.
   23. Three start-up failures, the cddap context, the log and the CUE
       sheet, return without `cyanrip_ctx_end()`. Fixed here (`3f0e161`,
       `72975de`).
+  24. An argument that is only its separator, `-c /`, `-c //`, `-p =` or
+      `-p ==`, hands `NULL` to `strtol()`: exit 139 and no output. Fixed
+      here on 2026-08-06 (`58f5151`).
+  25. Six hand-parsed integer arguments read `strtol()` straight into an
+      `int`, so a value past `INT_MAX` wraps and is used with exit 0:
+      `-c 4294967297/4294967297` is disc 1 of 1, `-P 4294967296` is
+      paranoia none. Fixed here (`716a99b`).
 
    **Not filed is not fixed, and twenty-three unfiled reports was the private
-   garden this rule forbids. All twenty-three were filed on 2026-10-16**, by
+   garden this rule forbids. Reports 1 to 23 were filed on 2026-10-16**, by
    the operator, as one issue, [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167), in the order of importance
    `docs/upstream/issues-to-file.md` suggests; a reply asking for a pull
    request, or for an item as an issue of its own, goes to the operator, who
    files it. Filing is on upstream's tracker and outside this
    repository, so it is the maintainer's act, not ours — and **every one was
-   drafted here first** (2026-09-27, five more 2026-10-05, the last five 2026-10-12):
-   the other twenty-two are in `docs/upstream/defect-reports.md`, each with
+   drafted here first** (2026-09-27, five more 2026-10-05, five 2026-10-12).
+   **Reports 24 and 25, drafted on 2026-10-19, are not filed yet**; the
+   operator files them. All but report 8, the cache model, are in
+   `docs/upstream/defect-reports.md`, each with
    upstream's `file:line` at `7dbe56a`, re-checked against it on 2026-10-16
-   (first checked at `f8ebf48` for 1 to 18 and at `b40c1f0` for 19 to 23),
-   and our fixing commit, and all twenty-three are rendered ready to
+   (first checked at `f8ebf48` for 1 to 18 and at `b40c1f0` for 19 to 23;
+   24 and 25 were run on a build of `7dbe56a`), and our fixing commit, and
+   all twenty-five are rendered ready to
    paste in `docs/upstream/issues-to-file.md`. The count
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
@@ -1043,6 +1055,12 @@ should need rewriting. If it does, that is the defect.
    grep could not see them. `git log -i -E --grep="upstream's (code|too)|both
    upstream's|same at [0-9a-f]{7}"` found them on 2026-10-12, beside what
    CI had just found.
+
+   **And grep upstream's tree for the code a fix changed, not only our
+   words about it.** Report 24's fix (`58f5151`, 2026-08-06) never said
+   upstream's, so neither grep could see it for ten weeks. It was found on
+   2026-10-19 by reading upstream's `cyanrip_main.c` at `7dbe56a` for the
+   code report 25 was about, two lines from it.
 
 **And custody, which is the part that makes "source of truth" mean something
 without meaning "we decide".** The shared seam documents live here as the

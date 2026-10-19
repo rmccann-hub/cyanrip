@@ -1,17 +1,18 @@
 # Upstream bug reports for cyanreg/cyanrip
 
-**Filed on 2026-10-16, all twenty-three as one issue: [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by the
+**Filed on 2026-10-16, reports 1 to 23 as one issue: [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by the
 operator, combined in the order of importance `issues-to-file.md` suggests.
 That is the operator's word: this file's author could not open it, since this session's proxy answers HTTP 403 for upstream's tracker and refuses to attach upstream beside the fork, so the link is relayed, not read. A reply that asks for a pull request, or for any report as
 an issue of its own, goes to the operator, who files it. Filing on upstream's
 tracker is outside this repository, so it is the maintainer's act; what this
-file does is make each one a copy-and-paste. All twenty-three are
+file does is make each one a copy-and-paste. **Reports 24 and 25, drafted
+on 2026-10-19, are not filed yet.** All twenty-five are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. `CLAUDE.md`'s rule is that
 *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
-its own file, `docs/upstream-cachemodel-report.md`. There are twenty-three:
-twenty-two here, and that one. The thirteenth found, report 13, was found the
+its own file, `docs/upstream-cachemodel-report.md`. There are twenty-five:
+twenty-four here, and that one. The thirteenth found, report 13, was found the
 day this file was written. Reports 14 to 18 were drafted on 2026-10-05, when
 `master` was still `f8ebf48` (`git ls-remote` again): 14 and 18 found that
 day, and 15 to 17 found earlier in round 30 and fixed for the fork's `.20`
@@ -20,6 +21,10 @@ day the fork merged upstream's `b40c1f0`: 19, 21, 22 and the first arm of 23
 were found by the fork's first macOS and sanitizer CI runs on the merged tree,
 and 20 and the other two arms of 23 were fixed here on 2026-09-06 and had no
 report until a grep of the fork's history for upstream's code found them.
+Reports 24 and 25 were drafted on 2026-10-19 and run on a build of
+`7dbe56a`: 25 found that day, adding boundary rows to the fork's argument
+probe, and 24 fixed here on 2026-08-06 with no report until 25's search for
+the same code found it.
 
 **Checked against upstream `master` at `7dbe56a` on 2026-10-16** (`git ls-remote
 https://github.com/cyanreg/cyanrip refs/heads/master` returned
@@ -667,3 +672,79 @@ first, `72975de` for the other two). The fork later sent the log and CUE
 failures to `end:` instead, so the log that was opened carries the run's
 completion footer (`a79ac9e`, "Emit the completion footer on the last two
 paths that skipped it").
+
+
+## 24. An argument that is only its separator crashes with no message
+
+**Where:** `src/cyanrip_main.c:1740-1741` at `7dbe56a`, for `-c`:
+
+```c
+        p = av_strtok(disc, "/", &p_save);
+        discnumber = strtol(p, NULL, 10);
+```
+
+and `:1806-1807`, for `-p`:
+
+```c
+        p = av_strtok(pregap[i], "=", &p_save);
+        idx = strtol(p, NULL, 10);
+```
+
+**What happens:** a string of nothing but delimiters yields no token, so `p`
+is `NULL` and `strtol()` dereferences it. The second `av_strtok()` in each
+block is checked for `NULL`; the first is not, because a non-empty string was
+assumed to yield a token. The process dies by signal before printing anything,
+so a caller sees a non-zero exit and not one line saying why.
+
+**How to reproduce:** on a build of `7dbe56a`, with any disc image:
+
+- `cyanrip -d disc.cue -I -N -A -U -s 0 -c /`: exit 139, no output.
+- The same with `-c //`, `-p =` or `-p ==`: exit 139, no output.
+
+**What the fork did:** both check the first token, and print `Missing
+discnumber` or `Missing track idx for pregap` and exit 1 (`58f5151`, "Fix two
+NULL derefs on arguments that are only a separator"). Found on 2026-08-06 by
+giving the fork's argument probe a malformed-shape axis; it had no report until
+2026-10-19.
+
+## 25. A number past `INT_MAX` wraps and is used
+
+**Where:** `src/cyanrip_main.c` at `7dbe56a`, six arguments genopt does not
+parse, each read with `strtol()` straight into an `int`:
+
+| line | argument | code |
+|---|---|---|
+| 1694 | `-P` | `settings.paranoia_level = (int)strtol(paranoia, NULL, 10);` |
+| 1729 | `-R` | `mb_release_idx = strtol(release, &p, 10);` |
+| 1741, 1748 | `-c` | `discnumber = strtol(p, NULL, 10);`, `totaldiscs = strtol(p, NULL, 10);` |
+| 1807 | `-p` | `idx = strtol(p, NULL, 10);` |
+| 1861 | `-C` | `idx = strtol(p, NULL, 10);` |
+| 2119 | `-t` | `int u_nb = strtol(track_metadata_ptr[i], &end, 10);` |
+
+**What happens:** on a 64-bit `long`, `strtol()` returns the whole value and
+the assignment keeps its low 32 bits, so a value past `INT_MAX` becomes
+whatever it wraps to, and the range check after it tests that instead. The
+argument is then used, with exit 0, as a value the caller did not type.
+
+**How to reproduce:** on a build of `7dbe56a`, with any disc image and `-d
+disc.cue -I -N -A -U -s 0`:
+
+- `-c 4294967297/4294967297`: exit 0, `Disc number:    1`, and the log and CUE
+  names lose their `CD` suffix, because the total read as 1.
+- `-c 1/4294967298`: exit 0, disc 1 of 2.
+- `-P 4294967296`: exit 0, `Paranoia level: none`. `-P 4294967297`: level 1.
+- `-t 4294967297=title=x` and `-p 4294967297=drop`: exit 0, applied to track 1.
+- `-R 4294967297`: exit 0, release 1.
+- `-c 2147483648/2147483648`: refused, but as `Invalid discnumber
+  -2147483648`, a number the caller did not type.
+
+And one shape beside them: `av_strtok()` skips a leading delimiter, so `-c /2`
+reads its total as the disc number and gives exit 0 and `Disc number:    2`.
+
+**What the fork did:** each is read with `strtoll()` into a `long long` and
+range-checked before it is narrowed, and refused with the message a smaller bad
+value always got, printed with `%lli`, so it names the number typed; every
+message that rendered before renders the same. `-c /2` is refused as `Missing
+discnumber`. All in `716a99b`, "Refuse integer arguments past INT_MAX instead
+of using what they wrap to". Found on 2026-10-19, adding boundary rows to the
+fork's argument probe.

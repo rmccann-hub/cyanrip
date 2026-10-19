@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Upstream reports 24 and 25 are drafted, and not filed yet.** 25 is the
+wrap fixed below, at upstream's same lines. 24 was fixed here on 2026-08-06
+(`58f5151`) and never reported: `-c /`, `-c //`, `-p =` and `-p ==` hand
+`NULL` to `strtol()`, and on a build of upstream's `7dbe56a` each exits 139
+with no output. Both were run on that build on 2026-10-19, not read. Each has a
+row in `docs/SETTLED.md` that re-checks upstream's code and ours, and both are
+rendered in `docs/upstream/issues-to-file.md` for the operator to file beside
+[cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167), which
+holds the first twenty-three.
+
 **A number past `INT_MAX` is refused, not wrapped and used.** Six arguments
 genopt does not parse were read with `strtol()` straight into an `int`, so a
 value past `INT_MAX` became whatever it wrapped to, with exit 0:
