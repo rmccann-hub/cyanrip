@@ -191,6 +191,14 @@ for job in ("linux", "macos"):
         fail(f"ci.yml: job {job} re-runs on a release event, on a commit its "
              "push already tested; give it `if: github.event_name != "
              "'release'`")
+# The Windows binary is run where it is built: its banner, and an info read
+# of a committed image. Comments left out, as below.
+win = "\n".join(ln for ln in ci_jobs.get("mingw", [])
+                if not ln.lstrip().startswith("#"))
+if "./cyanrip.exe --version" not in win or \
+        "./cyanrip.exe -d tests/fixtures/" not in win:
+    fail("ci.yml: the mingw job builds cyanrip.exe and does not run it; a "
+         "build nothing has run is a claim, not a result (round 35 lap 3 S11)")
 rel = "\n".join(ci_jobs.get("mingw-release", []))
 if "merge-base --is-ancestor" not in rel or "origin/platterpus-fork" not in rel:
     fail("ci.yml: mingw-release attaches a binary without checking that the "
