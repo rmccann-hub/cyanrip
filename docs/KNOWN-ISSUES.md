@@ -47,9 +47,9 @@ day, since it has no releases. A new version is a change to the script. The
 from the script's hash and from the MSYS2 packages they were compiled
 against, which `update: true` moves; a restored cache carries a stamp the
 script writes only once all five installed, and a failed job saves nothing.
-Each at its tag builds as it did at its branch's head: curl's `Makefile.am`
-has the same `SUBDIRS` line at both, so the script's `sed` on it is a no-op at
-both, as it was. `tests/workflows.py` fails on a `cyan_do_vcs` call that
+Each at its tag builds as it did at its branch's head: curl's `Makefile.am`,
+from which autoreconf writes the `Makefile.in` the script's `sed` edits, has
+the same `SUBDIRS` line at both, so the `sed` is a no-op at both, as it was. `tests/workflows.py` fails on a `cyan_do_vcs` call that
 names no full SHA, or on a `git clone` in the script, and the dependency map
 reads each pin. **Its first measurement is CI's**: the `mingw` job runs only
 on GitHub's Windows runner, so whether the pinned build and its cache work is
@@ -68,7 +68,7 @@ install-config`, the three targets `install` runs before the documentation;
 built here on Linux at the pinned commit, `make install` exits 2 with the same
 line and those three exit 0, installing `libneon.a`, `neon.pc` and the headers.
 
-## Fixed for `.20`, 2026-10-05, not released — what waited for round 31, and what fixing it found
+## Fixed for `.20`, 2026-10-05, released on beta 2026-10-06 (`5704062`) — what waited for round 31, and what fixing it found
 
 Put off on 2026-09-30 and 2026-10-04 because each changes what a P2 line says,
 and brought into round 30 on the operator's word of 2026-10-05. **None changes
@@ -95,7 +95,7 @@ each to them.
   **And `Ripping errors:` now counts the skips too**, by the operator's word
   of 2026-10-05, with a suffix whenever it does: `Ripping errors: N (including
   M paranoia skips)`, M being the disc block's `SKIP:`. A line with no suffix
-  counts no skips, whichever build wrote it. The `-j` record's
+  counts no skips, whichever build wrote it. The `--diagnostics` record's
   `rip.ripping_errors` follows it and `rip.paranoia_skips` is new. **The exit
   code does not follow it**: a rip whose only errors are skips exits 0, because
   exiting 1 makes Platterpus skip the securing pass
@@ -214,10 +214,12 @@ an offset.
 
 All four are pinned by `sc_probe_runs_open_no_logfile()`, `sc_paranoia_skip()`,
 `sc_repeat_limit()` and `tests/logrender.c`, each revert-proved with the build
-green. **None has run on a drive.** The skip and the speed are what the next
-acceptance run on a damaged disc would show.
+green. **The `-Z` limit arm ran on a drive on 2026-10-06**
+(`docs/rig-2026-10-06-5704062/`, tracks 3 and 5); the skip arm, a speed below
+1x and a `-f` search that finds nothing have not. The skip and the speed are
+what the next acceptance run on a damaged disc would show.
 
-## Fixed for `.20`, 2026-09-30, not released — found fixing where loudness is measured
+## Fixed for `.20`, 2026-09-30, released on beta 2026-10-06 (`5704062`) — found fixing where loudness is measured
 
 - **A `-Z` rip's kept pass was filtered with the previous pass's state.** The
   filter and loudness graphs were made once per track and
@@ -279,8 +281,8 @@ of 5, with 5 as the floor. The whole-track `-Z` ceiling is our own loop and keep
 the value as given. When the two differ, `Retry limit:` says both. The leading
 number is still the `-r` value, which is what `tools/probe-argv-surface.py` and
 their parser read; their matcher is the label alone
-(`platterpus@86f0547:src/platterpus/parsers/cyanrip_log.py:1983`). The `-j`
-record's `retry_limit` stays the `-r` value.
+(`platterpus@86f0547:src/platterpus/parsers/cyanrip_log.py:1983`). The
+`--diagnostics` record's `retry_limit` stays the `-r` value.
 
 **What the fix does to the audio**, checked against the source `.bin` rather than
 against the log: at `-r 3` and `-r 10` alike, sectors 400–402 come back as zeros
@@ -374,7 +376,7 @@ gains a first line, because its opening paragraph predates every fix.
 
 ### With paranoia disabled (`-P 0`), one unreadable sector hangs the rip at any retry limit
 
-**FIXED for `.20`, 2026-10-05, not released.** At `-P 0` cyanrip wraps the cdda
+**FIXED for `.20`, 2026-10-05, released on beta 2026-10-06 (`5704062`).** At `-P 0` cyanrip wraps the cdda
 layer's read (`crip_read_audio_salvaging()`, installed on `cdrom_drive_t`'s
 public `read_audio` hook, `cdio/paranoia/cdda.h:124`): a request that comes
 back short is completed one sector at a time, and a sector that still will not
@@ -687,7 +689,7 @@ Pinned by `sc_interrupt()`, against the partial file on disk, and
 
 ### Every figure the log reports about the audio is measured BEFORE the filter graph
 
-**FIXED for `.20`, 2026-09-30, not released.** `measure_frame()`
+**FIXED for `.20`, 2026-09-30, released on beta 2026-10-06 (`5704062`).** `measure_frame()`
 (`src/cyanrip_encode.c`) feeds the loudness graphs and the direct peak scan the
 frames the encoders receive, converted to one planar-double format so one album
 graph takes flagged and unflagged tracks alike. The read-path check keeps its
@@ -804,9 +806,9 @@ test of the fix needs a pre-emphasised fixture with treble in it.
 contract surface and wants a round — and the round in flight is pinned at
 `2cce60d`, where a finding defaults to the next round. Reported in round 23 §H.
 
-`sc_deemph_with_hdcd()` now pins both halves with opposite intents and says
-which is which; the checksum half failing is a regression, the loudness half
-failing is the fix landing.
+`sc_deemph_with_hdcd()` pins both halves: EAC CRC32 must not move between
+`-H -E` and `-H`, and the loudness figures must. Since the fix (`cc79c5b`,
+`.20`) a failure of either is a regression.
 
 ### A settled fact is re-checked by calling the internet, and it times the suite out
 
@@ -960,7 +962,7 @@ about 6 s each. The next timeout names its row; the cause is still not
 established.
 
 **And a measurement that is a warning, not yet a fault.** Since HR-2's move,
-the 30 rows that re-check a file on the evidence branch run only where that
+the 32 rows that re-check a file on the evidence branch run only where that
 file is fetched (`tools/check-settled.py` counts them unprobed otherwise). In
 this environment's checkout with `tools/evidence.py fetch --branch` done,
 `Settled facts` took **80.7 to 103.9 s** in seven full suites on 2026-10-15,
@@ -1005,11 +1007,12 @@ fix is a third outcome — `unobservable` — not a reword, and `--gate` must ke
 firing only on a genuine silent drop.
 
 **AND THE REASON ALL THREE DRIFTED IS A CHECK THAT COULD NOT FIRE.**
-`python3 tools/probe-argv-surface.py --binary build/src/cyanrip --check
-docs/seam-commands.md` refuses outright: *"carries no generated-block
-delimiters"*. §7 has declared itself generated since it was written and
-**nothing has ever verified that it is.** Planned in
-`docs/ROUND-22-PLAN.md` §3.
+Until 2026-09-29, `python3 tools/probe-argv-surface.py --binary
+build/src/cyanrip --check docs/seam-commands.md` refused outright: *"carries
+no generated-block delimiters"*. §7 had declared itself generated since it was
+written and **nothing verified that it was.** Planned in
+`docs/ROUND-22-PLAN.md` §3; §7 has carried the delimiters since 2026-09-29, and
+the `Argv table in seam-commands.md` test has run `--check` since `ae9764e`.
 
 **Do not cite any of the five.** Row 3 is the one that has already cost
 something: the real semantics are exactly why an empty leading component made a
@@ -1125,13 +1128,14 @@ other three are proposed there.
 
 ## Open, ours, and solvable
 
-**Round 30 carries these, on the operator's word of 2026-10-05**: the round
-stays open until everything here that can be fixed is fixed, both applications
+**Round 30 carried these, on the operator's word of 2026-10-05**, and closed
+on 2026-10-06; entries below fixed since say so in their headings. The round
+was to stay open until everything here that could be fixed was fixed, both applications
 ship betas, and an acceptance run of both passes. So *"not now"* and *"round
 31"* stopped being reasons. Where an entry below still says why it waited,
 that was the reason before 2026-10-05, kept as the record.
 
-### At the repeat limit the last read's checksum is not printed, and the spool can leave it in no line
+### At the repeat limit the last read's checksum is not printed, and the spool can leave it in no line (fixed for `.22`)
 
 **Fixed for `.22`, in round 31**: when the kept read is not the last, the
 line that ends the loop names it, `Done; (repeat limit of 5 reads reached; at
@@ -1152,7 +1156,7 @@ after every read but the last, then `Done; (repeat limit of N reads reached; at
 most M reads agreed)`, and the block's `EAC CRC32` is the kept read's. Up to
 `.19` the kept read was the last read, so the log carried every checksum. From
 `.20` it is the read the most reads agreed on, the newest on a tie
-(`crip_spool_kept_at_limit()`, `src/cyanrip_main.c:868`), so **a track read A,
+(`crip_spool_kept_at_limit()`, `cyanrip@174a134:src/cyanrip_main.c:868`), so **a track read A,
 A, B, B, C keeps B, and C is in no line of the log**. The block's paranoia
 counters are the last read's (`Scope:  the last of 5 reads`), so in that case
 they describe C while every other figure in the block describes B, and nothing
@@ -1182,7 +1186,7 @@ It is a P2 line. Platterpus reads it with two patterns, the prefix `Done;
 addition after `agreed` leaves both matching, so no string they match is
 removed and nothing of theirs has to ship first. It wants announcing in a lap.
 
-### The `Gaps:` list leaves out a pregap it could not determine, so it reads as none
+### The `Gaps:` list leaves out a pregap it could not determine, so it reads as none (fixed for `.22`)
 
 **Fixed for `.22`, in round 31**: each pregap whose search failed has a line,
 `pregap of track N unknown (sub-channel unreadable)` or `(sub-channel CRC
@@ -1237,9 +1241,10 @@ the run's 13 lists give track 4's 158 frames and two leave it out, the
 unknown (...)`, which `.23` would for a failed search, so **both searches
 returned zero**. Six filed logs of the reference disc now leave track 4 out.
 Platterpus's own script found the same pair, by comparing the run's lists
-(their step L1554, `expect-pregaps-agree`, graded `info`). **With no drive**: `-l 1` of `tests/fixtures/basic.cue` prints
-`None signalled` while the whole-disc rip's track 2 block reads `unknown
-(sub-channel unreadable)`.
+(their step L1554, `expect-pregaps-agree`, graded `info`). **With no drive, before `.22`**: `-l 1` of `tests/fixtures/basic.cue`
+printed `None signalled` while the whole-disc rip's track 2 block read
+`unknown (sub-channel unreadable)`; from `.22` it prints `pregap of track 2
+unknown (sub-channel unreadable)`.
 
 **No audio byte depends on it**: the default action merges a pregap into the
 track before it, whose end the TOC already gives. The cue sheet's `INDEX 00` for
@@ -1270,7 +1275,8 @@ either, needs the drive. The search reads Q sub-channel frames near the index
 boundary, and whether a frame there reads with a bad CRC or a stale index is a
 question of the drive's reporting, which no image reproduces. What the log can
 say without a drive is that the value is one reading; how it should say it is a
-line a consumer renders, so it is round 31's to agree.
+line a consumer renders, so it is for a round to agree, and `STATUS.md`'s
+`subchannel-pregap-varies` names which (round 35 when this was corrected).
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
@@ -1520,7 +1526,7 @@ enforcing `HANDSHAKE-CLOSE-BY`: *enforcement lets a clock skew block a release*.
 A 30-second default doing the same thing to a release is the same shape, one
 layer down.
 
-### `track is partially accurately ripped` is said of a track whose bytes are wrong
+### `track is partially accurately ripped` is said of a track whose bytes are wrong (tally renamed for `.22`)
 
 **Found by Platterpus in round 26's real test** (their lap 5 §B3), and
 confirmed here from our filed copy. `docs/rig-2026-09-24-df91ae7/rips/after-cancel.log`
@@ -1590,7 +1596,7 @@ their lap 5: amend one clause, accept the rest.** They proposed, per track, `Onl
 the summary `1 track(s) matched AccurateRip on one frame only`. The summary is
 accepted as written. **The per-track line says less than was established**: the
 450 line is printed only when both whole-track lookups returned −1, compared and
-not found (`src/cyanrip_log.c:594`). *"Unverified"* reads as *not checked*,
+not found (`cyanrip@174a134:src/cyanrip_log.c:594`). *"Unverified"* reads as *not checked*,
 which is round 7 H4's own distinction: *"it failed to match the database, and
 those are different claims."* And the confidence belongs to the frame that
 matched, not to the rest. Proposed: `Only one frame matched AccurateRip
@@ -1600,10 +1606,10 @@ matched, not to the rest. Proposed: `Only one frame matched AccurateRip
 lookup that missed fell through to the whole-track checksum
 (`crip_find_ar()`, their B1a). See `docs/SETTLED.md`'s upstream section.
 
-### The cache probe's calibration is wrong
+### The cache probe's calibration was wrong (fixed for `.20`)
 
-**FIXED for `.20`, 2026-10-05, released on beta 2026-10-06, and MEASURED ONCE,
-IN AGREEMENT** (`394ab17`).
+**FIXED for `.20`, 2026-10-05, released on beta 2026-10-06, and MEASURED FIVE
+TIMES, IN AGREEMENT** (`394ab17`).
 The probe now asks `cd-paranoia -A`'s question: a re-read is a hit when it is
 faster than `MIN_SEEK_MS`, 6 ms (libcdio-paranoia `src/cachetest.c:41`, read at
 `384f4da`), on its reasoning that no seek on a CD costs under ~10 ms. By that
@@ -1611,8 +1617,9 @@ criterion every "cached read" in the first sixteen rows below, 42 to 82 ms,
 was a seek, which is how all sixteen sessions ran to the ceiling. A slow
 re-read is tried three
 times before it ends the search. `miss_cost` is still measured and printed, and
-a drive whose full-stroke read beats 6 ms is refused as untimeable. The `-j`
-record's `hit_ratio` is `hit_below_us` from `cyanrip-diagnostics/7`.
+a drive whose full-stroke read beats 6 ms is refused as untimeable. The
+`--diagnostics` record's `hit_ratio` is `hit_below_us` from
+`cyanrip-diagnostics/7`.
 `tests/cacheprobe.c` pins the decision against the table's own figures,
 revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
@@ -1758,8 +1765,10 @@ understating its own case.**
 
 Evidence: `docs/rig-*/session/transcript.txt`, one per row: this said *"all
 eight"* from the day the table held eight until 2026-10-05, when it held
-seventeen, and the test below checks the rows rather than the count. Re-derive with
-`grep -h "Cache probe:" docs/rig-*/session/transcript.txt` — and note that
+seventeen, and the test below checks the rows rather than the count. The
+transcripts are on the `evidence` branch since HR-2's move; re-derive with
+`tools/evidence.py fetch`, then `tools/evidence.py cat
+docs/rig-<row>/session/transcript.txt | grep "Cache probe:"` per row — and note that
 `cached read` must be matched with a guard, because **`uncached` contains
 `cached`**: the first derivation of this table read the same number into both
 columns and produced a margin of exactly 400% on every row, which is what a
@@ -1856,8 +1865,8 @@ fixture a real round produces, with v5 on the same bytes as the control, and
 the control does not close. The same change requires `HANDSHAKE-AGREED-CHANGES`
 on a v6 `GO` (C44). **Both are live from `643631b`**, where v6 landed and
 `PROTOCOL_VERSION` went to 6 with no other change to this code. They apply to a
-file declaring 6, and no lap has declared 6 yet: v6 §14 waits for both gates to
-say in a lap that they implement it. Both halves are revert-proved.
+file declaring 6; the first was round 28 lap 5, once both gates had said in a
+lap that they implement it, as v6 §14 asks. Both halves are revert-proved.
 
 **Found 2026-09-22, answering their post-round-23 standing status**
 (`docs/handshake/inbound/status-2026-09-22-v0.6.53-c2f43d28.md`, the
@@ -1903,14 +1912,15 @@ from Platterpus's real lap 2, which is held:
    literally.** That is a rule for whoever writes the lap, and a brittleness in
    the gate, not a defect in any lap already sent.
 
-**Why none was fixed on finding, and why 2 and 4 still are not.** All four
+**Why none was fixed on finding.** All four
 were latent: no peer lap declared more than 5 or less than an earlier lap, and a
 closing lap can name the file. This paragraph also said *"no lap has followed a
 closed round"*, which the replay above shows is false: six have, all `GO`.
-Items 1 and 3 are fixed. **Items 2 and 4 wait for v6, and on purpose.** Item 4
-is v5's literal reading of C37, which v6 replaces. Item 2's row is proposed for
-amendment rather than implementation, because as written it refuses those six
-laps.
+Items 1 and 3 were fixed on 2026-09-23. Items 2 and 4 waited for v6, on
+purpose: item 4 was v5's literal reading of C37, which v6 replaces, and was
+written out of the v6 path the same day; item 2's row was proposed for
+amendment rather than implementation, because as written it refused those six
+laps, and its behaviour was fixed on 2026-10-11 (above).
 
 ## Open, ours, and NOT solvable here — no drive in this environment
 
@@ -1919,17 +1929,19 @@ coverage.
 
 | gap | status |
 |---|---|
-| `-x` correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). **`.20`'s fix (`394ab17`) ran once on a drive, 2026-10-06, and agreed**: `128 to 255` beside `cd-paranoia -A`'s 137. This cell said *"measured twice"* while the table above held nine rows |
+| `--cache-probe` (`-x` until 2026-10-12) correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). **`.20`'s fix (`394ab17`) has run five times on a drive, 2026-10-06 to 2026-10-16, and agreed each time**: `128 to 255` beside `cd-paranoia -A`'s 137 or 144. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
-| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. The only `read with errors.` arm exercised is still the fixture's (`tests/badsector.c`). From `.20` that arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have; no `.20` rip has run on a drive |
+| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. From `.20` the `read with errors.` arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have. The `-Z` arm printed it on a drive on 2026-10-06 (`docs/rig-2026-10-06-5704062/`, tracks 3 and 5); the skip arm has run only on the fixture (`tests/badsector.c`) |
 | CD-TEXT from a physical disc | `mmc_read_cdtext` is a different code path from the image parser, and no disc with CD-TEXT has been read |
 | ~~the diagnosed-abort exit code~~ | **RETIRED 2026-09-22.** `cyanrip -N -l 1` with no `-s` exited **1** with `Offset is unset!` at column 0, `Rip completed:  no (aborted, 0 of 14 tracks)` and a complete footer — `docs/rig-2026-09-22-2cce60d/session/script-report.json` step 212. The reason given here (*"every rig rip so far had `Ripping errors: 0`"*) had **already been false since 2026-09-10**: seven filed rig logs carry `Ripping errors: 1`, counted off `docs/rig-*/rips/*.log` rather than remembered |
 | ~~a non-zero `Read stalls:` count~~ | **RETIRED 2026-08-26**, and this row outlived the retirement by a month. **Five** filed rig logs carry a populated line, up to `5 reads exceeded 10s; longest 11s (track 1, LSN 8322)`, counted off `docs/rig-*/rips/*.log`. The rule it carried still holds and is why it is kept visible: **a silent watchdog is not a working watchdog**, and zero heartbeats on healthy media — which is what all eight rips of 2026-09-22 report — is the expected result and evidence of nothing |
 
-The remaining `TODO`s in `src/pregap.c` are upstream's, carried with the feature
-from PR #115, and are open questions rather than known defects: whether libcdio
-can report a first track other than 1, and whether the macOS path can be
+The six remaining `TODO`s in `src/pregap.c` are upstream's, carried with the
+feature from PR #115, and are open questions rather than known defects: whether
+libcdio can report a first track other than 1, whether `track_number - 1` is
+always safe, whether the Q fields are always BCD, whether a cache defeat is
+ever needed, finer error handling, and whether the macOS path can be
 restored (it needs `cdio_get_device_fd()`, which is not in libcdio 2.1.0 —
 verified against the installed headers *and* the `.so` export table).
 
@@ -1990,7 +2002,7 @@ running, or wait for it.
 said the cancel *"sent a second TERM 4.9 s after the first"*, Platterpus's
 *post-cancel rescue*, `fuser -k TERM /dev/sr0`, and that a second signal ends
 cyanrip with `_exit(1)` and no footer. The second half is true of our handler
-(`src/cyanrip_main.c:1219-1220`). The first is not true on this rig: the
+(`cyanrip@174a134:src/cyanrip_main.c:1219-1220`). The first is not true on this rig: the
 2026-10-05 run's cancel shows the cancel's own TERM stopping at the host
 wrapper, the rescue's TERM finding cyanrip still holding the drive, and a
 signed footer about 0.3 s later, which a second signal would have prevented
@@ -2001,7 +2013,7 @@ log was in a temporary directory and is not in the bundle, so whether it was
 signed is still not known.
 
 **SIGHUP is handled from `.20`**, like SIGTERM: the footer names it, `-Y`
-verifies, and the `-j` record is written. A SIGHUP that arrives already ignored
+verifies, and the `--diagnostics` record is written. A SIGHUP that arrives already ignored
 stays ignored, so `nohup` still keeps a rip running (measured). `sc_interrupt`
 pins it, revert-proved. SIGQUIT keeps its default, quit and dump core, which is
 the debugging path it exists for.
@@ -2192,9 +2204,11 @@ fetching the branch, which is this file's own *`git branch -r` is a cache, not
 the remote* rule biting in the middle of verifying somebody else's claim.
 
 **We have the same shape, and looking for it is the point of filing this.**
-`CLAUDE.md` carries *"never push a topic branch — the deletion is not available
-to us"* as prose backed by an observed `HTTP 403`, with an explicit note that
-there is deliberately no test because the only check would reach the network.
+`CLAUDE.md` carried *"never push a topic branch — the deletion is not
+available to us"* until 2026-10-12, as prose backed by an observed `HTTP 403`,
+with an explicit note that there is deliberately no test because the only check
+would reach the network; it now says to push one only to open its pull request,
+and still records branch delete as `HTTP 403`.
 That reasoning still holds and the exposure is still real: **the rule holds here
 because the proxy refuses, not because anything of ours checks.** Prose plus an
 accident of the environment is the same class as a bolded PR body; it just
@@ -2244,18 +2258,18 @@ measured 2026-09-22 with our own loader:
 
 **And our test proves the code, not the rule.** `test_v5_close_rule_and_the_v4_control`
 passes on the second record: `_v5_ours()` defaults to
-`held="round-30-lap-04.md"` (`tests/release_gate.py:2928`). A fixture that
+`held="round-30-lap-04.md"` (`tests/release_gate.py:3182`). A fixture that
 cannot occur made the one mechanism v5 exists for look exercised.
 
 **The remedy is v6 wording, not a gate edit by one side.** Their reading is
 the one under which §5b does what it says, and C42 already makes the gate print
 the lap it resolved from, so audit does not depend on the closing file's
 declaration. Proposed in round 24 lap 1, and landed in round 25 as v6 §5b
-step 1 and C37. **The divergence is not gone yet.** Our gate reads a file
-declaring 6 the decision-time way, and every lap so far declares 5, which our
-gate still reads literally. So the two gates keep two readings until laps
-declare 6. Round 25 closed on our gate by ordinary transcription, not by
-step 3. Kept under *Open* until a round has closed under §5b step 3.
+step 1 and C37. **The divergence is gone.** Our gate reads a file
+declaring 6 the decision-time way, and laps declare 6 from round 28 lap 5 on.
+Round 25 closed on our gate by ordinary transcription, not by step 3; round 28
+closed under §5b step 3 on Platterpus's lap 9, which was this entry's exit
+condition, and rounds 30 and 31 closed the same way.
 
 
 `PROTOCOL.md` §5 requires `HANDSHAKE-PEER-VERDICT: GO`, *"transcribed from the
@@ -2268,9 +2282,9 @@ first speaker.
 Not hypothetical and not new. `SETTLED.md` row 102 records it from **round 17**,
 where we spoke last and Platterpus's `--status` held the round `OPEN`; they filed
 their acceptance as a `verified/` record. **Round 22 is the first time they spoke
-last**, and we cannot use that escape: `tools/release-gate.py --release-gate`
-refuses while any round is open, so an unclosed round 22 blocks
-`+platterpus.14` permanently. Our lap 5 is that extra lap, and it closes the
+last**, and we could not use that escape: `tools/release-gate.py
+--release-gate` refused while any round was open (until protocol 8), so an
+unclosed round 22 blocked `+platterpus.14` permanently. Our lap 5 is that extra lap, and it closes the
 round rather than reopening anything.
 
 Measured on our side rather than assumed: with their lap 4 filed,
@@ -2333,9 +2347,8 @@ When the newest lap is held, the open state now ends ` (draft — lap not releas
 for reading)`. Closed and released states are unchanged. The test,
 `test_a_held_lap_banner_says_it_is_a_draft`, reads the expected string out of
 Platterpus's round 23 lap 2 table, the shape they ran through their parser,
-rather than retyping it. It is revert-proved. **It ships in no release yet**: a
-build of the tip carries it, and `+platterpus.15` is the first release that
-can. The history below is kept because it is why the ledger in v6 §5e
+rather than retyping it. It is revert-proved. **It first shipped in
+`+platterpus.15`** (`df91ae7`). The history below is kept because it is why the ledger in v6 §5e
 exists.
 
 **Status 2026-09-22, found by the pre-round-24 document audit: the change was
@@ -2504,7 +2517,7 @@ Two separate causes, and they need different answers:
   was encoded` — because `none` over an unstated population is the absence-of-
   evidence defect wearing a number.
 - **`File(s):`** — **STILL OPEN.** It is built from `ctx->settings.outputs` and
-  the naming scheme (`cyanrip_log.c:642`) and consults nothing about what was
+  the naming scheme (`cyanrip_log.c:847`) and consults nothing about what was
   written, so it names a path whatever happened to it. Platterpus's phrase for
   their own version of this — *a completeness field computed from the REQUEST,
   read as the OUTCOME* — fits it exactly. **It prints from
@@ -2603,8 +2616,10 @@ can derive. Round 22.
 those regions are digital silence, so the skip is a no-op and any golden log
 derived from the disc is silent on that logic — **in both implementations.**
 
-Ours is covered by three synthetic vectors in `audio-checksums.py self-test`,
-non-zero everywhere including the edges. **Platterpus has none to cover**: it
+The Python copy of the algorithm is pinned by one synthetic vector, non-zero
+including the edges, under three first/last settings in `audio-checksums.py
+self-test`; the C is compared with it by the `audio_checksums` image
+scenario. **Platterpus has none to cover**: it
 computes no AccurateRip checksum and reads ours from the log (their round 28
 lap 6 S7). Checked at `platterpus@808f8fb1` on 2026-10-12: nothing under their
 `src/` computes one, and `ctdb/crc.py` is the CTDB CRC with CTDB's own trims.
