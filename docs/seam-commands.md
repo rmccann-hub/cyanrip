@@ -86,9 +86,7 @@ the other side's wrong code, because nothing put them in the same row.
 
 ## 1. Rip-path flags
 
-Seventeen flags reach the argv builder (`adapters/cyanrip_backend.py`). The
-generated contract's §3 lists eighteen because the **version probe** contributes
-its own, which is a different call path and is tabled separately in §2.
+Twenty-one flags reach the argv builder's rip path (`adapters/cyanrip_backend.py`), one row each below, and `-I`, sent only by the disc-info probe, has a row here too. The generated contract's §3 lists twenty-four because it also counts the version and verify-log probes' own flags, which §2 tables separately.
 
 | flag | argument | type | range / shape enforced | meaning | **PP** | **CR** |
 |---|---|---|---|---|---|---|
@@ -110,6 +108,10 @@ its own, which is a different call path and is tabled separately in §2.
 | `-I` | — | flag | **never with `-J`** | — *(mutual exclusion recorded in `dependency-contracts.md`; we should state why)* | HAVE |  HAVE — refuses with `-J`, §7 |
 | `--consumer` | tag | `str`, `<name>/<version>` | no whitespace, contains `/` | who we tell them we are. Validated because it is written verbatim into an archival log as the identity of the producing program | HAVE |  HAVE |
 | `--prefer-disc-isrc` | — | flag | sent only to a build whose provider contract lists it in P1, and only with the `Disc ISRC` setting on | a code the disc returned is what the files and the `Metadata:` block's `ISRC:` carry, over the one `-t` gave, track by track; a track whose disc gave none keeps ours, and the one we gave stays in `Invoked as:` | HAVE |  HAVE — .24, 93afa15 |
+| `-T` | mode | `str` enum | always `unicode` | how cyanrip replaces characters a file name cannot hold; pinned to cyanrip's default so a moved default cannot rename files | HAVE |  HAVE |
+| `-U` | — | flag | always present | turns off the Cover Art DB query, which cannot succeed under `-N`; the log loses only that query's line (your round 30 lap 5 S15) | HAVE |  HAVE |
+| `-W` | — | flag | always present | keeps a pre-emphasised disc's own samples, and the cue says `FLAGS PRE`, instead of de-emphasising | HAVE |  HAVE |
+| `--diagnostics` | file | `str`, a file name | `cyanrip-diagnostics-<stamp>.json`, unique per rip, in the rips folder | cyanrip's machine-readable record of the rip, the one artifact of a run refused before its log opens | HAVE |  HAVE |
 
 ## 2. Probe-path flags, which is a separate call and a separate risk
 
