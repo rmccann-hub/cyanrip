@@ -38,10 +38,12 @@ cell reads **`not-probed: <reason>`** — a recorded finding. **A blank reads as
 
 **Nothing is out of scope for being unused.** *We may have to use or fix it in
 the future*, and at that moment an undocumented argument is something a person
-rediscovers under time pressure. The tables below are therefore incomplete by
-construction today: they cover the 17 flags we send, not the 41 their tool has.
-**That gap is the work, not an oversight** — every remaining flag needs a row
-with `NO: <reason>` or `?`.
+rediscovers under time pressure. The tables below were incomplete by
+construction until round 35: they covered the flags we send and not the rest of
+cyanrip's. **That gap was the work, not an oversight**, and §1b closes it: every
+flag cyanrip's `--help` lists has a row in §1, §1b or §2, each one we do not
+send reading `NO: <reason>` or `?`, and `tools/probe-argv-surface.py --check`
+fails when one has none.
 
 ## How to read the two status columns
 
@@ -280,8 +282,10 @@ positive teaches people to ignore the true ones.
    We sanitise it outbound; we do not know what they do with it inbound, and a
    value that survives our check and breaks theirs is the exact gap the
    double-check rule exists for.
-3. **Which of their 41 flags are rip-path and which are probe-path**, so §2's
-   distinction can be mechanical rather than ours to infer.
+3. **ANSWERED in round 35, and kept as the record of the ask:** which of
+   their flags are rip-path and which are probe-path, so §2's distinction can
+   be mechanical rather than ours to infer. §1 rows the rip path's, §2 the
+   probes', and §1b every other flag cyanrip accepts.
 4. **ANSWERED in round 7 lap 31, and kept as the record of the ask:** `\:`
    escapes a colon in both flags (§7, *Answers to §4.4*), and Platterpus sends it.
    The U+2236 substitution described below ended then; what still reads the
