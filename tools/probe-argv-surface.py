@@ -54,6 +54,7 @@ import pathlib
 import re
 import shutil
 import concurrent.futures
+import json
 import subprocess
 import sys
 import tempfile
@@ -113,6 +114,9 @@ def probe(binary, image, flag, value, extra=None):
                     f"**killed by signal {-r.returncode}**", None)
         return "refused", r.returncode, (msg[-1] if msg else "(no message)"), None
 
+    if flag == "--diagnostics":
+        return record_outcome(out, os.path.dirname(image) or ".", value)
+
     pat = EFFECT.get(flag)
     if not pat:
         return "unobservable", 0, "", "(no header field exposes this)"
@@ -131,6 +135,31 @@ def probe(binary, image, flag, value, extra=None):
             same = str(pat[1](value)) == observed
         return ("accepted" if same else "ignored"), 0, "", observed
     return "accepted", 0, "", observed
+
+
+# --diagnostics takes effect as a FILE, written at exit, so no header line
+# can show it: the probe looks for the record where the value says. Asked for
+# by Platterpus's round 35 lap 8 S7, at an unwritable path and with an empty
+# value, both of which exit 0 with no record. Each says why on stderr, which
+# this probe captures, so the row carries that line; a run that exits 0 with
+# no record AND no line is graded ignored, which --gate refuses.
+RECORD_REFUSED = re.compile(r'^Couldn\'t open diagnostics path ".*" for writing!$',
+                            re.M)
+
+
+def record_outcome(out, cwd, value):
+    path = os.path.join(cwd, str(value)) if value else None
+    if path and os.path.isfile(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                json.load(f)
+        except (OSError, ValueError):
+            return "ignored", 0, "", "(a file was written that is not JSON)"
+        return "accepted", 0, "", "record written"
+    m = RECORD_REFUSED.search(out)
+    if not m:
+        return "ignored", 0, "", "(no record and no line saying why)"
+    return "no record", 0, m.group(0), None
 
 
 GRID = [
@@ -187,6 +216,10 @@ STRING_GRID = [
                              "1", "=drop", "1=", "1==drop", "1=drop=", "=", "=="]),
     ("-C", "cover art location", ["Front=/nonexistent.png", "Front=", "=/nonexistent.png",
                                   "Front", "1=", "="]),
+    # Relative to the probe's own directory, so the row reads the same on
+    # every host; "." is a directory, which open() refuses for writing.
+    ("--diagnostics", "diagnostics record path", ["rec.json", "/nonexistent/rec.json",
+                                                  "", "."]),
 ]
 
 INTERACTIONS = [
@@ -241,8 +274,10 @@ def markdown_block(rows, inter, ignored, banner):
     n_ref = sum(1 for r in rows if r[3] == "refused")
     n_acc = sum(1 for r in rows if r[3] == "accepted")
     n_uno = sum(1 for r in rows if r[3] == "unobservable")
+    n_nor = sum(1 for r in rows if r[3] == "no record")
     out += ["", f"**{len(rows)} probes: {n_acc} accepted, {n_uno} unobservable, "
-                f"{n_ref} refused, {len(ignored)} silently ignored.**", "",
+                f"{n_ref} refused, {n_nor} exited 0 with no record and a line "
+                f"saying why, {len(ignored)} silently ignored.**", "",
             END_MARK]
     return "\n".join(out)
 
@@ -430,7 +465,9 @@ def main():
               f"{sum(1 for r in rows if r[3] == 'refused')} refused, "
               f"{sum(1 for r in rows if r[3] == 'accepted')} seen to take "
               f"effect, {sum(1 for r in rows if r[3] == 'unobservable')} "
-              f"unobservable")
+              f"unobservable, "
+              f"{sum(1 for r in rows if r[3] == 'no record')} with no "
+              f"record and a line saying why")
         return 0
 
     if a.check:
@@ -461,7 +498,8 @@ def main():
         else:
             n_uno = sum(1 for r in rows if r[3] == "unobservable")
             print("\n**Silently-ignored values: none.** Every value was seen to "
-                  "take effect, was refused with a message, or could not be "
+                  "take effect, was refused with a message, exited 0 with no "
+                  "record and a line saying why, or could not be "
                   f"observed ({n_uno} unobservable, which is not the same as "
                   "taking effect).")
         return 0

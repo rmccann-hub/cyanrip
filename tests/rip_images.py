@@ -5522,6 +5522,42 @@ def sc_argv_probe_names_what_it_did_not_see():
              f"seen to take effect")
 
 
+def sc_argv_probe_reads_the_record():
+    """The argv probe grades `--diagnostics` by the file, not the exit status.
+
+    Platterpus's round 35 lap 8 S7 asked for `--diagnostics` in
+    `docs/seam-commands.md` §7, at an unwritable path and with an empty value.
+    Both exit 0 and write no record, so an exit-status probe calls them
+    accepted, the defect `sc_argv_probe_names_what_it_did_not_see()` holds for
+    header fields. Three arms, each from one real invocation or the grading
+    function itself: a writable path is `accepted` only because the record is
+    there and parses; an unwritable one is `no record` carrying cyanrip's own
+    line; and no record with no line is `ignored`, which `--gate` refuses.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "crip_argv_probe", ROOT / "tools" / "probe-argv-surface.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    image = str(WORK / "basic.cue")
+    rec = WORK / "argv-probe-record.json"
+    rec.unlink(missing_ok=True)
+    got = mod.probe(str(CRIP), image, "--diagnostics", rec.name)
+    if got[0] != "accepted" or not rec.is_file():
+        fail(f"argv_probe: --diagnostics {rec.name} graded {got!r}, record "
+             f"{'present' if rec.is_file() else 'absent'}; accepted means the "
+             f"record was found")
+    rec.unlink(missing_ok=True)
+    got = mod.probe(str(CRIP), image, "--diagnostics", "/nonexistent/rec.json")
+    want = 'Couldn\'t open diagnostics path "/nonexistent/rec.json" for writing!'
+    if got[0] != "no record" or got[2] != want:
+        fail(f"argv_probe: --diagnostics at an unwritable path graded {got!r}; "
+             f"it writes no record and says {want!r}")
+    got = mod.record_outcome("", str(WORK), "never-written.json")
+    if got[0] != "ignored":
+        fail(f"argv_probe: no record and no line graded {got!r}; that is a "
+             f"value silently ignored, which --gate must refuse")
+
+
 def sc_mutation_exclusions_are_pinned():
     """`tools/mutate.py`'s `EXCLUDED_TESTS` may not change silently.
 
