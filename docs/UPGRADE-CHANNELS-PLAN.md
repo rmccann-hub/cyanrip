@@ -9,9 +9,9 @@
 >
 > | § | state |
 > |---|---|
-> | **3** — declare the channel, do not parse it | **BUILT.** `docs/release-ledger.tsv`'s columns are `seq channel version commit round`; 22 rows. |
-> | **3, ordering** — a sequence number, not a version comparison | **BUILT.** `release-manifest.json` carries `release_seq` and `latest_seq: 22`; nothing parses the version string. |
-> | **4** — a generated manifest, because tags do not work | **BUILT.** `tools/gen-release-manifest.py`, schema 2, `--check` is a gate. The four properties it asserts are in `CLAUDE.md`. |
+> | **3** — declare the channel, do not parse it | **BUILT.** `docs/release-ledger.tsv`'s columns are `seq channel version commit round`; 22 rows on 2026-09-16, one per published build. |
+> | **3, ordering** — a sequence number, not a version comparison | **BUILT.** `release-manifest.json` carries `release_seq` and `latest_seq` (22 on 2026-09-16); nothing parses the version string. |
+> | **4** — a generated manifest, because tags do not work | **BUILT.** `tools/gen-release-manifest.py`, schema 2, `--check` is a gate. The properties it asserts, and the one v8 retired since, are in `CLAUDE.md`. |
 > | **5** — warning and option | **BUILT, and it was already half true when written.** (1) every logfile carries `Handshake:` and the fork banner, so a beta is identifiable offline; (2) `default_channel` is `stable`; (3) the fact is in *every* log, so a UI re-derives rather than remembers; (4) declining changes nothing. |
 > | **5, the open question** — should a beta expire? | **STILL OPEN.** Put to Platterpus; our inclination remains no expiry, louder notice. |
 > | **6a** — `release/*` marker branches | **NOT BUILT.** Checked against the remote on 2026-09-16, not against `git branch -r`: `git ls-remote --heads origin` returns exactly `master` and `platterpus-fork`. |
