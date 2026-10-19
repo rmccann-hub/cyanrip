@@ -96,8 +96,8 @@ If the latest build is broken, you can find older ones in the [nightly release p
 ### Compiling
 Complete list of dependencies:
 
- * FFmpeg (at least 4.0, libavcodec, libswresample, libavutil, libavformat, libavfilter)
- * libcdio-paranoia
+ * FFmpeg 5.1 or later (libavcodec, libswresample, libavutil, libavformat, libavfilter; libavcodec at least 59.24.100, every minimum in `src/meson.build`)
+ * libcdio (at least 2.0) and libcdio-paranoia
  * libmusicbrainz5
  * libcurl
 
@@ -147,7 +147,7 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -P `int`             | Sets the [paranoia level](#paranoia-level), default is max, 0 disables checking completely  |
 | -O                   | Overread into lead-in/lead-out areas, if unsupported by drive may freeze ripping            |
 | --stall-secs `int`   | Seconds a frame read must stall before liveness is reported (default 10, 0 disables)        |
-| --cache-probe        | Measure the drive's readback cache (off by default, costs seconds; with `-I`, measure without ripping). **The figure it reports is known to be wrong**, see `docs/KNOWN-ISSUES.md` |
+| --cache-probe        | Measure the drive's readback cache (off by default, costs seconds; with `-I`, measure without ripping). Builds before `.20` reported a figure about fifteen times too large, see `docs/KNOWN-ISSUES.md` |
 | -H                   | Enable HDCD decoding, read below for details                                                |
 | -E                   | Force CD deemphasis, for CDs mastered with preemphasis without actually signalling it       |
 | -W                   | Disable automatic CD deemphasis. Read [below](#deemphasis) for details.                     |
@@ -166,6 +166,7 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -I                   | Only print CD metadata and information, will not rip or eject the CD                        |
 | -a `string`          | Album metadata, syntax is described below                                                   |
 | -t `number=string`   | Track metadata, syntax is described below                                                   |
+| --prefer-disc-isrc   | Tag a track with the ISRC read from the disc, where one is, over one given with `-t` (fork) |
 | -R `int` or `string` | Sets the MusicBrainz release to use, as an index from 1 or an ID, read [below](#metadata)   |
 | -c `int/int`         | Tag multi-disc albums as such, syntax is `disc/totaldiscs`, read below                      |
 | -C `path` or `url`   | Sets cover image to embed into each track, syntax is described below                        |
@@ -217,19 +218,19 @@ The output encoding(s) can be set via the `-o` option as a comma-separated list.
 
 | Format name | Description                                     | Extension | Cover art embedding | Notes                                                     |
 |-------------|-------------------------------------------------|-----------|---------------------|-----------------------------------------------------------|
-| `flac`      | Standard FLAC files                             | `.flac`   | :heavy_check_mark:  | Always uses maximum compression                           |
+| `flac`      | Standard FLAC files                             | `.flac`   | :heavy_check_mark:  | Always uses compression level 11                          |
 | `tta`       | TTA (True Audio) files                          | `.tta`    | ⬜                  | Always uses maximum compression                           |
 | `opus`      | Standard Opus files (in an Ogg container)       | `.opus`   | ⬜                  | VBR, use -b to adjust the bitrate, default is 256 (kbps)  |
-| `aac`       | Standard AAC files                              | `.aac`    | ⬜                  | Use -b to adjust the bitrate, default is 256 (kbps)       |
-| `wavpack`   | Standard lossless WavPack files                 | `.wv`     | ⬜                  | Always uses maximum compression                           |
-| `alac`      | Standard ALAC files                             | `.alac`   | ⬜                  | Always uses maximum compression                           |
+| `aac`       | Standard AAC files, an ADTS stream              | `.m4a`    | ⬜                  | Use -b to adjust the bitrate, default is 256 (kbps)       |
+| `wavpack`   | Standard lossless WavPack files                 | `.wv`     | ⬜                  | Always uses compression level 3                           |
+| `alac`      | Standard ALAC files                             | `.m4a`    | ⬜                  | Always uses maximum compression                           |
 | `mp3`       | Standard MP3 files                              | `.mp3`    | :heavy_check_mark:  | VBR, use -b to adjust the bitrate, default is 256 (kbps)  |
 | `vorbis`    | Standard Ogg/Vorbis files (in an OGG container) | `.ogg`    | ⬜                  | Use -b to adjust the bitrate, default is 256 (kbps)       |
 | `wav`       | Standard WAV files                              | `.wav`    | ⬜                  | 16-bit little endian signed audio, or 32-bit in HDCD mode |
 | `alac_mp4`  | Standard MP4 files (with ALAC encoding)         | `.mp4`    | :heavy_check_mark:  | Always uses maximum compression                           |
 | `aac_mp4`   | Standard MP4 files (with AAC encoding)          | `.mp4`    | :heavy_check_mark:  | Use -b to adjust the bitrate, default is 256 (kbps)       |
 | `opus_mp4`  | Standard MP4 files (with Opus encoding)         | `.mp4`    | :heavy_check_mark:  | Use -b to adjust the bitrate, default is 256 (kbps)       |
-| `pcm`       | Raw audio, 16-bits, two channel, little-endian  | `.raw`    | ⬜                  |                                                           |
+| `pcm`       | Raw audio, 16-bits (32 under `-H`), two channel, little-endian | `.pcm` | ⬜     |                                                           |
 
 For example, to make both FLAC and MP3 files simultaneously, use `-o flac,mp3`. Encodings are done in parallel during ripping, so adding more does not slow down the process.
 
@@ -416,16 +417,20 @@ here that upstream still has are in `docs/upstream/defect-reports.md`:
  * **`--cache-probe`** (`-x` until 2026-10-12) measures the drive's readback
    cache at rip time, on the disc in the drive. Off by default because it costs seconds of drive time, and it refuses
    to report a number for a disc image, which has no cache to measure. It has
-   run on hardware (`-x -I` on 2026-08-25, `-x` ripping on 2026-09-11), and
-   **the number it reports is wrong by roughly fifteen times**: `cd-paranoia -A`
-   measures 137 to 140 sectors on the drive we report as *at least 2048*. The
-   mechanism is in `docs/KNOWN-ISSUES.md`. Do not cite the figure.
+   run on hardware (`-x -I` on 2026-08-25, `-x` ripping on 2026-09-11). Up to
+   `.19` **the number it reported was wrong by roughly fifteen times**:
+   `cd-paranoia -A` measured 137 to 140 sectors on the drive reported as *at
+   least 2048*. `.20` fixed the calibration (`394ab17`), and on five runs since,
+   on one drive, it has reported `128 to 255 sectors` beside `cd-paranoia -A`'s
+   137 to 144. The mechanism and every run are in `docs/KNOWN-ISSUES.md`; do
+   not cite a figure from `.19` or earlier.
 
 Reporting additions, all in the rip log (P2 of `PROVIDER-CONTRACT.md` is the
 complete, derived list):
 
  * `Handshake:` and `Consumer:`, saying which agreed pair a rip came from; a
-   build from an open round says `NOT a released build`
+   build not configured with `-Ddeclare_released=true`, or built from a dirty
+   tree, says `NOT a released build`, whatever the round's state
  * CD-TEXT, disc level and per track, kept verbatim and separate from the
    metadata dictionaries. It fills metadata only where nothing else claimed it:
    user `-a`/`-t` > MusicBrainz > CD-TEXT > defaults.
@@ -441,8 +446,9 @@ complete, derived list):
  * `Encoder:`, naming the libavformat/libavcodec that wrote the audio;
    `Encoder errors:` and `Partial files:`, counting whole tracks encoded and
    partial files left
- * `Cache model:`, reporting the size paranoia models and stating that the
-   drive was not probed -- deliberately not phrased as a cache defeat
+ * `Cache model:`, reporting the size paranoia models and whether the drive's
+   cache was probed (`not probed`, `probed separately` under `--cache-probe`, or
+   `disc image, no drive cache`) -- deliberately not phrased as a cache defeat
  * `Retry limit:`, `Read stalls:`, and on an interrupted rip `Interrupted at:`
  * `Sample peak level:`, `True peak level:`, `Integrated loudness (R128):` and
    `Loudness range (R128):`

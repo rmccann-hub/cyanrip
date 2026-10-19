@@ -11,6 +11,10 @@ done; §3 needs a decision per item before any of it is built.*
 > shim instead of a timer); **D and F are not decided**: CI's workflow still exists and whether
 > it runs is the operator's call, and the `CLAUDE.md` cut needs the operator's
 > agreement on the target. The text below is the plan as written.
+>
+> **Status, 2026-10-19.** D is settled: CI runs, as
+> `.github/workflows/ci.yml` (`86561ff`, 2026-10-12), so the "has never run"
+> below is history. F has no decision recorded here.
 
 **The rule that bounds all of it: nothing here may remove a check or weaken what
 one asserts.** A faster suite that checks less is not an optimisation. Every

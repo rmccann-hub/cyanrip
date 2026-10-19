@@ -84,6 +84,12 @@ jobs:
       - name: Test
         run: meson test -C build --print-errorlogs
 
+      # Meson prints a test's output only when it fails, so a Settled facts
+      # that passes near its 120 s limit says nothing about its slow rows.
+      - name: Where Settled facts spent its time
+        if: always()
+        run: python3 tools/check-settled.py --timing-from build/meson-logs/testlog.json
+
   macos:
     if: github.event_name != 'release'
     runs-on: macos-26
@@ -108,6 +114,12 @@ jobs:
         run: |
           export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
           meson test -C build --print-errorlogs
+
+      # Meson prints a test's output only when it fails, so a Settled facts
+      # that passes near its 120 s limit says nothing about its slow rows.
+      - name: Where Settled facts spent its time
+        if: always()
+        run: python3 tools/check-settled.py --timing-from build/meson-logs/testlog.json
 
   # THE ONE JOB THAT FETCHES THE EVIDENCE BRANCH (PROTOCOL.md v9 §17, HR-2
   # 8a). It checks every manifest row a change adds against its file at its
@@ -172,6 +184,12 @@ jobs:
           'Settled facts' cache_table_matches_the_transcripts
           filed_rig_is_mappable 'No personal details in new evidence'
           'Evidence readers and fixture copies' 'Evidence tool'
+
+      # Meson prints a test's output only when it fails, so a Settled facts
+      # that passes near its 120 s limit says nothing about its slow rows.
+      - name: Where Settled facts spent its time
+        if: always()
+        run: python3 tools/check-settled.py --timing-from build/meson-logs/testlog.json
 
   # Builds curl, neon, libmusicbrainz, libqrencode and FFmpeg from source
   # before cyanrip (.github/mingw-build.sh), hence the longer limit.

@@ -68,7 +68,13 @@ BASE = ["-I", "-N", "-A", "-U", "-P", "0"]
 EFFECT = {
     "-s": (r"^Offset:\s+([+-]?\d+) samples", lambda v: int(v)),
     "-r": (r"^Retry limit:\s+(\d+)", lambda v: int(v)),
-    "-P": (r"^Paranoia level:\s+(\S+)", None),
+    # The header prints 0 as "none" and the top level, 3, as "max".
+    "-P": (r"^Paranoia level:\s+(\S+)",
+           lambda v: {0: "none", 3: "max"}.get(int(v), int(v))),
+    # The disc number, the part before "/". A value strtol() wrapped past
+    # INT_MAX reads here as what it wrapped to, so it grades ignored.
+    "-c": (r"^Disc number:\s+(\S+)",
+           lambda v: int(str(v).split("/")[0])),
     "-O": (r"^Overread:\s+([+-]?\d+) frames", None),
     "--consumer": (r"^Consumer:\s+(\S+)", None),
 }
@@ -82,9 +88,14 @@ def probe(binary, image, flag, value, extra=None):
     # it says: "-J alone" came back refused with the -I conflict message.
     if "-J" in extra and "-I" not in extra:
         base = [f for f in base if f != "-I"]
-    args = [binary, "-d", image] + base + extra
-    if flag:
-        args += [flag] + ([str(value)] if value is not None else [])
+    if flag == "-d":
+        # -d IS the image, so its probe replaces it rather than adding a
+        # second -d. Values are relative to the image's own directory.
+        args = [binary, "-d", str(value)] + base + extra
+    else:
+        args = [binary, "-d", image] + base + extra
+        if flag:
+            args += [flag] + ([str(value)] if value is not None else [])
     r = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                        timeout=120, cwd=os.path.dirname(image) or ".")
     out = r.stdout.decode(errors="replace")
@@ -129,11 +140,14 @@ GRID = [
     ("-Z", "repeat rips until N matches", [-1, 0, 1, 2, 10, 2147483647]),
     ("-S", "drive speed multiplier", [-1, 0, 1, 48, 2147483647]),
     ("--stall-secs", "stall threshold, seconds", [-1, 0, 1, 10, 2147483647]),
-    ("-P", "paranoia level", [-1, 0, 1, 3, 4, 999]),
+    ("-P", "paranoia level", [-1, 0, 1, 3, 4, 999, 4294967296, 4294967297]),
     ("-m", "cover art max size", [-2, -1, 250, 500, 1200, 999]),
     ("-b", "lossy bitrate, kbps", [-1, 0, 1, 256, 100000]),
     ("-l", "track list", [0, 1, 2, 3, 99]),
     ("-c", "disc/totaldiscs", ["0/0", "1/1", "2/1", "1/2",
+                               "2147483647/2147483647",
+                               "2147483648/2147483648", "1/2147483648",
+                               "4294967297/4294967297", "1/4294967298",
                                # malformed shapes: separator missing, doubled,
                                # empty either side. See MALFORMED_SHAPES below.
                                "1", "1/", "/2", "1//2", "/", "//"]),
@@ -147,6 +161,15 @@ GRID = [
 # for every structured argument, is the generalisation of that one fix.
 
 STRING_GRID = [
+    # -d, F9's first flag. Only values whose last line is cyanrip's own
+    # "Unable to open device:" are tabled, because §7 is compared byte for
+    # byte on every CI host: a missing .cue and a directory end on libcdio's
+    # own error, whose wording is its version's; and an empty -d makes
+    # libcdio look for a default drive, which opens a real one on a host
+    # that has a drive. All three were run on 2026-10-19 and each exited 1
+    # with a message; they are in our round 35 lap 7, not in this table.
+    ("-d", "disc image or drive", ["basic.cue", "basic.bin", "/nonexistent",
+                                   "/nonexistent.toc", "/nonexistent.nrg"]),
     ("--consumer", "consumer tag", ["", "x", "platterpus/0.6.4b12", "a" * 4096]),
     ("-a", "album metadata blob", ["", "album=x", "album=a:b", "album=" + "z" * 8192,
                                    "album", "=x", "album=", "a=b:", "a=b::c=d",
@@ -155,10 +178,12 @@ STRING_GRID = [
     # terminator and publish adjacent process memory as track metadata; it is
     # refused since 3923dee. Reported by Platterpus in round 7 lap 31.
     ("-t", "track metadata", ["1=title=x", "1=title=a:b", "0=title=x",
-                              "99=title=x", "1", "99", "1="]),
+                              "2=title=x", "3=title=x", "99=title=x",
+                              "4294967297=title=x", "1", "99", "1="]),
     ("-o", "output formats", ["flac", "", "nosuchformat", "flac,flac"]),
     ("-T", "filename sanitation", ["simple", "os_simple", "unicode", "os_unicode", "bogus"]),
     ("-p", "pregap action", ["1=default", "1=drop", "1=merge", "1=track", "1=bogus", "99=drop",
+                             "197=drop", "198=drop", "4294967297=drop",
                              "1", "=drop", "1=", "1==drop", "1=drop=", "=", "=="]),
     ("-C", "cover art location", ["Front=/nonexistent.png", "Front=", "=/nonexistent.png",
                                   "Front", "1=", "="]),
@@ -289,6 +314,34 @@ def check_against(path, block):
     return 1
 
 
+HELP_FLAG = re.compile(r"^\s+(--[a-z0-9-]+)(?: \((-[A-Za-z])\))?:", re.M)
+ROW_FLAGS = re.compile(r"`(--?[A-Za-z][a-z0-9-]*)`")
+
+
+def rows_cover_help(text, binary):
+    """Every flag in the live --help has a row in §1, §1b or §2.
+
+    Platterpus's F8, landed in round 35: §1 tabled the flags they send and nothing
+    said which of ours they do not, so a flag added here could go unseen
+    there. §1b now rows each one they do not send, and this fails when a
+    flag in --help has no row anywhere, so a new flag cannot land without
+    one. Reads the flag cell of each table row only, never the prose, which
+    is jointly owned. Returns the number of flags --help listed and those
+    without a row; none listed is a refusal, not a pass."""
+    helptext = subprocess.run([binary, "--help"], capture_output=True,
+                              text=True).stdout
+    flags = HELP_FLAG.findall(helptext)
+    tabled = set()
+    for head in (r"## 1\. ", r"## 1b\. ", r"## 2\. "):
+        m = re.search(head + r".*?(?=^## )", text, re.M | re.S)
+        for line in (m.group(0).splitlines() if m else ()):
+            if line.startswith("| `"):
+                tabled |= set(ROW_FLAGS.findall(line.split("|")[1]))
+    return len(flags), [long_ if not short else f"{short}, {long_}"
+                        for long_, short in flags
+                        if long_ not in tabled and short not in tabled]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--binary", default="build/src/cyanrip")
@@ -381,9 +434,23 @@ def main():
         return 0
 
     if a.check:
-        return check_against(a.check,
-                             markdown_block(rows, inter, ignored,
-                                            banner_of(a.binary)))
+        rc = check_against(a.check,
+                           markdown_block(rows, inter, ignored,
+                                          banner_of(a.binary)))
+        listed, missing = rows_cover_help(
+            pathlib.Path(a.check).read_text(encoding="utf-8"), binary)
+        if not listed:
+            print(f"FAIL: {binary} --help listed no flags, so whether "
+                  f"{a.check} rows them all was not checked")
+            return 1
+        for flag in missing:
+            print(f"FAIL: {a.check} has no row for {flag}, which --help "
+                  f"lists: add it to \u00a71 if the consumer sends it, else "
+                  f"\u00a71b")
+        if not missing:
+            print(f"{a.check}: each of the {listed} flags --help lists has a "
+                  f"row in \u00a71, \u00a71b or \u00a72")
+        return rc or (1 if missing else 0)
 
     if a.markdown:
         print(markdown_block(rows, inter, ignored, banner_of(a.binary)))

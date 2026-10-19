@@ -16,12 +16,12 @@
 # License along with cyanrip; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-"""Generate docs/upstream/issues-to-file.md: the twenty-three upstream bug
+"""Generate docs/upstream/issues-to-file.md: the twenty-five upstream bug
 reports, rendered as issues ready to paste into cyanreg/cyanrip's tracker.
 
 The reports themselves are written in two files, and this renders them:
 
-  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-23;
+  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-25;
   * `docs/upstream-cachemodel-report.md`, report 8.
 
 It exists because filing is the maintainer's act, done in a browser, and a
@@ -55,8 +55,10 @@ FORK = "https://github.com/rmccann-hub/cyanrip"
 UPSTREAM = "https://github.com/cyanreg/cyanrip"
 DEFECTS = "docs/upstream/defect-reports.md"
 CACHEMODEL = "docs/upstream-cachemodel-report.md"
-COUNT = 23
-# Where the operator filed all of them, as one issue, on 2026-10-16.
+COUNT = 25
+# Where the operator filed the first FILED_COUNT, as one issue, on 2026-10-16.
+# The rest are drafted and not filed, and the header says so.
+FILED_COUNT = 23
 FILED = f"{UPSTREAM}/issues/167"
 
 
@@ -151,11 +153,14 @@ def render():
         "report's row in `docs/SETTLED.md` re-checks it against `master`. "
         "Every fork commit linked below is on `platterpus-fork`, which is "
         "public, and every upstream commit links to upstream.", "",
-        "**Filed on 2026-10-16**, by the operator, as one issue combining all "
-        f"{COUNT} in the order of importance below: <{FILED}>. That link is "
-        "the operator's word; this file's generator does not read upstream's "
-        "tracker. An item asked for as an issue of its own is pasted from "
-        "here.", "",
+        f"**Items 1 to {FILED_COUNT} were filed on 2026-10-16**, by the "
+        "operator, as one issue combining them in the order of importance "
+        f"below: <{FILED}>. That link is the operator's word; this file's "
+        "generator does not read upstream's tracker. An item asked for as an "
+        "issue of its own is pasted from here. "
+        f"**Items {FILED_COUNT + 1} to {COUNT} are not filed yet**: they go "
+        "to the same issue as a comment, or each as an issue of its own, "
+        "as the operator decides.", "",
         "**How to file.** For each item: open "
         "<https://github.com/cyanreg/cyanrip/issues/new>, paste the "
         "**Title** line into the title box and everything between the two "

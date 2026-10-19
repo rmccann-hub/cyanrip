@@ -44,8 +44,8 @@
 > ### What survives, because it is a measurement and not a procedure
 >
 > **Every `[MEASURED]` row is still a measurement**, and supersession of the
-> workflow does not touch one. In particular §6 — `-O` is overread, it is one
-> keystroke from `-x`, and it hung the PIONEER BD-RW BDR-209D for about 23
+> workflow does not touch one. In particular §6 — `-O` is overread, it was one
+> keystroke from `-x` (`--cache-probe`, long-only since 2026-10-12), and it hung the PIONEER BD-RW BDR-209D for about 23
 > minutes — is cited live by `tools/rig-round16.sh:372` and that citation still
 > resolves. The `[INFERRED]` and `[UNVERIFIED]` rows are the ones to distrust,
 > and row 2 of the table above is the one already known wrong.

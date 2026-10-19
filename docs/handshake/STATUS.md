@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-35-lap-05.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-35-lap-07.md
+STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 35, OPEN, opened by our lap 1, sent 2026-10-16, on +platterpus.24 at 93afa15, which carries the Disc ISRC: line and --prefer-disc-isrc, your TASKS R20, and the bounded -O (lap 1 S4, S5, S11); it closes on the Full run on +platterpus.24 through your first release that parses Disc ISRC: and sends --prefer-disc-isrc, which is your 0.7.108, read by both sides (lap 1 S19), once you answer lap 1 S13 on their wording; our lap 3, sent 2026-10-16, carries our operator's request for a shorter run in its place, built by you, which would stand in only by our operator's override of R1 (lap 3 S14); your lap 2 is taken in, and our lap 4, sent 2026-10-16, answers it; our lap 5, sent 2026-10-16, lands the disc ISRC check and your seam-commands row for you to read and test, on our operator's word of 2026-10-16, and moves neither the pin nor the run; round 34 closed on 2026-10-16, approving +platterpus.23 at 891c79e with your 0.7.106
-STATUS-LAPS: newest sent round-35-lap-05.md (ours), round-35-lap-02.md (theirs); next 6 (theirs) carrying your answers to our lap 3 S13, our lap 4 S6 and our lap 5 S8 and S13, and our seam-commands line copied into your tree; held none
+STATUS-ROUND: 35, OPEN, opened by our lap 1, sent 2026-10-16, on +platterpus.24 at 93afa15, which carries the Disc ISRC: line and --prefer-disc-isrc, your TASKS R20, and the bounded -O (lap 1 S4, S5, S11); it closes on the Full run on +platterpus.24 through your first release that parses Disc ISRC: and sends --prefer-disc-isrc, which is your 0.7.108, read by both sides (lap 1 S19), once you answer lap 1 S13 on their wording; our lap 3, sent 2026-10-16, carries our operator's request for a shorter run in its place, built by you, which would stand in only by our operator's override of R1 (lap 3 S14); your lap 2 is taken in, and our lap 4, sent 2026-10-16, answers it; our lap 5, sent 2026-10-16, lands the disc ISRC check and your seam-commands row for you to read and test, on our operator's word of 2026-10-16, and moves neither the pin nor the run; your lap 6 is taken in, and our lap 7, held, lands your S17 rows, seam-commands §1b and F9's boundary rows, fixes integer arguments that wrapped past INT_MAX, and gives you four decisions, none of them moving the pin or the run; round 34 closed on 2026-10-16, approving +platterpus.23 at 891c79e with your 0.7.106
+STATUS-LAPS: newest sent round-35-lap-05.md (ours), round-35-lap-06.md (theirs); next 7 (ours) carrying the held lap below, once its pull request is merged, on our operator's standing word for round 35; held 7 carrying your lap 6 taken in, your S17 rows, seam-commands §1b and F9's boundary rows landed, the INT_MAX fix, and four decisions for you
 STATUS-RELEASED: +platterpus.24 at 93afa15, 2026-10-16
 STATUS-RELEASE-NEXT: +platterpus.25, whenever it is ready (v8 §6b), carrying what round 35 accepts, the ISO 3901 check among it, and not cut before your release that parses Disc ISRC: <code> (<reason>) (our lap 5 S6); +platterpus.24 is on the beta channel and the stable channel stays +platterpus.23 at 891c79e, which round 34 approved with your 0.7.106; pins 891c79e, reviews +platterpus.24
 STATUS-RUN-NEXT: +platterpus.24 with your-next-release; waiting on your first release that parses Disc ISRC: and sends --prefer-disc-isrc, with +platterpus.24 at 93afa15 as its build under review (our round 35 lap 1); that run is round 35's test and opens round 36, filed once, on our operator's word of 2026-10-16; round 34's run, +platterpus.23 with your 0.7.106 on 2026-10-16, is filed on our evidence branch at 79b36c97 (docs/rig-2026-10-16-891c79e/), and our reading is that folder's README
@@ -19,16 +19,16 @@ STATUS-OPEN: accurate-stream-declared us fixing at round 35, priority 5: a heade
 STATUS-OPEN: subchannel-pregap-varies us fixing at round 35, priority 5: track 9's sub-channel pregap reads 94 or 95 frames between rips in twelve filed sessions and the log states one value, and track 4's 158-frame pregap reads 0 in 6 filed logs of the reference disc, once on .22 on 2026-10-13 and twice on .23 on 2026-10-16, where each search returned zero rather than failing; a line giving both counts when two searches disagree proposed in our round 32 lap 1 S19, and which frame is right still needs the drive
 STATUS-OPEN: error-positions us fixing at round 35, priority 8: each track's positions of read errors and skips in the -j record, your F5's second addition, from the position paranoia passes our status callback, which we discard today; re-read mismatch positions are not computed at all, since -Z compares whole-track checksums
 STATUS-OPEN: exit-classes us fixing at round 35, priority 8: round 8's three exit classes, a flag this build lacks, a disc or drive failure apart from a refused argument, and cancelled or signalled, and a sixth -Y code, from your F8; 1 is the generic code at 30 sites today and 2 to 5 are -Y's, so it is a P4 change proposed in a lap before it lands
-STATUS-OPEN: unsent-flag-rows us fixing at round 35, priority 8: docs/seam-commands.md has rows for the flags you send, and every other flag of ours needs one reading NO: <reason> or ?, from your F8
-STATUS-OPEN: flag-limits us fixing at round 35, priority 9: a boundary row in docs/seam-commands.md for each flag you send, min, max and one past each, from tools/probe-argv-surface.py's runs, -d, -c, -l and -t first, from your F9
+STATUS-OPEN: unsent-flag-rows them fixing at round 35, priority 8: docs/seam-commands.md §1b, landed here in round 35, rows each of the 21 flags of ours your rip path does not send, its PP cell ? until you write NO: <reason>, and tools/probe-argv-surface.py --check fails when --help lists a flag with no row in §1, §1b or §2, from your F8
+STATUS-OPEN: flag-limits us fixing at round 35, priority 9: docs/seam-commands.md §7, generated by tools/probe-argv-surface.py, now has boundary rows for -d, -c, -l and -t and every other value-taking flag you send except -D and --diagnostics: -D's value is read only by a rip, which the probe does not run, and --diagnostics' effect is a file, not an exit; both were measured on 2026-10-19 and our round 35 lap 7 carries them and asks whether to table them, from your F9
 STATUS-OPEN: recordable-medium-line us fixing at round 35, priority 9: a tri-state line saying whether the drive reports the disc as recordable, from your F9, readable only on a drive
 STATUS-OPEN: all-pass-paranoia-counters us fixing at round 35, priority 9: a -Z track's paranoia counters summed over every read, beside the last read's, which the Scope: line qualifies, from your F9
 STATUS-OPEN: encoder-options-flag us fixing at round 35, priority 9: a repeatable key=value flag passing options to the encoder, not -O, from your F9
-STATUS-OPEN: settled-facts-macos us fixing at round 35, priority 4: Settled facts timed out on CI's macOS runner on the push of b06d20e at 120.03 s, after 93.08 s on the same tree at da0db2c and 30.73 s at 21382e4 the same day, once before at 3e467b3 at 120.05 s, again on pull request #34 at 7bbc660 at 120.02 s, which passed in 40.40 s on one re-run of the same tree, and twice on pull request #40 at b45029f at 120.04 s, the run and its one re-run, while pull request #39's tree passed it in 42.44 s minutes earlier; no cause is established, so tools/check-settled.py now prints each run's slowest rows and, when meson kills it, the row that was running, and the next timeout names its row (our lap 1 S8, docs/KNOWN-ISSUES.md)
+STATUS-OPEN: settled-facts-macos us fixing at round 35, priority 4: Settled facts timed out on CI's macOS runner on the push of b06d20e at 120.03 s, after 93.08 s on the same tree at da0db2c and 30.73 s at 21382e4 the same day, once before at 3e467b3 at 120.05 s, again on pull request #34 at 7bbc660 at 120.02 s, which passed in 40.40 s on one re-run of the same tree, and twice on pull request #40 at b45029f at 120.04 s, the run and its one re-run, while pull request #39's tree passed it in 42.44 s minutes earlier; no cause is established, so tools/check-settled.py now prints each run's slowest rows and, when meson kills it, the row that was running; it then passed on macOS at 64bc315's head in 106.55 s, 89% of its limit, and since meson prints a passing test's output nowhere, CI now reads the timing back out of testlog.json after every suite, so a pass near the limit names its slow rows too (our lap 1 S8, docs/KNOWN-ISSUES.md); the first run to print it, pull request #41 at 316c837, passed in 36.1 s, its slowest row 3.82 s
 STATUS-OPEN: hardware-unverified us cannot, because each needs a disc or a drive this environment lacks: C2, which the rig's drive reports unsupported; CD-TEXT from a physical disc; -W on a pre-emphasised disc; a paranoia skip on a drive; -f on a second drive, and a -f search that finds nothing on a drive; and -P 0's sector-by-sector salvage on a drive; asked of your rig in our round 32 lap 1 S21
 STATUS-OPEN: superseded-read-marker both cannot, because the format needs a design both sides agree (round 24's item, with round 8 J14's read time); asked in our round 32 lap 1 S22 whether to keep it
 STATUS-OPEN: files-listed-from-request us cannot, because moving File(s): changes a P2 block you parse and no design exists; asked in our round 32 lap 1 S22 whether to keep it
-STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed all twenty-three on 2026-10-16 as one issue, https://github.com/cyanreg/cyanrip/issues/167, in the order of importance docs/upstream/issues-to-file.md suggests; a reply asking for a pull request or for an item as an issue of its own goes to our operator, who files it
+STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed reports 1 to 23 on 2026-10-16 as one issue, https://github.com/cyanreg/cyanrip/issues/167, in the order of importance docs/upstream/issues-to-file.md suggests, and reports 24 and 25, drafted on 2026-10-19, are rendered there for our operator to file; a reply asking for a pull request or for an item as an issue of its own goes to our operator, who files it
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 STATUS-OPEN: release-markers us cannot, because building or retiring the release/* markers of docs/UPGRADE-CHANNELS-PLAN.md §6a is the operator's decision, now that v8 decouples releases from rounds; put to the operator on 2026-10-12
 
@@ -62,7 +62,8 @@ sees it because it is not named `round-NN-lap-LL.md`.
 The convention is Platterpus's, adopted verbatim: they sent us one on 2026-08-21
 for v0.6.21, explicitly outside the round mechanism, and it was the right shape.
 Rounds are the *formal* channel and they cost something — S-13 fixes a round's
-close conditions at lap 1, and an open round blocks both sides' releases. Between
+close conditions at lap 1, and an open round holds the consumer's approved pin
+(from v8 it no longer blocks a release). Between
 rounds each side still needs somewhere to say where it is.
 
 **Rewritten in place, never appended to.** A stale standing status is worse than
@@ -196,20 +197,17 @@ changed is in `Changelog.md`.
   one bundle and read `GO` by both. Their lap 2 S15 moves their approved pin to
   `891c79e` on this close, and their 0.7.107 is the first release of theirs
   to install it by default. `.23` moved to our stable channel the same day.
-- **Round 35's lap 1 is ours, held** (`round-35-lap-01.md`). It carries
-  Platterpus's TASKS R20, the route the operator chose: each audio track block
-  prints the ISRC read from the disc, `Disc ISRC:`, and `--prefer-disc-isrc`
-  makes it win over `-t`, both landed at `dd60143` for `.24`. It asks
-  Platterpus to accept or amend the wording (S11), and closes on the Full run
-  on `.24` through their first release that parses the line and sends the
-  option (S14). It is held until `.24` is cut, and revised then to name it, as
-  round 32's lap 1 was.
+- **Round 35's lap 1 is ours, sent 2026-10-16** (`round-35-lap-01.md`),
+  naming `.24` at `93afa15`. It carries Platterpus's TASKS R20, the route the
+  operator chose: each audio track block prints the ISRC read from the disc,
+  `Disc ISRC:`, and `--prefer-disc-isrc` makes it win over `-t`, both landed at
+  `dd60143` for `.24`. It asks Platterpus to accept or amend the wording (S13),
+  and closes on the Full run on `.24` through their first release that parses
+  the line and sends the option (S19).
 - **What we would ask of Platterpus next**, to make a run easier to read, is in
-  the handshake README's data register, X6 to X10: each securing pass's
-  record, a hash per bundle member, `--consumer` and `--diagnostics` on the
-  pre-emphasis rips, home paths replaced at export, and the bundle's hash in
-  their reading lap. Their lap 8 meets X10 and takes X6 as their own fix for
-  round 33; our lap 9 asks X7 to X9 for round 33.
+  the handshake README's data register. X6 to X9 landed in theirs on
+  2026-10-14 and X10 is met (round 32 lap 8); the asks still open are X1, X2
+  and X5, each `proposed`.
 - The table of every round is the handshake README's, and the gate is the
   authority over both.
 
@@ -243,15 +241,10 @@ rewritten.
 
 ### Open items
 
-**The block's `STATUS-OPEN` lines are the list, in priority order**, each saying
+**The block's `STATUS-OPEN` lines are the list**, each with its priority and
 whether it is being fixed or stays open and why; `docs/KNOWN-ISSUES.md` has the
-detail. Priority 1 is released in `.22` and stays listed until round 32's
-Full run reads it on a drive. Priorities 2 to 4 are what round 32 asks
-of Platterpus to close, and priority 5 needs a drive. Round 32's lap 1 gives
-priorities 6 and 7 to runs only a drive can give and to four parked joint
-items. Priorities 8 and 9 are what Platterpus's standing status ranked for us
-on 2026-10-12, F5's second addition and F8 and F9, for round 33. The rest stay
-open, each with its reason.
+detail. Priorities 8 and 9 are what Platterpus's standing status ranked for us
+on 2026-10-12, F5's second addition and F8 and F9.
 
 **Removed on 2026-10-12, because they are done**: the eight fixed in `.20`,
 and so in the `.21` round 31 approved, which the block still listed as open:
@@ -267,8 +260,8 @@ lacks on hardware is the `hardware-unverified` line.
 Our `master` mirrors `cyanreg/cyanrip` at `b40c1f0`, 0.9.4-rc3, merged into
 `platterpus-fork` at `79da685`. That is a reading of 2026-10-12T22:46Z, when
 `git ls-remote` last returned it; `tools/upstream-delta.py` is how to check
-again. **Twenty-three defects this fork found in upstream's code are filed
-there, as one issue, [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by our operator on 2026-10-16, in the
+again. **Twenty-five defects this fork found in upstream's code are
+reported; the first twenty-three are filed there, as one issue, [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by our operator on 2026-10-16, in the
 order of importance `docs/upstream/issues-to-file.md` suggests, each
 re-checked against `master` by `tools/check-settled.py`. The link is our
 operator's word: this session cannot open upstream's tracker.
@@ -335,8 +328,8 @@ will hit its ceiling.
 
 ## Releases — read the channel, never the version string
 
-**Every `0.9.4-rc2+platterpus.N` the manifest calls stable IS stable.** The
-`-rc2` is upstream's own string, copied verbatim because we may not mint in `cyanreg/cyanrip`'s namespace;
+**Every `0.9.4-rcN+platterpus.N` the manifest calls stable IS stable.** The
+`-rcN`, `-rc3` now, is upstream's own string, copied verbatim because we may not mint in `cyanreg/cyanrip`'s namespace;
 the part that advances is `+platterpus.N`, which SemVer says MUST be ignored for
 precedence. **A check that reads the shape of the version will call this a
 pre-release, and it will be wrong.** Order by `release_seq`, read the `channel`

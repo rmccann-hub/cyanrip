@@ -103,7 +103,8 @@ kept as-is.
   `generic_img_private_t`, the `_CdIo` struct) because libcdio doesn't yet expose a public
   accessor for the underlying file descriptor -- the PR's own comment notes a libcdio PR
   (libcdio/libcdio#37) that would remove the need for this. Left as-is: it's `#ifdef
-  __APPLE__`-gated (dead code on this Linux-only fork/build), and rewriting someone else's
+  __APPLE__`-gated (compiled only by the macOS CI job since 2026-10-12, and never run
+  against a drive), and rewriting someone else's
   platform-specific low-level driver code without being able to build or test it on macOS
   at all would be a worse idea than leaving it exactly as submitted.
 - **Six remaining `// TODO` comments** inherited from the PR, all pre-existing
