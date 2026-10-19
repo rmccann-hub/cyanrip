@@ -163,6 +163,7 @@ static void free_ctx(cyanrip_ctx *ctx)
         av_dict_free(&ctx->tracks[i].meta);
         av_dict_free(&ctx->tracks[i].cdtext);
         av_freep(&ctx->tracks[i].isrc_disc);
+        crip_error_pos_free(&ctx->tracks[i]);
     }
     av_dict_free(&ctx->cdtext);
     free(ctx);
@@ -215,42 +216,42 @@ static void test_track_fields(void)
     if (!out)
         return;
 
-    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/9\""),
-          "the schema is not cyanrip-diagnostics/9");
+    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/10\""),
+          "the schema is not cyanrip-diagnostics/10");
 
     expect_line(out, "{\"number\":1,\"cd_track\":1,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":\"AA\\\"BB\\\\CC\",\"isrc_disc\":\"ZZZZZ9999999\","
-                     "\"isrc_disc_reason\":null,\"encode_failures\":1}", "track 1");
+                     "\"isrc_disc_reason\":null,\"encode_failures\":1,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 1");
     expect_line(out, "{\"number\":2,\"cd_track\":2,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"subcode\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"libcdio returned none\",\"encode_failures\":0}",
+                     "\"isrc_disc_reason\":\"libcdio returned none\",\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}",
                 "track 2");
     expect_line(out, "{\"number\":3,\"cd_track\":3,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"toc\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"libcdio returned an empty ISRC\","
-                     "\"encode_failures\":0}", "track 3");
+                     "\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 3");
     expect_line(out, "{\"number\":4,\"cd_track\":4,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":true,"
                      "\"preemphasis\":null,\"deemphasis_applied\":null,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"data track\",\"encode_failures\":0}", "track 4");
+                     "\"isrc_disc_reason\":\"data track\",\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 4");
     expect_line(out, "{\"number\":5,\"cd_track\":5,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":null,\"deemphasis_applied\":null,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"not read\",\"encode_failures\":0}", "track 5");
+                     "\"isrc_disc_reason\":\"not read\",\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 5");
     expect_line(out, "{\"number\":6,\"cd_track\":6,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"the driver does not report reading ISRC\","
-                     "\"encode_failures\":0}", "track 6");
+                     "\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 6");
 
     /* No CD-TEXT and no -f: the absent arm names what libcdio reported, every
      * key is still written, and offset_search is null, not an object. */
@@ -280,7 +281,7 @@ static void test_deemphasis_forced(void)
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":null,\"encode_failures\":0}", "forced");
+                     "\"isrc_disc_reason\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "forced");
     free(out);
 }
 
@@ -306,7 +307,7 @@ static void test_isrc_disc_malformed(void)
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":null,\"isrc_disc\":\"1234567890AB\","
                      "\"isrc_disc_reason\":\"not an ISO 3901 code, so not used\","
-                     "\"encode_failures\":0}", "malformed");
+                     "\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "malformed");
     free(out);
 }
 
@@ -375,6 +376,131 @@ static void test_offset_search(void)
     }
 }
 
+/* Counts entries in the one track line that starts with `prefix`. */
+static int count_in_line(const char *out, const char *prefix, const char *needle)
+{
+    const char *p = strstr(out, prefix);
+    if (!p)
+        return -1;
+    const char *eol = strchr(p, '\n');
+    int n = 0;
+    for (const char *q = p; (q = strstr(q, needle)) && (!eol || q < eol); q++)
+        n++;
+    return n;
+}
+
+/* Whether `needle` occurs in the line starting with `prefix`, and where. */
+static const char *find_in_line(const char *out, const char *prefix, const char *needle)
+{
+    const char *p = strstr(out, prefix);
+    if (!p)
+        return NULL;
+    const char *eol = strchr(p, '\n');
+    const char *q = strstr(p, needle);
+    return (q && (!eol || q < eol)) ? q : NULL;
+}
+
+/* /10, round 35: paranoia_all_reads, error_positions and
+ * error_positions_dropped (our lap 7 S18 and S20, Platterpus's lap 8 S8 and
+ * S10). The cap keeps the first 500 and the last 500, as their S8 amended
+ * it, so each boundary is driven: a list that fits, one whose ring is not
+ * yet full, one past the cap by one, and one well past it. */
+static void test_error_positions(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+
+    /* 1: read, nothing reported: every counter key, 0 where nothing was
+     * counted, an empty list and 0 dropped. Not null: the read ran. */
+    cyanrip_track *t = &ctx->tracks[0];
+    t->read_attempted = 1;
+    t->paranoia_status_all[PARANOIA_CB_READ] = 7;
+    t->paranoia_status_all[PARANOIA_CB_VERIFY] = 70;
+
+    /* 2: 700 positions, the ring half full: nothing dropped. */
+    t = &ctx->tracks[1];
+    t->read_attempted = 1;
+    for (int i = 0; i < 700; i++)
+        crip_error_pos_add(t, 1000 + i, CRIP_ERROR_POS_READ_ERROR);
+
+    /* 3: 1001 positions: one past the cap, so exactly one is dropped, and it
+     * is the first of the tail, 500, not the last. */
+    t = &ctx->tracks[2];
+    t->read_attempted = 1;
+    for (int i = 0; i < 1001; i++)
+        crip_error_pos_add(t, i, CRIP_ERROR_POS_READ_ERROR);
+
+    /* 4: 1234 positions, every seventh a skip: the first 500, the last 500
+     * oldest first, and 234 dropped from the middle. */
+    t = &ctx->tracks[3];
+    t->read_attempted = 1;
+    t->paranoia_status_all[PARANOIA_CB_READERR] = 1057;
+    t->paranoia_status_all[PARANOIA_CB_SKIP] = 177;
+    for (int i = 0; i < 1234; i++)
+        crip_error_pos_add(t, 5000 + i, i % 7 ? CRIP_ERROR_POS_READ_ERROR :
+                                                CRIP_ERROR_POS_SKIP);
+
+    /* 5: never read, so every one of the three is null. */
+
+    char *out = write_record(ctx, "diagrecord_positions.json");
+    free_ctx(ctx);
+    if (!out)
+        return;
+
+    const char *t1 = "{\"number\":1,";
+    CHECK(find_in_line(out, t1, ",\"paranoia_all_reads\":{\"READ\":7,\"VERIFY\":70,"
+                       "\"FIXUP_EDGE\":0,\"FIXUP_ATOM\":0,\"SCRATCH\":0,\"REPAIR\":0,"
+                       "\"SKIP\":0,\"DRIFT\":0,\"BACKOFF\":0,\"OVERLAP\":0,"
+                       "\"FIXUP_DROPPED\":0,\"FIXUP_DUPED\":0,\"READERR\":0,"
+                       "\"CACHEERR\":0,\"WROTE\":0,\"FINISHED\":0},"
+                       "\"error_positions\":[],\"error_positions_dropped\":0}"),
+          "track 1: a read with nothing reported is not every key, [] and 0");
+
+    const char *t2 = "{\"number\":2,";
+    CHECK(count_in_line(out, t2, "\"lsn\":") == 700,
+          "track 2: %i entries, want all 700", count_in_line(out, t2, "\"lsn\":"));
+    CHECK(find_in_line(out, t2, "\"error_positions\":[{\"lsn\":1000,\"kind\":\"read_error\"},"),
+          "track 2: the list does not open with the first position");
+    CHECK(find_in_line(out, t2, "{\"lsn\":1699,\"kind\":\"read_error\"}],"
+                       "\"error_positions_dropped\":0}"),
+          "track 2: the list does not close with the last position, 0 dropped");
+
+    const char *t3 = "{\"number\":3,";
+    CHECK(count_in_line(out, t3, "\"lsn\":") == 1000,
+          "track 3: %i entries, want 1000", count_in_line(out, t3, "\"lsn\":"));
+    CHECK(find_in_line(out, t3, "{\"lsn\":499,\"kind\":\"read_error\"},"
+                       "{\"lsn\":501,\"kind\":\"read_error\"}"),
+          "track 3: the head's last is not followed by the tail's oldest kept, 501");
+    CHECK(!find_in_line(out, t3, "{\"lsn\":500,"),
+          "track 3: 500, the one dropped, is in the list");
+    CHECK(find_in_line(out, t3, "{\"lsn\":1000,\"kind\":\"read_error\"}],"
+                       "\"error_positions_dropped\":1}"),
+          "track 3: the list does not end at 1000 with 1 dropped");
+
+    const char *t4 = "{\"number\":4,";
+    CHECK(count_in_line(out, t4, "\"lsn\":") == 1000,
+          "track 4: %i entries, want 1000", count_in_line(out, t4, "\"lsn\":"));
+    /* Multiples of 7 among 0..499 and 734..1233: 72 in each half. */
+    CHECK(count_in_line(out, t4, "\"kind\":\"skip\"") == 144,
+          "track 4: %i skips kept, want 144", count_in_line(out, t4, "\"kind\":\"skip\""));
+    CHECK(find_in_line(out, t4, "\"error_positions\":[{\"lsn\":5000,\"kind\":\"skip\"},"
+                       "{\"lsn\":5001,\"kind\":\"read_error\"}"),
+          "track 4: the list does not open 5000 skip, 5001 read_error");
+    CHECK(find_in_line(out, t4, "{\"lsn\":5499,\"kind\":\"read_error\"},"
+                       "{\"lsn\":5734,\"kind\":\"read_error\"}"),
+          "track 4: the head's last, 5499, is not followed by the tail's oldest, 5734");
+    CHECK(find_in_line(out, t4, "{\"lsn\":6233,\"kind\":\"read_error\"}],"
+                       "\"error_positions_dropped\":234}"),
+          "track 4: the list does not end at 6233 with 234 dropped");
+    CHECK(find_in_line(out, t4, "\"SKIP\":177,") && find_in_line(out, t4, "\"READERR\":1057,"),
+          "track 4: paranoia_all_reads does not carry the counters set");
+
+    CHECK(find_in_line(out, "{\"number\":5,",
+                       ",\"paranoia_all_reads\":null,\"error_positions\":null,"
+                       "\"error_positions_dropped\":null}"),
+          "track 5: a track never read is not null in all three");
+    free(out);
+}
+
 int main(void)
 {
     test_track_fields();
@@ -382,11 +508,12 @@ int main(void)
     test_isrc_disc_malformed();
     test_cdtext_present();
     test_offset_search();
+    test_error_positions();
 
     if (failures)
         fprintf(stderr, "%d check(s) failed\n", failures);
     else
-        printf("all /9 record checks passed\n");
+        printf("all /10 record checks passed\n");
 
     return !!failures;
 }

@@ -175,6 +175,87 @@ def disc_skips(text):
     return int(m.group(1)) if m else 0
 
 
+def paranoia_counts(text):
+    """The log's `Paranoia status counts:` blocks, each track's in order
+    (four-space rows) and the disc's (two-space rows). A zero is not printed,
+    so a key that is absent is 0; `Scope:` is not a counter."""
+    tracks, disc, cur, ind = [], None, None, None
+    for line in text.splitlines():
+        if line == "  Paranoia status counts:":
+            cur, ind = {}, "    "
+            tracks.append(cur)
+            continue
+        if line == "Paranoia status counts:":
+            cur, ind = {}, "  "
+            disc = cur
+            continue
+        if cur is None:
+            continue
+        m = re.match(rf"^{ind}([A-Z_]+):\s+(\d+)$", line)
+        if m:
+            cur[m.group(1)] = int(m.group(2))
+        elif not line.startswith(ind + "Scope:"):
+            cur = None
+    return tracks, disc
+
+
+def check_error_positions(label, rec_path, text, first, last, bad, reads_once):
+    """The record's /10 fields against the log of the same rip and against the
+    sector the shim failed (round 35, our lap 7 S18 and S20, Platterpus's
+    lap 8 S8 and S10). Returns nothing; each mismatch is a fail()."""
+    try:
+        rec = json.loads(Path(rec_path).read_text())
+    except Exception as exc:
+        fail(f"{label}: no --diagnostics record to read: {exc}")
+        return
+    states = rec["rip"]["track_state"]
+    blocks, disc = paranoia_counts(text)
+    if len(blocks) != len(states) or disc is None:
+        fail(f"{label}: {len(blocks)} track counter block(s) and disc block "
+             f"{'present' if disc is not None else 'absent'} for {len(states)} "
+             f"track(s)")
+        return
+    total = {}
+    for st, block in zip(states, blocks):
+        n = st["number"]
+        alls = st["paranoia_all_reads"]
+        if not isinstance(alls, dict):
+            fail(f"{label}: track {n} read, and paranoia_all_reads is {alls!r}")
+            continue
+        for k, v in alls.items():
+            total[k] = total.get(k, 0) + v
+        nonzero = {k: v for k, v in alls.items() if v}
+        # The log's block is the last read; a single read makes it the whole.
+        if reads_once and nonzero != block:
+            fail(f"{label}: track {n} read once, so paranoia_all_reads "
+                 f"{nonzero} should be its log block {block}")
+        pos = st["error_positions"]
+        kinds = [e["kind"] for e in pos]
+        if (kinds.count("read_error"), kinds.count("skip"),
+                st["error_positions_dropped"]) != (alls["READERR"], alls["SKIP"], 0):
+            fail(f"{label}: track {n} lists {kinds.count('read_error')} "
+                 f"read_error and {kinds.count('skip')} skip, "
+                 f"{st['error_positions_dropped']} dropped, where its counters "
+                 f"say READERR {alls['READERR']} and SKIP {alls['SKIP']}")
+    # Summed over the tracks, every read of every track is the disc's total,
+    # which the log counts from the process-wide counters, not per track.
+    if {k: v for k, v in total.items() if v} != disc:
+        fail(f"{label}: paranoia_all_reads summed over the tracks is "
+             f"{ {k: v for k, v in total.items() if v} }, the disc block {disc}")
+    if states[0]["error_positions"] != []:
+        fail(f"{label}: track 1 read clean and lists "
+             f"{states[0]['error_positions'][:4]}")
+    lsns = [e["lsn"] for e in states[1]["error_positions"]]
+    errs = [e["lsn"] for e in states[1]["error_positions"] if e["kind"] == "read_error"]
+    if not lsns or any(not (first <= x < last) for x in lsns):
+        fail(f"{label}: track 2's positions {sorted(set(lsns))} are not all "
+             f"inside it, {first}..{last - 1}")
+    if bad not in errs or any(x > bad for x in errs):
+        fail(f"{label}: track 2's read errors start at {sorted(set(errs))}; "
+             f"the failed reads all overlap sector {bad}, so one starts there "
+             f"and none after it")
+
+
 def rip(name, img, *extra, cwd=None):
     # libcdio's cdrdao driver opens a .toc's FILE with the raw relative path
     # instead of the absolute one it just computed (lib/driver/image/cdrdao.c,
@@ -2902,9 +2983,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/9":
+        if rec["schema"] != "cyanrip-diagnostics/10":
             fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/9'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/10'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -4318,7 +4399,9 @@ def sc_diagnostics():
     # /8 from round 32 (our lap 1 S10, Platterpus's lap 2 S7): every field an
     # addition, each checked in sc_diag_record_v8(). /9 from the upstream sync
     # of 2026-10-12 adds data_ripped, checked in sc_data_track_completed().
-    if d.get("schema") != "cyanrip-diagnostics/9":
+    # /10 from round 35 adds paranoia_all_reads and error_positions, checked
+    # in sc_bad_sector() and tests/diagrecord.c.
+    if d.get("schema") != "cyanrip-diagnostics/10":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
@@ -7063,10 +7146,12 @@ def sc_bad_sector():
                    # link order; the shim only interposes stdio.
                    ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
                    + ":verify_asan_link_order=0")
+        rec = WORK / f"bad_sector_{r}.json"
         try:
             ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                            "-r", r, "-o", "pcm", "-D", out, "-F", "{track}",
-                           "-L", "log", "-M", "sheet", env=env)
+                           "-L", "log", "-M", "sheet", "--diagnostics", rec,
+                           env=env)
         except subprocess.TimeoutExpired:
             fail(f"bad_sector: -r {r} did not return within crip()'s timeout on "
                  f"one unreadable sector -- the per-frame limit is not reaching "
@@ -7112,8 +7197,38 @@ def sc_bad_sector():
         if any(t2[i * sec:(i + 1) * sec] != bytes(sec) for i in differ):
             fail(f"bad_sector: -r {r}: a damaged sector holds non-zero audio -- "
                  f"invented rather than skipped")
+        check_error_positions(f"bad_sector: -r {r}", rec, text, 300, 600, bad, True)
         note(f"bad_sector: -r {r}: {failed} failed read(s); sectors "
              f"{[300 + i for i in differ]} zeroed, the rest identical to the source")
+
+    # -Z 2: every track read three times, so a track's log block is the last
+    # read and paranoia_all_reads is all three. On a fixture read once the two
+    # agree by construction and cannot tell each other apart, which is the
+    # round-5 defect the record exists to avoid; this run separates them.
+    out, rec = WORK / "out_bad_sector_z", WORK / "bad_sector_z.json"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+               CRIP_BAD_SECTOR=str(bad), CRIP_BAD_OUT=str(WORK / "bad_sector_z.count"),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    try:
+        ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                       "-r", "10", "-Z", "2", "-o", "pcm", "-D", out,
+                       "-F", "{track}", "-L", "log", "-M", "sheet",
+                       "--diagnostics", rec, env=env)
+    except subprocess.TimeoutExpired:
+        fail("bad_sector: -Z 2 did not return within crip()'s timeout")
+        return
+    text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+    check_error_positions("bad_sector: -Z 2", rec, text, 300, 600, bad, False)
+    blocks, _ = paranoia_counts(text)
+    try:
+        alls = json.loads(rec.read_text())["rip"]["track_state"][1]["paranoia_all_reads"]
+    except Exception:
+        alls = None
+    if len(blocks) == 2 and alls and alls["READ"] <= blocks[1].get("READ", 0):
+        fail(f"bad_sector: -Z 2: track 2's paranoia_all_reads READ {alls['READ']} "
+             f"is not above its last read's {blocks[1].get('READ', 0)}, so it "
+             f"does not cover every read")
 
 
 def sc_p0_bad_sector():

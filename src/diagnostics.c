@@ -261,6 +261,73 @@ void crip_diag_enable(const char *path)
     }
 }
 
+/* Head and tail, for the reason the message list keeps both: a cap that
+ * keeps only the first entries loses exactly the ones at a track's end, and
+ * a run of errors there is what a damaged disc's last track looks like.
+ * Platterpus's round 35 lap 8 S8 asked for it in those words. Storage is
+ * taken on the first position, so a clean track costs nothing. */
+void crip_error_pos_add(cyanrip_track *t, long lsn, int kind)
+{
+    if (!t->error_pos) {
+        t->error_pos = av_calloc(2 * CRIP_ERROR_POS_HALF, sizeof(*t->error_pos));
+        if (!t->error_pos) {
+            t->error_pos_dropped++;
+            return;
+        }
+    }
+
+    const CRIPErrorPos e = { .lsn = (lsn_t)lsn, .kind = kind };
+    if (t->nb_error_pos_head < CRIP_ERROR_POS_HALF) {
+        t->error_pos[t->nb_error_pos_head++] = e;
+        return;
+    }
+
+    /* Past the head: a ring of the newest. What it overwrites is what
+     * "dropped" counts. */
+    if (t->nb_error_pos_tail == CRIP_ERROR_POS_HALF)
+        t->error_pos_dropped++;
+    else
+        t->nb_error_pos_tail++;
+    t->error_pos[CRIP_ERROR_POS_HALF + t->error_pos_tail_next] = e;
+    t->error_pos_tail_next = (t->error_pos_tail_next + 1) % CRIP_ERROR_POS_HALF;
+}
+
+void crip_error_pos_free(cyanrip_track *t)
+{
+    av_freep(&t->error_pos);
+    t->nb_error_pos_head = t->nb_error_pos_tail = t->error_pos_tail_next = 0;
+    t->error_pos_dropped = 0;
+}
+
+static void diag_error_pos_entry(AVBPrint *b, const CRIPErrorPos *e, int first)
+{
+    av_bprintf(b, "%s{\"lsn\":%i,\"kind\":\"%s\"}", first ? "" : ",",
+               (int)e->lsn,
+               e->kind == CRIP_ERROR_POS_SKIP ? "skip" : "read_error");
+}
+
+/* The log's per-track counter names, every one, in its order, 0 where
+ * nothing was counted, so the key set is fixed rather than whatever this
+ * track happened to need. */
+static const char *const diag_paranoia_keys[PARANOIA_CB_FINISHED + 1] = {
+    [PARANOIA_CB_READ]          = "READ",
+    [PARANOIA_CB_VERIFY]        = "VERIFY",
+    [PARANOIA_CB_FIXUP_EDGE]    = "FIXUP_EDGE",
+    [PARANOIA_CB_FIXUP_ATOM]    = "FIXUP_ATOM",
+    [PARANOIA_CB_SCRATCH]       = "SCRATCH",
+    [PARANOIA_CB_REPAIR]        = "REPAIR",
+    [PARANOIA_CB_SKIP]          = "SKIP",
+    [PARANOIA_CB_DRIFT]         = "DRIFT",
+    [PARANOIA_CB_BACKOFF]       = "BACKOFF",
+    [PARANOIA_CB_OVERLAP]       = "OVERLAP",
+    [PARANOIA_CB_FIXUP_DROPPED] = "FIXUP_DROPPED",
+    [PARANOIA_CB_FIXUP_DUPED]   = "FIXUP_DUPED",
+    [PARANOIA_CB_READERR]       = "READERR",
+    [PARANOIA_CB_CACHEERR]      = "CACHEERR",
+    [PARANOIA_CB_WROTE]         = "WROTE",
+    [PARANOIA_CB_FINISHED]      = "FINISHED",
+};
+
 void crip_diag_set_exit(int code)
 {
     diag_exit_code = code;
@@ -372,7 +439,52 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
 
                 /* The count behind the footer's `Encoder errors:` (Platterpus's
                  * F5, accepted as an addition to S10). */
-                av_bprintf(&b, ",\"encode_failures\":%i}", t->encode_failures);
+                av_bprintf(&b, ",\"encode_failures\":%i", t->encode_failures);
+
+                /* /10, round 35. Both cover EVERY read of the track, -Z
+                 * re-reads included, and both are null for a track whose
+                 * read never ran, which is a different claim from a read that
+                 * counted nothing.
+                 *
+                 * paranoia_all_reads is the log's per-track counter block
+                 * summed over every read, where that block is the last read
+                 * alone (its `Scope:` line says so); for a track read once
+                 * the two are equal (our lap 7 S20, their lap 8 S10).
+                 *
+                 * error_positions is where paranoia's callback reported a
+                 * hard read error or a skip, as a sector, one entry per
+                 * report, so an unamended list is as long as READERR plus
+                 * SKIP in paranoia_all_reads (our lap 7 S18, their lap 8
+                 * S8). A READERR names the first sector of the read that
+                 * failed, and a SKIP the end of what paranoia had verified,
+                 * or 0 when it had verified nothing: each is the position
+                 * paranoia passed, not a sector we located. A -Z re-read
+                 * that disagreed has no position, since -Z compares
+                 * whole-track checksums, so it is not here. */
+                if (!t->read_attempted) {
+                    av_bprintf(&b, ",\"paranoia_all_reads\":null"
+                                   ",\"error_positions\":null"
+                                   ",\"error_positions_dropped\":null}");
+                } else {
+                    av_bprintf(&b, ",\"paranoia_all_reads\":{");
+                    for (int k = 0; k <= PARANOIA_CB_FINISHED; k++)
+                        av_bprintf(&b, "%s\"%s\":%" PRIu64, k ? "," : "",
+                                   diag_paranoia_keys[k],
+                                   t->paranoia_status_all[k]);
+                    av_bprintf(&b, "},\"error_positions\":[");
+                    int n = 0;
+                    for (int k = 0; k < t->nb_error_pos_head; k++)
+                        diag_error_pos_entry(&b, &t->error_pos[k], !n++);
+                    /* The ring, oldest first: once full, the next slot to
+                     * be overwritten holds the oldest entry. */
+                    const int from = t->nb_error_pos_tail == CRIP_ERROR_POS_HALF ?
+                                     t->error_pos_tail_next : 0;
+                    for (int k = 0; k < t->nb_error_pos_tail; k++)
+                        diag_error_pos_entry(&b, &t->error_pos[CRIP_ERROR_POS_HALF +
+                                             (from + k) % CRIP_ERROR_POS_HALF], !n++);
+                    av_bprintf(&b, "],\"error_positions_dropped\":%" PRIu64 "}",
+                               t->error_pos_dropped);
+                }
 
                 if (av_bprint_is_complete(&b))
                     snap_track_state[i] = av_strdup(b.str);
@@ -501,8 +613,12 @@ void crip_diag_write(void)
      *
      * /9 ADDS per track data_ripped, from the upstream sync of 2026-10-12,
      * which made data tracks copied at all, and tracks_completed counts them.
-     * An addition; the version moves for the same reason. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/9\",\n");
+     * An addition; the version moves for the same reason.
+     *
+     * /10 ADDS per track paranoia_all_reads, error_positions and
+     * error_positions_dropped, round 35 (our lap 7 S18 and S20, Platterpus's
+     * lap 8 S8 and S10). Additions; the version moves for the same reason. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/10\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");

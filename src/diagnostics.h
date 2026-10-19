@@ -54,6 +54,15 @@ void crip_diag_record(const char *format, va_list args) av_printf_format(1, 0);
  * ctx, so the file can still be written after it has been freed. */
 void crip_diag_snapshot(struct cyanrip_ctx *ctx);
 
+/* Add one position paranoia reported for track t, keeping the first
+ * CRIP_ERROR_POS_HALF and the last CRIP_ERROR_POS_HALF and counting the
+ * middle in t->error_pos_dropped. Called from the paranoia status callback,
+ * so it never logs; an allocation that fails counts as a dropped entry
+ * rather than vanishing. Freed by crip_error_pos_free(). */
+struct cyanrip_track;
+void crip_error_pos_add(struct cyanrip_track *t, long lsn, int kind);
+void crip_error_pos_free(struct cyanrip_track *t);
+
 /* The value main() is about to return. */
 void crip_diag_set_exit(int code);
 

@@ -129,6 +129,7 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
     av_dict_free(&t->meta);
     av_dict_free(&t->cdtext);
     av_freep(&t->isrc_disc);
+    crip_error_pos_free(t);
     av_free(t->ar_db_entries);
     av_free(t->acoustid_fingerprint);
 }
@@ -625,10 +626,22 @@ uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1] = { 0 };
  * why the earlier callback-driven version could not. */
 static int crip_reading_track;
 
+/* The track whose read is in progress, for the positions the callback
+ * reports; NULL outside a track's read. The callback carries no context
+ * pointer, as the counters above say. */
+static cyanrip_track *crip_positions_track;
+
 static void status_cb(long int n, paranoia_cb_mode_t status)
 {
     if (status >= PARANOIA_CB_READ && status <= PARANOIA_CB_FINISHED)
         paranoia_status[status]++;
+    /* n is in 16-bit words for both, as cd-paranoia reads it: the first
+     * sector of a read that failed, and the end of what was verified. */
+    if (crip_positions_track &&
+        (status == PARANOIA_CB_READERR || status == PARANOIA_CB_SKIP))
+        crip_error_pos_add(crip_positions_track, n / CD_FRAMEWORDS,
+                           status == PARANOIA_CB_SKIP ? CRIP_ERROR_POS_SKIP :
+                                                        CRIP_ERROR_POS_READ_ERROR);
 }
 
 /* Under -O, a frame outside the disc is read once, through the cdda layer
@@ -1412,6 +1425,13 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
      * correct: the read did not finish. */
     ctx->track_read_incomplete = t->number;
 
+    /* Every read of this track, taken once, before the label a -Z re-read
+     * returns to: paranoia_all_reads and error_positions cover them all. */
+    uint64_t start_paranoia_all[PARANOIA_CB_FINISHED + 1];
+    memcpy(start_paranoia_all, paranoia_status, sizeof(start_paranoia_all));
+    crip_error_pos_free(t);
+    crip_positions_track = t;
+
 repeat_ripping:;
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;
@@ -1853,8 +1873,12 @@ end:
 
     t->total_repeats = total_repeats;
     t->rip_time_us = av_gettime_relative() - track_start_time;
-    for (int i = 0; i <= PARANOIA_CB_FINISHED; i++)
+    for (int i = 0; i <= PARANOIA_CB_FINISHED; i++) {
         t->paranoia_status[i] = paranoia_status[i] - start_paranoia[i];
+        t->paranoia_status_all[i] = paranoia_status[i] - start_paranoia_all[i];
+    }
+    t->read_attempted = 1;
+    crip_positions_track = NULL;
     if (!quit_now && !ret) {
         cyanrip_finalize_encoding(ctx, t);
         if (ctx->settings.enable_replaygain)
