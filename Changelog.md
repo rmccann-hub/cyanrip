@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**`PROVIDER-CONTRACT.md`'s P5 lists the argument errors again.** The exit
+classes (`292858d`) made each argument error `return CRIP_EXIT_USAGE;` where it
+returned 1, and the generator's failure-path predicate matched only `return
+1;`, so nine strings P5 held on control flow alone left both P5 and P5a while
+the binary still printed each: `Too many cover arts specified!`, both `-Z %i can
+never converge` messages, `Duplicated format`, `Duplicated rip idx`, `Cover art
+already specified` twice, `Directory name scheme must contain {format}` and
+`discnumber %i is larger than totaldiscs %i`. A consumer builds its error
+matcher from those two tables. The predicate now reads the exit classes from
+`enum CRIPExitCode` (`return`, `exit()` and `->exit_class =`), so a class added
+there is recognised without an edit; `contract_fatal_inventory` requires two of
+the nine in P5 and fails when the fix is reverted. Found cutting `.25`, by
+reading its contract delta against `.24`; no release carried it.
+
 **From the operator's review of 2026-10-19, four changes, none to the
 binary.** `+platterpus.25`'s contents are fixed at the five changes to the
 binary since `.24`, listed in `STATUS.md`'s `STATUS-RELEASE-NEXT`; anything

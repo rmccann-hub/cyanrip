@@ -97,10 +97,54 @@ FAIL_MECHANISMS = (
     (r"\bret\s*=\s*[1-9]\s*;",           "ret = N;",              "sets a local flag; **transfers no control by itself**"),
 )
 
+
+def exit_class_names():
+    """The enumerators of `enum CRIPExitCode` (cyanrip_main.h) whose value is
+    not 0: the statuses a failure path returns, which P4 lists.
+
+    READ FROM THE ENUM, NOT LISTED HERE, and it is why this exists. Round 35's
+    exit classes (292858d) turned every `return 1;` after an argument error
+    into `return CRIP_EXIT_USAGE;`, which the table above did not match, so
+    every string P5 had only on control flow left P5 and P5a both, `-Z %i can
+    never converge` and `Too many cover arts specified!` among them, while the
+    binary still printed each, and a consumer builds its error matcher from
+    those two tables. A class added to the enum is recognised here without an
+    edit, and one valued 0 is not taken for a failure."""
+    path = os.path.join(SRC, "cyanrip_main.h")
+    m = re.search(r"enum\s+CRIPExitCode\s*\{(.*?)\};",
+                  open(path, encoding="utf-8").read(), re.S)
+    if not m:
+        raise SystemExit(f"{path}: no `enum CRIPExitCode`, so P5 cannot tell "
+                         "which returns end a failure path")
+    return tuple(n for n, v in re.findall(r"\b([A-Z][A-Z0-9_]*)\s*=\s*(-?\d+)",
+                                          m.group(1)) if int(v) != 0)
+
+
+_FAIL = []
+
+
+def fail_mechanisms():
+    """FAIL_MECHANISMS plus the exit-class constructs, built from the enum on
+    first use, since SRC is relative to the repository root and a test imports
+    this file before it changes directory."""
+    if not _FAIL:
+        alt = "|".join(exit_class_names())
+        _FAIL.extend(FAIL_MECHANISMS + (
+            (rf"\breturn\s+(?:{alt})\b[^;]*;", "return CRIP_EXIT_<class>;",
+             "**ends the function** with a P4 exit class"),
+            (rf"\bexit\s*\(\s*(?:{alt})\b", "exit(CRIP_EXIT_<class>)",
+             "**ends the process** with a P4 exit class"),
+            (rf"->exit_class\s*=\s*(?:{alt})\s*;", "->exit_class = CRIP_EXIT_<class>;",
+             "sets the run's exit class; **transfers no control by itself**"),
+        ))
+    return _FAIL
+
+
 # ONE SOURCE OF TRUTH. The predicate is BUILT from the table above rather than
 # written out a second time beside it -- two lists that must agree is how the
 # preamble came to name five mechanisms for a regex with seven.
-FAIL_PATH = re.compile("|".join(pat for pat, _, _ in FAIL_MECHANISMS))
+def fail_path():
+    return re.compile("|".join(pat for pat, _, _ in fail_mechanisms()))
 
 # Any goto, with its label captured. A label is *named* rather than judged:
 # "goto fail" is unambiguous, "goto end" is both the success cleanup and the
@@ -138,7 +182,7 @@ GOTO_ONLY_RE = re.compile(r"goto [a-zA-Z_][a-zA-Z0-9_]*")
 def _suppressed_gotos(fatal):
     """How many P5 rows carry a `goto` that the Evidence column hides.
 
-    evidence() sets `by_flow` from FAIL_PATH and then returns "control flow" or
+    evidence() sets `by_flow` from fail_path() and then returns "control flow" or
     "both" WITHOUT reporting the goto label it also found -- the label is only
     surfaced when nothing else matched. So a row reading `control flow` on the
     strength of `total_error_count++` may be followed by `goto end`, and the
@@ -170,7 +214,7 @@ def _suppressed_gotos(fatal):
             cut = NEXT_BRANCH.search(w)
             if cut:
                 w = w[:cut.start()]
-            if not FAIL_PATH.search(w):
+            if not fail_path().search(w):
                 break
             g = GOTO_ANY.search(w)
             if g and g.group(1) not in GOTO_FATAL:
@@ -578,7 +622,7 @@ def evidence(text, end, msg):
     if cut:
         window = window[:cut.start()]
 
-    by_flow = bool(FAIL_PATH.search(window))
+    by_flow = bool(fail_path().search(window))
     by_word = any(msg.startswith(p) for p in DIAGNOSTIC_PREFIXES)
 
     g = GOTO_ANY.search(window)
@@ -1961,11 +2005,11 @@ def emit(binary):
     w("")
     w("  | construct | reaching it |")
     w("  |---|---|")
-    for pat, label, effect in FAIL_MECHANISMS:
+    for pat, label, effect in fail_mechanisms():
         w(f"  | `{label}` | {effect} |")
     w(f"  | `goto fail` | see P5a's note -- `fail:` is a label name, not a verdict |")
     w("")
-    w("  Derived from `FAIL_PATH` in the generator, so this list cannot describe a")
+    w("  Derived from `fail_path()` in the generator, so this list cannot describe a")
     w("  predicate the tool does not have.")
     w("")
     w("  **A CONSTRUCT IS NOT A SITE, AND THIS COLUMN DESCRIBES THE CONSTRUCT.**")
