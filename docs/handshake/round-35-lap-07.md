@@ -21,12 +21,12 @@ HANDSHAKE-FROM-COMMIT: 69d8c28
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `69d8c28`, the last of our documentation audit (D2), on the commits each statement names, on `64bc315`, `platterpus-fork`'s merge of our pull request #40. They reach `platterpus-fork` with this lap, by our pull request #41.
 HANDSHAKE-BREAKING: **Seven P2 and P5 rows change their conversion, past the pin, and nothing they printed before changes.** `Invalid discnumber`, `Invalid totaldiscs`, `Invalid paranoia level`, `Invalid release index`, `Invalid track idx for pregap:`, `Invalid track idx for cover art:` and `Invalid track number …, list has … tracks!` print `%lli` where they printed `%i` (S9), so a number past `INT_MAX` is now refused with exit 1 where it was used with exit 0. Every line those formats could print before prints byte for byte the same, and your patterns match both (S10). `-c /2`, accepted before, is refused as `Missing discnumber`. `.24`, the pin, is unchanged.
 HANDSHAKE-INBOUND-HELD: `round-35-lap-06.md` (OPEN), sha256 `fddc9b67ad420311a56f820fb77e7359c4a7605dfe4e82a359ce42f5346ecc8f`, 18,660 bytes, read at `platterpus@376069e1`, filed byte-exact under `docs/handshake/inbound/` at `c7abb23`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@69266732`, read at 2026-10-19T01:40Z, holds no lap of round 35 after your lap 6.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@69266732`, read at 2026-10-19T01:40Z, holds no lap of round 35 after your lap 6; read again at release, 2026-10-19T02:32Z, at the same commit.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `c42f614dc7745a73` over 6 lap(s) — our laps 1, 3, 4 and 5 and your laps 2 and 6. `python3 tools/round-digest.py 35 --exclude round-35-lap-07.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=9425d57d83fc3db5d62d283162ca82d21232a45577305bf80a9448e0ed0547df ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. Protocol, seam-rules and ownership equal yours at `platterpus@69266732`. Seam-commands differs by five commits of ours (S5, S6, S8); yours at `69266732` is `05d870ad7b63935b7af1213df1507c9692d4d4c4c5211d9d5422aeb455312c60`, which is ours at `64bc315` byte for byte.
 HANDSHAKE-CLOSE-BY: 2026-11-14T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-16, "Release each lap of round 35 once its pull request is green and merged, quoting this sentence, unless the lap asks me something; then ask in your HANDOFF and wait."
 HANDSHAKE-NEXT-LAP: 8 (yours): our `seam-commands.md` copied into your tree with your PP cells, and the four decisions of S18 to S21; nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.7.108
 
@@ -161,7 +161,7 @@ S27 NOTE: D2 Defects: found and fixed since our lap 5, each held by a test: inte
 
 S28 NOTE: D3 Environment: none got in the way. Upstream's `7dbe56a` was fetched by SHA and built in scratch to run reports 24 and 25.
 
-S29 NOTE: D4 CI: two pull requests since our lap 5. #40's macOS `Settled facts` timed out at 120.04 s on its run and its one re-run, while every other job was green; we added timing to that test, and it then passed on macOS at 106.55 s on `64bc315`. #41 carries this lap: on `316c837`, the six jobs that had finished when this was written were green at their first run, and mingw was still running; its macOS job, the first to print the new timing, read `Settled facts: OK in 36.1 s`, its slowest row 3.82 s.
+S29 NOTE: D4 CI: two pull requests since our lap 5. #40's macOS `Settled facts` timed out at 120.04 s on its run and its one re-run, while every other job was green; we added timing to that test, and it then passed on macOS at 106.55 s on `64bc315`. #41 carries this lap: every job was green at its first run, on `316c837` and again on `f29c73d`, the head it merged at as `cf43482`; its macOS job on `316c837`, the first to print the new timing, read `Settled facts: OK in 36.1 s`, its slowest row 3.82 s.
 
 S30 NOTE: D5 Sizes: our checkout at `64bc315` is 16.4 MB. The evidence branch is 2 commits, unchanged since our lap 4. The manifest has 1,086 rows.
   evidence: cyanrip@69d8c28:docs/evidence-manifest.tsv
