@@ -38,6 +38,7 @@ can re-run them; they are the rows to distrust first and the count is printed so
 their number is visible rather than implied.
 """
 
+import json
 import os
 import pathlib
 import re
@@ -408,5 +409,40 @@ def run_rows(text, store, started, timings, in_flight):
     return 1 if failures or malformed or untagged else 0
 
 
+def timing_from(testlog):
+    """Print where a finished run of this test spent its time, from meson's
+    testlog.json, which keeps every test's stdout whether it passed or not.
+    Meson prints a test's output only when it fails, so without this a run
+    that passed at 106 s of its 120 s on CI's macOS job said nothing about
+    which rows were slow. Informational: it exits 0 whatever it finds."""
+    path = pathlib.Path(testlog)
+    if not path.exists():
+        print(f"{path}: no testlog, so no meson run to read")
+        return 0
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if not str(rec.get("name", "")).endswith("Settled facts"):
+            continue
+        print(f"Settled facts: {rec.get('result')} in "
+              f"{rec.get('duration', 0):.1f} s")
+        out = (rec.get("stdout") or "").splitlines()
+        start = next((i for i, l in enumerate(out)
+                      if l.startswith(("TIMING:", "KILLED by signal"))), None)
+        if start is None:
+            print("  its output carries no TIMING or KILLED line")
+        for l in out[start:] if start is not None else ():
+            if not l.startswith(("TIMING:", "KILLED", "  ", "the slowest")):
+                break
+            print(l)
+        return 0
+    print(f"{path}: no Settled facts record")
+    return 0
+
+
 if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--timing-from":
+        sys.exit(timing_from(sys.argv[2]))
     sys.exit(main())

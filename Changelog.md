@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**CI prints where `Settled facts` spent its time, on every run.** After the
+change below it passed on macOS in 106.55 s of its 120 s, and meson prints a
+passing test's output nowhere, so its slowest rows stayed unseen.
+`tools/check-settled.py --timing-from build/meson-logs/testlog.json` reads its
+TIMING or KILLED block back out of meson's log, which keeps every test's
+stdout, and `ci.yml` runs it after each suite step, `if: always()`, in the
+Linux, macOS and evidence jobs. It exits 0 whatever it finds.
+`tests/golden_libraries.py` case 7 holds it, and three reverts, one at a time,
+each fail it.
+
 **`tools/check-settled.py` says where its time went.** CI's macOS job timed
 `Settled facts` out at 120 s twice in a row on pull request #40's tree, where
 pull request #39's had passed it in 42.44 s, and the killed test printed

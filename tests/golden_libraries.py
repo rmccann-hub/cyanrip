@@ -22,12 +22,14 @@ UNPROBED when it exits 77. Each case below is one way either could go wrong:
   * check-settled must count a 77 as unprobed, print its reason, and still
     report any other non-zero exit as stale;
   * and it must say where its time went, and, killed mid-row as meson kills
-    a test that overruns, name the row it was running and exit 143.
+    a test that overruns, name the row it was running and exit 143;
+  * and read that back out of meson's testlog.json for a run that passed.
 """
 
 import contextlib
 import importlib.util
 import io
+import json
 import os
 import pathlib
 import signal
@@ -189,6 +191,35 @@ with tempfile.TemporaryDirectory() as d:
             or "sleep 30" not in out or "with 8 row(s) run" not in out:
         fail(f"check-settled killed mid-row did not name the row it was "
              f"running:\n{out}")
+
+# 7. --timing-from reads that block back out of meson's testlog.json, which
+# keeps a passing test's stdout that meson itself never prints: CI runs it
+# after every suite, so a pass near the limit names its slow rows too.
+with tempfile.TemporaryDirectory() as d:
+    log = pathlib.Path(d) / "testlog.json"
+    stdout = ("STALE: nothing\nTIMING: 106.5 s, 99 row(s) run here; the "
+              "slowest:\n    40.00 s  sleep 40\n     1.00 s  true\n"
+              "99 runnable check(s), 0 stale, 0 unprobed here\n")
+    log.write_text(json.dumps({"name": "cyanrip / Release gate",
+                               "stdout": "TIMING: not this one\n"}) + "\n" +
+                   json.dumps({"name": "cyanrip / Settled facts",
+                               "result": "OK", "duration": 106.55,
+                               "stdout": stdout}) + "\n")
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "check-settled.py"),
+                        "--timing-from", str(log)], capture_output=True,
+                       text=True)
+    want = ["Settled facts: OK in 106.5 s",
+            "TIMING: 106.5 s, 99 row(s) run here; the slowest:",
+            "    40.00 s  sleep 40", "     1.00 s  true"]
+    if r.returncode != 0 or r.stdout.splitlines() != want:
+        fail(f"--timing-from printed {r.stdout.splitlines()!r} (exit "
+             f"{r.returncode}), not {want!r}")
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "check-settled.py"),
+                        "--timing-from", str(pathlib.Path(d) / "absent.json")],
+                       capture_output=True, text=True)
+    if r.returncode != 0 or "no testlog" not in r.stdout:
+        fail(f"--timing-from on a missing log: exit {r.returncode}, "
+             f"{r.stdout!r}")
 
 if failures:
     print(f"{failures} check(s) failed")
