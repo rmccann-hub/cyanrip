@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.24 (platterpus-fork-gb9b604c)`
+Build: `cyanrip 0.9.4-rc3+platterpus.24 (platterpus-fork-g10bd257)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -748,9 +748,12 @@ into a bare verdict so you can see which entries rest on the weaker test:
   | `total_error_count++` | increments a counter; **transfers no control by itself** |
   | `err = N` | sets a local flag; **transfers no control by itself** |
   | `ret = N;` | sets a local flag; **transfers no control by itself** |
+  | `return CRIP_EXIT_<class>;` | **ends the function** with a P4 exit class |
+  | `exit(CRIP_EXIT_<class>)` | **ends the process** with a P4 exit class |
+  | `->exit_class = CRIP_EXIT_<class>;` | sets the run's exit class; **transfers no control by itself** |
   | `goto fail` | see P5a's note -- `fail:` is a label name, not a verdict |
 
-  Derived from `FAIL_PATH` in the generator, so this list cannot describe a
+  Derived from `fail_path()` in the generator, so this list cannot describe a
   predicate the tool does not have.
 
   **A CONSTRUCT IS NOT A SITE, AND THIS COLUMN DESCRIBES THE CONSTRUCT.**
@@ -759,7 +762,7 @@ into a bare verdict so you can see which entries rest on the weaker test:
   and **this class reports only the first mechanism it finds**. Measured on
   this tree:
 
-  - **11** row(s) whose evidence is a bare mechanism ALSO carry a
+  - **13** row(s) whose evidence is a bare mechanism ALSO carry a
     `goto end` that this column does not report.
   - **2** row(s) whose evidence is a bare mechanism ALSO carry a
     `goto end_meta` that this column does not report.
@@ -851,7 +854,7 @@ must carry the same class.
 | `cyanrip_main.c:885` | `No track was long enough, unable to find drive offset!` | control flow | yes |
 | `cyanrip_main.c:995` | `Unable to read track %i subchannel info!` | wording | yes |
 | `cyanrip_main.c:1140` | `Error writing the -Z spool: %s!` | wording | yes |
-| `cyanrip_main.c:1286` | `Drive media changed, stopping!` | wording + goto end | yes |
+| `cyanrip_main.c:1286` | `Drive media changed, stopping!` | both | yes |
 | `cyanrip_main.c:1302` | `Frame read failed at LSN %i!` | control flow | yes |
 | `cyanrip_main.c:1312` | `Sector EDC mismatch at LSN %i!` | control flow | yes |
 | `cyanrip_main.c:1320` | `Stopping, ripping incomplete!` | both | yes |
@@ -863,24 +866,34 @@ must carry the same class.
 | `cyanrip_main.c:1786` | `Error verifying the -Z spool: it does not match the read it was kept for!` | both | yes |
 | `cyanrip_main.c:1800` | `Error sending flush signal to encoders: %s` | wording | yes |
 | `cyanrip_main.c:2587` | `Couldn't read \"%s\"!` | wording | **not directly** - see legend |
-| `cyanrip_main.c:2650` | `Invalid paranoia level %lli must be between 0 and %i!` | wording | yes |
-| `cyanrip_main.c:2664` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` | wording | yes |
-| `cyanrip_main.c:2676` | `Invalid sanitation method %s` | wording | yes |
-| `cyanrip_main.c:2688` | `Invalid release index %lli!` | wording | yes |
-| `cyanrip_main.c:2703` | `Missing discnumber` | wording | yes |
-| `cyanrip_main.c:2708` | `Invalid discnumber %lli` | wording | yes |
-| `cyanrip_main.c:2716` | `Invalid totaldiscs %lli` | wording | yes |
-| `cyanrip_main.c:2742` | `Invalid format \"%s\"` | wording | yes |
-| `cyanrip_main.c:2796` | `Missing track idx for pregap` | wording | yes |
-| `cyanrip_main.c:2801` | `Invalid track idx for pregap: %lli` | wording | yes |
-| `cyanrip_main.c:2808` | `Missing pregap action` | wording | yes |
-| `cyanrip_main.c:2816` | `Invalid pregap action %s` | wording | yes |
-| `cyanrip_main.c:2848` | `No cover art location specified for \"%s\"` | wording | yes |
-| `cyanrip_main.c:2857` | `Invalid track idx for cover art: %lli` | wording | yes |
-| `cyanrip_main.c:2897` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | wording | yes |
-| `cyanrip_main.c:2960` | `Invalid encoder option \"%s\", must be key=value!` | wording | yes |
-| `cyanrip_main.c:2968` | `Unable to store encoder option \"%s\"!` | wording | yes |
+| `cyanrip_main.c:2650` | `Invalid paranoia level %lli must be between 0 and %i!` | both | yes |
+| `cyanrip_main.c:2664` | `Invalid max coverart size %i (must be 250, 500, 1200 or -1)` | both | yes |
+| `cyanrip_main.c:2676` | `Invalid sanitation method %s` | both | yes |
+| `cyanrip_main.c:2688` | `Invalid release index %lli!` | both | yes |
+| `cyanrip_main.c:2703` | `Missing discnumber` | both | yes |
+| `cyanrip_main.c:2708` | `Invalid discnumber %lli` | both | yes |
+| `cyanrip_main.c:2716` | `Invalid totaldiscs %lli` | both | yes |
+| `cyanrip_main.c:2721` | `discnumber %i is larger than totaldiscs %i` | control flow | yes |
+| `cyanrip_main.c:2742` | `Invalid format \"%s\"` | both | yes |
+| `cyanrip_main.c:2747` | `Duplicated format \"%s\"` | control flow | yes |
+| `cyanrip_main.c:2762` | `Duplicated rip idx %i` | control flow | yes |
+| `cyanrip_main.c:2796` | `Missing track idx for pregap` | both | yes |
+| `cyanrip_main.c:2801` | `Invalid track idx for pregap: %lli` | both | yes |
+| `cyanrip_main.c:2808` | `Missing pregap action` | both | yes |
+| `cyanrip_main.c:2816` | `Invalid pregap action %s` | both | yes |
+| `cyanrip_main.c:2848` | `No cover art location specified for \"%s\"` | both | yes |
+| `cyanrip_main.c:2857` | `Invalid track idx for cover art: %lli` | both | yes |
+| `cyanrip_main.c:2864` | `Cover art already specified for track idx %i!` | control flow | yes |
+| `cyanrip_main.c:2876` | `Cover art \"%s\" already specified!` | control flow | yes |
+| `cyanrip_main.c:2882` | `Too many cover arts specified!` | control flow | yes |
+| `cyanrip_main.c:2892` | `Directory name scheme must contain {format} with multiple output formats!` | control flow | yes |
+| `cyanrip_main.c:2897` | `-J (only generate a CUE sheet) cannot be used with -I (only print info)!` | both | yes |
+| `cyanrip_main.c:2914` | `-Z %i can never converge with -r %i: it needs %lli reads to agree, and -r %i never allows that many. Use -r %lli or more!` | control flow | yes |
+| `cyanrip_main.c:2920` | `-Z %i can never converge with -r %i: it needs %lli reads to agree, more than any -r allows. Use a smaller -Z!` | control flow | yes |
+| `cyanrip_main.c:2960` | `Invalid encoder option \"%s\", must be key=value!` | both | yes |
+| `cyanrip_main.c:2968` | `Unable to store encoder option \"%s\"!` | both | yes |
 | `cyanrip_main.c:2997` | `Invalid %s naming scheme \"%s\"!` | wording | yes |
+| `cyanrip_main.c:3011` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | control flow | yes |
 | `cyanrip_main.c:3159` | `Error reading album tags: %s` | both | yes |
 | `cyanrip_main.c:3292` | `Invalid track number %i for pregap, list has %i tracks!` | both | yes |
 | `cyanrip_main.c:3314` | `Invalid track number %lli, list has %i tracks!` | both | yes |
@@ -925,9 +938,9 @@ must carry the same class.
 | `naming.c:316` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
 | `naming.c:332` | `Invalid condition syntax!` | both | yes |
 
-**132 distinct strings.** By evidence: 58 both, 29 wording, 20 control flow, 15 wording + goto end, 10 genopt.
+**142 distinct strings.** By evidence: 76 both, 30 control flow, 14 wording + goto end, 12 wording, 10 genopt.
 
-The `control flow` and `both` rows total 78 strings proven reachable on a
+The `control flow` and `both` rows total 106 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
 build a hard failure classifier on.
 
@@ -966,13 +979,12 @@ says.
 | `cyanrip_main.c:1686` | `Done; (%i out of %i matches for current checksum %08X)` | goto spool_encode | yes |
 | `cyanrip_main.c:1718` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed; last read %08X, not kept)` | goto spool_encode | yes |
 | `cyanrip_main.c:1724` | `Done; (repeat limit of %i read%s reached; at most %i read%s agreed)` | goto spool_encode | yes |
-| `cyanrip_main.c:3011` | `Offset is unset! To continue with an offset of 0, run with -s 0!` | goto end | yes |
 | `cyanrip_main.c:3370` | `%s` | goto end | yes |
 | `musicbrainz.c:396` | `MusicBrainz lookup failed: DiscID has no associated releases.` | goto end_meta | yes |
 | `musicbrainz.c:404` | `MusicBrainz lookup failed: no releases found for DiscID.` | goto end_meta | yes |
 | `musicbrainz.c:466` | `Release ID %s not found in release list for DiscID %s, looking it up` | goto end_meta | yes |
 
-**12 distinct strings.** By evidence: 6 goto end, 3 goto end_meta, 3 goto spool_encode.
+**11 distinct strings.** By evidence: 5 goto end, 3 goto end_meta, 3 goto spool_encode.
 
 ## P6 - Version flags across the stock line
 
