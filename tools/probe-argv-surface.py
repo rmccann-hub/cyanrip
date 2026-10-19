@@ -88,9 +88,14 @@ def probe(binary, image, flag, value, extra=None):
     # it says: "-J alone" came back refused with the -I conflict message.
     if "-J" in extra and "-I" not in extra:
         base = [f for f in base if f != "-I"]
-    args = [binary, "-d", image] + base + extra
-    if flag:
-        args += [flag] + ([str(value)] if value is not None else [])
+    if flag == "-d":
+        # -d IS the image, so its probe replaces it rather than adding a
+        # second -d. Values are relative to the image's own directory.
+        args = [binary, "-d", str(value)] + base + extra
+    else:
+        args = [binary, "-d", image] + base + extra
+        if flag:
+            args += [flag] + ([str(value)] if value is not None else [])
     r = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                        timeout=120, cwd=os.path.dirname(image) or ".")
     out = r.stdout.decode(errors="replace")
@@ -156,6 +161,15 @@ GRID = [
 # for every structured argument, is the generalisation of that one fix.
 
 STRING_GRID = [
+    # -d, F9's first flag. Only values whose last line is cyanrip's own
+    # "Unable to open device:" are tabled, because §7 is compared byte for
+    # byte on every CI host: a missing .cue and a directory end on libcdio's
+    # own error, whose wording is its version's; and an empty -d makes
+    # libcdio look for a default drive, which opens a real one on a host
+    # that has a drive. All three were run on 2026-10-19 and each exited 1
+    # with a message; they are in our round 35 lap 7, not in this table.
+    ("-d", "disc image or drive", ["basic.cue", "basic.bin", "/nonexistent",
+                                   "/nonexistent.toc", "/nonexistent.nrg"]),
     ("--consumer", "consumer tag", ["", "x", "platterpus/0.6.4b12", "a" * 4096]),
     ("-a", "album metadata blob", ["", "album=x", "album=a:b", "album=" + "z" * 8192,
                                    "album", "=x", "album=", "a=b:", "a=b::c=d",
