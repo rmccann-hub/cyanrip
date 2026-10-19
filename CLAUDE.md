@@ -1066,6 +1066,17 @@ should need rewriting. If it does, that is the defect.
    belongs here where it can be checked, and it is checked by the same command
    as every other fact: `python3 tools/check-settled.py`.
 
+   **In a commit message or a pull request's text, call it *upstream issue
+   167*, and write neither `cyanreg/cyanrip#167` nor its URL**, from the
+   operator's review of 2026-10-19. GitHub posted a reference on upstream's
+   issue for `f2e44bb`, whose message has both forms, when pull request #40
+   merged it, and upstream's maintainer sees that as the fork's activity.
+   Which form posts one is not settled from here: `f890a08` and `c28a748`
+   name the short form and were on `platterpus-fork` when the operator read
+   the page, with no entry for either, and a test commit would post the
+   entry it tests for. Files in the tree name it both ways, with no entry
+   from them, so the links in files stay.
+
    **Drafted is a separate claim from found, and for a day they differed.**
    Reports 15 to 17 were fixed for `.20` and recorded in
    `docs/KNOWN-ISSUES.md` and `Changelog.md` as upstream's too, while this list
