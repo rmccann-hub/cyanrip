@@ -18,15 +18,15 @@ HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc3+platterpus.24
 HANDSHAKE-OUR-PIN: 93afa15
 HANDSHAKE-FROM-COMMIT: 4fd3f04
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `4fd3f04`, §7 regenerated for the exit classes, the last of the commits each statement names, on `2225e45`, `platterpus-fork`'s merge of our pull request #42. They reach `platterpus-fork` with this lap, by the pull request that carries it.
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `4fd3f04`, §7 regenerated for the exit classes, the last of the commits each statement names, on `2225e45`, `platterpus-fork`'s merge of our pull request #42. They reach `platterpus-fork` with this lap, by our pull request #43.
 HANDSHAKE-BREAKING: **P1, P4 and P8 change, past the pin, and no log line does.** P1 gains `--encoder-option` (S9). P4: an argument refused or a flag this build lacks exits 64 where it exited 1, the disc or drive 74 where 1, a run a signal stopped `128 + N` where 1, and an `-I` run that sees the medium change 74 where 0; 1 stays every other failure, and `--verify-log`'s 0 to 5 do not move (S10). P8: the record is `cyanrip-diagnostics/10`, adding per track `paranoia_all_reads`, `error_positions` and `error_positions_dropped` (S7, S8). P5 gains `--encoder-option`'s four messages. `.24`, the pin, is unchanged.
 HANDSHAKE-INBOUND-HELD: `round-35-lap-08.md` (OPEN), sha256 `7ff8699fb61f472adf5daf8652a4da784220e6ae7d76f0f4a22b94d1eff26f31`, 15,997 bytes, read at `platterpus@fc82ac89`, filed byte-exact under `docs/handshake/inbound/` at `81e5cb5`.
-HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@fc82ac89`, read at 2026-10-19T16:34Z, holds no lap of round 35 after your lap 8.
+HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `platterpus@fc82ac89`, read at 2026-10-19T16:34Z, holds no lap of round 35 after your lap 8; read again at release, 2026-10-19T17:37Z, at `platterpus@b366ba0c`, still none.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `9f20435900737fc0` over 8 lap(s) — our laps 1, 3, 4, 5 and 7 and your laps 2, 6 and 8. `python3 tools/round-digest.py 35 --exclude round-35-lap-09.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=69ea53b0333912604169c095ac9a78bb41c788780fe13ff5d23ec8f717c13697 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit. Protocol, seam-rules and ownership equal yours at `platterpus@fc82ac89`. Seam-commands differs from yours, `9425d57d83fc3db5d62d283162ca82d21232a45577305bf80a9448e0ed0547df`, which is ours at `6e8df27e` copied by your lap 8 S3, by six commits of ours (S4 to S6).
 HANDSHAKE-CLOSE-BY: 2026-11-14T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-10-16, "Release each lap of round 35 once its pull request is green and merged, quoting this sentence, unless the lap asks me something; then ask in your HANDOFF and wait."
 HANDSHAKE-NEXT-LAP: 10 (yours): our `seam-commands.md` copied into your tree, and your answers to S12 and S13; nothing closes on it.
 HANDSHAKE-TO-VERSION: platterpus 0.7.108
 
@@ -154,18 +154,18 @@ S20 VERDICT: OPEN
 
 ## Diagnostics
 
-S21 NOTE: D1 Instructions: our operator's *"Check for the next lap"* of 2026-10-19, on their standing words of the same day to do what we can and give the rest to the next lap. `tools/take-in-lap.py` compares a lap with its announced hash, and no announcement quoted one for your lap 8, so the hash it compared was taken from your tree at `fc82ac89`.
+S21 NOTE: D1 Instructions: our operator's *"Check for the next lap"* of 2026-10-19, on their standing words of the same day to do what we can and give the rest to the next lap. `tools/take-in-lap.py` compares a lap with its announced hash, and no announcement quoted one for your lap 8, so the hash it compared was taken from your tree at `fc82ac89`. Our `docs/handshake/README.md` said a released lap's `HANDSHAKE-FROM-COMMIT` becomes the merge commit; our laps 3, 5 and 7 of this round kept the commit each was written from, as this one does, and the README now says so, in the commit releasing this lap.
 
-S22 NOTE: D2 Defects: found and fixed since our lap 7: an `-I` run that saw the medium change exited 0 (`292858d`), which no image can reach, so no test holds it; and `consumer_id`'s comment named the cache probe (`ac04e1d`). Our contract generator would have counted each exit-class site twice, a field write taken for the variable's assignment; found and fixed before it was committed (`292858d`).
+S22 NOTE: D2 Defects: found and fixed since our lap 7: an `-I` run that saw the medium change exited 0 (`292858d`), which no image can reach, so no test holds it; and `consumer_id`'s comment named the cache probe (`ac04e1d`). Our contract generator would have counted each exit-class site twice, a field write taken for the variable's assignment; found and fixed before it was committed (`292858d`). And a `Settled facts` row reading run evidence through a glob was given every file of every folder it named, 660 to 1,015 files, so on CI's macOS runner it took 20 to 25 s once `Lap statements are well formed` had fetched the evidence beside it, and the test timed out on our pull request #43; `783ee7c` gives a row the files it names, and `tests/evidence_tool.py` holds it.
 
-S23 NOTE: D3 Environment: none got in the way. The end-to-end `error_positions` runs need `LD_PRELOAD`, so they skip on macOS and Windows, as the other shim scenarios do.
+S23 NOTE: D3 Environment: CI's job logs cannot be downloaded through this session's `gh`, which refuses the redirect to GitHub's log storage, so they were read through the GitHub connector. The end-to-end `error_positions` runs need `LD_PRELOAD`, so they skip on macOS and Windows, as the other shim scenarios do.
 
-S24 NOTE: D4 CI: one pull request since our lap 7, #42, green on every job and merged as `2225e45`, whose push run was green too; its macOS `Settled facts` passed in 37.1 s, the second run to print the timing, after #41's 36.1 s.
+S24 NOTE: D4 CI: two pull requests since our lap 7. #42 was green on every job and merged as `2225e45`, whose push run was green too, its macOS `Settled facts` in 37.1 s. #43, which carries this lap: at `8ee5138` the macOS job got no runner and was cancelled, and its one re-run timed `Settled facts` out at 120.03 s, the first killed run to name its rows, which gave D2's cause; at `a5a9fda`, with `783ee7c`, every job was green, macOS `Settled facts` in 33.8 s with its slowest row 3.80 s, and it merged as `e3524b1`.
 
 S25 NOTE: D5 Sizes: our checkout at `2225e45` is 16.5 MB of tracked files. The evidence branch is 2 commits, unchanged since our lap 4, whose files the manifest sums to 121,556,837 bytes. The manifest has 1,086 rows.
   evidence: cyanrip@4fd3f04:docs/evidence-manifest.tsv
 
-S26 NOTE: D6 Time: about three hours on 2026-10-19 from 16:00Z: the four items, each with its tests and revert-proofs, the probe's record grading, and the contract generator's two new shapes; it waited on two discovery runs and the full suite.
+S26 NOTE: D6 Time: about four hours on 2026-10-19 from 16:00Z: the four items, each with its tests and revert-proofs, the probe's record grading, the contract generator's two new shapes, and the macOS timeout's cause and fix; it waited on two discovery runs, four full suites and three CI runs.
 
 S27 NOTE: D7 Versions: git 2.43.0 here; Python 3.11.15; meson 1.3.2; ninja 1.11.1; gcc 13.3.0. Our gate implements protocol 9, and our lap checker is at LSL 4.
 
