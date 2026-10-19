@@ -1,5 +1,77 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.25 — 2026-10-19 — **beta**
+===============================================
+**Released on the beta channel**, for round 35 to review with Platterpus's
+0.7.109. The operator moved round 35 to it on 2026-10-19: its pin from `.24`
+to this release, and its run to the Full run on this release through their
+0.7.109, overriding R1 and R4 in writing (our round 35 lap 14). Beta is this
+side's choice under v8 E3, as `.24`'s was, and the stable channel stays `.23`,
+which round 34 approved, until round 35 closes.
+**What it ships since `.24`**, the five changes to the binary fixed on
+2026-10-19, each in its entry below: a disc ISRC that is not an ISO 3901 code
+is not used, and its `Disc ISRC:` line says so (`72a7a8b`); integer arguments
+past `INT_MAX` are refused, not wrapped (`716a99b`); the `--diagnostics`
+record, `cyanrip-diagnostics/10`, carries each track's `error_positions` and
+`paranoia_all_reads` (`58f7779`); `--encoder-option key=value` (`ac04e1d`); and
+exit classes, 64 for an argument refused, 74 for the disc or drive, 128 + N
+for a run signal N stopped (`292858d`). **One release of Platterpus's had to
+come first, 0.7.109**: a refused code prints `Disc ISRC:     <code>
+(<reason>)`, a shape `.24` gave only to `none` and `unknown`, and their parser
+reads it from `platterpus@4d4d0a10`, which their `v0.7.108` does not hold (our
+lap 5 S6). They recognise the record by its prefix, never its number
+(`platterpus@d413db7:src/platterpus/ripper_ending.py:103-104`), so `/10` needs
+nothing first, and they send no `--encoder-option` (`docs/seam-commands.md`
+§1b).
+
+**What the acceptance run on the drive must cover**, item by item, for the
+operator's run on `.25` through 0.7.109. Items 1 to 3 are `.24`'s, which never
+ran on a drive: round 35's run moved here before it happened.
+
+1. **The sub-channel ISRC read**, the MMC path no image reaches, on two discs:
+   one whose sub-channel carries ISRCs, and one that does not. The reference
+   disc is the second: on `.23` its read returned `libcdio returned none` for
+   every track (round 34's run). For each track, the `Disc ISRC:` line equals
+   the record's `isrc_disc`, or `none (` its `isrc_disc_reason` `)`. A code
+   the disc returns that is not an ISO 3901 code reads `<code> (not an ISO 3901
+   code, so not used)` and is written to no file; a drive returns one only
+   from a disc that carries it, so this arm stays shown by images
+   (`disc_isrc_line`) unless such a disc turns up.
+2. **`--prefer-disc-isrc`**, with and without, on the disc that carries ISRCs:
+   without it each file's `ISRC` tag is the value Platterpus passed; with it,
+   the disc's code wherever the disc returned a valid one. On the reference
+   disc it changes no file.
+3. **A bounded `-O` read, once, on the BDR-209D**: the last track only
+   (`-l 14`), with `-O` at the drive's `+667`, which reads two frames past the
+   lead-out. It passes if the rip finishes, prints `Beyond disc: N of 2 frames
+   refused (written as silence)`, and the track's audio up to the lead-out
+   matches the same track ripped without `-O`. A time limit of a few minutes on
+   the step keeps a failure from holding the drive.
+4. **The cancel step's exit status**: the rip SIGTERM stops mid-read, whose
+   footer reads `interrupted by SIGTERM`, now exits **143**, where `.24` and
+   earlier exited 1. A second signal's forced quit writes no footer and still
+   exits 1. Optionally, `-I` with the tray empty: a start-up that cannot open
+   the drive or read its TOC returns **74** (`src/cyanrip_main.c:2985-2986`),
+   and no drive has shown which failure an empty tray gives.
+5. **The `/10` record on a drive**: every record's `schema` is
+   `cyanrip-diagnostics/10`; every track has `error_positions`,
+   `error_positions_dropped` and `paranoia_all_reads`. On the secure re-read,
+   a track read more than once has `paranoia_all_reads` at least the log's
+   per-track counters, which describe its last read, and a track read once has
+   them equal. `error_positions` is empty on a read with no read error or skip;
+   only a disc that makes paranoia skip, such as the damaged 18-track disc of
+   2026-10-04, fills it.
+
+**What the run can skip**: nothing of the Full run need be skipped. Beyond 1 to
+5, `.25` changes no code path round 34's Full run on `.23` covered:
+AccurateRip, the secure re-read and its securing passes, `-f`, the cache probe,
+pre-emphasis, CD-TEXT's absence and the data-track copy are as they were, so
+those sections are regression checks, not new evidence. `--encoder-option` and
+the refused integer arguments need no drive, and the image suite covers them;
+CI runs the Windows build, so no step needs `cyanrip.exe`.
+
 **`PROVIDER-CONTRACT.md`'s P5 lists the argument errors again.** The exit
 classes (`292858d`) made each argument error `return CRIP_EXIT_USAGE;` where it
 returned 1, and the generator's failure-path predicate matched only `return
