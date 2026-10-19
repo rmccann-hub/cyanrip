@@ -1289,6 +1289,15 @@ fact goes in an `evidence:` field under its NOTE, which both checkers resolve (a
 missing path is refused as `LSL.4` by both). `## Diagnostics` may follow
 `## Verdict`: neither checker requires the verdict last.
 
+**A time written to the operator is US Eastern time (`America/New_York`) on a
+12-hour clock, with the zone**: `1:45 PM EDT`, `9:10 AM EST`. The operator's
+word of 2026-10-19, *"moving forward, and forever"*. It covers replies and the
+HANDOFF block, whose template says `<UTC time>`, so the block gives both:
+`HANDOFF from fork, 2:35 PM EDT (18:35 UTC)`. Wire values stay UTC: a lap's
+headers and statements, commit dates, `STATUS.md`, and anything else either
+side's tools read, because both projects' records are in UTC and a second zone
+in them is a second description of one instant.
+
 ## Run evidence lives on the `evidence` branch (HR-2)
 
 HR-2 is `PROTOCOL.md` v9 §17, the operator's agreed text of 2026-10-14: what
