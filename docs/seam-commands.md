@@ -128,27 +128,27 @@ has no row in §1, §1b or §2.
 
 | flag | meaning (cyanrip's `--help`) | **PP** | **CR** |
 |---|---|---|---|
-| `-h`, `--help` | Print this text | ? | HAVE |
-| `--stall-secs` | Seconds a frame read must stall before reporting liveness (0 disables) (default: 10) | ? | HAVE |
-| `--cache-probe` | Measure the drive's readback cache before ripping (costs seconds; with -I to measure without ripping) (default: false) | ? | HAVE |
-| `-p`, `--pregap` | Track pregap handling: N=default\|drop\|merge\|track (repeatable) | ? | HAVE |
-| `-P`, `--paranoia` | Paranoia level (0..max, or 'none'/'max') | ? | HAVE |
-| `-H`, `--hdcd` | Enable HDCD decoding (default: false) | ? | HAVE |
-| `-E`, `--force-deemphasis` | Force CD deemphasis (default: false) | ? | HAVE |
-| `-K`, `--no-replaygain` | Disable ReplayGain tagging (default: false) | ? | HAVE |
+| `-h`, `--help` | Print this text | NO: we never print help; our probes read --version (§2) | HAVE |
+| `--stall-secs` | Seconds a frame read must stall before reporting liveness (0 disables) (default: 10) | NO: your default is kept | HAVE |
+| `--cache-probe` | Measure the drive's readback cache before ripping (costs seconds; with -I to measure without ripping) (default: false) | NO: not in a rip; our acceptance script's section P and --rig-check send it with -I, probe-only | HAVE |
+| `-p`, `--pregap` | Track pregap handling: N=default\|drop\|merge\|track (repeatable) | NO: your default pregap handling is kept; a per-track choice is not offered | HAVE |
+| `-P`, `--paranoia` | Paranoia level (0..max, or 'none'/'max') | NO: your default level is kept; a lower level is not offered | HAVE |
+| `-H`, `--hdcd` | Enable HDCD decoding (default: false) | NO: not in a rip; our acceptance script's section P3 sends it with -E and with -W | HAVE |
+| `-E`, `--force-deemphasis` | Force CD deemphasis (default: false) | NO: a rip keeps the disc's own samples with -W (§1); section P3 sends -E once, to test the other side | HAVE |
+| `-K`, `--no-replaygain` | Disable ReplayGain tagging (default: false) | NO: we keep and read your ReplayGain tags | HAVE |
 | `-X`, `--no-data-tracks` | Skip data tracks instead of ripping them to raw binaries (default: false) | ? | HAVE |
-| `-b`, `--bitrate` | Bitrate of lossy files in kbps (default: 256.000000) | ? | HAVE |
-| `-L`, `--log-scheme` | Log file name scheme (default: {album}{if #totaldiscs# > #1# CD\|disc\|}) | ? | HAVE |
-| `-M`, `--cue-scheme` | CUE file name scheme (default: {album}{if #totaldiscs# > #1# CD\|disc\|}) | ? | HAVE |
-| `-J`, `--cue-only` | Only generate and print a CUE sheet, don't rip (default: false) | ? | HAVE |
-| `-R`, `--release` | MusicBrainz release: 1-based index or ID string | ? | HAVE |
+| `-b`, `--bitrate` | Bitrate of lossy files in kbps (default: 256.000000) | NO: lossy files are derived from the FLAC master by our own transcoder | HAVE |
+| `-L`, `--log-scheme` | Log file name scheme (default: {album}{if #totaldiscs# > #1# CD\|disc\|}) | NO: your default names are kept; the album folder comes from -D (§1) | HAVE |
+| `-M`, `--cue-scheme` | CUE file name scheme (default: {album}{if #totaldiscs# > #1# CD\|disc\|}) | NO: your default names are kept; the album folder comes from -D (§1) | HAVE |
+| `-J`, `--cue-only` | Only generate and print a CUE sheet, don't rip (default: false) | NO: we never ask for a cue without a rip | HAVE |
+| `-R`, `--release` | MusicBrainz release: 1-based index or ID string | NO: our MusicBrainz lookup chooses the release, and its tags reach you with -a and -t under -N | HAVE |
 | `-C`, `--cover` | Cover art: title=path (or N=path per-track, repeatable) | ? | HAVE |
-| `-A`, `--no-accurip` | Disable AccurateRip database query and validation (default: false) | ? | HAVE |
+| `-A`, `--no-accurip` | Disable AccurateRip database query and validation (default: false) | NO: AccurateRip is the verification we read | HAVE |
 | `-B`, `--no-acoustid` | Disable AcoustID fingerprinting (default: false) | ? | HAVE |
-| `--acoustid-key` | AcoustID user API key, to submit fingerprints of verified rips | ? | HAVE |
-| `-m`, `--cover-size` | Cover art max size: 250, 500, 1200, or -1 for original (default: -1) | ? | HAVE |
-| `-Q`, `--eject` | Eject tray once successfully done (default: false) | ? | HAVE |
-| `-f`, `--find-offset` | Find drive offset (requires a disc with an AccuRip entry) (default: false) | ? | HAVE |
+| `--acoustid-key` | AcoustID user API key, to submit fingerprints of verified rips | NO: we submit nothing to AcoustID | HAVE |
+| `-m`, `--cover-size` | Cover art max size: 250, 500, 1200, or -1 for original (default: -1) | NO: under -N and -U you fetch no cover art | HAVE |
+| `-Q`, `--eject` | Eject tray once successfully done (default: false) | NO: the app ejects after it has read the results | HAVE |
+| `-f`, `--find-offset` | Find drive offset (requires a disc with an AccuRip entry) (default: false) | NO: not in a rip; our acceptance script's section O runs cyanrip -N -f against the reference drive's +667 | HAVE |
 
 ## 2. Probe-path flags, which is a separate call and a separate risk
 
