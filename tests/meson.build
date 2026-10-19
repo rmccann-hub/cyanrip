@@ -384,7 +384,9 @@ test('Fork options are long-only', python,
 ## And the table the probe publishes, in the shared docs/seam-commands.md §7,
 ## bounded by its generated-block delimiters so the check never reads prose the
 ## other side wrote. Without this the table went stale for weeks after the
-## probe's grading changed, while every test passed.
+## probe's grading changed, while every test passed. It also fails when a flag
+## the binary's --help lists has no row in §1, §1b or §2, reading each row's
+## flag cell only (Platterpus's F8, landed in round 35).
 test('Argv table in seam-commands.md', python,
      args: [ files('../tools/probe-argv-surface.py'), '--check',
              files('../docs/seam-commands.md'),

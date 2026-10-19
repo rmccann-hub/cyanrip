@@ -289,6 +289,34 @@ def check_against(path, block):
     return 1
 
 
+HELP_FLAG = re.compile(r"^\s+(--[a-z0-9-]+)(?: \((-[A-Za-z])\))?:", re.M)
+ROW_FLAGS = re.compile(r"`(--?[A-Za-z][a-z0-9-]*)`")
+
+
+def rows_cover_help(text, binary):
+    """Every flag in the live --help has a row in §1, §1b or §2.
+
+    Platterpus's F8, landed in round 35: §1 tabled the flags they send and nothing
+    said which of ours they do not, so a flag added here could go unseen
+    there. §1b now rows each one they do not send, and this fails when a
+    flag in --help has no row anywhere, so a new flag cannot land without
+    one. Reads the flag cell of each table row only, never the prose, which
+    is jointly owned. Returns the number of flags --help listed and those
+    without a row; none listed is a refusal, not a pass."""
+    helptext = subprocess.run([binary, "--help"], capture_output=True,
+                              text=True).stdout
+    flags = HELP_FLAG.findall(helptext)
+    tabled = set()
+    for head in (r"## 1\. ", r"## 1b\. ", r"## 2\. "):
+        m = re.search(head + r".*?(?=^## )", text, re.M | re.S)
+        for line in (m.group(0).splitlines() if m else ()):
+            if line.startswith("| `"):
+                tabled |= set(ROW_FLAGS.findall(line.split("|")[1]))
+    return len(flags), [long_ if not short else f"{short}, {long_}"
+                        for long_, short in flags
+                        if long_ not in tabled and short not in tabled]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--binary", default="build/src/cyanrip")
@@ -381,9 +409,23 @@ def main():
         return 0
 
     if a.check:
-        return check_against(a.check,
-                             markdown_block(rows, inter, ignored,
-                                            banner_of(a.binary)))
+        rc = check_against(a.check,
+                           markdown_block(rows, inter, ignored,
+                                          banner_of(a.binary)))
+        listed, missing = rows_cover_help(
+            pathlib.Path(a.check).read_text(encoding="utf-8"), binary)
+        if not listed:
+            print(f"FAIL: {binary} --help listed no flags, so whether "
+                  f"{a.check} rows them all was not checked")
+            return 1
+        for flag in missing:
+            print(f"FAIL: {a.check} has no row for {flag}, which --help "
+                  f"lists: add it to \u00a71 if the consumer sends it, else "
+                  f"\u00a71b")
+        if not missing:
+            print(f"{a.check}: each of the {listed} flags --help lists has a "
+                  f"row in \u00a71, \u00a71b or \u00a72")
+        return rc or (1 if missing else 0)
 
     if a.markdown:
         print(markdown_block(rows, inter, ignored, banner_of(a.binary)))

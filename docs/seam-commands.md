@@ -113,6 +113,41 @@ Twenty-one flags reach the argv builder's rip path (`adapters/cyanrip_backend.py
 | `-W` | — | flag | always present | keeps a pre-emphasised disc's own samples, and the cue says `FLAGS PRE`, instead of de-emphasising | HAVE |  HAVE |
 | `--diagnostics` | file | `str`, a file name | `cyanrip-diagnostics-<stamp>.json`, unique per rip, in the rips folder | cyanrip's machine-readable record of the rip, the one artifact of a run refused before its log opens | HAVE |  HAVE |
 
+## 1b. Flags of ours the rip path does not send
+
+Every other flag cyanrip accepts, one row each, so §1, this table and §2 list
+them all between them (Platterpus's F8, landed in round 35). The meaning is
+cyanrip's own `--help` line, word for word, a pipe in it escaped. **PP** says
+why the rip path does not send it, `NO: <reason>`, or `?` until that is
+stated; a flag sent by another call, a rig script or a probe, can say so
+there. **CR** is cyanrip's. `--version`, `-v`, `-V` and `--verify-log`, `-Y`
+are §2's. `tools/probe-argv-surface.py --check` fails when a flag in `--help`
+has no row in §1, §1b or §2.
+
+| flag | meaning (cyanrip's `--help`) | **PP** | **CR** |
+|---|---|---|---|
+| `-h`, `--help` | Print this text | ? | HAVE |
+| `--stall-secs` | Seconds a frame read must stall before reporting liveness (0 disables) (default: 10) | ? | HAVE |
+| `--cache-probe` | Measure the drive's readback cache before ripping (costs seconds; with -I to measure without ripping) (default: false) | ? | HAVE |
+| `-p`, `--pregap` | Track pregap handling: N=default\|drop\|merge\|track (repeatable) | ? | HAVE |
+| `-P`, `--paranoia` | Paranoia level (0..max, or 'none'/'max') | ? | HAVE |
+| `-H`, `--hdcd` | Enable HDCD decoding (default: false) | ? | HAVE |
+| `-E`, `--force-deemphasis` | Force CD deemphasis (default: false) | ? | HAVE |
+| `-K`, `--no-replaygain` | Disable ReplayGain tagging (default: false) | ? | HAVE |
+| `-X`, `--no-data-tracks` | Skip data tracks instead of ripping them to raw binaries (default: false) | ? | HAVE |
+| `-b`, `--bitrate` | Bitrate of lossy files in kbps (default: 256.000000) | ? | HAVE |
+| `-L`, `--log-scheme` | Log file name scheme (default: {album}{if #totaldiscs# > #1# CD\|disc\|}) | ? | HAVE |
+| `-M`, `--cue-scheme` | CUE file name scheme (default: {album}{if #totaldiscs# > #1# CD\|disc\|}) | ? | HAVE |
+| `-J`, `--cue-only` | Only generate and print a CUE sheet, don't rip (default: false) | ? | HAVE |
+| `-R`, `--release` | MusicBrainz release: 1-based index or ID string | ? | HAVE |
+| `-C`, `--cover` | Cover art: title=path (or N=path per-track, repeatable) | ? | HAVE |
+| `-A`, `--no-accurip` | Disable AccurateRip database query and validation (default: false) | ? | HAVE |
+| `-B`, `--no-acoustid` | Disable AcoustID fingerprinting (default: false) | ? | HAVE |
+| `--acoustid-key` | AcoustID user API key, to submit fingerprints of verified rips | ? | HAVE |
+| `-m`, `--cover-size` | Cover art max size: 250, 500, 1200, or -1 for original (default: -1) | ? | HAVE |
+| `-Q`, `--eject` | Eject tray once successfully done (default: false) | ? | HAVE |
+| `-f`, `--find-offset` | Find drive offset (requires a disc with an AccuRip entry) (default: false) | ? | HAVE |
+
 ## 2. Probe-path flags, which is a separate call and a separate risk
 
 | flag | why it is separate | the lesson attached to it |

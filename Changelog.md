@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**`docs/seam-commands.md` rows every flag cyanrip accepts.** §1 tabled the
+flags Platterpus's rip path sends, and nothing said which of ours it does not,
+so a flag added here could go unseen there (their F8). A new §1b rows the other
+21, each with its `--help` line word for word, a **PP** cell of `?` for them to
+answer `NO: <reason>`, and **CR** `HAVE`; with §1 and §2 that is all 45 flags
+`--help` lists. `tools/probe-argv-surface.py --check`, which the `Argv table in
+seam-commands.md` test runs, now also fails when a flag in `--help` has no row
+in §1, §1b or §2, reading each row's flag cell and never the prose, and refuses
+when `--help` lists nothing rather than passing. Deleting one §1b row fails it,
+and pointing it at `/bin/true` refuses. The document is shared: Platterpus lands
+the same bytes, and our round 35 lap 7 names them.
+
 **CI prints where `Settled facts` spent its time, on every run.** After the
 change below it passed on macOS in 106.55 s of its 120 s, and meson prints a
 passing test's output nowhere, so its slowest rows stayed unseen.
