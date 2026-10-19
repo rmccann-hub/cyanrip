@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**`seam-commands.md` §7 has boundary rows for `-d`, `-c`, `-l` and `-t`**,
+Platterpus's F9. `-c` and `-t` gained their limits and one past each, and the
+wrapping values that found the defect below; `-c`'s effect is now read from
+`Disc number:`, so eleven `-c` rows that said *unobservable* say what happened.
+`-d` is probed with values every CI host reads alike, whose last line is
+cyanrip's own `Unable to open device:`; a missing `.cue`, a directory and an
+empty `-d` are left out, because the first two end on libcdio's own wording and
+the third opens a real drive where a host has one. 129 probes, none silently
+ignored.
+
 **Upstream reports 24 and 25 are drafted, and not filed yet.** 25 is the
 wrap fixed below, at upstream's same lines. 24 was fixed here on 2026-08-06
 (`58f5151`) and never reported: `-c /`, `-c //`, `-p =` and `-p ==` hand
