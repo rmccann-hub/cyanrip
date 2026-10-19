@@ -5917,6 +5917,20 @@ def sc_contract_fatal_inventory():
             fail(f"contract_fatal_inventory: {probe!r} is in neither P5 nor "
                  "P5a, so a consumer's error matcher built from them loses it")
 
+    # 2b. Round 35's exit classes (292858d) made each argument error return
+    #     CRIP_EXIT_USAGE where it returned 1, and the predicate matched only
+    #     `return 1;`, so every string P5 held on control flow alone left both
+    #     tables, nine of them, while the binary printed each. Found cutting
+    #     .25. In P5 itself: the -Z pair's own comment in cyanrip_main.c says
+    #     each arm returns so that P5 can see it.
+    for probe in ("Too many cover arts specified!",
+                  "-Z %i can never converge with -r %i: it needs %lli reads "
+                  "to agree, more than any -r allows. Use a smaller -Z!"):
+        if probe not in p5:
+            fail(f"contract_fatal_inventory: {probe!r} is not in P5, though "
+                 "it returns an exit class; the predicate stopped seeing "
+                 "`return CRIP_EXIT_<class>;`")
+
     # 3. Both tallies must sum to their own table. The old summary said `128
     #    distinct strings` above a breakdown totalling 114, because it iterated
     #    a hardcoded tuple of class names -- so three classes were counted in

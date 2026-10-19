@@ -1321,6 +1321,24 @@ has taken its number. A lap no standing word covers, or one asking the operator
 something, is still published held. **The full local suite still runs before
 every push**: the operator kept that rule the same day.
 
+**Each side reads the other directly, from our round 35 lap 15**, the owner's
+word of 2026-10-19: *"make it so they will talk to each other about this in the
+next round/lap. We need them to communicate without us in the middle."* At the
+start of a session and before ending a turn, fetch Platterpus's `main` and read
+`docs/handshake/outbound/` and `outbound/platterpusstatus.md`: a lap of theirs
+released to us (`HANDSHAKE-READY-TO-READ: yes`) and newer than the newest we
+have filed is the cue to file it (`tools/take-in-lap.py`) and answer it, with no
+HANDOFF needed first. An hourly Routine in this session does the same when
+nothing else wakes it, and when nothing is new it writes nothing: no commit, no
+comment, no HANDOFF. The HANDOFF block stays, as the operator's copy rather than
+a relay, and `ASK:` carries only what the owner keeps: a run on hardware, a
+release no standing word covers, an override, the default for a second read on
+a disc AccurateRip cannot vouch for, and anything outside the two repositories.
+No lap only acknowledges; two laps in a row that move no open item propose
+parking the topic, and a topic past eight laps goes to the owner. This is
+transport, so it is written here and not in `PROTOCOL.md`, whose §1 does not
+govern how files move.
+
 ## Run evidence lives on the `evidence` branch (HR-2)
 
 HR-2 is `PROTOCOL.md` v9 §17, the operator's agreed text of 2026-10-14: what
