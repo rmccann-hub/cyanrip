@@ -8,7 +8,9 @@ builds, its banner and an info read of `tests/fixtures/cdda.nrg`, where
 nothing had run it before, and `tests/workflows.py` fails without the step.
 CI's timing step after the suite (`check-settled.py --timing-from`) now
 prints each Settled facts row it could not check and the count, so a macOS
-pass can show whether the evidence rows ran. And commit messages and pull
+pass can show whether the evidence rows ran. The first to print it, pull
+request #47's at `1dd06da`, ran them and passed in 46.1 s, which closes
+`STATUS.md`'s `settled-facts-macos`. And commit messages and pull
 request text name upstream's issue as *upstream issue 167* (`CLAUDE.md`).
 
 **Our round 35 lap 12 is sent** (`docs/handshake/round-35-lap-12.md`),

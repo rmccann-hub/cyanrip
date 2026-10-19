@@ -944,7 +944,8 @@ timed out at **120.03 s**; and the one re-run of the failed job passed it in
 `9aee54a`. So the time does not follow the tree, and the content of the
 change is not the cause; **what is, is still not established**, since CI keeps
 no per-row timing and the runner's other load is not visible from the job's
-log. It is our round 34 lap 1 S8, and `STATUS.md`'s `settled-facts-macos`.
+log. It is our round 34 lap 1 S8, and was `STATUS.md`'s
+`settled-facts-macos` until it closed on 2026-10-19, below.
 
 **And twice in a row on one tree on 2026-10-16**, pull request #40 at
 `b45029f`: `Settled facts TIMEOUT 120.04s` on the run and on its one re-run
@@ -1000,6 +1001,14 @@ after the suite printed only the slowest rows, so pull request #46's macOS job
 and the slowest 4.73 s, without saying whether those rows were among them. It
 now prints each row it could not check, with its reason, and the count;
 `tests/golden_libraries.py` fails when either is reverted.
+**Closed the same day by the first run to print it**, pull request #47's
+macOS job (`1dd06da`, job 118247330150): `Settled facts` passed in 46.1 s,
+102 rows run and the slowest 5.02 s, with one row unprobed, the golden
+reference's, which macOS skips by the owner's decision of 2026-10-12. So the
+evidence rows ran there, and none was among the five slowest. Before it,
+#43 timed out at 120.03 s, and #45 passed in 54.6 s and #46 in 42.5 s
+without saying whether those rows ran. Which test reaches the evidence cache
+first still varies, so a later run may count them unprobed, and now says so.
 
 ### `docs/seam-commands.md` carried FIVE known-wrong statements — ALL FIXED in round 30
 

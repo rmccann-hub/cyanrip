@@ -173,7 +173,7 @@ def run_row(store, command):
 # job has timed this test out at 120 s five times since 2026-10-15, twice in a
 # row on one tree, and a tree that timed out has passed in 28 s on a re-run; no
 # cause was established, because CI kept no per-row timing and a killed run
-# printed nothing (docs/KNOWN-ISSUES.md, STATUS.md's settled-facts-macos). Meson ends a
+# printed nothing (docs/KNOWN-ISSUES.md). Meson ends a
 # test that overruns with SIGTERM, so the handler names the row that was
 # running and the slowest ones before it, and exits 143 as a SIGTERM would.
 SLOWEST = 5
