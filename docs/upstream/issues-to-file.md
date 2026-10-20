@@ -309,11 +309,11 @@ with image size.
 ### Notes
 
 - Affects `0.9.4-rc1` and anything after [`c431d58`](https://github.com/cyanreg/cyanrip/commit/c431d58), including `0.9.4-rc2`,
-  `0.9.4-rc3` ([`e129ad9`](https://github.com/cyanreg/cyanrip/commit/e129ad9)) and `master` at `7dbe56a`, where the switch above is
+  `0.9.4-rc3` ([`e129ad9`](https://github.com/cyanreg/cyanrip/commit/e129ad9)) and `master` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), where the switch above is
   unchanged (`src/cyanrip_main.c:271-276`); measured on [`f8ebf48`](https://github.com/cyanreg/cyanrip/commit/f8ebf48) on
   2026-09-27.
 - Upstream's own image tests all rip at `-P 0` (`tests/rip_images.py` at
-  `7dbe56a`), which may be why it has not been seen there.
+  [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a)), which may be why it has not been seen there.
 - Real drives were never affected; the guard is on the image drivers only.
 - `-P 0` is byte-perfect on both, so a caller that always passes `-P 0` sees nothing.
 - Found and fixed downstream in `rmccann-hub/cyanrip` (`platterpus-fork`), where
@@ -709,7 +709,7 @@ match in the footer only where the track's line says so").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:1940-1945` at `7dbe56a`, the offset check:
+**Where:** `src/cyanrip_main.c:1940-1945` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), the offset check:
 
 ```c
     if (!settings.offset && !offset_set && !settings.print_info_only &&
@@ -761,7 +761,7 @@ driver, not by CDIO_DRIVE_CAP_READ_ISRC").
 
 <!-- BODY START -->
 
-**Where:** `src/fun512.c:69-75` at `7dbe56a`, in `cyanrip_verify_log()`:
+**Where:** `src/fun512.c:69-75` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), in `cyanrip_verify_log()`:
 
 ```c
     fseek(f, 0, SEEK_END);
@@ -801,7 +801,7 @@ paths that skipped it").
 
 <!-- BODY START -->
 
-**Where:** `src/fun512.c:76-77` at `7dbe56a`, in `cyanrip_verify_log()`:
+**Where:** `src/fun512.c:76-77` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), in `cyanrip_verify_log()`:
 
 ```c
     len = fread(data, 1, len, f);
@@ -838,7 +838,7 @@ as an I/O error, not as one without a checksum").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_log.c:383` at `7dbe56a`, in the `PCHECK()` macro,
+**Where:** `src/cyanrip_log.c:383` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), in the `PCHECK()` macro,
 which `:387-402` use sixteen times:
 
 ```c
@@ -881,7 +881,7 @@ build found this.
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:218-225` at `7dbe56a`, in `cyanrip_ctx_init()`:
+**Where:** `src/cyanrip_main.c:218-225` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), in `cyanrip_ctx_init()`:
 
 ```c
     if (!(ctx->drive = cdio_cddap_identify_cdio(ctx->cdio, CDDA_MESSAGE_LOGIT, &msg))) {
@@ -940,7 +940,7 @@ paths that skipped it").
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c:1740-1741` at `7dbe56a`, for `-c`:
+**Where:** `src/cyanrip_main.c:1740-1741` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), for `-c`:
 
 ```c
         p = av_strtok(disc, "/", &p_save);
@@ -960,7 +960,7 @@ block is checked for `NULL`; the first is not, because a non-empty string was
 assumed to yield a token. The process dies by signal before printing anything,
 so a caller sees a non-zero exit and not one line saying why.
 
-**How to reproduce:** on a build of `7dbe56a`, with any disc image:
+**How to reproduce:** on a build of [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), with any disc image:
 
 - `cyanrip -d disc.cue -I -N -A -U -s 0 -c /`: exit 139, no output.
 - The same with `-c //`, `-p =` or `-p ==`: exit 139, no output.
@@ -982,7 +982,7 @@ giving the fork's argument probe a malformed-shape axis; it had no report until
 
 <!-- BODY START -->
 
-**Where:** `src/cyanrip_main.c` at `7dbe56a`, six arguments genopt does not
+**Where:** `src/cyanrip_main.c` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), six arguments genopt does not
 parse, each read with `strtol()` straight into an `int`:
 
 | line | argument | code |
@@ -999,7 +999,7 @@ the assignment keeps its low 32 bits, so a value past `INT_MAX` becomes
 whatever it wraps to, and the range check after it tests that instead. The
 argument is then used, with exit 0, as a value the caller did not type.
 
-**How to reproduce:** on a build of `7dbe56a`, with any disc image and `-d
+**How to reproduce:** on a build of [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a), with any disc image and `-d
 disc.cue -I -N -A -U -s 0`:
 
 - `-c 4294967297/4294967297`: exit 0, `Disc number:    1`, and the log and CUE
