@@ -348,6 +348,10 @@ typedef struct cyanrip_track {
 
     lsn_t pregap_lsn;
     enum cyanrip_pregap_source pregap_source; /* Provenance of pregap_lsn */
+    /* A second sub-channel search's answer, made after every first search;
+     * CDIO_INVALID_LSN when none was made or it did not complete. Reported
+     * beside pregap_lsn when the two disagree, and never used to rip. */
+    lsn_t pregap_lsn_second;
     lsn_t start_lsn;
     lsn_t start_lsn_sig;
     lsn_t end_lsn;

@@ -457,6 +457,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         }
         t->pregap_lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number,
                                                      &t->pregap_source);
+        t->pregap_lsn_second = CDIO_INVALID_LSN;
         t->dropped_pregap_start = CDIO_INVALID_LSN;
         t->merged_pregap_end = CDIO_INVALID_LSN;
         t->start_lsn = cdio_get_track_lsn(ctx->cdio, t->number);
@@ -521,6 +522,26 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
                 }
             }
         }
+    }
+
+    /* Each pregap the TOC does not signal is searched for a second time, and
+     * the log gives both counts when the two searches disagree. Track 9 of
+     * the reference disc reads 94 frames in some rips and 95 in others, and
+     * track 4's 158 reads 0 in a few, each search returning rather than
+     * failing, so one search states one value of a measurement that varies
+     * (subchannel-pregap-varies). The second pass runs after every first
+     * search, so another track's reads come between a track's two searches
+     * on a disc with more than one; whether a drive answers the second from
+     * its cache is not known, and agreement prints nothing. The first
+     * search's answer is the one ripped, as before. */
+    for (int i = 0; i < ctx->nb_cd_tracks; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        if (t->track_is_data || t->pregap_source != CYANRIP_PREGAP_SRC_SUBCHANNEL)
+            continue;
+        enum cyanrip_pregap_source source;
+        lsn_t lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number, &source);
+        if (source == CYANRIP_PREGAP_SRC_SUBCHANNEL)
+            t->pregap_lsn_second = lsn;
     }
 
     /* MusicBrainz and CDDB identify a disc by its audio tracks alone.
@@ -2144,6 +2165,7 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
 
             nt->number = ct->number - 1;
             nt->pregap_lsn = CDIO_INVALID_LSN;
+            nt->pregap_lsn_second = CDIO_INVALID_LSN;
             nt->dropped_pregap_start = CDIO_INVALID_LSN;
             nt->merged_pregap_end = CDIO_INVALID_LSN;
             nt->start_lsn = ct->pregap_lsn;

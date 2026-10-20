@@ -223,6 +223,7 @@ static void base_track(cyanrip_track *t)
     t->start_lsn = t->start_lsn_sig = 450;
     t->end_lsn = t->end_lsn_sig = 749;
     t->pregap_lsn = CDIO_INVALID_LSN;
+    t->pregap_lsn_second = CDIO_INVALID_LSN;
     /* As cyanrip_main.c sets them for a track whose pregap was neither
      * dropped nor merged. 0 is an LSN, so a zeroed track says otherwise. */
     t->dropped_pregap_start = CDIO_INVALID_LSN;
@@ -860,6 +861,74 @@ static void test_merged_pregap_counts_to_index_01(void)
         char want[80];
         snprintf(want, sizeof(want), "    Pregap length: %i frames", cases[i].want);
         expect_line(out, want, "pregap/merged");
+        free_ctx(ctx);
+    }
+}
+
+/* A pregap the TOC does not signal is searched for twice
+ * (subchannel-pregap-varies): track 9 of the reference disc reads 94 frames in
+ * some rips and 95 in others, and track 4's 158 reads 0 in a few. The first
+ * search's answer is ripped, as before; when the second disagrees, the
+ * provenance line gives both counts against the same end Pregap length: uses,
+ * and otherwise it reads exactly as it did. */
+static void test_pregap_two_searches(void)
+{
+    const char *plain = "    Pregap source: sub-channel (not signalled by TOC)";
+    const struct {
+        enum cyanrip_pregap_source src;
+        lsn_t first, second, start, merged_end;
+        const char *want;      /* the provenance line */
+        const char *length;    /* the Pregap length: line, NULL when none */
+    } cases[] = {
+        /* track 9: 94 then 95 */
+        { CYANRIP_PREGAP_SRC_SUBCHANNEL, 356, 355, 450, CDIO_INVALID_LSN,
+          "    Pregap source: sub-channel (not signalled by TOC; two searches read 94 and 95 frames, the first is used)",
+          "    Pregap length: 94 frames" },
+        /* track 4: no pregap found, then 158 */
+        { CYANRIP_PREGAP_SRC_SUBCHANNEL, 450, 292, 450, CDIO_INVALID_LSN,
+          "    Pregap source: sub-channel (not signalled by TOC; two searches read 0 and 158 frames, the first is used)",
+          "    Pregap length: 0 frames" },
+        /* merged: both counted to where the merge ended, INDEX 01 */
+        { CYANRIP_PREGAP_SRC_SUBCHANNEL, 356, 355, 356, 450,
+          "    Pregap source: sub-channel (not signalled by TOC; two searches read 94 and 95 frames, the first is used)",
+          "    Pregap length: 94 frames" },
+        /* the searches agree, or the second did not complete: as before */
+        { CYANRIP_PREGAP_SRC_SUBCHANNEL, 356, 356, 450, CDIO_INVALID_LSN, NULL,
+          "    Pregap length: 94 frames" },
+        { CYANRIP_PREGAP_SRC_SUBCHANNEL, 356, CDIO_INVALID_LSN, 450, CDIO_INVALID_LSN, NULL,
+          "    Pregap length: 94 frames" },
+        /* split off into a track of its own, which leaves no pregap here */
+        { CYANRIP_PREGAP_SRC_SUBCHANNEL, CDIO_INVALID_LSN, 355, 450, CDIO_INVALID_LSN, NULL,
+          NULL },
+        /* only a sub-channel search is searched twice */
+        { CYANRIP_PREGAP_SRC_TOC, 300, 299, 450, CDIO_INVALID_LSN,
+          "    Pregap source: TOC", "    Pregap length: 150 frames" },
+    };
+
+    for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
+        cyanrip_ctx *ctx = new_ctx();
+        cyanrip_track t;
+        base_track(&t);
+        t.number = 9;
+        t.pregap_source = cases[i].src;
+        t.pregap_lsn = cases[i].first;
+        t.pregap_lsn_second = cases[i].second;
+        t.start_lsn = t.start_lsn_sig = cases[i].start;
+        t.merged_pregap_end = cases[i].merged_end;
+
+        cyanrip_log_track_end(ctx, &t);
+        const char *out = drain(ctx);
+
+        const char *want = cases[i].want;
+        if (!want && cases[i].src == CYANRIP_PREGAP_SRC_SUBCHANNEL)
+            want = plain;
+        expect_line(out, want, "pregap/two-searches");
+        if (want != plain)
+            expect_no_line(out, plain, "pregap/two-searches-plain");
+        if (cases[i].length)
+            expect_line(out, cases[i].length, "pregap/two-searches-length");
+        if (!cases[i].want && strstr(out, "two searches"))
+            FAIL("pregap/two-searches: case %zu names two searches it should not", i);
         free_ctx(ctx);
     }
 }
@@ -1724,6 +1793,7 @@ int main(void)
     test_accurip_450_zero_checksum_claims_nothing();
 
     test_pregap_reasons_are_distinct();
+    test_pregap_two_searches();
     test_merged_pregap_counts_to_index_01();
     test_track_one_counts_from_disc_start();
 

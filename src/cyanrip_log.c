@@ -429,7 +429,17 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
 
     /* Say where a pregap came from when it wasn't the TOC, so a reader can
      * tell a value this drive worked out from one the disc declared. */
-    if (t->pregap_source == CYANRIP_PREGAP_SRC_SUBCHANNEL)
+    if (t->pregap_source == CYANRIP_PREGAP_SRC_SUBCHANNEL &&
+        t->pregap_lsn != CDIO_INVALID_LSN &&
+        t->pregap_lsn_second != CDIO_INVALID_LSN &&
+        t->pregap_lsn_second != t->pregap_lsn) {
+        /* Both counts against the same end, the one Pregap length: uses */
+        lsn_t pregap_end = t->merged_pregap_end != CDIO_INVALID_LSN ?
+                           t->merged_pregap_end : t->start_lsn_sig;
+        cyanrip_log(ctx, 0, "    Pregap source: sub-channel (not signalled by TOC; "
+                    "two searches read %i and %i frames, the first is used)\n",
+                    pregap_end - t->pregap_lsn, pregap_end - t->pregap_lsn_second);
+    } else if (t->pregap_source == CYANRIP_PREGAP_SRC_SUBCHANNEL)
         cyanrip_log(ctx, 0, "    Pregap source: sub-channel (not signalled by TOC)\n");
     else if (t->pregap_source == CYANRIP_PREGAP_SRC_LEADIN)
         cyanrip_log(ctx, 0, "    Pregap source: lead-in\n");
