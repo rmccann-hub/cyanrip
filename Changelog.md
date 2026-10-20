@@ -1,5 +1,34 @@
 Unreleased
 ==========
+**For `.26`, on the owner's word of 2026-10-20** (*"we need to get as many
+fixes and improvements into the next releases so we can actually do a proper
+full acceptance test for as much as possible"*, and the word that puts a
+timed rip of `.25` against `.26` in the next Full run):
+
+- **Upstream's `7dbe56a` is merged**: the media-change query is asked at most
+  once a second instead of before every frame (upstream #165). No flag, log
+  line or exit moves; what it saves on the BDR-209D is what the timed rip
+  measures. `docs/upstream/sync-2026-10-20-media-check.md` is the analysis.
+- **`Accurate stream:`**, a disc-header line with what the drive's
+  capabilities page declares, in the four wordings our round 32 lap 1 S19
+  proposed: `declared supported by drive (capabilities page, not measured)`,
+  `declared unsupported by drive`, `unknown (capabilities page not readable)`
+  and `unknown (image)`. `src/drive_caps.c`, tested on built MODE SENSE
+  replies by `tests/drivecaps.c`.
+- **`Recordable:`**, whether the drive reports the disc as recordable, from
+  its current profile: `no, CD-ROM`, `yes, CD-R` or `yes, CD-RW`, each with
+  `(drive's current profile)`, or `unknown (reason)`. Platterpus's F9.
+- **A pregap the TOC does not signal is searched twice**, and when the two
+  searches disagree `Pregap source:` gives both counts:
+  `sub-channel (not signalled by TOC; two searches read 94 and 95 frames, the
+  first is used)`. The first search's answer is ripped, as before
+  (`subchannel-pregap-varies`).
+
+The three lines are new text a consumer parses, so they are proposed in
+round 36's first lap and `.26` is released once Platterpus's reader takes
+them. Each reads the drive and needs the Full run; the image arms and every
+wording are tested here.
+
 **Round 35's Full run is filed and read**, `.25` with Platterpus 0.7.110 on
 2026-10-20 (`docs/rig-2026-10-20-5f1d036/`, evidence commit `de128212`): 434
 pass, 1 fail, the one unreachable step E2, and the newest pair when it began.
