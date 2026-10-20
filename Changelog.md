@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**Our round 36 lap 1 is published, held** (`docs/handshake/round-36-lap-01.md`):
+it opens round 36 on `.25` with Platterpus's 0.7.110, proposes `.26`'s three
+new lines for their reader, sets the close on the Full run on `.26` with a
+timed rip of `.25` against `.26` in it, and gives SECTION C's corrected exit
+expectations. It waits for the operator's release word.
+
 **Round 35 is closed**, `GO`/`GO` on 2026-10-20 in eighteen laps, on our lap
 17 and Platterpus's lap 18 (`docs/handshake/inbound/round-35-lap-18.md`,
 filed byte for byte from `platterpus@fea12268`), approving `.25` at `5f1d036`
