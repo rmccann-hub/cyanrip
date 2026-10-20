@@ -387,5 +387,25 @@ with tempfile.TemporaryDirectory() as d:
     finally:
         del os.environ[evidence.CACHE_ENV]
 
+    # --- a stale tip in a repository that lacks the commit decides nothing.
+    # Here the clone's own remote-tracking ref stays at C while the cache
+    # holds E2 with no evidence ref; E2 was read as off the branch and the
+    # lap checker refused it rather than fetching (found 2026-10-20).
+    stale = {evidence.CACHE_ENV: str(d / "stale.git")}
+    rc, o = tool(work, "fetch", env=stale)
+    check(rc == 0, f"fetch by hash only, no branch: {o.strip()}")
+    git(work, "fetch", "-q", "--no-tags", url, C)
+    git(work, "update-ref", f"refs/remotes/origin/{evidence.BRANCH}", C)
+    os.environ.update(stale)
+    try:
+        s4 = evidence.Store(work)
+        check(evidence.on_evidence(s4, E2) is None,
+              "a commit no tip-holding repository has is undecided, not off "
+              f"the branch: got {evidence.on_evidence(s4, E2)!r}")
+        check(evidence.on_evidence(s4, C) is True,
+              "and the stale tip still decides the commit it holds")
+    finally:
+        del os.environ[evidence.CACHE_ENV]
+
 print(f"\n{'all ok' if not fails else f'{fails} failure(s)'}")
 sys.exit(1 if fails else 0)
