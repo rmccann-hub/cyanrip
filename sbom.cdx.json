@@ -64,11 +64,11 @@
             "properties": [
               {
                 "name": "cyanrip-fork:measured:fork-point",
-                "value": "b40c1f006a000a8bbd2d7ccc438a17006b9b71a0"
+                "value": "7dbe56aad2f0ab039ab7b238a30ed662b1c017de"
               },
               {
                 "name": "cyanrip-fork:measured:upstream-tip",
-                "value": "b40c1f006a000a8bbd2d7ccc438a17006b9b71a0"
+                "value": "7dbe56aad2f0ab039ab7b238a30ed662b1c017de"
               }
             ]
           }
@@ -1275,5 +1275,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:69136fbc-c6c8-52a6-a42a-f0a2b8c51e58"
+  "serialNumber": "urn:uuid:3dcb80ca-0936-553b-8df6-0d5ed45c21b0"
 }
