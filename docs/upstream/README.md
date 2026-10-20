@@ -33,7 +33,7 @@ entry.
 - **`platterpus-fork`** is the only ref anything is built or installed from.
 
 Syncing `master` never touches `platterpus-fork`; they first diverged at
-`958e1ad`, their merge base is now the last upstream commit merged (`b40c1f0`),
+`958e1ad`, their merge base is now the last upstream commit merged (`7dbe56a`),
 and every consumer-facing reference resolves to a commit SHA, never to a branch.
 So keeping `master` current is free, and is what makes these analyses possible.
 

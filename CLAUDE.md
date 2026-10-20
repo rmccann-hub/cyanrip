@@ -2655,8 +2655,8 @@ Two traps that record exists to keep, both paid for:
   it was reported here as a finding before anyone opened the merged file. Use
   `git show <ref>:<path>`.
 - **Syncing `master` is free and never touches the fork.** They first diverged
-  at `958e1ad`, and the merge base is now `b40c1f0`, the last upstream commit
-  merged, on 2026-10-12; every consumer-facing reference — `release-manifest.json`'s
+  at `958e1ad`, and the merge base is now `7dbe56a`, the last upstream commit
+  merged, on 2026-10-20; every consumer-facing reference — `release-manifest.json`'s
   `commit` and `install`, and the URL the consumer polls — resolves to a SHA or
   to `platterpus-fork`. The string `master` appears nowhere in the manifest.
   Keeping the mirror current is what makes the delta visible at all.
