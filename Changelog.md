@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Round 35 is closed**, `GO`/`GO` on 2026-10-20 in eighteen laps, on our lap
+17 and Platterpus's lap 18 (`docs/handshake/inbound/round-35-lap-18.md`,
+filed byte for byte from `platterpus@fea12268`), approving `.25` at `5f1d036`
+with their 0.7.110; their `FORK_PIN` rolls to `5f1d036`. Their reading agrees
+with ours, and both findings our lap 17 gave them are fixed on their side. For
+round 36 they give us two: `tools/redact.py` shares the lookbehind that let a
+name through after a JSON `\n` escape in their export, which nothing of ours
+has hit, and our SECTION C of the joint script still expects exit 1 from seven
+argument refusals that `.25` answers with 64.
+
 **For `.26`, on the owner's word of 2026-10-20** (*"we need to get as many
 fixes and improvements into the next releases so we can actually do a proper
 full acceptance test for as much as possible"*, and the word that puts a
