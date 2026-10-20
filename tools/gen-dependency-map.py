@@ -270,6 +270,14 @@ def ci():
     actions = sorted({(m.group(1), m.group(2), m.group(3) or "")
                       for m in re.finditer(r"uses:\s*([\w./-]+)@([\w.-]+)"
                                            r"(?:\s*#\s*(\S+))?", text)})
+    # Python tools a workflow installs from git, each as (url, ref): the ref
+    # is the text after `@`, so a branch or a tag reads as unpinned. And the
+    # uv and Python those run with, as setup-uv and uvx name them.
+    git_tools = sorted(set(re.findall(r"git\+(https://[^\s\"'@]+)@([\w.-]+)",
+                                      text)))
+    uv = sorted(set(re.findall(r"setup-uv@\S+[^\n]*\n\s+with:\n"
+                               r"\s+version:\s*\"?([\w.]+)\"?", text)))
+    python = sorted(set(re.findall(r"uvx --python (\S+)", text)))
     text = (wfdir / "ci.yml").read_text(encoding="utf-8")
     # The package list continues over lines ending in a backslash.
     apt = re.search(r"apt-get install -y((?:[^\n]*\\\n)*[^\n]*)", text)
@@ -288,7 +296,8 @@ def ci():
                   r"cyan_do_vcs\s+\"(https://[^\"]+)\"(?:\s+\"\$(\w+)\")?"
                   r"(?:\s+(\"[^\"]*\"|[^\s&]+))?", script)]
     return dict(workflows=workflows, runners=runners, actions=actions,
-                apt=apt, brew=brew, msys=msys, clones=clones)
+                apt=apt, brew=brew, msys=msys, clones=clones,
+                git_tools=git_tools, uv=uv, python=python)
 
 
 def shared_documents():
@@ -496,6 +505,12 @@ def bom(model, meas):
               for u, c, r in model["ci"]["clones"] if c]
     props += [{"name": "cyanrip-fork:ci-unpinned-clone", "value": u}
               for u, c, _ in model["ci"]["clones"] if not c]
+    props += [{"name": "cyanrip-fork:ci-git-tool", "value": f"{u}@{ref}"}
+              for u, ref in model["ci"]["git_tools"]]
+    props += [{"name": "cyanrip-fork:ci-uv", "value": v}
+              for v in model["ci"]["uv"]]
+    props += [{"name": "cyanrip-fork:ci-python", "value": v}
+              for v in model["ci"]["python"]]
     ancestor = {"type": "application", "name": "cyanrip", "group": "cyanreg",
                 "externalReferences": [{"type": "vcs", "url": UPSTREAM}]}
     if meas and meas.get("_fork_point"):
@@ -677,6 +692,15 @@ def markdown(model, meas):
       + ("Every one is pinned." if not loose else
          "**Not pinned to a commit, so built from whatever the branch held "
          "that day:** " + ", ".join(f"<{u}>" for u in loose) + "."))
+    if c["git_tools"]:
+        loose = [f"<{u}>@`{ref}`" for u, ref in c["git_tools"]
+                 if not re.fullmatch(r"[0-9a-f]{40}", ref)]
+        a("- **Python tools installed from git:** "
+          + ", ".join(f"<{u}> at `{ref[:12]}`" for u, ref in c["git_tools"])
+          + ", run with uv " + ", ".join(f"`{v}`" for v in c["uv"])
+          + " on Python " + ", ".join(f"`{v}`" for v in c["python"]) + ". "
+          + ("Each is pinned by full commit SHA." if not loose else
+             "**Not pinned by commit:** " + ", ".join(loose) + "."))
     a("")
     a("## Network services cyanrip contacts")
     a("")

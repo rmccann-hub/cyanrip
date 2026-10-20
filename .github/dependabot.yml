@@ -1,0 +1,19 @@
+# Proposes a pull request when an action in .github/workflows/ has a newer
+# release, weekly, past the same three-day wait as the weekly dependency check
+# (.github/workflows/dependencies.yml). Actions are the one ecosystem here
+# Dependabot can read: the C libraries come from each job's distribution.
+#
+# Its pull request changes a pin and its version comment and nothing else, so
+# `Dependency map is current` fails on it until tools/gen-dependency-map.py is
+# run and the result committed to the same branch: the map names every action
+# at its version, and a pin moved without it is the drift that check exists
+# to stop.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 3
+    open-pull-requests-limit: 5

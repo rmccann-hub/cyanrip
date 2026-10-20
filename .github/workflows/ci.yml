@@ -34,6 +34,13 @@ jobs:
     # tag's, so a re-run here tests nothing new. Only mingw-release needs the
     # event, for the binary it attaches.
     if: github.event_name != 'release'
+    # Not ubuntu-26.04, unlike the other Linux jobs. The golden reference is
+    # generated on Ubuntu 24.04 (libcdio 2.1, libavcodec 60), and its two
+    # checks compare a fresh rip only where the library set is the same
+    # (tools/gen-golden-reference.py, library_mismatch()). On 26.04 (libcdio
+    # 2.2, libavcodec 62) both exit 77, so this suite there checks no
+    # reference at all: measured on pull request #50, 131 passed and those
+    # two skipped. This moves when the reference's own environment does.
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Four configurations, because a configuration nobody builds is a
@@ -129,7 +136,7 @@ jobs:
   # branch, the files are in the checkout, and each check runs on them there.
   evidence:
     if: github.event_name != 'release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -193,11 +200,13 @@ jobs:
 
   # Builds curl, neon, libmusicbrainz, libqrencode and FFmpeg from source
   # before cyanrip (.github/mingw-build.sh), hence the longer limit.
-  # Runner labels are pinned to the images the first runs used: ubuntu-24.04,
-  # macos-26 (macOS 26, arm64) and windows-2025 (Server 2025 with VS 2026),
-  # per actions/runner-images' README as read on 2026-10-12. A -latest label
-  # moves to a newer OS over one to two months, and Ubuntu 26.04 is already
-  # listed there, so a pinned label changes only when this file does.
+  # Runner labels are pinned: ubuntu-26.04, macos-26 (macOS 26, arm64) and
+  # windows-2025 (Server 2025 with VS 2026), the newest of each in
+  # actions/runner-images' README at 82d1b86, read on 2026-10-20, where
+  # ubuntu-latest is still 24.04. The linux job alone stays on ubuntu-24.04,
+  # for the golden reference, as its comment says. A -latest label moves to
+  # a newer OS over one to two months, so a pinned label changes only when
+  # this file does.
   mingw:
     runs-on: windows-2025
     timeout-minutes: 120
@@ -224,7 +233,7 @@ jobs:
         run: |
           echo "packages=$(pacman -Q | grep '^mingw-w64-ucrt-x86_64-' | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .github/_install
           key: mingw-libs-${{ hashFiles('.github/mingw-build.sh') }}-${{ steps.libs.outputs.packages }}
@@ -256,7 +265,7 @@ jobs:
   mingw-release:
     needs: mingw
     if: github.event_name == 'release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: write
@@ -294,7 +303,7 @@ jobs:
   mingw-nightly:
     needs: mingw
     if: github.repository == 'cyanreg/cyanrip' && github.event_name == 'push'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: write
@@ -317,7 +326,7 @@ jobs:
 
       - name: Upload versioned Nightly asset
         if: steps.nightly.outputs.id != ''
-        uses: WebFreak001/deploy-nightly@c25135b42f3c555fd914ad3e22821d2f5a8d45c2 # v1.1.0
+        uses: WebFreak001/deploy-nightly@46ecbabd7fad70d3e7d2c97fe8cd54e7a52e215b # v3.2.0
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
@@ -328,16 +337,19 @@ jobs:
           asset_content_type: application/vnd.microsoft.portable-executable
           max_releases: 4
 
+      # mknejp/delete-release-assets did this until 2026-10-20. It publishes
+      # no release or tag, so its pin was a branch head no check could call
+      # current; gh does the same in two lines, and a missing asset is not an
+      # error, as fail-if-no-assets: false made it.
       - name: Delete existing nightly latest
         id: del_nightly_release
         if: steps.nightly.outputs.id != ''
-        # The repository publishes no tags; v1 is a branch, pinned at its head.
-        uses: mknejp/delete-release-assets@a40d395589329c6e93ab51a02fc2e4c60fdfe48f # v1
-        with:
-          token: ${{ github.token }}
-          tag: nightly
-          assets: cyanrip-win64-latest.exe
-          fail-if-no-assets: false
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view nightly --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -qx 'cyanrip-win64-latest.exe'; then
+            gh release delete-asset nightly cyanrip-win64-latest.exe --repo "$GITHUB_REPOSITORY" --yes
+          fi
 
       - name: Upload latest Nightly asset
         if: steps.del_nightly_release.conclusion == 'success'

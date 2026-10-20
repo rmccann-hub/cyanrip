@@ -55,14 +55,16 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 GitHub Actions. Each workflow, and what starts it:
 
 - `.github/workflows/ci.yml`, *CI (platterpus-fork)*: `push` to `platterpus-fork`; `pull_request` to `platterpus-fork`; `release`; by hand.
+- `.github/workflows/dependencies.yml`, *Dependencies*: `schedule`; by hand.
 - `.github/workflows/tag-release.yml`, *Tag a release*: by hand.
 
-- **Runners:** `macos-26`, `ubuntu-24.04`, `windows-2025`.
-- **Actions:** `WebFreak001/deploy-nightly` v1.1.0 at `c25135b42f3c`, `actions/cache` v5.1.0 at `caa296126883`, `actions/checkout` v7.0.1 at `3d3c42e5aac5`, `actions/download-artifact` v8.0.2 at `9000827ccba6`, `actions/upload-artifact` v7.0.2 at `cf430e030ddb`, `mknejp/delete-release-assets` v1 at `a40d39558932`, `msys2/setup-msys2` v2.33.0 at `ec48f7c5447b`. Each is pinned by full commit SHA, with the version in a comment.
+- **Runners:** `macos-26`, `ubuntu-24.04`, `ubuntu-26.04`, `windows-2025`.
+- **Actions:** `WebFreak001/deploy-nightly` v3.2.0 at `46ecbabd7fad`, `actions/cache` v6.1.0 at `55cc8345863c`, `actions/checkout` v7.0.1 at `3d3c42e5aac5`, `actions/download-artifact` v8.0.2 at `9000827ccba6`, `actions/upload-artifact` v7.0.2 at `cf430e030ddb`, `astral-sh/setup-uv` v10.3.0 at `1c37ad07a6a9`, `msys2/setup-msys2` v2.33.0 at `ec48f7c5447b`. Each is pinned by full commit SHA, with the version in a comment.
 - **Linux packages (apt):** `ffmpeg`, `libavcodec-dev`, `libavfilter-dev`, `libavformat-dev`, `libavutil-dev`, `libcdio-cdda-dev`, `libcdio-dev`, `libcdio-paranoia-dev`, `libcurl4-openssl-dev`, `libmusicbrainz5-dev`, `libqrencode-dev`, `libswresample-dev`, `meson`, `ninja-build`, `pkg-config`.
 - **macOS packages (brew):** `curl`, `ffmpeg`, `libcdio-paranoia`, `libmusicbrainz`, `meson`, `nasm`, `ninja`, `pkg-config`, `qrencode`.
 - **Windows packages (MSYS2):** `autoconf`, `automake`, `base-devel`, `git`, `libtool`, `mingw-w64-ucrt-x86_64-cmake`, `mingw-w64-ucrt-x86_64-lame`, `mingw-w64-ucrt-x86_64-libcdio-paranoia`, `mingw-w64-ucrt-x86_64-libvorbis`, `mingw-w64-ucrt-x86_64-libxml2`, `mingw-w64-ucrt-x86_64-meson`, `mingw-w64-ucrt-x86_64-nasm`, `mingw-w64-ucrt-x86_64-nghttp2`, `mingw-w64-ucrt-x86_64-ninja`, `mingw-w64-ucrt-x86_64-opus`, `mingw-w64-ucrt-x86_64-toolchain`, `zip`.
-- **Sources the Windows build compiles**, `.github/mingw-build.sh`, each fetched as one commit by its full SHA, with the release it is: <https://github.com/curl/curl.git> at `3163ec065643` (curl-8_23_0), <https://github.com/notroj/neon.git> at `170c36704bfc` (0.37.1), <https://github.com/cyanreg/libmusicbrainz.git> at `2398b8765ed8` (no release), <https://github.com/fukuchi/libqrencode.git> at `715e29fd4cd7` (v4.1.1), <https://github.com/FFmpeg/FFmpeg.git> at `1041abdc962f` (n8.1.3). Every one is pinned.
+- **Sources the Windows build compiles**, `.github/mingw-build.sh`, each fetched as one commit by its full SHA, with the release it is: <https://github.com/curl/curl.git> at `3163ec065643` (curl-8_23_0), <https://github.com/notroj/neon.git> at `170c36704bfc` (0.37.1), <https://github.com/cyanreg/libmusicbrainz.git> at `2398b8765ed8` (no release), <https://github.com/fukuchi/libqrencode.git> at `715e29fd4cd7` (v4.1.1), <https://github.com/FFmpeg/FFmpeg.git> at `946fcce07b6d` (n9.0.2). Every one is pinned.
+- **Python tools installed from git:** <https://github.com/rmccann-hub/claude-code-skills> at `ef35082deeda`, run with uv `0.13.1` on Python `3.15`. Each is pinned by full commit SHA.
 
 ## Network services cyanrip contacts
 
