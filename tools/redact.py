@@ -52,10 +52,16 @@ import os
 import pathlib
 import re
 
+# A value can follow a JSON escape, which spells a newline as backslash and
+# n: the n is then no part of a longer word, so each boundary below also
+# accepts an escape before it. Platterpus's export kept a username after one
+# (their round 35 lap 18 S9), and every boundary here had the same shape (S10).
+AFTER_ESCAPE = r"(?<=\\[nrtbf])"
+
 HOME_PATH = re.compile(
-    r"(?<![\w.~-])(?:/var)?/home/[^/\s\"'<>|:;,)\]]+"
-    r"|(?<![\w.~-])/Users/[^/\s\"'<>|:;,)\]]+"
-    r"|\b[A-Za-z]:\\\\?Users\\\\?[^\\\s\"'<>|:;,)\]]+")
+    r"(?:(?<![\w.~-])|" + AFTER_ESCAPE + r")(?:/var)?/home/[^/\s\"'<>|:;,)\]]+"
+    r"|(?:(?<![\w.~-])|" + AFTER_ESCAPE + r")/Users/[^/\s\"'<>|:;,)\]]+"
+    r"|(?:\b|" + AFTER_ESCAPE + r")[A-Za-z]:\\\\?Users\\\\?[^\\\s\"'<>|:;,)\]]+")
 
 # `Linux <host> <release>` from `uname -a`, and a `host:`/`hostname:` field.
 UNAME = re.compile(r"\b(?:Linux|Darwin|FreeBSD)\s+([A-Za-z0-9][A-Za-z0-9._-]*)"
@@ -133,10 +139,11 @@ def redact(text, hosts=(), names=None):
     to the ones the text names; `names` is local_names()'s answer."""
     rep = Report(names is not None)
     all_hosts = set(hosts) | hostnames_in(text)
-    host_res = [re.compile(r"(?<![\w.-])" + re.escape(f) + r"(?![\w-])")
+    host_res = [re.compile(r"(?:(?<![\w.-])|" + AFTER_ESCAPE + ")" + re.escape(f)
+                           + r"(?![\w-])")
                 for h in sorted(all_hosts, key=len, reverse=True)
                 for f in _forms(h)]
-    name_res = [re.compile(r"\b" + re.escape(n) + r"\b")
+    name_res = [re.compile(r"(?:\b|" + AFTER_ESCAPE + ")" + re.escape(n) + r"\b")
                 for n in sorted(names or (), key=len, reverse=True)]
 
     out = []
@@ -177,9 +184,11 @@ def findings(text, names=None):
     report must not write the name it found."""
     out = []
     hosts = hostnames_in(text)
-    host_res = [re.compile(r"(?<![\w.-])" + re.escape(f) + r"(?![\w-])")
+    host_res = [re.compile(r"(?:(?<![\w.-])|" + AFTER_ESCAPE + ")" + re.escape(f)
+                           + r"(?![\w-])")
                 for h in hosts for f in _forms(h)]
-    name_res = [re.compile(r"\b" + re.escape(n) + r"\b") for n in names or ()]
+    name_res = [re.compile(r"(?:\b|" + AFTER_ESCAPE + ")" + re.escape(n) + r"\b")
+                for n in names or ()]
     for i, line in enumerate(text.splitlines(), 1):
         if WIRE.match(line):
             continue

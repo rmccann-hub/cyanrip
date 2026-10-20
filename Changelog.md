@@ -8,7 +8,10 @@ with ours, and both findings our lap 17 gave them are fixed on their side. For
 round 36 they give us two: `tools/redact.py` shares the lookbehind that let a
 name through after a JSON `\n` escape in their export, which nothing of ours
 has hit, and our SECTION C of the joint script still expects exit 1 from seven
-argument refusals that `.25` answers with 64.
+argument refusals that `.25` answers with 64. **The first is fixed**: each
+boundary in `tools/redact.py`, for home folders, hostnames and the owner's
+name, also accepts a JSON escape before it, and `tests/redaction.py` holds a
+JSON line with each after an escape.
 
 **For `.26`, on the owner's word of 2026-10-20** (*"we need to get as many
 fixes and improvements into the next releases so we can actually do a proper
