@@ -110,8 +110,15 @@ const cyanrip_out_fmt crip_fmt_info[] = {
     [CYANRIP_FORMAT_PCM]      = { "pcm",      "PCM",  "pcm",   "s16le", 0,  0, 1, AV_CODEC_ID_NONE,      },
 };
 
-static int get_media_changed(CdIo_t *cdio) {
-    const int ret = cdio_get_media_changed(cdio);
+/* Some drives take several ms to answer, and the rip loops ask once per frame */
+#define MEDIA_CHECK_INTERVAL_US 1000000 /* one second */
+
+static int get_media_changed(cyanrip_ctx *ctx) {
+    const int64_t now = av_gettime_relative();
+    if (ctx->last_media_check && now - ctx->last_media_check < MEDIA_CHECK_INTERVAL_US)
+        return 0;
+    ctx->last_media_check = now;
+    const int ret = cdio_get_media_changed(ctx->cdio);
     return ret != 0 && ret != DRIVER_OP_UNSUPPORTED;
 }
 
@@ -528,7 +535,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     }
 
     /* For hot removal detection - init this so we can detect changes */
-    get_media_changed(ctx->cdio);
+    get_media_changed(ctx);
 
     *s = ctx;
     return 0;
@@ -1282,7 +1289,7 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
     for (int i = 0; i < t->frames; i++) {
         /* Detect disc removals */
-        if (get_media_changed(ctx->cdio)) {
+        if (get_media_changed(ctx)) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
             ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
@@ -1515,7 +1522,7 @@ repeat_ripping:;
     /* Read the actual CD data */
     for (int i = 0; i < frames; i++) {
         /* Detect disc removals */
-        if (get_media_changed(ctx->cdio)) {
+        if (get_media_changed(ctx)) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
             ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
@@ -3468,7 +3475,7 @@ static int cyanrip_run(int argc, char **argv)
                 track_read_extra(ctx, t);
                 cyanrip_log_track_end(ctx, t);
 
-                if (get_media_changed(ctx->cdio)) {
+                if (get_media_changed(ctx)) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
                     ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
@@ -3589,7 +3596,7 @@ static int cyanrip_run(int argc, char **argv)
                 track_read_extra(ctx, t);
                 cyanrip_log_track_end(ctx, t);
 
-                if (get_media_changed(ctx->cdio)) {
+                if (get_media_changed(ctx)) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
                     ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
