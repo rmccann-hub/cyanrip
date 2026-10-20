@@ -307,6 +307,25 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
     cdio_get_drive_cap(ctx->cdio, &ctx->rcap, &ctx->wcap, &ctx->mcap);
 
+    /* What the drive declares about accurate stream, for the log's header.
+     * libcdio reads page 2Ah for the caps above but keeps no bit for it, so
+     * the page is asked for again. An image has no drive to ask. */
+    switch (cdio_get_driver_id(ctx->cdio)) {
+    case DRIVER_BINCUE:
+    case DRIVER_NRG:
+    case DRIVER_CDRDAO:
+        ctx->accurate_stream = CRIP_ACCURATE_STREAM_IMAGE;
+        break;
+    default: {
+        uint8_t caps[256] = { 0 };
+        ctx->accurate_stream = CRIP_ACCURATE_STREAM_UNREADABLE;
+        if (mmc_mode_sense_10(ctx->cdio, caps, sizeof(caps),
+                              CDIO_MMC_CAPABILITIES_PAGE) == DRIVER_OP_SUCCESS)
+            ctx->accurate_stream = crip_accurate_stream_parse(caps, sizeof(caps));
+        break;
+    }
+    }
+
     char *msg = NULL;
     if (!(ctx->drive = cdio_cddap_identify_cdio(ctx->cdio, CDDA_MESSAGE_LOGIT, &msg))) {
         cyanrip_log(ctx, 0, "Unable to init cddap context!\n");

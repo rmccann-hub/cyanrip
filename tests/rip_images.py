@@ -2136,6 +2136,14 @@ def sc_reporting():
     if not re.search(r"^Cache model:\s+\S", log, re.M):
         fail("reporting: no Cache model: line")
 
+    # The capabilities page is a drive's to answer. An image has none, and the
+    # line says so rather than declaring anything (round 32 lap 1 S19); the
+    # drive's arms are pinned by tests/drivecaps.c on built replies.
+    acc = re.findall(r"^Accurate stream: (.*)$", log, re.M)
+    if acc != ["unknown (image)"]:
+        fail(f"reporting: an image rip should print 'Accurate stream: unknown "
+             f"(image)' once, got {acc}")
+
     # "Peak level" did not say which peak, with a true peak reported below it.
     if re.search(r"^\s+Peak level:", log, re.M):
         fail("reporting: ambiguous 'Peak level' label (which peak?)")

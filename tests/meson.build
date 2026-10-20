@@ -130,6 +130,18 @@ cacheprobe_test = executable('cacheprobe_test',
 )
 test('Cache probe wording', cacheprobe_test)
 
+## The `Accurate stream:` line reads page 2Ah of a MODE SENSE reply, which only
+## a drive sends. The parse is pure, so it is driven here with built replies:
+## the bit set and clear, block descriptors before the page, the page after
+## another, a reply cut short, and no page 2Ah at all.
+drivecaps_test = executable('drivecaps_test',
+    sources: [ 'drivecaps.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'drive_caps.c' ]),
+    dependencies: unit_test_deps,
+)
+test('Accurate stream from the capabilities page', drivecaps_test)
+
 ## Links the diagnostics object to drive it past its own retention cap, which
 ## no rip can reach: an image rip prints ~124 messages against a 20000 cap, so
 ## the truncation path shipped head-only -- keeping the first lines and
@@ -185,12 +197,13 @@ test('Diagnostics record fields', diagrecord_test)
 ## cyanrip_log_track_end() reads settings and a track struct and calls neither,
 ## so the states are simply BUILT: point ctx->logfile[0] at a tmpfile, fill the
 ## track in, call the shipped object, compare the bytes it wrote against the
-## contract wording. Not a mock -- cyanrip_log.c and accurip.c are linked
-## unmodified, and libcurl comes with accurip.c rather than being used.
+## contract wording. Not a mock -- cyanrip_log.c, accurip.c and drive_caps.c
+## are linked unmodified, and libcurl comes with accurip.c rather than being
+## used.
 logrender_test = executable('logrender_test',
     sources: [ 'logrender.c' ],
     include_directories: [ '../src' ],
-    objects: cyanrip_exe.extract_objects([ 'cyanrip_log.c', 'accurip.c' ]),
+    objects: cyanrip_exe.extract_objects([ 'cyanrip_log.c', 'accurip.c', 'drive_caps.c' ]),
     dependencies: unit_test_deps + [ dependency('threads'), dependency('libcurl') ],
 )
 test('Log rendering', logrender_test)

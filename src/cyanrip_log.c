@@ -954,6 +954,7 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
                     (ctx->mcap & CDIO_DRIVE_CAP_MISC_SELECT_SPEED) ? "changeable" : "unchangeable");
     cyanrip_log(ctx, 0, "C2 errors:      %s\n", (ctx->rcap & CDIO_DRIVE_CAP_READ_C2_ERRS) ?
                 "supported by drive, not used" : "unsupported by drive");
+    cyanrip_log(ctx, 0, "Accurate stream: %s\n", crip_accurate_stream_text(ctx->accurate_stream));
     print_cdtext(ctx);
     /* Name the library that actually encodes the audio, not just the ripper.
      * cyanrip encodes in-process through libavformat/libavcodec, so the FLAC

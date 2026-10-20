@@ -96,6 +96,7 @@ sources = [
 
     'cdtext.c',
     'cache_probe.c',
+    'drive_caps.c',
     'stall_watchdog.c',
     'diagnostics.c',
 
