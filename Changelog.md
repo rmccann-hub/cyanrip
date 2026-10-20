@@ -1,5 +1,25 @@
 Unreleased
 ==========
+**Round 35's Full run is filed and read**, `.25` with Platterpus 0.7.110 on
+2026-10-20 (`docs/rig-2026-10-20-5f1d036/`, evidence commit `de128212`): 434
+pass, 1 fail, the one unreachable step E2, and the newest pair when it began.
+All 106 hashed members match the sender's hashes, and all twelve logs verify
+with `-Y`. **The failed step is Platterpus's script, not `.25`**: C1's
+`cyanrip -N -l 1`, a rip with no offset, exits 64, the class our round 35 lap
+9 S12 proposed for `Offset is unset!` and their lap 11 S7 accepted, and their
+script still expects 1. What `.25`'s heading asked the run to cover: the
+sub-channel ISRC read ran on a drive and the reference disc returned none for
+every track, line and record agreeing; `--prefer-disc-isrc` was sent and
+changed no file; the cancel step exits 143; and every `/10` record carries
+`error_positions`, empty, and `paranoia_all_reads`, at least the last read's
+counters on each re-read track and equal on single reads. The bounded `-O`
+did not run, since their script passes no `-O`. With `-Z 2`, three of the
+four results for tracks 3 and 5 agreed on a wrong value and one was right,
+none flagged by failing to converge. `-f` and the cache probe agreed for the
+sixth time, `+667` and `128 to 255` beside `cd-paranoia -A`'s 140; track 4's
+pregap read 158 in every log and track 9's 94 or 95. Their runner again took
+a refused rip's `(no read exceeded 10s)` as the build tag, as round 34 found.
+
 **Our round 35 lap 15 is sent** (`docs/handshake/round-35-lap-15.md`), released
 in the pull request that publishes it, on the operator's standing word for
 round 35: it says `.25` is released, records the operator's override moving
