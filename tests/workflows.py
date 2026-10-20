@@ -9,6 +9,8 @@ outside read of 2026-10-12 asked for, checked on the files rather than on a run:
     only by the jobs named in WRITERS;
   * every job has `timeout-minutes`;
   * every action is pinned to a full commit SHA, with its version in a comment;
+  * every tool a workflow installs from git is pinned to a full commit SHA,
+    as the weekly dependency check installs skillcheck;
   * every library the Windows build compiles is fetched as one commit, named
     by a full SHA, and nothing in that script clones a branch (I16);
   * no `::set-output`, and no actions/upload-release-asset (archived);
@@ -36,6 +38,7 @@ WRITERS = {("ci.yml", "mingw-release"), ("ci.yml", "mingw-nightly"),
 UPSTREAM_ONLY = ("WebFreak001/deploy-nightly", "mknejp/delete-release-assets")
 PIN = re.compile(r"^\s*(?:- )?uses:\s*([\w.-]+/[\w./-]+)@([0-9a-f]{40})"
                  r"\s+#\s*v\S+\s*$")
+GIT_TOOL = re.compile(r"git\+(https://[^\s\"'@]+)@([\w.-]+)")
 failures = 0
 
 
@@ -103,7 +106,7 @@ if (WF / "main.yml").exists():
          "workflow has on master, so GitHub would treat ours and theirs as "
          "one workflow again")
 
-pins = writers = 0
+pins = writers = gits = 0
 for p in files:
     lines = p.read_text(encoding="utf-8").splitlines()
     text = "\n".join(lines)
@@ -123,6 +126,12 @@ for p in files:
             else:
                 fail(f"{p.name}:{n}: not pinned to a full commit SHA with its "
                      f"version in a comment: {line.strip()}")
+        for url, ref in GIT_TOOL.findall(line):
+            gits += 1
+            if not re.fullmatch(r"[0-9a-f]{40}", ref):
+                fail(f"{p.name}:{n}: {url} is installed at {ref}, not at a "
+                     "full commit SHA, so each run gets whatever it names "
+                     "that day")
     for n, body in run_blocks(lines):
         if "${{" in body:
             fail(f"{p.name}:{n}: a ${{{{ }}}} expression inside a run script; "
@@ -148,6 +157,9 @@ for p in files:
 
 if pins < 5:
     fail(f"only {pins} pinned actions found; the pattern has stopped matching")
+if (WF / "dependencies.yml").exists() and gits == 0:
+    fail("dependencies.yml installs skillcheck from git and no git install "
+         "was found; the pattern has stopped matching")
 if writers != len(WRITERS):
     fail(f"{writers} jobs hold contents: write, expected {len(WRITERS)}")
 
@@ -236,6 +248,7 @@ if re.search(r"^[^#\n]*git clone", script, re.M):
 if failures:
     print(f"{failures} failure(s)")
     sys.exit(1)
-print(f"ok: {len(files)} workflows, {pins} pinned actions, "
+print(f"ok: {len(files)} workflows, {pins} pinned actions, {gits} pinned "
+      f"git installs, "
       f"{writers} jobs with contents: write, {len(calls)} pinned Windows "
       "sources")

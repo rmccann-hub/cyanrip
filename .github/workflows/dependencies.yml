@@ -1,0 +1,68 @@
+name: Dependencies
+
+# Every Monday, and on demand: names each dependency behind its newest
+# release, past a three-day wait, and fails while anything is behind or cannot
+# be read, with the list in the run's summary. It runs `skillcheck --outdated`
+# from claude-code-skills, pinned to a commit.
+#
+# The owner's word of 2026-10-19: "are all repos using the most up to date of
+# all dependcies, they should. And we need a way to make sure they are. Like
+# a weekly repo check". This is the claude-code-skills session's Appendix A of
+# that day with two changes. It runs on a named image, as every job here does.
+# And it opens no issue: Issues are turned off on this fork, so where
+# Appendix A keeps one issue open while anything is behind, the failed run
+# carries the list instead, and needs no write permission.
+#
+# What it cannot see: the runner images, and the libraries each job installs
+# from its distribution (apt, brew, MSYS2). docs/DEPENDENCIES.md names both.
+
+on:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  outdated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SKILLCHECK: git+https://github.com/rmccann-hub/claude-code-skills@ef35082deedab76d28664078144c5f9f86ff6850
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"
+
+      - name: Measure each dependency against its newest release
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # raises the API's limit for reading releases
+        run: |
+          set +e
+          uvx --python 3.15 --from "$SKILLCHECK" skillcheck --outdated . > "$RUNNER_TEMP/outdated.txt"
+          found=$?
+          set -e
+          cat "$RUNNER_TEMP/outdated.txt"
+          if ! tail -n 1 "$RUNNER_TEMP/outdated.txt" | grep -q '^skillcheck: '; then
+            echo "::error::skillcheck --outdated did not finish"
+            exit 1
+          fi
+          {
+            echo '```'
+            cat "$RUNNER_TEMP/outdated.txt"
+            echo '```'
+            echo
+            echo "Behind: a newer release has been out at least three days. Waiting: one is newer"
+            echo "but still inside that wait. Unread: the registry couldn't be read, or the pin"
+            echo "names no exact release. Update what's behind, regenerate the dependency map"
+            echo "(tools/gen-dependency-map.py), and run this workflow again."
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$found" -ne 0 ]; then
+            echo "::error::$(tail -n 1 "$RUNNER_TEMP/outdated.txt")"
+            exit 1
+          fi
