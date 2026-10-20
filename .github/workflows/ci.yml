@@ -34,7 +34,7 @@ jobs:
     # tag's, so a re-run here tests nothing new. Only mingw-release needs the
     # event, for the binary it attaches.
     if: github.event_name != 'release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     # Four configurations, because a configuration nobody builds is a
     # configuration nobody knows the state of -- and that is not theoretical
@@ -129,7 +129,7 @@ jobs:
   # branch, the files are in the checkout, and each check runs on them there.
   evidence:
     if: github.event_name != 'release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -193,11 +193,13 @@ jobs:
 
   # Builds curl, neon, libmusicbrainz, libqrencode and FFmpeg from source
   # before cyanrip (.github/mingw-build.sh), hence the longer limit.
-  # Runner labels are pinned to the images the first runs used: ubuntu-24.04,
-  # macos-26 (macOS 26, arm64) and windows-2025 (Server 2025 with VS 2026),
-  # per actions/runner-images' README as read on 2026-10-12. A -latest label
-  # moves to a newer OS over one to two months, and Ubuntu 26.04 is already
-  # listed there, so a pinned label changes only when this file does.
+  # Runner labels are pinned: ubuntu-26.04, macos-26 (macOS 26, arm64) and
+  # windows-2025 (Server 2025 with VS 2026), the newest of each in
+  # actions/runner-images' README at 82d1b86, read on 2026-10-20, where
+  # ubuntu-latest is still 24.04. The Linux jobs ran on ubuntu-24.04, the
+  # image the first runs used, until then. A -latest label moves to a newer
+  # OS over one to two months, so a pinned label changes only when this file
+  # does.
   mingw:
     runs-on: windows-2025
     timeout-minutes: 120
@@ -256,7 +258,7 @@ jobs:
   mingw-release:
     needs: mingw
     if: github.event_name == 'release'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: write
@@ -294,7 +296,7 @@ jobs:
   mingw-nightly:
     needs: mingw
     if: github.repository == 'cyanreg/cyanrip' && github.event_name == 'push'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: write

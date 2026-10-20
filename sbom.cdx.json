@@ -149,7 +149,7 @@
         },
         {
           "name": "cyanrip-fork:ci-runner",
-          "value": "ubuntu-24.04"
+          "value": "ubuntu-26.04"
         },
         {
           "name": "cyanrip-fork:ci-runner",
@@ -1271,5 +1271,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:78b54112-ded8-5310-965c-054ddb9886e3"
+  "serialNumber": "urn:uuid:1b7a17ed-d339-57f7-be44-2abcd64f6d13"
 }

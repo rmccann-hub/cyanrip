@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   outdated:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     env:
       SKILLCHECK: git+https://github.com/rmccann-hub/claude-code-skills@ef35082deedab76d28664078144c5f9f86ff6850
