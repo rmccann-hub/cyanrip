@@ -133,14 +133,15 @@ test('Cache probe wording', cacheprobe_test)
 ## The `Accurate stream:` line reads page 2Ah of a MODE SENSE reply, which only
 ## a drive sends. The parse is pure, so it is driven here with built replies:
 ## the bit set and clear, block descriptors before the page, the page after
-## another, a reply cut short, and no page 2Ah at all.
+## another, a reply cut short, and no page 2Ah at all. The `Recordable:`
+## line's every wording, from the drive's current profile, is pinned beside it.
 drivecaps_test = executable('drivecaps_test',
     sources: [ 'drivecaps.c' ],
     include_directories: [ '../src' ],
     objects: cyanrip_exe.extract_objects([ 'drive_caps.c' ]),
     dependencies: unit_test_deps,
 )
-test('Accurate stream from the capabilities page', drivecaps_test)
+test('Accurate stream and recordable medium from the drive', drivecaps_test)
 
 ## Links the diagnostics object to drive it past its own retention cap, which
 ## no rip can reach: an image rip prints ~124 messages against a 20000 cap, so

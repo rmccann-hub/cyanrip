@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <stdio.h>
+
 #include "drive_caps.h"
 
 #define MODE_HEADER_10   8    /* MODE SENSE (10) parameter header */
@@ -52,6 +54,32 @@ enum CripAccurateStream crip_accurate_stream_parse(const uint8_t *buf, size_t le
     }
 
     return CRIP_ACCURATE_STREAM_UNREADABLE;
+}
+
+const char *crip_recordable_text(char *buf, size_t size, int profile)
+{
+    switch (profile) {
+    case CRIP_PROFILE_IMAGE:
+        snprintf(buf, size, "unknown (image)");
+        break;
+    case CRIP_PROFILE_UNREADABLE:
+        snprintf(buf, size, "unknown (profile not readable)");
+        break;
+    case 0x0008:
+        snprintf(buf, size, "no, CD-ROM (drive's current profile)");
+        break;
+    case 0x0009:
+        snprintf(buf, size, "yes, CD-R (drive's current profile)");
+        break;
+    case 0x000a:
+        snprintf(buf, size, "yes, CD-RW (drive's current profile)");
+        break;
+    default:
+        snprintf(buf, size, "unknown (profile 0x%04x is not a CD profile)",
+                 (unsigned)profile & 0xffff);
+        break;
+    }
+    return buf;
 }
 
 const char *crip_accurate_stream_text(enum CripAccurateStream s)

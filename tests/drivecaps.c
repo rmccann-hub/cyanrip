@@ -146,6 +146,28 @@ int main(void)
     expect("page beyond the declared length", crip_accurate_stream_parse(buf, sizeof(buf)),
            CRIP_ACCURATE_STREAM_UNREADABLE);
 
+    /* Every value of the `Recordable:` line: the three CD profiles, one
+     * that is not a CD's, and the two reasons there is no profile */
+    {
+        const struct { int profile; const char *want; } rec[] = {
+            { 0x0008, "no, CD-ROM (drive's current profile)" },
+            { 0x0009, "yes, CD-R (drive's current profile)" },
+            { 0x000a, "yes, CD-RW (drive's current profile)" },
+            { 0x0010, "unknown (profile 0x0010 is not a CD profile)" },
+            { CRIP_PROFILE_UNREADABLE, "unknown (profile not readable)" },
+            { CRIP_PROFILE_IMAGE, "unknown (image)" },
+        };
+        for (size_t i = 0; i < sizeof(rec)/sizeof(*rec); i++) {
+            char got[64];
+            crip_recordable_text(got, sizeof(got), rec[i].profile);
+            if (strcmp(got, rec[i].want)) {
+                printf("FAIL: profile %i reads \"%s\", want \"%s\"\n",
+                       rec[i].profile, got, rec[i].want);
+                fails++;
+            }
+        }
+    }
+
     /* No reply at all */
     expect("NULL", crip_accurate_stream_parse(NULL, 0), CRIP_ACCURATE_STREAM_UNREADABLE);
     expect("shorter than the header", crip_accurate_stream_parse(buf, 7),
@@ -154,6 +176,6 @@ int main(void)
     if (fails)
         printf("%i check(s) failed\n", fails);
     else
-        printf("accurate stream: every wording and parse pinned\n");
+        printf("accurate stream and recordable: every wording and parse pinned\n");
     return !!fails;
 }

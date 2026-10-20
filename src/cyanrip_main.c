@@ -27,6 +27,7 @@
 
 #include <cdio/mmc.h>
 #include <cdio/mmc_ll_cmds.h>
+#include <cdio/mmc_hl_cmds.h>
 #include <cdio/read.h>
 #include <cdio/util.h>
 
@@ -315,8 +316,14 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     case DRIVER_NRG:
     case DRIVER_CDRDAO:
         ctx->accurate_stream = CRIP_ACCURATE_STREAM_IMAGE;
+        ctx->disc_profile = CRIP_PROFILE_IMAGE;
         break;
     default: {
+        /* GET CONFIGURATION's current profile; a timeout of 0 is libcdio's
+         * default, mmc_timeout_ms */
+        cdio_mmc_feature_profile_t profile;
+        ctx->disc_profile = mmc_get_disctype(ctx->cdio, 0, &profile) == DRIVER_OP_SUCCESS ?
+                            (int)profile : CRIP_PROFILE_UNREADABLE;
         uint8_t caps[256] = { 0 };
         ctx->accurate_stream = CRIP_ACCURATE_STREAM_UNREADABLE;
         if (mmc_mode_sense_10(ctx->cdio, caps, sizeof(caps),

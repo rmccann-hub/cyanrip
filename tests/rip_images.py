@@ -2143,6 +2143,11 @@ def sc_reporting():
     if acc != ["unknown (image)"]:
         fail(f"reporting: an image rip should print 'Accurate stream: unknown "
              f"(image)' once, got {acc}")
+    # The same for the drive's current profile, Platterpus's F9 tri-state
+    rec = re.findall(r"^Recordable:     (.*)$", log, re.M)
+    if rec != ["unknown (image)"]:
+        fail(f"reporting: an image rip should print 'Recordable:     unknown "
+             f"(image)' once, got {rec}")
 
     # "Peak level" did not say which peak, with a true peak reported below it.
     if re.search(r"^\s+Peak level:", log, re.M):

@@ -503,6 +503,7 @@ typedef struct cyanrip_ctx {
     cdio_drive_write_cap_t wcap;
     cdio_drive_misc_cap_t  mcap;
     enum CripAccurateStream accurate_stream; /* page 2Ah's declaration, or why there is none */
+    int disc_profile; /* the drive's current profile, or CRIP_PROFILE_IMAGE/_UNREADABLE */
 
     /* Metadata */
     AVDictionary *meta;

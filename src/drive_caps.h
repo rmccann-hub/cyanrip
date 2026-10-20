@@ -41,3 +41,14 @@ enum CripAccurateStream crip_accurate_stream_parse(const uint8_t *buf, size_t le
 
 /* The value of the `Accurate stream:` line, as round 32 lap 1 S19 proposed it. */
 const char *crip_accurate_stream_text(enum CripAccurateStream s);
+
+/* Whether the drive reports the disc as recordable, from its current
+ * profile (GET CONFIGURATION): CD-ROM is pressed, CD-R and CD-RW were
+ * written. It is the drive's report of the medium, not a judgement of the
+ * disc; Platterpus's F9 asked for it as a tri-state. */
+#define CRIP_PROFILE_IMAGE      (-1)  /* a disc image: no drive to ask */
+#define CRIP_PROFILE_UNREADABLE (-2)  /* GET CONFIGURATION failed */
+
+/* The value of the `Recordable:` line for a profile, or for one of the two
+ * negatives above. Writes into buf, which 64 bytes always holds. */
+const char *crip_recordable_text(char *buf, size_t size, int profile);
