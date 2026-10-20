@@ -34,7 +34,14 @@ jobs:
     # tag's, so a re-run here tests nothing new. Only mingw-release needs the
     # event, for the binary it attaches.
     if: github.event_name != 'release'
-    runs-on: ubuntu-26.04
+    # Not ubuntu-26.04, unlike the other Linux jobs. The golden reference is
+    # generated on Ubuntu 24.04 (libcdio 2.1, libavcodec 60), and its two
+    # checks compare a fresh rip only where the library set is the same
+    # (tools/gen-golden-reference.py, library_mismatch()). On 26.04 (libcdio
+    # 2.2, libavcodec 62) both exit 77, so this suite there checks no
+    # reference at all: measured on pull request #50, 131 passed and those
+    # two skipped. This moves when the reference's own environment does.
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Four configurations, because a configuration nobody builds is a
     # configuration nobody knows the state of -- and that is not theoretical
@@ -196,10 +203,10 @@ jobs:
   # Runner labels are pinned: ubuntu-26.04, macos-26 (macOS 26, arm64) and
   # windows-2025 (Server 2025 with VS 2026), the newest of each in
   # actions/runner-images' README at 82d1b86, read on 2026-10-20, where
-  # ubuntu-latest is still 24.04. The Linux jobs ran on ubuntu-24.04, the
-  # image the first runs used, until then. A -latest label moves to a newer
-  # OS over one to two months, so a pinned label changes only when this file
-  # does.
+  # ubuntu-latest is still 24.04. The linux job alone stays on ubuntu-24.04,
+  # for the golden reference, as its comment says. A -latest label moves to
+  # a newer OS over one to two months, so a pinned label changes only when
+  # this file does.
   mingw:
     runs-on: windows-2025
     timeout-minutes: 120
