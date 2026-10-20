@@ -1284,7 +1284,9 @@ the run's 13 lists give track 4's 158 frames and two leave it out, the
 unknown (...)`, which `.23` would for a failed search, so **both searches
 returned zero**. Six filed logs of the reference disc now leave track 4 out.
 Platterpus's own script found the same pair, by comparing the run's lists
-(their step L1554, `expect-pregaps-agree`, graded `info`). **With no drive, before `.22`**: `-l 1` of `tests/fixtures/basic.cue`
+(their step L1554, `expect-pregaps-agree`, graded `info`). **None on 2026-10-20,
+on `.25`** (`docs/rig-2026-10-20-5f1d036/`): all twelve lists give track 4's 158
+frames, track 9 reading 94 or 95 as before. **With no drive, before `.22`**: `-l 1` of `tests/fixtures/basic.cue`
 printed `None signalled` while the whole-disc rip's track 2 block read
 `unknown (sub-channel unreadable)`; from `.22` it prints `pregap of track 2
 unknown (sub-channel unreadable)`.
@@ -1668,15 +1670,16 @@ revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
 that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
-bracket. **It did, five times**: the 2026-10-06 run on `.20` printed `128 to
+bracket. **It did, six times**: the 2026-10-06 run on `.20` printed `128 to
 255 sectors`, with a 1.7 ms re-read after 128 sectors and three re-reads of at
 least 32.6 ms after 256, and `cd-paranoia -A`, run straight after it, reported
 137 (`docs/rig-2026-10-06-5704062/`); the 2026-10-07 run on `.21` printed the
 same bracket beside 144, the 2026-10-12 run on `.21` the same again beside
 137 (`docs/rig-2026-10-12-ca3f3ea/`), the 2026-10-13 run on `.22` the same
-beside 144 (`docs/rig-2026-10-13-200530e/`), and the 2026-10-16 run on `.23`
-the same beside 137 (`docs/rig-2026-10-16-891c79e/`, the table's last row).
-Five runs on one drive, and the search can say no more than a power of two. Everything below is the record of
+beside 144 (`docs/rig-2026-10-13-200530e/`), the 2026-10-16 run on `.23`
+the same beside 137 (`docs/rig-2026-10-16-891c79e/`), and the 2026-10-20 run
+on `.25` the same beside 140 (`docs/rig-2026-10-20-5f1d036/`, the table's last
+row). Six runs on one drive, and the search can say no more than a power of two. Everything below is the record of
 the defect, kept because the table is checked against the transcripts.
 
 **The seventeenth session, 2026-10-05 on `.19`, bracketed 128 to 255, and that
@@ -1749,6 +1752,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-10-12 `ca3f3ea` | 244.2 ms | 1.6 ms | **6 ms** | 27%; `128 to 255 sectors`, three re-reads after 256 sectors at 29.9 ms or more, beside `cd-paranoia -A`'s 137 |
 | 2026-10-13 `200530e` | 244.7 ms | 1.9 ms | **6 ms** | 32%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.4 ms or more, beside `cd-paranoia -A`'s 144 |
 | 2026-10-16 `891c79e` | 244.5 ms | 1.7 ms | **6 ms** | 28%; `128 to 255 sectors`, three re-reads after 256 sectors at 31.9 ms or more, beside `cd-paranoia -A`'s 137 |
+| 2026-10-20 `5f1d036` | 362.7 ms | 1.5 ms | **6 ms** | 25%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.7 ms or more, beside `cd-paranoia -A`'s 140 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -1972,7 +1976,7 @@ coverage.
 
 | gap | status |
 |---|---|
-| `--cache-probe` (`-x` until 2026-10-12) correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). **`.20`'s fix (`394ab17`) has run five times on a drive, 2026-10-06 to 2026-10-16, and agreed each time**: `128 to 255` beside `cd-paranoia -A`'s 137 or 144. This cell said *"measured twice"* while the table above held nine rows |
+| `--cache-probe` (`-x` until 2026-10-12) correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). **`.20`'s fix (`394ab17`) has run six times on a drive, 2026-10-06 to 2026-10-20, and agreed each time**: `128 to 255` beside `cd-paranoia -A`'s 137, 140 or 144. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
 | damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. From `.20` the `read with errors.` arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have. The `-Z` arm printed it on a drive on 2026-10-06 (`docs/rig-2026-10-06-5704062/`, tracks 3 and 5); the skip arm has run only on the fixture (`tests/badsector.c`) |

@@ -392,12 +392,19 @@ def on_evidence(store, commit):
     tips = evidence_tips(store)
     if not tips:
         return None
+    # A tip in a repository that lacks the commit says nothing about it: a
+    # stale remote-tracking ref here, behind a tip the cache never stored as a
+    # ref, read every newer evidence commit as off the branch, and the lap
+    # checker refused a citation of one instead of fetching the branch (found
+    # 2026-10-20, citing de128212). Only a repository holding both decides.
+    held = False
     for repo, tip in tips:
         if git(repo, "cat-file", "-e", f"{commit}^{{commit}}").returncode != 0:
             continue
+        held = True
         if git(repo, "merge-base", "--is-ancestor", commit, tip).returncode == 0:
             return True
-    return False
+    return False if held else None
 
 
 # --------------------------------------------------------------------------
