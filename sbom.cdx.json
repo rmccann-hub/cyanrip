@@ -213,7 +213,7 @@
         },
         {
           "name": "cyanrip-fork:ci-pinned-clone",
-          "value": "https://github.com/FFmpeg/FFmpeg.git@1041abdc962f4cc4f394aa8de9dc5236c0c3b9e7 (n8.1.3)"
+          "value": "https://github.com/FFmpeg/FFmpeg.git@946fcce07b6dcd0331c8cc609192aeff5e1924f8 (n9.0.2)"
         },
         {
           "name": "cyanrip-fork:ci-git-tool",
@@ -1271,5 +1271,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:1b7a17ed-d339-57f7-be44-2abcd64f6d13"
+  "serialNumber": "urn:uuid:de7af22e-3349-509a-ae1f-ef9de030ef16"
 }

@@ -6,12 +6,14 @@
 # a key made from this file's hash, so a pin moved here is a fresh build, and a
 # restored cache carries the stamp written once all five installed.
 # cyanreg/libmusicbrainz has no releases: its commit is its default branch's
-# on 2026-10-16. Resolved with `git ls-remote` on 2026-10-16.
+# on 2026-10-16. Resolved with `git ls-remote` on 2026-10-16; FFmpeg moved
+# from n8.1.3 to n9.0.2 on 2026-10-20, when the other four were still their
+# newest. n8.1.3 is the newer tag by date and an older branch by version.
 CURL_COMMIT=3163ec065643ba20709f190111f42c3e1fe95273
 NEON_COMMIT=170c36704bfc2ac8b0e5607c3e1fdd4c159674db
 LIBMUSICBRAINZ_COMMIT=2398b8765ed8fa2644bdcef70f764ce6ec209431
 LIBQRENCODE_COMMIT=715e29fd4cd71b6e452ae0f4e36d917b43122ce8
-FFMPEG_COMMIT=1041abdc962f4cc4f394aa8de9dc5236c0c3b9e7
+FFMPEG_COMMIT=946fcce07b6dcd0331c8cc609192aeff5e1924f8
 
 buildCyanrip() {
     cyan_prepare
@@ -139,7 +141,7 @@ build_libqrencode() {
 }
 
 build_ffmpeg() {
-    cyan_do_vcs "https://github.com/FFmpeg/FFmpeg.git" "$FFMPEG_COMMIT" n8.1.3 &&
+    cyan_do_vcs "https://github.com/FFmpeg/FFmpeg.git" "$FFMPEG_COMMIT" n9.0.2 &&
     cyan_do_separate_confmakeinstall --pkg-config-flags=--static \
         --disable-{programs,devices,filters,decoders,hwaccels,encoders,muxers} \
         --disable-{debug,protocols,demuxers,parsers,doc,swscale,network} \

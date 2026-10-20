@@ -13,8 +13,10 @@ name: Dependencies
 # Appendix A keeps one issue open while anything is behind, the failed run
 # carries the list instead, and needs no write permission.
 #
-# What it cannot see: the runner images, and the libraries each job installs
-# from its distribution (apt, brew, MSYS2). docs/DEPENDENCIES.md names both.
+# What it cannot see: the runner images, the libraries each job installs
+# from its distribution (apt, brew, MSYS2), and the five sources
+# .github/mingw-build.sh pins by commit. docs/DEPENDENCIES.md names all
+# three; check them by hand when this runs.
 
 on:
   schedule:

@@ -39,10 +39,15 @@ current, and then **asked for it in round 34** (2026-10-15, our round 34 lap 1
 S10). The actions were pinned by commit on 2026-10-12.
 
 **Now each library is one commit, fetched by its full SHA and named by the
-release it is**: curl `curl-8_23_0`, neon `0.37.1`, libqrencode `v4.1.1` and
-FFmpeg `n8.1.3`, the newest release of each on 2026-10-16, read with `git
-ls-remote`, and `cyanreg/libmusicbrainz` at its default branch's commit that
-day, since it has no releases. A new version is a change to the script. The
+release it is**: curl `curl-8_23_0`, neon `0.37.1` and libqrencode `v4.1.1`,
+the newest release of each on 2026-10-16, read with `git ls-remote`,
+`cyanreg/libmusicbrainz` at its default branch's commit that day, since it
+has no releases, and FFmpeg `n9.0.2` from 2026-10-20. This said FFmpeg
+`n8.1.3` was its newest release on 2026-10-16, and it was the newest tag by
+date, a maintenance release of the older 8.1 branch: `n9.0.2` had been out
+since 2026-09-18. Found on 2026-10-20 by listing each source's tags by
+hand, since the weekly dependency check does not read this script. A new
+version is a change to the script. The
 `mingw` job caches what the five install, `.github/_install`, under a key made
 from the script's hash and from the MSYS2 packages they were compiled
 against, which `update: true` moves; a restored cache carries a stamp the
