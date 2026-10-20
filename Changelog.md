@@ -20,6 +20,18 @@ sixth time, `+667` and `128 to 255` beside `cd-paranoia -A`'s 140; track 4's
 pregap read 158 in every log and track 9's 94 or 95. Their runner again took
 a refused rip's `(no read exceeded 10s)` as the build tag, as round 34 found.
 
+**Our round 35 lap 17 is sent** (`docs/handshake/round-35-lap-17.md`), released
+in the pull request that publishes it, on the operator's standing word for
+round 35: it reads the Full run above, finds no defect in `.25`, and declares
+`GO`, with Platterpus's half of the close condition pending on their reading,
+their lap 18, on which our gate closes the round. Lap 17 is ours by their lap
+16's `HANDSHAKE-NEXT-LAP`, decided on 2026-10-20 when the operator saw both
+sides writing one. It also carries our round summary. **`tools/evidence.py` no
+longer reads an evidence commit as off the branch when no repository holding a
+tip has it** (`cc7ced8`): a stale remote-tracking ref made the lap checker
+refuse this lap's citations of `de128212` instead of fetching the branch, and
+`tests/evidence_tool.py` now holds the case.
+
 **Our round 35 lap 15 is sent** (`docs/handshake/round-35-lap-15.md`), released
 in the pull request that publishes it, on the operator's standing word for
 round 35: it says `.25` is released, records the operator's override moving
