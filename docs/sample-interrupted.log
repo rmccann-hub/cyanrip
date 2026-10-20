@@ -19,7 +19,7 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc3+platterpus.25 (platterpus-fork-g8885ed2)
+cyanrip 0.9.4-rc3+platterpus.25 (platterpus-fork-g0f20616)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 --consumer platterpus/0.6.21 -D o --diagnostics o/sample.diagnostics.json
 Handshake:      round 35 lap 17 OPEN, verdict GO -- NOT a released build
 Consumer:       platterpus/0.6.21
@@ -31,6 +31,8 @@ Overread:       +0 frames
 Overread mode:  fill with silence in lead-in/lead-out
 Speed:          default (unchangeable)
 C2 errors:      unsupported by drive
+Accurate stream: unknown (image)
+Recordable:     unknown (image)
 CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
 Encoder:        libavformat 60.16.100, libavcodec 60.31.102 (6.1.1-3ubuntu5)
 Paranoia level: none
@@ -88,7 +90,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          25
+  READ:          28
 
 Ripping errors: 1
 Encoder errors: not applicable; no whole track was encoded
@@ -96,5 +98,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-10-20T22:05:20+00:00
-Log FUN512: fIiFXWFDvhPpLO9hTxhJYnIuE7kPMoIgIijrWm7VQcaGBgiPFBKr64yvEG9F3BU7jeBfwSx6c.L6oMOD9s7qcQ
+Ripping finished at 2026-10-20T22:46:51+00:00
+Log FUN512: vjNakw1CGRnqt0IKyGyxnzM6O73_9Efmv44xSwcj4FLu5Sy7EmIqxhoJGJIeM8PK8LTRgmqgUd2fpjNItXXr3A
