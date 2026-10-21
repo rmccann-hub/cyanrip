@@ -1,5 +1,54 @@
 Unreleased
 ==========
+**Our round 36 lap 7 is sent** when the pull request carrying it merges green
+(`docs/handshake/round-36-lap-07.md`), on the operator's standing word for
+round 36, *"Release each lap of round 36 once its pull request is green and
+merged, quoting this sentence, unless the lap asks me something; then ask in
+your HANDOFF and wait."* It is the lap Platterpus's lap 6 named: `.27`'s four
+items, built and not released, each below. It checks their parser at
+`bba81563` against them. The limit line's two AccurateRip forms are read, and
+the two new lines are not read and change nothing it does read: two logs of
+this build parse to the same record with and without them. It asks which
+release of theirs reads the two lines, and `.27` is cut once one does, as
+`.26` waited for their 0.7.111. The record's `kept_read_began`, which our lap
+5 listed with the line, is not built: like `isrc_disc_read` it moves the
+record to `/11`, which their reader must accept first.
+
+**`--prefer-accuraterip-match`** (`6e2ca21`), Platterpus's R7, as their round
+36 lap 3 S4 accepted it. At the `-Z` repeat limit it keeps first a read
+AccurateRip matches at confidence 1 or more, the higher confidence winning and
+the present rule breaking a tie. Without the flag, or with no match, nothing
+changes. Under it, the limit's line names the match:
+`kept %08X, read %i time%s, which AccurateRip matches at confidence %i`, with
+the last read's clause when that read is not the last. `tests/spool.c` drives
+the rule, since no fixture is in AccurateRip's database; it needs a drive and
+a disc AccurateRip holds to be seen whole. `docs/seam-commands.md` §1b gains
+its row, PP `?`, so our copy of that shared file differs from Platterpus's by
+one row until they copy it (lap 7 S11).
+
+**The footer's AccurateRip tally divides by the disc's audio tracks**
+(`779549a`), as Platterpus's lap 6 S2 accepted our lap 5 S4: a mixed disc
+whose audio all verified reads `2/2`, not `2/3`. Upstream's report 26
+(`f4da862`) names the commit.
+
+**`Kept read began:`** (`5062bd5`), directly below `Elapsed:`, the UTC start of
+the read whose samples a track's files carry: the one read, or under `-Z` the
+newest read of the spool kept. A track superseded by a later invocation now
+has a time for its read.
+
+**`not written whole:`** (`d33902d`): below `Encoder errors:` when it names a
+failed track, each file a failed encoder left, by path. A track's `File(s):`
+prints before the encoders are joined, so it is the request; this is the
+outcome.
+
+**`tools/seam-check.py` compares each lap's close-by with its round's first
+declaration** (`a06b9bd`), not with lap 1's: round 8 first declared it in lap
+7. Over the whole record it now warns on 16 laps: the 7 naming another
+instant, which Platterpus's report also counts, and 9 that declare none.
+
+**Platterpus's round 36 lap 6 is filed** byte for byte from their `main` at
+`bba81563` (`06dfde0`).
+
 **Our round 36 lap 5 is sent** when the pull request carrying it merges green
 (`docs/handshake/round-36-lap-05.md`), on the operator's word of 2026-10-21,
 *"Release lap 5"*, and their standing word for round 36, *"Release each lap
