@@ -1333,6 +1333,39 @@ static void test_disc_tally_counts_over_one_population(void)
     free_ctx(ctx);
 }
 
+/* Both tallies count over the disc's AUDIO tracks. A data track never gets
+ * an AccurateRip status, so it can never be in a numerator, and with every
+ * track in the denominator a mixed disc whose audio all verified read `2/3`:
+ * mixed.cue's shape, built here, printed that before the fix. Platterpus's
+ * round 36 lap 3 S8 asked; our lap 5 S4 proposed this, their lap 6 S2
+ * accepted it. */
+static void test_disc_tally_counts_audio_tracks_only(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 3);
+    ctx->tracks[0].track_is_data = 1;
+    ctx->tracks[0].audio_ripped = 0;
+    ctx->tracks[0].data_ripped = 1;
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 8, .checksum = 0x11111111,
+                                       .checksum_450 = 0x44444444 };
+    ar_entries[1] = (CRIPAccuDBEntry){ .confidence = 8, .checksum = 0x22222222 };
+    for (int i = 1; i < 3; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+        t->ar_db_entries = ar_entries;
+        t->ar_db_nb_entries = 2;
+        t->ar_db_max_confidence = 8;
+    }
+    ctx->tracks[1].acurip_checksum_v1 = 0x11111111;
+    ctx->tracks[2].acurip_checksum_v1_450 = 0x44444444;   /* one frame only */
+
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    expect_line(out, "Tracks ripped accurately: 1/2", "disc-tally/data-track exact");
+    expect_line(out, "Tracks matched on one frame only: 1/2", "disc-tally/data-track partial");
+    free_ctx(ctx);
+}
+
 /* The footer's one-frame tally counts exactly the per-track `Accurip 450:`
  * lines that say `matches Accurip DB`. The per-track block is printed only when
  * both whole-track lookups MISSED (< 0); the tally tested "neither > 0", and
@@ -1810,6 +1843,7 @@ int main(void)
     test_data_track_reports_bytes_and_stops();
 
     test_disc_tally_counts_over_one_population();
+    test_disc_tally_counts_audio_tracks_only();
     test_disc_tally_ignores_a_zero_450_checksum();
     test_disc_tally_matches_the_per_track_450_gate();
     test_disc_tally_skips_tracks_not_in_the_database();

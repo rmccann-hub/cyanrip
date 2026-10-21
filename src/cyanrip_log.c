@@ -324,6 +324,25 @@ static void print_encode_failure_summary(cyanrip_ctx *ctx)
                     nb_failed, nb_failed == 1 ? "" : "s",
                     tracks, truncated ? ", list truncated" : "",
                     nb_whole, nb_whole == 1 ? "" : "s");
+        /* Each file a failed encoder left, by path. A track block's File(s):
+         * prints before the encoders are joined, so it is the request and
+         * names a path whatever happened to it; only here is the outcome
+         * known (item 22: our round 36 lap 4 S12, which Platterpus's lap 3
+         * S5 accepted). The path is built as File(s): builds it. */
+        for (int i = 0; i < ctx->nb_tracks; i++) {
+            cyanrip_track *t = &ctx->tracks[i];
+            if (!t->had_encoder || !t->audio_ripped || !t->encode_failures)
+                continue;
+            for (int f = 0; f < ctx->settings.outputs_num; f++) {
+                if (!(t->encode_failed_outputs & (1u << f)))
+                    continue;
+                char *path = crip_get_path(ctx, CRIP_PATH_TRACK, 0,
+                                           &crip_fmt_info[ctx->settings.outputs[f]],
+                                           t);
+                cyanrip_log(ctx, 0, "    not written whole: %s\n", path);
+                av_free(path);
+            }
+        }
     }
 
     if (!nb_partial)
@@ -648,6 +667,16 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "    Extraction speed:  %.*fx\n",
                     speed >= 1.0 ? 1 : speed >= 0.1 ? 2 : 3, speed);
         cyanrip_log(ctx, 0, "    Elapsed:            %.2f s\n", t->rip_time_us / 1000000.0);
+        /* When the read the files carry began, in UTC. Elapsed: says how
+         * long the track took and never when, and a -Z track's kept read can
+         * be any of its passes, so a log that supersedes a track had no read
+         * time to stand on. Our round 36 lap 4 S13 proposed this line and
+         * Platterpus's lap 3 S6 accepted it as given; marking a track
+         * superseded stays theirs. No line when the time cannot be read. */
+        char began[32];
+        if (t->kept_read_began &&
+            !crip_iso8601_utc(began, sizeof(began), t->kept_read_began))
+            cyanrip_log(ctx, 0, "    Kept read began:    %s\n", began);
     }
 
     print_offsets(ctx, t);
@@ -1140,11 +1169,23 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
          * claims more than one frame's checksum can: the rest of the track was
          * never compared. Renamed in round 31, as agreed in round 30 (our lap
          * 11 S16, their lap 12 S11), after Platterpus's 0.6.66b1 read both
-         * wordings: round 20's order. Same numerator and denominator. */
-        cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, ctx->nb_tracks);
+         * wordings: round 20's order. Same numerator and denominator.
+         *
+         * The denominator is the disc's AUDIO tracks. It was every track the
+         * drive reports, data tracks among them, while a data track never
+         * gets an AccurateRip status and so never reaches the numerator: a
+         * mixed disc whose audio all verified read `2/3`. Asked by
+         * Platterpus's round 36 lap 3 S8; our lap 5 S4 proposed this and
+         * their lap 6 S2 accepted it as given. A rip of some tracks with -l
+         * still divides by the disc's count, so the lines stay counts over
+         * the disc. Upstream's footer is the same. */
+        int nb_audio = 0;
+        for (int i = 0; i < ctx->nb_tracks; i++)
+            nb_audio += !ctx->tracks[i].track_is_data;
+        cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, nb_audio);
         if (accurip_partial)
             cyanrip_log(ctx, 0, "Tracks matched on one frame only: %i/%i\n",
-                        accurip_partial, ctx->nb_tracks);
+                        accurip_partial, nb_audio);
         cyanrip_log(ctx, 0, "\n");
     }
 

@@ -178,6 +178,7 @@ typedef struct cyanrip_settings {
     int cache_probe;
     char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
     int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
+    int prefer_ar_match; /* --prefer-accuraterip-match: at the -Z repeat limit, a read AccurateRip matches first */
     int generate_cue_only;
     int disable_data_tracks;
     int disable_acoustid;
@@ -310,6 +311,7 @@ typedef struct cyanrip_track {
      * one frame. This is what lets the two be told apart. */
     int end_lsn_session_gap;
     int64_t rip_time_us; /* Wall clock time spent ripping and encoding */
+    time_t kept_read_began; /* When the read the files carry began; 0 if none finished */
     int index; /* Array position + 1 */
 
     int track_is_data;
@@ -450,6 +452,7 @@ typedef struct cyanrip_track {
      * report a fact that comes into being at T+1; the only honest fix is to
      * split the claim, and this field is the half that lands in the footer. */
     int encode_failures;
+    uint32_t encode_failed_outputs; /* bit f: outputs[f]'s encoder failed */
     /* Whether this track had at least one encoder to join, read from the
      * encoder contexts themselves by the collection loop. With audio_ripped it
      * splits the files on disk in two: a track that had an encoder and whose

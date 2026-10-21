@@ -2,6 +2,7 @@
 # Rips the disc image fixtures and verifies the finished files.
 # Usage: rip_images.py <cyanrip-binary> <fixtures-dir> <scenario>
 
+import calendar
 import hashlib
 import importlib.util
 import json
@@ -749,6 +750,52 @@ def sc_data_track_completed():
             fail(f"{name}: {flags} tracks flagged, tracks_completed "
                  f"{d['rip']['tracks_completed']}, {len(on_disk)} files")
 
+
+def sc_kept_read_began():
+    """EACH AUDIO TRACK SAYS WHEN THE READ ITS FILES CARRY BEGAN.
+
+    Our round 36 lap 4 S13, accepted as given by Platterpus's lap 3 S6:
+    `Elapsed:` says how long a read took and never when, and a `-Z` track's
+    kept read can be any of its passes, so a log that supersedes a track had
+    no read time to stand on. One line, directly below `Elapsed:`, in UTC.
+
+    Checked against the test's own clock, which the binary does not share:
+    each value must parse as UTC ISO 8601 and fall between this process's
+    readings taken before and after the rip. On mixed.cue, so the data track,
+    which has no read time in this sense, is seen to print none; and again
+    under -Z, whose kept read is a spool's.
+    """
+    for name, extra in (("krb", ()), ("krb_z", ("-Z", "2"))):
+        before = int(time.time())
+        rip(name, "mixed.cue", *extra)
+        after = int(time.time()) + 1
+        log = (WORK / f"out_{name}" / "log.log").read_text(errors="replace")
+        lines = log.splitlines()
+        elapsed = [i for i, ln in enumerate(lines)
+                   if ln.startswith("    Elapsed:")]
+        began = [i for i, ln in enumerate(lines)
+                 if ln.startswith("    Kept read began:")]
+        if len(elapsed) != 2 or len(began) != 2:
+            fail(f"kept_read_began: {name}: {len(elapsed)} `Elapsed:` and "
+                 f"{len(began)} `Kept read began:` lines, want 2 of each, one "
+                 f"per audio track of mixed.cue")
+            continue
+        for e, b in zip(elapsed, began):
+            if b != e + 1:
+                fail(f"kept_read_began: {name}: `Kept read began:` is on line "
+                     f"{b + 1}, not directly below `Elapsed:` on line {e + 1}")
+            m = re.fullmatch(r"    Kept read began:    "
+                             r"(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)", lines[b])
+            if not m:
+                fail(f"kept_read_began: {name}: not the agreed shape: "
+                     f"{lines[b]!r}")
+                continue
+            when = calendar.timegm(time.strptime(m.group(1),
+                                                 "%Y-%m-%dT%H:%M:%SZ"))
+            if not before <= when <= after:
+                fail(f"kept_read_began: {name}: {m.group(1)} is outside this "
+                     f"rip, which ran from {before} to {after} by this "
+                     f"process's clock (the value read {when})")
 
 def sc_mixed():
     # The data track rips to a raw MODE1/2352 binary
@@ -2849,6 +2896,29 @@ def sc_encode_failure_reaches_the_log():
         return
     in_log = m[0]
 
+    # ITEM 22, ROUND 36: the footer names each file a failed encoder left,
+    # `    not written whole: <path>`, directly below `Encoder errors:` (our
+    # lap 4 S12, Platterpus's lap 3 S5). Checked against the files on disk,
+    # which the log did not write: a file the cap cut off is exactly the cap
+    # long, and each must be named, and nothing else.
+    lines = text.splitlines()
+    prefix = "    not written whole: "
+    named = sorted(ln[len(prefix):] for ln in lines if ln.startswith(prefix))
+    capped = sorted(str(f) for f in out.rglob("*.flac")
+                    if f.stat().st_size == 32768)
+    if not capped:
+        fail("encfail: no file on disk is the cap's length, so the cap cut "
+             "nothing off and the `not written whole:` check is vacuous")
+    elif named != capped:
+        fail(f"encfail: the footer names {named} as not written whole, and "
+             f"the files the cap cut off are {capped}")
+    enc = next((i for i, ln in enumerate(lines)
+                if ln.startswith("Encoder errors:")), None)
+    if enc is None or any(not ln.startswith(prefix)
+                          for ln in lines[enc + 1:enc + 1 + len(named)]):
+        fail("encfail: the `not written whole:` lines are not directly below "
+             "`Encoder errors:`")
+
     try:
         in_json = json.loads(diag.read_text())["rip"]["ripping_errors"]
     except Exception as exc:
@@ -2897,7 +2967,9 @@ def sc_encode_failure_reaches_the_log():
 
     # And the files it names are really truncated, so this is not a quibble
     # about a counter. Assert against the artifact, not against the log.
-    named = re.findall(r"(?m)^    (.*\.flac)$", text)
+    # The `File(s):` entries only: the footer's `not written whole:` lines
+    # (round 36) name the same files and are checked above.
+    named = re.findall(r"(?m)^    (?!not written whole: )(.*\.flac)$", text)
     if not named:
         fail("encfail: the log named no output files, so `File(s):` did not "
              "render and this check is guarding nothing")
@@ -7588,6 +7660,12 @@ def sc_repeat_limit_keeps_most_agreed():
     the source .bin with the expected XOR, and the log's EAC CRC32 against
     zlib's CRC32 of the delivered file, which is what EAC CRC32 is. -P 0 so
     each pass is one read of the sector, as in sc_repeat_limit().
+
+    The second schedule runs again with --prefer-accuraterip-match (round 36,
+    our lap 4 S11, Platterpus's lap 3 S4). Under -A no read can match
+    AccurateRip, so the flag must change nothing: the same read kept and the
+    same line. Its preference itself is tests/spool.c's, since no fixture is
+    in AccurateRip's database.
     """
     import zlib
     needs_preload_shim("repeat_limit_keeps_most_agreed")
@@ -7598,10 +7676,13 @@ def sc_repeat_limit_keeps_most_agreed():
         return
     src = (FIX / "cdda.bin").read_bytes()
     sec, flip = 2352, 100
-    for run, cycle, limit, want, last in ((2, 2, 3, 1, 2), (2, 3, 5, 2, 3)):
-        tag = f"run {run} cycle {cycle} -r {limit}"
-        out = WORK / f"out_keeps_{run}_{cycle}"
-        count = WORK / f"keeps_{run}_{cycle}.count"
+    for run, cycle, limit, want, last, flags in (
+            (2, 2, 3, 1, 2, ()), (2, 3, 5, 2, 3, ()),
+            (2, 3, 5, 2, 3, ("--prefer-accuraterip-match",))):
+        tag = f"run {run} cycle {cycle} -r {limit}" + "".join(" " + f for f in flags)
+        name = f"{run}_{cycle}" + ("_ar" if flags else "")
+        out = WORK / f"out_keeps_{name}"
+        count = WORK / f"keeps_{name}.count"
         env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
                    CRIP_FLIP_SECTOR=str(flip), CRIP_FLIP_CYCLE=str(cycle),
                    CRIP_FLIP_RUN=str(run), CRIP_FLIP_OUT=str(count),
@@ -7610,7 +7691,7 @@ def sc_repeat_limit_keeps_most_agreed():
         ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                      "-P", "0", "-Z", "2", "-r", str(limit), "-l", "1",
                      "-o", "pcm", "-D", out, "-F", "{track}", "-L", "log",
-                     env=env)
+                     *flags, env=env)
         if ec != 0:
             fail(f"repeat_limit_keeps_most_agreed: {tag}: cyanrip exited {ec}")
             continue
@@ -7631,6 +7712,12 @@ def sc_repeat_limit_keeps_most_agreed():
                  + (f", the last read's" if seen == last else ""))
             continue
         text = (out / "log.log").read_text(errors="replace")
+        inv = next((ln for ln in text.splitlines()
+                    if ln.startswith("Invoked as:")), "")
+        if any(f not in inv.split() for f in flags):
+            fail(f"repeat_limit_keeps_most_agreed: {tag}: the log's invocation "
+                 f"does not carry {flags}, so this run tested nothing new: "
+                 f"{inv!r}")
         m = re.search(r"^  EAC CRC32:\s+([0-9A-F]{8})", text, re.M)
         crc = f"{zlib.crc32(got) & 0xFFFFFFFF:08X}"
         if not m or m.group(1) != crc:

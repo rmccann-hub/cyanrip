@@ -54,6 +54,7 @@
 #include "os_compat.h"
 #include "cyanrip_encode.h"
 #include "pregap.h"
+#include "spool.h"
 
 static char cyanrip_helpstr[128];
 
@@ -1225,13 +1226,6 @@ static double sample_peak_rel_amp(const uint8_t *data, const int bytes)
  * tmpfile() leaves no name on disk, so a run that dies leaves nothing behind.
  * It costs at most one track's audio per distinct checksum while that track
  * is read, and no extra drive time. */
-typedef struct crip_spool {
-    uint32_t crc;   /* raw, before the final XOR, as last_checksums holds it */
-    int reads;      /* how many reads gave it */
-    int last_read;  /* the newest of them, counting from 1 */
-    FILE *f;        /* their bytes, as checksummed */
-} crip_spool;
-
 static int crip_spool_write(cyanrip_ctx *ctx, FILE *f, const uint8_t *data, int bytes)
 {
     if (bytes <= 0 || fwrite(data, 1, bytes, f) == (size_t)bytes)
@@ -1239,18 +1233,6 @@ static int crip_spool_write(cyanrip_ctx *ctx, FILE *f, const uint8_t *data, int 
     int err = AVERROR(errno ? errno : EIO);
     cyanrip_log(ctx, 0, "\nError writing the -Z spool: %s!\n", av_err2str(err));
     return err;
-}
-
-/* At the repeat limit: the most reads, and on a tie the newest. */
-static int crip_spool_kept_at_limit(const crip_spool *spools, int nb_spools)
-{
-    int k = 0;
-    for (int i = 1; i < nb_spools; i++)
-        if (spools[i].reads > spools[k].reads ||
-            (spools[i].reads == spools[k].reads &&
-             spools[i].last_read > spools[k].last_read))
-            k = i;
-    return k;
 }
 
 /* Reads one raw 2352 byte sector. Data tracks can't go through paranoia,
@@ -1535,6 +1517,10 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
     crip_positions_track = t;
 
 repeat_ripping:;
+    /* When this read began, for `Kept read began:`: a -Z track's kept read
+     * can be any pass, and Elapsed: says how long, never when (our round 36
+     * lap 4 S13, Platterpus's lap 3 S6). */
+    const time_t pass_began = time(NULL);
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;
     const int frames_after_disc_end = t->frames_after_disc_end;
@@ -1716,8 +1702,10 @@ repeat_ripping:;
     calc_global_peak = 0;
 
     crip_finalize_checksums(&checksum_ctx, t);
-    if (!ctx->settings.ripping_retries)
+    if (!ctx->settings.ripping_retries) {
         crip_finalize_fingerprint(ctx, t);
+        t->kept_read_began = pass_began;
+    }
 
     if (ctx->settings.ripping_retries) {
         /* Stop repeating when we have been told to stop. Without this the
@@ -1747,6 +1735,7 @@ repeat_ripping:;
         if (filed >= 0) {
             spools[filed].reads++;
             spools[filed].last_read = total_repeats + 1;
+            spools[filed].began = pass_began;
             fclose(pass_spool);
         } else {
             crip_spool *grown = av_realloc_array(spools, nb_spools + 1, sizeof(*spools));
@@ -1755,8 +1744,19 @@ repeat_ripping:;
                 goto end;
             }
             spools = grown;
-            spools[nb_spools] = (crip_spool){ checksum_ctx.eac_crc, 1,
-                                              total_repeats + 1, pass_spool };
+            /* t's AccurateRip checksums are this read's: they were finalised
+             * from it above. A track AccurateRip has no entry for answers 0,
+             * which is no match. */
+            int ar_conf = 0;
+            if (ctx->settings.prefer_ar_match)
+                ar_conf = FFMAX(crip_find_ar(t, t->acurip_checksum_v1, 0),
+                                crip_find_ar(t, t->acurip_checksum_v2, 0));
+            spools[nb_spools] = (crip_spool){ .crc = checksum_ctx.eac_crc,
+                                              .reads = 1,
+                                              .last_read = total_repeats + 1,
+                                              .began = pass_began,
+                                              .ar_conf = ar_conf,
+                                              .f = pass_spool };
             filed = nb_spools++;
         }
         pass_spool = NULL;
@@ -1806,7 +1806,32 @@ repeat_ripping:;
                 agreed = FFMAX(agreed, n);
             }
             t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
-            kept = crip_spool_kept_at_limit(spools, nb_spools);
+            kept = crip_spool_kept_at_limit(spools, nb_spools,
+                                            ctx->settings.prefer_ar_match);
+            /* --prefer-accuraterip-match kept a read AccurateRip matches: the
+             * line names it, how many reads gave it and the confidence, in
+             * our round 36 lap 4 S11's form, which Platterpus's lap 3 S4
+             * accepted and their parser reads. The last read's clause is
+             * appended as below when the kept read is not the last. */
+            const crip_spool *ks = &spools[kept];
+            if (ks->ar_conf >= 1 && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
+                            ctx->settings.max_retries,
+                            ctx->settings.max_retries == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s",
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf, shown_crc);
+                goto spool_encode;
+            }
+            if (ks->ar_conf >= 1) {
+                cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i)\n",
+                            ctx->settings.max_retries,
+                            ctx->settings.max_retries == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s",
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf);
+                goto spool_encode;
+            }
             /* Every read but the last prints its checksum on a `Repeating`
              * line, and the track block prints the kept read's. Since the
              * spool, the kept read can be an earlier one, and then the last
@@ -1851,6 +1876,7 @@ repeat_ripping:;
      * must be the ones the read was filed under. */
 spool_encode: {
         crip_spool *k = &spools[kept];
+        t->kept_read_began = k->began;
         cyanrip_checksum_ctx kept_ctx;
         uint8_t buf[CDIO_CD_FRAMESIZE_RAW];
         size_t n;
@@ -2553,6 +2579,8 @@ static int cyanrip_run(int argc, char **argv)
                 "Write a machine-readable diagnostics record to this path (JSON)");
     GEN_OPT_ONE(opts_list, bool,    prefer_disc_isrc, "", 0, 0, 0, 0, 0,
                 "Tag a track with the ISRC read from the disc, where one is, over one given with -t");
+    GEN_OPT_ONE(opts_list, bool,    prefer_accuraterip_match, "", 0, 0, 0, 0, 0,
+                "At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does");
     GEN_OPT_ARR(opts_list, char *,  encoder_option, "", 0, 0, 32, 0, 0,
                 "Pass key=value to every output's encoder, as FFmpeg names its options (repeatable)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
@@ -2701,6 +2729,7 @@ static int cyanrip_run(int argc, char **argv)
     settings.cache_probe                = cache_probe;
     settings.consumer_id                = consumer;
     settings.prefer_disc_isrc           = prefer_disc_isrc;
+    settings.prefer_ar_match            = prefer_accuraterip_match;
     /* Registers the atexit writer, so every route out of main() is covered
      * rather than the ones someone remembered to instrument. Messages are
      * recorded from process start regardless; this only decides whether they
@@ -3836,6 +3865,8 @@ end:
                  * which files are untrustworthy, which is the only question
                  * they have. */
                 t->encode_failures++;
+                /* And WHICH FILE, for the footer's `not written whole:`. */
+                t->encode_failed_outputs |= 1u << j;
             }
         }
         t->had_encoder = had_encoder;

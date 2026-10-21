@@ -269,6 +269,20 @@ static inline void crip_iso8601_now(char *buf, size_t len)
     snprintf(buf, len, "%s", raw);
 }
 
+/* An instant in UTC as ISO 8601, `2026-10-21T04:22:14Z`. UTC rather than
+ * crip_iso8601_now()'s local time with offset, because it is the form our
+ * round 36 lap 4 S13 proposed for `Kept read began:` and Platterpus's lap 3
+ * S6 accepted. gmtime() and not gmtime_r(), which Windows lacks; the log is
+ * written from one thread. Returns 0, or -1 when the instant cannot be
+ * converted, so the caller prints no line rather than one nobody agreed. */
+static inline int crip_iso8601_utc(char *buf, size_t len, time_t t)
+{
+    const struct tm *t_u = gmtime(&t);
+    if (!t_u || !strftime(buf, len, "%Y-%m-%dT%H:%M:%SZ", t_u))
+        return -1;
+    return 0;
+}
+
 static inline int cmp_numbers(const void *a, const void *b)
 {
     return *((int *)a) > *((int *)b);

@@ -5,14 +5,14 @@ operator, combined in the order of importance `issues-to-file.md` suggests.
 That is the operator's word: this file's author could not open it, since this session's proxy answers HTTP 403 for upstream's tracker and refuses to attach upstream beside the fork, so the link is relayed, not read. A reply that asks for a pull request, or for any report as
 an issue of its own, goes to the operator, who files it. Filing on upstream's
 tracker is outside this repository, so it is the maintainer's act; what this
-file does is make each one a copy-and-paste. **Reports 24 and 25, drafted
-on 2026-10-19, are not filed yet.** All twenty-five are
+file does is make each one a copy-and-paste. **Reports 24 to 26, drafted
+on 2026-10-19 and 2026-10-21, are not filed yet.** All twenty-six are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. The rule
 (`docs/history/CLAUDE-2026-10-21.md`) is that *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
-its own file, `docs/upstream-cachemodel-report.md`. There are twenty-five:
-twenty-four here, and that one. The thirteenth found, report 13, was found the
+its own file, `docs/upstream-cachemodel-report.md`. There are twenty-six:
+twenty-five here, and that one. The thirteenth found, report 13, was found the
 day this file was written. Reports 14 to 18 were drafted on 2026-10-05, when
 `master` was still `f8ebf48` (`git ls-remote` again): 14 and 18 found that
 day, and 15 to 17 found earlier in round 30 and fixed for the fork's `.20`
@@ -24,7 +24,10 @@ report until a grep of the fork's history for upstream's code found them.
 Reports 24 and 25 were drafted on 2026-10-19 and run on a build of
 `7dbe56a`: 25 found that day, adding boundary rows to the fork's argument
 probe, and 24 fixed here on 2026-08-06 with no report until 25's search for
-the same code found it.
+the same code found it. Report 26 was drafted on 2026-10-21, read from
+upstream's source at `7dbe56a` after Platterpus asked whether the fork's
+footer counted a data track (their round 36 lap 3 S8), and drafted with the
+fix that names it.
 
 **Checked against upstream `master` at `7dbe56a` on 2026-10-16** (`git ls-remote
 https://github.com/cyanreg/cyanrip refs/heads/master` returned
@@ -748,3 +751,34 @@ message that rendered before renders the same. `-c /2` is refused as `Missing
 discnumber`. All in `716a99b`, "Refuse integer arguments past INT_MAX instead
 of using what they wrap to". Found on 2026-10-19, adding boundary rows to the
 fork's argument probe.
+
+## 26. The AccurateRip tally divides by a count that includes data tracks
+
+**Where:** `src/cyanrip_log.c:366` at `7dbe56a`, in
+`cyanrip_log_finish_report()`:
+
+```c
+cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, ctx->nb_tracks);
+```
+
+and the partial line beside it, which divides by `ctx->nb_tracks -
+accurip_verified`. `ctx->nb_tracks` is `cdio_cddap_tracks()`, every track the
+drive reports (`src/cyanrip_main.c:286`), with data tracks marked inside it
+(`:307`); `crip_fill_accurip()` skips a data track (`src/accurip.c:224`), so
+it never gets an AccurateRip status.
+
+**What happens:** a data track can never be counted as verified, but it is
+always counted in the total. On a mixed-mode or enhanced disc whose audio
+tracks all verify, the footer reads `Tracks ripped accurately: 2/3`, and a
+reader of that line alone sees a track left unverified. The partial line's
+denominator counts the data track too. This is read from upstream's source,
+not run upstream: no disc image is in AccurateRip's database. On the fork
+before its fix, the footer printed `2/3` for a three-track disc whose track 1
+is data and whose two audio tracks verify, a state built the way the fork's
+`tests/logrender.c` builds the footer.
+
+**What the fork did:** both lines divide by the disc's audio tracks, the tracks
+the drive reports less those it reports as data (`779549a`, "Count the
+footer's AccurateRip tally over the disc's audio tracks"). A rip of some
+tracks with `-l` still divides by the disc's count. Found on 2026-10-21,
+answering Platterpus's question.

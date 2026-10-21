@@ -121,7 +121,7 @@ simulated drive. **The drive settles it**: the next rig rip of the reference
 disc on `.26`. If formatted Q carries no mode-3 frames, the next step is the
 raw P-W sub-channel, which a drive returns as recorded.
 
-### The footer's AccurateRip tally divides by a count that includes data tracks
+### The footer's AccurateRip tally divides by a count that includes data tracks (fixed for `.27`)
 
 **Found 2026-10-21, answering Platterpus's round 36 lap 3 S8**, which asked
 whether it does. `Tracks ripped accurately: %i/%i` and `Tracks matched on one
@@ -140,10 +140,15 @@ N/N, so the line alone shows a disc with a track left unverified.
 
 **Proposed in our round 36 lap 5**: divide both lines by the disc's audio
 tracks. The text does not change, but the value does on such a disc, and
-Platterpus parses it, so it is built once they accept. Upstream's report is
+Platterpus parses it, so it was built once they accepted. Upstream's report is
 drafted with the fix, so that it can name the fork's commit. No fixture is in
 AccurateRip's database, so no image rip reaches the line; the fix's test builds
 the state in `tests/logrender.c`.
+
+**Fixed for `.27`** (`779549a`), as Platterpus's round 36 lap 6 S2 accepted it:
+both lines divide by the disc's audio tracks, and `tests/logrender.c` builds
+mixed.cue's shape and reads both over 2. Upstream report 26 names the commit
+(`f4da862`).
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
@@ -794,6 +799,16 @@ own report, and would rather emit a marker we define than keep a private field.
 **That is the round-24 item** -- not the superseded-timestamp complaint, but
 whether our format grows a way to mark a superseded or abandoned read at all.
 
+**Built for `.27`: the read time** (`5062bd5`). Our round 36 lap 4 S13 proposed,
+and Platterpus's lap 3 S6 accepted as given, a track-block line directly below
+`Elapsed:`, `    Kept read began:    2026-10-21T04:22:14Z`, the kept read's
+start in UTC: the one read without `-Z`, and under `-Z` the newest read of the
+spool kept. Marking a track superseded stays theirs, since only their second
+invocation knows it supersedes; this gives the mark a time to stand on. The
+record's `kept_read_began` waits for `/11`. `.27` is released once a release of
+theirs reads the line, and this entry closes when a superseded track's log is
+filed with it.
+
 ### A track's per-track lines are computed from the REQUEST, not the outcome
 
 **HALF FIXED, AND THAT HALF SHIPPED IN `+platterpus.14` AT `3e01bb3` ON
@@ -885,6 +900,11 @@ Two separate causes, and they need different answers:
   became *possible* only once the footer named the tracks, which is why
   `ROUND-22-PLAN.md` §1 rejected it as a standalone option and listed it as a
   second pass. **Nobody has got to it**; that is not the same as declining it.
+  **Built for `.27`** (`d33902d`): our round 36 lap 4 S12 proposed, and
+  Platterpus's lap 3 S5 accepted, that the footer list each file a failed
+  encoder left, `    not written whole: <path>`, directly below an `Encoder
+  errors:` line that names a failed track. `File(s):` stays the request. The
+  line is released with `.27`, once a release of theirs reads it.
 
 **Why it waited for round 22, and what changed.** Round 21 shipped two agreed
 changes; a third, unannounced, would have been the finish line moving inside the

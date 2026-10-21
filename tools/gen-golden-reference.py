@@ -101,6 +101,9 @@ VOLATILE = (
     (re.compile(r"^(Log FUN512: ).*$", re.M), r"\1<normalised>"),
     (re.compile(r"^(Total time taken:\s+).*$", re.M), r"\1<normalised>"),
     (re.compile(r"^(\s*Elapsed:\s+).*$", re.M), r"\1<normalised>"),
+    # When each kept read began (round 36): a wall-clock instant, like the
+    # CREATION_TIME above it in the same block.
+    (re.compile(r"^(\s*Kept read began:\s+).*$", re.M), r"\1<normalised>"),
     (re.compile(r"^(\s*Extraction speed:\s+).*$", re.M), r"\1<normalised>"),
     # The released/unreleased suffix and its qualifier line, ONLY in --check.
     #
