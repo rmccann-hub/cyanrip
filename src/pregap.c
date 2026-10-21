@@ -469,12 +469,12 @@ enum pregap_observation {
  * The search is otherwise a function of the frames it is given, so two
  * searches of one disc can only disagree if the drive answered some request
  * with another sector's frame, or a corrupt frame passed its CRC (one in
- * 65,536). In the Gaps: lists of the reference disc's 227 filed logs, from 33
- * sessions on the rig's one drive, track 9's pregap read 94 frames in 192, 95
- * in 34 and none in 1, and track 4's 158 in 221 and none in 6; no other
- * track's varied (subchannel-pregap-varies). tests/subq.c reproduces both with
- * the search as it was: one read answered by the next sector's frame gives
- * 95, and a first read answered by a frame of the previous track gives none.
+ * 65,536). The rig's filed rips of the reference disc, all on one drive, gave
+ * track 9's pregap as 94 frames or 95, and track 4's as 158 or none
+ * (subchannel-pregap-varies; tools/cross-rip.py counts them). tests/subq.c
+ * reproduces both with the search as it was: one read answered by the next
+ * sector's frame gives 95, and a first read answered by a frame of the
+ * previous track gives none.
  * A frame's own address says which sector it is, so the frame is placed
  * there, and the reads after it are aimed by how far off the drive answers.
  * On a drive whose every frame answers for the sector asked, the answer is

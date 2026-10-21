@@ -257,11 +257,15 @@ binary-encoding quirk remains untested end to end.
 ## The search places each frame by its own address (2026-10-21)
 
 The algorithm was left as UltraFuzzy designed it until the rig showed it
-varying. In the `Gaps:` lists of the reference disc's 227 filed logs, from 33
-sessions on the BDR-209D, track 9's pregap read 94 frames in 192, 95 in 34 and
-none in 1, and track 4's 158 in 221 and none in 6. No other track's varied.
-Counted 2026-10-21 through `tools/evidence.py cat`, from the `Gaps:` list
-because a track block exists only for the tracks a log ripped.
+varying. `tools/cross-rip.py` compares every log's `Gaps:` list, which names
+every track's pregap, ripped or not, where a track block exists only for the
+tracks a log ripped. Over the whole filed record, `python3 tools/evidence.py run -- python3 tools/cross-rip.py docs/rig-* docs/handshake/inbound/artifacts`
+on 2026-10-21, it reads 237 files as cyanrip logs of the reference disc, all
+from the BDR-209D, a log filed twice counted twice: track 9's pregap read 94
+frames in 200, 95 in 36 and none in 1, and track 4's 158 in 230 and none in 7.
+No other track's varied. On the 18-track disc the drive reads differently
+each time, three tracks' did, by more: track 15's 98 or 109, track 16's 202 or
+264, and track 18's none or 187.
 
 **Why it varied, from the code.** The search's answer is a function of the Q
 frames it is given, one per sector it asks for, because each frame was taken

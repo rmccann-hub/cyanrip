@@ -45,10 +45,13 @@ that was the reason before 2026-10-05, kept as the record.
 **Found 2026-10-07, reading the run on `.21`** (`docs/rig-2026-10-07-ca3f3ea/`),
 and as old as the filed record: section P3 ripped track 1 twice, minutes apart,
 and one `Gaps:` list says `94 frame pregap in track 9` and the other `95`.
-Counted again 2026-10-21 from the `Gaps:` lists of the reference disc's 227
-filed logs, from 33 sessions on the BDR-209D: track 9's pregap read 94 frames
-in 192, 95 in 34 and none in 1, and track 4's 158 in 221 and none in 6. No
-other track's varied. The TOC signals neither, so each value is our sub-channel
+Counted again 2026-10-21 by `tools/cross-rip.py`, which since then compares
+every log's `Gaps:` list, over the whole filed record (`python3 tools/evidence.py run -- python3 tools/cross-rip.py docs/rig-* docs/handshake/inbound/artifacts`): of 237
+files it reads as cyanrip logs of the reference disc, all from the BDR-209D, a
+log filed twice counted twice, track 9's pregap read 94 frames in 200, 95 in 36
+and none in 1, and track 4's 158 in 230 and none in 7. No other track's varied.
+On the 18-track disc the drive reads differently each time, track 15's read 98
+or 109, track 16's 202 or 264, and track 18's none or 187. The TOC signals neither, so each value is our sub-channel
 search's, and the track block says so (`Pregap source: sub-channel`). This
 entry said *"no other track's does"* of track 9 for two weeks while track 4's
 zeroes were counted in `STATUS.md`.

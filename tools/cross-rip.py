@@ -48,9 +48,16 @@ consumer's EAC-format export or addendum is not read and cannot supersede
 anything here. A track the log has no block for (a killed or interrupted read)
 is not a read and is not counted.
 
-Exit status: 0 every track agrees; 1 at least one disagreement; 2 nothing to
-compare (no cyanrip log, or no track block in any). 1 and 2 are different
-claims and stay apart.
+PREGAPS TOO, FROM 2026-10-21. Each log's `Gaps:` list names every track's
+pregap, ripped or not. Over the whole filed record it found track 9's read as
+94 frames in 200 logs of the reference disc and 95 in 36, and track 4's as 158
+in 230 and none in 7, which no reading had counted
+(`subchannel-pregap-varies`). After the checksums, each disc's pregaps are
+compared across its logs, by the list's own words.
+
+Exit status: 0 every track agrees, checksums and pregaps; 1 at least one
+disagreement of either; 2 nothing to compare (no cyanrip log, or no track block
+in any). 1 and 2 are different claims and stay apart.
 
 Usage:
     python3 tools/cross-rip.py docs/rig-2026-09-24-df91ae7/rips
@@ -88,6 +95,12 @@ REPEAT = re.compile(r"^Repeating ripping \(\d+ out of \d+ matches for current "
 LIMIT = re.compile(r"^Done; \(repeat limit of \d+ reads? reached; at most "
                    r"(\d+) reads? agreed\)\s*$", re.M)
 FORK_N = re.compile(r"^cyanrip \S*\+platterpus\.(\d+) \(platterpus-fork-g", re.M)
+# Each log's `Gaps:` list names every track whose pregap the rip found, ripped
+# or not, so it is where two rips of one disc can be compared for every track;
+# a track block exists only for the tracks a log ripped.
+GAPS_HEAD = re.compile(r"^Gaps:[ \t]*$", re.M)
+GAP_FRAMES = re.compile(r"^    (\d+) frame pregap in track (\d+), ")
+GAP_UNKNOWN = re.compile(r"^    pregap of track (\d+) (unknown \([^()]*\))\s*$")
 REPEAT_IS_EAC_FROM = 19
 
 
@@ -158,6 +171,71 @@ def reads_in(path):
     return out
 
 
+def pregaps_in(path):
+    """(disc, {track: pregap}) from a log's `Gaps:` list, or None without one.
+
+    The value is the list's own words: `N frames`, or `unknown (reason)`. A
+    track the list does not name had no pregap found, or none signalled, and
+    reads as `none`; which tracks the disc has is the union of what its logs
+    name. Track numbers are the list's, which a `-p` that splits a pregap off
+    as a track of its own renumbers; no rig run has passed one."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    head = GAPS_HEAD.search(text)
+    if not head:
+        return None
+    disc = DISC_ID.search(text)
+    disc = disc.group(1) if disc else "unknown disc"
+    gaps = {}
+    for line in text[head.end():].lstrip("\n").split("\n"):
+        if not line.startswith("    "):
+            break
+        m = GAP_FRAMES.match(line)
+        if m:
+            gaps[int(m.group(2))] = f"{m.group(1)} frames"
+            continue
+        m = GAP_UNKNOWN.match(line)
+        if m:
+            gaps[int(m.group(1))] = m.group(2)
+    return disc, gaps
+
+
+def compare_pregaps(files):
+    """Print each disc's pregaps across its logs; the number that disagree."""
+    by_disc = collections.defaultdict(list)
+    for f in files:
+        got = pregaps_in(f)
+        if got:
+            by_disc[got[0]].append((f, got[1]))
+    if not by_disc:
+        return 0
+    disagree = 0
+    print("\npregaps, from each log's Gaps: list:")
+    for disc, logs in sorted(by_disc.items()):
+        tracks = sorted({tr for _, gaps in logs for tr in gaps})
+        print(f"disc {disc}: {len(logs)} log(s) with a Gaps: list, "
+              f"{len(tracks)} track(s) named in one")
+        if len(logs) == 1:
+            print("  1 log, nothing to compare it with")
+            continue
+        for tr in tracks:
+            by_value = collections.defaultdict(list)
+            for f, gaps in logs:
+                by_value[gaps.get(tr, "none")].append(f)
+            if len(by_value) == 1:
+                print(f"  track {tr}: {next(iter(by_value))} in all {len(logs)}  agree")
+                continue
+            disagree += 1
+            print(f"  track {tr}: " + ", ".join(
+                f"{v} in {len(fs)}" for v, fs in
+                sorted(by_value.items(), key=lambda kv: -len(kv[1]))) + "  DISAGREE")
+            for v, fs in sorted(by_value.items(), key=lambda kv: -len(kv[1]))[1:]:
+                print(f"      {v}  x{len(fs)}  {', '.join(sorted(f.name for f in fs))}")
+    if disagree:
+        print(f"\n{disagree} track(s) whose pregap the logs of one disc give "
+              "differently. Which is right is not decided here.")
+    return disagree
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("paths", nargs="+", type=pathlib.Path,
@@ -225,11 +303,12 @@ def main():
         print(f"\n{disagree} track(s) read with more than one checksum. Which read "
               "is right is not decided here; the AccurateRip result beside each "
               "is the log's own.")
-        return 1
-    print("\nevery track that was read more than once was read the same way"
-          + (f"; {once} track(s) were read once, which nothing here can "
-             f"compare" if once else ""))
-    return 0
+    else:
+        print("\nevery track that was read more than once was read the same way"
+              + (f"; {once} track(s) were read once, which nothing here can "
+                 f"compare" if once else ""))
+    pregaps_disagree = compare_pregaps(files)
+    return 1 if disagree or pregaps_disagree else 0
 
 
 if __name__ == "__main__":
