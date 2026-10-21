@@ -1273,7 +1273,8 @@ def load_rounds(directory=None, every_lap=False):
     # C29, ours and theirs in one sequence by declared lap number. Before this
     # the inbound loader never read a peer lap's version, so their lap 2
     # declaring 4 after our lap 1 declared 5 closed round 24 in a dry run
-    # (docs/KNOWN-ISSUES.md, "Our gate has four defects", item 3). A lap with
+    # (docs/history/KNOWN-ISSUES-2026-10-21.md, "Our gate has four defects",
+    # item 3). A lap with
     # no readable number or version is left to the checks that already refuse
     # it, rather than guessed into the order.
     for number, seq in versions_by_round.items():

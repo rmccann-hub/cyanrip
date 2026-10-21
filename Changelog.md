@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**`docs/KNOWN-ISSUES.md` keeps only what is open**: 934 lines and 64 KB,
+where it was 2,772 lines and 185 KB, after the operator's review of
+2026-10-19, item 3. The 1,838 lines of items fixed, landed in the shared
+protocol, or decided move word for word to
+`docs/history/KNOWN-ISSUES-2026-10-21.md`; the cache probe's section stays,
+because its table gains a row with every run and
+`cache_table_matches_the_transcripts` reads all 23 rows from here. Comments
+in eight tools and tests that cite a moved item now name the history file.
+
 **Round 36's pin moves to `.26` when `.26` is released**, on the operator's
 word of 2026-10-21 (*"once .26 is released, move round 36's pin to .26"*),
 which our round 36 lap 1 said the move needed (R4). `STATUS.md`'s

@@ -3289,7 +3289,8 @@ def test_a_peer_lap_below_an_earlier_lap_refuses_the_round():
     only shows the data is carried; this is the refusal. Found 2026-09-23 by
     dry-running round 24's close: their lap declaring 4 after our lap declared 5
     closed the round, because the inbound loader never read a peer lap's
-    version (`docs/KNOWN-ISSUES.md`, *"Our gate has four defects"*, item 3).
+    version (`docs/history/KNOWN-ISSUES-2026-10-21.md`, *"Our gate has four
+    defects"*, item 3).
 
     From round 25 only. Round 8's laps 3-15 of ours declared 1 after their lap
     2 declared 2, and that round is closed; the rule arrives at a boundary.
