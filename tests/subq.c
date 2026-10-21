@@ -185,6 +185,9 @@ struct fake_disc {
     lsn_t pregap;
     lsn_t start;
     lsn_t mode3;
+    /* What the mode-3 frame carries in its bytes 1 to 8, or NULL for bytes
+     * no ISRC has. */
+    const uint8_t *isrc;
 };
 
 enum fake_answer {
@@ -227,7 +230,7 @@ static void fake_frame(const struct fake_disc *disc, lsn_t at, uint8_t *q)
     if (at == disc->mode3) {
         q[0] = 0x03;
         for (int i = 1; i < 9; i++)
-            q[i] = 0x40 + i;
+            q[i] = disc->isrc ? disc->isrc[i - 1] : 0x40 + i;
     } else {
         const int in_pregap = at >= disc->pregap && at < disc->start;
         track_t t = disc->track;
@@ -478,6 +481,121 @@ static void test_search_bad_frames(void)
           "failing drive: got %i, source %i", got, src);
 }
 
+/* GBAAM7800003, the ISRC EAC's cue gives for track 1 of the reference disc,
+ * as a mode-3 frame's bytes 1 to 8, worked by hand from cdrdao's encoder
+ * (SubChannel::encodeIsrcCode(), dao/SubChannel.cc:160-186 at cdrdao
+ * 4b9e97f, with ascii2Isrc() mapping 'A' to 17), not from the decoder under
+ * test: G 23, B 18, A 17, A 17, M 29 in six bits each, then 7 8 0 0 0 0 3. */
+static const uint8_t isrc_gbaam7800003[8] = {
+    0x5D, 0x24, 0x51, 0x74, 0x78, 0x00, 0x00, 0x30,
+};
+
+static void test_isrc_decode(void)
+{
+    uint8_t q[12] = { 0x03 };
+    char isrc[CDIO_ISRC_SIZE + 1];
+
+    memcpy(q + 1, isrc_gbaam7800003, 8);
+    CHECK(subq_decode_isrc(q, isrc) && !strcmp(isrc, "GBAAM7800003"),
+          "cdrdao's encoding of GBAAM7800003 decoded as %s", isrc);
+
+    /* Six-bit values 10 to 16 and above 42 are no character. */
+    q[1] = 10 << 2;
+    CHECK(!subq_decode_isrc(q, isrc), "six-bit value 10 decoded as a character");
+    q[1] = 43 << 2;
+    CHECK(!subq_decode_isrc(q, isrc), "six-bit value 43 decoded as a character");
+
+    /* A digit nibble above 9 is no digit. */
+    memcpy(q + 1, isrc_gbaam7800003, 8);
+    q[6] = 0x0A;
+    CHECK(!subq_decode_isrc(q, isrc), "digit nibble 10 decoded as a digit");
+}
+
+static void scan_track(struct fake_drive *d, struct cyanrip_subq_isrc *res)
+{
+    subq_isrc_scan(fake_read, d, d->disc.start + 75, 200, res);
+}
+
+static void test_isrc_scan(void)
+{
+    struct cyanrip_subq_isrc res;
+    char reason[160];
+
+    /* The frame 50 sectors into the scan carries the code. */
+    struct fake_drive d = fake_track9();
+    d.disc.mode3 = d.disc.start + 75 + 50;
+    d.disc.isrc = isrc_gbaam7800003;
+    scan_track(&d, &res);
+    CHECK(res.found && !strcmp(res.isrc, "GBAAM7800003") && res.frames_read == 51 &&
+          res.frames_valid == 51 && res.isrc_frames == 1,
+          "ISRC frame 50 in: found %i, %s, %i read, %i valid, %i ISRC",
+          res.found, res.isrc, res.frames_read, res.frames_valid, res.isrc_frames);
+
+    /* It is found on a drive a sector off too: placement does not matter
+     * here, only that the frame is the track's. */
+    d = fake_track9();
+    d.answer = FAKE_SHIFTED;
+    d.shift = 1;
+    d.disc.mode3 = d.disc.start + 75 + 50;
+    d.disc.isrc = isrc_gbaam7800003;
+    scan_track(&d, &res);
+    CHECK(res.found && !strcmp(res.isrc, "GBAAM7800003"),
+          "drive a sector off: found %i", res.found);
+
+    /* A frame failing its CRC is passed over. */
+    d = fake_track9();
+    d.disc.mode3 = d.disc.start + 75 + 50;
+    d.disc.isrc = isrc_gbaam7800003;
+    d.bad_from = d.bad_to = d.disc.mode3;
+    d.bad_reads = -1;
+    scan_track(&d, &res);
+    CHECK(!res.found && res.frames_read == 200 && res.frames_valid == 199 &&
+          !res.isrc_frames, "ISRC frame failing its CRC: found %i, %i valid, %i ISRC",
+          res.found, res.frames_valid, res.isrc_frames);
+
+    /* No mode-3 frame, as from a drive that builds its Q from the TOC. */
+    d = fake_track9();
+    scan_track(&d, &res);
+    cyanrip_subq_isrc_reason(&res, reason, sizeof(reason));
+    CHECK(!res.found && res.frames_read == 200 && res.frames_valid == 200 &&
+          !strcmp(reason, "libcdio returned none, also after reading 200 Q frames "
+                          "of the track, none an ISRC frame"),
+          "no ISRC frame: %s", reason);
+
+    /* A mode-3 frame whose bytes are no ISRC. */
+    d = fake_track9();
+    d.disc.mode3 = d.disc.start + 75 + 10;
+    scan_track(&d, &res);
+    cyanrip_subq_isrc_reason(&res, reason, sizeof(reason));
+    CHECK(!res.found && res.isrc_frames == 1 &&
+          !strcmp(reason, "libcdio returned none, also after reading 200 Q frames "
+                          "of the track, 1 ISRC frames, none well formed"),
+          "malformed ISRC frame: %s", reason);
+
+    /* Every frame failing its CRC. */
+    d = fake_track9();
+    d.bad_from = d.disc.start;
+    d.bad_to = d.disc.start + 1000;
+    d.bad_reads = -1;
+    scan_track(&d, &res);
+    cyanrip_subq_isrc_reason(&res, reason, sizeof(reason));
+    CHECK(!res.found && res.frames_read == 200 && !res.frames_valid &&
+          !strcmp(reason, "libcdio returned none, also after reading 200 Q frames "
+                          "of the track, none passing its CRC"),
+          "every frame bad: %s", reason);
+
+    /* A drive refusing the read. */
+    d = fake_track9();
+    d.read_fails = 1;
+    scan_track(&d, &res);
+    cyanrip_subq_isrc_reason(&res, reason, sizeof(reason));
+    CHECK(!res.found && res.read_failed && !res.frames_read &&
+          !strcmp(reason, "libcdio returned none, also after the drive refused to "
+                          "read the track's Q frames"),
+          "refused read: %s", reason);
+    CHECK(strlen(reason) < 120, "reason of %zu characters", strlen(reason));
+}
+
 int main(void)
 {
     test_crc();
@@ -492,6 +610,8 @@ int main(void)
     test_search_stale();
     test_search_mode3();
     test_search_bad_frames();
+    test_isrc_decode();
+    test_isrc_scan();
 
     if (failures) {
         fprintf(stderr, "%d check(s) failed\n", failures);

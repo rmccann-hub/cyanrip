@@ -32,3 +32,27 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, track_t track_number,
 static inline lba_t cyanrip_get_track_pregap_lba(CdIo_t *p_cdio, track_t track_number) {
     return cdio_lsn_to_lba(cyanrip_get_track_pregap_lsn(p_cdio, track_number, NULL));
 }
+
+/* What reading a track's own Q frames for its ISRC found, for the record. */
+struct cyanrip_subq_isrc {
+    int found;          /* isrc holds a code a CRC-valid mode-3 frame carried */
+    int frames_read;    /* frames the drive returned */
+    int frames_valid;   /* of those, frames whose CRC checked */
+    int isrc_frames;    /* of those, mode-3 (ISRC) frames */
+    int read_failed;    /* the drive refused a read, which ended the scan */
+    char isrc[CDIO_ISRC_SIZE + 1];
+};
+
+/* Reads the Q sub-channel of up to `count` sectors from `first`, one READ CD
+ * each, and stops at the first CRC-valid mode-3 frame whose twelve characters
+ * are ones an ISRC frame can carry. For a drive whose READ SUB-CHANNEL answers
+ * with no ISRC: the frames are the disc's own, checked by their CRC. A drive
+ * that synthesises its formatted Q from the TOC returns no mode-3 frames, and
+ * the counts say so. Not for image drivers, which have no sub-channel. */
+void cyanrip_read_isrc_subq(CdIo_t *p_cdio, lsn_t first, int count,
+                            struct cyanrip_subq_isrc *res);
+
+/* The reason the log and the record give for a track whose READ SUB-CHANNEL
+ * gave no ISRC before and after cyanrip_read_isrc_subq() found none in `res`:
+ * what the scan saw, in counts. Written into buf, at most `size` bytes. */
+void cyanrip_subq_isrc_reason(const struct cyanrip_subq_isrc *res, char *buf, size_t size);

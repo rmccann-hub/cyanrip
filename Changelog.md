@@ -96,6 +96,17 @@ timed rip of `.25` against `.26` in the next Full run):
   sector the frames name. A frame of a third track arriving during the
   backtrack no longer ends the process on an assert (exit 134). No log line
   changes; the rig's reference-disc rips confirm it (`docs/pregap-carry.md`).
+- **A drive that gives no ISRC to READ SUB-CHANNEL gets its track's own Q
+  frames read for one.** On the BDR-209D every track of the reference disc read
+  `Disc ISRC: none (libcdio returned none)` while EAC's cue of the disc carries
+  an ISRC for each. Now, on a drive and only when libcdio returns none, cyanrip
+  reads 200 of the track's Q frames with READ CD and takes the code from the
+  first CRC-valid mode-3 frame, then asks libcdio again from inside the track.
+  The line's shapes do not change: a code prints as one, and `none (…)` gives
+  the new reason with what the frames showed, for example `libcdio returned
+  none, also after reading 200 Q frames of the track, none an ISRC frame`.
+  Images are untouched, so the golden reference is too. Needs the drive
+  (`docs/KNOWN-ISSUES.md`).
 
 The three lines are new text a consumer parses, so they are proposed in
 round 36's first lap and `.26` is released once Platterpus's reader takes

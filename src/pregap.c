@@ -27,8 +27,10 @@
 
 #include "pregap.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <cdio/cdio.h>
 #include <cdio/mmc_ll_cmds.h>
@@ -673,6 +675,104 @@ static lsn_t pregap_search_subq(subq_read_fn read, void *opaque,
 #undef SET_SOURCE
 }
 
+
+/* The twelve characters of the ISRC a mode-3 Q frame carries, in its bytes 1
+ * to 8: five of six bits each, '0' to '9' as 0 to 9 and 'A' to 'Z' as 17 to
+ * 42, two zero bits, then seven of four bits each, the digits, and four zero
+ * bits (IEC 60908; cdrdao's SubChannel::decodeIsrcCode() reads it the same
+ * way). Returns 0 for a value no ISRC character has. */
+static int subq_decode_isrc(const uint8_t *q, char isrc[CDIO_ISRC_SIZE + 1])
+{
+    const uint32_t a = (uint32_t)q[1] << 24 | (uint32_t)q[2] << 16 |
+                       (uint32_t)q[3] << 8 | q[4];
+
+    for (int i = 0; i < 5; i++) {
+        const int c = (a >> (26 - 6*i)) & 0x3F;
+        if (c <= 9)
+            isrc[i] = '0' + c;
+        else if (c >= 17 && c <= 42)
+            isrc[i] = 'A' + c - 17;
+        else
+            return 0;
+    }
+
+    for (int i = 0; i < 7; i++) {
+        const int c = (q[5 + i/2] >> (i % 2 ? 0 : 4)) & 0x0F;
+        if (c > 9)
+            return 0;
+        isrc[5 + i] = '0' + c;
+    }
+
+    isrc[CDIO_ISRC_SIZE] = '\0';
+    return 1;
+}
+
+/* Whether a frame's CRC checks, as read or with the raw-binary drive's fields
+ * re-encoded to BCD, on a copy: a mode-3 frame's bytes are not BCD fields, so
+ * the pregap search's sticky fixup would turn a good one into a bad one. */
+static int subq_frame_valid(const uint8_t *q)
+{
+    const unsigned crc_read = (q[10] << 8) | q[11];
+    uint8_t copy[12];
+
+    if (!crc_read)
+        return 0;
+    if (crc_read == crc_subq(q))
+        return 1;
+    memcpy(copy, q, sizeof(copy));
+    fixup_subq_to_bcd(copy);
+    return crc_read == crc_subq(copy);
+}
+
+static void subq_isrc_scan(subq_read_fn read, void *opaque, lsn_t first, int count,
+                           struct cyanrip_subq_isrc *res)
+{
+    uint8_t audio_subq_buf[CYANRIP_CD_FRAMESIZE_RAW_AND_SUBQ];
+    const uint8_t *q = audio_subq_buf + CDIO_CD_FRAMESIZE_RAW;
+
+    memset(res, 0, sizeof(*res));
+
+    for (int i = 0; i < count; i++) {
+        if (read(opaque, audio_subq_buf, first + i)) {
+            res->read_failed = 1;
+            return;
+        }
+        res->frames_read++;
+        if (!subq_frame_valid(q))
+            continue;
+        res->frames_valid++;
+        if ((q[0] & 0x0F) != 3)
+            continue;
+        res->isrc_frames++;
+        if (subq_decode_isrc(q, res->isrc)) {
+            res->found = 1;
+            return;
+        }
+    }
+}
+
+void cyanrip_read_isrc_subq(CdIo_t *p_cdio, lsn_t first, int count,
+                            struct cyanrip_subq_isrc *res)
+{
+    subq_isrc_scan(read_subq_from_drive, p_cdio, first, count, res);
+}
+
+void cyanrip_subq_isrc_reason(const struct cyanrip_subq_isrc *res, char *buf, size_t size)
+{
+    if (res->read_failed && !res->frames_read)
+        snprintf(buf, size, "libcdio returned none, also after the drive refused "
+                 "to read the track's Q frames");
+    else if (!res->frames_valid)
+        snprintf(buf, size, "libcdio returned none, also after reading %i Q frames "
+                 "of the track, none passing its CRC", res->frames_read);
+    else if (!res->isrc_frames)
+        snprintf(buf, size, "libcdio returned none, also after reading %i Q frames "
+                 "of the track, none an ISRC frame", res->frames_read);
+    else
+        snprintf(buf, size, "libcdio returned none, also after reading %i Q frames "
+                 "of the track, %i ISRC frames, none well formed",
+                 res->frames_read, res->isrc_frames);
+}
 
 /* An earlier TODO here asked whether the drive is actually returning Q
  * sub-channel data rather than zeroes. It is: verify_subq_crc() rejects a

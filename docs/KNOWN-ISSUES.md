@@ -79,6 +79,45 @@ rips of the reference disc with that line absent, and `Gaps:` reading 94 and
 158 throughout, are the confirmation. `STATUS.md`'s `subchannel-pregap-varies`
 tracks it.
 
+### The disc's ISRCs read as none on the rig's drive, while EAC's cue of the same disc has them
+
+**Found by the claude-code-skills session's known fixes of 2026-10-21, item 8**,
+and untracked here until then. On the BDR-209D, `.25` printed `Disc ISRC:
+none (libcdio returned none)` for every track of the reference disc
+(`docs/rig-2026-10-20-5f1d036/`, the secure re-read's log, lines 82 and 165 on),
+while EAC's cue of the same disc on the same drive gives an ISRC for every
+track, track 1's `GBAAM7800003`
+(`platterpus@1b532e69:output_reference/EAC_flac/eac_baseline_police_classics.cue:13`).
+Whether EAC read those codes from the disc's sub-channel is not stated in its
+log; it is the only source a cue's `ISRC` lines have in EAC.
+
+**What it costs**: the files carry MusicBrainz's ISRC, which names a recording
+rather than this pressing, and `--prefer-disc-isrc` has nothing to prefer.
+
+**What is known, read from libcdio, not run**: `cdio_get_track_isrc()` on Linux
+is `mmc_get_track_isrc()`, a READ SUB-CHANNEL with format 03h and the track in
+byte 6, the same from 2.1.1 to its master (`lib/driver/mmc/mmc.c`,
+`mmc_get_mcn_isrc_private()`). It returns NULL for three different answers:
+the command failing, a reply shorter than 21 bytes, and the drive's TCVal bit
+clear, which is the drive saying it found none. Our log cannot tell them apart,
+and it does not name the libcdio version the rig ran. The ISRC is read before
+any sector of the track, while the pre-emphasis read beside it reads a sector
+first because a drive answers for wherever it last read (upstream's `59b3f2d`).
+
+**For `.26`, without a drive**: when libcdio returns none on a drive, cyanrip
+reads 200 of the track's own Q frames with READ CD, the path the pregap search
+has used on the BDR-209D since 2026-08-04, and takes the ISRC from the first
+CRC-valid mode-3 frame; if none carries one, it asks libcdio again with the
+head inside the track. Each outcome is a different measurement, and the reason
+says which: a code; `none (libcdio returned none, also after reading 200 Q
+frames of the track, none an ISRC frame)`, which would mean the drive builds
+its formatted Q without mode-3 frames; or one of the counts for frames failing
+their CRC or carrying no well-formed code. `tests/subq.c` holds the decode,
+against an ISRC frame built from cdrdao's encoder, and the scan, on the
+simulated drive. **The drive settles it**: the next rig rip of the reference
+disc on `.26`. If formatted Q carries no mode-3 frames, the next step is the
+raw P-W sub-channel, which a drive returns as recorded.
+
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
