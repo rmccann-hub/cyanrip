@@ -11,10 +11,11 @@ lap files and reassembling their disposition tables. That is a real cost paid
 every time anyone asks "what is still wrong?", and the answer was drifting
 because each lap only knows about its own round.
 
-**What it is not.** Not external bugs we work around — those are in `CLAUDE.md`,
-"Known external bugs worked around here". Not designs we chose not to build —
-those are `CLAUDE.md`, "Planned, not built". Not a description of behaviour we
-*have* — that is `PROVIDER-CONTRACT.md`, and it is generated.
+**What it is not.** Not external bugs we work around — those are this file's
+last section, kept apart from our own. Not designs we chose not to build —
+those are `docs/history/CLAUDE-2026-10-21.md`, "Planned, not built". Not a
+description of behaviour we *have* — that is `PROVIDER-CONTRACT.md`, and it is
+generated.
 
 **Rules for this file.** An item leaves only when it is fixed and a test pins
 it, or when it is shown never to have been real. An item that turns out to be
@@ -2691,3 +2692,80 @@ where it says so:**
 | `wait-for-rip` returns `ok` after `rip` failed | **taken on their S8, not re-read**: we did not find the code path |
 | the script language cannot express a literal `"` | **fixed**: the tokeniser unescapes `\"` in a quoted run (`src/platterpus/uiscript/script.py:109`) |
 | the `-t` guard blocks a defect fixed in round 7 lap 32 | **their guard working**: it refuses a malformed `-t` before it reaches any build, and says which builds it protects (`src/platterpus/adapters/cyanrip_backend.py:1456-1463`) |
+
+## Known external bugs worked around here
+
+Moved here from `CLAUDE.md` on 2026-10-21, word for word below this
+paragraph, when that file was cut to its cap. These are defects in what we
+link or run, not in our code; `tools/gen-dependency-map.py` reads each
+bullet's bold lead into `docs/DEPENDENCIES.md` and `sbom.cdx.json`.
+
+Record these rather than rediscovering them:
+
+- **libcdio CDRDAO driver, relative `FILE` paths.** `lib/driver/image/cdrdao.c`
+  computes the absolute path of a `.toc`'s `FILE` and then opens the *raw
+  relative* one (`cdio_stdio_new(psz_field)` where it should pass
+  `psz_filename`; `bincue.c` gets this right). A `.toc` therefore only loads
+  when the process's working directory is the image's directory —
+  `tests/rip_images.py` sets `cwd=` for exactly this.
+- **libcdio-paranoia sniffs sample data to guess byte order.** `data_bigendianp()`
+  votes on which interpretation looks more like audio. Real music votes
+  correctly; a synthetic full-scale square wave is *smoother* byte-swapped, so
+  it silently rips byte-reversed. Any synthetic test signal must be checked
+  against its source bytes before conclusions are drawn from it.
+- **Paranoia's cache model doubles as its read chunk size.** Setting it small
+  enough to stop the backseek probe over-reading the leadout leaves the
+  verification logic no overlap and it emits zeroes. On disc images the safe
+  window measured 5-256 sectors; upstream ships 1. See the table in
+  `cyanrip_main.c`.
+- **`cdio_get_device_fd()` is not in libcdio 2.1.0.** Verified against the
+  installed headers *and* the `.so` export table. Upstream PR #153's macOS
+  sub-channel path calls it, which is why that PR's restructure is not carried
+  and `pregap.c` keeps its copy-pasted-struct workaround.
+- **libcdio does not distinguish "no CD-TEXT on disc" from "driver cannot read
+  CD-TEXT".** `cdio_get_cdtext()` returns the same `NULL` for both. Report what
+  was observed ("none reported by libcdio"), never the stronger claim.
+- **EAC's `Pre-gap length` field is hundredths of a second, not CD frames.**
+  Settled from a genuine EAC 1.8 log of the rig disc, which Platterpus opened
+  and we cannot (round 7 lap 11 §B). Our `Pregap length: N frames` states its
+  unit and is unaffected, but the two logs differ by design on every non-zero
+  pregap and **that is not a defect in either**. The reasoning that made it look
+  like one was sound and wrong: `0:00:01.96` cannot be a frame count, so we
+  correctly inferred the field was not frames — and then had no artifact to say
+  which of us matched EAC. Do not re-litigate this without opening an EAC log.
+- **libcdio terminates the process from inside a library call.** Its default
+  log handler `exit(EXIT_FAILURE)`s on `CDIO_LOG_ERROR` and `abort()`s on
+  `CDIO_LOG_ASSERT`, printing straight to stderr. So `-d` on an unparseable CUE
+  was a non-zero exit that cyanrip never saw and could not report the code of
+  -- measured, not assumed: that run's diagnostics record read `exit_code:
+  null`. `crip_cdio_log_handler()` now routes the message through ours first.
+  **It must keep terminating**: libcdio's internal callers are written assuming
+  `cdio_error()` does not return, so code after such a call runs in a state its
+  author never intended it to reach.
+- **libcdio-paranoia checks the per-frame retry limit only at multiples of 5.**
+  `cdio_paranoia_read_limited()` tests `retry_count == max_retries` inside
+  `if (retry_count % 5 == 0)` (`lib/paranoia/paranoia.c`, read at upstream
+  `384f4da`). Any other limit is never matched, and on a sector that will not
+  read the call does not return. Measured with one injected bad sector at the
+  default level: `-r 3` hung past 90 s, and `-r 10` finished in a second.
+  `crip_frame_retry_limit()` rounds up (minimum 5) and the `Retry limit:` line
+  says both numbers when they differ. **The whole-track `-Z` ceiling is ours
+  and keeps the value as given.**
+- **And with paranoia disabled (`-P 0`), an unreadable sector never returned
+  at any retry limit.** In disable mode every block read starts with
+  `paranoia_resetall()`, so a block in which nothing reads leaves the root
+  empty, and the skip then writes its zero frame at word 0 instead of at the
+  cursor; the next read resets the root again. Measured at `-r 10` and `-r 1`,
+  and traced 2026-10-05. **Worked around for `.20`** without leaving paranoia's
+  read path: at level 0 the cdda layer's public `read_audio` hook is wrapped
+  (`crip_read_audio_salvaging()`), so a short request is completed one sector
+  at a time and only an unreadable sector is zeroed. Reads that succeed are
+  untouched, so the counters and the golden reference do not move. Bypassing
+  paranoia at level 0 was rejected, because every image scenario runs at
+  `-P 0` and the counters it would have emptied are the ones the suite checks.
+  Platterpus never passes `-P`. Recorded in `docs/KNOWN-ISSUES.md`.
+- **genopt prints its own errors unless you take them.** `GEN_OPT_LOG` is
+  documented in `genopt.h` and cyanrip did not define it, so every
+  argument-parsing failure went to stdout via `vprintf` and reached no logfile
+  and no record. That includes the exact message that once read to a consumer
+  as "cyanrip is not installed".

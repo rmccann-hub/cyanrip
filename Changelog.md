@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**`CLAUDE.md` is cut to its cap**, the operator's review of 2026-10-19, item
+3, as a change of its own after round 35 closed: 300 lines and 32 KiB, where it
+was 2,750 lines and 176,299 bytes; it is 289 lines and 16,506 bytes. It keeps
+the rules a session needs on every task, each with what fails without it. The
+whole file as it stood moves, byte for byte, to
+`docs/history/CLAUDE-2026-10-21.md`; its *Known external bugs worked around
+here* to `docs/KNOWN-ISSUES.md`, which `tools/gen-dependency-map.py` now reads;
+the operator's lap items of 2026-10-14 and the evidence fetch refspec to
+`docs/handshake/README.md`. `tests/claude_md_cap.py` fails past the cap, and
+`sc_docs_do_not_contradict_themselves()` reads the retired rules from the
+history file and fails when `CLAUDE.md` states one. Nothing in the binary
+changes.
+
 **Our round 36 lap 1 is sent** (`docs/handshake/round-36-lap-01.md`), on the operator's word of 2026-10-21:
 it opens round 36 on `.25` with Platterpus's 0.7.110, proposes `.26`'s three
 new lines for their reader, sets the close on the Full run on `.26` with a

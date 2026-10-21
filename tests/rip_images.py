@@ -1297,9 +1297,9 @@ def sc_loudness_after_filter():
     DELIVERED BYTES, an artifact this program's measurement does not produce.
 
     The -W rip must be byte-identical to its source, which also rules out
-    libcdio-paranoia's byte-order guess (CLAUDE.md, known external bugs): a
-    synthetic tone that ripped byte-swapped would make every figure here
-    about the wrong audio.
+    libcdio-paranoia's byte-order guess (docs/KNOWN-ISSUES.md, known
+    external bugs): a synthetic tone that ripped byte-swapped would make
+    every figure here about the wrong audio.
     """
     n = 44100 * 4
     amp = 10 ** (-1 / 20) * 32767
@@ -2542,12 +2542,14 @@ def sc_docs_do_not_contradict_themselves():
     supposed to guard.
     """
     claude = ROOT / "CLAUDE.md"
+    history = ROOT / "docs" / "history" / "CLAUDE-2026-10-21.md"
     hs_readme = ROOT / "docs" / "handshake" / "README.md"
-    for f in (claude, hs_readme):
+    for f in (claude, history, hs_readme):
         if not f.exists():
             fail(f"docs_self_consistent: {f.relative_to(ROOT)} is missing")
             return
     ctext = claude.read_text(encoding="utf-8", errors="replace")
+    htext = history.read_text(encoding="utf-8", errors="replace")
     rtext = hs_readme.read_text(encoding="utf-8", errors="replace")
 
     # 1. A RULE DECLARED RETIRED MUST NOT ALSO STAND AS A LIVE INSTRUCTION.
@@ -2556,22 +2558,22 @@ def sc_docs_do_not_contradict_themselves():
     # silence is not [complete]" in the seam section and retired that exact rule
     # a thousand lines below under the round-14 reform, which says it is why two
     # lap 13s crossed. A reader going top-down got the dead rule. The retirement
-    # quotes the rule verbatim, so the expected set is derivable from the file.
-    retired = re.findall(r'\*\*"([^"]{10,})" is gone\.\*\*', ctext)
+    # quotes the rule verbatim, so the expected set is derivable. Since
+    # CLAUDE.md was cut to its cap on 2026-10-21 the retirements are in the
+    # history file, and CLAUDE.md must state none of the rules they retire.
+    retired = re.findall(r'\*\*"([^"]{10,})" is gone\.\*\*', htext)
     if not retired:
-        # The extraction itself can rot: if the reform section is reworded, this
+        # The extraction itself can rot: if the history file is reworded, this
         # check silently guards nothing. A check that cannot fire is worse than
         # a missing one, so say so rather than pass.
         fail("docs_self_consistent: no retired rule matched '**\"...\" is gone.**' "
-             "in CLAUDE.md -- the reform section was reworded and this check is "
-             "now guarding nothing")
+             f"in {history.relative_to(ROOT)} -- it was reworded and this check "
+             "is now guarding nothing")
     for rule in retired:
-        # Once in the retirement is correct; twice means it also stands somewhere
-        # as an instruction.
-        if ctext.count(rule) > 1:
-            fail(f"docs_self_consistent: CLAUDE.md declares \"{rule[:60]}...\" "
-                 f"RETIRED but the same text appears {ctext.count(rule)} times -- "
-                 f"a reader going top-down meets the dead rule as live")
+        if rule.lower() in ctext.lower():
+            fail(f"docs_self_consistent: {history.relative_to(ROOT)} records "
+                 f"\"{rule[:60]}...\" as RETIRED and CLAUDE.md states it -- a "
+                 f"reader meets the dead rule as live")
 
     # 2. THE ROUND TABLE MUST COVER EVERY ROUND THE RECORD HOLDS.
     #

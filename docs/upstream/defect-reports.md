@@ -8,8 +8,8 @@ tracker is outside this repository, so it is the maintainer's act; what this
 file does is make each one a copy-and-paste. **Reports 24 and 25, drafted
 on 2026-10-19, are not filed yet.** All twenty-five are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
-file and the cache-model one by `tools/gen-upstream-issues.py`. `CLAUDE.md`'s rule is that
-*"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
+file and the cache-model one by `tools/gen-upstream-issues.py`. The rule
+(`docs/history/CLAUDE-2026-10-21.md`) is that *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
 its own file, `docs/upstream-cachemodel-report.md`. There are twenty-five:
 twenty-four here, and that one. The thirteenth found, report 13, was found the
