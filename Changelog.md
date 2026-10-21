@@ -23,6 +23,20 @@ word of 2026-10-21 (*"once .26 is released, move round 36's pin to .26"*),
 which our round 36 lap 1 said the move needed (R4). `STATUS.md`'s
 `STATUS-ROUND` says so for Platterpus until a lap records the move.
 
+**Our round 36 lap 4 is sent** when the pull request carrying it merges green
+(`docs/handshake/round-36-lap-04.md`), on the operator's word of 2026-10-21,
+*"Release each lap of round 36 once its pull request is green and merged,
+quoting this sentence, unless the lap asks me something; then ask in your
+HANDOFF and wait."*, and numbered 4 on their word *"do lap 4, 2 and 3 will
+come from platterpus"*. It carries the two fixes for `.26` below, the pregap
+search and the disc's ISRCs, both needing the drive; the count our lap 1 S16
+promised; and three proposals, the read kept at the repeat limit (Platterpus's
+R7), `File(s):` and the superseded read's time. `status_block_is_current`
+took the next lap to be the newest plus one, which the protocol never said: a
+number is claimed at release (§4a), and when our newest lap's
+`HANDSHAKE-NEXT-LAP` names a lower number no sent lap has claimed, the check
+now expects that one.
+
 **`CLAUDE.md` is cut to its cap**, the operator's review of 2026-10-19, item
 3, as a change of its own after round 35 closed: 300 lines and 32 KiB, where it
 was 2,750 lines and 176,299 bytes; it is 289 lines and 16,506 bytes. It keeps
