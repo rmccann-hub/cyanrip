@@ -3812,6 +3812,16 @@ def test_seam_check_warns_on_a_close_by_lap_1_did_not_set():
     check(len(got) == 1 and got[0][0] == "OK",
           f"the same header with lap 1's close-by must read OK: {got}")
 
+    # Round 8's was first declared in lap 7, so its lap 9 is compared with
+    # lap 7's: against lap 1 alone it was compared with nothing (their round
+    # 36 lap 6 S8).
+    src = "round-08-lap-09.md"
+    header = (hs / src).read_text(encoding="utf-8").split("\n\n", 1)[0]
+    got = graded(header)
+    check(len(got) == 1 and got[0][0] == "WARN" and "lap 7" in got[0][1],
+          f"round 8 lap 9 must WARN against lap 7, the round's first "
+          f"declaration: {got}")
+
 
 def test_seam_check_reads_the_protocol_label_the_spec_declares():
     """Round 24, found preparing for Platterpus's lap 2.

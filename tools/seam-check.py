@@ -120,8 +120,26 @@ def _spec_version():
     return rg.PROTOCOL_VERSION
 
 
-# Each round's lap 1, either side's, read once per run: --all checks every lap.
-_LAP_ONES = {}
+# Each round's first declaration of HANDSHAKE-CLOSE-BY, either side's, found
+# once per run: --all checks every lap. None until the record is read.
+_FIRST_CLOSE_BY = None
+
+
+def _first_close_by(rnd):
+    """(lap number, path, value) of the round's earliest declaration, or None."""
+    global _FIRST_CLOSE_BY
+    if _FIRST_CLOSE_BY is None:
+        _FIRST_CLOSE_BY = {}
+        for other in rdg.candidates():
+            text = other.read_bytes().decode("utf-8", errors="replace")
+            q = rdg.is_a_lap(text)
+            m = rg.CLOSE_BY_RE.search(rg.strip_fences(text)) if q else None
+            if not m:
+                continue
+            r, n = int(q[0]), int(q[1])
+            if r not in _FIRST_CLOSE_BY or n < _FIRST_CLOSE_BY[r][0]:
+                _FIRST_CLOSE_BY[r] = (n, other, m.group(1))
+    return _FIRST_CLOSE_BY.get(rnd)
 
 
 def close_by_against_lap_one(text, name, rnd, lap):
@@ -131,47 +149,44 @@ def close_by_against_lap_one(text, name, rnd, lap):
     PEER lap naming a different instant went unreported. Platterpus's round 36
     laps 2 and 3 declare 2026-11-30T23:59:59Z where our lap 1 set
     2026-11-20T23:59:59Z, and every check on both sides passed; our lap 5
-    found it by reading the headers side by side. Lap 1 is looked for among
-    both sides' laps, since either side may open a round. R2 makes the field
-    advisory to a gate, and a sent lap cannot be edited, so a difference
-    WARNs rather than FAILs.
+    found it by reading the headers side by side. R2 makes the field advisory
+    to a gate, and a sent lap cannot be edited, so a difference WARNs rather
+    than FAILs.
+
+    Compared with the round's FIRST declaration, either side's, which is lap 1
+    whenever R2 was kept, as the gate's close_by_lines() compares: round 8's
+    was first declared in lap 7, and five later laps of it name other values.
+    Comparing with lap 1 alone, as this did first, said nothing of them;
+    Platterpus's round 36 lap 6 S8 counted them.
     """
-    if rnd < rg.CLOSE_BY_FROM_ROUND or lap == 1:
+    if rnd < rg.CLOSE_BY_FROM_ROUND:
         return
-    if not _LAP_ONES:
-        for other in rdg.candidates():
-            q = rdg.is_a_lap(other.read_bytes().decode("utf-8",
-                                                        errors="replace"))
-            if q and int(q[1]) == 1:
-                _LAP_ONES.setdefault(int(q[0]), other)
-    first = _LAP_ONES.get(rnd)
+    first = _first_close_by(rnd)
     if first is None:
         note("INFO", "wire/close-by",
-             f"round {rnd}'s lap 1 is not in this record, so {name}'s "
-             f"HANDSHAKE-CLOSE-BY is compared with nothing")
-        return
-    want = rg.CLOSE_BY_RE.search(rg.strip_fences(
-        first.read_text(encoding="utf-8", errors="replace")))
-    got = rg.CLOSE_BY_RE.search(rg.strip_fences(text))
-    if not want:
-        note("INFO", "wire/close-by",
-             f"round {rnd}'s lap 1 ({first.name}) declares no "
+             f"no lap of round {rnd} in this record declares "
              f"HANDSHAKE-CLOSE-BY, so {name}'s is compared with nothing")
-    elif not got:
+        return
+    n, path, want = first
+    if lap <= n:
+        return
+    got = rg.CLOSE_BY_RE.search(rg.strip_fences(text))
+    where = f"lap {n} ({path.name})"
+    if not got:
         note("WARN", "wire/close-by",
-             f"{name} declares no HANDSHAKE-CLOSE-BY; lap 1 set "
-             f"{want.group(1)}",
-             fix="carry lap 1's instant. R2: it is set in lap 1, and every "
-                 "lap carries the whole wire header.")
-    elif got.group(1) != want.group(1):
+             f"{name} declares no HANDSHAKE-CLOSE-BY; the round's first "
+             f"declaration, {where}, set {want}",
+             fix="carry that instant. R2: it is set in lap 1, and every lap "
+                 "carries the whole wire header.")
+    elif got.group(1) != want:
         note("WARN", "wire/close-by",
-             f"{name} declares HANDSHAKE-CLOSE-BY {got.group(1)}; lap 1 "
-             f"({first.name}) set {want.group(1)}",
-             fix="R2 says it is set in lap 1 and is not extended, so lap 1's "
-                 "instant governs. Carry it in the next lap; a sent lap is "
-                 "not edited.")
+             f"{name} declares HANDSHAKE-CLOSE-BY {got.group(1)}; the round's "
+             f"first declaration, {where}, set {want}",
+             fix="R2 says it is set in lap 1 and is not extended, so the "
+                 "first declaration governs. Carry it in the next lap; a sent "
+                 "lap is not edited.")
     else:
-        note("OK", "wire/close-by", f"{got.group(1)}, lap 1's")
+        note("OK", "wire/close-by", f"{got.group(1)}, as {where} set it")
 
 
 def check_lap(path):
