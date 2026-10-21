@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.25 (platterpus-fork-g5e9ad28)`
+Build: `cyanrip 0.9.4-rc3+platterpus.26 (platterpus-fork-ge2b52b1)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
