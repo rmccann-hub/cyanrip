@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 
 /* One -Z spool: the bytes of the reads that gave one checksum. What the spool
  * is for, and why, is above crip_spool_write() in cyanrip_main.c.
@@ -32,6 +33,7 @@ typedef struct crip_spool {
     uint32_t crc;   /* raw, before the final XOR, as last_checksums holds it */
     int reads;      /* how many reads gave it */
     int last_read;  /* the newest of them, counting from 1 */
+    time_t began;   /* when the newest of them began */
     int ar_conf;    /* under --prefer-accuraterip-match, the confidence of the
                      * AccurateRip entry its v1 or v2 checksum matches, the
                      * higher; below 1 when none does, or without the flag */

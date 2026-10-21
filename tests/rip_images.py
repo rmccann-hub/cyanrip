@@ -2,6 +2,7 @@
 # Rips the disc image fixtures and verifies the finished files.
 # Usage: rip_images.py <cyanrip-binary> <fixtures-dir> <scenario>
 
+import calendar
 import hashlib
 import importlib.util
 import json
@@ -749,6 +750,52 @@ def sc_data_track_completed():
             fail(f"{name}: {flags} tracks flagged, tracks_completed "
                  f"{d['rip']['tracks_completed']}, {len(on_disk)} files")
 
+
+def sc_kept_read_began():
+    """EACH AUDIO TRACK SAYS WHEN THE READ ITS FILES CARRY BEGAN.
+
+    Our round 36 lap 4 S13, accepted as given by Platterpus's lap 3 S6:
+    `Elapsed:` says how long a read took and never when, and a `-Z` track's
+    kept read can be any of its passes, so a log that supersedes a track had
+    no read time to stand on. One line, directly below `Elapsed:`, in UTC.
+
+    Checked against the test's own clock, which the binary does not share:
+    each value must parse as UTC ISO 8601 and fall between this process's
+    readings taken before and after the rip. On mixed.cue, so the data track,
+    which has no read time in this sense, is seen to print none; and again
+    under -Z, whose kept read is a spool's.
+    """
+    for name, extra in (("krb", ()), ("krb_z", ("-Z", "2"))):
+        before = int(time.time())
+        rip(name, "mixed.cue", *extra)
+        after = int(time.time()) + 1
+        log = (WORK / f"out_{name}" / "log.log").read_text(errors="replace")
+        lines = log.splitlines()
+        elapsed = [i for i, ln in enumerate(lines)
+                   if ln.startswith("    Elapsed:")]
+        began = [i for i, ln in enumerate(lines)
+                 if ln.startswith("    Kept read began:")]
+        if len(elapsed) != 2 or len(began) != 2:
+            fail(f"kept_read_began: {name}: {len(elapsed)} `Elapsed:` and "
+                 f"{len(began)} `Kept read began:` lines, want 2 of each, one "
+                 f"per audio track of mixed.cue")
+            continue
+        for e, b in zip(elapsed, began):
+            if b != e + 1:
+                fail(f"kept_read_began: {name}: `Kept read began:` is on line "
+                     f"{b + 1}, not directly below `Elapsed:` on line {e + 1}")
+            m = re.fullmatch(r"    Kept read began:    "
+                             r"(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)", lines[b])
+            if not m:
+                fail(f"kept_read_began: {name}: not the agreed shape: "
+                     f"{lines[b]!r}")
+                continue
+            when = calendar.timegm(time.strptime(m.group(1),
+                                                 "%Y-%m-%dT%H:%M:%SZ"))
+            if not before <= when <= after:
+                fail(f"kept_read_began: {name}: {m.group(1)} is outside this "
+                     f"rip, which ran from {before} to {after} by this "
+                     f"process's clock (the value read {when})")
 
 def sc_mixed():
     # The data track rips to a raw MODE1/2352 binary

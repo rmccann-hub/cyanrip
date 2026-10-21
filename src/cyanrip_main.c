@@ -1517,6 +1517,10 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
     crip_positions_track = t;
 
 repeat_ripping:;
+    /* When this read began, for `Kept read began:`: a -Z track's kept read
+     * can be any pass, and Elapsed: says how long, never when (our round 36
+     * lap 4 S13, Platterpus's lap 3 S6). */
+    const time_t pass_began = time(NULL);
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;
     const int frames_after_disc_end = t->frames_after_disc_end;
@@ -1698,8 +1702,10 @@ repeat_ripping:;
     calc_global_peak = 0;
 
     crip_finalize_checksums(&checksum_ctx, t);
-    if (!ctx->settings.ripping_retries)
+    if (!ctx->settings.ripping_retries) {
         crip_finalize_fingerprint(ctx, t);
+        t->kept_read_began = pass_began;
+    }
 
     if (ctx->settings.ripping_retries) {
         /* Stop repeating when we have been told to stop. Without this the
@@ -1729,6 +1735,7 @@ repeat_ripping:;
         if (filed >= 0) {
             spools[filed].reads++;
             spools[filed].last_read = total_repeats + 1;
+            spools[filed].began = pass_began;
             fclose(pass_spool);
         } else {
             crip_spool *grown = av_realloc_array(spools, nb_spools + 1, sizeof(*spools));
@@ -1747,6 +1754,7 @@ repeat_ripping:;
             spools[nb_spools] = (crip_spool){ .crc = checksum_ctx.eac_crc,
                                               .reads = 1,
                                               .last_read = total_repeats + 1,
+                                              .began = pass_began,
                                               .ar_conf = ar_conf,
                                               .f = pass_spool };
             filed = nb_spools++;
@@ -1868,6 +1876,7 @@ repeat_ripping:;
      * must be the ones the read was filed under. */
 spool_encode: {
         crip_spool *k = &spools[kept];
+        t->kept_read_began = k->began;
         cyanrip_checksum_ctx kept_ctx;
         uint8_t buf[CDIO_CD_FRAMESIZE_RAW];
         size_t n;

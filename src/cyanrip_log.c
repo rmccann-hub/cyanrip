@@ -648,6 +648,16 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "    Extraction speed:  %.*fx\n",
                     speed >= 1.0 ? 1 : speed >= 0.1 ? 2 : 3, speed);
         cyanrip_log(ctx, 0, "    Elapsed:            %.2f s\n", t->rip_time_us / 1000000.0);
+        /* When the read the files carry began, in UTC. Elapsed: says how
+         * long the track took and never when, and a -Z track's kept read can
+         * be any of its passes, so a log that supersedes a track had no read
+         * time to stand on. Our round 36 lap 4 S13 proposed this line and
+         * Platterpus's lap 3 S6 accepted it as given; marking a track
+         * superseded stays theirs. No line when the time cannot be read. */
+        char began[32];
+        if (t->kept_read_began &&
+            !crip_iso8601_utc(began, sizeof(began), t->kept_read_began))
+            cyanrip_log(ctx, 0, "    Kept read began:    %s\n", began);
     }
 
     print_offsets(ctx, t);

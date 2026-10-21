@@ -759,6 +759,7 @@ rip_scenarios = [
     'pregap',
     'mixed',
     'data_track_completed',
+    'kept_read_began',
     'trailing',
     'discid',
     'nrg',
