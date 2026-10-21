@@ -120,6 +120,60 @@ def _spec_version():
     return rg.PROTOCOL_VERSION
 
 
+# Each round's lap 1, either side's, read once per run: --all checks every lap.
+_LAP_ONES = {}
+
+
+def close_by_against_lap_one(text, name, rnd, lap):
+    """R2: HANDSHAKE-CLOSE-BY is set in lap 1 and is not extended.
+
+    release-gate.py's close-by rows read the laps in one directory, ours, so a
+    PEER lap naming a different instant went unreported. Platterpus's round 36
+    laps 2 and 3 declare 2026-11-30T23:59:59Z where our lap 1 set
+    2026-11-20T23:59:59Z, and every check on both sides passed; our lap 5
+    found it by reading the headers side by side. Lap 1 is looked for among
+    both sides' laps, since either side may open a round. R2 makes the field
+    advisory to a gate, and a sent lap cannot be edited, so a difference
+    WARNs rather than FAILs.
+    """
+    if rnd < rg.CLOSE_BY_FROM_ROUND or lap == 1:
+        return
+    if not _LAP_ONES:
+        for other in rdg.candidates():
+            q = rdg.is_a_lap(other.read_bytes().decode("utf-8",
+                                                        errors="replace"))
+            if q and int(q[1]) == 1:
+                _LAP_ONES.setdefault(int(q[0]), other)
+    first = _LAP_ONES.get(rnd)
+    if first is None:
+        note("INFO", "wire/close-by",
+             f"round {rnd}'s lap 1 is not in this record, so {name}'s "
+             f"HANDSHAKE-CLOSE-BY is compared with nothing")
+        return
+    want = rg.CLOSE_BY_RE.search(rg.strip_fences(
+        first.read_text(encoding="utf-8", errors="replace")))
+    got = rg.CLOSE_BY_RE.search(rg.strip_fences(text))
+    if not want:
+        note("INFO", "wire/close-by",
+             f"round {rnd}'s lap 1 ({first.name}) declares no "
+             f"HANDSHAKE-CLOSE-BY, so {name}'s is compared with nothing")
+    elif not got:
+        note("WARN", "wire/close-by",
+             f"{name} declares no HANDSHAKE-CLOSE-BY; lap 1 set "
+             f"{want.group(1)}",
+             fix="carry lap 1's instant. R2: it is set in lap 1, and every "
+                 "lap carries the whole wire header.")
+    elif got.group(1) != want.group(1):
+        note("WARN", "wire/close-by",
+             f"{name} declares HANDSHAKE-CLOSE-BY {got.group(1)}; lap 1 "
+             f"({first.name}) set {want.group(1)}",
+             fix="R2 says it is set in lap 1 and is not extended, so lap 1's "
+                 "instant governs. Carry it in the next lap; a sent lap is "
+                 "not edited.")
+    else:
+        note("OK", "wire/close-by", f"{got.group(1)}, lap 1's")
+
+
 def check_lap(path):
     """Every mechanical thing round 14 spent a lap saying in prose."""
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -185,6 +239,8 @@ def check_lap(path):
                  "not agreement and leaves the round open.")
     else:
         note("OK", "wire/verdict", verdicts[0])
+
+    close_by_against_lap_one(text, name, rnd, lap)
 
     # --- the digest, which is the one field a human cannot proofread ------
     status, decl, comp, _ = rdg.check_lap(path)

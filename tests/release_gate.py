@@ -2076,6 +2076,20 @@ KNOWN_UNREPRODUCIBLE = {
     # is written. Reported in our lap 4. Pinned to the declared value, and
     # it never comes out: lap 3 is sent and immutable.
     "round-35-lap-03.md": "85a64e289f431911",
+    # Round 36 laps 3 and 4, one cause, the operators' numbering: ours was
+    # written as lap 4 before their lap 3 existed ("do lap 4, 2 and 3 will
+    # come from platterpus", 2026-10-21). This check re-derives a lap over
+    # every lap numbered below it, and neither declaration is over that set.
+    #
+    # Our lap 4 declares `953737951ac1418f over 2`, our lap 1 and their lap 2,
+    # every lap that existed when it was written. Their lap 3 declares
+    # `2866bce69bb4f22a over 3`, laps 1, 2 and 4, every lap but itself, as its
+    # own field says. Each is reproduced rather than accepted: round-digest.py
+    # 36 excluding laps 3 and 4 gives the first, and excluding lap 3 alone the
+    # second. Platterpus recorded the same two in their d392d8d6. Both are
+    # sent and immutable, so neither comes out.
+    "round-36-lap-03.md": "2866bce69bb4f22a",
+    "round-36-lap-04.md": "953737951ac1418f",
 }
 
 
@@ -3749,6 +3763,54 @@ def test_seam_check_fails_a_malformed_shared_hash():
     got = graded(fixed)
     check(got and got[0][0] != "FAIL",
           f"the same header with a real hash must not FAIL: {got}")
+
+
+def test_seam_check_warns_on_a_close_by_lap_1_did_not_set():
+    """Round 36, our lap 5.
+
+    Platterpus's laps 2 and 3 declare HANDSHAKE-CLOSE-BY 2026-11-30T23:59:59Z
+    where our lap 1 set 2026-11-20T23:59:59Z, and R2 says it is set in lap 1
+    and not extended. The gate's close-by rows read only our laps, so nothing
+    said so. Graded against their filed lap 3 itself, which must WARN, and the
+    same header carrying lap 1's instant, which must read OK.
+    """
+    import shutil
+    sc_path = HERE.parent / "tools" / "seam-check.py"
+    spec = importlib.util.spec_from_file_location("seam_check_cb", sc_path)
+    sc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sc)
+    hs = HERE.parent / "docs" / "handshake"
+    src = "round-36-lap-03.md"
+    header = (hs / "inbound" / src).read_text(encoding="utf-8").split("\n\n", 1)[0]
+    lap1 = re.search(r"(?m)^HANDSHAKE-CLOSE-BY: (\S+)",
+                     (hs / "round-36-lap-01.md").read_text(encoding="utf-8"))
+    theirs = re.search(r"(?m)^HANDSHAKE-CLOSE-BY: (\S+)", header)
+    check(lap1 and theirs and lap1.group(1) != theirs.group(1),
+          f"their lap 3 no longer declares a close-by other than lap 1's, "
+          f"which this test is about: {theirs and theirs.group(1)!r} against "
+          f"{lap1 and lap1.group(1)!r}")
+    if not (lap1 and theirs):
+        return
+
+    def graded(text):
+        d = pathlib.Path(tempfile.mkdtemp())
+        try:
+            (d / src).write_text(text + "\n\nbody\n", encoding="utf-8")
+            sc.FINDINGS.clear()
+            sc.check_lap(d / src)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+        return [(lv, m) for lv, cat, m, _f, _a in sc.FINDINGS
+                if cat == "wire/close-by"]
+
+    got = graded(header)
+    check(len(got) == 1 and got[0][0] == "WARN"
+          and theirs.group(1) in got[0][1] and lap1.group(1) in got[0][1],
+          f"a close-by lap 1 did not set must WARN, naming both instants: {got}")
+    got = graded(header.replace(theirs.group(0),
+                                f"HANDSHAKE-CLOSE-BY: {lap1.group(1)}"))
+    check(len(got) == 1 and got[0][0] == "OK",
+          f"the same header with lap 1's close-by must read OK: {got}")
 
 
 def test_seam_check_reads_the_protocol_label_the_spec_declares():

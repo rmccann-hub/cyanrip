@@ -121,6 +121,30 @@ simulated drive. **The drive settles it**: the next rig rip of the reference
 disc on `.26`. If formatted Q carries no mode-3 frames, the next step is the
 raw P-W sub-channel, which a drive returns as recorded.
 
+### The footer's AccurateRip tally divides by a count that includes data tracks
+
+**Found 2026-10-21, answering Platterpus's round 36 lap 3 S8**, which asked
+whether it does. `Tracks ripped accurately: %i/%i` and `Tracks matched on one
+frame only: %i/%i` both divide by `ctx->nb_tracks`
+(`src/cyanrip_log.c:1144-1147`). That is `cdio_cddap_tracks()`, every track the
+drive reports (`src/cyanrip_main.c:439`), and data tracks are marked inside it
+(`:460`). A data track never gets a per-track AccurateRip status
+(`src/accurip.c:199`), so it can never reach the numerator. Built the way
+`tests/logrender.c` builds the footer, a three-track disc whose track 1 is data
+and whose two audio tracks both verify prints `Tracks ripped accurately: 2/3`;
+that probe ran in the session and is not committed. Upstream's line is the same
+at `7dbe56a` (`src/cyanrip_log.c:366`).
+
+**What it costs**: on a mixed-mode or enhanced disc the line can never read
+N/N, so the line alone shows a disc with a track left unverified.
+
+**Proposed in our round 36 lap 5**: divide both lines by the disc's audio
+tracks. The text does not change, but the value does on such a disc, and
+Platterpus parses it, so it is built once they accept. Upstream's report is
+drafted with the fix, so that it can name the fork's commit. No fixture is in
+AccurateRip's database, so no image rip reaches the line; the fix's test builds
+the state in `tests/logrender.c`.
+
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
