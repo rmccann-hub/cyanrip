@@ -30,7 +30,7 @@ STATUS-OPEN: files-listed-from-request us fixing at round 36, priority 7: File(s
 STATUS-OPEN: accuraterip-kept-read us fixing at round 36, priority 2: at the -Z repeat limit the spool keeps the read most reads agreed on, which on 2026-10-06 kept track 5's E0036697 over C96464AB, which AccurateRip matches; your R7, open since round 32; proposed in our round 36 lap 4 S11, a long-only --prefer-accuraterip-match you would pass, and one more form of the limit's Done; line, accepted as given in your lap 3 S4, whose parser already reads the clause; built for +platterpus.27, not yet
 STATUS-OPEN: tally-counts-data-tracks us fixing at round 36, priority 3: Tracks ripped accurately: and Tracks matched on one frame only: divide by every track the drive reports, data tracks among them, so a mixed disc whose audio all verified reads 2/3, measured with the footer code and the same upstream at 7dbe56a; asked by your lap 3 S8, answered in our lap 5 S2 and S3, and S4 proposes the disc's audio tracks as the denominator, built for +platterpus.27 once you accept, with upstream's report naming the commit
 STATUS-OPEN: round-36-close-by them fixing at round 36, priority 8: your laps 2 and 3 declare round 36's close-by as 2026-11-30T23:59:59Z where our lap 1 set 2026-11-20T23:59:59Z, and R2 says lap 1's governs (our lap 5 S15); tools/seam-check.py warns on it from c268ff6 (our lap 5 S16); open until a lap of yours carries lap 1's instant
-STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed reports 1 to 23 on 2026-10-16 as one issue, https://github.com/cyanreg/cyanrip/issues/167, in the order of importance docs/upstream/issues-to-file.md suggests, and reports 24 and 25, drafted on 2026-10-19 and rendered there, go to that issue as a comment of our operator's, their word of 2026-10-19; a reply asking for a pull request or for an item as an issue of its own goes to our operator, who files it
+STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed reports 1 to 23 on 2026-10-16 as one issue, https://github.com/cyanreg/cyanrip/issues/167, in the order of importance docs/upstream/issues-to-file.md suggests, and reports 24 and 25, drafted on 2026-10-19, and 26, drafted on 2026-10-21, each rendered there, go to that issue as a comment of our operator's, their word of 2026-10-19; a reply asking for a pull request or for an item as an issue of its own goes to our operator, who files it
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded
 
 **The block above is the proposal's D6, and it is checked, not trusted**
@@ -268,7 +268,7 @@ lacks on hardware is the `hardware-unverified` line.
 Our `master` mirrors `cyanreg/cyanrip` at `b40c1f0`, 0.9.4-rc3, merged into
 `platterpus-fork` at `79da685`. That is a reading of 2026-10-12T22:46Z, when
 `git ls-remote` last returned it; `tools/upstream-delta.py` is how to check
-again. **Twenty-five defects this fork found in upstream's code are
+again. **Twenty-six defects this fork found in upstream's code are
 reported; the first twenty-three are filed there, as one issue, [cyanreg/cyanrip#167](https://github.com/cyanreg/cyanrip/issues/167)**, by our operator on 2026-10-16, in the
 order of importance `docs/upstream/issues-to-file.md` suggests, each
 re-checked against `master` by `tools/check-settled.py`. The link is our
