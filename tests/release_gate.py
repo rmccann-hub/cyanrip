@@ -2076,6 +2076,20 @@ KNOWN_UNREPRODUCIBLE = {
     # is written. Reported in our lap 4. Pinned to the declared value, and
     # it never comes out: lap 3 is sent and immutable.
     "round-35-lap-03.md": "85a64e289f431911",
+    # Round 36 laps 3 and 4, one cause, the operators' numbering: ours was
+    # written as lap 4 before their lap 3 existed ("do lap 4, 2 and 3 will
+    # come from platterpus", 2026-10-21). This check re-derives a lap over
+    # every lap numbered below it, and neither declaration is over that set.
+    #
+    # Our lap 4 declares `953737951ac1418f over 2`, our lap 1 and their lap 2,
+    # every lap that existed when it was written. Their lap 3 declares
+    # `2866bce69bb4f22a over 3`, laps 1, 2 and 4, every lap but itself, as its
+    # own field says. Each is reproduced rather than accepted: round-digest.py
+    # 36 excluding laps 3 and 4 gives the first, and excluding lap 3 alone the
+    # second. Platterpus recorded the same two in their d392d8d6. Both are
+    # sent and immutable, so neither comes out.
+    "round-36-lap-03.md": "2866bce69bb4f22a",
+    "round-36-lap-04.md": "953737951ac1418f",
 }
 
 
