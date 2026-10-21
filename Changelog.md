@@ -1,5 +1,10 @@
 Unreleased
 ==========
+**Round 36's pin moves to `.26` when `.26` is released**, on the operator's
+word of 2026-10-21 (*"once .26 is released, move round 36's pin to .26"*),
+which our round 36 lap 1 said the move needed (R4). `STATUS.md`'s
+`STATUS-ROUND` says so for Platterpus until a lap records the move.
+
 **`CLAUDE.md` is cut to its cap**, the operator's review of 2026-10-19, item
 3, as a change of its own after round 35 closed: 300 lines and 32 KiB, where it
 was 2,750 lines and 176,299 bytes; it is 289 lines and 16,506 bytes. It keeps
