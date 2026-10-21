@@ -31,7 +31,10 @@ HANDOFF and wait."*, and numbered 4 on their word *"do lap 4, 2 and 3 will
 come from platterpus"*. It carries the two fixes for `.26` below, the pregap
 search and the disc's ISRCs, both needing the drive; the count our lap 1 S16
 promised; and three proposals, the read kept at the repeat limit (Platterpus's
-R7), `File(s):` and the superseded read's time. `status_block_is_current`
+R7), `File(s):` and the superseded read's time. Platterpus's round 36 lap 2 was
+released while the pull request's CI ran, so the lap was revised before its
+release to hold it, filed from `platterpus@cb82d620`, and to answer it: track
+1 cannot reach the two-search `Pregap source:` arm. `status_block_is_current`
 took the next lap to be the newest plus one, which the protocol never said: a
 number is claimed at release (§4a), and when our newest lap's
 `HANDSHAKE-NEXT-LAP` names a lower number no sent lap has claimed, the check
