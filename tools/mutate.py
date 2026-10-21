@@ -65,7 +65,7 @@ probe above is worth repeating rather than trusting this comment.
 **AND IT IS REPEATED, BEFORE EVERY SWEEP**, by inert_edit_probe() below. For
 nine days this paragraph said the probe was worth repeating while nothing
 repeated it: the premise EXCLUDED_TESTS rests on was retired in prose and read by
-no code (docs/KNOWN-ISSUES.md). Now a sweep makes the inert edit, runs the whole
+no code (docs/history/KNOWN-ISSUES-2026-10-21.md). Now a sweep makes the inert edit, runs the whole
 suite, and refuses to report a score if any test outside EXCLUDED_TESTS fails on
 it, or if a test inside it no longer does. `--probe-only` runs just that.
 `--skip-probe` exists for a sweep of a file the probe was just run for, and says

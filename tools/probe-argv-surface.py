@@ -29,8 +29,8 @@ have done:
                 whether it took effect was NOT observed. It was graded
                 `accepted` until 2026-09-27, and three quarters of the accepted
                 rows were this: the summary then said every value "took
-                effect" over rows nobody saw take effect (docs/KNOWN-ISSUES.md,
-                seam-commands row 1). It is not a finding, and the gate does not
+                effect" over rows nobody saw take effect
+                (docs/history/KNOWN-ISSUES-2026-10-21.md, seam-commands row 1). It is not a finding, and the gate does not
                 fire on it; it is a gap in what this probe can see.
     ignored     exit 0 and the value is NOT visible -- a silently dropped
                 argument, which is the outcome S-9 most wants written down

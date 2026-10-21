@@ -5622,7 +5622,8 @@ def sc_argv_probe_names_what_it_did_not_see():
     to take effect while its summary said every value "took effect or was
     refused". `docs/seam-commands.md` §7 is generated from it and carries that
     sentence; the shared file waits for the joint version bump, and the tool
-    that writes it is ours and is fixed now (docs/KNOWN-ISSUES.md, row 1).
+    that writes it is ours and is fixed now
+    (docs/history/KNOWN-ISSUES-2026-10-21.md, seam-commands row 1).
 
     Both arms, each from one real invocation: `-b 256`, which no header line
     shows, must be `unobservable`; `-s 667`, which `Offset:` shows, must still be

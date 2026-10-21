@@ -162,7 +162,7 @@ if "TIMING:" not in out or "  exit 3" not in out:
 
 # 6. Killed mid-row, as meson kills a test that overruns its timeout, it
 # names the row that was running (CI's macOS timeouts printed nothing at all,
-# so no run could say where 120 s went: docs/KNOWN-ISSUES.md).
+# so no run could say where 120 s went: docs/history/KNOWN-ISSUES-2026-10-21.md).
 with tempfile.TemporaryDirectory() as d:
     table = ["| fact | check |", "|---|---|"]
     table += [f"| fact {i} | `true` |" for i in range(8)]

@@ -295,7 +295,8 @@ INTERRUPTED_SHAPES = (
     # a pass can finish inside that window and the signal lands somewhere else.
     # So the first arm is what this USUALLY produces, the `between tracks` arm
     # is reachable here by accident rather than by design, and neither is
-    # scheduled. See docs/KNOWN-ISSUES.md -- including the second defect, that
+    # scheduled. See docs/history/KNOWN-ISSUES-2026-10-21.md -- including the
+    # second defect, that
     # this function's TemporaryDirectory deletes the artifacts a failing run
     # would need to settle which arm it took.
     re.compile(r"^Interrupted at: "
