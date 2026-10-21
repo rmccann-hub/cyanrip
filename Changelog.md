@@ -1,5 +1,33 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.26 — 2026-10-21 — **beta**
+===============================================
+**Released on the beta channel**, for round 36 to review with Platterpus's
+0.7.111, the release that reads its three new lines (their round 36 lap 2
+S3). Round 36's pin moves to it on the operator's word of 2026-10-21, *"once
+.26 is released, move round 36's pin to .26"*. Beta is this side's choice
+under v8 E3, as `.25`'s was, and the stable channel stays `.23` until a
+release of ours moves it.
+**What it ships since `.25`**, six changes to the binary, each in an entry
+below: upstream's `7dbe56a`, the media-change query asked at most once a
+second (`604f980`); `Accurate stream:` (`a52ea2b`) and `Recordable:`
+(`0a72e18`), two disc-header lines from what the drive declares; a pregap the
+TOC does not signal searched twice, with both counts when the searches
+disagree (`81805de`); the pregap search placing each Q sub-channel frame at
+the sector its own address names (`316682e`); and a track's ISRC read from its
+own Q frames when the drive's READ SUB-CHANNEL gives none (`9e1784e`).
+**One release of Platterpus's had to come first, 0.7.111**: an unrecognised
+disc line trips their parser's completeness sweep, and 0.7.111 reads both new
+header lines and the two-search form (`platterpus@7a3817a3`). **What the run
+on the drive must cover**, since every one of the six reads the drive: the
+three lines; `Gaps:` reading 94 frames for track 9 and 158 for track 4 in
+every log of the reference disc, which `tools/cross-rip.py` counts, with no
+`two searches read` clause; each `Disc ISRC:` line a code or a reason saying
+what the track's Q frames showed; and the timed rip of `.25` against `.26` on
+tracks 1 to 3, which round 36's close names (our lap 1 S18, their lap 2 S5).
+
 **This file keeps the releases still current**, `.23` (stable), `.24` and
 `.25`, with Unreleased: 1,361 lines and 90 KB, where it was 5,987 lines and
 377 KB, after the operator's review of 2026-10-19, item 3. `+platterpus.22`
