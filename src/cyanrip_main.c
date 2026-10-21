@@ -27,6 +27,7 @@
 
 #include <cdio/mmc.h>
 #include <cdio/mmc_ll_cmds.h>
+#include <cdio/mmc_hl_cmds.h>
 #include <cdio/read.h>
 #include <cdio/util.h>
 
@@ -110,8 +111,15 @@ const cyanrip_out_fmt crip_fmt_info[] = {
     [CYANRIP_FORMAT_PCM]      = { "pcm",      "PCM",  "pcm",   "s16le", 0,  0, 1, AV_CODEC_ID_NONE,      },
 };
 
-static int get_media_changed(CdIo_t *cdio) {
-    const int ret = cdio_get_media_changed(cdio);
+/* Some drives take several ms to answer, and the rip loops ask once per frame */
+#define MEDIA_CHECK_INTERVAL_US 1000000 /* one second */
+
+static int get_media_changed(cyanrip_ctx *ctx) {
+    const int64_t now = av_gettime_relative();
+    if (ctx->last_media_check && now - ctx->last_media_check < MEDIA_CHECK_INTERVAL_US)
+        return 0;
+    ctx->last_media_check = now;
+    const int ret = cdio_get_media_changed(ctx->cdio);
     return ret != 0 && ret != DRIVER_OP_UNSUPPORTED;
 }
 
@@ -300,6 +308,31 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
     cdio_get_drive_cap(ctx->cdio, &ctx->rcap, &ctx->wcap, &ctx->mcap);
 
+    /* What the drive declares about accurate stream, for the log's header.
+     * libcdio reads page 2Ah for the caps above but keeps no bit for it, so
+     * the page is asked for again. An image has no drive to ask. */
+    switch (cdio_get_driver_id(ctx->cdio)) {
+    case DRIVER_BINCUE:
+    case DRIVER_NRG:
+    case DRIVER_CDRDAO:
+        ctx->accurate_stream = CRIP_ACCURATE_STREAM_IMAGE;
+        ctx->disc_profile = CRIP_PROFILE_IMAGE;
+        break;
+    default: {
+        /* GET CONFIGURATION's current profile; a timeout of 0 is libcdio's
+         * default, mmc_timeout_ms */
+        cdio_mmc_feature_profile_t profile;
+        ctx->disc_profile = mmc_get_disctype(ctx->cdio, 0, &profile) == DRIVER_OP_SUCCESS ?
+                            (int)profile : CRIP_PROFILE_UNREADABLE;
+        uint8_t caps[256] = { 0 };
+        ctx->accurate_stream = CRIP_ACCURATE_STREAM_UNREADABLE;
+        if (mmc_mode_sense_10(ctx->cdio, caps, sizeof(caps),
+                              CDIO_MMC_CAPABILITIES_PAGE) == DRIVER_OP_SUCCESS)
+            ctx->accurate_stream = crip_accurate_stream_parse(caps, sizeof(caps));
+        break;
+    }
+    }
+
     char *msg = NULL;
     if (!(ctx->drive = cdio_cddap_identify_cdio(ctx->cdio, CDDA_MESSAGE_LOGIT, &msg))) {
         cyanrip_log(ctx, 0, "Unable to init cddap context!\n");
@@ -431,6 +464,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         }
         t->pregap_lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number,
                                                      &t->pregap_source);
+        t->pregap_lsn_second = CDIO_INVALID_LSN;
         t->dropped_pregap_start = CDIO_INVALID_LSN;
         t->merged_pregap_end = CDIO_INVALID_LSN;
         t->start_lsn = cdio_get_track_lsn(ctx->cdio, t->number);
@@ -497,6 +531,26 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         }
     }
 
+    /* Each pregap the TOC does not signal is searched for a second time, and
+     * the log gives both counts when the two searches disagree. Track 9 of
+     * the reference disc reads 94 frames in some rips and 95 in others, and
+     * track 4's 158 reads 0 in a few, each search returning rather than
+     * failing, so one search states one value of a measurement that varies
+     * (subchannel-pregap-varies). The second pass runs after every first
+     * search, so another track's reads come between a track's two searches
+     * on a disc with more than one; whether a drive answers the second from
+     * its cache is not known, and agreement prints nothing. The first
+     * search's answer is the one ripped, as before. */
+    for (int i = 0; i < ctx->nb_cd_tracks; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        if (t->track_is_data || t->pregap_source != CYANRIP_PREGAP_SRC_SUBCHANNEL)
+            continue;
+        enum cyanrip_pregap_source source;
+        lsn_t lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number, &source);
+        if (source == CYANRIP_PREGAP_SRC_SUBCHANNEL)
+            t->pregap_lsn_second = lsn;
+    }
+
     /* MusicBrainz and CDDB identify a disc by its audio tracks alone.
      * libdiscid's mb_disc_load_toc() stands the first track following the
      * last audio one in for the lead-out, one session gap earlier, no
@@ -528,7 +582,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     }
 
     /* For hot removal detection - init this so we can detect changes */
-    get_media_changed(ctx->cdio);
+    get_media_changed(ctx);
 
     *s = ctx;
     return 0;
@@ -1282,7 +1336,7 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
     for (int i = 0; i < t->frames; i++) {
         /* Detect disc removals */
-        if (get_media_changed(ctx->cdio)) {
+        if (get_media_changed(ctx)) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
             ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
@@ -1515,7 +1569,7 @@ repeat_ripping:;
     /* Read the actual CD data */
     for (int i = 0; i < frames; i++) {
         /* Detect disc removals */
-        if (get_media_changed(ctx->cdio)) {
+        if (get_media_changed(ctx)) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
             ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
@@ -2118,6 +2172,7 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
 
             nt->number = ct->number - 1;
             nt->pregap_lsn = CDIO_INVALID_LSN;
+            nt->pregap_lsn_second = CDIO_INVALID_LSN;
             nt->dropped_pregap_start = CDIO_INVALID_LSN;
             nt->merged_pregap_end = CDIO_INVALID_LSN;
             nt->start_lsn = ct->pregap_lsn;
@@ -3468,7 +3523,7 @@ static int cyanrip_run(int argc, char **argv)
                 track_read_extra(ctx, t);
                 cyanrip_log_track_end(ctx, t);
 
-                if (get_media_changed(ctx->cdio)) {
+                if (get_media_changed(ctx)) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
                     ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
@@ -3589,7 +3644,7 @@ static int cyanrip_run(int argc, char **argv)
                 track_read_extra(ctx, t);
                 cyanrip_log_track_end(ctx, t);
 
-                if (get_media_changed(ctx->cdio)) {
+                if (get_media_changed(ctx)) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
                     ctx->exit_class = CRIP_EXIT_IOERR;
                     break;

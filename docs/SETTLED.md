@@ -159,9 +159,9 @@ tag that overstates or understates it.
 Checked against upstream's `master` at `7dbe56a` on 2026-10-16, in a clone of
 upstream, not recalled: every row here passed against it, and every `file:line`
 below is its. Rows for reports 1 to 18 were first checked against `f8ebf48` and
-those for 19 to 23 against `b40c1f0`. Our `master` mirror is at `b40c1f0` until
-it is synced, and `7dbe56a` changes none of the code the rows grep for, so they
-pass against either. **`-Y` was on this list from
+those for 19 to 23 against `b40c1f0`. Our `master` mirror moved from `b40c1f0`
+to `7dbe56a` with the sync of 2026-10-20, and `7dbe56a` changes none of the code
+the rows grep for, so they pass against either. **`-Y` was on this list from
 memory and is wrong: upstream has it.** That is the whole reason the list is
 checked rather than written.
 

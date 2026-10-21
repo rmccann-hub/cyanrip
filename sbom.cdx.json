@@ -64,11 +64,11 @@
             "properties": [
               {
                 "name": "cyanrip-fork:measured:fork-point",
-                "value": "b40c1f006a000a8bbd2d7ccc438a17006b9b71a0"
+                "value": "7dbe56aad2f0ab039ab7b238a30ed662b1c017de"
               },
               {
                 "name": "cyanrip-fork:measured:upstream-tip",
-                "value": "b40c1f006a000a8bbd2d7ccc438a17006b9b71a0"
+                "value": "7dbe56aad2f0ab039ab7b238a30ed662b1c017de"
               }
             ]
           }
@@ -221,7 +221,7 @@
         },
         {
           "name": "cyanrip-fork:ci-git-tool",
-          "value": "https://github.com/rmccann-hub/claude-code-skills@ef35082deedab76d28664078144c5f9f86ff6850"
+          "value": "https://github.com/rmccann-hub/claude-code-skills@9c545d63190f6a5d4fa7aa7e86da33b6dc330fe4"
         },
         {
           "name": "cyanrip-fork:ci-uv",
@@ -1275,5 +1275,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:69136fbc-c6c8-52a6-a42a-f0a2b8c51e58"
+  "serialNumber": "urn:uuid:68871dcb-a7ef-5d97-9044-13011abc94e6"
 }

@@ -29,6 +29,7 @@
 #include "version.h"
 
 #include "utils.h"
+#include "drive_caps.h"
 
 #include <cdio/paranoia/paranoia.h>
 #include <cdio/logging.h>
@@ -347,6 +348,10 @@ typedef struct cyanrip_track {
 
     lsn_t pregap_lsn;
     enum cyanrip_pregap_source pregap_source; /* Provenance of pregap_lsn */
+    /* A second sub-channel search's answer, made after every first search;
+     * CDIO_INVALID_LSN when none was made or it did not complete. Reported
+     * beside pregap_lsn when the two disagree, and never used to rip. */
+    lsn_t pregap_lsn_second;
     lsn_t start_lsn;
     lsn_t start_lsn_sig;
     lsn_t end_lsn;
@@ -461,6 +466,7 @@ typedef struct cyanrip_ctx {
     cdrom_drive_t     *drive;
     cdrom_paranoia_t  *paranoia;
     CdIo_t            *cdio;
+    int64_t            last_media_check; /* When get_media_changed() last asked the drive */
     FILE              *logfile[CYANRIP_FORMATS_NB];
     FILE              *cuefile[CYANRIP_FORMATS_NB];
     cyanrip_settings   settings;
@@ -496,6 +502,8 @@ typedef struct cyanrip_ctx {
     cdio_drive_read_cap_t  rcap;
     cdio_drive_write_cap_t wcap;
     cdio_drive_misc_cap_t  mcap;
+    enum CripAccurateStream accurate_stream; /* page 2Ah's declaration, or why there is none */
+    int disc_profile; /* the drive's current profile, or CRIP_PROFILE_IMAGE/_UNREADABLE */
 
     /* Metadata */
     AVDictionary *meta;

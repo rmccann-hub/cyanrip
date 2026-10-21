@@ -80,6 +80,26 @@ check(not rep.names_checked and "names not checked" in rep.summary(),
       f"with no local list the report must say the name was not checked, not "
       f"that there was none: {rep.summary()}")
 
+# A JSON string spells a newline as the two characters backslash and n, so a
+# path, hostname or name that starts a line inside one follows the letter n,
+# and a boundary that reads n as part of a longer word lets it through.
+# Platterpus's export kept a username that way (their round 35 lap 18 S9),
+# and every boundary here had the same shape (S10).
+JSON = (r'{"log": "start\n/home/alice/Music\nC:\\Users\\alice\\x\n'
+        r'workstation-07 ripped\tAlice Example\r/Users/alice/y"}' "\n")
+jnew, _ = redact.redact(JSON, hosts=[HOST], names=[NAME])
+check("alice" not in jnew,
+      f"a home folder after a JSON escape survived:\n{jnew}")
+check("workstation-07" not in jnew,
+      f"a hostname after a JSON escape survived:\n{jnew}")
+check(NAME not in jnew,
+      f"the owner's name after a JSON escape survived:\n{jnew}")
+check(r"\n~/Music\n" in jnew and r"\r~/y" in jnew,
+      f"the escape before a replaced path must be kept:\n{jnew}")
+jfound = {k.split(" '")[0] for _, k in redact.findings(JSON, [NAME])}
+check("home path" in jfound and "the owner's name" in jfound,
+      f"findings() must see what follows a JSON escape: {jfound}")
+
 same, rep = redact.redact_bytes(b"\xff\xfe binary /home/alice", names=None)
 check(same == b"\xff\xfe binary /home/alice" and not rep.changed(),
       "bytes that are not UTF-8 are not rewritten")
