@@ -20,8 +20,8 @@ the file that decides it: the libraries and their minimum versions from
 src/meson.build, the toolchain from meson.build, the programs the tools and
 tests run from their subprocess calls, the network endpoints from src/'s
 string literals, CI from .github/, the shared seam documents from
-tools/seam-sync-check.py, and the local workarounds from CLAUDE.md's section
-on them. It does not copy release-manifest.json, which names the releases: a
+tools/seam-sync-check.py, and the local workarounds from docs/KNOWN-ISSUES.md's
+section on them. It does not copy release-manifest.json, which names the releases: a
 copy made every release regenerate this map for no new fact (operator,
 2026-10-07). What cannot be derived --
 what a library is FOR -- sits in a table keyed by the derived name, and the
@@ -310,9 +310,10 @@ def shared_documents():
 
 
 def mitigations():
-    """The bold lead of each bullet in CLAUDE.md's section on external bugs."""
-    text = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
-    m = re.search(r"^## Known external bugs worked around here\n(.*?)^## ",
+    """The bold lead of each bullet in KNOWN-ISSUES.md's section on external
+    bugs, its last; CLAUDE.md held it until 2026-10-21."""
+    text = (ROOT / "docs" / "KNOWN-ISSUES.md").read_text(encoding="utf-8")
+    m = re.search(r"^## Known external bugs worked around here\n(.*?)(?=^## |\Z)",
                   text, re.S | re.M)
     out = []
     for b in re.finditer(r"^- \*\*(.+?)\*\*", m.group(1), re.S | re.M):
@@ -597,8 +598,8 @@ def markdown(model, meas):
       "each list: `meson.build`, `src/meson.build`, the subprocess calls in "
       "`tools/` and `tests/`, the URL literals in `src/`, "
       "`.github/workflows/` and `.github/mingw-build.sh`, "
-      "`tools/seam-sync-check.py` and `CLAUDE.md`'s section on external "
-      "bugs. **The machine-readable form is "
+      "`tools/seam-sync-check.py` and `docs/KNOWN-ISSUES.md`'s section on "
+      "external bugs. **The machine-readable form is "
       "`sbom.cdx.json`**, CycloneDX 1.7 (ECMA-424, 2nd edition), for any "
       "application that reads a bill of materials. Regenerate with "
       "`tools/gen-dependency-map.py`; the suite's `Dependency map is current` "
@@ -735,8 +736,8 @@ def markdown(model, meas):
     a("## External defects worked around (local mitigations)")
     a("")
     a("Each is a liability with a removal condition, not a fix. The details "
-      "and what would end each are in `CLAUDE.md`, *Known external bugs "
-      "worked around here*, from which this list is read:")
+      "and what would end each are in `docs/KNOWN-ISSUES.md`, *Known external "
+      "bugs worked around here*, from which this list is read:")
     a("")
     for t in model["mitigations"]:
         a(f"- {t}")

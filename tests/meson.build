@@ -395,6 +395,12 @@ test('Argv surface probe', python,
 test('Fork options are long-only', python,
      args: [ files('option_letters.py'), cyanrip_exe ])
 
+## CLAUDE.md is loaded whole by every session, so it holds only the rules a
+## session needs on every task: 300 lines and 32 KiB, the operator's review of
+## 2026-10-19, item 3. Its history is in docs/history/.
+test('CLAUDE.md within its cap', python,
+     args: [ files('claude_md_cap.py') ])
+
 ## And the table the probe publishes, in the shared docs/seam-commands.md §7,
 ## bounded by its generated-block delimiters so the check never reads prose the
 ## other side wrote. Without this the table went stale for weeks after the
