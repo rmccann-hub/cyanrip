@@ -84,6 +84,18 @@ timed rip of `.25` against `.26` in the next Full run):
   `sub-channel (not signalled by TOC; two searches read 94 and 95 frames, the
   first is used)`. The first search's answer is ripped, as before
   (`subchannel-pregap-varies`).
+- **The pregap search places each Q sub-channel frame at the sector its own
+  address names**, not the sector asked for, and aims later reads by how far
+  off the drive answers once two frames agree. In the `Gaps:` lists of the
+  reference disc's 227 filed logs, track 9's pregap read 94 frames in 192, 95
+  in 34 and none in 1, and track 4's 158 in 221 and none in 6. The search could
+  vary only if a frame answered for another sector, and `tests/subq.c`, on a
+  simulated drive, reproduces both with the old search and neither with the
+  new one. On a drive whose frames all answer for the sector asked the answer
+  is unchanged; on one whose frames are all a sector off, it moves to the
+  sector the frames name. A frame of a third track arriving during the
+  backtrack no longer ends the process on an assert (exit 134). No log line
+  changes; the rig's reference-disc rips confirm it (`docs/pregap-carry.md`).
 
 The three lines are new text a consumer parses, so they are proposed in
 round 36's first lap and `.26` is released once Platterpus's reader takes

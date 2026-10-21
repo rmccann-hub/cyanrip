@@ -40,28 +40,44 @@ ship betas, and an acceptance run of both passes. So *"not now"* and *"round
 31"* stopped being reasons. Where an entry below still says why it waited,
 that was the reason before 2026-10-05, kept as the record.
 
-### A sub-channel pregap reads one frame different between rips, and the log states one value
+### A sub-channel pregap reads differently between rips, and the log states one value
 
 **Found 2026-10-07, reading the run on `.21`** (`docs/rig-2026-10-07-ca3f3ea/`),
 and as old as the filed record: section P3 ripped track 1 twice, minutes apart,
 and one `Gaps:` list says `94 frame pregap in track 9` and the other `95`.
-Counted over every filed log of the reference disc, track 9's pregap reads 94
-and 95 in eleven sessions from 2026-09-03 (`978f9b0`) to this one; no other
-track's does. The TOC does not signal it, so the value is our sub-channel
-search's, and the track block says so (`Pregap source: sub-channel`).
+Counted again 2026-10-21 from the `Gaps:` lists of the reference disc's 227
+filed logs, from 33 sessions on the BDR-209D: track 9's pregap read 94 frames
+in 192, 95 in 34 and none in 1, and track 4's 158 in 221 and none in 6. No
+other track's varied. The TOC signals neither, so each value is our sub-channel
+search's, and the track block says so (`Pregap source: sub-channel`). This
+entry said *"no other track's does"* of track 9 for two weeks while track 4's
+zeroes were counted in `STATUS.md`.
 
-**What it costs**: under the default action the pregap merges into track 8,
-which ends at track 9's `INDEX 01` either way, so no audio byte moves; the cue
-sheet's `INDEX 00` for track 9 does, by one frame. With `-p` set to drop or to
-a track of its own, the audio would move by 588 samples.
+**What it costs**: under the default action the pregap merges into the track
+before, which ends at the track's `INDEX 01` either way, so no audio byte
+moves; the cue sheet's `INDEX 00` does, by a frame for track 9 and by dropping
+it for track 4. With `-p` set to drop or to a track of its own, the audio would
+move.
 
-**Not fixed, and why**: which frame is right, and why the search lands on
-either, needs the drive. The search reads Q sub-channel frames near the index
-boundary, and whether a frame there reads with a bad CRC or a stale index is a
-question of the drive's reporting, which no image reproduces. What the log can
-say without a drive is that the value is one reading; how it should say it is a
-line a consumer renders, so it is for a round to agree, and `STATUS.md`'s
-`subchannel-pregap-varies` names which (round 35 when this was corrected).
+**Fixed in the code for `.26`, without a drive, and the drive has to confirm
+it.** The search's answer was a function of the Q frames the drive returned, one
+per sector asked for, each taken to belong to that sector, so two searches
+could disagree only if a frame answered for another sector, or a corrupt frame
+passed its CRC. `tests/subq.c` reproduces both symptoms with the old search on
+a simulated drive: one read answered by the next sector's frame gives 95, and a
+first read answered by the previous track's frame gives none. Each mode-1 frame
+carries its own address, so the search now places each frame there, aims later
+reads by how far off the drive answers once two frames agree, and asks again
+for a sector answered by another's frame. On a drive whose frames all answer
+for the sector asked the answer is unchanged, compared over 200,000 simulated
+searches. It also removes an assert a stale frame of a third track could reach,
+which ended the process with exit 134. The reasoning, the comparison and the
+revert-proof are in `docs/pregap-carry.md`. **What only a drive can say** is
+whether the BDR-209D's frames do answer for other sectors: from `.26` a
+disagreement between the two searches is printed on `Pregap source:`, so rig
+rips of the reference disc with that line absent, and `Gaps:` reading 94 and
+158 throughout, are the confirmation. `STATUS.md`'s `subchannel-pregap-varies`
+tracks it.
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
