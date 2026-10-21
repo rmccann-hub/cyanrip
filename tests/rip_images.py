@@ -3042,8 +3042,13 @@ def sc_changelog_names_every_release():
     """
     ledger = ROOT / "docs" / "release-ledger.tsv"
     changelog = ROOT / "Changelog.md"
-    if not ledger.exists() or not changelog.exists():
-        fail("changelog_releases: ledger or changelog missing")
+    # Releases that aged out of Changelog.md, newest first, continuing it
+    # (moved 2026-10-21, the operator's review of 2026-10-19, item 3). Read as
+    # the file's continuation, so a heading must be in one or the other and the
+    # order runs on across both.
+    archive = ROOT / "docs" / "history" / "Changelog-archive.md"
+    if not ledger.exists() or not changelog.exists() or not archive.exists():
+        fail("changelog_releases: ledger, changelog or archive missing")
 
     rows = []
     for line in ledger.read_text(encoding="utf-8").splitlines():
@@ -3058,7 +3063,7 @@ def sc_changelog_names_every_release():
              "the format moved and this check is now guarding nothing")
 
     ctext = changelog.read_text(encoding="utf-8")
-    clines = ctext.split("\n")
+    clines = ctext.split("\n") + archive.read_text(encoding="utf-8").split("\n")
 
     # A HEADING, not a mention. The version string appears throughout the prose
     # of neighbouring entries -- `.12` is named 20 times in this file -- so a
@@ -3077,7 +3082,8 @@ def sc_changelog_names_every_release():
 
     missing = [(s, v) for s, _, v in rows if v not in heads]
     if missing:
-        fail("changelog_releases: Changelog.md has no heading for published "
+        fail("changelog_releases: Changelog.md and its archive have no heading "
+             "for published "
              + ", ".join(f"{v} (release_seq {s})" for s, v in missing)
              + " -- release-ledger.tsv and release-manifest.json name it and "
                "the changelog does not, so the one artifact a human reads "
