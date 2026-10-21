@@ -33,6 +33,14 @@ subq_test = executable('subq_test',
 )
 test('Q sub-channel decoding', subq_test)
 
+## The read kept at the -Z repeat limit: the rule in spool.h, which a disc
+## image reaches only through the shim and AccurateRip not at all.
+spool_test = executable('spool_test',
+    sources: [ 'spool.c' ],
+    include_directories: [ '../src' ],
+)
+test('Read kept at the repeat limit', spool_test)
+
 ## Includes accurip.c rather than linking it: the response helpers are static,
 ## and this is the one path NO disc image can reach -- rip_images.py passes
 ## -N -A -U on every scenario, so crip_fill_accurip() returns before any of it.

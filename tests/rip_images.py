@@ -7588,6 +7588,12 @@ def sc_repeat_limit_keeps_most_agreed():
     the source .bin with the expected XOR, and the log's EAC CRC32 against
     zlib's CRC32 of the delivered file, which is what EAC CRC32 is. -P 0 so
     each pass is one read of the sector, as in sc_repeat_limit().
+
+    The second schedule runs again with --prefer-accuraterip-match (round 36,
+    our lap 4 S11, Platterpus's lap 3 S4). Under -A no read can match
+    AccurateRip, so the flag must change nothing: the same read kept and the
+    same line. Its preference itself is tests/spool.c's, since no fixture is
+    in AccurateRip's database.
     """
     import zlib
     needs_preload_shim("repeat_limit_keeps_most_agreed")
@@ -7598,10 +7604,13 @@ def sc_repeat_limit_keeps_most_agreed():
         return
     src = (FIX / "cdda.bin").read_bytes()
     sec, flip = 2352, 100
-    for run, cycle, limit, want, last in ((2, 2, 3, 1, 2), (2, 3, 5, 2, 3)):
-        tag = f"run {run} cycle {cycle} -r {limit}"
-        out = WORK / f"out_keeps_{run}_{cycle}"
-        count = WORK / f"keeps_{run}_{cycle}.count"
+    for run, cycle, limit, want, last, flags in (
+            (2, 2, 3, 1, 2, ()), (2, 3, 5, 2, 3, ()),
+            (2, 3, 5, 2, 3, ("--prefer-accuraterip-match",))):
+        tag = f"run {run} cycle {cycle} -r {limit}" + "".join(" " + f for f in flags)
+        name = f"{run}_{cycle}" + ("_ar" if flags else "")
+        out = WORK / f"out_keeps_{name}"
+        count = WORK / f"keeps_{name}.count"
         env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
                    CRIP_FLIP_SECTOR=str(flip), CRIP_FLIP_CYCLE=str(cycle),
                    CRIP_FLIP_RUN=str(run), CRIP_FLIP_OUT=str(count),
@@ -7610,7 +7619,7 @@ def sc_repeat_limit_keeps_most_agreed():
         ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                      "-P", "0", "-Z", "2", "-r", str(limit), "-l", "1",
                      "-o", "pcm", "-D", out, "-F", "{track}", "-L", "log",
-                     env=env)
+                     *flags, env=env)
         if ec != 0:
             fail(f"repeat_limit_keeps_most_agreed: {tag}: cyanrip exited {ec}")
             continue
@@ -7631,6 +7640,12 @@ def sc_repeat_limit_keeps_most_agreed():
                  + (f", the last read's" if seen == last else ""))
             continue
         text = (out / "log.log").read_text(errors="replace")
+        inv = next((ln for ln in text.splitlines()
+                    if ln.startswith("Invoked as:")), "")
+        if any(f not in inv.split() for f in flags):
+            fail(f"repeat_limit_keeps_most_agreed: {tag}: the log's invocation "
+                 f"does not carry {flags}, so this run tested nothing new: "
+                 f"{inv!r}")
         m = re.search(r"^  EAC CRC32:\s+([0-9A-F]{8})", text, re.M)
         crc = f"{zlib.crc32(got) & 0xFFFFFFFF:08X}"
         if not m or m.group(1) != crc:

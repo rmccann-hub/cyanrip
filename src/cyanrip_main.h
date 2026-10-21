@@ -178,6 +178,7 @@ typedef struct cyanrip_settings {
     int cache_probe;
     char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
     int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
+    int prefer_ar_match; /* --prefer-accuraterip-match: at the -Z repeat limit, a read AccurateRip matches first */
     int generate_cue_only;
     int disable_data_tracks;
     int disable_acoustid;

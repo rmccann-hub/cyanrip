@@ -69,6 +69,7 @@ ALLOWED = {
                                    "which stays, and a run folder built in a "
                                    "temporary repository for HR-2's cases"),
     "tests/personal_details.py": (1, "its docstring, naming its scope"),
+    "tests/spool.c": (1, "a comment naming the run its case came from"),
     "tests/rip_images.py": (5, "two prefix tests on folders listed by "
                                "tools/evidence.py, and three docstrings"),
     "tools/cross-rip.py": (3, "its docstring's examples"),
