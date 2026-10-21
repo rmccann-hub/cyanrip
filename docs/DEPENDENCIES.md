@@ -64,7 +64,7 @@ GitHub Actions. Each workflow, and what starts it:
 - **macOS packages (brew):** `curl`, `ffmpeg`, `libcdio-paranoia`, `libmusicbrainz`, `meson`, `nasm`, `ninja`, `pkg-config`, `qrencode`.
 - **Windows packages (MSYS2):** `autoconf`, `automake`, `base-devel`, `git`, `libtool`, `mingw-w64-ucrt-x86_64-cmake`, `mingw-w64-ucrt-x86_64-lame`, `mingw-w64-ucrt-x86_64-libcdio-paranoia`, `mingw-w64-ucrt-x86_64-libvorbis`, `mingw-w64-ucrt-x86_64-libxml2`, `mingw-w64-ucrt-x86_64-meson`, `mingw-w64-ucrt-x86_64-nasm`, `mingw-w64-ucrt-x86_64-nghttp2`, `mingw-w64-ucrt-x86_64-ninja`, `mingw-w64-ucrt-x86_64-opus`, `mingw-w64-ucrt-x86_64-toolchain`, `zip`.
 - **Sources the Windows build compiles**, `.github/mingw-build.sh`, each fetched as one commit by its full SHA, with the release it is: <https://github.com/curl/curl.git> at `3163ec065643` (curl-8_23_0), <https://github.com/notroj/neon.git> at `170c36704bfc` (0.37.1), <https://github.com/cyanreg/libmusicbrainz.git> at `2398b8765ed8` (no release), <https://github.com/fukuchi/libqrencode.git> at `715e29fd4cd7` (v4.1.1), <https://github.com/FFmpeg/FFmpeg.git> at `946fcce07b6d` (n9.0.2). Every one is pinned.
-- **Python tools installed from git:** <https://github.com/rmccann-hub/claude-code-skills> at `ef35082deeda`, run with uv `0.13.1` on Python `3.15`. Each is pinned by full commit SHA.
+- **Python tools installed from git:** <https://github.com/rmccann-hub/claude-code-skills> at `9c545d63190f`, run with uv `0.13.1` on Python `3.15`. Each is pinned by full commit SHA.
 
 ## Network services cyanrip contacts
 
