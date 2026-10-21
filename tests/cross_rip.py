@@ -58,8 +58,8 @@ check(n == 1 and names == "after-cancel.log",
       f"alone (got x{n} {names!r})")
 n, _ = crc_line(out, "B0D122E7")
 check(n == 5, f"2026-09-24 bundle: {n} reads of B0D122E7, want 5")
-check(len(re.findall(r"DISAGREE$", out, re.M)) == 1,
-      "2026-09-24 bundle: more than track 1 disagrees")
+check(len(re.findall(r"EAC CRC32.*DISAGREE$", out, re.M)) == 1,
+      "2026-09-24 bundle: more than track 1's checksums disagree")
 
 ec, out = run(R0911)
 check(ec == 1, f"2026-09-11 bundle: exit {ec}, want 1")
@@ -90,7 +90,8 @@ with tempfile.TemporaryDirectory() as t:
     (d / "b.log").write_text(shifted, encoding="utf-8")
     ec, out = run(d)
     check(ec == 0, f"a different offset was compared as the same read: exit {ec}\n{out}")
-    check(out.count("disc ") == 2, "a different offset did not form its own group")
+    check(len(re.findall(r"^disc \S+ at offset ", out, re.M)) == 2,
+          "a different offset did not form its own group")
 
 with tempfile.TemporaryDirectory() as t:
     d = pathlib.Path(t)
@@ -169,6 +170,41 @@ with tempfile.TemporaryDirectory() as t:
           f"a kept read that is not the last: the last read is not in the log:\n{out}")
     check(crc_line(out, "E0036697")[0] == 2,
           f"the kept read was counted as the last read too:\n{out}")
+
+# --- pregaps, from each log's Gaps: list ------------------------------------
+# subchannel-pregap-varies: the 2026-09-24 session's angle-bracket-2.log gives
+# track 9's pregap as 95 frames where its seven other logs give 94, which no
+# reading of the session counted. Filed bytes, so the attribution is exact.
+ec, out = run(R0924)
+check(re.search(r"^  track 9: 94 frames in 7, 95 frames in 1  DISAGREE$", out, re.M)
+      and re.search(r"^      95 frames  x1  full-acceptance-angle-bracket-2\.log$",
+                    out, re.M),
+      f"2026-09-24 bundle: track 9's 95-frame pregap not reported:\n{out}")
+ec, out = run(R0911)
+check(re.search(r"^  track 9: 94 frames in all 8  agree$", out, re.M)
+      and re.search(r"^  track 4: 158 frames in all 8  agree$", out, re.M),
+      f"2026-09-11 bundle: its pregaps should agree:\n{out}")
+
+# One log, and a copy of it whose list leaves out track 4's 158 frames: the
+# checksums agree, so the pregap alone makes it a disagreement, and the track
+# the copy does not name reads `none`, the way track 4 read in six filed logs.
+with tempfile.TemporaryDirectory() as tmp:
+    d = pathlib.Path(tmp)
+    src = R0911 / "full-acceptance-angle-bracket.log"
+    text = src.read_text(encoding="utf-8")
+    (d / "a.log").write_text(text, encoding="utf-8")
+    (d / "b.log").write_text(text, encoding="utf-8")
+    ec, out = run(d)
+    check(ec == 0 and "track 4: 158 frames in all 2  agree" in out,
+          f"a log and its copy: exit {ec}, want 0:\n{out}")
+    gone = re.sub(r"^    158 frame pregap in track 4, [^\n]*\n", "", text, flags=re.M)
+    check(gone != text, "the copy's track 4 line was not removed")
+    (d / "b.log").write_text(gone, encoding="utf-8")
+    ec, out = run(d)
+    check(ec == 1 and re.search(r"^  track 4: 158 frames in 1, none in 1  DISAGREE$",
+                                out, re.M)
+          and re.search(r"^      none  x1  b\.log$", out, re.M),
+          f"a pregap left out of one list: exit {ec}, want 1 and track 4 none:\n{out}")
 
 # --- a positive line that contains a negative phrase -------------------------
 # Platterpus's round 27 lap 5 §C: a classifier that decides NEGATIVE on a phrase

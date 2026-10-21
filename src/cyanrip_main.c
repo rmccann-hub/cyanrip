@@ -137,6 +137,7 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
     av_dict_free(&t->meta);
     av_dict_free(&t->cdtext);
     av_freep(&t->isrc_disc);
+    av_freep(&t->isrc_disc_reason_owned);
     crip_error_pos_free(t);
     av_free(t->ar_db_entries);
     av_free(t->acoustid_fingerprint);
@@ -984,7 +985,52 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                 t->isrc_disc_reason = "the driver does not report reading ISRC";
             } else {
                 const char *isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
-                if (!isrc_str) {
+                /* None from the drive's READ SUB-CHANNEL, as the BDR-209D
+                 * answered for every track of a disc whose ISRCs EAC's cue
+                 * gives (the claude-code-skills session's known fixes of
+                 * 2026-10-21, item 8): read the track's own Q frames for a
+                 * mode-3 one, then, if none carried a code, ask libcdio again
+                 * with the drive's head inside the track, since a drive may
+                 * answer for wherever it last read, as the pre-emphasis read
+                 * below allows for. Not on an image, which has no sub-channel
+                 * and whose answer is the cue sheet's. */
+                struct cyanrip_subq_isrc scan = { 0 };
+                int scanned = 0;
+                if (!isrc_str && !crip_is_image_driver(ctx)) {
+                    const lsn_t start = cdio_get_track_lsn(ctx->cdio, t->cd_track_number);
+                    const lsn_t last = cdio_get_track_last_lsn(ctx->cdio, t->cd_track_number);
+                    if (start != CDIO_INVALID_LSN && last != CDIO_INVALID_LSN && last > start) {
+                        /* A second in, clear of the pregap and of a drive
+                         * answering a sector or more off, for 200 sectors: an
+                         * ISRC the disc carries is in at least one frame of
+                         * every hundred. */
+                        lsn_t first = start + 75 <= last ? start + 75 : start;
+                        int count = last - first + 1 < 200 ? last - first + 1 : 200;
+                        cyanrip_read_isrc_subq(ctx->cdio, first, count, &scan);
+                        scanned = 1;
+                        if (!scan.found)
+                            isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
+                    }
+                }
+                if (scan.found && !crip_code_is_set(scan.isrc)) {
+                    t->isrc_disc_reason = "libcdio returned none, and a Q frame of the "
+                                          "track carried an all-zero ISRC";
+                    t->isrc_disc_none = 1;
+                } else if (scan.found) {
+                    if (!(t->isrc_disc = av_strdup(scan.isrc))) {
+                        t->isrc_disc_reason = "out of memory";
+                    } else if (!crip_isrc_is_iso3901(scan.isrc)) {
+                        t->isrc_disc_reason = "not an ISO 3901 code, so not used";
+                        t->isrc_disc_malformed = 1;
+                    }
+                } else if (!isrc_str && scanned) {
+                    char reason[160];
+                    cyanrip_subq_isrc_reason(&scan, reason, sizeof(reason));
+                    t->isrc_disc_reason_owned = av_strdup(reason);
+                    t->isrc_disc_reason = t->isrc_disc_reason_owned ?
+                                          t->isrc_disc_reason_owned : "libcdio returned none";
+                    t->isrc_disc_none = 1;
+                } else if (!isrc_str) {
                     t->isrc_disc_reason = "libcdio returned none";
                     t->isrc_disc_none = 1;
                 } else {

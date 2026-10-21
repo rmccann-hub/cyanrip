@@ -3320,6 +3320,21 @@ def sc_status_block_is_current():
         want_side = "ours" if (theirs_lap or 0) > (
             ours_newest.lap if ours_newest else 0) else "theirs"
         want_next = top + 1
+        # A lap can leave numbers below it to the other side: our round 36
+        # lap 4 was numbered on our operator's word "do lap 4, 2 and 3 will
+        # come from platterpus", and names their lap 2 as next. The protocol
+        # claims a number at release (§4a), so nothing forbids it. When our
+        # newest sent lap is the top and its HANDSHAKE-NEXT-LAP names a lower
+        # number no sent lap of the round has claimed, that lap is next.
+        if ours_newest and ours_newest.lap == top:
+            nm = re.search(r"^HANDSHAKE-NEXT-LAP:[ \t]*(\d+) \((ours|yours)\):",
+                           ours_newest.path.read_text(encoding="utf-8"), re.M)
+            claimed = {lp.lap for lp in rg.load_rounds(every_lap=True)
+                       if lp.number == current.number and lp.lap is not None
+                       and not lp.held}
+            if nm and int(nm.group(1)) < top and int(nm.group(1)) not in claimed:
+                want_next = int(nm.group(1))
+                want_side = "ours" if nm.group(2) == "ours" else "theirs"
         # A CLOSED round has no next lap. The next is the next round's lap 1,
         # and the provider opens every round (PROTOCOL.md §1a), so it is ours.
         # Round 30 was the first round the block outlived; counting on from

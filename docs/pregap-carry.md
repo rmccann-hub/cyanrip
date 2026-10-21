@@ -247,8 +247,69 @@ test are static.
 **Retired:** the risk that the sub-channel *decoder* is wrong. That is now
 testable, tested, and revert-proofed in this environment.
 
-**Not retired, unchanged from the section above:** the MMC read itself. No disc
-image reaches it — images resolve pregaps from the TOC — so a real
-`Pregap source: sub-channel` success has still **never executed anywhere**, and a
-drive exhibiting the binary-encoding quirk remains untested end to end. The
-hardware-validation procedure above is still the one to follow.
+**Not retired by the tests:** the MMC read itself. No disc image reaches it —
+images resolve pregaps from the TOC. **A drive has run it**, which this section
+denied until 2026-10-21: the BDR-209D printed `Pregap source: sub-channel (not
+signalled by TOC)` on 13 tracks on 2026-08-04 (`docs/rig-2026-08-04/`) and on
+every rig rip of the reference disc since. A drive exhibiting the
+binary-encoding quirk remains untested end to end.
+
+## The search places each frame by its own address (2026-10-21)
+
+The algorithm was left as UltraFuzzy designed it until the rig showed it
+varying. `tools/cross-rip.py` compares every log's `Gaps:` list, which names
+every track's pregap, ripped or not, where a track block exists only for the
+tracks a log ripped. Over the whole filed record, `python3 tools/evidence.py run -- python3 tools/cross-rip.py docs/rig-* docs/handshake/inbound/artifacts`
+on 2026-10-21, it reads 237 files as cyanrip logs of the reference disc, all
+from the BDR-209D, a log filed twice counted twice: track 9's pregap read 94
+frames in 200, 95 in 36 and none in 1, and track 4's 158 in 230 and none in 7.
+No other track's varied. On the 18-track disc the drive reads differently
+each time, three tracks' did, by more: track 15's 98 or 109, track 16's 202 or
+264, and track 18's none or 187.
+
+**Why it varied, from the code.** The search's answer is a function of the Q
+frames it is given, one per sector it asks for, because each frame was taken
+to belong to the sector asked for. Retries and CRC failures change which
+sectors are read and when, never which sector the bounds settle on. So two
+searches of one disc can only disagree if the drive answered some request with
+another sector's frame, or a corrupt frame passed its CRC, one chance in
+65,536. Which of the two happened on the rig is not measured; the first fits
+both symptoms and `tests/subq.c` reproduces them with the old search: one read
+answered by the next sector's frame gives 95 for track 9, and a first read
+answered by a frame of track 3 gives none for track 4's 158.
+
+**The change.** A mode-1 Q frame carries its own absolute address, so each
+frame is placed at the sector it names, not the one asked for, and the bounds
+move by what it says about that sector. The next read is aimed by how far off
+the drive answers, once two frames in a row agree on it, so a drive whose every
+frame is one sector off is followed and a single slip is not. A target answered
+by another sector's frame is asked for again, as often as a frame failing its
+CRC would be. A mode-2 or mode-3 frame names no track and carries only its
+frame number within the second: the old rule that one right after the previous
+track's last known sector belongs to the previous track is kept, but only where
+the drive's alignment puts the frame, since by its frame number alone it could
+be a second away.
+
+**What it removes.** The assert in the backtrack, `subq.track_number ==
+prev_track_number`, kept above as an invariant of the algorithm, was reachable
+from the drive: a valid frame of any other track arriving while backtracking
+ended the process with exit 134. A frame of another track now says nothing
+about this boundary. The other asserts went with the code they guarded.
+
+**What it keeps.** On a drive whose frames all answer for the sector asked, the
+answer is the same: 200,000 random searches of aligned simulated drives, with
+CRC failures and mode-3 frames placed at random, gave the same answer and
+source from the old search and the new, and the same reads but for 551 where a
+mode-3 frame right after the previous track's start let the new search stop one
+read sooner. That comparison was run in the session, not committed;
+`tests/subq.c` pins named cases instead.
+
+**Revert-proof.** With the old search built into the tree, `tests/subq.c`
+fails 17 checks and then aborts on the assert: every shifted drive, every
+phase of a drive slipping one read in two to seven, and the stale first frame.
+
+**Still needs the drive.** Whether the BDR-209D's frames ever answer for
+another sector is the inference above, not a measurement. The next rig rips of
+the reference disc settle it: from `.26` the log says when two searches
+disagree (`Pregap source: sub-channel (not signalled by TOC; two searches read
+… and … frames, the first is used)`), and with this change they should not.

@@ -322,12 +322,15 @@ typedef struct cyanrip_track {
     /* The ISRC read from the disc's sub-channel, whatever the files carry,
      * since round 32 (our lap 1 S10): read for every audio track, one passed
      * in with -t included. NULL with the reason beside it when there is none;
-     * the reason is a string literal and is never freed. isrc_disc_none is
+     * the reason is a string literal and is never freed, or it points at
+     * isrc_disc_reason_owned, which is freed with the track (a reason that
+     * gives counts from reading the track's Q frames). isrc_disc_none is
      * set beside the reasons that mean libcdio answered with no usable ISRC,
      * so the log can say `none` for those and `unknown` for a read that was
      * not made, without classifying a reason by its wording. */
     char *isrc_disc;
     const char *isrc_disc_reason;
+    char *isrc_disc_reason_owned;
     int isrc_disc_none;
     /* A code the disc returned that is not an ISO 3901 code (round 35,
      * Platterpus's lap 2 S7, our lap 4 S4 and S5): kept in isrc_disc, as

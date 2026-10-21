@@ -40,28 +40,86 @@ ship betas, and an acceptance run of both passes. So *"not now"* and *"round
 31"* stopped being reasons. Where an entry below still says why it waited,
 that was the reason before 2026-10-05, kept as the record.
 
-### A sub-channel pregap reads one frame different between rips, and the log states one value
+### A sub-channel pregap reads differently between rips, and the log states one value
 
 **Found 2026-10-07, reading the run on `.21`** (`docs/rig-2026-10-07-ca3f3ea/`),
 and as old as the filed record: section P3 ripped track 1 twice, minutes apart,
 and one `Gaps:` list says `94 frame pregap in track 9` and the other `95`.
-Counted over every filed log of the reference disc, track 9's pregap reads 94
-and 95 in eleven sessions from 2026-09-03 (`978f9b0`) to this one; no other
-track's does. The TOC does not signal it, so the value is our sub-channel
-search's, and the track block says so (`Pregap source: sub-channel`).
+Counted again 2026-10-21 by `tools/cross-rip.py`, which since then compares
+every log's `Gaps:` list, over the whole filed record (`python3 tools/evidence.py run -- python3 tools/cross-rip.py docs/rig-* docs/handshake/inbound/artifacts`): of 237
+files it reads as cyanrip logs of the reference disc, all from the BDR-209D, a
+log filed twice counted twice, track 9's pregap read 94 frames in 200, 95 in 36
+and none in 1, and track 4's 158 in 230 and none in 7. No other track's varied.
+On the 18-track disc the drive reads differently each time, track 15's read 98
+or 109, track 16's 202 or 264, and track 18's none or 187. The TOC signals neither, so each value is our sub-channel
+search's, and the track block says so (`Pregap source: sub-channel`). This
+entry said *"no other track's does"* of track 9 for two weeks while track 4's
+zeroes were counted in `STATUS.md`.
 
-**What it costs**: under the default action the pregap merges into track 8,
-which ends at track 9's `INDEX 01` either way, so no audio byte moves; the cue
-sheet's `INDEX 00` for track 9 does, by one frame. With `-p` set to drop or to
-a track of its own, the audio would move by 588 samples.
+**What it costs**: under the default action the pregap merges into the track
+before, which ends at the track's `INDEX 01` either way, so no audio byte
+moves; the cue sheet's `INDEX 00` does, by a frame for track 9 and by dropping
+it for track 4. With `-p` set to drop or to a track of its own, the audio would
+move.
 
-**Not fixed, and why**: which frame is right, and why the search lands on
-either, needs the drive. The search reads Q sub-channel frames near the index
-boundary, and whether a frame there reads with a bad CRC or a stale index is a
-question of the drive's reporting, which no image reproduces. What the log can
-say without a drive is that the value is one reading; how it should say it is a
-line a consumer renders, so it is for a round to agree, and `STATUS.md`'s
-`subchannel-pregap-varies` names which (round 35 when this was corrected).
+**Fixed in the code for `.26`, without a drive, and the drive has to confirm
+it.** The search's answer was a function of the Q frames the drive returned, one
+per sector asked for, each taken to belong to that sector, so two searches
+could disagree only if a frame answered for another sector, or a corrupt frame
+passed its CRC. `tests/subq.c` reproduces both symptoms with the old search on
+a simulated drive: one read answered by the next sector's frame gives 95, and a
+first read answered by the previous track's frame gives none. Each mode-1 frame
+carries its own address, so the search now places each frame there, aims later
+reads by how far off the drive answers once two frames agree, and asks again
+for a sector answered by another's frame. On a drive whose frames all answer
+for the sector asked the answer is unchanged, compared over 200,000 simulated
+searches. It also removes an assert a stale frame of a third track could reach,
+which ended the process with exit 134. The reasoning, the comparison and the
+revert-proof are in `docs/pregap-carry.md`. **What only a drive can say** is
+whether the BDR-209D's frames do answer for other sectors: from `.26` a
+disagreement between the two searches is printed on `Pregap source:`, so rig
+rips of the reference disc with that line absent, and `Gaps:` reading 94 and
+158 throughout, are the confirmation. `STATUS.md`'s `subchannel-pregap-varies`
+tracks it.
+
+### The disc's ISRCs read as none on the rig's drive, while EAC's cue of the same disc has them
+
+**Found by the claude-code-skills session's known fixes of 2026-10-21, item 8**,
+and untracked here until then. On the BDR-209D, `.25` printed `Disc ISRC:
+none (libcdio returned none)` for every track of the reference disc
+(`docs/rig-2026-10-20-5f1d036/`, the secure re-read's log, lines 82 and 165 on),
+while EAC's cue of the same disc on the same drive gives an ISRC for every
+track, track 1's `GBAAM7800003`
+(`platterpus@1b532e69:output_reference/EAC_flac/eac_baseline_police_classics.cue:13`).
+Whether EAC read those codes from the disc's sub-channel is not stated in its
+log; it is the only source a cue's `ISRC` lines have in EAC.
+
+**What it costs**: the files carry MusicBrainz's ISRC, which names a recording
+rather than this pressing, and `--prefer-disc-isrc` has nothing to prefer.
+
+**What is known, read from libcdio, not run**: `cdio_get_track_isrc()` on Linux
+is `mmc_get_track_isrc()`, a READ SUB-CHANNEL with format 03h and the track in
+byte 6, the same from 2.1.1 to its master (`lib/driver/mmc/mmc.c`,
+`mmc_get_mcn_isrc_private()`). It returns NULL for three different answers:
+the command failing, a reply shorter than 21 bytes, and the drive's TCVal bit
+clear, which is the drive saying it found none. Our log cannot tell them apart,
+and it does not name the libcdio version the rig ran. The ISRC is read before
+any sector of the track, while the pre-emphasis read beside it reads a sector
+first because a drive answers for wherever it last read (upstream's `59b3f2d`).
+
+**For `.26`, without a drive**: when libcdio returns none on a drive, cyanrip
+reads 200 of the track's own Q frames with READ CD, the path the pregap search
+has used on the BDR-209D since 2026-08-04, and takes the ISRC from the first
+CRC-valid mode-3 frame; if none carries one, it asks libcdio again with the
+head inside the track. Each outcome is a different measurement, and the reason
+says which: a code; `none (libcdio returned none, also after reading 200 Q
+frames of the track, none an ISRC frame)`, which would mean the drive builds
+its formatted Q without mode-3 frames; or one of the counts for frames failing
+their CRC or carrying no well-formed code. `tests/subq.c` holds the decode,
+against an ISRC frame built from cdrdao's encoder, and the scan, on the
+simulated drive. **The drive settles it**: the next rig rip of the reference
+disc on `.26`. If formatted Q carries no mode-3 frames, the next step is the
+raw P-W sub-channel, which a drive returns as recorded.
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
