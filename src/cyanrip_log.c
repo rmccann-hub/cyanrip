@@ -1140,11 +1140,23 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
          * claims more than one frame's checksum can: the rest of the track was
          * never compared. Renamed in round 31, as agreed in round 30 (our lap
          * 11 S16, their lap 12 S11), after Platterpus's 0.6.66b1 read both
-         * wordings: round 20's order. Same numerator and denominator. */
-        cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, ctx->nb_tracks);
+         * wordings: round 20's order. Same numerator and denominator.
+         *
+         * The denominator is the disc's AUDIO tracks. It was every track the
+         * drive reports, data tracks among them, while a data track never
+         * gets an AccurateRip status and so never reaches the numerator: a
+         * mixed disc whose audio all verified read `2/3`. Asked by
+         * Platterpus's round 36 lap 3 S8; our lap 5 S4 proposed this and
+         * their lap 6 S2 accepted it as given. A rip of some tracks with -l
+         * still divides by the disc's count, so the lines stay counts over
+         * the disc. Upstream's footer is the same. */
+        int nb_audio = 0;
+        for (int i = 0; i < ctx->nb_tracks; i++)
+            nb_audio += !ctx->tracks[i].track_is_data;
+        cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, nb_audio);
         if (accurip_partial)
             cyanrip_log(ctx, 0, "Tracks matched on one frame only: %i/%i\n",
-                        accurip_partial, ctx->nb_tracks);
+                        accurip_partial, nb_audio);
         cyanrip_log(ctx, 0, "\n");
     }
 
