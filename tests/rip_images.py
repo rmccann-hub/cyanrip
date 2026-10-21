@@ -2896,6 +2896,29 @@ def sc_encode_failure_reaches_the_log():
         return
     in_log = m[0]
 
+    # ITEM 22, ROUND 36: the footer names each file a failed encoder left,
+    # `    not written whole: <path>`, directly below `Encoder errors:` (our
+    # lap 4 S12, Platterpus's lap 3 S5). Checked against the files on disk,
+    # which the log did not write: a file the cap cut off is exactly the cap
+    # long, and each must be named, and nothing else.
+    lines = text.splitlines()
+    prefix = "    not written whole: "
+    named = sorted(ln[len(prefix):] for ln in lines if ln.startswith(prefix))
+    capped = sorted(str(f) for f in out.rglob("*.flac")
+                    if f.stat().st_size == 32768)
+    if not capped:
+        fail("encfail: no file on disk is the cap's length, so the cap cut "
+             "nothing off and the `not written whole:` check is vacuous")
+    elif named != capped:
+        fail(f"encfail: the footer names {named} as not written whole, and "
+             f"the files the cap cut off are {capped}")
+    enc = next((i for i, ln in enumerate(lines)
+                if ln.startswith("Encoder errors:")), None)
+    if enc is None or any(not ln.startswith(prefix)
+                          for ln in lines[enc + 1:enc + 1 + len(named)]):
+        fail("encfail: the `not written whole:` lines are not directly below "
+             "`Encoder errors:`")
+
     try:
         in_json = json.loads(diag.read_text())["rip"]["ripping_errors"]
     except Exception as exc:
@@ -2944,7 +2967,9 @@ def sc_encode_failure_reaches_the_log():
 
     # And the files it names are really truncated, so this is not a quibble
     # about a counter. Assert against the artifact, not against the log.
-    named = re.findall(r"(?m)^    (.*\.flac)$", text)
+    # The `File(s):` entries only: the footer's `not written whole:` lines
+    # (round 36) name the same files and are checked above.
+    named = re.findall(r"(?m)^    (?!not written whole: )(.*\.flac)$", text)
     if not named:
         fail("encfail: the log named no output files, so `File(s):` did not "
              "render and this check is guarding nothing")

@@ -3865,6 +3865,8 @@ end:
                  * which files are untrustworthy, which is the only question
                  * they have. */
                 t->encode_failures++;
+                /* And WHICH FILE, for the footer's `not written whole:`. */
+                t->encode_failed_outputs |= 1u << j;
             }
         }
         t->had_encoder = had_encoder;

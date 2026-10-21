@@ -324,6 +324,25 @@ static void print_encode_failure_summary(cyanrip_ctx *ctx)
                     nb_failed, nb_failed == 1 ? "" : "s",
                     tracks, truncated ? ", list truncated" : "",
                     nb_whole, nb_whole == 1 ? "" : "s");
+        /* Each file a failed encoder left, by path. A track block's File(s):
+         * prints before the encoders are joined, so it is the request and
+         * names a path whatever happened to it; only here is the outcome
+         * known (item 22: our round 36 lap 4 S12, which Platterpus's lap 3
+         * S5 accepted). The path is built as File(s): builds it. */
+        for (int i = 0; i < ctx->nb_tracks; i++) {
+            cyanrip_track *t = &ctx->tracks[i];
+            if (!t->had_encoder || !t->audio_ripped || !t->encode_failures)
+                continue;
+            for (int f = 0; f < ctx->settings.outputs_num; f++) {
+                if (!(t->encode_failed_outputs & (1u << f)))
+                    continue;
+                char *path = crip_get_path(ctx, CRIP_PATH_TRACK, 0,
+                                           &crip_fmt_info[ctx->settings.outputs[f]],
+                                           t);
+                cyanrip_log(ctx, 0, "    not written whole: %s\n", path);
+                av_free(path);
+            }
+        }
     }
 
     if (!nb_partial)

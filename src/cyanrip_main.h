@@ -452,6 +452,7 @@ typedef struct cyanrip_track {
      * report a fact that comes into being at T+1; the only honest fix is to
      * split the claim, and this field is the half that lands in the footer. */
     int encode_failures;
+    uint32_t encode_failed_outputs; /* bit f: outputs[f]'s encoder failed */
     /* Whether this track had at least one encoder to join, read from the
      * encoder contexts themselves by the collection loop. With audio_ripped it
      * splits the files on disk in two: a track that had an encoder and whose
