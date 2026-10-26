@@ -1,7 +1,8 @@
 Unreleased
 ==========
 **Platterpus's round 36 lap 11 is filed, and our lap 12 answers it**, held on
-our operator's word of 2026-10-26 until they release it. Their lap names `.27` under review
+our operator's word of 2026-10-26 and released on their word the same day.
+Their lap names `.27` under review
 and accepts our `--reread-time-limit` and `disc image`, both to be built in
 `.28`. Our lap 12:
 - **corrects our lap 10 S13** (S3): the Full run on `.27` needs their 0.7.114,
