@@ -241,7 +241,19 @@ for call in calls:
              "by a full SHA and its release")
 if len(calls) < 5:
     fail(f"mingw-build.sh: {len(calls)} cyan_do_vcs calls found, expected the "
-         "five libraries; the pattern has stopped matching")
+         "five git libraries; the pattern has stopped matching")
+# A library whose sources are not in git is pinned by its tarball's SHA-256,
+# which cyan_do_tarball checks before anything in it is used.
+sums = dict(re.findall(r"^(\w+)=([0-9a-f]{64})\s*$", script, re.M))
+tarballs = re.findall(r"^\s*cyan_do_tarball\s+(.*)$", script, re.M)
+for call in tarballs:
+    m = re.match(r'"https://[^"]+\.tar\.gz"\s+"\$(\w+)"\s+\S', call)
+    if not m or m.group(1) not in sums:
+        fail(f"mingw-build.sh: `cyan_do_tarball {call}` is not one tarball named "
+             "by its full SHA-256 and its release")
+if tarballs and not re.search(r'^\s*echo "\$sha256  \$file" \| sha256sum -c -', script, re.M):
+    fail("mingw-build.sh: cyan_do_tarball no longer checks the tarball's SHA-256")
+calls += tarballs
 if re.search(r"^[^#\n]*git clone", script, re.M):
     fail("mingw-build.sh runs git clone, which fetches a branch, not a commit")
 

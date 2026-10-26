@@ -1,25 +1,29 @@
 #!/bin/bash
 
-# The five libraries this build compiles, each pinned to one commit and named
+# The six libraries this build compiles, each pinned to one commit and named
 # by the release it is (I16, round 34), so two runs build the same sources and
 # a new version is a change to this file. ci.yml caches what they install under
 # a key made from this file's hash, so a pin moved here is a fresh build, and a
-# restored cache carries the stamp written once all five installed.
+# restored cache carries the stamp written once all six installed.
 # cyanreg/libmusicbrainz has no releases: its commit is its default branch's
 # on 2026-10-16. Resolved with `git ls-remote` on 2026-10-16; FFmpeg moved
 # from n8.1.3 to n9.0.2 on 2026-10-20, when the other four were still their
 # newest. n8.1.3 is the newer tag by date and an older branch by version.
+# LAME keeps its sources in Subversion, so its release tarball is pinned by
+# its SHA-256 instead, the one MSYS2's own package of 3.100 checked.
 CURL_COMMIT=3163ec065643ba20709f190111f42c3e1fe95273
 NEON_COMMIT=170c36704bfc2ac8b0e5607c3e1fdd4c159674db
 LIBMUSICBRAINZ_COMMIT=2398b8765ed8fa2644bdcef70f764ce6ec209431
 LIBQRENCODE_COMMIT=715e29fd4cd71b6e452ae0f4e36d917b43122ce8
 FFMPEG_COMMIT=946fcce07b6dcd0331c8cc609192aeff5e1924f8
+LAME_SHA256=ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e
 
 buildCyanrip() {
     cyan_prepare
     if [[ -f $CYANRIPINSTALLDIR/.libs-built ]]; then
-        echo "curl, neon, libmusicbrainz, libqrencode and FFmpeg: restored from the cache"
+        echo "curl, neon, libmusicbrainz, libqrencode, LAME and FFmpeg: restored from the cache"
     else
+        build_lame &&
         build_curl &&
         build_neon &&
         build_libmusicbrainz &&
@@ -64,6 +68,23 @@ cyan_do_vcs() {
     git checkout -q FETCH_HEAD
 }
 
+# One release tarball, by its SHA-256, checked before anything in it is used,
+# for a library whose sources are not in git.
+cyan_do_tarball() {
+    local url=$1 sha256=$2 release=$3
+    local file folder
+    file=$(basename "$url")
+    folder=${file%.tar.gz}
+
+    echo "$folder: $release, $file with SHA-256 $sha256"
+    cd "$CYANRIPBUILDDIR" &&
+    rm -rf "$folder" "$file" &&
+    curl -fsSL --retry 3 -o "$file" "$url" &&
+    echo "$sha256  $file" | sha256sum -c - &&
+    tar -xzf "$file" &&
+    cd "$folder"
+}
+
 cyan_do_hide_all_sharedlibs() {
     local files
     # The environment's own prefix, so this holds under UCRT64 as under MINGW64
@@ -102,6 +123,20 @@ cyan_do_cmakeinstall() {
             -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
             -DCMAKE_BUILD_TYPE=Release "$@" &&
         ninja -C _build && ninja -C _build install
+}
+
+build_lame() {
+    # MSYS2's lame moved to 4.0 by 2026-10-26, whose libmp3lame links an
+    # external libmpg123 as its decoder (its configure.ac:572-586). FFmpeg's
+    # check links -lmp3lame alone against the static library, so it stopped
+    # with `libmp3lame >= 3.98.3 not found` on the first build after the
+    # cache moved, in our pull request #60. 3.100 is what MSYS2 shipped until
+    # then and what the Linux job's Ubuntu 24.04 ships. Without its decoder
+    # and the lame program it needs nothing else; ours is found before
+    # MSYS2's, and cyan_hide_conflicting_libs hides theirs from cyanrip's link.
+    cyan_do_tarball "https://downloads.sourceforge.net/lame/lame-3.100.tar.gz" "$LAME_SHA256" 3.100 &&
+    cyan_do_separate_confmakeinstall --build="$MINGW_CHOST" --host="$MINGW_CHOST" \
+        --disable-{decoder,frontend}
 }
 
 build_curl() {
