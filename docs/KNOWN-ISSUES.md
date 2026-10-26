@@ -1060,6 +1060,41 @@ question about them.
 
 ---
 
+### `read successfully!` prints over a track AccurateRip then rejects
+
+**Found by the EAC parity plan of record of 2026-10-26, row 8**, in round 36's
+run on the damaged disc (`docs/rig-2026-10-21b-ca0f097/`). Tracks 11, 12, 14
+and 16 printed `Track N read successfully!` and failed AccurateRip (our round
+36 lap 8 S9).
+
+The line reports the read alone: no error from the drive, no paranoia skip,
+and no `-Z` repeat limit (`src/cyanrip_main.c`, the arm that prints `read with
+errors.`). It is printed before AccurateRip is looked up, and a read with no
+error reported can still be wrong. `successfully` claims more than the read
+knows, which is the overstatement the plan's row 8 asks both sides to remove.
+
+**Open, joint, proposed in our round 36 lap 8**: rename it `Track N read with
+no error reported.`, beside the unchanged `read with errors.`. Platterpus
+parses both wordings (`platterpus@bba81563:src/platterpus/parsers/cyanrip_log.py:396`),
+so the new one ships only after a release of theirs reads both.
+
+### Under `-Z`, `Extraction speed:` divides one track's audio by every read's time
+
+**Found by the EAC parity plan of record of 2026-10-26, Appendix H**, in round
+36's securing pass of the damaged disc. Track 11 reads `Extraction speed:
+1.4x` and `Elapsed: 131.75 s`: 188 seconds of audio over five reads of 23 to
+29 seconds each, about 7x apiece.
+
+The track's clock starts before the `-Z` loop and stops after the encode
+(`src/cyanrip_main.c`, `track_start_time` and `rip_time_us`), so under `-Z` the
+line gives the drive a speed it never read at. `Elapsed:` is right as it
+stands: it is the time the track took.
+
+**Open, joint, proposed in our round 36 lap 8**: under `-Z`, the speed of the
+kept read alone, with `Elapsed:` unchanged. Platterpus reads the value
+(`_TRACK_SPEED`) and folds it into its estimate of the drive's speed, so the
+value's meaning changes only once they agree.
+
 ## Known external bugs worked around here
 
 Moved here from `CLAUDE.md` on 2026-10-21, word for word below this
