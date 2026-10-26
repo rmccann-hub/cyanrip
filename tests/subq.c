@@ -195,6 +195,7 @@ enum fake_answer {
     FAKE_SHIFTED,   /* every frame is `shift` sectors from the one asked for */
     FAKE_FLAKY,     /* one read in `every`, from `phase`, answers `shift` off */
     FAKE_STALE,     /* read number `stale_read` answers with `stale`'s frame */
+    FAKE_STUCK,     /* every read of sector `stale` answers `shift` sectors off */
 };
 
 struct fake_drive {
@@ -215,6 +216,7 @@ struct fake_drive {
     int reads;
     lsn_t lowest_ask;
     lsn_t highest_ask;
+    struct cyanrip_pregap_stats stats; /* what the search said it saw */
 };
 
 static uint8_t to_bcd(int v)
@@ -280,6 +282,8 @@ static driver_return_code_t fake_read(void *opaque, uint8_t *audio_subq_buf, lsn
         at = ask + d->shift;
     else if (d->answer == FAKE_STALE && d->reads == d->stale_read)
         at = d->stale;
+    else if (d->answer == FAKE_STUCK && ask == d->stale)
+        at = ask + d->shift;
 
     uint8_t *q = audio_subq_buf + CDIO_CD_FRAMESIZE_RAW;
     fake_frame(&d->disc, at, q);
@@ -309,7 +313,7 @@ static struct fake_drive fake_track9(void)
 static lsn_t fake_search(struct fake_drive *d, enum cyanrip_pregap_source *src)
 {
     return pregap_search_subq(fake_read, d, d->disc.track, d->disc.prev_start,
-                              d->disc.start, src);
+                              d->disc.start, src, &d->stats);
 }
 
 static void test_search_aligned(void)
@@ -481,6 +485,92 @@ static void test_search_bad_frames(void)
           "failing drive: got %i, source %i", got, src);
 }
 
+/* What the search says it saw, for the log's `Pregap search:` line. The
+ * `unknown (sub-channel CRC mismatches)` the log gives is reached whenever
+ * the bounds do not meet (our round 36 lap 8 S5): these counts tell a frame
+ * that failed its CRC from one that answered for another sector. */
+static void test_search_stats(void)
+{
+    /* Clean: every sector asked once, nothing failed or misplaced, and the
+     * bounds met at the pregap */
+    struct fake_drive d = fake_track9();
+    enum cyanrip_pregap_source src = CYANRIP_PREGAP_SRC_NONE;
+    lsn_t got = fake_search(&d, &src);
+    struct cyanrip_pregap_stats st = d.stats;
+    CHECK(got == d.disc.pregap && st.searched && st.asked == d.reads &&
+          st.asked > 0 && !st.crc_failed && !st.no_frame && !st.elsewhere &&
+          !st.no_address && !st.shift && !st.harder &&
+          st.left == d.disc.pregap - 1 && st.right == d.disc.pregap,
+          "clean search: asked %i of %i reads, crc %i, none %i, elsewhere %i, "
+          "shift %i, harder %i, bounds %i-%i", st.asked, d.reads, st.crc_failed,
+          st.no_frame, st.elsewhere, st.shift, st.harder, st.left, st.right);
+
+    /* A drive one sector off: the shift it settled on, and the frames that
+     * came back for another sector before it did */
+    d = fake_track9();
+    d.answer = FAKE_SHIFTED;
+    d.shift = 1;
+    got = fake_search(&d, &src);
+    st = d.stats;
+    CHECK(got == d.disc.pregap && st.shift == 1 && st.elsewhere > 0 &&
+          !st.crc_failed && !st.no_frame,
+          "drive +1 off: shift %i, elsewhere %i, crc %i", st.shift,
+          st.elsewhere, st.crc_failed);
+
+    /* Boundary frames failing ten times: the reads that failed are counted,
+     * and the answer is still right. The re-asks of the first pass reach
+     * them, so the 200-retry pass does not run. */
+    d = fake_track9();
+    d.bad_from = d.disc.pregap - 2;
+    d.bad_to = d.disc.pregap + 2;
+    d.bad_reads = 10;
+    got = fake_search(&d, &src);
+    st = d.stats;
+    CHECK(got == d.disc.pregap && st.crc_failed >= 10 && st.no_frame > 0 &&
+          !st.harder && !st.elsewhere,
+          "boundary failing ten times: crc %i, none %i, harder %i, elsewhere %i",
+          st.crc_failed, st.no_frame, st.harder, st.elsewhere);
+
+    /* A frame that never passes its CRC: unknown, and the counts and the
+     * bounds say a CRC is what stopped it */
+    d = fake_track9();
+    d.bad_from = d.bad_to = d.disc.pregap - 1;
+    d.bad_reads = -1;
+    got = fake_search(&d, &src);
+    st = d.stats;
+    CHECK(got == CDIO_INVALID_LSN && src == CYANRIP_PREGAP_SRC_ERR_CRC &&
+          st.crc_failed > 200 && st.no_frame > 0 && !st.elsewhere && st.harder &&
+          st.left == d.disc.pregap - 2 && st.right == d.disc.pregap,
+          "unreadable boundary frame: crc %i, none %i, elsewhere %i, harder %i, "
+          "bounds %i-%i", st.crc_failed, st.no_frame, st.elsewhere, st.harder,
+          st.left, st.right);
+
+    /* A sector the drive always answers with its neighbour's frame: no CRC
+     * ever fails, yet the bounds never meet and the source is the one the
+     * log words `sub-channel CRC mismatches`. Only the counts tell it from
+     * the case above. */
+    d = fake_track9();
+    d.answer = FAKE_STUCK;
+    d.stale = d.disc.pregap - 1;
+    d.shift = 1;
+    got = fake_search(&d, &src);
+    st = d.stats;
+    CHECK(got == CDIO_INVALID_LSN && src == CYANRIP_PREGAP_SRC_ERR_CRC &&
+          !st.crc_failed && !st.no_frame && st.elsewhere > 200 && st.harder &&
+          st.right - st.left == 2,
+          "sector answered by its neighbour: got %i, source %i, crc %i, none %i, "
+          "elsewhere %i, harder %i, bounds %i-%i", got, src, st.crc_failed,
+          st.no_frame, st.elsewhere, st.harder, st.left, st.right);
+
+    /* A search that ends on a driver error says what it saw before it */
+    d = fake_track9();
+    d.read_fails = 1;
+    got = fake_search(&d, &src);
+    st = d.stats;
+    CHECK(src == CYANRIP_PREGAP_SRC_ERR_READ && st.searched && st.asked == 1,
+          "failing drive: searched %i, asked %i", st.searched, st.asked);
+}
+
 /* GBAAM7800003, the ISRC EAC's cue gives for track 1 of the reference disc,
  * as a mode-3 frame's bytes 1 to 8, worked by hand from cdrdao's encoder
  * (SubChannel::encodeIsrcCode(), dao/SubChannel.cc:160-186 at cdrdao
@@ -610,6 +700,7 @@ int main(void)
     test_search_stale();
     test_search_mode3();
     test_search_bad_frames();
+    test_search_stats();
     test_isrc_decode();
     test_isrc_scan();
 

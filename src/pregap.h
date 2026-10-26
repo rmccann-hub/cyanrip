@@ -25,12 +25,14 @@
 /* Returns the track's pregap LSN, or CDIO_INVALID_LSN if there is none or it
  * could not be determined. Those two are not the same thing, so *source is set
  * to say which, and why - see enum cyanrip_pregap_source. Pass NULL if the
- * distinction isn't wanted. */
+ * distinction isn't wanted. *stats, when given, says what a sub-channel search
+ * saw, and is all zero when none ran. */
 lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, track_t track_number,
-                                   enum cyanrip_pregap_source *source);
+                                   enum cyanrip_pregap_source *source,
+                                   struct cyanrip_pregap_stats *stats);
 
 static inline lba_t cyanrip_get_track_pregap_lba(CdIo_t *p_cdio, track_t track_number) {
-    return cdio_lsn_to_lba(cyanrip_get_track_pregap_lsn(p_cdio, track_number, NULL));
+    return cdio_lsn_to_lba(cyanrip_get_track_pregap_lsn(p_cdio, track_number, NULL, NULL));
 }
 
 /* What reading a track's own Q frames for its ISRC found, for the record. */

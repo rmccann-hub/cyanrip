@@ -107,10 +107,21 @@ the cause, but the search reaches that arm whenever its bounds fail to meet
 CRC and answer for another sector, which it asks for again up to five times
 (`:654`). The log does not say which happened.
 
-**Open, ours, for the release after `.26`.** The next step is to record what
-the search saw: frames failing their CRC, and frames for other sectors, with
-the shift it settled on. The `unknown` should name the one that stopped it,
-and a run of the reference disc should then show why `.26` never reached 94.
+**Recorded for `.27`, not yet run on a drive.** Each track a sub-channel
+search ran on gains a `Pregap search:` line. It gives:
+- the sectors asked for;
+- the reads whose frame failed its CRC, and the sectors that never gave a frame
+  passing it;
+- the frames placed at another sector, and the frames with no address;
+- the shift the drive's frames settled on, and whether the 200-retry pass ran;
+- for an `unknown`, the stretch the search left undecided.
+
+`tests/subq.c` drives the search on a simulated drive that answers one sector
+with its neighbour's frame on every read. No CRC fails, yet the search ends in
+the source the log words `sub-channel CRC mismatches`, and only these counts
+tell it from a frame that never passes its CRC. The `unknown` reason keeps its
+words, which Platterpus reads. The line is proposed in our round 36 lap 8. A
+run of the reference disc on `.27` is what shows why `.26` never reached 94.
 
 ### The disc's ISRCs read as none on the rig's drive, while EAC's cue of the same disc has them (fixed in `.26`)
 

@@ -471,7 +471,8 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
                             format == TRACK_FORMAT_PSX) ? 2 : 1;
         }
         t->pregap_lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number,
-                                                     &t->pregap_source);
+                                                     &t->pregap_source,
+                                                     &t->pregap_stats);
         t->pregap_lsn_second = CDIO_INVALID_LSN;
         t->dropped_pregap_start = CDIO_INVALID_LSN;
         t->merged_pregap_end = CDIO_INVALID_LSN;
@@ -554,7 +555,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         if (t->track_is_data || t->pregap_source != CYANRIP_PREGAP_SRC_SUBCHANNEL)
             continue;
         enum cyanrip_pregap_source source;
-        lsn_t lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number, &source);
+        lsn_t lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number, &source, NULL);
         if (source == CYANRIP_PREGAP_SRC_SUBCHANNEL)
             t->pregap_lsn_second = lsn;
     }

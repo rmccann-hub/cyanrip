@@ -933,6 +933,61 @@ static void test_pregap_two_searches(void)
     }
 }
 
+/* What the sub-channel search saw (our round 36 lap 8 S5): a line for every
+ * track a search ran on, found or not, and none for a TOC or a lead-in. Its
+ * `unknown` arm says which stretch it left undecided. */
+static void test_pregap_search_line(void)
+{
+    const struct {
+        enum cyanrip_pregap_source src;
+        lsn_t lsn;
+        struct cyanrip_pregap_stats st;
+        const char *want;      /* NULL when no search line is printed */
+    } cases[] = {
+        { CYANRIP_PREGAP_SRC_SUBCHANNEL, 356,
+          { .searched = 1, .asked = 37, .crc_failed = 2, .elsewhere = 3,
+            .left = 355, .right = 356 },
+          "    Pregap search: 37 sectors asked; 2 reads failed the CRC; 0 sectors "
+          "gave no frame passing it; 3 frames were another sector's; 0 had no "
+          "address; frames answer +0 sectors off" },
+        /* every frame for the stuck sector its neighbour's: no CRC failed */
+        { CYANRIP_PREGAP_SRC_ERR_CRC, CDIO_INVALID_LSN,
+          { .searched = 1, .asked = 412, .elsewhere = 408, .shift = 1,
+            .harder = 1, .left = 145566, .right = 145568 },
+          "    Pregap search: 412 sectors asked; 0 reads failed the CRC; 0 sectors "
+          "gave no frame passing it; 408 frames were another sector's; 0 had no "
+          "address; frames answer +1 sectors off; 200-retry pass ran; LSN 145567 "
+          "to 145567 undecided" },
+        { CYANRIP_PREGAP_SRC_ERR_READ, CDIO_INVALID_LSN,
+          { .searched = 1, .asked = 1, .shift = -2, .left = 128757, .right = 145662 },
+          "    Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors "
+          "gave no frame passing it; 0 frames were another sector's; 0 had no "
+          "address; frames answer -2 sectors off; LSN 128758 to 145661 undecided" },
+        { CYANRIP_PREGAP_SRC_TOC, 300, { 0 }, NULL },
+        { CYANRIP_PREGAP_SRC_LEADIN, 0, { 0 }, NULL },
+    };
+
+    for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
+        cyanrip_ctx *ctx = new_ctx();
+        cyanrip_track t;
+        base_track(&t);
+        t.pregap_source = cases[i].src;
+        t.pregap_lsn = cases[i].lsn;
+        t.pregap_lsn_second = CDIO_INVALID_LSN;
+        t.merged_pregap_end = CDIO_INVALID_LSN;
+        t.pregap_stats = cases[i].st;
+
+        cyanrip_log_track_end(ctx, &t);
+        const char *out = drain(ctx);
+
+        if (cases[i].want)
+            expect_line(out, cases[i].want, "pregap/search");
+        else if (strstr(out, "Pregap search:"))
+            FAIL("pregap/search: case %zu printed a search line with no search", i);
+        free_ctx(ctx);
+    }
+}
+
 /* =====================================================================
  * Pre-emphasis, and the two independent flags that can de-emphasise.
  * cyanrip_log.c:410 [|| to &&] survived: the fixture with pre-emphasis is
@@ -1827,6 +1882,7 @@ int main(void)
 
     test_pregap_reasons_are_distinct();
     test_pregap_two_searches();
+    test_pregap_search_line();
     test_merged_pregap_counts_to_index_01();
     test_track_one_counts_from_disc_start();
 
