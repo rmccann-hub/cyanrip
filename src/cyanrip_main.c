@@ -321,11 +321,17 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         ctx->disc_profile = CRIP_PROFILE_IMAGE;
         break;
     default: {
-        /* GET CONFIGURATION's current profile; a timeout of 0 is libcdio's
-         * default, mmc_timeout_ms */
-        cdio_mmc_feature_profile_t profile;
-        ctx->disc_profile = mmc_get_disctype(ctx->cdio, 0, &profile) == DRIVER_OP_SUCCESS ?
-                            (int)profile : CRIP_PROFILE_UNREADABLE;
+        /* GET CONFIGURATION's current profile, from its feature header. The
+         * command is the one libcdio's mmc_get_disctype() sends, every
+         * feature into 500 bytes from feature 0, with a timeout of 0 for
+         * libcdio's default, mmc_timeout_ms; its search of the reply is not
+         * used, for the reason crip_current_profile_parse() gives. */
+        uint8_t conf[500] = { 0 };
+        ctx->disc_profile = mmc_get_configuration(ctx->cdio, conf, sizeof(conf),
+                                                  CDIO_MMC_GET_CONF_ALL_FEATURES,
+                                                  0, 0) == DRIVER_OP_SUCCESS ?
+                            crip_current_profile_parse(conf, sizeof(conf)) :
+                            CRIP_PROFILE_UNREADABLE;
         uint8_t caps[256] = { 0 };
         ctx->accurate_stream = CRIP_ACCURATE_STREAM_UNREADABLE;
         if (mmc_mode_sense_10(ctx->cdio, caps, sizeof(caps),

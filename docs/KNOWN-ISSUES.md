@@ -165,7 +165,7 @@ cue now carry the disc's code. Platterpus's audit warns that it differs from
 the one they sent, which is the option working
 (`docs/rig-2026-10-21-ca0f097/`, L726).
 
-### `Recordable:` never answers on the rig's drive: libcdio's profile search stops one descriptor short
+### `Recordable:` never answers on the rig's drive: libcdio's profile search stops one descriptor short (fixed for `.27`)
 
 **Found 2026-10-25, reading the four runs of `.26`** (`docs/rig-2026-10-21-ca0f097/`
 and the three after it). All 38 `.26` logs, on four discs, read `Recordable:
@@ -180,7 +180,8 @@ unknown (profile 0xffff is not a CD profile)`.
 - returns `DRIVER_OP_SUCCESS` either way.
 
 The bound is the one the function was added with in 2010 (libcdio `2d3b7d28`),
-and is the same at 2.1.1, 2.4.0 and master `68ea374`
+and the function is the same at 2.1.1, at 2.3.0 (the rig's, by its install
+step's `libcdio-devel-2.3.0-1.fc44`), at 2.4.0 and at master `68ea374`
 (`lib/driver/mmc/mmc_hl_cmds.c`). So `0xffff` is libcdio's default, not the
 drive's answer, and our line states it as the drive's profile. Which
 descriptor the BDR-209D marks current, the log cannot show.
@@ -189,11 +190,15 @@ descriptor the BDR-209D marks current, the log cannot show.
 says nothing on the one drive we have. And what it does say names a profile
 the drive never reported.
 
-**Open, ours, for the release after `.26`**: read GET CONFIGURATION ourselves
-and take the current profile from the feature header's bytes 6 and 7, which
-MMC defines as the current profile. A drive run then shows the answer.
-libcdio's loop is an upstream defect of libcdio's, reported by our operator if
-they choose.
+**Fixed for `.27`, not yet shown on a drive**: cyanrip sends the command
+libcdio's function sends and takes the current profile from the reply's feature
+header, bytes 6 and 7, which MMC defines for it
+(`crip_current_profile_parse()`, `src/drive_caps.c`). `tests/drivecaps.c`
+builds a reply listing CD-ROM last and current, as a BD drive lists its
+profiles: libcdio's search over it gives `0xffff`, and the header gives
+`0x0008`. Only a drive run shows what the BDR-209D's header says. libcdio's
+loop is an upstream defect of libcdio's, reported by our operator if they
+choose.
 
 ### The footer's AccurateRip tally divides by a count that includes data tracks (fixed for `.27`)
 

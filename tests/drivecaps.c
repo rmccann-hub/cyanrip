@@ -168,6 +168,70 @@ int main(void)
         }
     }
 
+    /* The current profile comes from the feature header's bytes 6-7. The
+     * reply below is shaped as a BD drive lists its profiles, highest first,
+     * CD-ROM last and current: libcdio's mmc_get_disctype() stops one
+     * descriptor short of the list's end and returns its 0xffff placeholder
+     * for it, which is what the rig's BDR-209D printed in round 36's runs.
+     * The header says 0x0008 whatever the list holds. */
+    {
+        const uint16_t listed[] = { 0x0043, 0x0042, 0x0041, 0x0040, 0x0010,
+                                    0x000a, 0x0009, 0x0008 };
+        const size_t n = sizeof(listed)/sizeof(*listed);
+        memset(buf, 0, sizeof(buf));
+        const size_t conf_len = 8 + 4 + 4*n;   /* header, feature 0, its list */
+        buf[3] = conf_len - 4;
+        buf[6] = 0x00;
+        buf[7] = 0x08;
+        buf[8 + 3] = 4*n;                       /* feature 0's additional length */
+        for (size_t i = 0; i < n; i++) {
+            buf[12 + 4*i] = listed[i] >> 8;
+            buf[12 + 4*i + 1] = listed[i] & 0xff;
+            buf[12 + 4*i + 2] = i == n - 1;     /* the current bit */
+        }
+
+        /* libcdio's search, as mmc_hl_cmds.c has it at 68ea374, on the same
+         * reply: shows the defect the header parse is not subject to */
+        int libcdio = 0xffff;
+        const uint8_t *p = buf + 8, *q = p + 4;
+        while (libcdio == 0xffff && q < p + p[3]) {
+            if (q[2] & 0x01)
+                libcdio = q[0] << 8 | q[1];
+            q += 4;
+        }
+
+        const struct { const char *what; int got, want; } prof[] = {
+            { "libcdio's search, CD-ROM listed last", libcdio, 0xffff },
+            { "header, CD-ROM current", crip_current_profile_parse(buf, conf_len), 0x0008 },
+            { "header alone", crip_current_profile_parse(buf, 8), 0x0008 },
+            { "reply shorter than the header", crip_current_profile_parse(buf, 7),
+              CRIP_PROFILE_UNREADABLE },
+            { "NULL reply", crip_current_profile_parse(NULL, 0), CRIP_PROFILE_UNREADABLE },
+        };
+        for (size_t i = 0; i < sizeof(prof)/sizeof(*prof); i++) {
+            if (prof[i].got != prof[i].want) {
+                printf("FAIL: %s: profile 0x%04x, want 0x%04x\n", prof[i].what,
+                       (unsigned)prof[i].got & 0xffff, (unsigned)prof[i].want & 0xffff);
+                fails++;
+            }
+        }
+
+        /* A header declaring fewer bytes than its own holds no profile */
+        buf[3] = 3;
+        if (crip_current_profile_parse(buf, conf_len) != CRIP_PROFILE_UNREADABLE) {
+            printf("FAIL: a header declaring 3 bytes still gave a profile\n");
+            fails++;
+        }
+
+        /* A CD-R current, the header's other value */
+        buf[3] = conf_len - 4;
+        buf[7] = 0x09;
+        if (crip_current_profile_parse(buf, conf_len) != 0x0009) {
+            printf("FAIL: header naming CD-R did not give 0x0009\n");
+            fails++;
+        }
+    }
+
     /* No reply at all */
     expect("NULL", crip_accurate_stream_parse(NULL, 0), CRIP_ACCURATE_STREAM_UNREADABLE);
     expect("shorter than the header", crip_accurate_stream_parse(buf, 7),

@@ -67,7 +67,7 @@ never let a green suite imply coverage.** Date a rig session by its build.
 | `-f` | ran from 2026-10-06 (`5704062`); a stopped search and one that finds nothing have not |
 | damaged media | the read ran 2026-10-04 (`174a134`), the `-Z` arm 2026-10-06 and the skip arm 2026-10-21 (`ca0f097`); a drive that reports a failed read has not |
 | CD-TEXT from a disc | not yet done: `mmc_read_cdtext` is not the `.toc` path |
-| `Accurate stream:`, `Recordable:`, two-search `Pregap source:` | ran 2026-10-21 (`ca0f097`): `Accurate stream:` answers; `Recordable:` never does (libcdio); the two-search clause has not printed |
+| `Accurate stream:`, `Recordable:`, two-search `Pregap source:` | ran 2026-10-21 (`ca0f097`): `Accurate stream:` answers; `Recordable:` never does (libcdio), and `.27`'s own read of the profile has not run; the two-search clause has not printed |
 
 ## Say exactly what is true, and no more
 

@@ -49,6 +49,19 @@ const char *crip_accurate_stream_text(enum CripAccurateStream s);
 #define CRIP_PROFILE_IMAGE      (-1)  /* a disc image: no drive to ask */
 #define CRIP_PROFILE_UNREADABLE (-2)  /* GET CONFIGURATION failed */
 
+/* Reads a GET CONFIGURATION reply's feature header: bytes 0-3 the length of
+ * what follows them, bytes 6-7 the drive's current profile, which MMC defines
+ * there for this purpose. Returns that profile, or CRIP_PROFILE_UNREADABLE when
+ * the reply is too short to hold it. Pure, so it is tested on built replies.
+ *
+ * Not libcdio's mmc_get_disctype(), which searches the profile list for one
+ * with its current bit set: its loop stops one descriptor short of the list's
+ * end, so a drive that lists CD-ROM last never answers, and it returns
+ * success with its 0xffff placeholder whether or not it found one (the same
+ * at 2.1.1, 2.3.0, 2.4.0 and master 68ea374). The rig's BDR-209D gave 0xffff
+ * in all 38 logs of round 36's runs (our round 36 lap 8 S4). */
+int crip_current_profile_parse(const uint8_t *buf, size_t len);
+
 /* The value of the `Recordable:` line for a profile, or for one of the two
  * negatives above. Writes into buf, which 64 bytes always holds. */
 const char *crip_recordable_text(char *buf, size_t size, int profile);
