@@ -782,3 +782,39 @@ the drive reports less those it reports as data (`779549a`, "Count the
 footer's AccurateRip tally over the disc's audio tracks"). A rip of some
 tracks with `-l` still divides by the disc's count. Found on 2026-10-21,
 answering Platterpus's question.
+
+## 27. A value the log echoes can start a line of its own
+
+**Where:** `src/cyanrip_log.c:207` at `7dbe56a`, in the track block's metadata
+loop:
+
+```c
+cyanrip_log(ctx, 0, "%s\n", d->value);
+```
+
+and `cyanrip_log()` itself (`src/cyanrip_log.c:524-549`), which passes the
+format and its arguments to `vfprintf()` for each logfile and to `vprintf()`
+for stdout as they are. Every other line that prints a tag, a path or a
+library's message through `%s` does the same.
+
+**What happens:** a value carrying a line break is written as one, so the rest
+of the value is a line of the log of the value's choosing. A title given with
+`-t` as `Two`, a newline and `  Accurip:       accurately ripped` puts a line
+shaped like the track block's own `  Accurip:` line into the log, and a
+logchecker or any tool that reads the log a line at a time takes it for the
+program's. A newline is not the only way in: a CD-TEXT field that carries the
+byte 0x85 arrives as U+0085, NEXT LINE, because libcdio reads a cdrdao `.toc`'s
+CD-TEXT as ISO-8859-1, and Python's `str.splitlines()`, among others, ends a
+line there; so do a vertical tab, a form feed and U+2028. This is read from
+upstream's source. On the fork, whose metadata loop and log function were
+upstream's until the fix, a `.toc` whose track 1 CD-TEXT title carries 0x85
+followed by `Accurip: accurately ripped (forged)` gave the log a line reading
+exactly that, and a `-t` title with a newline did the same.
+
+**What the fork did:** the log function formats each message once and writes
+every `%s` argument escaped: each control character but the tab, and U+2028
+and U+2029, as `<U+XXXX>`, and each byte that is not well-formed UTF-8 as
+`<0xHH>`; every other conversion is `printf()`'s, so a value without those
+characters is written byte for byte (`46cec2a`, "Escape every value the log
+writes, so none can start a line of its own"). The tags written to the files
+keep the value as it came. Found on 2026-10-26 by a review of the fork.

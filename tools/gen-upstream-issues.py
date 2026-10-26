@@ -16,12 +16,12 @@
 # License along with cyanrip; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-"""Generate docs/upstream/issues-to-file.md: the twenty-six upstream bug
+"""Generate docs/upstream/issues-to-file.md: the twenty-seven upstream bug
 reports, rendered as issues ready to paste into cyanreg/cyanrip's tracker.
 
 The reports themselves are written in two files, and this renders them:
 
-  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-26;
+  * `docs/upstream/defect-reports.md`, reports 1-7 and 9-27;
   * `docs/upstream-cachemodel-report.md`, report 8.
 
 It exists because filing is the maintainer's act, done in a browser, and a
@@ -55,7 +55,7 @@ FORK = "https://github.com/rmccann-hub/cyanrip"
 UPSTREAM = "https://github.com/cyanreg/cyanrip"
 DEFECTS = "docs/upstream/defect-reports.md"
 CACHEMODEL = "docs/upstream-cachemodel-report.md"
-COUNT = 26
+COUNT = 27
 # Where the operator filed the first FILED_COUNT, as one issue, on 2026-10-16.
 # The rest are drafted and not filed, and the header says so.
 FILED_COUNT = 23
