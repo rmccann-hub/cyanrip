@@ -45,6 +45,17 @@ rows, with the files' names, lines and SHA-256 in their text. The checker
 here only warned, because this clone is shallow. A full clone rebuilt here
 from GitHub, with CI's refs, refuses the first push and accepts the fix.
 
+Re-reading Platterpus's `main` before the merge, at `5eee9c8c`, found S22
+overstating its run: it named two reference-disc logs with 13 lines added to
+each, but the second was an EAC-layout log that received none. Re-run over
+every native-layout log of the four runs, 40 logs and 138 lines in 30 of them,
+at their `bba81563`, `bf0a6768` and `5eee9c8c`, their parser reads each log
+the same with the line as without, in both its forms; a probe adding a line
+they do read changes all 30. S22 now says that, and D2 records the
+correction. S10 notes their `2904e732`, on their `main` and in no release,
+which makes their cue audit expect the disc's code under
+`--prefer-disc-isrc`.
+
 **Built for `.27`, not released, and not yet shown on a drive:**
 - **`Recordable:`** reads the drive's current profile from GET
   CONFIGURATION's feature header, bytes 6 and 7, instead of libcdio's search,

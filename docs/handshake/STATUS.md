@@ -250,7 +250,7 @@ from our lap 3 on declares 9.
 
 Their newest release is 0.7.112, tag `v0.7.112` at `9bf0cd34`, read with
 `git ls-remote` on 2026-10-26. Their newest lap is round 36's lap 6, read at
-`bf0a6768`, and their standing status is
+`5eee9c8c` on 2026-10-26, and their standing status is
 `docs/handshake/outbound/platterpusstatus.md` in their tree.
 Seventeen of their earlier statuses are filed under
 `docs/handshake/inbound/status-*.md`, each dated by the date it declares; theirs
