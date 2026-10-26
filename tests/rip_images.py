@@ -2830,7 +2830,8 @@ def sc_encode_failure_reaches_the_log():
     FIXED IN ROUND 22, AND HALF OF IT ONLY. `Track N ripped and encoded
     successfully!` was printed when the READ finished, before any encoder
     status existed -- so it asserted a fact that did not yet exist rather than
-    one that was merely unchecked. It now reads `Track N read successfully!`
+    one that was merely unchecked. It now reads `Track N read with no error
+    reported.` (`read successfully!` from round 22 until round 36 renamed it)
     and the encode outcome lands in `Encoder errors:` in the footer, where the
     collection loop has joined every encoder thread. Two P2 lines and one new
     one, announced in round 22 lap 1; `docs/ROUND-22-PLAN.md` §1 has the
@@ -3017,10 +3018,14 @@ def sc_encode_failure_reaches_the_log():
         fail("encfail: `ripped and encoded` is still in the log. The per-track "
              "line asserts an encode outcome that does not exist when it "
              "prints -- round 22's whole point")
-    if not re.search(r"(?m)^Track \d+ read successfully!$", text):
-        fail("encfail: no `Track N read successfully!` line -- the per-track "
-             "block reports nothing about the read at all, which is worse "
-             "than over-claiming")
+    if not re.search(r"(?m)^Track \d+ read with no error reported\.$", text):
+        fail("encfail: no `Track N read with no error reported.` line -- the "
+             "per-track block reports nothing about the read at all, which "
+             "is worse than over-claiming")
+    if re.search(r"(?m)^Track \d+ read successfully!$", text):
+        fail("encfail: `read successfully!` is still in the log. It printed "
+             "over tracks AccurateRip then rejected, and round 36 renamed it "
+             "to say only that no error was reported")
 
     m = re.search(r"(?m)^Encoder errors: (.*)$", text)
     if not m:
@@ -6005,10 +6010,11 @@ def sc_contract_fatal_inventory():
                   "Done; (%i out of %i matches for current checksum %08X)"):
         if probe in p5:
             fail(f"contract_fatal_inventory: {probe!r} is back in the fatal "
-                 "inventory. It is followed by `Track %i read successfully!` "
-                 "on hardware -- spelled `ripped and encoded successfully!` in "
-                 "the rig logs that settled it, before round 22 split the "
-                 "claim")
+                 "inventory. It is followed by `Track %i read with no error "
+                 "reported.` on hardware -- spelled `ripped and encoded "
+                 "successfully!` in the rig logs that settled it, before "
+                 "round 22 split the claim, and `read successfully!` until "
+                 "round 36")
         elif probe not in p5a:
             fail(f"contract_fatal_inventory: {probe!r} is in neither table; "
                  "the generator stopped seeing a string a real rip prints")
@@ -6623,7 +6629,8 @@ def sc_signal_after_last_frame():
                for l in lines):
         fail("signal_after_last_frame: the footer does not record the "
              "interrupt")
-    if "Track 1 read successfully!" in lines:
+    if any(l in lines for l in ("Track 1 read with no error reported.",
+                                "Track 1 read successfully!")):
         fail("signal_after_last_frame: track 1 is reported read, though the "
              "signal arrived before its read finished")
     want = ("Partial files:  1 track (1), read not completed; "
@@ -7385,7 +7392,7 @@ def sc_bad_sector():
         text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
         if want_retry not in text.splitlines():
             fail(f"bad_sector: -r {r}: no line {want_retry!r} in the log")
-        if "Track 1 read successfully!" not in text.splitlines():
+        if "Track 1 read with no error reported." not in text.splitlines():
             fail(f"bad_sector: -r {r}: track 1 should read clean")
         if "Track 2 read with errors." not in text.splitlines():
             fail(f"bad_sector: -r {r}: track 2 does not report `read with errors.`")
@@ -7518,7 +7525,7 @@ def sc_p0_bad_sector():
         return
     text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
     lines = text.splitlines()
-    if "Track 1 read successfully!" not in lines:
+    if "Track 1 read with no error reported." not in lines:
         fail("p0_bad_sector: track 1 should read clean")
     if "Track 2 read with errors." not in lines:
         fail("p0_bad_sector: track 2 does not report `read with errors.`")
@@ -7550,6 +7557,78 @@ def sc_p0_bad_sector():
              f"a clean rip {clean}")
     note(f"p0_bad_sector: {failed} failed read(s); sector {bad} zeroed, every "
          f"other sector the source's; READ per track {clean} as a clean rip")
+
+
+def sc_z_extraction_speed():
+    """UNDER -Z, `Extraction speed:` IS THE KEPT READ'S, AND `Elapsed:` THE TRACK'S.
+
+    Round 36. The track's clock runs from before the first -Z pass to after
+    the encode, so the speed divided one read's audio by every read's time:
+    track 11 of the damaged disc's securing pass on 2026-10-21 read 1.4x for
+    five reads of about 7x each. Our lap 8 S27 proposed the kept read's own
+    speed, with Elapsed: unchanged, and Platterpus's lap 9 S18 accepted it.
+
+    An image reads at memory speed, so tests/badsector.c's CRIP_READ_DELAY_US
+    makes every pass of track 1 take a known, equal time: 300 sectors at 3 ms
+    is about 0.9 s a read. -Z 2 on an image takes three reads that agree, so
+    the kept read's speed times Elapsed: is about three times the audio, where
+    the track's own rate gives one. The same rip without -Z is the control:
+    one read, so the two are equal there.
+    """
+    needs_preload_shim("z_extraction_speed")
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"z_extraction_speed: the shim was not built or not passed ({shim!r})")
+        return
+    got = {}
+    for tag, extra in (("plain", ()), ("z2", ("-Z", "2"))):
+        out = WORK / f"out_z_extraction_speed_{tag}"
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+                   CRIP_READ_DELAY_US="3000",
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", *extra, "-l", "1", "-o", "pcm",
+                     "-D", out, "-F", "{track}", "-L", "log", env=env)
+        if ec != 0:
+            fail(f"z_extraction_speed: {tag}: cyanrip exited {ec}")
+            return
+        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        speed = re.search(r"(?m)^    Extraction speed:  ([0-9.]+)x$", text)
+        elapsed = re.search(r"(?m)^    Elapsed:            ([0-9.]+) s$", text)
+        frames = re.search(r"(?m)^    Frames:      (\d+)$", text)
+        rips = re.search(r"(?m)^  EAC CRC32:     [0-9A-F]{8} \(after (\d+) rips\)$", text)
+        if not (speed and elapsed and frames):
+            fail(f"z_extraction_speed: {tag}: no Extraction speed:, Elapsed: or "
+                 f"Frames: line in the track block")
+            return
+        audio = int(frames.group(1)) / 75.0
+        reads = int(rips.group(1)) if rips else 1
+        got[tag] = (float(speed.group(1)), float(elapsed.group(1)), audio, reads)
+    for tag, (speed, elapsed, audio, reads) in got.items():
+        # Non-trivial: the delay is what makes a read take time at all. 300
+        # sectors at 3 ms is 0.9 s, so a track under half a second a read
+        # means the shim did not slow it and the ratio below measures noise.
+        if elapsed < 0.45 * reads:
+            fail(f"z_extraction_speed: {tag}: Elapsed: {elapsed} s for {reads} "
+                 f"read(s); the shim's delay did not reach the reads")
+    plain, z2 = got.get("plain"), got.get("z2")
+    if not plain or not z2:
+        return
+    ratio = plain[0] * plain[1] / plain[2]
+    if not 0.8 <= ratio <= 1.25:
+        fail(f"z_extraction_speed: without -Z, Extraction speed: {plain[0]}x "
+             f"over Elapsed: {plain[1]} s gives {ratio:.2f} of the audio, not 1: "
+             f"one read is the whole track")
+    if z2[3] != 3:
+        fail(f"z_extraction_speed: -Z 2 took {z2[3]} reads, not 3, so the "
+             f"ratio below does not test what it says")
+        return
+    ratio = z2[0] * z2[1] / z2[2]
+    if not 2.0 <= ratio <= z2[3] + 1:
+        fail(f"z_extraction_speed: under -Z 2, Extraction speed: {z2[0]}x "
+             f"over Elapsed: {z2[1]} s gives {ratio:.2f} of the audio; the kept "
+             f"read alone gives about {z2[3]}, and every read together gives 1")
 
 
 def sc_repeat_limit():
@@ -7616,11 +7695,12 @@ def sc_repeat_limit():
         if "  Secure re-read:  did NOT converge after 3 reads (repeat limit hit)" not in lines:
             fail(f"repeat_limit: cycle {cycle} run {run}: the track block does not say the "
                  f"secure re-read hit the limit")
-        # Round 30: a read -Z could not confirm is not `read successfully!`.
-        # Track 1 holds the flipped sector, and nothing else is wrong with it:
-        # -P 0 means no paranoia skip, and the drive reports no error, so the
-        # limit is the only reason left. A -Z track that converges is the
-        # golden reference's, which still reads `successfully!`.
+        # Round 30: a read -Z could not confirm is not `read with no error
+        # reported.` (`read successfully!` until round 36). Track 1 holds the
+        # flipped sector, and nothing else is wrong with it: -P 0 means no
+        # paranoia skip, and the drive reports no error, so the limit is the
+        # only reason left. A -Z track that converges is the golden
+        # reference's, which still reads `with no error reported.`
         if "Track 1 read with errors." not in lines:
             got = [ln for ln in lines if ln.startswith("Track 1 ")]
             fail(f"repeat_limit: cycle {cycle} run {run}: track 1 hit the repeat "
@@ -7826,7 +7906,8 @@ def sc_spool_refusal():
             if want not in body:
                 fail(f"spool_refusal: {name}: {where} has no line {want!r} at "
                      f"column 0")
-        if re.search(r"(?m)^Track \d+ read successfully!$", text):
+        if re.search(r"(?m)^Track \d+ read (?:with no error reported\.|"
+                     r"successfully!)$", text):
             fail(f"spool_refusal: {name}: a track says it was read, and nothing was")
         footer = "Rip completed:  no (aborted, 0 of 2 tracks)"
         if footer not in lines:
@@ -7893,7 +7974,8 @@ def sc_paranoia_skip():
         # two, so a four-space SKIP row belongs to the outcome line above it.
         arms, skip_of, cur = {}, {}, None
         for ln in lines:
-            m = re.match(r"^Track (\d+) (read successfully!|read with errors\.)$", ln)
+            m = re.match(r"^Track (\d+) (read with no error reported\.|"
+                         r"read successfully!|read with errors\.)$", ln)
             if m:
                 cur = int(m.group(1))
                 arms[cur], skip_of[cur] = ln, 0
@@ -7914,7 +7996,7 @@ def sc_paranoia_skip():
                     fail(f"paranoia_skip: cycle {cycle}: track {tr} skipped {skips} "
                          f"time(s) and is meant to be the control")
             want = (f"Track {tr} read with errors." if skips
-                    else f"Track {tr} read successfully!")
+                    else f"Track {tr} read with no error reported.")
             if arm != want:
                 fail(f"paranoia_skip: cycle {cycle}: track {tr} with {skips} "
                      f"skip(s) printed {arm!r}, not {want!r}")

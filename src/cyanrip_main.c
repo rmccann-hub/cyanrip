@@ -1528,6 +1528,11 @@ repeat_ripping:;
      * can be any pass, and Elapsed: says how long, never when (our round 36
      * lap 4 S13, Platterpus's lap 3 S6). */
     const time_t pass_began = time(NULL);
+    /* And how long it took, for a -Z track's `Extraction speed:`: the
+     * track's clock runs over every pass and the encode, so its speed was
+     * a rate the drive never read at (our round 36 lap 8 S27, accepted by
+     * Platterpus's lap 9 S18). From here to the end of the frame loop. */
+    const int64_t pass_start_us = av_gettime_relative();
     const int frames_before_disc_start = t->frames_before_disc_start;
     const int frames = t->frames;
     const int frames_after_disc_end = t->frames_after_disc_end;
@@ -1707,6 +1712,7 @@ repeat_ripping:;
     }
 
     calc_global_peak = 0;
+    const int64_t pass_us = av_gettime_relative() - pass_start_us;
 
     crip_finalize_checksums(&checksum_ctx, t);
     if (!ctx->settings.ripping_retries) {
@@ -1743,6 +1749,7 @@ repeat_ripping:;
             spools[filed].reads++;
             spools[filed].last_read = total_repeats + 1;
             spools[filed].began = pass_began;
+            spools[filed].read_us = pass_us;
             fclose(pass_spool);
         } else {
             crip_spool *grown = av_realloc_array(spools, nb_spools + 1, sizeof(*spools));
@@ -1762,6 +1769,7 @@ repeat_ripping:;
                                               .reads = 1,
                                               .last_read = total_repeats + 1,
                                               .began = pass_began,
+                                              .read_us = pass_us,
                                               .ar_conf = ar_conf,
                                               .f = pass_spool };
             filed = nb_spools++;
@@ -1884,6 +1892,7 @@ repeat_ripping:;
 spool_encode: {
         crip_spool *k = &spools[kept];
         t->kept_read_began = k->began;
+        t->kept_read_us = k->read_us;
         cyanrip_checksum_ctx kept_ctx;
         uint8_t buf[CDIO_CD_FRAMESIZE_RAW];
         size_t n;
@@ -1989,14 +1998,24 @@ fail:
          * asked for, and at the repeat limit it failed: the same run printed
          * `read successfully!` over tracks read five times with five
          * different checksums. The track block's `Secure re-read:` line says
-         * the limit was hit; this arm no longer contradicts it. */
+         * the limit was hit; this arm no longer contradicts it.
+         *
+         * AND THE OTHER ARM SAYS ONLY WHAT IT KNOWS. It printed
+         * `read successfully!` until round 36, over tracks 11, 12, 14 and
+         * 16 of the damaged disc on 2026-10-21, which read no skip and no
+         * error and which AccurateRip then rejected. The line prints before
+         * AccurateRip is looked up, and all it measured was that nothing
+         * was reported, so that is what it says now: our round 36 lap 8 S26,
+         * accepted by Platterpus's lap 9 S17, whose 0.7.113 reads both
+         * wordings. Logs filed before `.27` carry the old one. */
         const uint64_t skips = paranoia_status[PARANOIA_CB_SKIP] -
                                start_paranoia[PARANOIA_CB_SKIP];
         if ((ctx->total_error_count - start_err) || skips ||
             t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT)
             cyanrip_log(ctx, 0, "Track %i read with errors.\n", t->number);
         else
-            cyanrip_log(ctx, 0, "Track %i read successfully!\n", t->number);
+            cyanrip_log(ctx, 0, "Track %i read with no error reported.\n",
+                        t->number);
     }
 
 end:

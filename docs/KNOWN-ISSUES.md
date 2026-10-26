@@ -979,8 +979,9 @@ Two separate causes, and they need different answers:
   status did not exist yet, so the line was not merely mis-worded — at the
   moment it printed, the fact it asserted was genuinely unknown. **No rewording
   of a line printed at time T can report a fact that comes into being at T+1**,
-  so the claim is split rather than softened: the per-track line now reads
-  `Track N read successfully!` and the encode outcome lands in a new
+  so the claim is split rather than softened: the per-track line then read
+  `Track N read successfully!` (`read with no error reported.` from round
+  36) and the encode outcome lands in a new
   `Encoder errors:` line in the footer, below `Ripping errors:`, where the
   collection loop has joined every encoder thread. Three arms — `none; N tracks
   encoded`, `M tracks failed (…); N tracks encoded`, `not applicable; no track
@@ -1073,10 +1074,10 @@ errors.`). It is printed before AccurateRip is looked up, and a read with no
 error reported can still be wrong. `successfully` claims more than the read
 knows, which is the overstatement the plan's row 8 asks both sides to remove.
 
-**Open, joint, proposed in our round 36 lap 8**: rename it `Track N read with
-no error reported.`, beside the unchanged `read with errors.`. Platterpus
-parses both wordings (`platterpus@bba81563:src/platterpus/parsers/cyanrip_log.py:396`),
-so the new one ships only after a release of theirs reads both.
+**Fixed for `.27`**: renamed `Track N read with no error reported.`, beside
+the unchanged `read with errors.`, as our round 36 lap 8 S26 proposed and
+Platterpus's lap 9 S17 accepted. Their 0.7.113 reads both wordings, and logs
+written before `.27` keep the old one.
 
 ### Under `-Z`, `Extraction speed:` divides one track's audio by every read's time
 
@@ -1090,10 +1091,11 @@ The track's clock starts before the `-Z` loop and stops after the encode
 line gives the drive a speed it never read at. `Elapsed:` is right as it
 stands: it is the time the track took.
 
-**Open, joint, proposed in our round 36 lap 8**: under `-Z`, the speed of the
-kept read alone, with `Elapsed:` unchanged. Platterpus reads the value
-(`_TRACK_SPEED`) and folds it into its estimate of the drive's speed, so the
-value's meaning changes only once they agree.
+**Fixed for `.27`**: under `-Z`, the speed of the kept read alone, timed from
+the start of its pass to the end of its frame loop, with `Elapsed:` unchanged,
+as our round 36 lap 8 S27 proposed and Platterpus's lap 9 S18 accepted.
+`tests/badsector.c` slows an image's reads so `z_extraction_speed` can tell one
+pass from three.
 
 ## Known external bugs worked around here
 

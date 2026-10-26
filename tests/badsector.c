@@ -50,6 +50,15 @@
  *   CRIP_FLIP_OUT    where to write the number of reads varied, at exit
  *
  * And CRIP_NO_TMPFILE, set to anything, makes tmpfile() fail with ENOSPC.
+ *
+ * AND READS THAT TAKE TIME. An image reads at memory speed, so a -Z track's
+ * passes take no time worth measuring and one pass cannot be told from all
+ * of them. With CRIP_READ_DELAY_US set, every read of the image sleeps that
+ * many microseconds for each sector it covers, so each pass of a track takes
+ * a known, equal time. Round 36's kept-read `Extraction speed:` is what it
+ * was added for.
+ *
+ *   CRIP_READ_DELAY_US microseconds to sleep per sector read from the image
  */
 
 /* The build passes -D_FILE_OFFSET_BITS=64, under which glibc renames fopen
@@ -63,6 +72,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static FILE *victim;
 static long bad_sector = -1;
@@ -71,6 +81,7 @@ static long flip_sector = -1;
 static long flip_cycle = 1;
 static long flip_run = 1;
 static long flipped_reads;
+static long read_delay_us;
 
 static void report(void)
 {
@@ -111,6 +122,8 @@ FILE *fopen(const char *path, const char *mode)
             flip_cycle = atol(s);
         if ((s = getenv("CRIP_FLIP_RUN")) && atol(s) > 0)
             flip_run = atol(s);
+        if ((s = getenv("CRIP_READ_DELAY_US")) && atol(s) > 0)
+            read_delay_us = atol(s);
         atexit(report);
         atexit(report_flips);
     }
@@ -150,6 +163,8 @@ size_t fread(void *ptr, size_t size, size_t n, FILE *f)
     static size_t (*real)(void *, size_t, size_t, FILE *);
     if (!real)
         real = dlsym(RTLD_NEXT, "fread");
+    if (victim && f == victim && read_delay_us > 0)
+        usleep(read_delay_us * (long)((size * n + 2351) / 2352));
     if (victim && f == victim && bad_sector >= 0) {
         long a = ftell(f), b = a + (long)(size * n);
         long lo = bad_sector * 2352, hi = lo + 2352;

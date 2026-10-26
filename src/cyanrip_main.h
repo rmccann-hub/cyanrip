@@ -330,6 +330,8 @@ typedef struct cyanrip_track {
      * one frame. This is what lets the two be told apart. */
     int end_lsn_session_gap;
     int64_t rip_time_us; /* Wall clock time spent ripping and encoding */
+    int64_t kept_read_us; /* Under -Z, how long the kept read took to read;
+                           * 0 without -Z or with no kept read */
     time_t kept_read_began; /* When the read the files carry began; 0 if none finished */
     int index; /* Array position + 1 */
 

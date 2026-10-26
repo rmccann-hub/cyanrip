@@ -329,13 +329,14 @@ def check_checksum_inventory(out, log):
     text = log.read_text(encoding="utf-8", errors="replace")
     counts = {k: len(re.findall(rf"^\s+{k}:", text, re.M))
               for k in ("EAC CRC32", "Accurip v1", "Accurip v2", "Accurip 450")}
-    # BOTH SPELLINGS, DELIBERATELY. Round 22 renamed the per-track line from
+    # EVERY SPELLING, DELIBERATELY. Round 22 renamed the per-track line from
     # `Track N ripped and encoded successfully!` to `Track N read
     # successfully!`, because the old one asserted an encode outcome that did
-    # not exist when it printed. This tool reads FILED rig logs as well as new
-    # ones, and every log filed before that round carries the old wording --
-    # rewriting the pattern to the new spelling alone would silently count zero
-    # tracks in each of them. A tolerant pattern here is not the
+    # not exist when it printed, and round 36 renamed it to `Track N read with
+    # no error reported.`, because AccurateRip could still reject the track.
+    # This tool reads FILED rig logs as well as new ones, and every log filed
+    # before each round carries the older wording -- rewriting the pattern to
+    # the new spelling alone would silently count zero tracks in each of them. A tolerant pattern here is not the
     # matches-both-branches defect: it is a block DELIMITER over an artifact
     # whose format has a history, not an assertion about which one it found.
     TRACK_BLOCK = r"^Track \d+ (?:ripped|read)\b"

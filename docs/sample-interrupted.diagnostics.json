@@ -1,15 +1,15 @@
 {
   "schema": "cyanrip-diagnostics/10",
   "cyanrip": {
-    "version": "0.9.4-rc3+platterpus.26",
+    "version": "0.9.4-rc3+platterpus.27",
     "fork_id": "platterpus-fork",
-    "vcs": "726e8bb",
-    "handshake": "round 36 lap 8 OPEN, verdict HOLD",
+    "vcs": "25f40e8",
+    "handshake": "round 36 lap 10 OPEN, verdict OPEN",
     "released_build_declared": false
   },
   "invocation": "/home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 --consumer platterpus/0.6.21 -D o --diagnostics o/sample.diagnostics.json",
-  "started_at": "2026-10-26T06:22:50+00:00",
-  "finished_at": "2026-10-26T06:22:50+00:00",
+  "started_at": "2026-10-26T12:26:36+00:00",
+  "finished_at": "2026-10-26T12:26:37+00:00",
   "exit_code": 143,
   "cache_probe": {
     "ran": false
@@ -37,7 +37,7 @@
     "interrupted": true,
     "interrupted_by": "SIGTERM",
     "track_state": [
-      {"number":1,"cd_track":1,"repeats":1,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":11156,"data_ripped":false,"preemphasis":"none","deemphasis_applied":false,"isrc_written":null,"isrc_disc":null,"isrc_disc_reason":"the driver does not report reading ISRC","encode_failures":0,"paranoia_all_reads":{"READ":22,"VERIFY":0,"FIXUP_EDGE":0,"FIXUP_ATOM":0,"SCRATCH":0,"REPAIR":0,"SKIP":0,"DRIFT":0,"BACKOFF":0,"OVERLAP":0,"FIXUP_DROPPED":0,"FIXUP_DUPED":0,"READERR":0,"CACHEERR":0,"WROTE":0,"FINISHED":0},"error_positions":[],"error_positions_dropped":0},
+      {"number":1,"cd_track":1,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":2483,"data_ripped":false,"preemphasis":"none","deemphasis_applied":false,"isrc_written":null,"isrc_disc":null,"isrc_disc_reason":"the driver does not report reading ISRC","encode_failures":0,"paranoia_all_reads":{"READ":13,"VERIFY":0,"FIXUP_EDGE":0,"FIXUP_ATOM":0,"SCRATCH":0,"REPAIR":0,"SKIP":0,"DRIFT":0,"BACKOFF":0,"OVERLAP":0,"FIXUP_DROPPED":0,"FIXUP_DUPED":0,"READERR":0,"CACHEERR":0,"WROTE":0,"FINISHED":0},"error_positions":[],"error_positions_dropped":0},
       {"number":2,"cd_track":2,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0,"data_ripped":false,"preemphasis":null,"deemphasis_applied":null,"isrc_written":null,"isrc_disc":null,"isrc_disc_reason":"not read","encode_failures":0,"paranoia_all_reads":null,"error_positions":null,"error_positions_dropped":null},
       {"number":3,"cd_track":3,"repeats":0,"audio_ripped":false,"crcs_computed":false,"eac_crc":null,"rip_time_us":0,"data_ripped":false,"preemphasis":null,"deemphasis_applied":null,"isrc_written":null,"isrc_disc":null,"isrc_disc_reason":"not read","encode_failures":0,"paranoia_all_reads":null,"error_positions":null,"error_positions_dropped":null}
     ]
@@ -62,9 +62,9 @@
     "Checking pregap.bin for cdrom...",
     "Opening drive...",
     "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!",
-    "cyanrip 0.9.4-rc3+platterpus.26 (platterpus-fork-g726e8bb)",
+    "cyanrip 0.9.4-rc3+platterpus.27 (platterpus-fork-g25f40e8)",
     "Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 --consumer platterpus/0.6.21 -D o --diagnostics o/sample.diagnostics.json",
-    "Handshake:      round 36 lap 8 OPEN, verdict HOLD -- NOT a released build",
+    "Handshake:      round 36 lap 10 OPEN, verdict OPEN -- NOT a released build",
     "Consumer:       platterpus/0.6.21",
     "                (reported by the caller, not verified by cyanrip)",
     "Drive used:     libcdio CDRWIN (revision 2.1.)",
@@ -98,9 +98,7 @@
     "    75 frame pregap in track 2, merging into track 1",
     "    pregap of track 3 unknown (sub-channel unreadable)",
     "Tracks:",
-    "Ripping track 1, progress - 100.00%, ETA - 0s",
-    "Repeating ripping (0 out of 199 matches for current checksum D36D9296)",
-    "Ripping track 1, progress - 48.89%, ETA - 0s",
+    "Ripping track 1, progress - 89.78%, ETA - 0s",
     "Flushing encoders...",
     "Stopping, ripping incomplete!",
     "Album Loudness ",
@@ -109,14 +107,14 @@
     "Album sample peak level:          0.0 dBFS",
     "Album true peak level:            0.0 dBFS",
     "Paranoia status counts:",
-    "  READ:          22",
+    "  READ:          13",
     "Ripping errors: 1",
     "Encoder errors: not applicable; no whole track was encoded",
     "Partial files:  1 track (1), read not completed; encoder failures: none",
     "Read stalls:    none (no read exceeded 10s)",
     "Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)",
     "Interrupted at: track 1, mid-read",
-    "Ripping finished at 2026-10-26T06:22:50+00:00"
+    "Ripping finished at 2026-10-26T12:26:37+00:00"
   ],
   "messages_tail": []
 }

@@ -389,11 +389,13 @@ print("find_log: which .log is the rip log")
 RIP_LOG = (
     "cyanrip 0.9.4-rc2+platterpus.12 (platterpus-fork-gfe4d2c4)\n"
     "Invoked as:     /usr/local/bin/cyanrip -d /dev/sr0 -r 3 -Z 2\n"
-    "Disc tracks:    2\n"
+    "Disc tracks:    3\n"
     "\n"
-    # BOTH per-track wordings, in one file, deliberately. Round 22 renamed the
-    # line and every log filed before it carries the old spelling, so the block
-    # delimiter has to read both or a filed log counts zero tracks.
+    # ALL THREE per-track wordings, in one file, deliberately. Round 22 renamed
+    # the line, and round 36 renamed it again to `read with no error
+    # reported.`; every log filed before each carries the older spelling, so
+    # the block delimiter has to read all three or a filed log counts zero
+    # tracks.
     "Track 1 ripped and encoded successfully!\n"
     "  EAC CRC32:     B0D122E7 (after 3 rips)\n"
     "    Accurip v1:  5D3C90CB (accurately ripped, confidence 129)\n"
@@ -406,8 +408,13 @@ RIP_LOG = (
     "    Accurip 450: BF62B1DA (matches Accurip DB, confidence 200, track is "
     "partially accurately ripped)\n"
     "\n"
+    "Track 3 read with no error reported.\n"
+    "  EAC CRC32:     4A1D5C07 (after 3 rips)\n"
+    "    Accurip v1:  0C3E7F12 (accurately ripped, confidence 88)\n"
+    "    Accurip v2:  9D20B6E4 (accurately ripped, confidence 140)\n"
+    "\n"
     "Ripping errors: 0\n"
-    "Rip completed:  yes (2 of 2 tracks)\n"
+    "Rip completed:  yes (3 of 3 tracks)\n"
     "Log FUN512: .iwKHdeadbeef\n"
 )
 
@@ -454,7 +461,7 @@ with tempfile.TemporaryDirectory() as td:
     # plus one `Accurip 450:` for the track both whole-track checksums missed.
     rig.results.clear()
     st = rig.check_checksum_inventory(pathlib.Path(td), pathlib.Path(rip))
-    check("checksum-inventory counts 3x2 + 1 over BOTH wordings",
+    check("checksum-inventory counts 3x3 + 1 over ALL THREE wordings",
           st == rig.OK, f"got {st}: {rig.results[-1][2]}")
 
 with tempfile.TemporaryDirectory() as td:
