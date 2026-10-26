@@ -1,5 +1,39 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.27 — 2026-10-26 — **beta**
+===============================================
+**Released on the beta channel**, for round 36 to review with Platterpus's
+0.7.113, the release that reads every new line it carries (their round 36 lap
+9 S14). Round 36's pin moves to it at its release, on the operator's word of
+2026-10-26, which our lap 8 S19 quotes and their lap 9 records. Beta is this
+side's choice under v8 E3, as `.26`'s was, and the stable channel stays `.23`
+until a release of ours moves it.
+**What it ships since `.26`**, eight changes to the binary, each in an entry
+below:
+- `--prefer-accuraterip-match`, which at the `-Z` repeat limit keeps the read
+  AccurateRip matches (`6e2ca21`);
+- the footer's AccurateRip tally over the disc's audio tracks (`779549a`);
+- `Kept read began:` (`5062bd5`), and the footer's `not written whole:` lines
+  (`d33902d`);
+- `Recordable:`'s profile from GET CONFIGURATION's feature header, not
+  libcdio's search (`571051e`), and the `Pregap search:` line (`8726bd3`), the
+  two fixes round 36 goes on to `.27` for;
+- `Track N read with no error reported.` in place of `read successfully!`
+  (`ab130cc`), and, under `-Z`, the kept read's own `Extraction speed:`
+  (`db1bbe6`).
+
+**One release of Platterpus's had to come first, 0.7.113**, which reads every
+one of these lines (`v0.7.113` at `platterpus@58659497`). **The `--diagnostics`
+record stays at `/10`**: its `/11` keys wait on the word for an image's ISRC,
+which libcdio answers from the cue sheet and not with READ SUB-CHANNEL.
+**What the run on the drive must cover**, since `Recordable:`, the pregap
+search and `-Z` all read the drive: `Recordable:` answering for a pressed disc;
+track 9's pregap, with `Pregap search:` saying what the search saw; on the
+securing pass, `Extraction speed:` near each read's own rate; and the paired
+`.25` and `.26` rips of track 3 the operator's word of 2026-10-26 adds.
+
 **Under `-Z`, `Extraction speed:` is the kept read's own**, for `.27`, as our
 round 36 lap 8 S27 proposed and Platterpus's lap 9 S18 accepted. It divided
 the track's audio by every pass and the encode, so track 11 of the damaged
