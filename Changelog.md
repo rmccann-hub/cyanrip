@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**A tag value of `..` puts a rip outside its folder, recorded and not yet
+fixed**, item 3.2 of the claude-code-skills session's review of 2026-10-26.
+Measured at `ed37997` in all four `-T` modes: `-a album=..:album_artist=..`
+with `-D <root>/{album_artist}/{album}` wrote the rip two directories above
+`<root>`, and every mode keeps a leading dot, control characters and Windows'
+reserved names. Platterpus's overwrite guard predicts the folders we create,
+so the rule is proposed to them first; KNOWN-ISSUES and STATUS
+(`path-component-values`) record it.
+
 **No value the log echoes can start a line of its own any more**, for `.28`,
 item 3.1 of the claude-code-skills session's review of 2026-10-26. Every value
 went into the log through a bare `%s`, so a title could print a line of its

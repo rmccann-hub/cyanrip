@@ -240,6 +240,36 @@ both lines divide by the disc's audio tracks, and `tests/logrender.c` builds
 mixed.cue's shape and reads both over 2. Upstream report 26 names the commit
 (`f4da862`).
 
+### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names
+
+**Found by the claude-code-skills session's review of 2026-10-26, item 3.2**,
+and measured here at `ed37997` on `tests/fixtures/basic.cue`, track 1, with
+`-D <root>/{album_artist}/{album}`, in each of the four `-T` modes (`simple`,
+`os_simple`, `unicode`, `os_unicode`), all four alike:
+
+- `-a album=..:album_artist=..` wrote `1.flac`, `log.log` and a cue named
+  `...cue` two directories above `<root>`, exit 0. `crip_bprint_sanitize()`
+  (`src/naming.c:151`) replaces `< > : | ? * / \ "` and an invalid UTF-8 byte,
+  and nothing else, so a value that is exactly `.` or `..` is a path
+  component as it stands.
+- `album=.hidden` made a directory `.hidden`, hidden on every Unix.
+- `album=Ctl` + U+0001 + `x` + newline + `y` made a directory with both
+  characters in its name; Windows refuses those characters in a name.
+- `album=CON:album_artist=NUL` made `NUL/CON`; on Windows those are devices.
+
+**What it costs**: a disc's CD-TEXT, MusicBrainz or a caller's `-a` can put a
+rip's files outside the folder asked for, and on Windows a name can fail or
+open a device. Platterpus's own default folder, `{album} [FLAC]`, cannot
+traverse, since a suffix follows the value, but a track template with a folder
+part can.
+
+**Not fixed yet, and proposed first**: Platterpus predicts the folders we
+create, for its overwrite guard
+(`platterpus@d745464d:src/platterpus/adapters/cyanrip_backend.py:1904-1915`),
+so a change to a name on disk is theirs to absorb, and P7 of the contract
+changes with it. The rule goes to them in our next lap; the fix lands with
+tests of each case in each mode once they accept.
+
 ### A value the log echoes could start a line of its own (fixed for `.28`)
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.1**,
