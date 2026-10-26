@@ -1,5 +1,26 @@
 Unreleased
 ==========
+**Our round 36 lap 8 is published held** (`docs/handshake/round-36-lap-08.md`):
+our reading of the four runs of `.26`, and `HOLD`. Its two blocking findings
+are ours, each naming what it breaks in `.26`:
+- **`Recordable:`** gives a profile the drive never reported in all 38 logs;
+- **the pregap search** gives the reference disc's track 9 a value `.25` and
+  EAC's rip do not, in eight logs of eight. EAC's cue puts track 9's
+  `INDEX 00` 94 frames before the end of track 8's file, and its log's `1.25`
+  is that in hundredths of a second.
+
+It finds two of Platterpus's checks working against what they check: the cue
+audit counts `--prefer-disc-isrc`'s effect a failed step, and the pregap
+agreement check sets aside the logs whose `Gaps:` says a pregap is unknown.
+How round 36 goes on after the two defects is the operator's to decide, and
+the lap is held until they do. It recommends both fixes in `.27`, which needs
+the drive to show them working.
+
+STATUS drops three open items the runs met: `Accurate stream:` printed on a
+drive, the disc's ISRCs read from its Q frames, and an undetermined pregap
+listed in `Gaps:`. `docs/KNOWN-ISSUES.md` adds EAC's cue to the track 9
+entry.
+
 **Four runs of `.26` with Platterpus 0.7.112 are filed and read**, from
 2026-10-21 and 2026-10-22, each on its own disc, onto our evidence branch.
 Every bundle member matches the sender's hash, every cyanrip log verifies
@@ -59,14 +80,17 @@ seventh to ninth `128 to 255` beside `cd-paranoia -A`'s 137 to 140, and
 - **Run 2's** says it is the first filed rip of a disc with skips on a drive.
   2026-10-04's run of the same disc had 2,586. It also says its stall report
   ran on a drive for the first time, but that run reported 279 stalls.
-- **Run 1's** makes three claims it cannot back:
+- **Run 1's** makes five claims it cannot back:
+  - that the 55 failed steps were rips the app would not start, where they
+    are steps, not all of them rips;
+  - that the disc's track 3 reads wrong at every speed on every build, where
+    this run's `.25` rips read it right, and `.26`'s securing pass did too;
   - that Platterpus's runner fixed the caller line its pre-emphasis rip lacked
     in round 35, which is theirs to say;
   - that the media-change query is what the timed rip's speed shows, a cause
     the run did not isolate;
   - that every rip's AccurateRip result is as on `.25`, where the timed rips
-    differ on track 3. That track has read wrong at every speed on every
-    build filed.
+    differ on track 3.
 
 The default branch's copies stay byte for byte as filed until these rows
 merge, and are corrected in place after.

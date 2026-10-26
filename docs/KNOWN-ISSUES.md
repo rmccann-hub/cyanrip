@@ -86,7 +86,10 @@ tracks it.
 (`docs/rig-2026-10-21-ca0f097/` and the three runs after it, `.26` with
 Platterpus 0.7.112):
 - **The reference disc's track 9.** `.25`'s two logs read 94 frames, the
-  value EAC's log of the disc gives (`Pre-gap length 0:00:01.25`). `.26`'s
+  value EAC's rip of the disc on a BDR-209D gives: its cue puts track 9's
+  `INDEX 00` at `03:44:11` in track 8's file, 94 frames before the end of
+  track 8's 16,905 sectors, and its log's `Pre-gap length 0:00:01.25` is that
+  in hundredths of a second. `.26`'s
   eight read 95 in three and `pregap of track 9 unknown (sub-channel CRC
   mismatches)` in five, and **none reads 94**.
 - **Track 4 read 158 in all ten**, and the two-search clause printed in no
