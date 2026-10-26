@@ -17,6 +17,7 @@
  */
 
 #include <stdarg.h>
+#include <string.h>
 #include <time.h>
 #include <pthread.h>
 #include <inttypes.h>
@@ -33,6 +34,7 @@
 #include "accurip.h"
 #include "stall_watchdog.h"
 #include "diagnostics.h"
+#include "log_escape.h"
 #include "acoustid.h"
 
 #define CLOG(FORMAT, DICT, TAG)                                                \
@@ -1430,7 +1432,7 @@ static size_t crip_early_dropped;
 static int crip_early_sealed;
 
 /* Caller must hold log_lock. */
-static void crip_early_append(const char *format, va_list args)
+static void crip_early_append(const char *text, size_t len)
 {
     if (crip_early_sealed)
         return;
@@ -1443,20 +1445,16 @@ static void crip_early_append(const char *format, va_list args)
         }
     }
 
-    va_list copy;
-    va_copy(copy, args);
-    const int space = (int)(CRIP_EARLY_MAX - crip_early_len);
-    const int n = vsnprintf(crip_early + crip_early_len, space, format, copy);
-    va_end(copy);
-
     /* Truncation is recorded rather than hidden: a buffer that silently drops
      * the message explaining a failure is worse than no buffer. */
-    if (n < 0 || n >= space) {
+    const size_t space = CRIP_EARLY_MAX - crip_early_len;
+    if (len >= space) {
         crip_early_dropped++;
         crip_early_len = CRIP_EARLY_MAX - 1;
         return;
     }
-    crip_early_len += n;
+    memcpy(crip_early + crip_early_len, text, len);
+    crip_early_len += len;
 }
 
 /* Replay everything said before the log existed into it, then stop buffering.
@@ -1494,19 +1492,23 @@ static void av_log_capture(void *ptr, int lvl, const char *format,
     if (lvl > av_max_log_level)
         goto end;
 
+    /* A library's message carries our values too -- a filter's or a muxer's
+     * error can name a file, and a file is named from a title -- so it is
+     * escaped as cyanrip_vlog() escapes. */
+    AVBPrint msg;
+    av_bprint_init(&msg, 0, AV_BPRINT_SIZE_UNLIMITED);
+    crip_vbprintf_escaped(&msg, format, args);
+
     if (av_global_ctx) {
         for (int i = 0; i < av_global_ctx->settings.outputs_num; i++) {
             if (!av_global_ctx->logfile[i])
                 continue;
-
-            va_list args2;
-            va_copy(args2, args);
-            vfprintf(av_global_ctx->logfile[i], format, args2);
-            va_end(args2);
+            fwrite(msg.str, 1, msg.len, av_global_ctx->logfile[i]);
         }
     }
 
-    vprintf(format, args);
+    fwrite(msg.str, 1, msg.len, stdout);
+    av_bprint_finalize(&msg, NULL);
 
     /* The flush cyanrip_vlog() does and this function did not. Capture is
      * switched on around avfilter_graph_free(), so this is the path the
@@ -1557,11 +1559,18 @@ void cyanrip_log(cyanrip_ctx *ctx, int verbose, const char *format, ...)
 void cyanrip_vlog(cyanrip_ctx *ctx, int verbose, const char *format,
                   va_list args)
 {
+    /* Formatted once, with every value escaped (log_escape.c says why), and
+     * the same bytes then go to every destination, so the logfile, the
+     * terminal and the diagnostics record cannot disagree about a value. */
+    AVBPrint msg;
+    av_bprint_init(&msg, 0, AV_BPRINT_SIZE_UNLIMITED);
+    crip_vbprintf_escaped(&msg, format, args);
+
     pthread_mutex_lock(&log_lock);
 
     /* Before any routing decision, so the diagnostics record is a record of
      * what the program said and not of what happened to reach a file. */
-    crip_diag_record(format, args);
+    crip_diag_record_text(msg.str, msg.len);
 
     int reached_a_logfile = 0;
 
@@ -1570,10 +1579,7 @@ void cyanrip_vlog(cyanrip_ctx *ctx, int verbose, const char *format,
             if (!ctx->logfile[i])
                 continue;
 
-            va_list args2;
-            va_copy(args2, args);
-            vfprintf(ctx->logfile[i], format, args2);
-            va_end(args2);
+            fwrite(msg.str, 1, msg.len, ctx->logfile[i]);
             reached_a_logfile = 1;
         }
     }
@@ -1581,10 +1587,12 @@ void cyanrip_vlog(cyanrip_ctx *ctx, int verbose, const char *format,
     /* No logfile took it -- either none is open yet, or the caller passed no
      * ctx. Keep it so it can be replayed once one exists. */
     if (!reached_a_logfile)
-        crip_early_append(format, args);
+        crip_early_append(msg.str, msg.len);
 
-    vprintf(format, args);
+    fwrite(msg.str, 1, msg.len, stdout);
     fflush(stdout);
 
     pthread_mutex_unlock(&log_lock);
+
+    av_bprint_finalize(&msg, NULL);
 }

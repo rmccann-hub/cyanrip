@@ -19,6 +19,7 @@
 #pragma once
 
 #include <stdarg.h>
+#include <stddef.h>
 
 #include <libavutil/attributes.h>
 
@@ -48,6 +49,11 @@ void crip_diag_enable(const char *path);
 
 /* Every cyanrip_log() message, before it is routed anywhere. */
 void crip_diag_record(const char *format, va_list args) av_printf_format(1, 0);
+
+/* The same, for a message already formatted: cyanrip_vlog() hands over the
+ * text the log received, its values escaped, so the record says what the log
+ * says. */
+void crip_diag_record_text(const char *text, size_t len);
 
 /* Copy the structured facts out of ctx while it is still alive. Safe to call
  * more than once; the last call wins. Nothing else in this module dereferences

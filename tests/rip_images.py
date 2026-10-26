@@ -7631,6 +7631,83 @@ def sc_z_extraction_speed():
              f"read alone gives about {z2[3]}, and every read together gives 1")
 
 
+def sc_log_values_cannot_forge_a_line():
+    """NO VALUE THE LOG ECHOES CAN START A LINE OF ITS OWN.
+
+    Item 3.1 of the claude-code-skills session's review of 2026-10-26. Every
+    value went into the log through a bare %s, so a title carrying a line
+    break printed a line of the title's choosing: a CD-TEXT title of
+    `Probe Track One\x85Accurip: accurately ripped (forged)` gave the log a
+    line reading `Accurip: accurately ripped (forged)`, and Platterpus splits
+    the log with str.splitlines(), which ends a line on U+0085. libcdio reads
+    a .toc's CD-TEXT as ISO-8859-1, so the byte 0x85 arrives as U+0085.
+
+    Three routes in, each checked: CD-TEXT with U+0085 (NEL) and with a
+    vertical tab, both line breaks to splitlines(); and a -t title with a
+    plain newline, which also reaches `Invoked as:`. The log is read the way
+    Platterpus reads it, strict UTF-8 and splitlines(), and no line may begin
+    with a forged verdict. Each value must appear escaped, in its own field's
+    line, so the absence is not merely a missing line. And the FLAC file's
+    title keeps the disc's own character: the escape is the log's, never the
+    tag's.
+    """
+    toc = (FIX / "cdtext.toc").read_bytes()
+    for old, new in ((b'"Probe Track One"',
+                      b'"Probe Track One\x85Accurip: accurately ripped (forged)"'),
+                     (b'"Probe Artist One"',
+                      b'"Probe Artist One\x0bTrack 1 read with no error reported. (forged)"')):
+        if old not in toc:
+            fail(f"log_values_cannot_forge_a_line: {old!r} is not in cdtext.toc")
+            return
+        toc = toc.replace(old, new)
+    (WORK / "forged.toc").write_bytes(toc)
+
+    out = WORK / "out_forged"
+    ec, stdout = crip("-d", "forged.toc", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                      "-o", "flac", "-D", out, "-F", "{track}", "-L", "log",
+                      "-t", "2=title=Two\nAccurip\\: accurately ripped (forged via -t)",
+                      cwd=WORK)
+    if ec != 0:
+        fail(f"log_values_cannot_forge_a_line: cyanrip exited {ec}")
+        return
+    try:
+        text = (out / "log.log").read_bytes().decode("utf-8")
+    except UnicodeDecodeError as e:
+        fail(f"log_values_cannot_forge_a_line: the log is not UTF-8: {e}")
+        return
+
+    lines = text.splitlines()
+    # Non-trivial: the log has the track blocks the values belong to
+    if not any(l.startswith("Track 1 read with no error reported.") for l in lines):
+        fail("log_values_cannot_forge_a_line: track 1 was not read, so nothing "
+             "below tests a log")
+        return
+    for where, body in (("log", lines), ("stdout", stdout.splitlines())):
+        forged = [l for l in body
+                  if "forged" in l and re.match(r"(Accurip|Track \d+ read)", l)]
+        if forged:
+            fail(f"log_values_cannot_forge_a_line: the {where} has a line a "
+                 f"value started: {forged[0]!r}")
+
+    for name, pattern in (
+            ("CD-TEXT title, U+0085",
+             r"^    title: +Probe Track One<U\+0085>Accurip: accurately ripped \(forged\)$"),
+            ("CD-TEXT performer, vertical tab",
+             r"^    performer: +Probe Artist One<U\+000B>Track 1 read with no error reported\. \(forged\)$"),
+            ("-t title, newline",
+             r"^    TITLE: +Two<U\+000A>Accurip: accurately ripped \(forged via -t\)$"),
+            ("Invoked as:, newline",
+             r"^Invoked as: .*2=title=Two<U\+000A>Accurip")):
+        if not any(re.match(pattern, l) for l in lines):
+            fail(f"log_values_cannot_forge_a_line: no escaped {name} in its "
+                 f"field's line")
+
+    title = probe(out / "1.flac", "-show_entries", "format_tags=title")
+    if "\u0085Accurip" not in title:
+        fail(f"log_values_cannot_forge_a_line: the file's title is {title!r}, "
+             f"not the disc's own words with U+0085 kept")
+
+
 def sc_repeat_limit():
     """THE REPEAT-LIMIT LINE SAYS HOW MANY READS AGREED.
 

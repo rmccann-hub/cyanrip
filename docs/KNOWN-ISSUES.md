@@ -240,6 +240,101 @@ both lines divide by the disc's audio tracks, and `tests/logrender.c` builds
 mixed.cue's shape and reads both over 2. Upstream report 26 names the commit
 (`f4da862`).
 
+### Four drive answers the log states that are libcdio's defaults or its failure
+
+**Found by the claude-code-skills session's review of 2026-10-26, item 3.3**,
+which asked for drive answers printed without a sentinel check. A read-only
+audit of `src/` listed candidates; these four were then read here, in our code
+and in libcdio at `68ea374`:
+
+- **`Speed: default (unchangeable)` is a constant on Linux.** The line reads
+  `CDIO_DRIVE_CAP_MISC_SELECT_SPEED` (`src/cyanrip_log.c:1031-1032`), and on
+  Linux libcdio answers capabilities from its MMC parser
+  (`lib/driver/gnu_linux.c:1709-1713`), which never sets that bit; the one
+  setter on Linux is compiled out (`#undef USE_LINUX_CAP`, `:433`, `:490`).
+  All 21 `Speed:` lines in the drive logs copied to `tests/fixtures/evidence/`
+  read `unchangeable`.
+- **`Drive used:` on an image names libcdio's stand-in**, `libcdio CDRWIN
+  (revision 2.1.)` in the golden reference's line 6, two lines above
+  `Accurate stream: unknown (image)`.
+- **A failed capabilities query reads as the drive's answer.** When MODE SENSE
+  fails libcdio sets every capability word to `CDIO_DRIVE_CAP_ERROR`
+  (`lib/driver/mmc/mmc.c:866-870`), and nothing in `src/` tests for it, so the
+  log says `C2 errors: unsupported by drive`, and the disc ISRC and MCN reads
+  that the capability bits gate are skipped as if the drive lacked them.
+- **An error from the media-change query stops the rip as a changed disc.**
+  `get_media_changed()` counts any return but 0 and `DRIVER_OP_UNSUPPORTED`
+  (`src/cyanrip_main.c:118-125`), so a failed ioctl, `DRIVER_OP_ERROR`, ends
+  the rip with `Drive media changed, stopping!`.
+
+**Reported by the audit and not yet checked here**: the CD-TEXT language on an
+image is always `English` (libcdio sets it so); a TOC whose starts do not
+increase is printed raw while paranoia repairs its own copy; a failed
+last-session query decides the CD-Extra cut; an image's TOC pregap is not
+checked against the track's bounds; CD-TEXT's ISRC reaches the tags without the
+ISO 3901 check; and the offset search numbers tracks by position.
+
+**What it costs**: each prints a default or a failure as a measurement, which
+is the first rule's failure. **Not fixed yet**: every one changes what a line
+says, so each wording goes to Platterpus in our next lap, as `Recordable:`'s
+did.
+
+### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names
+
+**Found by the claude-code-skills session's review of 2026-10-26, item 3.2**,
+and measured here at `ed37997` on `tests/fixtures/basic.cue`, track 1, with
+`-D <root>/{album_artist}/{album}`, in each of the four `-T` modes (`simple`,
+`os_simple`, `unicode`, `os_unicode`), all four alike:
+
+- `-a album=..:album_artist=..` wrote `1.flac`, `log.log` and a cue named
+  `...cue` two directories above `<root>`, exit 0. `crip_bprint_sanitize()`
+  (`src/naming.c:151`) replaces `< > : | ? * / \ "` and an invalid UTF-8 byte,
+  and nothing else, so a value that is exactly `.` or `..` is a path
+  component as it stands.
+- `album=.hidden` made a directory `.hidden`, hidden on every Unix.
+- `album=Ctl` + U+0001 + `x` + newline + `y` made a directory with both
+  characters in its name; Windows refuses those characters in a name.
+- `album=CON:album_artist=NUL` made `NUL/CON`; on Windows those are devices.
+
+**What it costs**: a disc's CD-TEXT, MusicBrainz or a caller's `-a` can put a
+rip's files outside the folder asked for, and on Windows a name can fail or
+open a device. Platterpus's own default folder, `{album} [FLAC]`, cannot
+traverse, since a suffix follows the value, but a track template with a folder
+part can.
+
+**Not fixed yet, and proposed first**: Platterpus predicts the folders we
+create, for its overwrite guard
+(`platterpus@d745464d:src/platterpus/adapters/cyanrip_backend.py:1904-1915`),
+so a change to a name on disk is theirs to absorb, and P7 of the contract
+changes with it. The rule goes to them in our next lap; the fix lands with
+tests of each case in each mode once they accept.
+
+### A value the log echoes could start a line of its own (fixed for `.28`)
+
+**Found by the claude-code-skills session's review of 2026-10-26, item 3.1**,
+which searched `src/` for an escape of control characters as fields go into
+the log and found none. Measured here before the fix: a `.toc` whose track 1
+CD-TEXT title is `Probe Track One` + byte 0x85 + `Accurip: accurately ripped
+(forged)` gave the log a line reading `Accurip: accurately ripped (forged)`
+when split with Python's `str.splitlines()`, as Platterpus splits it
+(`platterpus@d745464d:src/platterpus/parsers/cyanrip_log.py:1471`). libcdio
+reads a `.toc`'s CD-TEXT as ISO-8859-1, so the byte arrives as U+0085. A
+vertical tab in the performer did the same, and so did a `-t` title with a
+newline, which also split `Invoked as:`. Upstream prints the same values the
+same way (`src/cyanrip_log.c:207` at `7dbe56a`).
+
+**What it costs**: a disc, a cue sheet, MusicBrainz or a caller's `-t` could
+write a line Platterpus or a tracker's logchecker reads as the rip's own,
+`Accurip:` or `Track N read with no error reported.` among them.
+
+**Fixed for `.28`**: every `%s` the log writes is escaped (`src/log_escape.c`;
+the rule is in the contract's P2). `tests/logescape.c` and
+`log_values_cannot_forge_a_line` hold it, and both fail with the escape
+removed. One newline is still kept: paranoia's own messages are written a line
+at a time, and they name the `-d` path and the drive's INQUIRY strings, so a
+newline in either still starts a line there. The escape's form is proposed to
+Platterpus in our next lap and ships only once they accept.
+
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every

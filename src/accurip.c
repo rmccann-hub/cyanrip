@@ -300,10 +300,13 @@ int crip_fill_accurip(cyanrip_ctx *ctx)
         }
 
         /* Different error */
+        /* curl's message may end in a newline; the format supplies the one
+         * the line ends with, since a newline inside a value is escaped */
         size_t len = strlen(errbuf);
+        if (len && errbuf[len - 1] == '\n')
+            errbuf[--len] = '\0';
         if (len)
-            cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: %s%s",
-                        errbuf, ((errbuf[len - 1] != '\n') ? "\n" : ""));
+            cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: %s\n", errbuf);
         else
             cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: %s\n!\n",
                         curl_easy_strerror(res));

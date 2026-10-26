@@ -31,15 +31,16 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 20
     env:
-      SKILLCHECK: git+https://github.com/rmccann-hub/claude-code-skills@9c545d63190f6a5d4fa7aa7e86da33b6dc330fe4
+      # v0.1.21, resolved 2026-10-26 with git ls-remote 'refs/tags/v0.1.21^{}'
+      SKILLCHECK: git+https://github.com/rmccann-hub/claude-code-skills@ebc28175ec6532c5c6af4de1ba9a27dbe6984845
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          version: "0.13.1"
+          version: "0.13.5"
 
       - name: Measure each dependency against its newest release
         env:

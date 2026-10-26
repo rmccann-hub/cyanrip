@@ -59,13 +59,13 @@ GitHub Actions. Each workflow, and what starts it:
 - `.github/workflows/tag-release.yml`, *Tag a release*: by hand.
 
 - **Runners:** `macos-26`, `ubuntu-24.04`, `ubuntu-26.04`, `windows-2025`.
-- **Actions:** `WebFreak001/deploy-nightly` v3.2.0 at `46ecbabd7fad`, `actions/cache` v6.1.0 at `55cc8345863c`, `actions/checkout` v7.0.1 at `3d3c42e5aac5`, `actions/download-artifact` v8.0.2 at `9000827ccba6`, `actions/upload-artifact` v7.0.2 at `cf430e030ddb`, `astral-sh/setup-uv` v10.3.0 at `1c37ad07a6a9`, `msys2/setup-msys2` v2.33.0 at `ec48f7c5447b`. Each is pinned by full commit SHA, with the version in a comment.
+- **Actions:** `WebFreak001/deploy-nightly` v3.2.0 at `46ecbabd7fad`, `actions/cache` v6.1.0 at `55cc8345863c`, `actions/checkout` v7.0.1 at `3d3c42e5aac5`, `actions/download-artifact` v8.0.2 at `9000827ccba6`, `actions/upload-artifact` v7.0.2 at `cf430e030ddb`, `astral-sh/setup-uv` v10.3.2 at `07a047e608db`, `msys2/setup-msys2` v2.33.0 at `ec48f7c5447b`. Each is pinned by full commit SHA, with the version in a comment.
 - **Linux packages (apt):** `ffmpeg`, `libavcodec-dev`, `libavfilter-dev`, `libavformat-dev`, `libavutil-dev`, `libcdio-cdda-dev`, `libcdio-dev`, `libcdio-paranoia-dev`, `libcurl4-openssl-dev`, `libmusicbrainz5-dev`, `libqrencode-dev`, `libswresample-dev`, `meson`, `ninja-build`, `pkg-config`.
 - **macOS packages (brew):** `curl`, `ffmpeg`, `libcdio-paranoia`, `libmusicbrainz`, `meson`, `nasm`, `ninja`, `pkg-config`, `qrencode`.
 - **Windows packages (MSYS2):** `autoconf`, `automake`, `base-devel`, `git`, `libtool`, `mingw-w64-ucrt-x86_64-cmake`, `mingw-w64-ucrt-x86_64-lame`, `mingw-w64-ucrt-x86_64-libcdio-paranoia`, `mingw-w64-ucrt-x86_64-libvorbis`, `mingw-w64-ucrt-x86_64-libxml2`, `mingw-w64-ucrt-x86_64-meson`, `mingw-w64-ucrt-x86_64-nasm`, `mingw-w64-ucrt-x86_64-nghttp2`, `mingw-w64-ucrt-x86_64-ninja`, `mingw-w64-ucrt-x86_64-opus`, `mingw-w64-ucrt-x86_64-toolchain`, `zip`.
 - **Sources the Windows build compiles**, `.github/mingw-build.sh`, each fetched as one commit by its full SHA, with the release it is: <https://github.com/curl/curl.git> at `3163ec065643` (curl-8_23_0), <https://github.com/notroj/neon.git> at `170c36704bfc` (0.37.1), <https://github.com/cyanreg/libmusicbrainz.git> at `2398b8765ed8` (no release), <https://github.com/fukuchi/libqrencode.git> at `715e29fd4cd7` (v4.1.1), <https://github.com/FFmpeg/FFmpeg.git> at `946fcce07b6d` (n9.0.2). Every one is pinned.
 - **Sources the Windows build compiles from a release tarball**, having none in git, each checked against its SHA-256 before use: <https://downloads.sourceforge.net/lame/lame-3.100.tar.gz> with SHA-256 `ddfe36cab873` (3.100). Every one is pinned.
-- **Python tools installed from git:** <https://github.com/rmccann-hub/claude-code-skills> at `9c545d63190f`, run with uv `0.13.1` on Python `3.15`. Each is pinned by full commit SHA.
+- **Python tools installed from git:** <https://github.com/rmccann-hub/claude-code-skills> at `ebc28175ec65`, run with uv `0.13.5` on Python `3.15`. Each is pinned by full commit SHA.
 
 ## Network services cyanrip contacts
 

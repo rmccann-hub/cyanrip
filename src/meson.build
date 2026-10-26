@@ -76,6 +76,7 @@ handshake_state_h = custom_target('handshake_state.h',
 sources = [
     'cyanrip_encode.c',
     'cyanrip_log.c',
+    'log_escape.c',
     'cyanrip_main.c',
     'naming.c',
     'fun512.c',

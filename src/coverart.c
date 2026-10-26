@@ -204,10 +204,15 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
         }
 
         /* Different error */
+        /* curl's message may end in a newline; the format supplies the one
+         * the line ends with, since a newline inside a value is escaped. The
+         * line keeps its old shape, the "!" on a line of its own. */
         size_t len = strlen(errbuf);
+        if (len && errbuf[len - 1] == '\n')
+            errbuf[--len] = '\0';
         if (len)
-            cyanrip_log(ctx, 0, "Unable to get cover art \"%s\": %s%s!\n",
-                        type, errbuf, ((errbuf[len - 1] != '\n') ? "\n" : ""));
+            cyanrip_log(ctx, 0, "Unable to get cover art \"%s\": %s\n!\n",
+                        type, errbuf);
         else
             cyanrip_log(ctx, 0, "Unable to get cover art \"%s\": %s\n!\n",
                         type, curl_easy_strerror(res));
