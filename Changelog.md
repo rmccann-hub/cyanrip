@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**The weekly dependency check runs claude-code-skills v0.1.21 with uv
+0.13.5**, items 1.1 and 1.2 of the claude-code-skills session's review of
+2026-10-26. v0.1.18's `skillcheck --outdated` ended its run when a
+registry's transfer was cut short (`http.client.IncompleteRead` is not an
+`OSError`), so one registry hiccup failed the week's check; v0.1.20 fixes it,
+and `--outdated`'s command line and output are unchanged. The pin is
+`ebc28175ec6532c5c6af4de1ba9a27dbe6984845`, which `git ls-remote` resolves
+`refs/tags/v0.1.21^{}` to, named with that tag and date beside it. uv's own
+changelog at 0.13.5 says 0.13.4 removed the eMudhra/emSign root from uv's
+certificate store and 0.13.5 rejects chains holding the compromised eMudhra
+intermediates.
+
 **Our round 36 lap 10 is sent when its pull request merges green**
 (`docs/handshake/round-36-lap-10.md`), on the operator's standing word for
 round 36, *"Release each lap of round 36 once its pull request is green and
