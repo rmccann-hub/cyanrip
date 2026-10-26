@@ -1,5 +1,27 @@
 Unreleased
 ==========
+**A run of `.26` with Platterpus 0.7.113 on the reference disc, 2026-10-26, is
+filed** on the evidence branch at `a0d1769` (`docs/rig-2026-10-26-ca0f097/`),
+from bundle `platterpusbundle20261026t121221z.tar.gz`. It began at 12:12:21Z,
+46 minutes before `.27` was published, so it is not round 36's closing run on
+`.27`. It carries section P6, track 3 ripped eight times in ABBA order on `.25`
+and `.26`, and P5, the timed rip.
+- **Verdict:** pass 553, fail 0, unreachable 1. All 181 hashed members match
+  the sender's SHA-256, and all 25 logs verify with `-Y`.
+- **P6:** track 3 was verified by AccurateRip in 1 of 4 rips on `.25` and 0 of
+  4 on `.26`, with seven distinct checksums in eight rips. Eight rips cannot
+  tell the builds apart.
+- **P5:** `.26` took 0.189 and 0.191 of `.25`'s time on tracks 1 to 3.
+- **The repeat limit's `last read` clause printed on a drive for the first
+  time** (track 3, the whole-disc rip's securing pass), so STATUS's
+  `repeat-limit-last-read`, open until a drive printed it, is closed.
+- **Track 5:** `-Z 2` converged on `E0036697`, which AccurateRip does not
+  match, while the securing pass's tie kept `C96464AB`, which it does.
+  STATUS's `accuraterip-kept-read` row records it.
+
+KNOWN-ISSUES's cache table gains the run's row: `128 to 255 sectors`, beside
+`cd-paranoia -A`'s 137. STATUS names the run as the newest.
+
 **Four drive answers that are libcdio's defaults or failures, recorded and not
 yet fixed**, item 3.3 of the claude-code-skills session's review of
 2026-10-26: `Speed: default (unchangeable)` is a constant on Linux, `Drive
