@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**`Track N read with no error reported.` replaces `Track N read
+successfully!`**, for `.27`, as our round 36 lap 8 S26 proposed and
+Platterpus's lap 9 S17 accepted. The line prints before AccurateRip is looked
+up, and on 2026-10-21 it printed over four tracks of the damaged disc that
+AccurateRip then rejected; it now says only what it measured. `read with
+errors.` and the condition between the two are unchanged. Platterpus's 0.7.113
+reads both wordings, and logs written before `.27` keep the old one. Our own
+readers, `tools/cross-rip.py`, `tools/rig-check.py` and `tools/read-run.py`,
+read all three spellings the line has had. Four suite cases fail with the old
+wording restored.
+
 **Platterpus's round 36 lap 9 is filed** (`docs/handshake/inbound/round-36-lap-09.md`,
 16,729 bytes, sha256 `df688e56…`), released at their `43e3b8a9` and taken in
 at their `main`'s `09d1e519`; every take-in check passes. It is `OPEN`: they

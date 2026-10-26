@@ -164,8 +164,9 @@ GOTO_FATAL = ("fail",)
 # what put `Done; (no matches found, but hit repeat limit of %i)` under a
 # heading reading "Every string reachable on a failure path" -- and
 # `finalize_ripping:` is the ordinary continuation, which flushes encoders and
-# falls into "Track %i read successfully!" -- spelled "ripped and encoded
-# successfully!" until round 22 split the read claim from the encode claim.
+# falls into "Track %i read with no error reported." -- spelled "ripped and
+# encoded successfully!" until round 22 split the read claim from the encode
+# claim, and "read successfully!" until round 36.
 #
 # NO LABEL LIST. An earlier draft of this kept `goto end` in P5 as a special
 # case and moved the rest, which would have been a hand-maintained allowlist
@@ -1738,16 +1739,19 @@ def emit(binary):
     w("  from 1x up, two decimals from 0.1x, three below that, so a slow read")
     w("  keeps two significant figures. Below 0.0005x it prints `0.000x`. Before")
     w("  round 30 it was one decimal throughout, and 0.033x printed `0.0x`.")
-    w("- **`Track N read successfully!` / `read with errors.` - what decides the")
-    w("  arm.** `read with errors.` when, **over the track's last read**, the drive")
-    w("  reported an error or returned no data, **or** paranoia skipped (`SKIP`")
-    w("  in that track's block, which the drive does not report), **or** `-Z` hit")
+    w("- **`Track N read with no error reported.` / `read with errors.` - what")
+    w("  decides the arm.** `read with errors.` when, **over the track's last")
+    w("  read**, the drive reported an error or returned no data, **or** paranoia")
+    w("  skipped (`SKIP` in that track's block, which the drive does not report),")
+    w("  **or** `-Z` hit")
     w("  its repeat limit (`Secure re-read:  did NOT converge`), which no count")
     w("  records. So the per-track arm can say `with errors` beside `Ripping")
     w("  errors: 0`, for a track at the repeat limit. The last two count from")
-    w("  round 30; before it, `read successfully!` was printed over both.")
-    w("  `successfully!` does not say the audio is right: that is what")
-    w("  AccurateRip reports.")
+    w("  round 30; before it, the first arm was printed over both. The first")
+    w("  arm read `read successfully!` until round 36, which renamed it because")
+    w("  it printed over tracks AccurateRip then rejected: it says only that")
+    w("  no error was reported, and whether the audio is right is what")
+    w("  AccurateRip reports. Logs written before `.27` carry the old wording.")
     w("- **`Ripping errors:` - what it counts.** Reads the drive failed or")
     w("  returned no data for, encoder failures, and operational errors, over")
     w("  every read of the run, **and from round 30 paranoia's skips** - the")
@@ -1963,8 +1967,9 @@ def emit(binary):
     # headed "Every string reachable on a failure path" on the strength of
     # `goto finalize_ripping` alone -- no wording evidence, no control-flow
     # evidence -- and `finalize_ripping:` is the NORMAL continuation, which
-    # flushes encoders and falls into `Track %i read successfully!` -- the line
-    # round 22 renamed from `Track %i ripped and encoded successfully!`, which
+    # flushes encoders and falls into `Track %i read with no error reported.`
+    # -- `read successfully!` until round 36, and before round 22
+    # `Track %i ripped and encoded successfully!`, which
     # is what the rig log quoted here says. It appeared three times in a rip that ended
     # `Ripping errors: 0` / `Rip completed: yes (14 of 14 tracks)`.
     #
@@ -2102,11 +2107,12 @@ def emit(binary):
     w("was acted on.** These rows sat in P5 under a heading reading *\"Every string")
     w("reachable on a failure path\"* purely on the strength of a `goto`. One of them")
     w("follows a converged/not-converged decision and jumps to `finalize_ripping:`,")
-    w("which flushes encoders and falls into `Track %i read successfully!` -- so a")
-    w("consumer classifying by this document recorded errors against a rip that")
-    w("completed every track with none. (That line read `Track %i ripped and encoded")
-    w("successfully!` until round 22 split the claim; logs filed before it carry the")
-    w("old wording, and the point it makes is unchanged.)")
+    w("which flushes encoders and falls into `Track %i read with no error reported.`")
+    w("-- so a consumer classifying by this document recorded errors against a rip")
+    w("that completed every track with none. (That line read `Track %i ripped and")
+    w("encoded successfully!` until round 22 split the claim, and `Track %i read")
+    w("successfully!` until round 36; logs filed before each carry the older")
+    w("wording, and the point it makes is unchanged.)")
     w("")
     w("**The label is not the discriminator, which is why no label is exempted")
     w("here.** `end:`, `end_meta:` and `finalize_ripping:` are all reachable by")

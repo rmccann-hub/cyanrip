@@ -77,9 +77,10 @@ _rc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_rc)
 is_cyanrip_log = _rc.is_cyanrip_log
 
-# Both wordings: round 22 renamed `Track N ripped and encoded successfully!` to
-# `Track N read successfully!` / `read with errors.`, and filed logs carry the
-# old one. A block DELIMITER over a format with a history, as in rig-check.py.
+# Every wording: round 22 renamed `Track N ripped and encoded successfully!` to
+# `Track N read successfully!` / `read with errors.`, round 36 renamed the first
+# to `read with no error reported.`, and filed logs carry the older ones. A
+# block DELIMITER over a format with a history, as in rig-check.py.
 TRACK_BLOCK = re.compile(r"^Track (\d+) (?:ripped|read)\b.*$", re.M)
 DISC_ID = re.compile(r"^DiscID:\s+(\S+)", re.M)
 OFFSET = re.compile(r"^Offset:\s+(\S(?:.*\S)?)\s*$", re.M)

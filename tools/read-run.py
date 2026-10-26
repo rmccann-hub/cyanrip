@@ -57,7 +57,8 @@ NOT_PASS = ("fail", "error", "skipped", "blocked", "unreachable", "info")
 DONE_RE = re.compile(r"^Done; \((.*)\)$")
 REPEAT_RE = re.compile(r"^Repeating ripping \((\d+) out of (\d+) matches for "
                        r"current checksum ([0-9A-F]{8})\)$")
-TRACK_RE = re.compile(r"^Track (\d+) (read successfully!|read with errors\.|.*)$")
+TRACK_RE = re.compile(r"^Track (\d+) (read with no error reported\.|"
+                      r"read successfully!|read with errors\.|.*)$")
 GAP_RE = re.compile(r"^\s+(\d+) frame pregap in track (\d+)")
 UNKNOWN_GAP_RE = re.compile(r"^\s+pregap of track (\d+) unknown \((.*)\)$")
 DIAG_RE = re.compile(r"(?:^|\s)(?:--diagnostics|-j) (\S+)")

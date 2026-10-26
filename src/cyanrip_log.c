@@ -241,11 +241,11 @@ static void print_stall_summary(cyanrip_ctx *ctx)
  * PER TRACK.
  *
  * The per-track block runs while the encoders are still in flight, so it now
- * reports the READ alone (`Track N read successfully!`). The encode outcome
- * exists only after the collection loop at the bottom of cyanrip_run() joins
- * every encoder thread, which is a disc-level moment -- so this is where it
- * lands, and it names the tracks rather than only counting them, for the same
- * reason `Interrupted at:` names the track.
+ * reports the READ alone (`Track N read with no error reported.`). The
+ * encode outcome exists only after the collection loop at the bottom of
+ * cyanrip_run() joins every encoder thread, which is a disc-level moment --
+ * so this is where it lands, and it names the tracks rather than only
+ * counting them, for the same reason `Interrupted at:` names the track.
  *
  * THREE STATES, NOT TWO, exactly as `Read stalls:` has three. `none` over an
  * unstated population is an absence of evidence read as evidence of absence:

@@ -1989,14 +1989,24 @@ fail:
          * asked for, and at the repeat limit it failed: the same run printed
          * `read successfully!` over tracks read five times with five
          * different checksums. The track block's `Secure re-read:` line says
-         * the limit was hit; this arm no longer contradicts it. */
+         * the limit was hit; this arm no longer contradicts it.
+         *
+         * AND THE OTHER ARM SAYS ONLY WHAT IT KNOWS. It printed
+         * `read successfully!` until round 36, over tracks 11, 12, 14 and
+         * 16 of the damaged disc on 2026-10-21, which read no skip and no
+         * error and which AccurateRip then rejected. The line prints before
+         * AccurateRip is looked up, and all it measured was that nothing
+         * was reported, so that is what it says now: our round 36 lap 8 S26,
+         * accepted by Platterpus's lap 9 S17, whose 0.7.113 reads both
+         * wordings. Logs filed before `.27` carry the old one. */
         const uint64_t skips = paranoia_status[PARANOIA_CB_SKIP] -
                                start_paranoia[PARANOIA_CB_SKIP];
         if ((ctx->total_error_count - start_err) || skips ||
             t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT)
             cyanrip_log(ctx, 0, "Track %i read with errors.\n", t->number);
         else
-            cyanrip_log(ctx, 0, "Track %i read successfully!\n", t->number);
+            cyanrip_log(ctx, 0, "Track %i read with no error reported.\n",
+                        t->number);
     }
 
 end:
