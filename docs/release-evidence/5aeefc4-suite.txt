@@ -1,0 +1,154 @@
+commit:       5aeefc43ae46c7171424bf84de6f762982c9c7b4
+command:      meson setup build && ninja -C build && meson test -C build --print-errorlogs
+meson:        1.3.2
+started:      2026-10-26T12:16:15Z
+ended:        2026-10-26T12:19:38Z
+exit:         0
+run headers:  1 in meson-logs/testlog.txt
+result lines: 138 in the run's stdout, 138 in its testlog
+
+Ok:                 138
+Expected Fail:      0
+Fail:               0
+Unexpected Pass:    0
+Skipped:            0
+Timeout:            0
+
+  1/138 cyanrip / FUN512 checksum                                      OK                0.02s
+  2/138 cyanrip / Naming schemes                                       OK                0.01s
+  3/138 cyanrip / Q sub-channel decoding                               OK                0.01s
+  4/138 cyanrip / Read kept at the repeat limit                        OK                0.01s
+  5/138 cyanrip / AccurateRip response                                 OK                0.01s
+  6/138 cyanrip / Cue pre-gap decision                                 OK                0.01s
+  7/138 cyanrip / Peak cross-check                                     OK                0.01s
+  8/138 cyanrip / Cache probe wording                                  OK                0.01s
+  9/138 cyanrip / Accurate stream and recordable medium from the drive OK                0.01s
+ 10/138 cyanrip / Cache probe evidence                                 OK                0.01s
+ 11/138 cyanrip / Diagnostics retention                                OK                0.01s
+ 12/138 cyanrip / Diagnostics record fields                            OK                0.02s
+ 13/138 cyanrip / JSON reader                                          OK                0.01s
+ 14/138 cyanrip / Option parsing                                       OK                0.01s
+ 15/138 cyanrip / Log rendering                                        OK                0.03s
+ 16/138 cyanrip / Compiler diagnostics gate only this tree             OK                0.05s
+ 17/138 cyanrip / FIFO spurious wakeup                                 OK                0.42s
+ 18/138 cyanrip / Audio checksum mirror                                OK                0.43s
+ 19/138 cyanrip / Golden reference freshness                           OK                0.62s
+ 20/138 cyanrip / Golden reference library set                         OK                3.24s
+ 21/138 cyanrip / Rig tools                                            OK                4.34s
+ 22/138 cyanrip / Interrupted sample freshness                         OK                0.37s
+ 23/138 cyanrip / Compiler diagnostics                                 OK                4.81s
+ 24/138 cyanrip / Stall watchdog                                       OK                5.09s
+ 25/138 cyanrip / CLAUDE.md within its cap                             OK                0.03s
+ 26/138 cyanrip / Fork options are long-only                           OK                0.48s
+ 27/138 cyanrip / Dependency map is current                            OK                0.61s
+ 28/138 cyanrip / Sent laps are immutable                              OK                0.12s
+ 29/138 cyanrip / Contract delta names its section                     OK                0.49s
+ 30/138 cyanrip / Lap commit list names its range                      OK                1.88s
+ 31/138 cyanrip / Round 16 acceptance checker                          OK                3.13s
+ 32/138 cyanrip / Handshake wire conformance                           OK                2.41s
+ 33/138 cyanrip / Argv surface probe                                   OK                8.44s
+ 34/138 cyanrip / Argv table in seam-commands.md                       OK                8.75s
+ 35/138 cyanrip / Release gate                                         OK               16.45s
+ 36/138 cyanrip / P5 message witnesses                                 OK                0.29s
+ 37/138 cyanrip / P5 citations fill conversions                        OK                0.08s
+ 38/138 cyanrip / Lap statements are well formed                       OK               47.32s
+ 39/138 cyanrip / Settled facts                                        OK               52.40s
+ 40/138 cyanrip / Sanitizer sweep                                      OK               57.11s
+ 41/138 cyanrip / Black-box sweep                                      OK              100.31s
+ 42/138 cyanrip / No personal details in new laps or evidence          OK                0.22s
+ 43/138 cyanrip / Redaction in the filing tools                        OK                0.42s
+ 44/138 cyanrip / Evidence readers and fixture copies                  OK                0.18s
+ 45/138 cyanrip / Lap intake and run reader                            OK                3.85s
+ 46/138 cyanrip / Bundle ingest                                        OK                3.91s
+ 47/138 cyanrip / Tool patterns are linear                             OK                0.08s
+ 48/138 cyanrip / Workflows are hardened                               OK                0.04s
+ 49/138 cyanrip / Evidence tool                                        OK                4.64s
+ 50/138 cyanrip / Cross-rip reader                                     OK                1.08s
+ 51/138 cyanrip / Release tag check                                    OK                0.97s
+ 52/138 cyanrip / Seam inbound-held audit                              OK                0.14s
+ 53/138 cyanrip / Seam gap report                                      OK                0.32s
+ 54/138 cyanrip:images / basic                                         OK                0.86s
+ 55/138 cyanrip:images / info                                          OK                1.67s
+ 56/138 cyanrip:images / mixed                                         OK                1.68s
+ 57/138 cyanrip / No personal details in new evidence                  OK                8.03s
+ 58/138 cyanrip:images / data_track_completed                          OK                0.77s
+ 59/138 cyanrip:images / kept_read_began                               OK                0.75s
+ 60/138 cyanrip:images / pregap                                        OK                4.18s
+ 61/138 cyanrip:images / discid                                        OK                1.33s
+ 62/138 cyanrip:images / nrg                                           OK                0.53s
+ 63/138 cyanrip:images / trailing                                      OK                2.03s
+ 64/138 cyanrip:images / cli                                           OK                6.25s
+ 65/138 cyanrip:images / media_tag                                     OK                0.74s
+ 66/138 cyanrip:images / loudness_after_filter                         OK                1.21s
+ 67/138 cyanrip:images / deemph_with_hdcd                              OK                1.75s
+ 68/138 cyanrip:images / filters                                       OK                1.97s
+ 69/138 cyanrip:images / golden_reference_matches_a_fresh_rip          OK                0.75s
+ 70/138 cyanrip:images / contract_line_shapes                          OK                0.43s
+ 71/138 cyanrip:images / audio_checksums                               OK                0.79s
+ 72/138 cyanrip:images / tag_keys_in_capitals                          OK                1.37s
+ 73/138 cyanrip:images / album_loudness                                OK                0.47s
+ 74/138 cyanrip:images / contract_covers_log                           OK                0.70s
+ 75/138 cyanrip:images / acoustid                                      OK                0.43s
+ 76/138 cyanrip:images / art                                           OK                0.75s
+ 77/138 cyanrip:images / cue_only                                      OK                0.79s
+ 78/138 cyanrip:images / reporting                                     OK                0.47s
+ 79/138 cyanrip:images / cdtext                                        OK                1.28s
+ 80/138 cyanrip:images / metadata                                      OK                1.10s
+ 81/138 cyanrip:images / handshake                                     OK                0.78s
+ 82/138 cyanrip:images / errors                                        OK                2.82s
+ 83/138 cyanrip:images / contract_build                                OK                0.17s
+ 84/138 cyanrip:images / diagnostics                                   OK                0.90s
+ 85/138 cyanrip:images / early_log                                     OK                1.40s
+ 86/138 cyanrip:images / contract_exit_codes                           OK                0.94s
+ 87/138 cyanrip:images / docs_do_not_contradict_themselves             OK                0.12s
+ 88/138 cyanrip:images / changelog_names_every_release                 OK                0.16s
+ 89/138 cyanrip:images / status_block_is_current                       OK                1.48s
+ 90/138 cyanrip:images / encode_failure_reaches_the_log                OK                0.51s
+ 91/138 cyanrip:images / cache_table_matches_the_transcripts           OK                0.39s
+ 92/138 cyanrip:images / format_guard                                  OK                0.34s
+ 93/138 cyanrip:images / status_is_current                             OK                2.22s
+ 94/138 cyanrip:images / version_matrix                                OK                0.31s
+ 95/138 cyanrip:images / cue_isrc                                      OK                0.47s
+ 96/138 cyanrip:images / reference                                     OK                0.45s
+ 97/138 cyanrip:images / duration                                      OK                5.16s
+ 98/138 cyanrip:images / exit_codes                                    OK                1.16s
+ 99/138 cyanrip:images / runa_block_is_complete                        OK                0.18s
+100/138 cyanrip:images / verify_log                                    OK                0.94s
+101/138 cyanrip:images / signal_after_last_frame                       OK                0.45s
+102/138 cyanrip:images / paranoia                                      OK                2.00s
+103/138 cyanrip:images / filed_rig_is_mappable                         OK                1.82s
+104/138 cyanrip:images / interrupt                                     OK                1.25s
+105/138 cyanrip:images / artifacts_are_tracked                         OK                0.14s
+106/138 cyanrip:images / cache_probe_only                              OK                0.78s
+107/138 cyanrip:images / argv_probe_names_what_it_did_not_see          OK                0.72s
+108/138 cyanrip:images / argv_probe_reads_the_record                   OK                0.75s
+109/138 cyanrip:images / mutation_exclusions_are_pinned                OK                0.14s
+110/138 cyanrip:images / interrupt_deadlock                            OK                1.53s
+111/138 cyanrip:images / contract_diagnostics                          OK                0.43s
+112/138 cyanrip:images / encoder_option                                OK                1.37s
+113/138 cyanrip:images / diag_repeated_flag                            OK                0.73s
+114/138 cyanrip:images / contract_composed                             OK                0.44s
+115/138 cyanrip:images / contract_fatal_inventory                      OK                0.17s
+116/138 cyanrip:images / curl_timeouts                                 OK                0.17s
+117/138 cyanrip:images / enhanced_cd                                   OK                1.67s
+118/138 cyanrip:images / outdir_is_a_file                              OK                0.41s
+119/138 cyanrip:images / timestamp_offset                              OK                0.70s
+120/138 cyanrip:images / abort_footer                                  OK                0.51s
+121/138 cyanrip:images / utf8_naming                                   OK                1.28s
+122/138 cyanrip:images / p0_bad_sector                                 OK                0.78s
+123/138 cyanrip:images / consumer_argv                                 OK                1.81s
+124/138 cyanrip:images / bad_sector                                    OK                1.31s
+125/138 cyanrip:images / repeat_limit                                  OK                1.09s
+126/138 cyanrip:images / repeat_limit_keeps_most_agreed                OK                1.02s
+127/138 cyanrip:images / sanitize                                      OK                5.59s
+128/138 cyanrip:images / gaps_unknown_pregap                           OK                1.01s
+129/138 cyanrip:images / spool_refusal                                 OK                0.74s
+130/138 cyanrip:images / paranoia_skip                                 OK                0.69s
+131/138 cyanrip:images / repeat_resets_filter                          OK                0.72s
+132/138 cyanrip:images / zr_refusal                                    OK                0.83s
+133/138 cyanrip:images / probe_runs_open_no_logfile                    OK                1.02s
+134/138 cyanrip:images / image_reports_isrc                            OK                0.77s
+135/138 cyanrip:images / diag_record_v8                                OK                1.64s
+136/138 cyanrip:images / z_extraction_speed                            OK                4.48s
+137/138 cyanrip:images / disc_isrc_line                                OK                1.29s
+138/138 cyanrip:images / overread_bounded                              OK                1.62s
