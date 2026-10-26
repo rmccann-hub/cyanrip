@@ -602,7 +602,7 @@ revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
 that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
-bracket. **It did, nine times**: the 2026-10-06 run on `.20` printed `128 to
+bracket. **It did, ten times**: the 2026-10-06 run on `.20` printed `128 to
 255 sectors`, with a 1.7 ms re-read after 128 sectors and three re-reads of at
 least 32.6 ms after 256, and `cd-paranoia -A`, run straight after it, reported
 137 (`docs/rig-2026-10-06-5704062/`); the 2026-10-07 run on `.21` printed the
@@ -610,10 +610,10 @@ same bracket beside 144, the 2026-10-12 run on `.21` the same again beside
 137 (`docs/rig-2026-10-12-ca3f3ea/`), the 2026-10-13 run on `.22` the same
 beside 144 (`docs/rig-2026-10-13-200530e/`), the 2026-10-16 run on `.23`
 the same beside 137 (`docs/rig-2026-10-16-891c79e/`), the 2026-10-20 run
-on `.25` the same beside 140 (`docs/rig-2026-10-20-5f1d036/`), and three runs
-on `.26` the same beside 140, 140 and 137 (`docs/rig-2026-10-21-ca0f097/`,
-`docs/rig-2026-10-22-ca0f097/` and `docs/rig-2026-10-22b-ca0f097/`, the table's
-last three rows). Nine runs on one drive, and the search can say no more than a
+on `.25` the same beside 140 (`docs/rig-2026-10-20-5f1d036/`), and four runs
+on `.26` the same beside 140, 140, 137 and 137 (`docs/rig-2026-10-21-ca0f097/`,
+`docs/rig-2026-10-22-ca0f097/`, `docs/rig-2026-10-22b-ca0f097/` and
+`docs/rig-2026-10-26-ca0f097/`, the table's last four rows). Ten runs on one drive, and the search can say no more than a
 power of two. Everything below is the record of
 the defect, kept because the table is checked against the transcripts.
 
@@ -691,6 +691,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-10-21 `ca0f097` | 363.1 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.8 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-10-22 `ca0f097` | 381.2 ms | 1.4 ms | **6 ms** | 23%; `128 to 255 sectors`, three re-reads after 256 sectors at 60.6 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-10-22b `ca0f097` | 253.6 ms | 1.7 ms | **6 ms** | 28%; `128 to 255 sectors`, three re-reads after 256 sectors at 34.4 ms or more, beside `cd-paranoia -A`'s 137 |
+| 2026-10-26 `ca0f097` | 237.3 ms | 2.0 ms | **6 ms** | 33%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.1 ms or more, beside `cd-paranoia -A`'s 137 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
