@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**Under `-Z`, `Extraction speed:` is the kept read's own**, for `.27`, as our
+round 36 lap 8 S27 proposed and Platterpus's lap 9 S18 accepted. It divided
+the track's audio by every pass and the encode, so track 11 of the damaged
+disc's securing pass read 1.4x for five reads of about 7x each. Each pass is
+now timed from its start to the end of its frame loop, the spool keeps the
+time of the read it keeps, and the line divides by that; `Elapsed:` and the
+`--diagnostics` record's `rip_time_us` stay the track's whole time. Without
+`-Z` nothing changes. `tests/badsector.c` gains `CRIP_READ_DELAY_US`, a sleep
+per sector read from an image, so `z_extraction_speed` can tell one pass of a
+track from three; it fails with the old division.
+
 **`Track N read with no error reported.` replaces `Track N read
 successfully!`**, for `.27`, as our round 36 lap 8 S26 proposed and
 Platterpus's lap 9 S17 accepted. The line prints before AccurateRip is looked

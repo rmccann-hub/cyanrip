@@ -7559,6 +7559,78 @@ def sc_p0_bad_sector():
          f"other sector the source's; READ per track {clean} as a clean rip")
 
 
+def sc_z_extraction_speed():
+    """UNDER -Z, `Extraction speed:` IS THE KEPT READ'S, AND `Elapsed:` THE TRACK'S.
+
+    Round 36. The track's clock runs from before the first -Z pass to after
+    the encode, so the speed divided one read's audio by every read's time:
+    track 11 of the damaged disc's securing pass on 2026-10-21 read 1.4x for
+    five reads of about 7x each. Our lap 8 S27 proposed the kept read's own
+    speed, with Elapsed: unchanged, and Platterpus's lap 9 S18 accepted it.
+
+    An image reads at memory speed, so tests/badsector.c's CRIP_READ_DELAY_US
+    makes every pass of track 1 take a known, equal time: 300 sectors at 3 ms
+    is about 0.9 s a read. -Z 2 on an image takes three reads that agree, so
+    the kept read's speed times Elapsed: is about three times the audio, where
+    the track's own rate gives one. The same rip without -Z is the control:
+    one read, so the two are equal there.
+    """
+    needs_preload_shim("z_extraction_speed")
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"z_extraction_speed: the shim was not built or not passed ({shim!r})")
+        return
+    got = {}
+    for tag, extra in (("plain", ()), ("z2", ("-Z", "2"))):
+        out = WORK / f"out_z_extraction_speed_{tag}"
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+                   CRIP_READ_DELAY_US="3000",
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", *extra, "-l", "1", "-o", "pcm",
+                     "-D", out, "-F", "{track}", "-L", "log", env=env)
+        if ec != 0:
+            fail(f"z_extraction_speed: {tag}: cyanrip exited {ec}")
+            return
+        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        speed = re.search(r"(?m)^    Extraction speed:  ([0-9.]+)x$", text)
+        elapsed = re.search(r"(?m)^    Elapsed:            ([0-9.]+) s$", text)
+        frames = re.search(r"(?m)^    Frames:      (\d+)$", text)
+        rips = re.search(r"(?m)^  EAC CRC32:     [0-9A-F]{8} \(after (\d+) rips\)$", text)
+        if not (speed and elapsed and frames):
+            fail(f"z_extraction_speed: {tag}: no Extraction speed:, Elapsed: or "
+                 f"Frames: line in the track block")
+            return
+        audio = int(frames.group(1)) / 75.0
+        reads = int(rips.group(1)) if rips else 1
+        got[tag] = (float(speed.group(1)), float(elapsed.group(1)), audio, reads)
+    for tag, (speed, elapsed, audio, reads) in got.items():
+        # Non-trivial: the delay is what makes a read take time at all. 300
+        # sectors at 3 ms is 0.9 s, so a track under half a second a read
+        # means the shim did not slow it and the ratio below measures noise.
+        if elapsed < 0.45 * reads:
+            fail(f"z_extraction_speed: {tag}: Elapsed: {elapsed} s for {reads} "
+                 f"read(s); the shim's delay did not reach the reads")
+    plain, z2 = got.get("plain"), got.get("z2")
+    if not plain or not z2:
+        return
+    ratio = plain[0] * plain[1] / plain[2]
+    if not 0.8 <= ratio <= 1.25:
+        fail(f"z_extraction_speed: without -Z, Extraction speed: {plain[0]}x "
+             f"over Elapsed: {plain[1]} s gives {ratio:.2f} of the audio, not 1: "
+             f"one read is the whole track")
+    if z2[3] != 3:
+        fail(f"z_extraction_speed: -Z 2 took {z2[3]} reads, not 3, so the "
+             f"ratio below does not test what it says")
+        return
+    ratio = z2[0] * z2[1] / z2[2]
+    if not 2.0 <= ratio <= z2[3] + 1:
+        fail(f"z_extraction_speed: under -Z 2, Extraction speed: {z2[0]}x "
+             f"over Elapsed: {z2[1]} s gives {ratio:.2f} of the audio; the kept "
+             f"read alone gives about {z2[3]}, and every read together gives 1")
+
+
 def sc_repeat_limit():
     """THE REPEAT-LIMIT LINE SAYS HOW MANY READS AGREED.
 

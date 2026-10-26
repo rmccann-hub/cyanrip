@@ -1091,10 +1091,11 @@ The track's clock starts before the `-Z` loop and stops after the encode
 line gives the drive a speed it never read at. `Elapsed:` is right as it
 stands: it is the time the track took.
 
-**Open, joint, proposed in our round 36 lap 8**: under `-Z`, the speed of the
-kept read alone, with `Elapsed:` unchanged. Platterpus reads the value
-(`_TRACK_SPEED`) and folds it into its estimate of the drive's speed, so the
-value's meaning changes only once they agree.
+**Fixed for `.27`**: under `-Z`, the speed of the kept read alone, timed from
+the start of its pass to the end of its frame loop, with `Elapsed:` unchanged,
+as our round 36 lap 8 S27 proposed and Platterpus's lap 9 S18 accepted.
+`tests/badsector.c` slows an image's reads so `z_extraction_speed` can tell one
+pass from three.
 
 ## Known external bugs worked around here
 

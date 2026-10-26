@@ -685,10 +685,24 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
          * before. One decimal printed `0.0x` for track 18 of the 2026-10-04
          * run, 267 s of audio in 8,161 s, which is 0.033x: a speed of zero.
          * Three decimals at most, because Platterpus's `_TRACK_SPEED` reads
-         * `\.\d{1,3}`, so below 0.0005x this still prints 0.000x. Round 30. */
-        const double speed = (t->frames / 75.0) / (t->rip_time_us / 1000000.0);
-        cyanrip_log(ctx, 0, "    Extraction speed:  %.*fx\n",
-                    speed >= 1.0 ? 1 : speed >= 0.1 ? 2 : 3, speed);
+         * `\.\d{1,3}`, so below 0.0005x this still prints 0.000x. Round 30.
+         *
+         * UNDER -Z, THE KEPT READ'S SPEED ALONE. The track's clock runs from
+         * before the first pass to after the encode, so five reads at about
+         * 7x each printed 1.4x for track 11 of the damaged disc's securing
+         * pass on 2026-10-21: a rate the drive never read at. Platterpus
+         * folds the value into its estimate of the drive's speed, which wants
+         * the read's own rate (our round 36 lap 8 S27, their lap 9 S18).
+         * Elapsed: below stays the time the track took. A track block prints
+         * only for a track that finished, which under -Z means a kept read,
+         * so the line is left out only in a case no finished track reaches. */
+        const int64_t read_us = ctx->settings.ripping_retries ? t->kept_read_us
+                                                             : t->rip_time_us;
+        if (read_us > 0) {
+            const double speed = (t->frames / 75.0) / (read_us / 1000000.0);
+            cyanrip_log(ctx, 0, "    Extraction speed:  %.*fx\n",
+                        speed >= 1.0 ? 1 : speed >= 0.1 ? 2 : 3, speed);
+        }
         cyanrip_log(ctx, 0, "    Elapsed:            %.2f s\n", t->rip_time_us / 1000000.0);
         /* When the read the files carry began, in UTC. Elapsed: says how
          * long the track took and never when, and a -Z track's kept read can
