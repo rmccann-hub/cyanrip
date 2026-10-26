@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Four drive answers that are libcdio's defaults or failures, recorded and not
+yet fixed**, item 3.3 of the claude-code-skills session's review of
+2026-10-26: `Speed: default (unchangeable)` is a constant on Linux, `Drive
+used:` names libcdio's stand-in on an image, a failed MODE SENSE reads as `C2
+errors: unsupported by drive`, and an error from the media-change query stops
+a rip as a changed disc. Each was read in our code and in libcdio; each
+changes what a line says, so each wording goes to Platterpus first.
+KNOWN-ISSUES lists them with the audit's six further candidates, not yet
+checked, and STATUS gains `drive-defaults-as-answers`.
+
 **A tag value of `..` puts a rip outside its folder, recorded and not yet
 fixed**, item 3.2 of the claude-code-skills session's review of 2026-10-26.
 Measured at `ed37997` in all four `-T` modes: `-a album=..:album_artist=..`

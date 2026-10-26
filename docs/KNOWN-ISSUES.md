@@ -240,6 +240,45 @@ both lines divide by the disc's audio tracks, and `tests/logrender.c` builds
 mixed.cue's shape and reads both over 2. Upstream report 26 names the commit
 (`f4da862`).
 
+### Four drive answers the log states that are libcdio's defaults or its failure
+
+**Found by the claude-code-skills session's review of 2026-10-26, item 3.3**,
+which asked for drive answers printed without a sentinel check. A read-only
+audit of `src/` listed candidates; these four were then read here, in our code
+and in libcdio at `68ea374`:
+
+- **`Speed: default (unchangeable)` is a constant on Linux.** The line reads
+  `CDIO_DRIVE_CAP_MISC_SELECT_SPEED` (`src/cyanrip_log.c:1031-1032`), and on
+  Linux libcdio answers capabilities from its MMC parser
+  (`lib/driver/gnu_linux.c:1709-1713`), which never sets that bit; the one
+  setter on Linux is compiled out (`#undef USE_LINUX_CAP`, `:433`, `:490`).
+  All 21 `Speed:` lines in the drive logs copied to `tests/fixtures/evidence/`
+  read `unchangeable`.
+- **`Drive used:` on an image names libcdio's stand-in**, `libcdio CDRWIN
+  (revision 2.1.)` in the golden reference's line 6, two lines above
+  `Accurate stream: unknown (image)`.
+- **A failed capabilities query reads as the drive's answer.** When MODE SENSE
+  fails libcdio sets every capability word to `CDIO_DRIVE_CAP_ERROR`
+  (`lib/driver/mmc/mmc.c:866-870`), and nothing in `src/` tests for it, so the
+  log says `C2 errors: unsupported by drive`, and the disc ISRC and MCN reads
+  that the capability bits gate are skipped as if the drive lacked them.
+- **An error from the media-change query stops the rip as a changed disc.**
+  `get_media_changed()` counts any return but 0 and `DRIVER_OP_UNSUPPORTED`
+  (`src/cyanrip_main.c:118-125`), so a failed ioctl, `DRIVER_OP_ERROR`, ends
+  the rip with `Drive media changed, stopping!`.
+
+**Reported by the audit and not yet checked here**: the CD-TEXT language on an
+image is always `English` (libcdio sets it so); a TOC whose starts do not
+increase is printed raw while paranoia repairs its own copy; a failed
+last-session query decides the CD-Extra cut; an image's TOC pregap is not
+checked against the track's bounds; CD-TEXT's ISRC reaches the tags without the
+ISO 3901 check; and the offset search numbers tracks by position.
+
+**What it costs**: each prints a default or a failure as a measurement, which
+is the first rule's failure. **Not fixed yet**: every one changes what a line
+says, so each wording goes to Platterpus in our next lap, as `Recordable:`'s
+did.
+
 ### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.2**,
