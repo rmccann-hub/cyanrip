@@ -276,6 +276,31 @@ static long crip_read_audio_salvaging(cdrom_drive_t *d, void *p, lsn_t begin,
     return sectors;
 }
 
+/* Logs a library's multi-line message one line at a time, so each of its own
+ * line breaks is still a line break while everything inside a line is escaped
+ * as every value is (log_escape.c). For a message with nothing to escape this
+ * writes exactly what "%s" did.
+ *
+ * Used for paranoia's identify messages and its read errors ("010: Unable to
+ * access sector N: skipping..."), which arrive as one string of lines.
+ *
+ * THE ONE PLACE A VALUE'S NEWLINE IS KEPT. The identify messages name the
+ * device path the caller passed, "Checking <path> for cdrom...", and the
+ * drive's INQUIRY strings, so a newline in either would still start a line
+ * here; every other control character in them is escaped. The path is the
+ * caller's own argument, recorded escaped on `Invoked as:`. */
+static void crip_log_library_text(cyanrip_ctx *ctx, const char *text)
+{
+    const char *p = text;
+    const char *nl;
+    while ((nl = strchr(p, '\n'))) {
+        cyanrip_log(ctx, 0, "%.*s\n", (int)(nl - p), p);
+        p = nl + 1;
+    }
+    if (*p)
+        cyanrip_log(ctx, 0, "%s", p);
+}
+
 static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 {
     cyanrip_ctx *ctx = av_mallocz(sizeof(cyanrip_ctx));
@@ -345,7 +370,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     if (!(ctx->drive = cdio_cddap_identify_cdio(ctx->cdio, CDDA_MESSAGE_LOGIT, &msg))) {
         cyanrip_log(ctx, 0, "Unable to init cddap context!\n");
         if (msg) {
-            cyanrip_log(ctx, 0, "cdio: \"%s\"\n", msg);
+            cyanrip_log(ctx, 0, "cdio: \"");
+            crip_log_library_text(ctx, msg);
+            cyanrip_log(ctx, 0, "\"\n");
             cdio_cddap_free_messages(msg);
         }
         cyanrip_ctx_end(&ctx);
@@ -353,7 +380,8 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     }
 
     if (msg) {
-        cyanrip_log(ctx, 0, "%s\n", msg);
+        crip_log_library_text(ctx, msg);
+        cyanrip_log(ctx, 0, "\n");
         cdio_cddap_free_messages(msg);
     }
 
@@ -381,7 +409,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         ret = cdio_cddap_speed_set(ctx->drive, settings->speed);
         msg = cdio_cddap_errors(ctx->drive);
         if (msg) {
-            cyanrip_log(ctx, 0, "cdio error: %s\n", msg);
+            cyanrip_log(ctx, 0, "cdio error: ");
+            crip_log_library_text(ctx, msg);
+            cyanrip_log(ctx, 0, "\n");
             cdio_cddap_free_messages(msg);
         }
         if (ret) {
@@ -774,7 +804,9 @@ static const uint8_t *cyanrip_read_frame(cyanrip_ctx *ctx, lsn_t lsn)
 
     msg = cdio_cddap_errors(ctx->drive);
     if (msg) {
-        cyanrip_log(ctx, 0, "\ncdio error: %s\n", msg);
+        cyanrip_log(ctx, 0, "\ncdio error: ");
+        crip_log_library_text(ctx, msg);
+        cyanrip_log(ctx, 0, "\n");
         cdio_cddap_free_messages(msg);
         err = 1;
     }
@@ -2346,7 +2378,9 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
         t->nt = i != (ctx->nb_tracks - 1) ? &ctx->tracks[i + 1] : NULL;
     }
 
-    cyanrip_log(ctx, 0, "%s\n", gaps ? "" : "    None signalled\n");
+    if (!gaps)
+        cyanrip_log(ctx, 0, "    None signalled\n");
+    cyanrip_log(ctx, 0, "\n");
 }
 
 /* The command line as this process actually received it, recorded so a log
@@ -3522,8 +3556,13 @@ static int cyanrip_run(int argc, char **argv)
             char line[4096];
             cyanrip_log(ctx, 0, "\n");
             rewind(ctx->cuefile[0]);
-            while (fgets(line, sizeof(line), ctx->cuefile[0]))
-                cyanrip_log(ctx, 0, "%s", line);
+            while (fgets(line, sizeof(line), ctx->cuefile[0])) {
+                const size_t n = strcspn(line, "\n");
+                if (line[n] == '\n')
+                    cyanrip_log(ctx, 0, "%.*s\n", (int)n, line);
+                else
+                    cyanrip_log(ctx, 0, "%s", line);
+            }
         }
 
         ctx->not_a_rip = CRIP_CUE_SHEET_ONLY;

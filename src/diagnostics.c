@@ -228,9 +228,15 @@ void crip_diag_record(const char *format, va_list args)
     if (n < 0)
         return;
 
-    const size_t len = (size_t)n < sizeof(buf) - 1 ? (size_t)n : sizeof(buf) - 1;
+    crip_diag_record_text(buf, (size_t)n);
+}
+
+void crip_diag_record_text(const char *text, size_t len)
+{
+    if (len > DIAG_MAX_LINE - 1)
+        len = DIAG_MAX_LINE - 1;
     for (size_t i = 0; i < len; i++)
-        diag_feed(buf[i]);
+        diag_feed(text[i]);
 }
 
 void crip_diag_enable(const char *path)

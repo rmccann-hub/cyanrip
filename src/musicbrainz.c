@@ -426,14 +426,13 @@ static int mb_metadata(cyanrip_ctx *ctx, int manual_metadata_specified, int rele
     (!!dict_get(tmp_dict, key)) ? postamble : "",               \
     (!!dict_get(tmp_dict, key)) ? ")" : ""
 
-            cyanrip_log(ctx, 0, "    %i (ID: %s): %s" "%s%s%s%s" "%s%s%s%s" "%s%s%s%s" "%s%s%s%s" "%s", i + 1,
+            cyanrip_log(ctx, 0, "    %i (ID: %s): %s" "%s%s%s%s" "%s%s%s%s" "%s%s%s%s" "%s%s%s%s" "\n", i + 1,
                         dict_get(tmp_dict, "id")    ? dict_get(tmp_dict, "id")    : "unknown id",
                         dict_get(tmp_dict, "album") ? dict_get(tmp_dict, "album") : "unknown album",
                         PROP("disambiguation", ""),
                         PROP("country", ""),
                         PROP("num_cds", " CDs"),
-                        PROP("date", ""),
-                        "\n");
+                        PROP("date", ""));
 
 #undef PROP
 

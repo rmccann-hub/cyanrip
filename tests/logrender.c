@@ -106,9 +106,9 @@ char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
     return NULL;
 }
 
-void crip_diag_record(const char *format, va_list args)
+void crip_diag_record_text(const char *text, size_t len)
 {
-    (void)format; (void)args;
+    (void)text; (void)len;
 }
 
 void crip_log_fun512(const uint8_t *sha512_digest, int idx,

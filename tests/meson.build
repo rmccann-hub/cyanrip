@@ -214,10 +214,23 @@ test('Diagnostics record fields', diagrecord_test)
 logrender_test = executable('logrender_test',
     sources: [ 'logrender.c' ],
     include_directories: [ '../src' ],
-    objects: cyanrip_exe.extract_objects([ 'cyanrip_log.c', 'accurip.c', 'drive_caps.c' ]),
+    objects: cyanrip_exe.extract_objects([ 'cyanrip_log.c', 'log_escape.c', 'accurip.c', 'drive_caps.c' ]),
     dependencies: unit_test_deps + [ dependency('threads'), dependency('libcurl') ],
 )
 test('Log rendering', logrender_test)
+
+## The log's formatter: every conversion this program uses against the C
+## library's own vsnprintf(), and each escape against the exact text
+## src/log_escape.h promises. Item 3.1 of the claude-code-skills session's
+## review of 2026-10-26: a value carrying a line break started a line of its
+## own, so a CD-TEXT title could print `Accurip: accurately ripped`.
+logescape_test = executable('logescape_test',
+    sources: [ 'logescape.c' ],
+    include_directories: [ '../src' ],
+    objects: cyanrip_exe.extract_objects([ 'log_escape.c' ]),
+    dependencies: unit_test_deps,
+)
+test('Log value escaping', logescape_test)
 
 ## The two shims below are LD_PRELOAD interposers on glibc's names (fopen64,
 ## __vfprintf_chk) through dlsym(RTLD_NEXT). That is Linux's dynamic loader:
@@ -854,6 +867,7 @@ rip_scenarios = [
     'repeat_limit',
     'repeat_limit_keeps_most_agreed',
     'z_extraction_speed',
+    'log_values_cannot_forge_a_line',
     'gaps_unknown_pregap',
     'spool_refusal',
     'paranoia_skip',

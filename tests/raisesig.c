@@ -31,9 +31,12 @@
  *   CRIP_RAISE_OUT  a file to create when the signal is raised, so a test can
  *                   prove the shim fired and the run was not vacuous
  *
- * cyanrip writes stdout with vprintf(), which the project's -O2 build turns
- * into __vfprintf_chk(stdout, ...), so all three spellings are interposed and
- * only writes to stdout are matched.
+ * cyanrip formats each message once and writes the escaped text to stdout
+ * with fwrite() (src/log_escape.c), so fwrite() is interposed and the text it
+ * writes is matched. Until then it wrote with vprintf(), which the -O2 build
+ * turns into __vfprintf_chk(stdout, ...), and those three spellings are still
+ * interposed for a library that prints for itself; there the format string is
+ * matched. Only writes to stdout are.
  */
 
 #define _GNU_SOURCE
@@ -48,13 +51,10 @@
 
 static int fired;
 
-static void maybe_raise(FILE *f, const char *format)
+static void raise_now(void)
 {
-    const char *want = getenv("CRIP_RAISE_ON");
     const char *out = getenv("CRIP_RAISE_OUT");
 
-    if (fired || f != stdout || !want || !format || !strstr(format, want))
-        return;
     fired = 1;
     if (out) {
         int fd = open(out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -66,6 +66,29 @@ static void maybe_raise(FILE *f, const char *format)
         }
     }
     raise(SIGTERM);
+}
+
+static void maybe_raise(FILE *f, const char *format)
+{
+    const char *want = getenv("CRIP_RAISE_ON");
+
+    if (fired || f != stdout || !want || !format || !strstr(format, want))
+        return;
+    raise_now();
+}
+
+size_t fwrite(const void *ptr, size_t size, size_t n, FILE *f)
+{
+    static size_t (*real)(const void *, size_t, size_t, FILE *);
+    if (!real)
+        real = dlsym(RTLD_NEXT, "fwrite");
+    const size_t ret = real(ptr, size, n, f);
+
+    const char *want = getenv("CRIP_RAISE_ON");
+    if (!fired && f == stdout && want && *want && size && n &&
+        memmem(ptr, size * n, want, strlen(want)))
+        raise_now();
+    return ret;
 }
 
 int __vfprintf_chk(FILE *f, int flag, const char *format, va_list ap)

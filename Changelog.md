@@ -1,5 +1,30 @@
 Unreleased
 ==========
+**No value the log echoes can start a line of its own any more**, for `.28`,
+item 3.1 of the claude-code-skills session's review of 2026-10-26. Every value
+went into the log through a bare `%s`, so a title could print a line of its
+choosing. Rip a `.toc` whose CD-TEXT title carries the byte 0x85 and
+`Accurip: accurately ripped (forged)` appeared as a line of the log. libcdio
+reads a `.toc`'s CD-TEXT as ISO-8859-1, so the byte arrives as U+0085, and
+Platterpus splits the log with Python's `str.splitlines()`, which ends a line
+there. A `-t` title with a newline did the same, and split `Invoked as:` too.
+`cyanrip_vlog()` now formats each message once through `src/log_escape.c`,
+which writes every `%s` argument with each control character but the tab, and
+U+2028 and U+2029, as `<U+XXXX>`, and each byte that is not well-formed UTF-8
+as `<0xHH>`. The same bytes go to the logfile, stdout, the pre-log buffer and
+the `--diagnostics` record, and FFmpeg's captured messages take the same path.
+A value without those characters is written byte for byte, and the golden
+reference is unchanged. The escape is the log's alone: a file's tags keep the
+value as it came. Six call sites that passed their own newline through `%s`
+now put it in the format, and paranoia's multi-line messages are written a
+line at a time. `tests/logescape.c` holds every conversion the program uses to
+the C library's `vsnprintf()` and each escape to its text, and
+`log_values_cannot_forge_a_line` rips the forged image. Both fail with the
+escape removed. `tests/raisesig.c` now matches the text `fwrite()` writes,
+since the log no longer reaches stdout through `vprintf()`. The form is
+proposed to Platterpus in our next lap, and `.28` ships it only once they
+accept.
+
 **The weekly dependency check runs claude-code-skills v0.1.21 with uv
 0.13.5**, items 1.1 and 1.2 of the claude-code-skills session's review of
 2026-10-26. v0.1.18's `skillcheck --outdated` ended its run when a

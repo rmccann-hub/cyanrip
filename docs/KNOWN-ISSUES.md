@@ -240,6 +240,32 @@ both lines divide by the disc's audio tracks, and `tests/logrender.c` builds
 mixed.cue's shape and reads both over 2. Upstream report 26 names the commit
 (`f4da862`).
 
+### A value the log echoes could start a line of its own (fixed for `.28`)
+
+**Found by the claude-code-skills session's review of 2026-10-26, item 3.1**,
+which searched `src/` for an escape of control characters as fields go into
+the log and found none. Measured here before the fix: a `.toc` whose track 1
+CD-TEXT title is `Probe Track One` + byte 0x85 + `Accurip: accurately ripped
+(forged)` gave the log a line reading `Accurip: accurately ripped (forged)`
+when split with Python's `str.splitlines()`, as Platterpus splits it
+(`platterpus@d745464d:src/platterpus/parsers/cyanrip_log.py:1471`). libcdio
+reads a `.toc`'s CD-TEXT as ISO-8859-1, so the byte arrives as U+0085. A
+vertical tab in the performer did the same, and so did a `-t` title with a
+newline, which also split `Invoked as:`. Upstream prints the same values the
+same way (`src/cyanrip_log.c:207` at `7dbe56a`).
+
+**What it costs**: a disc, a cue sheet, MusicBrainz or a caller's `-t` could
+write a line Platterpus or a tracker's logchecker reads as the rip's own,
+`Accurip:` or `Track N read with no error reported.` among them.
+
+**Fixed for `.28`**: every `%s` the log writes is escaped (`src/log_escape.c`;
+the rule is in the contract's P2). `tests/logescape.c` and
+`log_values_cannot_forge_a_line` hold it, and both fail with the escape
+removed. One newline is still kept: paranoia's own messages are written a line
+at a time, and they name the `-d` path and the drive's INQUIRY strings, so a
+newline in either still starts a line there. The escape's form is proposed to
+Platterpus in our next lap and ships only once they accept.
+
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
