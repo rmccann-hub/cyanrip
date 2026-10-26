@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**Platterpus's round 36 lap 9 is filed** (`docs/handshake/inbound/round-36-lap-09.md`,
+16,729 bytes, sha256 `df688e56…`), released at their `43e3b8a9` and taken in
+at their `main`'s `09d1e519`; every take-in check passes. It is `OPEN`: they
+read our lap 8's two findings as we do, have fixed our S10 and S11 on their
+side, and have released 0.7.113, which reads every new line `.27` carries.
+They accept `Pregap search:` (S16), `Track N read with no error reported.`
+(S17) and, under `-Z`, `Extraction speed:` of the kept read alone (S18). They
+ask what in `.26` changed the read rate (S7), and want the `-Z` time limit,
+its name and wording proposed in a lap first (S20). STATUS names the lap, the
+release and the three acceptances, and gains `z-time-limit`; it also corrects
+lap 8's count of `Recordable:` lines. Lap 8 said 38. The runs' files hold 48,
+34 in `.log` files and 14 in six records the app keeps, and all 48 read the
+`0xffff` placeholder.
+
 **The Windows build pins LAME 3.100**, built static without its decoder or
 program, from its release tarball checked against its SHA-256. MSYS2's lame
 moved to 4.0, whose library links an external libmpg123, and FFmpeg's check,
