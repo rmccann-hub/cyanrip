@@ -1,5 +1,76 @@
 Unreleased
 ==========
+**Four runs of `.26` with Platterpus 0.7.112 are filed and read**, from
+2026-10-21 and 2026-10-22, each on its own disc, onto our evidence branch.
+Every bundle member matches the sender's hash, every cyanrip log verifies
+with `-Y`, and each folder's README is our reading.
+
+| folder | evidence commit | disc |
+|---|---|---|
+| `docs/rig-2026-10-21-ca0f097/` | `c65b7b9` | the reference disc; round 36's test, with the timed rip |
+| `docs/rig-2026-10-21b-ca0f097/` | `0c8e6bd` | 2026-10-04's damaged 18-track disc |
+| `docs/rig-2026-10-22-ca0f097/` | `f3be312` | disc 3 of a four-disc set |
+| `docs/rig-2026-10-22b-ca0f097/` | `c917bf6` | disc 4 of that set |
+
+**None of the four passes by its own verdict, and no failure is the
+ripper's.** Run 1 lost 55 steps to a MusicBrainz release dialog the script
+did not expect. Run 2's six-hour wait ended while Platterpus's securing pass
+of the damaged disc was still reading. Every other failure is the app's
+audit:
+- the disc's ISRC differing from the one Platterpus sent, which is
+  `--prefer-disc-isrc` working;
+- ripping errors on a damaged track;
+- the cover check.
+
+**What `.26` changed, shown working on a drive:**
+- **The disc ISRC read.** On the reference disc the codes come from the
+  tracks' own Q frames, and all 14 match EAC's cue. A second disc reads 13
+  of 16.
+- **The timed rip.** Tracks 1 to 3 read in a third of `.25`'s time on two
+  discs, and a fifth on the third.
+- **`Accurate stream:`**.
+
+**Two defects in what `.26` changed:**
+- **`Recordable:`** reads `unknown (profile 0xffff is not a CD profile)` in
+  every log. `0xffff` is libcdio's own default, which its
+  `mmc_get_disctype()` returns when its loop, stopping one descriptor short
+  of GET CONFIGURATION's profile list, finds no current profile.
+- **The pregap search** never read the reference disc's track 9 as the 94
+  frames that `.25` and EAC read. It gave 95 three times and `unknown
+  (sub-channel CRC mismatches)` five times, a cause the code cannot tell
+  apart from frames that answered for another sector.
+
+Both are entries in `docs/KNOWN-ISSUES.md`, and no audio is affected: the
+pregap merges into the track before it.
+
+**On the damaged disc, a drive showed `.20`'s skip arm for the first time**:
+- 2,106 paranoia skips counted in `Ripping errors:`;
+- `read with errors.` on exactly the four tracks with skips;
+- their positions in the `--diagnostics` record, the first non-empty
+  `error_positions` from a drive.
+
+Four other tracks read wrong with no skip, and only AccurateRip caught them.
+The drive never reported a failed read. The cache table gains three rows, the
+seventh to ninth `128 to 255` beside `cd-paranoia -A`'s 137 to 140, and
+`CLAUDE.md`'s hardware table moves two rows.
+
+**Two filed READMEs overstate, and the evidence branch keeps them as filed**
+(HR-2 point 3: an evidence commit only adds files):
+- **Run 2's** says it is the first filed rip of a disc with skips on a drive.
+  2026-10-04's run of the same disc had 2,586. It also says its stall report
+  ran on a drive for the first time, but that run reported 279 stalls.
+- **Run 1's** makes three claims it cannot back:
+  - that Platterpus's runner fixed the caller line its pre-emphasis rip lacked
+    in round 35, which is theirs to say;
+  - that the media-change query is what the timed rip's speed shows, a cause
+    the run did not isolate;
+  - that every rip's AccurateRip result is as on `.25`, where the timed rips
+    differ on track 3. That track has read wrong at every speed on every
+    build filed.
+
+The default branch's copies stay byte for byte as filed until these rows
+merge, and are corrected in place after.
+
 **Our round 36 lap 7 is sent** when the pull request carrying it merges green
 (`docs/handshake/round-36-lap-07.md`), on the operator's standing word for
 round 36, *"Release each lap of round 36 once its pull request is green and

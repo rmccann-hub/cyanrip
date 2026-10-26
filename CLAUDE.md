@@ -65,9 +65,9 @@ never let a green suite imply coverage.** Date a rig session by its build.
 |---|---|
 | C2 | cannot be done on this rig: its BDR-209D reports C2 unsupported |
 | `-f` | ran from 2026-10-06 (`5704062`); a stopped search and one that finds nothing have not |
-| damaged media | the read ran 2026-10-04 (`174a134`) and the `-Z` arm 2026-10-06; the skip arm, and a drive that reports a failed read, have not |
+| damaged media | the read ran 2026-10-04 (`174a134`), the `-Z` arm 2026-10-06 and the skip arm 2026-10-21 (`ca0f097`); a drive that reports a failed read has not |
 | CD-TEXT from a disc | not yet done: `mmc_read_cdtext` is not the `.toc` path |
-| `Accurate stream:`, `Recordable:`, two-search `Pregap source:` | not yet run on a drive (`.26`) |
+| `Accurate stream:`, `Recordable:`, two-search `Pregap source:` | ran 2026-10-21 (`ca0f097`): `Accurate stream:` answers; `Recordable:` never does (libcdio); the two-search clause has not printed |
 
 ## Say exactly what is true, and no more
 
