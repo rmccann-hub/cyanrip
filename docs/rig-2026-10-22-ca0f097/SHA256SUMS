@@ -1,0 +1,169 @@
+# Filed here: each file's hash as filed. A file whose
+# personal details were replaced (tools/redact.py) says so
+# under it, with the bundle's hash of it, so the delivery
+# still verifies against the archive below.
+4397bb6c60ab7caf770a2c1924dd70578e7289f72db4782d3c88e4a1ee287f06  DIAGNOSTICS.txt
+81e0619c73230f48dc0c05671138578c20702704c1fb6dded3759fc918387c67  MANIFEST.txt
+d4b25ea8270f0cb0d1eadf1a762f5487de43073d0cc0beccf183f877d317fb73  SOURCES.txt
+fc10678fb4e239821620782cf3175e32ec97883a8e72098efe6941d3b54bd864  album/after cancel 20261022t114515 platterpus-fork-gca0f097/after cancel 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+b48514c7158bcd62d2b8d9537f9be9e738acd62c7b580ab4f0501158682a349c  album/after cancel 20261022t114515 platterpus-fork-gca0f097/after cancel 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+e7ad227e6a5d5a637830573c504054a6e5607a6b08e7ea0fe9273e20284e1126  album/after cancel 20261022t114515 platterpus-fork-gca0f097/after cancel 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+956a87d3ed80f8a70975c742a748917c0a83342210520be17a0ef91a798aad8d  album/cancel me 20261022t114515 platterpus-fork-gca0f097/cancel me 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+9d86eb88a6d045035e18d6f19a6b7813d9fd8116c57b12d4fa7a71521b8aeb58  album/cancel me 20261022t114515 platterpus-fork-gca0f097/cancel me 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+6f2e1712178fe267ec703e841f73e07e94f53c9ed2784f3373e25c4be940c071  album/cancel me 20261022t114515 platterpus-fork-gca0f097/cancel me 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+0823e12164dd39fbd4aeb92368c47dca74c61b79e7776267d2d2e1de87bdd3eb  album/derived mp3 20261022t114515 platterpus-fork-gca0f097/derived mp3 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+6f454bb1aa3ece32f2032940d849c6b1545173855901797a16301dc73b9d6ee7  album/derived mp3 20261022t114515 platterpus-fork-gca0f097/derived mp3 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+d15e5f81e70e526744205f193469cd3aea7800cec6211ab255aabfafd91d467d  album/derived mp3 20261022t114515 platterpus-fork-gca0f097/derived mp3 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+f975305a87cffd4c5d9551784c8ea4a13e8ec6f9f1ad80448cd410d03a3febf8  album/derived wav 20261022t114515 platterpus-fork-gca0f097/derived wav 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+aa9ecdecc9f9ca312f8da65518ee4a2f185b9398ccca7e3ed7696341e4b05952  album/derived wav 20261022t114515 platterpus-fork-gca0f097/derived wav 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+44885e94f89eac1b011b030acf02393bb3fb86f91d6fc39433a114c225bd1766  album/derived wav 20261022t114515 platterpus-fork-gca0f097/derived wav 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+3fdef4ef2948c43fd96752714bf8da93fe7b60070eb3e06a88761236e2398c3c  album/derived wavpack 20261022t114515 platterpus-fork-gca0f097/derived wavpack 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+0c22fca0e6734c7c3d312099b12324575c0b07f157c39ec4d184a8b12085e328  album/derived wavpack 20261022t114515 platterpus-fork-gca0f097/derived wavpack 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+c03fbbd97c61b3883685d17162090b5963e61cecee6e8a9c04e97f9a4052b2c9  album/derived wavpack 20261022t114515 platterpus-fork-gca0f097/derived wavpack 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+12ec7ce687b9dec7cd14fbbf969bfb0e0956bb597165a6ba1f74ad042c69ece4  album/full acceptance_ angle_bracket 20261022t11__terpus-fork-gca0f097/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+71df353fa3400b0fa700ebb6a1ac3194ed8e7e8d4e3ccfa93ad6156383e55e04  album/full acceptance_ angle_bracket 20261022t11__terpus-fork-gca0f097/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+6b49942dd8b74cbb04b5767b1ea239f29f0e6a66fff42fdd354582353d94d0a4  album/full acceptance_ angle_bracket 20261022t11__terpus-fork-gca0f097/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+6b3b5aea07cf1a6c47185f7e7c981e47f22abbf3cab187a8bf6aa789d7a3f8ee  album/full acceptance_ angle_bracket 20261022t11__terpus-fork-gca0f097/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus-securing-pass.txt
+#   -Y on the bundle's bytes: verifies
+27f8f207d2f02d67dfde3644e97b2ad8d29eb36a604e32c3137d3ba91c6f4add  album/full acceptance_ angle_bracket 20261022t11__terpus-fork-gca0f097/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus-verified-read.txt
+#   redacted: 5 home path(s), 0 hostname(s), names not checked (no local list); the bundle's bytes were c109f258878e4a8996c3f72eb3420a9bf5c4d3ac8c11ff2f84143e1745a5f532
+d9242d7ba17a876195fa3f54c1f64ae73353d3326dc38880c33d7b67dd25253c  album/full acceptance_ angle_bracket 20261022t11__us-fork-gca0f097 _2_/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+21ef3637a1cf19f0eeb737334a93aea44f9ad736f812478821c741c95dcb2feb  album/full acceptance_ angle_bracket 20261022t11__us-fork-gca0f097 _2_/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+f106772a1da2b4822ad919a6be7d3330c02361f8171e8a09d7eb342dfe40c906  album/full acceptance_ angle_bracket 20261022t11__us-fork-gca0f097 _2_/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+aa6eb71ce09745bddf6352e0b361ad4473131f2237a816e5c3743553b5d1e108  album/permutations 20261022t114515 platterpus-fork-gca0f097/permutations 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+3c785fb3341b35b27e0264a17adc0409348490dff4a52302fa26354dff067d34  album/permutations 20261022t114515 platterpus-fork-gca0f097/permutations 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+b6b0849eed4f8a1b04fef588f55f3e4912db8861ad73eebb4968c51654d143df  album/permutations 20261022t114515 platterpus-fork-gca0f097/permutations 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+a910d6ba6f4b8dd277f1588a9b12c12b00e021af32ea2e14fcffde5ac6f6ad53  album/r16deemphoff/Unknown disc (BKYF).cue
+1158ab20015f8544d93809bc4efa00bce2bacb2d255dd542a3c12e78a65b2932  album/r16deemphoff/Unknown disc (BKYF).log
+#   -Y on the bundle's bytes: verifies
+a910d6ba6f4b8dd277f1588a9b12c12b00e021af32ea2e14fcffde5ac6f6ad53  album/r16deemphon/Unknown disc (BKYF).cue
+74ba3fc96bebcbeea1290c635a230f7cfcaf832744ebd8c6a226910fce46f7dd  album/r16deemphon/Unknown disc (BKYF).log
+#   -Y on the bundle's bytes: verifies
+49300b56e05b3a67ea6127a74a080243970f907db2e89f00d21eff4413b6b012  album/secure reread 20261022t114515 platterpus-fork-gca0f097/secure reread 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+ed09daeb891a696de6d7f5eb8814e63228de03f92865ac2e9c23f7c1a15b00fc  album/secure reread 20261022t114515 platterpus-fork-gca0f097/secure reread 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+10ae77be98bcf072dcd9cb638afa22443a1703be930c9cfb3f8136cf1972b7b0  album/secure reread 20261022t114515 platterpus-fork-gca0f097/secure reread 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+278e1418fc37b0747f5193177f54a0e4c1201e6c7cb0495942ab3398446cfc4b  album/secure reread 20261022t114515 platterpus-fork-gca0f097/secure reread 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus-addendum.txt
+8d386d6fa9f0bd94ae445239a37b64655123981adfa371f85e5761e56ee22a53  album/secure reread 20261022t114515 platterpus-fork-gca0f097/secure reread 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus-securing-pass.txt
+#   -Y on the bundle's bytes: verifies
+54161b362698d871a7719d27ab9518c04006ba7f6276d659efef08fd70fc3cf2  album/secure reread 20261022t114515 platterpus-fork-gca0f097/secure reread 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus-verified-read.txt
+#   redacted: 5 home path(s), 0 hostname(s), names not checked (no local list); the bundle's bytes were f7ef7cdf66ce6d392b50547307910e9426d04e9695703fd05915de5d6b797a86
+4a368b5986fae7cda35a5c64d7645ef6df3b8772867e8df661cb9c815d984166  album/timing A1 20261022t114515 platterpus-fork-g5f1d036/timing A1 20261022t114515 platterpus-fork-g5f1d036 CD3 (EAC-compatible).log
+c5aa4ee92198dbe6ee87ea3f2d5a237ced9268cbdb49b6cf9e2b0df80ac6fbab  album/timing A1 20261022t114515 platterpus-fork-g5f1d036/timing A1 20261022t114515 platterpus-fork-g5f1d036 CD3.cue
+12a83e5432ec59616e9438e52305103159799be4440b37b3313c7dad1b9f33d8  album/timing A1 20261022t114515 platterpus-fork-g5f1d036/timing A1 20261022t114515 platterpus-fork-g5f1d036 CD3.log
+#   -Y on the bundle's bytes: verifies
+54c21aaa9d402be45ab77c2e562b4cda28541f74d67986107e8b0ec5e2ac98b6  album/timing A2 20261022t114515 platterpus-fork-g5f1d036/timing A2 20261022t114515 platterpus-fork-g5f1d036 CD3 (EAC-compatible).log
+b5fd63537280e19bc599a4312df11cc19301c91e7d54c4c5adf4b821b4cd76a4  album/timing A2 20261022t114515 platterpus-fork-g5f1d036/timing A2 20261022t114515 platterpus-fork-g5f1d036 CD3.cue
+b528a3c1276aa2c6f839041eea91bd0c0974b8d7e67c7cdcca29416e364627ca  album/timing A2 20261022t114515 platterpus-fork-g5f1d036/timing A2 20261022t114515 platterpus-fork-g5f1d036 CD3.log
+#   -Y on the bundle's bytes: verifies
+d3eafafee0f3b37953e8d85ab8b30de75f82f47bc75abd161285223faefc4bf1  album/timing B1 20261022t114515 platterpus-fork-gca0f097/timing B1 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+f24adc906a524457af35c6522d24c2212eb8e95a37f5a6234dd47fed632d2b56  album/timing B1 20261022t114515 platterpus-fork-gca0f097/timing B1 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+c827f0ab960c1f309cdcfd6d84d9f3beb239993a046233947b687bbebf83654d  album/timing B1 20261022t114515 platterpus-fork-gca0f097/timing B1 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+c79765df17e3d24c0ea40ffd19020de3a87321a2233383d2bec721e5503096d2  album/timing B2 20261022t114515 platterpus-fork-gca0f097/timing B2 20261022t114515 platterpus-fork-gca0f097 CD3 (EAC-compatible).log
+a7fa247527bb33cef8f766cf5b8f1ad426c6283f984db7f1487e9540575f3b30  album/timing B2 20261022t114515 platterpus-fork-gca0f097/timing B2 20261022t114515 platterpus-fork-gca0f097 CD3.cue
+3a903b43c36f64b445046a4991706e2f44b84f0c4aa9d87e81e66a643456cc82  album/timing B2 20261022t114515 platterpus-fork-gca0f097/timing B2 20261022t114515 platterpus-fork-gca0f097 CD3.log
+#   -Y on the bundle's bytes: verifies
+af5f0176df84a303bad4006e54c701e781e9311d46b7e29248cd98bfbce0a668  session/artifacts/02platterpus/log.txt
+7bc35b6bbd0bf656ef53b00299952232be479e2faf76ef3574eb56a4736d5bb9  session/run/cacheprobe1362.txt
+4dff74adc64bb8097242fb186c99cc2d18fd84091ca160cf848f024af8ef3f5c  session/run/installripper1628.txt
+aa278389cc6f8a0af2fd243a21cbc4ac96026aec07fba04bd2aade19d5869b71  session/run/installripper1635.txt
+ff9c24a7305b8c02aff9b3bda5252fdfb46495694922e6b682ba829f26b1352a  session/run/installripper1642.txt
+1acf8f4434153b1be0e8c3610a00b2401c5414470bf31eab8224e0d8f38a08ce  session/run/installripper1649.txt
+0f2149489a200eb79148df7542687d3f5a282786b5e504886b66338e07c07748  session/run/installripper1657.txt
+5db71a633a859e6fdd07586b86db21bc217ef45281d2e81065482e3bb3a0c31e  session/run/report.json
+f7a0f1d146a9d7fc48f070d1909e13390f961a43e44ff9d9e703bee696fd584e  session/run/rig-check/MANIFEST.txt
+34f38c717f287c5dce2775f265afe61244168d7c0e8abdb4a01c344f7758d507  session/run/rig-check/argv-probe-output.txt
+3f94e77ba4c489560da438d1668fac4f24ed2af609ca416befa6ce30800838a9  session/run/rig-check/ripper-version.txt
+f2b9e255f7ef1ec3f2343d996a1bd8047d126772f491bea2d7bd98515a981761  session/run/tags0729.txt
+dae3b180872fcd4c3ec63dcbca3beaae78440c7717bfebc72e171f9832784c6e  session/run/tags0805.txt
+a706ffd1f226a44bc2178a7327ebb982e6a857ab43dd86f1e573fa13a29157b7  session/run/tags0909.txt
+97cc26be35f84294f39cbf78fee11402a3be139bab84d7b9227dfbf1a3ce8201  session/run/tags1058.txt
+483b703a06341fdf6fd7b046500af4d57cb5c66d9b5b7b45b3d9f0a9fda409f9  session/run/tags1085.txt
+90f6fbd4a2548085caee55d656198e898e6526715cdba0da2a7e6932948e32c8  session/run/tags1112.txt
+273e457e6a92d5c4dd35fbbd155c5ffe49e6611c4a287844ca851628e1a67fdb  session/run/tags1277.txt
+6bab43cd102299ec85ae69d4b8d56675781167a40624988df85424d12e85a1d7  session/run/transcript.txt
+6bab43cd102299ec85ae69d4b8d56675781167a40624988df85424d12e85a1d7  session/transcript.txt
+
+# NOT filed. This list is the SET DIFFERENCE between the
+# archive's contents and what was written -- never a
+# hand-written note, which is how two files carrying the
+# run's own verdict were dropped from a filing whose own
+# paragraph called the omissions 'a choice'.
+29ed12c73182b91377958df7e9921ff5b3fb6f4fe7bbb254264dce21f6048bd0  (not filed) COMPONENTS.json
+8c43fd02e76bb4d8f1ec17334ca9cee994841346b4f5e932b41a1be62d348c10  (not filed) SETTINGS.json
+3bcf0f2d28f904e3e9e191df73e7056c056792969c73bf54c15f9fe6c23e3792  (not filed) album/after cancel 20261022t114515 platterpus-fork-gca0f097/after cancel 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+f5b14cf23c624dc186720a365a9e4c16d634d002044e211a2474bdf768e612aa  (not filed) album/cancel me 20261022t114515 platterpus-fork-gca0f097/cancel me 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+a64144d6dea430fa8406d91d7f06f28d1ee3da663f2c3ee7309659774283862d  (not filed) album/derived mp3 20261022t114515 platterpus-fork-gca0f097/derived mp3 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+a0ef0b2fb2abcd6bfa0b8b3d9852e790b79dbdca6903e496a8753c644f794d3a  (not filed) album/derived wav 20261022t114515 platterpus-fork-gca0f097/derived wav 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+d0790e78d7ee17571bccb57df4917ab8a7f8e5b110ae46e74409092e63ee13d1  (not filed) album/derived wavpack 20261022t114515 platterpus-fork-gca0f097/derived wavpack 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+4d044403f4914c973b93c282b883cccf881a28b562443a38c0f77d9d4987796b  (not filed) album/full acceptance_ angle_bracket 20261022t11__terpus-fork-gca0f097/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+c8c9affd9a7ca148295ef8262ed350600833273dba269de0989d0866d8a1e2d2  (not filed) album/full acceptance_ angle_bracket 20261022t11__us-fork-gca0f097 _2_/full acceptance∶ angle‹bracket 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+3818b3f77f04681173386a75c30955e10b3393cec170304fe7829634392f196e  (not filed) album/permutations 20261022t114515 platterpus-fork-gca0f097/permutations 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+93c21baf80c23c2dcbae27fc227cd576d7aa9308e64556a0c072add83631a99e  (not filed) album/secure reread 20261022t114515 platterpus-fork-gca0f097/secure reread 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+5f5a927ef9ade87bc8ed76c583295e8b5a77dfd4fa5e789afec5712f424ff868  (not filed) album/timing A1 20261022t114515 platterpus-fork-g5f1d036/timing A1 20261022t114515 platterpus-fork-g5f1d036 CD3.platterpus.json
+2941a6d09c53ac4e02f436973ea90a14264f49e9bb3dd6109bf4cd456fa5ff6b  (not filed) album/timing A2 20261022t114515 platterpus-fork-g5f1d036/timing A2 20261022t114515 platterpus-fork-g5f1d036 CD3.platterpus.json
+1eba31b2fbadfee7621d5214bbe68e72f422d8378a70f4bdc46d2ecc045b6977  (not filed) album/timing B1 20261022t114515 platterpus-fork-gca0f097/timing B1 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+50c9bd62ebcc3b43906c1a4f0d5c2d8915668f7962f10359b32931a1a8a99418  (not filed) album/timing B2 20261022t114515 platterpus-fork-gca0f097/timing B2 20261022t114515 platterpus-fork-gca0f097 CD3.platterpus.json
+8ac9fcc97cfffbd84cb123696f818f613a1ce0a070768deb17feb7a8017707e1  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T114605Z.json
+e9ad269c3abd5674a78b19b013a435e76c69652c1c54af51c14588bb066efca1  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T120418Z-securingpass.json
+0f5a70b73fe9a123a602dbc6ac1270f0cdbca1a414f6c19ac1b067dac7206cc6  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T121811Z.json
+1325ae00915b15166c1bba179449710890c07b7dee623e54a346434779eaafe3  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T122204Z.json
+b9adfcb54c8f65ea7e5e862063ab2ce8dba116cd39a0cdbeaca0caaf8f247c74  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T122702Z.json
+7c41c98d2f06d6dd83f9c799c655c6c05a883864c407ac850028bb559fcfb5e8  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T123058Z.json
+335f77ed50b2d220dc72c8234e30ee508e471d8ac997611e9fcc02ea2e9d8090  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T123445Z.json
+1691ede94ff1eb692f21fdf1e8ffc97363e0cd18c5f9658f4d9d0f5d838c4742  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T123926Z.json
+2f34dd7248d6906eb4ba5ed9a93b96134e9baf041407bfb84b3243dbd51dc3fa  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T124344Z.json
+10ee3ccdfcf527f49bef3607ae000f642de601cd776cf25f2336f6197e8d3411  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T124948Z.json
+faabaa0722e645be8521644aed3f3b29e6cbf8fd772a9b039465212accbf0acd  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T134436Z-securingpass.json
+1543efcdec58c09f14610d457e3a659122aeb8a44d216cec3b74ebf2b80ae22c  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T140202Z.json
+0695fd4c9c48e3e6d4ae3c01ab8cedc43e9bf633522e012f7b2dc07985df28f1  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T140333Z.json
+526be2b5ad54ad0107543965eed958da4622af9d47638d9c096b57b0a9d4067a  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T140520Z.json
+4e21770f8e52723a8bece98442954c026b63b1de7306cfe7d01df87565558e5d  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T141816Z.json
+6a77744a8e5635cdb81b44a4f0470fdadf7ff73156f4ff12d58a3fef46cd176e  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T142339Z.json
+924cd27eb10e579d0795455c47568f9c01c9fb990303dab85cc4989054275348  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T143635Z.json
+c291232cdec7e9b193db18562c54daa971a1e125abcffa1858a0373f3ef16122  (not filed) session/artifacts/13platterpus/config.toml
+31b6ab5e468301530ed3ec33428f61c8c7af714765242f29a6ba500d9245f11d  (not filed) session/run/aftercancel-1-Run-test-script.png
+24fff82e3e7ce8ce42be1b281b9b14dcacdc097274ae958e90413b6a746b0127  (not filed) session/run/aftercancel.png
+0c85b4e406c6033da0cb6116324851b6031e356c8f7f20eb83b4617c63eade6c  (not filed) session/run/afterfullrip-1-Run-test-script.png
+a32cdf424cbc97653f8fdd72b52a6249950897c9034c33c3d60481d6e83635a2  (not filed) session/run/afterfullrip.png
+59e54a2094cc24bcaaa45f1ada96f23e6a45923990db82a1e3969ef309e5ba10  (not filed) session/run/aftermp3-1-Run-test-script.png
+48fac12cda4e272ebcbe2390115a3c9f304876c1dc11c051de9cb412a775344a  (not filed) session/run/aftermp3.png
+0f22283b46683246719e238e762e27ccb46d02a3cf9ae9186f3a761320205612  (not filed) session/run/afteroverwrite-1-Run-test-script.png
+5c921d86c48404a71547fe1fe2edd4e8f602edf6abf86c33962aefb4c8d50af9  (not filed) session/run/afteroverwrite.png
+3303f81211ec2eac3d4df941868f208cae89027b3d76c9a22c4ce7665406fede  (not filed) session/run/afterrecovery-1-Run-test-script.png
+314437a46d8c24f7c697299b5a19d9300d4498673916512c14588c262410944b  (not filed) session/run/afterrecovery.png
+1beb683365361e9e5e54b4415cfaab9ad23f3cffad70b8b66d8f902d6f7aaa23  (not filed) session/run/aftersecurereread-1-Run-test-script.png
+39bcc8fa482b82127907cfbe3edce48faadb96cc5a87a7435ff290c726144af9  (not filed) session/run/aftersecurereread.png
+2188d6522ffd986b68bf7663597a974199a5d3a8eb26686e3c501e00133adfad  (not filed) session/run/afterwav-1-Run-test-script.png
+536ddb8c25bcd78e841137b9f66ec3fb7d220eddc7d25f5653e7fe758f4837fa  (not filed) session/run/afterwav.png
+13b69c105e09d169ece7d27becf2a9156ede6b5ed5703ce014d599e69f5b48d7  (not filed) session/run/dialogdependencies-1-Dependency-check-complete.png
+1b61a0084a12eaa1e0ea2bc09aa9f1dfa91f84dd498074ace093647dd3789d16  (not filed) session/run/dialogdependencies-2-Run-test-script.png
+47acab630d6290be8ee4c9859856da71d7cea92d1ab2ecc1e7bbf66bb3de35ff  (not filed) session/run/dialogdependencies.png
+13b4324d0a20d8befd10ac99c9bffabddc3765467a5965a6fc149b01728eb09b  (not filed) session/run/dialogdiagnostics-1-Diagnostics.png
+5c8e2f54bcf46ddede87373776808001f54a2301a7f5df4b9d18c8676027f456  (not filed) session/run/dialogdiagnostics-2-Run-test-script.png
+47acab630d6290be8ee4c9859856da71d7cea92d1ab2ecc1e7bbf66bb3de35ff  (not filed) session/run/dialogdiagnostics.png
+72394a8b576ea0ff60500c64685236c246151fd5ed44cffd51179c415ca67be7  (not filed) session/run/dialogdrive-1-Set-up-drive.png
+8db9e830d3fc6239c134002c6b35245db7782b98ae06ba1b296c107424850a7a  (not filed) session/run/dialogdrive-2-Run-test-script.png
+b4998e8811da93c06812e1d028d5ad2ef9c7806840679af515d90b653947d584  (not filed) session/run/dialogdrive.png
+38ec703e065f096eda7065946eb12db7866feea42643a9eaf0bf762980b405b7  (not filed) session/run/dialogsettings-1-Settings.png
+02fae75e28bdea530fbc041bf6ae41621e95f71e41ee4c72c6be6082f35801fc  (not filed) session/run/dialogsettings-2-Run-test-script.png
+b4998e8811da93c06812e1d028d5ad2ef9c7806840679af515d90b653947d584  (not filed) session/run/dialogsettings.png
+d317e88fc73960b3d010a8a52e4d71b547c68ea5fe8de6c5b689075cbb3a3b26  (not filed) session/run/rig-check/argv-probe.json
+88f6de712a36d259cec1d9c81fa4c8b8af811f00fd98eeca6344be01b20c7aac  (not filed) session/zz-applog-rotations/03platterpus/log.txt.1
+59bb509c11e9cf6e37343444e07c79b60bdaf49369d081ea861376f6268b3a94  (not filed) session/zz-applog-rotations/04platterpus/log.txt.2
+9bb97725cc0ee579fc8f0adff254019185821153043342237a99bb748ed90a6c  (not filed) session/zz-applog-rotations/05platterpus/log.txt.3
+4fcac41fa0cb0a064509e62bd96d67682a87be55063cb935b6558f636d82ebcc  (not filed) session/zz-applog-rotations/06platterpus/log.txt.4
+a2266b57b8875d5e91063a55405ea64820274b41fdcb348553bcea7d477f83e3  (not filed) session/zz-applog-rotations/07platterpus/log.txt.5
+24f0f09530eba5ff0889a54ca6b0631601253a8e5a4ececa89e6cf3dc30afdba  (not filed) session/zz-applog-rotations/08platterpus/log.txt.6
+
+# The archive as delivered.
+3e290b93b1f08f3fdf3aa21b823bdb22f93190b4ea5cdeee615f63500ee8b7db  (not filed) 04fbbefd-platterpusbundle20261022t114515z.tar.gz
