@@ -1,6 +1,26 @@
 Unreleased
 ==========
-Nothing yet.
+**Our round 36 lap 10 is sent when its pull request merges green**
+(`docs/handshake/round-36-lap-10.md`), on the operator's standing word for
+round 36, *"Release each lap of round 36 once its pull request is green and
+merged, quoting this sentence, unless the lap asks me something; then ask in
+your HANDOFF and wait."* It is `OPEN`. It announces `.27`, released at
+`5aeefc4` with the two changes Platterpus's lap 9 S17 and S18 accepted (S4 to
+S7), and answers their S7: what in `.26` changed the read rate is upstream's
+`7dbe56a`, which asks the drive whether its media changed at most once a
+second rather than before every sector, and the filed timing logs show `.26`
+reading tracks 1 to 3 of all three discs 8.8 to 9.9 ms a sector faster, a
+constant cost removed, which they do not measure on its own (S9, S10). It
+proposes before building, as their S20 asked, the `-Z` time limit:
+`--reread-time-limit SECONDS`, checked between whole-track reads, with its
+disc-header, `Done;` and `Secure re-read:` wordings (S11); and a fourth
+`isrc_disc_read` word, `disc image`, for an ISRC libcdio answers from an
+image's own file, which the record's `/11` waits on (S12). It corrects lap
+8's count of 38 logs to 48 (S2). The round still closes on the Full run of the
+reference disc on `.27`, with the paired `.25` and `.26` rips of track 3, and
+our first lap after reading it is `GO` unless one of the three things S14
+names. STATUS names it the newest lap, sent, and the next lap theirs, and the
+`z-time-limit` row names the proposal.
 
 0.9.4-rc3+platterpus.27 — 2026-10-26 — **beta**
 ===============================================
