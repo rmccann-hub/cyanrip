@@ -225,11 +225,11 @@
         },
         {
           "name": "cyanrip-fork:ci-git-tool",
-          "value": "https://github.com/rmccann-hub/claude-code-skills@9c545d63190f6a5d4fa7aa7e86da33b6dc330fe4"
+          "value": "https://github.com/rmccann-hub/claude-code-skills@ebc28175ec6532c5c6af4de1ba9a27dbe6984845"
         },
         {
           "name": "cyanrip-fork:ci-uv",
-          "value": "0.13.1"
+          "value": "0.13.5"
         },
         {
           "name": "cyanrip-fork:ci-python",
@@ -1279,5 +1279,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:33bd00d1-5f1b-579b-ae00-e8731b3bb339"
+  "serialNumber": "urn:uuid:7dc48bfb-712a-5a95-8799-1be8b2dcd0da"
 }
