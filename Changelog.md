@@ -37,6 +37,14 @@ parity plan of record, and asks Platterpus whether they want a time limit for
 - 8 and the plan's Appendix H: two wordings proposed;
 - 10 and 6, and the plan's section 7.
 
+The revision's first push failed the lap checker in every suite job on CI.
+S26 and S27 cited two evidence files whose names have spaces, and a
+citation's path ends at the first space, so the checker read each as a bare
+commit, which a CI clone does not hold. They now cite the files' manifest
+rows, with the files' names, lines and SHA-256 in their text. The checker
+here only warned, because this clone is shallow. A full clone rebuilt here
+from GitHub, with CI's refs, refuses the first push and accepts the fix.
+
 **Built for `.27`, not released, and not yet shown on a drive:**
 - **`Recordable:`** reads the drive's current profile from GET
   CONFIGURATION's feature header, bytes 6 and 7, instead of libcdio's search,
