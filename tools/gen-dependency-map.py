@@ -295,8 +295,16 @@ def ci():
               for u, var, rel in re.findall(
                   r"cyan_do_vcs\s+\"(https://[^\"]+)\"(?:\s+\"\$(\w+)\")?"
                   r"(?:\s+(\"[^\"]*\"|[^\s&]+))?", script)]
+    # A library whose sources are not in git, as (url, sha256, release): its
+    # release tarball, pinned by the SHA-256 cyan_do_tarball checks, and ""
+    # unless the variable it names holds a full one.
+    sums = dict(re.findall(r"^(\w+)=([0-9a-f]{64})\s*$", script, re.M))
+    tarballs = [(u, sums.get(var, ""), rel.strip('"'))
+                for u, var, rel in re.findall(
+                    r"cyan_do_tarball\s+\"(https://[^\"]+)\"(?:\s+\"\$(\w+)\")?"
+                    r"(?:\s+(\"[^\"]*\"|[^\s&]+))?", script)]
     return dict(workflows=workflows, runners=runners, actions=actions,
-                apt=apt, brew=brew, msys=msys, clones=clones,
+                apt=apt, brew=brew, msys=msys, clones=clones, tarballs=tarballs,
                 git_tools=git_tools, uv=uv, python=python)
 
 
@@ -506,6 +514,11 @@ def bom(model, meas):
               for u, c, r in model["ci"]["clones"] if c]
     props += [{"name": "cyanrip-fork:ci-unpinned-clone", "value": u}
               for u, c, _ in model["ci"]["clones"] if not c]
+    props += [{"name": "cyanrip-fork:ci-pinned-tarball",
+               "value": f"{u} sha256:{s}" + (f" ({r})" if r else "")}
+              for u, s, r in model["ci"]["tarballs"] if s]
+    props += [{"name": "cyanrip-fork:ci-unpinned-tarball", "value": u}
+              for u, s, _ in model["ci"]["tarballs"] if not s]
     props += [{"name": "cyanrip-fork:ci-git-tool", "value": f"{u}@{ref}"}
               for u, ref in model["ci"]["git_tools"]]
     props += [{"name": "cyanrip-fork:ci-uv", "value": v}
@@ -693,6 +706,15 @@ def markdown(model, meas):
       + ("Every one is pinned." if not loose else
          "**Not pinned to a commit, so built from whatever the branch held "
          "that day:** " + ", ".join(f"<{u}>" for u in loose) + "."))
+    if c["tarballs"]:
+        sealed = [x for x in c["tarballs"] if x[1]]
+        loose = [u for u, s, _ in c["tarballs"] if not s]
+        a("- **Sources the Windows build compiles from a release tarball**, "
+          "having none in git, each checked against its SHA-256 before use: "
+          + ", ".join(f"<{u}> with SHA-256 `{s[:12]}` ({r})" for u, s, r in sealed)
+          + ". " + ("Every one is pinned." if not loose else
+                    "**Not checked against a SHA-256:** "
+                    + ", ".join(f"<{u}>" for u in loose) + "."))
     if c["git_tools"]:
         loose = [f"<{u}>@`{ref}`" for u, ref in c["git_tools"]
                  if not re.fullmatch(r"[0-9a-f]{40}", ref)]

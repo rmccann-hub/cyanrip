@@ -56,6 +56,23 @@ enum CripAccurateStream crip_accurate_stream_parse(const uint8_t *buf, size_t le
     return CRIP_ACCURATE_STREAM_UNREADABLE;
 }
 
+#define CONF_HEADER 8 /* GET CONFIGURATION's feature header */
+
+int crip_current_profile_parse(const uint8_t *buf, size_t len)
+{
+    if (!buf || len < CONF_HEADER)
+        return CRIP_PROFILE_UNREADABLE;
+
+    /* Bytes 0-3 are the length of what follows them; a header that declares
+     * less than its own last four bytes holds no current profile. */
+    const uint32_t data = (uint32_t)buf[0] << 24 | (uint32_t)buf[1] << 16 |
+                          (uint32_t)buf[2] << 8 | buf[3];
+    if (data < CONF_HEADER - 4)
+        return CRIP_PROFILE_UNREADABLE;
+
+    return buf[6] << 8 | buf[7];
+}
+
 const char *crip_recordable_text(char *buf, size_t size, int profile)
 {
     switch (profile) {

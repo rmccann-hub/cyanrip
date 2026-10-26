@@ -376,12 +376,15 @@ static driver_return_code_t read_audio_subq_sector_with_retries(
     const lsn_t lsn,
     const int retry_max,
     int *needs_fixup,
-    int *out_valid)
+    int *out_valid,
+    int *crc_failed)
 {
     driver_return_code_t ret = read(opaque, audio_subq_buf, lsn);
     uint8_t *subq_buf = audio_subq_buf + CDIO_CD_FRAMESIZE_RAW;
     int valid = !ret && verify_subq_crc(subq_buf, needs_fixup);
     int retry = 0;
+    if (!ret && !valid)
+        (*crc_failed)++;
 
     while (retry++ < retry_max && !valid) {
         // TODO Is a cache defeat here ever necessary? Testing on macOS with an
@@ -392,6 +395,8 @@ static driver_return_code_t read_audio_subq_sector_with_retries(
             return ret;
         }
         valid = verify_subq_crc(subq_buf, needs_fixup);
+        if (!valid)
+            (*crc_failed)++;
     }
 
     *out_valid = valid;
@@ -454,6 +459,8 @@ struct pregap_search {
      * rather than on the context so one odd disc cannot poison the next. */
     int needs_bcd_fixup;
     int retry_max;
+    /* What the search saw, for the log (struct cyanrip_pregap_stats) */
+    struct cyanrip_pregap_stats st;
 };
 
 enum pregap_observation {
@@ -495,9 +502,12 @@ static driver_return_code_t pregap_observe(struct pregap_search *s, lsn_t want,
     *seen = PREGAP_OBS_NONE;
 
     int valid;
+    s->st.asked++;
     driver_return_code_t ret = read_audio_subq_sector_with_retries(
         s->read, s->opaque, s->audio_subq_buf, ask, s->retry_max,
-        &s->needs_bcd_fixup, &valid);
+        &s->needs_bcd_fixup, &valid, &s->st.crc_failed);
+    if (!ret && !valid)
+        s->st.no_frame++;
     if (ret || !valid)
         return ret;
 
@@ -506,11 +516,15 @@ static driver_return_code_t pregap_observe(struct pregap_search *s, lsn_t want,
 
     const lsn_t expected = ask + s->shift;
     const lsn_t at = subq_frame_lsn(&subq, expected);
-    if (at == CDIO_INVALID_LSN)
+    if (at == CDIO_INVALID_LSN) {
+        s->st.no_address++;
         return 0;
+    }
 
     if (subq.adr != 1) {
         *seen = at == expected && at == want ? PREGAP_OBS_HERE : PREGAP_OBS_ELSEWHERE;
+        if (*seen == PREGAP_OBS_ELSEWHERE)
+            s->st.elsewhere++;
         /* A mode-2 or mode-3 frame names no track. One right after the
          * previous track's last known sector is taken as the previous
          * track's, as it always was, but only where the drive's alignment
@@ -524,6 +538,8 @@ static driver_return_code_t pregap_observe(struct pregap_search *s, lsn_t want,
     }
 
     *seen = at == want ? PREGAP_OBS_HERE : PREGAP_OBS_ELSEWHERE;
+    if (*seen == PREGAP_OBS_ELSEWHERE)
+        s->st.elsewhere++;
 
     /* One frame off is a slip; two in a row the same distance off is how this
      * drive answers, and the reads are aimed by it from then on. */
@@ -558,9 +574,22 @@ static lsn_t pregap_search_subq(subq_read_fn read, void *opaque,
                                 const track_t track_number,
                                 const lsn_t prev_track_start_lsn,
                                 const lsn_t track_start_lsn,
-                                enum cyanrip_pregap_source *source)
+                                enum cyanrip_pregap_source *source,
+                                struct cyanrip_pregap_stats *stats)
 {
 #define SET_SOURCE(v) do { if (source) *source = (v); } while (0)
+/* Every return below goes through this, so the counts are those of the
+ * search that ended there. */
+#define DONE(lsn) do {                                                  \
+        s.st.searched = 1;                                              \
+        s.st.shift = s.shift;                                           \
+        s.st.harder = s.retry_max == harder_retry_max;                  \
+        s.st.left = s.left_bound;                                       \
+        s.st.right = s.right_bound;                                     \
+        if (stats)                                                      \
+            *stats = s.st;                                              \
+        return (lsn);                                                   \
+    } while (0)
 
     struct pregap_search s = {
         .read = read,
@@ -597,7 +626,7 @@ static lsn_t pregap_search_subq(subq_read_fn read, void *opaque,
     // A previous track of a single sector leaves nothing to search.
     if (s.left_bound + 1 == s.right_bound) {
         SET_SOURCE(CYANRIP_PREGAP_SRC_SUBCHANNEL);
-        return s.right_bound;
+        DONE(s.right_bound);
     }
 
     // Check one sector before track start to see if there is any pregap.
@@ -605,7 +634,7 @@ static lsn_t pregap_search_subq(subq_read_fn read, void *opaque,
         /* Persistent read failure: give up on detection rather than crash the
          * rip over what optical drives treat as a routine condition. */
         SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
-        return CDIO_INVALID_LSN;
+        DONE(CDIO_INVALID_LSN);
     }
 
     // There is a pregap or the result was ambiguous. Backtrack in 2
@@ -620,7 +649,7 @@ static lsn_t pregap_search_subq(subq_read_fn read, void *opaque,
             break;
         if ((ret = pregap_observe(&s, lsn, &moved, &seen))) {
             SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
-            return CDIO_INVALID_LSN;
+            DONE(CDIO_INVALID_LSN);
         }
     }
 
@@ -645,7 +674,7 @@ static lsn_t pregap_search_subq(subq_read_fn read, void *opaque,
         }
         if ((ret = pregap_observe(&s, lsn, &moved, &seen))) {
             SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_READ);
-            return CDIO_INVALID_LSN;
+            DONE(CDIO_INVALID_LSN);
         }
         if (moved) {
             // A bound moved: carry on from the previous track's last known sector.
@@ -667,11 +696,12 @@ static lsn_t pregap_search_subq(subq_read_fn read, void *opaque,
     // caller that only ever compares against CDIO_INVALID_LSN).
     if (s.left_bound + 1 == s.right_bound) {
         SET_SOURCE(CYANRIP_PREGAP_SRC_SUBCHANNEL);
-        return s.right_bound;
+        DONE(s.right_bound);
     }
 
     SET_SOURCE(CYANRIP_PREGAP_SRC_ERR_CRC);
-    return CDIO_INVALID_LSN;
+    DONE(CDIO_INVALID_LSN);
+#undef DONE
 #undef SET_SOURCE
 }
 
@@ -781,10 +811,13 @@ void cyanrip_subq_isrc_reason(const struct cyanrip_subq_isrc *res, char *buf, si
  * (`all-zero sector accepted`). The comment outlived the fix and was asserting
  * an unaddressed problem that is addressed -- removed 2026-08-13. */
 lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
-                                   enum cyanrip_pregap_source *source) {
+                                   enum cyanrip_pregap_source *source,
+                                   struct cyanrip_pregap_stats *stats) {
 #define SET_SOURCE(v) do { if (source) *source = (v); } while (0)
 
     SET_SOURCE(CYANRIP_PREGAP_SRC_NONE);
+    if (stats)
+        memset(stats, 0, sizeof(*stats));
 
     // Try to use libcdio. If libcdio doesn't implement pregap finding
     // for a driver, it will return CDIO_INVALID_LSN.
@@ -821,6 +854,6 @@ lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
     }
 
     return pregap_search_subq(read_subq_from_drive, p_cdio, track_number,
-                              prev_track_start_lsn, track_start_lsn, source);
+                              prev_track_start_lsn, track_start_lsn, source, stats);
 #undef SET_SOURCE
 }

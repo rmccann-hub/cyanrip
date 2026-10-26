@@ -465,6 +465,29 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
     else if (t->pregap_source == CYANRIP_PREGAP_SRC_TOC)
         cyanrip_log(ctx, 0, "    Pregap source: TOC\n");
 
+    /* What the sub-channel search saw, whether it found the pregap or not.
+     * Its `unknown (sub-channel CRC mismatches)` is given whenever its bounds
+     * do not meet, which frames for other sectors can cause as well as frames
+     * that fail their CRC; round 36's runs read the reference disc's track 9
+     * as 95 or unknown where .25 and EAC read 94 (our round 36 lap 8 S5), and
+     * these counts are what a drive run needs to tell the causes apart. The
+     * stretch the search could not decide is printed when it ended without
+     * an answer. */
+    if (t->pregap_stats.searched) {
+        const struct cyanrip_pregap_stats *st = &t->pregap_stats;
+        char undecided[64] = "";
+        if (t->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC ||
+            t->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ)
+            snprintf(undecided, sizeof(undecided), "; LSN %i to %i undecided",
+                     st->left + 1, st->right - 1);
+        cyanrip_log(ctx, 0, "    Pregap search: %i sectors asked; %i reads failed the CRC; "
+                    "%i sectors gave no frame passing it; %i frames were another "
+                    "sector's; %i had no address; frames answer %+i sectors off%s%s\n",
+                    st->asked, st->crc_failed, st->no_frame, st->elsewhere,
+                    st->no_address, st->shift,
+                    st->harder ? "; 200-retry pass ran" : "", undecided);
+    }
+
     if (t->frames_before_disc_start)
         cyanrip_log(ctx, 0, "    Prepended:   %i frames of silence\n", t->frames_before_disc_start);
     cyanrip_log(ctx, 0,     "    Start LSN:   %i", t->start_lsn_sig);

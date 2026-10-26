@@ -220,6 +220,10 @@
           "value": "https://github.com/FFmpeg/FFmpeg.git@946fcce07b6dcd0331c8cc609192aeff5e1924f8 (n9.0.2)"
         },
         {
+          "name": "cyanrip-fork:ci-pinned-tarball",
+          "value": "https://downloads.sourceforge.net/lame/lame-3.100.tar.gz sha256:ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e (3.100)"
+        },
+        {
           "name": "cyanrip-fork:ci-git-tool",
           "value": "https://github.com/rmccann-hub/claude-code-skills@9c545d63190f6a5d4fa7aa7e86da33b6dc330fe4"
         },
@@ -1275,5 +1279,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:a96cda88-d53d-566e-9361-b39160f5b39e"
+  "serialNumber": "urn:uuid:b59d8ca0-2647-5158-9750-16ed3115d69c"
 }

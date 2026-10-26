@@ -96,6 +96,25 @@ enum cyanrip_pregap_source {
     CYANRIP_PREGAP_SRC_ERR_CRC, /* Sub-channel CRCs never agreed, unknown */
 };
 
+/* What a sub-channel pregap search saw, for the log's `Pregap search:` line.
+ * Its `unknown (sub-channel CRC mismatches)` is given whenever the bounds do
+ * not meet, which frames for other sectors can cause as well as frames that
+ * fail their CRC, and round 36's runs read the reference disc's track 9 as 95
+ * or unknown where .25 and EAC read 94 (our round 36 lap 8 S5): these counts
+ * are what tells the causes apart. All zero when no search ran. */
+struct cyanrip_pregap_stats {
+    int searched;     /* a sub-channel search ran */
+    int asked;        /* sectors asked for, each read until its CRC checked or retries ran out */
+    int crc_failed;   /* reads whose Q frame failed its CRC, retries included */
+    int no_frame;     /* sectors asked for that gave no frame passing its CRC */
+    int no_address;   /* frames passing their CRC with an address no disc has */
+    int elsewhere;    /* frames placed at another sector than the one wanted */
+    int shift;        /* how far from the sector asked for the drive answered, settled */
+    int harder;       /* the 200-retry pass ran */
+    lsn_t left;       /* when it stopped, the last sector known to be the previous track's */
+    lsn_t right;      /* and the first known to be this track's */
+};
+
 enum cyanrip_secure_rip_state {
     CYANRIP_SECURE_RIP_NA = 0, /* -Z was not requested for this track */
     CYANRIP_SECURE_RIP_CONVERGED, /* Matching checksums were found */
@@ -353,6 +372,7 @@ typedef struct cyanrip_track {
 
     lsn_t pregap_lsn;
     enum cyanrip_pregap_source pregap_source; /* Provenance of pregap_lsn */
+    struct cyanrip_pregap_stats pregap_stats; /* What the first search saw */
     /* A second sub-channel search's answer, made after every first search;
      * CDIO_INVALID_LSN when none was made or it did not complete. Reported
      * beside pregap_lsn when the two disagree, and never used to rip. */

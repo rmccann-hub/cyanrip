@@ -82,7 +82,48 @@ rips of the reference disc with that line absent, and `Gaps:` reading 94 and
 158 throughout, are the confirmation. `STATUS.md`'s `subchannel-pregap-varies`
 tracks it.
 
-### The disc's ISRCs read as none on the rig's drive, while EAC's cue of the same disc has them
+**The drive did not confirm it, 2026-10-21 and 2026-10-22**
+(`docs/rig-2026-10-21-ca0f097/` and the three runs after it, `.26` with
+Platterpus 0.7.112):
+- **The reference disc's track 9.** `.25`'s two logs read 94 frames, the
+  value EAC's rip of the disc on a BDR-209D gives: its cue puts track 9's
+  `INDEX 00` at `03:44:11` in track 8's file, 94 frames before the end of
+  track 8's 16,905 sectors, and its log's `Pre-gap length 0:00:01.25` is that
+  in hundredths of a second. `.26`'s
+  eight read 95 in three and `pregap of track 9 unknown (sub-channel CRC
+  mismatches)` in five, and **none reads 94**.
+- **Track 4 read 158 in all ten**, and the two-search clause printed in no
+  log.
+- **Disc 3 of the four-disc set.** Three of fifteen `.26` logs read track 16's
+  pregap as unknown, where every other search on either build finds none.
+- **Disc 4.** All thirteen `.26` logs list a 175-frame pregap on track 5 that
+  both `.25` logs miss. That is the miss `tests/subq.c` reproduces, and no
+  third source settles it.
+
+So on this drive `.26`'s search is not the old one. It is worse on the one
+disc an independent artifact settles. Its `unknown` names CRC mismatches as
+the cause, but the search reaches that arm whenever its bounds fail to meet
+(`cyanrip@ca0f097:src/pregap.c:663-673`). That includes frames that pass their
+CRC and answer for another sector, which it asks for again up to five times
+(`:654`). The log does not say which happened.
+
+**Recorded for `.27`, not yet run on a drive.** Each track a sub-channel
+search ran on gains a `Pregap search:` line. It gives:
+- the sectors asked for;
+- the reads whose frame failed its CRC, and the sectors that never gave a frame
+  passing it;
+- the frames placed at another sector, and the frames with no address;
+- the shift the drive's frames settled on, and whether the 200-retry pass ran;
+- for an `unknown`, the stretch the search left undecided.
+
+`tests/subq.c` drives the search on a simulated drive that answers one sector
+with its neighbour's frame on every read. No CRC fails, yet the search ends in
+the source the log words `sub-channel CRC mismatches`, and only these counts
+tell it from a frame that never passes its CRC. The `unknown` reason keeps its
+words, which Platterpus reads. The line is proposed in our round 36 lap 8. A
+run of the reference disc on `.27` is what shows why `.26` never reached 94.
+
+### The disc's ISRCs read as none on the rig's drive, while EAC's cue of the same disc has them (fixed in `.26`)
 
 **Found by the claude-code-skills session's known fixes of 2026-10-21, item 8**,
 and untracked here until then. On the BDR-209D, `.25` printed `Disc ISRC:
@@ -120,6 +161,55 @@ against an ISRC frame built from cdrdao's encoder, and the scan, on the
 simulated drive. **The drive settles it**: the next rig rip of the reference
 disc on `.26`. If formatted Q carries no mode-3 frames, the next step is the
 raw P-W sub-channel, which a drive returns as recorded.
+
+**The drive settled it, 2026-10-21** (`docs/rig-2026-10-21-ca0f097/`).
+- **The reference disc.** Every `.26` track block read a code from the track's
+  own Q frames, and the 14 codes match EAC's cue of the disc, 14 of 14.
+- **Disc 4 of the four-disc set** (`docs/rig-2026-10-22b-ca0f097/`). It read
+  codes for 13 of 16 tracks, the same code in every log.
+- **Discs 1 and 3.** Their tracks read `none (libcdio returned none, also after
+  reading 200 Q frames of the track, none an ISRC frame)`.
+
+So the BDR-209D's formatted Q does carry mode-3 frames, and READ SUB-CHANNEL
+is the path that returned none. With `--prefer-disc-isrc`, the files and the
+cue now carry the disc's code. Platterpus's audit warns that it differs from
+the one they sent, which is the option working
+(`docs/rig-2026-10-21-ca0f097/`, L726).
+
+### `Recordable:` never answers on the rig's drive: libcdio's profile search stops one descriptor short (fixed for `.27`)
+
+**Found 2026-10-25, reading the four runs of `.26`** (`docs/rig-2026-10-21-ca0f097/`
+and the three after it). All 38 `.26` logs, on four discs, read `Recordable:
+unknown (profile 0xffff is not a CD profile)`.
+
+`.26` takes the profile from libcdio's `mmc_get_disctype()`
+(`cyanrip@ca0f097:src/cyanrip_main.c:326`). That function:
+- sets `*p_disctype` to `CDIO_MMC_FEATURE_PROF_NON_CONFORM`, `0xffff`, before
+  it searches GET CONFIGURATION's profile list;
+- loops `q < p + profiles_list_length` with `q` starting at `p + 4`, so the
+  list's last descriptor is never read;
+- returns `DRIVER_OP_SUCCESS` either way.
+
+The bound is the one the function was added with in 2010 (libcdio `2d3b7d28`),
+and the function is the same at 2.1.1, at 2.3.0 (the rig's, by its install
+step's `libcdio-devel-2.3.0-1.fc44`), at 2.4.0 and at master `68ea374`
+(`lib/driver/mmc/mmc_hl_cmds.c`). So `0xffff` is libcdio's default, not the
+drive's answer, and our line states it as the drive's profile. Which
+descriptor the BDR-209D marks current, the log cannot show.
+
+**What it costs**: the line meant to say whether the disc is a CD-R or CD-RW
+says nothing on the one drive we have. And what it does say names a profile
+the drive never reported.
+
+**Fixed for `.27`, not yet shown on a drive**: cyanrip sends the command
+libcdio's function sends and takes the current profile from the reply's feature
+header, bytes 6 and 7, which MMC defines for it
+(`crip_current_profile_parse()`, `src/drive_caps.c`). `tests/drivecaps.c`
+builds a reply listing CD-ROM last and current, as a BD drive lists its
+profiles: libcdio's search over it gives `0xffff`, and the header gives
+`0x0008`. Only a drive run shows what the BDR-209D's header says. libcdio's
+loop is an upstream defect of libcdio's, reported by our operator if they
+choose.
 
 ### The footer's AccurateRip tally divides by a count that includes data tracks (fixed for `.27`)
 
@@ -417,16 +507,19 @@ revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
 that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
-bracket. **It did, six times**: the 2026-10-06 run on `.20` printed `128 to
+bracket. **It did, nine times**: the 2026-10-06 run on `.20` printed `128 to
 255 sectors`, with a 1.7 ms re-read after 128 sectors and three re-reads of at
 least 32.6 ms after 256, and `cd-paranoia -A`, run straight after it, reported
 137 (`docs/rig-2026-10-06-5704062/`); the 2026-10-07 run on `.21` printed the
 same bracket beside 144, the 2026-10-12 run on `.21` the same again beside
 137 (`docs/rig-2026-10-12-ca3f3ea/`), the 2026-10-13 run on `.22` the same
 beside 144 (`docs/rig-2026-10-13-200530e/`), the 2026-10-16 run on `.23`
-the same beside 137 (`docs/rig-2026-10-16-891c79e/`), and the 2026-10-20 run
-on `.25` the same beside 140 (`docs/rig-2026-10-20-5f1d036/`, the table's last
-row). Six runs on one drive, and the search can say no more than a power of two. Everything below is the record of
+the same beside 137 (`docs/rig-2026-10-16-891c79e/`), the 2026-10-20 run
+on `.25` the same beside 140 (`docs/rig-2026-10-20-5f1d036/`), and three runs
+on `.26` the same beside 140, 140 and 137 (`docs/rig-2026-10-21-ca0f097/`,
+`docs/rig-2026-10-22-ca0f097/` and `docs/rig-2026-10-22b-ca0f097/`, the table's
+last three rows). Nine runs on one drive, and the search can say no more than a
+power of two. Everything below is the record of
 the defect, kept because the table is checked against the transcripts.
 
 **The seventeenth session, 2026-10-05 on `.19`, bracketed 128 to 255, and that
@@ -500,6 +593,9 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-10-13 `200530e` | 244.7 ms | 1.9 ms | **6 ms** | 32%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.4 ms or more, beside `cd-paranoia -A`'s 144 |
 | 2026-10-16 `891c79e` | 244.5 ms | 1.7 ms | **6 ms** | 28%; `128 to 255 sectors`, three re-reads after 256 sectors at 31.9 ms or more, beside `cd-paranoia -A`'s 137 |
 | 2026-10-20 `5f1d036` | 362.7 ms | 1.5 ms | **6 ms** | 25%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.7 ms or more, beside `cd-paranoia -A`'s 140 |
+| 2026-10-21 `ca0f097` | 363.1 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.8 ms or more, beside `cd-paranoia -A`'s 140 |
+| 2026-10-22 `ca0f097` | 381.2 ms | 1.4 ms | **6 ms** | 23%; `128 to 255 sectors`, three re-reads after 256 sectors at 60.6 ms or more, beside `cd-paranoia -A`'s 140 |
+| 2026-10-22b `ca0f097` | 253.6 ms | 1.7 ms | **6 ms** | 28%; `128 to 255 sectors`, three re-reads after 256 sectors at 34.4 ms or more, beside `cd-paranoia -A`'s 137 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -613,10 +709,10 @@ coverage.
 
 | gap | status |
 |---|---|
-| `--cache-probe` (`-x` until 2026-10-12) correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). **`.20`'s fix (`394ab17`) has run six times on a drive, 2026-10-06 to 2026-10-20, and agreed each time**: `128 to 255` beside `cd-paranoia -A`'s 137, 140 or 144. This cell said *"measured twice"* while the table above held nine rows |
+| `--cache-probe` (`-x` until 2026-10-12) correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). **`.20`'s fix (`394ab17`) has run nine times on a drive, 2026-10-06 to 2026-10-22, and agreed each time**: `128 to 255` beside `cd-paranoia -A`'s 137, 140 or 144. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
-| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. From `.20` the `read with errors.` arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have. The `-Z` arm printed it on a drive on 2026-10-06 (`docs/rig-2026-10-06-5704062/`, tracks 3 and 5); the skip arm has run only on the fixture (`tests/badsector.c`) |
+| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. From `.20` the `read with errors.` arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have. The `-Z` arm printed it on a drive on 2026-10-06 (`docs/rig-2026-10-06-5704062/`, tracks 3 and 5), and **the skip arm on 2026-10-21**, `.26` on the same disc (`docs/rig-2026-10-21b-ca0f097/`): 2,106 skips, on exactly the four tracks that print it, with their positions in the record. Tracks 11, 12, 14 and 16 read no skip, print `read successfully!` and fail AccurateRip, so paranoia reported nothing on four wrong reads. Every position in that run is a skip, so a drive reporting a failed read is still not seen |
 | CD-TEXT from a physical disc | `mmc_read_cdtext` is a different code path from the image parser, and no disc with CD-TEXT has been read |
 | ~~the diagnosed-abort exit code~~ | **RETIRED 2026-09-22.** `cyanrip -N -l 1` with no `-s` exited **1** with `Offset is unset!` at column 0, `Rip completed:  no (aborted, 0 of 14 tracks)` and a complete footer — `docs/rig-2026-09-22-2cce60d/session/script-report.json` step 212. The reason given here (*"every rig rip so far had `Ripping errors: 0`"*) had **already been false since 2026-09-10**: seven filed rig logs carry `Ripping errors: 1`, counted off `docs/rig-*/rips/*.log` rather than remembered |
 | ~~a non-zero `Read stalls:` count~~ | **RETIRED 2026-08-26**, and this row outlived the retirement by a month. **Five** filed rig logs carry a populated line, up to `5 reads exceeded 10s; longest 11s (track 1, LSN 8322)`, counted off `docs/rig-*/rips/*.log`. The rule it carried still holds and is why it is kept visible: **a silent watchdog is not a working watchdog**, and zero heartbeats on healthy media — which is what all eight rips of 2026-09-22 report — is the expected result and evidence of nothing |
@@ -963,6 +1059,41 @@ So round 8 `J13` is answered, and this stays a note about the disc, not an open
 question about them.
 
 ---
+
+### `read successfully!` prints over a track AccurateRip then rejects
+
+**Found by the EAC parity plan of record of 2026-10-26, row 8**, in round 36's
+run on the damaged disc (`docs/rig-2026-10-21b-ca0f097/`). Tracks 11, 12, 14
+and 16 printed `Track N read successfully!` and failed AccurateRip (our round
+36 lap 8 S9).
+
+The line reports the read alone: no error from the drive, no paranoia skip,
+and no `-Z` repeat limit (`src/cyanrip_main.c`, the arm that prints `read with
+errors.`). It is printed before AccurateRip is looked up, and a read with no
+error reported can still be wrong. `successfully` claims more than the read
+knows, which is the overstatement the plan's row 8 asks both sides to remove.
+
+**Open, joint, proposed in our round 36 lap 8**: rename it `Track N read with
+no error reported.`, beside the unchanged `read with errors.`. Platterpus
+parses both wordings (`platterpus@bba81563:src/platterpus/parsers/cyanrip_log.py:396`),
+so the new one ships only after a release of theirs reads both.
+
+### Under `-Z`, `Extraction speed:` divides one track's audio by every read's time
+
+**Found by the EAC parity plan of record of 2026-10-26, Appendix H**, in round
+36's securing pass of the damaged disc. Track 11 reads `Extraction speed:
+1.4x` and `Elapsed: 131.75 s`: 188 seconds of audio over five reads of 23 to
+29 seconds each, about 7x apiece.
+
+The track's clock starts before the `-Z` loop and stops after the encode
+(`src/cyanrip_main.c`, `track_start_time` and `rip_time_us`), so under `-Z` the
+line gives the drive a speed it never read at. `Elapsed:` is right as it
+stands: it is the time the track took.
+
+**Open, joint, proposed in our round 36 lap 8**: under `-Z`, the speed of the
+kept read alone, with `Elapsed:` unchanged. Platterpus reads the value
+(`_TRACK_SPEED`) and folds it into its estimate of the drive's speed, so the
+value's meaning changes only once they agree.
 
 ## Known external bugs worked around here
 

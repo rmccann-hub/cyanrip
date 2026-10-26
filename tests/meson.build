@@ -142,7 +142,9 @@ test('Cache probe wording', cacheprobe_test)
 ## a drive sends. The parse is pure, so it is driven here with built replies:
 ## the bit set and clear, block descriptors before the page, the page after
 ## another, a reply cut short, and no page 2Ah at all. The `Recordable:`
-## line's every wording, from the drive's current profile, is pinned beside it.
+## line's every wording, from the drive's current profile, is pinned beside it,
+## with that profile read from GET CONFIGURATION's header on a reply that lists
+## CD-ROM last, where libcdio's own search gives its 0xffff placeholder.
 drivecaps_test = executable('drivecaps_test',
     sources: [ 'drivecaps.c' ],
     include_directories: [ '../src' ],
