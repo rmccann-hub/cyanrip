@@ -247,13 +247,19 @@ which asked for drive answers printed without a sentinel check. A read-only
 audit of `src/` listed candidates; these four were then read here, in our code
 and in libcdio at `68ea374`:
 
-- **`Speed: default (unchangeable)` is a constant on Linux.** The line reads
-  `CDIO_DRIVE_CAP_MISC_SELECT_SPEED` (`src/cyanrip_log.c:1031-1032`), and on
-  Linux libcdio answers capabilities from its MMC parser
-  (`lib/driver/gnu_linux.c:1709-1713`), which never sets that bit; the one
-  setter on Linux is compiled out (`#undef USE_LINUX_CAP`, `:433`, `:490`).
-  All 21 `Speed:` lines in the drive logs copied to `tests/fixtures/evidence/`
-  read `unchangeable`.
+- **`Speed: default (unchangeable)` is libcdio's constant, not the drive's
+  answer.** The line reads `CDIO_DRIVE_CAP_MISC_SELECT_SPEED`
+  (`src/cyanrip_log.c:1031-1032`), and libcdio never asks the drive. Its MMC
+  page parser (`lib/driver/mmc/mmc_util.c:112`) never sets the bit, and it
+  answers on Linux (`lib/driver/gnu_linux.c:1709-1713`, where the one setter is
+  compiled out: `#undef USE_LINUX_CAP`, `:433`, `:490`), on Windows, NetBSD,
+  Solaris and AIX, and on FreeBSD in its CAM and MMC access modes. On macOS
+  the bit is set for every drive whose feature flags libcdio reads
+  (`lib/driver/osx.c:838`), so the line says `changeable` there whatever the
+  drive can do. All 21 `Speed:` lines in the drive logs copied to
+  `tests/fixtures/evidence/` read `unchangeable`. This entry first called the
+  constant Linux's only (`619dd07`); every driver's `.get_drive_cap` was then
+  read for our round 36 lap 12.
 - **`Drive used:` on an image names libcdio's stand-in**, `libcdio CDRWIN
   (revision 2.1.)` in the golden reference's line 6, two lines above
   `Accurate stream: unknown (image)`.
@@ -276,8 +282,10 @@ ISO 3901 check; and the offset search numbers tracks by position.
 
 **What it costs**: each prints a default or a failure as a measurement, which
 is the first rule's failure. **Not fixed yet**: every one changes what a line
-says, so each wording goes to Platterpus in our next lap, as `Recordable:`'s
-did.
+says, so each wording is proposed to Platterpus in our round 36 lap 12 S11, as
+`Recordable:`'s was, and lands once they answer. `Speed:` matters most to
+them: their reader takes `unchangeable` as a drive that cannot change speed,
+and their app then never sends `-S`.
 
 ### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names
 
@@ -306,8 +314,8 @@ part can.
 create, for its overwrite guard
 (`platterpus@d745464d:src/platterpus/adapters/cyanrip_backend.py:1904-1915`),
 so a change to a name on disk is theirs to absorb, and P7 of the contract
-changes with it. The rule goes to them in our next lap; the fix lands with
-tests of each case in each mode once they accept.
+changes with it. The rule is proposed to them in our round 36 lap 12 S10;
+the fix lands with tests of each case in each mode once they accept.
 
 ### A value the log echoes could start a line of its own (fixed for `.28`)
 
@@ -333,7 +341,7 @@ the rule is in the contract's P2). `tests/logescape.c` and
 removed. One newline is still kept: paranoia's own messages are written a line
 at a time, and they name the `-d` path and the drive's INQUIRY strings, so a
 newline in either still starts a line there. The escape's form is proposed to
-Platterpus in our next lap and ships only once they accept.
+Platterpus in our round 36 lap 12 S9 and ships only once they accept.
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
