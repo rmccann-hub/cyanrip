@@ -1,0 +1,51 @@
+# Filed here: each file's hash as filed. A file whose
+# personal details were replaced (tools/redact.py) says so
+# under it, with the bundle's hash of it, so the delivery
+# still verifies against the archive below.
+45abcd15b3a5e2cb24c36267ba00791b97fa7c463bfde14e51747156e1e9e7f1  DIAGNOSTICS.txt
+1c4a9f1c04e4e1f0720e8b706365f392c210d682073b300c31aab205c5a7e156  MANIFEST.txt
+9a4e233233a98a310a1d0b8f706eb3708bc39a5842237ff0b12488c89a0ec257  SOURCES.txt
+442e1e00045128070da56660854438fdcb54b78e166754cb174132c1d62925d1  album/full acceptance∶ angle‹bracket 20261021t214510 platterpus-fork-gca0f097 CD1 (EAC-compatible).log
+bc4797b5f5377f089d3d9f19433756c2ff8ed075a0c3577643f04ba09f1376c8  album/full acceptance∶ angle‹bracket 20261021t214510 platterpus-fork-gca0f097 CD1.cue
+b4a44c935f94496d3a670b7624e93e8ab56e365c0b2d884083810201fe9935af  album/full acceptance∶ angle‹bracket 20261021t214510 platterpus-fork-gca0f097 CD1.log
+#   -Y on the bundle's bytes: verifies
+ba2844d7040d07a467335e3337ab2314768db119bbe4f9482928c9629c45d45b  album/full acceptance∶ angle‹bracket 20261021t214510 platterpus-fork-gca0f097 CD1.platterpus-securing-pass.txt
+#   -Y on the bundle's bytes: verifies
+20674030362ebc1ab8cfa17696c02c51f6edf4619597997173b5903915d8dacd  session/artifacts/02platterpus/log.txt
+2ad9c3da7d4b7fb60f9468de49e8e8f7771e9ad2a2c605e7f49885f4033d70f2  session/run/report.json
+ab3ccc70c4741869306c691c9200a04886145f2ab01caee1de553c7cc8d9b3ed  session/run/transcript.txt
+ab3ccc70c4741869306c691c9200a04886145f2ab01caee1de553c7cc8d9b3ed  session/transcript.txt
+
+# NOT filed. This list is the SET DIFFERENCE between the
+# archive's contents and what was written -- never a
+# hand-written note, which is how two files carrying the
+# run's own verdict were dropped from a filing whose own
+# paragraph called the omissions 'a choice'.
+8d2a9f335226f2e8bb99a1494c5856bf6d067187a26fa3cbfce63b032211a4cb  (not filed) COMPONENTS.json
+c7ae21619c4731ab510a2c1e27927d983d567ef477137458d32c003aeff56103  (not filed) SETTINGS.json
+895b1719301f7356283ff80159c1f5230be5b7bd7a5bd9eefa448cb2d1512fc8  (not filed) album/full acceptance∶ angle‹bracket 20261021t214510 platterpus-fork-gca0f097 CD1.platterpus.json
+bc1b6eeea375819d9fd8baf9a00b61f5d6ebe4ce36dd127c5971a5da5156f561  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261021T214611Z.json
+4132c6876ad393602a775cc80b9255dfe92910036793705aaaad7180d8cfb9fc  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261022T001928Z-securingpass.json
+c291232cdec7e9b193db18562c54daa971a1e125abcffa1858a0373f3ef16122  (not filed) session/artifacts/13platterpus/config.toml
+13b69c105e09d169ece7d27becf2a9156ede6b5ed5703ce014d599e69f5b48d7  (not filed) session/run/dialogdependencies-1-Dependency-check-complete.png
+c6ecd6c3f137dc05544a96ef90a2e06b5812930c58f8c854c84fa13fe7eeaef6  (not filed) session/run/dialogdependencies-2-Run-test-script.png
+a07d40ee638a928c8d1e5d3403d3b4f3a95b4e8303aad160c6c29ed3f534e247  (not filed) session/run/dialogdependencies.png
+70ab420f3d03fbc853c532bc6190b6c3394756c256275fa55b9cb881603f268e  (not filed) session/run/dialogdiagnostics-1-Diagnostics.png
+5c8e2f54bcf46ddede87373776808001f54a2301a7f5df4b9d18c8676027f456  (not filed) session/run/dialogdiagnostics-2-Run-test-script.png
+a07d40ee638a928c8d1e5d3403d3b4f3a95b4e8303aad160c6c29ed3f534e247  (not filed) session/run/dialogdiagnostics.png
+72394a8b576ea0ff60500c64685236c246151fd5ed44cffd51179c415ca67be7  (not filed) session/run/dialogdrive-1-Set-up-drive.png
+8db9e830d3fc6239c134002c6b35245db7782b98ae06ba1b296c107424850a7a  (not filed) session/run/dialogdrive-2-Run-test-script.png
+7c3343d51666987f27e2bf6b6e25f0dd9847ce30448b7706f0a27ad051c4a358  (not filed) session/run/dialogdrive.png
+7c08548524a3d422c1763a2ccb417367d55cc4fc6156c117eec1d508ebc8476d  (not filed) session/run/dialogsettings-1-Settings.png
+02fae75e28bdea530fbc041bf6ae41621e95f71e41ee4c72c6be6082f35801fc  (not filed) session/run/dialogsettings-2-Run-test-script.png
+7c3343d51666987f27e2bf6b6e25f0dd9847ce30448b7706f0a27ad051c4a358  (not filed) session/run/dialogsettings.png
+88f6de712a36d259cec1d9c81fa4c8b8af811f00fd98eeca6344be01b20c7aac  (not filed) session/zz-applog-rotations/03platterpus/log.txt.1
+59bb509c11e9cf6e37343444e07c79b60bdaf49369d081ea861376f6268b3a94  (not filed) session/zz-applog-rotations/04platterpus/log.txt.2
+9bb97725cc0ee579fc8f0adff254019185821153043342237a99bb748ed90a6c  (not filed) session/zz-applog-rotations/05platterpus/log.txt.3
+4fcac41fa0cb0a064509e62bd96d67682a87be55063cb935b6558f636d82ebcc  (not filed) session/zz-applog-rotations/06platterpus/log.txt.4
+a2266b57b8875d5e91063a55405ea64820274b41fdcb348553bcea7d477f83e3  (not filed) session/zz-applog-rotations/07platterpus/log.txt.5
+24f0f09530eba5ff0889a54ca6b0631601253a8e5a4ececa89e6cf3dc30afdba  (not filed) session/zz-applog-rotations/08platterpus/log.txt.6
+8d6e84e2d9e8199d2e93c93ac244f9f87af71ce82233357e4dbedfd271bd323a  (not filed) session/zz-applog-rotations/09platterpus/log.txt.7
+
+# The archive as delivered.
+5a423751af670788dd6bf72bc578d716cb063cde9c60f626fbbad353c19a19f2  (not filed) e884ad3c-platterpusbundle20261021t214509z.tar.gz
