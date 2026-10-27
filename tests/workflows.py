@@ -20,16 +20,24 @@ outside read of 2026-10-12 asked for, checked on the files rather than on a run:
   * the push and pull_request triggers name platterpus-fork and not master;
   * there is no `.github/workflows/main.yml`, the path upstream's own file has
     on master: GitHub keys a workflow by path, so a file of ours there would be
-    the same workflow as upstream's again and could not be disabled alone.
+    the same workflow as upstream's again and could not be disabled alone;
+  * a script that pipes one command into another, where the pipeline's status
+    decides the step, sets pipefail first: Actions runs a script as `bash -e`,
+    where that status is the last command's (review C item 3.6), and the
+    static-analysis step, run that way with a stub build that fails, fails.
 
 It reads the files line by line rather than with a YAML parser, which would be
 a dependency for one test; every count it relies on is asserted, so a pattern
 that stops matching fails instead of passing on nothing.
 """
 
+import os
 import pathlib
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 WF = ROOT / ".github" / "workflows"
@@ -39,6 +47,7 @@ UPSTREAM_ONLY = ("WebFreak001/deploy-nightly", "mknejp/delete-release-assets")
 PIN = re.compile(r"^\s*(?:- )?uses:\s*([\w.-]+/[\w./-]+)@([0-9a-f]{40})"
                  r"\s+#\s*v\S+\s*$")
 GIT_TOOL = re.compile(r"git\+(https://[^\s\"'@]+)@([\w.-]+)")
+PIPEFAIL = re.compile(r"^\s*set\s+(?:-\w+\s+)*-\w*o\s+pipefail\b")
 failures = 0
 
 
@@ -96,6 +105,33 @@ def run_blocks(lines):
     return out
 
 
+def unpiped_status(body):
+    """The lines of a run script whose status is a pipeline's, before any
+    `set -o pipefail`. Quoted text and $( ) are left out, and so is a line
+    that opens a condition (`if`, `elif`, `while`, `until`, `!`): there the
+    status is the test, and grep -q ending early is not a failure."""
+    out, pipefail = [], False
+    for line in body.splitlines():
+        if PIPEFAIL.match(line):
+            pipefail = True
+        code = re.sub(r"'[^']*'|\"(?:[^\"\\]|\\.)*\"|\$\([^()]*\)", "", line)
+        code = code.split("#", 1)[0].strip()
+        if re.match(r"(?:if|elif|while|until|!)\s", code):
+            continue
+        if re.search(r"(?<![|])[|](?![|])", code) and not pipefail:
+            out.append(line.strip())
+    return out
+
+
+def step_script(lines, name):
+    """The run script of the step called NAME, or None."""
+    for i, line in enumerate(lines):
+        if re.match(rf"^\s*- name:\s*{re.escape(name)}\s*$", line):
+            blocks = run_blocks(lines[i + 1:])
+            return blocks[0][1] if blocks else None
+    return None
+
+
 files = sorted(WF.glob("*.yml")) + sorted(WF.glob("*.yaml"))
 names = [p.name for p in files]
 if "ci.yml" not in names or "tag-release.yml" not in names:
@@ -136,6 +172,9 @@ for p in files:
         if "${{" in body:
             fail(f"{p.name}:{n}: a ${{{{ }}}} expression inside a run script; "
                  "pass it through env: instead")
+        for piped in unpiped_status(body):
+            fail(f"{p.name}:{n}: `{piped}` decides the step by its last "
+                 "command alone; `set -o pipefail` first")
     found = jobs(lines)
     if not found:
         fail(f"{p.name}: no jobs found under `jobs:`")
@@ -256,6 +295,39 @@ if tarballs and not re.search(r'^\s*echo "\$sha256  \$file" \| sha256sum -c -', 
 calls += tarballs
 if re.search(r"^[^#\n]*git clone", script, re.M):
     fail("mingw-build.sh runs git clone, which fetches a branch, not a commit")
+
+# 3.6: the static-analysis step, run as Actions runs a script with no
+# `shell:`, `bash -e {0}`, on stubs of meson and ninja. A build that fails
+# must fail it, as must a build that passes with a finding; a clean one not.
+analysis = step_script(ci.splitlines(), "Static analysis")
+bash = shutil.which("bash")
+if analysis is None:
+    fail("ci.yml: no `Static analysis` step with a run script")
+elif bash is None:
+    fail("no bash here to run the static-analysis step with")
+else:
+    with tempfile.TemporaryDirectory(prefix="cyanrip-wf-") as d:
+        tmp = pathlib.Path(d)
+        (tmp / "step.sh").write_text(analysis + "\n", encoding="utf-8")
+        stubs = tmp / "bin"
+        stubs.mkdir()
+        (stubs / "meson").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (stubs / "ninja").write_text(
+            '#!/bin/sh\ncase "$NINJA_STUB" in\n'
+            'fail) echo "FAILED: src/cyanrip.p/x.c.o"; exit 1;;\n'
+            'finding) echo "x.c:1:1: warning: leak [-Wanalyzer-malloc-leak]";;\n'
+            'esac\nexit 0\n', encoding="utf-8")
+        for stub in stubs.iterdir():
+            stub.chmod(0o755)
+        for mode, want in (("fail", False), ("finding", False), ("clean", True)):
+            env = dict(os.environ, NINJA_STUB=mode,
+                       PATH=f"{stubs}{os.pathsep}{os.environ.get('PATH', '')}")
+            r = subprocess.run([bash, "-e", str(tmp / "step.sh")], cwd=tmp,
+                               env=env, capture_output=True, text=True,
+                               encoding="utf-8", timeout=60)
+            if (r.returncode == 0) != want:
+                fail(f"ci.yml: the static-analysis step, run as `bash -e` with "
+                     f"a {mode} build, exited {r.returncode}")
 
 if failures:
     print(f"{failures} failure(s)")

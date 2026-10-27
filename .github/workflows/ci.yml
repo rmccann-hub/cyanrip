@@ -103,9 +103,12 @@ jobs:
       # GCC's static analyzer over the program this ships (review C item 3.6).
       # Its five warnings at 590e959 were fixed at their source, so a warning
       # now is a new one and fails the step. Ubuntu 24.04's GCC 13, as here.
+      # pipefail: Actions runs this as `bash -e`, where a pipeline's status is
+      # tee's, so a build that failed passed the step until it was set.
       - name: Static analysis
         if: matrix.name == 'default'
         run: |
+          set -o pipefail
           meson setup build-analyzer -Dc_args=-fanalyzer
           ninja -C build-analyzer src/cyanrip 2>&1 | tee analyzer.log
           if grep -n -e '-Wanalyzer-' analyzer.log; then
@@ -184,7 +187,9 @@ jobs:
           sudo apt-get install -y shellcheck gitleaks
 
       - name: ShellCheck
-        run: git ls-files -z '*.sh' | xargs -0 shellcheck
+        run: |
+          set -o pipefail
+          git ls-files -z '*.sh' | xargs -0 shellcheck
 
       - name: No secret in the history
         run: gitleaks detect --source . --redact --verbose
@@ -417,6 +422,7 @@ jobs:
       # committed disc image, which needs no drive, network or Python.
       - name: Smoke test
         run: |
+          set -o pipefail
           ./cyanrip.exe --version | tee version.out
           grep -q 'platterpus-fork' version.out
           ./cyanrip.exe -d tests/fixtures/cdda.nrg -I -N -A -U -P 0
