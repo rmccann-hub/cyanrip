@@ -2,6 +2,8 @@
 # Generates the CD image test fixtures in tests/fixtures/.
 #
 # Needs ffmpeg and a directory of audio samples (any format ffmpeg can read);
+# art.avif also needs ffmpeg's libaom-av1 encoder, and without it is kept as
+# committed;
 # the committed fixtures were built from private encoder test samples, but any
 # three audio files >= 10 seconds long will do:
 #
@@ -177,11 +179,19 @@ def main():
                     "-i", "color=red:size=8x8", "-frames:v", "1",
                     str(FIXTURES / "art.png")], check=True)
     # A cover whose codec parameters carry extradata (AV1's configuration
-    # record), which PNG and JPEG do not
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi",
-                    "-i", "color=red:size=8x8", "-frames:v", "1",
-                    "-c:v", "libaom-av1", "-still-picture", "1",
-                    str(FIXTURES / "art.avif")], check=True)
+    # record), which PNG and JPEG do not. It needs an ffmpeg built with
+    # libaom-av1; without one the committed art.avif is kept, and said so,
+    # rather than every other fixture failing with it.
+    encoders = subprocess.run(["ffmpeg", "-hide_banner", "-encoders"],
+                              stdout=subprocess.PIPE, check=True).stdout
+    if b"libaom-av1" in encoders:
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi",
+                        "-i", "color=red:size=8x8", "-frames:v", "1",
+                        "-c:v", "libaom-av1", "-still-picture", "1",
+                        str(FIXTURES / "art.avif")], check=True)
+    else:
+        print("art.avif not written: this ffmpeg has no libaom-av1 encoder, "
+              "so the committed one is kept")
     print("fixtures written to", FIXTURES)
 
 
