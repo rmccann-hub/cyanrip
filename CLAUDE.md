@@ -242,9 +242,10 @@ Each of these is a confident wrong answer this repository has produced.
   its own. Push a topic branch only to open its pull request, never after it
   merges: a session cannot delete one, and a stale tip looks current.
 - Rulesets block deleting and force-pushing `platterpus-fork`, `master` and
-  `evidence`; tags come from `.github/workflows/tag-release.yml`. Consumers pin
-  a SHA, so never prune a ref a release can name: every log's build line
-  would dangle.
+  `evidence`. A release is the commit `release-manifest.json` names and needs
+  no tag; a tag, if the owner wants one, comes only from
+  `.github/workflows/tag-release.yml`. Consumers pin a SHA, so never prune a
+  ref a release can name: every log's build line would dangle.
 - Lap files are compiled in (`tools/gen-handshake-state.py`), so choose a pin
   with `git log -- src/ meson.build docs/handshake/round-*.md
   docs/handshake/inbound/round-*.md tools/gen-handshake-state.py
