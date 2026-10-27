@@ -799,6 +799,7 @@ rip_scenarios = [
     'album_loudness',
     'contract_covers_log',
     'art',
+    'art_extradata',
     'acoustid',
     'cue_only',
     'errors',

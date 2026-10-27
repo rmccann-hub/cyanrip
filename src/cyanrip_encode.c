@@ -1488,7 +1488,13 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
             ret = AVERROR(ENOMEM);
             goto fail;
         }
-        memcpy(s->st_img->codecpar, art->params, sizeof(AVCodecParameters));
+        /* A copy this stream owns, freed with the muxer's context; the art
+         * keeps its own for every other output */
+        ret = avcodec_parameters_copy(s->st_img->codecpar, art->params);
+        if (ret < 0) {
+            cyanrip_log(ctx, 0, "Unable to copy cover art parameters: %s!\n", av_err2str(ret));
+            goto fail;
+        }
         s->st_img->disposition |= AV_DISPOSITION_ATTACHED_PIC;
         s->st_img->time_base = (AVRational){ 1, 25 };
         av_dict_copy(&s->st_img->metadata, art->meta, 0);

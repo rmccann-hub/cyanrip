@@ -59,7 +59,13 @@ int crip_save_art(cyanrip_ctx *ctx, CRIPArt *art, const cyanrip_out_fmt *fmt)
         goto fail;
     }
 
-    memcpy(st->codecpar, art->params, sizeof(AVCodecParameters));
+    /* A copy the stream owns: the art keeps its own, and the muxer frees this
+     * one's extradata with the context */
+    ret = avcodec_parameters_copy(st->codecpar, art->params);
+    if (ret < 0) {
+        cyanrip_log(ctx, 0, "Unable to copy cover art parameters: %s!\n", av_err2str(ret));
+        goto fail;
+    }
     st->time_base = (AVRational){ 1, 25 };
     av_dict_copy(&st->metadata, art->meta, 0);
     av_dict_copy(&avf->metadata, art->meta, 0);
@@ -112,7 +118,7 @@ fail:
 void crip_free_art(CRIPArt *art)
 {
     av_packet_free(&art->pkt);
-    av_freep(&art->params);
+    avcodec_parameters_free(&art->params);
 
     av_freep(&art->data);
     art->size = 0;
@@ -299,11 +305,21 @@ static int demux_image(cyanrip_ctx *ctx, CRIPArt *art, int info_only)
         goto end;
     }
 
-    art->params = av_calloc(1, sizeof(AVCodecParameters));
-    if (!art->params)
+    /* A deep copy: the demuxer's own parameters, extradata included, are
+     * freed with it below. sizeof(AVCodecParameters) is not part of FFmpeg's
+     * ABI, so only its functions allocate, copy and free one. */
+    avcodec_parameters_free(&art->params);
+    art->params = avcodec_parameters_alloc();
+    if (!art->params) {
+        ret = AVERROR(ENOMEM);
         goto end;
+    }
 
-    memcpy(art->params, avf->streams[0]->codecpar, sizeof(AVCodecParameters));
+    ret = avcodec_parameters_copy(art->params, avf->streams[0]->codecpar);
+    if (ret < 0) {
+        cyanrip_log(ctx, 0, "Unable to copy cover image parameters: %s!\n", av_err2str(ret));
+        goto end;
+    }
 
     /* Output extension guesswork */
     av_freep(&art->extension);
