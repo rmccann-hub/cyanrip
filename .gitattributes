@@ -6,3 +6,14 @@
 # logfile records that string permanently, so a rip from such a build is
 # unusable as evidence. Found while packaging beta.7 for the rig.
 /src/archive-version.txt export-subst
+
+# Line endings (review C item 6.6). Every text file is LF in the repository,
+# and is checked out LF on every platform, whatever core.autocrlf says: the
+# Windows job checks this tree out, and a CRLF copy of a CUE sheet, a golden
+# log or a shell script is a different file to whatever reads it. git judges
+# which files are text.
+* text=auto eol=lf
+# Kept byte for byte. A fuzz seed may hold a CR on purpose, and the evidence
+# copies are checked against SHA-256s of their sources.
+/tests/fuzz/seeds/** -text
+/tests/fixtures/evidence/** -text
