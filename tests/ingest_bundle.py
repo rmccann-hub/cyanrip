@@ -151,6 +151,31 @@ def test_the_not_filed_list_is_derived_not_written():
         check(f"(not filed) {b}" in sums, f"{b} must be NAMED as not filed")
 
 
+def test_a_name_outside_into_is_refused_and_nothing_filed():
+    """Review C 1.7: every filed name lands under --into. One that resolves
+    outside it, by ".." or by being absolute, stops the tool with 3 before
+    the first write."""
+    top = pathlib.Path(tempfile.mkdtemp())
+    for bad in ("../escaped.txt", "album/../../escaped.txt",
+                str(top / "absolute.txt")):
+        into = top / "staging"
+        files = {"album/x/x.log": RIP, "session/transcript.txt": b"ok\n",
+                 bad: b"outside\n"}
+        rc, out = run(make(files), "--into", str(into))
+        check(rc == 3, f"{bad!r} must stop the tool with 3: {rc} {out[-400:]}")
+        check(f"  {bad!r}" in out, f"{bad!r} must be named: {out[-400:]}")
+        check("Nothing is filed." in out, f"it must say so: {out[-400:]}")
+        check(not into.exists() or not any(into.iterdir()),
+              f"{bad!r}: nothing may be filed under --into")
+        check(not any(top.glob("*.txt")),
+              f"{bad!r}: nothing may be written beside --into")
+    # A name that climbs and comes back down stays under --into and files
+    into = top / "kept"
+    rc, out = run(make({"album/x/../x.log": RIP}), "--into", str(into))
+    check(rc == 0 and (into / "album" / "x.log").read_bytes() == RIP,
+          f"a name that stays under --into must file: {rc} {out[-400:]}")
+
+
 def test_after_the_move_a_run_is_not_filed_into_the_checkout():
     """HR-2 point 10: once a manifest exists, --into docs/rig-* is refused.
 

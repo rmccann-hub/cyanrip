@@ -71,6 +71,11 @@ means the archive is not the bundle they wrote, and the tool stops with exit
 3 having filed nothing. A bundle with no such hashes is reported as not
 checked, which is not the same as intact.
 
+AND EVERY FILED NAME LANDS UNDER --into (review C 1.7, 2026-10-27). A
+member's name is the archive's, so each is resolved against --into before
+anything is written; a name that resolves outside it stops the tool with
+exit 3, the names listed and nothing filed.
+
 AND AFTER HR-2'S MOVE A RUN IS NOT FILED INTO THIS CHECKOUT (PROTOCOL.md v9
 §17, point 10). Once docs/evidence-manifest.tsv exists, --into a run folder
 under docs/ is refused: file into a staging directory outside the checkout,
@@ -625,6 +630,21 @@ def main():
               f"{evidence.run_folder(rel + '/x')} --push URL (PROTOCOL.md v9 "
               f"§17, point 10)")
         return 2
+    # Every name is checked before the first write, so a refused bundle
+    # leaves nothing behind
+    root = dest.resolve()
+    outside = []
+    for name in sorted(members):
+        target = (root / name).resolve()
+        if target == root or not target.is_relative_to(root):
+            outside.append(name)
+    if outside:
+        print("REFUSED: these member names resolve outside --into "
+              f"({dest}); a filed name must land under it. Nothing is filed.")
+        for name in outside:
+            print(f"  {name!r}")
+        return 3
+
     filed, dropped = [], []
     # Hostnames are gathered across the whole bundle first: a manifest names
     # the machine, and every other file that mentions it is then redacted too.
