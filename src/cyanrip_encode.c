@@ -1278,12 +1278,18 @@ static int open_output(cyanrip_ctx *ctx, cyanrip_enc_ctx *s)
     /* Mux cover image */
     if (s->cover_art_pkt) {
         AVPacket *pkt = av_packet_clone(s->cover_art_pkt);
-        pkt->stream_index = s->st_img->index;
-        if ((ret = av_interleaved_write_frame(s->avf, pkt)) < 0) {
+        if (!pkt) {
+            ret = AVERROR(ENOMEM);
             cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
             goto fail;
         }
+        pkt->stream_index = s->st_img->index;
+        ret = av_interleaved_write_frame(s->avf, pkt);
         av_packet_free(&pkt);
+        if (ret < 0) {
+            cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
+            goto fail;
+        }
     }
 
 fail:

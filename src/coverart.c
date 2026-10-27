@@ -90,11 +90,18 @@ int crip_save_art(cyanrip_ctx *ctx, CRIPArt *art, const cyanrip_out_fmt *fmt)
     }
 
     AVPacket *pkt = av_packet_clone(art->pkt);
+    if (!pkt) {
+        ret = AVERROR(ENOMEM);
+        cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
+        goto fail;
+    }
     pkt->stream_index = st->index;
 
+    /* The trailer flushes the interleaving queue, so one write is all, and
+     * its result is the one reported */
     ret = av_interleaved_write_frame(avf, pkt);
     av_packet_free(&pkt);
-    if ((ret = av_interleaved_write_frame(avf, pkt)) < 0) {
+    if (ret < 0) {
         cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
         goto fail;
     }
