@@ -161,6 +161,34 @@ jobs:
         if: always()
         run: python3 tools/check-settled.py --timing-from build/meson-logs/testlog.json
 
+  # The shell scripts under ShellCheck and the history under gitleaks (review
+  # C item 4.3), each from Ubuntu 24.04's own package, the versions this was
+  # written against: ShellCheck 0.9.0, and gitleaks 8.16.0, which found
+  # nothing in this branch's 1827 commits. The Python tools' lint is in the
+  # linux (released) row, where the suite runs it.
+  lint:
+    if: github.event_name != 'release'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch the history gitleaks reads
+        run: .github/fetch-history.sh platterpus-fork
+
+      - name: Install ShellCheck and gitleaks
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck gitleaks
+
+      - name: ShellCheck
+        run: git ls-files -z '*.sh' | xargs -0 shellcheck
+
+      - name: No secret in the history
+        run: gitleaks detect --source . --redact --verbose
+
   # Each parser of data from outside this program under libFuzzer, with ASan
   # and UBSan, for a minute from its committed seeds (review C item 3.8): the
   # JSON reader, AccurateRip's response and -Y's check of a log. A finding

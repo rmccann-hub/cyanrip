@@ -8,8 +8,9 @@
 cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 git rev-parse --git-dir >/dev/null 2>&1 || exit 0
 # A negative refspec needs git 2.29 or later.
-set -- $(git version | sed -n 's/^git version \([0-9]*\)\.\([0-9]*\).*/\1 \2/p')
-if [ "${1:-0}" -lt 2 ] || { [ "${1:-0}" -eq 2 ] && [ "${2:-0}" -lt 29 ]; }; then
+v=$(git version | sed -n 's/^git version \([0-9]*\)\.\([0-9]*\).*/\1 \2/p')
+major=${v%% *} minor=${v#* }
+if [ "${major:-0}" -lt 2 ] || { [ "${major:-0}" -eq 2 ] && [ "${minor:-0}" -lt 29 ]; }; then
     echo "evidence: git $(git version) has no negative refspecs, so the" \
          "evidence branch is not excluded from fetches"
     exit 0

@@ -59,13 +59,14 @@ buildCyanrip() {
 }
 
 cyan_prepare() {
-    local rootdir="$(pwd)"
+    local rootdir
+    rootdir="$(pwd)"
     CYANRIPREPODIR="${GITHUB_WORKSPACE:-$(realpath "$rootdir/..")}"
     CYANRIPINSTALLDIR="$(realpath "$rootdir/_install")"
     CYANRIPBUILDDIR="$(realpath "$rootdir/_build")"
     PKG_CONFIG_PATH=$CYANRIPINSTALLDIR/lib/pkgconfig:${PKG_CONFIG_PATH:-}
-    CPATH="$(cygpath -pm $CYANRIPINSTALLDIR/include:$MINGW_PREFIX/include)"
-    LIBRARY_PATH="$(cygpath -pm $CYANRIPINSTALLDIR/lib:$MINGW_PREFIX/lib)"
+    CPATH="$(cygpath -pm "$CYANRIPINSTALLDIR/include:$MINGW_PREFIX/include")"
+    LIBRARY_PATH="$(cygpath -pm "$CYANRIPINSTALLDIR/lib:$MINGW_PREFIX/lib")"
     CPPFLAGS="-D_FORTIFY_SOURCE=0 -D__USE_MINGW_ANSI_STDIO=1"
     CFLAGS="-mthreads -mtune=generic -O2 -pipe"
     CXXFLAGS="${CFLAGS}"
@@ -145,7 +146,8 @@ cyan_hide_conflicting_libs() {
 }
 
 # CYAN_INSTALL_TARGETS names the make targets that install, `install` unless
-# a caller says otherwise.
+# a caller says otherwise. It is expanded unquoted, one word per target.
+# shellcheck disable=SC2086
 cyan_do_separate_confmakeinstall() {
     rm -rf ./_build &&
     mkdir _build && cd _build &&

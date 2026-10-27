@@ -350,11 +350,14 @@ else
 fi
 echo
 echo "--- every log's first line must be the fork banner, and -Y must verify ---"
-for f in $(find "$OUT" -name '*.log' 2>/dev/null); do
-  printf '    %-40s %s\n' "$(basename "$f")" "$(head -1 "$f")"
-  timeout -k 10 60 "$CRIP" -Y "$f" >/dev/null 2>&1
-  echo "        -Y exit $?  (0 = the log verifies against its own FUN512)"
-done
+# Each path as find gives it, so an album folder with a space in its name is
+# one path, not two; the binary goes in as the inner shell's $0
+find "$OUT" -name '*.log' -exec sh -c '
+  for f; do
+    printf "    %-40s %s\n" "$(basename "$f")" "$(head -1 "$f")"
+    timeout -k 10 60 "$0" -Y "$f" >/dev/null 2>&1
+    echo "        -Y exit $?  (0 = the log verifies against its own FUN512)"
+  done' "$CRIP" {} + 2>/dev/null
 echo
 echo "=============================================================================="
 echo "WHAT THIS RUN CANNOT ESTABLISH, whatever it printed:"

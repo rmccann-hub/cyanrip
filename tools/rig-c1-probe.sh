@@ -197,6 +197,8 @@ SHELL_PID=$!
 # warning and then shipped the bug, because we tested against a bare binary. It
 # needed a fact about somebody else's rig that we could not have derived.
 descendants() {
+    # children is one line of pids separated by spaces, so words are wanted
+    # shellcheck disable=SC2013
     for c in $(cat "/proc/$1/task/$1/children" 2>/dev/null); do
         echo "$c"
         descendants "$c"
