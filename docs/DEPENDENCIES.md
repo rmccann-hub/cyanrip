@@ -72,9 +72,9 @@ GitHub Actions. Each workflow, and what starts it:
 | service | endpoint in `src/` | fetched by cyanrip | disabled by | what for |
 |---|---|---|---|---|
 | AcoustID | `https://api.acoustid.org/v2/submit` (src/acoustid.c) | yes | `-B` | fingerprints of an accurately ripped disc, sent only when --acoustid-key gives a user key and only in a build with libchromaprint |
-| Cover Art Archive | `http://coverartarchive.org/release` (src/coverart.c) | yes | `-U` | the release's cover art |
+| Cover Art Archive | `https://coverartarchive.org/release` (src/coverart.c) | yes | `-U` | the release's cover art |
 | MusicBrainz | `https://musicbrainz.org/cdtoc/attach?toc=` (src/discid.c) | no | `-N` | the literal in src/ is the disc-submission link, printed and never fetched; lookups reach musicbrainz.org through libmusicbrainz5 |
-| AccurateRip database | `http://www.accuraterip.com/accuraterip` (src/accurip.c) | yes | `-A` | per-track checksums other rips of the disc produced, compared with this rip's |
+| AccurateRip database | `https://www.accuraterip.com/accuraterip` (src/accurip.c) | yes | `-A` | per-track checksums other rips of the disc produced, compared with this rip's |
 
 ## Projects this one sits between
 
