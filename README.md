@@ -37,6 +37,14 @@ Features
 
 Installation
 ------------
+**Every package and build in this section, up to *Compiling*, is upstream
+cyanrip's or a distribution's, built from upstream's releases: none is this
+fork's, and none reports `+platterpus`** (review C item 5.4). This fork is
+built from source, by *Compiling* below, at the commit `release-manifest.json`
+names for a channel: its `install` field is that commit's source archive and
+its `build` field the commands. *Flatpak*, after it, builds the checkout it
+runs in, so from this repository it builds this fork.
+
 ### Alpine Linux
 ```bash
 apk add cyanrip
