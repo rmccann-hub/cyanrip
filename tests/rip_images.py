@@ -1786,6 +1786,15 @@ def sc_art_extradata():
         fail(f"artx: saved cover {have!r} != source {want!r}")
 
 
+def sc_art_local_name():
+    # Review C 2.3. A local file whose name begins with "http" is a file: a
+    # URL is recognised by its whole scheme, "://" included
+    shutil.copy(FIX / "art.png", WORK / "httpd.png")
+    rip("arth", "basic.cue", "-C", "Front=httpd.png", cwd=WORK)
+    expect("arth", "1.flac:4", "2.flac:4", "Front.png", "log.log",
+           "sheet.cue")
+
+
 def fingerprint(name, track):
     return probe(WORK / f"out_{name}" / f"{track}.flac", "-show_entries",
                  "format_tags=acoustid_fingerprint")

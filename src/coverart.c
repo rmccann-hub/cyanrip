@@ -382,14 +382,16 @@ end:
 
 static int string_is_url(const char *src)
 {
-    return !strncmp(src, "http://", 4)   ||
-           !strncmp(src, "https://", 4)  ||
-           !strncmp(src, "ftp://", 4)    ||
-           !strncmp(src, "ftps://", 4)   ||
-           !strncmp(src, "sftp://", 4)   ||
-           !strncmp(src, "tftp://", 4)   ||
-           !strncmp(src, "gopher://", 4) ||
-           !strncmp(src, "telnet://", 4);
+    /* Each scheme's whole prefix, "://" included: a local file whose name
+     * merely begins with "http" is a file */
+    static const char *const schemes[] = {
+        "http://", "https://", "ftp://", "ftps://", "sftp://", "tftp://",
+        "gopher://", "telnet://",
+    };
+    for (int i = 0; i < FF_ARRAY_ELEMS(schemes); i++)
+        if (!strncmp(src, schemes[i], strlen(schemes[i])))
+            return 1;
+    return 0;
 }
 
 int crip_fill_coverart(cyanrip_ctx *ctx, int info_only)

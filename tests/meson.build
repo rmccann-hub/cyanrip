@@ -800,6 +800,7 @@ rip_scenarios = [
     'contract_covers_log',
     'art',
     'art_extradata',
+    'art_local_name',
     'acoustid',
     'cue_only',
     'errors',
