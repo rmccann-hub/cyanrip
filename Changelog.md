@@ -1,5 +1,37 @@
 Unreleased
 ==========
+**Review C's first section: the fixes that need no change on Platterpus's
+side**, from the claude-code-skills session's review of 2026-10-27
+(`REVIEW-C-2026-10-27.md`, read on the operator's word of that day). Each item
+was checked against our code at `590e959` first, and each held:
+- **1.1**: a cover's codec parameters are copied with FFmpeg's own functions
+  for the art, the saved file and each track's muxer, so each owns its
+  extradata (`af89fcc`). `art_extradata` rips `tests/fixtures/art.avif`, an
+  AV1 cover whose parameters carry extradata, which PNG and JPEG do not.
+- **2.1**: the cover packet is written once and that write's error kept, and
+  each clone is checked (`f0dd963`).
+- **2.3**: a cover URL is recognised by its whole scheme (`56728f4`);
+  `art_local_name` rips a local cover named `httpd.png`.
+- **1.2**: the Cover Art DB fetch checks the room before it stores a cover
+  (`eeeed86`).
+- **2.4**: the allocations the review names are checked, and both reallocs go
+  through a temporary (`181473a`).
+- **1.7**: `tools/ingest-bundle.py` refuses a member whose name resolves
+  outside `--into`, and files nothing (`e3b138c`).
+
+Each new test fails with its fix reverted: `art_extradata` in a plain build for
+the tracks' copy and in the sanitizer rows for the other two, `art_local_name`
+and the bundle test in any build. 2.1, 1.2 and 2.4 have no test: each needs a
+failed allocation, a failed write or a Cover Art DB download. The fixes add
+six lines to the contract's P2 and four to P5, each on a path that crashed or
+misreported before; they are announced to Platterpus in our next lap, and
+`.28` ships them only once Platterpus accepts. Items 1.1, 1.2, 2.1 and 2.3
+are in upstream's code too.
+
+**Found while testing 1.1, and not fixed**: the log's `Embedded cover art:`
+names a cover that FFmpeg's FLAC muxer dropped. Recorded in KNOWN-ISSUES; the
+fix changes a P2 line, so it waits for a lap.
+
 **Platterpus's round 36 lap 11 is filed, and our lap 12 answers it**, held on
 our operator's word of 2026-10-26 and released on their word the same day.
 Their lap names `.27` under review
