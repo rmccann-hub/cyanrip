@@ -422,7 +422,12 @@ int crip_fill_coverart(cyanrip_ctx *ctx, int info_only)
             cyanrip_log(ctx, 0, "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!\n");
         } else if (!ctx->settings.disable_coverart_db) {
             int has_err = 0;
-            if (!have_front) {
+            /* The room checked before each write: -C takes up to 31 album
+             * covers, so a fetched front can take the last slot */
+            const int room = FF_ARRAY_ELEMS(ctx->cover_arts);
+            if (!have_front && ctx->nb_cover_arts >= room) {
+                cyanrip_log(ctx, 0, "Cover Art DB's front cover not fetched: a rip holds at most %i cover arts!\n", room);
+            } else if (!have_front) {
                 static const char *cover_ids[] = { "front", "front-250", "front-500", "front-1200" };
                 has_err = fetch_image(ctx, curl_ctx, &ctx->cover_arts[ctx->nb_cover_arts], release_id, cover_ids[ctx->settings.coverart_lookup_size], info_only, NULL);
                 if (has_err > 0) {
@@ -432,7 +437,9 @@ int crip_fill_coverart(cyanrip_ctx *ctx, int info_only)
                     ctx->nb_cover_arts++;
                 }
             }
-            if (!have_back && (has_err > 0)) {
+            if (!have_back && (has_err > 0) && ctx->nb_cover_arts >= room) {
+                cyanrip_log(ctx, 0, "Cover Art DB's back cover not fetched: a rip holds at most %i cover arts!\n", room);
+            } else if (!have_back && (has_err > 0)) {
                 static const char *cover_ids[] = { "back", "back-250", "back-500", "back-1200" };
                 has_err = fetch_image(ctx, curl_ctx, &ctx->cover_arts[ctx->nb_cover_arts], release_id, cover_ids[ctx->settings.coverart_lookup_size], info_only, NULL);
                 if (has_err > 0) {
