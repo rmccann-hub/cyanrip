@@ -284,7 +284,7 @@ bugs worked around here*; read it before touching libcdio, paranoia or the
 cache model. Two bite tests: a cdrdao `.toc` loads only from its own directory,
 and a synthetic signal can rip byte-reversed, so check it against its source.
 
-C99, K&R-ish, 4 spaces, no tabs; each source file opens with the LGPL-2.1+
+C11, K&R-ish, 4 spaces, no tabs; each source file opens with the LGPL-2.1+
 header from `src/utils.c`; log lines are column-aligned `label: value` within
 their block, so read the neighbours first; match the nearest existing code.
 Commit subjects are plain and imperative, one logical change per commit.

@@ -1,6 +1,6 @@
 project('cyanrip', 'c',
     license: 'LGPL2.1+',
-    default_options: [ 'buildtype=debugoptimized', 'c_std=c99', 'warning_level=1' ],
+    default_options: [ 'buildtype=debugoptimized', 'c_std=c11', 'warning_level=1' ],
     # Upstream's version verbatim, with the fork release appended as SemVer
     # build metadata. The base moved rc2 -> rc3 because we merged upstream's
     # b40c1f0; only upstream may change that half, and it changes exactly when
