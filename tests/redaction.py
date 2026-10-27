@@ -12,6 +12,11 @@ The names and hosts here are invented. A test that needed the owner's real
 details to run would be the thing the rule forbids.
 
 Usage: redaction.py <cyanrip binary>
+
+Meson gives the binary it built, and a path that is not a file then fails.
+Run by hand with no argument, ./build/src/cyanrip is tried; if it is not
+there, every check that needs no binary still runs, and a run where they
+pass exits 77, skipped, not 0: the -Y half was not tested (review C).
 """
 
 import hashlib
@@ -30,8 +35,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import redact  # noqa: E402
 
-CRIP = sys.argv[1] if len(sys.argv) > 1 else str(ROOT / "build" / "src" / "cyanrip")
+GIVEN = len(sys.argv) > 1
+CRIP = sys.argv[1] if GIVEN else str(ROOT / "build" / "src" / "cyanrip")
 failures = 0
+unprobed = []
 
 
 def check(cond, msg):
@@ -240,8 +247,10 @@ with tempfile.TemporaryDirectory() as d:
               f"{verdict_for('album/good/good.log')!r}\n{sums}")
         check((verdict_for("album/bad/bad.log") or "").startswith("does NOT verify"),
               f"a tampered log must not: {verdict_for('album/bad/bad.log')!r}")
+    elif GIVEN:
+        check(False, f"the cyanrip binary given, {CRIP}, is not a file")
     else:
-        print(f"UNPROBED: no cyanrip binary at {CRIP}, so -Y was not run")
+        unprobed.append(f"no cyanrip binary at {CRIP}, so -Y was not run")
     check("THE OWNER'S NAME WAS NOT CHECKED" not in out,
           "with a list given, the name was checked")
 
@@ -268,5 +277,8 @@ if hostname and hostname.lower() not in ("host",):
 if failures:
     print(f"{failures} check(s) failed")
     sys.exit(1)
+if unprobed:
+    print("SKIP: every other check passed; UNPROBED: " + "; ".join(unprobed))
+    sys.exit(77)
 print("redaction: home folders, hostnames and the owner's name stay out of "
       "what is filed and exported, and wire values stay as they are")
