@@ -137,6 +137,8 @@ PROGRAMS = {
           "Code runs it",
     "ruff": "the Python lint gate: Pyflakes's rules over tools/ and tests/, "
             "pinned in CI",
+    "valgrind": "memcheck over one rip of the basic image, which sees inside "
+                "the libraries as built",
 }
 
 # Every http(s) literal in src/, keyed by host. The KEYS must equal what

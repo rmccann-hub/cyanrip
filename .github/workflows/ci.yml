@@ -43,12 +43,19 @@ jobs:
     # two skipped. This moves when the reference's own environment does.
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    # Four configurations, because a configuration nobody builds is a
+    # Five configurations, because a configuration nobody builds is a
     # configuration nobody knows the state of -- and that is not theoretical
     # here. `-Ddeclare_released=true` is the build our release manifest tells
     # the consumer to make, nothing had ever compiled it, and when it finally
     # was it failed 2 of 41. The sanitizer rows are the same argument one level
     # down: they pass today, and nothing was running them.
+    # `thread` is TSan over the threaded encoder (review C item 3.7). Its
+    # options ignore accesses made inside libraries built without it: each
+    # of the 70 races TSan reported in this suite without them paired an
+    # FFmpeg free or reuse of a frame buffer with swr_convert() reading it,
+    # ordered by libavutil's atomic reference count, which TSan cannot see in
+    # an uninstrumented library. With them the suite reports none, and a race
+    # in this program's own code is still caught.
     strategy:
       fail-fast: false
       matrix:
@@ -61,6 +68,9 @@ jobs:
             opts: "-Db_sanitize=address,undefined -Db_lundef=false"
           - name: released+sanitizers
             opts: "-Ddeclare_released=true -Db_sanitize=address,undefined -Db_lundef=false"
+          - name: thread
+            opts: "-Db_sanitize=thread -Db_lundef=false"
+            tsan: "ignore_noninstrumented_modules=1"
     name: linux (${{ matrix.name }})
     steps:
       # One commit, then the whole history of what the suite reads: the
@@ -122,6 +132,13 @@ jobs:
           uvx --python 3.11 --from "meson==$floor" meson setup build-floor
           ninja -C build-floor
 
+      # tests/valgrind_rip.py rips under Valgrind's memcheck (review C item
+      # 3.7) and skips where valgrind is missing, so this row installs it and
+      # sets CYANRIP_VALGRIND_REQUIRED, so a missing valgrind fails.
+      - name: Install valgrind for the memcheck rip
+        if: matrix.name == 'default'
+        run: sudo apt-get install -y valgrind
+
       # tests/python_lint.py runs ruff's Pyflakes rules (review C item 4.3)
       # and skips where ruff is missing, so this row installs it, pinned, and
       # sets CYANRIP_LINT_REQUIRED so a missing ruff fails rather than skips.
@@ -134,6 +151,8 @@ jobs:
       - name: Test
         env:
           CYANRIP_LINT_REQUIRED: ${{ matrix.name == 'released' && '1' || '' }}
+          CYANRIP_VALGRIND_REQUIRED: ${{ matrix.name == 'default' && '1' || '' }}
+          TSAN_OPTIONS: ${{ matrix.tsan }}
         run: meson test -C build --print-errorlogs
 
       # Meson prints a test's output only when it fails, so a Settled facts

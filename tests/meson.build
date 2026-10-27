@@ -595,14 +595,24 @@ test('Release gate', python, args: [ files('release_gate.py') ],
 ## run -- a sanitizer sweep over an uninstrumented build reports zero findings
 ## and means nothing, the same shape as a mutation sweep whose mutants are all
 ## killed by a check that hashes the source.
-## In a build that is itself instrumented -- two of CI's four rows -- the
-## sweep skips, saying so: every image scenario here already runs under the
-## sanitizers, and a second instrumented tree would repeat them.
+## In a build that already carries ASan and UBSan -- two of CI's five rows
+## -- the sweep skips, saying so: every image scenario here already runs
+## under them, and a second instrumented tree would repeat them. The TSan
+## row's binary carries neither, so the sweep runs there.
 test('Sanitizer sweep', python,
      args: [ files('../tools/sanitize-run.py'),
              '--unless-instrumented', cyanrip_exe.full_path() ],
      depends: cyanrip_exe,
      timeout: 900)
+## Valgrind's memcheck over one rip of the basic image (review C item 3.7):
+## it sees inside the libraries as built, which no sanitizer instruments.
+## Skipped without valgrind or in a sanitized build, except in CI's linux
+## (default) row, which installs valgrind and requires it.
+test('Rip under memcheck', python,
+     args: [ files('valgrind_rip.py'), cyanrip_exe.full_path(),
+             meson.current_source_dir() / 'fixtures', get_option('b_sanitize') ],
+     depends: cyanrip_exe,
+     timeout: 1200)
 
 ## Timeout raised from meson's 30 s default: these rows run git and python over
 ## every lap and the whole record, and it was measured at 27-30 s on a loaded
