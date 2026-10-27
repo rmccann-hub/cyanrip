@@ -1,7 +1,9 @@
 # Proposes a pull request when an action in .github/workflows/ has a newer
-# release, weekly, past the same three-day wait as the weekly dependency check
-# (.github/workflows/dependencies.yml). Actions are the one ecosystem here
-# Dependabot can read: the C libraries come from each job's distribution.
+# release, weekly, once it is seven days old: zizmor's minimum, which CI's
+# lint job holds this file to (review C item 4.3). The weekly dependency check
+# (.github/workflows/dependencies.yml) waits three. Actions are the one
+# ecosystem here Dependabot can read: the C libraries come from each job's
+# distribution.
 #
 # Its pull request changes a pin and its version comment and nothing else, so
 # `Dependency map is current` fails on it until tools/gen-dependency-map.py is
@@ -15,5 +17,5 @@ updates:
     schedule:
       interval: "weekly"
     cooldown:
-      default-days: 3
+      default-days: 7
     open-pull-requests-limit: 5

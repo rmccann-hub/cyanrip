@@ -39,7 +39,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: # zizmor: ignore[artipacked] the tag is pushed with this credential, and this job uploads no artifact
           ref: platterpus-fork
 
       # platterpus-fork's whole history and the tags, which are what the check

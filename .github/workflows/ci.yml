@@ -432,7 +432,11 @@ jobs:
         run: |
           echo "packages=$(pacman -Q | grep '^mingw-w64-ucrt-x86_64-' | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
 
+      # Not on a release: the binary mingw-release attaches is built from the
+      # pinned sources, never from a cache another run wrote (zizmor's
+      # cache-poisoning, review C item 4.3).
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name != 'release'
         with:
           path: .github/_install
           key: mingw-libs-${{ hashFiles('.github/mingw-build.sh') }}-${{ steps.libs.outputs.packages }}
