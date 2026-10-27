@@ -1549,13 +1549,14 @@ static void crip_early_flush(cyanrip_ctx *ctx)
             static const char foot[] = "--- end of pre-log output ---\n";
             crip_log_put(ctx, i, head, sizeof(head) - 1);
             crip_log_put(ctx, i, crip_early, crip_early_len);
-            if (crip_early_dropped) {
-                char dropped[80];
-                int n = snprintf(dropped, sizeof(dropped),
-                                 "--- %zu earlier message(s) dropped: buffer full ---\n",
-                                 crip_early_dropped);
-                crip_log_put(ctx, i, dropped, n);
-            }
+            /* fprintf() itself, where the contract's generator reads a log
+             * line's format; checked as crip_log_put() is */
+            errno = 0;
+            if (crip_early_dropped &&
+                fprintf(ctx->logfile[i],
+                        "--- %zu earlier message(s) dropped: buffer full ---\n",
+                        crip_early_dropped) < 0)
+                crip_log_write_failed(ctx, i);
             crip_log_put(ctx, i, foot, sizeof(foot) - 1);
         }
     }
