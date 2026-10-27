@@ -355,6 +355,12 @@ test('Option parsing', genopt_test)
 ## Rip the disc image fixtures with the built binary and verify the
 ## finished files.
 python = import('python').find_installation()
+# The suite runs on the Python meson runs on, which the floor above does not
+# name; it needs 3.10 too
+if not python.language_version().version_compare('>=3.10')
+    error('the suite needs Python 3.10 or later, and meson runs on ' +
+          python.language_version())
+endif
 
 ## Zero compiler diagnostics under the flags the build ships. Installed while
 ## the count was 0, which is the only cheap moment. NOT -Wextra: that set is 22

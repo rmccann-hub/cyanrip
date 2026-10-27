@@ -68,6 +68,12 @@ endif
 
 cc = meson.get_compiler('c')
 
+# Python 3.10 or later runs the build's generators, every tool and the suite
+# (review C item 6.1): tools/gen-dependency-map.py reads
+# sys.stdlib_module_names, new in 3.10, and the whole suite has passed with
+# 3.10. Declared here, so an older one stops the setup and says so.
+python3 = find_program('python3', version: '>=3.10')
+
 subdir('src')
 subdir('tests')
 

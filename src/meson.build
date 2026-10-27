@@ -97,7 +97,7 @@ endif
 handshake_state_h = custom_target('handshake_state.h',
     output: 'handshake_state.h',
     build_always_stale: true,
-    command: [ find_program('python3'),
+    command: [ python3,
                meson.project_source_root() / 'tools/gen-handshake-state.py',
                handshake_declare_args,
                '@OUTPUT@' ],
