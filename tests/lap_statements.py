@@ -82,9 +82,9 @@ def run(body, *extra, verdict="GO", head=None):
     with tempfile.TemporaryDirectory() as tmp:
         p = pathlib.Path(tmp) / "lap.md"
         p.write_text((head or HEAD).format(verdict=verdict)
-                     + body.replace("{verdict}", verdict))
+                     + body.replace("{verdict}", verdict), encoding="utf-8")
         r = subprocess.run([sys.executable, str(TOOL), str(p), *extra],
-                           capture_output=True, text=True, cwd=ROOT)
+                           capture_output=True, text=True, cwd=ROOT, encoding="utf-8")
     return r.returncode, r.stdout + r.stderr
 
 
@@ -149,7 +149,7 @@ expect("a branch name is not a reference",
 # tell" (F3); the refusal arm is pinned on a full clone in section 8.
 SHALLOW = subprocess.run(["git", "-C", str(ROOT), "rev-parse",
                           "--is-shallow-repository"], capture_output=True,
-                         text=True).stdout.strip() == "true"
+                         text=True, encoding="utf-8").stdout.strip() == "true"
 ABSENT = ((0, "[LSL.unchecked]") if SHALLOW else (1, "[LSL.4]"))
 expect("a commit that does not exist" + (" (shallow clone)" if SHALLOW else ""),
        swap("cyanrip@ee0221c:src/cyanrip_log.c:1-20",
@@ -258,7 +258,7 @@ GIT_ENV = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
 
 def g(repo, *args):
     r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True,
-                       text=True, env=GIT_ENV)
+                       text=True, env=GIT_ENV, encoding="utf-8")
     assert r.returncode == 0, (args, r.stderr)
     return r.stdout.strip()
 
@@ -269,7 +269,7 @@ def make_repo(path, branch, n):
     g(path, "init", "-q", "-b", branch)
     shas = []
     for i in range(n):
-        (path / "README").write_text("".join(f"line {j}\n" for j in range(i + 3)))
+        (path / "README").write_text("".join(f"line {j}\n" for j in range(i + 3)), encoding="utf-8")
         g(path, "add", "README")
         g(path, "commit", "-q", "-m", f"c{i}")
         shas.append(g(path, "rev-parse", "HEAD"))
@@ -279,10 +279,10 @@ def make_repo(path, branch, n):
 def check_lap(text, *extra, stdin_text=None, env=None):
     with tempfile.TemporaryDirectory() as tmp:
         p = pathlib.Path(tmp) / "lap.md"
-        p.write_text(text)
+        p.write_text(text, encoding="utf-8")
         r = subprocess.run([sys.executable, str(TOOL), str(p), *extra],
                            capture_output=True, text=True, cwd=ROOT,
-                           input=stdin_text, env=env)
+                           input=stdin_text, env=env, encoding="utf-8")
     return r.returncode, r.stdout + r.stderr
 
 
@@ -327,7 +327,7 @@ with tempfile.TemporaryDirectory() as tmp:
     nl = tmp / "nl"
     nl.mkdir()
     g(nl, "init", "-q", "-b", "main")
-    (nl / "END").write_text("first\nsecond")
+    (nl / "END").write_text("first\nsecond", encoding="utf-8")
     g(nl, "add", "END")
     g(nl, "commit", "-q", "-m", "no final newline")
     nl_sha = g(nl, "rev-parse", "HEAD")[:7]
@@ -375,7 +375,7 @@ with tempfile.TemporaryDirectory() as tmp:
     # F4: judged against the ref of record; a side branch warns; no branch refuses.
     ours = make_repo(tmp / "ours", "platterpus-fork", 2)
     g(tmp / "ours", "checkout", "-q", "-b", "claude/side")
-    (tmp / "ours" / "README").write_text("side\n")
+    (tmp / "ours" / "README").write_text("side\n", encoding="utf-8")
     g(tmp / "ours", "commit", "-q", "-am", "side")
     side = g(tmp / "ours", "rev-parse", "HEAD")
     g(tmp / "ours", "checkout", "-q", "platterpus-fork")
@@ -419,7 +419,7 @@ with tempfile.TemporaryDirectory() as tmp:
     # record. And origin/HEAD is an alias, never a branch to list.
     g(tmp, "clone", "-q", "--branch", "platterpus-fork",
       f"file://{tmp / 'ours'}", "stale")
-    (tmp / "ours" / "README").write_text("newer\n")
+    (tmp / "ours" / "README").write_text("newer\n", encoding="utf-8")
     g(tmp / "ours", "commit", "-q", "-am", "newer")
     newer = g(tmp / "ours", "rev-parse", "HEAD")
     g(tmp / "stale", "fetch", "-q", "origin")
@@ -439,14 +439,14 @@ with tempfile.TemporaryDirectory() as tmp:
 #    LSL 2's are A1-A8, Platterpus's ids; the ones REQUIRED2 carries are
 #    emitted through it, so they count as emitted there.
 ID = r"LSL\.[a-z0-9]+|A[1-8]|B[1-3]|HR-2\.6[ab]"
-src = TOOL.read_text()
+src = TOOL.read_text(encoding="utf-8")
 body_src = src.split("class Lap")[1]
 emitted = {a or b for a, b in re.findall(
     rf'"({ID})"|\[({ID})\]', body_src)}
 emitted |= set(re.findall(r'\("[a-z]+", "(A[1-8])"\)', src))
 table = set(re.findall(rf'^    "({ID})":', src, re.M))
 spec_text = (ROOT / "docs" / "handshake" /
-             "PROPOSAL-lap-statement-language.md").read_text()
+             "PROPOSAL-lap-statement-language.md").read_text(encoding="utf-8")
 spec = set(re.findall(rf"^\| `({ID})` \|", spec_text, re.M))
 if not (emitted == table == spec):
     fail(f"rule ids disagree: emitted-not-in-RULES {sorted(emitted - table)}, "
@@ -470,7 +470,7 @@ laps = [p for p in sorted((ROOT / "docs" / "handshake").glob("round-*.md"))
         if _LSL_LINE.search(p.read_text(encoding="utf-8"))]
 for p in laps:
     r = subprocess.run([sys.executable, str(TOOL), str(p)],
-                       capture_output=True, text=True, cwd=ROOT)
+                       capture_output=True, text=True, cwd=ROOT, encoding="utf-8")
     if r.returncode != 0:
         fail(f"{p.name} is not a well-formed LSL lap:\n{r.stdout}")
     else:
@@ -708,7 +708,7 @@ with tempfile.TemporaryDirectory() as tmp:
         "S1 TERM set: The Full run passes.\n  requires: the Full run\n\n"
         "S2 WILL: Our lap 3 is GO.\n  owner: us\n  when: once lap 2 lands\n"
         "  verdict: GO\n  unless: the run fails\n\n"
-        "S3 VERDICT: OPEN\n  basis: S1\n"))
+        "S3 VERDICT: OPEN\n  basis: S1\n"), encoding="utf-8")
     theirs2 = ("S1 TERM {g}: Our half is done.\n  term: cyanrip:R31.L1.S1\n"
                "{f}\n"
                "S2 ASK: Will you name the pin?\n  target: BLOCKING\n"
@@ -718,7 +718,7 @@ with tempfile.TemporaryDirectory() as tmp:
 
     def their_lap2(g, f):
         lap2_path.write_text(lap2("platterpus", 31, 2, "OPEN",
-                                  theirs2.format(g=g, f=f)))
+                                  theirs2.format(g=g, f=f)), encoding="utf-8")
 
     ANSWER = ("S1 ACCEPT: Yes, the pin is named.\n  re: platterpus:R31.L2.S2\n"
               "  answers: platterpus:R31.L2.S2\n\n")
@@ -756,7 +756,7 @@ with tempfile.TemporaryDirectory() as tmp:
         "S1 NOTE: a.\n\nS2 NOTE: b.\n\nS3 NOTE: c.\n\n"
         "S4 TERM pending: Theirs remains.\n  term: cyanrip:R31.L1.S1\n"
         "  on: them\n  remains: their reading\n\n"
-        "S5 VERDICT: OPEN\n  basis: S4\n"))
+        "S5 VERDICT: OPEN\n  basis: S4\n"), encoding="utf-8")
     outcome("A1: our same-numbered lap is not a status their lap answers to",
             check2(lap2("platterpus", 31, 2, "GO",
                         "S1 TERM met: Our half is done.\n"
@@ -802,7 +802,7 @@ with tempfile.TemporaryDirectory() as tmp:
     # place of the lap under check would fail A7.
     (rnd / "round-31-lap-03.md").write_text(our_lap3("GO", "S1 FACT measured: x.\n"
         "  evidence: run: true => ok\n  holds: 0.9.4\n  examined: 1 run, closed\n\n"
-        "S2 VERDICT: GO\n  basis: S1\n"))
+        "S2 VERDICT: GO\n  basis: S1\n"), encoding="utf-8")
     outcome("the lap under check stands in for a stale held copy of itself",
             check2(our_lap3("GO", GO3), rnd), 0, ["well formed"])
 
@@ -865,14 +865,14 @@ with tempfile.TemporaryDirectory() as tmp:
     (rnd3 / "inbound").mkdir(parents=True)
     (rnd3 / "round-32-lap-01.md").write_text(lap2("cyanrip-fork", 32, 1, "OPEN",
         "S1 TERM set: The Full run passes.\n  requires: the Full run\n\n"
-        "S2 VERDICT: OPEN\n  basis: S1\n"))
+        "S2 VERDICT: OPEN\n  basis: S1\n"), encoding="utf-8")
     (rnd3 / "inbound" / "round-32-lap-02.md").write_text(lap2(
         "platterpus", 32, 2, "OPEN",
         "S1 TERM met: It passed.\n  term: cyanrip:R32.L1.S1\n"
         "  evidence: run: true => ok\n\n"
         "S2 ASK: Will you name the pin?\n  target: BLOCKING\n"
         "  breaks: the pin's approval\n\n"
-        "S3 VERDICT: OPEN\n  basis: S1\n"))
+        "S3 VERDICT: OPEN\n  basis: S1\n"), encoding="utf-8")
     NOTE_ANSWER = ("S1 NOTE: We will get to it.\n  answers: platterpus:R32.L2.S2\n\n"
                    "S2 FACT measured: x.\n  evidence: run: true => ok\n"
                    "  holds: 0.9.4\n  examined: 1 run, closed\n\n"
@@ -898,22 +898,22 @@ with tempfile.TemporaryDirectory() as tmp:
     g(repo, "init", "-q", "-b", "platterpus-fork")
     (repo / "tools").mkdir()
     (repo / "tools" / "say.py").write_text(
-        "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\nprint('hello 42')\n")
-    (repo / "tools" / "unmarked.py").write_text("print('hello 42')\n")
+        "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\nprint('hello 42')\n", encoding="utf-8")
+    (repo / "tools" / "unmarked.py").write_text("print('hello 42')\n", encoding="utf-8")
     # Round 28 lap 6 S27's cases: a marked tool that fails, one that reads its
     # standard input, and one whose output is not UTF-8.
     (repo / "tools" / "fails.py").write_text(
         "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\n"
-        "import sys\nprint('hello 42')\nsys.exit(1)\n")
+        "import sys\nprint('hello 42')\nsys.exit(1)\n", encoding="utf-8")
     (repo / "tools" / "reads.py").write_text(
         "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\n"
-        "import sys\nprint('read', len(sys.stdin.read()))\n")
+        "import sys\nprint('read', len(sys.stdin.read()))\n", encoding="utf-8")
     (repo / "tools" / "bytes.py").write_text(
         "#!/usr/bin/env python3\n# LSL-RERUN: commit-only\n"
-        "import sys\nsys.stdout.buffer.write(b'\\xff\\xfe hello 42\\n')\n")
+        "import sys\nsys.stdout.buffer.write(b'\\xff\\xfe hello 42\\n')\n", encoding="utf-8")
     # Round 29 lap 1 S29: the marker is a line, not a substring anywhere.
     (repo / "tools" / "codemark.py").write_text(
-        "#!/usr/bin/env python3\nx = 'LSL-RERUN: commit-only'\nprint('hello 42')\n")
+        "#!/usr/bin/env python3\nx = 'LSL-RERUN: commit-only'\nprint('hello 42')\n", encoding="utf-8")
     g(repo, "add", "tools")
     g(repo, "commit", "-q", "-m", "tools")
     at = g(repo, "rev-parse", "--short=12", "HEAD")
@@ -1225,7 +1225,7 @@ with tempfile.TemporaryDirectory() as t:
         tree = g(pl, "rev-parse", f"{sha}^{{tree}}")
         r = subprocess.run(["git", "-C", str(pl), "commit-tree", tree,
                             *parent, "-m", "rewritten"], capture_output=True,
-                           text=True, env=renv, check=True)
+                           text=True, env=renv, check=True, encoding="utf-8")
         new.append(r.stdout.strip())
         parent = ["-p", new[-1]]
     g(pl, "update-ref", "refs/heads/main", new[-1])
@@ -1234,7 +1234,7 @@ with tempfile.TemporaryDirectory() as t:
     (pl / "docs" / "handshake").mkdir(parents=True)
     (pl / "docs/handshake/commit-map-2026-10-13.txt").write_text(
         "old                                      new\n"
-        + "".join(f"{o} {n}\n" for o, n in zip(old, new)))
+        + "".join(f"{o} {n}\n" for o, n in zip(old, new)), encoding="utf-8")
     g(pl, "add", "docs")
     g(pl, "commit", "-q", "-m", "commit map")
 
@@ -1281,7 +1281,7 @@ with tempfile.TemporaryDirectory() as t:
             ["well formed, 0 warning(s)"], absent=["on no branch"])
     g(pl, "checkout", "-q", "-b", "conflict", "main")
     (pl / "docs/handshake/commit-map-2026-10-13.txt").write_text(
-        "old new\n" + "".join(f"{o} {n}\n" for o, n in zip(old[:1], new[:1])))
+        "old new\n" + "".join(f"{o} {n}\n" for o, n in zip(old[:1], new[:1])), encoding="utf-8")
     g(pl, "commit", "-q", "-am", "a different map of the same name")
     g(pl, "checkout", "-q", "main")
     try:
@@ -1301,9 +1301,9 @@ with tempfile.TemporaryDirectory() as t:
     fake_cyanrip = "9876543" + "5" * 33
     (pl / "docs/handshake/commit-map-2026-10-14.txt").write_text(
         "old new\n" + f"{amb[0]} {new[1]}\n{amb[1]} {new[0]}\n"
-        f"{chain_old} {chain_mid}\n{fake_cyanrip} {ours[0]}\n")
+        f"{chain_old} {chain_mid}\n{fake_cyanrip} {ours[0]}\n", encoding="utf-8")
     (pl / "docs/handshake/commit-map-2026-10-15.txt").write_text(
-        f"old new\n{chain_mid} {new[1]}\n")
+        f"old new\n{chain_mid} {new[1]}\n", encoding="utf-8")
     g(pl, "add", "docs")
     g(pl, "commit", "-q", "-m", "two more maps")
     outcome("HR-1.6 (c): two old IDs beginning with the value name no commit",
@@ -1327,7 +1327,7 @@ with tempfile.TemporaryDirectory() as t:
 
     g(pl, "checkout", "-q", "-b", "badmap")
     (pl / "docs/handshake/commit-map-2026-10-15.txt").write_text(
-        f"old\tnew\n{chain_mid} {new[1]}\n")
+        f"old\tnew\n{chain_mid} {new[1]}\n", encoding="utf-8")
     g(pl, "commit", "-q", "-am", "a map that does not read cleanly")
     outcome("HR-1.6 (f): a map that does not read cleanly is reported, and "
             "nothing is guessed through it",
@@ -1391,7 +1391,7 @@ with tempfile.TemporaryDirectory() as tmp:
     subprocess.run(["git", "clone", "-q", url, str(ours)], check=True,
                    env=env0, capture_output=True)
     g(ours, "checkout", "-q", "-b", "platterpus-fork")
-    (ours / "README").write_text("a tree\n")
+    (ours / "README").write_text("a tree\n", encoding="utf-8")
     g(ours, "add", "README")
     g(ours, "commit", "-q", "-m", "start")
     before = g(ours, "rev-parse", "HEAD")
@@ -1416,7 +1416,7 @@ with tempfile.TemporaryDirectory() as tmp:
     rows = [EV.Row(rel, len(data), sha, E, ""),
             EV.Row(f"{run}/rips/b.log", len(data), sha, S, "")]
     (ours / "docs").mkdir(exist_ok=True)
-    (ours / EV.MANIFEST).write_text(EV.format_manifest(rows))
+    (ours / EV.MANIFEST).write_text(EV.format_manifest(rows), encoding="utf-8")
     g(ours, "add", EV.MANIFEST)
     g(ours, "commit", "-q", "-m", "manifest")
     M = g(ours, "rev-parse", "HEAD")

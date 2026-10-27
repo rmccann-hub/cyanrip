@@ -63,6 +63,16 @@ static void mb_credit(Mb5ArtistCredit credit, AVDictionary *dict, const char *ke
     }
 }
 
+/* One lookup per key, so the value checked is the value hashed: GCC's
+ * -fanalyzer cannot tell two calls of dict_get() return the same pointer
+ * (review C item 3.6) */
+static uint32_t crc_dict_value(const AVCRC *crc_tab, uint32_t crc,
+                               AVDictionary *dict, const char *key)
+{
+    const char *v = dict_get(dict, key);
+    return v ? av_crc(crc_tab, crc, (const uint8_t *)v, strlen(v)) : crc;
+}
+
 /* This is pretty awful but I blame musicbrainz entirely */
 static uint32_t crc_medium(Mb5Medium medium)
 {
@@ -91,12 +101,9 @@ static uint32_t crc_medium(Mb5Medium medium)
         if (credit)
             mb_credit(credit, tmp_dict, "artist");
 
-        if (dict_get(tmp_dict, "mbid"))
-            crc = av_crc(crc_tab, crc, dict_get(tmp_dict, "mbid"), strlen(dict_get(tmp_dict, "mbid")));
-        if (dict_get(tmp_dict, "artist"))
-            crc = av_crc(crc_tab, crc, dict_get(tmp_dict, "artist"), strlen(dict_get(tmp_dict, "artist")));
-        if (dict_get(tmp_dict, "title"))
-            crc = av_crc(crc_tab, crc, dict_get(tmp_dict, "title"), strlen(dict_get(tmp_dict, "title")));
+        crc = crc_dict_value(crc_tab, crc, tmp_dict, "mbid");
+        crc = crc_dict_value(crc_tab, crc, tmp_dict, "artist");
+        crc = crc_dict_value(crc_tab, crc, tmp_dict, "title");
 
         av_dict_free(&tmp_dict);
         crc ^= mb5_track_get_length(track);
@@ -455,7 +462,8 @@ static int mb_metadata(cyanrip_ctx *ctx, int manual_metadata_specified, int rele
             release = mb5_release_list_item(release_list, i);
             AVDictionary *tmp_dict = NULL;
             READ_MB(mb5_release_get_id, release, tmp_dict, "id", 0);
-            if (dict_get(tmp_dict, "id") && !strcmp(release_str, dict_get(tmp_dict, "id"))) {
+            const char *id = dict_get(tmp_dict, "id");
+            if (id && !strcmp(release_str, id)) {
                 av_dict_free(&tmp_dict);
                 break;
             }

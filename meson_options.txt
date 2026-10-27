@@ -14,3 +14,9 @@
 option('declare_released', type: 'boolean', value: false,
        description: 'Declare this build a published release (release path only; ' +
                     'recorded as declared, never verified)')
+
+# Review C item 3.8. Also build each fuzz harness in tests/fuzz/ for clang's
+# libFuzzer, which CI's fuzz job runs. Every build runs the harnesses over
+# their seeds with tests/fuzz/driver.c whether or not this is on.
+option('fuzz', type: 'boolean', value: false,
+       description: 'Also build the fuzz harnesses for libFuzzer (clang only)')

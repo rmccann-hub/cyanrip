@@ -1,6 +1,6 @@
 project('cyanrip', 'c',
     license: 'LGPL2.1+',
-    default_options: [ 'buildtype=debugoptimized', 'c_std=c99', 'warning_level=1' ],
+    default_options: [ 'buildtype=debugoptimized', 'c_std=c11', 'warning_level=1' ],
     # Upstream's version verbatim, with the fork release appended as SemVer
     # build metadata. The base moved rc2 -> rc3 because we merged upstream's
     # b40c1f0; only upstream may change that half, and it changes exactly when
@@ -19,7 +19,7 @@ project('cyanrip', 'c',
     # Nothing here claims to be a release: `declare_released` defaults false and
     # the Handshake: line says so in every log this build writes.
     version: '0.9.4-rc3+platterpus.27',
-    meson_version: '>=0.53.0',
+    meson_version: '>=0.62.0',
 )
 
 conf = configuration_data()
@@ -67,6 +67,12 @@ else
 endif
 
 cc = meson.get_compiler('c')
+
+# Python 3.10 or later runs the build's generators, every tool and the suite
+# (review C item 6.1): tools/gen-dependency-map.py reads
+# sys.stdlib_module_names, new in 3.10, and the whole suite has passed with
+# 3.10. Declared here, so an older one stops the setup and says so.
+python3 = find_program('python3', version: '>=3.10')
 
 subdir('src')
 subdir('tests')

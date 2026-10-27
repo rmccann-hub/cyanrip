@@ -296,6 +296,54 @@ json_test = executable('json_test',
 )
 test('JSON reader', json_test)
 
+## The parsers of data from outside this program, each behind a harness in
+## tests/fuzz/ (review C item 3.8): the JSON reader, AccurateRip's response
+## and -Y's check of a log. Every build runs each harness over its committed
+## seeds and 2000 mutations of each (tests/fuzz/driver.c), so CI's sanitizer
+## rows run them under ASan and UBSan. With -Dfuzz=true, and clang, each is
+## also built for libFuzzer as fuzz_<name>, which CI's fuzz job runs.
+fuzz_harnesses = {
+    'json': {
+        'sources': [ 'fuzz/fuzz_json.c', '../src/json.c' ],
+        'deps': [ dependency('libavutil') ],
+        'seeds': files('fuzz/seeds/json/submit-ok.json',
+                       'fuzz/seeds/json/error.json',
+                       'fuzz/seeds/json/values.json'),
+    },
+    'accurip': {
+        'sources': [ 'fuzz/fuzz_accurip.c' ],
+        'deps': unit_test_deps + [ dependency('libcurl') ],
+        'seeds': files('fuzz/seeds/accurip/dBAR-014.bin'),
+    },
+    'log': {
+        'sources': [ 'fuzz/fuzz_log.c', '../src/fun512.c' ],
+        'deps': [ dependency('libavutil') ],
+        'seeds': files('fuzz/seeds/log/no-checksum.txt',
+                       'fuzz/seeds/log/mismatch.txt',
+                       '../docs/golden-reference.log'),
+    },
+}
+if get_option('fuzz') and cc.get_id() != 'clang'
+    error('-Dfuzz=true needs clang, for libFuzzer; this compiler is ' + cc.get_id())
+endif
+foreach name, h : fuzz_harnesses
+    driven = executable('fuzz_' + name + '_seeds',
+        sources: h['sources'] + [ 'fuzz/driver.c' ],
+        include_directories: [ '../src', 'fuzz' ],
+        dependencies: h['deps'],
+    )
+    test('Fuzz harness, ' + name, driven, args: h['seeds'], timeout: 300)
+    if get_option('fuzz')
+        executable('fuzz_' + name,
+            sources: h['sources'],
+            include_directories: [ '../src', 'fuzz' ],
+            dependencies: h['deps'],
+            c_args: [ '-fsanitize=fuzzer' ],
+            link_args: [ '-fsanitize=fuzzer' ],
+        )
+    endif
+endforeach
+
 genopt_test = executable('genopt_test',
     sources: [ 'genopt.c' ],
     include_directories: [ '../src' ],
@@ -307,14 +355,24 @@ test('Option parsing', genopt_test)
 ## Rip the disc image fixtures with the built binary and verify the
 ## finished files.
 python = import('python').find_installation()
+# The suite runs on the Python meson runs on, which the floor above does not
+# name; it needs 3.10 too
+if not python.language_version().version_compare('>=3.10')
+    error('the suite needs Python 3.10 or later, and meson runs on ' +
+          python.language_version())
+endif
 
 ## Zero compiler diagnostics under the flags the build ships. Installed while
 ## the count was 0, which is the only cheap moment. NOT -Wextra: that set is 22
 ## and needs its own change. See the tool's docstring for what is excluded and
 ## for the -fdiagnostics-color trap that made an earlier attempt report a false
 ## zero.
+## The build directory is the one meson is testing, named to the tool: it read
+## a fixed build/, so `meson test -C` anywhere else failed as unconfigured or
+## gated a stale build/ (review C item 3.3).
 test('Compiler diagnostics', python,
-    args: [ files('../tools/warn-gate.py') ],
+    args: [ files('../tools/warn-gate.py'),
+            '--build', meson.project_build_root() ],
     timeout: 300,
 )
 ## Which of those diagnostics gate: the ones located in this tree. A flag of
@@ -591,14 +649,24 @@ test('Release gate', python, args: [ files('release_gate.py') ],
 ## run -- a sanitizer sweep over an uninstrumented build reports zero findings
 ## and means nothing, the same shape as a mutation sweep whose mutants are all
 ## killed by a check that hashes the source.
-## In a build that is itself instrumented -- two of CI's four rows -- the
-## sweep skips, saying so: every image scenario here already runs under the
-## sanitizers, and a second instrumented tree would repeat them.
+## In a build that already carries ASan and UBSan -- two of CI's five rows
+## -- the sweep skips, saying so: every image scenario here already runs
+## under them, and a second instrumented tree would repeat them. The TSan
+## row's binary carries neither, so the sweep runs there.
 test('Sanitizer sweep', python,
      args: [ files('../tools/sanitize-run.py'),
              '--unless-instrumented', cyanrip_exe.full_path() ],
      depends: cyanrip_exe,
      timeout: 900)
+## Valgrind's memcheck over one rip of the basic image (review C item 3.7):
+## it sees inside the libraries as built, which no sanitizer instruments.
+## Skipped without valgrind or in a sanitized build, except in CI's linux
+## (default) row, which installs valgrind and requires it.
+test('Rip under memcheck', python,
+     args: [ files('valgrind_rip.py'), cyanrip_exe.full_path(),
+             meson.current_source_dir() / 'fixtures', get_option('b_sanitize') ],
+     depends: cyanrip_exe,
+     timeout: 1200)
 
 ## Timeout raised from meson's 30 s default: these rows run git and python over
 ## every lap and the whole record, and it was measured at 27-30 s on a loaded
@@ -745,6 +813,23 @@ test('Tool patterns are linear', python, args: [ files('tool_patterns.py') ])
 ## platterpus-fork, and no main.yml beside upstream's. Actions had never run
 ## here, so a regression would have shown first in a run with a write token.
 test('Workflows are hardened', python, args: [ files('workflows.py') ])
+## .github/mingw-build.sh runs only in the Windows job. This sources its
+## functions with stubs for the builds and checks that each failure stops it
+## (review C item 4.6); skipped without a GNU Bash 4.4 and xargs, as MSYS2 has.
+test('Windows build script stops where it fails', python, args: [ files('mingw_build.py') ])
+## .claude/hooks/session-start.sh, on scratch repositories, one with its
+## config locked: it says it excluded the evidence branch only when git wrote
+## the exclusion (review C item 4.7).
+test('Session hook says only what it did', python, args: [ files('session_hook.py') ])
+## ruff's Pyflakes rules over tools/ and tests/ (review C item 4.3); skipped
+## where ruff is not installed, except in CI's linux (released) row.
+test('Python lint', python, args: [ files('python_lint.py') ], timeout: 300)
+## Each text read, write and subprocess pipe in tools/ and tests/ names its
+## encoding, found by the AST (review C item 6.5).
+test('Text I/O names its encoding', python, args: [ files('text_encoding.py') ])
+## tools/check-commit-subjects.py, which CI's evidence job runs on each
+## change's commits (review C item 5.2), on a scratch repository.
+test('Commit subject check', python, args: [ files('commit_subjects.py') ])
 ## tools/tag-release-check.py decides every tag the tag workflow creates, on a
 ## repository this builds: on platterpus-fork, named by the manifest at that
 ## commit, ordered by release_seq, never moved. The workflow itself cannot be

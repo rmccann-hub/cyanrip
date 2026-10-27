@@ -131,7 +131,7 @@ def log_for(path, track, vals, tracktotal=1, upper=False):
     """The fragment of a cyanrip log that parse_log() reads. `upper` spells
     the Metadata keys as `.19` prints them, in capitals (round 29 lap 1)."""
     tk, tt = ("TRACK", "TRACKTOTAL") if upper else ("track", "tracktotal")
-    with open(path, "w") as fh:
+    with open(path, "w", encoding="utf-8") as fh:
         fh.write(f"Track {track} read successfully!\n"
                  f"  Properties:\n"
                  f"    Samples:     {vals['samples']}\n"

@@ -69,9 +69,19 @@ def sha256(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+# Long enough for a fetch of the peer's repository on a slow link, and a
+# limit all the same (review C item 6.4): a hung fetch is a check that could
+# not run, which this tool already reports as exit 2.
+GIT_TIMEOUT = 300
+
+
 def git(repo, *args):
-    r = subprocess.run(["git", "-C", str(repo), *args],
-                       capture_output=True, text=True)
+    try:
+        r = subprocess.run(["git", "-C", str(repo), *args],
+                           capture_output=True, text=True,
+                           timeout=GIT_TIMEOUT, encoding="utf-8")
+    except subprocess.TimeoutExpired:
+        return 124, "", f"git {args[0]} timed out after {GIT_TIMEOUT} s"
     return r.returncode, r.stdout.strip(), r.stderr.strip()
 
 
@@ -83,7 +93,7 @@ def newest_lap_hashes():
     """
     laps = sorted(ROOT.glob("docs/handshake/round-*-lap-*.md"))
     for lap in reversed(laps):
-        m = SHARED_HASHES_RE.search(lap.read_text(errors="replace"))
+        m = SHARED_HASHES_RE.search(lap.read_text(errors="replace", encoding="utf-8"))
         if m:
             out = {}
             for tok in m.group(1).split():

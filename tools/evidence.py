@@ -100,9 +100,15 @@ class Mismatch(Exception):
     """Bytes were found and are not the ones the manifest names."""
 
 
-def git(repo, *args, data=None, env=None, check=False):
+# Each call that reaches the network -- a fetch, a clone or a push -- is
+# given NET_TIMEOUT (review C item 6.4); a hung one raises TimeoutExpired,
+# which stops the tool as any other failed git call does.
+NET_TIMEOUT = 600
+
+
+def git(repo, *args, data=None, env=None, check=False, timeout=None):
     r = subprocess.run(["git", "-C", str(repo), *args], input=data,
-                       capture_output=True, env=env)
+                       capture_output=True, env=env, timeout=timeout)
     if check and r.returncode != 0:
         raise RuntimeError(f"git {' '.join(args)} failed in {repo}: "
                            f"{r.stderr.decode('utf-8', 'replace').strip()}")
@@ -365,12 +371,13 @@ def fetch(store, commits, url=None, branch=False):
         shallow = out(git(cache, "rev-parse", "--is-shallow-repository"))
         git(cache, "fetch", "-q", "--no-tags",
             *(["--unshallow"] if shallow == "true" else []), url,
-            f"+refs/heads/{BRANCH}:refs/remotes/origin/{BRANCH}", check=True)
+            f"+refs/heads/{BRANCH}:refs/remotes/origin/{BRANCH}", check=True,
+            timeout=NET_TIMEOUT)
     for c in sorted(set(commits)):
         if git(cache, "cat-file", "-e", f"{c}^{{commit}}").returncode == 0:
             continue
         git(cache, "fetch", "-q", "--no-tags", "--depth", "1", url, c,
-            check=True)
+            check=True, timeout=NET_TIMEOUT)
     return cache
 
 
@@ -542,7 +549,7 @@ def build_move(source, folders, date, push_url=None):
         tmp = pathlib.Path(d) / "clone"
         subprocess.run(["git", "clone", "-q", "--depth", "1", "--single-branch",
                         "--branch", DEFAULT_BRANCH, source, str(tmp)],
-                       check=True)
+                       check=True, timeout=NET_TIMEOUT)
         last = out(git(tmp, "rev-parse", "HEAD", check=True))
         have = tree_folders(tmp)
         unknown = [f for f in folders if f not in have]
@@ -574,7 +581,8 @@ def build_move(source, folders, date, push_url=None):
         if push_url:
             subprocess.run(["git", "-C", str(tmp), "-c", "push.negotiate=false",
                             "push", push_url,
-                            f"{commit}:refs/heads/{BRANCH}"], check=True)
+                            f"{commit}:refs/heads/{BRANCH}"], check=True,
+                           timeout=NET_TIMEOUT)
         return commit, rows, last
 
 
@@ -594,7 +602,7 @@ def file_run(store, staging, dest, date=None, push_url=None):
         tmp = pathlib.Path(d) / "clone"
         subprocess.run(["git", "clone", "-q", "--depth", "1", "--single-branch",
                         "--branch", BRANCH, "--no-checkout", url, str(tmp)],
-                       check=True)
+                       check=True, timeout=NET_TIMEOUT)
         tip = out(git(tmp, "rev-parse", "HEAD", check=True))
         if git(tmp, "cat-file", "-e", f"HEAD:{dest}").returncode == 0:
             raise RuntimeError(f"{dest} is already on {BRANCH}: evidence only "
@@ -619,7 +627,8 @@ def file_run(store, staging, dest, date=None, push_url=None):
         if push_url:
             subprocess.run(["git", "-C", str(tmp), "-c", "push.negotiate=false",
                             "push", push_url,
-                            f"{commit}:refs/heads/{BRANCH}"], check=True)
+                            f"{commit}:refs/heads/{BRANCH}"], check=True,
+                           timeout=NET_TIMEOUT)
         return commit, rows
 
 
@@ -888,7 +897,7 @@ def main():
             print(f"ok: {len(store.rows)} row(s) read cleanly"
                   + (f", those added since {args.base} checked against their "
                      f"files" if args.base else ", each checked against its "
-                     f"file")
+                     "file")
                   + (f"; {len(moved)} moved folder(s) the same on the default "
                      f"branch at {args.current or args.base} as at their "
                      f"evidence commit (HR-2.1 b)" if moved else ""))
@@ -906,7 +915,7 @@ def main():
                 print(f"ok: no tag points at or reaches {BRANCH}")
             return 1 if problems else 0
         if args.cmd == "build":
-            folders = [ln.strip() for ln in args.folders.read_text().splitlines()
+            folders = [ln.strip() for ln in args.folders.read_text(encoding="utf-8").splitlines()
                        if ln.strip() and not ln.startswith("#")]
             source = args.source or f"file://{store.root}"
             commit, rows, last = build_move(source, folders, args.date,

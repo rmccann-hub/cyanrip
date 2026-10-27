@@ -159,7 +159,6 @@ def check_lap(path):
                     break
             if not local:
                 continue
-            paths = [rel]
             found += 1
             # A moved file resolves through the manifest (HR-2 6d), whose row
             # gives its SHA-256, so nothing needs fetching to check the quote.

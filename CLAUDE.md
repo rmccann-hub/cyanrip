@@ -242,9 +242,10 @@ Each of these is a confident wrong answer this repository has produced.
   its own. Push a topic branch only to open its pull request, never after it
   merges: a session cannot delete one, and a stale tip looks current.
 - Rulesets block deleting and force-pushing `platterpus-fork`, `master` and
-  `evidence`; tags come from `.github/workflows/tag-release.yml`. Consumers pin
-  a SHA, so never prune a ref a release can name: every log's build line
-  would dangle.
+  `evidence`. A release is the commit `release-manifest.json` names and needs
+  no tag; a tag, if the owner wants one, comes only from
+  `.github/workflows/tag-release.yml`. Consumers pin a SHA, so never prune a
+  ref a release can name: every log's build line would dangle.
 - Lap files are compiled in (`tools/gen-handshake-state.py`), so choose a pin
   with `git log -- src/ meson.build docs/handshake/round-*.md
   docs/handshake/inbound/round-*.md tools/gen-handshake-state.py
@@ -284,7 +285,8 @@ bugs worked around here*; read it before touching libcdio, paranoia or the
 cache model. Two bite tests: a cdrdao `.toc` loads only from its own directory,
 and a synthetic signal can rip byte-reversed, so check it against its source.
 
-C99, K&R-ish, 4 spaces, no tabs; each source file opens with the LGPL-2.1+
+C11, K&R-ish, 4 spaces, no tabs; each source file opens with the LGPL-2.1+
 header from `src/utils.c`; log lines are column-aligned `label: value` within
 their block, so read the neighbours first; match the nearest existing code.
-Commit subjects are plain and imperative, one logical change per commit.
+Commit subjects are plain and imperative, at most 72 characters, with no
+full stop (`tools/check-commit-subjects.py`, in CI); one change per commit.

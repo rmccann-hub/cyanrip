@@ -364,7 +364,7 @@ def rows_cover_help(text, binary):
     is jointly owned. Returns the number of flags --help listed and those
     without a row; none listed is a refusal, not a pass."""
     helptext = subprocess.run([binary, "--help"], capture_output=True,
-                              text=True).stdout
+                              text=True, encoding="utf-8").stdout
     flags = HELP_FLAG.findall(helptext)
     tabled = set()
     for head in (r"## 1\. ", r"## 1b\. ", r"## 2\. "):
@@ -491,7 +491,6 @@ def main():
 
     if a.markdown:
         print(markdown_block(rows, inter, ignored, banner_of(a.binary)))
-        n_ign = len(ignored)
         if ignored:
             print("\n**Silently-ignored values (findings):** " +
                   ", ".join(f"`{f} {v}`" for f, v in ignored))

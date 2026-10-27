@@ -60,7 +60,6 @@ invented, so a finding can travel as a record instead of as prose:
 import argparse
 import hashlib
 import json
-import os
 import pathlib
 import re
 import sys

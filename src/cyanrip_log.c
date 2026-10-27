@@ -1542,8 +1542,12 @@ static void crip_early_flush(cyanrip_ctx *ctx)
     pthread_mutex_unlock(&log_lock);
 }
 
-static void av_log_capture(void *ptr, int lvl, const char *format,
-                           va_list args)
+/* av_printf_format(3, 0): FFmpeg's format, passed on as a va_list. GCC lets
+ * that pass -Wformat-nonliteral (-Wformat=2, review C item 3.9) as it is;
+ * clang, CI's macOS compiler, does only for a function marked as one. */
+static av_printf_format(3, 0) void av_log_capture(void *ptr, int lvl,
+                                                  const char *format,
+                                                  va_list args)
 {
     pthread_mutex_lock(&log_lock);
 

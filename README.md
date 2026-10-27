@@ -37,6 +37,14 @@ Features
 
 Installation
 ------------
+**Every package and build in this section, up to *Compiling*, is upstream
+cyanrip's or a distribution's, built from upstream's releases: none is this
+fork's, and none reports `+platterpus`** (review C item 5.4). This fork is
+built from source, by *Compiling* below, at the commit `release-manifest.json`
+names for a channel: its `install` field is that commit's source archive and
+its `build` field the commands. *Flatpak*, after it, builds the checkout it
+runs in, so from this repository it builds this fork.
+
 ### Alpine Linux
 ```bash
 apk add cyanrip
@@ -459,6 +467,31 @@ complete, derived list):
 `tools/gen-provider-contract.py`, and documents every flag, every stable log
 line, the exit codes and the full error-message inventory. Regenerate it rather
 than editing it.
+
+### Development
+
+Build and test with `meson setup build`, `ninja -C build` and
+`meson test -C build`. The suite needs no CD drive: it rips disc images
+through libcdio's image drivers. `CLAUDE.md` holds the rules every change to
+this fork follows, `.github/workflows/ci.yml` is its CI, and
+`docs/DEPENDENCIES.md` lists what the build and the tools need.
+
+### Releases
+
+A release is the commit `release-manifest.json` names for a channel, `stable`
+or `beta`, with the commands that build it, and a consumer pins that commit.
+Order releases by `release_seq`, never by the version string.
+`docs/release-ledger.tsv` records each one.
+
+### Security
+
+Report a vulnerability privately, as `SECURITY.md` says.
+
+### License
+
+LGPL-2.1-or-later, as upstream's (`LICENSE.md`). A built binary links libcdio
+and libcdio-paranoia, both GPL-3.0-or-later, so it is subject to the GPL's
+terms too (`docs/DEPENDENCIES.md`).
 
 Paranoia level
 --------------

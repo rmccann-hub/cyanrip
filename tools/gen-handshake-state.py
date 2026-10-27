@@ -82,7 +82,7 @@ def _known_dirty():
     try:
         return bool(subprocess.run(["git", "status", "--porcelain"], cwd=ROOT,
                                    capture_output=True, text=True,
-                                   check=True).stdout.strip())
+                                   check=True, encoding="utf-8").stdout.strip())
     except Exception:
         return False
 

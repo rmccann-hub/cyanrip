@@ -65,7 +65,7 @@ class MapError(Exception):
 
 def _git(repo, *args):
     r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True,
-                       text=True)
+                       text=True, encoding="utf-8")
     return r.returncode, r.stdout
 
 

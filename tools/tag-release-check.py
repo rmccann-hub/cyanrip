@@ -71,7 +71,7 @@ FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 
 def git(repo, *args):
     p = subprocess.run(["git", "-C", repo, *args], capture_output=True,
-                       text=True)
+                       text=True, encoding="utf-8")
     return p.returncode, p.stdout.strip()
 
 

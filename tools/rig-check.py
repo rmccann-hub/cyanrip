@@ -176,7 +176,7 @@ def check_argv(out, crip, container):
                    "is the one job it has on a run that fails early")
             continue
         try:
-            inv = json.loads(j.read_text()).get("invocation", "")
+            inv = json.loads(j.read_text(encoding="utf-8")).get("invocation", "")
         except Exception as e:
             record(f"argv/{label}", FAIL, f"diagnostics record unreadable: {e}")
             continue

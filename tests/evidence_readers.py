@@ -102,7 +102,7 @@ def check(ok, msg):
 def listed():
     r = subprocess.run(["git", "ls-files", "-z", "--cached", "--others",
                         "--exclude-standard", "--", *SCOPE], cwd=ROOT,
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0:
         return None
     return sorted({p for p in r.stdout.split("\0") if p})
@@ -168,7 +168,7 @@ check(lines[:1] == ["fixture\tsource\tsha256"], "SOURCES.tsv has its header")
 named = set()
 tracked = set(files) | set(subprocess.run(
     ["git", "ls-files", "-z", "--", "tests/fixtures/evidence"], cwd=ROOT,
-    capture_output=True, text=True).stdout.split("\0"))
+    capture_output=True, text=True, encoding="utf-8").stdout.split("\0"))
 for ln in lines[1:]:
     fixture, source, digest = ln.split("\t")
     named.add(fixture)

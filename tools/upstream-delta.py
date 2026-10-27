@@ -71,7 +71,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
 def git(*args, check=True):
-    p = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
+    p = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
     if check and p.returncode != 0:
         sys.exit(f"git {' '.join(args)}: {p.stderr.strip()}")
     return p.stdout
@@ -83,7 +83,7 @@ def show(ref, path):
     Absence is a real answer -- meson_options.txt does not exist before
     +platterpus.6 -- so it is returned rather than raised."""
     p = subprocess.run(["git", "show", f"{ref}:{path}"], cwd=ROOT,
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8")
     return p.stdout if p.returncode == 0 else None
 
 
@@ -98,7 +98,7 @@ def cli_flags(binary):
     as an empty set and must not be rendered as one."""
     if not binary:
         return None
-    p = subprocess.run([str(binary), "--help"], capture_output=True, text=True)
+    p = subprocess.run([str(binary), "--help"], capture_output=True, text=True, encoding="utf-8")
     text = p.stdout + p.stderr
     return set(re.findall(r"^\s+(--[a-z0-9-]+)", text, re.M))
 
@@ -156,7 +156,7 @@ def main():
 
     o = []
     o.append(f"## Delta: `{up}` -> `{fork}`\n")
-    o.append(f"| | |\n| --- | --- |")
+    o.append("| | |\n| --- | --- |")
     o.append(f"| fork `{fork}` | `{git('rev-parse', '--short', fork).strip()}`"
              f" — {version_of(fork)} |")
     o.append(f"| upstream `{up}` | `{git('rev-parse', '--short', up).strip()}`"
@@ -184,7 +184,7 @@ def main():
     else:
         gained = sorted(u_cli - f_cli)
         oursonly = sorted(f_cli - u_cli)
-        o.append(f"`[MEASURED]` from `--help` of both binaries.\n")
+        o.append("`[MEASURED]` from `--help` of both binaries.\n")
         o.append("- **inbound (upstream has, we lack):** "
                  + (", ".join(f"`{x}`" for x in gained) if gained else "**none**"))
         o.append(f"- ours only (our divergence): "

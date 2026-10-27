@@ -2471,6 +2471,26 @@ static void crip_cdio_log_handler(cdio_log_level_t level, const char message[])
     }
 }
 
+/* strtoll()'s reading of s, which is how every number option read its value,
+ * and in *whole whether s is a whole decimal number and nothing else.
+ *
+ * With no end pointer, "abc" read as 0 and "2junk" as 2, so -P abc ran at
+ * paranoia none and -c 2junk/3 tagged disc 2 (review C item 2.2). Each caller
+ * checks its range on this reading FIRST, with its old message, so an input
+ * refused before is refused in the same words, which docs/seam-commands.md
+ * section 7 records and both sides own; only an input that reading accepted
+ * is then refused for not being whole, named as typed. "-p =drop" still says
+ * "0", the index strtoll() read from "drop", av_strtok() having skipped the
+ * empty one: imprecise, recorded, and its rewording is for a round. */
+static long long crip_parse_ll(const char *s, int *whole)
+{
+    char *end = NULL;
+    errno = 0;
+    long long v = strtoll(s, &end, 10);
+    *whole = end != s && *end == '\0' && errno != ERANGE;
+    return v;
+}
+
 static int cyanrip_run(int argc, char **argv)
 {
     cyanrip_ctx *ctx = NULL;
@@ -2845,16 +2865,23 @@ static int cyanrip_run(int argc, char **argv)
      * value as read, so a refusal names the number the caller typed. */
     if (paranoia) {
         long long level;
+        int whole = 1;
         if (!strcmp(paranoia, "none"))
             level = 0;
         else if (!strcmp(paranoia, "max"))
             level = crip_max_paranoia_level;
         else
-            level = strtoll(paranoia, NULL, 10);
+            level = crip_parse_ll(paranoia, &whole);
         if (level < 0 || level > crip_max_paranoia_level) {
             cyanrip_log(ctx, 0,
                         "Invalid paranoia level %lli must be between 0 and %i!\n",
                         level, crip_max_paranoia_level);
+            return CRIP_EXIT_USAGE;
+        }
+        if (!whole) {
+            cyanrip_log(ctx, 0,
+                        "Invalid paranoia level %s must be between 0 and %i!\n",
+                        paranoia, crip_max_paranoia_level);
             return CRIP_EXIT_USAGE;
         }
         settings.paranoia_level = level;
@@ -2908,17 +2935,26 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Missing discnumber\n");
             return CRIP_EXIT_USAGE;
         }
-        long long wide = strtoll(p, NULL, 10);
+        int whole;
+        long long wide = crip_parse_ll(p, &whole);
         if (wide <= 0 || wide > INT_MAX) {
             cyanrip_log(ctx, 0, "Invalid discnumber %lli\n", wide);
+            return CRIP_EXIT_USAGE;
+        }
+        if (!whole) {
+            cyanrip_log(ctx, 0, "Invalid discnumber %s\n", p);
             return CRIP_EXIT_USAGE;
         }
         discnumber = wide;
         p = av_strtok(NULL, "/", &p_save);
         if (p) {
-            wide = strtoll(p, NULL, 10);
+            wide = crip_parse_ll(p, &whole);
             if (wide <= 0 || wide > INT_MAX) {
                 cyanrip_log(ctx, 0, "Invalid totaldiscs %lli\n", wide);
+                return CRIP_EXIT_USAGE;
+            }
+            if (!whole) {
+                cyanrip_log(ctx, 0, "Invalid totaldiscs %s\n", p);
                 return CRIP_EXIT_USAGE;
             }
             totaldiscs = wide;
@@ -3001,9 +3037,14 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Missing track idx for pregap\n");
             return CRIP_EXIT_USAGE;
         }
-        long long wide = strtoll(p, NULL, 10);
+        int whole;
+        long long wide = crip_parse_ll(p, &whole);
         if (wide < 1 || wide > 197) {
             cyanrip_log(ctx, 0, "Invalid track idx for pregap: %lli\n", wide);
+            return CRIP_EXIT_USAGE;
+        }
+        if (!whole) {
+            cyanrip_log(ctx, 0, "Invalid track idx for pregap: %s\n", p);
             return CRIP_EXIT_USAGE;
         }
         idx = wide;

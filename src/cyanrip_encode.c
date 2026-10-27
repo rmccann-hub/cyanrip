@@ -1480,9 +1480,12 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
     CRIPArt *art = &t->art;
     if (!art->pkt) {
         int i;
-        for (i = 0; i < ctx->nb_cover_arts; i++)
-            if (!strcmp(dict_get(ctx->cover_arts[i].meta, "title"), "Front"))
+        for (i = 0; i < ctx->nb_cover_arts; i++) {
+            /* NULL only if av_dict_set() failed to allocate it */
+            const char *title = dict_get(ctx->cover_arts[i].meta, "title");
+            if (title && !strcmp(title, "Front"))
                 break;
+        }
         art = &ctx->cover_arts[i == ctx->nb_cover_arts ? 0 : i];
     }
 

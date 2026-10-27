@@ -60,7 +60,7 @@ def fail(msg):
     print(f"FAIL: {msg}")
 
 
-ref = (ROOT / "docs" / "golden-reference.log").read_text()
+ref = (ROOT / "docs" / "golden-reference.log").read_text(encoding="utf-8")
 drive = next(l for l in ref.splitlines() if l.startswith("Drive used:"))
 encoder = next(l for l in ref.splitlines() if l.startswith("Encoder:"))
 acoustid = next(l for l in ref.splitlines() if l.startswith("AcoustID:"))
@@ -134,7 +134,7 @@ def run_settled(rows):
               "| a fact of theirs | — theirs: none |"]
     with tempfile.TemporaryDirectory() as d:
         p = pathlib.Path(d) / "SETTLED.md"
-        p.write_text("\n".join(table) + "\n")
+        p.write_text("\n".join(table) + "\n", encoding="utf-8")
         saved, settled.SETTLED = settled.SETTLED, p
         out = io.StringIO()
         try:
@@ -169,7 +169,7 @@ with tempfile.TemporaryDirectory() as d:
     table += ["| a slow fact | `sleep 30` |",
               "| a structural fact | — structural: none |",
               "| a fact of theirs | — theirs: none |"]
-    (pathlib.Path(d) / "SETTLED.md").write_text("\n".join(table) + "\n")
+    (pathlib.Path(d) / "SETTLED.md").write_text("\n".join(table) + "\n", encoding="utf-8")
     code = ("import importlib.util, pathlib, sys\n"
             "spec = importlib.util.spec_from_file_location('cs', sys.argv[1])\n"
             "cs = importlib.util.module_from_spec(spec)\n"
@@ -180,7 +180,7 @@ with tempfile.TemporaryDirectory() as d:
         [sys.executable, "-c", code, str(ROOT / "tools" / "check-settled.py"),
          str(pathlib.Path(d) / "SETTLED.md")],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-        start_new_session=True)
+        start_new_session=True, encoding="utf-8")
     time.sleep(3)
     os.killpg(proc.pid, signal.SIGTERM)
     out = proc.communicate(timeout=20)[0]
@@ -210,10 +210,10 @@ with tempfile.TemporaryDirectory() as d:
                                "stdout": "TIMING: not this one\n"}) + "\n" +
                    json.dumps({"name": "cyanrip / Settled facts",
                                "result": "OK", "duration": 106.55,
-                               "stdout": stdout}) + "\n")
+                               "stdout": stdout}) + "\n", encoding="utf-8")
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "check-settled.py"),
                         "--timing-from", str(log)], capture_output=True,
-                       text=True)
+                       text=True, encoding="utf-8")
     want = ["Settled facts: OK in 106.5 s",
             "UNPROBED (exit 77, cannot be checked here): a row",
             "       reads run evidence this clone has not fetched: x",
@@ -226,7 +226,7 @@ with tempfile.TemporaryDirectory() as d:
              f"{r.returncode}), not {want!r}")
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "check-settled.py"),
                         "--timing-from", str(pathlib.Path(d) / "absent.json")],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0 or "no testlog" not in r.stdout:
         fail(f"--timing-from on a missing log: exit {r.returncode}, "
              f"{r.stdout!r}")

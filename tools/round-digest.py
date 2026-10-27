@@ -250,7 +250,6 @@ def lap_lines(round_no, exclude=()):
     """
     rows = survey(round_no, exclude)
     out = [line for _, line, _ in rows if line is not None]
-    excluded = {p.name for p, line, r in rows if r == "excluded by --exclude"}
 
     # An exclusion that matched nothing is a MANUFACTURED MISMATCH, and it is
     # indistinguishable from a real one -- inside the tool implementing the one

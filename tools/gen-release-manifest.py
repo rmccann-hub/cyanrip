@@ -163,17 +163,29 @@ def build_command(commit):
     removed.
     """
     base = "meson setup build && ninja -C build"
-    try:
-        opts = subprocess.run(["git", "show", f"{commit}:meson_options.txt"],
-                              cwd=ROOT, capture_output=True, text=True)
-    except Exception:
-        return base
-    if opts.returncode != 0:
+    # Whether the file is in that commit's tree, asked apart from reading it:
+    # any failed `git show` used to read as "no option" (review C item 6.3),
+    # so a commit git could not find, or a git that failed, put the plain
+    # build in the manifest and dropped -Ddeclare_released=true from a release
+    # that declares it. Only an absent file means absent; anything else stops.
+    ls = subprocess.run(["git", "ls-tree", "--name-only", commit, "--",
+                         "meson_options.txt"], cwd=ROOT, capture_output=True,
+                        text=True, encoding="utf-8", timeout=60)
+    if ls.returncode != 0:
+        raise SystemExit(f"gen-release-manifest: cannot read the tree of "
+                         f"{commit}: {ls.stderr.strip()}")
+    if not ls.stdout.strip():
         # No meson_options.txt at that commit: the option cannot exist, and
         # passing it would fail the configure. Older releases take the plain
-        # build and simply render as unreleased, which is the honest outcome --
-        # they predate the flag and never could declare anything.
+        # build and render as unreleased, which is the honest outcome -- they
+        # predate the flag and never could declare anything.
         return base
+    opts = subprocess.run(["git", "show", f"{commit}:meson_options.txt"],
+                          cwd=ROOT, capture_output=True, text=True,
+                          encoding="utf-8", timeout=60)
+    if opts.returncode != 0:
+        raise SystemExit(f"gen-release-manifest: cannot read "
+                         f"{commit}:meson_options.txt: {opts.stderr.strip()}")
     if not re.search(r"^option\('declare_released'", opts.stdout, re.M):
         return base
     return "meson setup build -Ddeclare_released=true && ninja -C build"

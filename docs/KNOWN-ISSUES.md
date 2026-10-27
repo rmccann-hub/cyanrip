@@ -491,7 +491,7 @@ instrument now prints in call order, a clean run is
 `#1 --since 343ebd1`, `#2 --since 8880d8f`, `#3 --since 8880d8f`,
 `#4 16 9 --head 59cb5a9`, and **both timeout dumps match #1–#3 of that sequence
 exactly.** So #4 is the next one. This is inference from two artifacts rather
-than a direct observation; **the next occurrence will simply say it**, because
+than a direct observation; **the next occurrence will say it**, because
 the handler now prints `THE CALL THAT HUNG IS #N: <args>`.
 
 **And #4 is the first call of a different kind.** Calls 1–3 pass `--since

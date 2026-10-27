@@ -38,7 +38,7 @@ def check(cond, msg):
 
 def run(*paths):
     r = subprocess.run([sys.executable, str(TOOL), *map(str, paths)],
-                       capture_output=True, text=True, timeout=120)
+                       capture_output=True, text=True, timeout=120, encoding="utf-8")
     return r.returncode, r.stdout + r.stderr
 
 

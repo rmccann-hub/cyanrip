@@ -69,28 +69,28 @@ def build(root):
     """A synthetic $OUT that must pass every clause."""
     out = pathlib.Path(root)
     (out / "banner.txt").write_text(
-        "cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gddc1e8c)\n")
+        "cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-gddc1e8c)\n", encoding="utf-8")
 
     # clause 1: the first three reference checksum lines, reproduced exactly.
-    ref = REFERENCE.read_text(errors="replace")
+    ref = REFERENCE.read_text(errors="replace", encoding="utf-8")
     lines = re.findall(r"^\s+Accurip (?:v1|v2|450):.*$", ref, re.M)[:3]
     (out / "accurip").mkdir()
     (out / "accurip" / "accurip.log").write_text(
-        logfile("accurip", "AccurateRip:    found\n" + "\n".join(lines) + "\n"))
+        logfile("accurip", "AccurateRip:    found\n" + "\n".join(lines) + "\n"), encoding="utf-8")
 
     # clause 2: two files that differ and are both audio.
     for name, seed in (("hdcd-deemph", 1), ("hdcd-nodeemph", 2)):
         (out / name).mkdir()
         (out / name / "1.pcm").write_bytes(audio(seed))
-        (out / name / f"{name}.log").write_text(logfile(name))
+        (out / name / f"{name}.log").write_text(logfile(name), encoding="utf-8")
 
     # clause 3.
     (out / "plain.json").write_text(
         '{"schema": "cyanrip-diagnostics/4",'
         ' "started_at": "2026-09-07T12:00:00+00:00",'
-        ' "finished_at": "2026-09-07T12:01:00+00:00", "exit_code": 0}')
+        ' "finished_at": "2026-09-07T12:01:00+00:00", "exit_code": 0}', encoding="utf-8")
     (out / "plain").mkdir()
-    (out / "plain" / "plain.log").write_text(logfile("plain"))
+    (out / "plain" / "plain.log").write_text(logfile("plain"), encoding="utf-8")
     return out
 
 
@@ -132,7 +132,7 @@ def main():
     #    evidence however good its numbers are.
     expect("wrong build",
            lambda o: (o / "banner.txt").write_text(
-               "cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)\n"),
+               "cyanrip 0.9.4-rc2+platterpus.11 (platterpus-fork-g978f9b0)\n", encoding="utf-8"),
            1, r"CANNOT CLOSE ROUND 16")
     expect("no banner", lambda o: (o / "banner.txt").unlink(),
            1, r"FAIL.*build/banner")
@@ -143,13 +143,13 @@ def main():
            2, r"UNPROBED.*clause1/log", r"All three clauses settled")
     expect("clause 1 checksum differs",
            lambda o: (o / "accurip" / "accurip.log").write_text(
-               (o / "accurip" / "accurip.log").read_text()
-               .replace("5D3C90CB", "DEADBEEF")),
+               (o / "accurip" / "accurip.log").read_text(encoding="utf-8")
+               .replace("5D3C90CB", "DEADBEEF"), encoding="utf-8"),
            1, r"FAIL.*clause1/checksums")
     expect("clause 1 confidence FELL",
            lambda o: (o / "accurip" / "accurip.log").write_text(
-               (o / "accurip" / "accurip.log").read_text()
-               .replace("confidence 129", "confidence 3")),
+               (o / "accurip" / "accurip.log").read_text(encoding="utf-8")
+               .replace("confidence 129", "confidence 3"), encoding="utf-8"),
            1, r"confidence FELL")
     # THE FIVE VALUES cyanrip_log.c:786 CAN PRINT, each asserted separately.
     # The checker's first version collapsed four of them into one sentence
@@ -159,8 +159,8 @@ def main():
     # An example suite only finds the cases someone thought of.
     def verdict(v):
         return lambda o: (o / "accurip" / "accurip.log").write_text(
-            (o / "accurip" / "accurip.log").read_text()
-            .replace("AccurateRip:    found", f"AccurateRip:    {v}"))
+            (o / "accurip" / "accurip.log").read_text(encoding="utf-8")
+            .replace("AccurateRip:    found", f"AccurateRip:    {v}"), encoding="utf-8")
 
     # `not found`: the parser RAN and the disc is not in the database. A real
     # measurement, not our failure, and still cannot settle the clause.
@@ -199,7 +199,7 @@ def main():
     # reference's first six, where the reference's 5th and 6th are the NOT
     # FOUND ones and ours carry confidences.
     ref_lines = re.findall(r"^\s+Accurip (?:v1|v2|450):.*$",
-                           REFERENCE.read_text(errors="replace"), re.M)[:6]
+                           REFERENCE.read_text(errors="replace", encoding="utf-8"), re.M)[:6]
     unrecognised = [l for l in ref_lines if "confidence" not in l]
     if len(unrecognised) != 2:
         fail(f"the reference no longer has exactly 2 unrecognised lines in its "
@@ -213,12 +213,12 @@ def main():
 
         def six(o):
             log = o / "accurip" / "accurip.log"
-            body = log.read_text()
+            body = log.read_text(encoding="utf-8")
             head = body.split("AccurateRip:    found")[0]
             log.write_text(head + "AccurateRip:    found\n"
                            + "\n".join(ours) + "\n"
                            + "Rip completed:  yes (3 of 14 tracks)\n"
-                           + "Log FUN512: x\n")
+                           + "Log FUN512: x\n", encoding="utf-8")
 
         with tempfile.TemporaryDirectory() as td:
             out = build(td)
@@ -286,14 +286,14 @@ def main():
     # status line cannot establish. It IS readable, from the argv.
     def disable(o, invoked=None):
         log = o / "accurip" / "accurip.log"
-        txt = log.read_text().replace("AccurateRip:    found",
+        txt = log.read_text(encoding="utf-8").replace("AccurateRip:    found",
                                       "AccurateRip:    disabled")
         if invoked is None:
             txt = "\n".join(l for l in txt.splitlines()
                              if not l.startswith("Invoked as:")) + "\n"
         else:
             txt = re.sub(r"(?m)^Invoked as:.*$", f"Invoked as:     {invoked}", txt)
-        log.write_text(txt)
+        log.write_text(txt, encoding="utf-8")
 
     expect("clause 1 disabled WITH -A in the argv",
            lambda o: disable(o, "/usr/local/bin/cyanrip -d /dev/sr0 -N -A -U"),
@@ -330,36 +330,36 @@ def main():
     # 4. Clause 3.
     expect("clause 3 old schema",
            lambda o: (o / "plain.json").write_text(
-               (o / "plain.json").read_text().replace("/4", "/3")),
+               (o / "plain.json").read_text(encoding="utf-8").replace("/4", "/3"), encoding="utf-8"),
            1, r"FAIL.*clause3/schema")
     expect("clause 3 no started_at",
            lambda o: (o / "plain.json").write_text(
-               (o / "plain.json").read_text().replace(
-                   '"started_at": "2026-09-07T12:00:00+00:00",', "")),
+               (o / "plain.json").read_text(encoding="utf-8").replace(
+                   '"started_at": "2026-09-07T12:00:00+00:00",', ""), encoding="utf-8"),
            1, r"FAIL.*clause3/instants")
     expect("clause 3 no record",
            lambda o: (o / "plain.json").unlink(),
            2, r"UNPROBED.*clause3/record", r"All three clauses settled")
     expect("clause 3 no Secure re-read",
-           lambda o: [p.write_text(p.read_text().replace(
-               "    Secure re-read:  converged after 3 reads\n", ""))
+           lambda o: [p.write_text(p.read_text(encoding="utf-8").replace(
+               "    Secure re-read:  converged after 3 reads\n", ""), encoding="utf-8")
                for p in o.rglob("*.log")],
            1, r"FAIL.*clause3/secure-reread")
     expect("clause 3 no Consumer",
-           lambda o: [p.write_text(p.read_text().replace(
-               "Consumer:       cyanrip-rig/round-16\n", ""))
+           lambda o: [p.write_text(p.read_text(encoding="utf-8").replace(
+               "Consumer:       cyanrip-rig/round-16\n", ""), encoding="utf-8")
                for p in o.rglob("*.log")],
            1, r"FAIL.*clause3/consumer")
     expect("clause 3 foreign banner",
-           lambda o: (o / "plain" / "plain.log").write_text("cyanrip 0.9.3\n"),
+           lambda o: (o / "plain" / "plain.log").write_text("cyanrip 0.9.3\n", encoding="utf-8"),
            1, r"FAIL.*clause3/banner")
 
     # 5. TWO DESCRIPTIONS OF ONE FACT, so they must be checked against each
     #    other. The accepted builds live in the checker AND in the rig script's
     #    preflight, and a run graded by one and gated by the other is exactly
     #    the two-implementations-drift this seam already suffered.
-    tool = TOOL.read_text()
-    script = (ROOT / "tools" / "rig-round16.sh").read_text()
+    tool = TOOL.read_text(encoding="utf-8")
+    script = (ROOT / "tools" / "rig-round16.sh").read_text(encoding="utf-8")
     # COUNT WHAT THE PATTERN RETURNED. The first version spelled this
     # `[0-9a-f]+`, so drifting a build id to `gCAFEBAB` matched NOTHING, the
     # loop ran zero times, and the check passed while the two files disagreed

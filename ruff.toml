@@ -1,0 +1,7 @@
+# The Python lint gate's rules (review C item 4.3), run by tests/python_lint.py:
+# Pyflakes's (F) and syntax errors (E9). An undefined name, an unused import
+# or variable, a redefinition, an f-string with no field: each is a line that
+# does not do what it reads as doing. pycodestyle's style rules are left off,
+# since the tools keep their own and a style gate would rewrite every file.
+[lint]
+select = ["E9", "F"]

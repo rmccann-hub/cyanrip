@@ -43,12 +43,19 @@ jobs:
     # two skipped. This moves when the reference's own environment does.
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    # Four configurations, because a configuration nobody builds is a
+    # Five configurations, because a configuration nobody builds is a
     # configuration nobody knows the state of -- and that is not theoretical
     # here. `-Ddeclare_released=true` is the build our release manifest tells
     # the consumer to make, nothing had ever compiled it, and when it finally
     # was it failed 2 of 41. The sanitizer rows are the same argument one level
     # down: they pass today, and nothing was running them.
+    # `thread` is TSan over the threaded encoder (review C item 3.7). Its
+    # options ignore accesses made inside libraries built without it: each
+    # of the 70 races TSan reported in this suite without them paired an
+    # FFmpeg free or reuse of a frame buffer with swr_convert() reading it,
+    # ordered by libavutil's atomic reference count, which TSan cannot see in
+    # an uninstrumented library. With them the suite reports none, and a race
+    # in this program's own code is still caught.
     strategy:
       fail-fast: false
       matrix:
@@ -61,6 +68,9 @@ jobs:
             opts: "-Db_sanitize=address,undefined -Db_lundef=false"
           - name: released+sanitizers
             opts: "-Ddeclare_released=true -Db_sanitize=address,undefined -Db_lundef=false"
+          - name: thread
+            opts: "-Db_sanitize=thread -Db_lundef=false"
+            tsan: "ignore_noninstrumented_modules=1"
     name: linux (${{ matrix.name }})
     steps:
       # One commit, then the whole history of what the suite reads: the
@@ -69,6 +79,8 @@ jobs:
       # `fetch-depth: 0`, which fetches every branch and tag, the evidence
       # branch among them (PROTOCOL.md v9 §17, HR-2 8b).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Fetch the history the suite reads
         run: .github/fetch-history.sh platterpus-fork master
@@ -88,7 +100,59 @@ jobs:
           meson setup build $OPTS
           ninja -C build
 
+      # GCC's static analyzer over the program this ships (review C item 3.6).
+      # Its five warnings at 590e959 were fixed at their source, so a warning
+      # now is a new one and fails the step. Ubuntu 24.04's GCC 13, as here.
+      - name: Static analysis
+        if: matrix.name == 'default'
+        run: |
+          meson setup build-analyzer -Dc_args=-fanalyzer
+          ninja -C build-analyzer src/cyanrip 2>&1 | tee analyzer.log
+          if grep -n -e '-Wanalyzer-' analyzer.log; then
+            echo "::error::GCC's analyzer reported the findings above"
+            exit 1
+          fi
+
+      # meson.build's meson_version is the oldest Meson that configures and
+      # builds this tree, checked here rather than stated (review C item 3.1:
+      # it said 0.53 and the build used 0.55, 0.56 and 0.62). The version is
+      # read from meson.build, so moving the floor moves the check. Meson 0.62's
+      # python module needs distutils, which Python 3.12 removed, so it runs
+      # under uv's Python 3.11. One row is enough: the floor is about Meson.
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        if: matrix.name == 'released'
+        with:
+          version: "0.13.5"
+
+      - name: Build with the oldest Meson meson.build allows
+        if: matrix.name == 'released'
+        run: |
+          floor=$(sed -n "s/^ *meson_version: '>=\(.*\)',$/\1/p" meson.build)
+          test -n "$floor" || { echo "::error::no meson_version in meson.build"; exit 1; }
+          uvx --python 3.11 --from "meson==$floor" meson setup build-floor
+          ninja -C build-floor
+
+      # tests/valgrind_rip.py rips under Valgrind's memcheck (review C item
+      # 3.7) and skips where valgrind is missing, so this row installs it and
+      # sets CYANRIP_VALGRIND_REQUIRED, so a missing valgrind fails.
+      - name: Install valgrind for the memcheck rip
+        if: matrix.name == 'default'
+        run: sudo apt-get install -y valgrind
+
+      # tests/python_lint.py runs ruff's Pyflakes rules (review C item 4.3)
+      # and skips where ruff is missing, so this row installs it, pinned, and
+      # sets CYANRIP_LINT_REQUIRED so a missing ruff fails rather than skips.
+      - name: Install ruff for the Python lint
+        if: matrix.name == 'released'
+        run: |
+          uv tool install ruff==0.15.8
+          uv tool dir --bin >> "$GITHUB_PATH"
+
       - name: Test
+        env:
+          CYANRIP_LINT_REQUIRED: ${{ matrix.name == 'released' && '1' || '' }}
+          CYANRIP_VALGRIND_REQUIRED: ${{ matrix.name == 'default' && '1' || '' }}
+          TSAN_OPTIONS: ${{ matrix.tsan }}
         run: meson test -C build --print-errorlogs
 
       # Meson prints a test's output only when it fails, so a Settled facts
@@ -97,12 +161,84 @@ jobs:
         if: always()
         run: python3 tools/check-settled.py --timing-from build/meson-logs/testlog.json
 
+  # The shell scripts under ShellCheck and the history under gitleaks (review
+  # C item 4.3), each from Ubuntu 24.04's own package, the versions this was
+  # written against: ShellCheck 0.9.0, and gitleaks 8.16.0, which found
+  # nothing in this branch's 1827 commits. The Python tools' lint is in the
+  # linux (released) row, where the suite runs it.
+  lint:
+    if: github.event_name != 'release'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch the history gitleaks reads
+        run: .github/fetch-history.sh platterpus-fork
+
+      - name: Install ShellCheck and gitleaks
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck gitleaks
+
+      - name: ShellCheck
+        run: git ls-files -z '*.sh' | xargs -0 shellcheck
+
+      - name: No secret in the history
+        run: gitleaks detect --source . --redact --verbose
+
+  # Each parser of data from outside this program under libFuzzer, with ASan
+  # and UBSan, for a minute from its committed seeds (review C item 3.8): the
+  # JSON reader, AccurateRip's response and -Y's check of a log. A finding
+  # fails the job, and libFuzzer prints the input that found it. Ubuntu
+  # 24.04's clang 18, as the session that wrote the harnesses ran them.
+  fuzz:
+    if: github.event_name != 'release'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build pkg-config ffmpeg \
+            clang-18 libclang-rt-18-dev \
+            libavcodec-dev libavformat-dev libavfilter-dev libavutil-dev \
+            libswresample-dev libcdio-dev libcdio-cdda-dev libcdio-paranoia-dev \
+            libmusicbrainz5-dev libcurl4-openssl-dev libqrencode-dev
+
+      - name: Build the fuzz targets
+        run: |
+          CC=clang-18 meson setup build-fuzz -Dfuzz=true \
+            -Db_sanitize=address,undefined -Db_lundef=false
+          ninja -C build-fuzz tests/fuzz_json tests/fuzz_accurip tests/fuzz_log
+
+      - name: Fuzz each parser for a minute
+        run: |
+          for h in json accurip log; do
+            mkdir -p "corpus/$h"
+            cp tests/fuzz/seeds/$h/* "corpus/$h/"
+          done
+          cp docs/golden-reference.log corpus/log/
+          for h in json accurip log; do
+            echo "== $h"
+            "./build-fuzz/tests/fuzz_$h" -max_total_time=60 \
+              -print_final_stats=1 "corpus/$h"
+          done
+
   macos:
     if: github.event_name != 'release'
     runs-on: macos-26
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Fetch the history the suite reads
         run: .github/fetch-history.sh platterpus-fork master
@@ -140,9 +276,40 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # A merge's leftover markers, in any tracked text file (review C item
+      # 4.5). Seven '<', '>' or '|' at the start of a line, then a space or
+      # its end; seven '=' is left out, since Markdown underlines a heading
+      # with it.
+      - name: No conflict markers
+        run: |
+          if git grep -n -I -E '^(<{7}|>{7}|[|]{7})( |$)'; then
+            echo "::error::conflict markers in the tree, listed above"
+            exit 1
+          fi
 
       - name: Fetch the history, the tags and the evidence branch
         run: .github/fetch-history.sh platterpus-fork master --tags --evidence
+
+      # The subject of each commit a change adds (review C item 5.2): at most
+      # 72 characters, capitalised, with no full stop. On a pull request, its
+      # commits that platterpus-fork lacks; on a push, those the push added.
+      # Commits upstream's master holds are left out, being upstream's words.
+      - name: Commit subjects
+        env:
+          BEFORE: ${{ github.event.before }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            python3 tools/check-commit-subjects.py \
+              refs/remotes/origin/platterpus-fork HEAD
+          elif [ -n "$BEFORE" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            python3 tools/check-commit-subjects.py "$BEFORE" HEAD
+          else
+            echo "UNPROBED: no commit before this push to check from"
+          fi
 
       - name: Install dependencies
         run: |
@@ -219,6 +386,8 @@ jobs:
           shell: msys2 {0}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0
         with:
           msystem: UCRT64

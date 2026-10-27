@@ -48,7 +48,6 @@ by a check that hashes the source. `nm` is asked, not the build options.
 """
 
 import argparse
-import os
 import pathlib
 import re
 import shutil
@@ -135,9 +134,9 @@ def main():
                          "of the suite runs -- is itself instrumented")
     args = ap.parse_args()
 
-    # IN A SANITIZED BUILD THIS SWEEP IS THE SUITE, TWICE. Two of CI's four
-    # rows build with -Db_sanitize, and there every image scenario already
-    # runs under ASan and UBSan; building build-asan and running them again
+    # IN A SANITIZED BUILD THIS SWEEP IS THE SUITE, TWICE. Two of CI's five
+    # rows build with ASan and UBSan, and there every image scenario already
+    # runs under them; building build-asan and running them again
     # checks nothing new. Asked of the binary, like the check below, so a
     # sanitized option that did not reach the binary does not skip anything.
     if args.unless_instrumented:

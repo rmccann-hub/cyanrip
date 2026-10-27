@@ -42,7 +42,6 @@ Usage:
 
 import argparse
 import ast
-import hashlib
 import json
 import pathlib
 import re
@@ -130,6 +129,16 @@ PROGRAMS = {
                   "library through it too",
     "dpkg": "this map: names the package that owns a library, to read its "
             "copyright file",
+    "bash": "runs the Windows build script's functions, its builds stubbed, "
+            "to check where it stops",
+    "xargs": "asked its version: that check needs GNU xargs, which the "
+             "script runs, as MSYS2 has",
+    "sh": "runs the session-start hook on scratch repositories, as Claude "
+          "Code runs it",
+    "ruff": "the Python lint gate: Pyflakes's rules over tools/ and tests/, "
+            "pinned in CI",
+    "valgrind": "memcheck over one rip of the basic image, which sees inside "
+                "the libraries as built",
 }
 
 # Every http(s) literal in src/, keyed by host. The KEYS must equal what
@@ -154,7 +163,7 @@ SERVICES = {
 def run(cmd, **kw):
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=30,
-                           cwd=kw.get("cwd", ROOT))
+                           cwd=kw.get("cwd", ROOT), encoding="utf-8")
     except (OSError, subprocess.TimeoutExpired):
         return None
     return p.stdout.strip() if p.returncode == 0 else None
@@ -167,6 +176,7 @@ def project():
     name = re.search(r"project\(\s*'([^']+)'", text).group(1)
     version = re.search(r"^\s*version:\s*'([^']+)'", text, re.M).group(1)
     meson_min = re.search(r"meson_version:\s*'([^']+)'", text).group(1)
+    py = re.search(r"find_program\('python3',\s*version:\s*'([^']+)'\)", text)
     opts = re.search(r"default_options:\s*\[([^\]]*)\]", text).group(1)
     c_std = re.search(r"c_std=(\w+)", opts).group(1)
     fork_id = re.search(r"set_quoted\('PROJECT_FORK_ID',\s*'([^']+)'\)",
@@ -179,6 +189,7 @@ def project():
                if "version 2.1 of the License, or (at your option) any later"
                in " ".join(header.replace("*", " ").split()) else None)
     return dict(name=name, version=version, meson=meson_min, c_std=c_std,
+                python=py.group(1) if py else None,
                 fork_id=fork_id, werror=werror, licence=licence)
 
 
@@ -277,7 +288,10 @@ def ci():
                                       text)))
     uv = sorted(set(re.findall(r"setup-uv@\S+[^\n]*\n\s+with:\n"
                                r"\s+version:\s*\"?([\w.]+)\"?", text)))
-    python = sorted(set(re.findall(r"uvx --python (\S+)", text)))
+    # Only the uvx runs of those tools: one whose --from is a PyPI
+    # requirement, as the Meson floor check's `meson==$floor` is, is not one
+    python = sorted({py for py, src in re.findall(
+        r"uvx --python (\S+) --from \"?([^\"\s]+)", text) if "==" not in src})
     text = (wfdir / "ci.yml").read_text(encoding="utf-8")
     # The package list continues over lines ending in a backslash.
     apt = re.search(r"apt-get install -y((?:[^\n]*\\\n)*[^\n]*)", text)
@@ -397,7 +411,7 @@ def measure(model):
     os_name = None
     osr = pathlib.Path("/etc/os-release")
     if osr.exists():
-        mm = re.search(r'^PRETTY_NAME="([^"]+)"', osr.read_text(), re.M)
+        mm = re.search(r'^PRETTY_NAME="([^"]+)"', osr.read_text(encoding="utf-8"), re.M)
         os_name = mm.group(1) if mm else None
     ff = run(["ffmpeg", "-version"]) or ""
     env = dict(
@@ -638,7 +652,9 @@ def markdown(model, meas):
          ". Third-party imports: " + ", ".join(
              f"`{k}` ({', '.join(v)})"
              for k, v in model["python_third_party"].items()) + ".")
-      + " No minimum Python version is declared anywhere in the tree.")
+      + (f" Python `{p['python']}`, declared in `meson.build`."
+         if p["python"] else
+         " No minimum Python version is declared anywhere in the tree."))
     a(f"- **Licence: {p['licence']}**, read from `src/utils.c`'s header. "
       "The binary links libcdio and libcdio-paranoia, both GPL-3.0-or-later, "
       "so a built binary is subject to the GPL's terms; upstream's is too.")
@@ -813,7 +829,7 @@ def main():
         stale = []
         want = strip_measured(bom(model, None))
         try:
-            have = strip_measured(json.loads(BOM_PATH.read_text()))
+            have = strip_measured(json.loads(BOM_PATH.read_text(encoding="utf-8")))
         except (OSError, ValueError) as e:
             have = None
             stale.append(f"{BOM_PATH.name}: unreadable ({e})")

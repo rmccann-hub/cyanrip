@@ -256,7 +256,7 @@ def main():
         if args.cyanrip:
             try:
                 r = subprocess.run([args.cyanrip, "-Y", str(p)],
-                                   capture_output=True, text=True)
+                                   capture_output=True, text=True, encoding="utf-8")
                 said = ("verifies" if r.returncode == 0
                         else f"DOES NOT VERIFY (exit {r.returncode})")
             except OSError as e:

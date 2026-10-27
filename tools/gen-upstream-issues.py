@@ -111,8 +111,8 @@ def render():
                       capture_output=True).returncode != 0:
         sys.exit("gen-upstream-issues: not a git checkout; commit links "
                  "cannot be told from other hex strings without one")
-    dr = (ROOT / DEFECTS).read_text()
-    cm = (ROOT / CACHEMODEL).read_text()
+    dr = (ROOT / DEFECTS).read_text(encoding="utf-8")
+    cm = (ROOT / CACHEMODEL).read_text(encoding="utf-8")
 
     issues = {}
     m = HEADER_AT.search(dr)
@@ -196,7 +196,7 @@ def main():
     a = ap.parse_args()
     text = render()
     if a.check:
-        have = pathlib.Path(a.check).read_text()
+        have = pathlib.Path(a.check).read_text(encoding="utf-8")
         if have != text:
             print(f"{a.check}: stale; regenerate with "
                   f"tools/gen-upstream-issues.py > {a.check}", file=sys.stderr)

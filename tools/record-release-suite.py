@@ -97,7 +97,7 @@ def main():
         ended = now()
 
         log = build / "meson-logs" / "testlog.txt"
-        text = log.read_text(errors="replace") if log.exists() else ""
+        text = log.read_text(errors="replace", encoding="utf-8") if log.exists() else ""
         headers = len(re.findall(r"(?m)^Log of Meson test suite run", text))
         if headers != 1:
             sys.exit(f"the testlog holds {headers} run header(s), not 1, so it "
@@ -110,8 +110,8 @@ def main():
         meson = run(["meson", "--version"], work).stdout.strip()
 
         print(f"commit:       {sha}")
-        print(f"command:      meson setup build && ninja -C build && "
-              f"meson test -C build --print-errorlogs")
+        print("command:      meson setup build && ninja -C build && "
+              "meson test -C build --print-errorlogs")
         print(f"meson:        {meson}")
         print(f"started:      {started}")
         print(f"ended:        {ended}")

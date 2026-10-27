@@ -823,7 +823,7 @@ def flags(binary):
     --diagnostics, --stall-secs and --cache-probe with it, though a consumer
     reads P1 for --consumer by name. Its Short cell says `none`.
     """
-    out = subprocess.run([binary, "--help"], capture_output=True, text=True).stdout
+    out = subprocess.run([binary, "--help"], capture_output=True, text=True, encoding="utf-8").stdout
     rows, section = [], "General"
     for ln in out.splitlines():
         if ln.endswith(":") and not ln.startswith(" "):
@@ -1569,7 +1569,7 @@ def version(binary):
     recompute.
     """
     raw = subprocess.run([binary, "--version"], capture_output=True,
-                         text=True).stdout.strip()
+                         text=True, encoding="utf-8").stdout.strip()
 
     # A -dirty banner means the binary was built from a tree with uncommitted
     # changes, so its SHA does not describe it. Refuse rather than normalise:
@@ -2029,7 +2029,7 @@ def emit(binary):
     w("  |---|---|")
     for pat, label, effect in fail_mechanisms():
         w(f"  | `{label}` | {effect} |")
-    w(f"  | `goto fail` | see P5a's note -- `fail:` is a label name, not a verdict |")
+    w("  | `goto fail` | see P5a's note -- `fail:` is a label name, not a verdict |")
     w("")
     w("  Derived from `fail_path()` in the generator, so this list cannot describe a")
     w("  predicate the tool does not have.")
@@ -2483,9 +2483,9 @@ def emit(binary):
     def label(cond):
         return "elsewhere" if cond is None else f"`{cond}`"
 
-    w(f"Availability is a **compile-time** property (P7e). `os_compat.h` has")
+    w("Availability is a **compile-time** property (P7e). `os_compat.h` has")
     w(f"**{len(states)} states** for these macros, so {2 * len(states)} columns cover the")
-    w(f"`os_` modes: one per `#if defined()` block that sets any of them -- "
+    w("`os_` modes: one per `#if defined()` block that sets any of them -- "
       + ", ".join(f"`{c}`" for c in conds) + " --")
     w("and *elsewhere*, a build in none of them. They are exclusive in")
     w("practice. `HAVE_WMAIN` is set by `src/meson.build` when the compiler")
@@ -2611,7 +2611,7 @@ def emit(binary):
             if where and len(where) == 3 and isinstance(where[1], str) and where[1]:
                 w(f"- **`{macro}`** -- `os_compat.h:{where[2]}` defines it as")
                 w(f"  `{where[0]}` under `{where[1]}`. No file in `src/` reads")
-                w(f"  that name.")
+                w("  that name.")
             else:
                 w(f"- **`{macro}`** -- defined in `os_compat.h`, read nowhere.")
         w("")

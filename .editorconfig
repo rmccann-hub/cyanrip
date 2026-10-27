@@ -1,0 +1,41 @@
+# What the files already are (review C item 6.6): UTF-8 and LF, and a final
+# newline, which every text file but LICENSE.md has. C, Python and meson
+# files indent with four spaces, workflows with two; the shell scripts
+# differ, so they are left alone.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{c,h,py}]
+indent_style = space
+indent_size = 4
+
+[{meson.build,meson_options.txt}]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Records whose trailing tabs and spaces are content: a TSV's empty last
+# column, and the logs and run evidence kept byte for byte
+[*.{tsv,log}]
+trim_trailing_whitespace = false
+insert_final_newline = unset
+
+[tests/fixtures/evidence/**]
+charset = unset
+end_of_line = unset
+trim_trailing_whitespace = false
+insert_final_newline = unset
+
+[*.{bin,nrg,avif,png,jpg}]
+charset = unset
+end_of_line = unset
+trim_trailing_whitespace = false
+insert_final_newline = unset
