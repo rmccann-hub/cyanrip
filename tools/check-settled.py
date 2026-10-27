@@ -160,13 +160,29 @@ def run_row(store, command):
     lacking = [p for p in evidence.files_named(command, store)
                if not store.in_tree(p)]
     if not lacking:
-        return subprocess.run(command, shell=True, cwd=ROOT,
-                              capture_output=True, text=True)
+        return run_shell(command, ROOT)
     import tempfile
     with tempfile.TemporaryDirectory(prefix="settled-evidence-") as d:
         evidence.overlay(store, lacking, d)
-        return subprocess.run(command, shell=True, cwd=d,
-                              capture_output=True, text=True)
+        return run_shell(command, d)
+
+
+# A row is a shell command written in docs/SETTLED.md, pipes and all, so it
+# runs in a shell: this repository's own file, never outside input. What it
+# lacked was a limit (review C item 6.4). A row that hangs is now one failed
+# row, named with its time, rather than the whole test killed at meson's 120 s
+# with every row after it unrun. The slowest row has taken 25 s, on macOS.
+ROW_TIMEOUT = 90
+
+
+def run_shell(command, cwd):
+    try:
+        return subprocess.run(command, shell=True, cwd=cwd,
+                              capture_output=True, text=True,
+                              timeout=ROW_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(
+            command, 124, "", f"timed out after {ROW_TIMEOUT} s")
 
 
 # WHERE THE TIME WENT, printed whether the run ends or is killed. CI's macOS
