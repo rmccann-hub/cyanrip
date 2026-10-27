@@ -110,8 +110,8 @@ def main():
         meson = run(["meson", "--version"], work).stdout.strip()
 
         print(f"commit:       {sha}")
-        print(f"command:      meson setup build && ninja -C build && "
-              f"meson test -C build --print-errorlogs")
+        print("command:      meson setup build && ninja -C build && "
+              "meson test -C build --print-errorlogs")
         print(f"meson:        {meson}")
         print(f"started:      {started}")
         print(f"ended:        {ended}")

@@ -117,7 +117,7 @@ with tempfile.TemporaryDirectory() as t:
         if want not in text:
             failures += 1
             print(f"FAIL: the tag message does not carry {want!r}")
-    if f"release_seq: 22" in text:
+    if "release_seq: 22" in text:
         failures += 1
         print("FAIL: release_seq was taken from the version, not the manifest")
 

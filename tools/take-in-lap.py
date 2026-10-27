@@ -214,8 +214,8 @@ def main():
         dest.write_bytes(data)
         rep.line(dest.read_bytes() == data, f"filed byte for byte at {dest}")
     else:
-        print(f"\n  not filed (no --file); the checks below read a scratch "
-              f"copy and say nothing about our record")
+        print("\n  not filed (no --file); the checks below read a scratch "
+              "copy and say nothing about our record")
     checked = dest if dest.exists() else None
     if checked is None:
         import tempfile

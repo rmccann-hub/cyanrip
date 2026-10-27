@@ -156,7 +156,7 @@ def main():
 
     o = []
     o.append(f"## Delta: `{up}` -> `{fork}`\n")
-    o.append(f"| | |\n| --- | --- |")
+    o.append("| | |\n| --- | --- |")
     o.append(f"| fork `{fork}` | `{git('rev-parse', '--short', fork).strip()}`"
              f" — {version_of(fork)} |")
     o.append(f"| upstream `{up}` | `{git('rev-parse', '--short', up).strip()}`"
@@ -184,7 +184,7 @@ def main():
     else:
         gained = sorted(u_cli - f_cli)
         oursonly = sorted(f_cli - u_cli)
-        o.append(f"`[MEASURED]` from `--help` of both binaries.\n")
+        o.append("`[MEASURED]` from `--help` of both binaries.\n")
         o.append("- **inbound (upstream has, we lack):** "
                  + (", ".join(f"`{x}`" for x in gained) if gained else "**none**"))
         o.append(f"- ours only (our divergence): "

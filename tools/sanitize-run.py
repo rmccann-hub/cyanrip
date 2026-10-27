@@ -48,7 +48,6 @@ by a check that hashes the source. `nm` is asked, not the build options.
 """
 
 import argparse
-import os
 import pathlib
 import re
 import shutil

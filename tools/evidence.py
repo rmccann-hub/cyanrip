@@ -888,7 +888,7 @@ def main():
             print(f"ok: {len(store.rows)} row(s) read cleanly"
                   + (f", those added since {args.base} checked against their "
                      f"files" if args.base else ", each checked against its "
-                     f"file")
+                     "file")
                   + (f"; {len(moved)} moved folder(s) the same on the default "
                      f"branch at {args.current or args.base} as at their "
                      f"evidence commit (HR-2.1 b)" if moved else ""))

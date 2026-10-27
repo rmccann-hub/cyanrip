@@ -152,12 +152,12 @@ def main():
               "confidence is the\nshape a broken response parse makes.")
         return 1
 
-    print(f"\nThe rewritten response parser ran over a real 200 and read a "
-          f"confidence\nout of it, with no drive.\n"
-          f"NOT SETTLED BY THIS: the per-track MATCH path. The audio is "
-          f"silence, so every\nchecksum is 00000000 and correctly matches "
-          f"nothing. Clause 1 is de-risked,\nnot closed -- that needs the "
-          f"disc.")
+    print("\nThe rewritten response parser ran over a real 200 and read a "
+          "confidence\nout of it, with no drive.\n"
+          "NOT SETTLED BY THIS: the per-track MATCH path. The audio is "
+          "silence, so every\nchecksum is 00000000 and correctly matches "
+          "nothing. Clause 1 is de-risked,\nnot closed -- that needs the "
+          "disc.")
     return 0
 
 

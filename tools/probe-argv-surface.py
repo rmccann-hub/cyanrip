@@ -491,7 +491,6 @@ def main():
 
     if a.markdown:
         print(markdown_block(rows, inter, ignored, banner_of(a.binary)))
-        n_ign = len(ignored)
         if ignored:
             print("\n**Silently-ignored values (findings):** " +
                   ", ".join(f"`{f} {v}`" for f, v in ignored))

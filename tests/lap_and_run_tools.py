@@ -196,7 +196,7 @@ def read_run(tmp):
         check("-Y:         verifies" in o and "DOES NOT VERIFY" in o,
               "-Y is run on every log, and a log that does not verify says so")
     else:
-        print(f"UNPROBED: no cyanrip binary given, so -Y was not run")
+        print("UNPROBED: no cyanrip binary given, so -Y was not run")
 
 
 def main():

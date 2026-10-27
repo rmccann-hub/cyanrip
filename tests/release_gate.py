@@ -1628,7 +1628,6 @@ def test_protocol_must_not_go_backwards():
     files = {"round-9-lap1.md": lap(1, 9, "HOLD").replace("HANDSHAKE-PROTOCOL: 1",
                                                           "HANDSHAKE-PROTOCOL: 4"),
              "round-9-lap2.md": lap(2, 9, "HOLD")}
-    laps = rg.load_rounds_all(pathlib.Path(_write(files))) if hasattr(rg, "load_rounds_all") else None
     d = pathlib.Path(_write(files))
     every = rg.load_rounds(d, every_lap=True)
     by_lap = {l.lap: l for l in every}

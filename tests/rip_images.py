@@ -7986,7 +7986,7 @@ def sc_repeat_limit_keeps_most_agreed():
             fail(f"repeat_limit_keeps_most_agreed: {tag}: the delivered track is "
                  f"not read v{want}, the one the most reads agreed on (newest on "
                  f"a tie); sector {flip}'s first byte carries v{seen}"
-                 + (f", the last read's" if seen == last else ""))
+                 + (", the last read's" if seen == last else ""))
             continue
         text = (out / "log.log").read_text(errors="replace")
         inv = next((ln for ln in text.splitlines()
