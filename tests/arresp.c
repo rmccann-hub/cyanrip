@@ -346,6 +346,55 @@ static void test_a_response_of_the_wrong_size_is_an_error(const char *bin)
     av_free(ctx);
 }
 
+/* A failed allocation part way through the response keeps nothing: no track
+ * reads as found from part of it, and the disc's status is an error. The
+ * realloc kept the entries read so far and returned, so the tracks already
+ * filled said FOUND, unsorted, while the disc said ERROR (the check of #65,
+ * 2026-10-27). av_max_alloc() makes the second entry's realloc fail for real,
+ * after every track has taken its first. */
+static void test_a_failed_allocation_keeps_nothing(const char *bin)
+{
+    enum { N = 14 };
+    FILE *f = fopen(bin, "rb");
+    uint8_t data[4096];
+    size_t size = f ? fread(data, 1, sizeof(data), f) : 0;
+    if (f)
+        fclose(f);
+    if (size != 1807)
+        return;   /* test_recorded_response() has already failed on it */
+
+    cyanrip_ctx *ctx = av_mallocz(sizeof(*ctx));
+    for (int i = 0; i < N; i++)
+        ctx->tracks[i].number = i + 1;
+    ctx->nb_tracks = ctx->nb_cd_tracks = N;
+
+    av_max_alloc(sizeof(CRIPAccuDBEntry) + 32);
+    int ret = crip_parse_accurip(ctx, data, size, N, 0x001d420f,
+                                 0x013bb370, 0xe20dfe0e);
+    av_max_alloc(INT_MAX);
+
+    check(ret == AVERROR(ENOMEM), "alloc: a failed allocation returns ENOMEM");
+    check(ctx->ar_db_status == CYANRIP_ACCUDB_ERROR,
+          "alloc: the disc reads as an error");
+    int kept = 0;
+    for (int i = 0; i < N; i++)
+        kept += ctx->tracks[i].ar_db_nb_entries ||
+                ctx->tracks[i].ar_db_entries ||
+                ctx->tracks[i].ar_db_status == CYANRIP_ACCUDB_FOUND ||
+                ctx->tracks[i].ar_db_max_confidence;
+    check(kept == 0, "alloc: no track keeps anything from part of a response");
+
+    /* The control: the same response, with room, fills more than one entry
+     * per track, so the cap above did fail part way through */
+    ret = crip_parse_accurip(ctx, data, size, N, 0x001d420f,
+                             0x013bb370, 0xe20dfe0e);
+    check(ret == 0 && ctx->tracks[0].ar_db_nb_entries > 1,
+          "alloc/control: with room, track 1 takes more than one entry");
+    for (int i = 0; i < N; i++)
+        av_freep(&ctx->tracks[i].ar_db_entries);
+    av_free(ctx);
+}
+
 /* A data track has no entry in the response: entries run over the AUDIO
  * tracks only, in order. The loop that read them walked the first
  * audio_tracks slots of the track table instead, so on a disc whose data track
@@ -402,10 +451,42 @@ static void test_a_data_track_holds_no_entry(const char *bin)
     av_free(ctx);
 }
 
+/* Review C item 1.5: HTTPS only, and a response no larger than the cap */
+static void test_https_and_the_cap(void)
+{
+    check(!strncmp(ACCURIP_DB_BASE_URL, "https://", 8),
+          "the AccurateRip database is fetched over HTTPS");
+
+    RecvCtx rctx = { 0 };
+    check(receive_data("abcd", 1, 4, &rctx) == 4 && !rctx.too_big,
+          "a response under the cap is taken");
+    /* The check comes before the allocation, so the size can be set past
+     * what was received without allocating the cap's worth */
+    rctx.size = ACCURIP_MAX_BYTES - 4;
+    check(receive_data("e", 1, 1, &rctx) == 1 && !rctx.too_big,
+          "a response inside the cap is taken");
+    check(receive_data("fghi", 1, 4, &rctx) == 0 && rctx.too_big,
+          "a response past the cap is refused, and the refusal says why");
+    check(rctx.size == ACCURIP_MAX_BYTES - 3, "a refused write adds nothing");
+    av_freep(&rctx.data);
+
+    CURL *c = curl_easy_init();
+    check(c != NULL, "a curl handle");
+    if (c) {
+        https_only(c);
+        curl_easy_setopt(c, CURLOPT_URL, "http://127.0.0.1:9/");
+        curl_easy_setopt(c, CURLOPT_NOPROXY, "*");
+        check(curl_easy_perform(c) == CURLE_UNSUPPORTED_PROTOCOL,
+              "a handle limited to HTTPS refuses http:// before connecting");
+        curl_easy_cleanup(c);
+    }
+}
+
 int main(int argc, char **argv)
 {
     test_html_marker();
     test_receive_data();
+    test_https_and_the_cap();
     if (argc < 3) {
         fprintf(stderr, "FAIL: usage: arresp_test RESPONSE.bin RIG.log\n");
         return 1;
@@ -413,6 +494,7 @@ int main(int argc, char **argv)
     test_recorded_response(argv[1], argv[2]);
     test_disc_status_says_what_the_response_held(argv[1]);
     test_a_response_of_the_wrong_size_is_an_error(argv[1]);
+    test_a_failed_allocation_keeps_nothing(argv[1]);
     test_a_data_track_holds_no_entry(argv[1]);
 
     if (failures) {

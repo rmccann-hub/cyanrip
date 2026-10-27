@@ -1139,7 +1139,7 @@
       "bom-ref": "svc:coverartarchive.org",
       "name": "Cover Art Archive",
       "endpoints": [
-        "http://coverartarchive.org/release"
+        "https://coverartarchive.org/release"
       ],
       "authenticated": false,
       "x-trust-boundary": true,
@@ -1187,7 +1187,7 @@
       "bom-ref": "svc:www.accuraterip.com",
       "name": "AccurateRip database",
       "endpoints": [
-        "http://www.accuraterip.com/accuraterip"
+        "https://www.accuraterip.com/accuraterip"
       ],
       "authenticated": false,
       "x-trust-boundary": true,
@@ -1279,5 +1279,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:6b580c68-d51c-54b6-94f3-7ac98a92dda5"
+  "serialNumber": "urn:uuid:40cde63f-d3d6-522c-abe7-953ff2df58b8"
 }

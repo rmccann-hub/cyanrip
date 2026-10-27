@@ -51,6 +51,7 @@
 #include "handshake_state.h"
 #include "cdtext.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -904,7 +905,18 @@ void crip_diag_write(void)
         return;
     }
 
-    fwrite(b.str, 1, b.len, f);
-    fclose(f);
+    /* Each checked, since a record cut short on a full disk is a lost one
+     * (review C item 1.3). Named as the open's failure is, on stderr, and,
+     * like it, without changing the exit code: docs/seam-commands.md §7, a
+     * shared document, records a record that is not written as exit 0 with a
+     * line saying why. A failing code for both is a change both sides ship. */
+    int err = 0;
+    if (fwrite(b.str, 1, b.len, f) != b.len)
+        err = errno ? errno : EIO;
+    if (fclose(f) == EOF && !err)
+        err = errno ? errno : EIO;
+    if (err)
+        fprintf(stderr, "Couldn't write diagnostics path \"%s\": %s!\n",
+                diag_path, strerror(err));
     av_bprint_finalize(&b, NULL);
 }

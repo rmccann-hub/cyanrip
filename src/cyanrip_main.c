@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <errno.h>
+#include <string.h>
 #include <time.h>
 #include <inttypes.h>
 #include <pthread.h>
@@ -2399,6 +2401,15 @@ static void record_invocation(int argc, char **argv)
     for (int i = 0; i < argc; i++) {
         if (i)
             av_bprintf(&buf, " ");
+        /* The AcoustID key is a credential, and this line goes to the log,
+         * stdout and the diagnostics record, so its value is withheld (review
+         * C item 1.4). genopt takes a value as the next argument, so that is
+         * the one replaced; an argument that only looks like the option is
+         * withheld too, which hides nothing anyone needs. */
+        if (i > 0 && !strcmp(argv[i - 1], "--acoustid-key")) {
+            av_bprintf(&buf, "[withheld]");
+            continue;
+        }
         /* Quote anything a reader could not paste back verbatim */
         if (strpbrk(argv[i], " \t\"'\\"))
             av_bprintf(&buf, "\"%s\"", argv[i]);
@@ -3990,8 +4001,9 @@ end:
     if (!ctx->settings.print_info_only)
         cyanrip_log_finish_report(ctx);
 
-    cyanrip_log_end(ctx);
-    cyanrip_cue_end(ctx);
+    /* Each names the file that lost text, and a run that lost any is not a
+     * success (review C item 1.3) */
+    const int lost_writes = cyanrip_log_end(ctx) + cyanrip_cue_end(ctx);
 
     int err_cnt = ctx->total_error_count;
     const int exit_class = ctx->exit_class;
@@ -4021,7 +4033,7 @@ end:
         return CRIP_EXIT_SIGNAL_BASE + quit_signal;
     if (exit_class)
         return exit_class;
-    return (err_cnt || fatal_abort) ? CRIP_EXIT_FAILURE : 0;
+    return (err_cnt || fatal_abort || lost_writes) ? CRIP_EXIT_FAILURE : 0;
 }
 
 /* main() is a wrapper so that the exit code reaches the diagnostics record
@@ -4073,7 +4085,22 @@ int main(int argc, char **argv)
                     "record goes to the last one: \"%s\"\n", diag_given,
                     diag_arg);
 
-    const int rc = cyanrip_run(argc, argv);
+    int rc = cyanrip_run(argc, argv);
+
+    /* stdout carries every line the log does, and is what a caller without
+     * the log reads, so a write to it that failed is a lost one too (review C
+     * item 1.3). stderr, as the diagnostics record's own failures are named. */
+    int out_err = cyanrip_log_stdout_error();
+    if (fflush(stdout) == EOF && !out_err)
+        out_err = errno ? errno : EIO;
+    if (ferror(stdout) && !out_err)
+        out_err = EIO;
+    if (out_err) {
+        fprintf(stderr, "Unable to write to stdout: %s!\n", strerror(out_err));
+        if (!rc)
+            rc = CRIP_EXIT_FAILURE;
+    }
+
     crip_diag_set_exit(rc);
     return rc;
 }

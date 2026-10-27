@@ -113,6 +113,26 @@ check(not any(i == 6 for i, _ in found),
 check(not any(NAME in k for _, k in found),
       "findings() must not write the name it found")
 
+# Review C 1.4: an AcoustID key in a log an older build wrote, bare, quoted
+# or JSON-escaped, is withheld; one already withheld is left alone
+for given, want in (
+        ("Invoked as:     cyanrip --acoustid-key AbC123 -o flac",
+         "Invoked as:     cyanrip --acoustid-key [withheld] -o flac"),
+        ('Invoked as:     cyanrip --acoustid-key "a b" -N',
+         "Invoked as:     cyanrip --acoustid-key [withheld] -N"),
+        ('  "invocation": "cyanrip --acoustid-key \\"a b\\" -o flac",',
+         '  "invocation": "cyanrip --acoustid-key [withheld] -o flac",')):
+    got, rep = redact.redact(given)
+    check(got == want and rep.keys == 1 and rep.changed()
+          and "1 AcoustID key(s)" in rep.summary(),
+          f"the key must be withheld: {given!r} -> {got!r}")
+    check([k for _, k in redact.findings(given)] == ["an AcoustID key"],
+          f"findings() must see the key in {given!r}")
+    check(redact.findings(got) == [],
+          f"findings() must not see a withheld key: {got!r}")
+done, rep = redact.redact("cyanrip --acoustid-key [withheld] -N")
+check(rep.keys == 0 and not rep.changed(), "a withheld key is not withheld again")
+
 with tempfile.TemporaryDirectory() as d:
     p = pathlib.Path(d) / "names"
     p.write_text("# a comment\n\n" + NAME + "\n")

@@ -1795,6 +1795,74 @@ def sc_art_local_name():
            "sheet.cue")
 
 
+def sc_lost_writes():
+    # Review C 1.3. A write that fails to the log, the CUE sheet, the
+    # diagnostics record or stdout is named, at column 0. The run exits 1, but
+    # for the record: docs/seam-commands.md §7, a shared document, records a
+    # record that is not written as exit 0 with a line saying why. /dev/full
+    # fails every write with ENOSPC; the log and the sheet reach it through a
+    # symlink at the path the run opens.
+    full = Path("/dev/full")
+    if not full.exists():
+        skip("lost_writes: no /dev/full here, so no write can be made to fail")
+
+    def run(name, *extra, link=None, stdout=subprocess.PIPE):
+        out = WORK / f"out_{name}"
+        out.mkdir()
+        if link:
+            (out / link).symlink_to(full)
+        r = subprocess.run(
+            [CRIP, "-d", str(WORK / "basic.cue"), "-N", "-A", "-U", "-s", "0",
+             "-P", "0", "-o", "flac", "-D", str(out), "-F", "{track}",
+             "-L", "log", "-M", "sheet", *extra],
+            stdout=stdout, stderr=subprocess.PIPE, timeout=60)
+        return out, r
+
+    for name, link, extra, code, want in (
+            ("lw_log", "log.log", (), 1,
+             'Unable to write the log "{out}/log.log"'),
+            ("lw_cue", "sheet.cue", (), 1,
+             'Unable to write the CUE sheet "{out}/sheet.cue"'),
+            ("lw_diag", None, ("--diagnostics", str(full)), 0,
+             'Couldn\'t write diagnostics path "/dev/full"')):
+        out, r = run(name, *extra, link=link)
+        text = (r.stdout + r.stderr).decode(errors="replace")
+        line = want.format(out=out) + ": No space left on device!"
+        if r.returncode != code:
+            fail(f"{name}: exited {r.returncode}, wanted {code}")
+        if not re.search(rf"(?m)^{re.escape(line)}$", text):
+            fail(f"{name}: no line {line!r}; got {text.strip()[-200:]!r}")
+
+    # stdout itself: the message goes to stderr, and the log is whole
+    with open(full, "wb") as sink:
+        out, r = run("lw_stdout", stdout=sink)
+    err = r.stderr.decode(errors="replace")
+    if r.returncode != 1:
+        fail(f"lw_stdout: exited {r.returncode}, wanted 1")
+    if not re.search(r"(?m)^Unable to write to stdout: No space left on "
+                     r"device!$", err):
+        fail(f"lw_stdout: stderr {err.strip()[-200:]!r}")
+    if "Log FUN512: " not in (out / "log.log").read_text():
+        fail("lw_stdout: the log lost its footer to a failure of stdout")
+
+
+def sc_acoustid_key_withheld():
+    # Review C 1.4. The AcoustID key is a credential; `Invoked as:` goes to
+    # the log, stdout and the diagnostics record, and none may carry it
+    key = "PROBEKEY4711"
+    out = WORK / "out_akey"
+    rip("akey", "basic.cue", "--acoustid-key", key,
+        "--diagnostics", WORK / "akey-diag.json")
+    for where, text in (("stdout", (WORK / "akey.log").read_text()),
+                        ("log", (out / "log.log").read_text()),
+                        ("record", (WORK / "akey-diag.json").read_text())):
+        if key in text:
+            fail(f"acoustid_key_withheld: the key is in the {where}")
+        if "--acoustid-key [withheld]" not in text:
+            fail(f"acoustid_key_withheld: the {where} does not say the key "
+                 f"was withheld")
+
+
 def fingerprint(name, track):
     return probe(WORK / f"out_{name}" / f"{track}.flac", "-show_entries",
                  "format_tags=acoustid_fingerprint")

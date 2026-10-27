@@ -1512,7 +1512,15 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
                     title && !strcmp(title, "Back") ? "Cover (back)" :
                                                       "Cover (front)", 0);
 
+        /* Checked: with the stream made and no packet, the muxer would wait
+         * for a picture that never comes. Named as open_output() names a
+         * clone of this packet that fails. */
         s->cover_art_pkt = av_packet_clone(art->pkt);
+        if (!s->cover_art_pkt) {
+            ret = AVERROR(ENOMEM);
+            cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
+            goto fail;
+        }
     }
 
     /* Find encoder */

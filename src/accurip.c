@@ -23,7 +23,13 @@
 #include "cyanrip_log.h"
 #include "bytestream.h"
 
-#define ACCURIP_DB_BASE_URL "http://www.accuraterip.com/accuraterip"
+#define ACCURIP_DB_BASE_URL "https://www.accuraterip.com/accuraterip"
+
+/* The most a response is read to (review C item 1.5). A dBAR file holds one
+ * entry per pressing, each 13 bytes plus 9 per track, so the largest real one
+ * is a few hundred kilobytes; without a cap the buffer grew per callback until
+ * the 60 s timeout, which bounds time and not size. */
+#define ACCURIP_MAX_BYTES (4 << 20)
 
 int crip_get_accurip_ids(cyanrip_ctx *ctx, uint32_t *id_type_1, uint32_t *id_type_2,
                          uint32_t *cddb_id)
@@ -77,12 +83,37 @@ typedef struct RecvCtx {
     cyanrip_ctx *ctx;
     uint8_t *data;
     size_t size;
+    int too_big; /* The response passed ACCURIP_MAX_BYTES and was cut off */
 } RecvCtx;
+
+/* HTTPS only, for the request and any redirect (review C item 1.5); the
+ * certificate is verified, as libcurl does unless told not to. Its string
+ * option is libcurl 7.85's, and the bitmask it replaced is deprecated from
+ * then, so a build uses the one its headers have. Same as https_only() in
+ * coverart.c. */
+static void https_only(CURL *curl_ctx)
+{
+#if LIBCURL_VERSION_NUM >= 0x075500
+    curl_easy_setopt(curl_ctx, CURLOPT_PROTOCOLS_STR, "https");
+    curl_easy_setopt(curl_ctx, CURLOPT_REDIR_PROTOCOLS_STR, "https");
+#else
+    curl_easy_setopt(curl_ctx, CURLOPT_PROTOCOLS, (long)CURLPROTO_HTTPS);
+    curl_easy_setopt(curl_ctx, CURLOPT_REDIR_PROTOCOLS, (long)CURLPROTO_HTTPS);
+#endif
+}
 
 /* Kept NUL-terminated, for the error page check */
 static size_t receive_data(void *buffer, size_t size, size_t nb, void *opaque)
 {
     RecvCtx *rctx = opaque;
+
+    /* Checked before the size is added to, so neither can wrap. Returning
+     * short makes curl stop with CURLE_WRITE_ERROR, whose own message would
+     * say a write failed, so the flag tells the caller what happened. */
+    if (size * nb > ACCURIP_MAX_BYTES - rctx->size) {
+        rctx->too_big = 1;
+        return 0;
+    }
 
     /* av_realloc() returns NULL and leaves the old block intact when it cannot
      * satisfy the request, so the result has to be taken in a temporary.
@@ -203,10 +234,22 @@ static int crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t size
             uint32_t checksum = bytestream2_get_le32(&gbc);
             uint32_t checksum_450 = bytestream2_get_le32(&gbc);
 
-            /* A temporary, so a failed realloc keeps the entries read so far */
+            /* A temporary, so the old block can be freed if the realloc fails.
+             * Then nothing read so far is kept: every track goes back to how
+             * it was before the parse, as a response of the wrong size leaves
+             * them, so no track reads as found from part of a response and
+             * none is left unsorted. The rip goes on, as after any AccurateRip
+             * failure, with the disc's status an error. */
             CRIPAccuDBEntry *grown = av_realloc(t->ar_db_entries,
                                                 sizeof(CRIPAccuDBEntry) * (t->ar_db_nb_entries + 1));
             if (!grown) {
+                for (int k = 0; k < ctx->nb_cd_tracks; k++) {
+                    cyanrip_track *u = &ctx->tracks[k];
+                    av_freep(&u->ar_db_entries);
+                    u->ar_db_nb_entries = 0;
+                    u->ar_db_max_confidence = 0;
+                    u->ar_db_status = CYANRIP_ACCUDB_DISABLED;
+                }
                 ctx->ar_db_status = CYANRIP_ACCUDB_ERROR;
                 return AVERROR(ENOMEM);
             }
@@ -295,8 +338,17 @@ int crip_fill_accurip(cyanrip_ctx *ctx)
     curl_easy_setopt(curl_ctx, CURLOPT_TIMEOUT, 60L);
     curl_easy_setopt(curl_ctx, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(curl_ctx, CURLOPT_MAXREDIRS, 8L);
+    curl_easy_setopt(curl_ctx, CURLOPT_MAXFILESIZE_LARGE,
+                     (curl_off_t)ACCURIP_MAX_BYTES);
+    https_only(curl_ctx);
 
     CURLcode res = curl_easy_perform(curl_ctx);
+    if (res != CURLE_OK && rctx.too_big) {
+        cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: the response is "
+                    "larger than %i MiB!\n", ACCURIP_MAX_BYTES >> 20);
+        ctx->ar_db_status = CYANRIP_ACCUDB_ERROR;
+        goto end;
+    }
     if (res != CURLE_OK) {
         /* Filter out the majority of 404 errors here */
         if (res == CURLE_HTTP_RETURNED_ERROR) {

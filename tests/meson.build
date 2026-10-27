@@ -63,6 +63,18 @@ test('AccurateRip response', arresp_test,
      args: [ files('fixtures/accurip-dBAR-014-001d420f-013bb370-e20dfe0e.bin'),
              files('fixtures/evidence/rig-2026-09-10-ddc1e8c/rips/secure-reread.log') ])
 
+## What a cover art fetch accepts (review C items 1.5 and 2.3): the Cover Art
+## DB over HTTPS only, an image no larger than the cap, and a URL -C gives
+## keeping its own scheme on a handle the DB used. coverart.c is included, as
+## arresp.c includes accurip.c, since no scenario reaches the network.
+coverart_net_test = executable('coverart_net_test',
+    sources: [ 'coverart_net.c' ],
+    include_directories: [ '../src' ],
+    dependencies: unit_test_deps + [ dependency('libavformat'),
+                                     dependency('libcurl') ],
+)
+test('Cover art fetch limits', coverart_net_test)
+
 ## Whether a pre-gap earns an INDEX 00. Header-only, no objects: the case it
 ## exists to get right needs a pre-gap that is signalled AND zero frames long,
 ## and no image driver produces one -- measured on a purpose-built bincue
@@ -801,6 +813,8 @@ rip_scenarios = [
     'art',
     'art_extradata',
     'art_local_name',
+    'lost_writes',
+    'acoustid_key_withheld',
     'acoustid',
     'cue_only',
     'errors',
