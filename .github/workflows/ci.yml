@@ -166,6 +166,17 @@ jobs:
         with:
           persist-credentials: false
 
+      # A merge's leftover markers, in any tracked text file (review C item
+      # 4.5). Seven '<', '>' or '|' at the start of a line, then a space or
+      # its end; seven '=' is left out, since Markdown underlines a heading
+      # with it.
+      - name: No conflict markers
+        run: |
+          if git grep -n -I -E '^(<{7}|>{7}|[|]{7})( |$)'; then
+            echo "::error::conflict markers in the tree, listed above"
+            exit 1
+          fi
+
       - name: Fetch the history, the tags and the evidence branch
         run: .github/fetch-history.sh platterpus-fork master --tags --evidence
 
