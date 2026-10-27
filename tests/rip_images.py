@@ -508,7 +508,21 @@ def sc_cli():
              "Invalid track idx for cover art: 4294967297"),
             ("-R", "4294967297", "Invalid release index 4294967297!"),
             ("-t", "4294967297=title=wrapped",
-             "Invalid track number 4294967297, list has 2 tracks!")):
+             "Invalid track number 4294967297, list has 2 tracks!"),
+            # Review C 2.2: a number is the whole value, and only a number.
+            # strtoll() without its end pointer read abc as 0 and 2junk as
+            # 2, and took those that fell in range; each is now refused as
+            # typed. One it read OUT of range was refused already and keeps
+            # its words, which seam-commands.md section 7 records: a value
+            # past long long's range as its limit, abc and =drop as 0
+            ("-P", "abc", "Invalid paranoia level abc must be between 0 and "),
+            ("-c", "2junk/3", "Invalid discnumber 2junk"),
+            ("-c", "2/3x", "Invalid totaldiscs 3x"),
+            ("-p", "1x=drop", "Invalid track idx for pregap: 1x"),
+            ("-P", "99999999999999999999",
+             "Invalid paranoia level 9223372036854775807 must be between "),
+            ("-c", "abc/3", "Invalid discnumber 0\n"),
+            ("-p", "=drop", "Invalid track idx for pregap: 0\n")):
         ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
                        flag, val)
         if ec != 64:
