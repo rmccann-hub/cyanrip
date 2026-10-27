@@ -275,6 +275,13 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
 
         size_t data_len = AV_BASE64_SIZE(art->size);
         char *data = av_mallocz(strlen(header) + data_len);
+        if (!data) {
+            cyanrip_log(ctx, 0, "Unable to get cover art \"%s\": %s!\n",
+                        type, av_err2str(AVERROR(ENOMEM)));
+            crip_free_art(art);
+            ret = AVERROR(ENOMEM);
+            goto end;
+        }
         memcpy(data, header, strlen(header));
 
         av_base64_encode(data + strlen(header), data_len, art->data, art->size);
@@ -287,7 +294,7 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
     art->source_url = av_strdup(final_url);
 
 end:
-    if (res < 0)
+    if (res != CURLE_OK)
         crip_free_art(art);
 
     return ret;

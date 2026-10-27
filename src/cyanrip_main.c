@@ -304,6 +304,8 @@ static void crip_log_library_text(cyanrip_ctx *ctx, const char *text)
 static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 {
     cyanrip_ctx *ctx = av_mallocz(sizeof(cyanrip_ctx));
+    if (!ctx)
+        return AVERROR(ENOMEM);
 
     memcpy(&ctx->settings, settings, sizeof(cyanrip_settings));
 
@@ -1903,12 +1905,14 @@ repeat_ripping:;
         cyanrip_log(ctx, 0, "\nRepeating ripping (%i out of %i matches for current checksum %08X)\n",
                     matches, ctx->settings.ripping_retries, shown_crc);
 
-        last_checksums = av_realloc(last_checksums,
-                                    (nb_last_checksums + 1)*sizeof(*last_checksums));
-        if (!last_checksums) {
+        /* A temporary, so a failed realloc keeps the list to free at the end */
+        uint32_t *grown = av_realloc(last_checksums,
+                                     (nb_last_checksums + 1)*sizeof(*last_checksums));
+        if (!grown) {
             ret = AVERROR(ENOMEM);
             goto end;
         }
+        last_checksums = grown;
 
         last_checksums[nb_last_checksums] = checksum_ctx.eac_crc;
         nb_last_checksums++;
@@ -3341,6 +3345,12 @@ static int cyanrip_run(int argc, char **argv)
         char *esc = crip_escape_bare_quotes(album_metadata_ptr);
         char *copy = append_missing_keys(esc, "album=", "album_artist=");
         av_free(esc);
+        if (!copy) {
+            cyanrip_log(ctx, 0, "Error reading album tags: %s\n",
+                        av_err2str(AVERROR(ENOMEM)));
+            ctx->total_error_count++;
+            goto end;
+        }
 
         /* Parse */
         int err = av_dict_parse_string(&ctx->meta, copy, "=", ":", 0);
@@ -3528,6 +3538,12 @@ static int cyanrip_run(int argc, char **argv)
         char *esc = crip_escape_bare_quotes(end);
         char *copy = append_missing_keys(esc, "title=", "artist=");
         av_free(esc);
+        if (!copy) {
+            cyanrip_log(ctx, 0, "Error reading track tags: %s\n",
+                        av_err2str(AVERROR(ENOMEM)));
+            ctx->total_error_count++;
+            goto end;
+        }
 
         /* Parse */
         int err = av_dict_parse_string(&ctx->tracks[track_idx].meta,

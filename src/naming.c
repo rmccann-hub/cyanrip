@@ -48,8 +48,12 @@
  * which leaves every already-correct input byte-identical. */
 char *crip_escape_bare_quotes(const char *src)
 {
+    if (!src)
+        return NULL;
     size_t n = strlen(src);
     char *out = av_mallocz(2 * n + 1);   /* every byte could need a backslash */
+    if (!out)
+        return NULL;
     size_t o = 0;
 
     for (size_t i = 0; i < n; i++) {
@@ -68,8 +72,12 @@ char *crip_escape_bare_quotes(const char *src)
 
 char *append_missing_keys(const char *src, const char *key1, const char *key2)
 {
+    if (!src)
+        return NULL;
     /* Copy string with enough space to append extra */
     char *copy = av_mallocz(strlen(src) + strlen(key1) + strlen(key2) + 1);
+    if (!copy)
+        return NULL;
     memcpy(copy, src, strlen(src));
 
     int add_key1_offset = -1;
