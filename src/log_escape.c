@@ -159,6 +159,12 @@ static void put_padded(AVBPrint *b, const char *body, size_t len, int width,
         av_bprint_chars(b, ' ', pad);
 }
 
+/* The one place a format is built at run time: each conversion is re-made
+ * from the caller's spec, whose own arguments -Wformat checks at the call
+ * through av_printf_format(). -Wformat-nonliteral is off here alone
+ * (review C item 3.9). */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
 void crip_vbprintf_escaped(AVBPrint *b, const char *format, va_list ap)
 {
     va_list args;
@@ -342,3 +348,4 @@ void crip_vbprintf_escaped(AVBPrint *b, const char *format, va_list ap)
 
     va_end(args);
 }
+#pragma GCC diagnostic pop

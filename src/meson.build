@@ -15,6 +15,10 @@ build_opts = [
     # number, or adjacent process memory, printed into a file nobody can
     # re-take a measurement for.
     '-Werror=format', '-Werror=format-extra-args',
+
+    # The rest of -Wformat's checks: a non-literal format, %n, and a format
+    # with no arguments to check (review C item 3.9)
+    '-Wformat=2',
 ]
 
 #fix for MinGW32
@@ -192,7 +196,7 @@ if cc.links('int wmain() { return 0; }', args: '-municode')
      build_opts += '-municode'
 endif
 
-add_global_arguments(build_opts, language: 'c')
+add_project_arguments(build_opts, language: 'c')
 
 cyanrip_exe = executable('cyanrip',
     install: true,
