@@ -2499,7 +2499,10 @@ static void crip_cdio_log_handler(cdio_log_level_t level, const char message[])
 }
 
 /* strtoll()'s reading of s, which is how every number option read its value,
- * and in *whole whether s is a whole decimal number and nothing else.
+ * and in *whole whether s is a whole decimal number and nothing else: its
+ * digits from the first character, after a '-' at most. strtoll() also skips
+ * leading white space and takes a '+', which a caller typing " 2" or "+2"
+ * did not mean as a number either.
  *
  * With no end pointer, "abc" read as 0 and "2junk" as 2, so -P abc ran at
  * paranoia none and -c 2junk/3 tagged disc 2 (review C item 2.2). Each caller
@@ -2514,7 +2517,8 @@ static long long crip_parse_ll(const char *s, int *whole)
     char *end = NULL;
     errno = 0;
     long long v = strtoll(s, &end, 10);
-    *whole = end != s && *end == '\0' && errno != ERANGE;
+    int digits_first = av_isdigit(s[0]) || (s[0] == '-' && av_isdigit(s[1]));
+    *whole = digits_first && end != s && *end == '\0' && errno != ERANGE;
     return v;
 }
 
@@ -2952,6 +2956,15 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Invalid release index %lli!\n", wide);
             return CRIP_EXIT_USAGE;
         } else {
+            /* A number and a space read as the number, so -R "2 x" was
+             * release 2; " 2" and "+2" were too. What an index's old reading
+             * refused keeps its words above, as with -P (review C 2.2). */
+            int whole;
+            crip_parse_ll(release, &whole);
+            if (!whole) {
+                cyanrip_log(ctx, 0, "Invalid release index %s!\n", release);
+                return CRIP_EXIT_USAGE;
+            }
             mb_release_idx = wide;
         }
     }
@@ -3597,6 +3610,16 @@ static int cyanrip_run(int argc, char **argv)
         if (track_idx >= ctx->nb_tracks) {
             cyanrip_log(ctx, 0, "Invalid track number %lli, list has %i tracks!\n",
                         u_nb, ctx->nb_tracks);
+            ctx->total_error_count++;
+            ctx->exit_class = CRIP_EXIT_USAGE;
+            goto end;
+        }
+        /* strtoll() skipped a leading space or '+', so " 2=" and "+2=" were
+         * track 2; refused as typed, after the reading above, as -P is */
+        if (!av_isdigit(track_metadata_ptr[i][0])) {
+            cyanrip_log(ctx, 0, "Invalid track number %.*s, list has %i tracks!\n",
+                        (int)(end - track_metadata_ptr[i]), track_metadata_ptr[i],
+                        ctx->nb_tracks);
             ctx->total_error_count++;
             ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;

@@ -522,7 +522,22 @@ def sc_cli():
             ("-P", "99999999999999999999",
              "Invalid paranoia level 9223372036854775807 must be between "),
             ("-c", "abc/3", "Invalid discnumber 0\n"),
-            ("-p", "=drop", "Invalid track idx for pregap: 0\n")):
+            ("-p", "=drop", "Invalid track idx for pregap: 0\n"),
+            # strtoll() also skips a leading space and takes a '+', and -R
+            # read a number and a space as the number: each in range, and
+            # each refused as typed
+            ("-P", " 2", "Invalid paranoia level  2 must be between 0 and "),
+            ("-P", "+2", "Invalid paranoia level +2 must be between 0 and "),
+            ("-c", "+1/2", "Invalid discnumber +1\n"),
+            ("-c", "1/ 2", "Invalid totaldiscs  2\n"),
+            ("-p", " 1=drop", "Invalid track idx for pregap:  1\n"),
+            ("-R", "2 x", "Invalid release index 2 x!"),
+            ("-R", " 2", "Invalid release index  2!"),
+            ("-R", "+2", "Invalid release index +2!"),
+            ("-R", "0 x", "Invalid release index 0!"),
+            ("-t", "+2=title=plus", "Invalid track number +2, list has 2 tracks!"),
+            ("-t", " 2=title=space",
+             "Invalid track number  2, list has 2 tracks!")):
         ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
                        flag, val)
         if ec != 64:
@@ -538,7 +553,8 @@ def sc_cli():
     if ec != 0 or not re.search(r"^Disc number:\s+2147483647$", out, re.M):
         fail(f"cli: -c 2147483647/2147483647 was not taken as given "
              f"(exit {ec})")
-    for flag, val in (("-P", "3"), ("-t", "2=title=last"), ("-p", "2=drop")):
+    for flag, val in (("-P", "3"), ("-t", "2=title=last"), ("-p", "2=drop"),
+                      ("-P", "0"), ("-c", "1/2")):
         ec, _ = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
                      flag, val)
         if ec != 0:
