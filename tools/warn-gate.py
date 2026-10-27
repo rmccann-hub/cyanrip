@@ -113,7 +113,9 @@ def partition(entry, found):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--build", default="build")
+    ap.add_argument("--build", default="build",
+                    help="the build directory, relative to the repository or "
+                         "absolute; meson test passes its own")
     ap.add_argument("--extra", action="store_true",
                     help="report the -Wextra set; informational, never gates")
     args = ap.parse_args()

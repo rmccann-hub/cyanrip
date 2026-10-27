@@ -313,8 +313,12 @@ python = import('python').find_installation()
 ## and needs its own change. See the tool's docstring for what is excluded and
 ## for the -fdiagnostics-color trap that made an earlier attempt report a false
 ## zero.
+## The build directory is the one meson is testing, named to the tool: it read
+## a fixed build/, so `meson test -C` anywhere else failed as unconfigured or
+## gated a stale build/ (review C item 3.3).
 test('Compiler diagnostics', python,
-    args: [ files('../tools/warn-gate.py') ],
+    args: [ files('../tools/warn-gate.py'),
+            '--build', meson.project_build_root() ],
     timeout: 300,
 )
 ## Which of those diagnostics gate: the ones located in this tree. A flag of
