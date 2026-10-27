@@ -1757,6 +1757,44 @@ def sc_art():
                 fail(f"art: {f}.flac picture type {ptype!r}")
 
 
+def art_hashes(path):
+    """A cover's packet hash, extradata size and extradata hash, in that
+    order: what a copy of it must keep."""
+    return probe(path, "-select_streams", "v", "-show_data_hash", "md5",
+                 "-show_entries",
+                 "packet=data_hash:stream=extradata_size,extradata_hash"
+                 ).splitlines()
+
+
+def sc_art_extradata():
+    # Review C 1.1. A cover whose codec parameters carry extradata: the art,
+    # the file it is saved to and each track's muxer must each own a copy.
+    # Measured 2026-10-27 by reverting each copy alone: the tracks' fails
+    # this in a plain build, the other two only in the sanitizer rows
+    src = FIX / "art.avif"
+    rip("artx", "basic.cue", "-C", f"Front={src}")
+    expect("artx", "1.flac:4", "2.flac:4", "Front.avif", "log.log",
+           "sheet.cue")
+    if not FFPROBE:
+        return
+
+    want = art_hashes(src)
+    if len(want) != 3 or want[1] in ("", "0"):
+        fail(f"artx: the fixture has no extradata to keep: {want!r}")
+    have = art_hashes(WORK / "out_artx" / "Front.avif")
+    if have != want:
+        fail(f"artx: saved cover {have!r} != source {want!r}")
+
+
+def sc_art_local_name():
+    # Review C 2.3. A local file whose name begins with "http" is a file: a
+    # URL is recognised by its whole scheme, "://" included
+    shutil.copy(FIX / "art.png", WORK / "httpd.png")
+    rip("arth", "basic.cue", "-C", "Front=httpd.png", cwd=WORK)
+    expect("arth", "1.flac:4", "2.flac:4", "Front.png", "log.log",
+           "sheet.cue")
+
+
 def fingerprint(name, track):
     return probe(WORK / f"out_{name}" / f"{track}.flac", "-show_entries",
                  "format_tags=acoustid_fingerprint")

@@ -203,8 +203,14 @@ static int crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t size
             uint32_t checksum = bytestream2_get_le32(&gbc);
             uint32_t checksum_450 = bytestream2_get_le32(&gbc);
 
-            t->ar_db_entries = av_realloc(t->ar_db_entries,
-                                          sizeof(CRIPAccuDBEntry) * (t->ar_db_nb_entries + 1));
+            /* A temporary, so a failed realloc keeps the entries read so far */
+            CRIPAccuDBEntry *grown = av_realloc(t->ar_db_entries,
+                                                sizeof(CRIPAccuDBEntry) * (t->ar_db_nb_entries + 1));
+            if (!grown) {
+                ctx->ar_db_status = CYANRIP_ACCUDB_ERROR;
+                return AVERROR(ENOMEM);
+            }
+            t->ar_db_entries = grown;
 
             t->ar_db_status = CYANRIP_ACCUDB_FOUND;
             t->ar_db_entries[t->ar_db_nb_entries].confidence = confidence;
@@ -352,9 +358,15 @@ int crip_fill_accurip(cyanrip_ctx *ctx)
         }
     }
 
-    if (crip_parse_accurip(ctx, rctx.data, rctx.size, audio_tracks,
-                           id_type_1, id_type_2, cddb_id) < 0) {
+    /* Only a size the entries cannot divide is a data error; a failed
+     * allocation says so */
+    int perr = crip_parse_accurip(ctx, rctx.data, rctx.size, audio_tracks,
+                                  id_type_1, id_type_2, cddb_id);
+    if (perr == AVERROR_INVALIDDATA) {
         cyanrip_log(ctx, 0, "AccuRIP DB data error, got unexpected number of bytes!\n");
+        goto end;
+    } else if (perr < 0) {
+        cyanrip_log(ctx, 0, "Unable to read AccuRIP DB data: %s!\n", av_err2str(perr));
         goto end;
     }
 

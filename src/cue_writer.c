@@ -103,9 +103,11 @@ void cyanrip_cue_start(cyanrip_ctx *ctx)
             for (int Z = 0; Z < ctx->settings.outputs_num; Z++) {
                 char *tmp = av_strdup(d->key);
                 char *val = cue_str(ctx, d->value);
-                for (int i = 0; tmp[i]; i++)
-                    tmp[i] = av_toupper(tmp[i]);
-                fprintf(ctx->cuefile[Z], "REM %s \"%s\"\n", tmp, val);
+                if (tmp && val) {
+                    for (int i = 0; tmp[i]; i++)
+                        tmp[i] = av_toupper(tmp[i]);
+                    fprintf(ctx->cuefile[Z], "REM %s \"%s\"\n", tmp, val);
+                }
                 av_free(val);
                 av_free(tmp);
             }

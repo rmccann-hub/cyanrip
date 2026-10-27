@@ -59,7 +59,13 @@ int crip_save_art(cyanrip_ctx *ctx, CRIPArt *art, const cyanrip_out_fmt *fmt)
         goto fail;
     }
 
-    memcpy(st->codecpar, art->params, sizeof(AVCodecParameters));
+    /* A copy the stream owns: the art keeps its own, and the muxer frees this
+     * one's extradata with the context */
+    ret = avcodec_parameters_copy(st->codecpar, art->params);
+    if (ret < 0) {
+        cyanrip_log(ctx, 0, "Unable to copy cover art parameters: %s!\n", av_err2str(ret));
+        goto fail;
+    }
     st->time_base = (AVRational){ 1, 25 };
     av_dict_copy(&st->metadata, art->meta, 0);
     av_dict_copy(&avf->metadata, art->meta, 0);
@@ -84,11 +90,18 @@ int crip_save_art(cyanrip_ctx *ctx, CRIPArt *art, const cyanrip_out_fmt *fmt)
     }
 
     AVPacket *pkt = av_packet_clone(art->pkt);
+    if (!pkt) {
+        ret = AVERROR(ENOMEM);
+        cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
+        goto fail;
+    }
     pkt->stream_index = st->index;
 
+    /* The trailer flushes the interleaving queue, so one write is all, and
+     * its result is the one reported */
     ret = av_interleaved_write_frame(avf, pkt);
     av_packet_free(&pkt);
-    if ((ret = av_interleaved_write_frame(avf, pkt)) < 0) {
+    if (ret < 0) {
         cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
         goto fail;
     }
@@ -112,7 +125,7 @@ fail:
 void crip_free_art(CRIPArt *art)
 {
     av_packet_free(&art->pkt);
-    av_freep(&art->params);
+    avcodec_parameters_free(&art->params);
 
     av_freep(&art->data);
     art->size = 0;
@@ -262,6 +275,13 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
 
         size_t data_len = AV_BASE64_SIZE(art->size);
         char *data = av_mallocz(strlen(header) + data_len);
+        if (!data) {
+            cyanrip_log(ctx, 0, "Unable to get cover art \"%s\": %s!\n",
+                        type, av_err2str(AVERROR(ENOMEM)));
+            crip_free_art(art);
+            ret = AVERROR(ENOMEM);
+            goto end;
+        }
         memcpy(data, header, strlen(header));
 
         av_base64_encode(data + strlen(header), data_len, art->data, art->size);
@@ -274,7 +294,7 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
     art->source_url = av_strdup(final_url);
 
 end:
-    if (res < 0)
+    if (res != CURLE_OK)
         crip_free_art(art);
 
     return ret;
@@ -299,11 +319,21 @@ static int demux_image(cyanrip_ctx *ctx, CRIPArt *art, int info_only)
         goto end;
     }
 
-    art->params = av_calloc(1, sizeof(AVCodecParameters));
-    if (!art->params)
+    /* A deep copy: the demuxer's own parameters, extradata included, are
+     * freed with it below. sizeof(AVCodecParameters) is not part of FFmpeg's
+     * ABI, so only its functions allocate, copy and free one. */
+    avcodec_parameters_free(&art->params);
+    art->params = avcodec_parameters_alloc();
+    if (!art->params) {
+        ret = AVERROR(ENOMEM);
         goto end;
+    }
 
-    memcpy(art->params, avf->streams[0]->codecpar, sizeof(AVCodecParameters));
+    ret = avcodec_parameters_copy(art->params, avf->streams[0]->codecpar);
+    if (ret < 0) {
+        cyanrip_log(ctx, 0, "Unable to copy cover image parameters: %s!\n", av_err2str(ret));
+        goto end;
+    }
 
     /* Output extension guesswork */
     av_freep(&art->extension);
@@ -359,14 +389,16 @@ end:
 
 static int string_is_url(const char *src)
 {
-    return !strncmp(src, "http://", 4)   ||
-           !strncmp(src, "https://", 4)  ||
-           !strncmp(src, "ftp://", 4)    ||
-           !strncmp(src, "ftps://", 4)   ||
-           !strncmp(src, "sftp://", 4)   ||
-           !strncmp(src, "tftp://", 4)   ||
-           !strncmp(src, "gopher://", 4) ||
-           !strncmp(src, "telnet://", 4);
+    /* Each scheme's whole prefix, "://" included: a local file whose name
+     * merely begins with "http" is a file */
+    static const char *const schemes[] = {
+        "http://", "https://", "ftp://", "ftps://", "sftp://", "tftp://",
+        "gopher://", "telnet://",
+    };
+    for (int i = 0; i < FF_ARRAY_ELEMS(schemes); i++)
+        if (!strncmp(src, schemes[i], strlen(schemes[i])))
+            return 1;
+    return 0;
 }
 
 int crip_fill_coverart(cyanrip_ctx *ctx, int info_only)
@@ -397,7 +429,12 @@ int crip_fill_coverart(cyanrip_ctx *ctx, int info_only)
             cyanrip_log(ctx, 0, "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!\n");
         } else if (!ctx->settings.disable_coverart_db) {
             int has_err = 0;
-            if (!have_front) {
+            /* The room checked before each write: -C takes up to 31 album
+             * covers, so a fetched front can take the last slot */
+            const int room = FF_ARRAY_ELEMS(ctx->cover_arts);
+            if (!have_front && ctx->nb_cover_arts >= room) {
+                cyanrip_log(ctx, 0, "Cover Art DB's front cover not fetched: a rip holds at most %i cover arts!\n", room);
+            } else if (!have_front) {
                 static const char *cover_ids[] = { "front", "front-250", "front-500", "front-1200" };
                 has_err = fetch_image(ctx, curl_ctx, &ctx->cover_arts[ctx->nb_cover_arts], release_id, cover_ids[ctx->settings.coverart_lookup_size], info_only, NULL);
                 if (has_err > 0) {
@@ -407,7 +444,9 @@ int crip_fill_coverart(cyanrip_ctx *ctx, int info_only)
                     ctx->nb_cover_arts++;
                 }
             }
-            if (!have_back && (has_err > 0)) {
+            if (!have_back && (has_err > 0) && ctx->nb_cover_arts >= room) {
+                cyanrip_log(ctx, 0, "Cover Art DB's back cover not fetched: a rip holds at most %i cover arts!\n", room);
+            } else if (!have_back && (has_err > 0)) {
                 static const char *cover_ids[] = { "back", "back-250", "back-500", "back-1200" };
                 has_err = fetch_image(ctx, curl_ctx, &ctx->cover_arts[ctx->nb_cover_arts], release_id, cover_ids[ctx->settings.coverart_lookup_size], info_only, NULL);
                 if (has_err > 0) {

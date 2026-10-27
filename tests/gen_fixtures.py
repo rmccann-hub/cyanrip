@@ -176,6 +176,12 @@ def main():
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi",
                     "-i", "color=red:size=8x8", "-frames:v", "1",
                     str(FIXTURES / "art.png")], check=True)
+    # A cover whose codec parameters carry extradata (AV1's configuration
+    # record), which PNG and JPEG do not
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi",
+                    "-i", "color=red:size=8x8", "-frames:v", "1",
+                    "-c:v", "libaom-av1", "-still-picture", "1",
+                    str(FIXTURES / "art.avif")], check=True)
     print("fixtures written to", FIXTURES)
 
 

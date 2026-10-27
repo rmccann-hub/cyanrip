@@ -1278,12 +1278,18 @@ static int open_output(cyanrip_ctx *ctx, cyanrip_enc_ctx *s)
     /* Mux cover image */
     if (s->cover_art_pkt) {
         AVPacket *pkt = av_packet_clone(s->cover_art_pkt);
-        pkt->stream_index = s->st_img->index;
-        if ((ret = av_interleaved_write_frame(s->avf, pkt)) < 0) {
+        if (!pkt) {
+            ret = AVERROR(ENOMEM);
             cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
             goto fail;
         }
+        pkt->stream_index = s->st_img->index;
+        ret = av_interleaved_write_frame(s->avf, pkt);
         av_packet_free(&pkt);
+        if (ret < 0) {
+            cyanrip_log(ctx, 0, "Error writing picture packet: %s!\n", av_err2str(ret));
+            goto fail;
+        }
     }
 
 fail:
@@ -1488,7 +1494,13 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
             ret = AVERROR(ENOMEM);
             goto fail;
         }
-        memcpy(s->st_img->codecpar, art->params, sizeof(AVCodecParameters));
+        /* A copy this stream owns, freed with the muxer's context; the art
+         * keeps its own for every other output */
+        ret = avcodec_parameters_copy(s->st_img->codecpar, art->params);
+        if (ret < 0) {
+            cyanrip_log(ctx, 0, "Unable to copy cover art parameters: %s!\n", av_err2str(ret));
+            goto fail;
+        }
         s->st_img->disposition |= AV_DISPOSITION_ATTACHED_PIC;
         s->st_img->time_base = (AVRational){ 1, 25 };
         av_dict_copy(&s->st_img->metadata, art->meta, 0);

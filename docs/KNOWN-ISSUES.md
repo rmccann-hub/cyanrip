@@ -343,6 +343,25 @@ at a time, and they name the `-d` path and the drive's INQUIRY strings, so a
 newline in either still starts a line there. The escape's form is proposed to
 Platterpus in our round 36 lap 12 S9 and ships only once they accept.
 
+### `Embedded cover art:` names a cover the muxer dropped
+
+**Found 2026-10-27 while testing review C item 1.1.** A rip with an AV1 cover
+(`tests/fixtures/art.avif`) and `-o flac` logs, for each track,
+`Embedded cover art:` and `Front: 8x8 Alliance for Open Media AV1`, and saves
+`Front.avif`, but `ffprobe` finds no picture in either FLAC. FFmpeg 6.1.1's
+FLAC muxer drops an AV1 picture: it says `No mimetype is known for stream 1,
+cannot write an attached picture.` and writes the file without it, measured
+with `ffmpeg` alone, outside cyanrip. The log line is printed from what was asked for, not from
+what the muxer wrote. Upstream prints it the same way
+(`src/cyanrip_log.c:233` at `7dbe56a`).
+
+**What it costs**: a reader of the log believes the files carry a cover they
+do not. A PNG cover is embedded; the suite's `art` checks it.
+
+**Not fixed**: the line is in the contract's P2, so its fix is proposed in a
+lap first. Two shapes are open: refuse a cover the output's muxer cannot embed
+before the rip, or print what was written, read back from the muxer.
+
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
