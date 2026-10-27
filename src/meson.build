@@ -22,6 +22,31 @@ if host_machine.system() == 'windows' and cc.sizeof('void*') == 4
   build_opts += '-D__MINGW_USE_VC2005_COMPAT'
 endif
 
+# Hardening, asked for here rather than left to the compiler's vendor:
+# Ubuntu's GCC supplies these, MinGW's and macOS's Clang do not (review C item
+# 3.5; the set is the coding skill's c-build module at claude-code-skills
+# 951bf00). Each must link, not only compile: a static MinGW link can lack
+# __stack_chk_fail. FORTIFY needs optimisation, sanitizers do not support it,
+# and the Windows build sets it to 0 itself (.github/mingw-build.sh); -U first,
+# so a vendor's own level is replaced rather than redefined.
+hardening = [ '-fstack-protector-strong', '-fstack-clash-protection',
+              '-fcf-protection=full' ]
+if get_option('b_sanitize') == 'none' and \
+   get_option('optimization') not in [ '0', 'plain' ] and \
+   host_machine.system() != 'windows'
+  hardening += [ '-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3' ]
+endif
+foreach flag : hardening
+  if cc.links('int main(int c, char **v) { char b[64]; b[c & 63] = 0; return v[0][0] + b[1]; }',
+              args: flag.split(), name: flag)
+    build_opts += flag.split()
+  endif
+endforeach
+add_project_link_arguments(
+    cc.get_supported_link_arguments('-Wl,-z,relro', '-Wl,-z,now',
+                                    '-Wl,-z,noexecstack'),
+    language: 'c')
+
 static_build = get_option('default_library') == 'static'
 
 # Required dependencies
