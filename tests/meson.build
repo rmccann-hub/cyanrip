@@ -757,6 +757,9 @@ test('Windows build script stops where it fails', python, args: [ files('mingw_b
 ## config locked: it says it excluded the evidence branch only when git wrote
 ## the exclusion (review C item 4.7).
 test('Session hook says only what it did', python, args: [ files('session_hook.py') ])
+## ruff's Pyflakes rules over tools/ and tests/ (review C item 4.3); skipped
+## where ruff is not installed, except in CI's linux (released) row.
+test('Python lint', python, args: [ files('python_lint.py') ], timeout: 300)
 ## tools/tag-release-check.py decides every tag the tag workflow creates, on a
 ## repository this builds: on platterpus-fork, named by the manifest at that
 ## commit, ordered by release_seq, never moved. The workflow itself cannot be

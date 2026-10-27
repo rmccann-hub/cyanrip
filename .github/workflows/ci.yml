@@ -109,7 +109,18 @@ jobs:
           uvx --python 3.11 --from "meson==$floor" meson setup build-floor
           ninja -C build-floor
 
+      # tests/python_lint.py runs ruff's Pyflakes rules (review C item 4.3)
+      # and skips where ruff is missing, so this row installs it, pinned, and
+      # sets CYANRIP_LINT_REQUIRED so a missing ruff fails rather than skips.
+      - name: Install ruff for the Python lint
+        if: matrix.name == 'released'
+        run: |
+          uv tool install ruff==0.15.8
+          uv tool dir --bin >> "$GITHUB_PATH"
+
       - name: Test
+        env:
+          CYANRIP_LINT_REQUIRED: ${{ matrix.name == 'released' && '1' || '' }}
         run: meson test -C build --print-errorlogs
 
       # Meson prints a test's output only when it fails, so a Settled facts

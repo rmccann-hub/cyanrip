@@ -42,7 +42,6 @@ Usage:
 
 import argparse
 import ast
-import hashlib
 import json
 import pathlib
 import re
@@ -136,6 +135,8 @@ PROGRAMS = {
              "script runs, as MSYS2 has",
     "sh": "runs the session-start hook on scratch repositories, as Claude "
           "Code runs it",
+    "ruff": "the Python lint gate: Pyflakes's rules over tools/ and tests/, "
+            "pinned in CI",
 }
 
 # Every http(s) literal in src/, keyed by host. The KEYS must equal what
