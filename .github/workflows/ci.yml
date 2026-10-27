@@ -88,6 +88,25 @@ jobs:
           meson setup build $OPTS
           ninja -C build
 
+      # meson.build's meson_version is the oldest Meson that configures and
+      # builds this tree, checked here rather than stated (review C item 3.1:
+      # it said 0.53 and the build used 0.55, 0.56 and 0.62). The version is
+      # read from meson.build, so moving the floor moves the check. Meson 0.62's
+      # python module needs distutils, which Python 3.12 removed, so it runs
+      # under uv's Python 3.11. One row is enough: the floor is about Meson.
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        if: matrix.name == 'released'
+        with:
+          version: "0.13.5"
+
+      - name: Build with the oldest Meson meson.build allows
+        if: matrix.name == 'released'
+        run: |
+          floor=$(sed -n "s/^ *meson_version: '>=\(.*\)',$/\1/p" meson.build)
+          test -n "$floor" || { echo "::error::no meson_version in meson.build"; exit 1; }
+          uvx --python 3.11 --from "meson==$floor" meson setup build-floor
+          ninja -C build-floor
+
       - name: Test
         run: meson test -C build --print-errorlogs
 

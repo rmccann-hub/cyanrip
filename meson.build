@@ -19,7 +19,7 @@ project('cyanrip', 'c',
     # Nothing here claims to be a release: `declare_released` defaults false and
     # the Handshake: line says so in every log this build writes.
     version: '0.9.4-rc3+platterpus.27',
-    meson_version: '>=0.53.0',
+    meson_version: '>=0.62.0',
 )
 
 conf = configuration_data()
