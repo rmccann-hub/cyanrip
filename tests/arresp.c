@@ -402,10 +402,42 @@ static void test_a_data_track_holds_no_entry(const char *bin)
     av_free(ctx);
 }
 
+/* Review C item 1.5: HTTPS only, and a response no larger than the cap */
+static void test_https_and_the_cap(void)
+{
+    check(!strncmp(ACCURIP_DB_BASE_URL, "https://", 8),
+          "the AccurateRip database is fetched over HTTPS");
+
+    RecvCtx rctx = { 0 };
+    check(receive_data("abcd", 1, 4, &rctx) == 4 && !rctx.too_big,
+          "a response under the cap is taken");
+    /* The check comes before the allocation, so the size can be set past
+     * what was received without allocating the cap's worth */
+    rctx.size = ACCURIP_MAX_BYTES - 4;
+    check(receive_data("e", 1, 1, &rctx) == 1 && !rctx.too_big,
+          "a response inside the cap is taken");
+    check(receive_data("fghi", 1, 4, &rctx) == 0 && rctx.too_big,
+          "a response past the cap is refused, and the refusal says why");
+    check(rctx.size == ACCURIP_MAX_BYTES - 3, "a refused write adds nothing");
+    av_freep(&rctx.data);
+
+    CURL *c = curl_easy_init();
+    check(c != NULL, "a curl handle");
+    if (c) {
+        https_only(c);
+        curl_easy_setopt(c, CURLOPT_URL, "http://127.0.0.1:9/");
+        curl_easy_setopt(c, CURLOPT_NOPROXY, "*");
+        check(curl_easy_perform(c) == CURLE_UNSUPPORTED_PROTOCOL,
+              "a handle limited to HTTPS refuses http:// before connecting");
+        curl_easy_cleanup(c);
+    }
+}
+
 int main(int argc, char **argv)
 {
     test_html_marker();
     test_receive_data();
+    test_https_and_the_cap();
     if (argc < 3) {
         fprintf(stderr, "FAIL: usage: arresp_test RESPONSE.bin RIG.log\n");
         return 1;

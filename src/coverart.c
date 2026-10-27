@@ -24,7 +24,13 @@
 #include "cyanrip_log.h"
 #include "utils.h"
 
-#define COVERART_DB_URL_BASE "http://coverartarchive.org/release"
+#define COVERART_DB_URL_BASE "https://coverartarchive.org/release"
+
+/* The most an image is read to (review C item 1.5). The Cover Art Archive's
+ * unsized originals are scans, the largest some tens of megabytes; without a
+ * cap the buffer grew per callback until the 60 s timeout, which bounds time
+ * and not size. */
+#define COVERART_MAX_BYTES (64 << 20)
 
 int crip_save_art(cyanrip_ctx *ctx, CRIPArt *art, const cyanrip_out_fmt *fmt)
 {
@@ -136,9 +142,36 @@ void crip_free_art(CRIPArt *art)
     av_dict_free(&art->meta);
 }
 
+typedef struct ImageRecv {
+    CRIPArt *art;
+    int too_big; /* The image passed COVERART_MAX_BYTES and was cut off */
+} ImageRecv;
+
+/* HTTPS only, for the request and any redirect (review C item 1.5); the
+ * certificate is verified, as libcurl does unless told not to. Same as
+ * https_only() in accurip.c, which says why there are two options. */
+static void https_only(CURL *curl_ctx)
+{
+#if LIBCURL_VERSION_NUM >= 0x075500
+    curl_easy_setopt(curl_ctx, CURLOPT_PROTOCOLS_STR, "https");
+    curl_easy_setopt(curl_ctx, CURLOPT_REDIR_PROTOCOLS_STR, "https");
+#else
+    curl_easy_setopt(curl_ctx, CURLOPT_PROTOCOLS, (long)CURLPROTO_HTTPS);
+    curl_easy_setopt(curl_ctx, CURLOPT_REDIR_PROTOCOLS, (long)CURLPROTO_HTTPS);
+#endif
+}
+
 static size_t receive_image(void *buffer, size_t size, size_t nb, void *opaque)
 {
-    CRIPArt *art = opaque;
+    ImageRecv *recv = opaque;
+    CRIPArt *art = recv->art;
+
+    /* Checked before the size is added to, so neither can wrap; the flag
+     * says why curl stopped, since its own message would name a write */
+    if (size * nb > COVERART_MAX_BYTES - art->size) {
+        recv->too_big = 1;
+        return 0;
+    }
 
     uint8_t *new_data = av_realloc(art->data, art->size + (size * nb));
     if (!new_data)
@@ -158,6 +191,12 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
 {
     int ret;
     char errbuf[CURL_ERROR_SIZE];
+    ImageRecv recv = { .art = art };
+
+    /* One handle serves the Cover Art DB and the URLs -C gives, so each fetch
+     * starts from libcurl's defaults: the DB's HTTPS-only setting must not
+     * carry over to a URL whose scheme its caller chose */
+    curl_easy_reset(curl_ctx);
 
     char temp[4096];
     if (!own_url) {
@@ -173,7 +212,11 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
     curl_easy_setopt(curl_ctx, CURLOPT_USERAGENT, user_agent);
 
     curl_easy_setopt(curl_ctx, CURLOPT_WRITEFUNCTION, receive_image);
-    curl_easy_setopt(curl_ctx, CURLOPT_WRITEDATA, art);
+    curl_easy_setopt(curl_ctx, CURLOPT_WRITEDATA, &recv);
+    curl_easy_setopt(curl_ctx, CURLOPT_MAXFILESIZE_LARGE,
+                     (curl_off_t)COVERART_MAX_BYTES);
+    if (!own_url)
+        https_only(curl_ctx);
 
     curl_easy_setopt(curl_ctx, CURLOPT_ERRORBUFFER, errbuf);
     curl_easy_setopt(curl_ctx, CURLOPT_FAILONERROR, 1L); /* Explode on errors */
@@ -207,6 +250,12 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
     }
 
     CURLcode res = curl_easy_perform(curl_ctx);
+    if (res != CURLE_OK && recv.too_big) {
+        cyanrip_log(ctx, 0, "Unable to get cover art \"%s\": the image is "
+                    "larger than %i MiB!\n", type, COVERART_MAX_BYTES >> 20);
+        ret = AVERROR(EINVAL);
+        goto end;
+    }
     if (res != CURLE_OK) {
         /* Filter out the majority of 404 errors here */
         if (res == CURLE_HTTP_RETURNED_ERROR) {
