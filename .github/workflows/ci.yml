@@ -90,6 +90,19 @@ jobs:
           meson setup build $OPTS
           ninja -C build
 
+      # GCC's static analyzer over the program this ships (review C item 3.6).
+      # Its five warnings at 590e959 were fixed at their source, so a warning
+      # now is a new one and fails the step. Ubuntu 24.04's GCC 13, as here.
+      - name: Static analysis
+        if: matrix.name == 'default'
+        run: |
+          meson setup build-analyzer -Dc_args=-fanalyzer
+          ninja -C build-analyzer src/cyanrip 2>&1 | tee analyzer.log
+          if grep -n -e '-Wanalyzer-' analyzer.log; then
+            echo "::error::GCC's analyzer reported the findings above"
+            exit 1
+          fi
+
       # meson.build's meson_version is the oldest Meson that configures and
       # builds this tree, checked here rather than stated (review C item 3.1:
       # it said 0.53 and the build used 0.55, 0.56 and 0.62). The version is

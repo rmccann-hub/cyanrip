@@ -457,9 +457,10 @@ int crip_fill_coverart(cyanrip_ctx *ctx, int info_only)
     int have_front = 0;
     int have_back = 0;
     for (int i = 0; i < ctx->nb_cover_arts; i++) {
+        /* NULL only if av_dict_set() failed to allocate it */
         const char *title = dict_get(ctx->cover_arts[i].meta, "title");
-        have_front |= !strcmp(title, "Front");
-        have_back |= !strcmp(title, "Back");
+        have_front |= title && !strcmp(title, "Front");
+        have_back |= title && !strcmp(title, "Back");
     }
 
     CURL *curl_ctx = curl_easy_init();
