@@ -68,6 +68,15 @@ static av_printf_format(3, 4) void cue_printf(cyanrip_ctx *ctx, int Z,
     va_end(args);
 }
 
+/* A line that could not be made for want of memory is text the sheet lost:
+ * kept as a failed write is, and named with it at the end (from the check of
+ * #65; it was dropped with nothing said) */
+static void cue_lost(cyanrip_ctx *ctx, int Z)
+{
+    if (!ctx->cuefile_err[Z])
+        ctx->cuefile_err[Z] = ENOMEM;
+}
+
 /* CUE sheets have no way of escaping a quote inside a quoted string, so
  * replace them the way file names get them, and keep values on one line */
 static char *cue_str(cyanrip_ctx *ctx, const char *str)
@@ -99,10 +108,13 @@ static char *cue_str(cyanrip_ctx *ctx, const char *str)
 
 #define CLOG(FORMAT, DICT, TAG)                                                \
     do {                                                                       \
-        char *val = cue_str(ctx, dict_get(DICT, TAG));                         \
-        if (val) {                                                             \
-            for (int Z = 0; Z < ctx->settings.outputs_num; Z++)                \
+        const char *raw = dict_get(DICT, TAG);                                 \
+        char *val = cue_str(ctx, raw);                                         \
+        for (int Z = 0; Z < ctx->settings.outputs_num; Z++) {                  \
+            if (val)                                                           \
                 cue_printf(ctx, Z, FORMAT, val);                               \
+            else if (raw)                                                      \
+                cue_lost(ctx, Z);                                              \
         }                                                                      \
         av_free(val);                                                          \
     } while (0)
@@ -124,6 +136,8 @@ void cyanrip_cue_start(cyanrip_ctx *ctx)
                     for (int i = 0; tmp[i]; i++)
                         tmp[i] = av_toupper(tmp[i]);
                     cue_printf(ctx, Z, "REM %s \"%s\"\n", tmp, val);
+                } else {
+                    cue_lost(ctx, Z);
                 }
                 av_free(val);
                 av_free(tmp);
