@@ -759,7 +759,7 @@ def fam_filesystem(work):
         out.append(("fs/diagnostics-to-dir", base(work, ["--diagnostics", "readonly"])))
 
     afile = work / "afile"
-    afile.write_text("not a directory\n")
+    afile.write_text("not a directory\n", encoding="utf-8")
     out.append(("fs/outdir-is-a-file",
                 ["-d", "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
                  "-o", "flac", "-D", "afile/out", "-L", "log", "-M", "sheet"]))

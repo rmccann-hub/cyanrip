@@ -66,7 +66,7 @@ def run(*args, cwd=ROOT):
     r = subprocess.run([sys.executable, *map(str, args)], capture_output=True,
                        text=True, cwd=cwd, env={"PYTHONDONTWRITEBYTECODE": "1",
                                                 "PATH": "/usr/bin:/bin",
-                                                **GIT_ENV})
+                                                **GIT_ENV}, encoding="utf-8")
     return r.returncode, r.stdout + r.stderr
 
 
@@ -90,7 +90,7 @@ def take_in(tmp):
     subprocess.run(["git", "init", "-q", "-b", "main", str(up)], check=True,
                    env={**os.environ, **GIT_ENV})
     name = "round-99-lap-02.md"
-    (out / name).write_text(lap("no — published, NOT yet released"))
+    (out / name).write_text(lap("no — published, NOT yet released"), encoding="utf-8")
     git(up, "add", "-A")
     git(up, "commit", "-q", "-m", "held")
     subprocess.run(["git", "clone", "-q", str(up), str(peer)], check=True,
@@ -104,7 +104,7 @@ def take_in(tmp):
     check(rc != 0 and "FAIL  released for reading" in o and not dest.exists(),
           "a held lap is refused and not filed")
 
-    (out / name).write_text(lap("yes — operator, 2026-10-13"))
+    (out / name).write_text(lap("yes — operator, 2026-10-13"), encoding="utf-8")
     git(up, "commit", "-q", "-am", "released")
     released = (out / name).read_bytes()
 
@@ -126,7 +126,7 @@ def take_in(tmp):
           and dest.read_bytes() == released + b"edited\n",
           "an inbound file with other bytes is refused, not overwritten")
 
-    (out / "round-99-lap-04.md").write_text(lap("yes — operator", number=3))
+    (out / "round-99-lap-04.md").write_text(lap("yes — operator", number=3), encoding="utf-8")
     git(up, "add", "-A")
     git(up, "commit", "-q", "-m", "misnamed")
     rc, o = run(tool, "99", "4", "--peer", peer, "--laps", laps)
@@ -156,24 +156,24 @@ def read_run(tmp):
         "Repeating ripping (0 out of 2 matches for current checksum 22222222)\n"
         "\nDone; (repeat limit of 3 reads reached; at most 1 read agreed; "
         "last read 33333333, not kept)\nTrack 1 read with errors.\n"
-        "  Secure re-read:  did NOT converge after 3 reads (repeat limit hit)\n"))
+        "  Secure re-read:  did NOT converge after 3 reads (repeat limit hit)\n"), encoding="utf-8")
     (album / "a" / "a.platterpus-securing-pass.txt").write_text(log(
         "-d /dev/sr0 -Z 2 -l 1 --diagnostics rec-b.json", full[:1],
         "\nDone; (repeat limit of 3 reads reached; at most 1 read agreed)\n"
-        "Track 1 read with errors.\n"))
-    (album / "a" / "a (EAC-compatible).log").write_text(BANNER + "not ours\n")
+        "Track 1 read with errors.\n"), encoding="utf-8")
+    (album / "a" / "a (EAC-compatible).log").write_text(BANNER + "not ours\n", encoding="utf-8")
     # A second album whose securing pass's record Platterpus kept renamed
     # (their X6), beside an album pass whose record is missing and whose
     # renamed form, which is a securing pass's only, must not count for it.
     (album / "c").mkdir()
     (album / "c" / "c.log").write_text(log(
-        "-d /dev/sr0 --diagnostics rec-c.json", full, ""))
+        "-d /dev/sr0 --diagnostics rec-c.json", full, ""), encoding="utf-8")
     (album / "c" / "c.platterpus-securing-pass.txt").write_text(log(
-        "-d /dev/sr0 -Z 2 -l 1 --diagnostics rec-d.json", full, ""))
+        "-d /dev/sr0 -Z 2 -l 1 --diagnostics rec-d.json", full, ""), encoding="utf-8")
     (run_dir / "SHA256SUMS").write_text(
         f"{'0' * 64}  (not filed) ripperdiagnostics/rec-a.json\n"
         f"{'0' * 64}  (not filed) ripperdiagnostics/rec-c-securingpass.json\n"
-        f"{'0' * 64}  (not filed) ripperdiagnostics/rec-d-securingpass.json\n")
+        f"{'0' * 64}  (not filed) ripperdiagnostics/rec-d-securingpass.json\n", encoding="utf-8")
     if CRIP:
         (album / "g").mkdir()
         shutil.copy(ROOT / "docs" / "golden-reference.log", album / "g" / "g.log")

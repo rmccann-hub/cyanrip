@@ -298,7 +298,7 @@ def publications(root=ROOT):
         r = subprocess.run(
             ["git", "-C", str(root), "log", "--reverse", "-p", "--no-color",
              "--format=@@commit %h %cI", "--", LEDGER],
-            capture_output=True, text=True, timeout=60)
+            capture_output=True, text=True, timeout=60, encoding="utf-8")
     except (OSError, subprocess.TimeoutExpired):
         return None
     if r.returncode != 0:
@@ -328,7 +328,7 @@ def peer_releases(peer):
         r = subprocess.run(
             ["git", "-C", str(peer), "for-each-ref", "refs/tags/v*",
              "--format=%(refname:short)\t%(creatordate:iso-strict)"],
-            capture_output=True, text=True, timeout=60)
+            capture_output=True, text=True, timeout=60, encoding="utf-8")
     except (OSError, subprocess.TimeoutExpired):
         return None
     if r.returncode != 0:
@@ -525,7 +525,7 @@ def verify_original(crip, name, data):
         p.write_bytes(data)
         try:
             r = subprocess.run([str(crip), "-Y", str(p)], capture_output=True,
-                               text=True, timeout=60)
+                               text=True, timeout=60, encoding="utf-8")
         except (OSError, subprocess.TimeoutExpired) as e:
             return f"not run ({e})"
     return "verifies" if r.returncode == 0 else \

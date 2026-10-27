@@ -112,7 +112,7 @@ class Report:
     def run(self, what, cmd, ok_codes=(0,), cwd=ROOT):
         print(f"\n  $ {' '.join(str(c) for c in cmd)}")
         r = subprocess.run([str(c) for c in cmd], capture_output=True,
-                           text=True, cwd=cwd)
+                           text=True, cwd=cwd, encoding="utf-8")
         tail = (r.stdout + r.stderr).strip().splitlines()[-4:]
         for t in tail:
             print(f"      {t[:160]}")
@@ -259,7 +259,7 @@ def main():
 
     # The gate's line for the round, verbatim: the authority on its state.
     r = subprocess.run([py, "tools/release-gate.py"], capture_output=True,
-                       text=True, cwd=ROOT)
+                       text=True, cwd=ROOT, encoding="utf-8")
     print()
     inside = False
     for ln in r.stdout.splitlines():

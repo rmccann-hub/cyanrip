@@ -364,7 +364,7 @@ def rows_cover_help(text, binary):
     is jointly owned. Returns the number of flags --help listed and those
     without a row; none listed is a refusal, not a pass."""
     helptext = subprocess.run([binary, "--help"], capture_output=True,
-                              text=True).stdout
+                              text=True, encoding="utf-8").stdout
     flags = HELP_FLAG.findall(helptext)
     tabled = set()
     for head in (r"## 1\. ", r"## 1b\. ", r"## 2\. "):

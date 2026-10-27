@@ -114,7 +114,7 @@ def main():
         cue = ['FILE "disc.bin" BINARY']
         for i, l in enumerate(lsns, 1):
             cue += [f"  TRACK {i:02d} AUDIO", f"    INDEX 01 {msf(l)}"]
-        (d / "disc.cue").write_text("\n".join(cue) + "\n")
+        (d / "disc.cue").write_text("\n".join(cue) + "\n", encoding="utf-8")
         # Sparse: the bytes are never written, the filesystem serves zeros, and
         # a 603 MB image costs nothing on disk.
         with open(d / "disc.bin", "wb") as f:
@@ -129,7 +129,7 @@ def main():
             timeout=600)
         out = r.stdout.decode(errors="replace")
         log = (d / "out" / "ar.log")
-        logtext = log.read_text(errors="replace") if log.exists() else ""
+        logtext = log.read_text(errors="replace", encoding="utf-8") if log.exists() else ""
 
     status = re.search(r"^AccurateRip:\s+(\S(?:.*\S)?)\s*$", logtext, re.M)
     conf = re.search(r"max confidence:\s*(\d+)", out)

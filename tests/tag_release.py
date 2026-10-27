@@ -31,11 +31,11 @@ ENV = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@example.com",
 def g(repo, *args):
     return subprocess.run(["git", "-C", str(repo), *args], check=True,
                           capture_output=True, text=True,
-                          env=ENV).stdout.strip()
+                          env=ENV, encoding="utf-8").stdout.strip()
 
 
 def commit(repo, name, text, msg):
-    (repo / name).write_text(text)
+    (repo / name).write_text(text, encoding="utf-8")
     g(repo, "add", name)
     g(repo, "commit", "-q", "-m", msg)
     return g(repo, "rev-parse", "HEAD")
@@ -54,7 +54,7 @@ def run(repo, *args, msgfile=None):
     argv = [sys.executable, str(TOOL), *args, "--repo", str(repo)]
     if msgfile:
         argv += ["--message-file", str(msgfile)]
-    p = subprocess.run(argv, capture_output=True, text=True, env=ENV)
+    p = subprocess.run(argv, capture_output=True, text=True, env=ENV, encoding="utf-8")
     return p.returncode, p.stdout, p.stderr
 
 
@@ -111,7 +111,7 @@ with tempfile.TemporaryDirectory() as t:
     case("a release the manifest names at its commit is tagged",
          run(work, VERSION, rel, msgfile=msg), 0,
          ["tag=platterpus-fork-r22"])
-    text = msg.read_text() if msg.exists() else ""
+    text = msg.read_text(encoding="utf-8") if msg.exists() else ""
     for want in (f"commit: {rel}", f"release_seq: {SEQ}",
                  "channels: beta, stable", "Order releases by release_seq"):
         if want not in text:

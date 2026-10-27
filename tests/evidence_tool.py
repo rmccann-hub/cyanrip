@@ -69,7 +69,7 @@ def check(ok, msg):
 def git(repo, *args):
     r = subprocess.run(["git", "-C", str(repo), "-c", "user.name=t",
                         "-c", "user.email=t@t", *args], capture_output=True,
-                       text=True)
+                       text=True, encoding="utf-8")
     if r.returncode != 0:
         raise RuntimeError(f"git {args}: {r.stderr}")
     return r.stdout.strip()
@@ -79,7 +79,7 @@ def tool(root, *args, env=None):
     r = subprocess.run([sys.executable, str(TOOL), "--root", str(root),
                         *map(str, args)], capture_output=True, text=True,
                        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1",
-                            **(env or {})})
+                            **(env or {})}, encoding="utf-8")
     return r.returncode, r.stdout + r.stderr
 
 
@@ -125,12 +125,12 @@ with tempfile.TemporaryDirectory() as d:
     check(folders == [X, A, B], f"three run folders found, the loose file is "
                                 f"not one: {folders}")
     r = subprocess.run(["git", "-C", str(work), "ls-tree", "-r", "HEAD", "--",
-                        "docs/rig-*"], capture_output=True, text=True)
+                        "docs/rig-*"], capture_output=True, text=True, encoding="utf-8")
     check(r.returncode == 0 and r.stdout == "",
           "git ls-tree with a pattern prints nothing and exits 0, which is why "
           "the list is enumerated (HR-2 5b)")
     bad = d / "bad.txt"
-    bad.write_text("docs/rig-*\n")
+    bad.write_text("docs/rig-*\n", encoding="utf-8")
     rc, o = tool(work, "build", "--folders", bad, "--date", DATE,
                  "--manifest-out", d / "x.tsv", "--source", url)
     check(rc == 1 and "not run folders" in o,
@@ -138,11 +138,11 @@ with tempfile.TemporaryDirectory() as d:
 
     # --- 5b-5d: the move commit, built twice from one list and one instant
     lst = d / "folders.txt"
-    lst.write_text("\n".join(folders) + "\n")
+    lst.write_text("\n".join(folders) + "\n", encoding="utf-8")
     rc, o = tool(work, "build", "--folders", lst, "--date", DATE,
                  "--manifest-out", d / "m.tsv", "--source", url, "--push", url)
     check(rc == 0, f"build and push: {o.strip()}")
-    rows = evidence.parse_manifest((d / "m.tsv").read_text())
+    rows = evidence.parse_manifest((d / "m.tsv").read_text(encoding="utf-8"))
     C = rows[0].commit
     moved = [p for p in FILES if evidence.run_folder(p)]
     check(sorted(r.path for r in rows) == sorted(moved),
@@ -164,7 +164,7 @@ with tempfile.TemporaryDirectory() as d:
     check(git(origin, "rev-parse", "evidence") == C, "the push made evidence")
     rc, o = tool(work, "build", "--folders", lst, "--date", DATE,
                  "--manifest-out", d / "m2.tsv", "--source", url)
-    check(rc == 0 and evidence.parse_manifest((d / "m2.tsv").read_text())[0]
+    check(rc == 0 and evidence.parse_manifest((d / "m2.tsv").read_text(encoding="utf-8"))[0]
           .commit == C, "rebuilt from the same list and instant, the commit ID "
                         "is the same (HR-2 5c)")
     check(git(work, "rev-parse", "--is-shallow-repository") == "false",
@@ -177,7 +177,7 @@ with tempfile.TemporaryDirectory() as d:
     for p in moved:
         if not p.endswith("/README.md"):
             git(work, "rm", "-q", "--", p)
-    (work / evidence.MANIFEST).write_text((d / "m.tsv").read_text())
+    (work / evidence.MANIFEST).write_text((d / "m.tsv").read_text(encoding="utf-8"), encoding="utf-8")
     git(work, "add", evidence.MANIFEST)
     git(work, "commit", "-q", "-m", "move")
     R = git(work, "rev-parse", "HEAD")
@@ -267,7 +267,7 @@ with tempfile.TemporaryDirectory() as d:
     for p in moved:
         if not p.endswith("/README.md"):
             git(base, "rm", "-q", "--", p)
-    (base / evidence.MANIFEST).write_text((d / "m.tsv").read_text())
+    (base / evidence.MANIFEST).write_text((d / "m.tsv").read_text(encoding="utf-8"), encoding="utf-8")
     git(base, "add", evidence.MANIFEST)
     git(base, "commit", "-q", "-m", "move, second")
     R2 = git(base, "rev-parse", "HEAD")

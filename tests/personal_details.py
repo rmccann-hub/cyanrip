@@ -49,7 +49,7 @@ THIS = "tests/personal_details.py"
 
 def git(*args):
     r = subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True,
-                       text=True)
+                       text=True, encoding="utf-8")
     return r.stdout if r.returncode == 0 else None
 
 

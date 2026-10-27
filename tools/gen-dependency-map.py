@@ -163,7 +163,7 @@ SERVICES = {
 def run(cmd, **kw):
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=30,
-                           cwd=kw.get("cwd", ROOT))
+                           cwd=kw.get("cwd", ROOT), encoding="utf-8")
     except (OSError, subprocess.TimeoutExpired):
         return None
     return p.stdout.strip() if p.returncode == 0 else None
@@ -408,7 +408,7 @@ def measure(model):
     os_name = None
     osr = pathlib.Path("/etc/os-release")
     if osr.exists():
-        mm = re.search(r'^PRETTY_NAME="([^"]+)"', osr.read_text(), re.M)
+        mm = re.search(r'^PRETTY_NAME="([^"]+)"', osr.read_text(encoding="utf-8"), re.M)
         os_name = mm.group(1) if mm else None
     ff = run(["ffmpeg", "-version"]) or ""
     env = dict(
@@ -826,7 +826,7 @@ def main():
         stale = []
         want = strip_measured(bom(model, None))
         try:
-            have = strip_measured(json.loads(BOM_PATH.read_text()))
+            have = strip_measured(json.loads(BOM_PATH.read_text(encoding="utf-8")))
         except (OSError, ValueError) as e:
             have = None
             stale.append(f"{BOM_PATH.name}: unreadable ({e})")

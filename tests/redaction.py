@@ -135,7 +135,7 @@ check(rep.keys == 0 and not rep.changed(), "a withheld key is not withheld again
 
 with tempfile.TemporaryDirectory() as d:
     p = pathlib.Path(d) / "names"
-    p.write_text("# a comment\n\n" + NAME + "\n")
+    p.write_text("# a comment\n\n" + NAME + "\n", encoding="utf-8")
     check(redact.local_names(p) == [NAME], "the local list reads one name a line")
     check(redact.local_names(pathlib.Path(d) / "absent") is None,
           "no list is None, not an empty list")
@@ -176,17 +176,17 @@ def ingest(archive, into, names):
     env = dict(os.environ, **{redact.NAMES_ENV: str(names)})
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "ingest-bundle.py"),
                         str(archive), "--into", str(into), "--cyanrip", CRIP],
-                       capture_output=True, text=True, timeout=120, env=env)
+                       capture_output=True, text=True, timeout=120, env=env, encoding="utf-8")
     return r.returncode, r.stdout + r.stderr
 
 
 with tempfile.TemporaryDirectory() as d:
     d = pathlib.Path(d)
     names = d / "names"
-    names.write_text(NAME + "\n")
+    names.write_text(NAME + "\n", encoding="utf-8")
     rc, out = ingest(make(files), d / "filed", names)
     filed = d / "filed"
-    sums = (filed / "SHA256SUMS").read_text()
+    sums = (filed / "SHA256SUMS").read_text(encoding="utf-8")
     for name in files:
         f = filed / name
         if not f.exists():
@@ -243,7 +243,7 @@ home, hostname = str(pathlib.Path.home()), socket.gethostname()
 with tempfile.TemporaryDirectory() as d:
     rc_mod.save(pathlib.Path(d), "out.txt",
                 f"binary {home}/.local/bin/cyanrip on {hostname}\n")
-    got = (pathlib.Path(d) / "out.txt").read_text()
+    got = (pathlib.Path(d) / "out.txt").read_text(encoding="utf-8")
 check(home not in got and "~/.local/bin/cyanrip" in got,
       f"rig-check must write its own home as ~: {got!r}")
 if hostname and hostname.lower() not in ("host",):

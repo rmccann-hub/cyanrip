@@ -72,7 +72,7 @@ def main():
     # 4. Section names come from the document. A hardcoded list would go stale
     #    the moment a section is added, which is the failure one level up from
     #    the one this file exists for.
-    tool = TOOL.read_text()
+    tool = TOOL.read_text(encoding="utf-8")
     for hardcoded in ('"P1"', "'P1'", '"P5"', "'P5'"):
         if hardcoded in tool:
             fail(f"{hardcoded} appears literally in the tool -- section names "

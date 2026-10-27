@@ -915,7 +915,7 @@ def main():
                 print(f"ok: no tag points at or reaches {BRANCH}")
             return 1 if problems else 0
         if args.cmd == "build":
-            folders = [ln.strip() for ln in args.folders.read_text().splitlines()
+            folders = [ln.strip() for ln in args.folders.read_text(encoding="utf-8").splitlines()
                        if ln.strip() and not ln.startswith("#")]
             source = args.source or f"file://{store.root}"
             commit, rows, last = build_move(source, folders, args.date,

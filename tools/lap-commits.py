@@ -68,7 +68,7 @@ FROM_COMMIT = re.compile(r"(?m)^HANDSHAKE-FROM-COMMIT:\s*(\S+)")
 
 
 def git(*a):
-    r = subprocess.run(["git", *a], capture_output=True, text=True)
+    r = subprocess.run(["git", *a], capture_output=True, text=True, encoding="utf-8")
     if r.returncode:
         sys.exit(f"git {' '.join(a)}: {r.stderr.strip()}")
     return r.stdout

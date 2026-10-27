@@ -56,7 +56,7 @@ def make(files):
 
 def run(archive, *extra):
     r = subprocess.run([sys.executable, str(TOOL), str(archive), *extra],
-                       capture_output=True, text=True, timeout=120)
+                       capture_output=True, text=True, timeout=120, encoding="utf-8")
     return r.returncode, r.stdout + r.stderr
 
 
@@ -136,7 +136,7 @@ def test_the_not_filed_list_is_derived_not_written():
     d = pathlib.Path(tempfile.mkdtemp()) / "rig"
     rc, out = run(a, "--into", str(d))
     check(rc == 0, f"a passing bundle must file: {out[:200]}")
-    sums = (d / "SHA256SUMS").read_text()
+    sums = (d / "SHA256SUMS").read_text(encoding="utf-8")
     for name in files:
         check(name in sums,
               f"{name} appears in neither the filed nor the not-filed list -- "
@@ -191,13 +191,13 @@ def test_after_the_move_a_run_is_not_filed_into_the_checkout():
 
     def go(*extra):
         r = subprocess.run([sys.executable, str(tool), str(a), *extra],
-                           capture_output=True, text=True, timeout=120)
+                           capture_output=True, text=True, timeout=120, encoding="utf-8")
         return r.returncode, r.stdout + r.stderr
     rc, out = go("--into", str(t / "docs" / "rig-2026-01-01-aaaaaaa"))
     check(rc == 0, f"before the move a run is filed in place: {out[-300:]}")
     (t / "docs" / "evidence-manifest.tsv").write_text(
         "path\tbytes\tsha256\tevidence_commit\tlast_default_commit\n"
-        f"docs/rig-2026-01-01-aaaaaaa/x\t1\t{'a' * 64}\t{'b' * 40}\t\n")
+        f"docs/rig-2026-01-01-aaaaaaa/x\t1\t{'a' * 64}\t{'b' * 40}\t\n", encoding="utf-8")
     rc, out = go("--into", str(t / "docs" / "rig-2026-01-02-bbbbbbb"))
     check(rc == 2 and "REFUSED" in out and "evidence.py file" in out
           and not (t / "docs" / "rig-2026-01-02-bbbbbbb").exists(),

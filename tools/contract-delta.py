@@ -58,7 +58,7 @@ HEADING = re.compile(r"(?m)^(## P[0-9]+[a-z]?\b.*)$")
 
 def contract_at(ref):
     r = subprocess.run(["git", "show", f"{ref}:PROVIDER-CONTRACT.md"],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8")
     if r.returncode:
         sys.exit(f"cannot read PROVIDER-CONTRACT.md at {ref}: "
                  f"{r.stderr.strip()}")

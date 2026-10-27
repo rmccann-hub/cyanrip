@@ -1120,7 +1120,7 @@ def test_manifest_stable_on_an_open_round_publishes_and_says_so():
         f = _p.Path(d) / "l.tsv"
         # A real commit: the generator reads each released commit's tree, and
         # refuses one git cannot find (review C item 6.3)
-        f.write_text(_ledger([(1, "stable", "v1", "c4d1a00", 999)]))
+        f.write_text(_ledger([(1, "stable", "v1", "c4d1a00", 999)]), encoding="utf-8")
         orig = m.LEDGER
         try:
             m.LEDGER = f
@@ -1176,7 +1176,7 @@ def test_ledger_sequence_is_monotonic_and_unique():
         try:
             m.LEDGER = f
             for rows, label, want in cases:
-                f.write_text(_ledger(rows))
+                f.write_text(_ledger(rows), encoding="utf-8")
                 try:
                     m.load_ledger(f)
                     check(False, f"ledger with a {label} seq was accepted")
@@ -1259,7 +1259,7 @@ def test_manifest_schema_is_declared_and_current():
     man = m.build()
     check(man["schema"] == 2,
           f"manifest schema is {man['schema']!r}; `build` arrived at 2")
-    committed = json.loads((HERE.parent / "release-manifest.json").read_text())
+    committed = json.loads((HERE.parent / "release-manifest.json").read_text(encoding="utf-8"))
     check(committed["schema"] == man["schema"],
           f"committed manifest declares schema {committed['schema']!r} but the "
           f"generator emits {man['schema']!r}")
@@ -1374,7 +1374,7 @@ def test_released_is_declared_and_defaults_to_off():
     def released_in(tree, *args):
         out = subprocess.run(
             [sys.executable, str(tree / "tools" / "gen-handshake-state.py"), *args],
-            capture_output=True, text=True, check=True).stdout
+            capture_output=True, text=True, check=True, encoding="utf-8").stdout
         m = re.search(r"^#define HANDSHAKE_RELEASED\s+(\d)$", out, re.M)
         check(m is not None, "the generator emitted no HANDSHAKE_RELEASED")
         return m.group(1) if m else None
@@ -1410,7 +1410,7 @@ def test_released_is_declared_and_defaults_to_off():
           "an OPEN round with no declaration claimed release")
     state = subprocess.run(
         [sys.executable, str(work / "tools" / "gen-handshake-state.py"),
-         "--declare-released"], capture_output=True, text=True, check=True).stdout
+         "--declare-released"], capture_output=True, text=True, check=True, encoding="utf-8").stdout
     check("round 99 lap 1 OPEN" in state,
           f"the round state left the line when the build was released: {state!r}")
     open_lap.unlink()
@@ -1461,7 +1461,7 @@ def test_a_held_lap_banner_says_it_is_a_draft():
     def state():
         out = subprocess.run(
             [sys.executable, str(work / "tools" / "gen-handshake-state.py")],
-            capture_output=True, text=True, check=True).stdout
+            capture_output=True, text=True, check=True, encoding="utf-8").stdout
         m = re.search(r'^#define HANDSHAKE_STATE\s+"(.*)"$', out, re.M)
         return m.group(1) if m else None
 
@@ -1502,7 +1502,7 @@ def test_the_tarball_install_path_can_still_declare():
     safe into unreachable.
     """
     import json
-    manifest = json.loads((HERE.parent / "release-manifest.json").read_text())
+    manifest = json.loads((HERE.parent / "release-manifest.json").read_text(encoding="utf-8"))
     installs = [c["install"] for c in manifest["channels"].values()]
     check(all(".tar.gz" in u for u in installs),
           f"the manifest no longer installs from tarballs: {installs} -- "
@@ -1780,7 +1780,7 @@ def test_an_envelope_carrying_one_lap_can_be_built():
     def run(*args):
         return subprocess.run(
             [sys.executable, str(root / "tools" / "make-envelope.py"), *args],
-            capture_output=True, text=True)
+            capture_output=True, text=True, encoding="utf-8")
 
     # 1. One lap plus one artifact. This is the case that used to be refused.
     r = run(str(d / "out.md"), "--lap", str(lap), str(art))
@@ -2291,7 +2291,7 @@ def test_the_digest_checker_can_fail():
         # wrong declaration stops excusing it. Proved here rather than on the
         # real record because a sent lap is immutable -- the rule this session
         # already broke once.
-        edited = good.read_text().replace(truth, "d" * 16)
+        edited = good.read_text(encoding="utf-8").replace(truth, "d" * 16)
         good.write_text(edited, encoding="utf-8")
         st, decl, _, _ = rdg.check_lap(good)
         check(st == "mismatch" and decl[0] == "d" * 16,
@@ -2692,21 +2692,21 @@ def test_from_commit_must_be_reachable_not_merely_resolvable():
 
     def git(repo, *args):
         return subprocess.run(["git", "-C", str(repo), *args],
-                              capture_output=True, text=True, check=True)
+                              capture_output=True, text=True, check=True, encoding="utf-8")
 
     repo = pathlib.Path(tempfile.mkdtemp())
     try:
         git(repo, "init", "-q", "-b", "main")
         git(repo, "config", "user.email", "t@example.invalid")
         git(repo, "config", "user.name", "t")
-        (repo / "a").write_text("1\n")
+        (repo / "a").write_text("1\n", encoding="utf-8")
         git(repo, "add", "a")
         git(repo, "commit", "-qm", "base")
         base = git(repo, "rev-parse", "HEAD").stdout.strip()[:7]
 
         # The orphan: commit, then amend. The pre-amend SHA still resolves out
         # of the reflog and is on no branch -- exactly the lap-3 topology.
-        (repo / "b").write_text("2\n")
+        (repo / "b").write_text("2\n", encoding="utf-8")
         git(repo, "add", "b")
         git(repo, "commit", "-qm", "will be amended")
         orphan = git(repo, "rev-parse", "HEAD").stdout.strip()[:7]
@@ -3914,7 +3914,7 @@ def test_seam_check_held_names_what_it_rechecked():
     import subprocess
     sc_path = HERE.parent / "tools" / "seam-check.py"
     r = subprocess.run([sys.executable, str(sc_path), "--held"],
-                       capture_output=True, text=True, timeout=120)
+                       capture_output=True, text=True, timeout=120, encoding="utf-8")
     lines = [l for l in r.stdout.splitlines() if l.strip()]
     check(r.returncode == 0 and lines,
           f"seam-check --held exited {r.returncode}: {r.stderr[-400:]}")

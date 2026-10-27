@@ -311,7 +311,7 @@ def check_lap(path):
             continue
         sha = m.group(1)
         r = subprocess.run(["git", "-C", str(ROOT), "log", "--format=%s", "-1",
-                            sha + "^{commit}"], capture_output=True, text=True)
+                            sha + "^{commit}"], capture_output=True, text=True, encoding="utf-8")
         resolves = r.returncode == 0
         if resolves and not should_resolve:
             note("FAIL", "wire/pin",
@@ -392,7 +392,7 @@ def check_lap(path):
         ours = frm == "cyanrip-fork"
         r = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--verify",
                             "--quiet", fc + "^{commit}"],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, encoding="utf-8")
         resolves = r.returncode == 0
         anc = resolves and subprocess.run(
             ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", fc, "HEAD"],

@@ -94,7 +94,7 @@ def diagnostics(entry, extra):
         cmd += " -Wextra"
     r = subprocess.run(cmd, shell=True, cwd=entry["directory"],
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                       text=True, timeout=300)
+                       text=True, timeout=300, encoding="utf-8")
     return [m for m in (DIAG.match(l) for l in r.stdout.splitlines()) if m]
 
 
@@ -124,7 +124,7 @@ def main():
     if not cc.exists():
         print(f"FAIL: no {cc} -- meson has not configured {args.build}")
         return 1
-    entries = json.loads(cc.read_text())
+    entries = json.loads(cc.read_text(encoding="utf-8"))
     if not entries:
         print(f"FAIL: {cc} is empty; refusing to report 0 diagnostics over "
               f"0 translation units, which would pass by measuring nothing")

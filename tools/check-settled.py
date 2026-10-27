@@ -179,7 +179,7 @@ def run_shell(command, cwd):
     try:
         return subprocess.run(command, shell=True, cwd=cwd,
                               capture_output=True, text=True,
-                              timeout=ROW_TIMEOUT)
+                              timeout=ROW_TIMEOUT, encoding="utf-8")
     except subprocess.TimeoutExpired:
         return subprocess.CompletedProcess(
             command, 124, "", f"timed out after {ROW_TIMEOUT} s")

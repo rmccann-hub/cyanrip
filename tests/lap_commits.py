@@ -183,7 +183,7 @@ def main():
     line = [l for l in out.splitlines() if l.startswith("§C baseline")][0]
     tmp = ROOT / "tests" / ".lap_commits_probe.md"
     try:
-        tmp.write_text(f"## C\n\n{line}\n")
+        tmp.write_text(f"## C\n\n{line}\n", encoding="utf-8")
         rc, out = run("--since", "8880d8f", "--head", "59cb5a9",
                       "--check", str(tmp))
         if rc != 0:
@@ -207,7 +207,7 @@ def main():
     # 7. It reports the log-site evidence and does NOT grade it. §D is where
     #    "did the text move" is answered; a tool that answered it would be
     #    making the judgement the lap owes.
-    tool = TOOL.read_text()
+    tool = TOOL.read_text(encoding="utf-8")
     if "cyanrip_log(" not in tool:
         fail("the tool does not look for log call sites at all")
     if "YOURS TO" not in tool.upper():

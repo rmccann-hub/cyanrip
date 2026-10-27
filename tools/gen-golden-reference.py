@@ -243,7 +243,7 @@ def generate(binary):
             sys.exit(f"the reference rip failed (exit {p.returncode}). It must "
                      "succeed or the artifact describes nothing:\n"
                      + p.stdout.decode(errors="replace")[-2000:])
-        return log.read_text(), js.read_text()
+        return log.read_text(encoding="utf-8"), js.read_text(encoding="utf-8")
 
 
 SAMPLE_HEADER = """\
@@ -401,7 +401,7 @@ def generate_interrupted(binary):
                      "record, which is the defect this artifact documents "
                      "being fixed:\n"
                      + stdout.read_bytes().decode(errors="replace")[-2000:])
-        return log.read_text(), js.read_text()
+        return log.read_text(encoding="utf-8"), js.read_text(encoding="utf-8")
 
 
 def main():
@@ -455,7 +455,7 @@ def main():
         if args.check:
             if not SAMPLE_LOG.exists():
                 sys.exit(f"{SAMPLE_LOG.relative_to(ROOT)} is missing")
-            committed = SAMPLE_LOG.read_text()
+            committed = SAMPLE_LOG.read_text(encoding="utf-8")
             stale = interrupted_shape_problems(committed)
             if stale:
                 sys.exit("the committed interrupted sample no longer matches "
@@ -525,8 +525,8 @@ def main():
         # broken. The unmodified log is reachable by removing the block, and
         # the block says so.
         refuse_if_released_build(log, "the interrupted sample")
-        SAMPLE_LOG.write_text(SAMPLE_HEADER + log)
-        SAMPLE_JSON.write_text(js)
+        SAMPLE_LOG.write_text(SAMPLE_HEADER + log, encoding="utf-8")
+        SAMPLE_JSON.write_text(js, encoding="utf-8")
         print(f"wrote {SAMPLE_LOG.relative_to(ROOT)} and "
               f"{SAMPLE_JSON.relative_to(ROOT)}\n  {banner}")
         return 0
@@ -538,11 +538,11 @@ def main():
     if args.check:
         if not OUT_LOG.exists():
             sys.exit("docs/golden-reference.log is missing")
-        mismatch = library_mismatch(OUT_LOG.read_text(), log)
+        mismatch = library_mismatch(OUT_LOG.read_text(encoding="utf-8"), log)
         if mismatch:
             print(f"SKIP: the golden reference was not compared: {mismatch}")
             return 77
-        old = normalise(OUT_LOG.read_text())
+        old = normalise(OUT_LOG.read_text(encoding="utf-8"))
         new = normalise(log)
         if old != new:
             import difflib
@@ -563,8 +563,8 @@ def main():
                  "Commit, rebuild, and re-run.")
 
     refuse_if_released_build(log, "the golden reference")
-    OUT_LOG.write_text(log)
-    OUT_JSON.write_text(js)
+    OUT_LOG.write_text(log, encoding="utf-8")
+    OUT_JSON.write_text(js, encoding="utf-8")
     print(f"wrote {OUT_LOG.relative_to(ROOT)} and "
           f"{OUT_JSON.relative_to(ROOT)}\n  {banner}")
     return 0

@@ -238,7 +238,7 @@ def _envelope(tmp, lap_sha, artifact_shas):
         parts.append(str(a))
     r = subprocess.run(
         [sys.executable, str(TOOL), str(tmp / "out.md"), "--lap", str(lap)]
-        + parts, capture_output=True, text=True)
+        + parts, capture_output=True, text=True, encoding="utf-8")
     return r.returncode, (r.stdout + r.stderr)
 
 
@@ -306,7 +306,7 @@ with tempfile.TemporaryDirectory() as td:
 def _resolves_here(sha):
     """The commit subject if this repository has it, else None."""
     r = subprocess.run(["git", "-C", str(root), "log", "--format=%s", "-1",
-                        sha + "^{commit}"], capture_output=True, text=True)
+                        sha + "^{commit}"], capture_output=True, text=True, encoding="utf-8")
     return r.stdout.strip() if r.returncode == 0 else None
 
 
@@ -321,7 +321,7 @@ SENT_WRONG_PEER_PIN = {
 }
 
 _git_ok = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-dir"],
-                         capture_output=True, text=True).returncode == 0
+                         capture_output=True, text=True, encoding="utf-8").returncode == 0
 if not _git_ok:
     print("pin-repository check SKIPPED: not a git checkout "
           "(this is a gap, not a pass)")

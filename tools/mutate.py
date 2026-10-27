@@ -172,7 +172,7 @@ SKIP_LINE = re.compile(r"^\s*#|^\s*\*|^\s*/\*|^\s*//")
 def run(cmd, timeout=300):
     try:
         return subprocess.run(cmd, cwd=WORK, capture_output=True,
-                              text=True, timeout=timeout)
+                              text=True, timeout=timeout, encoding="utf-8")
     except subprocess.TimeoutExpired:
         return None
 
@@ -388,7 +388,7 @@ def sweep(args, tree):
     try:
         for n, (relpath, mut) in enumerate(pool, 1):
             i, a, _, repl, label = mut
-            src_line = (WORK / relpath).read_text().splitlines()[i].strip()[:72]
+            src_line = (WORK / relpath).read_text(encoding="utf-8").splitlines()[i].strip()[:72]
             apply_mutation(relpath, mut)
 
             b = run(["ninja", "-C", "build"], timeout=180)

@@ -79,7 +79,7 @@ def git(repo, *args):
     try:
         r = subprocess.run(["git", "-C", str(repo), *args],
                            capture_output=True, text=True,
-                           timeout=GIT_TIMEOUT)
+                           timeout=GIT_TIMEOUT, encoding="utf-8")
     except subprocess.TimeoutExpired:
         return 124, "", f"git {args[0]} timed out after {GIT_TIMEOUT} s"
     return r.returncode, r.stdout.strip(), r.stderr.strip()
@@ -93,7 +93,7 @@ def newest_lap_hashes():
     """
     laps = sorted(ROOT.glob("docs/handshake/round-*-lap-*.md"))
     for lap in reversed(laps):
-        m = SHARED_HASHES_RE.search(lap.read_text(errors="replace"))
+        m = SHARED_HASHES_RE.search(lap.read_text(errors="replace", encoding="utf-8"))
         if m:
             out = {}
             for tok in m.group(1).split():

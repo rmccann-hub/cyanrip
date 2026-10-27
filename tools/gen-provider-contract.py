@@ -823,7 +823,7 @@ def flags(binary):
     --diagnostics, --stall-secs and --cache-probe with it, though a consumer
     reads P1 for --consumer by name. Its Short cell says `none`.
     """
-    out = subprocess.run([binary, "--help"], capture_output=True, text=True).stdout
+    out = subprocess.run([binary, "--help"], capture_output=True, text=True, encoding="utf-8").stdout
     rows, section = [], "General"
     for ln in out.splitlines():
         if ln.endswith(":") and not ln.startswith(" "):
@@ -1569,7 +1569,7 @@ def version(binary):
     recompute.
     """
     raw = subprocess.run([binary, "--version"], capture_output=True,
-                         text=True).stdout.strip()
+                         text=True, encoding="utf-8").stdout.strip()
 
     # A -dirty banner means the binary was built from a tree with uncommitted
     # changes, so its SHA does not describe it. Refuse rather than normalise:

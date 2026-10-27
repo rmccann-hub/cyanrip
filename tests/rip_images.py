@@ -205,7 +205,7 @@ def check_error_positions(label, rec_path, text, first, last, bad, reads_once):
     sector the shim failed (round 35, our lap 7 S18 and S20, Platterpus's
     lap 8 S8 and S10). Returns nothing; each mismatch is a fail()."""
     try:
-        rec = json.loads(Path(rec_path).read_text())
+        rec = json.loads(Path(rec_path).read_text(encoding="utf-8"))
     except Exception as exc:
         fail(f"{label}: no --diagnostics record to read: {exc}")
         return
@@ -267,7 +267,7 @@ def rip(name, img, *extra, cwd=None):
                    "-N", "-A", "-U", "-s", "0", "-P", "0",
                    "-o", "flac", "-D", WORK / f"out_{name}", "-F", "{track}",
                    "-L", "log", "-M", "sheet", *extra, cwd=cwd)
-    (WORK / f"{name}.log").write_text(log)
+    (WORK / f"{name}.log").write_text(log, encoding="utf-8")
     if ec != 0:
         fail(f"{name}: cyanrip exited with {ec} (log follows)")
         print(log)
@@ -558,7 +558,7 @@ def sc_basic():
 
     # The frames an offset needs read are no part of the track's duration
     rip("offset", "basic.cue", "-s", "48")
-    log = (WORK / "out_offset" / "log.log").read_text()
+    log = (WORK / "out_offset" / "log.log").read_text(encoding="utf-8")
     durations = [l.split()[1] for l in log.splitlines() if l.strip().startswith("Duration:")]
     if durations != ["00:04.00", "00:04.00"]:
         fail(f"offset: logged durations {durations}")
@@ -566,7 +566,7 @@ def sc_basic():
 
 def log_frames(name):
     """Frame counts the log reports, one per track"""
-    log = (WORK / f"out_{name}" / "log.log").read_text()
+    log = (WORK / f"out_{name}" / "log.log").read_text(encoding="utf-8")
     return [int(l.split()[1]) for l in log.splitlines()
             if l.strip().startswith("Frames:")]
 
@@ -589,7 +589,7 @@ def sc_pregap():
     # A split off HTOA holds track 1's INDEX 00, there being no track 0, and
     # tracks are numbered by their number, not by their position
     rip("htoa", "pregap.cue", "-p", "1=track", "-J")
-    sheet = (WORK / "out_htoa" / "sheet.cue").read_text()
+    sheet = (WORK / "out_htoa" / "sheet.cue").read_text(encoding="utf-8")
     tracks = [l.split()[1] for l in sheet.splitlines() if l.strip().startswith("TRACK")]
     if tracks != ["01", "02", "03"]:
         fail(f"htoa: CUE sheet tracks {tracks}")
@@ -609,14 +609,14 @@ def sc_pregap():
     # Track 2 carries the signalled pre-gap here, so -l 2,3 is the shape: its
     # predecessor is not in the rip set and its FILE is never written.
     rip("lgap", "pregap.cue", "-l", "2,3")
-    cue = (WORK / "out_lgap" / "sheet.cue").read_text()
+    cue = (WORK / "out_lgap" / "sheet.cue").read_text(encoding="utf-8")
     if "INDEX 00" in cue:
         fail("lgap: INDEX 00 written against a FILE the rip never produced:\n"
              + cue)
 
     # Not vacuous: the same disc ripped whole DOES emit one, so the assertion
     # above is about the selection and not about the fixture having no gaps.
-    full = (WORK / "out_def" / "sheet.cue").read_text()
+    full = (WORK / "out_def" / "sheet.cue").read_text(encoding="utf-8")
     if "INDEX 00" not in full:
         fail("lgap: the full rip emits no INDEX 00, so the -l check proves "
              "nothing about the fix")
@@ -633,7 +633,7 @@ def sc_pregap():
     #
     # Track 2 is the control, and every number is checked against an
     # independent one, so a change that moved all of them together fails here.
-    log = (WORK / "out_def" / "log.log").read_text()
+    log = (WORK / "out_def" / "log.log").read_text(encoding="utf-8")
     gaps = dict((int(n), int(f)) for f, n in
                 re.findall(r"^ +(\d+) frame pregap in track (\d+),", log, re.M))
     # Track 1's Gaps: row is absent when its gap is the bare lead-in, so the
@@ -682,7 +682,7 @@ def sc_pregap():
     if log_frames("merge") != [150, 225, 75]:
         fail(f"merge: logged frames {log_frames('merge')}")
 
-    sheet = (WORK / "out_merge" / "sheet.cue").read_text()
+    sheet = (WORK / "out_merge" / "sheet.cue").read_text(encoding="utf-8")
     if "INDEX 00 00:00:00\n    INDEX 01 00:01:00" not in sheet:
         fail("merge: track 2 indices don't match its merged pregap")
 
@@ -697,10 +697,10 @@ def sc_pregap():
         'FILE "first3gap.bin" BINARY\n'
         "  TRACK 03 AUDIO\n    INDEX 00 00:00:00\n    INDEX 01 00:02:00\n"
         "  TRACK 04 AUDIO\n    INDEX 01 00:04:00\n"
-        "  TRACK 05 AUDIO\n    INDEX 01 00:06:00\n")
+        "  TRACK 05 AUDIO\n    INDEX 01 00:06:00\n", encoding="utf-8")
     rip("first3", "first3gap.cue")
     expect("first3", "3.flac:2", "4.flac:2", "5.flac:2", "log.log", "sheet.cue")
-    if "unmerged" not in (WORK / "first3.log").read_text():
+    if "unmerged" not in (WORK / "first3.log").read_text(encoding="utf-8"):
         fail("first3: first pregap taken for one following a track")
 
     rip("first3_track", "first3gap.cue", "-p", "3=track")
@@ -738,7 +738,7 @@ def sc_data_track_completed():
                          if p.suffix in (".flac", ".bin"))
         if len(on_disk) != want_files:
             fail(f"{name}: {on_disk} on disk, expected {want_files} files")
-        log = (out / "log.log").read_text()
+        log = (out / "log.log").read_text(encoding="utf-8")
         m = re.search(r"^Rip completed:  yes \((\d+) of (\d+) tracks\)$",
                       log, re.M)
         if not m:
@@ -747,7 +747,7 @@ def sc_data_track_completed():
         if (int(m.group(1)), int(m.group(2))) != (len(on_disk), 3):
             fail(f"{name}: the footer says {m.group(1)} of {m.group(2)} "
                  f"tracks, and {len(on_disk)} of 3 tracks' files are on disk")
-        d = json.loads(rec.read_text())
+        d = json.loads(rec.read_text(encoding="utf-8"))
         ts = {t["number"]: t for t in d["rip"]["track_state"]}
         if ts[1].get("data_ripped") is not want_data or ts[1]["audio_ripped"]:
             fail(f"{name}: track 1 is data and reads data_ripped="
@@ -783,7 +783,7 @@ def sc_kept_read_began():
         before = int(time.time())
         rip(name, "mixed.cue", *extra)
         after = int(time.time()) + 1
-        log = (WORK / f"out_{name}" / "log.log").read_text(errors="replace")
+        log = (WORK / f"out_{name}" / "log.log").read_text(errors="replace", encoding="utf-8")
         lines = log.splitlines()
         elapsed = [i for i, ln in enumerate(lines)
                    if ln.startswith("    Elapsed:")]
@@ -817,7 +817,7 @@ def sc_mixed():
     expect("mixed", "1.bin", "2.flac:2", "3.flac:2", "log.log", "sheet.cue")
     data_track("mixed", "mixed.bin", 1, 0, 150)
 
-    sheet = (WORK / "out_mixed" / "sheet.cue").read_text()
+    sheet = (WORK / "out_mixed" / "sheet.cue").read_text(encoding="utf-8")
     if 'FILE "1.bin" BINARY' not in sheet or "TRACK 01 MODE1/2352" not in sheet:
         fail("mixed: the CUE sheet does not reference the data track")
 
@@ -831,14 +831,14 @@ def sc_mixed():
 
     # Every sector's EDC is checked, so a damaged one is caught even when the
     # read itself succeeds
-    if "Sector EDC:    all 150 sectors match" not in (WORK / "mixed.log").read_text():
+    if "Sector EDC:    all 150 sectors match" not in (WORK / "mixed.log").read_text(encoding="utf-8"):
         fail("mixed: data track EDCs not verified")
 
     damaged = bytearray((WORK / "mixed.bin").read_bytes())
     damaged[10 * 2352 + 100] ^= 0x01
     (WORK / "damaged.bin").write_bytes(damaged)
-    (WORK / "damaged.cue").write_text((WORK / "mixed.cue").read_text()
-                                      .replace("mixed.bin", "damaged.bin"))
+    (WORK / "damaged.cue").write_text((WORK / "mixed.cue").read_text(encoding="utf-8")
+                                      .replace("mixed.bin", "damaged.bin"), encoding="utf-8")
     ec, log = crip("-d", WORK / "damaged.cue", "-N", "-A", "-U", "-s", "0",
                    "-P", "0", "-r", "1", "-o", "flac", "-D", WORK / "out_damaged",
                    "-L", "log", "-M", "sheet")
@@ -869,21 +869,21 @@ def sc_trailing():
         sector[2072:2076] = edc(sector[16:2072]).to_bytes(4, "little")
         xa[lsn * 2352:(lsn + 1) * 2352] = sector
     (WORK / "xa.bin").write_bytes(xa)
-    (WORK / "xa.cue").write_text((WORK / "trailing.cue").read_text()
+    (WORK / "xa.cue").write_text((WORK / "trailing.cue").read_text(encoding="utf-8")
                                  .replace("trailing.bin", "xa.bin")
-                                 .replace("MODE1/2352", "MODE2/2352"))
+                                 .replace("MODE1/2352", "MODE2/2352"), encoding="utf-8")
 
     # The sectors win over a TOC calling them mode 1
     shutil.copy(WORK / "xa.bin", WORK / "xa_toc.bin")
-    (WORK / "xa_toc.cue").write_text((WORK / "trailing.cue").read_text()
-                                     .replace("trailing.bin", "xa_toc.bin"))
+    (WORK / "xa_toc.cue").write_text((WORK / "trailing.cue").read_text(encoding="utf-8")
+                                     .replace("trailing.bin", "xa_toc.bin"), encoding="utf-8")
 
     for name, img, extra in (("xa", "xa.cue", ()), ("xa_cue", "xa.cue", ("-J",)),
                              ("xa_toc", "xa_toc.cue", ())):
         rip(name, img, *extra)
-        if "TRACK 03 MODE2/2352" not in (WORK / f"out_{name}" / "sheet.cue").read_text():
+        if "TRACK 03 MODE2/2352" not in (WORK / f"out_{name}" / "sheet.cue").read_text(encoding="utf-8"):
             fail(f"{name}: CUE sheet doesn't give the data track as mode 2")
-    if "Sector EDC:    all 150 sectors match" not in (WORK / "xa.log").read_text():
+    if "Sector EDC:    all 150 sectors match" not in (WORK / "xa.log").read_text(encoding="utf-8"):
         fail("xa: mode 2 form 1 EDCs not verified")
 
 
@@ -897,7 +897,7 @@ def write_toc(name, sectors, tracks):
         lines.append(f"  TRACK {number:02d} {kind}")
         lines.append("    INDEX 01 %02d:%02d:%02d"
                      % (lsn // (75 * 60), lsn // 75 % 60, lsn % 75))
-    (WORK / f"{name}.cue").write_text("\n".join(lines) + "\n")
+    (WORK / f"{name}.cue").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def check_ids(img, discid, cddb, toc, arid):
@@ -987,8 +987,8 @@ def sc_contract_covers_log():
     # A positive check ("the labels I expected are there") could never have
     # found that, because nobody expected it. This asks the log what it says.
     rip("cov", "pregap.cue", "-Z", "2", "-G", "-Q")
-    log = (WORK / "out_cov" / "log.log").read_text()
-    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    log = (WORK / "out_cov" / "log.log").read_text(encoding="utf-8")
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
 
     # Column-0 labels only: an indented row is a per-track field, and the
     # label must be followed by whitespace so `Ripping finished at 2026-08-15T20:`
@@ -1055,11 +1055,11 @@ def sc_contract_line_shapes():
     """
     # -C so the cover-art block, which is the two-line case, is in the log.
     rip("shapes", "basic.cue", "-C", f"Front={FIX / 'art.png'}")
-    log = (WORK / "out_shapes" / "log.log").read_text()
+    log = (WORK / "out_shapes" / "log.log").read_text(encoding="utf-8")
     lines = [l.rstrip("\n") for l in log.splitlines()]
     stripped = [l.lstrip() for l in lines]
 
-    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
     rows = re.findall(r"^\| `[^`]+:\d+` \| `(.+?)` \|", contract, re.M)
     if len(rows) < 100:
         fail(f"contract_line_shapes: {len(rows)} rows read from the contract "
@@ -1105,7 +1105,7 @@ def sc_album_loudness():
     # that a constant can be printed, and both halves come from the same filter
     # so they must agree exactly.
     rip("albloud", "pregap.cue", "-G")
-    whole = (WORK / "out_albloud" / "log.log").read_text()
+    whole = (WORK / "out_albloud" / "log.log").read_text(encoding="utf-8")
 
     # Bounded to the album block. Every ripped track prints an ebur128
     # `Summary:` of its own, so an unbounded search finds track 1's numbers and
@@ -1195,12 +1195,12 @@ def sc_filters():
     # track: the flag, no claim of de-emphasis, and FLAGS PRE telling a
     # player the file still needs it. Read from the logfile and the cue, the
     # two artifacts that persist; sc_deemph_with_hdcd covers -H -W.
-    off_log = (WORK / "out_off" / "log.log").read_text()
+    off_log = (WORK / "out_off" / "log.log").read_text(encoding="utf-8")
     emph = re.findall(r"^  Preemphasis:   (.*)$", off_log, re.M)
     if emph != ["present (TOC)", "present (TOC)"]:
         fail(f"-W: the logfile's Preemphasis lines are {emph}, wanted "
              "'present (TOC)' on both flagged tracks and nothing after it")
-    off_cue = (WORK / "out_off" / "sheet.cue").read_text()
+    off_cue = (WORK / "out_off" / "sheet.cue").read_text(encoding="utf-8")
     if off_cue.count("    FLAGS PRE\n") != 2:
         fail("-W: the cue does not flag both pre-emphasised tracks PRE")
 
@@ -1260,20 +1260,20 @@ def sc_deemph_with_hdcd():
     # These read the same predicate the graph does, so they cannot drift from
     # it again -- but a test that assumes that is a test asserting its own
     # construction, so both are read from the artifacts.
-    auto_log = (WORK / "hb_auto.log").read_text()
+    auto_log = (WORK / "hb_auto.log").read_text(encoding="utf-8")
     if "(deemphasis applied)" not in auto_log:
         fail("deemph_with_hdcd: -H on preemph.cue de-emphasised the audio but "
              "the log does not say so")
-    off_log = (WORK / "hb_off.log").read_text()
+    off_log = (WORK / "hb_off.log").read_text(encoding="utf-8")
     if "(deemphasis applied)" in off_log:
         fail("deemph_with_hdcd: -H -W left the audio pre-emphasised and the "
              "log claims de-emphasis was applied")
 
-    auto_cue = (WORK / "out_hb_auto" / "sheet.cue").read_text()
+    auto_cue = (WORK / "out_hb_auto" / "sheet.cue").read_text(encoding="utf-8")
     if "FLAGS PRE" in auto_cue:
         fail("deemph_with_hdcd: the audio was de-emphasised and the cue still "
              "flags it PRE, which tells a player to de-emphasise it twice")
-    off_cue = (WORK / "out_hb_off" / "sheet.cue").read_text()
+    off_cue = (WORK / "out_hb_off" / "sheet.cue").read_text(encoding="utf-8")
     if "FLAGS PRE" not in off_cue:
         fail("deemph_with_hdcd: -H -W left the audio pre-emphasised and the "
              "cue does not flag it")
@@ -1308,7 +1308,7 @@ def sc_deemph_with_hdcd():
                "Integrated loudness (R128):", "REPLAYGAIN_TRACK_PEAK:"]
 
     def fields(name, labels):
-        text = (WORK / f"{name}.log").read_text()
+        text = (WORK / f"{name}.log").read_text(encoding="utf-8")
         out = {}
         for line in text.splitlines():
             s = line.strip()
@@ -1370,7 +1370,7 @@ def sc_loudness_after_filter():
     (WORK / "treble.bin").write_bytes(tone)
     (WORK / "treble.cue").write_text(
         'FILE "treble.bin" BINARY\n  TRACK 01 AUDIO\n    FLAGS PRE\n'
-        '    INDEX 01 00:00:00\n')
+        '    INDEX 01 00:00:00\n', encoding="utf-8")
 
     def logged(text, label):
         for line in text.splitlines():
@@ -1400,7 +1400,7 @@ def sc_loudness_after_filter():
         if ec != 0:
             fail(f"loudness_after_filter: {name}: cyanrip exited {ec}")
             return
-        text = (WORK / f"out_{name}" / "log.log").read_text(errors="replace")
+        text = (WORK / f"out_{name}" / "log.log").read_text(errors="replace", encoding="utf-8")
         runs[name] = (text,) + delivered(name, width)
 
     off_bytes = runs["tone_off"][1]
@@ -1498,7 +1498,7 @@ def sc_media_tag():
     test would no longer be about the case the rig found."""
     for name, extra in (("media_h", ("-H",)), ("media_plain", ())):
         rip(name, "basic.cue", *extra)
-        log = (WORK / f"{name}.log").read_text()
+        log = (WORK / f"{name}.log").read_text(encoding="utf-8")
         if extra and not re.search(r"^\s+HDCD detected: no$", log, re.M):
             fail(f"media_tag: {name}: no `HDCD detected: no` line, so the "
                  f"premise of this check is gone")
@@ -1625,7 +1625,7 @@ def sc_tag_keys_in_capitals():
                    "-D", f"{out}/{{format}}",
                    "-F", "{if #totaldiscs# > #1#|disc|.}{track} - {title}",
                    "-L", "{album}{if #totaldiscs# > #1# CD|disc|}")
-    (WORK / "tagkeys.log").write_text(log)
+    (WORK / "tagkeys.log").write_text(log, encoding="utf-8")
     if ec != 0:
         fail(f"tag_keys: cyanrip exited {ec}")
         return
@@ -1856,7 +1856,7 @@ def sc_lost_writes():
     if not re.search(r"(?m)^Unable to write to stdout: No space left on "
                      r"device!$", err):
         fail(f"lw_stdout: stderr {err.strip()[-200:]!r}")
-    if "Log FUN512: " not in (out / "log.log").read_text():
+    if "Log FUN512: " not in (out / "log.log").read_text(encoding="utf-8"):
         fail("lw_stdout: the log lost its footer to a failure of stdout")
 
 
@@ -1867,9 +1867,9 @@ def sc_acoustid_key_withheld():
     out = WORK / "out_akey"
     rip("akey", "basic.cue", "--acoustid-key", key,
         "--diagnostics", WORK / "akey-diag.json")
-    for where, text in (("stdout", (WORK / "akey.log").read_text()),
-                        ("log", (out / "log.log").read_text()),
-                        ("record", (WORK / "akey-diag.json").read_text())):
+    for where, text in (("stdout", (WORK / "akey.log").read_text(encoding="utf-8")),
+                        ("log", (out / "log.log").read_text(encoding="utf-8")),
+                        ("record", (WORK / "akey-diag.json").read_text(encoding="utf-8"))):
         if key in text:
             fail(f"acoustid_key_withheld: the key is in the {where}")
         if "--acoustid-key [withheld]" not in text:
@@ -1886,7 +1886,7 @@ def sc_acoustid():
     # Nothing can be verified without the AccurateRip and MusicBrainz
     # lookups, so the fingerprints go in the tags rather than to AcoustID
     rip("fp", "basic.cue")
-    log = (WORK / "fp.log").read_text()
+    log = (WORK / "fp.log").read_text(encoding="utf-8")
     if "built without libchromaprint" in log:
         print("acoustid: built without libchromaprint, skipping")
         return
@@ -1900,7 +1900,7 @@ def sc_acoustid():
         fail(f"fp: fingerprint tags {fps!r}")
 
     # Fingerprints are kilobytes long on real tracks, they stay out of the log
-    if fps[0] and fps[0] in (WORK / "out_fp" / "log.log").read_text():
+    if fps[0] and fps[0] in (WORK / "out_fp" / "log.log").read_text(encoding="utf-8"):
         fail("fp: fingerprint written to the rip log")
 
     # The files must wait for the fingerprints even without ReplayGain
@@ -1920,13 +1920,13 @@ def sc_cue_only():
     if have != ["sheet.cue"]:
         fail(f"cue_only: outputs {have}, wanted only the CUE sheet")
 
-    cue = (WORK / "out_cue" / "sheet.cue").read_text()
+    cue = (WORK / "out_cue" / "sheet.cue").read_text(encoding="utf-8")
     if 'FILE "1.flac" WAVE' not in cue:
         fail("cue_only: file references are not relative to the sheet")
     if "TRACK 03 AUDIO" not in cue:
         fail("cue_only: cue sheet incomplete")
 
-    if "TRACK 01 AUDIO" not in (WORK / "cue.log").read_text():
+    if "TRACK 01 AUDIO" not in (WORK / "cue.log").read_text(encoding="utf-8"):
         fail("cue_only: cue sheet not printed to the terminal")
 
     if crip("-d", WORK / "basic.cue", "-J", "-I")[0] != 64:
@@ -1935,10 +1935,10 @@ def sc_cue_only():
     # A quote in a value can't be escaped, and must not end the string
     rip("quotes", "basic.cue", "-J", "-a", 'album=12" Mix:album_artist=A "B"',
         "-t", '1=title=Say "Hi"\nagain')
-    for line in (WORK / "out_quotes" / "sheet.cue").read_text().splitlines():
+    for line in (WORK / "out_quotes" / "sheet.cue").read_text(encoding="utf-8").splitlines():
         if line.strip().startswith(("TITLE", "PERFORMER")) and line.count('"') != 2:
             fail(f"quotes: broken CUE line {line!r}")
-    if 'TITLE "Say \u201cHi\u201d again"' not in (WORK / "out_quotes" / "sheet.cue").read_text():
+    if 'TITLE "Say \u201cHi\u201d again"' not in (WORK / "out_quotes" / "sheet.cue").read_text(encoding="utf-8"):
         fail("quotes: quotes and line breaks not replaced")
 
 
@@ -1956,7 +1956,7 @@ def sc_errors():
 
     # Schemes sending multiple tracks to one file must be warned about
     rip("collide", "basic.cue", "-F", "{album}")
-    if "resolve to the same file" not in (WORK / "collide.log").read_text():
+    if "resolve to the same file" not in (WORK / "collide.log").read_text(encoding="utf-8"):
         fail("collide: expected a filename collision warning")
 
     # Encoder init failure (file name too long) must fail cleanly, not
@@ -1992,7 +1992,7 @@ def sc_cdtext():
     # A cdrdao .toc image is the only disc image format libcdio parses CD-TEXT
     # from, so it stands in for a CD-TEXT disc that no drive is needed to read.
     rip("cdtext", "cdtext.toc", cwd=WORK)
-    log = (WORK / "out_cdtext" / "log.log").read_text()
+    log = (WORK / "out_cdtext" / "log.log").read_text(encoding="utf-8")
 
     if "CD-TEXT:        present (English, 5 disc fields, 2 of 2 tracks tagged)" not in log:
         fail("cdtext: disc-level CD-TEXT summary line missing or wrong")
@@ -2021,7 +2021,7 @@ def sc_cdtext():
 
     # ...but never overrides what the user asked for
     rip("cdtext_user", "cdtext.toc", "-a", "album=User Album", cwd=WORK)
-    ulog = (WORK / "out_cdtext_user" / "log.log").read_text()
+    ulog = (WORK / "out_cdtext_user" / "log.log").read_text(encoding="utf-8")
     if "Album:          User Album" not in ulog:
         fail("cdtext_user: -a did not win over CD-TEXT")
     if "title:     Probe Disc Title" not in ulog:
@@ -2030,7 +2030,7 @@ def sc_cdtext():
     # A disc with no CD-TEXT must say so, and say it was libcdio that reported
     # nothing -- not that the disc is definitely bare
     rip("cdtext_none", "basic.cue")
-    nlog = (WORK / "out_cdtext_none" / "log.log").read_text()
+    nlog = (WORK / "out_cdtext_none" / "log.log").read_text(encoding="utf-8")
     if "CD-TEXT:        none reported by libcdio" not in nlog:
         fail("cdtext_none: absent CD-TEXT not reported")
 
@@ -2101,7 +2101,7 @@ def sc_handshake():
     # later cannot otherwise tell a mutually-verified release from a mid-round
     # working tree, and those are different provenance.
     rip("hs", "basic.cue")
-    log = (WORK / "out_hs" / "log.log").read_text()
+    log = (WORK / "out_hs" / "log.log").read_text(encoding="utf-8")
 
     m = re.search(r"^Handshake:      (.+)$", log, re.M)
     if not m:
@@ -2198,7 +2198,7 @@ def sc_handshake():
                  "-L", "log", "--consumer", "platterpus/9.9.9-test")
     if ec != 0:
         fail(f"handshake: --consumer was rejected (exit {ec})")
-    log2 = (WORK / "out_hs2" / "log.log").read_text()
+    log2 = (WORK / "out_hs2" / "log.log").read_text(encoding="utf-8")
     if "Consumer:       platterpus/9.9.9-test" not in log2:
         fail("handshake: --consumer value not recorded verbatim")
     if "not verified by cyanrip" not in log2:
@@ -2237,7 +2237,7 @@ def sc_duration():
                 fail(f"duration: {img} at -s {off} exited {ec}")
                 continue
 
-            text = (WORK / f"out_{name}" / "log.log").read_text()
+            text = (WORK / f"out_{name}" / "log.log").read_text(encoding="utf-8")
 
             # The offset must have reached the rip, or every case below is the
             # -s 0 case wearing a different name and the check is vacuous.
@@ -2265,7 +2265,7 @@ def sc_reporting():
     # They are a delta of a process-global array, so an off-by-one in the
     # snapshot would show up here and nowhere else.
     rip("rep", "basic.cue")
-    log = (WORK / "out_rep" / "log.log").read_text()
+    log = (WORK / "out_rep" / "log.log").read_text(encoding="utf-8")
 
     disc, per_track, cur = {}, [], None
     for ln in log.splitlines():
@@ -2364,7 +2364,7 @@ def sc_metadata():
     for given, other in (("artist", "album_artist"),
                          ("album_artist", "artist")):
         rip(f"meta_{given}", "basic.cue", "-a", f"{given}=Only This")
-        log = (WORK / f"out_meta_{given}" / "log.log").read_text()
+        log = (WORK / f"out_meta_{given}" / "log.log").read_text(encoding="utf-8")
         for field in (given, other):
             if not re.search(rf"^    {field.upper()}:\s+Only This$", log, re.M):
                 fail(f"metadata: -a {given}=Only This did not leave {field} as "
@@ -2375,7 +2375,7 @@ def sc_metadata():
     # artist is somebody specific -- and it is the one the mutant breaks.
     rip("meta_both", "basic.cue",
         "-a", "artist=Disc Artist:album_artist=Various Artists")
-    log = (WORK / "out_meta_both" / "log.log").read_text()
+    log = (WORK / "out_meta_both" / "log.log").read_text(encoding="utf-8")
     for field, want in (("artist", "Disc Artist"),
                         ("album_artist", "Various Artists")):
         got = re.findall(rf"^    {field.upper()}:\s+(.*)$", log, re.M)
@@ -2482,7 +2482,7 @@ def sc_paranoia():
     # re-read count predicts. A check that only ever saw one of them would be
     # satisfied by either reading.
     def counts(path):
-        text = Path(path).read_text()
+        text = Path(path).read_text(encoding="utf-8")
         per = [int(m) for m in
                re.findall(r"^    READ:          (\d+)$", text, re.M)]
         disc = re.search(r"^  READ:          (\d+)$", text, re.M)
@@ -2505,7 +2505,7 @@ def sc_paranoia():
         fail(f"paranoia/scope: the -Z rip exited {ec}")
         return
     per2, disc2 = counts(multi / "log.log")
-    mtext = (multi / "log.log").read_text()
+    mtext = (multi / "log.log").read_text(encoding="utf-8")
 
     if not per1 or disc1 is None or not per2 or disc2 is None:
         fail(f"paranoia/scope: could not read the counters "
@@ -2540,7 +2540,7 @@ def sc_paranoia():
         fail(f"paranoia/scope: the -Z log does not carry {want!r} -- two "
              f"blocks share a heading and mean different things, and nothing "
              f"in the artifact says which")
-    if "Scope:" in (single / "log.log").read_text():
+    if "Scope:" in (single / "log.log").read_text(encoding="utf-8"):
         fail("paranoia/scope: a single-pass rip printed a Scope: line. It is "
              "additive on purpose -- a rip with no re-reads must be "
              "byte-identical to before this existed")
@@ -2553,7 +2553,7 @@ def sc_early_log():
     # cyanrip_log_init(), so a consumer that archives the log and not the
     # terminal lost them, and an aborted rip could read as a quiet success.
     rip("early", "basic.cue")
-    log = (WORK / "out_early" / "log.log").read_text()
+    log = (WORK / "out_early" / "log.log").read_text(encoding="utf-8")
     lines = log.splitlines()
 
     # The banner is contractually the first line -- the only reliable answer to
@@ -2571,7 +2571,7 @@ def sc_early_log():
     # the log opens, which are therefore in the log only via the replay. Each
     # is checked to have been printed at all first, so a probe that stops
     # firing fails loudly instead of passing by absence.
-    stdout = (WORK / "early.log").read_text()
+    stdout = (WORK / "early.log").read_text(encoding="utf-8")
     for probe_line in ("Checking", "Opening drive..."):
         if probe_line not in stdout:
             fail(f"early_log: {probe_line!r} not printed at all -- probe is stale")
@@ -2616,7 +2616,7 @@ def sc_early_log():
     elif not flog.exists():
         fail("early_log/fail: no log was written -- probe is stale")
     else:
-        fl = flog.read_text().splitlines()
+        fl = flog.read_text(encoding="utf-8").splitlines()
         if not fl or not re.match(r"^cyanrip \S+ \(platterpus-fork-g", fl[0]):
             fail(f"early_log/fail: first log line is not the version banner: "
                  f"{(fl[0] if fl else '')!r}")
@@ -2638,7 +2638,7 @@ def sc_early_log():
     diag = "No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!"
     if diag not in out:
         fail(f"early_log: {diag!r} not printed at all -- probe is stale")
-    elif diag not in (WORK / "out_earlydiag" / "log.log").read_text():
+    elif diag not in (WORK / "out_earlydiag" / "log.log").read_text(encoding="utf-8"):
         fail(f"early_log: {diag!r} reached stdout but not the log")
 
     # The block must sit inside the log, not be appended after the checksum --
@@ -2671,7 +2671,7 @@ def sc_cue_isrc():
     codes = {1: "AAAAA0000001", 2: "BBBBB0000002", 3: "CCCCC0000003"}
     rip("isrc", "pregap.cue",
         *[a for n, c in codes.items() for a in ("-t", f"{n}=isrc={c}")])
-    cue = (WORK / "out_isrc" / "sheet.cue").read_text()
+    cue = (WORK / "out_isrc" / "sheet.cue").read_text(encoding="utf-8")
 
     # The branch must actually be taken, or this proves nothing. A fixture that
     # stopped producing an appended pre-gap would make every check below pass
@@ -3041,7 +3041,7 @@ def sc_encode_failure_reaches_the_log():
              "`Encoder errors:`")
 
     try:
-        in_json = json.loads(diag.read_text())["rip"]["ripping_errors"]
+        in_json = json.loads(diag.read_text(encoding="utf-8"))["rip"]["ripping_errors"]
     except Exception as exc:
         fail(f"encfail: could not read ripping_errors from -j: {exc}")
         return
@@ -3197,7 +3197,7 @@ def sc_encode_failure_reaches_the_log():
     # now name exactly the tracks whose files the cap truncated, read from the
     # files on disk rather than from the log's own `Encoder errors:` line.
     try:
-        rec = json.loads(diag.read_text())
+        rec = json.loads(diag.read_text(encoding="utf-8"))
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
@@ -3332,8 +3332,8 @@ def sc_status_is_current():
         if not f.exists():
             fail(f"status_is_current: {f.relative_to(ROOT)} is missing")
             return
-    text = status.read_text()
-    rtext = readme.read_text()
+    text = status.read_text(encoding="utf-8")
+    rtext = readme.read_text(encoding="utf-8")
 
     # And the round table must not advertise an open round while the gate says
     # every round is closed. That exact disagreement is what let "round 7 is
@@ -3439,7 +3439,7 @@ def sc_status_block_is_current():
     block is checked in order, because each side's suite checks it
     positionally and a position nobody checks is a position nobody keeps.
     """
-    text = (ROOT / "docs" / "handshake" / "STATUS.md").read_text()
+    text = (ROOT / "docs" / "handshake" / "STATUS.md").read_text(encoding="utf-8")
     decl = {}
     order = []
     for line in text.splitlines():
@@ -3556,7 +3556,7 @@ def sc_status_block_is_current():
                  f"{m.group(6)} is held, and the gate holds no such lap of "
                  f"ours in round {current.number}.")
 
-    manifest = json.loads((ROOT / "release-manifest.json").read_text())
+    manifest = json.loads((ROOT / "release-manifest.json").read_text(encoding="utf-8"))
     channels = manifest["channels"]
     newest = max(channels.values(), key=lambda c: c["release_seq"])
     n_now = int(re.search(r"\+platterpus\.(\d+)$", newest["version"]).group(1))
@@ -3694,7 +3694,7 @@ def sc_diag_record_v8():
     rec = WORK / "v8_rip.json"
     rip("v8_rip", "pregap.cue", "-t", "1=isrc=AAAAA0000001", "--diagnostics", rec)
     m = re.search(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
-                  (WORK / "out_v8_rip" / "log.log").read_text(), re.M)
+                  (WORK / "out_v8_rip" / "log.log").read_text(encoding="utf-8"), re.M)
     if not m:
         fail("diag_record_v8: the log names no libcdio revision, so which "
              "ISRC reason an image gives cannot be decided")
@@ -3702,7 +3702,7 @@ def sc_diag_record_v8():
     want_isrc_reason = ("libcdio returned none"
                         if (int(m.group(1)), int(m.group(2))) >= (2, 3)
                         else "the driver does not report reading ISRC")
-    d = json.loads(rec.read_text())
+    d = json.loads(rec.read_text(encoding="utf-8"))
     # /8 or later: every move since has been an addition (/9, data_ripped).
     sv = re.fullmatch(r"cyanrip-diagnostics/(\d+)", str(d.get("schema")))
     if not sv or int(sv.group(1)) < 8:
@@ -3759,8 +3759,8 @@ def sc_diag_record_v8():
     for name, extra in (("v8_pre", ()), ("v8_pre_w", ("-W",))):
         rec = WORK / f"{name}.json"
         rip(name, "preemph.cue", "--diagnostics", rec, *extra)
-        ts = json.loads(rec.read_text())["rip"]["track_state"]
-        cue = (WORK / f"out_{name}" / "sheet.cue").read_text()
+        ts = json.loads(rec.read_text(encoding="utf-8"))["rip"]["track_state"]
+        cue = (WORK / f"out_{name}" / "sheet.cue").read_text(encoding="utf-8")
         blocks = re.split(r"(?m)^  TRACK ", cue)[1:]
         for tr, blk in zip(ts, blocks):
             flags_pre = bool(re.search(r"(?m)^    FLAGS PRE$", blk))
@@ -3785,7 +3785,7 @@ def sc_diag_record_v8():
                "SONGWRITER": "songwriter", "COMPOSER": "composer",
                "MESSAGE": "message", "ARRANGER": "arranger", "ISRC": "isrc",
                "UPC_EAN": "upc_ean", "GENRE": "genre", "DISC_ID": "discid"}
-    toc = (FIX / "cdtext.toc").read_text()
+    toc = (FIX / "cdtext.toc").read_text(encoding="utf-8")
     chunks = re.split(r"(?m)^TRACK AUDIO$", toc)
     want = []
     for chunk in chunks:
@@ -3797,7 +3797,7 @@ def sc_diag_record_v8():
     ec, out = crip("-d", "cdtext.toc", "-I", "-N", "-A", "--diagnostics", rec, cwd=WORK)
     if ec != 0:
         fail(f"diag_record_v8: -I on cdtext.toc exited {ec}")
-    ct = json.loads(rec.read_text())["cdtext"]
+    ct = json.loads(rec.read_text(encoding="utf-8"))["cdtext"]
     if (ct["status"], ct["language"]) != ("present", "English"):
         fail(f"diag_record_v8: cdtext {ct['status']!r}/{ct['language']!r}, and "
              f"the fixture declares English CD-TEXT")
@@ -3822,7 +3822,7 @@ def sc_diag_record_v8():
     ec, out = crip("-d", WORK / "basic.cue", "-f", "-N", "--diagnostics", rec, cwd=dd,
                    env=offline)
     printed = "No track had AccuRip entry, cannot find offset!" in out
-    got = json.loads(rec.read_text())["offset_search"]
+    got = json.loads(rec.read_text(encoding="utf-8"))["offset_search"]
     if not printed or got != {"result": "no AccurateRip entry",
                               "offset_samples": None, "confidence": None}:
         fail(f"diag_record_v8: -f printed the no-entry line: {printed}; "
@@ -3866,7 +3866,7 @@ def sc_image_reports_isrc():
     d.mkdir(exist_ok=True)
     ec, out = crip("-d", WORK / "basic.cue", "-J", "-N", "-A", "-U",
                    "-D", d / "out", cwd=d, env=env)
-    (WORK / "image_reports_isrc_cue.stdout").write_text(out)
+    (WORK / "image_reports_isrc_cue.stdout").write_text(out, encoding="utf-8")
     if not marker.exists():
         fail("image_reports_isrc: the shim never added the capability, so "
              "the -J run tests nothing")
@@ -3885,7 +3885,7 @@ def sc_image_reports_isrc():
     ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                    "-P", "0", "-o", "flac", "-D", outdir, "-F", "{track}",
                    "-L", "log", "--diagnostics", rec, env=env)
-    (WORK / "image_reports_isrc.stdout").write_text(out)
+    (WORK / "image_reports_isrc.stdout").write_text(out, encoding="utf-8")
     if not marker.exists():
         fail("image_reports_isrc: the shim never added the capability, so "
              "the rip tests nothing")
@@ -3895,13 +3895,13 @@ def sc_image_reports_isrc():
         print(out)
         return
     logp = outdir / "log.log"
-    text = out + (logp.read_text(errors="replace") if logp.exists() else "")
+    text = out + (logp.read_text(errors="replace", encoding="utf-8") if logp.exists() else "")
     n = text.count("subchannel info!")
     if n:
         fail(f"image_reports_isrc: {n} `Unable to read track N subchannel "
              f"info!` line(s) from a read no image driver implements")
     try:
-        ts = json.loads(rec.read_text())["rip"]["track_state"]
+        ts = json.loads(rec.read_text(encoding="utf-8"))["rip"]["track_state"]
     except (OSError, ValueError, KeyError, TypeError) as e:
         fail(f"image_reports_isrc: no readable --diagnostics record: {e}")
         return
@@ -3953,7 +3953,7 @@ def sc_overread_bounded():
             fail(f"overread_bounded: {name} exited {r.returncode}")
             print(r.stdout.decode(errors="replace"))
             return None
-        text = logp.read_text(errors="replace")
+        text = logp.read_text(errors="replace", encoding="utf-8")
         blocks = {int(m.group(1)): m.group(0) for m in re.finditer(
             r"^Track (\d+) .*?(?=^Track \d+ |\Z)", text, re.M | re.S)}
         return text, blocks, out
@@ -4070,7 +4070,7 @@ def sc_disc_isrc_line():
            '  TRACK 03 AUDIO\n    ISRC 1234567890AB\n    INDEX 01 00:07:00\n'
            '  TRACK 04 AUDIO\n    ISRC usrc17607839\n    INDEX 01 00:09:00\n'
            '  TRACK 05 AUDIO\n    ISRC GBAYE0601498\n    INDEX 01 00:11:00\n')
-    (d / "isrc.cue").write_text(cue)
+    (d / "isrc.cue").write_text(cue, encoding="utf-8")
     (d / "isrc.bin").write_bytes((FIX / "cdda.bin").read_bytes() * 2)
     disc, n = {}, 0
     for line in cue.splitlines():
@@ -4099,7 +4099,7 @@ def sc_disc_isrc_line():
                          for a in ("-t", f"{k}=isrc={v}")],
                        *(["--prefer-disc-isrc"] if prefer else []),
                        cwd=d, env=env)
-        (WORK / f"disc_isrc_{name}.stdout").write_text(out)
+        (WORK / f"disc_isrc_{name}.stdout").write_text(out, encoding="utf-8")
         if not marker.exists():
             fail(f"disc_isrc_line: {name}: the shim never added the "
                  f"capability, so the rip reads no ISRC")
@@ -4111,10 +4111,10 @@ def sc_disc_isrc_line():
         logp = outdir / "log.log"
         blocks = {int(m.group(1)): m.group(0) for m in re.finditer(
             r"^Track (\d+) .*?(?=^Track \d+ |\Z)",
-            logp.read_text(errors="replace"), re.M | re.S)}
+            logp.read_text(errors="replace", encoding="utf-8"), re.M | re.S)}
         try:
             ts = {tr["number"]: tr for tr in
-                  json.loads(rec.read_text())["rip"]["track_state"]}
+                  json.loads(rec.read_text(encoding="utf-8"))["rip"]["track_state"]}
         except (OSError, ValueError, KeyError, TypeError) as e:
             fail(f"disc_isrc_line: {name}: no readable --diagnostics "
                  f"record: {e}")
@@ -4181,12 +4181,12 @@ def sc_disc_isrc_line():
     rec = WORK / "disc_isrc_noshim.json"
     rip("disc_isrc_noshim", "pregap.cue", "--diagnostics", rec)
     try:
-        ts = json.loads(rec.read_text())["rip"]["track_state"]
+        ts = json.loads(rec.read_text(encoding="utf-8"))["rip"]["track_state"]
     except (OSError, ValueError, KeyError, TypeError) as e:
         fail(f"disc_isrc_line: no readable record without the shim: {e}")
         return
     got = re.findall(r"^  Disc ISRC:     (.*)$",
-                     (WORK / "out_disc_isrc_noshim" / "log.log").read_text(),
+                     (WORK / "out_disc_isrc_noshim" / "log.log").read_text(encoding="utf-8"),
                      re.M)
     want = [tr["isrc_disc"] or
             f"{DISC_ISRC_KIND.get(tr['isrc_disc_reason'], '?')} "
@@ -4257,7 +4257,7 @@ def sc_probe_runs_open_no_logfile():
             fail("probe_runs_open_no_logfile: the -J run wrote no cue sheet, so "
                  "an empty folder proves nothing about its logfile")
 
-    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
     m = re.search(r"^## P2 - [^\n]*\n(.*?)^\| File:line", contract, re.S | re.M)
     if not m:
         fail("probe_runs_open_no_logfile: PROVIDER-CONTRACT.md has no P2 "
@@ -4298,7 +4298,7 @@ def sc_contract_exit_codes():
         fail("contract_exit_codes: PROVIDER-CONTRACT.md is missing")
         return
 
-    text = contract.read_text()
+    text = contract.read_text(encoding="utf-8")
     section = re.search(r"^## P4 .*?(?=^## P5 )", text, re.M | re.S)
     if not section:
         fail("contract_exit_codes: no P4 section")
@@ -4316,14 +4316,14 @@ def sc_contract_exit_codes():
 
     rip("basic", "basic.cue")
     log = WORK / "out_basic" / "log.log"
-    body = log.read_text()
+    body = log.read_text(encoding="utf-8")
 
     tampered = WORK / "ec_tampered.log"
-    tampered.write_text(body.replace("Ripping errors: 0", "Ripping errors: 1"))
+    tampered.write_text(body.replace("Ripping errors: 0", "Ripping errors: 1"), encoding="utf-8")
     truncated = WORK / "ec_truncated.log"
-    truncated.write_text(body[:body.index("Log FUN512:")])
+    truncated.write_text(body[:body.index("Log FUN512:")], encoding="utf-8")
     appended = WORK / "ec_appended.log"
-    appended.write_text(body + "\n[addendum]\n")
+    appended.write_text(body + "\n[addendum]\n", encoding="utf-8")
 
     # One invocation per class we can reach without a drive. Named rather than
     # globbed, so adding a class is a visible act.
@@ -4387,13 +4387,13 @@ def sc_contract_build():
     # and procedure rots, so this is the thing that fails when it does. It is
     # pure text on purpose: no build, no network, no git, so it runs in a
     # tarball and on a dirty tree, which is exactly where --check cannot.
-    version = re.search(r"^\s*version:\s*'([^']+)'", (ROOT / "meson.build").read_text(),
+    version = re.search(r"^\s*version:\s*'([^']+)'", (ROOT / "meson.build").read_text(encoding="utf-8"),
                         re.M)
     if not version:
         fail("contract_build: no version in meson.build")
         return
 
-    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
     build = re.search(r"^Build: `cyanrip (\S+)", contract, re.M)
     if not build:
         fail("contract_build: PROVIDER-CONTRACT.md has no `Build:` line -- "
@@ -4481,7 +4481,7 @@ def sc_format_guard():
         skip(f"no {compdb} -- the guard is a property of the compile, and "
              "there is nothing here to reproduce the compile from")
 
-    entry = next((e for e in json.loads(compdb.read_text())
+    entry = next((e for e in json.loads(compdb.read_text(encoding="utf-8"))
                   if e.get("file", "").endswith("src/cyanrip_log.c")), None)
     if entry is None:
         skip("compile_commands.json has no entry for src/cyanrip_log.c")
@@ -4504,7 +4504,7 @@ def sc_format_guard():
         src.write_text('#include "cyanrip_log.h"\n'
                        "void crip_format_probe(void);\n"
                        "void crip_format_probe(void)\n{\n"
-                       f"    {body}\n}}\n")
+                       f"    {body}\n}}\n", encoding="utf-8")
         r = subprocess.run([cc, *argv, "-fsyntax-only", str(src)],
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                            cwd=entry["directory"], timeout=60)
@@ -4548,7 +4548,7 @@ def sc_version_matrix():
     # rebuild 0.9.3 on every run, but it can fail when the commits P6 cites
     # stop saying what P6 says they say, which is the drift that would make the
     # section quietly wrong again.
-    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
     if "## P6 - Version flags across the stock line" not in contract:
         fail("version_matrix: P6 is missing from the contract")
         return
@@ -4635,7 +4635,7 @@ def sc_diagnostics():
     #    than in the consumer.
     rip("diag", "basic.cue", "--diagnostics", diag)
     try:
-        d = json.loads(diag.read_text())
+        d = json.loads(diag.read_text(encoding="utf-8"))
     except Exception as e:
         fail(f"diagnostics: file is not valid JSON: {e}")
         return
@@ -4702,7 +4702,7 @@ def sc_diagnostics():
             sj = ROOT / "docs" / "sample-interrupted.diagnostics.json"
             if sj.exists():
                 try:
-                    s = json.loads(sj.read_text())
+                    s = json.loads(sj.read_text(encoding="utf-8"))
                     if (isinstance(s.get("started_at"), str)
                             and isinstance(s.get("finished_at"), str)
                             and s["started_at"] != s["finished_at"]):
@@ -4727,7 +4727,7 @@ def sc_diagnostics():
     # distinct call sites, one of them in crip_diag_enable() -- if a later edit
     # collapsed them to a single capture, the record would carry one instant
     # under two names and every behavioural check above would still pass.
-    diag_src = (ROOT / "src" / "diagnostics.c").read_text()
+    diag_src = (ROOT / "src" / "diagnostics.c").read_text(encoding="utf-8")
     if diag_src.count("crip_iso8601_now(") != 2:
         fail(f"diagnostics: crip_iso8601_now() appears "
              f"{diag_src.count('crip_iso8601_now(')} times in diagnostics.c; "
@@ -4810,7 +4810,7 @@ def sc_diagnostics():
     if not refusal.exists():
         fail("diagnostics: no record written for a run that wrote no log")
     else:
-        r = json.loads(refusal.read_text())
+        r = json.loads(refusal.read_text(encoding="utf-8"))
         if r.get("exit_code") != 64 or ec != 64:
             fail(f"diagnostics: refusal exited {ec} and recorded exit_code "
                  f"{r.get('exit_code')!r}; an argument refused is 64")
@@ -4829,7 +4829,7 @@ def sc_diagnostics():
     if not cdio.exists():
         fail("diagnostics: no record written for a libcdio-terminated run")
     else:
-        c = json.loads(cdio.read_text())
+        c = json.loads(cdio.read_text(encoding="utf-8"))
         if not any("libcdio" in m for m in c.get("messages", [])):
             fail(f"diagnostics: libcdio's own message is not in the record: "
                  f"{c.get('messages')}")
@@ -4855,7 +4855,7 @@ def sc_diagnostics():
     if not argf.exists():
         fail("diagnostics: no record written for an argument-parsing failure")
     else:
-        a = json.loads(argf.read_text())
+        a = json.loads(argf.read_text(encoding="utf-8"))
         if a.get("exit_code") != 64 or ec != 64:
             fail(f"diagnostics: argfail exited {ec} and recorded exit_code "
                  f"{a.get('exit_code')!r}; a flag this build lacks is 64")
@@ -4935,7 +4935,7 @@ def sc_golden_reference_matches_a_fresh_rip():
     if not ref_path.exists():
         fail("golden_shape: the reference is missing")
         return
-    ref = ref_path.read_text()
+    ref = ref_path.read_text(encoding="utf-8")
 
     m = re.search(r"^Invoked as:\s+(\S+)\s+(.*)$", ref, re.M)
     if not m:
@@ -4959,7 +4959,7 @@ def sc_golden_reference_matches_a_fresh_rip():
         fail(f"golden_shape: re-running the reference's own argv exited {ec} "
              f"and wrote no log -- the recorded invocation no longer works")
         return
-    fresh = fresh_path.read_text()
+    fresh = fresh_path.read_text(encoding="utf-8")
 
     # The reference describes one library set, and a rip made with another
     # differs in text those libraries write (CI's macOS job, on libcdio 2.4
@@ -4987,7 +4987,7 @@ def sc_golden_reference_matches_a_fresh_rip():
     if at is not None and lines[at].endswith(" -- released build"):
         try:
             declared = json.loads((WORK / "o" / "reference.diagnostics.json")
-                                  .read_text())["cyanrip"][
+                                  .read_text(encoding="utf-8"))["cyanrip"][
                                       "released_build_declared"]
         except (OSError, ValueError, KeyError, TypeError) as e:
             fail(f"golden_shape: the log says released build and the run's "
@@ -5050,7 +5050,7 @@ def sc_golden_reference_is_from_a_clean_build():
     if not ref.exists():
         fail("golden reference is missing")
         return
-    first = ref.read_text().splitlines()[0]
+    first = ref.read_text(encoding="utf-8").splitlines()[0]
     if "-dirty" in first:
         fail(f"golden reference was generated from a dirty tree: {first!r}")
     if not re.match(r"^cyanrip \S+ \(platterpus-fork-g[0-9a-f]{7,}\)$", first):
@@ -5065,7 +5065,7 @@ def sc_golden_reference_is_from_a_clean_build():
     # this file cannot see our test output; the banner is all they have.
     ref_ver = re.match(r"^cyanrip (\S+) ", first)
     tree_ver = re.search(r"^\s*version:\s*'([^']+)'",
-                         (ROOT / "meson.build").read_text(), re.M)
+                         (ROOT / "meson.build").read_text(encoding="utf-8"), re.M)
     if not tree_ver:
         fail("golden reference: no version in meson.build")
     elif ref_ver and ref_ver.group(1) != tree_ver.group(1):
@@ -5082,7 +5082,7 @@ def sc_golden_reference_is_from_a_clean_build():
         fail("golden diagnostics record is missing")
         return
     try:
-        d = json.loads(dj.read_text())
+        d = json.loads(dj.read_text(encoding="utf-8"))
     except Exception as e:
         fail(f"golden diagnostics record is not valid JSON: {e}")
         return
@@ -5149,7 +5149,7 @@ def sc_golden_reference_is_from_a_clean_build():
         # subsumes the other.
         homes = list((ROOT / "docs" / "handshake").glob("round-*.md"))
         homes.append(ROOT / "Changelog.md")
-        named = any(p.exists() and sha in p.read_text() for p in homes)
+        named = any(p.exists() and sha in p.read_text(encoding="utf-8") for p in homes)
         if not named:
             fail(f"nothing names {sha}, the build that produced the golden "
                  "reference -- name both it and the commit the reference is "
@@ -5165,7 +5165,7 @@ def sc_golden_reference_is_from_a_clean_build():
             for home in homes:
                 if not home.exists():
                     continue
-                lines = home.read_text().splitlines()
+                lines = home.read_text(encoding="utf-8").splitlines()
                 for i, line in enumerate(lines):
                     if sha not in line:
                         continue
@@ -5223,7 +5223,7 @@ def sc_reference():
     # every over-full-scale peak because -Z and -G were omitted -- the fixture
     # audio had a true peak above 0 dBFS the whole time.
     rip("ref", "pregap.cue", "-Z", "2", "-G")
-    log = (WORK / "out_ref" / "log.log").read_text()
+    log = (WORK / "out_ref" / "log.log").read_text(encoding="utf-8")
 
     for pat, what in ((r"^Repeating ripping \(\d+ out of \d+", "-Z repeat line"),
                       (r"^Done; \(\d+ out of \d+", "-Z convergence line"),
@@ -5306,7 +5306,7 @@ def sc_filed_rig_is_mappable():
         readme = ROOT / "docs" / name / "README.md"
         if name not in filings:
             fail(f"filed_rig_is_mappable: {name} is exempt and is not a filing")
-        elif readme.exists() and "| filed here | as delivered" in readme.read_text():
+        elif readme.exists() and "| filed here | as delivered" in readme.read_text(encoding="utf-8"):
             fail(f"filed_rig_is_mappable: {name} now carries a mapping, so its "
                  f"exemption ({why}) is stale")
 
@@ -5382,7 +5382,7 @@ def sc_runa_block_is_complete():
     if not status.exists():
         fail("STATUS.md is missing")
         return
-    text = status.read_text()
+    text = status.read_text(encoding="utf-8")
     m = re.search(r"```sh\n(.*?)```", text, re.S)
     if not m:
         fail("STATUS.md carries no shell block for Run A")
@@ -5410,7 +5410,7 @@ def sc_runa_block_is_complete():
         return
     pin = pin.group(1)
     grader = subprocess.run(["git", "show", f"{pin}:tools/round16-accept.py"],
-                            cwd=ROOT, capture_output=True, text=True, timeout=60)
+                            cwd=ROOT, capture_output=True, text=True, timeout=60, encoding="utf-8")
     if grader.returncode != 0:
         skip(f"runa_block_is_complete: commit {pin}, which the Run A block "
              f"checks out, is not in this clone, so its grader cannot be read")
@@ -5446,16 +5446,16 @@ def sc_verify_log():
     # and this is where they become contract.
     rip("basic", "basic.cue")
     log = WORK / "out_basic" / "log.log"
-    body = log.read_text()
+    body = log.read_text(encoding="utf-8")
 
     tampered = WORK / "tampered.log"
-    tampered.write_text(body.replace("Ripping errors: 0", "Ripping errors: 1"))
+    tampered.write_text(body.replace("Ripping errors: 0", "Ripping errors: 1"), encoding="utf-8")
 
     # Trailing content must not verify either. Platterpus asked whether it
     # could append an addendum after the checksum line; it cannot, and this
     # locks that answer so it cannot silently become "yes".
     appended = WORK / "appended.log"
-    appended.write_text(body + "\n[addendum]\ntrailing content\n")
+    appended.write_text(body + "\n[addendum]\ntrailing content\n", encoding="utf-8")
 
     # The case ask 2 is actually about, and the one this program manufactures:
     # a log with NO footer, which is what a rip killed mid-write leaves. Built
@@ -5464,7 +5464,7 @@ def sc_verify_log():
     # footer -- a hand-written file could differ in some other way and pass for
     # the wrong reason.
     truncated = WORK / "truncated.log"
-    truncated.write_text(body[:body.index("Log FUN512:")])
+    truncated.write_text(body[:body.index("Log FUN512:")], encoding="utf-8")
 
     cases = [
         ("valid",         log,                        0),
@@ -5514,7 +5514,7 @@ def sc_verify_log():
     if not sample.exists():
         fail("verify_log: the interrupted sample is missing")
     else:
-        text = sample.read_text()
+        text = sample.read_text(encoding="utf-8")
         if crip("--verify-log", sample)[0] == 0:
             fail("verify_log: the interrupted sample verified WITH its header "
                  "attached, which its own header says it does not")
@@ -5523,7 +5523,7 @@ def sc_verify_log():
                  "the instruction it ships for recovering the log is wrong")
         else:
             stripped = WORK / "sample_stripped.log"
-            stripped.write_text(text.split(end, 1)[1])
+            stripped.write_text(text.split(end, 1)[1], encoding="utf-8")
             ec, out = crip("--verify-log", stripped)
             if ec != 0:
                 fail(f"verify_log: the interrupted sample does not verify even "
@@ -5545,7 +5545,7 @@ def sc_verify_log():
     if not rig.exists():
         fail("rig log evidence is missing")
     else:
-        text = rig.read_text()
+        text = rig.read_text(encoding="utf-8")
         if crip("--verify-log", rig)[0] == 0:
             fail("rig log verified -- it carries an addendum after the "
                  "checksum and must not, or finding H1 has silently reverted")
@@ -5556,7 +5556,7 @@ def sc_verify_log():
                  "archived evidence was modified")
         else:
             clean = WORK / "rig_stripped.log"
-            clean.write_text(head + "\n")
+            clean.write_text(head + "\n", encoding="utf-8")
             ec, out = crip("--verify-log", clean)
             if ec != 0:
                 fail(f"rig log does not verify even with the addendum removed: "
@@ -5651,8 +5651,8 @@ def sc_interrupt():
                  f"its record")
 
         want = f"Rip completed:  no (interrupted by {name},"
-        if want not in log.read_text():
-            got = [ln for ln in log.read_text().splitlines()
+        if want not in log.read_text(encoding="utf-8"):
+            got = [ln for ln in log.read_text(encoding="utf-8").splitlines()
                    if ln.startswith("Rip completed:")]
             fail(f"interrupt/{name}: log says {got!r}, expected {want!r}")
 
@@ -5673,9 +5673,9 @@ def sc_interrupt():
         # drift, and pinning "track 1" here would pass even if the two
         # disagreed.
         at = re.search(r"^Interrupted at: track (\d+), mid-read$",
-                       log.read_text(), re.M)
+                       log.read_text(encoding="utf-8"), re.M)
         if not at:
-            got = [ln for ln in log.read_text().splitlines()
+            got = [ln for ln in log.read_text(encoding="utf-8").splitlines()
                    if ln.startswith("Interrupted at:")]
             fail(f"interrupt/{name}: no mid-read `Interrupted at:` line "
                  f"(found {got!r}). The log names how many tracks finished "
@@ -5689,7 +5689,7 @@ def sc_interrupt():
         # encoded. Exact lines, derived from the track `Interrupted at:`
         # names, and the partial file checked on disk: the line names a file,
         # so the file is the artifact to assert against.
-        text = log.read_text()
+        text = log.read_text(encoding="utf-8")
         enc = re.findall(r"^Encoder errors: .*$", text, re.M)
         if enc != ["Encoder errors: not applicable; no whole track was encoded"]:
             fail(f"interrupt/{name}: {enc!r}; no track's read completed, so "
@@ -5710,7 +5710,7 @@ def sc_interrupt():
                  f"from atexit, so this means the process did not unwind")
             continue
 
-        d = json.loads(diag.read_text())
+        d = json.loads(diag.read_text(encoding="utf-8"))
         rip_d = d.get("rip") or {}
         if rip_d.get("interrupted") is not True:
             fail(f"interrupt/{name}: diagnostics interrupted is "
@@ -6530,7 +6530,7 @@ def sc_outdir_is_a_file():
     are.
     """
     afile = WORK / "notadir"
-    afile.write_text("this is a regular file, not a directory\n")
+    afile.write_text("this is a regular file, not a directory\n", encoding="utf-8")
 
     ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                    "-P", "0", "-o", "flac", "-D", f"{afile}/out",
@@ -6630,7 +6630,7 @@ def sc_consumer_argv():
         "-a", "album=Greatest Hits:album_artist=The Police:date=2003",
         "-t", "1=title=Can’t Stand Losing You:artist=The Police:isrc=GBAAM0201089",
         "-t", "2=title=Roxanne:artist=Sting:isrc=GBAAM0201086")
-    meta = _meta_blocks((WORK / "cargv.log").read_text())
+    meta = _meta_blocks((WORK / "cargv.log").read_text(encoding="utf-8"))
 
     if set(meta) != {1, 2}:
         fail(f"consumer_argv: expected a Metadata block for tracks 1 and 2, "
@@ -6675,7 +6675,7 @@ def sc_consumer_argv():
                              ("already-escaped", "Don\\'t Stop")):
         rip(f"cargvq_{label}", "basic.cue", *common,
             "-t", f"1=title={title_arg}:artist=SHOULD_LAND:isrc=SHOULD_ALSO_LAND")
-        got = _meta_blocks((WORK / f"cargvq_{label}.log").read_text()).get(1, {})
+        got = _meta_blocks((WORK / f"cargvq_{label}.log").read_text(encoding="utf-8")).get(1, {})
         for key, want in (("title", "Don't Stop"),
                           ("artist", "SHOULD_LAND"),
                           ("isrc", "SHOULD_ALSO_LAND")):
@@ -6725,7 +6725,7 @@ def sc_signal_after_last_frame():
     ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                       "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
                       "-L", "log", env=env)
-    (WORK / "signal_after_last_frame.stdout").write_text(stdout)
+    (WORK / "signal_after_last_frame.stdout").write_text(stdout, encoding="utf-8")
     if not marker.exists():
         fail("signal_after_last_frame: the shim never raised the signal, so "
              "nothing below tests the window it targets")
@@ -6737,7 +6737,7 @@ def sc_signal_after_last_frame():
     if not log.exists():
         fail("signal_after_last_frame: no logfile was written")
         return
-    lines = log.read_text(errors="replace").splitlines()
+    lines = log.read_text(errors="replace", encoding="utf-8").splitlines()
     n = lines.count("Stopping, ripping incomplete!")
     if n != 1:
         fail(f"signal_after_last_frame: `Stopping, ripping incomplete!` "
@@ -6998,7 +6998,7 @@ def sc_sanitize():
     if not contract.exists():
         fail("sanitize: PROVIDER-CONTRACT.md is missing")
         return
-    text = contract.read_text()
+    text = contract.read_text(encoding="utf-8")
 
     section = re.search(r"^### P7c .*?(?=^### P7d )", text, re.M | re.S)
     if not section:
@@ -7268,8 +7268,8 @@ def sc_enhanced_cd():
     # sector's EDC as failed and exits 1. That is true of the fixture and is
     # not what this scenario is about.
     rip("ecd", "ecd.cue", "-X")
-    out = (WORK / "ecd.log").read_text()
-    log = (WORK / "out_ecd" / "log.log").read_text()
+    out = (WORK / "ecd.log").read_text(encoding="utf-8")
+    log = (WORK / "out_ecd" / "log.log").read_text(encoding="utf-8")
 
     if not SANITIZED:
         unprobed("enhanced_cd: UBSan/ASan is not compiled into this build, so "
@@ -7358,11 +7358,11 @@ def sc_enhanced_cd():
         "  TRACK 02 AUDIO\n"
         "    INDEX 01 00:02:00\n"
         "  TRACK 03 MODE1/2352\n"
-        "    INDEX 01 02:40:00\n")
+        "    INDEX 01 02:40:00\n", encoding="utf-8")
 
     rip("ecdbig", "ecdbig.cue", "-X")        # -X: as for ecd.cue above
-    bigout = (WORK / "ecdbig.log").read_text()
-    biglog = (WORK / "out_ecdbig" / "log.log").read_text()
+    bigout = (WORK / "ecdbig.log").read_text(encoding="utf-8")
+    biglog = (WORK / "out_ecdbig" / "log.log").read_text(encoding="utf-8")
 
     if not SANITIZED:
         unprobed("enhanced_cd/wellformed: UBSan/ASan is not compiled into this build, so "
@@ -7439,7 +7439,7 @@ def sc_enhanced_cd():
     # An offset-only line must still read exactly as it always has, on a disc
     # with no trailing data track. This is the half that must NOT have moved.
     rip("ecdoff", "basic.cue", "-s", "10")
-    offlog = (WORK / "out_ecdoff" / "log.log").read_text()
+    offlog = (WORK / "out_ecdoff" / "log.log").read_text(encoding="utf-8")
     if not re.search(r"^    End LSN:     \d+ \(with offset: -?\d+\)$", offlog,
                      re.M):
         fail("enhanced_cd/wellformed: the offset-only End LSN wording changed. "
@@ -7503,13 +7503,13 @@ def sc_bad_sector():
                  f"one unreadable sector -- the per-frame limit is not reaching "
                  f"libcdio-paranoia as a multiple of 5")
             continue
-        (WORK / f"bad_sector_{r}.log").write_text(log)
-        failed = int(count.read_text().strip()) if count.exists() else 0
+        (WORK / f"bad_sector_{r}.log").write_text(log, encoding="utf-8")
+        failed = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
         if failed < 1:
             fail(f"bad_sector: -r {r}: the shim failed no reads, so nothing "
                  f"below tests a bad sector")
             continue
-        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        text = (out / "log.log").read_text(errors="replace", encoding="utf-8") if (out / "log.log").exists() else ""
         if want_retry not in text.splitlines():
             fail(f"bad_sector: -r {r}: no line {want_retry!r} in the log")
         if "Track 1 read with no error reported." not in text.splitlines():
@@ -7564,11 +7564,11 @@ def sc_bad_sector():
     except subprocess.TimeoutExpired:
         fail("bad_sector: -Z 2 did not return within crip()'s timeout")
         return
-    text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+    text = (out / "log.log").read_text(errors="replace", encoding="utf-8") if (out / "log.log").exists() else ""
     check_error_positions("bad_sector: -Z 2", rec, text, 300, 600, bad, False)
     blocks, _ = paranoia_counts(text)
     try:
-        alls = json.loads(rec.read_text())["rip"]["track_state"][1]["paranoia_all_reads"]
+        alls = json.loads(rec.read_text(encoding="utf-8"))["rip"]["track_state"][1]["paranoia_all_reads"]
     except Exception:
         alls = None
     if len(blocks) == 2 and alls and alls["READ"] <= blocks[1].get("READ", 0):
@@ -7614,7 +7614,7 @@ def sc_p0_bad_sector():
     ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
                  "-r", "10", "-o", "pcm", "-D", control, "-F", "{track}",
                  "-L", "log")
-    clean = read_counts((control / "log.log").read_text(errors="replace")
+    clean = read_counts((control / "log.log").read_text(errors="replace", encoding="utf-8")
                         if (control / "log.log").exists() else "")
     if ec != 0 or len(clean) != 2:
         fail(f"p0_bad_sector: the control rip exited {ec} with READ counts {clean}")
@@ -7638,12 +7638,12 @@ def sc_p0_bad_sector():
         fail("p0_bad_sector: -P 0 did not return on one unreadable sector -- "
              "paranoia's disable mode is looping on an empty root again")
         return
-    failed = int(count.read_text().strip()) if count.exists() else 0
+    failed = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
     if failed < 1:
         fail("p0_bad_sector: the shim failed no reads, so nothing below tests a "
              "bad sector")
         return
-    text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+    text = (out / "log.log").read_text(errors="replace", encoding="utf-8") if (out / "log.log").exists() else ""
     lines = text.splitlines()
     if "Track 1 read with no error reported." not in lines:
         fail("p0_bad_sector: track 1 should read clean")
@@ -7713,7 +7713,7 @@ def sc_z_extraction_speed():
         if ec != 0:
             fail(f"z_extraction_speed: {tag}: cyanrip exited {ec}")
             return
-        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        text = (out / "log.log").read_text(errors="replace", encoding="utf-8") if (out / "log.log").exists() else ""
         speed = re.search(r"(?m)^    Extraction speed:  ([0-9.]+)x$", text)
         elapsed = re.search(r"(?m)^    Elapsed:            ([0-9.]+) s$", text)
         frames = re.search(r"(?m)^    Frames:      (\d+)$", text)
@@ -7867,14 +7867,14 @@ def sc_repeat_limit():
         if ec != 0:
             fail(f"repeat_limit: cycle {cycle} run {run}: cyanrip exited {ec}; hitting "
                  f"the repeat limit is not an error")
-        flips = int(count.read_text().strip()) if count.exists() else 0
+        flips = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
         # One read of the sector per pass, three passes: anything else means
         # the schedule below is not the one the reads followed.
         if flips != 3:
             fail(f"repeat_limit: cycle {cycle} run {run}: the shim varied {flips} reads, "
                  f"not 3, so the reads did not disagree as this test assumes")
             continue
-        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        text = (out / "log.log").read_text(errors="replace", encoding="utf-8") if (out / "log.log").exists() else ""
         lines = text.splitlines()
         noun = "read" if agreed == 1 else "reads"
         want = f"Done; (repeat limit of 3 reads reached; at most {agreed} {noun} agreed)"
@@ -7972,7 +7972,7 @@ def sc_repeat_limit_keeps_most_agreed():
         if ec != 0:
             fail(f"repeat_limit_keeps_most_agreed: {tag}: cyanrip exited {ec}")
             continue
-        flips = int(count.read_text().strip()) if count.exists() else 0
+        flips = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
         if flips != limit:
             fail(f"repeat_limit_keeps_most_agreed: {tag}: the shim varied "
                  f"{flips} reads, not {limit}, so the schedule is not the one "
@@ -7988,7 +7988,7 @@ def sc_repeat_limit_keeps_most_agreed():
                  f"a tie); sector {flip}'s first byte carries v{seen}"
                  + (", the last read's" if seen == last else ""))
             continue
-        text = (out / "log.log").read_text(errors="replace")
+        text = (out / "log.log").read_text(errors="replace", encoding="utf-8")
         inv = next((ln for ln in text.splitlines()
                     if ln.startswith("Invoked as:")), "")
         if any(f not in inv.split() for f in flags):
@@ -8035,7 +8035,7 @@ def sc_gaps_unknown_pregap():
     full = WORK / "out_gaps_full"
     ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
                  "-o", "pcm", "-D", full, "-F", "{track}", "-L", "log")
-    text = (full / "log.log").read_text(errors="replace") if (full / "log.log").exists() else ""
+    text = (full / "log.log").read_text(errors="replace", encoding="utf-8") if (full / "log.log").exists() else ""
     m = re.search(r"^    Pregap LSN:  unknown \(([^)]+)\)$", text, re.M)
     if ec != 0 or not m:
         fail(f"gaps_unknown_pregap: the whole-disc rip exited {ec} and its track "
@@ -8050,7 +8050,7 @@ def sc_gaps_unknown_pregap():
             ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
                          "-P", "0", *extra, "-o", "pcm", "-D", out, "-F",
                          "{track}", "-L", "log")
-            lines = ((out / "log.log").read_text(errors="replace")
+            lines = ((out / "log.log").read_text(errors="replace", encoding="utf-8")
                      if (out / "log.log").exists() else "").splitlines()
         if want not in lines:
             fail(f"gaps_unknown_pregap: {name}: the Gaps: list has no line "
@@ -8097,7 +8097,7 @@ def sc_spool_refusal():
             fail(f"spool_refusal: {name}: a -Z rip that could not spool exited "
                  f"{ec}, not 1")
         want = "Error creating the -Z spool: No space left on device!"
-        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        text = (out / "log.log").read_text(errors="replace", encoding="utf-8") if (out / "log.log").exists() else ""
         lines = text.splitlines()
         for where, body in (("the log", lines), ("stdout", stdout.splitlines())):
             if want not in body:
@@ -8160,12 +8160,12 @@ def sc_paranoia_skip():
         if ec != 0:
             fail(f"paranoia_skip: cycle {cycle}: cyanrip exited {ec}; a rip whose "
                  f"only errors are skips exits as the drive's count says")
-        flips = int(count.read_text().strip()) if count.exists() else 0
+        flips = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
         if flips < 2:
             fail(f"paranoia_skip: cycle {cycle}: the shim varied {flips} read(s), "
                  f"so the sector did not change between reads")
             continue
-        text = (out / "log.log").read_text(errors="replace") if (out / "log.log").exists() else ""
+        text = (out / "log.log").read_text(errors="replace", encoding="utf-8") if (out / "log.log").exists() else ""
         lines = text.splitlines()
         # The per-track paranoia rows are indented four spaces and the disc's
         # two, so a four-space SKIP row belongs to the outcome line above it.
@@ -8212,7 +8212,7 @@ def sc_paranoia_skip():
             fail(f"paranoia_skip: cycle {cycle}: printed "
                  f"{m.group(0) if m else 'no Ripping errors: line'!r}, not {want!r}")
         try:
-            rec = json.loads(diag.read_text())["rip"]
+            rec = json.loads(diag.read_text(encoding="utf-8"))["rip"]
             got = (rec["ripping_errors"], rec["paranoia_skips"])
         except (OSError, ValueError, KeyError, TypeError) as e:
             got = f"unreadable ({e})"
@@ -8273,14 +8273,14 @@ def sc_repeat_resets_filter():
         if ec != 0:
             fail(f"repeat_resets_filter: {name}: cyanrip exited {ec}")
             return
-        flips = int(count.read_text().strip()) if count.exists() else 0
+        flips = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
         want = 5 if name == "z" else 1
         if flips != want:
             fail(f"repeat_resets_filter: {name}: the shim varied {flips} reads, "
                  f"not {want}, so the passes did not read what this test assumes")
             return
         outs[name] = out
-    log = (outs["z"] / "log.log").read_text(errors="replace")
+    log = (outs["z"] / "log.log").read_text(errors="replace", encoding="utf-8")
     if "  Secure re-read:  converged after 5 reads" not in log.splitlines():
         fail("repeat_resets_filter: the -Z rip did not converge on its fifth "
              "read, so its kept pass is not the one the single pass matches")
@@ -8382,7 +8382,7 @@ def sc_abort_footer():
     if not log.exists():
         fail("abort_footer: the aborting run wrote no logfile at all")
         return
-    text = log.read_text(errors="replace")
+    text = log.read_text(errors="replace", encoding="utf-8")
 
     # The footer, line by line. Named individually rather than swept, because
     # "some of the footer is present" is the state that shipped.
@@ -8441,7 +8441,7 @@ def sc_contract_composed():
     segment's text" is exactly the property the false sentence would break, and
     it is checkable on the one branch we can reach.
     """
-    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text()
+    contract = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
 
     # The cache_probe row, POSITIONALLY: from its own heading to the next
     # composed row's heading or the next section, whichever comes first. Not a
@@ -8561,7 +8561,7 @@ def sc_diag_repeated_flag():
     # 4. It reaches the record as well as the terminal -- that is why it is
     # emitted after crip_diag_enable() rather than before it.
     try:
-        rec = json.loads(b.read_text())
+        rec = json.loads(b.read_text(encoding="utf-8"))
     except ValueError as e:
         fail(f"diag_repeated_flag: the record is not JSON: {e}")
         return
@@ -8595,7 +8595,7 @@ def sc_contract_diagnostics():
         fail("contract_diagnostics: PROVIDER-CONTRACT.md is missing")
         return
 
-    text = contract.read_text()
+    text = contract.read_text(encoding="utf-8")
     section = re.search(r"^### P8b .*?(?=^### P8c )", text, re.M | re.S)
     if not section:
         fail("contract_diagnostics: no P8b section -- the diagnostics record "
@@ -8621,7 +8621,7 @@ def sc_contract_diagnostics():
         fail("contract_diagnostics: no record was written")
         return
 
-    record = json.loads(diag.read_text())
+    record = json.loads(diag.read_text(encoding="utf-8"))
 
     def walk(node, path, acc):
         if isinstance(node, dict):

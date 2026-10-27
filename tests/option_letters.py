@@ -87,7 +87,7 @@ def table(src):
 
 def git(*args):
     r = subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True,
-                       text=True)
+                       text=True, encoding="utf-8")
     return r.stdout if r.returncode == 0 else None
 
 
@@ -95,14 +95,14 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("usage: option_letters.py <cyanrip binary>")
     r = subprocess.run([sys.argv[1], "--help"], capture_output=True,
-                       text=True)
+                       text=True, encoding="utf-8")
     shown = {m.group(1): m.group(2) or "" for m in HELP.finditer(r.stdout)}
     if len(shown) < 10:
         fail(f"--help listed {len(shown)} options; the reader is broken or "
              f"the binary printed something else (exit {r.returncode})")
         return 1
 
-    ours = table((ROOT / SRC).read_text())
+    ours = table((ROOT / SRC).read_text(encoding="utf-8"))
     if ours != shown:
         diff = {k: (ours.get(k), shown.get(k))
                 for k in set(ours) | set(shown) if ours.get(k) != shown.get(k)}
@@ -138,7 +138,7 @@ def main():
         if shown.get(was.lstrip("-")) is None:
             fail(f"{was} is gone; it was renamed from -{letter}, not removed")
         r = subprocess.run([sys.argv[1], f"-{letter}", "1", "-I"],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, encoding="utf-8")
         said = r.stdout + r.stderr
         if r.returncode == 0 or f"-{letter}" not in said:
             fail(f"the binary did not refuse -{letter}, naming it: exit "
