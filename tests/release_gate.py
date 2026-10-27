@@ -1118,7 +1118,9 @@ def test_manifest_stable_on_an_open_round_publishes_and_says_so():
     import tempfile, pathlib as _p
     with tempfile.TemporaryDirectory() as d:
         f = _p.Path(d) / "l.tsv"
-        f.write_text(_ledger([(1, "stable", "v1", "aaaaaaa", 999)]))
+        # A real commit: the generator reads each released commit's tree, and
+        # refuses one git cannot find (review C item 6.3)
+        f.write_text(_ledger([(1, "stable", "v1", "c4d1a00", 999)]))
         orig = m.LEDGER
         try:
             m.LEDGER = f
@@ -1231,6 +1233,15 @@ def test_manifest_build_command_is_derived_per_commit():
     new = m.build_command("c4d1a00")
     check("-Ddeclare_released=true" in new,
           f"c4d1a00 declares the option but its build command omits it: {new!r}")
+
+    # A commit git cannot find is an error, not a release without the option
+    # (review C item 6.3): that answer would drop -Ddeclare_released=true.
+    try:
+        got = m.build_command("0" * 40)
+        check(False, f"a commit git cannot find gave a build command: {got!r}")
+    except SystemExit as e:
+        check("cannot read the tree" in str(e),
+              f"a missing commit stopped the generator without saying so: {e}")
 
     # And the shipped manifest carries one per channel.
     man = m.build()
