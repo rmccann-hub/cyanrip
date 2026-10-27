@@ -1,5 +1,55 @@
 Unreleased
 ==========
+**Review C's first section, the items Platterpus can notice**, built here and
+shipped in `.28` only once Platterpus accepts them in a lap, as the operator's
+message of 2026-10-27 asks:
+- **1.3**: a write that fails to a log, a CUE sheet or stdout is named, with
+  its error, and the run exits 1 unless a class already applies (`2aa3d8a`).
+  Each file keeps the first error it met. A log's or sheet's name goes to
+  stdout once it is closed, and stdout's own to stderr. The diagnostics record
+  names a failed write on stderr, as it named a failed open, and like that open
+  it leaves the exit code at 0. `docs/seam-commands.md` §7, a shared document,
+  records it that way. A failing code for both changes that document, so it
+  is proposed to Platterpus rather than made here. `lost_writes` points each
+  at `/dev/full`, and skips where there is none.
+- **1.4**: `Invoked as:` and the record's `invocation` give `--acoustid-key`'s
+  value as `[withheld]` (`8e54c84`), and `tools/redact.py` withholds one an
+  older build wrote (`32d032a`). `acoustid_key_withheld` and
+  `tests/redaction.py` hold each.
+- **1.5**: AccurateRip and the Cover Art DB are fetched over HTTPS, with the
+  request and any redirect limited to it (`e1c6601`). A response is capped at
+  4 MiB and an image at 64 MiB, each cap with its own message. A URL given
+  with `-C` keeps the scheme its caller chose. `tests/arresp.c` and the new
+  `tests/coverart_net.c` hold it, and nothing in them leaves the machine.
+- **The Windows build's curl had no TLS backend** (`f897f1d`). It was
+  configured with `--with-winssl`, which curl 8.23's configure no longer has,
+  and with `--without-ssl`. The released Windows builds still fetched both
+  databases, which they reached over `http://`, but a `-C https://` URL failed
+  there. curl now builds with Schannel. The build stops if `libcurl.pc` lacks
+  HTTPS, and a static build links curl's private libraries. Found surveying
+  the other forks of cyanrip. The Windows job in CI is what builds it.
+
+**Five points from the independent check of #65**, each with a line in the
+handoff:
+- a failed allocation part way through an AccurateRip response now keeps
+  nothing (`8442350`). It had left the tracks already filled marked found and
+  unsorted. `tests/arresp.c` makes the allocation fail;
+- the track encoder's clone of the cover packet is checked (`5d1ca73`);
+- a CUE sheet line lost to a failed allocation is named as lost text, and the
+  run exits 1 (`4537ff9`);
+- `tests/gen_fixtures.py` keeps the committed `art.avif` when ffmpeg has no
+  libaom-av1 encoder (`3d491a8`);
+- and a note on #65's `181473a`: testing `res != CURLE_OK` rather than
+  `res < 0` makes `fetch_image()` free the art on four more error paths: the
+  transfer's own failure and the three queries after it. That cleanup never
+  ran before. Neither the check nor a reading here found anything it breaks.
+  Each path returns an error. A Cover Art DB cover that fails is not counted,
+  and one `-C` gave stops the rip before the report that reads it. The
+  context's own cleanup then frees it again, which is safe: every field was
+  freed to NULL.
+
+Every test named fails with its fix reverted, each part alone.
+
 **Review C's first section: the fixes that need no change on Platterpus's
 side**, from the claude-code-skills session's review of 2026-10-27
 (`REVIEW-C-2026-10-27.md`, read on the operator's word of that day). Each item
