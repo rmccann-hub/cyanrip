@@ -296,6 +296,54 @@ json_test = executable('json_test',
 )
 test('JSON reader', json_test)
 
+## The parsers of data from outside this program, each behind a harness in
+## tests/fuzz/ (review C item 3.8): the JSON reader, AccurateRip's response
+## and -Y's check of a log. Every build runs each harness over its committed
+## seeds and 2000 mutations of each (tests/fuzz/driver.c), so CI's sanitizer
+## rows run them under ASan and UBSan. With -Dfuzz=true, and clang, each is
+## also built for libFuzzer as fuzz_<name>, which CI's fuzz job runs.
+fuzz_harnesses = {
+    'json': {
+        'sources': [ 'fuzz/fuzz_json.c', '../src/json.c' ],
+        'deps': [ dependency('libavutil') ],
+        'seeds': files('fuzz/seeds/json/submit-ok.json',
+                       'fuzz/seeds/json/error.json',
+                       'fuzz/seeds/json/values.json'),
+    },
+    'accurip': {
+        'sources': [ 'fuzz/fuzz_accurip.c' ],
+        'deps': unit_test_deps + [ dependency('libcurl') ],
+        'seeds': files('fuzz/seeds/accurip/dBAR-014.bin'),
+    },
+    'log': {
+        'sources': [ 'fuzz/fuzz_log.c', '../src/fun512.c' ],
+        'deps': [ dependency('libavutil') ],
+        'seeds': files('fuzz/seeds/log/no-checksum.txt',
+                       'fuzz/seeds/log/mismatch.txt',
+                       '../docs/golden-reference.log'),
+    },
+}
+if get_option('fuzz') and cc.get_id() != 'clang'
+    error('-Dfuzz=true needs clang, for libFuzzer; this compiler is ' + cc.get_id())
+endif
+foreach name, h : fuzz_harnesses
+    driven = executable('fuzz_' + name + '_seeds',
+        sources: h['sources'] + [ 'fuzz/driver.c' ],
+        include_directories: [ '../src', 'fuzz' ],
+        dependencies: h['deps'],
+    )
+    test('Fuzz harness, ' + name, driven, args: h['seeds'], timeout: 300)
+    if get_option('fuzz')
+        executable('fuzz_' + name,
+            sources: h['sources'],
+            include_directories: [ '../src', 'fuzz' ],
+            dependencies: h['deps'],
+            c_args: [ '-fsanitize=fuzzer' ],
+            link_args: [ '-fsanitize=fuzzer' ],
+        )
+    endif
+endforeach
+
 genopt_test = executable('genopt_test',
     sources: [ 'genopt.c' ],
     include_directories: [ '../src' ],

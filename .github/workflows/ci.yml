@@ -161,6 +161,48 @@ jobs:
         if: always()
         run: python3 tools/check-settled.py --timing-from build/meson-logs/testlog.json
 
+  # Each parser of data from outside this program under libFuzzer, with ASan
+  # and UBSan, for a minute from its committed seeds (review C item 3.8): the
+  # JSON reader, AccurateRip's response and -Y's check of a log. A finding
+  # fails the job, and libFuzzer prints the input that found it. Ubuntu
+  # 24.04's clang 18, as the session that wrote the harnesses ran them.
+  fuzz:
+    if: github.event_name != 'release'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y meson ninja-build pkg-config ffmpeg \
+            clang-18 libclang-rt-18-dev \
+            libavcodec-dev libavformat-dev libavfilter-dev libavutil-dev \
+            libswresample-dev libcdio-dev libcdio-cdda-dev libcdio-paranoia-dev \
+            libmusicbrainz5-dev libcurl4-openssl-dev libqrencode-dev
+
+      - name: Build the fuzz targets
+        run: |
+          CC=clang-18 meson setup build-fuzz -Dfuzz=true \
+            -Db_sanitize=address,undefined -Db_lundef=false
+          ninja -C build-fuzz tests/fuzz_json tests/fuzz_accurip tests/fuzz_log
+
+      - name: Fuzz each parser for a minute
+        run: |
+          for h in json accurip log; do
+            mkdir -p "corpus/$h"
+            cp tests/fuzz/seeds/$h/* "corpus/$h/"
+          done
+          cp docs/golden-reference.log corpus/log/
+          for h in json accurip log; do
+            echo "== $h"
+            "./build-fuzz/tests/fuzz_$h" -max_total_time=60 \
+              -print_final_stats=1 "corpus/$h"
+          done
+
   macos:
     if: github.event_name != 'release'
     runs-on: macos-26
