@@ -69,6 +69,8 @@ jobs:
       # `fetch-depth: 0`, which fetches every branch and tag, the evidence
       # branch among them (PROTOCOL.md v9 §17, HR-2 8b).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Fetch the history the suite reads
         run: .github/fetch-history.sh platterpus-fork master
@@ -122,6 +124,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Fetch the history the suite reads
         run: .github/fetch-history.sh platterpus-fork master
@@ -159,6 +163,8 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Fetch the history, the tags and the evidence branch
         run: .github/fetch-history.sh platterpus-fork master --tags --evidence
@@ -238,6 +244,8 @@ jobs:
           shell: msys2 {0}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0
         with:
           msystem: UCRT64
