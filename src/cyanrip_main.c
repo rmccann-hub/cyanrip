@@ -1271,6 +1271,7 @@ static double sample_peak_rel_amp(const uint8_t *data, const int bytes)
  * is read, and no extra drive time. */
 static int crip_spool_write(cyanrip_ctx *ctx, FILE *f, const uint8_t *data, int bytes)
 {
+    errno = 0;
     if (bytes <= 0 || fwrite(data, 1, bytes, f) == (size_t)bytes)
         return 0;
     int err = AVERROR(errno ? errno : EIO);
@@ -1594,6 +1595,7 @@ repeat_ripping:;
     crip_init_checksum_ctx(ctx, &checksum_ctx, t);
 
     if (ctx->settings.ripping_retries) {
+        errno = 0;
         pass_spool = tmpfile();
         if (!pass_spool) {
             ret = AVERROR(errno ? errno : EIO);
@@ -4132,6 +4134,7 @@ int main(int argc, char **argv)
      * the log reads, so a write to it that failed is a lost one too (review C
      * item 1.3). stderr, as the diagnostics record's own failures are named. */
     int out_err = cyanrip_log_stdout_error();
+    errno = 0;
     if (fflush(stdout) == EOF && !out_err)
         out_err = errno ? errno : EIO;
     if (ferror(stdout) && !out_err)

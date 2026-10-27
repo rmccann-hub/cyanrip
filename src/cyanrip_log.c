@@ -1368,11 +1368,20 @@ int cyanrip_log_init(cyanrip_ctx *ctx)
 /* The first failed write to log i is the one kept: a full disk fails every
  * write after it, and the first says what went wrong. Review C item 1.3: no
  * write to a log was checked, so one that ran out of room stopped mid-line,
- * with no footer, and the run still exited 0. */
+ * with no footer, and the run still exited 0. The caller clears errno before
+ * the call that failed, so a value left by an earlier one is not given as
+ * the reason; a failure that sets none is EIO. */
 static void crip_log_write_failed(cyanrip_ctx *ctx, int i)
 {
     if (!ctx->logfile_err[i])
         ctx->logfile_err[i] = errno ? errno : EIO;
+}
+
+static void crip_log_put(cyanrip_ctx *ctx, int i, const char *str, size_t len)
+{
+    errno = 0;
+    if (fwrite(str, 1, len, ctx->logfile[i]) != len)
+        crip_log_write_failed(ctx, i);
 }
 
 /* The same for stdout, which carries every line a log does and is what a
@@ -1381,8 +1390,10 @@ static int crip_stdout_err = 0;
 
 static void crip_stdout_put(const char *str, size_t len)
 {
+    errno = 0;
     if (fwrite(str, 1, len, stdout) != len && !crip_stdout_err)
         crip_stdout_err = errno ? errno : EIO;
+    errno = 0;
     if (fflush(stdout) == EOF && !crip_stdout_err)
         crip_stdout_err = errno ? errno : EIO;
 }
@@ -1404,7 +1415,17 @@ int cyanrip_log_end(cyanrip_ctx *ctx)
         if (!ctx->logfile[i])
             continue;
 
-        if (!shactx)
+        /* The signature says this file is the log the run wrote. One that
+         * lost a write is not, and a signature over what did reach the disc
+         * would have -Y call it valid (review C item 1.3). It is left
+         * unsigned, which -Y reports as no checksum, and the loss is named
+         * below. Flushed first, so a write still buffered is counted. */
+        errno = 0;
+        if (fflush(ctx->logfile[i]) == EOF)
+            crip_log_write_failed(ctx, i);
+        if (ferror(ctx->logfile[i]) && !ctx->logfile_err[i])
+            ctx->logfile_err[i] = EIO;
+        if (ctx->logfile_err[i] || !shactx)
             goto fail;
 
         av_sha512_init(shactx, 512);
@@ -1424,16 +1445,19 @@ int cyanrip_log_end(cyanrip_ctx *ctx)
 
         crip_log_fun512(digest, i, digest_str);
 
+        errno = 0;
         if (fprintf(ctx->logfile[i], CRIP_LOG_FUN512_MARKER "%s\n", digest_str) < 0)
             crip_log_write_failed(ctx, i);
 fail:
         /* The close flushes, so it can be the first write to fail. Every
          * write is checked where it is made, so an error flag with none
          * recorded is not expected; it is still a lost write. */
+        errno = 0;
         if (fflush(ctx->logfile[i]) == EOF)
             crip_log_write_failed(ctx, i);
         if (ferror(ctx->logfile[i]) && !ctx->logfile_err[i])
             ctx->logfile_err[i] = EIO;
+        errno = 0;
         if (fclose(ctx->logfile[i]) == EOF)
             crip_log_write_failed(ctx, i);
         ctx->logfile[i] = NULL;
@@ -1521,17 +1545,18 @@ static void crip_early_flush(cyanrip_ctx *ctx)
         for (int i = 0; i < ctx->settings.outputs_num; i++) {
             if (!ctx->logfile[i])
                 continue;
-            int ok = fputs("--- output before this log was opened ---\n",
-                           ctx->logfile[i]) != EOF;
-            ok &= fwrite(crip_early, 1, crip_early_len,
-                         ctx->logfile[i]) == crip_early_len;
-            if (crip_early_dropped)
-                ok &= fprintf(ctx->logfile[i],
-                              "--- %zu earlier message(s) dropped: buffer full ---\n",
-                              crip_early_dropped) >= 0;
-            ok &= fputs("--- end of pre-log output ---\n", ctx->logfile[i]) != EOF;
-            if (!ok)
-                crip_log_write_failed(ctx, i);
+            static const char head[] = "--- output before this log was opened ---\n";
+            static const char foot[] = "--- end of pre-log output ---\n";
+            crip_log_put(ctx, i, head, sizeof(head) - 1);
+            crip_log_put(ctx, i, crip_early, crip_early_len);
+            if (crip_early_dropped) {
+                char dropped[80];
+                int n = snprintf(dropped, sizeof(dropped),
+                                 "--- %zu earlier message(s) dropped: buffer full ---\n",
+                                 crip_early_dropped);
+                crip_log_put(ctx, i, dropped, n);
+            }
+            crip_log_put(ctx, i, foot, sizeof(foot) - 1);
         }
     }
 
@@ -1565,8 +1590,7 @@ static av_printf_format(3, 0) void av_log_capture(void *ptr, int lvl,
         for (int i = 0; i < av_global_ctx->settings.outputs_num; i++) {
             if (!av_global_ctx->logfile[i])
                 continue;
-            if (fwrite(msg.str, 1, msg.len, av_global_ctx->logfile[i]) != msg.len)
-                crip_log_write_failed(av_global_ctx, i);
+            crip_log_put(av_global_ctx, i, msg.str, msg.len);
         }
     }
 
@@ -1642,8 +1666,7 @@ void cyanrip_vlog(cyanrip_ctx *ctx, int verbose, const char *format,
             if (!ctx->logfile[i])
                 continue;
 
-            if (fwrite(msg.str, 1, msg.len, ctx->logfile[i]) != msg.len)
-                crip_log_write_failed(ctx, i);
+            crip_log_put(ctx, i, msg.str, msg.len);
             reached_a_logfile = 1;
         }
     }

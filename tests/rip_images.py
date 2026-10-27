@@ -1860,6 +1860,76 @@ def sc_lost_writes():
         fail("lw_stdout: the log lost its footer to a failure of stdout")
 
 
+def sc_lost_log_line_is_not_signed():
+    # Review C 1.3. A log that lost one message and kept the rest was signed
+    # over what reached the disc, so -Y called it valid. The shim fails the
+    # one write that carries `Track 1 read with no error reported.` and lets
+    # every other through: the run names the loss and exits 1, the log has
+    # the lines on either side and no signature, and -Y says so (exit 3).
+    # Run again with the failure setting no errno after writes that left it
+    # at ENOENT: the reason given is EIO, not the stale value.
+    needs_preload_shim("lost_log_line_is_not_signed")
+    shim = os.environ.get("CYANRIP_LOSEWRITE_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"lost_log_line_is_not_signed: the shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    out = WORK / "out_lost_line"
+    marker = WORK / "lost_line.fired"
+    lost = "Track 1 read with no error reported."
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_LOSE_PATH="/log.log",
+               CRIP_LOSE_ON=lost, CRIP_LOSE_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                      "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                      "-L", "log", env=env)
+    if not marker.exists():
+        fail("lost_log_line_is_not_signed: the shim never failed a write, so "
+             "nothing below tests a log that lost one")
+        return
+    if ec != 1:
+        fail(f"lost_log_line_is_not_signed: exited {ec}, wanted 1")
+    line = f'Unable to write the log "{out}/log.log": No space left on device!'
+    if not re.search(rf"(?m)^{re.escape(line)}$", stdout):
+        fail(f"lost_log_line_is_not_signed: no line {line!r}")
+    if not re.search(rf"(?m)^{re.escape(lost)}$", stdout):
+        fail("lost_log_line_is_not_signed: stdout lost the line too, so the "
+             "shim failed more than the log's write")
+    lines = (out / "log.log").read_text(encoding="utf-8").splitlines()
+    if lost in lines:
+        fail("lost_log_line_is_not_signed: the log has the line the shim "
+             "failed, so it lost nothing")
+    for kept in ("Tracks:", "Summary:"):
+        if kept not in lines:
+            fail(f"lost_log_line_is_not_signed: the log lacks {kept!r}, so "
+                 "more than one write was lost")
+    if not any(ln.startswith("Rip completed:") for ln in lines):
+        fail("lost_log_line_is_not_signed: the log has no footer, so the "
+             "writes after the lost one did not go through")
+    if any(ln.startswith("Log FUN512:") for ln in lines):
+        fail("lost_log_line_is_not_signed: a log that lost a line is signed")
+    ec, text = crip("-Y", out / "log.log")
+    if ec != 3 or "No FUN512 checksum found in" not in text:
+        fail(f"lost_log_line_is_not_signed: -Y exited {ec} on the log, "
+             f"wanted 3 (no checksum): {text.strip()[-200:]!r}")
+
+    out = WORK / "out_lost_line_stale"
+    marker.unlink()
+    ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                      "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                      "-L", "log", env=dict(env, CRIP_LOSE_STALE="1"))
+    line = f'Unable to write the log "{out}/log.log": Input/output error!'
+    if not marker.exists():
+        fail("lost_log_line_is_not_signed: with a stale errno the shim never "
+             "failed a write")
+    elif ec != 1 or not re.search(rf"(?m)^{re.escape(line)}$", stdout):
+        got = re.findall(r"(?m)^Unable to write the log .*$", stdout)
+        fail(f"lost_log_line_is_not_signed: a failure that set no errno, "
+             f"after writes that left it set, exited {ec} and said {got}, "
+             f"not {line!r}")
+
+
 def sc_acoustid_key_withheld():
     # Review C 1.4. The AcoustID key is a credential; `Invoked as:` goes to
     # the log, stdout and the diagnostics record, and none may carry it

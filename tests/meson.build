@@ -282,10 +282,19 @@ imagecap_shim = shared_module('imagecap',
     name_prefix: '',
     dependencies: [ dependency('dl'), dependency('libcdio') ],
 )
+## One write to the log that fails, with the writes around it going through,
+## so the log on disk is missing a message and nothing else. Review C item 1.3:
+## such a log was signed and -Y called it valid. See its header.
+losewrite_shim = shared_module('losewrite',
+    sources: [ 'losewrite.c' ],
+    name_prefix: '',
+    dependencies: [ dependency('dl') ],
+)
 shim_env += [ 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path(),
               'CYANRIP_RAISESIG_SHIM=' + raisesig_shim.full_path(),
-              'CYANRIP_IMAGECAP_SHIM=' + imagecap_shim.full_path() ]
-shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim ]
+              'CYANRIP_IMAGECAP_SHIM=' + imagecap_shim.full_path(),
+              'CYANRIP_LOSEWRITE_SHIM=' + losewrite_shim.full_path() ]
+shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim, losewrite_shim ]
 endif
 
 json_test = executable('json_test',
@@ -899,6 +908,7 @@ rip_scenarios = [
     'art_extradata',
     'art_local_name',
     'lost_writes',
+    'lost_log_line_is_not_signed',
     'acoustid_key_withheld',
     'acoustid',
     'cue_only',
