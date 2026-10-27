@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #include <libavutil/sha512.h>
@@ -129,17 +130,31 @@ int main(void)
      * no disk. Before the bound existed, 65 MiB allocated fine, was read, and
      * parsed to CRIP_LOG_NO_CHECKSUM -- a different verdict from the one the
      * bound now produces, so a revert changes the answer in ANY build. */
+    /* A name of its own in the directory the test runs in, the build
+     * directory: a fixed /tmp name was shared by concurrent runs. A case that
+     * cannot run is a skip, exit 77, not a pass (review C item 3.4). */
+    int skipped = 0;
     {
-        const char *big = "/tmp/cyanrip-fun512-oversize.log";
-        FILE *bf = fopen(big, "wb");
+        char big[] = "cyanrip-fun512-oversize-XXXXXX";
+        int fd = mkstemp(big);
+        FILE *bf = fd >= 0 ? fdopen(fd, "wb") : NULL;
         if (!bf) {
-            printf("UNPROBED: could not create %s, oversize case not run\n", big);
+            if (fd >= 0) {
+                close(fd);
+                remove(big);
+            }
+            printf("SKIP: could not create %s, oversize case not run\n", big);
+            skipped = 1;
         } else {
             /* 1 byte past the cap, written sparsely. */
-            if (fseek(bf, CRIP_LOG_MAX_SIZE, SEEK_SET) || fputc('x', bf) == EOF)
-                printf("UNPROBED: could not extend %s\n", big);
-            fclose(bf);
-            if (cyanrip_verify_log(big) != CRIP_LOG_IO_ERROR) {
+            int made = !fseek(bf, CRIP_LOG_MAX_SIZE, SEEK_SET) &&
+                       fputc('x', bf) != EOF;
+            if (fclose(bf) == EOF)
+                made = 0;
+            if (!made) {
+                printf("SKIP: could not extend %s, oversize case not run\n", big);
+                skipped = 1;
+            } else if (cyanrip_verify_log(big) != CRIP_LOG_IO_ERROR) {
                 printf("FAIL: a file over CRIP_LOG_MAX_SIZE was read anyway\n");
                 fails++;
             }
@@ -150,6 +165,10 @@ int main(void)
     if (fails) {
         printf("%i check(s) failed\n", fails);
         return 1;
+    }
+    if (skipped) {
+        printf("every other check passed; the oversize case did not run\n");
+        return 77;
     }
     printf("all checks passed\n");
     return 0;
