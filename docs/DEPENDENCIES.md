@@ -7,8 +7,8 @@ Everything above **Measured where this was generated** is declared by the tree a
 ## The project
 
 - **cyanrip 0.9.4-rc3+platterpus.27**, the `platterpus-fork` build of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip), at [rmccann-hub/cyanrip](https://github.com/rmccann-hub/cyanrip). The only branch a consumer builds is `platterpus-fork`; `master` mirrors upstream.
-- **Language: C**, `c_std=c99`, built with meson (`meson_version: '>=0.53.0'`), and `-Werror=format`, `-Werror=format-extra-args`, `-Werror=implicit-function-declaration`.
-- **Tools and tests: Python 3, standard library only** — derived: no third-party import in `tools/` or `tests/`. No minimum Python version is declared anywhere in the tree.
+- **Language: C**, `c_std=c11`, built with meson (`meson_version: '>=0.62.0'`), and `-Werror=format`, `-Werror=format-extra-args`, `-Werror=implicit-function-declaration`.
+- **Tools and tests: Python 3, standard library only** — derived: no third-party import in `tools/` or `tests/`. Python `>=3.10`, declared in `meson.build`.
 - **Licence: LGPL-2.1-or-later**, read from `src/utils.c`'s header. The binary links libcdio and libcdio-paranoia, both GPL-3.0-or-later, so a built binary is subject to the GPL's terms; upstream's is too.
 
 ## Libraries linked
@@ -32,11 +32,12 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 
 ## Building and testing
 
-- **meson** >=0.53.0, **ninja**, **pkg-config** and a **C compiler**, with `-Werror=format`, `-Werror=format-extra-args`, `-Werror=implicit-function-declaration` making those warnings errors.
+- **meson** >=0.62.0, **ninja**, **pkg-config** and a **C compiler**, with `-Werror=format`, `-Werror=format-extra-args`, `-Werror=implicit-function-declaration` making those warnings errors.
 - **Programs the tools and tests run**, derived from their subprocess calls:
 
 | program | run by | for |
 |---|---|---|
+| `bash` | `tests/mingw_build.py` | runs the Windows build script's functions, its builds stubbed, to check where it stops |
 | `cd-paranoia` | `tools/rig-check.py` | on the rig only: the cache size the probe is measured against |
 | `cdparanoia` | `tools/rig-check.py` | on the rig only: the same, under its older name |
 | `distrobox` | `tools/rig-check.py` | on the rig only: the container the rig's ripper runs in |
@@ -44,11 +45,15 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `ffmpeg` | `tests/gen_fixtures.py`, `tests/rigcheck.py`, `tools/audio-checksums.py`, `tools/rig-check.py` | makes the disc-image fixtures' audio and decodes rips for checksums |
 | `ffprobe` | `tests/rip_images.py` | reads ripped files' tags, durations and encoder strings, as a witness independent of cyanrip |
 | `gcov` | `tools/coverage-summary.py` | coverage |
-| `git` | `tests/contract_delta.py`, `tests/evidence_readers.py`, `tests/evidence_tool.py`, `tests/handshake_wire.py` and 23 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
+| `git` | `tests/commit_subjects.py`, `tests/contract_delta.py`, `tests/evidence_readers.py`, `tests/evidence_tool.py` and 25 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
 | `meson` | `tools/sanitize-run.py` | configures the instrumented and mutated builds |
 | `ninja` | `tools/sanitize-run.py` | builds them |
 | `nm` | `tools/blackbox.py` | asks a binary whether sanitizer symbols are in it |
 | `pkg-config` | `tools/gen-dependency-map.py` | this map's measured versions; the build finds every library through it too |
+| `ruff` | `tests/python_lint.py` | the Python lint gate: Pyflakes's rules over tools/ and tests/, pinned in CI |
+| `sh` | `tests/session_hook.py` | runs the session-start hook on scratch repositories, as Claude Code runs it |
+| `valgrind` | `tests/valgrind_rip.py` | memcheck over one rip of the basic image, which sees inside the libraries as built |
+| `xargs` | `tests/mingw_build.py` | asked its version: that check needs GNU xargs, which the script runs, as MSYS2 has |
 
 ## Continuous integration
 

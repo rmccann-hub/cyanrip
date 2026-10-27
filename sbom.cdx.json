@@ -81,7 +81,7 @@
         },
         {
           "name": "cyanrip-fork:language",
-          "value": "C (c99)"
+          "value": "C (c11)"
         },
         {
           "name": "cyanrip-fork:consumer",
@@ -272,6 +272,10 @@
           "value": "True"
         },
         {
+          "name": "cyanrip-fork:measured:env:has-bash",
+          "value": "True"
+        },
+        {
           "name": "cyanrip-fork:measured:env:has-cd-paranoia",
           "value": "False"
         },
@@ -317,6 +321,22 @@
         },
         {
           "name": "cyanrip-fork:measured:env:has-pkg-config",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-ruff",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-sh",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-valgrind",
+          "value": "True"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-xargs",
           "value": "True"
         }
       ]
@@ -807,7 +827,7 @@
       "bom-ref": "tool:meson",
       "name": "meson",
       "scope": "excluded",
-      "description": "build system: meson.build requires >=0.53.0"
+      "description": "build system: meson.build requires >=0.62.0"
     },
     {
       "type": "application",
@@ -828,7 +848,7 @@
       "bom-ref": "tool:c-compiler",
       "name": "c-compiler",
       "scope": "excluded",
-      "description": "compiler: C, c_std=c99, -Werror=format, -Werror=format-extra-args, -Werror=implicit-function-declaration"
+      "description": "compiler: C, c_std=c11, -Werror=format, -Werror=format-extra-args, -Werror=implicit-function-declaration"
     },
     {
       "type": "application",
@@ -836,6 +856,19 @@
       "name": "python3",
       "scope": "excluded",
       "description": "language runtime: every tool and test script; standard library only"
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:bash",
+      "name": "bash",
+      "scope": "excluded",
+      "description": "runs the Windows build script's functions, its builds stubbed, to check where it stops",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/mingw_build.py"
+        }
+      ]
     },
     {
       "type": "application",
@@ -949,6 +982,10 @@
       "properties": [
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/commit_subjects.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tests/contract_delta.py"
         },
         {
@@ -994,6 +1031,10 @@
         {
           "name": "cyanrip-fork:run-by",
           "value": "tests/rip_images.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/session_hook.py"
         },
         {
           "name": "cyanrip-fork:run-by",
@@ -1106,6 +1147,58 @@
         {
           "name": "cyanrip-fork:run-by",
           "value": "tools/gen-dependency-map.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:ruff",
+      "name": "ruff",
+      "scope": "excluded",
+      "description": "the Python lint gate: Pyflakes's rules over tools/ and tests/, pinned in CI",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/python_lint.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:sh",
+      "name": "sh",
+      "scope": "excluded",
+      "description": "runs the session-start hook on scratch repositories, as Claude Code runs it",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/session_hook.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:valgrind",
+      "name": "valgrind",
+      "scope": "excluded",
+      "description": "memcheck over one rip of the basic image, which sees inside the libraries as built",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/valgrind_rip.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
+      "bom-ref": "run:xargs",
+      "name": "xargs",
+      "scope": "excluded",
+      "description": "asked its version: that check needs GNU xargs, which the script runs, as MSYS2 has",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/mingw_build.py"
         }
       ]
     }
@@ -1279,5 +1372,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:40cde63f-d3d6-522c-abe7-953ff2df58b8"
+  "serialNumber": "urn:uuid:f1f4c389-9331-5ab4-88a5-03e545d9f3b6"
 }
