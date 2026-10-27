@@ -749,6 +749,10 @@ test('Tool patterns are linear', python, args: [ files('tool_patterns.py') ])
 ## platterpus-fork, and no main.yml beside upstream's. Actions had never run
 ## here, so a regression would have shown first in a run with a write token.
 test('Workflows are hardened', python, args: [ files('workflows.py') ])
+## .github/mingw-build.sh runs only in the Windows job. This sources its
+## functions with stubs for the builds and checks that each failure stops it
+## (review C item 4.6); skipped without a GNU Bash 4.4 and xargs, as MSYS2 has.
+test('Windows build script stops where it fails', python, args: [ files('mingw_build.py') ])
 ## tools/tag-release-check.py decides every tag the tag workflow creates, on a
 ## repository this builds: on platterpus-fork, named by the manifest at that
 ## commit, ordered by release_seq, never moved. The workflow itself cannot be

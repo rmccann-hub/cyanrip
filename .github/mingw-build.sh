@@ -1,4 +1,11 @@
 #!/bin/bash
+# Strict: a failed command, an unset name or a failed stage of a pipe stops
+# the build where it happened, rather than at a later step that cannot say
+# why (review C item 4.6). Bash ignores -e inside a function called from an
+# && list or an if, as each build_* is, so those stop by their own && links,
+# and buildCyanrip stops when one fails. tests/mingw_build.py runs these
+# functions on Linux.
+set -euo pipefail
 
 # The six libraries this build compiles, each pinned to one commit and named
 # by the release it is (I16, round 34), so two runs build the same sources and
@@ -23,20 +30,30 @@ buildCyanrip() {
     if [[ -f $CYANRIPINSTALLDIR/.libs-built ]]; then
         echo "curl, neon, libmusicbrainz, libqrencode, LAME and FFmpeg: restored from the cache"
     else
-        build_lame &&
-        build_curl &&
-        build_neon &&
-        build_libmusicbrainz &&
-        build_libqrencode &&
-        build_ffmpeg &&
+        # A failed list here had gone on to build cyanrip against whatever
+        # MSYS2 had installed. The last "name: release" line above this
+        # message is the library that failed.
+        if ! { build_lame &&
+               build_curl &&
+               build_neon &&
+               build_libmusicbrainz &&
+               build_libqrencode &&
+               build_ffmpeg; }; then
+            echo "A library failed to build; the last line naming one is it" >&2
+            exit 1
+        fi
         touch "$CYANRIPINSTALLDIR/.libs-built"
     fi
     # AccurateRip and the Cover Art DB are fetched over HTTPS only (review C
     # item 1.5), so a curl without it would fail every fetch. Checked on
-    # every run, a cached build included, from the file meson reads.
-    if ! pkg-config --variable=supported_protocols libcurl | grep -qw HTTPS; then
-        echo "curl was built without HTTPS: $(pkg-config --variable=supported_protocols libcurl)" >&2
-        return 1
+    # every run, a cached build included, from the file meson reads. Read
+    # into a name rather than piped: grep -q may close the pipe before
+    # pkg-config has written its newline, and pipefail would count that.
+    local protocols
+    protocols=$(pkg-config --variable=supported_protocols libcurl)
+    if ! grep -qw HTTPS <<< "$protocols"; then
+        echo "curl was built without HTTPS: $protocols" >&2
+        exit 1
     fi
     build_cyanrip
 }
@@ -46,7 +63,7 @@ cyan_prepare() {
     CYANRIPREPODIR="${GITHUB_WORKSPACE:-$(realpath "$rootdir/..")}"
     CYANRIPINSTALLDIR="$(realpath "$rootdir/_install")"
     CYANRIPBUILDDIR="$(realpath "$rootdir/_build")"
-    PKG_CONFIG_PATH=$CYANRIPINSTALLDIR/lib/pkgconfig:$PKG_CONFIG_PATH
+    PKG_CONFIG_PATH=$CYANRIPINSTALLDIR/lib/pkgconfig:${PKG_CONFIG_PATH:-}
     CPATH="$(cygpath -pm $CYANRIPINSTALLDIR/include:$MINGW_PREFIX/include)"
     LIBRARY_PATH="$(cygpath -pm $CYANRIPINSTALLDIR/lib:$MINGW_PREFIX/lib)"
     CPPFLAGS="-D_FORTIFY_SOURCE=0 -D__USE_MINGW_ANSI_STDIO=1"
@@ -67,8 +84,11 @@ cyan_do_vcs() {
     vcsFolder=$(basename "$vcsURL" .git)
 
     echo "$vcsFolder: $vcsRelease at $vcsCommit"
-    cd "$CYANRIPBUILDDIR" &&
-    rm -rf "$vcsFolder" &&
+    # :? stops on an empty name. `cd ""` succeeds in Bash and stays put, so
+    # an empty build directory would have the rm remove a folder of this
+    # name wherever the script ran
+    cd "${CYANRIPBUILDDIR:?}" &&
+    rm -rf "${vcsFolder:?}" &&
     git init -q "$vcsFolder" &&
     cd "$vcsFolder" &&
     git fetch -q --depth 1 "$vcsURL" "$vcsCommit" &&
@@ -84,8 +104,8 @@ cyan_do_tarball() {
     folder=${file%.tar.gz}
 
     echo "$folder: $release, $file with SHA-256 $sha256"
-    cd "$CYANRIPBUILDDIR" &&
-    rm -rf "$folder" "$file" &&
+    cd "${CYANRIPBUILDDIR:?}" &&
+    rm -rf "${folder:?}" "${file:?}" &&
     curl -fsSL --retry 3 -o "$file" "$url" &&
     echo "$sha256  $file" | sha256sum -c - &&
     tar -xzf "$file" &&
@@ -95,16 +115,28 @@ cyan_do_tarball() {
 cyan_do_hide_all_sharedlibs() {
     local files
     # The environment's own prefix, so this holds under UCRT64 as under MINGW64
-    files="$(find "$MINGW_PREFIX/lib" "$MINGW_PREFIX/$MINGW_CHOST/lib" -name "*.dll.a" 2> /dev/null)"
+    # One of the two directories may not exist, which find reports and which
+    # is not a failure here
+    files="$(find "$MINGW_PREFIX/lib" "$MINGW_PREFIX/$MINGW_CHOST/lib" -name "*.dll.a" 2> /dev/null || true)"
     local tomove=()
     for file in $files; do
-        [[ -f ${file%*.dll.a}.a ]] && tomove+=("$file")
+        if [[ -f ${file%*.dll.a}.a ]]; then
+            tomove+=("$file")
+        fi
     done
-    printf '%s\0' "${tomove[@]}" | xargs -0ri mv -f '{}' '{}.dyn'
+    # Nothing to hide is nothing to move, not a move of ''
+    if (( ${#tomove[@]} )); then
+        printf '%s\0' "${tomove[@]}" | xargs -0ri mv -f '{}' '{}.dyn'
+    fi
 }
 
 cyan_hide_files() {
-    for opt; do [[ -f $opt ]] && mv -f "$opt" "$opt.bak"; done
+    local opt
+    for opt; do
+        if [[ -f $opt ]]; then
+            mv -f "$opt" "$opt.bak"
+        fi
+    done
 }
 cyan_hide_conflicting_libs() {
     local -a installed
@@ -216,5 +248,8 @@ build_cyanrip() {
     ninja -C build src/cyanrip.exe && strip --strip-all build/src/cyanrip.exe -o cyanrip.exe
 }
 
-cd "$(dirname "$0")"
-buildCyanrip
+# Built when run; tests/mingw_build.py sources it for its functions alone
+if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+    cd "$(dirname "$0")"
+    buildCyanrip
+fi

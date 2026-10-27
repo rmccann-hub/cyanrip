@@ -130,6 +130,10 @@ PROGRAMS = {
                   "library through it too",
     "dpkg": "this map: names the package that owns a library, to read its "
             "copyright file",
+    "bash": "runs the Windows build script's functions, its builds stubbed, "
+            "to check where it stops",
+    "xargs": "asked its version: that check needs GNU xargs, which the "
+             "script runs, as MSYS2 has",
 }
 
 # Every http(s) literal in src/, keyed by host. The KEYS must equal what
