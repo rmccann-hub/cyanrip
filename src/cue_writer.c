@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <errno.h>
+#include <stdarg.h>
+
 #include <libavutil/bprint.h>
 
 #include "cyanrip_log.h"
@@ -49,6 +52,20 @@ int cyanrip_cue_init(cyanrip_ctx *ctx)
     }
 
     return 0;
+}
+
+/* Every line of a sheet is written here, so the first write that fails is
+ * kept and cyanrip_cue_end() can name the sheet and say why. Review C item
+ * 1.3: no write was checked, and a sheet on a full disk came out empty with
+ * the run exiting 0. */
+static av_printf_format(3, 4) void cue_printf(cyanrip_ctx *ctx, int Z,
+                                              const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    if (vfprintf(ctx->cuefile[Z], format, args) < 0 && !ctx->cuefile_err[Z])
+        ctx->cuefile_err[Z] = errno ? errno : EIO;
+    va_end(args);
 }
 
 /* CUE sheets have no way of escaping a quote inside a quoted string, so
@@ -85,7 +102,7 @@ static char *cue_str(cyanrip_ctx *ctx, const char *str)
         char *val = cue_str(ctx, dict_get(DICT, TAG));                         \
         if (val) {                                                             \
             for (int Z = 0; Z < ctx->settings.outputs_num; Z++)                \
-                fprintf(ctx->cuefile[Z], FORMAT, val);                         \
+                cue_printf(ctx, Z, FORMAT, val);                               \
         }                                                                      \
         av_free(val);                                                          \
     } while (0)
@@ -106,7 +123,7 @@ void cyanrip_cue_start(cyanrip_ctx *ctx)
                 if (tmp && val) {
                     for (int i = 0; tmp[i]; i++)
                         tmp[i] = av_toupper(tmp[i]);
-                    fprintf(ctx->cuefile[Z], "REM %s \"%s\"\n", tmp, val);
+                    cue_printf(ctx, Z, "REM %s \"%s\"\n", tmp, val);
                 }
                 av_free(val);
                 av_free(tmp);
@@ -149,7 +166,7 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
     if (write_appended_pregap) {
         for (int Z = 0; Z < ctx->settings.outputs_num; Z++)
-            fprintf(ctx->cuefile[Z], "  TRACK %02d AUDIO\n", t->number);
+            cue_printf(ctx, Z, "  TRACK %02d AUDIO\n", t->number);
 
         CLOG("    TITLE \"%s\"\n", t->meta, "title");
         CLOG("    PERFORMER \"%s\"\n", t->meta, "artist");
@@ -165,7 +182,7 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
         cyanrip_frames_to_cue(t->pregap_lsn - t->pt->start_lsn_sig, time_00);
         for (int Z = 0; Z < ctx->settings.outputs_num; Z++)
-            fprintf(ctx->cuefile[Z], "    INDEX 00 %s\n", time_00);
+            cue_printf(ctx, Z, "    INDEX 00 %s\n", time_00);
     }
 
     /* A hidden track split off track 1 can't be track 0, which CUE sheets
@@ -193,12 +210,12 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
             av_free(cuepath);
         }
 
-        fprintf(ctx->cuefile[Z], "FILE \"%s\" %s\n", name,
+        cue_printf(ctx, Z, "FILE \"%s\" %s\n", name,
                 ctx->settings.outputs[Z] == CYANRIP_FORMAT_MP3 ? "MP3" :
                 t->track_is_data ? "BINARY" : "WAVE");
 
         if (!write_appended_pregap && !after_htoa)
-            fprintf(ctx->cuefile[Z], "  TRACK %02d %s\n", tm->number,
+            cue_printf(ctx, Z, "  TRACK %02d %s\n", tm->number,
                     !t->track_is_data ? "AUDIO" :
                     t->data_mode == 2 ? "MODE2/2352" : "MODE1/2352");
 
@@ -232,30 +249,53 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
          * Of the track whose TRACK this file starts, which a hidden track's
          * file hands to track 1. */
         if (!after_htoa && tm->preemphasis && !crip_deemphasis_active(ctx, tm))
-            fprintf(ctx->cuefile[Z], "    FLAGS PRE\n");
+            cue_printf(ctx, Z, "    FLAGS PRE\n");
 
         if (htoa) {
-            fprintf(ctx->cuefile[Z], "    INDEX 00 %s\n", time_01);
+            cue_printf(ctx, Z, "    INDEX 00 %s\n", time_01);
         } else if (t->dropped_pregap_start != CDIO_INVALID_LSN &&
             t->dropped_pregap_start != t->start_lsn) {
-            fprintf(ctx->cuefile[Z], "    PREGAP %s\n",   time_00);
-            fprintf(ctx->cuefile[Z], "    INDEX 01 %s\n", time_01);
+            cue_printf(ctx, Z, "    PREGAP %s\n",   time_00);
+            cue_printf(ctx, Z, "    INDEX 01 %s\n", time_01);
         } else if (t->merged_pregap_end != CDIO_INVALID_LSN) {
-            fprintf(ctx->cuefile[Z], "    INDEX 00 %s\n", time_00);
-            fprintf(ctx->cuefile[Z], "    INDEX 01 %s\n", time_01);
+            cue_printf(ctx, Z, "    INDEX 00 %s\n", time_00);
+            cue_printf(ctx, Z, "    INDEX 01 %s\n", time_01);
         } else {
-            fprintf(ctx->cuefile[Z], "    INDEX 01 %s\n", time_01);
+            cue_printf(ctx, Z, "    INDEX 01 %s\n", time_01);
         }
     }
 }
 
-void cyanrip_cue_end(cyanrip_ctx *ctx)
+int cyanrip_cue_end(cyanrip_ctx *ctx)
 {
+    int lost = 0;
+
     for (int i = 0; i < ctx->settings.outputs_num; i++) {
         if (!ctx->cuefile[i])
             continue;
 
-        fclose(ctx->cuefile[i]);
+        /* The sheet is fully buffered, so the close is often the first write
+         * to fail. An error flag with none recorded is not expected, since
+         * every line is checked; it is still a lost write. */
+        int *err = &ctx->cuefile_err[i];
+        if (fflush(ctx->cuefile[i]) == EOF && !*err)
+            *err = errno ? errno : EIO;
+        if (ferror(ctx->cuefile[i]) && !*err)
+            *err = EIO;
+        if (fclose(ctx->cuefile[i]) == EOF && !*err)
+            *err = errno ? errno : EIO;
         ctx->cuefile[i] = NULL;
+
+        if (!*err)
+            continue;
+        char *path = crip_get_path(ctx, CRIP_PATH_CUE, 0,
+                                   &crip_fmt_info[ctx->settings.outputs[i]],
+                                   NULL);
+        cyanrip_log(ctx, 0, "Unable to write the CUE sheet \"%s\": %s!\n",
+                    path ? path : "", av_err2str(AVERROR(*err)));
+        av_free(path);
+        lost++;
     }
+
+    return lost;
 }

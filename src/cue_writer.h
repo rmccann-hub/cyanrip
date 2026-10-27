@@ -71,4 +71,6 @@ static inline int crip_track_has_appended_pregap(lsn_t pregap_lsn,
 int cyanrip_cue_init(cyanrip_ctx *ctx);
 void cyanrip_cue_start(cyanrip_ctx *ctx);
 void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t);
-void cyanrip_cue_end(cyanrip_ctx *ctx);
+/* Closes each CUE sheet. Returns how many lost text to a failed write, each
+ * named on stdout */
+int cyanrip_cue_end(cyanrip_ctx *ctx);

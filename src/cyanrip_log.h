@@ -23,7 +23,12 @@
 #include "cyanrip_main.h"
 
 int cyanrip_log_init(cyanrip_ctx *ctx);
-void cyanrip_log_end(cyanrip_ctx *ctx);
+/* Signs and closes each log. Returns how many lost text to a failed write,
+ * each named on stdout */
+int cyanrip_log_end(cyanrip_ctx *ctx);
+
+/* The first error a write to stdout met, as an errno, or 0 */
+int cyanrip_log_stdout_error(void);
 
 void cyanrip_log_start_report(cyanrip_ctx *ctx);
 void cyanrip_log_finish_report(cyanrip_ctx *ctx);

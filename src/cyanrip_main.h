@@ -497,6 +497,10 @@ typedef struct cyanrip_ctx {
     int64_t            last_media_check; /* When get_media_changed() last asked the drive */
     FILE              *logfile[CYANRIP_FORMATS_NB];
     FILE              *cuefile[CYANRIP_FORMATS_NB];
+    /* The first error a write to each log or CUE sheet met, as an errno, or 0,
+     * so the end of the run can name the file that lost text and say why */
+    int                logfile_err[CYANRIP_FORMATS_NB];
+    int                cuefile_err[CYANRIP_FORMATS_NB];
     cyanrip_settings   settings;
 
     cyanrip_track tracks[198];

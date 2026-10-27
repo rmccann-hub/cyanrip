@@ -801,6 +801,7 @@ rip_scenarios = [
     'art',
     'art_extradata',
     'art_local_name',
+    'lost_writes',
     'acoustid',
     'cue_only',
     'errors',
