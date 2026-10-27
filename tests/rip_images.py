@@ -1846,6 +1846,23 @@ def sc_lost_writes():
         fail("lw_stdout: the log lost its footer to a failure of stdout")
 
 
+def sc_acoustid_key_withheld():
+    # Review C 1.4. The AcoustID key is a credential; `Invoked as:` goes to
+    # the log, stdout and the diagnostics record, and none may carry it
+    key = "PROBEKEY4711"
+    out = WORK / "out_akey"
+    rip("akey", "basic.cue", "--acoustid-key", key,
+        "--diagnostics", WORK / "akey-diag.json")
+    for where, text in (("stdout", (WORK / "akey.log").read_text()),
+                        ("log", (out / "log.log").read_text()),
+                        ("record", (WORK / "akey-diag.json").read_text())):
+        if key in text:
+            fail(f"acoustid_key_withheld: the key is in the {where}")
+        if "--acoustid-key [withheld]" not in text:
+            fail(f"acoustid_key_withheld: the {where} does not say the key "
+                 f"was withheld")
+
+
 def fingerprint(name, track):
     return probe(WORK / f"out_{name}" / f"{track}.flac", "-show_entries",
                  "format_tags=acoustid_fingerprint")

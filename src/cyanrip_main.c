@@ -2401,6 +2401,15 @@ static void record_invocation(int argc, char **argv)
     for (int i = 0; i < argc; i++) {
         if (i)
             av_bprintf(&buf, " ");
+        /* The AcoustID key is a credential, and this line goes to the log,
+         * stdout and the diagnostics record, so its value is withheld (review
+         * C item 1.4). genopt takes a value as the next argument, so that is
+         * the one replaced; an argument that only looks like the option is
+         * withheld too, which hides nothing anyone needs. */
+        if (i > 0 && !strcmp(argv[i - 1], "--acoustid-key")) {
+            av_bprintf(&buf, "[withheld]");
+            continue;
+        }
         /* Quote anything a reader could not paste back verbatim */
         if (strpbrk(argv[i], " \t\"'\\"))
             av_bprintf(&buf, "\"%s\"", argv[i]);
