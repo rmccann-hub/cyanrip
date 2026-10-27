@@ -134,6 +134,8 @@ PROGRAMS = {
             "to check where it stops",
     "xargs": "asked its version: that check needs GNU xargs, which the "
              "script runs, as MSYS2 has",
+    "sh": "runs the session-start hook on scratch repositories, as Claude "
+          "Code runs it",
 }
 
 # Every http(s) literal in src/, keyed by host. The KEYS must equal what

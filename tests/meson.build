@@ -753,6 +753,10 @@ test('Workflows are hardened', python, args: [ files('workflows.py') ])
 ## functions with stubs for the builds and checks that each failure stops it
 ## (review C item 4.6); skipped without a GNU Bash 4.4 and xargs, as MSYS2 has.
 test('Windows build script stops where it fails', python, args: [ files('mingw_build.py') ])
+## .claude/hooks/session-start.sh, on scratch repositories, one with its
+## config locked: it says it excluded the evidence branch only when git wrote
+## the exclusion (review C item 4.7).
+test('Session hook says only what it did', python, args: [ files('session_hook.py') ])
 ## tools/tag-release-check.py decides every tag the tag workflow creates, on a
 ## repository this builds: on platterpus-fork, named by the manifest at that
 ## commit, ordered by release_seq, never moved. The workflow itself cannot be

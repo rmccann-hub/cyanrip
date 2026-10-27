@@ -16,8 +16,14 @@ if [ "${1:-0}" -lt 2 ] || { [ "${1:-0}" -eq 2 ] && [ "${2:-0}" -lt 29 ]; }; then
 fi
 for r in $(git remote); do
     if ! git config --get-all "remote.$r.fetch" | grep -qx '\^refs/heads/evidence'; then
-        git config --add "remote.$r.fetch" '^refs/heads/evidence'
-        echo "evidence: remote $r no longer fetches refs/heads/evidence"
+        # Said only once git has written it (review C item 4.7): a locked
+        # or unwritable config leaves the branch in every fetch
+        if git config --add "remote.$r.fetch" '^refs/heads/evidence'; then
+            echo "evidence: remote $r no longer fetches refs/heads/evidence"
+        else
+            echo "evidence: remote $r still fetches refs/heads/evidence:" \
+                 "git config could not add the exclusion"
+        fi
     fi
 done
 exit 0
