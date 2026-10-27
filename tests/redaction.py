@@ -121,7 +121,15 @@ for given, want in (
         ('Invoked as:     cyanrip --acoustid-key "a b" -N',
          "Invoked as:     cyanrip --acoustid-key [withheld] -N"),
         ('  "invocation": "cyanrip --acoustid-key \\"a b\\" -o flac",',
-         '  "invocation": "cyanrip --acoustid-key [withheld] -o flac",')):
+         '  "invocation": "cyanrip --acoustid-key [withheld] -o flac",'),
+        ("Invoked as:     cyanrip --acoustid-kye AbC123 -N",
+         "Invoked as:     cyanrip --acoustid-kye [withheld] -N"),
+        ("Invoked as:     cyanrip --AcoustID-Key=AbC123 -N",
+         "Invoked as:     cyanrip --AcoustID-Key=[withheld] -N"),
+        ('Invoked as:     cyanrip "--acoustid-key=a b" -N',
+         'Invoked as:     cyanrip "--acoustid-key=[withheld]" -N'),
+        ('  "invocation": "cyanrip \\"--acoustid-key=a b\\" -N",',
+         '  "invocation": "cyanrip \\"--acoustid-key=[withheld]\\" -N",')):
     got, rep = redact.redact(given)
     check(got == want and rep.keys == 1 and rep.changed()
           and "1 AcoustID key(s)" in rep.summary(),
@@ -130,8 +138,15 @@ for given, want in (
           f"findings() must see the key in {given!r}")
     check(redact.findings(got) == [],
           f"findings() must not see a withheld key: {got!r}")
-done, rep = redact.redact("cyanrip --acoustid-key [withheld] -N")
-check(rep.keys == 0 and not rep.changed(), "a withheld key is not withheld again")
+for done in ("cyanrip --acoustid-key [withheld] -N",
+             "cyanrip --acoustid-key=[withheld] -N",
+             'cyanrip "--acoustid-key=[withheld]" -N'):
+    _, rep = redact.redact(done)
+    check(rep.keys == 0 and not rep.changed(),
+          f"a withheld key is not withheld again: {done!r}")
+same, rep = redact.redact("cyanrip -k 10 -N")
+check(same == "cyanrip -k 10 -N" and rep.keys == 0,
+      "-k is left alone: it was --stall-secs until 2026-10-12")
 
 with tempfile.TemporaryDirectory() as d:
     p = pathlib.Path(d) / "names"

@@ -570,6 +570,17 @@ static inline int gen_opt_parse_fn(void *log_ctx, GenOpt *opts_list,
         }
 
         if (!l) {
+#ifdef GEN_OPT_NAMES_SECRET
+            /* A refused `--flag=value` whose flag names a secret: the value
+             * is not repeated */
+            const char *eq = strchr(argv[i], '=');
+            if (eq && GEN_OPT_NAMES_SECRET(argv[i])) {
+                GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_ERROR,
+                            "Unable to parse command line argument: %.*s[withheld]\n",
+                            (int)(eq - argv[i]) + 1, argv[i]);
+                return -EINVAL;
+            }
+#endif
             GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_ERROR,
                         "Unable to parse command line argument: %s\n",
                         argv[i]);

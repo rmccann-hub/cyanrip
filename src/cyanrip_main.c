@@ -85,6 +85,18 @@ static inline void crip_genopt_log(void *log_ctx, int level, const char *fmt, ..
 #define GEN_OPT_MAX_ARR 198
 #define GEN_OPT_HELPSTRING cyanrip_helpstr
 
+/* An argument naming the AcoustID key, however it is spelled. Its value is a
+ * credential, and is withheld wherever the command line is repeated: on
+ * `Invoked as:`, in the diagnostics record, and in genopt's refusal of a
+ * spelling it does not take, such as `--acoustid-kye` or `--acoustid-key=`
+ * (review C item 1.4). */
+static int crip_names_acoustid_key(const char *arg)
+{
+    return !av_strncasecmp(arg, "--acoustid", strlen("--acoustid"));
+}
+
+#define GEN_OPT_NAMES_SECRET crip_names_acoustid_key
+
 #include "genopt.h"
 
 static int genopt_nb_vals(GenOpt *opts_list, int n, const char *name)
@@ -2406,10 +2418,23 @@ static void record_invocation(int argc, char **argv)
         /* The AcoustID key is a credential, and this line goes to the log,
          * stdout and the diagnostics record, so its value is withheld (review
          * C item 1.4). genopt takes a value as the next argument, so that is
-         * the one replaced; an argument that only looks like the option is
+         * the one replaced, after any spelling of the flag: this is recorded
+         * before genopt refuses a misspelt one. Also after upstream's -k, the
+         * same option there and refused here, and in the `--flag=value` form,
+         * which genopt refuses. An argument that only looks like the value is
          * withheld too, which hides nothing anyone needs. */
-        if (i > 0 && !strcmp(argv[i - 1], "--acoustid-key")) {
+        const char *prev = i > 0 ? argv[i - 1] : NULL;
+        if (prev && ((crip_names_acoustid_key(prev) && !strchr(prev, '=')) ||
+                     !strcmp(prev, "-k"))) {
             av_bprintf(&buf, "[withheld]");
+            continue;
+        }
+        const char *eq = strchr(argv[i], '=');
+        if (eq && crip_names_acoustid_key(argv[i])) {
+            int n = (int)(eq - argv[i]) + 1;
+            int quote = strcspn(argv[i], " \t\"'\\") < (size_t)n;
+            av_bprintf(&buf, "%s%.*s[withheld]%s", quote ? "\"" : "", n,
+                       argv[i], quote ? "\"" : "");
             continue;
         }
         /* Quote anything a reader could not paste back verbatim */
@@ -2845,6 +2870,11 @@ static int cyanrip_run(int argc, char **argv)
     settings.disable_mb                 = no_musicbrainz;
     settings.disable_accurip            = no_accurip;
     settings.disable_acoustid           = no_acoustid;
+    /* From the environment when not on the command line, where any user of
+     * the machine can read it in the process list (review C item 1.4) */
+    if (!acoustid_key && getenv("CYANRIP_ACOUSTID_KEY") &&
+        *getenv("CYANRIP_ACOUSTID_KEY"))
+        acoustid_key = getenv("CYANRIP_ACOUSTID_KEY");
     settings.acoustid_key               = acoustid_key;
     settings.disable_coverart_db        = no_coverart_db;
     settings.disable_coverart_embedding = no_coverart_embed;
