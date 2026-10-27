@@ -346,6 +346,55 @@ static void test_a_response_of_the_wrong_size_is_an_error(const char *bin)
     av_free(ctx);
 }
 
+/* A failed allocation part way through the response keeps nothing: no track
+ * reads as found from part of it, and the disc's status is an error. The
+ * realloc kept the entries read so far and returned, so the tracks already
+ * filled said FOUND, unsorted, while the disc said ERROR (the check of #65,
+ * 2026-10-27). av_max_alloc() makes the second entry's realloc fail for real,
+ * after every track has taken its first. */
+static void test_a_failed_allocation_keeps_nothing(const char *bin)
+{
+    enum { N = 14 };
+    FILE *f = fopen(bin, "rb");
+    uint8_t data[4096];
+    size_t size = f ? fread(data, 1, sizeof(data), f) : 0;
+    if (f)
+        fclose(f);
+    if (size != 1807)
+        return;   /* test_recorded_response() has already failed on it */
+
+    cyanrip_ctx *ctx = av_mallocz(sizeof(*ctx));
+    for (int i = 0; i < N; i++)
+        ctx->tracks[i].number = i + 1;
+    ctx->nb_tracks = ctx->nb_cd_tracks = N;
+
+    av_max_alloc(sizeof(CRIPAccuDBEntry) + 32);
+    int ret = crip_parse_accurip(ctx, data, size, N, 0x001d420f,
+                                 0x013bb370, 0xe20dfe0e);
+    av_max_alloc(INT_MAX);
+
+    check(ret == AVERROR(ENOMEM), "alloc: a failed allocation returns ENOMEM");
+    check(ctx->ar_db_status == CYANRIP_ACCUDB_ERROR,
+          "alloc: the disc reads as an error");
+    int kept = 0;
+    for (int i = 0; i < N; i++)
+        kept += ctx->tracks[i].ar_db_nb_entries ||
+                ctx->tracks[i].ar_db_entries ||
+                ctx->tracks[i].ar_db_status == CYANRIP_ACCUDB_FOUND ||
+                ctx->tracks[i].ar_db_max_confidence;
+    check(kept == 0, "alloc: no track keeps anything from part of a response");
+
+    /* The control: the same response, with room, fills more than one entry
+     * per track, so the cap above did fail part way through */
+    ret = crip_parse_accurip(ctx, data, size, N, 0x001d420f,
+                             0x013bb370, 0xe20dfe0e);
+    check(ret == 0 && ctx->tracks[0].ar_db_nb_entries > 1,
+          "alloc/control: with room, track 1 takes more than one entry");
+    for (int i = 0; i < N; i++)
+        av_freep(&ctx->tracks[i].ar_db_entries);
+    av_free(ctx);
+}
+
 /* A data track has no entry in the response: entries run over the AUDIO
  * tracks only, in order. The loop that read them walked the first
  * audio_tracks slots of the track table instead, so on a disc whose data track
@@ -445,6 +494,7 @@ int main(int argc, char **argv)
     test_recorded_response(argv[1], argv[2]);
     test_disc_status_says_what_the_response_held(argv[1]);
     test_a_response_of_the_wrong_size_is_an_error(argv[1]);
+    test_a_failed_allocation_keeps_nothing(argv[1]);
     test_a_data_track_holds_no_entry(argv[1]);
 
     if (failures) {

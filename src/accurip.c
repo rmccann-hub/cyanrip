@@ -234,10 +234,22 @@ static int crip_parse_accurip(cyanrip_ctx *ctx, const uint8_t *data, size_t size
             uint32_t checksum = bytestream2_get_le32(&gbc);
             uint32_t checksum_450 = bytestream2_get_le32(&gbc);
 
-            /* A temporary, so a failed realloc keeps the entries read so far */
+            /* A temporary, so the old block can be freed if the realloc fails.
+             * Then nothing read so far is kept: every track goes back to how
+             * it was before the parse, as a response of the wrong size leaves
+             * them, so no track reads as found from part of a response and
+             * none is left unsorted. The rip goes on, as after any AccurateRip
+             * failure, with the disc's status an error. */
             CRIPAccuDBEntry *grown = av_realloc(t->ar_db_entries,
                                                 sizeof(CRIPAccuDBEntry) * (t->ar_db_nb_entries + 1));
             if (!grown) {
+                for (int k = 0; k < ctx->nb_cd_tracks; k++) {
+                    cyanrip_track *u = &ctx->tracks[k];
+                    av_freep(&u->ar_db_entries);
+                    u->ar_db_nb_entries = 0;
+                    u->ar_db_max_confidence = 0;
+                    u->ar_db_status = CYANRIP_ACCUDB_DISABLED;
+                }
                 ctx->ar_db_status = CYANRIP_ACCUDB_ERROR;
                 return AVERROR(ENOMEM);
             }
