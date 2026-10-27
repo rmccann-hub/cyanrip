@@ -72,6 +72,14 @@ HOST_FIELD = re.compile(r"^\s*\"?(?:host|hostname|node)\"?\s*[:=]\s*\"?"
 
 WIRE = re.compile(r"^HANDSHAKE-[A-Z0-9-]+:")
 
+# An AcoustID key given on the command line, as `Invoked as:` and the
+# diagnostics record's `invocation` print it, bare or quoted. cyanrip withholds
+# it itself once review C item 1.4 is fixed; this is the second line, for a log
+# an older build wrote. Already withheld is not matched again.
+ACOUSTID_KEY = re.compile(r'(--acoustid-key\s+)(?!\[withheld\])'
+                          r'(\\"(?:(?!\\").)*\\"|"[^"]*"|[^\s"\\]+)')
+PLACEHOLDER_KEY = "[withheld]"
+
 NAMES_ENV = "CYANRIP_REDACT_NAMES"
 NAMES_FILE = pathlib.Path.home() / ".config" / "cyanrip" / "redact-names"
 
@@ -118,16 +126,19 @@ class Report:
         self.home = 0
         self.hosts = 0
         self.names = 0
+        self.keys = 0
         self.wire_lines_kept = 0
         self.names_checked = names_checked
 
     def changed(self):
-        return bool(self.home or self.hosts or self.names)
+        return bool(self.home or self.hosts or self.names or self.keys)
 
     def summary(self):
         parts = [f"{self.home} home path(s)", f"{self.hosts} hostname(s)"]
         parts.append(f"{self.names} name(s)" if self.names_checked
                      else "names not checked (no local list)")
+        if self.keys:
+            parts.append(f"{self.keys} AcoustID key(s)")
         if self.wire_lines_kept:
             parts.append(f"{self.wire_lines_kept} HANDSHAKE- line(s) left as "
                          f"they are")
@@ -156,6 +167,8 @@ def redact(text, hosts=(), names=None):
             continue
         line, n = HOME_PATH.subn("~", line)
         rep.home += n
+        line, n = ACOUSTID_KEY.subn(lambda m: m.group(1) + PLACEHOLDER_KEY, line)
+        rep.keys += n
         for r in host_res:
             line, n = r.subn(PLACEHOLDER_HOST, line)
             rep.hosts += n
@@ -198,4 +211,6 @@ def findings(text, names=None):
             out.append((i, "a hostname"))
         if any(r.search(line) for r in name_res):
             out.append((i, "the owner's name"))
+        if ACOUSTID_KEY.search(line):
+            out.append((i, "an AcoustID key"))
     return out
