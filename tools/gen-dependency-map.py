@@ -129,8 +129,9 @@ PROGRAMS = {
                   "library through it too",
     "dpkg": "this map: names the package that owns a library, to read its "
             "copyright file",
-    "bash": "runs the Windows build script's functions, its builds stubbed, "
-            "to check where it stops",
+    "bash": "runs the Windows build script's functions, and CI's "
+            "static-analysis step as Actions does, their builds stubbed, to "
+            "check where each stops",
     "xargs": "asked its version: that check needs GNU xargs, which the "
              "script runs, as MSYS2 has",
     "sh": "runs the session-start hook on scratch repositories, as Claude "
@@ -181,9 +182,15 @@ def project():
     c_std = re.search(r"c_std=(\w+)", opts).group(1)
     fork_id = re.search(r"set_quoted\('PROJECT_FORK_ID',\s*'([^']+)'\)",
                         text).group(1)
+    # Only the flags the build itself compiles with: those in the list that
+    # starts build_opts, which add_project_arguments() passes. A -Werror= that
+    # appears elsewhere, such as the one the hardening checks add to their
+    # own test compiles, makes no warning of the build an error.
+    src_meson = (ROOT / "src" / "meson.build").read_text(encoding="utf-8")
+    opts_list = re.search(r"^build_opts\s*=\s*\[(.*?)^\]", src_meson,
+                          re.M | re.S)
     werror = sorted(set(re.findall(r"'(-Werror=[\w-]+)'",
-                                   text + (ROOT / "src" / "meson.build")
-                                   .read_text(encoding="utf-8"))))
+                                   opts_list.group(1))))
     header = (ROOT / "src" / "utils.c").read_text(encoding="utf-8")[:800]
     licence = ("LGPL-2.1-or-later"
                if "version 2.1 of the License, or (at your option) any later"
