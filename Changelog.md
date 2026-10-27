@@ -1,5 +1,38 @@
 Unreleased
 ==========
+**The operator's follow-ups to review C** (2026-10-27), each checked against
+this tree first; *seam* marks what Platterpus can notice, which ships in
+`.28` only once they accept it in a lap.
+- **3.7, TSan**: CI's thread row ran with `ignore_noninstrumented_modules=1`,
+  which dropped every access inside FFmpeg, the encoder threads' reads of a
+  handed-over frame among them. `tests/tsan.supp` names instead the writing
+  side of the two shapes the 746 reports took, `av_buffer_unref` and
+  `av_samples_set_silence`, loaded by a default test setup in a TSan build.
+  Three defects planted in the frame handoff fail with it and none failed
+  under the old option; its header says which and how (`f3138b1`).
+- **3.6**: the analyzer step, and two others that piped a command whose
+  status mattered, set `pipefail`; `tests/workflows.py` runs the step as
+  Actions does on a failing stub build (`b95de37`).
+- **1.3** (*seam*): a log that lost a write is left without its `Log FUN512`
+  line, so `-Y` reports it as having no checksum (exit 3) rather than valid;
+  every checked write clears `errno` first, so a stale value is not given as
+  the reason (`f8d1c3a`). `lost_log_line_is_not_signed` fails one write
+  through an `LD_PRELOAD` shim.
+- **1.4** (*seam*, additive): `CYANRIP_ACOUSTID_KEY` gives the key outside
+  `argv`; its value is withheld after any spelling of the flag, in its `=`
+  form, in genopt's refusal of that form and after `-k` (`9e23a24`).
+- **3.5**: each hardening flag is checked with clang's unused-argument
+  warning as an error, so Apple clang's ignored `-fstack-clash-protection`
+  is left out (`a4995c9`).
+- **1.5** (*seam*): tests through `fetch_image()` itself for the HTTPS limit
+  and the size cap; an image refused by its declared size is now named as
+  larger than 64 MiB, as one refused by what arrived was (`2508027`).
+- **2.2** (*seam*): a leading space or `+` is refused by `-P`, `-c`, `-p` and
+  `-t`, and `-R` no longer reads `2 x` as release 2 (`c90ef0b`).
+- `tests/redaction.py` fails when the binary meson gives is missing and skips
+  when run by hand without one (`f672cc9`); actionlint and zizmor lint the
+  workflows in CI (`7427c62`).
+
 **Review C, sections 2 to 7**, each item checked against this tree first.
 What a consumer can notice is marked *seam*; it ships in `.28` only once
 Platterpus accepts it in a lap, as the operator's message of 2026-10-27 asks.
@@ -22,13 +55,12 @@ Platterpus accepts it in a lap, as the operator's message of 2026-10-27 asks.
   TSan, and one rip under Valgrind's memcheck (`2693659`); fuzz harnesses for
   the JSON reader, AccurateRip's response and `-Y`'s log check, run over seeds
   in every build and under libFuzzer in CI (`51e4fda`).
-- **TSan did not run clean here**, as the C audit found it: 70 reports, each
+- **TSan did not run clean here**, as the C audit found it: each report was
   FFmpeg freeing or reusing a frame buffer that `swr_convert()` had read on
   an encoder thread, ordered by libavutil's atomic reference count, which TSan
   cannot see in a library built without it. None involves an access in this
-  program's own code. CI's TSan row ignores accesses inside uninstrumented
-  libraries, under which the suite reports none, and a race planted in this
-  program's own code is still caught.
+  program's own code. CI's TSan row first ignored every access inside an
+  uninstrumented library; named suppressions replace that above.
 - **CI and the repository**: no checkout keeps its token (`cc5545c`); a
   conflict marker fails CI (`e0721f2`); the Windows build script runs strict
   and stops where a step fails (`7b9713f`); the session hook says what it did
