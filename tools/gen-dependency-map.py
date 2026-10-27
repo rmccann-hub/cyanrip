@@ -288,7 +288,10 @@ def ci():
                                       text)))
     uv = sorted(set(re.findall(r"setup-uv@\S+[^\n]*\n\s+with:\n"
                                r"\s+version:\s*\"?([\w.]+)\"?", text)))
-    python = sorted(set(re.findall(r"uvx --python (\S+)", text)))
+    # Only the uvx runs of those tools: one whose --from is a PyPI
+    # requirement, as the Meson floor check's `meson==$floor` is, is not one
+    python = sorted({py for py, src in re.findall(
+        r"uvx --python (\S+) --from \"?([^\"\s]+)", text) if "==" not in src})
     text = (wfdir / "ci.yml").read_text(encoding="utf-8")
     # The package list continues over lines ending in a backslash.
     apt = re.search(r"apt-get install -y((?:[^\n]*\\\n)*[^\n]*)", text)
