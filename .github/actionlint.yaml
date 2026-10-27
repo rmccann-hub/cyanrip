@@ -1,0 +1,5 @@
+# actionlint 1.7.12 (CI's lint job) predates the ubuntu-26.04 runner label,
+# which GitHub hosts; listed here so it is not reported as unknown.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04

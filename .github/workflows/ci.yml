@@ -94,6 +94,7 @@ jobs:
         env:
           OPTS: ${{ matrix.opts }}
         run: |
+          # shellcheck disable=SC2086 # OPTS is several options, split on purpose
           meson setup build $OPTS
           ninja -C build
 
@@ -164,7 +165,10 @@ jobs:
   # C item 4.3), each from Ubuntu 24.04's own package, the versions this was
   # written against: ShellCheck 0.9.0, and gitleaks 8.16.0, which found
   # nothing in this branch's 1827 commits. The Python tools' lint is in the
-  # linux (released) row, where the suite runs it.
+  # linux (released) row, where the suite runs it. The workflows under
+  # actionlint, which runs ShellCheck on each run script too, and zizmor,
+  # offline: actionlint's release binary, checked against the SHA-256 its
+  # release publishes, and zizmor's wheel, by the hash PyPI gives.
   lint:
     if: github.event_name != 'release'
     runs-on: ubuntu-24.04
@@ -180,7 +184,7 @@ jobs:
       - name: Install ShellCheck and gitleaks
         run: |
           sudo apt-get update
-          sudo apt-get install -y shellcheck gitleaks
+          sudo apt-get install -y shellcheck gitleaks python3-venv
 
       - name: ShellCheck
         run: |
@@ -189,6 +193,29 @@ jobs:
 
       - name: No secret in the history
         run: gitleaks detect --source . --redact --verbose
+
+      - name: Install actionlint and zizmor
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          set -o pipefail
+          tgz="$RUNNER_TEMP/actionlint.tar.gz"
+          curl -fsSL --max-time 120 -o "$tgz" \
+            "https://github.com/rhysd/actionlint/releases/download/v$ACTIONLINT_VERSION/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "$ACTIONLINT_SHA256  $tgz" | sha256sum -c -
+          tar -xzf "$tgz" -C "$RUNNER_TEMP" actionlint
+          python3 -m venv "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/zizmor/bin/pip" install --only-binary=:all: \
+            --require-hashes -r .github/zizmor-requirements.txt
+
+      - name: actionlint
+        run: |
+          "$RUNNER_TEMP/actionlint" -color
+
+      - name: zizmor
+        run: |
+          "$RUNNER_TEMP/zizmor/bin/zizmor" --offline .github/workflows .github/dependabot.yml
 
   # Each parser of data from outside this program under libFuzzer, with ASan
   # and UBSan, for a minute from its committed seeds (review C item 3.8): the
@@ -250,13 +277,15 @@ jobs:
 
       - name: Build
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_PATH
           meson setup build
           ninja -C build
 
       - name: Test
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_PATH
           meson test -C build --print-errorlogs
 
       # Meson prints a test's output only when it fails, so a Settled facts
