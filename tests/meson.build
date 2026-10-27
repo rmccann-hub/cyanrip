@@ -82,7 +82,8 @@ coverart_net_test = executable('coverart_net_test',
     sources: [ 'coverart_net.c' ],
     include_directories: [ '../src' ],
     dependencies: unit_test_deps + [ dependency('libavformat'),
-                                     dependency('libcurl') ],
+                                     dependency('libcurl'),
+                                     dependency('threads') ],
 )
 test('Cover art fetch limits', coverart_net_test)
 

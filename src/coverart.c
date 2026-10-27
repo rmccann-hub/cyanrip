@@ -26,6 +26,10 @@
 
 #define COVERART_DB_URL_BASE "https://coverartarchive.org/release"
 
+/* What fetch_image() asks the DB at; a variable only so tests/coverart_net.c
+ * can point it at http:// and see fetch_image() itself refuse that */
+static const char *coverart_db_url = COVERART_DB_URL_BASE;
+
 /* The most an image is read to (review C item 1.5). The Cover Art Archive's
  * unsized originals are scans, the largest some tens of megabytes; without a
  * cap the buffer grew per callback until the 60 s timeout, which bounds time
@@ -201,7 +205,7 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
     char temp[4096];
     if (!own_url) {
         snprintf(temp, sizeof(temp), "%s/%s/%s",
-                 COVERART_DB_URL_BASE, release_id, type);
+                 coverart_db_url, release_id, type);
         curl_easy_setopt(curl_ctx, CURLOPT_URL, temp);
     } else {
         curl_easy_setopt(curl_ctx, CURLOPT_URL, own_url);
@@ -249,8 +253,10 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
         curl_easy_setopt(curl_ctx, CURLOPT_FOLLOWLOCATION, 1L);
     }
 
+    /* Past the cap by the size it declared, refused before any of it is
+     * taken, or by what arrived: one cause, so one line */
     CURLcode res = curl_easy_perform(curl_ctx);
-    if (res != CURLE_OK && recv.too_big) {
+    if (res == CURLE_FILESIZE_EXCEEDED || (res != CURLE_OK && recv.too_big)) {
         cyanrip_log(ctx, 0, "Unable to get cover art \"%s\": the image is "
                     "larger than %i MiB!\n", type, COVERART_MAX_BYTES >> 20);
         ret = AVERROR(EINVAL);
