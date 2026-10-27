@@ -191,6 +191,24 @@ jobs:
       - name: Fetch the history, the tags and the evidence branch
         run: .github/fetch-history.sh platterpus-fork master --tags --evidence
 
+      # The subject of each commit a change adds (review C item 5.2): at most
+      # 72 characters, capitalised, with no full stop. On a pull request, its
+      # commits that platterpus-fork lacks; on a push, those the push added.
+      # Commits upstream's master holds are left out, being upstream's words.
+      - name: Commit subjects
+        env:
+          BEFORE: ${{ github.event.before }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            python3 tools/check-commit-subjects.py \
+              refs/remotes/origin/platterpus-fork HEAD
+          elif [ -n "$BEFORE" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            python3 tools/check-commit-subjects.py "$BEFORE" HEAD
+          else
+            echo "UNPROBED: no commit before this push to check from"
+          fi
+
       - name: Install dependencies
         run: |
           sudo apt-get update

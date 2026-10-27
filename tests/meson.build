@@ -760,6 +760,9 @@ test('Session hook says only what it did', python, args: [ files('session_hook.p
 ## ruff's Pyflakes rules over tools/ and tests/ (review C item 4.3); skipped
 ## where ruff is not installed, except in CI's linux (released) row.
 test('Python lint', python, args: [ files('python_lint.py') ], timeout: 300)
+## tools/check-commit-subjects.py, which CI's evidence job runs on each
+## change's commits (review C item 5.2), on a scratch repository.
+test('Commit subject check', python, args: [ files('commit_subjects.py') ])
 ## tools/tag-release-check.py decides every tag the tag workflow creates, on a
 ## repository this builds: on platterpus-fork, named by the manifest at that
 ## commit, ordered by release_seq, never moved. The workflow itself cannot be

@@ -288,4 +288,5 @@ and a synthetic signal can rip byte-reversed, so check it against its source.
 C11, K&R-ish, 4 spaces, no tabs; each source file opens with the LGPL-2.1+
 header from `src/utils.c`; log lines are column-aligned `label: value` within
 their block, so read the neighbours first; match the nearest existing code.
-Commit subjects are plain and imperative, one logical change per commit.
+Commit subjects are plain and imperative, at most 72 characters, with no
+full stop (`tools/check-commit-subjects.py`, in CI); one change per commit.
