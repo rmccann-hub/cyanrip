@@ -40,9 +40,14 @@ if get_option('b_sanitize') == 'none' and \
    host_machine.system() != 'windows'
   hardening += [ '-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3' ]
 endif
+# Clang only warns about a flag it ignores on the target, as Apple's does with
+# -fstack-clash-protection on arm64, so a link check alone let that one in and
+# every compile on macOS then warned; checked as an error, it is left out. GCC
+# has no such warning, and is checked as before.
+strict_check = cc.get_supported_arguments('-Werror=unused-command-line-argument')
 foreach flag : hardening
   if cc.links('int main(int c, char **v) { char b[64]; b[c & 63] = 0; return v[0][0] + b[1]; }',
-              args: flag.split(), name: flag)
+              args: strict_check + flag.split(), name: flag)
     build_opts += flag.split()
   endif
 endforeach
