@@ -49,13 +49,11 @@ jobs:
     # the consumer to make, nothing had ever compiled it, and when it finally
     # was it failed 2 of 41. The sanitizer rows are the same argument one level
     # down: they pass today, and nothing was running them.
-    # `thread` is TSan over the threaded encoder (review C item 3.7). Its
-    # options ignore accesses made inside libraries built without it: each
-    # of the 70 races TSan reported in this suite without them paired an
-    # FFmpeg free or reuse of a frame buffer with swr_convert() reading it,
-    # ordered by libavutil's atomic reference count, which TSan cannot see in
-    # an uninstrumented library. With them the suite reports none, and a race
-    # in this program's own code is still caught.
+    # `thread` is TSan over the threaded encoder (review C item 3.7). The
+    # suite's tsan setup loads tests/tsan.supp, two entries for FFmpeg's own
+    # free and reuse of a frame buffer, ordered by an atomic reference count
+    # TSan cannot see in an uninstrumented libavutil; its header says what
+    # they drop and which planted defects in the frame handoff still fail.
     strategy:
       fail-fast: false
       matrix:
@@ -70,7 +68,6 @@ jobs:
             opts: "-Ddeclare_released=true -Db_sanitize=address,undefined -Db_lundef=false"
           - name: thread
             opts: "-Db_sanitize=thread -Db_lundef=false"
-            tsan: "ignore_noninstrumented_modules=1"
     name: linux (${{ matrix.name }})
     steps:
       # One commit, then the whole history of what the suite reads: the
@@ -155,7 +152,6 @@ jobs:
         env:
           CYANRIP_LINT_REQUIRED: ${{ matrix.name == 'released' && '1' || '' }}
           CYANRIP_VALGRIND_REQUIRED: ${{ matrix.name == 'default' && '1' || '' }}
-          TSAN_OPTIONS: ${{ matrix.tsan }}
         run: meson test -C build --print-errorlogs
 
       # Meson prints a test's output only when it fails, so a Settled facts

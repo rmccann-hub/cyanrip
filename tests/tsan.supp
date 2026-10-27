@@ -1,0 +1,35 @@
+# ThreadSanitizer suppressions for a -Db_sanitize=thread build, loaded by the
+# `tsan` test setup in tests/meson.build (review C item 3.7).
+#
+# FFmpeg as Ubuntu builds it is not instrumented, so TSan sees its calls to
+# free(), memset() and memcpy() but not the atomic reference count in
+# libavutil that orders them. With no options the suite reported 746 races at
+# 47ffed3 (Ubuntu 24.04, libavutil 58, libswresample 4), each a thread freeing
+# or reusing a frame's buffer that an encoder thread had read in
+# swr_convert():
+#
+#   728  free in av_buffer_unref            against  memcpy in swr_convert
+#    18  memset in av_samples_set_silence   against  memcpy in swr_convert
+#        (a libavfilter pool buffer, reused)
+#
+# Each entry names the function on the writing side, so a report is dropped
+# only when that function is in one of its stacks. Three defects planted in
+# the frame handoff (push_frame_to_encs() and fifo_frame.c), each ripped three
+# times to FLAC and MP3 at once, all still fail with these entries, and none
+# failed under the ignore_noninstrumented_modules=1 they replace:
+#
+#   * the main thread writing a frame's samples after handing it over:
+#     its write against swr_convert() reading them;
+#   * the encoders given the frame itself, which the main thread then frees:
+#     a heap-use-after-free, the encoder reading the freed frame;
+#   * the encoders given the samples without a reference, so the main thread's
+#     unreference frees them early: that free is in av_buffer_unref and is not
+#     reported, but the block was handed to a later frame while an encoder
+#     still read it, and that was (13 runs of 13). ASan and memcheck report
+#     this one directly, as a read of freed memory.
+#
+# The option dropped every access made inside any uninstrumented library,
+# swr_convert()'s reads included, which is the encoder side of the handoff
+# this build exists to check.
+race:^av_buffer_unref$
+race:^av_samples_set_silence$

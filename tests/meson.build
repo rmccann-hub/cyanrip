@@ -1,3 +1,14 @@
+## A ThreadSanitizer build reads tests/tsan.supp, by absolute path since
+## tests change directory, appended to any TSAN_OPTIONS the caller gives. Its
+## header says what each entry drops and what still reports (review C 3.7).
+if get_option('b_sanitize') == 'thread'
+    tsan_env = environment()
+    tsan_env.append('TSAN_OPTIONS',
+                    'suppressions=' + meson.current_source_dir() / 'tsan.supp',
+                    separator: ' ')
+    add_test_setup('tsan', env: tsan_env, is_default: true)
+endif
+
 ## Unit tests
 ## ==========
 ## Built from the objects they test, avtransport-style.

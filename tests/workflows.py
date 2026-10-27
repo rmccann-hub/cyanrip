@@ -21,6 +21,9 @@ outside read of 2026-10-12 asked for, checked on the files rather than on a run:
   * there is no `.github/workflows/main.yml`, the path upstream's own file has
     on master: GitHub keys a workflow by path, so a file of ours there would be
     the same workflow as upstream's again and could not be disabled alone;
+  * the TSan row runs with tests/tsan.supp, loaded by the suite's default
+    test setup in a TSan build, and not ignore_noninstrumented_modules,
+    which hid the encoder side of the frame handoff (review C item 3.7);
   * a script that pipes one command into another, where the pipeline's status
     decides the step, sets pipefail first: Actions runs a script as `bash -e`,
     where that status is the last command's (review C item 3.6), and the
@@ -295,6 +298,18 @@ if tarballs and not re.search(r'^\s*echo "\$sha256  \$file" \| sha256sum -c -', 
 calls += tarballs
 if re.search(r"^[^#\n]*git clone", script, re.M):
     fail("mingw-build.sh runs git clone, which fetches a branch, not a commit")
+
+# 3.7: the TSan row reads tests/tsan.supp through the suite's tsan setup.
+# ignore_noninstrumented_modules dropped every access inside FFmpeg, the
+# encoder threads' reads of a handed-over frame among them.
+if "ignore_noninstrumented_modules" in ci:
+    fail("ci.yml sets ignore_noninstrumented_modules, which hides the "
+         "encoder side of the frame handoff; tests/tsan.supp replaces it")
+meson_tests = (ROOT / "tests" / "meson.build").read_text(encoding="utf-8")
+if not re.search(r"add_test_setup\('tsan',[^)]*is_default: true", meson_tests) \
+        or "'tsan.supp'" not in meson_tests:
+    fail("tests/meson.build no longer loads tests/tsan.supp by default in a "
+         "TSan build, so the thread row would run with no suppressions")
 
 # 3.6: the static-analysis step, run as Actions runs a script with no
 # `shell:`, `bash -e {0}`, on stubs of meson and ninja. A build that fails
