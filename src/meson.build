@@ -37,7 +37,9 @@ dependencies = [
     dependency('libcdio', version: '>= 2.0'),
     dependency('libcdio_paranoia', version: '>= 10.2'),
     dependency('libmusicbrainz5', version: '>= 5.1', static: static_build),
-    dependency('libcurl', version: '>=7.66.0'),
+    # static: a static curl with Schannel needs secur32 and crypt32 from
+    # its Libs.private, which only a static lookup reads (review C item 1.5)
+    dependency('libcurl', version: '>=7.66.0', static: static_build),
 
     # misc
     dependency('threads'),

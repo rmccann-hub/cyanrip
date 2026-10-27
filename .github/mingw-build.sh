@@ -31,6 +31,13 @@ buildCyanrip() {
         build_ffmpeg &&
         touch "$CYANRIPINSTALLDIR/.libs-built"
     fi
+    # AccurateRip and the Cover Art DB are fetched over HTTPS only (review C
+    # item 1.5), so a curl without it would fail every fetch. Checked on
+    # every run, a cached build included, from the file meson reads.
+    if ! pkg-config --variable=supported_protocols libcurl | grep -qw HTTPS; then
+        echo "curl was built without HTTPS: $(pkg-config --variable=supported_protocols libcurl)" >&2
+        return 1
+    fi
     build_cyanrip
 }
 
@@ -144,8 +151,12 @@ build_curl() {
     autoreconf -fi &&
     sed -ri "s;(^SUBDIRS = lib) src (include) scripts;\1 \2;" Makefile.in &&
 #    CPPFLAGS+=" -DNGHTTP2_STATICLIB" \
-    cyan_do_separate_confmakeinstall --with-{winssl,winidn,nghttp2} \
-        --without-{ssl,gnutls,mbedtls,libssh2,random,ca-bundle,ca-path,librtmp,brotli,debug,libpsl,zstd,nghttp2,ldap,ldap-lib} \
+    # Schannel, Windows' own TLS. The option was --with-winssl, which this
+    # curl's configure no longer has: it ignored it, and --without-ssl then
+    # built curl with no TLS at all, so every HTTPS fetch failed. configure
+    # refuses --without-ssl beside a TLS backend, so ssl left that list too.
+    cyan_do_separate_confmakeinstall --with-{schannel,winidn,nghttp2} \
+        --without-{gnutls,mbedtls,libssh2,random,ca-bundle,ca-path,librtmp,brotli,debug,libpsl,zstd,nghttp2,ldap,ldap-lib} \
         --disable-{ldap,ldaps}
 }
 
