@@ -43,11 +43,12 @@ def run(*args):
 
 def main():
     # A CHECK THAT CANNOT RUN SAYS SO. A shallow clone has no history to
-    # compare, and silently passing there would make this decoration.
+    # compare, and silently passing there would make this decoration. 77, so
+    # meson counts it skipped rather than passed (review C item 6.2).
     if not (have(OLD) and have(NEW)):
         print(f"UNPROBED: {OLD} or {NEW} is not in this clone -- the delta "
               f"cannot be computed and nothing here is asserted")
-        return 0
+        return 77
 
     rc, out = run(OLD, NEW, "--rows")
     if rc != 0:

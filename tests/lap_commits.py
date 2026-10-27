@@ -131,12 +131,13 @@ def main():
     atexit.register(_dump_timings)
     signal.signal(signal.SIGTERM, _on_sigterm)
 
-    # A CHECK THAT CANNOT RUN SAYS SO, rather than passing on an absence.
+    # A CHECK THAT CANNOT RUN SAYS SO, rather than passing on an absence:
+    # 77, so meson counts it skipped, not passed (review C item 6.2).
     if not all(have(r) for r, _ in PEER) or not have("59cb5a9"):
         print("UNPROBED: this history is not present (shallow clone). The "
               "cross-check against\nPlatterpus's derivation needs the commits "
               "their lap 10 §D named.")
-        return 0
+        return 77
 
     # 1. THE CROSS-CHECK. Both numbers a second implementation derived.
     for base, want in PEER:
