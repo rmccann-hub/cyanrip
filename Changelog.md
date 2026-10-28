@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Our round 36 lap 18 is released, with verdict `GO`, and closes round 36**
+on our operator's word of 2026-10-28, *"you are approved to release your lap
+when ready"*. It approves `.27` at `5aeefc4` with Platterpus's 0.7.114 on the
+operator's answer to our lap 16 S15, *"1. i approve it"*: `.27` approved on
+this run, with S10 fixed before our closing lap, which `14f9298` does. Their
+lap 17's `GO` is the other half, and their `FORK_PIN` rolls to `5aeefc4`.
+Four open items planned for round 36, three ours and one theirs, move to
+round 37, whose first lap is ours and carries the `Pregap searches:` block's
+wording.
+
 **Every track a sub-channel search ran on has its record in every log, ripped
 or not.** A `Pregap searches:` block after `Gaps:` gives each searched track
 its `Pregap search:` record, word for word as that track's own block gives it.
