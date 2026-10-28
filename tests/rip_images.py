@@ -1946,6 +1946,69 @@ def sc_lost_log_line_is_not_signed():
              f"not {line!r}")
 
 
+def sc_data_track_write_failure():
+    # The check of #68, item 3. The data track's file is opened, written and
+    # closed with each result checked, but the error was AVERROR(errno): a
+    # failure that set no errno, when errno was 0, gave 0, so the copy
+    # counted as done, the run said `Success!` and exited 0 with a file that
+    # was never written. The shim fails each call in turn, leaving errno at
+    # 0; then, setting none after calls that left it at ENOENT, so a reason
+    # read without clearing it first is the stale one. For the open, that is
+    # the stat() that found the file's new directory missing, so that run
+    # names one. Each run names EIO, exits 1, and the log counts no track
+    # completed.
+    needs_preload_shim("data_track_write_failure")
+    shim = os.environ.get("CYANRIP_LOSEWRITE_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"data_track_write_failure: the shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    marker = WORK / "data_write.fired"
+    for n, (call, mode, on, scheme) in enumerate((
+            ("fopen", "CRIP_LOSE_ZERO", None, "{track}"),
+            ("fwrite", "CRIP_LOSE_ZERO", None, "{track}"),
+            ("fclose", "CRIP_LOSE_ZERO", None, "{track}"),
+            ("fopen", "CRIP_LOSE_STALE", None, "sub/{track}"),
+            ("fwrite", "CRIP_LOSE_STALE", "DATA sector 010", "{track}"),
+            ("fclose", "CRIP_LOSE_STALE", None, "{track}"))):
+        out = WORK / f"out_data_write{n}"
+        marker.unlink(missing_ok=True)
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_LOSE_PATH="/1.bin",
+                   CRIP_LOSE_CALL=call, CRIP_LOSE_OUT=str(marker),
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        env[mode] = "1"
+        if on:
+            env["CRIP_LOSE_ON"] = on
+        what = f"{call} with {mode}"
+        ec, stdout = crip("-d", WORK / "mixed.cue", "-N", "-A", "-U", "-s", "0",
+                          "-P", "0", "-o", "flac", "-D", out, "-F", scheme,
+                          "-L", "log", env=env)
+        if not marker.exists():
+            fail(f"data_track_write_failure: {what}: the shim never failed "
+                 f"the call, so this run tests nothing")
+            continue
+        path = out / scheme.replace("{track}", "1.bin")
+        if call == "fopen":
+            line = (f'Couldn\'t open path "{path}" for writing: '
+                    f'Input/output error!')
+        else:
+            line = f'Error writing to "{path}": Input/output error!'
+        if not re.search(rf"(?m)^{re.escape(line)}$", stdout):
+            got = re.findall(r"(?m)^(?:Couldn't open path|Error writing to) .*$",
+                             stdout)
+            fail(f"data_track_write_failure: {what}: said {got}, not {line!r}")
+        if ec != 1:
+            fail(f"data_track_write_failure: {what}: exited {ec}, wanted 1")
+        log = (out / "log.log").read_text(encoding="utf-8") \
+            if (out / "log.log").exists() else ""
+        footer = "Rip completed:  no (aborted, 0 of 3 tracks)"
+        if not re.search(rf"(?m)^{re.escape(footer)}$", log):
+            got = re.findall(r"(?m)^Rip completed:.*$", log)
+            fail(f"data_track_write_failure: {what}: the log reads {got}, "
+                 f"not {footer!r}")
+
+
 def sc_acoustid_key_withheld():
     # Review C 1.4 and the check of #68, item 2. The AcoustID key is a
     # credential; `Invoked as:` goes to the log, stdout and the diagnostics

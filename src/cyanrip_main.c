@@ -1377,9 +1377,14 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
             continue;
         }
 
+        /* errno cleared first and EIO when the call set none, here and at
+         * each write and close below: AVERROR(0) is 0, and a track whose
+         * file was never written counted as copied (the check of #68,
+         * item 3) */
+        errno = 0;
         files[nb_files] = fopen(path, "wb");
         if (!files[nb_files]) {
-            ret = AVERROR(errno);
+            ret = AVERROR(errno ? errno : EIO);
             cyanrip_log(ctx, 0, "Couldn't open path \"%s\" for writing: %s!\n"
                         "Invalid folder name? Try -D <folder>.\n",
                         path, av_err2str(ret));
@@ -1460,8 +1465,9 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
         crc = av_crc(crc_table, crc, data, CDIO_CD_FRAMESIZE_RAW);
 
         for (int j = 0; j < nb_files; j++) {
+            errno = 0;
             if (fwrite(data, CDIO_CD_FRAMESIZE_RAW, 1, files[j]) != 1) {
-                ret = AVERROR(errno);
+                ret = AVERROR(errno ? errno : EIO);
                 cyanrip_log(ctx, 0, "\nError writing to \"%s\": %s!\n",
                             paths[j], av_err2str(ret));
                 goto end;
@@ -1490,8 +1496,9 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
 end:
     for (int i = 0; i < nb_files; i++) {
+        errno = 0;
         if (fclose(files[i]) && !ret) {
-            ret = AVERROR(errno);
+            ret = AVERROR(errno ? errno : EIO);
             cyanrip_log(ctx, 0, "Error writing to \"%s\": %s!\n",
                         paths[i], av_err2str(ret));
         }

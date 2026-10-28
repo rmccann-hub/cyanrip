@@ -921,6 +921,7 @@ rip_scenarios = [
     'art_local_name',
     'lost_writes',
     'lost_log_line_is_not_signed',
+    'data_track_write_failure',
     'acoustid_key_withheld',
     'acoustid',
     'cue_only',

@@ -27,21 +27,32 @@
  * called it valid.
  *
  *   CRIP_LOSE_PATH  the end of the path of the file whose write fails
- *   CRIP_LOSE_ON    a substring of the text whose write fails
+ *   CRIP_LOSE_ON    a substring of the text whose write fails; unset, the
+ *                   first write to the file fails
  *   CRIP_LOSE_OUT   a file to create when the write is failed, so a test can
  *                   prove the shim fired and the run was not vacuous
- *   CRIP_LOSE_STALE if set, the failed write sets no errno, and every other
- *                   fwrite() and fflush() that succeeds leaves errno at
- *                   ENOENT, as C11 7.5p3 lets a call that succeeds do: a
+ *   CRIP_LOSE_STALE if set, the failed call sets no errno, and every other
+ *                   fopen(), fwrite() and fflush() that succeeds leaves errno
+ *                   at ENOENT, as C11 7.5p3 lets a call that succeeds do: a
  *                   reason read from errno without clearing it first is then
  *                   the wrong one
+ *   CRIP_LOSE_ZERO  if set, the failed call leaves errno at 0: a failure that
+ *                   sets none, when errno was 0 before it, which a caller
+ *                   that reads errno without an EIO fallback takes for
+ *                   success
+ *   CRIP_LOSE_CALL  the call that fails: fwrite (the default), or fopen or
+ *                   fclose of the file
  *
  * cyanrip writes each log message with one fwrite() (src/cyanrip_log.c,
  * crip_log_put()), so fwrite() is the call failed, and fflush() is
- * interposed only to leave errno set. The file is named through
+ * interposed only to leave errno set. The data track's file is opened,
+ * written and closed by cyanrip_rip_data_track(), each checked, so each
+ * can be failed (the check of #68, item 3). The file is named through
  * /proc/self/fd, which is Linux's, as the shims are.
  */
 
+/* fopen() is defined under both names, as tests/badsector.c says why */
+#undef _FILE_OFFSET_BITS
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <errno.h>
@@ -73,6 +84,66 @@ static int names_the_file(FILE *f)
     return (size_t)n >= wl && !strcmp(path + n - wl, want);
 }
 
+static int fails(const char *call)
+{
+    const char *c = getenv("CRIP_LOSE_CALL");
+    return !strcmp(c && *c ? c : "fwrite", call) && !atomic_load(&fired);
+}
+
+/* Marks the failure made, once, and leaves errno as the mode says */
+static int lose(void)
+{
+    if (atomic_exchange(&fired, 1))
+        return 0;
+    const char *out = getenv("CRIP_LOSE_OUT");
+    if (out) {
+        int fd = open(out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd >= 0)
+            close(fd);
+    }
+    if (getenv("CRIP_LOSE_ZERO"))
+        errno = 0;
+    else if (!getenv("CRIP_LOSE_STALE"))
+        errno = ENOSPC;
+    return 1;
+}
+
+FILE *fopen(const char *path, const char *mode)
+{
+    static FILE *(*real)(const char *, const char *);
+    const char *want = getenv("CRIP_LOSE_PATH");
+
+    if (!real)
+        *(void **)&real = dlsym(RTLD_NEXT, "fopen");
+
+    size_t n = strlen(path), wl = want ? strlen(want) : 0;
+    if (wl && n >= wl && !strcmp(path + n - wl, want) && fails("fopen") && lose())
+        return NULL;
+    FILE *f = real(path, mode);
+    if (f && getenv("CRIP_LOSE_STALE"))
+        errno = ENOENT;
+    return f;
+}
+
+FILE *fopen64(const char *path, const char *mode)
+{
+    return fopen(path, mode);
+}
+
+int fclose(FILE *stream)
+{
+    static int (*real)(FILE *);
+
+    if (!real)
+        *(void **)&real = dlsym(RTLD_NEXT, "fclose");
+
+    int named = fails("fclose") && names_the_file(stream);
+    int ret = real(stream);
+    if (named && !ret && lose())
+        return EOF;
+    return ret;
+}
+
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
     static size_t (*real)(const void *, size_t, size_t, FILE *);
@@ -82,19 +153,10 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
     if (!real)
         *(void **)&real = dlsym(RTLD_NEXT, "fwrite");
 
-    if (on && *on && size && nmemb && !atomic_load(&fired) &&
-        memmem(ptr, size * nmemb, on, strlen(on)) && names_the_file(stream) &&
-        !atomic_exchange(&fired, 1)) {
-        const char *out = getenv("CRIP_LOSE_OUT");
-        if (out) {
-            int fd = open(out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (fd >= 0)
-                close(fd);
-        }
-        if (!stale)
-            errno = ENOSPC;
+    if (size && nmemb && fails("fwrite") &&
+        (!on || !*on || memmem(ptr, size * nmemb, on, strlen(on))) &&
+        names_the_file(stream) && lose())
         return 0;
-    }
 
     size_t ret = real(ptr, size, nmemb, stream);
     if (stale && ret == nmemb)
