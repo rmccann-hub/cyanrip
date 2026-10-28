@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**`CLAUDE.md` sets the tone from round 37**, on the owner's word of
+2026-10-28: an easy mistake by either side is called out with bite in laps,
+commits, pull requests, this file and notes to the operator, the facts exact,
+and never at a person, a wire header, a statement's fields or anything sent
+upstream. Aimed at ourselves it is clever and specific, not generic
+self-abuse. No code or process changes with it.
+
 **Our round 36 lap 14 is released**, on our operator's word of 2026-10-28,
 on #68's branch, which carries it to `platterpus-fork`. It files
 Platterpus's lap 13, accepts its two amendments for the build after
