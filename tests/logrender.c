@@ -54,6 +54,8 @@
  * test fails. tools/mutate.py regenerates the list.
  */
 
+#include <errno.h>
+#include <fcntl.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -1864,6 +1866,80 @@ static void test_log_reaches_only_requested_outputs(void)
     free_ctx(ctx);
 }
 
+/* The value a library leaves for its caller to read: ENOMEDIUM, the one
+ * crip_read_audio_salvaging() reads, where the platform has it */
+#ifdef ENOMEDIUM
+#define LIBRARY_ERRNO ENOMEDIUM
+#else
+#define LIBRARY_ERRNO ENXIO
+#endif
+
+/* A library that logs and then reads errno must find its own value there:
+ * libcdio may log during a failed read, and crip_read_audio_salvaging() tells
+ * a missing disc by ENOMEDIUM. Each checked write cleared errno and left it at
+ * 0, so a missing disc would have been taken for a bad sector and filled with
+ * zeros (the check of #68, item 1). Each path a library's message takes is
+ * run as it is, and again with stdout's descriptor on /dev/full, so that the
+ * write itself fails and sets errno. */
+static void test_logging_keeps_errno(void)
+{
+    static const char *const path[] = {
+        "cyanrip_log() to a log",
+        "cyanrip_log() with no log, as libcdio's handler calls it",
+        "av_log() through the capture",
+    };
+    cyanrip_ctx *ctx = new_ctx();
+
+    for (int full = 0; full < 2; full++) {
+        int kept_fd = -1;
+        if (full) {
+            int fd = open("/dev/full", O_WRONLY);
+            if (fd < 0) {
+                printf("UNPROBED: errno after a failed write to stdout: no /dev/full\n");
+                break;
+            }
+            if (cyanrip_log_stdout_error())
+                FAIL("errno: stdout had failed before this test, so a failure "
+                     "here cannot be told from that one");
+            fflush(stdout);
+            kept_fd = dup(STDOUT_FILENO);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        }
+
+        int after[3];
+        errno = LIBRARY_ERRNO;
+        cyanrip_log(ctx, 0, "errno check\n");
+        after[0] = errno;
+        errno = LIBRARY_ERRNO;
+        cyanrip_log(NULL, 0, "errno check\n");
+        after[1] = errno;
+        cyanrip_set_av_log_capture(ctx, 1, AV_LOG_INFO);
+        errno = LIBRARY_ERRNO;
+        av_log(NULL, AV_LOG_ERROR, "errno check\n");
+        after[2] = errno;
+        cyanrip_set_av_log_capture(ctx, 0, AV_LOG_QUIET);
+
+        if (full) {
+            fflush(stdout);
+            clearerr(stdout);
+            dup2(kept_fd, STDOUT_FILENO);
+            close(kept_fd);
+            if (!cyanrip_log_stdout_error())
+                FAIL("errno: no write to stdout failed on /dev/full, so that "
+                     "half proved nothing");
+        }
+        for (int i = 0; i < 3; i++)
+            if (after[i] != LIBRARY_ERRNO)
+                FAIL("errno: %s%s left it at %i (%s), not the caller's %i",
+                     path[i], full ? " with stdout failing" : "", after[i],
+                     strerror(after[i]), LIBRARY_ERRNO);
+    }
+
+    drain(ctx);
+    free_ctx(ctx);
+}
+
 int main(void)
 {
     test_accurip_disabled_says_disabled();
@@ -1914,6 +1990,7 @@ int main(void)
     test_embedded_cover_art_picks_front();
     test_embedded_cover_art_gating();
     test_log_reaches_only_requested_outputs();
+    test_logging_keeps_errno();
 
     if (failures) {
         printf("%i check(s) failed\n", failures);

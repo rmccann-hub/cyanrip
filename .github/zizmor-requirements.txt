@@ -1,0 +1,5 @@
+# zizmor for CI's lint job, installed by hash (review C item 4.3). 1.31.1,
+# published 2026-10-15; the wheel for the runner and the source archive.
+zizmor==1.31.1 \
+    --hash=sha256:58e878eb2dbd2c6183c105e1ac28c14f7dd1eca44a783f1fe2a69647d012c410 \
+    --hash=sha256:eb9c8a3e2c1080810fdb68bc36717b2a9d61283bb98e3a48689f5a852fc48e9f

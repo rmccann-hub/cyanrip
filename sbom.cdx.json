@@ -862,11 +862,15 @@
       "bom-ref": "run:bash",
       "name": "bash",
       "scope": "excluded",
-      "description": "runs the Windows build script's functions, its builds stubbed, to check where it stops",
+      "description": "runs the Windows build script's functions, and CI's static-analysis step as Actions does, their builds stubbed, to check where each stops",
       "properties": [
         {
           "name": "cyanrip-fork:run-by",
           "value": "tests/mingw_build.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/workflows.py"
         }
       ]
     },
@@ -1372,5 +1376,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:f1f4c389-9331-5ab4-88a5-03e545d9f3b6"
+  "serialNumber": "urn:uuid:1cec8798-97e7-5f60-96e2-e3e62c44490b"
 }

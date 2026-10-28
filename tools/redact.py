@@ -75,9 +75,18 @@ WIRE = re.compile(r"^HANDSHAKE-[A-Z0-9-]+:")
 # An AcoustID key given on the command line, as `Invoked as:` and the
 # diagnostics record's `invocation` print it, bare or quoted. cyanrip withholds
 # it itself once review C item 1.4 is fixed; this is the second line, for a log
-# an older build wrote. Already withheld is not matched again.
-ACOUSTID_KEY = re.compile(r'(--acoustid-key\s+)(?!\[withheld\])'
-                          r'(\\"(?:(?!\\").)*\\"|"[^"]*"|[^\s"\\]+)')
+# an older build wrote. Already withheld is not matched again. Any spelling of
+# the flag, in any case, as the binary withholds it: a misspelt one genopt
+# refused, and the `--flag=value` form, quoted whole when the value has a
+# space. Not upstream's -k, which the binary also withholds after: in a log
+# from before 2026-10-12 it was --stall-secs, and its value no secret.
+ACOUSTID_KEYS = (
+    re.compile(r'((?:\\"|")--(?i:acoustid)[\w-]*=)(?!\[withheld\])'
+               r'((?:(?!\\?").)+)'),
+    re.compile(r'(--(?i:acoustid)[\w-]*=)(?!\[withheld\])([^\s"\\]+)'),
+    re.compile(r'(--(?i:acoustid)[\w-]*\s+)(?!\[withheld\])'
+               r'(\\"(?:(?!\\").)*\\"|"[^"]*"|[^\s"\\]+)'),
+)
 PLACEHOLDER_KEY = "[withheld]"
 
 NAMES_ENV = "CYANRIP_REDACT_NAMES"
@@ -167,8 +176,9 @@ def redact(text, hosts=(), names=None):
             continue
         line, n = HOME_PATH.subn("~", line)
         rep.home += n
-        line, n = ACOUSTID_KEY.subn(lambda m: m.group(1) + PLACEHOLDER_KEY, line)
-        rep.keys += n
+        for r in ACOUSTID_KEYS:
+            line, n = r.subn(lambda m: m.group(1) + PLACEHOLDER_KEY, line)
+            rep.keys += n
         for r in host_res:
             line, n = r.subn(PLACEHOLDER_HOST, line)
             rep.hosts += n
@@ -211,6 +221,6 @@ def findings(text, names=None):
             out.append((i, "a hostname"))
         if any(r.search(line) for r in name_res):
             out.append((i, "the owner's name"))
-        if ACOUSTID_KEY.search(line):
+        if any(r.search(line) for r in ACOUSTID_KEYS):
             out.append((i, "an AcoustID key"))
     return out

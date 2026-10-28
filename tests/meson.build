@@ -1,3 +1,14 @@
+## A ThreadSanitizer build reads tests/tsan.supp, by absolute path since
+## tests change directory, appended to any TSAN_OPTIONS the caller gives. Its
+## header says what each entry drops and what still reports (review C 3.7).
+if get_option('b_sanitize') == 'thread'
+    tsan_env = environment()
+    tsan_env.append('TSAN_OPTIONS',
+                    'suppressions=' + meson.current_source_dir() / 'tsan.supp',
+                    separator: ' ')
+    add_test_setup('tsan', env: tsan_env, is_default: true)
+endif
+
 ## Unit tests
 ## ==========
 ## Built from the objects they test, avtransport-style.
@@ -71,7 +82,8 @@ coverart_net_test = executable('coverart_net_test',
     sources: [ 'coverart_net.c' ],
     include_directories: [ '../src' ],
     dependencies: unit_test_deps + [ dependency('libavformat'),
-                                     dependency('libcurl') ],
+                                     dependency('libcurl'),
+                                     dependency('threads') ],
 )
 test('Cover art fetch limits', coverart_net_test)
 
@@ -282,10 +294,19 @@ imagecap_shim = shared_module('imagecap',
     name_prefix: '',
     dependencies: [ dependency('dl'), dependency('libcdio') ],
 )
+## One write to the log that fails, with the writes around it going through,
+## so the log on disk is missing a message and nothing else. Review C item 1.3:
+## such a log was signed and -Y called it valid. See its header.
+losewrite_shim = shared_module('losewrite',
+    sources: [ 'losewrite.c' ],
+    name_prefix: '',
+    dependencies: [ dependency('dl') ],
+)
 shim_env += [ 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path(),
               'CYANRIP_RAISESIG_SHIM=' + raisesig_shim.full_path(),
-              'CYANRIP_IMAGECAP_SHIM=' + imagecap_shim.full_path() ]
-shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim ]
+              'CYANRIP_IMAGECAP_SHIM=' + imagecap_shim.full_path(),
+              'CYANRIP_LOSEWRITE_SHIM=' + losewrite_shim.full_path() ]
+shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim, losewrite_shim ]
 endif
 
 json_test = executable('json_test',
@@ -899,6 +920,8 @@ rip_scenarios = [
     'art_extradata',
     'art_local_name',
     'lost_writes',
+    'lost_log_line_is_not_signed',
+    'data_track_write_failure',
     'acoustid_key_withheld',
     'acoustid',
     'cue_only',

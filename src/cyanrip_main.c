@@ -85,6 +85,15 @@ static inline void crip_genopt_log(void *log_ctx, int level, const char *fmt, ..
 #define GEN_OPT_MAX_ARR 198
 #define GEN_OPT_HELPSTRING cyanrip_helpstr
 
+/* The argument genopt was reading when it stopped, at one it refused or at -h
+ * or -v. It read none after that one, so record_invocation() cannot know
+ * which of them is the AcoustID key under a spelling genopt does not take,
+ * and withholds them all; genopt's own refusal of a `--flag=value` withholds
+ * the value (review C item 1.4; the check of #68, item 2). */
+static int crip_genopt_reading;
+#define GEN_OPT_READING(i) (crip_genopt_reading = (i))
+#define GEN_OPT_WITHHOLD_REFUSED_VALUE
+
 #include "genopt.h"
 
 static int genopt_nb_vals(GenOpt *opts_list, int n, const char *name)
@@ -1271,6 +1280,7 @@ static double sample_peak_rel_amp(const uint8_t *data, const int bytes)
  * is read, and no extra drive time. */
 static int crip_spool_write(cyanrip_ctx *ctx, FILE *f, const uint8_t *data, int bytes)
 {
+    errno = 0;
     if (bytes <= 0 || fwrite(data, 1, bytes, f) == (size_t)bytes)
         return 0;
     int err = AVERROR(errno ? errno : EIO);
@@ -1367,9 +1377,14 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
             continue;
         }
 
+        /* errno cleared first and EIO when the call set none, here and at
+         * each write and close below: AVERROR(0) is 0, and a track whose
+         * file was never written counted as copied (the check of #68,
+         * item 3) */
+        errno = 0;
         files[nb_files] = fopen(path, "wb");
         if (!files[nb_files]) {
-            ret = AVERROR(errno);
+            ret = AVERROR(errno ? errno : EIO);
             cyanrip_log(ctx, 0, "Couldn't open path \"%s\" for writing: %s!\n"
                         "Invalid folder name? Try -D <folder>.\n",
                         path, av_err2str(ret));
@@ -1450,8 +1465,9 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
         crc = av_crc(crc_table, crc, data, CDIO_CD_FRAMESIZE_RAW);
 
         for (int j = 0; j < nb_files; j++) {
+            errno = 0;
             if (fwrite(data, CDIO_CD_FRAMESIZE_RAW, 1, files[j]) != 1) {
-                ret = AVERROR(errno);
+                ret = AVERROR(errno ? errno : EIO);
                 cyanrip_log(ctx, 0, "\nError writing to \"%s\": %s!\n",
                             paths[j], av_err2str(ret));
                 goto end;
@@ -1480,8 +1496,9 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
 end:
     for (int i = 0; i < nb_files; i++) {
+        errno = 0;
         if (fclose(files[i]) && !ret) {
-            ret = AVERROR(errno);
+            ret = AVERROR(errno ? errno : EIO);
             cyanrip_log(ctx, 0, "Error writing to \"%s\": %s!\n",
                         paths[i], av_err2str(ret));
         }
@@ -1594,6 +1611,7 @@ repeat_ripping:;
     crip_init_checksum_ctx(ctx, &checksum_ctx, t);
 
     if (ctx->settings.ripping_retries) {
+        errno = 0;
         pass_spool = tmpfile();
         if (!pass_spool) {
             ret = AVERROR(errno ? errno : EIO);
@@ -2393,7 +2411,53 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
  * states what was run rather than what a caller believes it ran. */
 char *crip_invocation = NULL;
 
-static void record_invocation(int argc, char **argv)
+/* argv as received, copied before genopt parses it: genopt splits a list
+ * option's value in place, so `-o flac,mp3` would read back as `-o flac` */
+static char **crip_copy_argv(int argc, char **argv)
+{
+    size_t size = (argc + 1) * sizeof(char *);
+    for (int i = 0; i < argc; i++)
+        size += strlen(argv[i]) + 1;
+
+    char **copy = av_malloc(size);
+    if (!copy)
+        return NULL;
+    char *p = (char *)(copy + argc + 1);
+    for (int i = 0; i < argc; i++) {
+        size_t n = strlen(argv[i]) + 1;
+        copy[i] = memcpy(p, argv[i], n);
+        p += n;
+    }
+    copy[argc] = NULL;
+    return copy;
+}
+
+/* The first len bytes of s, each occurrence of key in them withheld */
+static void crip_bprint_withholding(AVBPrint *buf, const char *s, size_t len,
+                                    const char *key)
+{
+    size_t n = key ? strlen(key) : 0, from = 0, at = 0;
+    while (n && at + n <= len) {
+        if (memcmp(s + at, key, n)) {
+            at++;
+            continue;
+        }
+        av_bprintf(buf, "%.*s[withheld]", (int)(at - from), s + from);
+        from = at = at + n;
+    }
+    av_bprintf(buf, "%.*s", (int)(len - from), s + from);
+}
+
+/* The AcoustID key is a credential, and this line goes to the log, stdout and
+ * the diagnostics record, so its value is withheld (review C item 1.4): after
+ * the flag genopt took as the key's, and wherever else in any argument it
+ * appears. A misspelt flag is one genopt refuses, and genopt reads nothing
+ * after an argument it refuses, so every argument after the one it stopped at
+ * (stop, or argc when it read them all) is withheld, and so is the value of
+ * that one in the `--flag=value` form, which genopt does not take: that the
+ * key is not among them cannot be known (the check of #68, item 2). Upstream's
+ * -k, the same option there, is refused here, so its value is one of them. */
+static void record_invocation(int argc, char **argv, int stop, const char *key)
 {
     AVBPrint buf;
     av_bprint_init(&buf, 0, AV_BPRINT_SIZE_UNLIMITED);
@@ -2401,23 +2465,41 @@ static void record_invocation(int argc, char **argv)
     for (int i = 0; i < argc; i++) {
         if (i)
             av_bprintf(&buf, " ");
-        /* The AcoustID key is a credential, and this line goes to the log,
-         * stdout and the diagnostics record, so its value is withheld (review
-         * C item 1.4). genopt takes a value as the next argument, so that is
-         * the one replaced; an argument that only looks like the option is
-         * withheld too, which hides nothing anyone needs. */
-        if (i > 0 && !strcmp(argv[i - 1], "--acoustid-key")) {
+        if (i > stop ||
+            (i > 0 && genopt_flagname_eq(argv[i - 1], "--acoustid_key"))) {
             av_bprintf(&buf, "[withheld]");
             continue;
         }
+        const char *eq = i == stop ? strchr(argv[i], '=') : NULL;
+        size_t shown = eq ? (size_t)(eq - argv[i]) + 1 : strlen(argv[i]);
         /* Quote anything a reader could not paste back verbatim */
-        if (strpbrk(argv[i], " \t\"'\\"))
-            av_bprintf(&buf, "\"%s\"", argv[i]);
-        else
-            av_bprintf(&buf, "%s", argv[i]);
+        int quote = strcspn(argv[i], " \t\"'\\") < shown;
+        if (quote)
+            av_bprintf(&buf, "\"");
+        crip_bprint_withholding(&buf, argv[i], shown, key);
+        if (eq)
+            av_bprintf(&buf, "[withheld]");
+        if (quote)
+            av_bprintf(&buf, "\"");
     }
 
     av_bprint_finalize(&buf, &crip_invocation);
+}
+
+/* CYANRIP_ACOUSTID_KEY, without a trailing space or line break, which a file
+ * read into it can leave and which no key has; NULL when unset or empty */
+static char *crip_acoustid_key_from_env(void)
+{
+    static char *key = NULL;
+    const char *v = getenv("CYANRIP_ACOUSTID_KEY");
+    size_t n = v ? strlen(v) : 0;
+    while (n && strchr(" \t\r\n", v[n - 1]))
+        n--;
+    if (!n)
+        return NULL;
+    av_free(key);
+    key = av_strndup(v, n);
+    return key;
 }
 
 /* libcdio's own messages, routed through ours.
@@ -2472,7 +2554,10 @@ static void crip_cdio_log_handler(cdio_log_level_t level, const char message[])
 }
 
 /* strtoll()'s reading of s, which is how every number option read its value,
- * and in *whole whether s is a whole decimal number and nothing else.
+ * and in *whole whether s is a whole decimal number and nothing else: its
+ * digits from the first character, after a '-' at most. strtoll() also skips
+ * leading white space and takes a '+', which a caller typing " 2" or "+2"
+ * did not mean as a number either.
  *
  * With no end pointer, "abc" read as 0 and "2junk" as 2, so -P abc ran at
  * paranoia none and -c 2junk/3 tagged disc 2 (review C item 2.2). Each caller
@@ -2487,7 +2572,8 @@ static long long crip_parse_ll(const char *s, int *whole)
     char *end = NULL;
     errno = 0;
     long long v = strtoll(s, &end, 10);
-    *whole = end != s && *end == '\0' && errno != ERANGE;
+    int digits_first = av_isdigit(s[0]) || (s[0] == '-' && av_isdigit(s[1]));
+    *whole = digits_first && end != s && *end == '\0' && errno != ERANGE;
     return v;
 }
 
@@ -2500,7 +2586,12 @@ static int cyanrip_run(int argc, char **argv)
     setlocale(LC_ALL, ".UTF8");
 #endif
 
-    record_invocation(argc, argv);
+    /* Recorded once genopt has said what it read */
+    char **argv_received = crip_copy_argv(argc, argv);
+    if (!argv_received) {
+        cyanrip_log(NULL, 0, "Unable to allocate memory for the command line!\n");
+        return CRIP_EXIT_FAILURE;
+    }
 
     cdio_log_set_handler(crip_cdio_log_handler);
 
@@ -2762,6 +2853,13 @@ static int cyanrip_run(int argc, char **argv)
 
     {
         int r = GEN_OPT_PARSE(NULL, opts_list, argc, argv);
+        /* From the environment when not on the command line, where any user
+         * of the machine can read it in the process list (review C item 1.4) */
+        if (!acoustid_key)
+            acoustid_key = crip_acoustid_key_from_env();
+        record_invocation(argc, argv_received, r < 0 ? crip_genopt_reading : argc,
+                          acoustid_key);
+        av_free(argv_received);
         if (r == -EAGAIN)
             return 0;
         if (r < 0)
@@ -2920,6 +3018,15 @@ static int cyanrip_run(int argc, char **argv)
             cyanrip_log(ctx, 0, "Invalid release index %lli!\n", wide);
             return CRIP_EXIT_USAGE;
         } else {
+            /* A number and a space read as the number, so -R "2 x" was
+             * release 2; " 2" and "+2" were too. What an index's old reading
+             * refused keeps its words above, as with -P (review C 2.2). */
+            int whole;
+            crip_parse_ll(release, &whole);
+            if (!whole) {
+                cyanrip_log(ctx, 0, "Invalid release index %s!\n", release);
+                return CRIP_EXIT_USAGE;
+            }
             mb_release_idx = wide;
         }
     }
@@ -3569,6 +3676,16 @@ static int cyanrip_run(int argc, char **argv)
             ctx->exit_class = CRIP_EXIT_USAGE;
             goto end;
         }
+        /* strtoll() skipped a leading space or '+', so " 2=" and "+2=" were
+         * track 2; refused as typed, after the reading above, as -P is */
+        if (!av_isdigit(track_metadata_ptr[i][0])) {
+            cyanrip_log(ctx, 0, "Invalid track number %.*s, list has %i tracks!\n",
+                        (int)(end - track_metadata_ptr[i]), track_metadata_ptr[i],
+                        ctx->nb_tracks);
+            ctx->total_error_count++;
+            ctx->exit_class = CRIP_EXIT_USAGE;
+            goto end;
+        }
 
         /* Check the equal sign is actually there before stepping past it.
          * "-t 12" leaves end on the terminator, so the step below walked off
@@ -4132,6 +4249,7 @@ int main(int argc, char **argv)
      * the log reads, so a write to it that failed is a lost one too (review C
      * item 1.3). stderr, as the diagnostics record's own failures are named. */
     int out_err = cyanrip_log_stdout_error();
+    errno = 0;
     if (fflush(stdout) == EOF && !out_err)
         out_err = errno ? errno : EIO;
     if (ferror(stdout) && !out_err)

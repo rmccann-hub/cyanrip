@@ -522,7 +522,22 @@ def sc_cli():
             ("-P", "99999999999999999999",
              "Invalid paranoia level 9223372036854775807 must be between "),
             ("-c", "abc/3", "Invalid discnumber 0\n"),
-            ("-p", "=drop", "Invalid track idx for pregap: 0\n")):
+            ("-p", "=drop", "Invalid track idx for pregap: 0\n"),
+            # strtoll() also skips a leading space and takes a '+', and -R
+            # read a number and a space as the number: each in range, and
+            # each refused as typed
+            ("-P", " 2", "Invalid paranoia level  2 must be between 0 and "),
+            ("-P", "+2", "Invalid paranoia level +2 must be between 0 and "),
+            ("-c", "+1/2", "Invalid discnumber +1\n"),
+            ("-c", "1/ 2", "Invalid totaldiscs  2\n"),
+            ("-p", " 1=drop", "Invalid track idx for pregap:  1\n"),
+            ("-R", "2 x", "Invalid release index 2 x!"),
+            ("-R", " 2", "Invalid release index  2!"),
+            ("-R", "+2", "Invalid release index +2!"),
+            ("-R", "0 x", "Invalid release index 0!"),
+            ("-t", "+2=title=plus", "Invalid track number +2, list has 2 tracks!"),
+            ("-t", " 2=title=space",
+             "Invalid track number  2, list has 2 tracks!")):
         ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
                        flag, val)
         if ec != 64:
@@ -538,7 +553,8 @@ def sc_cli():
     if ec != 0 or not re.search(r"^Disc number:\s+2147483647$", out, re.M):
         fail(f"cli: -c 2147483647/2147483647 was not taken as given "
              f"(exit {ec})")
-    for flag, val in (("-P", "3"), ("-t", "2=title=last"), ("-p", "2=drop")):
+    for flag, val in (("-P", "3"), ("-t", "2=title=last"), ("-p", "2=drop"),
+                      ("-P", "0"), ("-c", "1/2")):
         ec, _ = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
                      flag, val)
         if ec != 0:
@@ -1860,21 +1876,233 @@ def sc_lost_writes():
         fail("lw_stdout: the log lost its footer to a failure of stdout")
 
 
+def sc_lost_log_line_is_not_signed():
+    # Review C 1.3. A log that lost one message and kept the rest was signed
+    # over what reached the disc, so -Y called it valid. The shim fails the
+    # one write that carries `Track 1 read with no error reported.` and lets
+    # every other through: the run names the loss and exits 1, the log has
+    # the lines on either side and no signature, and -Y says so (exit 3).
+    # Run again with the failure setting no errno after writes that left it
+    # at ENOENT: the reason given is EIO, not the stale value.
+    needs_preload_shim("lost_log_line_is_not_signed")
+    shim = os.environ.get("CYANRIP_LOSEWRITE_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"lost_log_line_is_not_signed: the shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    out = WORK / "out_lost_line"
+    marker = WORK / "lost_line.fired"
+    lost = "Track 1 read with no error reported."
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_LOSE_PATH="/log.log",
+               CRIP_LOSE_ON=lost, CRIP_LOSE_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                      "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                      "-L", "log", env=env)
+    if not marker.exists():
+        fail("lost_log_line_is_not_signed: the shim never failed a write, so "
+             "nothing below tests a log that lost one")
+        return
+    if ec != 1:
+        fail(f"lost_log_line_is_not_signed: exited {ec}, wanted 1")
+    line = f'Unable to write the log "{out}/log.log": No space left on device!'
+    if not re.search(rf"(?m)^{re.escape(line)}$", stdout):
+        fail(f"lost_log_line_is_not_signed: no line {line!r}")
+    if not re.search(rf"(?m)^{re.escape(lost)}$", stdout):
+        fail("lost_log_line_is_not_signed: stdout lost the line too, so the "
+             "shim failed more than the log's write")
+    lines = (out / "log.log").read_text(encoding="utf-8").splitlines()
+    if lost in lines:
+        fail("lost_log_line_is_not_signed: the log has the line the shim "
+             "failed, so it lost nothing")
+    for kept in ("Tracks:", "Summary:"):
+        if kept not in lines:
+            fail(f"lost_log_line_is_not_signed: the log lacks {kept!r}, so "
+                 "more than one write was lost")
+    if not any(ln.startswith("Rip completed:") for ln in lines):
+        fail("lost_log_line_is_not_signed: the log has no footer, so the "
+             "writes after the lost one did not go through")
+    if any(ln.startswith("Log FUN512:") for ln in lines):
+        fail("lost_log_line_is_not_signed: a log that lost a line is signed")
+    ec, text = crip("-Y", out / "log.log")
+    if ec != 3 or "No FUN512 checksum found in" not in text:
+        fail(f"lost_log_line_is_not_signed: -Y exited {ec} on the log, "
+             f"wanted 3 (no checksum): {text.strip()[-200:]!r}")
+
+    out = WORK / "out_lost_line_stale"
+    marker.unlink()
+    ec, stdout = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                      "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                      "-L", "log", env=dict(env, CRIP_LOSE_STALE="1"))
+    line = f'Unable to write the log "{out}/log.log": Input/output error!'
+    if not marker.exists():
+        fail("lost_log_line_is_not_signed: with a stale errno the shim never "
+             "failed a write")
+    elif ec != 1 or not re.search(rf"(?m)^{re.escape(line)}$", stdout):
+        got = re.findall(r"(?m)^Unable to write the log .*$", stdout)
+        fail(f"lost_log_line_is_not_signed: a failure that set no errno, "
+             f"after writes that left it set, exited {ec} and said {got}, "
+             f"not {line!r}")
+
+
+def sc_data_track_write_failure():
+    # The check of #68, item 3. The data track's file is opened, written and
+    # closed with each result checked, but the error was AVERROR(errno): a
+    # failure that set no errno, when errno was 0, gave 0, so the copy
+    # counted as done, the run said `Success!` and exited 0 with a file that
+    # was never written. The shim fails each call in turn, leaving errno at
+    # 0; then, setting none after calls that left it at ENOENT, so a reason
+    # read without clearing it first is the stale one. For the open, that is
+    # the stat() that found the file's new directory missing, so that run
+    # names one. Each run names EIO, exits 1, and the log counts no track
+    # completed.
+    needs_preload_shim("data_track_write_failure")
+    shim = os.environ.get("CYANRIP_LOSEWRITE_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"data_track_write_failure: the shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    marker = WORK / "data_write.fired"
+    for n, (call, mode, on, scheme) in enumerate((
+            ("fopen", "CRIP_LOSE_ZERO", None, "{track}"),
+            ("fwrite", "CRIP_LOSE_ZERO", None, "{track}"),
+            ("fclose", "CRIP_LOSE_ZERO", None, "{track}"),
+            ("fopen", "CRIP_LOSE_STALE", None, "sub/{track}"),
+            ("fwrite", "CRIP_LOSE_STALE", "DATA sector 010", "{track}"),
+            ("fclose", "CRIP_LOSE_STALE", None, "{track}"))):
+        out = WORK / f"out_data_write{n}"
+        marker.unlink(missing_ok=True)
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_LOSE_PATH="/1.bin",
+                   CRIP_LOSE_CALL=call, CRIP_LOSE_OUT=str(marker),
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        env[mode] = "1"
+        if on:
+            env["CRIP_LOSE_ON"] = on
+        what = f"{call} with {mode}"
+        ec, stdout = crip("-d", WORK / "mixed.cue", "-N", "-A", "-U", "-s", "0",
+                          "-P", "0", "-o", "flac", "-D", out, "-F", scheme,
+                          "-L", "log", env=env)
+        if not marker.exists():
+            fail(f"data_track_write_failure: {what}: the shim never failed "
+                 f"the call, so this run tests nothing")
+            continue
+        path = out / scheme.replace("{track}", "1.bin")
+        if call == "fopen":
+            line = (f'Couldn\'t open path "{path}" for writing: '
+                    f'Input/output error!')
+        else:
+            line = f'Error writing to "{path}": Input/output error!'
+        if not re.search(rf"(?m)^{re.escape(line)}$", stdout):
+            got = re.findall(r"(?m)^(?:Couldn't open path|Error writing to) .*$",
+                             stdout)
+            fail(f"data_track_write_failure: {what}: said {got}, not {line!r}")
+        if ec != 1:
+            fail(f"data_track_write_failure: {what}: exited {ec}, wanted 1")
+        log = (out / "log.log").read_text(encoding="utf-8") \
+            if (out / "log.log").exists() else ""
+        footer = "Rip completed:  no (aborted, 0 of 3 tracks)"
+        if not re.search(rf"(?m)^{re.escape(footer)}$", log):
+            got = re.findall(r"(?m)^Rip completed:.*$", log)
+            fail(f"data_track_write_failure: {what}: the log reads {got}, "
+                 f"not {footer!r}")
+
+
 def sc_acoustid_key_withheld():
-    # Review C 1.4. The AcoustID key is a credential; `Invoked as:` goes to
-    # the log, stdout and the diagnostics record, and none may carry it
-    key = "PROBEKEY4711"
+    # Review C 1.4 and the check of #68, item 2. The AcoustID key is a
+    # credential; `Invoked as:` goes to the log, stdout and the diagnostics
+    # record, and none may carry it. Its value is withheld after the flag and
+    # wherever else it appears, here in the record's own path. Given twice,
+    # genopt keeps the second, and the first is withheld after its flag.
+    key, first = "PROBEKEY4711", "FIRSTKEY0815"
     out = WORK / "out_akey"
-    rip("akey", "basic.cue", "--acoustid-key", key,
-        "--diagnostics", WORK / "akey-diag.json")
+    record = WORK / f"akey-{key}.json"
+    rip("akey", "basic.cue", "--acoustid-key", first, "--acoustid-key", key,
+        "--diagnostics", record)
     for where, text in (("stdout", (WORK / "akey.log").read_text(encoding="utf-8")),
                         ("log", (out / "log.log").read_text(encoding="utf-8")),
-                        ("record", (WORK / "akey-diag.json").read_text(encoding="utf-8"))):
-        if key in text:
-            fail(f"acoustid_key_withheld: the key is in the {where}")
-        if "--acoustid-key [withheld]" not in text:
-            fail(f"acoustid_key_withheld: the {where} does not say the key "
-                 f"was withheld")
+                        ("record", record.read_text(encoding="utf-8"))):
+        for k in (key, first):
+            if k in text:
+                fail(f"acoustid_key_withheld: {k} is in the {where}")
+        if not re.search(r"--acoustid-key \[withheld\] --acoustid-key \[withheld\] "
+                         r".*akey-\[withheld\]\.json", text):
+            fail(f"acoustid_key_withheld: the {where} does not say both keys "
+                 f"were withheld, after their flags and in the record's path")
+
+    # A spelling genopt does not take is refused, and genopt reads nothing
+    # after the argument it refuses, so every one after it is withheld, and
+    # the value of a refused `--flag=value`, in the refusal too. However far
+    # the spelling is from the flag's (`--akustid-key` is two edits from it),
+    # and wherever the key is (here after another refused argument). Upstream's
+    # -k is this option there and refused here. Each exits 64 with the key in
+    # neither stdout nor the record, and says what it withheld.
+    for n, (args, shown, refused) in enumerate((
+            (["--acoustid-kye", key], "--acoustid-kye [withheld]",
+             "--acoustid-kye"),
+            (["--acousticid-key", key], "--acousticid-key [withheld]",
+             "--acousticid-key"),
+            (["--acoustd-key", key], "--acoustd-key [withheld]",
+             "--acoustd-key"),
+            (["-acoustid-key", key], "-acoustid-key [withheld]",
+             "-acoustid-key"),
+            (["--akustid-key", key], "--akustid-key [withheld]",
+             "--akustid-key"),
+            (["--no-such-flag", "x", "--acoustid-key", key],
+             "--no-such-flag [withheld] [withheld] [withheld]",
+             "--no-such-flag"),
+            ([f"--acoustid-key={key}"], "--acoustid-key=[withheld]",
+             "--acoustid-key=[withheld]"),
+            ([f"--AcoustID-Key={key}"], "--AcoustID-Key=[withheld]",
+             "--AcoustID-Key=[withheld]"),
+            ([f"--acousticid-key={key}"], "--acousticid-key=[withheld]",
+             "--acousticid-key=[withheld]"),
+            (["-k", key], "-k [withheld]", "-k"))):
+        record = WORK / f"akey-bad{n}.json"
+        ec, text = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-I",
+                        "--diagnostics", record, *args)
+        body = record.read_text(encoding="utf-8") if record.exists() else ""
+        if ec != 64:
+            fail(f"acoustid_key_withheld: {args[0]!r} exited {ec}, wanted 64")
+        if key in text or key in body:
+            fail(f"acoustid_key_withheld: {args[0]!r} left the key in "
+                 f"{'stdout' if key in text else 'the record'}")
+        if f' {shown}"' not in body:
+            fail(f"acoustid_key_withheld: the record of {args[0]!r} does not "
+                 f"end its invocation with {shown!r}")
+        want = f"Unable to parse command line argument: {refused}"
+        if not re.search(rf"(?m)^{re.escape(want)}$", text):
+            fail(f"acoustid_key_withheld: no line {want!r}")
+
+    # CYANRIP_ACOUSTID_KEY, which no process list shows, is read: its value,
+    # without the trailing space and line break a file read into it can
+    # leave, is withheld from the record's path as the flag's is above, and
+    # reaches none of the three. The key is otherwise used only for a disc
+    # AccurateRip and MusicBrainz both verify, which needs the network, in a
+    # build with libchromaprint, which CI's are not. And `-l 1,2` reads back
+    # as typed: genopt splits a list in place, and the line is recorded from a
+    # copy made before it does.
+    out = WORK / "out_akey_env"
+    record = WORK / f"akey-env-{key}.json"
+    ec, text = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                    "-P", "0", "-o", "flac", "-l", "1,2", "-D", out, "-F", "{track}",
+                    "-L", "log", "--diagnostics", record,
+                    env=dict(os.environ, CYANRIP_ACOUSTID_KEY=f"{key} \n"))
+    texts = {"stdout": text,
+             "record": record.read_text(encoding="utf-8") if record.exists() else "",
+             "log": (out / "log.log").read_text(encoding="utf-8")
+                    if (out / "log.log").exists() else ""}
+    if ec != 0 or not all(texts.values()):
+        fail(f"acoustid_key_withheld: the rip with CYANRIP_ACOUSTID_KEY set "
+             f"exited {ec}, or left no log or record")
+    for where, body in texts.items():
+        if key in body:
+            fail(f"acoustid_key_withheld: the key from the environment is in "
+                 f"the {where}")
+        if not re.search(r"-l 1,2 .*akey-env-\[withheld\]\.json", body):
+            fail(f"acoustid_key_withheld: the {where} does not record "
+                 f"`-l 1,2` and the key withheld from the record's path")
 
 
 def fingerprint(name, track):

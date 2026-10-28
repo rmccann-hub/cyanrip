@@ -37,7 +37,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 
 | program | run by | for |
 |---|---|---|
-| `bash` | `tests/mingw_build.py` | runs the Windows build script's functions, its builds stubbed, to check where it stops |
+| `bash` | `tests/mingw_build.py`, `tests/workflows.py` | runs the Windows build script's functions, and CI's static-analysis step as Actions does, their builds stubbed, to check where each stops |
 | `cd-paranoia` | `tools/rig-check.py` | on the rig only: the cache size the probe is measured against |
 | `cdparanoia` | `tools/rig-check.py` | on the rig only: the same, under its older name |
 | `distrobox` | `tools/rig-check.py` | on the rig only: the container the rig's ripper runs in |

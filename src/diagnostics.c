@@ -911,8 +911,10 @@ void crip_diag_write(void)
      * shared document, records a record that is not written as exit 0 with a
      * line saying why. A failing code for both is a change both sides ship. */
     int err = 0;
+    errno = 0;
     if (fwrite(b.str, 1, b.len, f) != b.len)
         err = errno ? errno : EIO;
+    errno = 0;
     if (fclose(f) == EOF && !err)
         err = errno ? errno : EIO;
     if (err)

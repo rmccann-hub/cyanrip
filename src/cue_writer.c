@@ -63,6 +63,7 @@ static av_printf_format(3, 4) void cue_printf(cyanrip_ctx *ctx, int Z,
 {
     va_list args;
     va_start(args, format);
+    errno = 0;
     if (vfprintf(ctx->cuefile[Z], format, args) < 0 && !ctx->cuefile_err[Z])
         ctx->cuefile_err[Z] = errno ? errno : EIO;
     va_end(args);
@@ -292,10 +293,12 @@ int cyanrip_cue_end(cyanrip_ctx *ctx)
          * to fail. An error flag with none recorded is not expected, since
          * every line is checked; it is still a lost write. */
         int *err = &ctx->cuefile_err[i];
+        errno = 0;
         if (fflush(ctx->cuefile[i]) == EOF && !*err)
             *err = errno ? errno : EIO;
         if (ferror(ctx->cuefile[i]) && !*err)
             *err = EIO;
+        errno = 0;
         if (fclose(ctx->cuefile[i]) == EOF && !*err)
             *err = errno ? errno : EIO;
         ctx->cuefile[i] = NULL;

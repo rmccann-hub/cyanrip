@@ -49,13 +49,11 @@ jobs:
     # the consumer to make, nothing had ever compiled it, and when it finally
     # was it failed 2 of 41. The sanitizer rows are the same argument one level
     # down: they pass today, and nothing was running them.
-    # `thread` is TSan over the threaded encoder (review C item 3.7). Its
-    # options ignore accesses made inside libraries built without it: each
-    # of the 70 races TSan reported in this suite without them paired an
-    # FFmpeg free or reuse of a frame buffer with swr_convert() reading it,
-    # ordered by libavutil's atomic reference count, which TSan cannot see in
-    # an uninstrumented library. With them the suite reports none, and a race
-    # in this program's own code is still caught.
+    # `thread` is TSan over the threaded encoder (review C item 3.7). The
+    # suite's tsan setup loads tests/tsan.supp, two entries for FFmpeg's own
+    # free and reuse of a frame buffer, ordered by an atomic reference count
+    # TSan cannot see in an uninstrumented libavutil; its header says what
+    # they drop and which planted defects in the frame handoff still fail.
     strategy:
       fail-fast: false
       matrix:
@@ -70,7 +68,6 @@ jobs:
             opts: "-Ddeclare_released=true -Db_sanitize=address,undefined -Db_lundef=false"
           - name: thread
             opts: "-Db_sanitize=thread -Db_lundef=false"
-            tsan: "ignore_noninstrumented_modules=1"
     name: linux (${{ matrix.name }})
     steps:
       # One commit, then the whole history of what the suite reads: the
@@ -97,15 +94,19 @@ jobs:
         env:
           OPTS: ${{ matrix.opts }}
         run: |
+          # shellcheck disable=SC2086 # OPTS is several options, split on purpose
           meson setup build $OPTS
           ninja -C build
 
       # GCC's static analyzer over the program this ships (review C item 3.6).
       # Its five warnings at 590e959 were fixed at their source, so a warning
       # now is a new one and fails the step. Ubuntu 24.04's GCC 13, as here.
+      # pipefail: Actions runs this as `bash -e`, where a pipeline's status is
+      # tee's, so a build that failed passed the step until it was set.
       - name: Static analysis
         if: matrix.name == 'default'
         run: |
+          set -o pipefail
           meson setup build-analyzer -Dc_args=-fanalyzer
           ninja -C build-analyzer src/cyanrip 2>&1 | tee analyzer.log
           if grep -n -e '-Wanalyzer-' analyzer.log; then
@@ -152,7 +153,6 @@ jobs:
         env:
           CYANRIP_LINT_REQUIRED: ${{ matrix.name == 'released' && '1' || '' }}
           CYANRIP_VALGRIND_REQUIRED: ${{ matrix.name == 'default' && '1' || '' }}
-          TSAN_OPTIONS: ${{ matrix.tsan }}
         run: meson test -C build --print-errorlogs
 
       # Meson prints a test's output only when it fails, so a Settled facts
@@ -165,7 +165,10 @@ jobs:
   # C item 4.3), each from Ubuntu 24.04's own package, the versions this was
   # written against: ShellCheck 0.9.0, and gitleaks 8.16.0, which found
   # nothing in this branch's 1827 commits. The Python tools' lint is in the
-  # linux (released) row, where the suite runs it.
+  # linux (released) row, where the suite runs it. The workflows under
+  # actionlint, which runs ShellCheck on each run script too, and zizmor,
+  # offline: actionlint's release binary, checked against the SHA-256 its
+  # release publishes, and zizmor's wheel, by the hash PyPI gives.
   lint:
     if: github.event_name != 'release'
     runs-on: ubuntu-24.04
@@ -181,13 +184,38 @@ jobs:
       - name: Install ShellCheck and gitleaks
         run: |
           sudo apt-get update
-          sudo apt-get install -y shellcheck gitleaks
+          sudo apt-get install -y shellcheck gitleaks python3-venv
 
       - name: ShellCheck
-        run: git ls-files -z '*.sh' | xargs -0 shellcheck
+        run: |
+          set -o pipefail
+          git ls-files -z '*.sh' | xargs -0 shellcheck
 
       - name: No secret in the history
         run: gitleaks detect --source . --redact --verbose
+
+      - name: Install actionlint and zizmor
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          set -o pipefail
+          tgz="$RUNNER_TEMP/actionlint.tar.gz"
+          curl -fsSL --max-time 120 -o "$tgz" \
+            "https://github.com/rhysd/actionlint/releases/download/v$ACTIONLINT_VERSION/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "$ACTIONLINT_SHA256  $tgz" | sha256sum -c -
+          tar -xzf "$tgz" -C "$RUNNER_TEMP" actionlint
+          python3 -m venv "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/zizmor/bin/pip" install --only-binary=:all: \
+            --require-hashes -r .github/zizmor-requirements.txt
+
+      - name: actionlint
+        run: |
+          "$RUNNER_TEMP/actionlint" -color
+
+      - name: zizmor
+        run: |
+          "$RUNNER_TEMP/zizmor/bin/zizmor" --offline .github/workflows .github/dependabot.yml
 
   # Each parser of data from outside this program under libFuzzer, with ASan
   # and UBSan, for a minute from its committed seeds (review C item 3.8): the
@@ -249,13 +277,15 @@ jobs:
 
       - name: Build
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_PATH
           meson setup build
           ninja -C build
 
       - name: Test
         run: |
-          export PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          PKG_CONFIG_PATH="$(brew --prefix curl)/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_PATH
           meson test -C build --print-errorlogs
 
       # Meson prints a test's output only when it fails, so a Settled facts
@@ -402,8 +432,13 @@ jobs:
         run: |
           echo "packages=$(pacman -Q | grep '^mingw-w64-ucrt-x86_64-' | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
 
+      # Not restored on a release, whose ref is its tag: the binary
+      # mingw-release attaches is built from the pinned sources, never from a
+      # cache another run wrote (zizmor's cache-poisoning, review C item 4.3).
+      # lookup-only, in this form, is what zizmor's audit reads as disabling it.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
+          lookup-only: ${{ startsWith(github.ref, 'refs/tags/') }}
           path: .github/_install
           key: mingw-libs-${{ hashFiles('.github/mingw-build.sh') }}-${{ steps.libs.outputs.packages }}
 
@@ -417,6 +452,7 @@ jobs:
       # committed disc image, which needs no drive, network or Python.
       - name: Smoke test
         run: |
+          set -o pipefail
           ./cyanrip.exe --version | tee version.out
           grep -q 'platterpus-fork' version.out
           ./cyanrip.exe -d tests/fixtures/cdda.nrg -I -N -A -U -P 0
