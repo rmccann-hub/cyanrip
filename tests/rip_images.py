@@ -8301,9 +8301,9 @@ def sc_pregap_search_record_listed():
     Our round 36 lap 16 S10, which Platterpus's lap 17 S4 accepted, fixed
     within round 36 on our operator's word of 2026-10-28. `Pregap search:` was
     printed only in a ripped track's block, while `Gaps:` names every track,
-    so on round 36's Full run (docs/rig-2026-10-28-5aeefc4/) the 21 .27 logs
-    that did not rip the reference disc's track 9 listed its pregap as unknown
-    or 95 with nothing saying why. The `Pregap searches:` block after `Gaps:`
+    so on round 36's Full run of 2026-10-28 the 21 .27 logs that did not rip
+    the reference disc's track 9 listed its pregap as unknown or 95 with
+    nothing saying why. The `Pregap searches:` block after `Gaps:`
     gives each searched track's record, ripped or not.
 
     An image's sub-channel cannot be read, so basic.cue's track 2 is searched
