@@ -39,8 +39,8 @@ README.
 - **Track 9's pregap is never 94 on `.27`:** `unknown` in 21 logs and 95 in
   2, against 94 in all six `.25` logs. In the two logs that rip track 9,
   `Pregap search:` leaves one sector undecided, LSN 145567, the one between
-  94 and 95, with no frame failing its CRC and 210 answering for another
-  sector. So the `unknown`'s words, `sub-channel CRC mismatches`, name a cause
+  94 and 95. Every sector asked gave a frame that passed its CRC, and 210
+  frames answered for another sector. So the `unknown`'s words, `sub-channel CRC mismatches`, name a cause
   its own record contradicts. The other 21 logs do not rip track 9 and carry
   no `Pregap search:` line for it, the two 95s among them.
 - **P6 and P5, track 3:** verified in 2 of 4 paired rips on `.25` and 0 of 4
