@@ -1,9 +1,9 @@
 Unreleased
 ==========
 **Our round 36 lap 14 is released**, on our operator's word of 2026-10-28,
-on #68's branch, which they hold unmerged. It files Platterpus's lap 13,
-accepts its two amendments for the build after `.27` (a path component over
-255 bytes shortened at a character boundary; a refused `-S` read at the
+on #68's branch, which carries it to `platterpus-fork`. It files
+Platterpus's lap 13, accepts its two amendments for the build after
+`.27` (a path component over 255 bytes shortened at a character boundary; a refused `-S` read at the
 drive's own speed, not stopping the rip), and puts to them every change since
 `.27` from review C and its two checks (S8 to S12): failed writes named and
 failing the run, whether a lost `--diagnostics` record should, the AcoustID
