@@ -1,5 +1,26 @@
 Unreleased
 ==========
+**Our round 36 lap 16 is written, held, with verdict `HOLD`.** It files
+Platterpus's lap 15 and reads round 36's Full run on `.27`:
+- **`Recordable:`** answers for a pressed disc, the first of our lap 14's
+  three conditions for `GO`.
+- **Track 9's pregap** differs from EAC's 94 in all 23 `.27` logs, and in the
+  21 that do not rip track 9 no `Pregap search:` line says why (S10). That is
+  the second condition, as written, so the pre-commit does not give `GO`.
+- **R3 against R6.** R3 says a fix never holds the verdict on the build
+  tested; R6 makes the pre-commit bind. The lap puts that to our operator:
+  approve `.27` on this run, with S10 fixed before our closing lap, or hold
+  round 36 for the build after `.27` and another Full run.
+- **Their S7 and S12, accepted.** A record that cannot be written keeps exit
+  0, its §7 row going into round 37's `seam-commands.md`; and a wrong
+  sentence goes back corrected whole, both ways.
+- **The `unknown`'s reason** names CRC mismatches where the record shows none
+  stopped the search (S9). Its rename is for round 37, since Platterpus reads
+  the words.
+
+It is published held because it asks our operator something, which the
+standing word for round 36 does not cover.
+
 **Round 36's Full run, `.27` with Platterpus 0.7.114 on the reference disc,
 2026-10-28, is filed** on the evidence branch at `dd89498`
 (`docs/rig-2026-10-28-5aeefc4/`), from bundle
