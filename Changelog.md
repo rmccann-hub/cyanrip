@@ -1,5 +1,29 @@
 Unreleased
 ==========
+**The check of #68** (2026-10-28), by the claude-code-skills session at
+`60825d6`, each item checked against this tree first; *seam* as below.
+- **`errno` across logging**: #68's checked log writes cleared `errno` and
+  left it at 0, and FFmpeg's and libcdio's log callbacks write through them,
+  so a library that logged and then read `errno` read 0. Had libcdio logged
+  during a failed read at `-P 0`, `crip_read_audio_salvaging()` would not
+  have seen ENOMEDIUM and would have filled a missing disc with zeros. Each
+  write now puts `errno` back; `tests/logrender.c` checks it with stdout
+  working and failing (`6c91d26`).
+- **The AcoustID key** (*seam*): `--acousticid-key K`, `--acoustd-key K` and
+  `-acoustid-key K` are refused before a log opens, and left `K` in the
+  `--diagnostics` record's invocation. A misspelt flag is always refused and
+  genopt reads nothing after the argument it stops at, so every argument
+  after it is withheld, as is the value of a refused `--flag=value`, in
+  genopt's refusal too; the key's value is withheld wherever it appears. The
+  line is recorded from a copy of `argv` made before genopt splits lists in
+  place. `CYANRIP_ACOUSTID_KEY` loses a trailing space or line break, and a
+  test now shows it is read (`fa9b304`).
+- **Data track writes** (*seam*): a failed open, write or close of the data
+  track's file that set no `errno` logged `Success!`, counted the track and
+  exited 0; each now clears `errno` first and falls back to EIO, so the run
+  names the error and exits 1. `tests/losewrite.c` fails each call
+  (`53553cb`).
+
 **The operator's follow-ups to review C** (2026-10-27), each checked against
 this tree first; *seam* marks what Platterpus can notice, which ships in
 `.28` only once they accept it in a lap.
