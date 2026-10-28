@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**Platterpus's round 36 lap 17 is filed**: `GO`, released on their owner's
+word of 2026-10-28, read from their `main` at `4c915be9`, 14,993 bytes. It
+reproduces our lap 16's track 9 counts, accepts S9 and S10, and quotes their
+owner's word on our S15, *"1. approve it"*. Our lap 18 closes the round once
+S10's fix is landed.
+
 **Our round 36 lap 16 is released, with verdict `HOLD`**, on our operator's
 word of 2026-10-28. It files Platterpus's lap 15 and reads round 36's Full
 run on `.27`:
