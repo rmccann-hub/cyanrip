@@ -8295,6 +8295,75 @@ def sc_gaps_unknown_pregap():
              "and the list calls a pregap unknown")
 
 
+def sc_pregap_search_record_listed():
+    """EVERY TRACK A SUB-CHANNEL SEARCH RAN ON HAS ITS RECORD IN EVERY LOG.
+
+    Our round 36 lap 16 S10, which Platterpus's lap 17 S4 accepted, fixed
+    within round 36 on our operator's word of 2026-10-28. `Pregap search:` was
+    printed only in a ripped track's block, while `Gaps:` names every track,
+    so on round 36's Full run of 2026-10-28 the 21 .27 logs that did not rip
+    the reference disc's track 9 listed its pregap as unknown or 95 with
+    nothing saying why. The `Pregap searches:` block after `Gaps:`
+    gives each searched track's record, ripped or not.
+
+    An image's sub-channel cannot be read, so basic.cue's track 2 is searched
+    and its search fails. Its record is asserted against track 2's own block
+    in a whole-disc rip, the line that predates this block, and must be the
+    same in the block of that rip and of a rip of track 1 alone, the case
+    that had none. Track 1 takes the lead-in, so no search runs on it and it
+    must not be listed. cdda.nrg is the control: its pregaps come from the
+    image's TOC, no search runs, and no block is printed.
+    """
+    def block(lines):
+        if "Pregap searches:" not in lines:
+            return None
+        rows = []
+        for line in lines[lines.index("Pregap searches:") + 1:]:
+            if not line.startswith("    "):
+                break
+            rows.append(line)
+        return rows
+
+    full = WORK / "out_searches_full"
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-o", "pcm", "-D", full, "-F", "{track}", "-L", "log")
+    text = (full / "log.log").read_text(errors="replace", encoding="utf-8") if (full / "log.log").exists() else ""
+    m = re.search(r"^    Pregap search: (.+)$", text, re.M)
+    if ec != 0 or not m or len(re.findall(r"^    Pregap search: ", text, re.M)) != 1:
+        fail(f"pregap_search_record_listed: the whole-disc rip exited {ec} and its "
+             f"track blocks do not carry exactly one search record, so this test "
+             f"has nothing to check")
+        return
+    want = [f"    track 2: {m.group(1)}"]
+    for name, extra in (("whole disc", None), ("track 1 alone", ["-l", "1"])):
+        if extra is None:
+            lines = text.splitlines()
+        else:
+            out = WORK / "out_searches_one"
+            ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                         "-P", "0", *extra, "-o", "pcm", "-D", out, "-F",
+                         "{track}", "-L", "log")
+            lines = ((out / "log.log").read_text(errors="replace", encoding="utf-8")
+                     if (out / "log.log").exists() else "").splitlines()
+            if any(line.startswith("    Pregap search: ") for line in lines):
+                fail(f"pregap_search_record_listed: {name}: a track block carries "
+                     f"a search record, so this rip no longer leaves track 2 unripped")
+        got = block(lines)
+        if got is None:
+            fail(f"pregap_search_record_listed: {name}: no `Pregap searches:` "
+                 f"block, so track 2's search says nothing in this log")
+        elif got != want:
+            fail(f"pregap_search_record_listed: {name}: the block reads {got!r}, "
+                 f"where track 2's own block gives {want!r}")
+    _, out = crip("-d", WORK / "cdda.nrg", "-I", "-N", "-A", "-U", "-P", "0")
+    if "frame pregap in track 2" not in out:
+        fail("pregap_search_record_listed: control: cdda.nrg lists no pregap for "
+             "track 2, so it no longer controls for a pregap the TOC gives")
+    if "Pregap searches:" in out:
+        fail("pregap_search_record_listed: control: cdda.nrg's pregaps come from "
+             "its TOC, and a `Pregap searches:` block is printed")
+
+
 def sc_spool_refusal():
     """A -Z RIP THAT CANNOT SPOOL SAYS SO, AT COLUMN 0, AND EXITS 1.
 

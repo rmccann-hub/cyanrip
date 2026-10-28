@@ -141,6 +141,15 @@ with Platterpus 0.7.114):
   line is printed in a ripped track's block, and none of the other 21 `.27`
   logs rips track 9, including the two that list 95.
 
+**Fixed for the build after `.27`, not yet released.** A `Pregap searches:`
+block after `Gaps:` gives every track a sub-channel search ran on, ripped or
+not, its record word for word as its own block would (our round 36 lap 16 S10,
+which Platterpus's lap 17 S4 accepted, fixed within the round on our
+operator's word of 2026-10-28). `sc_pregap_search_record_listed()` holds it on
+a rip of `basic.cue`'s track 1 alone, and fails with the fix reverted. Its
+wording goes to Platterpus in round 37, with the `unknown`'s reason renamed,
+before a build carries either.
+
 ### The disc's ISRCs read as none on the rig's drive, while EAC's cue of the same disc has them (fixed in `.26`)
 
 **Found by the claude-code-skills session's known fixes of 2026-10-21, item 8**,

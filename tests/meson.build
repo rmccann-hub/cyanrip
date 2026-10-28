@@ -993,6 +993,7 @@ rip_scenarios = [
     'z_extraction_speed',
     'log_values_cannot_forge_a_line',
     'gaps_unknown_pregap',
+    'pregap_search_record_listed',
     'spool_refusal',
     'paranoia_skip',
     'repeat_resets_filter',
