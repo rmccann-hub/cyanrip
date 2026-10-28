@@ -1377,11 +1377,18 @@ static void crip_log_write_failed(cyanrip_ctx *ctx, int i)
         ctx->logfile_err[i] = errno ? errno : EIO;
 }
 
+/* Each put leaves errno as it found it. FFmpeg's and libcdio's log callbacks
+ * come through here, and a library that logs and then reads errno must find
+ * its own value there: libcdio may log during a failed read, and
+ * crip_read_audio_salvaging() tells a missing disc by ENOMEDIUM. The clear
+ * alone set it to 0 on every line (the check of #68, item 1). */
 static void crip_log_put(cyanrip_ctx *ctx, int i, const char *str, size_t len)
 {
+    int saved_errno = errno;
     errno = 0;
     if (fwrite(str, 1, len, ctx->logfile[i]) != len)
         crip_log_write_failed(ctx, i);
+    errno = saved_errno;
 }
 
 /* The same for stdout, which carries every line a log does and is what a
@@ -1390,12 +1397,14 @@ static int crip_stdout_err = 0;
 
 static void crip_stdout_put(const char *str, size_t len)
 {
+    int saved_errno = errno;
     errno = 0;
     if (fwrite(str, 1, len, stdout) != len && !crip_stdout_err)
         crip_stdout_err = errno ? errno : EIO;
     errno = 0;
     if (fflush(stdout) == EOF && !crip_stdout_err)
         crip_stdout_err = errno ? errno : EIO;
+    errno = saved_errno;
 }
 
 int cyanrip_log_stdout_error(void)
