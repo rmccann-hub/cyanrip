@@ -506,6 +506,11 @@ static inline int gen_opt_parse_fn(void *log_ctx, GenOpt *opts_list,
     for (int i = 1; i < argc; i++) {
         GenOpt *l = NULL;
 
+#ifdef GEN_OPT_READING
+        /* Where parsing stopped, if it stops: nothing after it was read */
+        GEN_OPT_READING(i);
+#endif
+
         /* -V is accepted as an alias for -v. cyanrip 0.9.3 and earlier parsed
          * options with getopt and spelled this flag -V; replacing getopt with
          * genopt moved it to -v, which silently broke every caller that probed
@@ -570,11 +575,11 @@ static inline int gen_opt_parse_fn(void *log_ctx, GenOpt *opts_list,
         }
 
         if (!l) {
-#ifdef GEN_OPT_NAMES_SECRET
-            /* A refused `--flag=value` whose flag names a secret: the value
-             * is not repeated */
+#ifdef GEN_OPT_WITHHOLD_REFUSED_VALUE
+            /* A refused `--flag=value`: nothing read the value, so whether it
+             * is a secret is not known, and it is not repeated */
             const char *eq = strchr(argv[i], '=');
-            if (eq && GEN_OPT_NAMES_SECRET(argv[i])) {
+            if (eq) {
                 GEN_OPT_LOG(log_ctx, GEN_OPT_LOG_ERROR,
                             "Unable to parse command line argument: %.*s[withheld]\n",
                             (int)(eq - argv[i]) + 1, argv[i]);

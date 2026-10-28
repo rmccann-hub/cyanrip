@@ -85,17 +85,14 @@ static inline void crip_genopt_log(void *log_ctx, int level, const char *fmt, ..
 #define GEN_OPT_MAX_ARR 198
 #define GEN_OPT_HELPSTRING cyanrip_helpstr
 
-/* An argument naming the AcoustID key, however it is spelled. Its value is a
- * credential, and is withheld wherever the command line is repeated: on
- * `Invoked as:`, in the diagnostics record, and in genopt's refusal of a
- * spelling it does not take, such as `--acoustid-kye` or `--acoustid-key=`
- * (review C item 1.4). */
-static int crip_names_acoustid_key(const char *arg)
-{
-    return !av_strncasecmp(arg, "--acoustid", strlen("--acoustid"));
-}
-
-#define GEN_OPT_NAMES_SECRET crip_names_acoustid_key
+/* The argument genopt was reading when it stopped, at one it refused or at -h
+ * or -v. It read none after that one, so record_invocation() cannot know
+ * which of them is the AcoustID key under a spelling genopt does not take,
+ * and withholds them all; genopt's own refusal of a `--flag=value` withholds
+ * the value (review C item 1.4; the check of #68, item 2). */
+static int crip_genopt_reading;
+#define GEN_OPT_READING(i) (crip_genopt_reading = (i))
+#define GEN_OPT_WITHHOLD_REFUSED_VALUE
 
 #include "genopt.h"
 
@@ -2407,7 +2404,53 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
  * states what was run rather than what a caller believes it ran. */
 char *crip_invocation = NULL;
 
-static void record_invocation(int argc, char **argv)
+/* argv as received, copied before genopt parses it: genopt splits a list
+ * option's value in place, so `-o flac,mp3` would read back as `-o flac` */
+static char **crip_copy_argv(int argc, char **argv)
+{
+    size_t size = (argc + 1) * sizeof(char *);
+    for (int i = 0; i < argc; i++)
+        size += strlen(argv[i]) + 1;
+
+    char **copy = av_malloc(size);
+    if (!copy)
+        return NULL;
+    char *p = (char *)(copy + argc + 1);
+    for (int i = 0; i < argc; i++) {
+        size_t n = strlen(argv[i]) + 1;
+        copy[i] = memcpy(p, argv[i], n);
+        p += n;
+    }
+    copy[argc] = NULL;
+    return copy;
+}
+
+/* The first len bytes of s, each occurrence of key in them withheld */
+static void crip_bprint_withholding(AVBPrint *buf, const char *s, size_t len,
+                                    const char *key)
+{
+    size_t n = key ? strlen(key) : 0, from = 0, at = 0;
+    while (n && at + n <= len) {
+        if (memcmp(s + at, key, n)) {
+            at++;
+            continue;
+        }
+        av_bprintf(buf, "%.*s[withheld]", (int)(at - from), s + from);
+        from = at = at + n;
+    }
+    av_bprintf(buf, "%.*s", (int)(len - from), s + from);
+}
+
+/* The AcoustID key is a credential, and this line goes to the log, stdout and
+ * the diagnostics record, so its value is withheld (review C item 1.4): after
+ * the flag genopt took as the key's, and wherever else in any argument it
+ * appears. A misspelt flag is one genopt refuses, and genopt reads nothing
+ * after an argument it refuses, so every argument after the one it stopped at
+ * (stop, or argc when it read them all) is withheld, and so is the value of
+ * that one in the `--flag=value` form, which genopt does not take: that the
+ * key is not among them cannot be known (the check of #68, item 2). Upstream's
+ * -k, the same option there, is refused here, so its value is one of them. */
+static void record_invocation(int argc, char **argv, int stop, const char *key)
 {
     AVBPrint buf;
     av_bprint_init(&buf, 0, AV_BPRINT_SIZE_UNLIMITED);
@@ -2415,36 +2458,41 @@ static void record_invocation(int argc, char **argv)
     for (int i = 0; i < argc; i++) {
         if (i)
             av_bprintf(&buf, " ");
-        /* The AcoustID key is a credential, and this line goes to the log,
-         * stdout and the diagnostics record, so its value is withheld (review
-         * C item 1.4). genopt takes a value as the next argument, so that is
-         * the one replaced, after any spelling of the flag: this is recorded
-         * before genopt refuses a misspelt one. Also after upstream's -k, the
-         * same option there and refused here, and in the `--flag=value` form,
-         * which genopt refuses. An argument that only looks like the value is
-         * withheld too, which hides nothing anyone needs. */
-        const char *prev = i > 0 ? argv[i - 1] : NULL;
-        if (prev && ((crip_names_acoustid_key(prev) && !strchr(prev, '=')) ||
-                     !strcmp(prev, "-k"))) {
+        if (i > stop ||
+            (i > 0 && genopt_flagname_eq(argv[i - 1], "--acoustid_key"))) {
             av_bprintf(&buf, "[withheld]");
             continue;
         }
-        const char *eq = strchr(argv[i], '=');
-        if (eq && crip_names_acoustid_key(argv[i])) {
-            int n = (int)(eq - argv[i]) + 1;
-            int quote = strcspn(argv[i], " \t\"'\\") < (size_t)n;
-            av_bprintf(&buf, "%s%.*s[withheld]%s", quote ? "\"" : "", n,
-                       argv[i], quote ? "\"" : "");
-            continue;
-        }
+        const char *eq = i == stop ? strchr(argv[i], '=') : NULL;
+        size_t shown = eq ? (size_t)(eq - argv[i]) + 1 : strlen(argv[i]);
         /* Quote anything a reader could not paste back verbatim */
-        if (strpbrk(argv[i], " \t\"'\\"))
-            av_bprintf(&buf, "\"%s\"", argv[i]);
-        else
-            av_bprintf(&buf, "%s", argv[i]);
+        int quote = strcspn(argv[i], " \t\"'\\") < shown;
+        if (quote)
+            av_bprintf(&buf, "\"");
+        crip_bprint_withholding(&buf, argv[i], shown, key);
+        if (eq)
+            av_bprintf(&buf, "[withheld]");
+        if (quote)
+            av_bprintf(&buf, "\"");
     }
 
     av_bprint_finalize(&buf, &crip_invocation);
+}
+
+/* CYANRIP_ACOUSTID_KEY, without a trailing space or line break, which a file
+ * read into it can leave and which no key has; NULL when unset or empty */
+static char *crip_acoustid_key_from_env(void)
+{
+    static char *key = NULL;
+    const char *v = getenv("CYANRIP_ACOUSTID_KEY");
+    size_t n = v ? strlen(v) : 0;
+    while (n && strchr(" \t\r\n", v[n - 1]))
+        n--;
+    if (!n)
+        return NULL;
+    av_free(key);
+    key = av_strndup(v, n);
+    return key;
 }
 
 /* libcdio's own messages, routed through ours.
@@ -2531,7 +2579,12 @@ static int cyanrip_run(int argc, char **argv)
     setlocale(LC_ALL, ".UTF8");
 #endif
 
-    record_invocation(argc, argv);
+    /* Recorded once genopt has said what it read */
+    char **argv_received = crip_copy_argv(argc, argv);
+    if (!argv_received) {
+        cyanrip_log(NULL, 0, "Unable to allocate memory for the command line!\n");
+        return CRIP_EXIT_FAILURE;
+    }
 
     cdio_log_set_handler(crip_cdio_log_handler);
 
@@ -2793,6 +2846,13 @@ static int cyanrip_run(int argc, char **argv)
 
     {
         int r = GEN_OPT_PARSE(NULL, opts_list, argc, argv);
+        /* From the environment when not on the command line, where any user
+         * of the machine can read it in the process list (review C item 1.4) */
+        if (!acoustid_key)
+            acoustid_key = crip_acoustid_key_from_env();
+        record_invocation(argc, argv_received, r < 0 ? crip_genopt_reading : argc,
+                          acoustid_key);
+        av_free(argv_received);
         if (r == -EAGAIN)
             return 0;
         if (r < 0)
@@ -2874,11 +2934,6 @@ static int cyanrip_run(int argc, char **argv)
     settings.disable_mb                 = no_musicbrainz;
     settings.disable_accurip            = no_accurip;
     settings.disable_acoustid           = no_acoustid;
-    /* From the environment when not on the command line, where any user of
-     * the machine can read it in the process list (review C item 1.4) */
-    if (!acoustid_key && getenv("CYANRIP_ACOUSTID_KEY") &&
-        *getenv("CYANRIP_ACOUSTID_KEY"))
-        acoustid_key = getenv("CYANRIP_ACOUSTID_KEY");
     settings.acoustid_key               = acoustid_key;
     settings.disable_coverart_db        = no_coverart_db;
     settings.disable_coverart_embedding = no_coverart_embed;

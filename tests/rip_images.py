@@ -1947,35 +1947,54 @@ def sc_lost_log_line_is_not_signed():
 
 
 def sc_acoustid_key_withheld():
-    # Review C 1.4. The AcoustID key is a credential; `Invoked as:` goes to
-    # the log, stdout and the diagnostics record, and none may carry it.
-    # That CYANRIP_ACOUSTID_KEY is read is not tested: the key is used only
-    # for a disc AccurateRip and MusicBrainz both verify, which needs the
-    # network, in a build with libchromaprint, which CI's are not.
-    key = "PROBEKEY4711"
+    # Review C 1.4 and the check of #68, item 2. The AcoustID key is a
+    # credential; `Invoked as:` goes to the log, stdout and the diagnostics
+    # record, and none may carry it. Its value is withheld after the flag and
+    # wherever else it appears, here in the record's own path. Given twice,
+    # genopt keeps the second, and the first is withheld after its flag.
+    key, first = "PROBEKEY4711", "FIRSTKEY0815"
     out = WORK / "out_akey"
-    rip("akey", "basic.cue", "--acoustid-key", key,
-        "--diagnostics", WORK / "akey-diag.json")
+    record = WORK / f"akey-{key}.json"
+    rip("akey", "basic.cue", "--acoustid-key", first, "--acoustid-key", key,
+        "--diagnostics", record)
     for where, text in (("stdout", (WORK / "akey.log").read_text(encoding="utf-8")),
                         ("log", (out / "log.log").read_text(encoding="utf-8")),
-                        ("record", (WORK / "akey-diag.json").read_text(encoding="utf-8"))):
-        if key in text:
-            fail(f"acoustid_key_withheld: the key is in the {where}")
-        if "--acoustid-key [withheld]" not in text:
-            fail(f"acoustid_key_withheld: the {where} does not say the key "
-                 f"was withheld")
+                        ("record", record.read_text(encoding="utf-8"))):
+        for k in (key, first):
+            if k in text:
+                fail(f"acoustid_key_withheld: {k} is in the {where}")
+        if not re.search(r"--acoustid-key \[withheld\] --acoustid-key \[withheld\] "
+                         r".*akey-\[withheld\]\.json", text):
+            fail(f"acoustid_key_withheld: the {where} does not say both keys "
+                 f"were withheld, after their flags and in the record's path")
 
-    # Spellings genopt refuses are recorded before it refuses them, and the
-    # refusal repeats the argument: a misspelt flag, the `=` form, any case,
-    # and upstream's -k, which is this option there. Each exits 64 with the
-    # key in neither stdout nor the record, and says what it withheld.
+    # A spelling genopt does not take is refused, and genopt reads nothing
+    # after the argument it refuses, so every one after it is withheld, and
+    # the value of a refused `--flag=value`, in the refusal too. However far
+    # the spelling is from the flag's (`--akustid-key` is two edits from it),
+    # and wherever the key is (here after another refused argument). Upstream's
+    # -k is this option there and refused here. Each exits 64 with the key in
+    # neither stdout nor the record, and says what it withheld.
     for n, (args, shown, refused) in enumerate((
             (["--acoustid-kye", key], "--acoustid-kye [withheld]",
              "--acoustid-kye"),
+            (["--acousticid-key", key], "--acousticid-key [withheld]",
+             "--acousticid-key"),
+            (["--acoustd-key", key], "--acoustd-key [withheld]",
+             "--acoustd-key"),
+            (["-acoustid-key", key], "-acoustid-key [withheld]",
+             "-acoustid-key"),
+            (["--akustid-key", key], "--akustid-key [withheld]",
+             "--akustid-key"),
+            (["--no-such-flag", "x", "--acoustid-key", key],
+             "--no-such-flag [withheld] [withheld] [withheld]",
+             "--no-such-flag"),
             ([f"--acoustid-key={key}"], "--acoustid-key=[withheld]",
              "--acoustid-key=[withheld]"),
             ([f"--AcoustID-Key={key}"], "--AcoustID-Key=[withheld]",
              "--AcoustID-Key=[withheld]"),
+            ([f"--acousticid-key={key}"], "--acousticid-key=[withheld]",
+             "--acousticid-key=[withheld]"),
             (["-k", key], "-k [withheld]", "-k"))):
         record = WORK / f"akey-bad{n}.json"
         ec, text = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-I",
@@ -1986,29 +2005,41 @@ def sc_acoustid_key_withheld():
         if key in text or key in body:
             fail(f"acoustid_key_withheld: {args[0]!r} left the key in "
                  f"{'stdout' if key in text else 'the record'}")
-        if f" {shown}" not in body:
+        if f' {shown}"' not in body:
             fail(f"acoustid_key_withheld: the record of {args[0]!r} does not "
-                 f"read {shown!r}")
+                 f"end its invocation with {shown!r}")
         want = f"Unable to parse command line argument: {refused}"
         if not re.search(rf"(?m)^{re.escape(want)}$", text):
             fail(f"acoustid_key_withheld: no line {want!r}")
 
-    # The key from the environment, which no process list shows, reaches
-    # none of the three either
+    # CYANRIP_ACOUSTID_KEY, which no process list shows, is read: its value,
+    # without the trailing space and line break a file read into it can
+    # leave, is withheld from the record's path as the flag's is above, and
+    # reaches none of the three. The key is otherwise used only for a disc
+    # AccurateRip and MusicBrainz both verify, which needs the network, in a
+    # build with libchromaprint, which CI's are not. And `-l 1,2` reads back
+    # as typed: genopt splits a list in place, and the line is recorded from a
+    # copy made before it does.
     out = WORK / "out_akey_env"
-    record = WORK / "akey-env.json"
+    record = WORK / f"akey-env-{key}.json"
     ec, text = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
-                    "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                    "-P", "0", "-o", "flac", "-l", "1,2", "-D", out, "-F", "{track}",
                     "-L", "log", "--diagnostics", record,
-                    env=dict(os.environ, CYANRIP_ACOUSTID_KEY=key))
-    texts = [text, record.read_text(encoding="utf-8") if record.exists() else "",
-             (out / "log.log").read_text(encoding="utf-8")
-             if (out / "log.log").exists() else ""]
-    if ec != 0 or not all(texts):
+                    env=dict(os.environ, CYANRIP_ACOUSTID_KEY=f"{key} \n"))
+    texts = {"stdout": text,
+             "record": record.read_text(encoding="utf-8") if record.exists() else "",
+             "log": (out / "log.log").read_text(encoding="utf-8")
+                    if (out / "log.log").exists() else ""}
+    if ec != 0 or not all(texts.values()):
         fail(f"acoustid_key_withheld: the rip with CYANRIP_ACOUSTID_KEY set "
              f"exited {ec}, or left no log or record")
-    elif any(key in s for s in texts):
-        fail("acoustid_key_withheld: a key from the environment was written")
+    for where, body in texts.items():
+        if key in body:
+            fail(f"acoustid_key_withheld: the key from the environment is in "
+                 f"the {where}")
+        if not re.search(r"-l 1,2 .*akey-env-\[withheld\]\.json", body):
+            fail(f"acoustid_key_withheld: the {where} does not record "
+                 f"`-l 1,2` and the key withheld from the record's path")
 
 
 def fingerprint(name, track):
