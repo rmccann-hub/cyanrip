@@ -107,7 +107,7 @@ the cause, but the search reaches that arm whenever its bounds fail to meet
 CRC and answer for another sector, which it asks for again up to five times
 (`:654`). The log does not say which happened.
 
-**Recorded for `.27`, not yet run on a drive.** Each track a sub-channel
+**Recorded for `.27`, and run on a drive on 2026-10-28.** Each track a sub-channel
 search ran on gains a `Pregap search:` line. It gives:
 - the sectors asked for;
 - the reads whose frame failed its CRC, and the sectors that never gave a frame
@@ -122,6 +122,24 @@ the source the log words `sub-channel CRC mismatches`, and only these counts
 tell it from a frame that never passes its CRC. The `unknown` reason keeps its
 words, which Platterpus reads. The line is proposed in our round 36 lap 8. A
 run of the reference disc on `.27` is what shows why `.26` never reached 94.
+
+**What the run on `.27` showed, 2026-10-28** (`docs/rig-2026-10-28-5aeefc4/`,
+with Platterpus 0.7.114):
+- **Track 9 never read 94 on `.27`.** Its 23 logs list `unknown
+  (sub-channel CRC mismatches)` in 21 and 95 in 2; the six `.25` logs list 94.
+- **Where track 9 is ripped, the record says why.** The whole-disc rip and
+  the `-Z 2` re-read print `267 sectors asked; 131 reads failed the CRC; 0
+  sectors gave no frame passing it; 210 frames were another sector's; …;
+  200-retry pass ran; LSN 145567 to 145567 undecided` (130 in the re-read).
+  Track 9 starts at 145662, so the search put 145568 in its pregap and 145566
+  in track 8, and the one sector it could not place decides between 94 and 95.
+- **It was not a CRC failure.** Every sector asked gave a frame that passed
+  its CRC; frames answered for another sector 210 times. So the `unknown`'s
+  words name a cause its own record contradicts, the case `tests/subq.c`
+  reproduces.
+- **Where track 9 is not ripped, nothing says why.** The `Pregap search:`
+  line is printed in a ripped track's block, and none of the other 21 `.27`
+  logs rips track 9, including the two that list 95.
 
 ### The disc's ISRCs read as none on the rig's drive, while EAC's cue of the same disc has them (fixed in `.26`)
 
@@ -176,7 +194,7 @@ cue now carry the disc's code. Platterpus's audit warns that it differs from
 the one they sent, which is the option working
 (`docs/rig-2026-10-21-ca0f097/`, L726).
 
-### `Recordable:` never answers on the rig's drive: libcdio's profile search stops one descriptor short (fixed for `.27`)
+### `Recordable:` never answers on the rig's drive: libcdio's profile search stops one descriptor short (fixed in `.27`)
 
 **Found 2026-10-25, reading the four runs of `.26`** (`docs/rig-2026-10-21-ca0f097/`
 and the three after it). All 38 `.26` logs, on four discs, read `Recordable:
@@ -210,6 +228,11 @@ profiles: libcdio's search over it gives `0xffff`, and the header gives
 `0x0008`. Only a drive run shows what the BDR-209D's header says. libcdio's
 loop is an upstream defect of libcdio's, reported by our operator if they
 choose.
+
+**The drive confirmed it, 2026-10-28** (`docs/rig-2026-10-28-5aeefc4/`, `.27`
+with Platterpus 0.7.114): all 23 `.27` logs of the reference disc read
+`Recordable:     no, CD-ROM (drive's current profile)`, the 17 `.log` files,
+the securing pass and the five logs of Platterpus's verified-read chase.
 
 ### The footer's AccurateRip tally divides by a count that includes data tracks (fixed for `.27`)
 
@@ -629,7 +652,7 @@ revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
 that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
-bracket. **It did, ten times**: the 2026-10-06 run on `.20` printed `128 to
+bracket. **It did, eleven times**: the 2026-10-06 run on `.20` printed `128 to
 255 sectors`, with a 1.7 ms re-read after 128 sectors and three re-reads of at
 least 32.6 ms after 256, and `cd-paranoia -A`, run straight after it, reported
 137 (`docs/rig-2026-10-06-5704062/`); the 2026-10-07 run on `.21` printed the
@@ -637,10 +660,11 @@ same bracket beside 144, the 2026-10-12 run on `.21` the same again beside
 137 (`docs/rig-2026-10-12-ca3f3ea/`), the 2026-10-13 run on `.22` the same
 beside 144 (`docs/rig-2026-10-13-200530e/`), the 2026-10-16 run on `.23`
 the same beside 137 (`docs/rig-2026-10-16-891c79e/`), the 2026-10-20 run
-on `.25` the same beside 140 (`docs/rig-2026-10-20-5f1d036/`), and four runs
+on `.25` the same beside 140 (`docs/rig-2026-10-20-5f1d036/`), four runs
 on `.26` the same beside 140, 140, 137 and 137 (`docs/rig-2026-10-21-ca0f097/`,
 `docs/rig-2026-10-22-ca0f097/`, `docs/rig-2026-10-22b-ca0f097/` and
-`docs/rig-2026-10-26-ca0f097/`, the table's last four rows). Ten runs on one drive, and the search can say no more than a
+`docs/rig-2026-10-26-ca0f097/`), and the 2026-10-28 run on `.27` the same
+beside 140 (`docs/rig-2026-10-28-5aeefc4/`, the table's last row). Eleven runs on one drive, and the search can say no more than a
 power of two. Everything below is the record of
 the defect, kept because the table is checked against the transcripts.
 
@@ -681,7 +705,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: twenty-two of them**, derived
+session that produced a `Cache probe:` line is here now: twenty-eight of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -719,6 +743,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-10-22 `ca0f097` | 381.2 ms | 1.4 ms | **6 ms** | 23%; `128 to 255 sectors`, three re-reads after 256 sectors at 60.6 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-10-22b `ca0f097` | 253.6 ms | 1.7 ms | **6 ms** | 28%; `128 to 255 sectors`, three re-reads after 256 sectors at 34.4 ms or more, beside `cd-paranoia -A`'s 137 |
 | 2026-10-26 `ca0f097` | 237.3 ms | 2.0 ms | **6 ms** | 33%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.1 ms or more, beside `cd-paranoia -A`'s 137 |
+| 2026-10-28 `5aeefc4` | 362.8 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 57.8 ms or more, beside `cd-paranoia -A`'s 140 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -726,13 +751,15 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, twenty-two times. "A cached read of a
-few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen six
-times, in the seventeenth to the twenty-second at 1.5, 1.7, 1.8, 1.6, 1.9 and
-1.7 ms,
+**Hundreds of ms uncached: confirmed, twenty-eight times. "A cached read of a
+few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen twelve
+times, in the seventeenth to the twenty-eighth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
+1.5, 1.3, 1.4, 1.7, 2.0 and 1.3 ms,
 each after a run inside the cache. This said "eighteen" and "twice" for five days after the
 nineteenth row was added, the stale tally this section is about, found adding
-the twentieth. The first sixteen end
+the twentieth. It then said "twenty-two" and "six" from 2026-10-20, when the
+twenty-third row was added, to 2026-10-28: five rows went in under it, and the
+same tally went stale again, found adding the twenty-eighth. The first sixteen end
 identically, at
 `at least 2048 sectors … search ceiling reached`. The tenth, 2026-09-22, is the
 first on `2cce60d` and the first taken inside a full acceptance session; it
