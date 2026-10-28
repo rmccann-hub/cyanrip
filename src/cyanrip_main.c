@@ -2405,6 +2405,41 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
     if (!gaps)
         cyanrip_log(ctx, 0, "    None signalled\n");
     cyanrip_log(ctx, 0, "\n");
+
+    /* Every track a sub-channel search ran on, ripped or not, with what that
+     * search saw. `Pregap search:` is printed only in a ripped track's block,
+     * while the list above names every track, so on round 36's Full run of
+     * 2026-10-28 the 21 .27 logs that did not rip the reference disc's track 9
+     * listed its pregap as unknown or 95 with nothing saying why (our round
+     * 36 lap 16 S10, which Platterpus's lap 17 S4 accepted). Each line is the
+     * track block's record word for word, which
+     * sc_pregap_search_record_listed() holds, and names the disc's track,
+     * which a -p split leaves as it was. Nothing is printed when no search
+     * ran, as when the TOC gave every pregap. */
+    int searched = 0;
+    for (int i = 0; i < ctx->nb_tracks; i++)
+        searched += !!ctx->tracks[i].pregap_stats.searched;
+    if (searched) {
+        cyanrip_log(ctx, 0, "Pregap searches:\n");
+        for (int i = 0; i < ctx->nb_tracks; i++) {
+            const cyanrip_track *t = &ctx->tracks[i];
+            const struct cyanrip_pregap_stats *st = &t->pregap_stats;
+            if (!st->searched)
+                continue;
+            char undecided[64] = "";
+            if (t->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC ||
+                t->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ)
+                snprintf(undecided, sizeof(undecided), "; LSN %i to %i undecided",
+                         st->left + 1, st->right - 1);
+            cyanrip_log(ctx, 0, "    track %i: %i sectors asked; %i reads failed the CRC; "
+                        "%i sectors gave no frame passing it; %i frames were another "
+                        "sector's; %i had no address; frames answer %+i sectors off%s%s\n",
+                        t->cd_track_number, st->asked, st->crc_failed, st->no_frame,
+                        st->elsewhere, st->no_address, st->shift,
+                        st->harder ? "; 200-retry pass ran" : "", undecided);
+        }
+        cyanrip_log(ctx, 0, "\n");
+    }
 }
 
 /* The command line as this process actually received it, recorded so a log

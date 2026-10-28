@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**Every track a sub-channel search ran on has its record in every log, ripped
+or not.** A `Pregap searches:` block after `Gaps:` gives each searched track
+its `Pregap search:` record, word for word as that track's own block gives it.
+Until now the record was printed only in a ripped track's block, while `Gaps:`
+names every track. So on round 36's Full run, the 21 `.27` logs that did not
+rip the reference disc's track 9 listed its pregap as `unknown` or 95 with
+nothing saying why (our lap 16 S10, which Platterpus's lap 17 S4 accepted).
+Nothing is printed when no search ran. `sc_pregap_search_record_listed()`
+holds it on a rip of one track of `basic.cue`, and fails with the fix
+reverted, or with one word of the new line changed. It is not released: its
+wording goes to Platterpus in round 37 with the `unknown`'s reason renamed,
+before a build carries either.
+
 **Platterpus's round 36 lap 17 is filed**: `GO`, released on their owner's
 word of 2026-10-28, read from their `main` at `4c915be9`, 14,993 bytes. It
 reproduces our lap 16's track 9 counts, accepts S9 and S10, and quotes their
