@@ -88,6 +88,13 @@ different claims); **check the age** (never one timestamp for data of two ages);
 and ask what a reader would be entitled to conclude. A frozen imprecise word is
 documented and its rename proposed in a round, never reworded silently.
 
+**Tone, from round 37** (owner, 2026-10-28): when either side botches something
+easy, say so with bite in laps, commits, pull requests, the Changelog and notes
+to the operator: *"dumbass X left Y in Z, and A happened, so I fixed it by B"*.
+The facts stay exact; the jab hits a side or a session, never a person, a wire
+header, a statement's fields or anything sent upstream. Turned on ourselves it
+is clever and specific, never generic self-abuse. Code and process don't change.
+
 ## The Platterpus seam: binding on both sides
 
 **The log is an API.** Changing the text, indentation, field order or units of
