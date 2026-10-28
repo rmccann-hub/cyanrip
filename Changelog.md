@@ -1,5 +1,30 @@
 Unreleased
 ==========
+**Round 36's Full run, `.27` with Platterpus 0.7.114 on the reference disc,
+2026-10-28, is filed** on the evidence branch at `dd89498`
+(`docs/rig-2026-10-28-5aeefc4/`), from bundle
+`platterpusbundle20261028t030745z.tar.gz`, with its 101 manifest rows and
+README.
+- **Verdict:** pass 553, fail 0, unreachable 1. All 178 hashed members match
+  the sender's SHA-256, and all 24 signed logs verify with `-Y`.
+- **`Recordable:` answers for a pressed disc:** all 23 `.27` logs read `no,
+  CD-ROM (drive's current profile)`, where `.26`'s read libcdio's `0xffff`.
+- **Track 9's pregap is never 94 on `.27`:** `unknown` in 21 logs and 95 in
+  2, against 94 in all six `.25` logs. In the two logs that rip track 9,
+  `Pregap search:` leaves one sector undecided, LSN 145567, the one between
+  94 and 95, with no frame failing its CRC and 210 answering for another
+  sector. So the `unknown`'s words, `sub-channel CRC mismatches`, name a cause
+  its own record contradicts. The other 21 logs do not rip track 9 and carry
+  no `Pregap search:` line for it, the two 95s among them.
+- **P6 and P5, track 3:** verified in 2 of 4 paired rips on `.25` and 0 of 4
+  on `.27`, and in 0 of 2 timed rips on `.25` and 2 of 2 on `.27`: 2 of 6
+  each, with three checksums read under both builds.
+- **P5:** `.27` took 0.341 of `.25`'s time on tracks 1 to 3, and both builds
+  read slower than on 2026-10-26; `.27` changes no read, speed or
+  media-change call from `.26`.
+- `KNOWN-ISSUES.md`'s cache table gains the run's row, and its tally, which
+  said twenty-two while the table grew to twenty-seven, says twenty-eight.
+
 **`CLAUDE.md` sets the tone from round 37**, on the owner's word of
 2026-10-28: an easy mistake by either side is called out with bite in laps,
 commits, pull requests, this file and notes to the operator, the facts exact,
