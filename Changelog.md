@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**The `--diagnostics` record is `cyanrip-diagnostics/11`**, adding two keys
+to each track, as our round 36 laps 4, 7 and 10 proposed and Platterpus's
+laps 3 and 11 accepted, read by their 0.7.113:
+- **`isrc_disc_read`** names the read that gave `isrc_disc`: `read
+  sub-channel`, `q frames`, `read sub-channel, again`, or `disc image` when
+  libcdio answered from an image's own file and sent no command. It is
+  `null` where `isrc_disc` is.
+- **`kept_read_began`** is when the read the files carry began, in UTC, as
+  the log's `Kept read began:` gives it, `null` when no read finished.
+
+`sc_disc_isrc_line()` holds both against a cue sheet's ISRC lines and the
+block's own line. `tests/diagrecord.c` renders both, with a track whose
+ISRC came from Q frames. Each check fails with its half reverted. A drive
+shows the three drive words only on a disc that carries ISRCs.
+
 **`--reread-time-limit SECONDS` bounds `-Z`'s re-reads by time**, as our
 round 36 lap 10 S11 gave it and Platterpus's lap 11 S6 accepted it. After
 each whole-track read of a `-Z` track that has not converged, once its

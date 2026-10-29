@@ -362,6 +362,12 @@ typedef struct cyanrip_track {
      * the measurement it is, with its reason beside it, and never written to
      * the files, with or without --prefer-disc-isrc. */
     int isrc_disc_malformed;
+    /* Which read gave isrc_disc, for the record's isrc_disc_read (/11, our
+     * round 36 lap 4 S12 and lap 10 S12, Platterpus's lap 3 S5 and lap 11
+     * S7): "read sub-channel", "q frames", "read sub-channel, again" or, on
+     * a disc image, where libcdio answers from the image's own file and
+     * sends no command, "disc image". NULL when isrc_disc is. A literal. */
+    const char *isrc_disc_read;
 
     size_t nb_samples; /* Track duration in samples */
 

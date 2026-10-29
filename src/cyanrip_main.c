@@ -1048,7 +1048,7 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                  * below allows for. Not on an image, which has no sub-channel
                  * and whose answer is the cue sheet's. */
                 struct cyanrip_subq_isrc scan = { 0 };
-                int scanned = 0;
+                int scanned = 0, again = 0;
                 if (!isrc_str && !crip_is_image_driver(ctx)) {
                     const lsn_t start = cdio_get_track_lsn(ctx->cdio, t->cd_track_number);
                     const lsn_t last = cdio_get_track_last_lsn(ctx->cdio, t->cd_track_number);
@@ -1061,8 +1061,10 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                         int count = last - first + 1 < 200 ? last - first + 1 : 200;
                         cyanrip_read_isrc_subq(ctx->cdio, first, count, &scan);
                         scanned = 1;
-                        if (!scan.found)
+                        if (!scan.found) {
                             isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
+                            again = 1;
+                        }
                     }
                 }
                 if (scan.found && !crip_code_is_set(scan.isrc)) {
@@ -1070,7 +1072,9 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                                           "track carried an all-zero ISRC";
                     t->isrc_disc_none = 1;
                 } else if (scan.found) {
+                    t->isrc_disc_read = "q frames";
                     if (!(t->isrc_disc = av_strdup(scan.isrc))) {
+                        t->isrc_disc_read = NULL;
                         t->isrc_disc_reason = "out of memory";
                     } else if (!crip_isrc_is_iso3901(scan.isrc)) {
                         t->isrc_disc_reason = "not an ISO 3901 code, so not used";
@@ -1103,6 +1107,10 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                         t->isrc_disc_reason = "not an ISO 3901 code, so not used";
                         t->isrc_disc_malformed = 1;
                     }
+                    if (t->isrc_disc)
+                        t->isrc_disc_read = crip_is_image_driver(ctx) ? "disc image" :
+                                            again ? "read sub-channel, again" :
+                                                    "read sub-channel";
                     cdio_free((void *)isrc_str);
                 }
             }

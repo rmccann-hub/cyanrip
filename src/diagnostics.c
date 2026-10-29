@@ -443,6 +443,23 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
                                           t->track_is_data ? "data track" :
                                           !t->extra_read ? "not read" :
                                           t->isrc_disc_reason);
+                /* /11. Which read gave isrc_disc, null where it is null:
+                 * `read sub-channel`, `q frames`, `read sub-channel, again`,
+                 * or `disc image` when libcdio answered from an image's own
+                 * file (our round 36 lap 4 S12 and lap 10 S12, Platterpus's
+                 * lap 3 S5 and lap 11 S7). */
+                av_bprintf(&b, ",\"isrc_disc_read\":");
+                diag_json_str_or_null(&b, t->isrc_disc ? t->isrc_disc_read : NULL);
+                /* /11. When the read the files carry began, in UTC, as the
+                 * log's `Kept read began:` gives it, null when no read
+                 * finished (our round 36 lap 4 S13 and lap 7 S15,
+                 * Platterpus's lap 3 S6). */
+                char began[32];
+                av_bprintf(&b, ",\"kept_read_began\":");
+                diag_json_str_or_null(&b, t->kept_read_began &&
+                                          !crip_iso8601_utc(began, sizeof(began),
+                                                            t->kept_read_began) ?
+                                          began : NULL);
 
                 /* The count behind the footer's `Encoder errors:` (Platterpus's
                  * F5, accepted as an addition to S10). */
@@ -624,8 +641,13 @@ void crip_diag_write(void)
      *
      * /10 ADDS per track paranoia_all_reads, error_positions and
      * error_positions_dropped, round 35 (our lap 7 S18 and S20, Platterpus's
-     * lap 8 S8 and S10). Additions; the version moves for the same reason. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/10\",\n");
+     * lap 8 S8 and S10). Additions; the version moves for the same reason.
+     *
+     * /11 ADDS per track isrc_disc_read and kept_read_began, round 36 (our
+     * lap 4 S12 and S13, lap 7 S15 and lap 10 S12; Platterpus's lap 3 S5 and
+     * S6 and lap 11 S7, whose 0.7.113 reads both). Additions; the version
+     * moves for the same reason. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/11\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");

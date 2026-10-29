@@ -3429,9 +3429,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/10":
+        if rec["schema"] != "cyanrip-diagnostics/11":
             fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/10'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/11'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -4357,6 +4357,22 @@ def sc_disc_isrc_line():
                 fail(f"disc_isrc_line: {name}: track {num} isrc_disc "
                      f"{tr['isrc_disc']!r}, and the cue gives "
                      f"{disc.get(num)!r}")
+            # /11 (our round 36 lap 10 S12, Platterpus's lap 11 S7): a code
+            # libcdio took from the image's own cue sheet, sending no
+            # command, is `disc image`, and a track with none has none.
+            want_read = "disc image" if disc.get(num) else None
+            if tr.get("isrc_disc_read") != want_read:
+                fail(f"disc_isrc_line: {name}: track {num} isrc_disc_read "
+                     f"{tr.get('isrc_disc_read')!r}, where {want_read!r} is "
+                     f"expected of {'a code' if want_read else 'no code'} "
+                     f"from a cue sheet")
+            # /11: the record's kept_read_began is the block's `Kept read
+            # began:`, the line our round 36 lap 4 S13 added for the same
+            # instant.
+            kept = re.findall(r"^    Kept read began:    (\S+)$", block, re.M)
+            if [tr.get("kept_read_began")] != kept:
+                fail(f"disc_isrc_line: {name}: track {num} kept_read_began "
+                     f"{tr.get('kept_read_began')!r}, and the block says {kept!r}")
             reason = tr["isrc_disc_reason"]
             if num in disc and num not in usable:
                 if reason != DISC_ISRC_MALFORMED:
@@ -4872,8 +4888,9 @@ def sc_diagnostics():
     # addition, each checked in sc_diag_record_v8(). /9 from the upstream sync
     # of 2026-10-12 adds data_ripped, checked in sc_data_track_completed().
     # /10 from round 35 adds paranoia_all_reads and error_positions, checked
-    # in sc_bad_sector() and tests/diagrecord.c.
-    if d.get("schema") != "cyanrip-diagnostics/10":
+    # in sc_bad_sector() and tests/diagrecord.c. /11 from round 36 adds
+    # isrc_disc_read and kept_read_began, checked in sc_disc_isrc_line().
+    if d.get("schema") != "cyanrip-diagnostics/11":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
