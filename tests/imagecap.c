@@ -62,7 +62,18 @@ void cdio_get_drive_cap(const CdIo_t *p_cdio,
     }
     if (!p_read_cap)
         return;
-    *p_read_cap |= CDIO_DRIVE_CAP_READ_ISRC;
+    /* CRIP_IMAGE_CAP_ERROR: answer as libcdio does when MODE SENSE fails,
+     * every word CDIO_DRIVE_CAP_ERROR and nothing else (libcdio 68ea374,
+     * lib/driver/mmc/mmc.c), for the arms of our round 36 lap 12 S11 (c). */
+    if (getenv("CRIP_IMAGE_CAP_ERROR")) {
+        *p_read_cap = CDIO_DRIVE_CAP_ERROR;
+        if (p_write_cap)
+            *p_write_cap = CDIO_DRIVE_CAP_ERROR;
+        if (p_misc_cap)
+            *p_misc_cap = CDIO_DRIVE_CAP_ERROR;
+    } else {
+        *p_read_cap |= CDIO_DRIVE_CAP_READ_ISRC;
+    }
 
     const char *out = getenv("CRIP_IMAGE_CAP_OUT");
     if (out) {
@@ -74,4 +85,19 @@ void cdio_get_drive_cap(const CdIo_t *p_cdio,
             close(fd);
         }
     }
+}
+
+/* CRIP_MEDIA_CHANGED: what the media-change query answers on an image, which
+ * otherwise never reports a change, so the stop's two arms can be reached:
+ * 1 for a change the drive reports, a negative libcdio error for a query
+ * that failed (our round 36 lap 12 S11 (d)). */
+int cdio_get_media_changed(CdIo_t *p_cdio)
+{
+    static int (*real)(CdIo_t *);
+    const char *v = getenv("CRIP_MEDIA_CHANGED");
+    if (v)
+        return atoi(v);
+    if (!real)
+        real = dlsym(RTLD_NEXT, "cdio_get_media_changed");
+    return real(p_cdio);
 }

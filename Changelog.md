@@ -1,5 +1,32 @@
 Unreleased
 ==========
+**Four drive lines say what was asked, and a speed that cannot be set no
+longer stops the rip**, as our round 36 lap 12 S11 proposed and Platterpus's
+lap 13 S5 accepted, with our round 37 lap 1 S8's wording, which their lap 2
+S6 accepted:
+- **`Speed:`** without `-S` reads `default (drive not asked whether it can
+  change speed)`. libcdio never asks, so `unchangeable` and `changeable` were
+  its constant.
+- **`Drive used:`** on an image reads `none (disc image, read by libcdio's
+  CDRWIN driver, revision 2.1.)`. The revision clause is ours, kept because
+  it is the only place a log names libcdio's version, and put to Platterpus
+  in our round 37 lap 3.
+- **A failed capabilities query** prints `C2 errors:      unknown
+  (capabilities query failed)`, and gives the disc ISRC that reason.
+- **A failed media-change query** stops the rip with `Drive media change
+  query failed (libcdio error N), stopping!`, exit 74 as before. `Drive media
+  changed, stopping!` is kept for a change the drive reports.
+- **`-S`** that libcdio cannot set reads at the drive's own speed, with
+  `Speed:          default (setting 8x failed)` on a drive or `default (disc
+  image, 8x not applied)` on an image. It no longer exits 74 with `Device
+  does not support changing speeds!`.
+
+`tests/drivecaps.c` holds every wording of the two header lines, the drive
+arms no image reaches among them. `sc_drive_answers_as_answers()` holds the
+image arms, a failed query and both media-change answers through
+`tests/imagecap.c`. Reverting the media-change fix fails it. **Needs
+hardware verification**: a drive has shown none of the drive arms.
+
 **The `--diagnostics` record is `cyanrip-diagnostics/11`**, adding two keys
 to each track, as our round 36 laps 4, 7 and 10 proposed and Platterpus's
 laps 3 and 11 accepted, read by their 0.7.113:

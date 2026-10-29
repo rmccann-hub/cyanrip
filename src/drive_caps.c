@@ -99,6 +99,27 @@ const char *crip_recordable_text(char *buf, size_t size, int profile)
     return buf;
 }
 
+const char *crip_speed_text(char *buf, size_t size, int speed, int is_image,
+                            int failed)
+{
+    if (!speed)
+        snprintf(buf, size, "default (drive not asked whether it can change speed)");
+    else if (is_image)
+        snprintf(buf, size, "default (disc image, %ix not applied)", speed);
+    else if (failed)
+        snprintf(buf, size, "default (setting %ix failed)", speed);
+    else
+        snprintf(buf, size, "%ix", speed);
+    return buf;
+}
+
+const char *crip_c2_text(int caps_failed, int c2)
+{
+    if (caps_failed)
+        return "unknown (capabilities query failed)";
+    return c2 ? "supported by drive, not used" : "unsupported by drive";
+}
+
 const char *crip_accurate_stream_text(enum CripAccurateStream s)
 {
     switch (s) {

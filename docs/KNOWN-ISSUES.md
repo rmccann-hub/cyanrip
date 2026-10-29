@@ -323,11 +323,26 @@ checked against the track's bounds; CD-TEXT's ISRC reaches the tags without the
 ISO 3901 check; and the offset search numbers tracks by position.
 
 **What it costs**: each prints a default or a failure as a measurement, which
-is the first rule's failure. **Not fixed yet**: every one changes what a line
-says, so each wording is proposed to Platterpus in our round 36 lap 12 S11, as
-`Recordable:`'s was, and lands once they answer. `Speed:` matters most to
-them: their reader takes `unchangeable` as a drive that cannot change speed,
-and their app then never sends `-S`.
+is the first rule's failure.
+
+**Fixed for the build after `.27`, not yet released**, in the wordings our round
+36 lap 12 S11 proposed and Platterpus's lap 13 S5 accepted:
+- `Speed:          default (drive not asked whether it can change speed)`.
+- On an image, `Drive used:     none (disc image, read by libcdio's CDRWIN
+  driver, revision 2.1.)`. The revision clause is ours, put to Platterpus in
+  our round 37 lap 3, since it is the only place a log names libcdio's version.
+- `C2 errors:      unknown (capabilities query failed)`, and the disc ISRC
+  reason `the capabilities query failed`.
+- `Drive media change query failed (libcdio error N), stopping!` for a query
+  that failed, exit 74 as before.
+
+With their lap 13 S5's change, a `-S` that cannot be set no longer stops the
+rip. It reads at the drive's own speed, and `Speed:` says `default (setting
+8x failed)` on a drive or `default (disc image, 8x not applied)` on an image.
+
+The MCN read a failed query skips is still skipped without a word. Every drive
+arm is unit-tested in `tests/drivecaps.c`, and the image arms on images with
+`tests/imagecap.c`, but a drive has shown none of them.
 
 ### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names
 

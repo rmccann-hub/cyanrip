@@ -66,10 +66,47 @@ static void expect_text(enum CripAccurateStream s, const char *want)
     }
 }
 
+/* `Speed:` and `C2 errors:`, every arm, the drive's among them, which no
+ * image reaches: our round 36 lap 12 S11 (a) and (c) and round 37 lap 1 S8,
+ * accepted by Platterpus's round 36 lap 13 S5 and round 37 lap 2 S6. */
+static void expect_speed(int speed, int is_image, int failed, const char *want)
+{
+    char buf[64];
+    const char *got = crip_speed_text(buf, sizeof(buf), speed, is_image, failed);
+    if (strcmp(got, want)) {
+        printf("FAIL: speed %i, image %i, failed %i reads \"%s\", want \"%s\"\n",
+               speed, is_image, failed, got, want);
+        fails++;
+    }
+}
+
+static void expect_c2(int caps_failed, int c2, const char *want)
+{
+    const char *got = crip_c2_text(caps_failed, c2);
+    if (strcmp(got, want)) {
+        printf("FAIL: caps failed %i, C2 %i reads \"%s\", want \"%s\"\n",
+               caps_failed, c2, got, want);
+        fails++;
+    }
+}
+
 int main(void)
 {
     uint8_t buf[256];
     size_t len;
+
+    expect_speed(0, 0, 0, "default (drive not asked whether it can change speed)");
+    expect_speed(0, 1, 0, "default (drive not asked whether it can change speed)");
+    expect_speed(8, 0, 0, "8x");
+    expect_speed(8, 0, 1, "default (setting 8x failed)");
+    expect_speed(8, 1, 1, "default (disc image, 8x not applied)");
+    expect_speed(48, 1, 0, "default (disc image, 48x not applied)");
+    expect_c2(0, 1, "supported by drive, not used");
+    expect_c2(0, 0, "unsupported by drive");
+    /* A failed query's words carry CDIO_DRIVE_CAP_ERROR alone, so the C2
+     * bit cannot be set beside it; the failure decides either way */
+    expect_c2(1, 0, "unknown (capabilities query failed)");
+    expect_c2(1, 1, "unknown (capabilities query failed)");
 
     /* The four wordings, as round 32 lap 1 S19 proposed them */
     expect_text(CRIP_ACCURATE_STREAM_SUPPORTED,

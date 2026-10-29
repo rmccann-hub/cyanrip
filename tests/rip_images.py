@@ -2301,8 +2301,11 @@ def sc_exit_codes():
         (("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
           "-o", "flac", "-D", WORK / "out_ec", "-F", "{track}", "-t", "99"),
          64, "Invalid track number 99"),
+        # A speed that cannot be set no longer stops the rip (our round 36
+        # lap 13 S5 and round 37 lap 1 S8): an image has none to set, it says
+        # so, and the run goes on.
         (("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-S", "8"),
-         74, "Device does not support changing speeds"),
+         0, "Speed:          default (disc image, 8x not applied)"),
         (("-d", WORK / "basic.cue", "-f", "-N", "-A", "-U"), 1, None),
     ]
     for argv, want_ec, want_text in cases:
@@ -3921,7 +3924,8 @@ def sc_diag_record_v8():
     # `Drive used:` revision is libcdio's CDIO_VERSION cut to four characters.
     rec = WORK / "v8_rip.json"
     rip("v8_rip", "pregap.cue", "-t", "1=isrc=AAAAA0000001", "--diagnostics", rec)
-    m = re.search(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
+    m = re.search(r"^Drive used:\s+none \(disc image, read by libcdio's \S+ "
+                  r"driver, revision (\d+)\.(\d+)",
                   (WORK / "out_v8_rip" / "log.log").read_text(encoding="utf-8"), re.M)
     if not m:
         fail("diag_record_v8: the log names no libcdio revision, so which "
@@ -4238,6 +4242,7 @@ DISC_ISRC_KIND = {
     "libcdio returned an empty ISRC": "none",
     "libcdio returned an all-zero ISRC": "none",
     "the driver does not report reading ISRC": "unknown",
+    "the capabilities query failed": "unknown",
     "out of memory": "unknown",
     "not read": "unknown",
 }
@@ -8379,6 +8384,77 @@ def sc_gaps_unknown_pregap():
     if re.search(r"pregap of track \d+ unknown", out):
         fail("gaps_unknown_pregap: control: cdda.nrg's pregap comes from its TOC, "
              "and the list calls a pregap unknown")
+
+
+def sc_drive_answers_as_answers():
+    """FOUR DRIVE LINES STATE WHAT WAS ASKED, NOT LIBCDIO'S DEFAULT.
+
+    Our round 36 lap 12 S11, accepted in Platterpus's lap 13 S5 with the
+    refused speed of our round 37 lap 1 S8, which their lap 2 S6 accepted:
+    (a) `Speed:` without -S said `unchangeable` of a drive nobody asked; (b)
+    `Drive used:` named libcdio's image driver as a drive; (c) a failed
+    capabilities query read as a drive without C2 or ISRC; (d) a failed
+    media-change query stopped the rip as a change. tests/drivecaps.c holds
+    the wordings on the arms no image reaches; this holds the ones an image
+    does, through tests/imagecap.c for (c) and (d), and tests/badsector.c's
+    delay so a rip outlives the query's one-second throttle.
+    """
+    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0")
+    want = r"^Drive used:     none \(disc image, read by libcdio's CDRWIN driver, revision \d+\.\d+\.\)$"
+    if ec != 0 or not re.search(want, out, re.M):
+        got = re.findall(r"^Drive used:.*$", out, re.M)
+        fail(f"drive_answers_as_answers: (b) exit {ec}, Drive used: {got}")
+    if "Speed:          default (drive not asked whether it can change speed)" not in out.splitlines():
+        got = re.findall(r"^Speed:.*$", out, re.M)
+        fail(f"drive_answers_as_answers: (a) Speed: {got}")
+
+    needs_preload_shim("drive_answers_as_answers")
+    cap = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    bad = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not cap or not Path(cap).exists() or not bad or not Path(bad).exists():
+        fail(f"drive_answers_as_answers: the shims were not built or not "
+             f"passed ({cap!r}, {bad!r})")
+        return
+    asan = os.environ.get("ASAN_OPTIONS", "") + ":verify_asan_link_order=0"
+
+    # (c) The capabilities query failed: C2 and the disc's ISRC are unknown.
+    out_dir = WORK / "out_caps_failed"
+    rec = WORK / "caps_failed.json"
+    env = dict(os.environ, LD_PRELOAD=cap, CRIP_IMAGE_CAP_ERROR="1", ASAN_OPTIONS=asan)
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-o", "pcm", "-D", out_dir, "-F", "{track}", "-L", "log",
+                 "--diagnostics", rec, env=env)
+    lines = ((out_dir / "log.log").read_text(errors="replace", encoding="utf-8")
+             if (out_dir / "log.log").exists() else "").splitlines()
+    if ec != 0 or "C2 errors:      unknown (capabilities query failed)" not in lines:
+        got = [ln for ln in lines if ln.startswith("C2 errors:")]
+        fail(f"drive_answers_as_answers: (c) exit {ec}, C2 errors: {got}")
+    try:
+        reasons = {tr["isrc_disc_reason"] for tr in
+                   json.loads(rec.read_text(encoding="utf-8"))["rip"]["track_state"]}
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        reasons = {f"no record: {e}"}
+    if reasons != {"the capabilities query failed"}:
+        fail(f"drive_answers_as_answers: (c) the record's ISRC reasons are {reasons}")
+    if "  Disc ISRC:     unknown (the capabilities query failed)" not in lines:
+        fail("drive_answers_as_answers: (c) no track says its disc ISRC is unknown "
+             "because the capabilities query failed")
+
+    # (d) The media-change query: a change, and a query that failed, each
+    # stopping the rip with exit 74 and its own line.
+    for answer, line in (("1", "Drive media changed, stopping!"),
+                         ("-1", "Drive media change query failed (libcdio error -1), stopping!")):
+        env = dict(os.environ, LD_PRELOAD=f"{cap} {bad}", CRIP_MEDIA_CHANGED=answer,
+                   CRIP_BAD_PATH="basic.bin", CRIP_READ_DELAY_US="3000",
+                   ASAN_OPTIONS=asan)
+        out_dir = WORK / f"out_media_{answer}"
+        ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                       "-P", "0", "-o", "pcm", "-D", out_dir, "-F", "{track}",
+                       "-L", "log", env=env)
+        said = [ln.strip() for ln in out.splitlines() if "media change" in ln.lower()]
+        if ec != 74 or said != [line]:
+            fail(f"drive_answers_as_answers: (d) answer {answer}: exit {ec}, "
+                 f"lines {said}; want 74 and [{line!r}]")
 
 
 def sc_unknown_pregap_reasons_agree():

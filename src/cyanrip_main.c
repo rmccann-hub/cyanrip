@@ -123,16 +123,25 @@ const cyanrip_out_fmt crip_fmt_info[] = {
     [CYANRIP_FORMAT_PCM]      = { "pcm",      "PCM",  "pcm",   "s16le", 0,  0, 1, AV_CODEC_ID_NONE,      },
 };
 
+static int crip_is_image_driver(cyanrip_ctx *ctx);
+
 /* Some drives take several ms to answer, and the rip loops ask once per frame */
 #define MEDIA_CHECK_INTERVAL_US 1000000 /* one second */
 
+/* 1 when the drive reports a change, 0 when it does not or cannot say, and
+ * libcdio's negative error code when the query failed. Every answer but 0
+ * and unsupported stopped the rip as `Drive media changed`, a change the
+ * drive never reported; the stop is kept and says which it was (our round
+ * 36 lap 12 S11 (d), accepted by Platterpus's lap 13 S5). */
 static int get_media_changed(cyanrip_ctx *ctx) {
     const int64_t now = av_gettime_relative();
     if (ctx->last_media_check && now - ctx->last_media_check < MEDIA_CHECK_INTERVAL_US)
         return 0;
     ctx->last_media_check = now;
     const int ret = cdio_get_media_changed(ctx->cdio);
-    return ret != 0 && ret != DRIVER_OP_UNSUPPORTED;
+    if (ret == DRIVER_OP_UNSUPPORTED)
+        return 0;
+    return ret > 0 ? 1 : ret;
 }
 
 static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
@@ -347,6 +356,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     }
 
     cdio_get_drive_cap(ctx->cdio, &ctx->rcap, &ctx->wcap, &ctx->mcap);
+    ctx->is_image = crip_is_image_driver(ctx);
 
     /* What the drive declares about accurate stream, for the log's header.
      * libcdio reads page 2Ah for the caps above but keeps no bit for it, so
@@ -417,7 +427,13 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
     cdio_cddap_verbose_set(ctx->drive, CDDA_MESSAGE_LOGIT, CDDA_MESSAGE_FORGETIT);
 
-    /* Drives may not advertise a speed setting they honour, so try anyway */
+    /* Drives may not advertise a speed setting they honour, so try anyway.
+     * A speed that could not be set no longer stops the rip: it reads at the
+     * drive's own speed, as without -S, and the header's `Speed:` says the
+     * setting failed, or that an image has no speed to set (our round 36
+     * lap 13 S5 and round 37 lap 1 S8, accepted by Platterpus's lap 2 S6).
+     * libcdio reports a drive that refuses and a driver that cannot send
+     * the command alike, so the line does not say which. */
     if (settings->speed) {
         ret = cdio_cddap_speed_set(ctx->drive, settings->speed);
         msg = cdio_cddap_errors(ctx->drive);
@@ -427,11 +443,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
             cyanrip_log(ctx, 0, "\n");
             cdio_cddap_free_messages(msg);
         }
-        if (ret) {
-            cyanrip_log(ctx, 0, "Device does not support changing speeds!\n");
-            cyanrip_ctx_end(&ctx);
-            return AVERROR(EINVAL);
-        }
+        ctx->speed_failed = !!ret;
     }
 
     ctx->paranoia = cdio_paranoia_init(ctx->drive);
@@ -1034,7 +1046,12 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
          * once. Which ISRC the files carry is decided exactly as before: the
          * disc's, only when -t gave none and no earlier track reported none. */
         if (!t->extra_read) {
-            if (!(ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
+            /* A failed capabilities query sets every word to
+             * CDIO_DRIVE_CAP_ERROR, which says nothing about ISRC (our round
+             * 36 lap 12 S11 (c), accepted by Platterpus's lap 13 S5). */
+            if (ctx->rcap & CDIO_DRIVE_CAP_ERROR) {
+                t->isrc_disc_reason = "the capabilities query failed";
+            } else if (!(ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
                 t->isrc_disc_reason = "the driver does not report reading ISRC";
             } else {
                 const char *isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
@@ -1430,8 +1447,14 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
     for (int i = 0; i < t->frames; i++) {
         /* Detect disc removals */
-        if (get_media_changed(ctx)) {
+        const int changed = get_media_changed(ctx);
+        if (changed > 0) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
+            ctx->exit_class = CRIP_EXIT_IOERR;
+            ret = AVERROR(EINVAL);
+            goto end;
+        } else if (changed < 0) {
+            cyanrip_log(ctx, 0, "\nDrive media change query failed (libcdio error %i), stopping!\n", changed);
             ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
             goto end;
@@ -1675,8 +1698,14 @@ repeat_ripping:;
     /* Read the actual CD data */
     for (int i = 0; i < frames; i++) {
         /* Detect disc removals */
-        if (get_media_changed(ctx)) {
+        const int changed = get_media_changed(ctx);
+        if (changed > 0) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
+            ctx->exit_class = CRIP_EXIT_IOERR;
+            ret = AVERROR(EINVAL);
+            goto fail;
+        } else if (changed < 0) {
+            cyanrip_log(ctx, 0, "\nDrive media change query failed (libcdio error %i), stopping!\n", changed);
             ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
             goto fail;
@@ -3951,8 +3980,13 @@ static int cyanrip_run(int argc, char **argv)
                 track_read_extra(ctx, t);
                 cyanrip_log_track_end(ctx, t);
 
-                if (get_media_changed(ctx)) {
+                const int changed = get_media_changed(ctx);
+                if (changed > 0) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
+                    ctx->exit_class = CRIP_EXIT_IOERR;
+                    break;
+                } else if (changed < 0) {
+                    cyanrip_log(ctx, 0, "Drive media change query failed (libcdio error %i), stopping!\n", changed);
                     ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
                 }
@@ -4072,8 +4106,13 @@ static int cyanrip_run(int argc, char **argv)
                 track_read_extra(ctx, t);
                 cyanrip_log_track_end(ctx, t);
 
-                if (get_media_changed(ctx)) {
+                const int changed = get_media_changed(ctx);
+                if (changed > 0) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
+                    ctx->exit_class = CRIP_EXIT_IOERR;
+                    break;
+                } else if (changed < 0) {
+                    cyanrip_log(ctx, 0, "Drive media change query failed (libcdio error %i), stopping!\n", changed);
                     ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
                 }

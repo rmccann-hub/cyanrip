@@ -169,13 +169,16 @@ test('Cache probe wording', cacheprobe_test)
 ## line's every wording, from the drive's current profile, is pinned beside it,
 ## with that profile read from GET CONFIGURATION's header on a reply that lists
 ## CD-ROM last, where libcdio's own search gives its 0xffff placeholder.
+## `Speed:` and `C2 errors:` are pinned on every arm too, the drive's among
+## them: a speed libcdio could not set and a capabilities query that failed,
+## neither of which an image reaches.
 drivecaps_test = executable('drivecaps_test',
     sources: [ 'drivecaps.c' ],
     include_directories: [ '../src' ],
     objects: cyanrip_exe.extract_objects([ 'drive_caps.c' ]),
     dependencies: unit_test_deps,
 )
-test('Accurate stream and recordable medium from the drive', drivecaps_test)
+test('Drive header lines: speed, C2, accurate stream, recordable medium', drivecaps_test)
 
 ## Links the diagnostics object to drive it past its own retention cap, which
 ## no rip can reach: an image rip prints ~124 messages against a 20000 cap, so
@@ -995,6 +998,7 @@ rip_scenarios = [
     'log_values_cannot_forge_a_line',
     'gaps_unknown_pregap',
     'unknown_pregap_reasons_agree',
+    'drive_answers_as_answers',
     'pregap_search_record_listed',
     'spool_refusal',
     'paranoia_skip',
