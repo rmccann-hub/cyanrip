@@ -93,12 +93,12 @@ enum cyanrip_pregap_source {
     CYANRIP_PREGAP_SRC_LEADIN, /* First track, the standard lead-in */
     CYANRIP_PREGAP_SRC_SUBCHANNEL, /* Found by reading Q sub-channel data */
     CYANRIP_PREGAP_SRC_ERR_READ, /* Sub-channel unreadable, pregap unknown */
-    CYANRIP_PREGAP_SRC_ERR_CRC, /* Sub-channel CRCs never agreed, unknown */
+    CYANRIP_PREGAP_SRC_ERR_CRC, /* Search bounds never met, unknown */
 };
 
 /* What a sub-channel pregap search saw, for the log's `Pregap search:` line.
- * Its `unknown (sub-channel CRC mismatches)` is given whenever the bounds do
- * not meet, which frames for other sectors can cause as well as frames that
+ * Its `unknown (sub-channel search bounds did not meet)` is given whenever the
+ * bounds do not meet, which frames for other sectors can cause as well as frames that
  * fail their CRC, and round 36's runs read the reference disc's track 9 as 95
  * or unknown where .25 and EAC read 94 (our round 36 lap 8 S5): these counts
  * are what tells the causes apart. All zero when no search ran. */

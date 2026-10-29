@@ -8295,6 +8295,47 @@ def sc_gaps_unknown_pregap():
              "and the list calls a pregap unknown")
 
 
+def sc_unknown_pregap_reasons_agree():
+    """THE `Gaps:` LIST AND THE TRACK BLOCK GIVE AN UNKNOWN PREGAP ONE REASON.
+
+    Our round 37 lap 1 S6, which Platterpus's lap 2 S4 accepted, renamed the
+    reason a search gives when its bounds do not meet, from `sub-channel CRC
+    mismatches` to `sub-channel search bounds did not meet`: round 36's run
+    of 2026-10-28 showed the old words over a record in which no sector
+    failed its CRC (our round 36 lap 16 S9). The track block's line is
+    rendered by tests/logrender.c. The `Gaps:` list's is printed only after a
+    search, and no image reaches the arm, since an image's sub-channel is
+    unreadable: sc_gaps_unknown_pregap() holds that arm against the block on
+    a rip. So this reads both reasons from the source, where both arms are
+    literal strings, and holds them to each other and to the agreed words.
+    """
+    log_c = (ROOT / "src" / "cyanrip_log.c").read_text(encoding="utf-8")
+    main_c = (ROOT / "src" / "cyanrip_main.c").read_text(encoding="utf-8")
+    block = {}
+    for src, reason in re.findall(r'pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+)\) \{'
+                                  r'(?:[^{}]*?)"    Pregap LSN:  unknown \(([^)]+)\)\\n"',
+                                  log_c, re.S):
+        block[src] = reason
+    m = re.search(r'"    pregap of track %i unknown \(%s\)\\n", ct->number,\s*'
+                  r'ct->pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+) \?\s*'
+                  r'"([^"]+)" : "([^"]+)"\)', main_c)
+    if len(block) != 2 or not m:
+        fail(f"unknown_pregap_reasons_agree: found {len(block)} track-block "
+             f"reasons and {'a' if m else 'no'} Gaps: line in the source, so "
+             f"this test reads nothing it can compare")
+        return
+    other = ({"CYANRIP_PREGAP_SRC_ERR_READ", "CYANRIP_PREGAP_SRC_ERR_CRC"}
+             - {m.group(1)}).pop()
+    gaps = {m.group(1): m.group(2), other: m.group(3)}
+    if gaps != block:
+        fail(f"unknown_pregap_reasons_agree: the Gaps: list gives {gaps} and "
+             f"the track block {block}")
+    if block.get("CYANRIP_PREGAP_SRC_ERR_CRC") != "sub-channel search bounds did not meet":
+        fail(f"unknown_pregap_reasons_agree: the bounds-did-not-meet arm reads "
+             f"{block.get('CYANRIP_PREGAP_SRC_ERR_CRC')!r}, not the wording our "
+             f"round 37 lap 1 S6 gave and Platterpus's lap 2 S4 accepted")
+
+
 def sc_pregap_search_record_listed():
     """EVERY TRACK A SUB-CHANNEL SEARCH RAN ON HAS ITS RECORD IN EVERY LOG.
 

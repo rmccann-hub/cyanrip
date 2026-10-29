@@ -119,8 +119,9 @@ search ran on gains a `Pregap search:` line. It gives:
 `tests/subq.c` drives the search on a simulated drive that answers one sector
 with its neighbour's frame on every read. No CRC fails, yet the search ends in
 the source the log words `sub-channel CRC mismatches`, and only these counts
-tell it from a frame that never passes its CRC. The `unknown` reason keeps its
-words, which Platterpus reads. The line is proposed in our round 36 lap 8. A
+tell it from a frame that never passes its CRC. The build after `.27` words
+it `sub-channel search bounds did not meet` (our round 37 lap 1 S6, which
+Platterpus's lap 2 S4 accepted). The line is proposed in our round 36 lap 8. A
 run of the reference disc on `.27` is what shows why `.26` never reached 94.
 
 **What the run on `.27` showed, 2026-10-28** (`docs/rig-2026-10-28-5aeefc4/`,

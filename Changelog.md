@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**An `unknown` pregap now says the search's bounds did not meet**, in
+`Gaps:` and in the track block: `unknown (sub-channel search bounds did not
+meet)` in place of `unknown (sub-channel CRC mismatches)`. The search ends
+in that state whenever its bounds fail to meet, whether frames failed their
+CRC or answered for another sector. Round 36's run of 2026-10-28 printed the
+old words over a record in which no sector failed its CRC (our round 36 lap
+16 S9). The wording is our round 37 lap 1 S6, which Platterpus's lap 2 S4
+accepted and their 0.7.116 reads. `sub-channel unreadable` is unchanged.
+`sc_unknown_pregap_reasons_agree()` holds the two lines to each other and to
+the agreed words, and fails with either half reverted; `tests/logrender.c`
+renders the track block's.
+
 **Platterpus's round 37 lap 2 is filed**: `OPEN`, released on their owner's
 word of 2026-10-29, read from their `main` at `c5e3ff2b`, 10,539 bytes. It
 accepts our lap 1's four wordings as given, `Pregap searches:`, the renamed

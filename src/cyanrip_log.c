@@ -444,7 +444,15 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
     } else if (t->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ) {
         cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel unreadable)\n");
     } else if (t->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC) {
-        cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel CRC mismatches)\n");
+        /* Reached whenever the search's bounds do not meet, by frames that
+         * fail their CRC or frames that answer for another sector alike, so
+         * the words say what happened and not why. They read `sub-channel CRC
+         * mismatches` until our round 37 lap 1 S6, which Platterpus's lap 2
+         * S4 accepted, after round 36's run of 2026-10-28 showed the old
+         * words over a record in which no sector failed its CRC (our round 36
+         * lap 16 S9). The `Gaps:` list gives the same words, which
+         * sc_unknown_pregap_reasons_agree() holds. */
+        cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel search bounds did not meet)\n");
     } else {
         cyanrip_log(ctx, 0, "    Pregap LSN:  none\n");
     }
@@ -469,8 +477,8 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "    Pregap source: TOC\n");
 
     /* What the sub-channel search saw, whether it found the pregap or not.
-     * Its `unknown (sub-channel CRC mismatches)` is given whenever its bounds
-     * do not meet, which frames for other sectors can cause as well as frames
+     * Its `unknown (sub-channel search bounds did not meet)` is given
+     * whenever its bounds do not meet, which frames for other sectors can cause as well as frames
      * that fail their CRC; round 36's runs read the reference disc's track 9
      * as 95 or unknown where .25 and EAC read 94 (our round 36 lap 8 S5), and
      * these counts are what a drive run needs to tell the causes apart. The

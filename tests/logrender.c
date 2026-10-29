@@ -757,7 +757,7 @@ static void test_pregap_reasons_are_distinct(void)
         { CYANRIP_PREGAP_SRC_ERR_READ, CDIO_INVALID_LSN,
           "    Pregap LSN:  unknown (sub-channel unreadable)", NULL },
         { CYANRIP_PREGAP_SRC_ERR_CRC, CDIO_INVALID_LSN,
-          "    Pregap LSN:  unknown (sub-channel CRC mismatches)", NULL },
+          "    Pregap LSN:  unknown (sub-channel search bounds did not meet)", NULL },
         { CYANRIP_PREGAP_SRC_NONE, CDIO_INVALID_LSN,
           "    Pregap LSN:  none", NULL },
         { CYANRIP_PREGAP_SRC_TOC, 300,

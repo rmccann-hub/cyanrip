@@ -2260,7 +2260,7 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
              ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC)) {
             cyanrip_log(ctx, 0, "    pregap of track %i unknown (%s)\n", ct->number,
                         ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ ?
-                        "sub-channel unreadable" : "sub-channel CRC mismatches");
+                        "sub-channel unreadable" : "sub-channel search bounds did not meet");
             gaps++;
             continue;
         }
