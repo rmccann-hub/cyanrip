@@ -1844,6 +1844,14 @@ repeat_ripping:;
         const uint32_t shown_crc = checksum_ctx.eac_crc ^ UINT32_MAX;
 
         total_repeats++;
+        /* --reread-time-limit, checked here, between whole-track reads: a
+         * read in progress is never stopped, so the first read always runs
+         * and one read can run past the limit. Measured from the first read's
+         * start, so it is the time the track's reads have taken (our round 36
+         * lap 10 S11, accepted by Platterpus's lap 11 S6). */
+        const int time_up = ctx->settings.reread_time_limit &&
+                            av_gettime_relative() - track_start_time >=
+                            ctx->settings.reread_time_limit * INT64_C(1000000);
         if (matches >= ctx->settings.ripping_retries) {
             /* The state and the kept read are settled BEFORE the line, so the
              * goto stays beside it: tools/gen-provider-contract.py credits a
@@ -1856,7 +1864,7 @@ repeat_ripping:;
                         matches, ctx->settings.ripping_retries, shown_crc);
             goto spool_encode;
         }
-        if (total_repeats >= ctx->settings.max_retries) {
+        if (total_repeats >= ctx->settings.max_retries || time_up) {
             /* The largest number of reads that agree on one checksum, this
              * read included, which is at least 1. The line said "no matches
              * found" whatever that number was, so it was false of a track
@@ -1874,7 +1882,11 @@ repeat_ripping:;
                                                 : checksum_ctx.eac_crc) == ci;
                 agreed = FFMAX(agreed, n);
             }
-            t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
+            /* The repeat limit is named when both are reached at once: it is
+             * the one the read count alone decides. */
+            const int by_time = total_repeats < ctx->settings.max_retries;
+            t->secure_rip_state = by_time ? CYANRIP_SECURE_RIP_TIME_LIMIT
+                                          : CYANRIP_SECURE_RIP_LIMIT_HIT;
             kept = crip_spool_kept_at_limit(spools, nb_spools,
                                             ctx->settings.prefer_ar_match);
             /* --prefer-accuraterip-match kept a read AccurateRip matches: the
@@ -1883,6 +1895,42 @@ repeat_ripping:;
              * accepted and their parser reads. The last read's clause is
              * appended as below when the kept read is not the last. */
             const crip_spool *ks = &spools[kept];
+            /* The time limit keeps the read the repeat limit would, and its
+             * line takes the repeat limit's two clauses as they are, with
+             * its own words for what stopped the loop, so the log names the
+             * caller's limit and does not blame the disc. */
+            if (by_time && ks->ar_conf >= 1 && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s",
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf, shown_crc);
+                goto spool_encode;
+            }
+            if (by_time && ks->ar_conf >= 1) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s",
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf);
+                goto spool_encode;
+            }
+            if (by_time && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; last read %08X, not kept)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", shown_crc);
+                goto spool_encode;
+            }
+            if (by_time) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s");
+                goto spool_encode;
+            }
             if (ks->ar_conf >= 1 && kept != filed) {
                 cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
                             ctx->settings.max_retries,
@@ -2067,7 +2115,8 @@ fail:
         const uint64_t skips = paranoia_status[PARANOIA_CB_SKIP] -
                                start_paranoia[PARANOIA_CB_SKIP];
         if ((ctx->total_error_count - start_err) || skips ||
-            t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT)
+            t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT ||
+            t->secure_rip_state == CYANRIP_SECURE_RIP_TIME_LIMIT)
             cyanrip_log(ctx, 0, "Track %i read with errors.\n", t->number);
         else
             cyanrip_log(ctx, 0, "Track %i read with no error reported.\n",
@@ -2802,6 +2851,8 @@ static int cyanrip_run(int argc, char **argv)
                 "Tag a track with the ISRC read from the disc, where one is, over one given with -t");
     GEN_OPT_ONE(opts_list, bool,    prefer_accuraterip_match, "", 0, 0, 0, 0, 0,
                 "At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does");
+    GEN_OPT_ONE(opts_list, int32_t, reread_time_limit, "", 1, 1, 0, 1, INT32_MAX,
+                "Seconds a -Z track's reads may take, checked between whole-track reads; then no further read starts");
     GEN_OPT_ARR(opts_list, char *,  encoder_option, "", 0, 0, 32, 0, 0,
                 "Pass key=value to every output's encoder, as FFmpeg names its options (repeatable)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
@@ -2958,6 +3009,7 @@ static int cyanrip_run(int argc, char **argv)
     settings.consumer_id                = consumer;
     settings.prefer_disc_isrc           = prefer_disc_isrc;
     settings.prefer_ar_match            = prefer_accuraterip_match;
+    settings.reread_time_limit          = reread_time_limit;
     /* Registers the atexit writer, so every route out of main() is covered
      * rather than the ones someone remembered to instrument. Messages are
      * recorded from process start regardless; this only decides whether they
@@ -2989,6 +3041,14 @@ static int cyanrip_run(int argc, char **argv)
 
     find_drive_offset_range = find_offset ? 6 : 0;
     album_metadata_ptr = album_meta;
+
+    /* A limit on -Z's re-reads bounds nothing without -Z, so it is refused
+     * rather than ignored (our round 36 lap 10 S11, accepted by Platterpus's
+     * lap 11 S6). */
+    if (reread_time_limit && !repeat_rips) {
+        cyanrip_log(ctx, 0, "--reread-time-limit needs -Z: it limits -Z's re-reads, and without -Z there are none!\n");
+        return CRIP_EXIT_USAGE;
+    }
 
     /* The integers below that genopt does not parse are read wide and
      * range-checked before they are narrowed to an int. strtol() straight

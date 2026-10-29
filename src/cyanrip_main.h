@@ -119,6 +119,7 @@ enum cyanrip_secure_rip_state {
     CYANRIP_SECURE_RIP_NA = 0, /* -Z was not requested for this track */
     CYANRIP_SECURE_RIP_CONVERGED, /* Matching checksums were found */
     CYANRIP_SECURE_RIP_LIMIT_HIT, /* Repeat limit hit before checksums matched */
+    CYANRIP_SECURE_RIP_TIME_LIMIT, /* --reread-time-limit reached before they matched */
     /* There is deliberately NO "interrupted" state, and the absence is load
      * bearing rather than an omission. An interrupted track emits no track
      * block at all -- cyanrip_rip_track()'s `if (!quit_now && !ret)` guard --
@@ -198,6 +199,7 @@ typedef struct cyanrip_settings {
     char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
     int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
     int prefer_ar_match; /* --prefer-accuraterip-match: at the -Z repeat limit, a read AccurateRip matches first */
+    int reread_time_limit; /* --reread-time-limit: seconds a -Z track's reads may take; 0 is none */
     int generate_cue_only;
     int disable_data_tracks;
     int disable_acoustid;

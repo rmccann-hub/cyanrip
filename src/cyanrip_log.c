@@ -747,6 +747,11 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "  Secure re-read:  did NOT converge after %i reads (repeat limit hit)\n",
                     t->total_repeats);
         break;
+    case CYANRIP_SECURE_RIP_TIME_LIMIT:
+        cyanrip_log(ctx, 0, "  Secure re-read:  did NOT converge after %i read%s (time limit of %i s reached)\n",
+                    t->total_repeats, t->total_repeats == 1 ? "" : "s",
+                    ctx->settings.reread_time_limit);
+        break;
     case CYANRIP_SECURE_RIP_NA:
     default:
         cyanrip_log(ctx, 0, "  Secure re-read:  not attempted\n");
@@ -1082,6 +1087,11 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
                     "rounded up to a multiple of 5, the only values libcdio-paranoia checks)\n",
                     ctx->settings.max_retries,
                     crip_frame_retry_limit(ctx->settings.max_retries));
+    /* Printed only when the option is given, so a log without it reads as
+     * every log before it (our round 36 lap 10 S11). */
+    if (ctx->settings.reread_time_limit)
+        cyanrip_log(ctx, 0, "Re-read limit:  %i s a track, checked between whole-track reads\n",
+                    ctx->settings.reread_time_limit);
     print_cache_model(ctx);
     cyanrip_log(ctx, 0, "HDCD decoding:  %s\n", ctx->settings.decode_hdcd ? "enabled" : "disabled");
 

@@ -990,6 +990,7 @@ rip_scenarios = [
     'p0_bad_sector',
     'repeat_limit',
     'repeat_limit_keeps_most_agreed',
+    'reread_time_limit',
     'z_extraction_speed',
     'log_values_cannot_forge_a_line',
     'gaps_unknown_pregap',

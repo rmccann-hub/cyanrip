@@ -1,5 +1,29 @@
 Unreleased
 ==========
+**`--reread-time-limit SECONDS` bounds `-Z`'s re-reads by time**, as our
+round 36 lap 10 S11 gave it and Platterpus's lap 11 S6 accepted it. After
+each whole-track read of a `-Z` track that has not converged, once its
+reads have taken SECONDS or more since the first began, no further read
+starts.
+- **No read is cut short.** A read in progress is never stopped, so the
+  first read always runs.
+- **The kept read** is the one the repeat limit would keep.
+- **The header** prints `Re-read limit:  600 s a track, checked between
+  whole-track reads`, below `Retry limit:`, only when the option is given.
+- **The loop ends with** `Done; (time limit of 600 s reached after 4 reads;
+  at most 2 reads agreed)`, with the repeat limit's last-read and
+  AccurateRip clauses as they are.
+- **The track block** reads `Secure re-read:  did NOT converge after 4
+  reads (time limit of 600 s reached)`, and the track `read with errors.`
+- **Where both limits are reached at once**, the repeat limit is named.
+- **Refused with exit 64** without `-Z`, and at 0.
+
+`sc_reread_time_limit()` slows and varies the reads through
+`tests/badsector.c`. It fails with the time check disabled, when the loop
+runs to the repeat limit of 50. The time-limit line's AccurateRip and
+last-read forms are built as the repeat limit's are, and no test reaches
+them. A drive shows it only on a disc that does not converge.
+
 **An `unknown` pregap now says the search's bounds did not meet**, in
 `Gaps:` and in the track block: `unknown (sub-channel search bounds did not
 meet)` in place of `unknown (sub-channel CRC mismatches)`. The search ends

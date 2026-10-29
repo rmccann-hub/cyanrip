@@ -151,6 +151,7 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -r `int`             | How many times to retry a frame/ripping if it fails (default 10). The per-frame limit is rounded up to a multiple of 5, minimum 5, because libcdio-paranoia only checks it there |
 | -Z `int`             | Rips tracks until their checksums match `<int>` number of times. For very damaged CDs. Refused when `-r` is too small to ever allow it (fork, `.19`) |
 | --prefer-accuraterip-match | At the `-Z` repeat limit, keep the read AccurateRip matches at the highest confidence over the read made most often; with no match the rule is unchanged (fork) |
+| --reread-time-limit `s` | Under `-Z`, once a track's reads have taken `s` seconds, start no further read of it: checked between whole-track reads, so the first read always runs and none is stopped mid-read; the track keeps the read the repeat limit would, and its log names the time limit. Refused without `-Z` (fork) |
 | -S `int`             | Sets the drive speed if possible (default is unset, usually maximum)                        |
 | -p `number=string`   | Specifies what to do with the pregap, syntax is described below                             |
 | -P `int`             | Sets the [paranoia level](#paranoia-level), default is max, 0 disables checking completely  |

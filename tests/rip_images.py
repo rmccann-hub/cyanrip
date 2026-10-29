@@ -8145,6 +8145,75 @@ def _flip_crc(v, flip=100, sec=2352, sectors=300):
     return f"{zlib.crc32(b) & 0xFFFFFFFF:08X}"
 
 
+def sc_reread_time_limit():
+    """--reread-time-limit ENDS A -Z TRACK BETWEEN READS AND SAYS SO.
+
+    Our round 36 lap 10 S11, accepted as given in Platterpus's lap 11 S6,
+    whose reader takes every line below. After each whole-track read of a
+    track that has not converged, once its reads have taken the limit or
+    more since the first began, no further read starts; the track keeps the
+    read the repeat limit would keep, and the log names the caller's limit
+    rather than blaming the disc.
+
+    tests/badsector.c makes every read of sector 100 differ (a cycle longer
+    than the run), so -Z never converges, and slows each sector by 3 ms, so
+    track 1's 300 sectors take about 0.9 s a read. With a 1 s limit and -r 50
+    the loop must stop after a read or two, far short of the repeat limit;
+    the count is not fixed, since a sanitizer build reads slower, so the
+    test holds the lines to whatever count the shim saw. Without -Z, and at
+    0, the option is refused with exit 64.
+    """
+    needs_preload_shim("reread_time_limit")
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"reread_time_limit: the shim was not built or not passed ({shim!r})")
+        return
+    out = WORK / "out_reread_time_limit"
+    count = WORK / "reread_time_limit.count"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+               CRIP_FLIP_SECTOR="100", CRIP_FLIP_CYCLE="1000",
+               CRIP_FLIP_RUN="1", CRIP_FLIP_OUT=str(count),
+               CRIP_READ_DELAY_US="3000",
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                 "-P", "0", "-Z", "2", "-r", "50", "--reread-time-limit", "1",
+                 "-l", "1", "-o", "pcm", "-D", out, "-F", "{track}",
+                 "-L", "log", env=env)
+    if ec != 0:
+        fail(f"reread_time_limit: cyanrip exited {ec}; reaching the time limit "
+             f"is not an error")
+    reads = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
+    if not 1 <= reads < 50:
+        fail(f"reread_time_limit: the shim saw {reads} reads, so the time limit "
+             f"did not end the loop short of the repeat limit of 50")
+        return
+    lines = ((out / "log.log").read_text(errors="replace", encoding="utf-8")
+             if (out / "log.log").exists() else "").splitlines()
+    noun = "read" if reads == 1 else "reads"
+    want = {
+        "header": "Re-read limit:  1 s a track, checked between whole-track reads",
+        "done": f"Done; (time limit of 1 s reached after {reads} {noun}; at most 1 read agreed)",
+        "block": f"  Secure re-read:  did NOT converge after {reads} {noun} (time limit of 1 s reached)",
+        "verdict": "Track 1 read with errors.",
+    }
+    for what, line in want.items():
+        if line not in lines:
+            got = [ln for ln in lines if ln.startswith(("Done;", "  Secure re-read:", "Re-read limit:", "Track 1 read"))]
+            fail(f"reread_time_limit: no {what} line {line!r}; got {got}")
+    if any("repeat limit" in ln for ln in lines):
+        fail("reread_time_limit: a line names the repeat limit, which the "
+             "reads never reached")
+    for args, why, said in ((["-Z", "0"], "without -Z", "--reread-time-limit needs -Z"),
+                            (["-Z", "2", "--reread-time-limit", "0"], "at 0", "not in [1:")):
+        extra = [] if "--reread-time-limit" in args else ["--reread-time-limit", "5"]
+        ec, text = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
+                        *args, *extra)
+        if ec != 64 or said not in text:
+            fail(f"reread_time_limit: {why}: exit {ec}, and the output "
+                 f"{'carries' if said in text else 'lacks'} {said!r}; want 64 and it")
+
+
 def sc_repeat_limit_keeps_most_agreed():
     """AT THE REPEAT LIMIT, THE READ THE MOST READS AGREED ON IS KEPT.
 
