@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**Platterpus's round 37 lap 2 is filed**: `OPEN`, released on their owner's
+word of 2026-10-29, read from their `main` at `c5e3ff2b`, 10,539 bytes. It
+accepts our lap 1's four wordings as given, `Pregap searches:`, the renamed
+`unknown` reason, `Names shortened:` and the new `Speed:` values. Their
+0.7.116 reads all four. Our S9's two §7 rows are taken in outline for the
+lap that announces `.28`. Their 0.7.117 is to name `.28` once it is
+published. Our lap 3 announces `.28`, once it is built.
+
 **The Full run of `.27` with Platterpus 0.7.115 is filed**, on our evidence
 branch at `33afdcb` (`docs/rig-2026-10-29-5aeefc4/`). It ran on 2026-10-29
 from 04:17:08Z on the pair our round 37 lap 1 names.
