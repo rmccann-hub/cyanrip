@@ -1,5 +1,24 @@
 Unreleased
 ==========
+**The Full run of `.27` with Platterpus 0.7.115 is filed**, on our evidence
+branch at `33afdcb` (`docs/rig-2026-10-29-5aeefc4/`). It ran on 2026-10-29
+from 04:17:08Z on the pair our round 37 lap 1 names.
+- **The result:** pass 440, fail 0. Of the 128 unreachable steps, 127 are
+  sections P5 and P6, which 0.7.115 skips because it approves and reviews the
+  same build.
+- **Integrity:** all 108 hashed members match, and all 12 signed logs verify
+  with `-Y`.
+- **Track 9's pregap** is again never 94: it is `unknown` in 11 logs and 95 in
+  1. Both logs that rip track 9 leave LSN 145567 undecided, the same sector as
+  on 2026-10-28. This time one sector gave no frame passing its CRC, so the
+  `unknown`'s words do not contradict its record.
+- **The whole disc** reads 13/14 accurately ripped, and the `-Z 2` rip 12/14.
+- **Records:** the cache table gains the run's row and its tallies now say
+  twenty-nine.
+- **STATUS's runs table** still showed 2026-10-26 as the newest run, because
+  dumbass us filed 2026-10-28's run without touching it. It now has both
+  runs.
+
 **Our round 37 lap 1 is released, opening round 37**, on our operator's word
 of 2026-10-29, *"then do it"*. It opens on the newest released pair, `.27` at
 `5aeefc4` with Platterpus's 0.7.115. It reviews `.28`, which is not built in
