@@ -141,6 +141,15 @@ with Platterpus 0.7.114):
   line is printed in a ripped track's block, and none of the other 21 `.27`
   logs rips track 9, including the two that list 95.
 
+**The run of 2026-10-29 left the same sector undecided** (`docs/rig-2026-10-29-5aeefc4/`,
+`.27` with Platterpus 0.7.115). Track 9 is `unknown` in 11 of its 12 logs and
+95 in 1, never 94. Both logs that rip track 9 print `114 sectors asked; 201
+reads failed the CRC; 1 sectors gave no frame passing it; 56 frames were another
+sector's; …; LSN 145567 to 145567 undecided`. This time one sector gave no frame
+passing its CRC, so the `unknown`'s words do not contradict the record. On two
+runs, two causes in different proportions have left the same sector, 145567,
+unplaced.
+
 **Fixed for the build after `.27`, not yet released.** A `Pregap searches:`
 block after `Gaps:` gives every track a sub-channel search ran on, ripped or
 not, its record word for word as its own block would (our round 36 lap 16 S10,
@@ -661,7 +670,7 @@ revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
 that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
-bracket. **It did, eleven times**: the 2026-10-06 run on `.20` printed `128 to
+bracket. **It did, twelve times**: the 2026-10-06 run on `.20` printed `128 to
 255 sectors`, with a 1.7 ms re-read after 128 sectors and three re-reads of at
 least 32.6 ms after 256, and `cd-paranoia -A`, run straight after it, reported
 137 (`docs/rig-2026-10-06-5704062/`); the 2026-10-07 run on `.21` printed the
@@ -672,8 +681,9 @@ the same beside 137 (`docs/rig-2026-10-16-891c79e/`), the 2026-10-20 run
 on `.25` the same beside 140 (`docs/rig-2026-10-20-5f1d036/`), four runs
 on `.26` the same beside 140, 140, 137 and 137 (`docs/rig-2026-10-21-ca0f097/`,
 `docs/rig-2026-10-22-ca0f097/`, `docs/rig-2026-10-22b-ca0f097/` and
-`docs/rig-2026-10-26-ca0f097/`), and the 2026-10-28 run on `.27` the same
-beside 140 (`docs/rig-2026-10-28-5aeefc4/`, the table's last row). Eleven runs on one drive, and the search can say no more than a
+`docs/rig-2026-10-26-ca0f097/`), and the 2026-10-28 and 2026-10-29 runs on
+`.27` the same beside 140 each (`docs/rig-2026-10-28-5aeefc4/` and
+`docs/rig-2026-10-29-5aeefc4/`, the table's last row). Twelve runs on one drive, and the search can say no more than a
 power of two. Everything below is the record of
 the defect, kept because the table is checked against the transcripts.
 
@@ -714,7 +724,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: twenty-eight of them**, derived
+session that produced a `Cache probe:` line is here now: twenty-nine of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -753,6 +763,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-10-22b `ca0f097` | 253.6 ms | 1.7 ms | **6 ms** | 28%; `128 to 255 sectors`, three re-reads after 256 sectors at 34.4 ms or more, beside `cd-paranoia -A`'s 137 |
 | 2026-10-26 `ca0f097` | 237.3 ms | 2.0 ms | **6 ms** | 33%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.1 ms or more, beside `cd-paranoia -A`'s 137 |
 | 2026-10-28 `5aeefc4` | 362.8 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 57.8 ms or more, beside `cd-paranoia -A`'s 140 |
+| 2026-10-29 `5aeefc4` | 362.7 ms | 1.2 ms | **6 ms** | 20%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.6 ms or more, beside `cd-paranoia -A`'s 140 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -760,10 +771,10 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, twenty-eight times. "A cached read of a
-few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen twelve
-times, in the seventeenth to the twenty-eighth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
-1.5, 1.3, 1.4, 1.7, 2.0 and 1.3 ms,
+**Hundreds of ms uncached: confirmed, twenty-nine times. "A cached read of a
+few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen thirteen
+times, in the seventeenth to the twenty-ninth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
+1.5, 1.3, 1.4, 1.7, 2.0, 1.3 and 1.2 ms,
 each after a run inside the cache. This said "eighteen" and "twice" for five days after the
 nineteenth row was added, the stale tally this section is about, found adding
 the twentieth. It then said "twenty-two" and "six" from 2026-10-20, when the
