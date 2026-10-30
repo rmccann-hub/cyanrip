@@ -1,5 +1,32 @@
 Unreleased
 ==========
+**A path component a tag value is part of follows three rules**, as our
+round 36 lap 12 S10 gave them and Platterpus's lap 13 S4 accepted. Measured
+at `ed37997` with `-D <root>/{album_artist}/{album}` in all four `-T`
+modes, `album=..` wrote the rip a directory above where it was asked for, at
+exit 0, a U+0001 went into a directory's name, and `album=CON` made `CON`:
+- **No `.` or `..` component**: its dots are `_` in `simple` and
+  `os_simple`, and `․` U+2024 in `unicode` and `os_unicode`, on every system.
+- **A value's U+0001 to U+001F**, the tab among them, are `_` in `simple` and
+  their Control Pictures, U+2401 to U+241F, in `unicode`, and in the `os_`
+  modes only on Windows. A tab in a value is no longer trimmed at a
+  component's edge where this applies, since it is no longer a tab.
+- **A device name Microsoft reserves**, before the first dot and in any case,
+  gets `_` after it (`NUL_`, `CON_.flac`), in `simple` and `unicode` and in
+  the `os_` modes on Windows.
+
+A component only the scheme's own text makes is the caller's, so `-D
+../music` and `-D CON` are written as given; the render records each byte's
+origin to tell them apart. A leading dot and a trailing space or dot are
+kept, as the lap said. `tests/naming.c` holds each rule in each mode, and
+`sc_path_component_rules()` rips in each mode and finds the names
+`PROVIDER-CONTRACT.md`'s new P7f predicts; each fails with its rule
+reverted. P7f states the rules, read from the code that applies them, and P7b
+no longer claims the table is the only change to a name. Its U+FFFD row, which
+had read `**unclassified** -- ``` since that write landed, because the
+generator read its argument from text with every string blanked, now says
+what it writes.
+
 **A path over 1,003 bytes is written whole.** Upstream's `crip_get_path()`
 renders every path into the 1,003 bytes inside the `AVBPrint` itself, which
 `av_bprint_finalize()` hands back cut without a word, and every release of

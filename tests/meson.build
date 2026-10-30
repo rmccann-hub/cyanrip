@@ -978,6 +978,7 @@ rip_scenarios = [
     'encoder_option',
     'mutation_exclusions_are_pinned',
     'sanitize',
+    'path_component_rules',
     'enhanced_cd',
     'contract_diagnostics',
     'diag_repeated_flag',

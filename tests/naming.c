@@ -21,6 +21,7 @@
 
 #include "cyanrip_main.h"
 #include "cyanrip_log.h"
+#include "os_compat.h"
 
 static int fails = 0;
 
@@ -109,6 +110,87 @@ int main(void)
     av_dict_set(&t->meta, "title", "A/B: C\"D\"", 0);
     check_track_path("{title}", t, "folder/A∕B∶ C“D”.flac");
     av_dict_set(&t->meta, "title", "Title", 0);
+
+    /* Round 36 lap 12 S10's rules for a component a tag value is part of,
+     * which Platterpus's lap 13 S4 accepted (P7f), in each mode as this
+     * build's os_compat.h sets the os_ modes */
+    {
+        static const struct { enum CRIPSanitize method; int u, os; } modes[] = {
+            { CRIP_SANITIZE_SIMPLE,     0, 0 },
+            { CRIP_SANITIZE_OS_SIMPLE,  0, 1 },
+            { CRIP_SANITIZE_UNICODE,    1, 0 },
+            { CRIP_SANITIZE_OS_UNICODE, 1, 1 },
+        };
+        for (int i = 0; i < FF_ARRAY_ELEMS(modes); i++) {
+            ctx.settings.sanitize_method = modes[i].method;
+            const char *dot = modes[i].u ? "․" : "_";
+            const int ctl = !(modes[i].os && HAS_CH_CONTROL);
+            const int dev = !(modes[i].os && HAS_NAME_DEVICES);
+            char want[256];
+
+            /* The first: no `.` or `..` component, in every mode */
+            ctx.settings.folder_name_scheme = "{album}";
+            av_dict_set(&ctx.meta, "album", "..", 0);
+            snprintf(want, sizeof(want), "%s%s/1.flac", dot, dot);
+            check_track_path("{track}", t, want);
+            av_dict_set(&ctx.meta, "album", ".", 0);
+            snprintf(want, sizeof(want), "%s/1.flac", dot);
+            check_track_path("{track}", t, want);
+
+            /* A value and the scheme's own dot make `..` between them */
+            ctx.settings.folder_name_scheme = "{album}.";
+            snprintf(want, sizeof(want), "%s%s/1.flac", dot, dot);
+            check_track_path("{track}", t, want);
+
+            /* The scheme's own `..` is the caller's, and so is CON */
+            av_dict_set(&ctx.meta, "album", "Album", 0);
+            ctx.settings.folder_name_scheme = "../{album}";
+            check_track_path("{track}", t, "../Album/1.flac");
+            ctx.settings.folder_name_scheme = "CON";
+            check_track_path("{track}", t, "CON/1.flac");
+
+            /* Kept: a leading dot, and a trailing one */
+            ctx.settings.folder_name_scheme = "{album}";
+            av_dict_set(&ctx.meta, "album", ".hidden", 0);
+            check_track_path("{track}", t, ".hidden/1.flac");
+            av_dict_set(&ctx.meta, "album", "Album.", 0);
+            check_track_path("{track}", t, "Album./1.flac");
+
+            /* The third: a device name before the first dot gets `_` */
+            static const struct { const char *album, *reserved; } devices[] = {
+                { "CON",     "CON_" },     { "nul.txt", "nul_.txt" },
+                { "COM¹", "COM¹_" }, { "LPT9",    "LPT9_" },
+                { "Aux",     "Aux_" },
+                /* Not device names */
+                { "CONX",    NULL },       { "COM0",    NULL },
+                { "XCON",    NULL },       { "COM10",   NULL },
+            };
+            for (int j = 0; j < FF_ARRAY_ELEMS(devices); j++) {
+                av_dict_set(&ctx.meta, "album", devices[j].album, 0);
+                snprintf(want, sizeof(want), "%s/1.flac",
+                         dev && devices[j].reserved ? devices[j].reserved :
+                                                      devices[j].album);
+                check_track_path("{track}", t, want);
+            }
+            av_dict_set(&ctx.meta, "album", "Album", 0);
+            ctx.settings.folder_name_scheme = "folder";
+            av_dict_set(&t->meta, "title", "PRN", 0);
+            check_track_path("{title}", t, dev ? "folder/PRN_.flac" :
+                                                 "folder/PRN.flac");
+
+            /* The second: a value's U+0001 to U+001F, a tab among them */
+            av_dict_set(&t->meta, "title", "A\x01" "B\nC\tD\x1f", 0);
+            snprintf(want, sizeof(want), "folder/%s.flac",
+                     !ctl ? "A\x01" "B\nC\tD\x1f" :
+                     modes[i].u ? "A␁B␊C␉D␟" : "A_B_C_D_");
+            check_track_path("{title}", t, want);
+
+            /* and the scheme's own are the caller's */
+            check_track_path("X\x02{track}", t, "folder/X\x02" "1.flac");
+            av_dict_set(&t->meta, "title", "Title", 0);
+        }
+        ctx.settings.sanitize_method = CRIP_SANITIZE_UNICODE;
+    }
 
     /* Track number zero padding, driven by the track count */
     ctx.nb_tracks = 12;

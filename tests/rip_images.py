@@ -7467,6 +7467,112 @@ def sc_sanitize():
                  f"in all four modes. Found "
                  f"{sorted(str(p.relative_to(out)) for p in out.rglob('*'))}")
 
+def p7f_cells():
+    """P7f's rows for this platform's columns, as {mode: [cell, ...]} in rule
+    order, or None after a failure. The column is chosen from the platform,
+    as sc_sanitize() chooses P7c's, and never from the behaviour under test.
+    """
+    text = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
+    section = re.search(r"^### P7f .*?(?=^### |^## |\Z)", text, re.M | re.S)
+    if not section:
+        fail("P7f: no P7f section in the contract, so the path-component "
+             "rules have no statement for a consumer to predict names from")
+        return None
+    lines = section.group(0).splitlines()
+    header = next((l for l in lines if l.startswith("| rule |")), None)
+    if not header:
+        fail("P7f: no table header")
+        return None
+    heads = [h.strip() for h in header.strip().strip("|").split("|")]
+    state = ("`HAVE_WMAIN`" if os.name == "nt" else
+             "`__MACH__`" if sys.platform == "darwin" else "elsewhere")
+    try:
+        col = {"simple": heads.index("`simple`"),
+               "unicode": heads.index("`unicode`"),
+               "os_simple": heads.index(f"`os_simple` {state}"),
+               "os_unicode": heads.index(f"`os_unicode` {state}")}
+    except ValueError:
+        fail(f"P7f: no {state} columns: {heads}")
+        return None
+    rows = [l for l in lines if re.match(r"\| \d+ \|", l)]
+    if len(rows) < 3:
+        fail(f"P7f: {len(rows)} rule rows, where the lap gave at least three")
+        return None
+    out = {}
+    for mode, i in col.items():
+        out[mode] = [[c.strip() for c in r.strip().strip("|").split("|")][i]
+                     for r in rows]
+    return out
+
+
+def sc_path_component_rules():
+    """Round 36 lap 12 S10's rules for a component a tag value is part of, as
+    P7f states them, asserted against the files the binary writes.
+
+    WHAT IT COST TO NOT HAVE THEM. Measured at ed37997 with -D
+    <root>/{album_artist}/{album}, in all four modes: `album=..` put the rip
+    a directory above where it was asked for, at exit 0, and a U+0001 went
+    into a name. Platterpus's overwrite guard predicts our folder from P7, so
+    the prediction is the thing under test: each expected name is read from
+    P7f's cells for this platform, never written here.
+    """
+    cells = p7f_cells()
+    if cells is None:
+        return
+
+    def dot_glyph(cell):
+        m = re.fullmatch(r"each dot as `(.+?)`.*", cell)
+        return m.group(1) if m else None
+
+    def control(cell, ch):
+        if cell == "unchanged":
+            return ch
+        if cell == "each as `_`":
+            return "_"
+        if cell.startswith("each as its Control Picture"):
+            return chr(0x2400 + ord(ch))
+        return None
+
+    def device(cell, name):
+        return {"unchanged": name, "`_` after the name": name + "_"}.get(cell)
+
+    for mode, (r1, r2, r3, *_rest) in cells.items():
+        dot, ctl, dev = dot_glyph(r1), control(r2, "\x01"), device(r3, "NUL")
+        if None in (dot, ctl, dev):
+            fail(f"P7f: {mode}: cells this test cannot read: {r1!r}, {r2!r}, "
+                 f"{r3!r}")
+            continue
+        root = WORK / f"pcr_{mode}"
+        before = set(WORK.iterdir())
+        ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                       "-P", "0", "-o", "flac", "-T", mode,
+                       "-D", f"{root}/{{album_artist}}/{{album}}",
+                       "-F", "{track} {title}", "-L", "log", "-M", "sheet",
+                       "-a", "album=..:album_artist=NUL",
+                       "-t", "1=title=A\x01B")
+        if ec != 0:
+            fail(f"P7f: {mode}: cyanrip exited {ec}")
+            print(log)
+            continue
+        folder = root / dev / (dot * 2)
+        want = {folder / f"1 A{ctl}B.flac", folder / "2 Unknown track.flac",
+                folder / "log.log", folder / "sheet.cue"}
+        # Everything the rip wrote, wherever it went: with the first rule
+        # reverted, `..` puts it all in root/NUL's parent, which is root, and
+        # a `..` higher up would put it beside root, which `stray` catches.
+        got = {p for p in root.rglob("*") if p.is_file()}
+        stray = set(WORK.iterdir()) - before - {root}
+        if stray:
+            fail(f"P7f: {mode}: written outside {root.name}: "
+                 f"{sorted(map(str, stray))}")
+        if got != want:
+            fail(f"P7f: {mode}: files on disk are not the names P7f predicts\n"
+                 f"    want: {sorted(map(str, want))}\n"
+                 f"    got:  {sorted(map(str, got))}")
+        else:
+            print(f"P7f: {mode}: {folder.relative_to(WORK)} as predicted")
+
+
 def sc_enhanced_cd():
     """A trailing data track must not be able to publish a garbage disc ID.
 
