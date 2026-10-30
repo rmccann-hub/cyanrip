@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.27 (platterpus-fork-g819c735)`
+Build: `cyanrip 0.9.4-rc3+platterpus.27 (platterpus-fork-gf69d414)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = fe73fcb9f791faf4` over `src/*.c` and
+**Source anchor:** `sha256/16 = 578ef73ac6efb571` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -615,11 +615,11 @@ where a device path or drive string carrying one would still start a line
 | `musicbrainz.c:521` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` |
 | `musicbrainz.c:527` | `Please help improve the MusicBrainz DB by submitting the disc info via the following URL:` |
 | `musicbrainz.c:536` | `To continue add metadata via -a or -t, or ignore via -N!` |
-| `naming.c:290` | `Invalid scheme syntax, unterminated \"{\"!` |
-| `naming.c:298` | `Invalid scheme syntax, \"{\" inside \"{\", tags in conditions are written as \|tag\|!` |
-| `naming.c:310` | `Invalid scheme syntax, no \"#\"!` |
-| `naming.c:324` | `Invalid scheme syntax, no terminating \"#\"!` |
-| `naming.c:340` | `Invalid condition syntax!` |
+| `naming.c:358` | `Invalid scheme syntax, unterminated \"{\"!` |
+| `naming.c:366` | `Invalid scheme syntax, \"{\" inside \"{\", tags in conditions are written as \|tag\|!` |
+| `naming.c:378` | `Invalid scheme syntax, no \"#\"!` |
+| `naming.c:392` | `Invalid scheme syntax, no terminating \"#\"!` |
+| `naming.c:408` | `Invalid condition syntax!` |
 
 **389 distinct stable lines.**
 
@@ -1008,11 +1008,11 @@ must carry the same class.
 | `musicbrainz.c:513` | `MusicBrainz lookup failed, but DiscID has a matching stub, consider verifying the data and creating a release here:` | control flow | yes |
 | `musicbrainz.c:517` | `Unable to find release info for this CD, and metadata hasn't been manually added!` | both | yes |
 | `musicbrainz.c:521` | `Unable to find metadata for this CD, but metadata has been manually specified, continuing.` | wording | yes |
-| `naming.c:290` | `Invalid scheme syntax, unterminated \"{\"!` | both | yes |
-| `naming.c:298` | `Invalid scheme syntax, \"{\" inside \"{\", tags in conditions are written as \|tag\|!` | both | yes |
-| `naming.c:310` | `Invalid scheme syntax, no \"#\"!` | both | yes |
-| `naming.c:324` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
-| `naming.c:340` | `Invalid condition syntax!` | both | yes |
+| `naming.c:358` | `Invalid scheme syntax, unterminated \"{\"!` | both | yes |
+| `naming.c:366` | `Invalid scheme syntax, \"{\" inside \"{\", tags in conditions are written as \|tag\|!` | both | yes |
+| `naming.c:378` | `Invalid scheme syntax, no \"#\"!` | both | yes |
+| `naming.c:392` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
+| `naming.c:408` | `Invalid condition syntax!` | both | yes |
 
 **161 distinct strings.** By evidence: 85 both, 31 control flow, 18 wording + goto end, 16 wording, 11 genopt.
 
@@ -1424,9 +1424,11 @@ thing only, and P7d is about that thing.
 | 8 | `"` | `U+0022` | `'` | `“` | `U+201C` | `HAS_CH_QUOTES` |
 | 9 | `"` | `U+0022` | `'` | `”` | `U+201D` | `HAS_CH_QUOTES` |
 
-**Anything not in the `character` column is passed through unchanged**
--- no length limit, no case folding, no whitespace collapsing, no
-trailing-dot handling. That is an absence, so here is what it rests on
+**Anything not in the `character` column is passed through unchanged
+by this table.** What else changes a name is P7f's, for a path
+component a tag value is part of, and the trimming of spaces at a
+component's edges and before the extension; there is no case folding
+and no whitespace collapsing. That is an absence, so here is what it rests on
 rather than an assurance: these are every call in
 `crip_bprint_sanitize()` that writes to the output buffer, enumerated
 from the function body. A transformation this table does not describe
@@ -1435,10 +1437,12 @@ would have to appear as a call here.
 | line | call | writes |
 |---|---|---|
 | `naming.c:195` | `av_bprint_append_data` | the input, verbatim |
-| `naming.c:196` | `av_bprint_append_data` | **unclassified** -- `` |
-| `naming.c:217` | `av_bprint_append_data` | the input, verbatim |
-| `naming.c:222` | `av_bprint_chars` | the `simple` glyph, from the table |
-| `naming.c:225` | `av_bprint_append_data` | the `unicode` glyph, from the table |
+| `naming.c:196` | `av_bprint_append_data` | `U+FFFD`, in place of a byte that is not UTF-8 |
+| `naming.c:217` | `av_bprint_chars` | `_` for a value's control character, P7f's rule 2 |
+| `naming.c:219` | `av_bprint_append_data` | a value's control character's Control Picture, P7f's rule 2 |
+| `naming.c:239` | `av_bprint_append_data` | the input, verbatim |
+| `naming.c:244` | `av_bprint_chars` | the `simple` glyph, from the table |
+| `naming.c:247` | `av_bprint_append_data` | the `unicode` glyph, from the table |
 
 ### P7c - What each mode does to each character
 
@@ -1498,10 +1502,10 @@ subdirectory. Every call site, and what each one passes:
 
 | call site | `sanitize_fwdslash` | meaning |
 |---|---|---|
-| `naming.c:280` | `0` | literal text, never a tag value -- `/` is a directory separator here |
-| `naming.c:401` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
-| `naming.c:421` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
-| `naming.c:503` | `0` | literal text, never a tag value -- `/` is a directory separator here |
+| `naming.c:347` | `0` | literal text, never a tag value -- `/` is a directory separator here |
+| `naming.c:469` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
+| `naming.c:490` | `origin_is_tag` | `origin_is_tag`: 1 when the token resolved to a metadata tag, 0 when it fell back to literal scheme text |
+| `naming.c:735` | `0` | literal text, never a tag value -- `/` is a directory separator here |
 
 So a `/` **inside a metadata value** is substituted, and a `/` **in the
 scheme itself** creates a directory. The pass-through is checked after
@@ -1531,16 +1535,52 @@ behaviour moves.
 
 | macro | default | set under | value there |
 |---|---|---|---|
-| `HAS_CH_LESS` | `1` (`os_compat.h:109`) | `HAVE_WMAIN` | `0` (`os_compat.h:97`) |
-| `HAS_CH_MORE` | `1` (`os_compat.h:112`) | `HAVE_WMAIN` | `0` (`os_compat.h:98`) |
-| `HAS_CH_COLUMN` | `1` (`os_compat.h:115`) | `HAVE_WMAIN`; `__MACH__` | `0` (`os_compat.h:99`); `0` (`os_compat.h:93`) |
-| `HAS_CH_OR` | `1` (`os_compat.h:118`) | `HAVE_WMAIN` | `0` (`os_compat.h:100`) |
-| `HAS_CH_Q` | `1` (`os_compat.h:121`) | `HAVE_WMAIN` | `0` (`os_compat.h:101`) |
-| `HAS_CH_ANY` | `1` (`os_compat.h:124`) | `HAVE_WMAIN` | `0` (`os_compat.h:102`) |
-| `HAS_CH_FWDSLASH` | `0` (`os_compat.h:127`, *default should be 0 here*) | `HAVE_WMAIN` | `0` (`os_compat.h:103`) |
-| `HAS_CH_BWDSLASH` | `1` (`os_compat.h:130`) | `HAVE_WMAIN` | `0` (`os_compat.h:104`) |
-| `HAS_CH_QUOTES` | `1` (`os_compat.h:133`) | `HAVE_WMAIN` | `0` (`os_compat.h:105`) |
+| `HAS_CH_LESS` | `1` (`os_compat.h:111`) | `HAVE_WMAIN` | `0` (`os_compat.h:97`) |
+| `HAS_CH_MORE` | `1` (`os_compat.h:114`) | `HAVE_WMAIN` | `0` (`os_compat.h:98`) |
+| `HAS_CH_COLUMN` | `1` (`os_compat.h:117`) | `HAVE_WMAIN`; `__MACH__` | `0` (`os_compat.h:99`); `0` (`os_compat.h:93`) |
+| `HAS_CH_OR` | `1` (`os_compat.h:120`) | `HAVE_WMAIN` | `0` (`os_compat.h:100`) |
+| `HAS_CH_Q` | `1` (`os_compat.h:123`) | `HAVE_WMAIN` | `0` (`os_compat.h:101`) |
+| `HAS_CH_ANY` | `1` (`os_compat.h:126`) | `HAVE_WMAIN` | `0` (`os_compat.h:102`) |
+| `HAS_CH_FWDSLASH` | `0` (`os_compat.h:129`, *default should be 0 here*) | `HAVE_WMAIN` | `0` (`os_compat.h:103`) |
+| `HAS_CH_BWDSLASH` | `1` (`os_compat.h:132`) | `HAVE_WMAIN` | `0` (`os_compat.h:104`) |
+| `HAS_CH_QUOTES` | `1` (`os_compat.h:135`) | `HAVE_WMAIN` | `0` (`os_compat.h:105`) |
 
 A macro appears once per row of P7b, so `HAS_CH_QUOTES` governs both
 quote rows together.
+
+### P7f - Rules for a path component a tag value is part of
+
+**From our round 36 lap 12 S10, which Platterpus's lap 13 S4
+accepted.** A component is the text between two separators. It is a
+**component a tag value is part of** when any byte of it came from a
+`{tag}` that resolved to a value: `crip_render_mark()` records each
+byte's origin as the path is rendered, and a byte of the scheme's own
+text, or of what `crip_get_path()` adds itself, is not a value's. The
+rules apply to such a component after P7b's substitutions and the
+trimming of spaces, and a component only the scheme's own text makes is
+left as the caller wrote it, as `-D ../x` or `-D CON` is. A tag that
+does not resolve is the scheme's text (P7d). The cover art's file name is
+its title, rendered as the scheme's text, so these rules leave it alone.
+
+| rule | applies to | `simple` | `unicode` | `os_simple` elsewhere | `os_unicode` elsewhere | `os_simple` `HAVE_WMAIN` | `os_unicode` `HAVE_WMAIN` | `os_simple` `__MACH__` | `os_unicode` `__MACH__` | read at |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | a component that is `.` or `..` | each dot as `_` | each dot as `․` (`U+2024`) | each dot as `_` | each dot as `․` (`U+2024`) | each dot as `_` | each dot as `․` (`U+2024`) | each dot as `_` | each dot as `․` (`U+2024`) | `naming.c:562` |
+| 2 | a value's `U+0001` to `U+001F` | each as `_` | each as its Control Picture, `␁` (`U+2401`) to `␟` (`U+241F`) | unchanged | unchanged | each as `_` | each as its Control Picture, `␁` (`U+2401`) to `␟` (`U+241F`) | unchanged | unchanged | `naming.c:212` |
+| 3 | a component whose name before its first dot is a device name below, in any case | `_` after the name | `_` after the name | unchanged | unchanged | `_` after the name | `_` after the name | unchanged | unchanged | `naming.c:568` |
+
+Rule 1 reads no availability macro, so it applies in every
+mode on every system.
+
+Rule 2's `os_` columns follow `HAS_CH_CONTROL`: `1` by default (`os_compat.h:138`); set under `HAVE_WMAIN`, where it is `0` (`os_compat.h:106`).
+
+Rule 3's `os_` columns follow `HAS_NAME_DEVICES`: `1` by default (`os_compat.h:141`); set under `HAVE_WMAIN`, where it is `0` (`os_compat.h:107`).
+
+**The 28 device names**, from `crip_device_names[]`, compared
+without regard to ASCII case: `CON`, `PRN`, `AUX`, `NUL`, `COM1`, `COM2`, `COM3`, `COM4`, `COM5`, `COM6`, `COM7`, `COM8`, `COM9`, `COM¹`, `COM²`, `COM³`, `LPT1`, `LPT2`, `LPT3`, `LPT4`, `LPT5`, `LPT6`, `LPT7`, `LPT8`, `LPT9`, `LPT¹`, `LPT²`, `LPT³`. `_` goes after the name and before the first dot, so `nul.txt`
+is written `nul_.txt`.
+
+**Kept, as the lap that gave the rules said:** a leading dot, which is
+a title's own text, and a name ending in a space or a dot. A value's
+tab is `U+0009`, so where rule 2 applies a tab is written as `_` or
+`␉` and is no longer trimmed at a component's edge.
 
