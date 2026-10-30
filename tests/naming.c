@@ -120,6 +120,24 @@ int main(void)
     check_track_path("{track}", t, "Album (2020) [FLAC]/1.flac");
     ctx.settings.folder_name_scheme = "folder";
 
+    /* A path past 1,003 bytes keeps every byte. Rendered in an AVBPrint's
+     * own internal buffer, it was cut at byte 1,003, extension and all, so
+     * every file of a rip went to one path (upstream report 28) */
+    {
+        char album[201], want[1100] = "";
+        memset(album, 'a', 200);
+        album[200] = '\0';
+        av_dict_set(&ctx.meta, "album", album, 0);
+        ctx.settings.folder_name_scheme =
+            "{album}/{album}/{album}/{album}/{album}";
+        for (int i = 0; i < 5; i++)
+            av_strlcatf(want, sizeof(want), "%s/", album);
+        av_strlcat(want, "1.flac", sizeof(want));
+        check_track_path("{track}", t, want);
+        av_dict_set(&ctx.meta, "album", "Album", 0);
+        ctx.settings.folder_name_scheme = "folder";
+    }
+
     /* Track-only tags in a log scheme fall back to literal text */
     ctx.settings.log_name_scheme = "{track}";
     check_str("log scheme with {track}",

@@ -482,7 +482,15 @@ char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
 {
     char *ret = NULL;
     AVBPrint buf;
-    av_bprint_init(&buf, 0, AV_BPRINT_SIZE_AUTOMATIC);
+    /* UNLIMITED, never AUTOMATIC. AUTOMATIC is the buffer inside the AVBPrint
+     * itself, 1,003 bytes and a terminator, and av_bprint_finalize() hands
+     * back whatever fitted without a word. Upstream renders here with it, so
+     * a path past 1,003 bytes was cut there, extension and all: with -D
+     * "<root>/{album}" five times over and a 200-byte album, basic.cue's log,
+     * cue sheet and both tracks went to one file with no extension, and the
+     * rip said `Rip completed:  yes (2 of 2 tracks)` at exit 0 (upstream
+     * report 28). A path a buffer could not hold is no path at all. */
+    av_bprint_init(&buf, 0, AV_BPRINT_SIZE_UNLIMITED);
 
     /* A drive letter's colon would get sanitized like any other */
     const char *folder = ctx->settings.folder_name_scheme;
@@ -525,6 +533,10 @@ char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
     av_free(ext);
 
 end:
+    if (!av_bprint_is_complete(&buf)) {
+        av_bprint_finalize(&buf, NULL);
+        return NULL;
+    }
     av_bprint_finalize(&buf, &ret);
     if (!ret)
         return NULL;

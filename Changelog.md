@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**A path over 1,003 bytes is written whole.** Upstream's `crip_get_path()`
+renders every path into the 1,003 bytes inside the `AVBPrint` itself, which
+`av_bprint_finalize()` hands back cut without a word, and every release of
+this fork shipped that one line unread. With `-D "<root>/{album}"` five times
+over and a 200-byte album, `basic.cue`'s log, cue sheet and both tracks went
+to one 1,003-byte path with no extension, a FLAC stream with the log's text in
+it, while the rip printed `Rip completed:  yes (2 of 2 tracks)` and exited 0.
+A path now renders without a limit, and one the buffer cannot hold is not
+given at all. `tests/naming.c` renders a 1,011-byte path, and fails with the
+old buffer. The same rip now leaves four files, each under its own name.
+
 **Four drive lines say what was asked, and a speed that cannot be set no
 longer stops the rip**, as our round 36 lap 12 S11 proposed and Platterpus's
 lap 13 S5 accepted, with our round 37 lap 1 S8's wording, which their lap 2
