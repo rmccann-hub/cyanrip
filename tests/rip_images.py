@@ -7573,6 +7573,115 @@ def sc_path_component_rules():
             print(f"P7f: {mode}: {folder.relative_to(WORK)} as predicted")
 
 
+def sc_names_shortened():
+    """The fourth path-component rule and its log block, end to end.
+
+    Platterpus's round 36 lap 13 S4: a component a tag value is part of that
+    would exceed 255 bytes is shortened at a character boundary, keeping the
+    track number and the extension, the tags keeping the value whole, and the
+    log saying so, in the wording our round 37 lap 1 S7 gave and their lap 2
+    S5 accepted. Before .28 such a rip failed at the first open with
+    ENAMETOOLONG; their app refuses it before Start until .28 is its default.
+
+    Every expected length here is computed from the inputs, not read from the
+    binary: the block's `N bytes as rendered` against the name the scheme
+    makes of them, and its names against the files on disk.
+    """
+    album = "\u00c4" * 140                       # 280 bytes of UTF-8
+    root = WORK / "names_shortened"
+    ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac,wav",
+                   "-D", f"{root}/{{album}} [{{format}}]",
+                   "-a", f"album={album}", "-t", f"1=title={album}",
+                   "-t", "2=title=Short")
+    if ec != 0:
+        fail(f"names_shortened: cyanrip exited {ec}")
+        print(log)
+        return
+    rendered = {"folder": [len(f"{album} [{f}]".encode()) for f in ("FLAC", "WAV")],
+                "track 1, flac": [len(f"1 - {album}.flac".encode())],
+                "track 1, wav": [len(f"1 - {album}.wav".encode())],
+                "cue sheet": [len(f"{album}.cue".encode())] * 2,
+                "log": [len(f"{album}.log".encode())] * 2}
+
+    m = re.search(r"(?ms)^Names shortened:\n(.*?)\n\n", log)
+    if not m:
+        fail("names_shortened: no `Names shortened:` block in the log")
+        print(log)
+        return
+    if not re.search(r"(?ms)^Pregap searches:\n.*?\n\nNames shortened:\n", log):
+        fail("names_shortened: the block does not follow `Pregap searches:` "
+             "and its blank line, where our round 37 lap 1 S7 put it")
+    entries = []
+    for line in m.group(1).splitlines():
+        # Split from the right on the fixed tail, as Platterpus's reader does:
+        # a name may hold ": " and parentheses
+        e = re.fullmatch(r"    (folder|track \d+, \w+|cue sheet|log): (.*) "
+                         r"\((\d+) bytes as rendered\)", line)
+        if not e:
+            fail(f"names_shortened: a line not of the shape: {line!r}")
+            continue
+        entries.append((e.group(1), e.group(2), int(e.group(3))))
+
+    whats = [w for w, _n, _r in entries]
+    want_order = ["folder", "folder", "track 1, flac", "track 1, wav",
+                  "cue sheet", "cue sheet", "log", "log"]
+    if whats != want_order:
+        fail(f"names_shortened: entries {whats}, where folders, then tracks, "
+             f"then the cue sheets and the logs were expected: {want_order}")
+    for what in rendered:
+        got = sorted(r for w, _n, r in entries if w == what)
+        if got != sorted(rendered[what]):
+            fail(f"names_shortened: {what}: rendered lengths {got}, and the "
+                 f"inputs make {sorted(rendered[what])}")
+
+    on_disk = {p.name: p for p in root.rglob("*")}
+    for what, name, _r in entries:
+        if name not in on_disk:
+            fail(f"names_shortened: {what} {name[:20]!r}... is not a name on disk")
+        elif len(name.encode()) > 255:
+            fail(f"names_shortened: {what} is {len(name.encode())} bytes")
+        if what.startswith("track 1") and not (name.startswith("1 - ")
+                                               and name.endswith("." + what[-4:].strip(" ,"))):
+            fail(f"names_shortened: {what} lost its number or extension: "
+                 f"{name[:8]!r}...{name[-8:]!r}")
+    over = [p for p in on_disk if len(p.encode()) > 255]
+    if over:
+        fail(f"names_shortened: names over 255 bytes on disk: {over}")
+    # crip() reads the log with errors="replace", so a cut inside a
+    # character shows as U+FFFD there, and as a surrogate in a name on disk
+    for what, name, _r in entries:
+        if "\ufffd" in name:
+            fail(f"names_shortened: {what} was cut inside a character")
+    for p in on_disk:
+        try:
+            p.encode("utf-8")
+        except UnicodeEncodeError:
+            fail(f"names_shortened: {p!r} on disk is not UTF-8")
+
+    # The tags keep the value whole
+    flac = next((p for n, p in on_disk.items() if n.endswith(".flac")
+                 and n.startswith("1 - ")), None)
+    if flac is None:
+        fail("names_shortened: no track 1 FLAC on disk")
+    else:
+        title = probe(flac, "-show_entries", "format_tags=title")
+        if title != album:
+            fail(f"names_shortened: the title tag is {len(title.encode())} bytes, "
+                 f"not the 280 given")
+
+    # Nothing shortened, nothing printed
+    ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac", "-D", f"{root}_none",
+                   "-a", "album=Short")
+    if ec != 0 or "Names shortened:" in log:
+        fail(f"names_shortened: a rip shortening nothing exited {ec} or "
+             f"printed the block")
+    if not fails:
+        print(f"names_shortened: {len(entries)} entries, each on disk, the "
+              f"rendered lengths the inputs make")
+
+
 def sc_enhanced_cd():
     """A trailing data track must not be able to publish a garbage disc ID.
 

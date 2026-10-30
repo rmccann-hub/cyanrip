@@ -2306,6 +2306,105 @@ static void setup_track_lsn(cyanrip_ctx *ctx, cyanrip_track *t)
     t->partial_frame_byte_offs = offs;
 }
 
+/* Whether a rip writes this track's file */
+static int crip_track_written(cyanrip_ctx *ctx, const cyanrip_track *t)
+{
+    if (ctx->settings.print_info_only || ctx->settings.generate_cue_only)
+        return 0;
+    if (t->track_is_data && ctx->settings.disable_data_tracks)
+        return 0;
+    if (ctx->settings.rip_indices_count == -1)
+        return 1;
+    for (int i = 0; i < ctx->settings.rip_indices_count; i++)
+        if (ctx->settings.rip_indices[i] == t->number)
+            return 1;
+    return 0;
+}
+
+/* Every path component a tag value is part of that was shortened to fit 255
+ * bytes, the fourth of our round 36 lap 12 S10's rules, which Platterpus's
+ * lap 13 S4 added, in the wording our round 37 lap 1 S7 gave and their lap
+ * 2 S5 accepted: `    <what>: <name as written> (<N> bytes as rendered)`.
+ * Folders come first, in path order, then each track's file in track order,
+ * then the cue sheet and the log, each file or folder once. Nothing is
+ * printed when no name was shortened, or when no file is written, as under
+ * -I. The names come from crip_get_path()'s own rendering, of the tags
+ * known when the header is written: a scheme naming a tag set during the
+ * rip, as `isrc` is by track_read_extra(), renders it then, and its file's
+ * name can differ from the one printed here, as the same-file warning's
+ * can. */
+static void crip_log_short_names(cyanrip_ctx *ctx)
+{
+    if (ctx->settings.print_info_only)
+        return;
+
+    enum { SN_FOLDER, SN_TRACK, SN_CUE, SN_LOG, SN_NB };
+    struct { int kind; char what[64]; char *dir, *name; size_t rendered; } *e = NULL;
+    int nb_e = 0;
+
+    for (int pass = SN_TRACK; pass < SN_NB; pass++) {
+        if (pass == SN_LOG && ctx->settings.generate_cue_only)
+            continue;
+        for (int i = 0; i < (pass == SN_TRACK ? ctx->nb_tracks : 1); i++) {
+            cyanrip_track *t = &ctx->tracks[i];
+            if (pass == SN_TRACK && !crip_track_written(ctx, t))
+                continue;
+            for (int f = 0; f < ctx->settings.outputs_num; f++) {
+                const cyanrip_out_fmt *cfmt = &crip_fmt_info[ctx->settings.outputs[f]];
+                CRIPShortName *names = NULL;
+                int nb_names = 0;
+                crip_get_short_names(ctx, pass == SN_LOG ? CRIP_PATH_LOG :
+                                          pass == SN_CUE ? CRIP_PATH_CUE :
+                                          t->track_is_data ? CRIP_PATH_DATA :
+                                          CRIP_PATH_TRACK,
+                                     cfmt, pass == SN_TRACK ? t : NULL,
+                                     &names, &nb_names);
+                for (int j = 0; j < nb_names; j++) {
+                    int seen = 0;
+                    for (int k = 0; k < nb_e && !seen; k++)
+                        seen = !strcmp(e[k].dir, names[j].dir);
+                    void *tmp = seen ? NULL :
+                                av_realloc_array(e, nb_e + 1, sizeof(*e));
+                    if (!tmp)
+                        continue;
+                    e = tmp;
+                    e[nb_e].kind = names[j].is_file ? pass : SN_FOLDER;
+                    if (e[nb_e].kind == SN_TRACK)
+                        snprintf(e[nb_e].what, sizeof(e[nb_e].what), "track %i, %s",
+                                 t->cd_track_number,
+                                 cyanrip_fmt_desc(ctx->settings.outputs[f]));
+                    else
+                        av_strlcpy(e[nb_e].what,
+                                   e[nb_e].kind == SN_FOLDER ? "folder" :
+                                   e[nb_e].kind == SN_CUE ? "cue sheet" : "log",
+                                   sizeof(e[nb_e].what));
+                    e[nb_e].rendered = names[j].rendered;
+                    e[nb_e].dir = names[j].dir;
+                    e[nb_e].name = names[j].name;
+                    names[j].dir = names[j].name = NULL;
+                    nb_e++;
+                }
+                crip_free_short_names(&names, &nb_names);
+            }
+        }
+    }
+
+    if (nb_e) {
+        cyanrip_log(ctx, 0, "Names shortened:\n");
+        for (int kind = SN_FOLDER; kind < SN_NB; kind++)
+            for (int k = 0; k < nb_e; k++)
+                if (e[k].kind == kind)
+                    cyanrip_log(ctx, 0, "    %s: %s (%zu bytes as rendered)\n",
+                                e[k].what, e[k].name, e[k].rendered);
+        cyanrip_log(ctx, 0, "\n");
+    }
+    for (int k = 0; k < nb_e; k++) {
+        av_free(e[k].dir);
+        av_free(e[k].name);
+    }
+    av_free(e);
+}
+
 static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
 {
     int gaps = 0;
@@ -3858,6 +3957,11 @@ static int cyanrip_run(int argc, char **argv)
             goto end;
         }
     }
+
+    /* After every tag a name can use is set, and before anything else is
+     * logged, so the block follows Pregap searches: as our round 37 lap 1 S7
+     * placed it */
+    crip_log_short_names(ctx);
 
     /* Only generate the CUE sheet, print it, and exit */
     if (ctx->settings.generate_cue_only) {

@@ -639,12 +639,170 @@ static void crip_name_device(cyanrip_ctx *ctx, CRIPName *n)
     }
 }
 
+/* The longest a component may be, in bytes: Linux's NAME_MAX, the fourth
+ * rule's limit */
+#define CRIP_NAME_MAX 255
+
+/* The bytes a cut may take: every value's but the track number's */
+static size_t crip_name_cuttable(const CRIPName *n)
+{
+    size_t c = 0;
+    for (size_t i = 0; i < n->len; i++)
+        c += n->from[i] && !(n->from[i] & CRIP_FROM_NUMBER);
+    return c;
+}
+
+/* Takes excess bytes off the end of the longest value in the component, the
+ * later of two as long, moving the cut back to the start of the character it
+ * falls in, so it takes up to three bytes more. A value shorter than what is
+ * left to take goes whole, and the next longest gives the rest. Returns how
+ * many bytes it took. */
+static int crip_name_cut(CRIPName *n, size_t excess)
+{
+    const size_t len = n->len;
+    uint8_t *del = av_calloc(n->len, 1);
+    if (!del)
+        return AVERROR(ENOMEM);
+
+    while (excess) {
+        /* A value's bytes are one run, or two where the third rule put its
+         * `_` inside one, so counting by run start finds every value */
+        uint16_t v = 0;
+        size_t v_len = 0;
+        for (size_t i = 0; i < n->len; i++) {
+            const uint16_t f = n->from[i];
+            if (!f || (f & CRIP_FROM_NUMBER) || del[i] ||
+                (i && n->from[i - 1] == f && !del[i - 1]))
+                continue;
+            size_t l = 0;
+            for (size_t j = i; j < n->len; j++)
+                l += n->from[j] == f && !del[j];
+            if (l > v_len || (l == v_len && f > v)) {
+                v = f;
+                v_len = l;
+            }
+        }
+        if (!v)
+            break;
+
+        size_t taken = 0;
+        for (size_t i = n->len; i-- > 0;) {
+            if (n->from[i] != v || del[i])
+                continue;
+            del[i] = 1;
+            taken++;
+            if (taken >= excess && ((uint8_t)n->s[i] & 0xC0) != 0x80)
+                break;
+        }
+        excess -= FFMIN(excess, taken);
+    }
+
+    size_t o = 0;
+    for (size_t i = 0; i < n->len; i++) {
+        if (del[i])
+            continue;
+        n->s[o] = n->s[i];
+        n->from[o++] = n->from[i];
+    }
+    n->s[o] = '\0';
+    n->len = o;
+    av_free(del);
+    return len - o;
+}
+
+/* The trimming crip_trim_path_components() does, for one component: a cut
+ * can leave a space at its end or before the extension */
+static void crip_name_trim(CRIPName *n, int is_file)
+{
+    size_t a = 0, b = n->len;
+    while (a < b && (n->s[a] == ' ' || n->s[a] == '\t'))
+        a++;
+    while (b > a && (n->s[b - 1] == ' ' || n->s[b - 1] == '\t'))
+        b--;
+    crip_name_splice(n, b, n->len - b, "", 0, 0);
+    crip_name_splice(n, 0, a, "", 0, 0);
+
+    const char *dot = strrchr(n->s, '.');
+    if (is_file && dot && dot > n->s) {
+        size_t d = dot - n->s, w = d;
+        while (w > 0 && (n->s[w - 1] == ' ' || n->s[w - 1] == '\t'))
+            w--;
+        crip_name_splice(n, w, d - w, "", 0, 0);
+    }
+}
+
+/* The rules, in order, for one component. THE FOURTH, which Platterpus's
+ * lap 13 S4 added on its owner's word of 2026-10-26: a component over 255
+ * bytes is shortened to fit, cutting a value at a character boundary,
+ * keeping the track number and the extension, while the tags keep every
+ * value whole. A component the scheme's own text keeps over the limit is
+ * the caller's, and is left whole for the write to refuse. *rendered is
+ * the length it had as rendered when it was shortened, else 0. */
+static int crip_name_apply(cyanrip_ctx *ctx, CRIPName *n, int is_file,
+                           size_t *rendered)
+{
+    *rendered = 0;
+    for (;;) {
+        crip_name_dots(ctx, n);
+        crip_name_device(ctx, n);
+        if (n->len <= CRIP_NAME_MAX)
+            return 0;
+        if (n->len - crip_name_cuttable(n) > CRIP_NAME_MAX) {
+            *rendered = 0;
+            return 0;
+        }
+        if (!*rendered)
+            *rendered = n->len;
+        /* The check above leaves a cut enough values to take, so one that
+         * takes nothing is a bug, and stopping beats spinning in a rip */
+        int ret = crip_name_cut(n, n->len - CRIP_NAME_MAX);
+        if (ret <= 0) {
+            *rendered = 0;
+            return ret;
+        }
+        crip_name_trim(n, is_file);
+    }
+}
+
+static int crip_short_name_add(CRIPShortName **names, int *nb_names,
+                               const AVBPrint *dir, const CRIPName *n,
+                               size_t rendered, int is_file)
+{
+    CRIPShortName *tmp = av_realloc_array(*names, *nb_names + 1, sizeof(**names));
+    if (!tmp)
+        return AVERROR(ENOMEM);
+    *names = tmp;
+    CRIPShortName *sn = &tmp[*nb_names];
+    sn->dir = av_strndup(dir->str, dir->len);
+    sn->name = av_strdup(n->s);
+    sn->rendered = rendered;
+    sn->is_file = is_file;
+    if (!sn->dir || !sn->name) {
+        av_free(sn->dir);
+        av_free(sn->name);
+        return AVERROR(ENOMEM);
+    }
+    (*nb_names)++;
+    return 0;
+}
+
+void crip_free_short_names(CRIPShortName **names, int *nb_names)
+{
+    for (int i = 0; i < *nb_names; i++) {
+        av_free((*names)[i].dir);
+        av_free((*names)[i].name);
+    }
+    av_freep(names);
+    *nb_names = 0;
+}
+
 /* The rules, for each component a tag value is part of. A component only
  * the scheme's own text makes is left as the caller wrote it. Kept, as the
  * lap that gave the rules said: a leading dot, which is a title's own text
  * and which no system refuses, and a name ending in a space or a dot. */
 static char *crip_name_rules(cyanrip_ctx *ctx, const char *path,
-                             const uint16_t *from)
+                             const uint16_t *from,
+                             CRIPShortName **names, int *nb_names)
 {
     AVBPrint out;
     av_bprint_init(&out, 0, AV_BPRINT_SIZE_UNLIMITED);
@@ -676,12 +834,20 @@ static char *crip_name_rules(cyanrip_ctx *ctx, const char *path,
             n.s[len] = '\0';
             memcpy(n.from, f, len * sizeof(*f));
 
-            crip_name_dots(ctx, &n);
-            crip_name_device(ctx, &n);
-
-            av_bprint_append_data(&out, n.s, n.len);
+            size_t rendered;
+            int ret = crip_name_apply(ctx, &n, !e, &rendered);
+            if (ret >= 0) {
+                av_bprint_append_data(&out, n.s, n.len);
+                if (rendered && names && av_bprint_is_complete(&out))
+                    ret = crip_short_name_add(names, nb_names, &out, &n,
+                                              rendered, !e);
+            }
             av_free(n.s);
             av_free(n.from);
+            if (ret < 0) {
+                av_bprint_finalize(&out, NULL);
+                return NULL;
+            }
         }
 
         if (!e)
@@ -699,8 +865,9 @@ static char *crip_name_rules(cyanrip_ctx *ctx, const char *path,
     return ret;
 }
 
-char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
-                    const cyanrip_out_fmt *fmt, void *arg)
+static char *crip_render_path(cyanrip_ctx *ctx, enum CRIPPathType type,
+                              const cyanrip_out_fmt *fmt, void *arg,
+                              CRIPShortName **names, int *nb_names)
 {
     char *ret = NULL;
     CRIPPathRender r = { 0 };
@@ -773,12 +940,29 @@ end:
 
     crip_trim_path_components(ret, r.from);
 
-    char *named = crip_name_rules(ctx, ret, r.from);
+    char *named = crip_name_rules(ctx, ret, r.from, names, nb_names);
     av_free(r.from);
     av_free(ret);
-    if (!named)
+    return named;
+}
+
+int crip_get_short_names(cyanrip_ctx *ctx, enum CRIPPathType type,
+                         const cyanrip_out_fmt *fmt, void *arg,
+                         CRIPShortName **names, int *nb_names)
+{
+    char *path = crip_render_path(ctx, type, fmt, arg, names, nb_names);
+    if (!path)
+        return AVERROR(ENOMEM);
+    av_free(path);
+    return 0;
+}
+
+char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
+                    const cyanrip_out_fmt *fmt, void *arg)
+{
+    char *ret = crip_render_path(ctx, type, fmt, arg, NULL, NULL);
+    if (!ret)
         return NULL;
-    ret = named;
 
     if (create_dirs) {
         /* Create every directory making up the path */

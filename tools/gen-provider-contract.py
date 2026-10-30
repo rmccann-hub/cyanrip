@@ -1448,6 +1448,20 @@ def component_rules():
     else:
         unresolved.append("naming.c: crip_device_names[] or "
                           "crip_name_device() not found")
+
+    # 4. The length limit, and where the rules run
+    m = re.search(r"#\s*define\s+CRIP_NAME_MAX\s+(\d+)", raw)
+    macro, ok = macro_in("crip_name_apply")
+    if m and ok:
+        lim = int(m.group(1))
+        rules.append({"what": f"a component over {lim} bytes",
+                      "simple": f"shortened to {lim} bytes, as below",
+                      "unicode": f"shortened to {lim} bytes, as below",
+                      "macro": macro, "where": f"naming.c:{line_of(m.start())}",
+                      "limit": lim})
+    else:
+        unresolved.append("naming.c: CRIP_NAME_MAX or crip_name_apply() "
+                          "not found")
     return rules, devices, unresolved
 
 
@@ -2783,6 +2797,25 @@ def emit(binary):
         w("without regard to ASCII case: " + ", ".join(f"`{d}`" for d in devices)
           + ". `_` goes after the name and before the first dot, so `nul.txt`")
         w("is written `nul_.txt`.")
+        w("")
+    lim = next((r["limit"] for r in crules if "limit" in r), None)
+    if lim:
+        w(f"**How a component over {lim} bytes is shortened**, by")
+        w("`crip_name_apply()`, which runs rules 1 and 3 again after each cut,")
+        w("and `crip_name_cut()`. Rule 4 is our round 36 lap 12 S10 with")
+        w("Platterpus's lap 13 S4's fourth rule. The longest value in the")
+        w("component loses bytes from its end, the later of two values as long;")
+        w("a cut that falls inside a UTF-8 character moves back to its start, so")
+        w("up to three more bytes go. A value shorter than what remains to take")
+        w("goes whole, and the next longest gives the rest. The track number,")
+        w("`{track}`'s value, is never cut, and the scheme's own text, the")
+        w("extension with it, never is either. Spaces a cut leaves at the")
+        w("component's end or before its extension are trimmed, as P7b's")
+        w("trimming does. A component that the scheme's own text and the track")
+        w(f"number keep over {lim} bytes is left whole, for the write to refuse.")
+        w("The tags written into the files keep every value whole. Each")
+        w("shortened component is listed in the log's `Names shortened:` block,")
+        w("with the length it had as rendered.")
         w("")
     w("**Kept, as the lap that gave the rules said:** a leading dot, which is")
     w("a title's own text, and a name ending in a space or a dot. A value's")

@@ -1,5 +1,35 @@
 Unreleased
 ==========
+**A component over 255 bytes is shortened to fit, and the log says so**, the
+fourth rule, which Platterpus's round 36 lap 13 S4 added on its owner's word,
+in the wording our round 37 lap 1 S7 gave and their lap 2 S5 accepted. Until
+now such a rip failed at its first open, and their app refuses one before
+Start until `.28` is its default.
+- **The cut**: the longest value in the component loses bytes from its end,
+  the later of two as long, and a cut inside a UTF-8 character moves back to
+  its start. A value shorter than what is left to take goes whole and the
+  next longest gives the rest. The track number and the scheme's own text,
+  the extension with it, are never cut, so a component they alone keep over
+  255 bytes is left whole for the write to refuse. A space the cut leaves at
+  the end or before the extension is trimmed. The tags keep every value whole.
+- **The block**, after `Pregap searches:` or after `Gaps:` when no search
+  ran, only when a name was shortened and only when files are written:
+  `Names shortened:`, then `    <what>: <name as written> (<N> bytes as
+  rendered)` for each, `folder`, `track N, <format>`, `cue sheet` or `log`,
+  folders first, then tracks, the cue sheets and the logs. With two formats
+  there are two cue sheets and two logs, one in each folder, and their lines
+  read alike. The names are rendered from the tags known when the header is
+  written, so a scheme naming a tag set during the rip, as `isrc` is, can
+  name a file otherwise, as the same-file warning already could.
+
+`tests/naming.c` holds the cut, its character boundary, the number, the tie,
+a value going whole and a name left whole; `sc_names_shortened()` rips a
+280-byte album and title in two formats and checks the block against lengths
+computed from its inputs, the names on disk and the whole title in the tag.
+Each part fails with its line reverted. A cut that takes nothing now ends
+the loop: two of those reverts spun it forever before it did. P7f gains rule
+4.
+
 **A path component a tag value is part of follows three rules**, as our
 round 36 lap 12 S10 gave them and Platterpus's lap 13 S4 accepted. Measured
 at `ed37997` with `-D <root>/{album_artist}/{album}` in all four `-T`

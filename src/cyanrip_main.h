@@ -666,6 +666,21 @@ int crip_check_scheme(cyanrip_ctx *ctx, const char *scheme);
 char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
                     const cyanrip_out_fmt *fmt, void *arg);
 
+/* A path component crip_get_path() shortened to fit 255 bytes */
+typedef struct CRIPShortName {
+    char *dir;       /* the path up to and including the component */
+    char *name;      /* the component as written */
+    size_t rendered; /* its length in bytes as rendered */
+    int is_file;     /* the path's last component */
+} CRIPShortName;
+
+/* Appends each component of the path crip_get_path() gives that was
+ * shortened, left to right; free with crip_free_short_names() */
+int crip_get_short_names(cyanrip_ctx *ctx, enum CRIPPathType type,
+                         const cyanrip_out_fmt *fmt, void *arg,
+                         CRIPShortName **names, int *nb_names);
+void crip_free_short_names(CRIPShortName **names, int *nb_names);
+
 /* Prepend key1= and key2= to the first two keyless entries of a
  * key=value:key=value string, minding escapes. Key 1 and 2 must be set. */
 char *append_missing_keys(const char *src, const char *key1, const char *key2);

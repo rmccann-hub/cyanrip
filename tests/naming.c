@@ -48,6 +48,14 @@ static void check_str(const char *what, char *got, const char *want)
     av_free(got);
 }
 
+/* n bytes of ch in buf, which must hold n + 1 */
+static char *repeat(char *buf, char ch, int n)
+{
+    memset(buf, ch, n);
+    buf[n] = '\0';
+    return buf;
+}
+
 static void check_track_path(const char *scheme, cyanrip_track *t,
                              const char *want)
 {
@@ -190,6 +198,115 @@ int main(void)
             av_dict_set(&t->meta, "title", "Title", 0);
         }
         ctx.settings.sanitize_method = CRIP_SANITIZE_UNICODE;
+    }
+
+    /* The fourth rule: a component over 255 bytes is shortened by cutting
+     * a value at a character boundary, never the track number, never the
+     * scheme's own text (Platterpus's round 36 lap 13 S4) */
+    {
+        static char want[1024];
+        char *v1 = av_malloc(400), *v2 = av_malloc(400);
+        if (!v1 || !v2) {
+            printf("FAIL: allocation\n");
+            return 1;
+        }
+
+        /* The title loses what the component is over: 4 + 300 + 5 bytes */
+        av_dict_set(&t->meta, "title", repeat(v1, 'x', 300), 0);
+        snprintf(want, sizeof(want), "folder/1 - %s.flac", repeat(v2, 'x', 246));
+        check_track_path("{track} - {title}", t, want);
+
+        /* The track number is kept wherever the scheme puts it */
+        snprintf(want, sizeof(want), "folder/%s 1.flac", repeat(v2, 'x', 248));
+        check_track_path("{title} {track}", t, want);
+
+        /* Never inside a character: 55 bytes over, and a two-byte Ä at the
+         * cut, so 56 go and the name is 254 bytes */
+        strcpy(v1, "x");
+        for (int i = 0; i < 150; i++)
+            strcat(v1, "\xC3\x84");
+        av_dict_set(&t->meta, "title", v1, 0);
+        v1[1 + 2 * 122] = '\0';
+        snprintf(want, sizeof(want), "folder/1 - %s.flac", v1);
+        check_track_path("{track} - {title}", t, want);
+
+        /* A space the cut leaves before the extension is trimmed */
+        repeat(v1, 'a', 245);
+        strcat(v1, " ");
+        memset(v1 + 246, 'b', 60);
+        v1[306] = '\0';
+        av_dict_set(&t->meta, "title", v1, 0);
+        snprintf(want, sizeof(want), "folder/1 - %s.flac", repeat(v2, 'a', 245));
+        check_track_path("{track} - {title}", t, want);
+
+        /* The longest value is cut, and of two as long the later */
+        ctx.settings.folder_name_scheme = "{album} - {album_artist}";
+        av_dict_set(&ctx.meta, "album", repeat(v1, 'a', 200), 0);
+        av_dict_set(&ctx.meta, "album_artist", repeat(v1, 'b', 100), 0);
+        snprintf(want, sizeof(want), "%s - %s/1.flac", repeat(v1, 'a', 152),
+                 repeat(v2, 'b', 100));
+        check_track_path("{track}", t, want);
+        av_dict_set(&ctx.meta, "album", repeat(v1, 'a', 150), 0);
+        av_dict_set(&ctx.meta, "album_artist", repeat(v1, 'b', 150), 0);
+        snprintf(want, sizeof(want), "%s - %s/1.flac", repeat(v1, 'a', 150),
+                 repeat(v2, 'b', 102));
+        check_track_path("{track}", t, want);
+
+        /* 250 + 3 + 60 is 58 over, all from the longest */
+        av_dict_set(&ctx.meta, "album", repeat(v1, 'a', 250), 0);
+        av_dict_set(&ctx.meta, "album_artist", repeat(v1, 'b', 60), 0);
+        snprintf(want, sizeof(want), "%s - %s/1.flac", repeat(v1, 'a', 192),
+                 repeat(v2, 'b', 60));
+        check_track_path("{track}", t, want);
+        av_dict_set(&ctx.meta, "album", repeat(v1, 'a', 10), 0);
+        av_dict_set(&ctx.meta, "album_artist", repeat(v1, 'b', 300), 0);
+        ctx.settings.folder_name_scheme = "{album}{album_artist}{album}";
+        snprintf(want, sizeof(want), "%s%s%s/1.flac", repeat(v1, 'a', 10),
+                 repeat(v2, 'b', 235), "aaaaaaaaaa");
+        check_track_path("{track}", t, want);
+
+        /* A value shorter than what is left to take goes whole, and the
+         * next longest gives the rest: 250 + 10 + 8 is 13 over, so the
+         * 10-byte value goes and the 8-byte one loses 3 */
+        char lit[300];
+        snprintf(lit, sizeof(lit), "%s{album}{album_artist}", repeat(v2, 'L', 250));
+        ctx.settings.folder_name_scheme = lit;
+        av_dict_set(&ctx.meta, "album", repeat(v1, 'a', 10), 0);
+        av_dict_set(&ctx.meta, "album_artist", repeat(v1, 'b', 8), 0);
+        snprintf(want, sizeof(want), "%s%s/1.flac", repeat(v1, 'L', 250),
+                 repeat(v2, 'b', 5));
+        check_track_path("{track}", t, want);
+
+        /* Nor is the track number cut, so a name that only cutting it
+         * would bring to 255 bytes is left whole: 250 + 2 + 1 + 5 */
+        ctx.settings.folder_name_scheme = "folder";
+        char scheme4[300];
+        snprintf(scheme4, sizeof(scheme4), "%s{title}{track}", repeat(v2, 'L', 250));
+        av_dict_set(&t->meta, "title", "xy", 0);
+        snprintf(want, sizeof(want), "folder/%sxy1.flac", v2);
+        check_track_path(scheme4, t, want);
+
+        /* and is never the longest value: 248 + 1 + 2 + 5 is 1 over, and the
+         * one-byte title goes, not the two-digit number */
+        snprintf(scheme4, sizeof(scheme4), "%s{title}{track}", repeat(v2, 'L', 248));
+        av_dict_set(&t->meta, "title", "x", 0);
+        av_dict_set(&t->meta, "track", "12", 0);
+        snprintf(want, sizeof(want), "folder/%s12.flac", v2);
+        check_track_path(scheme4, t, want);
+        av_dict_set(&t->meta, "track", "1", 0);
+
+        /* The scheme's own text over the limit is the caller's: left whole */
+        ctx.settings.folder_name_scheme = "folder";
+        snprintf(want, sizeof(want), "folder/%s1.flac", repeat(v2, 'L', 260));
+        char scheme[300];
+        snprintf(scheme, sizeof(scheme), "%s{track}", v2);
+        check_track_path(scheme, t, want);
+
+        av_dict_set(&ctx.meta, "album", "Album", 0);
+        av_dict_set(&ctx.meta, "album_artist", NULL, 0);
+        av_dict_set(&t->meta, "title", "Title", 0);
+        av_free(v1);
+        av_free(v2);
     }
 
     /* Track number zero padding, driven by the track count */
