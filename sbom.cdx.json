@@ -1046,6 +1046,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/upstream_issues.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tools/commit-map.py"
         },
         {
@@ -1376,5 +1380,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:ba6a0558-ac9f-57ad-9e80-25734d8a1034"
+  "serialNumber": "urn:uuid:1f1b3056-3fd6-5ba2-82a4-a29050418408"
 }
