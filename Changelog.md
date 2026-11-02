@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Our round 37 lap 3 is released, announcing `.28`**, on our operator's word
+of 2026-10-29, *"you have permission to do everything you need to do to get
+to .28"*. `.28` is built and not released. The lap gives what it carries,
+each item with its commit, and proposes `seam-commands.md`'s §1b row for
+`--reread-time-limit`, §7's regenerated `-S` rows and its `--diagnostics`
+write-failure row for Platterpus to copy. One thing waits: `Drive used:` on a
+disc image keeps libcdio's revision, a clause their round 36 lap 13 S5 never
+accepted, because the golden checks read libcdio's version from it. `.28` is
+published on their answer, and round 37's pin moves to it then.
+
 **A component over 255 bytes is shortened to fit, and the log says so**, the
 fourth rule, which Platterpus's round 36 lap 13 S4 added on its owner's word,
 in the wording our round 37 lap 1 S7 gave and their lap 2 S5 accepted. Until
