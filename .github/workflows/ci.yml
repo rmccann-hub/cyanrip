@@ -22,6 +22,15 @@ on:
   # A run by hand, from the Actions tab. GitHub offers it only for a workflow
   # on the default branch, which is now platterpus-fork.
   workflow_dispatch:
+  # Daily, and only the mingw job: every other job is off on a schedule. It
+  # keeps the Windows libraries' cache in platterpus-fork's scope, which every
+  # pull request reads; a cache a pull request saves is that pull request's
+  # own. The key follows MSYS2's packages, and an update moved it between
+  # 2026-10-29 and 2026-11-02, so PR #75's first runs each rebuilt the
+  # libraries: 20 to 23 minutes, against 2 from the cache. A schedule runs on
+  # the default branch, so its run saves where they can all read it.
+  schedule:
+    - cron: '17 9 * * *'
 
 # Read-only unless a job says otherwise, and only the two upload jobs below do.
 permissions:
@@ -42,8 +51,9 @@ jobs:
     # A release event names a commit this job already tested when it was
     # pushed to platterpus-fork, and the banner is the commit's, not the
     # tag's, so a re-run here tests nothing new. Only mingw-release needs the
-    # event, for the binary it attaches.
-    if: github.event_name != 'release'
+    # event, for the binary it attaches. A schedule runs only mingw, for its
+    # cache, so this and every other job but mingw is off on one.
+    if: github.event_name != 'release' && github.event_name != 'schedule'
     # Not ubuntu-26.04, unlike the other Linux jobs. The golden reference is
     # generated on Ubuntu 24.04 (libcdio 2.1, libavcodec 60), and its two
     # checks compare a fresh rip only where the library set is the same
@@ -180,7 +190,7 @@ jobs:
   # offline: actionlint's release binary, checked against the SHA-256 its
   # release publishes, and zizmor's wheel, by the hash PyPI gives.
   lint:
-    if: github.event_name != 'release'
+    if: github.event_name != 'release' && github.event_name != 'schedule'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -233,7 +243,7 @@ jobs:
   # fails the job, and libFuzzer prints the input that found it. Ubuntu
   # 24.04's clang 18, as the session that wrote the harnesses ran them.
   fuzz:
-    if: github.event_name != 'release'
+    if: github.event_name != 'release' && github.event_name != 'schedule'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -270,7 +280,7 @@ jobs:
           done
 
   macos:
-    if: github.event_name != 'release'
+    if: github.event_name != 'release' && github.event_name != 'schedule'
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -311,7 +321,7 @@ jobs:
   # a failure here and not an unprobed 77. Before the move there is no evidence
   # branch, the files are in the checkout, and each check runs on them there.
   evidence:
-    if: github.event_name != 'release'
+    if: github.event_name != 'release' && github.event_name != 'schedule'
     runs-on: ubuntu-26.04
     timeout-minutes: 60
     steps:

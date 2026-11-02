@@ -228,6 +228,24 @@ if got_conc != want_conc:
     fail(f"ci.yml: concurrency is {got_conc}; it must cancel a pull "
          f"request's superseded run and nothing else: {want_conc}")
 
+# The daily schedule runs the mingw job alone, to keep the Windows libraries'
+# cache in platterpus-fork's scope where every pull request reads it. A job
+# runs on a schedule unless its condition rules that out; a whole suite a day
+# would be a cost nobody chose.
+if not re.search(r"^  schedule:\n(?:\s+#.*\n)*\s+- cron: '[^']+'$", ci, re.M):
+    fail("ci.yml: no daily schedule, so the Windows libraries' cache lives "
+         "only where a pull request saved it, which no other one reads")
+on_schedule = []
+for job, body in jobs(ci.splitlines()).items():
+    cond = re.search(r"^    if:\s*(.+)$", "\n".join(body), re.M)
+    cond = cond.group(1) if cond else ""
+    if not re.search(r"github\.event_name (!= 'schedule'|== 'release'|"
+                     r"== 'push')", cond):
+        on_schedule.append(job)
+if on_schedule != ["mingw"]:
+    fail(f"ci.yml: the jobs a schedule runs are {on_schedule}; it is for the "
+         "mingw job's cache alone")
+
 tag = (WF / "tag-release.yml").read_text(encoding="utf-8") \
     if (WF / "tag-release.yml").exists() else ""
 if "tools/tag-release-check.py" not in tag:
