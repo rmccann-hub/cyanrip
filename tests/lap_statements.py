@@ -473,8 +473,9 @@ laps = [p for p in sorted((ROOT / "docs" / "handshake").glob("round-*.md"))
 #     do not touch one another. One at a time this section grew with every
 #     lap we sent: with 51 of them the whole test took 38.9 s alone on
 #     2026-11-02, and 24.5 s with them checked this way; CI's macOS runner
-#     had taken it to 95.3 s of its 120 s timeout on 2026-10-29. Results are
-#     reported in lap order.
+#     had taken it to 95.3 s of its 120 s timeout on 2026-10-29. Two at a time,
+#     not one per core: this runs beside the suite's other long tests, and a
+#     check per core starved them. Results are reported in lap order.
 import concurrent.futures
 
 
@@ -484,7 +485,7 @@ def _check_committed(p):
                           encoding="utf-8")
 
 
-with concurrent.futures.ThreadPoolExecutor(os.cpu_count() or 1) as _pool:
+with concurrent.futures.ThreadPoolExecutor(2) as _pool:
     _committed = list(_pool.map(_check_committed, laps))
 for p, r in zip(laps, _committed):
     if r.returncode != 0:

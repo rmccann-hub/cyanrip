@@ -27,16 +27,17 @@ commit carrying this sentence**.
 **The lap checker's test checks our sent laps a few at a time.** It re-checks
 every lap we have sent, 51 now, one process each, and one at a time that grew
 with every lap: 38.9 s alone here, and 95.3 s of its 120 s timeout on CI's
-macOS runner on 2026-10-29. Run concurrently, the test takes 24.5 s here.
-Its comment in `tests/meson.build` still said 5.9 s, and says what was
-measured now.
+macOS runner on 2026-10-29. Run two at a time, the test takes 25.8 s here;
+one per core was 24.5 s and starved the long tests running beside it. Its
+comment in `tests/meson.build` still said 5.9 s, and says what was measured
+now.
 
 **The suite starts the black-box sweep first.** It must run alone, and meson
 starts such a test only once every running test has finished, so registered
 late it waited 29 s at 1231de5 for Settled facts with three of four cores
-idle. Started first there is nothing to wait for, and the five long tests
-that run beside others follow at the next priority: the suite here went from
-292 s to 246 s, one run each.
+idle. Started first there is nothing to wait for. The other long tests keep
+their order: starting all five together at the next priority took Settled
+facts past its 120 s on CI's thread row twice, and they are left as they were.
 
 **CI spends less time on runs nobody needs.** A pull request's run is now
 cancelled when a newer commit is pushed to it (`f067950`): on 2026-11-02
