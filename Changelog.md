@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**CI's thread row no longer fails now and then on a race TSan cannot see
+ordered.** `deemph_with_hdcd` failed there with one ThreadSanitizer warning on
+#76, as our notes record it did on #69's. Reproduced here, once in 72 runs
+six at a time: the main thread's `av_buffer_pool_uninit()`, freeing the PCM
+decoder at the flush, destroys the pool's mutex after an encoder thread locked
+it in `pool_release_buffer()`, the two ordered by the pool's reference count,
+an atomic in Ubuntu's uninstrumented libavutil. `tests/tsan.supp` names
+`av_buffer_pool_uninit` beside its two entries of the same kind. Over 120 rips
+of that scenario it matched 4 times, with no warning; without it, 2 of 120
+failed on exactly that report.
+
 **The upstream issues file gives the same answer in every clone.** Dumbass
 us pushed #75 twice with `docs/upstream/issues-to-file.md` current here and
 stale in CI, a CI round each: this clone's `master` branch sat at `7dbe56a`
