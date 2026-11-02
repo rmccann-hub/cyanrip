@@ -30,7 +30,8 @@ in CI. Minimum versions are pinned in `src/meson.build`.
 
 **The full suite passes before every push** (the operator's rule, kept
 2026-10-19): meson exit 0, `Fail: 0`, and exactly one `^Log of Meson test suite
-run` header in `build/meson-logs/testlog.txt`. Remove that log first, check no
+run` header in `build/meson-logs/testlog.txt`. `git fetch origin master` first,
+or Settled facts reads a staler upstream than CI's. Remove that log, check no
 other run is going, by path or PID, and edit nothing while it runs: two runs on
 one build directory write a log that is neither run.
 
