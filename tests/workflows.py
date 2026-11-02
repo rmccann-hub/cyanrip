@@ -214,6 +214,20 @@ for event in ("push", "pull_request"):
     if got != ["platterpus-fork"]:
         fail(f"ci.yml: the {event} trigger names {got}, not [platterpus-fork]")
 
+# A pull request's superseded run is cancelled, and nothing else is: a run on
+# platterpus-fork is the record of what was pushed there. A group shared by
+# every event would let one push cancel another's run.
+conc = top_block(ci.splitlines(), "concurrency") or []
+want_conc = {
+    "group": "ci-${{ github.event_name == 'pull_request' && "
+             "format('pr-{0}', github.event.pull_request.number) || "
+             "format('run-{0}', github.run_id) }}",
+    "cancel-in-progress": "${{ github.event_name == 'pull_request' }}"}
+got_conc = dict(ln.split(": ", 1) for ln in conc if ": " in ln)
+if got_conc != want_conc:
+    fail(f"ci.yml: concurrency is {got_conc}; it must cancel a pull "
+         f"request's superseded run and nothing else: {want_conc}")
+
 tag = (WF / "tag-release.yml").read_text(encoding="utf-8") \
     if (WF / "tag-release.yml").exists() else ""
 if "tools/tag-release-check.py" not in tag:

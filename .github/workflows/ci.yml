@@ -27,6 +27,16 @@ on:
 permissions:
   contents: read
 
+# A pull request's run is cancelled when a newer commit is pushed to it. On
+# 2026-11-02 PR #75 had three runs going at once, two of them on commits
+# already replaced, queued for the same scarce macOS runners and each
+# rebuilding the Windows libraries. Only a pull request's: every other run
+# has a group of its own, so a run on platterpus-fork, the record of what was
+# pushed there, is never cancelled by another.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   linux:
     # A release event names a commit this job already tested when it was
