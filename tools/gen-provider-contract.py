@@ -1330,13 +1330,19 @@ def sanitize_writes():
     at all.
     """
     text = open(os.path.join(SRC, "naming.c"), encoding="utf-8").read()
-    body, start = _fn_body(blank_noncode(text),
+    blanked = blank_noncode(text)
+    body, start = _fn_body(blanked,
                            re.compile(r"crip_bprint_sanitize\s*\([^;{}]*?\)\s*\n?\s*\{"))
     if body is None:
         return []
+    # The call is found in the blanked text, so a comment cannot contribute
+    # one, and its argument is read from the source at the same offsets,
+    # since blanking empties a string literal: the U+FFFD write was listed
+    # as "unclassified -- ``" until 2026-10-30 for exactly that.
+    raw_body = text[blanked.index(body):blanked.index(body) + len(body)]
     out = []
     for m in re.finditer(r"(av_bprint_\w+)\s*\(([^;{}]*?)\)\s*;", body, re.S):
-        args = [a.strip() for a in m.group(2).split(",")]
+        args = [a.strip() for a in raw_body[m.start(2):m.end(2)].split(",")]
         line = start + body[:m.start()].count("\n")
         out.append((line, m.group(1), args[1] if len(args) > 1 else "?"))
     return out
@@ -1355,6 +1361,109 @@ def sanitize_callsites():
         line = blanked[:m.start()].count("\n") + 1
         out.append((line, args[-1] if args else "?"))
     return out
+
+
+def component_rules():
+    """Round 36 lap 12 S10's rules for a path component a tag value is part
+    of, as src/naming.c builds them: what each writes, which macro limits it
+    in the os_ modes, and the device names. Every part is read from the code
+    that does it -- the glyphs from their initialisers, the control range and
+    its macro from the condition that tests them, and a rule's macro from the
+    body of the function that applies it, so a rule that gained or lost one
+    changes its columns here with no edit to this file.
+
+    Returns (rules, devices, unresolved). A rule is a dict with `what`,
+    `simple`, `unicode`, `macro` (None when the function reads none: every
+    mode) and `where`.
+    """
+    path = os.path.join(SRC, "naming.c")
+    raw = open(path, encoding="utf-8").read()
+    blanked = blank_noncode(raw)
+    unresolved, rules = [], []
+
+    def line_of(off):
+        return raw[:off].count("\n") + 1
+
+    def macro_in(fn):
+        body, _ = _fn_body(blanked, re.compile(
+            r"\b" + fn + r"\s*\([^;{}]*?\)\s*\n?\s*\{"))
+        if body is None:
+            unresolved.append(f"naming.c: {fn}() not found")
+            return None, False
+        found = sorted(set(re.findall(r"\b(HAS_[A-Z0-9_]+)\b", body)))
+        if len(found) > 1:
+            unresolved.append(f"naming.c: {fn}() reads {', '.join(found)}; "
+                              f"one macro per rule is what this table shows")
+        return (found[0] if found else None), True
+
+    # 1. `.` and `..`
+    m = re.search(r"crip_dot_replacement\s*=\s*\{\s*'(\\?.)'\s*,\s*\"(.*?)\"\s*\}",
+                  raw)
+    macro, ok = macro_in("crip_name_dots")
+    if m and ok:
+        rules.append({"what": "a component that is `.` or `..`",
+                      "simple": f"each dot as `{c_char(m.group(1))}`",
+                      "unicode": f"each dot as `{m.group(2)}` "
+                                 f"(`U+{ord(m.group(2)):04X}`)",
+                      "macro": macro, "where": f"naming.c:{line_of(m.start())}"})
+    else:
+        unresolved.append("naming.c: crip_dot_replacement or crip_name_dots() "
+                          "not found")
+
+    # 2. A value's control characters, in crip_bprint_sanitize()
+    m = re.search(r"if\s*\(([^{]*?cp\s*>=\s*(0x[0-9A-Fa-f]+)\s*&&\s*cp\s*<=\s*"
+                  r"(0x[0-9A-Fa-f]+)[^{]*?)\)\s*\{", blanked, re.S)
+    pic = re.search(r"ctl_u\[\d*\]\s*=\s*\{\s*(0x[0-9A-Fa-f]+)\s*,\s*"
+                    r"(0x[0-9A-Fa-f]+)\s*,\s*(0x[0-9A-Fa-f]+)\s*\+\s*cp\s*\}", raw)
+    if m and pic:
+        lo, hi = int(m.group(2), 16), int(m.group(3), 16)
+        macros = re.findall(r"\b(HAS_[A-Z0-9_]+)\b", m.group(1))
+        b = [int(x, 16) for x in pic.groups()]
+        first = bytes([b[0], b[1], b[2] + lo]).decode("utf-8")
+        last = bytes([b[0], b[1], b[2] + hi]).decode("utf-8")
+        rules.append({"what": f"a value's `U+{lo:04X}` to `U+{hi:04X}`",
+                      "simple": "each as `_`",
+                      "unicode": f"each as its Control Picture, `{first}` "
+                                 f"(`U+{ord(first):04X}`) to `{last}` "
+                                 f"(`U+{ord(last):04X}`)",
+                      "macro": macros[0] if len(macros) == 1 else None,
+                      "where": f"naming.c:{line_of(m.start())}"})
+        if len(macros) != 1:
+            unresolved.append(f"naming.c:{line_of(m.start())}: the control "
+                              f"range's condition reads {macros or 'no macro'}")
+    else:
+        unresolved.append("naming.c: the control range or its Control "
+                          "Picture not found in crip_bprint_sanitize()")
+
+    # 3. Device names
+    m = re.search(r"crip_device_names\[\]\s*=\s*\{(.*?)\};", raw, re.S)
+    devices = re.findall(r'"([^"]+)"', m.group(1)) if m else []
+    macro, ok = macro_in("crip_name_device")
+    if devices and ok:
+        rules.append({"what": "a component whose name before its first dot is "
+                              "a device name below, in any case",
+                      "simple": "`_` after the name",
+                      "unicode": "`_` after the name",
+                      "macro": macro, "where": f"naming.c:{line_of(m.start())}"})
+    else:
+        unresolved.append("naming.c: crip_device_names[] or "
+                          "crip_name_device() not found")
+
+    # 4. The length limit, and where the rules run
+    m = re.search(r"#\s*define\s+CRIP_NAME_MAX\s+(\d+)", raw)
+    macro, ok = macro_in("crip_name_apply")
+    if m and ok:
+        lim = int(m.group(1))
+        rules.append({"what": f"a component over {lim} bytes",
+                      "simple": f"shortened to {lim} bytes, as below",
+                      "unicode": f"shortened to {lim} bytes, as below",
+                      "macro": macro, "where": f"naming.c:{line_of(m.start())}",
+                      "limit": lim})
+    else:
+        unresolved.append("naming.c: CRIP_NAME_MAX or crip_name_apply() "
+                          "not found")
+    return rules, devices, unresolved
+
 
 def diag_schema_literal():
     """The `schema` string diagnostics.c emits, and its file:line.
@@ -2439,9 +2548,11 @@ def emit(binary):
         for u in row_unresolved:
             w(f"- `{u}`")
         w("")
-    w("**Anything not in the `character` column is passed through unchanged**")
-    w("-- no length limit, no case folding, no whitespace collapsing, no")
-    w("trailing-dot handling. That is an absence, so here is what it rests on")
+    w("**Anything not in the `character` column is passed through unchanged")
+    w("by this table.** What else changes a name is P7f's, for a path")
+    w("component a tag value is part of, and the trimming of spaces at a")
+    w("component's edges and before the extension; there is no case folding")
+    w("and no whitespace collapsing. That is an absence, so here is what it rests on")
     w("rather than an assurance: these are every call in")
     w("`crip_bprint_sanitize()` that writes to the output buffer, enumerated")
     w("from the function body. A transformation this table does not describe")
@@ -2452,6 +2563,12 @@ def emit(binary):
     for line, call, arg in sanitize_writes():
         if "pos" in arg:
             what = "the input, verbatim"
+        elif arg == '"\\xEF\\xBF\\xBD"':
+            what = "`U+FFFD`, in place of a byte that is not UTF-8"
+        elif "ctl_u" in arg:
+            what = "a value's control character's Control Picture, P7f's rule 2"
+        elif arg == "'_'":
+            what = "`_` for a value's control character, P7f's rule 2"
         elif "to_u" in arg:
             what = "the `unicode` glyph, from the table"
         elif "rep->to" in arg:
@@ -2625,6 +2742,90 @@ def emit(binary):
         w("**Unresolved while deriving this section:**")
         w("")
         for u in mode_unresolved:
+            w(f"- `{u}`")
+        w("")
+
+    w("### P7f - Rules for a path component a tag value is part of")
+    w("")
+    w("**From our round 36 lap 12 S10, which Platterpus's lap 13 S4")
+    w("accepted.** A component is the text between two separators. It is a")
+    w("**component a tag value is part of** when any byte of it came from a")
+    w("`{tag}` that resolved to a value: `crip_render_mark()` records each")
+    w("byte's origin as the path is rendered, and a byte of the scheme's own")
+    w("text, or of what `crip_get_path()` adds itself, is not a value's. The")
+    w("rules apply to such a component after P7b's substitutions and the")
+    w("trimming of spaces, and a component only the scheme's own text makes is")
+    w("left as the caller wrote it, as `-D ../x` or `-D CON` is. A tag that")
+    w("does not resolve is the scheme's text (P7d). The cover art's file name is")
+    w("its title, rendered as the scheme's text, so these rules leave it alone.")
+    w("")
+    crules, devices, cr_unresolved = component_rules()
+    w("| rule | applies to | `simple` | `unicode` | "
+      + " | ".join(f"`os_simple` {label(c)} | `os_unicode` {label(c)}"
+                   for c in states) + " | read at |")
+    w("|---|---|---|---|" + "---|---|" * len(states) + "---|")
+    for n, r in enumerate(crules, 1):
+        def oscell(glyph, cond, r=r):
+            if r["macro"] is None:
+                return glyph
+            a = avail(r["macro"], cond)
+            if a is None:
+                return "**unresolved**"
+            return "unchanged" if a else glyph
+        w(f"| {n} | {r['what']} | {r['simple']} | {r['unicode']} | "
+          + " | ".join(f"{oscell(r['simple'], c)} | {oscell(r['unicode'], c)}"
+                       for c in states)
+          + f" | `{r['where']}` |")
+    w("")
+    for n, r in enumerate(crules, 1):
+        if r["macro"] is None:
+            w(f"Rule {n} reads no availability macro, so it applies in every")
+            w("mode on every system.")
+        else:
+            d = defaults.get(r["macro"])
+            ovs = [f"`{cond}`, where it is `{m[r['macro']][0]}` "
+                   f"(`os_compat.h:{m[r['macro']][1]}`)"
+                   for cond, m in sorted(overrides.items()) if r["macro"] in m]
+            w(f"Rule {n}'s `os_` columns follow `{r['macro']}`: "
+              + (f"`{d[0]}` by default (`os_compat.h:{d[2]}`)" if d else
+                 "**no default**")
+              + ("; set under " + "; ".join(ovs) if ovs else "") + ".")
+        w("")
+    if devices:
+        w(f"**The {len(devices)} device names**, from `crip_device_names[]`, "
+          "compared")
+        w("without regard to ASCII case: " + ", ".join(f"`{d}`" for d in devices)
+          + ". `_` goes after the name and before the first dot, so `nul.txt`")
+        w("is written `nul_.txt`.")
+        w("")
+    lim = next((r["limit"] for r in crules if "limit" in r), None)
+    if lim:
+        w(f"**How a component over {lim} bytes is shortened**, by")
+        w("`crip_name_apply()`, which runs rules 1 and 3 again after each cut,")
+        w("and `crip_name_cut()`. Rule 4 is our round 36 lap 12 S10 with")
+        w("Platterpus's lap 13 S4's fourth rule. The longest value in the")
+        w("component loses bytes from its end, the later of two values as long;")
+        w("a cut that falls inside a UTF-8 character moves back to its start, so")
+        w("up to three more bytes go. A value shorter than what remains to take")
+        w("goes whole, and the next longest gives the rest. The track number,")
+        w("`{track}`'s value, is never cut, and the scheme's own text, the")
+        w("extension with it, never is either. Spaces a cut leaves at the")
+        w("component's end or before its extension are trimmed, as P7b's")
+        w("trimming does. A component that the scheme's own text and the track")
+        w(f"number keep over {lim} bytes is left whole, for the write to refuse.")
+        w("The tags written into the files keep every value whole. Each")
+        w("shortened component is listed in the log's `Names shortened:` block,")
+        w("with the length it had as rendered.")
+        w("")
+    w("**Kept, as the lap that gave the rules said:** a leading dot, which is")
+    w("a title's own text, and a name ending in a space or a dot. A value's")
+    w("tab is `U+0009`, so where rule 2 applies a tab is written as `_` or")
+    w("`\u2409` and is no longer trimmed at a component's edge.")
+    w("")
+    if cr_unresolved:
+        w("**Unresolved while deriving this section:**")
+        w("")
+        for u in cr_unresolved:
             w(f"- `{u}`")
         w("")
 

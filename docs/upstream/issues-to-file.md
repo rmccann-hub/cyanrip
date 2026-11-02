@@ -1,14 +1,14 @@
-# 27 upstream issues for cyanreg/cyanrip, ready to paste
+# 28 upstream issues for cyanreg/cyanrip, ready to paste
 
-**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `9a68f3cff0a62242`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
+**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `3d6a987aa0b4845a`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
 
-**Items 1 to 23 were filed on 2026-10-16**, by the operator, as one issue combining them in the order of importance below: <https://github.com/cyanreg/cyanrip/issues/167>. That link is the operator's word; this file's generator does not read upstream's tracker. An item asked for as an issue of its own is pasted from here. **Items 24 to 27 are not filed yet**: they go to the same issue as a comment, or each as an issue of its own, as the operator decides.
+**Items 1 to 23 were filed on 2026-10-16**, by the operator, as one issue combining them in the order of importance below: <https://github.com/cyanreg/cyanrip/issues/167>. That link is the operator's word; this file's generator does not read upstream's tracker. An item asked for as an issue of its own is pasted from here. **Items 24 to 28 are not filed yet**: they go to the same issue as a comment, or each as an issue of its own, as the operator decides.
 
 **How to file.** For each item: open <https://github.com/cyanreg/cyanrip/issues/new>, paste the **Title** line into the title box and everything between the two `BODY` markers into the body. File them in order: item 5 refers to item 4, so once item 4 is filed you can replace *"item 4 of this set"* in item 5 with its issue link. Before filing, a quick search of upstream's open issues for each title's key words avoids a duplicate; this list was not checked against their tracker.
 
 **Suggested order of importance**, if you file only some: 6 (apostrophes corrupt metadata on real rips), 8 (disc images rip corrupted audio with `Ripping errors: 0`), 19 (with libcdio 2.3.0 or later, every image rip without `-s` stops at `Offset is unset!`), 1 and 2 (a hung or cut-off process with the drive held), 4 and 5 (`-H` silently drops de-emphasis and the log claims it), then the rest.
 
-## Item 1 of 27
+## Item 1 of 28
 
 **Title:** The signal handler calls `cyanrip_log()`, which is not async-signal-safe
 
@@ -45,7 +45,7 @@ SIGTERM, and a -Z loop that ignored both").
 
 <!-- BODY END -->
 
-## Item 2 of 27
+## Item 2 of 28
 
 **Title:** SIGTERM is not handled at all
 
@@ -72,7 +72,7 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 
 <!-- BODY END -->
 
-## Item 3 of 27
+## Item 3 of 28
 
 **Title:** `cyanrip_log_finish_report()` sits above `end:`, so every `goto end` skips it
 
@@ -104,7 +104,7 @@ state").
 
 <!-- BODY END -->
 
-## Item 4 of 27
+## Item 4 of 28
 
 **Title:** The filter graph is a ternary cascade, so `-H` discards de-emphasis
 
@@ -133,7 +133,7 @@ de-emphasis").
 
 <!-- BODY END -->
 
-## Item 5 of 27
+## Item 5 of 28
 
 **Title:** `(deemphasis applied)` is printed from the settings, not from what happened
 
@@ -158,7 +158,7 @@ fixed with the filter-graph issue (item 4 of this set) in [`b866900`](https://gi
 
 <!-- BODY END -->
 
-## Item 6 of 27
+## Item 6 of 28
 
 **Title:** A bare apostrophe in `-a` or `-t` swallows every later field
 
@@ -185,7 +185,7 @@ double-escaping the consumer's").
 
 <!-- BODY END -->
 
-## Item 7 of 27
+## Item 7 of 28
 
 **Title:** An invalid UTF-8 byte truncates a name, and can make `-D` absolute
 
@@ -213,7 +213,7 @@ truncating and logging").
 
 <!-- BODY END -->
 
-## Item 8 of 27
+## Item 8 of 28
 
 **Title:** Ripping a disc image at any paranoia level above 0 returns corrupted audio and reports `Ripping errors: 0`
 
@@ -326,7 +326,7 @@ with image size.
 
 <!-- BODY END -->
 
-## Item 9 of 27
+## Item 9 of 28
 
 **Title:** `-r` reaches libcdio-paranoia unrounded, and `-r 3` never returns on a bad sector
 
@@ -355,7 +355,7 @@ there.
 
 <!-- BODY END -->
 
-## Item 10 of 27
+## Item 10 of 28
 
 **Title:** `media` is tagged from the `-H` setting, so every `-H` rip says HDCD
 
@@ -377,7 +377,7 @@ says").
 
 <!-- BODY END -->
 
-## Item 11 of 27
+## Item 11 of 28
 
 **Title:** The AccurateRip tally counts a track whose read was interrupted
 
@@ -400,7 +400,7 @@ in a real rip.
 
 <!-- BODY END -->
 
-## Item 12 of 27
+## Item 12 of 28
 
 **Title:** A 450 lookup falls through to the whole-track checksum on a miss
 
@@ -430,7 +430,7 @@ fork's copy of the same code.
 
 <!-- BODY END -->
 
-## Item 13 of 27
+## Item 13 of 28
 
 **Title:** The AccurateRip disc status can never read `mismatch`
 
@@ -477,7 +477,7 @@ of the fetch, unchanged, so a recorded response can be tested with no network
 
 <!-- BODY END -->
 
-## Item 14 of 27
+## Item 14 of 28
 
 **Title:** A one-frame AccurateRip entry under the threshold is logged as `(not found)`
 
@@ -517,7 +517,7 @@ threshold rejects it"). The tally of partial matches is unchanged.
 
 <!-- BODY END -->
 
-## Item 15 of 27
+## Item 15 of 28
 
 **Title:** A track's success line ignores paranoia's skips and a `-Z` repeat limit
 
@@ -567,7 +567,7 @@ repeat limit as read with errors").
 
 <!-- BODY END -->
 
-## Item 16 of 27
+## Item 16 of 28
 
 **Title:** A failed track ends a rip of every track silently, and the album is finalised over it
 
@@ -609,7 +609,7 @@ under `-l`.
 
 <!-- BODY END -->
 
-## Item 17 of 27
+## Item 17 of 28
 
 **Title:** A stopped `-f` search is retried with a larger radius
 
@@ -658,7 +658,7 @@ was, and end a -f search on a stop").
 
 <!-- BODY END -->
 
-## Item 18 of 27
+## Item 18 of 28
 
 **Title:** The footer can count a one-frame match the track's lines never printed
 
@@ -703,7 +703,7 @@ match in the footer only where the track's line says so").
 
 <!-- BODY END -->
 
-## Item 19 of 27
+## Item 19 of 28
 
 **Title:** A disc image is taken for a drive with libcdio 2.3.0 or later
 
@@ -755,7 +755,7 @@ driver, not by CDIO_DRIVE_CAP_READ_ISRC").
 
 <!-- BODY END -->
 
-## Item 20 of 27
+## Item 20 of 28
 
 **Title:** `-Y` on a directory overflows a signed length
 
@@ -795,7 +795,7 @@ paths that skipped it").
 
 <!-- BODY END -->
 
-## Item 21 of 27
+## Item 21 of 28
 
 **Title:** A failed read in `-Y` is reported as a log with no checksum
 
@@ -832,7 +832,7 @@ as an I/O error, not as one without a checksum").
 
 <!-- BODY END -->
 
-## Item 22 of 27
+## Item 22 of 28
 
 **Title:** The paranoia counters are printed with `%lu` from `uint64_t`
 
@@ -875,7 +875,7 @@ build found this.
 
 <!-- BODY END -->
 
-## Item 23 of 27
+## Item 23 of 28
 
 **Title:** Three start-up failures return without tearing the context down
 
@@ -934,7 +934,7 @@ paths that skipped it").
 
 <!-- BODY END -->
 
-## Item 24 of 27
+## Item 24 of 28
 
 **Title:** An argument that is only its separator crashes with no message
 
@@ -976,7 +976,7 @@ giving the fork's argument probe a malformed-shape axis; it had no report until
 
 <!-- BODY END -->
 
-## Item 25 of 27
+## Item 25 of 28
 
 **Title:** A number past `INT_MAX` wraps and is used
 
@@ -1027,7 +1027,7 @@ fork's argument probe.
 
 <!-- BODY END -->
 
-## Item 26 of 27
+## Item 26 of 28
 
 **Title:** The AccurateRip tally divides by a count that includes data tracks
 
@@ -1067,7 +1067,7 @@ answering Platterpus's question.
 
 <!-- BODY END -->
 
-## Item 27 of 27
+## Item 27 of 28
 
 **Title:** A value the log echoes can start a line of its own
 
@@ -1109,6 +1109,50 @@ keep the value as it came. Found on 2026-10-26 by a review of the fork.
 
 ---
 *Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `7dbe56a`. The fix is linked above; happy to open a PR if it helps.*
+
+<!-- BODY END -->
+
+## Item 28 of 28
+
+**Title:** A path over 1,003 bytes is cut there, extension and all
+
+<!-- BODY START -->
+
+**Where:** `src/naming.c:410` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a) and at [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), in
+`crip_get_path()`:
+
+```c
+av_bprint_init(&buf, 0, AV_BPRINT_SIZE_AUTOMATIC);
+```
+
+`AV_BPRINT_SIZE_AUTOMATIC` limits the buffer to the one inside the `AVBPrint`
+structure itself, which FFmpeg pads to 1,024 bytes, and
+`av_bprint_finalize()` (`:453`) returns whatever fitted without saying that
+anything did not. Every path the program writes comes from this function:
+each track, the log, the CUE sheet and the cover art.
+
+**What happens:** a path longer than 1,003 bytes is cut at byte 1,003, so the
+file loses its extension and the end of its name, and every file whose path
+shares those 1,003 bytes goes to the same file. Each component can be within
+the 255 bytes a filesystem allows, so nothing refuses it. Run on the fork
+before its fix, whose `crip_get_path()` was upstream's here: `basic.cue`, two
+audio tracks, ripped with `-o flac`, an album of 200 bytes and `-D
+"<root>/{album}/{album}/{album}/{album}/{album}"` from a 90-byte root, left
+one file on disk, 1,003 bytes of path with no extension, a FLAC stream with
+the log's text written into it. The log, the CUE sheet and both tracks had
+been written to it. The rip printed `WARNING: tracks 1 and 2 resolve to the
+same file` and `Rip completed:  yes (2 of 2 tracks)`, and exited 0. Upstream's
+own rip was not run: this is read from its source, which is the fork's here.
+
+**What the fork did:** `crip_get_path()` renders with
+`AV_BPRINT_SIZE_UNLIMITED` and returns `NULL` if the buffer could not be
+completed, so a path is either whole or not given ([`cfd738e`](https://github.com/rmccann-hub/cyanrip/commit/cfd738e), "Render a
+path whole, past the 1,003 bytes an AVBPrint holds"). The same rip leaves
+the log, the CUE sheet and both tracks, each under its own name. Found on
+2026-10-30.
+
+---
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `648b1dd`. The fix is linked above; happy to open a PR if it helps.*
 
 <!-- BODY END -->
 

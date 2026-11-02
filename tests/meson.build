@@ -169,13 +169,16 @@ test('Cache probe wording', cacheprobe_test)
 ## line's every wording, from the drive's current profile, is pinned beside it,
 ## with that profile read from GET CONFIGURATION's header on a reply that lists
 ## CD-ROM last, where libcdio's own search gives its 0xffff placeholder.
+## `Speed:` and `C2 errors:` are pinned on every arm too, the drive's among
+## them: a speed libcdio could not set and a capabilities query that failed,
+## neither of which an image reaches.
 drivecaps_test = executable('drivecaps_test',
     sources: [ 'drivecaps.c' ],
     include_directories: [ '../src' ],
     objects: cyanrip_exe.extract_objects([ 'drive_caps.c' ]),
     dependencies: unit_test_deps,
 )
-test('Accurate stream and recordable medium from the drive', drivecaps_test)
+test('Drive header lines: speed, C2, accurate stream, recordable medium', drivecaps_test)
 
 ## Links the diagnostics object to drive it past its own retention cap, which
 ## no rip can reach: an image rip prints ~124 messages against a 20000 cap, so
@@ -812,8 +815,13 @@ test('No personal details in new laps or evidence', python,
 test('Evidence tool', python, args: [ files('evidence_tool.py') ], timeout: 120)
 test('Evidence readers and fixture copies', python,
      args: [ files('evidence_readers.py') ])
+## Not meson's 30 s default: before it can say 77, it tries each manifest row
+## in turn, one git call apiece, 566 rows on 2026-11-02, and the count grows
+## with every filing. CI's macOS runner took 27.96 s and 28.75 s on 2026-10-29
+## and was killed at 30.01 s on 2026-11-02 (PR #75); 11.9 s here, fetched.
 test('No personal details in new evidence', python,
-     args: [ files('personal_details.py'), '--evidence' ])
+     args: [ files('personal_details.py'), '--evidence' ],
+     timeout: 120)
 
 ## tools/cross-rip.py compares each track's EAC CRC32 across every cyanrip log
 ## in a bundle. Round 26's reading read logs one at a time and missed a wrong
@@ -975,6 +983,8 @@ rip_scenarios = [
     'encoder_option',
     'mutation_exclusions_are_pinned',
     'sanitize',
+    'path_component_rules',
+    'names_shortened',
     'enhanced_cd',
     'contract_diagnostics',
     'diag_repeated_flag',
@@ -990,9 +1000,12 @@ rip_scenarios = [
     'p0_bad_sector',
     'repeat_limit',
     'repeat_limit_keeps_most_agreed',
+    'reread_time_limit',
     'z_extraction_speed',
     'log_values_cannot_forge_a_line',
     'gaps_unknown_pregap',
+    'unknown_pregap_reasons_agree',
+    'drive_answers_as_answers',
     'pregap_search_record_listed',
     'spool_refusal',
     'paranoia_skip',

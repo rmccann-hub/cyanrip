@@ -2301,8 +2301,11 @@ def sc_exit_codes():
         (("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
           "-o", "flac", "-D", WORK / "out_ec", "-F", "{track}", "-t", "99"),
          64, "Invalid track number 99"),
+        # A speed that cannot be set no longer stops the rip (our round 36
+        # lap 13 S5 and round 37 lap 1 S8): an image has none to set, it says
+        # so, and the run goes on.
         (("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-S", "8"),
-         74, "Device does not support changing speeds"),
+         0, "Speed:          default (disc image, 8x not applied)"),
         (("-d", WORK / "basic.cue", "-f", "-N", "-A", "-U"), 1, None),
     ]
     for argv, want_ec, want_text in cases:
@@ -3429,9 +3432,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/10":
+        if rec["schema"] != "cyanrip-diagnostics/11":
             fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/10'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/11'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -3921,7 +3924,8 @@ def sc_diag_record_v8():
     # `Drive used:` revision is libcdio's CDIO_VERSION cut to four characters.
     rec = WORK / "v8_rip.json"
     rip("v8_rip", "pregap.cue", "-t", "1=isrc=AAAAA0000001", "--diagnostics", rec)
-    m = re.search(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
+    m = re.search(r"^Drive used:\s+none \(disc image, read by libcdio's \S+ "
+                  r"driver, revision (\d+)\.(\d+)",
                   (WORK / "out_v8_rip" / "log.log").read_text(encoding="utf-8"), re.M)
     if not m:
         fail("diag_record_v8: the log names no libcdio revision, so which "
@@ -4238,6 +4242,7 @@ DISC_ISRC_KIND = {
     "libcdio returned an empty ISRC": "none",
     "libcdio returned an all-zero ISRC": "none",
     "the driver does not report reading ISRC": "unknown",
+    "the capabilities query failed": "unknown",
     "out of memory": "unknown",
     "not read": "unknown",
 }
@@ -4357,6 +4362,22 @@ def sc_disc_isrc_line():
                 fail(f"disc_isrc_line: {name}: track {num} isrc_disc "
                      f"{tr['isrc_disc']!r}, and the cue gives "
                      f"{disc.get(num)!r}")
+            # /11 (our round 36 lap 10 S12, Platterpus's lap 11 S7): a code
+            # libcdio took from the image's own cue sheet, sending no
+            # command, is `disc image`, and a track with none has none.
+            want_read = "disc image" if disc.get(num) else None
+            if tr.get("isrc_disc_read") != want_read:
+                fail(f"disc_isrc_line: {name}: track {num} isrc_disc_read "
+                     f"{tr.get('isrc_disc_read')!r}, where {want_read!r} is "
+                     f"expected of {'a code' if want_read else 'no code'} "
+                     f"from a cue sheet")
+            # /11: the record's kept_read_began is the block's `Kept read
+            # began:`, the line our round 36 lap 4 S13 added for the same
+            # instant.
+            kept = re.findall(r"^    Kept read began:    (\S+)$", block, re.M)
+            if [tr.get("kept_read_began")] != kept:
+                fail(f"disc_isrc_line: {name}: track {num} kept_read_began "
+                     f"{tr.get('kept_read_began')!r}, and the block says {kept!r}")
             reason = tr["isrc_disc_reason"]
             if num in disc and num not in usable:
                 if reason != DISC_ISRC_MALFORMED:
@@ -4872,8 +4893,9 @@ def sc_diagnostics():
     # addition, each checked in sc_diag_record_v8(). /9 from the upstream sync
     # of 2026-10-12 adds data_ripped, checked in sc_data_track_completed().
     # /10 from round 35 adds paranoia_all_reads and error_positions, checked
-    # in sc_bad_sector() and tests/diagrecord.c.
-    if d.get("schema") != "cyanrip-diagnostics/10":
+    # in sc_bad_sector() and tests/diagrecord.c. /11 from round 36 adds
+    # isrc_disc_read and kept_read_began, checked in sc_disc_isrc_line().
+    if d.get("schema") != "cyanrip-diagnostics/11":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
@@ -7445,6 +7467,221 @@ def sc_sanitize():
                  f"in all four modes. Found "
                  f"{sorted(str(p.relative_to(out)) for p in out.rglob('*'))}")
 
+def p7f_cells():
+    """P7f's rows for this platform's columns, as {mode: [cell, ...]} in rule
+    order, or None after a failure. The column is chosen from the platform,
+    as sc_sanitize() chooses P7c's, and never from the behaviour under test.
+    """
+    text = (ROOT / "PROVIDER-CONTRACT.md").read_text(encoding="utf-8")
+    section = re.search(r"^### P7f .*?(?=^### |^## |\Z)", text, re.M | re.S)
+    if not section:
+        fail("P7f: no P7f section in the contract, so the path-component "
+             "rules have no statement for a consumer to predict names from")
+        return None
+    lines = section.group(0).splitlines()
+    header = next((l for l in lines if l.startswith("| rule |")), None)
+    if not header:
+        fail("P7f: no table header")
+        return None
+    heads = [h.strip() for h in header.strip().strip("|").split("|")]
+    state = ("`HAVE_WMAIN`" if os.name == "nt" else
+             "`__MACH__`" if sys.platform == "darwin" else "elsewhere")
+    try:
+        col = {"simple": heads.index("`simple`"),
+               "unicode": heads.index("`unicode`"),
+               "os_simple": heads.index(f"`os_simple` {state}"),
+               "os_unicode": heads.index(f"`os_unicode` {state}")}
+    except ValueError:
+        fail(f"P7f: no {state} columns: {heads}")
+        return None
+    rows = [l for l in lines if re.match(r"\| \d+ \|", l)]
+    if len(rows) < 3:
+        fail(f"P7f: {len(rows)} rule rows, where the lap gave at least three")
+        return None
+    out = {}
+    for mode, i in col.items():
+        out[mode] = [[c.strip() for c in r.strip().strip("|").split("|")][i]
+                     for r in rows]
+    return out
+
+
+def sc_path_component_rules():
+    """Round 36 lap 12 S10's rules for a component a tag value is part of, as
+    P7f states them, asserted against the files the binary writes.
+
+    WHAT IT COST TO NOT HAVE THEM. Measured at ed37997 with -D
+    <root>/{album_artist}/{album}, in all four modes: `album=..` put the rip
+    a directory above where it was asked for, at exit 0, and a U+0001 went
+    into a name. Platterpus's overwrite guard predicts our folder from P7, so
+    the prediction is the thing under test: each expected name is read from
+    P7f's cells for this platform, never written here.
+    """
+    cells = p7f_cells()
+    if cells is None:
+        return
+
+    def dot_glyph(cell):
+        m = re.fullmatch(r"each dot as `(.+?)`.*", cell)
+        return m.group(1) if m else None
+
+    def control(cell, ch):
+        if cell == "unchanged":
+            return ch
+        if cell == "each as `_`":
+            return "_"
+        if cell.startswith("each as its Control Picture"):
+            return chr(0x2400 + ord(ch))
+        return None
+
+    def device(cell, name):
+        return {"unchanged": name, "`_` after the name": name + "_"}.get(cell)
+
+    for mode, (r1, r2, r3, *_rest) in cells.items():
+        dot, ctl, dev = dot_glyph(r1), control(r2, "\x01"), device(r3, "NUL")
+        if None in (dot, ctl, dev):
+            fail(f"P7f: {mode}: cells this test cannot read: {r1!r}, {r2!r}, "
+                 f"{r3!r}")
+            continue
+        root = WORK / f"pcr_{mode}"
+        before = set(WORK.iterdir())
+        ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                       "-P", "0", "-o", "flac", "-T", mode,
+                       "-D", f"{root}/{{album_artist}}/{{album}}",
+                       "-F", "{track} {title}", "-L", "log", "-M", "sheet",
+                       "-a", "album=..:album_artist=NUL",
+                       "-t", "1=title=A\x01B")
+        if ec != 0:
+            fail(f"P7f: {mode}: cyanrip exited {ec}")
+            print(log)
+            continue
+        folder = root / dev / (dot * 2)
+        want = {folder / f"1 A{ctl}B.flac", folder / "2 Unknown track.flac",
+                folder / "log.log", folder / "sheet.cue"}
+        # Everything the rip wrote, wherever it went: with the first rule
+        # reverted, `..` puts it all in root/NUL's parent, which is root, and
+        # a `..` higher up would put it beside root, which `stray` catches.
+        got = {p for p in root.rglob("*") if p.is_file()}
+        stray = set(WORK.iterdir()) - before - {root}
+        if stray:
+            fail(f"P7f: {mode}: written outside {root.name}: "
+                 f"{sorted(map(str, stray))}")
+        if got != want:
+            fail(f"P7f: {mode}: files on disk are not the names P7f predicts\n"
+                 f"    want: {sorted(map(str, want))}\n"
+                 f"    got:  {sorted(map(str, got))}")
+        else:
+            print(f"P7f: {mode}: {folder.relative_to(WORK)} as predicted")
+
+
+def sc_names_shortened():
+    """The fourth path-component rule and its log block, end to end.
+
+    Platterpus's round 36 lap 13 S4: a component a tag value is part of that
+    would exceed 255 bytes is shortened at a character boundary, keeping the
+    track number and the extension, the tags keeping the value whole, and the
+    log saying so, in the wording our round 37 lap 1 S7 gave and their lap 2
+    S5 accepted. Before .28 such a rip failed at the first open with
+    ENAMETOOLONG; their app refuses it before Start until .28 is its default.
+
+    Every expected length here is computed from the inputs, not read from the
+    binary: the block's `N bytes as rendered` against the name the scheme
+    makes of them, and its names against the files on disk.
+    """
+    album = "\u00c4" * 140                       # 280 bytes of UTF-8
+    root = WORK / "names_shortened"
+    ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac,wav",
+                   "-D", f"{root}/{{album}} [{{format}}]",
+                   "-a", f"album={album}", "-t", f"1=title={album}",
+                   "-t", "2=title=Short")
+    if ec != 0:
+        fail(f"names_shortened: cyanrip exited {ec}")
+        print(log)
+        return
+    rendered = {"folder": [len(f"{album} [{f}]".encode()) for f in ("FLAC", "WAV")],
+                "track 1, flac": [len(f"1 - {album}.flac".encode())],
+                "track 1, wav": [len(f"1 - {album}.wav".encode())],
+                "cue sheet": [len(f"{album}.cue".encode())] * 2,
+                "log": [len(f"{album}.log".encode())] * 2}
+
+    m = re.search(r"(?ms)^Names shortened:\n(.*?)\n\n", log)
+    if not m:
+        fail("names_shortened: no `Names shortened:` block in the log")
+        print(log)
+        return
+    if not re.search(r"(?ms)^Pregap searches:\n.*?\n\nNames shortened:\n", log):
+        fail("names_shortened: the block does not follow `Pregap searches:` "
+             "and its blank line, where our round 37 lap 1 S7 put it")
+    entries = []
+    for line in m.group(1).splitlines():
+        # Split from the right on the fixed tail, as Platterpus's reader does:
+        # a name may hold ": " and parentheses
+        e = re.fullmatch(r"    (folder|track \d+, \w+|cue sheet|log): (.*) "
+                         r"\((\d+) bytes as rendered\)", line)
+        if not e:
+            fail(f"names_shortened: a line not of the shape: {line!r}")
+            continue
+        entries.append((e.group(1), e.group(2), int(e.group(3))))
+
+    whats = [w for w, _n, _r in entries]
+    want_order = ["folder", "folder", "track 1, flac", "track 1, wav",
+                  "cue sheet", "cue sheet", "log", "log"]
+    if whats != want_order:
+        fail(f"names_shortened: entries {whats}, where folders, then tracks, "
+             f"then the cue sheets and the logs were expected: {want_order}")
+    for what in rendered:
+        got = sorted(r for w, _n, r in entries if w == what)
+        if got != sorted(rendered[what]):
+            fail(f"names_shortened: {what}: rendered lengths {got}, and the "
+                 f"inputs make {sorted(rendered[what])}")
+
+    on_disk = {p.name: p for p in root.rglob("*")}
+    for what, name, _r in entries:
+        if name not in on_disk:
+            fail(f"names_shortened: {what} {name[:20]!r}... is not a name on disk")
+        elif len(name.encode()) > 255:
+            fail(f"names_shortened: {what} is {len(name.encode())} bytes")
+        if what.startswith("track 1") and not (name.startswith("1 - ")
+                                               and name.endswith("." + what[-4:].strip(" ,"))):
+            fail(f"names_shortened: {what} lost its number or extension: "
+                 f"{name[:8]!r}...{name[-8:]!r}")
+    over = [p for p in on_disk if len(p.encode()) > 255]
+    if over:
+        fail(f"names_shortened: names over 255 bytes on disk: {over}")
+    # crip() reads the log with errors="replace", so a cut inside a
+    # character shows as U+FFFD there, and as a surrogate in a name on disk
+    for what, name, _r in entries:
+        if "\ufffd" in name:
+            fail(f"names_shortened: {what} was cut inside a character")
+    for p in on_disk:
+        try:
+            p.encode("utf-8")
+        except UnicodeEncodeError:
+            fail(f"names_shortened: {p!r} on disk is not UTF-8")
+
+    # The tags keep the value whole
+    flac = next((p for n, p in on_disk.items() if n.endswith(".flac")
+                 and n.startswith("1 - ")), None)
+    if flac is None:
+        fail("names_shortened: no track 1 FLAC on disk")
+    else:
+        title = probe(flac, "-show_entries", "format_tags=title")
+        if title != album:
+            fail(f"names_shortened: the title tag is {len(title.encode())} bytes, "
+                 f"not the 280 given")
+
+    # Nothing shortened, nothing printed
+    ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                   "-P", "0", "-o", "flac", "-D", f"{root}_none",
+                   "-a", "album=Short")
+    if ec != 0 or "Names shortened:" in log:
+        fail(f"names_shortened: a rip shortening nothing exited {ec} or "
+             f"printed the block")
+    if not fails:
+        print(f"names_shortened: {len(entries)} entries, each on disk, the "
+              f"rendered lengths the inputs make")
+
+
 def sc_enhanced_cd():
     """A trailing data track must not be able to publish a garbage disc ID.
 
@@ -8145,6 +8382,75 @@ def _flip_crc(v, flip=100, sec=2352, sectors=300):
     return f"{zlib.crc32(b) & 0xFFFFFFFF:08X}"
 
 
+def sc_reread_time_limit():
+    """--reread-time-limit ENDS A -Z TRACK BETWEEN READS AND SAYS SO.
+
+    Our round 36 lap 10 S11, accepted as given in Platterpus's lap 11 S6,
+    whose reader takes every line below. After each whole-track read of a
+    track that has not converged, once its reads have taken the limit or
+    more since the first began, no further read starts; the track keeps the
+    read the repeat limit would keep, and the log names the caller's limit
+    rather than blaming the disc.
+
+    tests/badsector.c makes every read of sector 100 differ (a cycle longer
+    than the run), so -Z never converges, and slows each sector by 3 ms, so
+    track 1's 300 sectors take about 0.9 s a read. With a 1 s limit and -r 50
+    the loop must stop after a read or two, far short of the repeat limit;
+    the count is not fixed, since a sanitizer build reads slower, so the
+    test holds the lines to whatever count the shim saw. Without -Z, and at
+    0, the option is refused with exit 64.
+    """
+    needs_preload_shim("reread_time_limit")
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"reread_time_limit: the shim was not built or not passed ({shim!r})")
+        return
+    out = WORK / "out_reread_time_limit"
+    count = WORK / "reread_time_limit.count"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+               CRIP_FLIP_SECTOR="100", CRIP_FLIP_CYCLE="1000",
+               CRIP_FLIP_RUN="1", CRIP_FLIP_OUT=str(count),
+               CRIP_READ_DELAY_US="3000",
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                 "-P", "0", "-Z", "2", "-r", "50", "--reread-time-limit", "1",
+                 "-l", "1", "-o", "pcm", "-D", out, "-F", "{track}",
+                 "-L", "log", env=env)
+    if ec != 0:
+        fail(f"reread_time_limit: cyanrip exited {ec}; reaching the time limit "
+             f"is not an error")
+    reads = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
+    if not 1 <= reads < 50:
+        fail(f"reread_time_limit: the shim saw {reads} reads, so the time limit "
+             f"did not end the loop short of the repeat limit of 50")
+        return
+    lines = ((out / "log.log").read_text(errors="replace", encoding="utf-8")
+             if (out / "log.log").exists() else "").splitlines()
+    noun = "read" if reads == 1 else "reads"
+    want = {
+        "header": "Re-read limit:  1 s a track, checked between whole-track reads",
+        "done": f"Done; (time limit of 1 s reached after {reads} {noun}; at most 1 read agreed)",
+        "block": f"  Secure re-read:  did NOT converge after {reads} {noun} (time limit of 1 s reached)",
+        "verdict": "Track 1 read with errors.",
+    }
+    for what, line in want.items():
+        if line not in lines:
+            got = [ln for ln in lines if ln.startswith(("Done;", "  Secure re-read:", "Re-read limit:", "Track 1 read"))]
+            fail(f"reread_time_limit: no {what} line {line!r}; got {got}")
+    if any("repeat limit" in ln for ln in lines):
+        fail("reread_time_limit: a line names the repeat limit, which the "
+             "reads never reached")
+    for args, why, said in ((["-Z", "0"], "without -Z", "--reread-time-limit needs -Z"),
+                            (["-Z", "2", "--reread-time-limit", "0"], "at 0", "not in [1:")):
+        extra = [] if "--reread-time-limit" in args else ["--reread-time-limit", "5"]
+        ec, text = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
+                        *args, *extra)
+        if ec != 64 or said not in text:
+            fail(f"reread_time_limit: {why}: exit {ec}, and the output "
+                 f"{'carries' if said in text else 'lacks'} {said!r}; want 64 and it")
+
+
 def sc_repeat_limit_keeps_most_agreed():
     """AT THE REPEAT LIMIT, THE READ THE MOST READS AGREED ON IS KEPT.
 
@@ -8293,6 +8599,118 @@ def sc_gaps_unknown_pregap():
     if re.search(r"pregap of track \d+ unknown", out):
         fail("gaps_unknown_pregap: control: cdda.nrg's pregap comes from its TOC, "
              "and the list calls a pregap unknown")
+
+
+def sc_drive_answers_as_answers():
+    """FOUR DRIVE LINES STATE WHAT WAS ASKED, NOT LIBCDIO'S DEFAULT.
+
+    Our round 36 lap 12 S11, accepted in Platterpus's lap 13 S5 with the
+    refused speed of our round 37 lap 1 S8, which their lap 2 S6 accepted:
+    (a) `Speed:` without -S said `unchangeable` of a drive nobody asked; (b)
+    `Drive used:` named libcdio's image driver as a drive; (c) a failed
+    capabilities query read as a drive without C2 or ISRC; (d) a failed
+    media-change query stopped the rip as a change. tests/drivecaps.c holds
+    the wordings on the arms no image reaches; this holds the ones an image
+    does, through tests/imagecap.c for (c) and (d), and tests/badsector.c's
+    delay so a rip outlives the query's one-second throttle.
+    """
+    ec, out = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", "-P", "0")
+    want = r"^Drive used:     none \(disc image, read by libcdio's CDRWIN driver, revision \d+\.\d+\.\)$"
+    if ec != 0 or not re.search(want, out, re.M):
+        got = re.findall(r"^Drive used:.*$", out, re.M)
+        fail(f"drive_answers_as_answers: (b) exit {ec}, Drive used: {got}")
+    if "Speed:          default (drive not asked whether it can change speed)" not in out.splitlines():
+        got = re.findall(r"^Speed:.*$", out, re.M)
+        fail(f"drive_answers_as_answers: (a) Speed: {got}")
+
+    needs_preload_shim("drive_answers_as_answers")
+    cap = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    bad = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not cap or not Path(cap).exists() or not bad or not Path(bad).exists():
+        fail(f"drive_answers_as_answers: the shims were not built or not "
+             f"passed ({cap!r}, {bad!r})")
+        return
+    asan = os.environ.get("ASAN_OPTIONS", "") + ":verify_asan_link_order=0"
+
+    # (c) The capabilities query failed: C2 and the disc's ISRC are unknown.
+    out_dir = WORK / "out_caps_failed"
+    rec = WORK / "caps_failed.json"
+    env = dict(os.environ, LD_PRELOAD=cap, CRIP_IMAGE_CAP_ERROR="1", ASAN_OPTIONS=asan)
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-o", "pcm", "-D", out_dir, "-F", "{track}", "-L", "log",
+                 "--diagnostics", rec, env=env)
+    lines = ((out_dir / "log.log").read_text(errors="replace", encoding="utf-8")
+             if (out_dir / "log.log").exists() else "").splitlines()
+    if ec != 0 or "C2 errors:      unknown (capabilities query failed)" not in lines:
+        got = [ln for ln in lines if ln.startswith("C2 errors:")]
+        fail(f"drive_answers_as_answers: (c) exit {ec}, C2 errors: {got}")
+    try:
+        reasons = {tr["isrc_disc_reason"] for tr in
+                   json.loads(rec.read_text(encoding="utf-8"))["rip"]["track_state"]}
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        reasons = {f"no record: {e}"}
+    if reasons != {"the capabilities query failed"}:
+        fail(f"drive_answers_as_answers: (c) the record's ISRC reasons are {reasons}")
+    if "  Disc ISRC:     unknown (the capabilities query failed)" not in lines:
+        fail("drive_answers_as_answers: (c) no track says its disc ISRC is unknown "
+             "because the capabilities query failed")
+
+    # (d) The media-change query: a change, and a query that failed, each
+    # stopping the rip with exit 74 and its own line.
+    for answer, line in (("1", "Drive media changed, stopping!"),
+                         ("-1", "Drive media change query failed (libcdio error -1), stopping!")):
+        env = dict(os.environ, LD_PRELOAD=f"{cap} {bad}", CRIP_MEDIA_CHANGED=answer,
+                   CRIP_BAD_PATH="basic.bin", CRIP_READ_DELAY_US="3000",
+                   ASAN_OPTIONS=asan)
+        out_dir = WORK / f"out_media_{answer}"
+        ec, out = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                       "-P", "0", "-o", "pcm", "-D", out_dir, "-F", "{track}",
+                       "-L", "log", env=env)
+        said = [ln.strip() for ln in out.splitlines() if "media change" in ln.lower()]
+        if ec != 74 or said != [line]:
+            fail(f"drive_answers_as_answers: (d) answer {answer}: exit {ec}, "
+                 f"lines {said}; want 74 and [{line!r}]")
+
+
+def sc_unknown_pregap_reasons_agree():
+    """THE `Gaps:` LIST AND THE TRACK BLOCK GIVE AN UNKNOWN PREGAP ONE REASON.
+
+    Our round 37 lap 1 S6, which Platterpus's lap 2 S4 accepted, renamed the
+    reason a search gives when its bounds do not meet, from `sub-channel CRC
+    mismatches` to `sub-channel search bounds did not meet`: round 36's run
+    of 2026-10-28 showed the old words over a record in which no sector
+    failed its CRC (our round 36 lap 16 S9). The track block's line is
+    rendered by tests/logrender.c. The `Gaps:` list's is printed only after a
+    search, and no image reaches the arm, since an image's sub-channel is
+    unreadable: sc_gaps_unknown_pregap() holds that arm against the block on
+    a rip. So this reads both reasons from the source, where both arms are
+    literal strings, and holds them to each other and to the agreed words.
+    """
+    log_c = (ROOT / "src" / "cyanrip_log.c").read_text(encoding="utf-8")
+    main_c = (ROOT / "src" / "cyanrip_main.c").read_text(encoding="utf-8")
+    block = {}
+    for src, reason in re.findall(r'pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+)\) \{'
+                                  r'(?:[^{}]*?)"    Pregap LSN:  unknown \(([^)]+)\)\\n"',
+                                  log_c, re.S):
+        block[src] = reason
+    m = re.search(r'"    pregap of track %i unknown \(%s\)\\n", ct->number,\s*'
+                  r'ct->pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+) \?\s*'
+                  r'"([^"]+)" : "([^"]+)"\)', main_c)
+    if len(block) != 2 or not m:
+        fail(f"unknown_pregap_reasons_agree: found {len(block)} track-block "
+             f"reasons and {'a' if m else 'no'} Gaps: line in the source, so "
+             f"this test reads nothing it can compare")
+        return
+    other = ({"CYANRIP_PREGAP_SRC_ERR_READ", "CYANRIP_PREGAP_SRC_ERR_CRC"}
+             - {m.group(1)}).pop()
+    gaps = {m.group(1): m.group(2), other: m.group(3)}
+    if gaps != block:
+        fail(f"unknown_pregap_reasons_agree: the Gaps: list gives {gaps} and "
+             f"the track block {block}")
+    if block.get("CYANRIP_PREGAP_SRC_ERR_CRC") != "sub-channel search bounds did not meet":
+        fail(f"unknown_pregap_reasons_agree: the bounds-did-not-meet arm reads "
+             f"{block.get('CYANRIP_PREGAP_SRC_ERR_CRC')!r}, not the wording our "
+             f"round 37 lap 1 S6 gave and Platterpus's lap 2 S4 accepted")
 
 
 def sc_pregap_search_record_listed():

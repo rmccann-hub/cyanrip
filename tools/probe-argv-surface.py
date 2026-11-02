@@ -77,6 +77,11 @@ EFFECT = {
     "-c": (r"^Disc number:\s+(\S+)",
            lambda v: int(str(v).split("/")[0])),
     "-O": (r"^Overread:\s+([+-]?\d+) frames", None),
+    # From the build after `.27` a speed that cannot be set no longer stops the
+    # run, so -S's rows are what the header says of it: on this probe's image,
+    # that it was not applied (our round 37 lap 1 S8 and S9, Platterpus's lap
+    # 2 S6 and S7). The value is text, recorded as the line gives it.
+    "-S": (r"^Speed:\s+(\S.*)$", None),
     "--consumer": (r"^Consumer:\s+(\S+)", None),
 }
 

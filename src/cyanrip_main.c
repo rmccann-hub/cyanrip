@@ -123,16 +123,25 @@ const cyanrip_out_fmt crip_fmt_info[] = {
     [CYANRIP_FORMAT_PCM]      = { "pcm",      "PCM",  "pcm",   "s16le", 0,  0, 1, AV_CODEC_ID_NONE,      },
 };
 
+static int crip_is_image_driver(cyanrip_ctx *ctx);
+
 /* Some drives take several ms to answer, and the rip loops ask once per frame */
 #define MEDIA_CHECK_INTERVAL_US 1000000 /* one second */
 
+/* 1 when the drive reports a change, 0 when it does not or cannot say, and
+ * libcdio's negative error code when the query failed. Every answer but 0
+ * and unsupported stopped the rip as `Drive media changed`, a change the
+ * drive never reported; the stop is kept and says which it was (our round
+ * 36 lap 12 S11 (d), accepted by Platterpus's lap 13 S5). */
 static int get_media_changed(cyanrip_ctx *ctx) {
     const int64_t now = av_gettime_relative();
     if (ctx->last_media_check && now - ctx->last_media_check < MEDIA_CHECK_INTERVAL_US)
         return 0;
     ctx->last_media_check = now;
     const int ret = cdio_get_media_changed(ctx->cdio);
-    return ret != 0 && ret != DRIVER_OP_UNSUPPORTED;
+    if (ret == DRIVER_OP_UNSUPPORTED)
+        return 0;
+    return ret > 0 ? 1 : ret;
 }
 
 static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
@@ -347,6 +356,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     }
 
     cdio_get_drive_cap(ctx->cdio, &ctx->rcap, &ctx->wcap, &ctx->mcap);
+    ctx->is_image = crip_is_image_driver(ctx);
 
     /* What the drive declares about accurate stream, for the log's header.
      * libcdio reads page 2Ah for the caps above but keeps no bit for it, so
@@ -417,7 +427,13 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
     cdio_cddap_verbose_set(ctx->drive, CDDA_MESSAGE_LOGIT, CDDA_MESSAGE_FORGETIT);
 
-    /* Drives may not advertise a speed setting they honour, so try anyway */
+    /* Drives may not advertise a speed setting they honour, so try anyway.
+     * A speed that could not be set no longer stops the rip: it reads at the
+     * drive's own speed, as without -S, and the header's `Speed:` says the
+     * setting failed, or that an image has no speed to set (our round 36
+     * lap 13 S5 and round 37 lap 1 S8, accepted by Platterpus's lap 2 S6).
+     * libcdio reports a drive that refuses and a driver that cannot send
+     * the command alike, so the line does not say which. */
     if (settings->speed) {
         ret = cdio_cddap_speed_set(ctx->drive, settings->speed);
         msg = cdio_cddap_errors(ctx->drive);
@@ -427,11 +443,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
             cyanrip_log(ctx, 0, "\n");
             cdio_cddap_free_messages(msg);
         }
-        if (ret) {
-            cyanrip_log(ctx, 0, "Device does not support changing speeds!\n");
-            cyanrip_ctx_end(&ctx);
-            return AVERROR(EINVAL);
-        }
+        ctx->speed_failed = !!ret;
     }
 
     ctx->paranoia = cdio_paranoia_init(ctx->drive);
@@ -1034,7 +1046,12 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
          * once. Which ISRC the files carry is decided exactly as before: the
          * disc's, only when -t gave none and no earlier track reported none. */
         if (!t->extra_read) {
-            if (!(ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
+            /* A failed capabilities query sets every word to
+             * CDIO_DRIVE_CAP_ERROR, which says nothing about ISRC (our round
+             * 36 lap 12 S11 (c), accepted by Platterpus's lap 13 S5). */
+            if (ctx->rcap & CDIO_DRIVE_CAP_ERROR) {
+                t->isrc_disc_reason = "the capabilities query failed";
+            } else if (!(ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
                 t->isrc_disc_reason = "the driver does not report reading ISRC";
             } else {
                 const char *isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
@@ -1048,7 +1065,7 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                  * below allows for. Not on an image, which has no sub-channel
                  * and whose answer is the cue sheet's. */
                 struct cyanrip_subq_isrc scan = { 0 };
-                int scanned = 0;
+                int scanned = 0, again = 0;
                 if (!isrc_str && !crip_is_image_driver(ctx)) {
                     const lsn_t start = cdio_get_track_lsn(ctx->cdio, t->cd_track_number);
                     const lsn_t last = cdio_get_track_last_lsn(ctx->cdio, t->cd_track_number);
@@ -1061,8 +1078,10 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                         int count = last - first + 1 < 200 ? last - first + 1 : 200;
                         cyanrip_read_isrc_subq(ctx->cdio, first, count, &scan);
                         scanned = 1;
-                        if (!scan.found)
+                        if (!scan.found) {
                             isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
+                            again = 1;
+                        }
                     }
                 }
                 if (scan.found && !crip_code_is_set(scan.isrc)) {
@@ -1070,7 +1089,9 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                                           "track carried an all-zero ISRC";
                     t->isrc_disc_none = 1;
                 } else if (scan.found) {
+                    t->isrc_disc_read = "q frames";
                     if (!(t->isrc_disc = av_strdup(scan.isrc))) {
+                        t->isrc_disc_read = NULL;
                         t->isrc_disc_reason = "out of memory";
                     } else if (!crip_isrc_is_iso3901(scan.isrc)) {
                         t->isrc_disc_reason = "not an ISO 3901 code, so not used";
@@ -1103,6 +1124,10 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                         t->isrc_disc_reason = "not an ISO 3901 code, so not used";
                         t->isrc_disc_malformed = 1;
                     }
+                    if (t->isrc_disc)
+                        t->isrc_disc_read = crip_is_image_driver(ctx) ? "disc image" :
+                                            again ? "read sub-channel, again" :
+                                                    "read sub-channel";
                     cdio_free((void *)isrc_str);
                 }
             }
@@ -1422,8 +1447,14 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
 
     for (int i = 0; i < t->frames; i++) {
         /* Detect disc removals */
-        if (get_media_changed(ctx)) {
+        const int changed = get_media_changed(ctx);
+        if (changed > 0) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
+            ctx->exit_class = CRIP_EXIT_IOERR;
+            ret = AVERROR(EINVAL);
+            goto end;
+        } else if (changed < 0) {
+            cyanrip_log(ctx, 0, "\nDrive media change query failed (libcdio error %i), stopping!\n", changed);
             ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
             goto end;
@@ -1667,8 +1698,14 @@ repeat_ripping:;
     /* Read the actual CD data */
     for (int i = 0; i < frames; i++) {
         /* Detect disc removals */
-        if (get_media_changed(ctx)) {
+        const int changed = get_media_changed(ctx);
+        if (changed > 0) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
+            ctx->exit_class = CRIP_EXIT_IOERR;
+            ret = AVERROR(EINVAL);
+            goto fail;
+        } else if (changed < 0) {
+            cyanrip_log(ctx, 0, "\nDrive media change query failed (libcdio error %i), stopping!\n", changed);
             ctx->exit_class = CRIP_EXIT_IOERR;
             ret = AVERROR(EINVAL);
             goto fail;
@@ -1844,6 +1881,14 @@ repeat_ripping:;
         const uint32_t shown_crc = checksum_ctx.eac_crc ^ UINT32_MAX;
 
         total_repeats++;
+        /* --reread-time-limit, checked here, between whole-track reads: a
+         * read in progress is never stopped, so the first read always runs
+         * and one read can run past the limit. Measured from the first read's
+         * start, so it is the time the track's reads have taken (our round 36
+         * lap 10 S11, accepted by Platterpus's lap 11 S6). */
+        const int time_up = ctx->settings.reread_time_limit &&
+                            av_gettime_relative() - track_start_time >=
+                            ctx->settings.reread_time_limit * INT64_C(1000000);
         if (matches >= ctx->settings.ripping_retries) {
             /* The state and the kept read are settled BEFORE the line, so the
              * goto stays beside it: tools/gen-provider-contract.py credits a
@@ -1856,7 +1901,7 @@ repeat_ripping:;
                         matches, ctx->settings.ripping_retries, shown_crc);
             goto spool_encode;
         }
-        if (total_repeats >= ctx->settings.max_retries) {
+        if (total_repeats >= ctx->settings.max_retries || time_up) {
             /* The largest number of reads that agree on one checksum, this
              * read included, which is at least 1. The line said "no matches
              * found" whatever that number was, so it was false of a track
@@ -1874,7 +1919,11 @@ repeat_ripping:;
                                                 : checksum_ctx.eac_crc) == ci;
                 agreed = FFMAX(agreed, n);
             }
-            t->secure_rip_state = CYANRIP_SECURE_RIP_LIMIT_HIT;
+            /* The repeat limit is named when both are reached at once: it is
+             * the one the read count alone decides. */
+            const int by_time = total_repeats < ctx->settings.max_retries;
+            t->secure_rip_state = by_time ? CYANRIP_SECURE_RIP_TIME_LIMIT
+                                          : CYANRIP_SECURE_RIP_LIMIT_HIT;
             kept = crip_spool_kept_at_limit(spools, nb_spools,
                                             ctx->settings.prefer_ar_match);
             /* --prefer-accuraterip-match kept a read AccurateRip matches: the
@@ -1883,6 +1932,42 @@ repeat_ripping:;
              * accepted and their parser reads. The last read's clause is
              * appended as below when the kept read is not the last. */
             const crip_spool *ks = &spools[kept];
+            /* The time limit keeps the read the repeat limit would, and its
+             * line takes the repeat limit's two clauses as they are, with
+             * its own words for what stopped the loop, so the log names the
+             * caller's limit and does not blame the disc. */
+            if (by_time && ks->ar_conf >= 1 && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s",
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf, shown_crc);
+                goto spool_encode;
+            }
+            if (by_time && ks->ar_conf >= 1) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s",
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf);
+                goto spool_encode;
+            }
+            if (by_time && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; last read %08X, not kept)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", shown_crc);
+                goto spool_encode;
+            }
+            if (by_time) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s");
+                goto spool_encode;
+            }
             if (ks->ar_conf >= 1 && kept != filed) {
                 cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
                             ctx->settings.max_retries,
@@ -2067,7 +2152,8 @@ fail:
         const uint64_t skips = paranoia_status[PARANOIA_CB_SKIP] -
                                start_paranoia[PARANOIA_CB_SKIP];
         if ((ctx->total_error_count - start_err) || skips ||
-            t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT)
+            t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT ||
+            t->secure_rip_state == CYANRIP_SECURE_RIP_TIME_LIMIT)
             cyanrip_log(ctx, 0, "Track %i read with errors.\n", t->number);
         else
             cyanrip_log(ctx, 0, "Track %i read with no error reported.\n",
@@ -2220,6 +2306,105 @@ static void setup_track_lsn(cyanrip_ctx *ctx, cyanrip_track *t)
     t->partial_frame_byte_offs = offs;
 }
 
+/* Whether a rip writes this track's file */
+static int crip_track_written(cyanrip_ctx *ctx, const cyanrip_track *t)
+{
+    if (ctx->settings.print_info_only || ctx->settings.generate_cue_only)
+        return 0;
+    if (t->track_is_data && ctx->settings.disable_data_tracks)
+        return 0;
+    if (ctx->settings.rip_indices_count == -1)
+        return 1;
+    for (int i = 0; i < ctx->settings.rip_indices_count; i++)
+        if (ctx->settings.rip_indices[i] == t->number)
+            return 1;
+    return 0;
+}
+
+/* Every path component a tag value is part of that was shortened to fit 255
+ * bytes, the fourth of our round 36 lap 12 S10's rules, which Platterpus's
+ * lap 13 S4 added, in the wording our round 37 lap 1 S7 gave and their lap
+ * 2 S5 accepted: `    <what>: <name as written> (<N> bytes as rendered)`.
+ * Folders come first, in path order, then each track's file in track order,
+ * then the cue sheet and the log, each file or folder once. Nothing is
+ * printed when no name was shortened, or when no file is written, as under
+ * -I. The names come from crip_get_path()'s own rendering, of the tags
+ * known when the header is written: a scheme naming a tag set during the
+ * rip, as `isrc` is by track_read_extra(), renders it then, and its file's
+ * name can differ from the one printed here, as the same-file warning's
+ * can. */
+static void crip_log_short_names(cyanrip_ctx *ctx)
+{
+    if (ctx->settings.print_info_only)
+        return;
+
+    enum { SN_FOLDER, SN_TRACK, SN_CUE, SN_LOG, SN_NB };
+    struct { int kind; char what[64]; char *dir, *name; size_t rendered; } *e = NULL;
+    int nb_e = 0;
+
+    for (int pass = SN_TRACK; pass < SN_NB; pass++) {
+        if (pass == SN_LOG && ctx->settings.generate_cue_only)
+            continue;
+        for (int i = 0; i < (pass == SN_TRACK ? ctx->nb_tracks : 1); i++) {
+            cyanrip_track *t = &ctx->tracks[i];
+            if (pass == SN_TRACK && !crip_track_written(ctx, t))
+                continue;
+            for (int f = 0; f < ctx->settings.outputs_num; f++) {
+                const cyanrip_out_fmt *cfmt = &crip_fmt_info[ctx->settings.outputs[f]];
+                CRIPShortName *names = NULL;
+                int nb_names = 0;
+                crip_get_short_names(ctx, pass == SN_LOG ? CRIP_PATH_LOG :
+                                          pass == SN_CUE ? CRIP_PATH_CUE :
+                                          t->track_is_data ? CRIP_PATH_DATA :
+                                          CRIP_PATH_TRACK,
+                                     cfmt, pass == SN_TRACK ? t : NULL,
+                                     &names, &nb_names);
+                for (int j = 0; j < nb_names; j++) {
+                    int seen = 0;
+                    for (int k = 0; k < nb_e && !seen; k++)
+                        seen = !strcmp(e[k].dir, names[j].dir);
+                    void *tmp = seen ? NULL :
+                                av_realloc_array(e, nb_e + 1, sizeof(*e));
+                    if (!tmp)
+                        continue;
+                    e = tmp;
+                    e[nb_e].kind = names[j].is_file ? pass : SN_FOLDER;
+                    if (e[nb_e].kind == SN_TRACK)
+                        snprintf(e[nb_e].what, sizeof(e[nb_e].what), "track %i, %s",
+                                 t->cd_track_number,
+                                 cyanrip_fmt_desc(ctx->settings.outputs[f]));
+                    else
+                        av_strlcpy(e[nb_e].what,
+                                   e[nb_e].kind == SN_FOLDER ? "folder" :
+                                   e[nb_e].kind == SN_CUE ? "cue sheet" : "log",
+                                   sizeof(e[nb_e].what));
+                    e[nb_e].rendered = names[j].rendered;
+                    e[nb_e].dir = names[j].dir;
+                    e[nb_e].name = names[j].name;
+                    names[j].dir = names[j].name = NULL;
+                    nb_e++;
+                }
+                crip_free_short_names(&names, &nb_names);
+            }
+        }
+    }
+
+    if (nb_e) {
+        cyanrip_log(ctx, 0, "Names shortened:\n");
+        for (int kind = SN_FOLDER; kind < SN_NB; kind++)
+            for (int k = 0; k < nb_e; k++)
+                if (e[k].kind == kind)
+                    cyanrip_log(ctx, 0, "    %s: %s (%zu bytes as rendered)\n",
+                                e[k].what, e[k].name, e[k].rendered);
+        cyanrip_log(ctx, 0, "\n");
+    }
+    for (int k = 0; k < nb_e; k++) {
+        av_free(e[k].dir);
+        av_free(e[k].name);
+    }
+    av_free(e);
+}
+
 static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
 {
     int gaps = 0;
@@ -2260,7 +2445,7 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
              ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC)) {
             cyanrip_log(ctx, 0, "    pregap of track %i unknown (%s)\n", ct->number,
                         ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ ?
-                        "sub-channel unreadable" : "sub-channel CRC mismatches");
+                        "sub-channel unreadable" : "sub-channel search bounds did not meet");
             gaps++;
             continue;
         }
@@ -2802,6 +2987,8 @@ static int cyanrip_run(int argc, char **argv)
                 "Tag a track with the ISRC read from the disc, where one is, over one given with -t");
     GEN_OPT_ONE(opts_list, bool,    prefer_accuraterip_match, "", 0, 0, 0, 0, 0,
                 "At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does");
+    GEN_OPT_ONE(opts_list, int32_t, reread_time_limit, "", 1, 1, 0, 1, INT32_MAX,
+                "Seconds a -Z track's reads may take, checked between whole-track reads; then no further read starts");
     GEN_OPT_ARR(opts_list, char *,  encoder_option, "", 0, 0, 32, 0, 0,
                 "Pass key=value to every output's encoder, as FFmpeg names its options (repeatable)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
@@ -2958,6 +3145,7 @@ static int cyanrip_run(int argc, char **argv)
     settings.consumer_id                = consumer;
     settings.prefer_disc_isrc           = prefer_disc_isrc;
     settings.prefer_ar_match            = prefer_accuraterip_match;
+    settings.reread_time_limit          = reread_time_limit;
     /* Registers the atexit writer, so every route out of main() is covered
      * rather than the ones someone remembered to instrument. Messages are
      * recorded from process start regardless; this only decides whether they
@@ -2989,6 +3177,14 @@ static int cyanrip_run(int argc, char **argv)
 
     find_drive_offset_range = find_offset ? 6 : 0;
     album_metadata_ptr = album_meta;
+
+    /* A limit on -Z's re-reads bounds nothing without -Z, so it is refused
+     * rather than ignored (our round 36 lap 10 S11, accepted by Platterpus's
+     * lap 11 S6). */
+    if (reread_time_limit && !repeat_rips) {
+        cyanrip_log(ctx, 0, "--reread-time-limit needs -Z: it limits -Z's re-reads, and without -Z there are none!\n");
+        return CRIP_EXIT_USAGE;
+    }
 
     /* The integers below that genopt does not parse are read wide and
      * range-checked before they are narrowed to an int. strtol() straight
@@ -3762,6 +3958,11 @@ static int cyanrip_run(int argc, char **argv)
         }
     }
 
+    /* After every tag a name can use is set, and before anything else is
+     * logged, so the block follows Pregap searches: as our round 37 lap 1 S7
+     * placed it */
+    crip_log_short_names(ctx);
+
     /* Only generate the CUE sheet, print it, and exit */
     if (ctx->settings.generate_cue_only) {
         for (int i = 0; i < ctx->nb_tracks; i++) {
@@ -3883,8 +4084,13 @@ static int cyanrip_run(int argc, char **argv)
                 track_read_extra(ctx, t);
                 cyanrip_log_track_end(ctx, t);
 
-                if (get_media_changed(ctx)) {
+                const int changed = get_media_changed(ctx);
+                if (changed > 0) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
+                    ctx->exit_class = CRIP_EXIT_IOERR;
+                    break;
+                } else if (changed < 0) {
+                    cyanrip_log(ctx, 0, "Drive media change query failed (libcdio error %i), stopping!\n", changed);
                     ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
                 }
@@ -4004,8 +4210,13 @@ static int cyanrip_run(int argc, char **argv)
                 track_read_extra(ctx, t);
                 cyanrip_log_track_end(ctx, t);
 
-                if (get_media_changed(ctx)) {
+                const int changed = get_media_changed(ctx);
+                if (changed > 0) {
                     cyanrip_log(ctx, 0, "Drive media changed, stopping!\n");
+                    ctx->exit_class = CRIP_EXIT_IOERR;
+                    break;
+                } else if (changed < 0) {
+                    cyanrip_log(ctx, 0, "Drive media change query failed (libcdio error %i), stopping!\n", changed);
                     ctx->exit_class = CRIP_EXIT_IOERR;
                     break;
                 }

@@ -155,7 +155,11 @@ def normalise(text):
 # either one ambiguously or not at all is compared as before: skipping needs
 # evidence that the libraries differ, and a rip that failed before writing
 # those lines must fail, not skip.
-LIBCDIO_RE = re.compile(r"^Drive used:\s+libcdio \S+ \(revision (\d+)\.(\d+)",
+# Both forms: the build after `.27` says no drive was used on an image and
+# keeps the revision (our round 36 lap 12 S11 (b), with our round 37 lap 3's
+# revision clause); every reference before it names the driver as a drive.
+LIBCDIO_RE = re.compile(r"^Drive used:\s+(?:libcdio \S+ \(|none \(disc image, "
+                        r"read by libcdio's \S+ driver, )revision (\d+)\.(\d+)",
                         re.M)
 LIBAVCODEC_RE = re.compile(r"^Encoder:\s+.*\blibavcodec (\d+)\.", re.M)
 # libchromaprint is optional, and whether the build has it is printed on the

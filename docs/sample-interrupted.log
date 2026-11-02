@@ -19,17 +19,17 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc3+platterpus.27 (platterpus-fork-g437d282)
+cyanrip 0.9.4-rc3+platterpus.27 (platterpus-fork-gb8be82e)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 --consumer platterpus/0.6.21 -D o --diagnostics o/sample.diagnostics.json
-Handshake:      round 37 lap 1 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 37 lap 3 OPEN, verdict OPEN -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
-Drive used:     libcdio CDRWIN (revision 2.1.)
+Drive used:     none (disc image, read by libcdio's CDRWIN driver, revision 2.1.)
 System device:  pregap.cue
 Offset:         +0 samples
 Overread:       +0 frames
 Overread mode:  fill with silence in lead-in/lead-out
-Speed:          default (unchangeable)
+Speed:          default (drive not asked whether it can change speed)
 C2 errors:      unsupported by drive
 Accurate stream: unknown (image)
 Recordable:     unknown (image)
@@ -103,7 +103,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          100
+  READ:          99
 
 Ripping errors: 1
 Encoder errors: not applicable; no whole track was encoded
@@ -111,5 +111,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-10-29T01:40:13+00:00
-Log FUN512: BLXiPaLTx.Zs6cWhlYRoSRDooCb8MjNxb_Tj5JmWxjDDJ16J55wqFG9DiNkiV7_doIfSO_crZyCbpnMCEazfYw
+Ripping finished at 2026-11-02T20:32:26+00:00
+Log FUN512: L8MSwsGqbEACCm64DJqy_ql2ukm.h8n6MZS4jaIvB17.pztAA1rsItrxDHdR14vC_nnv3rivcmr_vjLIRlAB1Q

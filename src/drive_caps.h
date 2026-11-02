@@ -65,3 +65,19 @@ int crip_current_profile_parse(const uint8_t *buf, size_t len);
 /* The value of the `Recordable:` line for a profile, or for one of the two
  * negatives above. Writes into buf, which 64 bytes always holds. */
 const char *crip_recordable_text(char *buf, size_t size, int profile);
+
+/* The `Speed:` value: `speed` is -S's (0 when not given), `is_image` that
+ * the device is a disc image, and `failed` that libcdio could not set the
+ * speed. Without -S nothing asks the drive whether it can change speed; with
+ * it, a speed that could not be set reads at the drive's own speed and says
+ * so, and an image has no speed to set (our round 36 lap 12 S11 (a) and
+ * round 37 lap 1 S8, accepted by Platterpus's round 36 lap 13 S5 and round
+ * 37 lap 2 S6). Writes into buf and returns it. */
+const char *crip_speed_text(char *buf, size_t size, int speed, int is_image,
+                            int failed);
+
+/* The `C2 errors:` value: `caps_failed` that the capabilities query failed,
+ * which sets every capability word to CDIO_DRIVE_CAP_ERROR, so the C2 bit's
+ * absence says nothing (our round 36 lap 12 S11 (c), accepted by
+ * Platterpus's lap 13 S5); `c2` that the drive declares C2 reporting. */
+const char *crip_c2_text(int caps_failed, int c2);

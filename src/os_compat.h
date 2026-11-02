@@ -103,6 +103,8 @@ typedef struct stat cyanrip_stat_t;
 #define HAS_CH_FWDSLASH 0
 #define HAS_CH_BWDSLASH 0
 #define HAS_CH_QUOTES 0
+#define HAS_CH_CONTROL 0
+#define HAS_NAME_DEVICES 0
 #endif
 
 #ifndef HAS_CH_LESS
@@ -131,6 +133,12 @@ typedef struct stat cyanrip_stat_t;
 #endif
 #ifndef HAS_CH_QUOTES
 #define HAS_CH_QUOTES 1
+#endif
+#ifndef HAS_CH_CONTROL
+#define HAS_CH_CONTROL 1 // U+0001 to U+001F
+#endif
+#ifndef HAS_NAME_DEVICES
+#define HAS_NAME_DEVICES 1 // a file may be named CON, NUL...
 #endif
 #ifndef OS_DIR_CHAR
 #define OS_DIR_CHAR '/'

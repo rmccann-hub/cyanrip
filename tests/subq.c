@@ -486,9 +486,9 @@ static void test_search_bad_frames(void)
 }
 
 /* What the search says it saw, for the log's `Pregap search:` line. The
- * `unknown (sub-channel CRC mismatches)` the log gives is reached whenever
- * the bounds do not meet (our round 36 lap 8 S5): these counts tell a frame
- * that failed its CRC from one that answered for another sector. */
+ * `unknown (sub-channel search bounds did not meet)` the log gives is reached
+ * whenever the bounds do not meet (our round 36 lap 8 S5): these counts tell
+ * a frame that failed its CRC from one that answered for another sector. */
 static void test_search_stats(void)
 {
     /* Clean: every sector asked once, nothing failed or misplaced, and the
@@ -547,8 +547,8 @@ static void test_search_stats(void)
 
     /* A sector the drive always answers with its neighbour's frame: no CRC
      * ever fails, yet the bounds never meet and the source is the one the
-     * log words `sub-channel CRC mismatches`. Only the counts tell it from
-     * the case above. */
+     * log words `sub-channel search bounds did not meet`. Only the counts
+     * tell it from the case above. */
     d = fake_track9();
     d.answer = FAKE_STUCK;
     d.stale = d.disc.pregap - 1;

@@ -71,7 +71,7 @@ if gen.library_set(ref) != ("2.1", "60", "absent"):
          f"{encoder!r} and {acoustid!r}")
 
 # 2. The lines CI's macOS job printed for the same rip (run 38292984001).
-mac = (ref.replace(drive, "Drive used:     libcdio CDRWIN (revision 2.4.)")
+mac = (ref.replace(drive, drive.replace("revision 2.1.", "revision 2.4."))
           .replace(encoder, "Encoder:        libavformat 63.1.101, "
                             "libavcodec 63.1.101 (9.0.1)"))
 why = gen.library_mismatch(ref, mac)
@@ -114,7 +114,7 @@ for label, fresh in (
         ("no Drive used line", ref.replace(drive + "\n", "")),
         ("no Encoder line", ref.replace(encoder + "\n", "")),
         ("two Drive used lines", ref.replace(
-            drive, drive + "\nDrive used:     libcdio CDRWIN (revision 2.4.)")),
+            drive, drive + "\n" + drive.replace("revision 2.1.", "revision 2.4."))),
         ("no AcoustID line", ref.replace(acoustid + "\n", "")),
         ("two AcoustID lines", ref.replace(
             acoustid, acoustid + "\nAcoustID:       disabled"))):

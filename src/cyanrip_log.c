@@ -444,7 +444,15 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
     } else if (t->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ) {
         cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel unreadable)\n");
     } else if (t->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC) {
-        cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel CRC mismatches)\n");
+        /* Reached whenever the search's bounds do not meet, by frames that
+         * fail their CRC or frames that answer for another sector alike, so
+         * the words say what happened and not why. They read `sub-channel CRC
+         * mismatches` until our round 37 lap 1 S6, which Platterpus's lap 2
+         * S4 accepted, after round 36's run of 2026-10-28 showed the old
+         * words over a record in which no sector failed its CRC (our round 36
+         * lap 16 S9). The `Gaps:` list gives the same words, which
+         * sc_unknown_pregap_reasons_agree() holds. */
+        cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel search bounds did not meet)\n");
     } else {
         cyanrip_log(ctx, 0, "    Pregap LSN:  none\n");
     }
@@ -469,8 +477,8 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "    Pregap source: TOC\n");
 
     /* What the sub-channel search saw, whether it found the pregap or not.
-     * Its `unknown (sub-channel CRC mismatches)` is given whenever its bounds
-     * do not meet, which frames for other sectors can cause as well as frames
+     * Its `unknown (sub-channel search bounds did not meet)` is given
+     * whenever its bounds do not meet, which frames for other sectors can cause as well as frames
      * that fail their CRC; round 36's runs read the reference disc's track 9
      * as 95 or unknown where .25 and EAC read 94 (our round 36 lap 8 S5), and
      * these counts are what a drive run needs to tell the causes apart. The
@@ -739,6 +747,11 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         cyanrip_log(ctx, 0, "  Secure re-read:  did NOT converge after %i reads (repeat limit hit)\n",
                     t->total_repeats);
         break;
+    case CYANRIP_SECURE_RIP_TIME_LIMIT:
+        cyanrip_log(ctx, 0, "  Secure re-read:  did NOT converge after %i read%s (time limit of %i s reached)\n",
+                    t->total_repeats, t->total_repeats == 1 ? "" : "s",
+                    ctx->settings.reread_time_limit);
+        break;
     case CYANRIP_SECURE_RIP_NA:
     default:
         cyanrip_log(ctx, 0, "  Secure re-read:  not attempted\n");
@@ -1000,8 +1013,18 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     crip_log_identity(ctx);
     cdio_hwinfo_t hwinfo;
     const int hwinfo_success = cdio_get_hwinfo(ctx->cdio, &hwinfo);
+    /* On a disc image libcdio's hwinfo names its own image driver, `libcdio
+     * CDRWIN`, where a drive's vendor and model would be, so the line said a
+     * drive was used. It says none was, and which driver read the image (our
+     * round 36 lap 12 S11 (b), accepted by Platterpus's lap 13 S5), keeping
+     * the revision, libcdio's CDIO_VERSION cut to four characters, which is
+     * the only place a log names libcdio's version and which the golden
+     * reference's library check reads (our round 37 lap 3). */
     if (!hwinfo_success)
         cyanrip_log(ctx, 0, "Drive used:     error retrieving drive info\n");
+    else if (ctx->is_image)
+        cyanrip_log(ctx, 0, "Drive used:     none (disc image, read by libcdio's %s driver, revision %s)\n",
+                    hwinfo.psz_model, hwinfo.psz_revision);
     else
         cyanrip_log(ctx, 0, "Drive used:     %s %s (revision %s)\n", hwinfo.psz_vendor, hwinfo.psz_model, hwinfo.psz_revision);
     cyanrip_log(ctx, 0, "System device:  %s\n", ctx->settings.dev_path);
@@ -1026,13 +1049,19 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     cyanrip_log(ctx, 0, "%s%s\n",
                 ctx->settings.over_under_read_frames < 0 ? "Underread mode: " : "Overread mode:  ",
                 ctx->settings.overread_leadinout ? "read in lead-in/lead-out" : "fill with silence in lead-in/lead-out");
-    if (ctx->settings.speed)
-        cyanrip_log(ctx, 0, "Speed:          %ix\n", ctx->settings.speed);
-    else
-        cyanrip_log(ctx, 0, "Speed:          default (%s)\n",
-                    (ctx->mcap & CDIO_DRIVE_CAP_MISC_SELECT_SPEED) ? "changeable" : "unchangeable");
-    cyanrip_log(ctx, 0, "C2 errors:      %s\n", (ctx->rcap & CDIO_DRIVE_CAP_READ_C2_ERRS) ?
-                "supported by drive, not used" : "unsupported by drive");
+    /* Without -S nothing asks the drive whether it can change speed:
+     * libcdio's MMC page parser never sets CDIO_DRIVE_CAP_MISC_SELECT_SPEED,
+     * and on macOS it is set for every drive whose features it reads, so the
+     * line said `unchangeable` or `changeable` of no answer. The wordings are
+     * crip_speed_text()'s and crip_c2_text()'s, which tests/drivecaps.c holds
+     * on the arms no image reaches. */
+    char speed[64];
+    cyanrip_log(ctx, 0, "Speed:          %s\n",
+                crip_speed_text(speed, sizeof(speed), ctx->settings.speed,
+                                ctx->is_image, ctx->speed_failed));
+    cyanrip_log(ctx, 0, "C2 errors:      %s\n",
+                crip_c2_text(!!(ctx->rcap & CDIO_DRIVE_CAP_ERROR),
+                             !!(ctx->rcap & CDIO_DRIVE_CAP_READ_C2_ERRS)));
     cyanrip_log(ctx, 0, "Accurate stream: %s\n", crip_accurate_stream_text(ctx->accurate_stream));
     char recordable[64];
     cyanrip_log(ctx, 0, "Recordable:     %s\n",
@@ -1074,6 +1103,11 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
                     "rounded up to a multiple of 5, the only values libcdio-paranoia checks)\n",
                     ctx->settings.max_retries,
                     crip_frame_retry_limit(ctx->settings.max_retries));
+    /* Printed only when the option is given, so a log without it reads as
+     * every log before it (our round 36 lap 10 S11). */
+    if (ctx->settings.reread_time_limit)
+        cyanrip_log(ctx, 0, "Re-read limit:  %i s a track, checked between whole-track reads\n",
+                    ctx->settings.reread_time_limit);
     print_cache_model(ctx);
     cyanrip_log(ctx, 0, "HDCD decoding:  %s\n", ctx->settings.decode_hdcd ? "enabled" : "disabled");
 

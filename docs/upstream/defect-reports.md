@@ -5,14 +5,14 @@ operator, combined in the order of importance `issues-to-file.md` suggests.
 That is the operator's word: this file's author could not open it, since this session's proxy answers HTTP 403 for upstream's tracker and refuses to attach upstream beside the fork, so the link is relayed, not read. A reply that asks for a pull request, or for any report as
 an issue of its own, goes to the operator, who files it. Filing on upstream's
 tracker is outside this repository, so it is the maintainer's act; what this
-file does is make each one a copy-and-paste. **Reports 24 to 26, drafted
-on 2026-10-19 and 2026-10-21, are not filed yet.** All twenty-six are
+file does is make each one a copy-and-paste. **Reports 24 to 28, drafted
+from 2026-10-19 to 2026-10-30, are not filed yet.** All twenty-eight are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. The rule
 (`docs/history/CLAUDE-2026-10-21.md`) is that *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
-its own file, `docs/upstream-cachemodel-report.md`. There are twenty-six:
-twenty-five here, and that one. The thirteenth found, report 13, was found the
+its own file, `docs/upstream-cachemodel-report.md`. There are twenty-eight:
+twenty-seven here, and that one. The thirteenth found, report 13, was found the
 day this file was written. Reports 14 to 18 were drafted on 2026-10-05, when
 `master` was still `f8ebf48` (`git ls-remote` again): 14 and 18 found that
 day, and 15 to 17 found earlier in round 30 and fixed for the fork's `.20`
@@ -27,7 +27,11 @@ probe, and 24 fixed here on 2026-08-06 with no report until 25's search for
 the same code found it. Report 26 was drafted on 2026-10-21, read from
 upstream's source at `7dbe56a` after Platterpus asked whether the fork's
 footer counted a data track (their round 36 lap 3 S8), and drafted with the
-fix that names it.
+fix that names it. Report 27 was drafted on 2026-10-26, from a review of the
+fork. Report 28 was drafted on 2026-10-30, found while building the fork's
+path-component rules, and checked against upstream's `648b1dd`, which
+`git ls-remote` gave for `master` that day: its four commits after `7dbe56a`
+change only files under `.github/`, so every `src/` line below holds there.
 
 **Checked against upstream `master` at `7dbe56a` on 2026-10-16** (`git ls-remote
 https://github.com/cyanreg/cyanrip refs/heads/master` returned
@@ -818,3 +822,38 @@ and U+2029, as `<U+XXXX>`, and each byte that is not well-formed UTF-8 as
 characters is written byte for byte (`46cec2a`, "Escape every value the log
 writes, so none can start a line of its own"). The tags written to the files
 keep the value as it came. Found on 2026-10-26 by a review of the fork.
+
+## 28. A path over 1,003 bytes is cut there, extension and all
+
+**Where:** `src/naming.c:410` at `7dbe56a` and at `648b1dd`, in
+`crip_get_path()`:
+
+```c
+av_bprint_init(&buf, 0, AV_BPRINT_SIZE_AUTOMATIC);
+```
+
+`AV_BPRINT_SIZE_AUTOMATIC` limits the buffer to the one inside the `AVBPrint`
+structure itself, which FFmpeg pads to 1,024 bytes, and
+`av_bprint_finalize()` (`:453`) returns whatever fitted without saying that
+anything did not. Every path the program writes comes from this function:
+each track, the log, the CUE sheet and the cover art.
+
+**What happens:** a path longer than 1,003 bytes is cut at byte 1,003, so the
+file loses its extension and the end of its name, and every file whose path
+shares those 1,003 bytes goes to the same file. Each component can be within
+the 255 bytes a filesystem allows, so nothing refuses it. Run on the fork
+before its fix, whose `crip_get_path()` was upstream's here: `basic.cue`, two
+audio tracks, ripped with `-o flac`, an album of 200 bytes and `-D
+"<root>/{album}/{album}/{album}/{album}/{album}"` from a 90-byte root, left
+one file on disk, 1,003 bytes of path with no extension, a FLAC stream with
+the log's text written into it. The log, the CUE sheet and both tracks had
+been written to it. The rip printed `WARNING: tracks 1 and 2 resolve to the
+same file` and `Rip completed:  yes (2 of 2 tracks)`, and exited 0. Upstream's
+own rip was not run: this is read from its source, which is the fork's here.
+
+**What the fork did:** `crip_get_path()` renders with
+`AV_BPRINT_SIZE_UNLIMITED` and returns `NULL` if the buffer could not be
+completed, so a path is either whole or not given (`cfd738e`, "Render a
+path whole, past the 1,003 bytes an AVBPrint holds"). The same rip leaves
+the log, the CUE sheet and both tracks, each under its own name. Found on
+2026-10-30.

@@ -93,12 +93,12 @@ enum cyanrip_pregap_source {
     CYANRIP_PREGAP_SRC_LEADIN, /* First track, the standard lead-in */
     CYANRIP_PREGAP_SRC_SUBCHANNEL, /* Found by reading Q sub-channel data */
     CYANRIP_PREGAP_SRC_ERR_READ, /* Sub-channel unreadable, pregap unknown */
-    CYANRIP_PREGAP_SRC_ERR_CRC, /* Sub-channel CRCs never agreed, unknown */
+    CYANRIP_PREGAP_SRC_ERR_CRC, /* Search bounds never met, unknown */
 };
 
 /* What a sub-channel pregap search saw, for the log's `Pregap search:` line.
- * Its `unknown (sub-channel CRC mismatches)` is given whenever the bounds do
- * not meet, which frames for other sectors can cause as well as frames that
+ * Its `unknown (sub-channel search bounds did not meet)` is given whenever the
+ * bounds do not meet, which frames for other sectors can cause as well as frames that
  * fail their CRC, and round 36's runs read the reference disc's track 9 as 95
  * or unknown where .25 and EAC read 94 (our round 36 lap 8 S5): these counts
  * are what tells the causes apart. All zero when no search ran. */
@@ -119,6 +119,7 @@ enum cyanrip_secure_rip_state {
     CYANRIP_SECURE_RIP_NA = 0, /* -Z was not requested for this track */
     CYANRIP_SECURE_RIP_CONVERGED, /* Matching checksums were found */
     CYANRIP_SECURE_RIP_LIMIT_HIT, /* Repeat limit hit before checksums matched */
+    CYANRIP_SECURE_RIP_TIME_LIMIT, /* --reread-time-limit reached before they matched */
     /* There is deliberately NO "interrupted" state, and the absence is load
      * bearing rather than an omission. An interrupted track emits no track
      * block at all -- cyanrip_rip_track()'s `if (!quit_now && !ret)` guard --
@@ -198,6 +199,7 @@ typedef struct cyanrip_settings {
     char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
     int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
     int prefer_ar_match; /* --prefer-accuraterip-match: at the -Z repeat limit, a read AccurateRip matches first */
+    int reread_time_limit; /* --reread-time-limit: seconds a -Z track's reads may take; 0 is none */
     int generate_cue_only;
     int disable_data_tracks;
     int disable_acoustid;
@@ -360,6 +362,12 @@ typedef struct cyanrip_track {
      * the measurement it is, with its reason beside it, and never written to
      * the files, with or without --prefer-disc-isrc. */
     int isrc_disc_malformed;
+    /* Which read gave isrc_disc, for the record's isrc_disc_read (/11, our
+     * round 36 lap 4 S12 and lap 10 S12, Platterpus's lap 3 S5 and lap 11
+     * S7): "read sub-channel", "q frames", "read sub-channel, again" or, on
+     * a disc image, where libcdio answers from the image's own file and
+     * sends no command, "disc image". NULL when isrc_disc is. A literal. */
+    const char *isrc_disc_read;
 
     size_t nb_samples; /* Track duration in samples */
 
@@ -535,6 +543,8 @@ typedef struct cyanrip_ctx {
     cdio_drive_write_cap_t wcap;
     cdio_drive_misc_cap_t  mcap;
     enum CripAccurateStream accurate_stream; /* page 2Ah's declaration, or why there is none */
+    int is_image;       /* The device is a disc image (crip_is_image_driver()) */
+    int speed_failed;   /* -S was given and libcdio could not set the speed */
     int disc_profile; /* the drive's current profile, or CRIP_PROFILE_IMAGE/_UNREADABLE */
 
     /* Metadata */
@@ -655,6 +665,21 @@ int crip_check_scheme(cyanrip_ctx *ctx, const char *scheme);
 
 char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
                     const cyanrip_out_fmt *fmt, void *arg);
+
+/* A path component crip_get_path() shortened to fit 255 bytes */
+typedef struct CRIPShortName {
+    char *dir;       /* the path up to and including the component */
+    char *name;      /* the component as written */
+    size_t rendered; /* its length in bytes as rendered */
+    int is_file;     /* the path's last component */
+} CRIPShortName;
+
+/* Appends each component of the path crip_get_path() gives that was
+ * shortened, left to right; free with crip_free_short_names() */
+int crip_get_short_names(cyanrip_ctx *ctx, enum CRIPPathType type,
+                         const cyanrip_out_fmt *fmt, void *arg,
+                         CRIPShortName **names, int *nb_names);
+void crip_free_short_names(CRIPShortName **names, int *nb_names);
 
 /* Prepend key1= and key2= to the first two keyless entries of a
  * key=value:key=value string, minding escapes. Key 1 and 2 must be set. */
