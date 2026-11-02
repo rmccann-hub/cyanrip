@@ -70,10 +70,18 @@ HEADER_AT = re.compile(r"\*\*Checked against upstream `master` at `([0-9a-f]{7})
 WHERE_AT = re.compile(r"\A\*\*Where:\*\*[^\n]* at `([0-9a-f]{7})`")
 
 
-def is_commit(sha):
+def is_commit(sha, ref):
+    """A commit this checkout's history or our mirror of upstream reaches.
+    Not any object the clone holds: a clone that had fetched upstream's
+    648b1dd to read it linked that commit as the fork's, a link to nothing,
+    and rendered a file CI's clone, without the object, called stale."""
     r = subprocess.run(["git", "-C", str(ROOT), "cat-file", "-e",
                         sha + "^{commit}"], capture_output=True)
-    return r.returncode == 0
+    if r.returncode != 0:
+        return False
+    return any(subprocess.run(
+        ["git", "-C", str(ROOT), "merge-base", "--is-ancestor", sha, tip],
+        capture_output=True).returncode == 0 for tip in ("HEAD", ref) if tip)
 
 
 def upstream_ref():
@@ -100,7 +108,7 @@ def link_commits(text):
 
     def link(m):
         sha = m.group(1)
-        if not is_commit(sha):
+        if not is_commit(sha, ref):
             return m.group(0)
         return f"[`{sha}`]({UPSTREAM if is_upstream(sha, ref) else FORK}/commit/{sha})"
     return re.sub(r"`([0-9a-f]{7})`", link, text)
