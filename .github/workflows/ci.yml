@@ -166,7 +166,7 @@ jobs:
       - name: Install ruff for the Python lint
         if: matrix.name == 'released'
         run: |
-          uv tool install ruff==0.15.8
+          uv tool install ruff==0.17.3
           uv tool dir --bin >> "$GITHUB_PATH"
 
       - name: Test
