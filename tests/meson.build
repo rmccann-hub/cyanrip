@@ -700,8 +700,12 @@ test('Rip under memcheck', python,
 ## every lap and the whole record, and it was measured at 27-30 s on a loaded
 ## machine -- close enough to flake, and a flaky test is worse than none. The
 ## expensive rows were made cheap in the same change; this is the headroom.
+## 240 s since 2026-11-02: some rows run the binary, so in CI's TSan row they
+## run the instrumented one, and that row took 107.55 s at 03cc064 (PR #75)
+## and was killed at 120 s twice the same day, 72 of 107 rows done. Elsewhere
+## it takes 45 to 75 s; a hung row is stopped at 90 s by the tool itself.
 test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
-     timeout: 120)
+     timeout: 240)
 
 ## docs/upstream/issues-to-file.md names the upstream commit its links were
 ## resolved against, and --check renders against that commit, so a clone
