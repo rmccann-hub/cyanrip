@@ -609,6 +609,7 @@ test('Lap commit list names its range', python,
 ## is the shape Platterpus's round 28 lap 2 S21-S22 named. 5.9 s alone.
 test('Lap statements are well formed', python,
      args: [ files('lap_statements.py') ],
+     priority: 50,  # started early: see the black-box sweep
      timeout: 120)
 
 test('Handshake wire conformance', python,
@@ -632,6 +633,7 @@ test('Handshake wire conformance', python,
 ## where it misfires. This one is CPU-bound, deterministic, and growing with the
 ## handshake record exactly as designed.
 test('Release gate', python, args: [ files('release_gate.py') ],
+     priority: 50,  # started early: see the black-box sweep
      timeout: 120)
 
 ## Settled facts, and the seam checker
@@ -681,6 +683,7 @@ test('Sanitizer sweep', python,
      args: [ files('../tools/sanitize-run.py'),
              '--unless-instrumented', cyanrip_exe.full_path() ],
      depends: cyanrip_exe,
+     priority: 50,  # started early: see the black-box sweep
      timeout: 900)
 ## Valgrind's memcheck over one rip of the basic image (review C item 3.7):
 ## it sees inside the libraries as built, which no sanitizer instruments.
@@ -690,6 +693,7 @@ test('Rip under memcheck', python,
      args: [ files('valgrind_rip.py'), cyanrip_exe.full_path(),
              meson.current_source_dir() / 'fixtures', get_option('b_sanitize') ],
      depends: cyanrip_exe,
+     priority: 50,  # started early: see the black-box sweep
      timeout: 1200)
 
 ## Timeout raised from meson's 30 s default: these rows run git and python over
@@ -697,6 +701,7 @@ test('Rip under memcheck', python,
 ## machine -- close enough to flake, and a flaky test is worse than none. The
 ## expensive rows were made cheap in the same change; this is the headroom.
 test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
+     priority: 50,  # started early: see the black-box sweep
      timeout: 120)
 
 ## The black-box sweep
@@ -719,6 +724,16 @@ test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
 ##
 ## is_parallel: false is therefore load-bearing. `meson test` runs
 ## non-parallel tests on their own, which is the condition the class needs.
+##
+## STARTED FIRST, priority 100, because a test that must run alone costs the
+## suite twice when it starts late: meson starts it only once every running
+## test has finished. In the run at 1231de5 it was reached at 83 s and waited
+## until 112 s for Settled facts, the one test still running, with three of
+## four cores idle; it ran alone to 251 s and the suite ended at 292 s. First,
+## there is nothing to wait for. The five long tests that run beside others
+## (Lap statements, Release gate, Sanitizer sweep, Rip under memcheck and
+## Settled facts, 30 to 71 s each in that run) come next at priority 50, so
+## none of them is started last and runs on alone at the end.
 ##
 ## MEASURED before wiring it in: ~7 minutes for all 838 on this machine, and
 ## a clean serial run reports no invariant violations. Two classes are
@@ -766,6 +781,7 @@ test('P5 citations fill conversions', python,
 
 test('Black-box sweep', python,
      args: [ files('../tools/blackbox.py'), '--binary', cyanrip_exe, '--gate' ],
+     priority: 100,
      is_parallel: false,
      timeout: 1800)
 

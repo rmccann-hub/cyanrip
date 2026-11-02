@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**The suite starts the black-box sweep first.** It must run alone, and meson
+starts such a test only once every running test has finished, so registered
+late it waited 29 s at 1231de5 for Settled facts with three of four cores
+idle. Started first there is nothing to wait for, and the five long tests
+that run beside others follow at the next priority: the suite here went from
+292 s to 246 s, one run each.
+
 **CI spends less time on runs nobody needs.** A pull request's run is now
 cancelled when a newer commit is pushed to it (`f067950`): on 2026-11-02
 PR #75 had three going at once, two on commits already replaced. A daily
