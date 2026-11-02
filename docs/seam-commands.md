@@ -608,7 +608,13 @@ rather than an error — also an `absent` row.
 
 <!-- END GENERATED probe-argv-surface -->
 
-**Silently-ignored values: none.** Every value was seen to take effect, was refused with a message, or could not be observed (46 unobservable, which is not the same as taking effect).
+**Silently-ignored values: none.** Every value was seen to take effect, was refused with a message, or could not be observed, which is not the same as taking effect; the count of each is the generated line above.
+
+**A `--diagnostics` record that opens and cannot be written**, a row the probe cannot generate on every platform, since the file it needs, `/dev/full`, is not on macOS. Measured on Linux at `.28`'s build with `--diagnostics /dev/full`: the rip completes and exits 0, and stderr carries `Couldn't write diagnostics path "/dev/full": No space left on device!`, the reason being the system's. As for a record that cannot be opened, above, the exit code stays at 0 and the stderr line is what says the record was lost: our round 36 lap 14 S9 asked, and Platterpus's lap 15 S7 answered keep exit 0 and print the line.
+
+| flag | value | outcome | exit | message |
+|---|---|---|---|---|
+| `--diagnostics` | `'/dev/full'` | **no record** | 0 | Couldn't write diagnostics path "/dev/full": No space left on device! |
 
 ### Exit codes, graded (S-12)
 
