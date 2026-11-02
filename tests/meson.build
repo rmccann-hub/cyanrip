@@ -606,7 +606,10 @@ test('Lap commit list names its range', python,
 ## one cannot be sent malformed.
 ## An explicit timeout, not meson's 30 s default: this runs a subprocess per
 ## case, about a hundred of them since LSL 2, and a library default in a parallel run
-## is the shape Platterpus's round 28 lap 2 S21-S22 named. 5.9 s alone.
+## is the shape Platterpus's round 28 lap 2 S21-S22 named. It was 5.9 s alone
+## when that was written; on 2026-11-02 it was 38.9 s, because it re-checks
+## every lap we have sent, 51 then, and 24.5 s once those checks ran a few at
+## a time. CI's macOS runner took it to 95.3 s on 2026-10-29.
 test('Lap statements are well formed', python,
      args: [ files('lap_statements.py') ],
      priority: 50,  # started early: see the black-box sweep

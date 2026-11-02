@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**The lap checker's test checks our sent laps a few at a time.** It re-checks
+every lap we have sent, 51 now, one process each, and one at a time that grew
+with every lap: 38.9 s alone here, and 95.3 s of its 120 s timeout on CI's
+macOS runner on 2026-10-29. Run concurrently, the test takes 24.5 s here.
+Its comment in `tests/meson.build` still said 5.9 s, and says what was
+measured now.
+
 **The suite starts the black-box sweep first.** It must run alone, and meson
 starts such a test only once every running test has finished, so registered
 late it waited 29 s at 1231de5 for Settled facts with three of four cores
