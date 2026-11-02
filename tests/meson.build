@@ -707,6 +707,15 @@ test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
      priority: 50,  # started early: see the black-box sweep
      timeout: 120)
 
+## docs/upstream/issues-to-file.md names the upstream commit its links were
+## resolved against, and --check renders against that commit, so a clone
+## whose `master` is stale gives CI's answer; on 2026-11-02 it did not, twice.
+## Run on a view of this repository with refs of its own. 10 s alone, so not
+## meson's 30 s default in a parallel run.
+test('Upstream issues file is pinned to its master', python,
+     args: [ files('upstream_issues.py') ],
+     timeout: 120)
+
 ## The black-box sweep
 ## ==================
 ## 838 invocations of hostile, malformed and adversarial argv against seven
