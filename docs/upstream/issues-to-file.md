@@ -1118,7 +1118,7 @@ keep the value as it came. Found on 2026-10-26 by a review of the fork.
 
 <!-- BODY START -->
 
-**Where:** `src/naming.c:410` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a) and at [`648b1dd`](https://github.com/rmccann-hub/cyanrip/commit/648b1dd), in
+**Where:** `src/naming.c:410` at [`7dbe56a`](https://github.com/cyanreg/cyanrip/commit/7dbe56a) and at `648b1dd`, in
 `crip_get_path()`:
 
 ```c
