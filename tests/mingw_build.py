@@ -72,7 +72,7 @@ if "GNU findutils" not in xargs:
 
 # The stubs buildCyanrip calls. LAME stands for whichever library fails.
 STUBS = ('cyan_prepare() { CYANRIPINSTALLDIR=$T/inst; mkdir -p "$CYANRIPINSTALLDIR"; }\n'
-         'build_lame() { echo "lame-3.100: stub"; return "${LAME_STATUS}"; }\n'
+         'build_lame() { echo "lame-4.0: stub"; return "${LAME_STATUS}"; }\n'
          + "".join(f"{f}() {{ echo ran-{f}; }}\n" for f in LIBS)
          + 'pkg-config() { echo "$PROTOCOLS"; }\n'
          'build_cyanrip() { echo ran-build_cyanrip; }\n'
@@ -97,7 +97,7 @@ with tempfile.TemporaryDirectory(prefix="cyanrip-mingw-") as d:
     for ran in ("ran-build_curl", "ran-build_cyanrip", "finished"):
         if ran in r.stdout:
             fail(f"a failed library: {ran} printed, so the build went on")
-    if "lame-3.100: stub" not in r.stdout:
+    if "lame-4.0: stub" not in r.stdout:
         fail("a failed library: its own line is missing, so the stub never ran")
     if "A library failed to build" not in r.stderr:
         fail(f"a failed library is not named on stderr: {r.stderr!r}")
