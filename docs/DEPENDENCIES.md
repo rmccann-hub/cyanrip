@@ -59,7 +59,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 
 GitHub Actions. Each workflow, and what starts it:
 
-- `.github/workflows/ci.yml`, *CI (platterpus-fork)*: `push` to `platterpus-fork`; `pull_request` to `platterpus-fork`; `release`; by hand.
+- `.github/workflows/ci.yml`, *CI (platterpus-fork)*: `push` to `platterpus-fork`; `pull_request` to `platterpus-fork`; `release`; by hand; `schedule`.
 - `.github/workflows/dependencies.yml`, *Dependencies*: `schedule`; by hand.
 - `.github/workflows/tag-release.yml`, *Tag a release*: by hand.
 
@@ -115,7 +115,7 @@ Each is a liability with a removal condition, not a fix. The details and what wo
 
 - **Machine:** Ubuntu 24.04.4 LTS; Python 3.11.15; cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; meson 1.3.2; ninja 1.11.1; pkg-config 1.8.1; git version 2.43.0.
 - **FFmpeg:** ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers; configured `--enable-gpl`, so the FFmpeg libraries as built here are GPL-2.0-or-later rather than LGPL.
-- **Fork point against upstream:** `7dbe56aad2f0ab039ab7b238a30ed662b1c017de` (`git merge-base HEAD master`); upstream mirror tip `7dbe56aad2f0ab039ab7b238a30ed662b1c017de`.
+- **Fork point against upstream:** `7dbe56aad2f0ab039ab7b238a30ed662b1c017de` (`git merge-base HEAD master`); upstream mirror tip `648b1dddd265cfd2bb69483a826eb5a5c7e7079e`.
 - **Programs above not installed here:** `cd-paranoia`, `cdparanoia`, `distrobox`. The rig-only ones are expected to be missing.
 
 | library | installed here | licence confirmed from |
