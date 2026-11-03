@@ -1,5 +1,10 @@
 Unreleased
 ==========
+**`CLAUDE.md`: a check run through this session's credentialed proxy is not
+evidence of what a stranger can read** (owner, 2026-11-03), after the steward
+skill's fact passed that way and failed in CI. The file is at its 300-line cap,
+so two sentences were tightened to make room.
+
 **Our round 37 lap 5 answers Platterpus's lap 4, which crossed ours.** Their
 lap 4, released 2026-11-03 at `platterpus@da3d1d98`, reached their `main`
 after our lap 4 merged: it accepts our lap 3 S9's `Drive used:` as given,
