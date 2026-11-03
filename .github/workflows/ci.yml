@@ -102,8 +102,12 @@ jobs:
       - name: Fetch the history the suite reads
         run: .github/fetch-history.sh platterpus-fork master
 
+      # Each install step stops at 10 minutes and apt retries a stalled
+      # fetch: .github/apt-retries.conf says why.
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
+          sudo cp .github/apt-retries.conf /etc/apt/apt.conf.d/80-ci-retries
           sudo apt-get update
           sudo apt-get install -y meson ninja-build pkg-config ffmpeg \
             libavcodec-dev libavformat-dev libavfilter-dev libavutil-dev \
@@ -157,6 +161,7 @@ jobs:
       # 3.7) and skips where valgrind is missing, so this row installs it and
       # sets CYANRIP_VALGRIND_REQUIRED, so a missing valgrind fails.
       - name: Install valgrind for the memcheck rip
+        timeout-minutes: 10
         if: matrix.name == 'default'
         run: sudo apt-get install -y valgrind
 
@@ -164,6 +169,7 @@ jobs:
       # and skips where ruff is missing, so this row installs it, pinned, and
       # sets CYANRIP_LINT_REQUIRED so a missing ruff fails rather than skips.
       - name: Install ruff for the Python lint
+        timeout-minutes: 10
         if: matrix.name == 'released'
         run: |
           uv tool install ruff==0.17.3
@@ -202,7 +208,9 @@ jobs:
         run: .github/fetch-history.sh platterpus-fork
 
       - name: Install ShellCheck and gitleaks
+        timeout-minutes: 10
         run: |
+          sudo cp .github/apt-retries.conf /etc/apt/apt.conf.d/80-ci-retries
           sudo apt-get update
           sudo apt-get install -y shellcheck gitleaks python3-venv
 
@@ -215,6 +223,7 @@ jobs:
         run: gitleaks detect --source . --redact --verbose
 
       - name: Install actionlint and zizmor
+        timeout-minutes: 10
         env:
           ACTIONLINT_VERSION: 1.7.12
           ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
@@ -252,7 +261,9 @@ jobs:
           persist-credentials: false
 
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
+          sudo cp .github/apt-retries.conf /etc/apt/apt.conf.d/80-ci-retries
           sudo apt-get update
           sudo apt-get install -y meson ninja-build pkg-config ffmpeg \
             clang-18 libclang-rt-18-dev \
@@ -292,6 +303,7 @@ jobs:
         run: .github/fetch-history.sh platterpus-fork master
 
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
           brew install meson ninja pkg-config nasm ffmpeg libcdio-paranoia libmusicbrainz curl qrencode
 
@@ -362,7 +374,9 @@ jobs:
           fi
 
       - name: Install dependencies
+        timeout-minutes: 10
         run: |
+          sudo cp .github/apt-retries.conf /etc/apt/apt.conf.d/80-ci-retries
           sudo apt-get update
           sudo apt-get install -y meson ninja-build pkg-config ffmpeg \
             libavcodec-dev libavformat-dev libavfilter-dev libavutil-dev \

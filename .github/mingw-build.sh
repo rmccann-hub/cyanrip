@@ -108,7 +108,10 @@ cyan_do_tarball() {
     echo "$folder: $release, $file with SHA-256 $sha256"
     cd "${CYANRIPBUILDDIR:?}" &&
     rm -rf "${folder:?}" "${file:?}" &&
-    curl -fsSL --retry 3 -o "$file" "$url" &&
+    # A stalled mirror is retried, not waited on: under 1 KiB/s for 60 s
+    # fails the attempt (curl exit 28), which --retry repeats.
+    curl -fsSL --retry 3 --connect-timeout 30 --speed-limit 1024 --speed-time 60 \
+        -o "$file" "$url" &&
     echo "$sha256  $file" | sha256sum -c - &&
     tar -xzf "$file" &&
     cd "$folder"

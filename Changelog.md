@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**CI no longer waits on a stalled mirror.** An install step that hung held its
+job to the job's own limit, up to an hour (the audit of 2026-10-27, carried
+since). Each install step now stops at 10 minutes, apt retries a fetch three
+times and drops one that sends nothing for 60 s (`.github/apt-retries.conf`,
+copied in before each `apt-get update`, so the install lines `CLAUDE.md`
+quotes are unchanged), and the Windows job's source downloads give up an
+attempt slower than 1 KiB/s for 60 s, which `curl --retry` then repeats. The
+Windows job's library cache is keyed on `mingw-build.sh`, so its next run
+rebuilds the six libraries once.
+
 **Two `KNOWN-ISSUES.md` entries said open what `.28` had fixed.** The `..`
 tag-value entry still read "not fixed yet, and proposed first" a release after
 its rules shipped; it now says fixed for `.28`, which round of Platterpus's
