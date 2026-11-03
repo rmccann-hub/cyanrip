@@ -140,6 +140,9 @@ PROGRAMS = {
             "pinned in CI",
     "valgrind": "memcheck over one rip of the basic image, which sees inside "
                 "the libraries as built",
+    "clang": "links a probe to learn whether it ignores an argument, then "
+             "sets up a scratch build with it to check the hardening flags "
+             "survive; skipped where it is missing",
 }
 
 # Every http(s) literal in src/, keyed by host. The KEYS must equal what
