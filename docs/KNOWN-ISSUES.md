@@ -282,7 +282,7 @@ both lines divide by the disc's audio tracks, and `tests/logrender.c` builds
 mixed.cue's shape and reads both over 2. Upstream report 26 names the commit
 (`f4da862`).
 
-### Four drive answers the log states that are libcdio's defaults or its failure
+### Four drive answers the log states that are libcdio's defaults or its failure (fixed for `.28`)
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.3**,
 which asked for drive answers printed without a sentinel check. A read-only
@@ -342,9 +342,13 @@ rip. It reads at the drive's own speed, and `Speed:` says `default (setting
 
 The MCN read a failed query skips is still skipped without a word. Every drive
 arm is unit-tested in `tests/drivecaps.c`, and the image arms on images with
-`tests/imagecap.c`, but a drive has shown none of them.
+`tests/imagecap.c`. **On a drive, 2026-11-03** (`docs/rig-2026-11-03-3f288fb/`,
+`.28` at `3f288fb`, released with the fix at `819c735`): `Speed:` said the drive
+was not asked, since no `-S` was sent; `C2 errors:` said unsupported by drive;
+`Accurate stream:` gave the drive's declaration; `Recordable:` said `no`. A `-S`
+sent, and one the drive refuses, have not run.
 
-### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names
+### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names (fixed for `.28`)
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.2**,
 and measured here at `ed37997` on `tests/fixtures/basic.cue`, track 1, with
@@ -367,12 +371,18 @@ open a device. Platterpus's own default folder, `{album} [FLAC]`, cannot
 traverse, since a suffix follows the value, but a track template with a folder
 part can.
 
-**Not fixed yet, and proposed first**: Platterpus predicts the folders we
+**Fixed for `.28`**, at `f69d414` and `ed50558`, after Platterpus accepted our
+round 36 lap 12 S10's three rules in their round 36 lap 13 S4, with a fourth
+for a component over 255 bytes, and our `Names shortened:` block in their
+round 37 lap 2 S5: no component is `.` or `..`, U+0001 to U+001F are replaced,
+Microsoft's reserved device names take a `_`, and a leading dot is kept.
+Platterpus predicts the folders we
 create, for its overwrite guard
 (`platterpus@d745464d:src/platterpus/adapters/cyanrip_backend.py:1904-1915`),
-so a change to a name on disk is theirs to absorb, and P7 of the contract
-changes with it. The rule is proposed to them in our round 36 lap 12 S10;
-the fix lands with tests of each case in each mode once they accept.
+so the rules were theirs to absorb first, and the contract's P7f states them.
+`sc_path_component_rules()` in `tests/rip_images.py` checks each case in each
+`-T` mode. This entry said "not fixed yet" until 2026-11-03, a month-old
+sentence the release had already made false.
 
 ### A value the log echoes could start a line of its own (fixed for `.28`)
 

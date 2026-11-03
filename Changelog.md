@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Two `KNOWN-ISSUES.md` entries said open what `.28` had fixed.** The `..`
+tag-value entry still read "not fixed yet, and proposed first" a release after
+its rules shipped; it now says fixed for `.28`, which round of Platterpus's
+accepted what, and which test holds it. The four-drive-answers entry said a
+drive had shown none of its arms; it now records what the 2026-11-03 run
+showed and the two `-S` arms no run has reached.
+
 **`STATUS.md`'s open items, audited after round 37's run: 27 down to 7.**
 Twenty were built, released and, where a drive could show them, shown; each
 stayed open on a condition that is now met:
