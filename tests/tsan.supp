@@ -31,6 +31,16 @@
 # The option dropped every access made inside any uninstrumented library,
 # swr_convert()'s reads included, which is the encoder side of the handoff
 # this build exists to check.
+#
+# WHAT THE FIRST ENTRY ALSO HIDES: every free of a frame's or packet's data
+# goes through av_buffer_unref(), ours included -- av_frame_free(input) at
+# src/cyanrip_encode.c:1149, the 21 other calls of av_frame_free(),
+# av_packet_free(), av_packet_unref() and av_buffer_unref() in that file and
+# src/coverart.c, and the FREE_FN of fifo_frame.c and fifo_packet.c. A free
+# of ours that races a read in our own code is therefore not reported here
+# either, as the third planted defect shows. ASan reports it, as a read of
+# freed memory, and the sanitizer rows run every test: this build checks the
+# reads and writes of a handoff, not its frees.
 race:^av_buffer_unref$
 race:^av_samples_set_silence$
 
