@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**`tools/lap-commits.py` names commits with seven digits, asked for.** It
+took git's default, which grows with the clone's object count: CI's fuller
+clone printed `59cb5a9f` where ours printed `59cb5a9`, and `Lap commit list
+names its range` failed on every CI job of PR #83 while passing here. Dumbass
+us had a test whose verdict depended on how much history the clone held.
+Forcing `core.abbrev=8` reproduces the failure here, and passes with the fix.
+
 **Round 37's closing run is filed and read**: `.28` with Platterpus 0.7.117,
 Full, on the reference disc, 2026-11-03, on our evidence branch at `dd48c1f`
 (`docs/rig-2026-11-03-3f288fb/`), whose README is our reading. The script
