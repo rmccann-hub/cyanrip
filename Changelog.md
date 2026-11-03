@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**`docs/READINESS-PLAN.md` says what stands between the fork and ready to go,**
+on the owner's word of 2026-11-03: what was done that day without the owner's
+input, then by priority the `.28` Full run that closes round 37, what needs a
+lap (the cover-art line, with a recommended shape), what needs a drive, the
+owner's decisions, and what is left of test time. It records that Platterpus's
+round 37 lap 5 crossed ours at the same number, the night's second crossing,
+and waits on their copy of our `seam-commands.md` before it is filed.
+
 **The two `sprintf` calls left in `src/` are `snprintf`.** AccurateRip's and the
 Cover Art Archive's User-Agent were written by `sprintf` into 256 bytes. The
 string is the build's version, fixed at compile time and about 70 bytes, so
