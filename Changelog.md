@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**`READINESS-PLAN.md` rewritten after round 37's run was read.** Its
+crossing row said Platterpus's lap 5 reached their `main` at 02:56:56Z; that
+is their #429, one merge past the one that carried it. Dumbass us read one
+merge too far: it was their #428 at 02:39:52Z (`platterpus@2522a1bb`), which
+still leaves ours, at 02:31:06Z, first. The row is now in the done table with
+the run's filing and the open-items audit; P1 is round 37's close, waiting on
+their lap 6; and the round 38 items the run turned up are listed, each with
+what settles it: the `Ripping errors:` count missing a `-Z` track whose
+re-reads never agreed (A5), the footer's whole-disc denominators and a
+cancel counted as an error (B5), `-H`'s quieter file (A6), track 9's
+one-sector pregap bound (A7), the cover-art line (B6) and a per-second
+checksum in the record. Track 3's row names what an ABBA test should vary.
+
 **CI no longer waits on a stalled mirror.** An install step that hung held its
 job to the job's own limit, up to an hour (the audit of 2026-10-27, carried
 since). Each install step now stops at 10 minutes, apt retries a fetch three
