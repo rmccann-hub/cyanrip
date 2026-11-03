@@ -1,5 +1,10 @@
 Unreleased
 ==========
+**The black-box sweep keeps 4 workers: 8 made it twice as slow.** Measured
+alone on 4 CPUs: 188 s at 4 jobs, 366 s at 8, with the same exit-code tallies
+and no violations. `docs/OPTIMISATION-PLAN.md` records it, with the evidence
+check's 17.6 s to 2.6 s.
+
 **The evidence check reads its files in one git process.**
 `tools/evidence.py`'s `Store.read_many()` gives what `read()` gives for each
 path, through one `git cat-file --batch` per repository instead of a process
