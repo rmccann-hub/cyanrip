@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**The tests build with no clang warning.** Clang, CI's macOS compiler, gave 16
+in four test files, none in `src/`, so the gate never saw them. Four test
+wrappers forwarded a format string without being marked as format functions;
+they now carry `av_printf_format`, as `src/cyanrip_log.c`'s own do. The other
+12 were `src/genopt.h` writing an option's range into its double fields in a
+branch an `int64_t` option never takes, where clang counts `INT64_MAX`
+rounding to 2^63; an explicit `(double)` says so, and changes nothing that
+runs. Marking `fmt_escaped()` let GCC see the `NULL` that
+`tests/logescape.c` passes to `%s` on purpose, and refuse it; the `NULL` now
+goes through a `volatile`, and breaking the escaper's `(null)` still fails
+that check.
+
 **`-Wextra` is shipped and gated, less two of its checks.** The build now
 compiles with `-Wextra -Wno-unused-parameter -Wno-sign-compare`, and
 `Compiler diagnostics` holds the rest of the set at zero as it does

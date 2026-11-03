@@ -87,6 +87,7 @@ const crip_cache_evidence_t *crip_cache_evidence(void)
     return &no_probe;
 }
 
+static void record(const char *format, ...) av_printf_format(1, 2);
 static void record(const char *format, ...)
 {
     va_list args;

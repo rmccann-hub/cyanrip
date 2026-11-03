@@ -20,8 +20,12 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <libavutil/attributes.h>
+
 /* Keep the parser's messages, rather than printing them */
 static char last_msg[512];
+static void test_log(void *ctx, int level, const char *fmt, ...)
+    av_printf_format(3, 4);
 static void test_log(void *ctx, int level, const char *fmt, ...)
 {
     va_list args;
