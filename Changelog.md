@@ -13,6 +13,11 @@ rips first and must report nothing. 9 s here. With the old
 `get_next_audio_pts` added to the suppressions, all three plants rip clean
 and it fails; without `tests/tsan.supp` in `TSAN_OPTIONS` it says
 `UNPROBED` and fails.
+The rest of backlog 145, annotating our own frees for TSan, is decided
+against, and `tests/tsan.supp` says why: the free follows the decrement that
+orders it inside `av_buffer_unref()`, where no annotation of ours can sit, so
+one at our call either orders nothing or hides a real race. An instrumented
+libavutil is the way to drop the entries, and is not built.
 
 **The check against TSan's old `ignore_noninstrumented_modules` reads every
 file that runs or builds, not only `ci.yml`** (backlog 145, part).
