@@ -7,6 +7,9 @@ neither could overflow; each now names its bound, and the string sent is the
 same. The binary was already linked as a PIE with full RELRO, a
 non-executable stack, and stack-protector and `_FORTIFY_SOURCE=3` checks in
 place.
+The provider contract, whose source anchor moves with these two calls and
+`src/genopt.h`'s casts below, and no line number with them, was **generated
+by `2bd0c67`** and **committed in the commit carrying this sentence**.
 
 **The black-box sweep keeps 4 workers: 8 made it twice as slow.** Measured
 alone on 4 CPUs: 188 s at 4 jobs, 366 s at 8, with the same exit-code tallies
