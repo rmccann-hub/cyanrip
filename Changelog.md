@@ -1,5 +1,29 @@
 Unreleased
 ==========
+**`STATUS.md`'s open items, audited after round 37's run: 27 down to 7.**
+Twenty were built, released and, where a drive could show them, shown; each
+stayed open on a condition that is now met:
+- shown on a drive for the first time on 2026-11-03: `accuraterip-kept-read`
+  (the repeat limit kept track 3's AccurateRip read), `z-extraction-speed`,
+  `superseded-read-marker` and `files-listed-from-request` (`kept_read_began`
+  and `isrc_disc_read` in record `/11`), `disc-isrc-check` (valid codes, on
+  every track), and `drive-defaults-as-answers`' drive arms;
+- shown on a drive before, and kept open only by a word since given:
+  `disc-isrc-line`, `read-successfully-wording`, `exit-classes` (their script
+  now expects 64), `all-pass-paranoia-counters`, `j-record-fields`;
+- released, with nothing a drive could add or Platterpus does not send:
+  `encoder-options-flag`, `z-time-limit`, `log-value-escape`,
+  `review-c-changes`, `path-component-values`, `path-cut-at-1003`;
+- open only on a disc this rig has not had, now named in
+  `hardware-unverified`: `recordable-medium-line` (a CD-R),
+  `tally-counts-data-tracks` (a data track), `error-positions` (a reported
+  read error).
+The seven that stay are the ones a run, Platterpus or upstream still owes:
+`track1-pregap-base`, `overread-bounded`, `subchannel-pregap-varies`,
+`unsent-flag-rows` (their `--prefer-accuraterip-match` cell is still `?`),
+`hardware-unverified`, `upstream-reports-filed` and
+`suite-timeouts-at-default`.
+
 **`tools/redact.py`'s host-field pattern no longer slows down on runs of
 blank lines.** Its `^\s*` under `re.M` made every line start scan across every
 blank line after it, quadratic in the run's length: 4,000 blank lines took
