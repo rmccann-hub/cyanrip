@@ -40,13 +40,14 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `bash` | `tests/mingw_build.py`, `tests/workflows.py` | runs the Windows build script's functions, and CI's static-analysis step as Actions does, their builds stubbed, to check where each stops |
 | `cd-paranoia` | `tools/rig-check.py` | on the rig only: the cache size the probe is measured against |
 | `cdparanoia` | `tools/rig-check.py` | on the rig only: the same, under its older name |
+| `clang` | `tests/hardening_probe.py` | links a probe to learn whether it ignores an argument, then sets up a scratch build with it to check the hardening flags survive; skipped where it is missing |
 | `distrobox` | `tools/rig-check.py` | on the rig only: the container the rig's ripper runs in |
 | `dpkg` | `tools/gen-dependency-map.py` | this map: names the package that owns a library, to read its copyright file |
 | `ffmpeg` | `tests/gen_fixtures.py`, `tests/rigcheck.py`, `tools/audio-checksums.py`, `tools/rig-check.py` | makes the disc-image fixtures' audio and decodes rips for checksums |
 | `ffprobe` | `tests/rip_images.py` | reads ripped files' tags, durations and encoder strings, as a witness independent of cyanrip |
 | `gcov` | `tools/coverage-summary.py` | coverage |
 | `git` | `tests/commit_subjects.py`, `tests/contract_delta.py`, `tests/evidence_readers.py`, `tests/evidence_tool.py` and 26 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
-| `meson` | `tools/sanitize-run.py` | configures the instrumented and mutated builds |
+| `meson` | `tests/hardening_probe.py`, `tools/sanitize-run.py` | configures the instrumented and mutated builds |
 | `ninja` | `tools/sanitize-run.py` | builds them |
 | `nm` | `tools/blackbox.py` | asks a binary whether sanitizer symbols are in it |
 | `pkg-config` | `tools/gen-dependency-map.py` | this map's measured versions; the build finds every library through it too |
@@ -115,7 +116,7 @@ Each is a liability with a removal condition, not a fix. The details and what wo
 
 - **Machine:** Ubuntu 24.04.4 LTS; Python 3.11.15; cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; meson 1.3.2; ninja 1.11.1; pkg-config 1.8.1; git version 2.43.0.
 - **FFmpeg:** ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers; configured `--enable-gpl`, so the FFmpeg libraries as built here are GPL-2.0-or-later rather than LGPL.
-- **Fork point against upstream:** `7dbe56aad2f0ab039ab7b238a30ed662b1c017de` (`git merge-base HEAD master`); upstream mirror tip `648b1dddd265cfd2bb69483a826eb5a5c7e7079e`.
+- **Fork point against upstream:** `648b1dddd265cfd2bb69483a826eb5a5c7e7079e` (`git merge-base HEAD master`); upstream mirror tip `648b1dddd265cfd2bb69483a826eb5a5c7e7079e`.
 - **Programs above not installed here:** `cd-paranoia`, `cdparanoia`, `distrobox`. The rig-only ones are expected to be missing.
 
 | library | installed here | licence confirmed from |

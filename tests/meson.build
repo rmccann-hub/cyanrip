@@ -404,6 +404,13 @@ test('Compiler diagnostics', python,
 ## first macOS run) is listed and not counted.
 test('Compiler diagnostics gate only this tree', python,
     args: [ files('warn_gate.py') ])
+## The hardening flags survive an argument Clang ignores in LDFLAGS: until
+## 2026-11-03 such a setup succeeded with all four left out. Sets up a scratch
+## build under clang, 2.6 s here; skips without clang, as on CI's suite rows,
+## and on macOS, where the argument it uses is not ignored.
+test('Hardening survives an ignored LDFLAGS argument', python,
+    args: [ files('hardening_probe.py') ],
+    timeout: 120)
 
 
 ## Audio checksum mirror

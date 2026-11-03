@@ -64,7 +64,7 @@
             "properties": [
               {
                 "name": "cyanrip-fork:measured:fork-point",
-                "value": "7dbe56aad2f0ab039ab7b238a30ed662b1c017de"
+                "value": "648b1dddd265cfd2bb69483a826eb5a5c7e7079e"
               },
               {
                 "name": "cyanrip-fork:measured:upstream-tip",
@@ -282,6 +282,10 @@
         {
           "name": "cyanrip-fork:measured:env:has-cdparanoia",
           "value": "False"
+        },
+        {
+          "name": "cyanrip-fork:measured:env:has-clang",
+          "value": "True"
         },
         {
           "name": "cyanrip-fork:measured:env:has-distrobox",
@@ -902,6 +906,19 @@
     },
     {
       "type": "application",
+      "bom-ref": "run:clang",
+      "name": "clang",
+      "scope": "excluded",
+      "description": "links a probe to learn whether it ignores an argument, then sets up a scratch build with it to check the hardening flags survive; skipped where it is missing",
+      "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/hardening_probe.py"
+        }
+      ]
+    },
+    {
+      "type": "application",
       "bom-ref": "run:distrobox",
       "name": "distrobox",
       "scope": "excluded",
@@ -1113,6 +1130,10 @@
       "scope": "excluded",
       "description": "configures the instrumented and mutated builds",
       "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/hardening_probe.py"
+        },
         {
           "name": "cyanrip-fork:run-by",
           "value": "tools/sanitize-run.py"
@@ -1380,5 +1401,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:113d5e01-d1b7-5314-89c8-afc4c10a652b"
+  "serialNumber": "urn:uuid:be58ef08-e325-5b21-82fe-b27e27fccdef"
 }

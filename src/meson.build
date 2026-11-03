@@ -44,10 +44,27 @@ endif
 # -fstack-clash-protection on arm64, so a link check alone let that one in and
 # every compile on macOS then warned; checked as an error, it is left out. GCC
 # has no such warning, and is checked as before.
+#
+# The error is only worth asking for while the probe links without any flag.
+# An argument in LDFLAGS that Clang ignores, -mmacosx-version-min on Linux,
+# passes the compile-only check above and then fails every link check below,
+# which until 2026-11-03 left out all four flags with setup succeeding. (In
+# CFLAGS it fails the check above, and the flags are checked as for GCC.)
+# Clang is then checked without the error, and the setup says why.
+hardening_probe = 'int main(int c, char **v) { char b[64]; b[c & 63] = 0; return v[0][0] + b[1]; }'
 strict_check = cc.get_supported_arguments('-Werror=unused-command-line-argument')
+if strict_check.length() > 0 and \
+   not cc.links(hardening_probe, args: strict_check,
+                name: 'the hardening probe, with no flag')
+  warning('The hardening probe does not link with ' +
+          '-Werror=unused-command-line-argument even without a hardening ' +
+          'flag, so this compiler ignores an argument in LDFLAGS or CFLAGS. ' +
+          'The flags are checked without that error, and one the target ' +
+          'ignores will warn on every compile.')
+  strict_check = []
+endif
 foreach flag : hardening
-  if cc.links('int main(int c, char **v) { char b[64]; b[c & 63] = 0; return v[0][0] + b[1]; }',
-              args: strict_check + flag.split(), name: flag)
+  if cc.links(hardening_probe, args: strict_check + flag.split(), name: flag)
     build_opts += flag.split()
   endif
 endforeach

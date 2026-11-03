@@ -121,3 +121,10 @@ users run. It needs the owner's word, being CI time every run.
   #75 after macOS killed it at 30 s.
 - **macOS arm64 runners** went unacquired five times on 2026-11-02; whether
   another label waits less was not measured.
+- **A static Linux binary for end users.** Upstream's CI has built one for
+  each release since `e5ac607` (Alpine, musl, every library linked in, QR
+  codes and AcoustID among them). One of ours, named with its SHA-256 by
+  `release-manifest.json`, would let Platterpus's installer fetch what our CI
+  tested instead of building in the Fedora container what no CI job builds.
+  It changes how every user gets the program, so it needs the owner's word and
+  a round; `docs/upstream/sync-2026-11-03-ci.md` §5.
