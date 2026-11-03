@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.28 (platterpus-fork-gef413b1)`
+Build: `cyanrip 0.9.4-rc3+platterpus.28 (platterpus-fork-g2f38264)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = aac0811f4fd28a6c` over `src/*.c` and
+**Source anchor:** `sha256/16 = 6ba84e889954a9e3` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -231,13 +231,13 @@ where a device path or drive string carrying one would still start a line
 
 | File:line | Line |
 |---|---|
-| `accurip.c:292` | `Disc has no audio tracks, skipping AccuRIP DB!` |
-| `accurip.c:347` | `Unable to get AccuRIP DB data: the response is larger than %i MiB!` |
-| `accurip.c:355` | `Unable to get AccuRIP DB data: missing entry!` |
-| `accurip.c:367` | `Unable to get AccuRIP DB data: %s` |
-| `accurip.c:369` | `Unable to get AccuRIP DB data: %s\n!` |
-| `accurip.c:418` | `AccuRIP DB data error, got unexpected number of bytes!` |
-| `accurip.c:421` | `Unable to read AccuRIP DB data: %s!` |
+| `accurip.c:287` | `Disc has no audio tracks, skipping AccuRIP DB!` |
+| `accurip.c:342` | `Unable to get AccuRIP DB data: the response is larger than %i MiB!` |
+| `accurip.c:350` | `Unable to get AccuRIP DB data: missing entry!` |
+| `accurip.c:362` | `Unable to get AccuRIP DB data: %s` |
+| `accurip.c:364` | `Unable to get AccuRIP DB data: %s\n!` |
+| `accurip.c:413` | `AccuRIP DB data error, got unexpected number of bytes!` |
+| `accurip.c:416` | `Unable to read AccuRIP DB data: %s!` |
 | `acoustid.c:281` | `AcoustID submission failed: %s` |
 | `acoustid.c:299` | `AcoustID: submitted %i fingerprint%s, pending import` |
 | `acoustid.c:310` | `AcoustID submission failed: unexpected reply (HTTP %li)` |
@@ -251,18 +251,18 @@ where a device path or drive string carrying one would still start a line
 | `coverart.c:98` | `Couldn't write header: %s!` |
 | `coverart.c:105` | `Error writing picture packet: %s!` |
 | `coverart.c:120` | `Error writing trailer: %s!` |
-| `coverart.c:252` | `Downloading %s cover art...` |
-| `coverart.c:260` | `Unable to get cover art \"%s\": the image is larger than %i MiB!` |
-| `coverart.c:268` | `Unable to get cover art \"%s\": not found!` |
-| `coverart.c:282` | `Unable to get cover art \"%s\": %s\n!` |
-| `coverart.c:334` | `Unable to get cover art \"%s\": %s!` |
-| `coverart.c:366` | `Unable to open \"%s\": %s!` |
-| `coverart.c:373` | `Unable to get cover image info: %s!` |
-| `coverart.c:389` | `Unable to copy cover image parameters: %s!` |
-| `coverart.c:413` | `Error demuxing cover image: %s!` |
-| `coverart.c:485` | `No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!` |
-| `coverart.c:492` | `Cover Art DB's front cover not fetched: a rip holds at most %i cover arts!` |
-| `coverart.c:504` | `Cover Art DB's back cover not fetched: a rip holds at most %i cover arts!` |
+| `coverart.c:247` | `Downloading %s cover art...` |
+| `coverart.c:255` | `Unable to get cover art \"%s\": the image is larger than %i MiB!` |
+| `coverart.c:263` | `Unable to get cover art \"%s\": not found!` |
+| `coverart.c:277` | `Unable to get cover art \"%s\": %s\n!` |
+| `coverart.c:329` | `Unable to get cover art \"%s\": %s!` |
+| `coverart.c:361` | `Unable to open \"%s\": %s!` |
+| `coverart.c:368` | `Unable to get cover image info: %s!` |
+| `coverart.c:384` | `Unable to copy cover image parameters: %s!` |
+| `coverart.c:408` | `Error demuxing cover image: %s!` |
+| `coverart.c:480` | `No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!` |
+| `coverart.c:487` | `Cover Art DB's front cover not fetched: a rip holds at most %i cover arts!` |
+| `coverart.c:499` | `Cover Art DB's back cover not fetched: a rip holds at most %i cover arts!` |
 | `cue_writer.c:44` | `Couldn't open path \"%s\" for writing: %s!\nInvalid folder name? Try -D <folder>.` |
 | `cue_writer.c:175` | `Refusing an INDEX 00 of %i frames into a %i frame file for track %i, writing none` |
 | `cue_writer.c:311` | `Unable to write the CUE sheet \"%s\": %s!` |
@@ -854,11 +854,11 @@ must carry the same class.
 
 | File:line | Message | Evidence | Reaches logfile? |
 |---|---|---|---|
-| `accurip.c:347` | `Unable to get AccuRIP DB data: the response is larger than %i MiB!` | wording + goto end | yes |
-| `accurip.c:355` | `Unable to get AccuRIP DB data: missing entry!` | wording + goto end | yes |
-| `accurip.c:367` | `Unable to get AccuRIP DB data: %s` | wording + goto end | yes |
-| `accurip.c:369` | `Unable to get AccuRIP DB data: %s\n!` | wording + goto end | yes |
-| `accurip.c:421` | `Unable to read AccuRIP DB data: %s!` | wording + goto end | yes |
+| `accurip.c:342` | `Unable to get AccuRIP DB data: the response is larger than %i MiB!` | wording + goto end | yes |
+| `accurip.c:350` | `Unable to get AccuRIP DB data: missing entry!` | wording + goto end | yes |
+| `accurip.c:362` | `Unable to get AccuRIP DB data: %s` | wording + goto end | yes |
+| `accurip.c:364` | `Unable to get AccuRIP DB data: %s\n!` | wording + goto end | yes |
+| `accurip.c:416` | `Unable to read AccuRIP DB data: %s!` | wording + goto end | yes |
 | `coverart.c:61` | `Unable to init lavf context: %s!` | both | yes |
 | `coverart.c:67` | `Unable to alloc stream!` | both | yes |
 | `coverart.c:76` | `Unable to copy cover art parameters: %s!` | both | yes |
@@ -866,14 +866,14 @@ must carry the same class.
 | `coverart.c:98` | `Couldn't write header: %s!` | both | yes |
 | `coverart.c:105` | `Error writing picture packet: %s!` | both | yes |
 | `coverart.c:120` | `Error writing trailer: %s!` | both | yes |
-| `coverart.c:260` | `Unable to get cover art \"%s\": the image is larger than %i MiB!` | wording + goto end | yes |
-| `coverart.c:268` | `Unable to get cover art \"%s\": not found!` | wording + goto end | yes |
-| `coverart.c:282` | `Unable to get cover art \"%s\": %s\n!` | wording + goto end | yes |
-| `coverart.c:334` | `Unable to get cover art \"%s\": %s!` | wording + goto end | yes |
-| `coverart.c:366` | `Unable to open \"%s\": %s!` | wording + goto end | yes |
-| `coverart.c:373` | `Unable to get cover image info: %s!` | wording + goto end | yes |
-| `coverart.c:389` | `Unable to copy cover image parameters: %s!` | wording + goto end | yes |
-| `coverart.c:413` | `Error demuxing cover image: %s!` | wording + goto end | yes |
+| `coverart.c:255` | `Unable to get cover art \"%s\": the image is larger than %i MiB!` | wording + goto end | yes |
+| `coverart.c:263` | `Unable to get cover art \"%s\": not found!` | wording + goto end | yes |
+| `coverart.c:277` | `Unable to get cover art \"%s\": %s\n!` | wording + goto end | yes |
+| `coverart.c:329` | `Unable to get cover art \"%s\": %s!` | wording + goto end | yes |
+| `coverart.c:361` | `Unable to open \"%s\": %s!` | wording + goto end | yes |
+| `coverart.c:368` | `Unable to get cover image info: %s!` | wording + goto end | yes |
+| `coverart.c:384` | `Unable to copy cover image parameters: %s!` | wording + goto end | yes |
+| `coverart.c:408` | `Error demuxing cover image: %s!` | wording + goto end | yes |
 | `cue_writer.c:44` | `Couldn't open path \"%s\" for writing: %s!\nInvalid folder name? Try -D <folder>.` | both | yes |
 | `cue_writer.c:311` | `Unable to write the CUE sheet \"%s\": %s!` | wording | yes |
 | `cyanrip_encode.c:164` | `Unable to set up the %s encoder to try encoder options!` | both | **not directly** - see legend |
@@ -1051,8 +1051,8 @@ says.
 
 | File:line | Message | Evidence | Reaches logfile? |
 |---|---|---|---|
-| `accurip.c:292` | `Disc has no audio tracks, skipping AccuRIP DB!` | goto end | yes |
-| `accurip.c:418` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
+| `accurip.c:287` | `Disc has no audio tracks, skipping AccuRIP DB!` | goto end | yes |
+| `accurip.c:413` | `AccuRIP DB data error, got unexpected number of bytes!` | goto end | yes |
 | `acoustid.c:281` | `AcoustID submission failed: %s` | goto end | yes |
 | `acoustid.c:299` | `AcoustID: submitted %i fingerprint%s, pending import` | goto end | yes |
 | `cyanrip_main.c:1900` | `Done; (%i out of %i matches for current checksum %08X)` | goto spool_encode | yes |

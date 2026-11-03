@@ -153,16 +153,11 @@ typedef struct ImageRecv {
 
 /* HTTPS only, for the request and any redirect (review C item 1.5); the
  * certificate is verified, as libcurl does unless told not to. Same as
- * https_only() in accurip.c, which says why there are two options. */
+ * https_only() in accurip.c, which says why there is one path. */
 static void https_only(CURL *curl_ctx)
 {
-#if LIBCURL_VERSION_NUM >= 0x075500
     curl_easy_setopt(curl_ctx, CURLOPT_PROTOCOLS_STR, "https");
     curl_easy_setopt(curl_ctx, CURLOPT_REDIR_PROTOCOLS_STR, "https");
-#else
-    curl_easy_setopt(curl_ctx, CURLOPT_PROTOCOLS, (long)CURLPROTO_HTTPS);
-    curl_easy_setopt(curl_ctx, CURLOPT_REDIR_PROTOCOLS, (long)CURLPROTO_HTTPS);
-#endif
 }
 
 static size_t receive_image(void *buffer, size_t size, size_t nb, void *opaque)

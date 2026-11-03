@@ -77,20 +77,24 @@ static_build = get_option('default_library') == 'static'
 
 # Required dependencies
 dependencies = [
-    # ffmpeg libs
-    dependency('libavcodec', version: '>= 59.24.100'),
-    dependency('libavformat', version: '>= 58.13.100'),
-    dependency('libswresample', version: '>= 4.5.100'),
-    dependency('libavfilter', version: '>= 7.16.100'),
-    dependency('libavutil', version: '>= 57.25.100'),
+    # ffmpeg libs. Each minimum is the oldest a CI job builds: FFmpeg 6.1.1's
+    # libraries, libcdio 2.1.0 and libcurl 8.5.0 are Ubuntu 24.04's, which the
+    # Linux job builds with; every other job builds newer ones. Raised from
+    # FFmpeg 5.1, libcdio 2.0 and curl 7.66.0, which no job built, for .29
+    # (docs/DEPENDENCY-PLAN.md section 3).
+    dependency('libavcodec', version: '>= 60.31.102'),
+    dependency('libavformat', version: '>= 60.16.100'),
+    dependency('libswresample', version: '>= 4.12.100'),
+    dependency('libavfilter', version: '>= 9.12.100'),
+    dependency('libavutil', version: '>= 58.29.100'),
 
     # other dependencies
-    dependency('libcdio', version: '>= 2.0'),
+    dependency('libcdio', version: '>= 2.1.0'),
     dependency('libcdio_paranoia', version: '>= 10.2'),
     dependency('libmusicbrainz5', version: '>= 5.1', static: static_build),
     # static: a static curl with Schannel needs secur32 and crypt32 from
     # its Libs.private, which only a static lookup reads (review C item 1.5)
-    dependency('libcurl', version: '>=7.66.0', static: static_build),
+    dependency('libcurl', version: '>= 8.5.0', static: static_build),
 
     # misc
     dependency('threads'),

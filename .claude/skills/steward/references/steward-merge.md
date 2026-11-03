@@ -34,7 +34,7 @@ release*, which this module names and does not restate.
    ```
 
    The `sha` makes GitHub refuse the merge if anything was pushed after the read. Squash and
-   rebase merges are off here (fact `steward-merge-settings`), and would orphan commits a lap or
+   rebase merges are off here (fact `steward-merge-methods`), and would orphan commits a lap or
    a Changelog cites.
 6. **Confirm on the remote:** `git ls-remote origin refs/heads/platterpus-fork` names the merge
    commit the call returned. A cache, such as `git branch -r`, is not the remote.
@@ -70,6 +70,11 @@ release*, which this module names and does not restate.
   pull request.
 - **Forgetting the handoff.** The operator relays it to Platterpus; without it a sent lap goes
   unread until their next look.
+- **Citing a setting only a credential can read.** The repository API shows
+  `delete_branch_on_merge` and the merge methods only to a caller with write access. On
+  2026-11-03 this module's fact quoted that API, `--verify` passed through the session's
+  authenticated proxy, and the weekly job's first run, with no credentials, failed it. Such a
+  setting is recorded in the handshake README and cited there.
 
 ## Audit
 
@@ -114,7 +119,8 @@ Versions, dates and defaults, each named elsewhere in this module by its ID. Che
 
 | ID | Fact | Source | Quote | Checked | Check by |
 |---|---|---|---|---|---|
-| `steward-merge-settings` | Only merge commits are allowed, and GitHub deletes a pull request's head branch when it merges | [repository settings](https://api.github.com/repos/rmccann-hub/cyanrip) | "delete_branch_on_merge\":true" | 2026-11-03 | 2027-02-03 |
+| `steward-merge-settings` | GitHub deletes a pull request's head branch when it merges, by the repository's setting | [the handshake README](https://raw.githubusercontent.com/rmccann-hub/cyanrip/platterpus-fork/docs/handshake/README.md) | "(the repository's `delete_branch_on_merge`, read" | 2026-11-03 | 2027-02-03 |
+| `steward-merge-methods` | Only merge commits are allowed: squash and rebase merging are off | [the handshake README](https://raw.githubusercontent.com/rmccann-hub/cyanrip/platterpus-fork/docs/handshake/README.md) | "squash and rebase merging are off" | 2026-11-03 | 2027-02-03 |
 | `steward-branch-delete` | A session cannot delete a branch: the git proxy answers HTTP 403 | [the handshake README](https://raw.githubusercontent.com/rmccann-hub/cyanrip/platterpus-fork/docs/handshake/README.md) | "branch delete is `HTTP 403` from" | 2026-11-03 | 2027-02-03 |
 
 ## Sources
@@ -127,4 +133,4 @@ stated in our own words with a link.
 | [`docs/handshake/README.md`](https://github.com/rmccann-hub/cyanrip/blob/platterpus-fork/docs/handshake/README.md) | releasing a lap in its pull request, branches on the remote, round 23's squash, named and quoted | LGPL-2.1-or-later, this repository's |
 | [`CLAUDE.md`](https://github.com/rmccann-hub/cyanrip/blob/platterpus-fork/CLAUDE.md) | the handoff block, the reads of Platterpus, branches and merges, named | LGPL-2.1-or-later, this repository's |
 | [GitHub REST API, merge a pull request](https://docs.github.com/en/rest/pulls/pulls#merge-a-pull-request) | the merge call and its `sha` parameter, in our own words | CC BY 4.0 |
-| [GitHub REST API, repositories](https://docs.github.com/en/rest/repos/repos) | the merge settings, in our own words | CC BY 4.0 |
+| [GitHub REST API, repositories](https://docs.github.com/en/rest/repos/repos) | the merge settings, read with write access and recorded in the handshake README, since an unauthenticated read does not show them; in our own words | CC BY 4.0 |

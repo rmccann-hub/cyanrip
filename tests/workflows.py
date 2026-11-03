@@ -22,8 +22,10 @@ outside read of 2026-10-12 asked for, checked on the files rather than on a run:
     on master: GitHub keys a workflow by path, so a file of ours there would be
     the same workflow as upstream's again and could not be disabled alone;
   * the TSan row runs with tests/tsan.supp, loaded by the suite's default
-    test setup in a TSan build, and not ignore_noninstrumented_modules,
-    which hid the encoder side of the frame handoff (review C item 3.7);
+    test setup in a TSan build, and ignore_noninstrumented_modules, which hid
+    the encoder side of the frame handoff (review C item 3.7), is set nowhere
+    an option reaches TSan: no workflow, script, build file, test, tool or
+    source file;
   * a script that pipes one command into another, where the pipeline's status
     decides the step, sets pipefail first: Actions runs a script as `bash -e`,
     where that status is the last command's (review C item 3.6), and the
@@ -333,10 +335,48 @@ if re.search(r"^[^#\n]*git clone", script, re.M):
 
 # 3.7: the TSan row reads tests/tsan.supp through the suite's tsan setup.
 # ignore_noninstrumented_modules dropped every access inside FFmpeg, the
-# encoder threads' reads of a handed-over frame among them.
-if "ignore_noninstrumented_modules" in ci:
-    fail("ci.yml sets ignore_noninstrumented_modules, which hides the "
-         "encoder side of the frame handoff; tests/tsan.supp replaces it")
+# encoder threads' reads of a handed-over frame among them. It can come back
+# anywhere an option reaches TSan, not only ci.yml: another workflow or a
+# script under .github/, the suite's own TSAN_OPTIONS in a meson.build, a
+# test or tool that sets the environment, or a __tsan_default_options() in
+# the source. So every file that runs or builds is read, which is everything
+# under .github/, src/, tests/ and tools/ and the top-level build files, and
+# not the prose: the documentation, the fixtures, this file, which names the
+# option to find it, and tests/tsan.supp's comment lines, which say why it
+# went (a suppression file takes no options). A sanitizer option is only ever
+# set as name=value, in TSAN_OPTIONS or a __tsan_default_options() string, so
+# that is what matches; a sentence naming the option sets nothing.
+OLD_TSAN_OPTION = "ignore_noninstrumented_modules"
+SETS_OLD_TSAN_OPTION = re.compile(OLD_TSAN_OPTION + r"\s*=")
+SELF = pathlib.Path(__file__).resolve()
+tsan_scanned = []
+for top in (ROOT / ".github", ROOT / "src", ROOT / "tests", ROOT / "tools"):
+    for path in sorted(top.rglob("*")):
+        if not path.is_file() or path.resolve() == SELF \
+                or (ROOT / "tests" / "fixtures") in path.parents \
+                or "__pycache__" in path.parts:
+            continue
+        tsan_scanned.append(path)
+tsan_scanned += [p for p in (ROOT / n for n in ("meson.build", "meson.options",
+                                                "meson_options.txt"))
+                 if p.is_file()]
+for need in (WF / "ci.yml", ROOT / "tests" / "meson.build",
+             ROOT / "tests" / "tsan.supp", ROOT / "meson.build"):
+    if need not in tsan_scanned:
+        fail(f"the {OLD_TSAN_OPTION} check did not read {need.relative_to(ROOT)}")
+for path in tsan_scanned:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        continue
+    for number, line in enumerate(text.splitlines(), 1):
+        if not SETS_OLD_TSAN_OPTION.search(line):
+            continue
+        if path.name == "tsan.supp" and line.lstrip().startswith("#"):
+            continue
+        fail(f"{path.relative_to(ROOT)}:{number} sets {OLD_TSAN_OPTION}, "
+             "which hides the encoder side of the frame handoff; "
+             "tests/tsan.supp replaces it")
 meson_tests = (ROOT / "tests" / "meson.build").read_text(encoding="utf-8")
 if not re.search(r"add_test_setup\('tsan',[^)]*is_default: true", meson_tests) \
         or "'tsan.supp'" not in meson_tests:

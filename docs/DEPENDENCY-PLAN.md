@@ -5,7 +5,8 @@ versions of all dependencies, or if a big move, make sure it is part of the
 plan for the next release. do we need to still support those old versions?
 check if there is a compelling reason not to, or if we should keep doing it.
 this is about qol for the end user, security, and balancing what we need to
-do". **§1 is built; §3 and §4 are a plan for `.29`**, the release after `.28`.
+do". **§1 is built, and §3 is built for `.29`**, the release after `.28`; §4
+waits on the owner's word.
 A dependency is handshake material, so each change in them is announced in a
 lap before the release that carries it.*
 
@@ -51,7 +52,7 @@ upstream's cyanrip, from a COPR (`platterpus@33573022:setup-host.sh:246-265`).
 | CI, macOS 26 (full suite) | 63.1.102 | 2.4.0 | 10.2+2.0.2 | 8.23.0 | brew's | runner's |
 | CI, Windows (smoke test) | n9.0.2, ours | 2.4.0 | 10.2+2.0.2 | 8.23.0, ours | 1.12.1 | — |
 | CI, Linux: Ubuntu 24.04 | 6.1.1 (60.31.102) | 2.1.0 | 10.2+2.0.0 | 8.5.0 | 1.3.2; 0.62 in the floor row | 3.12; 3.11 in the floor row |
-| **declared minimum** | 59.24.100 | 2.0 | 10.2 | 7.66.0 | 0.62 | 3.10 |
+| **declared minimum** | 60.31.102, from `.29` (59.24.100 to `.28`) | 2.1.0 (2.0) | 10.2 | 8.5.0 (7.66.0) | 0.62 | 3.11 (3.10) |
 
 Fedora's are from `mdapi.fedoraproject.org`, read 2026-11-02 (four Fedora 45
 packages did not answer). The macOS and Windows rows are from PR #75's CI logs
@@ -59,7 +60,7 @@ that day; Ubuntu 24.04's from the dependency map, generated on 24.04.4, the
 archive CI's linux job installs from. libmusicbrainz5 is 5.1.0, its last
 release, everywhere.
 
-## 3. The minimums: raise them to what CI tests (proposed for `.29`)
+## 3. The minimums: raise them to what CI tests (built 2026-11-03 for `.29`)
 
 **A minimum is a claim that the build works there, and nothing runs ours.**
 No job builds FFmpeg 5.1, libcdio 2.0, curl 7.66 or Python 3.10; the oldest
@@ -94,6 +95,15 @@ deleted), Python 3.11, each the oldest a CI job builds or runs; libcdio-
 paranoia, libmusicbrainz5, Meson, and the optional libqrencode and
 libchromaprint left as they are. Platterpus's build is unaffected, as Fedora
 44 and 45 exceed each; it is still announced in a lap first.
+
+**Built on 2026-11-03**, as proposed, in `src/meson.build`, `meson.build`,
+`tests/meson.build` and the README, with curl's branch before 7.85.0 deleted
+from `src/accurip.c` and `src/coverart.c`. Two places now choose by a
+library's version, both in `src/cyanrip_encode.c` (libavcodec 61.13.100 at
+`:252`, libavfilter 10.6.100 at `:491`), and CI compiles each both ways:
+Ubuntu 24.04's libraries take the older branch, macOS's and the Windows
+build's the newer. It ships in `.29`
+and is announced in our next lap of round 37, before that release.
 
 ## 4. A bigger gap than the minimums: no CI job builds what users build
 

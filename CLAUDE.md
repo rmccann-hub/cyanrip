@@ -38,16 +38,14 @@ one build directory write a log that is neither run.
 Regenerate, never hand-edit, what is derived: `tools/gen-provider-contract.py >
 PROVIDER-CONTRACT.md` after a `cyanrip_log()` call site or the option table
 changes; `tools/gen-dependency-map.py` after a dependency, subprocess call or
-URL; the golden reference after a lap or a log line. A check fails on each
-when it is stale.
+URL; the golden reference after a lap or a log line. A stale one fails a check.
 
 ## Where things live
 
 - `src/cyanrip_main.c`: argv, enumeration, the rip loop, `-Z` and its spool,
   pregap actions; `src/cyanrip_log.c` the log; `src/cue_writer.c` the CUE sheet.
 - `src/pregap.c`, `src/cache_probe.c`, `src/stall_watchdog.c`,
-  `src/diagnostics.c`: **read the header before changing one**; each records
-  why it is built as it is.
+  `src/diagnostics.c`: **read the header before changing one**: it says why.
 - `tests/`: every test is registered in `tests/meson.build`, and a new
   `sc_<name>()` in `tests/rip_images.py` runs only once it is, so **register it
   in the same commit as the feature**, or that commit is not bisectable.
@@ -182,7 +180,8 @@ documentation, never to evidence.
   Its time gives both zones: `HANDOFF from fork, 2:35 PM EDT (18:35 UTC)`.
 - **A lap a standing release word covers is released in the pull request that
   publishes it**, sent when it merges green (operator, 2026-10-19); re-read
-  their record before the merge. Otherwise a lap is published held.
+  their record before the merge. Standing since 2026-11-03 (owner): a lap that
+  answers, files or announces and moves no pin. Otherwise it is published held.
 - **Each side reads the other directly** (owner, 2026-10-19): at a session's
   start and before ending a turn, read Platterpus's `main`,
   `docs/handshake/outbound/`. A newer lap released to us is the cue to file it
@@ -232,8 +231,9 @@ Each of these is a confident wrong answer this repository has produced.
 - **Look at a whole log once** before concluding from a filtered view. **Wait
   on a PID, never a pattern** your own command line contains. **Build the way
   the build builds** (`-D_XOPEN_SOURCE=700`).
-- **A check that reaches the network is not evidence about this program.** A
-  check that cannot fire is worse than none: print `UNPROBED`.
+- **A check that reaches the network is not evidence about this program**, nor
+  one through this session's credentialed proxy about what strangers can read.
+  A check that cannot fire is worse than none: print `UNPROBED`.
 - **A re-check is independent only in elapsed time**: give the gap, not the
   dates. `git ls-remote` asks the remote; `git branch -r` is a cache.
 - `tools/mutate.py` measures what the suite misses; a 100% sweep means nothing

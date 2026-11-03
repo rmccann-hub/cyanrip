@@ -28,6 +28,10 @@
 #     still read it, and that was (13 runs of 13). ASan and memcheck report
 #     this one directly, as a read of freed memory.
 #
+# tests/tsan_plants.py plants all three in every TSan build's suite and fails
+# if one rips without a report, so an entry widened here, or an option that
+# hides FFmpeg's accesses again, fails there.
+#
 # The option dropped every access made inside any uninstrumented library,
 # swr_convert()'s reads included, which is the encoder side of the handoff
 # this build exists to check.
@@ -41,6 +45,16 @@
 # either, as the third planted defect shows. ASan reports it, as a read of
 # freed memory, and the sanitizer rows run every test: this build checks the
 # reads and writes of a handoff, not its frees.
+#
+# WHY NOT ANNOTATE OUR FREES INSTEAD (backlog 145, decided 2026-11-03). What
+# orders a free is the decrement in av_buffer_unref() that reaches zero, and
+# the free follows it inside libavutil. An __tsan_acquire() would have to sit
+# between the two, where we cannot put it: one at our call, before the
+# decrement, can run before another thread's __tsan_release() and then order
+# nothing, so the reports would stay, or, placed to silence them, would order
+# accesses the program does not and hide a real race. The way to drop these
+# entries is a libavutil built with -fsanitize=thread, which sees the atomic
+# itself; that is a build of FFmpeg in the thread row, not done.
 race:^av_buffer_unref$
 race:^av_samples_set_silence$
 
