@@ -12,7 +12,11 @@ claude-code-skills' framework: `skillcheck .claude` reports only the plugin
 catalog that a repository's own skill has no use for, and `skillcheck
 --verify` finds all 11 of its facts' quotes at their sources. Its trigger
 tests are in `.claude/tests/fixtures/modules/`, where the checker reads them;
-running them is a model call each, by hand.
+running them is a model call each, by hand. The weekly `Dependencies`
+workflow's new `steward-skill` job runs the same checks with its pinned
+`skillcheck`, and fails on any finding but the catalog, a quote gone from its
+source, or a fact past its check-by date: each was planted in a copy, and each
+failed the job's script.
 
 **The cover art cap is tested on an image that declares no size.** The
 test's first try sent 64 MiB over the loopback and took longer than its 30 s
