@@ -66,8 +66,17 @@ HOME_PATH = re.compile(
 # `Linux <host> <release>` from `uname -a`, and a `host:`/`hostname:` field.
 UNAME = re.compile(r"\b(?:Linux|Darwin|FreeBSD)\s+([A-Za-z0-9][A-Za-z0-9._-]*)"
                    r"\s+\d+\.\d+")
-HOST_FIELD = re.compile(r"^\s*\"?(?:host|hostname|node)\"?\s*[:=]\s*\"?"
-                        r"([A-Za-z0-9][A-Za-z0-9._-]*)\"?\s*$",
+# Whitespace that stops at a line's end. `\s` matches a newline too, and with
+# re.M every line start is a start position, so `^\s*` ran from each one
+# across every blank line after it: quadratic in a run of blank lines, 0.4 s
+# for 4,000 of them and a minute for 40,000 (measured 2026-11-03). What it no
+# longer reads is a value on the line after its `host:` key; of the 3,390
+# filed and tracked texts compared that day, none held one, and none read
+# differently.
+_SP = r"[^\S\n]*"
+HOST_FIELD = re.compile(r"^" + _SP + r"\"?(?:host|hostname|node)\"?" + _SP +
+                        r"[:=]" + _SP + r"\"?([A-Za-z0-9][A-Za-z0-9._-]*)\"?" +
+                        _SP + r"$",
                         re.M | re.I)
 
 WIRE = re.compile(r"^HANDSHAKE-[A-Z0-9-]+:")

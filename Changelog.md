@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**`tools/redact.py`'s host-field pattern no longer slows down on runs of
+blank lines.** Its `^\s*` under `re.M` made every line start scan across every
+blank line after it, quadratic in the run's length: 4,000 blank lines took
+0.4 s and 50,000 took 68 s. Its whitespace now stops at a line's end. Against
+the old pattern, 3,390 filed and tracked texts read the same, 241 of them with
+a field in them; what it no longer reads is a value on the line after its
+`host:` key, which none of them held. `tests/redaction.py` checks a field
+after 50,000 blank lines. **And dumbass us wrote that check twice before it
+checked anything:** with the field just after the run the old pattern matched
+from the run's first line at once, and with it just before, the field's
+trailing whitespace swallowed the run; both versions passed with the bug in
+place, and only the revert-proof said so.
+
 **`tools/lap-commits.py` names commits with seven digits, asked for.** It
 took git's default, which grows with the clone's object count: CI's fuller
 clone printed `59cb5a9f` where ours printed `59cb5a9`, and `Lap commit list

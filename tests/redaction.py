@@ -120,6 +120,21 @@ check(not any(i == 6 for i, _ in found),
 check(not any(NAME in k for _, k in found),
       "findings() must not write the name it found")
 
+# HOST_FIELD's whitespace stops at a line's end. With `\s*`, every line start
+# under re.M scanned across every blank line after it, so a long run of them
+# took minutes: 40,000 took about one, on 2026-11-03. The run must sit between
+# two lines that are not fields: a field just after it was matched from the
+# run's first line at once, and a field just before it swallowed the run in its
+# trailing whitespace, and each version of this check that did either passed
+# with the old pattern too. The field after them must still be found.
+import time as _time
+_blank = "x\n" + "\n" * 50000 + "y\nhost: boxy\n"
+_t0 = _time.perf_counter()
+_found = redact.hostnames_in(_blank)
+_took = _time.perf_counter() - _t0
+check(_found == {"boxy"} and _took < 5.0,
+      f"a host field after 50,000 blank lines: found {_found} in {_took:.2f} s")
+
 # findings() looks line by line only for a kind whose literal the whole text
 # holds (HOME_LITERALS, KEY_FLAG). Each text here holds one kind and nothing
 # else, so dropping any literal from its gate fails exactly one of them. The
