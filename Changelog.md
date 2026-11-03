@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**The cover art cap is tested on an image that declares no size.** The
+test's first try sent 64 MiB over the loopback and took longer than its 30 s
+under ASan, so it was dropped, and only the callback was tested alone. Now
+`tests/coverart_net.c` starts a fetch 8 bytes under the cap, as
+`fetch_image()` adds to what it holds, and a server sends 16 bytes with no
+length: the fetch is refused with the line naming 64 MiB and keeps nothing,
+while the same 16 bytes from empty are taken whole. Removing the cap check,
+or the refusal's arm for it, fails the test.
+
 **A build under clang keeps its hardening flags when LDFLAGS holds an
 argument clang ignores.** Our own backlog note said the flags went missing
 when CFLAGS held one; run, CFLAGS was fine and LDFLAGS was not:

@@ -24,6 +24,7 @@
 #include "coverart.c"
 
 #include <arpa/inet.h>
+#include <limits.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
@@ -152,12 +153,14 @@ static void test_a_db_fetch_is_https_only(void)
 }
 
 /* A one-connection HTTP server on the loopback, for the cap through
- * fetch_image() itself: it declares a body one byte past the cap and sends a
- * little of it. An image that declares no size is cut off by receive_image(),
- * whose own test is above; sending one past the cap here took more than the
- * test's 30 s under ASan, whose realloc() copies every time. */
+ * fetch_image() itself. Sized, it declares a body one byte past the cap and
+ * sends a little of it. Unsized, it sends 16 bytes with no length and closes,
+ * the body read until the connection ends; the fetch then starts a few bytes
+ * under the cap, as fetch_image() adds to what art holds, since sending the
+ * cap's worth took more than the test's 30 s under ASan, whose realloc()
+ * copies every time. */
 typedef struct Server {
-    int fd, port;
+    int fd, port, unsized;
     pthread_t thread;
 } Server;
 
@@ -165,11 +168,16 @@ static void *serve_one(void *opaque)
 {
     Server *s = opaque;
     char req[4096], head[160];
-    int c = accept(s->fd, NULL, NULL);
+    int n, c = accept(s->fd, NULL, NULL);
     if (c < 0)
         return NULL;
     (void)!recv(c, req, sizeof(req), 0);
-    int n = snprintf(head, sizeof(head), "HTTP/1.1 200 OK\r\n"
+    if (s->unsized)
+        n = snprintf(head, sizeof(head), "HTTP/1.1 200 OK\r\n"
+                     "Content-Type: image/png\r\nConnection: close\r\n\r\n"
+                     "0123456789abcdef");
+    else
+        n = snprintf(head, sizeof(head), "HTTP/1.1 200 OK\r\n"
                      "Content-Type: image/png\r\nContent-Length: %lld\r\n\r\n"
                      "0123456789abcdef", (long long)COVERART_MAX_BYTES + 1);
     (void)!send(c, head, n, 0);
@@ -178,10 +186,11 @@ static void *serve_one(void *opaque)
 }
 
 /* inet_pton(), not INADDR_LOOPBACK, which macOS hides under _XOPEN_SOURCE */
-static int server_start(Server *s)
+static int server_start(Server *s, int unsized)
 {
     struct sockaddr_in a = { .sin_family = AF_INET };
     socklen_t len = sizeof(a);
+    s->unsized = unsized;
     s->fd = socket(AF_INET, SOCK_STREAM, 0);
     if (s->fd < 0 || inet_pton(AF_INET, "127.0.0.1", &a.sin_addr) != 1 ||
         bind(s->fd, (struct sockaddr *)&a, sizeof(a)) ||
@@ -211,7 +220,7 @@ static void test_a_fetch_past_the_cap_is_refused(void)
     curl_off_t got = -1;
     char url[64];
     CURL *c = curl_easy_init();
-    if (!c || server_start(&s)) {
+    if (!c || server_start(&s, 0)) {
         check(0, "a curl handle and a loopback server");
         if (c)
             curl_easy_cleanup(c);
@@ -227,6 +236,45 @@ static void test_a_fetch_past_the_cap_is_refused(void)
     check(strstr(last_log, "the image is larger than 64 MiB") != NULL,
           "the refusal names the cap");
     check(got == 0, "it is refused by its size, with none of its body taken");
+    check(!art.data && !art.size, "no image is kept");
+    crip_free_art(&art);
+}
+
+/* An image that declares no size is cut off where it passes the cap, by
+ * receive_image(), and fetch_image() says so as for one that declared it.
+ * The same 16 bytes from the start are taken, so the server and curl accept
+ * an unsized body and it is the cap that refuses it. */
+static int fetch_unsized(CRIPArt *art, int info_only)
+{
+    Server s;
+    char url[64];
+    CURL *c = curl_easy_init();
+    if (!c || server_start(&s, 1)) {
+        if (c)
+            curl_easy_cleanup(c);
+        return INT_MIN;
+    }
+    snprintf(url, sizeof(url), "http://127.0.0.1:%i/front.png", s.port);
+    last_log[0] = '\0';
+    int ret = fetch_image(NULL, c, art, NULL, "Front", info_only, url);
+    curl_easy_cleanup(c);
+    server_stop(&s);
+    return ret;
+}
+
+static void test_an_unsized_fetch_past_the_cap_is_cut_off(void)
+{
+    CRIPArt art = { 0 };
+    int ret = fetch_unsized(&art, 1);
+    check(ret != INT_MIN, "a curl handle and a loopback server");
+    check(ret == 16, "an unsized image under the cap is taken whole");
+
+    art.size = COVERART_MAX_BYTES - 8;
+    ret = fetch_unsized(&art, 0);
+    check(ret != INT_MIN, "a curl handle and a loopback server");
+    check(ret < 0, "an unsized image that passes the cap is refused");
+    check(strstr(last_log, "the image is larger than 64 MiB") != NULL,
+          "the refusal of an unsized image names the cap");
     check(!art.data && !art.size, "no image is kept");
     crip_free_art(&art);
 }
@@ -247,6 +295,7 @@ int main(void)
     test_a_given_url_keeps_its_scheme();
     test_a_db_fetch_is_https_only();
     test_a_fetch_past_the_cap_is_refused();
+    test_an_unsized_fetch_past_the_cap_is_cut_off();
 
     if (failures) {
         fprintf(stderr, "%i check(s) failed\n", failures);
