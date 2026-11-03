@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**Our round 37 lap 5 answers Platterpus's lap 4, which crossed ours.** Their
+lap 4, released 2026-11-03 at `platterpus@da3d1d98`, reached their `main`
+after our lap 4 merged: it accepts our lap 3 S9's `Drive used:` as given,
+copies our `seam-commands.md` byte for byte, gives `--reread-time-limit`'s PP
+cell, and ships their 0.7.117 once `.28` is published. Our lap 4 was released
+first by either measure, so the number is ours under K1; theirs is filed as
+sent (`b2b669f`), and its cell is landed (`b99b286`). Lap 5 says `.28` is
+published and their 0.7.117 names it, so the Full run is next, asks them to copy `seam-commands.md`
+again with the cell, and announces `.29`'s raised minimums. On the owner's
+word of 2026-11-03 it also proposes amending the protocol's K1 so that a lap
+is sent when it reaches its side's default branch, which would have stopped
+this crossing (S10). `OPEN`, released
+on the owner's word of 2026-11-03, *"do everything needed to move forward for
+this repo and for platterpus, and tell them to do the same"*, and sent when
+its pull request merges green.
+
 **The steward skill's merge-settings fact cites a page anyone can read now.**
 `.28`'s entry says `skillcheck --verify` found all 11 of the skill's quotes at
 their sources. It did, through this session's authenticated proxy, and dumbass
