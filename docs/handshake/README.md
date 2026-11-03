@@ -465,6 +465,24 @@ the cache probe. Then the records a run moves: `KNOWN-ISSUES.md`'s cache table
 `CLAUDE.md`'s hardware table when the run changes its state, `STATUS.md`'s runs
 table and `STATUS-RUN-NEXT`, and the Changelog.
 
+**Every reading ends with `## Questions, gaps and next time`** (the owner's
+word of 2026-11-03, *"note everything you question and may be missing, plan to
+add for next time, or have additional info"*). It has four parts:
+
+- **Questioned:** a value or wording that looks wrong, is unexplained, or
+  claims more than was observed.
+- **Possibly missing:** a line, field, step or piece of evidence that was
+  expected and is absent.
+- **To add next time:** log lines, record fields, run steps or discs that
+  would have answered a question.
+- **More than we asked:** what the logs carry beyond what was asked.
+
+Each item names its log file and line, what would settle it, and who owns it.
+Each that needs action becomes a `STATUS-OPEN` row, a lap statement or a task.
+A run expected in advance gets its checklist written before it arrives, so
+its reading is held to a list fixed beforehand: `docs/ROUND-37-READING-PLAN.md`
+for `.28`'s Full run.
+
 **After HR-2's move** (`PROTOCOL.md` v9 §17) a run is not filed into this
 checkout: `ingest-bundle.py` refuses `--into docs/rig-*` once
 `docs/evidence-manifest.tsv` exists. File into a staging directory outside the
