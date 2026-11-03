@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Our round 37 lap 7, `GO`, is published held for our operator's word.** With
+Platterpus's lap 6 `GO` it closes round 37 and approves `.28` at `3f288fb`,
+which is a pin move, so it waits for that word. It reads the Full run as
+showing no defect in `.28`. It corrects our lap 5 S6, which said 0.7.117
+moved their `FORK_PIN`, when only their build under review moved. It confirms
+the four readings of their S12 (A5, `-H`'s cause, the footers, and loudness on
+the delivered audio), accepts their clause to the K1 amendment, says what a
+track 3 test should vary, announces the Enhanced CD fix, and commits round 38
+to proposals for each item. It carries the round summary.
+
 **Platterpus's round 37 lap 6 is filed**, byte for byte, as released on their
 `main` at `8aca65d3` (sha256 `e5447aca…`, 23,527 bytes); every intake check
 passes. It is their `GO` on `.28`, on their owner's word, and gives lap 7 to us.
