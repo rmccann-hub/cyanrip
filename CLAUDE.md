@@ -180,7 +180,8 @@ documentation, never to evidence.
   Its time gives both zones: `HANDOFF from fork, 2:35 PM EDT (18:35 UTC)`.
 - **A lap a standing release word covers is released in the pull request that
   publishes it**, sent when it merges green (operator, 2026-10-19); re-read
-  their record before the merge. Otherwise a lap is published held.
+  their record before the merge. Standing since 2026-11-03 (owner): a lap that
+  answers, files or announces and moves no pin. Otherwise it is published held.
 - **Each side reads the other directly** (owner, 2026-10-19): at a session's
   start and before ending a turn, read Platterpus's `main`,
   `docs/handshake/outbound/`. A newer lap released to us is the cue to file it

@@ -1,5 +1,10 @@
 Unreleased
 ==========
+**A standing word now covers a lap that answers, files or announces and moves
+no pin** (owner, 2026-11-03): the session releases it in the pull request that
+publishes it, and a release, a pin move and an override stay the owner's.
+`CLAUDE.md` and the handshake README's *Releasing our lap* say so.
+
 **`CLAUDE.md`: a check run through this session's credentialed proxy is not
 evidence of what a stranger can read** (owner, 2026-11-03), after the steward
 skill's fact passed that way and failed in CI. The file is at its 300-line cap,

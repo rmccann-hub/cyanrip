@@ -66,9 +66,10 @@ when the request merges (the repository's `delete_branch_on_merge`, read
 owner to remove it. The same settings allow only merge commits:
 squash and rebase merging are off (`allow_squash_merge` and
 `allow_rebase_merge` false, read 2026-11-03). GitHub shows these settings only
-to a caller with write access, so this paragraph is where they are on record. The standing rule since 2026-10-12: push a topic branch
-only to open its pull request into `platterpus-fork`, and never push to it
-again once that request has merged, which would recreate it with a stale tip.
+to a caller with write access, so this paragraph is where they are on record.
+The standing rule since 2026-10-12: push a topic branch only to open its pull
+request into `platterpus-fork`, and never push to it again once that request
+has merged, which would recreate it with a stale tip.
 
 `platterpus-fork` is not a straight line: `1ee56fc`, the upstream `0.9.4-rc2`
 sync, was the first merge commit, and since 2026-10-12 every pull request lands
@@ -423,6 +424,12 @@ missing path is refused as `LSL.4` by both). `## Diagnostics` may follow
 quoted, `STATUS-NEWEST-LAP-STATE: sent`, regenerate the golden reference from
 the commit carrying the lap, run the suite, push, and re-read the other side's
 `main` before the merge; the lap is sent when the pull request merges green.
+**What a standing word covers** (the owner's word of 2026-11-03, *"yes"*, to
+this proposal: a lap that only answers the other side, files their laps or
+runs, or announces, and moves no pin, is released by the session in the pull
+request that publishes it, while a release, a pin move and an override stay
+the owner's). Our round 37 lap 5, on *"do everything needed to move forward
+for this repo and for platterpus"*, was the first under it.
 Otherwise, after the pull request that published it held has merged:
 
 - `HANDSHAKE-READY-TO-READ: yes — operator, <date>, "<their words>"`, with no
