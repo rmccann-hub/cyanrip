@@ -8,7 +8,7 @@ Everything above **Measured where this was generated** is declared by the tree a
 
 - **cyanrip 0.9.4-rc3+platterpus.28**, the `platterpus-fork` build of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip), at [rmccann-hub/cyanrip](https://github.com/rmccann-hub/cyanrip). The only branch a consumer builds is `platterpus-fork`; `master` mirrors upstream.
 - **Language: C**, `c_std=c11`, built with meson (`meson_version: '>=0.62.0'`), and `-Werror=format`, `-Werror=format-extra-args`, `-Werror=implicit-function-declaration`.
-- **Tools and tests: Python 3, standard library only** — derived: no third-party import in `tools/` or `tests/`. Python `>=3.10`, declared in `meson.build`.
+- **Tools and tests: Python 3, standard library only** — derived: no third-party import in `tools/` or `tests/`. Python `>=3.11`, declared in `meson.build`.
 - **Licence: LGPL-2.1-or-later**, read from `src/utils.c`'s header. The binary links libcdio and libcdio-paranoia, both GPL-3.0-or-later, so a built binary is subject to the GPL's terms; upstream's is too.
 
 ## Libraries linked
@@ -17,15 +17,15 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 
 | library | project | minimum | required | licence | used for |
 |---|---|---|---|---|---|
-| `libavcodec` | [FFmpeg](https://ffmpeg.org/) | >= 59.24.100 | yes | LGPL-2.1-or-later | encodes each output format |
-| `libavformat` | [FFmpeg](https://ffmpeg.org/) | >= 58.13.100 | yes | LGPL-2.1-or-later | muxes each output file and writes its tags |
-| `libswresample` | [FFmpeg](https://ffmpeg.org/) | >= 4.5.100 | yes | LGPL-2.1-or-later | sample-format conversion for each encoder |
-| `libavfilter` | [FFmpeg](https://ffmpeg.org/) | >= 7.16.100 | yes | LGPL-2.1-or-later | the de-emphasis, HDCD and loudness (ebur128) graphs |
-| `libavutil` | [FFmpeg](https://ffmpeg.org/) | >= 57.25.100 | yes | LGPL-2.1-or-later | CRC, dictionaries, frames, errors |
-| `libcdio` | [GNU libcdio](https://www.gnu.org/software/libcdio/) | >= 2.0 | yes | GPL-3.0-or-later | drive and disc-image access: TOC, sub-channel, ISRC, MCN, CD-TEXT, MMC commands |
+| `libavcodec` | [FFmpeg](https://ffmpeg.org/) | >= 60.31.102 | yes | LGPL-2.1-or-later | encodes each output format |
+| `libavformat` | [FFmpeg](https://ffmpeg.org/) | >= 60.16.100 | yes | LGPL-2.1-or-later | muxes each output file and writes its tags |
+| `libswresample` | [FFmpeg](https://ffmpeg.org/) | >= 4.12.100 | yes | LGPL-2.1-or-later | sample-format conversion for each encoder |
+| `libavfilter` | [FFmpeg](https://ffmpeg.org/) | >= 9.12.100 | yes | LGPL-2.1-or-later | the de-emphasis, HDCD and loudness (ebur128) graphs |
+| `libavutil` | [FFmpeg](https://ffmpeg.org/) | >= 58.29.100 | yes | LGPL-2.1-or-later | CRC, dictionaries, frames, errors |
+| `libcdio` | [GNU libcdio](https://www.gnu.org/software/libcdio/) | >= 2.1.0 | yes | GPL-3.0-or-later | drive and disc-image access: TOC, sub-channel, ISRC, MCN, CD-TEXT, MMC commands |
 | `libcdio_paranoia` | [libcdio-paranoia](https://github.com/rocky/libcdio-paranoia) | >= 10.2 | yes | GPL-3.0-or-later | the verified read and its status counters |
 | `libmusicbrainz5` | [libmusicbrainz](https://musicbrainz.org/doc/libmusicbrainz) | >= 5.1 | yes | LGPL-2.1-or-later | MusicBrainz lookups by disc ID |
-| `libcurl` | [curl](https://curl.se/) | >=7.66.0 | yes | curl | AccurateRip and Cover Art Archive requests |
+| `libcurl` | [curl](https://curl.se/) | >= 8.5.0 | yes | curl | AccurateRip and Cover Art Archive requests |
 | `threads` | POSIX threads (the C library) | none | yes | — | encoder threads and the read-stall watchdog |
 | `libqrencode` | [libqrencode](https://fukuchi.org/works/qrencode/) | >= 4.0 | no | LGPL-2.1-or-later | prints MusicBrainz submission links as QR codes |
 | `libchromaprint` | [Chromaprint](https://acoustid.org/chromaprint) | >= 1.4 | no | MIT AND LGPL-2.1-or-later | AcoustID fingerprints of each audio track, tagged, or submitted with --acoustid-key; -B turns it off |

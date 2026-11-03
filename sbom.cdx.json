@@ -360,7 +360,7 @@
         },
         {
           "name": "cyanrip-fork:declared-constraint",
-          "value": ">= 59.24.100"
+          "value": ">= 60.31.102"
         },
         {
           "name": "cyanrip-fork:declared-in",
@@ -403,7 +403,7 @@
         },
         {
           "name": "cyanrip-fork:declared-constraint",
-          "value": ">= 58.13.100"
+          "value": ">= 60.16.100"
         },
         {
           "name": "cyanrip-fork:declared-in",
@@ -446,7 +446,7 @@
         },
         {
           "name": "cyanrip-fork:declared-constraint",
-          "value": ">= 4.5.100"
+          "value": ">= 4.12.100"
         },
         {
           "name": "cyanrip-fork:declared-in",
@@ -489,7 +489,7 @@
         },
         {
           "name": "cyanrip-fork:declared-constraint",
-          "value": ">= 7.16.100"
+          "value": ">= 9.12.100"
         },
         {
           "name": "cyanrip-fork:declared-in",
@@ -532,7 +532,7 @@
         },
         {
           "name": "cyanrip-fork:declared-constraint",
-          "value": ">= 57.25.100"
+          "value": ">= 58.29.100"
         },
         {
           "name": "cyanrip-fork:declared-in",
@@ -575,7 +575,7 @@
         },
         {
           "name": "cyanrip-fork:declared-constraint",
-          "value": ">= 2.0"
+          "value": ">= 2.1.0"
         },
         {
           "name": "cyanrip-fork:declared-in",
@@ -704,7 +704,7 @@
         },
         {
           "name": "cyanrip-fork:declared-constraint",
-          "value": ">=7.66.0"
+          "value": ">= 8.5.0"
         },
         {
           "name": "cyanrip-fork:declared-in",
@@ -1401,5 +1401,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:ed71f68e-8790-5f87-946c-c6ed48ee46a4"
+  "serialNumber": "urn:uuid:989d0691-2896-5a65-8936-fda08a38a1a5"
 }
