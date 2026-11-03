@@ -60,10 +60,12 @@ that did not exist.
 while its pull request is open (`claude/pending-task-vg2afd` is the one this
 file's sessions use), and is not a ref to build from. A session branch pushed
 once is **permanent from inside a session** — branch delete is `HTTP 403` from
-this git proxy, measured by trying it — so after its merge it can only be
-removed by the repository owner. The standing rule since 2026-10-12: push a
-topic branch only to open its pull request into `platterpus-fork`, and never
-push to it again once that request has merged.
+this git proxy, measured by trying it. GitHub deletes a pull request's branch
+when the request merges (the repository's `delete_branch_on_merge`, read
+2026-11-03), so only a branch whose request never merged needs the repository
+owner to remove it. The standing rule since 2026-10-12: push a topic branch
+only to open its pull request into `platterpus-fork`, and never push to it
+again once that request has merged, which would recreate it with a stale tip.
 
 `platterpus-fork` is not a straight line: `1ee56fc`, the upstream `0.9.4-rc2`
 sync, was the first merge commit, and since 2026-10-12 every pull request lands
