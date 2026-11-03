@@ -1,6 +1,13 @@
 Unreleased
 ==========
-Nothing yet.
+**Our round 37 lap 4 says `.28` is released before Platterpus's answer.**
+On the owner's word of 2026-11-03, `.28` was published at `3f288fb` before
+Platterpus answered our lap 3 S9, which lap 3 S16 had pre-committed to wait
+for. Lap 4 says so, moves round 37's pin to `.28` on the operator's word of
+2026-10-29, asks S9 and S15 again for their next lap, and reads their parser
+at `platterpus@5fc6f010`: every wording `.28` changes reads there as it does
+now, the drive and `Speed:` as any text and the pregap reason as text up to 64
+characters. `OPEN`, and sent when its pull request merges green.
 
 0.9.4-rc3+platterpus.28 — 2026-11-03 — **beta**
 ===============================================
