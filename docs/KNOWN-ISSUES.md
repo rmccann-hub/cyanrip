@@ -429,6 +429,31 @@ do not. A PNG cover is embedded; the suite's `art` checks it.
 lap first. Two shapes are open: refuse a cover the output's muxer cannot embed
 before the rip, or print what was written, read back from the muxer.
 
+### A positive offset on an Enhanced CD read the session gap into the last audio track (fixed for the build after `.28`)
+
+**Found 2026-11-03, checking upstream issue 168 against this fork** (the
+owner's message of that day, §5): upstream's rip of an Enhanced CD with a
+positive drive offset hangs at the end of the last audio track at `-P 0 -Z 2`.
+The fork shares the read: the session gap is cut from the last audio track
+(`src/cyanrip_main.c`, the `CRIP_XA_INTERVAL` branch), but the frame an offset
+needs past its new end was bounded by the disc's end, so it was read from the
+drive. On an image it did not hang, because `crip_read_audio_salvaging()` holds
+at `-P 0` and the retry limit is rounded elsewhere; instead the gap's bytes went
+into the track's last samples, and where that sector failed, a track whose own
+sectors all read cleanly said `read with errors.` and the rip exited 1.
+
+**Fixed**: the read is bounded by `audio_end_lsn`, the last audio track's end on
+an Enhanced CD and the disc's end otherwise, in all three places the read
+checked the disc's end. The frame is now appended silence, as at the end of a
+one-session disc, and under `-O` it is read once (`Beyond disc:`, whose label
+then covers session 1's lead-out, not only the disc's). `sc_enhanced_cd`'s
+offset check rips the well-formed image at +6 samples and compares track 2
+with the image's bytes; with the fix reverted it fails two checks.
+
+**Needs a drive**: what a drive does with a read of session 1's lead-out, and
+whether a pressed CD-Extra's TOC matches the image's, are unknown here. Listed
+in `STATUS.md`'s `hardware-unverified`.
+
 ### `-H` on a disc without HDCD delivers a file 6.02 dB quieter, beside checksums of the read
 
 **Measured on a drive 2026-10-06** (`docs/rig-2026-10-06-5704062/README.md`,

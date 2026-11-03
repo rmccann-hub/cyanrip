@@ -496,6 +496,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     ctx->start_lsn = 0;
 
     ctx->end_lsn = cdio_get_track_lsn(ctx->cdio, CDIO_CDROM_LEADOUT_TRACK) - 1;
+    ctx->audio_end_lsn = ctx->end_lsn;
     ctx->duration_frames = ctx->end_lsn - ctx->start_lsn + 1;
 
     ctx->nb_tracks = ctx->nb_cd_tracks = cdio_cddap_tracks(ctx->drive);
@@ -582,6 +583,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
                 if ((pt->end_lsn - CRIP_XA_INTERVAL) >= pt->start_lsn) {
                     pt->end_lsn -= CRIP_XA_INTERVAL;
                     pt->end_lsn_session_gap = CRIP_XA_INTERVAL;
+                    ctx->audio_end_lsn = pt->end_lsn;
                     t->pregap_lsn = pt->end_lsn + 1;
                 } else {
                     cyanrip_log(ctx, 0, "Track %i is data and last, but track "
@@ -812,7 +814,7 @@ static const uint8_t *cyanrip_read_frame(cyanrip_ctx *ctx, lsn_t lsn)
     const uint8_t *data;
 
     if (ctx->settings.overread_leadinout &&
-        (lsn < ctx->start_lsn || lsn > ctx->end_lsn))
+        (lsn < ctx->start_lsn || lsn > ctx->audio_end_lsn))
         return crip_read_frame_beyond_disc(ctx, lsn);
 
     if (ctx->overread_resync) {
@@ -1712,7 +1714,7 @@ repeat_ripping:;
         }
 
         /* Flush paranoia cache if overreading into lead-out - no idea why */
-        if ((t->start_lsn + i) > ctx->end_lsn)
+        if ((t->start_lsn + i) > ctx->audio_end_lsn)
             cdio_paranoia_seek(ctx->paranoia, t->start_lsn + i, SEEK_SET);
 
         int bytes = CDIO_CD_FRAMESIZE_RAW;
@@ -2282,10 +2284,16 @@ static void setup_track_lsn(cyanrip_ctx *ctx, cyanrip_track *t)
     first_frame -= sign < 0;
     last_frame  += sign > 0;
 
-    /* Don't read into the lead in/out */
+    /* Don't read into the lead in/out. On an Enhanced CD the last audio
+     * track ends at the session gap, and the frame an offset needs past it
+     * is session 1's lead-out, so it is bounded there, as at the disc's end:
+     * against end_lsn it was read from the drive, the gap's bytes went into
+     * the track, and a read that failed there marked the track read with
+     * errors. Upstream issue 168 is the same read hanging at -P 0 -Z 2;
+     * here crip_read_audio_salvaging() kept it from hanging on an image. */
     if (!ctx->settings.overread_leadinout) {
         t->frames_before_disc_start = FFMAX(ctx->start_lsn - first_frame, 0);
-        t->frames_after_disc_end = FFMAX(last_frame - ctx->end_lsn, 0);
+        t->frames_after_disc_end = FFMAX(last_frame - ctx->audio_end_lsn, 0);
 
         first_frame += t->frames_before_disc_start;
         last_frame  -= t->frames_after_disc_end;

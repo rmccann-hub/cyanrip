@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**A positive offset on an Enhanced CD no longer reads the session gap into
+the last audio track.** Checked against upstream issue 168, where the same
+read hangs upstream's rip at `-P 0 -Z 2`: the fork cut the gap from the last
+audio track and then bounded the offset's extra frame by the disc's end, so
+it read session 1's lead-out from the drive. On an image the track's last
+samples were the gap's bytes, and a failed read there marked a track whose
+own sectors all read cleanly as read with errors and exited 1. Upstream's
+code, the fork's code and three bound checks all agreed on the wrong end, and
+the suite's offset rip used a disc with no data track, so no test could see it. The
+frame is now appended silence, as at a one-session disc's end; under `-O` it
+is read once. **Changes drive I/O and is not verified on hardware**: it
+touches the `damaged media` row's failed-read arm and adds an Enhanced CD to
+`hardware-unverified`. A file on disk differs (six samples of silence where
+gap bytes were) and an `Appended:` line appears, both announced in our next
+lap before a release carries them.
+
 **Three defects the 2026-11-03 run showed are now open items in
 `KNOWN-ISSUES.md`.** `-H` on a disc without HDCD delivers a file 6.02 dB
 quieter beside checksums of the read: measured on 2026-10-06 and then left as
