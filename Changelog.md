@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**The redaction tool no longer eats the word after `--acoustid-key` in
+prose.** Dumbass us wrote its key pattern for a command line and let it loose
+on laps: "via --acoustid-key or CYANRIP_ACOUSTID_KEY" came out "via
+--acoustid-key [withheld] CYANRIP_ACOUSTID_KEY". `tools/redact.py` now
+withholds the next word as a key on the log's `Invoked as:` line, the
+record's `invocation`, a line or Markdown code span that runs `cyanrip`, and
+elsewhere only when no prose word looks like it (quoted, or holding a digit,
+a capital or a symbol); a key's value no longer swallows a code span's
+closing backtick. `tests/redaction.py` holds both sides, and fails on the old
+pattern.
+
 **Upstream's four commits after `7dbe56a` are merged, and change nothing we
 build.** They touch only upstream's CI: pull-request triggers, a static Linux
 binary and a macOS disk image on its releases, chromaprint in its Windows

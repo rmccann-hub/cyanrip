@@ -79,15 +79,55 @@ WIRE = re.compile(r"^HANDSHAKE-[A-Z0-9-]+:")
 # the flag, in any case, as the binary withholds it: a misspelt one genopt
 # refused, and the `--flag=value` form, quoted whole when the value has a
 # space. Not upstream's -k, which the binary also withholds after: in a log
-# from before 2026-10-12 it was --stall-secs, and its value no secret.
+# from before 2026-10-12 it was --stall-secs, and its value no secret. A value
+# never takes a backtick, so a key in a Markdown code span keeps the span's end.
 ACOUSTID_KEYS = (
     re.compile(r'((?:\\"|")--(?i:acoustid)[\w-]*=)(?!\[withheld\])'
                r'((?:(?!\\?").)+)'),
-    re.compile(r'(--(?i:acoustid)[\w-]*=)(?!\[withheld\])([^\s"\\]+)'),
-    re.compile(r'(--(?i:acoustid)[\w-]*\s+)(?!\[withheld\])'
-               r'(\\"(?:(?!\\").)*\\"|"[^"]*"|[^\s"\\]+)'),
+    re.compile(r'(--(?i:acoustid)[\w-]*=)(?!\[withheld\])([^\s"\\`]+)'),
 )
+# The flag and its value as two words. On a command line the next word is the
+# key whatever it looks like; in prose it is prose, and until 2026-11-03 a lap
+# saying "via --acoustid-key or CYANRIP_ACOUSTID_KEY" lost its "or". So outside
+# a command line a value is withheld only when no prose word looks like it:
+# quoted, or holding anything but lower-case letters and closing punctuation.
+# A key of lower-case letters alone in prose is the one this misses; a line of
+# prose that begins with `cyanrip ` is taken for a command, and loses a word.
+SPACED_KEY = re.compile(r'(--(?i:acoustid)[\w-]*\s+)(?!\[withheld\])'
+                        r'(\\"(?:(?!\\").)*\\"|"[^"]*"|[^\s"\\`]+)')
+PROSE_WORD = re.compile(r"[a-z]+[.,;:!?)]*")
+# A command line: the log's `Invoked as:`, the record's `invocation`, or a line
+# that runs cyanrip, by any path, after an optional shell prompt.
+COMMAND_LINE = (
+    re.compile(r"Invoked as:"),
+    re.compile(r'"invocation"\s*:'),
+    re.compile(r"^\s*(?:[$#>+]\s+)?(?:\S*/)?cyanrip(?:\.exe)?\s"),
+)
+# ...or a Markdown code span that does, in a line of prose.
+COMMAND_SPAN = re.compile(r"`(?:[^`\s]*/)?cyanrip(?:\.exe)?\s[^`]*`")
 PLACEHOLDER_KEY = "[withheld]"
+
+
+def withhold_keys(line):
+    """`line` with each AcoustID key in it withheld, and how many were."""
+    total = 0
+    for r in ACOUSTID_KEYS:
+        line, n = r.subn(lambda m: m.group(1) + PLACEHOLDER_KEY, line)
+        total += n
+    command = any(r.search(line) for r in COMMAND_LINE)
+    spans = [m.span() for m in COMMAND_SPAN.finditer(line)]
+    spaced = 0
+
+    def one(m):
+        nonlocal spaced
+        if (command or any(a <= m.start() < b for a, b in spans)
+                or not PROSE_WORD.fullmatch(m.group(2))):
+            spaced += 1
+            return m.group(1) + PLACEHOLDER_KEY
+        return m.group(0)
+
+    line = SPACED_KEY.sub(one, line)
+    return line, total + spaced
 
 NAMES_ENV = "CYANRIP_REDACT_NAMES"
 NAMES_FILE = pathlib.Path.home() / ".config" / "cyanrip" / "redact-names"
@@ -176,9 +216,8 @@ def redact(text, hosts=(), names=None):
             continue
         line, n = HOME_PATH.subn("~", line)
         rep.home += n
-        for r in ACOUSTID_KEYS:
-            line, n = r.subn(lambda m: m.group(1) + PLACEHOLDER_KEY, line)
-            rep.keys += n
+        line, n = withhold_keys(line)
+        rep.keys += n
         for r in host_res:
             line, n = r.subn(PLACEHOLDER_HOST, line)
             rep.hosts += n
@@ -221,6 +260,6 @@ def findings(text, names=None):
             out.append((i, "a hostname"))
         if any(r.search(line) for r in name_res):
             out.append((i, "the owner's name"))
-        if any(r.search(line) for r in ACOUSTID_KEYS):
+        if withhold_keys(line)[1]:
             out.append((i, "an AcoustID key"))
     return out

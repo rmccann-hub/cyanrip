@@ -155,6 +155,34 @@ same, rep = redact.redact("cyanrip -k 10 -N")
 check(same == "cyanrip -k 10 -N" and rep.keys == 0,
       "-k is left alone: it was --stall-secs until 2026-10-12")
 
+# Prose that names the flag keeps its next word; until 2026-11-03 the first
+# lost its "or". A command line, a code span running cyanrip, or a value no
+# prose word looks like is still a key, and a code span keeps its end.
+for prose in ("via --acoustid-key or CYANRIP_ACOUSTID_KEY",
+              "sent only when --acoustid-key gives a user key",
+              "keep --acoustid-key. Then"):
+    same, rep = redact.redact(prose)
+    check(same == prose and rep.keys == 0 and redact.findings(prose) == [],
+          f"prose naming the flag must keep its words: {prose!r} -> {same!r}")
+for given, want in (
+        ("$ cyanrip -N --acoustid-key abcdefgh",
+         "$ cyanrip -N --acoustid-key [withheld]"),
+        ("~/.local/bin/cyanrip --acoustid-key abcdefgh -N",
+         "~/.local/bin/cyanrip --acoustid-key [withheld] -N"),
+        ("Invoked as:     cyanrip --acoustid-key abcdefgh -N",
+         "Invoked as:     cyanrip --acoustid-key [withheld] -N"),
+        ("run `cyanrip -N --acoustid-key abcdefgh` first",
+         "run `cyanrip -N --acoustid-key [withheld]` first"),
+        ("set --acoustid-key Xy7kQ2 there",
+         "set --acoustid-key [withheld] there"),
+        ("`cyanrip --acoustid-key=AbC123` or `--acoustid-key AbC123`",
+         "`cyanrip --acoustid-key=[withheld]` or `--acoustid-key [withheld]`")):
+    got, rep = redact.redact(given)
+    check(got == want and rep.keys == given.count("--acoustid"),
+          f"the key must be withheld: {given!r} -> {got!r}")
+    check(redact.findings(given) == [(1, "an AcoustID key")],
+          f"findings() must see the key in {given!r}")
+
 with tempfile.TemporaryDirectory() as d:
     p = pathlib.Path(d) / "names"
     p.write_text("# a comment\n\n" + NAME + "\n", encoding="utf-8")
