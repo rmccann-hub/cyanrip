@@ -780,6 +780,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-10-26 `ca0f097` | 237.3 ms | 2.0 ms | **6 ms** | 33%; `128 to 255 sectors`, three re-reads after 256 sectors at 32.1 ms or more, beside `cd-paranoia -A`'s 137 |
 | 2026-10-28 `5aeefc4` | 362.8 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 57.8 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-10-29 `5aeefc4` | 362.7 ms | 1.2 ms | **6 ms** | 20%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.6 ms or more, beside `cd-paranoia -A`'s 140 |
+| 2026-11-03 `3f288fb` | 362.8 ms | 1.4 ms | **6 ms** | 23%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.7 ms or more, beside `cd-paranoia -A`'s 144 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are

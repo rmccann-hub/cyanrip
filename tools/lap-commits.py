@@ -134,10 +134,14 @@ def main():
                      f"-- pass --since")
         why = f"lap {prev}'s own HANDSHAKE-FROM-COMMIT"
 
-    shas = git("log", "--format=%h", f"{base}..{args.head}").split()
+    # Seven digits, asked for, never git's default: its default grows with the
+    # clone's object count, so CI's fuller clone printed `59cb5a9f` where this
+    # one printed `59cb5a9`, and the summary stopped naming its own range
+    # (2026-11-03, PR #83). Git still lengthens a name that would be ambiguous.
+    shas = git("log", "--abbrev=7", "--format=%h", f"{base}..{args.head}").split()
     shas.reverse()
 
-    summary = (f"§C baseline `{base}` ({why}) .. `{git('rev-parse', '--short', args.head).strip()}`: "
+    summary = (f"§C baseline `{base}` ({why}) .. `{git('rev-parse', '--short=7', args.head).strip()}`: "
                f"**{len(shas)} commit(s)**, "
                f"{sum(1 for s in shas if classify(s)[1])} touching the binary.")
 

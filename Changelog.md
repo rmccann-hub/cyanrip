@@ -1,5 +1,39 @@
 Unreleased
 ==========
+**`tools/lap-commits.py` names commits with seven digits, asked for.** It
+took git's default, which grows with the clone's object count: CI's fuller
+clone printed `59cb5a9f` where ours printed `59cb5a9`, and `Lap commit list
+names its range` failed on every CI job of PR #83 while passing here. Dumbass
+us had a test whose verdict depended on how much history the clone held.
+Forcing `core.abbrev=8` reproduces the failure here, and passes with the fix.
+
+**Round 37's closing run is filed and read**: `.28` with Platterpus 0.7.117,
+Full, on the reference disc, 2026-11-03, on our evidence branch at `dd48c1f`
+(`docs/rig-2026-11-03-3f288fb/`), whose README is our reading. The script
+passed 553 steps, failed none, and could not reach the one this drive never
+reaches; all 25 signed logs verify. Every unknown pregap has its own `Pregap
+searches:` line in all 19 `.28` logs, the round's close condition. `.28`'s
+drive lines read as intended on a drive, and **`Disc ISRC:` read the disc
+itself for the first time on this drive**, on every track. Two tracks read
+wrong on every build: track 3, wrong in all four timed rips and right in all
+eight paired ones, the reverse of 2026-10-28, and track 5, the same wrong
+value seven times; each log says so and none calls them verified. The reading
+ends with what it questions, what is missing, what to add next time and what
+the logs carry beyond what was asked. The cache table gains its row,
+`CLAUDE.md`'s hardware table its date, and `docs/eac-parity.md`'s row 6 what
+this run adds.
+
+**Platterpus's round 37 lap 5 is filed** (`docs/handshake/inbound/`), sha256
+`c8a4c277…`, 11,230 bytes, from their `main` at `75915aa9`, now that their
+copy of our `seam-commands.md` matches ours again (their lap 6 S3, at
+`platterpus@92ba640c`). It crossed our lap 5 at the same number, ours reaching
+`platterpus-fork` at 02:31:06Z and theirs their `main` at 02:56:56Z; both are
+sent, and `HANDSHAKE-FROM` tells them apart. Its declared hash for
+`seam-commands.md` is their copy from before ours, `bb925f60…`, so
+`tools/seam-check.py` on that one lap reports the difference; it is the
+difference their lap 6 then closed, and a sent lap is not edited. Every other
+check passes, the suite's held-hash audit among them.
+
 **`docs/READINESS-PLAN.md` says what stands between the fork and ready to go,**
 on the owner's word of 2026-11-03: what was done that day without the owner's
 input, then by priority the `.28` Full run that closes round 37, what needs a
