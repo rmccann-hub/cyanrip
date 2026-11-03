@@ -15,6 +15,10 @@ build_opts = [
     # repeat count, whose limit -r's option table floors at 0. None is a
     # defect. The cost of leaving them off: a new site of either kind fails
     # nothing and shows only in --extra's list.
+    # Meson's configure says "Consider using the built-in warning_level
+    # option" for this line, and that is deliberate: warning_level=2 would
+    # add -Wextra only to a build directory set up after the change, and a
+    # -Dwarning_level=1 would take it away without a word.
     '-Wextra', '-Wno-unused-parameter', '-Wno-sign-compare',
 
     # Warnings to treat as errors
