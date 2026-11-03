@@ -1,0 +1,24 @@
+[
+  {
+    "query": "Push this branch and open the pull request.",
+    "should_trigger": true
+  },
+  {
+    "query": "I need to bring platterpus-fork into my branch; there is a conflict in tests/meson.build.",
+    "should_trigger": true
+  },
+  {
+    "query": "Write the pull request description for these commits.",
+    "should_trigger": true
+  },
+  {
+    "query": "Is the pull request green at its head?",
+    "should_trigger": false,
+    "note": "steward-checks"
+  },
+  {
+    "query": "Cut the .28 release.",
+    "should_trigger": false,
+    "note": "the handshake README's Cutting a release"
+  }
+]

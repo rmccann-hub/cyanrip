@@ -1,0 +1,24 @@
+[
+  {
+    "query": "Is PR #78 green yet? Check every job at its head commit.",
+    "should_trigger": true
+  },
+  {
+    "query": "The macOS job on my pull request says queued; does that count as passing?",
+    "should_trigger": true
+  },
+  {
+    "query": "Which CI jobs have to pass before a pull request into platterpus-fork can merge?",
+    "should_trigger": true
+  },
+  {
+    "query": "linux (thread) failed with a ThreadSanitizer warning in libavutil; what is it?",
+    "should_trigger": false,
+    "note": "steward-failures"
+  },
+  {
+    "query": "Merge the pull request now that CI is green.",
+    "should_trigger": false,
+    "note": "steward-merge"
+  }
+]

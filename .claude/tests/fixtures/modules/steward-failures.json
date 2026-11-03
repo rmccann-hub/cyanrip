@@ -1,0 +1,28 @@
+[
+  {
+    "query": "Settled facts timed out on the thread row of CI; what do we do?",
+    "should_trigger": true
+  },
+  {
+    "query": "CI says the dependency map is stale on my pull request.",
+    "should_trigger": true
+  },
+  {
+    "query": "The macos job got cancelled before it started on my PR.",
+    "should_trigger": true
+  },
+  {
+    "query": "A ThreadSanitizer warning failed deemph_with_hdcd in CI, frames all in FFmpeg.",
+    "should_trigger": true
+  },
+  {
+    "query": "Which jobs count toward green on this pull request?",
+    "should_trigger": false,
+    "note": "steward-checks"
+  },
+  {
+    "query": "Run the suite before I push this fix.",
+    "should_trigger": false,
+    "note": "steward-push"
+  }
+]

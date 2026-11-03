@@ -22,7 +22,7 @@
       "type": "application",
       "bom-ref": "cyanrip",
       "name": "cyanrip",
-      "version": "0.9.4-rc3+platterpus.27",
+      "version": "0.9.4-rc3+platterpus.28",
       "description": "CD ripper; the Platterpus fork of cyanreg/cyanrip",
       "licenses": [
         {
@@ -1401,5 +1401,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:be58ef08-e325-5b21-82fe-b27e27fccdef"
+  "serialNumber": "urn:uuid:ed71f68e-8790-5f87-946c-c6ed48ee46a4"
 }

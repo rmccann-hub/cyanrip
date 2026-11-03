@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.27 (platterpus-fork-ged50558)`
+Build: `cyanrip 0.9.4-rc3+platterpus.28 (platterpus-fork-gef413b1)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -1282,7 +1282,7 @@ observed null by any record here; that is not a guarantee it cannot be.
 | `rip.track_state[].isrc_disc_read` | *(null in every record here)* | **yes** | **no** |
 | `rip.track_state[].isrc_disc_reason` | string | -- | **no** |
 | `rip.track_state[].isrc_written` | string | **yes** | **no** |
-| `rip.track_state[].kept_read_began` | *(null in every record here)* | **yes** | **no** |
+| `rip.track_state[].kept_read_began` | string | **yes** | **no** |
 | `rip.track_state[].number` | int | -- | **no** |
 | `rip.track_state[].paranoia_all_reads` | object | **yes** | **no** |
 | `rip.track_state[].paranoia_all_reads.BACKOFF` | int | -- | **no** |
