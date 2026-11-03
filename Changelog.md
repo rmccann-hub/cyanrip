@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**The steward skill's merge-settings fact cites a page anyone can read now.**
+`.28`'s entry says `skillcheck --verify` found all 11 of the skill's quotes at
+their sources. It did, through this session's authenticated proxy, and dumbass
+us cited GitHub's repository API for `delete_branch_on_merge`, which the API
+shows only to a caller with write access: the weekly `steward-skill` job's
+first run, dispatched on 2026-11-03 with no credentials, could not find it and
+failed. The fact is two now, branch deletion and merge commits only, each
+quoting the handshake README, which records the settings as read with write
+access; 12 facts in all. The second quote is on `platterpus-fork` once this
+merges, and is checked again then.
+
 **The three defects `tests/tsan.supp` was proved against are a test now**
 (backlog 145, part). Its header said three defects planted in the frame
 handoff still fail under its suppressions; that was measured once, by hand,

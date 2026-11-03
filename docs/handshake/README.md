@@ -63,7 +63,10 @@ once is **permanent from inside a session** — branch delete is `HTTP 403` from
 this git proxy, measured by trying it. GitHub deletes a pull request's branch
 when the request merges (the repository's `delete_branch_on_merge`, read
 2026-11-03), so only a branch whose request never merged needs the repository
-owner to remove it. The standing rule since 2026-10-12: push a topic branch
+owner to remove it. The same settings allow only merge commits:
+squash and rebase merging are off (`allow_squash_merge` and
+`allow_rebase_merge` false, read 2026-11-03). GitHub shows these settings only
+to a caller with write access, so this paragraph is where they are on record. The standing rule since 2026-10-12: push a topic branch
 only to open its pull request into `platterpus-fork`, and never push to it
 again once that request has merged, which would recreate it with a stale tip.
 

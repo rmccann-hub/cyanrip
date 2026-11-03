@@ -38,7 +38,10 @@ since a second copy of a rule drifts from the first. General Git and CI advice i
   framework has a mode for a repository's own skills, one finding is expected and is not a
   defect here: `catalog: missing, so 1 skill(s) ship in no plugin`. On 2026-11-03, at
   claude-code-skills `e989cd1`, that was the only finding, and `--verify` confirmed all 11
-  facts. Every Monday the `Dependencies` workflow's `steward-skill` job runs the same checks
+  facts, but through this session's authenticated proxy: the weekly job's first run, with no
+  credentials, could not find the merge-settings quote, which the repository API shows only to
+  a caller with write access. That fact now cites the handshake README, as two facts, 12 in
+  all. Every Monday the `Dependencies` workflow's `steward-skill` job runs the same checks
   with its pinned `skillcheck`, and fails on any other finding, a quote gone from its source,
   or a fact past its check-by date.
 - **Asked of the framework, 2026-11-03:** a mode for skills under a repository's `.claude/`,
