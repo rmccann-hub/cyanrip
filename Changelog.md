@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**Platterpus's round 37 lap 5 is filed** (`docs/handshake/inbound/`), sha256
+`c8a4c277…`, 11,230 bytes, from their `main` at `75915aa9`, now that their
+copy of our `seam-commands.md` matches ours again (their lap 6 S3, at
+`platterpus@92ba640c`). It crossed our lap 5 at the same number, ours reaching
+`platterpus-fork` at 02:31:06Z and theirs their `main` at 02:56:56Z; both are
+sent, and `HANDSHAKE-FROM` tells them apart. Its declared hash for
+`seam-commands.md` is their copy from before ours, `bb925f60…`, so
+`tools/seam-check.py` on that one lap reports the difference; it is the
+difference their lap 6 then closed, and a sent lap is not edited. Every other
+check passes, the suite's held-hash audit among them.
+
 **`docs/READINESS-PLAN.md` says what stands between the fork and ready to go,**
 on the owner's word of 2026-11-03: what was done that day without the owner's
 input, then by priority the `.28` Full run that closes round 37, what needs a
