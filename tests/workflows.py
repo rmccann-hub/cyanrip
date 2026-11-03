@@ -343,8 +343,11 @@ if re.search(r"^[^#\n]*git clone", script, re.M):
 # under .github/, src/, tests/ and tools/ and the top-level build files, and
 # not the prose: the documentation, the fixtures, this file, which names the
 # option to find it, and tests/tsan.supp's comment lines, which say why it
-# went (a suppression file takes no options).
+# went (a suppression file takes no options). A sanitizer option is only ever
+# set as name=value, in TSAN_OPTIONS or a __tsan_default_options() string, so
+# that is what matches; a sentence naming the option sets nothing.
 OLD_TSAN_OPTION = "ignore_noninstrumented_modules"
+SETS_OLD_TSAN_OPTION = re.compile(OLD_TSAN_OPTION + r"\s*=")
 SELF = pathlib.Path(__file__).resolve()
 tsan_scanned = []
 for top in (ROOT / ".github", ROOT / "src", ROOT / "tests", ROOT / "tools"):
@@ -367,7 +370,7 @@ for path in tsan_scanned:
     except UnicodeDecodeError:
         continue
     for number, line in enumerate(text.splitlines(), 1):
-        if OLD_TSAN_OPTION not in line:
+        if not SETS_OLD_TSAN_OPTION.search(line):
             continue
         if path.name == "tsan.supp" and line.lstrip().startswith("#"):
             continue

@@ -7,9 +7,10 @@ the suite's own `TSAN_OPTIONS` in `tests/meson.build`, in another workflow,
 or in a `__tsan_default_options()` in the source would have hidden the
 encoder side of the frame handoff again with the check passing. It now reads
 everything under `.github/`, `src/`, `tests/` and `tools/` and the top-level
-build files, skipping only prose. Planted in each of those three places, the
-new check fails, naming the file and line; planted in `tests/meson.build`, the
-old one passed.
+build files, skipping only prose, and matches the option where it is set, as
+`name=value`, so a sentence naming it sets nothing and passes. Planted in each
+of those three places, the new check fails, naming the file and line; planted
+in `tests/meson.build`, the old one passed.
 
 **For `.29`: every minimum version is now one a CI job builds**
 (`docs/DEPENDENCY-PLAN.md` §3). The five FFmpeg libraries need FFmpeg
