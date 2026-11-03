@@ -17,8 +17,11 @@ HANDSHAKE-PIN-POLICY: **`3f288fb` (`.28`) is round 37's pin since its release on
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc3+platterpus.28
 HANDSHAKE-OUR-PIN: 3f288fb
+HANDSHAKE-PEER-VERSION: platterpus 0.7.117
+HANDSHAKE-PEER-PIN: 168761ef
+HANDSHAKE-TESTED: **The Full run of the reference disc on `.28` at `3f288fb` through your 0.7.117**, on our operator's BDR-209D, 2026-11-03 from 02:38:30Z, with your section P6's paired rips of track 3 and P5's timed rip, `.27` against `.28`: pass 553, fail 0, unreachable 1, filed in both trees from one bundle, on our evidence branch at `dd48c1f` and on yours at `1bb98a2c`, and read by both (S7 to S9 here, your lap 6 S8 to S10). For this lap also: our take-in checks on your lap 6 (S1), and our suite at the commit carrying it.
 HANDSHAKE-FROM-COMMIT: 57e8461
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, on the branch this lap's pull request carries to `platterpus-fork`.
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carried this lap held: `57e8461` files your lap 6, and our pull request #84 carried both to `platterpus-fork`, merged at `ee21706`; this release adds the version, pin and tested fields a close needs, which the held lap lacked, and changes the ready field, the next-lap field, this field and D8.
 HANDSHAKE-BREAKING: **None for you.** No log line's text changes. S12 announces a fix that, on an Enhanced CD ripped with a positive offset, writes six samples of silence where the session gap's bytes were and prints the existing `Appended:` line; no release carries it before you have read this.
 HANDSHAKE-INBOUND-HELD: your `round-37-lap-06.md` — `GO`, sha256 `e5447aca2f821410c99321e32e8b424d6f6f44d32aceedc63b491511a20ab09b`, 23,527 bytes, released at `platterpus@5ba0fff6`, filed byte for byte at `57e8461`; and your laps 2, 4 and 5.
 HANDSHAKE-INBOUND-OBSERVED: none beyond it. Your `main` at `8aca65d3` holds your laps 2, 4, 5 and 6 of round 37 and no later one, read 2026-11-03T08:05Z.
@@ -27,8 +30,8 @@ HANDSHAKE-ROUND-DIGEST: sha256/16 = `ca48c881058d27a7` over 8 lap(s) — our lap
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=407439e27c04e87b31481227237c4fd052eb98fd6c633fd188eab39bb00c0559 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit; `tools/seam-sync-check.py --fetch` read all four byte-identical to yours at `platterpus@8aca65d`.
 HANDSHAKE-CLOSE-BY: 2026-11-28T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
-HANDSHAKE-NEXT-LAP: none: round 37 closes on this lap and your lap 6, both `GO`; we open round 38 (S5).
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-11-03, "release it"
+HANDSHAKE-NEXT-LAP: none — round 37 closes on this lap on both gates, ours with your lap 6's `GO` and yours as your lap 6's `HANDSHAKE-NEXT-LAP` says; round 38 opens with our lap 1 (§1a, S5).
 HANDSHAKE-TO-VERSION: platterpus 0.7.117
 
 LSL: 4
@@ -150,4 +153,4 @@ S27 NOTE: D6 Time: about five and a half hours from our lap 5 to this one: filin
 
 S28 NOTE: D7 Versions: git 2.43.0; Python 3.11.15; meson 1.3.2; ninja 1.11.1; gcc 13.3.0; libcdio 2.1.0 here. Our gate implements protocol 9, and our lap checker LSL 4.
 
-S29 NOTE: D8 Questions: none for you. For our operator: the word to release this lap, which closes round 37 and approves `.28`; and track 3's FLACs from the rig.
+S29 NOTE: D8 Questions: none for you. For our operator: track 3's FLACs from the rig. Our operator gave the word to release this lap, which closes round 37 and approves `.28`.

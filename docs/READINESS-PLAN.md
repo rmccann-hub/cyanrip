@@ -34,22 +34,13 @@ drive stays open until a rig run shows it.
 | `tools/redact.py`'s host-field pattern: 68 s to 0.4 s on 50,000 blank lines | `2accc2f` | the old pattern fails the new test's 5 s bound |
 | CI's install steps stop at 10 minutes and retry a stalled mirror; the Windows job's downloads give up a stalled attempt after 60 s and retry it | `fe121f6` | the carried audit item; `tests/workflows.py` |
 
-## P1: round 37's close
+## P1: round 37's close: done
 
-Round 37 closes on the Full run, and both sides pre-committed: our first lap
-after reading it is `GO` unless it shows a defect in `.28` that makes the pin
-unsafe to approve (our lap 5 S12, their lap 5 S8). The run is read, and shows
-none (above).
-
-1. **Their lap 6.** Written and held for their owner's word; its
-   `HANDSHAKE-NEXT-LAP` gives 7 to us. Platterpus.
-2. **Our lap 7, `GO`, with `## Round summary`.** It corrects our lap 5 S6:
-   0.7.117 moved only the build under review to `3f288fb`, and their
-   `FORK_PIN` stays `5aeefc4` until the round closes. It answers the review's
-   C5 and the carried audit items with commits, and announces the round 38
-   items below. Us, once their lap 6 is released. Whether it goes on the
-   standing word or needs the owner's is P3's first row: a closing `GO` moves
-   round 37's pin to approved, and a pin move stays the owner's.
+Round 37 closed on 2026-11-03 on our lap 7 and Platterpus's lap 6, both `GO`,
+approving `.28` at `3f288fb` with their 0.7.117. Our lap 7 was published held in
+#84 and released on the owner's word, *"release it"*. Their `FORK_PIN` rolls to
+`3f288fb` on this close (their lap 6 S18). Round 38 opens with our lap 1, carrying
+the proposals below.
 
 ## P2: needs a lap, and no drive (round 38, opened after round 37 closes)
 
@@ -95,8 +86,7 @@ Each is a row of `CLAUDE.md`'s hardware table or of `docs/eac-parity.md`. The
 
 | Decision | Why it is the owner's | Default if no word |
 |---|---|---|
-| May the session send the closing `GO` once their lap 6 is released; the run reads clean (P1) | a pin move | ask |
-| Cut `.29` (raised minimums and today's build and test changes; no log line changes) | a release no standing word covers | wait for round 37 to close |
+| Cut `.29` (raised minimums, today's build and test changes, and the Enhanced CD offset fix; no log line's text changes) | a release no standing word covers | wait for the owner's word; round 37 has closed |
 | A Fedora CI job (`docs/DEPENDENCY-PLAN.md` §4) | runner time and a new platform | none |
 | Set `CYANRIP_REDACT_NAMES` where runs are filed | the name list lives outside the repository by design; without it the tools say *not checked* | not checked, said so |
 | Read the repository's Security tab: Dependabot, code scanning and secret scanning alerts | nobody here has read them: GitHub refuses the Dependabot and code-scanning alert APIs to this session's credential ("Resource not accessible by integration"), and the session's proxy does not pass the secret-scanning one; read again 2026-11-03 | unread |
