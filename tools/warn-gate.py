@@ -28,24 +28,30 @@ diagnostics under the shipped flags.** The gate is therefore free today, and it
 stops being free the moment one lands -- after that, someone has to triage a
 backlog to get the gate they could have had for nothing.
 
-WHAT IS NOT GATED, and it is a real bound on this tool. Under `-Wextra` the same
-19 units produce **22** diagnostics: 13 -Wunused-parameter and 9 -Wsign-compare.
-Gating on -Wextra means fixing those first, which is a separate change with its
-own argument. Recorded rather than silently dropped, because a gate that quietly
-covers less than a reader assumes is worse than none.
+-WEXTRA IS SHIPPED AND GATED SINCE 2026-11-03, less two of its checks, which
+are a real bound on this tool. Under the full set the src/ units gave 35
+diagnostics at 16 sites of -Wunused-parameter and 13 of -Wsign-compare, and
+nothing else, so the rest of -Wextra (missing initialisers, type limits, empty
+bodies, implicit fall-through) came in at zero. The two left off were read site
+by site, and src/meson.build says what they are; none is a defect. A new site
+of either kind fails nothing: `--extra` turns the two back on and lists them,
+and never gates. Recorded rather than silently dropped, because a gate that
+quietly covers less than a reader assumes is worse than none.
 
-AND ONE OF THE 22 IS A KNOWN DEFECT, which is the argument for eventually
-gating on -Wextra rather than a reason to dismiss it:
-
-    src/cyanrip_encode.c: warning: unused parameter 'deemphasis'
-
-`deemphasis` is unused because `init_filtering()`'s filter string is a ternary
-cascade in which `hdcd` wins outright, so de-emphasis never enters the graph --
-the defect held for round 16, where the log prints `(deemphasis applied)` from
-the settings anyway. The compiler has been pointing at it the whole time.
+A CORRECTION, 2026-11-03. This docstring said, from 2026-09-06, that one of
+those warnings was a known defect: "unused parameter 'deemphasis'" in
+src/cyanrip_encode.c, the de-emphasis that `-H` threw away, and that "the
+compiler has been pointing at it the whole time". It never was. At 9995a10,
+where that was written, the unused parameter is `setup_out_avctx()`'s, which
+sets the encoder up and has no use for it; the defect was in
+`init_filtering()`, where `deemphasis` IS used, in the branch of a ternary
+cascade that `hdcd` never let it reach. No unused-parameter warning can see
+that. The defect was found by a test and fixed in b866900 (SETTLED.md, the
+`-H` row); the warning still stands at the same harmless parameter.
 
 (Counts are over src/ only. compile_commands.json also carries test units,
-which is why an earlier hand count said 29 and 26.)
+which is why an earlier hand count said 29 and 26. A header included by
+several units is reported once per unit, so 35 diagnostics are 29 sites.)
 
 ONLY DIAGNOSTICS LOCATED IN THIS TREE ARE GATED, and the rest are printed.
 CI's first macOS run showed why: clang reports `-Wundef`, one of our flags,
@@ -62,7 +68,7 @@ explicitly below rather than stripped afterwards.
 
 Usage:
     tools/warn-gate.py                    # non-zero if any diagnostic appears
-    tools/warn-gate.py --extra            # report the -Wextra set, never gates
+    tools/warn-gate.py --extra            # list the two -Wextra checks left off; never gates
     tools/warn-gate.py --build build
 """
 
@@ -91,7 +97,10 @@ def diagnostics(entry, extra):
     # revert-proof caught it: a gate that cannot fire is worse than none.
     cmd = re.sub(r"-o\s+\S+", "-o /dev/null", cmd)
     if extra:
-        cmd += " -Wextra"
+        # The two checks src/meson.build leaves off, named outright. Appending
+        # -Wextra instead would list nothing under GCC, where an explicit
+        # -Wno- wins wherever it stands; clang lets the last flag win.
+        cmd += " -Wunused-parameter -Wsign-compare"
     r = subprocess.run(cmd, shell=True, cwd=entry["directory"],
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                        text=True, timeout=300, encoding="utf-8")
@@ -117,7 +126,8 @@ def main():
                     help="the build directory, relative to the repository or "
                          "absolute; meson test passes its own")
     ap.add_argument("--extra", action="store_true",
-                    help="report the -Wextra set; informational, never gates")
+                    help="list the two -Wextra checks the build leaves off; "
+                         "informational, never gates")
     args = ap.parse_args()
 
     cc = ROOT / args.build / "compile_commands.json"
@@ -149,7 +159,8 @@ def main():
         (re.search(r"\[-W([a-z0-9-]+)\]", m.group("msg")) or [None, "no-flag"])[1]
         for m in found)
 
-    label = "-Wextra" if args.extra else "the shipped flags"
+    label = ("the shipped flags plus -Wunused-parameter -Wsign-compare"
+             if args.extra else "the shipped flags")
     print(f"{len(ours)} translation unit(s) re-run under {label}: "
           f"{len(found)} diagnostic(s)")
     for flag, n in by_flag.most_common():
@@ -165,8 +176,8 @@ def main():
             print(f"  {n:4d}x {f}: {kind}: {msg}")
 
     if args.extra:
-        print("\n--extra is informational and never gates. Gating on it means "
-              "fixing these first.")
+        print("\n--extra is informational and never gates. src/meson.build "
+              "says why these two checks are off.")
         return 0
 
     if found:

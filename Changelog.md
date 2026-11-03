@@ -1,5 +1,23 @@
 Unreleased
 ==========
+**`-Wextra` is shipped and gated, less two of its checks.** The build now
+compiles with `-Wextra -Wno-unused-parameter -Wno-sign-compare`, and
+`Compiler diagnostics` holds the rest of the set at zero as it does
+everything else: missing initialisers, type limits, empty bodies, implicit
+fall-through. The full set gave 35 diagnostics at 29 sites in `src/`, all of
+them unused parameters (16) or signed against unsigned comparisons (13), each
+read before it was kept off; `src/meson.build` says what they are, and
+`tools/warn-gate.py --extra` now turns exactly those two back on to list
+them. A `size_t` compared `< 0`, planted in `src/fun512.c`, fails the new gate
+and passed the old one. GCC and clang both build `src/` with no diagnostic.
+**And a correction:** the gate's docstring said since 2026-09-06 that its
+unused `deemphasis` warning was the `-H` de-emphasis defect, and that "the
+compiler has been pointing at it the whole time". Dumbass us diagnosed the
+warning by its parameter's name: it names `setup_out_avctx()`, which never
+needed the value, while the defect sat in `init_filtering()`, where
+`deemphasis` was used, in a branch `hdcd` never let it reach. A test found
+that defect (`b866900`); the docstring now says so.
+
 **Every run's reading now ends with what it questions, what may be missing,
 what to add next time, and what the logs carry beyond what was asked** (owner,
 2026-11-03). Each item names its log line, what would settle it and who owns

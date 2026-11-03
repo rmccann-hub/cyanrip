@@ -387,10 +387,11 @@ if not python.language_version().version_compare('>=3.11')
 endif
 
 ## Zero compiler diagnostics under the flags the build ships. Installed while
-## the count was 0, which is the only cheap moment. NOT -Wextra: that set is 22
-## and needs its own change. See the tool's docstring for what is excluded and
-## for the -fdiagnostics-color trap that made an earlier attempt report a false
-## zero.
+## the count was 0, which is the only cheap moment. -Wextra joined it on
+## 2026-11-03, less -Wunused-parameter and -Wsign-compare, whose 29 sites were
+## read and kept (src/meson.build says why; `--extra` lists them). See the
+## tool's docstring for what is excluded and for the -fdiagnostics-color trap
+## that made an earlier attempt report a false zero.
 ## The build directory is the one meson is testing, named to the tool: it read
 ## a fixed build/, so `meson test -C` anywhere else failed as unconfigured or
 ## gated a stale build/ (review C item 3.3).
