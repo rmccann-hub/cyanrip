@@ -282,7 +282,7 @@ both lines divide by the disc's audio tracks, and `tests/logrender.c` builds
 mixed.cue's shape and reads both over 2. Upstream report 26 names the commit
 (`f4da862`).
 
-### Four drive answers the log states that are libcdio's defaults or its failure
+### Four drive answers the log states that are libcdio's defaults or its failure (fixed for `.28`)
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.3**,
 which asked for drive answers printed without a sentinel check. A read-only
@@ -342,9 +342,13 @@ rip. It reads at the drive's own speed, and `Speed:` says `default (setting
 
 The MCN read a failed query skips is still skipped without a word. Every drive
 arm is unit-tested in `tests/drivecaps.c`, and the image arms on images with
-`tests/imagecap.c`, but a drive has shown none of them.
+`tests/imagecap.c`. **On a drive, 2026-11-03** (`docs/rig-2026-11-03-3f288fb/`,
+`.28` at `3f288fb`, released with the fix at `819c735`): `Speed:` said the drive
+was not asked, since no `-S` was sent; `C2 errors:` said unsupported by drive;
+`Accurate stream:` gave the drive's declaration; `Recordable:` said `no`. A `-S`
+sent, and one the drive refuses, have not run.
 
-### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names
+### A tag value of `..` puts the rip outside its folder, and `-T` passes control characters, a leading dot and reserved names (fixed for `.28`)
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.2**,
 and measured here at `ed37997` on `tests/fixtures/basic.cue`, track 1, with
@@ -367,12 +371,18 @@ open a device. Platterpus's own default folder, `{album} [FLAC]`, cannot
 traverse, since a suffix follows the value, but a track template with a folder
 part can.
 
-**Not fixed yet, and proposed first**: Platterpus predicts the folders we
+**Fixed for `.28`**, at `f69d414` and `ed50558`, after Platterpus accepted our
+round 36 lap 12 S10's three rules in their round 36 lap 13 S4, with a fourth
+for a component over 255 bytes, and our `Names shortened:` block in their
+round 37 lap 2 S5: no component is `.` or `..`, U+0001 to U+001F are replaced,
+Microsoft's reserved device names take a `_`, and a leading dot is kept.
+Platterpus predicts the folders we
 create, for its overwrite guard
 (`platterpus@d745464d:src/platterpus/adapters/cyanrip_backend.py:1904-1915`),
-so a change to a name on disk is theirs to absorb, and P7 of the contract
-changes with it. The rule is proposed to them in our round 36 lap 12 S10;
-the fix lands with tests of each case in each mode once they accept.
+so the rules were theirs to absorb first, and the contract's P7f states them.
+`sc_path_component_rules()` in `tests/rip_images.py` checks each case in each
+`-T` mode. This entry said "not fixed yet" until 2026-11-03, a month-old
+sentence the release had already made false.
 
 ### A value the log echoes could start a line of its own (fixed for `.28`)
 
@@ -418,6 +428,96 @@ do not. A PNG cover is embedded; the suite's `art` checks it.
 **Not fixed**: the line is in the contract's P2, so its fix is proposed in a
 lap first. Two shapes are open: refuse a cover the output's muxer cannot embed
 before the rip, or print what was written, read back from the muxer.
+
+### A positive offset on an Enhanced CD read the session gap into the last audio track (fixed for the build after `.28`)
+
+**Found 2026-11-03, checking upstream issue 168 against this fork** (the
+owner's message of that day, §5): upstream's rip of an Enhanced CD with a
+positive drive offset hangs at the end of the last audio track at `-P 0 -Z 2`.
+The fork shares the read: the session gap is cut from the last audio track
+(`src/cyanrip_main.c`, the `CRIP_XA_INTERVAL` branch), but the frame an offset
+needs past its new end was bounded by the disc's end, so it was read from the
+drive. On an image it did not hang, because `crip_read_audio_salvaging()` holds
+at `-P 0` and the retry limit is rounded elsewhere; instead the gap's bytes went
+into the track's last samples, and where that sector failed, a track whose own
+sectors all read cleanly said `read with errors.` and the rip exited 1.
+
+**Fixed**: the read is bounded by `audio_end_lsn`, the last audio track's end on
+an Enhanced CD and the disc's end otherwise, in all three places the read
+checked the disc's end. The frame is now appended silence, as at the end of a
+one-session disc, and under `-O` it is read once (`Beyond disc:`, whose label
+then covers session 1's lead-out, not only the disc's). `sc_enhanced_cd`'s
+offset check rips the well-formed image at +6 samples and compares track 2
+with the image's bytes; with the fix reverted it fails two checks.
+
+**Needs a drive**: what a drive does with a read of session 1's lead-out, and
+whether a pressed CD-Extra's TOC matches the image's, are unknown here. Listed
+in `STATUS.md`'s `hardware-unverified`.
+
+### `-H` on a disc without HDCD delivers a file 6.02 dB quieter, beside checksums of the read
+
+**Measured on a drive 2026-10-06** (`docs/rig-2026-10-06-5704062/README.md`,
+-6.5 against -0.5 dBFS) **and raised again by the review of 2026-11-03 (A6)**,
+where P3's `-H` arm read `B0D122E7` and "accurately ripped" over a file 6 dB
+below the plain arm's. Until now it was an aside in the closed loudness item
+(`docs/history/KNOWN-ISSUES-2026-10-21.md`), never an open defect of its own.
+
+**The cause, confirmed on an image 2026-11-03**: `-H` builds the graph
+`hdcd` with its defaults (`src/cyanrip_encode.c:625-626`). libavfilter's
+`hdcd` copies each 16-bit sample into s32 and shifts it by 15
+(`af_hdcd.c` at FFmpeg n6.1.1, `hdcd_envelope`), leaving the top bit for peak
+extension, so 16-bit full scale lands at 2^30, -6.02 dBFS. With no HDCD packets
+nothing else changes. Ripping `tests/fixtures/basic.cue` with and without `-H`,
+every one of the 352,800 samples per track of the `-H` file is the plain
+file's shifted by 15; the EAC CRC32 and AccurateRip checksums are the same in
+both logs, because they are taken on the read (`src/cyanrip_main.c:1680`); the
+loudness, peak and ReplayGain lines differ by 6.0 dB, because they are taken on
+the delivered audio (`measure_frame()`, since `.20`); and the log's
+`HDCD detected: no` is the only hint.
+
+**What it costs**: a reader takes the checksum and the AccurateRip verdict as
+describing the file, and they describe the read. The audio is intact apart
+from the level.
+
+**Not fixed**: the checksums are right where they are, so the fix is a line
+saying when a filter changed the delivered audio, which is new log text and
+goes in a lap first (round 38). Compensating the level is not offered: whether
+the disc carried HDCD is known only when the graph is freed, after encoding.
+
+### `Ripping errors:` leaves out a `-Z` track whose re-reads never agreed
+
+**Found by the review of 2026-11-03 (A5)**, in that night's secure re-read
+(`-Z 2 -r 5`): track 3 read five times to four checksums, the block printed
+`Secure re-read:  did NOT converge after 5 reads (repeat limit hit)` and
+`Track 3 read with errors.`, and the footer `Ripping errors: 0`.
+`crip_ripping_errors()` (`src/cyanrip_main.h`) counts the drive's and the
+encoders' errors and paranoia's skips, and the repeat-limit and time-limit arms
+(`src/cyanrip_main.c:2154-2157`) add to neither.
+
+**What it costs**: the footer says a rip had no errors when its own body says
+one track's read was never confirmed.
+
+**Not fixed, and not a local fix**: Platterpus's read-speed ladder takes the
+count less the skips as what the drive failed
+(`platterpus@168761ef:src/platterpus/parsers/cyanrip_log.py:1089-1105`), so
+adding these to the count would step a disc down for a disagreement no drive
+reported. Proposed in a lap first (round 38): a third part of the suffix, for
+example `(including 1 track whose re-reads never agreed)`, which their
+parser must accept before it ships.
+
+### The footer's tallies count the whole disc under `-l` and `-f`, and a cancel as an error
+
+**Found by the review of 2026-11-03 (B5)**: `-f` prints
+`Tracks ripped accurately: 0/14`, `-l 1` prints `1/14`, and a rip cancelled by
+SIGTERM counts the interrupted track in `Ripping errors: 1`. The tallies'
+denominator is the disc's audio tracks since `.27` (the item above on data
+tracks), not the tracks asked for.
+
+**What it costs**: a partial rip reads as a mostly failed one, and a cancel as
+a read error.
+
+**Not fixed**: both are lines Platterpus parses; the wordings go in a lap
+first (round 38), counting against the tracks asked and a cancel as a cancel.
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 

@@ -614,6 +614,11 @@ typedef struct cyanrip_ctx {
     int exit_class;
     lsn_t start_lsn;
     lsn_t end_lsn;
+    /* The last sector an audio read may take from the drive: end_lsn, or,
+     * on an Enhanced CD, the last audio track's end, before the session gap
+     * cut from it. A frame an offset needs past it is treated as past the
+     * disc's end: silence, or under -O one read. Upstream issue 168. */
+    lsn_t audio_end_lsn;
     lsn_t duration_frames;
     lsn_t id_leadout_lsn; /* Lead-out the MusicBrainz and CDDB IDs derive from */
 

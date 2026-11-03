@@ -7901,6 +7901,38 @@ def sc_enhanced_cd():
                          f"carries a length field of {have}, and the TOC "
                          f"says {want}")
 
+    # UPSTREAM ISSUE 168: a positive offset on an Enhanced CD. The frame the
+    # offset needs past track 2's end is session 1's lead-out, and the read was
+    # bounded by the disc's end instead, so it came from the drive: the gap's
+    # bytes went into the track (here, sector 600 of the image, cdda.bin's
+    # first sector, which is not silence), and a failed read there marked a
+    # track whose own sectors all read as read with errors. Upstream's rip
+    # hangs on it at -P 0 -Z 2. Bounded now as at the disc's end: appended
+    # silence, or under -O one read. Asserted against the image's bytes.
+    sec = 2352
+    src = big.read_bytes()
+    if src[600 * sec:600 * sec + 24] == bytes(24):
+        fail("enhanced_cd/offset: the gap's first 24 bytes are silence, so "
+             "this check could not tell a read from appended silence")
+    rip("ecdoffs", "ecdbig.cue", "-X", "-s", "6", "-o", "pcm")
+    olog = (WORK / "out_ecdoffs" / "log.log").read_text(encoding="utf-8")
+    t2 = (WORK / "out_ecdoffs" / "2.pcm").read_bytes()
+    if t2[:-24] != src[150 * sec + 24:600 * sec]:
+        fail("enhanced_cd/offset: track 2 at +6 samples is not the image's "
+             "sectors 150 to 599 moved by 24 bytes")
+    if t2[-24:] != bytes(24):
+        which = ("the session gap's bytes"
+                 if t2[-24:] == src[600 * sec:600 * sec + 24] else "neither")
+        fail(f"enhanced_cd/offset: track 2's last 6 samples are {which}, "
+             "not appended silence")
+    if not re.search(r"^    End LSN:     11999 \(less 11400 frame CD-Extra "
+                     r"session gap, read to: 599\)\n    Appended:    1 frames "
+                     r"of silence$", olog, re.M):
+        fail("enhanced_cd/offset: track 2's block does not say it read to 599 "
+             "and appended one frame of silence")
+    if "read with errors" in olog:
+        fail("enhanced_cd/offset: a track read with errors at +6 samples")
+
     # An offset-only line must still read exactly as it always has, on a disc
     # with no trailing data track. This is the half that must NOT have moved.
     rip("ecdoff", "basic.cue", "-s", "10")
