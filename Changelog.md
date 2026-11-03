@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**Three defects the 2026-11-03 run showed are now open items in
+`KNOWN-ISSUES.md`.** `-H` on a disc without HDCD delivers a file 6.02 dB
+quieter beside checksums of the read: measured on 2026-10-06 and then left as
+an aside in a closed item, never filed as open, so dumbass us carried a known
+defect for four weeks in a file nobody reads for open ones. Its cause is now
+confirmed on an image: libavfilter's `hdcd` shifts each 16-bit sample by 15
+into s32, and every sample of the `-H` file is the plain one's shifted so,
+with the same checksums. `Ripping errors:` leaves out a `-Z` track whose
+re-reads never agreed, while the block says the track read with errors; and
+the footer's tallies count the whole disc under `-l` and `-f`, and a cancel as
+an error. Each changes a line Platterpus parses or a count its read-speed
+ladder acts on, so each is proposed in round 38 before it is built.
+
 **`READINESS-PLAN.md` rewritten after round 37's run was read.** Its
 crossing row said Platterpus's lap 5 reached their `main` at 02:56:56Z; that
 is their #429, one merge past the one that carried it. Dumbass us read one

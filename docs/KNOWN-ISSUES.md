@@ -429,6 +429,71 @@ do not. A PNG cover is embedded; the suite's `art` checks it.
 lap first. Two shapes are open: refuse a cover the output's muxer cannot embed
 before the rip, or print what was written, read back from the muxer.
 
+### `-H` on a disc without HDCD delivers a file 6.02 dB quieter, beside checksums of the read
+
+**Measured on a drive 2026-10-06** (`docs/rig-2026-10-06-5704062/README.md`,
+-6.5 against -0.5 dBFS) **and raised again by the review of 2026-11-03 (A6)**,
+where P3's `-H` arm read `B0D122E7` and "accurately ripped" over a file 6 dB
+below the plain arm's. Until now it was an aside in the closed loudness item
+(`docs/history/KNOWN-ISSUES-2026-10-21.md`), never an open defect of its own.
+
+**The cause, confirmed on an image 2026-11-03**: `-H` builds the graph
+`hdcd` with its defaults (`src/cyanrip_encode.c:625-626`). libavfilter's
+`hdcd` copies each 16-bit sample into s32 and shifts it by 15
+(`af_hdcd.c` at FFmpeg n6.1.1, `hdcd_envelope`), leaving the top bit for peak
+extension, so 16-bit full scale lands at 2^30, -6.02 dBFS. With no HDCD packets
+nothing else changes. Ripping `tests/fixtures/basic.cue` with and without `-H`,
+every one of the 352,800 samples per track of the `-H` file is the plain
+file's shifted by 15; the EAC CRC32 and AccurateRip checksums are the same in
+both logs, because they are taken on the read (`src/cyanrip_main.c:1680`); the
+loudness, peak and ReplayGain lines differ by 6.0 dB, because they are taken on
+the delivered audio (`measure_frame()`, since `.20`); and the log's
+`HDCD detected: no` is the only hint.
+
+**What it costs**: a reader takes the checksum and the AccurateRip verdict as
+describing the file, and they describe the read. The audio is intact apart
+from the level.
+
+**Not fixed**: the checksums are right where they are, so the fix is a line
+saying when a filter changed the delivered audio, which is new log text and
+goes in a lap first (round 38). Compensating the level is not offered: whether
+the disc carried HDCD is known only when the graph is freed, after encoding.
+
+### `Ripping errors:` leaves out a `-Z` track whose re-reads never agreed
+
+**Found by the review of 2026-11-03 (A5)**, in that night's secure re-read
+(`-Z 2 -r 5`): track 3 read five times to four checksums, the block printed
+`Secure re-read:  did NOT converge after 5 reads (repeat limit hit)` and
+`Track 3 read with errors.`, and the footer `Ripping errors: 0`.
+`crip_ripping_errors()` (`src/cyanrip_main.h`) counts the drive's and the
+encoders' errors and paranoia's skips, and the repeat-limit and time-limit arms
+(`src/cyanrip_main.c:2154-2157`) add to neither.
+
+**What it costs**: the footer says a rip had no errors when its own body says
+one track's read was never confirmed.
+
+**Not fixed, and not a local fix**: Platterpus's read-speed ladder takes the
+count less the skips as what the drive failed
+(`platterpus@168761ef:src/platterpus/parsers/cyanrip_log.py:1089-1105`), so
+adding these to the count would step a disc down for a disagreement no drive
+reported. Proposed in a lap first (round 38): a third part of the suffix, for
+example `(including 1 track whose re-reads never agreed)`, which their
+parser must accept before it ships.
+
+### The footer's tallies count the whole disc under `-l` and `-f`, and a cancel as an error
+
+**Found by the review of 2026-11-03 (B5)**: `-f` prints
+`Tracks ripped accurately: 0/14`, `-l 1` prints `1/14`, and a rip cancelled by
+SIGTERM counts the interrupted track in `Ripping errors: 1`. The tallies'
+denominator is the disc's audio tracks since `.27` (the item above on data
+tracks), not the tracks asked for.
+
+**What it costs**: a partial rip reads as a mostly failed one, and a cancel as
+a read error.
+
+**Not fixed**: both are lines Platterpus parses; the wordings go in a lap
+first (round 38), counting against the tracks asked and a cancel as a cancel.
+
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
