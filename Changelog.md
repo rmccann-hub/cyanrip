@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**A steward skill, drafted and owned here, steers pull requests into
+`platterpus-fork`.** `.claude/skills/steward/` holds the steps this session
+kept writing out in every check-in's prompt: what green means in CI, ten jobs
+passed and two skipped; the failures CI has had and their fixes; the reads
+before a merge, the merge pinned to the head that was checked, and what
+follows it; and the order of things before a push. `CLAUDE.md` is at its cap,
+so the skill points to its rules rather than copying them. It is a draft, on
+the owner's word of 2026-11-03, owned by the fork's session and built to
+claude-code-skills' framework: `skillcheck .claude` reports only the plugin
+catalog that a repository's own skill has no use for, and `skillcheck
+--verify` finds all 11 of its facts' quotes at their sources. Its trigger
+tests are in `.claude/tests/fixtures/modules/`, where the checker reads them;
+running them is a model call each, by hand.
+
 **The cover art cap is tested on an image that declares no size.** The
 test's first try sent 64 MiB over the loopback and took longer than its 30 s
 under ASan, so it was dropped, and only the callback was tested alone. Now

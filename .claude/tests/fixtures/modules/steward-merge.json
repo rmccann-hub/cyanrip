@@ -1,0 +1,24 @@
+[
+  {
+    "query": "All checks passed on #78; merge it into platterpus-fork.",
+    "should_trigger": true
+  },
+  {
+    "query": "What do I clean up after the pull request merges?",
+    "should_trigger": true
+  },
+  {
+    "query": "Before merging, did Platterpus release a new lap we need to read?",
+    "should_trigger": true
+  },
+  {
+    "query": "Should the release commit be tagged?",
+    "should_trigger": false,
+    "note": "git-workflows"
+  },
+  {
+    "query": "Push the fix for the red lint job.",
+    "should_trigger": false,
+    "note": "steward-push"
+  }
+]
