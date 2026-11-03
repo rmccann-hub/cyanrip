@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**The evidence check reads its files in one git process.**
+`tools/evidence.py`'s `Store.read_many()` gives what `read()` gives for each
+path, through one `git cat-file --batch` per repository instead of a process
+per file, checking each file's size and hash against its row as `read()`
+does. Over all 1,598 manifest rows, 493 of them with spaces in their names, it
+returns the same bytes as `read()` in 1.3 s against 8.8 s. `tests/evidence_tool.py`
+checks it reads the tree and gives `None` for an unfetched file, reads the
+cache's files as `read()` does, and refuses a file whose hash is not its
+row's; with its hash check removed, that last check fails. `No personal
+details in new evidence` uses it, and went from 5.7 s to 2.6 s here, 17.6 s
+before either change; a home path planted in what it reads still fails it,
+at its file and line.
+
 **`tools/redact.py`'s `findings()` reads a text's lines only for a kind the
 whole text holds.** Every home-path, hostname, name and AcoustID-key pattern
 needs a literal that cannot span a line, so one search of the whole text

@@ -66,10 +66,10 @@ def check_evidence():
     rows = [r for r in store.rows.values() if not r.last_default]
     names = redact.local_names()
     problems = unfetched = 0
+    every = store.read_many([r.path for r in rows])
     for r in rows:
-        try:
-            data = store.read(r.path)
-        except evidence.NotFetched:
+        data = every[r.path]
+        if data is None:
             unfetched += 1
             continue
         try:

@@ -191,6 +191,11 @@ with tempfile.TemporaryDirectory() as d:
     check(store.folders() == [X, A, B], f"folders after the move: "
                                         f"{store.folders()}")
 
+    got = store.read_many([f"{A}/README.md", f"{A}/rips/a.log"])
+    check(got == {f"{A}/README.md": FILES[f"{A}/README.md"],
+                  f"{A}/rips/a.log": None},
+          f"read_many reads the tree and gives None for the unfetched: {got}")
+
     rc, o = tool(work, "cat", f"{A}/rips/a.log")
     check(rc == 77 and "UNPROBED" in o, f"unfetched is 77, never absent: {rc}")
     rc, o = tool(work, "cat", f"{A}/rips/a.log",
@@ -212,6 +217,10 @@ with tempfile.TemporaryDirectory() as d:
     name = f"{B}/album/full acceptance∶ angle‹bracket.log"
     check(store.read(name) == FILES[name], "a name with spaces and non-ASCII "
                                            "characters survives the move")
+    every = [p for p in FILES if p in store.rows or store.in_tree(p)]
+    check(store.read_many(every) == {p: store.read(p) for p in every},
+          "read_many gives every file's bytes as read() does, one name with "
+          "spaces among them, from the cache in one batch")
 
     # --- 5d after the push
     rc, o = tool(work, "verify-move", C, R)
@@ -236,6 +245,12 @@ with tempfile.TemporaryDirectory() as d:
     probs, _ = evidence.verify_rows(
         evidence.Store(work, evidence.format_manifest(tampered)))
     check(any("a.log" in p for p in probs), f"a wrong hash is named: {probs}")
+    try:
+        evidence.Store(work, evidence.format_manifest(tampered)).read_many(
+            [f"{B}/rips/b.log", f"{A}/rips/a.log"])
+        check(False, "read_many returned bytes whose hash is not their row's")
+    except evidence.Mismatch:
+        check(True, "read_many refuses bytes whose hash is not their row's")
     base = d / "base"
     subprocess.run(["git", "clone", "-q", url, str(base)], check=True,
                    capture_output=True)

@@ -862,10 +862,12 @@ test('No personal details in new laps or evidence', python,
 test('Evidence tool', python, args: [ files('evidence_tool.py') ], timeout: 120)
 test('Evidence readers and fixture copies', python,
      args: [ files('evidence_readers.py') ])
-## Not meson's 30 s default: before it can say 77, it tries each manifest row
-## in turn, one git call apiece, 566 rows on 2026-11-02, and the count grows
-## with every filing. CI's macOS runner took 27.96 s and 28.75 s on 2026-10-29
-## and was killed at 30.01 s on 2026-11-02 (PR #75); 11.9 s here, fetched.
+## Not meson's 30 s default: it reads every manifest row with no default
+## commit, 566 on 2026-11-02, and the count grows with every filing. CI's
+## macOS runner took 27.96 s and 28.75 s on 2026-10-29 and was killed at
+## 30.01 s on 2026-11-02 (PR #75). Since 2026-11-03 it reads them in one
+## `git cat-file --batch` and looks at a file's lines only for a kind the file
+## holds: 2.6 s here, fetched, from 17.6 s.
 test('No personal details in new evidence', python,
      args: [ files('personal_details.py'), '--evidence' ],
      timeout: 120)
