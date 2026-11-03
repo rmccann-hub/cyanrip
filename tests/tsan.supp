@@ -28,6 +28,10 @@
 #     still read it, and that was (13 runs of 13). ASan and memcheck report
 #     this one directly, as a read of freed memory.
 #
+# tests/tsan_plants.py plants all three in every TSan build's suite and fails
+# if one rips without a report, so an entry widened here, or an option that
+# hides FFmpeg's accesses again, fails there.
+#
 # The option dropped every access made inside any uninstrumented library,
 # swr_convert()'s reads included, which is the encoder side of the handoff
 # this build exists to check.

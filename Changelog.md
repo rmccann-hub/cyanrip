@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**The three defects `tests/tsan.supp` was proved against are a test now**
+(backlog 145, part). Its header said three defects planted in the frame
+handoff still fail under its suppressions; that was measured once, by hand,
+on 2026-11-02. `tests/tsan_plants.py`, registered in TSan builds only (CI's
+thread row), recompiles the planted copy of each with the build's own
+commands from `ninja -t commands`, links it with the build's other objects,
+rips `basic.cue` to FLAC and MP3 under the suite's own `TSAN_OPTIONS`, and
+fails if a plant rips with no ThreadSanitizer report; the unplanted build
+rips first and must report nothing. 9 s here. With the old
+`ignore_noninstrumented_modules=1` back, or `swr_convert` and
+`get_next_audio_pts` added to the suppressions, all three plants rip clean
+and it fails; without `tests/tsan.supp` in `TSAN_OPTIONS` it says
+`UNPROBED` and fails.
+
 **The check against TSan's old `ignore_noninstrumented_modules` reads every
 file that runs or builds, not only `ci.yml`** (backlog 145, part).
 `tests/workflows.py` looked for it in `ci.yml` alone, so the option back in

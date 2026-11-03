@@ -411,6 +411,16 @@ test('Compiler diagnostics gate only this tree', python,
 test('Hardening survives an ignored LDFLAGS argument', python,
     args: [ files('hardening_probe.py') ],
     timeout: 120)
+## In a TSan build, three defects planted in the frame handoff still report
+## under the suite's own TSAN_OPTIONS, so tests/tsan.supp cannot widen past
+## them unnoticed. Recompiles the planted files with the build's own commands
+## and rips four times: 9 s here; 120 s leaves CI's runners thirteen times that.
+if get_option('b_sanitize') == 'thread'
+    test('TSan still reports defects planted in the frame handoff', python,
+        args: [ files('tsan_plants.py'), find_program('ninja', 'samu').full_path(),
+                meson.project_build_root(), cyanrip_exe ],
+        timeout: 120)
+endif
 
 
 ## Audio checksum mirror
