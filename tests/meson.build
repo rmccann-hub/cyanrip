@@ -368,9 +368,15 @@ foreach name, h : fuzz_harnesses
     endif
 endforeach
 
+## libavutil's headers only, for av_printf_format on test_log(): on Ubuntu
+## they sit on the default include path, so the build found them without
+## this, and on CI's macOS, where Homebrew's come only through pkg-config,
+## it did not.
 genopt_test = executable('genopt_test',
     sources: [ 'genopt.c' ],
     include_directories: [ '../src' ],
+    dependencies: [ dependency('libavutil').partial_dependency(
+        compile_args: true, includes: true) ],
 )
 test('Option parsing', genopt_test)
 

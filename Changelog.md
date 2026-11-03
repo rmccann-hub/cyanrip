@@ -62,6 +62,12 @@ runs. Marking `fmt_escaped()` let GCC see the `NULL` that
 `tests/logescape.c` passes to `%s` on purpose, and refuse it; the `NULL` now
 goes through a `volatile`, and breaking the escaper's `(null)` still fails
 that check.
+**And dumbass us broke CI's macOS build doing it:** `tests/genopt.c` took
+`av_printf_format` from `libavutil/attributes.h` in a test target that names
+no libavutil dependency. Ubuntu keeps FFmpeg's headers on the default include
+path, so the suite here built and passed; Homebrew's come only through
+pkg-config, so macOS stopped at `'libavutil/attributes.h' file not found`.
+The target now takes libavutil's headers, and links nothing more.
 
 **`-Wextra` is shipped and gated, less two of its checks.** The build now
 compiles with `-Wextra -Wno-unused-parameter -Wno-sign-compare`, and
