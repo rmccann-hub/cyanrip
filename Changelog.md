@@ -1,5 +1,46 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.28 — 2026-11-03 — **beta**
+===============================================
+**Released on the beta channel before Platterpus answered our round 37 lap 3
+S9, on the owner's word of 2026-11-03**: *"When done, can you merge all to
+main and release .28? If not do what you can to release .28 so we can keep
+the laps going."* Lap 3 S16 had pre-committed to waiting for that answer, and
+the owner's word overrides it. So S9's `Drive used:` revision clause ships as
+`.28` prints it on a disc image; Platterpus's parser takes any text there, and
+an amendment of theirs ships in `.29`. Round 37's pin moves to it at its
+release, on the operator's word of 2026-10-29. Beta is this side's choice
+under v8 E3, as `.27`'s was, and the stable channel stays `.23`.
+
+**What it ships since `.27`**, each in an entry below:
+- every value the log writes escaped, so none can start a line of its own
+  (`46cec2a`);
+- review C's changes, put to Platterpus in our round 36 lap 14 S8 to S12 and
+  answered in their lap 15: a failed write to the log, a CUE sheet, the
+  `--diagnostics` record or stdout named, and failing the run except for the
+  record (`2aa3d8a`); the AcoustID key withheld from what is written, and
+  taken from the environment (`8e54c84`, `9e23a24`, `fa9b304`); AccurateRip
+  and the Cover Art DB over HTTPS only, with size caps (`e1c6601`); option
+  numbers that are not whole refused (`428864b`, `c90ef0b`); and the memory
+  and allocation fixes beside them;
+- `Pregap searches:` (`14f9298`), and the `unknown` pregap's reason worded
+  `sub-channel search bounds did not meet` (`b675efd`);
+- `--reread-time-limit` (`195c58b`), and the `--diagnostics` record at `/11`
+  (`bf010d7`);
+- `Speed:`, `C2 errors:` and the media-change line saying what was asked, and
+  a `-S` the drive refuses read at its own speed (`819c735`);
+- the three path-component rules (`f69d414`), `Names shortened:` for a
+  component over 255 bytes (`ed50558`), and a path past 1,003 bytes rendered
+  whole (`cfd738e`);
+- the build: C11, Meson 0.62, the hardening flags, `-Wformat=2`, GCC's analyzer
+  in CI, and the hardening kept when clang ignores an LDFLAGS argument
+  (`ae09b4d`).
+
+**No drive has run it.** Every drive arm of `819c735` waits for the
+operator's next run on the drive, which is round 37's Full run on `.28`.
+
 **A steward skill, drafted and owned here, steers pull requests into
 `platterpus-fork`.** `.claude/skills/steward/` holds the steps this session
 kept writing out in every check-in's prompt: what green means in CI, ten jobs
