@@ -214,6 +214,38 @@ for event in ("push", "pull_request"):
     if got != ["platterpus-fork"]:
         fail(f"ci.yml: the {event} trigger names {got}, not [platterpus-fork]")
 
+# A pull request's superseded run is cancelled, and nothing else is: a run on
+# platterpus-fork is the record of what was pushed there. A group shared by
+# every event would let one push cancel another's run.
+conc = top_block(ci.splitlines(), "concurrency") or []
+want_conc = {
+    "group": "ci-${{ github.event_name == 'pull_request' && "
+             "format('pr-{0}', github.event.pull_request.number) || "
+             "format('run-{0}', github.run_id) }}",
+    "cancel-in-progress": "${{ github.event_name == 'pull_request' }}"}
+got_conc = dict(ln.split(": ", 1) for ln in conc if ": " in ln)
+if got_conc != want_conc:
+    fail(f"ci.yml: concurrency is {got_conc}; it must cancel a pull "
+         f"request's superseded run and nothing else: {want_conc}")
+
+# The daily schedule runs the mingw job alone, to keep the Windows libraries'
+# cache in platterpus-fork's scope where every pull request reads it. A job
+# runs on a schedule unless its condition rules that out; a whole suite a day
+# would be a cost nobody chose.
+if not re.search(r"^  schedule:\n(?:\s+#.*\n)*\s+- cron: '[^']+'$", ci, re.M):
+    fail("ci.yml: no daily schedule, so the Windows libraries' cache lives "
+         "only where a pull request saved it, which no other one reads")
+on_schedule = []
+for job, body in jobs(ci.splitlines()).items():
+    cond = re.search(r"^    if:\s*(.+)$", "\n".join(body), re.M)
+    cond = cond.group(1) if cond else ""
+    if not re.search(r"github\.event_name (!= 'schedule'|== 'release'|"
+                     r"== 'push')", cond):
+        on_schedule.append(job)
+if on_schedule != ["mingw"]:
+    fail(f"ci.yml: the jobs a schedule runs are {on_schedule}; it is for the "
+         "mingw job's cache alone")
+
 tag = (WF / "tag-release.yml").read_text(encoding="utf-8") \
     if (WF / "tag-release.yml").exists() else ""
 if "tools/tag-release-check.py" not in tag:

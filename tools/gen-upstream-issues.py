@@ -41,6 +41,15 @@ the report's row in `docs/SETTLED.md`.
 
 It needs a git checkout, because it links a hex string only when it names a
 commit this repository holds.
+
+Which commits are upstream's depends on how far our mirror of upstream's
+`master` reaches, and that differs between clones: on 2026-11-02 this clone's
+`master` branch sat at `7dbe56a` while CI fetched `648b1dd`, so a file that
+passed here failed there. So the file names the upstream commit its links
+were resolved against, and `--check` renders against that commit, not against
+whatever the clone's refs hold: every clone holding it gives one answer. A
+render takes upstream's tip from `origin/master`, which any fetch of it
+moves, before the `master` branch, which only a deliberate update moves.
 """
 
 import argparse
@@ -68,6 +77,15 @@ FILED = f"{UPSTREAM}/issues/167"
 # from the reports, so the footer cannot claim a check nobody made.
 HEADER_AT = re.compile(r"\*\*Checked against upstream `master` at `([0-9a-f]{7})`")
 WHERE_AT = re.compile(r"\A\*\*Where:\*\*[^\n]* at `([0-9a-f]{7})`")
+# The upstream commit a rendered file's links were resolved against.
+PINNED_AT = re.compile(
+    r"^\*\*Links were resolved against upstream's `master` at "
+    r"`([0-9a-f]{7,40})`\*\*", re.M)
+
+
+def git(*args):
+    return subprocess.run(["git", "-C", str(ROOT), *args],
+                          capture_output=True, text=True, encoding="utf-8")
 
 
 def is_commit(sha, ref):
@@ -84,13 +102,15 @@ def is_commit(sha, ref):
         capture_output=True).returncode == 0 for tip in ("HEAD", ref) if tip)
 
 
-def upstream_ref():
-    """Our mirror of upstream's `master`: the local branch, or its remote
-    copy in a checkout that has only that, as CI's has."""
-    for ref in ("master", "origin/master"):
-        if subprocess.run(["git", "-C", str(ROOT), "rev-parse", "-q",
-                           "--verify", ref], capture_output=True).returncode == 0:
-            return ref
+def upstream_tip():
+    """Our mirror of upstream's `master`, as a full commit ID: its
+    remote-tracking copy, which any fetch of it moves, before the local
+    branch, which only a deliberate update moves and which was two syncs
+    stale here on 2026-11-02. None when the clone has neither."""
+    for ref in ("origin/master", "master"):
+        r = git("rev-parse", "-q", "--verify", ref + "^{commit}")
+        if r.returncode == 0:
+            return r.stdout.strip()
     return None
 
 
@@ -103,9 +123,7 @@ def is_upstream(sha, ref):
         capture_output=True).returncode == 0
 
 
-def link_commits(text):
-    ref = upstream_ref()
-
+def link_commits(text, ref):
     def link(m):
         sha = m.group(1)
         if not is_commit(sha, ref):
@@ -114,11 +132,9 @@ def link_commits(text):
     return re.sub(r"`([0-9a-f]{7})`", link, text)
 
 
-def render():
-    if subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--git-dir"],
-                      capture_output=True).returncode != 0:
-        sys.exit("gen-upstream-issues: not a git checkout; commit links "
-                 "cannot be told from other hex strings without one")
+def render(ref, short):
+    """The file, its links resolved against upstream's `master` at REF, a
+    full commit ID, which the header names as SHORT."""
     dr = (ROOT / DEFECTS).read_text(encoding="utf-8")
     cm = (ROOT / CACHEMODEL).read_text(encoding="utf-8")
 
@@ -161,6 +177,12 @@ def render():
         "report's row in `docs/SETTLED.md` re-checks it against `master`. "
         "Every fork commit linked below is on `platterpus-fork`, which is "
         "public, and every upstream commit links to upstream.", "",
+        f"**Links were resolved against upstream's `master` at `{short}`**, "
+        "our mirror's tip when this was rendered: a commit it reaches links "
+        "to upstream, and any other commit our history reaches links to the "
+        "fork. `--check` renders against that commit, not against what a "
+        "clone's `master` holds, so every clone holding it gives the same "
+        "answer; `git fetch origin master` brings it.", "",
         f"**Items 1 to {FILED_COUNT} were filed on 2026-10-16**, by the "
         "operator, as one issue combining them in the order of importance "
         f"below: <{FILED}>. That link is the operator's word; this file's "
@@ -192,7 +214,7 @@ def render():
                   "above; happy to open a PR if it helps.*")
         out += [f"## Item {n} of {COUNT}", "",
                 f"**Title:** {title.replace('**', '')}", "",
-                "<!-- BODY START -->", "", link_commits(body) + footer, "",
+                "<!-- BODY START -->", "", link_commits(body, ref) + footer, "",
                 "<!-- BODY END -->", ""]
     return "\n".join(out) + "\n"
 
@@ -202,16 +224,38 @@ def main():
     ap.add_argument("--check", metavar="FILE",
                     help="exit 1 if FILE is not what this would generate")
     a = ap.parse_args()
-    text = render()
+    if git("rev-parse", "--git-dir").returncode != 0:
+        sys.exit("gen-upstream-issues: not a git checkout; commit links "
+                 "cannot be told from other hex strings without one")
     if a.check:
         have = pathlib.Path(a.check).read_text(encoding="utf-8")
+        m = PINNED_AT.search(have)
+        if not m:
+            print(f"{a.check}: stale; it names no upstream commit its links "
+                  "were resolved against. Regenerate with "
+                  f"tools/gen-upstream-issues.py > {a.check}", file=sys.stderr)
+            return 1
+        r = git("rev-parse", "-q", "--verify", m.group(1) + "^{commit}")
+        if r.returncode != 0:
+            print(f"{a.check}: its links were resolved against upstream's "
+                  f"`master` at {m.group(1)}, which this clone does not hold; "
+                  "`git fetch origin master` brings it", file=sys.stderr)
+            return 1
+        text = render(r.stdout.strip(), m.group(1))
         if have != text:
             print(f"{a.check}: stale; regenerate with "
                   f"tools/gen-upstream-issues.py > {a.check}", file=sys.stderr)
             return 1
-        print(f"{a.check}: current ({COUNT} issues)")
+        print(f"{a.check}: current ({COUNT} issues, links resolved against "
+              f"upstream's master at {m.group(1)})")
         return 0
-    sys.stdout.write(text)
+    tip = upstream_tip()
+    if tip is None:
+        sys.exit("gen-upstream-issues: this clone has no mirror of upstream's "
+                 "master, origin/master or master, to tell upstream's commits "
+                 "from the fork's; `git fetch origin master` brings it")
+    short = git("rev-parse", "--short=7", tip).stdout.strip()
+    sys.stdout.write(render(tip, short))
     return 0
 
 

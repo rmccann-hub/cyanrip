@@ -33,3 +33,17 @@
 # this build exists to check.
 race:^av_buffer_unref$
 race:^av_samples_set_silence$
+
+# A third, rarer: the main thread's av_buffer_pool_uninit() destroying a
+# pool's mutex, when it frees the PCM decoder at the flush
+# (cyanrip_send_pcm_to_encoders(), inlined at src/cyanrip_main.c:2080),
+# against an encoder thread's earlier pthread_mutex_lock() in
+# pool_release_buffer() handing a frame's buffer back (libavutil.so.58 at
+# 0x2a324). What orders them is the pool's reference count, decremented by
+# the uninstrumented `lock subl` at 0x2a33d; the last to reach zero frees the
+# pool. Reproduced once in 72 runs of deemph_with_hdcd, six at a time, on
+# 2026-11-02. CI's thread row failed that test with one TSan warning on PR
+# #76, its report cut from the log, as our notes record it did on PR #69's.
+# cyanrip calls no av_buffer_pool_* function itself; every pool here is
+# FFmpeg's own.
+race:^av_buffer_pool_uninit$

@@ -606,7 +606,11 @@ test('Lap commit list names its range', python,
 ## one cannot be sent malformed.
 ## An explicit timeout, not meson's 30 s default: this runs a subprocess per
 ## case, about a hundred of them since LSL 2, and a library default in a parallel run
-## is the shape Platterpus's round 28 lap 2 S21-S22 named. 5.9 s alone.
+## is the shape Platterpus's round 28 lap 2 S21-S22 named. It was 5.9 s alone
+## when that was written; on 2026-11-02 it was 38.9 s, because it re-checks
+## every lap we have sent, 51 then, and 24.5 s once those checks ran a few at
+## a time, 25.8 s two at a time. CI's macOS runner took it to 95.3 s on
+## 2026-10-29.
 test('Lap statements are well formed', python,
      args: [ files('lap_statements.py') ],
      timeout: 120)
@@ -696,7 +700,20 @@ test('Rip under memcheck', python,
 ## every lap and the whole record, and it was measured at 27-30 s on a loaded
 ## machine -- close enough to flake, and a flaky test is worse than none. The
 ## expensive rows were made cheap in the same change; this is the headroom.
+## 240 s since 2026-11-02: some rows run the binary, so in CI's TSan row they
+## run the instrumented one, and that row took 107.55 s at 03cc064 (PR #75)
+## and was killed at 120 s twice the same day, 72 of 107 rows done. Elsewhere
+## it takes 45 to 75 s; a hung row is stopped at 90 s by the tool itself.
 test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
+     timeout: 240)
+
+## docs/upstream/issues-to-file.md names the upstream commit its links were
+## resolved against, and --check renders against that commit, so a clone
+## whose `master` is stale gives CI's answer; on 2026-11-02 it did not, twice.
+## Run on a view of this repository with refs of its own. 10 s alone, so not
+## meson's 30 s default in a parallel run.
+test('Upstream issues file is pinned to its master', python,
+     args: [ files('upstream_issues.py') ],
      timeout: 120)
 
 ## The black-box sweep
@@ -719,6 +736,17 @@ test('Settled facts', python, args: [ files('../tools/check-settled.py') ],
 ##
 ## is_parallel: false is therefore load-bearing. `meson test` runs
 ## non-parallel tests on their own, which is the condition the class needs.
+##
+## STARTED FIRST, priority 100, because a test that must run alone costs the
+## suite twice when it starts late: meson starts it only once every running
+## test has finished. In the run at 1231de5 it was reached at 83 s and waited
+## until 112 s for Settled facts, the one test still running, with three of
+## four cores idle; it ran alone to 251 s and the suite ended at 292 s. First,
+## there is nothing to wait for. The other long tests keep the order they are
+## defined in: given priority 50 too, all five started together the moment
+## the sweep ended, and on CI's thread row Settled facts, whose rows run the
+## TSan binary, was killed at 120 s twice on 2026-11-02, having taken 70.42 s
+## at 1231de5 in this order.
 ##
 ## MEASURED before wiring it in: ~7 minutes for all 838 on this machine, and
 ## a clean serial run reports no invariant violations. Two classes are
@@ -766,6 +794,7 @@ test('P5 citations fill conversions', python,
 
 test('Black-box sweep', python,
      args: [ files('../tools/blackbox.py'), '--binary', cyanrip_exe, '--gate' ],
+     priority: 100,
      is_parallel: false,
      timeout: 1800)
 
