@@ -15,7 +15,7 @@ fine.
 | Row | Regard | Where we stand | Tracked in |
 |---|---|---|---|
 | 5 | A damaged disc | `-r` bounds paranoia's retries of a stretch, and `-Z`'s whole-track reads. It is not EAC's 82 reads of a sector; the two measure different things | Our round 36 lap 8 (what `-r` means); `src/cyanrip_main.h`, `crip_frame_retry_limit()` |
-| 6 | Track 3 of the reference disc | No cause named. The track reads right on some reads and wrong on others, on one build at nearly one speed. The next Full run pairs `.25` and `.26` rips of it, on the owner's word of 2026-10-26 | Our round 36 lap 8 S8 |
+| 6 | Track 3 of the reference disc | No cause named. The wrong reads cluster in time on every build, not by rip mode: on 2026-11-03 all four timed rips (`-l 1,2,3`, `.27` and `.28`) read it wrong and all eight paired rips (`-l 3`) right, and on 2026-10-28 the reverse. Each wrong read logs `no error reported` and AccurateRip's `not found`, so none is called verified. Which samples differ is not yet known: the rig's FLACs of one wrong and one right read would say | `docs/rig-2026-11-03-3f288fb/README.md`; `docs/rig-2026-10-28-5aeefc4/README.md` |
 | 8 | Saying a wrong track is wrong | `read successfully!` printed over tracks AccurateRip rejects. `.27` prints `Track N read with no error reported.` instead, as Platterpus's round 36 lap 9 S17 accepts | `docs/KNOWN-ISSUES.md`; our round 36 lap 8 S26 |
 | 10 | Where a read was unsure | Positions are in the `--diagnostics` record from `.25`. Their wording in the EAC-layout log is Platterpus's R44, which we review | STATUS `error-positions`; Platterpus's TASKS R44 |
 | 16 | Accurate stream | The drive's declaration is read and printed, "not measured". libcdio-paranoia neither reads it nor depends on it | Our round 36 lap 8 |

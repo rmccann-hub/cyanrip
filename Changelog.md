@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**Round 37's closing run is filed and read**: `.28` with Platterpus 0.7.117,
+Full, on the reference disc, 2026-11-03, on our evidence branch at `dd48c1f`
+(`docs/rig-2026-11-03-3f288fb/`), whose README is our reading. The script
+passed 553 steps, failed none, and could not reach the one this drive never
+reaches; all 25 signed logs verify. Every unknown pregap has its own `Pregap
+searches:` line in all 19 `.28` logs, the round's close condition. `.28`'s
+drive lines read as intended on a drive, and **`Disc ISRC:` read the disc
+itself for the first time on this drive**, on every track. Two tracks read
+wrong on every build: track 3, wrong in all four timed rips and right in all
+eight paired ones, the reverse of 2026-10-28, and track 5, the same wrong
+value seven times; each log says so and none calls them verified. The reading
+ends with what it questions, what is missing, what to add next time and what
+the logs carry beyond what was asked. The cache table gains its row,
+`CLAUDE.md`'s hardware table its date, and `docs/eac-parity.md`'s row 6 what
+this run adds.
+
 **Platterpus's round 37 lap 5 is filed** (`docs/handshake/inbound/`), sha256
 `c8a4c277…`, 11,230 bytes, from their `main` at `75915aa9`, now that their
 copy of our `seam-commands.md` matches ours again (their lap 6 S3, at
