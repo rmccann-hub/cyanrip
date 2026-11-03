@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**The two `sprintf` calls left in `src/` are `snprintf`.** AccurateRip's and the
+Cover Art Archive's User-Agent were written by `sprintf` into 256 bytes. The
+string is the build's version, fixed at compile time and about 70 bytes, so
+neither could overflow; each now names its bound, and the string sent is the
+same. The binary was already linked as a PIE with full RELRO, a
+non-executable stack, and stack-protector and `_FORTIFY_SOURCE=3` checks in
+place.
+
 **The black-box sweep keeps 4 workers: 8 made it twice as slow.** Measured
 alone on 4 CPUs: 188 s at 4 jobs, 366 s at 8, with the same exit-code tallies
 and no violations. `docs/OPTIMISATION-PLAN.md` records it, with the evidence

@@ -207,7 +207,7 @@ static int fetch_image(cyanrip_ctx *ctx, CURL *curl_ctx, CRIPArt *art,
     }
 
     char user_agent[256] = { 0 };
-    sprintf(user_agent, "cyanrip/%s ( https://github.com/cyanreg/cyanrip )", PROJECT_VERSION_STRING);
+    snprintf(user_agent, sizeof(user_agent), "cyanrip/%s ( https://github.com/cyanreg/cyanrip )", PROJECT_VERSION_STRING);
     curl_easy_setopt(curl_ctx, CURLOPT_USERAGENT, user_agent);
 
     curl_easy_setopt(curl_ctx, CURLOPT_WRITEFUNCTION, receive_image);
