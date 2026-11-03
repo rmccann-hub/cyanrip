@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**`tools/redact.py`'s `findings()` reads a text's lines only for a kind the
+whole text holds.** Every home-path, hostname, name and AcoustID-key pattern
+needs a literal that cannot span a line, so one search of the whole text
+decides whether any line can match. A substring test goes before the home-path
+pattern, whose lookbehinds took 9.8 s over the 47 MB of evidence where `in`
+takes 0.12 s. The key's gate is a regex and not `str.lower()`, since `(?i)`
+folds `ſ` (U+017F) to `s`. Checked against the old code as an oracle: 44,796
+comparisons (14,932 texts, each with three name lists): the 1,598 evidence
+files, 662 tracked files, and 12,672 built texts joining 24 pieces at each of
+`splitlines()`'s 11 kinds of line end. 31,171 had findings; none differed. `tests/redaction.py` gains a text for each literal alone and
+for the folded key, and dropping any literal, or gating the key with
+`lower()`, fails one. `No personal details in new evidence` went from 17.6 s
+to 5.7 s here.
+
 **The tests build with no clang warning.** Clang, CI's macOS compiler, gave 16
 in four test files, none in `src/`, so the gate never saw them. Four test
 wrappers forwarded a format string without being marked as format functions;

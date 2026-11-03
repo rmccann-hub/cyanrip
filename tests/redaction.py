@@ -120,6 +120,20 @@ check(not any(i == 6 for i, _ in found),
 check(not any(NAME in k for _, k in found),
       "findings() must not write the name it found")
 
+# findings() looks line by line only for a kind whose literal the whole text
+# holds (HOME_LITERALS, KEY_FLAG). Each text here holds one kind and nothing
+# else, so dropping any literal from its gate fails exactly one of them. The
+# last is the AcoustID flag with U+017F for its s, which `(?i)` folds to s and
+# str.lower() does not, so a gate written with lower() misses it.
+for alone, kind in (
+        ("ripped to /Users/alice/Music", "home path"),
+        ("ripped to C:\\Users\\alice\\Music", "home path"),
+        (r'{"out": "C:\\Users\\alice\\Music"}', "home path"),
+        ("Invoked as:     cyanrip --acou\u017ftid-key AbC123 -N",
+         "an AcoustID key")):
+    got = [k.split(" '")[0] for _, k in redact.findings(alone)]
+    check(got == [kind], f"findings() must see {kind} alone in {alone!r}: {got}")
+
 # Review C 1.4: an AcoustID key in a log an older build wrote, bare, quoted
 # or JSON-escaped, is withheld; one already withheld is left alone
 for given, want in (
