@@ -193,7 +193,7 @@
         },
         {
           "name": "cyanrip-fork:ci-action",
-          "value": "astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e (v10.3.2)"
+          "value": "astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 (v10.3.3)"
         },
         {
           "name": "cyanrip-fork:ci-action",
@@ -221,7 +221,7 @@
         },
         {
           "name": "cyanrip-fork:ci-pinned-tarball",
-          "value": "https://downloads.sourceforge.net/lame/lame-3.100.tar.gz sha256:ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e (3.100)"
+          "value": "https://downloads.sourceforge.net/lame/lame-4.0.tar.gz sha256:3df5124d5ad3a98312ffd7ba6a9b36230e4f8a3e66d3ce0f425e336c32d216eb (4.0)"
         },
         {
           "name": "cyanrip-fork:ci-git-tool",
@@ -229,7 +229,7 @@
         },
         {
           "name": "cyanrip-fork:ci-uv",
-          "value": "0.13.5"
+          "value": "0.13.6"
         },
         {
           "name": "cyanrip-fork:ci-python",
@@ -1380,5 +1380,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:1f1b3056-3fd6-5ba2-82a4-a29050418408"
+  "serialNumber": "urn:uuid:113d5e01-d1b7-5314-89c8-afc4c10a652b"
 }

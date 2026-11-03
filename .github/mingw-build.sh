@@ -17,13 +17,14 @@ set -euo pipefail
 # from n8.1.3 to n9.0.2 on 2026-10-20, when the other four were still their
 # newest. n8.1.3 is the newer tag by date and an older branch by version.
 # LAME keeps its sources in Subversion, so its release tarball is pinned by
-# its SHA-256 instead, the one MSYS2's own package of 3.100 checked.
+# its SHA-256 instead: 4.0's, the one MSYS2's own package of 4.0 checks
+# (its PKGBUILD's sha256sums, read 2026-11-02), as we downloaded it.
 CURL_COMMIT=3163ec065643ba20709f190111f42c3e1fe95273
 NEON_COMMIT=170c36704bfc2ac8b0e5607c3e1fdd4c159674db
 LIBMUSICBRAINZ_COMMIT=2398b8765ed8fa2644bdcef70f764ce6ec209431
 LIBQRENCODE_COMMIT=715e29fd4cd71b6e452ae0f4e36d917b43122ce8
 FFMPEG_COMMIT=946fcce07b6dcd0331c8cc609192aeff5e1924f8
-LAME_SHA256=ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e
+LAME_SHA256=3df5124d5ad3a98312ffd7ba6a9b36230e4f8a3e66d3ce0f425e336c32d216eb
 
 buildCyanrip() {
     cyan_prepare
@@ -175,7 +176,14 @@ build_lame() {
     # then and what the Linux job's Ubuntu 24.04 ships. Without its decoder
     # and the lame program it needs nothing else; ours is found before
     # MSYS2's, and cyan_hide_conflicting_libs hides theirs from cyanrip's link.
-    cyan_do_tarball "https://downloads.sourceforge.net/lame/lame-3.100.tar.gz" "$LAME_SHA256" 3.100 &&
+    # Moved to 4.0 on 2026-11-02, still built without its decoder, so still
+    # needing no libmpg123: 3.101 fixed a buffer overflow in the encoder
+    # (LAME bug #500), a crash in init_xrpow_core_sse (#496) and an ABR
+    # assertion (#501), all in the library this links; 4.0 fixed building
+    # with recent GCC and the version every MP3's LAME tag carries, which
+    # 3.101 cut short. 4.0's two security fixes, in the Blade DLL and the
+    # AIFF reader, are in parts this build does not compile.
+    cyan_do_tarball "https://downloads.sourceforge.net/lame/lame-4.0.tar.gz" "$LAME_SHA256" 4.0 &&
     cyan_do_separate_confmakeinstall --build="$MINGW_CHOST" --host="$MINGW_CHOST" \
         --disable-{decoder,frontend}
 }
