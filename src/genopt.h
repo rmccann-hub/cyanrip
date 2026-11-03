@@ -190,8 +190,8 @@ typedef struct GenOpt {
         case GEN_OPT_TYPE_FLOAT:                                               \
         case GEN_OPT_TYPE_DOUBLE:                                              \
         case GEN_OPT_TYPE_RATIONAL:                                            \
-            optlist[opts_list_nb].range_low_f  = rangelow;                     \
-            optlist[opts_list_nb].range_high_f = rangehigh;                    \
+            optlist[opts_list_nb].range_low_f  = (double)(rangelow);           \
+            optlist[opts_list_nb].range_high_f = (double)(rangehigh);          \
             break;                                                             \
         case GEN_OPT_TYPE_I16:                                                 \
         case GEN_OPT_TYPE_I32:                                                 \

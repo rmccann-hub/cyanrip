@@ -368,9 +368,15 @@ foreach name, h : fuzz_harnesses
     endif
 endforeach
 
+## libavutil's headers only, for av_printf_format on test_log(): on Ubuntu
+## they sit on the default include path, so the build found them without
+## this, and on CI's macOS, where Homebrew's come only through pkg-config,
+## it did not.
 genopt_test = executable('genopt_test',
     sources: [ 'genopt.c' ],
     include_directories: [ '../src' ],
+    dependencies: [ dependency('libavutil').partial_dependency(
+        compile_args: true, includes: true) ],
 )
 test('Option parsing', genopt_test)
 
@@ -387,10 +393,11 @@ if not python.language_version().version_compare('>=3.11')
 endif
 
 ## Zero compiler diagnostics under the flags the build ships. Installed while
-## the count was 0, which is the only cheap moment. NOT -Wextra: that set is 22
-## and needs its own change. See the tool's docstring for what is excluded and
-## for the -fdiagnostics-color trap that made an earlier attempt report a false
-## zero.
+## the count was 0, which is the only cheap moment. -Wextra joined it on
+## 2026-11-03, less -Wunused-parameter and -Wsign-compare, whose 29 sites were
+## read and kept (src/meson.build says why; `--extra` lists them). See the
+## tool's docstring for what is excluded and for the -fdiagnostics-color trap
+## that made an earlier attempt report a false zero.
 ## The build directory is the one meson is testing, named to the tool: it read
 ## a fixed build/, so `meson test -C` anywhere else failed as unconfigured or
 ## gated a stale build/ (review C item 3.3).
@@ -861,10 +868,12 @@ test('No personal details in new laps or evidence', python,
 test('Evidence tool', python, args: [ files('evidence_tool.py') ], timeout: 120)
 test('Evidence readers and fixture copies', python,
      args: [ files('evidence_readers.py') ])
-## Not meson's 30 s default: before it can say 77, it tries each manifest row
-## in turn, one git call apiece, 566 rows on 2026-11-02, and the count grows
-## with every filing. CI's macOS runner took 27.96 s and 28.75 s on 2026-10-29
-## and was killed at 30.01 s on 2026-11-02 (PR #75); 11.9 s here, fetched.
+## Not meson's 30 s default: it reads every manifest row with no default
+## commit, 566 on 2026-11-02, and the count grows with every filing. CI's
+## macOS runner took 27.96 s and 28.75 s on 2026-10-29 and was killed at
+## 30.01 s on 2026-11-02 (PR #75). Since 2026-11-03 it reads them in one
+## `git cat-file --batch` and looks at a file's lines only for a kind the file
+## holds: 2.6 s here, fetched, from 17.6 s.
 test('No personal details in new evidence', python,
      args: [ files('personal_details.py'), '--evidence' ],
      timeout: 120)

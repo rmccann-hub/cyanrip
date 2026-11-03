@@ -1,5 +1,92 @@
 Unreleased
 ==========
+**`docs/READINESS-PLAN.md` says what stands between the fork and ready to go,**
+on the owner's word of 2026-11-03: what was done that day without the owner's
+input, then by priority the `.28` Full run that closes round 37, what needs a
+lap (the cover-art line, with a recommended shape), what needs a drive, the
+owner's decisions, and what is left of test time. It records that Platterpus's
+round 37 lap 5 crossed ours at the same number, the night's second crossing,
+and waits on their copy of our `seam-commands.md` before it is filed.
+
+**The two `sprintf` calls left in `src/` are `snprintf`.** AccurateRip's and the
+Cover Art Archive's User-Agent were written by `sprintf` into 256 bytes. The
+string is the build's version, fixed at compile time and about 70 bytes, so
+neither could overflow; each now names its bound, and the string sent is the
+same. The binary was already linked as a PIE with full RELRO, a
+non-executable stack, and stack-protector and `_FORTIFY_SOURCE=3` checks in
+place.
+The provider contract, whose source anchor moves with these two calls and
+`src/genopt.h`'s casts below, and no line number with them, was **generated
+by `2bd0c67`** and **committed in the commit carrying this sentence**.
+
+**The black-box sweep keeps 4 workers: 8 made it twice as slow.** Measured
+alone on 4 CPUs: 188 s at 4 jobs, 366 s at 8, with the same exit-code tallies
+and no violations. `docs/OPTIMISATION-PLAN.md` records it, with the evidence
+check's 17.6 s to 2.6 s.
+
+**The evidence check reads its files in one git process.**
+`tools/evidence.py`'s `Store.read_many()` gives what `read()` gives for each
+path, through one `git cat-file --batch` per repository instead of a process
+per file, checking each file's size and hash against its row as `read()`
+does. Over all 1,598 manifest rows, 493 of them with spaces in their names, it
+returns the same bytes as `read()` in 1.3 s against 8.8 s. `tests/evidence_tool.py`
+checks it reads the tree and gives `None` for an unfetched file, reads the
+cache's files as `read()` does, and refuses a file whose hash is not its
+row's; with its hash check removed, that last check fails. `No personal
+details in new evidence` uses it, and went from 5.7 s to 2.6 s here, 17.6 s
+before either change; a home path planted in what it reads still fails it,
+at its file and line.
+
+**`tools/redact.py`'s `findings()` reads a text's lines only for a kind the
+whole text holds.** Every home-path, hostname, name and AcoustID-key pattern
+needs a literal that cannot span a line, so one search of the whole text
+decides whether any line can match. A substring test goes before the home-path
+pattern, whose lookbehinds took 9.8 s over the 47 MB of evidence where `in`
+takes 0.12 s. The key's gate is a regex and not `str.lower()`, since `(?i)`
+folds `ſ` (U+017F) to `s`. Checked against the old code as an oracle: 44,796
+comparisons (14,932 texts, each with three name lists): the 1,598 evidence
+files, 662 tracked files, and 12,672 built texts joining 24 pieces at each of
+`splitlines()`'s 11 kinds of line end. 31,171 had findings; none differed. `tests/redaction.py` gains a text for each literal alone and
+for the folded key, and dropping any literal, or gating the key with
+`lower()`, fails one. `No personal details in new evidence` went from 17.6 s
+to 5.7 s here.
+
+**The tests build with no clang warning.** Clang, CI's macOS compiler, gave 16
+in four test files, none in `src/`, so the gate never saw them. Four test
+wrappers forwarded a format string without being marked as format functions;
+they now carry `av_printf_format`, as `src/cyanrip_log.c`'s own do. The other
+12 were `src/genopt.h` writing an option's range into its double fields in a
+branch an `int64_t` option never takes, where clang counts `INT64_MAX`
+rounding to 2^63; an explicit `(double)` says so, and changes nothing that
+runs. Marking `fmt_escaped()` let GCC see the `NULL` that
+`tests/logescape.c` passes to `%s` on purpose, and refuse it; the `NULL` now
+goes through a `volatile`, and breaking the escaper's `(null)` still fails
+that check.
+**And dumbass us broke CI's macOS build doing it:** `tests/genopt.c` took
+`av_printf_format` from `libavutil/attributes.h` in a test target that names
+no libavutil dependency. Ubuntu keeps FFmpeg's headers on the default include
+path, so the suite here built and passed; Homebrew's come only through
+pkg-config, so macOS stopped at `'libavutil/attributes.h' file not found`.
+The target now takes libavutil's headers, and links nothing more.
+
+**`-Wextra` is shipped and gated, less two of its checks.** The build now
+compiles with `-Wextra -Wno-unused-parameter -Wno-sign-compare`, and
+`Compiler diagnostics` holds the rest of the set at zero as it does
+everything else: missing initialisers, type limits, empty bodies, implicit
+fall-through. The full set gave 35 diagnostics at 29 sites in `src/`, all of
+them unused parameters (16) or signed against unsigned comparisons (13), each
+read before it was kept off; `src/meson.build` says what they are, and
+`tools/warn-gate.py --extra` now turns exactly those two back on to list
+them. A `size_t` compared `< 0`, planted in `src/fun512.c`, fails the new gate
+and passed the old one. GCC and clang both build `src/` with no diagnostic.
+**And a correction:** the gate's docstring said since 2026-09-06 that its
+unused `deemphasis` warning was the `-H` de-emphasis defect, and that "the
+compiler has been pointing at it the whole time". Dumbass us diagnosed the
+warning by its parameter's name: it names `setup_out_avctx()`, which never
+needed the value, while the defect sat in `init_filtering()`, where
+`deemphasis` was used, in a branch `hdcd` never let it reach. A test found
+that defect (`b866900`); the docstring now says so.
+
 **Every run's reading now ends with what it questions, what may be missing,
 what to add next time, and what the logs carry beyond what was asked** (owner,
 2026-11-03). Each item names its log line, what would settle it and who owns

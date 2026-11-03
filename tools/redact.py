@@ -240,10 +240,30 @@ def redact_bytes(data, hosts=(), names=None):
     return new.encode("utf-8"), rep
 
 
+# One of these is in every match of HOME_PATH, case and all: its three
+# alternatives each spell one out. A text without any cannot match it, and
+# `in` finds that out 80 times sooner than the pattern's lookbehinds do.
+HOME_LITERALS = ("/home/", "/Users/", "Users\\")
+
+# Every AcoustID key pattern above starts with this, which cannot span a line.
+# A regex and not `"--acoustid" in line.lower()`: (?i) in a str pattern folds
+# Unicode, so `--acouſtid` (U+017F for the s) matches it and lower() does not.
+KEY_FLAG = re.compile(r"--(?i:acoustid)")
+
+
 def findings(text, names=None):
     """What redact() would replace, as (line number, kind) pairs, for a check
     of what is newly committed. A name found is reported by kind only: the
-    report must not write the name it found."""
+    report must not write the name it found.
+
+    ONE SEARCH OF THE WHOLE TEXT FIRST, per kind. Each pattern needs a literal
+    that cannot span a line (`/home/`, `/Users/`, `Users\\`, a hostname, a
+    name, `--acoustid`), and each lookaround reads a line's edge in the whole
+    text as it does in the line alone, so a kind with no match in the text has
+    none in any line. Only the kinds that matched are looked for line by line.
+    Measured 2026-11-03: the evidence check spent 17 s of its 21 here, on
+    505,000 lines that matched nothing, and then 10 s on HOME_PATH's whole-text
+    search until HOME_LITERALS went first."""
     out = []
     hosts = hostnames_in(text)
     host_res = [re.compile(r"(?:(?<![\w.-])|" + AFTER_ESCAPE + ")" + re.escape(f)
@@ -251,15 +271,23 @@ def findings(text, names=None):
                 for h in hosts for f in _forms(h)]
     name_res = [re.compile(r"(?:\b|" + AFTER_ESCAPE + ")" + re.escape(n) + r"\b")
                 for n in names or ()]
+    host_res = [r for r in host_res if r.search(text)]
+    name_res = [r for r in name_res if r.search(text)]
+    homes = (any(s in text for s in HOME_LITERALS)
+             and HOME_PATH.search(text) is not None)
+    keys = KEY_FLAG.search(text) is not None
+    if not (homes or host_res or name_res or keys):
+        return out
     for i, line in enumerate(text.splitlines(), 1):
         if WIRE.match(line):
             continue
-        for m in HOME_PATH.finditer(line):
-            out.append((i, f"home path {m.group(0)!r}"))
+        if homes:
+            for m in HOME_PATH.finditer(line):
+                out.append((i, f"home path {m.group(0)!r}"))
         if any(r.search(line) for r in host_res):
             out.append((i, "a hostname"))
         if any(r.search(line) for r in name_res):
             out.append((i, "the owner's name"))
-        if withhold_keys(line)[1]:
+        if keys and withhold_keys(line)[1]:
             out.append((i, "an AcoustID key"))
     return out

@@ -5,6 +5,22 @@ build_opts = [
     '-Wundef', '-Wmissing-prototypes', '-Wshadow', '-Wparentheses',
     '-Wpointer-arith', '-Wno-pointer-sign',
 
+    # -Wextra, less two of its checks, so tools/warn-gate.py holds the rest of
+    # it at zero like everything above: missing initialisers, type limits,
+    # empty bodies, implicit fall-through. The two left off were read site by
+    # site on 2026-11-03 (`tools/warn-gate.py --extra` lists them):
+    # -Wunused-parameter's 16 are callbacks and upstream signatures with a
+    # fixed shape, and stubs for a library a build may lack; -Wsign-compare's
+    # 13 compare a non-negative int with a length, a byte, an enum or the -Z
+    # repeat count, whose limit -r's option table floors at 0. None is a
+    # defect. The cost of leaving them off: a new site of either kind fails
+    # nothing and shows only in --extra's list.
+    # Meson's configure says "Consider using the built-in warning_level
+    # option" for this line, and that is deliberate: warning_level=2 would
+    # add -Wextra only to a build directory set up after the change, and a
+    # -Dwarning_level=1 would take it away without a word.
+    '-Wextra', '-Wno-unused-parameter', '-Wno-sign-compare',
+
     # Warnings to treat as errors
     '-Werror=implicit-function-declaration',
 

@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <libavutil/attributes.h>
 #include <libavutil/time.h>
 
 static int failures;
@@ -67,7 +68,8 @@ static char cap[16384];
 static size_t cap_len;
 
 struct cyanrip_ctx;
-void cyanrip_log(struct cyanrip_ctx *ctx, int verbose, const char *format, ...);
+void cyanrip_log(struct cyanrip_ctx *ctx, int verbose, const char *format, ...)
+    av_printf_format(3, 4);
 void cyanrip_log(struct cyanrip_ctx *ctx, int verbose, const char *format, ...)
 {
     va_list args;

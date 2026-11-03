@@ -327,6 +327,61 @@ class Store:
                          f"{row.commit[:12]} and this clone has not fetched "
                          f"it: run tools/evidence.py fetch")
 
+    def read_many(self, paths):
+        """{path: bytes} for each of `paths`, as read() gives them, with None
+        where read() would raise NotFetched; Mismatch and FileNotFoundError
+        are raised as read() raises them. One `git cat-file --batch` per
+        repository instead of a process per file: the evidence check spent
+        3.5 s of its 5.7 s starting 710 of them on 2026-11-03."""
+        found, pending = {}, []
+        for p in paths:
+            if self.in_tree(p):
+                found[p] = (self.root / p).read_bytes()
+            elif p not in self.rows:
+                raise FileNotFoundError(f"{p} is not in this checkout and has "
+                                        f"no row in {MANIFEST}")
+            elif "\n" in p:
+                # --batch reads one name a line; read() names it whole
+                try:
+                    found[p] = self.read(p)
+                except NotFetched:
+                    found[p] = None
+            else:
+                pending.append(p)
+        for repo in (self.root, self.cache):
+            if not pending or repo is None or not pathlib.Path(repo).exists():
+                continue
+            names = "".join(f"{self.rows[p].commit}:{p}\n" for p in pending)
+            r = git(repo, "cat-file", "--batch", data=names.encode("utf-8"))
+            if r.returncode != 0:
+                continue
+            buf, at, still = r.stdout, 0, []
+            for p in pending:
+                end = buf.index(b"\n", at)
+                head = buf[at:end].split(b" ")
+                at = end + 1
+                # `<name> missing`, or `<oid> <type> <size>` and the bytes;
+                # read() asks for a blob, so anything else is not this file
+                if len(head) == 3 and head[-1].isdigit() \
+                        and head[1] in (b"blob", b"tree", b"commit", b"tag"):
+                    size = int(head[2])
+                    data, at = buf[at:at + size], at + size + 1
+                    if head[1] == b"blob":
+                        row = self.rows[p]
+                        if len(data) != row.size or sha256(data) != row.sha256:
+                            raise Mismatch(
+                                f"{p} at {row.commit[:12]} is {len(data)} "
+                                f"bytes, sha256 {sha256(data)[:16]}..., and "
+                                f"its manifest row says {row.size} bytes, "
+                                f"{row.sha256[:16]}...")
+                        found[p] = data
+                        continue
+                still.append(p)
+            pending = still
+        for p in pending:
+            found[p] = None
+        return found
+
     def missing(self, paths):
         """The paths among `paths` this tree cannot read, without reading."""
         return [p for p in paths if self.where(p) is None]

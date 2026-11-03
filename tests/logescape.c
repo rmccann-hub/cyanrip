@@ -40,6 +40,8 @@
 static int failures;
 
 static void fmt_escaped(AVBPrint *b, const char *format, ...)
+    av_printf_format(2, 3);
+static void fmt_escaped(AVBPrint *b, const char *format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -139,8 +141,11 @@ int main(void)
     GIVES("a<U+000A>b  |", "%-12s|", "a\nb");
     GIVES("  a<U+000A>b|", "%12s|", "a\nb");
 
-    /* A string the C library would print as (null) */
-    GIVES("[(null)]", "[%s]", (const char *)NULL);
+    /* A string the C library would print as (null). Through a volatile, so a
+     * NULL still reaches the escaper at run time while GCC, which now checks
+     * fmt_escaped()'s format, cannot see one at compile time and refuse it. */
+    const char *volatile null_str = NULL;
+    GIVES("[(null)]", "[%s]", null_str);
 
     if (failures) {
         fprintf(stderr, "%i failure(s)\n", failures);
