@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Every run's reading now ends with what it questions, what may be missing,
+what to add next time, and what the logs carry beyond what was asked** (owner,
+2026-11-03). Each item names its log line, what would settle it and who owns
+it. The handshake README's *Filing and reading a run* says so, and
+`docs/ROUND-37-READING-PLAN.md` is the checklist `.28`'s Full run with
+Platterpus 0.7.117 will be read against, written before the run arrived.
+
 **A standing word now covers a lap that answers, files or announces and moves
 no pin** (owner, 2026-11-03): the session releases it in the pull request that
 publishes it, and a release, a pin move and an override stay the owner's.
