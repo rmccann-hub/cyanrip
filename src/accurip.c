@@ -87,19 +87,14 @@ typedef struct RecvCtx {
 } RecvCtx;
 
 /* HTTPS only, for the request and any redirect (review C item 1.5); the
- * certificate is verified, as libcurl does unless told not to. Its string
- * option is libcurl 7.85's, and the bitmask it replaced is deprecated from
- * then, so a build uses the one its headers have. Same as https_only() in
- * coverart.c. */
+ * certificate is verified, as libcurl does unless told not to. The string
+ * options are libcurl 7.85's, and the minimum is 8.5.0, so there is one path:
+ * the branch for the deprecated bitmask before 7.85 went with the old
+ * minimum, since no CI job compiled it. Same as https_only() in coverart.c. */
 static void https_only(CURL *curl_ctx)
 {
-#if LIBCURL_VERSION_NUM >= 0x075500
     curl_easy_setopt(curl_ctx, CURLOPT_PROTOCOLS_STR, "https");
     curl_easy_setopt(curl_ctx, CURLOPT_REDIR_PROTOCOLS_STR, "https");
-#else
-    curl_easy_setopt(curl_ctx, CURLOPT_PROTOCOLS, (long)CURLPROTO_HTTPS);
-    curl_easy_setopt(curl_ctx, CURLOPT_REDIR_PROTOCOLS, (long)CURLPROTO_HTTPS);
-#endif
 }
 
 /* Kept NUL-terminated, for the error page check */

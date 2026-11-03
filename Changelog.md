@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**For `.29`: every minimum version is now one a CI job builds**
+(`docs/DEPENDENCY-PLAN.md` §3). The five FFmpeg libraries need FFmpeg
+6.1.1's (libavcodec 60.31.102), libcdio 2.1.0, libcurl 8.5.0 and Python 3.11,
+each the oldest CI builds or runs: Ubuntu 24.04's libraries in the Linux job,
+and uv's Python 3.11 in the floor row. They were FFmpeg 5.1, libcdio 2.0, curl
+7.66.0 and Python 3.10, and dumbass us had been promising builds on all four
+that no job ever made. With curl's minimum past 7.85.0, its branch for the
+deprecated `CURLOPT_PROTOCOLS` bitmask is gone from `src/accurip.c` and
+`src/coverart.c`, so the HTTPS-only limit has one path, the one every build
+compiled anyway. Platterpus builds on Fedora 44 or 45, past every one of
+these; a dependency is handshake material all the same, so this is announced
+in our next lap of round 37, before `.29` ships. Nothing a rip prints changes.
+
 **Our round 37 lap 4 says `.28` is released before Platterpus's answer.**
 On the owner's word of 2026-11-03, `.28` was published at `3f288fb` before
 Platterpus answered our lap 3 S9, which lap 3 S16 had pre-committed to wait

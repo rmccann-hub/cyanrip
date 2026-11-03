@@ -68,11 +68,13 @@ endif
 
 cc = meson.get_compiler('c')
 
-# Python 3.10 or later runs the build's generators, every tool and the suite
-# (review C item 6.1): tools/gen-dependency-map.py reads
-# sys.stdlib_module_names, new in 3.10, and the whole suite has passed with
-# 3.10. Declared here, so an older one stops the setup and says so.
-python3 = find_program('python3', version: '>=3.10')
+# Python 3.11 or later runs the build's generators, every tool and the suite
+# (review C item 6.1). 3.11 is the oldest anything here runs: CI's floor row
+# runs Meson under uv's Python 3.11, and the suite passes under 3.11 in the
+# sessions' container. 3.10, the minimum until .29, left security support in
+# October 2026 and nothing ran it (docs/DEPENDENCY-PLAN.md section 3).
+# Declared here, so an older one stops the setup and says so.
+python3 = find_program('python3', version: '>=3.11')
 
 subdir('src')
 subdir('tests')

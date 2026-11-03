@@ -380,9 +380,9 @@ test('Option parsing', genopt_test)
 ## finished files.
 python = import('python').find_installation()
 # The suite runs on the Python meson runs on, which the floor above does not
-# name; it needs 3.10 too
-if not python.language_version().version_compare('>=3.10')
-    error('the suite needs Python 3.10 or later, and meson runs on ' +
+# name; it needs 3.11 too
+if not python.language_version().version_compare('>=3.11')
+    error('the suite needs Python 3.11 or later, and meson runs on ' +
           python.language_version())
 endif
 

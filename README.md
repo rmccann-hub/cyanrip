@@ -104,10 +104,10 @@ If the latest build is broken, you can find older ones in the [nightly release p
 ### Compiling
 Complete list of dependencies:
 
- * FFmpeg 5.1 or later (libavcodec, libswresample, libavutil, libavformat, libavfilter; libavcodec at least 59.24.100, every minimum in `src/meson.build`)
- * libcdio (at least 2.0) and libcdio-paranoia
+ * FFmpeg 6.1 or later (libavcodec, libswresample, libavutil, libavformat, libavfilter; libavcodec at least 60.31.102, every minimum in `src/meson.build`)
+ * libcdio (at least 2.1.0) and libcdio-paranoia
  * libmusicbrainz5
- * libcurl
+ * libcurl (at least 8.5.0)
 
 Optional dependencies:
 
