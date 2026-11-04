@@ -95,7 +95,7 @@ stopped when the drive failed, inside the secure re-read, so a repeat is owed.
 
 | Decision | Why it is the owner's | Default if no word |
 |---|---|---|
-| Cut `.29` (raised minimums, today's build and test changes, and the Enhanced CD offset fix; no log line's text changes) | a release no standing word covers | wait for the owner's word; round 37 has closed |
+| Cut `.29` | a release no standing word covers | **done**: released at `8d2ca72` on 2026-11-04, on the owner's word *"Release .29"* |
 | A Fedora CI job (`docs/DEPENDENCY-PLAN.md` §4) | runner time and a new platform | none |
 | Set `CYANRIP_REDACT_NAMES` where runs are filed | the name list lives outside the repository by design; without it the tools say *not checked* | not checked, said so |
 | Read the repository's Security tab: Dependabot, code scanning and secret scanning alerts | nobody here has read them: GitHub refuses the Dependabot and code-scanning alert APIs to this session's credential ("Resource not accessible by integration"), and the session's proxy does not pass the secret-scanning one; read again 2026-11-03 | unread |
