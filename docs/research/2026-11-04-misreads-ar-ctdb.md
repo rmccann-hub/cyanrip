@@ -22,7 +22,8 @@ track. CTDB places that difference at 02:24:59, and the drive once returned the 
 drive, going by its documented algorithm (not run). For the fork, the ripper could do what
 dBpoweramp does: test each read against AR, keep a verified read even when it is outvoted, and
 change speed between passes. For Platterpus, the app could do what CUETools does and repair from
-CTDB parity. I found no implementation of CTDB repair outside C#.
+CTDB parity. I found no implementation of CTDB repair outside C#. **Corrected the same day:**
+Platterpus's research found `cdverify`, a native Rust one (see *Implementations outside C#*).
 
 ## How to read this report
 
@@ -436,7 +437,10 @@ The sources disagree:
 
 ### Implementations outside C#
 
-- **Repair: none found.** In 2018 Chudov wrote in whipper issue 15: *"As far as i know, yes [the
+- **Repair, corrected 2026-11-04:** `neheb/cdverify` (Rust, GPL-3.0, created 2026-10-11) says
+  in its README that it can "repair them with CTDB parity data". This report missed it, and
+  Platterpus's research found it. Its code was not read here.
+- **Repair, as first written: none found.** In 2018 Chudov wrote in whipper issue 15: *"As far as i know, yes [the
   C# client is the only one]. The network protocol part is quite trivial, but the parity
   calculations ... a bit more work."*
 - **Per-track CRC verification, no parity:**

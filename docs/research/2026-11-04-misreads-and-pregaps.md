@@ -115,8 +115,10 @@ round.
 - **A1. CTDB repair**, with provenance: never from a confidence-1 entry; keep
   the original; record each repaired sample's position and the entry used.
   On track 5 it is expected to give back `C96464AB`, which AccurateRip and our
-  own drive would then confirm independently. No repair implementation exists
-  outside C# (`ctdb-cli` runs it on Linux under .NET). The code's licence is
+  own drive would then confirm independently. Two implementations outside
+  CUETools exist: `ctdb-cli` runs CUETools' own code on Linux under .NET, and
+  `cdverify` (Rust, GPL-3.0, created 2026-10-11) is a native one, which
+  Platterpus found and our first draft missed. The code's licence is
   unclear between GPL-2.0-or-later and LGPL, so a port needs the author's word
   or GPL terms.
 - **A2. Choose among alternates** the ripper kept, once R2 keeps them.
@@ -129,6 +131,11 @@ round.
   says.
 - **No reading plan for the `.29` run.** We wrote none before the run
   arrived, and the procedure asks for one.
+- **We missed `cdverify`.** Our first draft said no CTDB repair exists outside
+  C#. Platterpus's own research found `cdverify`, a Rust tool whose README says
+  it can "repair them with CTDB parity data" (github.com/neheb/cdverify,
+  read 2026-11-04). Dumbass us: the report looked for one and missed a
+  repository three weeks old.
 - **The lower-speed request went unmet.** The 2026-11-03 reading asked for track 3 at a forced lower
   speed, and no rip of the 2026-11-04 run did it. The first observation above
   asks again.

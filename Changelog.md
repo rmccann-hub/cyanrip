@@ -10,7 +10,9 @@ CTDB's parity. Our drive read track 5 right once, on 2026-10-06, and agreement
 kept the wrong read. The proposal: an AccurateRip stop-and-keep rule in our
 read loop, every distinct read in the log, and three rig observations first;
 CTDB repair is Platterpus's to decide. No public database holds pregaps, and
-the careful readers read raw sub-channel where ours reads formatted Q.
+the careful readers read raw sub-channel where ours reads formatted Q. The
+first draft said no CTDB repair exists outside C#; Platterpus found
+`cdverify`, a Rust one, and the two documents now say so.
 
 **Round 38's Full run is filed and read**: `.29` through Platterpus 0.7.120
 on the reference disc, 2026-11-04 from 12:53:46Z, on our evidence branch at
