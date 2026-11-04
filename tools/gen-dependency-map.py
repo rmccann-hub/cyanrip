@@ -112,7 +112,7 @@ LICENCE_PHRASE = {
 # programs() finds in their subprocess calls; describe() refuses if not.
 PROGRAMS = {
     "git": "reads history: lap commits, ledger publication dates, contract "
-           "and upstream deltas",
+           "and upstream deltas; builds the scratch repositories tests run on",
     "ffmpeg": "makes the disc-image fixtures' audio, decodes rips for "
               "checksums, and measures which covers each muxer keeps",
     "ffprobe": "reads ripped files' tags, durations and encoder strings, as "
@@ -135,7 +135,7 @@ PROGRAMS = {
     "xargs": "asked its version: that check needs GNU xargs, which the "
              "script runs, as MSYS2 has",
     "sh": "runs the session-start hook on scratch repositories, as Claude "
-          "Code runs it",
+          "Code runs it, and the build's own tag script",
     "ruff": "the Python lint gate: Pyflakes's rules over tools/ and tests/, "
             "pinned in CI",
     "valgrind": "memcheck over one rip of the basic image, which sees inside "

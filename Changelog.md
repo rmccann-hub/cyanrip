@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**The build tag names its commit in seven characters, however big the clone.**
+Dumbass us: the tag was `git rev-parse --short HEAD`, which git lengthens as a
+repository grows, and this one grew an eighth character with `.29`. A full
+clone built `platterpus-fork-g8d2ca726` while the release manifest, the
+ledger, our laps and Platterpus's pin all say `8d2ca72`, and Platterpus's
+installer refused the owner's install of `.29` with their 0.7.120 for it
+(platterpus@7fdc33a1). Our own `.29` entry below even records the
+eight-character tag, and our round 38 lap 5 still gave the banner as
+`g8d2ca72`. The build now asks for `--short=7`, which git lengthens only for an
+ambiguous prefix, and a source archive carries the full hash, cut to seven.
+`tests/build_tag.py` runs the build's own tag script in a repository that
+abbreviates at twelve and in one with no git, checks what `git archive` writes,
+and holds this build's banner to `--short=7`; it fails with either half
+reverted. `.29` as released is unchanged. The banner's form is unchanged, and
+its tag is now the seven characters every record already writes.
+
 **Platterpus's round 38 lap 6 is filed**, byte for byte, as released on their
 `main` at `7eba2a0e` (sha256 `581ffb30…`, 8,836 bytes); every intake check
 passes. It is `OPEN`: it accepts our lap 5's pin move to `.29` (S2), names
