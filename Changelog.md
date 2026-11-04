@@ -1,5 +1,22 @@
 Unreleased
 ==========
+**A line the log writes with consecutive calls is one row of the provider
+contract again.** When `46cec2a1` made libcdio's messages print a line at a
+time, so that their values are escaped, it split three lines into an opening
+call, the message and a closing call. Dumbass us then let the generator publish
+the pieces: `.28`'s P2 and P5 list the identify message as `cdio: \"` with a
+lone `\"` two lines down, and the two `cdio error:` lines without their `%s`.
+Platterpus could build no matcher from a one-character row and excluded it
+(their round 37 lap 5 S6). `tools/gen-provider-contract.py` now finds such a
+line by structure: a call that leaves its line open, calls with the same target
+to a function of the same file that writes only values, and a call that ends
+the line. It publishes one row at the first call's site, `cdio: \"%s\"` and
+`cdio error: %s` as `.27` published them, and none for the closing call; P2 and
+P5 each say which rows these are. Nothing the log prints changes.
+`sc_contract_fatal_inventory` checks the rows, at the lines the source puts
+them, and fails nine times on the old generator. Our round 38 lap 1 S4
+announced the identify message; the two `cdio error:` rows go in our next lap.
+
 **Sentences in the open-issue lists that had gone stale are corrected.**
 Dumbass us filed the second Full run of 2026-11-03, whose drive reported 6,720
 failed reads, into `CLAUDE.md` and `STATUS.md` and left

@@ -27,6 +27,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import textwrap
 
 SRC = "src"
 
@@ -608,6 +609,141 @@ def joined(lit):
     return "".join(re.findall(r'"((?:[^"\\]|\\.)*)"', lit))
 
 
+# A LINE WRITTEN BY CONSECUTIVE CALLS IS ONE ROW.
+#
+# `.28`'s P2 and P5 listed libcdio's identify message, on the fatal path at
+# cyanrip_main.c:394-398, as `cdio: \"` and, two lines down, a lone `\"`, with
+# the message between them written by crip_log_library_text(). Platterpus's
+# round 37 lap 5 S6: a consumer that builds a matcher from P5 cannot use a
+# one-character row, which matches any line that starts with a quote, so they
+# excluded it. Every row here is one call site, and the closing quote's call
+# wrote no line of its own: it ended one. `.27` printed each of these lines
+# with one call, `cdio: \"%s\"\n` and `cdio error: %s\n`, until 46cec2a1 wrote
+# the message a line at a time so its values are escaped; the two `cdio
+# error:` lines lost their `%s` the same way, their closing `\n` being no row.
+#
+# Found by structure, not by the wording: a cyanrip_log() whose format leaves
+# its line open, then one or more calls, with the same target, to a function
+# of the same file that writes only values (every format it logs is
+# conversions and line breaks), then a cyanrip_log() to that target whose
+# format ends the line. That is one row at the first call's site, each helper
+# standing as `%s`, and the closing call has no row. A helper with words of
+# its own is not composed, because the row would lack them.
+CONVERSION = re.compile(
+    r'%[-+ #0]*(?:\*|\d+)?(?:\.(?:\*|\d+))?(?:hh|h|ll|l|z|j|t|L)?'
+    r'[diouxXeEfgGcsp%]')
+VALUE_FN_DEF = re.compile(
+    r'^(?:static\s+)?(?:inline\s+)?void\s+(?P<name>[A-Za-z_]\w*)\s*\('
+    r'[^;{]*\)\s*\{', re.M)
+HELPER_CALL = re.compile(
+    r'\s*(?P<fn>[A-Za-z_]\w*)\s*\(\s*(?P<target>[A-Za-z_][A-Za-z0-9_>\-\.]*)'
+    r'\s*,')
+
+
+def _block_end(blank, brace):
+    """Offset just past the brace that closes the one at `brace`, counted in
+    text whose comments and literals are blanked, so a brace in a string
+    does not count."""
+    depth = 0
+    for i in range(brace, len(blank)):
+        if blank[i] == "{":
+            depth += 1
+        elif blank[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return i + 1
+    return len(blank)
+
+
+def value_helpers(text, blank):
+    """{name: spans_lines} for each function defined in `text` that logs and
+    whose every format is conversions and line breaks only: what it writes is
+    a value. spans_lines is true when a format ends a line, so the value can
+    run over several."""
+    out = {}
+    for m in VALUE_FN_DEF.finditer(blank):
+        brace = m.end() - 1
+        body = text[brace:_block_end(blank, brace)]
+        lits = [joined(c.group("lit")) for c in LOGCALL.finditer(body)]
+        if not lits:
+            continue
+        if all(not CONVERSION.sub("", l).replace("\\n", "") for l in lits):
+            out[m.group("name")] = any("\\n" in l for l in lits)
+    return out
+
+
+def continued_lines(text):
+    """{open call's offset: (helper names, closing format, closing call's
+    offset)} for each line this file writes with consecutive calls, as the
+    note above describes."""
+    blank = blank_noncode(text)
+    helpers = value_helpers(text, blank)
+    out = {}
+    if not helpers:
+        return out
+    for m in LOGCALL.finditer(text):
+        if joined(m.group("lit")).endswith("\\n"):
+            continue
+        pos = blank.find(";", m.end()) + 1
+        names = []
+        while pos:
+            h = HELPER_CALL.match(blank, pos)
+            if (not h or h.group("fn") not in helpers
+                    or h.group("target") != m.group("target")):
+                break
+            names.append(h.group("fn"))
+            pos = blank.find(";", h.end()) + 1
+        if not names or not pos:
+            continue
+        c = LOGCALL.match(text, re.compile(r"\s*").match(text, pos).end())
+        if not c or c.group("target") != m.group("target"):
+            continue
+        close = joined(c.group("lit"))
+        if close.endswith("\\n"):
+            out[m.start()] = (names, close, c.start())
+    return out
+
+
+def composed_calls():
+    """[(file, line, [(helper, spans_lines)])] for every line written by
+    consecutive calls, in file order: what P2 and P5 say about such rows."""
+    out = []
+    for name in sorted(os.listdir(SRC)):
+        if not name.endswith((".c", ".h")):
+            continue
+        text = open(os.path.join(SRC, name), encoding="utf-8").read()
+        helpers = value_helpers(text, blank_noncode(text))
+        for start, (names, _close, _c) in sorted(continued_lines(text).items()):
+            out.append((name, text[:start].count("\n") + 1,
+                        [(n, helpers[n]) for n in names]))
+    return out
+
+
+def composed_calls_note():
+    """The lines P2 and P5 print about rows composed from consecutive calls,
+    wrapped as the prose around them is, or none when there are none. Sites
+    whose lines are written by the same helpers share one clause."""
+    rows = composed_calls()
+    if not rows:
+        return []
+    groups = {}
+    for name, line, helpers in rows:
+        groups.setdefault(tuple(helpers), []).append(f"`{name}:{line}`")
+    parts = []
+    for helpers, sites in groups.items():
+        where = (sites[0] if len(sites) == 1
+                 else ", ".join(sites[:-1]) + " and " + sites[-1])
+        hs = " and ".join(f"`{h}()`" for h, _ in helpers)
+        spans = any(s for _, s in helpers)
+        parts.append(f"{where}, whose `%s` is what {hs} writes"
+                     + (", which can run over several lines" if spans else ""))
+    text = ("**A line written by consecutive calls is one row**, at its first "
+            "call's site: " + "; ".join(parts) + ". The call that ends the "
+            "line has no row of its own.")
+    return textwrap.wrap(text, width=79, break_long_words=False,
+                         break_on_hyphens=False)
+
+
 def evidence(text, end, msg):
     """Why this message is believed to be reachable on a failure path.
 
@@ -726,8 +862,15 @@ def collect():
             else:
                 stable.append(rec)
 
+        continued = continued_lines(text)
+        closers = {c for _n, _f, c in continued.values()}
         for m in LOGCALL.finditer(text):
+            if m.start() in closers:
+                continue
             raw = splice_inttypes(text, m.end("lit"), joined(m.group("lit")))
+            if m.start() in continued:
+                names, close, _c = continued[m.start()]
+                raw += "%s" * len(names) + close
             line = text[:m.start()].count("\n") + 1
             to_log = m.group("target") != "NULL"
             s = render_literal(raw)
@@ -1915,6 +2058,11 @@ def emit(binary):
     w("")
     w(f"**{len(seen)} distinct stable lines.**")
     w("")
+    note = composed_calls_note()
+    for s in note:
+        w(s)
+    if note:
+        w("")
     w("Field order within a block is fixed and is part of the contract. The golden")
     w("reference log in the handshake package is the authoritative example.")
     w("")
@@ -2110,6 +2258,11 @@ def emit(binary):
     w("derive error matching rather than guessing prefixes. **P5a below lists strings")
     w("this document does NOT claim are failures**; it is not part of this inventory.")
     w("")
+    note = composed_calls_note()
+    for s in note:
+        w(s)
+    if note:
+        w("")
     w("**Evidence** says why each string is here, and is reported rather than folded")
     w("into a bare verdict so you can see which entries rest on the weaker test:")
     w("")
