@@ -33,6 +33,9 @@ int cyanrip_log_stdout_error(void);
 void cyanrip_log_start_report(cyanrip_ctx *ctx);
 void cyanrip_log_finish_report(cyanrip_ctx *ctx);
 void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t);
+/* The `Gaps:` row of a track whose pregap search found no LSN: `unknown`
+ * with its reason, or, narrowed to one sector, both lengths */
+void cyanrip_log_gap_not_found(cyanrip_ctx *ctx, const cyanrip_track *t);
 
 void cyanrip_set_av_log_capture(cyanrip_ctx *ctx, int enable,
                                 int max_av_lvl);

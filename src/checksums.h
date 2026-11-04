@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <libavutil/crc.h>
+#include <libavutil/mem.h>
 
 #include "cyanrip_main.h"
 
@@ -32,7 +33,32 @@ typedef struct cyanrip_checksum_ctx {
     uint32_t acu_sum_1;
     uint32_t acu_sum_1_450;
     uint32_t acu_sum_2;
+    /* One CRC32 per CRIP_BLOCK_CRC_BYTES of the bytes the EAC CRC32 covers,
+     * written to blk_track as each block ends */
+    cyanrip_track *blk_track;
+    uint32_t blk_crc;
+    int blk_bytes;
 } cyanrip_checksum_ctx;
+
+/* 75 frames, a second of audio: block_crcs' unit */
+#define CRIP_BLOCK_CRC_BYTES (75 * CDIO_CD_FRAMESIZE_RAW)
+
+static inline void crip_block_crc_push(cyanrip_track *t, uint32_t crc)
+{
+    if (t->block_crcs_failed)
+        return;
+    if (t->nb_block_crcs == t->block_crcs_alloc) {
+        const int n = t->block_crcs_alloc ? 2 * t->block_crcs_alloc : 512;
+        uint32_t *g = av_realloc_array(t->block_crcs, n, sizeof(*g));
+        if (!g) {
+            t->block_crcs_failed = 1;
+            return;
+        }
+        t->block_crcs = g;
+        t->block_crcs_alloc = n;
+    }
+    t->block_crcs[t->nb_block_crcs++] = crc;
+}
 
 static inline void crip_init_checksum_ctx(cyanrip_ctx *ctx, cyanrip_checksum_ctx *s, cyanrip_track *t)
 {
@@ -44,8 +70,13 @@ static inline void crip_init_checksum_ctx(cyanrip_ctx *ctx, cyanrip_checksum_ctx
     s->acu_sum_1 = 0x0;
     s->acu_sum_1_450 = 0x0;
     s->acu_sum_2 = 0x0;
+    s->blk_track = t;
+    s->blk_crc = UINT32_MAX;
+    s->blk_bytes = 0;
 
     t->computed_crcs = 0;
+    t->nb_block_crcs = 0;
+    t->block_crcs_failed = 0;
 
     if (t->acurip_track_is_first)
         s->acu_start += (CDIO_CD_FRAMESIZE_RAW * 5) >> 2;
@@ -59,6 +90,19 @@ static inline void crip_process_checksums(cyanrip_checksum_ctx *s, const uint8_t
         return;
 
     s->eac_crc = av_crc(s->eac_ctx, s->eac_crc, data, bytes);
+
+    /* The same bytes, cut at every second of audio */
+    for (int done = 0; done < bytes;) {
+        const int n = FFMIN(bytes - done, CRIP_BLOCK_CRC_BYTES - s->blk_bytes);
+        s->blk_crc = av_crc(s->eac_ctx, s->blk_crc, data + done, n);
+        s->blk_bytes += n;
+        done += n;
+        if (s->blk_bytes == CRIP_BLOCK_CRC_BYTES) {
+            crip_block_crc_push(s->blk_track, s->blk_crc ^ UINT32_MAX);
+            s->blk_crc = UINT32_MAX;
+            s->blk_bytes = 0;
+        }
+    }
 
     /* Loop over samples */
     for (int j = 0; j < (bytes >> 2); j++) {
@@ -84,6 +128,11 @@ static inline void crip_finalize_checksums(cyanrip_checksum_ctx *s, cyanrip_trac
 {
     t->computed_crcs = 1;
     t->eac_crc = s->eac_crc ^ UINT32_MAX;
+    if (s->blk_bytes) {
+        crip_block_crc_push(t, s->blk_crc ^ UINT32_MAX);
+        s->blk_crc = UINT32_MAX;
+        s->blk_bytes = 0;
+    }
     t->acurip_checksum_v1 = s->acu_sum_1;
     t->acurip_checksum_v1_450 = s->acu_sum_1_450;
     t->acurip_checksum_v2 = s->acu_sum_2;

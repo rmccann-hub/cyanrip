@@ -241,7 +241,7 @@ test('Diagnostics record fields', diagrecord_test)
 logrender_test = executable('logrender_test',
     sources: [ 'logrender.c' ],
     include_directories: [ '../src' ],
-    objects: cyanrip_exe.extract_objects([ 'cyanrip_log.c', 'log_escape.c', 'accurip.c', 'drive_caps.c' ]),
+    objects: cyanrip_exe.extract_objects([ 'cyanrip_log.c', 'log_escape.c', 'accurip.c', 'drive_caps.c', 'cue_writer.c' ]),
     dependencies: unit_test_deps + [ dependency('threads'), dependency('libcurl') ],
 )
 test('Log rendering', logrender_test)
@@ -1054,6 +1054,8 @@ rip_scenarios = [
     'bad_sector',
     'p0_bad_sector',
     'repeat_limit',
+    'block_crcs',
+    'block_crcs_kept',
     'repeat_limit_keeps_most_agreed',
     'reread_time_limit',
     'z_extraction_speed',

@@ -3,6 +3,7 @@
 # Usage: rip_images.py <cyanrip-binary> <fixtures-dir> <scenario>
 
 import calendar
+import errno
 import hashlib
 import importlib.util
 import json
@@ -1352,6 +1353,25 @@ def sc_deemph_with_hdcd():
                      f"-H, which deliver different audio. The figure is being "
                      f"measured before the filter graph again")
 
+    # `Filtered:` NAMES THE FILTERS THAT RAN, on every track block, because
+    # the checksums above it are of the read and the file is not (our round
+    # 38 lap 1 S7, Platterpus's lap 2 S4; the review of 2026-11-03, A6). One
+    # line per track, in the order the graph runs them, and none when no
+    # filter ran. Counted against the blocks' own `Accurip:` lines, so a
+    # line printed on some tracks only cannot pass.
+    rip("hb_plain", "basic.cue", "-o", "pcm")
+    tail = "; the checksums and AccurateRip verdicts above are of the read, before the filter"
+    for name, filters in (("hb_hdcd", "hdcd"), ("hb_both", "hdcd, de-emphasis"),
+                          ("hb_emph", "de-emphasis"), ("hb_auto", "hdcd, de-emphasis"),
+                          ("hb_off", "hdcd"), ("hb_plain", None)):
+        f = WORK / f"out_{name}" / "log.log"
+        text = f.read_text(encoding="utf-8") if f.exists() else ""
+        blocks = len(re.findall(r"^  Accurip:       ", text, re.M))
+        got = re.findall(r"^  Filtered:      (.*)$", text, re.M)
+        want = [] if filters is None else [filters + tail] * blocks
+        if not blocks or got != want:
+            fail(f"deemph_with_hdcd: {name}: {blocks} track block(s) and "
+                 f"`Filtered:` lines {got!r}; want {want!r}")
 
 
 def sc_loudness_after_filter():
@@ -3432,9 +3452,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/11":
+        if rec["schema"] != "cyanrip-diagnostics/12":
             fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/11'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/12'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -4895,7 +4915,8 @@ def sc_diagnostics():
     # /10 from round 35 adds paranoia_all_reads and error_positions, checked
     # in sc_bad_sector() and tests/diagrecord.c. /11 from round 36 adds
     # isrc_disc_read and kept_read_began, checked in sc_disc_isrc_line().
-    if d.get("schema") != "cyanrip-diagnostics/11":
+    # /12 from round 38 adds block_crcs, checked in sc_block_crcs().
+    if d.get("schema") != "cyanrip-diagnostics/12":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
@@ -5940,6 +5961,13 @@ def sc_interrupt():
         # names, and the partial file checked on disk: the line names a file,
         # so the file is the artifact to assert against.
         text = log.read_text(encoding="utf-8")
+        # A cancel is not a ripping error: the image reads without one, so
+        # the count is 0. It was 1 until `.29`, the interrupted track itself
+        # (our round 38 lap 1 S6 (c), Platterpus's lap 2 S3).
+        errs = re.findall(r"^Ripping errors: .*$", text, re.M)
+        if errs != ["Ripping errors: 0"]:
+            fail(f"interrupt/{name}: {errs!r}; a cancel with no failed read "
+                 f"is not a ripping error")
         enc = re.findall(r"^Encoder errors: .*$", text, re.M)
         if enc != ["Encoder errors: not applicable; no whole track was encoded"]:
             fail(f"interrupt/{name}: {enc!r}; no track's read completed, so "
@@ -8436,6 +8464,17 @@ def sc_repeat_limit():
         if not re.search(r"(?m)^Ripping errors: 0$", text):
             fail(f"repeat_limit: cycle {cycle} run {run}: `Ripping errors:` should "
                  f"stay 0, so the limit is the only reason for the arm")
+        # `Ripping errors: 0` is true of the drive and says nothing about a
+        # track whose reads never agreed, so the line directly above it does
+        # (our round 38 lap 1 S5, Platterpus's lap 2 S2): by position, since
+        # the lines below `Encoder errors:` are claimed by their rule.
+        at = next((i for i, ln in enumerate(lines)
+                   if ln.startswith("Ripping errors:")), None)
+        want = "Secure re-reads: 1 track did not converge (track 1)"
+        if at is None or at == 0 or lines[at - 1] != want:
+            got = lines[at - 1] if at else None
+            fail(f"repeat_limit: cycle {cycle} run {run}: the line above "
+                 f"`Ripping errors:` is {got!r}, not {want!r}")
 
 
 def _flip_crc(v, flip=100, sec=2352, sectors=300):
@@ -8446,6 +8485,102 @@ def _flip_crc(v, flip=100, sec=2352, sectors=300):
     b = bytearray((FIX / "cdda.bin").read_bytes()[:sectors * sec])
     b[flip * sec] ^= v
     return f"{zlib.crc32(b) & 0xFFFFFFFF:08X}"
+
+
+def _block_crcs_check(label, out, rec_path):
+    """Each track's block_crcs against the PCM file the rip wrote, recomputed
+    here with zlib: the record's own eac_crc is held to the same file first,
+    so the bytes compared are the ones the record says it checksummed."""
+    import zlib
+    b = 75 * 2352
+    try:
+        rec = json.loads(rec_path.read_text(encoding="utf-8"))
+        states = rec["rip"]["track_state"]
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        fail(f"{label}: no record to read: {e}")
+        return []
+    lens = []
+    for tr in states:
+        f = out / f"{tr['number']}.pcm"
+        if not f.exists():
+            continue
+        data = f.read_bytes()
+        whole = f"{zlib.crc32(data) & 0xFFFFFFFF:08X}"
+        want = [f"{zlib.crc32(data[i:i + b]) & 0xFFFFFFFF:08X}"
+                for i in range(0, len(data), b)]
+        if tr.get("eac_crc") != whole:
+            fail(f"{label}: track {tr['number']}: eac_crc {tr.get('eac_crc')!r} "
+                 f"is not the file's CRC32 {whole}, so the bytes differ")
+        elif tr.get("block_crcs") != want:
+            fail(f"{label}: track {tr['number']}: block_crcs "
+                 f"{tr.get('block_crcs')!r}, want {want!r}")
+        lens.append((len(data) // b, len(data) % b))
+    return lens
+
+
+def sc_block_crcs():
+    """THE RECORD'S block_crcs ARE A CRC32 PER SECOND OF THE READ WRITTEN.
+
+    Our round 38 lap 1 S10, which Platterpus's lap 2 S7 accepted: one entry
+    per 75 frames of the bytes the EAC CRC32 covers, the last over what
+    remains, as 8-digit hex strings. Every fixture's tracks are whole
+    seconds, so this cue starts track 2 at 00:02:37 and track 1 ends on a
+    37-frame entry. Recomputed from the PCM files with zlib, which shares no
+    code with src/checksums.h.
+    """
+    # libcdio's bincue driver opens the BIN named after the cue, not the
+    # one its FILE line names, so the image is copied to match.
+    shutil.copyfile(WORK / "basic.bin", WORK / "blockcrc.bin")
+    cue = WORK / "blockcrc.cue"
+    cue.write_text('FILE "blockcrc.bin" BINARY\n  TRACK 01 AUDIO\n    INDEX 01 00:00:00\n'
+                   '  TRACK 02 AUDIO\n    INDEX 01 00:02:37\n', encoding="utf-8")
+    out, rec = WORK / "out_blockcrc", WORK / "blockcrc.json"
+    ec, _ = crip("-d", cue, "-N", "-A", "-U", "-s", "0", "-P", "0", "-o", "pcm",
+                 "-D", out, "-F", "{track}", "-L", "log", "--diagnostics", rec)
+    if ec != 0:
+        fail(f"block_crcs: cyanrip exited {ec}")
+        return
+    lens = _block_crcs_check("block_crcs", out, rec)
+    if sorted(lens) != [(2, 37 * 2352), (5, 38 * 2352)]:
+        fail(f"block_crcs: the tracks are {lens} whole seconds and remainders, "
+             "not track 1's 2 s and 37 frames and track 2's 5 s and 38 frames, "
+             "so the cue did not cut the disc as this test assumes")
+
+
+def sc_block_crcs_kept():
+    """UNDER -Z, block_crcs ARE THE KEPT READ'S, NOT THE LAST READ'S.
+
+    tests/badsector.c's flip mode with sc_repeat_limit's run 2 schedule
+    reads track 1 as v1, v1, v2 at sector 100: the limit keeps v1, and v2,
+    the last read, differs in the block holding sector 100. The record must
+    match the file, which holds v1.
+    """
+    needs_preload_shim("block_crcs_kept")
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"block_crcs_kept: the shim was not built or not passed ({shim!r})")
+        return
+    out, rec = WORK / "out_blockcrc_kept", WORK / "blockcrc_kept.json"
+    count = WORK / "blockcrc_kept.count"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+               CRIP_FLIP_SECTOR="100", CRIP_FLIP_CYCLE="2", CRIP_FLIP_RUN="2",
+               CRIP_FLIP_OUT=str(count),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-Z", "2", "-r", "3", "-l", "1", "-o", "pcm", "-D", out,
+                 "-F", "{track}", "-L", "log", "--diagnostics", rec, env=env)
+    if ec != 0:
+        fail(f"block_crcs_kept: cyanrip exited {ec}")
+        return
+    text = (out / "log.log").read_text(errors="replace", encoding="utf-8") \
+        if (out / "log.log").exists() else ""
+    if f"last read {_flip_crc(2)}, not kept" not in text:
+        fail("block_crcs_kept: the rip did not keep a read other than the "
+             "last, so this test compares nothing it is meant to")
+        return
+    if not _block_crcs_check("block_crcs_kept", out, rec):
+        fail("block_crcs_kept: no track's file to compare")
 
 
 def sc_reread_time_limit():
@@ -8736,6 +8871,16 @@ def sc_drive_answers_as_answers():
         if ec != 74 or said != [line]:
             fail(f"drive_answers_as_answers: (d) answer {answer}: exit {ec}, "
                  f"lines {said}; want 74 and [{line!r}]")
+        # The stop's `Error ripping:` names an I/O error, not the bad
+        # argument it named until `.29` (Platterpus's round 38 lap 2 S12:
+        # their run of 2026-11-03 lost its drive and read `Invalid
+        # argument`). The text is the C library's, so it is read from it.
+        errs = [ln.strip() for ln in out.splitlines()
+                if ln.startswith("Error ripping: ")]
+        want = f"Error ripping: {os.strerror(errno.EIO)}"
+        if errs != [want]:
+            fail(f"drive_answers_as_answers: (d) answer {answer}: "
+                 f"`Error ripping:` lines {errs}; want [{want!r}]")
 
 
 def sc_unknown_pregap_reasons_agree():
@@ -8753,15 +8898,16 @@ def sc_unknown_pregap_reasons_agree():
     literal strings, and holds them to each other and to the agreed words.
     """
     log_c = (ROOT / "src" / "cyanrip_log.c").read_text(encoding="utf-8")
-    main_c = (ROOT / "src" / "cyanrip_main.c").read_text(encoding="utf-8")
     block = {}
     for src, reason in re.findall(r'pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+)\) \{'
                                   r'(?:[^{}]*?)"    Pregap LSN:  unknown \(([^)]+)\)\\n"',
                                   log_c, re.S):
         block[src] = reason
-    m = re.search(r'"    pregap of track %i unknown \(%s\)\\n", ct->number,\s*'
-                  r'ct->pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+) \?\s*'
-                  r'"([^"]+)" : "([^"]+)"\)', main_c)
+    # The `Gaps:` row is cyanrip_log_gap_not_found()'s since `.29`, in the
+    # same file as the block, so tests/logrender.c can render it.
+    m = re.search(r'"    pregap of track %i unknown \(%s\)\\n", t->number,\s*'
+                  r't->pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+) \?\s*'
+                  r'"([^"]+)" : "([^"]+)"\)', log_c)
     if len(block) != 2 or not m:
         fail(f"unknown_pregap_reasons_agree: found {len(block)} track-block "
              f"reasons and {'a' if m else 'no'} Gaps: line in the source, so "

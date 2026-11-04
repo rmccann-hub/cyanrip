@@ -78,6 +78,7 @@
 #include "fun512.h"
 #include "stall_watchdog.h"
 #include "accurip.h"
+#include "cue_writer.h"
 
 static int failures;
 static char captured[65536];
@@ -101,10 +102,16 @@ const char *cyanrip_fmt_desc(enum cyanrip_output_formats format)
     return "STUB-FORMAT";
 }
 
+/* A track file's name while a cue sheet test sets one; NULL otherwise, as
+ * every other caller here has always had */
+static const char *stub_track_path = NULL;
+
 char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
                     const cyanrip_out_fmt *fmt, void *arg)
 {
-    (void)ctx; (void)type; (void)create_dirs; (void)fmt; (void)arg;
+    (void)ctx; (void)create_dirs; (void)fmt; (void)arg;
+    if (stub_track_path && type == CRIP_PATH_TRACK)
+        return av_strdup(stub_track_path);
     return NULL;
 }
 
@@ -150,6 +157,8 @@ static cyanrip_ctx *new_ctx(void)
         exit(1);
     }
     ctx->settings.outputs_num = 1;
+    /* Every track asked, as main() leaves it without -l */
+    ctx->settings.rip_indices_count = -1;
     ctx->logfile[0] = tmpfile();
     if (!ctx->logfile[0]) {
         printf("FAIL: could not open a tmpfile to capture the log\n");
@@ -990,6 +999,122 @@ static void test_pregap_search_line(void)
     }
 }
 
+/* A search narrowed to one sector without deciding it prints both lengths,
+ * in the track block and the `Gaps:` row, and the cue sheet takes the
+ * earlier bound for INDEX 00: our round 38 lap 1 S8, which Platterpus's lap 2
+ * S5 accepted, with their S8 (c)'s answer for `Pregap LSN:` and `Gaps:`. The
+ * numbers are the reference disc's track 9 since `.27`: LSN 145567 left
+ * between bounds 145566 and 145568, INDEX 01 at 145662. A stretch of two
+ * sectors stays `unknown`. No image reaches either: its sub-channel is
+ * unreadable. */
+static void test_pregap_undecided(void)
+{
+    const struct {
+        lsn_t left, right;
+        enum cyanrip_pregap_source src;
+        const char *block1, *block2, *gap;
+        lsn_t cue;
+    } cases[] = {
+        { 145566, 145568, CYANRIP_PREGAP_SRC_ERR_CRC,
+          "    Pregap LSN:  145567 or 145568 (undecided)",
+          "    Pregap length: 94 or 95 frames (undecided)",
+          "    pregap of track 9: 94 or 95 frames (undecided)", 145567 },
+        { 145565, 145568, CYANRIP_PREGAP_SRC_ERR_CRC,
+          "    Pregap LSN:  unknown (sub-channel search bounds did not meet)", NULL,
+          "    pregap of track 9 unknown (sub-channel search bounds did not meet)",
+          CDIO_INVALID_LSN },
+        { 145566, 145568, CYANRIP_PREGAP_SRC_ERR_READ,
+          "    Pregap LSN:  unknown (sub-channel unreadable)", NULL,
+          "    pregap of track 9 unknown (sub-channel unreadable)", CDIO_INVALID_LSN },
+    };
+
+    for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
+        cyanrip_ctx *ctx = new_ctx();
+        cyanrip_track t;
+        base_track(&t);
+        t.number = 9;
+        t.pregap_source = cases[i].src;
+        t.pregap_lsn = t.pregap_lsn_second = CDIO_INVALID_LSN;
+        t.merged_pregap_end = t.dropped_pregap_start = CDIO_INVALID_LSN;
+        t.start_lsn = t.start_lsn_sig = 145662;
+        t.pregap_stats = (struct cyanrip_pregap_stats){ .searched = 1, .asked = 412,
+                                                        .left = cases[i].left,
+                                                        .right = cases[i].right };
+
+        cyanrip_log_track_end(ctx, &t);
+        const char *out = drain(ctx);
+        expect_line(out, cases[i].block1, "pregap/undecided block");
+        if (cases[i].block2)
+            expect_line(out, cases[i].block2, "pregap/undecided length");
+        else if (strstr(out, "Pregap length:"))
+            FAIL("pregap/undecided: case %zu printed a length for no pregap", i);
+
+        cyanrip_log_gap_not_found(ctx, &t);
+        expect_line(drain(ctx), cases[i].gap, "pregap/undecided Gaps row");
+
+        /* INDEX 00 at the earlier bound, into the previous track's file,
+         * which the TOC leaves the pregap at: B frames before INDEX 01 */
+        if (crip_cue_pregap_lsn(&t) != cases[i].cue)
+            FAIL("pregap/undecided cue: case %zu places INDEX 00 at %i, not %i",
+                 i, (int)crip_cue_pregap_lsn(&t), (int)cases[i].cue);
+        if (cases[i].cue != CDIO_INVALID_LSN &&
+            (!crip_track_has_appended_pregap(crip_cue_pregap_lsn(&t), t.start_lsn_sig,
+                                             t.dropped_pregap_start, t.merged_pregap_end,
+                                             1, 1) ||
+             t.start_lsn_sig - crip_cue_pregap_lsn(&t) != 95))
+            FAIL("pregap/undecided cue: case %zu writes no INDEX 00 95 frames before "
+                 "INDEX 01", i);
+        free_ctx(ctx);
+    }
+}
+
+/* The cue sheet itself, through cyanrip_cue_track(): an undecided pregap's
+ * INDEX 00 is the earlier bound, under the previous track's FILE, the
+ * longer length before INDEX 01 (our round 38 lap 1 S8, Platterpus's lap 2
+ * S5). Track 8 starts at LSN 130000, so 145567 is 15567 frames into its
+ * file, 03:27:42. Before `.29` the track had no INDEX 00. */
+static void test_cue_undecided_pregap(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    ctx->cuefile[0] = tmpfile();
+    if (!ctx->cuefile[0]) {
+        FAIL("cue/undecided: no tmpfile");
+        free_ctx(ctx);
+        return;
+    }
+    cyanrip_track pt, t;
+    base_track(&pt);
+    base_track(&t);
+    pt.number = 8;
+    pt.start_lsn = pt.start_lsn_sig = 130000;
+    pt.frames = 145662 - 130000;
+    pt.cue_file_written = 1;
+    t.number = 9;
+    t.pt = &pt;
+    t.pregap_source = CYANRIP_PREGAP_SRC_ERR_CRC;
+    t.pregap_lsn = t.pregap_lsn_second = CDIO_INVALID_LSN;
+    t.merged_pregap_end = t.dropped_pregap_start = CDIO_INVALID_LSN;
+    t.start_lsn = t.start_lsn_sig = 145662;
+    t.pregap_stats = (struct cyanrip_pregap_stats){ .searched = 1, .asked = 412,
+                                                    .left = 145566, .right = 145568 };
+
+    stub_track_path = "09.flac";
+    cyanrip_cue_track(ctx, &t);
+    stub_track_path = NULL;
+
+    char cue[1024] = { 0 };
+    rewind(ctx->cuefile[0]);
+    size_t n = fread(cue, 1, sizeof(cue) - 1, ctx->cuefile[0]);
+    cue[n] = '\0';
+    const char *want = "  TRACK 09 AUDIO\n    INDEX 00 03:27:42\n"
+                       "FILE \"09.flac\" WAVE\n    INDEX 01 00:00:00\n";
+    if (strcmp(cue, want))
+        FAIL("cue/undecided: the cue reads\n%s\nnot\n%s", cue, want);
+    fclose(ctx->cuefile[0]);
+    ctx->cuefile[0] = NULL;
+    free_ctx(ctx);
+}
+
 /* =====================================================================
  * Pre-emphasis, and the two independent flags that can de-emphasise.
  * cyanrip_log.c:410 [|| to &&] survived: the fixture with pre-emphasis is
@@ -1420,6 +1545,100 @@ static void test_disc_tally_counts_audio_tracks_only(void)
     const char *out = drain(ctx);
     expect_line(out, "Tracks ripped accurately: 1/2", "disc-tally/data-track exact");
     expect_line(out, "Tracks matched on one frame only: 1/2", "disc-tally/data-track partial");
+    free_ctx(ctx);
+}
+
+/* The tallies divide by the audio tracks the run asked for, and -f prints
+ * neither: our round 38 lap 1 S6 (a) and (b), which Platterpus's lap 2 S3
+ * accepted. Before `.29`, `-l 2` on this disc printed `1/3` over the one
+ * track it read and matched, and an offset search printed a tally of tracks
+ * no rip read. */
+/* `Secure re-reads:` under -Z, directly above `Ripping errors:`: our round
+ * 38 lap 1 S5, which Platterpus's lap 2 S2 accepted. Every arm: tracks that
+ * did not converge, named in one and in several; every track converged; a
+ * rip that stopped with none named, which prints nothing because `every
+ * track converged` would be false of the track it stopped in; and no -Z. */
+static void secure_rereads_case(const int *states, const int *ripped, int n,
+                                int retries, const char *want, const char *what)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, n);
+    ctx->settings.ripping_retries = retries;
+    for (int i = 0; i < n; i++) {
+        ctx->tracks[i].secure_rip_state = states[i];
+        ctx->tracks[i].audio_ripped = ripped[i];
+    }
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    const char *at = strstr(out, "\nRipping errors: ");
+    const char *line = strstr(out, "Secure re-reads:");
+    if (!want) {
+        if (line)
+            FAIL("%s: printed a `Secure re-reads:` line", what);
+    } else if (!at || !line) {
+        FAIL("%s: no `Secure re-reads:` line, or no `Ripping errors:`", what);
+    } else {
+        /* The line, whole, ends where `Ripping errors:` begins */
+        size_t len = strlen(want);
+        if (strncmp(line, want, len) || line + len != at)
+            FAIL("%s: want `%s` directly above `Ripping errors:`", what, want);
+    }
+    free_ctx(ctx);
+}
+
+static void test_secure_rereads_line(void)
+{
+    const int C = CYANRIP_SECURE_RIP_CONVERGED, L = CYANRIP_SECURE_RIP_LIMIT_HIT,
+              T = CYANRIP_SECURE_RIP_TIME_LIMIT, N = CYANRIP_SECURE_RIP_NA;
+    const int all[3] = { 1, 1, 1 };
+    secure_rereads_case((int[]){ C, L, T }, all, 3, 2,
+                        "Secure re-reads: 2 tracks did not converge (tracks 2, 3)",
+                        "secure-rereads/two");
+    secure_rereads_case((int[]){ C, L, C }, all, 3, 2,
+                        "Secure re-reads: 1 track did not converge (track 2)",
+                        "secure-rereads/one");
+    secure_rereads_case((int[]){ C, C, C }, all, 3, 2,
+                        "Secure re-reads: every track converged",
+                        "secure-rereads/all");
+    secure_rereads_case((int[]){ C, C, N }, (int[]){ 1, 1, 0 }, 3, 2, NULL,
+                        "secure-rereads/stopped with none named");
+    secure_rereads_case((int[]){ C, L, N }, (int[]){ 1, 1, 0 }, 3, 2,
+                        "Secure re-reads: 1 track did not converge (track 2)",
+                        "secure-rereads/stopped with one named");
+    secure_rereads_case((int[]){ N, N, N }, all, 3, 0, NULL,
+                        "secure-rereads/no -Z");
+}
+
+static void test_disc_tally_counts_tracks_asked(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 3);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 8, .checksum = 0x11111111 };
+    for (int i = 0; i < 3; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+        t->ar_db_entries = ar_entries;
+        t->ar_db_nb_entries = 1;
+        t->ar_db_max_confidence = 8;
+        t->audio_ripped = (i == 1);
+    }
+    ctx->tracks[1].acurip_checksum_v1 = 0x11111111;
+    ctx->settings.rip_indices_count = 1;
+    ctx->settings.rip_indices[0] = 2;
+
+    cyanrip_log_finish_report(ctx);
+    expect_line(drain(ctx), "Tracks ripped accurately: 1/1", "disc-tally/-l 2");
+
+    /* The same disc under -f, which reads no track to rip it */
+    ctx->settings.rip_indices_count = -1;
+    ctx->not_a_rip = CRIP_OFFSET_SEARCH_ONLY;
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    if (strstr(out, "Tracks ripped accurately:") ||
+        strstr(out, "Tracks matched on one frame only:"))
+        FAIL("disc-tally/-f: an offset search printed an AccurateRip tally");
+    expect_line(out, "Rip completed:  no (offset search only, 0 of 3 tracks)",
+                "disc-tally/-f footer");
     free_ctx(ctx);
 }
 
@@ -1959,6 +2178,8 @@ int main(void)
     test_pregap_reasons_are_distinct();
     test_pregap_two_searches();
     test_pregap_search_line();
+    test_pregap_undecided();
+    test_cue_undecided_pregap();
     test_merged_pregap_counts_to_index_01();
     test_track_one_counts_from_disc_start();
 
@@ -1976,6 +2197,8 @@ int main(void)
 
     test_disc_tally_counts_over_one_population();
     test_disc_tally_counts_audio_tracks_only();
+    test_disc_tally_counts_tracks_asked();
+    test_secure_rereads_line();
     test_disc_tally_ignores_a_zero_450_checksum();
     test_disc_tally_matches_the_per_track_450_gate();
     test_disc_tally_skips_tracks_not_in_the_database();

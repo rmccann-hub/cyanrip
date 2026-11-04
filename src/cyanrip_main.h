@@ -407,6 +407,15 @@ typedef struct cyanrip_track {
 
     int computed_crcs;
     uint32_t eac_crc;
+    /* The EAC CRC32's algorithm over each 75 frames of the same bytes, a
+     * second of audio, the last over what remains; for the --diagnostics
+     * record's block_crcs (our round 38 lap 1 S10, which Platterpus's lap 2
+     * S7 accepted). Rewritten by each checksum pass, so the kept read's are
+     * what stays. block_crcs_failed: memory for one could not be had. */
+    uint32_t *block_crcs;
+    int nb_block_crcs;
+    int block_crcs_alloc;
+    int block_crcs_failed;
     int edc_sectors; /* Data track sectors with an EDC to check */
     int edc_errors; /* Of those, the ones that never matched it */
     uint32_t acurip_checksum_v1;
@@ -705,6 +714,22 @@ int crip_is_integer(const char *src);
  * rip and after one -- which matters because -J writes a cue sheet without
  * ever building a decode context, and a predicate keyed on what the graph did
  * would flip FLAGS PRE between a cue-only run and a real one. */
+/* The earlier of the two sectors a pregap may start at, when a sub-channel
+ * search's bounds narrowed to one sector without deciding it: that sector,
+ * or the one after it. CDIO_INVALID_LSN for every other outcome, a wider
+ * undecided stretch included, which stays `unknown`. The reference disc's
+ * track 9 has ended here since `.27`, LSN 145567 undecided between 95 and 94
+ * frames. Our round 38 lap 1 S8, which Platterpus's lap 2 S5 accepted: the
+ * pregap is printed as both lengths, never as either, and the cue sheet's
+ * INDEX 00 goes at this, the earlier bound. */
+static inline lsn_t crip_pregap_undecided_lsn(const cyanrip_track *t)
+{
+    if (t->pregap_source != CYANRIP_PREGAP_SRC_ERR_CRC || !t->pregap_stats.searched ||
+        t->pregap_stats.right - t->pregap_stats.left != 2)
+        return CDIO_INVALID_LSN;
+    return t->pregap_stats.left + 1;
+}
+
 static inline int crip_deemphasis_active(const cyanrip_ctx *ctx,
                                          const cyanrip_track *t)
 {
@@ -747,6 +772,20 @@ extern const int crip_max_paranoia_level;
  * securing pass that re-reads exactly those tracks
  * (platterpus@bd508bf1:src/platterpus/workers/rip_worker.py:2536 and 1905).
  * Which way it should go is put to them in round 30 lap 9. */
+/* Whether the run asked for this track: every track without -l, otherwise
+ * the tracks -l names. The footer's AccurateRip tallies divide by the audio
+ * tracks this is true of (our round 38 lap 1 S6 (a), which Platterpus's lap 2
+ * S3 accepted), and crip_track_written() starts from it. */
+static inline int crip_track_asked(const cyanrip_ctx *ctx, const cyanrip_track *t)
+{
+    if (ctx->settings.rip_indices_count == -1)
+        return 1;
+    for (int i = 0; i < ctx->settings.rip_indices_count; i++)
+        if (ctx->settings.rip_indices[i] == t->number)
+            return 1;
+    return 0;
+}
+
 static inline uint64_t crip_ripping_errors(const cyanrip_ctx *ctx)
 {
     return (uint64_t)ctx->total_error_count + ctx->paranoia_skips;

@@ -159,6 +159,7 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
     av_dict_free(&t->cdtext);
     av_freep(&t->isrc_disc);
     av_freep(&t->isrc_disc_reason_owned);
+    av_freep(&t->block_crcs);
     crip_error_pos_free(t);
     av_free(t->ar_db_entries);
     av_free(t->acoustid_fingerprint);
@@ -1453,12 +1454,12 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
         if (changed > 0) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
             ctx->exit_class = CRIP_EXIT_IOERR;
-            ret = AVERROR(EINVAL);
+            ret = AVERROR(EIO);
             goto end;
         } else if (changed < 0) {
             cyanrip_log(ctx, 0, "\nDrive media change query failed (libcdio error %i), stopping!\n", changed);
             ctx->exit_class = CRIP_EXIT_IOERR;
-            ret = AVERROR(EINVAL);
+            ret = AVERROR(EIO);
             goto end;
         }
 
@@ -1699,17 +1700,22 @@ repeat_ripping:;
 
     /* Read the actual CD data */
     for (int i = 0; i < frames; i++) {
-        /* Detect disc removals */
+        /* Detect disc removals. Each stop returns EIO, which the caller's
+         * `Error ripping:` line prints: until `.29` it was EINVAL, and a
+         * drive lost mid-rip read `Error ripping: Invalid argument`, a bad
+         * argument nobody passed (Platterpus's round 38 lap 2 S12, on the
+         * run of 2026-11-03 from 23:05Z). The data-track loop's stops are
+         * the same. */
         const int changed = get_media_changed(ctx);
         if (changed > 0) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
             ctx->exit_class = CRIP_EXIT_IOERR;
-            ret = AVERROR(EINVAL);
+            ret = AVERROR(EIO);
             goto fail;
         } else if (changed < 0) {
             cyanrip_log(ctx, 0, "\nDrive media change query failed (libcdio error %i), stopping!\n", changed);
             ctx->exit_class = CRIP_EXIT_IOERR;
-            ret = AVERROR(EINVAL);
+            ret = AVERROR(EIO);
             goto fail;
         }
 
@@ -2187,7 +2193,15 @@ end:
         t->audio_ripped = 1;
         ctx->tracks_completed++;
         ctx->track_read_incomplete = 0;
-    } else {
+    } else if (ret) {
+        /* A track that did not finish is a ripping error when something
+         * failed it. One a cancel stopped, with nothing failed, is not: it
+         * added one here until `.29`, so every interrupted rip read
+         * `Ripping errors: 1` over reads that had all succeeded. The cancel
+         * is reported by `Rip completed:  no (interrupted by ...)` and
+         * `Partial files:`, and a read error inside the track still counts
+         * where it happened. Our round 38 lap 1 S6 (c), which Platterpus's
+         * lap 2 S3 accepted: nothing of theirs relied on the one. */
         ctx->total_error_count++;
     }
 
@@ -2321,12 +2335,7 @@ static int crip_track_written(cyanrip_ctx *ctx, const cyanrip_track *t)
         return 0;
     if (t->track_is_data && ctx->settings.disable_data_tracks)
         return 0;
-    if (ctx->settings.rip_indices_count == -1)
-        return 1;
-    for (int i = 0; i < ctx->settings.rip_indices_count; i++)
-        if (ctx->settings.rip_indices[i] == t->number)
-            return 1;
-    return 0;
+    return crip_track_asked(ctx, t);
 }
 
 /* Every path component a tag value is part of that was shortened to fit 255
@@ -2441,19 +2450,11 @@ static void setup_track_offsets_and_report(cyanrip_ctx *ctx)
         cyanrip_track *ct = &ctx->tracks[i - 0];
         cyanrip_track *lt = i ? &ctx->tracks[i - 1] : NULL;
 
-        /* A search that failed has no LSN either, and skipping it silently
-         * made the list's silence read as no pregap: a rip of selected tracks
-         * prints only their blocks, so for every other track this list is
-         * the only record, and with every search failed it said `None
-         * signalled`. Found in round 30 lap 15 (S10); this wording is round
-         * 31 lap 1 S27's, which Platterpus's lap 2 S15 accepted and their
-         * 0.7.101 reads. Its reason is the track block's, in the same words. */
+        /* A search that failed: its row, cyanrip_log_gap_not_found() */
         if (ct->pregap_lsn == CDIO_INVALID_LSN &&
             (ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ ||
              ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_CRC)) {
-            cyanrip_log(ctx, 0, "    pregap of track %i unknown (%s)\n", ct->number,
-                        ct->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ ?
-                        "sub-channel unreadable" : "sub-channel search bounds did not meet");
+            cyanrip_log_gap_not_found(ctx, ct);
             gaps++;
             continue;
         }

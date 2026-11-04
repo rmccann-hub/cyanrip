@@ -163,6 +163,16 @@ wording, and the `unknown`'s reason renamed `sub-channel search bounds did not
 meet` (`b675efd`), went to Platterpus in our round 37 lap 1 S5 and S6; their
 lap 2 S3 and S4 accepted both as given, and both shipped in `.28`.
 
+**For `.29`, not yet released, the one undecided sector is printed as such.**
+Where the bounds narrowed to one sector, the track block says `Pregap LSN:
+145567 or 145568 (undecided)` and `Pregap length: 94 or 95 frames
+(undecided)`, the `Gaps:` row `pregap of track 9: 94 or 95 frames
+(undecided)`, and the cue sheet places `INDEX 00` at the earlier bound, as our
+round 38 lap 1 S8 proposed and Platterpus's lap 2 S5 accepted; a wider
+stretch stays `unknown`. `tests/logrender.c` holds the block, the row and the
+cue on track 9's own numbers, and fails with the fix reverted. Which of the
+two the disc has, only the drive can say, and this entry stays until it does.
+
 ### Four drive answers the log states that are libcdio's defaults or its failure (fixed for `.28`)
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.3**,
@@ -300,7 +310,7 @@ with the image's bytes; with the fix reverted it fails two checks.
 whether a pressed CD-Extra's TOC matches the image's, are unknown here. Listed
 in `STATUS.md`'s `hardware-unverified`.
 
-### `-H` on a disc without HDCD delivers a file 6.02 dB quieter, beside checksums of the read
+### `-H` on a disc without HDCD delivers a file 6.02 dB quieter, beside checksums of the read (the line fixed for `.29`)
 
 **Measured on a drive 2026-10-06** (`docs/rig-2026-10-06-5704062/README.md`,
 -6.5 against -0.5 dBFS) **and raised again by the review of 2026-11-03 (A6)**,
@@ -330,7 +340,16 @@ saying when a filter changed the delivered audio, which is new log text and
 goes in a lap first (round 38). Compensating the level is not offered: whether
 the disc carried HDCD is known only when the graph is freed, after encoding.
 
-### `Ripping errors:` leaves out a `-Z` track whose re-reads never agreed
+**The line is fixed for `.29`, not yet released**: each track block a filter
+ran on says `  Filtered:      hdcd; the checksums and AccurateRip verdicts
+above are of the read, before the filter`, with `de-emphasis` or both, in the
+order the graph runs them, joined by `, `, as our round 38 lap 1 S7 proposed
+and Platterpus's lap 2 S4 accepted. `sc_deemph_with_hdcd` checks every
+combination on every block and a plain rip's absence, and fails with the
+line removed or joined otherwise. The level itself stays as libavfilter
+leaves it, and this entry stays until a decision on that.
+
+### `Ripping errors:` leaves out a `-Z` track whose re-reads never agreed (fixed for `.29`)
 
 **Found by the review of 2026-11-03 (A5)**, in that night's secure re-read
 (`-Z 2 -r 5`): track 3 read five times to four checksums, the block printed
@@ -351,7 +370,17 @@ reported. Proposed in a lap first (round 38): a third part of the suffix, for
 example `(including 1 track whose re-reads never agreed)`, which their
 parser must accept before it ships.
 
-### The footer's tallies count the whole disc under `-l` and `-f`, and a cancel as an error
+**Fixed for `.29`, not yet released**, by a line of its own and not the
+suffix: under `-Z`, directly above `Ripping errors:`, `Secure re-reads: N
+track(s) did not converge (track(s) T)` or `Secure re-reads: every track
+converged`, as our round 38 lap 1 S5 proposed and Platterpus's lap 2 S2
+accepted; `Ripping errors:` keeps its count. A rip that stopped with no track
+named prints no line, a case lap 1 did not cover, which our lap 3 gives them.
+`tests/logrender.c` holds every arm and `sc_repeat_limit` the line on a rip,
+by position; each fails with the fix reverted. It leaves this file once
+`.29` ships.
+
+### The footer's tallies count the whole disc under `-l` and `-f`, and a cancel as an error (fixed for `.29`)
 
 **Found by the review of 2026-11-03 (B5)**: `-f` prints
 `Tracks ripped accurately: 0/14`, `-l 1` prints `1/14`, and a rip cancelled by
@@ -362,8 +391,12 @@ now in `docs/history/KNOWN-ISSUES-2026-11-04.md`), not the tracks asked for.
 **What it costs**: a partial rip reads as a mostly failed one, and a cancel as
 a read error.
 
-**Not fixed**: both are lines Platterpus parses; the wordings go in a lap
-first (round 38), counting against the tracks asked and a cancel as a cancel.
+**Fixed for `.29`, not yet released**, as our round 38 lap 1 S6 proposed and
+Platterpus's lap 2 S3 accepted as given: the tallies divide by the audio
+tracks the run asked for and `-f` prints neither (`27d1c048`,
+`tests/logrender.c`); a track a cancel stopped with nothing failed adds
+nothing to `Ripping errors:` (`sc_interrupt`). Each test fails on its fix
+reverted. It leaves this file once `.29` ships.
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 

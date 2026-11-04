@@ -286,6 +286,59 @@ static void append_track(char *buf, size_t size, int *len, int *truncated,
         *len += n;
 }
 
+/* `Secure re-reads:`, under -Z only, directly above `Ripping errors:` (the
+ * lines below `Encoder errors:` are claimed by Platterpus's not-written-whole
+ * rule). Our round 38 lap 1 S5, which their lap 2 S2 accepted.
+ *
+ * `Ripping errors:` counts what the drive and paranoia reported, and a track
+ * whose re-reads never agreed reported nothing to either: before this line,
+ * a -Z rip that kept a read at its repeat limit could end on `Ripping errors:
+ * 0` with nothing at disc level saying a track had not converged (the review
+ * of 2026-11-03, A5). The count stays as it is, so their read-speed ladder,
+ * which takes it less the skips as the drive's, is not moved by a
+ * disagreement no drive reported.
+ *
+ * Over the audio tracks the run asked for and read to the end, each of
+ * whose blocks carries its own `Done;` line: a track at its repeat limit or
+ * time limit is named; `every track converged` only when every asked audio
+ * track finished and converged. A rip that stopped with none named prints no
+ * line, because that sentence would be false of the track it stopped in, and
+ * `Rip completed:` and `Partial files:` say what stopped. At most 99 tracks
+ * joined by ", " fill 394 bytes, so the list is never cut. */
+static void print_secure_reread_summary(cyanrip_ctx *ctx)
+{
+    char tracks[512];
+    int len = 0, truncated = 0, nb_asked = 0, nb_converged = 0, nb_failed = 0;
+
+    if (!ctx->settings.ripping_retries)
+        return;
+    tracks[0] = '\0';
+    for (int i = 0; i < ctx->nb_tracks; i++) {
+        const cyanrip_track *t = &ctx->tracks[i];
+        if (t->track_is_data || !crip_track_asked(ctx, t))
+            continue;
+        nb_asked++;
+        if (!t->audio_ripped)
+            continue;
+        if (t->secure_rip_state == CYANRIP_SECURE_RIP_CONVERGED) {
+            nb_converged++;
+        } else if (t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT ||
+                   t->secure_rip_state == CYANRIP_SECURE_RIP_TIME_LIMIT) {
+            nb_failed++;
+            append_track(tracks, sizeof(tracks), &len, &truncated, t->number);
+        }
+    }
+
+    if (nb_failed)
+        cyanrip_log(ctx, 0, "Secure re-reads: %i track%s did not converge "
+                            "(track%s %s%s)\n",
+                    nb_failed, nb_failed == 1 ? "" : "s",
+                    nb_failed == 1 ? "" : "s",
+                    tracks, truncated ? ", list truncated" : "");
+    else if (nb_asked && nb_converged == nb_asked)
+        cyanrip_log(ctx, 0, "Secure re-reads: every track converged\n");
+}
+
 static void print_encode_failure_summary(cyanrip_ctx *ctx)
 {
     char tracks[512], partial[512];
@@ -452,7 +505,23 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
          * words over a record in which no sector failed its CRC (our round 36
          * lap 16 S9). The `Gaps:` list gives the same words, which
          * sc_unknown_pregap_reasons_agree() holds. */
-        cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel search bounds did not meet)\n");
+        const lsn_t undecided = crip_pregap_undecided_lsn(t);
+        if (undecided == CDIO_INVALID_LSN)
+            cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel search bounds did not meet)\n");
+        else {
+            /* Narrowed to one sector and not decided: the pregap starts at
+             * it or at the next, so both, and the shorter length first. It
+             * read `unknown` with the reason above, while `Pregap search:`
+             * named the one sector left (our round 38 lap 1 S8,
+             * which Platterpus's lap 2 S5 accepted; their S8 (c) asked what
+             * this line prints). Counted to INDEX 01, as the known case is:
+             * no action moved a pregap nobody found. */
+            const lsn_t end = t->start_lsn_sig;
+            cyanrip_log(ctx, 0, "    Pregap LSN:  %i or %i (undecided)\n",
+                        undecided, undecided + 1);
+            cyanrip_log(ctx, 0, "    Pregap length: %i or %i frames (undecided)\n",
+                        end - (undecided + 1), end - undecided);
+        }
     } else {
         cyanrip_log(ctx, 0, "    Pregap LSN:  none\n");
     }
@@ -543,6 +612,32 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
     if (t->overread_frames)
         cyanrip_log(ctx, 0, "    Beyond disc: %i of %i frames refused (written as silence)\n",
                     t->overread_refused, t->overread_frames);
+}
+
+void cyanrip_log_gap_not_found(cyanrip_ctx *ctx, const cyanrip_track *t)
+{
+    /* A search that failed has no LSN either, and skipping it silently
+     * made the list's silence read as no pregap: a rip of selected tracks
+     * prints only their blocks, so for every other track this list is
+     * the only record, and with every search failed it said `None
+     * signalled`. Found in round 30 lap 15 (S10); this wording is round
+     * 31 lap 1 S27's, which Platterpus's lap 2 S15 accepted and their
+     * 0.7.101 reads. Its reason is the track block's, in the same words.
+     *
+     * Narrowed to one sector, it gives both lengths as the track block does,
+     * counted to the same INDEX 01 (our round 38 lap 1 S8; Platterpus's lap
+     * 2 S8 (c) asked what this row prints). Here since `.29`, from
+     * cyanrip_main.c, so tests/logrender.c can build the state no image
+     * reaches: an image's sub-channel is unreadable. */
+    const lsn_t undecided = crip_pregap_undecided_lsn(t);
+    if (undecided != CDIO_INVALID_LSN)
+        cyanrip_log(ctx, 0, "    pregap of track %i: %i or %i frames (undecided)\n",
+                    t->number, t->start_lsn_sig - (undecided + 1),
+                    t->start_lsn_sig - undecided);
+    else
+        cyanrip_log(ctx, 0, "    pregap of track %i unknown (%s)\n", t->number,
+                    t->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ ?
+                    "sub-channel unreadable" : "sub-channel search bounds did not meet");
 }
 
 void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
@@ -842,6 +937,24 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                 cyanrip_log(ctx, 0, "\n");
             }
         }
+
+        /* WHEN A FILTER CHANGED THE AUDIO WRITTEN, the lines above describe
+         * a different signal from the file's. Every checksum and AccurateRip
+         * verdict is of the read, before the filter graph; -H's hdcd puts
+         * each 16-bit sample into s32 shifted by 15, so on a disc without
+         * HDCD the file is 6.02 dB quieter than the read the checksums
+         * matched (our round 37 lap 7 S4), and de-emphasis changes every
+         * sample. Nothing in the block said so (the review of 2026-11-03,
+         * A6). The filters are named in the order they run, hdcd first,
+         * joined by ", ". Our round 38 lap 1 S7, which Platterpus's lap 2 S4
+         * accepted; not printed when no filter ran on the track. */
+        const int hdcd = ctx->settings.decode_hdcd;
+        const int deemph = crip_deemphasis_active(ctx, t);
+        if (!t->track_is_data && (hdcd || deemph))
+            cyanrip_log(ctx, 0, "  Filtered:      %s%s%s; the checksums and AccurateRip "
+                                "verdicts above are of the read, before the filter\n",
+                        hdcd ? "hdcd" : "", hdcd && deemph ? ", " : "",
+                        deemph ? "de-emphasis" : "");
     }
 
     cyanrip_log(ctx, 0, "\n  Metadata:\n");
@@ -1194,7 +1307,11 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
      * and this does nothing. */
     crip_early_flush(ctx);
 
-    if (ctx->ar_db_status == CYANRIP_ACCUDB_FOUND) {
+    /* Not under -f, which reads to search for an offset and rips nothing, so
+     * a tally there counted tracks no rip read (our round 38 lap 1 S6 (b),
+     * which Platterpus's lap 2 S3 accepted). */
+    if (ctx->ar_db_status == CYANRIP_ACCUDB_FOUND &&
+        ctx->not_a_rip != CRIP_OFFSET_SEARCH_ONLY) {
         int accurip_verified = 0;
         int accurip_partial = 0;
         for (int i = 0; i < ctx->nb_tracks; i++) {
@@ -1250,12 +1367,19 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
          * gets an AccurateRip status and so never reaches the numerator: a
          * mixed disc whose audio all verified read `2/3`. Asked by
          * Platterpus's round 36 lap 3 S8; our lap 5 S4 proposed this and
-         * their lap 6 S2 accepted it as given. A rip of some tracks with -l
-         * still divides by the disc's count, so the lines stay counts over
-         * the disc. Upstream's footer is the same. */
+         * their lap 6 S2 accepted it as given.
+         *
+         * And only the audio tracks the run asked for: every track, or the
+         * ones -l names. It divided by the disc's audio tracks whatever -l
+         * said, so `-l 1` printed `1/14` over a rip that read one track and
+         * matched it (our round 38 lap 1 S6 (a), which Platterpus's lap 2 S3
+         * accepted: nothing of theirs read the denominator as the disc). An
+         * aborted rip still divides by what was asked. Upstream divides by
+         * the disc. */
         int nb_audio = 0;
         for (int i = 0; i < ctx->nb_tracks; i++)
-            nb_audio += !ctx->tracks[i].track_is_data;
+            nb_audio += !ctx->tracks[i].track_is_data &&
+                        crip_track_asked(ctx, &ctx->tracks[i]);
         cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, nb_audio);
         if (accurip_partial)
             cyanrip_log(ctx, 0, "Tracks matched on one frame only: %i/%i\n",
@@ -1276,6 +1400,7 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
      * disc block's `SKIP:` directly above. The leading count is unchanged in
      * form, and Platterpus's pattern is a prefix match
      * (platterpus@bd508bf1:src/platterpus/parsers/cyanrip_log.py:542, 2470). */
+    print_secure_reread_summary(ctx);
     if (ctx->paranoia_skips)
         cyanrip_log(ctx, 0, "Ripping errors: %" PRIu64 " (including %" PRIu64 " paranoia skip%s)\n",
                     crip_ripping_errors(ctx), ctx->paranoia_skips,

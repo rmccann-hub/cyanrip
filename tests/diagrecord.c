@@ -164,6 +164,7 @@ static void free_ctx(cyanrip_ctx *ctx)
         av_dict_free(&ctx->tracks[i].cdtext);
         av_freep(&ctx->tracks[i].isrc_disc);
         crip_error_pos_free(&ctx->tracks[i]);
+        av_freep(&ctx->tracks[i].block_crcs);
     }
     av_dict_free(&ctx->cdtext);
     free(ctx);
@@ -218,42 +219,42 @@ static void test_track_fields(void)
     if (!out)
         return;
 
-    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/11\""),
-          "the schema is not cyanrip-diagnostics/11");
+    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/12\""),
+          "the schema is not cyanrip-diagnostics/12");
 
     expect_line(out, "{\"number\":1,\"cd_track\":1,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":\"AA\\\"BB\\\\CC\",\"isrc_disc\":\"ZZZZZ9999999\","
-                     "\"isrc_disc_reason\":null,\"isrc_disc_read\":\"q frames\",\"kept_read_began\":\"2027-01-15T08:00:00Z\",\"encode_failures\":1,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 1");
+                     "\"isrc_disc_reason\":null,\"isrc_disc_read\":\"q frames\",\"kept_read_began\":\"2027-01-15T08:00:00Z\",\"block_crcs\":null,\"encode_failures\":1,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 1");
     expect_line(out, "{\"number\":2,\"cd_track\":2,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"subcode\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"libcdio returned none\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}",
+                     "\"isrc_disc_reason\":\"libcdio returned none\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}",
                 "track 2");
     expect_line(out, "{\"number\":3,\"cd_track\":3,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"toc\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"libcdio returned an empty ISRC\","
-                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 3");
+                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 3");
     expect_line(out, "{\"number\":4,\"cd_track\":4,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":true,"
                      "\"preemphasis\":null,\"deemphasis_applied\":null,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"data track\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 4");
+                     "\"isrc_disc_reason\":\"data track\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 4");
     expect_line(out, "{\"number\":5,\"cd_track\":5,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":null,\"deemphasis_applied\":null,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"not read\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 5");
+                     "\"isrc_disc_reason\":\"not read\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 5");
     expect_line(out, "{\"number\":6,\"cd_track\":6,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"the driver does not report reading ISRC\","
-                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 6");
+                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 6");
 
     /* No CD-TEXT and no -f: the absent arm names what libcdio reported, every
      * key is still written, and offset_search is null, not an object. */
@@ -283,7 +284,7 @@ static void test_deemphasis_forced(void)
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":null,\"isrc_disc_read\":null,\"kept_read_began\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "forced");
+                     "\"isrc_disc_reason\":null,\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "forced");
     free(out);
 }
 
@@ -309,7 +310,45 @@ static void test_isrc_disc_malformed(void)
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":null,\"isrc_disc\":\"1234567890AB\","
                      "\"isrc_disc_reason\":\"not an ISO 3901 code, so not used\","
-                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "malformed");
+                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "malformed");
+    free(out);
+}
+
+/* /12's block_crcs (our round 38 lap 1 S10, Platterpus's lap 2 S7): the
+ * per-second CRCs as 8-digit hex strings, in order, for a finished read;
+ * null as a whole when memory for them could not be had, as eac_crc is null
+ * where no read finished. */
+static void test_block_crcs(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    for (int i = 0; i < 2; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->audio_ripped = 1;
+        t->computed_crcs = 1;
+        t->eac_crc = 0xCAFEF00D;
+        t->block_crcs = av_malloc_array(2, sizeof(*t->block_crcs));
+        if (!t->block_crcs) {
+            free_ctx(ctx);
+            CHECK(0, "out of memory");
+            return;
+        }
+        t->block_crcs[0] = 0x0000ABCD;
+        t->block_crcs[1] = 0x12345678;
+        t->nb_block_crcs = 2;
+    }
+    ctx->tracks[1].block_crcs_failed = 1;
+    ctx->nb_tracks = 2;
+
+    char *out = write_record(ctx, "diagrecord_block_crcs.json");
+    free_ctx(ctx);
+    if (!out)
+        return;
+    CHECK(strstr(out, "\"eac_crc\":\"CAFEF00D\""), "no eac_crc for the finished read");
+    CHECK(strstr(out, "\"block_crcs\":[\"0000ABCD\",\"12345678\"]"),
+          "track 1's block_crcs are not its two CRCs, in order, as hex strings");
+    const char *two = strstr(out, "{\"number\":2,");
+    CHECK(two && strstr(two, "\"block_crcs\":null"),
+          "track 2's block_crcs are not null after memory failed");
     free(out);
 }
 
@@ -508,6 +547,7 @@ int main(void)
     test_track_fields();
     test_deemphasis_forced();
     test_isrc_disc_malformed();
+    test_block_crcs();
     test_cdtext_present();
     test_offset_search();
     test_error_positions();
