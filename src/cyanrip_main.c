@@ -1453,12 +1453,12 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
         if (changed > 0) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
             ctx->exit_class = CRIP_EXIT_IOERR;
-            ret = AVERROR(EINVAL);
+            ret = AVERROR(EIO);
             goto end;
         } else if (changed < 0) {
             cyanrip_log(ctx, 0, "\nDrive media change query failed (libcdio error %i), stopping!\n", changed);
             ctx->exit_class = CRIP_EXIT_IOERR;
-            ret = AVERROR(EINVAL);
+            ret = AVERROR(EIO);
             goto end;
         }
 
@@ -1699,17 +1699,22 @@ repeat_ripping:;
 
     /* Read the actual CD data */
     for (int i = 0; i < frames; i++) {
-        /* Detect disc removals */
+        /* Detect disc removals. Each stop returns EIO, which the caller's
+         * `Error ripping:` line prints: until `.29` it was EINVAL, and a
+         * drive lost mid-rip read `Error ripping: Invalid argument`, a bad
+         * argument nobody passed (Platterpus's round 38 lap 2 S12, on the
+         * run of 2026-11-03 from 23:05Z). The data-track loop's stops are
+         * the same. */
         const int changed = get_media_changed(ctx);
         if (changed > 0) {
             cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
             ctx->exit_class = CRIP_EXIT_IOERR;
-            ret = AVERROR(EINVAL);
+            ret = AVERROR(EIO);
             goto fail;
         } else if (changed < 0) {
             cyanrip_log(ctx, 0, "\nDrive media change query failed (libcdio error %i), stopping!\n", changed);
             ctx->exit_class = CRIP_EXIT_IOERR;
-            ret = AVERROR(EINVAL);
+            ret = AVERROR(EIO);
             goto fail;
         }
 

@@ -3,6 +3,7 @@
 # Usage: rip_images.py <cyanrip-binary> <fixtures-dir> <scenario>
 
 import calendar
+import errno
 import hashlib
 import importlib.util
 import json
@@ -8736,6 +8737,16 @@ def sc_drive_answers_as_answers():
         if ec != 74 or said != [line]:
             fail(f"drive_answers_as_answers: (d) answer {answer}: exit {ec}, "
                  f"lines {said}; want 74 and [{line!r}]")
+        # The stop's `Error ripping:` names an I/O error, not the bad
+        # argument it named until `.29` (Platterpus's round 38 lap 2 S12:
+        # their run of 2026-11-03 lost its drive and read `Invalid
+        # argument`). The text is the C library's, so it is read from it.
+        errs = [ln.strip() for ln in out.splitlines()
+                if ln.startswith("Error ripping: ")]
+        want = f"Error ripping: {os.strerror(errno.EIO)}"
+        if errs != [want]:
+            fail(f"drive_answers_as_answers: (d) answer {answer}: "
+                 f"`Error ripping:` lines {errs}; want [{want!r}]")
 
 
 def sc_unknown_pregap_reasons_agree():

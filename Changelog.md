@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**A drive lost mid-rip says `Error ripping: Input/output error`.** Dumbass us
+returned `EINVAL` from the stop that follows `Drive media changed, stopping!`
+and `Drive media change query failed (libcdio error N), stopping!`, so the run
+of 2026-11-03 from 23:05Z, whose drive failed, ended its log on `Error
+ripping: Invalid argument`, a bad argument nobody passed; Platterpus's round
+38 lap 2 S12 pointed at it. Each of the four stops returns `EIO` now; the exit
+code stays 74. `sc_drive_answers_as_answers` (d) checks the line on both of
+the audio loop's stops against the C library's own text, and fails on the old
+code; the data-track loop's two stops are the same change, and no image
+reaches them. Only the value after `Error ripping:` changes.
+
 **Platterpus's round 38 lap 2 is filed**, byte for byte, as released on their
 `main` at `a96a547f` (sha256 `e7e2378d…`, 14,221 bytes); every intake check
 passes. It is `OPEN`: it accepts our lap 1's S5 to S10, each read by their
