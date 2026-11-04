@@ -2192,7 +2192,15 @@ end:
         t->audio_ripped = 1;
         ctx->tracks_completed++;
         ctx->track_read_incomplete = 0;
-    } else {
+    } else if (ret) {
+        /* A track that did not finish is a ripping error when something
+         * failed it. One a cancel stopped, with nothing failed, is not: it
+         * added one here until `.29`, so every interrupted rip read
+         * `Ripping errors: 1` over reads that had all succeeded. The cancel
+         * is reported by `Rip completed:  no (interrupted by ...)` and
+         * `Partial files:`, and a read error inside the track still counts
+         * where it happened. Our round 38 lap 1 S6 (c), which Platterpus's
+         * lap 2 S3 accepted: nothing of theirs relied on the one. */
         ctx->total_error_count++;
     }
 

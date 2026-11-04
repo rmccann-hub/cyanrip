@@ -5941,6 +5941,13 @@ def sc_interrupt():
         # names, and the partial file checked on disk: the line names a file,
         # so the file is the artifact to assert against.
         text = log.read_text(encoding="utf-8")
+        # A cancel is not a ripping error: the image reads without one, so
+        # the count is 0. It was 1 until `.29`, the interrupted track itself
+        # (our round 38 lap 1 S6 (c), Platterpus's lap 2 S3).
+        errs = re.findall(r"^Ripping errors: .*$", text, re.M)
+        if errs != ["Ripping errors: 0"]:
+            fail(f"interrupt/{name}: {errs!r}; a cancel with no failed read "
+                 f"is not a ripping error")
         enc = re.findall(r"^Encoder errors: .*$", text, re.M)
         if enc != ["Encoder errors: not applicable; no whole track was encoded"]:
             fail(f"interrupt/{name}: {enc!r}; no track's read completed, so "

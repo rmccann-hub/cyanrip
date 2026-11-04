@@ -351,7 +351,7 @@ reported. Proposed in a lap first (round 38): a third part of the suffix, for
 example `(including 1 track whose re-reads never agreed)`, which their
 parser must accept before it ships.
 
-### The footer's tallies count the whole disc under `-l` and `-f`, and a cancel as an error
+### The footer's tallies count the whole disc under `-l` and `-f`, and a cancel as an error (fixed for `.29`)
 
 **Found by the review of 2026-11-03 (B5)**: `-f` prints
 `Tracks ripped accurately: 0/14`, `-l 1` prints `1/14`, and a rip cancelled by
@@ -362,8 +362,12 @@ now in `docs/history/KNOWN-ISSUES-2026-11-04.md`), not the tracks asked for.
 **What it costs**: a partial rip reads as a mostly failed one, and a cancel as
 a read error.
 
-**Not fixed**: both are lines Platterpus parses; the wordings go in a lap
-first (round 38), counting against the tracks asked and a cancel as a cancel.
+**Fixed for `.29`, not yet released**, as our round 38 lap 1 S6 proposed and
+Platterpus's lap 2 S3 accepted as given: the tallies divide by the audio
+tracks the run asked for and `-f` prints neither (`27d1c048`,
+`tests/logrender.c`); a track a cancel stopped with nothing failed adds
+nothing to `Ripping errors:` (`sc_interrupt`). Each test fails on its fix
+reverted. It leaves this file once `.29` ships.
 
 ### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
 

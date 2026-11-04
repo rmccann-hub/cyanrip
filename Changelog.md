@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**A cancel is not a ripping error.** A track that did not finish added one to
+`Ripping errors:` whatever stopped it, so every interrupted rip read `Ripping
+errors: 1` over reads that had all succeeded. It adds one only when something
+failed the track; the cancel is reported by `Rip completed:  no (interrupted
+by ...)` and `Partial files:`, and a read error inside the track still counts.
+Our round 38 lap 1 S6 (c), accepted as given in Platterpus's lap 2 S3.
+`sc_interrupt` checks `Ripping errors: 0` after each of three signals, and
+fails on the old code. `docs/KNOWN-ISSUES.md`'s B5 entry says fixed for `.29`.
+
 **The footer's AccurateRip tallies count the tracks the run asked for, and `-f`
 prints neither.** `Tracks ripped accurately:` and `Tracks matched on one frame
 only:` divided by the disc's audio tracks whatever `-l` said, so `-l 1` printed
