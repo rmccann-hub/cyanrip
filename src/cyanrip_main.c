@@ -159,6 +159,7 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
     av_dict_free(&t->cdtext);
     av_freep(&t->isrc_disc);
     av_freep(&t->isrc_disc_reason_owned);
+    av_freep(&t->block_crcs);
     crip_error_pos_free(t);
     av_free(t->ar_db_entries);
     av_free(t->acoustid_fingerprint);

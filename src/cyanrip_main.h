@@ -407,6 +407,15 @@ typedef struct cyanrip_track {
 
     int computed_crcs;
     uint32_t eac_crc;
+    /* The EAC CRC32's algorithm over each 75 frames of the same bytes, a
+     * second of audio, the last over what remains; for the --diagnostics
+     * record's block_crcs (our round 38 lap 1 S10, which Platterpus's lap 2
+     * S7 accepted). Rewritten by each checksum pass, so the kept read's are
+     * what stays. block_crcs_failed: memory for one could not be had. */
+    uint32_t *block_crcs;
+    int nb_block_crcs;
+    int block_crcs_alloc;
+    int block_crcs_failed;
     int edc_sectors; /* Data track sectors with an EDC to check */
     int edc_errors; /* Of those, the ones that never matched it */
     uint32_t acurip_checksum_v1;

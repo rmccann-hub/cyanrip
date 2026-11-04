@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**The `--diagnostics` record gives a CRC32 per second of each track's kept
+read, and moves to `/12`.** Per track, `block_crcs` lists the EAC CRC32's
+algorithm over each 75 frames of the bytes `eac_crc` covers, the read after
+offset correction and before any filter, as 8-digit hex strings; the last
+covers what remains. Under `-Z` they are the kept read's. They are null where
+`eac_crc` is, and as a whole if memory for them could not be had; no entry is
+left out on its own. So two rips of one track can be compared region by
+region without the audio, which the run of 2026-11-03 needed to place track
+3's wrong reads. Our round 38 lap 1 S10, which Platterpus's lap 2 S7 accepted;
+the entry's form answers their S8 (d) in our lap 3. `sc_block_crcs`
+recomputes every entry with zlib from the PCM files over a cue whose tracks
+end mid-second, `sc_block_crcs_kept` does so for a `-Z` rip that keeps a read
+other than the last, and `tests/diagrecord.c` holds the JSON; dropping the
+short entry, keeping a previous pass's entries, or writing null each fails one
+of them.
+
 **A track block says when a filter changed the audio written.** `-H` puts each
 16-bit sample into s32 shifted by 15, so on a disc without HDCD the file is
 6.02 dB quieter than the read its checksums and AccurateRip verdicts describe,

@@ -3452,9 +3452,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/11":
+        if rec["schema"] != "cyanrip-diagnostics/12":
             fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/11'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/12'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -4915,7 +4915,8 @@ def sc_diagnostics():
     # /10 from round 35 adds paranoia_all_reads and error_positions, checked
     # in sc_bad_sector() and tests/diagrecord.c. /11 from round 36 adds
     # isrc_disc_read and kept_read_began, checked in sc_disc_isrc_line().
-    if d.get("schema") != "cyanrip-diagnostics/11":
+    # /12 from round 38 adds block_crcs, checked in sc_block_crcs().
+    if d.get("schema") != "cyanrip-diagnostics/12":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
@@ -8484,6 +8485,102 @@ def _flip_crc(v, flip=100, sec=2352, sectors=300):
     b = bytearray((FIX / "cdda.bin").read_bytes()[:sectors * sec])
     b[flip * sec] ^= v
     return f"{zlib.crc32(b) & 0xFFFFFFFF:08X}"
+
+
+def _block_crcs_check(label, out, rec_path):
+    """Each track's block_crcs against the PCM file the rip wrote, recomputed
+    here with zlib: the record's own eac_crc is held to the same file first,
+    so the bytes compared are the ones the record says it checksummed."""
+    import zlib
+    b = 75 * 2352
+    try:
+        rec = json.loads(rec_path.read_text(encoding="utf-8"))
+        states = rec["rip"]["track_state"]
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        fail(f"{label}: no record to read: {e}")
+        return []
+    lens = []
+    for tr in states:
+        f = out / f"{tr['number']}.pcm"
+        if not f.exists():
+            continue
+        data = f.read_bytes()
+        whole = f"{zlib.crc32(data) & 0xFFFFFFFF:08X}"
+        want = [f"{zlib.crc32(data[i:i + b]) & 0xFFFFFFFF:08X}"
+                for i in range(0, len(data), b)]
+        if tr.get("eac_crc") != whole:
+            fail(f"{label}: track {tr['number']}: eac_crc {tr.get('eac_crc')!r} "
+                 f"is not the file's CRC32 {whole}, so the bytes differ")
+        elif tr.get("block_crcs") != want:
+            fail(f"{label}: track {tr['number']}: block_crcs "
+                 f"{tr.get('block_crcs')!r}, want {want!r}")
+        lens.append((len(data) // b, len(data) % b))
+    return lens
+
+
+def sc_block_crcs():
+    """THE RECORD'S block_crcs ARE A CRC32 PER SECOND OF THE READ WRITTEN.
+
+    Our round 38 lap 1 S10, which Platterpus's lap 2 S7 accepted: one entry
+    per 75 frames of the bytes the EAC CRC32 covers, the last over what
+    remains, as 8-digit hex strings. Every fixture's tracks are whole
+    seconds, so this cue starts track 2 at 00:02:37 and track 1 ends on a
+    37-frame entry. Recomputed from the PCM files with zlib, which shares no
+    code with src/checksums.h.
+    """
+    # libcdio's bincue driver opens the BIN named after the cue, not the
+    # one its FILE line names, so the image is copied to match.
+    shutil.copyfile(WORK / "basic.bin", WORK / "blockcrc.bin")
+    cue = WORK / "blockcrc.cue"
+    cue.write_text('FILE "blockcrc.bin" BINARY\n  TRACK 01 AUDIO\n    INDEX 01 00:00:00\n'
+                   '  TRACK 02 AUDIO\n    INDEX 01 00:02:37\n', encoding="utf-8")
+    out, rec = WORK / "out_blockcrc", WORK / "blockcrc.json"
+    ec, _ = crip("-d", cue, "-N", "-A", "-U", "-s", "0", "-P", "0", "-o", "pcm",
+                 "-D", out, "-F", "{track}", "-L", "log", "--diagnostics", rec)
+    if ec != 0:
+        fail(f"block_crcs: cyanrip exited {ec}")
+        return
+    lens = _block_crcs_check("block_crcs", out, rec)
+    if sorted(lens) != [(2, 37 * 2352), (5, 38 * 2352)]:
+        fail(f"block_crcs: the tracks are {lens} whole seconds and remainders, "
+             "not track 1's 2 s and 37 frames and track 2's 5 s and 38 frames, "
+             "so the cue did not cut the disc as this test assumes")
+
+
+def sc_block_crcs_kept():
+    """UNDER -Z, block_crcs ARE THE KEPT READ'S, NOT THE LAST READ'S.
+
+    tests/badsector.c's flip mode with sc_repeat_limit's run 2 schedule
+    reads track 1 as v1, v1, v2 at sector 100: the limit keeps v1, and v2,
+    the last read, differs in the block holding sector 100. The record must
+    match the file, which holds v1.
+    """
+    needs_preload_shim("block_crcs_kept")
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"block_crcs_kept: the shim was not built or not passed ({shim!r})")
+        return
+    out, rec = WORK / "out_blockcrc_kept", WORK / "blockcrc_kept.json"
+    count = WORK / "blockcrc_kept.count"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+               CRIP_FLIP_SECTOR="100", CRIP_FLIP_CYCLE="2", CRIP_FLIP_RUN="2",
+               CRIP_FLIP_OUT=str(count),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-Z", "2", "-r", "3", "-l", "1", "-o", "pcm", "-D", out,
+                 "-F", "{track}", "-L", "log", "--diagnostics", rec, env=env)
+    if ec != 0:
+        fail(f"block_crcs_kept: cyanrip exited {ec}")
+        return
+    text = (out / "log.log").read_text(errors="replace", encoding="utf-8") \
+        if (out / "log.log").exists() else ""
+    if f"last read {_flip_crc(2)}, not kept" not in text:
+        fail("block_crcs_kept: the rip did not keep a read other than the "
+             "last, so this test compares nothing it is meant to")
+        return
+    if not _block_crcs_check("block_crcs_kept", out, rec):
+        fail("block_crcs_kept: no track's file to compare")
 
 
 def sc_reread_time_limit():

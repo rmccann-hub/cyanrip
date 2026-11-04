@@ -1054,6 +1054,8 @@ rip_scenarios = [
     'bad_sector',
     'p0_bad_sector',
     'repeat_limit',
+    'block_crcs',
+    'block_crcs_kept',
     'repeat_limit_keeps_most_agreed',
     'reread_time_limit',
     'z_extraction_speed',

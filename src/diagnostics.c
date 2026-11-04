@@ -460,6 +460,27 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
                                           !crip_iso8601_utc(began, sizeof(began),
                                                             t->kept_read_began) ?
                                           began : NULL);
+                /* /12. A CRC32 per 75 frames of the read the files carry, a
+                 * second of audio, so two rips of a track can be compared
+                 * region by region without the audio (our round 38 lap 1 S10,
+                 * which Platterpus's lap 2 S7 accepted; the 2026-11-03 run
+                 * needed it to place track 3's wrong reads). Each entry is the
+                 * EAC CRC32's algorithm, written as eac_crc is, an 8-digit hex
+                 * string, over the same bytes: the read after offset
+                 * correction, before any filter. The last covers what
+                 * remains, fewer than 75 frames unless the track is a whole
+                 * number of seconds. Under -Z they are the kept read's. null
+                 * where eac_crc is, and as a whole if memory for them could
+                 * not be had; no entry is ever left out on its own. */
+                av_bprintf(&b, ",\"block_crcs\":");
+                if (t->audio_ripped && t->computed_crcs && !t->block_crcs_failed) {
+                    av_bprintf(&b, "[");
+                    for (int j = 0; j < t->nb_block_crcs; j++)
+                        av_bprintf(&b, "%s\"%08X\"", j ? "," : "", t->block_crcs[j]);
+                    av_bprintf(&b, "]");
+                } else {
+                    av_bprintf(&b, "null");
+                }
 
                 /* The count behind the footer's `Encoder errors:` (Platterpus's
                  * F5, accepted as an addition to S10). */
@@ -646,8 +667,12 @@ void crip_diag_write(void)
      * /11 ADDS per track isrc_disc_read and kept_read_began, round 36 (our
      * lap 4 S12 and S13, lap 7 S15 and lap 10 S12; Platterpus's lap 3 S5 and
      * S6 and lap 11 S7, whose 0.7.113 reads both). Additions; the version
-     * moves for the same reason. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/11\",\n");
+     * moves for the same reason.
+     *
+     * /12 ADDS per track block_crcs, round 38 (our lap 1 S10, Platterpus's
+     * lap 2 S7, whose readers match the cyanrip-diagnostics/ prefix and not
+     * the number). An addition; the version moves for the same reason. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/12\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
