@@ -853,6 +853,48 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
         break;
     }
 
+    /* EVERY OTHER DISTINCT READ OF A -Z TRACK, AND WHERE IT DIFFERS (round 38;
+     * Platterpus's docs/eac-parity.md Part G.5 asks for a line when a read of
+     * a second disagrees with the kept one). One line per read that was not
+     * kept: its EAC CRC32, how many reads gave it, the seconds of the track
+     * whose per-second CRCs differ from the kept read's, counted from 0 with
+     * their mm:ss, the first 8 named and the rest counted, and the file
+     * --keep-every-read saved it to. A read whose per-second CRCs could not be
+     * kept says so instead of naming seconds. One call per line, so the
+     * contract row is whole. */
+    const crip_read *kr = NULL;
+    for (int i = 0; i < t->nb_reads; i++)
+        if (t->reads[i].kept)
+            kr = &t->reads[i];
+    for (int i = 0; kr && i < t->nb_reads; i++) {
+        const crip_read *r = &t->reads[i];
+        if (r->kept)
+            continue;
+        AVBPrint where;
+        av_bprint_init(&where, 0, AV_BPRINT_SIZE_UNLIMITED);
+        if (!r->block_crcs || !kr->block_crcs || r->nb_block_crcs != kr->nb_block_crcs) {
+            av_bprintf(&where, "differs from the kept read; which seconds is not known (per-second CRCs not kept)");
+        } else {
+            int nb = 0;
+            for (int j = 0; j < r->nb_block_crcs; j++)
+                nb += r->block_crcs[j] != kr->block_crcs[j];
+            av_bprintf(&where, "differs from the kept read in second%s ", nb == 1 ? "" : "s");
+            for (int j = 0, shown = 0; j < r->nb_block_crcs && shown < 8; j++) {
+                if (r->block_crcs[j] == kr->block_crcs[j])
+                    continue;
+                av_bprintf(&where, "%s%i (%02i:%02i)", shown ? ", " : "", j, j / 60, j % 60);
+                shown++;
+            }
+            if (nb > 8)
+                av_bprintf(&where, ", and %i more", nb - 8);
+        }
+        cyanrip_log(ctx, 0, "  Other read:      %08X, read %i time%s, %s%s%s\n",
+                    r->crc, r->count, r->count == 1 ? "" : "s",
+                    av_bprint_is_complete(&where) ? where.str : "",
+                    r->file ? "; saved as " : "", r->file ? r->file : "");
+        av_bprint_finalize(&where, NULL);
+    }
+
     cyanrip_log(ctx, 0, "  Accurip:       %s",
                 ctx->settings.disable_accurip ? "disabled" :
                 has_ar ? "disc found in database" : "not found");

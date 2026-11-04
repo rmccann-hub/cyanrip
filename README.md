@@ -152,6 +152,7 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -Z `int`             | Rips tracks until their checksums match `<int>` number of times. For very damaged CDs. Refused when `-r` is too small to ever allow it (fork, `.19`) |
 | --prefer-accuraterip-match | At the `-Z` repeat limit, keep the read AccurateRip matches at the highest confidence over the read made most often; with no match the rule is unchanged (fork) |
 | --reread-time-limit `s` | Under `-Z`, once a track's reads have taken `s` seconds, start no further read of it: checked between whole-track reads, so the first read always runs and none is stopped mid-read; the track keeps the read the repeat limit would, and its log names the time limit. Refused without `-Z` (fork) |
+| --keep-every-read `dir` | Under `-Z`, save every distinct read of each track, the kept one too, as `dir/NN-CRC.wav`, the bytes its EAC CRC32 covers; the folder is made if it is not there. Each read not kept has an `Other read:` line in its track block and every read is in the `--diagnostics` record either way. Refused without `-Z` (fork) |
 | -S `int`             | Sets the drive speed if possible (default is unset, usually maximum)                        |
 | -p `number=string`   | Specifies what to do with the pregap, syntax is described below                             |
 | -P `int`             | Sets the [paranoia level](#paranoia-level), default is max, 0 disables checking completely  |

@@ -199,6 +199,7 @@ typedef struct cyanrip_settings {
     char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
     int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
     int prefer_ar_match; /* --prefer-accuraterip-match: at the -Z repeat limit, a read AccurateRip matches first */
+    char *keep_every_read; /* --keep-every-read DIR: every distinct -Z read's audio, as WAV, in DIR */
     int reread_time_limit; /* --reread-time-limit: seconds a -Z track's reads may take; 0 is none */
     int generate_cue_only;
     int disable_data_tracks;
@@ -258,6 +259,22 @@ typedef struct CRIPErrorPos {
     lsn_t lsn;
     enum CRIPErrorPosKind kind;
 } CRIPErrorPos;
+
+/* One distinct read of a -Z track: its checksum, how many whole-track reads
+ * gave it, the newest of them, whether it is the read kept, its AccurateRip
+ * checksums, the EAC CRC32's algorithm over each second of it as block_crcs
+ * holds for the kept read (NULL when memory for them could not be had), and
+ * the file --keep-every-read saved it to (NULL when none was saved). */
+typedef struct crip_read {
+    uint32_t crc;          /* EAC CRC32, as the log prints it */
+    int count;
+    int last_read;
+    int kept;
+    uint32_t ar_v1, ar_v2;
+    uint32_t *block_crcs;
+    int nb_block_crcs;
+    char *file;
+} crip_read;
 
 typedef struct cyanrip_track {
     int number; /* Human readable track number, may be 0 */
@@ -416,6 +433,13 @@ typedef struct cyanrip_track {
     int nb_block_crcs;
     int block_crcs_alloc;
     int block_crcs_failed;
+    /* Every distinct read of a -Z track, the kept one among them, copied
+     * from its spool when the track's reads end: for the log's `Other
+     * read:` lines and the record's reads (round 38, Platterpus's
+     * docs/eac-parity.md Part G.5, for rebuilding a disputed second from
+     * several reads). NULL, 0 for a track read without -Z. */
+    struct crip_read *reads;
+    int nb_reads;
     int edc_sectors; /* Data track sectors with an EDC to check */
     int edc_errors; /* Of those, the ones that never matched it */
     uint32_t acurip_checksum_v1;

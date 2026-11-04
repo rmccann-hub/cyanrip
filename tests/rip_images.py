@@ -3542,9 +3542,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/12":
+        if rec["schema"] != "cyanrip-diagnostics/13":
             fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/12'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/13'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -5005,8 +5005,10 @@ def sc_diagnostics():
     # /10 from round 35 adds paranoia_all_reads and error_positions, checked
     # in sc_bad_sector() and tests/diagrecord.c. /11 from round 36 adds
     # isrc_disc_read and kept_read_began, checked in sc_disc_isrc_line().
-    # /12 from round 38 adds block_crcs, checked in sc_block_crcs().
-    if d.get("schema") != "cyanrip-diagnostics/12":
+    # /12 from round 38 adds block_crcs, checked in sc_block_crcs(). /13, for
+    # +platterpus.30, adds reads, checked in sc_every_read() and
+    # tests/diagrecord.c.
+    if d.get("schema") != "cyanrip-diagnostics/13":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
@@ -8845,6 +8847,188 @@ def sc_repeat_limit_keeps_most_agreed():
             got = [ln for ln in text.splitlines() if ln.startswith("Done;")]
             fail(f"repeat_limit_keeps_most_agreed: {tag}: no line {want!r}, so "
                  f"the last read, v{last}, is in no line of the log; got {got}")
+
+
+def sc_every_read():
+    """EVERY DISTINCT -Z READ IS IN THE RECORD AND THE LOG, AND --keep-every-read
+    SAVES EACH ONE'S AUDIO.
+
+    Round 38: Platterpus's docs/eac-parity.md Part G.5 asks for every -Z read,
+    not only the kept one: its audio, its per-second CRCs, and a log line
+    naming the seconds where it differs from the kept read, so a second the
+    reads disagree on can be rebuilt from one rip.
+
+    tests/badsector.c's flip mode, RUN 2 CYCLE 3 -r 5, reads track 1 as v1,
+    v1, v2, v2, v3 at sector 100, as in sc_repeat_limit_keeps_most_agreed():
+    v2 is kept, v1 was read twice and v3 once. Sector 100 is in second 1
+    (sectors 75 to 149). Every expected value comes from cdda.bin with the
+    flip applied: the EAC CRC32 and per-second CRCs from zlib, and the
+    AccurateRip sums from tools/audio-checksums.py, which sc_audio_checksums()
+    holds to the binary's. The rip runs without the option too, to show the
+    record and the lines carry every read either way and only the files
+    depend on it, and the option is refused without -Z and with no name.
+    """
+    import importlib.util
+    import zlib
+    needs_preload_shim("every_read")
+    shim = os.environ.get("CYANRIP_BADSECTOR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"every_read: the shim was not built or not passed ({shim!r})")
+        return
+    spec = importlib.util.spec_from_file_location(
+        "audio_checksums", ROOT / "tools" / "audio-checksums.py")
+    acs = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(acs)
+    src = (FIX / "cdda.bin").read_bytes()
+    sec, flip, b = 2352, 100, 75 * 2352
+
+    def version(v):
+        a = bytearray(src[:300 * sec])
+        a[flip * sec] ^= v
+        return bytes(a)
+
+    # (version, reads that gave it, the newest of them, kept)
+    want_reads = [(1, 2, 2, False), (2, 2, 4, True), (3, 1, 5, False)]
+    for keep in (True, False):
+        tag = "with --keep-every-read" if keep else "without --keep-every-read"
+        name = "kept" if keep else "summaries"
+        out, rec = WORK / f"out_every_{name}", WORK / f"every_{name}.json"
+        folder = WORK / f"every_{name}_reads" / "nested"
+        count = WORK / f"every_{name}.count"
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_BAD_PATH="basic.bin",
+                   CRIP_FLIP_SECTOR=str(flip), CRIP_FLIP_CYCLE="3",
+                   CRIP_FLIP_RUN="2", CRIP_FLIP_OUT=str(count),
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        extra = ("--keep-every-read", folder) if keep else ()
+        ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                     "-P", "0", "-Z", "2", "-r", "5", "-l", "1", "-o", "pcm",
+                     "-D", out, "-F", "{track}", "-L", "log",
+                     "--diagnostics", rec, *extra, env=env)
+        if ec != 0:
+            fail(f"every_read: {tag}: cyanrip exited {ec}")
+            continue
+        flips = int(count.read_text(encoding="utf-8").strip()) if count.exists() else 0
+        if flips != 5:
+            fail(f"every_read: {tag}: the shim varied {flips} reads, not 5, so "
+                 f"the schedule is not the one this test assumes")
+            continue
+        got = (out / "1.pcm").read_bytes() if (out / "1.pcm").exists() else b""
+        if got != version(2):
+            fail(f"every_read: {tag}: the delivered track is not v2, so the "
+                 f"kept read is not the one this test assumes")
+            continue
+        try:
+            record = json.loads(rec.read_text(encoding="utf-8"))
+            track = next(t for t in record["rip"]["track_state"] if t["number"] == 1)
+        except (OSError, ValueError, KeyError, TypeError, StopIteration) as e:
+            fail(f"every_read: {tag}: no record of track 1 to read: {e}")
+            continue
+        if record.get("schema") != "cyanrip-diagnostics/13":
+            fail(f"every_read: {tag}: the record is {record.get('schema')!r}, "
+                 f"not cyanrip-diagnostics/13")
+        reads = track.get("reads")
+        if not isinstance(reads, list) or len(reads) != 3:
+            fail(f"every_read: {tag}: track 1's reads are {reads!r}, not the "
+                 f"three distinct reads v1, v2 and v3")
+            continue
+        text = (out / "log.log").read_text(errors="replace", encoding="utf-8")
+        lines = text.splitlines()
+        others = [ln for ln in lines if ln.startswith("  Other read:")]
+        for got_r, (v, n, last, kept) in zip(reads, want_reads):
+            pcm = version(v)
+            sums = acs.checksums(pcm, is_first=True, is_last=False)
+            crc = f"{sums['eac_crc']:08X}"
+            path = str(folder / f"01-{crc}.wav") if keep else None
+            want = {"eac_crc": crc, "count": n, "last_read": last, "kept": kept,
+                    "accurip_v1": f"{sums['v1']:08X}",
+                    "accurip_v2": f"{sums['v2']:08X}",
+                    "block_crcs": [f"{zlib.crc32(pcm[i:i + b]) & 0xFFFFFFFF:08X}"
+                                   for i in range(0, len(pcm), b)],
+                    "file": path}
+            if got_r != want:
+                diff = {k: (got_r.get(k), w) for k, w in want.items()
+                        if got_r.get(k) != w}
+                fail(f"every_read: {tag}: read v{v} in the record differs from "
+                     f"the source with flip v{v} in {diff} (got, want)")
+            if keep:
+                f = Path(path)
+                data = f.read_bytes() if f.exists() else b""
+                hdr = (b"RIFF" + (len(pcm) + 36).to_bytes(4, "little") + b"WAVE"
+                       + b"fmt " + (16).to_bytes(4, "little")
+                       + bytes([1, 0, 2, 0]) + (44100).to_bytes(4, "little")
+                       + (176400).to_bytes(4, "little") + bytes([4, 0, 16, 0])
+                       + b"data" + len(pcm).to_bytes(4, "little"))
+                if data[:44] != hdr:
+                    fail(f"every_read: {tag}: {f.name}'s header is "
+                         f"{data[:44].hex()}, not a 16-bit stereo 44.1 kHz WAV "
+                         f"of {len(pcm)} bytes")
+                if data[44:] != pcm:
+                    fail(f"every_read: {tag}: {f.name} does not hold read v{v}: "
+                         f"the source with sector {flip}'s first byte XORed "
+                         f"with {v}")
+            line = (f"  Other read:      {crc}, read {n} time{'' if n == 1 else 's'}, "
+                    f"differs from the kept read in second 1 (00:01)"
+                    + (f"; saved as {path}" if keep else ""))
+            if kept and any(crc in ln for ln in others):
+                fail(f"every_read: {tag}: the kept read v{v} has an `Other "
+                     f"read:` line: {others}")
+            if not kept and line not in lines:
+                fail(f"every_read: {tag}: no line {line!r}; got {others}")
+        if len(others) != 2:
+            fail(f"every_read: {tag}: {len(others)} `Other read:` lines, not "
+                 f"one for each of the two reads not kept: {others}")
+        saved = sorted(p.name for p in folder.parent.rglob("*")) if folder.parent.exists() else []
+        want_saved = (sorted(["nested"] + [f"01-{_flip_crc(v)}.wav" for v in (1, 2, 3)])
+                      if keep else [])
+        if saved != want_saved:
+            fail(f"every_read: {tag}: the folder holds {saved}, not {want_saved}")
+
+    # A track whose reads all agree has one read, kept, and no line.
+    out, rec = WORK / "out_every_agree", WORK / "every_agree.json"
+    folder = WORK / "every_agree_reads"
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-Z", "2", "-r", "5", "-l", "1", "-o", "pcm", "-D", out,
+                 "-F", "{track}", "-L", "log", "--diagnostics", rec,
+                 "--keep-every-read", folder)
+    try:
+        record = json.loads(rec.read_text(encoding="utf-8"))
+        states = {t["number"]: t for t in record["rip"]["track_state"]}
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        fail(f"every_read: agreeing reads: exit {ec}, no record: {e}")
+        return
+    crc = f"{zlib.crc32(src[:300 * sec]) & 0xFFFFFFFF:08X}"
+    reads = states.get(1, {}).get("reads")
+    if ec != 0 or not isinstance(reads, list) or len(reads) != 1 \
+            or reads[0].get("eac_crc") != crc or reads[0].get("count") != 3 \
+            or reads[0].get("kept") is not True:
+        fail(f"every_read: agreeing reads: exit {ec}, track 1's reads "
+             f"{reads!r}, not one read {crc}, read 3 times and kept")
+    if states.get(2, {}).get("reads", "absent") is not None:
+        fail(f"every_read: agreeing reads: track 2, not ripped, has reads "
+             f"{states.get(2, {}).get('reads', 'absent')!r}, not null")
+    text = (out / "log.log").read_text(errors="replace", encoding="utf-8") \
+        if (out / "log.log").exists() else ""
+    if "Other read:" in text:
+        fail("every_read: agreeing reads: an `Other read:` line was printed")
+    if sorted(p.name for p in folder.glob("*")) != [f"01-{crc}.wav"]:
+        fail(f"every_read: agreeing reads: the folder holds "
+             f"{sorted(p.name for p in folder.glob('*'))}, not 01-{crc}.wav")
+
+    # Refused, before any disc is opened, where it can do nothing.
+    base = ("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0", "-I")
+    for args, want_line in (
+            (("--keep-every-read", WORK / "every_refused"),
+             "--keep-every-read needs -Z: it saves -Z's reads, and without -Z "
+             "there is one read, the output!"),
+            (("-Z", "2", "--keep-every-read", ""),
+             "--keep-every-read needs a folder name, and was given an empty one!")):
+        ec, outp = crip(*base, *args)
+        if ec != 64 or want_line not in outp.splitlines():
+            fail(f"every_read: {' '.join(map(str, args))!r} exited {ec}, not "
+                 f"64, or did not print at column 0 {want_line!r}")
+    if (WORK / "every_refused").exists():
+        fail("every_read: the refused run made its folder anyway")
 
 
 def sc_gaps_unknown_pregap():

@@ -165,6 +165,11 @@ static void free_ctx(cyanrip_ctx *ctx)
         av_freep(&ctx->tracks[i].isrc_disc);
         crip_error_pos_free(&ctx->tracks[i]);
         av_freep(&ctx->tracks[i].block_crcs);
+        for (int j = 0; j < ctx->tracks[i].nb_reads; j++) {
+            av_freep(&ctx->tracks[i].reads[j].block_crcs);
+            av_freep(&ctx->tracks[i].reads[j].file);
+        }
+        av_freep(&ctx->tracks[i].reads);
     }
     av_dict_free(&ctx->cdtext);
     free(ctx);
@@ -219,42 +224,42 @@ static void test_track_fields(void)
     if (!out)
         return;
 
-    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/12\""),
-          "the schema is not cyanrip-diagnostics/12");
+    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/13\""),
+          "the schema is not cyanrip-diagnostics/13");
 
     expect_line(out, "{\"number\":1,\"cd_track\":1,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":\"AA\\\"BB\\\\CC\",\"isrc_disc\":\"ZZZZZ9999999\","
-                     "\"isrc_disc_reason\":null,\"isrc_disc_read\":\"q frames\",\"kept_read_began\":\"2027-01-15T08:00:00Z\",\"block_crcs\":null,\"encode_failures\":1,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 1");
+                     "\"isrc_disc_reason\":null,\"isrc_disc_read\":\"q frames\",\"kept_read_began\":\"2027-01-15T08:00:00Z\",\"block_crcs\":null,\"reads\":null,\"encode_failures\":1,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 1");
     expect_line(out, "{\"number\":2,\"cd_track\":2,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"subcode\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"libcdio returned none\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}",
+                     "\"isrc_disc_reason\":\"libcdio returned none\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"reads\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}",
                 "track 2");
     expect_line(out, "{\"number\":3,\"cd_track\":3,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"toc\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"libcdio returned an empty ISRC\","
-                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 3");
+                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"reads\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 3");
     expect_line(out, "{\"number\":4,\"cd_track\":4,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":true,"
                      "\"preemphasis\":null,\"deemphasis_applied\":null,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"data track\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 4");
+                     "\"isrc_disc_reason\":\"data track\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"reads\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 4");
     expect_line(out, "{\"number\":5,\"cd_track\":5,\"repeats\":0,\"audio_ripped\":false,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":null,\"deemphasis_applied\":null,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":\"not read\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 5");
+                     "\"isrc_disc_reason\":\"not read\",\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"reads\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 5");
     expect_line(out, "{\"number\":6,\"cd_track\":6,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
                      "\"isrc_disc_reason\":\"the driver does not report reading ISRC\","
-                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 6");
+                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"reads\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "track 6");
 
     /* No CD-TEXT and no -f: the absent arm names what libcdio reported, every
      * key is still written, and offset_search is null, not an object. */
@@ -284,7 +289,7 @@ static void test_deemphasis_forced(void)
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":true,"
                      "\"isrc_written\":null,\"isrc_disc\":null,"
-                     "\"isrc_disc_reason\":null,\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "forced");
+                     "\"isrc_disc_reason\":null,\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"reads\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "forced");
     free(out);
 }
 
@@ -310,7 +315,7 @@ static void test_isrc_disc_malformed(void)
                      "\"preemphasis\":\"none\",\"deemphasis_applied\":false,"
                      "\"isrc_written\":null,\"isrc_disc\":\"1234567890AB\","
                      "\"isrc_disc_reason\":\"not an ISO 3901 code, so not used\","
-                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "malformed");
+                     "\"isrc_disc_read\":null,\"kept_read_began\":null,\"block_crcs\":null,\"reads\":null,\"encode_failures\":0,\"paranoia_all_reads\":null,\"error_positions\":null,\"error_positions_dropped\":null}", "malformed");
     free(out);
 }
 
@@ -349,6 +354,50 @@ static void test_block_crcs(void)
     const char *two = strstr(out, "{\"number\":2,");
     CHECK(two && strstr(two, "\"block_crcs\":null"),
           "track 2's block_crcs are not null after memory failed");
+    free(out);
+}
+
+/* /13's reads (round 38, Platterpus's docs/eac-parity.md Part G.5): every
+ * distinct -Z read, in the order first read, with its own block_crcs, null
+ * as a whole when memory for them could not be had, and the file it was
+ * saved to as a JSON string, null when none was. The image scenario
+ * every_read cannot reach either null, nor a name that needs escaping. */
+static void test_reads(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    cyanrip_track *t = &ctx->tracks[0];
+    ctx->nb_tracks = 2;
+    t->reads = av_calloc(2, sizeof(*t->reads));
+    if (!t->reads || !(t->reads[0].block_crcs = av_malloc_array(2, sizeof(uint32_t))) ||
+        !(t->reads[0].file = av_strdup("dir/\"q\".wav"))) {
+        free_ctx(ctx);
+        CHECK(0, "out of memory");
+        return;
+    }
+    t->nb_reads = 2;
+    t->reads[0] = (crip_read){ .crc = 0x0BADF00D, .count = 2, .last_read = 3,
+                               .ar_v1 = 0x1, .ar_v2 = 0xFFFFFFFF,
+                               .block_crcs = t->reads[0].block_crcs,
+                               .nb_block_crcs = 2, .file = t->reads[0].file };
+    t->reads[0].block_crcs[0] = 0x0000ABCD;
+    t->reads[0].block_crcs[1] = 0x12345678;
+    t->reads[1] = (crip_read){ .crc = 0xCAFEF00D, .count = 1, .last_read = 4,
+                               .kept = 1, .ar_v1 = 0xA, .ar_v2 = 0xB };
+
+    char *out = write_record(ctx, "diagrecord_reads.json");
+    free_ctx(ctx);
+    if (!out)
+        return;
+    CHECK(strstr(out, "\"reads\":[{\"eac_crc\":\"0BADF00D\",\"count\":2,\"last_read\":3,"
+                      "\"kept\":false,\"accurip_v1\":\"00000001\",\"accurip_v2\":\"FFFFFFFF\","
+                      "\"block_crcs\":[\"0000ABCD\",\"12345678\"],\"file\":\"dir/\\\"q\\\".wav\"},"
+                      "{\"eac_crc\":\"CAFEF00D\",\"count\":1,\"last_read\":4,\"kept\":true,"
+                      "\"accurip_v1\":\"0000000A\",\"accurip_v2\":\"0000000B\","
+                      "\"block_crcs\":null,\"file\":null}]"),
+          "track 1's reads are not its two reads, in order, with the second's "
+          "block_crcs and file null and the first's file escaped");
+    const char *two = strstr(out, "{\"number\":2,");
+    CHECK(two && strstr(two, "\"reads\":null"), "track 2, never read, has reads");
     free(out);
 }
 
@@ -548,6 +597,7 @@ int main(void)
     test_deemphasis_forced();
     test_isrc_disc_malformed();
     test_block_crcs();
+    test_reads();
     test_cdtext_present();
     test_offset_search();
     test_error_positions();

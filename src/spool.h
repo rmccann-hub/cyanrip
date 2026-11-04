@@ -40,6 +40,9 @@ typedef struct crip_spool {
                      * AccurateRip entry its v1 or v2 checksum matches, the
                      * higher; below 1 when none does, or without the flag */
     FILE *f;        /* their bytes, as checksummed */
+    uint32_t ar_v1, ar_v2;   /* this read's AccurateRip checksums */
+    uint32_t *block_crcs;    /* this read's per-second CRCs, or NULL */
+    int nb_block_crcs;
 } crip_spool;
 
 /* At the repeat limit: the most reads, and on a tie the newest.
