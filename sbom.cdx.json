@@ -961,7 +961,7 @@
       "bom-ref": "run:ffmpeg",
       "name": "ffmpeg",
       "scope": "excluded",
-      "description": "makes the disc-image fixtures' audio and decodes rips for checksums",
+      "description": "makes the disc-image fixtures' audio, decodes rips for checksums, and measures which covers each muxer keeps",
       "properties": [
         {
           "name": "cyanrip-fork:run-by",
@@ -970,6 +970,10 @@
         {
           "name": "cyanrip-fork:run-by",
           "value": "tests/rigcheck.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/rip_images.py"
         },
         {
           "name": "cyanrip-fork:run-by",
@@ -1414,5 +1418,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:819cdef7-b14e-5c28-bb0a-c67a66da4aff"
+  "serialNumber": "urn:uuid:ddf8a7ff-2653-58f7-83d1-261a8b9cdc4e"
 }
