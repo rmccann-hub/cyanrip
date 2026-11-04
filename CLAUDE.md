@@ -64,7 +64,7 @@ never let a green suite imply coverage.** Date a rig session by its build.
 |---|---|
 | C2 | cannot be done on this rig: its BDR-209D reports C2 unsupported |
 | `-f` | ran from 2026-10-06 (`5704062`); a stopped search and one that finds nothing have not |
-| damaged media | the read ran 2026-10-04 (`174a134`), the `-Z` arm 2026-10-06 and the skip arm 2026-10-21 (`ca0f097`); a drive that reports a failed read has not |
+| damaged media | the read ran 2026-10-04 (`174a134`), the `-Z` arm 2026-10-06 and the skip arm 2026-10-21 (`ca0f097`); a drive reporting failed reads, then unopenable, 2026-11-03 (`3f288fb`); a track's `File(s):` naming one not written whole has not |
 | CD-TEXT from a disc | not yet done: `mmc_read_cdtext` is not the `.toc` path |
 | `Accurate stream:`, `Recordable:`, two-search `Pregap source:` | ran 2026-10-21 (`ca0f097`), 2026-10-28 (`5aeefc4`) and 2026-11-03 (`3f288fb`): `Accurate stream:` answers; `Recordable:` answers `no` for a pressed disc from the drive's own profile, and a recordable disc has not run; the two-search clause has not printed |
 
