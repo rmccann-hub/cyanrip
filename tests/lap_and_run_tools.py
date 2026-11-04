@@ -31,6 +31,7 @@ log built to carry exactly that.
 
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -170,6 +171,17 @@ def read_run(tmp):
         "-d /dev/sr0 --diagnostics rec-c.json", full, ""), encoding="utf-8")
     (album / "c" / "c.platterpus-securing-pass.txt").write_text(log(
         "-d /dev/sr0 -Z 2 -l 1 --diagnostics rec-d.json", full, ""), encoding="utf-8")
+    # A third album whose list gives track 3's pregap as .29's undecided row,
+    # from the program's own format string: it names the track, so the list
+    # is not silent about it (Platterpus's round 38 lap 4 S5, on their own
+    # readers of this row; ours read it as no row and called track 3 absent).
+    fmt = re.search(r'"    (pregap of track %i: %i or %i frames \(undecided\))\\n"',
+                    (ROOT / "src" / "cyanrip_log.c").read_text(encoding="utf-8"))
+    check(fmt is not None, "src/cyanrip_log.c no longer prints the undecided row")
+    (album / "e").mkdir()
+    (album / "e" / "e.log").write_text(log(
+        "-d /dev/sr0", [full[0], fmt.group(1).replace("%i", "{}").format(3, 158, 159)],
+        ""), encoding="utf-8")
     (run_dir / "SHA256SUMS").write_text(
         f"{'0' * 64}  (not filed) ripperdiagnostics/rec-a.json\n"
         f"{'0' * 64}  (not filed) ripperdiagnostics/rec-c-securingpass.json\n"
@@ -180,13 +192,15 @@ def read_run(tmp):
     rc, o = run(ROOT / "tools" / "read-run.py", run_dir,
                 *(["--cyanrip", CRIP] if CRIP else []))
     check(rc == 0, f"read-run exits 0 on a filed session (exit {rc})")
-    check(f"LOGS -- {5 if CRIP else 4} cyanrip log(s)" in o,
+    check(f"LOGS -- {6 if CRIP else 5} cyanrip log(s)" in o,
           "a securing pass's log counts as a log, an EAC rendering does not")
     check("clause naming a last read not kept: PRINTED" in o
           and "clause naming a last read not kept: not printed" in o,
           "each repeat-limit Done; line says whether the clause printed")
     check("track 3's pregap is in 3 list(s) and absent from 1" in o,
           "a pregap one list gives and another leaves out is reported")
+    check("UNDECIDED: [(3, '158 or 159')]" in o,
+          "an undecided pregap is reported in the list's own numbers")
     check("rec-a.json in the bundle" in o and "rec-b.json NOT IN THE BUNDLE" in o,
           "each log's --diagnostics record is looked up in the bundle")
     check("rec-d.json in the bundle as rec-d-securingpass.json" in o
