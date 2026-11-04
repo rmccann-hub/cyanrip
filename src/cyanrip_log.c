@@ -505,7 +505,23 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
          * words over a record in which no sector failed its CRC (our round 36
          * lap 16 S9). The `Gaps:` list gives the same words, which
          * sc_unknown_pregap_reasons_agree() holds. */
-        cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel search bounds did not meet)\n");
+        const lsn_t undecided = crip_pregap_undecided_lsn(t);
+        if (undecided == CDIO_INVALID_LSN)
+            cyanrip_log(ctx, 0, "    Pregap LSN:  unknown (sub-channel search bounds did not meet)\n");
+        else {
+            /* Narrowed to one sector and not decided: the pregap starts at
+             * it or at the next, so both, and the shorter length first. It
+             * read `unknown` with the reason above, while `Pregap search:`
+             * named the one sector left (our round 38 lap 1 S8,
+             * which Platterpus's lap 2 S5 accepted; their S8 (c) asked what
+             * this line prints). Counted to INDEX 01, as the known case is:
+             * no action moved a pregap nobody found. */
+            const lsn_t end = t->start_lsn_sig;
+            cyanrip_log(ctx, 0, "    Pregap LSN:  %i or %i (undecided)\n",
+                        undecided, undecided + 1);
+            cyanrip_log(ctx, 0, "    Pregap length: %i or %i frames (undecided)\n",
+                        end - (undecided + 1), end - undecided);
+        }
     } else {
         cyanrip_log(ctx, 0, "    Pregap LSN:  none\n");
     }
@@ -596,6 +612,32 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
     if (t->overread_frames)
         cyanrip_log(ctx, 0, "    Beyond disc: %i of %i frames refused (written as silence)\n",
                     t->overread_refused, t->overread_frames);
+}
+
+void cyanrip_log_gap_not_found(cyanrip_ctx *ctx, const cyanrip_track *t)
+{
+    /* A search that failed has no LSN either, and skipping it silently
+     * made the list's silence read as no pregap: a rip of selected tracks
+     * prints only their blocks, so for every other track this list is
+     * the only record, and with every search failed it said `None
+     * signalled`. Found in round 30 lap 15 (S10); this wording is round
+     * 31 lap 1 S27's, which Platterpus's lap 2 S15 accepted and their
+     * 0.7.101 reads. Its reason is the track block's, in the same words.
+     *
+     * Narrowed to one sector, it gives both lengths as the track block does,
+     * counted to the same INDEX 01 (our round 38 lap 1 S8; Platterpus's lap
+     * 2 S8 (c) asked what this row prints). Here since `.29`, from
+     * cyanrip_main.c, so tests/logrender.c can build the state no image
+     * reaches: an image's sub-channel is unreadable. */
+    const lsn_t undecided = crip_pregap_undecided_lsn(t);
+    if (undecided != CDIO_INVALID_LSN)
+        cyanrip_log(ctx, 0, "    pregap of track %i: %i or %i frames (undecided)\n",
+                    t->number, t->start_lsn_sig - (undecided + 1),
+                    t->start_lsn_sig - undecided);
+    else
+        cyanrip_log(ctx, 0, "    pregap of track %i unknown (%s)\n", t->number,
+                    t->pregap_source == CYANRIP_PREGAP_SRC_ERR_READ ?
+                    "sub-channel unreadable" : "sub-channel search bounds did not meet");
 }
 
 void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)

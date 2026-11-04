@@ -8898,15 +8898,16 @@ def sc_unknown_pregap_reasons_agree():
     literal strings, and holds them to each other and to the agreed words.
     """
     log_c = (ROOT / "src" / "cyanrip_log.c").read_text(encoding="utf-8")
-    main_c = (ROOT / "src" / "cyanrip_main.c").read_text(encoding="utf-8")
     block = {}
     for src, reason in re.findall(r'pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+)\) \{'
                                   r'(?:[^{}]*?)"    Pregap LSN:  unknown \(([^)]+)\)\\n"',
                                   log_c, re.S):
         block[src] = reason
-    m = re.search(r'"    pregap of track %i unknown \(%s\)\\n", ct->number,\s*'
-                  r'ct->pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+) \?\s*'
-                  r'"([^"]+)" : "([^"]+)"\)', main_c)
+    # The `Gaps:` row is cyanrip_log_gap_not_found()'s since `.29`, in the
+    # same file as the block, so tests/logrender.c can render it.
+    m = re.search(r'"    pregap of track %i unknown \(%s\)\\n", t->number,\s*'
+                  r't->pregap_source == (CYANRIP_PREGAP_SRC_ERR_\w+) \?\s*'
+                  r'"([^"]+)" : "([^"]+)"\)', log_c)
     if len(block) != 2 or not m:
         fail(f"unknown_pregap_reasons_agree: found {len(block)} track-block "
              f"reasons and {'a' if m else 'no'} Gaps: line in the source, so "

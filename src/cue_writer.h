@@ -68,6 +68,18 @@ static inline int crip_track_has_appended_pregap(lsn_t pregap_lsn,
         && merged_pregap_end == CDIO_INVALID_LSN;
 }
 
+/* The pregap the cue sheet places INDEX 00 at: the one the search or the TOC
+ * found, or, when a search left one sector undecided, the earlier bound (our
+ * round 38 lap 1 S8, which Platterpus's lap 2 S5 accepted: INDEX 00 the
+ * longer length before INDEX 01). An undecided pregap is acted on by no -p
+ * action, so it is where the TOC leaves it, at the end of the previous
+ * track's file, as an appended one is. */
+static inline lsn_t crip_cue_pregap_lsn(const cyanrip_track *t)
+{
+    return t->pregap_lsn != CDIO_INVALID_LSN ? t->pregap_lsn :
+                                               crip_pregap_undecided_lsn(t);
+}
+
 int cyanrip_cue_init(cyanrip_ctx *ctx);
 void cyanrip_cue_start(cyanrip_ctx *ctx);
 void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t);

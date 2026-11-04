@@ -163,6 +163,16 @@ wording, and the `unknown`'s reason renamed `sub-channel search bounds did not
 meet` (`b675efd`), went to Platterpus in our round 37 lap 1 S5 and S6; their
 lap 2 S3 and S4 accepted both as given, and both shipped in `.28`.
 
+**For `.29`, not yet released, the one undecided sector is printed as such.**
+Where the bounds narrowed to one sector, the track block says `Pregap LSN:
+145567 or 145568 (undecided)` and `Pregap length: 94 or 95 frames
+(undecided)`, the `Gaps:` row `pregap of track 9: 94 or 95 frames
+(undecided)`, and the cue sheet places `INDEX 00` at the earlier bound, as our
+round 38 lap 1 S8 proposed and Platterpus's lap 2 S5 accepted; a wider
+stretch stays `unknown`. `tests/logrender.c` holds the block, the row and the
+cue on track 9's own numbers, and fails with the fix reverted. Which of the
+two the disc has, only the drive can say, and this entry stays until it does.
+
 ### Four drive answers the log states that are libcdio's defaults or its failure (fixed for `.28`)
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.3**,

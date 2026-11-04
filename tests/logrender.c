@@ -78,6 +78,7 @@
 #include "fun512.h"
 #include "stall_watchdog.h"
 #include "accurip.h"
+#include "cue_writer.h"
 
 static int failures;
 static char captured[65536];
@@ -101,10 +102,16 @@ const char *cyanrip_fmt_desc(enum cyanrip_output_formats format)
     return "STUB-FORMAT";
 }
 
+/* A track file's name while a cue sheet test sets one; NULL otherwise, as
+ * every other caller here has always had */
+static const char *stub_track_path = NULL;
+
 char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
                     const cyanrip_out_fmt *fmt, void *arg)
 {
-    (void)ctx; (void)type; (void)create_dirs; (void)fmt; (void)arg;
+    (void)ctx; (void)create_dirs; (void)fmt; (void)arg;
+    if (stub_track_path && type == CRIP_PATH_TRACK)
+        return av_strdup(stub_track_path);
     return NULL;
 }
 
@@ -990,6 +997,122 @@ static void test_pregap_search_line(void)
             FAIL("pregap/search: case %zu printed a search line with no search", i);
         free_ctx(ctx);
     }
+}
+
+/* A search narrowed to one sector without deciding it prints both lengths,
+ * in the track block and the `Gaps:` row, and the cue sheet takes the
+ * earlier bound for INDEX 00: our round 38 lap 1 S8, which Platterpus's lap 2
+ * S5 accepted, with their S8 (c)'s answer for `Pregap LSN:` and `Gaps:`. The
+ * numbers are the reference disc's track 9 since `.27`: LSN 145567 left
+ * between bounds 145566 and 145568, INDEX 01 at 145662. A stretch of two
+ * sectors stays `unknown`. No image reaches either: its sub-channel is
+ * unreadable. */
+static void test_pregap_undecided(void)
+{
+    const struct {
+        lsn_t left, right;
+        enum cyanrip_pregap_source src;
+        const char *block1, *block2, *gap;
+        lsn_t cue;
+    } cases[] = {
+        { 145566, 145568, CYANRIP_PREGAP_SRC_ERR_CRC,
+          "    Pregap LSN:  145567 or 145568 (undecided)",
+          "    Pregap length: 94 or 95 frames (undecided)",
+          "    pregap of track 9: 94 or 95 frames (undecided)", 145567 },
+        { 145565, 145568, CYANRIP_PREGAP_SRC_ERR_CRC,
+          "    Pregap LSN:  unknown (sub-channel search bounds did not meet)", NULL,
+          "    pregap of track 9 unknown (sub-channel search bounds did not meet)",
+          CDIO_INVALID_LSN },
+        { 145566, 145568, CYANRIP_PREGAP_SRC_ERR_READ,
+          "    Pregap LSN:  unknown (sub-channel unreadable)", NULL,
+          "    pregap of track 9 unknown (sub-channel unreadable)", CDIO_INVALID_LSN },
+    };
+
+    for (size_t i = 0; i < sizeof(cases)/sizeof(*cases); i++) {
+        cyanrip_ctx *ctx = new_ctx();
+        cyanrip_track t;
+        base_track(&t);
+        t.number = 9;
+        t.pregap_source = cases[i].src;
+        t.pregap_lsn = t.pregap_lsn_second = CDIO_INVALID_LSN;
+        t.merged_pregap_end = t.dropped_pregap_start = CDIO_INVALID_LSN;
+        t.start_lsn = t.start_lsn_sig = 145662;
+        t.pregap_stats = (struct cyanrip_pregap_stats){ .searched = 1, .asked = 412,
+                                                        .left = cases[i].left,
+                                                        .right = cases[i].right };
+
+        cyanrip_log_track_end(ctx, &t);
+        const char *out = drain(ctx);
+        expect_line(out, cases[i].block1, "pregap/undecided block");
+        if (cases[i].block2)
+            expect_line(out, cases[i].block2, "pregap/undecided length");
+        else if (strstr(out, "Pregap length:"))
+            FAIL("pregap/undecided: case %zu printed a length for no pregap", i);
+
+        cyanrip_log_gap_not_found(ctx, &t);
+        expect_line(drain(ctx), cases[i].gap, "pregap/undecided Gaps row");
+
+        /* INDEX 00 at the earlier bound, into the previous track's file,
+         * which the TOC leaves the pregap at: B frames before INDEX 01 */
+        if (crip_cue_pregap_lsn(&t) != cases[i].cue)
+            FAIL("pregap/undecided cue: case %zu places INDEX 00 at %i, not %i",
+                 i, (int)crip_cue_pregap_lsn(&t), (int)cases[i].cue);
+        if (cases[i].cue != CDIO_INVALID_LSN &&
+            (!crip_track_has_appended_pregap(crip_cue_pregap_lsn(&t), t.start_lsn_sig,
+                                             t.dropped_pregap_start, t.merged_pregap_end,
+                                             1, 1) ||
+             t.start_lsn_sig - crip_cue_pregap_lsn(&t) != 95))
+            FAIL("pregap/undecided cue: case %zu writes no INDEX 00 95 frames before "
+                 "INDEX 01", i);
+        free_ctx(ctx);
+    }
+}
+
+/* The cue sheet itself, through cyanrip_cue_track(): an undecided pregap's
+ * INDEX 00 is the earlier bound, under the previous track's FILE, the
+ * longer length before INDEX 01 (our round 38 lap 1 S8, Platterpus's lap 2
+ * S5). Track 8 starts at LSN 130000, so 145567 is 15567 frames into its
+ * file, 03:27:42. Before `.29` the track had no INDEX 00. */
+static void test_cue_undecided_pregap(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    ctx->cuefile[0] = tmpfile();
+    if (!ctx->cuefile[0]) {
+        FAIL("cue/undecided: no tmpfile");
+        free_ctx(ctx);
+        return;
+    }
+    cyanrip_track pt, t;
+    base_track(&pt);
+    base_track(&t);
+    pt.number = 8;
+    pt.start_lsn = pt.start_lsn_sig = 130000;
+    pt.frames = 145662 - 130000;
+    pt.cue_file_written = 1;
+    t.number = 9;
+    t.pt = &pt;
+    t.pregap_source = CYANRIP_PREGAP_SRC_ERR_CRC;
+    t.pregap_lsn = t.pregap_lsn_second = CDIO_INVALID_LSN;
+    t.merged_pregap_end = t.dropped_pregap_start = CDIO_INVALID_LSN;
+    t.start_lsn = t.start_lsn_sig = 145662;
+    t.pregap_stats = (struct cyanrip_pregap_stats){ .searched = 1, .asked = 412,
+                                                    .left = 145566, .right = 145568 };
+
+    stub_track_path = "09.flac";
+    cyanrip_cue_track(ctx, &t);
+    stub_track_path = NULL;
+
+    char cue[1024] = { 0 };
+    rewind(ctx->cuefile[0]);
+    size_t n = fread(cue, 1, sizeof(cue) - 1, ctx->cuefile[0]);
+    cue[n] = '\0';
+    const char *want = "  TRACK 09 AUDIO\n    INDEX 00 03:27:42\n"
+                       "FILE \"09.flac\" WAVE\n    INDEX 01 00:00:00\n";
+    if (strcmp(cue, want))
+        FAIL("cue/undecided: the cue reads\n%s\nnot\n%s", cue, want);
+    fclose(ctx->cuefile[0]);
+    ctx->cuefile[0] = NULL;
+    free_ctx(ctx);
 }
 
 /* =====================================================================
@@ -2055,6 +2178,8 @@ int main(void)
     test_pregap_reasons_are_distinct();
     test_pregap_two_searches();
     test_pregap_search_line();
+    test_pregap_undecided();
+    test_cue_undecided_pregap();
     test_merged_pregap_counts_to_index_01();
     test_track_one_counts_from_disc_start();
 

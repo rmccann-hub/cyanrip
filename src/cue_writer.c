@@ -157,8 +157,9 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
     char time_01[16];
 
     /* Finish over the pregap which has been appended to the last track */
+    const lsn_t pregap_lsn = crip_cue_pregap_lsn(t);
     int write_appended_pregap = crip_track_has_appended_pregap(
-        t->pregap_lsn, t->start_lsn_sig, t->dropped_pregap_start,
+        pregap_lsn, t->start_lsn_sig, t->dropped_pregap_start,
         t->merged_pregap_end, !!t->pt,
         t->pt && t->pt->cue_file_written);
 
@@ -170,7 +171,7 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
      * caught here too, and a cue is an archival artifact that a burner or
      * tracker will either error on or mis-seek. */
     if (write_appended_pregap) {
-        const lsn_t off = t->pregap_lsn - t->pt->start_lsn_sig;
+        const lsn_t off = pregap_lsn - t->pt->start_lsn_sig;
         if (off < 0 || off >= t->pt->frames) {
             cyanrip_log(ctx, 0, "Refusing an INDEX 00 of %i frames into a "
                         "%i frame file for track %i, writing none\n",
@@ -195,7 +196,7 @@ void cyanrip_cue_track(cyanrip_ctx *ctx, cyanrip_track *t)
          * any INDEX line, so it goes above the INDEX 00 written just below. */
         CLOG("    ISRC %s\n", t->meta, "isrc");
 
-        cyanrip_frames_to_cue(t->pregap_lsn - t->pt->start_lsn_sig, time_00);
+        cyanrip_frames_to_cue(pregap_lsn - t->pt->start_lsn_sig, time_00);
         for (int Z = 0; Z < ctx->settings.outputs_num; Z++)
             cue_printf(ctx, Z, "    INDEX 00 %s\n", time_00);
     }

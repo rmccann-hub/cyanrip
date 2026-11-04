@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**A pregap the sub-channel search left one sector undecided is printed as
+both lengths.** The reference disc's track 9 has ended there since `.27`, LSN
+145567 between 94 and 95 frames, and the log said `unknown (sub-channel search
+bounds did not meet)`. The track block now says `Pregap LSN:  145567 or 145568
+(undecided)` and `Pregap length: 94 or 95 frames (undecided)`, the `Gaps:` row
+`pregap of track 9: 94 or 95 frames (undecided)`, and the cue sheet places
+`INDEX 00` at the earlier bound, 95 frames before `INDEX 01`; a wider stretch
+stays `unknown`. Our round 38 lap 1 S8, which Platterpus's lap 2 S5 accepted.
+Dumbass us wrote that lap from memory: it said `Pregap length:` carried the
+`unknown`, and at `3f288fb` that line prints only for a known pregap; the
+`unknown` is `Pregap LSN:`'s and `Gaps:`'s, which their S8 (c) caught, and our
+lap 3 corrects it and gives both lines. The `Gaps:` row moved into
+`cyanrip_log.c` and `tests/logrender.c` now links the cue writer, so the block,
+the row and the cue are held on track 9's own numbers, a state no image
+reaches; each fails with the fix reverted.
+
 **The `--diagnostics` record gives a CRC32 per second of each track's kept
 read, and moves to `/12`.** Per track, `block_crcs` lists the EAC CRC32's
 algorithm over each 75 frames of the bytes `eac_crc` covers, the read after

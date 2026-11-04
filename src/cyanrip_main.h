@@ -714,6 +714,22 @@ int crip_is_integer(const char *src);
  * rip and after one -- which matters because -J writes a cue sheet without
  * ever building a decode context, and a predicate keyed on what the graph did
  * would flip FLAGS PRE between a cue-only run and a real one. */
+/* The earlier of the two sectors a pregap may start at, when a sub-channel
+ * search's bounds narrowed to one sector without deciding it: that sector,
+ * or the one after it. CDIO_INVALID_LSN for every other outcome, a wider
+ * undecided stretch included, which stays `unknown`. The reference disc's
+ * track 9 has ended here since `.27`, LSN 145567 undecided between 95 and 94
+ * frames. Our round 38 lap 1 S8, which Platterpus's lap 2 S5 accepted: the
+ * pregap is printed as both lengths, never as either, and the cue sheet's
+ * INDEX 00 goes at this, the earlier bound. */
+static inline lsn_t crip_pregap_undecided_lsn(const cyanrip_track *t)
+{
+    if (t->pregap_source != CYANRIP_PREGAP_SRC_ERR_CRC || !t->pregap_stats.searched ||
+        t->pregap_stats.right - t->pregap_stats.left != 2)
+        return CDIO_INVALID_LSN;
+    return t->pregap_stats.left + 1;
+}
+
 static inline int crip_deemphasis_active(const cyanrip_ctx *ctx,
                                          const cyanrip_track *t)
 {
