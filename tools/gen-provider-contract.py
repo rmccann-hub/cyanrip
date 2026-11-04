@@ -1768,6 +1768,13 @@ def diag_records(binary):
         # the one ending an image can reach.
         ("an -f run whose AccurateRip lookup is refused offline",
          ["-d", "cdtext.toc", "-f", "-N"]),
+        # From /13: reads, which only -Z fills, with a file only where
+        # --keep-every-read saved one; every other record has it null. The
+        # image reads the same every time, so the track has one read, kept.
+        ("a -Z rip of one track saving its reads",
+         ["-d", "cdtext.toc", "-N", "-A", "-U", "-l", "1", "-Z", "1",
+          "-o", "pcm", "-D", "zrip", "-F", "{track}", "-L", "log",
+          "--keep-every-read", "zreads"]),
     ]
     # Absolute: the runs below start in the image's directory, so a binary
     # named relative to ours would not be found from there.
