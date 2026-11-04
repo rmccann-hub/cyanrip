@@ -206,6 +206,25 @@ with tempfile.TemporaryDirectory() as tmp:
           and re.search(r"^      none  x1  b\.log$", out, re.M),
           f"a pregap left out of one list: exit {ec}, want 1 and track 4 none:\n{out}")
 
+    # .29's undecided row, from the program's own format string. A reader of
+    # the decided and unknown rows alone took it for no row, so `none`: the
+    # defect Platterpus's round 38 lap 4 S5 found in their readers of this
+    # row, and which ours had too. It is read in the list's own words.
+    fmt = re.search(r'"(    pregap of track %i: %i or %i frames \(undecided\))\\n"',
+                    (ROOT / "src" / "cyanrip_log.c").read_text(encoding="utf-8"))
+    check(fmt is not None, "src/cyanrip_log.c no longer prints the undecided row")
+    row = fmt.group(1).replace("%i", "{}").format(4, 158, 159)
+    undecided = re.sub(r"^    158 frame pregap in track 4, [^\n]*$", row, text,
+                       count=1, flags=re.M)
+    check(undecided != text, "the copy's track 4 line was not replaced")
+    (d / "b.log").write_text(undecided, encoding="utf-8")
+    ec, out = run(d)
+    check(ec == 1 and re.search(r"^  track 4: 158 frames in 1, 158 or 159 frames "
+                                r"\(undecided\) in 1  DISAGREE$", out, re.M)
+          and not re.search(r"^  track 4: .*none in", out, re.M),
+          f"an undecided pregap is read in its own words, not as none: "
+          f"exit {ec}:\n{out}")
+
 # --- a positive line that contains a negative phrase -------------------------
 # Platterpus's round 27 lap 5 §C: a classifier that decides NEGATIVE on a phrase
 # misreads a positive line containing it, and `.17`'s 450 match ends

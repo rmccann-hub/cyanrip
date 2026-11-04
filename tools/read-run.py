@@ -52,8 +52,10 @@ BANNER = re.compile(r"^cyanrip \S+ \(")
 NOT_PASS = ("fail", "error", "skipped", "blocked", "unreachable", "info")
 # The strings the program prints, from its source: a Done; line at the repeat
 # limit (src/cyanrip_main.c, "repeat limit of %i read%s reached"), the clause
-# naming a last read that was not kept ("last read %08X, not kept"), and a
-# pregap whose search failed ("pregap of track %i unknown (%s)").
+# naming a last read that was not kept ("last read %08X, not kept"), a
+# pregap whose search failed ("pregap of track %i unknown (%s)"), and, from
+# .29, one whose bounds stayed two frames apart ("pregap of track %i: %i or %i
+# frames (undecided)"), which a reader of the other two took for no row.
 DONE_RE = re.compile(r"^Done; \((.*)\)$")
 REPEAT_RE = re.compile(r"^Repeating ripping \((\d+) out of (\d+) matches for "
                        r"current checksum ([0-9A-F]{8})\)$")
@@ -61,6 +63,8 @@ TRACK_RE = re.compile(r"^Track (\d+) (read with no error reported\.|"
                       r"read successfully!|read with errors\.|.*)$")
 GAP_RE = re.compile(r"^\s+(\d+) frame pregap in track (\d+)")
 UNKNOWN_GAP_RE = re.compile(r"^\s+pregap of track (\d+) unknown \((.*)\)$")
+UNDECIDED_GAP_RE = re.compile(r"^\s+pregap of track (\d+): (\d+ or \d+) frames "
+                              r"\(undecided\)$")
 DIAG_RE = re.compile(r"(?:^|\s)(?:--diagnostics|-j) (\S+)")
 TALLY_RE = re.compile(r"^(Tracks ripped accurately|Tracks matched on one frame "
                       r"only|Tracks ripped partially accurately): (.*)$")
@@ -125,7 +129,8 @@ def previous_run(run):
 def read_log(p):
     lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
     info = {"invoked": "", "footer": {}, "tallies": {}, "gaps": [],
-            "unknown": [], "none_signalled": False, "limits": [],
+            "unknown": [], "undecided": [], "none_signalled": False,
+            "limits": [],
             "secure": collections.Counter()}
     reps, in_gaps = [], False
     for ln in lines:
@@ -142,10 +147,13 @@ def read_log(p):
             continue
         if in_gaps:
             m, u = GAP_RE.match(ln), UNKNOWN_GAP_RE.match(ln)
+            d = UNDECIDED_GAP_RE.match(ln)
             if m:
                 info["gaps"].append((int(m.group(2)), int(m.group(1))))
             elif u:
                 info["unknown"].append((int(u.group(1)), u.group(2)))
+            elif d:
+                info["undecided"].append((int(d.group(1)), d.group(2)))
             elif ln.strip() == "None signalled":
                 info["none_signalled"] = True
             elif not ln.strip() or not ln.startswith(" "):
@@ -293,6 +301,8 @@ def main():
         flags = []
         if i["unknown"]:
             flags.append(f"UNKNOWN: {i['unknown']}")
+        if i["undecided"]:
+            flags.append(f"UNDECIDED: {i['undecided']}")
         if i["none_signalled"]:
             flags.append("None signalled")
         print(f"  {short(run, p)}: {len(i['gaps'])} pregap(s)"
@@ -304,11 +314,13 @@ def main():
     # line (before .22). The track's own block, if the log ripped it, says
     # which. Found reading 2026-10-13: track 4 absent from one of 13 lists.
     for t in sorted(listed_in):
-        # A list that says the search failed (`unknown`) accounts for the
-        # track; only a list silent about it leaves it out.
+        # A list that says the search failed (`unknown`) or stopped between
+        # two values (`undecided`) accounts for the track; only a list silent
+        # about it leaves it out.
         absent = [p for p in logs if p not in listed_in[t]
                   and not infos[p]["none_signalled"]
-                  and t not in {u for u, _ in infos[p]["unknown"]}]
+                  and t not in {u for u, _ in infos[p]["unknown"]}
+                  and t not in {u for u, _ in infos[p]["undecided"]}]
         if absent:
             print(f"  track {t}'s pregap is in {len(listed_in[t])} list(s) "
                   f"and absent from {len(absent)}:")

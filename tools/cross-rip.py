@@ -102,6 +102,11 @@ FORK_N = re.compile(r"^cyanrip \S*\+platterpus\.(\d+) \(platterpus-fork-g", re.M
 GAPS_HEAD = re.compile(r"^Gaps:[ \t]*$", re.M)
 GAP_FRAMES = re.compile(r"^    (\d+) frame pregap in track (\d+), ")
 GAP_UNKNOWN = re.compile(r"^    pregap of track (\d+) (unknown \([^()]*\))\s*$")
+# From .29 a search whose bounds stayed two frames apart names both, with a
+# colon where the decided and unknown rows have none: a reader of those two
+# alone read it as no row at all, so as `none` (Platterpus's round 38 lap 4
+# S5, on their own readers of this row; ours had the same hole).
+GAP_UNDECIDED = re.compile(r"^    pregap of track (\d+): (\d+ or \d+ frames \(undecided\))\s*$")
 REPEAT_IS_EAC_FROM = 19
 
 
@@ -175,7 +180,8 @@ def reads_in(path):
 def pregaps_in(path):
     """(disc, {track: pregap}) from a log's `Gaps:` list, or None without one.
 
-    The value is the list's own words: `N frames`, or `unknown (reason)`. A
+    The value is the list's own words: `N frames`, `A or B frames
+    (undecided)`, or `unknown (reason)`. A
     track the list does not name had no pregap found, or none signalled, and
     reads as `none`; which tracks the disc has is the union of what its logs
     name. Track numbers are the list's, which a `-p` that splits a pregap off
@@ -195,6 +201,10 @@ def pregaps_in(path):
             gaps[int(m.group(2))] = f"{m.group(1)} frames"
             continue
         m = GAP_UNKNOWN.match(line)
+        if m:
+            gaps[int(m.group(1))] = m.group(2)
+            continue
+        m = GAP_UNDECIDED.match(line)
         if m:
             gaps[int(m.group(1))] = m.group(2)
     return disc, gaps

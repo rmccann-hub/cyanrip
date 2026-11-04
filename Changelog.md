@@ -1,6 +1,17 @@
 Unreleased
 ==========
-Nothing yet.
+**Our own readers of the `Gaps:` list read `.29`'s undecided row.** Dumbass
+us: `.29` added `pregap of track N: A or B frames (undecided)` to `Gaps:`, and
+neither of our two readers of that list was taught it. `tools/cross-rip.py`
+took it for no row and so read the track as `none` (a log whose list says
+`158 or 159 frames (undecided)` printed `track 4: 158 frames in 1, none in 1`),
+and `tools/read-run.py` reported the track as absent from a list that names
+it. Both now read it in the list's own words. It was Platterpus's round 38 lap
+4 S5 that pointed at it: they found the same hole in their two readers of the
+row, fixed it, and said ours might have it. Each test builds the row from
+`src/cyanrip_log.c`'s format string, and each fails with its tool's fix
+reverted: `tests/cross_rip.py` once, and `tests/lap_and_run_tools.py` twice.
+Nothing cyanrip prints changes.
 
 0.9.4-rc3+platterpus.29 — 2026-11-04 — **beta**
 ===============================================
