@@ -1,4 +1,4 @@
-cyanrip 0.9.4-rc3+platterpus.28 (platterpus-fork-g008e81a1)
+cyanrip 0.9.4-rc3+platterpus.29 (platterpus-fork-g2a06e064)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 2 -G -F {track} -L reference -M sheet -P 0 --consumer platterpus/0.6.4b12 -t 1=isrc=AAAAA0000001 -t 2=isrc=BBBBB0000002 -t 3=isrc=CCCCC0000003 -D o --diagnostics o/reference.diagnostics.json
 Handshake:      round 38 lap 3 OPEN, verdict OPEN -- NOT a released build
 Consumer:       platterpus/0.6.4b12
@@ -81,9 +81,9 @@ Summary:
     True peak level:   0.0 dBFS
     Integrated loudness (R128): -7.7 LUFS
     Loudness range (R128):      20.0 LU (-27.7 to -7.7 LUFS)
-    Extraction speed:  149.9x
-    Elapsed:            0.10 s
-    Kept read began:    2026-11-04T04:16:24Z
+    Extraction speed:  187.3x
+    Elapsed:            0.12 s
+    Kept read began:    2026-11-04T06:27:14Z
     Pregap LSN:  0 (duration: 00:04.00)
     Pregap length: 300 frames
     Pregap source: TOC
@@ -103,11 +103,11 @@ Summary:
     MUSICBRAINZ_DISCID:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     CDDB:                          14000603
     MEDIA:                         CD
-    COMMENT:                       cyanrip 0.9.4-rc3+platterpus.28
+    COMMENT:                       cyanrip 0.9.4-rc3+platterpus.29
     ALBUM:                         Unknown disc (OMP2)
     TITLE:                         Unknown track
     ISRC:                          AAAAA0000001
-    CREATION_TIME:                 2026-11-04T04:16:24+00:00
+    CREATION_TIME:                 2026-11-04T06:27:14+00:00
     REPLAYGAIN_TRACK_GAIN:         -10.29 dB
     R128_TRACK_GAIN:               -1355
     REPLAYGAIN_TRACK_RANGE:        20.00 dB
@@ -157,9 +157,9 @@ Summary:
     True peak level:   0.3 dBFS
     Integrated loudness (R128): -6.8 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  101.0x
-    Elapsed:            0.09 s
-    Kept read began:    2026-11-04T04:16:24Z
+    Extraction speed:  103.4x
+    Elapsed:            0.11 s
+    Kept read began:    2026-11-04T06:27:14Z
     Pregap LSN:  300 (duration: 00:01.00)
     Pregap length: 75 frames
     Pregap source: TOC
@@ -179,11 +179,11 @@ Summary:
     MUSICBRAINZ_DISCID:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     CDDB:                          14000603
     MEDIA:                         CD
-    COMMENT:                       cyanrip 0.9.4-rc3+platterpus.28
+    COMMENT:                       cyanrip 0.9.4-rc3+platterpus.29
     ALBUM:                         Unknown disc (OMP2)
     TITLE:                         Unknown track
     ISRC:                          BBBBB0000002
-    CREATION_TIME:                 2026-11-04T04:16:24+00:00
+    CREATION_TIME:                 2026-11-04T06:27:14+00:00
     REPLAYGAIN_TRACK_GAIN:         -11.19 dB
     R128_TRACK_GAIN:               -1584
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -233,9 +233,9 @@ Summary:
     True peak level:   -11.3 dBFS
     Integrated loudness (R128): -22.6 LUFS
     Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
-    Extraction speed:  82.5x
+    Extraction speed:  125.7x
     Elapsed:            0.05 s
-    Kept read began:    2026-11-04T04:16:24Z
+    Kept read began:    2026-11-04T06:27:15Z
     Pregap LSN:  unknown (sub-channel unreadable)
     Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off; LSN 376 to 524 undecided
     Start LSN:   525
@@ -254,11 +254,11 @@ Summary:
     MUSICBRAINZ_DISCID:            oMp2k.ixH0QqrdaZzsARoRS.p6c-
     CDDB:                          14000603
     MEDIA:                         CD
-    COMMENT:                       cyanrip 0.9.4-rc3+platterpus.28
+    COMMENT:                       cyanrip 0.9.4-rc3+platterpus.29
     ALBUM:                         Unknown disc (OMP2)
     TITLE:                         Unknown track
     ISRC:                          CCCCC0000003
-    CREATION_TIME:                 2026-11-04T04:16:24+00:00
+    CREATION_TIME:                 2026-11-04T06:27:15+00:00
     REPLAYGAIN_TRACK_GAIN:         4.63 dB
     R128_TRACK_GAIN:               2465
     REPLAYGAIN_TRACK_RANGE:        0.00 dB
@@ -302,5 +302,5 @@ Ripping errors: 0
 Encoder errors: none; 3 tracks encoded
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  yes (3 of 3 tracks)
-Ripping finished at 2026-11-04T04:16:25+00:00
-Log FUN512: Q1EwDKyhwt9alEEd3bAo2TkUDOqi8BT5OrhwUqjKBBpXTro1EyQEv8E_5i__npYceG5YaPy2LMj_lZu7AVEcyg
+Ripping finished at 2026-11-04T06:27:15+00:00
+Log FUN512: CoDp4.4O0VfN6N5bYTPa0LcrJONlJtNs.NdDUmhaYB3C3uDxaWdONvKmwsiv_hxYeBKANMgN92Xmu9WEiXV.Fg
