@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**Round 38's Full run is filed and read**: `.29` through Platterpus 0.7.120
+on the reference disc, 2026-11-04 from 12:53:46Z, on our evidence branch at
+`7c832173` (`docs/rig-2026-11-04-8d2ca72/`), whose README is our reading. By
+its own report it did not pass: 591 pass, 2 fail, 1 unreachable. Both
+failures are Platterpus's `expect-ctdb whole`, which since their `eb550dd6`
+fails a match CTDB outvotes; it grades track 5's `E0036697`, which the earlier
+readings of this disc report the same way and which AccurateRip matches on
+frame 450 only. Every `.29` change a drive could reach printed as built:
+`Secure re-reads:`, the tallies over the tracks asked and none under `-f`, a
+cancel at `Ripping errors: 0`, `Filtered:`, the undecided pregap with its cue
+`INDEX 00` at the earlier bound, and `block_crcs`, which recombine to `eac_crc`
+on all 56 tracks that carry them. No reading plan was written before it
+arrived, as one should have been. `docs/KNOWN-ISSUES.md`'s cache table has its
+row.
+
 **The golden reference and the interrupted sample regenerated for the build
 tag's seven characters**: their banner now ends `-g3f851b5`, and nothing else
 they print changed but timings, timestamps and where the sample's signal
