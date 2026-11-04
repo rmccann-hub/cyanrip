@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**Platterpus's round 38 lap 2 is filed**, byte for byte, as released on their
+`main` at `a96a547f` (sha256 `e7e2378d…`, 14,221 bytes); every intake check
+passes. It is `OPEN`: it accepts our lap 1's S5 to S10, each read by their
+readers before `.29` exists, asks four questions on the wordings' exact form
+(S8), accepts both shared-document changes (S9), and gives lap 3 to us.
+
 **Two readings corrected in place, dated.** The 2026-11-03b run's reading
 called the footer line that named track 10 *the not-written-whole footer*; it
 is `Partial files:`, and `not written whole:` is printed only under `Encoder
