@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.28 (platterpus-fork-g6fa6fe5)`
+Build: `cyanrip 0.9.4-rc3+platterpus.28 (platterpus-fork-g0e2e2c21)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -449,11 +449,10 @@ where a device path or drive string carrying one would still start a line
 | `cyanrip_main.c:345` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:353` | `Unable to open device: %s` |
 | `cyanrip_main.c:394` | `Unable to init cddap context!` |
-| `cyanrip_main.c:396` | `cdio: \"` |
-| `cyanrip_main.c:398` | `\"` |
+| `cyanrip_main.c:396` | `cdio: \"%s\"` |
 | `cyanrip_main.c:411` | `Opening drive...` |
 | `cyanrip_main.c:423` | `Unable to open device!` |
-| `cyanrip_main.c:441` | `cdio error:` |
+| `cyanrip_main.c:441` | `cdio error: %s` |
 | `cyanrip_main.c:451` | `Unable to init paranoia!` |
 | `cyanrip_main.c:504` | `Invalid number of tracks: %i!` |
 | `cyanrip_main.c:541` | `CDIO returned invalid track %i end LSN` |
@@ -623,7 +622,12 @@ where a device path or drive string carrying one would still start a line
 | `naming.c:392` | `Invalid scheme syntax, no terminating \"#\"!` |
 | `naming.c:408` | `Invalid condition syntax!` |
 
-**391 distinct stable lines.**
+**390 distinct stable lines.**
+
+**A line written by consecutive calls is one row**, at its first call's site:
+`cyanrip_main.c:396`, `cyanrip_main.c:441` and `cyanrip_main.c:834`, whose `%s`
+is what `crip_log_library_text()` writes, which can run over several lines. The
+call that ends the line has no row of its own.
 
 Field order within a block is fixed and is part of the contract. The golden
 reference log in the handshake package is the authoritative example.
@@ -790,6 +794,11 @@ Every string with evidence of being reachable on a failure path. Use this to
 derive error matching rather than guessing prefixes. **P5a below lists strings
 this document does NOT claim are failures**; it is not part of this inventory.
 
+**A line written by consecutive calls is one row**, at its first call's site:
+`cyanrip_main.c:396`, `cyanrip_main.c:441` and `cyanrip_main.c:834`, whose `%s`
+is what `crip_log_library_text()` writes, which can run over several lines. The
+call that ends the line has no row of its own.
+
 **Evidence** says why each string is here, and is reported rather than folded
 into a bare verdict so you can see which entries rest on the weaker test:
 
@@ -907,13 +916,12 @@ must carry the same class.
 | `cyanrip_main.c:345` | `No device specified and unable to get default device!` | both | yes |
 | `cyanrip_main.c:353` | `Unable to open device: %s` | both | yes |
 | `cyanrip_main.c:394` | `Unable to init cddap context!` | wording | yes |
-| `cyanrip_main.c:396` | `cdio: \"` | control flow | yes |
-| `cyanrip_main.c:398` | `\"` | control flow | yes |
+| `cyanrip_main.c:396` | `cdio: \"%s\"` | control flow | yes |
 | `cyanrip_main.c:423` | `Unable to open device!` | both | yes |
 | `cyanrip_main.c:451` | `Unable to init paranoia!` | both | yes |
 | `cyanrip_main.c:504` | `Invalid number of tracks: %i!` | both | yes |
 | `cyanrip_main.c:541` | `CDIO returned invalid track %i end LSN` | control flow | yes |
-| `cyanrip_main.c:834` | `cdio error:` | control flow | yes |
+| `cyanrip_main.c:834` | `cdio error: %s` | control flow | yes |
 | `cyanrip_main.c:843` | `Frame read failed!` | control flow | yes |
 | `cyanrip_main.c:936` | `Stopping, offset finding incomplete!` | wording + goto end | yes |
 | `cyanrip_main.c:1002` | `No track had AccuRip entry, cannot find offset!` | control flow | yes |
@@ -1016,9 +1024,9 @@ must carry the same class.
 | `naming.c:392` | `Invalid scheme syntax, no terminating \"#\"!` | both | yes |
 | `naming.c:408` | `Invalid condition syntax!` | both | yes |
 
-**161 distinct strings.** By evidence: 85 both, 31 control flow, 18 wording + goto end, 16 wording, 11 genopt.
+**160 distinct strings.** By evidence: 85 both, 30 control flow, 18 wording + goto end, 16 wording, 11 genopt.
 
-The `control flow` and `both` rows total 116 strings proven reachable on a
+The `control flow` and `both` rows total 115 strings proven reachable on a
 failure path without reference to their wording. That subset is the one to
 build a hard failure classifier on.
 

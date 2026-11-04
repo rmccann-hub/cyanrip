@@ -6343,7 +6343,7 @@ def sc_contract_fatal_inventory():
     was = os.getcwd()
     try:
         os.chdir(ROOT)
-        _stable, _unstable, fatal = g.collect()
+        stable, _unstable, fatal = g.collect()
     finally:
         os.chdir(was)
     # THE GENERATOR'S OWN SPLIT, not a second copy of the rule. The first draft
@@ -6415,6 +6415,40 @@ def sc_contract_fatal_inventory():
             fail(f"contract_fatal_inventory: {probe!r} is not in P5, though "
                  "it returns an exit class; the predicate stopped seeing "
                  "`return CRIP_EXIT_<class>;`")
+
+    # 2c. A line written by consecutive calls is ONE row, at its first call.
+    #     `.28` split libcdio's identify message into `cdio: \"` and a lone
+    #     `\"` (46cec2a1 wrote the message a line at a time), and Platterpus's
+    #     round 37 lap 5 S6 could build no matcher from a one-character row;
+    #     the two `cdio error:` lines lost their `%s` the same way. The line
+    #     numbers are read from the source, so the row is checked where the
+    #     generator says it is, not merely somewhere.
+    src = (ROOT / "src" / "cyanrip_main.c").read_text(encoding="utf-8")
+    openers = {}
+    for probe, call in (('cdio: \\"%s\\"', 'cyanrip_log(ctx, 0, "cdio: \\"");'),
+                        ("cdio error: %s", 'cyanrip_log(ctx, 0, "cdio error: ");')):
+        at = src.find(call)
+        if at < 0:
+            fail(f"contract_fatal_inventory: no `{call}` in cyanrip_main.c; "
+                 "this check names a call the source no longer makes")
+            continue
+        openers[probe] = src[:at].count("\n") + 1
+    rows = {}
+    for name, line, s, _t in stable:
+        rows.setdefault(s, (name, line))  # P2 keeps a string's first site
+    for probe, line in sorted(openers.items()):
+        if rows.get(probe) != ("cyanrip_main.c", line):
+            fail(f"contract_fatal_inventory: P2 has {probe!r} at "
+                 f"{rows.get(probe)}, not cyanrip_main.c:{line}; a line "
+                 "written by consecutive calls is one row at its first call")
+    if 'cdio: \\"%s\\"' not in p5:
+        fail("contract_fatal_inventory: libcdio's identify message is not one "
+             "row in P5")
+    for table, got in (("P2", rows), ("P5", p5), ("P5a", p5a)):
+        for lone in ('\\"', "cdio error:", 'cdio: \\"'):
+            if lone in got:
+                fail(f"contract_fatal_inventory: {table} publishes {lone!r}, "
+                     "a piece of a line written by consecutive calls")
 
     # 3. Both tallies must sum to their own table. The old summary said `128
     #    distinct strings` above a breakdown totalling 114, because it iterated

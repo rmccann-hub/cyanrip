@@ -144,6 +144,10 @@
           "value": "genopt prints its own errors unless you take them."
         },
         {
+          "name": "cyanrip-fork:local-mitigation",
+          "value": "libcdio's `mmc_get_disctype()` never reads the profile list's last descriptor, and answers `0xffff` when it finds nothing."
+        },
+        {
           "name": "cyanrip-fork:ci-runner",
           "value": "macos-26"
         },
@@ -237,11 +241,11 @@
         },
         {
           "name": "cyanrip-fork:measured:env:os",
-          "value": "Ubuntu 24.04.4 LTS"
+          "value": "Ubuntu 24.04.5 LTS"
         },
         {
           "name": "cyanrip-fork:measured:env:python",
-          "value": "3.11.15"
+          "value": "3.11.18"
         },
         {
           "name": "cyanrip-fork:measured:env:cc",
@@ -778,6 +782,14 @@
         {
           "name": "cyanrip-fork:declared-in",
           "value": "src/meson.build"
+        },
+        {
+          "name": "cyanrip-fork:measured:version",
+          "value": "4.1.1"
+        },
+        {
+          "name": "cyanrip-fork:measured:licence-evidence",
+          "value": "/usr/share/doc/libqrencode-dev/copyright contains \"LGPL-2.1+\""
         }
       ],
       "licenses": [
@@ -792,7 +804,8 @@
           "type": "website",
           "url": "https://fukuchi.org/works/qrencode/"
         }
-      ]
+      ],
+      "version": "4.1.1"
     },
     {
       "type": "library",
@@ -1401,5 +1414,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:989d0691-2896-5a65-8936-fda08a38a1a5"
+  "serialNumber": "urn:uuid:819cdef7-b14e-5c28-bb0a-c67a66da4aff"
 }
