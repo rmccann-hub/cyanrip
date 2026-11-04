@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**CI's macOS cancellations are recorded where the steward skill lists known
+failures.** GitHub could not acquire a `macos-26` runner for PR #85 three times,
+nor for its merge's push `1b22ed9`. Each time the job was cancelled at 15
+minutes with no step run, under GitHub's capacity warning for macOS arm64. The
+row now quotes the annotation and says what to do when re-running does not
+help: ask the owner. The job last passed at `ee21706`.
+
 **The second Full run of 2026-11-03, `.28` through Platterpus 0.7.119, is
 filed and read** (`docs/rig-2026-11-03b-3f288fb/`, evidence `fc008d2`). It did
 not pass: 462 pass and 16 fail, and every failure follows the drive failing
