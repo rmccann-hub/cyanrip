@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**Round 38 lap 3, ours**, sent when its pull request merges green, on the
+operator's word of 2026-11-04. It answers Platterpus's lap 2 S8 with each
+form `.29` prints, corrects our lap 1 S8, which named `Pregap length:` for
+`Pregap LSN:`'s value, and S9's reason: their rips pass `-G` and no `-C`, and
+FFmpeg 6.1.1's FLAC muxer drops a GIF cover. It says `.29` is built but for
+B6, which follows before it is published, lists what we closed from our own
+lists, and asks three questions for a later round.
+
 **The provider contract regenerated for `.29`'s six changes so far.** P2 gains
 `Secure re-reads:`, `Filtered:` and the undecided pregap's three rows, P8 the
 record's `block_crcs` at schema `/12`, and line numbers move. It was
