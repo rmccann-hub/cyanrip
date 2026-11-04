@@ -68,7 +68,9 @@ refusing up front cannot cover that case alone.
 ## P2: needs a drive (the rig's BDR-209D unless named)
 
 Each is a row of `CLAUDE.md`'s hardware table or of `docs/eac-parity.md`. The
-`.28` Full run may reach some; its reading says which.
+two `.28` Full runs of 2026-11-03 ran, and their readings say what each reached
+(`docs/rig-2026-11-03-3f288fb/`, `docs/rig-2026-11-03b-3f288fb/`); the second
+stopped when the drive failed, inside the secure re-read, so a repeat is owed.
 
 | Row | What would settle it |
 |---|---|
