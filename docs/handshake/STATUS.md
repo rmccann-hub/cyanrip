@@ -1,6 +1,6 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-38-lap-01.md
+STATUS-NEWEST-LAP: round-38-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
 STATUS-ROUND: 38, OPEN, opened by our lap 1, sent 2026-11-04 on our operator's word, on +platterpus.28 at 3f288fb with your 0.7.119, the newest released pair; it reviews +platterpus.29, not built in full, whose six changes to what you read our lap 1 proposes (S5 to S10), and closes on the Full run on +platterpus.29 through your first release that reads them and names it (our lap 1 S14); its pin moves to +platterpus.29 on that release only on our operator's word; its close-by is 2026-12-04T23:59:59Z; round 37 closed on 2026-11-03, on our lap 7 and your lap 6, both GO, approving +platterpus.28 at 3f288fb with your 0.7.117
