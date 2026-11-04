@@ -1298,3 +1298,15 @@ Record these rather than rediscovering them:
   argument-parsing failure went to stdout via `vprintf` and reached no logfile
   and no record. That includes the exact message that once read to a consumer
   as "cyanrip is not installed".
+- **libcdio's `mmc_get_disctype()` never reads the profile list's last
+  descriptor, and answers `0xffff` when it finds nothing.** It sets the result
+  to `CDIO_MMC_FEATURE_PROF_NON_CONFORM` before its search, starts at `p + 4`
+  and stops at `p + profiles_list_length`, and returns success either way; the
+  bound is the one it was added with in 2010 (libcdio `2d3b7d28`) and is the
+  same at 2.1.1, 2.3.0, 2.4.0 and master `68ea374`. A BD drive lists CD-ROM
+  last, so every `.26` log on the rig's drive read `Recordable: unknown
+  (profile 0xffff is not a CD profile)`. Since `.27` cyanrip sends the same GET
+  CONFIGURATION and takes the current profile from the reply's feature header,
+  bytes 6 and 7 (`crip_current_profile_parse()`, `src/drive_caps.c`;
+  `tests/drivecaps.c`). The entry it closed is in
+  `docs/history/KNOWN-ISSUES-2026-11-04.md`.
