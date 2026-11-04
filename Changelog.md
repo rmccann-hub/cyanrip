@@ -13,7 +13,10 @@ form `.29` prints, corrects our lap 1 S8, which named `Pregap length:` for
 `Pregap LSN:`'s value, and S9's reason: their rips pass `-G` and no `-C`, and
 FFmpeg 6.1.1's FLAC muxer drops a GIF cover. It says `.29` is built but for
 B6, which follows before it is published, lists what we closed from our own
-lists, and asks three questions for a later round.
+lists, and asks three questions for a later round. Before it was sent, its S14 and
+S15 dropped lap 1 S9's *fetched during the rip*: the Cover Art Archive's
+cover is fetched before the rip begins, and is not refused because nobody
+chose it.
 
 **The provider contract regenerated for `.29`'s six changes so far.** P2 gains
 `Secure re-reads:`, `Filtered:` and the undecided pregap's three rows, P8 the
