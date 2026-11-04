@@ -46,13 +46,13 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `ffmpeg` | `tests/gen_fixtures.py`, `tests/rigcheck.py`, `tests/rip_images.py`, `tools/audio-checksums.py` and 1 more | makes the disc-image fixtures' audio, decodes rips for checksums, and measures which covers each muxer keeps |
 | `ffprobe` | `tests/rip_images.py` | reads ripped files' tags, durations and encoder strings, as a witness independent of cyanrip |
 | `gcov` | `tools/coverage-summary.py` | coverage |
-| `git` | `tests/commit_subjects.py`, `tests/contract_delta.py`, `tests/evidence_readers.py`, `tests/evidence_tool.py` and 26 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |
+| `git` | `tests/build_tag.py`, `tests/commit_subjects.py`, `tests/contract_delta.py`, `tests/evidence_readers.py` and 27 more | reads history: lap commits, ledger publication dates, contract and upstream deltas; builds the scratch repositories tests run on |
 | `meson` | `tests/hardening_probe.py`, `tools/sanitize-run.py` | configures the instrumented and mutated builds |
 | `ninja` | `tools/sanitize-run.py` | builds them |
 | `nm` | `tools/blackbox.py` | asks a binary whether sanitizer symbols are in it |
 | `pkg-config` | `tools/gen-dependency-map.py` | this map's measured versions; the build finds every library through it too |
 | `ruff` | `tests/python_lint.py` | the Python lint gate: Pyflakes's rules over tools/ and tests/, pinned in CI |
-| `sh` | `tests/session_hook.py` | runs the session-start hook on scratch repositories, as Claude Code runs it |
+| `sh` | `tests/build_tag.py`, `tests/session_hook.py` | runs the session-start hook on scratch repositories, as Claude Code runs it, and the build's own tag script |
 | `valgrind` | `tests/valgrind_rip.py` | memcheck over one rip of the basic image, which sees inside the libraries as built |
 | `xargs` | `tests/mingw_build.py` | asked its version: that check needs GNU xargs, which the script runs, as MSYS2 has |
 
