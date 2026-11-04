@@ -20,8 +20,8 @@ fine.
 | 10 | Where a read was unsure | Positions are in the `--diagnostics` record from `.25`. Their wording in the EAC-layout log is Platterpus's R44, which we review | STATUS `error-positions`; Platterpus's TASKS R44 |
 | 16 | Accurate stream | The drive's declaration is read and printed, "not measured". libcdio-paranoia neither reads it nor depends on it | Our round 36 lap 8 |
 | 21 | Pregaps | `.26` never read the reference disc's track 9 as the 94 frames `.25` and EAC read. `.27` records what the search saw, in `Pregap search:` | STATUS `subchannel-pregap-varies`; `docs/KNOWN-ISSUES.md` |
-| 23 | CD-R detection | `.26` printed libcdio's placeholder. `.27` reads the drive's current profile itself | STATUS `recordable-medium-line`; `docs/KNOWN-ISSUES.md` |
-| — | `Extraction speed:` under `-Z` | It divided one track's audio by every read's time. `.27` gives the kept read's own speed, as Platterpus's round 36 lap 9 S18 accepts | `docs/KNOWN-ISSUES.md`; our round 36 lap 8 S27 |
+| 23 | CD-R detection | `.26` printed libcdio's placeholder. `.27` reads the drive's current profile itself | STATUS `recordable-medium-line`; `docs/history/KNOWN-ISSUES-2026-11-04.md` |
+| — | `Extraction speed:` under `-Z` | It divided one track's audio by every read's time. `.27` gives the kept read's own speed, as Platterpus's round 36 lap 9 S18 accepts | `docs/history/KNOWN-ISSUES-2026-11-04.md`; our round 36 lap 8 S27 |
 
 Every row that needs the drive stays open until a rig run shows it. A green
 suite is not that run (`CLAUDE.md`, *No CD drive in this environment*).
