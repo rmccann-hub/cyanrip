@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**The footer's AccurateRip tallies count the tracks the run asked for, and `-f`
+prints neither.** `Tracks ripped accurately:` and `Tracks matched on one frame
+only:` divided by the disc's audio tracks whatever `-l` said, so `-l 1` printed
+`1/14` over a rip that read one track and matched it; they divide by the audio
+tracks `-l` names, every one without it. An offset search, which rips nothing,
+printed both. Our round 38 lap 1 S6 (a) and (b), which Platterpus's lap 2 S3
+accepted as given. `tests/logrender.c` checks `-l 2` and `-f` on one disc, and
+fails on either half reverted.
+
 **A drive lost mid-rip says `Error ripping: Input/output error`.** Dumbass us
 returned `EINVAL` from the stop that follows `Drive media changed, stopping!`
 and `Drive media change query failed (libcdio error N), stopping!`, so the run

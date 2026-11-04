@@ -1194,7 +1194,11 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
      * and this does nothing. */
     crip_early_flush(ctx);
 
-    if (ctx->ar_db_status == CYANRIP_ACCUDB_FOUND) {
+    /* Not under -f, which reads to search for an offset and rips nothing, so
+     * a tally there counted tracks no rip read (our round 38 lap 1 S6 (b),
+     * which Platterpus's lap 2 S3 accepted). */
+    if (ctx->ar_db_status == CYANRIP_ACCUDB_FOUND &&
+        ctx->not_a_rip != CRIP_OFFSET_SEARCH_ONLY) {
         int accurip_verified = 0;
         int accurip_partial = 0;
         for (int i = 0; i < ctx->nb_tracks; i++) {
@@ -1250,12 +1254,19 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
          * gets an AccurateRip status and so never reaches the numerator: a
          * mixed disc whose audio all verified read `2/3`. Asked by
          * Platterpus's round 36 lap 3 S8; our lap 5 S4 proposed this and
-         * their lap 6 S2 accepted it as given. A rip of some tracks with -l
-         * still divides by the disc's count, so the lines stay counts over
-         * the disc. Upstream's footer is the same. */
+         * their lap 6 S2 accepted it as given.
+         *
+         * And only the audio tracks the run asked for: every track, or the
+         * ones -l names. It divided by the disc's audio tracks whatever -l
+         * said, so `-l 1` printed `1/14` over a rip that read one track and
+         * matched it (our round 38 lap 1 S6 (a), which Platterpus's lap 2 S3
+         * accepted: nothing of theirs read the denominator as the disc). An
+         * aborted rip still divides by what was asked. Upstream divides by
+         * the disc. */
         int nb_audio = 0;
         for (int i = 0; i < ctx->nb_tracks; i++)
-            nb_audio += !ctx->tracks[i].track_is_data;
+            nb_audio += !ctx->tracks[i].track_is_data &&
+                        crip_track_asked(ctx, &ctx->tracks[i]);
         cyanrip_log(ctx, 0, "Tracks ripped accurately: %i/%i\n", accurip_verified, nb_audio);
         if (accurip_partial)
             cyanrip_log(ctx, 0, "Tracks matched on one frame only: %i/%i\n",

@@ -747,6 +747,20 @@ extern const int crip_max_paranoia_level;
  * securing pass that re-reads exactly those tracks
  * (platterpus@bd508bf1:src/platterpus/workers/rip_worker.py:2536 and 1905).
  * Which way it should go is put to them in round 30 lap 9. */
+/* Whether the run asked for this track: every track without -l, otherwise
+ * the tracks -l names. The footer's AccurateRip tallies divide by the audio
+ * tracks this is true of (our round 38 lap 1 S6 (a), which Platterpus's lap 2
+ * S3 accepted), and crip_track_written() starts from it. */
+static inline int crip_track_asked(const cyanrip_ctx *ctx, const cyanrip_track *t)
+{
+    if (ctx->settings.rip_indices_count == -1)
+        return 1;
+    for (int i = 0; i < ctx->settings.rip_indices_count; i++)
+        if (ctx->settings.rip_indices[i] == t->number)
+            return 1;
+    return 0;
+}
+
 static inline uint64_t crip_ripping_errors(const cyanrip_ctx *ctx)
 {
     return (uint64_t)ctx->total_error_count + ctx->paranoia_skips;

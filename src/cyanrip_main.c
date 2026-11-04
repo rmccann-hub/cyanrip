@@ -2326,12 +2326,7 @@ static int crip_track_written(cyanrip_ctx *ctx, const cyanrip_track *t)
         return 0;
     if (t->track_is_data && ctx->settings.disable_data_tracks)
         return 0;
-    if (ctx->settings.rip_indices_count == -1)
-        return 1;
-    for (int i = 0; i < ctx->settings.rip_indices_count; i++)
-        if (ctx->settings.rip_indices[i] == t->number)
-            return 1;
-    return 0;
+    return crip_track_asked(ctx, t);
 }
 
 /* Every path component a tag value is part of that was shortened to fit 255

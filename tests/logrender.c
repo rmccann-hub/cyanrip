@@ -150,6 +150,8 @@ static cyanrip_ctx *new_ctx(void)
         exit(1);
     }
     ctx->settings.outputs_num = 1;
+    /* Every track asked, as main() leaves it without -l */
+    ctx->settings.rip_indices_count = -1;
     ctx->logfile[0] = tmpfile();
     if (!ctx->logfile[0]) {
         printf("FAIL: could not open a tmpfile to capture the log\n");
@@ -1423,6 +1425,44 @@ static void test_disc_tally_counts_audio_tracks_only(void)
     free_ctx(ctx);
 }
 
+/* The tallies divide by the audio tracks the run asked for, and -f prints
+ * neither: our round 38 lap 1 S6 (a) and (b), which Platterpus's lap 2 S3
+ * accepted. Before `.29`, `-l 2` on this disc printed `1/3` over the one
+ * track it read and matched, and an offset search printed a tally of tracks
+ * no rip read. */
+static void test_disc_tally_counts_tracks_asked(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, 3);
+    ar_entries[0] = (CRIPAccuDBEntry){ .confidence = 8, .checksum = 0x11111111 };
+    for (int i = 0; i < 3; i++) {
+        cyanrip_track *t = &ctx->tracks[i];
+        t->ar_db_status = CYANRIP_ACCUDB_FOUND;
+        t->ar_db_entries = ar_entries;
+        t->ar_db_nb_entries = 1;
+        t->ar_db_max_confidence = 8;
+        t->audio_ripped = (i == 1);
+    }
+    ctx->tracks[1].acurip_checksum_v1 = 0x11111111;
+    ctx->settings.rip_indices_count = 1;
+    ctx->settings.rip_indices[0] = 2;
+
+    cyanrip_log_finish_report(ctx);
+    expect_line(drain(ctx), "Tracks ripped accurately: 1/1", "disc-tally/-l 2");
+
+    /* The same disc under -f, which reads no track to rip it */
+    ctx->settings.rip_indices_count = -1;
+    ctx->not_a_rip = CRIP_OFFSET_SEARCH_ONLY;
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    if (strstr(out, "Tracks ripped accurately:") ||
+        strstr(out, "Tracks matched on one frame only:"))
+        FAIL("disc-tally/-f: an offset search printed an AccurateRip tally");
+    expect_line(out, "Rip completed:  no (offset search only, 0 of 3 tracks)",
+                "disc-tally/-f footer");
+    free_ctx(ctx);
+}
+
 /* The footer's one-frame tally counts exactly the per-track `Accurip 450:`
  * lines that say `matches Accurip DB`. The per-track block is printed only when
  * both whole-track lookups MISSED (< 0); the tally tested "neither > 0", and
@@ -1976,6 +2016,7 @@ int main(void)
 
     test_disc_tally_counts_over_one_population();
     test_disc_tally_counts_audio_tracks_only();
+    test_disc_tally_counts_tracks_asked();
     test_disc_tally_ignores_a_zero_450_checksum();
     test_disc_tally_matches_the_per_track_450_gate();
     test_disc_tally_skips_tracks_not_in_the_database();
