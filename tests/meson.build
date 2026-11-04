@@ -846,6 +846,14 @@ test('Bundle ingest', python, args: [ files('ingest_bundle.py') ])
 test('Lap intake and run reader', python,
      args: [ files('lap_and_run_tools.py'), cyanrip_exe ])
 
+## The build tag's short hash is seven characters however big the clone:
+## git sizes `--short` by object count, this repository passed eight with
+## .29, and Platterpus's installer refused a correct build of it
+## (platterpus@7fdc33a1). The tag script is run from src/meson.build in a
+## repository abbreviating at twelve and in a directory with no git.
+test('Build tag length', python,
+     args: [ files('build_tag.py'), cyanrip_exe ])
+
 ## The owner's rule of 2026-10-12: home folders, the hostname and the owner's
 ## real name stay out of anything newly committed, through the export and
 ## filing tools. tests/redaction.py checks tools/redact.py and the two tools

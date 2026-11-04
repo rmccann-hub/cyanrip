@@ -1016,8 +1016,12 @@
       "bom-ref": "run:git",
       "name": "git",
       "scope": "excluded",
-      "description": "reads history: lap commits, ledger publication dates, contract and upstream deltas",
+      "description": "reads history: lap commits, ledger publication dates, contract and upstream deltas; builds the scratch repositories tests run on",
       "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/build_tag.py"
+        },
         {
           "name": "cyanrip-fork:run-by",
           "value": "tests/commit_subjects.py"
@@ -1214,8 +1218,12 @@
       "bom-ref": "run:sh",
       "name": "sh",
       "scope": "excluded",
-      "description": "runs the session-start hook on scratch repositories, as Claude Code runs it",
+      "description": "runs the session-start hook on scratch repositories, as Claude Code runs it, and the build's own tag script",
       "properties": [
+        {
+          "name": "cyanrip-fork:run-by",
+          "value": "tests/build_tag.py"
+        },
         {
           "name": "cyanrip-fork:run-by",
           "value": "tests/session_hook.py"
@@ -1418,5 +1426,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:2896c674-7381-5a18-a236-63a739a52c84"
+  "serialNumber": "urn:uuid:91a7b274-6342-5fcf-b2e3-4cc28a826a1a"
 }

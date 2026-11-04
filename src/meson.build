@@ -197,14 +197,26 @@ sources = [
     # .gitattributes export-subst, so an archive can still name itself. In a
     # working tree that file still holds the literal placeholder, which starts
     # with '$' and so fails the hex test below.
+    #
+    # THE TAG'S LENGTH MUST NOT DEPEND ON THE CLONE (2026-11-04). `git
+    # rev-parse --short` takes its length from the repository's object count:
+    # seven characters until about 16,000 objects, eight after. This
+    # repository passed that line with .29, so a full clone built
+    # `platterpus-fork-g8d2ca726` where the release manifest, the ledger, our
+    # laps and Platterpus's pin all say `8d2ca72`, and their installer refused
+    # the owner's install of .29 with their 0.7.120 (platterpus@7fdc33a1, which
+    # pins seven in their clone). Seven is what every record of ours writes, so
+    # the build asks for it: `--short=7` is lengthened only for a prefix that is
+    # ambiguous. An archive's `%h` is sized by whichever git made the archive,
+    # so the file carries the full hash and the first seven are taken here.
     vcs_tag(command: ['sh', '-c',
                       'cd ' + meson.project_source_root() +
-                      ''' && if git rev-parse --short HEAD >/dev/null 2>&1; then
-                             printf %s "$(git rev-parse --short HEAD)$(git diff --quiet HEAD || printf -- -dirty)"
+                      ''' && if git rev-parse --short=7 HEAD >/dev/null 2>&1; then
+                             printf %s "$(git rev-parse --short=7 HEAD)$(git diff --quiet HEAD || printf -- -dirty)"
                            else
                              a=$(cat src/archive-version.txt 2>/dev/null | tr -d " \n")
                              case "$a" in
-                               [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) printf %s "$a" ;;
+                               [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) printf %s "$(printf %s "$a" | cut -c1-7)" ;;
                                *) printf %s "unknown" ;;
                              esac
                            fi'''],

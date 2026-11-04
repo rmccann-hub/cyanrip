@@ -328,6 +328,32 @@ with the image's bytes; with the fix reverted it fails two checks.
 whether a pressed CD-Extra's TOC matches the image's, are unknown here. Listed
 in `STATUS.md`'s `hardware-unverified`.
 
+### The build tag names `.29` in eight characters from a full clone (fixed for the build after `.29`)
+
+**Found 2026-11-04 by Platterpus** (platterpus@7fdc33a1), when their installer
+refused the owner's install of `.29` with their 0.7.120. The build tag is `git
+rev-parse --short HEAD`, whose length git takes from the repository's object
+count: seven characters until about 16,000 objects, eight after. This
+repository passed that line with `.29` (17,009 packed objects in a full clone
+on 2026-11-04), so a full clone builds `platterpus-fork-g8d2ca726`, while the
+release manifest, the ledger, our laps and Platterpus's pin say `8d2ca72`. Our
+own `.29` Changelog records the eight-character tag, and our round 38 lap 5
+still gave the banner as `g8d2ca72`.
+
+**What it costs**: the same commit builds two banners depending on the clone,
+and a consumer that checks the banner against the pin refuses a correct build.
+Platterpus's installer now pins seven in its own clone.
+
+**Fixed for the build after `.29`, not yet released**: the build asks `git
+rev-parse --short=7`, which git lengthens only for a prefix that is ambiguous,
+and an archive carries the full hash (`$Format:%H$`), cut to seven, since `%h`
+is sized by whichever git made the archive. `tests/build_tag.py` runs the
+build's own tag script in a repository abbreviating at twelve and in one with
+no git, reads what `git archive` writes, and holds this build's banner to
+`--short=7`. It fails with either half of the fix reverted. `.29` as released
+still builds eight characters from a full clone. It leaves this file once the
+fix ships.
+
 ### `-H` on a disc without HDCD delivers a file 6.02 dB quieter, beside checksums of the read (the line fixed for `.29`)
 
 **Measured on a drive 2026-10-06** (`docs/rig-2026-10-06-5704062/README.md`,
@@ -778,6 +804,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-10-28 `5aeefc4` | 362.8 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 57.8 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-10-29 `5aeefc4` | 362.7 ms | 1.2 ms | **6 ms** | 20%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.6 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-11-03 `3f288fb` | 362.8 ms | 1.4 ms | **6 ms** | 23%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.7 ms or more, beside `cd-paranoia -A`'s 144 |
+| 2026-11-04 `8d2ca72` | 362.9 ms | 1.2 ms | **6 ms** | 20%; `128 to 255 sectors`, three re-reads after 256 sectors at 59.0 ms or more, beside `cd-paranoia -A`'s 140 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
