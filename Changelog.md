@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Two readings corrected in place, dated.** The 2026-11-03b run's reading
+called the footer line that named track 10 *the not-written-whole footer*; it
+is `Partial files:`, and `not written whole:` is printed only under `Encoder
+errors:`, in none of that run's 55 filed files. The readiness plan's P2 still
+said the `.28` Full run *may reach some*; both runs have been read, and the
+second stopped inside the secure re-read when the drive failed.
+
 **A line the log writes with consecutive calls is one row of the provider
 contract again.** When `46cec2a1` made libcdio's messages print a line at a
 time, so that their values are escaped, it split three lines into an opening

@@ -54,7 +54,10 @@ same as not present.
 - **The read-stall watchdog on a real stall**: `Read stalls:    1 read exceeded
   10s; longest 17s (track 10, LSN 170803)`. The record's `read_stalls` field
   agrees.
-- **The not-written-whole footer** names track 10.
+- **The footer's `Partial files:` line** names track 10. *Corrected
+  2026-11-04: this said "the not-written-whole footer", which is
+  `not written whole:`, a different line, printed under `Encoder errors:` for a
+  file whose encoder failed. This run printed no such line.*
 
 ## The reads before the drive failed
 
