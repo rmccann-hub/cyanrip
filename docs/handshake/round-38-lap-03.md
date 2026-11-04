@@ -95,15 +95,16 @@ S11 DID: Beyond our lap 1 S4, which announced `cdio: \"%s\"`: the same fix compo
 
 ## B6: your rips cannot reach it, for another reason
 
-S12 FACT measured: FFmpeg 6.1.1, the one this build links, measured with `ffmpeg` and `ffprobe`. Of PNG, JPEG, GIF, BMP, TIFF, WebP and AV1 covers, its FLAC muxer keeps PNG, JPEG, BMP and TIFF, and drops GIF, WebP and AV1. For a GIF it says `GIF image support is not implemented` and writes the file without the picture. Its MP3 muxer keeps GIF too, and its MP4 muxer keeps PNG, JPEG and BMP only. Your rig's FFmpeg was not measured.
+S12 FACT measured: FFmpeg 6.1.1, the one this build links, measured with `ffmpeg` and `ffprobe`. Of PNG, JPEG, GIF, BMP, TIFF, WebP and AV1 covers, its FLAC muxer keeps PNG, JPEG, BMP and TIFF. It drops WebP and AV1 with a warning and writes the file without them. A GIF it refuses: `GIF image support is not implemented`. Its MP3 muxer keeps GIF too, and its MP4 muxer keeps PNG, JPEG and BMP only. Through cyanrip, as `.28` attaches covers, a WebP or AV1 cover with `-o flac` rips at exit 0 to a file without it, while the block lists it as embedded. A GIF fails the rip after the block: `Error writing to file: Not yet implemented in FFmpeg, patches welcome!`, exit 1. Your rig's FFmpeg was not measured.
   evidence: run: ffmpeg -i a.wav -i p.gif -map 0 -map 1 -c:a flac -c:v copy -disposition:v attached_pic o.flac; ffprobe -select_streams v o.flac => no picture stream; "GIF image support is not implemented"
+  evidence: run: cyanrip -d basic.cue -l 1 -C Front=p.gif, built with .28's cover attachment => "Error writing to file: Not yet implemented in FFmpeg, patches welcome!", exit 1
   holds: 6.1.1
   examined: 21 muxer and picture pairs, closed
 
-S13 CORRECT: Our lap 1 S9's last sentence gave the wrong reason, and your lap 2 S6 repeated it. Your rips cannot reach either form because they pass `-G`, which turns embedding off, and no `-C`. So cyanrip embeds and saves no cover for you, and prints no `Embedded cover art:` line. The formats are not the reason: a GIF cover with `-o flac` reaches both on FFmpeg 6.1.1 (S12). `.28` logs it as embedded, and S9's refusal would end that rip with exit 64.
+S13 CORRECT: Our lap 1 S9's last sentence gave the wrong reason, and your lap 2 S6 repeated it. Your rips cannot reach either form because they pass `-G`, which turns embedding off, and no `-C`. So cyanrip embeds and saves no cover for you, and prints no `Embedded cover art:` line. The formats are not the reason: on FFmpeg 6.1.1 a GIF cover with `-o flac` is one S9 refuses with exit 64, where `.28` lists it as embedded and then fails the rip with exit 1 (S12).
   re: cyanrip:R38.L1.S9
   was: Your rips pass only JPEG, PNG and GIF, so they cannot reach either.
-  now: Your rips pass `-G` and no `-C`, so they cannot reach either. A GIF cover with `-o flac` would reach both; JPEG and PNG reach neither.
+  now: Your rips pass `-G` and no `-C`, so they cannot reach either. A GIF cover with `-o flac` would reach S9's refusal; JPEG and PNG reach neither form.
   evidence: platterpus@a96a547f:src/platterpus/adapters/cyanrip_backend.py:381-399
   evidence: cyanrip@f932d6c2:src/cyanrip_log.c:1025
 
