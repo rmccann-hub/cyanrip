@@ -1353,6 +1353,25 @@ def sc_deemph_with_hdcd():
                      f"-H, which deliver different audio. The figure is being "
                      f"measured before the filter graph again")
 
+    # `Filtered:` NAMES THE FILTERS THAT RAN, on every track block, because
+    # the checksums above it are of the read and the file is not (our round
+    # 38 lap 1 S7, Platterpus's lap 2 S4; the review of 2026-11-03, A6). One
+    # line per track, in the order the graph runs them, and none when no
+    # filter ran. Counted against the blocks' own `Accurip:` lines, so a
+    # line printed on some tracks only cannot pass.
+    rip("hb_plain", "basic.cue", "-o", "pcm")
+    tail = "; the checksums and AccurateRip verdicts above are of the read, before the filter"
+    for name, filters in (("hb_hdcd", "hdcd"), ("hb_both", "hdcd, de-emphasis"),
+                          ("hb_emph", "de-emphasis"), ("hb_auto", "hdcd, de-emphasis"),
+                          ("hb_off", "hdcd"), ("hb_plain", None)):
+        f = WORK / f"out_{name}" / "log.log"
+        text = f.read_text(encoding="utf-8") if f.exists() else ""
+        blocks = len(re.findall(r"^  Accurip:       ", text, re.M))
+        got = re.findall(r"^  Filtered:      (.*)$", text, re.M)
+        want = [] if filters is None else [filters + tail] * blocks
+        if not blocks or got != want:
+            fail(f"deemph_with_hdcd: {name}: {blocks} track block(s) and "
+                 f"`Filtered:` lines {got!r}; want {want!r}")
 
 
 def sc_loudness_after_filter():

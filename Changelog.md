@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**A track block says when a filter changed the audio written.** `-H` puts each
+16-bit sample into s32 shifted by 15, so on a disc without HDCD the file is
+6.02 dB quieter than the read its checksums and AccurateRip verdicts describe,
+and de-emphasis changes every sample; nothing in the block said so (the review
+of 2026-11-03, A6). After the Accurip lines, a filtered track prints a
+`Filtered:` line at the block's indent: `hdcd; the checksums and AccurateRip
+verdicts above are of the read, before the filter`, with `de-emphasis`, or
+`hdcd, de-emphasis` in the order the graph runs them, in place of `hdcd`. Our
+round 38 lap 1 S7, which Platterpus's lap 2 S4 accepted; the `, ` answers their
+S8 (b) in our lap 3. `sc_deemph_with_hdcd` checks every combination on every
+block and a plain rip's absence, and fails with the line removed or joined
+otherwise.
+
 **`Secure re-reads:` says at disc level whether `-Z` confirmed every track.**
 A track whose re-reads never agreed reported nothing to the drive or to
 paranoia, so a `-Z` rip could keep a read at its repeat limit and end on

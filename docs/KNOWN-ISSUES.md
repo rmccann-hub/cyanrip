@@ -300,7 +300,7 @@ with the image's bytes; with the fix reverted it fails two checks.
 whether a pressed CD-Extra's TOC matches the image's, are unknown here. Listed
 in `STATUS.md`'s `hardware-unverified`.
 
-### `-H` on a disc without HDCD delivers a file 6.02 dB quieter, beside checksums of the read
+### `-H` on a disc without HDCD delivers a file 6.02 dB quieter, beside checksums of the read (the line fixed for `.29`)
 
 **Measured on a drive 2026-10-06** (`docs/rig-2026-10-06-5704062/README.md`,
 -6.5 against -0.5 dBFS) **and raised again by the review of 2026-11-03 (A6)**,
@@ -329,6 +329,15 @@ from the level.
 saying when a filter changed the delivered audio, which is new log text and
 goes in a lap first (round 38). Compensating the level is not offered: whether
 the disc carried HDCD is known only when the graph is freed, after encoding.
+
+**The line is fixed for `.29`, not yet released**: each track block a filter
+ran on says `  Filtered:      hdcd; the checksums and AccurateRip verdicts
+above are of the read, before the filter`, with `de-emphasis` or both, in the
+order the graph runs them, joined by `, `, as our round 38 lap 1 S7 proposed
+and Platterpus's lap 2 S4 accepted. `sc_deemph_with_hdcd` checks every
+combination on every block and a plain rip's absence, and fails with the
+line removed or joined otherwise. The level itself stays as libavfilter
+leaves it, and this entry stays until a decision on that.
 
 ### `Ripping errors:` leaves out a `-Z` track whose re-reads never agreed (fixed for `.29`)
 

@@ -895,6 +895,24 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                 cyanrip_log(ctx, 0, "\n");
             }
         }
+
+        /* WHEN A FILTER CHANGED THE AUDIO WRITTEN, the lines above describe
+         * a different signal from the file's. Every checksum and AccurateRip
+         * verdict is of the read, before the filter graph; -H's hdcd puts
+         * each 16-bit sample into s32 shifted by 15, so on a disc without
+         * HDCD the file is 6.02 dB quieter than the read the checksums
+         * matched (our round 37 lap 7 S4), and de-emphasis changes every
+         * sample. Nothing in the block said so (the review of 2026-11-03,
+         * A6). The filters are named in the order they run, hdcd first,
+         * joined by ", ". Our round 38 lap 1 S7, which Platterpus's lap 2 S4
+         * accepted; not printed when no filter ran on the track. */
+        const int hdcd = ctx->settings.decode_hdcd;
+        const int deemph = crip_deemphasis_active(ctx, t);
+        if (!t->track_is_data && (hdcd || deemph))
+            cyanrip_log(ctx, 0, "  Filtered:      %s%s%s; the checksums and AccurateRip "
+                                "verdicts above are of the read, before the filter\n",
+                        hdcd ? "hdcd" : "", hdcd && deemph ? ", " : "",
+                        deemph ? "de-emphasis" : "");
     }
 
     cyanrip_log(ctx, 0, "\n  Metadata:\n");
