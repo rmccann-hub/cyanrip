@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**Research: why tracks 3 and 5 read wrong the same way, and track 9's
+pregap**, on the owner's word of 2026-11-04 (`docs/research/`). EAC can't fix
+a read that is wrong the same way every time either, by its own documented
+algorithm, and nor can any ripper that keeps a read because reads agree.
+dBpoweramp stops a track at the first pass AccurateRip verifies, riprip stops
+once AccurateRip or CTDB confirm it, and CUETools repairs a rip afterwards from
+CTDB's parity. Our drive read track 5 right once, on 2026-10-06, and agreement
+kept the wrong read. The proposal: an AccurateRip stop-and-keep rule in our
+read loop, every distinct read in the log, and three rig observations first;
+CTDB repair is Platterpus's to decide. No public database holds pregaps, and
+the careful readers read raw sub-channel where ours reads formatted Q. The
+first draft said no CTDB repair exists outside C#; Platterpus found
+`cdverify`, a Rust one, and the two documents now say so.
+
 **Round 38's Full run is filed and read**: `.29` through Platterpus 0.7.120
 on the reference disc, 2026-11-04 from 12:53:46Z, on our evidence branch at
 `7c832173` (`docs/rig-2026-11-04-8d2ca72/`), whose README is our reading. By
