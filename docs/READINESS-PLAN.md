@@ -47,23 +47,30 @@ the proposals below.
 Each is a line Platterpus parses or a count it acts on, so each is proposed in
 a lap before it ships, `.29` included (the review of 2026-11-03, §2 and §4).
 
+**State, 2026-11-04:** our round 38 lap 1 proposed all six and Platterpus's
+lap 2 accepted them. A5, B5, A6, A7 and the per-second checksum are built for
+`.29` as our lap 3 gives them, not released; B6 is built as lap 3 S15 says.
+
 | Item | What settles it | Owner |
 |---|---|---|
 | **A5: `Ripping errors:` leaves out a `-Z` track whose re-reads never agreed**, while the track block says `Track 3 read with errors.` (the 2026-11-03 secure re-read: five reads, four checksums, footer `0`). `crip_ripping_errors()` counts the drive's errors and paranoia's skips, and the repeat-limit arm (`src/cyanrip_main.c:2154-2157`) adds to neither. **Folding it into the count is not a local fix:** Platterpus's read-speed ladder takes the count less the skips as what the drive failed (`platterpus@168761ef:src/platterpus/parsers/cyanrip_log.py:1089-1105`), so it would step the disc down for a disagreement no drive reported | a lap proposing a third part of the suffix, e.g. `(including 1 track whose re-reads never agreed)`, and their parser taking it | us, then Platterpus |
 | **B5: the footer's denominators count the whole disc**: `-f` prints `Tracks ripped accurately: 0/14`, `-l 1` prints `1/14`; and a cancel's SIGTERM counts in `Ripping errors: 1` | a lap with the wordings: count against the tracks asked, and a cancel as a cancel | us, then Platterpus |
 | **A6: `-H` on a disc without HDCD delivers a file 6 dB quieter** while the CRC and the AccurateRip verdict, taken before the filter, are unchanged | **Cause confirmed on an image, 2026-11-03**: libavfilter's `hdcd` shifts each 16-bit sample by 15 into s32, -6.02 dB, and every sample of the `-H` file is the plain one's shifted so (`KNOWN-ISSUES.md`). What remains: a lap proposing a line beside the CRC whenever a filter changed the delivered audio | us |
 | **A7: track 9's pregap says `unknown` where the search narrowed to one sector** (LSN 145567): "94 or 95 frames, undecided", with both bounds for a cue's `INDEX 00` | a lap with the wording | us, then Platterpus |
-| **B6: `Embedded cover art:` names a cover the muxer dropped** (`KNOWN-ISSUES.md`): an AV1 cover is logged as embedded in a FLAC that has none. The line is in the contract's P2. Platterpus passes only JPEG, PNG and GIF, so its rips cannot reach it | a lap proposing the fix, then a build, before `.29` | us |
+| **B6: `Embedded cover art:` names a cover the muxer dropped** (`KNOWN-ISSUES.md`): an AV1 cover is logged as embedded in a FLAC that has none. The line is in the contract's P2. Platterpus passes `-G` and no `-C`, so its rips cannot reach it (our round 38 lap 3 S13 corrects the reason lap 1 S9 gave) | a lap proposing the fix, then a build, before `.29` | us |
 | A checksum per second of audio for each kept read, in the `--diagnostics` record, so two rips can be compared region by region without the audio (the 2026-11-03 reading, *To add next time* 1) | a lap; a record field, not a log line | us |
 | Their lap 5 S6: P5's lone `"` row for libcdio's identify message | optional | us |
 | The K1 amendment (our lap 5 S10): a lap is sent when it reaches its side's default branch | a round of its own; round 37's crossing is its case | both, then the owners |
 
-**Recommended shape for the cover-art fix:** print what the muxer wrote, read
-back after the header is written, so the line can never claim a cover the file
-does not hold; and, where the cover is the user's own file and its format is
-known before the rip, refuse it up front with exit 64 naming the format. A
-cover fetched from the Cover Art Archive arrives after the rip has started, so
-refusing up front cannot cover that case alone.
+**The cover-art fix as built for `.29`** (our round 38 lap 3 S15): which
+output holds which picture is a table of what FFmpeg's muxers keep, which
+`sc_cover_art_formats` re-measures against the FFmpeg the build links; a
+user's own cover an embedding output cannot hold is refused before the rip
+with exit 64; and the track block lists a cover only for the files that hold
+it. The line cannot be read back from the files, because it prints before the
+encoders finish. A cover the Cover Art Archive supplies is fetched before the
+rip too; it is not refused, because nobody chose it. *Corrected 2026-11-04:
+this paragraph said it arrives after the rip has started.*
 
 ## P2: needs a drive (the rig's BDR-209D unless named)
 

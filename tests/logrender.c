@@ -94,7 +94,12 @@ char *crip_invocation = NULL;
 const int crip_max_paranoia_level = 2;
 const char *vcstag = "logrender-test";
 uint64_t paranoia_status[PARANOIA_CB_FINISHED + 1] = { 0 };
-const cyanrip_out_fmt crip_fmt_info[CYANRIP_FORMATS_NB] = { { 0 } };
+/* The two rows the cover-art tests need, as src/cyanrip_main.c gives them:
+ * an output that embeds covers and one that does not */
+const cyanrip_out_fmt crip_fmt_info[CYANRIP_FORMATS_NB] = {
+    [CYANRIP_FORMAT_FLAC] = { "flac", "FLAC", "flac", "flac", 1, 11, 1, AV_CODEC_ID_FLAC },
+    [CYANRIP_FORMAT_PCM]  = { "pcm",  "PCM",  "pcm",  "s16le", 0, 0, 1, AV_CODEC_ID_NONE },
+};
 
 const char *cyanrip_fmt_desc(enum cyanrip_output_formats format)
 {
@@ -112,6 +117,8 @@ char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
     (void)ctx; (void)create_dirs; (void)fmt; (void)arg;
     if (stub_track_path && type == CRIP_PATH_TRACK)
         return av_strdup(stub_track_path);
+    if (type == CRIP_PATH_COVERART)
+        return av_asprintf("%s/Front.png", fmt && fmt->name ? fmt->name : "?");
     return NULL;
 }
 
@@ -2021,6 +2028,66 @@ static void test_embedded_cover_art_picks_front(void)
     free_ctx(ctx);
 }
 
+/* `Embedded cover art:` says what the files hold (the review of 2026-11-03,
+ * B6; our round 38 lap 1 S9, Platterpus's lap 2 S6, our lap 3 S14 and S15).
+ * A PNG in a FLAC is held; in PCM, which holds no picture, the line says
+ * none and where the disc's cover was saved, and says no file for a track's
+ * own cover, which is not saved; with both outputs, the cover is listed and
+ * the PCM file named as not holding it. */
+static void test_embedded_cover_art_held(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    cyanrip_track t;
+    base_track(&t);
+    ctx->nb_cover_arts = 1;
+    av_dict_set(&ctx->cover_arts[0].meta, "title", "Front", 0);
+    ctx->cover_arts[0].params = art_params(8, 8);
+    ctx->cover_arts[0].params->codec_id = AV_CODEC_ID_PNG;
+    ctx->cover_arts[0].pkt = av_packet_alloc();
+
+    ctx->settings.outputs[0] = CYANRIP_FORMAT_PCM;
+    cyanrip_log_track_end(ctx, &t);
+    expect_line(drain(ctx), "  Embedded cover art: none (the output cannot hold a PNG "
+                            "picture; saved as pcm/Front.png)", "cover-art/pcm disc");
+
+    ctx->settings.outputs[0] = CYANRIP_FORMAT_FLAC;
+    ctx->settings.outputs[1] = CYANRIP_FORMAT_PCM;
+    ctx->settings.outputs_num = 2;
+    cyanrip_log_track_end(ctx, &t);
+    const char *out = drain(ctx);
+    expect_line(out, "    Front: 8x8 PNG (Portable Network Graphics) image", "cover-art/mixed");
+    expect_line(out, "    not in the pcm file: the output cannot hold a PNG picture",
+                "cover-art/mixed pcm");
+    expect_no_line(out, "    not in the flac file: the output cannot hold a PNG picture",
+                   "cover-art/mixed flac");
+
+    /* A GIF in a FLAC: FFmpeg's FLAC muxer drops it */
+    ctx->cover_arts[0].params->codec_id = AV_CODEC_ID_GIF;
+    ctx->settings.outputs_num = 1;
+    cyanrip_log_track_end(ctx, &t);
+    expect_line(drain(ctx), "  Embedded cover art: none (the output cannot hold a GIF "
+                            "picture; saved as flac/Front.png)", "cover-art/gif in flac");
+
+    /* A track's own cover is not saved, so no file is named */
+    ctx->settings.outputs[0] = CYANRIP_FORMAT_PCM;
+    t.art.source_url = (char *)"cover.png";
+    av_dict_set(&t.art.meta, "title", "Front", 0);
+    t.art.params = art_params(8, 8);
+    t.art.params->codec_id = AV_CODEC_ID_PNG;
+    t.art.pkt = av_packet_alloc();
+    cyanrip_log_track_end(ctx, &t);
+    expect_line(drain(ctx), "  Embedded cover art: none (the output cannot hold a PNG picture)",
+                "cover-art/track own");
+
+    av_dict_free(&t.art.meta);
+    avcodec_parameters_free(&t.art.params);
+    av_packet_free(&t.art.pkt);
+    av_dict_free(&ctx->cover_arts[0].meta);
+    avcodec_parameters_free(&ctx->cover_arts[0].params);
+    av_packet_free(&ctx->cover_arts[0].pkt);
+    free_ctx(ctx);
+}
+
 /* cyanrip_log.c:615 [|| to &&] -- the block is written when the track has its
  * own art OR the disc has some, and not at all when embedding is off. */
 static void test_embedded_cover_art_gating(void)
@@ -2212,6 +2279,7 @@ int main(void)
 
     test_embedded_cover_art_picks_front();
     test_embedded_cover_art_gating();
+    test_embedded_cover_art_held();
     test_log_reaches_only_requested_outputs();
     test_logging_keeps_errno();
 

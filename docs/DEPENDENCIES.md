@@ -43,7 +43,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `clang` | `tests/hardening_probe.py` | links a probe to learn whether it ignores an argument, then sets up a scratch build with it to check the hardening flags survive; skipped where it is missing |
 | `distrobox` | `tools/rig-check.py` | on the rig only: the container the rig's ripper runs in |
 | `dpkg` | `tools/gen-dependency-map.py` | this map: names the package that owns a library, to read its copyright file |
-| `ffmpeg` | `tests/gen_fixtures.py`, `tests/rigcheck.py`, `tools/audio-checksums.py`, `tools/rig-check.py` | makes the disc-image fixtures' audio and decodes rips for checksums |
+| `ffmpeg` | `tests/gen_fixtures.py`, `tests/rigcheck.py`, `tests/rip_images.py`, `tools/audio-checksums.py` and 1 more | makes the disc-image fixtures' audio, decodes rips for checksums, and measures which covers each muxer keeps |
 | `ffprobe` | `tests/rip_images.py` | reads ripped files' tags, durations and encoder strings, as a witness independent of cyanrip |
 | `gcov` | `tools/coverage-summary.py` | coverage |
 | `git` | `tests/commit_subjects.py`, `tests/contract_delta.py`, `tests/evidence_readers.py`, `tests/evidence_tool.py` and 26 more | reads history: lap commits, ledger publication dates, contract and upstream deltas |

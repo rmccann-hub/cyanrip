@@ -2328,6 +2328,42 @@ static void setup_track_lsn(cyanrip_ctx *ctx, cyanrip_track *t)
     t->partial_frame_byte_offs = offs;
 }
 
+/* A user's own cover that an output embedding covers cannot hold, refused
+ * before the rip with exit 64: our round 38 lap 1 S9, which Platterpus's lap
+ * 2 S6 accepted, as our lap 3 S15 builds it. Every cover -C gave, the disc's
+ * and each track's, against every output that embeds; a cover the Cover Art
+ * Archive supplied is not refused, since nobody chose it, and the track
+ * block says the file holds none. Nothing under -G, which embeds nothing, or
+ * -I, which rips nothing. Returns 1 after the line, else 0. */
+static int crip_refuse_unheld_covers(cyanrip_ctx *ctx)
+{
+    if (ctx->settings.disable_coverart_embedding || ctx->settings.print_info_only)
+        return 0;
+    for (int f = 0; f < ctx->settings.outputs_num; f++) {
+        const cyanrip_out_fmt *cfmt = &crip_fmt_info[ctx->settings.outputs[f]];
+        if (!cfmt->coverart_supported)
+            continue;
+        for (int i = -ctx->nb_cover_arts; i < ctx->nb_tracks; i++) {
+            const CRIPArt *art = i < 0 ? &ctx->cover_arts[-i - 1] : &ctx->tracks[i].art;
+            const char *source = dict_get(art->meta, "source");
+            if (!art->params || (i < 0 && source && !strcmp(source, "Cover Art DB")) ||
+                crip_fmt_holds_picture(cfmt, art->params->codec_id))
+                continue;
+            char name[32];
+            const char *article;
+            crip_picture_name(art->params->codec_id, name, sizeof(name), &article);
+            if (i < 0)
+                cyanrip_log(ctx, 0, "Cover art \"%s\": the %s output cannot hold %s %s picture!\n",
+                            dict_get(art->meta, "title"), cfmt->name, article, name);
+            else
+                cyanrip_log(ctx, 0, "Cover art of track %i: the %s output cannot hold %s %s picture!\n",
+                            ctx->tracks[i].number, cfmt->name, article, name);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 /* Whether a rip writes this track's file */
 static int crip_track_written(cyanrip_ctx *ctx, const cyanrip_track *t)
 {
@@ -4021,6 +4057,12 @@ static int cyanrip_run(int argc, char **argv)
     /* Track cover art (down)loading */
     if (crip_fill_track_coverart(ctx, ctx->settings.print_info_only) < 0) {
         ctx->total_error_count++;
+        goto end;
+    }
+
+    if (crip_refuse_unheld_covers(ctx)) {
+        ctx->total_error_count++;
+        ctx->exit_class = CRIP_EXIT_USAGE;
         goto end;
     }
 

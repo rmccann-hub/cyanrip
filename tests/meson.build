@@ -1056,6 +1056,7 @@ rip_scenarios = [
     'repeat_limit',
     'block_crcs',
     'block_crcs_kept',
+    'cover_art_formats',
     'repeat_limit_keeps_most_agreed',
     'reread_time_limit',
     'z_extraction_speed',

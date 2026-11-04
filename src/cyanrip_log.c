@@ -1041,12 +1041,58 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                 codec_name = avcodec_get_name(art->params->codec_id);
         }
 
-        if (ctx->settings.print_info_only)
+        /* WHAT THE FILES HOLD, not what was asked for. The line named an AV1
+         * cover in a FLAC whose muxer had dropped it (the review of
+         * 2026-11-03, B6). An output holds a picture as
+         * crip_fmt_holds_picture() says; every output holding it prints the
+         * cover, none prints `none` with why and where the cover went, and
+         * some prints the cover and names each output that does not. A
+         * track's own cover is not saved, so its `none` names no file. Our
+         * round 38 lap 1 S9, which Platterpus's lap 2 S6 accepted, with the
+         * two cases our lap 3 S14 and S15 add. -I rips nothing and says
+         * what it would have embedded, as before. */
+        int nb_hold = 0;
+        for (int f = 0; f < ctx->settings.outputs_num && art->params; f++)
+            nb_hold += crip_fmt_holds_picture(&crip_fmt_info[ctx->settings.outputs[f]],
+                                              art->params->codec_id);
+        char name[32] = "";
+        const char *article = "a";
+        if (art->params)
+            crip_picture_name(art->params->codec_id, name, sizeof(name), &article);
+
+        if (ctx->settings.print_info_only) {
             cyanrip_log(ctx, 0, "\n  Embedded cover art:\n    %s: %s\n",
                         dict_get(art->meta, "title"), art->source_url);
-        else
+        } else if (!art->params) {
+            /* Not reached: a cover that cannot be read ends the run in
+             * crip_fill_coverart(), before any track. Nothing is claimed. */
+        } else if (!nb_hold && art == &t->art) {
+            cyanrip_log(ctx, 0, "\n  Embedded cover art: none (the output cannot hold %s %s picture)\n",
+                        article, name);
+        } else if (!nb_hold) {
+            /* Each output's copy of the disc's cover, in one value, so the
+             * line is one call and one contract row */
+            AVBPrint saved;
+            av_bprint_init(&saved, 0, AV_BPRINT_SIZE_UNLIMITED);
+            for (int f = 0; f < ctx->settings.outputs_num; f++) {
+                char *path = crip_get_path(ctx, CRIP_PATH_COVERART, 0,
+                                           &crip_fmt_info[ctx->settings.outputs[f]], art);
+                av_bprintf(&saved, "%s%s", f ? ", " : "", path ? path : "");
+                av_free(path);
+            }
+            cyanrip_log(ctx, 0, "\n  Embedded cover art: none (the output cannot hold %s %s picture; saved as %s)\n",
+                        article, name, av_bprint_is_complete(&saved) ? saved.str : "");
+            av_bprint_finalize(&saved, NULL);
+        } else {
             cyanrip_log(ctx, 0, "\n  Embedded cover art:\n    %s: %ix%i %s\n",
                         dict_get(art->meta, "title"), art->params->width, art->params->height, codec_name);
+            for (int f = 0; f < ctx->settings.outputs_num; f++) {
+                const cyanrip_out_fmt *cfmt = &crip_fmt_info[ctx->settings.outputs[f]];
+                if (!crip_fmt_holds_picture(cfmt, art->params->codec_id))
+                    cyanrip_log(ctx, 0, "    not in the %s file: the output cannot hold %s %s picture\n",
+                                cfmt->ext, article, name);
+            }
+        }
     }
 
     cyanrip_log(ctx, 0, "\n  File(s):\n");

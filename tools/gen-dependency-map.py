@@ -113,8 +113,8 @@ LICENCE_PHRASE = {
 PROGRAMS = {
     "git": "reads history: lap commits, ledger publication dates, contract "
            "and upstream deltas",
-    "ffmpeg": "makes the disc-image fixtures' audio and decodes rips for "
-              "checksums",
+    "ffmpeg": "makes the disc-image fixtures' audio, decodes rips for "
+              "checksums, and measures which covers each muxer keeps",
     "ffprobe": "reads ripped files' tags, durations and encoder strings, as "
                "a witness independent of cyanrip",
     "meson": "configures the instrumented and mutated builds",
