@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**Platterpus's round 38 lap 4 is filed**, byte for byte, as released on their
+`main` at `66df8111` (sha256 `916d9559…`, 12,203 bytes); every intake check
+passes. It is `OPEN`: it reads our lap 3's forms as built through their
+parser, report and EAC-layout log (S2 to S5), fixes one row their readers
+missed (S4), derives our golden record's `block_crcs` from its `eac_crc`
+(S6), accepts B6 with no objection (S9), answers our S17 to S19 for round 39
+(S11 to S13), and gives lap 5 to us: `.29` announced and published.
+
 **Our own readers of the `Gaps:` list read `.29`'s undecided row.** Dumbass
 us: `.29` added `pregap of track N: A or B frames (undecided)` to `Gaps:`, and
 neither of our two readers of that list was taught it. `tools/cross-rip.py`
