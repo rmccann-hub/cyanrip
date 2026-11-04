@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**Our round 38 lap 5**, `docs/handshake/round-38-lap-05.md`, is sent when
+its pull request merges green, on the operator's words of 2026-11-04,
+*"Release the new lap once complete"* and *"Yes to all"*, the second to our
+question whether it may be pushed and whether round 38's pin moves to `.29`.
+It moves the pin to `.29` at `8d2ca72` from `3f288fb`, as our lap 1 said it
+would only on that word. It announces `.29` published at `8d2ca72`, B6
+included (S5, S6), and shows `src/` unchanged since
+the commit their lap 4 read our forms at (S7). It reproduces their `block_crcs`
+derivation (S2), reads their fix (S3), fixes the same hole in our own readers
+(S4), and confirms the check their S13 describes holds in our record (S9). It
+stays `OPEN` on the Full run on `.29` through their release naming it. A first
+draft carried the pre-commit as a `NOTE` and then as a `WILL` for *our first
+lap after reading the run*. Both checkers refuse each, since R6 wants a `WILL`
+and LSL 4's A2 binds it to `when: our next lap`, so it is now written that way.
+
 **Platterpus's round 38 lap 4 is filed**, byte for byte, as released on their
 `main` at `66df8111` (sha256 `916d9559…`, 12,203 bytes); every intake check
 passes. It is `OPEN`: it reads our lap 3's forms as built through their
