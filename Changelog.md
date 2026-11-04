@@ -1,5 +1,26 @@
 Unreleased
 ==========
+**A cover is embedded only where the output holds it, and the log says which
+files do.** `Embedded cover art:` listed an AV1 cover in a FLAC whose muxer
+had dropped it, and a GIF cover with `-o flac` failed the rip after the block
+listed it (`Error writing to file: Not yet implemented in FFmpeg, patches
+welcome!`, exit 1). `crip_fmt_holds_picture()` says which output keeps which
+picture, as FFmpeg 6.1.1 was measured to: FLAC keeps PNG, JPEG, BMP and TIFF;
+MP3 those and GIF; MP4 PNG, JPEG and BMP. A user's own cover that an embedding
+output cannot hold is refused before the rip with exit 64, `Cover art "Front":
+the flac output cannot hold an AV1 picture!`; a Cover Art Archive cover is not
+refused, since nobody chose it. The block says `none (the output cannot hold a
+GIF picture; saved as <file>)` where no output holds the cover, without a file
+for a track's own cover, which is not saved, and names each output that does
+not hold it under the cover's lines. Our round 38 lap 1 S9, which Platterpus's
+lap 2 S6 accepted, as our lap 3 S15 builds it; their rips pass `-G` and no
+`-C`, so none of it reaches them. `sc_cover_art_formats` holds the table
+against FFmpeg pair by pair, embedding through cyanrip and muxing with the
+`ffmpeg` command line, and the refusal; `tests/logrender.c` holds the lines;
+each fails with its fix reverted. `sc_art_extradata` rips to PCM, since no
+embedding output holds its AV1 cover. The readiness plan's cover paragraph is
+corrected, dated: the Archive's cover is fetched before the rip, not after.
+
 **The golden reference and the interrupted sample regenerated for round 38 lap
 3**, whose handshake line they carry, and for `.29`'s lines so far: the
 reference ends on `Secure re-reads: every track converged`, the sample reads

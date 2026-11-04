@@ -28,6 +28,7 @@ SCENARIO = sys.argv[3]
 ROOT = Path(__file__).resolve().parent.parent
 
 FFPROBE = shutil.which("ffprobe")
+FFMPEG = shutil.which("ffmpeg")
 
 # WHETHER UBSan/ASan IS ACTUALLY COMPILED IN, measured from the binary rather
 # than from the environment. Meson sets ASAN_OPTIONS and UBSAN_OPTIONS for
@@ -1820,11 +1821,14 @@ def sc_art_extradata():
     # Review C 1.1. A cover whose codec parameters carry extradata: the art,
     # the file it is saved to and each track's muxer must each own a copy.
     # Measured 2026-10-27 by reverting each copy alone: the tracks' fails
-    # this in a plain build, the other two only in the sanitizer rows
+    # this in a plain build, the other two only in the sanitizer rows.
+    # Since `.29` no output that embeds covers holds an AV1 picture, so a
+    # FLAC rip refuses it (sc_cover_art_formats) and this rips to PCM: the
+    # art's copy and the saved file's are still exercised, and no muxer is
+    # given an AV1 cover to copy.
     src = FIX / "art.avif"
-    rip("artx", "basic.cue", "-C", f"Front={src}")
-    expect("artx", "1.flac:4", "2.flac:4", "Front.avif", "log.log",
-           "sheet.cue")
+    rip("artx", "basic.cue", "-o", "pcm", "-C", f"Front={src}")
+    expect("artx", "1.pcm", "2.pcm", "Front.avif", "log.log", "sheet.cue")
     if not FFPROBE:
         return
 
@@ -1834,6 +1838,92 @@ def sc_art_extradata():
     have = art_hashes(WORK / "out_artx" / "Front.avif")
     if have != want:
         fail(f"artx: saved cover {have!r} != source {want!r}")
+
+
+def sc_cover_art_formats():
+    """A COVER IS EMBEDDED ONLY WHERE THE OUTPUT HOLDS IT, AND THE LOG SAYS SO.
+
+    The review of 2026-11-03, B6: an AV1 cover was logged as embedded in a
+    FLAC whose muxer had dropped it. Our round 38 lap 1 S9, which
+    Platterpus's lap 2 S6 accepted, with our lap 3 S14 and S15: a user's own
+    cover an embedding output cannot hold is refused with exit 64.
+
+    THE TABLE IS HELD AGAINST FFMPEG, not against itself. For each picture
+    format and each output that embeds, cyanrip either embeds it, and
+    ffprobe finds the picture in the track's file, or refuses it, and the
+    ffmpeg command line muxing the same picture into the same container
+    keeps none. So a newer FFmpeg that keeps more fails here, rather than
+    being refused by a table that no longer describes it.
+    """
+    if not FFPROBE or not FFMPEG:
+        skip("cover_art_formats: needs ffmpeg and ffprobe to measure what "
+             "each muxer keeps")
+    # The refusal, by name and at column 0, before any track is written
+    for cover, line in ((f"Front={FIX / 'art.avif'}",
+                         'Cover art "Front": the flac output cannot hold an AV1 picture!'),
+                        (f"1={FIX / 'art.avif'}",
+                         "Cover art of track 1: the flac output cannot hold an AV1 picture!")):
+        out = WORK / "out_cover_refused"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                       "-l", "1", "-D", out, "-F", "{track}", "-L", "log", "-C", cover)
+        tracks = [p.name for p in out.glob("*.flac")] if out.is_dir() else []
+        if ec != 64 or line not in log.splitlines() or tracks:
+            fail(f"cover_art_formats: -C {cover}: exit {ec}, tracks {tracks}, "
+                 f"want 64 and the line {line!r} before any track")
+
+    pics = WORK / "cover_pics"
+    pics.mkdir(exist_ok=True)
+    shutil.copy(FIX / "art.png", pics / "p.png")
+    shutil.copy(FIX / "art.avif", pics / "p.avif")
+    for ext in ("jpg", "gif", "bmp", "tiff", "webp"):
+        subprocess.run([FFMPEG, "-v", "error", "-y", "-i", str(pics / "p.png"),
+                        "-frames:v", "1", str(pics / f"p.{ext}")],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
+    wav = pics / "a.wav"
+    subprocess.run([FFMPEG, "-v", "error", "-y", "-f", "lavfi", "-i", "sine=d=1",
+                    "-ac", "2", str(wav)], stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL, timeout=60)
+    containers = {"flac": ("flac", ["-c:a", "flac"]),
+                  "mp3": ("mp3", ["-c:a", "libmp3lame"]),
+                  "aac_mp4": ("mp4", ["-c:a", "aac", "-f", "mp4"])}
+    held = refused = 0
+    for pic in sorted(pics.glob("p.*")):
+        for fmt, (ext, acodec) in containers.items():
+            out = WORK / f"out_cover_{fmt}_{pic.suffix[1:]}"
+            shutil.rmtree(out, ignore_errors=True)
+            ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                           "-P", "0", "-l", "1", "-o", fmt, "-D", out, "-F", "{track}",
+                           "-L", "log", "-C", f"Front={pic}")
+            track = out / f"1.{ext}"
+            if ec == 0:
+                held += 1
+                got = probe(track, "-select_streams", "v", "-show_entries",
+                            "stream=codec_name") if track.exists() else ""
+                text = (out / "log.log").read_text(errors="replace", encoding="utf-8") \
+                    if (out / "log.log").exists() else ""
+                if len(got.splitlines()) != 1 or "  Embedded cover art: none" in text:
+                    fail(f"cover_art_formats: {pic.name} in {fmt}: cyanrip took it, "
+                         f"and the file holds {got!r} pictures")
+            elif ec == 64:
+                refused += 1
+                probe_file = pics / f"ffmpeg_{fmt}.{ext}"
+                probe_file.unlink(missing_ok=True)
+                r = subprocess.run([FFMPEG, "-v", "error", "-y", "-i", str(wav),
+                                    "-i", str(pic), "-map", "0", "-map", "1", *acodec,
+                                    "-c:v", "copy", "-disposition:v", "attached_pic",
+                                    str(probe_file)], stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL, timeout=60)
+                kept = probe(probe_file, "-select_streams", "v", "-show_entries",
+                             "stream=codec_name") if r.returncode == 0 and probe_file.exists() else ""
+                if kept:
+                    fail(f"cover_art_formats: cyanrip refuses {pic.name} for {fmt}, "
+                         f"and ffmpeg's {ext} muxer keeps it as {kept!r}")
+            else:
+                fail(f"cover_art_formats: {pic.name} in {fmt}: cyanrip exited {ec}")
+    if not held or not refused:
+        fail(f"cover_art_formats: {held} pair(s) held and {refused} refused; a "
+             "table that never says one of the two is not being tested")
 
 
 def sc_art_local_name():
@@ -6477,6 +6567,14 @@ def sc_contract_fatal_inventory():
             if lone in got:
                 fail(f"contract_fatal_inventory: {table} publishes {lone!r}, "
                      "a piece of a line written by consecutive calls")
+        # And any such piece: a row with no conversion and no letter or digit
+        # is punctuation that ends or joins a line, which no matcher can use.
+        # The `.29` cover line shipped `)` and `, %s` rows this way until it
+        # was written in one call.
+        for s in got:
+            if "%" not in s and not re.search(r"[A-Za-z0-9]", s):
+                fail(f"contract_fatal_inventory: {table} publishes {s!r}, "
+                     "punctuation with no words, a piece of a line")
 
     # 3. Both tallies must sum to their own table. The old summary said `128
     #    distinct strings` above a breakdown totalling 114, because it iterated

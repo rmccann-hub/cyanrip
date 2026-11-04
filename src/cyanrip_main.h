@@ -673,6 +673,46 @@ typedef struct cyanrip_out_fmt {
 
 extern const cyanrip_out_fmt crip_fmt_info[];
 
+/* WHETHER AN OUTPUT HOLDS A COVER OF THIS PICTURE FORMAT, as measured, not as
+ * a muxer's name suggests. FFmpeg 6.1.1, with ffmpeg and ffprobe (our round
+ * 38 lap 3 S12): its FLAC muxer keeps PNG, JPEG, BMP and TIFF, and drops GIF
+ * ("GIF image support is not implemented"), WebP and AV1 with a warning,
+ * writing the file without the picture; its MP3 muxer keeps GIF as well; its
+ * MP4 muxer keeps PNG, JPEG and BMP and fails the header on any other. An
+ * output that embeds no cover holds none. `Embedded cover art:` said a FLAC
+ * held an AV1 cover its muxer had dropped (the review of 2026-11-03, B6).
+ * sc_cover_art_formats holds every pair against the FFmpeg the build links,
+ * so a newer one that keeps more fails it rather than being refused here. */
+static inline int crip_fmt_holds_picture(const cyanrip_out_fmt *f, enum AVCodecID id)
+{
+    if (!f->coverart_supported)
+        return 0;
+    switch (id) {
+    case AV_CODEC_ID_PNG:
+    case AV_CODEC_ID_MJPEG:
+    case AV_CODEC_ID_BMP:
+        return 1;
+    case AV_CODEC_ID_TIFF:
+        return !strcmp(f->lavf_name, "flac") || !strcmp(f->lavf_name, "mp3");
+    case AV_CODEC_ID_GIF:
+        return !strcmp(f->lavf_name, "mp3");
+    default:
+        return 0;
+    }
+}
+
+/* A picture format as the log names it, FFmpeg's codec name in capitals
+ * (PNG, MJPEG, GIF, AV1), with its article: "an" before a name read letter by
+ * letter from A, E, F, H, I, L, M, N, O, R, S or X, "a" otherwise. */
+static inline void crip_picture_name(enum AVCodecID id, char *name, size_t size,
+                                     const char **article)
+{
+    av_strlcpy(name, avcodec_get_name(id), size);
+    for (char *p = name; *p; p++)
+        *p = av_toupper(*p);
+    *article = name[0] && strchr("AEFHILMNORSX", name[0]) ? "an" : "a";
+}
+
 /* Whether a naming scheme parses, which doesn't depend on the metadata,
  * logging why not */
 int crip_check_scheme(cyanrip_ctx *ctx, const char *scheme);

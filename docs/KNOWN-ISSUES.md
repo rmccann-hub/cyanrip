@@ -266,7 +266,7 @@ newline in either still starts a line there. The escape's form, proposed to
 Platterpus in our round 36 lap 12 S9 and accepted as given in their lap 13 S3,
 shipped in `.28` (`46cec2a`).
 
-### `Embedded cover art:` names a cover the muxer dropped
+### `Embedded cover art:` names a cover the muxer dropped (fixed for `.29`)
 
 **Found 2026-10-27 while testing review C item 1.1.** A rip with an AV1 cover
 (`tests/fixtures/art.avif`) and `-o flac` logs, for each track,
@@ -284,6 +284,24 @@ do not. A PNG cover is embedded; the suite's `art` checks it.
 **Not fixed**: the line is in the contract's P2, so its fix is proposed in a
 lap first. Two shapes are open: refuse a cover the output's muxer cannot embed
 before the rip, or print what was written, read back from the muxer.
+
+**Worse for a GIF, measured 2026-11-04** with FFmpeg 6.1.1: its FLAC and MP4
+muxers refuse one, so a `.28` rip with a GIF cover and `-o flac` lists the
+cover in the track block and then fails with `Error writing to file: Not yet
+implemented in FFmpeg, patches welcome!` and exit 1 (our round 38 lap 3 S12).
+
+**Fixed for `.29`, not yet released**, as our round 38 lap 1 S9 proposed,
+Platterpus's lap 2 S6 accepted, and our lap 3 S15 completes. Which output
+holds which picture is `crip_fmt_holds_picture()`, a table of what FFmpeg
+6.1.1's muxers keep. A user's own cover that an embedding output cannot hold
+is refused before the rip, with exit 64 and a line naming the output and the
+format. A cover is given only to an output that holds it, and the block lists
+it only for the files that do: `none (the output cannot hold a GIF picture;
+saved as <file>)` when none does, with no file for a track's own cover, which
+is not saved, and `not in the <ext> file: ...` for each that does not.
+`sc_cover_art_formats` holds the table against FFmpeg itself, pair by pair,
+and the refusal; `tests/logrender.c` holds the lines. Each fails with its fix
+reverted. It leaves this file once `.29` ships.
 
 ### A positive offset on an Enhanced CD read the session gap into the last audio track (fixed for the build after `.28`)
 
