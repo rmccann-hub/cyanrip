@@ -111,10 +111,11 @@ Each is a liability with a removal condition, not a fix. The details and what wo
 - libcdio-paranoia checks the per-frame retry limit only at multiples of 5.
 - And with paranoia disabled (`-P 0`), an unreadable sector never returned at any retry limit.
 - genopt prints its own errors unless you take them.
+- libcdio's `mmc_get_disctype()` never reads the profile list's last descriptor, and answers `0xffff` when it finds nothing.
 
 ## Measured where this was generated
 
-- **Machine:** Ubuntu 24.04.4 LTS; Python 3.11.15; cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; meson 1.3.2; ninja 1.11.1; pkg-config 1.8.1; git version 2.43.0.
+- **Machine:** Ubuntu 24.04.5 LTS; Python 3.11.18; cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0; meson 1.3.2; ninja 1.11.1; pkg-config 1.8.1; git version 2.43.0.
 - **FFmpeg:** ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers; configured `--enable-gpl`, so the FFmpeg libraries as built here are GPL-2.0-or-later rather than LGPL.
 - **Fork point against upstream:** `648b1dddd265cfd2bb69483a826eb5a5c7e7079e` (`git merge-base HEAD master`); upstream mirror tip `648b1dddd265cfd2bb69483a826eb5a5c7e7079e`.
 - **Programs above not installed here:** `cd-paranoia`, `cdparanoia`, `distrobox`. The rig-only ones are expected to be missing.
@@ -131,5 +132,5 @@ Each is a liability with a removal condition, not a fix. The details and what wo
 | `libmusicbrainz5` | 5.1.0 | /usr/share/doc/libmusicbrainz5-dev/copyright contains "LGPL-2.1+" |
 | `libcurl` | 8.5.0 | /usr/share/doc/libcurl4-openssl-dev/copyright contains "License: curl" |
 | `threads` | part of the C library, not a pkg-config package | not confirmed here |
-| `libqrencode` | not found | not confirmed here |
+| `libqrencode` | 4.1.1 | /usr/share/doc/libqrencode-dev/copyright contains "LGPL-2.1+" |
 | `libchromaprint` | not found | not confirmed here |
