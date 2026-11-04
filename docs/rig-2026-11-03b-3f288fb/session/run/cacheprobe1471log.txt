@@ -1,0 +1,10 @@
+/usr/bin/cd-paranoia -A -d /dev/sr0 
+cdparanoia III release 10.2 libcdio 2.1.0
+(C) 2001 Monty <monty@xiph.org> and Xiphophorus
+(C) 2004, 2005, 2008 Rocky Bernstein <rocky@gnu.org>
+(C) 2014 Robert Kausch <robert.kausch@freac.org>
+
+Report bugs to bug-libcdio@gnu.org
+
+Using cdda library version: 10.2+2.0.2 x86_64-redhat-linux-gnu
+Using paranoia library version: 10.2+2.0.2 x86_64-redhat-linux-gnu

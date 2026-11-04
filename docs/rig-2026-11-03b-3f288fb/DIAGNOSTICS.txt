@@ -1,0 +1,794 @@
+=== Platterpus diagnostics ===
+
+Approved pair: Platterpus 0.7.117 + cyanrip 0.9.4-rc3+platterpus.28 (platterpus-fork-g3f288fb) — verified by handshake round 37. This app is Platterpus 0.7.119, which that round did NOT approve — it verified this ripper build with Platterpus 0.7.117 and never saw this app. The pair is what the record APPROVES, not what is installed — the ripper build that produced a given rip is named in that rip's own log and report.
+Installed ripper: cyanrip 0.9.4-rc3+platterpus.28 (commit 3f288fb, fork release 39), the Platterpus fork of cyanrip. ✓ Approved: both projects tested this exact build together and signed it off (handshake round 37, with Platterpus 0.7.117). Every rip records its ripper as approved.
+
+--- Environment ---
+install_channel: appimage
+platform: Linux-7.2.11-ogc4.1.fc44.x86_64-x86_64-with-glibc2.43
+pyside6: 6.11.2
+python: 3.14.9
+
+--- Dependencies ---
+measured 1 hour ago (23:06 UTC)
+cdparanoia: present=True version=10.2 min_version_met=True
+cyanrip: present=True version=0.9.4 build=0.9.4-rc3+platterpus.28 min_version_met=True
+ffmpeg: present=True version=8.1.3 min_version_met=True
+flac: present=True version=1.5.0 min_version_met=True
+metaflac: present=True version=1.5.0 min_version_met=True
+musicbrainzngs: present=True version=0.7.1 min_version_met=True
+numpy: present=True version=2.5.4 min_version_met=True
+picard: present=True version=3.0.4 min_version_met=True
+
+--- Diagnostics ---
+errors: 31  warnings: 6  info: 12
+worst: error
+scope: process session (not only this rip)
+
+[info] ripper.secure_rerip_verdict @ 2026-11-03T23:28:47+00:00
+  Done; (2 out of 2 matches for current checksum 3D8FCF0C)
+  tool: cyanrip
+  track: 3
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-03T23:32:24+00:00
+  Done; (2 out of 2 matches for current checksum E0036697)
+  tool: cyanrip
+  track: 5
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-03T23:56:54+00:00
+  Done; (2 out of 2 matches for current checksum B0D122E7)
+  tool: cyanrip
+  track: 1
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:04:21+00:00
+  Done; (2 out of 2 matches for current checksum B0D122E7)
+  tool: cyanrip
+  track: 1
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:07:41+00:00
+  Done; (2 out of 2 matches for current checksum 985AAE32)
+  tool: cyanrip
+  track: 2
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:12:34+00:00
+  Done; (2 out of 2 matches for current checksum 3D8FCF0C)
+  tool: cyanrip
+  track: 3
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:17:17+00:00
+  Done; (2 out of 2 matches for current checksum 60D796AE)
+  tool: cyanrip
+  track: 4
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:20:56+00:00
+  Done; (2 out of 2 matches for current checksum E0036697)
+  tool: cyanrip
+  track: 5
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:24:26+00:00
+  Done; (2 out of 2 matches for current checksum B32769D6)
+  tool: cyanrip
+  track: 6
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:28:00+00:00
+  Done; (2 out of 2 matches for current checksum CCBFF669)
+  tool: cyanrip
+  track: 7
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:30:58+00:00
+  Done; (2 out of 2 matches for current checksum D723C1B0)
+  tool: cyanrip
+  track: 8
+  where: workers.rip_worker.RipWorker._run_rip
+
+[info] ripper.secure_rerip_verdict @ 2026-11-04T00:33:19+00:00
+  Done; (2 out of 2 matches for current checksum 6F6E4A5F)
+  tool: cyanrip
+  track: 9
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:17+00:00
+  cdio error: 010: Unable to access sector 170017: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 170827: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171206: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171216: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171211: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171221: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171216: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171212: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171221: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171217: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171227: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171222: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171232: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171227: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171237: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171232: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171242: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171238: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171234: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171243: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:18+00:00
+  cdio error: 010: Unable to access sector 171239: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  cdio error: 010: Unable to access sector 171248: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  cdio error: 010: Unable to access sector 171244: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  cdio error: 010: Unable to access sector 171253: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  cdio error: 010: Unable to access sector 171248: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  cdio error: 010: Unable to access sector 171259: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  cdio error: 010: Unable to access sector 171254: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  cdio error: 010: Unable to access sector 171264: skipping...
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  Drive media change query failed (libcdio error -1), stopping!
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.fatal_message @ 2026-11-04T00:34:19+00:00
+  Error ripping: Invalid argument
+  tool: cyanrip
+  where: workers.rip_worker.RipWorker._run_rip
+
+[error] ripper.nonzero_exit @ 2026-11-04T00:34:19+00:00
+  the album pass's ripper exited 74 — cdio error: 010: Unable to access sector 170017: skipping... — The disc or the drive failed: cyanrip exited 74, its code for a disc or drive failure (no drive at that device, a drive it could not open, a table of contents it could not read, or a disc that changed mid-rip). Its own message says which; it is in the rip log view. Check that the disc is in the drive and the drive is connected, then start the rip again.
+  tool: cyanrip
+  exit code: 74
+  argv: ~/.local/bin/cyanrip -d /dev/sr0 -s 667 -o flac -T unicode -r 5 -Z 2 -N --consumer platterpus/0.7.119 --prefer-disc-isrc --prefer-accuraterip-match -c 1/1 -a album=secure reread 20261103t230546 platterpus-fork-g3f288fb:album_artist=The Police:date=2003:musicbrainz_albumid=65282302-368b-4ba2-953a-483bcdef2410 -t 1=title=Roxanne:artist=The Police:isrc=GBAAM0201086 -t 2=title=Can’t Stand Losing You:artist=The Police:isrc=GBAAM0201089 -t 3=title=Message in a Bottle:artist=The Police:isrc=GBAAM0201170 -t 4=title=Walking on the Moon:artist=The Police:isrc=GBAAM0201175 -t 5=title=Don’t Stand So Close to Me:artist=The Police:isrc=GBAAM0201148 -t 6=title=De Do Do Do, De Da Da Da:artist=The Police:isrc=GBAAM0201154 -t 7=title=Every Little Thing She Does Is Magic:artist=The Police:isrc=GBAAM0201127 -t 8=title=Invisible Sun:artist=The Police:isrc=GBAAM0201128 -t 9=title=Spirits in the Material World:artist=The Police:isrc=GBAAM0201126 -t 10=title=Every Breath You Take:artist=The Police:isrc=GBAAM0201110 -t 11=title=King of Pain:artist=The Police:isrc=GBAAM0201111 -t 12=title=Wrapped Around Your Finger:artist=The Police:isrc=GBAAM0201112 -t 13=title=Don’t Stand So Close to Me ’86:artist=The Police:isrc=GBAAM0201252 -t 14=title=Message in a Bottle (new classic rock mix):artist=The Police:isrc=GBAAM0201253 -D {album_artist}/{album} -F {track} - {title} -G -U -W --diagnostics cyanrip-diagnostics-20261104T000024Z.json
+  where: workers.rip_worker.RipWorker._run_rip
+  detail:
+    Checking /dev/sr0 for cdrom...
+    		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+    
+    
+    Opening drive...
+    cyanrip 0.9.4-rc3+platterpus.28 (platterpus-fork-g3f288fb)
+    Invoked as:     /usr/local/bin/cyanrip -d /dev/sr0 -s 667 -o flac -T unicode -r 5 -Z 2 -N --consumer platterpus/0.7.119 --prefer-disc-isrc --prefer-accuraterip-match -c 1/1 -a "album=secure reread 20261103t230546 platterpus-fork-g3f288fb:album_artist=The Police:date=2003:musicbrainz_albumid=65282302-368b-4ba2-953a-483bcdef2410" -t "1=title=Roxanne:artist=The Police:isrc=GBAAM0201086" -t "2=title=Can’t Stand Losing You:artist=The Police:isrc=GBAAM0201089" -t "3=title=Message in a Bottle:artist=The Police:isrc=GBAAM0201170" -t "4=title=Walking on the Moon:artist=The Police:isrc=GBAAM0201175" -t "5=title=Don’t Stand So Close to Me:artist=The Police:isrc=GBAAM0201148" -t "6=title=De Do Do Do, De Da Da Da:artist=The Police:isrc=GBAAM0201154" -t "7=title=Every Little Thing She Does Is Magic:artist=The Police:isrc=GBAAM0201127" -t "8=title=Invisible Sun:artist=The Police:isrc=GBAAM0201128" -t "9=title=Spirits in the Material World:artist=The Police:isrc=GBAAM0201126" -t "10=title=Every Breath You Take:artist=The Police:isrc=GBAAM0201110" -t "11=title=King of Pain:artist=The Police:isrc=GBAAM0201111" -t "12=title=Wrapped Around Your Finger:artist=The Police:isrc=GBAAM0201112" -t "13=title=Don’t Stand So Close to Me ’86:artist=The Police:isrc=GBAAM0201252" -t "14=title=Message in a Bottle (new classic rock mix):artist=The Police:isrc=GBAAM0201253" -D {album_artist}/{album} -F "{track} - {title}" -G -U -W --diagnostics cyanrip-diagnostics-20261104T000024Z.json
+    Handshake:      round 37 lap 3 OPEN, verdict OPEN -- released build
+                    (declared at build time, not verified by cyanrip)
+    Consumer:       platterpus/0.7.119
+                    (reported by the caller, not verified by cyanrip)
+    Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+    System device:  /dev/sr0
+    Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+    Offset:         +667 samples
+    Overread:       +2 frames
+    Overread mode:  fill with silence in lead-in/lead-out
+    Speed:          default (drive not asked whether it can change speed)
+    C2 errors:      unsupported by drive
+    Accurate stream: declared supported by drive (capabilities page, not measured)
+    Recordable:     no, CD-ROM (drive's current profile)
+    CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+    Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+    Paranoia level: max
+    Retry limit:    5 (per frame, and per whole-track re-read)
+    Cache model:    1200 sectors (drive cache size not probed)
+    HDCD decoding:  disabled
+    Album Art:      none
+    Outputs:        flac
+    Disc number:    1
+    Total discs:    1
+    Disc tracks:    14
+    Tracks to rip:  all
+    DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+    Release ID:     65282302-368b-4ba2-953a-483bcdef2410
+    CDDB ID:        E20DFE0E
+    Album:          secure reread 20261103t230546 platterpus-fork-g3f288fb
+    Album artist:   The Police
+    AccurateRip ID: 001d420f-013bb370-e20dfe0e
+    AccurateRip:    found
+    AcoustID:       unsupported (built without libchromaprint)
+    Total time:     59:42.57
+    
+    Gaps:
+        160 frame pregap in track 2, merging into track 1
+        158 frame pregap in track 4, merging into track 3
+        115 frame pregap in track 5, merging into track 4
+        105 frame pregap in track 7, merging into track 6
+        85 frame pregap in track 8, merging into track 7
+        pregap of track 9 unknown (sub-channel search bounds did not meet)
+        147 frame pregap in track 10, merging into track 9
+        90 frame pregap in track 13, merging into track 12
+        117 frame pregap in track 14, merging into track 13
+    
+    Pregap searches:
+        track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 18 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 9: 258 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 200 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+        track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 11: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+    
+    Tracks:
+    Ripping track 1, progress - 0.01%, ETA - 406h 18m
+    [platterpus] … 14486 progress redraws elided here …
+    Ripping track 1, progress - 100.00%, ETA - 21m   
+    Repeating ripping (0 out of 2 matches for current checksum B0D122E7)
+    Ripping track 1, progress - 0.01%, ETA - 24m
+    [platterpus] … 14486 progress redraws elided here …
+    Ripping track 1, progress - 100.00%, ETA - 22m
+    Repeating ripping (1 out of 2 matches for current checksum B0D122E7)
+    Ripping track 1, progress - 0.01%, ETA - 25m
+    [platterpus] … 14486 progress redraws elided here …
+    Ripping track 1, progress - 100.00%, ETA - 21m
+    Done; (2 out of 2 matches for current checksum B0D122E7)
+    
+    Flushing encoders...
+    Track 1 read with no error reported.
+    Summary:
+    
+      Integrated loudness:
+        I:         -13.9 LUFS
+        Threshold: -24.3 LUFS
+    
+      Loudness range:
+        LRA:         6.5 LU
+        Threshold: -34.3 LUFS
+        LRA low:   -18.3 LUFS
+        LRA high:  -11.7 LUFS
+    
+      Sample peak:
+        Peak:       -0.5 dBFS
+    
+      True peak:
+        Peak:        0.3 dBFS
+    
+      Preemphasis:   none detected
+      Disc ISRC:     GBAAM7800003
+    
+      Properties:
+        Duration:    03:13.12
+        Samples:     8518356
+        Frames:      14487
+        Sample peak level: 94.3% (-0.5 dBFS)
+        True peak level:   0.3 dBFS
+        Integrated loudness (R128): -13.9 LUFS
+        Loudness range (R128):      6.5 LU (-18.3 to -11.7 LUFS)
+        Extraction speed:  2.5x
+        Elapsed:            228.97 s
+        Kept read began:    2026-11-04T00:03:05Z
+        Pregap LSN:  0 (duration: 00:02.00)
+        Pregap length: 150 frames
+        Pregap source: lead-in
+        Start LSN:   0 (with offset: 1)
+        End LSN:     14486 (with offset: 14488)
+    
+      EAC CRC32:     B0D122E7 (after 3 rips)
+      Secure re-read:  converged after 3 reads
+      Accurip:       disc found in database (max confidence: 200)
+        Accurip v1:  5D3C90CB (accurately ripped, confidence 129)
+        Accurip v2:  22B9924D (accurately ripped, confidence 200)
+    
+      Metadata:
+        TRACK:                         1
+        TRACKTOTAL:                    14
+        MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+        CDDB:                          E20DFE0E
+        MEDIA:                         CD
+        COMMENT:                       cyanrip 0.9.4-rc3+platterpus.28
+        TOTALDISCS:                    1
+        TITLE:                         Roxanne
+        DISC:                          1
+        ALBUM:                         secure reread 20261103t230546 platterpus-fork-g3f288fb
+        ALBUM_ARTIST:                  The Police
+        DATE:                          2003
+        MUSICBRAINZ_ALBUMID:           65282302-368b-4ba2-953a-483bcdef2410
+        ARTIST:                        The Police
+        ISRC:                          GBAAM7800003
+        CREATION_TIME:                 2026-11-03T19:00:34-05:00
+        REPLAYGAIN_TRACK_GAIN:         -4.10 dB
+        R128_TRACK_GAIN:               229
+        REPLAYGAIN_TRACK_RANGE:        6.54 dB
+        REPLAYGAIN_TRACK_PEAK:         1.029445
+        REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+        DISCTOTAL:                     1
+    
+      Paranoia status counts:
+        Scope:         the last of 3 reads; the disc totals below sum all of them
+        READ:          1202
+        VERIFY:        259
+        OVERLAP:       32
+    
+      File(s):
+        The Police/secure reread 20261103t230546 platterpus-fork-g3f288fb/01 - Roxanne.flac
+    
+    Ripping track 2, progress - 0.01%, ETA - 22m
+    [platterpus] … 13579 progress redraws elided here …
+    Ripping track 2, progress - 100.00%, ETA - 19m
+    Repeating ripping (0 out of 2 matches for current checksum 985AAE32)
+    Ripping track 2, progress - 0.01%, ETA - 21m
+    [platterpus] … 13579 progress redraws elided here …
+    Ripping track 2, progress - 100.00%, ETA - 19m
+    Repeating ripping (1 out of 2 matches for current checksum 985AAE32)
+    Ripping track 2, progress - 0.01%, ETA - 21m
+    [platterpus] … 13579 progress redraws elided here …
+    Ripping track 2, progress - 100.00%, ETA - 17m
+    Done; (2 out of 2 matches for current checksum 985AAE32)
+    
+    Flushing encoders...
+    Track 2 read with no error reported.
+    Summary:
+    
+      Integrated loudness:
+        I:         -13.1 LUFS
+        Threshold: -23.3 LUFS
+    
+      Loudness range:
+        LRA:         6.1 LU
+        Threshold: -33.3 LUFS
+        LRA low:   -17.2 LUFS
+        LRA high:  -11.1 LUFS
+    
+      Sample peak:
+        Peak:       -0.5 dBFS
+    
+      True peak:
+        Peak:        0.1 dBFS
+    
+      Preemphasis:   none detected
+      Disc ISRC:     GBAAM7800006
+    
+      Properties:
+        Duration:    03:01.05
+        Samples:     7985040
+        Frames:      13580
+        Sample peak level: 94.3% (-0.5 dBFS)
+        True peak level:   0.1 dBFS
+        Integrated loudness (R128): -13.1 LUFS
+        Loudness range (R128):      6.1 LU (-17.2 to -11.1 LUFS)
+        Extraction speed:  2.8x
+        Elapsed:            199.37 s
+        Kept read began:    2026-11-04T00:06:35Z
+        Pregap LSN:  14327 (duration: 00:02.10)
+        Pregap length: 160 frames
+        Pregap source: sub-channel (not signalled by TOC)
+        Pregap search: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        Start LSN:   14487 (with offset: 14488)
+        End LSN:     28066 (with offset: 28068)
+    
+      EAC CRC32:     985AAE32 (after 3 rips)
+      Secure re-read:  converged after 3 reads
+      Accurip:       disc found in database (max confidence: 200)
+        Accurip v1:  A3019EB3 (accurately ripped, confidence 131)
+        Accurip v2:  31C28378 (accurately ripped, confidence 200)
+    
+      Metadata:
+        TRACK:                         2
+        TRACKTOTAL:                    14
+        MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+        CDDB:                          E20DFE0E
+        MEDIA:                         CD
+        COMMENT:                       cyanrip 0.9.4-rc3+platterpus.28
+        TOTALDISCS:                    1
+        TITLE:                         Can’t Stand Losing You
+        DISC:                          1
+        ALBUM:                         secure reread 20261103t230546 platterpus-fork-g3f288fb
+        ALBUM_ARTIST:                  The Police
+        DATE:                          2003
+        MUSICBRAINZ_ALBUMID:           65282302-368b-4ba2-953a-483bcdef2410
+        ARTIST:                        The Police
+        ISRC:                          GBAAM7800006
+        CREATION_TIME:                 2026-11-03T19:04:23-05:00
+        REPLAYGAIN_TRACK_GAIN:         -4.88 dB
+        R128_TRACK_GAIN:               32
+        REPLAYGAIN_TRACK_RANGE:        6.07 dB
+        REPLAYGAIN_TRACK_PEAK:         1.008499
+        REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+        DISCTOTAL:                     1
+    
+      Paranoia status counts:
+        Scope:         the last of 3 reads; the disc totals below sum all of them
+        READ:          1106
+        VERIFY:        193
+        OVERLAP:       20
+    
+      File(s):
+        The Police/secure reread 20261103t230546 platterpus-fork-g3f288fb/02 - Can’t Stand Losing You.flac
+    
+    Ripping track 3, progress - 0.00%, ETA - 18m
+    [platterpus] … 21852 progress redraws elided here …
+    Ripping track 3, progress - 100.00%, ETA - 16m
+    Repeating ripping (0 out of 2 matches for current checksum 3D8FCF0C)
+    Ripping track 3, progress - 0.00%, ETA - 19m
+    [platterpus] … 21852 progress redraws elided here …
+    Ripping track 3, progress - 100.00%, ETA - 15m
+    Repeating ripping (1 out of 2 matches for current checksum 3D8FCF0C)
+    Ripping track 3, progress - 0.00%, ETA - 18m
+    [platterpus] … 21852 progress redraws elided here …
+    Ripping track 3, progress - 100.00%, ETA - 15m
+    Done; (2 out of 2 matches for current checksum 3D8FCF0C)
+    
+    Flushing encoders...
+    Track 3 read with no error reported.
+    Summary:
+    
+      Integrated loudness:
+        I:         -12.4 LUFS
+        Threshold: -22.6 LUFS
+    
+      Loudness range:
+        LRA:         6.5 LU
+        Threshold: -32.6 LUFS
+        LRA low:   -16.7 LUFS
+        LRA high:  -10.2 LUFS
+    
+      Sample peak:
+        Peak:       -0.2 dBFS
+    
+      True peak:
+        Peak:        0.5 dBFS
+    
+      Preemphasis:   none detected
+      Disc ISRC:     GBAAM7900002
+    
+      Properties:
+        Duration:    04:51.28
+        Samples:     12849564
+        Frames:      21853
+        Sample peak level: 97.6% (-0.2 dBFS)
+        True peak level:   0.5 dBFS
+        Integrated loudness (R128): -12.4 LUFS
+        Loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+        Extraction speed:  3.0x
+        Elapsed:            293.30 s
+        Kept read began:    2026-11-04T00:10:58Z
+        Pregap LSN:  28067 (duration: 00:00.00)
+        Pregap length: 0 frames
+        Pregap source: sub-channel (not signalled by TOC)
+        Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        Start LSN:   28067 (with offset: 28068)
+        End LSN:     49919 (with offset: 49921)
+    
+      EAC CRC32:     3D8FCF0C (after 3 rips)
+      Secure re-read:  converged after 3 reads
+      Accurip:       disc found in database (max confidence: 200)
+        Accurip v1:  1B28C061 (not found, either a new pressing, or bad rip)
+        Accurip v2:  757AAD2D (not found, either a new pressing, or bad rip)
+        Accurip 450: BF62B1DA (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+    
+      Metadata:
+        TRACK:                         3
+        TRACKTOTAL:                    14
+        MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+        CDDB:                          E20DFE0E
+        MEDIA:                         CD
+        COMMENT:                       cyanrip 0.9.4-rc3+platterpus.28
+        TOTALDISCS:                    1
+        TITLE:                         Message in a Bottle
+        DISC:                          1
+        ALBUM:                         secure reread 20261103t230546 platterpus-fork-g3f288fb
+        ALBUM_ARTIST:                  The Police
+        DATE:                          2003
+        MUSICBRAINZ_ALBUMID:           65282302-368b-4ba2-953a-483bcdef2410
+        ARTIST:                        The Police
+        ISRC:                          GBAAM7900002
+        CREATION_TIME:                 2026-11-03T19:07:42-05:00
+        REPLAYGAIN_TRACK_GAIN:         -5.62 dB
+        R128_TRACK_GAIN:               -159
+        REPLAYGAIN_TRACK_RANGE:        6.47 dB
+        REPLAYGAIN_TRACK_PEAK:         1.058175
+        REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+        DISCTOTAL:                     1
+    
+      Paranoia status counts:
+        Scope:         the last of 3 reads; the disc totals below sum all of them
+        READ:          1730
+        VERIFY:        332
+        OVERLAP:       33
+    
+      File(s):
+        The Police/secure reread 20261103t230546 platterpus-fork-g3f288fb/03 - Message in a Bottle.flac
+    
+    Ripping track 4, progress - 0.00%, ETA - 15m
+    [platterpus] … 22649 progress redraws elided here …
+    Ripping track 4, progress - 100.00%, ETA - 13m
+    Repeating ripping (0 out of 2 matches for current checksum 60D796AE)
+    Ripping track 4, progress - 0.00%, ETA - 15m
+    [platterpus] … 22649 progress redraws elided here …
+    Ripping track 4, progress - 100.00%, ETA - 12m
+    Repeating ripping (1 out of 2 matches for current checksum 60D796AE)
+    Ripping track 4, progress - 0.00%, ETA - 14m
+    [platterpus] … 22649 progress redraws elided here …
+    Ripping track 4, progress - 100.00%, ETA - 12m
+    Done; (2 out of 2 matches for current checksum 60D796AE)
+    
+    Flushing encoders...
+    Track 4 read with no error reported.
+    Summary:
+    
+      Integrated loudness:
+        I:         -16.4 LUFS
+        Threshold: -26.7 LUFS
+    
+      Loudness range:
+        LRA:         5.9 LU
+        Threshold: -36.7 LUFS
+        LRA low:   -19.7 LUFS
+        LRA high:  -13.8 LUFS
+    
+      Sample peak:
+        Peak:       -0.1 dBFS
+    
+      True peak:
+        Peak:        0.6 dBFS
+    
+      Preemphasis:   none detected
+      Disc ISRC:     GBAAM7900007
+    
+      Properties:
+        Duration:    05:02.00
+        Samples:     13318200
+        Frames:      22650
+        Sample peak level: 98.9% (-0.1 dBFS)
+        True peak level:   0.6 dBFS
+        Integrated loudness (R128): -16.4 LUFS
+        Loudness range (R128):      5.9 LU (-19.7 to -13.8 LUFS)
+        Extraction speed:  3.3x
+        Elapsed:            283.15 s
+        Kept read began:    2026-11-04T00:15:44Z
+        Pregap LSN:  49762 (duration: 00:02.08)
+        Pregap length: 158 frames
+        Pregap source: sub-channel (not signalled by TOC)
+        Pregap search: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 18 frames were another sector's; 0 had no address; frames answer +0 sectors off
+        Start LSN:   49920 (with offset: 49921)
+        End LSN:     72569 (with offset: 72571)
+    
+      EAC CRC32:     60D796AE (after 3 rips)
+      Secure re-read:  converged after 3 reads
+      Accurip:       disc found in database (max confidence: 200)
+        Accurip v1:  7B43209E (accurately ripped, confidence 128)
+        Accurip v2:  BB959D84 (accurately ripped, confidence 200)
+    
+      Metadata:
+        TRACK:                         4
+        TRACKTOTAL:                    14
+        MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+        CDDB:                          E20DFE0E
+        MEDIA:                         CD
+        COMMENT:                       cyanrip 0.9.4-rc3+platterpus.28
+        TOTALDISCS:                    1
+        TITLE:                         Walking on the Moon
+        DISC:                          1
+        ALBUM:                         secure reread 20261103t230546 platterpus-fork-g3f288fb
+        ALBUM_ARTIST:                  The Police
+        DATE:                          2003
+        MUSICBRAINZ_ALBUMID:           65282302-368b-4ba2-953a-483bcdef2410
+        ARTIST:                        The Police
+        ISRC:                          GBAAM7900007
+        CREATION_TIME:                 2026-11-03T19:12:36-05:00
+        REPLAYGAIN_TRACK_GAIN:         -1.60 dB
+        R128_TRACK_GAIN:               870
+        REPLAYGAIN_TRACK_RANGE:        5.89 dB
+        REPLAYGAIN_TRACK_PEAK:         1.072539
+        REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+        DISCTOTAL:                     1
+    
+      Paranoia status counts:
+        Scope:         the last of 3 reads; the disc totals below sum all of them
+        READ:          1778
+        VERIFY:        398
+        OVERLAP:       44
+    
+      File(s):
+        The Police/secure reread 20261103t230546 platterpus-fork-g3f288fb/04 - Walking on the Moon.flac
+    
+    Ripping track 5, progress - 0.01%, ETA - 12m
+    [platterpus] … 18071 progress redraws elided here …
+    Ripping track 5, progress - 100.00%, ETA - 11m
+    Repeating ripping (0 out of 2 matches for current checksum E0036697)
+    Ripping track 5, progress - 0.01%, ETA - 13m
+    [platterpus] … 18071 progress redraws elided here …
+    Ripping track 5, progre
+    … [344380 more character(s) omitted]
+
+[warning] deps.command_failed @ 2026-11-04T00:34:26+00:00
+  cyanrip exited 74: Unable to open device: /dev/sr0
+  tool: cyanrip
+  exit code: 74
+  argv: ~/.local/bin/cyanrip -N -d /dev/sr0 -f
+  where: adapters.rip_backend.run_capture
+  detail:
+    Searching for drive offset, enabling AccuRip and disabling MusicBrainz and Cover art fetching...
+    libcdio warning: Can't get file status for /dev/sr0:<U+000A>No such file or directory
+    libcdio warning: could not retrieve file info for `/dev/sr0': No such file or directory
+    libcdio warning: can't open nrg image file /dev/sr0 for reading
+    Unable to open device: /dev/sr0
+
+[warning] deps.command_failed @ 2026-11-04T00:34:27+00:00
+  cyanrip exited 74: Unable to open device: /dev/sr0
+  tool: cyanrip
+  exit code: 74
+  argv: ~/.local/bin/cyanrip -N -d /dev/sr0 --cache-probe -I
+  where: adapters.rip_backend.run_capture
+  detail:
+    libcdio warning: Can't get file status for /dev/sr0:<U+000A>No such file or directory
+    libcdio warning: could not retrieve file info for `/dev/sr0': No such file or directory
+    libcdio warning: can't open nrg image file /dev/sr0 for reading
+    Unable to open device: /dev/sr0
+
+[warning] deps.command_failed @ 2026-11-04T00:34:28+00:00
+  cache-defeat probe on /dev/sr0: cd-paranoia -A exited 1 — the archival 'Defeat audio cache' field stays unknown, and that is a tool failure rather than an inconclusive measurement
+  tool: cd-paranoia -A
+  exit code: 1
+  argv: ~/.local/bin/cd-paranoia -A -d /dev/sr0
+  where: adapters.cache_probe.probe_cache_defeat
+  detail:
+    ++ WARN: Can't get file status for /dev/sr0:
+    No such file or directory
+    ++ WARN: could not retrieve file info for `/dev/sr0': No such file or directory
+    ++ WARN: can't open nrg image file /dev/sr0 for reading
+    cdparanoia III release 10.2 libcdio 2.1.0
+    (C) 2001 Monty <monty@xiph.org> and Xiphophorus
+    (C) 2004, 2005, 2008 Rocky Bernstein <rocky@gnu.org>
+    (C) 2014 Robert Kausch <robert.kausch@freac.org>
+    
+    Report bugs to bug-libcdio@gnu.org
+    
+    Using cdda library version: 10.2+2.0.2 x86_64-redhat-linux-gnu
+    Using paranoia library version: 10.2+2.0.2 x86_64-redhat-linux-gnu
+    Checking /dev/sr0 for cdrom...
+    		Could not stat /dev/sr0: No such file or directory
+
+[warning] deps.command_failed @ 2026-11-04T00:34:29+00:00
+  cyanrip exited 74: Unable to open device: /dev/sr0
+  tool: cyanrip
+  exit code: 74
+  argv: ~/.local/bin/cyanrip -N -d /dev/sr0 -l 1
+  where: adapters.rip_backend.run_capture
+  detail:
+    libcdio warning: Can't get file status for /dev/sr0:<U+000A>No such file or directory
+    libcdio warning: could not retrieve file info for `/dev/sr0': No such file or directory
+    libcdio warning: can't open nrg image file /dev/sr0 for reading
+    Unable to open device: /dev/sr0
+
+[warning] deps.command_failed @ 2026-11-04T00:34:30+00:00
+  cyanrip exited 74: Unable to open device: /dev/sr0
+  tool: cyanrip
+  exit code: 74
+  argv: ~/.local/bin/cyanrip -N -d /dev/sr0 -s 667 -l 1 -H -E -D r16deemphon --consumer platterpus/0.7.119 --diagnostics cyanrip-diagnostics-20261104T003430Z.json
+  where: adapters.rip_backend.run_capture
+  detail:
+    libcdio warning: Can't get file status for /dev/sr0:<U+000A>No such file or directory
+    libcdio warning: could not retrieve file info for `/dev/sr0': No such file or directory
+    libcdio warning: can't open nrg image file /dev/sr0 for reading
+    Unable to open device: /dev/sr0
+
+[warning] deps.command_failed @ 2026-11-04T00:34:31+00:00
+  cyanrip exited 74: Unable to open device: /dev/sr0
+  tool: cyanrip
+  exit code: 74
+  argv: ~/.local/bin/cyanrip -N -d /dev/sr0 -s 667 -l 1 -H -W -D r16deemphoff --consumer platterpus/0.7.119 --diagnostics cyanrip-diagnostics-20261104T003431Z.json
+  where: adapters.rip_backend.run_capture
+  detail:
+    libcdio warning: Can't get file status for /dev/sr0:<U+000A>No such file or directory
+    libcdio warning: could not retrieve file info for `/dev/sr0': No such file or directory
+    libcdio warning: can't open nrg image file /dev/sr0 for reading
+    Unable to open device: /dev/sr0
+
+--- Where the rest lives ---
+app log: ~/.local/share/platterpus/log.txt
+per-rip report: a `.platterpus.json` beside each album's audio — it embeds the ripper's own output and that session's debug log.

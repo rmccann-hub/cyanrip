@@ -1,0 +1,136 @@
+# Filed here: each file's hash as filed. A file whose
+# personal details were replaced (tools/redact.py) says so
+# under it, with the bundle's hash of it, so the delivery
+# still verifies against the archive below.
+42b02160f1e244c62735bc2c5d69d024f25a6cef535be628f829cda109b86f50  DIAGNOSTICS.txt
+4bdaef5dcb7114181c53a8a805be94dc0731753933e8b0043b88d2e6e0420a24  MANIFEST.txt
+e08f3aa5ef81656a966ef90cea2c83499a646f2bdb74c00dc67025d2e66d5166  SOURCES.txt
+cec9e535d09c2db6a6dd20cae3259d2e9ce08fe4e44744e4ea8f95c025191cfe  album/after cancel 20261103t230546 platterpus-fork-g3f288fb/after cancel 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+ac3c05d83295bb03d33e840bec9d0d71e14c5f47df256f38c16422e993becab0  album/after cancel 20261103t230546 platterpus-fork-g3f288fb/after cancel 20261103t230546 platterpus-fork-g3f288fb.cue
+a8053bfd8805354e5a9151a4168775c4a2c158779d4c11c63bc135f3f4394f40  album/after cancel 20261103t230546 platterpus-fork-g3f288fb/after cancel 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+27c756584dbc85c7e6579c14ca7b6b979c30138795b194e253ebbe3db8388300  album/cancel me 20261103t230546 platterpus-fork-g3f288fb/cancel me 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+250bf005054358878a9feda1dc227d521eb4bb183c984ac892302127eb91ea19  album/cancel me 20261103t230546 platterpus-fork-g3f288fb/cancel me 20261103t230546 platterpus-fork-g3f288fb.cue
+519d6a6ba157d90a06355bf06439aa945992ae209788baeb41ec3982853b37da  album/cancel me 20261103t230546 platterpus-fork-g3f288fb/cancel me 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+485c9005c869c8df989cdb4ba54eaf2f3596a22ba3793fa3104edfdc4ea8b6d5  album/derived mp3 20261103t230546 platterpus-fork-g3f288fb/derived mp3 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+a4685791be37838546b563999fbb33734c41d095fef45641de2fc8172ab94974  album/derived mp3 20261103t230546 platterpus-fork-g3f288fb/derived mp3 20261103t230546 platterpus-fork-g3f288fb.cue
+609c6430bc391335f998a10ed1c453e7cd8407c111910c435e92657a604064b1  album/derived mp3 20261103t230546 platterpus-fork-g3f288fb/derived mp3 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+b72b8a13369242778ce1e05c888365e97422f1dca9b192ff0238ea67fe91b75d  album/derived wav 20261103t230546 platterpus-fork-g3f288fb/derived wav 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+51283d8f71096a3b9f1da8a2edf9fdc6f39795d29dc244062ac14a04cab6441f  album/derived wav 20261103t230546 platterpus-fork-g3f288fb/derived wav 20261103t230546 platterpus-fork-g3f288fb.cue
+77445039e33da84ddd49efe34b2094b53aa0e9382b8fa17229ae89b5814d4fd9  album/derived wav 20261103t230546 platterpus-fork-g3f288fb/derived wav 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+68d8bac22162ab89901c7c09193da538701c2338939dc9bd56083cb2000d838e  album/derived wavpack 20261103t230546 platterpus-fork-g3f288fb/derived wavpack 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+4dff6a1d5a93fba4118a6fdbd7a636e7968f600b9a8be8bb8d96a7679dbed303  album/derived wavpack 20261103t230546 platterpus-fork-g3f288fb/derived wavpack 20261103t230546 platterpus-fork-g3f288fb.cue
+e8fb59b780f7d64a65eefd6974ee13ad6c6e0fc9ef32e514ec7d89365eac8556  album/derived wavpack 20261103t230546 platterpus-fork-g3f288fb/derived wavpack 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+460ab05e32fef88318d11a72bc038025dd52388072e1dbc46cf2ac95c2377c71  album/derived wavpack 20261103t230546 platterpus-fork-g3f288fb/derived wavpack 20261103t230546 platterpus-fork-g3f288fb.platterpus-addendum.txt
+a63fb65ec2610cd8d16cd1b7f6e733af7fc7bf40d1f3c1fb9d4a733420e27fe9  album/derived wavpack 20261103t230546 platterpus-fork-g3f288fb/derived wavpack 20261103t230546 platterpus-fork-g3f288fb.platterpus-securing-pass.txt
+#   -Y on the bundle's bytes: verifies
+5908e236b0b62c09286c1d09675ab569f6067eea992191c5108686b466bef7ff  album/full acceptance_ angle_bracket 20261103t23__terpus-fork-g3f288fb/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+7052396d448edf5a319900131051d72546e36fca8405218a3bed30694c00081f  album/full acceptance_ angle_bracket 20261103t23__terpus-fork-g3f288fb/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb.cue
+501b2959139436936457da4a2f9055ba5200074ea960ed11501fe852d9cf47ce  album/full acceptance_ angle_bracket 20261103t23__terpus-fork-g3f288fb/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+26604a05365207975f803ef232161a26eea770408c55f3c0a2bd48d4def66de1  album/full acceptance_ angle_bracket 20261103t23__terpus-fork-g3f288fb/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb.platterpus-addendum.txt
+9decc721b36ff14245901b51ec88bc2e71389473d017815531a8e1eb4c91fd47  album/full acceptance_ angle_bracket 20261103t23__terpus-fork-g3f288fb/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb.platterpus-securing-pass.txt
+#   -Y on the bundle's bytes: verifies
+da64365f9e6fd0211b26d3560dbdee57b9e3c01b7c2ec064b7719fb89d5576fb  album/full acceptance_ angle_bracket 20261103t23__us-fork-g3f288fb _2_/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+e30badfa24be308df38548b079bb05e3eda50497bcb324bdb37d95cb3a229a4a  album/full acceptance_ angle_bracket 20261103t23__us-fork-g3f288fb _2_/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb.cue
+1b483559c9da723e1194046a8908efdaef6cdbee84b71dd98474944cfc3c1a22  album/full acceptance_ angle_bracket 20261103t23__us-fork-g3f288fb _2_/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+30f01cbc3f749d329759b9d080f9d8691b142c252cffca485477f4b7f46f3861  album/overwrite answers 20261103t230546 platterpus-fork-g3f288fb/overwrite answers 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+f9f06501c1b8da8b9bc5f0f5f2966432b924cc380265d8435ccefcda70e1dabf  album/overwrite answers 20261103t230546 platterpus-fork-g3f288fb/overwrite answers 20261103t230546 platterpus-fork-g3f288fb.cue
+828b0224d109f12b6e18ff2b4bdedbddc52299387d8ccf062124b198eb87f983  album/overwrite answers 20261103t230546 platterpus-fork-g3f288fb/overwrite answers 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+393bf6a0dcd20676fb7387520639931da81b1c4f2ac4ed0d8e671830f8606781  album/permutations 20261103t230546 platterpus-fork-g3f288fb/permutations 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+da8abf32d4f58ed3c4f8d3073422d82a3c85e41919aed83df2caea7609f618dd  album/permutations 20261103t230546 platterpus-fork-g3f288fb/permutations 20261103t230546 platterpus-fork-g3f288fb.cue
+c3772f7700dbd30682147f2ba5a3fe67afd46a5ede5125c0f4f5bb07a6847ec3  album/permutations 20261103t230546 platterpus-fork-g3f288fb/permutations 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+8cffb0ff503d2cb791bc2658949fa0bec95826938ef991ed9173e3fc63afb07c  album/secure reread 20261103t230546 platterpus-fork-g3f288fb/secure reread 20261103t230546 platterpus-fork-g3f288fb (EAC-compatible).log
+c1c394ccc6490f514f663f10bdb814e4c4e6e079ce2d881b86ff1736eac45128  album/secure reread 20261103t230546 platterpus-fork-g3f288fb/secure reread 20261103t230546 platterpus-fork-g3f288fb.cue
+a921da70dde9d2aa45c67cdbe984b63f720ae53130b3c3c29d654deb9f2de140  album/secure reread 20261103t230546 platterpus-fork-g3f288fb/secure reread 20261103t230546 platterpus-fork-g3f288fb.log
+#   -Y on the bundle's bytes: verifies
+6db918372f29af0a9f9a82b6bc0c396ad2fd0a793b8746a82a7790b0b4e8b74c  session/artifacts/02platterpus/log.txt
+fd9980810e13617665d322c0813cdcb20aedf30f6814aa0ac7fbd588542f69ee  session/run/cacheprobe1471.txt
+ebcae281252adf6d5c77f173e3a7c379bc5069afdbe8781f6fa792e1d343f475  session/run/cacheprobe1471log.txt
+8e60c757dadc3247c608ca4a01999a98cc255710119f5196bb6408740c3989c4  session/run/report.json
+b2681e89e68f7562d1fda9b93a1e3d7318b3ac517a1234522a96a5d7c43f9bb2  session/run/rig-check/MANIFEST.txt
+466c1d0e08217243453ff950195eaa69d6ff4a4fc80685a8b3b567b1e81258b2  session/run/rig-check/argv-probe-output.txt
+f245e8cfae090102153baf804216c4ee277e7fbe7874f022f4d6c885beb6ea85  session/run/rig-check/ripper-version.txt
+9f2f2a512e2a45f5bb7dc06144239ffc3216f1ebb7c7dd9ec96c0d06f6f2de22  session/run/tags0781.txt
+4be88ad9ffdf0be371718cc45ae131cecbc1d44b97c083e8259f41398efa20c9  session/run/tags0857.txt
+14c2073f8d454c6ef94a37aceddc86ba73d74dd188d7e845ca9a177049440648  session/run/tags0899.txt
+39d678c5e7876254471a7c0af5a698823353adbd358c4ec62f36f89c44c82005  session/run/tags1003.txt
+44812b497fbf3e0b430400990062eeee6915cc4adb15b9bc70f80f63e4f7e020  session/run/tags1159.txt
+d6be39782b77a0e0a9507a8f567f947105557458e31926d97e4b3d980538ea1b  session/run/tags1187.txt
+df04e9f2d5ee25099367044fb0ec36a55cfbfef6bf8524aec710721fa1b10c94  session/run/tags1215.txt
+46e754bd13487c7d5e651abfcf27b88eba5e5b6e0237d6dc2e8fb1225c6cccb7  session/run/transcript.txt
+46e754bd13487c7d5e651abfcf27b88eba5e5b6e0237d6dc2e8fb1225c6cccb7  session/transcript.txt
+
+# NOT filed. This list is the SET DIFFERENCE between the
+# archive's contents and what was written -- never a
+# hand-written note, which is how two files carrying the
+# run's own verdict were dropped from a filing whose own
+# paragraph called the omissions 'a choice'.
+c258a56df7606c28e6d811c337d02bc0670840fffa2e3b369588fa5c341a880b  (not filed) COMPONENTS.json
+14a4ffa091ed18c57906771eaf77d2b274edc6bbf29faa3f53686959db7957d0  (not filed) SETTINGS.json
+d0455c43c48230f53ede30668ea7dccb55bedd04754f68e197e1cb604a4b3f7e  (not filed) album/after cancel 20261103t230546 platterpus-fork-g3f288fb/after cancel 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+9b30b7e448744d8606f20d6e23dcfc481dc3b44f90bf7a3db1e7fb2a1c94e3b9  (not filed) album/cancel me 20261103t230546 platterpus-fork-g3f288fb/cancel me 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+5a9f3dd913617c7cb643ca5c36e325eb54f61c98ea3d4bacf8b302f8a8f44fe7  (not filed) album/derived mp3 20261103t230546 platterpus-fork-g3f288fb/derived mp3 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+c3b95c80a613b0ec05f0911ae4e201870c9138ae61d1dade1f837e5737e7695a  (not filed) album/derived wav 20261103t230546 platterpus-fork-g3f288fb/derived wav 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+d7fd6881eb3cdaf90941f58f3820e0ba9acb4c3da24a3946033feaac36171d17  (not filed) album/derived wavpack 20261103t230546 platterpus-fork-g3f288fb/derived wavpack 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+1c8e7c1604cf5ea76f9b11f7d150d6273a09d90a3386ca66647d30b36bc975e7  (not filed) album/full acceptance_ angle_bracket 20261103t23__terpus-fork-g3f288fb/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+ff22cb4717b826edcfd2731f2c746055de8ee33d49036c8cf5f664b6c31c4b29  (not filed) album/full acceptance_ angle_bracket 20261103t23__us-fork-g3f288fb _2_/full acceptance∶ angle‹bracket 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+6639732b4cffd6c5e28b68eb4e69693523e20327175842f86f5ad8c28e4730c0  (not filed) album/overwrite answers 20261103t230546 platterpus-fork-g3f288fb/overwrite answers 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+5172ac40150dff8caea471ff74c67a96b9ae74c27142c0879a522898944c4351  (not filed) album/permutations 20261103t230546 platterpus-fork-g3f288fb/permutations 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+17681977c7ccd07f6b86dfb24148e6b651389ea4928ed07fb7ae2aa4a31fe747  (not filed) album/secure reread 20261103t230546 platterpus-fork-g3f288fb/secure reread 20261103t230546 platterpus-fork-g3f288fb.platterpus.json
+648191664d93308e89720890825ab632bc331c9720dcc07b150a36cabd65b5f9  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T230630Z.json
+b20afcbda604162334e83ebac117bbfa04a1752dcb2e19a71129b72180a25886  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T232346Z-securingpass.json
+8fdc32cf736bb301d9d4122e242970270a9553ed645a63db1a42074ceded2dec  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T233317Z.json
+9752bc4e2471b2a0c3a22eff285c44c49c64fe36b392e05e880cdef25bb74fac  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T233559Z.json
+39283284b7cf1f94b927390a74dae38095635d431bec1607488c6b753c46c68a  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T233735Z.json
+e2d990a940d87bd080f3fdf35489ccf23ea0e0b6b16c9c173426d641fff8ad9b  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T233907Z.json
+1d0ab4ed60ad9f0cb911cbc68a5f8940b0fb27c19036bc395e2c719d5adf4b23  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T234313Z.json
+627c9fabca2bc0d309c349d19f524be531e11cbcfc085d5dff0fdf968b7a5fc1  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T234557Z.json
+344e52d1cb786b1565d74ff824d0303b4ae89488e7a336731b7f3278cb98da2f  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T234732Z.json
+df9241e570953b933d018b192688ed5a358214e97923a5c5ffcb220af6643aea  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T235025Z.json
+0ce123c1f9cf4503432504d17f735d3a30ec22cf92b70eb7ef59292d8623dbb7  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T235257Z-securingpass.json
+c7bebc2f0d2b12580b7b96f4da0926b60da69e6e3916a5fc3b02fe06d7bcf8ff  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261103T235709Z.json
+214f9b491f140d6a091ba939280224bf842bb8331180e541e4bb2786f96927ca  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261104T000024Z.json
+a4169ec5f381a27f69cf4ce9d28e630b081c19eb740915fd4b6069914f6d68c8  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261104T003430Z.json
+13428197524a1ff2b0b8660db97f65c47bb941229562e90dc4a5a5cf3a4ed17f  (not filed) ripperdiagnostics/cyanrip-diagnostics-20261104T003431Z.json
+1450306e84a4e0ee553b2a7d4cf070f45442252fbf725976857069ad5877d04d  (not filed) session/artifacts/13platterpus/config.toml
+bf012d26d2c685daa607de299f4573fb766952793b0a7b8a8c98f2f7b027d10e  (not filed) session/run/aftercancel-1-Run-test-script.png
+7b990aae9f2c929a8d6605e06cc8cfb99405825c47fba6625cad95e01581e13d  (not filed) session/run/aftercancel.png
+0afa577f6d476611ac2a21066b2ea920dc0ecbaba55fe50e26351893def7eb85  (not filed) session/run/afterfullrip-1-Run-test-script.png
+b7b60325a05e7f849c41cae8d519375ebde6d36e52f1a7064c6059fbf8833c7c  (not filed) session/run/afterfullrip.png
+d7047af32286bbc5cecab3a848b2eb9eee3c429d47204091e93cbf03676cf0a7  (not filed) session/run/aftermp3-1-Run-test-script.png
+e7b23c36cdd2031835b7ba036e283141f091f810f37a13f8f3baf0ac6f79daa3  (not filed) session/run/aftermp3.png
+027842d1c59035dd4604a0e57daa0c6bf2067adbf68c43a178687069507c658b  (not filed) session/run/afteroverwrite-1-Run-test-script.png
+124502ecdb893f2da53891ed225eba399781fabba21cac30a099018766b74516  (not filed) session/run/afteroverwrite.png
+223d9a75cfe3b730c6c121d5e5c9c517fb8f7c335c25a9dc8bedf8f123c1349e  (not filed) session/run/afterrecovery-1-Run-test-script.png
+0c5f85bb6bfec6dca0f83913a03b035277d7b156fa1f89da933aeb434364f188  (not filed) session/run/afterrecovery.png
+c7c20c76a5fa0d8f230e5873ce2f708a2f2b3dff5bc47dfd4411fc33c78ee484  (not filed) session/run/aftersecurereread-1-Run-test-script.png
+a27b08d76f835a08c52701724d76b0c406123b3118ee296f364a15f51c813e75  (not filed) session/run/aftersecurereread.png
+2b8cbda854f690f8edd5e00c74eafc0dbcb542a0acb88274592a29f990f765bd  (not filed) session/run/afterwav-1-Run-test-script.png
+4fff69abffad300689f04701456323ae061e928ab2f362e8f5d1634dd5df0733  (not filed) session/run/afterwav.png
+69b83e1fda9a070fedfaa5da1d76c45d5d2e54854e1b143f923b46b0091447f0  (not filed) session/run/dialogdependencies-1-Dependency-check-complete.png
+6572cfe2f5d892d435e2ce000532bab696746e882ffb5eae11d219aa564d323f  (not filed) session/run/dialogdependencies-2-Run-test-script.png
+6308b21b8f0d4e49cc7efc6d7fb79a7c10d7545d5db59e8ce2283dc0fed59b0a  (not filed) session/run/dialogdependencies.png
+c0e528016cda45619c9420fe8003012f8ca1bb8d74efc849536f56433b5751c6  (not filed) session/run/dialogdiagnostics-1-Diagnostics.png
+3124885cf175d3f643b06b5fb4ab0f45d7cab55ff3060d887dcb66164246a2da  (not filed) session/run/dialogdiagnostics-2-Run-test-script.png
+6308b21b8f0d4e49cc7efc6d7fb79a7c10d7545d5db59e8ce2283dc0fed59b0a  (not filed) session/run/dialogdiagnostics.png
+ca853daa67e0bb46460f9a5e2c98ee073cb1377fbf607085c5ed3f9418e7a30c  (not filed) session/run/dialogdrive-1-Set-up-drive.png
+329fa4114e87f4e8c10c3c5ebff6c61a8183eae0b1b753caa7581529be6c0ace  (not filed) session/run/dialogdrive-2-Run-test-script.png
+9ccf3ab4cbe55b94a20704576b7e55a733be05010cde909e31bbd56b67932cc7  (not filed) session/run/dialogdrive.png
+87638fa834f3b4c5e2b39da0152f1193d727938e73a4f34295d5f2c3d41915b9  (not filed) session/run/dialogsettings-1-Settings.png
+2c15112128d2312bd7a2ed8433f97d3fe87b4c7b5eaa841b5f65748f33c97b62  (not filed) session/run/dialogsettings-2-Run-test-script.png
+9ccf3ab4cbe55b94a20704576b7e55a733be05010cde909e31bbd56b67932cc7  (not filed) session/run/dialogsettings.png
+87638fa834f3b4c5e2b39da0152f1193d727938e73a4f34295d5f2c3d41915b9  (not filed) session/run/dialogsettingsok-1-Settings.png
+fe516ff10a65822af5e8e9c6eccff00d923cb2b71a333db23d5b39b1f379c06f  (not filed) session/run/dialogsettingsok-2-Run-test-script.png
+6308b21b8f0d4e49cc7efc6d7fb79a7c10d7545d5db59e8ce2283dc0fed59b0a  (not filed) session/run/dialogsettingsok.png
+c1d9ba9bf0e820c0973c6354e65efcd34a9d3c8b992098743173bd342599c3ea  (not filed) session/run/rig-check/argv-probe.json
+
+# The archive as delivered.
+099c2527c78eb96ec830698c51798c50d5b4b13f9140acb6e6bdc60989a417bf  (not filed) 7b103391-platterpusbundle20261103t230546z.tar.gz
