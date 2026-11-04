@@ -330,7 +330,7 @@ saying when a filter changed the delivered audio, which is new log text and
 goes in a lap first (round 38). Compensating the level is not offered: whether
 the disc carried HDCD is known only when the graph is freed, after encoding.
 
-### `Ripping errors:` leaves out a `-Z` track whose re-reads never agreed
+### `Ripping errors:` leaves out a `-Z` track whose re-reads never agreed (fixed for `.29`)
 
 **Found by the review of 2026-11-03 (A5)**, in that night's secure re-read
 (`-Z 2 -r 5`): track 3 read five times to four checksums, the block printed
@@ -350,6 +350,16 @@ adding these to the count would step a disc down for a disagreement no drive
 reported. Proposed in a lap first (round 38): a third part of the suffix, for
 example `(including 1 track whose re-reads never agreed)`, which their
 parser must accept before it ships.
+
+**Fixed for `.29`, not yet released**, by a line of its own and not the
+suffix: under `-Z`, directly above `Ripping errors:`, `Secure re-reads: N
+track(s) did not converge (track(s) T)` or `Secure re-reads: every track
+converged`, as our round 38 lap 1 S5 proposed and Platterpus's lap 2 S2
+accepted; `Ripping errors:` keeps its count. A rip that stopped with no track
+named prints no line, a case lap 1 did not cover, which our lap 3 gives them.
+`tests/logrender.c` holds every arm and `sc_repeat_limit` the line on a rip,
+by position; each fails with the fix reverted. It leaves this file once
+`.29` ships.
 
 ### The footer's tallies count the whole disc under `-l` and `-f`, and a cancel as an error (fixed for `.29`)
 

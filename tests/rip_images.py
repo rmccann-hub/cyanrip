@@ -8444,6 +8444,17 @@ def sc_repeat_limit():
         if not re.search(r"(?m)^Ripping errors: 0$", text):
             fail(f"repeat_limit: cycle {cycle} run {run}: `Ripping errors:` should "
                  f"stay 0, so the limit is the only reason for the arm")
+        # `Ripping errors: 0` is true of the drive and says nothing about a
+        # track whose reads never agreed, so the line directly above it does
+        # (our round 38 lap 1 S5, Platterpus's lap 2 S2): by position, since
+        # the lines below `Encoder errors:` are claimed by their rule.
+        at = next((i for i, ln in enumerate(lines)
+                   if ln.startswith("Ripping errors:")), None)
+        want = "Secure re-reads: 1 track did not converge (track 1)"
+        if at is None or at == 0 or lines[at - 1] != want:
+            got = lines[at - 1] if at else None
+            fail(f"repeat_limit: cycle {cycle} run {run}: the line above "
+                 f"`Ripping errors:` is {got!r}, not {want!r}")
 
 
 def _flip_crc(v, flip=100, sec=2352, sectors=300):

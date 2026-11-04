@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**`Secure re-reads:` says at disc level whether `-Z` confirmed every track.**
+A track whose re-reads never agreed reported nothing to the drive or to
+paranoia, so a `-Z` rip could keep a read at its repeat limit and end on
+`Ripping errors: 0` (the review of 2026-11-03, A5). Under `-Z`, directly above
+`Ripping errors:`, the footer prints `Secure re-reads: 1 track did not
+converge (track 3)`, `2 tracks did not converge (tracks 3, 5)`, or `every
+track converged`, over the audio tracks the run asked for; `Ripping errors:`
+keeps its count, so Platterpus's read-speed ladder does not move. A rip that
+stopped with none named prints no line, since `every track converged` would
+be false of the track it stopped in. Our round 38 lap 1 S5, which their lap 2
+S2 accepted; the plural, the `, ` between tracks and the partial-rip case
+answer their S8 (a) in our lap 3. `tests/logrender.c` holds every arm and
+`sc_repeat_limit` the line on a rip, by position, and each fails with the fix
+reverted.
+
 **A cancel is not a ripping error.** A track that did not finish added one to
 `Ripping errors:` whatever stopped it, so every interrupted rip read `Ripping
 errors: 1` over reads that had all succeeded. It adds one only when something

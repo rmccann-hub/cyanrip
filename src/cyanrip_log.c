@@ -286,6 +286,59 @@ static void append_track(char *buf, size_t size, int *len, int *truncated,
         *len += n;
 }
 
+/* `Secure re-reads:`, under -Z only, directly above `Ripping errors:` (the
+ * lines below `Encoder errors:` are claimed by Platterpus's not-written-whole
+ * rule). Our round 38 lap 1 S5, which their lap 2 S2 accepted.
+ *
+ * `Ripping errors:` counts what the drive and paranoia reported, and a track
+ * whose re-reads never agreed reported nothing to either: before this line,
+ * a -Z rip that kept a read at its repeat limit could end on `Ripping errors:
+ * 0` with nothing at disc level saying a track had not converged (the review
+ * of 2026-11-03, A5). The count stays as it is, so their read-speed ladder,
+ * which takes it less the skips as the drive's, is not moved by a
+ * disagreement no drive reported.
+ *
+ * Over the audio tracks the run asked for and read to the end, each of
+ * whose blocks carries its own `Done;` line: a track at its repeat limit or
+ * time limit is named; `every track converged` only when every asked audio
+ * track finished and converged. A rip that stopped with none named prints no
+ * line, because that sentence would be false of the track it stopped in, and
+ * `Rip completed:` and `Partial files:` say what stopped. At most 99 tracks
+ * joined by ", " fill 394 bytes, so the list is never cut. */
+static void print_secure_reread_summary(cyanrip_ctx *ctx)
+{
+    char tracks[512];
+    int len = 0, truncated = 0, nb_asked = 0, nb_converged = 0, nb_failed = 0;
+
+    if (!ctx->settings.ripping_retries)
+        return;
+    tracks[0] = '\0';
+    for (int i = 0; i < ctx->nb_tracks; i++) {
+        const cyanrip_track *t = &ctx->tracks[i];
+        if (t->track_is_data || !crip_track_asked(ctx, t))
+            continue;
+        nb_asked++;
+        if (!t->audio_ripped)
+            continue;
+        if (t->secure_rip_state == CYANRIP_SECURE_RIP_CONVERGED) {
+            nb_converged++;
+        } else if (t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT ||
+                   t->secure_rip_state == CYANRIP_SECURE_RIP_TIME_LIMIT) {
+            nb_failed++;
+            append_track(tracks, sizeof(tracks), &len, &truncated, t->number);
+        }
+    }
+
+    if (nb_failed)
+        cyanrip_log(ctx, 0, "Secure re-reads: %i track%s did not converge "
+                            "(track%s %s%s)\n",
+                    nb_failed, nb_failed == 1 ? "" : "s",
+                    nb_failed == 1 ? "" : "s",
+                    tracks, truncated ? ", list truncated" : "");
+    else if (nb_asked && nb_converged == nb_asked)
+        cyanrip_log(ctx, 0, "Secure re-reads: every track converged\n");
+}
+
 static void print_encode_failure_summary(cyanrip_ctx *ctx)
 {
     char tracks[512], partial[512];
@@ -1287,6 +1340,7 @@ void cyanrip_log_finish_report(cyanrip_ctx *ctx)
      * disc block's `SKIP:` directly above. The leading count is unchanged in
      * form, and Platterpus's pattern is a prefix match
      * (platterpus@bd508bf1:src/platterpus/parsers/cyanrip_log.py:542, 2470). */
+    print_secure_reread_summary(ctx);
     if (ctx->paranoia_skips)
         cyanrip_log(ctx, 0, "Ripping errors: %" PRIu64 " (including %" PRIu64 " paranoia skip%s)\n",
                     crip_ripping_errors(ctx), ctx->paranoia_skips,

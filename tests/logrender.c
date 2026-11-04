@@ -1430,6 +1430,62 @@ static void test_disc_tally_counts_audio_tracks_only(void)
  * accepted. Before `.29`, `-l 2` on this disc printed `1/3` over the one
  * track it read and matched, and an offset search printed a tally of tracks
  * no rip read. */
+/* `Secure re-reads:` under -Z, directly above `Ripping errors:`: our round
+ * 38 lap 1 S5, which Platterpus's lap 2 S2 accepted. Every arm: tracks that
+ * did not converge, named in one and in several; every track converged; a
+ * rip that stopped with none named, which prints nothing because `every
+ * track converged` would be false of the track it stopped in; and no -Z. */
+static void secure_rereads_case(const int *states, const int *ripped, int n,
+                                int retries, const char *want, const char *what)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    setup_disc(ctx, n);
+    ctx->settings.ripping_retries = retries;
+    for (int i = 0; i < n; i++) {
+        ctx->tracks[i].secure_rip_state = states[i];
+        ctx->tracks[i].audio_ripped = ripped[i];
+    }
+    cyanrip_log_finish_report(ctx);
+    const char *out = drain(ctx);
+    const char *at = strstr(out, "\nRipping errors: ");
+    const char *line = strstr(out, "Secure re-reads:");
+    if (!want) {
+        if (line)
+            FAIL("%s: printed a `Secure re-reads:` line", what);
+    } else if (!at || !line) {
+        FAIL("%s: no `Secure re-reads:` line, or no `Ripping errors:`", what);
+    } else {
+        /* The line, whole, ends where `Ripping errors:` begins */
+        size_t len = strlen(want);
+        if (strncmp(line, want, len) || line + len != at)
+            FAIL("%s: want `%s` directly above `Ripping errors:`", what, want);
+    }
+    free_ctx(ctx);
+}
+
+static void test_secure_rereads_line(void)
+{
+    const int C = CYANRIP_SECURE_RIP_CONVERGED, L = CYANRIP_SECURE_RIP_LIMIT_HIT,
+              T = CYANRIP_SECURE_RIP_TIME_LIMIT, N = CYANRIP_SECURE_RIP_NA;
+    const int all[3] = { 1, 1, 1 };
+    secure_rereads_case((int[]){ C, L, T }, all, 3, 2,
+                        "Secure re-reads: 2 tracks did not converge (tracks 2, 3)",
+                        "secure-rereads/two");
+    secure_rereads_case((int[]){ C, L, C }, all, 3, 2,
+                        "Secure re-reads: 1 track did not converge (track 2)",
+                        "secure-rereads/one");
+    secure_rereads_case((int[]){ C, C, C }, all, 3, 2,
+                        "Secure re-reads: every track converged",
+                        "secure-rereads/all");
+    secure_rereads_case((int[]){ C, C, N }, (int[]){ 1, 1, 0 }, 3, 2, NULL,
+                        "secure-rereads/stopped with none named");
+    secure_rereads_case((int[]){ C, L, N }, (int[]){ 1, 1, 0 }, 3, 2,
+                        "Secure re-reads: 1 track did not converge (track 2)",
+                        "secure-rereads/stopped with one named");
+    secure_rereads_case((int[]){ N, N, N }, all, 3, 0, NULL,
+                        "secure-rereads/no -Z");
+}
+
 static void test_disc_tally_counts_tracks_asked(void)
 {
     cyanrip_ctx *ctx = new_ctx();
@@ -2017,6 +2073,7 @@ int main(void)
     test_disc_tally_counts_over_one_population();
     test_disc_tally_counts_audio_tracks_only();
     test_disc_tally_counts_tracks_asked();
+    test_secure_rereads_line();
     test_disc_tally_ignores_a_zero_450_checksum();
     test_disc_tally_matches_the_per_track_450_gate();
     test_disc_tally_skips_tracks_not_in_the_database();
