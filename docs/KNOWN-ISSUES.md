@@ -151,14 +151,15 @@ passing its CRC, so the `unknown`'s words do not contradict the record. On two
 runs, two causes in different proportions have left the same sector, 145567,
 unplaced.
 
-**Fixed for the build after `.27`, not yet released.** A `Pregap searches:`
+**Fixed in `.28`** (`14f9298`). A `Pregap searches:`
 block after `Gaps:` gives every track a sub-channel search ran on, ripped or
 not, its record word for word as its own block would (our round 36 lap 16 S10,
 which Platterpus's lap 17 S4 accepted, fixed within the round on our
 operator's word of 2026-10-28). `sc_pregap_search_record_listed()` holds it on
 a rip of `basic.cue`'s track 1 alone, and fails with the fix reverted. Its
-wording goes to Platterpus in round 37, with the `unknown`'s reason renamed,
-before a build carries either.
+wording, and the `unknown`'s reason renamed `sub-channel search bounds did not
+meet` (`b675efd`), went to Platterpus in our round 37 lap 1 S5 and S6; their
+lap 2 S3 and S4 accepted both as given, and both shipped in `.28`.
 
 ### The disc's ISRCs read as none on the rig's drive, while EAC's cue of the same disc has them (fixed in `.26`)
 
@@ -325,7 +326,7 @@ ISO 3901 check; and the offset search numbers tracks by position.
 **What it costs**: each prints a default or a failure as a measurement, which
 is the first rule's failure.
 
-**Fixed for the build after `.27`, not yet released**, in the wordings our round
+**Fixed in `.28`** (`819c735`), in the wordings our round
 36 lap 12 S11 proposed and Platterpus's lap 13 S5 accepted:
 - `Speed:          default (drive not asked whether it can change speed)`.
 - On an image, `Drive used:     none (disc image, read by libcdio's CDRWIN
@@ -407,8 +408,9 @@ the rule is in the contract's P2). `tests/logescape.c` and
 `log_values_cannot_forge_a_line` hold it, and both fail with the escape
 removed. One newline is still kept: paranoia's own messages are written a line
 at a time, and they name the `-d` path and the drive's INQUIRY strings, so a
-newline in either still starts a line there. The escape's form is proposed to
-Platterpus in our round 36 lap 12 S9 and ships only once they accept.
+newline in either still starts a line there. The escape's form, proposed to
+Platterpus in our round 36 lap 12 S9 and accepted as given in their lap 13 S3,
+shipped in `.28` (`46cec2a`).
 
 ### `Embedded cover art:` names a cover the muxer dropped
 
@@ -999,7 +1001,7 @@ coverage.
 | `--cache-probe` (`-x` until 2026-10-12) correctness on a real drive | **measured seventeen times on builds up to `.19`, wrong sixteen times** — `at least 2048 sectors` against `cd-paranoia -A`'s 137–140 — and right once by the defect's own arithmetic, 2026-10-05's `128 to 255` (see the cache section). **`.20`'s fix (`394ab17`) has run nine times on a drive, 2026-10-06 to 2026-10-22, and agreed each time**: `128 to 255` beside `cd-paranoia -A`'s 137, 140 or 144. This cell said *"measured twice"* while the table above held nine rows |
 | C2 error reporting | the rig's drive reports C2 unsupported; never exercised anywhere |
 | `-f` offset autodetection | **partially retired 2026-08-12** — exited 0 and rediscovered `+667` on the rig. The *value* is now confirmed; behaviour on a drive with a different offset is not |
-| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. **Still not seen:** a drive that reports a read as failed. From `.20` the `read with errors.` arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have. The `-Z` arm printed it on a drive on 2026-10-06 (`docs/rig-2026-10-06-5704062/`, tracks 3 and 5), and **the skip arm on 2026-10-21**, `.26` on the same disc (`docs/rig-2026-10-21b-ca0f097/`): 2,106 skips, on exactly the four tracks that print it, with their positions in the record. Tracks 11, 12, 14 and 16 read no skip, print `read successfully!` and fail AccurateRip, so paranoia reported nothing on four wrong reads. Every position in that run is a skip, so a drive reporting a failed read is still not seen |
+| damaged media | **read on hardware 2026-10-04**, `174a134` on the BDR-209D (`docs/rig-2026-10-04-174a134/`): a disc the drive reads differently each time from track 11 on. Measured: the drive reported no error (no `cdio error` or `Frame read failed` in any log), C2 is unsupported so it said nothing, reads slowed to **54 s**, one track took **8,161 s**, paranoia **skipped 2,586** times on it, and five `-Z` reads of each of five tracks gave five checksums. Whether the disc is damaged is an inference; the drive's behaviour is what was measured. No drive reported a read as failed in that run. From `.20` the `read with errors.` arm also takes a track paranoia skipped on, or one whose `-Z` reads never agreed, which this run's tracks 12 to 18 would have. The `-Z` arm printed it on a drive on 2026-10-06 (`docs/rig-2026-10-06-5704062/`, tracks 3 and 5), and **the skip arm on 2026-10-21**, `.26` on the same disc (`docs/rig-2026-10-21b-ca0f097/`): 2,106 skips, on exactly the four tracks that print it, with their positions in the record. Tracks 11, 12, 14 and 16 read no skip, print `read successfully!` and fail AccurateRip, so paranoia reported nothing on four wrong reads. Every position in that run is a skip. **A drive reporting failed reads, then unopenable, ran in the rig session of 2026-11-03**, `.28` at `3f288fb` on the reference disc (`docs/rig-2026-11-03b-3f288fb/`, whose README puts it down to the drive failing and says nothing in the bundle rules out the disc): in the secure re-read's track 10 the BDR-209D answered `Unknown, unrecoverable error reading data` 6,720 times, the track's `error_positions` holds 995 `read_error` and 5 `skip` with 5,748 more counted as dropped, and the rip stopped at `Drive media change query failed (libcdio error -1), stopping!`, exit 74, after which every call failed to open the drive. **Still not seen:** a track's `File(s):` naming one not written whole, since that rip stopped inside track 10, which the footer's `Partial files:` names as read not completed |
 | CD-TEXT from a physical disc | `mmc_read_cdtext` is a different code path from the image parser, and no disc with CD-TEXT has been read |
 | ~~the diagnosed-abort exit code~~ | **RETIRED 2026-09-22.** `cyanrip -N -l 1` with no `-s` exited **1** with `Offset is unset!` at column 0, `Rip completed:  no (aborted, 0 of 14 tracks)` and a complete footer — `docs/rig-2026-09-22-2cce60d/session/script-report.json` step 212. The reason given here (*"every rig rip so far had `Ripping errors: 0`"*) had **already been false since 2026-09-10**: seven filed rig logs carry `Ripping errors: 1`, counted off `docs/rig-*/rips/*.log` rather than remembered |
 | ~~a non-zero `Read stalls:` count~~ | **RETIRED 2026-08-26**, and this row outlived the retirement by a month. **Five** filed rig logs carry a populated line, up to `5 reads exceeded 10s; longest 11s (track 1, LSN 8322)`, counted off `docs/rig-*/rips/*.log`. The rule it carried still holds and is why it is kept visible: **a silent watchdog is not a working watchdog**, and zero heartbeats on healthy media — which is what all eight rips of 2026-09-22 report — is the expected result and evidence of nothing |
@@ -1100,7 +1102,11 @@ Both are for round 29, and both are gaps in the spec, not false statements.
 read against v7 as proposed at `09f39bc` and still true of it at `2abeb5d`.
 **Carried to round 31 by the operator's decision of 2026-10-05**: v7 governs
 from round 31, so a v8 drafted in round 30 could govern nothing sooner, and
-drafting it would add laps to a round whose close waits on a run.
+drafting it would add laps to a round whose close waits on a run. **v8 landed
+at `5cadca3b`, as round 31 agreed, and its E3 rewrote R8 point 2** to *"Each
+side chooses its own channel"*: row 16's *"accepts"* and row 15's *"the
+consumer follows a build on beta"* went with the old sentence. Row 15's other
+items were not re-read against v8 or v9 for this note.
 
 **Consolidated 2026-09-22 by the pre-round-24 audit**, read against the four
 files as they stand — byte-identical in both trees, `tools/seam-sync-check.py
@@ -1122,8 +1128,8 @@ version bump would carry, and round 24 proposes it rather than editing it.
 | 8–12 | `seam-commands.md` | five statements | **all fixed in round 30**, two at `83bcd70` and three by the text landed after `0645ddb` | *"`docs/seam-commands.md` carried FIVE known-wrong statements"*, above |
 | 13 | `PROTOCOL.md` §5b, rows C39–C40 | step 2 cross-checks the closing file's transcription of the PEER's verdict against the lap its source names | **nothing asks a gate to check the peer's transcription of ITS OWN verdict**, so the two gates can split on one record. Rehearsed 2026-09-28 on copies of our record (control X-c3): our lap 6 `GO`, their lap 7 `GO`, released, at protocol 6, but transcribing our lap 6 as `OPEN`. **Our gate closes the round** on their lap 7 by step 3. **Theirs refuses it**: their closing file is their lap 7, its source names our lap 6, and the values disagree (`platterpus@785925a:scripts/handshake.py:2438-2447`, *"the transcription disagrees with its source"*). Their gate makes them correct their own file, so the split closes itself once they do; until then ours says CLOSED and theirs does not | found by a control in the round-28 close rehearsal, not by a real record. **For round 29, not round 28**: the candidate row is that a gate refuses when the newest peer lap's source names one of the gate's own laps and its `HANDSHAKE-PEER-VERDICT` disagrees with that lap's `HANDSHAKE-VERDICT` |
 | 14 | `PROTOCOL.md` §5, `HANDSHAKE-OUR-VERSION` / `HANDSHAKE-PEER-VERSION` | *"which two programs agreed"* | **the two closing files of round 28 name different Platterpus builds as the party.** Our lap 8 names the build that was tested, `platterpus 0.6.61` at `59f4c00`. Their lap 9 names its own current release, `platterpus 0.6.62` at `9e96fa0` (their `v0.6.62` tag), while its `HANDSHAKE-APP-VERSION` and `HANDSHAKE-TESTED` say 0.6.61. Both are defensible readings. Neither gate cross-checks the two files, so one closed round quotes two different agreements | found 2026-09-28 filing their round 28 lap 9. For round 29: say whether the field names the build under test or the build declaring the verdict |
-| 15 | `PROTOCOL.md` v7 and `seam-rules.md` v7 | nine wording items | each is a sentence v7 leaves imprecise, none a false rule: `HANDSHAKE-NEXT-LAP` with two grammars (§3, C46); R9 keeping the sentence §15 calls misleading; R8 point 2's unscoped *"the consumer follows a build on beta"*; §6d asking for the pair newest at the run's end where D3 checks only its start; a mid-round hotfix reading as a pin move against R4; §15 saying one v6 item was withdrawn; §6c's *"opens with"* and undefined `<owner>`; and five smaller | Platterpus's round 30 lap 6 S23, which gives each with its v7 line numbers at `09f39bc` |
-| 16 | `PROTOCOL.md` v7 R8 point 2 | the provider's release goes to stable *"once the round its run opens accepts it"* | both sides read *"accepts"* as *"closes `GO`"*, which is how a run graded `partial`, as `.19`'s was, still reaches stable | Platterpus's lap 6 S24 and our lap 7. The reading is agreed; the word is for v8 |
+| 15 | `PROTOCOL.md` v7 and `seam-rules.md` v7 | nine wording items | each is a sentence v7 leaves imprecise, none a false rule: `HANDSHAKE-NEXT-LAP` with two grammars (§3, C46); R9 keeping the sentence §15 calls misleading; R8 point 2's unscoped *"the consumer follows a build on beta"*; §6d asking for the pair newest at the run's end where D3 checks only its start; a mid-round hotfix reading as a pin move against R4; §15 saying one v6 item was withdrawn; §6c's *"opens with"* and undefined `<owner>`; and five smaller | Platterpus's round 30 lap 6 S23, which gives each with its v7 line numbers at `09f39bc`. **R8 point 2's item is gone**: v8's E3 rewrote that point (`5cadca3b`); the others were not re-read against v8 or v9 |
+| 16 | `PROTOCOL.md` v7 R8 point 2 | the provider's release goes to stable *"once the round its run opens accepts it"* | both sides read *"accepts"* as *"closes `GO`"*, which is how a run graded `partial`, as `.19`'s was, still reaches stable | Platterpus's lap 6 S24 and our lap 7. The reading is agreed; the word is for v8. **Gone in v8**: its E3 rewrote R8 point 2 as *"Each side chooses its own channel"* (`5cadca3b`), and *"accepts"* is not in it |
 
 **Fix row 5 first.** It is a false premise under a rule that may still be
 true. §3 argues that the systematic-gate duty is Platterpus's partly *because*
@@ -1188,9 +1194,9 @@ and Platterpus's lap 3 S6 accepted as given, a track-block line directly below
 start in UTC: the one read without `-Z`, and under `-Z` the newest read of the
 spool kept. Marking a track superseded stays theirs, since only their second
 invocation knows it supersedes; this gives the mark a time to stand on. The
-record's `kept_read_began` waits for `/11`. `.27` is released once a release of
-theirs reads the line, and this entry closes when a superseded track's log is
-filed with it.
+line shipped in `.27`, released at `5aeefc4`, and the record's
+`kept_read_began` is in `/11` since `bf010d72`, released in `.28`. This entry
+closes when a superseded track's log is filed with it.
 
 ### A track's per-track lines are computed from the REQUEST, not the outcome
 
@@ -1288,7 +1294,7 @@ Two separate causes, and they need different answers:
   Platterpus's lap 3 S5 accepted, that the footer list each file a failed
   encoder left, `    not written whole: <path>`, directly below an `Encoder
   errors:` line that names a failed track. `File(s):` stays the request. The
-  line is released with `.27`, once a release of theirs reads it.
+  line shipped in `.27`, released at `5aeefc4`.
 
 **Why it waited for round 22, and what changed.** Round 21 shipped two agreed
 changes; a third, unannounced, would have been the finish line moving inside the
@@ -1328,9 +1334,15 @@ the test as *"could the other side notice?"* rather than *"did I edit a
 
 No mechanism is proposed yet, deliberately. R1 fixed round 21's conditions at
 lap 1, and a semantic-change marker designed in a hurry would be a field nobody
-can derive. Round 22.
+can derive. It was left for round 22, and none of round 22's five laps filed
+here mentions it. Protocol v6 deferred the marker to v7, v7 deferred it to v8
+(*"Deferred to v8, not rejected"*), and v8 took nothing from that list; v9 is
+v8 plus HR-2 alone. Our round 32 lap 1 S29 asked for a draft for v9 and
+Platterpus's lap 2 S22 said v9 would carry it, but v9 does not. No proposal is
+open: nothing in this repository drafts the marker, and no `STATUS.md` line
+tracks it.
 
-### The reference disc cannot discriminate a correct AccurateRip skip
+### The reference disc cannot discriminate a correct AccurateRip skip (a note about the disc, not a defect)
 
 `--first`/`--last` apply AccurateRip's 5-sector lead/tail skip. On this disc
 those regions are digital silence, so the skip is a no-op and any golden log
@@ -1348,7 +1360,7 @@ question about them.
 
 ---
 
-### `read successfully!` prints over a track AccurateRip then rejects
+### `read successfully!` prints over a track AccurateRip then rejects (fixed in `.27`, `ab130cca`)
 
 **Found by the EAC parity plan of record of 2026-10-26, row 8**, in round 36's
 run on the damaged disc (`docs/rig-2026-10-21b-ca0f097/`). Tracks 11, 12, 14
@@ -1366,7 +1378,7 @@ the unchanged `read with errors.`, as our round 36 lap 8 S26 proposed and
 Platterpus's lap 9 S17 accepted. Their 0.7.113 reads both wordings, and logs
 written before `.27` keep the old one.
 
-### Under `-Z`, `Extraction speed:` divides one track's audio by every read's time
+### Under `-Z`, `Extraction speed:` divides one track's audio by every read's time (fixed in `.27`, `db1bbe63`)
 
 **Found by the EAC parity plan of record of 2026-10-26, Appendix H**, in round
 36's securing pass of the damaged disc. Track 11 reads `Extraction speed:
