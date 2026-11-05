@@ -8984,13 +8984,16 @@ def sc_every_read():
         if saved != want_saved:
             fail(f"every_read: {tag}: the folder holds {saved}, not {want_saved}")
 
-    # A track whose reads all agree has one read, kept, and no line.
+    # A track whose reads all agree has one read, kept, and no line. The
+    # folder is given with trailing slashes, which the saved path drops:
+    # `reads/` once gave `reads//01-…`, a path that opens but matches none a
+    # reader compares it with (Platterpus's round 38 lap 9 S11 asked).
     out, rec = WORK / "out_every_agree", WORK / "every_agree.json"
     folder = WORK / "every_agree_reads"
     ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
                  "-Z", "2", "-r", "5", "-l", "1", "-o", "pcm", "-D", out,
                  "-F", "{track}", "-L", "log", "--diagnostics", rec,
-                 "--keep-every-read", folder)
+                 "--keep-every-read", f"{folder}//")
     try:
         record = json.loads(rec.read_text(encoding="utf-8"))
         states = {t["number"]: t for t in record["rip"]["track_state"]}
@@ -9004,6 +9007,9 @@ def sc_every_read():
             or reads[0].get("kept") is not True:
         fail(f"every_read: agreeing reads: exit {ec}, track 1's reads "
              f"{reads!r}, not one read {crc}, read 3 times and kept")
+    elif reads[0].get("file") != f"{folder}/01-{crc}.wav":
+        fail(f"every_read: the folder given as {folder}// saved its read as "
+             f"{reads[0].get('file')!r}, not {folder}/01-{crc}.wav")
     if states.get(2, {}).get("reads", "absent") is not None:
         fail(f"every_read: agreeing reads: track 2, not ripped, has reads "
              f"{states.get(2, {}).get('reads', 'absent')!r}, not null")
