@@ -69,7 +69,7 @@ TOC = "1+14+268857+150+14637+28217+50070+72720+90792+109325+128907+145812+159387
 
 def write(path, text, mode=0o755):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8")
     path.chmod(mode)
 
 
@@ -134,9 +134,9 @@ exit 0
     write(cbin / "eject", '#!/bin/bash\ntouch "$STUB/ejected"\n')
     write(cbin / "cdrdao", '#!/bin/bash\nfor a; do last="$a"; done; echo CD_DA > "$last"\n')
     write(cbin / "sudo", '#!/bin/bash\nexec "$@"\n')
-    write(cbin / "strace", f"""#!/bin/bash
+    write(cbin / "strace", r"""#!/bin/bash
 o=""; while [ "$1" != /usr/local/bin/cyanrip ]; do [ "$1" = -o ] && o="$2"; shift; done; shift
-echo "12:00:00.000 ioctl(5, SG_IO, {{interface_id='S', cmdp=\\"\\\\xbe\\\\x00\\"..." > "$o"
+echo "12:00:00.000 ioctl(5, SG_IO, {interface_id='S', cmdp=\\"\\\\xbe\\\\x00\\"..." > "$o"
 exec "$HOME/.local/bin/cyanrip" "$@"
 """)
     # The host-side ripper. A second read while one runs hangs, as the
@@ -192,7 +192,8 @@ def run(base, home, stub, bin_, args, script=None, extra=None, reinsert=False):
     if reinsert:   # the owner: take the disc out when the tray opens, wipe it, put it back
         helper = subprocess.Popen(["bash", "-c", f'while [ ! -e "{stub}/ejected" ]; do sleep 0.5; done; sleep 2; rm -f "{stub}/ejected"'])
     p = subprocess.run(["bash", str(script or home / "Downloads" / "drivetest.sh"), *args],
-                       cwd=home, env=env, capture_output=True, text=True, timeout=240)
+                       cwd=home, env=env, capture_output=True, text=True,
+                       encoding="utf-8", timeout=240)
     if helper:
         helper.kill()
     return p
@@ -201,7 +202,7 @@ def run(base, home, stub, bin_, args, script=None, extra=None, reinsert=False):
 def timeline(home):
     """The timeline's messages, without the two time columns."""
     tl = home / "platterpus-rig/drivetest-r38/timeline.txt"
-    return [line.split(" | ", 2)[2] for line in tl.read_text().splitlines()] if tl.exists() else []
+    return [line.split(" | ", 2)[2] for line in tl.read_text(encoding="utf-8").splitlines()] if tl.exists() else []
 
 
 def sendfile(home):
@@ -283,7 +284,7 @@ def case_empty_runs(base):
     check("FAILED: Run C: not started: the last two app runs ripped nothing, so this one would not either" in tl,
           "Run C's not starting is written down with why")
     check("phase 2: end, 6 of 6 track 9 reads saved" in tl, "phase 2 still runs")
-    fails = (home / "platterpus-rig/drivetest-r38/FAILURES.txt").read_text()
+    fails = (home / "platterpus-rig/drivetest-r38/FAILURES.txt").read_text(encoding="utf-8")
     check(fails.count("\n=== ") == 5 and "--- last 60 lines of platterpus-rig/drivetest-r38/app-output/runA.txt" in fails,
           "FAILURES.txt holds five entries, each run's with its output")
     check("FAILURE(S) THIS STAGE" in p.stdout, "the failures are printed at the end of the stage")
