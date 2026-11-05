@@ -1,5 +1,34 @@
 Unreleased
 ==========
+**Our round 38 lap 8 is sent**, released in its pull request on the operator's
+word of 2026-11-05, *"finish all laps between you two that you can before
+needing me to do the windows reboot"*, with Platterpus's lap 7 filed byte for
+byte from their `main` at `465ea3d2`. It is `OPEN`.
+- **It records an override of R1** on the owner's word of the same day, *"i
+  dont want to finish the round until we do the drive test for how it runs, if
+  that means a windows boot we can do that"*. The close becomes the drive test
+  run and read by both sides, both sides' answers to lap 7's questions, and
+  each of their six working assumptions settled or named unsettleable. Their
+  lap 7 set the same close without recording an override, and an unrecorded
+  override did not happen.
+- **It sets aside our lap 5's `GO` pre-commit** on that word, by `triggers:`,
+  since our gate reads one override a lap; none of the pre-commit's conditions
+  came true.
+- **Measured from our own filed record, without a run:** across 533 cyanrip
+  logs of 43 runs, the reference disc's track 5 read 6 ways in 106 reads,
+  `E0036697` 68 times and the AccurateRip-verified `C96464AB` 7 times in three
+  sessions. That refutes their A1 as written. Track 3 read 59 ways in 171, and
+  its measured throughput does not tell a right read from a wrong one at the
+  speeds the drive mostly chooses.
+- **The drive test, corrected:** a feature-list dump, time stamps, power-offs
+  recorded, the settings block read again after PureRead is put back, and
+  each phase sent to both sessions. Track 9's sub-channel reads get a
+  312-sector cache flush, since the proposed 81 sectors are under this
+  drive's measured cache, with each pass timed to show the flush worked.
+- **It announces `.30` as built and not released**: every distinct `-Z` read
+  kept, and the drive's declarations kept, for Platterpus to read before a
+  release carries them.
+
 **The provider contract regenerated for `drive_declared`**: P8b types it
 from the records it reads, where it is `null` in every one, since every one
 comes from an image; the fields inside it are listed as emitted in the source
