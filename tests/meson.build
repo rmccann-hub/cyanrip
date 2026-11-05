@@ -187,7 +187,7 @@ test('Drive header lines: speed, C2, accurate stream, recordable medium', drivec
 diag_test = executable('diag_test',
     sources: [ 'diag.c' ],
     include_directories: [ '../src' ],
-    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c' ]),
+    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c', 'drive_caps.c' ]),
     dependencies: unit_test_deps + [ dependency('threads') ],
 )
 test('Diagnostics retention', diag_test)
@@ -204,7 +204,7 @@ test('Diagnostics retention', diag_test)
 diagcache_test = executable('diagcache_test',
     sources: [ 'diagcache.c' ],
     include_directories: [ '../src' ],
-    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c' ]),
+    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c', 'drive_caps.c' ]),
     dependencies: unit_test_deps + [ dependency('threads') ],
 )
 test('Cache probe evidence', diagcache_test)
@@ -218,7 +218,7 @@ test('Cache probe evidence', diagcache_test)
 diagrecord_test = executable('diagrecord_test',
     sources: [ 'diagrecord.c' ],
     include_directories: [ '../src' ],
-    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c' ]),
+    objects: cyanrip_exe.extract_objects([ 'diagnostics.c', 'stall_watchdog.c', 'drive_caps.c' ]),
     dependencies: unit_test_deps + [ dependency('threads') ],
 )
 test('Diagnostics record fields', diagrecord_test)

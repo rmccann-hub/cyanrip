@@ -90,6 +90,20 @@ static void expect_c2(int caps_failed, int c2, const char *want)
     }
 }
 
+/* The drive's declarations kept for the record (drive_caps.h): a check
+ * of what crip_feature_take() or crip_mode_page_take() kept. */
+static void expect_taken(const char *what, int got, const CripDeclared *d,
+                         int want, int length, const uint8_t *bytes, int nb)
+{
+    if (got != want || d->found != want || (want && (d->length != length ||
+        d->nb_bytes != nb || memcmp(d->bytes, bytes, nb)))) {
+        printf("FAIL: %s: returned %i, found %i, length %i, %i bytes kept; "
+               "want %i, length %i, %i bytes\n", what, got, d->found,
+               d->length, d->nb_bytes, want, length, nb);
+        fails++;
+    }
+}
+
 int main(void)
 {
     uint8_t buf[256];
@@ -274,9 +288,74 @@ int main(void)
     expect("shorter than the header", crip_accurate_stream_parse(buf, 7),
            CRIP_ACCURATE_STREAM_UNREADABLE);
 
+    /* The CD Read feature, GET CONFIGURATION 001Eh, found by walking the
+     * descriptors: 0000h (profile list, 8 bytes), then 001Eh (8 bytes) with
+     * DAP and C2 Flags set; the walk must skip the first by its own length */
+    {
+        uint8_t c[64] = { 0 }, want[8] = { 0x00, 0x1e, 0x09, 0x04, 0x82, 0, 0, 0 };
+        CripDeclared d = { 0 };
+        c[3] = 8 + 12 + 8 - 4;
+        c[7] = 0x08;                         /* current profile: CD-ROM */
+        c[8 + 3] = 8;                        /* 0000h, 4 + 8 bytes */
+        memcpy(c + 8 + 12, want, sizeof(want));
+        expect_taken("feature 001Eh after 0000h",
+                     crip_feature_take(c, sizeof(c), CRIP_FEATURE_CD_READ, &d), &d,
+                     1, 8, want, 8);
+        memset(&d, 0, sizeof(d));
+        expect_taken("feature 001Eh beyond the declared length",
+                     crip_feature_take(c, 8 + 12 + 4, CRIP_FEATURE_CD_READ, &d), &d,
+                     0, 0, NULL, 0);
+        memset(&d, 0, sizeof(d));
+        c[3] = 8 + 12 - 4;                   /* the header ends before it */
+        expect_taken("feature 001Eh past the header's length",
+                     crip_feature_take(c, sizeof(c), CRIP_FEATURE_CD_READ, &d), &d,
+                     0, 0, NULL, 0);
+        memset(&d, 0, sizeof(d));
+        expect_taken("no reply", crip_feature_take(NULL, 0, CRIP_FEATURE_CD_READ, &d),
+                     &d, 0, 0, NULL, 0);
+    }
+
+    /* The whole length each reply declares in its own header, read from the
+     * header's own bytes and never from the buffer's size */
+    {
+        uint8_t r[8] = { 0 };
+        const struct { enum CripReplyKind kind; uint8_t b[4]; size_t len, want;
+                       const char *what; } lens[] = {
+            { CRIP_REPLY_INQUIRY, { 0, 0, 0, 0 }, 8, 5, "INQUIRY, additional length 0" },
+            { CRIP_REPLY_INQUIRY, { 0x12, 0x34, 0x56, 0x78 }, 4, 0, "INQUIRY cut before byte 4" },
+            { CRIP_REPLY_CONFIGURATION, { 0x00, 0x01, 0x02, 0x03 }, 8, 0x010203 + 4,
+              "GET CONFIGURATION, all four length bytes" },
+            { CRIP_REPLY_CONFIGURATION, { 0x00, 0x01, 0x02, 0x03 }, 3, 0,
+              "GET CONFIGURATION cut before byte 3" },
+            { CRIP_REPLY_MODE_SENSE_10, { 0x01, 0x02, 0xff, 0xff }, 8, 0x0102 + 2,
+              "MODE SENSE (10), two length bytes only" },
+            { CRIP_REPLY_MODE_SENSE_10, { 0x01, 0x02 }, 1, 0,
+              "MODE SENSE (10) cut before byte 1" },
+        };
+        for (size_t k = 0; k < sizeof(lens)/sizeof(*lens); k++) {
+            memset(r, 0, sizeof(r));
+            memcpy(r, lens[k].b, 4);
+            size_t got = crip_reply_length(lens[k].kind, r, lens[k].len);
+            if (got != lens[k].want) {
+                printf("FAIL: %s: length %zu, want %zu\n", lens[k].what, got, lens[k].want);
+                fails++;
+            }
+        }
+        memset(r, 0, sizeof(r));
+        r[4] = 91;                           /* additional length: a 96-byte INQUIRY */
+        if (crip_reply_length(CRIP_REPLY_INQUIRY, r, 8) != 96) {
+            printf("FAIL: INQUIRY of additional length 91 is not 96 bytes long\n");
+            fails++;
+        }
+        if (crip_reply_length(CRIP_REPLY_INQUIRY, NULL, 8) != 0) {
+            printf("FAIL: no reply has a length\n");
+            fails++;
+        }
+    }
+
     if (fails)
         printf("%i check(s) failed\n", fails);
     else
-        printf("accurate stream and recordable: every wording and parse pinned\n");
+        printf("accurate stream, recordable and the declarations kept: every wording and parse pinned\n");
     return !!fails;
 }

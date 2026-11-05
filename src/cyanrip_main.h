@@ -579,6 +579,13 @@ typedef struct cyanrip_ctx {
     int is_image;       /* The device is a disc image (crip_is_image_driver()) */
     int speed_failed;   /* -S was given and libcdio could not set the speed */
     int disc_profile; /* the drive's current profile, or CRIP_PROFILE_IMAGE/_UNREADABLE */
+    /* What the drive declares, asked in full and kept as it answered, for
+     * the --diagnostics record (drive_caps.h): its INQUIRY, every feature,
+     * and every mode page under each page control, current, changeable,
+     * default and saved. Not asked of a disc image. */
+    CripReply drive_inquiry;
+    CripReply drive_configuration;
+    CripReply drive_mode_pages[4];
 
     /* Metadata */
     AVDictionary *meta;

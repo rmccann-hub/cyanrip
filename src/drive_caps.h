@@ -81,3 +81,55 @@ const char *crip_speed_text(char *buf, size_t size, int speed, int is_image,
  * absence says nothing (our round 36 lap 12 S11 (c), accepted by
  * Platterpus's lap 13 S5); `c2` that the drive declares C2 reporting. */
 const char *crip_c2_text(int caps_failed, int c2);
+
+/* WHAT THE DRIVE DECLARES, ASKED IN FULL AND KEPT AS IT ANSWERED (round 38,
+ * for +platterpus.30; docs/research/2026-11-04-drive-settings.md). Three
+ * standard read-only commands any MMC drive answers, new or legacy: INQUIRY,
+ * GET CONFIGURATION for every feature, and MODE SENSE (10) for every mode
+ * page (3Fh) under each page control. Kept whole and raw, so nothing has to
+ * know in advance which byte matters on which drive: the CD Read feature's
+ * DAP and C2 Flags bits, the error recovery and caching pages, and whatever a
+ * later reader needs are read from these replies afterwards.
+ *
+ * Each is what the drive SAYS. Pioneer's BDR-203 command reference says that
+ * drive ignores most of the error recovery page and that the caching page has
+ * no effect, so nothing kept here measures what a drive does, and nothing
+ * here writes a page or sends a vendor command. */
+#define CRIP_FEATURE_CD_READ 0x001e
+#define CRIP_REPLY_MAX       8192 /* bytes asked for, and at most kept, of a reply */
+#define CRIP_INQUIRY_MAX     255  /* INQUIRY's: one byte, for drives that read one */
+#define CRIP_DECLARED_MAX    64   /* bytes of one feature descriptor kept */
+
+enum CripReplyKind {
+    CRIP_REPLY_INQUIRY,
+    CRIP_REPLY_CONFIGURATION,
+    CRIP_REPLY_MODE_SENSE_10,
+};
+
+typedef struct CripReply {
+    int asked;     /* the command was sent; 0 for a disc image */
+    int answered;  /* it succeeded */
+    int length;    /* the reply's whole length, as its own header declares it */
+    int nb_bytes;  /* of it kept: that length, at most the allocation asked */
+    uint8_t bytes[CRIP_REPLY_MAX];
+} CripReply;
+
+/* The whole length a reply declares in its own header: INQUIRY's byte 4 plus
+ * 5, GET CONFIGURATION's bytes 0-3 plus 4, MODE SENSE (10)'s bytes 0-1 plus
+ * 2. 0 when `len` is too short to hold that header. Pure. */
+size_t crip_reply_length(enum CripReplyKind kind, const uint8_t *buf, size_t len);
+
+/* One feature descriptor, found in a GET CONFIGURATION reply. */
+typedef struct CripDeclared {
+    int found;     /* the reply held a whole descriptor for it */
+    int length;    /* the descriptor's whole length, as declared */
+    int nb_bytes;  /* of it kept in bytes[], at most CRIP_DECLARED_MAX */
+    uint8_t bytes[CRIP_DECLARED_MAX];
+} CripDeclared;
+
+/* Finds feature `code` in a GET CONFIGURATION reply: the 8-byte feature
+ * header, bytes 0-3 the length of what follows them, then descriptors of 4
+ * bytes plus their byte 3. Copies the descriptor into `out` and returns 1,
+ * or returns 0 when the reply holds no whole descriptor for it. Pure. */
+int crip_feature_take(const uint8_t *buf, size_t len, unsigned code,
+                      CripDeclared *out);

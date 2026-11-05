@@ -122,6 +122,7 @@ static int snap_nb_track_state;
  * atexit, after the context and its dictionaries are gone. */
 static char *snap_cdtext;
 static int snap_offset_search;
+static char *snap_drive_declared;
 static int snap_offset_samples;
 static int snap_offset_confidence;
 
@@ -339,6 +340,73 @@ void crip_diag_set_exit(int code)
 {
     diag_exit_code = code;
     diag_have_exit = 1;
+}
+
+/* One reply as the drive answered it: answered, the whole length its header
+ * declares, whether that is more than was kept, and the bytes kept, as
+ * uppercase hex from the first; the last three null where it did not
+ * answer. */
+static void diag_reply(AVBPrint *b, const CripReply *r)
+{
+    av_bprintf(b, "\"answered\":%s,", r->answered ? "true" : "false");
+    if (!r->answered) {
+        av_bprintf(b, "\"length\":null,\"truncated\":null,\"bytes\":null");
+        return;
+    }
+    const int kept = r->nb_bytes < (int)sizeof(r->bytes) ? r->nb_bytes
+                                                         : (int)sizeof(r->bytes);
+    av_bprintf(b, "\"length\":%i,\"truncated\":%s,\"bytes\":\"", r->length,
+               r->length > kept ? "true" : "false");
+    for (int i = 0; i < kept; i++)
+        av_bprintf(b, "%02X", r->bytes[i]);
+    av_bprintf(b, "\"");
+}
+
+/* WHAT THE DRIVE DECLARES, asked in full and kept as it answered
+ * (drive_caps.h; /13, for +platterpus.30): its INQUIRY, its GET
+ * CONFIGURATION for every feature, the CD Read feature (001Eh) found in that
+ * reply with its current bit and byte 4's DAP, C2 Flags and CD-Text bits,
+ * null where the reply held none, and MODE SENSE (10) for every page under
+ * each page control. A drive may refuse one, often the saved values, which
+ * is kept as not answered. Declarations, not measurements: nothing here says
+ * what the drive does, and nothing was written to it. */
+static void diag_drive_declared(AVBPrint *b, const cyanrip_ctx *ctx)
+{
+    static const char *const controls[4] = { "current", "changeable",
+                                             "default", "saved" };
+    CripDeclared f = { 0 };
+    if (ctx->drive_configuration.answered)
+        crip_feature_take(ctx->drive_configuration.bytes,
+                          ctx->drive_configuration.nb_bytes,
+                          CRIP_FEATURE_CD_READ, &f);
+
+    av_bprintf(b, "{\n    \"inquiry\": {");
+    diag_reply(b, &ctx->drive_inquiry);
+    av_bprintf(b, "},\n    \"configuration\": {");
+    diag_reply(b, &ctx->drive_configuration);
+    av_bprintf(b, "},\n    \"cd_read_feature\": {\"found\":%s,",
+               f.found ? "true" : "false");
+    if (f.found && f.nb_bytes >= 5) {
+        av_bprintf(b, "\"bytes\":\"");
+        for (int i = 0; i < f.nb_bytes; i++)
+            av_bprintf(b, "%02X", f.bytes[i]);
+        av_bprintf(b, "\",\"current\":%s,\"dap\":%s,\"c2_flags\":%s,\"cd_text\":%s},",
+                   f.bytes[2] & 0x01 ? "true" : "false",
+                   f.bytes[4] & 0x80 ? "true" : "false",
+                   f.bytes[4] & 0x02 ? "true" : "false",
+                   f.bytes[4] & 0x01 ? "true" : "false");
+    } else {
+        av_bprintf(b, "\"bytes\":null,\"current\":null,\"dap\":null,"
+                      "\"c2_flags\":null,\"cd_text\":null},");
+    }
+    av_bprintf(b, "\n    \"mode_sense_all_pages\": [");
+    for (int pc = 0; pc < 4; pc++) {
+        av_bprintf(b, "%s\n      {\"page_control\":\"%s\",", pc ? "," : "",
+                   controls[pc]);
+        diag_reply(b, &ctx->drive_mode_pages[pc]);
+        av_bprintf(b, "}");
+    }
+    av_bprintf(b, "\n    ]\n  }");
 }
 
 void crip_diag_snapshot(cyanrip_ctx *ctx)
@@ -609,6 +677,18 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
     snap_offset_search     = ctx->offset_search;
     snap_offset_samples    = ctx->offset_search_samples;
     snap_offset_confidence = ctx->offset_search_confidence;
+
+    /* What the drive declares, as it answered (drive_caps.h), formatted now,
+     * while the context that holds the replies is alive. */
+    av_freep(&snap_drive_declared);
+    if (ctx->drive_inquiry.asked) {
+        AVBPrint b;
+        av_bprint_init(&b, 0, AV_BPRINT_SIZE_UNLIMITED);
+        diag_drive_declared(&b, ctx);
+        if (av_bprint_is_complete(&b))
+            snap_drive_declared = av_strdup(b.str);
+        av_bprint_finalize(&b, NULL);
+    }
 }
 
 /* RFC 8259 string escaping. Anything below 0x20 becomes \uXXXX, so a stray
@@ -715,8 +795,9 @@ void crip_diag_write(void)
      *
      * /13 ADDS per track reads, every distinct -Z read with its block_crcs,
      * round 38 (Platterpus's docs/eac-parity.md Part G.5, for their rebuild of
-     * a disputed second). An addition; the version moves for the same
-     * reason. */
+     * a disputed second), and drive_declared, what the drive declares, asked
+     * in full (docs/research/2026-11-04-drive-settings.md). Additions; the
+     * version moves for the same reason. */
     av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/13\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
@@ -925,6 +1006,12 @@ void crip_diag_write(void)
         else
             av_bprintf(&b, ",\n    \"offset_samples\": null,\n    \"confidence\": null\n  },\n");
     }
+
+    /* What the drive declares, asked in full (diag_drive_declared()). null
+     * for a disc image, which has no drive to ask, and for a run that opened
+     * none. */
+    av_bprintf(&b, "  \"drive_declared\": %s,\n",
+               diag_have_snapshot && snap_drive_declared ? snap_drive_declared : "null");
 
     /* Every message, in order, unclassified -- and saying so, because a
      * consumer must not read the absence of a severity field as "nothing here

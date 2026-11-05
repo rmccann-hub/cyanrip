@@ -401,6 +401,97 @@ static void test_reads(void)
     free(out);
 }
 
+/* /13's drive_declared (drive_caps.h): null where nothing was asked, as on
+ * every image; otherwise each reply as answered, whole, in hex, with the
+ * length its header declares and whether that is more than was kept, the CD
+ * Read feature read out of the GET CONFIGURATION reply, and the four MODE
+ * SENSE replies in page-control order. Only a drive answers, so the shapes
+ * an image cannot reach are built here: a reply kept whole, one cut short,
+ * one refused, and a feature list without 001Eh. */
+static void set_reply(CripReply *r, int answered, int length, const uint8_t *b, int nb)
+{
+    *r = (CripReply){ .asked = 1, .answered = answered, .length = length,
+                      .nb_bytes = nb };
+    if (nb)
+        memcpy(r->bytes, b, nb);
+}
+
+static void test_drive_declared(void)
+{
+    cyanrip_ctx *ctx = new_ctx();
+    ctx->nb_tracks = 1;
+    char *out = write_record(ctx, "diagrecord_declared_none.json");
+    if (out) {
+        expect_line(out, "\"drive_declared\": null", "nothing asked");
+        free(out);
+    }
+
+    const uint8_t inq[8] = { 0x05, 0x80, 0x00, 0x32, 0x03, 'P', 'I', 'O' };
+    /* A feature list: header (current profile CD-ROM), 0000h with 4 bytes,
+     * then 001Eh with DAP and C2 Flags set and its current bit */
+    const uint8_t conf[24] = { 0, 0, 0, 20, 0, 0, 0, 0x08,
+                               0x00, 0x00, 0x03, 0x04, 0x00, 0x08, 0x01, 0x00,
+                               0x00, 0x1e, 0x09, 0x04, 0x82, 0x00, 0x00, 0x00 };
+    const uint8_t page[16] = { 0x00, 0x0e, 0, 0, 0, 0, 0, 0,
+                               0x01, 0x06, 0x24, 0x05, 0, 0, 0, 0 };
+    set_reply(&ctx->drive_inquiry, 1, 8, inq, 8);
+    set_reply(&ctx->drive_configuration, 1, 24, conf, 24);
+    set_reply(&ctx->drive_mode_pages[0], 1, 16, page, 16);
+    set_reply(&ctx->drive_mode_pages[1], 1, 40, page, 16);  /* cut short */
+    set_reply(&ctx->drive_mode_pages[2], 1, 16, page, 16);
+    ctx->drive_mode_pages[2].bytes[10] = 0x00;            /* defaults differ */
+    set_reply(&ctx->drive_mode_pages[3], 0, 0, NULL, 0);    /* saved refused */
+
+    out = write_record(ctx, "diagrecord_declared.json");
+    if (out) {
+        expect_line(out, "\"inquiry\": {\"answered\":true,\"length\":8,\"truncated\":false,"
+                         "\"bytes\":\"058000320350494F\"}", "INQUIRY");
+        expect_line(out, "\"configuration\": {\"answered\":true,\"length\":24,\"truncated\":false,"
+                         "\"bytes\":\"00000014000000080000030400080100001E090482000000\"}",
+                    "GET CONFIGURATION");
+        expect_line(out, "\"cd_read_feature\": {\"found\":true,\"bytes\":\"001E090482000000\","
+                         "\"current\":true,\"dap\":true,\"c2_flags\":true,\"cd_text\":false}",
+                    "the CD Read feature, read from the feature list");
+        expect_line(out, "{\"page_control\":\"current\",\"answered\":true,\"length\":16,"
+                         "\"truncated\":false,\"bytes\":\"000E0000000000000106240500000000\"}",
+                    "MODE SENSE, current");
+        expect_line(out, "{\"page_control\":\"changeable\",\"answered\":true,\"length\":40,"
+                         "\"truncated\":true,\"bytes\":\"000E0000000000000106240500000000\"}",
+                    "MODE SENSE, changeable, cut short");
+        expect_line(out, "{\"page_control\":\"default\",\"answered\":true,\"length\":16,"
+                         "\"truncated\":false,\"bytes\":\"000E0000000000000106000500000000\"}",
+                    "MODE SENSE, default");
+        expect_line(out, "{\"page_control\":\"saved\",\"answered\":false,\"length\":null,"
+                         "\"truncated\":null,\"bytes\":null}",
+                    "MODE SENSE, saved, refused, last");
+        free(out);
+    }
+
+    /* A feature list without 001Eh gives the feature's bits as null, never
+     * false, and a refused list the same */
+    set_reply(&ctx->drive_configuration, 1, 16, conf, 16);
+    out = write_record(ctx, "diagrecord_declared_nofeature.json");
+    if (out) {
+        expect_line(out, "\"cd_read_feature\": {\"found\":false,\"bytes\":null,\"current\":null,"
+                         "\"dap\":null,\"c2_flags\":null,\"cd_text\":null}",
+                    "the CD Read feature, not in the list");
+        free(out);
+    }
+    /* Refused, with the earlier list's bytes still in the buffer: a reply
+     * the drive did not give is never read */
+    set_reply(&ctx->drive_configuration, 0, 24, conf, 24);
+    out = write_record(ctx, "diagrecord_declared_noconf.json");
+    free_ctx(ctx);
+    if (out) {
+        expect_line(out, "\"configuration\": {\"answered\":false,\"length\":null,"
+                         "\"truncated\":null,\"bytes\":null}", "GET CONFIGURATION refused");
+        expect_line(out, "\"cd_read_feature\": {\"found\":false,\"bytes\":null,\"current\":null,"
+                         "\"dap\":null,\"c2_flags\":null,\"cd_text\":null}",
+                    "the CD Read feature, list refused");
+        free(out);
+    }
+}
+
 static void test_cdtext_present(void)
 {
     cyanrip_ctx *ctx = new_ctx();
@@ -598,6 +689,7 @@ int main(void)
     test_isrc_disc_malformed();
     test_block_crcs();
     test_reads();
+    test_drive_declared();
     test_cdtext_present();
     test_offset_search();
     test_error_positions();

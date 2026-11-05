@@ -10,7 +10,11 @@ labelled by its source:
 
 - [`2026-11-04-misreads-ar-ctdb.md`](2026-11-04-misreads-ar-ctdb.md): tracks
   3 and 5, AccurateRip, CTDB and repair;
-- [`2026-11-04-pregaps.md`](2026-11-04-pregaps.md): track 9's pregap.
+- [`2026-11-04-pregaps.md`](2026-11-04-pregaps.md): track 9's pregap;
+- [`2026-11-04-drive-settings.md`](2026-11-04-drive-settings.md), added later
+  the same day on the owner's question about Platterpus's `drivemode.txt`:
+  what a drive's own settings, Pioneer's PureRead among them, do to a read,
+  and what Linux can read of them.
 
 Nothing in either was run on a drive, and no code downloaded for them was
 executed.
@@ -122,6 +126,32 @@ round.
   unclear between GPL-2.0-or-later and LGPL, so a port needs the author's word
   or GPL terms.
 - **A2. Choose among alternates** the ripper kept, once R2 keeps them.
+
+### The drive's own settings
+
+Pioneer's PureRead decides whether a frame the drive cannot correct is
+interpolated (Standard, and Master once its retries fail) or refused
+(Perfect), and Pioneer's own engineers write that such an error often
+interpolates the same way on every read. That fits track 5, and does not
+prove it. Three findings bear on the plan:
+
+- **Only a Pioneer vendor command reads PureRead**: READ BUFFER `F4h`, as the
+  `pioneer-optical` library sends it, gives its support and mode. Our first
+  draft said no command does; Platterpus found the library. The operator's
+  setting belongs in the run's own record, said to be the operator's, and the
+  drive's own answer, if the round agrees to ask for it, in ours.
+- **Whether the BDR-209D has PureRead at all is not established.** Pioneer
+  names the retail BDR-209 models "PureRead2", without the "+" that stores the
+  setting in the drive; the 209DBK's specification lists no PureRead, and
+  Pioneer's utility download does not name it. A census of Pioneer's firmware
+  finds 1.51's settings handler writing 0 into PureRead's support byte, which
+  it says is not proof at run time.
+- **What any drive declares can be kept whole**: its INQUIRY, its full
+  feature list and every mode page it reports, raw, so the DAP and C2 Flags
+  bits and the error recovery and caching pages are read from it on any drive,
+  new or legacy. Pioneer's BDR-203 reference says that drive ignores most of
+  both pages, so they are declarations, never measurements; what a drive does
+  is measured by its reads.
 
 ## What we got wrong on the way
 

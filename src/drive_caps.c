@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "drive_caps.h"
 
@@ -133,4 +134,47 @@ const char *crip_accurate_stream_text(enum CripAccurateStream s)
         break;
     }
     return "unknown (capabilities page not readable)";
+}
+
+size_t crip_reply_length(enum CripReplyKind kind, const uint8_t *buf, size_t len)
+{
+    if (!buf)
+        return 0;
+    switch (kind) {
+    case CRIP_REPLY_INQUIRY:
+        return len >= 5 ? (size_t)buf[4] + 5 : 0;
+    case CRIP_REPLY_CONFIGURATION:
+        return len >= 4 ? ((size_t)buf[0] << 24 | (size_t)buf[1] << 16 |
+                           (size_t)buf[2] << 8 | buf[3]) + 4 : 0;
+    case CRIP_REPLY_MODE_SENSE_10:
+        return len >= 2 ? ((size_t)buf[0] << 8 | buf[1]) + 2 : 0;
+    }
+    return 0;
+}
+
+int crip_feature_take(const uint8_t *buf, size_t len, unsigned code,
+                      CripDeclared *out)
+{
+    if (!buf || len < CONF_HEADER)
+        return 0;
+
+    /* Read no further than the reply declares, or than was returned. */
+    const size_t data = crip_reply_length(CRIP_REPLY_CONFIGURATION, buf, len);
+    if (data < len)
+        len = data;
+
+    for (size_t off = CONF_HEADER; off + 4 <= len;) {
+        const size_t whole = 4 + (size_t)buf[off + 3];
+        if (off + whole > len)
+            return 0;
+        if (((unsigned)buf[off] << 8 | buf[off + 1]) == code) {
+            out->found = 1;
+            out->length = (int)whole;
+            out->nb_bytes = (int)(whole < CRIP_DECLARED_MAX ? whole : CRIP_DECLARED_MAX);
+            memcpy(out->bytes, buf + off, out->nb_bytes);
+            return 1;
+        }
+        off += whole;
+    }
+    return 0;
 }

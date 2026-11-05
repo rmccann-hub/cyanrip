@@ -328,6 +328,50 @@ static void crip_log_library_text(cyanrip_ctx *ctx, const char *text)
         cyanrip_log(ctx, 0, "%s", p);
 }
 
+/* WHAT THE DRIVE DECLARES, ASKED IN FULL (drive_caps.h), once before ripping
+ * and kept as it answered, for the --diagnostics record. Six standard
+ * read-only commands: INQUIRY, GET CONFIGURATION for every feature from
+ * feature 0, and MODE SENSE (10) for every page (3Fh) under each of the four
+ * page controls. libcdio's mmc_mode_sense_10() masks the page control off,
+ * so these CDBs are built here. A drive may refuse one, often the saved
+ * values; that is kept as asked and not answered. Nothing here sends MODE
+ * SELECT, since a page a ripper changes is a drive state every later program
+ * inherits, nor any vendor command. */
+static void crip_reply_ask(cyanrip_ctx *ctx, CripReply *r, enum CripReplyKind kind,
+                           const uint8_t *cdb_bytes, int cdb_len, size_t alloc)
+{
+    mmc_cdb_t cdb = { { 0 } };
+
+    memcpy(cdb.field, cdb_bytes, cdb_len);
+    memset(r->bytes, 0, sizeof(r->bytes));
+    r->asked = 1;
+    r->answered = mmc_run_cmd(ctx->cdio, mmc_timeout_ms, &cdb, SCSI_MMC_DATA_READ,
+                              alloc, r->bytes) == DRIVER_OP_SUCCESS;
+    if (!r->answered)
+        return;
+    const size_t whole = crip_reply_length(kind, r->bytes, alloc);
+    r->length = (int)whole;
+    r->nb_bytes = (int)(whole < alloc ? whole : alloc);
+}
+
+static void crip_read_declarations(cyanrip_ctx *ctx)
+{
+    const uint8_t inquiry[6] = { 0x12, 0, 0, 0, CRIP_INQUIRY_MAX, 0 };
+    const uint8_t config[10] = { 0x46, 0, 0, 0, 0, 0, 0,
+                                 CRIP_REPLY_MAX >> 8, CRIP_REPLY_MAX & 0xff, 0 };
+
+    crip_reply_ask(ctx, &ctx->drive_inquiry, CRIP_REPLY_INQUIRY, inquiry,
+                   sizeof(inquiry), CRIP_INQUIRY_MAX);
+    crip_reply_ask(ctx, &ctx->drive_configuration, CRIP_REPLY_CONFIGURATION,
+                   config, sizeof(config), CRIP_REPLY_MAX);
+    for (int pc = 0; pc < 4; pc++) {
+        const uint8_t sense[10] = { 0x5a, 0, (uint8_t)(pc << 6 | 0x3f), 0, 0, 0, 0,
+                                    CRIP_REPLY_MAX >> 8, CRIP_REPLY_MAX & 0xff, 0 };
+        crip_reply_ask(ctx, &ctx->drive_mode_pages[pc], CRIP_REPLY_MODE_SENSE_10,
+                       sense, sizeof(sense), CRIP_REPLY_MAX);
+    }
+}
+
 static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 {
     cyanrip_ctx *ctx = av_mallocz(sizeof(cyanrip_ctx));
@@ -392,6 +436,7 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         if (mmc_mode_sense_10(ctx->cdio, caps, sizeof(caps),
                               CDIO_MMC_CAPABILITIES_PAGE) == DRIVER_OP_SUCCESS)
             ctx->accurate_stream = crip_accurate_stream_parse(caps, sizeof(caps));
+        crip_read_declarations(ctx);
         break;
     }
     }
