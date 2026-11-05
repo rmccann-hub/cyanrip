@@ -305,7 +305,9 @@ preflight() {
     app_running && stop "Platterpus is open: close it, then run the same command again"
     # shellcheck disable=SC2012  # the newest by time; these names hold no newline
     [ -x "$APP" ] || APP="$(ls -t "$HOME"/Applications/*latterpus*.AppImage "$HOME"/Downloads/*latterpus*.AppImage 2>/dev/null | head -1)"
-    [ -n "$APP" ] && [ -x "$APP" ] || stop "no Platterpus AppImage in ~/Applications or ~/Downloads"
+    if [ -z "$APP" ] || [ ! -x "$APP" ]; then
+        stop "no Platterpus AppImage in ~/Applications or ~/Downloads"
+    fi
     [ -x "$CYANRIP" ] || stop "no ripper at ~/.local/bin/cyanrip: repeat phase 0"
     command -v distrobox >/dev/null 2>&1 || stop "no distrobox on this system"
     if ! distrobox enter "$BOX" -- sh -c 'command -v sg_raw && command -v sg_turs && command -v cdrdao && command -v strace' >/dev/null 2>&1; then
