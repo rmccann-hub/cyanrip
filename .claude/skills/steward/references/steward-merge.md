@@ -20,12 +20,13 @@ release*, which this module names and does not restate.
    here, released to us, is taken in first (`tools/take-in-lap.py`), since a merge that sends a
    lap of ours must answer theirs. Then `python3 tools/seam-sync-check.py --fetch`: exit 0, or 1
    only for a shared document our last sent lap declares different in its
-   `HANDSHAKE-SHARED-HASHES-SOURCE`, or one that is exactly this pull request's own change to a
-   shared document, which our next lap then proposes for their copy: a new flag's
-   `seam-commands.md` row, which the argv probe requires in the same commit as the flag (PR
-   #75's `--reread-time-limit` row, proposed in round 37's lap 3; PR #96's `--keep-every-read`
-   row). Check that `git diff origin/platterpus-fork -- <document>` shows only that change. Any
-   other difference stops the merge until it is resolved.
+   `HANDSHAKE-SHARED-HASHES-SOURCE`, or one that is exactly a change of ours to a shared document
+   that our next lap proposes for their copy, made by this pull request or by an earlier one
+   still awaiting that lap: a new flag's `seam-commands.md` row, which the argv probe requires in
+   the same commit as the flag (PR #75's `--reread-time-limit` row, proposed in round 37's lap
+   3; PR #96's `--keep-every-read` row, which PR #97 merged beside). Check that `git diff
+   <their main's copy> <our head's copy>` shows only such rows. Any other difference stops the
+   merge until it is resolved.
 4. **A pull request carrying our lap** is merged as the README's *Releasing our lap* says: under
    a standing release word the lap is sent when the pull request merges green, so their `main`
    is read again just before.
