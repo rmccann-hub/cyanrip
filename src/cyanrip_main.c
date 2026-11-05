@@ -160,6 +160,12 @@ static void free_track(cyanrip_ctx *ctx, cyanrip_track *t)
     av_freep(&t->isrc_disc);
     av_freep(&t->isrc_disc_reason_owned);
     av_freep(&t->block_crcs);
+    for (int i = 0; i < t->nb_reads; i++) {
+        av_free(t->reads[i].block_crcs);
+        av_free(t->reads[i].file);
+    }
+    av_freep(&t->reads);
+    t->nb_reads = 0;
     crip_error_pos_free(t);
     av_free(t->ar_db_entries);
     av_free(t->acoustid_fingerprint);
@@ -1316,6 +1322,97 @@ static int crip_spool_write(cyanrip_ctx *ctx, FILE *f, const uint8_t *data, int 
     return err;
 }
 
+/* EVERY DISTINCT READ OF A -Z TRACK, KEPT AFTER THE TRACK IS DECIDED.
+ * Round 38: Platterpus's docs/eac-parity.md Part G.5 asks for the audio and
+ * the per-second CRCs of every -Z read, not only the kept one, so that one rip
+ * yields several reads of a second that reads disagree on, to rebuild it from
+ * (their G.4 item 2, accepted only where AccurateRip then verifies the track).
+ * The summaries are copied onto the track whatever stopped the reads; the
+ * audio is saved only when the track's reads ended normally and
+ * --keep-every-read names a folder. A read that cannot be saved is said so in
+ * the log and keeps no file; it fails nothing, since the rip itself is whole.
+ * The bytes saved are the spool's: the read after offset correction, exactly
+ * as its EAC CRC32 was computed, as 16-bit stereo 44.1 kHz WAV. */
+static int crip_write_wav(FILE *out, FILE *in)
+{
+    uint8_t hdr[44] = { 'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'A', 'V', 'E',
+                        'f', 'm', 't', ' ', 16, 0, 0, 0, 1, 0, 2, 0,
+                        0x44, 0xAC, 0, 0, 0x10, 0xB1, 0x02, 0, 4, 0, 16, 0,
+                        'd', 'a', 't', 'a', 0, 0, 0, 0 };
+    uint8_t buf[CDIO_CD_FRAMESIZE_RAW * 16];
+    size_t n;
+    uint64_t data = 0;
+
+    if (fseek(in, 0, SEEK_END) || (data = ftell(in)) > UINT32_MAX - 36 ||
+        fseek(in, 0, SEEK_SET))
+        return AVERROR(errno ? errno : EIO);
+    AV_WL32(hdr + 4, (uint32_t)(data + 36));
+    AV_WL32(hdr + 40, (uint32_t)data);
+    if (fwrite(hdr, 1, sizeof(hdr), out) != sizeof(hdr))
+        return AVERROR(errno ? errno : EIO);
+    while ((n = fread(buf, 1, sizeof(buf), in)) > 0)
+        if (fwrite(buf, 1, n, out) != n)
+            return AVERROR(errno ? errno : EIO);
+    return ferror(in) ? AVERROR(EIO) : 0;
+}
+
+static void crip_keep_reads(cyanrip_ctx *ctx, cyanrip_track *t,
+                            crip_spool *spools, int nb_spools, int kept,
+                            int finished)
+{
+    if (!nb_spools || !(t->reads = av_calloc(nb_spools, sizeof(*t->reads))))
+        return;
+    t->nb_reads = nb_spools;
+    for (int i = 0; i < nb_spools; i++) {
+        crip_read *r = &t->reads[i];
+        r->crc = spools[i].crc ^ UINT32_MAX;
+        r->count = spools[i].reads;
+        r->last_read = spools[i].last_read;
+        r->kept = i == kept;
+        r->ar_v1 = spools[i].ar_v1;
+        r->ar_v2 = spools[i].ar_v2;
+        r->block_crcs = spools[i].block_crcs; /* moved, not copied */
+        r->nb_block_crcs = spools[i].nb_block_crcs;
+        spools[i].block_crcs = NULL;
+    }
+    if (!finished || !ctx->settings.keep_every_read)
+        return;
+
+    /* The folder, made as mkdir -p would, when it is not there */
+    char *dir = av_strdup(ctx->settings.keep_every_read);
+    for (char *s = dir ? dir + 1 : NULL; s && *s; s++) {
+        if (*s != '/')
+            continue;
+        *s = '\0';
+        mkdir(dir, 0755);
+        *s = '/';
+    }
+    if (dir)
+        mkdir(dir, 0755);
+    av_free(dir);
+
+    for (int i = 0; i < nb_spools; i++) {
+        crip_read *r = &t->reads[i];
+        char *path = av_asprintf("%s/%02d-%08X.wav", ctx->settings.keep_every_read,
+                                 t->number, r->crc);
+        errno = 0;
+        FILE *out = path ? fopen(path, "wb") : NULL;
+        int err = out ? crip_write_wav(out, spools[i].f) :
+                  AVERROR(path && errno ? errno : ENOMEM);
+        if (out && fclose(out) && !err)
+            err = AVERROR(errno ? errno : EIO);
+        if (err < 0) {
+            cyanrip_log(ctx, 0, "Error saving read %08X of track %i: %s!\n",
+                        r->crc, t->number, av_err2str(err));
+            if (path)
+                remove(path);
+            av_free(path);
+            continue;
+        }
+        r->file = path;
+    }
+}
+
 /* Reads one raw 2352 byte sector. Data tracks can't go through paranoia,
  * which only knows how to read audio, so go to the device directly. */
 static int crip_read_raw_frame(cyanrip_ctx *ctx, uint8_t *data, lsn_t lsn)
@@ -1870,7 +1967,19 @@ repeat_ripping:;
                                               .began = pass_began,
                                               .read_us = pass_us,
                                               .ar_conf = ar_conf,
-                                              .f = pass_spool };
+                                              .f = pass_spool,
+                                              .ar_v1 = t->acurip_checksum_v1,
+                                              .ar_v2 = t->acurip_checksum_v2 };
+            /* This read's per-second CRCs, which the next pass's checksums
+             * overwrite on the track: kept for the `Other read:` lines and
+             * the record's reads. Without memory for them the read is still
+             * filed, with none. */
+            if (!t->block_crcs_failed && t->nb_block_crcs) {
+                spools[nb_spools].block_crcs = av_memdup(t->block_crcs,
+                                                         t->nb_block_crcs * sizeof(*t->block_crcs));
+                if (spools[nb_spools].block_crcs)
+                    spools[nb_spools].nb_block_crcs = t->nb_block_crcs;
+            }
             filed = nb_spools++;
         }
         pass_spool = NULL;
@@ -2172,8 +2281,11 @@ end:
     av_free(last_checksums);
     if (pass_spool)
         fclose(pass_spool);
-    for (int i = 0; i < nb_spools; i++)
+    crip_keep_reads(ctx, t, spools, nb_spools, kept, !quit_now && !ret);
+    for (int i = 0; i < nb_spools; i++) {
         fclose(spools[i].f);
+        av_free(spools[i].block_crcs);
+    }
     av_free(spools);
 
     t->total_repeats = total_repeats;
@@ -3034,6 +3146,8 @@ static int cyanrip_run(int argc, char **argv)
                 "At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does");
     GEN_OPT_ONE(opts_list, int32_t, reread_time_limit, "", 1, 1, 0, 1, INT32_MAX,
                 "Seconds a -Z track's reads may take, checked between whole-track reads; then no further read starts");
+    GEN_OPT_ONE(opts_list, char *,  keep_every_read, "", 1, 1, NULL, 0, 0,
+                "Save every distinct -Z read of a track, the kept one too, as WAV in this folder");
     GEN_OPT_ARR(opts_list, char *,  encoder_option, "", 0, 0, 32, 0, 0,
                 "Pass key=value to every output's encoder, as FFmpeg names its options (repeatable)");
     GEN_OPT_ARR(opts_list, char *,  pregap, "p", 0, 0, 198, 0, 0,
@@ -3190,6 +3304,7 @@ static int cyanrip_run(int argc, char **argv)
     settings.consumer_id                = consumer;
     settings.prefer_disc_isrc           = prefer_disc_isrc;
     settings.prefer_ar_match            = prefer_accuraterip_match;
+    settings.keep_every_read            = keep_every_read;
     settings.reread_time_limit          = reread_time_limit;
     /* Registers the atexit writer, so every route out of main() is covered
      * rather than the ones someone remembered to instrument. Messages are
@@ -3228,6 +3343,18 @@ static int cyanrip_run(int argc, char **argv)
      * lap 11 S6). */
     if (reread_time_limit && !repeat_rips) {
         cyanrip_log(ctx, 0, "--reread-time-limit needs -Z: it limits -Z's re-reads, and without -Z there are none!\n");
+        return CRIP_EXIT_USAGE;
+    }
+
+    /* Likewise a folder for -Z's reads: without -Z each track is read once,
+     * and that read is the output. An empty name would save every read in
+     * the root directory. */
+    if (keep_every_read && !repeat_rips) {
+        cyanrip_log(ctx, 0, "--keep-every-read needs -Z: it saves -Z's reads, and without -Z there is one read, the output!\n");
+        return CRIP_EXIT_USAGE;
+    }
+    if (keep_every_read && !*keep_every_read) {
+        cyanrip_log(ctx, 0, "--keep-every-read needs a folder name, and was given an empty one!\n");
         return CRIP_EXIT_USAGE;
     }
 

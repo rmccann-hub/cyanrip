@@ -482,6 +482,46 @@ void crip_diag_snapshot(cyanrip_ctx *ctx)
                     av_bprintf(&b, "null");
                 }
 
+                /* reads: every distinct read of a -Z track, the kept one
+                 * among them, in the order first read (round 38, Platterpus's
+                 * docs/eac-parity.md Part G.5). Each gives its eac_crc, how
+                 * many whole-track reads gave it (count), the newest of them
+                 * counting from 1 (last_read), whether it is the read kept,
+                 * its AccurateRip v1 and v2 checksums, its block_crcs as the
+                 * track's own are written (null when memory for them could
+                 * not be had), and the file --keep-every-read saved it to,
+                 * null when none was. null for a track read without -Z. */
+                av_bprintf(&b, ",\"reads\":");
+                if (t->nb_reads) {
+                    av_bprintf(&b, "[");
+                    for (int j = 0; j < t->nb_reads; j++) {
+                        const crip_read *r = &t->reads[j];
+                        av_bprintf(&b, "%s{\"eac_crc\":\"%08X\",\"count\":%i,"
+                                       "\"last_read\":%i,\"kept\":%s,"
+                                       "\"accurip_v1\":\"%08X\",\"accurip_v2\":\"%08X\","
+                                       "\"block_crcs\":",
+                                   j ? "," : "", r->crc, r->count, r->last_read,
+                                   r->kept ? "true" : "false", r->ar_v1, r->ar_v2);
+                        if (r->block_crcs) {
+                            av_bprintf(&b, "[");
+                            for (int k = 0; k < r->nb_block_crcs; k++)
+                                av_bprintf(&b, "%s\"%08X\"", k ? "," : "", r->block_crcs[k]);
+                            av_bprintf(&b, "]");
+                        } else {
+                            av_bprintf(&b, "null");
+                        }
+                        av_bprintf(&b, ",\"file\":");
+                        if (r->file)
+                            diag_json_str(&b, r->file);
+                        else
+                            av_bprintf(&b, "null");
+                        av_bprintf(&b, "}");
+                    }
+                    av_bprintf(&b, "]");
+                } else {
+                    av_bprintf(&b, "null");
+                }
+
                 /* The count behind the footer's `Encoder errors:` (Platterpus's
                  * F5, accepted as an addition to S10). */
                 av_bprintf(&b, ",\"encode_failures\":%i", t->encode_failures);
@@ -671,8 +711,13 @@ void crip_diag_write(void)
      *
      * /12 ADDS per track block_crcs, round 38 (our lap 1 S10, Platterpus's
      * lap 2 S7, whose readers match the cyanrip-diagnostics/ prefix and not
-     * the number). An addition; the version moves for the same reason. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/12\",\n");
+     * the number). An addition; the version moves for the same reason.
+     *
+     * /13 ADDS per track reads, every distinct -Z read with its block_crcs,
+     * round 38 (Platterpus's docs/eac-parity.md Part G.5, for their rebuild of
+     * a disputed second). An addition; the version moves for the same
+     * reason. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/13\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");
