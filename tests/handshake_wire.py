@@ -410,5 +410,118 @@ for lap in laps:
               f"§192's 'never edit a file already sent' hinges on exactly that")
         fails += 1
 
+# --- A header key the other side's gate can read, and our digest ----------
+#
+# Our round 38 lap 8 went out declaring `HANDSHAKE-ROUND-912eabfc5751adb2:`
+# where `HANDSHAKE-ROUND-DIGEST:` belonged: the placeholder DIGEST was filled
+# with the digest's value, and the fill hit the key as well as the value.
+# Every check here passed it. The lap checker reads headers with an uppercase
+# pattern, so it skipped the line without a word; the gate reads the digest
+# only by its key, so the lap declared none, and C21 had nothing to compare.
+# Platterpus found it filing the lap (their round 38 lap 9 S14), and their
+# own first draft of that lap had the same slip.
+#
+# Two rules, each derived from the record rather than from a list of keys:
+# a key is uppercase words joined by hyphens, as every key PROTOCOL.md names
+# is and every key in either side's laps was until that one; and every lap of
+# ours from round 9, when the digest came in, declares HANDSHAKE-ROUND-DIGEST
+# exactly once outside a fence, as each one did until that one.
+# A sent lap cannot be edited, so it is pinned by the sha256 of the bytes that
+# left and by the rules it breaks; a pinned lap that stops breaking them fails.
+_rd_spec = importlib.util.spec_from_file_location(
+    "round_digest_wire", root / "tools" / "round-digest.py")
+_rd = importlib.util.module_from_spec(_rd_spec)
+_rd_spec.loader.exec_module(_rd)
+
+KEY_DECL_RE = re.compile(r"^HANDSHAKE-(\S*?):")
+KEY_SHAPE_RE = re.compile(r"[A-Z]+(?:-[A-Z]+)*")
+DIGEST_DECL_RE = re.compile(r"^HANDSHAKE-ROUND-DIGEST:")
+DIGEST_FROM_ROUND = 9
+
+
+def key_refusals(text, ours):
+    """What is wrong with a lap's header keys: the rules it breaks, by name."""
+    lines = text.split("\n")
+    fenced = _rd.fenced_lines(text)
+    out = []
+    for i, line in enumerate(lines):
+        m = KEY_DECL_RE.match(line)
+        if i in fenced or not m:
+            continue
+        if not KEY_SHAPE_RE.fullmatch(m.group(1)):
+            out.append(f"key: line {i + 1} declares HANDSHAKE-{m.group(1)}, "
+                       f"which is not uppercase words joined by hyphens, so no "
+                       f"gate reads it")
+    rnd = re.search(r"(?m)^HANDSHAKE-ROUND:[ \t]*(\d+)[ \t]*$", text)
+    if ours and rnd and int(rnd.group(1)) >= DIGEST_FROM_ROUND:
+        n = sum(1 for i, line in enumerate(lines)
+                if i not in fenced and DIGEST_DECL_RE.match(line))
+        if n != 1:
+            out.append(f"digest: declares HANDSHAKE-ROUND-DIGEST {n} times, not "
+                       f"once, as every lap of ours from round "
+                       f"{DIGEST_FROM_ROUND} does")
+    return out
+
+
+SENT_MISKEYED = {
+    "round-38-lap-08.md":
+        ("d6aded669429f4b2821c88dbf77e3d0cd2d4b1e243de511635c06e3c392c0c88",
+         {"key", "digest"}),
+}
+seen_miskeyed = set()
+for path in sorted(list(hs.glob("round-*-lap-*.md")) +
+                   list((hs / "inbound").glob("round-*-lap-*.md"))):
+    name = path.relative_to(hs).as_posix()
+    reasons = key_refusals(path.read_text(encoding="utf-8", errors="replace"),
+                           ours=path.parent == hs)
+    if not reasons:
+        continue
+    pin = SENT_MISKEYED.get(name)
+    if (pin and hashlib.sha256(path.read_bytes()).hexdigest() == pin[0]
+            and {r.split(":")[0] for r in reasons} == pin[1]):
+        print(f"known-bad (sent, cannot be edited): {name} -- {'; '.join(reasons)}")
+        seen_miskeyed.add(name)
+        continue
+    print(f"FAIL: {name}: {'; '.join(reasons)}")
+    fails += 1
+for name in sorted(set(SENT_MISKEYED) - seen_miskeyed):
+    print(f"FAIL: {name} is pinned as mis-keyed and is no longer refused as "
+          f"pinned: the check regressed or the sent file changed")
+    fails += 1
+
+# And the rules on laps built for each side of them, so a check that refuses
+# everything or nothing fails here rather than passing on the record.
+def _key_lap(rnd, headers):
+    return (f"HANDSHAKE-PROTOCOL: 9\nHANDSHAKE-ROUND: {rnd}\nHANDSHAKE-LAP: 2\n"
+            f"{headers}\nLSL: 4\n\nS1 NOTE: nothing.\n")
+
+_DIGEST = "HANDSHAKE-ROUND-DIGEST: sha256/16 = `0123456789abcdef` over 1 lap(s)\n"
+for label, text, ours, want in (
+    ("our lap with its digest", _key_lap(38, _DIGEST), True, []),
+    ("our lap, the digest's value in its key",
+        _key_lap(38, _DIGEST.replace("DIGEST:", "0123456789abcdef:")), True,
+        ["key", "digest"]),
+    ("our lap with no digest", _key_lap(38, ""), True, ["digest"]),
+    ("our lap with two digests", _key_lap(38, _DIGEST * 2), True, ["digest"]),
+    ("our round 8 lap with no digest, before it came in", _key_lap(8, ""), True, []),
+    ("their lap with no digest, which the protocol allows", _key_lap(38, ""),
+        False, []),
+    ("a lowercase key", _key_lap(38, _DIGEST + "HANDSHAKE-Verdict: OPEN\n"),
+        True, ["key"]),
+    ("a key with digits", _key_lap(38, _DIGEST + "HANDSHAKE-LAP2: 3\n"),
+        True, ["key"]),
+    ("a quoted mis-keyed line inside a fence",
+        _key_lap(38, _DIGEST + "```\nHANDSHAKE-ROUND-abc: x\n```\n"), True, []),
+    ("prose naming a key without a colon after it",
+        _key_lap(38, _DIGEST + "HANDSHAKE-ROUND-DIGEST is the checksum.\n"),
+        True, []),
+):
+    got = [r.split(":")[0] for r in key_refusals(text, ours)]
+    if got != want:
+        print(f"FAIL: header keys on {label}: refused {got}, should be {want}")
+        fails += 1
+    else:
+        print(f"ok   header keys on {label}: {'refused ' + str(got) if got else 'passes'}")
+
 print(f"{len(laps)} lap(s) checked, {fails} malformed")
 sys.exit(1 if fails else 0)
