@@ -362,6 +362,56 @@ static void diag_reply(AVBPrint *b, const CripReply *r)
     av_bprintf(b, "\"");
 }
 
+static const char *diag_tri(enum CripTriState t)
+{
+    return t == CRIP_YES ? "\"supported\"" : t == CRIP_NO ? "\"unsupported\""
+                                                          : "\"not determined\"";
+}
+
+/* --read-vendor-settings (drive_caps.h): whether it was asked for; the table
+ * row the drive's INQUIRY vendor matched, with its source and command, null
+ * for none; the reply as for every other command; and, for Pioneer's
+ * settings block, PureRead read from it: whether the block passed its own
+ * shape check, support as supported, unsupported or not determined, and the
+ * mode where it is supported, null otherwise; a block that fails its shape
+ * check leaves support not determined (crip_pioneer_f4_decode()). A row is
+ * set only as its query is sent, so a drive no row names was sent nothing,
+ * and everything after "requested" is null. */
+static void diag_vendor_settings(AVBPrint *b, const cyanrip_ctx *ctx)
+{
+    const CripVendorQuery *q = ctx->drive_vendor_query;
+    av_bprintf(b, "{\"requested\":%s,",
+               ctx->settings.read_vendor_settings ? "true" : "false");
+    if (!q) {
+        av_bprintf(b, "\"query\":null,\"source\":null,\"cdb\":null,"
+                      "\"answered\":null,\"length\":null,\"truncated\":null,"
+                      "\"bytes\":null,\"pureread\":null}");
+        return;
+    }
+    av_bprintf(b, "\"query\":");
+    diag_json_str(b, q->id);
+    av_bprintf(b, ",\"source\":");
+    diag_json_str(b, q->source);
+    av_bprintf(b, ",\"cdb\":\"");
+    for (size_t i = 0; i < sizeof(q->cdb); i++)
+        av_bprintf(b, "%02X", q->cdb[i]);
+    av_bprintf(b, "\",");
+    diag_reply(b, &ctx->drive_vendor);
+    if (!ctx->drive_vendor.answered || strcmp(q->id, "pioneer-f4")) {
+        av_bprintf(b, ",\"pureread\":null}");
+        return;
+    }
+    CripPureRead p;
+    crip_pioneer_f4_decode(ctx->drive_vendor.bytes, ctx->drive_vendor.nb_bytes, &p);
+    av_bprintf(b, ",\"pureread\":{\"block_valid\":%s,\"support\":%s,\"mode\":",
+               p.block_valid ? "true" : "false",
+               diag_tri(p.supported));
+    if (p.supported == CRIP_YES)
+        av_bprintf(b, "\"%s\"}}", p.mode ? p.mode : "not determined");
+    else
+        av_bprintf(b, "null}}");
+}
+
 /* WHAT THE DRIVE DECLARES, asked in full and kept as it answered
  * (drive_caps.h; /13, for +platterpus.30): its INQUIRY, its GET
  * CONFIGURATION for every feature, the CD Read feature (001Eh) found in that
@@ -406,7 +456,9 @@ static void diag_drive_declared(AVBPrint *b, const cyanrip_ctx *ctx)
         diag_reply(b, &ctx->drive_mode_pages[pc]);
         av_bprintf(b, "}");
     }
-    av_bprintf(b, "\n    ]\n  }");
+    av_bprintf(b, "\n    ],\n    \"vendor_settings\": ");
+    diag_vendor_settings(b, ctx);
+    av_bprintf(b, "\n  }");
 }
 
 void crip_diag_snapshot(cyanrip_ctx *ctx)

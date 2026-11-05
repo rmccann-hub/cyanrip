@@ -1,5 +1,25 @@
 Unreleased
 ==========
+**`--read-vendor-settings` asks a drive its vendor's settings, read-only and
+opt-in**, on the owner's word of 2026-11-05, *"Yes do this."*, to *"should
+cyanrip send Pioneer's read-only settings query itself, opt-in and only to
+Pioneer drives?"* (relayed in Platterpus's round 38 lap 11 S1).
+- **A table of read-only vendor queries**, each row matched on INQUIRY's vendor
+  and citing its source. A drive no row names is sent nothing more. The first
+  row is Pioneer's settings block: READ BUFFER, mode 02h, buffer `F4h`, 256
+  bytes, as `pioneer-optical` at `d2cbbf2` sends it.
+- **The reply goes whole into the `--diagnostics` record**, in hex, as
+  `drive_declared.vendor_settings`, with PureRead read from it the way
+  `pioneer-optical` reads it. Support is `supported`, `unsupported` or `not
+  determined`, and the mode is `standard`, `master`, `perfect` or `not
+  determined` where supported. A block that fails its own shape check holds
+  no state, and says so.
+- **Refused without `--diagnostics`**, since the record is the only place the
+  answer goes.
+- **No log line changes**, and no command that writes is in the table.
+- **Not run on a drive.** No image reaches it, and whether the rig's BDR-209D
+  answers buffer `F4h` at all is what its first run will show.
+
 **The provider contract regenerated for the trailing-slash fix**: dumbass us
 moved `src/` with the fix and left the contract's source anchor naming the
 tree before it, which `contract_build` caught. Only its line numbers, build

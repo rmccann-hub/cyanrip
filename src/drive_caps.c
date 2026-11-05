@@ -148,6 +148,8 @@ size_t crip_reply_length(enum CripReplyKind kind, const uint8_t *buf, size_t len
                            (size_t)buf[2] << 8 | buf[3]) + 4 : 0;
     case CRIP_REPLY_MODE_SENSE_10:
         return len >= 2 ? ((size_t)buf[0] << 8 | buf[1]) + 2 : 0;
+    case CRIP_REPLY_FIXED:
+        return len;
     }
     return 0;
 }
@@ -177,4 +179,64 @@ int crip_feature_take(const uint8_t *buf, size_t len, unsigned code,
         off += whole;
     }
     return 0;
+}
+
+/* The table. One row so far; a row is added only with its source, and only
+ * for a command that reads. */
+static const CripVendorQuery vendor_queries[] = {
+    {
+        .id     = "pioneer-f4",
+        .vendor = "PIONEER",
+        .source = "pioneer-optical@d2cbbf2:src/settings/f4.rs:92-94 "
+                  "(READ BUFFER, mode 02h, buffer F4h, 256 bytes)",
+        .cdb    = { 0x3c, 0x02, 0xf4, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00 },
+        .alloc  = 256,
+    },
+};
+
+const CripVendorQuery *crip_vendor_query_for(const uint8_t *inquiry, size_t len)
+{
+    /* INQUIRY's vendor identification is bytes 8 to 15, ASCII, padded with
+     * spaces (SPC-4 6.4.2). A reply too short to hold it matches nothing. */
+    if (!inquiry || len < 16)
+        return NULL;
+    size_t n = 8;
+    while (n && (inquiry[8 + n - 1] == ' ' || inquiry[8 + n - 1] == '\0'))
+        n--;
+    for (size_t i = 0; i < sizeof(vendor_queries) / sizeof(vendor_queries[0]); i++) {
+        const CripVendorQuery *q = &vendor_queries[i];
+        if (strlen(q->vendor) == n && !memcmp(q->vendor, inquiry + 8, n))
+            return q;
+    }
+    return NULL;
+}
+
+void crip_pioneer_f4_decode(const uint8_t *buf, size_t len, CripPureRead *out)
+{
+    memset(out, 0, sizeof(*out));
+    if (!buf || len < 256)
+        return;
+
+    int all_ff = 1;
+    for (int i = 0; i < 256; i++)
+        all_ff &= buf[i] == 0xff;
+    const int sentinel = buf[0] == 0xff && buf[1] == 0xff;
+    const int feature = (buf[0] <= 1 || buf[0] == 0xff) &&
+                        (buf[1] <= 1 || buf[1] == 0xff) &&
+                        buf[11] == 0xff && buf[12] == 0xff &&
+                        buf[13] == 0xff && buf[14] == 0xff;
+    if ((!sentinel && !feature) || all_ff)
+        return;
+    out->block_valid = 1;
+
+    out->supported = buf[9] == 1 ? CRIP_YES : buf[9] == 0 ? CRIP_NO
+                                                          : CRIP_UNDETERMINED;
+    if (out->supported != CRIP_YES)
+        return;
+    if (buf[4] == 0)
+        out->mode = "standard";
+    else if (buf[4] == 1 && buf[5] == 8)
+        out->mode = "master";
+    else if (buf[4] == 1 && buf[5] == 254)
+        out->mode = "perfect";
 }

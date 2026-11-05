@@ -1067,6 +1067,7 @@ rip_scenarios = [
     'cover_art_formats',
     'repeat_limit_keeps_most_agreed',
     'every_read',
+    'vendor_settings',
     'reread_time_limit',
     'z_extraction_speed',
     'log_values_cannot_forge_a_line',
