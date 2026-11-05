@@ -1,5 +1,23 @@
 Unreleased
 ==========
+**Our round 38 lap 10 is sent**, released in its pull request under the
+owner's standing word of 2026-11-03, with Platterpus's lap 9 filed byte for
+byte from their `main` at `c7a2cdee`. Both laps are `OPEN`: the close our lap
+8 recorded waits on the drive test, and their rig sheet now runs it with
+every correction our lap 8 asked for.
+- **Their lap 9 caught dumbass us**: our lap 8's digest header went out
+  keyed `HANDSHAKE-ROUND-912eabfc5751adb2`, so it declared no digest a gate
+  reads. Our wire test now refuses a header key no gate can read, and a lap of
+  ours from round 9 without exactly one digest, with lap 8 pinned as sent.
+- **Their question about a saved read's path is answered by measurement**:
+  the folder as given, relative to where cyanrip runs or absolute. The
+  measurement found the doubled slash fixed below.
+- **Their S9's cell is written into our `--keep-every-read` row**, verbatim;
+  they copy the row back.
+- **Their count of our logs is corrected**: the three sessions with track 5's
+  verified read hold, but their totals mixed in the EAC-compatible logs their
+  app writes.
+
 **`--keep-every-read` drops a trailing slash from its folder**, unreleased
 since `.30` is unreleased: `--keep-every-read reads/` saved `reads/01-….wav`
 and printed and recorded `reads//01-….wav`, a path that opens but matches none
