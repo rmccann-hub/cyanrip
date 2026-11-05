@@ -1,0 +1,289 @@
+Thu Nov  5 10:20:26 PM UTC 2026
+standard INQUIRY:
+  PQual=0  PDT=5  RMB=1  LU_CONG=0  hot_pluggable=0  version=0x05  [SPC-3]
+  [AERC=0]  [TrmTsk=0]  NormACA=1  HiSUP=1  Resp_data_format=2
+  SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
+  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
+  [RelAdr=0]  WBus16=0  Sync=0  [Linked=0]  [TranDis=0]  CmdQue=0
+  [SPI: Clocking=0x0  QAS=0  IUS=0]
+    length=96 (0x60)   Peripheral device type: cd/dvd
+ Vendor identification: PIONEER 
+ Product identification: BD-RW   BDR-209D
+ Product revision level: 1.51
+  PIONEER   BD-RW   BDR-209D  1.51
+  Peripheral device type: cd/dvd
+Current profile: CD-ROM
+Features:
+  Profile list feature
+    version=0, persist=1, current=1 [0x0]
+    available profiles [more recent typically higher in list]:
+      profile: BD-RE , currentP=0
+      profile: BD-R RRM , currentP=0
+      profile: BD-R SRM , currentP=0
+      profile: BD-ROM , currentP=0
+      profile: DVD+R dual layer , currentP=0
+      profile: DVD+RW , currentP=0
+      profile: DVD+R , currentP=0
+      profile: DVD-R dual layer jump recording , currentP=0
+      profile: DVD-R dual layer sequental recording , currentP=0
+      profile: DVD-RW restricted overwrite , currentP=0
+      profile: DVD-RW sequential recording , currentP=0
+      profile: DVD-R sequential recording , currentP=0
+      profile: DVD-RAM , currentP=0
+      profile: Removable disk , currentP=0
+      profile: DVD-ROM , currentP=0
+      profile: CD-RW , currentP=0
+      profile: CD-R , currentP=0
+      profile: CD-ROM , currentP=1
+  Core feature
+    version=2, persist=1, current=1 [0x1]
+      Physical interface standard: Serial ATAPI, INQ2=0, DBE=1
+  Morphing feature
+    version=1, persist=1, current=1 [0x2]
+      OCEvent=1, ASYNC=0
+  Removable media feature
+    version=1, persist=1, current=1 [0x3]
+      Loading mechanism: Tray type
+      Load=1, Eject=1, Prevent jumper=0, Lock=1
+  Write Protect feature
+    version=2, persist=0, current=0 [0x4]
+      DWP=0, WDCB=0, SPWP=1, SSWPP=0
+  Random readable feature
+    version=0, persist=0, current=1 [0x10]
+      Logical block size=0x800, blocking=0x1, PP=1
+  Multi-read feature
+    version=0, persist=0, current=1 [0x1d]
+  CD read feature
+    version=2, persist=0, current=1 [0x1e]
+      DAP=0, C2 flags=1, CD-Text=1
+  DVD read feature
+    version=2, persist=0, current=0 [0x1f]
+      MULTI110=0, Dual-RW=0, Dual-R=1
+  Random writable feature
+    version=1, persist=0, current=0 [0x20]
+      Last lba=0x0, Logical block size=0x800, blocking=0x10, PP=1
+  Incremental streaming writable feature
+    version=3, persist=0, current=0 [0x21]
+      Data block types supported=0x3f01, TRIO=0, ARSV=0, BUF=0
+      Number of link sizes=1
+        7
+  Formattable feature
+    version=2, persist=0, current=0 [0x23]
+      BD-RE: RENoSA=1, Expand=0, QCert=0, Cert=0, FRF=0
+      BD-R: RRM=0
+  Hardware defect management feature
+    version=1, persist=0, current=0 [0x24]
+      SSA=1
+  Restricted overwrite feature
+    version=0, persist=0, current=0 [0x26]
+  DVD+RW feature
+    version=2, persist=0, current=0 [0x2a]
+      Write=1, Quick start=0, Close only=0
+  DVD+R feature
+    version=0, persist=0, current=0 [0x2b]
+      Write=1
+  Rigid restricted overwrite feature
+    version=0, persist=0, current=0 [0x2c]
+      DSDG=0, DSDR=0, Intermediate=1, Blank=1
+  CD track-at-once feature
+    version=2, persist=0, current=0 [0x2d]
+      BUF=1, R-W raw=0, R-W pack=0, Test write=1
+      CD-RW=1, R-W sub-code=0, Data type supported=16129
+  CD mastering (session at once) feature
+    version=1, persist=0, current=0 [0x2e]
+      BUF=1, SAO=1, Raw MS=0, Raw=1
+      Test write=1, CD-RW=1, R-W=1
+      Maximum cue sheet length=0x800
+  DVD-R/-RW write feature
+    version=2, persist=0, current=0 [0x2f]
+      BUF=1, RDL=1, Test write=1, DVD-RW SL=1
+  Layer jump recording feature
+    version=0, persist=0, current=0 [0x33]
+      Number of link sizes=1
+        16
+  CD-RW media write support feature
+    version=0, persist=0, current=0 [0x37]
+      CD-RW media sub-type support (bitmask)=0xf
+  BD-R POW feature
+    version=0, persist=0, current=0 [0x38]
+  DVD+R dual layer feature
+    version=0, persist=0, current=0 [0x3b]
+      write=1
+  BD read feature
+    version=2, persist=0, current=0 [0x40]
+      Bitmaps for BD-RE read support:
+        Class 0=0x6, Class 1=0x0, Class 2=0x0, Class 3=0x0
+      Bitmaps for BD-R read support:
+        Class 0=0x2, Class 1=0x0, Class 2=0x0, Class 3=0x0
+      Bitmaps for BD-ROM read support:
+        Class 0=0x2, Class 1=0x0, Class 2=0x0, Class 3=0x0
+  BD write feature
+    version=1, persist=0, current=0 [0x41]
+      additional length [20] too short
+  Power management feature
+    version=0, persist=1, current=1 [0x100]
+  CD audio external play feature
+    version=0, persist=0, current=1 [0x103]
+      Scan=1, SCM=1, SV=1, number of volume levels=1
+  Microcode upgrade feature
+    version=1, persist=0, current=0 [0x104]
+      M5=0
+  Timeout feature
+    version=1, persist=1, current=1 [0x105]
+      Group 3=1, unit length=0
+  DVD CSS feature
+    version=0, persist=0, current=0 [0x106]
+      CSS version=1
+  Real time streaming feature
+    version=5, persist=0, current=1 [0x107]
+      RBCB=1, SCS=1, MP2A=1, WSPD=1, SW=1
+  Drive serial number feature
+    version=0, persist=1, current=1 [0x108]
+      Drive serial number: SBDL041072WL
+  Disc control blocks feature
+    version=0, persist=0, current=0 [0x10a]
+      Disc control blocks:
+        0x46444300
+        0x53444300
+        0x544f4300
+  DVD CPRM feature
+    version=0, persist=0, current=0 [0x10b]
+      CPRM version=1
+  AACS feature
+    version=2, persist=0, current=0 [0x10d]
+      BNG=1, Block count for binding nonce=1
+      Number of AGIDs=1, AACS version=1
+  PIONEER   BD-RW   BDR-209D  1.51
+  Peripheral device type: cd/dvd
+ 00     00 00 01 b0 00 00 00 08  00 00 03 48 00 43 00 00    ...........H.C..
+ 10     00 42 00 00 00 41 00 00  00 40 00 00 00 2b 00 00    .B...A...@...+..
+ 20     00 1a 00 00 00 1b 00 00  00 16 00 00 00 15 00 00    ................
+ 30     00 13 00 00 00 14 00 00  00 11 00 00 00 12 00 00    ................
+ 40     00 02 00 00 00 10 00 00  00 0a 00 00 00 09 00 00    ................
+ 50     00 08 01 00 00 01 0b 08  00 00 00 07 01 00 00 00    ................
+ 60     00 02 07 04 02 00 00 00  00 03 07 04 39 00 00 00    ............9...
+ 70     00 04 08 04 02 00 00 00  00 10 01 08 00 00 08 00    ................
+ 80     00 01 01 00 00 1d 01 00  00 1e 09 04 03 00 00 00    ................
+ 90     00 1f 08 04 00 00 01 00  00 20 04 0c 00 00 00 00    ......... ......
+ a0     00 00 08 00 00 10 01 00  00 21 0c 08 3f 01 00 01    .........!..?...
+ b0     07 00 00 00 00 23 08 08  08 00 00 00 00 00 00 00    .....#..........
+ c0     00 24 04 04 80 00 00 00  00 26 00 00 00 2a 08 04    .$.......&...*..
+ d0     01 00 00 00 00 2b 00 04  01 00 00 00 00 2c 00 04    .....+.......,..
+ e0     03 00 00 00 00 2d 08 04  46 00 3f 01 00 2e 04 04    .....-..F.?.....
+ f0     6f 00 08 00 00 2f 08 04  4e 00 00 00 00 33 00 08    o..../..N....3..
+ 100    00 00 00 01 10 00 00 00  00 37 00 04 00 0f 00 00    .........7......
+ 110    00 38 00 04 00 00 00 00  00 3b 00 04 01 00 00 00    .8.......;......
+ 120    00 40 08 1c 01 00 00 00  00 06 00 00 00 00 00 00    .@..............
+ 130    00 02 00 00 00 00 00 00  00 02 00 00 00 00 00 00    ................
+ 140    00 41 04 14 01 00 00 00  00 04 00 00 00 00 00 00    .A..............
+ 150    00 02 00 00 00 00 00 00  01 00 03 00 01 03 01 04    ................
+ 160    07 00 00 01 01 04 04 04  00 00 00 00 01 05 07 04    ................
+ 170    01 00 00 00 01 06 00 04  00 00 00 01 01 07 15 04    ................
+ 180    3f 00 00 00 01 08 03 0c  53 42 44 4c 30 34 31 30    ?.......SBDL0410
+ 190    37 32 57 4c 01 0a 00 0c  46 44 43 00 53 44 43 00    72WL....FDC.SDC.
+ 1a0    54 4f 43 00 01 0b 00 04  00 00 00 01 01 0d 08 04    TOC.............
+ 1b0    13 01 01 01                                         ....
+=== page control 0 ===
+    PIONEER   BD-RW   BDR-209D  1.51   peripheral_type: cd/dvd [0x5]
+Mode parameter header from MODE SENSE(10):
+ 00     00 b2 00 00 00 00 00 00
+  Mode data length=180, medium type=0x00, specific param=0x00, longlba=0
+  Block descriptor length=0
+>> Read-Write error recovery, page_control: current
+ 00     01 0a 00 03 00 00 00 00  00 00 00 00
+>> Write parameters, page_control: current
+ 00     05 32 60 c7 08 10 00 00  00 00 00 00 00 20 00 96
+ 10     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ 20     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ 30     00 00 00 00
+>> Caching, page_control: current
+ 00     08 0a 04 00 00 00 00 00  00 00 00 00
+>> CD audio, page_control: current
+ 00     0e 0e 04 00 00 00 00 4b  01 ff 02 ff 00 00 00 00
+>> Power condition (mmc), page_control: current
+ 00     1a 0a 00 03 00 00 00 c8  00 00 12 c0
+>> Timeout and protect, page_control: current
+ 00     1d 0a 00 00 00 00 00 78  15 18 00 03
+>> MM capabilities and mechanical status (obsolete), page_control: current
+ 00     2a 36 3f 17 f1 63 29 23  09 a5 01 00 0f a0 09 a5
+ 10     00 00 1b 90 1b 90 00 01  00 00 00 00 1b 90 00 06
+ 20     00 00 1b 90 00 00 16 0d  00 00 10 8a 00 00 0b 07
+ 30     00 00 06 e4 00 00 02 c2
+=== page control 1 ===
+    PIONEER   BD-RW   BDR-209D  1.51   peripheral_type: cd/dvd [0x5]
+Mode parameter header from MODE SENSE(10):
+ 00     00 b2 00 00 00 00 00 00
+  Mode data length=180, medium type=0x00, specific param=0x00, longlba=0
+  Block descriptor length=0
+>> Read-Write error recovery, page_control: changeable
+ 00     01 0a 35 ff 00 00 00 00  00 00 00 00
+>> Write parameters, page_control: changeable
+ 00     05 32 7f ff 0f ff 00 00  00 00 00 00 00 00 00 00
+ 10     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ 20     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ 30     00 00 00 00
+>> Caching, page_control: changeable
+ 00     08 0a 00 00 00 00 00 00  00 00 00 00
+>> CD audio, page_control: changeable
+ 00     0e 0e 00 00 00 00 00 00  0f ff 0f ff 00 00 00 00
+>> Power condition (mmc), page_control: changeable
+ 00     1a 0a 00 03 ff ff ff ff  ff ff ff ff
+>> Timeout and protect, page_control: changeable
+ 00     1d 0a 00 00 04 00 ff ff  ff ff ff ff
+>> MM capabilities and mechanical status (obsolete), page_control: changeable
+ 00     2a 36 3f 17 f1 63 29 23  09 a5 01 00 0f a0 09 a5
+ 10     00 00 1b 90 1b 90 00 01  00 00 00 00 1b 90 00 06
+ 20     00 00 1b 90 00 00 16 0d  00 00 10 8a 00 00 0b 07
+ 30     00 00 06 e4 00 00 02 c2
+=== page control 2 ===
+    PIONEER   BD-RW   BDR-209D  1.51   peripheral_type: cd/dvd [0x5]
+Mode parameter header from MODE SENSE(10):
+ 00     00 b2 00 00 00 00 00 00
+  Mode data length=180, medium type=0x00, specific param=0x00, longlba=0
+  Block descriptor length=0
+>> Read-Write error recovery, page_control: default
+ 00     01 0a 00 03 00 00 00 00  00 00 00 00
+>> Write parameters, page_control: default
+ 00     05 32 60 c7 08 10 00 00  00 00 00 00 00 00 00 96
+ 10     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ 20     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ 30     00 00 00 00
+>> Caching, page_control: default
+ 00     08 0a 04 00 00 00 00 00  00 00 00 00
+>> CD audio, page_control: default
+ 00     0e 0e 04 00 00 00 00 4b  01 ff 02 ff 00 00 00 00
+>> Power condition (mmc), page_control: default
+ 00     1a 0a 00 03 00 00 00 c8  00 00 12 c0
+>> Timeout and protect, page_control: default
+ 00     1d 0a 00 00 00 00 00 78  15 18 00 03
+>> MM capabilities and mechanical status (obsolete), page_control: default
+ 00     2a 36 3f 17 f1 63 29 23  09 a5 01 00 0f a0 09 a5
+ 10     00 00 1b 90 1b 90 00 01  00 00 00 00 1b 90 00 06
+ 20     00 00 1b 90 00 00 16 0d  00 00 10 8a 00 00 0b 07
+ 30     00 00 06 e4 00 00 02 c2
+=== page control 3 ===
+    PIONEER   BD-RW   BDR-209D  1.51   peripheral_type: cd/dvd [0x5]
+Mode parameter header from MODE SENSE(10):
+ 00     00 b2 00 00 00 00 00 00
+  Mode data length=180, medium type=0x00, specific param=0x00, longlba=0
+  Block descriptor length=0
+>> Read-Write error recovery, page_control: saved
+ 00     01 0a 00 03 00 00 00 00  00 00 00 00
+>> Write parameters, page_control: saved
+ 00     05 32 60 c7 08 10 00 00  00 00 00 00 00 00 00 96
+ 10     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ 20     00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+ 30     00 00 00 00
+>> Caching, page_control: saved
+ 00     08 0a 04 00 00 00 00 00  00 00 00 00
+>> CD audio, page_control: saved
+ 00     0e 0e 04 00 00 00 00 4b  01 ff 02 ff 00 00 00 00
+>> Power condition (mmc), page_control: saved
+ 00     1a 0a 00 03 00 00 00 c8  00 00 12 c0
+>> Timeout and protect, page_control: saved
+ 00     1d 0a 00 00 00 00 00 78  15 18 00 03
+>> MM capabilities and mechanical status (obsolete), page_control: saved
+ 00     2a 36 3f 17 f1 63 29 23  09 a5 01 00 0f a0 09 a5
+ 10     00 00 1b 90 1b 90 00 01  00 00 00 00 1b 90 00 06
+ 20     00 00 1b 90 00 00 16 0d  00 00 10 8a 00 00 0b 07
+ 30     00 00 06 e4 00 00 02 c2

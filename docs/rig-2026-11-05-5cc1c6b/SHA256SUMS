@@ -1,0 +1,9 @@
+# Each file as the owner uploaded it (delivered) and as filed here (filed).
+# personal details replaced by tools/redact.py: home paths -> ~, hostnames -> host,
+# the owner's name list from outside the repository -> the owner.
+# delivered-sha256  filed-sha256  path  redaction
+68afcd964fe6569d83e4b18a48c53961714deb7faaf8f947604d20d2c74ed384  9491cd1339bb471b25696930df6ddbaa25535b83d78b7267a5d33e8ab9617707  session/owner-sheet-annotated.md  20 home path(s), 8 hostname(s), 10 name(s)
+f3148e4af33aba8084bee894bb9976d851e2d7b897cc9905c0a3f23f307c60de  f3148e4af33aba8084bee894bb9976d851e2d7b897cc9905c0a3f23f307c60de  session/dumps/pioneer-f4.txt  0 home path(s), 0 hostname(s), 0 name(s)
+82323110d392f6c782ab6f4bdf6532bbff0c95d27262ea729b4692dbc7b18d20  82323110d392f6c782ab6f4bdf6532bbff0c95d27262ea729b4692dbc7b18d20  session/dumps/before.txt  0 home path(s), 0 hostname(s), 0 name(s)
+605b9ea83ded396a0eeff4abb6589bbde091954383277b33ac14d44fdb17f3e8  4ae9a8c86a6f7bd4cdfc6a61edb5f5ef63cc3b64a69dd07e1daf70bb59304d77  session/dumps/cyanrip-vendor.json  2 home path(s), 0 hostname(s), 0 name(s)
+1defe357b4705a3bf128b92fb7eca770bee360559393b5182b3e42663866cf3a  1b251c1f718c823203e3d916859988fc3caa59fc8607e784a42c66bb25725a7a  session/dumps/cyanrip-vendor.txt  1 home path(s), 0 hostname(s), 0 name(s)
