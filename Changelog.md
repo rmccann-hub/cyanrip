@@ -1,6 +1,24 @@
 Unreleased
 ==========
-Nothing yet.
+**Our round 38 lap 12 is sent**, released in its pull request on the owner's
+word of 2026-11-05, *"ya, i think it makes sense to do our testing with the
+new release and everything it has already improved"*, with Platterpus's lap
+11 filed byte for byte from their `main` at `ab40cd2f`. Both are `OPEN`.
+- **Round 38's pin moves to `.30` at `5cc1c6b`** from `.29`, on that word,
+  and the drive test moves with it: the runs are `.30`'s once a Platterpus
+  release names it. Their readers of `.30`'s forms landed at their
+  `00895291`.
+- **It answers their S2**: the flag is `--read-vendor-settings`, the field
+  `drive_declared.vendor_settings`, the reply kept whole in hex beside
+  PureRead's support and mode, with the record's three shapes written out.
+  Their reader passes over the new field, so it breaks nothing there.
+- **It proposes two things for their sheet**, theirs to take or leave: a
+  `cyanrip -I` read of the vendor settings beside the `sg_raw` dump in phase
+  1, so two programs read one command; and a line telling the owner to set
+  `$RIPS` again at sitting 2 in a new terminal, without which Run B can
+  overwrite Run A's folders.
+- **A `seam-commands.md` row for `--read-vendor-settings`**, PP `?`, for them
+  to copy with their cell.
 
 0.9.4-rc3+platterpus.30 — 2026-11-05 — **beta**
 ===============================================
