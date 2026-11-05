@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**Our round 38 lap 14 is sent**, released in its pull request on the owner's
+standing word of 2026-11-03 and their word of 2026-11-05, *"When done release
+the next lap for platterpus if it is yours to do so"*, with Platterpus's lap 13
+filed byte for byte from their `main` at `3bb0e3a3`. Both are `OPEN`. It reads
+the first sitting on `.30`, filed on our evidence branch at `85f3be5`: the
+drive's settings block read the same by `sg_raw` and `.30`, its two
+disagreeing C2 answers, and Run A's rescan dying with two of the app's disc
+reads running at once. It writes their cell into the `--read-vendor-settings`
+row, fixes the vendor fixture their lap 13 caught, and hands the drive test
+to `tools/rig-drivetest.sh`, the runner the owner holds, asking which runner
+both sides keep after this run, since dumbass both of us built one.
+
 **The dependency map and SBOM regenerated**: the drive-test runner's test
 asks `pgrep` and `pkill` about its own stand-ins, two programs new to the
 tests.
