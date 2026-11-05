@@ -1,5 +1,36 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.30 — 2026-11-05 — **beta**
+===============================================
+**Released on the beta channel on the owner's word of 2026-11-05**: *"ya, i
+think it makes sense to do our testing with the new release and everything it
+has already improved"*. Round 38's drive test moves to it on the same word, so
+round 38 reviews `.30` and our lap 12 moves its pin from `.29`, as our lap 5
+moved it from `.28`. The test then waits on a Platterpus release that reads
+`.30`'s forms, which their lap 9 S10 undertakes to read first. Beta is this
+side's choice under v8 E3, as `.29`'s was, and the stable channel stays `.23`.
+
+**What it ships since `.29`**, each in an entry below:
+- every distinct `-Z` read of a track kept in the `--diagnostics` record at
+  `/13`, one `  Other read:` line in the track block for each read not kept,
+  and `--keep-every-read DIR` saving each as WAV (`e81d318a`), its folder's
+  trailing slash dropped (`d2af4d54`);
+- everything the drive declares, asked in full and kept raw in
+  `drive_declared`: INQUIRY, GET CONFIGURATION for every feature, and MODE
+  SENSE for every page under each page control (`1602486f`);
+- `--read-vendor-settings`, a read-only vendor settings query, opt-in and
+  sent only to a drive a row of its table names, Pioneer's settings block
+  first, its reply and PureRead read from it kept in `drive_declared`
+  (`3c8b002a`);
+- the build tag's short hash pinned at seven characters (`31afbf12`).
+
+**No drive has run it.** Every read kept, what the drive declares, and the
+vendor query wait for the owner's runs, round 38's drive test on `.30`:
+an image reaches none of the drive's answers, and whether the rig's BDR-209D
+answers Pioneer's buffer `F4h` at all is what the first run will show.
+
 **The provider contract regenerated for `--read-vendor-settings`**: the flag,
 its refusal, and the fields of `drive_declared.vendor_settings`, listed as
 emitted in the source and never observed, since every record it reads comes
