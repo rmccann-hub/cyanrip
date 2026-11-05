@@ -9037,6 +9037,49 @@ def sc_every_read():
         fail("every_read: the refused run made its folder anyway")
 
 
+def sc_vendor_settings():
+    """--read-vendor-settings IS REFUSED WITHOUT A RECORD, AND SENDS NOTHING TO AN IMAGE.
+
+    The owner's word of 2026-11-05, "Yes do this.", relayed in Platterpus's
+    round 38 lap 11 S1: a read-only vendor settings query, opt-in, sent only
+    to a drive whose INQUIRY vendor drive_caps.h's table names, its reply kept
+    only in the --diagnostics record. So without a record it is refused before
+    any disc is opened, at column 0, exit 64, as every usage refusal is; and on
+    an image, which is no drive, the record's drive_declared stays null and the
+    rip is the rip it would have been. What a drive answers is
+    tests/drivecaps.c's and tests/diagrecord.c's, on built replies: no image
+    reaches it, and on a drive it has not run.
+    """
+    want = ("--read-vendor-settings needs --diagnostics: the drive's answer is "
+            "kept only in the record!")
+    ec, outp = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                    "-I", "--read-vendor-settings")
+    if ec != 64 or want not in outp.splitlines():
+        fail(f"vendor_settings: without --diagnostics it exited {ec}, not 64, "
+             f"or did not print at column 0 {want!r}")
+
+    out, rec = WORK / "out_vendor_settings", WORK / "vendor_settings.json"
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                 "-l", "1", "-o", "pcm", "-D", out, "-F", "{track}", "-L", "log",
+                 "--diagnostics", rec, "--read-vendor-settings")
+    try:
+        record = json.loads(rec.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        fail(f"vendor_settings: exit {ec}, no record to read: {e}")
+        return
+    if ec != 0:
+        fail(f"vendor_settings: a rip of an image with the flag exited {ec}, not 0")
+    if "drive_declared" not in record or record["drive_declared"] is not None:
+        fail(f"vendor_settings: an image's drive_declared is "
+             f"{record.get('drive_declared', 'absent')!r}, not null: nothing is "
+             f"asked of an image")
+    got = (out / "1.pcm").read_bytes() if (out / "1.pcm").exists() else b""
+    src = (FIX / "cdda.bin").read_bytes()[:300 * 2352]
+    if got != src:
+        fail(f"vendor_settings: track 1 ripped with the flag is {len(got)} bytes "
+             f"that are not the image's first 300 sectors")
+
+
 def sc_gaps_unknown_pregap():
     """A PREGAP THE SEARCH COULD NOT DETERMINE IS IN THE `Gaps:` LIST.
 

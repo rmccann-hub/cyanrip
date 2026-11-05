@@ -200,6 +200,7 @@ typedef struct cyanrip_settings {
     int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
     int prefer_ar_match; /* --prefer-accuraterip-match: at the -Z repeat limit, a read AccurateRip matches first */
     char *keep_every_read; /* --keep-every-read DIR: every distinct -Z read's audio, as WAV, in DIR */
+    int read_vendor_settings; /* --read-vendor-settings: send a vendor's read-only settings query (drive_caps.h) */
     int reread_time_limit; /* --reread-time-limit: seconds a -Z track's reads may take; 0 is none */
     int generate_cue_only;
     int disable_data_tracks;
@@ -586,6 +587,10 @@ typedef struct cyanrip_ctx {
     CripReply drive_inquiry;
     CripReply drive_configuration;
     CripReply drive_mode_pages[4];
+    /* --read-vendor-settings: the table row the drive's INQUIRY matched, NULL
+     * for none, and its reply; not asked unless both */
+    const CripVendorQuery *drive_vendor_query;
+    CripReply drive_vendor;
 
     /* Metadata */
     AVDictionary *meta;

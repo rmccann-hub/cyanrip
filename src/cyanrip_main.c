@@ -370,6 +370,20 @@ static void crip_read_declarations(cyanrip_ctx *ctx)
         crip_reply_ask(ctx, &ctx->drive_mode_pages[pc], CRIP_REPLY_MODE_SENSE_10,
                        sense, sizeof(sense), CRIP_REPLY_MAX);
     }
+
+    /* The one exception to "nor any vendor command" above: a read-only
+     * vendor query from drive_caps.h's table, sent only when the caller asks
+     * with --read-vendor-settings, and only to a drive whose INQUIRY vendor a
+     * row names. Every other drive is sent nothing more. */
+    if (!ctx->settings.read_vendor_settings || !ctx->drive_inquiry.answered)
+        return;
+    ctx->drive_vendor_query = crip_vendor_query_for(ctx->drive_inquiry.bytes,
+                                                    ctx->drive_inquiry.nb_bytes);
+    if (ctx->drive_vendor_query)
+        crip_reply_ask(ctx, &ctx->drive_vendor, CRIP_REPLY_FIXED,
+                       ctx->drive_vendor_query->cdb,
+                       sizeof(ctx->drive_vendor_query->cdb),
+                       ctx->drive_vendor_query->alloc);
 }
 
 static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
@@ -3199,6 +3213,8 @@ static int cyanrip_run(int argc, char **argv)
                 "At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does");
     GEN_OPT_ONE(opts_list, int32_t, reread_time_limit, "", 1, 1, 0, 1, INT32_MAX,
                 "Seconds a -Z track's reads may take, checked between whole-track reads; then no further read starts");
+    GEN_OPT_ONE(opts_list, bool,    read_vendor_settings, "", 0, 0, 0, 0, 0,
+                "Ask the drive for its settings with its vendor's read-only query, where cyanrip has one for its vendor (Pioneer's settings block), into the --diagnostics record");
     GEN_OPT_ONE(opts_list, char *,  keep_every_read, "", 1, 1, NULL, 0, 0,
                 "Save every distinct -Z read of a track, the kept one too, as WAV in this folder");
     GEN_OPT_ARR(opts_list, char *,  encoder_option, "", 0, 0, 32, 0, 0,
@@ -3358,6 +3374,7 @@ static int cyanrip_run(int argc, char **argv)
     settings.prefer_disc_isrc           = prefer_disc_isrc;
     settings.prefer_ar_match            = prefer_accuraterip_match;
     settings.keep_every_read            = keep_every_read;
+    settings.read_vendor_settings       = read_vendor_settings;
     settings.reread_time_limit          = reread_time_limit;
     /* Registers the atexit writer, so every route out of main() is covered
      * rather than the ones someone remembered to instrument. Messages are
@@ -3408,6 +3425,13 @@ static int cyanrip_run(int argc, char **argv)
     }
     if (keep_every_read && !*keep_every_read) {
         cyanrip_log(ctx, 0, "--keep-every-read needs a folder name, and was given an empty one!\n");
+        return CRIP_EXIT_USAGE;
+    }
+
+    /* A vendor's settings go only into the record, so without one the query
+     * would be sent to the drive for nothing. */
+    if (read_vendor_settings && !diagnostics) {
+        cyanrip_log(ctx, 0, "--read-vendor-settings needs --diagnostics: the drive's answer is kept only in the record!\n");
         return CRIP_EXIT_USAGE;
     }
 

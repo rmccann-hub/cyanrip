@@ -416,6 +416,101 @@ static void set_reply(CripReply *r, int answered, int length, const uint8_t *b, 
         memcpy(r->bytes, b, nb);
 }
 
+/* --read-vendor-settings, in drive_declared's vendor_settings: asked for or
+ * not; for a drive no table row names, nothing sent and every field after
+ * "requested" null; for Pioneer's row, its source and command, the reply
+ * whole in hex, and PureRead read from it, tri-state, the mode only where
+ * supported. Only a Pioneer drive answers, so each shape is built here. */
+static void expect_vendor(cyanrip_ctx *ctx, const char *file, const char *pureread,
+                          const char *what)
+{
+    char *out = write_record(ctx, file);
+    if (!out)
+        return;
+    char want[1024], hex[513] = "";
+    for (int i = 0; ctx->drive_vendor.answered && i < ctx->drive_vendor.nb_bytes; i++)
+        snprintf(hex + 2 * i, 3, "%02X", ctx->drive_vendor.bytes[i]);
+    if (ctx->drive_vendor.answered)
+        snprintf(want, sizeof(want),
+                 "\"vendor_settings\": {\"requested\":true,\"query\":\"pioneer-f4\","
+                 "\"source\":\"pioneer-optical@d2cbbf2:src/settings/f4.rs:92-94 "
+                 "(READ BUFFER, mode 02h, buffer F4h, 256 bytes)\","
+                 "\"cdb\":\"3C02F400000000010000\",\"answered\":true,\"length\":256,"
+                 "\"truncated\":false,\"bytes\":\"%s\",\"pureread\":%s}", hex, pureread);
+    else
+        snprintf(want, sizeof(want),
+                 "\"vendor_settings\": {\"requested\":true,\"query\":\"pioneer-f4\","
+                 "\"source\":\"pioneer-optical@d2cbbf2:src/settings/f4.rs:92-94 "
+                 "(READ BUFFER, mode 02h, buffer F4h, 256 bytes)\","
+                 "\"cdb\":\"3C02F400000000010000\",\"answered\":false,\"length\":null,"
+                 "\"truncated\":null,\"bytes\":null,\"pureread\":null}");
+    expect_line(out, want, what);
+    free(out);
+}
+
+static void test_vendor_settings(cyanrip_ctx *ctx)
+{
+    uint8_t inq[36] = { 0x05, 0x80, 0x00, 0x32, 31 };
+    memcpy(inq + 8, "PIONEER BD-RW   BDR-209D", 24);
+    set_reply(&ctx->drive_inquiry, 1, 36, inq, 36);
+    ctx->settings.read_vendor_settings = 1;
+
+    /* Asked for, and a drive no row names: nothing sent */
+    ctx->drive_vendor_query = NULL;
+    char *out = write_record(ctx, "diagrecord_vendor_none.json");
+    if (out) {
+        expect_line(out, "\"vendor_settings\": {\"requested\":true,\"query\":null,"
+                         "\"source\":null,\"cdb\":null,\"answered\":null,\"length\":null,"
+                         "\"truncated\":null,\"bytes\":null,\"pureread\":null}",
+                    "asked for, no row for the drive");
+        free(out);
+    }
+
+    /* Pioneer's row, a valid block: support 1, Master (1, 8) */
+    uint8_t f4[256];
+    memset(f4, 0x00, sizeof(f4));
+    f4[0] = 1;
+    memset(f4 + 11, 0xff, 4);
+    f4[4] = 1; f4[5] = 8; f4[9] = 1;
+    ctx->drive_vendor_query = crip_vendor_query_for(inq, sizeof(inq));
+    set_reply(&ctx->drive_vendor, 1, 256, f4, 256);
+    expect_vendor(ctx, "diagrecord_vendor_master.json",
+                  "{\"block_valid\":true,\"support\":\"supported\",\"mode\":\"master\"}",
+                  "Pioneer's block, PureRead Master");
+
+    /* Supported, at a level nobody has named */
+    ctx->drive_vendor.bytes[5] = 7;
+    expect_vendor(ctx, "diagrecord_vendor_level.json",
+                  "{\"block_valid\":true,\"support\":\"supported\",\"mode\":\"not determined\"}",
+                  "Pioneer's block, an unknown level");
+
+    /* Unsupported: the mode is not read */
+    ctx->drive_vendor.bytes[5] = 8;
+    ctx->drive_vendor.bytes[9] = 0;
+    expect_vendor(ctx, "diagrecord_vendor_unsupported.json",
+                  "{\"block_valid\":true,\"support\":\"unsupported\",\"mode\":null}",
+                  "Pioneer's block, PureRead unsupported");
+
+    /* Answered with a block that fails its shape check: no state in it */
+    memset(f4, 0x00, sizeof(f4));
+    set_reply(&ctx->drive_vendor, 1, 256, f4, 256);
+    expect_vendor(ctx, "diagrecord_vendor_zero.json",
+                  "{\"block_valid\":false,\"support\":\"not determined\",\"mode\":null}",
+                  "a zero-filled block");
+
+    /* Refused, with the earlier block's bytes still in the buffer */
+    f4[0] = 1;
+    memset(f4 + 11, 0xff, 4);
+    f4[4] = 1; f4[5] = 8; f4[9] = 1;
+    set_reply(&ctx->drive_vendor, 0, 256, f4, 256);
+    expect_vendor(ctx, "diagrecord_vendor_refused.json", NULL, "Pioneer's query refused");
+
+    ctx->settings.read_vendor_settings = 0;
+    ctx->drive_vendor_query = NULL;
+    ctx->drive_vendor = (CripReply){ 0 };
+    set_reply(&ctx->drive_inquiry, 1, 8, inq, 8);
+}
+
 static void test_drive_declared(void)
 {
     cyanrip_ctx *ctx = new_ctx();
@@ -464,8 +559,14 @@ static void test_drive_declared(void)
         expect_line(out, "{\"page_control\":\"saved\",\"answered\":false,\"length\":null,"
                          "\"truncated\":null,\"bytes\":null}",
                     "MODE SENSE, saved, refused, last");
+        expect_line(out, "\"vendor_settings\": {\"requested\":false,\"query\":null,"
+                         "\"source\":null,\"cdb\":null,\"answered\":null,\"length\":null,"
+                         "\"truncated\":null,\"bytes\":null,\"pureread\":null}",
+                    "no vendor query without --read-vendor-settings");
         free(out);
     }
+
+    test_vendor_settings(ctx);
 
     /* A feature list without 001Eh gives the feature's bits as null, never
      * false, and a refused list the same */

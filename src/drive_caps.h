@@ -104,6 +104,7 @@ enum CripReplyKind {
     CRIP_REPLY_INQUIRY,
     CRIP_REPLY_CONFIGURATION,
     CRIP_REPLY_MODE_SENSE_10,
+    CRIP_REPLY_FIXED,      /* no length header: the length asked is the reply's */
 };
 
 typedef struct CripReply {
@@ -133,3 +134,47 @@ typedef struct CripDeclared {
  * or returns 0 when the reply holds no whole descriptor for it. Pure. */
 int crip_feature_take(const uint8_t *buf, size_t len, unsigned code,
                       CripDeclared *out);
+
+/* VENDOR SETTINGS, ASKED ONLY ON --read-vendor-settings (the owner's word of
+ * 2026-11-05, "Yes do this.", to "should cyanrip send Pioneer's read-only
+ * settings query itself, opt-in and only to Pioneer drives?", relayed in
+ * Platterpus's round 38 lap 11 S1). A table of read-only vendor queries, each
+ * row matched on INQUIRY's vendor identification and citing where its command
+ * and its decoding come from. A drive no row matches is sent nothing. No row
+ * may be a write: READ BUFFER (3Ch) reads, and Linux lets any user who can
+ * open the device send it (drivers/scsi/scsi_ioctl.c, scsi_cmd_allowed()).
+ *
+ * Pioneer's settings block is the first row. Whether a given Pioneer drive
+ * implements it is not known until it answers: pioneer-optical calls the
+ * command "a protocol probe, not a claim that all Pioneer firmware implements
+ * F4" (src/settings/f4.rs:88 at d2cbbf2). So the reply is kept whole, and what is read from it is tri-state. */
+typedef struct CripVendorQuery {
+    const char *id;       /* the row's name in the record */
+    const char *vendor;   /* INQUIRY bytes 8-15, trailing spaces dropped */
+    const char *source;   /* where the command and its decoding come from */
+    uint8_t cdb[10];
+    int alloc;            /* bytes asked for; the reply has no length header */
+} CripVendorQuery;
+
+const CripVendorQuery *crip_vendor_query_for(const uint8_t *inquiry, size_t len);
+
+enum CripTriState {
+    CRIP_UNDETERMINED = 0,
+    CRIP_YES,
+    CRIP_NO,
+};
+
+/* Pioneer's 256-byte settings block, decoded as pioneer-optical decodes it
+ * (src/settings/f4.rs:11-23 and 53-66 at d2cbbf2; src/settings.rs:21-27). A
+ * block that fails its own shape check (bytes 0 and 1 both FFh, or each 0, 1
+ * or FFh with bytes 11 to 14 all FFh; and not every byte FFh) holds no state:
+ * zero-filled or refused buffers look like that. Byte 9 is PureRead's
+ * support: 1 supported, 0 not, anything else undetermined. Bytes 4 and 5 are
+ * its mode, read only where it is supported. */
+typedef struct CripPureRead {
+    int block_valid;
+    enum CripTriState supported;
+    const char *mode; /* "standard", "master", "perfect"; NULL undetermined */
+} CripPureRead;
+
+void crip_pioneer_f4_decode(const uint8_t *buf, size_t len, CripPureRead *out);

@@ -351,11 +351,130 @@ int main(void)
             printf("FAIL: no reply has a length\n");
             fails++;
         }
+        if (crip_reply_length(CRIP_REPLY_FIXED, r, 256) != 256) {
+            printf("FAIL: a reply with no header is the length asked\n");
+            fails++;
+        }
+    }
+
+    /* --read-vendor-settings: the table row an INQUIRY's vendor names, by
+     * exact match on bytes 8 to 15 less their padding, and nothing for any
+     * other drive or a reply too short to name one */
+    {
+        static const uint8_t f4[10] = { 0x3c, 0x02, 0xf4, 0, 0, 0, 0, 0x01, 0, 0 };
+        const struct { const char *vendor; size_t len; int match; const char *what; } v[] = {
+            { "PIONEER ", 36, 1, "PIONEER, space-padded" },
+            { "PIONEER\0", 36, 1, "PIONEER, NUL-padded" },
+            { "PIONEER ", 16, 1, "a reply just long enough" },
+            { "PIONEER ", 15, 0, "a reply too short to hold the vendor" },
+            { "PIONEERX", 36, 0, "a longer vendor that starts the same" },
+            { "PIONEE  ", 36, 0, "a shorter vendor" },
+            { "pioneer ", 36, 0, "another case" },
+            { "PLEXTOR ", 36, 0, "another vendor" },
+            { "        ", 36, 0, "no vendor" },
+        };
+        for (size_t i = 0; i < sizeof(v) / sizeof(v[0]); i++) {
+            uint8_t inq[36] = { 0x05, 0x80, 0x00, 0x32, 31 };
+            memcpy(inq + 8, v[i].vendor, 8);
+            memcpy(inq + 16, "BD-RW   BDR-209D", 16);
+            const CripVendorQuery *q = crip_vendor_query_for(inq, v[i].len);
+            if (!!q != v[i].match) {
+                printf("FAIL: vendor table, %s: %s\n", v[i].what,
+                       q ? "a row matched" : "no row matched");
+                fails++;
+            }
+        }
+        if (crip_vendor_query_for(NULL, 36)) {
+            printf("FAIL: vendor table: no reply matched a row\n");
+            fails++;
+        }
+        uint8_t inq[36] = { 0 };
+        memcpy(inq + 8, "PIONEER ", 8);
+        const CripVendorQuery *q = crip_vendor_query_for(inq, sizeof(inq));
+        if (!q || strcmp(q->id, "pioneer-f4") || memcmp(q->cdb, f4, sizeof(f4)) ||
+            q->alloc != 256 || !strstr(q->source, "pioneer-optical@d2cbbf2")) {
+            printf("FAIL: Pioneer's row is not READ BUFFER mode 02h buffer F4h for 256 bytes, cited\n");
+            fails++;
+        }
+        if (q && q->cdb[0] != 0x3c) {
+            printf("FAIL: Pioneer's row is not a READ BUFFER\n");
+            fails++;
+        }
+    }
+
+    /* Pioneer's settings block, decoded as pioneer-optical decodes it: the
+     * shape check first, then byte 9's support, then bytes 4 and 5's mode
+     * only where supported */
+    {
+        const struct { int b0, b1, tail_ff, b4, b5, b9; size_t len; int valid;
+                       enum CripTriState sup; const char *mode; const char *what; } c[] = {
+            { 1, 0, 1, 1, 8,   1, 256, 1, CRIP_YES, "master", "Master" },
+            { 1, 0, 1, 0, 0,   1, 256, 1, CRIP_YES, "standard", "Standard" },
+            { 1, 0, 1, 0, 77,  1, 256, 1, CRIP_YES, "standard", "Standard, byte 5 not read" },
+            { 1, 0, 1, 1, 254, 1, 256, 1, CRIP_YES, "perfect", "Perfect" },
+            { 1, 0, 1, 1, 7,   1, 256, 1, CRIP_YES, NULL, "an unknown level" },
+            { 1, 0, 1, 255, 0, 1, 256, 1, CRIP_YES, NULL, "mode not reported" },
+            { 1, 0, 1, 2, 8,   1, 256, 1, CRIP_YES, NULL, "an unknown mode byte" },
+            { 1, 0, 1, 1, 8,   0, 256, 1, CRIP_NO, NULL, "unsupported, mode not read" },
+            { 1, 0, 1, 1, 8,   2, 256, 1, CRIP_UNDETERMINED, NULL, "support byte 2" },
+            { 1, 0, 1, 1, 8, 255, 256, 1, CRIP_UNDETERMINED, NULL, "support byte FFh" },
+            { 255, 255, 0, 1, 8, 1, 256, 1, CRIP_YES, "master", "the sentinel prefix" },
+            { 0, 1, 1, 1, 8,   1, 256, 1, CRIP_YES, "master", "feature flags 0 and 1" },
+            { 1, 0, 0, 1, 8,   1, 256, 0, CRIP_UNDETERMINED, NULL, "bytes 11 to 14 not FFh" },
+            { 2, 0, 1, 1, 8,   1, 256, 0, CRIP_UNDETERMINED, NULL, "byte 0 not a flag" },
+            { 1, 3, 1, 1, 8,   1, 256, 0, CRIP_UNDETERMINED, NULL, "byte 1 not a flag" },
+            { 1, 0, 1, 1, 8,   1, 255, 0, CRIP_UNDETERMINED, NULL, "a block one byte short" },
+            { 0, 0, 0, 0, 0,   0, 256, 0, CRIP_UNDETERMINED, NULL, "a zero-filled buffer" },
+        };
+        for (size_t i = 0; i < sizeof(c) / sizeof(c[0]); i++) {
+            uint8_t b[256];
+            memset(b, 0x5a, sizeof(b));
+            if (!strcmp(c[i].what, "a zero-filled buffer"))
+                memset(b, 0, sizeof(b));
+            b[0] = c[i].b0; b[1] = c[i].b1;
+            if (c[i].tail_ff)
+                memset(b + 11, 0xff, 4);
+            b[4] = c[i].b4; b[5] = c[i].b5; b[9] = c[i].b9;
+            CripPureRead p;
+            crip_pioneer_f4_decode(b, c[i].len, &p);
+            const int mode_ok = c[i].mode ? p.mode && !strcmp(p.mode, c[i].mode) : !p.mode;
+            if (p.block_valid != c[i].valid || p.supported != c[i].sup || !mode_ok) {
+                printf("FAIL: F4h block, %s: valid %i support %i mode %s\n", c[i].what,
+                       p.block_valid, (int)p.supported, p.mode ? p.mode : "(none)");
+                fails++;
+            }
+        }
+        uint8_t one[256];
+        memset(one, 0x5a, sizeof(one));
+        one[0] = 1; one[1] = 0; one[4] = 1; one[5] = 8; one[9] = 1;
+        for (int k = 11; k <= 14; k++) {
+            memset(one + 11, 0xff, 4);
+            one[k] = 0x5a;
+            CripPureRead p1;
+            crip_pioneer_f4_decode(one, sizeof(one), &p1);
+            if (p1.block_valid) {
+                printf("FAIL: F4h block, byte %i alone not FFh: read as state\n", k);
+                fails++;
+            }
+        }
+        uint8_t ff[256];
+        memset(ff, 0xff, sizeof(ff));
+        CripPureRead p;
+        crip_pioneer_f4_decode(ff, sizeof(ff), &p);
+        if (p.block_valid || p.supported != CRIP_UNDETERMINED || p.mode) {
+            printf("FAIL: F4h block, every byte FFh: read as state\n");
+            fails++;
+        }
+        crip_pioneer_f4_decode(NULL, 256, &p);
+        if (p.block_valid || p.supported != CRIP_UNDETERMINED || p.mode) {
+            printf("FAIL: F4h block, no reply: read as state\n");
+            fails++;
+        }
     }
 
     if (fails)
         printf("%i check(s) failed\n", fails);
     else
-        printf("accurate stream, recordable and the declarations kept: every wording and parse pinned\n");
+        printf("accurate stream, recordable, the declarations kept and the vendor table: every wording and parse pinned\n");
     return !!fails;
 }
