@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**`--keep-every-read` drops a trailing slash from its folder**, unreleased
+since `.30` is unreleased: `--keep-every-read reads/` saved `reads/01-….wav`
+and printed and recorded `reads//01-….wav`, a path that opens but matches none
+a reader compares it with. Dumbass us shipped the double slash to our own
+record's `file` field; Platterpus's question about that path (their round 38
+lap 9 S11) is what made us run it. The path is otherwise the folder exactly as
+given: relative to where cyanrip runs if the folder is, absolute if it is.
+
 **The golden reference and the interrupted sample regenerated for our round 38
 lap 8**: their `Handshake:` line now names lap 8, and nothing else they print
 changed but the build tag, timings, timestamps and where the sample's signal

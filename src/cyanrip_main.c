@@ -1436,9 +1436,17 @@ static void crip_keep_reads(cyanrip_ctx *ctx, cyanrip_track *t,
         mkdir(dir, 0755);
     av_free(dir);
 
+    /* The folder as given, less any trailing slash: `reads/` printed
+     * `reads//01-2FFECF45.wav`, which opens but matches no path a reader
+     * compares it with. `/` alone leaves nothing, and the file is `/NN-…` */
+    const char *given = ctx->settings.keep_every_read;
+    int given_len = strlen(given);
+    while (given_len > 0 && given[given_len - 1] == '/')
+        given_len--;
+
     for (int i = 0; i < nb_spools; i++) {
         crip_read *r = &t->reads[i];
-        char *path = av_asprintf("%s/%02d-%08X.wav", ctx->settings.keep_every_read,
+        char *path = av_asprintf("%.*s/%02d-%08X.wav", given_len, given,
                                  t->number, r->crc);
         errno = 0;
         FILE *out = path ? fopen(path, "wb") : NULL;
