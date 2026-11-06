@@ -451,12 +451,19 @@ static void expect_vendor(cyanrip_ctx *ctx, const char *file, const char *purere
 static void test_vendor_settings(cyanrip_ctx *ctx)
 {
     uint8_t inq[36] = { 0x05, 0x80, 0x00, 0x32, 31 };
-    memcpy(inq + 8, "PIONEER BD-RW   BDR-209D", 24);
-    set_reply(&ctx->drive_inquiry, 1, 36, inq, 36);
     ctx->settings.read_vendor_settings = 1;
 
-    /* Asked for, and a drive no row names: nothing sent */
-    ctx->drive_vendor_query = NULL;
+    /* Asked for, and a drive no row names: nothing sent. The query comes
+     * from crip_vendor_query_for() as cyanrip_main.c gets it, beside an
+     * INQUIRY no row names: a hand-set NULL beside PIONEER's was a record
+     * the program cannot write (Platterpus's round 38 lap 13 S7). */
+    memcpy(inq + 8, "HL-DT-STBD-RE  WH16NS60 ", 24);
+    set_reply(&ctx->drive_inquiry, 1, 36, inq, 36);
+    ctx->drive_vendor_query = crip_vendor_query_for(inq, sizeof(inq));
+    if (ctx->drive_vendor_query) {
+        fprintf(stderr, "FAIL %s:%d: a row names HL-DT-ST\n", __func__, __LINE__);
+        failures++;
+    }
     char *out = write_record(ctx, "diagrecord_vendor_none.json");
     if (out) {
         expect_line(out, "\"vendor_settings\": {\"requested\":true,\"query\":null,"
@@ -467,6 +474,8 @@ static void test_vendor_settings(cyanrip_ctx *ctx)
     }
 
     /* Pioneer's row, a valid block: support 1, Master (1, 8) */
+    memcpy(inq + 8, "PIONEER BD-RW   BDR-209D", 24);
+    set_reply(&ctx->drive_inquiry, 1, 36, inq, 36);
     uint8_t f4[256];
     memset(f4, 0x00, sizeof(f4));
     f4[0] = 1;

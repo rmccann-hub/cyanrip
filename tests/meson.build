@@ -460,6 +460,16 @@ test('Audio checksum mirror', python,
 ## describe no disc. New code is not safer than old code.
 test('Rig tools', python, args: [ files('rigcheck.py') ])
 
+## tools/rig-drivetest.sh runs round 38's drive test on the owner's rig, where
+## nothing of ours watches it (round 38 lap 14). Every path it takes there is
+## taken here first, against stand-ins for distrobox, the drive tools, cyanrip
+## and the app: Run A's two reads at once of 2026-11-05, a read that outlives
+## its kill, the first sitting's files moved into one folder, runs that rip
+## nothing, the app left open, and PureRead not put back. Each stand-in carries
+## a name made for the run, so nothing here can stop another test's ripper.
+test('Rig drive test runner', python, args: [ files('rig_drivetest.py') ],
+     timeout: 300)
+
 ## Golden reference freshness
 ## ==========================
 ## The reference Platterpus checks its parser against carries the version and
