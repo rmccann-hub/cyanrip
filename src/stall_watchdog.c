@@ -55,6 +55,7 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 #include <pthread.h>
 #include <libavutil/time.h>
 
@@ -92,7 +93,10 @@ static lsn_t reading_lsn;
  * summary line to carry anything. */
 static int64_t wait_started;
 static int64_t wait_heartbeat;
-static const char *wait_what;
+/* A copy, not the caller's pointer: a name built per track ("the ISRC read for
+ * track 2") lives in the caller's buffer, which the next track rewrites while
+ * the heartbeat may still be printing it. Read and written under live_lock. */
+static char wait_what[96];
 
 /* What the heartbeats add up to, kept so the log can carry the finding rather
  * than only the terminal.
@@ -179,7 +183,8 @@ static void *watchdog_fn(void *unused)
             now - wait_started >= stall_threshold_us &&
             (!wait_heartbeat || now - wait_heartbeat >= heartbeat_us)) {
             wait_heartbeat = now;
-            const char *what = wait_what;
+            char what[sizeof(wait_what)];
+            memcpy(what, wait_what, sizeof(what));
             const int64_t secs = (now - wait_started) / 1000000LL;
             pthread_mutex_unlock(&live_lock);
             cyanrip_log(NULL, 0,
@@ -227,7 +232,7 @@ void crip_stall_wait_begin(const char *what)
     pthread_mutex_lock(&live_lock);
     wait_started = av_gettime_relative();
     wait_heartbeat = 0;
-    wait_what = what;
+    snprintf(wait_what, sizeof(wait_what), "%s", what ? what : "a drive command");
     pthread_mutex_unlock(&live_lock);
 }
 
@@ -235,11 +240,12 @@ void crip_stall_wait_end(void)
 {
     pthread_mutex_lock(&live_lock);
     const int reported = !!wait_heartbeat;
-    const char *what = wait_what;
+    char what[sizeof(wait_what)];
+    memcpy(what, wait_what, sizeof(what));
     const int64_t took = wait_started ? av_gettime_relative() - wait_started : 0;
     wait_started = 0;
     wait_heartbeat = 0;
-    wait_what = NULL;
+    wait_what[0] = '\0';
     pthread_mutex_unlock(&live_lock);
 
     /* Only if it was reported: a call that returned promptly is not news, and

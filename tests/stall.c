@@ -245,6 +245,34 @@ static void test_wait_fires_and_is_not_a_read_stall(void)
           "a blocked drive open moved the longest read stall");
 }
 
+/* A wait named per track keeps its own copy of the name (round 38 lap 14
+ * S8). The caller builds "the ISRC read for track 2" in a buffer the next track
+ * rewrites, and the heartbeat thread prints the name while the call blocks: a
+ * stored pointer would print whatever the buffer holds by then. */
+static void test_wait_keeps_its_own_name(void)
+{
+    cap_reset();
+    crip_stall_watchdog_config(200000, 200000);
+    crip_stall_watchdog_start();
+
+    char name[64];
+    snprintf(name, sizeof(name), "the ISRC read for track %i", 2);
+    crip_stall_wait_begin(name);
+    snprintf(name, sizeof(name), "the ISRC read for track %i", 3);
+    av_usleep(700000);
+    crip_stall_wait_end();
+
+    crip_stall_watchdog_end();
+
+    CHECK(cap_count("Still waiting: the ISRC read for track 2 has not returned") >= 1,
+          "no heartbeat named the wait as it began");
+    CHECK(cap_count("track 3") == 0,
+          "the heartbeat printed the caller's buffer as rewritten, not the name it was given");
+    CHECK(cap_count("the ISRC read for track 2 returned after") == 1,
+          "expected one returned line naming track 2, got %i",
+          cap_count("the ISRC read for track 2 returned after"));
+}
+
 /* An ordinary rip must stay silent: frames complete in milliseconds and a
  * heartbeat on every one of them would bury the progress output. */
 static void test_silent_when_reads_are_fast(void)
@@ -386,6 +414,7 @@ int main(void)
     test_stats_count_and_longest();
     test_fires_with_no_callbacks();
     test_wait_fires_and_is_not_a_read_stall();
+    test_wait_keeps_its_own_name();
     test_silent_when_reads_are_fast();
     test_threshold_zero_disables();
     test_state_resets_between_reads();
