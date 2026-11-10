@@ -1,0 +1,2432 @@
+================================================================
+Platterpus UI script run — 2026-11-09T23:16:36+00:00
+app: 0.7.121
+run size: full
+Run estimate (full): about 47s: no rips, and the steps 47s (measured on the 2026-10-05 Full run, plus this script's waits).
+saved to: ~/.local/share/platterpus/uiscript/20261109T231636+0000
+  (transcript.txt, report.json, and any screenshots)
+================================================================
+[  ok  ] L67   log =============================================================
+           =============================================================
+[  ok  ] L68   log DRIVE MODE AND SESSION - tracks 5 and 3, six rips each
+           DRIVE MODE AND SESSION - tracks 5 and 3, six rips each
+[  ok  ] L69   log typically about 35-50 minutes
+           typically about 35-50 minutes
+[  ok  ] L70   log =============================================================
+           =============================================================
+[  ok  ] L72   set debug_logging on
+           debug_logging = True
+[  ok  ] L73   expect debug_logging on
+           debug_logging is True
+[  ok  ] L74   snapshot atstart
+           snapshot 'atstart':
+             dialog on top: (none)
+             window title : Platterpus 0.7.121
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: reading disc…
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L78   log --- A. identity ---
+           --- A. identity ---
+[  ok  ] L79   cyanrip --version   (0.4s)
+           argv: ~/.local/bin/cyanrip --version
+           cwd: ~/Music/rips
+           exit: 0
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+[  ok  ] L80   expect-exit 0
+           exit was 0
+[  ok  ] L81   expect-cyanrip platterpus-fork
+           found 'platterpus-fork'
+[  ok  ] L82   snapshot identity
+           snapshot 'identity':
+             dialog on top: (none)
+             window title : Platterpus 0.7.121
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: reading disc…
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L86   log --- B. drive offset, disc, and the time bound ---
+           --- B. drive offset, disc, and the time bound ---
+[  ok  ] L87   set-drive-offset
+           read offset +667, from the offset this machine is already set to
+[  ok  ] L88   expect-drive-offset
+           read offset +667, override on
+[  ok  ] L89   abort-if-failed the read offset for this drive is not known — set the drive up once (Tools, Setup and Updates, Set up drive), then run again
+           no failures in the 3 step(s) of 'B. drive offset, disc, and the time bound' — continuing
+[  ok  ] L105  pick-release d14a7546-815b-43c6-8af6-35cff6cee1d0 600   (22.0s)
+           chose d14a7546-815b-43c6-8af6-35cff6cee1d0 (Every Breath You Take: The Classics) — row 3 of 4; 14 track(s) loaded
+[  ok  ] L106  expect-tracks 5+
+           14 track rows (at least 5)
+[  ok  ] L107  abort-if-failed no disc with five tracks is loaded — put the reference disc in, then run again
+           no failures in the 6 step(s) of 'B. drive offset, disc, and the time bound' — continuing
+[ info ] L108  cyanrip-timeout 1800
+           each later cyanrip step may take 1800s before it is killed
+[  ok  ] L109  snapshot discready
+           snapshot 'discready':
+             dialog on top: (none)
+             window title : Platterpus 0.7.121
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L113  log --- C. early: track 5 then track 3, three times ---
+           --- C. early: track 5 then track 3, three times ---
+[  ok  ] L116  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 5 -D dmfiveearly1 --read-vendor-settings (consumer) (diagnostics)   (84.9s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfiveearly1 --read-vendor-settings --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T231701Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfiveearly1 --read-vendor-settings --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T231701Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  5
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.4 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 156 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 20 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 261 sectors asked; 284 reads failed the CRC; 1 sectors gave no frame passing it; 203 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had n
+           … [142 characters omitted] …
+           re another sector's; 0 had no address; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 18072 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 5, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 5 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM8000002
+           
+             Properties:
+               Duration:    04:00.72
+               Samples:     10626336
+               Frames:      18072
+               Sample peak level: 94.3% (-0.5 dBFS)
+               True peak level:   0.8 dBFS
+               Integrated loudness (R128): -14.6 LUFS
+               Loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+               Extraction speed:  3.4x
+               Elapsed:            70.49 s
+               Kept read began:    2026-11-09T23:17:15Z
+               Pregap LSN:  72455 (duration: 00:01.40)
+               Pregap length: 115 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   72570 (with offset: 72571)
+               End LSN:     90641 (with offset: 90643)
+           
+             EAC CRC32:     E0036697
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  F5426D5F (not found, either a new pressing, or bad rip)
+               Accurip v2:  9EEB8843 (not found, either a new pressing, or bad rip)
+               Accurip 450: 4CCBCF89 (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         5
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM8000002
+               CREATION_TIME:                 2026-11-09T18:17:15-05:00
+               REPLAYGAIN_TRACK_GAIN:         -3.37 dB
+               R128_TRACK_GAIN:               418
+               REPLAYGAIN_TRACK_RANGE:        14.08 dB
+               REPLAYGAIN_TRACK_PEAK:         1.097202
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1538
+               VERIFY:        106
+               OVERLAP:       23
+           
+             File(s):
+               dmfiveearly1/05 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+           Album integrated loudness (R128): -14.6 LUFS
+           Album loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+           Album sample peak level:          -0.5 dBFS
+           Album true peak level:            0.8 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1538
+             VERIFY:        106
+             OVERLAP:       23
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:18:26-05:00
+[  ok  ] L117  expect-exit 0
+           exit was 0
+[ info ] L118  record-accuracy fiveearly1 dmfiveearly1   (0.1s)
+           accuracy fiveearly1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.4 ms or more)
+             from ~/Music/rips/dmfiveearly1/Unknown disc (PNTI).log
+[  ok  ] L119  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 3 -D dmthreeearly1 (consumer) (diagnostics)   (113.9s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreeearly1 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T231826Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreeearly1 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T231826Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  3
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 342.9 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 18 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 267 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 210 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer
+           … [157 characters omitted] …
+           frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 21853 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 3, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 3 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM7900002
+           
+             Properties:
+               Duration:    04:51.28
+               Samples:     12849564
+               Frames:      21853
+               Sample peak level: 97.6% (-0.2 dBFS)
+               True peak level:   0.5 dBFS
+               Integrated loudness (R128): -12.4 LUFS
+               Loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+               Extraction speed:  2.9x
+               Elapsed:            100.22 s
+               Kept read began:    2026-11-09T23:18:40Z
+               Pregap LSN:  28067 (duration: 00:00.00)
+               Pregap length: 0 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   28067 (with offset: 28068)
+               End LSN:     49919 (with offset: 49921)
+           
+             EAC CRC32:     0EE1440E
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  C60AC061 (not found, either a new pressing, or bad rip)
+               Accurip v2:  205F1811 (not found, either a new pressing, or bad rip)
+               Accurip 450: BF62B1DA (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         3
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM7900002
+               CREATION_TIME:                 2026-11-09T18:18:40-05:00
+               REPLAYGAIN_TRACK_GAIN:         -5.62 dB
+               R128_TRACK_GAIN:               -159
+               REPLAYGAIN_TRACK_RANGE:        6.47 dB
+               REPLAYGAIN_TRACK_PEAK:         1.058175
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1874
+               VERIFY:        195
+               FIXUP_ATOM:    22
+               OVERLAP:       44
+           
+             File(s):
+               dmthreeearly1/03 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+           Album integrated loudness (R128): -12.4 LUFS
+           Album loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+           Album sample peak level:          -0.2 dBFS
+           Album true peak level:            0.5 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1874
+             VERIFY:        195
+             FIXUP_ATOM:    22
+             OVERLAP:       44
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:20:20-05:00
+[  ok  ] L120  expect-exit 0
+           exit was 0
+[ info ] L121  record-accuracy threeearly1 dmthreeearly1   (0.1s)
+           accuracy threeearly1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 3: frame 450 only (200 of 200), CRC32 0EE1440E, 2.90x, FIXUP_ATOM 22
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 342.9 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+             from ~/Music/rips/dmthreeearly1/Unknown disc (PNTI).log
+[  ok  ] L122  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 5 -D dmfiveearly2 (consumer) (diagnostics)   (86.3s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfiveearly2 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232021Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfiveearly2 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232021Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  5
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.1 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 18 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 176 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 118 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answe
+           … [159 characters omitted] …
+           rames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 18072 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 5, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 5 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM8000002
+           
+             Properties:
+               Duration:    04:00.72
+               Samples:     10626336
+               Frames:      18072
+               Sample peak level: 94.3% (-0.5 dBFS)
+               True peak level:   0.8 dBFS
+               Integrated loudness (R128): -14.6 LUFS
+               Loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+               Extraction speed:  3.3x
+               Elapsed:            72.54 s
+               Kept read began:    2026-11-09T23:20:34Z
+               Pregap LSN:  72455 (duration: 00:01.40)
+               Pregap length: 115 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   72570 (with offset: 72571)
+               End LSN:     90641 (with offset: 90643)
+           
+             EAC CRC32:     E0036697
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  F5426D5F (not found, either a new pressing, or bad rip)
+               Accurip v2:  9EEB8843 (not found, either a new pressing, or bad rip)
+               Accurip 450: 4CCBCF89 (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         5
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM8000002
+               CREATION_TIME:                 2026-11-09T18:20:34-05:00
+               REPLAYGAIN_TRACK_GAIN:         -3.37 dB
+               R128_TRACK_GAIN:               418
+               REPLAYGAIN_TRACK_RANGE:        14.08 dB
+               REPLAYGAIN_TRACK_PEAK:         1.097202
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1586
+               VERIFY:        108
+               FIXUP_ATOM:    4
+               OVERLAP:       24
+           
+             File(s):
+               dmfiveearly2/05 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+           Album integrated loudness (R128): -14.6 LUFS
+           Album loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+           Album sample peak level:          -0.5 dBFS
+           Album true peak level:            0.8 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1586
+             VERIFY:        108
+             FIXUP_ATOM:    4
+             OVERLAP:       24
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:21:47-05:00
+[  ok  ] L123  expect-exit 0
+           exit was 0
+[ info ] L124  record-accuracy fiveearly2 dmfiveearly2   (0.1s)
+           accuracy fiveearly2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.30x, FIXUP_ATOM 4
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.1 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more)
+             from ~/Music/rips/dmfiveearly2/Unknown disc (PNTI).log
+[  ok  ] L125  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 3 -D dmthreeearly2 (consumer) (diagnostics)   (113.3s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreeearly2 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232147Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreeearly2 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232147Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  3
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 10 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 22 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 176 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 118 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 11: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 21853 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 3, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 3 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM7900002
+           
+             Properties:
+               Duration:    04:51.28
+               Samples:     12849564
+               Frames:      21853
+               Sample peak level: 97.6% (-0.2 dBFS)
+               True peak level:   0.5 dBFS
+               Integrated loudness (R128): -12.4 LUFS
+               Loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+               Extraction speed:  2.9x
+               Elapsed:            99.40 s
+               Kept read began:    2026-11-09T23:22:01Z
+               Pregap LSN:  28067 (duration: 00:00.00)
+               Pregap length: 0 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   28067 (with offset: 28068)
+               End LSN:     49919 (with offset: 49921)
+           
+             EAC CRC32:     59D352DD
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  3C8BDDD2 (accurately ripped, confidence 128)
+               Accurip v2:  96DF8C22 (accurately ripped, confidence 200)
+           
+             Metadata:
+               TRACK:                         3
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM7900002
+               CREATION_TIME:                 2026-11-09T18:22:01-05:00
+               REPLAYGAIN_TRACK_GAIN:         -5.62 dB
+               R128_TRACK_GAIN:               -159
+               REPLAYGAIN_TRACK_RANGE:        6.47 dB
+               REPLAYGAIN_TRACK_PEAK:         1.058175
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1874
+               VERIFY:        134
+               FIXUP_ATOM:    10
+               OVERLAP:       32
+           
+             File(s):
+               dmthreeearly2/03 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+           Album integrated loudness (R128): -12.4 LUFS
+           Album loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+           Album sample peak level:          -0.2 dBFS
+           Album true peak level:            0.5 dBFS
+           Tracks ripped accurately: 1/1
+           
+           Paranoia status counts:
+             READ:          1874
+             VERIFY:        134
+             FIXUP_ATOM:    10
+             OVERLAP:       32
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:23:41-05:00
+[  ok  ] L126  expect-exit 0
+           exit was 0
+[ info ] L127  record-accuracy threeearly2 dmthreeearly2   (0.1s)
+           accuracy threeearly2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 3: verified (200 of 200), CRC32 59D352DD, 2.90x, FIXUP_ATOM 10
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+             from ~/Music/rips/dmthreeearly2/Unknown disc (PNTI).log
+[  ok  ] L128  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 5 -D dmfiveearly3 (consumer) (diagnostics)   (84.1s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfiveearly3 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232341Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfiveearly3 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232341Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  5
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.5 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 18 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 172 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 114 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answe
+           … [119 characters omitted] …
+           re another sector's; 0 had no address; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 18072 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 5, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 5 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM8000002
+           
+             Properties:
+               Duration:    04:00.72
+               Samples:     10626336
+               Frames:      18072
+               Sample peak level: 94.3% (-0.5 dBFS)
+               True peak level:   0.8 dBFS
+               Integrated loudness (R128): -14.6 LUFS
+               Loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+               Extraction speed:  3.4x
+               Elapsed:            70.45 s
+               Kept read began:    2026-11-09T23:23:55Z
+               Pregap LSN:  72455 (duration: 00:01.40)
+               Pregap length: 115 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   72570 (with offset: 72571)
+               End LSN:     90641 (with offset: 90643)
+           
+             EAC CRC32:     E0036697
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  F5426D5F (not found, either a new pressing, or bad rip)
+               Accurip v2:  9EEB8843 (not found, either a new pressing, or bad rip)
+               Accurip 450: 4CCBCF89 (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         5
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM8000002
+               CREATION_TIME:                 2026-11-09T18:23:55-05:00
+               REPLAYGAIN_TRACK_GAIN:         -3.37 dB
+               R128_TRACK_GAIN:               418
+               REPLAYGAIN_TRACK_RANGE:        14.08 dB
+               REPLAYGAIN_TRACK_PEAK:         1.097202
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1538
+               VERIFY:        106
+               OVERLAP:       23
+           
+             File(s):
+               dmfiveearly3/05 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+           Album integrated loudness (R128): -14.6 LUFS
+           Album loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+           Album sample peak level:          -0.5 dBFS
+           Album true peak level:            0.8 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1538
+             VERIFY:        106
+             OVERLAP:       23
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:25:05-05:00
+[  ok  ] L129  expect-exit 0
+           exit was 0
+[ info ] L130  record-accuracy fiveearly3 dmfiveearly3   (0.1s)
+           accuracy fiveearly3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.5 ms or more)
+             from ~/Music/rips/dmfiveearly3/Unknown disc (PNTI).log
+[  ok  ] L131  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 3 -D dmthreeearly3 (consumer) (diagnostics)   (113.1s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreeearly3 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232506Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreeearly3 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232506Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  3
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 10 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 18 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 267 sectors asked; 170 reads failed the CRC; 0 sectors gave no frame passing it; 210 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames ans
+           … [159 characters omitted] …
+            frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 21853 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 3, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 3 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM7900002
+           
+             Properties:
+               Duration:    04:51.28
+               Samples:     12849564
+               Frames:      21853
+               Sample peak level: 97.6% (-0.2 dBFS)
+               True peak level:   0.5 dBFS
+               Integrated loudness (R128): -12.4 LUFS
+               Loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+               Extraction speed:  2.9x
+               Elapsed:            99.23 s
+               Kept read began:    2026-11-09T23:25:20Z
+               Pregap LSN:  28067 (duration: 00:00.00)
+               Pregap length: 0 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   28067 (with offset: 28068)
+               End LSN:     49919 (with offset: 49921)
+           
+             EAC CRC32:     CEC480C2
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  CEB60290 (not found, either a new pressing, or bad rip)
+               Accurip v2:  290D1C11 (not found, either a new pressing, or bad rip)
+               Accurip 450: BF62B1DA (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         3
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM7900002
+               CREATION_TIME:                 2026-11-09T18:25:20-05:00
+               REPLAYGAIN_TRACK_GAIN:         -5.62 dB
+               R128_TRACK_GAIN:               -159
+               REPLAYGAIN_TRACK_RANGE:        6.47 dB
+               REPLAYGAIN_TRACK_PEAK:         1.058175
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1874
+               VERIFY:        155
+               FIXUP_ATOM:    36
+               OVERLAP:       38
+           
+             File(s):
+               dmthreeearly3/03 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+           Album integrated loudness (R128): -12.4 LUFS
+           Album loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+           Album sample peak level:          -0.2 dBFS
+           Album true peak level:            0.5 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1874
+             VERIFY:        155
+             FIXUP_ATOM:    36
+             OVERLAP:       38
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:26:59-05:00
+[  ok  ] L132  expect-exit 0
+           exit was 0
+[ info ] L133  record-accuracy threeearly3 dmthreeearly3   (0.1s)
+           accuracy threeearly3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 3: frame 450 only (200 of 200), CRC32 CEC480C2, 2.90x, FIXUP_ATOM 36
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more)
+             from ~/Music/rips/dmthreeearly3/Unknown disc (PNTI).log
+[  ok  ] L134  snapshot afterearly
+           snapshot 'afterearly':
+             dialog on top: (none)
+             window title : Platterpus 0.7.121
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L138  log --- D. late: track 5 then track 3, three times ---
+           --- D. late: track 5 then track 3, three times ---
+[  ok  ] L139  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 5 -D dmfivelate1 (consumer) (diagnostics)   (84.6s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfivelate1 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232700Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfivelate1 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232700Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  5
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.3 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 10 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 11 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 261 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 203 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answe
+           … [118 characters omitted] …
+           ere another sector's; 0 had no address; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 18072 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 5, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 5 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM8000002
+           
+             Properties:
+               Duration:    04:00.72
+               Samples:     10626336
+               Frames:      18072
+               Sample peak level: 94.3% (-0.5 dBFS)
+               True peak level:   0.8 dBFS
+               Integrated loudness (R128): -14.6 LUFS
+               Loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+               Extraction speed:  3.4x
+               Elapsed:            70.33 s
+               Kept read began:    2026-11-09T23:27:14Z
+               Pregap LSN:  72455 (duration: 00:01.40)
+               Pregap length: 115 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   72570 (with offset: 72571)
+               End LSN:     90641 (with offset: 90643)
+           
+             EAC CRC32:     E0036697
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  F5426D5F (not found, either a new pressing, or bad rip)
+               Accurip v2:  9EEB8843 (not found, either a new pressing, or bad rip)
+               Accurip 450: 4CCBCF89 (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         5
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM8000002
+               CREATION_TIME:                 2026-11-09T18:27:14-05:00
+               REPLAYGAIN_TRACK_GAIN:         -3.37 dB
+               R128_TRACK_GAIN:               418
+               REPLAYGAIN_TRACK_RANGE:        14.08 dB
+               REPLAYGAIN_TRACK_PEAK:         1.097202
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1538
+               VERIFY:        106
+               OVERLAP:       23
+           
+             File(s):
+               dmfivelate1/05 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+           Album integrated loudness (R128): -14.6 LUFS
+           Album loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+           Album sample peak level:          -0.5 dBFS
+           Album true peak level:            0.8 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1538
+             VERIFY:        106
+             OVERLAP:       23
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:28:24-05:00
+[  ok  ] L140  expect-exit 0
+           exit was 0
+[ info ] L141  record-accuracy fivelate1 dmfivelate1   (0.1s)
+           accuracy fivelate1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.3 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+             from ~/Music/rips/dmfivelate1/Unknown disc (PNTI).log
+[  ok  ] L142  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 3 -D dmthreelate1 (consumer) (diagnostics)   (113.7s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreelate1 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232825Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreelate1 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T232825Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  3
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 14 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 260 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 202 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 11: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 21853 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 3, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 3 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM7900002
+           
+             Properties:
+               Duration:    04:51.28
+               Samples:     12849564
+               Frames:      21853
+               Sample peak level: 97.6% (-0.2 dBFS)
+               True peak level:   0.5 dBFS
+               Integrated loudness (R128): -12.4 LUFS
+               Loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+               Extraction speed:  2.9x
+               Elapsed:            99.67 s
+               Kept read began:    2026-11-09T23:28:39Z
+               Pregap LSN:  28067 (duration: 00:00.00)
+               Pregap length: 0 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   28067 (with offset: 28068)
+               End LSN:     49919 (with offset: 49921)
+           
+             EAC CRC32:     59D352DD
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  3C8BDDD2 (accurately ripped, confidence 128)
+               Accurip v2:  96DF8C22 (accurately ripped, confidence 200)
+           
+             Metadata:
+               TRACK:                         3
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM7900002
+               CREATION_TIME:                 2026-11-09T18:28:39-05:00
+               REPLAYGAIN_TRACK_GAIN:         -5.62 dB
+               R128_TRACK_GAIN:               -159
+               REPLAYGAIN_TRACK_RANGE:        6.47 dB
+               REPLAYGAIN_TRACK_PEAK:         1.058175
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1874
+               VERIFY:        155
+               FIXUP_ATOM:    8
+               OVERLAP:       36
+           
+             File(s):
+               dmthreelate1/03 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+           Album integrated loudness (R128): -12.4 LUFS
+           Album loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+           Album sample peak level:          -0.2 dBFS
+           Album true peak level:            0.5 dBFS
+           Tracks ripped accurately: 1/1
+           
+           Paranoia status counts:
+             READ:          1874
+             VERIFY:        155
+             FIXUP_ATOM:    8
+             OVERLAP:       36
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:30:18-05:00
+[  ok  ] L143  expect-exit 0
+           exit was 0
+[ info ] L144  record-accuracy threelate1 dmthreelate1   (0.1s)
+           accuracy threelate1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 3: verified (200 of 200), CRC32 59D352DD, 2.90x, FIXUP_ATOM 8
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+             from ~/Music/rips/dmthreelate1/Unknown disc (PNTI).log
+[  ok  ] L145  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 5 -D dmfivelate2 (consumer) (diagnostics)   (84.3s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfivelate2 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T233019Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfivelate2 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T233019Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  5
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 10 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 90 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 32 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +
+           … [115 characters omitted] …
+           ere another sector's; 0 had no address; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 18072 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 5, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 5 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM8000002
+           
+             Properties:
+               Duration:    04:00.72
+               Samples:     10626336
+               Frames:      18072
+               Sample peak level: 94.3% (-0.5 dBFS)
+               True peak level:   0.8 dBFS
+               Integrated loudness (R128): -14.6 LUFS
+               Loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+               Extraction speed:  3.4x
+               Elapsed:            70.57 s
+               Kept read began:    2026-11-09T23:30:32Z
+               Pregap LSN:  72455 (duration: 00:01.40)
+               Pregap length: 115 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   72570 (with offset: 72571)
+               End LSN:     90641 (with offset: 90643)
+           
+             EAC CRC32:     E0036697
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  F5426D5F (not found, either a new pressing, or bad rip)
+               Accurip v2:  9EEB8843 (not found, either a new pressing, or bad rip)
+               Accurip 450: 4CCBCF89 (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         5
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM8000002
+               CREATION_TIME:                 2026-11-09T18:30:32-05:00
+               REPLAYGAIN_TRACK_GAIN:         -3.37 dB
+               R128_TRACK_GAIN:               418
+               REPLAYGAIN_TRACK_RANGE:        14.08 dB
+               REPLAYGAIN_TRACK_PEAK:         1.097202
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1538
+               VERIFY:        106
+               OVERLAP:       23
+           
+             File(s):
+               dmfivelate2/05 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+           Album integrated loudness (R128): -14.6 LUFS
+           Album loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+           Album sample peak level:          -0.5 dBFS
+           Album true peak level:            0.8 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1538
+             VERIFY:        106
+             OVERLAP:       23
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:31:43-05:00
+[  ok  ] L146  expect-exit 0
+           exit was 0
+[ info ] L147  record-accuracy fivelate2 dmfivelate2   (0.1s)
+           accuracy fivelate2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+             from ~/Music/rips/dmfivelate2/Unknown disc (PNTI).log
+[  ok  ] L148  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 3 -D dmthreelate2 (consumer) (diagnostics)   (110.6s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreelate2 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T233144Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreelate2 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T233144Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  3
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 14 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 173 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 115 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answe
+           … [154 characters omitted] …
+           ss; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 21853 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 3, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 3 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM7900002
+           
+             Properties:
+               Duration:    04:51.28
+               Samples:     12849564
+               Frames:      21853
+               Sample peak level: 97.6% (-0.2 dBFS)
+               True peak level:   0.5 dBFS
+               Integrated loudness (R128): -12.4 LUFS
+               Loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+               Extraction speed:  3.0x
+               Elapsed:            97.13 s
+               Kept read began:    2026-11-09T23:31:57Z
+               Pregap LSN:  28067 (duration: 00:00.00)
+               Pregap length: 0 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   28067 (with offset: 28068)
+               End LSN:     49919 (with offset: 49921)
+           
+             EAC CRC32:     3D8FCF0C
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  1B28C061 (not found, either a new pressing, or bad rip)
+               Accurip v2:  757AAD2D (not found, either a new pressing, or bad rip)
+               Accurip 450: BF62B1DA (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         3
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM7900002
+               CREATION_TIME:                 2026-11-09T18:31:57-05:00
+               REPLAYGAIN_TRACK_GAIN:         -5.62 dB
+               R128_TRACK_GAIN:               -159
+               REPLAYGAIN_TRACK_RANGE:        6.47 dB
+               REPLAYGAIN_TRACK_PEAK:         1.058175
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1826
+               VERIFY:        130
+               FIXUP_ATOM:    8
+               OVERLAP:       29
+           
+             File(s):
+               dmthreelate2/03 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+           Album integrated loudness (R128): -12.4 LUFS
+           Album loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+           Album sample peak level:          -0.2 dBFS
+           Album true peak level:            0.5 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1826
+             VERIFY:        130
+             FIXUP_ATOM:    8
+             OVERLAP:       29
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:33:34-05:00
+[  ok  ] L149  expect-exit 0
+           exit was 0
+[ info ] L150  record-accuracy threelate2 dmthreelate2   (0.1s)
+           accuracy threelate2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x, FIXUP_ATOM 8
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+             from ~/Music/rips/dmthreelate2/Unknown disc (PNTI).log
+[  ok  ] L151  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 5 -D dmfivelate3 (consumer) (diagnostics)   (85.8s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfivelate3 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T233335Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 5 -D dmfivelate3 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T233335Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  5
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 156 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 20 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 267 sectors asked; 337 reads failed the CRC; 0 sectors gave no frame passing it; 210 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer
+           … [117 characters omitted] …
+           ere another sector's; 0 had no address; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 18072 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 5, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 5 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM8000002
+           
+             Properties:
+               Duration:    04:00.72
+               Samples:     10626336
+               Frames:      18072
+               Sample peak level: 94.3% (-0.5 dBFS)
+               True peak level:   0.8 dBFS
+               Integrated loudness (R128): -14.6 LUFS
+               Loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+               Extraction speed:  3.4x
+               Elapsed:            71.39 s
+               Kept read began:    2026-11-09T23:33:49Z
+               Pregap LSN:  72455 (duration: 00:01.40)
+               Pregap length: 115 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   72570 (with offset: 72571)
+               End LSN:     90641 (with offset: 90643)
+           
+             EAC CRC32:     E0036697
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  F5426D5F (not found, either a new pressing, or bad rip)
+               Accurip v2:  9EEB8843 (not found, either a new pressing, or bad rip)
+               Accurip 450: 4CCBCF89 (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         5
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM8000002
+               CREATION_TIME:                 2026-11-09T18:33:49-05:00
+               REPLAYGAIN_TRACK_GAIN:         -3.37 dB
+               R128_TRACK_GAIN:               418
+               REPLAYGAIN_TRACK_RANGE:        14.08 dB
+               REPLAYGAIN_TRACK_PEAK:         1.097202
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1538
+               VERIFY:        106
+               OVERLAP:       23
+           
+             File(s):
+               dmfivelate3/05 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -14.6 LUFS
+               Threshold: -25.4 LUFS
+           
+             Loudness range:
+               LRA:        14.1 LU
+               Threshold: -35.4 LUFS
+               LRA low:   -27.0 LUFS
+               LRA high:  -12.9 LUFS
+           
+             Sample peak:
+               Peak:       -0.5 dBFS
+           
+             True peak:
+               Peak:        0.8 dBFS
+           
+           Album integrated loudness (R128): -14.6 LUFS
+           Album loudness range (R128):      14.1 LU (-27.0 to -12.9 LUFS)
+           Album sample peak level:          -0.5 dBFS
+           Album true peak level:            0.8 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1538
+             VERIFY:        106
+             OVERLAP:       23
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:35:01-05:00
+[  ok  ] L152  expect-exit 0
+           exit was 0
+[ info ] L153  record-accuracy fivelate3 dmfivelate3   (0.1s)
+           accuracy fivelate3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+             from ~/Music/rips/dmfivelate3/Unknown disc (PNTI).log
+[  ok  ] L154  cyanrip -N -U -W -d (device) -s (offset) -o flac -r 5 --cache-probe -l 3 -D dmthreelate3 (consumer) (diagnostics)   (109.1s)
+           argv: ~/.local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreelate3 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T233501Z.json
+           cwd: ~/Music/rips
+           exit: 0
+           Checking /dev/sr0 for cdrom...
+           		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           
+           
+           Opening drive...
+           cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+           Invoked as:     /usr/local/bin/cyanrip -N -U -W -d /dev/sr0 -s 667 -o flac -r 5 --cache-probe -l 3 -D dmthreelate3 --consumer platterpus/0.7.121 --diagnostics cyanrip-diagnostics-20261109T233501Z.json
+           Handshake:      round 38 lap 10 OPEN, verdict OPEN -- released build
+                           (declared at build time, not verified by cyanrip)
+           Consumer:       platterpus/0.7.121
+                           (reported by the caller, not verified by cyanrip)
+           Drive used:     PIONEER  BD-RW   BDR-209D (revision 1.51)
+           System device:  /dev/sr0
+           Device model:   PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+           Offset:         +667 samples
+           Overread:       +2 frames
+           Overread mode:  fill with silence in lead-in/lead-out
+           Speed:          default (drive not asked whether it can change speed)
+           C2 errors:      unsupported by drive
+           Accurate stream: declared supported by drive (capabilities page, not measured)
+           Recordable:     no, CD-ROM (drive's current profile)
+           CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+           Encoder:        libavformat 62.12.102, libavcodec 62.28.102 (8.1.2)
+           Paranoia level: max
+           Retry limit:    5 (per frame, and per whole-track re-read)
+           Cache model:    1200 sectors (drive cache probed separately, see "Cache probe:")
+           HDCD decoding:  disabled
+           Album Art:      none
+           Outputs:        flac
+           Disc tracks:    14
+           Tracks to rip:  3
+           DiscID:         pNtImOkdBm9RMBIalzx0w9cfsYY-
+           CDDB ID:        E20DFE0E
+           Album:          Unknown disc (PNTI)
+           AccurateRip ID: 001d420f-013bb370-e20dfe0e
+           AccurateRip:    found
+           AcoustID:       unsupported (built without libchromaprint)
+           Total time:     59:42.57
+           
+           Cache probe:    no readback cache measured (uncached read 342.9 ms, 3 re-reads after a 1-sector run took 11.2 ms or more)
+           Gaps:
+               160 frame pregap in track 2, merging into track 1
+               158 frame pregap in track 4, merging into track 3
+               115 frame pregap in track 5, merging into track 4
+               105 frame pregap in track 7, merging into track 6
+               85 frame pregap in track 8, merging into track 7
+               pregap of track 9: 94 or 95 frames (undecided)
+               147 frame pregap in track 10, merging into track 9
+               90 frame pregap in track 13, merging into track 12
+               117 frame pregap in track 14, merging into track 13
+           
+           Pregap searches:
+               track 2: 144 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 6 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 3: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 4: 151 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 18 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 5: 38 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 6: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 7: 48 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 8: 70 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 4 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 9: 90 sectors asked; 201 reads failed the CRC; 1 sectors gave no frame passing it; 32 frames were another sector's; 0 had no address; frames answer +0 sectors off; 200-retry pass ran; LSN 145567 to 145567 undecided
+               track 10: 6 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 11: 1 sec
+           … [118 characters omitted] …
+           ss; frames answer +0 sectors off
+               track 12: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 13: 63 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               track 14: 36 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+           
+           Tracks:
+           [platterpus] … 21853 earlier redraw(s) of the line below folded into it …
+           Ripping and encoding track 3, progress - 100.00%, ETA - 0s   
+           Flushing encoders...
+           Track 3 read with no error reported.
+           Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+             Preemphasis:   none detected
+             Disc ISRC:     GBAAM7900002
+           
+             Properties:
+               Duration:    04:51.28
+               Samples:     12849564
+               Frames:      21853
+               Sample peak level: 97.6% (-0.2 dBFS)
+               True peak level:   0.5 dBFS
+               Integrated loudness (R128): -12.4 LUFS
+               Loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+               Extraction speed:  3.0x
+               Elapsed:            97.32 s
+               Kept read began:    2026-11-09T23:35:13Z
+               Pregap LSN:  28067 (duration: 00:00.00)
+               Pregap length: 0 frames
+               Pregap source: sub-channel (not signalled by TOC)
+               Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off
+               Start LSN:   28067 (with offset: 28068)
+               End LSN:     49919 (with offset: 49921)
+           
+             EAC CRC32:     3D8FCF0C
+             Secure re-read:  not attempted
+             Accurip:       disc found in database (max confidence: 200)
+               Accurip v1:  1B28C061 (not found, either a new pressing, or bad rip)
+               Accurip v2:  757AAD2D (not found, either a new pressing, or bad rip)
+               Accurip 450: BF62B1DA (matches Accurip DB, confidence 200, one frame only; whole-track checksums not found)
+           
+             Metadata:
+               TRACK:                         3
+               TRACKTOTAL:                    14
+               MUSICBRAINZ_DISCID:            pNtImOkdBm9RMBIalzx0w9cfsYY-
+               CDDB:                          E20DFE0E
+               MEDIA:                         CD
+               COMMENT:                       cyanrip 0.9.4-rc3+platterpus.30
+               ALBUM:                         Unknown disc (PNTI)
+               TITLE:                         Unknown track
+               ISRC:                          GBAAM7900002
+               CREATION_TIME:                 2026-11-09T18:35:13-05:00
+               REPLAYGAIN_TRACK_GAIN:         -5.62 dB
+               R128_TRACK_GAIN:               -159
+               REPLAYGAIN_TRACK_RANGE:        6.47 dB
+               REPLAYGAIN_TRACK_PEAK:         1.058175
+               REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+           
+             Paranoia status counts:
+               READ:          1826
+               VERIFY:        130
+               FIXUP_ATOM:    8
+               OVERLAP:       29
+           
+             File(s):
+               dmthreelate3/03 - Unknown track.flac
+           
+           Album Loudness Summary:
+           
+             Integrated loudness:
+               I:         -12.4 LUFS
+               Threshold: -22.6 LUFS
+           
+             Loudness range:
+               LRA:         6.5 LU
+               Threshold: -32.6 LUFS
+               LRA low:   -16.7 LUFS
+               LRA high:  -10.2 LUFS
+           
+             Sample peak:
+               Peak:       -0.2 dBFS
+           
+             True peak:
+               Peak:        0.5 dBFS
+           
+           Album integrated loudness (R128): -12.4 LUFS
+           Album loudness range (R128):      6.5 LU (-16.7 to -10.2 LUFS)
+           Album sample peak level:          -0.2 dBFS
+           Album true peak level:            0.5 dBFS
+           Tracks ripped accurately: 0/1
+           Tracks matched on one frame only: 1/1
+           
+           Paranoia status counts:
+             READ:          1826
+             VERIFY:        130
+             FIXUP_ATOM:    8
+             OVERLAP:       29
+           
+           Ripping errors: 0
+           Encoder errors: none; 1 track encoded
+           Read stalls:    none (no read exceeded 10s)
+           Rip completed:  yes (1 of 14 tracks)
+           Ripping finished at 2026-11-09T18:36:50-05:00
+[  ok  ] L155  expect-exit 0
+           exit was 0
+[ info ] L156  record-accuracy threelate3 dmthreelate3   (0.1s)
+           accuracy threelate3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+             track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x, FIXUP_ATOM 8
+             cache probe: no readback cache measured (uncached read 342.9 ms, 3 re-reads after a 1-sector run took 11.2 ms or more)
+             from ~/Music/rips/dmthreelate3/Unknown disc (PNTI).log
+[  ok  ] L157  snapshot afterlate
+           snapshot 'afterlate':
+             dialog on top: (none)
+             window title : Platterpus 0.7.121
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L163  log --- E. early against late, per track ---
+           --- E. early against late, per track ---
+[ info ] L164  compare-conditions 5 fiveearly1 fiveearly2 fiveearly3 fivelate1 fivelate2 fivelate3
+           build platterpus-fork-g5cc1c6b; conditions in the order first named
+           track 5, fiveearly: right in 0 of 3 rip(s) (fiveearly1, fiveearly2, fiveearly3); frame 450 only 3
+             1 distinct CRC32: E0036697 x3
+             per rip: fiveearly1 frame 450 only E0036697; fiveearly2 frame 450 only E0036697 FIXUP_ATOM 4; fiveearly3 frame 450 only E0036697
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.5 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.4 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.1 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more) x1
+           track 5, fivelate: right in 0 of 3 rip(s) (fivelate1, fivelate2, fivelate3); frame 450 only 3
+             1 distinct CRC32: E0036697 x3
+             per rip: fivelate1 frame 450 only E0036697; fivelate2 frame 450 only E0036697; fivelate3 frame 450 only E0036697
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.3 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more) x1
+           track 5: CRC32 read under more than one condition: E0036697
+[ info ] L165  compare-conditions 3 threeearly1 threeearly2 threeearly3 threelate1 threelate2 threelate3
+           build platterpus-fork-g5cc1c6b; conditions in the order first named
+           track 3, threeearly: right in 1 of 3 rip(s) (threeearly1, threeearly2, threeearly3); frame 450 only 2, verified 1
+             3 distinct CRC32: 0EE1440E x1; 59D352DD x1; CEC480C2 x1
+             per rip: threeearly1 frame 450 only 0EE1440E FIXUP_ATOM 22; threeearly2 verified 59D352DD FIXUP_ATOM 10; threeearly3 frame 450 only CEC480C2 FIXUP_ATOM 36
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 342.9 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more) x1
+           track 3, threelate: right in 1 of 3 rip(s) (threelate1, threelate2, threelate3); frame 450 only 2, verified 1
+             2 distinct CRC32: 3D8FCF0C x2; 59D352DD x1
+             per rip: threelate1 verified 59D352DD FIXUP_ATOM 8; threelate2 frame 450 only 3D8FCF0C FIXUP_ATOM 8; threelate3 frame 450 only 3D8FCF0C FIXUP_ATOM 8
+             cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.6 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more) x1; no readback cache measured (uncached read 342.9 ms, 3 re-reads after a 1-sector run took 11.2 ms or more) x1
+           track 3: CRC32 read under more than one condition: 59D352DD
+[  ok  ] L169  log --- F. restoring ---
+           --- F. restoring ---
+[  ok  ] L170  set debug_logging off
+           debug_logging = False
+[  ok  ] L171  expect-drive-offset
+           read offset +667, override on
+[  ok  ] L172  expect-dialog none
+           no dialog, as expected
+[  ok  ] L173  snapshot atend
+           snapshot 'atend':
+             dialog on top: (none)
+             window title : Platterpus 0.7.121
+             drive: PIONEER BD-RW BDR-209D · firmware 1.51 · /dev/sr0
+             musicbrainz: using: The Police — Every Breath You Take: The Classics
+             accuraterip: —
+             read offset: +667 — confirmed — two independent sources agree (high confidence)
+             cache defeat: Yes — cache defeated on re-read (measured, cd-paranoia)
+[  ok  ] L175  log =============================================================
+           =============================================================
+[  ok  ] L176  log DONE. Send the ONE .tar.gz named on the "SEND THIS ONE FILE"
+           DONE. Send the ONE .tar.gz named on the SEND THIS ONE FILE
+[  ok  ] L177  log line in the app log - it is under
+           line in the app log - it is under
+[  ok  ] L178  log ~/.local/share/platterpus/bundles/
+           ~/.local/share/platterpus/bundles/
+[  ok  ] L179  log Say with it which PureRead mode the drive was in, whether the
+           Say with it which PureRead mode the drive was in, whether the
+[  ok  ] L180  log disc had just been put in, and whether it was cleaned first.
+           disc had just been put in, and whether it was cleaned first.
+[  ok  ] L181  log =============================================================
+           =============================================================
+================================================================
+pass=61  fail=0  error=0  skipped=0  blocked=0  unreachable=0  info=15
+RESULT: all checks passed
+================================================================

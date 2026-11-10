@@ -1,0 +1,25 @@
+# delivered-sha256  filed-sha256  path  redaction (tools/redact.py)
+775b2bb20d05034c8f978148bc9ed8d37e8d25b3f6e230a87354a73667598cae  b824d7d01d1f9ce44cae825bc1dfa008322ae11988ab1b09bf02778c926aeef4  session/drivetest.log  73 home path(s), 0 hostname(s), 0 name(s)
+c0a27cad653ab814764b41af5173a0be6f59edc28c8f0c00d88cab540172d247  c0a27cad653ab814764b41af5173a0be6f59edc28c8f0c00d88cab540172d247  session/notes.txt  0 home path(s), 0 hostname(s), 0 name(s)
+5f0a4e55a8c893bc89e9d17a84570fd1afb2f1c5d0b74649e4ced67faba7860a  d8978d539964397100bb142c15b086c9263ac71a905e9440c8730da60cdb3a77  session/preflight.txt  4 home path(s), 0 hostname(s), 0 name(s)
+eef2a190598c16ce2e7c4e690f39568a0420d5fa5db98111bce9b0cfb94addfd  eef2a190598c16ce2e7c4e690f39568a0420d5fa5db98111bce9b0cfb94addfd  session/dumps/before.txt  0 home path(s), 0 hostname(s), 0 name(s)
+b50a5051c5ef7c2b3a75c16a31786612731269a9a2d67fdd6f299a235317cbda  b50a5051c5ef7c2b3a75c16a31786612731269a9a2d67fdd6f299a235317cbda  session/dumps/pioneer-f4.txt  0 home path(s), 0 hostname(s), 0 name(s)
+f1611f5681efc79ec703ca69e5750111a0ae5d10cb189820db8acdbde0621207  a0b6ccbce45bc9146f58ec8d712180c840a9198f89b36c46d60f01691da2f97c  session/dumps/cyanrip-vendor.json  2 home path(s), 0 hostname(s), 0 name(s)
+da9c8aa175c75ef4c22aef0d5a4c05ab02243a9258b144a68768b9cac1dbb86b  71c0d3aa9a46814ac89090cff74f84e7fb7eae92ea64716371f2e8f48ebe2443  session/dumps/cyanrip-vendor.txt  1 home path(s), 0 hostname(s), 0 name(s)
+09f2a0dd10867f5c3abdaeb329c9ba75eb2473b9c7c735f56ad54d6167ecf097  e4360318401c20dc3f0adbf94c9077800c5b2d42020afaee2a020f9e57663fd8  session/scriptruns/20261109T224901+0000/report.json  39 home path(s), 0 hostname(s), 0 name(s)
+83c08869638dd29929bebbf2a77ba11ac12de4ab3fc9580ce8148edf9ac20b18  decea8c8c4ad288c0af8b662e6227be30ad954c1ec02d29bc8ca467dc85c15a7  session/scriptruns/20261109T224901+0000/transcript.txt  39 home path(s), 0 hostname(s), 0 name(s)
+881627a95fe55464533b1efb1578951671b5ed5c6e5776916b9f3ec50cb592c8  01dd03d904bd42a60ba24d8bedc8b9a74db595f068650422550770e72119354d  session/scriptruns/20261109T231636+0000/report.json  39 home path(s), 0 hostname(s), 0 name(s)
+de469bdec921378f25e57a3f8bbc281de2f3993a595ca4de2d4e3a753e9464cb  a06e40056950f54b00fec24ee7efd6675981d13970cdfa3baee5eb2fac230c4f  session/scriptruns/20261109T231636+0000/transcript.txt  39 home path(s), 0 hostname(s), 0 name(s)
+c602aaa8559c5e84823fb56b0af5bfd608460879efe6ff809427bdff1b0b1c44  22ca773bb8f5a25a48b62c553c70afb1956b26d23575c485e4a7c897a3cd9714  session/scriptruns/20261109T233723+0000/report.json  54 home path(s), 0 hostname(s), 0 name(s)
+8a4812a105c0def8fb3de5f7ea6cac587c9ea9c27944da7346026646102e9cf2  54052af9bbd36d2f27b228ca7d310d5461cdf2ea235d7718056967a212d31799  session/scriptruns/20261109T233723+0000/transcript.txt  54 home path(s), 0 hostname(s), 0 name(s)
+5ea568f0c5c1f0f89a0a381e31faa9093da757c0d25ab2858e8be3508ff5543c  5ea568f0c5c1f0f89a0a381e31faa9093da757c0d25ab2858e8be3508ff5543c  session/track9/cdrdao-output.txt  0 home path(s), 0 hostname(s), 0 name(s)
+56cffab779cfbbec230016eda847abd2eefc46a28c2358b92fb4948e7573dd4c  56cffab779cfbbec230016eda847abd2eefc46a28c2358b92fb4948e7573dd4c  session/track9/cdrdao.toc  0 home path(s), 0 hostname(s), 0 name(s)
+ccf7caf10bde7495bd1d0d0aa0613de7bcd1cd9a7eda5e7573d8ae5afd9f5b17  ccf7caf10bde7495bd1d0d0aa0613de7bcd1cd9a7eda5e7573d8ae5afd9f5b17  session/track9/q1.bin  binary, as delivered
+ccf7caf10bde7495bd1d0d0aa0613de7bcd1cd9a7eda5e7573d8ae5afd9f5b17  ccf7caf10bde7495bd1d0d0aa0613de7bcd1cd9a7eda5e7573d8ae5afd9f5b17  session/track9/q2.bin  binary, as delivered
+ccf7caf10bde7495bd1d0d0aa0613de7bcd1cd9a7eda5e7573d8ae5afd9f5b17  ccf7caf10bde7495bd1d0d0aa0613de7bcd1cd9a7eda5e7573d8ae5afd9f5b17  session/track9/q3.bin  binary, as delivered
+dc5deed78c212173f5c8cbf8d1d2fb7c478fb90c7ef0852789a194b0c01fc4cb  dc5deed78c212173f5c8cbf8d1d2fb7c478fb90c7ef0852789a194b0c01fc4cb  session/track9/raw1.bin  binary, as delivered
+dc5deed78c212173f5c8cbf8d1d2fb7c478fb90c7ef0852789a194b0c01fc4cb  dc5deed78c212173f5c8cbf8d1d2fb7c478fb90c7ef0852789a194b0c01fc4cb  session/track9/raw2.bin  binary, as delivered
+dc5deed78c212173f5c8cbf8d1d2fb7c478fb90c7ef0852789a194b0c01fc4cb  dc5deed78c212173f5c8cbf8d1d2fb7c478fb90c7ef0852789a194b0c01fc4cb  session/track9/raw3.bin  binary, as delivered
+21401d317e0bbb41d3c51b7c4a226d03663361f6269bb9c404013729f9eb2fd2  e50dab1e7643eb94f8bce314035b3c739a918552ceaa39b78d178b0352620d7b  session/track9/times.txt  0 home path(s), 0 hostname(s), 12 name(s)
+eba81faacd4e7d1b817c2c4f0fea00288f0a72b7e86973e383e82a2a86fcfa41  eba81faacd4e7d1b817c2c4f0fea00288f0a72b7e86973e383e82a2a86fcfa41  session/phase3-pioneer-utility.png  the owner's screenshot, as delivered
+# not filed: applog/log.txt (the app's whole log since 2026-10-29; the run's own lines are in each bundle's applog), runA/B/C-logs.tar.gz (the same rips' logs, filed here from the bundles), and the owner's Explorer screenshot, which shows the machine's network shares

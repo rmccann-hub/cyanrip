@@ -1,0 +1,61 @@
+# Filed here: each file's hash as filed. A file whose
+# personal details were replaced (tools/redact.py) says so
+# under it, with the bundle's hash of it, so the delivery
+# still verifies against the archive below.
+7603d32b45ee548213fc080dfd0b861818259004bf24870d68d2bfdd9f288bc7  MANIFEST.txt
+cc8923685f59a5086a2fad4b91682cfd6e2cc11573f02ce3e3f3705ab4876c4a  applog/log.txt
+#   redacted: 0 home path(s), 0 hostname(s), 73 name(s); the bundle's bytes were 63895228f7b668b00b099112cb7114915a265d0feecec08a5a1cecc051543e9d
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfiveearly1/Unknown disc (PNTI).cue
+3d172a6898b6e294557be044055f7621d69089604bf13caad65fc9efcc4b3621  scriptrips/dmfiveearly1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfiveearly2/Unknown disc (PNTI).cue
+5fe830f6449aaf0860a63c049e2387be005f7d2e35124dc6af1f64c64f8bedec  scriptrips/dmfiveearly2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfiveearly3/Unknown disc (PNTI).cue
+7e676d52da13b4320bd2706da611b989bb2eb186210e88a402e4c447d95c6720  scriptrips/dmfiveearly3/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfivelate1/Unknown disc (PNTI).cue
+d90abe87fbbab9ed022fd16eebfc7439c9742aea3f6f8802a349d5dd88ca205e  scriptrips/dmfivelate1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfivelate2/Unknown disc (PNTI).cue
+5f724105bcad94159637bd9e370fdfe6216f35cbc9a24b771d0b658db1190158  scriptrips/dmfivelate2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfivelate3/Unknown disc (PNTI).cue
+434005b81209fa85d730790345ff0647f00e0c0ab9e1ccf952a683b63678f950  scriptrips/dmfivelate3/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreeearly1/Unknown disc (PNTI).cue
+de1672b2eef1d0baf9093812cb64f757b4c6120d47c4e37b436120afec8d54ec  scriptrips/dmthreeearly1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreeearly2/Unknown disc (PNTI).cue
+98fe7213eb936a25b3764189ffcee6d65df4f5865a2bfac3e3471a37b4f0c86b  scriptrips/dmthreeearly2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreeearly3/Unknown disc (PNTI).cue
+42835482f521cb77d26008ac3dbb416c0b270688268139000e6a9482bd0d4ae4  scriptrips/dmthreeearly3/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreelate1/Unknown disc (PNTI).cue
+614ff568e2db8c5cca463e206d889044850f6dd6f2c3ce984143b68880a3bc35  scriptrips/dmthreelate1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreelate2/Unknown disc (PNTI).cue
+358bdc2e5077e8931da9cbcc7661c9c92c0926488b3aa6e65d8629b07f9cca69  scriptrips/dmthreelate2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreelate3/Unknown disc (PNTI).cue
+0ebdc792ca51fd79df2aee8dd8f5387be01ac4900d7f52480b06440a05981ede  scriptrips/dmthreelate3/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+01dd03d904bd42a60ba24d8bedc8b9a74db595f068650422550770e72119354d  scriptrun/report.json
+a06e40056950f54b00fec24ee7efd6675981d13970cdfa3baee5eb2fac230c4f  scriptrun/transcript.txt
+
+# NOT filed. This list is the SET DIFFERENCE between the
+# archive's contents and what was written -- never a
+# hand-written note, which is how two files carrying the
+# run's own verdict were dropped from a filing whose own
+# paragraph called the omissions 'a choice'.
+a9969b8fd51381b6aeabf83911fef8c34a2f8a5ddcb2e44032e19a07dfb20a1c  (not filed) applog/log.txt.1
+d619b91c1a7e4c6e10d20720f978a16f22238e60e37c6785727d310d215c697b  (not filed) applog/log.txt.10
+88f6de712a36d259cec1d9c81fa4c8b8af811f00fd98eeca6344be01b20c7aac  (not filed) applog/log.txt.2
+59bb509c11e9cf6e37343444e07c79b60bdaf49369d081ea861376f6268b3a94  (not filed) applog/log.txt.3
+9bb97725cc0ee579fc8f0adff254019185821153043342237a99bb748ed90a6c  (not filed) applog/log.txt.4
+4fcac41fa0cb0a064509e62bd96d67682a87be55063cb935b6558f636d82ebcc  (not filed) applog/log.txt.5
+a2266b57b8875d5e91063a55405ea64820274b41fdcb348553bcea7d477f83e3  (not filed) applog/log.txt.6
+
+# The archive as delivered.
+a89e9fad35863e08abb024ba4b1c70a796449562eec2523a3617be122eeb598a  (not filed) platterpusbundle20261109t2316360000.tar.gz

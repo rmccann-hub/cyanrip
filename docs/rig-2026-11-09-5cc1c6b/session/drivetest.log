@@ -1,0 +1,491 @@
+
+[2026-11-09 22:48:01 UTC] Round 38 drive test, phases 1 and 2. Rips go to ~/Music/rips
+
+[2026-11-09 22:48:01 UTC] Checking versions
+platterpus 0.7.121 (2ca5196)
+cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+cyanrip is the build under test (platterpus.30).
+Rip scripts fetched from claude/session-omka9f: 9800 and 10694 bytes.
+sg3_utils and cdrdao are already in the container.
+
+[2026-11-09 22:48:03 UTC] Preflight
+app: platterpus 0.7.121 (2ca5196)
+cyanrip: cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+kernel: 7.2.15-ogc1.1.fc45.x86_64
+drive:  Vendor identification: PIONEER   Product identification: BD-RW BDR-209D  Product revision level: 1.51 
+rips folder: ~/Music/rips
+/dev/nvme1n1p3  1.8T  1.6T  170G  91% /var/home
+2026-11-09 17:48:04,655 INFO platterpus.app: platterpus 0.7.121 (build 2ca5196) starting; args: --doctor
+2026-11-09 17:48:04,657 INFO platterpus.container_scope: removed INVOCATION_ID from our environment, so a container one of our tools starts gets its own scope instead of belonging to this window (podman keeps its monitor in the caller's unit while the variable is set)
+2026-11-09 17:48:04,709 INFO platterpus.logging_setup: debug logging ENABLED
+2026-11-09 17:48:04,774 INFO platterpus.composition: using cyanrip backend (~/.local/bin/cyanrip)
+2026-11-09 17:48:05,127 INFO platterpus.deps.manager: dependency cyanrip build: the Platterpus fork (ok=True)
+2026-11-09 17:48:09,073 INFO platterpus.adapters.ctdb_client: CTDB lookup: http://db.cuetools.net/lookup2.php?version=3&ctdb=1&fuzzy=0&metadata=none&toc=0%3A19850%3A39850%3A59850
+2026-11-09 17:48:09,179 INFO platterpus.adapters.ctdb_client: CTDB has no entry for this TOC (HTTP 404)
+Platterpus 0.7.121 (build 2ca5196) preflight — backend: cyanrip
+
+[✓] Configuration — backend=cyanrip, output=~/Music/rips
+[✓] Output location — writable (~/Music/rips)
+[✓] Dependencies — all 8 dependencies present
+[✓] cyanrip reachable — cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+[✓] cyanrip build — cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b) — the Platterpus fork
+[✓] Optical drive detected — 1 drive(s) found
+[✓] Read offset — +667 samples (applied as cyanrip's -s)
+[✓] Ripper wrapper exits — The host export exited in 0.37s. The 2026-08-27 hang does not reproduce here.
+[!] Container owner — belongs to tab(5365).scope: if that ends, the container stops and a rip in it is killed
+[✓] Drive access — The optical drive is accessible.
+[✓] MusicBrainz reachable — reachable (1 release(s) for the probe disc id)
+[✓] Cover Art Archive reachable — reachable (HTTP 200)
+[✓] CTDB reachable — reachable (not in DB (expected for the probe))
+
+! Container owner: belongs to tab(5365).scope: if that ends, the container stops and a rip in it is killed
+    monitor pid 8897, unit tab(5365).scope
+    → Close Platterpus and that app or terminal, run `distrobox stop -Y ripping`, then open Platterpus again: the container it starts gets its own scope.
+
+Preflight: 12 OK, 1 warning(s), 0 blocker(s) — ready (review warnings)
+Room: normal, warm or cold? Anything else unusual? (Enter to skip): 
+[2026-11-09 22:48:27 UTC] Reading the drive's own settings (read-only)
+Disc ready.
+
+[2026-11-09 22:49:00 UTC] runA, attempt 1: running the drivemode script (no input needed)
+2026-11-09 17:49:00,597 INFO platterpus.app: platterpus 0.7.121 (build 2ca5196) starting; args: --run-script ~/platterpus-rig/drivetest38/scripts/drivemode.txt
+2026-11-09 17:49:00,599 INFO platterpus.container_scope: removed INVOCATION_ID from our environment, so a container one of our tools starts gets its own scope instead of belonging to this window (podman keeps its monitor in the caller's unit while the variable is set)
+2026-11-09 17:49:00,649 INFO platterpus.logging_setup: debug logging ENABLED
+2026-11-09 17:49:00,775 INFO platterpus.app: Wayland session detected — preferring XWayland (QT_QPA_PLATFORM=xcb;wayland) to avoid the Plasma 6 black-window repaint bug; set QT_QPA_PLATFORM=wayland to force native Wayland.
+2026-11-09 17:49:01,158 INFO platterpus.composition: using cyanrip backend (~/.local/bin/cyanrip)
+2026-11-09 17:49:01,278 INFO platterpus.app: not arming the automatic cyanrip check — this launch runs a script
+2026-11-09 17:49:01,363 INFO platterpus.ui.dialogs.centering: dialog presented: ScriptConsoleDialog ('Run test script') — the app now waits for the user
+2026-11-09 17:49:01,365 INFO platterpus.app: --run-script ~/platterpus-rig/drivetest38/scripts/drivemode.txt -> found: ~/platterpus-rig/drivetest38/scripts/drivemode.txt
+  (this is your copy, not the one packaged inside Platterpus at /tmp/.mount_plattekeGmjp/opt/python3.14/lib/python3.14/site-packages/platterpus/rig_scripts/drivemode.txt — yours wins because it was found first; it is DIFFERENT from it)
+2026-11-09 17:49:01,365 INFO platterpus.app: unattended test script starting (--run-script)
+2026-11-09 17:49:01,368 INFO platterpus.uiscript.runner: ui script run starting: 76 step(s)
+2026-11-09 17:49:01,369 INFO platterpus.uiscript.runner: ui script Run estimate (full): about 47s: no rips, and the steps 47s (measured on the 2026-10-05 Full run, plus this script's waits).
+2026-11-09 17:49:01,369 INFO platterpus.app: termination-signal handlers installed for [<Signals.SIGTERM: 15>, <Signals.SIGINT: 2>]
+2026-11-09 17:49:01,376 INFO platterpus.ui.main_window: drive changed: /dev/sr0
+2026-11-09 17:49:01,386 INFO platterpus.ui.main_window_provision: not making the first-run offers — this launch is running a script, so there is nobody to answer them
+2026-11-09 17:49:01,635 INFO platterpus.container_gate: ripper info probe waits for the first container command of this session to finish, so the container is not started twice at once
+2026-11-09 17:49:01,665 INFO platterpus.deps.manager: dependency cyanrip build: the Platterpus fork (ok=True)
+2026-11-09 17:49:18,167 INFO platterpus.ui.main_window_picker: MusicBrainz returned 4 candidates for disc 'pNtImOkdBm9RMBIalzx0w9cfsYY-' — opening the release picker; the app will WAIT here until the user chooses (this is not a hang)
+2026-11-09 17:49:18,176 INFO platterpus.ui.dialogs.centering: dialog presented: ReleasePickerDialog ('Pick a MusicBrainz release') — the app now waits for the user
+2026-11-09 17:49:18,229 INFO platterpus.ui.dialogs.centering: dialog closed: ReleasePickerDialog ('Pick a MusicBrainz release') — accepted
+2026-11-09 17:49:18,232 INFO platterpus.ui.main_window_picker: release picker: user chose d14a7546-815b-43c6-8af6-35cff6cee1d0 after 0.1s
+2026-11-09 17:49:19,728 WARNING platterpus.uiscript.runner: ui script L108 info: each later cyanrip step may take 1800s before it is killed
+2026-11-09 17:50:44,804 WARNING platterpus.uiscript.runner: ui script L118 info: accuracy fiveearly1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.1 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.5 ms or more)
+  from ~/Music/rips/dmfiveearly1/Unknown disc (PNTI).log
+2026-11-09 17:52:38,439 WARNING platterpus.uiscript.runner: ui script L121 info: accuracy threeearly1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 DBA21A84, 2.90x, FIXUP_ATOM 42
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+  from ~/Music/rips/dmthreeearly1/Unknown disc (PNTI).log
+2026-11-09 17:54:05,028 WARNING platterpus.uiscript.runner: ui script L124 info: accuracy fiveearly2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.30x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more)
+  from ~/Music/rips/dmfiveearly2/Unknown disc (PNTI).log
+2026-11-09 17:55:57,379 WARNING platterpus.uiscript.runner: ui script L127 info: accuracy threeearly2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: verified (200 of 200), CRC32 59D352DD, 3.00x, FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.8 ms or more)
+  from ~/Music/rips/dmthreeearly2/Unknown disc (PNTI).log
+2026-11-09 17:57:22,279 WARNING platterpus.uiscript.runner: ui script L130 info: accuracy fiveearly3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.5 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.1 ms or more)
+  from ~/Music/rips/dmfiveearly3/Unknown disc (PNTI).log
+2026-11-09 17:59:16,929 WARNING platterpus.uiscript.runner: ui script L133 info: accuracy threeearly3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: verified (200 of 200), CRC32 59D352DD, 2.90x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more)
+  from ~/Music/rips/dmthreeearly3/Unknown disc (PNTI).log
+2026-11-09 18:00:41,579 WARNING platterpus.uiscript.runner: ui script L141 info: accuracy fivelate1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.50x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 342.9 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+  from ~/Music/rips/dmfivelate1/Unknown disc (PNTI).log
+2026-11-09 18:02:32,729 WARNING platterpus.uiscript.runner: ui script L144 info: accuracy threelate1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x, FIXUP_ATOM 20
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more)
+  from ~/Music/rips/dmthreelate1/Unknown disc (PNTI).log
+2026-11-09 18:03:56,829 WARNING platterpus.uiscript.runner: ui script L147 info: accuracy fivelate2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.50x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.9 ms or more)
+  from ~/Music/rips/dmfivelate2/Unknown disc (PNTI).log
+2026-11-09 18:05:47,879 WARNING platterpus.uiscript.runner: ui script L150 info: accuracy threelate2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 E45FCE56, 3.00x, FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.4 ms or more)
+  from ~/Music/rips/dmthreelate2/Unknown disc (PNTI).log
+2026-11-09 18:07:15,754 WARNING platterpus.uiscript.runner: ui script L153 info: accuracy fivelate3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.30x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.5 ms or more)
+  from ~/Music/rips/dmfivelate3/Unknown disc (PNTI).log
+2026-11-09 18:09:08,879 WARNING platterpus.uiscript.runner: ui script L156 info: accuracy threelate3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x, FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 59.1 ms or more)
+  from ~/Music/rips/dmthreelate3/Unknown disc (PNTI).log
+2026-11-09 18:09:09,254 WARNING platterpus.uiscript.runner: ui script L164 info: build platterpus-fork-g5cc1c6b; conditions in the order first named
+track 5, fiveearly: right in 0 of 3 rip(s) (fiveearly1, fiveearly2, fiveearly3); frame 450 only 3
+  1 distinct CRC32: E0036697 x3
+  per rip: fiveearly1 frame 450 only E0036697; fiveearly2 frame 450 only E0036697 FIXUP_ATOM 4; fiveearly3 frame 450 only E0036697
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.1 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.5 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.5 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.1 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more) x1
+track 5, fivelate: right in 0 of 3 rip(s) (fivelate1, fivelate2, fivelate3); frame 450 only 3
+  1 distinct CRC32: E0036697 x3
+  per rip: fivelate1 frame 450 only E0036697; fivelate2 frame 450 only E0036697; fivelate3 frame 450 only E0036697 FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 342.9 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.7 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.5 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.9 ms or more) x1
+track 5: CRC32 read under more than one condition: E0036697
+2026-11-09 18:09:09,379 WARNING platterpus.uiscript.runner: ui script L165 info: build platterpus-fork-g5cc1c6b; conditions in the order first named
+track 3, threeearly: right in 2 of 3 rip(s) (threeearly1, threeearly2, threeearly3); frame 450 only 1, verified 2
+  2 distinct CRC32: 59D352DD x2; DBA21A84 x1
+  per rip: threeearly1 frame 450 only DBA21A84 FIXUP_ATOM 42; threeearly2 verified 59D352DD FIXUP_ATOM 8; threeearly3 verified 59D352DD FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.8 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more) x1
+track 3, threelate: right in 0 of 3 rip(s) (threelate1, threelate2, threelate3); frame 450 only 3
+  2 distinct CRC32: 3D8FCF0C x2; E45FCE56 x1
+  per rip: threelate1 frame 450 only 3D8FCF0C FIXUP_ATOM 20; threelate2 frame 450 only E45FCE56 FIXUP_ATOM 8; threelate3 frame 450 only 3D8FCF0C FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 59.1 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.4 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more) x1
+track 3: CRC32 read under more than one condition: none
+2026-11-09 18:09:11,004 INFO platterpus.uiscript.runner: ui script run finished: {'pass': 61, 'fail': 0, 'error': 0, 'skipped': 0, 'blocked': 0, 'unreachable': 0, 'info': 15}
+2026-11-09 18:09:11,006 INFO platterpus.uiscript.runner: ui script run saved to ~/.local/share/platterpus/uiscript/20261109T224901+0000
+2026-11-09 18:09:11,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:12,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:13,464 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:14,433 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:15,433 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:16,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:17,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:18,465 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:19,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:20,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:21,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:22,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:23,465 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:24,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:25,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:26,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:27,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:28,465 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:29,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:30,433 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:31,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:32,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:33,464 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:34,433 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:35,433 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:36,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:37,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:09:38,025 INFO platterpus.evidence_bundle: evidence bundle written: ~/.local/share/platterpus/bundles/platterpusbundle20261109t2249010000.tar.gz (34 file(s) in, 15 excluded, 4971079 bytes)
+2026-11-09 18:09:38,030 INFO platterpus.uiscript.runner: SEND THIS ONE FILE: ~/.local/share/platterpus/bundles/platterpusbundle20261109t2249010000.tar.gz (34 file(s) in, 15 excluded; no audio)
+2026-11-09 18:09:38,439 INFO platterpus.app: unattended run finished and post-rip work has settled — quitting. Nothing is left running, so the terminal will not ask.
+2026-11-09 18:09:38,439 INFO platterpus.ui.main_window: window close requested (from the app itself); tearing down workers (rip active=False)
+2026-11-09 18:09:38,439 INFO platterpus.ui.dialogs.centering: dialog closed: ScriptConsoleDialog ('Run test script') — rejected or closed
+2026-11-09 18:09:38,685 INFO platterpus.exit_work: exit check: nothing holds /dev/sr0; no ripper process is running, as the host sees them — Platterpus left nothing behind
+Report: ~/.local/share/platterpus/uiscript/20261109T224901+0000/report.json
+  "ended_reason": null,
+  "ok": true,
+runA made 12 rip folder(s).
+Packed ~/platterpus-rig/drivetest38/runA-logs.tar.gz
+
+[2026-11-09 23:09:38 UTC] YOUR TURN (about 2 minutes): the disc comes out now
+Wipe it gently from the centre outward with a soft, dry, lint-free cloth.
+Put it back in and close the tray.
+What did you wipe with, and any liquid? Type it, then Enter: Wipe: it was a soft micro cloth, the type used for eyeglasses, not liquid
+Disc ready.
+
+[2026-11-09 23:16:35 UTC] runB, attempt 1: running the drivemode script (no input needed)
+2026-11-09 18:16:35,314 INFO platterpus.app: platterpus 0.7.121 (build 2ca5196) starting; args: --run-script ~/platterpus-rig/drivetest38/scripts/drivemode.txt
+2026-11-09 18:16:35,316 INFO platterpus.container_scope: removed INVOCATION_ID from our environment, so a container one of our tools starts gets its own scope instead of belonging to this window (podman keeps its monitor in the caller's unit while the variable is set)
+2026-11-09 18:16:35,366 INFO platterpus.logging_setup: debug logging disabled
+2026-11-09 18:16:35,480 INFO platterpus.app: Wayland session detected — preferring XWayland (QT_QPA_PLATFORM=xcb;wayland) to avoid the Plasma 6 black-window repaint bug; set QT_QPA_PLATFORM=wayland to force native Wayland.
+2026-11-09 18:16:35,845 INFO platterpus.composition: using cyanrip backend (~/.local/bin/cyanrip)
+2026-11-09 18:16:35,963 INFO platterpus.app: not arming the automatic cyanrip check — this launch runs a script
+2026-11-09 18:16:36,048 INFO platterpus.ui.dialogs.centering: dialog presented: ScriptConsoleDialog ('Run test script') — the app now waits for the user
+2026-11-09 18:16:36,049 INFO platterpus.app: --run-script ~/platterpus-rig/drivetest38/scripts/drivemode.txt -> found: ~/platterpus-rig/drivetest38/scripts/drivemode.txt
+  (this is your copy, not the one packaged inside Platterpus at /tmp/.mount_platteePhMML/opt/python3.14/lib/python3.14/site-packages/platterpus/rig_scripts/drivemode.txt — yours wins because it was found first; it is DIFFERENT from it)
+2026-11-09 18:16:36,050 INFO platterpus.app: unattended test script starting (--run-script)
+2026-11-09 18:16:36,053 INFO platterpus.uiscript.runner: ui script run starting: 76 step(s)
+2026-11-09 18:16:36,053 INFO platterpus.uiscript.runner: ui script Run estimate (full): about 47s: no rips, and the steps 47s (measured on the 2026-10-05 Full run, plus this script's waits).
+2026-11-09 18:16:36,053 INFO platterpus.app: termination-signal handlers installed for [<Signals.SIGTERM: 15>, <Signals.SIGINT: 2>]
+2026-11-09 18:16:36,061 INFO platterpus.ui.main_window: drive changed: /dev/sr0
+2026-11-09 18:16:36,070 INFO platterpus.ui.main_window_provision: not making the first-run offers — this launch is running a script, so there is nobody to answer them
+2026-11-09 18:16:36,319 INFO platterpus.container_gate: ripper info probe waits for the first container command of this session to finish, so the container is not started twice at once
+2026-11-09 18:16:36,337 INFO platterpus.deps.manager: dependency cyanrip build: the Platterpus fork (ok=True)
+2026-11-09 18:16:59,427 INFO platterpus.ui.main_window_picker: MusicBrainz returned 4 candidates for disc 'pNtImOkdBm9RMBIalzx0w9cfsYY-' — opening the release picker; the app will WAIT here until the user chooses (this is not a hang)
+2026-11-09 18:16:59,436 INFO platterpus.ui.dialogs.stacking: dialog 'Pick a MusicBrainz release' stacked above 'Run test script', the window it blocks
+2026-11-09 18:16:59,436 INFO platterpus.ui.dialogs.centering: dialog presented: ReleasePickerDialog ('Pick a MusicBrainz release') — the app now waits for the user
+2026-11-09 18:16:59,439 INFO platterpus.ui.dialogs.centering: dialog closed: ReleasePickerDialog ('Pick a MusicBrainz release') — accepted
+2026-11-09 18:16:59,441 INFO platterpus.ui.main_window_picker: release picker: user chose d14a7546-815b-43c6-8af6-35cff6cee1d0 after 0.0s
+2026-11-09 18:17:00,939 WARNING platterpus.uiscript.runner: ui script L108 info: each later cyanrip step may take 1800s before it is killed
+2026-11-09 18:18:26,554 WARNING platterpus.uiscript.runner: ui script L118 info: accuracy fiveearly1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.4 ms or more)
+  from ~/Music/rips/dmfiveearly1/Unknown disc (PNTI).log
+2026-11-09 18:20:20,938 WARNING platterpus.uiscript.runner: ui script L121 info: accuracy threeearly1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 0EE1440E, 2.90x, FIXUP_ATOM 22
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 342.9 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+  from ~/Music/rips/dmthreeearly1/Unknown disc (PNTI).log
+2026-11-09 18:21:47,729 WARNING platterpus.uiscript.runner: ui script L124 info: accuracy fiveearly2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.30x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.1 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more)
+  from ~/Music/rips/dmfiveearly2/Unknown disc (PNTI).log
+2026-11-09 18:23:41,553 WARNING platterpus.uiscript.runner: ui script L127 info: accuracy threeearly2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: verified (200 of 200), CRC32 59D352DD, 2.90x, FIXUP_ATOM 10
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+  from ~/Music/rips/dmthreeearly2/Unknown disc (PNTI).log
+2026-11-09 18:25:06,179 WARNING platterpus.uiscript.runner: ui script L130 info: accuracy fiveearly3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.5 ms or more)
+  from ~/Music/rips/dmfiveearly3/Unknown disc (PNTI).log
+2026-11-09 18:26:59,754 WARNING platterpus.uiscript.runner: ui script L133 info: accuracy threeearly3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 CEC480C2, 2.90x, FIXUP_ATOM 36
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more)
+  from ~/Music/rips/dmthreeearly3/Unknown disc (PNTI).log
+2026-11-09 18:28:25,079 WARNING platterpus.uiscript.runner: ui script L141 info: accuracy fivelate1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.3 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+  from ~/Music/rips/dmfivelate1/Unknown disc (PNTI).log
+2026-11-09 18:30:19,304 WARNING platterpus.uiscript.runner: ui script L144 info: accuracy threelate1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: verified (200 of 200), CRC32 59D352DD, 2.90x, FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+  from ~/Music/rips/dmthreelate1/Unknown disc (PNTI).log
+2026-11-09 18:31:44,104 WARNING platterpus.uiscript.runner: ui script L147 info: accuracy fivelate2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+  from ~/Music/rips/dmfivelate2/Unknown disc (PNTI).log
+2026-11-09 18:33:35,229 WARNING platterpus.uiscript.runner: ui script L150 info: accuracy threelate2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x, FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+  from ~/Music/rips/dmthreelate2/Unknown disc (PNTI).log
+2026-11-09 18:35:01,529 WARNING platterpus.uiscript.runner: ui script L153 info: accuracy fivelate3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+  from ~/Music/rips/dmfivelate3/Unknown disc (PNTI).log
+2026-11-09 18:36:51,154 WARNING platterpus.uiscript.runner: ui script L156 info: accuracy threelate3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x, FIXUP_ATOM 8
+  cache probe: no readback cache measured (uncached read 342.9 ms, 3 re-reads after a 1-sector run took 11.2 ms or more)
+  from ~/Music/rips/dmthreelate3/Unknown disc (PNTI).log
+2026-11-09 18:36:51,530 WARNING platterpus.uiscript.runner: ui script L164 info: build platterpus-fork-g5cc1c6b; conditions in the order first named
+track 5, fiveearly: right in 0 of 3 rip(s) (fiveearly1, fiveearly2, fiveearly3); frame 450 only 3
+  1 distinct CRC32: E0036697 x3
+  per rip: fiveearly1 frame 450 only E0036697; fiveearly2 frame 450 only E0036697 FIXUP_ATOM 4; fiveearly3 frame 450 only E0036697
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.5 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.4 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.1 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more) x1
+track 5, fivelate: right in 0 of 3 rip(s) (fivelate1, fivelate2, fivelate3); frame 450 only 3
+  1 distinct CRC32: E0036697 x3
+  per rip: fivelate1 frame 450 only E0036697; fivelate2 frame 450 only E0036697; fivelate3 frame 450 only E0036697
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.3 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.7 ms or more) x1
+track 5: CRC32 read under more than one condition: E0036697
+2026-11-09 18:36:51,654 WARNING platterpus.uiscript.runner: ui script L165 info: build platterpus-fork-g5cc1c6b; conditions in the order first named
+track 3, threeearly: right in 1 of 3 rip(s) (threeearly1, threeearly2, threeearly3); frame 450 only 2, verified 1
+  3 distinct CRC32: 0EE1440E x1; 59D352DD x1; CEC480C2 x1
+  per rip: threeearly1 frame 450 only 0EE1440E FIXUP_ATOM 22; threeearly2 verified 59D352DD FIXUP_ATOM 10; threeearly3 frame 450 only CEC480C2 FIXUP_ATOM 36
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 342.9 ms, cached read 1.1 ms, 3 re-reads after a 256-sector run took 58.6 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.8 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more) x1
+track 3, threelate: right in 1 of 3 rip(s) (threelate1, threelate2, threelate3); frame 450 only 2, verified 1
+  2 distinct CRC32: 3D8FCF0C x2; 59D352DD x1
+  per rip: threelate1 verified 59D352DD FIXUP_ATOM 8; threelate2 frame 450 only 3D8FCF0C FIXUP_ATOM 8; threelate3 frame 450 only 3D8FCF0C FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.6 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more) x1; no readback cache measured (uncached read 342.9 ms, 3 re-reads after a 1-sector run took 11.2 ms or more) x1
+track 3: CRC32 read under more than one condition: 59D352DD
+2026-11-09 18:36:53,279 INFO platterpus.uiscript.runner: ui script run finished: {'pass': 61, 'fail': 0, 'error': 0, 'skipped': 0, 'blocked': 0, 'unreachable': 0, 'info': 15}
+2026-11-09 18:36:53,282 INFO platterpus.uiscript.runner: ui script run saved to ~/.local/share/platterpus/uiscript/20261109T231636+0000
+2026-11-09 18:36:53,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:36:54,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:36:55,965 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:36:56,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:36:57,929 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:36:58,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:36:59,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:00,964 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:01,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:02,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:03,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:04,939 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:05,965 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:06,939 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:07,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:08,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:09,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:11,091 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:11,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:12,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:13,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:14,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:15,976 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:16,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:17,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:18,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:19,934 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:20,999 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 18:37:21,003 INFO platterpus.evidence_bundle: evidence bundle written: ~/.local/share/platterpus/bundles/platterpusbundle20261109t2316360000.tar.gz (34 file(s) in, 15 excluded, 4972589 bytes)
+2026-11-09 18:37:21,009 INFO platterpus.uiscript.runner: SEND THIS ONE FILE: ~/.local/share/platterpus/bundles/platterpusbundle20261109t2316360000.tar.gz (34 file(s) in, 15 excluded; no audio)
+2026-11-09 18:37:21,929 INFO platterpus.app: unattended run finished and post-rip work has settled — quitting. Nothing is left running, so the terminal will not ask.
+2026-11-09 18:37:21,929 INFO platterpus.ui.main_window: window close requested (from the app itself); tearing down workers (rip active=False)
+2026-11-09 18:37:21,929 INFO platterpus.ui.dialogs.centering: dialog closed: ScriptConsoleDialog ('Run test script') — rejected or closed
+2026-11-09 18:37:22,188 INFO platterpus.exit_work: exit check: nothing holds /dev/sr0; no ripper process is running, as the host sees them — Platterpus left nothing behind
+Report: ~/.local/share/platterpus/uiscript/20261109T231636+0000/report.json
+  "ended_reason": null,
+  "ok": true,
+runB made 12 rip folder(s).
+Packed ~/platterpus-rig/drivetest38/runB-logs.tar.gz
+
+[2026-11-09 23:37:22 UTC] runC, attempt 1: running the drivespeed script (no input needed)
+2026-11-09 18:37:22,483 INFO platterpus.app: platterpus 0.7.121 (build 2ca5196) starting; args: --run-script ~/platterpus-rig/drivetest38/scripts/drivespeed.txt
+2026-11-09 18:37:22,484 INFO platterpus.container_scope: removed INVOCATION_ID from our environment, so a container one of our tools starts gets its own scope instead of belonging to this window (podman keeps its monitor in the caller's unit while the variable is set)
+2026-11-09 18:37:22,534 INFO platterpus.logging_setup: debug logging disabled
+2026-11-09 18:37:22,663 INFO platterpus.app: Wayland session detected — preferring XWayland (QT_QPA_PLATFORM=xcb;wayland) to avoid the Plasma 6 black-window repaint bug; set QT_QPA_PLATFORM=wayland to force native Wayland.
+2026-11-09 18:37:23,053 INFO platterpus.composition: using cyanrip backend (~/.local/bin/cyanrip)
+2026-11-09 18:37:23,177 INFO platterpus.app: not arming the automatic cyanrip check — this launch runs a script
+2026-11-09 18:37:23,266 INFO platterpus.ui.dialogs.centering: dialog presented: ScriptConsoleDialog ('Run test script') — the app now waits for the user
+2026-11-09 18:37:23,268 INFO platterpus.app: --run-script ~/platterpus-rig/drivetest38/scripts/drivespeed.txt -> found: ~/platterpus-rig/drivetest38/scripts/drivespeed.txt
+  (this is your copy, not the one packaged inside Platterpus at /tmp/.mount_plattePcGgej/opt/python3.14/lib/python3.14/site-packages/platterpus/rig_scripts/drivespeed.txt — yours wins because it was found first; it is DIFFERENT from it)
+2026-11-09 18:37:23,268 INFO platterpus.app: unattended test script starting (--run-script)
+2026-11-09 18:37:23,273 INFO platterpus.uiscript.runner: ui script run starting: 94 step(s)
+2026-11-09 18:37:23,273 INFO platterpus.uiscript.runner: ui script Run estimate (full): about 55s: no rips, and the steps 55s (measured on the 2026-10-05 Full run, plus this script's waits); NOT counted, so add them to it: section(s) F2, never measured on a filed run.
+2026-11-09 18:37:23,274 INFO platterpus.app: termination-signal handlers installed for [<Signals.SIGTERM: 15>, <Signals.SIGINT: 2>]
+2026-11-09 18:37:23,280 INFO platterpus.ui.main_window: drive changed: /dev/sr0
+2026-11-09 18:37:23,291 INFO platterpus.ui.main_window_provision: not making the first-run offers — this launch is running a script, so there is nobody to answer them
+2026-11-09 18:37:23,540 INFO platterpus.container_gate: ripper info probe waits for the first container command of this session to finish, so the container is not started twice at once
+2026-11-09 18:37:23,557 INFO platterpus.deps.manager: dependency cyanrip build: the Platterpus fork (ok=True)
+2026-11-09 18:37:38,938 INFO platterpus.ui.main_window_picker: MusicBrainz returned 4 candidates for disc 'pNtImOkdBm9RMBIalzx0w9cfsYY-' — opening the release picker; the app will WAIT here until the user chooses (this is not a hang)
+2026-11-09 18:37:38,946 INFO platterpus.ui.dialogs.centering: dialog presented: ReleasePickerDialog ('Pick a MusicBrainz release') — the app now waits for the user
+2026-11-09 18:37:39,030 INFO platterpus.ui.dialogs.centering: dialog closed: ReleasePickerDialog ('Pick a MusicBrainz release') — accepted
+2026-11-09 18:37:39,031 INFO platterpus.ui.main_window_picker: release picker: user chose d14a7546-815b-43c6-8af6-35cff6cee1d0 after 0.1s
+2026-11-09 18:37:47,654 WARNING platterpus.uiscript.runner: ui script L99 info: each later cyanrip step may take 1800s before it is killed
+2026-11-09 18:39:39,804 WARNING platterpus.uiscript.runner: ui script L109 info: accuracy nospeed1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.8 ms or more)
+  from ~/Music/rips/dsnospeed1/Unknown disc (PNTI).log
+2026-11-09 18:41:34,679 WARNING platterpus.uiscript.runner: ui script L112 info: accuracy nospeed2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 2.90x, FIXUP_ATOM 10
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.4 ms or more)
+  from ~/Music/rips/dsnospeed2/Unknown disc (PNTI).log
+2026-11-09 18:43:26,378 WARNING platterpus.uiscript.runner: ui script L115 info: accuracy nospeed3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: verified (200 of 200), CRC32 59D352DD, 3.00x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 59.1 ms or more)
+  from ~/Music/rips/dsnospeed3/Unknown disc (PNTI).log
+2026-11-09 18:44:51,754 WARNING platterpus.uiscript.runner: ui script L118 info: accuracy fivenospeed1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.9 ms or more)
+  from ~/Music/rips/dsfivenospeed1/Unknown disc (PNTI).log
+2026-11-09 18:46:17,854 WARNING platterpus.uiscript.runner: ui script L121 info: accuracy fivenospeed2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+  from ~/Music/rips/dsfivenospeed2/Unknown disc (PNTI).log
+2026-11-09 18:48:13,754 WARNING platterpus.uiscript.runner: ui script L129 info: accuracy speedfour1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: verified (200 of 200), CRC32 59D352DD, 2.90x, FIXUP_ATOM 12
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.0 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+  from ~/Music/rips/dsspeedfour1/Unknown disc (PNTI).log
+2026-11-09 18:50:06,404 WARNING platterpus.uiscript.runner: ui script L132 info: accuracy speedfour2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.5 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.4 ms or more)
+  from ~/Music/rips/dsspeedfour2/Unknown disc (PNTI).log
+2026-11-09 18:52:00,529 WARNING platterpus.uiscript.runner: ui script L135 info: accuracy speedfour3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.4 ms or more)
+  from ~/Music/rips/dsspeedfour3/Unknown disc (PNTI).log
+2026-11-09 18:53:27,179 WARNING platterpus.uiscript.runner: ui script L138 info: accuracy fivespeedfour1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 6902BCF0, 3.30x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.2 ms or more)
+  from ~/Music/rips/dsfivespeedfour1/Unknown disc (PNTI).log
+2026-11-09 18:54:52,054 WARNING platterpus.uiscript.runner: ui script L141 info: accuracy fivespeedfour2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.40x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.4 ms or more)
+  from ~/Music/rips/dsfivespeedfour2/Unknown disc (PNTI).log
+2026-11-09 18:56:18,929 WARNING platterpus.uiscript.runner: ui script L144 info: accuracy fivespeedfour3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.30x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.8 ms or more)
+  from ~/Music/rips/dsfivespeedfour3/Unknown disc (PNTI).log
+2026-11-09 18:58:14,804 WARNING platterpus.uiscript.runner: ui script L152 info: accuracy speedtwentyfour1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 52DFDF7D, 2.90x, FIXUP_ATOM 16
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.3 ms or more)
+  from ~/Music/rips/dsspeedtwentyfour1/Unknown disc (PNTI).log
+2026-11-09 19:00:07,179 WARNING platterpus.uiscript.runner: ui script L155 info: accuracy speedtwentyfour2: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+  from ~/Music/rips/dsspeedtwentyfour2/Unknown disc (PNTI).log
+2026-11-09 19:01:59,254 WARNING platterpus.uiscript.runner: ui script L158 info: accuracy speedtwentyfour3: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: frame 450 only (200 of 200), CRC32 3D8FCF0C, 3.00x, FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 382.5 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.6 ms or more)
+  from ~/Music/rips/dsspeedtwentyfour3/Unknown disc (PNTI).log
+2026-11-09 19:03:26,654 WARNING platterpus.uiscript.runner: ui script L161 info: accuracy fivespeedtwentyfour1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.30x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more)
+  from ~/Music/rips/dsfivespeedtwentyfour1/Unknown disc (PNTI).log
+2026-11-09 19:05:21,054 WARNING platterpus.uiscript.runner: ui script L169 info: accuracy nospeedafter1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 3: verified (200 of 200), CRC32 59D352DD, 2.90x, FIXUP_ATOM 40
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.0 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.5 ms or more)
+  from ~/Music/rips/dsnospeedafter1/Unknown disc (PNTI).log
+2026-11-09 19:15:24,629 WARNING platterpus.uiscript.runner: ui script L178 info: accuracy fivemanyreads1: build platterpus-fork-g5cc1c6b; 1 audio track(s)
+  track 5: frame 450 only (200 of 200), CRC32 E0036697, 3.20x, FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.7 ms or more)
+  from ~/Music/rips/dsfivemanyreads1/Unknown disc (PNTI).log
+2026-11-09 19:15:24,879 WARNING platterpus.uiscript.runner: ui script L183 info: build platterpus-fork-g5cc1c6b; conditions in the order first named
+track 3, nospeed: right in 1 of 3 rip(s) (nospeed1, nospeed2, nospeed3); frame 450 only 2, verified 1
+  2 distinct CRC32: 3D8FCF0C x2; 59D352DD x1
+  per rip: nospeed1 frame 450 only 3D8FCF0C; nospeed2 frame 450 only 3D8FCF0C FIXUP_ATOM 10; nospeed3 verified 59D352DD FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.4 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 59.1 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.8 ms or more) x1
+track 3, speedfour: right in 1 of 3 rip(s) (speedfour1, speedfour2, speedfour3); frame 450 only 2, verified 1
+  2 distinct CRC32: 3D8FCF0C x2; 59D352DD x1
+  per rip: speedfour1 verified 59D352DD FIXUP_ATOM 12; speedfour2 frame 450 only 3D8FCF0C; speedfour3 frame 450 only 3D8FCF0C FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.5 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.4 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.4 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.0 ms, cached read 1.6 ms, 3 re-reads after a 256-sector run took 58.3 ms or more) x1
+track 3, speedtwentyfour: right in 0 of 3 rip(s) (speedtwentyfour1, speedtwentyfour2, speedtwentyfour3); frame 450 only 3
+  2 distinct CRC32: 3D8FCF0C x2; 52DFDF7D x1
+  per rip: speedtwentyfour1 frame 450 only 52DFDF7D FIXUP_ATOM 16; speedtwentyfour2 frame 450 only 3D8FCF0C; speedtwentyfour3 frame 450 only 3D8FCF0C FIXUP_ATOM 8
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 343.0 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.3 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.4 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.7 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 382.5 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.6 ms or more) x1
+track 3, nospeedafter: right in 1 of 1 rip(s) (nospeedafter1); verified 1
+  1 distinct CRC32: 59D352DD x1
+  per rip: nospeedafter1 verified 59D352DD FIXUP_ATOM 40
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 363.0 ms, cached read 1.5 ms, 3 re-reads after a 256-sector run took 58.5 ms or more) x1
+track 3: CRC32 read under more than one condition: 3D8FCF0C, 59D352DD
+2026-11-09 19:15:25,004 WARNING platterpus.uiscript.runner: ui script L184 info: build platterpus-fork-g5cc1c6b; conditions in the order first named
+track 5, fivenospeed: right in 0 of 2 rip(s) (fivenospeed1, fivenospeed2); frame 450 only 2
+  1 distinct CRC32: E0036697 x2
+  per rip: fivenospeed1 frame 450 only E0036697; fivenospeed2 frame 450 only E0036697
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.3 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.3 ms, 3 re-reads after a 256-sector run took 58.9 ms or more) x1
+track 5, fivespeedfour: right in 0 of 3 rip(s) (fivespeedfour1, fivespeedfour2, fivespeedfour3); frame 450 only 3
+  2 distinct CRC32: 6902BCF0 x1; E0036697 x2
+  per rip: fivespeedfour1 frame 450 only 6902BCF0 FIXUP_ATOM 4; fivespeedfour2 frame 450 only E0036697; fivespeedfour3 frame 450 only E0036697 FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.7 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.4 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.2 ms or more) x1; 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.9 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.8 ms or more) x1
+track 5, fivespeedtwentyfour: right in 0 of 1 rip(s) (fivespeedtwentyfour1); frame 450 only 1
+  1 distinct CRC32: E0036697 x1
+  per rip: fivespeedtwentyfour1 frame 450 only E0036697 FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.8 ms, cached read 1.2 ms, 3 re-reads after a 256-sector run took 58.2 ms or more) x1
+track 5, fivemanyreads: right in 0 of 1 rip(s) (fivemanyreads1); frame 450 only 1
+  1 distinct CRC32: E0036697 x1
+  per rip: fivemanyreads1 frame 450 only E0036697 FIXUP_ATOM 4
+  cache probe: 128 to 255 sectors (294.0 to 585.7 KiB, uncached read 362.6 ms, cached read 1.4 ms, 3 re-reads after a 256-sector run took 58.7 ms or more) x1
+track 5: CRC32 read under more than one condition: E0036697
+2026-11-09 19:15:26,504 INFO platterpus.uiscript.runner: ui script run finished: {'pass': 74, 'fail': 0, 'error': 0, 'skipped': 0, 'blocked': 0, 'unreachable': 0, 'info': 20}
+2026-11-09 19:15:26,507 INFO platterpus.uiscript.runner: ui script run saved to ~/.local/share/platterpus/uiscript/20261109T233723+0000
+2026-11-09 19:15:27,439 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:28,461 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:29,439 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:30,464 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:31,429 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:32,439 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:33,439 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:34,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:35,460 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:36,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:37,439 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:38,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:39,464 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:40,460 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:41,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:42,439 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:43,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:44,429 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:45,464 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:46,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:47,433 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:48,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:49,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:50,465 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:51,439 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:52,439 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:53,434 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:54,474 INFO platterpus.app: unattended run: the batch is finished but its EVIDENCE BUNDLE is still being written — waiting. That archive is the file the operator sends; quitting now would truncate it.
+2026-11-09 19:15:54,522 INFO platterpus.evidence_bundle: evidence bundle written: ~/.local/share/platterpus/bundles/platterpusbundle20261109t2337230000.tar.gz (44 file(s) in, 20 excluded, 4981840 bytes)
+2026-11-09 19:15:54,523 INFO platterpus.uiscript.runner: SEND THIS ONE FILE: ~/.local/share/platterpus/bundles/platterpusbundle20261109t2337230000.tar.gz (44 file(s) in, 20 excluded; no audio)
+2026-11-09 19:15:55,439 INFO platterpus.app: unattended run finished and post-rip work has settled — quitting. Nothing is left running, so the terminal will not ask.
+2026-11-09 19:15:55,439 INFO platterpus.ui.main_window: window close requested (from the app itself); tearing down workers (rip active=False)
+2026-11-09 19:15:55,439 INFO platterpus.ui.dialogs.centering: dialog closed: ScriptConsoleDialog ('Run test script') — rejected or closed
+2026-11-09 19:15:55,698 INFO platterpus.exit_work: exit check: nothing holds /dev/sr0; no ripper process is running, as the host sees them — Platterpus left nothing behind
+Report: ~/.local/share/platterpus/uiscript/20261109T233723+0000/report.json
+  "ended_reason": null,
+  "ok": true,
+runC made 17 rip folder(s).
+Packed ~/platterpus-rig/drivetest38/runC-logs.tar.gz
+
+[2026-11-10 00:15:55 UTC] Phase 2: track 9 read two ways, then cdrdao (about 10 minutes)

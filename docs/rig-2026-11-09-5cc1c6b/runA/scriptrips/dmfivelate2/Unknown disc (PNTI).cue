@@ -1,0 +1,10 @@
+REM MUSICBRAINZ_ID "pNtImOkdBm9RMBIalzx0w9cfsYY-"
+REM DISCID "E20DFE0E"
+REM MEDIA "CD"
+REM COMMENT "cyanrip 0.9.4-rc3+platterpus.30"
+TITLE "Unknown disc (PNTI)"
+FILE "05 - Unknown track.flac" WAVE
+  TRACK 05 AUDIO
+    TITLE "Unknown track"
+    ISRC GBAAM8000002
+    INDEX 01 00:00:00

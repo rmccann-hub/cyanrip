@@ -1,0 +1,151 @@
+PLATTERPUS EVIDENCE BUNDLE
+==========================
+
+created            2026-11-09T22:49:01+00:00
+platterpus         0.7.121
+build              2ca5196
+rip outcome        test script run
+ripper build wanted platterpus-fork-g5cc1c6b ONLY — the build under review
+album folder       (none)
+
+Raw facts this outcome was derived from (a label can be wrong; these
+are what it was computed from):
+  results                blocked=0, error=0, fail=0, info=15, pass=61, skipped=0, unreachable=0
+  run folder             ~/.local/share/platterpus/uiscript/20261109T224901+0000
+  steps                  76
+
+INCLUDED (34 file(s))
+----------------------------------------
+  applog/log.txt                                          6289944 B
+  scriptrips/dmfiveearly1/Unknown disc (PNTI).cue             284 B
+  scriptrips/dmfiveearly1/Unknown disc (PNTI).log            8156 B
+  scriptrips/dmfiveearly2/Unknown disc (PNTI).cue             284 B
+  scriptrips/dmfiveearly2/Unknown disc (PNTI).log            8173 B
+  scriptrips/dmfiveearly3/Unknown disc (PNTI).cue             284 B
+  scriptrips/dmfiveearly3/Unknown disc (PNTI).log            8133 B
+  scriptrips/dmfivelate1/Unknown disc (PNTI).cue              284 B
+  scriptrips/dmfivelate1/Unknown disc (PNTI).log             8131 B
+  scriptrips/dmfivelate2/Unknown disc (PNTI).cue              284 B
+  scriptrips/dmfivelate2/Unknown disc (PNTI).log             8129 B
+  scriptrips/dmfivelate3/Unknown disc (PNTI).cue              284 B
+  scriptrips/dmfivelate3/Unknown disc (PNTI).log             8171 B
+  scriptrips/dmthreeearly1/Unknown disc (PNTI).cue            284 B
+  scriptrips/dmthreeearly1/Unknown disc (PNTI).log           8173 B
+  scriptrips/dmthreeearly2/Unknown disc (PNTI).cue            284 B
+  scriptrips/dmthreeearly2/Unknown disc (PNTI).log           7998 B
+  scriptrips/dmthreeearly3/Unknown disc (PNTI).cue            284 B
+  scriptrips/dmthreeearly3/Unknown disc (PNTI).log           7998 B
+  scriptrips/dmthreelate1/Unknown disc (PNTI).cue             284 B
+  scriptrips/dmthreelate1/Unknown disc (PNTI).log            8168 B
+  scriptrips/dmthreelate2/Unknown disc (PNTI).cue             284 B
+  scriptrips/dmthreelate2/Unknown disc (PNTI).log            8166 B
+  scriptrips/dmthreelate3/Unknown disc (PNTI).cue             284 B
+  scriptrips/dmthreelate3/Unknown disc (PNTI).log            8168 B
+  scriptrun/report.json                                    148323 B
+  scriptrun/transcript.txt                                 141952 B
+  applog/log.txt.1                                        8352924 B
+  applog/log.txt.10                                       8384957 B
+  applog/log.txt.2                                        8378716 B
+  applog/log.txt.3                                        8386136 B
+  applog/log.txt.4                                        8386839 B
+  applog/log.txt.5                                        8386167 B
+  applog/log.txt.6                                        8387135 B
+
+NOT INCLUDED (15 file(s))
+----------------------------------------
+  Listed so an absence is visible. A bundle quietly missing an artifact
+  looks exactly like a complete one.
+  scriptrips/dmfiveearly1/05 - Unknown track.flac      excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmfiveearly2/05 - Unknown track.flac      excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmfiveearly3/05 - Unknown track.flac      excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmfivelate1/05 - Unknown track.flac       excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmfivelate2/05 - Unknown track.flac       excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmfivelate3/05 - Unknown track.flac       excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmthreeearly1/03 - Unknown track.flac     excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmthreeearly2/03 - Unknown track.flac     excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmthreeearly3/03 - Unknown track.flac     excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmthreelate1/03 - Unknown track.flac      excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmthreelate2/03 - Unknown track.flac      excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  scriptrips/dmthreelate3/03 - Unknown track.flac      excluded: '.flac' is not one of the types this part of the bundle may contain (audio and everything else is refused by allowlist — Critical rule #8)
+  applog/log.txt.7                                     excluded: the bundle's 67108864-byte total budget was already spent (65344065 bytes) and this file is 8387500 bytes. Nothing is dropped silently — this line IS the record that it was.
+  applog/log.txt.8                                     excluded: the bundle's 67108864-byte total budget was already spent (65344065 bytes) and this file is 8385616 bytes. Nothing is dropped silently — this line IS the record that it was.
+  applog/log.txt.9                                     excluded: the bundle's 67108864-byte total budget was already spent (65344065 bytes) and this file is 8388168 bytes. Nothing is dropped silently — this line IS the record that it was.
+
+SHA-256 OF EVERY INCLUDED MEMBER (34), of the bytes written into this archive
+----------------------------------------
+  Each line is in sha256sum's format, so after extracting the archive:
+    grep -E '^\\?[0-9a-f]{64}  ' MANIFEST.txt | sha256sum -c
+  Computed from the bytes written, so a file kept head+tail is hashed
+  with its elision marker. MANIFEST.txt cannot hash itself; the
+  archive's own hash covers it.
+6f5da583fe766adfc18bce00a38279075de2dbd67626befe1d36af6e60533850  applog/log.txt
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfiveearly1/Unknown disc (PNTI).cue
+67ba3bc8638dd641f2f6d20ebd6603e7f0c9693db28c416d08adc888640153f5  scriptrips/dmfiveearly1/Unknown disc (PNTI).log
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfiveearly2/Unknown disc (PNTI).cue
+dad87a73fff6623266a2181e8a4344321d67ddb985582e956700e008a5e0fe08  scriptrips/dmfiveearly2/Unknown disc (PNTI).log
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfiveearly3/Unknown disc (PNTI).cue
+15821015d770d46182567a053dd93b816d0e4cc5a77afc1936bb61939b40cfe5  scriptrips/dmfiveearly3/Unknown disc (PNTI).log
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfivelate1/Unknown disc (PNTI).cue
+a703d2685912af4969beb9e3dc824a85fce5390a8ae4105ff145b662b448fb2f  scriptrips/dmfivelate1/Unknown disc (PNTI).log
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfivelate2/Unknown disc (PNTI).cue
+35a851cafee4149c8badf6f52bfcee23ed84f5dbd36b4b5420647489f0c61d92  scriptrips/dmfivelate2/Unknown disc (PNTI).log
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dmfivelate3/Unknown disc (PNTI).cue
+2f2f9a0c49b504809aa36169f2a6db9189e2dd3b949144e3eed6383f1c087400  scriptrips/dmfivelate3/Unknown disc (PNTI).log
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreeearly1/Unknown disc (PNTI).cue
+86504cb741018d733add0115596d2888c03da7dbbb35ae2fed6039fba4a6c844  scriptrips/dmthreeearly1/Unknown disc (PNTI).log
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreeearly2/Unknown disc (PNTI).cue
+6b80d8c5cf9bad1cb06ad85a4f53e11a9e750b56a447282d2afffab5a68dc2a8  scriptrips/dmthreeearly2/Unknown disc (PNTI).log
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreeearly3/Unknown disc (PNTI).cue
+56512695bef5562ce1ce030124c5590b275197476884834c01c8c695623b17ed  scriptrips/dmthreeearly3/Unknown disc (PNTI).log
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreelate1/Unknown disc (PNTI).cue
+8253f31f8ef924ddfacb1ba4c3f51b6e6e48cc8256d1f4cc190be7130be4fb96  scriptrips/dmthreelate1/Unknown disc (PNTI).log
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreelate2/Unknown disc (PNTI).cue
+03d7e1ea57ef2e76c8226d1b9dd03a627497052e30194e7305a4a124a1decb49  scriptrips/dmthreelate2/Unknown disc (PNTI).log
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dmthreelate3/Unknown disc (PNTI).cue
+fde768c17c3ad9dd9604bf02707ba6b456f29ee2d8540efc88b3ff6794903389  scriptrips/dmthreelate3/Unknown disc (PNTI).log
+e4360318401c20dc3f0adbf94c9077800c5b2d42020afaee2a020f9e57663fd8  scriptrun/report.json
+decea8c8c4ad288c0af8b662e6227be30ad954c1ec02d29bc8ca467dc85c15a7  scriptrun/transcript.txt
+a9969b8fd51381b6aeabf83911fef8c34a2f8a5ddcb2e44032e19a07dfb20a1c  applog/log.txt.1
+d619b91c1a7e4c6e10d20720f978a16f22238e60e37c6785727d310d215c697b  applog/log.txt.10
+88f6de712a36d259cec1d9c81fa4c8b8af811f00fd98eeca6344be01b20c7aac  applog/log.txt.2
+59bb509c11e9cf6e37343444e07c79b60bdaf49369d081ea861376f6268b3a94  applog/log.txt.3
+9bb97725cc0ee579fc8f0adff254019185821153043342237a99bb748ed90a6c  applog/log.txt.4
+4fcac41fa0cb0a064509e62bd96d67682a87be55063cb935b6558f636d82ebcc  applog/log.txt.5
+a2266b57b8875d5e91063a55405ea64820274b41fdcb348553bcea7d477f83e3  applog/log.txt.6
+
+HOME FOLDERS REPLACED WITH ~
+----------------------------------------
+  Home-folder paths (/home/<name>, /var/home/<name>, /Users/<name>,
+  C:\Users\<name>, and this machine's own home) in every text member
+  were replaced with ~ as it was written, so the hashes above are of the
+  replaced bytes. Hostnames (this machine's, and any a uname line or a
+  host: field names) became `host`; the owner's names, from a list kept
+  outside the repository, became `the owner` (TASKS R16).
+  replaced: 7198 home path(s), 0 hostname(s), names not checked (no list) in 10 member(s), and 1 in this manifest's own text
+  applog/log.txt                                       2373 replaced, 0 hostname(s), 0 name(s); sha256 before replacement 19e04175336db13b35170a1626d02ca9a2dda18f56f1582bea84a8b0ebabc3ba
+  scriptrun/report.json                                39 replaced, 0 hostname(s), 0 name(s); sha256 before replacement 09f2a0dd10867f5c3abdaeb329c9ba75eb2473b9c7c735f56ad54d6167ecf097
+  scriptrun/transcript.txt                             39 replaced, 0 hostname(s), 0 name(s); sha256 before replacement 83c08869638dd29929bebbf2a77ba11ac12de4ab3fc9580ce8148edf9ac20b18
+  applog/log.txt.1                                     2966 replaced, 0 hostname(s), 0 name(s); sha256 before replacement 224eea164bac9810880310e79daedf89d852adbda54b3b44f4fbf5de1f131909
+  applog/log.txt.10                                    301 replaced, 0 hostname(s), 0 name(s); sha256 before replacement c96964294f48c21a8263ad92c48d5909eee4bf55047e114eaa2187ee0ed419f8
+  applog/log.txt.2                                     814 replaced, 0 hostname(s), 0 name(s); sha256 before replacement 45d6cd6eb8bea4ee6a7c5f65a55aee9e168840c6e5408db542da852d8f9fe31e
+  applog/log.txt.3                                     203 replaced, 0 hostname(s), 0 name(s); sha256 before replacement d1f2411da959727aa3d52b44e579fd981b669f693ae9e26937e1005fc3111e39
+  applog/log.txt.4                                     144 replaced, 0 hostname(s), 0 name(s); sha256 before replacement aabb1798a5ea8f8f76aa03cc3bd29381634d25ca00a164fbb5447ef6839183ce
+  applog/log.txt.5                                     199 replaced, 0 hostname(s), 0 name(s); sha256 before replacement 57b4355616d1f8fe9c40b20b748acd20e6811b3fca880d4f7a5b6dd81ae7440c
+  applog/log.txt.6                                     120 replaced, 0 hostname(s), 0 name(s); sha256 before replacement e508c078da2a7ebb4632912a51ca537b30a3fb89a54d9ab9964c0974a1a27c6d
+  kept as written: 0 member(s), 0 home path(s) left in them
+
+NO AUDIO IS PRESENT — no file of any audio type can enter this archive.
+Everything here passed an allowlist: .cue .json .log .md .md5 .sha256 .toml .txt
+Plus, from this program's own run folder ONLY: .png
+A name is not a guarantee, so two more checks run on every file: its
+first bytes are compared against 14 audio-container
+signatures, and a symbolic link is judged by the name of the file it
+points at as well as by its own.
+(those are screenshots Platterpus took of its own window. An album folder
+is never judged by that wider rule, because its images are record-label
+artwork.) The per-track CRCs in the logs prove bit-perfection without the
+audio.
+
+Caps in force: 16777216 B per file (head+tail kept, elision
+marked inline), 67108864 B across the whole payload, and the
+newest 20 bundles are kept in the bundles folder.

@@ -1,0 +1,76 @@
+# Filed here: each file's hash as filed. A file whose
+# personal details were replaced (tools/redact.py) says so
+# under it, with the bundle's hash of it, so the delivery
+# still verifies against the archive below.
+eeadf39f6a2be021c7b02ca148797b59a2d80b5d4f8f03d798464f5d45efc2c2  MANIFEST.txt
+bf8886fb80076bb5d54376acbd8648be4abbcf1126412d29d0fb0c457766c18e  applog/log.txt
+#   redacted: 0 home path(s), 0 hostname(s), 73 name(s); the bundle's bytes were 3364b2563acdb6ef01ed3b91ab02fbbf40456d3a074715a38b8492ec74864783
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dsfivemanyreads1/Unknown disc (PNTI).cue
+38f46a29d853c7834b14e1c91ee753ab668f480eda5ce5871b052e9a7cc2cc50  scriptrips/dsfivemanyreads1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dsfivenospeed1/Unknown disc (PNTI).cue
+d8f80063aed638734ff64660fa0f0fb981eaa26f2c5e1c0250a997e70d1093ef  scriptrips/dsfivenospeed1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dsfivenospeed2/Unknown disc (PNTI).cue
+dc68bffc255bcd95efcc6a9f3907ac4addd1fd77274b4939b25f4d3176c75e75  scriptrips/dsfivenospeed2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dsfivespeedfour1/Unknown disc (PNTI).cue
+2aa293fc4f0de8e09788dbe6d559b9c44bf60fe62b3d61d99632ef73f4ed6c0e  scriptrips/dsfivespeedfour1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dsfivespeedfour2/Unknown disc (PNTI).cue
+46354decc037fa96e8ed1b3a5af9cdf4c94d434a1d80075d6c9e135ced978e1a  scriptrips/dsfivespeedfour2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dsfivespeedfour3/Unknown disc (PNTI).cue
+0c31dde260808b5159dc188100eb80c395701f5547ee4385cd3c00ba0063fac3  scriptrips/dsfivespeedfour3/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+545ed6fb3ff77a46ff347fe058660899d010af02cf789df6cf4e9c793ffdebf4  scriptrips/dsfivespeedtwentyfour1/Unknown disc (PNTI).cue
+c1918d4f8801c0f36b69f13e03691ba43f6ef75c8470d0872bd3cad5e7448aa1  scriptrips/dsfivespeedtwentyfour1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsnospeed1/Unknown disc (PNTI).cue
+62b3e5260ef34c5071d047ebda26d90a40cc87c3f6fec1771734468f54cccdc5  scriptrips/dsnospeed1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsnospeed2/Unknown disc (PNTI).cue
+704b66cc53f0f779576718a9ff39e9f956c011d23ae81b850b29cd58754c09f5  scriptrips/dsnospeed2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsnospeed3/Unknown disc (PNTI).cue
+a46f86544cc7dd6b6d26cbd5f41a3f143b606144f5f89f523f4ba79df948d9e0  scriptrips/dsnospeed3/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsnospeedafter1/Unknown disc (PNTI).cue
+684025c552b395d6125659a1d5fa690170ae1ce1527e3077e62358dffc9f8435  scriptrips/dsnospeedafter1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsspeedfour1/Unknown disc (PNTI).cue
+80a94aa0757bb340871dbf4cb082e44bed65425e52ef869d73aba50ce31c6090  scriptrips/dsspeedfour1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsspeedfour2/Unknown disc (PNTI).cue
+bb8fb94bb01c6b14b5cda817c226b446a84bedf44cbf9c6f61fed95a0384383f  scriptrips/dsspeedfour2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsspeedfour3/Unknown disc (PNTI).cue
+a232d381b7709d1a672ef0e4dc130067a65eb879bfad8f8f4beab0f65ee0d2fd  scriptrips/dsspeedfour3/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsspeedtwentyfour1/Unknown disc (PNTI).cue
+44299c73ab10f27f53d28c14aadb82c81b8092a6aa19b3ba9647fdd267dc250e  scriptrips/dsspeedtwentyfour1/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsspeedtwentyfour2/Unknown disc (PNTI).cue
+7be693ac5688ef2b020c89eb7eeeb72d406c25c426aeb7b98cc2cd47954ff6c6  scriptrips/dsspeedtwentyfour2/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+7345acea6c4aa70d5030fbc16987abb88101fcca2e8b9fec30e001356745642d  scriptrips/dsspeedtwentyfour3/Unknown disc (PNTI).cue
+40c9c894105c510b10d896db13f6c7849b746707a3ef574bfff97dfdee3e8395  scriptrips/dsspeedtwentyfour3/Unknown disc (PNTI).log
+#   -Y on the bundle's bytes: verifies
+22ca773bb8f5a25a48b62c553c70afb1956b26d23575c485e4a7c897a3cd9714  scriptrun/report.json
+54052af9bbd36d2f27b228ca7d310d5461cdf2ea235d7718056967a212d31799  scriptrun/transcript.txt
+
+# NOT filed. This list is the SET DIFFERENCE between the
+# archive's contents and what was written -- never a
+# hand-written note, which is how two files carrying the
+# run's own verdict were dropped from a filing whose own
+# paragraph called the omissions 'a choice'.
+a9969b8fd51381b6aeabf83911fef8c34a2f8a5ddcb2e44032e19a07dfb20a1c  (not filed) applog/log.txt.1
+d619b91c1a7e4c6e10d20720f978a16f22238e60e37c6785727d310d215c697b  (not filed) applog/log.txt.10
+88f6de712a36d259cec1d9c81fa4c8b8af811f00fd98eeca6344be01b20c7aac  (not filed) applog/log.txt.2
+59bb509c11e9cf6e37343444e07c79b60bdaf49369d081ea861376f6268b3a94  (not filed) applog/log.txt.3
+9bb97725cc0ee579fc8f0adff254019185821153043342237a99bb748ed90a6c  (not filed) applog/log.txt.4
+4fcac41fa0cb0a064509e62bd96d67682a87be55063cb935b6558f636d82ebcc  (not filed) applog/log.txt.5
+a2266b57b8875d5e91063a55405ea64820274b41fdcb348553bcea7d477f83e3  (not filed) applog/log.txt.6
+
+# The archive as delivered.
+154cac6ed1ff359683b81b69c243e7d5d60b54631d6a359ce951f132c511558e  (not filed) platterpusbundle20261109t2337230000.tar.gz

@@ -1,0 +1,55 @@
+Tue Nov 10 12:15:55 AM UTC 2026
+raw1
+SCSI Status: Good 
+
+Writing 39168 bytes of data to raw1.bin
+
+real	0m0.297s
+user	0m0.001s
+sys	0m0.000s
+q1
+SCSI Status: Good 
+
+Writing 37888 bytes of data to q1.bin
+
+real	0m0.302s
+user	0m0.000s
+sys	0m0.001s
+raw2
+SCSI Status: Good 
+
+Writing 39168 bytes of data to raw2.bin
+
+real	0m0.299s
+user	0m0.000s
+sys	0m0.001s
+q2
+SCSI Status: Good 
+
+Writing 37888 bytes of data to q2.bin
+
+real	0m0.303s
+user	0m0.000s
+sys	0m0.001s
+raw3
+SCSI Status: Good 
+
+Writing 39168 bytes of data to raw3.bin
+
+real	0m0.308s
+user	0m0.000s
+sys	0m0.001s
+q3
+SCSI Status: Good 
+
+Writing 37888 bytes of data to q3.bin
+
+real	0m0.291s
+user	0m0.000s
+sys	0m0.001s
+-rw-r--r--. 1 the owner the owner 37888 Nov  9 19:15 ./q1.bin
+-rw-r--r--. 1 the owner the owner 37888 Nov  9 19:16 ./q2.bin
+-rw-r--r--. 1 the owner the owner 37888 Nov  9 19:16 ./q3.bin
+-rw-r--r--. 1 the owner the owner 39168 Nov  9 19:15 ./raw1.bin
+-rw-r--r--. 1 the owner the owner 39168 Nov  9 19:16 ./raw2.bin
+-rw-r--r--. 1 the owner the owner 39168 Nov  9 19:16 ./raw3.bin

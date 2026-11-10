@@ -1,0 +1,34 @@
+app: platterpus 0.7.121 (2ca5196)
+cyanrip: cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+kernel: 7.2.15-ogc1.1.fc45.x86_64
+drive:  Vendor identification: PIONEER   Product identification: BD-RW BDR-209D  Product revision level: 1.51 
+rips folder: ~/Music/rips
+/dev/nvme1n1p3  1.8T  1.6T  170G  91% /var/home
+2026-11-09 17:48:04,655 INFO platterpus.app: platterpus 0.7.121 (build 2ca5196) starting; args: --doctor
+2026-11-09 17:48:04,657 INFO platterpus.container_scope: removed INVOCATION_ID from our environment, so a container one of our tools starts gets its own scope instead of belonging to this window (podman keeps its monitor in the caller's unit while the variable is set)
+2026-11-09 17:48:04,709 INFO platterpus.logging_setup: debug logging ENABLED
+2026-11-09 17:48:04,774 INFO platterpus.composition: using cyanrip backend (~/.local/bin/cyanrip)
+2026-11-09 17:48:05,127 INFO platterpus.deps.manager: dependency cyanrip build: the Platterpus fork (ok=True)
+2026-11-09 17:48:09,073 INFO platterpus.adapters.ctdb_client: CTDB lookup: http://db.cuetools.net/lookup2.php?version=3&ctdb=1&fuzzy=0&metadata=none&toc=0%3A19850%3A39850%3A59850
+2026-11-09 17:48:09,179 INFO platterpus.adapters.ctdb_client: CTDB has no entry for this TOC (HTTP 404)
+Platterpus 0.7.121 (build 2ca5196) preflight — backend: cyanrip
+
+[✓] Configuration — backend=cyanrip, output=~/Music/rips
+[✓] Output location — writable (~/Music/rips)
+[✓] Dependencies — all 8 dependencies present
+[✓] cyanrip reachable — cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b)
+[✓] cyanrip build — cyanrip 0.9.4-rc3+platterpus.30 (platterpus-fork-g5cc1c6b) — the Platterpus fork
+[✓] Optical drive detected — 1 drive(s) found
+[✓] Read offset — +667 samples (applied as cyanrip's -s)
+[✓] Ripper wrapper exits — The host export exited in 0.37s. The 2026-08-27 hang does not reproduce here.
+[!] Container owner — belongs to tab(5365).scope: if that ends, the container stops and a rip in it is killed
+[✓] Drive access — The optical drive is accessible.
+[✓] MusicBrainz reachable — reachable (1 release(s) for the probe disc id)
+[✓] Cover Art Archive reachable — reachable (HTTP 200)
+[✓] CTDB reachable — reachable (not in DB (expected for the probe))
+
+! Container owner: belongs to tab(5365).scope: if that ends, the container stops and a rip in it is killed
+    monitor pid 8897, unit tab(5365).scope
+    → Close Platterpus and that app or terminal, run `distrobox stop -Y ripping`, then open Platterpus again: the container it starts gets its own scope.
+
+Preflight: 12 OK, 1 warning(s), 0 blocker(s) — ready (review warnings)
