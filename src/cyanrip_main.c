@@ -386,6 +386,18 @@ static void crip_read_declarations(cyanrip_ctx *ctx)
                        ctx->drive_vendor_query->alloc);
 }
 
+/* Name a drive command after the open for the stall watchdog, which prints
+ * `Still waiting: <name> has not returned after Ns` if it blocks. Measured
+ * 2026-11-05 and 2026-11-06 on the BDR-209D: a `-I` read sat silent for 110 s
+ * after `Opening drive...`, and again after `Track 2 info:`, inside commands
+ * no heartbeat covered, so the capture could not say what it waited on. */
+static void crip_wait_begin_track(const char *what, int track)
+{
+    char name[64];
+    snprintf(name, sizeof(name), "%s for track %i", what, track);
+    crip_stall_wait_begin(name);
+}
+
 static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 {
     cyanrip_ctx *ctx = av_mallocz(sizeof(cyanrip_ctx));
@@ -592,9 +604,11 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
             t->data_mode = (format == TRACK_FORMAT_XA || format == TRACK_FORMAT_CDI ||
                             format == TRACK_FORMAT_PSX) ? 2 : 1;
         }
+        crip_wait_begin_track("the pregap search", t->number);
         t->pregap_lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number,
                                                      &t->pregap_source,
                                                      &t->pregap_stats);
+        crip_stall_wait_end();
         t->pregap_lsn_second = CDIO_INVALID_LSN;
         t->dropped_pregap_start = CDIO_INVALID_LSN;
         t->merged_pregap_end = CDIO_INVALID_LSN;
@@ -678,7 +692,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         if (t->track_is_data || t->pregap_source != CYANRIP_PREGAP_SRC_SUBCHANNEL)
             continue;
         enum cyanrip_pregap_source source;
+        crip_wait_begin_track("the second pregap search", t->number);
         lsn_t lsn = cyanrip_get_track_pregap_lsn(ctx->cdio, t->number, &source, NULL);
+        crip_stall_wait_end();
         if (source == CYANRIP_PREGAP_SRC_SUBCHANNEL)
             t->pregap_lsn_second = lsn;
     }
@@ -775,7 +791,9 @@ static void crip_fill_mcn(cyanrip_ctx *ctx)
 {
     /* Get disc MCN */
     if (ctx->rcap & CDIO_DRIVE_CAP_READ_MCN) {
+        crip_stall_wait_begin("the MCN read");
         const char *mcn = cdio_get_mcn(ctx->cdio);
+        crip_stall_wait_end();
         if (mcn) {
             if (crip_code_is_set(mcn))
                 av_dict_set(&ctx->meta, "disc_mcn", mcn, 0);
@@ -1122,7 +1140,9 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
             } else if (!(ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC)) {
                 t->isrc_disc_reason = "the driver does not report reading ISRC";
             } else {
+                crip_wait_begin_track("the ISRC read", t->number);
                 const char *isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
+                crip_stall_wait_end();
                 /* None from the drive's READ SUB-CHANNEL, as the BDR-209D
                  * answered for every track of a disc whose ISRCs EAC's cue
                  * gives (the claude-code-skills session's known fixes of
@@ -1144,10 +1164,14 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                          * every hundred. */
                         lsn_t first = start + 75 <= last ? start + 75 : start;
                         int count = last - first + 1 < 200 ? last - first + 1 : 200;
+                        crip_wait_begin_track("the ISRC search of the Q frames", t->number);
                         cyanrip_read_isrc_subq(ctx->cdio, first, count, &scan);
+                        crip_stall_wait_end();
                         scanned = 1;
                         if (!scan.found) {
+                            crip_wait_begin_track("the second ISRC read", t->number);
                             isrc_str = cdio_get_track_isrc(ctx->cdio, t->cd_track_number);
+                            crip_stall_wait_end();
                             again = 1;
                         }
                     }
@@ -3860,7 +3884,9 @@ static int cyanrip_run(int argc, char **argv)
      * fields are kept verbatim for the log either way; crip_cdtext_to_meta()
      * only fills tags nothing else has claimed, so MusicBrainz below and the
      * user's -a/-t further down still win. */
+    crip_stall_wait_begin("the CD-TEXT read");
     crip_fill_cdtext(ctx);
+    crip_stall_wait_end();
     crip_cdtext_to_meta(ctx);
 
     /* A disc that named itself in CD-TEXT does not get the "Unknown disc"
