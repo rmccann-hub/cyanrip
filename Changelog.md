@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**The 2026-11-09 drive test filed and read**: phases 1 to 3 on `.30` through
+Platterpus's 0.7.121 and their runner, filed on our evidence branch at
+`198ee58` as `docs/rig-2026-11-09-5cc1c6b`. Track 5 never verifies (18 of 19
+reads `E0036697`); track 3 verifies 7 of 22, ten of its wrong reads one
+value; wiping the disc and asking 4x or 24x changed neither, every rip
+reading at 2.9x to 3.5x; and Pioneer's Drive Utility does not reach the
+BDR-209D, so no PureRead setting can be changed on this rig.
+
 **The golden reference and the interrupted sample regenerated for our round 38
 lap 14**: their `Handshake:` line now names lap 14, and nothing else they print
 changed but the build tag, timings, timestamps and where the sample's signal
