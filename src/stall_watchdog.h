@@ -38,8 +38,8 @@ void crip_stall_read_begin(int track, lsn_t lsn);
 void crip_stall_read_end(void);
 
 /* Bracket one blocking call that is NOT a read -- `what` is a noun phrase the
- * heartbeat prints verbatim ("the drive open"), so it must be a literal that
- * outlives the call. Deliberately separate from the read bracket: it prints
+ * heartbeat prints verbatim ("the drive open", "the ISRC read for track 2");
+ * it is copied, up to 95 bytes, so a caller's buffer may change after the call. Deliberately separate from the read bracket: it prints
  * different words and feeds no counter, because `Read stalls:` is a
  * measurement of reads and must not quietly absorb something else. */
 void crip_stall_wait_begin(const char *what);
