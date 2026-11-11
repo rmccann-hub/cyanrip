@@ -271,6 +271,12 @@ def case_restored(base, home, stub, bin_):
     run(base, home, stub, bin_, ["4"], script=script, extra={"F4_ALT": "1"})
     check("FAILED: restored: the drive's settings bytes DIFFER from the first read; compare pioneer-f4.txt with pioneer-f4-restored-2.txt" in timeline(home),
           "stage 4: settings not put back are a failure, naming both files")
+    p = run(base, home, stub, bin_, ["c2"], script=script)
+    tl = timeline(home)
+    check(p.returncode == 0 and tl.count("C2 probe: t5-c2-1.bin: frame 13 (3 bits)") >= 2,
+          "c2 alone runs the probe again, as round 38 lap 16 S9's fallback asks")
+    c2_sends = list((home / "platterpus-rig/drivetest-r38/SEND").glob("drivetest-r38-c2-*.tar.gz"))
+    check(len(c2_sends) == 1, f"c2 alone makes its own upload file ({len(c2_sends)})")
 
 
 def case_empty_runs(base):
