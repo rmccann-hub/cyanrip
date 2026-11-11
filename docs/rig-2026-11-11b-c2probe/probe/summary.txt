@@ -1,0 +1,36 @@
+one read alone: exit 137 after 305s
+two reads 2.4 s apart: A exit 124 after 300s; B exit 137 after 305s (124 or 137 = killed at 300s)
+pairA.strace: last call: 494292 18:10:24.974981 ioctl(3, CDROM_SEND_PACKET, 0x7ffc37fd3dc0
+pairB.strace: last call: 494408 18:10:24.709087 ioctl(3, CDROM_SEND_PACKET, 0x7ffd026287b0
+a probe read was still running after both ended; stopped it
+control-c2-1.bin: no C2 bit set in 26 frames
+control-c2-2.bin: no C2 bit set in 26 frames
+control-c2-3.bin: no C2 bit set in 26 frames
+t3a-c2-1.bin: no C2 bit set in 26 frames
+t3a-c2-2.bin: no C2 bit set in 26 frames
+t3a-c2-3.bin: no C2 bit set in 26 frames
+t3b-c2-1.bin: no C2 bit set in 26 frames
+t3b-c2-2.bin: no C2 bit set in 26 frames
+t3b-c2-3.bin: no C2 bit set in 26 frames
+t3c-c2-1.bin: no C2 bit set in 26 frames
+t3c-c2-2.bin: no C2 bit set in 26 frames
+t3c-c2-3.bin: no C2 bit set in 26 frames
+t5-c2-1.bin: frame 14 (3 bits)
+t5-c2-2.bin: frame 14 (3 bits)
+t5-c2-3.bin: frame 14 (3 bits)
+control-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+control-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+control-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3a-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3a-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3a-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3b-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3b-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3b-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3c-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3c-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3c-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t5-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t5-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t5-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t5-c2b-1.bin: 68848 bytes read, 26 frame(s); kept 7696 bytes, audio dropped

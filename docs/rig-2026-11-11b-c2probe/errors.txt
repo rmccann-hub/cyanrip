@@ -1,0 +1,28 @@
+
+===== 2026-11-11 22:59:44 UTC: probe: the single disc read failed (going on) =====
+command: cyanrip -I -N -d /dev/sr0; exit 137; output in probe/solo.txt
+Checking /dev/sr0 for cdrom...
+		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+
+
+Opening drive...
+
+===== 2026-11-11 23:05:02 UTC: probe: two reads at once did not both finish (kept; going on) =====
+A exit 124 after 300s, B exit 137 after 305s
+--- A's last lines
+the second pregap search for track 4 returned after 35s
+
+Still waiting: the second pregap search for track 7 has not returned after 10s
+the second pregap search for track 7 returned after 14s
+
+Still waiting: the second pregap search for track 8 has not returned after 10s
+
+Still waiting: the second pregap search for track 8 has not returned after 20s
+the second pregap search for track 8 returned after 22s
+
+Still waiting: the second pregap search for track 9 has not returned after 10s
+the second pregap search for track 9 returned after 16s
+
+Still waiting: the second pregap search for track 13 has not returned after 10s
+the second pregap search for track 13 returned after 17s
+--- B's last lines

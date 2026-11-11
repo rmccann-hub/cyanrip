@@ -1,0 +1,59 @@
+Checking /dev/sr0 for cdrom...
+		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+
+
+Opening drive...
+
+Still waiting: the pregap search for track 4 has not returned after 10s
+
+Still waiting: the pregap search for track 4 has not returned after 20s
+the pregap search for track 4 returned after 25s
+
+Still waiting: the pregap search for track 7 has not returned after 10s
+the pregap search for track 7 returned after 12s
+
+Still waiting: the pregap search for track 8 has not returned after 10s
+the pregap search for track 8 returned after 16s
+
+Still waiting: the pregap search for track 9 has not returned after 10s
+
+Still waiting: the pregap search for track 9 has not returned after 20s
+
+Still waiting: the pregap search for track 9 has not returned after 30s
+the pregap search for track 9 returned after 32s
+
+Still waiting: the pregap search for track 13 has not returned after 10s
+the pregap search for track 13 returned after 15s
+
+Still waiting: the pregap search for track 14 has not returned after 10s
+the pregap search for track 14 returned after 11s
+
+Still waiting: the second pregap search for track 2 has not returned after 10s
+
+Still waiting: the second pregap search for track 2 has not returned after 20s
+
+Still waiting: the second pregap search for track 2 has not returned after 30s
+
+Still waiting: the second pregap search for track 2 has not returned after 40s
+the second pregap search for track 2 returned after 48s
+
+Still waiting: the second pregap search for track 4 has not returned after 10s
+
+Still waiting: the second pregap search for track 4 has not returned after 20s
+
+Still waiting: the second pregap search for track 4 has not returned after 30s
+the second pregap search for track 4 returned after 35s
+
+Still waiting: the second pregap search for track 7 has not returned after 10s
+the second pregap search for track 7 returned after 14s
+
+Still waiting: the second pregap search for track 8 has not returned after 10s
+
+Still waiting: the second pregap search for track 8 has not returned after 20s
+the second pregap search for track 8 returned after 22s
+
+Still waiting: the second pregap search for track 9 has not returned after 10s
+the second pregap search for track 9 returned after 16s
+
+Still waiting: the second pregap search for track 13 has not returned after 10s
+the second pregap search for track 13 returned after 17s

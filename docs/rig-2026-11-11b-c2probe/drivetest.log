@@ -1,0 +1,110 @@
+
+[2026-11-11 22:54:27 UTC] Installing the read-only tools in the container (it may ask for your password)
+Updating and loading repositories:
+ Fedora 44 - x86_64 - Updates           100% |  65.4 KiB/s |  20.2 KiB |  00m00s
+Repositories loaded.
+Package "sg3_utils-1.48-10.fc44.x86_64" is already installed.
+Package "cdrdao-1.2.6-1.fc44.x86_64" is already installed.
+
+Package Arch   Version      Repository      Size
+Installing:
+ strace x86_64 0:7.3-1.fc44 updates      2.8 MiB
+
+Transaction Summary:
+ Installing:         1 package
+
+Total size of inbound packages is 2 MiB. Need to download 2 MiB.
+After this operation, 3 MiB extra will be used (install 3 MiB, remove 0 B).
+[1/1] strace-0:7.3-1.fc44.x86_64        100% |   3.9 MiB/s |   1.6 MiB |  00m00s
+--------------------------------------------------------------------------------
+[1/1] Total                             100% |   3.9 MiB/s |   1.6 MiB |  00m00s
+Running transaction
+[1/3] Verify package files              100% | 250.0   B/s |   1.0   B |  00m00s
+[2/3] Prepare transaction               100% |  16.0   B/s |   1.0   B |  00m00s
+[3/3] Installing strace-0:7.3-1.fc44.x8 100% |   6.1 MiB/s |   2.8 MiB |  00m00s
+Complete!
+Disc ready.
+
+[2026-11-11 22:54:39 UTC] Probe 1 of 3: one disc read alone
+~/platterpus-rig/drivetest.sh: line 675: 491210 Killed                     timeout -k 5 "$PROBE_SECS" "$HOME/.local/bin/cyanrip" -I -N -d "$DEVICE" > "$c/solo.txt" 2>&1
+one read alone: exit 137 after 305s
+
+===== 2026-11-11 22:59:44 UTC: probe: the single disc read failed (going on) =====
+command: cyanrip -I -N -d /dev/sr0; exit 137; output in probe/solo.txt
+Checking /dev/sr0 for cdrom...
+		CDROM sensed: PIONEER  BD-RW   BDR-209D 1.51 SCSI CD-ROM
+
+
+Opening drive...
+Disc ready.
+
+[2026-11-11 22:59:54 UTC] Probe 2 of 3: two disc reads, 2.4 s apart
+~/platterpus-rig/drivetest.sh: line 675: 492972 Killed                     timeout -k 5 "$PROBE_SECS" "$HOME/.local/bin/cyanrip" -I -N -d "$DEVICE" > "$c/pairB.txt" 2>&1
+two reads 2.4 s apart: A exit 124 after 300s; B exit 137 after 305s (124 or 137 = killed at 300s)
+
+===== 2026-11-11 23:05:02 UTC: probe: two reads at once did not both finish (kept; going on) =====
+A exit 124 after 300s, B exit 137 after 305s
+--- A's last lines
+the second pregap search for track 4 returned after 35s
+
+Still waiting: the second pregap search for track 7 has not returned after 10s
+the second pregap search for track 7 returned after 14s
+
+Still waiting: the second pregap search for track 8 has not returned after 10s
+
+Still waiting: the second pregap search for track 8 has not returned after 20s
+the second pregap search for track 8 returned after 22s
+
+Still waiting: the second pregap search for track 9 has not returned after 10s
+the second pregap search for track 9 returned after 16s
+
+Still waiting: the second pregap search for track 13 has not returned after 10s
+the second pregap search for track 13 returned after 17s
+--- B's last lines
+
+[2026-11-11 23:05:02 UTC] Probe 2b: a read stalled; the pair again under strace
+A cyanrip from an earlier run is still running; waiting for it to finish (up to 10 minutes)...
+Disc ready.
+pairA.strace: last call: 494292 18:10:24.974981 ioctl(3, CDROM_SEND_PACKET, 0x7ffc37fd3dc0
+pairB.strace: last call: 494408 18:10:24.709087 ioctl(3, CDROM_SEND_PACKET, 0x7ffd026287b0
+a probe read was still running after both ended; stopped it
+A cyanrip from an earlier run is still running; waiting for it to finish (up to 10 minutes)...
+Disc ready.
+
+[2026-11-11 23:10:47 UTC] Probe 3 of 3: the C2 probe
+one read alone: exit 137 after 305s
+two reads 2.4 s apart: A exit 124 after 300s; B exit 137 after 305s (124 or 137 = killed at 300s)
+pairA.strace: last call: 494292 18:10:24.974981 ioctl(3, CDROM_SEND_PACKET, 0x7ffc37fd3dc0
+pairB.strace: last call: 494408 18:10:24.709087 ioctl(3, CDROM_SEND_PACKET, 0x7ffd026287b0
+a probe read was still running after both ended; stopped it
+control-c2-1.bin: no C2 bit set in 26 frames
+control-c2-2.bin: no C2 bit set in 26 frames
+control-c2-3.bin: no C2 bit set in 26 frames
+t3a-c2-1.bin: no C2 bit set in 26 frames
+t3a-c2-2.bin: no C2 bit set in 26 frames
+t3a-c2-3.bin: no C2 bit set in 26 frames
+t3b-c2-1.bin: no C2 bit set in 26 frames
+t3b-c2-2.bin: no C2 bit set in 26 frames
+t3b-c2-3.bin: no C2 bit set in 26 frames
+t3c-c2-1.bin: no C2 bit set in 26 frames
+t3c-c2-2.bin: no C2 bit set in 26 frames
+t3c-c2-3.bin: no C2 bit set in 26 frames
+t5-c2-1.bin: frame 14 (3 bits)
+t5-c2-2.bin: frame 14 (3 bits)
+t5-c2-3.bin: frame 14 (3 bits)
+control-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+control-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+control-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3a-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3a-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3a-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3b-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3b-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3b-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3c-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3c-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t3c-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t5-c2-1.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t5-c2-2.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t5-c2-3.bin: 68796 bytes read, 26 frame(s); kept 7644 bytes, audio dropped
+t5-c2b-1.bin: 68848 bytes read, 26 frame(s); kept 7696 bytes, audio dropped
