@@ -23,6 +23,8 @@
 # the same command again after a stop: finished steps are skipped. Phase 4,
 # the Full acceptance run, stays the app's menu.
 #
+#   c2          the C2 probe alone, once, with its upload file (round 38 lap
+#               16 S9: until Platterpus's runner carries it)
 #   note TEXT   add a line to the timeline (the cloth, the room, anything)
 #   redo STEP   run a finished step again next time
 #   send        make an upload file from whatever exists now
@@ -92,7 +94,7 @@ STD_QUERIES='sg_inq /dev/sr0; sg_get_config -q /dev/sr0; sg_get_config -q -H /de
 STAGE="${1:-}"
 STAGE_START_EPOCH=$(date +%s)
 case "$STAGE" in
-    1|3|4|note|redo|send) mkdir -p "$ROOT" "$OUT" "$READS" "$RUNS" "$SCRIPTS" ;;
+    1|3|4|c2|note|redo|send) mkdir -p "$ROOT" "$OUT" "$READS" "$RUNS" "$SCRIPTS" ;;
 esac
 
 # ---- the timeline and the failures ------------------------------------------------
@@ -683,6 +685,12 @@ case "$STAGE" in
     if [ -e "$ROOT/.phase3-start" ]; then since="$ROOT/.phase3-start"; else since="$(first_f4)"; fi
     finish stage4 "$since"
     say "Stage 4 done. Phase 4 is the app's menu: Tools, Advanced, Run acceptance test, Full."
+    ;;
+c2)
+    preflight
+    marker="$ROOT/.c2-start"; touch "$marker"
+    do_c2 || failed "C2 probe" "not run: the drive was not ready"
+    finish c2 "$marker"
     ;;
 note)
     shift
