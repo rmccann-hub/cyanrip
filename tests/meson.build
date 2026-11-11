@@ -460,16 +460,6 @@ test('Audio checksum mirror', python,
 ## describe no disc. New code is not safer than old code.
 test('Rig tools', python, args: [ files('rigcheck.py') ])
 
-## tools/rig-drivetest.sh runs round 38's drive test on the owner's rig, where
-## nothing of ours watches it (round 38 lap 14). Every path it takes there is
-## taken here first, against stand-ins for distrobox, the drive tools, cyanrip
-## and the app: Run A's two reads at once of 2026-11-05, a read that outlives
-## its kill, the first sitting's files moved into one folder, runs that rip
-## nothing, the app left open, and PureRead not put back. Each stand-in carries
-## a name made for the run, so nothing here can stop another test's ripper.
-test('Rig drive test runner', python, args: [ files('rig_drivetest.py') ],
-     timeout: 300)
-
 ## Golden reference freshness
 ## ==========================
 ## The reference Platterpus checks its parser against carries the version and
@@ -585,17 +575,6 @@ test('Argv table in seam-commands.md', python,
 ## IDENTITY OVER TIME. Adopted from Platterpus's guard, which is better than
 ## anything we had.
 test('Sent laps are immutable', python, args: [ files('sent_laps.py') ])
-
-## tools/round16-accept.py grades a rig run against round 16's close condition,
-## and it was written BEFORE the run so its git history proves the criteria were
-## not adjusted to fit the data. S-13 fixes close conditions at lap 1; a checker
-## written afterwards is how one quietly moves.
-##
-## This is the list of ways it could wrongly say a run passed. Every fixture is
-## built -- there is no drive here -- so each check is PROVED able to fire
-## rather than assumed to be. It also asserts the accepted build ids match
-## rig-round16.sh's preflight, because that is one fact described in two files.
-test('Round 16 acceptance checker', python, args: [ files('round16_accept.py') ])
 
 ## Round 16 lap 7 §H1: our lap 6 told the consumer the contract's one added row
 ## was in P5. It is in P3. The generator was right; the LABEL was inferred from

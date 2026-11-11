@@ -1,6 +1,18 @@
 Unreleased
 ==========
-Nothing yet.
+**Round 38's drive-test runner and round 16's rig script retired**, as our
+round 38 lap 18 S3 said: `tools/rig-drivetest.sh` and its test, and
+`tools/rig-round16.sh` with its grader `tools/round16-accept.py` and that
+grader's test. Platterpus's runner carries the C2 probe now
+(`platterpus@863d2fdc:docs/rig-scripts/drivetest.sh:633-730`), and round 16's
+run is history. `docs/JOINT-SCRIPT-RUNBOOK.md` cited `tools/rig-round16.sh:372`
+and called that citation live, but the line it meant was 375: dumbass us left
+a stale line number vouched for, so it now cites
+`cyanrip@b45b40e4:tools/rig-round16.sh:375-376`, the script's last version.
+`pgrep` and `pkill` leave the dependency map with the runner's test. The SETTLED
+row that re-ran the grader is now a past measurement naming the copy that ran,
+and `tests/tool_patterns.py` stops timing the `Invoked as:` pattern only the
+grader used.
 
 0.9.4-rc3+platterpus.31 — 2026-11-11 — **beta**
 ===============================================

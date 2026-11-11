@@ -66,7 +66,6 @@ for p in files:
 LINEAR = [
     r"^AccurateRip:\s+(\S(?:.*\S)?)\s*$",
     r"^Offset:\s+(\S(?:.*\S)?)\s*$",
-    r"^Invoked as:\s+((?:\S(?:.*\S)?)?)\s*$",
 ]
 for pat in LINEAR:
     found = sum(pat in p.read_text(encoding="utf-8") for p in files)
