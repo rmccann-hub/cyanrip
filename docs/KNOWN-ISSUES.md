@@ -42,6 +42,22 @@ ship betas, and an acceptance run of both passes. So *"not now"* and *"round
 31"* stopped being reasons. Where an entry below still says why it waited,
 that was the reason before 2026-10-05, kept as the record.
 
+### `C2 errors: unsupported by drive` is false on the BDR-209D
+
+**Found 2026-11-11 by the C2 probe** (`docs/rig-2026-11-11b-c2probe/`). The line
+prints libcdio's reading of the capabilities page, 2Ah, whose C2 pointers bit this
+drive leaves clear under all four page controls, so every log on this drive says
+`unsupported by drive`. Asked with READ CD byte 9 = `12h`, the drive returns C2
+pointers, and it flags three bytes at track 5's 02:24:59 in four reads of four.
+
+**What it costs**: a reader of the log takes the drive to be unable to report C2
+errors, which it can. The label asserts what one declaration implied.
+
+**Not fixed**: the line is in the contract's P2, so its wording goes to Platterpus
+first. Our round 39 lap 3 proposes `not declared by drive (capabilities page, not
+measured)` and `declared supported by drive (capabilities page), not used`, worded
+as `Accurate stream:` words its own declaration.
+
 ### A sub-channel pregap reads differently between rips, and the log states one value
 
 **Found 2026-10-07, reading the run on `.21`** (`docs/rig-2026-10-07-ca3f3ea/`),

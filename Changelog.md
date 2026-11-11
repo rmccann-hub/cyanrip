@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**Round 39's C2 probe is filed** on our evidence branch at `74b6f0a`
+(`docs/rig-2026-11-11b-c2probe/`). It is Platterpus's runner on the BDR-209D,
+2026-11-11 from 22:54Z, its 56 files matching the sender's hashes. What it shows:
+- **The drive returns C2 error pointers,** though its capabilities page says it
+  cannot. It flags three bytes of track 5 at 02:24:59 in four reads of four,
+  where CTDB places track 5's three wrong samples.
+- **No bit is set at track 3's three probe LBAs.** Since the probe drops the
+  audio, that says nothing about whether those reads were wrong.
+- **Our own header line is wrong on this drive.** Every log says `C2 errors:
+  unsupported by drive`, which repeats the capabilities page. KNOWN-ISSUES
+  records it; a wording goes to Platterpus first. CLAUDE.md's C2 row now says
+  what was measured.
+- **The two-read check did not finish in 300 s,** alone or in a pair. The lone
+  read printed nothing past `Opening drive...`, and the kernel reset the SATA
+  link 92 s in.
+
 **Two of Platterpus's cells written into `seam-commands.md`**, as their round 39
 lap 2 S7 gives them: `--reread-until-accuraterip` and `--prefer-accuraterip-match`.
 `--reread-time-limit`'s cell, which they call stale, waits for their wording.
