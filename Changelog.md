@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**The 26 `--diagnostics` records of 2026-11-10 are filed late**, on our
+evidence branch at `b8bb129` (`docs/rig-2026-11-10-5cc1c6b-records/`), from the
+same bundle as that run. Platterpus's bundle carried them, and our ingest tool
+dropped them, which `b6e7755e` fixed. Our round 39 lap 1 S9 and S10 said no
+record of that date was filed, and asked Platterpus to bundle what they already
+had: dumbass us blamed the bundle for our own tool. In them, track 3's
+`3D8FCF0C` differs from `59D352DD` in second 251 alone, as in the test burn. Each
+value's per-second CRCs match the burn's.
+
 **Round 39's test burn is filed** on our evidence branch at `f6b9188`
 (`docs/rig-2026-11-11-e531a33/`): `.31` through Platterpus's 0.7.122,
 2026-11-11 from 12:34:47Z, with all 83 of its `--diagnostics` records. Its
