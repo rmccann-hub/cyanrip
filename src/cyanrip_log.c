@@ -847,6 +847,11 @@ void cyanrip_log_track_end(cyanrip_ctx *ctx, cyanrip_track *t)
                     t->total_repeats, t->total_repeats == 1 ? "" : "s",
                     ctx->settings.reread_time_limit);
         break;
+    case CYANRIP_SECURE_RIP_AR_MATCHED:
+        /* --reread-until-accuraterip (our round 38 lap 16 S13) */
+        cyanrip_log(ctx, 0, "  Secure re-read:  matched AccurateRip after %i reads (agreement on %08X overruled)\n",
+                    t->total_repeats, t->secure_rip_overruled);
+        break;
     case CYANRIP_SECURE_RIP_NA:
     default:
         cyanrip_log(ctx, 0, "  Secure re-read:  not attempted\n");

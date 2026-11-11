@@ -1775,7 +1775,12 @@ static int cyanrip_rip_track(cyanrip_ctx *ctx, cyanrip_track *t)
     crip_spool *spools = NULL;
     int nb_spools = 0, kept = -1;
     FILE *pass_spool = NULL;
+    /* --reread-until-accuraterip overruled an agreement, and the first one
+     * it overruled, as printed */
+    int overruled = 0;
+    uint32_t overruled_crc = 0;
     t->secure_rip_state = CYANRIP_SECURE_RIP_NA;
+    t->secure_rip_overruled = 0;
     int64_t track_start_time = av_gettime_relative();
 
     /* Named from here until this track FINISHES, and cleared beside
@@ -2049,7 +2054,7 @@ repeat_ripping:;
              * from it above. A track AccurateRip has no entry for answers 0,
              * which is no match. */
             int ar_conf = 0;
-            if (ctx->settings.prefer_ar_match)
+            if (ctx->settings.prefer_ar_match || ctx->settings.reread_until_ar)
                 ar_conf = FFMAX(crip_find_ar(t, t->acurip_checksum_v1, 0),
                                 crip_find_ar(t, t->acurip_checksum_v2, 0));
             spools[nb_spools] = (crip_spool){ .crc = checksum_ctx.eac_crc,
@@ -2097,7 +2102,20 @@ repeat_ripping:;
         const int time_up = ctx->settings.reread_time_limit &&
                             av_gettime_relative() - track_start_time >=
                             ctx->settings.reread_time_limit * INT64_C(1000000);
-        if (matches >= ctx->settings.ripping_retries) {
+        /* --reread-until-accuraterip CONF (our round 38 lap 16 S13, accepted
+         * by Platterpus's lap 17 S8): an agreement on a read AccurateRip does
+         * not match, on a track it holds at confidence CONF or more, does not
+         * end the track. The Repeating line below still prints the agreement
+         * it reached, and the Done; line that ends the track names it. */
+        const int ar_max = t->ar_db_status == CYANRIP_ACCUDB_FOUND ?
+                           t->ar_db_max_confidence : 0;
+        if (matches >= ctx->settings.ripping_retries &&
+            crip_agreement_overruled(ctx->settings.reread_until_ar, ar_max,
+                                     spools[filed].ar_conf)) {
+            if (!overruled)
+                overruled_crc = shown_crc;
+            overruled = 1;
+        } else if (matches >= ctx->settings.ripping_retries) {
             /* The state and the kept read are settled BEFORE the line, so the
              * goto stays beside it: tools/gen-provider-contract.py credits a
              * log call with the jump that follows it within 320 characters,
@@ -2107,6 +2125,21 @@ repeat_ripping:;
             kept = filed;
             cyanrip_log(ctx, 0, "\nDone; (%i out of %i matches for current checksum %08X)\n",
                         matches, ctx->settings.ripping_retries, shown_crc);
+            goto spool_encode;
+        }
+        /* Once overruled, the track ends at a read AccurateRip matches at
+         * CONF or more, this one or an earlier one, which is kept. */
+        const int verified = overruled ?
+                             crip_spool_ar_verified(spools, nb_spools,
+                                                    ctx->settings.reread_until_ar) : -1;
+        if (verified >= 0) {
+            const crip_spool *vs = &spools[verified];
+            t->secure_rip_state = CYANRIP_SECURE_RIP_AR_MATCHED;
+            t->secure_rip_overruled = overruled_crc;
+            kept = verified;
+            cyanrip_log(ctx, 0, "\nDone; (read %i matches AccurateRip at confidence %i; agreement on %08X overruled by AccurateRip; kept %08X, read %i time%s)\n",
+                        vs->last_read, vs->ar_conf, overruled_crc,
+                        vs->crc ^ UINT32_MAX, vs->reads, vs->reads == 1 ? "" : "s");
             goto spool_encode;
         }
         if (total_repeats >= ctx->settings.max_retries || time_up) {
@@ -2132,19 +2165,91 @@ repeat_ripping:;
             const int by_time = total_repeats < ctx->settings.max_retries;
             t->secure_rip_state = by_time ? CYANRIP_SECURE_RIP_TIME_LIMIT
                                           : CYANRIP_SECURE_RIP_LIMIT_HIT;
-            kept = crip_spool_kept_at_limit(spools, nb_spools,
-                                            ctx->settings.prefer_ar_match);
+            /* After an overrule, --prefer-accuraterip-match's keep rule
+             * applies whether or not it was given (our lap 16 S13). */
+            const int use_ar = ctx->settings.prefer_ar_match || overruled;
+            kept = crip_spool_kept_at_limit(spools, nb_spools, use_ar);
             /* --prefer-accuraterip-match kept a read AccurateRip matches: the
              * line names it, how many reads gave it and the confidence, in
              * our round 36 lap 4 S11's form, which Platterpus's lap 3 S4
              * accepted and their parser reads. The last read's clause is
              * appended as below when the kept read is not the last. */
             const crip_spool *ks = &spools[kept];
+            const int ks_conf = use_ar ? ks->ar_conf : 0;
+            /* After an overrule, each of the lines below with one clause more,
+             * `agreement on %08X overruled by AccurateRip`, after `agreed`, so
+             * before the kept clause where there is one (our lap 16 S13). */
+            if (overruled && by_time && ks_conf >= 1 && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; agreement on %08X overruled by AccurateRip; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", overruled_crc,
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf, shown_crc);
+                goto spool_encode;
+            }
+            if (overruled && by_time && ks_conf >= 1) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; agreement on %08X overruled by AccurateRip; kept %08X, read %i time%s, which AccurateRip matches at confidence %i)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", overruled_crc,
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf);
+                goto spool_encode;
+            }
+            if (overruled && by_time && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; agreement on %08X overruled by AccurateRip; last read %08X, not kept)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", overruled_crc,
+                            shown_crc);
+                goto spool_encode;
+            }
+            if (overruled && by_time) {
+                cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; agreement on %08X overruled by AccurateRip)\n",
+                            ctx->settings.reread_time_limit,
+                            total_repeats, total_repeats == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", overruled_crc);
+                goto spool_encode;
+            }
+            if (overruled && ks_conf >= 1 && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; agreement on %08X overruled by AccurateRip; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
+                            ctx->settings.max_retries,
+                            ctx->settings.max_retries == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", overruled_crc,
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf, shown_crc);
+                goto spool_encode;
+            }
+            if (overruled && ks_conf >= 1) {
+                cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; agreement on %08X overruled by AccurateRip; kept %08X, read %i time%s, which AccurateRip matches at confidence %i)\n",
+                            ctx->settings.max_retries,
+                            ctx->settings.max_retries == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", overruled_crc,
+                            ks->crc ^ UINT32_MAX, ks->reads,
+                            ks->reads == 1 ? "" : "s", ks->ar_conf);
+                goto spool_encode;
+            }
+            if (overruled && kept != filed) {
+                cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; agreement on %08X overruled by AccurateRip; last read %08X, not kept)\n",
+                            ctx->settings.max_retries,
+                            ctx->settings.max_retries == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", overruled_crc,
+                            shown_crc);
+                goto spool_encode;
+            }
+            if (overruled) {
+                cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; agreement on %08X overruled by AccurateRip)\n",
+                            ctx->settings.max_retries,
+                            ctx->settings.max_retries == 1 ? "" : "s",
+                            agreed, agreed == 1 ? "" : "s", overruled_crc);
+                goto spool_encode;
+            }
             /* The time limit keeps the read the repeat limit would, and its
              * line takes the repeat limit's two clauses as they are, with
              * its own words for what stopped the loop, so the log names the
              * caller's limit and does not blame the disc. */
-            if (by_time && ks->ar_conf >= 1 && kept != filed) {
+            if (by_time && ks_conf >= 1 && kept != filed) {
                 cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
                             ctx->settings.reread_time_limit,
                             total_repeats, total_repeats == 1 ? "" : "s",
@@ -2153,7 +2258,7 @@ repeat_ripping:;
                             ks->reads == 1 ? "" : "s", ks->ar_conf, shown_crc);
                 goto spool_encode;
             }
-            if (by_time && ks->ar_conf >= 1) {
+            if (by_time && ks_conf >= 1) {
                 cyanrip_log(ctx, 0, "\nDone; (time limit of %i s reached after %u read%s; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i)\n",
                             ctx->settings.reread_time_limit,
                             total_repeats, total_repeats == 1 ? "" : "s",
@@ -2176,7 +2281,7 @@ repeat_ripping:;
                             agreed, agreed == 1 ? "" : "s");
                 goto spool_encode;
             }
-            if (ks->ar_conf >= 1 && kept != filed) {
+            if (ks_conf >= 1 && kept != filed) {
                 cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i; last read %08X, not kept)\n",
                             ctx->settings.max_retries,
                             ctx->settings.max_retries == 1 ? "" : "s",
@@ -2185,7 +2290,7 @@ repeat_ripping:;
                             ks->reads == 1 ? "" : "s", ks->ar_conf, shown_crc);
                 goto spool_encode;
             }
-            if (ks->ar_conf >= 1) {
+            if (ks_conf >= 1) {
                 cyanrip_log(ctx, 0, "\nDone; (repeat limit of %i read%s reached; at most %i read%s agreed; kept %08X, read %i time%s, which AccurateRip matches at confidence %i)\n",
                             ctx->settings.max_retries,
                             ctx->settings.max_retries == 1 ? "" : "s",
@@ -3237,6 +3342,8 @@ static int cyanrip_run(int argc, char **argv)
                 "At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does");
     GEN_OPT_ONE(opts_list, int32_t, reread_time_limit, "", 1, 1, 0, 1, INT32_MAX,
                 "Seconds a -Z track's reads may take, checked between whole-track reads; then no further read starts");
+    GEN_OPT_ONE(opts_list, int32_t, reread_until_accuraterip, "", 1, 1, 0, 1, INT32_MAX,
+                "Under -Z, read on past an agreement AccurateRip does not match, on a track it holds at this confidence or more, until a read it matches at this confidence or a limit");
     GEN_OPT_ONE(opts_list, bool,    read_vendor_settings, "", 0, 0, 0, 0, 0,
                 "Ask the drive for its settings with its vendor's read-only query, where cyanrip has one for its vendor (Pioneer's settings block), into the --diagnostics record");
     GEN_OPT_ONE(opts_list, char *,  keep_every_read, "", 1, 1, NULL, 0, 0,
@@ -3400,6 +3507,7 @@ static int cyanrip_run(int argc, char **argv)
     settings.keep_every_read            = keep_every_read;
     settings.read_vendor_settings       = read_vendor_settings;
     settings.reread_time_limit          = reread_time_limit;
+    settings.reread_until_ar            = reread_until_accuraterip;
     /* Registers the atexit writer, so every route out of main() is covered
      * rather than the ones someone remembered to instrument. Messages are
      * recorded from process start regardless; this only decides whether they
@@ -3437,6 +3545,13 @@ static int cyanrip_run(int argc, char **argv)
      * lap 11 S6). */
     if (reread_time_limit && !repeat_rips) {
         cyanrip_log(ctx, 0, "--reread-time-limit needs -Z: it limits -Z's re-reads, and without -Z there are none!\n");
+        return CRIP_EXIT_USAGE;
+    }
+
+    /* Likewise an AccurateRip test of -Z's agreement: without -Z there is no
+     * agreement to test (our round 38 lap 16 S13). */
+    if (reread_until_accuraterip && !repeat_rips) {
+        cyanrip_log(ctx, 0, "--reread-until-accuraterip needs -Z: it tests -Z's agreement against AccurateRip, and without -Z there is none!\n");
         return CRIP_EXIT_USAGE;
     }
 

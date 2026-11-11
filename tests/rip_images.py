@@ -8752,6 +8752,46 @@ def sc_reread_time_limit():
                  f"{'carries' if said in text else 'lacks'} {said!r}; want 64 and it")
 
 
+def sc_reread_until_accuraterip():
+    """--reread-until-accuraterip ACTS ONLY WITH -Z, AND NOT WITHOUT ACCURATERIP.
+
+    Our round 38 lap 16 S13, accepted as given by Platterpus's lap 17 S8. The
+    rule acts only on a track AccurateRip holds, and every scenario runs with
+    -N -A -U, so no scenario reaches it: tests/spool.c drives the rule, and
+    the loop that calls it waits for a drive. Here: without -Z and at 0 the
+    option is refused with exit 64, and on a disc AccurateRip was not asked
+    about, an agreement ends the track as it does without the option, so no
+    line names an overrule.
+    """
+    for args, why, said in ((["-Z", "0"], "without -Z", "--reread-until-accuraterip needs -Z"),
+                            (["-Z", "2", "--reread-until-accuraterip", "0"], "at 0", "not in [1:")):
+        extra = [] if "--reread-until-accuraterip" in args else ["--reread-until-accuraterip", "2"]
+        ec, text = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U",
+                        *args, *extra)
+        if ec != 64 or said not in text:
+            fail(f"reread_until_accuraterip: {why}: exit {ec}, and the output "
+                 f"{'carries' if said in text else 'lacks'} {said!r}; want 64 and it")
+    out = WORK / "out_reread_until_accuraterip"
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                 "-Z", "1", "--reread-until-accuraterip", "2",
+                 "-l", "1", "-o", "pcm", "-D", out, "-F", "{track}", "-L", "log")
+    if ec != 0:
+        fail(f"reread_until_accuraterip: cyanrip exited {ec} on a clean image")
+        return
+    lines = ((out / "log.log").read_text(errors="replace", encoding="utf-8")
+             if (out / "log.log").exists() else "").splitlines()
+    done = [ln for ln in lines if ln.startswith("Done;")]
+    block = [ln for ln in lines if ln.startswith("  Secure re-read:")]
+    if not done or not done[0].startswith("Done; (1 out of 1 matches for current checksum "):
+        fail(f"reread_until_accuraterip: the agreement did not end the track: {done}")
+    if block != ["  Secure re-read:  converged after 2 reads"]:
+        fail(f"reread_until_accuraterip: the track's row is {block}, want "
+             f"converged after 2 reads")
+    if any("overruled" in ln for ln in lines):
+        fail("reread_until_accuraterip: a line names an overrule on a disc "
+             "AccurateRip was not asked about")
+
+
 def sc_repeat_limit_keeps_most_agreed():
     """AT THE REPEAT LIMIT, THE READ THE MOST READS AGREED ON IS KEPT.
 

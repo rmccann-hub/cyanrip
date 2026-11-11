@@ -120,6 +120,9 @@ enum cyanrip_secure_rip_state {
     CYANRIP_SECURE_RIP_CONVERGED, /* Matching checksums were found */
     CYANRIP_SECURE_RIP_LIMIT_HIT, /* Repeat limit hit before checksums matched */
     CYANRIP_SECURE_RIP_TIME_LIMIT, /* --reread-time-limit reached before they matched */
+    CYANRIP_SECURE_RIP_AR_MATCHED, /* --reread-until-accuraterip: an agreement AccurateRip
+                                    * does not match was overruled, and a read it matches
+                                    * ended the track */
     /* There is deliberately NO "interrupted" state, and the absence is load
      * bearing rather than an omission. An interrupted track emits no track
      * block at all -- cyanrip_rip_track()'s `if (!quit_now && !ret)` guard --
@@ -202,6 +205,8 @@ typedef struct cyanrip_settings {
     char *keep_every_read; /* --keep-every-read DIR: every distinct -Z read's audio, as WAV, in DIR */
     int read_vendor_settings; /* --read-vendor-settings: send a vendor's read-only settings query (drive_caps.h) */
     int reread_time_limit; /* --reread-time-limit: seconds a -Z track's reads may take; 0 is none */
+    int reread_until_ar; /* --reread-until-accuraterip: the AccurateRip confidence at which an
+                          * agreement it does not match is overruled; 0 is off */
     int generate_cue_only;
     int disable_data_tracks;
     int disable_acoustid;
@@ -322,6 +327,8 @@ typedef struct cyanrip_track {
     int error_pos_tail_next;
     uint64_t error_pos_dropped;
     enum cyanrip_secure_rip_state secure_rip_state; /* -Z convergence verdict */
+    uint32_t secure_rip_overruled; /* the first agreement --reread-until-accuraterip
+                                    * overruled, as printed; set with AR_MATCHED */
     /* Whether this track's audio was ripped AND finalised. Set beside one of
      * the two places ctx->tracks_completed is incremented, data_ripped beside
      * the other, so the disc counter is the sum of the two per-track flags by

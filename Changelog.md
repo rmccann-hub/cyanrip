@@ -45,6 +45,26 @@ record, sends them our C2 probe and two-read check for their runner, and
 retires `tools/rig-c1-probe.sh`. It corrects our own README of the Full run,
 which counted a two-track rip as the whole-disc one: dumbass parse.
 
+**`.31`: `--reread-until-accuraterip CONF` reads on past a wrong
+agreement**, as our round 38 lap 16 S13 specified and Platterpus's lap 17 S8
+accepted. On the reference disc, `-Z` agreed on track 5's `E0036697` after 3
+reads on 2026-11-10, and AccurateRip matches that read at frame 450 only.
+With the option, under `-Z`, an agreement on a read AccurateRip does not match
+(whole-track v1 or v2) does not end a track AccurateRip holds at confidence
+CONF or more. The track ends at a read AccurateRip matches at CONF or more,
+which is kept, or at `-r` or `--reread-time-limit`, where
+`--prefer-accuraterip-match`'s keep rule applies. It is refused without `-Z`.
+New lines, for Platterpus's reader:
+- the early-end head `Done; (read N matches AccurateRip at confidence C;
+  agreement on X overruled by AccurateRip; kept Y, read M times)`;
+- eight limit lines with `agreement on X overruled by AccurateRip` after
+  `agreed`;
+- the row `Secure re-read:  matched AccurateRip after N reads (agreement on X
+  overruled)`.
+The rule is `tests/spool.c`'s to drive, since no scenario reaches
+AccurateRip. The loop that calls it has not run until a drive and AccurateRip
+meet in round 39.
+
 **`.31`: a stall after the drive open says what it waits on.** `.30` went
 silent for 110 s twice on the BDR-209D, on 2026-11-05 after `Opening
 drive...` and on 2026-11-06 after `Track 2 info:`, inside commands no

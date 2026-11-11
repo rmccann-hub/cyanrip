@@ -36,9 +36,10 @@ typedef struct crip_spool {
     time_t began;   /* when the newest of them began */
     int64_t read_us; /* how long the newest of them took to read, in
                       * microseconds: Extraction speed:'s time under -Z */
-    int ar_conf;    /* under --prefer-accuraterip-match, the confidence of the
+    int ar_conf;    /* under --prefer-accuraterip-match or
+                     * --reread-until-accuraterip, the confidence of the
                      * AccurateRip entry its v1 or v2 checksum matches, the
-                     * higher; below 1 when none does, or without the flag */
+                     * higher; below 1 when none does, or without either */
     FILE *f;        /* their bytes, as checksummed */
     uint32_t ar_v1, ar_v2;   /* this read's AccurateRip checksums */
     uint32_t *block_crcs;    /* this read's per-second CRCs, or NULL */
@@ -74,4 +75,32 @@ static inline int crip_spool_kept_at_limit(const crip_spool *spools, int nb_spoo
             k = i;
     }
     return k;
+}
+
+/* --reread-until-accuraterip CONF (round 38: our lap 16 S13, which
+ * Platterpus's lap 17 S8 accepted as given): an agreement of -Z's reads does
+ * not end the track when AccurateRip holds the track at confidence CONF or
+ * more and matches neither whole-track checksum, v1 or v2, of the read agreed
+ * on. ar_max_conf is the track's highest AccurateRip confidence, 0 when it
+ * holds no entry; read_conf is the agreed read's ar_conf, below 1 for no
+ * match. A match at frame 450 alone is no match: on 2026-11-10, -Z agreed on
+ * track 5's E0036697 after 3 reads, which AccurateRip matches at frame 450
+ * only (docs/rig-2026-11-10-5cc1c6b/). */
+static inline int crip_agreement_overruled(int until_conf, int ar_max_conf,
+                                           int read_conf)
+{
+    return until_conf >= 1 && ar_max_conf >= until_conf && read_conf < 1;
+}
+
+/* Once an agreement is overruled, the spool that ends the track: the one
+ * --prefer-accuraterip-match's keep rule picks, when AccurateRip matches it at
+ * until_conf or more; otherwise -1, and reading goes on. A read made before
+ * the agreement counts, since it is a read AccurateRip matches. */
+static inline int crip_spool_ar_verified(const crip_spool *spools, int nb_spools,
+                                         int until_conf)
+{
+    if (nb_spools < 1 || until_conf < 1)
+        return -1;
+    const int k = crip_spool_kept_at_limit(spools, nb_spools, 1);
+    return spools[k].ar_conf >= until_conf ? k : -1;
 }

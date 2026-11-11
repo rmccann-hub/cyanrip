@@ -121,6 +121,53 @@ static void test_no_match_falls_back_to_the_rule(void)
     CHECK(k == 0, "kept spool %d, want 0: a confidence of 0 is no match", k);
 }
 
+/* --reread-until-accuraterip: an agreement is overruled only when AccurateRip
+ * holds the track at CONF or more and matches none of the agreed read. Each
+ * case moves one argument across its boundary, so a rule that dropped any
+ * clause fails one. */
+static void test_an_agreement_is_overruled(void)
+{
+    CHECK(crip_agreement_overruled(2, 5, -1),
+          "AccurateRip holds the track at 5 and matches no agreed read: overruled");
+    CHECK(crip_agreement_overruled(2, 2, -1),
+          "a track held at exactly CONF is held at CONF or more: overruled");
+    CHECK(crip_agreement_overruled(2, 5, 0),
+          "a confidence of 0 is no match: overruled");
+    CHECK(!crip_agreement_overruled(0, 5, -1), "without the option nothing is overruled");
+    CHECK(!crip_agreement_overruled(2, 1, -1),
+          "a track held only at 1 is not held at 2: the agreement stands");
+    CHECK(!crip_agreement_overruled(2, 0, 0),
+          "a track AccurateRip holds no entry for: the agreement stands");
+    CHECK(!crip_agreement_overruled(2, 5, 1),
+          "AccurateRip matches the agreed read, at 1 though CONF is 2: it stands");
+}
+
+/* After an overrule: the read AccurateRip matches at CONF or more ends the
+ * track, an earlier read included; one below CONF does not. The first case is
+ * 2026-11-10's track 5, E0036697 agreed on three times. */
+static void test_a_verified_read_ends_the_track(void)
+{
+    crip_spool s[] = {
+        { .crc = 0xE0036697, .reads = 3, .last_read = 3, .ar_conf = -1 },
+        { .crc = 0xC96464AB, .reads = 1, .last_read = 4, .ar_conf = 5 },
+    };
+    CHECK(crip_spool_ar_verified(s, 1, 2) == -1, "E0036697 alone: reading goes on");
+    int k = crip_spool_ar_verified(s, NB(s), 2);
+    CHECK(k == 1, "verified spool %d, want 1, C96464AB at 5", k);
+
+    crip_spool t[] = {
+        { .crc = 0xA, .reads = 1, .last_read = 1, .ar_conf = 3 },
+        { .crc = 0xB, .reads = 2, .last_read = 3, .ar_conf = -1 },
+    };
+    k = crip_spool_ar_verified(t, NB(t), 3);
+    CHECK(k == 0, "verified spool %d, want 0: read 1, before the agreement, "
+          "matches at CONF", k);
+    CHECK(crip_spool_ar_verified(t, NB(t), 4) == -1,
+          "a match at 3 when CONF is 4: reading goes on");
+    CHECK(crip_spool_ar_verified(t, 0, 3) == -1, "no spools: reading goes on");
+    CHECK(crip_spool_ar_verified(t, NB(t), 0) == -1, "without the option: -1");
+}
+
 /* One spool, whatever it says. */
 static void test_one_spool(void)
 {
@@ -135,6 +182,8 @@ int main(void)
     test_the_higher_confidence_then_the_rule();
     test_no_match_falls_back_to_the_rule();
     test_one_spool();
+    test_an_agreement_is_overruled();
+    test_a_verified_read_ends_the_track();
 
     if (failures) {
         printf("%i check(s) failed\n", failures);

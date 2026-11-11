@@ -1079,6 +1079,7 @@ rip_scenarios = [
     'every_read',
     'vendor_settings',
     'reread_time_limit',
+    'reread_until_accuraterip',
     'z_extraction_speed',
     'log_values_cannot_forge_a_line',
     'gaps_unknown_pregap',
