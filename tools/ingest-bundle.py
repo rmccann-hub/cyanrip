@@ -112,6 +112,26 @@ VERDICT_FILES = ("report.json", "transcript.txt")
 # Extensions filed in full. Everything else is recorded by hash and named.
 TEXT_SUFFIXES = (".log", ".cue", ".txt", ".toc", ".md")
 
+# CYANRIP'S OWN --diagnostics RECORDS ARE FILED, whatever their name or folder.
+# Until 2026-11-11 a record was a .json, so it was named as not filed and
+# dropped: all 83 of round 39's test burn, under `ripperdiagnostics/`, the
+# per-second CRCs our round 39 lap 1 S10 asked to have bundled. Known by what
+# the file says it is, its "schema", never by a name or a path, which the
+# sender chooses (the 2026-10-06 bundle kept them under session/diagnostics/).
+RECORD_SCHEMA = "cyanrip-diagnostics/"
+
+
+def is_cyanrip_record(name, data):
+    """True for a JSON member whose own schema names a cyanrip record."""
+    if pathlib.PurePosixPath(name).suffix.lower() != ".json":
+        return False
+    try:
+        doc = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        return False
+    return (isinstance(doc, dict) and isinstance(doc.get("schema"), str)
+            and doc["schema"].startswith(RECORD_SCHEMA))
+
 FAIL_LINE = re.compile(r"^\s*\[\s*FAIL\s*\]", re.M)
 
 
@@ -669,7 +689,8 @@ def main():
         # That is the same defect the tool exists to prevent, reproduced in the
         # act of writing it, and tests/ingest_bundle.py is what found it.
         is_verdict = os.path.basename(name) in VERDICT_FILES
-        if is_verdict or pathlib.PurePosixPath(name).suffix.lower() in TEXT_SUFFIXES:
+        if (is_verdict or is_cyanrip_record(name, data)
+                or pathlib.PurePosixPath(name).suffix.lower() in TEXT_SUFFIXES):
             out = dest / name
             out.parent.mkdir(parents=True, exist_ok=True)
             new, rep = redact.redact_bytes(data, hosts, names)

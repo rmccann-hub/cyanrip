@@ -151,6 +151,39 @@ def test_the_not_filed_list_is_derived_not_written():
         check(f"(not filed) {b}" in sums, f"{b} must be NAMED as not filed")
 
 
+def test_cyanrip_records_are_filed_and_other_json_is_named():
+    """A --diagnostics record is filed by its schema; any other .json is named.
+
+    Round 39's test burn carried 83 records under ripperdiagnostics/, and all
+    83 were named as not filed, so the per-second CRCs our round 39 lap 1 S10
+    asked for never reached the evidence branch. The schema decides, not the
+    folder: the second record sits where no record has been before.
+    """
+    record = json.dumps({"schema": "cyanrip-diagnostics/13",
+                         "rip": {"track_state": []}}).encode()
+    files = {
+        "album/x/x.log": RIP,
+        "extra/report.json": json.dumps({"ok": True}).encode(),
+        "ripperdiagnostics/cyanrip-diagnostics-20261111T123533Z.json": record,
+        "anywhere/else/record.json": record,
+        "COMPONENTS.json": json.dumps({"schema": "platterpus-components/1"}).encode(),
+        "SETTINGS.json": json.dumps({"ripper": "cyanrip"}).encode(),
+        "broken.json": b"{not json",
+    }
+    d = pathlib.Path(tempfile.mkdtemp()) / "rig"
+    rc, out = run(make(files), "--into", str(d))
+    check(rc == 0, f"a passing bundle must file: {out[:200]}")
+    sums = (d / "SHA256SUMS").read_text(encoding="utf-8")
+    for name in ("ripperdiagnostics/cyanrip-diagnostics-20261111T123533Z.json",
+                 "anywhere/else/record.json"):
+        check((d / name).exists() and (d / name).read_bytes() == record,
+              f"{name} is a cyanrip record and must be filed byte-exact")
+        check(f"(not filed) {name}" not in sums, f"{name} must not be named as not filed")
+    for name in ("COMPONENTS.json", "SETTINGS.json", "broken.json"):
+        check(not (d / name).exists(), f"{name} is not a cyanrip record and must not be filed")
+        check(f"(not filed) {name}" in sums, f"{name} must be NAMED as not filed")
+
+
 def test_a_name_outside_into_is_refused_and_nothing_filed():
     """Review C 1.7: every filed name lands under --into. One that resolves
     outside it, by ".." or by being absolute, stops the tool with 3 before
