@@ -1,5 +1,9 @@
 Unreleased
 ==========
+**Two of Platterpus's cells written into `seam-commands.md`**, as their round 39
+lap 2 S7 gives them: `--reread-until-accuraterip` and `--prefer-accuraterip-match`.
+`--reread-time-limit`'s cell, which they call stale, waits for their wording.
+
 **The 26 `--diagnostics` records of 2026-11-10 are filed late**, on our
 evidence branch at `b8bb129` (`docs/rig-2026-11-10-5cc1c6b-records/`), from the
 same bundle as that run. Platterpus's bundle carried them, and our ingest tool
