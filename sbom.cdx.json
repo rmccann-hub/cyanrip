@@ -22,7 +22,7 @@
       "type": "application",
       "bom-ref": "cyanrip",
       "name": "cyanrip",
-      "version": "0.9.4-rc3+platterpus.30",
+      "version": "0.9.4-rc3+platterpus.31",
       "description": "CD ripper; the Platterpus fork of cyanreg/cyanrip",
       "licenses": [
         {
@@ -328,15 +328,7 @@
           "value": "True"
         },
         {
-          "name": "cyanrip-fork:measured:env:has-pgrep",
-          "value": "True"
-        },
-        {
           "name": "cyanrip-fork:measured:env:has-pkg-config",
-          "value": "True"
-        },
-        {
-          "name": "cyanrip-fork:measured:env:has-pkill",
           "value": "True"
         },
         {
@@ -895,10 +887,6 @@
         },
         {
           "name": "cyanrip-fork:run-by",
-          "value": "tests/rig_drivetest.py"
-        },
-        {
-          "name": "cyanrip-fork:run-by",
           "value": "tests/workflows.py"
         }
       ]
@@ -1201,19 +1189,6 @@
     },
     {
       "type": "application",
-      "bom-ref": "run:pgrep",
-      "name": "pgrep",
-      "scope": "excluded",
-      "description": "asks whether the drive-test runner's stand-in rippers are still running when its test ends",
-      "properties": [
-        {
-          "name": "cyanrip-fork:run-by",
-          "value": "tests/rig_drivetest.py"
-        }
-      ]
-    },
-    {
-      "type": "application",
       "bom-ref": "run:pkg-config",
       "name": "pkg-config",
       "scope": "excluded",
@@ -1222,19 +1197,6 @@
         {
           "name": "cyanrip-fork:run-by",
           "value": "tools/gen-dependency-map.py"
-        }
-      ]
-    },
-    {
-      "type": "application",
-      "bom-ref": "run:pkill",
-      "name": "pkill",
-      "scope": "excluded",
-      "description": "stops any the drive-test runner's test left, by a name made for that run only",
-      "properties": [
-        {
-          "name": "cyanrip-fork:run-by",
-          "value": "tests/rig_drivetest.py"
         }
       ]
     },
@@ -1464,5 +1426,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:2f8bfdc6-eb79-5202-8ac0-adf5daad8a0b"
+  "serialNumber": "urn:uuid:35d72944-3742-5e82-82fc-8d6d3d3b20ed"
 }

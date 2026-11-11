@@ -173,6 +173,29 @@ stretch stays `unknown`. `tests/logrender.c` holds the block, the row and the
 cue on track 9's own numbers, and fails with the fix reverted. Which of the
 two the disc has, only the drive can say, and this entry stays until it does.
 
+**This drive's own sub-channel for that sector, read on 2026-11-09**
+(`docs/rig-2026-11-09-5cc1c6b/session/track9/`, phase 2 of round 38's drive
+test). The phase ran READ CD over LSN 145560 to 145575, raw P-W and formatted Q,
+three times each, with the cache flushed before each read; read here on
+2026-11-11.
+- **The three raw reads are byte for byte the same.** Every Q frame in them
+  passes its CRC except 145567's.
+- **145567's raw Q is `01090000012000722267c872` in all three, and fails its
+  CRC.** Exactly one one-bit change makes it pass: the absolute minute, `72` to
+  `32`. That frame says track 9, index 00, relative 00:01:20, absolute
+  32:22:67, which is its own position and 95 frames before index 01 at 145662.
+- **The formatted Q of 145567 is 145566's Q in all three**, with a passing
+  CRC: track 8, index 01, relative 03:44:09, absolute 32:22:66. So the drive
+  repeats the frame before. A search that reads formatted Q gets another
+  sector's frame here, never a CRC failure, as the `.27` record of 2026-10-28
+  counted.
+
+So no read of 145567 on this drive gives a Q of its own that passes its CRC.
+The one frame a single bit away that does pass says 95. A raw read of 145567
+on a second drive would settle whether the disc carries that bit or this drive
+makes it every time. Until then, `94 or 95 frames (undecided)` is what the
+reads support.
+
 ### Four drive answers the log states that are libcdio's defaults or its failure (fixed for `.28`)
 
 **Found by the claude-code-skills session's review of 2026-10-26, item 3.3**,

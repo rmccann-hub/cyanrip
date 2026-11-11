@@ -33,7 +33,7 @@ reference disc's TOC gave `AccurateRip: found` and `max confidence: 200`, and
 WHY IT IS A TOOL AND NOT A TEST. It reaches the network, and a check that
 reaches the network is not evidence about this program -- it would fail offline
 for reasons unrelated to anything. Homes considered: `tools/rig-check.py` is
-the no-rip checks and this rips; `tools/rig-round16.sh` needs a drive;
+the no-rip checks and this rips; `tools/rig-round16.sh`, retired in round 39, needed a drive;
 `tests/rip_images.py` may not reach the network. None fit.
 
 WHAT IT DOES AND DOES NOT SETTLE. The audio is silence, so every per-track

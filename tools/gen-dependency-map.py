@@ -143,10 +143,6 @@ PROGRAMS = {
     "clang": "links a probe to learn whether it ignores an argument, then "
              "sets up a scratch build with it to check the hardening flags "
              "survive; skipped where it is missing",
-    "pgrep": "asks whether the drive-test runner's stand-in rippers are "
-             "still running when its test ends",
-    "pkill": "stops any the drive-test runner's test left, by a name made "
-             "for that run only",
 }
 
 # Every http(s) literal in src/, keyed by host. The KEYS must equal what

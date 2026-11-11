@@ -62,7 +62,7 @@ never let a green suite imply coverage.** Date a rig session by its build.
 
 | on a drive | state |
 |---|---|
-| C2 | cannot be done on this rig: its BDR-209D reports C2 unsupported |
+| C2 | not yet run: the BDR-209D's page 2Ah says no C2 pointers and its CD Read feature says C2 flags (round 38 lap 14 S7); round 38 lap 16 S9's C2 probe measures which |
 | `-f` | ran from 2026-10-06 (`5704062`); a stopped search and one that finds nothing have not |
 | damaged media | the read ran 2026-10-04 (`174a134`), the `-Z` arm 2026-10-06 and the skip arm 2026-10-21 (`ca0f097`); a drive reporting failed reads, then unopenable, 2026-11-03 (`3f288fb`); a track's `File(s):` naming one not written whole has not |
 | CD-TEXT from a disc | not yet done: `mmc_read_cdtext` is not the `.toc` path |

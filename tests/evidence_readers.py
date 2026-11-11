@@ -78,14 +78,11 @@ ALLOWED = {
                                   "run is filed after the move"),
     "tools/read-run.py": (4, "examples, and the earlier runs it compares, "
                              "read through an overlay of tools/evidence.py"),
-    "tools/rig-round16.sh": (1, "a message naming the reference on record"),
-    "tools/round16-accept.py": (1, "a comment naming what its pinned copy "
-                                   "reads"),
 }
 # SETTLED rows that re-check a fact against run evidence. tools/check-settled.py
 # runs each through tools/evidence.py, so a moved file is read from the
 # evidence branch or the row is unprobed; a new one is a new reader.
-SETTLED_ROWS = 32
+SETTLED_ROWS = 31
 
 fails = 0
 

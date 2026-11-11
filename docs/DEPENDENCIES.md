@@ -6,7 +6,7 @@ Everything above **Measured where this was generated** is declared by the tree a
 
 ## The project
 
-- **cyanrip 0.9.4-rc3+platterpus.30**, the `platterpus-fork` build of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip), at [rmccann-hub/cyanrip](https://github.com/rmccann-hub/cyanrip). The only branch a consumer builds is `platterpus-fork`; `master` mirrors upstream.
+- **cyanrip 0.9.4-rc3+platterpus.31**, the `platterpus-fork` build of [cyanreg/cyanrip](https://github.com/cyanreg/cyanrip), at [rmccann-hub/cyanrip](https://github.com/rmccann-hub/cyanrip). The only branch a consumer builds is `platterpus-fork`; `master` mirrors upstream.
 - **Language: C**, `c_std=c11`, built with meson (`meson_version: '>=0.62.0'`), and `-Werror=format`, `-Werror=format-extra-args`, `-Werror=implicit-function-declaration`.
 - **Tools and tests: Python 3, standard library only** — derived: no third-party import in `tools/` or `tests/`. Python `>=3.11`, declared in `meson.build`.
 - **Licence: LGPL-2.1-or-later**, read from `src/utils.c`'s header. The binary links libcdio and libcdio-paranoia, both GPL-3.0-or-later, so a built binary is subject to the GPL's terms; upstream's is too.
@@ -37,7 +37,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 
 | program | run by | for |
 |---|---|---|
-| `bash` | `tests/mingw_build.py`, `tests/rig_drivetest.py`, `tests/workflows.py` | runs the Windows build script's functions, and CI's static-analysis step as Actions does, their builds stubbed, to check where each stops |
+| `bash` | `tests/mingw_build.py`, `tests/workflows.py` | runs the Windows build script's functions, and CI's static-analysis step as Actions does, their builds stubbed, to check where each stops |
 | `cd-paranoia` | `tools/rig-check.py` | on the rig only: the cache size the probe is measured against |
 | `cdparanoia` | `tools/rig-check.py` | on the rig only: the same, under its older name |
 | `clang` | `tests/hardening_probe.py` | links a probe to learn whether it ignores an argument, then sets up a scratch build with it to check the hardening flags survive; skipped where it is missing |
@@ -50,9 +50,7 @@ Declared in `src/meson.build`. The minimum is what the build requires; what is i
 | `meson` | `tests/hardening_probe.py`, `tools/sanitize-run.py` | configures the instrumented and mutated builds |
 | `ninja` | `tools/sanitize-run.py` | builds them |
 | `nm` | `tools/blackbox.py` | asks a binary whether sanitizer symbols are in it |
-| `pgrep` | `tests/rig_drivetest.py` | asks whether the drive-test runner's stand-in rippers are still running when its test ends |
 | `pkg-config` | `tools/gen-dependency-map.py` | this map's measured versions; the build finds every library through it too |
-| `pkill` | `tests/rig_drivetest.py` | stops any the drive-test runner's test left, by a name made for that run only |
 | `ruff` | `tests/python_lint.py` | the Python lint gate: Pyflakes's rules over tools/ and tests/, pinned in CI |
 | `sh` | `tests/build_tag.py`, `tests/session_hook.py` | runs the session-start hook on scratch repositories, as Claude Code runs it, and the build's own tag script |
 | `valgrind` | `tests/valgrind_rip.py` | memcheck over one rip of the basic image, which sees inside the libraries as built |
