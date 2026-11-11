@@ -1596,7 +1596,8 @@ static void secure_rereads_case(const int *states, const int *ripped, int n,
 static void test_secure_rereads_line(void)
 {
     const int C = CYANRIP_SECURE_RIP_CONVERGED, L = CYANRIP_SECURE_RIP_LIMIT_HIT,
-              T = CYANRIP_SECURE_RIP_TIME_LIMIT, N = CYANRIP_SECURE_RIP_NA;
+              T = CYANRIP_SECURE_RIP_TIME_LIMIT, N = CYANRIP_SECURE_RIP_NA,
+              M = CYANRIP_SECURE_RIP_AR_MATCHED;
     const int all[3] = { 1, 1, 1 };
     secure_rereads_case((int[]){ C, L, T }, all, 3, 2,
                         "Secure re-reads: 2 tracks did not converge (tracks 2, 3)",
@@ -1614,6 +1615,21 @@ static void test_secure_rereads_line(void)
                         "secure-rereads/stopped with one named");
     secure_rereads_case((int[]){ N, N, N }, all, 3, 0, NULL,
                         "secure-rereads/no -Z");
+    /* --reread-until-accuraterip (our round 39 lap 1 S7, Platterpus's lap 2
+     * S5, our lap 3 S2): a matched track makes the third form when none
+     * failed; a failed one keeps the named form, which names only the
+     * limit tracks; a matched track with one that stopped prints nothing. */
+    secure_rereads_case((int[]){ C, M, C }, all, 3, 2,
+                        "Secure re-reads: every track converged or matched AccurateRip",
+                        "secure-rereads/one matched");
+    secure_rereads_case((int[]){ M, M, M }, all, 3, 2,
+                        "Secure re-reads: every track converged or matched AccurateRip",
+                        "secure-rereads/all matched");
+    secure_rereads_case((int[]){ C, M, L }, all, 3, 2,
+                        "Secure re-reads: 1 track did not converge (track 3)",
+                        "secure-rereads/matched beside a failed one");
+    secure_rereads_case((int[]){ C, M, N }, (int[]){ 1, 1, 0 }, 3, 2, NULL,
+                        "secure-rereads/matched beside one that stopped");
 }
 
 static void test_disc_tally_counts_tracks_asked(void)
