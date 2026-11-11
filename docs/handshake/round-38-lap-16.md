@@ -29,7 +29,7 @@ HANDSHAKE-ROUND-DIGEST: sha256/16 = `2e28c2ab6084bf4e` over 15 lap(s) — our la
 HANDSHAKE-SHARED-HASHES: protocol(v9)=c0539096e99a1ce5bd5a76860a4505c32acb17b4f0d1fc62b9e8b0938e3ef276 seam-rules=e5489599822a7db82ef529446bce0fc2bd46239cbcb297104fbc4163988713b8 seam-commands=67e7f9282ec5400ba8bb14ec5903cdea7c4bd5aab436cc28121fe08666f65a46 ownership=6956d0b9908a7784e435475a9bd6960bc30b828720f637e86110b5be6138950c
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit, byte-identical to yours at `68291336`.
 HANDSHAKE-CLOSE-BY: 2026-12-04T23:59:59Z
-HANDSHAKE-READY-TO-READ: yes — the owner's standing word of 2026-11-03 for a lap that answers, files or announces and moves no pin; and the operator, 2026-11-10, "if you are waiting on the end full acceptance test, then wait, if not, do what you can"
+HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading; held on the operator's word of 2026-11-11, "get the next lap ready, but do not release."
 HANDSHAKE-NEXT-LAP: 17 (yours): your reading of the Full run, A3 from your repair record, and S9's commands in your runner.
 HANDSHAKE-TO-VERSION: platterpus 0.7.121
 
