@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**Our round 39 lap 3 is sent**, `OPEN`, under the standing word of 2026-11-03,
+with Platterpus's lap 2 filed byte for byte from their `main` at `f8b1e657`. Both
+sides read the test burn the same, and each side's `block_crcs` comparison
+reproduces the other's. The lap does four more things:
+- It owns the defect their lap found: our filing of 2026-11-10 dropped 26
+  records they had bundled.
+- It reads the C2 probe, which meets G4.
+- It proposes `C2 errors:` wordings that say what page 2Ah declares.
+- It writes two of their seam cells.
+
+The round waits on G5, the EAC re-rip. The lap was ready when the probe
+arrived, so it was rewritten to read the probe before it went out.
+
 **Round 39's C2 probe is filed** on our evidence branch at `74b6f0a`
 (`docs/rig-2026-11-11b-c2probe/`). It is Platterpus's runner on the BDR-209D,
 2026-11-11 from 22:54Z, its 56 files matching the sender's hashes. What it shows:
