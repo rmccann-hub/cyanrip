@@ -1,5 +1,23 @@
 Unreleased
 ==========
+**Round 39's test burn is filed** on our evidence branch at `f6b9188`
+(`docs/rig-2026-11-11-e531a33/`): `.31` through Platterpus's 0.7.122,
+2026-11-11 from 12:34:47Z, with all 83 of its `--diagnostics` records. Its
+script's verdict is not a pass: 651 passed and 1 failed, the same `expect-ctdb
+whole` on track 5's read as on 2026-11-10. What it shows:
+- **Track 3.** It came from the drive as `59D352DD` in all five burn rips.
+  Each whole-disc read got it wrong, and Platterpus's securing pass got it
+  right.
+- **The new rule's first run on a drive.** `--reread-until-accuraterip`
+  overruled an agreement on `3D8FCF0C` in burn rip 3 and kept the read
+  AccurateRip matched. It also overruled `E0036697` on track 5 in every pass,
+  each of which ran to its limit.
+- **G4's comparison.** Every wrong read of track 3 differs from the right one
+  in a single second (244, 251 or 252), and track 5's two values differ only
+  in second 144.
+
+KNOWN-ISSUES' cache table gains the run's row.
+
 **`tools/ingest-bundle.py` files cyanrip's `--diagnostics` records.** It filed
 text files and the run's verdict files only, so every `.json` was named as not
 filed. Round 39's test burn carried 83 records under `ripperdiagnostics/`, the
