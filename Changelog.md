@@ -1,5 +1,39 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.31 — 2026-11-11 — **beta**
+===============================================
+**Released on the beta channel on the owner's word of 2026-11-11**, relayed in
+the coordinator's note the owner gave this session: *"both applications
+release their next version with everything fixed so far, nothing held back, so
+the next test burn tests all of it at once."* It goes out before Platterpus's
+0.7.122, which reads it and sends its new option. Round 38 closed on `.30`;
+round 39 reviews `.31`, and its pin moves on the owner's word. Beta is this
+side's choice under v8 E3, and the stable channel stays `.23`.
+
+**What it ships since `.30`**, each in an entry below:
+- `--reread-until-accuraterip CONF`, which reads on past a `-Z` agreement
+  AccurateRip does not match (`85808ae6`);
+- the stall watchdog naming each drive command after the drive open
+  (`b1264f9c`), with its own copy of the name (`3e43ca74`).
+
+**Nothing built is held back.** Asked for and not in it, each with its reason:
+- **The `block_crcs` comparison** of track 3's and track 5's wrong reads. No
+  filed record holds a wrong read's per-second CRCs: none of the twelve filed
+  JSON files of 2026-11-03 to 2026-11-10 has a `block_crcs` array, and no filed
+  log of those dates has an `Other read:` line. Round 39's `-Z` rips print both.
+- **A drive report for any drive** (Platterpus's TASKS R137 part 1) shipped in
+  `.30`. `--diagnostics` with `--read-vendor-settings` writes `drive_declared`:
+  INQUIRY, every GET CONFIGURATION feature, MODE SENSE of every page under all
+  four page controls, and the vendor read where a row names the drive, as the
+  record filed for 2026-11-09 shows
+  (`docs/rig-2026-11-09-5cc1c6b/session/dumps/cyanrip-vendor.json`). `.31` adds
+  nothing to it.
+- **`docs/KNOWN-ISSUES.md`'s open entries** need a drive or the seam. Track 9's
+  undecided sector now has this drive's raw and formatted Q (`14b3e478`), and
+  only a second drive settles it.
+
 **The provider contract regenerated for `--reread-until-accuraterip`**: its
 option row, its refusal, the early-end `Done;` head, the eight overruled limit
 lines and the `Secure re-read:` row, with every line number after them moved.
