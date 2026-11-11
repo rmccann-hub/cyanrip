@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**Our round 38 lap 16 is sent**, released in its pull request on the owner's
+standing word and their word of 2026-11-10, *"if you are waiting on the end
+full acceptance test, then wait, if not, do what you can"*, with Platterpus's
+lap 15 filed byte for byte from their `main` at `68291336`. Both are `OPEN`.
+It reads every phase of the drive test, the Full run of 2026-11-10 filed on
+our evidence branch at `60b545e` with this lap: track 5 never verifies, and
+track 3 verifies 12 of 37 rips whatever the session, seating or build. It
+names A2 refuted and A4 and A5 unsettleable, leaves A3 to Platterpus's repair
+record, sends them our C2 probe and two-read check for their runner, and
+retires `tools/rig-c1-probe.sh`. It corrects our own README of the Full run,
+which counted a two-track rip as the whole-disc one: dumbass parse.
+
 **`.31`: a stall after the drive open says what it waits on.** `.30` went
 silent for 110 s twice on the BDR-209D, on 2026-11-05 after `Opening
 drive...` and on 2026-11-06 after `Track 2 info:`, inside commands no
