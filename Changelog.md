@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**The C2 probe's README named the wrong unnamed calls**, and now carries a dated
+correction: the capabilities and `drive_declared` queries run before `Opening
+drive...` prints, and the TOC is read inside the named drive open, so none of
+the three can be where the lone `cyanrip -I` sat. Our round 39 lap 3 S13 and S16
+name no call, and stand.
+
 **The calls between the drive open and the first pregap search name
 themselves to the stall watchdog**, for the next build: the speed setting, the
 lead-out address lookup, the first track number lookup, the last-session query

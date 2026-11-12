@@ -60,7 +60,12 @@ searches, a wording `.31` is the first release to carry.
 **Questioned:**
 - **The lone read's silence.** It contradicts what `.31`'s named waits were for. The commands
   between the drive open and the first pregap search carry no name: the capabilities and
-  `drive_declared` queries and the TOC read. Ours to name.
+  `drive_declared` queries and the TOC read. Ours to name. **Corrected 2026-11-12**: those are the
+  wrong calls. The capabilities and `drive_declared` queries are made before `Opening drive...`
+  prints, and libcdio reads the TOC inside the drive open, a named wait, so none of the three can
+  be where the lone read sat. Between the open and the first pregap search, the build after `.31`
+  names the speed setting, the lead-out and first track lookups, the last-session query and a data
+  track's format query; whether the silence was in one of them is not known.
 - **B's 690 packets with no output.** Ours, with the trace's commands decoded.
 
 **Possibly missing:**
