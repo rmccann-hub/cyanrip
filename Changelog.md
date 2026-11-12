@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**The calls between the drive open and the first pregap search name
+themselves to the stall watchdog**, for the next build: the speed setting, the
+lead-out address lookup, the first track number lookup, the last-session query
+and a data track's track format query. On 2026-11-11 a lone `cyanrip -I` on
+the BDR-209D printed nothing after `Opening drive...` for 300 s. The open is a
+named wait, so it was past it, in a call nothing named; which one is not
+known. Dumbass `.31` named the waits on either side of these and left the gap
+between them unnamed. `tests/slowcall.c` makes
+one of these calls sleep 12 s after the open. `sc_named_waits_after_the_open`
+reads the watchdog's line for the last-session query and the lead-out lookup;
+with either name removed, the 12 s pass in silence, as on the rig. The `Still
+waiting:` line's shape is unchanged; only its `<what>` gains values. Not run on
+a drive.
+
 **`Secure re-reads: every track converged or matched AccurateRip`**, for the
 next build. A track `--reread-until-accuraterip` ends on an AccurateRip match
 neither converged nor failed, so `.31` printed no footer line when one did and

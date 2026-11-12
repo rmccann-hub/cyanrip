@@ -8752,6 +8752,49 @@ def sc_reread_time_limit():
                  f"{'carries' if said in text else 'lacks'} {said!r}; want 64 and it")
 
 
+def sc_named_waits_after_the_open():
+    """A COMMAND BETWEEN THE DRIVE OPEN AND THE FIRST PREGAP SEARCH SAYS SO.
+
+    On 2026-11-11 a lone `cyanrip -I` on the BDR-209D printed nothing after
+    `Opening drive...` for 300 s (the C2 probe's run; our round 39 lap 3
+    S13): the drive open is a named wait, so it was past it, in a command
+    no wait named, which one not known. The calls between the open and the
+    first pregap search now name themselves. tests/slowcall.c makes the
+    first of one of them after the open sleep 12 s, past the watchdog's 10 s,
+    and the run must name it while it waits and when it returns. Two of them,
+    the last-session query and the lead-out address lookup, are made on an
+    image as on a drive.
+    """
+    needs_preload_shim("named_waits_after_the_open")
+    shim = os.environ.get("CYANRIP_SLOWCALL_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"named_waits_after_the_open: the shim was not built or not passed ({shim!r})")
+        return
+    for call, what in (("cdio_get_last_session", "the last-session query"),
+                       ("cdio_get_track_lsn", "the lead-out address lookup")):
+        marker = WORK / f"slowcall-{call}.done"
+        if marker.exists():
+            marker.unlink()
+        env = dict(os.environ, LD_PRELOAD=shim, CRIP_SLOW_CALL=call,
+                   CRIP_SLOW_SECS="12", CRIP_SLOW_OUT=str(marker),
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        ec, text = crip("-d", WORK / "basic.cue", "-I", "-N", "-A", "-U", env=env)
+        if not marker.exists():
+            fail(f"named_waits_after_the_open: {call} never slept, so the run "
+                 f"proves nothing")
+            continue
+        if ec != 0:
+            fail(f"named_waits_after_the_open: {call}: cyanrip exited {ec}")
+        for want in (f"Still waiting: {what} has not returned after 10s",
+                     f"{what} returned after 12s"):
+            if want not in text.splitlines():
+                got = [ln for ln in text.splitlines()
+                       if "waiting" in ln.lower() or "returned after" in ln]
+                fail(f"named_waits_after_the_open: {call}: no line {want!r}; "
+                     f"got {got}")
+
+
 def sc_reread_until_accuraterip():
     """--reread-until-accuraterip ACTS ONLY WITH -Z, AND NOT WITHOUT ACCURATERIP.
 

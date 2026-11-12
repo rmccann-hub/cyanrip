@@ -513,7 +513,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
      * libcdio reports a drive that refuses and a driver that cannot send
      * the command alike, so the line does not say which. */
     if (settings->speed) {
+        crip_stall_wait_begin("the speed setting");
         ret = cdio_cddap_speed_set(ctx->drive, settings->speed);
+        crip_stall_wait_end();
         msg = cdio_cddap_errors(ctx->drive);
         if (msg) {
             cyanrip_log(ctx, 0, "cdio error: ");
@@ -573,7 +575,18 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
     ctx->start_lsn = 0;
 
+    /* The calls between the drive open and the first pregap search each
+     * name themselves to the stall watchdog, as the open and the searches
+     * do. On 2026-11-11 a lone `cyanrip -I` printed nothing after `Opening
+     * drive...` for 300 s: past the named open, in a call no wait named,
+     * which one not known (docs/rig-2026-11-11b-c2probe/; our round 39 lap
+     * 3 S13 and S16). The open has read the TOC and asked the last session
+     * already; on Linux the last-session and track-format queries ask the
+     * drive again, and the two lookups answer from libcdio's copy of the TOC,
+     * named all the same so that one which blocks is seen. */
+    crip_stall_wait_begin("the lead-out address lookup");
     ctx->end_lsn = cdio_get_track_lsn(ctx->cdio, CDIO_CDROM_LEADOUT_TRACK) - 1;
+    crip_stall_wait_end();
     ctx->audio_end_lsn = ctx->end_lsn;
     ctx->duration_frames = ctx->end_lsn - ctx->start_lsn + 1;
 
@@ -585,13 +598,17 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         return AVERROR(EINVAL);
     }
 
+    crip_stall_wait_begin("the first track number lookup");
     int first_track_nb = cdio_get_first_track_num(ctx->cdio);
+    crip_stall_wait_end();
 
     /* Drives report where the last session starts, disc images usually don't */
     lsn_t last_session_lsn;
+    crip_stall_wait_begin("the last-session query");
     int single_session =
         cdio_get_last_session(ctx->cdio, &last_session_lsn) == DRIVER_OP_SUCCESS &&
         last_session_lsn <= cdio_get_track_lsn(ctx->cdio, first_track_nb);
+    crip_stall_wait_end();
 
     for (int i = 0; i < ctx->nb_cd_tracks; i++) {
         cyanrip_track *t = &ctx->tracks[i];
@@ -600,7 +617,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         t->number = t->cd_track_number = i + first_track_nb;
         t->track_is_data = !cdio_cddap_track_audiop(ctx->drive, t->number);
         if (t->track_is_data) {
+            crip_wait_begin_track("the track format query", t->number);
             track_format_t format = cdio_get_track_format(ctx->cdio, t->number);
+            crip_stall_wait_end();
             t->data_mode = (format == TRACK_FORMAT_XA || format == TRACK_FORMAT_CDI ||
                             format == TRACK_FORMAT_PSX) ? 2 : 1;
         }
