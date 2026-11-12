@@ -551,6 +551,10 @@ test('Fork options are long-only', python,
 ## 2026-10-19, item 3. Its history is in docs/history/.
 test('CLAUDE.md within its cap', python,
      args: [ files('claude_md_cap.py') ])
+## A burn writes a disc (the owner, 2026-11-11, in Platterpus's round 39 lap 4
+## S10): no living text of ours calls a read one; the records keep their words.
+test('Burn means writing a disc', python,
+     args: [ files('burn_means_writing.py') ])
 
 ## And the table the probe publishes, in the shared docs/seam-commands.md §7,
 ## bounded by its generated-block delimiters so the check never reads prose the

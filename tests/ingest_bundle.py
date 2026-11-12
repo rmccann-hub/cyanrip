@@ -154,7 +154,7 @@ def test_the_not_filed_list_is_derived_not_written():
 def test_cyanrip_records_are_filed_and_other_json_is_named():
     """A --diagnostics record is filed by its schema; any other .json is named.
 
-    Round 39's test burn carried 83 records under ripperdiagnostics/, and all
+    Round 39's five-rip run carried 83 records under ripperdiagnostics/, and all
     83 were named as not filed, so the per-second CRCs our round 39 lap 1 S10
     asked for never reached the evidence branch. The schema decides, not the
     folder: the second record sits where no record has been before.

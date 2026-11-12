@@ -93,6 +93,8 @@ hardware"); **check what an absence means** (`none` and `unknown (reason)` are
 different claims); **check the age** (never one timestamp for data of two ages);
 and ask what a reader would be entitled to conclude. A frozen imprecise word is
 documented and its rename proposed in a round, never reworded silently.
+**A burn writes a disc** (owner, 2026-11-11): a read is a rip, never a burn;
+round 39's five rips are the five-rip run (`tests/burn_means_writing.py`).
 
 **Tone, from round 37** (owner, 2026-10-28): when either side botches something
 easy, say so with bite in laps, commits, pull requests, the Changelog and notes
