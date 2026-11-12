@@ -304,11 +304,21 @@ static void append_track(char *buf, size_t size, int *len, int *truncated,
  * track finished and converged. A rip that stopped with none named prints no
  * line, because that sentence would be false of the track it stopped in, and
  * `Rip completed:` and `Partial files:` say what stopped. At most 99 tracks
- * joined by ", " fill 394 bytes, so the list is never cut. */
+ * joined by ", " fill 394 bytes, so the list is never cut.
+ *
+ * A track --reread-until-accuraterip ended on an AccurateRip match neither
+ * converged nor failed, so `.31` printed no line when one did and none
+ * failed. `every track converged or matched AccurateRip` says so: printed
+ * only when at least one track matched and every other converged, as our
+ * round 39 lap 1 S7 proposed and Platterpus's lap 2 S5 accepted, with their
+ * two requests our lap 3 S2 took: the `did not converge` form names only
+ * repeat-limit and time-limit tracks, and without a match the line is
+ * `every track converged`. */
 static void print_secure_reread_summary(cyanrip_ctx *ctx)
 {
     char tracks[512];
     int len = 0, truncated = 0, nb_asked = 0, nb_converged = 0, nb_failed = 0;
+    int nb_matched = 0;
 
     if (!ctx->settings.ripping_retries)
         return;
@@ -322,6 +332,8 @@ static void print_secure_reread_summary(cyanrip_ctx *ctx)
             continue;
         if (t->secure_rip_state == CYANRIP_SECURE_RIP_CONVERGED) {
             nb_converged++;
+        } else if (t->secure_rip_state == CYANRIP_SECURE_RIP_AR_MATCHED) {
+            nb_matched++;
         } else if (t->secure_rip_state == CYANRIP_SECURE_RIP_LIMIT_HIT ||
                    t->secure_rip_state == CYANRIP_SECURE_RIP_TIME_LIMIT) {
             nb_failed++;
@@ -335,6 +347,8 @@ static void print_secure_reread_summary(cyanrip_ctx *ctx)
                     nb_failed, nb_failed == 1 ? "" : "s",
                     nb_failed == 1 ? "" : "s",
                     tracks, truncated ? ", list truncated" : "");
+    else if (nb_asked && nb_matched && nb_converged + nb_matched == nb_asked)
+        cyanrip_log(ctx, 0, "Secure re-reads: every track converged or matched AccurateRip\n");
     else if (nb_asked && nb_converged == nb_asked)
         cyanrip_log(ctx, 0, "Secure re-reads: every track converged\n");
 }
