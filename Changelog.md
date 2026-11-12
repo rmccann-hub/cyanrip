@@ -24,7 +24,10 @@ tracks 3 and 5 do not.
 EAC and cyanrip have read the same wrong values of tracks 3, 4 and 5 from this
 drive. The log's `Filename` lines carry the owner's Windows home folder, which
 the owner's rule turns to `~` in anything filed; changing any line breaks EAC's
-log checksum, so how it is filed is Platterpus's call.
+log checksum, so how it is filed is Platterpus's call. They filed it at
+`platterpus@00a3592b` as `output_reference/EAC_wav/eac_wav_police_classics_20261112.log`,
+33,498 bytes, the folder written `<name>` at the owner's choice, with the
+delivered file's sha256 in their README.
 
 **The golden reference and the interrupted sample regenerated for our round 39
 lap 5**: their `Handshake:` line now names round 39's lap 5.
