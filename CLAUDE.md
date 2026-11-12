@@ -12,6 +12,13 @@ review of 2026-10-19, item 3). The reasons and citations behind them are in
 *Procedures* before rebuilding a step from git history**: a re-derived fact can
 come out wrong, and a rebuilt step is how one gets dropped.
 
+**The first question, every session, in both repositories** (owner,
+2026-11-12): *who released the last lap, and who holds the next?* Answer it
+from both sides' `main`, ours under `docs/handshake/` and theirs under
+`docs/handshake/outbound/`, each lap by its `HANDSHAKE-READY-TO-READ`, at a
+session's start and before ending a turn (owner, 2026-10-19). Without it a
+session busy elsewhere misses a turn that is ours, or acts on a lap still held.
+
 ## Build and test
 
     meson setup build
@@ -182,12 +189,10 @@ documentation, never to evidence.
   publishes it**, sent when it merges green (operator, 2026-10-19); re-read
   their record before the merge. Standing since 2026-11-03 (owner): a lap that
   answers, files or announces and moves no pin. Otherwise it is published held.
-- **Each side reads the other directly** (owner, 2026-10-19): at a session's
-  start and before ending a turn, read Platterpus's `main`,
-  `docs/handshake/outbound/`. A newer lap released to us is the cue to file it
-  (`tools/take-in-lap.py`) and answer. `ASK:` carries only what the owner keeps:
-  hardware runs, releases no standing word covers, overrides, the second-read
-  default, and anything outside the two repositories.
+- **A newer lap released to us** (the first question, at the top) is the cue
+  to file it (`tools/take-in-lap.py`) and answer. `ASK:` carries only what the
+  owner keeps: hardware runs, releases no standing word covers, overrides, the
+  second-read default, and anything outside the two repositories.
 
 ## Personal details stay out of what is committed
 
