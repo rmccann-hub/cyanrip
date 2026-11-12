@@ -30,7 +30,9 @@ README, three rig READMEs (each with a dated note) and two comments.
 `tests/burn_means_writing.py` holds it there. It passes only lines about writing
 a disc, and keeps the records as written: laps sent before the rule, every lap
 of theirs, the evidence manifest, `docs/history/` and the released sections.
-It fails with one of the 24 put back.
+It fails with one of the 24 put back. Its first push found nothing on macOS,
+whose `git grep -E` has no `\b`; it now greps a fixed string and finds the
+word in Python, and its own guard against reading nothing is what caught it.
 
 **The provider contract regenerated for the footer's third form**: P2 gains
 `Secure re-reads: every track converged or matched AccurateRip`, and every line

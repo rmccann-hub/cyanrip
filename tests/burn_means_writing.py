@@ -70,9 +70,12 @@ def released_from(path):
 
 
 # --untracked: a file not yet added is still text someone is about to commit,
-# and a run that skipped it would pass on what it never read.
-out = subprocess.run(["git", "grep", "--untracked", "-I", "-n", "-i", "-E",
-                      r"\bburn"], cwd=ROOT, capture_output=True,
+# and a run that skipped it would pass on what it never read. A fixed string,
+# because git grep's -E is the platform's regex library, and macOS's has no
+# \b: there the word-boundary pattern matched nothing at all, and only the
+# guard below said so. BURN finds the word on the lines it returns.
+out = subprocess.run(["git", "grep", "--untracked", "-I", "-n", "-i", "-F",
+                      "burn"], cwd=ROOT, capture_output=True,
                      encoding="utf-8")
 if out.returncode not in (0, 1):
     print(f"FAIL: git grep exited {out.returncode}: {out.stderr.strip()}")
@@ -82,7 +85,7 @@ failures, records, allowed = [], 0, 0
 cut = {}
 for hit in out.stdout.splitlines():
     path, num, text = hit.split(":", 2)
-    if path == THIS:
+    if path == THIS or not BURN.search(text):
         continue
     if is_record(path):
         records += 1
