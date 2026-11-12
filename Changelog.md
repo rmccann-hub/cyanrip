@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**Our round 39 lap 5 is sent**, `OPEN`, under the standing word of 2026-11-03,
+with Platterpus's lap 4 filed byte for byte from their `main` at `23c8c55c`. It
+checks their lap against their code at their 0.7.123: their reader takes both
+`C2 errors:` wordings our lap 3 S14 proposed, so our next build prints them
+(S4), and every pass of theirs with `-Z` now sends `--reread-until-accuraterip`.
+It writes their two seam cells, adopts the owner's two words of 2026-11-11 and
+2026-11-12, and stays `OPEN` on G5's EAC re-rip, as our lap 3 S17 said.
+
 **Platterpus's two cells of their round 39 lap 4 S5 are in `seam-commands.md`**,
 written as given for them to copy: `--reread-until-accuraterip` is now sent on
 every pass with `-Z`, and `--reread-time-limit`, whose cell said not sent, is
