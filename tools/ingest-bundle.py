@@ -114,7 +114,7 @@ TEXT_SUFFIXES = (".log", ".cue", ".txt", ".toc", ".md")
 
 # CYANRIP'S OWN --diagnostics RECORDS ARE FILED, whatever their name or folder.
 # Until 2026-11-11 a record was a .json, so it was named as not filed and
-# dropped: all 83 of round 39's test burn, under `ripperdiagnostics/`, the
+# dropped: all 83 of round 39's five-rip run, under `ripperdiagnostics/`, the
 # per-second CRCs our round 39 lap 1 S10 asked to have bundled. Known by what
 # the file says it is, its "schema", never by a name or a path, which the
 # sender chooses (the 2026-10-06 bundle kept them under session/diagnostics/).

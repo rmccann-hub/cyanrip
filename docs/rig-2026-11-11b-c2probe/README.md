@@ -1,7 +1,11 @@
 # Rig session 2026-11-11b — the C2 probe and the two-read check, Platterpus's runner, the reference disc
 
+**Reworded 2026-11-12**, on the owner's word that a burn writes a disc (Platterpus's
+round 39 lap 4 S10): round 39's five back-to-back rips are the five-rip run here. The
+evidence's folder names keep the word their runner gave them.
+
 **What this is.** Round 39's G4 probe: Platterpus's `docs/rig-scripts/drivetest.sh`, its `probe`
-entry, run by the owner on the BDR-209D from 22:54:27Z, after the test burn
+entry, run by the owner on the BDR-209D from 22:54:27Z, after the five-rip run
 (`docs/rig-2026-11-11-e531a33/`). It ran three things:
 - **The two-read check:** one `cyanrip -I -N` alone, then two 2.4 s apart, then the pair again
   under `strace`.
@@ -27,8 +31,8 @@ searches, a wording `.31` is the first release to carry.
    - **On the track.** By the TOC (track 5 from LSN 72570) and the read offset of +667 samples,
      those are track 5's samples 6,385,264, 6,385,273 and 6,385,275, at 02:24.79, which is 02:24:59
      in frames.
-   - **How it matches.** Platterpus's report of the test burn places `E0036697`'s three-sample
-     difference from CTDB's 1,425-submission entry at "@02:24:59", and the burn's records put track
+   - **How it matches.** Platterpus's report of the five-rip run places `E0036697`'s three-sample
+     difference from CTDB's 1,425-submission entry at "@02:24:59", and the run's records put track
      5's every disagreement in second 144 (02:24).
    - **The block error byte.** The `14h` read also sets it for that frame, `38h`.
 2. **No C2 bit is set at track 3's three LBAs** (46422, 46446 and 46911, three reads each) **or at
@@ -73,7 +77,7 @@ searches, a wording `.31` is the first release to carry.
 - **The audio of the C2 reads at track 3,** to say whether each was right or wrong.
 
 **To add next time:**
-- **At track 3's LBAs, a C2 read that keeps its audio,** CRC'd per second against the burn's
+- **At track 3's LBAs, a C2 read that keeps its audio,** CRC'd per second against the run's
   records, so each read is known right or wrong.
 - **An LBA in second 252 (47004).**
 - **`--version` before the two-read check,** so the build is in the delivery.

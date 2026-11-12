@@ -1,10 +1,14 @@
-# Rig session 2026-11-11 — build `e531a33` (`.31`), Platterpus 0.7.122, **Full**, round 39's test burn
+# Rig session 2026-11-11 — build `e531a33` (`.31`), Platterpus 0.7.122, **Full**, round 39's five-rip run
+
+**Reworded 2026-11-12**, on the owner's word that a burn writes a disc (Platterpus's
+round 39 lap 4 S10): round 39's five back-to-back rips are the five-rip run here. The
+evidence's folder names keep the word their runner gave them.
 
 **Read the build, not the date.** `.31` at `e531a33` and Platterpus **0.7.122**
 (tag `v0.7.122`, the newest when the run began at 12:34:47Z). The paired rips
 `accuracy A1` to `A4` and `timing A1` and `A2` ran `.30` at `5cc1c6b`; every
-other cyanrip log opens with `platterpus-fork-ge531a33`. It is round 39's test
-burn, the run our round 39 lap 1 S16 closes on.
+other cyanrip log opens with `platterpus-fork-ge531a33`. It is round 39's
+five-rip run, the run our round 39 lap 1 S16 closes on.
 
 **The script's verdict is not a pass**: pass 651, fail 1, error 0, unreachable
 1, info 22 (`session/run/report.json`). The one failure is `expect-ctdb whole`
@@ -20,7 +24,7 @@ filing that carries cyanrip's `--diagnostics` records: 83 of them, under
 
 ## What it establishes
 
-1. **The five burn rips.** Each is a default whole-disc rip of `.31` through
+1. **The five rips.** Each is a default whole-disc rip of `.31` through
    0.7.122, followed by Platterpus's securing pass of tracks 3 and 5,
    `-Z 2 -r 5 -l 3,5 --reread-until-accuraterip 2 --reread-time-limit 1457`
    (each folder's `.platterpus-securing-pass.txt`).
@@ -36,7 +40,7 @@ filing that carries cyanrip's `--diagnostics` records: 83 of them, under
      L1919, L1929, L1939, L1949). The repair and that reading are theirs.
 2. **`--reread-until-accuraterip` ran on a drive for the first time**, and
    printed what our round 39 lap 1 S4 announced.
-   - **Burn rip 3's securing pass, track 3.** The reads agreed on `3D8FCF0C`
+   - **Rip 3's securing pass, track 3.** The reads agreed on `3D8FCF0C`
      three times. Read 4 was `59D352DD`, and the track ended there:
      `Done; (read 4 matches AccurateRip at confidence 200; agreement on
      3D8FCF0C overruled by AccurateRip; kept 59D352DD, read 1 time)`, then
@@ -72,7 +76,7 @@ filing that carries cyanrip's `--diagnostics` records: 83 of them, under
    - **Right (`59D352DD`):** all 8 paired `accuracy` rips, 4 on `.30` and 4 on
      `.31`; the first whole-disc rip of the run; all 5 securing passes.
    - **Wrong:** all 4 `timing` rips (`3D8FCF0C` three times, `E5BEB068`); all
-     5 burn rips' whole-disc reads; the whole-disc secure re-read.
+     5 rips' whole-disc reads; the whole-disc secure re-read.
    - **The secure re-read.** It ran `-Z 2` without
      `--reread-until-accuraterip`, so its agreement on `3D8FCF0C` (reads 1
      and 4) ended the track. Platterpus's chase then read `3F5462BB` and
@@ -91,7 +95,7 @@ filing that carries cyanrip's `--diagnostics` records: 83 of them, under
 - **G5.** The owner's EAC re-rip is not in this bundle.
 - **Why the reads land where they do.** Nothing here varies anything that
   changes it.
-- **What the burn says against S16.** That is each side's lap.
+- **What the run says against S16.** That is each side's lap.
 
 ## Questions, gaps and next time
 

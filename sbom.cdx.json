@@ -1024,6 +1024,10 @@
         },
         {
           "name": "cyanrip-fork:run-by",
+          "value": "tests/burn_means_writing.py"
+        },
+        {
+          "name": "cyanrip-fork:run-by",
           "value": "tests/commit_subjects.py"
         },
         {
@@ -1426,5 +1430,5 @@
       "dependsOn": []
     }
   ],
-  "serialNumber": "urn:uuid:35d72944-3742-5e82-82fc-8d6d3d3b20ed"
+  "serialNumber": "urn:uuid:25de0f85-26c6-5e25-912b-c7a541ea3eeb"
 }
