@@ -264,17 +264,9 @@ Each of these is a confident wrong answer this repository has produced.
 
 ## Releases
 
-Bump `+platterpus.N` and write the Changelog; from that clean commit regenerate
-every derived file naming the version (contract, golden reference and
-interrupted sample, dependency map); prove the candidate from a clean checkout
-(`tools/record-release-suite.py`, under `docs/release-evidence/`, and a `git
-archive` build whose rip verifies with `-Y`); then one publish commit appending
-a `docs/release-ledger.tsv` row (append only) and regenerating
-`release-manifest.json`. Commands: the handshake README, *Cutting a release*.
-
-A release is published when `release-manifest.json` names it.
-Choose the released commit after the artifacts agree, never at the bump. It
-does not wait for a round (v8 §6b).
+Cut one by the handshake README's *Cutting a release*. A release is published
+when `release-manifest.json` names it; choose the released commit after the
+artifacts agree, never at the bump. It does not wait for a round (v8 §6b).
 **Never decide by parsing the version**: order by `release_seq`.
 
 ## Watching upstream

@@ -553,17 +553,27 @@ that. Then, from that clean commit, regenerate every derived file that names
 the version, and commit them as the candidate:
 
 ```sh
-ninja -C build && python3 tools/gen-provider-contract.py > PROVIDER-CONTRACT.md \
+c=$(mktemp) && ninja -C build \
+               && python3 tools/gen-provider-contract.py > "$c" \
+               && cp "$c" PROVIDER-CONTRACT.md \
                && python3 tools/gen-golden-reference.py \
                && python3 tools/gen-golden-reference.py --interrupted \
                && python3 tools/gen-dependency-map.py
 ```
 
 The dependency map was missing from this list until `.24`, whose first
-candidate failed `Dependency map is current` on it. Prove the candidate from a
-clean checkout, `python3 tools/record-release-suite.py <candidate>`, and file
-its output under `docs/release-evidence/<candidate>-suite.txt` with the
-publish commit, which appends the ledger row and regenerates the manifest
+candidate failed `Dependency map is current` on it. The contract goes through a
+scratch file because redirecting straight into `PROVIDER-CONTRACT.md` empties
+it first, and the generator then refuses the dirty tree.
+
+Prove the candidate from a clean checkout, `python3
+tools/record-release-suite.py <candidate>`, and file its output under
+`docs/release-evidence/<candidate>-suite.txt`. Build it again from `git archive
+<candidate>` with `-Ddeclare_released=true`: it must name itself by the
+candidate's hash, and its rip of `tests/fixtures/cdda.nrg` must verify with
+`-Y`. Choose the released commit only once those agree, never at the bump. Then
+one publish commit files the suite's output, appends the row to
+`docs/release-ledger.tsv` (append only) and regenerates the manifest
 (`tools/gen-release-manifest.py`, then `--check`).
 
 ### Running cyanrip by hand on a disc image
