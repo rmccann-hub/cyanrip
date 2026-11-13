@@ -19,9 +19,9 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc3+platterpus.31 (platterpus-fork-gcff3368)
+cyanrip 0.9.4-rc3+platterpus.31 (platterpus-fork-g2a49776)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 --consumer platterpus/0.6.21 -D o --diagnostics o/sample.diagnostics.json
-Handshake:      round 39 lap 5 OPEN, verdict OPEN -- NOT a released build
+Handshake:      round 39 lap 7 closed, verdict GO -- NOT a released build
 Consumer:       platterpus/0.6.21
                 (reported by the caller, not verified by cyanrip)
 Drive used:     none (disc image, read by libcdio's CDRWIN driver, revision 2.1.)
@@ -69,6 +69,14 @@ Tracks:
 
 Repeating ripping (0 out of 199 matches for current checksum D36D9296)
 
+Repeating ripping (1 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (2 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (3 out of 199 matches for current checksum D36D9296)
+
+Repeating ripping (4 out of 199 matches for current checksum D36D9296)
+
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -93,7 +101,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          20
+  READ:          81
 
 Ripping errors: 0
 Encoder errors: not applicable; no whole track was encoded
@@ -101,5 +109,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-11-12T01:17:30+00:00
-Log FUN512: 8NN_r6PqsRfxIgYB2XWQBYZVpCOrobr9vRtJH2m3XwLMB4dOk6L9s21y4Rb3hidbbhQb0mIHSIVLVLn6V1NR0g
+Ripping finished at 2026-11-13T01:02:47+00:00
+Log FUN512: xkEcLryQX3QV9jZtEdLZC54oKBSr8DpjlQ5D0Bgg87.RdXR2U4nh06tPYzX5Dm188KLoUNJIk0cysWY0mQUXHQ
