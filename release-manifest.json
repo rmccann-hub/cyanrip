@@ -6,7 +6,7 @@
       "handshake_round": 39,
       "install": "https://github.com/rmccann-hub/cyanrip/archive/e531a33.tar.gz",
       "release_seq": 42,
-      "round_closed": false,
+      "round_closed": true,
       "version": "0.9.4-rc3+platterpus.31"
     },
     "stable": {
