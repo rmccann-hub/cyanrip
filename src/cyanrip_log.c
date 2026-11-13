@@ -1280,7 +1280,8 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
                 crip_speed_text(speed, sizeof(speed), ctx->settings.speed,
                                 ctx->is_image, ctx->speed_failed));
     cyanrip_log(ctx, 0, "C2 errors:      %s\n",
-                crip_c2_text(!!(ctx->rcap & CDIO_DRIVE_CAP_ERROR),
+                crip_c2_text(ctx->is_image,
+                             !!(ctx->rcap & CDIO_DRIVE_CAP_ERROR),
                              !!(ctx->rcap & CDIO_DRIVE_CAP_READ_C2_ERRS)));
     cyanrip_log(ctx, 0, "Accurate stream: %s\n", crip_accurate_stream_text(ctx->accurate_stream));
     char recordable[64];

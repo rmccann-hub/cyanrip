@@ -76,11 +76,20 @@ const char *crip_recordable_text(char *buf, size_t size, int profile);
 const char *crip_speed_text(char *buf, size_t size, int speed, int is_image,
                             int failed);
 
-/* The `C2 errors:` value: `caps_failed` that the capabilities query failed,
- * which sets every capability word to CDIO_DRIVE_CAP_ERROR, so the C2 bit's
- * absence says nothing (our round 36 lap 12 S11 (c), accepted by
- * Platterpus's lap 13 S5); `c2` that the drive declares C2 reporting. */
-const char *crip_c2_text(int caps_failed, int c2);
+/* The `C2 errors:` value, which says what the capabilities page declares and
+ * never what the drive can do: on 2026-11-11 the BDR-209D, whose page denies
+ * C2, returned C2 pointers that flagged track 5's error (our round 39 lap 3
+ * S11 and S14). `caps_failed` that the capabilities query failed, which sets
+ * every capability word to CDIO_DRIVE_CAP_ERROR, so the C2 bit's absence
+ * says nothing (our round 36 lap 12 S11 (c), accepted by Platterpus's lap 13
+ * S5), and decides first, since a failure is the stronger fact and an image
+ * with a failed query is how tests/imagecap.c reaches that arm; `is_image`
+ * that the device is a disc image, which has no page to ask; `c2` that the
+ * page declares C2 reporting. The wordings are our round
+ * 39 lap 3 S14's, which Platterpus's 0.7.123 reads (their lap 4 S3) and our
+ * lap 5 S4 announced; an image's is the `unknown (image)` of the lines
+ * beside it, which that reader takes as `unknown` with its reason. */
+const char *crip_c2_text(int is_image, int caps_failed, int c2);
 
 /* WHAT THE DRIVE DECLARES, ASKED IN FULL AND KEPT AS IT ANSWERED (round 38,
  * for +platterpus.30; docs/research/2026-11-04-drive-settings.md). Three

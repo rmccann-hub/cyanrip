@@ -80,12 +80,12 @@ static void expect_speed(int speed, int is_image, int failed, const char *want)
     }
 }
 
-static void expect_c2(int caps_failed, int c2, const char *want)
+static void expect_c2(int is_image, int caps_failed, int c2, const char *want)
 {
-    const char *got = crip_c2_text(caps_failed, c2);
+    const char *got = crip_c2_text(is_image, caps_failed, c2);
     if (strcmp(got, want)) {
-        printf("FAIL: caps failed %i, C2 %i reads \"%s\", want \"%s\"\n",
-               caps_failed, c2, got, want);
+        printf("FAIL: image %i, caps failed %i, C2 %i reads \"%s\", want \"%s\"\n",
+               is_image, caps_failed, c2, got, want);
         fails++;
     }
 }
@@ -115,12 +115,21 @@ int main(void)
     expect_speed(8, 0, 1, "default (setting 8x failed)");
     expect_speed(8, 1, 1, "default (disc image, 8x not applied)");
     expect_speed(48, 1, 0, "default (disc image, 48x not applied)");
-    expect_c2(0, 1, "supported by drive, not used");
-    expect_c2(0, 0, "unsupported by drive");
+    expect_c2(0, 0, 1, "declared supported by drive (capabilities page), not used");
+    expect_c2(0, 0, 0, "not declared by drive (capabilities page, not measured)");
+    /* An image has no capabilities page: whatever libcdio's image driver
+     * fills in, the line says so (on cdda.nrg it said "unsupported by
+     * drive", where there is no drive) */
+    expect_c2(1, 0, 0, "unknown (image)");
+    expect_c2(1, 0, 1, "unknown (image)");
+    /* ...unless the query failed, which decides first: tests/imagecap.c
+     * reaches that arm through an image, and a failure is the stronger
+     * fact (sc_drive_answers_as_answers, case (c)) */
+    expect_c2(1, 1, 0, "unknown (capabilities query failed)");
     /* A failed query's words carry CDIO_DRIVE_CAP_ERROR alone, so the C2
      * bit cannot be set beside it; the failure decides either way */
-    expect_c2(1, 0, "unknown (capabilities query failed)");
-    expect_c2(1, 1, "unknown (capabilities query failed)");
+    expect_c2(0, 1, 0, "unknown (capabilities query failed)");
+    expect_c2(0, 1, 1, "unknown (capabilities query failed)");
 
     /* The four wordings, as round 32 lap 1 S19 proposed them */
     expect_text(CRIP_ACCURATE_STREAM_SUPPORTED,
