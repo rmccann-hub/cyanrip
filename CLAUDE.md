@@ -165,9 +165,8 @@ documentation, never to evidence.
 
 ## The operator, and Platterpus
 
-- **Times to the operator are US Eastern on a 12-hour clock with the zone**
-  (`1:45 PM EDT`; the operator's word of 2026-10-19). Wire values (lap headers
-  and statements, commit dates, `STATUS.md`) stay UTC.
+- **Times to the operator: US Eastern, 12-hour, with the zone** (`1:45 PM EDT`;
+  owner, 2026-10-19); wire values (laps, commit dates, `STATUS.md`) stay UTC.
 - Every lap ends with `## Diagnostics`, and a round's last lap carries
   `## Round summary` before it: the operator's items 2 and 3 of 2026-10-14, word
   for word in `docs/handshake/README.md`, *Writing our lap, held*.
@@ -186,7 +185,9 @@ documentation, never to evidence.
 
          If a reply needs no handoff, end it with: HANDOFF: none
 
-  Its time gives both zones: `HANDOFF from fork, 2:35 PM EDT (18:35 UTC)`.
+  Its first line gives both zones and whose turn it is (owner, 2026-11-13):
+  `HANDOFF from fork, 2:35 PM EDT (18:35 UTC): my turn to wait. Round 39 lap 5
+  went to Platterpus; expecting round 39 lap 6 back.`, or *my turn to send*.
 - **A lap a standing release word covers is released in the pull request that
   publishes it**, sent when it merges green (operator, 2026-10-19); re-read
   their record before the merge. Standing since 2026-11-03 (owner): a lap that
