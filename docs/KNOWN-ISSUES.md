@@ -53,10 +53,13 @@ pointers, and it flags three bytes at track 5's 02:24:59 in four reads of four.
 **What it costs**: a reader of the log takes the drive to be unable to report C2
 errors, which it can. The label asserts what one declaration implied.
 
-**Not fixed**: the line is in the contract's P2, so its wording goes to Platterpus
-first. Our round 39 lap 3 proposes `not declared by drive (capabilities page, not
-measured)` and `declared supported by drive (capabilities page), not used`, worded
-as `Accurate stream:` words its own declaration.
+**Fixed for the next build**, not in `.31`: the line says `not declared by drive
+(capabilities page, not measured)` or `declared supported by drive (capabilities
+page), not used`, our round 39 lap 3 S14's wordings, which Platterpus's 0.7.123
+reads (their lap 4 S3) and our lap 5 S4 announced. A disc image, which has no
+capabilities page and said `unsupported by drive`, says `unknown (image)`, as the
+lines beside it do. `tests/drivecaps.c` holds each wording and fails with the old
+ones restored. `.31`'s logs still say what this entry describes.
 
 ### A sub-channel pregap reads differently between rips, and the log states one value
 

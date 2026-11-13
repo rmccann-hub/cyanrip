@@ -114,11 +114,14 @@ const char *crip_speed_text(char *buf, size_t size, int speed, int is_image,
     return buf;
 }
 
-const char *crip_c2_text(int caps_failed, int c2)
+const char *crip_c2_text(int is_image, int caps_failed, int c2)
 {
     if (caps_failed)
         return "unknown (capabilities query failed)";
-    return c2 ? "supported by drive, not used" : "unsupported by drive";
+    if (is_image)
+        return "unknown (image)";
+    return c2 ? "declared supported by drive (capabilities page), not used"
+              : "not declared by drive (capabilities page, not measured)";
 }
 
 const char *crip_accurate_stream_text(enum CripAccurateStream s)
