@@ -1,5 +1,32 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.32 — 2026-11-13 — **beta**
+===============================================
+**Released on the beta channel on the owner's word of 2026-11-13**, *"do your
+own thing if you can without their input"*, given to our question whether to
+build the two `C2 errors:` wordings into `.32` and release it. Every change in
+it was agreed with Platterpus in round 39, and their 0.7.123 reads its new
+`C2 errors:` values. Round 39 closed on `.31`; round 40 reviews `.32`. Beta is
+this side's choice under v8 E3, and the stable channel stays `.23`.
+
+**What it ships since `.31`**, each in an entry below:
+- `C2 errors:` says what the capabilities page declares, and a disc image
+  says `unknown (image)` (`372706fe`);
+- `Secure re-reads: every track converged or matched AccurateRip`, the
+  footer's third form (`220ee383`);
+- the stall watchdog's names for the drive calls between the open and the
+  first pregap search (`f2bb5619`).
+
+**Nothing built is held back.** Asked for and not in it, each with its reason:
+- **Our round 38 lap 3 S17 to S19 and lap 8 S19** (the `Disc MCN:` reason, the
+  `Ripping errors:` count, `error_positions`' cap, a newline in the `-d` path
+  or the drive's INQUIRY strings, and the declared speed line) wait for a
+  round to agree them; none is built.
+- **Which cache probe Platterpus's drive setup should trust** (their round 39
+  lap 6 S17) is a question for round 40, not a change to this build.
+
 **The provider contract regenerated for the `C2 errors:` wordings**: every line
 number after the call site moved; P2's row is `C2 errors:      %s` either way,
 so the wordings themselves are named in our round 40 lap 1.
