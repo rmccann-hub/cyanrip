@@ -1,6 +1,14 @@
 Unreleased
 ==========
-Nothing yet.
+**Our round 40 lap 1 is sent**, opening round 40 on `.32` at `edb73dd`, released
+in the same pull request on the owner's word of 2026-11-13. It names the three
+`C2 errors:` values the contract cannot show, since its row is a format, and
+the run of Platterpus's released reader on each. It answers their round 39 lap
+6 S17's third question with what both cache probes measured on this drive and
+no verdict. It proposes round 40's goal: one default whole-disc rip of `.32`
+through their first release naming it under review, printing `not declared by
+drive (capabilities page, not measured)`, with all 14 tracks verified as in
+round 39.
 
 0.9.4-rc3+platterpus.32 — 2026-11-13 — **beta**
 ===============================================

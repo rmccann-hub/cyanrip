@@ -53,7 +53,7 @@ pointers, and it flags three bytes at track 5's 02:24:59 in four reads of four.
 **What it costs**: a reader of the log takes the drive to be unable to report C2
 errors, which it can. The label asserts what one declaration implied.
 
-**Fixed for the next build**, not in `.31`: the line says `not declared by drive
+**Fixed in `.32`**, released 2026-11-13 at `edb73dd`, not in `.31`: the line says `not declared by drive
 (capabilities page, not measured)` or `declared supported by drive (capabilities
 page), not used`, our round 39 lap 3 S14's wordings, which Platterpus's 0.7.123
 reads (their lap 4 S3) and our lap 5 S4 announced. A disc image, which has no
