@@ -4,7 +4,7 @@
 built binary. Do not edit by hand -- regenerate. A hand-written contract goes
 stale silently, which is the failure this file exists to prevent.
 
-Build: `cyanrip 0.9.4-rc3+platterpus.31 (platterpus-fork-gb501002)`
+Build: `cyanrip 0.9.4-rc3+platterpus.31 (platterpus-fork-g372706f)`
 
 That is the build that GENERATED this file, which is always the commit
 *before* the one containing it -- a generated artifact cannot carry the hash
@@ -14,7 +14,7 @@ weaker provenance handle**: a build tag names a commit, not what was built.
 The source anchor below is content-derived, survives committing this file,
 and is the one to recompute.
 
-**Source anchor:** `sha256/16 = d95373d7365baa08` over `src/*.c` and
+**Source anchor:** `sha256/16 = c043ff9a9c4d6d93` over `src/*.c` and
 `src/*.h`. **Every `file:line` below refers to exactly that source.** Line
 numbers move between commits, so a citation without an anchor is not
 checkable -- recompute this hash before quoting one back.
@@ -299,8 +299,8 @@ where a device path or drive string carrying one would still start a line
 | `cyanrip_encode.c:1561` | `Could not open output codec context!` |
 | `cyanrip_encode.c:1568` | `Couldn't copy codec params!` |
 | `cyanrip_encode.c:1575` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` |
-| `cyanrip_log.c:1724` | `Log FUN512: %s` |
-| `cyanrip_log.c:1831` | `--- %zu earlier message(s) dropped: buffer full ---` |
+| `cyanrip_log.c:1725` | `Log FUN512: %s` |
+| `cyanrip_log.c:1832` | `--- %zu earlier message(s) dropped: buffer full ---` |
 | `cyanrip_log.c:62` | `%s%s:` |
 | `cyanrip_log.c:65` | `%s` |
 | `cyanrip_log.c:75` | `CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)` |
@@ -419,48 +419,48 @@ where a device path or drive string carrying one would still start a line
 | `cyanrip_log.c:1269` | `Overread mode:  %s` |
 | `cyanrip_log.c:1279` | `Speed:          %s` |
 | `cyanrip_log.c:1282` | `C2 errors:      %s` |
-| `cyanrip_log.c:1285` | `Accurate stream: %s` |
-| `cyanrip_log.c:1287` | `Recordable:     %s` |
-| `cyanrip_log.c:1296` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
-| `cyanrip_log.c:1301` | `Paranoia level: %s` |
-| `cyanrip_log.c:1305` | `Paranoia level: %i` |
-| `cyanrip_log.c:1319` | `Retry limit:    %i (per frame, and per whole-track re-read)` |
-| `cyanrip_log.c:1322` | `Retry limit:    %i (per whole-track re-read; %i per frame, rounded up to a multiple of 5, the only values libcdio-paranoia checks)` |
-| `cyanrip_log.c:1329` | `Re-read limit:  %i s a track, checked between whole-track reads` |
-| `cyanrip_log.c:1332` | `HDCD decoding:  %s` |
-| `cyanrip_log.c:1334` | `Album Art:      %s` |
-| `cyanrip_log.c:1338` | `%s%s%s%s%s` |
-| `cyanrip_log.c:1346` | `Outputs:` |
-| `cyanrip_log.c:1352` | `Disc tracks:    %i` |
-| `cyanrip_log.c:1353` | `Tracks to rip:  %s` |
-| `cyanrip_log.c:1356` | `%i%s` |
-| `cyanrip_log.c:1372` | `AccurateRip ID: %08x-%08x-%08x` |
-| `cyanrip_log.c:1374` | `AccurateRip:    %s` |
-| `cyanrip_log.c:1381` | `AcoustID:       %s` |
-| `cyanrip_log.c:1385` | `AcoustID:       unsupported (built without libchromaprint)` |
-| `cyanrip_log.c:1388` | `Total time:     %s` |
-| `cyanrip_log.c:1490` | `Tracks ripped accurately: %i/%i` |
-| `cyanrip_log.c:1492` | `Tracks matched on one frame only: %i/%i` |
-| `cyanrip_log.c:1512` | `Ripping errors: %llu (including %llu paranoia skip%s)` |
-| `cyanrip_log.c:1516` | `Ripping errors: %i` |
-| `cyanrip_log.c:1546` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
-| `cyanrip_log.c:1549` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
-| `cyanrip_log.c:1567` | `Interrupted at: track %i, mid-read` |
-| `cyanrip_log.c:1570` | `Interrupted at: between tracks, no read in progress` |
-| `cyanrip_log.c:1584` | `Rip completed:  no (cue sheet only, %i of %i tracks)` |
-| `cyanrip_log.c:1587` | `Rip completed:  no (offset search only, %i of %i tracks)` |
-| `cyanrip_log.c:1590` | `Rip completed:  no (aborted, %i of %i tracks)` |
-| `cyanrip_log.c:1593` | `Rip completed:  yes (%i of %i tracks)` |
-| `cyanrip_log.c:1596` | `Ripping finished at %s` |
-| `cyanrip_log.c:1753` | `Unable to write the log \"%s\": %s!` |
-| `cyanrip_log.c:1350` | `Disc number:    %s` |
-| `cyanrip_log.c:1351` | `Total discs:    %s` |
-| `cyanrip_log.c:1363` | `DiscID:         %s` |
-| `cyanrip_log.c:1364` | `Release ID:     %s` |
-| `cyanrip_log.c:1365` | `CDDB ID:        %s` |
-| `cyanrip_log.c:1366` | `Disc MCN:       %s` |
-| `cyanrip_log.c:1367` | `Album:          %s` |
-| `cyanrip_log.c:1368` | `Album artist:   %s` |
+| `cyanrip_log.c:1286` | `Accurate stream: %s` |
+| `cyanrip_log.c:1288` | `Recordable:     %s` |
+| `cyanrip_log.c:1297` | `Encoder:        libavformat %i.%i.%i, libavcodec %i.%i.%i (%s)` |
+| `cyanrip_log.c:1302` | `Paranoia level: %s` |
+| `cyanrip_log.c:1306` | `Paranoia level: %i` |
+| `cyanrip_log.c:1320` | `Retry limit:    %i (per frame, and per whole-track re-read)` |
+| `cyanrip_log.c:1323` | `Retry limit:    %i (per whole-track re-read; %i per frame, rounded up to a multiple of 5, the only values libcdio-paranoia checks)` |
+| `cyanrip_log.c:1330` | `Re-read limit:  %i s a track, checked between whole-track reads` |
+| `cyanrip_log.c:1333` | `HDCD decoding:  %s` |
+| `cyanrip_log.c:1335` | `Album Art:      %s` |
+| `cyanrip_log.c:1339` | `%s%s%s%s%s` |
+| `cyanrip_log.c:1347` | `Outputs:` |
+| `cyanrip_log.c:1353` | `Disc tracks:    %i` |
+| `cyanrip_log.c:1354` | `Tracks to rip:  %s` |
+| `cyanrip_log.c:1357` | `%i%s` |
+| `cyanrip_log.c:1373` | `AccurateRip ID: %08x-%08x-%08x` |
+| `cyanrip_log.c:1375` | `AccurateRip:    %s` |
+| `cyanrip_log.c:1382` | `AcoustID:       %s` |
+| `cyanrip_log.c:1386` | `AcoustID:       unsupported (built without libchromaprint)` |
+| `cyanrip_log.c:1389` | `Total time:     %s` |
+| `cyanrip_log.c:1491` | `Tracks ripped accurately: %i/%i` |
+| `cyanrip_log.c:1493` | `Tracks matched on one frame only: %i/%i` |
+| `cyanrip_log.c:1513` | `Ripping errors: %llu (including %llu paranoia skip%s)` |
+| `cyanrip_log.c:1517` | `Ripping errors: %i` |
+| `cyanrip_log.c:1547` | `Rip completed:  no (interrupted by %s, %i of %i tracks)` |
+| `cyanrip_log.c:1550` | `Rip completed:  no (interrupted by signal %i, %i of %i tracks)` |
+| `cyanrip_log.c:1568` | `Interrupted at: track %i, mid-read` |
+| `cyanrip_log.c:1571` | `Interrupted at: between tracks, no read in progress` |
+| `cyanrip_log.c:1585` | `Rip completed:  no (cue sheet only, %i of %i tracks)` |
+| `cyanrip_log.c:1588` | `Rip completed:  no (offset search only, %i of %i tracks)` |
+| `cyanrip_log.c:1591` | `Rip completed:  no (aborted, %i of %i tracks)` |
+| `cyanrip_log.c:1594` | `Rip completed:  yes (%i of %i tracks)` |
+| `cyanrip_log.c:1597` | `Ripping finished at %s` |
+| `cyanrip_log.c:1754` | `Unable to write the log \"%s\": %s!` |
+| `cyanrip_log.c:1351` | `Disc number:    %s` |
+| `cyanrip_log.c:1352` | `Total discs:    %s` |
+| `cyanrip_log.c:1364` | `DiscID:         %s` |
+| `cyanrip_log.c:1365` | `Release ID:     %s` |
+| `cyanrip_log.c:1366` | `CDDB ID:        %s` |
+| `cyanrip_log.c:1367` | `Disc MCN:       %s` |
+| `cyanrip_log.c:1368` | `Album:          %s` |
+| `cyanrip_log.c:1369` | `Album artist:   %s` |
 | `cyanrip_main.c:324` | `%.*s` |
 | `cyanrip_main.c:422` | `No device specified and unable to get default device!` |
 | `cyanrip_main.c:430` | `Unable to open device: %s` |
@@ -943,7 +943,7 @@ must carry the same class.
 | `cyanrip_encode.c:1561` | `Could not open output codec context!` | both | yes |
 | `cyanrip_encode.c:1568` | `Couldn't copy codec params!` | both | yes |
 | `cyanrip_encode.c:1575` | `Couldn't open %s: %s! Invalid folder name? Try -D <folder>.` | both | yes |
-| `cyanrip_log.c:1753` | `Unable to write the log \"%s\": %s!` | wording | yes |
+| `cyanrip_log.c:1754` | `Unable to write the log \"%s\": %s!` | wording | yes |
 | `cyanrip_main.c:422` | `No device specified and unable to get default device!` | both | yes |
 | `cyanrip_main.c:430` | `Unable to open device: %s` | both | yes |
 | `cyanrip_main.c:472` | `Unable to init cddap context!` | wording | yes |
