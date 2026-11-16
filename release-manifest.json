@@ -5,22 +5,22 @@
       "commit": "edb73dd",
       "handshake_round": 40,
       "install": "https://github.com/rmccann-hub/cyanrip/archive/edb73dd.tar.gz",
-      "release_seq": 43,
+      "release_seq": 44,
       "round_closed": true,
       "version": "0.9.4-rc3+platterpus.32"
     },
     "stable": {
       "build": "meson setup build -Ddeclare_released=true && ninja -C build",
-      "commit": "891c79e",
-      "handshake_round": 34,
-      "install": "https://github.com/rmccann-hub/cyanrip/archive/891c79e.tar.gz",
-      "release_seq": 34,
+      "commit": "edb73dd",
+      "handshake_round": 40,
+      "install": "https://github.com/rmccann-hub/cyanrip/archive/edb73dd.tar.gz",
+      "release_seq": 44,
       "round_closed": true,
-      "version": "0.9.4-rc3+platterpus.23"
+      "version": "0.9.4-rc3+platterpus.32"
     }
   },
   "default_channel": "stable",
-  "latest_seq": 43,
+  "latest_seq": 44,
   "manifest_url": "https://raw.githubusercontent.com/rmccann-hub/cyanrip/platterpus-fork/release-manifest.json",
   "note": "Machine-readable. Order by release_seq -- the version string cannot be ordered, because the part that advances is SemVer build metadata, which is ignored for precedence.",
   "project": "cyanrip-fork",

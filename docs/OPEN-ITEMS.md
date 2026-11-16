@@ -85,14 +85,13 @@ id.
 | PP-12 | `seam-commands.md` §1b PP cells `?` for `-X`, `-C` and `-B`; §1 PP cells for `-F` and `-I`; §2a :260 (both sides) | `STATUS-OPEN unsent-flag-rows` | Theirs, in R41-5's version |
 | PP-13 | Their footer within 8 s when the script console closes | `docs/history/KNOWN-ISSUES-2026-11-16.md`, *Closing Platterpus's script console…*; their round 30 lap 4 S9 | Their rig run |
 | PP-14 | Their addendum carries no timestamp; the `--version` hang through the Distrobox wrapper | `SETTLED.md` (their addendum and wrapper rows) | Theirs |
-| PP-15 | Should a beta expire? | `docs/history/UPGRADE-CHANNELS-PLAN.md` | Theirs, then OW-2's decision |
+| PP-15 | Should a beta expire? | `docs/history/UPGRADE-CHANNELS-PLAN.md` | Theirs; our stable channel moved to `.32` on 2026-11-16 |
 
 ## The owner's decisions and actions
 
 | Id | Item | Source | Next step |
 |---|---|---|---|
 | OW-1 | Release `.33`, which opens round 41 | `STATUS.md` | The owner's word |
-| OW-2 | Move the stable channel from `.23` | asked in cyanrip:R38.L1.S24, R38.L3.S30, R38.L5.S22 and platterpus:R38.L2.S16, R38.L4.S26, R38.L6.S17; no answer recorded; stable is `.23` at `891c79e` | Decide |
 | OW-3 | Their transport rule: a lap written out of turn is held and renumbered | platterpus:R38.L15.S7; put to the owner in cyanrip:R38.L16.S11, R38.L18.S15, R39.L1.S26; possibly superseded by the owner's rules of 2026-11-12 and 2026-11-13 (UNVERIFIED) | Confirm or drop |
 | OW-4 | Adopt K1's amendment as protocol v10 (R41-5) | R41-5 | After both sides accept the version |
 | OW-5 | `-H` on a disc without HDCD: compensate the level, refuse, or leave it | US-3 | Decide |

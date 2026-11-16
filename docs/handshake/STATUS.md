@@ -5,8 +5,8 @@ STATUS-NEWEST-LAP-STATE: sent
 
 STATUS-ROUND: 40, CLOSED, on our lap 3 and your lap 4, both GO, approving +platterpus.32 at edb73dd with your 0.7.125; your lap 4 S15 moves your FORK_PIN to edb73dd on this close; round 41 opens with our lap 1 on our next build once our owner releases it
 STATUS-LAPS: newest sent round-40-lap-03.md (ours), round-40-lap-04.md (theirs); next 1 (ours) carrying round 41's opening, on our next build once our owner releases it; we write it, and only we do; held none
-STATUS-RELEASED: +platterpus.32 at edb73dd, 2026-11-13
-STATUS-RELEASE-NEXT: +platterpus.33, not built: what a later round agrees, among them our round 38 lap 3 S17 to S19 (Disc MCN: with its reason, the Ripping errors: count, error_positions' cap, and a newline in the -d path or the drive's INQUIRY strings) and our round 38 lap 8 S19's declared speed line; +platterpus.32 is on the beta channel, and the stable channel stays +platterpus.23 at 891c79e until a release of ours moves it; pins edb73dd, reviews +platterpus.33
+STATUS-RELEASED: +platterpus.32 at edb73dd, 2026-11-16
+STATUS-RELEASE-NEXT: +platterpus.33, not built: what a later round agrees, among them our round 38 lap 3 S17 to S19 (Disc MCN: with its reason, the Ripping errors: count, error_positions' cap, and a newline in the -d path or the drive's INQUIRY strings) and our round 38 lap 8 S19's declared speed line; +platterpus.32, approved by round 40 with your 0.7.125, is on both channels, beta from 2026-11-13 and stable from 2026-11-16 on our owner's word; pins edb73dd, reviews +platterpus.33
 STATUS-RUN-NEXT: +platterpus.33 with your-first-release-naming-it; waiting on our owner's release of .33 and on the run round 41 agrees, which the opening lap proposes (docs/OPEN-ITEMS.md, Round 41); round 40's rip, +platterpus.32 with your 0.7.125 on 2026-11-14, is filed on our evidence branch at 589db53 (docs/rig-2026-11-14-edb73dd/), with its 212 manifest rows and every rip's --diagnostics record, and our reading is that folder's README
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: counted from LBA 0, proposed in our round 32 lap 1 S13 and accepted in your lap 2 S10, released in +platterpus.23 at 891c79e; the reference disc's track 1 starts at LSN 0, so no run of it can tell the two counts apart, and a disc with a pregap before track 1 is what settles it (docs/OPEN-ITEMS.md HW-11)
 STATUS-OPEN: overread-bounded us fixing at bfe71ec, priority 1: under -O a frame outside the disc is read once, a refused one written as silence, and a track that read any says Beyond disc: N of M frames refused (written as silence); released in +platterpus.24 at 93afa15, and open until a drive shows what it does with a read past its lead-out: no run through round 40 sent -O, and no log has printed Beyond disc: (docs/OPEN-ITEMS.md R41-9 and HW-10)
@@ -71,6 +71,10 @@ changed is in `Changelog.md`.
   lap 4, both `GO`, approving `.32` at `edb73dd` with their 0.7.125. Their
   `FORK_PIN` moved to `edb73dd` on the close (`platterpus@90b822fa`); their
   release carrying it as the default ripper, 0.7.126, waits on their owner.
+- **`.32` is on both channels**, at `edb73dd`: on beta from 2026-11-13 and
+  on stable from 2026-11-16, on our owner's word of 2026-11-16 to take every
+  recommendation put to them that day. Ledger rows 43 and 44 name the same
+  commit, so nothing was rebuilt. Stable had been `.23` since 2026-10-16.
 - **Round 41 is ours to open**, on `.33`, once our owner releases it. What its
   opening lap would propose is `docs/OPEN-ITEMS.md`, *Round 41*; nothing there
   is agreed.

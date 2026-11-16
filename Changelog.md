@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**`.32` is on the stable channel**, at `edb73dd`, on the owner's word of
+2026-11-16 to take every recommendation put to them that day. Round 40 closed
+`GO`/`GO` on it, and it is the build Platterpus pins. Stable had been `.23`,
+nine releases back, since 2026-10-16: it still printed the false `C2 errors:
+unsupported by drive` and predated `.29`'s fixes to the cover-art line and to
+`Ripping errors:` under `-Z`. Ledger row 44 names the commit row 43 published
+on beta, so nothing was rebuilt; its suite from a clean checkout is
+`docs/release-evidence/edb73dd-suite.txt`. Both channels now resolve to seq 44.
+
 **`docs/README.md` maps the folder by kind.** Every file in `docs/` is now
 named as living, shared or agreed with Platterpus, generated, record, or
 history, with whether it is current and how it may change, so a reader
