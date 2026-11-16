@@ -42,7 +42,6 @@ at `13bec0a`. A row leaves when the round settles it.
 | US-4 | `Lap commit list names its range` timed out in full parallel suites; mechanism unknown | `KNOWN-ISSUES.md`; `STATUS-OPEN suite-timeouts-at-default` | Record the next occurrence; none since 2026-09-30 |
 | US-5 | A superseded track's read time on a drive | `KNOWN-ISSUES.md`, *A superseded track…*; their R155, shipped in their 0.7.126 | File a log where a later read replaced the first |
 | US-6 | A derived contract shows a surface's shape, not its meaning | `KNOWN-ISSUES.md`, *A derived contract…* | Joint; no proposal open |
-| US-9 | The inert-edit probe last ran 2026-09-16 (`d92c4e1`) | `SETTLED.md`; `docs/inert-edit-probe.log` | Run it before trusting a mutation sweep again |
 | US-10 | `seam-commands.md` §4 NEED 1 (argument types in P1) and §5 WANT 1 (a machine-readable contract) | `docs/seam-commands.md` §4, §5 | Build, or decline in a round |
 | US-11 | `seam-commands.md` §2a CR cells still `?` (:255, :259) | `docs/seam-commands.md` §2a | Fill in a shared-document version (R41-5) |
 | US-12 | The pregap search on a drive: a pregap the TOC misses against the TOC-only answer; the binary-encoding quirk; the two-search clause never printed; cache defeat between sub-channel retries (`src/pregap.c` TODO); raw P-W mode, two-read confirmation, runs of sectors, the P channel | `docs/pregap-carry.md` (:173, :255, :311); `docs/research/2026-11-04-pregaps.md` (:452-459); `docs/history/2026-11-04-misreads-and-pregaps.md` (R4) | After HW-6's raw read on a second drive |

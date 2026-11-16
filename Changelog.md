@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**The inert-edit probe ran, for the first time since 2026-09-16.** At
+`8d2b73c8` all 174 tests ran under the edit, 173 passed, and the one that
+failed is `contract_build`, the only test `EXCLUDED_TESTS` names, so a
+mutation score means something again. `docs/inert-edit-probe.log` is
+replaced whole with the run, and `SETTLED.md`'s row cites it.
+`docs/OPEN-ITEMS.md` US-9 leaves.
+
 **Two more calls after the drive open name themselves to the stall
 watchdog.** Paranoia's setup asks libcdio for the lead-out address before our
 own lookup does (`cdio_paranoia_init()` → `cdio_get_track()`), and the
