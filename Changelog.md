@@ -1,5 +1,32 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.33 — 2026-11-16 — **beta**
+===============================================
+**Released on the beta channel on the owner's word of 2026-11-16**, *"do all
+recommendations"*, given to ours that day to release `.33` and open round 41
+on it. Round 40 closed on `.32`, which moved to the stable channel the same
+day; round 41 reviews `.33`. Beta is this side's choice under v8 E3.
+
+**What it ships since `.32`**, each in an entry below:
+- the read performance a drive declares, GET PERFORMANCE's reply and
+  descriptors, as `drive_declared.read_performance` in the record, which
+  moves to `cyanrip-diagnostics/14` (`3017be01`; our round 38 lap 8 S19,
+  Platterpus's lap 9 S12). **Drive I/O never yet sent to a drive**
+  (`docs/OPEN-ITEMS.md` HW-12);
+- `--help` saying a disc without HDCD comes out 6.02 dB quieter under `-H`
+  (`3718f12e`);
+- two tests that pin what the suite did not: the AccurateRip path's missing
+  Content-Type (`e16f64f4`) and the 450-frame window's edges (`c049cdfe`).
+
+**Nothing built is held back.** Asked for and not in it, each with its reason:
+- **`Disc MCN:` printed always** (our round 38 lap 3 S17) waits for
+  Platterpus's reader, as their lap 4 S11 asked.
+- **`Ripping errors:` as named counts** (their round 38 lap 4 S12) is worded
+  in our round 41 lap 1, and ships after a release of theirs reads both
+  wordings, with a data track's cancel no longer counted (US-24).
+
 **The golden reference and interrupted sample regenerated for the record's
 `/14`**: both records name `cyanrip-diagnostics/14`, and an image asks no
 drive, so `drive_declared` stays `null`; only the schema, the build tag,
