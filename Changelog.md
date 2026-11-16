@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**A WebP or JPEG XL cover is embedded in FLAC and MP3 where the linked
+FFmpeg keeps it.** The table of what each output holds was measured on FFmpeg
+6.1.1, and the FLAC and MP3 muxers' list, `ff_id3v2_mime_tags`, gained WebP in
+FFmpeg 8.0 and JPEG XL in 9.0. Fedora's 9.0.2 kept a WebP cover that we
+refused with exit 64. The table now asks the libavformat loaded, from
+61.9.107 for WebP and 62.14.100 for JPEG XL, the first versions numbered
+after each change on FFmpeg's master; on an older FFmpeg nothing changes. Our next lap
+announces it: a WebP or JPEG XL cover for `-o flac` or `-o mp3` is embedded
+on FFmpeg 8.0 or 9.0 and later, where it was refused. Both comments on the
+table now say what FFmpeg 6.1.1 does through our own encoder, measured by
+admitting every picture: the FLAC muxer fails its header on a GIF rather
+than dropping it, and the MP3 muxer fails a write rather than dropping one.
+`cover_art_formats` fails with either threshold lowered below 6.1.1's
+libavformat; the acceptances are proved only on a newer FFmpeg, as the
+Fedora job will. `docs/OPEN-ITEMS.md` US-25 and US-27 leave.
+
 **A JPEG XL cover is saved as `Front.jxl`, and no longer fails the rip.**
 A loaded cover's extension came from a list that knew WebP, AV1 and HEVC and
 otherwise used the codec's name, `jpegxl`, which no muxer takes: the cover's

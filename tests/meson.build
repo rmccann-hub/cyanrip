@@ -252,7 +252,8 @@ logrender_test = executable('logrender_test',
     sources: [ 'logrender.c' ],
     include_directories: [ '../src' ],
     objects: cyanrip_exe.extract_objects([ 'cyanrip_log.c', 'log_escape.c', 'accurip.c', 'drive_caps.c', 'cue_writer.c' ]),
-    dependencies: unit_test_deps + [ dependency('threads'), dependency('libcurl') ],
+    dependencies: unit_test_deps + [ dependency('threads'), dependency('libcurl'),
+                                     dependency('libavformat') ],
 )
 test('Log rendering', logrender_test)
 

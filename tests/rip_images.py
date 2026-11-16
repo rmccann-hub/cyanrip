@@ -1876,7 +1876,9 @@ def sc_cover_art_formats():
     pics.mkdir(exist_ok=True)
     shutil.copy(FIX / "art.png", pics / "p.png")
     shutil.copy(FIX / "art.avif", pics / "p.avif")
-    # jxl where this ffmpeg encodes it
+    # jxl where this ffmpeg encodes it: FFmpeg 9.0's FLAC and MP3 muxers keep
+    # JPEG XL and earlier ones do not, and crip_fmt_holds_picture() asks the
+    # loaded libavformat which it is.
     for ext in ("jpg", "gif", "bmp", "tiff", "webp", "jxl"):
         subprocess.run([FFMPEG, "-v", "error", "-y", "-i", str(pics / "p.png"),
                         "-frames:v", "1", str(pics / f"p.{ext}")],

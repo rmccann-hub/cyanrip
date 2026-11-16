@@ -1489,10 +1489,11 @@ int cyanrip_init_track_encoding(cyanrip_ctx *ctx, cyanrip_enc_ctx **enc_ctx,
         art = &ctx->cover_arts[i == ctx->nb_cover_arts ? 0 : i];
     }
 
-    /* Only a picture this output holds (crip_fmt_holds_picture()): a FLAC
-     * or MP3 muxer drops any other with a warning, and an MP4 muxer fails
-     * its header on one. A user's own such cover is refused before the rip,
-     * and the track block says the file holds none. */
+    /* Only a picture this output holds (crip_fmt_holds_picture()). Handed
+     * any other, the FLAC muxer fails its header on a GIF and otherwise
+     * writes the file without the picture, the MP3 muxer fails a write, and
+     * the MP4 muxer fails its header. A user's own such cover is refused
+     * before the rip, and the track block says the file holds none. */
     if (art->pkt && art->params && crip_fmt_holds_picture(cfmt, art->params->codec_id) &&
         !ctx->settings.disable_coverart_embedding) {
         s->st_img = avformat_new_stream(s->avf, NULL);

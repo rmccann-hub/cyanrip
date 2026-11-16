@@ -39,6 +39,7 @@
 #include <libavutil/avstring.h>
 #include <libavutil/intreadwrite.h>
 #include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 
 /* Session 1's lead-out, session 2's lead-in and the pregap, the gap that
  * separates a trailing data track from the audio. libdiscid calls this
@@ -721,28 +722,46 @@ typedef struct cyanrip_out_fmt {
 extern const cyanrip_out_fmt crip_fmt_info[];
 
 /* WHETHER AN OUTPUT HOLDS A COVER OF THIS PICTURE FORMAT, as measured, not as
- * a muxer's name suggests. FFmpeg 6.1.1, with ffmpeg and ffprobe (our round
- * 38 lap 3 S12): its FLAC muxer keeps PNG, JPEG, BMP and TIFF, and drops GIF
- * ("GIF image support is not implemented"), WebP and AV1 with a warning,
- * writing the file without the picture; its MP3 muxer keeps GIF as well; its
- * MP4 muxer keeps PNG, JPEG and BMP and fails the header on any other. An
- * output that embeds no cover holds none. `Embedded cover art:` said a FLAC
- * held an AV1 cover its muxer had dropped (the review of 2026-11-03, B6).
- * sc_cover_art_formats holds every pair against the FFmpeg the build links,
- * so a newer one that keeps more fails it rather than being refused here. */
+ * a muxer's name suggests. FFmpeg 6.1.1 (libavformat 60.16.100), through this
+ * program's encoder with the table set aside, on 2026-11-16: the FLAC and MP3
+ * muxers keep PNG, JPEG, BMP and TIFF, the MP3 muxer GIF as well, and the
+ * MP4 muxer PNG, JPEG and BMP. Handed any other, the FLAC muxer fails its
+ * header on a GIF ("Not yet implemented in FFmpeg") and writes the file
+ * without the picture on WebP, JPEG XL and AV1; the MP3 muxer fails a packet
+ * write with EINVAL on those three; the MP4 muxer fails its header with
+ * EINVAL. An output that embeds no cover holds none.
+ *
+ * The FLAC and MP3 lists are FFmpeg's ff_id3v2_mime_tags, which gained WebP
+ * in FFmpeg 8.0 (4401e4b606, libavformat 61.9.107 on master) and JPEG XL in
+ * 9.0 (5242bdae82, 62.14.100), neither backported to an earlier release:
+ * read in FFmpeg's source, and for WebP seen on Fedora 45's 9.0.2, whose
+ * ffmpeg kept a WebP cover in both. The version tested is the libavformat
+ * loaded, which can be newer than the headers built against.
+ * `Embedded cover art:` said a FLAC held an AV1 cover its muxer had dropped
+ * (the review of 2026-11-03, B6). sc_cover_art_formats holds every pair
+ * against the FFmpeg the build links, so a newer one that keeps more fails it
+ * rather than being refused here. */
+#define CRIP_LAVF_ID3_WEBP AV_VERSION_INT(61, 9, 107)
+#define CRIP_LAVF_ID3_JPEGXL AV_VERSION_INT(62, 14, 100)
+
 static inline int crip_fmt_holds_picture(const cyanrip_out_fmt *f, enum AVCodecID id)
 {
     if (!f->coverart_supported)
         return 0;
+    const int id3 = !strcmp(f->lavf_name, "flac") || !strcmp(f->lavf_name, "mp3");
     switch (id) {
     case AV_CODEC_ID_PNG:
     case AV_CODEC_ID_MJPEG:
     case AV_CODEC_ID_BMP:
         return 1;
     case AV_CODEC_ID_TIFF:
-        return !strcmp(f->lavf_name, "flac") || !strcmp(f->lavf_name, "mp3");
+        return id3;
     case AV_CODEC_ID_GIF:
         return !strcmp(f->lavf_name, "mp3");
+    case AV_CODEC_ID_WEBP:
+        return id3 && avformat_version() >= CRIP_LAVF_ID3_WEBP;
+    case AV_CODEC_ID_JPEGXL:
+        return id3 && avformat_version() >= CRIP_LAVF_ID3_JPEGXL;
     default:
         return 0;
     }
