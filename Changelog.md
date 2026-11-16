@@ -1,5 +1,36 @@
 Unreleased
 ==========
+**The Fedora job is held back for its two findings.** Dumbass session added a
+job that builds on Fedora without ever having run on Fedora, and its first
+run, on Fedora 45 with FFmpeg 9.0.2 and libcdio-paranoia 2.0.2, failed two
+tests that pass everywhere else: FFmpeg 9's FLAC and MP3 muxers keep a WebP
+cover our table refuses (US-27), and a lead-out lookup after the drive open
+runs under no named wait there (US-28). Both are real differences, one a
+change of behaviour that needs a round, so the job comes back in its own pull
+request with both fixed rather than red or allowed to fail (US-23).
+
+**`docs/upstream/carried-patches.md` lists what this fork carries over
+upstream**, each row with what retires it: three carries from upstream pull
+requests (pregap detection from 115, the raw sub-channel quirk from 153, and
+ebur128's `+sample`, which matches 116 without coming from it), our fixes to
+defects upstream still has, by report, our workarounds for the libraries we
+link, and what is ours by design. Made 2026-11-16 by a read-only agent of
+this session against upstream's `648b1dd`, and checked here: the merge base,
+upstream's missing `+sample` and `-J`'s ancestry. It found upstream pull
+request 153 moved to twenty commits, and `-J` to be upstream's own, both now
+US-26. `docs/OPEN-ITEMS.md` US-18 leaves.
+
+**Upstream reports 29 to 31 are drafted**, each for a defect fixed here and
+still in upstream's `648b1dd`, and each run on a build of `648b1dd` itself:
+the `C2 errors:` line from libcdio's capability bit (`372706fe`), a disc
+changed mid-rip reported as `Invalid argument` (`30f16465`), and
+`Embedded cover art:` naming what was asked for (`443cbeb9`). Reports 24 to
+28 were re-checked there too: every cited line holds, item 27 now says its
+colon is typed `\:`, and item 28 is now run on upstream itself.
+`issues-to-file.md` renders all thirty-one; `docs/SETTLED.md` gains a row
+per new report, each failing on our tree and passing on upstream's; UP-2 now
+holds one more, an AVIF cover that aborts upstream (`af89fcc`).
+
 **The golden reference and interrupted sample regenerated for round 41 lap 1**:
 their `Handshake:` line reads round 41 lap 1 `OPEN`; only it, the build tag,
 timings, timestamps and where the sample's signal landed change.

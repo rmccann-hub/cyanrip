@@ -51,14 +51,16 @@ at `13bec0a`. A row leaves when the round settles it.
 | US-15 | EAC parity row 6 stops at 2026-11-03 | `docs/eac-parity.md:17` | Add the runs of 2026-11-09 and 2026-11-14 |
 | US-16 | rig-check's instructions live only in a superseded runbook, `docs/JOINT-SCRIPT-RUNBOOK.md` §8, cited by `tools/rig-check.py` | that file's banner | Re-home them in the handshake README, then archive the runbook |
 | US-17 | `tools/seam-check.py` accepts a lap without `OWNERSHIP-VERSION` and `SEAM-RULES-VERSION` | Our laps left both out from round 37 lap 7 to round 40 lap 3; round 41's lap 1 carries them again | Make it refuse their absence on our laps (a code change) |
-| US-18 | A list of patches we carry over upstream, each with its retirement condition, and an index of our changes upstream could take | `docs/handshake/PROPOSAL-operator-seam-automation.md` P7; `docs/history/upstream-audit-2026-08-21-prs-and-forks.md` §7 | Build it (the owner's word of 2026-11-16) |
 | US-19 | macOS arm64 runner wait times | `docs/DEPENDENCY-PLAN.md` | Measure, or drop |
 | US-20 | Three audit leads never re-checked: c, g, l | `docs/history/AUDIT-2026-09-05.md` (:224, :228, :233) | Re-check, then close or list |
 | US-21 | Our proposed `Pregap sample peak: …, not ripped` line has no answer | cyanrip:R36.L1.S17; UNVERIFIED whether superseded (their status lists `eac-htoa-log` as `cannot`) | Ask once in round 41's lap 1; withdraw it if they decline |
 | US-22 | `P5`'s lone `"` row in the contract | `PROVIDER-CONTRACT.md` P5 | Optional |
 | US-24 | A cancel still counts one ripping error on a data track (`Stopping, ripping incomplete!`), where since `.29` it counts none on an audio track | `src/cyanrip_main.c`, the data track's read loop; our round 38 lap 1 S6 (c), platterpus:R38.L2.S3 | Make it none with R41-3's build, announced in lap 1 |
 | US-25 | Two comments may misdescribe FFmpeg 6.1.1's muxers: `src/cyanrip_main.h` says FLAC drops a GIF cover with a warning, `src/cyanrip_encode.c` that MP3 drops other formats; a run of upstream's `648b1dd` on 2026-11-16 saw FLAC fail its header on a GIF and MP3 fail on AV1 and WebP. The fork sends neither, so no output changes | the upstream drafts of 2026-11-16 (UP-2) | Re-measure both through our encoder, then correct the comments |
-| US-23 | A Fedora CI job building what end users build: Fedora's packages, libcdio 2.3, FFmpeg 8 or 9 | `docs/DEPENDENCY-PLAN.md` §4; the owner's word of 2026-11-16 | Add it to `.github/workflows/ci.yml` |
+| US-26 | Upstream pull request 153 moved to `ca3ab44` (2026-11-10), 20 commits on `648b1dd`, three of whose subjects match work done here; `docs/pregap-carry.md` still calls it a later evolution of 115 by the same author, and the 2026-08-21 audit's §3 calls `-J` independently implemented here, though it is upstream's own `ca7e830c` | `docs/upstream/carried-patches.md` §1 | Read 153's code against ours; correct `pregap-carry.md`'s and the audit's sentences in a dated note |
+| US-23 | A Fedora CI job building what end users build. Its first run, on PR #120 at `ce969c5e` (Fedora 45: FFmpeg 9.0.2, libcdio 2.3.0, libcdio-paranoia 10.2+2.0.2), passed 165 tests, skipped 6 and failed 2, US-27 and US-28, so it was taken out of that pull request | `docs/DEPENDENCY-PLAN.md` §4; the owner's word of 2026-11-16 | Land it with US-27 and US-28 fixed |
+| US-27 | FFmpeg 9.0.2's FLAC and MP3 muxers keep a WebP cover that our table, measured on FFmpeg 6.1.1, refuses before the rip (`crip_fmt_holds_picture()`), so a Fedora user's WebP cover is refused where it would embed: `cover_art_formats` on the first Fedora run | the run of PR #120's `fedora` job | Find which FFmpeg version changed it; make the table follow the linked libavformat; announce the refusal's change in a lap |
+| US-28 | On Fedora 45, `named_waits_after_the_open`'s lead-out sleep printed no `Still waiting:` line, while its last-session sleep did: a lead-out lookup is made after the drive open and before ours, under no named wait. Which call makes it is not established; paranoia's init is the likeliest | the run of PR #120's `fedora` job | Find the call; name a wait around it or start the shim's count after it |
 
 ## Waiting on Platterpus
 
@@ -85,7 +87,7 @@ id.
 | Id | Item | Source | Next step |
 |---|---|---|---|
 | OW-7 | A static Linux binary for users | `docs/DEPENDENCY-PLAN.md` §5; `docs/upstream/sync-2026-11-03-ci.md` §5 | Deferred on 2026-11-16 until the Fedora CI job (US-23) has run a while; it changes how every user gets the program, needs a round, and brings the GPL's source terms for every library linked in |
-| OW-8 | File upstream items 24 to 31 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md` | The owner files, once UP-2 is drafted and all eight are re-checked against upstream's master |
+| OW-8 | File upstream items 24 to 31 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md`, items 24 to 31 | The owner files; all eight were re-checked against upstream's `648b1dd` on 2026-11-16 |
 | OW-9 | Set `CYANRIP_REDACT_NAMES` where runs are filed; read the repository's Security tab (unread since 2026-11-03) | `docs/history/READINESS-PLAN.md` | Owner actions |
 | OW-11 | Outside these repositories: skillcheck reading tarball pins, and the skillcheck `--verify` report | `docs/DEPENDENCY-PLAN.md`; `docs/history/READINESS-PLAN.md` | Handed to the claude-code-skills session in the fork's HANDOFF of 2026-11-16 |
 
@@ -120,5 +122,5 @@ in `STATUS-OPEN hardware-unverified`, which disagreed.
 
 | Id | Item | Source | Next step |
 |---|---|---|---|
-| UP-1 | Items 24 to 28, drafted and not filed | `docs/upstream/issues-to-file.md` | OW-8, with UP-2 |
-| UP-2 | Three defects fixed here and present in upstream's master, not yet drafted: `C2 errors: %s by drive` from libcdio's capability bit (ours fixed at `372706fe`); a media change returns `EINVAL`, so the log says `Error ripping: Invalid argument` (`30f16465`); `Embedded cover art:` names what was asked, not what was written (`443cbeb9`); and a fourth, an AVIF cover aborting upstream with a double free, fixed here at `af89fcc` | upstream's master at `648b1dd`: `src/cyanrip_log.c:275`, `src/cyanrip_main.c:904-905`, `:1075-1076`, `src/cyanrip_log.c:230-233` | Draft as items 29 to 31, then re-check 24 to 31 (the owner's word of 2026-11-16) |
+| UP-1 | Items 24 to 31, drafted and not filed; 29 to 31 drafted, and all eight re-checked, against `648b1dd` on 2026-11-16 | `docs/upstream/issues-to-file.md` | OW-8 |
+| UP-2 | An AVIF cover aborts upstream with `free(): double free detected`, exit 134: the cover's codec parameters are copied with `memcpy` (`src/coverart.c:62`, `:278`, `src/cyanrip_encode.c:1166` at `648b1dd`), run on a build of it on 2026-11-16; fixed here at `af89fcc` | the upstream drafts of 2026-11-16 | Draft as item 32 |

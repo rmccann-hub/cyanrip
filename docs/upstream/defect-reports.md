@@ -5,14 +5,14 @@ operator, combined in the order of importance `issues-to-file.md` suggests.
 That is the operator's word: this file's author could not open it, since this session's proxy answers HTTP 403 for upstream's tracker and refuses to attach upstream beside the fork, so the link is relayed, not read. A reply that asks for a pull request, or for any report as
 an issue of its own, goes to the operator, who files it. Filing on upstream's
 tracker is outside this repository, so it is the maintainer's act; what this
-file does is make each one a copy-and-paste. **Reports 24 to 28, drafted
-from 2026-10-19 to 2026-10-30, are not filed yet.** All twenty-eight are
+file does is make each one a copy-and-paste. **Reports 24 to 31, drafted
+from 2026-10-19 to 2026-11-16, are not filed yet.** All thirty-one are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. The rule
 (`docs/history/CLAUDE-2026-10-21.md`) is that *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
-its own file, `docs/upstream-cachemodel-report.md`. There are twenty-eight:
-twenty-seven here, and that one. The thirteenth found, report 13, was found the
+its own file, `docs/upstream-cachemodel-report.md`. There are thirty-one:
+thirty here, and that one. The thirteenth found, report 13, was found the
 day this file was written. Reports 14 to 18 were drafted on 2026-10-05, when
 `master` was still `f8ebf48` (`git ls-remote` again): 14 and 18 found that
 day, and 15 to 17 found earlier in round 30 and fixed for the fork's `.20`
@@ -32,6 +32,9 @@ fork. Report 28 was drafted on 2026-10-30, found while building the fork's
 path-component rules, and checked against upstream's `648b1dd`, which
 `git ls-remote` gave for `master` that day: its four commits after `7dbe56a`
 change only files under `.github/`, so every `src/` line below holds there.
+Reports 29 to 31 were drafted on 2026-11-16, each for a defect the fork had
+fixed (`372706fe`, `30f16465` and `443cbeb9`), and each run on a build of
+upstream's `648b1dd` itself, the tip `git ls-remote` gave that day.
 
 **Checked against upstream `master` at `7dbe56a` on 2026-10-16** (`git ls-remote
 https://github.com/cyanreg/cyanrip refs/heads/master` returned
@@ -803,8 +806,10 @@ library's message through `%s` does the same.
 
 **What happens:** a value carrying a line break is written as one, so the rest
 of the value is a line of the log of the value's choosing. A title given with
-`-t` as `Two`, a newline and `  Accurip:       accurately ripped` puts a line
-shaped like the track block's own `  Accurip:` line into the log, and a
+`-t` as `Two`, a newline and `  Accurip\:       accurately ripped`, its colon
+typed as `\:` so that `-t` does not split there, puts a line shaped like the
+track block's own `  Accurip:` line into the log (run on a build of `648b1dd`
+on 2026-11-16, exit 0), and a
 logchecker or any tool that reads the log a line at a time takes it for the
 program's. A newline is not the only way in: a CD-TEXT field that carries the
 byte 0x85 arrives as U+0085, NEXT LINE, because libcdio reads a cdrdao `.toc`'s
@@ -848,8 +853,12 @@ audio tracks, ripped with `-o flac`, an album of 200 bytes and `-D
 one file on disk, 1,003 bytes of path with no extension, a FLAC stream with
 the log's text written into it. The log, the CUE sheet and both tracks had
 been written to it. The rip printed `WARNING: tracks 1 and 2 resolve to the
-same file` and `Rip completed:  yes (2 of 2 tracks)`, and exited 0. Upstream's
-own rip was not run: this is read from its source, which is the fork's here.
+same file` and `Rip completed:  yes (2 of 2 tracks)`, and exited 0. Run on a
+build of upstream's `648b1dd` on 2026-11-16, with a 92-byte root, a 200-byte
+album and five `{album}` components, `-o flac`: exit 0, the same warning,
+both tracks `ripped and encoded successfully!`, `Ripping errors: 0`, and one
+file on disk whose path is 1,003 bytes with no extension. Which file is
+written last differs from the fork's run, and the cut is the same.
 
 **What the fork did:** `crip_get_path()` renders with
 `AV_BPRINT_SIZE_UNLIMITED` and returns `NULL` if the buffer could not be
@@ -857,3 +866,323 @@ completed, so a path is either whole or not given (`cfd738e`, "Render a
 path whole, past the 1,003 bytes an AVBPrint holds"). The same rip leaves
 the log, the CUE sheet and both tracks, each under its own name. Found on
 2026-10-30.
+
+## 29. `C2 errors: unsupported by drive` is printed for a disc image, and for a drive that returns C2 pointers
+
+**Where:** `src/cyanrip_log.c:275-276` at `648b1dd`, in `cyanrip_log_start_report()`:
+
+```c
+    cyanrip_log(ctx, 0, "C2 errors:      %s by drive\n", (ctx->rcap & CDIO_DRIVE_CAP_READ_C2_ERRS) ?
+                "supported" : "unsupported");
+```
+
+`ctx->rcap` is what `cdio_get_drive_cap()` returned at start-up
+(`src/cyanrip_main.c:215`). Nothing else in `src/` mentions C2. No read asks
+the drive for C2 pointers.
+
+**What happens:** the line turns one capability bit into a statement about
+what the drive can do. In the fork's reading of libcdio, the bit is the C2
+pointers bit of the drive's capabilities mode page, 2Ah: it says what the drive
+declares, not what it can do. In three cases the line says something false:
+
+- **A disc image** has no drive and no capabilities page. libcdio's BIN/CUE
+  driver answers the query with a fixed set, and that set leaves the C2 bit
+  clear. With libcdio 2.1.0 the read word is `0x0701e` and the misc word is
+  `CDIO_DRIVE_CAP_MISC_FILE`, "drive is really a file". So a rip of a CUE image
+  says `C2 errors:      unsupported by drive`, under `Drive used:     libcdio
+  CDRWIN (revision 2.1.)`.
+- **A drive can deny C2 in that page and still return C2 pointers when
+  asked.** The fork measured its test drive, a PIONEER BD-RW BDR-209D (revision
+  1.51):
+  - Page 2Ah's byte 5 is `63h` under all four page controls, so its C2
+    pointers bit is 0.
+  - The CD Read feature (001Eh) of GET CONFIGURATION says `C2 flags=1`.
+  - A READ CD with byte 9 = `12h`, which asks for C2 error pointers, returned
+    them. In four reads of four, they flagged the same three bytes of one frame
+    of track 5. That frame is where that disc's rips of track 5 differed from a
+    CTDB entry by three samples.
+  - Every log cyanrip writes on that drive says `unsupported by drive`.
+- **A failed query.** In the fork's reading of libcdio at `68ea374`
+  (`lib/driver/mmc/mmc.c:866-870`), a failed MODE SENSE sets every capability
+  word to `CDIO_DRIVE_CAP_ERROR`. That leaves the C2 bit clear, so the line
+  says `unsupported by drive` about a drive whose answer was never read.
+
+The other arm also claims more than is true. `supported by drive` is printed on
+a rip that never asks for C2 pointers, so a reader can take it that C2 was
+used.
+
+**How to reproduce:**
+
+- **The image case**, on a build of `648b1dd` against libcdio 2.1.0:
+  1. Make a two-track image:
+
+     ```
+     ffmpeg -f lavfi -i "sine=frequency=440:duration=8:sample_rate=44100" -ac 2 -f s16le -acodec pcm_s16le disc.bin
+     ```
+
+     and a CUE sheet with `FILE "disc.bin" BINARY`, two `AUDIO` tracks, and
+     `INDEX 01` at `00:00:00` and `00:04:00`.
+  2. Run `cyanrip -d disc.cue -I -N -A -U -B -s 0`. It prints `C2 errors:
+     unsupported by drive` and exits 0.
+
+  The NRG and cdrdao drivers and later libcdio releases were not run.
+- **The failed-query case** was not run on a drive. A preloaded
+  `cdio_get_drive_cap()` that sets all three words to `CDIO_DRIVE_CAP_ERROR`
+  makes the same command print `unsupported by drive`.
+- **The drive case** needs a drive whose page 2Ah clears byte 5 bit 4, and
+  whose READ CD still answers byte 9 = `12h` with 2,352 bytes of audio and 294
+  of C2 pointers a frame. The fork's measurements above were taken with
+  sg3_utils on its rig, on 2026-11-05 and 2026-11-11, not with cyanrip. Without
+  such a drive they cannot be reproduced, and the case rests on the code above:
+  the line's only input is the declared bit.
+
+**What the fork did:** three changes to this one line:
+
+- `8499890` (2026-07-31) added `, not used` to the supported arm.
+- `819c735` (2026-10-29) prints `unknown (capabilities query failed)` when the
+  read word carries `CDIO_DRIVE_CAP_ERROR`.
+- `372706f` (2026-11-13, "Say what the capabilities page declares on the C2
+  errors line") says what was asked:
+  - `declared supported by drive (capabilities page), not used`;
+  - `not declared by drive (capabilities page, not measured)`;
+  - `unknown (image)` for a disc image. The fork tells an image from a drive by
+    its driver, as in item 19 (`faec396`).
+  - A failed query decides first. Log text only; no read changed.
+
+In upstream's code the fix is this line alone. It can use the driver test
+upstream already applies to the cache model (`src/cyanrip_main.c:271-274`):
+
+```c
+    int is_image = 0;
+    switch (cdio_get_driver_id(ctx->cdio)) {
+    case DRIVER_BINCUE:
+    case DRIVER_NRG:
+    case DRIVER_CDRDAO:
+        is_image = 1;
+        break;
+    default:
+        break;
+    }
+    cyanrip_log(ctx, 0, "C2 errors:      %s\n",
+                (ctx->rcap & CDIO_DRIVE_CAP_ERROR) ? "unknown (capabilities query failed)" :
+                is_image ? "unknown (disc image)" :
+                (ctx->rcap & CDIO_DRIVE_CAP_READ_C2_ERRS) ?
+                    "declared supported by drive (capabilities page), not used" :
+                    "not declared by drive (capabilities page, not measured)");
+```
+
+The wordings are the fork's; any wording that says what was asked will do.
+Applied to `648b1dd` and run, this prints `unknown (disc image)` for the image
+above. It prints `unknown (capabilities query failed)` under the preloaded
+failure, which unchanged `648b1dd` reports as `unsupported by drive`.
+
+## 30. A disc change mid-rip is reported as `Error ripping: Invalid argument`
+
+**Where:** `src/cyanrip_main.c:1074-1078` at `648b1dd`, in the read loop of
+`cyanrip_rip_track()`:
+
+```c
+        if (get_media_changed(ctx)) {
+            cyanrip_log(ctx, 0, "\nDrive media changed, stopping!\n");
+            ret = AVERROR(EINVAL);
+            goto fail;
+        }
+```
+
+and `:903-907`, the same code in `cyanrip_rip_data_track()` with `goto end`.
+Under `-l`, the loop over the listed tracks prints what comes back
+(`:2425-2429`):
+
+```c
+            ret = cyanrip_rip_track(ctx, t);
+            if (ret < 0) {
+                cyanrip_log(ctx, 0, "Error ripping: %s\n", av_err2str(ret));
+                goto end;
+            }
+```
+
+**What happens:** `AVERROR(EINVAL)` renders as `Invalid argument`. So a rip
+under `-l` that loses its disc ends its log on `Drive media changed,
+stopping!`, then `Error ripping: Invalid argument`. That names an argument
+nobody passed as the cause, right below a line that blames the device. A data
+track's stop (`:905`) reaches the same line, because `cyanrip_rip_track()`
+returns it (`:1001-1003`).
+
+Without `-l`, the loop over every track does not print the return value
+(`:2295-2296`, item 16), so the log stops at `Drive media changed,
+stopping!`. Once that loop prints `Error ripping:` as the `-l` loop does, it
+will say `Invalid argument` too.
+
+The same two lines follow a media-change query that failed.
+`get_media_changed()` counts every answer except 0 and `DRIVER_OP_UNSUPPORTED`
+as a change (`:91`). So when a drive stops answering, its `DRIVER_OP_ERROR` is
+logged as a changed disc and then an invalid argument. On the fork's rig on
+2026-11-03, a drive failed mid-rip while the fork's stop still returned
+`EINVAL`, and the fork's log ended on `Error ripping: Invalid argument`.
+
+**How to reproduce:** no image driver reports a changed medium, so a preloaded
+library answers libcdio's query instead:
+
+```c
+/* mediachanged.c: cc -shared -fPIC -o mediachanged.so mediachanged.c */
+#include <stdlib.h>
+#include <cdio/cdio.h>
+
+/* Every media-change query answers $MC_ANSWER, 1 (changed) by default */
+int cdio_get_media_changed(CdIo_t *p_cdio)
+{
+    const char *a = getenv("MC_ANSWER");
+    (void)p_cdio;
+    return a ? atoi(a) : 1;
+}
+```
+
+The image needs two tracks and two minutes of audio, made as in item 29 with
+`duration=120` and track 2's `INDEX 01` at `01:00:00`. The rip has to outlast
+the once-a-second limit on the query (`:83`, `:87-88`): an 8-second image rips
+before the loop asks again, and completes. On a build of `648b1dd`, on Linux,
+each run below uses `-N -A -U -B -s 0 -o flac`:
+
+- With `-l 1` and `LD_PRELOAD=./mediachanged.so`: `Drive media changed,
+  stopping!`, then `Error ripping: Invalid argument`, exit 1. The log file
+  ends on the same two lines, then `Log FUN512:`.
+- The same without `-l`: `Drive media changed, stopping!` and no `Error
+  ripping:` line; `Ripping errors: 1`, exit 1.
+- `MC_ANSWER=-1` (`DRIVER_OP_ERROR`) with `-l 1`: the same two lines as the
+  first run.
+- Without the library, the `-l 1` rip completes with exit 0.
+- A mixed-mode image whose track 1 is data, with `-l 1`: `Track 1 is data:`,
+  then the same two lines, exit 1. Its data track is too short for the
+  once-a-second limit, so for this run the library slept 1.1 s in its first
+  call.
+
+Not run on a drive.
+
+**What the fork did:** two commits:
+
+- `30f1646` ("Stop a lost drive's rip with EIO, not EINVAL"): each stop
+  returns `AVERROR(EIO)` instead. The line then reads `Error ripping:
+  Input/output error`, glibc's text, which names the device rather than the
+  caller's arguments.
+- `819c735` (2026-10-29) separated a failed query from a change, as `Drive
+  media change query failed (libcdio error N), stopping!`.
+
+In upstream's code:
+
+- Return `AVERROR(EIO)` at `:905` and `:1076`.
+- Have `get_media_changed()` return libcdio's code for a failed query, `ret ==
+  DRIVER_OP_UNSUPPORTED ? 0 : ret > 0 ? 1 : ret`, so each caller can tell a
+  change from a failure. That includes the two `-I` loops (`:2265`, `:2373`),
+  which today print `Drive media changed, stopping!` for both.
+
+Applied to `648b1dd` and run with the library above, the first run ends
+`Error ripping: Input/output error`. With `MC_ANSWER=-1` the first line becomes
+`Drive media change query failed (libcdio error -1), stopping!`.
+
+## 31. `Embedded cover art:` names the cover that was asked for, not what the file holds
+
+**Where:** `src/cyanrip_log.c:210` and `:229-234` at `648b1dd`, in `cyanrip_log_track_end()`:
+
+```c
+    if (!ctx->settings.disable_coverart_embedding && (t->art.source_url || ctx->nb_cover_arts)) {
+```
+
+```c
+        if (ctx->settings.print_info_only)
+            cyanrip_log(ctx, 0, "\n  Embedded cover art:\n    %s: %s\n",
+                        dict_get(art->meta, "title"), art->source_url);
+        else
+            cyanrip_log(ctx, 0, "\n  Embedded cover art:\n    %s: %ix%i %s\n",
+                        dict_get(art->meta, "title"), art->params->width, art->params->height, codec_name);
+```
+
+Compare the test that decides whether a muxer is given the picture at all,
+`src/cyanrip_encode.c:1158-1159`:
+
+```c
+    if (art->pkt && cfmt->coverart_supported &&
+        !ctx->settings.disable_coverart_embedding) {
+```
+
+**What happens:** the block is printed whenever there is a cover and `-G` is
+not given, and it consults no output. Here are three ways it is false. The
+first two were run.
+
+- **An output that embeds no cover.**
+  - These outputs have `coverart_supported` 0 (`src/cyanrip_main.c:67-79`):
+    Opus, Vorbis, WAV, TTA, WavPack, AAC in ADTS, ALAC in `.m4a` and PCM. No
+    picture stream is added for them, yet each track's block lists the cover.
+  - With `-o opus -C Front=art.png`, both tracks' blocks read `Embedded cover
+    art:` and `Front: 8x8 PNG (Portable Network Graphics) image`, and the run
+    exits 0. Neither `.opus` file holds a picture: one stream each, and no PNG
+    signature anywhere in the file.
+  - The same happens with `-o wav`. For a control, the same cover with `-o
+    flac` is in both files.
+  - With several outputs, the one block speaks for all of them.
+- **A picture the muxer refuses.**
+  - FFmpeg's FLAC muxer will not write a GIF (`GIF image support is not
+    implemented.`) and fails the header.
+  - With `-o flac -C Front=art.gif`, both blocks list `Front: 8x8 CompuServe
+    GIF (Graphics Interchange Format)`, and both tracks print `ripped and
+    encoded successfully!`.
+  - After the album summary come `Couldn't write header: Not yet implemented
+    in FFmpeg, patches welcome!` and `Error writing to file: Not yet
+    implemented in FFmpeg, patches welcome!`, twice each. The footer says
+    `Ripping errors: 0`, the exit code is 1, and both `.flac` files are 0
+    bytes.
+  - The blocks were printed before the files were written. With ReplayGain on,
+    the default (`src/cyanrip_main.c:194-195`), each file is written only after
+    every track has been ripped (`:2306-2331`).
+- **A picture the muxer drops.**
+  - FFmpeg 6.1.1's FLAC muxer drops an AV1 or WebP picture with a warning, `No
+    mimetype is known for stream 1, cannot write an attached picture.`, and
+    writes the file without it.
+  - This was measured with `ffmpeg` alone. The fork before its fix, whose
+    block was upstream's, listed an AVIF cover as `Front: 8x8 Alliance for
+    Open Media AV1` while neither FLAC held a picture.
+  - Upstream does not get that far with an AVIF cover. A build of `648b1dd`
+    aborts before the first track with `free(): double free detected in tcache
+    2`, exit 134, with `-o flac` or `-o pcm`. That is a separate defect: the
+    cover's codec parameters are copied with `memcpy` (`src/coverart.c:62`,
+    `:278`, `src/cyanrip_encode.c:1166`), so the copies share one extradata
+    buffer. The fork fixed it in `af89fcc`.
+
+The same `ffmpeg` 6.1.1, muxing each 8x8 picture into each container that
+embeds covers, gives:
+
+- FLAC keeps PNG, JPEG, BMP and TIFF. It drops AV1 and WebP, and fails on GIF.
+- MP4 keeps PNG, JPEG and BMP. It fails on GIF, TIFF, AV1 and WebP.
+- MP3 keeps PNG, JPEG, BMP, TIFF and GIF. It fails on AV1 and WebP.
+
+**How to reproduce:** on a build of `648b1dd`, with the two-track image from
+item 29, make a cover with `ffmpeg -f lavfi -i color=c=red:s=8x8 -frames:v 1
+art.png` (or `art.gif`). Then run `cyanrip -d disc.cue -N -A -U -B -s 0 -o opus
+-C Front=art.png`, and check the `.opus` files with `ffprobe`. For the refused
+case, use `-o flac -C Front=art.gif`.
+
+**What the fork did:** `443cbeb` ("Embed a cover only where the output holds
+it, and say so"):
+
+- A table records which picture formats each output's muxer keeps, measured
+  against FFmpeg 6.1.1.
+- A cover goes only to an output that holds it.
+- A user's own cover that a cover-embedding output cannot hold is refused
+  before the rip.
+- The block lists the cover only for the files that hold it:
+  - `none (the output cannot hold a GIF picture; saved as <file>)` when no file
+    does;
+  - `not in the <ext> file: ...` for each file that does not.
+- `-I`, which rips nothing, still says what it would embed.
+
+In upstream's code there are two steps.
+
+1. Count the outputs the encoder gives the picture to, with the same test as
+   `src/cyanrip_encode.c:1158`. Print `none` when there are none, and name the
+   outputs that lack it when only some hold it. Applied to `648b1dd` and run:
+   - `-o opus` reads `Embedded cover art: none (no output embeds cover art)`;
+   - `-o flac,opus` lists the cover, then `not in the opus file: that output
+     embeds no cover art`.
+2. For a picture that a cover-embedding muxer refuses or drops, decide before
+   the rip, either refusing the cover or leaving it out of that output, and say
+   so in the block. The block is printed before the file is written, so the
+   muxer's result is not yet known when the block is logged.

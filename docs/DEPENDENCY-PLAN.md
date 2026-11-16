@@ -12,7 +12,7 @@ lap before the release that carries it.*
 
 > **STATUS, 2026-11-16: finished except what `docs/OPEN-ITEMS.md` holds.**
 > §1 and §3 shipped in `.29`. §4's Fedora job is US-23, which the owner
-> approved on 2026-11-16, and §5's static binary is OW-7, deferred that day
+> approved on 2026-11-16 and whose first run found two differences, and §5's static binary is OW-7, deferred that day
 > until the Fedora job has run a while; §5's macOS runner wait is US-19 and its
 > tarball pin is OW-11. §5's evidence scan reads its files in one git process
 > since `0994170` (2026-11-03). The plan stays at this path because
