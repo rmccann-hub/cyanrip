@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**`tools/rig-check.py`'s instructions are in the handshake README**, under
+*Checking the rig without a rip*. They lived only in
+`docs/JOINT-SCRIPT-RUNBOOK.md` §8, a runbook marked superseded since
+2026-09-16, which the tool's own comment still cited. The runbook stays, since
+sent laps cite it. `docs/OPEN-ITEMS.md` US-16 leaves.
+
 **`docs/eac-parity.md`'s row 6 includes the runs of 2026-11-09 and 2026-11-14.** It
 stopped at 2026-11-03's clustering, which 2026-11-09 did not repeat (7 of 22
 verified, wrong and right reads alternating within each run), and said
