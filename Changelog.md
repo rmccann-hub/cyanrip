@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**The handshake README's procedures run as written.**
+- **Filing a run:** its first command block had failed since HR-2's move. It
+  is now the one flow that works: staging folder, reading, README, filing,
+  fetching.
+- **Writing our lap:** it now asks for the two version fields our laps
+  dropped in round 37.
+- **Taking in a peer lap:** it now says what a closing lap regenerates.
+- **Cutting a release:** the manifest step names its file.
+- **Running cyanrip by hand:** the suite's flags include `-U`.
+- **The round table:** a blank line broke it after round 13 on GitHub.
+  Rounds 30 and 36 now give their verdicts and dates.
+
 **`CLAUDE.md` names `docs/OPEN-ITEMS.md` as the one list**, to be reviewed
 whole before each round's opening lap, and its table of what has run on a
 drive gives way to the list's *Needs a drive*, which it no longer duplicates.
