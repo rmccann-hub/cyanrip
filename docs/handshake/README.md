@@ -483,7 +483,7 @@ add for next time, or have additional info"*). It has four parts:
 Each item names its log file and line, what would settle it, and who owns it.
 Each that needs action becomes a `STATUS-OPEN` row, a lap statement or a task.
 A run expected in advance gets its checklist written before it arrives, so
-its reading is held to a list fixed beforehand: `docs/ROUND-37-READING-PLAN.md`
+its reading is held to a list fixed beforehand: `docs/history/ROUND-37-READING-PLAN.md`
 for `.28`'s Full run.
 
 **After HR-2's move** (`PROTOCOL.md` v9 §17) a run is not filed into this

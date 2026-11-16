@@ -5,7 +5,7 @@ difference between two files.
 Why this exists
 ---------------
 Every claim of the form "the rip matches EAC" in this project's history has
-rested on somebody else's comparison, reported in prose. `docs/AUDIT-2026-08-05.md`
+rested on somebody else's comparison, reported in prose. `docs/history/AUDIT-2026-08-05.md`
 §2 lists "14/14 bit-perfect vs EAC" as closed, and the artifact behind it is a
 report, not a file anyone here can open. That is an assertion, not a
 verification, by this project's own rule.

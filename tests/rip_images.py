@@ -9757,7 +9757,7 @@ def sc_abort_footer():
 def sc_contract_composed():
     """A composed line's segments must combine the way P2 says they do.
 
-    ROUND 14, found by writing docs/round-14-acceptance-spec.md against our own
+    ROUND 14, found by writing docs/history/round-14-acceptance-spec.md against our own
     contract and noticing the document disagreed with the source.
 
     P2 printed one sentence under EVERY composed row -- *"Segment 0 is always
