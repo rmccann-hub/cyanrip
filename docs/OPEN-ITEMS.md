@@ -85,7 +85,7 @@ id.
 | Id | Item | Source | Next step |
 |---|---|---|---|
 | OW-7 | A static Linux binary for users | `docs/DEPENDENCY-PLAN.md` §5; `docs/upstream/sync-2026-11-03-ci.md` §5 | Deferred on 2026-11-16 until the Fedora CI job (US-23) has run a while; it changes how every user gets the program, needs a round, and brings the GPL's source terms for every library linked in |
-| OW-8 | File upstream items 24 to 31 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md` | The owner files, once UP-2 is drafted and all eight are re-checked against upstream's master |
+| OW-8 | File upstream items 24 to 31 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md`, items 24 to 31 | The owner files; all eight were re-checked against upstream's `648b1dd` on 2026-11-16 |
 | OW-9 | Set `CYANRIP_REDACT_NAMES` where runs are filed; read the repository's Security tab (unread since 2026-11-03) | `docs/history/READINESS-PLAN.md` | Owner actions |
 | OW-11 | Outside these repositories: skillcheck reading tarball pins, and the skillcheck `--verify` report | `docs/DEPENDENCY-PLAN.md`; `docs/history/READINESS-PLAN.md` | Handed to the claude-code-skills session in the fork's HANDOFF of 2026-11-16 |
 
@@ -120,5 +120,5 @@ in `STATUS-OPEN hardware-unverified`, which disagreed.
 
 | Id | Item | Source | Next step |
 |---|---|---|---|
-| UP-1 | Items 24 to 28, drafted and not filed | `docs/upstream/issues-to-file.md` | OW-8, with UP-2 |
-| UP-2 | Three defects fixed here and present in upstream's master, not yet drafted: `C2 errors: %s by drive` from libcdio's capability bit (ours fixed at `372706fe`); a media change returns `EINVAL`, so the log says `Error ripping: Invalid argument` (`30f16465`); `Embedded cover art:` names what was asked, not what was written (`443cbeb9`); and a fourth, an AVIF cover aborting upstream with a double free, fixed here at `af89fcc` | upstream's master at `648b1dd`: `src/cyanrip_log.c:275`, `src/cyanrip_main.c:904-905`, `:1075-1076`, `src/cyanrip_log.c:230-233` | Draft as items 29 to 31, then re-check 24 to 31 (the owner's word of 2026-11-16) |
+| UP-1 | Items 24 to 31, drafted and not filed; 29 to 31 drafted, and all eight re-checked, against `648b1dd` on 2026-11-16 | `docs/upstream/issues-to-file.md` | OW-8 |
+| UP-2 | An AVIF cover aborts upstream with `free(): double free detected`, exit 134: the cover's codec parameters are copied with `memcpy` (`src/coverart.c:62`, `:278`, `src/cyanrip_encode.c:1166` at `648b1dd`), run on a build of it on 2026-11-16; fixed here at `af89fcc` | the upstream drafts of 2026-11-16 | Draft as item 32 |
