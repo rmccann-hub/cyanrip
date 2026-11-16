@@ -90,6 +90,7 @@ even when nothing outside can see it.
 """
 
 import argparse
+import json
 import pathlib
 import random
 import re
@@ -301,8 +302,30 @@ FAILED_LINE = re.compile(r"^\s*\d+/\d+ (.*?)\s+(?:FAIL|TIMEOUT)\b", re.M)
 
 
 def short_name(meson_name):
-    """`images - cyanrip:contract_build` -> `contract_build`."""
+    """A test's own name, from the line `meson test` printed for it.
+
+    Meson 1.3.2 prints `cyanrip:images / contract_build`, suite then name; the
+    probe filed on 2026-09-16 recorded `images - cyanrip:contract_build`. The
+    name follows the last ` / `, or failing that the first `:`. This read the
+    first `:` alone until 2026-11-16, so under 1.3.2 it returned `images /
+    contract_build`, matched nothing in EXCLUDED_TESTS, and the probe refused
+    every sweep. inert_edit_probe() checks each name against meson's own list
+    of tests, so a third format refuses by name instead of mismatching."""
+    if " / " in meson_name:
+        return meson_name.rsplit(" / ", 1)[-1].strip()
     return meson_name.split(":", 1)[-1].strip()
+
+
+def test_names():
+    """Every test's own name, as `meson introspect --tests` lists it, or None
+    if meson would not say."""
+    r = run(["meson", "introspect", "--tests", "build"], timeout=300)
+    if r is None or r.returncode != 0:
+        return None
+    try:
+        return {t["name"] for t in json.loads(r.stdout)}
+    except (ValueError, KeyError, TypeError):
+        return None
 
 
 def inert_edit_probe():
@@ -324,6 +347,16 @@ def inert_edit_probe():
             return False, out + ["REFUSING: the suite did not finish under "
                                  "the inert edit"]
         failed = {short_name(n) for n in FAILED_LINE.findall(r.stdout)}
+        known = test_names()
+        if known is None:
+            return False, out + ["REFUSING: `meson introspect --tests` did not "
+                                 "list the tests, so no failing name could be "
+                                 "checked"]
+        if failed - known:
+            return False, out + [f"REFUSING: meson printed {sorted(failed - known)} "
+                                 f"as failing, which name no test meson lists, "
+                                 f"so short_name() does not read this meson's "
+                                 f"output"]
         # A test that failed in the full suite is asked again, alone, with the
         # edit still applied: this suite has a known timeout under parallel
         # load, and a flake is not an edit detector.

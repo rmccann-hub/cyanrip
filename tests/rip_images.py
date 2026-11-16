@@ -6398,6 +6398,21 @@ def sc_mutation_exclusions_are_pinned():
         fail("mutation_exclusions: sweep() can skip the probe without printing "
              "UNPROBED over the score")
 
+    # The probe matches EXCLUDED_TESTS against the names `meson test` prints.
+    # Meson 1.3.2 prints this one as the first string below (this suite's log,
+    # 2026-11-16); the probe filed on 2026-09-16 recorded the second. Read up
+    # to the first `:` alone, the first was `images / contract_build`, which
+    # matched nothing, and the probe refused every sweep from 2026-09-27.
+    short_name = getattr(mod, "short_name", None)
+    for printed in ("cyanrip:images / contract_build",
+                    "images - cyanrip:contract_build"):
+        name = short_name(printed) if short_name else None
+        if name != "contract_build":
+            fail(f"mutation_exclusions: short_name({printed!r}) is {name!r}, "
+                 f"not 'contract_build', so the inert-edit probe cannot match "
+                 f"the name meson prints against EXCLUDED_TESTS and refuses "
+                 f"every sweep")
+
     want = {"contract_build"}
     got = set(getattr(mod, "EXCLUDED_TESTS", {}))
     if got != want:

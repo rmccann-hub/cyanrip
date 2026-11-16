@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**The inert-edit probe can match a failing test to `EXCLUDED_TESTS` again.**
+`tools/mutate.py` has run it before every sweep since 2026-09-27, reading a
+failing test's name up to the first `:`, as the probe filed on 2026-09-16
+wrote it. Meson 1.3.2 prints `cyanrip:images / contract_build`, which that
+read as `images / contract_build`: it matched no exclusion, and the probe
+refused every sweep. Dumbass session wired the probe in from a log's prose
+and never ran it, so its first run, today, refused on the one test it
+excludes. The name is now read after the last ` / `, and a name meson does
+not list refuses by name. `mutation_exclusions_are_pinned` reads meson's
+printed name for `contract_build` and fails with the old parser.
+
 **`docs/OPEN-ITEMS.md` US-22 was already done when it was listed.** P5's lone
 `"` row went when `0e2e2c21` published a line written by consecutive calls as
 one row, `cdio: \"%s\"`, on 2026-11-04; the contract has had no such row
