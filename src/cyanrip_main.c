@@ -542,7 +542,14 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         crip_stall_wait_end();
     }
 
+    /* Paranoia's setup finds the track its cursor starts in, which asks
+     * libcdio for the lead-out address before our own lookup below does
+     * (cdio_paranoia_init() -> i_paranoia_firstlast() ->
+     * cdio_cddap_sector_gettrack() -> cdio_get_track()). Named, as the calls
+     * after it are, so that a setup which blocks is seen. */
+    crip_stall_wait_begin("the paranoia setup");
     ctx->paranoia = cdio_paranoia_init(ctx->drive);
+    crip_stall_wait_end();
     if (!ctx->paranoia) {
         cyanrip_log(ctx, 0, "Unable to init paranoia!\n");
         cyanrip_ctx_end(&ctx);
@@ -597,9 +604,10 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
      * drive...` for 300 s: past the named open, in a call no wait named,
      * which one not known (docs/rig-2026-11-11b-c2probe/; our round 39 lap
      * 3 S13 and S16). The open has read the TOC and asked the last session
-     * already; on Linux the last-session and track-format queries ask the
-     * drive again, and the two lookups answer from libcdio's copy of the TOC,
-     * named all the same so that one which blocks is seen. */
+     * already. On Linux the last-session query asks the kernel again
+     * (CDROMMULTISESSION); the lookups and the track format queries answer
+     * from libcdio's copy of the TOC, in libcdio 2.1.0 and 2.3.0 alike. Each
+     * is named all the same, so that one which blocks is seen. */
     crip_stall_wait_begin("the lead-out address lookup");
     ctx->end_lsn = cdio_get_track_lsn(ctx->cdio, CDIO_CDROM_LEADOUT_TRACK) - 1;
     crip_stall_wait_end();
@@ -631,7 +639,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
         t->index = i + 1;
         t->number = t->cd_track_number = i + first_track_nb;
+        crip_wait_begin_track("the track format query", t->number);
         t->track_is_data = !cdio_cddap_track_audiop(ctx->drive, t->number);
+        crip_stall_wait_end();
         if (t->track_is_data) {
             crip_wait_begin_track("the track format query", t->number);
             track_format_t format = cdio_get_track_format(ctx->cdio, t->number);

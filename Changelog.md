@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**Two more calls after the drive open name themselves to the stall
+watchdog.** Paranoia's setup asks libcdio for the lead-out address before our
+own lookup does (`cdio_paranoia_init()` → `cdio_get_track()`), and the
+audio-track test before each track's format query asks the same question as
+that query. A block in either printed nothing until now. They are named *the
+paranoia setup* and *the track format query for track N*, the second as
+named since `.32` for a data track. Our next lap announces the new name.
+Found by the Fedora job's first run: Fedora 45's libcdio calls its own
+`cdio_get_track_lsn` through its PLT, Ubuntu's does not, so on Fedora
+`tests/slowcall.c` slept inside paranoia's setup instead of in our lookup.
+The shim now counts only calls from cyanrip itself, and
+`named_waits_after_the_open` slows both new calls; each fails with its wait
+removed. The comment on that window also said Linux's track format query
+asks the drive again; libcdio 2.1.0 and 2.3.0 answer it from their copy of
+the TOC.
+
 **The inert-edit probe can match a failing test to `EXCLUDED_TESTS` again.**
 `tools/mutate.py` has run it before every sweep since 2026-09-27, reading a
 failing test's name up to the first `:`, as the probe filed on 2026-09-16

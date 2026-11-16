@@ -8828,17 +8828,24 @@ def sc_named_waits_after_the_open():
     no wait named, which one not known. The calls between the open and the
     first pregap search now name themselves. tests/slowcall.c makes the
     first of one of them after the open sleep 12 s, past the watchdog's 10 s,
-    and the run must name it while it waits and when it returns. Two of them,
-    the last-session query and the lead-out address lookup, are made on an
-    image as on a drive.
+    and the run must name it while it waits and when it returns. Four of
+    them, the paranoia setup, the lead-out address lookup, the last-session
+    query and the first track's format query, are made on an image as on a
+    drive. The shim counts only calls
+    from cyanrip itself: on Fedora 45 libcdio's own lead-out question inside
+    the paranoia setup reached it and took the sleep, so that neither line
+    printed (the first run of a Fedora CI job, on 2026-11-16).
     """
     needs_preload_shim("named_waits_after_the_open")
     shim = os.environ.get("CYANRIP_SLOWCALL_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"named_waits_after_the_open: the shim was not built or not passed ({shim!r})")
         return
-    for call, what in (("cdio_get_last_session", "the last-session query"),
-                       ("cdio_get_track_lsn", "the lead-out address lookup")):
+    for call, what in (("cdio_paranoia_init", "the paranoia setup"),
+                       ("cdio_get_last_session", "the last-session query"),
+                       ("cdio_get_track_lsn", "the lead-out address lookup"),
+                       ("cdio_cddap_track_audiop",
+                        "the track format query for track 1")):
         marker = WORK / f"slowcall-{call}.done"
         if marker.exists():
             marker.unlink()
