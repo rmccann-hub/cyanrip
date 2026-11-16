@@ -51,7 +51,6 @@ at `13bec0a`. A row leaves when the round settles it.
 | US-20 | Three audit leads never re-checked: c, g, l | `docs/history/AUDIT-2026-09-05.md` (:224, :228, :233) | Re-check, then close or list |
 | US-21 | Our proposed `Pregap sample peak: …, not ripped` line has no answer | cyanrip:R36.L1.S17; UNVERIFIED whether superseded (their status lists `eac-htoa-log` as `cannot`) | Ask once in round 41's lap 1; withdraw it if they decline |
 | US-26 | Upstream pull request 153 moved to `ca3ab44` (2026-11-10), 20 commits on `648b1dd`, three of whose subjects match work done here; `docs/pregap-carry.md` still calls it a later evolution of 115 by the same author, and the 2026-08-21 audit's §3 calls `-J` independently implemented here, though it is upstream's own `ca7e830c` | `docs/upstream/carried-patches.md` §1 | Read 153's code against ours; correct `pregap-carry.md`'s and the audit's sentences in a dated note |
-| US-23 | A Fedora CI job building what end users build. Its first run, on PR #120 at `ce969c5e` (Fedora 45: FFmpeg 9.0.2, libcdio 2.3.0, libcdio-paranoia 10.2+2.0.2), passed 165 tests, skipped 6 and failed 2, `cover_art_formats` and `named_waits_after_the_open`, so it was taken out of that pull request. Both are fixed on 2026-11-16, the cover table following the loaded libavformat and `tests/slowcall.c` counting only cyanrip's calls, each proved on Fedora only when the job runs again | `docs/DEPENDENCY-PLAN.md` §4; the owner's word of 2026-11-16 | Land it again |
 | US-29 | An HEVC cover would be saved as `Front.heif`, which FFmpeg 6.1.1's image muxer does not list, so its save likely fails as JPEG XL's did; no HEVC cover the loader takes was made here | `src/coverart.c`, the extension list | Make one, or refuse HEVC before the rip |
 
 ## Waiting on Platterpus
@@ -78,7 +77,7 @@ id.
 
 | Id | Item | Source | Next step |
 |---|---|---|---|
-| OW-7 | A static Linux binary for users | `docs/DEPENDENCY-PLAN.md` §5; `docs/upstream/sync-2026-11-03-ci.md` §5 | Deferred on 2026-11-16 until the Fedora CI job (US-23) has run a while; it changes how every user gets the program, needs a round, and brings the GPL's source terms for every library linked in |
+| OW-7 | A static Linux binary for users | `docs/DEPENDENCY-PLAN.md` §5; `docs/upstream/sync-2026-11-03-ci.md` §5 | Deferred on 2026-11-16 until CI's `fedora` job has run a while; it changes how every user gets the program, needs a round, and brings the GPL's source terms for every library linked in |
 | OW-8 | File upstream items 24 to 31 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md`, items 24 to 31 | The owner files; all eight were re-checked against upstream's `648b1dd` on 2026-11-16 |
 | OW-9 | Set `CYANRIP_REDACT_NAMES` where runs are filed; read the repository's Security tab (unread since 2026-11-03) | `docs/history/READINESS-PLAN.md` | Owner actions |
 | OW-11 | Outside these repositories: skillcheck reading tarball pins, and the skillcheck `--verify` report | `docs/DEPENDENCY-PLAN.md`; `docs/history/READINESS-PLAN.md` | Handed to the claude-code-skills session in the fork's HANDOFF of 2026-11-16 |

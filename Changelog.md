@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**CI builds what end users build, again.** The `fedora` job runs the whole
+suite in `registry.fedoraproject.org/fedora-toolbox:latest`, the image
+Platterpus's container uses, with the packages Platterpus installs to build
+this fork, named as the same pkg-config provides, so Fedora's libcdio and
+FFmpeg are what it links. Every other job builds on Ubuntu 24.04's or
+Homebrew's libraries. `latest` floats on purpose, the one image zizmor is told
+to allow, and the suite runs as a user, since root writes every path the suite
+checks is unwritable. Its first run, on 2026-11-16, failed
+`cover_art_formats` and `named_waits_after_the_open`, and it was held back
+until both were fixed, above; its next run is the first proof of either fix
+on Fedora. On the owner's word of 2026-11-16; `docs/OPEN-ITEMS.md` US-23
+leaves.
+
 **A WebP or JPEG XL cover is embedded in FLAC and MP3 where the linked
 FFmpeg keeps it.** The table of what each output holds was measured on FFmpeg
 6.1.1, and the FLAC and MP3 muxers' list, `ff_id3v2_mime_tags`, gained WebP in
