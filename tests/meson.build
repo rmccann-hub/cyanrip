@@ -1051,6 +1051,7 @@ rip_scenarios = [
     'runa_block_is_complete',
     'interrupt',
     'signal_after_last_frame',
+    'data_track_cancel',
     'interrupt_deadlock',
     'cache_probe_only',
     'artifacts_are_tracked',

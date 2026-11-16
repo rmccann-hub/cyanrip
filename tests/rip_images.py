@@ -7175,6 +7175,57 @@ def sc_signal_after_last_frame():
              "1.flac is not on disk")
 
 
+def sc_data_track_cancel():
+    """A CANCEL DURING A DATA TRACK IS NOT A RIPPING ERROR, AS ON AN AUDIO ONE.
+
+    Since `.29` a cancel adds nothing to `Ripping errors:` on an audio track
+    (our round 38 lap 1 S6 (c), Platterpus's lap 2 S3); the data track's own
+    read loop still added one at `Stopping, ripping incomplete!`, found
+    reading the count's sources for our round 41 lap 1 S16 (US-24).
+    tests/raisesig.c raises SIGTERM on `Track 1 is data:`, printed just
+    before mixed.cue's data track is read, so the stop lands in that loop.
+
+    What it asserts: the shim fired, so the run is not vacuous; the rip
+    stopped there, by its own stop line, `Interrupted at:` and exit status;
+    and `Ripping errors: 0`, since the image reads every sector without one.
+    """
+    needs_preload_shim("data_track_cancel")
+    shim = os.environ.get("CYANRIP_RAISESIG_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"data_track_cancel: the shim was not built or not passed ({shim!r})")
+        return
+    out = WORK / "out_data_track_cancel"
+    marker = WORK / "data_track_cancel.raised"
+    if marker.exists():
+        marker.unlink()
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_RAISE_ON="is data:",
+               CRIP_RAISE_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, stdout = crip("-d", WORK / "mixed.cue", "-N", "-A", "-U", "-s", "0",
+                      "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                      "-L", "log", env=env)
+    if not marker.exists():
+        fail("data_track_cancel: the shim never raised the signal, so nothing "
+             "below tests a data track's cancel")
+        return
+    if ec != 128 + signal.SIGTERM:
+        fail(f"data_track_cancel: exited {ec}, expected {128 + signal.SIGTERM}")
+    log = out / "log.log"
+    if not log.exists():
+        fail("data_track_cancel: no logfile was written")
+        return
+    lines = log.read_text(errors="replace", encoding="utf-8").splitlines()
+    if lines.count("Stopping, ripping incomplete!") != 1:
+        fail("data_track_cancel: `Stopping, ripping incomplete!` is not there "
+             "once, so the signal did not stop the data track's read")
+    if "Interrupted at: track 1, mid-read" not in lines:
+        fail("data_track_cancel: no `Interrupted at: track 1, mid-read`")
+    errs = [l for l in lines if l.startswith("Ripping errors:")]
+    if errs != ["Ripping errors: 0"]:
+        fail(f"data_track_cancel: {errs!r}; a cancel with no failed read is "
+             f"not a ripping error, on a data track as on an audio one")
+
 def sc_interrupt_deadlock():
     """A signal arriving while the log lock is held must not wedge the process.
 

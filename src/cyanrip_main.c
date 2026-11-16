@@ -1712,10 +1712,12 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
             }
         }
 
-        /* Stop now if requested */
+        /* Stop now if requested. A cancel is not a ripping error, on a data
+         * track as on an audio one since `.29` (our round 38 lap 1 S6 (c),
+         * Platterpus's lap 2 S3): a sector that failed still counts where it
+         * failed, and `Rip completed:` says the rip was interrupted. */
         if (quit_now) {
             cyanrip_log(ctx, 0, "\nStopping, ripping incomplete!\n");
-            ctx->total_error_count++;
             goto end;
         }
 

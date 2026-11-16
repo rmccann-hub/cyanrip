@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**A cancel during a data track is no longer a ripping error**, as it has not
+been on an audio track since `.29` (our round 38 lap 1 S6 (c), Platterpus's
+lap 2 S3). The data track's own read loop still added one at `Stopping,
+ripping incomplete!`, found reading the count's sources for our round 41
+lap 1 S16. A sector that fails still counts where it fails. Only an
+interrupted rip of a disc with a data track changes: its `Ripping errors:`
+is one lower. `data_track_cancel` interrupts mixed.cue's data track and
+fails with the old line back. `docs/OPEN-ITEMS.md` US-24 leaves.
+
 **The Fedora job is held back for its two findings.** Dumbass session added a
 job that builds on Fedora without ever having run on Fedora, and its first
 run, on Fedora 45 with FFmpeg 9.0.2 and libcdio-paranoia 2.0.2, failed two
