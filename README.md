@@ -328,6 +328,14 @@ HDCD detected: yes, peak_extend: never enabled, max_gain_adj: 0.0 dB, transient_
 
 Should a track be detected as HDCD, it would be safe to proceed decoding all of the disc. The resulting encoded files will have a bit depth of at least 24 bits.
 
+**On a disc without HDCD, `-H` makes the file 6.02 dB quieter.** FFmpeg's
+`hdcd` filter shifts every sample left by 15 bits into 32, leaving the top
+bit for peak extension whether or not the disc carries HDCD, so 16-bit full
+scale lands at -6.02 dBFS; nothing else about the audio changes. The log's
+checksums and AccurateRip verdicts are of the read, before the filter, and
+each track's `Filtered:` line says so. Use `-H` on a disc the log shows as
+HDCD.
+
 
 Deemphasis
 ----------

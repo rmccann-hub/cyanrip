@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**The README says `-H` makes a disc without HDCD 6.02 dB quieter**, and
+that the log's checksums are of the read, before the filter. The owner
+decided on 2026-11-16 to document the level rather than compensate it:
+whether a disc carries HDCD is known only after encoding, and Platterpus
+never sends `-H` in a rip. `--help` says so from `.33`, announced in round
+41's lap 1, because the help text is CLI surface and `docs/seam-commands.md`
+copies it.
+
 **`.32` is on the stable channel**, at `edb73dd`, on the owner's word of
 2026-11-16 to take every recommendation put to them that day. Round 40 closed
 `GO`/`GO` on it, and it is the build Platterpus pins. Stable had been `.23`,

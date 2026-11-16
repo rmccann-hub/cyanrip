@@ -43,7 +43,7 @@ decides. The build is `.33`, released on the owner's word (OW-1).
 |---|---|---|---|
 | US-1 | A newline in the `-d` path or the drive's INQUIRY strings inside paranoia's identify message | `KNOWN-ISSUES.md`, *paranoia's identify message can still start a line…*; cyanrip:R38.L3.S19 (b), platterpus:R38.L4.S13 | Escape it when the rig can show it (HW-14) |
 | US-2 | Six candidates from the 2026-10-26 audit, never checked: CD-TEXT language, a TOC whose starts do not increase, a failed last-session query, an image's TOC pregap bounds, CD-TEXT ISRC skipping the ISO 3901 check, offset-search numbering | `KNOWN-ISSUES.md`, *Six drive answers an audit listed…* | Check each in the code; any that changes log text goes to a round |
-| US-3 | `-H` on a disc without HDCD delivers a file 6.02 dB quieter | `KNOWN-ISSUES.md`, its `-H` entry; the `Filtered:` line shipped in `.29` | Waits on OW-5 |
+| US-3 | `-H` on a disc without HDCD delivers a file 6.02 dB quieter | `KNOWN-ISSUES.md`, its `-H` entry; the owner chose on 2026-11-16 to document it, not compensate; the README says so | Say so in `--help` in `.33`, announced in round 41's lap 1; then the row leaves |
 | US-4 | `Lap commit list names its range` timed out in full parallel suites; mechanism unknown | `KNOWN-ISSUES.md`; `STATUS-OPEN suite-timeouts-at-default` | Record the next occurrence; none since 2026-09-30 |
 | US-5 | A superseded track's read time on a drive | `KNOWN-ISSUES.md`, *A superseded track…*; their R155 (PP-1) | File a log where a later read replaced the first, after PP-1 |
 | US-6 | A derived contract shows a surface's shape, not its meaning | `KNOWN-ISSUES.md`, *A derived contract…* | Joint; no proposal open |
@@ -94,7 +94,6 @@ id.
 | OW-1 | Release `.33`, which opens round 41 | `STATUS.md` | The owner's word |
 | OW-3 | Their transport rule: a lap written out of turn is held and renumbered | platterpus:R38.L15.S7; put to the owner in cyanrip:R38.L16.S11, R38.L18.S15, R39.L1.S26; possibly superseded by the owner's rules of 2026-11-12 and 2026-11-13 (UNVERIFIED) | Confirm or drop |
 | OW-4 | Adopt K1's amendment as protocol v10 (R41-5) | R41-5 | After both sides accept the version |
-| OW-5 | `-H` on a disc without HDCD: compensate the level, refuse, or leave it | US-3 | Decide |
 | OW-6 | Let the black-box sweep run beside other tests | `docs/history/OPTIMISATION-PLAN.md` A1; `tests/meson.build` (`is_parallel: false`) | Decide; until then it runs alone |
 | OW-7 | A Fedora CI job; a static Linux binary for users | `docs/DEPENDENCY-PLAN.md` §4, §5; `docs/upstream/sync-2026-11-03-ci.md` §5 | Decide |
 | OW-8 | File upstream items 24 to 28 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md` | The owner files |

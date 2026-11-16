@@ -263,14 +263,21 @@ saying when a filter changed the delivered audio, which is new log text and
 goes in a lap first (round 38). Compensating the level is not offered: whether
 the disc carried HDCD is known only when the graph is freed, after encoding.
 
-**The line shipped in `.29`** (`f70763b0`, released 2026-11-04 at `8d2ca72`), and the level waits on the owner's decision (`docs/OPEN-ITEMS.md` OW-5): each track block a filter
+**The line shipped in `.29`** (`f70763b0`, released 2026-11-04 at `8d2ca72`), and the level was decided on 2026-11-16, below: each track block a filter
 ran on says `  Filtered:      hdcd; the checksums and AccurateRip verdicts
 above are of the read, before the filter`, with `de-emphasis` or both, in the
 order the graph runs them, joined by `, `, as our round 38 lap 1 S7 proposed
 and Platterpus's lap 2 S4 accepted. `sc_deemph_with_hdcd` checks every
 combination on every block and a plain rip's absence, and fails with the
-line removed or joined otherwise. The level itself stays as libavfilter
-leaves it, and this entry stays until a decision on that.
+line removed or joined otherwise.
+
+**The level stays as libavfilter leaves it, by the owner's decision of
+2026-11-16**, taking the recommendation to document it rather than
+compensate: whether a disc carries HDCD is known only after encoding, so
+compensating means encoding or reading twice, for an option Platterpus never
+sends in a rip (`docs/seam-commands.md`, `-H`). The README says so from
+2026-11-16, and `--help` from `.33`, announced in round 41's lap 1. This entry
+stays as the record of the behaviour; it is documented, not fixed.
 
 ### `Lap commit list names its range` timed out in full parallel suites, the mechanism not established, and the call that hangs is now named
 
