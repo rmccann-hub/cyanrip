@@ -1,5 +1,9 @@
 Unreleased
 ==========
+**`CLAUDE.md` names `docs/OPEN-ITEMS.md` as the one list**, to be reviewed
+whole before each round's opening lap, and its table of what has run on a
+drive gives way to the list's *Needs a drive*, which it no longer duplicates.
+
 **`STATUS.md` says where things stand on 2026-11-16.** Its *Now* section was
 dated 2026-10-16 and listed rounds up to 36, Platterpus at 0.7.113 and
 upstream at a commit two syncs old; it now names round 40's close, round 41

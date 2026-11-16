@@ -56,24 +56,22 @@ URL; the golden reference after a lap or a log line. A stale one fails a check.
 - `tests/`: every test is registered in `tests/meson.build`, and a new
   `sc_<name>()` in `tests/rip_images.py` runs only once it is, so **register it
   in the same commit as the feature**, or that commit is not bisectable.
-- `docs/KNOWN-ISSUES.md`: our open defects and the external bugs worked around
-  here. `docs/upstream/`: syncs and defect reports.
+- **`docs/OPEN-ITEMS.md` is the one list of every open item** (owner,
+  2026-11-16), **reviewed whole before each round's opening lap**; a row leaves
+  in the commit that closes it. `docs/KNOWN-ISSUES.md`: the evidence behind our
+  defects, and the external bugs worked around here. `docs/upstream/`: syncs
+  and defect reports. `docs/history/`: finished plans, indexed in its README.
 
 ## No CD drive in this environment
 
 The suite rips BIN/CUE, NRG and `.toc` images through libcdio's image drivers.
 Before accepting "no fixture can reach this", try another image format or build
 the state directly (`tests/subq.c`, `tests/logrender.c`). **Flag any change to
-drive I/O as needing hardware verification, name the row below it touches, and
-never let a green suite imply coverage.** Date a rig session by its build.
-
-| on a drive | state |
-|---|---|
-| C2 | measured 2026-11-11 by `sg_raw`, not cyanrip: the BDR-209D returns C2 pointers, which its page 2Ah denies, and flags three bytes at track 5's 02:24:59, none at track 3's probe LBAs; cyanrip reads no C2 |
-| `-f` | ran from 2026-10-06 (`5704062`); a stopped search and one that finds nothing have not |
-| damaged media | the read ran 2026-10-04 (`174a134`), the `-Z` arm 2026-10-06 and the skip arm 2026-10-21 (`ca0f097`); a drive reporting failed reads, then unopenable, 2026-11-03 (`3f288fb`); a track's `File(s):` naming one not written whole has not |
-| CD-TEXT from a disc | not yet done: `mmc_read_cdtext` is not the `.toc` path |
-| `Accurate stream:`, `Recordable:`, two-search `Pregap source:` | ran 2026-10-21 (`ca0f097`), 2026-10-28 (`5aeefc4`) and 2026-11-03 (`3f288fb`): `Accurate stream:` answers; `Recordable:` answers `no` for a pressed disc from the drive's own profile, and a recordable disc has not run; the two-search clause has not printed |
+drive I/O as needing hardware verification, name the row of
+`docs/OPEN-ITEMS.md`'s *Needs a drive* it touches, and never let a green suite
+imply coverage.** Date a rig session by its build. That table replaced this
+file's on 2026-11-16, with its rows: C2, `-f`, damaged media, CD-TEXT, and
+`Accurate stream:`, `Recordable:` and the two-search clause.
 
 ## Say exactly what is true, and no more
 
