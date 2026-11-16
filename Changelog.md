@@ -1,5 +1,23 @@
 Unreleased
 ==========
+**The owner's decisions of 2026-11-16 are recorded in `docs/OPEN-ITEMS.md`**,
+on their word *"do all recommendations"*:
+- **Taken into round 41:** Platterpus's transport rule and K1's amendment go
+  into protocol v10 (R41-5); their rule that a script names no round,
+  release or build it did not read from the run is accepted (R41-8); our
+  `Pregap sample peak:` line is asked about once more (US-21).
+- **Built next:** the declared speed field in `.33` (R41-2), with `Disc MCN:`
+  held for Platterpus's reader (R41-1); a Fedora CI job (US-23); upstream
+  items 29 to 31, then 24 to 31 filed together (UP-2, OW-8); a list of the
+  patches we carry over upstream (US-18).
+- **Declined or dropped, and their rows gone:** the black-box sweep keeps
+  running alone, since it takes 93 s of the suite and its outside-root check
+  needs a quiet machine; copying track 3's FLACs off the rig, which round
+  40's run overtook by locating its misreads; a list of upstream's
+  third-party forks, which nothing would read.
+- **Deferred:** a static Linux binary (OW-7), until the Fedora job has run a
+  while.
+
 **The README says `-H` makes a disc without HDCD 6.02 dB quieter**, and
 that the log's checksums are of the read, before the filter. The owner
 decided on 2026-11-16 to document the level rather than compensate it:

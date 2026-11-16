@@ -23,9 +23,9 @@ rename. Three of them, `BETA-NOTE.md`, `round-14-acceptance-spec.md` and
 | `round-14-acceptance-spec.md` | Round 14's acceptance specification | Historical, as its banner says |
 | `AUDIT-2026-08-05.md` | The audit of 2026-08-05 | Its §3 gaps are the drive rows of `docs/OPEN-ITEMS.md`, *Needs a drive* |
 | `AUDIT-2026-09-05.md` | The audit of 2026-09-05 | §1.1 fixed at `9207def`, §1.2 by CI; leads c, g and l are OPEN-ITEMS US-20 |
-| `upstream-audit-2026-08-21-prs-and-forks.md` | Upstream's pull requests and forks, 2026-08-21 | Answered "stay on our line"; rc2 merged at `1ee56fc`. Its §0 and §7 are UP-3 and US-18 |
-| `OPTIMISATION-PLAN.md` | The suite and CI speed plan | A2, B, C and E built (`c085847`, `08cb71d`, `0698174`, `126c433`, `9d52271`); D is CI; F is `CLAUDE.md`'s cut. A1 is OW-6; D.2's ccache is not done and not decided |
+| `upstream-audit-2026-08-21-prs-and-forks.md` | Upstream's pull requests and forks, 2026-08-21 | Answered "stay on our line"; rc2 merged at `1ee56fc`. Its §0, listing third-party forks, was declined on 2026-11-16; its §7 is US-18 |
+| `OPTIMISATION-PLAN.md` | The suite and CI speed plan | A2, B, C and E built (`c085847`, `08cb71d`, `0698174`, `126c433`, `9d52271`); D is CI; F is `CLAUDE.md`'s cut. A1 was declined on 2026-11-16, so the sweep keeps running alone; D.2's ccache is not done and not decided |
 | `UPGRADE-CHANNELS-PLAN.md` | The release-channel plan | §3 to §5 built and §6a retired on 2026-10-19, as its banner says. Whether a beta expires is PP-15 |
-| `READINESS-PLAN.md` | The readiness plan of 2026-11-05 | P1 done when round 37 closed; P2's lap items shipped in `.29`; `.29` and `.30` cut. Its owner rows are OW-6, OW-7 and OW-9 to OW-11; its drive rows are *Needs a drive* |
+| `READINESS-PLAN.md` | The readiness plan of 2026-11-05 | P1 done when round 37 closed; P2's lap items shipped in `.29`; `.29` and `.30` cut. Its owner rows are OW-7, OW-9 and OW-11, and the copy of track 3's FLACs was dropped on 2026-11-16, overtaken by round 40's run; its drive rows are *Needs a drive* |
 | `ROUND-37-READING-PLAN.md` | The checklist for reading `.28`'s Full run | The method is now the handshake README's *Filing and reading a run* |
 | `2026-11-04-misreads-and-pregaps.md` | The synthesis of 2026-11-04's research on misreads and pregaps | R1, R2 and R4's undecided form are built, and observations 1 and 2 ran on 2026-11-09. R3, R4's cache defeat and R5 are US-12 and US-13. Its three sources stay in `docs/research/` |
