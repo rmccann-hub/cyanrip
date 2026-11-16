@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**What our docs say about upstream pull request 153 and `-J` is corrected**
+(`docs/OPEN-ITEMS.md` US-26). `docs/pregap-carry.md` called 153 a later
+evolution of 115 by the same author; at its head `ca3ab44`, one commit in
+twenty is that author's, and a dated correction says so. `carried-patches.md`
+§1 now compares 153 with our search, read in its code and not built: it
+matches the review fixes, the guard, the CRC and the quirk, differs in frame
+placement, log lines, retries and the macOS read, and does not supersede what
+we carry. And the 2026-08-21 audit counted `-J` as ours; it is upstream's
+`ca7e830c`, an ancestor of the commit our first one was made on.
+
 **Upstream report 32 is drafted:** a cover whose codec parameters carry
 extradata, such as an AVIF, aborts upstream's `648b1dd` with `free(): double
 free detected in tcache 2`, exit 134, because its parameters are copied with
