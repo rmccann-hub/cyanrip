@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-41-lap-01.md
+STATUS-NEWEST-LAP: round-41-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 41, OPEN, on our lap 1 and your lap 2, both OPEN; it reviews +platterpus.33 at 13bec0a with your 0.7.126, and your next release names it under review (your lap 2 S18); it closes on our lap 1 S28, which your lap 2 S17 accepts as given; protocol v10 is accepted (your S15), its texts ours to write
-STATUS-LAPS: newest sent round-41-lap-01.md (ours), round-41-lap-02.md (theirs); next 3 (ours) carrying our reading of your lap 2 and the texts of protocol v10 your S15 accepts; held none
+STATUS-ROUND: 41, OPEN, on our lap 3 and your lap 2, both OPEN; it reviews +platterpus.33 at 13bec0a with your 0.7.126, and our lap 3 asks to move its pin to +platterpus.34 at fb28088, restating our lap 1 S28 as its S10, since your release naming +platterpus.33 has not shipped; protocol v10 is accepted (your S15), its texts sent in our lap 3 S18 and your cells to come
+STATUS-LAPS: newest sent round-41-lap-03.md (ours), round-41-lap-02.md (theirs); next 4 (theirs) carrying your answer to our lap 3 S9 and the release naming the pin you accept, your cells for v10, and your answers to S20 and S22 to S25; held none
 STATUS-RELEASED: +platterpus.34 at fb28088, 2026-11-16
 STATUS-RELEASE-NEXT: +platterpus.35, not built: Disc MCN: printed always and the Ripping errors: parts named, in our first build after your release that reads both (your round 41 lap 2 S9 and S10), and what round 41's questions decide; +platterpus.34 is on the beta channel from 2026-11-16, which our round 41 lap 3 asks to make the round's pin in place of +platterpus.33, and +platterpus.32 on stable; pins edb73dd, reviews +platterpus.34
 STATUS-RUN-NEXT: +platterpus.34 with your-first-release-naming-it; waiting on your lap 4's answer to our round 41 lap 3 S9, which keeps +platterpus.33 as your lap 2 S17 restates if you decline, and your release naming the pin, then our owner's rip of round 41 on the reference disc, with -O in one rip and second 245 in the C2 probe (your lap 2 S11, S12); round 40's rip is filed on our evidence branch at 589db53 (docs/rig-2026-11-14-edb73dd/)
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-16: round 41 open on `.33`; `.32` on stable
+## Now — rewritten 2026-11-16: round 41 open, `.34` asked as its pin; `.34` on beta
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -71,15 +71,17 @@ changed is in `Changelog.md`.
   lap 4, both `GO`, approving `.32` at `edb73dd` with their 0.7.125. Their
   `FORK_PIN` moved to `edb73dd` on the close (`platterpus@90b822fa`), and
   their 0.7.126 of 2026-11-16 installs it by default (`platterpus@3e2f194a`).
-- **`.33` is on the beta channel** at `13bec0a`, from 2026-11-16, ledger row
-  45. **`.32` is on stable** at `edb73dd`, from 2026-11-16, on our owner's
-  word that day to take every recommendation put to them; ledger rows 43 and
-  44 name the same commit, so nothing was rebuilt. Stable had been `.23` since
-  2026-10-16.
-- **Round 41 is open**, on our lap 1 of 2026-11-16, reviewing `.33` at
-  `13bec0a` with their 0.7.126 and proposing protocol v10. It closes on its
-  S28: a rip of `.33` reading the drive's declared read performance, all 14
-  tracks verified, the bundle filed, and v10 landed in both trees.
+- **`.34` is on the beta channel** at `fb28088`, from 2026-11-16, ledger row
+  46, after `.33` at `13bec0a` (row 45) the same day. **`.32` is on stable**
+  at `edb73dd`, from 2026-11-16, on our owner's word that day to take every
+  recommendation put to them; ledger rows 43 and 44 name the same commit, so
+  nothing was rebuilt. Stable had been `.23` since 2026-10-16.
+- **Round 41 is open**, on our laps 1 and 3 and Platterpus's lap 2, all
+  `OPEN`. Their lap 2 accepted `.33` as the pin and lap 1's S28 as the close,
+  and protocol v10. Their 0.7.127 naming `.33` had not shipped, so our lap 3,
+  on our owner's word, asks to move the pin to `.34` with S28 restated for it
+  (its S10); until they accept, `.33` stands. Lap 3 also sends v10's texts and
+  asks five questions.
 - **Every earlier round** is a row of the handshake README's round table, and
   the gate is the authority over both.
 

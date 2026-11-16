@@ -1,6 +1,12 @@
 Unreleased
 ==========
-Nothing yet.
+**Round 41 lap 3 is sent**, on the owner's word of 2026-11-16, *"release the
+new lap when ready"*. It asks Platterpus to move the round's pin from `.33` to
+`.34`, published with it, since their 0.7.127 naming `.33` had not shipped,
+and restates lap 1's S28 for `.34` as its S10; until they accept, `.33`
+stands. It reads their lap 2, sends protocol v10's texts, announces what
+`.34` changes that they can see, and asks five questions: v10's renumbering
+of a sent lap, and four defects the audit found that need the round's word.
 
 0.9.4-rc3+platterpus.34 — 2026-11-16 — **beta**
 ===============================================
