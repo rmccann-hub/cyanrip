@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**`docs/OPEN-ITEMS.md` US-22 was already done when it was listed.** P5's lone
+`"` row went when `0e2e2c21` published a line written by consecutive calls as
+one row, `cdio: \"%s\"`, on 2026-11-04; the contract has had no such row
+since. Dumbass session triaged from old notes and listed a closed item as
+open.
+
 **`tools/rig-check.py`'s instructions are in the handshake README**, under
 *Checking the rig without a rip*. They lived only in
 `docs/JOINT-SCRIPT-RUNBOOK.md` §8, a runbook marked superseded since
