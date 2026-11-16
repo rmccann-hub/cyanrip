@@ -8890,6 +8890,91 @@ def sc_named_waits_after_the_open():
                      f"got {got}")
 
 
+def sc_offset_search():
+    """-f FINDS THE DRIVE'S OFFSET, 0 INCLUDED, WHATEVER THE FIRST TRACK'S NUMBER.
+
+    The suite had never run the search: it needs the disc in AccurateRip,
+    and no fixture's disc is there. tests/fakear.c answers the lookup
+    instead. The disc is three tracks of the fixture's music, and the entry
+    holds, for each, the 450-frame checksum a rip at `-s N` prints, under
+    the disc IDs that rip asked for; the search must then find `+N`.
+
+    Two defects found by the review of 2026-11-16's audit candidates, both
+    in upstream's `648b1dd` too. The search tested a guess only when it was
+    not 0, and skipped it in the scan, so an offset of 0 was never tried:
+    the search ended `No track was long enough` on a drive that needs none.
+    And it asked libcdio for the track at position + 1 while comparing
+    against the track at that position, so on a disc numbered from 3, which
+    libcdio before 2.2.1 keeps from a CUE sheet, it read sectors before the
+    disc and found nothing.
+    """
+    needs_preload_shim("offset_search")
+    shim = os.environ.get("CYANRIP_FAKEAR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"offset_search: the shim was not built or not passed ({shim!r})")
+        return
+    music = (FIX / "cdda.bin").read_bytes()
+    sectors = len(music) // 2352
+    sheets = [("offset1", 1, (0, 6))]
+    if CUE_TRACK_NUMBERS:
+        sheets.append(("offset3", 3, (0,)))
+    for name, first, shifts in sheets:
+        (WORK / f"{name}.bin").write_bytes(music * 3)
+        lines = [f'FILE "{name}.bin" BINARY']
+        for i in range(3):
+            lsn = sectors * i
+            lines += [f"  TRACK {first + i:02d} AUDIO",
+                      "    INDEX 01 %02d:%02d:%02d" % (lsn // 4500, lsn // 75 % 60, lsn % 75)]
+        (WORK / f"{name}.cue").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        for shift in shifts:
+            what = f"{name}.cue at -s {shift}"
+            urls = WORK / f"{name}-{shift}.urls"
+            body = WORK / f"{name}-{shift}.dbar"
+            urls.unlink(missing_ok=True)
+            env = dict(os.environ, LD_PRELOAD=shim, CRIP_FAKEAR_URL=str(urls),
+                       ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                       + ":verify_asan_link_order=0")
+            out = WORK / f"out_{name}_{shift}"
+            shutil.rmtree(out, ignore_errors=True)
+            ec, text = crip("-d", WORK / f"{name}.cue", "-N", "-U", "-s", str(shift),
+                            "-o", "wav", "-D", out, "-L", "log", env=env)
+            crcs = re.findall(r"^\s*Accurip 450:\s+([0-9A-F]{8})\s*$", text, re.M)
+            url = urls.read_text(encoding="utf-8") if urls.exists() else ""
+            ids = re.findall(r"dBAR-(\d{3})-([0-9a-f]{8})-([0-9a-f]{8})-([0-9a-f]{8})\.bin", url)
+            if len(crcs) != 3 or len(set(crcs)) != 1 or crcs[0] == "00000000" or len(ids) != 1:
+                fail(f"offset_search: {what}: the rip printed {crcs} as its 450-frame "
+                     f"checksums and asked {ids}; want three equal, non-zero, and "
+                     f"one lookup")
+                continue
+            count, id1, id2, cddb = ids[0]
+            body.write_bytes(bytes([int(count)])
+                             + struct.pack("<III", int(id1, 16), int(id2, 16), int(cddb, 16))
+                             + b"".join(bytes([5]) + struct.pack("<II", 0x11111111, int(c, 16))
+                                        for c in crcs))
+            env["CRIP_FAKEAR_BODY"] = str(body)
+            try:
+                ec, text = crip("-d", WORK / f"{name}.cue", "-f", env=env)
+            except subprocess.TimeoutExpired:
+                fail(f"offset_search: {what}: -f ran past 60 s, as it does reading "
+                     f"sectors before the disc for a track it does not have")
+                continue
+            want = f"Drive offset of +{shift} found (confidence: 3)!"
+            # One pass, each track once, by its own number: a second pass
+            # means the first found nothing
+            loaded = re.findall(r"^Loading data for track (\d+)\.\.\.$", text, re.M)
+            if ec != 0 or want not in text.splitlines():
+                got = [ln for ln in text.splitlines()
+                       if "ffset" in ln or "track was long" in ln][:6]
+                fail(f"offset_search: {what}: -f exited {ec}; want 0 and {want!r}; "
+                     f"got {got}")
+            if loaded != [str(first + i) for i in range(3)]:
+                fail(f"offset_search: {what}: loaded tracks {loaded}, want "
+                     f"{[str(first + i) for i in range(3)]}, the disc's own numbers")
+            if "Unable to access sector" in text:
+                fail(f"offset_search: {what}: -f read a sector it could not access, "
+                     f"so it asked for a track the disc does not have")
+
+
 def sc_reread_until_accuraterip():
     """--reread-until-accuraterip ACTS ONLY WITH -Z, AND NOT WITHOUT ACCURATERIP.
 

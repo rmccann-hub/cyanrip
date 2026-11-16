@@ -984,7 +984,11 @@ static int search_for_offset(cyanrip_track *t, int *offset_found,
                              const uint8_t *mem, int dir,
                              int guess, int bytes)
 {
-    if (guess) {
+    /* The guess first, 0 included: it was tried only when not 0, and the
+     * scan below skips it, so an offset of 0 was never tested and a drive
+     * that needs none ended `No track was long enough` (the review of
+     * 2026-11-16's audit candidates; upstream's 648b1dd too). */
+    {
         const uint8_t *start_addr = mem + guess*4;
         uint32_t accurip_v1 = 0x0;
         for (int j = 0; j < (CDIO_CD_FRAMESIZE_RAW >> 2); j++)
@@ -1033,15 +1037,23 @@ static int search_for_drive_offset(cyanrip_ctx *ctx, int range)
 
     for (int t_idx = 0; t_idx < ctx->nb_tracks; t_idx++) {
         cyanrip_track *t = &ctx->tracks[t_idx];
-        lsn_t start = cdio_get_track_lsn(ctx->cdio, t_idx + 1);
-        lsn_t end = cdio_get_track_last_lsn(ctx->cdio, t_idx + 1);
+        /* By the track's number on the disc, as AccurateRip's entry for it
+         * is. It asked for track t_idx + 1, which is that track only when
+         * the disc starts at 1: from a CUE sheet numbered from 3, which
+         * libcdio before 2.2.1 keeps, it compared track 3's audio with track
+         * 5's entry and read sectors before the disc for a track it does not
+         * have (the review of 2026-11-16's audit candidates; upstream's
+         * 648b1dd too). */
+        lsn_t start = cdio_get_track_lsn(ctx->cdio, t->cd_track_number);
+        lsn_t end = cdio_get_track_last_lsn(ctx->cdio, t->cd_track_number);
 
-        if (ctx->tracks[t_idx].ar_db_status != CYANRIP_ACCUDB_FOUND)
+        if (t->ar_db_status != CYANRIP_ACCUDB_FOUND)
             continue;
         else
             had_ar |= 1;
 
-        if ((end - start) < (450 + range))
+        if (start == CDIO_INVALID_LSN || end == CDIO_INVALID_LSN ||
+            (end - start) < (450 + range))
             continue;
 
         did_check |= 1;
@@ -1052,10 +1064,10 @@ static int search_for_drive_offset(cyanrip_ctx *ctx, int range)
 
         size_t bytes = 0;
 
-        cyanrip_log(ctx, 0, "Loading data for track %i...\n", t_idx + 1);
+        cyanrip_log(ctx, 0, "Loading data for track %i...\n", t->number);
         cdio_paranoia_seek(ctx->paranoia, start, SEEK_SET);
 
-        crip_reading_track = t_idx + 1;
+        crip_reading_track = t->number;
 
         for (int i = 0; i < 2*range; i++) {
             const uint8_t *data = cyanrip_read_frame(ctx, start + i);
@@ -1080,22 +1092,22 @@ static int search_for_drive_offset(cyanrip_ctx *ctx, int range)
                                       range * CDIO_CD_FRAMESIZE_RAW);
 
         if (!found) {
-            cyanrip_log(ctx, 0, "Nothing found for track %i%s\n", t_idx + 1,
+            cyanrip_log(ctx, 0, "Nothing found for track %i%s\n", t->number,
                         t_idx != (ctx->nb_tracks - 1) ? ", trying another track" : "");
         } else if (!offset_found) {
             offset_found_samples = offset;
             offset_found++;
             cyanrip_log(ctx, 0, "Offset of %c%i found in track %i%s\n",
-                        offset >= 0 ? '+' : '-', abs(offset), t_idx + 1,
+                        offset >= 0 ? '+' : '-', abs(offset), t->number,
                         t_idx != (ctx->nb_tracks - 1) ? ", trying to confirm with another track" : "");
         } else if (offset_found_samples == offset) {
             offset_found++;
             cyanrip_log(ctx, 0, "Offset of %c%i confirmed (confidence: %i) in track %i%s\n",
-                        offset >= 0 ? '+' : '-', abs(offset), offset_found, t_idx + 1,
+                        offset >= 0 ? '+' : '-', abs(offset), offset_found, t->number,
                         t_idx != (ctx->nb_tracks - 1) ? ", trying to confirm with another track" : "");
         } else {
             cyanrip_log(ctx, 0, "New offset of %c%i found at track %i, scrapping old offset of %c%i%s\n",
-                        offset >= 0 ? '+' : '-', abs(offset), t_idx + 1,
+                        offset >= 0 ? '+' : '-', abs(offset), t->number,
                         offset_found_samples >= 0 ? '+' : '-', abs(offset_found_samples),
                         t_idx != (ctx->nb_tracks - 1) ? ", trying to confirm with another track" : "");
             offset_found_samples = offset;

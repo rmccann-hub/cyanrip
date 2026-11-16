@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**`-f` finds an offset of 0, and finds an offset on a disc numbered from
+any track.** The search tested its guess only when it was not 0, and its scan
+skips the guess, so a drive needing no offset ended `No track was long
+enough`. It also asked libcdio for track *position + 1* while comparing with
+the track at that position, so a CUE sheet numbered from 3 read sectors before
+the disc for a track it does not have; its lines now name each track by its
+own number. The suite had never run the search, since no fixture's disc is in
+AccurateRip: `tests/fakear.c` now serves an entry without the network, and
+`offset_search` finds `+0` and `+6` on a disc numbered from 1 and `+0` on one
+numbered from 3. Testing the guess only when not 0, looking tracks up by
+position, or naming them by position each fails it. Only `-f` changes, and
+only on such a drive or disc; our next lap announces it. Upstream's `648b1dd`
+has the same code (`docs/OPEN-ITEMS.md` UP-4).
+
 **The audit's six candidates are all real defects** (`docs/OPEN-ITEMS.md`
 US-2). Five reproduce on images made from the fixtures: the CD-TEXT language
 on a `.toc` or inline CUE CD-TEXT, a TOC whose starts do not increase, an

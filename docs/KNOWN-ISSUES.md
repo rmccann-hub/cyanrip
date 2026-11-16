@@ -233,17 +233,18 @@ a scenario that reproduces it.
   11400-frame cut, with no line saying why. libcdio's macOS, FreeBSD and AIX
   drivers cannot answer it at all, so there every disc whose last track is data
   is cut. An image takes that arm by design.
-- **The offset search numbers tracks by position, and never tries an offset
+- **The offset search numbered tracks by position, and never tried an offset
   of 0.** With an AccurateRip answer served without the network, a CUE sheet
-  numbered from 3, which libcdio before 2.2.1 keeps, reads sectors -69427 to
-  -20276 for a track the disc does not have, and ends `No track was long
-  enough`; the same audio numbered from 1 is found. A true offset of 0 ends
-  the same way, while the control at +6 is found.
+  numbered from 3, which libcdio before 2.2.1 keeps, read sectors -69427 to
+  -20276 for a track the disc does not have, and ended `No track was long
+  enough`; the same audio numbered from 1 was found. A true offset of 0 ended
+  the same way, while the control at +6 was found. Fixed on 2026-11-16, and
+  `offset_search` holds both.
 
 **The MCN read a failed capabilities query skips is still skipped without a
 word.** Our round 38 lap 3 S17 proposed `Disc MCN:` printed always, with its
 reasons, and Platterpus's lap 4 S11 accepted it as given; it is not built
-(`docs/OPEN-ITEMS.md` R41-1). The six are US-2 there.
+(`docs/OPEN-ITEMS.md` R41-1). The five not fixed are US-2 there.
 
 ### paranoia's identify message can still start a line, from the `-d` path or the drive's INQUIRY strings
 

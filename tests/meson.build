@@ -324,13 +324,21 @@ slowcall_shim = shared_module('slowcall',
     name_prefix: '',
     dependencies: [ dependency('dl'), dependency('libcdio') ],
 )
+## An AccurateRip answer without the network, so `-f`'s offset search runs:
+## no fixture's disc is in AccurateRip. See its header.
+fakear_shim = shared_module('fakear',
+    sources: [ 'fakear.c' ],
+    name_prefix: '',
+    dependencies: [ dependency('dl'), dependency('libcurl') ],
+)
 shim_env += [ 'CYANRIP_BADSECTOR_SHIM=' + badsector_shim.full_path(),
               'CYANRIP_RAISESIG_SHIM=' + raisesig_shim.full_path(),
               'CYANRIP_IMAGECAP_SHIM=' + imagecap_shim.full_path(),
               'CYANRIP_LOSEWRITE_SHIM=' + losewrite_shim.full_path(),
-              'CYANRIP_SLOWCALL_SHIM=' + slowcall_shim.full_path() ]
+              'CYANRIP_SLOWCALL_SHIM=' + slowcall_shim.full_path(),
+              'CYANRIP_FAKEAR_SHIM=' + fakear_shim.full_path() ]
 shim_deps = [ badsector_shim, raisesig_shim, imagecap_shim, losewrite_shim,
-              slowcall_shim ]
+              slowcall_shim, fakear_shim ]
 endif
 
 json_test = executable('json_test',
@@ -1086,6 +1094,7 @@ rip_scenarios = [
     'reread_time_limit',
     'reread_until_accuraterip',
     'named_waits_after_the_open',
+    'offset_search',
     'z_extraction_speed',
     'log_values_cannot_forge_a_line',
     'gaps_unknown_pregap',
