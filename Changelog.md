@@ -1,5 +1,9 @@
 Unreleased
 ==========
+**The history index lists the KNOWN-ISSUES file this pass created.**
+Dumbass session wrote `docs/history/KNOWN-ISSUES-2026-11-16.md` and an index
+of `docs/history/` in the same pass, and left the one out of the other.
+
 **Three finished plans kept in place say so at the top.** Each is cited
 from code or the protocol, so it cannot move to `docs/history/`, and each
 read as live work. `docs/ROUND-22-PLAN.md`'s index still said item 2 was

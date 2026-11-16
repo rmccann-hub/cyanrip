@@ -18,7 +18,7 @@ rename. Three of them, `BETA-NOTE.md`, `round-14-acceptance-spec.md` and
 |---|---|---|
 | `CLAUDE-2026-10-21.md` | `CLAUDE.md` before the cut to 300 lines | The reasons and citations behind its rules. `docs_do_not_contradict_themselves` reads its retired-rule markers |
 | `Changelog-archive.md` | `Changelog.md`'s releases `.22` and earlier | `sc_changelog_names_every_release` reads it after `Changelog.md` |
-| `KNOWN-ISSUES-2026-10-21.md`, `KNOWN-ISSUES-2026-11-04.md` | Known issues closed and pinned by a test, moved when they closed | `docs/KNOWN-ISSUES.md`'s rule: an item leaves when it is fixed and a test pins it |
+| `KNOWN-ISSUES-2026-10-21.md`, `KNOWN-ISSUES-2026-11-04.md`, `KNOWN-ISSUES-2026-11-16.md` | Known issues closed and pinned by a test, moved when they closed; the 2026-11-16 file opens with a table of each item's fix, release and test | `docs/KNOWN-ISSUES.md`'s rule: an item leaves when it is fixed and a test pins it |
 | `BETA-NOTE.md` | The note for beta.5 at `9048082` | Superseded 2026-09-13, as its banner says |
 | `round-14-acceptance-spec.md` | Round 14's acceptance specification | Historical, as its banner says |
 | `AUDIT-2026-08-05.md` | The audit of 2026-08-05 | Its §3 gaps are the drive rows of `docs/OPEN-ITEMS.md`, *Needs a drive* |
