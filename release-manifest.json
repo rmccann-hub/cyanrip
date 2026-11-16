@@ -6,7 +6,7 @@
       "handshake_round": 40,
       "install": "https://github.com/rmccann-hub/cyanrip/archive/edb73dd.tar.gz",
       "release_seq": 43,
-      "round_closed": false,
+      "round_closed": true,
       "version": "0.9.4-rc3+platterpus.32"
     },
     "stable": {
