@@ -77,9 +77,9 @@ file does not reconcile the two.
 ## 2. Fixes upstream could take
 
 The reports are in `docs/upstream/defect-reports.md`; report 8 is
-`docs/upstream-cachemodel-report.md`. Reports 1 to 31 are rendered for upstream's
+`docs/upstream-cachemodel-report.md`. Reports 1 to 32 are rendered for upstream's
 tracker in `docs/upstream/issues-to-file.md`. The operator says 1 to 23 were filed on
-2026-10-16 as upstream issue 167; that is relayed, not read. Reports 24 to 31 are
+2026-10-16 as upstream issue 167; that is relayed, not read. Reports 24 to 32 are
 drafted and not filed (UP-1, OW-8). Reports 1 to 28 had a check row in
 `docs/SETTLED.md`'s upstream section when this list was made, and all of that
 section's rows passed against `648b1dd` on 2026-11-16; 29 to 31 gained theirs

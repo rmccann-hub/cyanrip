@@ -124,10 +124,11 @@ Our `master` mirrors upstream at `648b1dd`, 0.9.4-rc3, merged into
 `platterpus-fork` at `56da02eb` on 2026-11-03
 (`docs/upstream/sync-2026-11-03-ci.md`); `git ls-remote` returned the same
 commit on 2026-11-16, and `tools/upstream-delta.py` is how to check again.
-**Thirty-one defects this fork found in upstream's code are drafted; the
+**Thirty-two defects this fork found in upstream's code are drafted; the
 first twenty-three are filed there, as upstream issue 167**, by our operator
-on 2026-10-16, and 24 to 31 wait for our operator to add them as one comment
-(`docs/OPEN-ITEMS.md` OW-8). One more fixed here is not yet drafted (UP-2).
+on 2026-10-16, and 24 to 32 wait for our operator to add them as one comment
+(`docs/OPEN-ITEMS.md` OW-8). Two more fixed here are read in upstream's code
+and not yet run there (UP-3, UP-4).
 The issue's existence is our operator's word: this session cannot open
 upstream's tracker.
 

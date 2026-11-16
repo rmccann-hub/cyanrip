@@ -78,7 +78,7 @@ id.
 | Id | Item | Source | Next step |
 |---|---|---|---|
 | OW-7 | A static Linux binary for users | `docs/DEPENDENCY-PLAN.md` §5; `docs/upstream/sync-2026-11-03-ci.md` §5 | Deferred on 2026-11-16 until CI's `fedora` job has run a while; it changes how every user gets the program, needs a round, and brings the GPL's source terms for every library linked in |
-| OW-8 | File upstream items 24 to 31 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md`, items 24 to 31 | The owner files; all eight were re-checked against upstream's `648b1dd` on 2026-11-16 |
+| OW-8 | File upstream items 24 to 32 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md`, items 24 to 32 | The owner files; all nine were re-checked against upstream's `648b1dd` on 2026-11-16 |
 | OW-9 | Set `CYANRIP_REDACT_NAMES` where runs are filed; read the repository's Security tab (unread since 2026-11-03) | `docs/history/READINESS-PLAN.md` | Owner actions |
 | OW-11 | Outside these repositories: skillcheck reading tarball pins, and the skillcheck `--verify` report | `docs/DEPENDENCY-PLAN.md`; `docs/history/READINESS-PLAN.md` | Handed to the claude-code-skills session in the fork's HANDOFF of 2026-11-16 |
 
@@ -113,7 +113,6 @@ in `STATUS-OPEN hardware-unverified`, which disagreed.
 
 | Id | Item | Source | Next step |
 |---|---|---|---|
-| UP-1 | Items 24 to 31, drafted and not filed; 29 to 31 drafted, and all eight re-checked, against `648b1dd` on 2026-11-16 | `docs/upstream/issues-to-file.md` | OW-8 |
-| UP-2 | An AVIF cover aborts upstream with `free(): double free detected`, exit 134: the cover's codec parameters are copied with `memcpy` (`src/coverart.c:62`, `:278`, `src/cyanrip_encode.c:1166` at `648b1dd`), run on a build of it on 2026-11-16; fixed here at `af89fcc` | the upstream drafts of 2026-11-16 | Draft as item 32 |
+| UP-1 | Items 24 to 32, drafted and not filed; 29 to 32 drafted, and all nine re-checked, against `648b1dd` on 2026-11-16 | `docs/upstream/issues-to-file.md` | OW-8 |
 | UP-3 | A JPEG XL cover failed a rip here, and by its source would upstream: its file is named `Front.jpegxl`, from the codec's name, which no muxer takes, so the save fails with *Unable to init lavf context: Invalid argument!*; `648b1dd`'s extension list (`src/coverart.c:280`) is the same, read and not yet run there; fixed here on 2026-11-16 | this list | Run on a build of `648b1dd`; draft as an item |
 | UP-4 | `-f`'s offset search never tries an offset of 0, and numbers tracks by position, reading sectors before the disc when it starts above track 1: run here at `8b3174ae`, and `648b1dd`'s code is the same (`src/cyanrip_main.c:513`, `:529`, `:557`, `:576`), read and not run there; fixed here on 2026-11-16 | `KNOWN-ISSUES.md`, *Six drive answers an audit listed…* | Run on a build of `648b1dd`; draft as an item |

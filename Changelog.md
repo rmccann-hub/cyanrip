@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**Upstream report 32 is drafted:** a cover whose codec parameters carry
+extradata, such as an AVIF, aborts upstream's `648b1dd` with `free(): double
+free detected in tcache 2`, exit 134, because its parameters are copied with
+`memcpy` and the extradata freed once per owner. Run on a build of `648b1dd`;
+the fork fixed it in `af89fcc`, whose two files fix upstream too. Its
+`SETTLED.md` row was run four ways: it passes on our checkout, and fails
+with either half pointed at the other side's tree. `docs/OPEN-ITEMS.md` UP-2
+becomes item 32 of UP-1 and OW-8.
+
 **`-f` finds an offset of 0, and finds an offset on a disc numbered from
 any track.** The search tested its guess only when it was not 0, and its scan
 skips the guess, so a drive needing no offset ended `No track was long
