@@ -8,6 +8,11 @@ agreed text has landed in both trees. **Every decision is numbered so a lap can
 answer it by number**: ACCEPT, AMEND with your text, or REFUSE with the reason.
 The operator decides the four items in §5, and may overrule anything else.*
 
+> **STATUS, 2026-11-16: adopted.** Round 30 agreed it, and `PROTOCOL.md` v7
+> §15 is the text that binds: where this proposal and the protocol differ,
+> the protocol is current. It stays at this path because `PROTOCOL.md` cites
+> it, and is otherwise a record, in the sense of `docs/history/README.md`.
+
 ## 1. What the operator asked
 
 In the operator's words, 2026-09-30:

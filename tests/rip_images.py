@@ -3298,13 +3298,13 @@ def sc_encode_failure_reaches_the_log():
     one, announced in round 22 lap 1; `docs/ROUND-22-PLAN.md` §1 has the
     options that were rejected.
 
-    STILL NOT FIXED, and still worth a reader knowing: `File(s):` is built from
-    `ctx->settings.outputs` and the naming scheme (`cyanrip_log.c:642`) and
-    consults nothing about what was written, so it names a path whatever
-    happened to it. It prints from `cyanrip_log_track_end()`, which also runs
-    before the encoders are joined, so marking a failed entry there is the same
-    fixpoint one level down -- possible only as a second pass now that the
-    footer names the tracks. It is in KNOWN-ISSUES.
+    `File(s):` stays the request, by agreement (our round 36 lap 4 S12, their
+    lap 3 S5): it is built from `ctx->settings.outputs` and the naming scheme
+    (`cyanrip_log.c`, `File(s):`) and consults nothing about what was written,
+    so it names a path whatever happened to it, and it prints before the
+    encoders are joined. From `.27` the footer's `not written whole:` line,
+    checked below, names each file a failed encoder left. The record is in
+    docs/history/KNOWN-ISSUES-2026-11-16.md.
 
     RLIMIT_FSIZE stands in for ENOSPC, which is the realistic case: both reach
     the muxer as a write error rather than as a signal. Without SIGXFSZ ignored
@@ -9757,7 +9757,7 @@ def sc_abort_footer():
 def sc_contract_composed():
     """A composed line's segments must combine the way P2 says they do.
 
-    ROUND 14, found by writing docs/round-14-acceptance-spec.md against our own
+    ROUND 14, found by writing docs/history/round-14-acceptance-spec.md against our own
     contract and noticing the document disagreed with the source.
 
     P2 printed one sentence under EVERY composed row -- *"Segment 0 is always

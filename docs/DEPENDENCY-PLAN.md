@@ -10,6 +10,14 @@ waits on the owner's word.
 A dependency is handshake material, so each change in them is announced in a
 lap before the release that carries it.*
 
+> **STATUS, 2026-11-16: finished except what `docs/OPEN-ITEMS.md` holds.**
+> §1 and §3 shipped in `.29`. §4's Fedora job and §5's static binary are
+> OW-7, waiting on the owner's word; §5's macOS runner wait is US-19 and its
+> tarball pin is OW-11. §5's evidence scan reads its files in one git process
+> since `0994170` (2026-11-03). The plan stays at this path because
+> `meson.build` and `src/meson.build` cite its section 3; it is otherwise a
+> record, in the sense of `docs/history/README.md`.
+
 ## 1. Every pin at its newest release (built 2026-11-02)
 
 Read with `git ls-remote --tags` against each upstream on 2026-11-02, release

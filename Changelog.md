@@ -1,5 +1,108 @@
 Unreleased
 ==========
+**`docs/README.md` maps the folder by kind.** Every file in `docs/` is now
+named as living, shared or agreed with Platterpus, generated, record, or
+history, with whether it is current and how it may change, so a reader
+knows before citing a file whether it is the current word or a record of an
+old one. It names the three files to start from: `OPEN-ITEMS.md`,
+`SETTLED.md` and `handshake/STATUS.md`.
+
+**The history index lists the KNOWN-ISSUES file this pass created.**
+Dumbass session wrote `docs/history/KNOWN-ISSUES-2026-11-16.md` and an index
+of `docs/history/` in the same pass, and left the one out of the other.
+
+**Three finished plans kept in place say so at the top.** Each is cited
+from code or the protocol, so it cannot move to `docs/history/`, and each
+read as live work. `docs/ROUND-22-PLAN.md`'s index still said item 2 was
+*not started* and item 3 had not begun, two months after `394ab17` and
+`9207def` closed them; every item is now marked closed, with the commit that
+closed it. `docs/DEPENDENCY-PLAN.md` names the open-items rows its last
+steps went to, and notes that its evidence-scan watch item was done at
+`0994170`. `docs/handshake/PROPOSAL-release-cycle.md` says `PROTOCOL.md` v7
+§15 is the text that binds.
+
+**`docs/upstream/` says where each report and sync stands.**
+- **Reports:** its README said twenty-two drafted and twenty-five rendered.
+  It now says twenty-seven in the reports file plus report 8, twenty-eight
+  rendered, 1 to 23 filed and 24 to 28 waiting.
+- **Syncs:** two sync records still called themselves analyses written
+  before a merge that had happened, and now record it (`604f980`,
+  `56da02eb`). The rc3 record names the pull request that landed it.
+
+**The README's stale statements are corrected.**
+- **Dependencies:** they name Meson 0.62 and Python 3.11, which the build
+  requires, and the build command is `meson setup build`.
+- **`-s`:** it is required on a drive, and a disc image needs no offset.
+- **Compression levels:** FLAC, WavPack and ALAC give theirs as defaults that
+  `--encoder-option` overrides.
+- **`-T os_simple`:** it is described.
+- **The cache probe:** it counts seventeen agreeing runs, where it said
+  five.
+- **Versions:** they are matched on upstream's version, not on `0.9.4-rc2`.
+
+**`SETTLED.md`'s stale rows are corrected in place.**
+- **Counts:** the argv probe counts are dated, with today's beside them.
+- **Names:** the record's schema is `/13`, the retired letters are named,
+  and the upstream mirror is `648b1dd`.
+- **Upstream reports:** 24 to 28 are listed as unfiled, where it said 24
+  to 26.
+- **Checked now:** a 2020 claim it called unchecked is checked, and HR-1.7's
+  rule says it held from round 32.
+- **C2:** the hardware row says the drive answered for C2 by `sg_raw`, not
+  that C2 was never run.
+- **The ask to Platterpus:** an ask about their schema set is marked stale.
+  The set is their manifest's, and they have read this record since `/10`.
+- **Home path:** a home path is now `~`, as the owner's rule asks.
+
+**The handshake README's procedures run as written.**
+- **Filing a run:** its first command block had failed since HR-2's move. It
+  is now the one flow that works: staging folder, reading, README, filing,
+  fetching.
+- **Writing our lap:** it now asks for the two version fields our laps
+  dropped in round 37.
+- **Taking in a peer lap:** it now says what a closing lap regenerates.
+- **Cutting a release:** the manifest step names its file.
+- **Running cyanrip by hand:** the suite's flags include `-U`.
+- **The round table:** a blank line broke it after round 13 on GitHub.
+  Rounds 30 and 36 now give their verdicts and dates.
+
+**`CLAUDE.md` names `docs/OPEN-ITEMS.md` as the one list**, to be reviewed
+whole before each round's opening lap, and its table of what has run on a
+drive gives way to the list's *Needs a drive*, which it no longer duplicates.
+
+**`STATUS.md` says where things stand on 2026-11-16.** Its *Now* section was
+dated 2026-10-16 and listed rounds up to 36, Platterpus at 0.7.113 and
+upstream at a commit two syncs old; it now names round 40's close, round 41
+ours to open on `.33`, their 0.7.125 and upstream at `648b1dd`. Its open rows
+are short and each names its rows in `docs/OPEN-ITEMS.md`; the upstream row no
+longer carries the tracker's URL, and the next run names `.33`.
+
+**`KNOWN-ISSUES.md`'s remaining entries say what is true now**: shipped fixes
+name their release instead of "not yet released", the cache fix counts
+seventeen agreeing runs where it said five, the timeout entry records that its
+settling runs were done in September, and the pregap entry gives track 9's
+counts since `.29`: no log in any run since has read it as 94 frames.
+
+**`KNOWN-ISSUES.md` holds only what is open, 955 lines from 1,444.** Ten items
+fixed and pinned by a test moved word for word to
+`docs/history/KNOWN-ISSUES-2026-11-16.md`, with the closed parts of three
+more and the table of what has not run on a drive, now
+`docs/OPEN-ITEMS.md`'s *Needs a drive*. The history file's table gives each
+item's fix, release and test. Dumbass sessions, ours, left six of them saying
+"not yet released" about fixes that shipped in `.29` and `.30`, and the C2
+entry open after `.32` fixed it.
+
+**Every open item is now in one list, `docs/OPEN-ITEMS.md`**, and ten finished
+plans, audits and research notes moved to `docs/history/`, on the owner's word
+of 2026-11-16 to consolidate the documentation before round 41. Open items
+had lived in seven places that disagreed: `STATUS.md`'s open rows, three
+separate lists of what has not run on a drive, `KNOWN-ISSUES.md`, the plans'
+undone steps and the laps' round summaries. The list carries round 41's
+proposed items, ours, Platterpus's, the owner's, what needs a drive, and
+upstream's, each pointing where its detail lives. `docs/history/README.md`
+says what each archived file was and where its open steps went; the files
+moved byte for byte.
+
 **The release manifest regenerated for round 40's close**: `round_closed` is
 now `true` for `.32` on beta; no channel moves.
 It was **generated by `872ff161`** and **committed in the commit carrying this sentence**.

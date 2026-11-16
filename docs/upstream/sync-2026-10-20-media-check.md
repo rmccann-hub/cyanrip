@@ -1,6 +1,8 @@
 # Upstream sync analysis — `7dbe56a`, 2026-10-20
 
-**Status: analysis, written before the merge.** It is taken into
+**Status: MERGED** at `604f980`, 2026-10-20, and landed in `platterpus-fork`
+by pull request #52 at `908c23cf`. Recorded 2026-11-16: the §5 this file
+promises was never written, so this line is the record of the merge. It is taken into
 `platterpus-fork` for `.26`, on the owner's word of 2026-10-20, relayed by
 the claude-code-skills session's report of that day: build `.26` with
 `7dbe56a`, and time a rip of the same disc and tracks on `.25` and `.26`
