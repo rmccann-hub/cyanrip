@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**`STATUS.md` says where things stand on 2026-11-16.** Its *Now* section was
+dated 2026-10-16 and listed rounds up to 36, Platterpus at 0.7.113 and
+upstream at a commit two syncs old; it now names round 40's close, round 41
+ours to open on `.33`, their 0.7.125 and upstream at `648b1dd`. Its open rows
+are short and each names its rows in `docs/OPEN-ITEMS.md`; the upstream row no
+longer carries the tracker's URL, and the next run names `.33`.
+
 **`KNOWN-ISSUES.md`'s remaining entries say what is true now**: shipped fixes
 name their release instead of "not yet released", the cache fix counts
 seventeen agreeing runs where it said five, the timeout entry records that its
