@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**`docs/upstream/` says where each report and sync stands.**
+- **Reports:** its README said twenty-two drafted and twenty-five rendered.
+  It now says twenty-seven in the reports file plus report 8, twenty-eight
+  rendered, 1 to 23 filed and 24 to 28 waiting.
+- **Syncs:** two sync records still called themselves analyses written
+  before a merge that had happened, and now record it (`604f980`,
+  `56da02eb`). The rc3 record names the pull request that landed it.
+
 **The README's stale statements are corrected.**
 - **Dependencies:** they name Meson 0.62 and Python 3.11, which the build
   requires, and the build command is `meson setup build`.
