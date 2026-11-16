@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Three finished plans kept in place say so at the top.** Each is cited
+from code or the protocol, so it cannot move to `docs/history/`, and each
+read as live work. `docs/ROUND-22-PLAN.md`'s index still said item 2 was
+*not started* and item 3 had not begun, two months after `394ab17` and
+`9207def` closed them; every item is now marked closed, with the commit that
+closed it. `docs/DEPENDENCY-PLAN.md` names the open-items rows its last
+steps went to, and notes that its evidence-scan watch item was done at
+`0994170`. `docs/handshake/PROPOSAL-release-cycle.md` says `PROTOCOL.md` v7
+§15 is the text that binds.
+
 **`docs/upstream/` says where each report and sync stands.**
 - **Reports:** its README said twenty-two drafted and twenty-five rendered.
   It now says twenty-seven in the reports file plus report 8, twenty-eight

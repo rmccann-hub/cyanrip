@@ -4,6 +4,15 @@
 conditions were fixed and could not grow (R1), so every item below was
 deliberately outside it.*
 
+> **STATUS, 2026-11-16: every item here is closed, and the index below is as
+> it stood on 2026-09-22.** §1's option 2 shipped at `89a57d6`; its `File(s):`
+> half closed in `.27` as the footer's `not written whole:` line (`d33902d`),
+> and `File(s):` stays the request by agreement
+> (`docs/history/KNOWN-ISSUES-2026-11-16.md`). §1b's K1, K2 and K3 are
+> `PROTOCOL.md` v6, §4a, §5a and §5d. §2 shipped in `.20` (`394ab17`), and §3
+> at `9207def`. The plan stays at this path because `src/cyanrip_main.c` cites
+> it; what is open is in `docs/OPEN-ITEMS.md`.
+
 > **STATUS, 2026-09-22 — round 22 CLOSED `GO`/`GO` on 2026-09-21, and this
 > index was stale for a day saying it was open.** It said *"nothing here is
 > started"* before that, which is the kind of sentence that goes quietly false;
