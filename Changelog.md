@@ -1,6 +1,15 @@
 Unreleased
 ==========
-Nothing yet.
+**Round 41 opens on `.33`**, with our lap 1, sent when this pull request
+merges, on the owner's word of 2026-11-16. It reviews `.33` with Platterpus's
+0.7.126, which installs `.32` by default and ships their R155 and R156; it
+proposes protocol v10 (K1 as round 38 agreed it, their transport rule, and the
+shared documents' stale text); it asks for the `Ripping errors:` wording,
+second 245 in their C2 probe and `-O` in the round's run; and it corrects our
+round 39 lap 7 S25, which read EAC's pregaps in hundredths of a second as
+frames. Our laps carry `OWNERSHIP-VERSION` and `SEAM-RULES-VERSION` again,
+which they had dropped since round 37 lap 7. Its close is S28; `STATUS.md`,
+the round table and `docs/OPEN-ITEMS.md` move with it.
 
 0.9.4-rc3+platterpus.33 — 2026-11-16 — **beta**
 ===============================================
