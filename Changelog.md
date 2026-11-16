@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Our lap checker refuses a `term:` naming two close conditions.** Dumbass
+draft of our round 40 lap 3 put two references in one `term:` field; our
+checker counted both and read the lap well formed, while Platterpus's reads
+only the first and refused the `GO` for the condition it never saw.
+`PROTOCOL.md`'s template gives one reference per status, so ours now says so
+(`tests/lap_statements.py`, revert-proved); no filed lap used two.
+
 **Round 40's rip is filed**: `.32` through Platterpus's 0.7.125 on 2026-11-14,
 on our evidence branch at `589db536` with 212 manifest rows, every rip's
 `--diagnostics` record among them. The folder's README reads it against round

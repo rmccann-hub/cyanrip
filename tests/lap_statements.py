@@ -614,6 +614,9 @@ with tempfile.TemporaryDirectory() as tmp:
     expect2("A1: term: naming what is not a TERM set",
             swap2("  term: S4\n", "  term: S1\n"), 1,
             ["[A1] S5 TERM met: term: S1 does not name a TERM set"])
+    expect2("A1: a term: naming two close conditions",
+            swap2("  term: S6\n  on: them", "  term: S6 S4\n  on: them"), 1,
+            ["[A1] S7 TERM pending: term: names one close condition, not 2"])
     expect2("A1: on: that is neither side",
             swap2("  on: them", "  on: somebody"), 1,
             ["[A1] S7 TERM pending: on: is us or them"])

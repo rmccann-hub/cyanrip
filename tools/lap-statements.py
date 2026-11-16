@@ -860,10 +860,20 @@ def check_v2(lap, s, tag, have, me, by_n, resolver):
         if value not in ("us", "them"):
             lap.refuse(fl, "A1", f"{tag}: on: is us or them, not {value!r}")
     for value, fl in have.get("term", []):
-        for token in re.split(r"[,\s]+", value.strip()):
-            got = resolve_stmt(token, me, lap) if token else None
-            if not token:
-                continue
+        tokens = [t for t in re.split(r"[,\s]+", value.strip()) if t]
+        # One close condition per status. PROTOCOL.md's template gives
+        # `term: <side>:R<round>.L1.S<n>`, one reference, and Platterpus's
+        # checker reads only the first token (platterpus@01c291e9:
+        # scripts/laplang/round_rules.py:148), so a second one was a status
+        # this checker counted and theirs never saw. Our round 40 lap 3's
+        # draft named two in one field: ours read it well formed, theirs
+        # refused the GO for the condition it could not see.
+        if len(tokens) > 1:
+            lap.refuse(fl, "A1", f"{tag}: term: names one close condition, "
+                                 f"not {len(tokens)}: write one TERM "
+                                 f"statement per condition")
+        for token in tokens:
+            got = resolve_stmt(token, me, lap)
             if got is None or (got[2]["kind"], got[2]["grade"]) != ("TERM", "set"):
                 lap.refuse(fl, "A1", f"{tag}: term: {token} does not name a "
                                      f"TERM set this tree holds")
