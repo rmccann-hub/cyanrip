@@ -58,7 +58,6 @@ at `13bec0a`. A row leaves when the round settles it.
 | US-24 | A cancel still counts one ripping error on a data track (`Stopping, ripping incomplete!`), where since `.29` it counts none on an audio track | `src/cyanrip_main.c`, the data track's read loop; our round 38 lap 1 S6 (c), platterpus:R38.L2.S3 | Make it none with R41-3's build, announced in lap 1 |
 | US-25 | Two comments may misdescribe FFmpeg 6.1.1's muxers: `src/cyanrip_main.h` says FLAC drops a GIF cover with a warning, `src/cyanrip_encode.c` that MP3 drops other formats; a run of upstream's `648b1dd` on 2026-11-16 saw FLAC fail its header on a GIF and MP3 fail on AV1 and WebP. The fork sends neither, so no output changes | the upstream drafts of 2026-11-16 (UP-2) | Re-measure both through our encoder, then correct the comments |
 | US-26 | Upstream pull request 153 moved to `ca3ab44` (2026-11-10), 20 commits on `648b1dd`, three of whose subjects match work done here; `docs/pregap-carry.md` still calls it a later evolution of 115 by the same author, and the 2026-08-21 audit's §3 calls `-J` independently implemented here, though it is upstream's own `ca7e830c` | `docs/upstream/carried-patches.md` §1 | Read 153's code against ours; correct `pregap-carry.md`'s and the audit's sentences in a dated note |
-| US-23 | A Fedora CI job building what end users build: Fedora's packages, libcdio 2.3, FFmpeg 8 or 9 | `docs/DEPENDENCY-PLAN.md` §4; the owner's word of 2026-11-16 | Add it to `.github/workflows/ci.yml` |
 
 ## Waiting on Platterpus
 
@@ -84,7 +83,7 @@ id.
 
 | Id | Item | Source | Next step |
 |---|---|---|---|
-| OW-7 | A static Linux binary for users | `docs/DEPENDENCY-PLAN.md` §5; `docs/upstream/sync-2026-11-03-ci.md` §5 | Deferred on 2026-11-16 until the Fedora CI job (US-23) has run a while; it changes how every user gets the program, needs a round, and brings the GPL's source terms for every library linked in |
+| OW-7 | A static Linux binary for users | `docs/DEPENDENCY-PLAN.md` §5; `docs/upstream/sync-2026-11-03-ci.md` §5 | Deferred on 2026-11-16 until CI's `fedora` job has run a while; it changes how every user gets the program, needs a round, and brings the GPL's source terms for every library linked in |
 | OW-8 | File upstream items 24 to 31 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md`, items 24 to 31 | The owner files; all eight were re-checked against upstream's `648b1dd` on 2026-11-16 |
 | OW-9 | Set `CYANRIP_REDACT_NAMES` where runs are filed; read the repository's Security tab (unread since 2026-11-03) | `docs/history/READINESS-PLAN.md` | Owner actions |
 | OW-11 | Outside these repositories: skillcheck reading tarball pins, and the skillcheck `--verify` report | `docs/DEPENDENCY-PLAN.md`; `docs/history/READINESS-PLAN.md` | Handed to the claude-code-skills session in the fork's HANDOFF of 2026-11-16 |

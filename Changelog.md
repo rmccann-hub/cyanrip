@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**CI builds what end users build.** A `fedora` job runs the whole suite in
+`registry.fedoraproject.org/fedora-toolbox:latest`, the image Platterpus's
+container uses, with the packages Platterpus installs to build this fork,
+named as the same pkg-config provides, so Fedora's libcdio and FFmpeg are
+what it links. Every other job builds on Ubuntu 24.04's or Homebrew's
+libraries. `latest` floats on purpose, the one image zizmor is told to
+allow, and the suite runs as a user, since root writes every path the suite
+checks is unwritable. On the owner's word of 2026-11-16;
+`docs/OPEN-ITEMS.md` US-23 leaves.
 **`docs/upstream/carried-patches.md` lists what this fork carries over
 upstream**, each row with what retires it: three carries from upstream pull
 requests (pregap detection from 115, the raw sub-channel quirk from 153, and
