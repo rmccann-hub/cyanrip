@@ -805,7 +805,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: twenty-nine of them**, derived
+session that produced a `Cache probe:` line is here now: thirty-four of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -857,15 +857,18 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, twenty-nine times. "A cached read of a
-few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen thirteen
-times, in the seventeenth to the twenty-ninth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
-1.5, 1.3, 1.4, 1.7, 2.0, 1.3 and 1.2 ms,
+**Hundreds of ms uncached: confirmed, thirty-four times. "A cached read of a
+few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen eighteen
+times, in the seventeenth to the thirty-fourth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
+1.5, 1.3, 1.4, 1.7, 2.0, 1.3, 1.2, 1.4, 1.2, 1.3, 1.4 and 1.3 ms,
 each after a run inside the cache. This said "eighteen" and "twice" for five days after the
 nineteenth row was added, the stale tally this section is about, found adding
 the twentieth. It then said "twenty-two" and "six" from 2026-10-20, when the
 twenty-third row was added, to 2026-10-28: five rows went in under it, and the
-same tally went stale again, found adding the twenty-eighth. The first sixteen end
+same tally went stale again, found adding the twenty-eighth. It said
+"twenty-nine" and "thirteen" from 2026-11-03 to 2026-11-16, while the thirtieth
+to the thirty-third went in under it: dumbass sessions, ours, added four rows
+and recounted nothing, found adding the thirty-fourth. The first sixteen end
 identically, at
 `at least 2048 sectors … search ceiling reached`. The tenth, 2026-09-22, is the
 first on `2cce60d` and the first taken inside a full acceptance session; it
