@@ -156,6 +156,18 @@ static const uint8_t *crip_find_html_marker(const uint8_t *data, size_t size)
     return NULL;
 }
 
+/* Whether a response's Content-Type names AccurateRip's binary type.
+ * `content_type` is NULL when the response carried no Content-Type header at
+ * all, which curl reports as CURLE_OK: a 200 with no Content-Type is legal
+ * HTTP, and what a minimal server or an interposing proxy returns. An absent
+ * header is not the binary type, the conservative reading, which goes on to
+ * check for an error page. Split out so the NULL arm is reached without a
+ * live handle (tests/arresp.c). */
+static int crip_ar_type_is_binary(const char *content_type)
+{
+    return content_type && !strcmp(content_type, "application/octet-stream");
+}
+
 static int cmp_conf(const void *a, const void *b)
 {
     return ((CRIPAccuDBEntry *)a)->confidence - ((CRIPAccuDBEntry *)b)->confidence;
@@ -378,17 +390,13 @@ int crip_fill_accurip(cyanrip_ctx *ctx)
 
     /* If we have a binary we're pretty sure we've found a match.
      *
-     * A 200 with no body is no entry (upstream's 76dcd5d). content_type is
-     * NULL when the response carried no Content-Type header at all, which
-     * curl reports as CURLE_OK -- a 200 with no Content-Type is legal HTTP and
-     * is what a minimal server or an interposing proxy returns. Treat the
-     * absent header as "not the binary type", which is the conservative
-     * reading and the one that goes on to check for an error page. */
+     * A 200 with no body is no entry (upstream's 76dcd5d), and a missing
+     * Content-Type is not the binary type (crip_ar_type_is_binary()). */
     if (!rctx.data) {
         cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: missing entry!\n");
         ctx->ar_db_status = CYANRIP_ACCUDB_NOT_FOUND;
         goto end;
-    } else if (!content_type || strcmp(content_type, "application/octet-stream")) {
+    } else if (!crip_ar_type_is_binary(content_type)) {
         /* Atrocious heuristics to determine whether we have an error or binary data, don't look */
         /* The body was never NUL-terminated, so strstr() read off the end
          * of the allocation for any body without a zero byte, and was passed

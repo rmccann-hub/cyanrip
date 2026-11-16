@@ -47,7 +47,6 @@ decides. The build is `.33`, released on the owner's word (OW-1).
 | US-5 | A superseded track's read time on a drive | `KNOWN-ISSUES.md`, *A superseded track…*; their R155 (PP-1) | File a log where a later read replaced the first, after PP-1 |
 | US-6 | A derived contract shows a surface's shape, not its meaning | `KNOWN-ISSUES.md`, *A derived contract…* | Joint; no proposal open |
 | US-7 | A mutant at the 450-frame boundary in `src/checksums.h` survives the suite | `SETTLED.md`, its mutation rows | Write the test that kills it |
-| US-8 | The NULL `content_type` guard in `src/accurip.c` is not under test | `SETTLED.md`, its `accurip` rows | Write the test |
 | US-9 | The inert-edit probe last ran 2026-09-16 (`d92c4e1`) | `SETTLED.md`; `docs/inert-edit-probe.log` | Run it before trusting a mutation sweep again |
 | US-10 | `seam-commands.md` §4 NEED 1 (argument types in P1) and §5 WANT 1 (a machine-readable contract) | `docs/seam-commands.md` §4, §5 | Build, or decline in a round |
 | US-11 | `seam-commands.md` §2a CR cells still `?` (:255, :259) | `docs/seam-commands.md` §2a | Fill in a shared-document version (R41-5) |

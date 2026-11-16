@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**The NULL `Content-Type` guard in the AccurateRip path is under test.** It
+was fixed long ago and never pinned, because it sat inside
+`crip_fill_accurip()`, which only a live curl handle reaches. The check is
+now `crip_ar_type_is_binary()`, and `tests/arresp.c` asks it about a missing
+header, the binary type, `text/html` and an empty one. With the guard
+removed the compiler refuses the test's NULL, and built anyway the test
+segfaults. `docs/OPEN-ITEMS.md` US-8 leaves.
+
 **`--help` says what `-H` does to a disc without HDCD**: `Enable HDCD
 decoding; a disc without HDCD comes out 6.02 dB quieter`, for `.33`, as the
 owner decided on 2026-11-16. Announced in round 41's lap 1, since

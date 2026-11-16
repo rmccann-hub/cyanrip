@@ -482,8 +482,24 @@ static void test_https_and_the_cap(void)
     }
 }
 
+/* The Content-Type that decides whether a body is read as AccurateRip's
+ * binary or searched for an error page. A response with no Content-Type
+ * header leaves curl's pointer NULL, and strcmp() on it was a crash
+ * (SETTLED.md, the three response-parser defects); only a live handle could
+ * reach it until the test was split out. */
+static void test_content_type(void)
+{
+    check(!crip_ar_type_is_binary(NULL),
+          "no Content-Type header is not the binary type, and is not read");
+    check(crip_ar_type_is_binary("application/octet-stream"),
+          "application/octet-stream is the binary type");
+    check(!crip_ar_type_is_binary("text/html"), "text/html is not the binary type");
+    check(!crip_ar_type_is_binary(""), "an empty Content-Type is not the binary type");
+}
+
 int main(int argc, char **argv)
 {
+    test_content_type();
     test_html_marker();
     test_receive_data();
     test_https_and_the_cap();
