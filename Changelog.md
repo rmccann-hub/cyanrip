@@ -1,5 +1,19 @@
 Unreleased
 ==========
+**`SETTLED.md`'s stale rows are corrected in place.**
+- **Counts:** the argv probe counts are dated, with today's beside them.
+- **Names:** the record's schema is `/13`, the retired letters are named,
+  and the upstream mirror is `648b1dd`.
+- **Upstream reports:** 24 to 28 are listed as unfiled, where it said 24
+  to 26.
+- **Checked now:** a 2020 claim it called unchecked is checked, and HR-1.7's
+  rule says it held from round 32.
+- **C2:** the hardware row says the drive answered for C2 by `sg_raw`, not
+  that C2 was never run.
+- **The ask to Platterpus:** an ask about their schema set is marked stale.
+  The set is their manifest's, and they have read this record since `/10`.
+- **Home path:** a home path is now `~`, as the owner's rule asks.
+
 **The handshake README's procedures run as written.**
 - **Filing a run:** its first command block had failed since HR-2's move. It
   is now the one flow that works: staging folder, reading, README, filing,
