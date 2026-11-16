@@ -147,6 +147,7 @@ size_t crip_reply_length(enum CripReplyKind kind, const uint8_t *buf, size_t len
     case CRIP_REPLY_INQUIRY:
         return len >= 5 ? (size_t)buf[4] + 5 : 0;
     case CRIP_REPLY_CONFIGURATION:
+    case CRIP_REPLY_PERFORMANCE:
         return len >= 4 ? ((size_t)buf[0] << 24 | (size_t)buf[1] << 16 |
                            (size_t)buf[2] << 8 | buf[3]) + 4 : 0;
     case CRIP_REPLY_MODE_SENSE_10:
@@ -155,6 +156,35 @@ size_t crip_reply_length(enum CripReplyKind kind, const uint8_t *buf, size_t len
         return len;
     }
     return 0;
+}
+
+static uint32_t be32(const uint8_t *p)
+{
+    return (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3];
+}
+
+int crip_performance_take(const uint8_t *buf, size_t len, CripPerformance *out,
+                          int max)
+{
+    if (!buf || len < 8)
+        return -1;
+
+    /* Read no further than the reply declares, or than was returned. */
+    const size_t data = crip_reply_length(CRIP_REPLY_PERFORMANCE, buf, len);
+    if (data < len)
+        len = data;
+    if (len < 8)
+        return 0;
+
+    int n = 0;
+    for (size_t off = 8; off + 16 <= len; off += 16, n++) {
+        if (n < max && out)
+            out[n] = (CripPerformance){ .start_lba      = be32(buf + off),
+                                        .start_kb_per_s = be32(buf + off + 4),
+                                        .end_lba        = be32(buf + off + 8),
+                                        .end_kb_per_s   = be32(buf + off + 12) };
+    }
+    return n;
 }
 
 int crip_feature_take(const uint8_t *buf, size_t len, unsigned code,

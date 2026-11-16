@@ -3542,9 +3542,9 @@ def sc_encode_failure_reaches_the_log():
     except Exception as exc:
         fail(f"encfail: could not read the --diagnostics record: {exc}")
     else:
-        if rec["schema"] != "cyanrip-diagnostics/13":
+        if rec["schema"] != "cyanrip-diagnostics/14":
             fail(f"encfail: --diagnostics schema is {rec['schema']!r}, not "
-                 f"'cyanrip-diagnostics/13'; a schema move needs its own "
+                 f"'cyanrip-diagnostics/14'; a schema move needs its own "
                  f"announcement, as round 32's had")
         else:
             truncated = {int(Path(path).stem) for path in named
@@ -5007,8 +5007,9 @@ def sc_diagnostics():
     # isrc_disc_read and kept_read_began, checked in sc_disc_isrc_line().
     # /12 from round 38 adds block_crcs, checked in sc_block_crcs(). /13, for
     # +platterpus.30, adds reads, checked in sc_every_read() and
-    # tests/diagrecord.c.
-    if d.get("schema") != "cyanrip-diagnostics/13":
+    # tests/diagrecord.c. /14, for +platterpus.33, adds drive_declared's
+    # read_performance, which only a drive answers: tests/diagrecord.c.
+    if d.get("schema") != "cyanrip-diagnostics/14":
         fail(f"diagnostics: schema is {d.get('schema')!r}")
 
     # TWO INSTANTS, AND THEY MUST BE TWO. The record is written from atexit, so
@@ -9007,9 +9008,9 @@ def sc_every_read():
         except (OSError, ValueError, KeyError, TypeError, StopIteration) as e:
             fail(f"every_read: {tag}: no record of track 1 to read: {e}")
             continue
-        if record.get("schema") != "cyanrip-diagnostics/13":
+        if record.get("schema") != "cyanrip-diagnostics/14":
             fail(f"every_read: {tag}: the record is {record.get('schema')!r}, "
-                 f"not cyanrip-diagnostics/13")
+                 f"not cyanrip-diagnostics/14")
         reads = track.get("reads")
         if not isinstance(reads, list) or len(reads) != 3:
             fail(f"every_read: {tag}: track 1's reads are {reads!r}, not the "

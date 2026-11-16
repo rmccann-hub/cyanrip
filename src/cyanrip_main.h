@@ -598,6 +598,10 @@ typedef struct cyanrip_ctx {
      * for none, and its reply; not asked unless both */
     const CripVendorQuery *drive_vendor_query;
     CripReply drive_vendor;
+    /* GET PERFORMANCE's nominal read performance (drive_caps.h), asked once
+     * after any -S; not asked of a disc image, nor when the drive did not
+     * open */
+    CripReply drive_performance;
 
     /* Metadata */
     AVDictionary *meta;

@@ -114,6 +114,7 @@ enum CripReplyKind {
     CRIP_REPLY_CONFIGURATION,
     CRIP_REPLY_MODE_SENSE_10,
     CRIP_REPLY_FIXED,      /* no length header: the length asked is the reply's */
+    CRIP_REPLY_PERFORMANCE,
 };
 
 typedef struct CripReply {
@@ -125,9 +126,38 @@ typedef struct CripReply {
 } CripReply;
 
 /* The whole length a reply declares in its own header: INQUIRY's byte 4 plus
- * 5, GET CONFIGURATION's bytes 0-3 plus 4, MODE SENSE (10)'s bytes 0-1 plus
- * 2. 0 when `len` is too short to hold that header. Pure. */
+ * 5, GET CONFIGURATION's and GET PERFORMANCE's bytes 0-3 plus 4, MODE SENSE
+ * (10)'s bytes 0-1 plus 2. 0 when `len` is too short to hold that header.
+ * Pure. */
 size_t crip_reply_length(enum CripReplyKind kind, const uint8_t *buf, size_t len);
+
+/* THE READ PERFORMANCE THE DRIVE DECLARES, for +platterpus.33 (our round 38
+ * lap 8 S19, accepted in Platterpus's lap 9 S12 as a record field first). GET
+ * PERFORMANCE (ACh), type 00h, nominal read performance from LBA 0, as MMC
+ * defines it: an 8-byte header, bytes 0-3 the length of what follows them and
+ * byte 4 its Write and Except bits, then descriptors of 16 bytes, each a
+ * start LBA, the performance there, an end LBA and the performance there,
+ * big-endian, in kilobytes of 1000 bytes per second. Asked once, after any -S
+ * was sent, so it is what the drive says it will do for the read that
+ * follows. A declaration, not a measurement: Pioneer's BDR-203 command
+ * reference says the speed a drive declares "does not reflect the actual
+ * read speed", and the log's `Extraction speed:` is the measurement. */
+#define CRIP_PERFORMANCE_DESCRIPTORS 32
+#define CRIP_PERFORMANCE_ALLOC       (8 + 16 * CRIP_PERFORMANCE_DESCRIPTORS)
+
+typedef struct CripPerformance {
+    uint32_t start_lba;
+    uint32_t start_kb_per_s;
+    uint32_t end_lba;
+    uint32_t end_kb_per_s;
+} CripPerformance;
+
+/* The whole descriptors in a GET PERFORMANCE reply of `len` bytes, read no
+ * further than its header declares: copies at most `max` into `out` and
+ * returns how many the reply holds whole, or -1 when `len` cannot hold the
+ * 8-byte header. A trailing part of a descriptor is not one. Pure. */
+int crip_performance_take(const uint8_t *buf, size_t len, CripPerformance *out,
+                          int max);
 
 /* One feature descriptor, found in a GET CONFIGURATION reply. */
 typedef struct CripDeclared {
