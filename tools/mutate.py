@@ -299,6 +299,8 @@ def main():
 PROBE_FILE = "src/utils.c"
 PROBE_TEXT = "\n/* mutate.py inert-edit probe: behaviourally inert */\n"
 FAILED_LINE = re.compile(r"^\s*\d+/\d+ (.*?)\s+(?:FAIL|TIMEOUT)\b", re.M)
+TOTALS_LINE = re.compile(r"^(Ok|Expected Fail|Fail|Unexpected Pass|Skipped|"
+                         r"Timeout):\s+(\d+)\s*$", re.M)
 
 
 def short_name(meson_name):
@@ -346,6 +348,12 @@ def inert_edit_probe():
         if r is None:
             return False, out + ["REFUSING: the suite did not finish under "
                                  "the inert edit"]
+        totals = TOTALS_LINE.findall(r.stdout)
+        if not totals:
+            return False, out + ["REFUSING: meson printed no totals, so it is "
+                                 "not known that the suite ran"]
+        out.append("  meson's totals under the edit: "
+                   + ", ".join(f"{k} {v}" for k, v in totals))
         failed = {short_name(n) for n in FAILED_LINE.findall(r.stdout)}
         known = test_names()
         if known is None:
