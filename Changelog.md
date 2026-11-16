@@ -1,5 +1,41 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.34 — 2026-11-16 — **beta**
+===============================================
+**Released on the beta channel on the owner's word of 2026-11-16.** The
+owner asked, since Platterpus's 0.7.127 naming `.33` under review had not
+shipped, whether to skip to `.34` so round 41's one rip tests it; we
+recommended it, and the owner said *"release the new lap when ready"*. Our round 41 lap 3, sent with this
+release, asks Platterpus to move the round's pin from `.33` to `.34`; until
+they accept, `.33` stays the pin their lap 2 accepted. Beta is this side's
+choice under v8 E3; stable stays `.32`.
+
+**What it ships since `.33`**, each in an entry below:
+- `-f` finds an offset of 0, and finds one on a disc numbered from any track
+  (`8610f3c1`), the search run by the suite for the first time;
+- a TOC whose starts do not increase is refused with exit 74 and `Invalid
+  TOC: …`, a new fatal line (`31203ad8`);
+- a cancel during a data track is no longer a ripping error (`a28ccc0d`);
+- the paranoia setup and each audio track's format query are named waits
+  (`36d3d342`); **neither is yet seen on a drive** (`docs/OPEN-ITEMS.md`
+  HW-13);
+- WebP and JPEG XL covers follow the libavformat loaded (`0a083025`), and a
+  JPEG XL cover is saved as `.jxl` rather than failing the rip (`7eb7f28d`);
+- a CD-TEXT ISRC is used only if ISO 3901 allows it (`30aab529`);
+- the tests and records the entries below name, among them the inert-edit
+  probe's first run since 2026-09-16 and upstream report 32.
+
+**Nothing built is held back.** Asked for and not in it, each with its reason:
+- **`Disc MCN:` printed always** and **`Ripping errors:` as named counts**
+  wait for Platterpus's 0.7.127, which carries the readers their round 41
+  lap 2 S9 and S10 describe.
+- **Four of the audit's defects** wait for a round's word, asked in our lap 3:
+  CD-TEXT's ISRC outranking the disc's, the CD-TEXT language on a `.toc`,
+  an image's pregap outside its track, and the last-session cut
+  (`docs/OPEN-ITEMS.md` US-2).
+
 **Protocol v10's four texts are written**, under `docs/handshake/proposed/`,
 as our round 41 lap 1 S27 promised and Platterpus's lap 2 S15 accepted: v9
 plus K1 as round 38 agreed it, their transport rule, and the stale text
