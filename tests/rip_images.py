@@ -1876,10 +1876,29 @@ def sc_cover_art_formats():
     pics.mkdir(exist_ok=True)
     shutil.copy(FIX / "art.png", pics / "p.png")
     shutil.copy(FIX / "art.avif", pics / "p.avif")
-    for ext in ("jpg", "gif", "bmp", "tiff", "webp"):
+    # jxl where this ffmpeg encodes it
+    for ext in ("jpg", "gif", "bmp", "tiff", "webp", "jxl"):
         subprocess.run([FFMPEG, "-v", "error", "-y", "-i", str(pics / "p.png"),
                         "-frames:v", "1", str(pics / f"p.{ext}")],
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
+    # Every picture loaded is saved beside the tracks, embedded or not, as a
+    # file that reads back as the same codec. A JPEG XL cover was named
+    # Front.jpegxl, which no muxer takes, and failed the rip with exit 1.
+    for pic in sorted(pics.glob("p.*")):
+        want = probe(pic, "-select_streams", "v", "-show_entries", "stream=codec_name")
+        out = WORK / f"out_cover_saved_{pic.suffix[1:]}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                       "-l", "1", "-o", "wav", "-D", out, "-F", "{track}", "-L", "log",
+                       "-C", f"Front={pic}")
+        saved = sorted(out.glob("Front.*")) if out.is_dir() else []
+        got = probe(saved[0], "-select_streams", "v", "-show_entries",
+                    "stream=codec_name") if len(saved) == 1 else ""
+        if ec != 0 or not want or got != want:
+            fail(f"cover_art_formats: {pic.name} with -o wav: exit {ec}, saved "
+                 f"{[s.name for s in saved]} reading {got!r}; want exit 0 and one "
+                 f"Front file reading {want!r}")
+
     wav = pics / "a.wav"
     subprocess.run([FFMPEG, "-v", "error", "-y", "-f", "lavfi", "-i", "sine=d=1",
                     "-ac", "2", str(wav)], stdout=subprocess.DEVNULL,

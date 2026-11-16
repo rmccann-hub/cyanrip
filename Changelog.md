@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**A JPEG XL cover is saved as `Front.jxl`, and no longer fails the rip.**
+A loaded cover's extension came from a list that knew WebP, AV1 and HEVC and
+otherwise used the codec's name, `jpegxl`, which no muxer takes: the cover's
+own file failed to open, *Unable to init lavf context: Invalid argument!*,
+and the rip exited 1 with no track written, whatever the output. Upstream's
+`648b1dd` has the same list (`docs/OPEN-ITEMS.md` UP-3). `cover_art_formats`
+now makes a JPEG XL picture where its `ffmpeg` can, and checks that every
+picture it loads is saved as one file reading back as the same codec; with
+the `.jxl` case removed it fails on exit 1. An HEVC cover would be saved as
+`Front.heif`, which FFmpeg 6.1.1's image muxer does not list either; none
+could be made here to try (US-29).
+
 **The inert-edit probe ran, for the first time since 2026-09-16.** At
 `8d2b73c8` all 174 tests ran under the edit, 173 passed, and the one that
 failed is `contract_build`, the only test `EXCLUDED_TESTS` names, so a
