@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**`docs/eac-parity.md`'s row 6 includes the runs of 2026-11-09 and 2026-11-14.** It
+stopped at 2026-11-03's clustering, which 2026-11-09 did not repeat (7 of 22
+verified, wrong and right reads alternating within each run), and said
+nothing of round 40's rip, whose securing pass delivered `59D352DD` in four
+of five rips. `docs/OPEN-ITEMS.md` US-15 leaves.
+
 **Our laps from round 41 must declare `OWNERSHIP-VERSION` and
 `SEAM-RULES-VERSION`.** `OWNERSHIP.md` §6a asks every lap for both, so a hash
 check reads each shared file at the version the lap declares; ours dropped

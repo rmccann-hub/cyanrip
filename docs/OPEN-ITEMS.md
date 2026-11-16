@@ -48,7 +48,6 @@ at `13bec0a`. A row leaves when the round settles it.
 | US-12 | The pregap search on a drive: a pregap the TOC misses against the TOC-only answer; the binary-encoding quirk; the two-search clause never printed; cache defeat between sub-channel retries (`src/pregap.c` TODO); raw P-W mode, two-read confirmation, runs of sectors, the P channel | `docs/pregap-carry.md` (:173, :255, :311); `docs/research/2026-11-04-pregaps.md` (:452-459); `docs/history/2026-11-04-misreads-and-pregaps.md` (R4) | After HW-6's raw read on a second drive |
 | US-13 | Speed change between passes (R3) and sector-level re-reads (R5) | `docs/history/2026-11-04-misreads-and-pregaps.md` | R3 is blocked: the BDR-209D read at 2.9x to 3.5x whatever `-S` asked; R5 waits on R1 and R2's results |
 | US-14 | Log the READ CD request, sense data on a failed read, and per-read latency | `docs/research/2026-11-04-drive-settings.md` (options 2, 4, 5, 7) | Propose in a round |
-| US-15 | EAC parity row 6 stops at 2026-11-03 | `docs/eac-parity.md:17` | Add the runs of 2026-11-09 and 2026-11-14 |
 | US-16 | rig-check's instructions live only in a superseded runbook, `docs/JOINT-SCRIPT-RUNBOOK.md` §8, cited by `tools/rig-check.py` | that file's banner | Re-home them in the handshake README, then archive the runbook |
 | US-19 | macOS arm64 runner wait times | `docs/DEPENDENCY-PLAN.md` | Measure, or drop |
 | US-20 | Three audit leads never re-checked: c, g, l | `docs/history/AUDIT-2026-09-05.md` (:224, :228, :233) | Re-check, then close or list |
