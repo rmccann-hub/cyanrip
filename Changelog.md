@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**The `Accurip 450:` checksum's window is pinned at both edges.** A mutant
+moving its lower bound by one sample survived the suite, recorded in
+`docs/SETTLED.md` as needing a disc whose length hit the window exactly. It
+needs no disc: `tests/checksums.c` feeds `crip_process_checksums()` a sample
+just inside and just outside each edge, and fails when either edge moves by
+one. `docs/OPEN-ITEMS.md` US-7 leaves.
+
 **The NULL `Content-Type` guard in the AccurateRip path is under test.** It
 was fixed long ago and never pinned, because it sat inside
 `crip_fill_accurip()`, which only a live curl handle reaches. The check is

@@ -108,6 +108,16 @@ peak_test = executable('peak_test',
 )
 test('Peak cross-check', peak_test)
 
+## AccurateRip's one-sector checksum at its window's edges: checksums.h is
+## header-only, so the function under test is compiled in. No fixture's audio
+## tells the edges apart, which let a mutant at the lower bound survive.
+checksums_test = executable('checksums_test',
+    sources: [ 'checksums.c' ],
+    include_directories: [ '../src' ],
+    dependencies: unit_test_deps,
+)
+test('AccurateRip 450 window edges', checksums_test)
+
 ## Links the watchdog object and supplies its own cyanrip_log(), so the
 ## assertions are against the formatted message rather than scraped stdout.
 ## Deliberately calls nothing while a read is outstanding: that is the property
