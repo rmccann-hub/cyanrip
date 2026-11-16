@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**`docs/README.md` maps the folder by kind.** Every file in `docs/` is now
+named as living, shared or agreed with Platterpus, generated, record, or
+history, with whether it is current and how it may change, so a reader
+knows before citing a file whether it is the current word or a record of an
+old one. It names the three files to start from: `OPEN-ITEMS.md`,
+`SETTLED.md` and `handshake/STATUS.md`.
+
 **The history index lists the KNOWN-ISSUES file this pass created.**
 Dumbass session wrote `docs/history/KNOWN-ISSUES-2026-11-16.md` and an index
 of `docs/history/` in the same pass, and left the one out of the other.
