@@ -3392,7 +3392,7 @@ static int cyanrip_run(int argc, char **argv)
     GEN_OPT_ONE(opts_list, bool,    overread, "O", 0, 0, 0, 0, 0,
                 "Enable overreading into lead-in and lead-out");
     GEN_OPT_ONE(opts_list, bool,    hdcd, "H", 0, 0, 0, 0, 0,
-                "Enable HDCD decoding");
+                "Enable HDCD decoding; a disc without HDCD comes out 6.02 dB quieter");
     GEN_OPT_ONE(opts_list, bool,    force_deemphasis, "E", 0, 0, 0, 0, 0,
                 "Force CD deemphasis");
     GEN_OPT_ONE(opts_list, bool,    no_deemphasis, "W", 0, 0, 0, 0, 0,

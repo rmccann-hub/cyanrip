@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**`--help` says what `-H` does to a disc without HDCD**: `Enable HDCD
+decoding; a disc without HDCD comes out 6.02 dB quieter`, for `.33`, as the
+owner decided on 2026-11-16. Announced in round 41's lap 1, since
+`docs/seam-commands.md` copies the help text; its `-H` row changes in the
+shared documents' next version. `docs/OPEN-ITEMS.md` US-3 leaves.
+
 **The record keeps the read performance the drive declares, for `.33`**, as
 our round 38 lap 8 S19 proposed and Platterpus's lap 9 S12 accepted, a
 record field before a log line. After any `-S`, a drive is asked GET

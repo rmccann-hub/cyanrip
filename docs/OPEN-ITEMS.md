@@ -43,7 +43,6 @@ decides. The build is `.33`, released on the owner's word (OW-1).
 |---|---|---|---|
 | US-1 | A newline in the `-d` path or the drive's INQUIRY strings inside paranoia's identify message | `KNOWN-ISSUES.md`, *paranoia's identify message can still start a line…*; cyanrip:R38.L3.S19 (b), platterpus:R38.L4.S13 | Escape it when the rig can show it (HW-14) |
 | US-2 | Six candidates from the 2026-10-26 audit, never checked: CD-TEXT language, a TOC whose starts do not increase, a failed last-session query, an image's TOC pregap bounds, CD-TEXT ISRC skipping the ISO 3901 check, offset-search numbering | `KNOWN-ISSUES.md`, *Six drive answers an audit listed…* | Check each in the code; any that changes log text goes to a round |
-| US-3 | `-H` on a disc without HDCD delivers a file 6.02 dB quieter | `KNOWN-ISSUES.md`, its `-H` entry; the owner chose on 2026-11-16 to document it, not compensate; the README says so | Say so in `--help` in `.33`, announced in round 41's lap 1; then the row leaves |
 | US-4 | `Lap commit list names its range` timed out in full parallel suites; mechanism unknown | `KNOWN-ISSUES.md`; `STATUS-OPEN suite-timeouts-at-default` | Record the next occurrence; none since 2026-09-30 |
 | US-5 | A superseded track's read time on a drive | `KNOWN-ISSUES.md`, *A superseded track…*; their R155 (PP-1) | File a log where a later read replaced the first, after PP-1 |
 | US-6 | A derived contract shows a surface's shape, not its meaning | `KNOWN-ISSUES.md`, *A derived contract…* | Joint; no proposal open |

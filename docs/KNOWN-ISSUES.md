@@ -276,7 +276,8 @@ line removed or joined otherwise.
 compensate: whether a disc carries HDCD is known only after encoding, so
 compensating means encoding or reading twice, for an option Platterpus never
 sends in a rip (`docs/seam-commands.md`, `-H`). The README says so from
-2026-11-16, and `--help` from `.33`, announced in round 41's lap 1. This entry
+2026-11-16, and `--help` from `.33`, announced in round 41's lap 1: `Enable HDCD
+decoding; a disc without HDCD comes out 6.02 dB quieter`. This entry
 stays as the record of the behaviour; it is documented, not fixed.
 
 ### `Lap commit list names its range` timed out in full parallel suites, the mechanism not established, and the call that hangs is now named
