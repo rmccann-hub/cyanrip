@@ -3068,6 +3068,37 @@ def sc_cdtext_isrc_checked():
              f"want track 1's alone")
 
 
+def sc_toc_starts_increase():
+    """A TOC WHOSE STARTS DO NOT INCREASE IS REFUSED, NAMING THE TWO TRACKS.
+
+    The review of 2026-11-16's audit candidates (US-2): a CUE sheet whose
+    track 1 started after track 2 ripped with exit 0, `Duration:
+    142840:54.21`, an empty track 1 and `Rip completed: yes`, since paranoia
+    repairs its own copy of the TOC and nothing read its note. Two equal
+    starts gave a track of no length the same way. Each is now refused with
+    exit 74 before anything is read, at column 0.
+    """
+    for name, starts, line in (
+            ("toc_late", ("00:04:00", "00:02:00", "00:06:00"),
+             "Invalid TOC: track 2 starts at LSN 150, not after track 1 at LSN 300!"),
+            ("toc_equal", ("00:00:00", "00:04:00", "00:04:00"),
+             "Invalid TOC: track 3 starts at LSN 300, not after track 2 at LSN 300!")):
+        shutil.copy(FIX / "cdda.bin", WORK / f"{name}.bin")
+        lines = [f'FILE "{name}.bin" BINARY']
+        for i, s in enumerate(starts):
+            lines += [f"  TRACK {i + 1:02d} AUDIO", f"    INDEX 01 {s}"]
+        (WORK / f"{name}.cue").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        out = WORK / f"out_{name}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, text = crip("-d", WORK / f"{name}.cue", "-N", "-A", "-U", "-s", "0",
+                        "-D", out, "-F", "{track}", "-L", "log")
+        tracks = sorted(p.name for p in out.glob("*.flac")) if out.is_dir() else []
+        if ec != 74 or line not in text.splitlines() or tracks:
+            fail(f"toc_starts_increase: {name}: exit {ec}, tracks {tracks}, and the "
+                 f"output {'carries' if line in text.splitlines() else 'lacks'} "
+                 f"{line!r}; want 74, that line and no track")
+
+
 def sc_cue_isrc():
     # Every ISRC handed in must come back out in the cue, on a disc WITH
     # pre-gaps. Both halves of that sentence are the test.

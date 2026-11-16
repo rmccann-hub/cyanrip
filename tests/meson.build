@@ -1096,6 +1096,7 @@ rip_scenarios = [
     'named_waits_after_the_open',
     'offset_search',
     'cdtext_isrc_checked',
+    'toc_starts_increase',
     'z_extraction_speed',
     'log_values_cannot_forge_a_line',
     'gaps_unknown_pregap',

@@ -670,6 +670,19 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         t->start_lsn_sig = t->start_lsn;
         t->end_lsn_sig = t->end_lsn;
 
+        /* A track must start after the one before it, as the TOC gives them.
+         * A CUE sheet whose track 1 started after track 2 ripped with exit
+         * 0, `Duration: 142840:54.21`, an empty track 1 and `Rip completed:
+         * yes`: paranoia repairs its own copy of the TOC, and nothing here
+         * read its note (the review of 2026-11-16's audit candidates). */
+        if (i && t->start_lsn <= ctx->tracks[i - 1].start_lsn_sig) {
+            cyanrip_log(ctx, 0, "Invalid TOC: track %i starts at LSN %i, not after track %i at LSN %i!\n",
+                        t->number, t->start_lsn, ctx->tracks[i - 1].number,
+                        ctx->tracks[i - 1].start_lsn_sig);
+            cyanrip_ctx_end(&ctx);
+            return AVERROR(EINVAL);
+        }
+
         if (t->track_is_data) {
             if (ctx->settings.pregap_action[t->number - 1] == CYANRIP_PREGAP_DEFAULT)
                 ctx->settings.pregap_action[t->number - 1] = CYANRIP_PREGAP_DROP;

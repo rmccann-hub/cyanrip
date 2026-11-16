@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**A TOC whose starts do not increase is refused.** A CUE sheet whose track 1
+started after track 2 ripped with exit 0, `Duration: 142840:54.21`, an empty
+track 1 and `Rip completed: yes`: paranoia repairs its own copy of the TOC,
+and nothing read its note. Two equal starts gave a track of no length the
+same way. Such a TOC now ends the run with exit 74 before anything is read,
+printing `Invalid TOC: track N starts at LSN …, not after track M at LSN …!` at
+column 0. It is a new fatal line, for our next lap to announce.
+`toc_starts_increase` fails without the check.
+
 **A CD-TEXT ISRC reaches the files only if ISO 3901 allows it.** A CD-TEXT
 ISRC pack is free text: from a CUE sheet's `CDTEXTFILE`, `not an isrc` reached
 the FLAC tag and the CUE sheet's `ISRC` line, where the disc's own code is

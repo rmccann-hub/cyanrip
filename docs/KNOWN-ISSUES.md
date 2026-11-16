@@ -217,10 +217,13 @@ a scenario that reproduces it.
   CUE sheet with inline CD-TEXT, both log `CD-TEXT: present (English, …)`:
   libcdio 2.1.0 assigns English on those two routes. A `CDTEXTFILE` gives
   German.
-- **A TOC whose starts do not increase.** A CUE sheet whose track 1 starts
-  after track 2 rips with exit 0, `Duration: 142840:54.21`, `Samples:
-  18446744073709463416` and an empty track 1, and says `Rip completed: yes`.
-  Paranoia repairs its own copy, and nothing reads its note.
+- **A TOC whose starts did not increase.** A CUE sheet whose track 1 started
+  after track 2 ripped with exit 0, `Duration: 142840:54.21`, `Samples:
+  18446744073709463416` and an empty track 1, and said `Rip completed: yes`.
+  Paranoia repairs its own copy, and nothing read its note. Since 2026-11-16
+  such a TOC, or one with two equal starts, is refused with exit 74 and
+  `Invalid TOC: track N starts at LSN …, not after track M at LSN …!`;
+  `toc_starts_increase` holds it.
 - **An image's pregap outside the track's bounds.** An `INDEX 00` after `INDEX
   01` logs `Pregap length: -75 frames`. A pregap before the previous track's
   start, with `-p 2=merge`, leaves track 1 empty with `End LSN: 74` below
