@@ -125,6 +125,13 @@ void crip_cdtext_to_meta(cyanrip_ctx *ctx)
         fill_gap(&t->meta, "title",    t->cdtext, "title");
         fill_gap(&t->meta, "artist",   t->cdtext, "performer");
         fill_gap(&t->meta, "composer", t->cdtext, "composer");
-        fill_gap(&t->meta, "isrc",     t->cdtext, "isrc");
+        /* Only a code ISO 3901 allows: a CD-TEXT ISRC pack is free text, and
+         * a malformed one reached the tags and the CUE sheet's ISRC line
+         * unchecked, where the disc's own code is checked (the review of
+         * 2026-11-16's audit candidates). The CD-TEXT block's own `isrc:`
+         * line still prints it, as the disc's text. */
+        const char *isrc = dict_get(t->cdtext, "isrc");
+        if (isrc && crip_isrc_is_iso3901(isrc))
+            fill_gap(&t->meta, "isrc", t->cdtext, "isrc");
     }
 }

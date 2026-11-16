@@ -225,9 +225,14 @@ a scenario that reproduces it.
   01` logs `Pregap length: -75 frames`. A pregap before the previous track's
   start, with `-p 2=merge`, leaves track 1 empty with `End LSN: 74` below
   `Start LSN: 150`, and exits 0.
-- **CD-TEXT's ISRC skips the ISO 3901 check.** A `CDTEXTFILE` carrying `not an
-  isrc` reaches the FLAC tag and the CUE sheet's `ISRC`, and beats a valid disc
-  ISRC unless `--prefer-disc-isrc` is given.
+- **CD-TEXT's ISRC skipped the ISO 3901 check, and still outranks the disc's.**
+  A `CDTEXTFILE` carrying `not an isrc` reached the FLAC tag and the CUE sheet's
+  `ISRC`; since 2026-11-16 only a code ISO 3901 allows is used, and
+  `cdtext_isrc_checked` holds it. Still true: CD-TEXT fills the tags before the
+  disc's own code is read, so a valid CD-TEXT code beats the disc's unless
+  `--prefer-disc-isrc` is given, against `src/cdtext.c`'s own rule that
+  CD-TEXT only fills gaps. Which should win is round 35's `--prefer-disc-isrc`
+  question again, so it goes to a lap.
 - **A failed last-session query decides the CD-Extra cut.** Certain from the
   code, reproducible only on a drive: any answer but success takes the
   11400-frame cut, with no line saying why. libcdio's macOS, FreeBSD and AIX

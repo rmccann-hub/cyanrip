@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**A CD-TEXT ISRC reaches the files only if ISO 3901 allows it.** A CD-TEXT
+ISRC pack is free text: from a CUE sheet's `CDTEXTFILE`, `not an isrc` reached
+the FLAC tag and the CUE sheet's `ISRC` line, where the disc's own code is
+checked. The CD-TEXT block's `isrc:` line still prints it, as the disc's text.
+`cdtext_isrc_checked` builds the CD-TEXT file and fails on the old code. Our
+next lap announces it, and asks whether a valid CD-TEXT code should still
+outrank the disc's checked one, as it does today unless `--prefer-disc-isrc`
+is given (`docs/OPEN-ITEMS.md` US-2).
+
 **The zero-CRC rule in the pregap search is tested for the first time.**
 `tests/subq.c`'s all-zero block passed with the rule removed: ten zero bytes
 do not checksum to 0x0000, so that block fails the CRC anyway. Two comments

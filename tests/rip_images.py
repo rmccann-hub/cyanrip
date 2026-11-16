@@ -3010,6 +3010,64 @@ def sc_early_log():
         fail("early_log: a log containing the replay block fails --verify-log")
 
 
+def sc_cdtext_isrc_checked():
+    """A CD-TEXT ISRC REACHES THE FILES ONLY IF ISO 3901 ALLOWS IT.
+
+    The review of 2026-11-16's audit candidates (US-2): a CD-TEXT ISRC pack is
+    free text, and `not an isrc` reached the FLAC tag and the CUE sheet's ISRC
+    line unchecked, where the disc's own code is checked. A `.toc` puts an
+    ISRC inside CD_TEXT into the TOC's ISRC, so the route is a CUE sheet's
+    CDTEXTFILE, built here as ISRC packs (0x8E) and their size packs (0x8F).
+    """
+    def pack(kind, track, seq, pos, text):
+        return bytes([kind, track, seq, pos & 0x0F]) + text.ljust(12, b"\0") + b"\0\0"
+    codes = ["USABC2600001", "not an isrc"]
+    stream = b"\0" + b"".join(c.encode("latin-1") + b"\0" for c in codes)
+    where, track, pos = [], 0, 0
+    for b in stream:
+        where.append((track, pos))
+        pos += 1
+        if b == 0:
+            track, pos = track + 1, 0
+    packs, seq = [pack(0x80, 0, 0, 0, b"Disc\0T1\0T2\0\0")], 1
+    for i in range(0, len(stream), 12):
+        packs.append(pack(0x8E, where[i][0], seq, min(where[i][1], 15), stream[i:i + 12]))
+        seq += 1
+    counts = [1] + [0] * 13 + [len(packs) - 1, 3]
+    sizes = (bytes([0, 1, len(codes), 0]) + bytes(counts[0:8]),
+             bytes(counts[8:16]) + bytes([len(packs) + 2, 0, 0, 0]),
+             bytes(4) + bytes([0x09]) + bytes(7))
+    for i, s in enumerate(sizes):
+        packs.append(pack(0x8F, i, seq, 0, s))
+        seq += 1
+    (WORK / "cdtisrc.cdt").write_bytes(b"".join(packs))
+    shutil.copy(FIX / "cdda.bin", WORK / "cdtisrc.bin")
+    (WORK / "cdtisrc.cue").write_text(
+        'CDTEXTFILE "cdtisrc.cdt"\nFILE "cdtisrc.bin" BINARY\n'
+        "  TRACK 01 AUDIO\n    INDEX 01 00:00:00\n"
+        "  TRACK 02 AUDIO\n    INDEX 01 00:04:00\n", encoding="utf-8")
+    out = WORK / "out_cdtisrc"
+    shutil.rmtree(out, ignore_errors=True)
+    ec, text = crip("-d", WORK / "cdtisrc.cue", "-N", "-A", "-U", "-s", "0",
+                    "-D", out, "-F", "{track}", "-L", "log")
+    if ec != 0:
+        fail(f"cdtext_isrc_checked: exit {ec}")
+        return
+    if "not an isrc" not in text:
+        fail("cdtext_isrc_checked: the log never shows track 2's CD-TEXT ISRC, "
+             "so the CD-TEXT file was not read and the run proves nothing")
+    tags = {n: probe(out / f"{n}.flac", "-show_entries", "format_tags=ISRC")
+            for n in (1, 2)}
+    if tags != {1: "USABC2600001", 2: ""}:
+        fail(f"cdtext_isrc_checked: the files' ISRC tags are {tags}; want "
+             f"track 1's code and none for track 2")
+    cue = next(out.glob("*.cue"), None)
+    isrcs = re.findall(r"^\s*ISRC (.*)$", cue.read_text(encoding="utf-8"), re.M) if cue else None
+    if isrcs != ["USABC2600001"]:
+        fail(f"cdtext_isrc_checked: the CUE sheet's ISRC lines are {isrcs}; "
+             f"want track 1's alone")
+
+
 def sc_cue_isrc():
     # Every ISRC handed in must come back out in the cue, on a disc WITH
     # pre-gaps. Both halves of that sentence are the test.
