@@ -8,7 +8,7 @@ Fully featured CD ripping program able to take out most of the tedium. Fully acc
 > upstream's 0.9.4-rc2, fork release 14. That is an example, not a claim about
 > which release is current: `release-manifest.json` answers that, and nothing
 > keeps this sentence in step with it. Match on
-> `platterpus-fork` or on the `+platterpus.` suffix, never on `0.9.4-rc2` alone --
+> `platterpus-fork` or on the `+platterpus.` suffix, never on upstream's version alone --
 > upstream answers to that too. **Never order two fork builds by that string**:
 > the part that advances is SemVer build metadata, which the spec says to ignore
 > for precedence. Order by `release_seq` in `release-manifest.json`. See [Fork differences](#fork-differences),
@@ -104,6 +104,7 @@ If the latest build is broken, you can find older ones in the [nightly release p
 ### Compiling
 Complete list of dependencies:
 
+ * Meson 0.62 or later and Python 3.11 or later, to build (`meson.build`)
  * FFmpeg 6.1 or later (libavcodec, libswresample, libavutil, libavformat, libavfilter; libavcodec at least 60.31.102, every minimum in `src/meson.build`)
  * libcdio (at least 2.1.0) and libcdio-paranoia
  * libmusicbrainz5
@@ -116,7 +117,7 @@ Optional dependencies:
 
 All are available on any up-to-date Linux distribution's package repositories. To compile and install on any *NIX platform:
 
-`meson build`
+`meson setup build`
 
 `ninja -C build`
 
@@ -141,7 +142,7 @@ flatpak run com.github.cyanreg.cyanrip
 
 CLI
 ---
-This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRACT.md`, derived from the binary's own `--help`. Arguments are optional, except `-s`. By default cyanrip will rip all tracks from the default CD drive, output to flac only, enables all cd-paranoia error checking, performs a MusicBrainz lookup, and downloads and embeds the cover art if one is found.
+This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRACT.md`, derived from the binary's own `--help`. Arguments are optional, except `-s` on a drive: without `-s`, `-I` or `-f`, a rip there stops at `Offset is unset!` (`-s 0` rips with none), and a disc image needs no offset. By default cyanrip will rip all tracks from the default CD drive, output to flac only, enables all cd-paranoia error checking, performs a MusicBrainz lookup, and downloads and embeds the cover art if one is found.
 
 | Argument             | Description                                                                                 |
 |----------------------|---------------------------------------------------------------------------------------------|
@@ -232,16 +233,16 @@ The output encoding(s) can be set via the `-o` option as a comma-separated list.
 
 | Format name | Description                                     | Extension | Cover art embedding | Notes                                                     |
 |-------------|-------------------------------------------------|-----------|---------------------|-----------------------------------------------------------|
-| `flac`      | Standard FLAC files                             | `.flac`   | :heavy_check_mark:  | Always uses compression level 11                          |
+| `flac`      | Standard FLAC files                             | `.flac`   | :heavy_check_mark:  | Default compression level 11; `--encoder-option` sets another |
 | `tta`       | TTA (True Audio) files                          | `.tta`    | ⬜                  | Always uses maximum compression                           |
 | `opus`      | Standard Opus files (in an Ogg container)       | `.opus`   | ⬜                  | VBR, use -b to adjust the bitrate, default is 256 (kbps)  |
 | `aac`       | Standard AAC files, an ADTS stream              | `.m4a`    | ⬜                  | Use -b to adjust the bitrate, default is 256 (kbps)       |
-| `wavpack`   | Standard lossless WavPack files                 | `.wv`     | ⬜                  | Always uses compression level 3                           |
-| `alac`      | Standard ALAC files                             | `.m4a`    | ⬜                  | Always uses maximum compression                           |
+| `wavpack`   | Standard lossless WavPack files                 | `.wv`     | ⬜                  | Default compression level 3; `--encoder-option` sets another |
+| `alac`      | Standard ALAC files                             | `.m4a`    | ⬜                  | Default maximum compression; `--encoder-option` sets another |
 | `mp3`       | Standard MP3 files                              | `.mp3`    | :heavy_check_mark:  | VBR, use -b to adjust the bitrate, default is 256 (kbps)  |
 | `vorbis`    | Standard Ogg/Vorbis files (in an OGG container) | `.ogg`    | ⬜                  | Use -b to adjust the bitrate, default is 256 (kbps)       |
 | `wav`       | Standard WAV files                              | `.wav`    | ⬜                  | 16-bit little endian signed audio, or 32-bit in HDCD mode |
-| `alac_mp4`  | Standard MP4 files (with ALAC encoding)         | `.mp4`    | :heavy_check_mark:  | Always uses maximum compression                           |
+| `alac_mp4`  | Standard MP4 files (with ALAC encoding)         | `.mp4`    | :heavy_check_mark:  | Default maximum compression; `--encoder-option` sets another |
 | `aac_mp4`   | Standard MP4 files (with AAC encoding)          | `.mp4`    | :heavy_check_mark:  | Use -b to adjust the bitrate, default is 256 (kbps)       |
 | `opus_mp4`  | Standard MP4 files (with Opus encoding)         | `.mp4`    | :heavy_check_mark:  | Use -b to adjust the bitrate, default is 256 (kbps)       |
 | `pcm`       | Raw audio, 16-bits (32 under `-H`), two channel, little-endian | `.pcm` | ⬜     |                                                           |
@@ -434,9 +435,9 @@ here that upstream still has are in `docs/upstream/defect-reports.md`:
    run on hardware (`-x -I` on 2026-08-25, `-x` ripping on 2026-09-11). Up to
    `.19` **the number it reported was wrong by roughly fifteen times**:
    `cd-paranoia -A` measured 137 to 140 sectors on the drive reported as *at
-   least 2048*. `.20` fixed the calibration (`394ab17`), and on five runs since,
-   on one drive, it has reported `128 to 255 sectors` beside `cd-paranoia -A`'s
-   137 to 144. The mechanism and every run are in `docs/KNOWN-ISSUES.md`; do
+   least 2048*. `.20` fixed the calibration (`394ab17`), and on every run since,
+   seventeen to 2026-11-14, on one drive, it has reported `128 to 255 sectors`
+   beside `cd-paranoia -A`'s 137 to 144. The mechanism and every run are in `docs/KNOWN-ISSUES.md`; do
    not cite a figure from `.19` or earlier.
 
 Reporting additions, all in the rip log (P2 of `PROVIDER-CONTRACT.md` is the
@@ -573,7 +574,7 @@ The ripping log name and location can be modified via the `-L` argument. By defa
 
 Filename sanitation
 -------------------
-If invalid symbols are found in a file or a folder, such as `:` or `/`, the symbol is by default substituted with a unicode lookalike, such as `∶` or `∕` respectively. If this is undesirable, this can be overridden via the `-T simple` argument. This will replace all invalid symbols with `_`.
+If invalid symbols are found in a file or a folder, such as `:` or `/`, the symbol is by default substituted with a unicode lookalike, such as `∶` or `∕` respectively. If this is undesirable, this can be overridden via the `-T simple` argument. This will replace all invalid symbols with `_`. `-T os_simple` passes through what the operating system allows, as `-T os_unicode` below does, and writes `_` for the rest.
 In case you're on an operating system with more liberal allowance on filenames, you can use the `-T os_unicode` option to allow symbols like `:` not supported on Windows to be passed through. Note that this will make files like these not accessible on Windows, unless renamed, so use this only if you're sure.
 
 

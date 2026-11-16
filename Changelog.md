@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**The README's stale statements are corrected.**
+- **Dependencies:** they name Meson 0.62 and Python 3.11, which the build
+  requires, and the build command is `meson setup build`.
+- **`-s`:** it is required on a drive, and a disc image needs no offset.
+- **Compression levels:** FLAC, WavPack and ALAC give theirs as defaults that
+  `--encoder-option` overrides.
+- **`-T os_simple`:** it is described.
+- **The cache probe:** it counts seventeen agreeing runs, where it said
+  five.
+- **Versions:** they are matched on upstream's version, not on `0.9.4-rc2`.
+
 **`SETTLED.md`'s stale rows are corrected in place.**
 - **Counts:** the argv probe counts are dated, with today's beside them.
 - **Names:** the record's schema is `/13`, the retired letters are named,
