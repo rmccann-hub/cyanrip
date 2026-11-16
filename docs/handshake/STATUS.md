@@ -1,19 +1,19 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-41-lap-01.md
+STATUS-NEWEST-LAP: round-41-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 41, OPEN, on our lap 1 and your lap 2, both OPEN; it reviews +platterpus.33 at 13bec0a with your 0.7.126, and your next release names it under review (your lap 2 S18); it closes on our lap 1 S28, which your lap 2 S17 accepts as given; protocol v10 is accepted (your S15), its texts ours to write
-STATUS-LAPS: newest sent round-41-lap-01.md (ours), round-41-lap-02.md (theirs); next 3 (ours) carrying our reading of your lap 2 and the texts of protocol v10 your S15 accepts; held none
-STATUS-RELEASED: +platterpus.33 at 13bec0a, 2026-11-16
-STATUS-RELEASE-NEXT: +platterpus.34, not built: what round 41 agrees, among them the Ripping errors: wording our round 41 lap 1 proposes, with a data track's cancel no longer counted, and Disc MCN: printed always once your reader is released; +platterpus.33 is on the beta channel from 2026-11-16 and +platterpus.32 on stable; pins edb73dd, reviews +platterpus.33
-STATUS-RUN-NEXT: +platterpus.33 with your-first-release-naming-it; waiting on your answer to our round 41 lap 1 S28's goal and your release naming +platterpus.33 as your build under review, then our owner's rip of round 41 on the reference disc, with -O in one rip and second 245 in the C2 probe if you agree (S19, S20); round 40's rip is filed on our evidence branch at 589db53 (docs/rig-2026-11-14-edb73dd/)
+STATUS-ROUND: 41, OPEN, on our lap 3 and your lap 2, both OPEN; it reviews +platterpus.33 at 13bec0a with your 0.7.126, and our lap 3 asks to move its pin to +platterpus.34 at fb28088, restating our lap 1 S28 as its S10, since your release naming +platterpus.33 has not shipped; protocol v10 is accepted (your S15), its texts sent in our lap 3 S18 and your cells to come
+STATUS-LAPS: newest sent round-41-lap-03.md (ours), round-41-lap-02.md (theirs); next 4 (theirs) carrying your answer to our lap 3 S9 and the release naming the pin you accept, your cells for v10, and your answers to S20 and S22 to S25; held none
+STATUS-RELEASED: +platterpus.34 at fb28088, 2026-11-16
+STATUS-RELEASE-NEXT: +platterpus.35, not built: Disc MCN: printed always and the Ripping errors: parts named, in our first build after your release that reads both (your round 41 lap 2 S9 and S10), and what round 41's questions decide; +platterpus.34 is on the beta channel from 2026-11-16, which our round 41 lap 3 asks to make the round's pin in place of +platterpus.33, and +platterpus.32 on stable; pins edb73dd, reviews +platterpus.34
+STATUS-RUN-NEXT: +platterpus.34 with your-first-release-naming-it; waiting on your lap 4's answer to our round 41 lap 3 S9, which keeps +platterpus.33 as your lap 2 S17 restates if you decline, and your release naming the pin, then our owner's rip of round 41 on the reference disc, with -O in one rip and second 245 in the C2 probe (your lap 2 S11, S12); round 40's rip is filed on our evidence branch at 589db53 (docs/rig-2026-11-14-edb73dd/)
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: counted from LBA 0, proposed in our round 32 lap 1 S13 and accepted in your lap 2 S10, released in +platterpus.23 at 891c79e; the reference disc's track 1 starts at LSN 0, so no run of it can tell the two counts apart, and a disc with a pregap before track 1 is what settles it (docs/OPEN-ITEMS.md HW-11)
 STATUS-OPEN: overread-bounded us fixing at bfe71ec, priority 1: under -O a frame outside the disc is read once, a refused one written as silence, and a track that read any says Beyond disc: N of M frames refused (written as silence); released in +platterpus.24 at 93afa15, and open until a drive shows what it does with a read past its lead-out: no run through round 40 sent -O, and no log has printed Beyond disc: (docs/OPEN-ITEMS.md R41-9 and HW-10)
 STATUS-OPEN: subchannel-pregap-varies us fixing at 8726bd3, priority 5: a pregap the TOC does not signal read differently between rips of one disc while the log stated one value; fixed by placing each Q frame at the sector its own address names (316682e), with every search's counts in Pregap searches: (8726bd3, +platterpus.27 and .28), and since +platterpus.29 the one sector the reads leave undecided prints as such: track 9 is 94 or 95 frames (undecided) in 18 of the 19 .29 logs of 2026-11-04 and 26 of round 40's 29 rip logs, 95 in the rest, and 94 in no log since .29; this drive's raw Q of LSN 145567 fails its CRC, so a raw read on a second drive settles it (our round 39 lap 1 S11; docs/OPEN-ITEMS.md HW-6; the record is docs/KNOWN-ISSUES.md)
 STATUS-OPEN: unsent-flag-rows them fixing at round 41, priority 8: docs/seam-commands.md §1b rows each flag of ours your rip path does not send, and every cell has landed except the PP cells for -X, -C and -B, still ?, which are yours; --prefer-accuraterip-match and --reread-until-accuraterip, which your rip path sends, move to §1 in the shared-documents version proposed for round 41 (docs/OPEN-ITEMS.md R41-5 and PP-12)
 STATUS-OPEN: hardware-unverified us cannot, because each needs a disc or a drive this environment lacks: the list is docs/OPEN-ITEMS.md, Needs a drive, HW-1 to HW-17, which on 2026-11-16 replaced this line's own list, CLAUDE.md's table and KNOWN-ISSUES.md's, which disagreed; among them C2 read by cyanrip itself, the C2 probe at track 3's second 245, track 9's LSN 145567 on a second drive, -O past the lead-out, CD-TEXT from a disc, a recordable disc, -W on a pre-emphasised disc, -P 0's salvage, Speed: with -S, and .32's footer third form and Still waiting: names; asked of your rig in our round 32 lap 1 S21
-STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed reports 1 to 23 on 2026-10-16 as upstream issue 167, in the order of importance docs/upstream/issues-to-file.md suggests, and reports 24 to 31, drafted from 2026-10-19 to 2026-11-16, go to that issue as one comment of our operator's; one more defect fixed here is not yet drafted; a reply asking for a pull request or an issue of its own goes to our operator, who files it (docs/OPEN-ITEMS.md OW-8, UP-1 and UP-2)
+STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed reports 1 to 23 on 2026-10-16 as upstream issue 167, in the order of importance docs/upstream/issues-to-file.md suggests, and reports 24 to 32, drafted from 2026-10-19 to 2026-11-16, go to that issue as one comment of our operator's; two more defects fixed here are read in upstream's code and not yet run there; a reply asking for a pull request or an issue of its own goes to our operator, who files it (docs/OPEN-ITEMS.md OW-8, UP-1, UP-3 and UP-4)
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded, and none has been since 2026-09-30 (docs/OPEN-ITEMS.md US-4)
 
 **The block above is the proposal's D6, and it is checked, not trusted**
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-16: round 41 open on `.33`; `.32` on stable
+## Now — rewritten 2026-11-16: round 41 open, `.34` asked as its pin; `.34` on beta
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -71,15 +71,17 @@ changed is in `Changelog.md`.
   lap 4, both `GO`, approving `.32` at `edb73dd` with their 0.7.125. Their
   `FORK_PIN` moved to `edb73dd` on the close (`platterpus@90b822fa`), and
   their 0.7.126 of 2026-11-16 installs it by default (`platterpus@3e2f194a`).
-- **`.33` is on the beta channel** at `13bec0a`, from 2026-11-16, ledger row
-  45. **`.32` is on stable** at `edb73dd`, from 2026-11-16, on our owner's
-  word that day to take every recommendation put to them; ledger rows 43 and
-  44 name the same commit, so nothing was rebuilt. Stable had been `.23` since
-  2026-10-16.
-- **Round 41 is open**, on our lap 1 of 2026-11-16, reviewing `.33` at
-  `13bec0a` with their 0.7.126 and proposing protocol v10. It closes on its
-  S28: a rip of `.33` reading the drive's declared read performance, all 14
-  tracks verified, the bundle filed, and v10 landed in both trees.
+- **`.34` is on the beta channel** at `fb28088`, from 2026-11-16, ledger row
+  46, after `.33` at `13bec0a` (row 45) the same day. **`.32` is on stable**
+  at `edb73dd`, from 2026-11-16, on our owner's word that day to take every
+  recommendation put to them; ledger rows 43 and 44 name the same commit, so
+  nothing was rebuilt. Stable had been `.23` since 2026-10-16.
+- **Round 41 is open**, on our laps 1 and 3 and Platterpus's lap 2, all
+  `OPEN`. Their lap 2 accepted `.33` as the pin and lap 1's S28 as the close,
+  and protocol v10. Their 0.7.127 naming `.33` had not shipped, so our lap 3,
+  on our owner's word, asks to move the pin to `.34` with S28 restated for it
+  (its S10); until they accept, `.33` stands. Lap 3 also sends v10's texts and
+  asks five questions.
 - **Every earlier round** is a row of the handshake README's round table, and
   the gate is the authority over both.
 
