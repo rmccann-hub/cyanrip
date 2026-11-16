@@ -19,7 +19,7 @@ line and it does.
 
 Companion record: docs/sample-interrupted.diagnostics.json
 === END OF HEADER -- THE LOG ITSELF STARTS ON THE NEXT LINE ===
-cyanrip 0.9.4-rc3+platterpus.32 (platterpus-fork-g0b00d72)
+cyanrip 0.9.4-rc3+platterpus.32 (platterpus-fork-g19a2ee7)
 Invoked as:     /home/user/cyanrip/build/src/cyanrip -d pregap.cue -N -A -Q -s 0 -o flac -Z 199 -r 200 -G -F {track} -L sample -M sheet -P 0 --consumer platterpus/0.6.21 -D o --diagnostics o/sample.diagnostics.json
 Handshake:      round 40 lap 3 closed, verdict GO -- NOT a released build
 Consumer:       platterpus/0.6.21
@@ -69,6 +69,8 @@ Tracks:
 
 Repeating ripping (0 out of 199 matches for current checksum D36D9296)
 
+Repeating ripping (1 out of 199 matches for current checksum D36D9296)
+
 Stopping, ripping incomplete!
 Album Loudness Summary:
 
@@ -93,7 +95,7 @@ Album loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
 Album sample peak level:          0.0 dBFS
 Album true peak level:            0.0 dBFS
 Paranoia status counts:
-  READ:          19
+  READ:          42
 
 Ripping errors: 0
 Encoder errors: not applicable; no whole track was encoded
@@ -101,5 +103,5 @@ Partial files:  1 track (1), read not completed; encoder failures: none
 Read stalls:    none (no read exceeded 10s)
 Rip completed:  no (interrupted by SIGTERM, 0 of 3 tracks)
 Interrupted at: track 1, mid-read
-Ripping finished at 2026-11-16T02:16:38+00:00
-Log FUN512: 9QeJIuCIiQD5szOXRcmUQVpwO.ENi9CtLMyRxDxixAVLF7JoQmdSLK0X7pW1l20VC0xfK_0ILjWgS368PNRm.Q
+Ripping finished at 2026-11-16T15:53:47+00:00
+Log FUN512: 5fUlh7RQJDrvnKf55N_lIxxUFtVN6b.gyliz3V4agV_WW895lxO6OR8p7MJUhbFJNvO.d4asVNQTF_i7WOXxDA
