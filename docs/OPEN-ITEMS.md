@@ -41,8 +41,8 @@ decides. The build is `.33`, released on the owner's word (OW-1).
 
 | Id | Item | Where the detail is | Next step |
 |---|---|---|---|
-| US-1 | A newline in the `-d` path or the drive's INQUIRY strings inside paranoia's identify message | `KNOWN-ISSUES.md`, *A value the log echoes…*, the open part; cyanrip:R38.L3.S19 (b), platterpus:R38.L4.S13 | Escape it when the rig can show it (HW-14) |
-| US-2 | Six candidates from the 2026-10-26 audit, never checked: CD-TEXT language, a TOC whose starts do not increase, a failed last-session query, an image's TOC pregap bounds, CD-TEXT ISRC skipping the ISO 3901 check, offset-search numbering | `KNOWN-ISSUES.md`, *Four drive answers…*, its open part | Check each in the code; any that changes log text goes to a round |
+| US-1 | A newline in the `-d` path or the drive's INQUIRY strings inside paranoia's identify message | `KNOWN-ISSUES.md`, *paranoia's identify message can still start a line…*; cyanrip:R38.L3.S19 (b), platterpus:R38.L4.S13 | Escape it when the rig can show it (HW-14) |
+| US-2 | Six candidates from the 2026-10-26 audit, never checked: CD-TEXT language, a TOC whose starts do not increase, a failed last-session query, an image's TOC pregap bounds, CD-TEXT ISRC skipping the ISO 3901 check, offset-search numbering | `KNOWN-ISSUES.md`, *Six drive answers an audit listed…* | Check each in the code; any that changes log text goes to a round |
 | US-3 | `-H` on a disc without HDCD delivers a file 6.02 dB quieter | `KNOWN-ISSUES.md`, its `-H` entry; the `Filtered:` line shipped in `.29` | Waits on OW-5 |
 | US-4 | `Lap commit list names its range` timed out in full parallel suites; mechanism unknown | `KNOWN-ISSUES.md`; `STATUS-OPEN suite-timeouts-at-default` | Record the next occurrence; none since 2026-09-30 |
 | US-5 | A superseded track's read time on a drive | `KNOWN-ISSUES.md`, *A superseded track…*; their R155 (PP-1) | File a log where a later read replaced the first, after PP-1 |
@@ -83,7 +83,7 @@ id.
 | PP-10 | **R44**: the EAC-layout wording for error positions, through the handshake | their `TASKS.md` | No proposal sent |
 | PP-11 | Their reader for `Disc MCN:` | platterpus:R38.L4.S11 | Not built; before R41-1 ships |
 | PP-12 | `seam-commands.md` §1b PP cells `?` for `-X`, `-C` and `-B`; §1 PP cells for `-F` and `-I`; §2a :260 (both sides) | `STATUS-OPEN unsent-flag-rows` | Theirs, in R41-5's version |
-| PP-13 | Their footer within 8 s when the script console closes | `docs/KNOWN-ISSUES.md`, *Closing Platterpus's script console…*; their round 30 lap 4 S9 | Their rig run |
+| PP-13 | Their footer within 8 s when the script console closes | `docs/history/KNOWN-ISSUES-2026-11-16.md`, *Closing Platterpus's script console…*; their round 30 lap 4 S9 | Their rig run |
 | PP-14 | Their addendum carries no timestamp; the `--version` hang through the Distrobox wrapper | `SETTLED.md` (their addendum and wrapper rows) | Theirs |
 | PP-15 | Should a beta expire? | `docs/history/UPGRADE-CHANNELS-PLAN.md` | Theirs, then OW-2's decision |
 

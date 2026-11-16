@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**`KNOWN-ISSUES.md` holds only what is open, 955 lines from 1,444.** Ten items
+fixed and pinned by a test moved word for word to
+`docs/history/KNOWN-ISSUES-2026-11-16.md`, with the closed parts of three
+more and the table of what has not run on a drive, now
+`docs/OPEN-ITEMS.md`'s *Needs a drive*. The history file's table gives each
+item's fix, release and test. Dumbass sessions, ours, left six of them saying
+"not yet released" about fixes that shipped in `.29` and `.30`, and the C2
+entry open after `.32` fixed it.
+
 **Every open item is now in one list, `docs/OPEN-ITEMS.md`**, and ten finished
 plans, audits and research notes moved to `docs/history/`, on the owner's word
 of 2026-11-16 to consolidate the documentation before round 41. Open items
