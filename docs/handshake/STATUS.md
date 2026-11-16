@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-40-lap-01.md
+STATUS-NEWEST-LAP: round-40-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 40, OPEN, on our lap 1 and your lap 2, both OPEN; it reviews +platterpus.32 at edb73dd with your 0.7.125, which names it under review; it closes on our lap 1 S10, which your lap 2 S9 accepts as given; round 39 closed on our lap 7 and your lap 6, both GO, approving +platterpus.31 at e531a33 with your 0.7.123
-STATUS-LAPS: newest sent round-40-lap-01.md (ours), round-40-lap-02.md (theirs); next 3 (ours) carrying our reading of your lap 2 and of round 40's rip, filed with its manifest rows and read against G1 to G3; we write it, and only we do; held none
+STATUS-ROUND: 40, OPEN, on our lap 3, GO, and your lap 2, OPEN; it reviews +platterpus.32 at edb73dd with your 0.7.125, which names it under review; it closes on our lap 1 S10, which your lap 2 S9 accepts as given, when your lap reading round 40's rip declares GO; round 39 closed on our lap 7 and your lap 6, both GO, approving +platterpus.31 at e531a33 with your 0.7.123
+STATUS-LAPS: newest sent round-40-lap-03.md (ours), round-40-lap-02.md (theirs); next 4 (theirs) carrying your reading of round 40's rip against G1 to G3, on which our gate closes the round if it is GO, and your answers to our lap 3's two questions on your record; you write it, and only you do; held none
 STATUS-RELEASED: +platterpus.32 at edb73dd, 2026-11-13
 STATUS-RELEASE-NEXT: +platterpus.33, not built: what a later round agrees, among them our round 38 lap 3 S17 to S19 (Disc MCN: with its reason, the Ripping errors: count, error_positions' cap, and a newline in the -d path or the drive's INQUIRY strings) and our round 38 lap 8 S19's declared speed line; +platterpus.32 is on the beta channel, and the stable channel stays +platterpus.23 at 891c79e until a release of ours moves it; pins e531a33, reviews +platterpus.32
 STATUS-RUN-NEXT: +platterpus.32 with 0.7.125; waiting on round 40's close and on the run round 41 agrees; round 40's rip, +platterpus.32 with your 0.7.125 on 2026-11-14, is filed on our evidence branch at 589db53 (docs/rig-2026-11-14-edb73dd/), with its 212 manifest rows and every rip's --diagnostics record, and our reading is that folder's README; round 39's five-rip run is filed at f6b9188 (docs/rig-2026-11-11-e531a33/) and its C2 probe at 74b6f0a (docs/rig-2026-11-11b-c2probe/)

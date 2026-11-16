@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Our round 40 lap 3 is sent, `GO`**, released in its pull request on the
+owner's word of 2026-11-16, *"Release GO on merge"*. It reads round 40's rip
+as meeting all three gates: every `.32` log prints the new `C2 errors:` line
+and Platterpus's records keep it as `not_declared`; all 14 tracks are verified
+in each of the five whole-disc rips; and the bundle is filed with its manifest
+rows. It notes that their lap 2 S9 dropped G2's last clause when restating it,
+and asks two questions about their record: which read `kept_read_began`
+describes, and which read rip 1's track 5 repair started from. Round 40 closes
+when their reading lap declares `GO`, and this is our last lap of the round.
+
 **Our lap checker refuses a `term:` naming two close conditions.** Dumbass
 draft of our round 40 lap 3 put two references in one `term:` field; our
 checker counted both and read the lap well formed, while Platterpus's reads
