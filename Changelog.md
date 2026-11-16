@@ -1,5 +1,185 @@
 Unreleased
 ==========
+**A TOC whose starts do not increase is refused.** A CUE sheet whose track 1
+started after track 2 ripped with exit 0, `Duration: 142840:54.21`, an empty
+track 1 and `Rip completed: yes`: paranoia repairs its own copy of the TOC,
+and nothing read its note. Two equal starts gave a track of no length the
+same way. Such a TOC now ends the run with exit 74 before anything is read,
+printing `Invalid TOC: track N starts at LSN …, not after track M at LSN …!` at
+column 0. It is a new fatal line, for our next lap to announce.
+`toc_starts_increase` fails without the check.
+
+**A CD-TEXT ISRC reaches the files only if ISO 3901 allows it.** A CD-TEXT
+ISRC pack is free text: from a CUE sheet's `CDTEXTFILE`, `not an isrc` reached
+the FLAC tag and the CUE sheet's `ISRC` line, where the disc's own code is
+checked. The CD-TEXT block's `isrc:` line still prints it, as the disc's text.
+`cdtext_isrc_checked` builds the CD-TEXT file and fails on the old code. Our
+next lap announces it, and asks whether a valid CD-TEXT code should still
+outrank the disc's checked one, as it does today unless `--prefer-disc-isrc`
+is given (`docs/OPEN-ITEMS.md` US-2).
+
+**The zero-CRC rule in the pregap search is tested for the first time.**
+`tests/subq.c`'s all-zero block passed with the rule removed: ten zero bytes
+do not checksum to 0x0000, so that block fails the CRC anyway. Two comments
+in `src/pregap.c` said it would checksum as valid. The test now finds ten
+bytes that do checksum to 0x0000 and checks the rule refuses them; it fails
+with the rule removed. No behaviour changes. Found comparing upstream pull
+request 153 with our search.
+
+**What our docs say about upstream pull request 153 and `-J` is corrected**
+(`docs/OPEN-ITEMS.md` US-26). `docs/pregap-carry.md` called 153 a later
+evolution of 115 by the same author; at its head `ca3ab44`, one commit in
+twenty is that author's, and a dated correction says so. `carried-patches.md`
+§1 now compares 153 with our search, read in its code and not built: it
+matches the review fixes, the guard, the CRC and the quirk, differs in frame
+placement, log lines, retries and the macOS read, and does not supersede what
+we carry. And the 2026-08-21 audit counted `-J` as ours; it is upstream's
+`ca7e830c`, an ancestor of the commit our first one was made on.
+
+**Upstream report 32 is drafted:** a cover whose codec parameters carry
+extradata, such as an AVIF, aborts upstream's `648b1dd` with `free(): double
+free detected in tcache 2`, exit 134, because its parameters are copied with
+`memcpy` and the extradata freed once per owner. Run on a build of `648b1dd`;
+the fork fixed it in `af89fcc`, whose two files fix upstream too. Its
+`SETTLED.md` row was run four ways: it passes on our checkout, and fails
+with either half pointed at the other side's tree. `docs/OPEN-ITEMS.md` UP-2
+becomes item 32 of UP-1 and OW-8.
+
+**`-f` finds an offset of 0, and finds an offset on a disc numbered from
+any track.** The search tested its guess only when it was not 0, and its scan
+skips the guess, so a drive needing no offset ended `No track was long
+enough`. It also asked libcdio for track *position + 1* while comparing with
+the track at that position, so a CUE sheet numbered from 3 read sectors before
+the disc for a track it does not have; its lines now name each track by its
+own number. The suite had never run the search, since no fixture's disc is in
+AccurateRip: `tests/fakear.c` now serves an entry without the network, and
+`offset_search` finds `+0` and `+6` on a disc numbered from 1 and `+0` on one
+numbered from 3. Testing the guess only when not 0, looking tracks up by
+position, or naming them by position each fails it. Only `-f` changes, and
+only on such a drive or disc; our next lap announces it. Upstream's `648b1dd`
+has the same code (`docs/OPEN-ITEMS.md` UP-4).
+
+**The audit's six candidates are all real defects** (`docs/OPEN-ITEMS.md`
+US-2). Five reproduce on images made from the fixtures: the CD-TEXT language
+on a `.toc` or inline CUE CD-TEXT, a TOC whose starts do not increase, an
+image's pregap outside its track, CD-TEXT's ISRC unchecked, and the offset
+search. The sixth, a failed last-session query deciding the CD-Extra cut, is
+certain from the code and needs a drive. `KNOWN-ISSUES.md` holds what each run
+showed. Of US-20's three leads, the timestamps' offset is fixed, and the
+error rows without a test and the memory `-K` saves are still true, now
+counted.
+
+**CI builds what end users build, again.** The `fedora` job runs the whole
+suite in `registry.fedoraproject.org/fedora-toolbox:latest`, the image
+Platterpus's container uses, with the packages Platterpus installs to build
+this fork, named as the same pkg-config provides, so Fedora's libcdio and
+FFmpeg are what it links. Every other job builds on Ubuntu 24.04's or
+Homebrew's libraries. `latest` floats on purpose, the one image zizmor is told
+to allow, and the suite runs as a user, since root writes every path the suite
+checks is unwritable. Its first run, on 2026-11-16, failed
+`cover_art_formats` and `named_waits_after_the_open`, and it was held back
+until both were fixed, above; its next run is the first proof of either fix
+on Fedora. On the owner's word of 2026-11-16; `docs/OPEN-ITEMS.md` US-23
+leaves.
+
+**A WebP or JPEG XL cover is embedded in FLAC and MP3 where the linked
+FFmpeg keeps it.** The table of what each output holds was measured on FFmpeg
+6.1.1, and the FLAC and MP3 muxers' list, `ff_id3v2_mime_tags`, gained WebP in
+FFmpeg 8.0 and JPEG XL in 9.0. Fedora's 9.0.2 kept a WebP cover that we
+refused with exit 64. The table now asks the libavformat loaded, from
+61.9.107 for WebP and 62.14.100 for JPEG XL, the first versions numbered
+after each change on FFmpeg's master; on an older FFmpeg nothing changes. Our next lap
+announces it: a WebP or JPEG XL cover for `-o flac` or `-o mp3` is embedded
+on FFmpeg 8.0 or 9.0 and later, where it was refused. Both comments on the
+table now say what FFmpeg 6.1.1 does through our own encoder, measured by
+admitting every picture: the FLAC muxer fails its header on a GIF rather
+than dropping it, and the MP3 muxer fails a write rather than dropping one.
+`cover_art_formats` fails with either threshold lowered below 6.1.1's
+libavformat; the acceptances are proved only on a newer FFmpeg, as the
+Fedora job will. `docs/OPEN-ITEMS.md` US-25 and US-27 leave.
+
+**A JPEG XL cover is saved as `Front.jxl`, and no longer fails the rip.**
+A loaded cover's extension came from a list that knew WebP, AV1 and HEVC and
+otherwise used the codec's name, `jpegxl`, which no muxer takes: the cover's
+own file failed to open, *Unable to init lavf context: Invalid argument!*,
+and the rip exited 1 with no track written, whatever the output. Upstream's
+`648b1dd` has the same list (`docs/OPEN-ITEMS.md` UP-3). `cover_art_formats`
+now makes a JPEG XL picture where its `ffmpeg` can, and checks that every
+picture it loads is saved as one file reading back as the same codec; with
+the `.jxl` case removed it fails on exit 1. An HEVC cover would be saved as
+`Front.heif`, which FFmpeg 6.1.1's image muxer does not list either; none
+could be made here to try (US-29).
+
+**The inert-edit probe ran, for the first time since 2026-09-16.** At
+`8d2b73c8` all 174 tests ran under the edit, 173 passed, and the one that
+failed is `contract_build`, the only test `EXCLUDED_TESTS` names, so a
+mutation score means something again. `docs/inert-edit-probe.log` is
+replaced whole with the run, and `SETTLED.md`'s row cites it.
+`docs/OPEN-ITEMS.md` US-9 leaves.
+
+**Two more calls after the drive open name themselves to the stall
+watchdog.** Paranoia's setup asks libcdio for the lead-out address before our
+own lookup does (`cdio_paranoia_init()` → `cdio_get_track()`), and the
+audio-track test before each track's format query asks the same question as
+that query. A block in either printed nothing until now. They are named *the
+paranoia setup* and *the track format query for track N*, the second as
+named since `.32` for a data track. Our next lap announces the new name.
+Found by the Fedora job's first run: Fedora 45's libcdio calls its own
+`cdio_get_track_lsn` through its PLT, Ubuntu's does not, so on Fedora
+`tests/slowcall.c` slept inside paranoia's setup instead of in our lookup.
+The shim now counts only calls from cyanrip itself, and
+`named_waits_after_the_open` slows both new calls; each fails with its wait
+removed. The comment on that window also said Linux's track format query
+asks the drive again; libcdio 2.1.0 and 2.3.0 answer it from their copy of
+the TOC.
+
+**The inert-edit probe can match a failing test to `EXCLUDED_TESTS` again.**
+`tools/mutate.py` has run it before every sweep since 2026-09-27, reading a
+failing test's name up to the first `:`, as the probe filed on 2026-09-16
+wrote it. Meson 1.3.2 prints `cyanrip:images / contract_build`, which that
+read as `images / contract_build`: it matched no exclusion, and the probe
+refused every sweep. Dumbass session wired the probe in from a log's prose
+and never ran it, so its first run, today, refused on the one test it
+excludes. The name is now read after the last ` / `, and a name meson does
+not list refuses by name. `mutation_exclusions_are_pinned` reads meson's
+printed name for `contract_build` and fails with the old parser.
+
+**`docs/OPEN-ITEMS.md` US-22 was already done when it was listed.** P5's lone
+`"` row went when `0e2e2c21` published a line written by consecutive calls as
+one row, `cdio: \"%s\"`, on 2026-11-04; the contract has had no such row
+since. Dumbass session triaged from old notes and listed a closed item as
+open.
+
+**`tools/rig-check.py`'s instructions are in the handshake README**, under
+*Checking the rig without a rip*. They lived only in
+`docs/JOINT-SCRIPT-RUNBOOK.md` §8, a runbook marked superseded since
+2026-09-16, which the tool's own comment still cited. The runbook stays, since
+sent laps cite it. `docs/OPEN-ITEMS.md` US-16 leaves.
+
+**`docs/eac-parity.md`'s row 6 includes the runs of 2026-11-09 and 2026-11-14.** It
+stopped at 2026-11-03's clustering, which 2026-11-09 did not repeat (7 of 22
+verified, wrong and right reads alternating within each run), and said
+nothing of round 40's rip, whose securing pass delivered `59D352DD` in four
+of five rips. `docs/OPEN-ITEMS.md` US-15 leaves.
+
+**Our laps from round 41 must declare `OWNERSHIP-VERSION` and
+`SEAM-RULES-VERSION`.** `OWNERSHIP.md` §6a asks every lap for both, so a hash
+check reads each shared file at the version the lap declares; ours dropped
+them from round 37 lap 7 to round 40 lap 3, and `tools/seam-check.py` never
+asked. It now refuses a lap of ours from round 41 without each once at column
+0, and `Handshake wire conformance` checks every such lap with the same
+function and four cases, three of which fail with the check disabled. Sent
+laps before round 41 stay as sent. `docs/OPEN-ITEMS.md` US-17 leaves.
+
+**A cancel during a data track is no longer a ripping error**, as it has not
+been on an audio track since `.29` (our round 38 lap 1 S6 (c), Platterpus's
+lap 2 S3). The data track's own read loop still added one at `Stopping,
+ripping incomplete!`, found reading the count's sources for our round 41
+lap 1 S16. A sector that fails still counts where it fails. Only an
+interrupted rip of a disc with a data track changes: its `Ripping errors:`
+is one lower. `data_track_cancel` interrupts mixed.cue's data track and
+fails with the old line back. `docs/OPEN-ITEMS.md` US-24 leaves.
+
 **The Fedora job is held back for its two findings.** Dumbass session added a
 job that builds on Fedora without ever having run on Fedora, and its first
 run, on Fedora 45 with FFmpeg 9.0.2 and libcdio-paranoia 2.0.2, failed two

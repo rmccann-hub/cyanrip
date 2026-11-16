@@ -600,8 +600,8 @@ def main():
     crip = args.binary if (os.path.sep in args.binary) else (shutil.which(args.binary) or args.binary)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     # ONE PARENT FOLDER, NOT ONE PER RUN IN $HOME. The default used to be
-    # `~/seam-check-<stamp>`, and the documented invocation in
-    # `docs/JOINT-SCRIPT-RUNBOOK.md` §8 passes no --out -- so every pre-flight
+    # `~/seam-check-<stamp>`, and the documented invocation, now the handshake
+    # README's *Checking the rig without a rip*, passes no --out -- so every pre-flight
     # dropped another directory straight into the operator's home, and the
     # operator has asked both projects twice to stop doing that. The path is
     # still printed, still the thing to tar up, and now deletable in one go.

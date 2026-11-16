@@ -137,10 +137,32 @@ static void test_verify_rejects(void)
     int fixup = 0;
 
     /* A drive that returns no Q sub-channel data at all leaves zeroes. That is
-     * an absence of data, not a sector that happens to check out. */
+     * an absence of data, not a sector that happens to check out. Ten zero
+     * bytes do not checksum to 0x0000, so this block fails the CRC with or
+     * without the zero-CRC rule below; it is kept as the drive's case. */
     memset(buf, 0, sizeof(buf));
     CHECK(verify_subq_crc(buf, &fixup) == 0, "all-zero sector accepted");
     CHECK(fixup == 0, "all-zero sector set the fixup flag");
+
+    /* THE ZERO-CRC RULE ITSELF: a stored CRC of 0x0000 is refused even where
+     * the other ten bytes checksum to exactly that. Found here rather than
+     * hard-coded, by varying two bytes until crc_subq() gives 0x0000; with the
+     * rule removed such a block is accepted. The all-zero block above never
+     * reached it (the review of 2026-11-16: it passed with the rule gone). */
+    int found = 0;
+    for (unsigned v = 0; v < 0x10000 && !found; v++) {
+        memset(buf, 0, sizeof(buf));
+        buf[0] = 0x01;
+        buf[8] = v >> 8;
+        buf[9] = v & 0xff;
+        found = crc_subq(buf) == 0x0000;
+    }
+    CHECK(found, "no two bytes found that checksum ten bytes to 0x0000");
+    if (found) {
+        fixup = 0;
+        CHECK(verify_subq_crc(buf, &fixup) == 0,
+              "a block whose stored CRC 0x0000 matches its data was accepted");
+    }
 
     /* Genuine corruption stays rejected -- the workaround must not turn a bad
      * sector into a good one. */

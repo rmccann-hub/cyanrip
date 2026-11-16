@@ -326,6 +326,56 @@ jobs:
         if: always()
         run: python3 tools/check-settled.py --timing-from build/meson-logs/testlog.json
 
+  # WHAT END USERS BUILD (docs/DEPENDENCY-PLAN.md §4; the owner's word
+  # of 2026-11-16). Every user builds this fork inside Platterpus's Fedora
+  # container, registry.fedoraproject.org/fedora-toolbox:latest
+  # (platterpus@34d20333:src/platterpus/deps/host_setup.py:48), from the
+  # packages it names as pkg-config provides
+  # (src/platterpus/deps/fork_source.py:2949-2967), so Fedora's own libcdio
+  # and FFmpeg are what it links, built without libqrencode or chromaprint.
+  # No other job builds that: linux is Ubuntu 24.04's libcdio 2.1 and FFmpeg
+  # 6.1, macOS is Homebrew's. `latest` on purpose, since that is what a new
+  # user gets. The golden checks say SKIP here, naming the library set, as on
+  # macOS. The container runs as root, and the suite checks what an unwritable
+  # path does, which root can always write, so the suite runs as a user.
+  fedora:
+    if: github.event_name != 'release' && github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    container:
+      image: registry.fedoraproject.org/fedora-toolbox:latest # zizmor: ignore[unpinned-images] -- floating on purpose: it is the image a new user's container pulls
+    timeout-minutes: 60
+    steps:
+      # git first, so the checkout is a repository and not a tarball
+      - name: Install dependencies
+        timeout-minutes: 15
+        run: |
+          dnf install -y --setopt=install_weak_deps=False \
+            git meson ninja-build gcc pkgconf-pkg-config python3 ffmpeg-free \
+            'pkgconfig(libavcodec)' 'pkgconfig(libavformat)' \
+            'pkgconfig(libswresample)' 'pkgconfig(libavfilter)' \
+            'pkgconfig(libavutil)' 'pkgconfig(libcdio)' \
+            'pkgconfig(libcdio_paranoia)' 'pkgconfig(libmusicbrainz5)' \
+            'pkgconfig(libcurl)'
+          useradd -m builder
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch the history the suite reads
+        run: |
+          chown -R builder: .
+          runuser -u builder -- .github/fetch-history.sh platterpus-fork master
+
+      - name: Build
+        run: |
+          rpm -q libcdio libcdio-paranoia ffmpeg-free-devel || true
+          runuser -u builder -- meson setup build
+          runuser -u builder -- ninja -C build
+
+      - name: Test
+        run: runuser -u builder -- meson test -C build --print-errorlogs
+
   # THE ONE JOB THAT FETCHES THE EVIDENCE BRANCH (PROTOCOL.md v9 §17, HR-2
   # 8a). It checks every manifest row a change adds against its file at its
   # commit, fails if a tag reaches the branch, and runs every check that reads

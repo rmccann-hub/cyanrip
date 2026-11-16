@@ -542,7 +542,14 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         crip_stall_wait_end();
     }
 
+    /* Paranoia's setup finds the track its cursor starts in, which asks
+     * libcdio for the lead-out address before our own lookup below does
+     * (cdio_paranoia_init() -> i_paranoia_firstlast() ->
+     * cdio_cddap_sector_gettrack() -> cdio_get_track()). Named, as the calls
+     * after it are, so that a setup which blocks is seen. */
+    crip_stall_wait_begin("the paranoia setup");
     ctx->paranoia = cdio_paranoia_init(ctx->drive);
+    crip_stall_wait_end();
     if (!ctx->paranoia) {
         cyanrip_log(ctx, 0, "Unable to init paranoia!\n");
         cyanrip_ctx_end(&ctx);
@@ -597,9 +604,10 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
      * drive...` for 300 s: past the named open, in a call no wait named,
      * which one not known (docs/rig-2026-11-11b-c2probe/; our round 39 lap
      * 3 S13 and S16). The open has read the TOC and asked the last session
-     * already; on Linux the last-session and track-format queries ask the
-     * drive again, and the two lookups answer from libcdio's copy of the TOC,
-     * named all the same so that one which blocks is seen. */
+     * already. On Linux the last-session query asks the kernel again
+     * (CDROMMULTISESSION); the lookups and the track format queries answer
+     * from libcdio's copy of the TOC, in libcdio 2.1.0 and 2.3.0 alike. Each
+     * is named all the same, so that one which blocks is seen. */
     crip_stall_wait_begin("the lead-out address lookup");
     ctx->end_lsn = cdio_get_track_lsn(ctx->cdio, CDIO_CDROM_LEADOUT_TRACK) - 1;
     crip_stall_wait_end();
@@ -631,7 +639,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
         t->index = i + 1;
         t->number = t->cd_track_number = i + first_track_nb;
+        crip_wait_begin_track("the track format query", t->number);
         t->track_is_data = !cdio_cddap_track_audiop(ctx->drive, t->number);
+        crip_stall_wait_end();
         if (t->track_is_data) {
             crip_wait_begin_track("the track format query", t->number);
             track_format_t format = cdio_get_track_format(ctx->cdio, t->number);
@@ -659,6 +669,19 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
 
         t->start_lsn_sig = t->start_lsn;
         t->end_lsn_sig = t->end_lsn;
+
+        /* A track must start after the one before it, as the TOC gives them.
+         * A CUE sheet whose track 1 started after track 2 ripped with exit
+         * 0, `Duration: 142840:54.21`, an empty track 1 and `Rip completed:
+         * yes`: paranoia repairs its own copy of the TOC, and nothing here
+         * read its note (the review of 2026-11-16's audit candidates). */
+        if (i && t->start_lsn <= ctx->tracks[i - 1].start_lsn_sig) {
+            cyanrip_log(ctx, 0, "Invalid TOC: track %i starts at LSN %i, not after track %i at LSN %i!\n",
+                        t->number, t->start_lsn, ctx->tracks[i - 1].number,
+                        ctx->tracks[i - 1].start_lsn_sig);
+            cyanrip_ctx_end(&ctx);
+            return AVERROR(EINVAL);
+        }
 
         if (t->track_is_data) {
             if (ctx->settings.pregap_action[t->number - 1] == CYANRIP_PREGAP_DEFAULT)
@@ -974,7 +997,11 @@ static int search_for_offset(cyanrip_track *t, int *offset_found,
                              const uint8_t *mem, int dir,
                              int guess, int bytes)
 {
-    if (guess) {
+    /* The guess first, 0 included: it was tried only when not 0, and the
+     * scan below skips it, so an offset of 0 was never tested and a drive
+     * that needs none ended `No track was long enough` (the review of
+     * 2026-11-16's audit candidates; upstream's 648b1dd too). */
+    {
         const uint8_t *start_addr = mem + guess*4;
         uint32_t accurip_v1 = 0x0;
         for (int j = 0; j < (CDIO_CD_FRAMESIZE_RAW >> 2); j++)
@@ -1023,15 +1050,23 @@ static int search_for_drive_offset(cyanrip_ctx *ctx, int range)
 
     for (int t_idx = 0; t_idx < ctx->nb_tracks; t_idx++) {
         cyanrip_track *t = &ctx->tracks[t_idx];
-        lsn_t start = cdio_get_track_lsn(ctx->cdio, t_idx + 1);
-        lsn_t end = cdio_get_track_last_lsn(ctx->cdio, t_idx + 1);
+        /* By the track's number on the disc, as AccurateRip's entry for it
+         * is. It asked for track t_idx + 1, which is that track only when
+         * the disc starts at 1: from a CUE sheet numbered from 3, which
+         * libcdio before 2.2.1 keeps, it compared track 3's audio with track
+         * 5's entry and read sectors before the disc for a track it does not
+         * have (the review of 2026-11-16's audit candidates; upstream's
+         * 648b1dd too). */
+        lsn_t start = cdio_get_track_lsn(ctx->cdio, t->cd_track_number);
+        lsn_t end = cdio_get_track_last_lsn(ctx->cdio, t->cd_track_number);
 
-        if (ctx->tracks[t_idx].ar_db_status != CYANRIP_ACCUDB_FOUND)
+        if (t->ar_db_status != CYANRIP_ACCUDB_FOUND)
             continue;
         else
             had_ar |= 1;
 
-        if ((end - start) < (450 + range))
+        if (start == CDIO_INVALID_LSN || end == CDIO_INVALID_LSN ||
+            (end - start) < (450 + range))
             continue;
 
         did_check |= 1;
@@ -1042,10 +1077,10 @@ static int search_for_drive_offset(cyanrip_ctx *ctx, int range)
 
         size_t bytes = 0;
 
-        cyanrip_log(ctx, 0, "Loading data for track %i...\n", t_idx + 1);
+        cyanrip_log(ctx, 0, "Loading data for track %i...\n", t->number);
         cdio_paranoia_seek(ctx->paranoia, start, SEEK_SET);
 
-        crip_reading_track = t_idx + 1;
+        crip_reading_track = t->number;
 
         for (int i = 0; i < 2*range; i++) {
             const uint8_t *data = cyanrip_read_frame(ctx, start + i);
@@ -1070,22 +1105,22 @@ static int search_for_drive_offset(cyanrip_ctx *ctx, int range)
                                       range * CDIO_CD_FRAMESIZE_RAW);
 
         if (!found) {
-            cyanrip_log(ctx, 0, "Nothing found for track %i%s\n", t_idx + 1,
+            cyanrip_log(ctx, 0, "Nothing found for track %i%s\n", t->number,
                         t_idx != (ctx->nb_tracks - 1) ? ", trying another track" : "");
         } else if (!offset_found) {
             offset_found_samples = offset;
             offset_found++;
             cyanrip_log(ctx, 0, "Offset of %c%i found in track %i%s\n",
-                        offset >= 0 ? '+' : '-', abs(offset), t_idx + 1,
+                        offset >= 0 ? '+' : '-', abs(offset), t->number,
                         t_idx != (ctx->nb_tracks - 1) ? ", trying to confirm with another track" : "");
         } else if (offset_found_samples == offset) {
             offset_found++;
             cyanrip_log(ctx, 0, "Offset of %c%i confirmed (confidence: %i) in track %i%s\n",
-                        offset >= 0 ? '+' : '-', abs(offset), offset_found, t_idx + 1,
+                        offset >= 0 ? '+' : '-', abs(offset), offset_found, t->number,
                         t_idx != (ctx->nb_tracks - 1) ? ", trying to confirm with another track" : "");
         } else {
             cyanrip_log(ctx, 0, "New offset of %c%i found at track %i, scrapping old offset of %c%i%s\n",
-                        offset >= 0 ? '+' : '-', abs(offset), t_idx + 1,
+                        offset >= 0 ? '+' : '-', abs(offset), t->number,
                         offset_found_samples >= 0 ? '+' : '-', abs(offset_found_samples),
                         t_idx != (ctx->nb_tracks - 1) ? ", trying to confirm with another track" : "");
             offset_found_samples = offset;
@@ -1712,10 +1747,12 @@ static int cyanrip_rip_data_track(cyanrip_ctx *ctx, cyanrip_track *t)
             }
         }
 
-        /* Stop now if requested */
+        /* Stop now if requested. A cancel is not a ripping error, on a data
+         * track as on an audio one since `.29` (our round 38 lap 1 S6 (c),
+         * Platterpus's lap 2 S3): a sector that failed still counts where it
+         * failed, and `Rip completed:` says the rip was interrupted. */
         if (quit_now) {
             cyanrip_log(ctx, 0, "\nStopping, ripping incomplete!\n");
-            ctx->total_error_count++;
             goto end;
         }
 

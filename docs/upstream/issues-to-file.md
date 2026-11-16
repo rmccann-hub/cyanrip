@@ -1,16 +1,16 @@
-# 31 upstream issues for cyanreg/cyanrip, ready to paste
+# 32 upstream issues for cyanreg/cyanrip, ready to paste
 
-**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `7d27f109072a65af`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
+**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `205bca03783f63b9`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
 
 **Links were resolved against upstream's `master` at `648b1dd`**, our mirror's tip when this was rendered: a commit it reaches links to upstream, and any other commit our history reaches links to the fork. `--check` renders against that commit, not against what a clone's `master` holds, so every clone holding it gives the same answer; `git fetch origin master` brings it.
 
-**Items 1 to 23 were filed on 2026-10-16**, by the operator, as one issue combining them in the order of importance below: <https://github.com/cyanreg/cyanrip/issues/167>. That link is the operator's word; this file's generator does not read upstream's tracker. An item asked for as an issue of its own is pasted from here. **Items 24 to 31 are not filed yet**: they go to the same issue as a comment, or each as an issue of its own, as the operator decides.
+**Items 1 to 23 were filed on 2026-10-16**, by the operator, as one issue combining them in the order of importance below: <https://github.com/cyanreg/cyanrip/issues/167>. That link is the operator's word; this file's generator does not read upstream's tracker. An item asked for as an issue of its own is pasted from here. **Items 24 to 32 are not filed yet**: they go to the same issue as a comment, or each as an issue of its own, as the operator decides.
 
 **How to file.** For each item: open <https://github.com/cyanreg/cyanrip/issues/new>, paste the **Title** line into the title box and everything between the two `BODY` markers into the body. File them in order: item 5 refers to item 4, so once item 4 is filed you can replace *"item 4 of this set"* in item 5 with its issue link. Before filing, a quick search of upstream's open issues for each title's key words avoids a duplicate; this list was not checked against their tracker.
 
 **Suggested order of importance**, if you file only some: 6 (apostrophes corrupt metadata on real rips), 8 (disc images rip corrupted audio with `Ripping errors: 0`), 19 (with libcdio 2.3.0 or later, every image rip without `-s` stops at `Offset is unset!`), 1 and 2 (a hung or cut-off process with the drive held), 4 and 5 (`-H` silently drops de-emphasis and the log claims it), then the rest.
 
-## Item 1 of 31
+## Item 1 of 32
 
 **Title:** The signal handler calls `cyanrip_log()`, which is not async-signal-safe
 
@@ -47,7 +47,7 @@ SIGTERM, and a -Z loop that ignored both").
 
 <!-- BODY END -->
 
-## Item 2 of 31
+## Item 2 of 32
 
 **Title:** SIGTERM is not handled at all
 
@@ -74,7 +74,7 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 
 <!-- BODY END -->
 
-## Item 3 of 31
+## Item 3 of 32
 
 **Title:** `cyanrip_log_finish_report()` sits above `end:`, so every `goto end` skips it
 
@@ -106,7 +106,7 @@ state").
 
 <!-- BODY END -->
 
-## Item 4 of 31
+## Item 4 of 32
 
 **Title:** The filter graph is a ternary cascade, so `-H` discards de-emphasis
 
@@ -135,7 +135,7 @@ de-emphasis").
 
 <!-- BODY END -->
 
-## Item 5 of 31
+## Item 5 of 32
 
 **Title:** `(deemphasis applied)` is printed from the settings, not from what happened
 
@@ -160,7 +160,7 @@ fixed with the filter-graph issue (item 4 of this set) in [`b866900`](https://gi
 
 <!-- BODY END -->
 
-## Item 6 of 31
+## Item 6 of 32
 
 **Title:** A bare apostrophe in `-a` or `-t` swallows every later field
 
@@ -187,7 +187,7 @@ double-escaping the consumer's").
 
 <!-- BODY END -->
 
-## Item 7 of 31
+## Item 7 of 32
 
 **Title:** An invalid UTF-8 byte truncates a name, and can make `-D` absolute
 
@@ -215,7 +215,7 @@ truncating and logging").
 
 <!-- BODY END -->
 
-## Item 8 of 31
+## Item 8 of 32
 
 **Title:** Ripping a disc image at any paranoia level above 0 returns corrupted audio and reports `Ripping errors: 0`
 
@@ -328,7 +328,7 @@ with image size.
 
 <!-- BODY END -->
 
-## Item 9 of 31
+## Item 9 of 32
 
 **Title:** `-r` reaches libcdio-paranoia unrounded, and `-r 3` never returns on a bad sector
 
@@ -357,7 +357,7 @@ there.
 
 <!-- BODY END -->
 
-## Item 10 of 31
+## Item 10 of 32
 
 **Title:** `media` is tagged from the `-H` setting, so every `-H` rip says HDCD
 
@@ -379,7 +379,7 @@ says").
 
 <!-- BODY END -->
 
-## Item 11 of 31
+## Item 11 of 32
 
 **Title:** The AccurateRip tally counts a track whose read was interrupted
 
@@ -402,7 +402,7 @@ in a real rip.
 
 <!-- BODY END -->
 
-## Item 12 of 31
+## Item 12 of 32
 
 **Title:** A 450 lookup falls through to the whole-track checksum on a miss
 
@@ -432,7 +432,7 @@ fork's copy of the same code.
 
 <!-- BODY END -->
 
-## Item 13 of 31
+## Item 13 of 32
 
 **Title:** The AccurateRip disc status can never read `mismatch`
 
@@ -479,7 +479,7 @@ of the fetch, unchanged, so a recorded response can be tested with no network
 
 <!-- BODY END -->
 
-## Item 14 of 31
+## Item 14 of 32
 
 **Title:** A one-frame AccurateRip entry under the threshold is logged as `(not found)`
 
@@ -519,7 +519,7 @@ threshold rejects it"). The tally of partial matches is unchanged.
 
 <!-- BODY END -->
 
-## Item 15 of 31
+## Item 15 of 32
 
 **Title:** A track's success line ignores paranoia's skips and a `-Z` repeat limit
 
@@ -569,7 +569,7 @@ repeat limit as read with errors").
 
 <!-- BODY END -->
 
-## Item 16 of 31
+## Item 16 of 32
 
 **Title:** A failed track ends a rip of every track silently, and the album is finalised over it
 
@@ -611,7 +611,7 @@ under `-l`.
 
 <!-- BODY END -->
 
-## Item 17 of 31
+## Item 17 of 32
 
 **Title:** A stopped `-f` search is retried with a larger radius
 
@@ -660,7 +660,7 @@ was, and end a -f search on a stop").
 
 <!-- BODY END -->
 
-## Item 18 of 31
+## Item 18 of 32
 
 **Title:** The footer can count a one-frame match the track's lines never printed
 
@@ -705,7 +705,7 @@ match in the footer only where the track's line says so").
 
 <!-- BODY END -->
 
-## Item 19 of 31
+## Item 19 of 32
 
 **Title:** A disc image is taken for a drive with libcdio 2.3.0 or later
 
@@ -757,7 +757,7 @@ driver, not by CDIO_DRIVE_CAP_READ_ISRC").
 
 <!-- BODY END -->
 
-## Item 20 of 31
+## Item 20 of 32
 
 **Title:** `-Y` on a directory overflows a signed length
 
@@ -797,7 +797,7 @@ paths that skipped it").
 
 <!-- BODY END -->
 
-## Item 21 of 31
+## Item 21 of 32
 
 **Title:** A failed read in `-Y` is reported as a log with no checksum
 
@@ -834,7 +834,7 @@ as an I/O error, not as one without a checksum").
 
 <!-- BODY END -->
 
-## Item 22 of 31
+## Item 22 of 32
 
 **Title:** The paranoia counters are printed with `%lu` from `uint64_t`
 
@@ -877,7 +877,7 @@ build found this.
 
 <!-- BODY END -->
 
-## Item 23 of 31
+## Item 23 of 32
 
 **Title:** Three start-up failures return without tearing the context down
 
@@ -936,7 +936,7 @@ paths that skipped it").
 
 <!-- BODY END -->
 
-## Item 24 of 31
+## Item 24 of 32
 
 **Title:** An argument that is only its separator crashes with no message
 
@@ -978,7 +978,7 @@ giving the fork's argument probe a malformed-shape axis; it had no report until
 
 <!-- BODY END -->
 
-## Item 25 of 31
+## Item 25 of 32
 
 **Title:** A number past `INT_MAX` wraps and is used
 
@@ -1029,7 +1029,7 @@ fork's argument probe.
 
 <!-- BODY END -->
 
-## Item 26 of 31
+## Item 26 of 32
 
 **Title:** The AccurateRip tally divides by a count that includes data tracks
 
@@ -1069,7 +1069,7 @@ answering Platterpus's question.
 
 <!-- BODY END -->
 
-## Item 27 of 31
+## Item 27 of 32
 
 **Title:** A value the log echoes can start a line of its own
 
@@ -1116,7 +1116,7 @@ keep the value as it came. Found on 2026-10-26 by a review of the fork.
 
 <!-- BODY END -->
 
-## Item 28 of 31
+## Item 28 of 32
 
 **Title:** A path over 1,003 bytes is cut there, extension and all
 
@@ -1164,7 +1164,7 @@ the log, the CUE sheet and both tracks, each under its own name. Found on
 
 <!-- BODY END -->
 
-## Item 29 of 31
+## Item 29 of 32
 
 **Title:** `C2 errors: unsupported by drive` is printed for a disc image, and for a drive that returns C2 pointers
 
@@ -1282,7 +1282,7 @@ failure, which unchanged [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/6
 
 <!-- BODY END -->
 
-## Item 30 of 31
+## Item 30 of 32
 
 **Title:** A disc change mid-rip is reported as `Error ripping: Invalid argument`
 
@@ -1394,7 +1394,7 @@ Applied to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd) and ru
 
 <!-- BODY END -->
 
-## Item 31 of 31
+## Item 31 of 32
 
 **Title:** `Embedded cover art:` names the cover that was asked for, not what the file holds
 
@@ -1464,7 +1464,7 @@ first two were run.
     2`, exit 134, with `-o flac` or `-o pcm`. That is a separate defect: the
     cover's codec parameters are copied with `memcpy` (`src/coverart.c:62`,
     `:278`, `src/cyanrip_encode.c:1166`), so the copies share one extradata
-    buffer. The fork fixed it in [`af89fcc`](https://github.com/rmccann-hub/cyanrip/commit/af89fcc).
+    buffer. The fork fixed it in [`af89fcc`](https://github.com/rmccann-hub/cyanrip/commit/af89fcc); it is report 32.
 
 The same `ffmpeg` 6.1.1, muxing each 8x8 picture into each container that
 embeds covers, gives:
@@ -1505,6 +1505,209 @@ In upstream's code there are two steps.
    the rip, either refusing the cover or leaving it out of that output, and say
    so in the block. The block is printed before the file is written, so the
    muxer's result is not yet known when the block is logged.
+
+---
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `648b1dd`. The fix is linked above; happy to open a PR if it helps.*
+
+<!-- BODY END -->
+
+## Item 32 of 32
+
+**Title:** A cover whose codec parameters carry extradata, such as an AVIF, aborts the rip with a double free
+
+<!-- BODY START -->
+
+**Where:** `src/coverart.c:274-278` and `:319` at [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), in `demux_image()`:
+
+```c
+    art->params = av_calloc(1, sizeof(AVCodecParameters));
+    if (!art->params)
+        goto end;
+
+    memcpy(art->params, avf->streams[0]->codecpar, sizeof(AVCodecParameters));
+```
+
+```c
+    avformat_close_input(&avf);
+```
+
+Then the cover's parameters are copied the same way into the stream of each
+muxer that is given the cover: `src/coverart.c:62`, in `crip_save_art()`, and
+`src/cyanrip_encode.c:1166`, in `cyanrip_init_track_encoding()`:
+
+```c
+    memcpy(st->codecpar, art->params, sizeof(AVCodecParameters));
+```
+
+```c
+        memcpy(s->st_img->codecpar, art->params, sizeof(AVCodecParameters));
+```
+
+Each of those streams is freed with its muxer's context:
+`avformat_free_context(avf)` at `src/coverart.c:107`, and
+`avformat_free_context(ctx->avf)` at `src/cyanrip_encode.c:918`, in
+`cyanrip_end_track_encoding()`.
+
+**What happens:** `memcpy` copies the `extradata` pointer, not the buffer it
+points to. FFmpeg's header says the struct must not be handled this way:
+*"sizeof(AVCodecParameters) is not a part of the public ABI, this struct must
+be allocated with avcodec_parameters_alloc() and freed with
+avcodec_parameters_free()"*, and `extradata` *"will be freed by
+avcodec_parameters_free()"* (`libavcodec/codec_par.h`). So one buffer has
+several owners:
+
+1. `avformat_close_input()` at `coverart.c:319` frees it with the demuxer's
+   stream, while `art->params->extradata` still points to it.
+2. `crip_save_art()` writes the cover file for each output
+   (`src/cyanrip_main.c:2208`) from the freed buffer, then frees it again at
+   `:107`.
+3. Each track muxer that embeds the cover frees it again at
+   `cyanrip_encode.c:918`.
+
+Of the 8x8 covers made for this report, the PNG, JPEG, BMP, TIFF, GIF and
+WebP have no extradata, so every copy holds a null pointer and nothing is
+freed twice. The AVIF, an AV1 still, has 7 bytes of it.
+
+With an AVIF cover in `-C`, on a build of [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd):
+
+- **An album cover aborts the rip before the first track.** After `Cover art
+  destination(s):` and the cover's path, glibc prints `free(): double free
+  detected in tcache 2`, and the exit code is 134 (SIGABRT). It did so in all
+  15 runs: three each with `-o flac`, `-o pcm`, `-o mp3` and `-o opus`, and one
+  each with `-o flac`, `-o mp3` and `-o flac -G`.
+  - `-o opus` aborts too, though Opus embeds no cover: the cover file is saved
+    for every output (`src/cyanrip_main.c:2197-2216`).
+  - `-G`, which turns embedding off, aborts the same way, for the same reason.
+  - `-I` exits 0. It saves nothing and opens no muxer.
+- **A track's own cover aborts after the rip.** With `-C 1=art.avif -o flac`,
+  no cover file is saved. Both tracks are written, the footer says `Ripping
+  errors: 0` and `Ripping finished at ...`, and then glibc aborts, exit 134,
+  in all four runs. Its message varied: `double free or corruption (out)` once
+  and `corrupted size vs. prev_size in fastbins` three times. In two more runs
+  under gdb, the abort was in `cyanrip_end_track_encoding()`, called at
+  `src/cyanrip_main.c:2480`, once freeing the muxer's context
+  (`cyanrip_encode.c:918`) and once the encoder's (`:914`). That is before the
+  log is closed (`:2484`). The same cover with `-o opus`, which gives it to no
+  muxer, exits 0.
+- **The log file and the CUE sheet are 0 bytes** after every one of the 19
+  aborted runs here. The log is written through stdio and closed in
+  `cyanrip_log_end()` (`src/cyanrip_log.c:468`), which an abort never reaches.
+  So the only record of the run is what reached the terminal.
+- **The cover file saved before the abort is not the cover.** It is 312
+  bytes, where the source is 316. Its `av1C` box is empty, 8 bytes of header,
+  where the source's holds `81 00 0c 00`. Valgrind reports
+  `avformat_write_header()`, called at `coverart.c:79`, reading the block that
+  `coverart.c:319` freed.
+
+Each of those seven covers was given to the same `-o mp3` rip: only the AVIF
+aborts. The WebP exits 1 at `Error writing packet: Invalid argument!`, the MP3
+muxer refusing that picture, as item 31 says; that is not this defect. The
+other five exit 0.
+
+Where the damage shows is not fixed. The album-cover command was run twice
+under gdb, with its default settings, which turn off address randomisation.
+Once it aborted as the plain runs do, with glibc's `free(): double free
+detected in tcache 2` inside `avformat_free_context()`, called by
+`crip_save_art()` at `coverart.c:107`. The other time it got past the cover's
+save, printed `Tracks:`, and died of SIGSEGV in `free()`, called from
+libavfilter's `avfilter_graph_create_filter()` by `init_filtering()`
+(`src/cyanrip_encode.c:358`), for `cyanrip_initialize_ebur128()`
+(`src/cyanrip_main.c:2256`), with no glibc message. So a run that does not
+print `double free` has not escaped it.
+
+Only a cover given as a file was run. A cover given as a URL, or fetched from
+the Cover Art Archive, reaches the same `demux_image()` (`coverart.c:401`,
+and `:433` for a track's cover), so the code is the same for those; they were
+not run.
+
+**How to reproduce:** on a build of [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), with the two-track image from
+item 29:
+
+```
+ffmpeg -f lavfi -i "sine=frequency=440:duration=8:sample_rate=44100" -ac 2 -f s16le -acodec pcm_s16le disc.bin
+```
+
+and a CUE sheet with `FILE "disc.bin" BINARY`, two `AUDIO` tracks, and `INDEX
+01` at `00:00:00` and `00:04:00`. Make the cover with libaom, which this
+`ffmpeg` has:
+
+```
+ffmpeg -f lavfi -i color=c=red:s=8x8 -frames:v 1 -c:v libaom-av1 -still-picture 1 art.avif
+```
+
+`ffprobe` gives its stream as `codec_name=av1`, `extradata_size=7`. Then:
+
+```
+cyanrip -d disc.cue -N -A -U -B -s 0 -o flac -C Front=art.avif
+```
+
+After the usual start-up report, its output ends:
+
+```
+Gaps:
+    None signalled
+
+Cover art destination(s):
+    Unknown disc (ONPX) [FLAC]/Front.avif
+free(): double free detected in tcache 2
+```
+
+and it exits 134. The same command with an 8x8 PNG cover rips both tracks and
+exits 0.
+
+To see every owner, `valgrind --freelist-vol=2000000000` on the same command
+reports, among others:
+
+```
+Invalid read of size 2
+   ...
+   by 0x...: avformat_write_header (in .../libavformat.so.60.16.100)
+   by 0x...: crip_save_art (coverart.c:79)
+ Address 0x... is 0 bytes inside a block of size 71 free'd
+   ...
+   by 0x...: avformat_close_input (in .../libavformat.so.60.16.100)
+   by 0x...: demux_image (coverart.c:319)
+ Block was alloc'd at
+   ...
+   by 0x...: avformat_find_stream_info (in .../libavformat.so.60.16.100)
+   by 0x...: demux_image (coverart.c:268)
+
+Invalid free() / delete / delete[] / realloc()
+   ...
+   by 0x...: avformat_free_context (in .../libavformat.so.60.16.100)
+   by 0x...: crip_save_art (coverart.c:107)
+```
+
+and three invalid frees in all (`-s`). Valgrind's allocator does not abort,
+so that run completes with exit 0. On an unoptimized build
+(`--buildtype=debug`) of the same tree, a gdb breakpoint on `free()` for that
+one pointer, which returns without freeing, counts four frees in a two-track
+FLAC rip: `demux_image` (`coverart.c:319`), `crip_save_art` (`:107`), and
+`cyanrip_end_track_encoding` (`cyanrip_encode.c:918`) once for each track.
+
+**What the fork did:** [`af89fcc`](https://github.com/rmccann-hub/cyanrip/commit/af89fcc) ("Give each cover art output its own codec
+parameters", 2026-10-27):
+
+- `demux_image()` allocates the cover's parameters with
+  `avcodec_parameters_alloc()` and fills them with `avcodec_parameters_copy()`,
+  a deep copy that owns its own extradata.
+- `crip_save_art()` and `cyanrip_init_track_encoding()` copy into their
+  stream's parameters with `avcodec_parameters_copy()`, and log an error and
+  fail if the copy does.
+- `crip_free_art()` frees them with `avcodec_parameters_free()`.
+- A test rips with an 8x8 AVIF cover and checks that the saved cover keeps the
+  source's packet and extradata hashes.
+
+In upstream's code the change is the same three copies and the one free.
+[`af89fcc`](https://github.com/rmccann-hub/cyanrip/commit/af89fcc)'s two source files apply to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd) as they stand, with line
+offsets only. Applied to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd) and run:
+
+- The command above exits 0 with `-o flac`, `-o pcm` and `-o opus`, and with
+  `-G`. The saved `Front.avif` is byte-identical to `art.avif`.
+- `-C 1=art.avif -o flac` exits 0, with a 4,014-byte log.
+- Valgrind reports `0 errors from 0 contexts` for the FLAC run.
+- `-o mp3` exits 1 at `Error writing packet: Invalid argument!`. That is the
+  MP3 muxer refusing an AV1 picture, which is item 31, not this defect.
 
 ---
 *Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `648b1dd`. The fix is linked above; happy to open a PR if it helps.*

@@ -596,6 +596,28 @@ one publish commit files the suite's output, appends the row to
 (`python3 tools/gen-release-manifest.py > release-manifest.json`, then
 `--check release-manifest.json`; the tool never reads the file it replaces).
 
+### Checking the rig without a rip
+
+`tools/rig-check.py` runs every check that is not a rip: the installed build's
+identity, argument integrity, the audio on disk against the log that claims
+it, and the two drive probes that read and never rip. It writes nothing into
+the music library and spends no disc:
+
+```sh
+tools/rig-check.py --album-dir "<the album's folder>" --device /dev/sr0
+```
+
+Its exit status is 0 when nothing failed; a `SKIP` is not a failure, and its
+summary keeps "did not run" and "ran and found nothing" apart. Without
+`--out` it writes to `~/cyanrip-rig-checks/seam-check-<stamp>/`, one folder
+per run under one parent, and its last two lines print that path and the
+`tar` command for it. For a parity block of an album without moving any
+audio, `tools/audio-checksums.py digest "<the album's folder>" --tracktotal
+<N>` prints about 60 bytes a track, and refuses an ambiguous folder rather
+than guess. These instructions were in `docs/JOINT-SCRIPT-RUNBOOK.md` §8
+until 2026-11-16; that runbook is superseded and stays only because sent
+laps cite it.
+
 ### Running cyanrip by hand on a disc image
 
 `tests/fixtures/pregap.cue` reads `pregap.bin`, which is `cdda.bin` copied, as

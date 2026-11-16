@@ -330,7 +330,9 @@ static int verify_subq_crc(uint8_t *subq_buf, int *needs_fixup)
 
     /* An all-zero CRC is what a drive that does not return Q sub-channel data
      * at all leaves in the buffer; treat it as invalid rather than as a
-     * sector that happens to check out. */
+     * sector that happens to check out. A wholly zero block fails the check
+     * below anyway, since ten zero bytes do not checksum to 0x0000; this
+     * refuses the rare block whose data does. tests/subq.c finds one. */
     if (!crc_read)
         return 0;
 
@@ -805,11 +807,11 @@ void cyanrip_subq_isrc_reason(const struct cyanrip_subq_isrc *res, char *buf, si
 }
 
 /* An earlier TODO here asked whether the drive is actually returning Q
- * sub-channel data rather than zeroes. It is: verify_subq_crc() rejects a
- * zero CRC outright, because a drive that returns nothing leaves the buffer
- * zeroed and an all-zero block checksums as valid. tests/subq.c pins it
- * (`all-zero sector accepted`). The comment outlived the fix and was asserting
- * an unaddressed problem that is addressed -- removed 2026-08-13. */
+ * sub-channel data rather than zeroes. verify_subq_crc() refuses a zero CRC
+ * outright, and a wholly zero block fails the CRC in any case: ten zero bytes
+ * do not checksum to 0x0000, which this comment wrongly said they did until
+ * 2026-11-16. tests/subq.c pins both. The TODO outlived the fix and was
+ * removed 2026-08-13. */
 lsn_t cyanrip_get_track_pregap_lsn(CdIo_t *p_cdio, const track_t track_number,
                                    enum cyanrip_pregap_source *source,
                                    struct cyanrip_pregap_stats *stats) {

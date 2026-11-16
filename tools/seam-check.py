@@ -85,6 +85,21 @@ def note(level, cat, msg, fix=None, artifact=None):
 VERSION_FIELD = {"ownership": "OWNERSHIP-VERSION", "seam-rules": "SEAM-RULES-VERSION"}
 
 
+# The two version fields OWNERSHIP.md §6a asks of every lap, so a hash check
+# reads each shared file against the version the lap declares. Our laps left
+# both out from round 37 lap 7 to round 40 lap 3 and nothing here asked, so
+# from round 41 a lap of ours without each, once at column 0, is refused
+# (our round 41 lap 1 S33). Sent laps before it are evidence and stay as sent.
+VERSION_HEADERS_FROM_ROUND = 41
+
+
+def missing_version_headers(text):
+    """The version fields of VERSION_FIELD a lap does not declare exactly once
+    at column 0, in VERSION_FIELD's order."""
+    return [field for field in VERSION_FIELD.values()
+            if len(re.findall(rf"^{field}:[ \t]*\d+[ \t]*$", text, re.M)) != 1]
+
+
 def _version_differs(text, label):
     field = VERSION_FIELD.get(label)
     if not field:
@@ -239,6 +254,19 @@ def check_lap(path):
                  "only half either gate can check.")
     else:
         note("OK", "wire/required", "every required field for this round is present")
+
+    # --- the shared files' versions (OWNERSHIP.md §6a) --------------------
+    if frm == "cyanrip-fork" and rnd >= VERSION_HEADERS_FROM_ROUND:
+        gone = missing_version_headers(text)
+        if gone:
+            note("FAIL", "wire/versions",
+                 f"{name} does not declare {', '.join(gone)} exactly once",
+                 fix="add each at column 0 with the version of the shared file "
+                     "this lap was written under. A receiver checks the file's "
+                     "hash against the version the lap declares, and without "
+                     "it cannot tell a rules difference from a version step.")
+        else:
+            note("OK", "wire/versions", "OWNERSHIP-VERSION and SEAM-RULES-VERSION declared")
 
     # --- verdict ----------------------------------------------------------
     verdicts = rg.VERDICT_RE.findall(text)

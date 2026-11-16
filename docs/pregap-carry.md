@@ -193,6 +193,18 @@ Upstream PR #153 ("Harden pregap Q sub-channel search and make it unit-testable"
 is a later evolution of #115 by the same author. **The algorithm change was
 carried; the restructure was not.**
 
+**Correction, 2026-11-16.** 153 does carry 115 forward, but not by the same
+author. At `ca3ab44`, its head that day, it is 20 commits on `648b1dd`. The
+first, `0b94beb`, is UltraFuzzy's 115 rebased as one commit: its
+`src/pregap.c` and `src/pregap.h` are byte-identical to 115's head `f22c3d3`,
+with a second contributor as co-author. The other 19, from `d13a121`
+(2025-12-19) to `ca3ab44`, are that contributor's. The head read in round 5
+was not recorded, so its authorship then is not known. Two details below
+describe that head, not `ca3ab44`: the test seam is now the linker, not an ops
+table, and a third reader, `subq_read_cdio.c`, serves any libcdio with
+`cdio_read_audio_sectors_sub()`. 153 against our search, item by item:
+`docs/upstream/carried-patches.md` §1.
+
 Some drives' firmware returns the Q sub-channel track, index and MSF fields as
 **raw binary instead of the BCD the spec requires**. The CRC is written on the
 disc and computed over the BCD encoding, so on such a drive *every* sector fails

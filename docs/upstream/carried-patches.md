@@ -61,25 +61,51 @@ It reads through `cdio_read_audio_sectors_sub()` where libcdio has it, and its
 macOS reader still calls `cdio_get_device_fd()`. We recorded that function as
 absent from libcdio 2.1.0 (`docs/pregap-carry.md`), so it still blocks 153 at
 our floor, `>= 2.1.0` everywhere (`src/meson.build:108`), though not at 153's.
-**Inferred, not compared:** 153 may now supersede much of the first row. All of
-this is from its commit subjects and two of its files, not its code.
-`docs/pregap-carry.md` calls 153 *"a later evolution"* of 115 *"by the same
-author"*; that may describe an earlier head, since at `ca3ab44` it holds for one
-commit in twenty.
+**153 against our search, read in its code at `ca3ab44` on 2026-11-16, not
+built or run.** It does not supersede the first row.
+
+- **Equivalent:** 115's three review fixes (the failure sentinel, the leak, no
+  `assert` on I/O), the track-address guard, the CRC (its `av_crc` matched ours
+  on 2,000,000 random buffers), track 1's lead-in, and the raw-binary quirk.
+- **Different:** the quirk is remembered for the whole disc, not per search;
+  a frame is placed by its own address only when both bounds agree, so the
+  subject that matches our `316682e8` is not its mechanism; its log has no
+  `Pregap source:` and no read counts, and reports a failure only under
+  `Gaps:`; its retries are 5 per sector and 100 per track, with no escalation
+  to 200; and its macOS reader needs libcdio 2.3.0.
+- **Ours, not in 153:** the zero-length pregap filter (`12127d2d`), the second
+  search, and the ISRC read.
+- **153's, not ours:** a test of the frame's index, raw P-W reads (US-12),
+  one-bit repair of a damaged frame, frames accepted by position on a drive
+  that gives no CRC, a data-track guard, and two sectors to confirm "no
+  pregap".
+
+`docs/pregap-carry.md` called 153 a later evolution of 115 *"by the same
+author"*; at `ca3ab44` that holds for one commit in twenty, and its dated
+correction says so.
 
 **Not carried:** 153's restructure (`subq_read*.c`), for the libcdio floor
 above; 127, a single cosmetic string (audit §3); and `-J` (upstream pull request
 128), which is upstream's own `ca7e830c`, an ancestor of `958e1ad` where the
-fork first diverged, so none of it is ours. The audit's §3 called `-J`
-*"independently implemented here"*; the history does not support that, and this
-file does not reconcile the two.
+fork first diverged, so none of it is ours.
+
+**Correction to the 2026-08-21 audit, made 2026-11-16.** Its §3 says `-J` was
+"independently implemented here", its §4 counts `--cue-only` as ours, both
+ahead of upstream and convergent with it, and its §7 lists it to offer
+upstream. None of that holds. `-J` is upstream's `ca7e830c`, committed
+2026-07-12, whose message says it reimplements upstream pull request 128 and
+closes it. It is an ancestor of `958e1ad`, the upstream commit our first
+commit `d559cbcc` (2026-07-31) was made on, and of every upstream `master`
+our mirror has held since (`f8ebf48`, `b40c1f0`, `7dbe56a`, `648b1dd`). So
+upstream had `-J` before the fork had a commit, and on the audit's day. No
+commit of ours added it; ours touch it only later (`81eedbf8`, `ed50558d`).
 
 ## 2. Fixes upstream could take
 
 The reports are in `docs/upstream/defect-reports.md`; report 8 is
-`docs/upstream-cachemodel-report.md`. Reports 1 to 31 are rendered for upstream's
+`docs/upstream-cachemodel-report.md`. Reports 1 to 32 are rendered for upstream's
 tracker in `docs/upstream/issues-to-file.md`. The operator says 1 to 23 were filed on
-2026-10-16 as upstream issue 167; that is relayed, not read. Reports 24 to 31 are
+2026-10-16 as upstream issue 167; that is relayed, not read. Reports 24 to 32 are
 drafted and not filed (UP-1, OW-8). Reports 1 to 28 had a check row in
 `docs/SETTLED.md`'s upstream section when this list was made, and all of that
 section's rows passed against `648b1dd` on 2026-11-16; 29 to 31 gained theirs

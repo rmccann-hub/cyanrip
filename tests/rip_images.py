@@ -1876,10 +1876,31 @@ def sc_cover_art_formats():
     pics.mkdir(exist_ok=True)
     shutil.copy(FIX / "art.png", pics / "p.png")
     shutil.copy(FIX / "art.avif", pics / "p.avif")
-    for ext in ("jpg", "gif", "bmp", "tiff", "webp"):
+    # jxl where this ffmpeg encodes it: FFmpeg 9.0's FLAC and MP3 muxers keep
+    # JPEG XL and earlier ones do not, and crip_fmt_holds_picture() asks the
+    # loaded libavformat which it is.
+    for ext in ("jpg", "gif", "bmp", "tiff", "webp", "jxl"):
         subprocess.run([FFMPEG, "-v", "error", "-y", "-i", str(pics / "p.png"),
                         "-frames:v", "1", str(pics / f"p.{ext}")],
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
+    # Every picture loaded is saved beside the tracks, embedded or not, as a
+    # file that reads back as the same codec. A JPEG XL cover was named
+    # Front.jpegxl, which no muxer takes, and failed the rip with exit 1.
+    for pic in sorted(pics.glob("p.*")):
+        want = probe(pic, "-select_streams", "v", "-show_entries", "stream=codec_name")
+        out = WORK / f"out_cover_saved_{pic.suffix[1:]}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, log = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0", "-P", "0",
+                       "-l", "1", "-o", "wav", "-D", out, "-F", "{track}", "-L", "log",
+                       "-C", f"Front={pic}")
+        saved = sorted(out.glob("Front.*")) if out.is_dir() else []
+        got = probe(saved[0], "-select_streams", "v", "-show_entries",
+                    "stream=codec_name") if len(saved) == 1 else ""
+        if ec != 0 or not want or got != want:
+            fail(f"cover_art_formats: {pic.name} with -o wav: exit {ec}, saved "
+                 f"{[s.name for s in saved]} reading {got!r}; want exit 0 and one "
+                 f"Front file reading {want!r}")
+
     wav = pics / "a.wav"
     subprocess.run([FFMPEG, "-v", "error", "-y", "-f", "lavfi", "-i", "sine=d=1",
                     "-ac", "2", str(wav)], stdout=subprocess.DEVNULL,
@@ -2987,6 +3008,95 @@ def sc_early_log():
     # would make every log from this build fail its own verification.
     if crip("--verify-log", WORK / "out_early" / "log.log")[0] != 0:
         fail("early_log: a log containing the replay block fails --verify-log")
+
+
+def sc_cdtext_isrc_checked():
+    """A CD-TEXT ISRC REACHES THE FILES ONLY IF ISO 3901 ALLOWS IT.
+
+    The review of 2026-11-16's audit candidates (US-2): a CD-TEXT ISRC pack is
+    free text, and `not an isrc` reached the FLAC tag and the CUE sheet's ISRC
+    line unchecked, where the disc's own code is checked. A `.toc` puts an
+    ISRC inside CD_TEXT into the TOC's ISRC, so the route is a CUE sheet's
+    CDTEXTFILE, built here as ISRC packs (0x8E) and their size packs (0x8F).
+    """
+    def pack(kind, track, seq, pos, text):
+        return bytes([kind, track, seq, pos & 0x0F]) + text.ljust(12, b"\0") + b"\0\0"
+    codes = ["USABC2600001", "not an isrc"]
+    stream = b"\0" + b"".join(c.encode("latin-1") + b"\0" for c in codes)
+    where, track, pos = [], 0, 0
+    for b in stream:
+        where.append((track, pos))
+        pos += 1
+        if b == 0:
+            track, pos = track + 1, 0
+    packs, seq = [pack(0x80, 0, 0, 0, b"Disc\0T1\0T2\0\0")], 1
+    for i in range(0, len(stream), 12):
+        packs.append(pack(0x8E, where[i][0], seq, min(where[i][1], 15), stream[i:i + 12]))
+        seq += 1
+    counts = [1] + [0] * 13 + [len(packs) - 1, 3]
+    sizes = (bytes([0, 1, len(codes), 0]) + bytes(counts[0:8]),
+             bytes(counts[8:16]) + bytes([len(packs) + 2, 0, 0, 0]),
+             bytes(4) + bytes([0x09]) + bytes(7))
+    for i, s in enumerate(sizes):
+        packs.append(pack(0x8F, i, seq, 0, s))
+        seq += 1
+    (WORK / "cdtisrc.cdt").write_bytes(b"".join(packs))
+    shutil.copy(FIX / "cdda.bin", WORK / "cdtisrc.bin")
+    (WORK / "cdtisrc.cue").write_text(
+        'CDTEXTFILE "cdtisrc.cdt"\nFILE "cdtisrc.bin" BINARY\n'
+        "  TRACK 01 AUDIO\n    INDEX 01 00:00:00\n"
+        "  TRACK 02 AUDIO\n    INDEX 01 00:04:00\n", encoding="utf-8")
+    out = WORK / "out_cdtisrc"
+    shutil.rmtree(out, ignore_errors=True)
+    ec, text = crip("-d", WORK / "cdtisrc.cue", "-N", "-A", "-U", "-s", "0",
+                    "-D", out, "-F", "{track}", "-L", "log")
+    if ec != 0:
+        fail(f"cdtext_isrc_checked: exit {ec}")
+        return
+    if "not an isrc" not in text:
+        fail("cdtext_isrc_checked: the log never shows track 2's CD-TEXT ISRC, "
+             "so the CD-TEXT file was not read and the run proves nothing")
+    tags = {n: probe(out / f"{n}.flac", "-show_entries", "format_tags=ISRC")
+            for n in (1, 2)}
+    if tags != {1: "USABC2600001", 2: ""}:
+        fail(f"cdtext_isrc_checked: the files' ISRC tags are {tags}; want "
+             f"track 1's code and none for track 2")
+    cue = next(out.glob("*.cue"), None)
+    isrcs = re.findall(r"^\s*ISRC (.*)$", cue.read_text(encoding="utf-8"), re.M) if cue else None
+    if isrcs != ["USABC2600001"]:
+        fail(f"cdtext_isrc_checked: the CUE sheet's ISRC lines are {isrcs}; "
+             f"want track 1's alone")
+
+
+def sc_toc_starts_increase():
+    """A TOC WHOSE STARTS DO NOT INCREASE IS REFUSED, NAMING THE TWO TRACKS.
+
+    The review of 2026-11-16's audit candidates (US-2): a CUE sheet whose
+    track 1 started after track 2 ripped with exit 0, `Duration:
+    142840:54.21`, an empty track 1 and `Rip completed: yes`, since paranoia
+    repairs its own copy of the TOC and nothing read its note. Two equal
+    starts gave a track of no length the same way. Each is now refused with
+    exit 74 before anything is read, at column 0.
+    """
+    for name, starts, line in (
+            ("toc_late", ("00:04:00", "00:02:00", "00:06:00"),
+             "Invalid TOC: track 2 starts at LSN 150, not after track 1 at LSN 300!"),
+            ("toc_equal", ("00:00:00", "00:04:00", "00:04:00"),
+             "Invalid TOC: track 3 starts at LSN 300, not after track 2 at LSN 300!")):
+        shutil.copy(FIX / "cdda.bin", WORK / f"{name}.bin")
+        lines = [f'FILE "{name}.bin" BINARY']
+        for i, s in enumerate(starts):
+            lines += [f"  TRACK {i + 1:02d} AUDIO", f"    INDEX 01 {s}"]
+        (WORK / f"{name}.cue").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        out = WORK / f"out_{name}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, text = crip("-d", WORK / f"{name}.cue", "-N", "-A", "-U", "-s", "0",
+                        "-D", out, "-F", "{track}", "-L", "log")
+        tracks = sorted(p.name for p in out.glob("*.flac")) if out.is_dir() else []
+        if ec != 74 or line not in text.splitlines() or tracks:
+            fail(f"toc_starts_increase: {name}: exit {ec}, tracks {tracks}, and the "
+                 f"output {'carries' if line in text.splitlines() else 'lacks'} "
+                 f"{line!r}; want 74, that line and no track")
 
 
 def sc_cue_isrc():
@@ -6398,6 +6508,21 @@ def sc_mutation_exclusions_are_pinned():
         fail("mutation_exclusions: sweep() can skip the probe without printing "
              "UNPROBED over the score")
 
+    # The probe matches EXCLUDED_TESTS against the names `meson test` prints.
+    # Meson 1.3.2 prints this one as the first string below (this suite's log,
+    # 2026-11-16); the probe filed on 2026-09-16 recorded the second. Read up
+    # to the first `:` alone, the first was `images / contract_build`, which
+    # matched nothing, and the probe refused every sweep from 2026-09-27.
+    short_name = getattr(mod, "short_name", None)
+    for printed in ("cyanrip:images / contract_build",
+                    "images - cyanrip:contract_build"):
+        name = short_name(printed) if short_name else None
+        if name != "contract_build":
+            fail(f"mutation_exclusions: short_name({printed!r}) is {name!r}, "
+                 f"not 'contract_build', so the inert-edit probe cannot match "
+                 f"the name meson prints against EXCLUDED_TESTS and refuses "
+                 f"every sweep")
+
     want = {"contract_build"}
     got = set(getattr(mod, "EXCLUDED_TESTS", {}))
     if got != want:
@@ -7174,6 +7299,57 @@ def sc_signal_after_last_frame():
         fail("signal_after_last_frame: `Partial files:` names track 1 and "
              "1.flac is not on disk")
 
+
+def sc_data_track_cancel():
+    """A CANCEL DURING A DATA TRACK IS NOT A RIPPING ERROR, AS ON AN AUDIO ONE.
+
+    Since `.29` a cancel adds nothing to `Ripping errors:` on an audio track
+    (our round 38 lap 1 S6 (c), Platterpus's lap 2 S3); the data track's own
+    read loop still added one at `Stopping, ripping incomplete!`, found
+    reading the count's sources for our round 41 lap 1 S16 (US-24).
+    tests/raisesig.c raises SIGTERM on `Track 1 is data:`, printed just
+    before mixed.cue's data track is read, so the stop lands in that loop.
+
+    What it asserts: the shim fired, so the run is not vacuous; the rip
+    stopped there, by its own stop line, `Interrupted at:` and exit status;
+    and `Ripping errors: 0`, since the image reads every sector without one.
+    """
+    needs_preload_shim("data_track_cancel")
+    shim = os.environ.get("CYANRIP_RAISESIG_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"data_track_cancel: the shim was not built or not passed ({shim!r})")
+        return
+    out = WORK / "out_data_track_cancel"
+    marker = WORK / "data_track_cancel.raised"
+    if marker.exists():
+        marker.unlink()
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_RAISE_ON="is data:",
+               CRIP_RAISE_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    ec, stdout = crip("-d", WORK / "mixed.cue", "-N", "-A", "-U", "-s", "0",
+                      "-P", "0", "-o", "flac", "-D", out, "-F", "{track}",
+                      "-L", "log", env=env)
+    if not marker.exists():
+        fail("data_track_cancel: the shim never raised the signal, so nothing "
+             "below tests a data track's cancel")
+        return
+    if ec != 128 + signal.SIGTERM:
+        fail(f"data_track_cancel: exited {ec}, expected {128 + signal.SIGTERM}")
+    log = out / "log.log"
+    if not log.exists():
+        fail("data_track_cancel: no logfile was written")
+        return
+    lines = log.read_text(errors="replace", encoding="utf-8").splitlines()
+    if lines.count("Stopping, ripping incomplete!") != 1:
+        fail("data_track_cancel: `Stopping, ripping incomplete!` is not there "
+             "once, so the signal did not stop the data track's read")
+    if "Interrupted at: track 1, mid-read" not in lines:
+        fail("data_track_cancel: no `Interrupted at: track 1, mid-read`")
+    errs = [l for l in lines if l.startswith("Ripping errors:")]
+    if errs != ["Ripping errors: 0"]:
+        fail(f"data_track_cancel: {errs!r}; a cancel with no failed read is "
+             f"not a ripping error, on a data track as on an audio one")
 
 def sc_interrupt_deadlock():
     """A signal arriving while the log lock is held must not wedge the process.
@@ -8762,17 +8938,24 @@ def sc_named_waits_after_the_open():
     no wait named, which one not known. The calls between the open and the
     first pregap search now name themselves. tests/slowcall.c makes the
     first of one of them after the open sleep 12 s, past the watchdog's 10 s,
-    and the run must name it while it waits and when it returns. Two of them,
-    the last-session query and the lead-out address lookup, are made on an
-    image as on a drive.
+    and the run must name it while it waits and when it returns. Four of
+    them, the paranoia setup, the lead-out address lookup, the last-session
+    query and the first track's format query, are made on an image as on a
+    drive. The shim counts only calls
+    from cyanrip itself: on Fedora 45 libcdio's own lead-out question inside
+    the paranoia setup reached it and took the sleep, so that neither line
+    printed (the first run of a Fedora CI job, on 2026-11-16).
     """
     needs_preload_shim("named_waits_after_the_open")
     shim = os.environ.get("CYANRIP_SLOWCALL_SHIM")
     if not shim or not Path(shim).exists():
         fail(f"named_waits_after_the_open: the shim was not built or not passed ({shim!r})")
         return
-    for call, what in (("cdio_get_last_session", "the last-session query"),
-                       ("cdio_get_track_lsn", "the lead-out address lookup")):
+    for call, what in (("cdio_paranoia_init", "the paranoia setup"),
+                       ("cdio_get_last_session", "the last-session query"),
+                       ("cdio_get_track_lsn", "the lead-out address lookup"),
+                       ("cdio_cddap_track_audiop",
+                        "the track format query for track 1")):
         marker = WORK / f"slowcall-{call}.done"
         if marker.exists():
             marker.unlink()
@@ -8794,6 +8977,88 @@ def sc_named_waits_after_the_open():
                        if "waiting" in ln.lower() or "returned after" in ln]
                 fail(f"named_waits_after_the_open: {call}: no line {want!r}; "
                      f"got {got}")
+
+
+def sc_offset_search():
+    """-f FINDS THE DRIVE'S OFFSET, 0 INCLUDED, WHATEVER THE FIRST TRACK'S NUMBER.
+
+    The suite had never run the search: it needs the disc in AccurateRip,
+    and no fixture's disc is there. tests/fakear.c answers the lookup
+    instead. The disc is three tracks of the fixture's music, and the entry
+    holds, for each, the 450-frame checksum a rip at `-s N` prints, under
+    the disc IDs that rip asked for; the search must then find `+N`.
+
+    Two defects found by the review of 2026-11-16's audit candidates, both
+    in upstream's `648b1dd` too. The search tested a guess only when it was
+    not 0, and skipped it in the scan, so an offset of 0 was never tried:
+    the search ended `No track was long enough` on a drive that needs none.
+    And it asked libcdio for the track at position + 1 while comparing
+    against the track at that position, so on a disc numbered from 3, which
+    libcdio before 2.2.1 keeps from a CUE sheet, it read sectors before the
+    disc and found nothing.
+    """
+    needs_preload_shim("offset_search")
+    shim = os.environ.get("CYANRIP_FAKEAR_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"offset_search: the shim was not built or not passed ({shim!r})")
+        return
+    music = (FIX / "cdda.bin").read_bytes()
+    sectors = len(music) // 2352
+    sheets = [("offset1", 1, (0, 6))]
+    if CUE_TRACK_NUMBERS:
+        sheets.append(("offset3", 3, (0,)))
+    for name, first, shifts in sheets:
+        (WORK / f"{name}.bin").write_bytes(music * 3)
+        lines = [f'FILE "{name}.bin" BINARY']
+        for i in range(3):
+            lsn = sectors * i
+            lines += [f"  TRACK {first + i:02d} AUDIO",
+                      "    INDEX 01 %02d:%02d:%02d" % (lsn // 4500, lsn // 75 % 60, lsn % 75)]
+        (WORK / f"{name}.cue").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        for shift in shifts:
+            what = f"{name}.cue at -s {shift}"
+            urls = WORK / f"{name}-{shift}.urls"
+            body = WORK / f"{name}-{shift}.dbar"
+            urls.unlink(missing_ok=True)
+            env = dict(os.environ, LD_PRELOAD=shim, CRIP_FAKEAR_URL=str(urls),
+                       ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                       + ":verify_asan_link_order=0")
+            out = WORK / f"out_{name}_{shift}"
+            shutil.rmtree(out, ignore_errors=True)
+            ec, text = crip("-d", WORK / f"{name}.cue", "-N", "-U", "-s", str(shift),
+                            "-o", "wav", "-D", out, "-L", "log", env=env)
+            crcs = re.findall(r"^\s*Accurip 450:\s+([0-9A-F]{8})\s*$", text, re.M)
+            url = urls.read_text(encoding="utf-8") if urls.exists() else ""
+            ids = re.findall(r"dBAR-(\d{3})-([0-9a-f]{8})-([0-9a-f]{8})-([0-9a-f]{8})\.bin", url)
+            if len(crcs) != 3 or len(set(crcs)) != 1 or crcs[0] == "00000000" or len(ids) != 1:
+                fail(f"offset_search: {what}: the rip printed {crcs} as its 450-frame "
+                     f"checksums and asked {ids}; want three equal, non-zero, and "
+                     f"one lookup")
+                continue
+            count, id1, id2, cddb = ids[0]
+            body.write_bytes(bytes([int(count)])
+                             + struct.pack("<III", int(id1, 16), int(id2, 16), int(cddb, 16))
+                             + b"".join(bytes([5]) + struct.pack("<II", 0x11111111, int(c, 16))
+                                        for c in crcs))
+            env["CRIP_FAKEAR_BODY"] = str(body)
+            try:
+                ec, text = crip("-d", WORK / f"{name}.cue", "-f", env=env)
+            except subprocess.TimeoutExpired:
+                fail(f"offset_search: {what}: -f ran past 60 s, as it does reading "
+                     f"sectors before the disc for a track it does not have")
+                continue
+            want = f"Drive offset of +{shift} found (confidence: 3)!"
+            # One pass, each track once, by its own number: a second pass
+            # means the first found nothing
+            loaded = re.findall(r"^Loading data for track (\d+)\.\.\.$", text, re.M)
+            if ec != 0 or want not in text.splitlines():
+                got = [ln for ln in text.splitlines()
+                       if "ffset" in ln or "track was long" in ln][:6]
+                fail(f"offset_search: {what}: -f exited {ec}; want 0 and {want!r}; "
+                     f"got {got}")
+            if loaded != [str(first + i) for i in range(3)]:
+                fail(f"offset_search: {what}: loaded tracks {loaded}, want "
+                     f"{[str(first + i) for i in range(3)]}, the disc's own numbers")
 
 
 def sc_reread_until_accuraterip():

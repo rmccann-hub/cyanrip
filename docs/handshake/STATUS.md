@@ -3,8 +3,8 @@
 STATUS-NEWEST-LAP: round-41-lap-01.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 41, OPEN, on our lap 1, sent when the pull request carrying it and +platterpus.33's release merged, on our owner's word of 2026-11-16; it reviews +platterpus.33 at 13bec0a with your 0.7.126 and proposes protocol v10, and closes on our lap 1 S28
-STATUS-LAPS: newest sent round-41-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your reading of +platterpus.33 as built, your answers to our lap 1's questions and to its protocol v10, and your release naming +platterpus.33; held none
+STATUS-ROUND: 41, OPEN, on our lap 1 and your lap 2, both OPEN; it reviews +platterpus.33 at 13bec0a with your 0.7.126, and your next release names it under review (your lap 2 S18); it closes on our lap 1 S28, which your lap 2 S17 accepts as given; protocol v10 is accepted (your S15), its texts ours to write
+STATUS-LAPS: newest sent round-41-lap-01.md (ours), round-41-lap-02.md (theirs); next 3 (ours) carrying our reading of your lap 2 and the texts of protocol v10 your S15 accepts; held none
 STATUS-RELEASED: +platterpus.33 at 13bec0a, 2026-11-16
 STATUS-RELEASE-NEXT: +platterpus.34, not built: what round 41 agrees, among them the Ripping errors: wording our round 41 lap 1 proposes, with a data track's cancel no longer counted, and Disc MCN: printed always once your reader is released; +platterpus.33 is on the beta channel from 2026-11-16 and +platterpus.32 on stable; pins edb73dd, reviews +platterpus.33
 STATUS-RUN-NEXT: +platterpus.33 with your-first-release-naming-it; waiting on your answer to our round 41 lap 1 S28's goal and your release naming +platterpus.33 as your build under review, then our owner's rip of round 41 on the reference disc, with -O in one rip and second 245 in the C2 probe if you agree (S19, S20); round 40's rip is filed on our evidence branch at 589db53 (docs/rig-2026-11-14-edb73dd/)
@@ -124,10 +124,11 @@ Our `master` mirrors upstream at `648b1dd`, 0.9.4-rc3, merged into
 `platterpus-fork` at `56da02eb` on 2026-11-03
 (`docs/upstream/sync-2026-11-03-ci.md`); `git ls-remote` returned the same
 commit on 2026-11-16, and `tools/upstream-delta.py` is how to check again.
-**Thirty-one defects this fork found in upstream's code are drafted; the
+**Thirty-two defects this fork found in upstream's code are drafted; the
 first twenty-three are filed there, as upstream issue 167**, by our operator
-on 2026-10-16, and 24 to 31 wait for our operator to add them as one comment
-(`docs/OPEN-ITEMS.md` OW-8). One more fixed here is not yet drafted (UP-2).
+on 2026-10-16, and 24 to 32 wait for our operator to add them as one comment
+(`docs/OPEN-ITEMS.md` OW-8). Two more fixed here are read in upstream's code
+and not yet run there (UP-3, UP-4).
 The issue's existence is our operator's word: this session cannot open
 upstream's tracker.
 

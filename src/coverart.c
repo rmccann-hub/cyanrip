@@ -401,6 +401,10 @@ static int demux_image(cyanrip_ctx *ctx, CRIPArt *art, int info_only)
         art->extension = av_strdup("heif");
     } else if (art->params->codec_id == AV_CODEC_ID_WEBP) {
         art->extension = av_strdup("webp");
+    } else if (art->params->codec_id == AV_CODEC_ID_JPEGXL) {
+        /* The codec's name, "jpegxl", is no extension a muxer knows, so the
+         * cover's own file failed to open and the rip with it */
+        art->extension = av_strdup("jxl");
     } else if (art->params->codec_id != AV_CODEC_ID_NONE) {
         art->extension = av_strdup(avcodec_get_name(art->params->codec_id));
     } else {
