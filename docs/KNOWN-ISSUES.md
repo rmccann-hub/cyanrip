@@ -119,10 +119,10 @@ search ran on gains a `Pregap search:` line. It gives:
 `tests/subq.c` drives the search on a simulated drive that answers one sector
 with its neighbour's frame on every read. No CRC fails, yet the search ends in
 the source the log words `sub-channel CRC mismatches`, and only these counts
-tell it from a frame that never passes its CRC. The build after `.27` words
+tell it from a frame that never passes its CRC. `.28` words
 it `sub-channel search bounds did not meet` (our round 37 lap 1 S6, which
-Platterpus's lap 2 S4 accepted). The line is proposed in our round 36 lap 8. A
-run of the reference disc on `.27` is what shows why `.26` never reached 94.
+Platterpus's lap 2 S4 accepted). The line is proposed in our round 36 lap 8.
+The run of the reference disc on `.27`, 2026-10-28, is read below.
 
 **What the run on `.27` showed, 2026-10-28** (`docs/rig-2026-10-28-5aeefc4/`,
 with Platterpus 0.7.114):
@@ -161,7 +161,7 @@ wording, and the `unknown`'s reason renamed `sub-channel search bounds did not
 meet` (`b675efd`), went to Platterpus in our round 37 lap 1 S5 and S6; their
 lap 2 S3 and S4 accepted both as given, and both shipped in `.28`.
 
-**For `.29`, not yet released, the one undecided sector is printed as such.**
+**Shipped in `.29` (`2e3421b6`), released 2026-11-04 at `8d2ca72`: the one undecided sector is printed as such.**
 Where the bounds narrowed to one sector, the track block says `Pregap LSN:
 145567 or 145568 (undecided)` and `Pregap length: 94 or 95 frames
 (undecided)`, the `Gaps:` row `pregap of track 9: 94 or 95 frames
@@ -193,6 +193,13 @@ The one frame a single bit away that does pass says 95. A raw read of 145567
 on a second drive would settle whether the disc carries that bit or this drive
 makes it every time. Until then, `94 or 95 frames (undecided)` is what the
 reads support.
+
+**Since `.29`, measured from the filed logs, 2026-11-16**: `pregap of track 9: 94
+or 95 frames (undecided)` in 18 of the 19 `.29` logs of 2026-11-04
+(`docs/rig-2026-11-04-8d2ca72/`), and in 26 of the 29 rip logs of 2026-11-14,
+`.31` and `.32`, which give 95 in the other 3 (`docs/rig-2026-11-14-edb73dd/`).
+No log since `.29` has said 94. The next step is the raw read on a second drive
+(`docs/OPEN-ITEMS.md` HW-6).
 
 ### Six drive answers an audit listed and nothing has checked, and an MCN read skipped without a word
 
@@ -251,12 +258,12 @@ the delivered audio (`measure_frame()`, since `.20`); and the log's
 describing the file, and they describe the read. The audio is intact apart
 from the level.
 
-**Not fixed**: the checksums are right where they are, so the fix is a line
+**Before `.29`**: the checksums are right where they are, so the fix is a line
 saying when a filter changed the delivered audio, which is new log text and
 goes in a lap first (round 38). Compensating the level is not offered: whether
 the disc carried HDCD is known only when the graph is freed, after encoding.
 
-**The line is fixed for `.29`, not yet released**: each track block a filter
+**The line shipped in `.29`** (`f70763b0`, released 2026-11-04 at `8d2ca72`), and the level waits on the owner's decision (`docs/OPEN-ITEMS.md` OW-5): each track block a filter
 ran on says `  Filtered:      hdcd; the checksums and AccurateRip verdicts
 above are of the read, before the filter`, with `de-emphasis` or both, in the
 order the graph runs them, joined by `, `, as our round 38 lap 1 S7 proposed
@@ -265,7 +272,7 @@ combination on every block and a plain rip's absence, and fails with the
 line removed or joined otherwise. The level itself stays as libavfilter
 leaves it, and this entry stays until a decision on that.
 
-### `Lap commit list names its range` times out under parallel load, and the call that hangs is now named
+### `Lap commit list names its range` timed out in full parallel suites, the mechanism not established, and the call that hangs is now named
 
 **THE HEADING USED TO PIN A COUNT — "FOUR times", then "FIVE" — and every
 occurrence falsified it.** That is the number-incremented-rather-than-derived
@@ -476,14 +483,14 @@ run, the first after this container started, took **48.4 s wall over 0.73 s of
 CPU**, while the next run's timed calls added up to **0.84 s**. So the test waits
 rather than works, and the wait can outlast 30 s. With 120 s, a pass between
 30 and 120 s says *slow*, and a kill at 120 s says *hung*. **The mechanism is
-still not established**, and the settling runs this paragraph named are still
-the ones to do: the suite at `--num-processes 1`, and this test under a deliberate
-parallel load. Every other test still on meson's default was measured at 9.2 s
+still not established**, and the settling runs this paragraph named, the suite
+at `--num-processes 1` and this test under a deliberate parallel load, were done
+on 2026-09-30 and reproduced nothing (below). Every other test still on meson's default was measured at 9.2 s
 or under.
 
 **A second test has now timed out the same way, and it is not waiting: it is
 starved.** 2026-09-30, at `5a0dc2f`, in a full suite of 97 on 4 cores:
-`Round 16 acceptance checker` `TIMEOUT 30.07s`, `Ok: 96  Timeout: 1`, in the
+`Round 16 acceptance checker` (retired 2026-11-11, `085e394c`) `TIMEOUT 30.07s`, `Ok: 96  Timeout: 1`, in the
 suite straight after another full suite and a fixture rip. Alone straight
 afterwards: **3.02 s, 2.94 s, 2.91 s**, and one run measured **2.97 s wall over
 2.63 s of CPU**. So unlike `Lap commit list`, which spent 48 s of wall over
@@ -515,8 +522,8 @@ layer down.
 
 ### The cache probe's calibration was wrong (fixed for `.20`)
 
-**FIXED for `.20`, 2026-10-05, released on beta 2026-10-06, and MEASURED FIVE
-TIMES, IN AGREEMENT** (`394ab17`).
+**FIXED for `.20`, 2026-10-05, released on beta 2026-10-06, and MEASURED
+SEVENTEEN TIMES, IN AGREEMENT, 2026-10-06 to 2026-11-14** (`394ab17`).
 The probe now asks `cd-paranoia -A`'s question: a re-read is a hit when it is
 faster than `MIN_SEEK_MS`, 6 ms (libcdio-paranoia `src/cachetest.c:41`, read at
 `384f4da`), on its reasoning that no seek on a CD costs under ~10 ms. By that
@@ -786,7 +793,7 @@ round 41 (`docs/OPEN-ITEMS.md` R41-5).
 | 14 | `PROTOCOL.md` §5, `HANDSHAKE-OUR-VERSION` / `HANDSHAKE-PEER-VERSION` | *"which two programs agreed"* | **the two closing files of round 28 name different Platterpus builds as the party.** Our lap 8 names the build that was tested, `platterpus 0.6.61` at `59f4c00`. Their lap 9 names its own current release, `platterpus 0.6.62` at `9e96fa0` (their `v0.6.62` tag), while its `HANDSHAKE-APP-VERSION` and `HANDSHAKE-TESTED` say 0.6.61. Both are defensible readings. Neither gate cross-checks the two files, so one closed round quotes two different agreements | found 2026-09-28 filing their round 28 lap 9. For round 29: say whether the field names the build under test or the build declaring the verdict |
 | 15 | `PROTOCOL.md` v7 and `seam-rules.md` v7 | nine wording items | each is a sentence v7 leaves imprecise, none a false rule: `HANDSHAKE-NEXT-LAP` with two grammars (§3, C46); R9 keeping the sentence §15 calls misleading; R8 point 2's unscoped *"the consumer follows a build on beta"*; §6d asking for the pair newest at the run's end where D3 checks only its start; a mid-round hotfix reading as a pin move against R4; §15 saying one v6 item was withdrawn; §6c's *"opens with"* and undefined `<owner>`; and five smaller | Platterpus's round 30 lap 6 S23, which gives each with its v7 line numbers at `09f39bc`. **R8 point 2's item is gone**: v8's E3 rewrote that point (`5cadca3b`); the others were not re-read against v8 or v9 |
 
-### A superseded track has no recorded read time anywhere
+### A superseded track's read time: carried since `.27`, open until a superseded track's log is filed
 
 Our album log gives each track a `creation_time` describing the **first pass**.
 Platterpus's addendum supersedes that track and carries **no timestamp at all**.
@@ -863,7 +870,7 @@ lap 1, and a semantic-change marker designed in a hurry would be a field nobody
 can derive. It was left for round 22, and none of round 22's five laps filed
 here mentions it. Protocol v6 deferred the marker to v7, v7 deferred it to v8
 (*"Deferred to v8, not rejected"*), and v8 took nothing from that list; v9 is
-v8 plus HR-2 alone. Our round 32 lap 1 S29 asked for a draft for v9 and
+v8 plus HR-2 and its clarifications, HR-2.1. Our round 32 lap 1 S29 asked for a draft for v9 and
 Platterpus's lap 2 S22 said v9 would carry it, but v9 does not. No proposal is
 open: nothing in this repository drafts the marker, and no `STATUS.md` line
 tracks it.
@@ -873,7 +880,8 @@ tracks it.
 ## Known external bugs worked around here
 
 Moved here from `CLAUDE.md` on 2026-10-21, word for word below this
-paragraph, when that file was cut to its cap. These are defects in what we
+paragraph, when that file was cut to its cap; `mmc_get_disctype()`'s bullet was
+added on 2026-11-04 (`6a053feb`). These are defects in what we
 link or run, not in our code; `tools/gen-dependency-map.py` reads each
 bullet's bold lead into `docs/DEPENDENCIES.md` and `sbom.cdx.json`.
 
@@ -940,7 +948,7 @@ Record these rather than rediscovering them:
   untouched, so the counters and the golden reference do not move. Bypassing
   paranoia at level 0 was rejected, because every image scenario runs at
   `-P 0` and the counters it would have emptied are the ones the suite checks.
-  Platterpus never passes `-P`. Recorded in `docs/KNOWN-ISSUES.md`.
+  Platterpus never passes `-P`.
 - **genopt prints its own errors unless you take them.** `GEN_OPT_LOG` is
   documented in `genopt.h` and cyanrip did not define it, so every
   argument-parsing failure went to stdout via `vprintf` and reached no logfile

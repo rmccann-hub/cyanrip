@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**`KNOWN-ISSUES.md`'s remaining entries say what is true now**: shipped fixes
+name their release instead of "not yet released", the cache fix counts
+seventeen agreeing runs where it said five, the timeout entry records that its
+settling runs were done in September, and the pregap entry gives track 9's
+counts since `.29`: no log in any run since has read it as 94 frames.
+
 **`KNOWN-ISSUES.md` holds only what is open, 955 lines from 1,444.** Ten items
 fixed and pinned by a test moved word for word to
 `docs/history/KNOWN-ISSUES-2026-11-16.md`, with the closed parts of three
