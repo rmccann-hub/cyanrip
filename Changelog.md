@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Round 41's new findings are open items.** Dumbass session read EAC's
+`Pre-gap length  0:00:02.10` and `0:00:01.25`, hundredths of a second, as
+seconds and frames in our round 39 lap 7 S25, and sent Platterpus a question
+about a difference of 160 and 100 frames against our 158 and 94 or 95 that
+does not exist: EAC's own cue sheet gives 158 and 94. `R41-10` now says so,
+and lap 1 corrects S25. Two more: a cancel still counts one ripping error on
+a data track (US-24), and two comments may misdescribe FFmpeg 6.1.1's
+muxers (US-25). UP-2 gains an AVIF cover that aborts upstream, fixed here at
+`af89fcc`.
+
 **The `Accurip 450:` checksum's window is pinned at both edges.** A mutant
 moving its lower bound by one sample survived the suite, recorded in
 `docs/SETTLED.md` as needing a disc whose length hit the window exactly. It
