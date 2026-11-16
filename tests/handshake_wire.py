@@ -523,5 +523,46 @@ for label, text, ours, want in (
     else:
         print(f"ok   header keys on {label}: {'refused ' + str(got) if got else 'passes'}")
 
+# --- the shared files' versions, on our laps from round 41 ------------------
+#
+# OWNERSHIP.md §6a asks every lap for OWNERSHIP-VERSION and SEAM-RULES-VERSION.
+# Ours left both out from round 37 lap 7 to round 40 lap 3 and no check asked,
+# so from round 41 a lap of ours without each, once, is refused. The rule is
+# seam-check.py's, imported, not a second reading of it.
+_sc_spec = importlib.util.spec_from_file_location("sc_versions", root / "tools" / "seam-check.py")
+_sc = importlib.util.module_from_spec(_sc_spec)
+_sc_spec.loader.exec_module(_sc)
+checked_versions = 0
+for path in sorted(hs.glob("round-*-lap-*.md")):
+    text = path.read_text(encoding="utf-8", errors="replace")
+    m = re.search(r"^HANDSHAKE-ROUND:\s*(\d+)", text, re.M)
+    f = re.search(r"^HANDSHAKE-FROM:\s*(\S+)", text, re.M)
+    if not m or not f or f.group(1) != "cyanrip-fork" or int(m.group(1)) < _sc.VERSION_HEADERS_FROM_ROUND:
+        continue
+    checked_versions += 1
+    gone = _sc.missing_version_headers(text)
+    if gone:
+        print(f"FAIL: {path.name} does not declare {', '.join(gone)} exactly "
+              f"once -- OWNERSHIP.md §6a")
+        fails += 1
+if not checked_versions:
+    print("FAIL: no lap of ours from round "
+          f"{_sc.VERSION_HEADERS_FROM_ROUND} was found to check its versions")
+    fails += 1
+for label, text, want in (
+    ("both, once", "SEAM-RULES-VERSION: 8\nOWNERSHIP-VERSION: 3\n", []),
+    ("none", "LSL: 4\n", ["OWNERSHIP-VERSION", "SEAM-RULES-VERSION"]),
+    ("ownership twice", "SEAM-RULES-VERSION: 8\nOWNERSHIP-VERSION: 3\nOWNERSHIP-VERSION: 3\n",
+     ["OWNERSHIP-VERSION"]),
+    ("indented, so not a header", "  SEAM-RULES-VERSION: 8\nOWNERSHIP-VERSION: 3\n",
+     ["SEAM-RULES-VERSION"]),
+):
+    got = _sc.missing_version_headers(text)
+    if got != want:
+        print(f"FAIL: version headers on {label}: missing {got}, should be {want}")
+        fails += 1
+    else:
+        print(f"ok   version headers on {label}: {'missing ' + str(got) if got else 'pass'}")
+
 print(f"{len(laps)} lap(s) checked, {fails} malformed")
 sys.exit(1 if fails else 0)

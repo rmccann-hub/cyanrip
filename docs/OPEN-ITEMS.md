@@ -50,7 +50,6 @@ at `13bec0a`. A row leaves when the round settles it.
 | US-14 | Log the READ CD request, sense data on a failed read, and per-read latency | `docs/research/2026-11-04-drive-settings.md` (options 2, 4, 5, 7) | Propose in a round |
 | US-15 | EAC parity row 6 stops at 2026-11-03 | `docs/eac-parity.md:17` | Add the runs of 2026-11-09 and 2026-11-14 |
 | US-16 | rig-check's instructions live only in a superseded runbook, `docs/JOINT-SCRIPT-RUNBOOK.md` §8, cited by `tools/rig-check.py` | that file's banner | Re-home them in the handshake README, then archive the runbook |
-| US-17 | `tools/seam-check.py` accepts a lap without `OWNERSHIP-VERSION` and `SEAM-RULES-VERSION` | Our laps left both out from round 37 lap 7 to round 40 lap 3; round 41's lap 1 carries them again | Make it refuse their absence on our laps (a code change) |
 | US-19 | macOS arm64 runner wait times | `docs/DEPENDENCY-PLAN.md` | Measure, or drop |
 | US-20 | Three audit leads never re-checked: c, g, l | `docs/history/AUDIT-2026-09-05.md` (:224, :228, :233) | Re-check, then close or list |
 | US-21 | Our proposed `Pregap sample peak: …, not ripped` line has no answer | cyanrip:R36.L1.S17; UNVERIFIED whether superseded (their status lists `eac-htoa-log` as `cannot`) | Ask once in round 41's lap 1; withdraw it if they decline |

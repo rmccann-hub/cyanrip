@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**Our laps from round 41 must declare `OWNERSHIP-VERSION` and
+`SEAM-RULES-VERSION`.** `OWNERSHIP.md` §6a asks every lap for both, so a hash
+check reads each shared file at the version the lap declares; ours dropped
+them from round 37 lap 7 to round 40 lap 3, and `tools/seam-check.py` never
+asked. It now refuses a lap of ours from round 41 without each once at column
+0, and `Handshake wire conformance` checks every such lap with the same
+function and four cases, three of which fail with the check disabled. Sent
+laps before round 41 stay as sent. `docs/OPEN-ITEMS.md` US-17 leaves.
+
 **A cancel during a data track is no longer a ripping error**, as it has not
 been on an audio track since `.29` (our round 38 lap 1 S6 (c), Platterpus's
 lap 2 S3). The data track's own read loop still added one at `Stopping,
