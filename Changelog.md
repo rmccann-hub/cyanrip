@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**`docs/upstream/carried-patches.md` lists what this fork carries over
+upstream**, each row with what retires it: three carries from upstream pull
+requests (pregap detection from 115, the raw sub-channel quirk from 153, and
+ebur128's `+sample`, which matches 116 without coming from it), our fixes to
+defects upstream still has, by report, our workarounds for the libraries we
+link, and what is ours by design. Made 2026-11-16 by a read-only agent of
+this session against upstream's `648b1dd`, and checked here: the merge base,
+upstream's missing `+sample` and `-J`'s ancestry. It found upstream pull
+request 153 moved to twenty commits, and `-J` to be upstream's own, both now
+US-26. `docs/OPEN-ITEMS.md` US-18 leaves.
+
 **Upstream reports 29 to 31 are drafted**, each for a defect fixed here and
 still in upstream's `648b1dd`, and each run on a build of `648b1dd` itself:
 the `C2 errors:` line from libcdio's capability bit (`372706fe`), a disc
