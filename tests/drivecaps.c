@@ -481,9 +481,64 @@ int main(void)
         }
     }
 
+    /* GET PERFORMANCE's nominal read performance (drive_caps.h). A reply is
+     * the 8-byte header, bytes 0-3 the length after them, then 16-byte
+     * descriptors; only a drive answers, so each shape is built here. */
+    {
+        uint8_t r[8 + 3 * 16];
+        memset(r, 0, sizeof(r));
+        r[3] = 4 + 2 * 16;                        /* two descriptors declared */
+        const uint8_t d0[16] = { 0, 0, 0, 0,       0, 0, 0x05, 0x83,   /* 0, 1411 kB/s */
+                                 0, 0x05, 0x2b, 0x0f, 0, 0, 0x0c, 0x3c }; /* 338703, 3132 */
+        memcpy(r + 8, d0, 16);
+        memcpy(r + 24, d0, 16);
+        r[24 + 7] = 0x84;                          /* the second differs */
+        memset(r + 40, 0xee, 16);                  /* past what is declared */
+        CripPerformance d[4];
+        memset(d, 0, sizeof(d));
+        int n = crip_performance_take(r, sizeof(r), d, 4);
+        if (n != 2 || d[0].start_lba != 0 || d[0].start_kb_per_s != 1411 ||
+            d[0].end_lba != 338703 || d[0].end_kb_per_s != 3132 ||
+            d[1].start_kb_per_s != 1412) {
+            printf("FAIL: GET PERFORMANCE, two declared: %i, %u %u %u %u, %u\n", n,
+                   d[0].start_lba, d[0].start_kb_per_s, d[0].end_lba,
+                   d[0].end_kb_per_s, d[1].start_kb_per_s);
+            fails++;
+        }
+        if (crip_reply_length(CRIP_REPLY_PERFORMANCE, r, sizeof(r)) != 40) {
+            printf("FAIL: GET PERFORMANCE's length is not bytes 0-3 plus 4\n");
+            fails++;
+        }
+        /* More whole than asked for: counted, at most `max` copied */
+        memset(d, 0, sizeof(d));
+        n = crip_performance_take(r, sizeof(r), d, 1);
+        if (n != 2 || d[0].start_kb_per_s != 1411 || d[1].start_kb_per_s != 0) {
+            printf("FAIL: GET PERFORMANCE, max 1: %i, %u, %u\n", n,
+                   d[0].start_kb_per_s, d[1].start_kb_per_s);
+            fails++;
+        }
+        /* Declared longer than returned: only whole descriptors kept */
+        n = crip_performance_take(r, 8 + 16 + 5, d, 4);
+        if (n != 1) {
+            printf("FAIL: GET PERFORMANCE, cut inside the second: %i\n", n);
+            fails++;
+        }
+        /* No descriptors, and a header alone */
+        r[3] = 4;
+        if ((n = crip_performance_take(r, sizeof(r), d, 4)) != 0) {
+            printf("FAIL: GET PERFORMANCE, none declared: %i\n", n);
+            fails++;
+        }
+        if ((n = crip_performance_take(r, 7, d, 4)) != -1 ||
+            (n = crip_performance_take(NULL, 64, d, 4)) != -1) {
+            printf("FAIL: GET PERFORMANCE, no header read as a reply: %i\n", n);
+            fails++;
+        }
+    }
+
     if (fails)
         printf("%i check(s) failed\n", fails);
     else
-        printf("accurate stream, recordable, the declarations kept and the vendor table: every wording and parse pinned\n");
+        printf("accurate stream, recordable, the declarations kept, the vendor table and the read performance: every wording and parse pinned\n");
     return !!fails;
 }

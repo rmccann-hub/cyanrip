@@ -526,6 +526,22 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
         ctx->speed_failed = !!ret;
     }
 
+    /* What the drive declares it will read at, once any -S above was sent
+     * (drive_caps.h): for the --diagnostics record only, asked of a drive
+     * the declarations were asked of, never of an image. Read-only. Byte
+     * 1 is 10h: tolerance 10b, Write 0 for read, Except 00b for nominal
+     * performance; bytes 2-5 start at LBA 0; bytes 8-9 are the descriptors
+     * asked for; byte 10 is type 00h, performance. */
+    if (ctx->drive_inquiry.asked) {
+        const uint8_t perf[12] = { 0xac, 0x10, 0, 0, 0, 0, 0, 0,
+                                   CRIP_PERFORMANCE_DESCRIPTORS >> 8,
+                                   CRIP_PERFORMANCE_DESCRIPTORS & 0xff, 0x00, 0 };
+        crip_stall_wait_begin("the read performance query");
+        crip_reply_ask(ctx, &ctx->drive_performance, CRIP_REPLY_PERFORMANCE,
+                       perf, sizeof(perf), CRIP_PERFORMANCE_ALLOC);
+        crip_stall_wait_end();
+    }
+
     ctx->paranoia = cdio_paranoia_init(ctx->drive);
     if (!ctx->paranoia) {
         cyanrip_log(ctx, 0, "Unable to init paranoia!\n");

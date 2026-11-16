@@ -224,8 +224,8 @@ static void test_track_fields(void)
     if (!out)
         return;
 
-    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/13\""),
-          "the schema is not cyanrip-diagnostics/13");
+    CHECK(strstr(out, "\"schema\": \"cyanrip-diagnostics/14\""),
+          "the schema is not cyanrip-diagnostics/14");
 
     expect_line(out, "{\"number\":1,\"cd_track\":1,\"repeats\":0,\"audio_ripped\":true,"
                      "\"crcs_computed\":false,\"eac_crc\":null,\"rip_time_us\":0,\"data_ripped\":false,"
@@ -572,7 +572,39 @@ static void test_drive_declared(void)
                          "\"source\":null,\"cdb\":null,\"answered\":null,\"length\":null,"
                          "\"truncated\":null,\"bytes\":null,\"pureread\":null}",
                     "no vendor query without --read-vendor-settings");
+        expect_line(out, "\"read_performance\": null",
+                    "GET PERFORMANCE not asked: the drive did not open");
         free(out);
+    }
+
+    /* /14's read_performance: GET PERFORMANCE's reply, and the descriptors
+     * read from it. One whole descriptor and the start of a second, which
+     * is not one; then refused, with those bytes still in the buffer. */
+    {
+        uint8_t perf[8 + 16 + 4] = { 0, 0, 0, 0x24 };
+        const uint8_t d0[16] = { 0, 0, 0, 0, 0, 0, 0x05, 0x83,
+                                 0, 0x05, 0x2b, 0x0f, 0, 0, 0x0c, 0x3c };
+        memcpy(perf + 8, d0, 16);
+        set_reply(&ctx->drive_performance, 1, 40, perf, sizeof(perf));
+        out = write_record(ctx, "diagrecord_declared_perf.json");
+        if (out) {
+            expect_line(out, "\"read_performance\": {\"answered\":true,\"length\":40,"
+                             "\"truncated\":true,\"bytes\":\"00000024000000000000000000000583"
+                             "00052B0F00000C3C00000000\",\"descriptors\":[{\"start_lba\":0,"
+                             "\"start_kb_per_s\":1411,\"end_lba\":338703,"
+                             "\"end_kb_per_s\":3132}]}",
+                        "GET PERFORMANCE, one whole descriptor of two declared");
+            free(out);
+        }
+        set_reply(&ctx->drive_performance, 0, 40, perf, sizeof(perf));
+        out = write_record(ctx, "diagrecord_declared_perf_refused.json");
+        if (out) {
+            expect_line(out, "\"read_performance\": {\"answered\":false,\"length\":null,"
+                             "\"truncated\":null,\"bytes\":null,\"descriptors\":null}",
+                        "GET PERFORMANCE refused");
+            free(out);
+        }
+        ctx->drive_performance = (CripReply){ 0 };
     }
 
     test_vendor_settings(ctx);

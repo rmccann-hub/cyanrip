@@ -412,12 +412,44 @@ static void diag_vendor_settings(AVBPrint *b, const cyanrip_ctx *ctx)
         av_bprintf(b, "null}}");
 }
 
+/* GET PERFORMANCE's nominal read performance (/14, for +platterpus.33;
+ * drive_caps.h): null where it was not asked, because the drive did not
+ * open; otherwise the reply as for every other command, and its descriptors
+ * read from it, each a start and end LBA with the kilobytes of 1000 bytes per
+ * second the drive declares there, null where it did not answer or the reply
+ * cannot hold the 8-byte header. What the drive says, not what it did. */
+static void diag_read_performance(AVBPrint *b, const CripReply *r)
+{
+    if (!r->asked) {
+        av_bprintf(b, "null");
+        return;
+    }
+    av_bprintf(b, "{");
+    diag_reply(b, r);
+    CripPerformance d[CRIP_PERFORMANCE_DESCRIPTORS];
+    const int n = r->answered ? crip_performance_take(r->bytes, r->nb_bytes, d,
+                                                      CRIP_PERFORMANCE_DESCRIPTORS)
+                              : -1;
+    if (n < 0) {
+        av_bprintf(b, ",\"descriptors\":null}");
+        return;
+    }
+    av_bprintf(b, ",\"descriptors\":[");
+    for (int i = 0; i < n && i < CRIP_PERFORMANCE_DESCRIPTORS; i++)
+        av_bprintf(b, "%s{\"start_lba\":%u,\"start_kb_per_s\":%u,"
+                      "\"end_lba\":%u,\"end_kb_per_s\":%u}", i ? "," : "",
+                   (unsigned)d[i].start_lba, (unsigned)d[i].start_kb_per_s,
+                   (unsigned)d[i].end_lba, (unsigned)d[i].end_kb_per_s);
+    av_bprintf(b, "]}");
+}
+
 /* WHAT THE DRIVE DECLARES, asked in full and kept as it answered
  * (drive_caps.h; /13, for +platterpus.30): its INQUIRY, its GET
  * CONFIGURATION for every feature, the CD Read feature (001Eh) found in that
  * reply with its current bit and byte 4's DAP, C2 Flags and CD-Text bits,
- * null where the reply held none, and MODE SENSE (10) for every page under
- * each page control. A drive may refuse one, often the saved values, which
+ * null where the reply held none, MODE SENSE (10) for every page under
+ * each page control, and from /14 GET PERFORMANCE's read performance. A
+ * drive may refuse one, often the saved values, which
  * is kept as not answered. Declarations, not measurements: nothing here says
  * what the drive does, and nothing was written to it. */
 static void diag_drive_declared(AVBPrint *b, const cyanrip_ctx *ctx)
@@ -456,7 +488,9 @@ static void diag_drive_declared(AVBPrint *b, const cyanrip_ctx *ctx)
         diag_reply(b, &ctx->drive_mode_pages[pc]);
         av_bprintf(b, "}");
     }
-    av_bprintf(b, "\n    ],\n    \"vendor_settings\": ");
+    av_bprintf(b, "\n    ],\n    \"read_performance\": ");
+    diag_read_performance(b, &ctx->drive_performance);
+    av_bprintf(b, ",\n    \"vendor_settings\": ");
     diag_vendor_settings(b, ctx);
     av_bprintf(b, "\n  }");
 }
@@ -849,8 +883,13 @@ void crip_diag_write(void)
      * round 38 (Platterpus's docs/eac-parity.md Part G.5, for their rebuild of
      * a disputed second), and drive_declared, what the drive declares, asked
      * in full (docs/research/2026-11-04-drive-settings.md). Additions; the
-     * version moves for the same reason. */
-    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/13\",\n");
+     * version moves for the same reason.
+     *
+     * /14 ADDS drive_declared's read_performance, the read speed the drive
+     * declares through GET PERFORMANCE, round 41 (our round 38 lap 8 S19,
+     * accepted in Platterpus's lap 9 S12 as a record field first). An
+     * addition; the version moves for the same reason. */
+    av_bprintf(&b, "  \"schema\": \"cyanrip-diagnostics/14\",\n");
 
     av_bprintf(&b, "  \"cyanrip\": {\n");
     av_bprintf(&b, "    \"version\": ");

@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**The record keeps the read performance the drive declares, for `.33`**, as
+our round 38 lap 8 S19 proposed and Platterpus's lap 9 S12 accepted, a
+record field before a log line. After any `-S`, a drive is asked GET
+PERFORMANCE (ACh) for its nominal read performance, and
+`drive_declared.read_performance` keeps the reply as every other
+declaration is kept, with its descriptors read out: a start and end LBA and
+the kilobytes of 1000 bytes per second declared at each. `null` where it was
+not asked, because the drive did not open. The schema moves to
+`cyanrip-diagnostics/14`; Platterpus's readers match the prefix, not the
+number (`platterpus@34d20333:src/platterpus/ripper_ending.py:104`). A
+declaration, not a measurement: `Extraction speed:` stays the measurement.
+**Drive I/O, not yet run on a drive** (`docs/OPEN-ITEMS.md` HW-12): no image
+driver answers the command, so the suite pins the parse and the record's
+shapes, and each fails with its piece removed.
+
 **The owner's decisions of 2026-11-16 are recorded in `docs/OPEN-ITEMS.md`**,
 on their word *"do all recommendations"*:
 - **Taken into round 41:** Platterpus's transport rule and K1's amendment go
