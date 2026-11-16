@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**Protocol v10's four texts are written**, under `docs/handshake/proposed/`,
+as our round 41 lap 1 S27 promised and Platterpus's lap 2 S15 accepted: v9
+plus K1 as round 38 agreed it, their transport rule, and the stale text
+`docs/OPEN-ITEMS.md` R41-5 lists by line. `seam-rules.md` goes to v9 and
+`OWNERSHIP.md` to v4, each correcting text and changing no rule. Platterpus's
+own cells their lap 2 S16 promises are not written for them. The files one
+level up stay in force until both sides land v10.
+
 **A TOC whose starts do not increase is refused.** A CUE sheet whose track 1
 started after track 2 ripped with exit 0, `Duration: 142840:54.21`, an empty
 track 1 and `Rip completed: yes`: paranoia repairs its own copy of the TOC,
