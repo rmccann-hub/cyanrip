@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**The zero-CRC rule in the pregap search is tested for the first time.**
+`tests/subq.c`'s all-zero block passed with the rule removed: ten zero bytes
+do not checksum to 0x0000, so that block fails the CRC anyway. Two comments
+in `src/pregap.c` said it would checksum as valid. The test now finds ten
+bytes that do checksum to 0x0000 and checks the rule refuses them; it fails
+with the rule removed. No behaviour changes. Found comparing upstream pull
+request 153 with our search.
+
 **What our docs say about upstream pull request 153 and `-J` is corrected**
 (`docs/OPEN-ITEMS.md` US-26). `docs/pregap-carry.md` called 153 a later
 evolution of 115 by the same author; at its head `ca3ab44`, one commit in
