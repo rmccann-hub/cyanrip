@@ -751,7 +751,7 @@ revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
 that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
-bracket. **It did, twelve times**: the 2026-10-06 run on `.20` printed `128 to
+bracket. **It did, seventeen times**: the 2026-10-06 run on `.20` printed `128 to
 255 sectors`, with a 1.7 ms re-read after 128 sectors and three re-reads of at
 least 32.6 ms after 256, and `cd-paranoia -A`, run straight after it, reported
 137 (`docs/rig-2026-10-06-5704062/`); the 2026-10-07 run on `.21` printed the
@@ -764,8 +764,14 @@ on `.26` the same beside 140, 140, 137 and 137 (`docs/rig-2026-10-21-ca0f097/`,
 `docs/rig-2026-10-22-ca0f097/`, `docs/rig-2026-10-22b-ca0f097/` and
 `docs/rig-2026-10-26-ca0f097/`), and the 2026-10-28 and 2026-10-29 runs on
 `.27` the same beside 140 each (`docs/rig-2026-10-28-5aeefc4/` and
-`docs/rig-2026-10-29-5aeefc4/`, the table's last row). Twelve runs on one drive, and the search can say no more than a
-power of two. Everything below is the record of
+`docs/rig-2026-10-29-5aeefc4/`); then the 2026-11-03 run on `.28` the same
+beside 144, and the 2026-11-04, 2026-11-10, 2026-11-11 and 2026-11-14 runs on
+`.29` to `.32` the same beside 140 each (`docs/rig-2026-11-03-3f288fb/`,
+`docs/rig-2026-11-04-8d2ca72/`, `docs/rig-2026-11-10-5cc1c6b/`,
+`docs/rig-2026-11-11-e531a33/` and `docs/rig-2026-11-14-edb73dd/`, the table's
+last row). Seventeen runs on one drive, and the search can say no more than a
+power of two. This said "twelve" and named 2026-10-29 the last row from
+2026-11-03 to 2026-11-16, while those five went in under it. Everything below is the record of
 the defect, kept because the table is checked against the transcripts.
 
 **The seventeenth session, 2026-10-05 on `.19`, bracketed 128 to 255, and that
