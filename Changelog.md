@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**The audit's six candidates are all real defects** (`docs/OPEN-ITEMS.md`
+US-2). Five reproduce on images made from the fixtures: the CD-TEXT language
+on a `.toc` or inline CUE CD-TEXT, a TOC whose starts do not increase, an
+image's pregap outside its track, CD-TEXT's ISRC unchecked, and the offset
+search. The sixth, a failed last-session query deciding the CD-Extra cut, is
+certain from the code and needs a drive. `KNOWN-ISSUES.md` holds what each run
+showed. Of US-20's three leads, the timestamps' offset is fixed, and the
+error rows without a test and the memory `-K` saves are still true, now
+counted.
+
 **CI builds what end users build, again.** The `fedora` job runs the whole
 suite in `registry.fedoraproject.org/fedora-toolbox:latest`, the image
 Platterpus's container uses, with the packages Platterpus installs to build

@@ -201,7 +201,7 @@ or 95 frames (undecided)` in 18 of the 19 `.29` logs of 2026-11-04
 No log since `.29` has said 94. The next step is the raw read on a second drive
 (`docs/OPEN-ITEMS.md` HW-6).
 
-### Six drive answers an audit listed and nothing has checked, and an MCN read skipped without a word
+### Six drive answers an audit listed, all real, and an MCN read skipped without a word
 
 **What is left of *Four drive answers the log states that are libcdio's
 defaults or its failure***, whose four were fixed in `.28` (`819c735b`, held by
@@ -209,17 +209,41 @@ defaults or its failure***, whose four were fixed in `.28` (`819c735b`, held by
 `docs/history/KNOWN-ISSUES-2026-11-16.md` on 2026-11-16. Found by the
 claude-code-skills session's review of 2026-10-26, item 3.3.
 
-**Reported by the audit and not yet checked here**: the CD-TEXT language on an
-image is always `English` (libcdio sets it so); a TOC whose starts do not
-increase is printed raw while paranoia repairs its own copy; a failed
-last-session query decides the CD-Extra cut; an image's TOC pregap is not
-checked against the track's bounds; CD-TEXT's ISRC reaches the tags without the
-ISO 3901 check; and the offset search numbers tracks by position.
+**Checked on 2026-11-16, and all six are real.** Five reproduce on images
+made from `tests/fixtures/`, run on a build of `8b3174ae`. Each fix lands with
+a scenario that reproduces it.
+
+- **The CD-TEXT language.** A `.toc` whose `LANGUAGE_MAP` says German, and a
+  CUE sheet with inline CD-TEXT, both log `CD-TEXT: present (English, …)`:
+  libcdio 2.1.0 assigns English on those two routes. A `CDTEXTFILE` gives
+  German.
+- **A TOC whose starts do not increase.** A CUE sheet whose track 1 starts
+  after track 2 rips with exit 0, `Duration: 142840:54.21`, `Samples:
+  18446744073709463416` and an empty track 1, and says `Rip completed: yes`.
+  Paranoia repairs its own copy, and nothing reads its note.
+- **An image's pregap outside the track's bounds.** An `INDEX 00` after `INDEX
+  01` logs `Pregap length: -75 frames`. A pregap before the previous track's
+  start, with `-p 2=merge`, leaves track 1 empty with `End LSN: 74` below
+  `Start LSN: 150`, and exits 0.
+- **CD-TEXT's ISRC skips the ISO 3901 check.** A `CDTEXTFILE` carrying `not an
+  isrc` reaches the FLAC tag and the CUE sheet's `ISRC`, and beats a valid disc
+  ISRC unless `--prefer-disc-isrc` is given.
+- **A failed last-session query decides the CD-Extra cut.** Certain from the
+  code, reproducible only on a drive: any answer but success takes the
+  11400-frame cut, with no line saying why. libcdio's macOS, FreeBSD and AIX
+  drivers cannot answer it at all, so there every disc whose last track is data
+  is cut. An image takes that arm by design.
+- **The offset search numbers tracks by position, and never tries an offset
+  of 0.** With an AccurateRip answer served without the network, a CUE sheet
+  numbered from 3, which libcdio before 2.2.1 keeps, reads sectors -69427 to
+  -20276 for a track the disc does not have, and ends `No track was long
+  enough`; the same audio numbered from 1 is found. A true offset of 0 ends
+  the same way, while the control at +6 is found.
 
 **The MCN read a failed capabilities query skips is still skipped without a
 word.** Our round 38 lap 3 S17 proposed `Disc MCN:` printed always, with its
 reasons, and Platterpus's lap 4 S11 accepted it as given; it is not built
-(`docs/OPEN-ITEMS.md` R41-1). Checking the six is US-2 there.
+(`docs/OPEN-ITEMS.md` R41-1). The six are US-2 there.
 
 ### paranoia's identify message can still start a line, from the `-d` path or the drive's INQUIRY strings
 
