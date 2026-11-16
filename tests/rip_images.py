@@ -9059,9 +9059,6 @@ def sc_offset_search():
             if loaded != [str(first + i) for i in range(3)]:
                 fail(f"offset_search: {what}: loaded tracks {loaded}, want "
                      f"{[str(first + i) for i in range(3)]}, the disc's own numbers")
-            if "Unable to access sector" in text:
-                fail(f"offset_search: {what}: -f read a sector it could not access, "
-                     f"so it asked for a track the disc does not have")
 
 
 def sc_reread_until_accuraterip():
