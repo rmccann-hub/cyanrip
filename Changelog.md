@@ -1,7 +1,7 @@
 Unreleased
 ==========
-**Two test fixes after `.35`'s candidate**, both found by Fedora's CI job on
-pull request #127, and neither changing the program:
+**Three test fixes after `.35`'s candidate**, found by the Fedora and macOS CI
+jobs on pull request #127, and none changing the program:
 - `disc_mcn_always` gave each cue a `.bin` of its own while every cue's `FILE`
   line still named `basic.bin`, which libcdio 2.1 ignores and Fedora's 2.3.0
   did not: all its rips exited 74 there (`76fc858a`). With that fixed, 2.3.0
@@ -12,11 +12,16 @@ pull request #127, and neither changing the program:
   libcdio returns on any version; breaking the empty reason in the program,
   or making the shim's answer inert, fails it;
 - the QR test defined its helper where libqrencode is absent, and only a
-  warning said so (`d011c618`).
+  warning said so (`d011c618`);
+- dumbass QR test waited for its child before reading the pseudo-terminal
+  the child wrote 1,086 bytes into, so wherever the terminal buffers less,
+  each blocked the other: macOS ran into meson's 30-second timeout. The
+  parent now reads while the child writes, bounded at 10 seconds; with
+  512 KB written after the QR code, the old harness timed out on Linux too,
+  and the new one passes.
 
 `.35` stays the build at `1280aa4`: its suite passed from a clean checkout
-here, on libcdio 2.1, and Fedora's job failed on the test's fixture, not on
-the program.
+here, on libcdio 2.1, and the jobs failed on the tests, not on the program.
 
 0.9.4-rc3+platterpus.35 — 2026-11-17 — **beta**
 ===============================================

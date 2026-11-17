@@ -30,6 +30,8 @@
 #define _XOPEN_SOURCE 700
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,13 +50,19 @@ static int drawn(const char *no_color, const char *term)
     const char *name = ptsname(master);
     if (!name)
         return -1;
+    /* The parent holds the terminal's other side open too, so reading the
+     * master never meets end-of-file or EIO before the child opens it or
+     * after it exits; waitpid() says when the child is done. */
+    int slave = open(name, O_RDWR | O_NOCTTY);
+    if (slave < 0)
+        return -1;
 
     pid_t pid = fork();
     if (pid < 0)
         return -1;
     if (!pid) {
-        int slave = open(name, O_RDWR | O_NOCTTY);
-        if (slave < 0 || dup2(slave, STDOUT_FILENO) < 0)
+        close(master);
+        if (dup2(slave, STDOUT_FILENO) < 0)
             _exit(2);
         unsetenv("NO_COLOR");
         setenv("TERM", "xterm-256color", 1);
@@ -67,21 +75,42 @@ static int drawn(const char *no_color, const char *term)
         _exit(0);
     }
 
-    int status = 0;
-    waitpid(pid, &status, 0);
-    if (!WIFEXITED(status) || WEXITSTATUS(status))
-        return -1;
-
-    char buf[65536];
+    /* READ WHILE THE CHILD WRITES. This waited for the child before reading
+     * anything, and the QR code is 1,086 bytes on a terminal, so wherever a
+     * pseudo-terminal buffers less, the child's write and the parent's wait
+     * block each other. #127's macos job (2026-11-17) ran into meson's
+     * 30-second timeout here while Linux passed. Bounded at 10 seconds; what
+     * outgrows the buffer is read and dropped, so the child never blocks. */
+    char buf[65536], spill[4096];
     size_t got = 0;
-    fcntl(master, F_SETFL, O_NONBLOCK);
-    for (;;) {
-        ssize_t n = read(master, buf + got, sizeof(buf) - 1 - got);
-        if (n <= 0)
+    int status = 0, exited = 0;
+    for (int ticks = 0; ticks < 200; ) {
+        struct pollfd p = { .fd = master, .events = POLLIN };
+        if (poll(&p, 1, exited ? 0 : 50) > 0 && (p.revents & POLLIN)) {
+            int into_buf = got < sizeof(buf) - 1;
+            ssize_t n = read(master, into_buf ? buf + got : spill,
+                             into_buf ? sizeof(buf) - 1 - got : sizeof(spill));
+            if (n > 0) {
+                if (into_buf)
+                    got += (size_t)n;
+                continue;
+            }
+        }
+        if (exited)
             break;
-        got += n;
+        if (waitpid(pid, &status, WNOHANG) == pid)
+            exited = 1;
+        else
+            ticks++;
     }
+    if (!exited) {
+        kill(pid, SIGKILL);
+        waitpid(pid, &status, 0);
+    }
+    close(slave);
     close(master);
+    if (!exited || !WIFEXITED(status) || WEXITSTATUS(status))
+        return -1;
     buf[got] = '\0';
     return strstr(buf, "\033[38;5;") != NULL;
 }
