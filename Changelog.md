@@ -1,5 +1,23 @@
 Unreleased
 ==========
+**The UX review of 2026-11-17 is triaged and filed**
+(`docs/history/UX-REVIEW-2026-11-17.md`, verbatim). All 28 findings hold
+against the source. The fixes that move no line Platterpus parses are
+OPEN-ITEMS US-31, the rest are proposals for a round (US-32), and the owner
+chooses which go into `.35` (OW-12). Five of its statements needed
+correcting:
+- P3 does not call the progress line unstable wording. The contract shows it
+  only as `\r` and `%s`, so a line Platterpus reads by regex has no published
+  wording at all.
+- F5's `NOT a released build` prints only on a build not declared released.
+- F22's `CYANRIP_ACOUSTID_KEY` is in the README's AcoustID section, though
+  not in its table or `--help`.
+- F19 is not Safe: Platterpus's source matches `Trying to quit`.
+- F25 is not Safe either: files on disk are handshake material.
+
+The review also missed a lone `!` line after a failed AccurateRip fetch, which
+upstream prints too.
+
 **Round 41's rip is filed and read**: `.34` through Platterpus's 0.7.127 on
 2026-11-17, on our evidence branch at `e1e6a68`
 (`docs/rig-2026-11-17-fb28088/`), its README our reading. All 37 `.34`
