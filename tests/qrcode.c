@@ -38,6 +38,8 @@
 
 #include "qrcode.h"
 
+#ifdef TEST_HAVE_QRENCODE
+/* Only a build with libqrencode draws, and main() asks this only there */
 static int drawn(const char *no_color, const char *term)
 {
     int master = posix_openpt(O_RDWR | O_NOCTTY);
@@ -83,6 +85,7 @@ static int drawn(const char *no_color, const char *term)
     buf[got] = '\0';
     return strstr(buf, "\033[38;5;") != NULL;
 }
+#endif
 
 int main(void)
 {
