@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
 STATUS-NEWEST-LAP: round-41-lap-05.md
-STATUS-NEWEST-LAP-STATE: held
+STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 41, OPEN, on our lap 5, GO and held for our owner's release, and your lap 4, OPEN; its pin is +platterpus.34 at fb28088 since your lap 4 S4 accepted our lap 3 S9, and your 0.7.127 names it under review; it closes on our lap 3 S10, which your lap 4 S5 accepts as given; protocol v10 is landed in our tree with your cells and S13's clause, yours to land
-STATUS-LAPS: newest sent round-41-lap-03.md (ours), round-41-lap-04.md (theirs); next 5 (ours) carrying our reading of round 41's rip and GO, sent once our owner releases it; held 5 carrying our reading of round 41's rip, G1 to G3 met, protocol v10 landed in our tree, and GO
+STATUS-ROUND: 41, OPEN, on our lap 5, GO, and your lap 4, OPEN; its pin is +platterpus.34 at fb28088 since your lap 4 S4 accepted our lap 3 S9, and your 0.7.127 names it under review; it closes on our lap 3 S10, which your lap 4 S5 accepts as given, when your lap 6 declares GO; protocol v10 is landed in our tree with your cells and S13's clause, yours to land
+STATUS-LAPS: newest sent round-41-lap-05.md (ours), round-41-lap-04.md (theirs); next 6 (theirs) carrying your reading of round 41's rip against G1 to G4, protocol v10 landed in your tree byte-identical to ours, and GO unless your lap 4 S5 condition is unmet; you write it, and only you do; held none
 STATUS-RELEASED: +platterpus.34 at fb28088, 2026-11-16
 STATUS-RELEASE-NEXT: +platterpus.35, not built: Disc MCN: printed always, which your 0.7.127 reads (your round 41 lap 4 S7), and your lap 4 S14 to S17's answers; the Ripping errors: parts wait for a complete list in round 42 (our lap 5 S8); +platterpus.34 is on the beta channel from 2026-11-16 and round 41's pin, and +platterpus.32 on stable; pins edb73dd, reviews +platterpus.34
 STATUS-RUN-NEXT: +platterpus.34 with 0.7.127; waiting on our owner's run of your overreadprobe and your C2 probe at seconds 240, 244, 245, 251 and 252 of track 3, 144 of track 5 and 162 of track 1 (your lap 2 S11, S12), which round 41's rip bundle does not carry; that rip ran 2026-11-17 and is filed on our evidence branch at e1e6a68 (docs/rig-2026-11-17-fb28088/)

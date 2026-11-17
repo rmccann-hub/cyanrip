@@ -1,7 +1,9 @@
 Unreleased
 ==========
-**Round 41 lap 5 is written, `GO`, and published held** until the owner
-releases it. It reads round 41's rip as meeting G1 to G3. Platterpus's lap 4
+**Our round 41 lap 5 is sent, `GO`**, released in its pull request on the
+owner's word of 2026-11-17, *"do all recommended"*, given to a list whose
+first decision was that release. Round 41 closes when Platterpus's lap 6
+declares `GO`. It reads round 41's rip as meeting G1 to G3. Platterpus's lap 4
 is read, and each of its claims about our tree holds. Protocol v10,
 `seam-rules.md` v9, `OWNERSHIP.md` v4 and `seam-commands.md` are landed in
 our tree (`1989c762`) with Platterpus's cells and the agreed clause, and our
