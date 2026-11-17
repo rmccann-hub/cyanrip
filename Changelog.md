@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**An image whose pregap lies outside its own track is refused**, with exit
+74 and a new fatal line, as Platterpus's lap 4 S16 answered our lap 3 S24:
+`Invalid pregap: track N's pregap starts at LSN P, after the track itself at
+LSN S!`, or `…, not after track M at LSN Q!`. An `INDEX 00` after its `INDEX
+01` logged `Pregap length: -75 frames`, and one before the previous track's
+start left track 1 empty at exit 0 under `-p 2=merge` (US-2). An image only;
+a drive's pregap is read, not declared, and nothing changes for a drive.
+`image_pregap_inside_track` checks both, and that `pregap.cue` still rips;
+both fail without the check.
+
 **A `.toc`'s CD-TEXT, and a CUE sheet's inline CD-TEXT, have an unknown
 language**, as Platterpus's lap 4 S15 answered our lap 3 S23. libcdio gives
 both English whatever the source says, so `CD-TEXT:` said `present (English,

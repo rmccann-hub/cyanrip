@@ -683,6 +683,33 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
             return AVERROR(EINVAL);
         }
 
+        /* An image's pregap must lie in its own track's run up: after the
+         * track before starts, and not after its own INDEX 01. An INDEX 00
+         * after INDEX 01 logged `Pregap length: -75 frames`, and one before
+         * the previous track's start, with `-p 2=merge`, left track 1 empty
+         * at exit 0 (US-2). Such a sheet describes no disc, so it is refused
+         * as an unordered TOC is, naming the track and both positions, as
+         * Platterpus's lap 4 S16 answered our lap 3 S24. An image only: a
+         * drive's pregap is read, not declared, and nothing here changes
+         * what a drive does. */
+        if (crip_is_image_driver(ctx) && t->pregap_lsn != CDIO_INVALID_LSN) {
+            if (t->pregap_lsn > t->start_lsn) {
+                cyanrip_log(ctx, 0, "Invalid pregap: track %i's pregap starts at LSN %i, "
+                            "after the track itself at LSN %i!\n",
+                            t->number, t->pregap_lsn, t->start_lsn);
+                cyanrip_ctx_end(&ctx);
+                return AVERROR(EINVAL);
+            }
+            if (i && t->pregap_lsn <= ctx->tracks[i - 1].start_lsn_sig) {
+                cyanrip_log(ctx, 0, "Invalid pregap: track %i's pregap starts at LSN %i, "
+                            "not after track %i at LSN %i!\n",
+                            t->number, t->pregap_lsn, ctx->tracks[i - 1].number,
+                            ctx->tracks[i - 1].start_lsn_sig);
+                cyanrip_ctx_end(&ctx);
+                return AVERROR(EINVAL);
+            }
+        }
+
         if (t->track_is_data) {
             if (ctx->settings.pregap_action[t->number - 1] == CYANRIP_PREGAP_DEFAULT)
                 ctx->settings.pregap_action[t->number - 1] = CYANRIP_PREGAP_DROP;

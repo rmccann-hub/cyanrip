@@ -229,9 +229,12 @@ a scenario that reproduces it.
   `Invalid TOC: track N starts at LSN …, not after track M at LSN …!`;
   `toc_starts_increase` holds it.
 - **An image's pregap outside the track's bounds.** An `INDEX 00` after `INDEX
-  01` logs `Pregap length: -75 frames`. A pregap before the previous track's
-  start, with `-p 2=merge`, leaves track 1 empty with `End LSN: 74` below
-  `Start LSN: 150`, and exits 0.
+  01` logged `Pregap length: -75 frames`. A pregap before the previous track's
+  start, with `-p 2=merge`, left track 1 empty with `End LSN: 74` below
+  `Start LSN: 150`, and exited 0. Refused for `.35` with exit 74 and
+  `Invalid pregap: track N's pregap starts at LSN P, …`, naming the track and
+  both positions, as Platterpus's lap 4 S16 answered our lap 3 S24; an image
+  only. `image_pregap_inside_track` holds both cases.
 - **CD-TEXT's ISRC skipped the ISO 3901 check, and still outranks the disc's.**
   A `CDTEXTFILE` carrying `not an isrc` reached the FLAC tag and the CUE sheet's
   `ISRC`; since 2026-11-16 only a code ISO 3901 allows is used, and

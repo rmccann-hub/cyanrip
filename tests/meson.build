@@ -1113,6 +1113,7 @@ rip_scenarios = [
     'disc_isrc_line',
     'overread_bounded',
     'disc_mcn_always',
+    'image_pregap_inside_track',
 ]
 
 # The scenarios are told which build configuration they are testing, because

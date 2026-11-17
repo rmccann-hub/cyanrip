@@ -3145,6 +3145,52 @@ def sc_cdtext_isrc_checked():
              f"USABC2600001, and none for track 2")
 
 
+def sc_image_pregap_inside_track():
+    """AN IMAGE'S PREGAP OUTSIDE ITS OWN TRACK IS REFUSED, since .35.
+
+    An INDEX 00 after its INDEX 01 logged `Pregap length: -75 frames`, and
+    one before the previous track's start left track 1 empty at exit 0 under
+    `-p 2=merge` (US-2). Such a sheet describes no disc, so it is refused as
+    an unordered TOC is, with exit 74 and a line naming the track and both
+    positions, as Platterpus's lap 4 S16 answered our lap 3 S24. The cue's
+    MM:SS:FF is LSN 75 per second, so the positions below are the sheet's.
+    `pregap.cue`, whose pregaps are where they belong, still rips.
+    """
+    cases = (
+        ("pregap_after", ("00:00:00", None), ("00:02:00", "00:03:00"),
+         "Invalid pregap: track 2's pregap starts at LSN 225, after the track "
+         "itself at LSN 150!"),
+        ("pregap_before", ("00:02:00", None), ("00:03:00", "00:01:00"),
+         "Invalid pregap: track 2's pregap starts at LSN 75, not after track 1 "
+         "at LSN 150!"),
+    )
+    for name, (one, _), (two, two_pregap), line in cases:
+        shutil.copy(FIX / "cdda.bin", WORK / f"{name}.bin")
+        (WORK / f"{name}.cue").write_text(
+            f'FILE "{name}.bin" BINARY\n'
+            f"  TRACK 01 AUDIO\n    INDEX 01 {one}\n"
+            f"  TRACK 02 AUDIO\n    INDEX 00 {two_pregap}\n    INDEX 01 {two}\n",
+            encoding="utf-8")
+        out = WORK / f"out_{name}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, text = crip("-d", WORK / f"{name}.cue", "-N", "-A", "-U", "-s", "0",
+                        "-D", out, "-F", "{track}", "-L", "log")
+        tracks = sorted(p.name for p in out.glob("*.flac")) if out.is_dir() else []
+        if ec != 74 or line not in text.splitlines() or tracks:
+            fail(f"image_pregap_inside_track: {name}: exit {ec}, tracks "
+                 f"{tracks}, and the output "
+                 f"{'carries' if line in text.splitlines() else 'lacks'} "
+                 f"{line!r}; want 74, that line and no track")
+
+    shutil.copy(FIX / "pregap.cue", WORK / "pregap_ok.cue")
+    shutil.copy(FIX / "cdda.bin", WORK / "pregap_ok.bin")
+    ec, text = crip("-d", WORK / "pregap_ok.cue", "-N", "-A", "-U", "-s", "0",
+                    "-I")
+    if ec != 0 or "Invalid pregap" in text:
+        fail(f"image_pregap_inside_track: pregap.cue, whose pregaps are in "
+             f"place, exited {ec} or was refused")
+
+
 def sc_toc_starts_increase():
     """A TOC WHOSE STARTS DO NOT INCREASE IS REFUSED, NAMING THE TWO TRACKS.
 
