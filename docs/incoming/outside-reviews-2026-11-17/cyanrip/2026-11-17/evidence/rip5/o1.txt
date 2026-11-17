@@ -1,0 +1,112 @@
+Checking ../disc/basic.bin for cdrom...
+
+Opening drive...
+MusicBrainz URL:
+https://musicbrainz.org/cdtoc/attach?toc=1+2+750+150+450&tracks=2&id=OnpX1oVWL7CypwcIA.ZsRybkaBw-
+No MusicBrainz release ID at cover art lookup, cannot search Cover Art DB!
+Unable to get AccuRIP DB data: missing entry!
+Log(s) will be written to:
+    Unknown disc (ONPX) [FLAC]/Unknown disc (ONPX).log
+CUE files will be written to:
+    Unknown disc (ONPX) [FLAC]/Unknown disc (ONPX).cue
+cyanrip 0.9.4-rc3+platterpus.34 (platterpus-fork-gfd20a0a)
+Invoked as:     /tmp/claude-0/-home-user-claude-code-skills/46cfbc1a-d1c5-5a09-bbbb-4b2444266d0f/scratchpad/ux/cyanrip-build2/src/cyanrip -d ../disc/basic.cue -N -I --diagnostics /nonexistent/x.json
+Handshake:      round 41 lap 3 OPEN, verdict OPEN -- NOT a released build
+Consumer:       not identified (no --consumer given)
+Drive used:     none (disc image, read by libcdio's CDRWIN driver, revision 2.1.)
+System device:  ../disc/basic.cue
+Offset:         +0 samples
+Overread:       +0 frames
+Overread mode:  fill with silence in lead-in/lead-out
+Speed:          default (drive not asked whether it can change speed)
+C2 errors:      unknown (image)
+Accurate stream: unknown (image)
+Recordable:     unknown (image)
+CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+Encoder:        libavformat 60.16.100, libavcodec 60.31.102 (6.1.1-3ubuntu5)
+Paranoia level: max
+Retry limit:    10 (per frame, and per whole-track re-read)
+Cache model:    16 sectors (disc image, no drive cache)
+HDCD decoding:  disabled
+Album Art:      none
+Outputs:        flac
+Disc tracks:    2
+Tracks to rip:  all
+DiscID:         OnpX1oVWL7CypwcIA.ZsRybkaBw-
+CDDB ID:        08000802
+Album:          Unknown disc (ONPX)
+AccurateRip ID: 00000384-00000961-08000802
+AccurateRip:    not found
+AcoustID:       unsupported (built without libchromaprint)
+Total time:     00:08.00
+
+Gaps:
+    pregap of track 2 unknown (sub-channel unreadable)
+
+Pregap searches:
+    track 2: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off; LSN 1 to 299 undecided
+
+Tracks:
+Track 1 info:
+  Preemphasis:   none detected
+  Disc ISRC:     unknown (the driver does not report reading ISRC)
+
+  Properties:
+    Duration:    00:04.00
+    Samples:     176400
+    Frames:      300
+    Pregap LSN:  0 (duration: 00:02.00)
+    Pregap length: 150 frames
+    Pregap source: lead-in
+    Start LSN:   0
+    End LSN:     299
+  Secure re-read:  not attempted
+  Accurip:       not found
+
+  Metadata:
+    TRACK:              1
+    TRACKTOTAL:         2
+    MUSICBRAINZ_DISCID: OnpX1oVWL7CypwcIA.ZsRybkaBw-
+    CDDB:               08000802
+    MEDIA:              CD
+    COMMENT:            cyanrip 0.9.4-rc3+platterpus.34
+    ALBUM:              Unknown disc (ONPX)
+    TITLE:              Unknown track
+
+  Paranoia status counts:
+    none
+
+  File(s):
+    Unknown disc (ONPX) [FLAC]/1 - Unknown track.flac
+
+Track 2 info:
+  Preemphasis:   none detected
+  Disc ISRC:     unknown (the driver does not report reading ISRC)
+
+  Properties:
+    Duration:    00:04.00
+    Samples:     176400
+    Frames:      300
+    Pregap LSN:  unknown (sub-channel unreadable)
+    Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off; LSN 1 to 299 undecided
+    Start LSN:   300
+    End LSN:     599
+  Secure re-read:  not attempted
+  Accurip:       not found
+
+  Metadata:
+    TRACK:              2
+    TRACKTOTAL:         2
+    MUSICBRAINZ_DISCID: OnpX1oVWL7CypwcIA.ZsRybkaBw-
+    CDDB:               08000802
+    MEDIA:              CD
+    COMMENT:            cyanrip 0.9.4-rc3+platterpus.34
+    ALBUM:              Unknown disc (ONPX)
+    TITLE:              Unknown track
+
+  Paranoia status counts:
+    none
+
+  File(s):
+    Unknown disc (ONPX) [FLAC]/2 - Unknown track.flac
+
