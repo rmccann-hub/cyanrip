@@ -11,7 +11,10 @@ seven default `.34` rips', and its AccurateRip match says nothing of the refused
 frames, which fall in the five frames AccurateRip leaves out of a last track.
 R41-9 leaves the list; HW-10 stays open for a drive that answers past its
 lead-out. The probe's last step found Platterpus's `force_overread` on after
-the run (PP-16).
+the run (PP-16). The lead-in rip's CUE sheet, which the owner's delivery lacked,
+is filed at `73d45f9` as a byte-for-byte copy of Platterpus's at
+`platterpus@977d78fa`; neither side holds the lead-in log or either
+diagnostics record.
 
 **The outside reviews are archived on the evidence branch**, at `60ec8702`
 under `docs/outside-reviews-2026-11-17/`, on the owner's word of 2026-11-17.
