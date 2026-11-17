@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**The owner's decisions of 2026-11-17 are recorded**, all given as *"do
+all recommended"*: round 41 lap 5 is released as `GO` (sent in pull request
+#126); `.35` is published on beta once its suite passes; stable moves to
+`.34` when round 41 closes (`docs/OPEN-ITEMS.md` US-33); round 42 opens on
+`.35`, proposing F2, F7, F16, F20 and F24, the progress line's wording, the
+two AccurateRip defects and the complete `Ripping errors:` list (US-32,
+R41-3); Platterpus's rule #12 is not copied into our `CLAUDE.md`, which
+stands at 298 of its 300 lines, and round 42's opening lap says so; saved
+settings (F3, F23) and a man page (F28) are not for now (US-31); the
+overread probe and the C2 probe run at the next rig session (R41-9, HW-1);
+and upstream reports 24 to 33 are the owner's to file (OW-8). OW-12, the
+question these answer, leaves the list.
+
 **Upstream report 33 is drafted:** a failed AccurateRip query can print
 `Unable to get AccuRIP DB data:` and then a line holding only `!`, because
 both formats end `\n!\n`, and when `curl_easy_getinfo()` fails the status
