@@ -1112,6 +1112,7 @@ rip_scenarios = [
     'image_reports_isrc',
     'disc_isrc_line',
     'overread_bounded',
+    'disc_mcn_always',
 ]
 
 # The scenarios are told which build configuration they are testing, because

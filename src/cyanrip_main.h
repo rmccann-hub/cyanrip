@@ -615,6 +615,11 @@ typedef struct cyanrip_ctx {
     int cdtext_nb_disc_fields;
     int cdtext_nb_tagged_tracks;
     const char *cdtext_language; /* Owned by libcdio, do not free */
+    /* Why `Disc MCN:` names no code, when it names none: crip_fill_mcn()'s
+     * reason, a static string, and whether libcdio answered (none) or was
+     * not asked (unknown). NULL until the MCN is asked for. */
+    const char *mcn_reason;
+    int mcn_none;
 
     /* State */
     int success;

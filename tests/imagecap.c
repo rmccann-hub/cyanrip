@@ -31,6 +31,9 @@
  *
  *   CRIP_IMAGE_CAP_OUT  a file to create when the bit is added, so a test can
  *                       prove the shim took effect and the run was not vacuous
+ *   CRIP_IMAGE_CAP_NO_MCN  clear CDIO_DRIVE_CAP_READ_MCN, as a driver that
+ *                       cannot read an MCN reports it, for `Disc MCN:`'s
+ *                       `unknown (the driver does not report reading MCN)`
  */
 
 #define _GNU_SOURCE
@@ -73,6 +76,8 @@ void cdio_get_drive_cap(const CdIo_t *p_cdio,
             *p_misc_cap = CDIO_DRIVE_CAP_ERROR;
     } else {
         *p_read_cap |= CDIO_DRIVE_CAP_READ_ISRC;
+        if (getenv("CRIP_IMAGE_CAP_NO_MCN"))
+            *p_read_cap &= ~CDIO_DRIVE_CAP_READ_MCN;
     }
 
     const char *out = getenv("CRIP_IMAGE_CAP_OUT");

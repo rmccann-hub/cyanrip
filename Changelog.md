@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**`Disc MCN:` is printed always, with a reason when there is no code**,
+our round 38 lap 3 S17, accepted in Platterpus's lap 4 S11 and read by their
+0.7.127: `none (libcdio returned none)`, `unknown (the driver does not report
+reading MCN)` and `unknown (capabilities query failed)`. It printed only a
+code before, so those three cases looked the same, as no line. Two more
+reasons name what libcdio returned rather than calling it none: `libcdio
+returned an all-zero MCN` and `an empty MCN`, as an ISRC's do; round 42's
+opening lap announces them. `disc_mcn_always` checks all five forms in place,
+through the image shim's new `CRIP_IMAGE_CAP_NO_MCN`, and fails with the old
+line and with either new reason removed.
+
 **Round 41 lap 5 is written, `GO`, and published held** until the owner
 releases it. It reads round 41's rip as meeting G1 to G3. Platterpus's lap 4
 is read, and each of its claims about our tree holds. Protocol v10,

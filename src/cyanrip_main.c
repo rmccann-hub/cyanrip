@@ -845,19 +845,45 @@ static int crip_code_is_set(const char *code)
     return code[strspn(code, "0")] != '\0';
 }
 
+/* The disc's MCN, or why there is none. `Disc MCN:` printed only a code
+ * until .35, so a disc with none, a driver that cannot read one and a failed
+ * capabilities query all printed no line, and a reader could not tell them
+ * apart. Now each says so, as `Disc ISRC:` does: our round 38 lap 3 S17's
+ * three reasons, which Platterpus's lap 4 S11 accepted and their 0.7.127
+ * reads, and an empty or all-zero code named as what libcdio returned, as an
+ * ISRC's is, rather than called none it did not return. */
 static void crip_fill_mcn(cyanrip_ctx *ctx)
 {
-    /* Get disc MCN */
-    if (ctx->rcap & CDIO_DRIVE_CAP_READ_MCN) {
-        crip_stall_wait_begin("the MCN read");
-        const char *mcn = cdio_get_mcn(ctx->cdio);
-        crip_stall_wait_end();
-        if (mcn) {
-            if (crip_code_is_set(mcn))
-                av_dict_set(&ctx->meta, "disc_mcn", mcn, 0);
-            cdio_free((void *)mcn);
-        }
+    /* A failed capabilities query sets every word to CDIO_DRIVE_CAP_ERROR,
+     * which says nothing about the MCN (our round 36 lap 12 S11 (c)). */
+    if (ctx->rcap & CDIO_DRIVE_CAP_ERROR) {
+        ctx->mcn_reason = "capabilities query failed";
+        return;
     }
+    if (!(ctx->rcap & CDIO_DRIVE_CAP_READ_MCN)) {
+        ctx->mcn_reason = "the driver does not report reading MCN";
+        return;
+    }
+
+    crip_stall_wait_begin("the MCN read");
+    const char *mcn = cdio_get_mcn(ctx->cdio);
+    crip_stall_wait_end();
+
+    ctx->mcn_none = 1;
+    if (!mcn) {
+        ctx->mcn_reason = "libcdio returned none";
+        return;
+    }
+    if (!mcn[0]) {
+        ctx->mcn_reason = "libcdio returned an empty MCN";
+    } else if (!crip_code_is_set(mcn)) {
+        ctx->mcn_reason = "libcdio returned an all-zero MCN";
+    } else if (av_dict_set(&ctx->meta, "disc_mcn", mcn, 0) < 0) {
+        ctx->mcn_reason = "out of memory";
+    } else {
+        ctx->mcn_none = 0;
+    }
+    cdio_free((void *)mcn);
 }
 
 static void track_set_creation_time(cyanrip_ctx *ctx, cyanrip_track *t)

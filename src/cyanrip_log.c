@@ -1364,7 +1364,15 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     CLOG("DiscID:         %s\n", ctx->meta, "musicbrainz_discid")
     CLOG("Release ID:     %s\n", ctx->meta, "musicbrainz_albumid")
     CLOG("CDDB ID:        %s\n", ctx->meta, "cddb")
-    CLOG("Disc MCN:       %s\n", ctx->meta, "disc_mcn")
+    /* Always, since .35: the code, or `none` (libcdio answered with no usable
+     * code) or `unknown` (it was not asked), each with its reason, in
+     * `Disc ISRC:`'s shape (crip_fill_mcn()). */
+    if (dict_get(ctx->meta, "disc_mcn"))
+        cyanrip_log(ctx, 0, "Disc MCN:       %s\n", dict_get(ctx->meta, "disc_mcn"));
+    else
+        cyanrip_log(ctx, 0, "Disc MCN:       %s (%s)\n",
+                    ctx->mcn_none ? "none" : "unknown",
+                    ctx->mcn_reason ? ctx->mcn_reason : "not read");
     CLOG("Album:          %s\n", ctx->meta, "album")
     CLOG("Album artist:   %s\n", ctx->meta, "album_artist")
 
