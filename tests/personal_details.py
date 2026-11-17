@@ -16,8 +16,8 @@ tarball build, or a shallow clone cut at or after it, where the oldest commit
 seems to add every file -- the check cannot tell new from old, and it says so
 and skips (exit 77) rather than pass over files it did not judge.
 
-SCOPE: our laps and standing status under docs/handshake/, and rig evidence
-under docs/rig-*/. NOT docs/handshake/inbound/: those are Platterpus's sent
+SCOPE: our laps and standing status under docs/handshake/, and evidence
+under docs/rig-*/ and docs/outside-reviews-*/. NOT docs/handshake/inbound/: those are Platterpus's sent
 laps, filed byte-exact so their quoted hashes still verify, and editing one
 is what the protocol forbids; their side keeps the rule for what they write.
 A `HANDSHAKE-` line is a wire value and is skipped (tools/redact.py).
@@ -58,7 +58,7 @@ def in_scope(path):
     if p.parts[:2] == ("docs", "handshake"):
         return len(p.parts) == 3   # not inbound/ or any other subdirectory
     return len(p.parts) >= 3 and p.parts[0] == "docs" and \
-        p.parts[1].startswith("rig-")
+        p.parts[1].startswith(evidence.OUR_FOLDERS)
 
 
 def check_evidence():

@@ -52,7 +52,7 @@ THIS = "tests/evidence_readers.py"
 sys.path.insert(0, str(ROOT / "tools"))
 import evidence  # noqa: E402
 
-PAT = re.compile(r"""docs/rig-|["']docs["']\s*/\s*["']rig-|glob\(\s*["']rig-"""
+PAT = re.compile(r"""docs/(?:rig|outside-reviews)-|["']docs["']\s*/\s*["']rig-|glob\(\s*["']rig-"""
                  r"""|round-14-(?:rig|acceptance)-2026"""
                  r"""|inbound/artifacts/round-1[45]-lap""")
 SCOPE = ["tools", "tests", ".github", "meson.build", "src/meson.build",
@@ -61,19 +61,22 @@ SCOPE = ["tools", "tests", ".github", "meson.build", "src/meson.build",
 # Every file that names a run-evidence path, how many times, and why.
 ALLOWED = {
     "tests/cuegap.c": (1, "a comment naming the log its numbers came from"),
-    "tests/evidence_tool.py": (5, "run folders built in a temporary repository"),
+    "tests/evidence_tool.py": (6, "run folders, and an outside review's "
+                                  "folder, built in a temporary repository"),
     "tests/ingest_bundle.py": (5, "run folders built in a temporary directory"),
     "tests/lap_and_run_tools.py": (1, "a run folder built in a temporary "
                                       "directory"),
     "tests/lap_statements.py": (8, "lap texts citing a README at a commit, "
                                    "which stays, and a run folder built in a "
                                    "temporary repository for HR-2's cases"),
-    "tests/personal_details.py": (1, "its docstring, naming its scope"),
+    "tests/personal_details.py": (2, "its docstring, naming its scope: rig "
+                                     "and outside-review folders"),
     "tests/spool.c": (1, "a comment naming the run its case came from"),
     "tests/rip_images.py": (5, "two prefix tests on folders listed by "
                                "tools/evidence.py, and three docstrings"),
     "tools/cross-rip.py": (3, "its docstring's examples"),
-    "tools/evidence.py": (5, "the one tool every evidence reader goes through"),
+    "tools/evidence.py": (8, "the one tool every evidence reader goes "
+                             "through, naming both kinds of folder of ours"),
     "tools/ingest-bundle.py": (3, "help text and the refusal naming where a "
                                   "run is filed after the move"),
     "tools/read-run.py": (4, "examples, and the earlier runs it compares, "
