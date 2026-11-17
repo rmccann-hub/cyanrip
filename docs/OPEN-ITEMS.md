@@ -71,7 +71,6 @@ id.
 | PP-8 | **R131**: a re-read track's block CRCs describe the album pass | platterpus:R38.L7.S9 | Open |
 | PP-9 | **R137** parts 2 and 3: a drive report in `--doctor` and every bundle, and a *Report this drive* action | part 1, ours, shipped in `.30` | Open |
 | PP-10 | **R44**: the EAC-layout wording for error positions, through the handshake | their `TASKS.md` | No proposal sent |
-| PP-11 | Their reader for `Disc MCN:` | platterpus:R38.L4.S11 | Not built; before R41-1 ships |
 | PP-12 | `seam-commands.md` §1b PP cells `?` for `-X`, `-C` and `-B`; §1 PP cells for `-F` and `-I`; §2a :260 (both sides) | `STATUS-OPEN unsent-flag-rows` | Theirs, in R41-5's version |
 | PP-13 | Their footer within 8 s when the script console closes | `docs/history/KNOWN-ISSUES-2026-11-16.md`, *Closing Platterpus's script console…*; their round 30 lap 4 S9 | Their rig run |
 | PP-14 | Their addendum carries no timestamp; the `--version` hang through the Distrobox wrapper | `SETTLED.md` (their addendum and wrapper rows) | Theirs |
@@ -113,6 +112,7 @@ in `STATUS-OPEN hardware-unverified`, which disagreed.
 | HW-16 | A second drive for: the cache probe choice (PP-5); `A2`'s speed half, `A4` and `A5`, closed as unsettleable on this drive (platterpus:R38.L17.S5); redumper on the reference disc (US-12) | No second drive yet |
 | HW-17 | Memory use at whole-disc scale | Not measured (`SETTLED.md`) |
 | HW-18 | `Session gap: not determined (…)` on a drive whose last-session query fails | Built for `.35` and held on an image through the shim (`session_gap_assumed`); never printed by a drive. Linux answers the query, so the line should not print there; libcdio's macOS, FreeBSD and AIX drivers never answer it. Not run |
+| HW-19 | `Disc MCN:` on a drive: a code, `none (libcdio returned none)`, or `unknown (…)` with the reason the capabilities query gave | Built for `.35` and held on images through the shim (`disc_mcn_always`); `.35` has not run on a drive. Not run |
 
 ## Upstream
 
