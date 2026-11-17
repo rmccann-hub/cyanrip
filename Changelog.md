@@ -1,5 +1,20 @@
 Unreleased
 ==========
+**The outside reviews are archived on the evidence branch**, at `60ec8702`
+under `docs/outside-reviews-2026-11-17/`, on the owner's word of 2026-11-17.
+Another session had carried them from the owner's company audit repository
+to the branch `claude/outside-reviews-import`. They are 96 files: the audit
+of 2026-10-27 and what followed it, the audit log with the week review of
+2026-11-10, and the UX review of 2026-11-17 with its rips, captures and
+screenshots. All of them are under `imported/`, byte for byte but for nine
+lines `tools/redact.py` changed, five home paths and four AcoustID option
+values, none of them a key. The folder's README says which, and what this
+repository has done with each review. No real name, email, company or
+hostname is in them, checked before filing; the only account name is
+`rmccann-hub`, in repository addresses. `tools/evidence.py` files
+`docs/outside-reviews-*` folders as it does `docs/rig-*`, since HR-2 counts a
+review's captures as evidence too (`e2a406c9`).
+
 **Three test fixes after `.35`'s candidate**, found by the Fedora and macOS CI
 jobs on pull request #127, and none changing the program:
 - `disc_mcn_always` gave each cue a `.bin` of its own while every cue's `FILE`
