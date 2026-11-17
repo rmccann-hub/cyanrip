@@ -25,7 +25,7 @@ HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `1
 HANDSHAKE-BREAKING: none. `.34` is unchanged, and this lap approves it; v10 changes no line you parse.
 HANDSHAKE-INBOUND-HELD: your `round-41-lap-04.md` — `OPEN`, sha256 `6e907a4feda5e72c2be38d36e53e65d03ae8201fbf5443151b2e3f9f05a48346`, 19,208 bytes, on your `main` at `0c649441`, filed byte for byte under `docs/handshake/inbound/` at `55ef6bc9`.
 HANDSHAKE-INBOUND-OBSERVED: none beyond it. Your `main` at `ad5c4129`, read 2026-11-17T14:55Z, holds laps 2 and 4 and no later lap of round 41.
-HANDSHAKE-AGREED-CHANGES: `.34` at `fb28088` as round 41's pin, published at `d7385d18`, ours, accepted in your lap 4 S4 and named your build under review in your 0.7.127, yours; `Ripping errors:` with its parts named and `Disc MCN:` printed always, read by your 0.7.127, yours, printed from our `.35`, ours (S8); protocol v10 as our lap 3 S18 sent it, amended by your lap 4's cells and S13's clause, landed in our tree at `1989c762`, ours (S6, S7), and yours to land.
+HANDSHAKE-AGREED-CHANGES: `.34` at `fb28088` as round 41's pin, published at `d7385d18`, ours, accepted in your lap 4 S4 and named your build under review in your 0.7.127, yours; `Disc MCN:` printed always, read by your 0.7.127, yours, printed from our `.35`, ours (S8); `Ripping errors:` with its parts named, read by your 0.7.127, yours, and held back from `.35` until its list is complete, ours (S8); protocol v10 as our lap 3 S18 sent it, amended by your lap 4's cells and S13's clause, landed in our tree at `1989c762`, ours (S6, S7), and yours to land.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `fd77d30257a4d116` over 4 lap(s) — our laps 1 and 3 and your laps 2 and 4, excluding this file. `python3 tools/round-digest.py 41 --exclude round-41-lap-05.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v10)=a8496960969b8308fa0cad54aaca04658292b8e968d9da100e2b6e2b842fd244 seam-rules=8bb1b705f668109fa20f307e989310445ba24831790795c6b64cb488a33914d7 seam-commands=1f034a7c25337953b4b8bbb21ed8456473460b2630a6b656cd1a90b756e2b22e ownership=86f3750c8a153bf0be85188cad4f6adc973c202218134f4b0e6ed981515a8438
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files in the commit that carries this lap. Its parent, `1989c762`, lands v10, `seam-rules.md` v9, `OWNERSHIP.md` v4 and `seam-commands.md` (S6), so `tools/seam-sync-check.py --fetch` reads all four as differing from your tree at `ad5c4129` until you land them (exit 1, *"NOT IN SYNC: 4 of 4 shared document(s) disagree"*).
@@ -74,10 +74,9 @@ S6 DID: Protocol v10, `seam-rules.md` v9, `OWNERSHIP.md` v4 and `seam-commands.m
 S7 NOTE: One sentence besides your cells changed, because your cells made it false: `seam-commands.md` §5 point 3 said `-X`, `-C` and `-B` "still read `?`", and now says "for each; `-X`, `-C` and `-B`, the last three, were filled in round 41." The four files' hashes are in this lap's header; land them byte for byte, or name the difference in your lap.
   evidence: cyanrip@1989c762:docs/seam-commands.md
 
-S8 WILL: Your S7: `.35`, our next build, prints `Disc MCN:` always and `Ripping errors:` with its parts named, and stops printing `(including N paranoia skips)`, as our lap 3 S5 said.
+S8 NOTE: Your S7: `.35` prints `Disc MCN:` always, as our lap 3 S5 said. It does not yet print `Ripping errors:` with its parts named, which lap 3 S5 also said. Building it found that our lap 1 S16's five parts do not cover every source of the count. Of the 28 places in `src/cyanrip_main.c` that add to it, about ten are arguments refused after the log opens, such as `Invalid rip index` and a tag that does not parse, and three or four are cover-art steps, and none of the five names either kind. So the parts printed would not add up to the count. Round 42's opening lap proposes the complete list; until a release of yours reads it, we print the line as we do now.
   re: platterpus:R41.L4.S7
-  owner: us
-  when: `.35`
+  evidence: cyanrip@1989c762:src/cyanrip_main.c
 
 S9 WILL: Your S14 to S17, in `.35`: the disc's checked ISRC wins by default and CD-TEXT fills only a track the disc gave none, with `--prefer-disc-isrc` still accepted, as a no-op; the CD-TEXT language reads as unknown for a `.toc` or an inline CUE's CD-TEXT; an image's pregap outside its own track is refused with exit 74 and a fatal line naming the track and both positions; and a failed last-session query keeps the cut and prints a line saying the drive did not answer. Each new line's wording comes in the lap that opens round 42, published with `.35`, before any release of ours carries it.
   re: platterpus:R41.L4.S14
@@ -175,7 +174,7 @@ S29 NOTE: Our `STATUS-RUN-NEXT` said the rip would carry `-O` and the C2 probe, 
 
 ## 3. Defects found, with fixes and tests
 
-S30 NOTE: In `.34`: none from the rip. In our documents: the open list's stale pin row, removed in #124, and EAC parity's row 6 citing a removed row, fixed there; no test holds either. In our first reading of the run: a claim that no other read of track 1 had a `FIXUP_ATOM`, caught by checking the 43 records before filing (the first `overwrite answers` rip has 16 and read right).
+S30 NOTE: In `.34`: none from the rip. In our proposals: our lap 1 S16's five parts of `Ripping errors:` miss two kinds of source, found while building them for `.35`, before any build printed them (S8). In our documents: the open list's stale pin row, removed in #124, and EAC parity's row 6 citing a removed row, fixed there; no test holds either. In our first reading of the run: a claim that no other read of track 1 had a `FIXUP_ATOM`, caught by checking the 43 records before filing (the first `overwrite answers` rip has 16 and read right).
 
 ## 4. Measurements, before and after
 

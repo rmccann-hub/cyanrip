@@ -9,7 +9,11 @@ gate stays at 9 until their tree holds the same bytes. One sentence beyond
 their cells changed, because their cells made it false. The lap waives our
 lap 1 S28 and their lap 2 S17, which the move to `.34` replaced. Our lap
 checker refused the `GO` until it did, since a close condition with no
-status in any lap leaves the round undecidable.
+status in any lap leaves the round undecidable. Its S8 holds back
+`Ripping errors:` with its parts named from `.35`. Dumbass lap 1 proposed
+five parts without mapping all 28 places that add to the count, and refused
+arguments and cover-art steps are none of them, so the parts would not have
+summed to the count. Round 42 proposes the complete list.
 
 **The golden reference and interrupted sample regenerated for round 41 lap 5**:
 their `Handshake:` line reads round 41 lap 5 `OPEN`, verdict `GO`, as a draft
