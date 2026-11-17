@@ -1,5 +1,17 @@
 Unreleased
 ==========
+**Upstream report 33 is drafted:** a failed AccurateRip query can print
+`Unable to get AccuRIP DB data:` and then a line holding only `!`, because
+both formats end `\n!\n`, and when `curl_easy_getinfo()` fails the status
+is left unset, so the log says `AccurateRip:    disabled` of a query that was
+made. Both run on a build of upstream's `648b1dd` with a preload library
+standing in for libcurl's failures, since neither could be caught from the
+network. The fork has both, unchanged since `.34`, and its log keeps the `!`
+line too; Platterpus records that text and reads that value, so the fix is
+proposed in round 42 (`docs/OPEN-ITEMS.md` US-32). The upstream items'
+footer no longer says a fix is linked above for this one: the generator
+reads which of two labels a report's last section carries.
+
 **The golden reference and interrupted sample regenerated for `.35`'s
 changes so far**: both gain `Disc MCN:       none (libcdio returned none)`;
 otherwise only the build tag, timings, timestamps and where the sample's

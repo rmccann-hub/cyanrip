@@ -1,16 +1,16 @@
-# 32 upstream issues for cyanreg/cyanrip, ready to paste
+# 33 upstream issues for cyanreg/cyanrip, ready to paste
 
-**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `205bca03783f63b9`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
+**Generated, never edited.** `tools/gen-upstream-issues.py` renders it from `docs/upstream/defect-reports.md` and `docs/upstream-cachemodel-report.md`, whose combined sha256/16 is `20b3b88be277ab6f`; `--check` fails when either has moved. Every `file:line` below is upstream's, at the commit its source file names, and each report's row in `docs/SETTLED.md` re-checks it against `master`. Every fork commit linked below is on `platterpus-fork`, which is public, and every upstream commit links to upstream.
 
 **Links were resolved against upstream's `master` at `648b1dd`**, our mirror's tip when this was rendered: a commit it reaches links to upstream, and any other commit our history reaches links to the fork. `--check` renders against that commit, not against what a clone's `master` holds, so every clone holding it gives the same answer; `git fetch origin master` brings it.
 
-**Items 1 to 23 were filed on 2026-10-16**, by the operator, as one issue combining them in the order of importance below: <https://github.com/cyanreg/cyanrip/issues/167>. That link is the operator's word; this file's generator does not read upstream's tracker. An item asked for as an issue of its own is pasted from here. **Items 24 to 32 are not filed yet**: they go to the same issue as a comment, or each as an issue of its own, as the operator decides.
+**Items 1 to 23 were filed on 2026-10-16**, by the operator, as one issue combining them in the order of importance below: <https://github.com/cyanreg/cyanrip/issues/167>. That link is the operator's word; this file's generator does not read upstream's tracker. An item asked for as an issue of its own is pasted from here. **Items 24 to 33 are not filed yet**: they go to the same issue as a comment, or each as an issue of its own, as the operator decides.
 
 **How to file.** For each item: open <https://github.com/cyanreg/cyanrip/issues/new>, paste the **Title** line into the title box and everything between the two `BODY` markers into the body. File them in order: item 5 refers to item 4, so once item 4 is filed you can replace *"item 4 of this set"* in item 5 with its issue link. Before filing, a quick search of upstream's open issues for each title's key words avoids a duplicate; this list was not checked against their tracker.
 
 **Suggested order of importance**, if you file only some: 6 (apostrophes corrupt metadata on real rips), 8 (disc images rip corrupted audio with `Ripping errors: 0`), 19 (with libcdio 2.3.0 or later, every image rip without `-s` stops at `Offset is unset!`), 1 and 2 (a hung or cut-off process with the drive held), 4 and 5 (`-H` silently drops de-emphasis and the log claims it), then the rest.
 
-## Item 1 of 32
+## Item 1 of 33
 
 **Title:** The signal handler calls `cyanrip_log()`, which is not async-signal-safe
 
@@ -47,7 +47,7 @@ SIGTERM, and a -Z loop that ignored both").
 
 <!-- BODY END -->
 
-## Item 2 of 32
+## Item 2 of 33
 
 **Title:** SIGTERM is not handled at all
 
@@ -74,7 +74,7 @@ footer names the signal (`Rip completed:  no (interrupted by SIGTERM, …)`), in
 
 <!-- BODY END -->
 
-## Item 3 of 32
+## Item 3 of 33
 
 **Title:** `cyanrip_log_finish_report()` sits above `end:`, so every `goto end` skips it
 
@@ -106,7 +106,7 @@ state").
 
 <!-- BODY END -->
 
-## Item 4 of 32
+## Item 4 of 33
 
 **Title:** The filter graph is a ternary cascade, so `-H` discards de-emphasis
 
@@ -135,7 +135,7 @@ de-emphasis").
 
 <!-- BODY END -->
 
-## Item 5 of 32
+## Item 5 of 33
 
 **Title:** `(deemphasis applied)` is printed from the settings, not from what happened
 
@@ -160,7 +160,7 @@ fixed with the filter-graph issue (item 4 of this set) in [`b866900`](https://gi
 
 <!-- BODY END -->
 
-## Item 6 of 32
+## Item 6 of 33
 
 **Title:** A bare apostrophe in `-a` or `-t` swallows every later field
 
@@ -187,7 +187,7 @@ double-escaping the consumer's").
 
 <!-- BODY END -->
 
-## Item 7 of 32
+## Item 7 of 33
 
 **Title:** An invalid UTF-8 byte truncates a name, and can make `-D` absolute
 
@@ -215,7 +215,7 @@ truncating and logging").
 
 <!-- BODY END -->
 
-## Item 8 of 32
+## Item 8 of 33
 
 **Title:** Ripping a disc image at any paranoia level above 0 returns corrupted audio and reports `Ripping errors: 0`
 
@@ -328,7 +328,7 @@ with image size.
 
 <!-- BODY END -->
 
-## Item 9 of 32
+## Item 9 of 33
 
 **Title:** `-r` reaches libcdio-paranoia unrounded, and `-r 3` never returns on a bad sector
 
@@ -357,7 +357,7 @@ there.
 
 <!-- BODY END -->
 
-## Item 10 of 32
+## Item 10 of 33
 
 **Title:** `media` is tagged from the `-H` setting, so every `-H` rip says HDCD
 
@@ -379,7 +379,7 @@ says").
 
 <!-- BODY END -->
 
-## Item 11 of 32
+## Item 11 of 33
 
 **Title:** The AccurateRip tally counts a track whose read was interrupted
 
@@ -402,7 +402,7 @@ in a real rip.
 
 <!-- BODY END -->
 
-## Item 12 of 32
+## Item 12 of 33
 
 **Title:** A 450 lookup falls through to the whole-track checksum on a miss
 
@@ -432,7 +432,7 @@ fork's copy of the same code.
 
 <!-- BODY END -->
 
-## Item 13 of 32
+## Item 13 of 33
 
 **Title:** The AccurateRip disc status can never read `mismatch`
 
@@ -479,7 +479,7 @@ of the fetch, unchanged, so a recorded response can be tested with no network
 
 <!-- BODY END -->
 
-## Item 14 of 32
+## Item 14 of 33
 
 **Title:** A one-frame AccurateRip entry under the threshold is logged as `(not found)`
 
@@ -519,7 +519,7 @@ threshold rejects it"). The tally of partial matches is unchanged.
 
 <!-- BODY END -->
 
-## Item 15 of 32
+## Item 15 of 33
 
 **Title:** A track's success line ignores paranoia's skips and a `-Z` repeat limit
 
@@ -569,7 +569,7 @@ repeat limit as read with errors").
 
 <!-- BODY END -->
 
-## Item 16 of 32
+## Item 16 of 33
 
 **Title:** A failed track ends a rip of every track silently, and the album is finalised over it
 
@@ -611,7 +611,7 @@ under `-l`.
 
 <!-- BODY END -->
 
-## Item 17 of 32
+## Item 17 of 33
 
 **Title:** A stopped `-f` search is retried with a larger radius
 
@@ -660,7 +660,7 @@ was, and end a -f search on a stop").
 
 <!-- BODY END -->
 
-## Item 18 of 32
+## Item 18 of 33
 
 **Title:** The footer can count a one-frame match the track's lines never printed
 
@@ -705,7 +705,7 @@ match in the footer only where the track's line says so").
 
 <!-- BODY END -->
 
-## Item 19 of 32
+## Item 19 of 33
 
 **Title:** A disc image is taken for a drive with libcdio 2.3.0 or later
 
@@ -757,7 +757,7 @@ driver, not by CDIO_DRIVE_CAP_READ_ISRC").
 
 <!-- BODY END -->
 
-## Item 20 of 32
+## Item 20 of 33
 
 **Title:** `-Y` on a directory overflows a signed length
 
@@ -797,7 +797,7 @@ paths that skipped it").
 
 <!-- BODY END -->
 
-## Item 21 of 32
+## Item 21 of 33
 
 **Title:** A failed read in `-Y` is reported as a log with no checksum
 
@@ -834,7 +834,7 @@ as an I/O error, not as one without a checksum").
 
 <!-- BODY END -->
 
-## Item 22 of 32
+## Item 22 of 33
 
 **Title:** The paranoia counters are printed with `%lu` from `uint64_t`
 
@@ -877,7 +877,7 @@ build found this.
 
 <!-- BODY END -->
 
-## Item 23 of 32
+## Item 23 of 33
 
 **Title:** Three start-up failures return without tearing the context down
 
@@ -936,7 +936,7 @@ paths that skipped it").
 
 <!-- BODY END -->
 
-## Item 24 of 32
+## Item 24 of 33
 
 **Title:** An argument that is only its separator crashes with no message
 
@@ -978,7 +978,7 @@ giving the fork's argument probe a malformed-shape axis; it had no report until
 
 <!-- BODY END -->
 
-## Item 25 of 32
+## Item 25 of 33
 
 **Title:** A number past `INT_MAX` wraps and is used
 
@@ -1029,7 +1029,7 @@ fork's argument probe.
 
 <!-- BODY END -->
 
-## Item 26 of 32
+## Item 26 of 33
 
 **Title:** The AccurateRip tally divides by a count that includes data tracks
 
@@ -1069,7 +1069,7 @@ answering Platterpus's question.
 
 <!-- BODY END -->
 
-## Item 27 of 32
+## Item 27 of 33
 
 **Title:** A value the log echoes can start a line of its own
 
@@ -1116,7 +1116,7 @@ keep the value as it came. Found on 2026-10-26 by a review of the fork.
 
 <!-- BODY END -->
 
-## Item 28 of 32
+## Item 28 of 33
 
 **Title:** A path over 1,003 bytes is cut there, extension and all
 
@@ -1164,7 +1164,7 @@ the log, the CUE sheet and both tracks, each under its own name. Found on
 
 <!-- BODY END -->
 
-## Item 29 of 32
+## Item 29 of 33
 
 **Title:** `C2 errors: unsupported by drive` is printed for a disc image, and for a drive that returns C2 pointers
 
@@ -1282,7 +1282,7 @@ failure, which unchanged [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/6
 
 <!-- BODY END -->
 
-## Item 30 of 32
+## Item 30 of 33
 
 **Title:** A disc change mid-rip is reported as `Error ripping: Invalid argument`
 
@@ -1394,7 +1394,7 @@ Applied to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd) and ru
 
 <!-- BODY END -->
 
-## Item 31 of 32
+## Item 31 of 33
 
 **Title:** `Embedded cover art:` names the cover that was asked for, not what the file holds
 
@@ -1511,7 +1511,7 @@ In upstream's code there are two steps.
 
 <!-- BODY END -->
 
-## Item 32 of 32
+## Item 32 of 33
 
 **Title:** A cover whose codec parameters carry extradata, such as an AVIF, aborts the rip with a double free
 
@@ -1711,6 +1711,106 @@ offsets only. Applied to [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/6
 
 ---
 *Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `648b1dd`. The fix is linked above; happy to open a PR if it helps.*
+
+<!-- BODY END -->
+
+## Item 33 of 33
+
+**Title:** A failed AccurateRip query can print a line holding only `!`, and log `AccurateRip: disabled`
+
+<!-- BODY START -->
+
+**Where:** `src/accurip.c:160-162` and `:168-173` at [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), in
+`crip_fill_accurip()`:
+
+```c
+        else
+            cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: %s\n!\n",
+                        curl_easy_strerror(res));
+```
+
+```c
+    res = curl_easy_getinfo(curl_ctx, CURLINFO_CONTENT_TYPE, &content_type);
+    if (res != CURLE_OK) {
+        cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: %s\n!\n",
+                    curl_easy_strerror(res));
+        goto end;
+    }
+```
+
+**What happens:** two things.
+
+1. **Both formats end `\n!\n`**, so each prints libcurl's message as one line
+   and then a line holding only `!`. The first is the branch for a failed
+   transfer whose error buffer (`CURLOPT_ERRORBUFFER`, set at `:143`) is
+   empty. libcurl's page for that option says it "initializes the contents
+   of the error buffer to an empty string before performing a transfer", and
+   its History section that before 7.60.0, "if an error code was returned but
+   there was no error detail the buffer was untouched". Its example prints
+   `curl_easy_strerror()` in that case, ending in one `\n`, which this branch
+   follows but for the `!`. The second format prints whenever
+   `curl_easy_getinfo()` fails.
+2. **The second path leaves the status unset.** It returns without setting
+   `ctx->ar_db_status`, which stays `CYANRIP_ACCUDB_DISABLED`, the zero the
+   context starts with. So the log's start report (`src/cyanrip_log.c:326-330`)
+   says `AccurateRip:    disabled`, as it does for a rip run with `-A`, though
+   the query was made and failed. The first path sets
+   `CYANRIP_ACCUDB_ERROR` (`:163`), and the log says `error`.
+
+The query runs at `src/cyanrip_main.c:2029`, before the log file is opened at
+`:2083`, so the `Unable to get AccuRIP DB data:` line and its `!` reach only
+the terminal. The log file has only the `AccurateRip:` line.
+
+Neither failure was caught from the network. This report names no real
+failure for which libcurl 8.5.0 leaves the error buffer empty, nor one of
+`curl_easy_getinfo()` for `CURLINFO_CONTENT_TYPE`. Both were run with a
+preload library that makes libcurl answer as those failures would.
+
+**How to reproduce:** on a build of [`648b1dd`](https://github.com/cyanreg/cyanrip/commit/648b1dd), with the two-track image from
+item 29, as in item 32. The preload library overrides three functions:
+
+- `curl_easy_setopt()` keeps the error buffer's pointer, and calls libcurl's.
+- `curl_easy_perform()` empties that buffer, as libcurl does, and returns
+  `CURLE_COULDNT_CONNECT`. For the second path, it instead gives the write
+  callback an 8-byte body and returns `CURLE_OK`.
+- `curl_easy_getinfo()`, for the second path, returns `CURLE_UNKNOWN_OPTION`
+  for `CURLINFO_CONTENT_TYPE`, and calls libcurl's otherwise.
+
+Then:
+
+```
+cyanrip -d disc.cue -N -U -s 0 -o flac
+```
+
+On the first path, the terminal's output begins:
+
+```
+Checking disc.bin for cdrom...
+
+Opening drive...
+Unable to get AccuRIP DB data: Couldn't connect to server
+!
+cyanrip 0.9.4-rc3 (release)
+```
+
+and the log file says `AccurateRip:    error`. The second path prints the
+same, with `An unknown option was passed in to libcurl`, and its log file says
+`AccurateRip:    disabled`. Both rip the two tracks and exit 0.
+
+**Not fixed in the fork yet:** the fork's `src/accurip.c:376` and `:386`
+print the same two formats, unchanged since `.34` ([`fb28088`](https://github.com/rmccann-hub/cyanrip/commit/fb28088)), and the
+second path leaves the status unset the same way. Run the same way on a build
+of the fork's work after `.34`, both paths print what upstream's do, and the
+fork's log file, which also keeps what was printed before it opened, has the
+`!` line too. The fork's consumer, Platterpus, records the
+`Unable to get AccuRIP DB data: %s\n!` text in its inventory of this
+program's messages and reads the `AccurateRip:` value, so the fork changes
+either only through a handshake round, which its round 42 proposes. The `!`
+was found on 2026-11-17, while the fork triaged an outside review of its
+interface, and the unset status the same day, while this report was drafted.
+
+---
+*Found in the fork `rmccann-hub/cyanrip` (branch `platterpus-fork`), which feeds the Platterpus ripper. Checked against `master` at `648b1dd`. The fork has not fixed this one yet.*
 
 <!-- BODY END -->
 

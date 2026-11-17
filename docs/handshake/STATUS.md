@@ -13,7 +13,7 @@ STATUS-OPEN: overread-bounded us fixing at bfe71ec, priority 1: under -O a frame
 STATUS-OPEN: subchannel-pregap-varies us fixing at 8726bd3, priority 5: a pregap the TOC does not signal read differently between rips of one disc while the log stated one value; fixed by placing each Q frame at the sector its own address names (316682e), with every search's counts in Pregap searches: (8726bd3, +platterpus.27 and .28), and since +platterpus.29 the one sector the reads leave undecided prints as such: track 9 is 94 or 95 frames (undecided) in 18 of the 19 .29 logs of 2026-11-04 and 26 of round 40's 29 rip logs, 95 in the rest, and 94 in no log since .29; this drive's raw Q of LSN 145567 fails its CRC, so a raw read on a second drive settles it (our round 39 lap 1 S11; docs/OPEN-ITEMS.md HW-6; the record is docs/KNOWN-ISSUES.md)
 STATUS-OPEN: unsent-flag-rows them fixing at round 41, priority 8: docs/seam-commands.md §1b rows each flag of ours your rip path does not send, and your lap 4 S8 and S9 gave the last three PP cells, for -X, -C and -B, and --prefer-accuraterip-match and --reread-until-accuraterip, which your rip path sends, move to §1; both are in protocol v10's texts, landed in our tree at 1989c762 and yours to land (docs/OPEN-ITEMS.md R41-5 and PP-12)
 STATUS-OPEN: hardware-unverified us cannot, because each needs a disc or a drive this environment lacks: the list is docs/OPEN-ITEMS.md, Needs a drive, HW-1 to HW-17, which on 2026-11-16 replaced this line's own list, CLAUDE.md's table and KNOWN-ISSUES.md's, which disagreed; among them C2 read by cyanrip itself, the C2 probe at track 3's seconds 240 and 245 and track 1's second 162, track 9's LSN 145567 on a second drive, -O past the lead-out, CD-TEXT from a disc, a recordable disc, -W on a pre-emphasised disc, -P 0's salvage, Speed: with -S, and .32's footer third form and Still waiting: names; asked of your rig in our round 32 lap 1 S21
-STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed reports 1 to 23 on 2026-10-16 as upstream issue 167, in the order of importance docs/upstream/issues-to-file.md suggests, and reports 24 to 32, drafted from 2026-10-19 to 2026-11-16, go to that issue as one comment of our operator's; two more defects fixed here are read in upstream's code and not yet run there; a reply asking for a pull request or an issue of its own goes to our operator, who files it (docs/OPEN-ITEMS.md OW-8, UP-1, UP-3 and UP-4)
+STATUS-OPEN: upstream-reports-filed us cannot, because what follows is upstream's maintainer's: our operator filed reports 1 to 23 on 2026-10-16 as upstream issue 167, in the order of importance docs/upstream/issues-to-file.md suggests, and reports 24 to 33, drafted from 2026-10-19 to 2026-11-17, go to that issue as one comment of our operator's; two more defects fixed here are read in upstream's code and not yet run there; a reply asking for a pull request or an issue of its own goes to our operator, who files it (docs/OPEN-ITEMS.md OW-8, UP-1, UP-3 and UP-4)
 STATUS-OPEN: suite-timeouts-at-default us cannot, because neither settling run reproduces a timeout (the suite serially, and each test under the two heaviest), so no mechanism is known to fix; each occurrence is recorded, and none has been since 2026-09-30 (docs/OPEN-ITEMS.md US-4)
 
 **The block above is the proposal's D6, and it is checked, not trusted**
@@ -126,10 +126,11 @@ Our `master` mirrors upstream at `648b1dd`, 0.9.4-rc3, merged into
 `platterpus-fork` at `56da02eb` on 2026-11-03
 (`docs/upstream/sync-2026-11-03-ci.md`); `git ls-remote` returned the same
 commit on 2026-11-16, and `tools/upstream-delta.py` is how to check again.
-**Thirty-two defects this fork found in upstream's code are drafted; the
+**Thirty-three defects this fork found in upstream's code are drafted; the
 first twenty-three are filed there, as upstream issue 167**, by our operator
-on 2026-10-16, and 24 to 32 wait for our operator to add them as one comment
-(`docs/OPEN-ITEMS.md` OW-8). Two more fixed here are read in upstream's code
+on 2026-10-16, and 24 to 33 wait for our operator to add them as one comment
+(`docs/OPEN-ITEMS.md` OW-8). The fork has report 33's defect too, unfixed
+until a round agrees the change (US-32). Two more fixed here are read in upstream's code
 and not yet run there (UP-3, UP-4).
 The issue's existence is our operator's word: this session cannot open
 upstream's tracker.

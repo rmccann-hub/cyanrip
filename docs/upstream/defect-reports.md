@@ -5,14 +5,14 @@ operator, combined in the order of importance `issues-to-file.md` suggests.
 That is the operator's word: this file's author could not open it, since this session's proxy answers HTTP 403 for upstream's tracker and refuses to attach upstream beside the fork, so the link is relayed, not read. A reply that asks for a pull request, or for any report as
 an issue of its own, goes to the operator, who files it. Filing on upstream's
 tracker is outside this repository, so it is the maintainer's act; what this
-file does is make each one a copy-and-paste. **Reports 24 to 32, drafted
-from 2026-10-19 to 2026-11-16, are not filed yet.** All thirty-two are
+file does is make each one a copy-and-paste. **Reports 24 to 33, drafted
+from 2026-10-19 to 2026-11-17, are not filed yet.** All thirty-three are
 rendered for upstream's tracker in `issues-to-file.md`, generated from this
 file and the cache-model one by `tools/gen-upstream-issues.py`. The rule
 (`docs/history/CLAUDE-2026-10-21.md`) is that *"not filed is not fixed"*, and until 2026-09-27 only one of the defects this
 fork found in upstream had a report written: the cache-model one, which stays in
-its own file, `docs/upstream-cachemodel-report.md`. There are thirty-two:
-thirty-one here, and that one. The thirteenth found, report 13, was found the
+its own file, `docs/upstream-cachemodel-report.md`. There are thirty-three:
+thirty-two here, and that one. The thirteenth found, report 13, was found the
 day this file was written. Reports 14 to 18 were drafted on 2026-10-05, when
 `master` was still `f8ebf48` (`git ls-remote` again): 14 and 18 found that
 day, and 15 to 17 found earlier in round 30 and fixed for the fork's `.20`
@@ -36,7 +36,9 @@ Reports 29 to 31 were drafted on 2026-11-16, each for a defect the fork had
 fixed (`372706fe`, `30f16465` and `443cbeb9`), and each run on a build of
 upstream's `648b1dd` itself, the tip `git ls-remote` gave that day.
 Report 32 was drafted the same day for a defect the fork fixed in
-`af89fcc`, and run on a build of `648b1dd` too.
+`af89fcc`, and run on a build of `648b1dd` too. Report 33 was drafted on
+2026-11-17 for a defect the fork has too and has not fixed, and run on a
+build of `648b1dd` with a preload library standing in for libcurl's failures.
 
 **Checked against upstream `master` at `7dbe56a` on 2026-10-16** (`git ls-remote
 https://github.com/cyanreg/cyanrip refs/heads/master` returned
@@ -1382,3 +1384,94 @@ offsets only. Applied to `648b1dd` and run:
 - Valgrind reports `0 errors from 0 contexts` for the FLAC run.
 - `-o mp3` exits 1 at `Error writing packet: Invalid argument!`. That is the
   MP3 muxer refusing an AV1 picture, which is item 31, not this defect.
+
+## 33. A failed AccurateRip query can print a line holding only `!`, and log `AccurateRip: disabled`
+
+**Where:** `src/accurip.c:160-162` and `:168-173` at `648b1dd`, in
+`crip_fill_accurip()`:
+
+```c
+        else
+            cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: %s\n!\n",
+                        curl_easy_strerror(res));
+```
+
+```c
+    res = curl_easy_getinfo(curl_ctx, CURLINFO_CONTENT_TYPE, &content_type);
+    if (res != CURLE_OK) {
+        cyanrip_log(ctx, 0, "Unable to get AccuRIP DB data: %s\n!\n",
+                    curl_easy_strerror(res));
+        goto end;
+    }
+```
+
+**What happens:** two things.
+
+1. **Both formats end `\n!\n`**, so each prints libcurl's message as one line
+   and then a line holding only `!`. The first is the branch for a failed
+   transfer whose error buffer (`CURLOPT_ERRORBUFFER`, set at `:143`) is
+   empty. libcurl's page for that option says it "initializes the contents
+   of the error buffer to an empty string before performing a transfer", and
+   its History section that before 7.60.0, "if an error code was returned but
+   there was no error detail the buffer was untouched". Its example prints
+   `curl_easy_strerror()` in that case, ending in one `\n`, which this branch
+   follows but for the `!`. The second format prints whenever
+   `curl_easy_getinfo()` fails.
+2. **The second path leaves the status unset.** It returns without setting
+   `ctx->ar_db_status`, which stays `CYANRIP_ACCUDB_DISABLED`, the zero the
+   context starts with. So the log's start report (`src/cyanrip_log.c:326-330`)
+   says `AccurateRip:    disabled`, as it does for a rip run with `-A`, though
+   the query was made and failed. The first path sets
+   `CYANRIP_ACCUDB_ERROR` (`:163`), and the log says `error`.
+
+The query runs at `src/cyanrip_main.c:2029`, before the log file is opened at
+`:2083`, so the `Unable to get AccuRIP DB data:` line and its `!` reach only
+the terminal. The log file has only the `AccurateRip:` line.
+
+Neither failure was caught from the network. This report names no real
+failure for which libcurl 8.5.0 leaves the error buffer empty, nor one of
+`curl_easy_getinfo()` for `CURLINFO_CONTENT_TYPE`. Both were run with a
+preload library that makes libcurl answer as those failures would.
+
+**How to reproduce:** on a build of `648b1dd`, with the two-track image from
+item 29, as in item 32. The preload library overrides three functions:
+
+- `curl_easy_setopt()` keeps the error buffer's pointer, and calls libcurl's.
+- `curl_easy_perform()` empties that buffer, as libcurl does, and returns
+  `CURLE_COULDNT_CONNECT`. For the second path, it instead gives the write
+  callback an 8-byte body and returns `CURLE_OK`.
+- `curl_easy_getinfo()`, for the second path, returns `CURLE_UNKNOWN_OPTION`
+  for `CURLINFO_CONTENT_TYPE`, and calls libcurl's otherwise.
+
+Then:
+
+```
+cyanrip -d disc.cue -N -U -s 0 -o flac
+```
+
+On the first path, the terminal's output begins:
+
+```
+Checking disc.bin for cdrom...
+
+Opening drive...
+Unable to get AccuRIP DB data: Couldn't connect to server
+!
+cyanrip 0.9.4-rc3 (release)
+```
+
+and the log file says `AccurateRip:    error`. The second path prints the
+same, with `An unknown option was passed in to libcurl`, and its log file says
+`AccurateRip:    disabled`. Both rip the two tracks and exit 0.
+
+**Not fixed in the fork yet:** the fork's `src/accurip.c:376` and `:386`
+print the same two formats, unchanged since `.34` (`fb28088`), and the
+second path leaves the status unset the same way. Run the same way on a build
+of the fork's work after `.34`, both paths print what upstream's do, and the
+fork's log file, which also keeps what was printed before it opened, has the
+`!` line too. The fork's consumer, Platterpus, records the
+`Unable to get AccuRIP DB data: %s\n!` text in its inventory of this
+program's messages and reads the `AccurateRip:` value, so the fork changes
+either only through a handshake round, which its round 42 proposes. The `!`
+was found on 2026-11-17, while the fork triaged an outside review of its
+interface, and the unset status the same day, while this report was drafted.
