@@ -1,0 +1,61 @@
+$ cyanrip --help
+cyanrip 0.9.4-rc3+platterpus.34 (platterpus-fork-gfd20a0a)
+    --help (-h):                     Print this text
+    --version (-v):                  Print the version number (-V accepted as an alias)
+
+Ripping options:
+    --device (-d):                   Set device path (can be a TOC file)
+    --offset (-s):                   CD drive offset in samples (default: 0)
+    --retries (-r):                  Maximum number of retries for frames and repeated rips (default: 10)
+    --repeat-rips (-Z):              Rip tracks until checksums match N times (for damaged CDs) (default: 0)
+    --speed (-S):                    Set drive speed (default: 0)
+    --stall-secs:                    Seconds a frame read must stall before reporting liveness (0 disables) (default: 10)
+    --cache-probe:                   Measure the drive's readback cache before ripping (costs seconds; with -I to measure without ripping) (default: false)
+    --consumer:                      Identify the calling program in the log (recorded verbatim, not verified)
+    --diagnostics:                   Write a machine-readable diagnostics record to this path (JSON)
+    --prefer-disc-isrc:              Tag a track with the ISRC read from the disc, where one is, over one given with -t (default: false)
+    --prefer-accuraterip-match:      At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does (default: false)
+    --reread-time-limit:             Seconds a -Z track's reads may take, checked between whole-track reads; then no further read starts (default: 0)
+    --reread-until-accuraterip:      Under -Z, read on past an agreement AccurateRip does not match, on a track it holds at this confidence or more, until a read it matches at this confidence or a limit (default: 0)
+    --read-vendor-settings:          Ask the drive for its settings with its vendor's read-only query, where cyanrip has one for its vendor (Pioneer's settings block), into the --diagnostics record (default: false)
+    --keep-every-read:               Save every distinct -Z read of a track, the kept one too, as WAV in this folder
+    --encoder-option:                Pass key=value to every output's encoder, as FFmpeg names its options (repeatable)
+    --pregap (-p):                   Track pregap handling: N=default|drop|merge|track (repeatable)
+    --paranoia (-P):                 Paranoia level (0..max, or 'none'/'max')
+    --overread (-O):                 Enable overreading into lead-in and lead-out (default: false)
+    --hdcd (-H):                     Enable HDCD decoding; a disc without HDCD comes out 6.02 dB quieter (default: false)
+    --force-deemphasis (-E):         Force CD deemphasis (default: false)
+    --no-deemphasis (-W):            Disable automatic CD deemphasis (default: false)
+    --no-replaygain (-K):            Disable ReplayGain tagging (default: false)
+    --no-data-tracks (-X):           Skip data tracks instead of ripping them to raw binaries (default: false)
+
+Output options:
+    --outputs (-o):                  Comma separated list of output formats ('help' lists all)
+    --bitrate (-b):                  Bitrate of lossy files in kbps (default: 256.000000)
+    --folder-scheme (-D):            Directory naming scheme (default: {album}{if #releasecomment# > #0# (|releasecomment|)} [{format}])
+    --track-scheme (-F):             Track naming scheme (default: {if #totaldiscs# > #1#|disc|.}{track} - {title})
+    --log-scheme (-L):               Log file name scheme (default: {album}{if #totaldiscs# > #1# CD|disc|})
+    --cue-scheme (-M):               CUE file name scheme (default: {album}{if #totaldiscs# > #1# CD|disc|})
+    --tracks (-l):                   Comma separated list of tracks to rip (default: all)
+    --sanitize (-T):                 Filename sanitation: simple, os_simple, unicode, os_unicode
+
+Metadata options:
+    --info (-I):                     Only print CD and track info (default: false)
+    --cue-only (-J):                 Only generate and print a CUE sheet, don't rip (default: false)
+    --album-meta (-a):               Album metadata, key=value:key=value
+    --track-meta (-t):               Track metadata as N=key=value:key=value (repeatable)
+    --release (-R):                  MusicBrainz release: 1-based index or ID string
+    --disc (-c):                     Multi-disc tag: disc/totaldiscs
+    --cover (-C):                    Cover art: title=path (or N=path per-track, repeatable)
+    --no-musicbrainz (-N):           Disable MusicBrainz lookup (default: false)
+    --no-accurip (-A):               Disable AccurateRip database query and validation (default: false)
+    --no-acoustid (-B):              Disable AcoustID fingerprinting (default: false)
+    --acoustid-key:                  AcoustID user API key, to submit fingerprints of verified rips
+    --no-coverart-db (-U):           Disable Cover art DB query and retrieval (default: false)
+    --cover-size (-m):               Cover art max size: 250, 500, 1200, or -1 for original (default: -1)
+    --no-coverart-embed (-G):        Disable embedding of cover art images (default: false)
+
+Misc. options:
+    --eject (-Q):                    Eject tray once successfully done (default: false)
+    --find-offset (-f):              Find drive offset (requires a disc with an AccuRip entry) (default: false)
+    --verify-log (-Y):               Verify a rip log's FUN512 checksum
