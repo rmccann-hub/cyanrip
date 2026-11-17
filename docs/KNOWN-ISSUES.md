@@ -197,8 +197,9 @@ reads support.
 **Since `.29`, measured from the filed logs, 2026-11-16**: `pregap of track 9: 94
 or 95 frames (undecided)` in 18 of the 19 `.29` logs of 2026-11-04
 (`docs/rig-2026-11-04-8d2ca72/`), and in 26 of the 29 rip logs of 2026-11-14,
-`.31` and `.32`, which give 95 in the other 3 (`docs/rig-2026-11-14-edb73dd/`).
-No log since `.29` has said 94. The next step is the raw read on a second drive
+`.31` and `.32`, which give 95 in the other 3 (`docs/rig-2026-11-14-edb73dd/`),
+and in 28 of the 29 rip logs of 2026-11-17, `.32` and `.34`, which give 95 in
+the other 1 (`docs/rig-2026-11-17-fb28088/`). No log since `.29` has said 94. The next step is the raw read on a second drive
 (`docs/OPEN-ITEMS.md` HW-6).
 
 ### Six drive answers an audit listed, all real, and an MCN read skipped without a word
@@ -564,7 +565,7 @@ layer down.
 ### The cache probe's calibration was wrong (fixed for `.20`)
 
 **FIXED for `.20`, 2026-10-05, released on beta 2026-10-06, and MEASURED
-SEVENTEEN TIMES, IN AGREEMENT, 2026-10-06 to 2026-11-14** (`394ab17`).
+EIGHTEEN TIMES, IN AGREEMENT, 2026-10-06 to 2026-11-17** (`394ab17`).
 The probe now asks `cd-paranoia -A`'s question: a re-read is a hit when it is
 faster than `MIN_SEEK_MS`, 6 ms (libcdio-paranoia `src/cachetest.c:41`, read at
 `384f4da`), on its reasoning that no seek on a CD costs under ~10 ms. By that
@@ -580,7 +581,7 @@ revert-proved. **What was not established was that it agrees with cd-paranoia on
 a drive**: the first `-x` run on `.20`, beside section P's `cd-paranoia -A`, is
 that measurement, and the doubling search can still only bracket the size
 between two powers of two, so agreement means 137 to 140 falling inside the
-bracket. **It did, seventeen times**: the 2026-10-06 run on `.20` printed `128 to
+bracket. **It did, eighteen times**: the 2026-10-06 run on `.20` printed `128 to
 255 sectors`, with a 1.7 ms re-read after 128 sectors and three re-reads of at
 least 32.6 ms after 256, and `cd-paranoia -A`, run straight after it, reported
 137 (`docs/rig-2026-10-06-5704062/`); the 2026-10-07 run on `.21` printed the
@@ -594,11 +595,12 @@ on `.26` the same beside 140, 140, 137 and 137 (`docs/rig-2026-10-21-ca0f097/`,
 `docs/rig-2026-10-26-ca0f097/`), and the 2026-10-28 and 2026-10-29 runs on
 `.27` the same beside 140 each (`docs/rig-2026-10-28-5aeefc4/` and
 `docs/rig-2026-10-29-5aeefc4/`); then the 2026-11-03 run on `.28` the same
-beside 144, and the 2026-11-04, 2026-11-10, 2026-11-11 and 2026-11-14 runs on
-`.29` to `.32` the same beside 140 each (`docs/rig-2026-11-03-3f288fb/`,
-`docs/rig-2026-11-04-8d2ca72/`, `docs/rig-2026-11-10-5cc1c6b/`,
-`docs/rig-2026-11-11-e531a33/` and `docs/rig-2026-11-14-edb73dd/`, the table's
-last row). Seventeen runs on one drive, and the search can say no more than a
+beside 144, and the 2026-11-04, 2026-11-10, 2026-11-11, 2026-11-14 and
+2026-11-17 runs on `.29` to `.32` and `.34` the same beside 140 each
+(`docs/rig-2026-11-03-3f288fb/`, `docs/rig-2026-11-04-8d2ca72/`,
+`docs/rig-2026-11-10-5cc1c6b/`, `docs/rig-2026-11-11-e531a33/`,
+`docs/rig-2026-11-14-edb73dd/` and `docs/rig-2026-11-17-fb28088/`, the table's
+last row). Eighteen runs on one drive, and the search can say no more than a
 power of two. This said "twelve" and named 2026-10-29 the last row from
 2026-11-03 to 2026-11-16, while those five went in under it. Everything below is the record of
 the defect, kept because the table is checked against the transcripts.
@@ -640,7 +642,7 @@ hardware. Shipping a second unverifiable probe would repeat the mistake.
 
 **SETTLED IN DIRECTION, FALSIFIED IN MAGNITUDE — and the table below was
 INCOMPLETE for two days.** It carried three rows, then four. **Every filed rig
-session that produced a `Cache probe:` line is here now: thirty-four of them**, derived
+session that produced a `Cache probe:` line is here now: thirty-five of them**, derived
 by scanning `docs/rig-*/session/transcript.txt` rather than by adding the ones
 anyone remembered. **This sentence said "eight" while the table held nine rows**
 — written 2026-09-15 and never recounted when 09-17 was added, which is the same
@@ -685,6 +687,7 @@ uncached read in the hundreds of milliseconds beside a cached read of a few."*
 | 2026-11-10 `5cc1c6b` | 362.3 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.5 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-11-11 `e531a33` | 363.0 ms | 1.4 ms | **6 ms** | 23%; `128 to 255 sectors`, three re-reads after 256 sectors at 58.6 ms or more, beside `cd-paranoia -A`'s 140 |
 | 2026-11-14 `edb73dd` | 362.9 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 78.5 ms or more, beside `cd-paranoia -A`'s 140 |
+| 2026-11-17 `fb28088` | 362.8 ms | 1.3 ms | **6 ms** | 22%; `128 to 255 sectors`, three re-reads after 256 sectors at 59.1 ms or more, beside `cd-paranoia -A`'s 140 |
 
 **Each row names its directory**, `docs/rig-<row>-<build>/` — so `2026-09-15` is
 the `00:58` session and `2026-09-15b` the `12:01` one, which is how they are
@@ -692,10 +695,10 @@ filed. `sc_cache_table_matches_the_transcripts()` resolves every row that way
 and fails on a row that names no session **and** on a session with no row; the
 label read `2026-09-15a` until that test was written and pointed at nothing.
 
-**Hundreds of ms uncached: confirmed, thirty-four times. "A cached read of a
-few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen eighteen
-times, in the seventeenth to the thirty-fourth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
-1.5, 1.3, 1.4, 1.7, 2.0, 1.3, 1.2, 1.4, 1.2, 1.3, 1.4 and 1.3 ms,
+**Hundreds of ms uncached: confirmed, thirty-five times. "A cached read of a
+few ms": FALSIFIED** by the first sixteen — 42 to 82, not 2.2 — and seen nineteen
+times, in the seventeenth to the thirty-fifth at 1.5, 1.7, 1.8, 1.6, 1.9, 1.7,
+1.5, 1.3, 1.4, 1.7, 2.0, 1.3, 1.2, 1.4, 1.2, 1.3, 1.4, 1.3 and 1.3 ms,
 each after a run inside the cache. This said "eighteen" and "twice" for five days after the
 nineteenth row was added, the stale tally this section is about, found adding
 the twentieth. It then said "twenty-two" and "six" from 2026-10-20, when the
