@@ -1,6 +1,16 @@
 Unreleased
 ==========
-Nothing yet.
+**Two test fixes after `.35`'s candidate**, both found by Fedora's CI job on
+pull request #127, and neither changing the program:
+- `disc_mcn_always` gave each cue a `.bin` of its own while every cue's `FILE`
+  line still named `basic.bin`, which libcdio 2.1 ignores and Fedora's 2.3.0
+  did not: all its rips exited 74 there (`76fc858a`);
+- the QR test defined its helper where libqrencode is absent, and only a
+  warning said so (`d011c618`).
+
+`.35` stays the build at `1280aa4`: its suite passed from a clean checkout
+here, on libcdio 2.1, and Fedora's job failed on the test's fixture, not on
+the program.
 
 0.9.4-rc3+platterpus.35 — 2026-11-17 — **beta**
 ===============================================
