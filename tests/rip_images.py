@@ -4641,8 +4641,10 @@ def sc_disc_mcn_always():
       * the shim failing the capabilities query: `unknown (capabilities query
         failed)`.
 
-    libcdio's CUE driver opens the .bin named after the cue, so each cue here
-    has one of its own.
+    Each cue names a .bin of its own, named after it. libcdio 2.1 opens the
+    .bin named after the cue whatever its FILE line says, and on Fedora's
+    libcdio 2.3.0 every rip here exited 74 while the FILE line still named
+    basic.bin, which this folder lacks (CI, 2026-11-17).
     """
     d = WORK / "disc_mcn_always"
     d.mkdir(exist_ok=True)
@@ -4651,6 +4653,7 @@ def sc_disc_mcn_always():
             "code": "CATALOG 1234567890123\n" + base,
             "zero": "CATALOG 0000000000000\n" + base}
     for name, text in cues.items():
+        text = text.replace('FILE "basic.bin" BINARY', f'FILE "{name}.bin" BINARY')
         (d / f"{name}.cue").write_text(text, encoding="utf-8")
         shutil.copy(WORK / "basic.bin", d / f"{name}.bin")
 
