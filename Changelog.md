@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**A CD-Extra cut made without an answer says so**, as Platterpus's lap 4 S17
+answered our lap 3 S25. When the last-session query fails, which libcdio's
+macOS, FreeBSD and AIX drivers and every image do, the 11400-frame session
+gap still comes off the last audio track, so no rip changes, and the track
+block now says under `End LSN:`: `Session gap: not determined (the
+last-session query failed; 11400 frames cut by assumption)`. The image shim
+can now answer the query (`CRIP_LAST_SESSION`), so `session_gap_assumed`
+checks no answer, a second session and one session; it fails without the
+line, and with the line printed after an answer. On a drive it is HW-18.
+This closes US-2.
+
 **An image whose pregap lies outside its own track is refused**, with exit
 74 and a new fatal line, as Platterpus's lap 4 S16 answered our lap 3 S24:
 `Invalid pregap: track N's pregap starts at LSN P, after the track itself at

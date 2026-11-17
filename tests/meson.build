@@ -1114,6 +1114,7 @@ rip_scenarios = [
     'overread_bounded',
     'disc_mcn_always',
     'image_pregap_inside_track',
+    'session_gap_assumed',
 ]
 
 # The scenarios are told which build configuration they are testing, because

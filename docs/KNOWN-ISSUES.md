@@ -247,10 +247,14 @@ a scenario that reproduces it.
   `cdtext_isrc_checked` holds it, and `disc_isrc_line` holds the same over
   `-t`.
 - **A failed last-session query decides the CD-Extra cut.** Certain from the
-  code, reproducible only on a drive: any answer but success takes the
-  11400-frame cut, with no line saying why. libcdio's macOS, FreeBSD and AIX
-  drivers cannot answer it at all, so there every disc whose last track is data
-  is cut. An image takes that arm by design.
+  code: any answer but success takes the 11400-frame cut, and until `.35` no
+  line said why. libcdio's macOS, FreeBSD and AIX drivers cannot answer it at
+  all, so there every disc whose last track is data is cut. An image takes that
+  arm by design. As Platterpus's lap 4 S17 answered our lap 3 S25, the cut is
+  kept and the track block says `Session gap: not determined (the
+  last-session query failed; 11400 frames cut by assumption)`;
+  `session_gap_assumed` holds it on an image, and `docs/OPEN-ITEMS.md` HW-18
+  is a drive's.
 - **The offset search numbered tracks by position, and never tried an offset
   of 0.** With an AccurateRip answer served without the network, a CUE sheet
   numbered from 3, which libcdio before 2.2.1 keeps, read sectors -69427 to
@@ -262,8 +266,8 @@ a scenario that reproduces it.
 **The MCN read a failed capabilities query skips is still skipped without a
 word.** Our round 38 lap 3 S17 proposed `Disc MCN:` printed always, with its
 reasons, and Platterpus's lap 4 S11 accepted it as given; built for `.35`,
-held by `disc_mcn_always`. The four not fixed are US-2 in
-`docs/OPEN-ITEMS.md`.
+held by `disc_mcn_always`. The other four are fixed for `.35` too, each
+above with the scenario that holds it.
 
 ### paranoia's identify message can still start a line, from the `-d` path or the drive's INQUIRY strings
 

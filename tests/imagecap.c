@@ -92,6 +92,24 @@ void cdio_get_drive_cap(const CdIo_t *p_cdio,
     }
 }
 
+/* CRIP_LAST_SESSION: answer the last-session query, which no image driver
+ * does, with this LSN, so both arms of the CD-Extra cut are reached on an
+ * image: an answer past track 1 is a second session, cut on the answer; no
+ * answer is the cut by assumption that `Session gap:` names (our round 41
+ * lap 3 S25, Platterpus's lap 4 S17). */
+driver_return_code_t cdio_get_last_session(CdIo_t *p_cdio, lsn_t *i_last_session)
+{
+    static driver_return_code_t (*real)(CdIo_t *, lsn_t *);
+    const char *v = getenv("CRIP_LAST_SESSION");
+    if (v) {
+        *i_last_session = atoi(v);
+        return DRIVER_OP_SUCCESS;
+    }
+    if (!real)
+        real = dlsym(RTLD_NEXT, "cdio_get_last_session");
+    return real(p_cdio, i_last_session);
+}
+
 /* CRIP_MEDIA_CHANGED: what the media-change query answers on an image, which
  * otherwise never reports a change, so the stop's two arms can be reached:
  * 1 for a change the drive reports, a negative libcdio error for a query

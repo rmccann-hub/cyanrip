@@ -3191,6 +3191,67 @@ def sc_image_pregap_inside_track():
              f"place, exited {ec} or was refused")
 
 
+def sc_session_gap_assumed():
+    """A CD-EXTRA CUT MADE WITHOUT AN ANSWER SAYS SO, since .35.
+
+    When the disc's last track is data and the TOC gives it no pregap, the
+    11400-frame session gap comes off the last audio track unless the
+    last-session query says the disc is single-session. A query that failed
+    took the cut with no line saying why; libcdio's macOS, FreeBSD and AIX
+    drivers never answer it, and no image driver does. As Platterpus's lap 4
+    S17 answered our lap 3 S25, the cut is kept and the track block says
+    `Session gap: not determined (...)`, directly under `End LSN:`.
+
+    Three runs of one image, track 1 audio to LSN 13499 and track 2 data:
+    no answer, the line; the image shim answering a second session at track
+    2, the cut and no line; the shim answering one session, no cut. The
+    image is zeroes, and -I reads none of it.
+    """
+    d = WORK / "session_gap"
+    d.mkdir(exist_ok=True)
+    with open(d / "sg.bin", "wb") as f:
+        f.truncate(13800 * 2352)
+    (d / "sg.cue").write_text(
+        'FILE "sg.bin" BINARY\n  TRACK 01 AUDIO\n    INDEX 01 00:00:00\n'
+        "  TRACK 02 MODE1/2352\n    INDEX 01 03:00:00\n", encoding="utf-8")
+    cut = "    End LSN:     13499 (less 11400 frame CD-Extra session gap, read to: 2099)"
+    said = ("    Session gap: not determined (the last-session query failed; "
+            "11400 frames cut by assumption)")
+
+    def block(env=None, label="plain"):
+        ec, out = crip("-d", d / "sg.cue", "-N", "-A", "-U", "-I", "-s", "0",
+                       cwd=d, env=env)
+        (d / f"{label}.stdout").write_text(out, encoding="utf-8")
+        if ec != 0:
+            fail(f"session_gap_assumed: {label}: exit {ec}")
+        return out.splitlines()
+
+    lines = block()
+    if cut not in lines or said not in lines or \
+            lines.index(said) != lines.index(cut) + 1:
+        fail("session_gap_assumed: with no answer, the cut and the line saying "
+             "it was assumed are not both there, the line directly under it")
+
+    needs_preload_shim("session_gap_assumed")
+    shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"session_gap_assumed: the image shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    base = dict(os.environ, LD_PRELOAD=shim,
+                ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                + ":verify_asan_link_order=0")
+    lines = block(dict(base, CRIP_LAST_SESSION="13500"), "second_session")
+    if cut not in lines or any(l.startswith("    Session gap:") for l in lines):
+        fail("session_gap_assumed: with a second session answered, want the "
+             "cut and no `Session gap:` line")
+    lines = block(dict(base, CRIP_LAST_SESSION="0"), "one_session")
+    if any("CD-Extra session gap" in l or l.startswith("    Session gap:")
+           for l in lines):
+        fail("session_gap_assumed: with one session answered, want no cut "
+             "and no `Session gap:` line; the shim may not have answered")
+
+
 def sc_toc_starts_increase():
     """A TOC WHOSE STARTS DO NOT INCREASE IS REFUSED, NAMING THE TWO TRACKS.
 
@@ -8473,11 +8534,16 @@ def sc_enhanced_cd():
                  if t2[-24:] == src[600 * sec:600 * sec + 24] else "neither")
         fail(f"enhanced_cd/offset: track 2's last 6 samples are {which}, "
              "not appended silence")
+    # An image never answers the last-session query, so since .35 the cut is
+    # said to be an assumption, on the line between (sc_session_gap_assumed).
     if not re.search(r"^    End LSN:     11999 \(less 11400 frame CD-Extra "
-                     r"session gap, read to: 599\)\n    Appended:    1 frames "
+                     r"session gap, read to: 599\)\n    Session gap: not "
+                     r"determined \(the last-session query failed; 11400 frames "
+                     r"cut by assumption\)\n    Appended:    1 frames "
                      r"of silence$", olog, re.M):
-        fail("enhanced_cd/offset: track 2's block does not say it read to 599 "
-             "and appended one frame of silence")
+        fail("enhanced_cd/offset: track 2's block does not say it read to 599, "
+             "that the cut was assumed, and that it appended one frame of "
+             "silence")
     if "read with errors" in olog:
         fail("enhanced_cd/offset: a track read with errors at +6 samples")
 

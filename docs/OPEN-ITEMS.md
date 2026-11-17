@@ -40,7 +40,6 @@ review. Round 41's rip ran 2026-11-17 and is filed
 | Id | Item | Where the detail is | Next step |
 |---|---|---|---|
 | US-1 | A newline in the `-d` path or the drive's INQUIRY strings inside paranoia's identify message | `KNOWN-ISSUES.md`, *paranoia's identify message can still start a line…*; cyanrip:R38.L3.S19 (b), platterpus:R38.L4.S13 | Escape it when the rig can show it (HW-14) |
-| US-2 | Four defects from the 2026-10-26 audit, checked 2026-11-16: none reproduced on an image any longer (CD-TEXT's ISO 3901 check is fixed, and for `.35` CD-TEXT's ISRC no longer outranks the disc's, its language reads unknown where libcdio assigns English, and an image's pregap outside its track is refused); a failed last-session query deciding the CD-Extra cut (certain from the code; a drive to reproduce) | `KNOWN-ISSUES.md`, *Six drive answers an audit listed…* | Fix each with a scenario and announce it in a lap; the last-session cut without an answer needs a round |
 | US-4 | `Lap commit list names its range` timed out in full parallel suites; mechanism unknown | `KNOWN-ISSUES.md`; `STATUS-OPEN suite-timeouts-at-default` | Record the next occurrence; none since 2026-09-30 |
 | US-5 | A superseded track's read time on a drive | `KNOWN-ISSUES.md`, *A superseded track…*; their R155, shipped in their 0.7.126 | File a log where a later read replaced the first |
 | US-6 | A derived contract shows a surface's shape, not its meaning | `KNOWN-ISSUES.md`, *A derived contract…* | Joint; no proposal open |
@@ -113,6 +112,7 @@ in `STATUS-OPEN hardware-unverified`, which disagreed.
 | HW-15 | A disc ISRC that is not an ISO 3901 code; `Tracks ripped accurately:` on a disc with a data track; an Enhanced CD with a positive offset (upstream issue 168's read) | Not run |
 | HW-16 | A second drive for: the cache probe choice (PP-5); `A2`'s speed half, `A4` and `A5`, closed as unsettleable on this drive (platterpus:R38.L17.S5); redumper on the reference disc (US-12) | No second drive yet |
 | HW-17 | Memory use at whole-disc scale | Not measured (`SETTLED.md`) |
+| HW-18 | `Session gap: not determined (…)` on a drive whose last-session query fails | Built for `.35` and held on an image through the shim (`session_gap_assumed`); never printed by a drive. Linux answers the query, so the line should not print there; libcdio's macOS, FreeBSD and AIX drivers never answer it. Not run |
 
 ## Upstream
 

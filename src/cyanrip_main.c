@@ -629,8 +629,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     /* Drives report where the last session starts, disc images usually don't */
     lsn_t last_session_lsn;
     crip_stall_wait_begin("the last-session query");
-    int single_session =
-        cdio_get_last_session(ctx->cdio, &last_session_lsn) == DRIVER_OP_SUCCESS &&
+    const int session_answered =
+        cdio_get_last_session(ctx->cdio, &last_session_lsn) == DRIVER_OP_SUCCESS;
+    int single_session = session_answered &&
         last_session_lsn <= cdio_get_track_lsn(ctx->cdio, first_track_nb);
     crip_stall_wait_end();
 
@@ -748,6 +749,11 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
                 if ((pt->end_lsn - CRIP_XA_INTERVAL) >= pt->start_lsn) {
                     pt->end_lsn -= CRIP_XA_INTERVAL;
                     pt->end_lsn_session_gap = CRIP_XA_INTERVAL;
+                    /* Cut without an answer: kept, so no rip a user has made
+                     * changes, and said, as Platterpus's lap 4 S17 answered
+                     * our lap 3 S25 (US-2). libcdio's macOS, FreeBSD and AIX
+                     * drivers never answer, and no image driver does. */
+                    pt->session_gap_assumed = !session_answered;
                     ctx->audio_end_lsn = pt->end_lsn;
                     t->pregap_lsn = pt->end_lsn + 1;
                 } else {

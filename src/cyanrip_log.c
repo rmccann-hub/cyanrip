@@ -616,6 +616,15 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
     else
         cyanrip_log(ctx, 0, " (with offset: %i)\n", t->end_lsn);
 
+    /* The gap cut above with no answer to say there is a second session: the
+     * last-session query failed, which a drive on macOS, FreeBSD or AIX and
+     * every image does, and the frames came off by assumption. Since .35, as
+     * Platterpus's lap 4 S17 answered our lap 3 S25: the cut is kept, and
+     * the block says the session layout was not determined. */
+    if (t->session_gap_assumed)
+        cyanrip_log(ctx, 0, "    Session gap: not determined (the last-session query failed; "
+                            "%i frames cut by assumption)\n", t->end_lsn_session_gap);
+
     if (t->frames_after_disc_end)
         cyanrip_log(ctx, 0, "    Appended:    %i frames of silence\n", t->frames_after_disc_end);
 
