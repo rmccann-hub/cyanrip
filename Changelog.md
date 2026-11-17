@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**The README opens with a quick start**: find the drive's offset with `-f`,
+rip with `-s`, and rip a disc MusicBrainz does not know with `-N`, with `-I`
+for a dry run. *Compiling* lists the Debian, Ubuntu and Fedora packages this
+repository's CI installs, where it said only that they were in every
+distribution (the UX review of 2026-11-17, F4).
+
 **An `-l` index the disc lacks is refused before the header**: `-l 9` on a
 two-track disc printed the disc header, some 44 lines, before `Invalid rip
 index 9, list has 2 tracks!`, and a rip left a log and a CUE sheet for nothing

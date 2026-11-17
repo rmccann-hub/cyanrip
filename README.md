@@ -16,6 +16,18 @@ Fully featured CD ripping program able to take out most of the tedium. Fully acc
 > the generated interface contract, and `docs/handshake/` for the record of the
 > rounds that agreed it.
 
+Quick start
+-----------
+A drive needs its read offset once, given with `-s` on every rip; a disc image
+needs none. Find it with a disc AccurateRip knows, then rip:
+
+    cyanrip -f          # find the drive's read offset, say +6
+    cyanrip -s 6        # rip the disc in the default drive to FLAC
+    cyanrip -s 6 -N     # rip a disc MusicBrainz does not know, without its tags
+
+`cyanrip -I` prints what a rip would do, folders and file names included,
+without reading any audio. The options are under [CLI](#cli).
+
 Features
 --------
  * Automatic tag lookup from the MusicBrainz database
@@ -115,7 +127,12 @@ Optional dependencies:
  * libqrencode (to print MusicBrainz submission URLs as scannable QR codes)
  * libchromaprint (to fingerprint tracks for [AcoustID](#acoustid))
 
-All are available on any up-to-date Linux distribution's package repositories. To compile and install on any *NIX platform:
+All are available on any up-to-date Linux distribution's package repositories. The packages this repository's CI installs, which build it with every test:
+
+ * Debian and Ubuntu: `apt-get install meson ninja-build pkg-config ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavutil-dev libswresample-dev libcdio-dev libcdio-cdda-dev libcdio-paranoia-dev libmusicbrainz5-dev libcurl4-openssl-dev libqrencode-dev`
+ * Fedora: `dnf install meson ninja-build gcc pkgconf-pkg-config ffmpeg-free 'pkgconfig(libavcodec)' 'pkgconfig(libavformat)' 'pkgconfig(libswresample)' 'pkgconfig(libavfilter)' 'pkgconfig(libavutil)' 'pkgconfig(libcdio)' 'pkgconfig(libcdio_paranoia)' 'pkgconfig(libmusicbrainz5)' 'pkgconfig(libcurl)'`
+
+`ffmpeg` is only for the tests' `ffprobe`. To compile and install on any *NIX platform:
 
 `meson setup build`
 
