@@ -4289,6 +4289,27 @@ static int cyanrip_run(int argc, char **argv)
     }
 
     /* Create log file */
+    /* Every -l index is checked here, before the log opens: the same
+     * refusal came after the disc header, some 44 lines of it, and left
+     * a log and a CUE sheet for a rip that never started (the UX review
+     * of 2026-11-17, F17). The check in the rip loop below stays, as the
+     * one that decides what is read. -J ignores -l, and still does. */
+    if (!ctx->settings.generate_cue_only) {
+        for (int i = 0; i < ctx->settings.rip_indices_count; i++) {
+            int j = 0;
+            while (j < ctx->nb_tracks &&
+                   ctx->tracks[j].number != ctx->settings.rip_indices[i])
+                j++;
+            if (j >= ctx->nb_tracks) {
+                cyanrip_log(ctx, 0, "Invalid rip index %i, list has %i tracks!\n",
+                            ctx->settings.rip_indices[i], ctx->nb_tracks);
+                fatal_abort = 1;
+                ctx->exit_class = CRIP_EXIT_USAGE;
+                goto end;
+            }
+        }
+    }
+
     if (!ctx->settings.print_info_only) {
         /* These two returns used to be bare, bypassing `end:` entirely -- the
          * only two exits from this function that did. All twenty-four `goto

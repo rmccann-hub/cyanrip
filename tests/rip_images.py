@@ -3284,6 +3284,40 @@ def sc_album_folder_mode():
                      f"want {oct(want)}")
 
 
+def sc_rip_index_checked_first():
+    """AN -l INDEX THE DISC LACKS IS REFUSED BEFORE THE HEADER, since .35.
+
+    `-l 9` on a two-track disc printed the disc header, some 44 lines, then
+    `Invalid rip index 9, list has 2 tracks!`, and a rip left a log and a CUE
+    sheet behind for nothing (the UX review of 2026-11-17, F17). It is now
+    refused before the log opens, with the same line and exit 64: under -I
+    and a rip, the line comes before `DiscID:`, and the rip writes no file.
+    -J ignores -l, as before, and a valid -l still rips.
+    """
+    for label, extra in (("info", ["-I"]), ("rip", ["-s", "0"])):
+        out = WORK / f"out_rip_index_{label}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, text = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-l", "9",
+                        "-D", out, *extra)
+        lines = text.splitlines()
+        line = "Invalid rip index 9, list has 2 tracks!"
+        disc = next((i for i, l in enumerate(lines) if l.startswith("DiscID:")), None)
+        if ec != 64 or line not in lines:
+            fail(f"rip_index_checked_first: {label}: exit {ec}, refusal "
+                 f"{'printed' if line in lines else 'missing'}; want 64 and it")
+        elif disc is not None and disc < lines.index(line):
+            fail(f"rip_index_checked_first: {label}: the refusal is on line "
+                 f"{lines.index(line) + 1}, after the header's DiscID: on "
+                 f"line {disc + 1}")
+        files = sorted(p.name for p in out.rglob("*") if p.is_file()) if out.is_dir() else []
+        if files:
+            fail(f"rip_index_checked_first: {label}: the refusal left {files}")
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-J", "-l", "9",
+                 "-D", WORK / "out_rip_index_cue")
+    if ec != 0:
+        fail(f"rip_index_checked_first: -J ignores -l, and exited {ec}")
+
+
 def sc_toc_starts_increase():
     """A TOC WHOSE STARTS DO NOT INCREASE IS REFUSED, NAMING THE TWO TRACKS.
 

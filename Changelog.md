@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**An `-l` index the disc lacks is refused before the header**: `-l 9` on a
+two-track disc printed the disc header, some 44 lines, before `Invalid rip
+index 9, list has 2 tracks!`, and a rip left a log and a CUE sheet for nothing
+(the UX review of 2026-11-17, F17). The line and exit 64 are unchanged; under
+`-I` and a rip it now comes before `DiscID:` and no file is written. `-J`
+still ignores `-l`. `rip_index_checked_first` fails on the old order in all
+three of its checks.
+
 **The MusicBrainz QR code honours `NO_COLOR` and `TERM=dumb`**: it is drawn
 in 256-colour escapes, and checked only that stdout was a terminal (the UX
 review of 2026-11-17, F13). An empty `NO_COLOR` still draws it, as
