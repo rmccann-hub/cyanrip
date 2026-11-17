@@ -382,6 +382,39 @@ with tempfile.TemporaryDirectory() as d:
     check(rc == 1 and "already on evidence" in o,
           "a folder already on evidence is refused (HR-2 3)")
 
+    # --- an outside review, filed as a run is (the owner's choice of
+    # 2026-11-17): the same commit shape, its README in the checkout, and the
+    # folder enumerated and cited as a run folder is. A folder of neither kind
+    # is still refused.
+    rev = d / "review"
+    (rev / "imported" / "evidence").mkdir(parents=True)
+    (rev / "README.md").write_bytes(b"# review R\n")
+    (rev / "imported" / "evidence" / "r.txt").write_bytes(b"captured\n")
+    Rn = "docs/outside-reviews-2026-01-04"
+    rc, o = tool(work, "file", rev, "--as", Rn, "--date", DATE, "--push", url)
+    check(rc == 0, f"file an outside review: {o.strip()}")
+    E3 = git(origin, "rev-parse", "evidence")
+    check(git(origin, "rev-parse", f"{E3}^") == E2
+          and git(origin, "diff", "--name-only", "--diff-filter=MD", E2, E3)
+          == "", "it is one more commit on the tip, changing nothing there")
+    store = evidence.Store(work)
+    got = sorted(r.path for r in store.rows.values()
+                 if r.path.startswith(Rn + "/"))
+    check(got == [f"{Rn}/README.md", f"{Rn}/imported/evidence/r.txt"],
+          f"its rows are its two files: {got}")
+    check((work / Rn / "README.md").read_bytes() == b"# review R\n"
+          and not (work / Rn / "imported").exists(),
+          "its README is copied into the checkout, and nothing else")
+    check(evidence.run_folder(f"{Rn}/imported/evidence/r.txt") == Rn
+          and Rn in evidence.tree_folders(origin, E3),
+          "it is a folder of ours, found by enumerating the tree")
+    check(evidence.folders_named(f"cat {Rn}/imported/evidence/r.txt", store)
+          == [Rn], "a command naming one of its files names the folder")
+    rc, o = tool(work, "file", rev, "--as", "docs/other-2026-01-05",
+                 "--push", url)
+    check(rc == 1 and "not an evidence folder path" in o,
+          f"a folder of neither kind is refused: {o.strip()[-90:]}")
+
     # --- reachability through a cache that fetched the tip by hash first.
     # `fetch` takes each commit at depth 1, which marks the tip shallow; a
     # branch fetch after it did not deepen past that mark, so the earlier

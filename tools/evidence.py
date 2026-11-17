@@ -55,6 +55,7 @@ program.
     tools/evidence.py build --folders LIST --date ISO --manifest-out FILE [--push]
     tools/evidence.py verify-move EVIDENCE_COMMIT REMOVAL_COMMIT
     tools/evidence.py file STAGING --as docs/rig-NAME [--push]
+    tools/evidence.py file STAGING --as docs/outside-reviews-NAME [--push]
 """
 
 import argparse
@@ -188,13 +189,23 @@ def manifest_at(repo, rev):
     return parse_manifest(r.stdout.decode("utf-8"))
 
 
-def run_folder(path):
-    """The run folder a path is in (HR-2 5a moves whole ones), or None.
+# Our folders directly under docs/: a rig session's run, and since
+# 2026-11-17 an outside review with what it produced (logs, captures,
+# screenshots), which HR-2 1 counts as evidence as much as a run's. The owner
+# chose that day to archive the reviews moved here from another repository on
+# the evidence branch, and until then this module filed only `rig-` folders.
+OUR_FOLDERS = ("rig-", "outside-reviews-")
 
-    `docs/rig-*/` is ours; a folder under `docs/handshake/inbound/artifacts/`
-    is a copy of the other side's run. A loose file there is not a folder."""
+
+def run_folder(path):
+    """The evidence folder a path is in (HR-2 5a moves whole ones), or None.
+
+    `docs/rig-*/` and `docs/outside-reviews-*/` are ours; a folder under
+    `docs/handshake/inbound/artifacts/` is a copy of the other side's run. A
+    loose file there is not a folder."""
     parts = path.split("/")
-    if len(parts) >= 3 and parts[0] == "docs" and parts[1].startswith("rig-"):
+    if (len(parts) >= 3 and parts[0] == "docs"
+            and parts[1].startswith(OUR_FOLDERS)):
         return "/".join(parts[:2])
     if len(parts) >= 6 and parts[:4] == ["docs", "handshake", "inbound",
                                          "artifacts"]:
@@ -207,7 +218,7 @@ def tree_folders(repo, rev="HEAD"):
     pattern such as `docs/rig-*` literally, prints nothing and exits 0
     (HR-2 5b), so the list is read from the tree and never passed as one."""
     found = []
-    for parent, test in (("docs", lambda n: n.startswith("rig-")),
+    for parent, test in (("docs", lambda n: n.startswith(OUR_FOLDERS)),
                          ("docs/handshake/inbound/artifacts", lambda n: True)):
         r = git(repo, "ls-tree", "-d", "-z", "--name-only", f"{rev}:{parent}")
         if r.returncode != 0:
@@ -506,7 +517,8 @@ def overlay(store, paths, dest):
 
 
 EVIDENCE_TOKEN = re.compile(
-    r"docs/(?:rig-|handshake/inbound/artifacts/)[^\s\"'`|;<>()]*")
+    r"docs/(?:rig-|outside-reviews-|handshake/inbound/artifacts/)"
+    r"[^\s\"'`|;<>()]*")
 
 
 def folders_named(text, store):
@@ -517,7 +529,7 @@ def folders_named(text, store):
     found = set()
     for token in EVIDENCE_TOKEN.findall(text):
         parts = token.rstrip(".,").split("/")
-        depth = 2 if parts[1].startswith("rig-") else 5
+        depth = 2 if parts[1].startswith(OUR_FOLDERS) else 5
         if len(parts) < depth:
             continue
         pattern = "/".join(parts[:depth])
@@ -541,7 +553,7 @@ def files_named(text, store):
     for token in EVIDENCE_TOKEN.findall(text):
         token = token.rstrip(".,")
         parts = token.split("/")
-        depth = 2 if parts[1].startswith("rig-") else 5
+        depth = 2 if parts[1].startswith(OUR_FOLDERS) else 5
         files = [p for f in folders_named(token, store) for p in store.files(f)]
         rest = token.rstrip("/")
         hit = [p for p in files if fnmatch.fnmatchcase(p, rest)
@@ -648,7 +660,8 @@ def file_run(store, staging, dest, date=None, push_url=None):
     were filed straight to evidence."""
     staging = pathlib.Path(staging)
     if run_folder(dest.rstrip("/") + "/x") != dest.rstrip("/"):
-        raise RuntimeError(f"{dest} is not a run folder path (docs/rig-NAME)")
+        raise RuntimeError(f"{dest} is not an evidence folder path "
+                           f"(docs/rig-NAME or docs/outside-reviews-NAME)")
     dest = dest.rstrip("/")
     url = push_url or remote_url(store.root)
     date = date or datetime.datetime.now(datetime.timezone.utc).strftime(
