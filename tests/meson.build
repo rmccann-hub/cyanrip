@@ -1115,6 +1115,7 @@ rip_scenarios = [
     'disc_mcn_always',
     'image_pregap_inside_track',
     'session_gap_assumed',
+    'album_folder_mode',
 ]
 
 # The scenarios are told which build configuration they are testing, because

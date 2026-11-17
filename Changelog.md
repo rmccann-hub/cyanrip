@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**Album folders follow the umask** instead of being made 0700, upstream's
+mode, under which a media server running as another user could not read the
+library (the UX review of 2026-11-17, F25). Under the usual umask of 022 they
+are 0755. `album_folder_mode` checks a nested `-D` under 022 and 077, and
+fails on the old mode.
+
 **A CD-Extra cut made without an answer says so**, as Platterpus's lap 4 S17
 answered our lap 3 S25. When the last-session query fails, which libcdio's
 macOS, FreeBSD and AIX drivers and every image do, the 11400-frame session

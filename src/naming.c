@@ -970,8 +970,12 @@ char *crip_get_path(cyanrip_ctx *ctx, enum CRIPPathType type, int create_dirs,
              p = strchr(p + 1, OS_DIR_CHAR)) {
             *p = '\0';
             cyanrip_stat_t st_req = { 0 };
+            /* The umask decides, as for any file a program makes: 0700,
+             * upstream's, made every album folder private under the usual
+             * umask of 022, so a media server running as another user could
+             * not read the library (the UX review of 2026-11-17, F25). */
             if (cyanrip_stat(ret, &st_req) == -1)
-                mkdir(ret, 0700);
+                mkdir(ret, 0777);
             *p = OS_DIR_CHAR;
         }
     }

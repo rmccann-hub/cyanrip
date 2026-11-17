@@ -3252,6 +3252,38 @@ def sc_session_gap_assumed():
              "and no `Session gap:` line; the shim may not have answered")
 
 
+def sc_album_folder_mode():
+    """THE FOLDERS A RIP MAKES FOLLOW THE UMASK, since .35.
+
+    Every directory of a rip's path was made 0700, upstream's mode, so under
+    the usual umask of 022 an album folder was private and a media server
+    running as another user could not read it (the UX review of 2026-11-17,
+    F25). Each folder of a nested -D is checked under 022, where it must be
+    0755, and under 077, where it must still be 0700: the umask decides.
+    """
+    if os.name != "posix":
+        skip("album_folder_mode: folder modes are POSIX's")
+    for umask, want in ((0o022, 0o755), (0o077, 0o700)):
+        out = WORK / f"folder_mode_{umask:03o}"
+        shutil.rmtree(out, ignore_errors=True)
+        old = os.umask(umask)
+        try:
+            ec, text = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                            "-o", "wav", "-D", out / "artist" / "album",
+                            "-F", "{track}", "-L", "log")
+        finally:
+            os.umask(old)
+        if ec != 0:
+            fail(f"album_folder_mode: umask {umask:03o}: exit {ec}")
+            continue
+        for d in (out, out / "artist", out / "artist" / "album"):
+            mode = d.stat().st_mode & 0o777 if d.is_dir() else None
+            if mode != want:
+                fail(f"album_folder_mode: umask {umask:03o}: {d.name} is "
+                     f"{oct(mode) if mode is not None else 'missing'}, "
+                     f"want {oct(want)}")
+
+
 def sc_toc_starts_increase():
     """A TOC WHOSE STARTS DO NOT INCREASE IS REFUSED, NAMING THE TWO TRACKS.
 
