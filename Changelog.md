@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**Round 41 lap 5 is written, `GO`, and published held** until the owner
+releases it. It reads round 41's rip as meeting G1 to G3. Platterpus's lap 4
+is read, and each of its claims about our tree holds. Protocol v10,
+`seam-rules.md` v9, `OWNERSHIP.md` v4 and `seam-commands.md` are landed in
+our tree (`1989c762`) with Platterpus's cells and the agreed clause, and our
+gate stays at 9 until their tree holds the same bytes. One sentence beyond
+their cells changed, because their cells made it false. The lap waives our
+lap 1 S28 and their lap 2 S17, which the move to `.34` replaced. Our lap
+checker refused the `GO` until it did, since a close condition with no
+status in any lap leaves the round undecidable.
+
 **The UX review of 2026-11-17 is triaged and filed**
 (`docs/history/UX-REVIEW-2026-11-17.md`, verbatim). All 28 findings hold
 against the source. The fixes that move no line Platterpus parses are
