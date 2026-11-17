@@ -76,6 +76,11 @@ FILED = f"{UPSTREAM}/issues/167"
 # **Where:** line ("... at `b40c1f0`"), and the footer says that one. Read
 # from the reports, so the footer cannot claim a check nobody made.
 HEADER_AT = re.compile(r"\*\*Checked against upstream `master` at `([0-9a-f]{7})`")
+# Whether the fork has fixed a report's defect, read from the label of the
+# report's last section: the footer said "The fix is linked above" of every
+# item, and report 33's defect is the fork's too, unfixed.
+FIXED_LABEL = "**What the fork did:**"
+UNFIXED_LABEL = "**Not fixed in the fork yet:**"
 WHERE_AT = re.compile(r"\A\*\*Where:\*\*[^\n]* at `([0-9a-f]{7})`")
 # The upstream commit a rendered file's links were resolved against.
 PINNED_AT = re.compile(
@@ -156,13 +161,21 @@ def render(ref, short):
             sys.exit(f"gen-upstream-issues: report {n} appears twice in "
                      f"{DEFECTS}")
         w = WHERE_AT.search(body)
-        issues[n] = (title, body, w.group(1) if w else checked_at)
+        labels = [lab for lab in (FIXED_LABEL, UNFIXED_LABEL)
+                  if f"\n{lab}" in body]
+        if len(labels) != 1:
+            sys.exit(f"gen-upstream-issues: report {n} must carry exactly one "
+                     f"of {FIXED_LABEL} and {UNFIXED_LABEL}, at a line's "
+                     f"start; it carries {len(labels)}")
+        issues[n] = (title, body, w.group(1) if w else checked_at,
+                     labels[0] == FIXED_LABEL)
     m = re.search(r"(?ms)^## Title\s*\n+(.+?)\n\s*\n## Body", cm)
     if not m or 8 in issues:
         sys.exit(f"gen-upstream-issues: report 8 is {CACHEMODEL}'s, and "
                  f"that file must carry a '## Title' then a '## Body'")
+    # Report 8 is its own file, whose body ends naming the fork's fix
     issues[8] = (m.group(1).strip(), cm.split("\n## Body", 1)[1].strip(),
-                 checked_at)
+                 checked_at, True)
     if sorted(issues) != list(range(1, COUNT + 1)):
         sys.exit(f"gen-upstream-issues: expected reports 1-{COUNT}, found "
                  f"{sorted(issues)}")
@@ -207,11 +220,13 @@ def render(ref, short):
         "process with the drive held), 4 and 5 (`-H` silently drops "
         "de-emphasis and the log claims it), then the rest.", ""]
     for n in range(1, COUNT + 1):
-        title, body, at = issues[n]
+        title, body, at, fixed = issues[n]
         footer = ("\n\n---\n*Found in the fork `rmccann-hub/cyanrip` (branch "
                   "`platterpus-fork`), which feeds the Platterpus ripper. "
-                  f"Checked against `master` at `{at}`. The fix is linked "
-                  "above; happy to open a PR if it helps.*")
+                  f"Checked against `master` at `{at}`. "
+                  + ("The fix is linked above; happy to open a PR if it "
+                     "helps.*" if fixed else
+                     "The fork has not fixed this one yet.*"))
         out += [f"## Item {n} of {COUNT}", "",
                 f"**Title:** {title.replace('**', '')}", "",
                 "<!-- BODY START -->", "", link_commits(body, ref) + footer, "",
