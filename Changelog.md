@@ -1,5 +1,42 @@
 Unreleased
 ==========
+Nothing yet.
+
+0.9.4-rc3+platterpus.35 — 2026-11-17 — **beta**
+===============================================
+**Released on the beta channel on the owner's word of 2026-11-17**, *"do
+all recommended"*, given to a list whose second decision was to publish
+`.35` on beta once its suite passes. Round 41, which approves `.34`, is open
+until Platterpus's lap 6; a release made during a round is the next round's
+to review (v8 §6b), so round 42 opens on `.35` once round 41 closes. Beta is
+this side's choice under v8 E3; stable stays `.32` until round 41 closes, and
+then moves to `.34`.
+
+**What it ships since `.34`**, each in an entry below:
+- `Disc MCN:` is printed always, with a reason when there is no code
+  (`08c62b06`), which Platterpus's 0.7.127 reads;
+- a track's ISRC read from the disc wins over one from `-t` or CD-TEXT, and
+  `--prefer-disc-isrc` is accepted and ignored (`0c43925f`);
+- CD-TEXT read from a `.toc` or a CUE sheet's own lines reports its language
+  as unknown, where libcdio assigned English (`c099400f`);
+- an image whose pregap lies outside its own track is refused with exit 74
+  and one of two `Invalid pregap:` lines, both new fatal lines (`cf944575`);
+- `Session gap: not determined (…)` when the CD-Extra cut was made without
+  the drive's answer (`5bbbf458`); **not yet seen on a drive**
+  (`docs/OPEN-ITEMS.md` HW-18);
+- album folders made under the umask (`8f0a861d`), the QR code skipped under
+  `NO_COLOR` or `TERM=dumb` (`ed9a578d`), `-l` checked before the header
+  (`7c169ba7`), and a README that opens with a quick start (`f0d88e55`);
+- upstream report 33, and the owner's decisions of 2026-11-17.
+
+**Nothing built is held back.** Asked for and not in it, each with its reason:
+- **`Ripping errors:` with its parts named** waits for round 42, which
+  proposes a list that covers every source of the count (our round 41 lap 5
+  S8).
+- **The lone `!` after a failed AccurateRip query, and `AccurateRip:
+  disabled` after a failed `curl_easy_getinfo()`**, wait for round 42, since
+  Platterpus records the text and reads the value (US-32).
+
 **The owner's decisions of 2026-11-17 are recorded**, all given as *"do
 all recommended"*: round 41 lap 5 is released as `GO` (sent in pull request
 #126); `.35` is published on beta once its suite passes; stable moves to
