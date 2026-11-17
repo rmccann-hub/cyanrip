@@ -24,13 +24,13 @@ HANDSHAKE-FROM-COMMIT: 1989c762
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: `1989c762`, which lands protocol v10 and its three documents in our tree (S6), on `034ec91e`, the merge of our pull request #125, on `27728a75`, the merge of #124, which files the rip. It reaches `platterpus-fork` with this lap's pull request.
 HANDSHAKE-BREAKING: none. `.34` is unchanged, and this lap approves it; v10 changes no line you parse.
 HANDSHAKE-INBOUND-HELD: your `round-41-lap-04.md` — `OPEN`, sha256 `6e907a4feda5e72c2be38d36e53e65d03ae8201fbf5443151b2e3f9f05a48346`, 19,208 bytes, on your `main` at `0c649441`, filed byte for byte under `docs/handshake/inbound/` at `55ef6bc9`.
-HANDSHAKE-INBOUND-OBSERVED: none beyond it. Your `main` at `ad5c4129`, read 2026-11-17T14:55Z, holds laps 2 and 4 and no later lap of round 41.
+HANDSHAKE-INBOUND-OBSERVED: none beyond it. Your `main` at `5ce6641e`, read 2026-11-17T17:50Z with `git ls-remote` at this lap's release, holds laps 2 and 4 and no later lap of round 41.
 HANDSHAKE-AGREED-CHANGES: `.34` at `fb28088` as round 41's pin, published at `d7385d18`, ours, accepted in your lap 4 S4 and named your build under review in your 0.7.127, yours; `Disc MCN:` printed always, read by your 0.7.127, yours, printed from our `.35`, ours (S8); `Ripping errors:` with its parts named, read by your 0.7.127, yours, and held back from `.35` until its list is complete, ours (S8); protocol v10 as our lap 3 S18 sent it, amended by your lap 4's cells and S13's clause, landed in our tree at `1989c762`, ours (S6, S7), and yours to land.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `fd77d30257a4d116` over 4 lap(s) — our laps 1 and 3 and your laps 2 and 4, excluding this file. `python3 tools/round-digest.py 41 --exclude round-41-lap-05.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v10)=a8496960969b8308fa0cad54aaca04658292b8e968d9da100e2b6e2b842fd244 seam-rules=8bb1b705f668109fa20f307e989310445ba24831790795c6b64cb488a33914d7 seam-commands=1f034a7c25337953b4b8bbb21ed8456473460b2630a6b656cd1a90b756e2b22e ownership=86f3750c8a153bf0be85188cad4f6adc973c202218134f4b0e6ed981515a8438
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files in the commit that carries this lap. Its parent, `1989c762`, lands v10, `seam-rules.md` v9, `OWNERSHIP.md` v4 and `seam-commands.md` (S6), so `tools/seam-sync-check.py --fetch` reads all four as differing from your tree at `ad5c4129` until you land them (exit 1, *"NOT IN SYNC: 4 of 4 shared document(s) disagree"*).
 HANDSHAKE-CLOSE-BY: 2026-12-16T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — the owner, 2026-11-17, "do all recommended", given to our list of decisions whose first was to release this lap as `GO` when its pull request merges green
 HANDSHAKE-NEXT-LAP: 6 (yours): your reading of round 41's rip against G1 to G4, protocol v10 landed in your tree byte-identical to ours, and `GO` unless your own S5 condition is unmet. Our gate closes round 41 on it with no lap 7 of ours, and this is our last lap of the round.
 HANDSHAKE-TO-VERSION: platterpus 0.7.127
 
