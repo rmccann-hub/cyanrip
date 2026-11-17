@@ -16,6 +16,18 @@ Fully featured CD ripping program able to take out most of the tedium. Fully acc
 > the generated interface contract, and `docs/handshake/` for the record of the
 > rounds that agreed it.
 
+Quick start
+-----------
+A drive needs its read offset once, given with `-s` on every rip; a disc image
+needs none. Find it with a disc AccurateRip knows, then rip:
+
+    cyanrip -f          # find the drive's read offset, say +6
+    cyanrip -s 6        # rip the disc in the default drive to FLAC
+    cyanrip -s 6 -N     # rip a disc MusicBrainz does not know, without its tags
+
+`cyanrip -I` prints what a rip would do, folders and file names included,
+without reading any audio. The options are under [CLI](#cli).
+
 Features
 --------
  * Automatic tag lookup from the MusicBrainz database
@@ -115,7 +127,12 @@ Optional dependencies:
  * libqrencode (to print MusicBrainz submission URLs as scannable QR codes)
  * libchromaprint (to fingerprint tracks for [AcoustID](#acoustid))
 
-All are available on any up-to-date Linux distribution's package repositories. To compile and install on any *NIX platform:
+All are available on any up-to-date Linux distribution's package repositories. The packages this repository's CI installs, which build it with every test:
+
+ * Debian and Ubuntu: `apt-get install meson ninja-build pkg-config ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavutil-dev libswresample-dev libcdio-dev libcdio-cdda-dev libcdio-paranoia-dev libmusicbrainz5-dev libcurl4-openssl-dev libqrencode-dev`
+ * Fedora: `dnf install meson ninja-build gcc pkgconf-pkg-config ffmpeg-free 'pkgconfig(libavcodec)' 'pkgconfig(libavformat)' 'pkgconfig(libswresample)' 'pkgconfig(libavfilter)' 'pkgconfig(libavutil)' 'pkgconfig(libcdio)' 'pkgconfig(libcdio_paranoia)' 'pkgconfig(libmusicbrainz5)' 'pkgconfig(libcurl)'`
+
+`ffmpeg` is only for the tests' `ffprobe`. To compile and install on any *NIX platform:
 
 `meson setup build`
 
@@ -181,7 +198,7 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -I                   | Only print CD metadata and information, will not rip or eject the CD                        |
 | -a `string`          | Album metadata, syntax is described below                                                   |
 | -t `number=string`   | Track metadata, syntax is described below                                                   |
-| --prefer-disc-isrc   | Tag a track with the ISRC read from the disc, where one is, over one given with `-t` (fork) |
+| --prefer-disc-isrc   | Accepted and ignored: since `.35` a track's ISRC read from the disc is always used, over one given with `-t` or CD-TEXT (fork) |
 | -R `int` or `string` | Sets the MusicBrainz release to use, as an index from 1 or an ID, read [below](#metadata)   |
 | -c `int/int`         | Tag multi-disc albums as such, syntax is `disc/totaldiscs`, read below                      |
 | -C `path` or `url`   | Sets cover image to embed into each track, syntax is described below                        |

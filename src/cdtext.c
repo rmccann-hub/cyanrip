@@ -16,7 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <stdio.h>
+#include <string.h>
+
 #include <cdio/cdtext.h>
+#include <libavutil/avstring.h>
 
 #include "cdtext.h"
 #include "cyanrip_log.h"
@@ -51,6 +55,39 @@ static int read_track_fields(const cdtext_t *cdt, track_t track,
     return count;
 }
 
+/* WHETHER LIBCDIO'S CD-TEXT LANGUAGE IS THE SOURCE'S. libcdio 2.1.0 reads a
+ * language from binary CD-TEXT, a drive's or a CUE sheet's CDTEXTFILE, but
+ * gives a cdrdao .toc's CD-TEXT and a CUE sheet's inline CD-TEXT the language
+ * English whatever the source says: a .toc whose LANGUAGE_MAP says German
+ * logged `present (English, ...)` (US-2). Those two routes now log `unknown
+ * language`, as Platterpus's lap 4 S15 answered our lap 3 S23. A CUE sheet is
+ * read for a CDTEXTFILE command at the start of a line, the only route by
+ * which its CD-TEXT is binary; libcdio names the sheet it parsed. */
+static int cdtext_language_is_the_sources(cyanrip_ctx *ctx)
+{
+    switch (cdio_get_driver_id(ctx->cdio)) {
+    case DRIVER_CDRDAO:
+        return 0;
+    case DRIVER_BINCUE: {
+        const char *cue = cdio_get_arg(ctx->cdio, "cue");
+        FILE *f = cue ? fopen(cue, "r") : NULL;
+        if (!f)
+            return 0;
+        char line[1024];
+        int binary = 0;
+        while (!binary && fgets(line, sizeof(line), f)) {
+            const char *p = line + strspn(line, " \t");
+            binary = !av_strncasecmp(p, "CDTEXTFILE", 10) &&
+                     (p[10] == ' ' || p[10] == '\t');
+        }
+        fclose(f);
+        return binary;
+    }
+    default:
+        return 1;
+    }
+}
+
 int crip_fill_cdtext(cyanrip_ctx *ctx)
 {
     ctx->cdtext_status = CYANRIP_CDTEXT_ABSENT;
@@ -66,7 +103,8 @@ int crip_fill_cdtext(cyanrip_ctx *ctx)
     if (!cdt)
         return 0;
 
-    ctx->cdtext_language = cdtext_lang2str(cdtext_get_language((cdtext_t *)cdt));
+    ctx->cdtext_language = cdtext_language_is_the_sources(ctx) ?
+                           cdtext_lang2str(cdtext_get_language((cdtext_t *)cdt)) : NULL;
 
     ctx->cdtext_nb_disc_fields = read_track_fields(cdt, CDTEXT_DISC_TRACK,
                                                    &ctx->cdtext);

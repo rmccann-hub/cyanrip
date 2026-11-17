@@ -616,6 +616,15 @@ static void print_offsets(cyanrip_ctx *ctx, cyanrip_track *t)
     else
         cyanrip_log(ctx, 0, " (with offset: %i)\n", t->end_lsn);
 
+    /* The gap cut above with no answer to say there is a second session: the
+     * last-session query failed, which a drive on macOS, FreeBSD or AIX and
+     * every image does, and the frames came off by assumption. Since .35, as
+     * Platterpus's lap 4 S17 answered our lap 3 S25: the cut is kept, and
+     * the block says the session layout was not determined. */
+    if (t->session_gap_assumed)
+        cyanrip_log(ctx, 0, "    Session gap: not determined (the last-session query failed; "
+                            "%i frames cut by assumption)\n", t->end_lsn_session_gap);
+
     if (t->frames_after_disc_end)
         cyanrip_log(ctx, 0, "    Appended:    %i frames of silence\n", t->frames_after_disc_end);
 
@@ -1364,7 +1373,15 @@ void cyanrip_log_start_report(cyanrip_ctx *ctx)
     CLOG("DiscID:         %s\n", ctx->meta, "musicbrainz_discid")
     CLOG("Release ID:     %s\n", ctx->meta, "musicbrainz_albumid")
     CLOG("CDDB ID:        %s\n", ctx->meta, "cddb")
-    CLOG("Disc MCN:       %s\n", ctx->meta, "disc_mcn")
+    /* Always, since .35: the code, or `none` (libcdio answered with no usable
+     * code) or `unknown` (it was not asked), each with its reason, in
+     * `Disc ISRC:`'s shape (crip_fill_mcn()). */
+    if (dict_get(ctx->meta, "disc_mcn"))
+        cyanrip_log(ctx, 0, "Disc MCN:       %s\n", dict_get(ctx->meta, "disc_mcn"));
+    else
+        cyanrip_log(ctx, 0, "Disc MCN:       %s (%s)\n",
+                    ctx->mcn_none ? "none" : "unknown",
+                    ctx->mcn_reason ? ctx->mcn_reason : "not read");
     CLOG("Album:          %s\n", ctx->meta, "album")
     CLOG("Album artist:   %s\n", ctx->meta, "album_artist")
 

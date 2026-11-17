@@ -215,9 +215,12 @@ made from `tests/fixtures/`, run on a build of `8b3174ae`. Each fix lands with
 a scenario that reproduces it.
 
 - **The CD-TEXT language.** A `.toc` whose `LANGUAGE_MAP` says German, and a
-  CUE sheet with inline CD-TEXT, both log `CD-TEXT: present (English, …)`:
+  CUE sheet with inline CD-TEXT, both logged `CD-TEXT: present (English, …)`:
   libcdio 2.1.0 assigns English on those two routes. A `CDTEXTFILE` gives
-  German.
+  German. Fixed for `.35`, as Platterpus's lap 4 S15 answered our lap 3 S23:
+  those two routes log `unknown language`, and the record's
+  `cdtext.language` is null; `cdtext` and `diag_record_v8` hold it, and
+  `cdtext_isrc_checked` holds that a `CDTEXTFILE` keeps its language.
 - **A TOC whose starts did not increase.** A CUE sheet whose track 1 started
   after track 2 ripped with exit 0, `Duration: 142840:54.21`, `Samples:
   18446744073709463416` and an empty track 1, and said `Rip completed: yes`.
@@ -226,22 +229,32 @@ a scenario that reproduces it.
   `Invalid TOC: track N starts at LSN …, not after track M at LSN …!`;
   `toc_starts_increase` holds it.
 - **An image's pregap outside the track's bounds.** An `INDEX 00` after `INDEX
-  01` logs `Pregap length: -75 frames`. A pregap before the previous track's
-  start, with `-p 2=merge`, leaves track 1 empty with `End LSN: 74` below
-  `Start LSN: 150`, and exits 0.
+  01` logged `Pregap length: -75 frames`. A pregap before the previous track's
+  start, with `-p 2=merge`, left track 1 empty with `End LSN: 74` below
+  `Start LSN: 150`, and exited 0. Refused for `.35` with exit 74 and
+  `Invalid pregap: track N's pregap starts at LSN P, …`, naming the track and
+  both positions, as Platterpus's lap 4 S16 answered our lap 3 S24; an image
+  only. `image_pregap_inside_track` holds both cases.
 - **CD-TEXT's ISRC skipped the ISO 3901 check, and still outranks the disc's.**
   A `CDTEXTFILE` carrying `not an isrc` reached the FLAC tag and the CUE sheet's
   `ISRC`; since 2026-11-16 only a code ISO 3901 allows is used, and
-  `cdtext_isrc_checked` holds it. Still true: CD-TEXT fills the tags before the
-  disc's own code is read, so a valid CD-TEXT code beats the disc's unless
-  `--prefer-disc-isrc` is given, against `src/cdtext.c`'s own rule that
-  CD-TEXT only fills gaps. Which should win is round 35's `--prefer-disc-isrc`
-  question again, so it goes to a lap.
+  `cdtext_isrc_checked` holds it. CD-TEXT filled the tags before the disc's
+  own code was read, so a valid CD-TEXT code beat the disc's unless
+  `--prefer-disc-isrc` was given, against `src/cdtext.c`'s own rule that
+  CD-TEXT only fills gaps. Fixed for `.35`: our round 41 lap 3 S22 asked, and
+  Platterpus's lap 4 S14 answered that the disc's checked code wins by
+  default, the flag accepted as a no-op. The second rip of
+  `cdtext_isrc_checked` holds it, and `disc_isrc_line` holds the same over
+  `-t`.
 - **A failed last-session query decides the CD-Extra cut.** Certain from the
-  code, reproducible only on a drive: any answer but success takes the
-  11400-frame cut, with no line saying why. libcdio's macOS, FreeBSD and AIX
-  drivers cannot answer it at all, so there every disc whose last track is data
-  is cut. An image takes that arm by design.
+  code: any answer but success takes the 11400-frame cut, and until `.35` no
+  line said why. libcdio's macOS, FreeBSD and AIX drivers cannot answer it at
+  all, so there every disc whose last track is data is cut. An image takes that
+  arm by design. As Platterpus's lap 4 S17 answered our lap 3 S25, the cut is
+  kept and the track block says `Session gap: not determined (the
+  last-session query failed; 11400 frames cut by assumption)`;
+  `session_gap_assumed` holds it on an image, and `docs/OPEN-ITEMS.md` HW-18
+  is a drive's.
 - **The offset search numbered tracks by position, and never tried an offset
   of 0.** With an AccurateRip answer served without the network, a CUE sheet
   numbered from 3, which libcdio before 2.2.1 keeps, read sectors -69427 to
@@ -252,8 +265,9 @@ a scenario that reproduces it.
 
 **The MCN read a failed capabilities query skips is still skipped without a
 word.** Our round 38 lap 3 S17 proposed `Disc MCN:` printed always, with its
-reasons, and Platterpus's lap 4 S11 accepted it as given; it is not built
-(`docs/OPEN-ITEMS.md` R41-1). The five not fixed are US-2 there.
+reasons, and Platterpus's lap 4 S11 accepted it as given; built for `.35`,
+held by `disc_mcn_always`. The other four are fixed for `.35` too, each
+above with the scenario that holds it.
 
 ### paranoia's identify message can still start a line, from the `-d` path or the drive's INQUIRY strings
 

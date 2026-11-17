@@ -201,7 +201,7 @@ typedef struct cyanrip_settings {
     int enable_replaygain;
     int cache_probe;
     char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
-    int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
+    int prefer_disc_isrc; /* --prefer-disc-isrc: accepted, a no-op since .35 */
     int prefer_ar_match; /* --prefer-accuraterip-match: at the -Z repeat limit, a read AccurateRip matches first */
     char *keep_every_read; /* --keep-every-read DIR: every distinct -Z read's audio, as WAV, in DIR */
     int read_vendor_settings; /* --read-vendor-settings: send a vendor's read-only settings query (drive_caps.h) */
@@ -357,6 +357,9 @@ typedef struct cyanrip_track {
      * 11400-frame session adjustment read as a read offset that is normally
      * one frame. This is what lets the two be told apart. */
     int end_lsn_session_gap;
+    /* The session gap above was cut because the last-session query failed,
+     * not because it answered: an assumption, which the block says. */
+    int session_gap_assumed;
     int64_t rip_time_us; /* Wall clock time spent ripping and encoding */
     int64_t kept_read_us; /* Under -Z, how long the kept read took to read;
                            * 0 without -Z or with no kept read */
@@ -556,7 +559,6 @@ typedef struct cyanrip_ctx {
     cyanrip_track tracks[198];
     int nb_tracks; /* Total number of output tracks */
     int nb_cd_tracks; /* Total tracks the CD signals */
-    int disregard_cd_isrc; /* If one track doesn't have ISRC, universally the rest won't */
 
     /* How a -f search ended, for the -j record (round 32, our lap 1 S10):
      * NONE when -f did not run. Set where each ending prints its line. */
@@ -615,6 +617,11 @@ typedef struct cyanrip_ctx {
     int cdtext_nb_disc_fields;
     int cdtext_nb_tagged_tracks;
     const char *cdtext_language; /* Owned by libcdio, do not free */
+    /* Why `Disc MCN:` names no code, when it names none: crip_fill_mcn()'s
+     * reason, a static string, and whether libcdio answered (none) or was
+     * not asked (unknown). NULL until the MCN is asked for. */
+    const char *mcn_reason;
+    int mcn_none;
 
     /* State */
     int success;

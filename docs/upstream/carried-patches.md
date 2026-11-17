@@ -103,13 +103,14 @@ commit of ours added it; ours touch it only later (`81eedbf8`, `ed50558d`).
 ## 2. Fixes upstream could take
 
 The reports are in `docs/upstream/defect-reports.md`; report 8 is
-`docs/upstream-cachemodel-report.md`. Reports 1 to 32 are rendered for upstream's
+`docs/upstream-cachemodel-report.md`. Reports 1 to 33 are rendered for upstream's
 tracker in `docs/upstream/issues-to-file.md`. The operator says 1 to 23 were filed on
-2026-10-16 as upstream issue 167; that is relayed, not read. Reports 24 to 32 are
+2026-10-16 as upstream issue 167; that is relayed, not read. Reports 24 to 33 are
 drafted and not filed (UP-1, OW-8). Reports 1 to 28 had a check row in
 `docs/SETTLED.md`'s upstream section when this list was made, and all of that
 section's rows passed against `648b1dd` on 2026-11-16; 29 to 31 gained theirs
-the same day, each run against upstream's tree and ours.
+the same day, each run against upstream's tree and ours, 32 its own
+the same day, and 33 its own on 2026-11-17.
 
 **Retire when** a report's check fails against a synced `origin/master`: upstream
 has changed that code. At that sync, read upstream's fix, keep one, and delete

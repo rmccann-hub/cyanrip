@@ -629,8 +629,9 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
     /* Drives report where the last session starts, disc images usually don't */
     lsn_t last_session_lsn;
     crip_stall_wait_begin("the last-session query");
-    int single_session =
-        cdio_get_last_session(ctx->cdio, &last_session_lsn) == DRIVER_OP_SUCCESS &&
+    const int session_answered =
+        cdio_get_last_session(ctx->cdio, &last_session_lsn) == DRIVER_OP_SUCCESS;
+    int single_session = session_answered &&
         last_session_lsn <= cdio_get_track_lsn(ctx->cdio, first_track_nb);
     crip_stall_wait_end();
 
@@ -683,6 +684,33 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
             return AVERROR(EINVAL);
         }
 
+        /* An image's pregap must lie in its own track's run up: after the
+         * track before starts, and not after its own INDEX 01. An INDEX 00
+         * after INDEX 01 logged `Pregap length: -75 frames`, and one before
+         * the previous track's start, with `-p 2=merge`, left track 1 empty
+         * at exit 0 (US-2). Such a sheet describes no disc, so it is refused
+         * as an unordered TOC is, naming the track and both positions, as
+         * Platterpus's lap 4 S16 answered our lap 3 S24. An image only: a
+         * drive's pregap is read, not declared, and nothing here changes
+         * what a drive does. */
+        if (crip_is_image_driver(ctx) && t->pregap_lsn != CDIO_INVALID_LSN) {
+            if (t->pregap_lsn > t->start_lsn) {
+                cyanrip_log(ctx, 0, "Invalid pregap: track %i's pregap starts at LSN %i, "
+                            "after the track itself at LSN %i!\n",
+                            t->number, t->pregap_lsn, t->start_lsn);
+                cyanrip_ctx_end(&ctx);
+                return AVERROR(EINVAL);
+            }
+            if (i && t->pregap_lsn <= ctx->tracks[i - 1].start_lsn_sig) {
+                cyanrip_log(ctx, 0, "Invalid pregap: track %i's pregap starts at LSN %i, "
+                            "not after track %i at LSN %i!\n",
+                            t->number, t->pregap_lsn, ctx->tracks[i - 1].number,
+                            ctx->tracks[i - 1].start_lsn_sig);
+                cyanrip_ctx_end(&ctx);
+                return AVERROR(EINVAL);
+            }
+        }
+
         if (t->track_is_data) {
             if (ctx->settings.pregap_action[t->number - 1] == CYANRIP_PREGAP_DEFAULT)
                 ctx->settings.pregap_action[t->number - 1] = CYANRIP_PREGAP_DROP;
@@ -721,6 +749,11 @@ static int cyanrip_ctx_init(cyanrip_ctx **s, cyanrip_settings *settings)
                 if ((pt->end_lsn - CRIP_XA_INTERVAL) >= pt->start_lsn) {
                     pt->end_lsn -= CRIP_XA_INTERVAL;
                     pt->end_lsn_session_gap = CRIP_XA_INTERVAL;
+                    /* Cut without an answer: kept, so no rip a user has made
+                     * changes, and said, as Platterpus's lap 4 S17 answered
+                     * our lap 3 S25 (US-2). libcdio's macOS, FreeBSD and AIX
+                     * drivers never answer, and no image driver does. */
+                    pt->session_gap_assumed = !session_answered;
                     ctx->audio_end_lsn = pt->end_lsn;
                     t->pregap_lsn = pt->end_lsn + 1;
                 } else {
@@ -845,19 +878,45 @@ static int crip_code_is_set(const char *code)
     return code[strspn(code, "0")] != '\0';
 }
 
+/* The disc's MCN, or why there is none. `Disc MCN:` printed only a code
+ * until .35, so a disc with none, a driver that cannot read one and a failed
+ * capabilities query all printed no line, and a reader could not tell them
+ * apart. Now each says so, as `Disc ISRC:` does: our round 38 lap 3 S17's
+ * three reasons, which Platterpus's lap 4 S11 accepted and their 0.7.127
+ * reads, and an empty or all-zero code named as what libcdio returned, as an
+ * ISRC's is, rather than called none it did not return. */
 static void crip_fill_mcn(cyanrip_ctx *ctx)
 {
-    /* Get disc MCN */
-    if (ctx->rcap & CDIO_DRIVE_CAP_READ_MCN) {
-        crip_stall_wait_begin("the MCN read");
-        const char *mcn = cdio_get_mcn(ctx->cdio);
-        crip_stall_wait_end();
-        if (mcn) {
-            if (crip_code_is_set(mcn))
-                av_dict_set(&ctx->meta, "disc_mcn", mcn, 0);
-            cdio_free((void *)mcn);
-        }
+    /* A failed capabilities query sets every word to CDIO_DRIVE_CAP_ERROR,
+     * which says nothing about the MCN (our round 36 lap 12 S11 (c)). */
+    if (ctx->rcap & CDIO_DRIVE_CAP_ERROR) {
+        ctx->mcn_reason = "capabilities query failed";
+        return;
     }
+    if (!(ctx->rcap & CDIO_DRIVE_CAP_READ_MCN)) {
+        ctx->mcn_reason = "the driver does not report reading MCN";
+        return;
+    }
+
+    crip_stall_wait_begin("the MCN read");
+    const char *mcn = cdio_get_mcn(ctx->cdio);
+    crip_stall_wait_end();
+
+    ctx->mcn_none = 1;
+    if (!mcn) {
+        ctx->mcn_reason = "libcdio returned none";
+        return;
+    }
+    if (!mcn[0]) {
+        ctx->mcn_reason = "libcdio returned an empty MCN";
+    } else if (!crip_code_is_set(mcn)) {
+        ctx->mcn_reason = "libcdio returned an all-zero MCN";
+    } else if (av_dict_set(&ctx->meta, "disc_mcn", mcn, 0) < 0) {
+        ctx->mcn_reason = "out of memory";
+    } else {
+        ctx->mcn_none = 0;
+    }
+    cdio_free((void *)mcn);
 }
 
 static void track_set_creation_time(cyanrip_ctx *ctx, cyanrip_track *t)
@@ -1294,27 +1353,24 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                 }
             }
         }
-        /* --prefer-disc-isrc (round 35, Platterpus's TASKS R20): an ISRC the
-         * disc returned is what the files carry, over one -t gave, track by
-         * track, so a track whose read returned none keeps the caller's. A
-         * MusicBrainz ISRC names a recording, which can carry several; the
-         * disc's is a measurement of this pressing. Without the option,
-         * as before: the disc's only when -t gave none and no earlier track
-         * reported none. In both, a code that is not an ISO 3901 code is
-         * never written (round 35, Platterpus's lap 2 S7, our lap 4 S5): the
-         * record and the Disc ISRC: line keep it, saying it was not used, and
-         * it is not a `none`, so it does not stop a later track's code. */
+        /* THE DISC'S CODE WINS, since .35: an ISRC the disc returned is what
+         * the files carry, over one -t or CD-TEXT gave, track by track, so a
+         * track whose read returned none keeps theirs. A MusicBrainz ISRC
+         * names a recording, which can carry several; the disc's is a
+         * measurement of this pressing. Until .35 that took
+         * --prefer-disc-isrc (round 35, Platterpus's TASKS R20), and without
+         * it CD-TEXT's ISRC outranked the disc's checked code, against
+         * cdtext.c's own rule that CD-TEXT only fills gaps (US-2). Our round
+         * 41 lap 3 S22 asked; Platterpus's lap 4 S14 answered that the disc's
+         * should win by default, and asked us to keep accepting the flag,
+         * which every rip of theirs sends: it is now a no-op. A code that is
+         * not an ISO 3901 code is never written (round 35, Platterpus's lap 2
+         * S7, our lap 4 S5): the record and the Disc ISRC: line keep it,
+         * saying it was not used. */
         const char *disc_isrc_usable = t->isrc_disc && !t->isrc_disc_malformed ?
                                        t->isrc_disc : NULL;
-        if (ctx->settings.prefer_disc_isrc) {
-            if (disc_isrc_usable)
-                av_dict_set(&t->meta, "isrc", disc_isrc_usable, 0);
-        } else if (!ctx->disregard_cd_isrc && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) && !dict_get(t->meta, "isrc")) {
-            if (disc_isrc_usable)
-                av_dict_set(&t->meta, "isrc", disc_isrc_usable, 0);
-            else if (!t->isrc_disc)
-                ctx->disregard_cd_isrc = 1;
-        }
+        if (disc_isrc_usable)
+            av_dict_set(&t->meta, "isrc", disc_isrc_usable, 0);
 
         /* TOC preemphasis flag*/
         t->preemphasis = cdio_cddap_track_preemp(ctx->drive, t->cd_track_number);
@@ -3409,7 +3465,7 @@ static int cyanrip_run(int argc, char **argv)
     GEN_OPT_ONE(opts_list, char *,  diagnostics, "", 1, 1, NULL, 0, 0,
                 "Write a machine-readable diagnostics record to this path (JSON)");
     GEN_OPT_ONE(opts_list, bool,    prefer_disc_isrc, "", 0, 0, 0, 0, 0,
-                "Tag a track with the ISRC read from the disc, where one is, over one given with -t");
+                "Accepted and ignored: since .35 a track's ISRC read from the disc is always used over one given with -t or CD-TEXT");
     GEN_OPT_ONE(opts_list, bool,    prefer_accuraterip_match, "", 0, 0, 0, 0, 0,
                 "At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does");
     GEN_OPT_ONE(opts_list, int32_t, reread_time_limit, "", 1, 1, 0, 1, INT32_MAX,
@@ -4233,6 +4289,27 @@ static int cyanrip_run(int argc, char **argv)
     }
 
     /* Create log file */
+    /* Every -l index is checked here, before the log opens: the same
+     * refusal came after the disc header, some 44 lines of it, and left
+     * a log and a CUE sheet for a rip that never started (the UX review
+     * of 2026-11-17, F17). The check in the rip loop below stays, as the
+     * one that decides what is read. -J ignores -l, and still does. */
+    if (!ctx->settings.generate_cue_only) {
+        for (int i = 0; i < ctx->settings.rip_indices_count; i++) {
+            int j = 0;
+            while (j < ctx->nb_tracks &&
+                   ctx->tracks[j].number != ctx->settings.rip_indices[i])
+                j++;
+            if (j >= ctx->nb_tracks) {
+                cyanrip_log(ctx, 0, "Invalid rip index %i, list has %i tracks!\n",
+                            ctx->settings.rip_indices[i], ctx->nb_tracks);
+                fatal_abort = 1;
+                ctx->exit_class = CRIP_EXIT_USAGE;
+                goto end;
+            }
+        }
+    }
+
     if (!ctx->settings.print_info_only) {
         /* These two returns used to be bare, bypassing `end:` entirely -- the
          * only two exits from this function that did. All twenty-four `goto

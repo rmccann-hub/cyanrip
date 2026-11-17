@@ -2353,8 +2353,35 @@ def sc_cdtext():
     rip("cdtext", "cdtext.toc", cwd=WORK)
     log = (WORK / "out_cdtext" / "log.log").read_text(encoding="utf-8")
 
-    if "CD-TEXT:        present (English, 5 disc fields, 2 of 2 tracks tagged)" not in log:
+    # UNKNOWN LANGUAGE, since .35: libcdio gives a .toc's CD-TEXT English
+    # whatever its LANGUAGE_MAP says (US-2; Platterpus's lap 4 S15), so the
+    # language is not the source's to report. This line said English until
+    # then, which a German .toc printed too.
+    if "CD-TEXT:        present (unknown language, 5 disc fields, 2 of 2 tracks tagged)" not in log:
         fail("cdtext: disc-level CD-TEXT summary line missing or wrong")
+
+    # A German .toc, and a CUE sheet's inline CD-TEXT, which libcdio also
+    # gives English: both unknown. (The CDTEXTFILE route, whose language
+    # libcdio reads, keeps it: sc_cdtext_isrc_checked.)
+    toc = (FIX / "cdtext.toc").read_text(encoding="utf-8")
+    if "LANGUAGE_MAP { 0 : EN }" not in toc:
+        fail("cdtext: cdtext.toc no longer maps English, so the German copy "
+             "below is not German")
+    (WORK / "cdtext_de.toc").write_text(
+        toc.replace("LANGUAGE_MAP { 0 : EN }", "LANGUAGE_MAP { 0 : 8 }"),
+        encoding="utf-8")
+    inline = WORK / "cdtext_inline.cue"
+    inline.write_text('TITLE "Inline Title"\nPERFORMER "Inline Performer"\n'
+                      + (WORK / "basic.cue").read_text(encoding="utf-8"),
+                      encoding="utf-8")
+    shutil.copy(WORK / "basic.bin", WORK / "cdtext_inline.bin")
+    for image in ("cdtext_de.toc", "cdtext_inline.cue"):
+        ec, out = crip("-d", image, "-N", "-A", "-U", "-I", cwd=WORK)
+        got = [l for l in out.splitlines() if l.startswith("CD-TEXT:")]
+        if ec != 0 or len(got) != 1 or not got[0].startswith(
+                "CD-TEXT:        present (unknown language, "):
+            fail(f"cdtext: {image}: exit {ec}, CD-TEXT line(s) {got!r}; want "
+                 f"one saying present, in an unknown language")
 
     # Disc-level fields, verbatim
     for field, value in (("title", "Probe Disc Title"),
@@ -3018,6 +3045,15 @@ def sc_cdtext_isrc_checked():
     line unchecked, where the disc's own code is checked. A `.toc` puts an
     ISRC inside CD_TEXT into the TOC's ISRC, so the route is a CUE sheet's
     CDTEXTFILE, built here as ISRC packs (0x8E) and their size packs (0x8F).
+
+    AND THE DISC'S OWN CODE OUTRANKS IT, since .35 (US-2, our round 41 lap 3
+    S22, Platterpus's lap 4 S14). CD-TEXT filled the ISRC first and the
+    disc's was taken only into a gap, unless --prefer-disc-isrc, so a
+    CD-TEXT code beat the checked one. The second rip gives track 1 a disc
+    ISRC too, through the image shim, under which libcdio returns a cue
+    sheet's ISRC line as the disc's: the file must carry the disc's, and
+    track 2, whose disc gave none, still nothing, since its CD-TEXT code is
+    not an ISO 3901 code.
     """
     def pack(kind, track, seq, pos, text):
         return bytes([kind, track, seq, pos & 0x0F]) + text.ljust(12, b"\0") + b"\0\0"
@@ -3056,6 +3092,11 @@ def sc_cdtext_isrc_checked():
     if "not an isrc" not in text:
         fail("cdtext_isrc_checked: the log never shows track 2's CD-TEXT ISRC, "
              "so the CD-TEXT file was not read and the run proves nothing")
+    # A CDTEXTFILE is binary CD-TEXT, whose language libcdio reads: its size
+    # packs above declare English (0x09), and the log keeps it.
+    if "CD-TEXT:        present (English, " not in text:
+        fail("cdtext_isrc_checked: a CDTEXTFILE's declared language is not "
+             "reported; only a .toc's and inline CD-TEXT's are unknown")
     tags = {n: probe(out / f"{n}.flac", "-show_entries", "format_tags=ISRC")
             for n in (1, 2)}
     if tags != {1: "USABC2600001", 2: ""}:
@@ -3066,6 +3107,215 @@ def sc_cdtext_isrc_checked():
     if isrcs != ["USABC2600001"]:
         fail(f"cdtext_isrc_checked: the CUE sheet's ISRC lines are {isrcs}; "
              f"want track 1's alone")
+
+    needs_preload_shim("cdtext_isrc_checked")
+    shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"cdtext_isrc_checked: the image shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    disc_code = "GBAYE0601498"
+    shutil.copy(WORK / "cdtisrc.cdt", WORK / "cdtdisc.cdt")
+    shutil.copy(FIX / "cdda.bin", WORK / "cdtdisc.bin")
+    (WORK / "cdtdisc.cue").write_text(
+        'CDTEXTFILE "cdtdisc.cdt"\nFILE "cdtdisc.bin" BINARY\n'
+        f"  TRACK 01 AUDIO\n    ISRC {disc_code}\n    INDEX 01 00:00:00\n"
+        "  TRACK 02 AUDIO\n    INDEX 01 00:04:00\n", encoding="utf-8")
+    marker = WORK / "cdtdisc.added"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_IMAGE_CAP_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    out = WORK / "out_cdtdisc"
+    shutil.rmtree(out, ignore_errors=True)
+    ec, text = crip("-d", WORK / "cdtdisc.cue", "-N", "-A", "-U", "-s", "0",
+                    "-D", out, "-F", "{track}", "-L", "log", env=env)
+    if not marker.exists():
+        fail("cdtext_isrc_checked: the shim never ran, so the disc gave no "
+             "ISRC and the second rip proves nothing")
+        return
+    if ec != 0 or "USABC2600001" not in text or f"Disc ISRC:     {disc_code}" not in text:
+        fail(f"cdtext_isrc_checked: the second rip exited {ec}, or its log "
+             f"does not show both track 1's CD-TEXT code and the disc's")
+        return
+    tags = {n: probe(out / f"{n}.flac", "-show_entries", "format_tags=ISRC")
+            for n in (1, 2)}
+    if tags != {1: disc_code, 2: ""}:
+        fail(f"cdtext_isrc_checked: with a disc code the files' ISRC tags are "
+             f"{tags}; want the disc's {disc_code} for track 1, over CD-TEXT's "
+             f"USABC2600001, and none for track 2")
+
+
+def sc_image_pregap_inside_track():
+    """AN IMAGE'S PREGAP OUTSIDE ITS OWN TRACK IS REFUSED, since .35.
+
+    An INDEX 00 after its INDEX 01 logged `Pregap length: -75 frames`, and
+    one before the previous track's start left track 1 empty at exit 0 under
+    `-p 2=merge` (US-2). Such a sheet describes no disc, so it is refused as
+    an unordered TOC is, with exit 74 and a line naming the track and both
+    positions, as Platterpus's lap 4 S16 answered our lap 3 S24. The cue's
+    MM:SS:FF is LSN 75 per second, so the positions below are the sheet's.
+    `pregap.cue`, whose pregaps are where they belong, still rips.
+    """
+    cases = (
+        ("pregap_after", ("00:00:00", None), ("00:02:00", "00:03:00"),
+         "Invalid pregap: track 2's pregap starts at LSN 225, after the track "
+         "itself at LSN 150!"),
+        ("pregap_before", ("00:02:00", None), ("00:03:00", "00:01:00"),
+         "Invalid pregap: track 2's pregap starts at LSN 75, not after track 1 "
+         "at LSN 150!"),
+    )
+    for name, (one, _), (two, two_pregap), line in cases:
+        shutil.copy(FIX / "cdda.bin", WORK / f"{name}.bin")
+        (WORK / f"{name}.cue").write_text(
+            f'FILE "{name}.bin" BINARY\n'
+            f"  TRACK 01 AUDIO\n    INDEX 01 {one}\n"
+            f"  TRACK 02 AUDIO\n    INDEX 00 {two_pregap}\n    INDEX 01 {two}\n",
+            encoding="utf-8")
+        out = WORK / f"out_{name}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, text = crip("-d", WORK / f"{name}.cue", "-N", "-A", "-U", "-s", "0",
+                        "-D", out, "-F", "{track}", "-L", "log")
+        tracks = sorted(p.name for p in out.glob("*.flac")) if out.is_dir() else []
+        if ec != 74 or line not in text.splitlines() or tracks:
+            fail(f"image_pregap_inside_track: {name}: exit {ec}, tracks "
+                 f"{tracks}, and the output "
+                 f"{'carries' if line in text.splitlines() else 'lacks'} "
+                 f"{line!r}; want 74, that line and no track")
+
+    shutil.copy(FIX / "pregap.cue", WORK / "pregap_ok.cue")
+    shutil.copy(FIX / "cdda.bin", WORK / "pregap_ok.bin")
+    ec, text = crip("-d", WORK / "pregap_ok.cue", "-N", "-A", "-U", "-s", "0",
+                    "-I")
+    if ec != 0 or "Invalid pregap" in text:
+        fail(f"image_pregap_inside_track: pregap.cue, whose pregaps are in "
+             f"place, exited {ec} or was refused")
+
+
+def sc_session_gap_assumed():
+    """A CD-EXTRA CUT MADE WITHOUT AN ANSWER SAYS SO, since .35.
+
+    When the disc's last track is data and the TOC gives it no pregap, the
+    11400-frame session gap comes off the last audio track unless the
+    last-session query says the disc is single-session. A query that failed
+    took the cut with no line saying why; libcdio's macOS, FreeBSD and AIX
+    drivers never answer it, and no image driver does. As Platterpus's lap 4
+    S17 answered our lap 3 S25, the cut is kept and the track block says
+    `Session gap: not determined (...)`, directly under `End LSN:`.
+
+    Three runs of one image, track 1 audio to LSN 13499 and track 2 data:
+    no answer, the line; the image shim answering a second session at track
+    2, the cut and no line; the shim answering one session, no cut. The
+    image is zeroes, and -I reads none of it.
+    """
+    d = WORK / "session_gap"
+    d.mkdir(exist_ok=True)
+    with open(d / "sg.bin", "wb") as f:
+        f.truncate(13800 * 2352)
+    (d / "sg.cue").write_text(
+        'FILE "sg.bin" BINARY\n  TRACK 01 AUDIO\n    INDEX 01 00:00:00\n'
+        "  TRACK 02 MODE1/2352\n    INDEX 01 03:00:00\n", encoding="utf-8")
+    cut = "    End LSN:     13499 (less 11400 frame CD-Extra session gap, read to: 2099)"
+    said = ("    Session gap: not determined (the last-session query failed; "
+            "11400 frames cut by assumption)")
+
+    def block(env=None, label="plain"):
+        ec, out = crip("-d", d / "sg.cue", "-N", "-A", "-U", "-I", "-s", "0",
+                       cwd=d, env=env)
+        (d / f"{label}.stdout").write_text(out, encoding="utf-8")
+        if ec != 0:
+            fail(f"session_gap_assumed: {label}: exit {ec}")
+        return out.splitlines()
+
+    lines = block()
+    if cut not in lines or said not in lines or \
+            lines.index(said) != lines.index(cut) + 1:
+        fail("session_gap_assumed: with no answer, the cut and the line saying "
+             "it was assumed are not both there, the line directly under it")
+
+    needs_preload_shim("session_gap_assumed")
+    shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"session_gap_assumed: the image shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    base = dict(os.environ, LD_PRELOAD=shim,
+                ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                + ":verify_asan_link_order=0")
+    lines = block(dict(base, CRIP_LAST_SESSION="13500"), "second_session")
+    if cut not in lines or any(l.startswith("    Session gap:") for l in lines):
+        fail("session_gap_assumed: with a second session answered, want the "
+             "cut and no `Session gap:` line")
+    lines = block(dict(base, CRIP_LAST_SESSION="0"), "one_session")
+    if any("CD-Extra session gap" in l or l.startswith("    Session gap:")
+           for l in lines):
+        fail("session_gap_assumed: with one session answered, want no cut "
+             "and no `Session gap:` line; the shim may not have answered")
+
+
+def sc_album_folder_mode():
+    """THE FOLDERS A RIP MAKES FOLLOW THE UMASK, since .35.
+
+    Every directory of a rip's path was made 0700, upstream's mode, so under
+    the usual umask of 022 an album folder was private and a media server
+    running as another user could not read it (the UX review of 2026-11-17,
+    F25). Each folder of a nested -D is checked under 022, where it must be
+    0755, and under 077, where it must still be 0700: the umask decides.
+    """
+    if os.name != "posix":
+        skip("album_folder_mode: folder modes are POSIX's")
+    for umask, want in ((0o022, 0o755), (0o077, 0o700)):
+        out = WORK / f"folder_mode_{umask:03o}"
+        shutil.rmtree(out, ignore_errors=True)
+        old = os.umask(umask)
+        try:
+            ec, text = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-s", "0",
+                            "-o", "wav", "-D", out / "artist" / "album",
+                            "-F", "{track}", "-L", "log")
+        finally:
+            os.umask(old)
+        if ec != 0:
+            fail(f"album_folder_mode: umask {umask:03o}: exit {ec}")
+            continue
+        for d in (out, out / "artist", out / "artist" / "album"):
+            mode = d.stat().st_mode & 0o777 if d.is_dir() else None
+            if mode != want:
+                fail(f"album_folder_mode: umask {umask:03o}: {d.name} is "
+                     f"{oct(mode) if mode is not None else 'missing'}, "
+                     f"want {oct(want)}")
+
+
+def sc_rip_index_checked_first():
+    """AN -l INDEX THE DISC LACKS IS REFUSED BEFORE THE HEADER, since .35.
+
+    `-l 9` on a two-track disc printed the disc header, some 44 lines, then
+    `Invalid rip index 9, list has 2 tracks!`, and a rip left a log and a CUE
+    sheet behind for nothing (the UX review of 2026-11-17, F17). It is now
+    refused before the log opens, with the same line and exit 64: under -I
+    and a rip, the line comes before `DiscID:`, and the rip writes no file.
+    -J ignores -l, as before, and a valid -l still rips.
+    """
+    for label, extra in (("info", ["-I"]), ("rip", ["-s", "0"])):
+        out = WORK / f"out_rip_index_{label}"
+        shutil.rmtree(out, ignore_errors=True)
+        ec, text = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-l", "9",
+                        "-D", out, *extra)
+        lines = text.splitlines()
+        line = "Invalid rip index 9, list has 2 tracks!"
+        disc = next((i for i, l in enumerate(lines) if l.startswith("DiscID:")), None)
+        if ec != 64 or line not in lines:
+            fail(f"rip_index_checked_first: {label}: exit {ec}, refusal "
+                 f"{'printed' if line in lines else 'missing'}; want 64 and it")
+        elif disc is not None and disc < lines.index(line):
+            fail(f"rip_index_checked_first: {label}: the refusal is on line "
+                 f"{lines.index(line) + 1}, after the header's DiscID: on "
+                 f"line {disc + 1}")
+        files = sorted(p.name for p in out.rglob("*") if p.is_file()) if out.is_dir() else []
+        if files:
+            fail(f"rip_index_checked_first: {label}: the refusal left {files}")
+    ec, _ = crip("-d", WORK / "basic.cue", "-N", "-A", "-U", "-J", "-l", "9",
+                 "-D", WORK / "out_rip_index_cue")
+    if ec != 0:
+        fail(f"rip_index_checked_first: -J ignores -l, and exited {ec}")
 
 
 def sc_toc_starts_increase():
@@ -4076,10 +4326,19 @@ def sc_status_block_is_current():
                  f"{max((r for r in latest if r.closed), key=lambda r: r.number).our_pin}.")
         # `reviews` is the release under review beside that pin. Until v8 that
         # was the next release; from v8 a round reviews a released pair, so it
-        # is a published release or the next one.
-        published = {"+platterpus." + re.search(r"\+platterpus\.(\d+)$",
-                                                c["version"]).group(1)
-                     for c in channels.values()}
+        # is a published release or the next one. Published means any row of
+        # the ledger, not only what a channel resolves to now: `.35` moved beta
+        # on 2026-11-17 while Platterpus's 0.7.127 still reviewed `.34`, which
+        # this check then called unpublished.
+        ledger_rows = [ln.split("\t") for ln in (ROOT / "docs" / "release-ledger.tsv")
+                       .read_text(encoding="utf-8").splitlines()
+                       if ln.strip() and not ln.startswith("#")]
+        published = {"+platterpus." + v.group(1)
+                     for v in (re.search(r"\+platterpus\.(\d+)$", r[2].strip())
+                               for r in ledger_rows if len(r) >= 3) if v}
+        published |= {"+platterpus." + re.search(r"\+platterpus\.(\d+)$",
+                                                 c["version"]).group(1)
+                      for c in channels.values()}
         if m.group(4) not in published | {next_version}:
             fail(f"status_block_is_current: STATUS-RELEASE-NEXT reviews "
                  f"{m.group(4)}, which is neither published "
@@ -4250,9 +4509,10 @@ def sc_diag_record_v8():
     if ec != 0:
         fail(f"diag_record_v8: -I on cdtext.toc exited {ec}")
     ct = json.loads(rec.read_text(encoding="utf-8"))["cdtext"]
-    if (ct["status"], ct["language"]) != ("present", "English"):
-        fail(f"diag_record_v8: cdtext {ct['status']!r}/{ct['language']!r}, and "
-             f"the fixture declares English CD-TEXT")
+    if (ct["status"], ct["language"]) != ("present", None):
+        fail(f"diag_record_v8: cdtext {ct['status']!r}/{ct['language']!r}; "
+             f"want present, and a null language, since libcdio gives a "
+             f".toc's CD-TEXT English whatever it says (.35)")
     if ct["disc"] != want[0]:
         fail(f"diag_record_v8: cdtext.disc {ct['disc']}, the fixture {want[0]}")
     got_tracks = [{k: v for k, v in tr.items() if k != "number"}
@@ -4363,6 +4623,96 @@ def sc_image_reports_isrc():
              f"with the bit reported, the ISRC is asked for and this image "
              f"has none")
 
+
+def sc_disc_mcn_always():
+    """`Disc MCN:` is printed always, since .35, with a reason when there is
+    no code (our round 38 lap 3 S17, accepted in Platterpus's lap 4 S11 and
+    read by their 0.7.127). It printed only a code before, so a disc with
+    none, a driver that cannot read one and a failed capabilities query all
+    printed no line. Each form is checked as the whole line, and in its place,
+    directly after `CDDB ID:` under -N:
+
+      * a cue with no CATALOG: `none (libcdio returned none)`;
+      * libcdio returning a code: the code;
+      * thirteen zeros: `none (libcdio returned an all-zero MCN)`, named as
+        what libcdio returned, as an all-zero ISRC is;
+      * an empty string: `none (libcdio returned an empty MCN)`;
+      * the image shim clearing READ_MCN: `unknown (the driver does not
+        report reading MCN)`;
+      * the shim failing the capabilities query: `unknown (capabilities query
+        failed)`.
+
+    The code, the zeros and the empty string come from the image shim's
+    CRIP_IMAGE_MCN, not a cue's CATALOG line: libcdio 2.1 returns a CATALOG's
+    code, and Fedora's libcdio 2.3.0 returned none for the same cue (#127's
+    fedora job, 2026-11-17), where the program truthfully printed `none
+    (libcdio returned none)`. What is tested is that the line says what
+    libcdio returned, so the shim sets that. The cue names a .bin of its own,
+    named after it: 2.1 opens the one named after the cue whatever its FILE
+    line says, and on 2.3.0 every rip exited 74 while the line named
+    basic.bin, which this folder lacks.
+    """
+    d = WORK / "disc_mcn_always"
+    d.mkdir(exist_ok=True)
+    base = (WORK / "basic.cue").read_text(encoding="utf-8")
+    (d / "plain.cue").write_text(
+        base.replace('FILE "basic.bin" BINARY', 'FILE "plain.bin" BINARY'),
+        encoding="utf-8")
+    shutil.copy(WORK / "basic.bin", d / "plain.bin")
+
+    def mcn_line(label, env=None):
+        ec, out = crip("-d", d / "plain.cue", "-N", "-A", "-U", "-I",
+                       cwd=d, env=env)
+        (d / f"{label}.stdout").write_text(out, encoding="utf-8")
+        lines = out.splitlines()
+        hits = [i for i, l in enumerate(lines) if l.startswith("Disc MCN:")]
+        if ec != 0 or len(hits) != 1:
+            fail(f"disc_mcn_always: {label}: exit {ec}, {len(hits)} "
+                 f"`Disc MCN:` line(s), not 1")
+            return None
+        i = hits[0]
+        if i == 0 or not lines[i - 1].startswith("CDDB ID:"):
+            fail(f"disc_mcn_always: {label}: `Disc MCN:` is not directly "
+                 f"after `CDDB ID:`")
+        return lines[i]
+
+    line = "Disc MCN:       none (libcdio returned none)"
+    got = mcn_line("plain")
+    if got is not None and got != line:
+        fail(f"disc_mcn_always: plain: {got!r}, not {line!r}")
+
+    needs_preload_shim("disc_mcn_always")
+    shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"disc_mcn_always: the image shim was not built or not passed "
+             f"({shim!r})")
+        return
+    cases = (
+        ("CRIP_IMAGE_MCN", "1234567890123", "CRIP_IMAGE_MCN_OUT",
+         "Disc MCN:       1234567890123"),
+        ("CRIP_IMAGE_MCN", "0000000000000", "CRIP_IMAGE_MCN_OUT",
+         "Disc MCN:       none (libcdio returned an all-zero MCN)"),
+        ("CRIP_IMAGE_MCN", "", "CRIP_IMAGE_MCN_OUT",
+         "Disc MCN:       none (libcdio returned an empty MCN)"),
+        ("CRIP_IMAGE_CAP_NO_MCN", "1", "CRIP_IMAGE_CAP_OUT",
+         "Disc MCN:       unknown (the driver does not report reading MCN)"),
+        ("CRIP_IMAGE_CAP_ERROR", "1", "CRIP_IMAGE_CAP_OUT",
+         "Disc MCN:       unknown (capabilities query failed)"),
+    )
+    for n, (var, value, out_var, line) in enumerate(cases):
+        label = f"{var}={value!r}"
+        marker = d / f"case{n}.marker"
+        env = dict(os.environ, LD_PRELOAD=shim,
+                   ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+                   + ":verify_asan_link_order=0")
+        env[out_var] = str(marker)
+        env[var] = value
+        got = mcn_line(f"case{n}", env=env)
+        if not marker.exists():
+            fail(f"disc_mcn_always: {label}: the shim never ran, so the run "
+                 f"tests nothing")
+        elif got is not None and got != line:
+            fail(f"disc_mcn_always: {label}: {got!r}, not {line!r}")
 
 def sc_overread_bounded():
     """Under -O, a frame outside the disc is read once (round 35).
@@ -4630,21 +4980,27 @@ def sc_disc_isrc_line():
                 fail(f"disc_isrc_line: {name}: track {num}'s Metadata ISRC: "
                      f"{meta!r}, and its file carries {in_file!r}")
             written[num] = in_file
-        # The disc's code over -t with the option, -t's without it; a track
-        # whose disc gave none keeps -t's either way, and one -t left alone
-        # takes the disc's either way. A code that is not an ISO 3901 code
-        # is never written: -t's stands, or nothing.
-        want_written = {num: (usable.get(num) if prefer and num in usable
-                              else passed.get(num, usable.get(num)))
+        # The disc's code over -t, with the option or without it since .35,
+        # which made the option a no-op (our round 41 lap 3 S22, Platterpus's
+        # lap 4 S14); a track whose disc gave none keeps -t's. A code that is
+        # not an ISO 3901 code is never written: -t's stands, or nothing.
+        want_written = {num: (usable[num] if num in usable
+                              else passed.get(num))
                         for num in tracks}
         if written != want_written:
             fail(f"disc_isrc_line: {name}: the files carry {written}, where "
                  f"{want_written} is expected")
         results[name] = written
-    # Not vacuous: the option changed what a file carries.
-    if results.get("plain") == results.get("prefer"):
-        fail(f"disc_isrc_line: --prefer-disc-isrc changed no file "
-             f"({results})")
+    # The option is accepted and changes nothing, and the disc's code does
+    # displace one -t gave: not vacuous, since -t named every track.
+    if results.get("plain") != results.get("prefer"):
+        fail(f"disc_isrc_line: --prefer-disc-isrc, a no-op since .35, changed "
+             f"what the files carry ({results})")
+    if not any(passed.get(n) and usable.get(n) and passed[n] != usable[n]
+               and results.get("plain", {}).get(n) == usable[n]
+               for n in tracks):
+        fail(f"disc_isrc_line: no track shows the disc's code displacing "
+             f"-t's, so the run proves nothing ({results})")
 
     # Without the shim, the read this libcdio gives an image, from the record.
     rec = WORK / "disc_isrc_noshim.json"
@@ -8264,11 +8620,16 @@ def sc_enhanced_cd():
                  if t2[-24:] == src[600 * sec:600 * sec + 24] else "neither")
         fail(f"enhanced_cd/offset: track 2's last 6 samples are {which}, "
              "not appended silence")
+    # An image never answers the last-session query, so since .35 the cut is
+    # said to be an assumption, on the line between (sc_session_gap_assumed).
     if not re.search(r"^    End LSN:     11999 \(less 11400 frame CD-Extra "
-                     r"session gap, read to: 599\)\n    Appended:    1 frames "
+                     r"session gap, read to: 599\)\n    Session gap: not "
+                     r"determined \(the last-session query failed; 11400 frames "
+                     r"cut by assumption\)\n    Appended:    1 frames "
                      r"of silence$", olog, re.M):
-        fail("enhanced_cd/offset: track 2's block does not say it read to 599 "
-             "and appended one frame of silence")
+        fail("enhanced_cd/offset: track 2's block does not say it read to 599, "
+             "that the cut was assumed, and that it appended one frame of "
+             "silence")
     if "read with errors" in olog:
         fail("enhanced_cd/offset: a track read with errors at +6 samples")
 
