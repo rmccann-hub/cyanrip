@@ -27,6 +27,20 @@ fun512_test = executable('fun512_test',
 )
 test('FUN512 checksum', fun512_test)
 
+## The QR code's colour opt-outs, on a pseudo-terminal (the UX review of
+## 2026-11-17, F13). POSIX only: a Windows console is not a pty.
+if host_machine.system() != 'windows'
+    qrencode_dep = dependency('libqrencode', version: '>= 4.0', required: false)
+    qrcode_test = executable('qrcode_test',
+        sources: [ 'qrcode.c' ],
+        include_directories: [ '../src' ],
+        objects: cyanrip_exe.extract_objects([ 'qrcode.c' ]),
+        c_args: qrencode_dep.found() ? [ '-DTEST_HAVE_QRENCODE' ] : [],
+        dependencies: unit_test_deps + [ qrencode_dep ],
+    )
+    test('QR code colour opt-outs', qrcode_test)
+endif
+
 naming_test = executable('naming_test',
     sources: [ 'naming.c' ],
     include_directories: [ '../src' ],

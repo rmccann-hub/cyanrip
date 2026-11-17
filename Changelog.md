@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**The MusicBrainz QR code honours `NO_COLOR` and `TERM=dumb`**: it is drawn
+in 256-colour escapes, and checked only that stdout was a terminal (the UX
+review of 2026-11-17, F13). An empty `NO_COLOR` still draws it, as
+no-color.org defines, and the URL above it prints either way. `QR code colour
+opt-outs` runs it on a pseudo-terminal in four cases, and fails on the old
+code in the two that opt out; it skips in a build without libqrencode.
+
 **Album folders follow the umask** instead of being made 0700, upstream's
 mode, under which a media server running as another user could not read the
 library (the UX review of 2026-11-17, F25). Under the usual umask of 022 they

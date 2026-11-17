@@ -23,6 +23,8 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <qrencode.h>
 #include <libavutil/bprint.h>
@@ -117,10 +119,25 @@ static void qr_put_utf8(AVBPrint *buf, uint32_t cp)
 
 #endif
 
+/* The code is drawn in 256-colour escapes, so a reader who has asked for no
+ * colour (NO_COLOR, set and not empty, as no-color.org defines it) or whose
+ * terminal is `dumb` gets none of it; the URL is printed above it either way
+ * (the UX review of 2026-11-17, F13). */
+#ifdef HAVE_QRENCODE
+static int crip_colour_wanted(void)
+{
+    const char *no_color = getenv("NO_COLOR");
+    if (no_color && no_color[0])
+        return 0;
+    const char *term = getenv("TERM");
+    return !(term && !strcmp(term, "dumb"));
+}
+#endif
+
 void crip_print_qrcode(const char *url)
 {
 #ifdef HAVE_QRENCODE
-    if (!url || !crip_isatty())
+    if (!url || !crip_isatty() || !crip_colour_wanted())
         return;
 
     QRcode *qr = QRcode_encodeString(url, 0, QR_ECLEVEL_L, QR_MODE_8, 1);
