@@ -1,5 +1,18 @@
 Unreleased
 ==========
+**The overread probe of 2026-11-17 is filed and read**: Platterpus's `overreadprobe`
+on `.34` and the BDR-209D, the first run to send `-O`. It is filed at `1a16efe`
+(`docs/rig-2026-11-17b-overreadprobe/`), with the lead-out rip's log and CUE sheet
+beside it at `a73cb11`, delivered later, whose FUN512 checks. Track 14 at +667 and
+track 1 at -667 each printed `Beyond disc: 2 of 2 frames refused (written as
+silence)`, exit 0 in under 90 s, so the bound holds at both edges and the drive
+refuses every frame outside the disc. Track 14's EAC CRC, `787BA2D6`, is all
+seven default `.34` rips', and its AccurateRip match says nothing of the refused
+frames, which fall in the five frames AccurateRip leaves out of a last track.
+R41-9 leaves the list; HW-10 stays open for a drive that answers past its
+lead-out. The probe's last step found Platterpus's `force_overread` on after
+the run (PP-16).
+
 **The outside reviews are archived on the evidence branch**, at `60ec8702`
 under `docs/outside-reviews-2026-11-17/`, on the owner's word of 2026-11-17.
 Another session had carried them from the owner's company audit repository

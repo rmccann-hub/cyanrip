@@ -199,7 +199,9 @@ or 95 frames (undecided)` in 18 of the 19 `.29` logs of 2026-11-04
 (`docs/rig-2026-11-04-8d2ca72/`), and in 26 of the 29 rip logs of 2026-11-14,
 `.31` and `.32`, which give 95 in the other 3 (`docs/rig-2026-11-14-edb73dd/`),
 and in 28 of the 29 rip logs of 2026-11-17, `.32` and `.34`, which give 95 in
-the other 1 (`docs/rig-2026-11-17-fb28088/`). No log since `.29` has said 94. The next step is the raw read on a second drive
+the other 1 (`docs/rig-2026-11-17-fb28088/`), and in 1 of the 2 rips of the overread
+probe that evening, `.34`, which gives 95 in the other, read from its transcript
+(`docs/rig-2026-11-17b-overreadprobe/`). No log since `.29` has said 94. The next step is the raw read on a second drive
 (`docs/OPEN-ITEMS.md` HW-6).
 
 ### Six drive answers an audit listed, all real, and an MCN read skipped without a word
