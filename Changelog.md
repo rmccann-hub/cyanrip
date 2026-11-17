@@ -15,6 +15,13 @@ hostname is in them, checked before filing; the only account name is
 `docs/outside-reviews-*` folders as it does `docs/rig-*`, since HR-2 counts a
 review's captures as evidence too (`e2a406c9`).
 
+**Two run READMEs have differed from their filed copies since 2026-11-12**:
+the round 39 five-rip run's and the C2 probe's, corrected here after they were
+filed. The evidence branch never changes, so a full `verify-rows` fails on
+both, and CI, which checks only the rows a change adds, never showed it.
+`docs/OPEN-ITEMS.md` US-35 holds it, and US-34 the archived reviews this
+repository has not read.
+
 **Three test fixes after `.35`'s candidate**, found by the Fedora and macOS CI
 jobs on pull request #127, and none changing the program:
 - `disc_mcn_always` gave each cue a `.bin` of its own while every cue's `FILE`
