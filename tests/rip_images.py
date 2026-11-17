@@ -4326,10 +4326,19 @@ def sc_status_block_is_current():
                  f"{max((r for r in latest if r.closed), key=lambda r: r.number).our_pin}.")
         # `reviews` is the release under review beside that pin. Until v8 that
         # was the next release; from v8 a round reviews a released pair, so it
-        # is a published release or the next one.
-        published = {"+platterpus." + re.search(r"\+platterpus\.(\d+)$",
-                                                c["version"]).group(1)
-                     for c in channels.values()}
+        # is a published release or the next one. Published means any row of
+        # the ledger, not only what a channel resolves to now: `.35` moved beta
+        # on 2026-11-17 while Platterpus's 0.7.127 still reviewed `.34`, which
+        # this check then called unpublished.
+        ledger_rows = [ln.split("\t") for ln in (ROOT / "docs" / "release-ledger.tsv")
+                       .read_text(encoding="utf-8").splitlines()
+                       if ln.strip() and not ln.startswith("#")]
+        published = {"+platterpus." + v.group(1)
+                     for v in (re.search(r"\+platterpus\.(\d+)$", r[2].strip())
+                               for r in ledger_rows if len(r) >= 3) if v}
+        published |= {"+platterpus." + re.search(r"\+platterpus\.(\d+)$",
+                                                 c["version"]).group(1)
+                      for c in channels.values()}
         if m.group(4) not in published | {next_version}:
             fail(f"status_block_is_current: STATUS-RELEASE-NEXT reviews "
                  f"{m.group(4)}, which is neither published "
