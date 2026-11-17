@@ -1,0 +1,15 @@
+Checking ../disc/basic.bin for cdrom...
+
+Opening drive...
+Unable to find release info for this CD, and metadata hasn't been manually added!
+Please help improve the MusicBrainz DB by submitting the disc info via the following URL:
+https://musicbrainz.org/cdtoc/attach?toc=1+2+750+150+450&tracks=2&id=OnpX1oVWL7CypwcIA.ZsRybkaBw-
+To continue add metadata via -a or -t, or ignore via -N!
+Paranoia status counts:
+  none
+
+Ripping errors: 1
+Encoder errors: not applicable; no track was encoded
+Read stalls:    none (no read exceeded 10s)
+Rip completed:  no (aborted, 0 of 2 tracks)
+Ripping finished at 2026-11-17T01:27:57+00:00

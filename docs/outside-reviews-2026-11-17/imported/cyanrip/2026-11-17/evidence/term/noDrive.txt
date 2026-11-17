@@ -1,0 +1,64 @@
+=== cyanrip 
+No device specified and unable to get default device!
+[exit 74]
+=== cyanrip -I
+No device specified and unable to get default device!
+[exit 74]
+=== cyanrip -d /dev/sr0
+libcdio warning: Can't get file status for /dev/sr0:<U+000A>No such file or directory
+libcdio warning: could not retrieve file info for `/dev/sr0': No such file or directory
+libcdio warning: can't open nrg image file /dev/sr0 for reading
+Unable to open device: /dev/sr0
+[exit 74]
+=== cyanrip -d /nonexistent
+libcdio warning: Can't get file status for /nonexistent:<U+000A>No such file or directory
+libcdio warning: could not retrieve file info for `/nonexistent': No such file or directory
+libcdio warning: can't open nrg image file /nonexistent for reading
+Unable to open device: /nonexistent
+[exit 74]
+=== cyanrip -d /etc/passwd -I
+Unable to open device: /etc/passwd
+[exit 74]
+=== cyanrip --bogus
+Unable to parse command line argument: --bogus
+[exit 64]
+=== cyanrip -x
+Unable to parse command line argument: -x
+[exit 64]
+=== cyanrip -o mp9
+Invalid format "mp9"
+[exit 64]
+=== cyanrip -o help
+Supported output codecs:
+	flac	folder: [FLAC]	extension: flac	(supports cover art)
+	tta	folder: [TTA]	extension: tta
+	opus	folder: [OPUS]	extension: opus
+	aac	folder: [AAC]	extension: m4a
+	wavpack	folder: [WV]	extension: wv
+	alac	folder: [ALAC]	extension: m4a
+	alac_mp4	folder: [ALAC]	extension: mp4	(supports cover art)
+	mp3	folder: [MP3]	extension: mp3	(supports cover art)
+	vorbis	folder: [OGG]	extension: ogg
+	wav	folder: [WAV]	extension: wav
+	aac_mp4	folder: [AAC]	extension: mp4	(supports cover art)
+	opus_mp4	folder: [OPUS]	extension: mp4	(supports cover art)
+	pcm	folder: [PCM]	extension: pcm
+[exit 0]
+=== cyanrip -s abc
+Error parsing "abc" as a int32_t for argument "offset"
+[exit 64]
+=== cyanrip -b
+Missing value for argument "--bitrate"
+[exit 64]
+=== cyanrip -Z 3 -r -1
+Error parsing -1 for argument "retries": not in [0:2147483647] range!
+[exit 64]
+=== cyanrip -Y
+Missing value for argument "--verify-log"
+[exit 64]
+=== cyanrip -Y /etc/hostname
+No FUN512 checksum found in "/etc/hostname"!
+[exit 3]
+=== cyanrip -T weird
+Invalid sanitation method weird
+[exit 64]

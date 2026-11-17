@@ -1,0 +1,7 @@
+$ cyanrip
+No device specified and unable to get default device!
+$ cyanrip -d /dev/sr0
+libcdio warning: Can't get file status for /dev/sr0:<U+000A>No such file or directory
+libcdio warning: could not retrieve file info for `/dev/sr0': No such file or directory
+libcdio warning: can't open nrg image file /dev/sr0 for reading
+Unable to open device: /dev/sr0

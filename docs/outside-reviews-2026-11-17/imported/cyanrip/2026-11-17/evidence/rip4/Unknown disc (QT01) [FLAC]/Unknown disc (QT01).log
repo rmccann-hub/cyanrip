@@ -1,0 +1,216 @@
+cyanrip 0.9.4-rc3+platterpus.34 (platterpus-fork-gfd20a0a)
+Invoked as:     /tmp/claude-0/-home-user-claude-code-skills/46cfbc1a-d1c5-5a09-bbbb-4b2444266d0f/scratchpad/ux/cyanrip-out/../cyanrip-build2/src/cyanrip -d ../disc/trunc.cue -N -A -B -U
+Handshake:      round 41 lap 3 OPEN, verdict OPEN -- NOT a released build
+Consumer:       not identified (no --consumer given)
+Drive used:     none (disc image, read by libcdio's CDRWIN driver, revision 2.1.)
+System device:  ../disc/trunc.cue
+Offset:         +0 samples
+Overread:       +0 frames
+Overread mode:  fill with silence in lead-in/lead-out
+Speed:          default (drive not asked whether it can change speed)
+C2 errors:      unknown (image)
+Accurate stream: unknown (image)
+Recordable:     unknown (image)
+CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+Encoder:        libavformat 60.16.100, libavcodec 60.31.102 (6.1.1-3ubuntu5)
+Paranoia level: max
+Retry limit:    10 (per frame, and per whole-track re-read)
+Cache model:    16 sectors (disc image, no drive cache)
+HDCD decoding:  disabled
+Album Art:      none
+Outputs:        flac
+Disc tracks:    2
+Tracks to rip:  all
+DiscID:         QT01izNTdYnH3d96XiF6qfuA1eY-
+CDDB ID:        08000502
+Album:          Unknown disc (QT01)
+AccurateRip ID: 000002aa-000006d3-08000502
+AccurateRip:    disabled
+AcoustID:       unsupported (built without libchromaprint)
+Total time:     00:05.07
+
+--- output before this log was opened ---
+libcdio warning: image ../disc/trunc.bin size (900000) not multiple of blocksize (2352)
+Checking ../disc/trunc.bin for cdrom...
+
+Opening drive...
+--- end of pre-log output ---
+Gaps:
+    pregap of track 2 unknown (sub-channel unreadable)
+
+Pregap searches:
+    track 2: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off; LSN 1 to 299 undecided
+
+Tracks:
+Track 1 read with no error reported.
+Summary:
+
+  Integrated loudness:
+    I:          -8.7 LUFS
+    Threshold: -18.7 LUFS
+
+  Loudness range:
+    LRA:         1.0 LU
+    Threshold: -28.8 LUFS
+    LRA low:    -9.3 LUFS
+    LRA high:   -8.4 LUFS
+
+  Sample peak:
+    Peak:        0.0 dBFS
+
+  True peak:
+    Peak:        0.0 dBFS
+
+  Preemphasis:   none detected
+  Disc ISRC:     unknown (the driver does not report reading ISRC)
+
+  Properties:
+    Duration:    00:04.00
+    Samples:     176400
+    Frames:      300
+    Sample peak level: 100.0% (0.0 dBFS)
+    True peak level:   0.0 dBFS
+    Integrated loudness (R128): -8.7 LUFS
+    Loudness range (R128):      1.0 LU (-9.3 to -8.4 LUFS)
+    Extraction speed:  84.3x
+    Elapsed:            0.05 s
+    Kept read began:    2026-11-17T01:29:55Z
+    Pregap LSN:  0 (duration: 00:02.00)
+    Pregap length: 150 frames
+    Pregap source: lead-in
+    Start LSN:   0
+    End LSN:     299
+
+  EAC CRC32:     77C2791A
+  Secure re-read:  not attempted
+  Accurip:       disabled
+    Accurip v1:  9B499B5B
+    Accurip v2:  6ED38802
+    Accurip 450: 00000000
+
+  Metadata:
+    TRACK:                         1
+    TRACKTOTAL:                    2
+    MUSICBRAINZ_DISCID:            QT01izNTdYnH3d96XiF6qfuA1eY-
+    CDDB:                          08000502
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc3+platterpus.34
+    ALBUM:                         Unknown disc (QT01)
+    TITLE:                         Unknown track
+    CREATION_TIME:                 2026-11-17T01:29:55+00:00
+    REPLAYGAIN_TRACK_GAIN:         -9.30 dB
+    R128_TRACK_GAIN:               -1102
+    REPLAYGAIN_TRACK_RANGE:        0.95 dB
+    REPLAYGAIN_TRACK_PEAK:         1.005757
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+
+  Paranoia status counts:
+    READ:          59
+    VERIFY:        612
+    OVERLAP:       38
+
+  File(s):
+    Unknown disc (QT01) [FLAC]/1 - Unknown track.flac
+
+Track 2 read with no error reported.
+Summary:
+
+  Integrated loudness:
+    I:          -7.3 LUFS
+    Threshold: -17.3 LUFS
+
+  Loudness range:
+    LRA:         0.0 LU
+    Threshold:   0.0 LUFS
+    LRA low:     0.0 LUFS
+    LRA high:    0.0 LUFS
+
+  Sample peak:
+    Peak:       -0.0 dBFS
+
+  True peak:
+    Peak:        0.0 dBFS
+
+  Preemphasis:   none detected
+  Disc ISRC:     unknown (the driver does not report reading ISRC)
+
+  Properties:
+    Duration:    00:01.07
+    Samples:     48216
+    Frames:      82
+    Sample peak level: 100.0% (-0.0 dBFS)
+    True peak level:   0.0 dBFS
+    Integrated loudness (R128): -7.3 LUFS
+    Loudness range (R128):      0.0 LU (0.0 to 0.0 LUFS)
+    Extraction speed:  87.7x
+    Elapsed:            0.01 s
+    Kept read began:    2026-11-17T01:29:55Z
+    Pregap LSN:  unknown (sub-channel unreadable)
+    Pregap search: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off; LSN 1 to 299 undecided
+    Start LSN:   300
+    End LSN:     381
+
+  EAC CRC32:     C3506DDD
+  Secure re-read:  not attempted
+  Accurip:       disabled
+    Accurip v1:  20A1EAF1
+    Accurip v2:  3F57C3CC
+    Accurip 450: 00000000
+
+  Metadata:
+    TRACK:                         2
+    TRACKTOTAL:                    2
+    MUSICBRAINZ_DISCID:            QT01izNTdYnH3d96XiF6qfuA1eY-
+    CDDB:                          08000502
+    MEDIA:                         CD
+    COMMENT:                       cyanrip 0.9.4-rc3+platterpus.34
+    ALBUM:                         Unknown disc (QT01)
+    TITLE:                         Unknown track
+    CREATION_TIME:                 2026-11-17T01:29:55+00:00
+    REPLAYGAIN_TRACK_GAIN:         -10.69 dB
+    R128_TRACK_GAIN:               -1456
+    REPLAYGAIN_TRACK_RANGE:        0.00 dB
+    REPLAYGAIN_TRACK_PEAK:         1.000975
+    REPLAYGAIN_REFERENCE_LOUDNESS: -18.00 LUFS
+
+  Paranoia status counts:
+    READ:          11
+    VERIFY:        162
+    OVERLAP:       10
+
+  File(s):
+    Unknown disc (QT01) [FLAC]/2 - Unknown track.flac
+
+Album Loudness Summary:
+
+  Integrated loudness:
+    I:          -8.4 LUFS
+    Threshold: -18.4 LUFS
+
+  Loudness range:
+    LRA:         1.5 LU
+    Threshold: -28.4 LUFS
+    LRA low:    -9.2 LUFS
+    LRA high:   -7.8 LUFS
+
+  Sample peak:
+    Peak:        0.0 dBFS
+
+  True peak:
+    Peak:        0.0 dBFS
+
+Album integrated loudness (R128): -8.4 LUFS
+Album loudness range (R128):      1.5 LU (-9.2 to -7.8 LUFS)
+Album sample peak level:          0.0 dBFS
+Album true peak level:            0.0 dBFS
+Paranoia status counts:
+  READ:          70
+  VERIFY:        774
+  OVERLAP:       48
+
+Ripping errors: 0
+Encoder errors: none; 2 tracks encoded
+Read stalls:    none (no read exceeded 10s)
+Rip completed:  yes (2 of 2 tracks)
+Ripping finished at 2026-11-17T01:29:56+00:00
+Log FUN512: rXHIZJp.fy8lY5qd2bmsCN2cPBpxmd7f9MpYFQriNUxJ737q4brlMz5lXMgH1mfixUIimO_LcXvKsOPmBMsjRQ

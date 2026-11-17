@@ -1,0 +1,62 @@
+Checking ../disc/basic.bin for cdrom...
+
+Opening drive...
+cyanrip 0.9.4-rc3+platterpus.34 (platterpus-fork-gfd20a0a)
+Invoked as:     /tmp/claude-0/-home-user-claude-code-skills/46cfbc1a-d1c5-5a09-bbbb-4b2444266d0f/scratchpad/ux/cyanrip-build2/src/cyanrip -d ../disc/basic.cue -N -J
+Handshake:      round 41 lap 3 OPEN, verdict OPEN -- NOT a released build
+Consumer:       not identified (no --consumer given)
+Drive used:     none (disc image, read by libcdio's CDRWIN driver, revision 2.1.)
+System device:  ../disc/basic.cue
+Offset:         +0 samples
+Overread:       +0 frames
+Overread mode:  fill with silence in lead-in/lead-out
+Speed:          default (drive not asked whether it can change speed)
+C2 errors:      unknown (image)
+Accurate stream: unknown (image)
+Recordable:     unknown (image)
+CD-TEXT:        none reported by libcdio (absent, or unreadable by this driver)
+Encoder:        libavformat 60.16.100, libavcodec 60.31.102 (6.1.1-3ubuntu5)
+Paranoia level: max
+Retry limit:    10 (per frame, and per whole-track re-read)
+Cache model:    16 sectors (disc image, no drive cache)
+HDCD decoding:  disabled
+Album Art:      none
+Outputs:        flac
+Disc tracks:    2
+Tracks to rip:  all
+DiscID:         OnpX1oVWL7CypwcIA.ZsRybkaBw-
+CDDB ID:        08000802
+Album:          Unknown disc (ONPX)
+AccurateRip ID: 00000384-00000961-08000802
+AccurateRip:    disabled
+AcoustID:       unsupported (built without libchromaprint)
+Total time:     00:08.00
+
+Gaps:
+    pregap of track 2 unknown (sub-channel unreadable)
+
+Pregap searches:
+    track 2: 1 sectors asked; 0 reads failed the CRC; 0 sectors gave no frame passing it; 0 frames were another sector's; 0 had no address; frames answer +0 sectors off; LSN 1 to 299 undecided
+
+
+REM MUSICBRAINZ_ID "OnpX1oVWL7CypwcIA.ZsRybkaBw-"
+REM DISCID "08000802"
+REM MEDIA "CD"
+REM COMMENT "cyanrip 0.9.4-rc3+platterpus.34"
+TITLE "Unknown disc (ONPX)"
+FILE "1 - Unknown track.flac" WAVE
+  TRACK 01 AUDIO
+    TITLE "Unknown track"
+    INDEX 01 00:00:00
+FILE "2 - Unknown track.flac" WAVE
+  TRACK 02 AUDIO
+    TITLE "Unknown track"
+    INDEX 01 00:00:00
+Paranoia status counts:
+  none
+
+Ripping errors: 0
+Encoder errors: not applicable; no track was encoded
+Read stalls:    none (no read exceeded 10s)
+Rip completed:  no (cue sheet only, 0 of 2 tracks)
+Ripping finished at 2026-11-17T01:32:55+00:00
