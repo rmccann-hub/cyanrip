@@ -1,5 +1,22 @@
 Unreleased
 ==========
+**Round 41's rip is filed and read**: `.34` through Platterpus's 0.7.127 on
+2026-11-17, on our evidence branch at `e1e6a68`
+(`docs/rig-2026-11-17-fb28088/`), its README our reading. All 37 `.34`
+records hold the drive's declared read performance, one descriptor from 1012
+to 2469 kB/s, the first answer any drive has given to `.33`'s GET PERFORMANCE.
+All 14 tracks are verified in all five whole-disc rips, track 5 by Platterpus's
+labeled CTDB repair, as in round 40. The run is not a pass: besides the two
+`expect-ctdb whole` failures on track 5, the de-emphasis pair failed because
+its `-E` arm misread track 1 in second 162, the same bytes as a read filed on
+2026-09-28; the checksums are taken before the filter, and AccurateRip's frame
+450 matching that read shows it. Track 3 misread in a new second, 240. The run
+carries no `-O` read and no C2 probe, so `Beyond disc:` and the drive's C2 at
+those seconds are still unseen. Dumbass session filed Platterpus's lap 4,
+which accepted the pin move, and left the open list saying `.33` stood until
+they did, so the round 41 rows say what their lap 4 settled now, and R41-10
+leaves.
+
 **Round 41 lap 3 is sent**, on the owner's word of 2026-11-16, *"release the
 new lap when ready"*. It asks Platterpus to move the round's pin from `.33` to
 `.34`, published with it, since their 0.7.127 naming `.33` had not shipped,
