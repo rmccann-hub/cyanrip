@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**A `.toc`'s CD-TEXT, and a CUE sheet's inline CD-TEXT, have an unknown
+language**, as Platterpus's lap 4 S15 answered our lap 3 S23. libcdio gives
+both English whatever the source says, so `CD-TEXT:` said `present (English,
+…)` for a `.toc` mapped to German. They now say `present (unknown language,
+…)`, the line's existing form, and the record's `cdtext.language` is null; a
+`CDTEXTFILE`, whose language libcdio reads, keeps it. `cdtext` checks the
+`.toc`, a German copy and an inline sheet, `diag_record_v8` the record, and
+`cdtext_isrc_checked` the `CDTEXTFILE`; the first two fail on the old code.
+
 **A track's ISRC read from the disc wins by default**, over one `-t` or
 CD-TEXT gave, as Platterpus's lap 4 S14 answered our lap 3 S22. Until now that
 took `--prefer-disc-isrc`, and without it a CD-TEXT code beat the disc's

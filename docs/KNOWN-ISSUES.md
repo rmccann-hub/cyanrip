@@ -215,9 +215,12 @@ made from `tests/fixtures/`, run on a build of `8b3174ae`. Each fix lands with
 a scenario that reproduces it.
 
 - **The CD-TEXT language.** A `.toc` whose `LANGUAGE_MAP` says German, and a
-  CUE sheet with inline CD-TEXT, both log `CD-TEXT: present (English, …)`:
+  CUE sheet with inline CD-TEXT, both logged `CD-TEXT: present (English, …)`:
   libcdio 2.1.0 assigns English on those two routes. A `CDTEXTFILE` gives
-  German.
+  German. Fixed for `.35`, as Platterpus's lap 4 S15 answered our lap 3 S23:
+  those two routes log `unknown language`, and the record's
+  `cdtext.language` is null; `cdtext` and `diag_record_v8` hold it, and
+  `cdtext_isrc_checked` holds that a `CDTEXTFILE` keeps its language.
 - **A TOC whose starts did not increase.** A CUE sheet whose track 1 started
   after track 2 ripped with exit 0, `Duration: 142840:54.21`, `Samples:
   18446744073709463416` and an empty track 1, and said `Rip completed: yes`.

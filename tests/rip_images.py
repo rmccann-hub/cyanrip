@@ -2353,8 +2353,35 @@ def sc_cdtext():
     rip("cdtext", "cdtext.toc", cwd=WORK)
     log = (WORK / "out_cdtext" / "log.log").read_text(encoding="utf-8")
 
-    if "CD-TEXT:        present (English, 5 disc fields, 2 of 2 tracks tagged)" not in log:
+    # UNKNOWN LANGUAGE, since .35: libcdio gives a .toc's CD-TEXT English
+    # whatever its LANGUAGE_MAP says (US-2; Platterpus's lap 4 S15), so the
+    # language is not the source's to report. This line said English until
+    # then, which a German .toc printed too.
+    if "CD-TEXT:        present (unknown language, 5 disc fields, 2 of 2 tracks tagged)" not in log:
         fail("cdtext: disc-level CD-TEXT summary line missing or wrong")
+
+    # A German .toc, and a CUE sheet's inline CD-TEXT, which libcdio also
+    # gives English: both unknown. (The CDTEXTFILE route, whose language
+    # libcdio reads, keeps it: sc_cdtext_isrc_checked.)
+    toc = (FIX / "cdtext.toc").read_text(encoding="utf-8")
+    if "LANGUAGE_MAP { 0 : EN }" not in toc:
+        fail("cdtext: cdtext.toc no longer maps English, so the German copy "
+             "below is not German")
+    (WORK / "cdtext_de.toc").write_text(
+        toc.replace("LANGUAGE_MAP { 0 : EN }", "LANGUAGE_MAP { 0 : 8 }"),
+        encoding="utf-8")
+    inline = WORK / "cdtext_inline.cue"
+    inline.write_text('TITLE "Inline Title"\nPERFORMER "Inline Performer"\n'
+                      + (WORK / "basic.cue").read_text(encoding="utf-8"),
+                      encoding="utf-8")
+    shutil.copy(WORK / "basic.bin", WORK / "cdtext_inline.bin")
+    for image in ("cdtext_de.toc", "cdtext_inline.cue"):
+        ec, out = crip("-d", image, "-N", "-A", "-U", "-I", cwd=WORK)
+        got = [l for l in out.splitlines() if l.startswith("CD-TEXT:")]
+        if ec != 0 or len(got) != 1 or not got[0].startswith(
+                "CD-TEXT:        present (unknown language, "):
+            fail(f"cdtext: {image}: exit {ec}, CD-TEXT line(s) {got!r}; want "
+                 f"one saying present, in an unknown language")
 
     # Disc-level fields, verbatim
     for field, value in (("title", "Probe Disc Title"),
@@ -3065,6 +3092,11 @@ def sc_cdtext_isrc_checked():
     if "not an isrc" not in text:
         fail("cdtext_isrc_checked: the log never shows track 2's CD-TEXT ISRC, "
              "so the CD-TEXT file was not read and the run proves nothing")
+    # A CDTEXTFILE is binary CD-TEXT, whose language libcdio reads: its size
+    # packs above declare English (0x09), and the log keeps it.
+    if "CD-TEXT:        present (English, " not in text:
+        fail("cdtext_isrc_checked: a CDTEXTFILE's declared language is not "
+             "reported; only a .toc's and inline CD-TEXT's are unknown")
     tags = {n: probe(out / f"{n}.flac", "-show_entries", "format_tags=ISRC")
             for n in (1, 2)}
     if tags != {1: "USABC2600001", 2: ""}:
@@ -4295,9 +4327,10 @@ def sc_diag_record_v8():
     if ec != 0:
         fail(f"diag_record_v8: -I on cdtext.toc exited {ec}")
     ct = json.loads(rec.read_text(encoding="utf-8"))["cdtext"]
-    if (ct["status"], ct["language"]) != ("present", "English"):
-        fail(f"diag_record_v8: cdtext {ct['status']!r}/{ct['language']!r}, and "
-             f"the fixture declares English CD-TEXT")
+    if (ct["status"], ct["language"]) != ("present", None):
+        fail(f"diag_record_v8: cdtext {ct['status']!r}/{ct['language']!r}; "
+             f"want present, and a null language, since libcdio gives a "
+             f".toc's CD-TEXT English whatever it says (.35)")
     if ct["disc"] != want[0]:
         fail(f"diag_record_v8: cdtext.disc {ct['disc']}, the fixture {want[0]}")
     got_tracks = [{k: v for k, v in tr.items() if k != "number"}
