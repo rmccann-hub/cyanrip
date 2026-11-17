@@ -4,7 +4,13 @@ Unreleased
 pull request #127, and neither changing the program:
 - `disc_mcn_always` gave each cue a `.bin` of its own while every cue's `FILE`
   line still named `basic.bin`, which libcdio 2.1 ignores and Fedora's 2.3.0
-  did not: all its rips exited 74 there (`76fc858a`);
+  did not: all its rips exited 74 there (`76fc858a`). With that fixed, 2.3.0
+  returned no MCN for a cue's `CATALOG` line where 2.1 returns its code, and
+  the program printed `none (libcdio returned none)`, which is what libcdio
+  returned. The code, the thirteen zeros and, newly, an empty MCN now come
+  from the image shim's `CRIP_IMAGE_MCN`, so the test holds the line to what
+  libcdio returns on any version; breaking the empty reason in the program,
+  or making the shim's answer inert, fails it;
 - the QR test defined its helper where libqrencode is absent, and only a
   warning said so (`d011c618`).
 

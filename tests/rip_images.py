@@ -4633,54 +4633,53 @@ def sc_disc_mcn_always():
     directly after `CDDB ID:` under -N:
 
       * a cue with no CATALOG: `none (libcdio returned none)`;
-      * `CATALOG 1234567890123`: the code;
-      * `CATALOG 0000000000000`: `none (libcdio returned an all-zero MCN)`,
-        named as what libcdio returned, as an all-zero ISRC is;
+      * libcdio returning a code: the code;
+      * thirteen zeros: `none (libcdio returned an all-zero MCN)`, named as
+        what libcdio returned, as an all-zero ISRC is;
+      * an empty string: `none (libcdio returned an empty MCN)`;
       * the image shim clearing READ_MCN: `unknown (the driver does not
         report reading MCN)`;
       * the shim failing the capabilities query: `unknown (capabilities query
         failed)`.
 
-    Each cue names a .bin of its own, named after it. libcdio 2.1 opens the
-    .bin named after the cue whatever its FILE line says, and on Fedora's
-    libcdio 2.3.0 every rip here exited 74 while the FILE line still named
-    basic.bin, which this folder lacks (CI, 2026-11-17).
+    The code, the zeros and the empty string come from the image shim's
+    CRIP_IMAGE_MCN, not a cue's CATALOG line: libcdio 2.1 returns a CATALOG's
+    code, and Fedora's libcdio 2.3.0 returned none for the same cue (#127's
+    fedora job, 2026-11-17), where the program truthfully printed `none
+    (libcdio returned none)`. What is tested is that the line says what
+    libcdio returned, so the shim sets that. The cue names a .bin of its own,
+    named after it: 2.1 opens the one named after the cue whatever its FILE
+    line says, and on 2.3.0 every rip exited 74 while the line named
+    basic.bin, which this folder lacks.
     """
     d = WORK / "disc_mcn_always"
     d.mkdir(exist_ok=True)
     base = (WORK / "basic.cue").read_text(encoding="utf-8")
-    cues = {"plain": base,
-            "code": "CATALOG 1234567890123\n" + base,
-            "zero": "CATALOG 0000000000000\n" + base}
-    for name, text in cues.items():
-        text = text.replace('FILE "basic.bin" BINARY', f'FILE "{name}.bin" BINARY')
-        (d / f"{name}.cue").write_text(text, encoding="utf-8")
-        shutil.copy(WORK / "basic.bin", d / f"{name}.bin")
+    (d / "plain.cue").write_text(
+        base.replace('FILE "basic.bin" BINARY', 'FILE "plain.bin" BINARY'),
+        encoding="utf-8")
+    shutil.copy(WORK / "basic.bin", d / "plain.bin")
 
-    def mcn_line(cue, env=None):
-        ec, out = crip("-d", d / f"{cue}.cue", "-N", "-A", "-U", "-I",
+    def mcn_line(label, env=None):
+        ec, out = crip("-d", d / "plain.cue", "-N", "-A", "-U", "-I",
                        cwd=d, env=env)
-        (d / f"{cue}.{'shim' if env else 'plain'}.stdout").write_text(
-            out, encoding="utf-8")
+        (d / f"{label}.stdout").write_text(out, encoding="utf-8")
         lines = out.splitlines()
         hits = [i for i, l in enumerate(lines) if l.startswith("Disc MCN:")]
         if ec != 0 or len(hits) != 1:
-            fail(f"disc_mcn_always: {cue}: exit {ec}, {len(hits)} `Disc MCN:` "
-                 f"line(s), not 1")
+            fail(f"disc_mcn_always: {label}: exit {ec}, {len(hits)} "
+                 f"`Disc MCN:` line(s), not 1")
             return None
         i = hits[0]
         if i == 0 or not lines[i - 1].startswith("CDDB ID:"):
-            fail(f"disc_mcn_always: {cue}: `Disc MCN:` is not directly after "
-                 f"`CDDB ID:`")
+            fail(f"disc_mcn_always: {label}: `Disc MCN:` is not directly "
+                 f"after `CDDB ID:`")
         return lines[i]
 
-    want = {"plain": "Disc MCN:       none (libcdio returned none)",
-            "code": "Disc MCN:       1234567890123",
-            "zero": "Disc MCN:       none (libcdio returned an all-zero MCN)"}
-    for cue, line in want.items():
-        got = mcn_line(cue)
-        if got is not None and got != line:
-            fail(f"disc_mcn_always: {cue}: {got!r}, not {line!r}")
+    line = "Disc MCN:       none (libcdio returned none)"
+    got = mcn_line("plain")
+    if got is not None and got != line:
+        fail(f"disc_mcn_always: plain: {got!r}, not {line!r}")
 
     needs_preload_shim("disc_mcn_always")
     shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
@@ -4688,23 +4687,32 @@ def sc_disc_mcn_always():
         fail(f"disc_mcn_always: the image shim was not built or not passed "
              f"({shim!r})")
         return
-    for var, line in (("CRIP_IMAGE_CAP_NO_MCN",
-                       "Disc MCN:       unknown (the driver does not report "
-                       "reading MCN)"),
-                      ("CRIP_IMAGE_CAP_ERROR",
-                       "Disc MCN:       unknown (capabilities query failed)")):
-        marker = d / f"{var}.added"
-        env = dict(os.environ, LD_PRELOAD=shim, CRIP_IMAGE_CAP_OUT=str(marker),
+    cases = (
+        ("CRIP_IMAGE_MCN", "1234567890123", "CRIP_IMAGE_MCN_OUT",
+         "Disc MCN:       1234567890123"),
+        ("CRIP_IMAGE_MCN", "0000000000000", "CRIP_IMAGE_MCN_OUT",
+         "Disc MCN:       none (libcdio returned an all-zero MCN)"),
+        ("CRIP_IMAGE_MCN", "", "CRIP_IMAGE_MCN_OUT",
+         "Disc MCN:       none (libcdio returned an empty MCN)"),
+        ("CRIP_IMAGE_CAP_NO_MCN", "1", "CRIP_IMAGE_CAP_OUT",
+         "Disc MCN:       unknown (the driver does not report reading MCN)"),
+        ("CRIP_IMAGE_CAP_ERROR", "1", "CRIP_IMAGE_CAP_OUT",
+         "Disc MCN:       unknown (capabilities query failed)"),
+    )
+    for n, (var, value, out_var, line) in enumerate(cases):
+        label = f"{var}={value!r}"
+        marker = d / f"case{n}.marker"
+        env = dict(os.environ, LD_PRELOAD=shim,
                    ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
                    + ":verify_asan_link_order=0")
-        env[var] = "1"
-        got = mcn_line("code", env=env)
+        env[out_var] = str(marker)
+        env[var] = value
+        got = mcn_line(f"case{n}", env=env)
         if not marker.exists():
-            fail(f"disc_mcn_always: {var}: the shim never ran, so the run "
+            fail(f"disc_mcn_always: {label}: the shim never ran, so the run "
                  f"tests nothing")
         elif got is not None and got != line:
-            fail(f"disc_mcn_always: {var}: {got!r}, not {line!r}")
-
+            fail(f"disc_mcn_always: {label}: {got!r}, not {line!r}")
 
 def sc_overread_bounded():
     """Under -O, a frame outside the disc is read once (round 35).

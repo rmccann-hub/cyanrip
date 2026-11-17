@@ -34,12 +34,16 @@
  *   CRIP_IMAGE_CAP_NO_MCN  clear CDIO_DRIVE_CAP_READ_MCN, as a driver that
  *                       cannot read an MCN reports it, for `Disc MCN:`'s
  *                       `unknown (the driver does not report reading MCN)`
+ *   CRIP_IMAGE_MCN      what cdio_get_mcn() returns for an image: a code,
+ *                       thirteen zeros, or "" for an empty one; see below
+ *   CRIP_IMAGE_MCN_OUT  a file to create when it does, as CRIP_IMAGE_CAP_OUT
  */
 
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <cdio/cdio.h>
@@ -123,4 +127,40 @@ int cdio_get_media_changed(CdIo_t *p_cdio)
     if (!real)
         real = dlsym(RTLD_NEXT, "cdio_get_media_changed");
     return real(p_cdio);
+}
+
+/* CRIP_IMAGE_MCN: answer cdio_get_mcn() for an image driver with this string,
+ * newly allocated, as libcdio does, and freed by the caller's cdio_free().
+ * `disc_mcn_always` put the code in a cue's CATALOG line until libcdio
+ * versions disagreed: 2.1 returns it, and Fedora's 2.3.0 returned none for
+ * the same cue (#127's fedora job, 2026-11-17). What the program prints
+ * follows what libcdio returns, which this sets, so the test no longer rests
+ * on which libcdio parses the cue. */
+char *cdio_get_mcn(const CdIo_t *p_cdio)
+{
+    static char *(*real)(const CdIo_t *);
+    if (!real)
+        real = (char *(*)(const CdIo_t *))dlsym(RTLD_NEXT, "cdio_get_mcn");
+    const char *v = getenv("CRIP_IMAGE_MCN");
+    if (!v)
+        return real(p_cdio);
+    switch (cdio_get_driver_id(p_cdio)) {
+    case DRIVER_BINCUE:
+    case DRIVER_NRG:
+    case DRIVER_CDRDAO:
+        break;
+    default:
+        return real(p_cdio);
+    }
+    const char *out = getenv("CRIP_IMAGE_MCN_OUT");
+    if (out) {
+        int fd = open(out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd >= 0) {
+            if (write(fd, "answered\n", 9) < 0) {
+                /* the marker is evidence, not a requirement */
+            }
+            close(fd);
+        }
+    }
+    return strdup(v);
 }
