@@ -1320,27 +1320,24 @@ static void track_read_extra(cyanrip_ctx *ctx, cyanrip_track *t)
                 }
             }
         }
-        /* --prefer-disc-isrc (round 35, Platterpus's TASKS R20): an ISRC the
-         * disc returned is what the files carry, over one -t gave, track by
-         * track, so a track whose read returned none keeps the caller's. A
-         * MusicBrainz ISRC names a recording, which can carry several; the
-         * disc's is a measurement of this pressing. Without the option,
-         * as before: the disc's only when -t gave none and no earlier track
-         * reported none. In both, a code that is not an ISO 3901 code is
-         * never written (round 35, Platterpus's lap 2 S7, our lap 4 S5): the
-         * record and the Disc ISRC: line keep it, saying it was not used, and
-         * it is not a `none`, so it does not stop a later track's code. */
+        /* THE DISC'S CODE WINS, since .35: an ISRC the disc returned is what
+         * the files carry, over one -t or CD-TEXT gave, track by track, so a
+         * track whose read returned none keeps theirs. A MusicBrainz ISRC
+         * names a recording, which can carry several; the disc's is a
+         * measurement of this pressing. Until .35 that took
+         * --prefer-disc-isrc (round 35, Platterpus's TASKS R20), and without
+         * it CD-TEXT's ISRC outranked the disc's checked code, against
+         * cdtext.c's own rule that CD-TEXT only fills gaps (US-2). Our round
+         * 41 lap 3 S22 asked; Platterpus's lap 4 S14 answered that the disc's
+         * should win by default, and asked us to keep accepting the flag,
+         * which every rip of theirs sends: it is now a no-op. A code that is
+         * not an ISO 3901 code is never written (round 35, Platterpus's lap 2
+         * S7, our lap 4 S5): the record and the Disc ISRC: line keep it,
+         * saying it was not used. */
         const char *disc_isrc_usable = t->isrc_disc && !t->isrc_disc_malformed ?
                                        t->isrc_disc : NULL;
-        if (ctx->settings.prefer_disc_isrc) {
-            if (disc_isrc_usable)
-                av_dict_set(&t->meta, "isrc", disc_isrc_usable, 0);
-        } else if (!ctx->disregard_cd_isrc && (ctx->rcap & CDIO_DRIVE_CAP_READ_ISRC) && !dict_get(t->meta, "isrc")) {
-            if (disc_isrc_usable)
-                av_dict_set(&t->meta, "isrc", disc_isrc_usable, 0);
-            else if (!t->isrc_disc)
-                ctx->disregard_cd_isrc = 1;
-        }
+        if (disc_isrc_usable)
+            av_dict_set(&t->meta, "isrc", disc_isrc_usable, 0);
 
         /* TOC preemphasis flag*/
         t->preemphasis = cdio_cddap_track_preemp(ctx->drive, t->cd_track_number);
@@ -3435,7 +3432,7 @@ static int cyanrip_run(int argc, char **argv)
     GEN_OPT_ONE(opts_list, char *,  diagnostics, "", 1, 1, NULL, 0, 0,
                 "Write a machine-readable diagnostics record to this path (JSON)");
     GEN_OPT_ONE(opts_list, bool,    prefer_disc_isrc, "", 0, 0, 0, 0, 0,
-                "Tag a track with the ISRC read from the disc, where one is, over one given with -t");
+                "Accepted and ignored: since .35 a track's ISRC read from the disc is always used over one given with -t or CD-TEXT");
     GEN_OPT_ONE(opts_list, bool,    prefer_accuraterip_match, "", 0, 0, 0, 0, 0,
                 "At the -Z repeat limit, keep the read AccurateRip matches at the highest confidence, where one does");
     GEN_OPT_ONE(opts_list, int32_t, reread_time_limit, "", 1, 1, 0, 1, INT32_MAX,

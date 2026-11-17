@@ -181,7 +181,7 @@ This table is written by hand; the authoritative list is P1 of `PROVIDER-CONTRAC
 | -I                   | Only print CD metadata and information, will not rip or eject the CD                        |
 | -a `string`          | Album metadata, syntax is described below                                                   |
 | -t `number=string`   | Track metadata, syntax is described below                                                   |
-| --prefer-disc-isrc   | Tag a track with the ISRC read from the disc, where one is, over one given with `-t` (fork) |
+| --prefer-disc-isrc   | Accepted and ignored: since `.35` a track's ISRC read from the disc is always used, over one given with `-t` or CD-TEXT (fork) |
 | -R `int` or `string` | Sets the MusicBrainz release to use, as an index from 1 or an ID, read [below](#metadata)   |
 | -c `int/int`         | Tag multi-disc albums as such, syntax is `disc/totaldiscs`, read below                      |
 | -C `path` or `url`   | Sets cover image to embed into each track, syntax is described below                        |

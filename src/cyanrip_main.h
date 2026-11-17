@@ -201,7 +201,7 @@ typedef struct cyanrip_settings {
     int enable_replaygain;
     int cache_probe;
     char *consumer_id; /* --consumer: the caller's name for itself, recorded verbatim */
-    int prefer_disc_isrc; /* --prefer-disc-isrc: the disc's ISRC over one -t gave */
+    int prefer_disc_isrc; /* --prefer-disc-isrc: accepted, a no-op since .35 */
     int prefer_ar_match; /* --prefer-accuraterip-match: at the -Z repeat limit, a read AccurateRip matches first */
     char *keep_every_read; /* --keep-every-read DIR: every distinct -Z read's audio, as WAV, in DIR */
     int read_vendor_settings; /* --read-vendor-settings: send a vendor's read-only settings query (drive_caps.h) */
@@ -556,7 +556,6 @@ typedef struct cyanrip_ctx {
     cyanrip_track tracks[198];
     int nb_tracks; /* Total number of output tracks */
     int nb_cd_tracks; /* Total tracks the CD signals */
-    int disregard_cd_isrc; /* If one track doesn't have ISRC, universally the rest won't */
 
     /* How a -f search ended, for the -j record (round 32, our lap 1 S10):
      * NONE when -f did not run. Set where each ending prints its line. */

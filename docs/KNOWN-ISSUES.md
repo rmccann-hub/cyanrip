@@ -232,11 +232,14 @@ a scenario that reproduces it.
 - **CD-TEXT's ISRC skipped the ISO 3901 check, and still outranks the disc's.**
   A `CDTEXTFILE` carrying `not an isrc` reached the FLAC tag and the CUE sheet's
   `ISRC`; since 2026-11-16 only a code ISO 3901 allows is used, and
-  `cdtext_isrc_checked` holds it. Still true: CD-TEXT fills the tags before the
-  disc's own code is read, so a valid CD-TEXT code beats the disc's unless
-  `--prefer-disc-isrc` is given, against `src/cdtext.c`'s own rule that
-  CD-TEXT only fills gaps. Which should win is round 35's `--prefer-disc-isrc`
-  question again, so it goes to a lap.
+  `cdtext_isrc_checked` holds it. CD-TEXT filled the tags before the disc's
+  own code was read, so a valid CD-TEXT code beat the disc's unless
+  `--prefer-disc-isrc` was given, against `src/cdtext.c`'s own rule that
+  CD-TEXT only fills gaps. Fixed for `.35`: our round 41 lap 3 S22 asked, and
+  Platterpus's lap 4 S14 answered that the disc's checked code wins by
+  default, the flag accepted as a no-op. The second rip of
+  `cdtext_isrc_checked` holds it, and `disc_isrc_line` holds the same over
+  `-t`.
 - **A failed last-session query decides the CD-Extra cut.** Certain from the
   code, reproducible only on a drive: any answer but success takes the
   11400-frame cut, with no line saying why. libcdio's macOS, FreeBSD and AIX
@@ -252,8 +255,9 @@ a scenario that reproduces it.
 
 **The MCN read a failed capabilities query skips is still skipped without a
 word.** Our round 38 lap 3 S17 proposed `Disc MCN:` printed always, with its
-reasons, and Platterpus's lap 4 S11 accepted it as given; it is not built
-(`docs/OPEN-ITEMS.md` R41-1). The five not fixed are US-2 there.
+reasons, and Platterpus's lap 4 S11 accepted it as given; built for `.35`,
+held by `disc_mcn_always`. The four not fixed are US-2 in
+`docs/OPEN-ITEMS.md`.
 
 ### paranoia's identify message can still start a line, from the `-d` path or the drive's INQUIRY strings
 

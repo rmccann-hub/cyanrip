@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**A track's ISRC read from the disc wins by default**, over one `-t` or
+CD-TEXT gave, as Platterpus's lap 4 S14 answered our lap 3 S22. Until now that
+took `--prefer-disc-isrc`, and without it a CD-TEXT code beat the disc's
+checked one, against `src/cdtext.c`'s own rule that CD-TEXT only fills gaps
+(US-2). The flag is still accepted, as a no-op, since every rip of theirs sends
+it. `cdtext_isrc_checked` gains a rip with both codes, and `disc_isrc_line`
+now expects the disc's over `-t` with or without the flag; both fail on the
+old rule.
+
 **`Disc MCN:` is printed always, with a reason when there is no code**,
 our round 38 lap 3 S17, accepted in Platterpus's lap 4 S11 and read by their
 0.7.127: `none (libcdio returned none)`, `unknown (the driver does not report

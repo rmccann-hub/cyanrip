@@ -3018,6 +3018,15 @@ def sc_cdtext_isrc_checked():
     line unchecked, where the disc's own code is checked. A `.toc` puts an
     ISRC inside CD_TEXT into the TOC's ISRC, so the route is a CUE sheet's
     CDTEXTFILE, built here as ISRC packs (0x8E) and their size packs (0x8F).
+
+    AND THE DISC'S OWN CODE OUTRANKS IT, since .35 (US-2, our round 41 lap 3
+    S22, Platterpus's lap 4 S14). CD-TEXT filled the ISRC first and the
+    disc's was taken only into a gap, unless --prefer-disc-isrc, so a
+    CD-TEXT code beat the checked one. The second rip gives track 1 a disc
+    ISRC too, through the image shim, under which libcdio returns a cue
+    sheet's ISRC line as the disc's: the file must carry the disc's, and
+    track 2, whose disc gave none, still nothing, since its CD-TEXT code is
+    not an ISO 3901 code.
     """
     def pack(kind, track, seq, pos, text):
         return bytes([kind, track, seq, pos & 0x0F]) + text.ljust(12, b"\0") + b"\0\0"
@@ -3066,6 +3075,42 @@ def sc_cdtext_isrc_checked():
     if isrcs != ["USABC2600001"]:
         fail(f"cdtext_isrc_checked: the CUE sheet's ISRC lines are {isrcs}; "
              f"want track 1's alone")
+
+    needs_preload_shim("cdtext_isrc_checked")
+    shim = os.environ.get("CYANRIP_IMAGECAP_SHIM")
+    if not shim or not Path(shim).exists():
+        fail(f"cdtext_isrc_checked: the image shim was not built or not "
+             f"passed ({shim!r})")
+        return
+    disc_code = "GBAYE0601498"
+    shutil.copy(WORK / "cdtisrc.cdt", WORK / "cdtdisc.cdt")
+    shutil.copy(FIX / "cdda.bin", WORK / "cdtdisc.bin")
+    (WORK / "cdtdisc.cue").write_text(
+        'CDTEXTFILE "cdtdisc.cdt"\nFILE "cdtdisc.bin" BINARY\n'
+        f"  TRACK 01 AUDIO\n    ISRC {disc_code}\n    INDEX 01 00:00:00\n"
+        "  TRACK 02 AUDIO\n    INDEX 01 00:04:00\n", encoding="utf-8")
+    marker = WORK / "cdtdisc.added"
+    env = dict(os.environ, LD_PRELOAD=shim, CRIP_IMAGE_CAP_OUT=str(marker),
+               ASAN_OPTIONS=os.environ.get("ASAN_OPTIONS", "")
+               + ":verify_asan_link_order=0")
+    out = WORK / "out_cdtdisc"
+    shutil.rmtree(out, ignore_errors=True)
+    ec, text = crip("-d", WORK / "cdtdisc.cue", "-N", "-A", "-U", "-s", "0",
+                    "-D", out, "-F", "{track}", "-L", "log", env=env)
+    if not marker.exists():
+        fail("cdtext_isrc_checked: the shim never ran, so the disc gave no "
+             "ISRC and the second rip proves nothing")
+        return
+    if ec != 0 or "USABC2600001" not in text or f"Disc ISRC:     {disc_code}" not in text:
+        fail(f"cdtext_isrc_checked: the second rip exited {ec}, or its log "
+             f"does not show both track 1's CD-TEXT code and the disc's")
+        return
+    tags = {n: probe(out / f"{n}.flac", "-show_entries", "format_tags=ISRC")
+            for n in (1, 2)}
+    if tags != {1: disc_code, 2: ""}:
+        fail(f"cdtext_isrc_checked: with a disc code the files' ISRC tags are "
+             f"{tags}; want the disc's {disc_code} for track 1, over CD-TEXT's "
+             f"USABC2600001, and none for track 2")
 
 
 def sc_toc_starts_increase():
@@ -4709,21 +4754,27 @@ def sc_disc_isrc_line():
                 fail(f"disc_isrc_line: {name}: track {num}'s Metadata ISRC: "
                      f"{meta!r}, and its file carries {in_file!r}")
             written[num] = in_file
-        # The disc's code over -t with the option, -t's without it; a track
-        # whose disc gave none keeps -t's either way, and one -t left alone
-        # takes the disc's either way. A code that is not an ISO 3901 code
-        # is never written: -t's stands, or nothing.
-        want_written = {num: (usable.get(num) if prefer and num in usable
-                              else passed.get(num, usable.get(num)))
+        # The disc's code over -t, with the option or without it since .35,
+        # which made the option a no-op (our round 41 lap 3 S22, Platterpus's
+        # lap 4 S14); a track whose disc gave none keeps -t's. A code that is
+        # not an ISO 3901 code is never written: -t's stands, or nothing.
+        want_written = {num: (usable[num] if num in usable
+                              else passed.get(num))
                         for num in tracks}
         if written != want_written:
             fail(f"disc_isrc_line: {name}: the files carry {written}, where "
                  f"{want_written} is expected")
         results[name] = written
-    # Not vacuous: the option changed what a file carries.
-    if results.get("plain") == results.get("prefer"):
-        fail(f"disc_isrc_line: --prefer-disc-isrc changed no file "
-             f"({results})")
+    # The option is accepted and changes nothing, and the disc's code does
+    # displace one -t gave: not vacuous, since -t named every track.
+    if results.get("plain") != results.get("prefer"):
+        fail(f"disc_isrc_line: --prefer-disc-isrc, a no-op since .35, changed "
+             f"what the files carry ({results})")
+    if not any(passed.get(n) and usable.get(n) and passed[n] != usable[n]
+               and results.get("plain", {}).get(n) == usable[n]
+               for n in tracks):
+        fail(f"disc_isrc_line: no track shows the disc's code displacing "
+             f"-t's, so the run proves nothing ({results})")
 
     # Without the shim, the read this libcdio gives an image, from the record.
     rec = WORK / "disc_isrc_noshim.json"
