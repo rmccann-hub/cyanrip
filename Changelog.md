@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**`STATUS.md`'s *Now* says what is true again, and a test keeps it so.** Dumbass us: every lap and release of 2026-11-17 updated the checked block at the top and left the prose under it saying `.34` was on beta, `.33` stood until Platterpus accepted `.34`, v9 governed and their newest release was 0.7.125. In fact `.35` was out, their lap 4 had accepted `.34`, v10 was landed in both trees and 0.7.127 was tagged. The outside week review of 2026-11-10 had found the same rot. The section is rewritten. It no longer copies the manifest's channels, which the operator removed from this file on 2026-10-07 and which had crept back. The new `status_now_is_current` fails when its date is older than the newest ledger row or lap file of the current round, or when its heading does not name that round. Protocol v10 is byte-identical in both trees at `platterpus@2b7e579`, so our gate may now implement it, and round 42's opening lap is where we say so (US-40).
+
 **The overread probe of 2026-11-17 is filed and read**: Platterpus's `overreadprobe`
 on `.34` and the BDR-209D, the first run to send `-O`. It is filed at `1a16efe`
 (`docs/rig-2026-11-17b-overreadprobe/`), with the lead-out rip's log and CUE sheet

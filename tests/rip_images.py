@@ -4378,6 +4378,96 @@ def sc_status_block_is_current():
         seen.add(m.group(1))
 
 
+def sc_status_now_is_current():
+    """STATUS.md's *Now* was rewritten no earlier than the newest lap or release.
+
+    The block above it is checked field by field (`sc_status_block_is_current`);
+    the prose under `## Now` cannot be, and it rotted twice. The outside week
+    review of 2026-11-10 found it stale under a checked block, and on
+    2026-11-17 it still said `.34` was on beta, `.33` stood until Platterpus
+    accepted `.34`, v9 governed and their newest release was 0.7.125, a day
+    after `.35`, their lap 4's acceptance and their 0.7.127, while every check
+    passed.
+
+    This checks only what can be derived, never wording: the heading names the
+    round the gate reads as current, and its rewrite date is no earlier than
+    the commit that wrote the newest ledger row or last touched a lap file of
+    that round, both by committer date in UTC. It does not bring back the
+    copies of the manifest the operator removed on 2026-10-07 (see
+    `sc_status_is_current`): it asks that the section be rewritten when what it
+    describes moves, not that it repeat a field. Outside a full git history it
+    prints UNPROBED, since a shallow clone dates every file by its one commit.
+    """
+    text = (ROOT / "docs" / "handshake" / "STATUS.md").read_text(encoding="utf-8")
+    heads = [ln for ln in text.splitlines() if ln.startswith("## Now")]
+    if len(heads) != 1:
+        fail(f"status_now_is_current: STATUS.md has {len(heads)} '## Now' "
+             f"headings; it has one section that says what is true now.")
+        return
+    m = re.match(r"^## Now — rewritten (\d{4})-(\d{2})-(\d{2}): (\S.*)$", heads[0])
+    if not m:
+        fail(f"status_now_is_current: the heading is not '## Now — rewritten "
+             f"YYYY-MM-DD: <state>': {heads[0]!r}")
+        return
+    stamp = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+
+    spec = importlib.util.spec_from_file_location(
+        "rg_now", ROOT / "tools" / "release-gate.py")
+    rg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rg)
+    rounds = rg.load_rounds()
+    if not rounds:
+        fail("status_now_is_current: the gate's loader found no round")
+        return
+    current = max(rounds, key=lambda r: r.number)
+    if not re.search(rf"\bround {current.number}\b", m.group(4)):
+        fail(f"status_now_is_current: the heading's state, {m.group(4)!r}, "
+             f"does not name round {current.number}, the round the gate reads "
+             f"as current.")
+
+    shallow = subprocess.run(["git", "-C", str(ROOT), "rev-parse",
+                              "--is-shallow-repository"],
+                             capture_output=True, text=True, encoding="utf-8",
+                             timeout=60)
+    if shallow.returncode != 0 or shallow.stdout.strip() != "false":
+        print("UNPROBED: status_now_is_current: no full git history, so the "
+              "rewrite date was not compared with the newest lap or release")
+        return
+
+    moved = []
+    spec = importlib.util.spec_from_file_location(
+        "ib_now", ROOT / "tools" / "ingest-bundle.py")
+    ib = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ib)
+    pubs = ib.publications(ROOT) or []
+    if not pubs:
+        fail("status_now_is_current: no commit wrote a ledger row")
+        return
+    seq, version, released, at, by = max(pubs, key=lambda p: p[0])
+    moved.append((f"ledger row {seq}, {version} at {released}", by, at))
+
+    hs = ROOT / "docs" / "handshake"
+    laps = sorted(hs.glob(f"round-{current.number}-lap-*.md")) + sorted(
+        (hs / "inbound").glob(f"round-{current.number}-lap-*.md"))
+    if laps:
+        r = subprocess.run(["git", "-C", str(ROOT), "log", "-1",
+                            "--format=%h %cI", "--"]
+                           + [str(p.relative_to(ROOT)) for p in laps],
+                           capture_output=True, text=True, encoding="utf-8",
+                           timeout=60)
+        if r.returncode == 0 and r.stdout.strip():
+            commit, iso = r.stdout.split()
+            moved.append((f"a lap file of round {current.number}", commit,
+                          ib.when(iso)))
+
+    for what, commit, at in moved:
+        utc = at.astimezone(ib.datetime.timezone.utc)
+        if (utc.year, utc.month, utc.day) > stamp:
+            fail(f"status_now_is_current: '## Now' says it was rewritten "
+                 f"{'%04d-%02d-%02d' % stamp}, and {commit} wrote {what} on "
+                 f"{utc:%Y-%m-%d} (UTC); rewrite the section for what moved.")
+
+
 def sc_diag_record_v8():
     """The --diagnostics record's /8 fields, each against an artifact it does not share.
 

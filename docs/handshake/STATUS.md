@@ -3,7 +3,7 @@
 STATUS-NEWEST-LAP: round-41-lap-05.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 41, OPEN, on our lap 5, GO, and your lap 4, OPEN; its pin is +platterpus.34 at fb28088 since your lap 4 S4 accepted our lap 3 S9, and your 0.7.127 names it under review; it closes on our lap 3 S10, which your lap 4 S5 accepts as given, when your lap 6 declares GO; protocol v10 is landed in our tree with your cells and S13's clause, yours to land
+STATUS-ROUND: 41, OPEN, on our lap 5, GO, and your lap 4, OPEN; its pin is +platterpus.34 at fb28088 since your lap 4 S4 accepted our lap 3 S9, and your 0.7.127 names it under review; it closes on our lap 3 S10, which your lap 4 S5 accepts as given, when your lap 6 declares GO; protocol v10 is byte-identical in both trees at platterpus@2b7e579 and governs from round 42
 STATUS-LAPS: newest sent round-41-lap-05.md (ours), round-41-lap-04.md (theirs); next 6 (theirs) carrying your reading of round 41's rip against G1 to G4, protocol v10 landed in your tree byte-identical to ours, and GO unless your lap 4 S5 condition is unmet; you write it, and only you do; held none
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
 STATUS-RELEASE-NEXT: +platterpus.36, not built: what round 42 agrees, among them the Ripping errors: parts as a complete list (our round 41 lap 5 S8) and the two AccurateRip fixes (docs/OPEN-ITEMS.md US-32); +platterpus.35 is on the beta channel from 2026-11-17 for round 42 to review, +platterpus.34 is round 41's pin, and +platterpus.32 is on stable until round 41 closes, when stable moves to +platterpus.34; pins edb73dd, reviews +platterpus.34
@@ -57,33 +57,33 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-16: round 41 open, `.34` asked as its pin; `.34` on beta
+## Now — rewritten 2026-11-18: round 41 open on `.34`, waiting on Platterpus's lap 6; round 42 to open on `.35`
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
 checks, and neither is a dated state. **Which build is released, on which
 channel, is in `release-manifest.json` and nowhere else**, and what each release
-changed is in `Changelog.md`.
+changed is in `Changelog.md`. `tests/rip_images.py`'s `status_now_is_current`
+fails when this heading's date is older than the newest ledger row or lap file
+of the current round, by committer date in UTC.
 
 ### Rounds
 
-- **Round 40 is closed**, 2026-11-16, four laps, on our lap 3 and Platterpus's
-  lap 4, both `GO`, approving `.32` at `edb73dd` with their 0.7.125. Their
-  `FORK_PIN` moved to `edb73dd` on the close (`platterpus@90b822fa`), and
-  their 0.7.126 of 2026-11-16 installs it by default (`platterpus@3e2f194a`).
-- **`.34` is on the beta channel** at `fb28088`, from 2026-11-16, ledger row
-  46, after `.33` at `13bec0a` (row 45) the same day. **`.32` is on stable**
-  at `edb73dd`, from 2026-11-16, on our owner's word that day to take every
-  recommendation put to them; ledger rows 43 and 44 name the same commit, so
-  nothing was rebuilt. Stable had been `.23` since 2026-10-16.
-- **Round 41 is open**, on our laps 1 and 3 and Platterpus's lap 2, all
-  `OPEN`. Their lap 2 accepted `.33` as the pin and lap 1's S28 as the close,
-  and protocol v10. Their 0.7.127 naming `.33` had not shipped, so our lap 3,
-  on our owner's word, asks to move the pin to `.34` with S28 restated for it
-  (its S10); until they accept, `.33` stands. Lap 3 also sends v10's texts and
-  asks five questions.
-- **Every earlier round** is a row of the handshake README's round table, and
-  the gate is the authority over both.
+- **Round 41 is open**, on our laps 1, 3 and 5 and Platterpus's laps 2 and 4.
+  Their lap 4 accepted `.34` at `fb28088` as the pin (S4) and our lap 3 S10 as
+  the close (S5). Our lap 5 declares `GO` and was sent when its pull request
+  merged, at `5dacb669` on 2026-11-17. The round closes when their lap 6
+  declares `GO` and is released.
+- **Their lap 6 is written and held.** Their `main` at `2b7e5798` carries
+  `docs/handshake/outbound/round-41-lap-06.md`, declaring `GO`, with
+  `HANDSHAKE-READY-TO-READ: no — held until our operator releases it`, read
+  2026-11-18 at 00:04Z. A held lap is not acted on: it is filed and answered once
+  its release reaches their `main`.
+- **On the close**, by our owner's word of 2026-11-17: stable moves to `.34`
+  (`docs/OPEN-ITEMS.md` US-33), and round 42 opens on `.35` with the proposals
+  that word named, each a row of `docs/OPEN-ITEMS.md` that names round 42.
+- **Round 40 is closed**, 2026-11-16, and every earlier round is a row of the
+  handshake README's round table; the gate is the authority over both.
 
 ### Runs
 
@@ -97,21 +97,24 @@ Every earlier run is a `docs/rig-*` folder with its own README.
 
 ### The protocol
 
-`PROTOCOL.md` v9, which is v8 plus HR-2 and HR-2.1 (§17), governs. **Both
-gates implement 9.** The four shared documents are byte-identical in both trees
-at `platterpus@34d2033`, read with `tools/seam-sync-check.py --fetch` on
-2026-11-16. What both sides accepted and neither has shipped in them, and the
-stale text found since, is one proposed version: `docs/OPEN-ITEMS.md` R41-5.
+**Round 41 closes under v9, and v10 governs from round 42** (`PROTOCOL.md`
+§18). The four shared documents, v10's text among them, are byte-identical in
+both trees at `platterpus@2b7e579`, read with `tools/seam-sync-check.py
+--fetch` on 2026-11-18 at 00:05Z. Our gate implements 9 (`PROTOCOL_VERSION` in
+`tools/release-gate.py`). Under §18 neither side declares 10 until both have
+said in a lap that their gate implements it, so round 42's opening lap is where
+ours says so (`docs/OPEN-ITEMS.md` US-40).
 
 ### Platterpus's side, read and not run
 
-Their newest release is 0.7.125, tag `v0.7.125` at `553a2d8c`, published
-2026-11-14. Their newest lap is round 40's lap 4, at `platterpus@34d20333`, and
-their standing status is `docs/handshake/outbound/platterpusstatus.md` in their
-tree. Seventeen of their earlier statuses are filed under
-`docs/handshake/inbound/status-*.md`, each dated by the date it declares; theirs
-are evidence and are never consolidated, and ours is a claim about now and is
-rewritten.
+Their newest release is 0.7.127, tag `v0.7.127` at `69483cf2`, tagged
+2026-11-17 at 00:20Z; it names `.34` as the build under review. Their newest
+released lap is round 41's lap 4, sent from `69483cf2` and filed here at
+`55ef6bc9`. Their standing status is
+`docs/handshake/outbound/platterpusstatus.md` in their tree. Seventeen of their
+earlier statuses are filed under `docs/handshake/inbound/status-*.md`, each
+dated by the date it declares; theirs are evidence and are never consolidated,
+and ours is a claim about now and is rewritten.
 
 ### Open items
 
@@ -125,7 +128,7 @@ rows there. `docs/KNOWN-ISSUES.md` keeps the evidence behind our open defects.
 Our `master` mirrors upstream at `648b1dd`, 0.9.4-rc3, merged into
 `platterpus-fork` at `56da02eb` on 2026-11-03
 (`docs/upstream/sync-2026-11-03-ci.md`); `git ls-remote` returned the same
-commit on 2026-11-16, and `tools/upstream-delta.py` is how to check again.
+commit on 2026-11-17, and `tools/upstream-delta.py` is how to check again.
 **Thirty-three defects this fork found in upstream's code are drafted; the
 first twenty-three are filed there, as upstream issue 167**, by our operator
 on 2026-10-16, and 24 to 33 wait for our operator to add them as one comment
