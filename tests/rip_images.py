@@ -4259,7 +4259,22 @@ def sc_status_block_is_current():
 
     manifest = json.loads((ROOT / "release-manifest.json").read_text(encoding="utf-8"))
     channels = manifest["channels"]
-    newest = max(channels.values(), key=lambda c: c["release_seq"])
+    # The newest RELEASE is the one first published last, not the channel
+    # whose row is newest: moving `.34` to stable after `.35` went out on
+    # beta (round 41's close, ledger row 48) publishes nothing newer, and a
+    # channel's own release_seq would have named `.34` newest and demanded
+    # `.35` as the next. Still ordered by release_seq, never by version: a
+    # release's first ledger row is its publication.
+    first_seq = {}
+    for r in (ln.split("\t") for ln in (ROOT / "docs" / "release-ledger.tsv")
+              .read_text(encoding="utf-8").splitlines()
+              if ln.strip() and not ln.startswith("#")):
+        if len(r) >= 3 and r[0].strip().isdigit():
+            v = r[2].strip()
+            first_seq[v] = min(first_seq.get(v, int(r[0])), int(r[0]))
+    newest = max(channels.values(),
+                 key=lambda c: first_seq.get(c["version"], c["release_seq"]))
+    newest_seq = first_seq.get(newest["version"], newest["release_seq"])
     n_now = int(re.search(r"\+platterpus\.(\d+)$", newest["version"]).group(1))
 
     # STATUS-RELEASED: <version> at <commit>, <UTC date>[, hotfix: <why>]
@@ -4280,13 +4295,13 @@ def sc_status_block_is_current():
         ib = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(ib)
         pubs = ib.publications(ROOT)
-        row = [p for p in (pubs or []) if p[0] == newest["release_seq"]]
+        row = [p for p in (pubs or []) if p[0] == newest_seq]
         if pubs is None:
             print("UNPROBED: status_block_is_current: no git history, so "
                   "STATUS-RELEASED's date was not checked")
         elif not row:
             fail(f"status_block_is_current: no commit wrote ledger row "
-                 f"{newest['release_seq']}, the manifest's newest release")
+                 f"{newest_seq}, the first publication of the newest release")
         elif row[0][3].strftime("%Y-%m-%d") != m.group(3):
             fail(f"status_block_is_current: STATUS-RELEASED dates the release "
                  f"{m.group(3)}; its ledger row was written by {row[0][4]} on "
