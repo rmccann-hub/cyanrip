@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**Platterpus 0.7.128 is out**, tagged 2026-11-18 at `0ec72e6b`: it installs `.34` by default, as their round 41 lap 6 S18 said, and `STATUS.md` says so. It names `.34` under review still; round 42 asks their first release naming `.35`.
+
 **Two defects found preparing round 42, recorded, not yet fixed.** The AccurateRip lookup never initialises its error buffer or checks `curl_easy_init()`, so a handle libcurl could not make would leave `strlen()` reading the uninitialised buffer; upstream's code has it too (US-42). And dumbass us: the provider contract quietly dropped the progress line's composed row on 2026-10-12, when the line moved into a structure the generator cannot follow, and nothing noticed for five weeks (US-43).
 
 **US-41's evidence corrected.** Dumbass us: the double count's excerpt in `KNOWN-ISSUES.md` was picked out of the log by a pattern that `Partial files:` does not match, and was called *the log*. That line does name the encoder failure, `Partial files:  1 track (1), read not completed; encoder failures: 1`, re-run on the same image; `Encoder errors:` says *not applicable* because it counts whole tracks only. The double count stands.
