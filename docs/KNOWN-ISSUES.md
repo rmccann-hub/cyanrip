@@ -199,8 +199,34 @@ or 95 frames (undecided)` in 18 of the 19 `.29` logs of 2026-11-04
 (`docs/rig-2026-11-04-8d2ca72/`), and in 26 of the 29 rip logs of 2026-11-14,
 `.31` and `.32`, which give 95 in the other 3 (`docs/rig-2026-11-14-edb73dd/`),
 and in 28 of the 29 rip logs of 2026-11-17, `.32` and `.34`, which give 95 in
-the other 1 (`docs/rig-2026-11-17-fb28088/`). No log since `.29` has said 94. The next step is the raw read on a second drive
+the other 1 (`docs/rig-2026-11-17-fb28088/`), and in 1 of the 2 rips of the overread
+probe that evening, `.34`, which gives 95 in the other, read from its transcript
+(`docs/rig-2026-11-17b-overreadprobe/`). No log since `.29` has said 94. The next step is the raw read on a second drive
 (`docs/OPEN-ITEMS.md` HW-6).
+
+### One encoder write failure counts twice in `Ripping errors:`, beside `Encoder errors: not applicable`
+
+**Found 2026-11-18**, counting the sources of `Ripping errors:` for round 42 (`docs/OPEN-ITEMS.md` R41-3, US-41).
+
+**Reproduced** on `71430d40`'s build with a two-track BIN/CUE image of 21,168,000 bytes, `-K -o flac` and a 64 KiB file-size limit (`RLIMIT_FSIZE`, `SIGXFSZ` ignored), which makes the first FLAC write fail. Among the log's lines, in order, are:
+
+    Error writing packet: File too large!
+    Error in decoding/sending frame: File too large
+    Error ripping: File too large
+    Ripping errors: 2
+    Encoder errors: not applicable; no whole track was encoded
+    Partial files:  1 track (1), read not completed; encoder failures: 1
+    Rip completed:  no (aborted, 0 of 2 tracks)
+
+The first filing of this entry left the `Partial files:` line out, because the filter that picked these lines out did not match it, and called the rest *the log*; it was corrected on 2026-11-18.
+
+and `--diagnostics` agrees, `ripping_errors` 2. With no limit, the same command gives `Ripping errors: 0` and `Encoder errors: none; 2 tracks encoded`.
+
+**Why two.** One write failure fails the track, and `cyanrip_rip_track()` adds one for a track not finished. Then, at the end of the rip, the encoder thread's status is read back through `cyanrip_end_track_encoding()`, and the loop that collects it adds another, once per output. This matches the code and the count. Neither site was instrumented. Without `-K`, ReplayGain holds the writes until after the read, and the same failure counts once.
+
+**Why it matters.** `Ripping errors:` says 2 for one fault. `Encoder errors:` says *not applicable*, since it counts whole tracks only, and the failure is named one line below, on `Partial files:`, which Platterpus's parser ignores (`platterpus@0cb08891:src/platterpus/parsers/cyanrip_log.py:3461-3468`). Both lines are parsed, so the fix goes to a round, with R41-3's parts.
+
+**Upstream.** Upstream's `src/cyanrip_main.c` at `648b1dd` has both increments, in `cyanrip_rip_track()`'s failure branch and in the end-of-rip loop over `cyanrip_end_track_encoding()`. That is read in the code and not run there.
 
 ### Six drive answers an audit listed, all real, and an MCN read skipped without a word
 

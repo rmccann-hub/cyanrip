@@ -679,20 +679,24 @@ def test_protocol_version_matches_the_shared_spec():
           f"trees; tools/seam-sync-check.py --fetch says when)")
 
 
-def test_gate_implements_9_once_both_trees_hold_it():
-    """Our gate implements 9, as round 33 lap 1 says.
+def test_gate_implements_10_once_both_trees_hold_it():
+    """Our gate implements 10, as round 42's opening lap is to say.
 
-    v9 (PROTOCOL.md §17, HR-2 and HR-2.1) was byte-identical in both trees from
-    platterpus@37826a5f, measured on 2026-10-14 with tools/seam-sync-check.py
-    --fetch, which ends the landing window above. The test above cannot see the
-    other tree, so it still passes with the gate one behind until a lap
-    declares 9; this pins the version the window closed at, so reverting the
-    gate fails here and not at the first lap declaring 9."""
-    check(rg.version_refusal("HANDSHAKE-PROTOCOL: 9\n") is None,
-          f"the gate refuses a lap declaring 9: "
-          f"{rg.version_refusal('HANDSHAKE-PROTOCOL: 9')}")
-    check(rg.version_refusal("HANDSHAKE-PROTOCOL: 10\n") is not None,
-          "the gate reads a lap declaring 10, which no shared file defines")
+    v10 (PROTOCOL.md §18) was byte-identical in both trees from
+    platterpus@0cb0889, measured on 2026-11-18 with tools/seam-sync-check.py
+    --fetch, which ends the landing window above; §18 lets neither gate
+    implement 10 before that. v10 adds no field and no conformance row, so
+    the step is this constant alone. The test above cannot see the other
+    tree, so it would pass with the gate one behind until a lap declares 10;
+    this pins the version the window closed at. Round 41's laps declare 9 and
+    stay readable: the gate refuses only a version above its own.
+    (It pinned 9 from 2026-10-14, platterpus@37826a5f, until this.)"""
+    for v in (9, 10):
+        check(rg.version_refusal(f"HANDSHAKE-PROTOCOL: {v}\n") is None,
+              f"the gate refuses a lap declaring {v}: "
+              f"{rg.version_refusal(f'HANDSHAKE-PROTOCOL: {v}')}")
+    check(rg.version_refusal("HANDSHAKE-PROTOCOL: 11\n") is not None,
+          "the gate reads a lap declaring 11, which no shared file defines")
 
 
 
