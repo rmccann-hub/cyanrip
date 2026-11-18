@@ -82,7 +82,7 @@ id.
 | PP-13 | Their footer within 8 s when the script console closes | `docs/history/KNOWN-ISSUES-2026-11-16.md`, *Closing Platterpus's script console…*; their round 30 lap 4 S9 | Their rig run |
 | PP-14 | Their addendum carries no timestamp; the `--version` hang through the Distrobox wrapper | `SETTLED.md` (their addendum and wrapper rows) | Theirs |
 | PP-15 | Should a beta expire? | `docs/history/UPGRADE-CHANNELS-PLAN.md` | Theirs; our stable channel moved to `.32` on 2026-11-16 |
-| PP-16 | `force_overread` was on after their `overreadprobe` ran: its last step, `expect force_overread off`, failed with `got True` | `docs/rig-2026-11-17b-overreadprobe/` | Theirs to say whether the run turned it on or it was on before; the owner's to check it before the next rip from Platterpus |
+| PP-16 | `force_overread` was on after their `overreadprobe` ran: its last step, `expect force_overread off`, failed with `got True` | `docs/rig-2026-11-17b-overreadprobe/`. **Answered** in their TASKS R189 (`platterpus@26a125ac`): the owner's Overread setting was on before the run, so the check failed on a setting the probe neither set nor changed, and the probe is to compare it before and after. **Not reconciled with round 41's rip**: all seven `.34` logs of it, from 01:14:14Z the same day, say `Overread mode: fill with silence in lead-in/lead-out`, so Platterpus sent no `-O` then | The owner's to say whether Overread was turned on between that rip and the probe or Platterpus's Full run does not send it, and to turn it off before the next rip unless `-O` is meant; R189's fix is theirs |
 
 ## The owner's decisions and actions
 

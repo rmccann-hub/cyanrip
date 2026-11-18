@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**Platterpus answered PP-16**: the owner's Overread setting was on before their overread probe ran, so the probe's last check failed on a setting it never touched (their TASKS R189, `platterpus@26a125ac`). That leaves a question for the owner: round 41's rip, 21 hours earlier, sent no `-O` in any of its seven `.34` logs.
+
 **`Ripping errors:` is counted to its last source, for round 42.** Round 41 lap 5 S8 said 28 places add to it; that grep counted a comment. There are 27 increments, all in `src/cyanrip_main.c`, plus paranoia's skips. A log can hold 21 of them in eight causes, and S16's proposed `disc lookups failed` can never be non-zero in a log (R41-3). Counting them found a defect: one encoder write failure under `-K` counts twice, `Ripping errors: 2`, beside `Encoder errors: not applicable` (US-41, `KNOWN-ISSUES.md`). Upstream's code has the same two increments.
 
 **The outside week review of 2026-11-10 is read**, a week after it was archived here unread (`docs/history/WEEK-REVIEW-2026-11-10-READ.md`). Most of it is done or overtaken. What holds is now rows: the evidence branch's missing root README and the records standard's four questions (US-36); three process points for both sides, among them R1's amendment, which round 41 overrode again (US-37); a lost drive's log not saying the drive is gone (US-38, the review's F2); and the steward's re-run rule beside Platterpus's (US-39). Its stale `STATUS.md` point is fixed above. US-34 keeps the rest of the audit log, still unread.
