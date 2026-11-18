@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**US-41's evidence corrected.** Dumbass us: the double count's excerpt in `KNOWN-ISSUES.md` was picked out of the log by a pattern that `Partial files:` does not match, and was called *the log*. That line does name the encoder failure, `Partial files:  1 track (1), read not completed; encoder failures: 1`, re-run on the same image; `Encoder errors:` says *not applicable* because it counts whole tracks only. The double count stands.
+
 **Our gate implements protocol v10** (US-40). §18 allowed it once `PROTOCOL.md` was byte-identical in both trees, which it is at `platterpus@0cb0889`. v10 adds no field and no conformance row, so the step is `PROTOCOL_VERSION` alone; round 41's laps, declaring 9, stay readable, and `test_gate_implements_10_once_both_trees_hold_it` fails with the gate at 9. Round 42's opening lap says so, as §18 asks before either side declares 10.
 
 **`status_block_is_current` names the newest release by its first publication.** It took the channel with the newest ledger row, which was right only while no older build went to a channel after a newer one. Moving `.34` to stable after `.35` went out on beta would have made it demand `STATUS-RELEASED: +platterpus.34` and `.35` as the next release, both false (§6c: *that side's newest published release*). It still orders by `release_seq`, never by version.
