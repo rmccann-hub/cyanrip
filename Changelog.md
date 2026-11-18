@@ -21,8 +21,9 @@ R41-9 leaves the list; HW-10 stays open for a drive that answers past its
 lead-out. The probe's last step found Platterpus's `force_overread` on after
 the run (PP-16). The lead-in rip's CUE sheet, which the owner's delivery lacked,
 is filed at `73d45f9` as a byte-for-byte copy of Platterpus's at
-`platterpus@977d78fa`; neither side holds the lead-in log or either
-diagnostics record.
+`platterpus@977d78fa`, and its log, which Platterpus filed later, at `28e1e87`
+from `platterpus@f63869fe`. Its FUN512 checks, and it holds what the runner's
+transcript holds of that step. Neither side holds either diagnostics record.
 
 **The outside reviews are archived on the evidence branch**, at `60ec8702`
 under `docs/outside-reviews-2026-11-17/`, on the owner's word of 2026-11-17.
