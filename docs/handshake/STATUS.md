@@ -97,12 +97,12 @@ Every earlier run is a `docs/rig-*` folder with its own README.
 **Round 41 closed under v9, and v10 governs from round 42** (`PROTOCOL.md`
 §18). The four shared documents, v10's text among them, are byte-identical in
 both trees at `platterpus@0cb0889`, read with `tools/seam-sync-check.py
---fetch` on 2026-11-18 at 00:50Z. Both gates implement 9: ours by
-`PROTOCOL_VERSION` in `tools/release-gate.py`, theirs by their round 41 lap 6
-S7 and D7. Under §18 neither side declares 10 until both have said in a lap
-that their gate implements it. Their lap 6 says theirs will before their first
-lap of round 42; ours is `docs/OPEN-ITEMS.md` US-40, said in round 42's opening
-lap.
+--fetch` on 2026-11-18 at 00:50Z. Our gate implements 10 (`PROTOCOL_VERSION`
+in `tools/release-gate.py`, US-40), and still reads round 41's laps, which
+declare 9. Theirs implements 9 by their round 41 lap 6 S7 and D7, which says it
+implements 10 before their first lap of round 42. Under §18 neither side
+declares 10 until both have said in a lap that their gate implements it: round
+42's opening lap says it of ours.
 
 ### Platterpus's side, read and not run
 

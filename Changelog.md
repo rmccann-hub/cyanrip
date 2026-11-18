@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**Our gate implements protocol v10** (US-40). §18 allowed it once `PROTOCOL.md` was byte-identical in both trees, which it is at `platterpus@0cb0889`. v10 adds no field and no conformance row, so the step is `PROTOCOL_VERSION` alone; round 41's laps, declaring 9, stay readable, and `test_gate_implements_10_once_both_trees_hold_it` fails with the gate at 9. Round 42's opening lap says so, as §18 asks before either side declares 10.
+
 **`status_block_is_current` names the newest release by its first publication.** It took the channel with the newest ledger row, which was right only while no older build went to a channel after a newer one. Moving `.34` to stable after `.35` went out on beta would have made it demand `STATUS-RELEASED: +platterpus.34` and `.35` as the next release, both false (§6c: *that side's newest published release*). It still orders by `release_seq`, never by version.
 
 **The release manifest regenerated for round 41's close**: `round_closed` is
