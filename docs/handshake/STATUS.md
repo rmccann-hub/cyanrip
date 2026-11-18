@@ -106,9 +106,10 @@ declares 10 until both have said in a lap that their gate implements it: round
 
 ### Platterpus's side, read and not run
 
-Their newest release is 0.7.127, tag `v0.7.127` at `69483cf2`, tagged
-2026-11-17 at 00:20Z; it names `.34` as the build under review, and their lap
-6 S18 says their next release carries `fb28088` as the default ripper. Their
+Their newest release is 0.7.128, tag `v0.7.128` at `0ec72e6b`, tagged
+2026-11-18 at 02:35Z. It installs `.34` by default, its `FORK_PIN` being
+`fb28088` as their lap 6 S18 said, and still names `.34` as the build under
+review, round 42 not being open. Their
 newest lap is round 41's lap 6, released 2026-11-18 at `0cb08891` and filed
 here in the commit that closes round 41. Their standing status is
 `docs/handshake/outbound/platterpusstatus.md` in their tree. Seventeen of their
