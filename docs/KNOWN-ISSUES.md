@@ -204,6 +204,27 @@ probe that evening, `.34`, which gives 95 in the other, read from its transcript
 (`docs/rig-2026-11-17b-overreadprobe/`). No log since `.29` has said 94. The next step is the raw read on a second drive
 (`docs/OPEN-ITEMS.md` HW-6).
 
+### One encoder write failure counts twice in `Ripping errors:`, beside `Encoder errors: not applicable`
+
+**Found 2026-11-18**, counting the sources of `Ripping errors:` for round 42 (`docs/OPEN-ITEMS.md` R41-3, US-41).
+
+**Reproduced** on `71430d40`'s build with a two-track BIN/CUE image of 21,168,000 bytes, `-K -o flac` and a 64 KiB file-size limit (`RLIMIT_FSIZE`, `SIGXFSZ` ignored), which makes the first FLAC write fail. The log says:
+
+    Error writing packet: File too large!
+    Error in decoding/sending frame: File too large
+    Error ripping: File too large
+    Ripping errors: 2
+    Encoder errors: not applicable; no whole track was encoded
+    Rip completed:  no (aborted, 0 of 2 tracks)
+
+and `--diagnostics` agrees, `ripping_errors` 2. With no limit, the same command gives `Ripping errors: 0` and `Encoder errors: none; 2 tracks encoded`.
+
+**Why two.** One write failure fails the track, and `cyanrip_rip_track()` adds one for a track not finished. Then, at the end of the rip, the encoder thread's status is read back through `cyanrip_end_track_encoding()`, and the loop that collects it adds another, once per output. This matches the code and the count. Neither site was instrumented. Without `-K`, ReplayGain holds the writes until after the read, and the same failure counts once.
+
+**Why it matters.** `Ripping errors:` says 2 for one fault, and `Encoder errors:` says *not applicable* beside an encoder's write error. Both are lines Platterpus parses, so the fix goes to a round, with R41-3's parts.
+
+**Upstream.** Upstream's `src/cyanrip_main.c` at `648b1dd` has both increments, in `cyanrip_rip_track()`'s failure branch and in the end-of-rip loop over `cyanrip_end_track_encoding()`. That is read in the code and not run there.
+
 ### Six drive answers an audit listed, all real, and an MCN read skipped without a word
 
 **What is left of *Four drive answers the log states that are libcdio's
