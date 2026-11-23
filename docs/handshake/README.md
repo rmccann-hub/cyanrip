@@ -381,8 +381,8 @@ manifest regenerated, since `round_closed` is derived from the laps and
   digest.
 - Declare `OWNERSHIP-VERSION` and `SEAM-RULES-VERSION` after the header, as
   `OWNERSHIP.md` §6a asks of every lap. Ours left them out from round 37 lap 7
-  to round 40 lap 3, and `tools/seam-check.py` does not yet refuse their
-  absence (`docs/OPEN-ITEMS.md` R41-6 and US-17).
+  to round 40 lap 3, and from round 41 `tools/seam-check.py` refuses a lap
+  of ours without each (`VERSION_HEADERS_FROM_ROUND`).
 - `meson test -C build 'Handshake wire conformance'` checks R6's pre-commit, and
   fails on any file of ours the gate refuses (C29, C46), except those pinned in
   `tests/handshake_wire.py` (round 32's lap 5, under C46).
