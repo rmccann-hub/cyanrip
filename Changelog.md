@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**The owner decided round 42's scope on 2026-11-23**: *"1. A 2. Yes to all 4 3. Do as recomended 4. Yes."* Besides the stable move above, round 42's opening lap proposes the double count's fix with the `Ripping errors:` parts (US-41) and the declared-speed line (R41-2), drops `-O` from its goal, since it ran on `.34` and no line of `src/` changed for it in `.35`, and proposes how a filed README is corrected (US-35). The week review's process points and the lost-drive wording go to round 43 (US-37, US-38). And it gives Platterpus the owner's answer to their TASKS R185: a de-emphasis pair whose arms read differently grades `not determined`.
+
 **`.34` is on the stable channel**, at `fb28088`, the build round 41 approved, on the owner's word of 2026-11-17 and by the way they chose on 2026-11-23. Ledger row 48 puts it on stable; row 49 lists `.35` on beta again, because beta resolves to the newest row of any channel, and a stable row alone would have moved beta back from `.35` to `.34`. Nothing was rebuilt. Stable had been `.32` since 2026-11-16. US-33 leaves the list.
 
 **Platterpus 0.7.128 is out**, tagged 2026-11-18 at `0ec72e6b`: it installs `.34` by default, as their round 41 lap 6 S18 said, and `STATUS.md` says so. It names `.34` under review still; round 42 asks their first release naming `.35`.
