@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**`.34` is on the stable channel**, at `fb28088`, the build round 41 approved, on the owner's word of 2026-11-17 and by the way they chose on 2026-11-23. Ledger row 48 puts it on stable; row 49 lists `.35` on beta again, because beta resolves to the newest row of any channel, and a stable row alone would have moved beta back from `.35` to `.34`. Nothing was rebuilt. Stable had been `.32` since 2026-11-16. US-33 leaves the list.
+
 **Platterpus 0.7.128 is out**, tagged 2026-11-18 at `0ec72e6b`: it installs `.34` by default, as their round 41 lap 6 S18 said, and `STATUS.md` says so. It names `.34` under review still; round 42 asks their first release naming `.35`.
 
 **Two defects found preparing round 42, recorded, not yet fixed.** The AccurateRip lookup never initialises its error buffer or checks `curl_easy_init()`, so a handle libcurl could not make would leave `strlen()` reading the uninitialised buffer; upstream's code has it too (US-42). And dumbass us: the provider contract quietly dropped the progress line's composed row on 2026-10-12, when the line moved into a structure the generator cannot follow, and nothing noticed for five weeks (US-43).
