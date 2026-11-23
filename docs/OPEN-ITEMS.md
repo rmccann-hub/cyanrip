@@ -18,11 +18,11 @@ who owns it, and the next step.
   upstream's. A source like `cyanrip:R38.L3.S17` is a lap statement: round 38,
   lap 3, statement 17.
 
-## For round 42's opening lap: carried from round 41
+## Round 42: open since our lap 1 of 2026-11-23
 
-Round 41 closed `GO`/`GO` on 2026-11-18, on our lap 5 and Platterpus's lap 6, approving
-`.34` at `fb28088`. These rows came out of it and go to round 42's opening lap, on
-`.35`; their ids stay. A row leaves when round 42 settles it.
+Round 41 closed `GO`/`GO` on 2026-11-18, approving `.34` at `fb28088`. Round 42's
+opening lap, on `.35`, proposes each row below and the `.36` changes of US-32, US-35,
+US-41 and US-42; their ids stay. A row leaves when round 42 settles it.
 
 | Id | Item | Source and state | Next step |
 |---|---|---|---|

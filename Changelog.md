@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Round 42 is open**, on our lap 1, sent when its pull request merged, on the owner's words of 2026-11-17 and 2026-11-23. It reviews `.35` at `1280aa4`, announces what `.35` ships, and says our gate implements protocol v10. For `.36` it proposes:
+- the complete `Ripping errors:` list, with its double count fixed;
+- five changes from the outside UX review of 2026-11-17 (F2, F7, F16, F20 and F24), each with its order of release against Platterpus's readers;
+- two AccurateRip defects, the declared-speed line, and a rule for correcting a filed README.
+
+Its goal is one default whole-disc rip of `.35` through Platterpus's first release naming it, their C2 probe, and each side's gate on v10. Every measurement it states was re-run here before release.
+
 **The owner decided round 42's scope on 2026-11-23**: *"1. A 2. Yes to all 4 3. Do as recomended 4. Yes."* Besides the stable move above, round 42's opening lap proposes the double count's fix with the `Ripping errors:` parts (US-41) and the declared-speed line (R41-2), drops `-O` from its goal, since it ran on `.34` and no line of `src/` changed for it in `.35`, and proposes how a filed README is corrected (US-35). The week review's process points and the lost-drive wording go to round 43 (US-37, US-38). And it gives Platterpus the owner's answer to their TASKS R185: a de-emphasis pair whose arms read differently grades `not determined`.
 
 **`.34` is on the stable channel**, at `fb28088`, the build round 41 approved, on the owner's word of 2026-11-17 and by the way they chose on 2026-11-23. Ledger row 48 puts it on stable; row 49 lists `.35` on beta again, because beta resolves to the newest row of any channel, and a stable row alone would have moved beta back from `.35` to `.34`. Nothing was rebuilt. Stable had been `.32` since 2026-11-16. US-33 leaves the list.
