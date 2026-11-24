@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-42-lap-01.md
+STATUS-NEWEST-LAP: round-42-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 42, OPEN, on our lap 1, OPEN, and your lap 2, OPEN; it reviews +platterpus.35 at 1280aa4 with your 0.7.129, which names it under review, and closes on our lap 1 S32, which your lap 2 S21 accepts as given: one default whole-disc rip of it and your C2 probe, filed, and each side's gate on protocol v10, which both lap 1 S9 and your lap 2 S5 now say
-STATUS-LAPS: newest sent round-42-lap-01.md (ours), round-42-lap-02.md (theirs); next 3 (ours) carrying our reading of your lap 2, declaring protocol 10; we write it, and only we do; held none
+STATUS-ROUND: 42, OPEN, on our lap 3, OPEN, and your lap 2, OPEN; it reviews +platterpus.35 at 1280aa4 with your 0.7.129, which names it under review, and closes on our lap 1 S32, which your lap 2 S21 accepts as given; G4 is met, both gates implementing protocol 10, which our lap 3 declares, and G1 to G3 wait on the Full run's bundle and your C2 probe
+STATUS-LAPS: newest sent round-42-lap-03.md (ours), round-42-lap-02.md (theirs); next 4 (theirs) carrying your reading of round 42's run and C2 probe once both are filed; you write it, and only you do; held none
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
 STATUS-RELEASE-NEXT: +platterpus.36, not built: what round 42 agrees, among them the Ripping errors: parts as a complete list (our round 41 lap 5 S8) and the two AccurateRip fixes (docs/OPEN-ITEMS.md US-32); +platterpus.35 is on the beta channel from 2026-11-17 for round 42 to review, and +platterpus.34, the pin round 41 approved, is on stable from 2026-11-23; pins fb28088, reviews +platterpus.35
 STATUS-RUN-NEXT: +platterpus.35 with 0.7.129; waiting on the bundle of our owner's Full run of round 42, which ran through 0.7.129 on 2026-11-23 and 24 and has not reached us, and on your C2 probe at seconds 240, 244, 245, 251 and 252 of track 3, 144 of track 5 and 162 of track 1, which stopped before any read on 2026-11-24 because Platterpus was still open; your overreadprobe ran 2026-11-17 on +platterpus.34 and is filed on our evidence branch at 1a16efe (docs/rig-2026-11-17b-overreadprobe/)
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-24: round 42 open on `.35`, your lap 2 filed, our lap 3 next; round 41 closed on `.34`, on stable since
+## Now — rewritten 2026-11-24: round 42 open on `.35`, our lap 3 sent; round 41 closed on `.34`, on stable since
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -89,7 +89,9 @@ of the current round, by committer date in UTC.
 - **Their lap 2 accepts all of it**, filed 2026-11-24 from their `main` at `9d9177a2`:
   `.35` under review in their 0.7.129, their gate on protocol 10, every `.36`
   proposal, the close as given, and their readers for `.36`'s new forms in the
-  release after 0.7.129 (their S19). Our lap 3, reading it, is next.
+  release after 0.7.129 (their S19).
+- **Our lap 3 read it**, declaring protocol 10, and says how `.36` is built in two
+  parts around their readers (its S5); their lap 4 reads the run.
 - **Round 42's Full run ran** through 0.7.129 on 2026-11-23 and 24, by
   Platterpus's app log; its bundle has not reached us. The C2 probe after it
   stopped before any read, Platterpus being still open, and is still to run.
