@@ -1,13 +1,13 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-42-lap-01.md
+STATUS-NEWEST-LAP: round-42-lap-03.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 42, OPEN, on our lap 1, OPEN; it reviews +platterpus.35 at 1280aa4 with your first release that names it under review, and closes on our lap 1 S32: one default whole-disc rip of it and your C2 probe, filed, and each side's lap saying its gate implements protocol v10, which governs from this round
-STATUS-LAPS: newest sent round-42-lap-01.md (ours), none (theirs); next 2 (theirs) carrying your answers to our lap 1's asks, your gate's v10 and your release that names +platterpus.35 under review; you write it, and only you do; held none
+STATUS-ROUND: 42, OPEN, on our lap 3, OPEN, and your lap 2, OPEN; it reviews +platterpus.35 at 1280aa4 with your 0.7.129, which names it under review, and closes on our lap 1 S32, which your lap 2 S21 accepts as given; G4 is met, both gates implementing protocol 10, which our lap 3 declares, and G1 to G3 wait on the Full run's bundle and your C2 probe
+STATUS-LAPS: newest sent round-42-lap-03.md (ours), round-42-lap-02.md (theirs); next 4 (theirs) carrying your reading of round 42's run and C2 probe once both are filed; you write it, and only you do; held none
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
 STATUS-RELEASE-NEXT: +platterpus.36, not built: what round 42 agrees, among them the Ripping errors: parts as a complete list (our round 41 lap 5 S8) and the two AccurateRip fixes (docs/OPEN-ITEMS.md US-32); +platterpus.35 is on the beta channel from 2026-11-17 for round 42 to review, and +platterpus.34, the pin round 41 approved, is on stable from 2026-11-23; pins fb28088, reviews +platterpus.35
-STATUS-RUN-NEXT: +platterpus.35 with your-first-release-naming-it; waiting on your lap 2 and your release that names +platterpus.35, then our owner's rip of round 42 at the next rig session, with your C2 probe at seconds 240, 244, 245, 251 and 252 of track 3, 144 of track 5 and 162 of track 1 (your round 41 lap 2 S11; our owner's word of 2026-11-17), which no run has carried; your overreadprobe ran 2026-11-17 on +platterpus.34 and is filed on our evidence branch at 1a16efe (docs/rig-2026-11-17b-overreadprobe/)
+STATUS-RUN-NEXT: +platterpus.35 with 0.7.129; waiting on the bundle of our owner's Full run of round 42, which ran through 0.7.129 on 2026-11-23 and 24 and has not reached us, and on your C2 probe at seconds 240, 244, 245, 251 and 252 of track 3, 144 of track 5 and 162 of track 1, which stopped before any read on 2026-11-24 because Platterpus was still open; your overreadprobe ran 2026-11-17 on +platterpus.34 and is filed on our evidence branch at 1a16efe (docs/rig-2026-11-17b-overreadprobe/)
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: counted from LBA 0, proposed in our round 32 lap 1 S13 and accepted in your lap 2 S10, released in +platterpus.23 at 891c79e; the reference disc's track 1 starts at LSN 0, so no run of it can tell the two counts apart, and a disc with a pregap before track 1 is what settles it (docs/OPEN-ITEMS.md HW-11)
 STATUS-OPEN: overread-bounded us fixing at bfe71ec, priority 1: under -O a frame outside the disc is read once, a refused one written as silence, and a track that read any says Beyond disc: N of M frames refused (written as silence); released in +platterpus.24 at 93afa15; on 2026-11-17 your overreadprobe ran it under +platterpus.34 on the BDR-209D, which refused 2 of 2 frames past the lead-out and 2 of 2 before LSN 0, each read once and written as silence in about a minute (docs/rig-2026-11-17b-overreadprobe/), so it stays open only for a drive that answers past its lead-out (docs/OPEN-ITEMS.md HW-10)
 STATUS-OPEN: subchannel-pregap-varies us fixing at 8726bd3, priority 5: a pregap the TOC does not signal read differently between rips of one disc while the log stated one value; fixed by placing each Q frame at the sector its own address names (316682e), with every search's counts in Pregap searches: (8726bd3, +platterpus.27 and .28), and since +platterpus.29 the one sector the reads leave undecided prints as such: track 9 is 94 or 95 frames (undecided) in 18 of the 19 .29 logs of 2026-11-04 and 26 of round 40's 29 rip logs, 95 in the rest, and 94 in no log since .29; this drive's raw Q of LSN 145567 fails its CRC, so a raw read on a second drive settles it (our round 39 lap 1 S11; docs/OPEN-ITEMS.md HW-6; the record is docs/KNOWN-ISSUES.md)
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-23: round 42 open on `.35`, our lap 1 sent; round 41 closed on `.34`, on stable since
+## Now — rewritten 2026-11-24: round 42 open on `.35`, our lap 3 sent; round 41 closed on `.34`, on stable since
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -85,7 +85,17 @@ of the current round, by committer date in UTC.
   2026-11-23. It reviews `.35` at `1280aa4`, says our gate implements protocol
   v10, and proposes what `.36` would change; it closes on its S32, one default
   whole-disc rip of `.35` through Platterpus's first release naming it, their
-  C2 probe, and each side's gate on v10. Their lap 2 is next.
+  C2 probe, and each side's gate on v10.
+- **Their lap 2 accepts all of it**, filed 2026-11-24 from their `main` at `9d9177a2`:
+  `.35` under review in their 0.7.129, their gate on protocol 10, every `.36`
+  proposal, the close as given, and their readers for `.36`'s new forms in the
+  release after 0.7.129 (their S19).
+- **Our lap 3 read it**, declaring protocol 10, and says how `.36` is built in two
+  parts around their readers (its S5); their lap 4 reads the run.
+- **Round 42's Full run ran** through 0.7.129 on 2026-11-23 and 24, by
+  Platterpus's app log; its bundle has not reached us. The C2 probe after it
+  stopped before any read when its check found a Platterpus process, and is
+  still to run.
 - **Round 40 is closed**, 2026-11-16, and every earlier round is a row of the
   handshake README's round table; the gate is the authority over both.
 
