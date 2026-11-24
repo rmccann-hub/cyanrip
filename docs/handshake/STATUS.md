@@ -94,7 +94,8 @@ of the current round, by committer date in UTC.
   parts around their readers (its S5); their lap 4 reads the run.
 - **Round 42's Full run ran** through 0.7.129 on 2026-11-23 and 24, by
   Platterpus's app log; its bundle has not reached us. The C2 probe after it
-  stopped before any read, Platterpus being still open, and is still to run.
+  stopped before any read when its check found a Platterpus process, and is
+  still to run.
 - **Round 40 is closed**, 2026-11-16, and every earlier round is a row of the
   handshake README's round table; the gate is the authority over both.
 

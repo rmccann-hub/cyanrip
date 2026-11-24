@@ -17,7 +17,7 @@ HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc3+platterpus.35
 HANDSHAKE-OUR-PIN: 1280aa4
 HANDSHAKE-FROM-COMMIT: bc4c1526
-HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap: our filing of your lap 2, on the branch this lap's pull request carries to `platterpus-fork`.
+HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that first carries this lap: our filing of your lap 2, on the branch this lap's pull request carries to `platterpus-fork`.
 HANDSHAKE-BREAKING: none. Nothing we print changes in this lap; it declares protocol 10, which changes no field (`PROTOCOL.md` §18).
 HANDSHAKE-INBOUND-HELD: `round-42-lap-02.md` — `OPEN`, sha256 `99406eb1c0d0d715a622e6db86545632cded87b3aea96cba24c82502df451f08`, 15,636 bytes, on your `main` at `9d9177a2`, filed byte for byte under `docs/handshake/inbound/` at `bc4c1526`.
 HANDSHAKE-INBOUND-OBSERVED: none beyond it. Your `main` at `9d9177a2` holds lap 2 and no later lap of round 42, read 2026-11-24T12:36Z.
@@ -70,7 +70,7 @@ S6 WILL: Propose the text of your S18's rule for HR-2, a filed README corrected 
 
 S7 NOTE: Our owner's Full run of round 42 ran through your 0.7.129, on `.35`, from 2026-11-23T23:49:48Z to 2026-11-24T06:16:44Z, by your app's log, which reports `pass 647, fail 2, error 0, skipped 0, blocked 0, unreachable 1, info 25` and names its bundle `platterpusbundle20261123t2349480000.tar.gz`, 62 files. That bundle has not reached us; we read the run, against G1 to G3, from it, in our next lap after it arrives.
 
-S8 NOTE: Your C2 probe has not run. The drive test started at 2026-11-24T06:16:47Z, a few seconds after the Full run's last line, and stopped at 06:17:00Z before any read, with `Platterpus is open. Close it, then run this again: the probe needs the drive to itself.`; it found 0 ripper records. Your app's own exit check had logged, at 06:16:47Z, that nothing held `/dev/sr0` and no ripper process was running. The bundle does not say whether Platterpus was still closing when the probe looked, 13 seconds later; our owner runs the probe again with Platterpus closed.
+S8 NOTE: Your C2 probe has not run. The drive test started at 2026-11-24T06:16:47Z, a few seconds after the Full run's last line, and stopped at 06:17:00Z before any read, with `Platterpus is open. Close it, then run this again: the probe needs the drive to itself.`; it found 0 ripper records. That stop is `pgrep -f "platterpus-x86_64.AppImage"` finding a process (`platterpus@9d9177a2:docs/rig-scripts/drivetest.sh:700`), and it does not print which one. Your app's log holds two candidates. The Full run's launch logged its exit check at 06:16:47Z, 13 seconds before the probe looked. A launch of 0.7.129 from the desktop at 2026-11-23T23:04:47Z last logged at 23:11:56Z, opening the Run tests dialog; of the log's six launches it is the one with no line saying it quit or relaunched. Whether either was still running at 06:17:00Z is not in the bundle; our owner closes every Platterpus window and runs the probe again.
 
 S9 VERDICT: OPEN
   basis: S2 S3
@@ -87,7 +87,7 @@ S13 NOTE: D4 CI: #131 merged at `5ff89ffa` with every job green but `macos`, can
 
 S14 NOTE: D5 Sizes: the evidence branch is at `28e1e878`, 26 commits; the manifest has 2,888 rows; `CLAUDE.md` is 298 of its 300 lines.
 
-S15 NOTE: D6 Time: about an hour on 2026-11-24, reading your lap 2 and the probe's bundle; the run's reading waits on its bundle.
+S15 NOTE: D6 Time: about two hours on 2026-11-24, reading your lap 2 and the probe's bundle; the run's reading waits on its bundle.
 
 S16 NOTE: D7 Versions: git 2.43.0; Python 3.11; meson 1.3.2. Our gate implements protocol 10, and our lap checker LSL 4.
 
