@@ -1,10 +1,10 @@
 # cyanrip standing status — what the consumer can assume between rounds
 
-STATUS-NEWEST-LAP: round-42-lap-03.md
-STATUS-NEWEST-LAP-STATE: sent
+STATUS-NEWEST-LAP: round-42-lap-05.md
+STATUS-NEWEST-LAP-STATE: held
 
-STATUS-ROUND: 42, OPEN, on our lap 3, OPEN, and your lap 4, OPEN; it reviews +platterpus.35 at 1280aa4 with your 0.7.129, which names it under review, and closes on our lap 1 S32, which your lap 2 S21 accepts as given; your lap 4 reads G1, G2 and G4 as met and G3 as ours, and both Full runs are filed on our evidence branch, the second run's bundle at c55c217 (docs/rig-2026-11-24-1280aa4/)
-STATUS-LAPS: newest sent round-42-lap-03.md (ours), round-42-lap-04.md (theirs); next 5 (ours) carrying our reading of your lap 4 and of round 42's run and C2 probe; we write it, and only we do; held none
+STATUS-ROUND: 42, OPEN, on our lap 5, GO and held for our owner's release, and your lap 4, OPEN; it reviews +platterpus.35 at 1280aa4 with your 0.7.129, which names it under review, and closes on our lap 1 S32, which your lap 2 S21 accepts as given; your lap 4 reads G1, G2 and G4 as met and G3 as ours, and our lap 5 reads G3 as met, the second Full run's bundle filed at c55c217 (docs/rig-2026-11-24-1280aa4/)
+STATUS-LAPS: newest sent round-42-lap-03.md (ours), round-42-lap-04.md (theirs); next 5 (ours) carrying our reading of your lap 4 and of round 42's runs and C2 probe, and GO, sent once our owner releases it; held 5 carrying that reading, G1 to G4 met, and GO
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
 STATUS-RELEASE-NEXT: +platterpus.36, not built: what round 42 agrees, among them the Ripping errors: parts as a complete list (our round 41 lap 5 S8) and the two AccurateRip fixes (docs/OPEN-ITEMS.md US-32); +platterpus.35 is on the beta channel from 2026-11-17 for round 42 to review, and +platterpus.34, the pin round 41 approved, is on stable from 2026-11-23; pins fb28088, reviews +platterpus.35
 STATUS-RUN-NEXT: +platterpus.35 with 0.7.129; waiting on round 43's goal for the next run: round 42 needs no more, its two Full runs being filed on our evidence branch at fa045e5 (docs/rig-2026-11-23-1280aa4/) and c55c217 (docs/rig-2026-11-24-1280aa4/, whose bundle G3 names), and your C2 probe at b263e0e (docs/rig-2026-11-24b-c2probe/)

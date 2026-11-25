@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Round 42 lap 5, ours, declares `GO` on `.35`**, published held for our owner's release.
+
+- **Their lap 4.** Its claims hold against the logs and probe bytes we filed.
+- **G1.** Met by the second run's full acceptance rip, as round 41's G2 was; repeat rip 4 verifies all 14 tracks from `.35`'s own reads.
+- **G2.** Met by the C2 probe and the 68 logs' `C2 errors:` line.
+- **G3.** Met by our filing of the second run's bundle.
+- **G4.** Met in both laps 3 and 4.
+- **Reported to Platterpus:** the prune's mechanism, their script's comment on a window it says nobody had open, and the bundle's missing album folders.
+- **Round summary.** It carries one: the round's last lap of ours.
+
 **Platterpus's round 42 lap 4 is filed**, byte for byte from their `main` at `d05c1bc5`, after their operator released it. It reads G1, G2 and G4 as met, and G3, the filing of the run's bundle, as ours.
 
 - **G1.** It holds in seven of the second run's whole-disc rips: track 5 by the labeled CTDB repair in six, and from `.35`'s own reads in repeat rip 4.
