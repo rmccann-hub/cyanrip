@@ -64,9 +64,10 @@ EXCLUDED = {"message-witness.py", "message_witness.py"}
 # UNPROBABLE and counted in neither column.
 MIN_PROBE = 12
 
-# The count of witnessed rows at the last deliberate measurement. Raising it is
+# The count of witnessed rows at the last deliberate measurement, 2026-11-25:
+# 45 of 170 (US-20 c), where it had stood at 7 since 2026-09-05. Raising it is
 # a normal part of adding a test; LOWERING it is an act, and has to be one.
-WITNESS_FLOOR = 7
+WITNESS_FLOOR = 45
 
 
 def looks_like_a_regex(s):
