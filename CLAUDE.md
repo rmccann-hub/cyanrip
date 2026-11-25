@@ -116,7 +116,8 @@ is a version both sides ship, never a local edit.
 - **One file per exchange, and it is the lap**; the repository is the
   transport, and a lap is cited by commit SHA. A lap is sent when the operator
   releases it and says so in `HANDSHAKE-READY-TO-READ`: read the field, never a
-  relay. A sent lap is never edited; when unsure, treat it as sent.
+  relay. A sent lap is never edited; an unsent one, held or released on an
+  unmerged branch, may be changed (owner, 2026-11-25; `PROTOCOL.md` §4a).
 - **Answer from the artifact.** Never state a mechanism in their code without
   citing `platterpus@<sha>:<path>:<line>` (their repository is public). Read
   their parser before announcing a change they must absorb: a renamed line may

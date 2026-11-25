@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**An unsent lap may be changed**, on our owner's word of 2026-11-25: *"both you and the other repo should be fine to change a lap if it has not been released yet, thats the whole point. it is accepted by me."* That covers a held lap, and a released one on a branch not yet merged. `CLAUDE.md` dropped its *"when unsure, treat it as sent"*, which read stricter than `PROTOCOL.md` §4a. §4a, shared by both sides, already says a lap drafted and never sent *"may be edited or deleted freely"*. Round 43's lap 1 asks Platterpus to confirm their side follows it too.
+
 **`docs/eac-parity.md` rows 6, 21 and 23 now read round 42** (Platterpus's audit F9 and F17). Each row cites its authority instead of restating counts: HW-1 and the rig READMEs for track 3, HW-6 and R43-1 for track 9's pregap, and HW-5 for `Recordable:`.
 
 **The owner's drive setup on Platterpus 0.7.130 is filed**, at `docs/rig-2026-11-25-drivesetup/` (evidence `90006cd`): one app log the owner uploaded with the message *"cd-paranoia ran but didn't report a cache verdict we recognise"*.
