@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**`docs/eac-parity.md` rows 6, 21 and 23 now read round 42** (Platterpus's audit F9 and F17). Each row cites its authority instead of restating counts: HW-1 and the rig READMEs for track 3, HW-6 and R43-1 for track 9's pregap, and HW-5 for `Recordable:`.
+
 **The owner's drive setup on Platterpus 0.7.130 is filed**, at `docs/rig-2026-11-25-drivesetup/` (evidence `90006cd`): one app log the owner uploaded with the message *"cd-paranoia ran but didn't report a cache verdict we recognise"*.
 
 - **Why the verdict is unknown.** It was not cd-paranoia's wording. Platterpus gave up on our `-I` at its 300 s limit and ran `fuser -k (SIGKILL) /dev/sr0`, which killed `cd-paranoia -A` mid-test (exit 137) while it was timing the drive our read was using. Dumbass Platterpus killed its own measurement, then told the owner the measurement was unrecognisable (R43-12).
