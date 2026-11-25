@@ -4,7 +4,7 @@ STATUS-NEWEST-LAP: round-43-lap-01.md
 STATUS-NEWEST-LAP-STATE: held
 
 STATUS-ROUND: 43, OPEN, on our lap 1, held for our owner's release; it reviews +platterpus.35 at 1280aa4 with your 0.7.130, which names it under review, our owner's Full run on that pair being its run, and agrees everything +platterpus.36 will carry, which we build during the round and publish after your release that reads it, for round 44 to review; round 42 closed GO/GO on 2026-11-25
-STATUS-LAPS: newest sent round-42-lap-05.md (ours), round-42-lap-06.md (theirs); next 1 (ours) opening round 43, sent once our owner releases it; held 1 carrying round 43's goal, everything .36 will carry, our answers to your audit of 2026-11-25 and our list's sweep
+STATUS-LAPS: newest sent round-42-lap-05.md (ours), round-42-lap-06.md (theirs); next 1 (ours) carrying round 43's opening, sent once our owner releases it; held 1 carrying round 43's goal, everything .36 will carry, our answers to your audit of 2026-11-25 and our list's sweep
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
 STATUS-RELEASE-NEXT: +platterpus.36, not built: everything our round 43 lap 1 S5 to S18 names, in one build, published only after your release that reads its new wordings in both forms; +platterpus.35, the pin round 42 approved, is on beta from 2026-11-17 and on stable from 2026-11-25; pins 1280aa4, reviews +platterpus.35
 STATUS-RUN-NEXT: +platterpus.35 with 0.7.130; waiting on our owner's rig session for round 43's run: the Full acceptance on that pair, `time cyanrip -I -N -d /dev/sr0` alone on the disc of 2026-11-25 (US-44), the cache check with the drive to itself (R43-12), and `cat /proc/sys/dev/cdrom/lock` (R43-4)
