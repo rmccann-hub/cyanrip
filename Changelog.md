@@ -1,5 +1,24 @@
 Unreleased
 ==========
+**STATUS and the open items follow the Full runs.**
+
+- **R42-1** says both runs are filed.
+- **R42-2** is new: Platterpus's in-app bundle carries no album folder.
+- **HW-19** has its first drive answer: `none (libcdio returned none)` in all 56 `.35` logs.
+- **HW-1 and HW-6** take round 42's counts.
+
+Dumbass Platterpus's bundle is the one file the operator is told to send, and it leaves out the logs the round is read from.
+
+**Round 42's two Full runs are filed** on our evidence branch: the first at `fa045e5` (`docs/rig-2026-11-23-1280aa4/`), the second at `c55c217` (`docs/rig-2026-11-24-1280aa4/`).
+
+- **Run 2, G3's folder.** Its bundle, 63 of 63 members matching, joined by the 27 album folders and 96 records our owner collected from `~/Music/rips`. Its manifest says `album folder (none)`.
+- **Run 1.** Its session folder joined by its 27 album folders and 91 records, because Platterpus deleted its bundle.
+- **Signatures.** All 68 signed logs verify with `-Y`.
+- **G1.** Each run's section F rip verifies 13 tracks from the read and track 5 by Platterpus's labeled CTDB repair, as in round 41. Every `.35` log reads `Disc MCN:       none (libcdio returned none)`. The second run's repeat rip 4 verifies all 14 from the drive's reads: its securing pass kept `C96464AB` for track 5 over three reads of `E0036697`.
+- **The cache table** gains both runs, now thirty-seven rows.
+
+**`tools/read-run.py` and the cache-table test read an in-app bundle's `scriptrun/`.** Platterpus's app files an in-app `--run-script` run's own folder as `scriptrun/`, where the rig harness used `session/run/`. Until now a session filed that way had no report or transcript as far as `read-run.py` could tell. `cache_table_matches_the_transcripts` skipped its `Cache probe:` line, the omission that test was written to catch. Revert-proved: with both of round 42's Full runs filed and no rows, the new test names both runs and the old one passes.
+
 **Round 42's C2 probe is filed** on our evidence branch: its two completed runs of 2026-11-24 at `b263e0e` (`docs/rig-2026-11-24b-c2probe/`), and its first try, stopped at 06:17Z before any read, at `f04dac5` (`docs/rig-2026-11-24-c2probe-stopped/`). The drive sets C2 bits at track 5's LBA 83430 in 5 of 6 reads and at track 3's seconds 251 and 252 in some reads and not others, and none at the other seconds G2 names. Our decoding of the kept bytes matches the script's summary read for read. The first try's stop was right: the app log in the second delivery shows a Platterpus window open from 23:04Z to 09:38Z.
 
 **STATUS and the open items follow the probe.**

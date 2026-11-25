@@ -3568,9 +3568,18 @@ def sc_cache_table_matches_the_transcripts():
     # when a transcript is one this clone has not fetched.
     store = _evidence_store()
     found, unfetched = {}, []
+    # The rig harness's bundle keeps its transcript at session/transcript.txt;
+    # the bundle Platterpus's app writes for an in-app --run-script run keeps
+    # the script's under scriptrun/ (round 42's Full runs of 2026-11-23 and
+    # 24), and a probe line there needs its row as much as one in the harness's.
     for folder in store.folders():
-        t = f"{folder}/session/transcript.txt"
-        if not folder.startswith("docs/rig-") or t not in store.files(folder):
+        if not folder.startswith("docs/rig-"):
+            continue
+        names = store.files(folder)
+        t = next((f"{folder}/{rel}" for rel in
+                  ("session/transcript.txt", "scriptrun/transcript.txt")
+                  if f"{folder}/{rel}" in names), None)
+        if t is None:
             continue
         data = _read_evidence(store, t, unfetched)
         if data is None:
