@@ -3,11 +3,11 @@
 STATUS-NEWEST-LAP: round-42-lap-05.md
 STATUS-NEWEST-LAP-STATE: sent
 
-STATUS-ROUND: 42, OPEN, on our lap 5, GO, and your lap 4, OPEN; it reviews +platterpus.35 at 1280aa4 with your 0.7.129, which names it under review, and closes on our lap 1 S32, which your lap 2 S21 accepts as given; your lap 4 reads G1, G2 and G4 as met and G3 as ours, and our lap 5 reads G3 as met, the second Full run's bundle filed at c55c217 (docs/rig-2026-11-24-1280aa4/)
-STATUS-LAPS: newest sent round-42-lap-05.md (ours), round-42-lap-04.md (theirs); next 6 (theirs) carrying your reading of our G3 filing and GO unless your lap 4 S18's condition is unmet; you write it, and only you do; our gate closes round 42 on it; held none
+STATUS-ROUND: 42, CLOSED, on our lap 5 and your lap 6, both GO, approving +platterpus.35 at 1280aa4 with your 0.7.129; your lap 6 S15 moves your FORK_PIN to 1280aa4 on this close, and your main has it from 79ad1496; round 43 opens with our lap 1, under protocol v10, byte-identical in both trees at platterpus@b628344
+STATUS-LAPS: newest sent round-42-lap-05.md (ours), round-42-lap-06.md (theirs); next 1 (ours) carrying round 43's opening; we write it, and only we do; held none
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
-STATUS-RELEASE-NEXT: +platterpus.36, not built: what round 42 agrees, among them the Ripping errors: parts as a complete list (our round 41 lap 5 S8) and the two AccurateRip fixes (docs/OPEN-ITEMS.md US-32); +platterpus.35 is on the beta channel from 2026-11-17 for round 42 to review, and +platterpus.34, the pin round 41 approved, is on stable from 2026-11-23; pins fb28088, reviews +platterpus.35
-STATUS-RUN-NEXT: +platterpus.35 with 0.7.129; waiting on round 43's goal for the next run: round 42 needs no more, its two Full runs being filed on our evidence branch at fa045e5 (docs/rig-2026-11-23-1280aa4/) and c55c217 (docs/rig-2026-11-24-1280aa4/, whose bundle G3 names), and your C2 probe at b263e0e (docs/rig-2026-11-24b-c2probe/)
+STATUS-RELEASE-NEXT: +platterpus.36, not built: what round 42 agreed, among them the Ripping errors: parts as a complete list (our round 41 lap 5 S8) and the two AccurateRip fixes (docs/OPEN-ITEMS.md US-32), in two parts around your readers (our round 42 lap 3 S5); +platterpus.35, the pin round 42 approved, is on beta from 2026-11-17 and on stable from 2026-11-25, where +platterpus.34 had been since 2026-11-23; pins 1280aa4, reviews +platterpus.36
+STATUS-RUN-NEXT: +platterpus.36 with your-first-release-naming-it; waiting on .36's build and round 43's opening, round 42 being closed with nothing more to run: its two Full runs are filed on our evidence branch at fa045e5 (docs/rig-2026-11-23-1280aa4/) and c55c217 (docs/rig-2026-11-24-1280aa4/, whose bundle G3 names), and your C2 probe at b263e0e (docs/rig-2026-11-24b-c2probe/)
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: counted from LBA 0, proposed in our round 32 lap 1 S13 and accepted in your lap 2 S10, released in +platterpus.23 at 891c79e; the reference disc's track 1 starts at LSN 0, so no run of it can tell the two counts apart, and a disc with a pregap before track 1 is what settles it (docs/OPEN-ITEMS.md HW-11)
 STATUS-OPEN: overread-bounded us fixing at bfe71ec, priority 1: under -O a frame outside the disc is read once, a refused one written as silence, and a track that read any says Beyond disc: N of M frames refused (written as silence); released in +platterpus.24 at 93afa15; on 2026-11-17 your overreadprobe ran it under +platterpus.34 on the BDR-209D, which refused 2 of 2 frames past the lead-out and 2 of 2 before LSN 0, each read once and written as silence in about a minute (docs/rig-2026-11-17b-overreadprobe/), so it stays open only for a drive that answers past its lead-out (docs/OPEN-ITEMS.md HW-10)
 STATUS-OPEN: subchannel-pregap-varies us fixing at 8726bd3, priority 5: a pregap the TOC does not signal read differently between rips of one disc while the log stated one value; fixed by placing each Q frame at the sector its own address names (316682e), with every search's counts in Pregap searches: (8726bd3, +platterpus.27 and .28), and since +platterpus.29 the one sector the reads leave undecided prints as such: track 9 is 94 or 95 frames (undecided) in 18 of the 19 .29 logs of 2026-11-04 and 26 of round 40's 29 rip logs, 95 in the rest, and 94 in no log since .29; this drive's raw Q of LSN 145567 fails its CRC, so a raw read on a second drive settles it (our round 39 lap 1 S11; docs/OPEN-ITEMS.md HW-6; the record is docs/KNOWN-ISSUES.md)
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-25: round 42 open on `.35`, our lap 3 sent, its C2 probe and Full runs filed; round 41 closed on `.34`, on stable since
+## Now — rewritten 2026-11-25: round 42 closed `GO`/`GO` on `.35`, on stable since; round 43 to open
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -69,48 +69,31 @@ of the current round, by committer date in UTC.
 
 ### Rounds
 
-- **Round 41 is closed**, 2026-11-18, six laps, on our lap 5 and Platterpus's
-  lap 6, both `GO`, approving `.34` at `fb28088` with their 0.7.127. Their lap
+- **Round 42 is closed**, 2026-11-25, six laps, on our lap 5 and Platterpus's
+  lap 6, both `GO`, approving `.35` at `1280aa4` with their 0.7.129. Their lap
   6, released by their operator and filed byte for byte from their `main` at
-  `0cb08891`, reads round 41's rip as meeting G1 to G3 by its own reading and
-  lands protocol v10 in their tree (G4). Their `FORK_PIN` moved to `fb28088`
-  in the commit that released it, `13bf57bc`.
-- **`.34` went to stable on 2026-11-23**, as our owner decided on 2026-11-17,
-  by the way our owner chose that day: ledger row 48 puts it on stable and row
-  49 lists `.35` on beta again, since beta resolves to the newest row of any
-  channel and a stable row alone would have moved beta back to `.34`. Nothing
-  was rebuilt.
-- **Round 42 is open**, on our lap 1 (`docs/handshake/round-42-lap-01.md`),
-  sent when its pull request merged, on our owner's words of 2026-11-17 and
-  2026-11-23. It reviews `.35` at `1280aa4`, says our gate implements protocol
-  v10, and proposes what `.36` would change; it closes on its S32, one default
-  whole-disc rip of `.35` through Platterpus's first release naming it, their
-  C2 probe, and each side's gate on v10.
-- **Their lap 2 accepts all of it**, filed 2026-11-24 from their `main` at `9d9177a2`:
-  `.35` under review in their 0.7.129, their gate on protocol 10, every `.36`
-  proposal, the close as given, and their readers for `.36`'s new forms in the
-  release after 0.7.129 (their S19).
-- **Our lap 3 read it**, declaring protocol 10, and says how `.36` is built in two
-  parts around their readers (its S5); their lap 4 reads the run.
-- **Round 42's Full run ran twice** through 0.7.129, from 2026-11-23 23:49Z
-  and from 2026-11-24 09:38Z, and **both are filed**: the first at `fa045e5`
-  (`docs/rig-2026-11-23-1280aa4/`), from its session folder and rip folders,
-  because **their app deleted its bundle** at 2026-11-24 12:24Z, keeping its
-  newest 20, before it reached us; the second at `c55c217`
-  (`docs/rig-2026-11-24-1280aa4/`), from its bundle, which G3 names, and its rip
-  folders, which **their in-app bundle does not carry**. By our reading each
-  run's section F rip meets G1 as round 41's rips met its G2: 13 tracks verified
-  from the read, track 5 by their labeled CTDB repair, and `Disc MCN:` reading
-  `none (libcdio returned none)`.
-- **Their C2 probe ran to the end twice** on 2026-11-24, filed at `b263e0e`
-  (`docs/rig-2026-11-24b-c2probe/`): C2 bits at track 5's LBA 83430 in 5 of 6
-  reads and at track 3's seconds 251 and 252 in some reads, none at the
-  other seconds G2 names. Its first try stopped at 06:17Z on a window still
-  open from 23:04Z (`docs/rig-2026-11-24-c2probe-stopped/`, at `f04dac5`).
-- **Their lap 4 is written and held**, at `2e89ef2d` on their `main`; it is
-  not read here until their operator releases it.
-- **Round 40 is closed**, 2026-11-16, and every earlier round is a row of the
-  handshake README's round table; the gate is the authority over both.
+  `b628344e`, reads our G3 filing on our evidence branch (`c55c217`), finds G1
+  to G4 met and no defect in `.35` that makes the pin unsafe. Their `FORK_PIN`
+  moved to `1280aa4` in the commit that released it, `79ad1496`, and their
+  0.7.130, tagged 2026-11-25, installs `.35` by default.
+- **What round 42 found.** Each Full run's section F rip verifies 13 tracks
+  from the read and track 5 by their labeled CTDB repair, as round 41's did,
+  and the second run's repeat rip 4 verifies all 14 from `.35`'s own reads.
+  `Disc MCN:` reads `none (libcdio returned none)` in all 56 `.35` logs. Their
+  C2 probe finds C2 bits at track 5's LBA 83430 in 5 of 6 reads, which `C2
+  errors:` does not measure (HW-1). Two defects are theirs, accepted for their
+  next release: their app pruned the bundle a run told our owner to send
+  (R42-1, their R200), and their in-app bundle carries no album folder (R42-2,
+  their R197).
+- **`.35` went to stable on 2026-11-25**, on our owner's word that day, *"yes
+  move stable to .35"*. Ledger row 50 puts it on stable under round 42, and beta
+  resolves to the same row, so beta stays on `.35`. Nothing was rebuilt.
+  Stable had been `.34` since 2026-11-23.
+- **Next:** round 43 opens with our lap 1, and `.36` is built in two parts
+  around their readers (our lap 3 S5).
+- **Round 41 is closed**, 2026-11-18, approving `.34` at `fb28088`, and it and
+  every earlier round is a row of the handshake README's round table; the gate
+  is the authority over all of them.
 
 ### Runs
 
@@ -124,24 +107,21 @@ Every earlier run is a `docs/rig-*` folder with its own README.
 
 ### The protocol
 
-**Round 41 closed under v9, and v10 governs from round 42** (`PROTOCOL.md`
-§18). The four shared documents, v10's text among them, are byte-identical in
-both trees at `platterpus@0cb0889`, read with `tools/seam-sync-check.py
---fetch` on 2026-11-18 at 00:50Z. Our gate implements 10 (`PROTOCOL_VERSION`
-in `tools/release-gate.py`, US-40), and still reads round 41's laps, which
-declare 9. Theirs implements 9 by their round 41 lap 6 S7 and D7, which says it
-implements 10 before their first lap of round 42. Under §18 neither side
-declares 10 until both have said in a lap that their gate implements it: round
-42's opening lap says it of ours.
+**Round 42 ran under v10**, both gates implementing it (our lap 3 S3, their
+lap 4 S3). The four shared documents are byte-identical in both trees at
+`platterpus@b628344`, read with `tools/seam-sync-check.py --fetch` on
+2026-11-25 at 15:38Z. Our gate implements 10 (`PROTOCOL_VERSION` in
+`tools/release-gate.py`, US-40) and still reads earlier rounds' laps, which
+declare 9 or less.
 
 ### Platterpus's side, read and not run
 
-Their newest release is 0.7.128, tag `v0.7.128` at `0ec72e6b`, tagged
-2026-11-18 at 02:35Z. It installs `.34` by default, its `FORK_PIN` being
-`fb28088` as their lap 6 S18 said, and still names `.34` as the build under
-review, round 42 not being open. Their
-newest lap is round 41's lap 6, released 2026-11-18 at `0cb08891` and filed
-here in the commit that closes round 41. Their standing status is
+Their newest release is 0.7.130, tag `v0.7.130` at `d15c0fff`, tagged
+2026-11-25 at 16:42Z. It installs `.35` by default, its `FORK_PIN` being
+`1280aa4` since round 42's close (`79ad1496`), and still names `.35` as the
+build under review, round 43 not being open. Their 0.7.129 installs `.34`.
+Their newest lap is round 42's lap 6, released 2026-11-25 and on their
+`main` from `b628344e`, filed here in the commit that closes round 42. Their standing status is
 `docs/handshake/outbound/platterpusstatus.md` in their tree. Seventeen of their
 earlier statuses are filed under `docs/handshake/inbound/status-*.md`, each
 dated by the date it declares; theirs are evidence and are never consolidated,
