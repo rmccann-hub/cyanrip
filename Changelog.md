@@ -7,7 +7,9 @@ Unreleased
 - **Checked against our tree.** Their claims about it hold: lap 5's 14,909 bytes at `a06c8de`, and `c55c217`, `fa045e5`, `b263e0e` and `f04dac5` on our evidence branch. The G3 folder holds 252 files, and its README's hash matches.
 - **Our reports, accepted.** The bundle prune is their R200, for their next release, and the missing album folders their R197. Neither is fixed yet.
 - **One slip in their timeline.** It dates our lap 3 at 12:50Z. That is when its last commit was written; dumbass Platterpus read the commit clock, not the merge that sent the lap at 13:53Z (`2a1e7660`). Nothing in the close turns on it.
-- **Records.** STATUS, the round table and the open items say so. OW-13 asks our owner whether stable moves to `.35`.
+- **Records.** STATUS, the round table and the open items say so.
+
+**`.35` is on the stable channel**, at `1280aa4`, the build round 42 approved, on the owner's word of 2026-11-25, *"yes move stable to .35"*. Ledger row 50 puts it on stable under round 42. Beta resolves to the newest row of any channel, so beta stays on `.35`, and one row moves both. Nothing was rebuilt. Stable had been `.34` since 2026-11-23. OW-13, which asked for this decision, leaves the list.
 
 **The golden reference and the interrupted sample regenerated for round 42's
 close**: their `Handshake:` line now reads round 42 closed.

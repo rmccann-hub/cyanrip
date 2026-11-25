@@ -91,7 +91,6 @@ id.
 | OW-8 | File upstream items 24 to 33 as one comment on upstream issue 167 | `docs/upstream/issues-to-file.md`, items 24 to 33 | The owner files; 24 to 32 were re-checked against upstream's `648b1dd` on 2026-11-16, and 33 was drafted against it on 2026-11-17, when `git ls-remote` still gave it for `master` |
 | OW-9 | Set `CYANRIP_REDACT_NAMES` where runs are filed; read the repository's Security tab (unread since 2026-11-03) | `docs/history/READINESS-PLAN.md` | Owner actions |
 | OW-11 | Outside these repositories: skillcheck reading tarball pins, and the skillcheck `--verify` report | `docs/DEPENDENCY-PLAN.md`; `docs/history/READINESS-PLAN.md` | Handed to the claude-code-skills session in the fork's HANDOFF of 2026-11-16 |
-| OW-13 | Move stable to `.35`, the pin round 42 approved | `release-manifest.json`; round 42 closed `GO`/`GO` on 2026-11-25. `.34` is on stable from 2026-11-23, and Platterpus's next release installs `.35` by default (platterpus:R42.L6.S15) | The owner decides; a stable move is a ledger row, as `.34`'s was |
 
 ## Needs a drive
 

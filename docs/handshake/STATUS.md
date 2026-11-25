@@ -6,7 +6,7 @@ STATUS-NEWEST-LAP-STATE: sent
 STATUS-ROUND: 42, CLOSED, on our lap 5 and your lap 6, both GO, approving +platterpus.35 at 1280aa4 with your 0.7.129; your lap 6 S15 moves your FORK_PIN to 1280aa4 on this close, and your main has it from 79ad1496; round 43 opens with our lap 1, under protocol v10, byte-identical in both trees at platterpus@b628344
 STATUS-LAPS: newest sent round-42-lap-05.md (ours), round-42-lap-06.md (theirs); next 1 (ours) carrying round 43's opening; we write it, and only we do; held none
 STATUS-RELEASED: +platterpus.35 at 1280aa4, 2026-11-17
-STATUS-RELEASE-NEXT: +platterpus.36, not built: what round 42 agreed, among them the Ripping errors: parts as a complete list (our round 41 lap 5 S8) and the two AccurateRip fixes (docs/OPEN-ITEMS.md US-32), in two parts around your readers (our round 42 lap 3 S5); +platterpus.35 is the pin round 42 approved, on the beta channel from 2026-11-17, and +platterpus.34 is on stable from 2026-11-23 until our owner moves stable (docs/OPEN-ITEMS.md OW-13); pins 1280aa4, reviews +platterpus.36
+STATUS-RELEASE-NEXT: +platterpus.36, not built: what round 42 agreed, among them the Ripping errors: parts as a complete list (our round 41 lap 5 S8) and the two AccurateRip fixes (docs/OPEN-ITEMS.md US-32), in two parts around your readers (our round 42 lap 3 S5); +platterpus.35, the pin round 42 approved, is on beta from 2026-11-17 and on stable from 2026-11-25, where +platterpus.34 had been since 2026-11-23; pins 1280aa4, reviews +platterpus.36
 STATUS-RUN-NEXT: +platterpus.36 with your-first-release-naming-it; waiting on .36's build and round 43's opening, round 42 being closed with nothing more to run: its two Full runs are filed on our evidence branch at fa045e5 (docs/rig-2026-11-23-1280aa4/) and c55c217 (docs/rig-2026-11-24-1280aa4/, whose bundle G3 names), and your C2 probe at b263e0e (docs/rig-2026-11-24b-c2probe/)
 STATUS-OPEN: track1-pregap-base us fixing at a64d58d, priority 3: track 1's Pregap length: counted from LBA 0, proposed in our round 32 lap 1 S13 and accepted in your lap 2 S10, released in +platterpus.23 at 891c79e; the reference disc's track 1 starts at LSN 0, so no run of it can tell the two counts apart, and a disc with a pregap before track 1 is what settles it (docs/OPEN-ITEMS.md HW-11)
 STATUS-OPEN: overread-bounded us fixing at bfe71ec, priority 1: under -O a frame outside the disc is read once, a refused one written as silence, and a track that read any says Beyond disc: N of M frames refused (written as silence); released in +platterpus.24 at 93afa15; on 2026-11-17 your overreadprobe ran it under +platterpus.34 on the BDR-209D, which refused 2 of 2 frames past the lead-out and 2 of 2 before LSN 0, each read once and written as silence in about a minute (docs/rig-2026-11-17b-overreadprobe/), so it stays open only for a drive that answers past its lead-out (docs/OPEN-ITEMS.md HW-10)
@@ -57,7 +57,7 @@ record of what was said at a moment and this is a claim about *now*.
 
 ---
 
-## Now — rewritten 2026-11-25: round 42 closed `GO`/`GO` on `.35`; round 43 to open; `.34` on stable
+## Now — rewritten 2026-11-25: round 42 closed `GO`/`GO` on `.35`, on stable since; round 43 to open
 
 **This section is the whole of what this file claims.** Everything below it is
 either guidance on reading the manifest or the rig procedure the suite
@@ -85,14 +85,12 @@ of the current round, by committer date in UTC.
   next release: their app pruned the bundle a run told our owner to send
   (R42-1, their R200), and their in-app bundle carries no album folder (R42-2,
   their R197).
+- **`.35` went to stable on 2026-11-25**, on our owner's word that day, *"yes
+  move stable to .35"*. Ledger row 50 puts it on stable under round 42, and beta
+  resolves to the same row, so beta stays on `.35`. Nothing was rebuilt.
+  Stable had been `.34` since 2026-11-23.
 - **Next:** round 43 opens with our lap 1, and `.36` is built in two parts
-  around their readers (our lap 3 S5). Whether stable moves to `.35` is our
-  owner's to decide (`docs/OPEN-ITEMS.md` OW-13).
-- **`.34` went to stable on 2026-11-23**, as our owner decided on 2026-11-17,
-  by the way our owner chose that day: ledger row 48 puts it on stable and row
-  49 lists `.35` on beta again, since beta resolves to the newest row of any
-  channel and a stable row alone would have moved beta back to `.34`. Nothing
-  was rebuilt.
+  around their readers (our lap 3 S5).
 - **Round 41 is closed**, 2026-11-18, approving `.34` at `fb28088`, and it and
   every earlier round is a row of the handshake README's round table; the gate
   is the authority over all of them.
