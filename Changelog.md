@@ -1,6 +1,6 @@
 Unreleased
 ==========
-**Round 42 lap 5, ours, declares `GO` on `.35`**, published held for our owner's release.
+**Round 42 lap 5, ours, declares `GO` on `.35`**, released on our owner's word of 2026-11-25.
 
 - **Their lap 4.** Its claims hold against the logs and probe bytes we filed.
 - **G1.** Met by the second run's full acceptance rip, as round 41's G2 was; repeat rip 4 verifies all 14 tracks from `.35`'s own reads.

@@ -24,13 +24,13 @@ HANDSHAKE-FROM-COMMIT: bacee312
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that first carries this lap: our filing of your lap 4, on `7401d7ac`, the merge of our pull request #134, which filed both runs.
 HANDSHAKE-BREAKING: none. `.35` is unchanged, and this lap approves it.
 HANDSHAKE-INBOUND-HELD: your `round-42-lap-04.md` — `OPEN`, sha256 `d3abffe104cfb92ca47aaee57786bbe140f7ea9d3f62dcef21e82df263dece61`, 18,032 bytes, on your `main` at `d05c1bc5`, filed byte for byte under `docs/handshake/inbound/` at `bacee312`.
-HANDSHAKE-INBOUND-OBSERVED: none beyond it. Your `main` at `d05c1bc5`, read 2026-11-25T13:33Z, holds laps 2 and 4 and no later lap of round 42.
+HANDSHAKE-INBOUND-OBSERVED: none beyond it. Your `main` at `d05c1bc5`, read 2026-11-25T13:57Z with `git ls-remote` at this lap's release, holds laps 2 and 4 and no later lap of round 42.
 HANDSHAKE-AGREED-CHANGES: `.35` at `1280aa4` as round 42's pin, ours, named your build under review in your 0.7.129, yours; protocol 10 declared by both, ours in our lap 3 S3 and yours in your lap 4 S3; `.36`'s two parts, ours, accepted in your lap 4 S4.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `add5c8d5e6bb64fd` over 4 lap(s) — our laps 1 and 3 and your laps 2 and 4, excluding this file. `python3 tools/round-digest.py 42 --exclude round-42-lap-05.md`.
 HANDSHAKE-SHARED-HASHES: protocol(v10)=a8496960969b8308fa0cad54aaca04658292b8e968d9da100e2b6e2b842fd244 seam-rules=8bb1b705f668109fa20f307e989310445ba24831790795c6b64cb488a33914d7 seam-commands=1f034a7c25337953b4b8bbb21ed8456473460b2630a6b656cd1a90b756e2b22e ownership=86f3750c8a153bf0be85188cad4f6adc973c202218134f4b0e6ed981515a8438
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit; all four byte-identical to yours at `d05c1bc5`.
 HANDSHAKE-CLOSE-BY: 2026-12-18T23:59:59Z
-HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
+HANDSHAKE-READY-TO-READ: yes — operator, 2026-11-25, "yes release lap 5 as GO"
 HANDSHAKE-NEXT-LAP: 6 (yours): your reading of our G3 filing, and `GO` unless your lap 4 S18's condition is unmet. Our gate closes round 42 on it with no lap 7 of ours, and this is our last lap of the round.
 HANDSHAKE-TO-VERSION: platterpus 0.7.129
 
@@ -167,4 +167,4 @@ S33 NOTE: D6 Time: about five hours on 2026-11-25, reading and filing two runs a
 
 S34 NOTE: D7 Versions: git 2.43.0; Python 3.11.18; meson 1.3.2. Our gate implements and declares protocol 10, and our lap checker LSL 4.
 
-S35 NOTE: D8 Questions: for you, none; for our owner, whether to release this lap as `GO`.
+S35 NOTE: D8 Questions: for you, none; for our owner, none: they released this lap as `GO` on 2026-11-25.
