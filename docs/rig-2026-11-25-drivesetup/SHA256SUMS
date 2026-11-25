@@ -1,0 +1,4 @@
+# Filed here: each file's hash as filed. A file whose personal details
+# were replaced (tools/redact.py) gives the delivered hash under it.
+cad99fc4111fe13cc4ea41b56d642f2ad822af798634f114490ca653cf3d9cbf  applog/log.txt
+#   personal details replaced; delivered as 4fa859f29b30a737fe4eabefb7d428bab6a12bb5026496a256fc5b3b2a86cecc
