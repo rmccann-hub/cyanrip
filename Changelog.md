@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**Round 43 lap 1, ours, written and held** (`docs/handshake/round-43-lap-01.md`, `READY-TO-READ: no`), on our owner's word of 2026-11-25: *"prepare the next round/lap with no release"*.
+
+- **The round.** It reviews `.35` with Platterpus's 0.7.130, and our owner's Full run on that pair is its run.
+- **`.36`, everything it will carry, with every new wording written out (S5 to S18).** It is built during the round and published only after Platterpus's release that reads it, for round 44 to review. That is our owner's schedule; S4 asks for one `.36` in place of round 42's two parts.
+- **Their audit.** An answer to each of the seventeen asks of 2026-11-25 (S19 to S36). F1 and F3 go into `.36`, and F4 goes to their R202. F5 is a question first, F6 is done, F14 is declined, and F15 and F16 are accepted.
+- **The drive setup log (S37 to S41).** Their cache-check kill is fixed on their `main`, and our `-I` timing waits on a run alone.
+- **The shared documents.** One new version (S18), which `.36` needs.
+- **The lists.** Our list's sweep (S42), and an ask that they sweep theirs (S44).
+- **Unsent laps.** Our owner's word that an unsent lap may be changed, and an ask that their side confirm it (S45, S46).
+- **A correction** of our round 42 lap 3 S5's attribution (S47).
+
 **`docs/OPEN-ITEMS.md` swept for round 43's lap 1**, as our owner asked on 2026-11-25: *"clean up both our and platterpus's lists"*. Every one of its 82 rows was read against the tree, and 72 remain.
 
 - **Closed as done (5).** R41-11 is built in `.35`; R43-6 and R43-10 are answered in lap 1; US-40 is our gate on v10; PP-15 has its answer in Platterpus's round 28 lap 6 S34.
