@@ -1,5 +1,15 @@
 Unreleased
 ==========
+**Round 42's C2 probe is filed** on our evidence branch: its two completed runs of 2026-11-24 at `b263e0e` (`docs/rig-2026-11-24b-c2probe/`), and its first try, stopped at 06:17Z before any read, at `f04dac5` (`docs/rig-2026-11-24-c2probe-stopped/`). The drive sets C2 bits at track 5's LBA 83430 in 5 of 6 reads and at track 3's seconds 251 and 252 in some reads and not others, and none at the other seconds G2 names. Our decoding of the kept bytes matches the script's summary read for read. The first try's stop was right: the app log in the second delivery shows a Platterpus window open from 23:04Z to 09:38Z.
+
+**STATUS and the open items follow the probe.**
+
+- **R42-1.** Platterpus's app deleted the first Full run's bundle at 12:24Z on 2026-11-24, keeping its newest 20, before it reached us.
+- **HW-1** carries round 42's C2 measurement.
+- **HW-20** is new: the solo `-I -N` read's 300 s of silence after `Opening drive...`, seen on `.31` and now twice on `.35`, a build that names every wait after the open.
+
+Dumbass Platterpus told our owner to send one file, then deleted it six hours later on its own keep-20 rule. Their drive test's fix for the stopped probe blames shutdown timing "when nobody had a window open"; their own log has that window open from 23:04Z to 09:38Z, right through the stop at 06:17Z.
+
 **The golden reference and the interrupted sample regenerated for round 42's
 lap 3**, and again after its S8 was corrected: their `Handshake:` line reads
 round 42 lap 3 OPEN.
