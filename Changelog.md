@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Platterpus's audit of 2026-11-25 is taken into the open items**, as round 43's proposals R43-1 to R43-11. It asks seventeen things of us, F1 to F17, at `platterpus@562a5a3f:docs/cyanrip-fork.md:1911`. It is not a lap, so round 43's lap 1 answers it.
+
+- **Checked against our tree.** Every fact it states about our tree holds, with two exceptions.
+- **F6 is already done.** It asks us to fix `-f`'s two defects; `8610f3c1` fixed them on 2026-11-16, in `.34` and `.35`. UP-4 is upstream's copy.
+- **F1's "94 in 200 of 237 logs" is our own count,** from 2026-10-21. Most of those logs come from builds before `.26`, whose search could place a frame at another sector. No log since `.26` decides 94; EAC's read is the evidence for 94.
+- **Folded into existing rows.** F2 joins US-12 and F8 joins US-13. F10 asks nothing.
+
 **Round 42 is closed `GO`/`GO` on `.35`.** Platterpus's lap 6, released by their operator on 2026-11-25, is filed byte for byte from their `main` at `b628344e`.
 
 - **Their verdict.** `GO`, approving `.35` at `1280aa4` with their 0.7.129. Our gate reads round 42 closed.
