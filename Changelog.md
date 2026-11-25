@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**A draft of the next shared-document version is in `docs/handshake/draft-shared-v11/`**, for round 43's lap 1 to cite. It is a draft, never a copy of the shared files in force.
+
+- **`PROTOCOL.md` v11.** The change history is marked as an appendix, keeping §10 to §18's numbers, which both sides' tooling finds versions by. It adds §19 for v11, and the agreed rule for correcting a filed README.
+- **`seam-rules.md` v10.** Platterpus's two proposed seam rules, quoted from their laps.
+- **`seam-commands.md`.** `.36`'s `--diagnostics` and `--overwrite-existing` rows, our two `?` cells in §2a, and the stale `--prefer-disc-isrc` row.
+- **Undecided, as `CHANGES.md` says:** the README rule's manifest mechanics under HR-2 point 4, and the `.36` rows, which only `.36`'s build can confirm.
+- **Two defects the drafting found.** Under `-X` the cue names a data track's `.bin`, which is never written (US-46, measured on `mixed.cue`). And `--prefer-disc-isrc`'s help says "always used" of a disc ISRC that is not used when invalid (US-47).
+
 **HW-1: the drive's C2 pointers, set against round 42's reads.** No drive was needed: this compares the C2 probe of 2026-11-24 with round 42's 187 records.
 
 - **Every second the drive flagged is one where cyanrip's reads disagree.**
