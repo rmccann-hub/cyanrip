@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**Round 42's C2 probe is filed** on our evidence branch: its two completed runs of 2026-11-24 at `b263e0e` (`docs/rig-2026-11-24b-c2probe/`), and its first try, stopped at 06:17Z before any read, at `f04dac5` (`docs/rig-2026-11-24-c2probe-stopped/`). The drive sets C2 bits at track 5's LBA 83430 in 5 of 6 reads and at track 3's seconds 251 and 252 in some reads and not others, and none at the other seconds G2 names. Our decoding of the kept bytes matches the script's summary read for read. The first try's stop was right: the app log in the second delivery shows a Platterpus window open from 23:04Z to 09:38Z.
+
 **The golden reference and the interrupted sample regenerated for round 42's
 lap 3**, and again after its S8 was corrected: their `Handshake:` line reads
 round 42 lap 3 OPEN.
