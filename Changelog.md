@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**Round 43 lap 1, still held, brought up to date**, as an unsent lap may be (our owner, 2026-11-25).
+
+- **Their readers.** It credits Platterpus's `c760697f`, which reads every part-2 wording the lap writes out (S4, S7).
+- **The shared draft.** It cites `docs/handshake/draft-shared-v11/` (S18).
+- **C2.** It answers their F10 with HW-1's comparison (S28).
+- **Two more for `.36`.** It adds US-46 and US-47 (S5).
+- **The list.** It counts US-5's close: 73 rows remain, with US-46 and US-47 added (S42, S43).
+- **Their `main`.** It re-reads it at `4021f95c`.
+
 **A draft of the next shared-document version is in `docs/handshake/draft-shared-v11/`**, for round 43's lap 1 to cite. It is a draft, never a copy of the shared files in force.
 
 - **`PROTOCOL.md` v11.** The change history is marked as an appendix, keeping §10 to §18's numbers, which both sides' tooling finds versions by. It adds §19 for v11, and the agreed rule for correcting a filed README.
