@@ -1,5 +1,14 @@
 Unreleased
 ==========
+**STATUS and the open items follow the Full runs.**
+
+- **R42-1** says both runs are filed.
+- **R42-2** is new: Platterpus's in-app bundle carries no album folder.
+- **HW-19** has its first drive answer: `none (libcdio returned none)` in all 56 `.35` logs.
+- **HW-1 and HW-6** take round 42's counts.
+
+Dumbass Platterpus's bundle is the one file the operator is told to send, and it leaves out the logs the round is read from.
+
 **Round 42's two Full runs are filed** on our evidence branch: the first at `fa045e5` (`docs/rig-2026-11-23-1280aa4/`), the second at `c55c217` (`docs/rig-2026-11-24-1280aa4/`).
 
 - **Run 2, G3's folder.** Its bundle, 63 of 63 members matching, joined by the 27 album folders and 96 records our owner collected from `~/Music/rips`. Its manifest says `album folder (none)`.
