@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**The message-witness gate's floor is 45, not 7** (US-20 c). Of P5's 170 failure messages, 45 are asserted by something in `tests/` or `tools/` today, and the gate let coverage fall to 7 before it complained. It now fails as soon as one of the 45 loses its witness.
+
 **US-5 closed: a superseded track's read time is on record from a drive.** In round 42's first Full run, repeat rip 1 (evidence `fa045e5`), Platterpus's securing pass replaced track 3 (`replaced: true`, `kept_read: securing_pass`). The replacing read's `Kept read began:    2026-11-24T03:07:14Z` is in the securing pass's log, filed beside it and embedded in their record. The first pass had read track 3 at `02:47:25Z`. The list review called this done before anyone had read the field that shows it; now it has been read.
 
 **The golden reference and the interrupted sample regenerated for round 43's
