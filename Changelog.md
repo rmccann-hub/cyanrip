@@ -1,5 +1,11 @@
 Unreleased
 ==========
+**The owner's drive setup on Platterpus 0.7.130 is filed**, at `docs/rig-2026-11-25-drivesetup/` (evidence `90006cd`): one app log the owner uploaded with the message *"cd-paranoia ran but didn't report a cache verdict we recognise"*.
+
+- **Why the verdict is unknown.** It was not cd-paranoia's wording. Platterpus gave up on our `-I` at its 300 s limit and ran `fuser -k (SIGKILL) /dev/sr0`, which killed `cd-paranoia -A` mid-test (exit 137) while it was timing the drive our read was using. Dumbass Platterpus killed its own measurement, then told the owner the measurement was unrecognisable (R43-12).
+- **Ours.** `-I` spent its five minutes in sub-channel searches: pregaps of 12 to 41 s each, a second search for several tracks, then an ISRC search (US-44). `.35`'s watchdog named each wait on the drive (HW-20).
+- **The log's clock is local time, UTC−5,** as in round 42's filed app logs, whose times our READMEs converted correctly.
+
 **Platterpus's audit of 2026-11-25 is taken into the open items**, as round 43's proposals R43-1 to R43-11. It asks seventeen things of us, F1 to F17, at `platterpus@562a5a3f:docs/cyanrip-fork.md:1911`. It is not a lap, so round 43's lap 1 answers it.
 
 - **Checked against our tree.** Every fact it states about our tree holds, with two exceptions.
