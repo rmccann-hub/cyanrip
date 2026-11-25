@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Platterpus's round 42 lap 4 is filed**, byte for byte from their `main` at `d05c1bc5`, after their operator released it. It reads G1, G2 and G4 as met, and G3, the filing of the run's bundle, as ours.
+
+- **G1.** It holds in seven of the second run's whole-disc rips: track 5 by the labeled CTDB repair in six, and from `.35`'s own reads in repeat rip 4.
+- **The stopped probe.** It confirms the window behind the first try's stop was open throughout.
+- **Their defects.** It takes the in-app bundle's missing album folders as theirs (their R197).
+- **Their next lap** is pre-committed to `GO` once it has read our G3 filing.
+
 **STATUS and the open items follow the Full runs.**
 
 - **R42-1** says both runs are filed.
