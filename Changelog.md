@@ -1,5 +1,13 @@
 Unreleased
 ==========
+**`docs/OPEN-ITEMS.md` swept for round 43's lap 1**, as our owner asked on 2026-11-25: *"clean up both our and platterpus's lists"*. Every one of its 82 rows was read against the tree, and 72 remain.
+
+- **Closed as done (5).** R41-11 is built in `.35`; R43-6 and R43-10 are answered in lap 1; US-40 is our gate on v10; PP-15 has its answer in Platterpus's round 28 lap 6 S34.
+- **Folded into other rows (6).** US-41 into R41-3, HW-17 into US-20 and UP-1 into OW-8. R43-11, US-11 and US-35 went into a new row, US-45: the next shared-document version, which `.36` needs.
+- **Stale text fixed.** R41-2, R41-3, R43-1, R43-3, R43-4, R43-7, R43-8, R43-12, US-5, US-13, US-19, US-21, US-44, HW-9, HW-13, HW-20, PP-7 and PP-14.
+- **Not closed: US-5.** Its candidate log has two `Kept read began:` lines, but nobody has yet read whether the later read replaced the first.
+- **HDCD (R43-3) is left to Platterpus's R202.** FFmpeg 6.1.1's `hdcd` filter has no pass-through mode and reports only `HDCD detected: no` in a closing log line, so reading the finished FLAC gives the same answer.
+
 **An unsent lap may be changed**, on our owner's word of 2026-11-25: *"both you and the other repo should be fine to change a lap if it has not been released yet, thats the whole point. it is accepted by me."* That covers a held lap, and a released one on a branch not yet merged. `CLAUDE.md` dropped its *"when unsure, treat it as sent"*, which read stricter than `PROTOCOL.md` §4a. §4a, shared by both sides, already says a lap drafted and never sent *"may be edited or deleted freely"*. Round 43's lap 1 asks Platterpus to confirm their side follows it too.
 
 **`docs/eac-parity.md` rows 6, 21 and 23 now read round 42** (Platterpus's audit F9 and F17). Each row cites its authority instead of restating counts: HW-1 and the rig READMEs for track 3, HW-6 and R43-1 for track 9's pregap, and HW-5 for `Recordable:`.
