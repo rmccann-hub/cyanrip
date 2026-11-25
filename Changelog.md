@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**HW-1: the drive's C2 pointers, set against round 42's reads.** No drive was needed: this compares the C2 probe of 2026-11-24 with round 42's 187 records.
+
+- **Every second the drive flagged is one where cyanrip's reads disagree.**
+- **On track 5 the flags fall on CTDB's words exactly.** They mark the very words CTDB's majority corrects, frame and channel: LSN 83430's three bytes are CTDB's three words at 02:24:59, and LSN 83443's are its three at 02:24:72.
+- **The reverse does not hold on track 3.** Three of its disagreeing seconds carry no bit, and the words CTDB located there sit in a sector that never carried one.
+- **What it does not show.** That the flagged bytes were wrong in the probe's reads, which kept no audio, or that the drive flagged anything during the rips themselves.
+
 **The message-witness gate's floor is 45, not 7** (US-20 c). Of P5's 170 failure messages, 45 are asserted by something in `tests/` or `tools/` today, and the gate let coverage fall to 7 before it complained. It now fails as soon as one of the 45 loses its witness.
 
 **US-5 closed: a superseded track's read time is on record from a drive.** In round 42's first Full run, repeat rip 1 (evidence `fa045e5`), Platterpus's securing pass replaced track 3 (`replaced: true`, `kept_read: securing_pass`). The replacing read's `Kept read began:    2026-11-24T03:07:14Z` is in the securing pass's log, filed beside it and embedded in their record. The first pass had read track 3 at `02:47:25Z`. The list review called this done before anyone had read the field that shows it; now it has been read.
