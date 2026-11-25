@@ -74,8 +74,8 @@ of the current round, by committer date in UTC.
   6, released by their operator and filed byte for byte from their `main` at
   `b628344e`, reads our G3 filing on our evidence branch (`c55c217`), finds G1
   to G4 met and no defect in `.35` that makes the pin unsafe. Their `FORK_PIN`
-  moved to `1280aa4` in the commit that released it, `79ad1496`, for their next
-  release; their 0.7.129 still installs `.34`.
+  moved to `1280aa4` in the commit that released it, `79ad1496`, and their
+  0.7.130, tagged 2026-11-25, installs `.35` by default.
 - **What round 42 found.** Each Full run's section F rip verifies 13 tracks
   from the read and track 5 by their labeled CTDB repair, as round 41's did,
   and the second run's repeat rip 4 verifies all 14 from `.35`'s own reads.
@@ -116,11 +116,11 @@ declare 9 or less.
 
 ### Platterpus's side, read and not run
 
-Their newest release is 0.7.129, tag `v0.7.129` at `a964e3bd`, tagged
-2026-11-23 at 22:37Z. It installs `.34` by default, its `FORK_PIN` being
-`fb28088`, and names `.35` as the build under review. Their `main` moved
-`FORK_PIN` to `1280aa4` at `79ad1496`, on round 42's close, for their next
-release. Their newest lap is round 42's lap 6, released 2026-11-25 and on their
+Their newest release is 0.7.130, tag `v0.7.130` at `d15c0fff`, tagged
+2026-11-25 at 16:42Z. It installs `.35` by default, its `FORK_PIN` being
+`1280aa4` since round 42's close (`79ad1496`), and still names `.35` as the
+build under review, round 43 not being open. Their 0.7.129 installs `.34`.
+Their newest lap is round 42's lap 6, released 2026-11-25 and on their
 `main` from `b628344e`, filed here in the commit that closes round 42. Their standing status is
 `docs/handshake/outbound/platterpusstatus.md` in their tree. Seventeen of their
 earlier statuses are filed under `docs/handshake/inbound/status-*.md`, each

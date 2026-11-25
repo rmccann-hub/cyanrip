@@ -3,7 +3,7 @@ Unreleased
 **Round 42 is closed `GO`/`GO` on `.35`.** Platterpus's lap 6, released by their operator on 2026-11-25, is filed byte for byte from their `main` at `b628344e`.
 
 - **Their verdict.** `GO`, approving `.35` at `1280aa4` with their 0.7.129. Our gate reads round 42 closed.
-- **Their pin.** Their `FORK_PIN` moved to `1280aa4` at `79ad1496`, for their next release. Their 0.7.129 still installs `.34`.
+- **Their pin.** Their `FORK_PIN` moved to `1280aa4` at `79ad1496`, and their 0.7.130, tagged 2026-11-25 at `d15c0fff`, installs `.35` by default.
 - **Checked against our tree.** Their claims about it hold: lap 5's 14,909 bytes at `a06c8de`, and `c55c217`, `fa045e5`, `b263e0e` and `f04dac5` on our evidence branch. The G3 folder holds 252 files, and its README's hash matches.
 - **Our reports, accepted.** The bundle prune is their R200, for their next release, and the missing album folders their R197. Neither is fixed yet.
 - **One slip in their timeline.** It dates our lap 3 at 12:50Z. That is when its last commit was written; dumbass Platterpus read the commit clock, not the merge that sent the lap at 13:53Z (`2a1e7660`). Nothing in the close turns on it.
