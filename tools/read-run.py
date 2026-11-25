@@ -102,9 +102,24 @@ def short(run, p):
     return f"{name[:44]} [{kind}]"
 
 
+# Where a session keeps the script's own run folder: `session/run/` in the
+# rig harness's bundle, `scriptrun/` in the bundle Platterpus's app writes for
+# an in-app `--run-script` run (round 42's Full runs, 2026-11-23 and 24).
+RUN_DIRS = ("session/run", "scriptrun")
+
+
+def run_file(run, name):
+    """The first of RUN_DIRS holding `name` in `run`, or None."""
+    for d in RUN_DIRS:
+        p = run / d / name
+        if p.exists():
+            return p
+    return None
+
+
 def report(run):
-    p = run / "session" / "run" / "report.json"
-    if not p.exists():
+    p = run_file(run, "report.json")
+    if p is None:
         return None
     try:
         return json.loads(p.read_text(encoding="utf-8"))
@@ -121,7 +136,7 @@ def non_pass(rep):
 
 def previous_run(run):
     runs = sorted(d for d in run.parent.glob("rig-*")
-                  if d.is_dir() and (d / "session" / "run" / "report.json").exists())
+                  if d.is_dir() and run_file(d, "report.json") is not None)
     earlier = [d for d in runs if d.name < run.name]
     return earlier[-1] if earlier else None
 
@@ -196,9 +211,10 @@ def main():
     if rel and evidence.run_folder(rel + "/x") == rel:
         store = evidence.Store(ROOT)
         need = [p for p in store.files(rel) if not store.in_tree(p)]
-        need += [f"{f}/session/run/report.json" for f in store.folders()
-                 if f"{f}/session/run/report.json" in store.rows
-                 and not store.in_tree(f"{f}/session/run/report.json")]
+        need += [f"{f}/{d}/report.json" for f in store.folders()
+                 for d in RUN_DIRS
+                 if f"{f}/{d}/report.json" in store.rows
+                 and not store.in_tree(f"{f}/{d}/report.json")]
         if need:
             import tempfile
             overlay_dir = tempfile.TemporaryDirectory(prefix="read-run-")
@@ -218,7 +234,7 @@ def main():
         print(f"\n{'=' * 68}\n{t}\n{'=' * 68}")
 
     # ---- the script's verdict, and what changed since the last run -------
-    head("VERDICT -- session/run/report.json")
+    head("VERDICT -- the script's report.json, under " + " or ".join(f"{d}/" for d in RUN_DIRS))
     rep = report(run)
     if rep is None:
         print("  no readable report.json: the script's verdict is unknown")
@@ -368,11 +384,13 @@ def main():
     # ---- the transcript ---------------------------------------------------
     head("TRANSCRIPT -- -f, the cache probe and cd-paranoia -A")
     t = run / "session" / "transcript.txt"
+    if not t.exists():
+        t = run_file(run, "transcript.txt") or t
     if t.exists():
         for n, ln in enumerate(t.read_text(encoding="utf-8",
                                            errors="replace").splitlines(), 1):
             if TRANSCRIPT_RE.search(ln):
-                print(f"  session/transcript.txt:{n}: {ln.strip()[:150]}")
+                print(f"  {t.relative_to(run).as_posix()}:{n}: {ln.strip()[:150]}")
     else:
         print("  no session/transcript.txt")
     return 0

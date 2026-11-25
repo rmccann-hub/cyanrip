@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**`tools/read-run.py` and the cache-table test read an in-app bundle's `scriptrun/`.** Platterpus's app files an in-app `--run-script` run's own folder as `scriptrun/`, where the rig harness used `session/run/`. Until now a session filed that way had no report or transcript as far as `read-run.py` could tell. `cache_table_matches_the_transcripts` skipped its `Cache probe:` line, the omission that test was written to catch. Revert-proved: with both of round 42's Full runs filed and no rows, the new test names both runs and the old one passes.
+
 **Round 42's C2 probe is filed** on our evidence branch: its two completed runs of 2026-11-24 at `b263e0e` (`docs/rig-2026-11-24b-c2probe/`), and its first try, stopped at 06:17Z before any read, at `f04dac5` (`docs/rig-2026-11-24-c2probe-stopped/`). The drive sets C2 bits at track 5's LBA 83430 in 5 of 6 reads and at track 3's seconds 251 and 252 in some reads and not others, and none at the other seconds G2 names. Our decoding of the kept bytes matches the script's summary read for read. The first try's stop was right: the app log in the second delivery shows a Platterpus window open from 23:04Z to 09:38Z.
 
 **STATUS and the open items follow the probe.**
