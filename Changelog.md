@@ -1,5 +1,21 @@
 Unreleased
 ==========
+**US-34 closed: the rest of the outside audit log read against the tree.** 273 points: 171 done, 33 already done, 44 still holding, 4 wrong, 12 Platterpus's and 9 not checkable from here. Of those still holding, most were already rows. Seven rows are new:
+
+- **US-49** and **US-50**, two of ours, go into round 43 lap 1 for `.36`.
+  - **US-49.** A metadata key reaches the CUE sheet raw, so a quote or newline in an `-a` key breaks its `REM` line. Reproduced on the current build.
+  - **US-50.** `Appended:` says `2 frames of silence` for 667 samples, and the earlier of those two frames is mostly disc audio.
+- **US-51 to US-53:** the ReplayGain peak tag, untimed tool calls, and the libcdio-paranoia minimum.
+- **OW-12** and **OW-13**, for the owner: stale repository settings and four process questions.
+- **UP-5** and **UP-6:** upstream's copies of US-49 and US-50.
+
+Two of the audit's points were wrong:
+
+- **`Rip completed:` divides by the disc's track count by design.** Platterpus reads it as the disc total (`platterpus@728d4f9e:src/platterpus/parsers/cyanrip_log.py:2814-2821`).
+- **Running the black-box sweep beside other tests (A1)** was declined on 2026-11-16.
+
+Dumbass us left `docs/history/README.md` pointing at PP-15 for a day after closing it. It now says where the answer is.
+
 **Our owner's drive checks of 2026-11-26 filed** (`docs/rig-2026-11-26b-drivecheck/`, evidence `1d7f47e`, 9 files and rows).
 
 - **US-44 closed, not ours.** Alone on the reference disc, `.35`'s `-I -N` took 18.7 s and named no wait. The minutes of 2026-11-25 were a drive `cd-paranoia -A` was timing at the same time.
