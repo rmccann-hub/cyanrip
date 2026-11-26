@@ -1,5 +1,27 @@
 Unreleased
 ==========
+**Upstream reports 34 and 35 drafted, each run on a build of upstream's `648b1dd`** (`docs/upstream/defect-reports.md`; UP-3 and UP-4 close into OW-8). Filing them is our owner's.
+
+- **34, a cover saved under its codec's name.**
+  - **Upstream.** It saves a JPEG XL cover as `Front.jpegxl`, which none of FFmpeg 6.1.1's 189 muxers takes. The rip stops before its first track with `Unable to init lavf context: Invalid argument!`, exit 1, under `-o wav` and `-o flac`; a PNG cover rips.
+  - **Ours** has saved it as `Front.jxl` since `7eb7f28d`.
+- **The same fallback does it to four more covers, and ours still has it (US-54).**
+  - **Upstream and ours alike.** Targa, JPEG 2000, Sun Raster and JPEG-LS covers become `Front.targa`, `Front.jpeg2000`, `Front.sunrast` and `Front.jpegls` and fail the same way. Reproduced here with a Targa cover.
+  - **The jab.** Dumbass session of 2026-11-16 taught the list the one codec it tripped over, and left the fallback that names four more the same way.
+  - **The extensions.** On a patched upstream build, `tga`, `j2k`, `ras` and `jls`, which FFmpeg's image muxer lists, save each cover byte-identical.
+  - **The report's label.** It calls the fork's fix partial, under a third label, `Fixed in the fork in part:`, which the generator now renders with its own footer.
+- **35, `-f`'s search.**
+  - **Offset 0.** At `-P 0`, upstream never tests an offset of 0. Of the 7,054 checksums its first pass over track 1 tests, 6,467 map to every offset from -3527 to +2940 but 0. So an entry matching at 0 ends `No track was long enough, unable to find drive offset!`, exit 1, while one at +6 is found.
+  - **A sheet numbered from 3.** Upstream prints `Loading data for track 2...` and reads sector -44857 until killed, a SIGINT notwithstanding.
+  - **Ours** is fixed in `8610f3c1`. The same change applied to `648b1dd` by hand finds +0 and +6 from both sheets.
+- **Found on the way, in neither report.**
+  - **An over-read.** The search reads up to 2,348 bytes past its buffer for an offset above (radius - 1) x 588 samples, which valgrind reports in both trees (US-55, UP-7).
+  - **Zeros.** At its default paranoia level, upstream reads frames 1 to 599 of each track of these images as zeros. That is consistent with report 8, not diagnosed, so every upstream `-f` run used `-P 0`.
+- **The records.**
+  - **`SETTLED.md`** gains a row for each report that fails if either tree changes that code, probed both ways.
+  - **The counts.** The upstream README, `carried-patches.md` and the issues-file row count thirty-five. `issues-to-file.md` is regenerated.
+  - **The open items.** OW-8 and `STATUS.md` count 24 to 35.
+
 **`Lap statements are well formed` gets 240 s.** CI's macOS runner killed it at 120.04 s on PR #142. On `platterpus-fork`'s head the same morning it passed there in 88.52 s.
 
 - **The runner, not the test.** The failing job ran 1.36 times slower throughout: `Settled facts` took 78.8 s there against 57.8 s.
