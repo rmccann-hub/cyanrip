@@ -31,9 +31,6 @@ Platterpus 0.7.130's Full acceptance script on the BDR-209D and the reference di
 - **No `.34` this time.** The script's A/B timing and accuracy sections compare Platterpus's
   `FORK_PIN` with its build under review. Both are `1280aa4` in 0.7.130, so the script skipped
   them (`skip-if-same-build`, L1678 and L1784), and those are the run's 128 `unreachable` steps.
-  **Corrected 2026-11-26**, after filing at `6451c5c`: 127 of them are. The 128th is
-  `expect-offset-refusal` (L625), which cannot run on a drive AccurateRip's list carries, as in
-  round 42's runs.
 - **The verdict.** `pass 531, fail 8, unreachable 128, info 8`, `ok: False`
   (`session/run/report.json`). **The run did not pass.** All eight failures are one check of
   Platterpus's, point 1.
