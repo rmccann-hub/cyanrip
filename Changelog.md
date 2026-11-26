@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**Held round 43 lap 1 proposes US-48's fix for `.36`, not round 44** (S54), on our owner's question of 2026-11-26, *"Why wait, why not put it in this lap / round since it's not released yet?"*. Neither reason for waiting held. Platterpus's R249 settles which builds print the arm. A renamed arm would need their reader first, but a qualifier beneath it does not: every Platterpus since round 10 folds an indented parenthetical into the line above. So `.36` keeps `-- NOT a released build` and prints beneath it `(not declared at build time; whether this commit was published is not checked by cyanrip)`, or `(declared at build time, withdrawn: git reported changes in the tree)`. S54 joins G2, and the v11 draft's §7 and §19 say so (`draft-shared-v11/CHANGES.md` P6, its line references and `PROTOCOL.md` hash updated).
+
 **The round 43 run README's unreachable count, corrected, dated**: 127 of its 128 `unreachable` steps are Platterpus's A/B sections, and the 128th is the offset refusal (L625), which this drive cannot reach. It lands now because `tools/evidence.py verify-rows` holds a README to its filed bytes only in the pull request that adds its row, #140.
 
 **The golden reference and the interrupted sample regenerated for held round 43

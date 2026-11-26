@@ -9,23 +9,24 @@ Kinds: **(a)** agreed wording, quoted; **(b)** mechanical; **(c)** drafted here,
 | # | Where | Old | New | Source | Kind |
 |---|---|---|---|---|---|
 | P1 | :1 | `# Handshake protocol v10` | `# Handshake protocol v11` | v10's own bump, `1989c762` | b |
-| P2 | :1267-1278 | nothing between §9 and §10 | `---`, `# Appendix A. Change history`, and one paragraph saying §1 to §9 bind, that HR-2, HR-2.1 and the README rule still bind, and that nothing moved | platterpus audit F16 (`platterpus@972b4d84:docs/cyanrip-fork.md:1943`); cyanrip:R43.L1.S34 | c |
+| P2 | :1272-1283 | nothing between §9 and §10 | `---`, `# Appendix A. Change history`, and one paragraph saying §1 to §9 bind, that HR-2, HR-2.1 and the README rule still bind, and that nothing moved | platterpus audit F16 (`platterpus@972b4d84:docs/cyanrip-fork.md:1943`); cyanrip:R43.L1.S34 | c |
 | P3 | :305-306 | `…refs/heads/evidence` (§17). | adds: `A run folder's README filed there may be corrected on the default branch, as §19 says (v11).` | a pointer to P5 | c |
-| P4 | :1831-1891 | none | `## 19. Changes in v11`, in §18's shape: summary, bullets, versions named, *Declaring 11*, *What v11 does not do* | cyanrip:R43.L1.S18, S34 | c |
-| P5 | :1844-1852 | none | the README rule, word for word | cyanrip:R42.L1.S30, accepted platterpus:R42.L2.S18; text promised cyanrip:R42.L3.S6; platterpus:R42.L4.S5 waits for it | a |
+| P4 | :1836-1903 | none | `## 19. Changes in v11`, in §18's shape: summary, bullets, versions named, *Declaring 11*, *What v11 does not do* | cyanrip:R43.L1.S18, S34 | c |
+| P5 | :1850-1858 | none | the README rule, word for word | cyanrip:R42.L1.S30, accepted platterpus:R42.L2.S18; text promised cyanrip:R42.L3.S6; platterpus:R42.L4.S5 waits for it | a |
+| P6 | :1121-1130, §7 | `NOT a released build` otherwise, with no line beneath | adds the qualifier beneath each arm: `(not declared at build time; whether this commit was published is not checked by cyanrip)` or `(declared at build time, withdrawn: git reported changes in the tree)` under the second; the arms unchanged | cyanrip:R43.L1.S54 | c |
 
 **Deviation from the brief: the history keeps its numbers, §10 to §18, and v11's entry is §19.** It is not renumbered A.1 to A.9, for three reasons:
 
 1. Both sides' tooling finds a version by its `## N. Changes in vM` heading: ours at `tools/seam-check.py:131` (`^## \d+\. Changes in v(\d+)`), theirs at `platterpus@4021f95c:tests/test_handshake_tooling.py:1531-1536`, which fails once their gate implements 11 unless `^## \d+[a-z]?\. Changes in v11` matches. A.n headings break both; on the draft, ours reads 11 and theirs matches.
-2. Unqualified citations live where nothing may be edited, or where the edit would fall to other people. HR-2.1's own header, the operator's words, says `added to PROTOCOL §17` (:1756). Others: our `docs/handshake/README.md:58`, `tools/ingest-bundle.py:80`, `tests/release_gate.py:650,685`, and the sent laps.
-3. The sections already follow §9 (:1280-1891); "move to an appendix" needs only a divider.
+2. Unqualified citations live where nothing may be edited, or where the edit would fall to other people. HR-2.1's own header, the operator's words, says `added to PROTOCOL §17` (:1761). Others: our `docs/handshake/README.md:58`, `tools/ingest-bundle.py:80`, `tests/release_gate.py:650,685`, and the sent laps.
+3. The sections already follow §9 (:1285-1903); "move to an appendix" needs only a divider.
 
-Every §10 to §18 reference still resolves, unchanged. In the file: :305, :1486 (`§13`), :1523 (`§15`), :1541 (`§18`), :1756 (HR-2.1, verbatim), :1802 (`§14`), :1806 (`§17`). Elsewhere, each names its version and so still resolves: `seam-rules.md:415,422,429` (`PROTOCOL v7 §15`, `v8 §16`, `v10 §18`) and `OWNERSHIP.md:209` (`v10 (§18)`).
+Every §10 to §18 reference still resolves, unchanged. In the file: :305, :1491 (`§13`), :1528 (`§15`), :1546 (`§18`), :1761 (HR-2.1, verbatim), :1807 (`§14`), :1811 (`§17`). Elsewhere, each names its version and so still resolves: `seam-rules.md:415,422,429` (`PROTOCOL v7 §15`, `v8 §16`, `v10 §18`) and `OWNERSHIP.md:209` (`v10 (§18)`).
 
 A.n numbering would take both regexes, the seven in-file references, and a mapping sentence for HR-2.1's unalterable header.
 
 - HR-2 and HR-2.1 now sit under an appendix heading; P2's paragraph says they still bind.
-- §10's last paragraph (:1294-1295, *"Widening either set is a visible edit…"*) reads like a §9 rule and now sits in the appendix. Left in place: in §9 it would soften *"may shrink, never grow"*.
+- §10's last paragraph (:1299-1300, *"Widening either set is a visible edit…"*) reads like a §9 rule and now sits in the appendix. Left in place: in §9 it would soften *"may shrink, never grow"*.
 
 ## seam-rules.md (v9 to v10)
 
@@ -81,6 +82,6 @@ Platterpus's generated §1a region is byte-identical. No `docs/…md` path was a
 
 ## sha256
 
-    33c8b1abecc803f75a2deb4dbad356e63ef5ee872d9e49ffe7a1c16c25ba9ab8  PROTOCOL.md
+    14407da1e458ea4ac221436bed768f5ccb644bc61fa72c732d9bf622437fd1e9  PROTOCOL.md
     505ba476295bccaefc9b7a8702392a9803410b3a317d70b1dd0ab01f39ac1fb1  seam-rules.md
     ed68538b5e11d3c5f9ad38a8b8d23057407499d210dc7dc97922a76ac0753952  seam-commands.md

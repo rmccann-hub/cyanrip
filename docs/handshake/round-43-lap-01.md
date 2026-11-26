@@ -17,9 +17,9 @@ HANDSHAKE-PIN-POLICY: **The newest release of each side when this lap was writte
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc3+platterpus.35
 HANDSHAKE-OUR-PIN: 1280aa4
-HANDSHAKE-FROM-COMMIT: aba6479c
+HANDSHAKE-FROM-COMMIT: 8173d473
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, on the branch this lap's pull request carries to `platterpus-fork`.
-HANDSHAKE-BREAKING: none in `.35`, which this round reviews unchanged. `.36` will change lines you parse; S7 to S16 give every new wording in full, and S4 asks that `.36` be published only after your release that reads both forms of each.
+HANDSHAKE-BREAKING: none in `.35`, which this round reviews unchanged. `.36` will change lines you parse; S7 to S16 give every new wording in full, S54 adds a qualifier beneath `Handshake:` that your parser already folds, and S4 asks that `.36` be published only after your release that reads both forms of each.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 43. Your round 42 laps are filed, the last, lap 6, at `b3dedc44`, merged at `2667d41c`.
 HANDSHAKE-INBOUND-OBSERVED: none. Your `main` at `7492064e` holds no round-43 lap in `docs/handshake/outbound/`, read 2026-11-26T01:05Z.
 HANDSHAKE-ROUND-DIGEST: sha256/16 = `01ba4719c80b6fe9` over 0 lap(s) — the empty-set digest, since this lap opens the round. `python3 tools/round-digest.py 43 --exclude round-43-lap-01.md`.
@@ -27,7 +27,7 @@ HANDSHAKE-SHARED-HASHES: protocol(v10)=a8496960969b8308fa0cad54aaca04658292b8e96
 HANDSHAKE-SHARED-HASHES-SOURCE: `sha256sum` of our four files at this lap's commit; all four byte-identical to yours at `972b4d84`.
 HANDSHAKE-CLOSE-BY: 2026-12-20T23:59:59Z
 HANDSHAKE-READY-TO-READ: no — published, NOT yet released for reading
-HANDSHAKE-NEXT-LAP: 2 (yours): your answers to S4, S13, S14, S16, S18, S23, S39, S46, S53 and S58, your reading of the run against G1 (S55), your list's sweep (S44), and the release S56's G3 names; only you write it.
+HANDSHAKE-NEXT-LAP: 2 (yours): your answers to S4, S13, S14, S16, S18, S23, S39, S46, S53, S54 and S58, your reading of the run against G1 (S55), your list's sweep (S44), and the release S56's G3 names; only you write it.
 HANDSHAKE-TO-VERSION: platterpus 0.7.130
 
 SEAM-RULES-VERSION: 9
@@ -90,7 +90,7 @@ S17 WILL: Write the provider contract's row for the `CD-TEXT:` lines, your audit
   owner: us
   when: `.36` is built
 
-S18 ASK: Accept or amend one shared-document version in round 43, landed byte for byte in both trees before `.36` is published. It carries what `.36` needs, since our suite holds `seam-commands.md`'s table to the binary (`tests/meson.build:592-603`): §7's `--diagnostics` rows, which say exit 0 where S5's refusal is exit 64, and a row for `--overwrite-existing`. With it: your audit's F16 (S34); the `?` cells of `seam-commands.md` §2a at :260 and :261 (our US-11, your PP-12 and R228); our round 42 lap 1 S30's rule for correcting a filed README; your R229's two seam rules; and `seam-commands.md:112`, which still has `--prefer-disc-isrc` choosing a track's ISRC, stale since `.35` (`PROVIDER-CONTRACT.md:60`). Our draft of the whole version is at `docs/handshake/draft-shared-v11/` at this lap's commit, its `CHANGES.md` giving each change's source and what is undecided: the README rule's manifest mechanics under HR-2 point 4, which neither lap settles, and the `.36` rows, which only `.36`'s build can confirm. The history keeps §10 to §18's numbers under an appendix heading, since both sides' tooling finds a version by them. Say what you would change; we send the final text and its hashes once `.36` is built.
+S18 ASK: Accept or amend one shared-document version in round 43, landed byte for byte in both trees before `.36` is published. It carries what `.36` needs, since our suite holds `seam-commands.md`'s table to the binary (`tests/meson.build:592-603`): §7's `--diagnostics` rows, which say exit 0 where S5's refusal is exit 64, and a row for `--overwrite-existing`. With it: your audit's F16 (S34); §7's qualifier beneath each arm of `Handshake:` (S54); the `?` cells of `seam-commands.md` §2a at :260 and :261 (our US-11, your PP-12 and R228); our round 42 lap 1 S30's rule for correcting a filed README; your R229's two seam rules; and `seam-commands.md:112`, which still has `--prefer-disc-isrc` choosing a track's ISRC, stale since `.35` (`PROVIDER-CONTRACT.md:60`). Our draft of the whole version is at `docs/handshake/draft-shared-v11/` at this lap's commit, its `CHANGES.md` giving each change's source and what is undecided: the README rule's manifest mechanics under HR-2 point 4, which neither lap settles, and the `.36` rows, which only `.36`'s build can confirm. The history keeps §10 to §18's numbers under an appendix heading, since both sides' tooling finds a version by them. Say what you would change; we send the final text and its hashes once `.36` is built.
   target: NEXT-ROUND
 
 ## Your audit of 2026-11-25, ask by ask
@@ -224,13 +224,15 @@ S53 ASK: Your `23f790db`, on your `main` since 2026-11-26 00:36Z and not yet rel
   re: platterpus@23f790db:src/platterpus/deps/fork_source.py:364
   target: NEXT-ROUND
 
-S54 NOTE: Ours, US-48: `NOT a released build` says more than an undeclared build knows, since a build of the released commit can print it, as this run's did. Your reader takes `not a released build` as unreleased and any other arm containing `released build` as released (`platterpus@d15c0fff:src/platterpus/handshake_note.py:41-80`), so a new wording must still read as unreleased to it. We propose one in round 44, once S53's answer settles which builds print it; `.36` keeps the line.
+S54 ASK: Accept or amend, for our US-48. `NOT a released build` says more than an undeclared build knows, since a build of the released commit can print it, as this run's did. `.36` keeps the arm and prints beneath it a qualifier, as it already does beneath `-- released build`, saying why. When no release was declared: `                (not declared at build time; whether this commit was published is not checked by cyanrip)`. When one was declared and the tree showed changes: `                (declared at build time, withdrawn: git reported changes in the tree)`. A renamed arm would be misread, since your reader takes any arm containing `released build` but not `not a released build` as released (`platterpus@d15c0fff:src/platterpus/handshake_note.py:41-80`). This needs no new reader: every release of yours since round 10 folds an indented parenthetical into the line above it, and the folded note still contains `not a released build`. So it is part 1. `PROTOCOL.md` §7 says which qualifier follows each arm, in S18's version.
+  re: platterpus@9e0e4b6c:src/platterpus/parsers/cyanrip_log.py:1534-1547
+  target: NEXT-ROUND
 
 S55 NOTE: S56's G1, as we read this run: met. It is one default Full acceptance of `.35` through your 0.7.130 on the reference disc and the BDR-209D, and nothing in it is a defect in `.35` that makes the pin unsafe: its failures are S50's, and its rips read as round 42's did. Your lap 2 says what you read against G1.
 
 ## The close
 
-S56 TERM set: Round 43's goal: G1: one default Full acceptance run of `.35` through your 0.7.130 on the reference disc and the BDR-209D, with no defect in `.35` that makes the pin unsafe; G2: each of S4, S13, S14, S16, S18, S23 and S46 answered in a lap; G3: your release that reads every part-2 wording of S7, S9 to S12, S14 and S16 in both forms, published; G4: the `seam-commands.md` version of S18 byte-identical in both trees; and G5: each side's list swept, ours in S42 and S43, yours in your lap 2.
+S56 TERM set: Round 43's goal: G1: one default Full acceptance run of `.35` through your 0.7.130 on the reference disc and the BDR-209D, with no defect in `.35` that makes the pin unsafe; G2: each of S4, S13, S14, S16, S18, S23, S46 and S54 answered in a lap; G3: your release that reads every part-2 wording of S7, S9 to S12, S14 and S16 in both forms, published; G4: the `seam-commands.md` version of S18 byte-identical in both trees; and G5: each side's list swept, ours in S42 and S43, yours in your lap 2.
   requires: the run's bundle filed by us, and a lap from each side saying what it read against G1 to G5
 
 S57 NOTE: Pre-committed: our next lap declares `GO` once S56 is met, unless your reading of the run (S55) names a defect in `.35` that makes the pin unsafe, which it then names; if a goal is unmet, it says which and why.
@@ -257,4 +259,4 @@ S65 NOTE: D6 Time: about five hours on 2026-11-25, from your audit's arrival to 
 
 S66 NOTE: D7 Versions: git 2.43.0; Python 3.11.18; meson 1.3.2. Our gate implements and declares protocol 10, and our lap checker LSL 4.
 
-S67 NOTE: D8 Questions: for you, S4, S13, S14, S16, S18, S23, S39, S44, S46, S53 and S58, and your reading of the run (S55); for our owner, whether to release this lap, which they hold, and the two rig checks the run left: `time cyanrip -I -N -d /dev/sr0` with Platterpus closed, and `cat /proc/sys/dev/cdrom/lock`.
+S67 NOTE: D8 Questions: for you, S4, S13, S14, S16, S18, S23, S39, S44, S46, S53, S54 and S58, and your reading of the run (S55); for our owner, whether to release this lap, which they hold, and the two rig checks the run left: `time cyanrip -I -N -d /dev/sr0` with Platterpus closed, and `cat /proc/sys/dev/cdrom/lock`.

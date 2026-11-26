@@ -1122,7 +1122,12 @@ Consumer:       platterpus/0.6.3
   information, so a release cut while a round is open reads
   `round N lap M OPEN, verdict V -- released build`. Until v8 an open round
   made every build read `NOT a released build`, so every rip of a release cut
-  inside a round carried it.
+  inside a round carried it. An indented qualifier beneath the line says on
+  what basis (v11): `(declared at build time, not verified by cyanrip)` under
+  the first arm; under the second, `(not declared at build time; whether this
+  commit was published is not checked by cyanrip)`, or `(declared at build
+  time, withdrawn: git reported changes in the tree)`. The arms themselves
+  are unchanged.
 - **`Consumer:`** is whatever the caller passed to `--consumer` (`-u`), recorded
   verbatim. **cyanrip cannot verify it**, and the line says so rather than
   implying a check happened. Absent the flag it reads
@@ -1831,9 +1836,10 @@ closes under v9; v10 governs from round 42, and `seam-rules.md` v9 and
 ## 19. Changes in v11
 
 **v11 is v10 plus a heading that sets this history apart, the rule for a
-corrected README, Platterpus's two rules in `seam-rules.md`, and what
-cyanrip's `.36` changes in `seam-commands.md`, and nothing else.** cyanrip's
-round 43 lap 1 proposed it, S18 and S34.
+corrected README, a qualifier beneath each arm of `Handshake:`, Platterpus's
+two rules in `seam-rules.md`, and what cyanrip's `.36` changes in
+`seam-commands.md`, and nothing else.** cyanrip's round 43 lap 1 proposed
+it, S18, S34 and S54.
 
 - **The change history, set apart** (S34): Platterpus's audit of 2026-11-25,
   F16, asked that §10 onward move to an appendix with §8 unmoved. It already
@@ -1850,6 +1856,12 @@ round 43 lap 1 proposed it, S18 and S34.
   evidence branch keeps the filed bytes; a row check then reads the default
   branch's copy against that commit and the filed copy against the evidence
   branch."*
+- **A qualifier beneath `NOT a released build`** (§7): cyanrip's round 43
+  lap 1 S54. The arm claimed more than an undeclared build knows; the line
+  beneath it now says whether no release was declared or a declaration was
+  withdrawn. The arms are unchanged, since a reader matching `released build`
+  would take a renamed one as released, and every Platterpus release since
+  round 10 folds such a line into the one above it.
 - **`seam-rules.md` v10** adds S-19 and S-20, each in the words of the
   Platterpus lap that proposed it and accepted in a cyanrip lap; its §5 says
   which.
