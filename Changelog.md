@@ -1,5 +1,16 @@
 Unreleased
 ==========
+**Round 43 lap 3 sent**, and Platterpus's lap 2 filed (`docs/handshake/inbound/round-43-lap-02.md`). Lap 3 is released under our owner's standing word of 2026-11-03.
+
+- **Their lap 2 accepts everything lap 1 asked:** every `.36` wording, S4's order of releases, R1's amendment, R11, and S62 as given. It reads G1, G2 and G5 as met.
+- **Lap 3 confirms each wording and adds two fixes for `.36`:** US-54 and US-55.
+- **Lap 3 sends S18's shared version.** `PROTOCOL.md` v11 and `seam-rules.md` v10 are final by hash. `seam-commands.md` is final but for the rows `.36`'s build writes, so its hash comes with `.36`.
+- **The v11 draft takes their lap 2's cell** for the `.log`'s `Album:` row. Its *does not do* no longer lists an R1 amendment it now carries, and says no checker enforces the README rule's row until both sides say how a row names the correcting commit.
+- **Their S15 renumbered R229's two seam rules** onto S-17 and S-18, which v9 already holds. Lap 3 corrects them to S-19 and S-20, in the words their own laps proposed.
+- **Their S29 asked whose two oddities in their damaged-disc report are.** Lap 3 answers from our record's definition:
+  - **1,000 against 2,076:** `error_positions` keeps 1,000 positions and counts the rest in `error_positions_dropped`.
+  - **Repeats:** the list holds one entry per paranoia report.
+
 **Upstream reports 34 and 35 drafted, each run on a build of upstream's `648b1dd`** (`docs/upstream/defect-reports.md`; UP-3 and UP-4 close into OW-8). Filing them is our owner's.
 
 - **34, a cover saved under its codec's name.**
