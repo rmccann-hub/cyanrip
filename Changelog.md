@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**US-39 closed: the steward says why its one re-run differs from Platterpus's never.** Ours is deliberate: a re-run here only diagnoses and never stands in for a fix. Two known failures here kill a job before any test runs, no `macos` runner and the package mirror's timeout, which no fix in this repository reaches (`.claude/skills/steward/SKILL.md` rule 4).
+
 **Held round 43 lap 1 folds in every item we recommended** (S56 to S61), on our owner's word of 2026-11-26, *"Do all recommended. Fold all into this round and release when ready"*.
 
 - **US-37, the week review's three process points.** Point 1 is already R8 point 3 (S57). R1 is amended so close conditions are fixed when lap 1 is sent and grow only by both sides' word (S58); it had been overridden in rounds 25 to 28, 35, 38 and 41. A new R11 says a request the operator gives both sessions names its builder (S59). Both go into the v11 draft, with `CHANGES.md` rows P7 and P8, its line references remapped by diff and the draft's hash updated.
