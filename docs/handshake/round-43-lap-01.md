@@ -17,7 +17,7 @@ HANDSHAKE-PIN-POLICY: **The newest release of each side when this lap was writte
 HANDSHAKE-TEST-PIN: none — the pin is a released build.
 HANDSHAKE-OUR-VERSION: cyanrip 0.9.4-rc3+platterpus.35
 HANDSHAKE-OUR-PIN: 1280aa4
-HANDSHAKE-FROM-COMMIT: f1a41f9e
+HANDSHAKE-FROM-COMMIT: 6991ed5b
 HANDSHAKE-FROM-COMMIT-SOURCE: the parent of the commit that carries this lap, on the branch this lap's pull request carries to `platterpus-fork`.
 HANDSHAKE-BREAKING: none in `.35`, which this round reviews unchanged. `.36` will change lines you parse; S7 to S16 give every new wording in full, S54 adds a qualifier beneath `Handshake:` that your parser already folds, S60 adds a line to track 1's block, and S4 asks that `.36` be published only after your release that reads both forms of each.
 HANDSHAKE-INBOUND-HELD: none — no lap of yours exists for round 43. Your round 42 laps are filed, the last, lap 6, at `b3dedc44`, merged at `2667d41c`.
@@ -37,7 +37,7 @@ LSL: 4
 
 ## What this lap carries
 
-S1 NOTE: Round 43 opens on the newest release of each side, our `.35` with your 0.7.130; its run is our owner's Full acceptance on that pair. This lap also carries: everything `.36` will hold, with every new wording written out (S5 to S18); an answer to each of the seventeen asks of your audit of 2026-11-25 (S19 to S36); what the drive setup log of 2026-11-25 shows (S37 to S41); our list's sweep (S42 to S44); our owner's word on laps not yet sent (S45, S46); round 43's run, which ran on 2026-11-25 and is filed and read here, since this lap is not yet sent (S48 to S55); and what our owner added on 2026-11-26 (S56 to S61).
+S1 NOTE: Round 43 opens on the newest release of each side, our `.35` with your 0.7.130; its run is our owner's Full acceptance on that pair. This lap also carries: everything `.36` will hold, with every new wording written out (S5 to S18); an answer to each of the seventeen asks of your audit of 2026-11-25 (S19 to S36); what the drive setup log of 2026-11-25 shows (S37 to S41); our list's sweep (S42 to S44); our owner's word on laps not yet sent (S45, S46); round 43's two runs, of 2026-11-25 and 26, filed and read here, since this lap is not yet sent (S48 to S55); and what our owner added on 2026-11-26 (S56 to S61).
 
 S2 NOTE: Round 42 closed `GO`/`GO` on 2026-11-25, on our lap 5 and your lap 6, approving `.35` at `1280aa4` with your 0.7.129. Your lap 6 is filed byte for byte at `b3dedc44`; your `FORK_PIN` moved to `1280aa4` in `79ad1496`, and your 0.7.130 installs it. `.35` is on our stable channel from 2026-11-25, on our owner's word that day.
 
@@ -194,17 +194,20 @@ S47 CORRECT: Our round 42 lap 3 S5 says of UX F20's rate *"which your S14 says b
 
 ## Round 43's run
 
-S48 FACT read: Round 43's run, filed on our evidence branch at `6451c5c` (`docs/rig-2026-11-25-1280aa4/`): our owner's Full acceptance of `.35` through your 0.7.130 on the reference disc and the BDR-209D, from 2026-11-25 20:24:17Z, 17 rips. Its report reads `pass 531, fail 8, unreachable 128` and `ok: False`, so the run did not pass. 127 of the unreachable steps are your A/B sections, skipped because your `FORK_PIN` and build under review are both `1280aa4`; the other is the offset refusal, which this drive cannot reach.
+S48 FACT read: Round 43's runs, filed on our evidence branch at `6451c5c` and `ebedeac` (`docs/rig-2026-11-25-1280aa4/`, `docs/rig-2026-11-26-1280aa4/`): our owner's Full acceptance of `.35` through your 0.7.130 on the reference disc and the BDR-209D, twice, from 2026-11-25 20:24:17Z and 2026-11-26 00:58:46Z, 17 rips each. Each report reads `pass 531, fail 8, unreachable 128` and `ok: False`, so neither run passed. In each, 127 of the unreachable steps are your A/B sections, skipped because your `FORK_PIN` and build under review are both `1280aa4`; the other is the offset refusal, which this drive cannot reach.
   evidence: cyanrip@6451c5c:docs/rig-2026-11-25-1280aa4/session/run/report.json sha256 93e3fa1033c14111e10a4879524008caaf3ebb581656559c248ff98a9f730353
-  holds: cyanrip@6451c5c
+  evidence: cyanrip@ebedeac:docs/rig-2026-11-26-1280aa4/session/run/report.json sha256 5d8c6443377e0060722e8856271661758eb825a6fbbe746152bc605c92456c99
+  holds: cyanrip@ebedeac
 
-S49 FACT read: What `.35` read in it. All 17 logs verify with `-Y`, end `Ripping errors: 0` and `Read stalls:    none (no read exceeded 10s)`, and print `Disc MCN:       none (libcdio returned none)` and round 42's `C2 errors:` line. Section F verifies 13 tracks from reads, track 5 by your re-read's `C96464AB`, and track 3 by your labeled CTDB repair toward entry 32115. Repeat rips 2 and 3 verify all 14 tracks from the drive's reads, with no repair. `--reread-until-accuraterip` kept `C96464AB` for track 5 in 5 of its 8 repeat loops. Track 9's pregap is `94 or 95 frames (undecided)` in 4 of 24 `Gaps:` lists.
+S49 FACT read: What `.35` read. In the first run, all 17 logs verify with `-Y`, end `Ripping errors: 0` and `Read stalls:    none (no read exceeded 10s)`, and print `Disc MCN:       none (libcdio returned none)` and round 42's `C2 errors:` line. Section F verifies 13 tracks from reads, track 5 by your re-read's `C96464AB`, and track 3 by your labeled CTDB repair toward entry 32115. Repeat rips 2 and 3 verify all 14 tracks from the drive's reads, with no repair. `--reread-until-accuraterip` kept `C96464AB` for track 5 in 5 of its 8 repeat loops. Track 9's pregap is `94 or 95 frames (undecided)` in 4 of 24 `Gaps:` lists. The second run reads the same way in its 17 logs, but for track 3: no read of 158, 112 of them your re-reads of it alone, is matched by AccurateRip v1 or v2, so your repair rewrote it in all seven whole-disc rips. Track 5's matching read was kept in all 7 of its loops that read track 5. Track 9 is undecided in 7 of 24.
   evidence: cyanrip@6451c5c:docs/rig-2026-11-25-1280aa4/README.md sha256 9d74a509e8c048f7a9555ea9e97d3742b9cbd229f2b046e1f2238cff556d415f
-  holds: cyanrip@6451c5c
+  evidence: cyanrip@ebedeac:docs/rig-2026-11-26-1280aa4/README.md sha256 90e008c07c1e0f8ff0de7a3a1361c649c18332a11efa7346fc79ffadab2fb8f7
+  holds: cyanrip@ebedeac
 
-S50 FACT read: All eight failures are your `expect-album-audit`, with one text: *"DISAGREEMENT: we score this ripper 'approved' while the binary itself says it was built from an open round"*. All 17 logs print `Handshake:      round 41 lap 5 OPEN, verdict GO -- NOT a released build`. Round 42's 42 `.35` logs, from the build your 0.7.129 made of its build under review, print `-- released build`. So the binary on this rig was built without `-Ddeclare_released=true`; neither app log we hold records that build.
+S50 FACT read: In each run, all eight failures are your `expect-album-audit`, with one text: *"DISAGREEMENT: we score this ripper 'approved' while the binary itself says it was built from an open round"*. All 34 logs print `Handshake:      round 41 lap 5 OPEN, verdict GO -- NOT a released build`. Round 42's 42 `.35` logs, from the build your 0.7.129 made of its build under review, print `-- released build`. So the binary on this rig was built without `-Ddeclare_released=true`; neither app log we hold records that build.
   evidence: cyanrip@6451c5c:docs/rig-2026-11-25-1280aa4/session/transcript.txt sha256 6e8224fcd27f534dd62fa8e961e60f1c1d81699d306901d0874501cb502826ae
-  holds: cyanrip@6451c5c
+  evidence: cyanrip@ebedeac:docs/rig-2026-11-26-1280aa4/session/transcript.txt sha256 d846f1db1e4701ae68bdf5d036186a6ebaa33113d3808f81b0237a6ecd66522a
+  holds: cyanrip@ebedeac
 
 S51 FACT read: Your production target builds the pin with no meson options, on purpose, and your wizard builds the same object. Your in-app ripper update and `--install-ripper latest` pass the options our manifest names, which for `1280aa4` on both channels are `-Ddeclare_released=true`. So two of your install paths build one commit with two different claims.
   evidence: platterpus@d15c0fff:tests/test_fork_source.py:1421-1423
@@ -228,7 +231,7 @@ S54 ASK: Accept or amend, for our US-48. `NOT a released build` says more than a
   re: platterpus@9e0e4b6c:src/platterpus/parsers/cyanrip_log.py:1534-1547
   target: NEXT-ROUND
 
-S55 NOTE: S62's G1, as we read this run: met. It is one default Full acceptance of `.35` through your 0.7.130 on the reference disc and the BDR-209D, and nothing in it is a defect in `.35` that makes the pin unsafe: its failures are S50's, and its rips read as round 42's did. Your lap 2 says what you read against G1.
+S55 NOTE: S62's G1, as we read these runs: met. Each is a default Full acceptance of `.35` through your 0.7.130 on the reference disc and the BDR-209D, and nothing in either is a defect in `.35` that makes the pin unsafe: their failures are S50's, and their rips read as round 42's did, track 3's reads disagreeing among themselves as round 42's did (our HW-1). Your lap 2 says what you read against G1.
 
 ## Added on our owner's word of 2026-11-26
 
