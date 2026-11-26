@@ -1,5 +1,12 @@
 Unreleased
 ==========
+**Round 43's second run filed and read** (`docs/rig-2026-11-26-1280aa4/`, evidence `ebedeac`, 228 files and manifest rows). It is our owner's second Full acceptance of `.35` through Platterpus 0.7.130, on 2026-11-26 from 00:58:46Z.
+
+- **The verdict.** Step for step the first run's: pass 531, fail 8, unreachable 128. Every failure is again Platterpus's audit on `-- NOT a released build` (R43-13).
+- **Track 3 differs.** No read of 158, 112 of them Platterpus's re-reads of it alone, is matched by AccurateRip v1 or v2. Their CTDB repair rewrote it in all seven whole-disc rips, where the first run read `59D352DD`, which AccurateRip matches, in two.
+- **Track 5.** `--reread-until-accuraterip` kept `C96464AB` in all 7 of its loops.
+- **The records.** The cache table gains its thirty-ninth row, and HW-6, HW-19 and `STATUS.md` count both runs.
+
 **US-36 closed: `docs/README.md` now describes the `evidence` branch**: what it holds, how it is indexed, how it changes and how to read it. The branch keeps no root README, deliberately: every file there has a manifest row only the filing tool writes, and a root file would be the one without one.
 
 **US-39 closed: the steward says why its one re-run differs from Platterpus's never.** Ours is deliberate: a re-run here only diagnoses and never stands in for a fix. Two known failures here kill a job before any test runs, no `macos` runner and the package mirror's timeout, which no fix in this repository reaches (`.claude/skills/steward/SKILL.md` rule 4).
