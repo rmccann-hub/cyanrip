@@ -1,5 +1,7 @@
 Unreleased
 ==========
+**US-36 closed: `docs/README.md` now describes the `evidence` branch**: what it holds, how it is indexed, how it changes and how to read it. The branch keeps no root README, deliberately: every file there has a manifest row only the filing tool writes, and a root file would be the one without one.
+
 **US-39 closed: the steward says why its one re-run differs from Platterpus's never.** Ours is deliberate: a re-run here only diagnoses and never stands in for a fix. Two known failures here kill a job before any test runs, no `macos` runner and the package mirror's timeout, which no fix in this repository reaches (`.claude/skills/steward/SKILL.md` rule 4).
 
 **Held round 43 lap 1 folds in every item we recommended** (S56 to S61), on our owner's word of 2026-11-26, *"Do all recommended. Fold all into this round and release when ready"*.
