@@ -12,6 +12,10 @@ Unreleased
 - **Before release it took two fixes for `.36` from the outside audit.**
   - **S60 proposes a new `Appended:`/`Prepended:` wording**, `667 samples of silence (2 frames past the last audio sector, not read)`, to sit beside the `Pregap sample peak:` line.
   - **S61 adds the CUE key fix**: a key byte outside `[A-Za-z0-9_]` is written as `_`, the set Platterpus's `REM` reader takes.
+- **S4 answers Platterpus's order of releases**, relayed by our owner on 2026-11-26.
+  - **Agreed through step 5:** 0.7.131 mid-round once the wordings settle; `.36` built last and published after it.
+  - **Not agreed: steps 6 and 7.** Under R8 point 3 the Full run on `.36` with 0.7.131 is round 44's run, not round 43's close.
+  - **Not yet true:** their readers do not yet take S60's `Appended:` in samples.
 - **Its inbound line reads their `main` at `e306a43f`.** Their side already prepares its lap 2 from the published lap: `03a920cf` fixes their audit's wording for S52, and `2aa94982` tests S13's and S14's forms.
 
 **US-34 closed: the rest of the outside audit log read against the tree.** 273 points: 171 done, 33 already done, 44 still holding, 4 wrong, 12 Platterpus's and 9 not checkable from here. Of those still holding, most were already rows. Seven rows are new:
