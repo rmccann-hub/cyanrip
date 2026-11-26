@@ -1,0 +1,12 @@
+# Filed here: each file's hash as filed. A file whose personal details
+# were replaced (tools/redact.py) gives the delivered hash under it.
+9c33c0183c982501b0bcd77ed7c21b44e101008711bcf5d0768a9f6933fec3b4  drivecheck/cdrom-info.txt
+4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865  drivecheck/cdrom-lock.txt
+7e9aa9760e268d5c52a4ff0180151e0cce54376d0196e140a5bdaeb70be8b5a0  drivecheck/end.txt
+5ae723a1a1eaad6d0a69a5ea63e70263f0070d87b61e219ff7942a4eb6110a8b  drivecheck/info-run.txt
+16a081cdcc0248fee37582af453d2f7803b815035ab7c236fdbc6b98d4a91542  drivecheck/start.txt
+bfce1b04904c33725581860b3a1af0463994db0c0bc35c4dff6bafcf1ce76820  drivecheck/strace-run.txt
+58654413390ce9541e50d7d56e74a6d1dacb38c7bad77dc03bcdc79b290d854e  drivecheck/version.txt
+
+# The archive as delivered.
+33225a340094c8c7b580185bcbcf24cba447606111dba749698ff57afc009f84  (not filed) drivecheck-20261126T131329Z.tar.gz
