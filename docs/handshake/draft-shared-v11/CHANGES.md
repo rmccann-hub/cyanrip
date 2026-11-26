@@ -1,6 +1,6 @@
 # Next shared-document version: what changed and why
 
-Drafted 2026-11-25 from the four shared files at `cyanrip@5b20a334`, byte-identical to `platterpus@4021f95c`; neither repository was edited. Three files change: `PROTOCOL.md` v10 to v11, `seam-rules.md` v9 to v10, and `seam-commands.md`, which declares no version and is named by its hash. `OWNERSHIP.md` has no change, so there is no copy.
+Drafted 2026-11-25 from the four shared files at `cyanrip@5b20a334`, byte-identical to `platterpus@4021f95c`; neither repository was edited. Three files change: `PROTOCOL.md` v10 to v11, `seam-rules.md` v9 to v10, and `seam-commands.md`, which declares no version and is named by its hash. `OWNERSHIP.md` has no change, so there is no copy. Updated 2026-11-26 for Platterpus's round 43 lap 2: its S14 cell (C7), and §19's *does not do* (P9).
 
 Kinds: **(a)** agreed wording, quoted; **(b)** mechanical; **(c)** drafted here, needs both sides' accept. Line numbers are the new files'.
 
@@ -11,11 +11,12 @@ Kinds: **(a)** agreed wording, quoted; **(b)** mechanical; **(c)** drafted here,
 | P1 | :1 | `# Handshake protocol v10` | `# Handshake protocol v11` | v10's own bump, `1989c762` | b |
 | P2 | :1279-1290 | nothing between §9 and §10 | `---`, `# Appendix A. Change history`, and one paragraph saying §1 to §9 bind, that HR-2, HR-2.1 and the README rule still bind, and that nothing moved | platterpus audit F16 (`platterpus@972b4d84:docs/cyanrip-fork.md:1943`); cyanrip:R43.L1.S34 | c |
 | P3 | :305-306 | `…refs/heads/evidence` (§17). | adds: `A run folder's README filed there may be corrected on the default branch, as §19 says (v11).` | a pointer to P5 | c |
-| P4 | :1843-1917 | none | `## 19. Changes in v11`, in §18's shape: summary, bullets, versions named, *Declaring 11*, *What v11 does not do* | cyanrip:R43.L1.S18, S34 | c |
-| P5 | :1857-1865 | none | the README rule, word for word | cyanrip:R42.L1.S30, accepted platterpus:R42.L2.S18; text promised cyanrip:R42.L3.S6; platterpus:R42.L4.S5 waits for it | a |
+| P4 | :1843-1924 | none | `## 19. Changes in v11`, in §18's shape: summary, bullets, versions named, *Declaring 11*, *What v11 does not do* | cyanrip:R43.L1.S18, S34 | c |
+| P5 | :1858-1865 | none | the README rule, word for word | cyanrip:R42.L1.S30, accepted platterpus:R42.L2.S18; text promised cyanrip:R42.L3.S6; platterpus:R42.L4.S5 waits for it | a |
 | P6 | :1128-1137, §7 | `NOT a released build` otherwise, with no line beneath | adds the qualifier beneath each arm: `(not declared at build time; whether this commit was published is not checked by cyanrip)` or `(declared at build time, withdrawn: git reported changes in the tree)` under the second; the arms unchanged | cyanrip:R43.L1.S54 | c |
 | P7 | :743-748, R1 | `R1 — Close conditions are fixed in lap 1 and cannot grow.` and its three lines | fixed when lap 1 is sent, and changed after only by one side's proposal and the other's next lap accepting it by name | cyanrip:R43.L1.S58; the week review of 2026-11-10, point 2 | c |
 | P8 | :898-901, after R10 | none | `R11 — One builder per request (v11)` | cyanrip:R43.L1.S59; the week review of 2026-11-10, point 4 | c |
+| P9 | :1908-1924, *What v11 does not do* | names an R1 amendment among the rules no lap has agreed | drops it, since P7 carries R1 as agreed; adds that no checker enforces the README rule's row until a lap of each side says how a row names the correcting commit, and that until then a correction is dated in the README | P7; the open points under *Not included* | c |
 
 **Deviation from the brief: the history keeps its numbers, §10 to §18, and v11's entry is §19.** It is not renumbered A.1 to A.9, for three reasons:
 
@@ -40,6 +41,8 @@ A.n numbering would take both regexes, the seven in-file references, and a mappi
 | R4 | :390, :393 | `BOTH(S-1..S-18)`, `all eighteen` | `BOTH(S-1..S-20)`, `all twenty` | follows R2 and R3 | b |
 | R5 | :431-439 | none | the v10 paragraph: provenance, numbers new in v10, binds from round 44 | Platterpus TASKS R229 | c |
 
+**Platterpus's round 43 lap 2 S15 numbers these two S-17 and S-18 and words them afresh.** v9 already has an S-17 and an S-18 (`seam-rules.md:257`, `:266`), so they stay S-19 and S-20, in the words of the laps that proposed them and that cyanrip's laps accepted: platterpus:R39.L6.S29(e) and platterpus:R40.L4.S21(b), accepted cyanrip:R41.L1.S21 *"as written"*.
+
 ## seam-commands.md
 
 | # | Where | Old | New | Source | Kind |
@@ -50,6 +53,7 @@ A.n numbering would take both regexes, the seven in-file references, and a mappi
 | C4 | :262, CR | `?` | what `Album:` prints, and where the value comes from. No substitution; `<U+XXXX>` escaping. Which test holds which case | `src/cyanrip_log.c:1385`, `src/cyanrip_main.c:4133-4187`, `:4250-4264`, `src/log_escape.c`; measured with `album=A\: B` | c |
 | C5 | :464, :600-602, :614 (§7 generated block) | `.27` banner; three rows `**no record** \| 0 \| Couldn't open … for writing!`; count `61 refused, 3 …` | banner says these lines are drafted; rows `**refused** \| 64 \|` with the S19 line and reasons `No such file or directory` (twice) and `Is a directory`; count `64 refused, 0 …` | line: cyanrip:R42.L1.S19, platterpus:R42.L2.S11 | a (line), c (rows) |
 | C6 | :620 | `As for a record that cannot be opened, above, the exit code stays at 0` | `Unlike a record that cannot be opened, which .36 refuses before anything is read (above; …S19, …S11), the exit code stays at 0` | as C5 | c |
+| C7 | :262, PP | `? — our parser reads …, and nothing of ours compares it with the album we sent` | ``read, not compared: our parser reads `Album:` (`parsers/cyanrip_log.py` `_ALBUM`); nothing of ours compares it with the album we sent (TASKS R228)`` | platterpus:R43.L2.S14, their words | a |
 
 Platterpus's generated §1a region is byte-identical. No `docs/…md` path was added to any file; their pointer sweep's ratchet cannot grow.
 
@@ -63,18 +67,17 @@ Platterpus's generated §1a region is byte-identical. No `docs/…md` path was a
 
 ## Not included, and why
 
-- **US-37's R1 amendment.** No lap of either side proposes a wording (rounds 41 to 43, their TASKS and outbound laps searched); `docs/history/WEEK-REVIEW-2026-11-10-READ.md:32` says only that it "goes up for amendment". §19 names it under *does not do*.
 - **KNOWN-ISSUES rows 13 to 15** (`cyanrip@5b20a334:docs/KNOWN-ISSUES.md:864-881`). None has an agreed wording.
   - Row 13 would add a §5b check and a conformance row: a gate refuses when the peer's transcription of the gate's own verdict disagrees. The candidate is only in our list, never a lap.
   - Row 14 would say in §5 whether `HANDSHAKE-OUR-VERSION` names the build under test or the declaring build. The row asks; no text.
   - Row 15 would reword platterpus:R30.L6.S23's items in §3/C46, R9, R8, §6d, §6c and §15. No agreed replacement, and not re-read against v8 to v10.
-- **The PP cell at :262** is Platterpus's (their PP-12, R228). C2's PP `?` is theirs too, and their S12 says they will send the flag. C1's range cell is theirs, unchanged.
+- **C2's PP `?`** is Platterpus's; their S12 says they will send the flag. C1's range cell is theirs, unchanged.
 - **The README rule's open points.** S30's wording is in, as agreed, but it does not fit HR-2 point 4 as both checkers enforce it: append-only, each path once, five fixed columns (`tools/evidence.py:136-140`, `:815-817`; `platterpus scripts/evidence_manifest.py:150-160`). No lap says:
   - which column names the correcting commit;
   - whether a second row may be added for the same path;
   - which copy's bytes and sha256 the row gives.
 
-  cyanrip:R42.L3.S6 promised that text. Both sides must settle it before either checker implements the rule.
+  cyanrip:R42.L3.S6 promised that text. Both sides must settle it before either checker implements the rule; P9 says so in §19.
 
 ## Found along the way (not shared-file changes)
 
@@ -84,6 +87,6 @@ Platterpus's generated §1a region is byte-identical. No `docs/…md` path was a
 
 ## sha256
 
-    580ac7204d6a6af3dda1660b2496e10f886ae4eeb71120fad95b970dc43c34cf  PROTOCOL.md
+    31057b3c8be61f4760063eb616fd8f78e4c918907097d159848151594f90bfe8  PROTOCOL.md
     505ba476295bccaefc9b7a8702392a9803410b3a317d70b1dd0ab01f39ac1fb1  seam-rules.md
-    ed68538b5e11d3c5f9ad38a8b8d23057407499d210dc7dc97922a76ac0753952  seam-commands.md
+    abb1d0977502bc180e533324269ef772bd15d737eeb549e62cffff75610694d9  seam-commands.md
